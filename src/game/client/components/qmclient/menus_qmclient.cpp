@@ -1035,7 +1035,7 @@ void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHei
 	if(!g_Config.m_QmSkinChangeTransition)
 		return;
 
-	auto RenderDropDown = [&](const char *pTextId, const char *pText, int *pValue, int MaxValue, const char *const *ppNames, int NumNames, CUi::SDropDownState &State, CScrollRegion &ScrollRegion) {
+	auto RenderDropDown = [&](const char *pTextId, const char *pText, int *pValue, int MaxValue, const char **ppNames, int NumNames, CUi::SDropDownState &State, CScrollRegion &ScrollRegion) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
 		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
@@ -1146,6 +1146,92 @@ void CMenus::RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, 
 		else
 			g_CommandBindCache.erase("toggle qm_focus_mode 0 1");
 	}
+}
+
+void CMenus::RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		CUIRect Row, LabelColumn, ControlColumn;
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCameraDrift, "Enable camera drift", Localize("Enable camera drift"), &g_Config.m_QmCameraDrift);
+	if(g_Config.m_QmCameraDrift)
+	{
+		static int s_QmCameraDriftAmountInputId;
+		static int s_QmCameraDriftSmoothnessInputId;
+		RenderValue("qmclient-camera-drift-intensity", "Drift intensity", &s_QmCameraDriftAmountInputId, &g_Config.m_QmCameraDriftAmount, 0, 200);
+		RenderValue("qmclient-camera-drift-smoothness", "Drift smoothness", &s_QmCameraDriftSmoothnessInputId, &g_Config.m_QmCameraDriftSmoothness, 0, 100, "%");
+		RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCameraDriftReverse, "Drift direction", Localize("Drift direction"), &g_Config.m_QmCameraDriftReverse);
+	}
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmDynamicFov, "Enable dynamic FOV", Localize("Enable dynamic FOV"), &g_Config.m_QmDynamicFov);
+	if(g_Config.m_QmDynamicFov)
+	{
+		static int s_QmDynamicFovAmountInputId;
+		static int s_QmDynamicFovSmoothnessInputId;
+		RenderValue("qmclient-camera-dynamic-fov-intensity", "Dynamic FOV intensity", &s_QmDynamicFovAmountInputId, &g_Config.m_QmDynamicFovAmount, 0, 200);
+		RenderValue("qmclient-camera-dynamic-fov-smoothness", "Dynamic FOV smoothness", &s_QmDynamicFovSmoothnessInputId, &g_Config.m_QmDynamicFovSmoothness, 0, 100, "%");
+	}
+	const char *apAspectPresetNames[] = {Localize("Off"), "5:4", "4:3", "3:2", "16:9", "21:9", Localize("Custom")};
+	static CUi::SDropDownState s_AspectPresetDropDownState;
+	static CScrollRegion s_AspectPresetDropDownScrollRegion;
+	s_AspectPresetDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_AspectPresetDropDownScrollRegion;
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmVisualLabel("qmclient-camera-aspect-ratio-preset", &LabelColumn, Localize("Aspect ratio preset"), BodySize);
+	const int CurrentPreset = std::clamp(g_Config.m_QmAspectPreset, 0, 6);
+	const int NewPreset = Ui()->DoDropDown(&ControlColumn, CurrentPreset, apAspectPresetNames, (int)std::size(apAspectPresetNames), s_AspectPresetDropDownState);
+	bool AspectChanged = NewPreset != CurrentPreset;
+	if(AspectChanged)
+	{
+		g_Config.m_QmAspectPreset = NewPreset;
+		switch(NewPreset)
+		{
+		case 1: g_Config.m_QmAspectRatio = 125; break;
+		case 2: g_Config.m_QmAspectRatio = 133; break;
+		case 3: g_Config.m_QmAspectRatio = 150; break;
+		case 4: g_Config.m_QmAspectRatio = 178; break;
+		case 5: g_Config.m_QmAspectRatio = 233; break;
+		case 6:
+			if(g_Config.m_QmAspectRatio < 100)
+				g_Config.m_QmAspectRatio = 178;
+			break;
+		default: break;
+		}
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(g_Config.m_QmAspectPreset == 6)
+	{
+		static int s_QmAspectRatioInputId;
+		const int OldAspectRatio = g_Config.m_QmAspectRatio;
+		RenderValue("qmclient-camera-custom-aspect-ratio", "Custom aspect ratio", &s_QmAspectRatioInputId, &g_Config.m_QmAspectRatio, 100, 300);
+		AspectChanged |= OldAspectRatio != g_Config.m_QmAspectRatio;
+	}
+	int EffectiveAspectValue = 0;
+	switch(g_Config.m_QmAspectPreset)
+	{
+	case 1: EffectiveAspectValue = 125; break;
+	case 2: EffectiveAspectValue = 133; break;
+	case 3: EffectiveAspectValue = 150; break;
+	case 4: EffectiveAspectValue = 178; break;
+	case 5: EffectiveAspectValue = 233; break;
+	case 6: EffectiveAspectValue = std::clamp(g_Config.m_QmAspectRatio, 100, 300); break;
+	default: break;
+	}
+	Content.HSplitTop(BodySize, &Row, &Content);
+	char aAspectInfo[128];
+	if(EffectiveAspectValue > 0)
+		str_format(aAspectInfo, sizeof(aAspectInfo), "%s %.2f:1", Localize("Current aspect ratio:"), EffectiveAspectValue / 100.0f);
+	else
+		str_copy(aAspectInfo, Localize("Current aspect ratio: Show default"), sizeof(aAspectInfo));
+	Ui()->DoLabel(&Row, aAspectInfo, BodySize, TEXTALIGN_ML);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(AspectChanged && !PrewarmOnly)
+		GameClient()->TClientComponent().QueueAspectApply();
 }
 
 void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
@@ -5711,156 +5797,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 10, Localize("Camera & FOV"), Localize("What kind of blockbuster do you want to shoot?"));
-				{
-					const float DriftSectionHeight = LgLineHeight + LgLineSpacing +
-									 (g_Config.m_QmCameraDrift ? (LgLineHeight + LgLineSpacing) * 3.0f : 0.0f);
-					if(IsModuleContentBlockVisible(CardContent, DriftSectionHeight))
-					{
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoQmSettingsCheckboxAuto(&g_Config.m_QmCameraDrift, "Enable camera drift", Localize("Enable camera drift"), &g_Config.m_QmCameraDrift, &Row, LgLineHeight);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						if(g_Config.m_QmCameraDrift)
-						{
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-camera-drift-intensity", &LabelColValue, Localize("Drift intensity"), LgBodySize);
-							static int s_QmCameraDriftAmountInputId;
-							RenderSliderWithValueInput(&s_QmCameraDriftAmountInputId, ControlColValue, &g_Config.m_QmCameraDriftAmount, 0, 200);
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-camera-drift-smoothness", &LabelColValue, Localize("Drift smoothness"), LgBodySize);
-							static int s_QmCameraDriftSmoothnessInputId;
-							RenderSliderWithValueInput(&s_QmCameraDriftSmoothnessInputId, ControlColValue, &g_Config.m_QmCameraDriftSmoothness, 0, 100, "%");
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							DoQmSettingsCheckboxAuto(&g_Config.m_QmCameraDriftReverse, "Drift direction", Localize("Drift direction"), &g_Config.m_QmCameraDriftReverse, &Row, LgLineHeight);
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-					}
-					else
-					{
-						SkipModuleContentBlock(CardContent, DriftSectionHeight);
-					}
-
-					const float DynamicFovSectionHeight = LgLineHeight + LgLineSpacing +
-									      (g_Config.m_QmDynamicFov ? (LgLineHeight + LgLineSpacing) * 2.0f : 0.0f);
-					if(IsModuleContentBlockVisible(CardContent, DynamicFovSectionHeight))
-					{
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoQmSettingsCheckboxAuto(&g_Config.m_QmDynamicFov, "Enable dynamic FOV", Localize("Enable dynamic FOV"), &g_Config.m_QmDynamicFov, &Row, LgLineHeight);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						if(g_Config.m_QmDynamicFov)
-						{
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-camera-dynamic-fov-intensity", &LabelColValue, Localize("Dynamic FOV intensity"), LgBodySize);
-							static int s_QmDynamicFovAmountInputId;
-							RenderSliderWithValueInput(&s_QmDynamicFovAmountInputId, ControlColValue, &g_Config.m_QmDynamicFovAmount, 0, 200);
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-camera-dynamic-fov-smoothness", &LabelColValue, Localize("Dynamic FOV smoothness"), LgBodySize);
-							static int s_QmDynamicFovSmoothnessInputId;
-							RenderSliderWithValueInput(&s_QmDynamicFovSmoothnessInputId, ControlColValue, &g_Config.m_QmDynamicFovSmoothness, 0, 100, "%");
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-					}
-					else
-					{
-						SkipModuleContentBlock(CardContent, DynamicFovSectionHeight);
-					}
-
-					bool AspectChanged = false;
-					const char *apAspectPresetNames[] = {
-						Localize("Off"),
-						"5:4",
-						"4:3",
-						"3:2",
-						"16:9",
-						"21:9",
-						Localize("Custom"),
-					};
-					static CUi::SDropDownState s_AspectPresetDropDownState;
-					static CScrollRegion s_AspectPresetDropDownScrollRegion;
-					s_AspectPresetDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_AspectPresetDropDownScrollRegion;
-					const int CurrentPreset = std::clamp(g_Config.m_QmAspectPreset, 0, 6);
-					const float AspectSectionHeight = LgLineHeight + LgLineSpacing +
-									  (g_Config.m_QmAspectPreset == 6 ? (LgLineHeight + LgLineSpacing) : 0.0f) +
-									  LgBodySize + LgLineSpacing + LgBodySize;
-					if(IsModuleContentBlockVisible(CardContent, AspectSectionHeight))
-					{
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						DoQmSettingsLabel("qmclient-camera-aspect-ratio-preset", &LabelCol, Localize("Aspect ratio preset"), LgBodySize);
-						const int NewPreset = Ui()->DoDropDown(&ControlCol, CurrentPreset, apAspectPresetNames, static_cast<int>(std::size(apAspectPresetNames)), s_AspectPresetDropDownState);
-						if(NewPreset != CurrentPreset)
-						{
-							g_Config.m_QmAspectPreset = NewPreset;
-							switch(NewPreset)
-							{
-							case 1: g_Config.m_QmAspectRatio = 125; break;
-							case 2: g_Config.m_QmAspectRatio = 133; break;
-							case 3: g_Config.m_QmAspectRatio = 150; break;
-							case 4: g_Config.m_QmAspectRatio = 178; break;
-							case 5: g_Config.m_QmAspectRatio = 233; break;
-							case 6:
-								if(g_Config.m_QmAspectRatio < 100)
-									g_Config.m_QmAspectRatio = 178;
-								break;
-							default: break;
-							}
-							AspectChanged = true;
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						if(g_Config.m_QmAspectPreset == 6)
-						{
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-camera-custom-aspect-ratio", &LabelColValue, Localize("Custom aspect ratio"), LgBodySize);
-							static int s_QmAspectRatioInputId;
-							const int OldAspectRatio = g_Config.m_QmAspectRatio;
-							RenderSliderWithValueInput(&s_QmAspectRatioInputId, ControlColValue, &g_Config.m_QmAspectRatio, 100, 300);
-							AspectChanged |= OldAspectRatio != g_Config.m_QmAspectRatio;
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-
-						int EffectiveAspectValue = 0;
-						switch(g_Config.m_QmAspectPreset)
-						{
-						case 1: EffectiveAspectValue = 125; break;
-						case 2: EffectiveAspectValue = 133; break;
-						case 3: EffectiveAspectValue = 150; break;
-						case 4: EffectiveAspectValue = 178; break;
-						case 5: EffectiveAspectValue = 233; break;
-						case 6: EffectiveAspectValue = std::clamp(g_Config.m_QmAspectRatio, 100, 300); break;
-						default: break;
-						}
-
-						CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
-						char aAspectInfo[128];
-						if(EffectiveAspectValue > 0)
-							str_format(aAspectInfo, sizeof(aAspectInfo), "%s %.2f:1", Localize("Current aspect ratio:"), EffectiveAspectValue / 100.0f);
-						else
-							str_copy(aAspectInfo, Localize("Current aspect ratio: Show default"), sizeof(aAspectInfo));
-						Ui()->DoLabel(&Row, aAspectInfo, LgBodySize, TEXTALIGN_ML);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					}
-					else
-					{
-						SkipModuleContentBlock(CardContent, AspectSectionHeight);
-					}
-
-					if(AspectChanged)
-						GameClient()->TClientComponent().QueueAspectApply();
-				}
+				RenderQmVisualCameraViewContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;

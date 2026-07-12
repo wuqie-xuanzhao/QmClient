@@ -7402,6 +7402,7 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	const std::string ChatBubbleBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	const std::string SkinTransitionBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	const std::string FocusModeBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float ColumnGap, float LabelWidth)");
+	const std::string CameraViewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	ASSERT_FALSE(StreamerBody.empty());
 	ASSERT_FALSE(TranslateUiBody.empty());
 	ASSERT_FALSE(CardAppearanceBody.empty());
@@ -7411,6 +7412,7 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	ASSERT_FALSE(ChatBubbleBody.empty());
 	ASSERT_FALSE(SkinTransitionBody.empty());
 	ASSERT_FALSE(FocusModeBody.empty());
+	ASSERT_FALSE(CameraViewBody.empty());
 
 	EXPECT_NE(Header.find("RenderQmVisualStreamerContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualTranslateUiContent"), std::string::npos);
@@ -7421,6 +7423,7 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	EXPECT_NE(Header.find("RenderQmVisualChatBubbleContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualSkinTransitionContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualFocusModeContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmVisualCameraViewContent"), std::string::npos);
 	EXPECT_NE(Header.find("IsQmNewFeatureRead"), std::string::npos);
 	EXPECT_NE(StreamerBody.find("RenderQmVisualCheckbox"), std::string::npos);
 	EXPECT_NE(TranslateUiBody.find("NTranslateUiSettings::RenderTranslateUiModule"), std::string::npos);
@@ -7433,6 +7436,8 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	EXPECT_NE(SkinTransitionBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
 	EXPECT_NE(FocusModeBody.find("toggle qm_focus_mode 0 1"), std::string::npos);
 	EXPECT_NE(FocusModeBody.find("g_CommandBindCache"), std::string::npos);
+	EXPECT_NE(CameraViewBody.find("QueueAspectApply"), std::string::npos);
+	EXPECT_NE(CameraViewBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
 	EXPECT_EQ(StreamerBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(TranslateUiBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(CardAppearanceBody.find("RegisterModuleCard"), std::string::npos);
@@ -7442,6 +7447,7 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	EXPECT_EQ(ChatBubbleBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(SkinTransitionBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(FocusModeBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(CameraViewBody.find("RegisterModuleCard"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
