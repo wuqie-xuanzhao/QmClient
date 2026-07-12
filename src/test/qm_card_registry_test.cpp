@@ -29,6 +29,18 @@ TEST(QmCardRegistry, CoversAllCardsNoDuplicates)
 		EXPECT_TRUE(Ids.insert(E.m_pStableId).second) << "重复 stableId: " << E.m_pStableId;
 }
 
+TEST(QmCardRegistry, P6RegistersQmClientOverviewCards)
+{
+	const auto *pIntro = qm_card_registry::FindByStableId("deck:qmclient-overview-intro");
+	const auto *pGuide = qm_card_registry::FindByStableId("deck:qmclient-overview-guide");
+	ASSERT_NE(pIntro, nullptr);
+	ASSERT_NE(pGuide, nullptr);
+	EXPECT_STREQ(pIntro->m_pDefaultTab, "qmclient-overview");
+	EXPECT_STREQ(pGuide->m_pDefaultTab, "qmclient-overview");
+	EXPECT_EQ(pIntro->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
+	EXPECT_LT(pIntro->m_DefaultOrder, pGuide->m_DefaultOrder);
+}
+
 // 意图：注册表必须覆盖当前 Tclient 运行时 section 的 stable card id。
 // 这些 id 是全局 Search/迁移/默认补位的事实来源，漏掉会让对应卡片从全局卡片系统消失。
 TEST(QmCardRegistry, CoversCurrentTClientSectionIds)

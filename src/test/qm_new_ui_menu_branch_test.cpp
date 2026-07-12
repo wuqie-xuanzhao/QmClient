@@ -102,6 +102,20 @@ namespace
 
 } // namespace
 
+TEST(QmNewUiMenuBranches, P6QmClientOverviewUsesCanonicalPageCardAndScroll)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+	EXPECT_NE(Body.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Body.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(Body.find(".State()"), std::string::npos);
+	EXPECT_NE(Body.find("QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_EQ(Body.find("BeginSettingsQmScrollContainer("), std::string::npos);
+	EXPECT_EQ(Body.find("RenderQmSettingsGlassCard("), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
@@ -1720,10 +1734,12 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 
 	const std::string RenderSettingsQmClientOverview = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(RenderSettingsQmClientOverview.empty());
-	EXPECT_NE(RenderSettingsQmClientOverview.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClientOverview.find("SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer("), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClientOverview.find("RenderQmSettingsGlassCard(Card, QmCardStyle);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsQmClientOverview.find("auto DrawCardBackground ="), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClientOverview.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClientOverview.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClientOverview.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClientOverview.find("QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClientOverview.find("BeginSettingsQmScrollContainer("), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClientOverview.find("RenderQmSettingsGlassCard("), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GlassCardUsesFlatHairlineWithoutDropShadow)

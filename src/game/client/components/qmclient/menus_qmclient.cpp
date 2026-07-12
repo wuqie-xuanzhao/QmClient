@@ -706,27 +706,17 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	const float ViewWidth = MainView.w;
 	const bool CompactLayout = ViewWidth < 680.0f;
 	const float UiScale = std::clamp(ViewWidth / 1000.0f, CompactLayout ? 0.78f : 0.85f, 1.0f);
-	const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);
-	const float CardPadding = QmCardStyle.m_Padding;
-	const float CardSpacing = QmCardStyle.m_Spacing;
-	const float HeadlineSize = std::clamp(16.0f * UiScale, 13.0f, 16.0f);
-	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
-	const float TipSize = std::clamp(BodySize * 0.88f, 9.0f, BodySize);
+	const float CardSpacing = ui_token::settings::CARD_GAP * UiScale;
+	const float BodySize = std::clamp(ui_token::font::BODY * UiScale, 10.0f, 12.0f);
+	const float TipSize = std::clamp(ui_token::font::TIP * UiScale, 9.0f, BodySize);
 	const float LineHeight = std::clamp(22.0f * UiScale, 18.0f, 22.0f);
-	const ColorRGBA TipColor(1.0f, 1.0f, 1.0f, 0.72f);
+	const ColorRGBA TipColor = ui_token::color::TEXT_SECONDARY;
+	const SSettingsPageLayoutFrame OverviewPage = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const IUiContext OverviewCardCtx = SettingsUiContext("settings_qmclient_overview", UiScale);
+	const SSettingsCardDeckVisualOptions OverviewVisualOptions = SettingsCardDeckVisualOptions();
+	static CScrollRegion s_QmOverviewSettingsScrollRegion;
 
-	static CQmScrollState s_QmOverviewScrollState;
-	static CQmScrollContainer s_QmOverviewScrollContainer;
-	static float s_QmOverviewScrollContentHeight = 0.0f;
-	static float s_PrevOverviewScrollY = 0.0f;
-	SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer(s_QmOverviewScrollState, s_QmOverviewScrollContainer, &MainView, s_QmOverviewScrollContentHeight, QmCardStyle, UiScale, s_PrevOverviewScrollY, !PrewarmOnly);
-
-	MainView.y += OverviewScrollFrame.m_Offset.y;
-	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
-	MainView.VSplitRight(OuterMargin, &MainView, nullptr);
-	MainView.VSplitLeft(OuterMargin, nullptr, &MainView);
-
-	auto AddTextLine = [&](CUIRect &Content, const char *pText, float Size = -1.0f, const ColorRGBA *pColor = nullptr) {
+	auto AddTextLine = [&](CUIRect &Content, const char *pText, const float Size, const ColorRGBA *pColor = nullptr) {
 		CUIRect Row;
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		if(pColor != nullptr)
@@ -738,45 +728,49 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 		Content.HSplitTop(CardSpacing * 0.35f, nullptr, &Content);
 	};
 
-	auto DrawCardTitle = [&](CUIRect &Content, const char *pTitle, const char *pTip) {
-		CUIRect Title;
-		Content.HSplitTop(HeadlineSize, &Title, &Content);
-		CUIElement &TitleElement = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, pTitle);
-		DoSettingsLabelStreamed(TitleElement, &Title, pTitle, HeadlineSize, TEXTALIGN_ML);
-		Content.HSplitTop(CardSpacing * 0.35f, nullptr, &Content);
-		if(pTip != nullptr && pTip[0] != '\0')
-			AddTextLine(Content, pTip, TipSize, &TipColor);
-		Content.HSplitTop(CardSpacing * 0.25f, nullptr, &Content);
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(2);
+	const auto AddCard = [&](const char *pStableId, const char *pTitle, const int LineCount, const FSettingsCardRender &Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {pStableId, Localize(pTitle), nullptr};
+		Definition.m_Measure = [LineCount, LineHeight, CardSpacing](float) {
+			return LineCount * (LineHeight + CardSpacing * 0.35f);
+		};
+		Definition.m_Render = Render;
+		vCards.push_back(std::move(Definition));
 	};
 
-	auto DrawFullWidthCard = [&](float Height, const std::function<void(CUIRect &)> &RenderContent) {
-		MainView.HSplitTop(CardSpacing, nullptr, &MainView);
-		CUIRect Card = MainView;
-		Card.h = Height;
-		RenderQmSettingsGlassCard(Card, QmCardStyle);
-		CUIRect Content = Card;
-		Content.Margin(CardPadding, &Content);
-		RenderContent(Content);
-		MainView.HSplitTop(Height, nullptr, &MainView);
-	};
-
-	DrawFullWidthCard(std::clamp(148.0f * UiScale, 126.0f, 168.0f), [&](CUIRect &Content) {
-		DrawCardTitle(Content, Localize("QmClient overview"), Localize("Use the top tabs to browse QmClient features by category"));
-		AddTextLine(Content, Localize("Overview cards show a lightweight guide to the client and page structure"));
-		AddTextLine(Content, Localize("The Visuals tab contains appearance and rendering options"));
-		AddTextLine(Content, Localize("The Functions tab contains tools, automation, and gameplay helpers"));
+	AddCard("deck:qmclient-overview-intro", "QmClient overview", 4, [&](CUIRect Content) {
+		AddTextLine(Content, Localize("Use the top tabs to browse QmClient features by category"), TipSize, &TipColor);
+		AddTextLine(Content, Localize("Overview cards show a lightweight guide to the client and page structure"), BodySize);
+		AddTextLine(Content, Localize("The Visuals tab contains appearance and rendering options"), BodySize);
+		AddTextLine(Content, Localize("The Functions tab contains tools, automation, and gameplay helpers"), BodySize);
+	});
+	AddCard("deck:qmclient-overview-guide", "Page guide", 5, [&](CUIRect Content) {
+		AddTextLine(Content, Localize("Each tab has a clear purpose"), TipSize, &TipColor);
+		AddTextLine(Content, Localize("The HUD tab collects overlays, counters, voice display, and top components"), BodySize);
+		AddTextLine(Content, Localize("The Config tab reuses QmClient's client config browser"), BodySize);
+		AddTextLine(Content, Localize("Community links, updates, and sponsors moved to the Contributors tab"), BodySize);
+		AddTextLine(Content, Localize("Dragging, collapsing, search, and usage history are preserved per category"), BodySize);
 	});
 
-	DrawFullWidthCard(std::clamp(176.0f * UiScale, 150.0f, 198.0f), [&](CUIRect &Content) {
-		DrawCardTitle(Content, Localize("Page guide"), Localize("Each tab has a clear purpose"));
-		AddTextLine(Content, Localize("The HUD tab collects overlays, counters, voice display, and top components"));
-		AddTextLine(Content, Localize("The Config tab reuses QmClient's client config browser"));
-		AddTextLine(Content, Localize("Community links, updates, and sponsors moved to the Contributors tab"));
-		AddTextLine(Content, Localize("Dragging, collapsing, search, and usage history are preserved per category"));
-	});
-
-	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
-	FinishSettingsQmScrollContainer(s_QmOverviewScrollState, s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_QmOverviewSettingsScrollRegion.State();
+	(void)ScrollState;
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(OverviewCardCtx, OverviewPage, "qmclient-overview", vCards, SettingsCardOrderModel(), &s_QmOverviewSettingsScrollRegion, InputState, SettingsCardMotionSpec(), OverviewVisualOptions);
+	if(DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 }
 
 void CMenus::RenderSettingsGlobalSearch(CUIRect MainView, bool PrewarmOnly)
