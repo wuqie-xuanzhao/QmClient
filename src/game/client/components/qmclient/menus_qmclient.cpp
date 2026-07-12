@@ -1631,6 +1631,36 @@ void CMenus::RenderQmHudKeyBindRow(CUIRect &Content, CButtonContainer &ReaderBut
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
+void CMenus::RenderQmFunctionKeyBindsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)
+{
+	static CButtonContainer s_ReaderButtonDummyPseudo, s_ClearButtonDummyPseudo,
+		s_ReaderButtonDeepfly, s_ClearButtonDeepfly,
+		s_ReaderButton45Degrees, s_ClearButton45Degrees,
+		s_ReaderButtonSmallSens, s_ClearButtonSmallSens,
+		s_ReaderButtonLeftJump, s_ClearButtonLeftJump,
+		s_ReaderButtonRightJump, s_ClearButtonRightJump,
+		s_ReaderButtonWeaponTrajectory, s_ClearButtonWeaponTrajectory,
+		s_ReaderButtonTimeoutDisconnect, s_ClearButtonTimeoutDisconnect;
+	[[maybe_unused]] static CButtonContainer s_ReaderButtonDeepflyToggle, s_ClearButtonDeepflyToggle;
+
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonDummyPseudo, s_ClearButtonDummyPseudo,
+		Localize("HDF"), "+toggle cl_dummy_hammer 1 0", LineHeight, BodySize, LineSpacing, LabelWidth);
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonDeepfly, s_ClearButtonDeepfly,
+		Localize("DF"), "+fire; +toggle cl_dummy_hammer 1 0", LineHeight, BodySize, LineSpacing, LabelWidth);
+	RenderQmHudKeyBindRow(Content, s_ReaderButton45Degrees, s_ClearButton45Degrees,
+		Localize("45° Aim"), "echo You are using 45-degree aim;+toggle cl_mouse_max_distance 2 400; +toggle_restore inp_mousesens 1", LineHeight, BodySize, LineSpacing, LabelWidth);
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonSmallSens, s_ClearButtonSmallSens,
+		Localize("Gap aim rescue"), "+toggle_restore inp_mousesens 1", LineHeight, BodySize, LineSpacing, LabelWidth);
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonLeftJump, s_ClearButtonLeftJump,
+		Localize("Left jump"), "+jump; +left", LineHeight, BodySize, LineSpacing, LabelWidth);
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonRightJump, s_ClearButtonRightJump,
+		Localize("Right jump"), "+jump; +right", LineHeight, BodySize, LineSpacing, LabelWidth);
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonWeaponTrajectory, s_ClearButtonWeaponTrajectory,
+		Localize("Weapon Trajectory"), "+showweapontrajectory", LineHeight, BodySize, LineSpacing, LabelWidth);
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonTimeoutDisconnect, s_ClearButtonTimeoutDisconnect,
+		Localize("Active disconnect"), "qm_timeout_disconnect", LineHeight, BodySize, LineSpacing, LabelWidth);
+}
+
 void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
@@ -5777,32 +5807,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 3, Localize("Key Bindings"), Localize("Common key bindings"));
 
-				static CButtonContainer s_ReaderButtonDummyPseudo, s_ClearButtonDummyPseudo,
-					s_ReaderButtonDeepfly, s_ClearButtonDeepfly,
-					s_ReaderButton45Degrees, s_ClearButton45Degrees,
-					s_ReaderButtonSmallSens, s_ClearButtonSmallSens,
-					s_ReaderButtonLeftJump, s_ClearButtonLeftJump,
-					s_ReaderButtonRightJump, s_ClearButtonRightJump,
-					s_ReaderButtonWeaponTrajectory, s_ClearButtonWeaponTrajectory,
-					s_ReaderButtonTimeoutDisconnect, s_ClearButtonTimeoutDisconnect;
-				[[maybe_unused]] static CButtonContainer s_ReaderButtonDeepflyToggle, s_ClearButtonDeepflyToggle;
-
-				DoKeyBindRow(CardContent, s_ReaderButtonDummyPseudo, s_ClearButtonDummyPseudo,
-					Localize("HDF"), "+toggle cl_dummy_hammer 1 0");
-				DoKeyBindRow(CardContent, s_ReaderButtonDeepfly, s_ClearButtonDeepfly,
-					Localize("DF"), "+fire; +toggle cl_dummy_hammer 1 0");
-				DoKeyBindRow(CardContent, s_ReaderButton45Degrees, s_ClearButton45Degrees,
-					Localize("45° Aim"), "echo You are using 45-degree aim;+toggle cl_mouse_max_distance 2 400; +toggle_restore inp_mousesens 1");
-				DoKeyBindRow(CardContent, s_ReaderButtonSmallSens, s_ClearButtonSmallSens,
-					Localize("Gap aim rescue"), "+toggle_restore inp_mousesens 1");
-				DoKeyBindRow(CardContent, s_ReaderButtonLeftJump, s_ClearButtonLeftJump,
-					Localize("Left jump"), "+jump; +left");
-				DoKeyBindRow(CardContent, s_ReaderButtonRightJump, s_ClearButtonRightJump,
-					Localize("Right jump"), "+jump; +right");
-				DoKeyBindRow(CardContent, s_ReaderButtonWeaponTrajectory, s_ClearButtonWeaponTrajectory,
-					Localize("Weapon Trajectory"), "+showweapontrajectory");
-				DoKeyBindRow(CardContent, s_ReaderButtonTimeoutDisconnect, s_ClearButtonTimeoutDisconnect,
-					Localize("Active disconnect"), "qm_timeout_disconnect");
+				RenderQmFunctionKeyBindsContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;

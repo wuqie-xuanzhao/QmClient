@@ -7482,6 +7482,26 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	EXPECT_EQ(CameraViewBody.find("RegisterModuleCard"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionKeyBindsContentExtractionKeepsTheLegacyShellAsOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string KeyBindsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionKeyBindsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)");
+	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::KeyBinds:");
+	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::MiniFeatures:", LegacyCaseStart);
+	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
+	ASSERT_FALSE(KeyBindsBody.empty());
+	ASSERT_FALSE(LegacyCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionKeyBindsContent"), std::string::npos);
+	EXPECT_NE(KeyBindsBody.find("RenderQmHudKeyBindRow"), std::string::npos);
+	EXPECT_NE(KeyBindsBody.find("+toggle cl_dummy_hammer 1 0"), std::string::npos);
+	EXPECT_NE(KeyBindsBody.find("qm_timeout_disconnect"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmFunctionKeyBindsContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);"), std::string::npos);
+	EXPECT_EQ(LegacyCase.find("DoKeyBindRow(CardContent"), std::string::npos);
+	EXPECT_EQ(KeyBindsBody.find("RegisterModuleCard"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
