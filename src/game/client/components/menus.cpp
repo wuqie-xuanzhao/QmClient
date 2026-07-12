@@ -4894,6 +4894,11 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
 		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_HUD;
 	}
+	else if(str_comp(pTab, "qmclient-overview") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
+		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_OVERVIEW;
+	}
 	else if(str_comp(pTab, "tclient") == 0)
 	{
 		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;

@@ -120,6 +120,7 @@ static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
 	{"sound", CMenus::SETTINGS_SOUND},
 	{"ddnet", CMenus::SETTINGS_DDNET},
 	{"controls", CMenus::SETTINGS_CONTROLS},
+	{"qmclient-overview", CMenus::SETTINGS_QMCLIENT},
 	{"tclient-bind-wheel", CMenus::SETTINGS_TCLIENT, 1},
 	{"tclient-status-bar", CMenus::SETTINGS_TCLIENT, 4},
 	{"appearance-hud", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HUD},
@@ -209,6 +210,12 @@ namespace
 				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_VISUAL;
 			return Navigation;
 		}
+		if(str_comp(pTab, "qmclient-overview") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
+			Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_OVERVIEW;
+			return Navigation;
+		}
 		if(str_startswith(pStableId, "tclient:") != nullptr)
 		{
 			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
@@ -293,6 +300,7 @@ namespace
 		case CMenus::QMCLIENT_SETTINGS_TAB_HUD: return "hud";
 		case CMenus::QMCLIENT_SETTINGS_TAB_CONTRIBUTORS: return "contributors";
 		case CMenus::QMCLIENT_SETTINGS_TAB_CONFIG: return "config";
+		case CMenus::QMCLIENT_SETTINGS_TAB_OVERVIEW: return "overview";
 		default: return "unknown";
 		}
 	}
@@ -760,16 +768,16 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	CQmScrollState &ScrollState = s_QmOverviewSettingsScrollRegion.State();
 	(void)ScrollState;
 	SSettingsCardDeckInput InputState;
-	InputState.m_MouseX = Ui()->MouseX();
-	InputState.m_MouseY = Ui()->MouseY();
-	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
-	InputState.m_MouseDown = Ui()->MouseButton(0);
-	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
-	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_MouseX = PrewarmOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = PrewarmOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !PrewarmOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !PrewarmOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !PrewarmOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !PrewarmOnly && Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	InputState.m_pScrollParams = &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(OverviewCardCtx, OverviewPage, "qmclient-overview", vCards, SettingsCardOrderModel(), &s_QmOverviewSettingsScrollRegion, InputState, SettingsCardMotionSpec(), OverviewVisualOptions);
-	if(DeckResult.m_OrderChanged)
+	if(!PrewarmOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 }
 
@@ -1059,6 +1067,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_HUD] = Localize("HUD");
 			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_CONTRIBUTORS] = Localize("Contributors");
 			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_CONFIG] = Localize("Config");
+			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_OVERVIEW] = Localize("Overview");
 		}
 
 		{
@@ -1103,6 +1112,8 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					if(AnyQmNewFeatureUnread(apHudFeatureIds, (int)std::size(apHudFeatureIds)))
 						DrawQmNewFeatureDot(Button);
 				}
+				else if(Tab == QMCLIENT_SETTINGS_TAB_OVERVIEW)
+					pTabName = s_apQmTabNames[QMCLIENT_SETTINGS_TAB_OVERVIEW];
 				const bool ClickedTab = DoButton_MenuTab(&s_aPageTabs[Tab], pTabName, m_QmClientSettingsTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f);
 				if(!PrewarmOnly && ClickedTab)
 					m_QmClientSettingsTab = Tab;
@@ -1161,6 +1172,13 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			if(TabTransitionActive)
 				Ui()->ClipDisable();
 			LogQmPerfStage(Client(), "render_total", RenderTimer.ElapsedMs(), false, aConfigExtra);
+			return;
+		}
+		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_OVERVIEW)
+		{
+			RenderSettingsQmClientOverview(ContentView, PrewarmOnly);
+			if(TabTransitionActive)
+				Ui()->ClipDisable();
 			return;
 		}
 

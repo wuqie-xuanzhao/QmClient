@@ -38,6 +38,7 @@ TEST(QmCardRegistry, P6RegistersQmClientOverviewCards)
 	EXPECT_STREQ(pIntro->m_pDefaultTab, "qmclient-overview");
 	EXPECT_STREQ(pGuide->m_pDefaultTab, "qmclient-overview");
 	EXPECT_EQ(pIntro->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
+	EXPECT_EQ(pGuide->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
 	EXPECT_LT(pIntro->m_DefaultOrder, pGuide->m_DefaultOrder);
 }
 

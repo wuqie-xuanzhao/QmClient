@@ -6154,6 +6154,12 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(QmClient.find("CQmScrollState &ScrollState = s_QmOverviewSettingsScrollRegion.State();"), std::string::npos);
 	EXPECT_NE(QmClient.find("const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);"), std::string::npos);
 	EXPECT_NE(QmClient.find("InputState.m_pScrollParams = &ScrollParams;"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"qmclient-overview\", CMenus::SETTINGS_QMCLIENT}"), std::string::npos);
+	EXPECT_NE(QmClient.find("Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_OVERVIEW;"), std::string::npos);
+	EXPECT_NE(QmClient.find("s_apQmTabNames[QMCLIENT_SETTINGS_TAB_OVERVIEW] = Localize(\"Overview\")"), std::string::npos);
+	EXPECT_NE(QmClient.find("InputState.m_MousePressed = !PrewarmOnly"), std::string::npos);
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	EXPECT_NE(MenusSource.find("str_comp(pTab, \"qmclient-overview\")"), std::string::npos);
 	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
 	const std::string BeginScrollBody = ExtractSourceFunctionBody(QmClient, "CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)");
 	const std::string FinishScrollBody = ExtractSourceFunctionBody(QmClient, "void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)");

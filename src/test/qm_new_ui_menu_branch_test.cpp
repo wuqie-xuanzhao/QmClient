@@ -114,6 +114,9 @@ TEST(QmNewUiMenuBranches, P6QmClientOverviewUsesCanonicalPageCardAndScroll)
 	EXPECT_NE(Body.find("QmResolveScrollPolicy("), std::string::npos);
 	EXPECT_EQ(Body.find("BeginSettingsQmScrollContainer("), std::string::npos);
 	EXPECT_EQ(Body.find("RenderQmSettingsGlassCard("), std::string::npos);
+	const std::string Dispatch = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	EXPECT_NE(Dispatch.find("QMCLIENT_SETTINGS_TAB_OVERVIEW"), std::string::npos);
+	EXPECT_NE(Dispatch.find("RenderSettingsQmClientOverview(ContentView, PrewarmOnly)"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
