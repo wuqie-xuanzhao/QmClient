@@ -7388,6 +7388,28 @@ TEST(QmMonitoringHelpers, P6VisualQmClientMigrationRemainsExplicitlyUnclaimed)
 	EXPECT_NE(QmClient.find("RenderQmModuleHeadline(CardContent, 0, Localize(\"Chat Bubble\")"), std::string::npos);
 	EXPECT_NE(QmClient.find("RegisterModuleCard(pModule, ColumnId"), std::string::npos);
 }
+
+TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string StreamerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing)");
+	const std::string TranslateUiBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualTranslateUiContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing)");
+	const std::string CardAppearanceBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualCardAppearanceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	ASSERT_FALSE(StreamerBody.empty());
+	ASSERT_FALSE(TranslateUiBody.empty());
+	ASSERT_FALSE(CardAppearanceBody.empty());
+
+	EXPECT_NE(Header.find("RenderQmVisualStreamerContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmVisualTranslateUiContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
+	EXPECT_NE(StreamerBody.find("DoSettingsButton_CheckBox"), std::string::npos);
+	EXPECT_NE(TranslateUiBody.find("NTranslateUiSettings::RenderTranslateUiModule"), std::string::npos);
+	EXPECT_NE(CardAppearanceBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_EQ(StreamerBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(TranslateUiBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(CardAppearanceBody.find("RegisterModuleCard"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
