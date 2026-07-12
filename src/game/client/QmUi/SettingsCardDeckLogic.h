@@ -43,6 +43,9 @@ void ApplySettingsCardDeckDragPlacement(std::array<std::vector<int>, 3> &aColumn
 int ResolveSettingsCardDeckDropOrder(float MouseY, int TargetColumn, const std::vector<SSettingsCardDeckItemGeometry> &vItems, int IgnoredStateIndex);
 float SettingsCardDeckAutoScrollDelta(float MouseY, const CUIRect &Viewport, float UiScale);
 bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetColumn, int TargetOrder, const std::vector<int> *pActiveStateIndices = nullptr);
+// 折叠卡保留 header shell，但不得触发内容测量或内容绘制。
+bool SettingsCardDeckNeedsContentMeasure(bool Collapsed, bool MeasureEachFrame, float CachedContentHeight);
+bool SettingsCardDeckRendersContent(bool Collapsed);
 // 设置卡片排序的无渲染状态 owner。
 namespace settings_card_deck_logic
 {

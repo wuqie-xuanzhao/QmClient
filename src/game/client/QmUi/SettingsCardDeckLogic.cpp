@@ -80,6 +80,16 @@ float SettingsCardDeckAutoScrollDelta(float MouseY, const CUIRect &Viewport, flo
 	return 0.0f;
 }
 
+bool SettingsCardDeckNeedsContentMeasure(const bool Collapsed, const bool MeasureEachFrame, const float CachedContentHeight)
+{
+	return !Collapsed && (CachedContentHeight < 0.0f || MeasureEachFrame);
+}
+
+bool SettingsCardDeckRendersContent(const bool Collapsed)
+{
+	return !Collapsed;
+}
+
 bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetColumn, int TargetOrder, const std::vector<int> *pActiveStateIndices)
 {
 	if(pTab == nullptr || pStableId == nullptr || TargetColumn < 0 || TargetColumn > 2)

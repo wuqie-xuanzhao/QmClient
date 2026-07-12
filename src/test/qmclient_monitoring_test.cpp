@@ -7421,6 +7421,8 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Source.find("Input.m_MouseX >= DrawLayout.m_aColumns[0].x"), std::string::npos);
 	EXPECT_NE(Source.find("m_vContentHeights[StateIndex]"), std::string::npos);
 	EXPECT_NE(Source.find("pDefinition->m_MeasureEachFrame"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckNeedsContentMeasure(Collapsed, pDefinition->m_MeasureEachFrame, ContentHeight)"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_Render : FSettingsCardRender{}"), std::string::npos);
 	EXPECT_NE(Source.find("Model.Entry(Card.m_StateIndex).m_pStableId"), std::string::npos);
 	EXPECT_EQ(Source.find("m_Drag.m_pStableId"), std::string::npos);
 
@@ -7429,6 +7431,9 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	ASSERT_NE(AddRect, std::string::npos);
 	ASSERT_NE(Render, std::string::npos);
 	EXPECT_LT(AddRect, Render);
+
+	const std::string CardSource = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");
+	EXPECT_NE(CardSource.find("HeaderAction(DrawFrame, DrawState.m_Collapsed)"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 {

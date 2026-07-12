@@ -114,7 +114,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			const bool Collapsed = pDefinition->m_IsCollapsed && pDefinition->m_IsCollapsed();
 			if(Collapsed)
 				ContentHeight = 0.0f;
-			else if(ContentHeight < 0.0f || pDefinition->m_MeasureEachFrame)
+			else if(SettingsCardDeckNeedsContentMeasure(Collapsed, pDefinition->m_MeasureEachFrame, ContentHeight))
 			{
 				const float ContentWidth = std::max(0.0f, Slot.w - 28.0f * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
 				ContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;
@@ -323,7 +323,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
 			State.m_Collapsed = Collapsed;
 			SettingsCard(Ctx, Card.m_Frame, Card.m_pDefinition->m_Spec, State, VisualOptions,
-				Collapsed ? FSettingsCardRender{} : Card.m_pDefinition->m_Render, Card.m_pDefinition->m_HeaderAction);
+				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_Render : FSettingsCardRender{}, Card.m_pDefinition->m_HeaderAction);
 		}
 		Result.m_vFrames.push_back(Card.m_Frame);
 	}

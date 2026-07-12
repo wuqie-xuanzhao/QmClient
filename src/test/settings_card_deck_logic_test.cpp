@@ -132,6 +132,16 @@ TEST(SettingsCardDeck, EdgeDragRequestsBoundedAutoScroll)
 	EXPECT_FLOAT_EQ(SettingsCardDeckAutoScrollDelta(300.0f, Viewport, 1.0f), 0.0f);
 }
 
+TEST(SettingsCardDeck, CollapsedCardsSkipContentWorkAndExpandedDynamicCardsRemeasure)
+{
+	EXPECT_FALSE(SettingsCardDeckNeedsContentMeasure(true, false, -1.0f));
+	EXPECT_FALSE(SettingsCardDeckRendersContent(true));
+	EXPECT_TRUE(SettingsCardDeckNeedsContentMeasure(false, false, -1.0f));
+	EXPECT_FALSE(SettingsCardDeckNeedsContentMeasure(false, false, 96.0f));
+	EXPECT_TRUE(SettingsCardDeckNeedsContentMeasure(false, true, 96.0f));
+	EXPECT_TRUE(SettingsCardDeckRendersContent(false));
+}
+
 TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)
 {
 	std::array<std::vector<int>, 3> aColumns{
