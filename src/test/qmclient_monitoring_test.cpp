@@ -7396,19 +7396,29 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	const std::string StreamerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing)");
 	const std::string TranslateUiBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualTranslateUiContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing)");
 	const std::string CardAppearanceBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualCardAppearanceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const std::string EntityOverlayBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualEntityOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const std::string CollisionHitboxBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	ASSERT_FALSE(StreamerBody.empty());
 	ASSERT_FALSE(TranslateUiBody.empty());
 	ASSERT_FALSE(CardAppearanceBody.empty());
+	ASSERT_FALSE(EntityOverlayBody.empty());
+	ASSERT_FALSE(CollisionHitboxBody.empty());
 
 	EXPECT_NE(Header.find("RenderQmVisualStreamerContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualTranslateUiContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmVisualEntityOverlayContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmVisualCollisionHitboxContent"), std::string::npos);
 	EXPECT_NE(StreamerBody.find("DoSettingsButton_CheckBox"), std::string::npos);
 	EXPECT_NE(TranslateUiBody.find("NTranslateUiSettings::RenderTranslateUiModule"), std::string::npos);
 	EXPECT_NE(CardAppearanceBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(EntityOverlayBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(CollisionHitboxBody.find("DoLine_ColorPicker"), std::string::npos);
 	EXPECT_EQ(StreamerBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(TranslateUiBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(CardAppearanceBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(EntityOverlayBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(CollisionHitboxBody.find("RegisterModuleCard"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {

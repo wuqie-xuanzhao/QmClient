@@ -746,6 +746,97 @@ void CMenus::RenderQmVisualCardAppearanceContent(CUIRect &Content, float LineHei
 	RenderQmSettingsSliderWithValueInput(&s_QmCardCornerSegmentsInputId, ControlColumn, &g_Config.m_QmRectCornerSegments, 8, 48, "", PrewarmOnly);
 }
 
+void CMenus::RenderQmVisualEntityOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	auto RenderSlider = [&](const void *pInputId, int *pValue, const char *pTitle) {
+		CUIRect Row, LabelColumn, ControlColumn;
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		Ui()->DoLabel(&LabelColumn, pTitle, BodySize, TEXTALIGN_ML);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, 0, 100, "%", PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	static int s_QmEntityOverlayDeathAlphaInputId;
+	static int s_QmEntityOverlayFreezeAlphaInputId;
+	static int s_QmEntityOverlayUnfreezeAlphaInputId;
+	static int s_QmEntityOverlayDeepFreezeAlphaInputId;
+	static int s_QmEntityOverlayDeepUnfreezeAlphaInputId;
+	static int s_QmEntityOverlayTeleAlphaInputId;
+	static int s_QmEntityOverlayTeleCheckpointAlphaInputId;
+	static int s_QmEntityOverlaySwitchAlphaInputId;
+	static int s_ClOverlayEntitiesInputId;
+	RenderSlider(&s_QmEntityOverlayDeathAlphaInputId, &g_Config.m_QmEntityOverlayDeathAlpha, Localize("Death opacity"));
+	RenderSlider(&s_QmEntityOverlayFreezeAlphaInputId, &g_Config.m_QmEntityOverlayFreezeAlpha, Localize("Freeze opacity"));
+	RenderSlider(&s_QmEntityOverlayUnfreezeAlphaInputId, &g_Config.m_QmEntityOverlayUnfreezeAlpha, Localize("Unfreeze opacity"));
+	RenderSlider(&s_QmEntityOverlayDeepFreezeAlphaInputId, &g_Config.m_QmEntityOverlayDeepFreezeAlpha, Localize("Deep freeze opacity"));
+	RenderSlider(&s_QmEntityOverlayDeepUnfreezeAlphaInputId, &g_Config.m_QmEntityOverlayDeepUnfreezeAlpha, Localize("Deep unfreeze opacity"));
+	RenderSlider(&s_QmEntityOverlayTeleAlphaInputId, &g_Config.m_QmEntityOverlayTeleAlpha, Localize("Teleport opacity"));
+	RenderSlider(&s_QmEntityOverlayTeleCheckpointAlphaInputId, &g_Config.m_QmEntityOverlayTeleCheckpointAlpha, Localize("CP opacity"));
+	RenderSlider(&s_QmEntityOverlaySwitchAlphaInputId, &g_Config.m_QmEntityOverlaySwitchAlpha, Localize("Switch opacity"));
+	RenderSlider(&s_ClOverlayEntitiesInputId, &g_Config.m_ClOverlayEntities, Localize("Tune layer opacity"));
+}
+
+void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	auto RenderCheckbox = [&](const void *pId, const char *pTextId, const char *pText, int *pValue) {
+		CUIRect Row;
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, pId, pTextId, pText, *pValue, &Row))
+			*pValue ^= 1;
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	int HitboxModeEnabled = g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox;
+	{
+		CUIRect Row;
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmHitboxMode, "Show hitbox mode", Localize("Show hitbox mode"), HitboxModeEnabled, &Row))
+		{
+			HitboxModeEnabled ^= 1;
+			g_Config.m_QmHitboxMode = HitboxModeEnabled;
+			g_Config.m_QmShowCollisionHitbox = 0;
+		}
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+	if(!HitboxModeEnabled)
+		return;
+
+	RenderCheckbox(&g_Config.m_QmHitboxShowMap, "Map danger border", Localize("Map danger border"), &g_Config.m_QmHitboxShowMap);
+	RenderCheckbox(&g_Config.m_QmHitboxShowTees, "Tee hitbox", Localize("Tee hitbox"), &g_Config.m_QmHitboxShowTees);
+	RenderCheckbox(&g_Config.m_QmHitboxShowPickups, "Pickup range", Localize("Pickup range"), &g_Config.m_QmHitboxShowPickups);
+	RenderCheckbox(&g_Config.m_QmHitboxShowWeapons, "Weapon interaction range", Localize("Weapon interaction range"), &g_Config.m_QmHitboxShowWeapons);
+
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	static std::vector<const char *> s_HitboxScopeDropDownNames;
+	s_HitboxScopeDropDownNames = {Localize("Local only"), Localize("Local + Dummy"), Localize("All players")};
+	static CUi::SDropDownState s_HitboxScopeDropDownState;
+	static CScrollRegion s_HitboxScopeDropDownScrollRegion;
+	s_HitboxScopeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HitboxScopeDropDownScrollRegion;
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, "qmclient-hitbox-player-range", &LabelColumn, Localize("Player range"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	const int HitboxScope = std::clamp(g_Config.m_QmHitboxPlayerScope, 0, 2);
+	const int HitboxScopeNew = Ui()->DoDropDown(&ControlColumn, HitboxScope, s_HitboxScopeDropDownNames.data(), s_HitboxScopeDropDownNames.size(), s_HitboxScopeDropDownState);
+	if(g_Config.m_QmHitboxPlayerScope != HitboxScopeNew)
+		g_Config.m_QmHitboxPlayerScope = HitboxScopeNew;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	static CButtonContainer s_FreezeColorId;
+	DoLine_ColorPicker(&s_FreezeColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Freeze border color"), &g_Config.m_QmHitboxColorFreeze, ColorRGBA(1.0f, 0.0f, 1.0f), false);
+	static CButtonContainer s_TeeColorId;
+	DoLine_ColorPicker(&s_TeeColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Tee hitbox color"), &g_Config.m_QmHitboxColorTee, ColorRGBA(0.0f, 1.0f, 1.0f), false);
+	static CButtonContainer s_WeaponColorId;
+	DoLine_ColorPicker(&s_WeaponColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Weapon range color"), &g_Config.m_QmHitboxColorWeapon, ColorRGBA(1.0f, 1.0f, 0.0f), false);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, "qmclient-hitbox-opacity", &LabelColumn, Localize("Opacity"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	static int s_QmHitboxAlphaInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmHitboxAlphaInputId, ControlColumn, &g_Config.m_QmHitboxAlpha, 0, 100, "%", PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
 {
 	if(!Frame.m_Enabled)
@@ -5842,44 +5933,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 6, Localize("Entity Layer Colors"), Localize("No more blocking entity layers in the world of TeeWorlds"));
-
-				{
-					auto RenderOverlaySlider = [&](const void *pInputId, int *pValue, const char *pTitle) {
-						const float SliderHeight = LgLineHeight + LgLineSpacing;
-						if(IsModuleContentBlockVisible(CardContent, SliderHeight))
-						{
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-							Ui()->DoLabel(&LabelCol, pTitle, LgBodySize, TEXTALIGN_ML);
-
-							RenderSliderWithValueInput(pInputId, ControlCol, pValue, 0, 100, "%");
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-						else
-						{
-							SkipModuleContentBlock(CardContent, SliderHeight);
-						}
-					};
-
-					static int s_QmEntityOverlayDeathAlphaInputId;
-					static int s_QmEntityOverlayFreezeAlphaInputId;
-					static int s_QmEntityOverlayUnfreezeAlphaInputId;
-					static int s_QmEntityOverlayDeepFreezeAlphaInputId;
-					static int s_QmEntityOverlayDeepUnfreezeAlphaInputId;
-					static int s_QmEntityOverlayTeleAlphaInputId;
-					static int s_QmEntityOverlayTeleCheckpointAlphaInputId;
-					static int s_QmEntityOverlaySwitchAlphaInputId;
-					static int s_ClOverlayEntitiesInputId;
-					RenderOverlaySlider(&s_QmEntityOverlayDeathAlphaInputId, &g_Config.m_QmEntityOverlayDeathAlpha, Localize("Death opacity"));
-					RenderOverlaySlider(&s_QmEntityOverlayFreezeAlphaInputId, &g_Config.m_QmEntityOverlayFreezeAlpha, Localize("Freeze opacity"));
-					RenderOverlaySlider(&s_QmEntityOverlayUnfreezeAlphaInputId, &g_Config.m_QmEntityOverlayUnfreezeAlpha, Localize("Unfreeze opacity"));
-					RenderOverlaySlider(&s_QmEntityOverlayDeepFreezeAlphaInputId, &g_Config.m_QmEntityOverlayDeepFreezeAlpha, Localize("Deep freeze opacity"));
-					RenderOverlaySlider(&s_QmEntityOverlayDeepUnfreezeAlphaInputId, &g_Config.m_QmEntityOverlayDeepUnfreezeAlpha, Localize("Deep unfreeze opacity"));
-					RenderOverlaySlider(&s_QmEntityOverlayTeleAlphaInputId, &g_Config.m_QmEntityOverlayTeleAlpha, Localize("Teleport opacity"));
-					RenderOverlaySlider(&s_QmEntityOverlayTeleCheckpointAlphaInputId, &g_Config.m_QmEntityOverlayTeleCheckpointAlpha, Localize("CP opacity"));
-					RenderOverlaySlider(&s_QmEntityOverlaySwitchAlphaInputId, &g_Config.m_QmEntityOverlaySwitchAlpha, Localize("Switch opacity"));
-					RenderOverlaySlider(&s_ClOverlayEntitiesInputId, &g_Config.m_ClOverlayEntities, Localize("Tune layer opacity"));
-				}
+				RenderQmVisualEntityOverlayContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -5991,63 +6045,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 7, Localize("Hitbox mode"), Localize("Show Tee, map, and weapon interaction hitboxes"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				int HitboxModeEnabled = g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox;
-				if(DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxMode, "Show hitbox mode", Localize("Show hitbox mode"), &HitboxModeEnabled, &Row, LgLineHeight))
-				{
-					g_Config.m_QmHitboxMode = HitboxModeEnabled;
-					g_Config.m_QmShowCollisionHitbox = 0;
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(HitboxModeEnabled)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowMap, "Map danger border", Localize("Map danger border"), &g_Config.m_QmHitboxShowMap, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowTees, "Tee hitbox", Localize("Tee hitbox"), &g_Config.m_QmHitboxShowTees, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowPickups, "Pickup range", Localize("Pickup range"), &g_Config.m_QmHitboxShowPickups, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowWeapons, "Weapon interaction range", Localize("Weapon interaction range"), &g_Config.m_QmHitboxShowWeapons, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					static std::vector<const char *> s_HitboxScopeDropDownNames;
-					s_HitboxScopeDropDownNames = {Localize("Local only"), Localize("Local + Dummy"), Localize("All players")};
-					static CUi::SDropDownState s_HitboxScopeDropDownState;
-					static CScrollRegion s_HitboxScopeDropDownScrollRegion;
-					s_HitboxScopeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HitboxScopeDropDownScrollRegion;
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-hitbox-player-range", &LabelCol, Localize("Player range"), LgBodySize);
-					const int HitboxScope = std::clamp(g_Config.m_QmHitboxPlayerScope, 0, 2);
-					const int HitboxScopeNew = Ui()->DoDropDown(&ControlCol, HitboxScope, s_HitboxScopeDropDownNames.data(), s_HitboxScopeDropDownNames.size(), s_HitboxScopeDropDownState);
-					if(g_Config.m_QmHitboxPlayerScope != HitboxScopeNew)
-						g_Config.m_QmHitboxPlayerScope = HitboxScopeNew;
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					static CButtonContainer s_FreezeColorId;
-					DoLine_ColorPicker(&s_FreezeColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Freeze border color"), &g_Config.m_QmHitboxColorFreeze, ColorRGBA(1.0f, 0.0f, 1.0f), false);
-
-					static CButtonContainer s_TeeColorId;
-					DoLine_ColorPicker(&s_TeeColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Tee hitbox color"), &g_Config.m_QmHitboxColorTee, ColorRGBA(0.0f, 1.0f, 1.0f), false);
-
-					static CButtonContainer s_WeaponColorId;
-					DoLine_ColorPicker(&s_WeaponColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Weapon range color"), &g_Config.m_QmHitboxColorWeapon, ColorRGBA(1.0f, 1.0f, 0.0f), false);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-hitbox-opacity", &LabelCol, Localize("Opacity"), LgBodySize);
-					static int s_QmHitboxAlphaInputId;
-					RenderSliderWithValueInput(&s_QmHitboxAlphaInputId, ControlCol, &g_Config.m_QmHitboxAlpha, 0, 100, "%");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmVisualCollisionHitboxContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
