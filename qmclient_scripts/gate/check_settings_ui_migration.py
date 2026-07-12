@@ -168,6 +168,9 @@ def audit_page(repo_root: Path, page: str) -> list[str]:
         else:
             bodies.append(body)
     page_source = "\n".join(bodies)
+    if page == "controls":
+        # Controls keeps small render helpers outside Render; inspect them as part of the page contract.
+        page_source += "\n" + source
 
     for token in COMMON_REQUIRED + PAGE_REQUIRED[page]:
         if token not in page_source:

@@ -12,6 +12,10 @@
 #include <engine/textrender.h>
 
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/QmScroll.h>
+#include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/SettingsCardDeck.h>
+#include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/key_binder.h>
@@ -154,9 +158,19 @@ int CMenusSettingsControls::DoSettingsControlsCheckBox(const void *pId, const ch
 	return GameClient()->m_Menus.DoSettingsButton_CheckBox(CMenus::SETTINGS_CONTROLS, -1, -1, pId, pTextId, pText, Checked, pRect);
 }
 
-bool CMenusSettingsControls::DoSettingsControlsScrollbarOption(const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText) const
+bool CMenusSettingsControls::DoSettingsControlsNumericField(const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags)
 {
-	return GameClient()->m_Menus.DoSettingsScrollbarOption(CMenus::SETTINGS_CONTROLS, -1, -1, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
+	ui_widget::SNumericFieldOptions Options;
+	Options.m_pLabel = pLabel;
+	Options.m_pScale = pScale;
+	Options.m_Flags = Flags;
+	Options.m_FontSize = Rect.h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_LabelAlign = TEXTALIGN_ML;
+	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
+	if(GameClient()->m_Menus.PrepareSettingsNumericFieldLabel(CMenus::SETTINGS_CONTROLS, -1, -1, pTextId, Rect, pLabel, Flags, Options))
+		return false;
+	IUiContext Context = GameClient()->m_Menus.SettingsUiContext("settings_controls");
+	return ui_widget::NumericField(Context, GameClient()->m_Menus.GetSettingsNumericFieldState(pId), pId, pOption, Min, Max, Rect, Options);
 }
 
 void CMenusSettingsControls::Render(CUIRect MainView)
@@ -228,39 +242,65 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	}
 	LogControlsPerfStage(GameClient()->Client(), "controls_interactive_layer", InteractiveTimer.ElapsedMs(), false, "page=controls section=interactive");
 
-	vec2 ScrollOffset(0.0f, 0.0f);
-	static float s_PrevSettingsScrollY = 0.0f;
-	CScrollRegionParams ScrollParams = GameClient()->m_Menus.QmSettingsScrollRegionParams(1.0f);
-	CMenus::SSettingsScrollRegionFrame ScrollFrame = GameClient()->m_Menus.BeginSettingsScrollRegion(m_SettingsScrollRegion, &MainView, ScrollParams, s_PrevSettingsScrollY);
-	ScrollOffset = ScrollFrame.m_BeginOffset;
-	MainView.y += ScrollOffset.y;
-
-	CUIRect LeftColumn, RightColumn;
-	MainView.VSplitMid(&LeftColumn, &RightColumn, MARGIN);
-	LogControlsPerfStage(GameClient()->Client(), "controls_text_cache", ShellTimer.ElapsedMs(), false, "page=controls section=text_cache");
-
-	// Left column
-	CPerfTimer BindListTimer;
-	RenderSettingsBlock(MeasureSettingsMouseHeight(), &LeftColumn,
-		Localize("Mouse"), "controls-mouse-title", nullptr, nullptr, std::bind_front(&CMenusSettingsControls::RenderSettingsMouse, this));
-	RenderSettingsBlock(MeasureSettingsJoystickHeight(), &LeftColumn,
-		Localize("Controller"), "controls-controller-title", nullptr, nullptr, std::bind_front(&CMenusSettingsControls::RenderSettingsJoystick, this));
-	RenderSettingsBindsBlock(EBindOptionGroup::MOVEMENT, &LeftColumn, "controls-movement-title", Localize("Movement"));
-	RenderSettingsBindsBlock(EBindOptionGroup::WEAPON, &LeftColumn, "controls-weapon-title", Localize("Weapon"));
-
-	// Right column
-	RenderSettingsBindsBlock(EBindOptionGroup::VOTING, &RightColumn, "controls-voting-title", Localize("Voting"));
-	RenderSettingsBindsBlock(EBindOptionGroup::CHAT, &RightColumn, "controls-chat-title", Localize("Chat"));
-	RenderSettingsBindsBlock(EBindOptionGroup::DUMMY, &RightColumn, "controls-dummy-title", Localize("Dummy"));
-	RenderSettingsBindsBlock(EBindOptionGroup::MISCELLANEOUS, &RightColumn, "controls-miscellaneous-title", Localize("Miscellaneous"));
-	if(std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }))
+	CQmScrollState &ScrollState = m_SettingsScrollRegion.State();
+	(void)ScrollState;
+	const float UiScale = 1.0f;
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const IUiContext CardCtx = GameClient()->m_Menus.SettingsUiContext("settings_controls", UiScale);
+	const SSettingsCardDeckVisualOptions VisualOptions = GameClient()->m_Menus.SettingsCardDeckVisualOptions();
+	const auto FindCard = [](const char *pId) { return qm_card_registry::FindByStableId(pId); };
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(9);
+	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}) {
+		const qm_card_registry::SCardDefault *pDefault = FindCard(pId);
+		if(pDefault == nullptr)
+			return;
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {pDefault->m_pStableId, Localize(pDefault->m_pTitle), nullptr};
+		Definition.m_Measure = [Measure, MinHeight](float Width) { return std::max(MinHeight, Measure ? Measure(Width) : 0.0f); };
+		Definition.m_Render = std::move(Render);
+		Definition.m_IsVisible = std::move(IsVisible);
+		Definition.m_MeasureEachFrame = true;
+		vCards.push_back(std::move(Definition));
+	};
+	const auto BindHeight = [this](EBindOptionGroup Group, float) {
+		const bool Expanded = m_aBindGroupExpanded[(int)Group];
+		return HEADER_FONT_SIZE + MARGIN + (Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f);
+	};
+	if(m_SearchMatchReveal && !m_vSearchMatches.empty() && m_CurrentSearchMatch >= 0 && m_CurrentSearchMatch < (int)m_vSearchMatches.size())
 	{
-		RenderSettingsBindsBlock(EBindOptionGroup::CUSTOM, &RightColumn, "controls-custom-title", Localize("Custom"));
+		const EBindOptionGroup Group = m_vBindOptions[m_vSearchMatches[m_CurrentSearchMatch]].m_Group;
+		static const char *const apCardIds[(int)EBindOptionGroup::NUM] = {
+			"deck:controls-movement", "deck:controls-weapon", "deck:controls-voting", "deck:controls-chat",
+			"deck:controls-dummy", "deck:controls-miscellaneous", "deck:controls-custom"};
+		GameClient()->m_Menus.m_SettingsCardDeck.RequestReveal(apCardIds[(int)Group]);
 	}
-	LogControlsPerfStage(GameClient()->Client(), "controls_bind_list", BindListTimer.ElapsedMs(), false, "page=controls section=bind_list");
-
-	GameClient()->m_Menus.FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame);
-	s_PrevSettingsScrollY = ScrollFrame.m_FinalOffsetY;
+	AddCard("deck:controls-mouse", MeasureSettingsMouseHeight(), [this](float) { return HEADER_FONT_SIZE + MARGIN + MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
+	AddCard("deck:controls-controller", MeasureSettingsJoystickHeight(), [this](float) { return HEADER_FONT_SIZE + MARGIN + MeasureSettingsJoystickHeight(); }, [this](CUIRect Rect) { RenderSettingsJoystick(Rect); });
+	const std::pair<EBindOptionGroup, const char *> aBindCards[] = {
+		{EBindOptionGroup::MOVEMENT, "deck:controls-movement"}, {EBindOptionGroup::WEAPON, "deck:controls-weapon"},
+		{EBindOptionGroup::VOTING, "deck:controls-voting"}, {EBindOptionGroup::CHAT, "deck:controls-chat"},
+		{EBindOptionGroup::DUMMY, "deck:controls-dummy"}, {EBindOptionGroup::MISCELLANEOUS, "deck:controls-miscellaneous"}, {EBindOptionGroup::CUSTOM, "deck:controls-custom"}};
+	for(const auto &[Group, pId] : aBindCards)
+	{
+		const bool IsCustom = Group == EBindOptionGroup::CUSTOM;
+		AddCard(pId, HEADER_FONT_SIZE + MARGIN, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>());
+	}
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = GameClient()->m_Menus.m_SettingsCardDeck.Render(CardCtx, Page, "controls", vCards, GameClient()->m_Menus.SettingsCardOrderModel(), &m_SettingsScrollRegion, InputState, GameClient()->m_Menus.SettingsCardMotionSpec(), VisualOptions);
+	if(DeckResult.m_OrderChanged)
+		GameClient()->m_Menus.SaveSettingsCardOrderModel();
 }
 
 void CMenusSettingsControls::UpdateBindOptions()
@@ -432,81 +472,22 @@ void CMenusSettingsControls::UpdateSearchMatches()
 	}
 }
 
-void CMenusSettingsControls::RenderSettingsBlock(float Height, CUIRect *pParentRect, const char *pTitle,
-	const char *pTitleId, bool *pExpanded, CButtonContainer *pExpandButton, const std::function<void(CUIRect Rect)> &RenderContentFunction)
+void CMenusSettingsControls::RenderSettingsBindCard(EBindOptionGroup Group, CUIRect View)
 {
-	const bool WasExpanded = pExpanded == nullptr || *pExpanded;
-	float FullHeight = WasExpanded ? Height : 0.0f; // Content
-	FullHeight += pTitle == nullptr ? 0.0f : HEADER_FONT_SIZE + (WasExpanded ? MARGIN : 0.0f); // Title and spacing
-	FullHeight += 2.0f * MARGIN; // Margin
-
-	CUIRect SettingsBlock;
-	pParentRect->HSplitTop(FullHeight, &SettingsBlock, pParentRect);
-	pParentRect->HSplitTop(MARGIN, nullptr, pParentRect);
-	if(m_SettingsScrollRegion.AddRect(SettingsBlock) || m_SearchMatchReveal)
-	{
-		SettingsBlock.Draw(pExpandButton == nullptr || Ui()->HotItem() != pExpandButton ? ui_token::color::SURFACE_GLASS : ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::CARD);
-		CUIRect TopHighlight = SettingsBlock;
-		TopHighlight.h = 1.0f;
-		TopHighlight.x += ui_token::radius::BASE;
-		TopHighlight.w -= 2.0f * ui_token::radius::BASE;
-		TopHighlight.Draw(ui_token::color::SURFACE_HIGHLIGHT, IGraphics::CORNER_T, 0.0f);
-		SettingsBlock.Margin(MARGIN, &SettingsBlock);
-
-		if(pTitle != nullptr)
-		{
-			CUIRect Label;
-			SettingsBlock.HSplitTop(HEADER_FONT_SIZE, &Label, &SettingsBlock);
-			if(WasExpanded)
-			{
-				SettingsBlock.HSplitTop(MARGIN, nullptr, &SettingsBlock);
-			}
-
-			if(pExpanded != nullptr)
-			{
-				CUIRect ButtonArea;
-				Label.Margin(-MARGIN, &ButtonArea);
-				if(Ui()->DoButtonLogic(pExpandButton, 0, &ButtonArea, BUTTONFLAG_LEFT))
-				{
-					*pExpanded = !*pExpanded;
-				}
-
-				CUIRect ExpandButton;
-				Label.VSplitRight(20.0f, &Label, &ExpandButton);
-				Label.VSplitRight(BUTTON_SPACING, &Label, nullptr);
-				if(m_SettingsScrollRegion.AddRect(ExpandButton))
-				{
-					SLabelProperties Props;
-					Props.SetColor(ui_token::color::TEXT_SECONDARY.WithMultipliedAlpha(Ui()->ButtonColorMul(pExpandButton)));
-					Props.m_EnableWidthCheck = false;
-					TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-					TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-					DoSettingsControlsLabel(*pExpanded ? "controls-expand-collapse-icon-open" : "controls-expand-collapse-icon-closed", &ExpandButton, *pExpanded ? FONT_ICON_CHEVRON_UP : FONT_ICON_CHEVRON_DOWN, HEADER_FONT_SIZE, TEXTALIGN_MR, Props);
-					TextRender()->SetRenderFlags(0);
-					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-				}
-			}
-
-			if(m_SettingsScrollRegion.AddRect(Label))
-			{
-				SLabelProperties Props;
-				Props.SetColor(ui_token::color::TEXT_PRIMARY);
-				DoSettingsControlsMenuLabel(pTitleId, &Label, pTitle, HEADER_FONT_SIZE, TEXTALIGN_ML, Props);
-			}
-		}
-
-		if(WasExpanded)
-		{
-			RenderContentFunction(SettingsBlock);
-		}
-	}
-}
-
-void CMenusSettingsControls::RenderSettingsBindsBlock(EBindOptionGroup Group, CUIRect *pParentRect, const char *pTitleId, const char *pTitle)
-{
-	RenderSettingsBlock(MeasureSettingsBindsHeight(Group), pParentRect, pTitle,
-		pTitleId, &m_aBindGroupExpanded[(int)Group], &m_aBindGroupExpandButtons[(int)Group],
-		[&](CUIRect Rect) { RenderSettingsBinds(Group, Rect); });
+	static const char *const apTitles[(int)EBindOptionGroup::NUM] = {"Movement", "Weapon", "Voting", "Chat", "Dummy", "Miscellaneous", "Custom"};
+	const int GroupIndex = (int)Group;
+	CUIRect Header;
+	View.HSplitTop(HEADER_FONT_SIZE, &Header, &View);
+	const char *pTitle = GroupIndex >= 0 && GroupIndex < (int)EBindOptionGroup::NUM ? Localize(apTitles[GroupIndex]) : "";
+	DoSettingsControlsMenuLabel(apTitles[GroupIndex], &Header, pTitle, HEADER_FONT_SIZE, TEXTALIGN_ML);
+	CUIRect ExpandButton;
+	Header.VSplitRight(20.0f, &Header, &ExpandButton);
+	if(Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], 0, &ExpandButton, BUTTONFLAG_LEFT))
+		m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
+	DoSettingsControlsLabel(m_aBindGroupExpanded[GroupIndex] ? "controls-expand-collapse-icon-open" : "controls-expand-collapse-icon-closed", &ExpandButton, m_aBindGroupExpanded[GroupIndex] ? FONT_ICON_CHEVRON_UP : FONT_ICON_CHEVRON_DOWN, HEADER_FONT_SIZE, TEXTALIGN_MC);
+	View.HSplitTop(MARGIN, nullptr, &View);
+	if(m_aBindGroupExpanded[GroupIndex])
+		RenderSettingsBinds(Group, View);
 }
 
 float CMenusSettingsControls::MeasureSettingsBindsHeight(EBindOptionGroup Group) const
@@ -629,61 +610,13 @@ float CMenusSettingsControls::MeasureSettingsMouseHeight() const
 
 void CMenusSettingsControls::RenderSettingsMouse(CUIRect View)
 {
-	// Ingame mouse sensitivity
-	{
-		CUIRect Label, Slider, ValueSelector;
-		View.HSplitTop(BUTTON_HEIGHT, &Label, &View);
-		Label.VSplitLeft(Label.w * 0.4f, &Label, &Slider);
-		Slider.VSplitRight(50.0f, &Slider, &ValueSelector);
-		Slider.VSplitRight(5.0f, &Slider, nullptr);
-
-		// Label
-		DoSettingsControlsLabel("controls-ingame-mouse-sens-label", &Label, Localize("Ingame mouse sens."), FONT_SIZE, TEXTALIGN_ML);
-
-		// Slider
-		const int Min = 1, Max = 500;
-		int Value = g_Config.m_InpMousesens;
-		Value = CUi::ms_LogarithmicScrollbarScale.ToAbsolute(
-			Ui()->DoScrollbarH(&g_Config.m_InpMousesens, &Slider,
-				CUi::ms_LogarithmicScrollbarScale.ToRelative(Value, Min, Max)),
-			Min, Max);
-		g_Config.m_InpMousesens = Value;
-
-		// Value selector for manual input
-		SValueSelectorProperties Props;
-		Props.m_UseScroll = false;
-		g_Config.m_InpMousesens = (int)Ui()->DoValueSelector(&m_IngameMouseSensValueSelector, &ValueSelector, "",
-			g_Config.m_InpMousesens, 1, 500, Props);
-	}
+	CUIRect Button;
+	View.HSplitTop(BUTTON_HEIGHT, &Button, &View);
+	DoSettingsControlsNumericField("controls-ingame-mouse-sens-label", &g_Config.m_InpMousesens, &g_Config.m_InpMousesens, Button, Localize("Ingame mouse sens."), 1, 500, &CUi::ms_LogarithmicScrollbarScale);
 
 	View.HSplitTop(BIND_OPTION_SPACING, nullptr, &View);
-
-	// UI mouse sensitivity
-	{
-		CUIRect Label, Slider, ValueSelector;
-		View.HSplitTop(BUTTON_HEIGHT, &Label, &View);
-		Label.VSplitLeft(Label.w * 0.4f, &Label, &Slider);
-		Slider.VSplitRight(50.0f, &Slider, &ValueSelector);
-		Slider.VSplitRight(5.0f, &Slider, nullptr);
-
-		// Label
-		DoSettingsControlsLabel("controls-ui-mouse-sens-label", &Label, Localize("UI mouse sens."), FONT_SIZE, TEXTALIGN_ML);
-
-		// Slider
-		const int Min = 1, Max = 500;
-		int Value = g_Config.m_UiMousesens;
-		Value = CUi::ms_LogarithmicScrollbarScale.ToAbsolute(
-			Ui()->DoScrollbarH(&g_Config.m_UiMousesens, &Slider,
-				CUi::ms_LogarithmicScrollbarScale.ToRelative(Value, Min, Max)),
-			Min, Max);
-		g_Config.m_UiMousesens = Value;
-
-		// Value selector for manual input
-		SValueSelectorProperties Props;
-		Props.m_UseScroll = false;
-		g_Config.m_UiMousesens = (int)Ui()->DoValueSelector(&m_UiMouseSensValueSelector, &ValueSelector, "",
-			g_Config.m_UiMousesens, 1, 500, Props);
-	}
+	View.HSplitTop(BUTTON_HEIGHT, &Button, &View);
+	DoSettingsControlsNumericField("controls-ui-mouse-sens-label", &g_Config.m_UiMousesens, &g_Config.m_UiMousesens, Button, Localize("UI mouse sens."), 1, 500, &CUi::ms_LogarithmicScrollbarScale);
 }
 
 float CMenusSettingsControls::MeasureSettingsJoystickHeight() const
@@ -768,18 +701,18 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View)
 		{
 			View.HSplitTop(BUTTON_SPACING, nullptr, &View);
 			View.HSplitTop(BUTTON_HEIGHT, &Button, &View);
-			DoSettingsControlsScrollbarOption("controls-ingame-controller-sens-label", &g_Config.m_InpControllerSens, &g_Config.m_InpControllerSens, &Button, Localize("Ingame controller sens."), 1, 500,
+			DoSettingsControlsNumericField("controls-ingame-controller-sens-label", &g_Config.m_InpControllerSens, &g_Config.m_InpControllerSens, Button, Localize("Ingame controller sens."), 1, 500,
 				&CUi::ms_LogarithmicScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE);
 		}
 
 		View.HSplitTop(BUTTON_SPACING, nullptr, &View);
 		View.HSplitTop(BUTTON_HEIGHT, &Button, &View);
-		DoSettingsControlsScrollbarOption("controls-ui-controller-sens-label", &g_Config.m_UiControllerSens, &g_Config.m_UiControllerSens, &Button, Localize("UI controller sens."), 1, 500,
+		DoSettingsControlsNumericField("controls-ui-controller-sens-label", &g_Config.m_UiControllerSens, &g_Config.m_UiControllerSens, Button, Localize("UI controller sens."), 1, 500,
 			&CUi::ms_LogarithmicScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE);
 
 		View.HSplitTop(BUTTON_SPACING, nullptr, &View);
 		View.HSplitTop(BUTTON_HEIGHT, &Button, &View);
-		DoSettingsControlsScrollbarOption("controls-controller-jitter-tolerance-label", &g_Config.m_InpControllerTolerance, &g_Config.m_InpControllerTolerance, &Button, Localize("Controller jitter tolerance"), 0, 50);
+		DoSettingsControlsNumericField("controls-controller-jitter-tolerance-label", &g_Config.m_InpControllerTolerance, &g_Config.m_InpControllerTolerance, Button, Localize("Controller jitter tolerance"), 0, 50);
 
 		View.HSplitTop(BUTTON_SPACING, nullptr, &View);
 		if(m_SettingsScrollRegion.AddRect(View))

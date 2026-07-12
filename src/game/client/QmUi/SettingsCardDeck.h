@@ -23,6 +23,8 @@ struct SSettingsCardDefinition
 	std::function<bool()> m_IsVisible;
 	// 控制其他卡片可见性的输入在最终布局前处理。
 	bool m_VisibilityController = false;
+	// 内容高度依赖配置或运行时状态时，每帧重新测量。
+	bool m_MeasureEachFrame = false;
 	bool m_RenderWhenClipped = false;
 };
 

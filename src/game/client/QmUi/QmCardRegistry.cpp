@@ -114,6 +114,15 @@ namespace qm_card_registry
 			{"deck:appearance-laser-enhanced", "appearance-laser", ECardColumn::Left, 0, "Laser settings", "appearance laser enhanced settings"},
 			{"deck:appearance-laser-colors", "appearance-laser", ECardColumn::Left, 1, "Laser colors", "appearance laser colors weapons entities"},
 			{"deck:appearance-laser-preview", "appearance-laser", ECardColumn::Right, 0, "Preview", "appearance laser preview"},
+			{"deck:controls-mouse", "controls", ECardColumn::Left, 0, "Mouse", "controls mouse sensitivity"},
+			{"deck:controls-controller", "controls", ECardColumn::Left, 1, "Controller", "controls controller joystick"},
+			{"deck:controls-movement", "controls", ECardColumn::Left, 2, "Movement", "controls movement binds"},
+			{"deck:controls-weapon", "controls", ECardColumn::Left, 3, "Weapon", "controls weapon binds"},
+			{"deck:controls-voting", "controls", ECardColumn::Right, 0, "Voting", "controls voting binds"},
+			{"deck:controls-chat", "controls", ECardColumn::Right, 1, "Chat", "controls chat binds"},
+			{"deck:controls-dummy", "controls", ECardColumn::Right, 2, "Dummy", "controls dummy binds"},
+			{"deck:controls-miscellaneous", "controls", ECardColumn::Right, 3, "Miscellaneous", "controls miscellaneous binds"},
+			{"deck:controls-custom", "controls", ECardColumn::Right, 4, "Custom", "controls custom binds"},
 		};
 		// clang-format on
 		return s_aDefaults;

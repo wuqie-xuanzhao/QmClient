@@ -111,7 +111,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 				return;
 			CUIRect Slot{ColumnRect.x, CursorY, ColumnRect.w, 0.0f};
 			float &ContentHeight = m_vContentHeights[StateIndex];
-			if(ContentHeight < 0.0f)
+			if(ContentHeight < 0.0f || pDefinition->m_MeasureEachFrame)
 			{
 				const float ContentWidth = std::max(0.0f, Slot.w - 28.0f * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
 				ContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;

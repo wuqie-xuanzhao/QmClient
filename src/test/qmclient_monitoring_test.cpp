@@ -5083,7 +5083,7 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateHookStrengthSizeUsesSingleLineSlide
 	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 
-	EXPECT_NE(NamePlateBranch.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\", &g_Config.m_ClNamePlatesStrongSize, &g_Config.m_ClNamePlatesStrongSize, &Button, Localize(\"Size of hook strength icon and number indicator\"), -50, 100);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\""), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("SCROLLBAR_OPTION_MULTILINE"), std::string::npos);
 	EXPECT_NE(ReadRepoFile("src/game/client/components/menus_settings.cpp").find("Localize(\"Glow\")"), std::string::npos);
 	EXPECT_NE(ReadRepoFile("src/game/client/components/menus_settings.cpp").find("Localize(\"Glow range\")"), std::string::npos);
@@ -5104,14 +5104,8 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("const float QmClientSettingsScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float NamePlateContentPaddingY = std::clamp(14.0f * UiScale, 10.0f, 14.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float NamePlateRadioLineHeight = 22.0f;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateSettingsContentHeight ="), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateRadioLineHeight + LineSize"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("g_Config.m_ClNamePlatesStrong ? NamePlateRadioLineHeight : LineSize"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlatePreviewContentHeight = HeadlineHeight + 2.0f * MarginSmall + 3.0f * LineSize + MarginSmall;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateEstimatedSettingsCardHeight = maximum(NamePlateScrollView.h, NamePlateSettingsContentHeight + 2.0f * NamePlateContentPaddingY);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateEstimatedPreviewCardHeight = maximum(NamePlateScrollView.h, NamePlatePreviewContentHeight + 2.0f * NamePlateContentPaddingY);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("BeginAppearanceCard(LeftView, NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight, &NamePlateSettingsCard, \"appearance-name-plate-settings\""), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("BeginAppearanceCard(RightView, NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight, &NamePlatePreviewCard, \"appearance-name-plate-preview\""), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("AddCard(5, NamePlateSettingsMinCardHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("AddCard(6, NamePlatePreviewMinCardHeight"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float NamePlateCardHeight"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsCard.h = NamePlateSettingsCardHeight;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
@@ -5119,7 +5113,6 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("LeftView.HSplitTop(NamePlateContentPaddingY, nullptr, &LeftView);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("LeftView.HSplitBottom(NamePlateContentPaddingY, &LeftView, nullptr);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("CUIRect NamePlatePreviewCard;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlateCardHeight;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlatePreviewCardHeight;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
@@ -5127,9 +5120,8 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitTop(NamePlateContentPaddingY, nullptr, &RightView);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitBottom(NamePlateContentPaddingY, &RightView, nullptr);"), std::string::npos);
-	EXPECT_LT(NamePlateBranch.find("BeginAppearanceCard(RightView, NamePlateEstimatedPreviewCardHeight"), NamePlateBranch.find("RenderNamePlatePreview"));
-	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NamePlateSettingsScrollRegion;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateScrollView, ScrollParams"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("UpdateMeasuredCardHeight(s_NamePlateMeasuredSettingsCardHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("UpdateMeasuredCardHeight(s_NamePlateMeasuredPreviewCardHeight"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateSettingsView"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("60.0f"), std::string::npos);
@@ -5137,15 +5129,11 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarMargin = QmClientSettingsScrollbarMargin;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarWidth = std::clamp(20.0f * UiScale, 18.0f, 20.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarMargin = std::clamp(5.0f * UiScale, 4.0f, 5.0f);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE"), std::string::npos);
-	EXPECT_EQ(NamePlateBranch.find("const float NamePlateRightContentBottom = NamePlateScrollView.y + NamePlateScrollView.h;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateMeasuredSettingsContentBottom = LeftView.y + NamePlateContentPaddingY;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateMeasuredPreviewContentBottom = RightView.y + NamePlateContentPaddingY;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("s_NamePlateMeasuredSettingsCardHeight = maximum(NamePlateMeasuredSettingsContentBottom - NamePlateSettingsCard.y, NamePlateEstimatedSettingsCardHeight);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("s_NamePlateMeasuredPreviewCardHeight = maximum(NamePlateMeasuredPreviewContentBottom - NamePlatePreviewCard.y, NamePlateEstimatedPreviewCardHeight);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateScrollEnd.y = maximum(NamePlateSettingsCard.y + maximum(NamePlateSettingsCard.h, s_NamePlateMeasuredSettingsCardHeight), NamePlatePreviewCard.y + maximum(NamePlatePreviewCard.h, s_NamePlateMeasuredPreviewCardHeight));"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("RenderNamePlatePreview"), std::string::npos);
-	EXPECT_LT(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateScrollView, ScrollParams"), NamePlateBranch.find("ContentView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);"));
+	EXPECT_NE(Settings.find("pAppearanceDeckTab = m_AppearanceSettingsTab == APPEARANCE_TAB_HUD ? \"appearance-hud\""), std::string::npos);
+	EXPECT_NE(Settings.find("std::array<CScrollRegion, NUMBER_OF_APPEARANCE_TABS> s_AppearanceSettingsCardScrollRegions"), std::string::npos);
+	EXPECT_NE(Settings.find("m_SettingsCardDeck.Render(AppearanceCardCtx, AppearancePage, pAppearanceDeckTab"), std::string::npos);
+	EXPECT_NE(Settings.find("s_AppearanceSettingsCardScrollRegions[m_AppearanceSettingsTab]"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, AppearanceSettingsHeadingsUseBudgetedTextPipeline)
@@ -7407,6 +7395,7 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Header.find("std::string m_PendingRevealStableId"), std::string::npos);
 	EXPECT_NE(Header.find("m_ReflowCompleteFeedbackRemaining"), std::string::npos);
 	EXPECT_NE(Header.find("m_vContentHeights"), std::string::npos);
+	EXPECT_NE(Header.find("m_MeasureEachFrame"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardEntryNodeKey"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardReflowNodeKey"), std::string::npos);
 	EXPECT_NE(Source.find("EUiAnimProperty::ALPHA"), std::string::npos);
@@ -7416,6 +7405,7 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Source.find("MouseInScrollViewport"), std::string::npos);
 	EXPECT_NE(Source.find("Input.m_MouseX >= DrawLayout.m_aColumns[0].x"), std::string::npos);
 	EXPECT_NE(Source.find("m_vContentHeights[StateIndex]"), std::string::npos);
+	EXPECT_NE(Source.find("pDefinition->m_MeasureEachFrame"), std::string::npos);
 	EXPECT_NE(Source.find("Model.Entry(Card.m_StateIndex).m_pStableId"), std::string::npos);
 	EXPECT_EQ(Source.find("m_Drag.m_pStableId"), std::string::npos);
 

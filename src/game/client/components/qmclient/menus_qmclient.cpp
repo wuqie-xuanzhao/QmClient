@@ -119,6 +119,7 @@ static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
 	{"graphics", CMenus::SETTINGS_GRAPHICS},
 	{"sound", CMenus::SETTINGS_SOUND},
 	{"ddnet", CMenus::SETTINGS_DDNET},
+	{"controls", CMenus::SETTINGS_CONTROLS},
 	{"tclient-bind-wheel", CMenus::SETTINGS_TCLIENT, 1},
 	{"tclient-status-bar", CMenus::SETTINGS_TCLIENT, 4},
 	{"appearance-hud", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HUD},

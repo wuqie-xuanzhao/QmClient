@@ -105,9 +105,18 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:appearance-laser-enhanced",
 		"deck:appearance-laser-colors",
 		"deck:appearance-laser-preview",
+		"deck:controls-mouse", "deck:controls-controller", "deck:controls-movement", "deck:controls-weapon",
+		"deck:controls-voting", "deck:controls-chat", "deck:controls-dummy", "deck:controls-miscellaneous", "deck:controls-custom",
 	};
 	for(const char *pId : apIds)
 		ASSERT_NE(qm_card_registry::FindByStableId(pId), nullptr) << pId;
+}
+
+TEST(QmCardRegistry, ControlsStandardPageCardsPersistInVisualOrder)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "controls", 1), (std::vector<std::string>{"deck:controls-mouse", "deck:controls-controller", "deck:controls-movement", "deck:controls-weapon"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "controls", 2), (std::vector<std::string>{"deck:controls-voting", "deck:controls-chat", "deck:controls-dummy", "deck:controls-miscellaneous", "deck:controls-custom"}));
 }
 
 // 意图：General 的默认卡片顺序必须随全局 model 往返持久化，避免重启后列投影或 Search 跳转丢失 placement。
