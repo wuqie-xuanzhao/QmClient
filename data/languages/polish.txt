@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Automatycznie rób zrzut ekranu tablicy statystyk
 
+Available resolutions
+== Dostępne rozdzielczości
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Średnia %.*f   ↓ %.*f   ↑ %.*f
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Renderuj małe tee zamiast okręgów
 
+Renderer selection
+== Wybór renderera
+
+Rendering options
+== Opcje renderowania
+
 Renders your frame rate in the top right
 == Wyświetla liczbę klatek na sekundę w prawym górnym rogu
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == Szerokość linii kolizji własnego haka
+
+Window and monitor
+== Okno i monitor
 
 Windowed
 == Okno

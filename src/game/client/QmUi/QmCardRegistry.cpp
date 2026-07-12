@@ -2,6 +2,12 @@
 
 #include <base/system.h>
 
+#include <engine/shared/localization.h>
+
+#include <game/localization.h>
+
+#include <utility>
+
 namespace qm_card_registry
 {
 	static const std::vector<SCardDefault> &DefaultsTable()
@@ -70,10 +76,10 @@ namespace qm_card_registry
 			{"tclient:finish-name", "tclient", ECardColumn::Left, 18, "Finish name", "finish name tclient"},
 
 			// === 设置 deck（29）· deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
-			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, "Graphics display", "graphics display"},
-			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, "Visual", "graphics visual"},
-			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, "Graphics backend", "graphics backend"},
-			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, "Display modes", "display modes graphics"},
+			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, Localizable("Graphics display"), "graphics display monitor window", Localizable("Window and monitor")},
+			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, Localizable("Visual"), "graphics visual rendering", Localizable("Rendering options")},
+			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, Localizable("Graphics backend"), "graphics backend renderer selection", Localizable("Renderer selection")},
+			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, Localizable("Display modes"), "display modes graphics resolutions", Localizable("Available resolutions")},
 			{"deck:sound-toggle", "sound", ECardColumn::Left, 0, "Sound", "sound toggle audio"},
 			{"deck:sound-volume", "sound", ECardColumn::Left, 1, "Volume", "volume sound audio"},
 			{"deck:sound-audio-pack", "sound", ECardColumn::Left, 2, "Audio packs", "audio pack audio packs sound"},
@@ -119,6 +125,47 @@ namespace qm_card_registry
 				return &D;
 		}
 		return nullptr;
+	}
+
+	namespace
+	{
+		bool SearchTextMatches(const char *pText, const char *pQuery)
+		{
+			return pText != nullptr && pText[0] != '\0' && str_utf8_find_nocase(pText, pQuery) != nullptr;
+		}
+	}
+
+	std::vector<SCardSearchResult> SearchCards(const char *pQuery, const qm_card_order::CModel &Model)
+	{
+		std::vector<SCardSearchResult> vResults;
+		if(pQuery == nullptr || pQuery[0] == '\0')
+			return vResults;
+
+		const std::vector<SCardDefault> &vDefaults = DefaultsTable();
+		vResults.reserve(vDefaults.size());
+		for(const SCardDefault &Default : vDefaults)
+		{
+			if(Default.m_pStableId == nullptr)
+				continue;
+			const char *pLocalizedTitle = Default.m_pTitle != nullptr ? Localize(Default.m_pTitle) : "";
+			const char *pLocalizedDescription = Default.m_pDescription != nullptr ? Localize(Default.m_pDescription) : "";
+			if(!SearchTextMatches(pLocalizedTitle, pQuery) &&
+				!SearchTextMatches(pLocalizedDescription, pQuery) &&
+				!SearchTextMatches(Default.m_pSearchKeywords, pQuery))
+				continue;
+
+			const int StateIndex = Model.FindByStableId(Default.m_pStableId);
+			const char *pCurrentTab = StateIndex >= 0 ? Model.Entry(StateIndex).m_pDefaultTab : nullptr;
+			if(pCurrentTab == nullptr)
+				pCurrentTab = Default.m_pDefaultTab;
+			SCardSearchResult Result;
+			Result.m_pStableId = Default.m_pStableId;
+			Result.m_Title = pLocalizedTitle;
+			Result.m_Description = pLocalizedDescription;
+			Result.m_Target = {pCurrentTab, Default.m_pStableId};
+			vResults.push_back(std::move(Result));
+		}
+		return vResults;
 	}
 
 	const char *MigrateLegacyKey(const char *pLegacyKey)

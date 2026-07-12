@@ -1,4 +1,5 @@
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/localization.h>
 
 #include <gtest/gtest.h>
 
@@ -192,6 +193,50 @@ TEST(QmCardRegistry, ProvidesSearchMetadataForGlobalCards)
 	EXPECT_STREQ(TClientInput->m_pTitle, "Input");
 }
 
+// 意图：公共 Search 的 stable ID、标题和跳转目标都必须来自 registry/model，不能为 Search 建第二张 metadata 表。
+TEST(QmCardRegistry, SearchReturnsCanonicalStableIdAndNavigationTarget)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+	const auto Results = qm_card_registry::SearchCards("monitor", Model);
+	const auto It = std::find_if(Results.begin(), Results.end(), [](const qm_card_registry::SCardSearchResult &Result) {
+		return Result.m_pStableId != nullptr && std::string(Result.m_pStableId) == "deck:graphics-display";
+	});
+	ASSERT_NE(It, Results.end());
+	EXPECT_EQ(std::count_if(Results.begin(), Results.end(), [](const qm_card_registry::SCardSearchResult &Result) {
+		return Result.m_pStableId != nullptr && std::string(Result.m_pStableId) == "deck:graphics-display";
+	}),
+		1);
+	EXPECT_STREQ(It->m_Target.m_pTab, "graphics");
+	EXPECT_STREQ(It->m_Target.m_pStableId, It->m_pStableId);
+	EXPECT_EQ(It->m_Description, Localize("Window and monitor"));
+}
+
+// 意图：历史/裁剪 model 缺少卡片时，Search 必须使用 registry 默认 tab，保证导航目标仍有效。
+TEST(QmCardRegistry, SearchFallsBackToDefaultTabWhenModelDoesNotContainCard)
+{
+	qm_card_order::CModel Model;
+	const auto Results = qm_card_registry::SearchCards("monitor", Model);
+	const auto It = std::find_if(Results.begin(), Results.end(), [](const qm_card_registry::SCardSearchResult &Result) {
+		return Result.m_pStableId != nullptr && std::string(Result.m_pStableId) == "deck:graphics-display";
+	});
+	ASSERT_NE(It, Results.end());
+	EXPECT_STREQ(It->m_Target.m_pTab, "graphics");
+}
+
+// 意图：tab 是 model placement 而不是 Search metadata；移动后 Search 必须使用当前 tab，且不复制 registry 条目。
+TEST(QmCardRegistry, SearchUsesCurrentModelTabWithoutDuplicatingMetadata)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+	Model.MoveToTab("deck:graphics-display", "appearance-hud", 2, 0);
+	const auto Results = qm_card_registry::SearchCards("monitor", Model);
+	const auto It = std::find_if(Results.begin(), Results.end(), [](const qm_card_registry::SCardSearchResult &Result) {
+		return Result.m_pStableId != nullptr && std::string(Result.m_pStableId) == "deck:graphics-display";
+	});
+	ASSERT_NE(It, Results.end());
+	EXPECT_STREQ(It->m_Target.m_pTab, "appearance-hud");
+}
 // 意图：全局搜索页替代旧 QmClient 模块搜索后，registry 必须承接旧中文/拼音功能词。
 // 否则用户搜索旧入口能搜到的具体功能时，会在新 Search 页漏掉对应 qm:* 卡片。
 TEST(QmCardRegistry, QmCardsPreserveLegacyModuleSearchKeywords)

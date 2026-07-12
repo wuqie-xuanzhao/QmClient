@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == 自动对统计板截图
 
+Available resolutions
+== 可用分辨率
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == 平均 %.*f ↓ %.*f ↑ %.*f
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == 渲染成迷你 Tee 而不是圆圈
 
+Renderer selection
+== 渲染器选择
+
+Rendering options
+== 渲染选项
+
 Renders your frame rate in the top right
 == 在右上角显示帧率
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == 自己的钩索碰撞线宽度
+
+Window and monitor
+== 窗口和显示器
 
 Windowed
 == 窗口化

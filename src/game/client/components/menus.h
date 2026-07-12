@@ -55,6 +55,10 @@ struct CDataSprite;
 
 class CHttpRequest;
 class CChat;
+namespace qm_card_registry
+{
+	struct SCardNavigationTarget;
+}
 
 // IDs of the tabs in the Assets menu
 enum
@@ -2645,6 +2649,8 @@ private:
 	SSettingsCardDeckLayout BeginSettingsCardDeck(CUIRect MainView, CScrollRegion &ScrollRegion, float PreviousScrollY, float UiScale, const char *pDeckId, int Page, std::vector<std::string> *pOrder = nullptr, const std::vector<std::string> *pActiveCardIds = nullptr);
 	SSettingsCardDeckCard BeginSettingsCardDeckCard(SSettingsCardDeckLayout &Deck, const char *pStableId, const char *pTitle, float MinHeight, float LastMeasuredHeight, ESettingsCardDeckColumn PreferredColumn = ESettingsCardDeckColumn::LEFT, bool ForcePreferredColumn = false);
 	void EndSettingsCardDeck(SSettingsCardDeckLayout &Deck, float *pPreviousScrollY);
+	bool SetSettingsPageFromCardTab(const char *pTab);
+	void NavigateToSettingsCard(const qm_card_registry::SCardNavigationTarget &Target);
 	void RequestSettingsCardFocus(const char *pStableId);
 	bool ConsumeSettingsCardFocus(SSettingsCardDeckLayout &Deck, const SSettingsCardDeckCard &Card);
 	void RenderSettingsCardDragHandle(const CUIRect &Card, CUIRect *pHandleRect, const SQmSettingsCardStyle &Style);

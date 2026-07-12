@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == İstatistik tablosunun otomatik ekran görüntüsünü al
 
+Available resolutions
+== Kullanılabilir çözünürlükler
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Ort. %.*f   ↓ %.*f   ↑ %.*f
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Daireler yerine minik teeler işle
 
+Renderer selection
+== İşleyici seçimi
+
+Rendering options
+== İşleme seçenekleri
+
 Renders your frame rate in the top right
 == Sağ üstte kare hızınızı gösterir
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == Kendi kanca çarpışma çizgisi genişliği
+
+Window and monitor
+== Pencere ve monitör
 
 Windowed
 == Pencereli

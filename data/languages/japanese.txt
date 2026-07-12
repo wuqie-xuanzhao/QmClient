@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Pending japanese translation 6c518109d4
 
+Available resolutions
+== 利用可能な解像度
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Pending japanese translation 54c2a99c38
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Pending japanese translation 8dd1e38ad7
 
+Renderer selection
+== レンダラーの選択
+
+Rendering options
+== 描画オプション
+
 Renders your frame rate in the top right
 == Pending japanese translation d285112092
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == Pending japanese translation 06407c1855
+
+Window and monitor
+== ウィンドウとモニター
 
 Windowed
 == ウィンドウモード

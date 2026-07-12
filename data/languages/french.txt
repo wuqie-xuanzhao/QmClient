@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Prendre automatiquement une capture d'écran du tableau des stats
 
+Available resolutions
+== Résolutions disponibles
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Moy. %.*f   ↓ %.*f   ↑ %.*f
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Rendre des mini tees au lieu de cercles
 
+Renderer selection
+== Sélection du moteur de rendu
+
+Rendering options
+== Options de rendu
+
 Renders your frame rate in the top right
 == Affiche votre taux d'images par seconde en haut à droite
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == Largeur de ta propre ligne de collision du grappin
+
+Window and monitor
+== Fenêtre et moniteur
 
 Windowed
 == Fenêtré

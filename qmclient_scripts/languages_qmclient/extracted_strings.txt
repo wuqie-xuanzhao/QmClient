@@ -307,6 +307,7 @@ Automatically reply to muted players
 Automatically reply while the window is unfocused
 Automatically take game over screenshot
 Automatically take statboard screenshot
+Available resolutions
 Avg %.*f   ↓ %.*f   ↑ %.*f
 Axiom auto login failed
 Axiom auto login failed, retrying
@@ -1933,6 +1934,8 @@ Render cut to video
 Render demo
 Render ghosts as circles
 Render tiny tees instead of circles
+Renderer selection
+Rendering options
 Renders your frame rate in the top right
 Repeat message
 Repeat the latest chat message
@@ -2852,6 +2855,7 @@ Width
 Width and height are required to be within the range from %d to %d.
 Width of others' hook collision line
 Width of your own hook collision line
+Window and monitor
 Windowed
 Windowed borderless
 Windowed fullscreen

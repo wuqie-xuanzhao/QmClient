@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == 통계판 스크린샷 자동 촬영
 
+Available resolutions
+== 사용 가능한 해상도
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == 평균 %.*f   ↓ %.*f   ↑ %.*f
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == 원 대신 미니 Tee 로 렌더링
 
+Renderer selection
+== 렌더러 선택
+
+Rendering options
+== 렌더링 옵션
+
 Renders your frame rate in the top right
 == 오른쪽 상단에 프레임 속도를 표시합니다
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == 자신의 갈고리 충돌선 너비
+
+Window and monitor
+== 창 및 모니터
 
 Windowed
 == 창 모드

@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Pending traditional_chinese translation 3d58aa73b5
 
+Available resolutions
+== 可用解析度
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Pending traditional_chinese translation 5764be5bab
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Pending traditional_chinese translation fb6db55986
 
+Renderer selection
+== 渲染器選擇
+
+Rendering options
+== 渲染選項
+
 Renders your frame rate in the top right
 == Pending traditional_chinese translation 52f78c3876
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == Pending traditional_chinese translation 9e832ae19a
+
+Window and monitor
+== 視窗和顯示器
 
 Windowed
 == Pending traditional_chinese translation 324e5f248d

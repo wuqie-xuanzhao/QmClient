@@ -3,6 +3,7 @@
 
 #include <game/client/QmUi/QmCardOrderModel.h>
 
+#include <string>
 #include <vector>
 
 // 全局卡片组件注册表（单一事实源）。
@@ -26,6 +27,21 @@ namespace qm_card_registry
 		int m_DefaultOrder; // 列内默认序
 		const char *m_pTitle; // 面向用户的默认标题（Localize key）
 		const char *m_pSearchKeywords; // 搜索补充词，英文小写为主，空格分隔
+		const char *m_pDescription = nullptr; // 面向用户的描述（Localize key）
+	};
+
+	struct SCardNavigationTarget
+	{
+		const char *m_pTab = nullptr;
+		const char *m_pStableId = nullptr;
+	};
+
+	struct SCardSearchResult
+	{
+		const char *m_pStableId = nullptr;
+		std::string m_Title;
+		std::string m_Description;
+		SCardNavigationTarget m_Target;
 	};
 
 	// 全局卡片默认 Placement 表（栖梦 + Tclient + deck）
@@ -41,6 +57,9 @@ namespace qm_card_registry
 
 	// 构建完整默认全局模型 entries（从注册表派生），供首次迁移和缺失卡补位复用。
 	std::vector<qm_card_order::SEntry> BuildDefaultEntries();
+
+	// 从单一注册表构建本地化搜索视图，并以当前 model placement 返回导航 tab。
+	std::vector<SCardSearchResult> SearchCards(const char *pQuery, const qm_card_order::CModel &Model);
 } // namespace qm_card_registry
 
 #endif // GAME_CLIENT_QMUI_QMCARDREGISTRY_H

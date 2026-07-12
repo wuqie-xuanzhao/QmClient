@@ -4869,6 +4869,88 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 	return Card;
 }
 
+bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
+{
+	if(pTab == nullptr || pTab[0] == '\0')
+		return false;
+	if(str_comp(pTab, "visual") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
+		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
+	}
+	else if(str_comp(pTab, "function") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
+		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_FUNCTION;
+	}
+	else if(str_comp(pTab, "hud") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
+		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_HUD;
+	}
+	else if(str_comp(pTab, "tclient") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
+		m_TClientSettingsTab = 0;
+	}
+	else if(str_comp(pTab, "tclient-bind-wheel") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
+		m_TClientSettingsTab = 1;
+	}
+	else if(str_comp(pTab, "tclient-status-bar") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
+		m_TClientSettingsTab = 4;
+	}
+	else if(str_comp(pTab, "graphics") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
+	else if(str_comp(pTab, "sound") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_SOUND;
+	else if(str_comp(pTab, "ddnet") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_DDNET;
+	else if(str_comp(pTab, "appearance-hud") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_APPEARANCE;
+		m_AppearanceSettingsTab = APPEARANCE_TAB_HUD;
+	}
+	else if(str_comp(pTab, "appearance-chat") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_APPEARANCE;
+		m_AppearanceSettingsTab = APPEARANCE_TAB_CHAT;
+	}
+	else if(str_comp(pTab, "appearance-name-plate") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_APPEARANCE;
+		m_AppearanceSettingsTab = APPEARANCE_TAB_NAME_PLATE;
+	}
+	else if(str_comp(pTab, "appearance-hook-collision") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_APPEARANCE;
+		m_AppearanceSettingsTab = APPEARANCE_TAB_HOOK_COLLISION;
+	}
+	else if(str_comp(pTab, "appearance-info-messages") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_APPEARANCE;
+		m_AppearanceSettingsTab = APPEARANCE_TAB_INFO_MESSAGES;
+	}
+	else if(str_comp(pTab, "appearance-laser") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_APPEARANCE;
+		m_AppearanceSettingsTab = APPEARANCE_TAB_LASER;
+	}
+	else
+		return false;
+	return true;
+}
+
+void CMenus::NavigateToSettingsCard(const qm_card_registry::SCardNavigationTarget &Target)
+{
+	if(Target.m_pStableId == nullptr || Target.m_pStableId[0] == '\0' || !SetSettingsPageFromCardTab(Target.m_pTab))
+		return;
+	m_SettingsCardDeck.RequestReveal(Target.m_pStableId);
+}
+
 void CMenus::RequestSettingsCardFocus(const char *pStableId)
 {
 	if(pStableId == nullptr || pStableId[0] == '\0')

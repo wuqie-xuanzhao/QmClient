@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Tirar automaticamente screenshot do quadro de estatísticas
 
+Available resolutions
+== Resoluções disponíveis
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Média %.*f   ↓ %.*f   ↑ %.*f
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Renderizar tees minúsculos em vez de círculos
 
+Renderer selection
+== Seleção do renderizador
+
+Rendering options
+== Opções de renderização
+
 Renders your frame rate in the top right
 == Mostra a sua taxa de fotogramas no canto superior direito
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == Largura da tua própria linha de colisão do gancho
+
+Window and monitor
+== Janela e monitor
 
 Windowed
 == Janelado

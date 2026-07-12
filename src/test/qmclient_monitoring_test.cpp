@@ -7304,6 +7304,34 @@ TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
 	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.Render("), std::string::npos);
 }
+TEST(QmMonitoringHelpers, RegistryNavigationBridgeOwnsSettingsTarget)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string SetPageBody = ExtractSourceFunctionBody(Source, "bool CMenus::SetSettingsPageFromCardTab(const char *pTab)");
+	const std::string NavigateBody = ExtractSourceFunctionBody(Source, "void CMenus::NavigateToSettingsCard(const qm_card_registry::SCardNavigationTarget &Target)");
+	ASSERT_FALSE(SetPageBody.empty());
+	ASSERT_FALSE(NavigateBody.empty());
+
+	EXPECT_NE(Header.find("bool SetSettingsPageFromCardTab(const char *pTab);"), std::string::npos);
+	EXPECT_NE(Header.find("void NavigateToSettingsCard(const qm_card_registry::SCardNavigationTarget &Target);"), std::string::npos);
+	EXPECT_NE(SetPageBody.find("str_comp(pTab, \"graphics\") == 0"), std::string::npos);
+	EXPECT_NE(SetPageBody.find("g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;"), std::string::npos);
+	EXPECT_NE(SetPageBody.find("str_comp(pTab, \"appearance-hud\") == 0"), std::string::npos);
+	EXPECT_NE(SetPageBody.find("return false;"), std::string::npos);
+	EXPECT_NE(NavigateBody.find("SetSettingsPageFromCardTab(Target.m_pTab)"), std::string::npos);
+	EXPECT_NE(NavigateBody.find("m_SettingsCardDeck.RequestReveal(Target.m_pStableId);"), std::string::npos);
+}
+
+// 意图：registry 的动态 Localize 标题也必须显式进入提取器，避免生成语言文件后 Search 回退英文。
+TEST(QmMonitoringHelpers, RegistrySearchTitlesRemainLocalizationSourceKeys)
+{
+	const std::string Registry = ReadRepoFile("src/game/client/QmUi/QmCardRegistry.cpp");
+	EXPECT_NE(Registry.find("Localizable(\"Graphics display\")"), std::string::npos);
+	EXPECT_NE(Registry.find("Localizable(\"Visual\")"), std::string::npos);
+	EXPECT_NE(Registry.find("Localizable(\"Graphics backend\")"), std::string::npos);
+	EXPECT_NE(Registry.find("Localizable(\"Display modes\")"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
 {
 	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");

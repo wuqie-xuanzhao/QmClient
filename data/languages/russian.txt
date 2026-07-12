@@ -925,6 +925,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Автоматически делать скриншот статистики
 
+Available resolutions
+== Доступные разрешения
+
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Средн. %.*f   ↓ %.*f   ↑ %.*f
 
@@ -5803,6 +5806,12 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Отображать мини-ти вместо кругов
 
+Renderer selection
+== Выбор рендерера
+
+Rendering options
+== Параметры рендеринга
+
 Renders your frame rate in the top right
 == Отображает частоту кадров в правом верхнем углу
 
@@ -8559,6 +8568,9 @@ Width of others' hook collision line
 
 Width of your own hook collision line
 == Ширина линии столкновения твоего крюка
+
+Window and monitor
+== Окно и монитор
 
 Windowed
 == Оконный режим
