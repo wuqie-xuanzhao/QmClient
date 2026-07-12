@@ -7482,6 +7482,27 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	EXPECT_EQ(FocusModeBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(CameraViewBody.find("RegisterModuleCard"), std::string::npos);
 }
+
+TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string SpeedrunBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::SpeedrunTimer:");
+	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::DebugGraph:", LegacyCaseStart);
+	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
+	ASSERT_FALSE(SpeedrunBody.empty());
+	ASSERT_FALSE(LegacyCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmHudSpeedrunTimerContent"), std::string::npos);
+	EXPECT_NE(SpeedrunBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(SpeedrunBody.find("m_QmSpeedrunTimerAutoDisable"), std::string::npos);
+	EXPECT_EQ(SpeedrunBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(SpeedrunBody.find("HandleModuleDragState"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmHudSpeedrunTimerContent"), std::string::npos);
+	EXPECT_EQ(LegacyCase.find("RenderSliderWithValueInput"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");

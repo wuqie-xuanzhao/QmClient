@@ -1585,6 +1585,37 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 		SaveSettingsCardOrderModel();
 }
 
+void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &g_Config.m_QmSpeedrunTimer, "Enable speedrun timer", Localize("Enable speedrun timer"), g_Config.m_QmSpeedrunTimer, &Row))
+		g_Config.m_QmSpeedrunTimer ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(!g_Config.m_QmSpeedrunTimer)
+		return;
+
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, "", PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_QmSpeedrunTimerHoursInputId;
+	static int s_QmSpeedrunTimerMinutesInputId;
+	static int s_QmSpeedrunTimerSecondsInputId;
+	static int s_QmSpeedrunTimerMillisecondsInputId;
+	RenderValue("qmclient-speedrun-timer-hours", "Hours", &s_QmSpeedrunTimerHoursInputId, &g_Config.m_QmSpeedrunTimerHours, 0, 99);
+	RenderValue("qmclient-speedrun-timer-minutes", "Minutes", &s_QmSpeedrunTimerMinutesInputId, &g_Config.m_QmSpeedrunTimerMinutes, 0, 59);
+	RenderValue("qmclient-speedrun-timer-seconds", "Seconds", &s_QmSpeedrunTimerSecondsInputId, &g_Config.m_QmSpeedrunTimerSeconds, 0, 59);
+	RenderValue("qmclient-speedrun-timer-milliseconds", "Milliseconds", &s_QmSpeedrunTimerMillisecondsInputId, &g_Config.m_QmSpeedrunTimerMilliseconds, 0, 999);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &g_Config.m_QmSpeedrunTimerAutoDisable, "Auto disable when time expires", Localize("Auto disable when time expires"), g_Config.m_QmSpeedrunTimerAutoDisable, &Row))
+		g_Config.m_QmSpeedrunTimerAutoDisable ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)
 {
 	using namespace qm_module;
@@ -6428,41 +6459,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 11, Localize("Speedrun Timer"), Localize("Speedrun countdown timer"));
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmSpeedrunTimer, "Enable speedrun timer", Localize("Enable speedrun timer"), &g_Config.m_QmSpeedrunTimer, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmSpeedrunTimer)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-speedrun-timer-hours", &LabelCol, Localize("Hours"), LgBodySize);
-					static int s_QmSpeedrunTimerHoursInputId;
-					RenderSliderWithValueInput(&s_QmSpeedrunTimerHoursInputId, ControlCol, &g_Config.m_QmSpeedrunTimerHours, 0, 99);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-speedrun-timer-minutes", &LabelCol, Localize("Minutes"), LgBodySize);
-					static int s_QmSpeedrunTimerMinutesInputId;
-					RenderSliderWithValueInput(&s_QmSpeedrunTimerMinutesInputId, ControlCol, &g_Config.m_QmSpeedrunTimerMinutes, 0, 59);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-speedrun-timer-seconds", &LabelCol, Localize("Seconds"), LgBodySize);
-					static int s_QmSpeedrunTimerSecondsInputId;
-					RenderSliderWithValueInput(&s_QmSpeedrunTimerSecondsInputId, ControlCol, &g_Config.m_QmSpeedrunTimerSeconds, 0, 59);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-speedrun-timer-milliseconds", &LabelCol, Localize("Milliseconds"), LgBodySize);
-					static int s_QmSpeedrunTimerMillisecondsInputId;
-					RenderSliderWithValueInput(&s_QmSpeedrunTimerMillisecondsInputId, ControlCol, &g_Config.m_QmSpeedrunTimerMilliseconds, 0, 999);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmSpeedrunTimerAutoDisable, "Auto disable when time expires", Localize("Auto disable when time expires"), &g_Config.m_QmSpeedrunTimerAutoDisable, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmHudSpeedrunTimerContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
