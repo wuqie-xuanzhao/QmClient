@@ -4418,261 +4418,289 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		s_SndPackInit = true;
 	}
 
-	CUIRect Button;
-	auto DoSliderWithValueInput = [this](const void *pId, int *pOption, const CUIRect &Rect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, const char *pSuffix = "") {
-		CUIRect Label, Controls, Slider, Input, SuffixRect;
-		const float InputWidth = 58.0f;
-		const float GapWidth = 6.0f;
-		const float SuffixWidth = pSuffix[0] != '\0' ? 18.0f : 0.0f;
-		Rect.VSplitLeft(minimum(180.0f, Rect.w * 0.42f), &Label, &Controls);
-		if(SuffixWidth > 0.0f)
-		{
-			Controls.VSplitRight(InputWidth + GapWidth + SuffixWidth, &Slider, &Input);
-			Input.VSplitRight(SuffixWidth, &Input, &SuffixRect);
-			Input.VSplitRight(GapWidth, &Input, nullptr);
-		}
-		else
-		{
-			Controls.VSplitRight(InputWidth, &Slider, &Input);
-			SuffixRect = {};
-		}
-		Slider.VSplitRight(GapWidth, &Slider, nullptr);
-		Slider.VMargin(1.0f, &Slider);
-		Input.VMargin(1.0f, &Input);
-		Ui()->DoLabel(&Label, pStr, Label.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML);
-		*pOption = pScale->ToAbsolute(Ui()->DoScrollbarH(pId, &Slider, pScale->ToRelative(*pOption, Min, Max)), Min, Max);
-		SValueSelectorProperties Props;
-		Props.m_UseScroll = false;
-		Props.m_TextAlign = TEXTALIGN_MC;
-		Props.m_SelectAllOnActivate = false;
-		const auto Result = Ui()->DoValueSelectorWithState(reinterpret_cast<const void *>((uintptr_t)pId ^ 0x1), &Input, "", *pOption, Min, Max, Props);
-		*pOption = (int)Result.m_Value;
-		if(SuffixWidth > 0.0f)
-			Ui()->DoLabel(&SuffixRect, pSuffix, SuffixRect.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
-	};
-
-	static CScrollRegion s_SoundSettingsScrollRegion;
-	static float s_SoundSettingsScrollY = 0.0f;
+	const float UiScale = minimum(1.0f, maximum(0.85f, MainView.w / 800.0f));
+	static CScrollRegion s_SoundScrollRegion;
 	static float s_SoundToggleCardHeight = 0.0f;
 	static float s_SoundAudioPackCardHeight = 0.0f;
 	static float s_SoundVolumeCardHeight = 0.0f;
-	std::vector<std::string> vSoundActiveCards;
-	vSoundActiveCards.emplace_back("sound-toggle");
-	if(g_Config.m_SndEnable)
-	{
-		vSoundActiveCards.emplace_back("sound-volume");
-		vSoundActiveCards.emplace_back("sound-audio-pack");
-	}
-	SSettingsCardDeckLayout SoundDeck = BeginSettingsCardDeck(MainView, s_SoundSettingsScrollRegion, s_SoundSettingsScrollY, 1.0f, "sound", SETTINGS_SOUND, nullptr, &vSoundActiveCards);
-	const float SoundRightColumnHeight = SoundDeck.m_aColumns[1].h;
-	SSettingsCardDeckCard SoundToggleCard = BeginSettingsCardDeckCard(SoundDeck, "sound-toggle", Localize("Sound"), 270.0f, s_SoundToggleCardHeight, ESettingsCardDeckColumn::LEFT, true);
-	CUIRect SoundToggleView = SoundToggleCard.m_ContentRect;
-	MainView = SoundToggleView;
-
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndEnable, "Use sounds", Localize("Use sounds"), g_Config.m_SndEnable, &Button))
-	{
-		g_Config.m_SndEnable ^= 1;
-		UpdateMusicState();
-	}
-
-	m_NeedRestartSound = g_Config.m_SndEnable && !Sound()->IsSoundEnabled();
-	if(!g_Config.m_SndEnable)
-	{
-		const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
-		m_NeedRestartSound = m_NeedRestartSound || PackChanged;
-		s_SoundToggleCardHeight = maximum(MainView.y + SoundDeck.m_Style.m_Padding - SoundToggleCard.m_Rect.y, 270.0f);
-		EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);
+	const SSettingsPageLayoutFrame SoundPage = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const IUiContext SoundCardCtx = SettingsUiContext("settings_sound", UiScale);
+	const SSettingsCardDeckVisualOptions SoundVisualOptions = SettingsCardDeckVisualOptions();
+	const auto DoSoundNumericField = [this, &SoundCardCtx](const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel) {
+		ui_widget::SNumericFieldOptions Options;
+		Options.m_pLabel = pLabel;
+		Options.m_pSuffix = "%";
+		Options.m_pScale = &CUi::ms_LogarithmicScrollbarScale;
+		Options.m_FontSize = Rect.h * CUi::ms_FontmodHeight * 0.8f;
+		Options.m_LabelAlign = TEXTALIGN_ML;
+		if(PrepareSettingsNumericFieldLabel(SETTINGS_SOUND, -1, -1, pTextId, Rect, pLabel, 0u, Options))
+			return false;
+		return ui_widget::NumericField(SoundCardCtx, GetSettingsNumericFieldState(pId), pId, pOption, 0, 100, Rect, Options);
+	};
+	const qm_card_registry::SCardDefault *pToggleDefault = qm_card_registry::FindByStableId("deck:sound-toggle");
+	const qm_card_registry::SCardDefault *pVolumeDefault = qm_card_registry::FindByStableId("deck:sound-volume");
+	const qm_card_registry::SCardDefault *pAudioPackDefault = qm_card_registry::FindByStableId("deck:sound-audio-pack");
+	dbg_assert(pToggleDefault != nullptr && pVolumeDefault != nullptr && pAudioPackDefault != nullptr, "sound settings cards must be registered");
+	if(pToggleDefault == nullptr || pVolumeDefault == nullptr || pAudioPackDefault == nullptr)
 		return;
-	}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndMusic, "Play background music", Localize("Play background music"), g_Config.m_SndMusic, &Button))
-	{
-		g_Config.m_SndMusic ^= 1;
-		UpdateMusicState();
-	}
+	const SSettingsCardSpec ToggleSpec{pToggleDefault->m_pStableId, Localize(pToggleDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec VolumeSpec{pVolumeDefault->m_pStableId, Localize(pVolumeDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec AudioPackSpec{pAudioPackDefault->m_pStableId, Localize(pAudioPackDefault->m_pTitle), nullptr};
+	const auto CardChromeHeight = [UiScale](const SSettingsCardSpec &Spec) {
+		return BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, Spec, 0.0f, UiScale).m_Rect.h;
+	};
+	const float SoundToggleMinCardHeight = 270.0f * UiScale;
+	const float SoundVolumeMinCardHeight = 170.0f * UiScale;
+	const float SoundAudioPackMinCardHeight = maximum(300.0f * UiScale, SoundPage.m_ScrollViewport.h - SoundPage.m_CardGap);
+	const float ToggleChromeHeight = CardChromeHeight(ToggleSpec);
+	const float VolumeChromeHeight = CardChromeHeight(VolumeSpec);
+	const float AudioPackChromeHeight = CardChromeHeight(AudioPackSpec);
+	const auto UpdateMeasuredCardHeight = [](float &LastHeight, float MinHeight, float ChromeHeight, const CUIRect &InitialContent, const CUIRect &RemainingContent) {
+		LastHeight = maximum(MinHeight, ChromeHeight + maximum(0.0f, RemainingContent.y - InitialContent.y));
+	};
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(3);
+	const auto AddCard = [&](const SSettingsCardSpec &Spec, float MinHeight, float &LastHeight, float ChromeHeight, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool VisibilityController = false, FSettingsCardPreLayoutInput PreLayoutInput = {}) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = Spec;
+		Definition.m_Measure = [MinHeight, &LastHeight, ChromeHeight](float) {
+			return maximum(0.0f, maximum(MinHeight, LastHeight) - ChromeHeight);
+		};
+		Definition.m_Render = Render;
+		Definition.m_PreLayoutInput = std::move(PreLayoutInput);
+		Definition.m_IsVisible = std::move(IsVisible);
+		Definition.m_VisibilityController = VisibilityController;
+		vCards.push_back(Definition);
+	};
+	CUIRect Button;
+	const auto ProcessSoundToggleInput = [this](CUIRect ContentRect) {
+		if(m_MenuTextPlanCollecting)
+			return;
+		CUIRect MainView = ContentRect;
+		CUIRect Button;
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(Ui()->DoButtonLogic(&g_Config.m_SndEnable, 0, &Button, BUTTONFLAG_LEFT))
+		{
+			g_Config.m_SndEnable ^= 1;
+			UpdateMusicState();
+		}
+	};
+	AddCard(ToggleSpec, SoundToggleMinCardHeight, s_SoundToggleCardHeight, ToggleChromeHeight, [&](CUIRect ContentRect) {
+		CUIRect MainView = ContentRect;
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndNonactiveMute, "Mute when not active", Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
-		g_Config.m_SndNonactiveMute ^= 1;
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, -1, &g_Config.m_SndEnable, "Use sounds", Localize("Use sounds"), g_Config.m_SndEnable, &Button, SLabelProperties{}, false);
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndGame, "Enable game sounds", Localize("Enable game sounds"), g_Config.m_SndGame, &Button))
-		g_Config.m_SndGame ^= 1;
+		m_NeedRestartSound = g_Config.m_SndEnable && !Sound()->IsSoundEnabled();
+		if(!g_Config.m_SndEnable)
+		{
+			const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
+			m_NeedRestartSound = m_NeedRestartSound || PackChanged;
+			UpdateMeasuredCardHeight(s_SoundToggleCardHeight, SoundToggleMinCardHeight, ToggleChromeHeight, ContentRect, MainView);
+			return;
+		}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndGun, "Enable gun sound", Localize("Enable gun sound"), g_Config.m_SndGun, &Button))
-		g_Config.m_SndGun ^= 1;
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndMusic, "Play background music", Localize("Play background music"), g_Config.m_SndMusic, &Button))
+		{
+			g_Config.m_SndMusic ^= 1;
+			UpdateMusicState();
+		}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndLongPain, "Enable long pain sound (used when shooting in freeze)", Localize("Enable long pain sound (used when shooting in freeze)"), g_Config.m_SndLongPain, &Button))
-		g_Config.m_SndLongPain ^= 1;
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndNonactiveMute, "Mute when not active", Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
+			g_Config.m_SndNonactiveMute ^= 1;
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndServerMessage, "Enable server message sound", Localize("Enable server message sound"), g_Config.m_SndServerMessage, &Button))
-		g_Config.m_SndServerMessage ^= 1;
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndGame, "Enable game sounds", Localize("Enable game sounds"), g_Config.m_SndGame, &Button))
+			g_Config.m_SndGame ^= 1;
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndChat, "Enable regular chat sound", Localize("Enable regular chat sound"), g_Config.m_SndChat, &Button))
-		g_Config.m_SndChat ^= 1;
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndGun, "Enable gun sound", Localize("Enable gun sound"), g_Config.m_SndGun, &Button))
+			g_Config.m_SndGun ^= 1;
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndTeamChat, "Enable team chat sound", Localize("Enable team chat sound"), g_Config.m_SndTeamChat, &Button))
-		g_Config.m_SndTeamChat ^= 1;
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndLongPain, "Enable long pain sound (used when shooting in freeze)", Localize("Enable long pain sound (used when shooting in freeze)"), g_Config.m_SndLongPain, &Button))
+			g_Config.m_SndLongPain ^= 1;
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndHighlight, "Enable highlighted chat sound", Localize("Enable highlighted chat sound"), g_Config.m_SndHighlight, &Button))
-		g_Config.m_SndHighlight ^= 1;
-	s_SoundToggleCardHeight = maximum(MainView.y + SoundDeck.m_Style.m_Padding - SoundToggleCard.m_Rect.y, 270.0f);
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndServerMessage, "Enable server message sound", Localize("Enable server message sound"), g_Config.m_SndServerMessage, &Button))
+			g_Config.m_SndServerMessage ^= 1;
 
-	// audio pack selector
-	{
-		SSettingsCardDeckCard VolumeCard = BeginSettingsCardDeckCard(SoundDeck, "sound-volume", Localize("Volume"), 170.0f, s_SoundVolumeCardHeight, ESettingsCardDeckColumn::LEFT, true);
-		MainView = VolumeCard.m_ContentRect;
-		CUIRect VolumeButton;
-		MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
-		DoSliderWithValueInput(&g_Config.m_SndVolume, &g_Config.m_SndVolume, VolumeButton, Localize("Sound volume"), 0, 100, &CUi::ms_LogarithmicScrollbarScale, "%");
-		MainView.HSplitTop(5.0f, nullptr, &MainView);
-		MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
-		DoSliderWithValueInput(&g_Config.m_SndGameVolume, &g_Config.m_SndGameVolume, VolumeButton, Localize("Game sound volume"), 0, 100, &CUi::ms_LogarithmicScrollbarScale, "%");
-		MainView.HSplitTop(5.0f, nullptr, &MainView);
-		MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
-		DoSliderWithValueInput(&g_Config.m_SndChatVolume, &g_Config.m_SndChatVolume, VolumeButton, Localize("Chat sound volume"), 0, 100, &CUi::ms_LogarithmicScrollbarScale, "%");
-		MainView.HSplitTop(5.0f, nullptr, &MainView);
-		MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
-		DoSliderWithValueInput(&g_Config.m_SndMapVolume, &g_Config.m_SndMapVolume, VolumeButton, Localize("Map sound volume"), 0, 100, &CUi::ms_LogarithmicScrollbarScale, "%");
-		MainView.HSplitTop(5.0f, nullptr, &MainView);
-		MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
-		DoSliderWithValueInput(&g_Config.m_SndBackgroundMusicVolume, &g_Config.m_SndBackgroundMusicVolume, VolumeButton, Localize("Background music volume"), 0, 100, &CUi::ms_LogarithmicScrollbarScale, "%");
-		s_SoundVolumeCardHeight = maximum(MainView.y + SoundDeck.m_Style.m_Padding - VolumeCard.m_Rect.y, 170.0f);
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndChat, "Enable regular chat sound", Localize("Enable regular chat sound"), g_Config.m_SndChat, &Button))
+			g_Config.m_SndChat ^= 1;
 
-		const float AudioPackMinHeight = maximum(300.0f, SoundRightColumnHeight - SoundDeck.m_Style.m_Spacing * 2.0f);
-		SSettingsCardDeckCard AudioPackCard = BeginSettingsCardDeckCard(SoundDeck, "sound-audio-pack", Localize("Audio packs"), AudioPackMinHeight, maximum(s_SoundAudioPackCardHeight, AudioPackMinHeight), ESettingsCardDeckColumn::RIGHT, true);
-		CUIRect AudioPackView = AudioPackCard.m_ContentRect;
-		static CButtonContainer s_AudioPackRefreshButton;
-		static CButtonContainer s_AudioPackEditorButton;
-		static CButtonContainer s_AudioPackDirectoryButton;
-		static CListBox s_AudioPackListBox;
-		EnsureSharedAudioPacks(Storage());
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndTeamChat, "Enable team chat sound", Localize("Enable team chat sound"), g_Config.m_SndTeamChat, &Button))
+			g_Config.m_SndTeamChat ^= 1;
 
-		auto RefreshAudioPackState = [&]() {
-			RefreshSharedAudioPacks(Storage());
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		if(DoSettingsButton_CheckBox(SETTINGS_SOUND, -1, &g_Config.m_SndHighlight, "Enable highlighted chat sound", Localize("Enable highlighted chat sound"), g_Config.m_SndHighlight, &Button))
+			g_Config.m_SndHighlight ^= 1;
+		UpdateMeasuredCardHeight(s_SoundToggleCardHeight, SoundToggleMinCardHeight, ToggleChromeHeight, ContentRect, MainView); }, {}, true, ProcessSoundToggleInput);
+
+	AddCard(VolumeSpec, SoundVolumeMinCardHeight, s_SoundVolumeCardHeight, VolumeChromeHeight, [&](CUIRect ContentRect) {
+			CUIRect MainView = ContentRect;
+			CUIRect VolumeButton;
+			MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
+			DoSoundNumericField("sound-volume", &g_Config.m_SndVolume, &g_Config.m_SndVolume, VolumeButton, Localize("Sound volume"));
+			MainView.HSplitTop(5.0f, nullptr, &MainView);
+			MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
+			DoSoundNumericField("sound-game-volume", &g_Config.m_SndGameVolume, &g_Config.m_SndGameVolume, VolumeButton, Localize("Game sound volume"));
+			MainView.HSplitTop(5.0f, nullptr, &MainView);
+			MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
+			DoSoundNumericField("sound-chat-volume", &g_Config.m_SndChatVolume, &g_Config.m_SndChatVolume, VolumeButton, Localize("Chat sound volume"));
+			MainView.HSplitTop(5.0f, nullptr, &MainView);
+			MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
+			DoSoundNumericField("sound-map-volume", &g_Config.m_SndMapVolume, &g_Config.m_SndMapVolume, VolumeButton, Localize("Map sound volume"));
+			MainView.HSplitTop(5.0f, nullptr, &MainView);
+			MainView.HSplitTop(20.0f, &VolumeButton, &MainView);
+			DoSoundNumericField("sound-background-music-volume", &g_Config.m_SndBackgroundMusicVolume, &g_Config.m_SndBackgroundMusicVolume, VolumeButton, Localize("Background music volume"));
+			UpdateMeasuredCardHeight(s_SoundVolumeCardHeight, SoundVolumeMinCardHeight, VolumeChromeHeight, ContentRect, MainView); }, []() { return g_Config.m_SndEnable != 0; });
+	AddCard(AudioPackSpec, SoundAudioPackMinCardHeight, s_SoundAudioPackCardHeight, AudioPackChromeHeight, [&](CUIRect ContentRect) {
+			CUIRect AudioPackView = ContentRect;
+			static CButtonContainer s_AudioPackRefreshButton;
+			static CButtonContainer s_AudioPackEditorButton;
+			static CButtonContainer s_AudioPackDirectoryButton;
+			static CListBox s_AudioPackListBox;
+			EnsureSharedAudioPacks(Storage());
+
+			auto RefreshAudioPackState = [&]() {
+				RefreshSharedAudioPacks(Storage());
+				if(g_Config.m_SndPack[0] == '\0')
+					str_copy(g_Config.m_SndPack, "default", sizeof(g_Config.m_SndPack));
+				if(m_AudioPackEditorState.m_PackNameInput.IsEmpty())
+					m_AudioPackEditorState.m_PackNameInput.Set(g_Config.m_SndPack);
+			};
+
 			if(g_Config.m_SndPack[0] == '\0')
 				str_copy(g_Config.m_SndPack, "default", sizeof(g_Config.m_SndPack));
-			if(m_AudioPackEditorState.m_PackNameInput.IsEmpty())
-				m_AudioPackEditorState.m_PackNameInput.Set(g_Config.m_SndPack);
-		};
 
-		if(g_Config.m_SndPack[0] == '\0')
-			str_copy(g_Config.m_SndPack, "default", sizeof(g_Config.m_SndPack));
+			auto FindSelectedPackIndex = [&]() {
+				int Result = FindAudioPackIndexByName(gs_vAudioPacks, g_Config.m_SndPack);
+				if(Result < 0)
+				{
+					RefreshSharedAudioPacks(Storage());
+					Result = FindAudioPackIndexByName(gs_vAudioPacks, g_Config.m_SndPack);
+				}
+				if(Result < 0)
+				{
+					str_copy(g_Config.m_SndPack, "default", sizeof(g_Config.m_SndPack));
+					Result = 0;
+				}
+				return Result;
+			};
+			int SelectedPack = FindSelectedPackIndex();
 
-		auto FindSelectedPackIndex = [&]() {
-			int Result = FindAudioPackIndexByName(gs_vAudioPacks, g_Config.m_SndPack);
-			if(Result < 0)
+			CUIRect AudioPackContent;
+			AudioPackView.Margin(2.0f, &AudioPackContent);
+			CUIRect HeaderRow, ListRow;
+			AudioPackContent.HSplitTop(24.0f, &HeaderRow, &AudioPackContent);
+			AudioPackContent.HSplitTop(8.0f, nullptr, &AudioPackContent);
+			ListRow = AudioPackContent;
+
+			const float RefreshButtonW = 25.0f;
+			const float EditButtonW = minimum(168.0f, maximum(114.0f, TextRender()->TextWidth(12.0f, Localize("Edit audio pack"), -1, -1.0f) + 22.0f));
+			const float DirectoryButtonW = minimum(176.0f, maximum(122.0f, TextRender()->TextWidth(12.0f, Localize("Audio pack directory"), -1, -1.0f) + 22.0f));
+			CUIRect EditButton;
+			CUIRect DirectoryButton;
+			CUIRect RefreshButton;
+			HeaderRow.VSplitRight(RefreshButtonW, &HeaderRow, &RefreshButton);
+			RefreshButton.VMargin(2.0f, &RefreshButton);
+			if(DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton))
 			{
-				RefreshSharedAudioPacks(Storage());
-				Result = FindAudioPackIndexByName(gs_vAudioPacks, g_Config.m_SndPack);
+				RefreshAudioPackState();
+				SelectedPack = FindSelectedPackIndex();
 			}
-			if(Result < 0)
+			HeaderRow.VSplitLeft(EditButtonW, &EditButton, &HeaderRow);
+			EditButton.VMargin(2.0f, &EditButton);
+			if(DoSettingsButton_Menu(SETTINGS_SOUND, -1, -1, &s_AudioPackEditorButton, "sound-edit-audio-pack", Localize("Edit audio pack"), 0, &EditButton))
+				AudioPackEditorOpen(g_Config.m_SndPack);
+			HeaderRow.VSplitLeft(6.0f, nullptr, &HeaderRow);
+			HeaderRow.VSplitLeft(DirectoryButtonW, &DirectoryButton, &HeaderRow);
+			DirectoryButton.VMargin(2.0f, &DirectoryButton);
+			if(DoSettingsButton_Menu(SETTINGS_SOUND, -1, -1, &s_AudioPackDirectoryButton, "sound-audio-pack-directory", Localize("Audio pack directory"), 0, &DirectoryButton))
 			{
-				str_copy(g_Config.m_SndPack, "default", sizeof(g_Config.m_SndPack));
-				Result = 0;
-			}
-			return Result;
-		};
-		int SelectedPack = FindSelectedPackIndex();
-
-		CUIRect AudioPackContent;
-		AudioPackView.Margin(2.0f, &AudioPackContent);
-		CUIRect HeaderRow, ListRow;
-		AudioPackContent.HSplitTop(24.0f, &HeaderRow, &AudioPackContent);
-		AudioPackContent.HSplitTop(8.0f, nullptr, &AudioPackContent);
-		ListRow = AudioPackContent;
-
-		const float RefreshButtonW = 25.0f;
-		const float EditButtonW = minimum(168.0f, maximum(114.0f, TextRender()->TextWidth(12.0f, Localize("Edit audio pack"), -1, -1.0f) + 22.0f));
-		const float DirectoryButtonW = minimum(176.0f, maximum(122.0f, TextRender()->TextWidth(12.0f, Localize("Audio pack directory"), -1, -1.0f) + 22.0f));
-		CUIRect EditButton;
-		CUIRect DirectoryButton;
-		CUIRect RefreshButton;
-		HeaderRow.VSplitRight(RefreshButtonW, &HeaderRow, &RefreshButton);
-		RefreshButton.VMargin(2.0f, &RefreshButton);
-		if(DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton))
-		{
-			RefreshAudioPackState();
-			SelectedPack = FindSelectedPackIndex();
-		}
-		HeaderRow.VSplitLeft(EditButtonW, &EditButton, &HeaderRow);
-		EditButton.VMargin(2.0f, &EditButton);
-		if(DoSettingsButton_Menu(SETTINGS_SOUND, -1, -1, &s_AudioPackEditorButton, "sound-edit-audio-pack", Localize("Edit audio pack"), 0, &EditButton))
-			AudioPackEditorOpen(g_Config.m_SndPack);
-		HeaderRow.VSplitLeft(6.0f, nullptr, &HeaderRow);
-		HeaderRow.VSplitLeft(DirectoryButtonW, &DirectoryButton, &HeaderRow);
-		DirectoryButton.VMargin(2.0f, &DirectoryButton);
-		if(DoSettingsButton_Menu(SETTINGS_SOUND, -1, -1, &s_AudioPackDirectoryButton, "sound-audio-pack-directory", Localize("Audio pack directory"), 0, &DirectoryButton))
-		{
-			char aBuf[IO_MAX_PATH_LENGTH];
-			Storage()->GetCompletePath(IStorage::TYPE_SAVE, "audio", aBuf, sizeof(aBuf));
-			Client()->ViewFile(aBuf);
-		}
-
-		ListRow.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f), IGraphics::CORNER_ALL, 6.0f);
-		ListRow.Margin(6.0f, &ListRow);
-
-		const int OldSelectedPack = SelectedPack;
-		s_AudioPackListBox.DoStart(22.0f, gs_vAudioPacks.size(), 1, 4, SelectedPack, &ListRow, false);
-
-		const float BuiltInBadgeW = minimum(72.0f, maximum(38.0f, TextRender()->TextWidth(10.0f, Localize("Built-in"), -1, -1.0f) + 16.0f));
-
-		for(size_t i = 0; i < gs_vAudioPacks.size(); ++i)
-		{
-			const SAudioPackEntry &Entry = gs_vAudioPacks[i];
-			const CListboxItem Item = s_AudioPackListBox.DoNextItem(&Entry, SelectedPack == (int)i);
-			if(!Item.m_Visible)
-				continue;
-
-			char aLabel[128];
-			if(str_comp(Entry.m_aName, "default") == 0)
-			{
-				str_copy(aLabel, Localize("Default"), sizeof(aLabel));
-			}
-			else
-			{
-				str_copy(aLabel, Entry.m_aName, sizeof(aLabel));
+				char aBuf[IO_MAX_PATH_LENGTH];
+				Storage()->GetCompletePath(IStorage::TYPE_SAVE, "audio", aBuf, sizeof(aBuf));
+				Client()->ViewFile(aBuf);
 			}
 
-			CUIRect NameRect, BadgeRect;
-			Item.m_Rect.VSplitRight(BuiltInBadgeW, &NameRect, &BadgeRect);
-			NameRect.VMargin(6.0f, &NameRect);
-			BadgeRect.VMargin(4.0f, &BadgeRect);
+			ListRow.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f), IGraphics::CORNER_ALL, 6.0f);
+			ListRow.Margin(6.0f, &ListRow);
 
-			char aBadge[32];
-			str_format(aBadge, sizeof(aBadge), "%d", Entry.m_FileCount);
-			BadgeRect.Draw(SelectedPack == (int)i ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 4.0f);
+			const int OldSelectedPack = SelectedPack;
+			s_AudioPackListBox.DoStart(22.0f, gs_vAudioPacks.size(), 1, 4, SelectedPack, &ListRow, false);
 
-			Ui()->DoLabel(&NameRect, aLabel, 12.0f, TEXTALIGN_ML);
-			Ui()->DoLabel(&BadgeRect, aBadge, 10.0f, TEXTALIGN_MC);
-		}
+			const float BuiltInBadgeW = minimum(72.0f, maximum(38.0f, TextRender()->TextWidth(10.0f, Localize("Built-in"), -1, -1.0f) + 16.0f));
 
-		SelectedPack = s_AudioPackListBox.DoEnd();
-		if(SelectedPack != OldSelectedPack && SelectedPack >= 0 && SelectedPack < (int)gs_vAudioPacks.size())
-		{
-			str_copy(g_Config.m_SndPack, gs_vAudioPacks[SelectedPack].m_aName, sizeof(g_Config.m_SndPack));
-			if(GameClient()->m_Sounds.Reload())
+			for(size_t i = 0; i < gs_vAudioPacks.size(); ++i)
 			{
-				str_copy(s_aSndPack, g_Config.m_SndPack, sizeof(s_aSndPack));
-				UpdateMusicState();
-			}
-			if(!m_AudioPackEditorState.m_PackNameInput.IsActive())
-				m_AudioPackEditorState.m_PackNameInput.Set(g_Config.m_SndPack);
-		}
-		s_SoundAudioPackCardHeight = maximum(ListRow.y + ListRow.h + SoundDeck.m_Style.m_Padding - AudioPackCard.m_Rect.y, 220.0f);
-	}
+				const SAudioPackEntry &Entry = gs_vAudioPacks[i];
+				const CListboxItem Item = s_AudioPackListBox.DoNextItem(&Entry, SelectedPack == (int)i);
+				if(!Item.m_Visible)
+					continue;
 
+				char aLabel[128];
+				if(str_comp(Entry.m_aName, "default") == 0)
+				{
+					str_copy(aLabel, Localize("Default"), sizeof(aLabel));
+				}
+				else
+				{
+					str_copy(aLabel, Entry.m_aName, sizeof(aLabel));
+				}
+
+				CUIRect NameRect, BadgeRect;
+				Item.m_Rect.VSplitRight(BuiltInBadgeW, &NameRect, &BadgeRect);
+				NameRect.VMargin(6.0f, &NameRect);
+				BadgeRect.VMargin(4.0f, &BadgeRect);
+
+				char aBadge[32];
+				str_format(aBadge, sizeof(aBadge), "%d", Entry.m_FileCount);
+				BadgeRect.Draw(SelectedPack == (int)i ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 4.0f);
+
+				Ui()->DoLabel(&NameRect, aLabel, 12.0f, TEXTALIGN_ML);
+				Ui()->DoLabel(&BadgeRect, aBadge, 10.0f, TEXTALIGN_MC);
+			}
+
+			SelectedPack = s_AudioPackListBox.DoEnd();
+			if(SelectedPack != OldSelectedPack && SelectedPack >= 0 && SelectedPack < (int)gs_vAudioPacks.size())
+			{
+				str_copy(g_Config.m_SndPack, gs_vAudioPacks[SelectedPack].m_aName, sizeof(g_Config.m_SndPack));
+				if(GameClient()->m_Sounds.Reload())
+				{
+					str_copy(s_aSndPack, g_Config.m_SndPack, sizeof(s_aSndPack));
+					UpdateMusicState();
+				}
+				if(!m_AudioPackEditorState.m_PackNameInput.IsActive())
+					m_AudioPackEditorState.m_PackNameInput.Set(g_Config.m_SndPack);
+			}
+			const float VisibleContentHeight = ListRow.y + ListRow.h - ContentRect.y;
+			s_SoundAudioPackCardHeight = maximum(SoundAudioPackMinCardHeight, AudioPackChromeHeight + VisibleContentHeight); }, []() { return g_Config.m_SndEnable != 0; });
+
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_SoundScrollRegion.State();
+	// Deck 通过同一个 region 消费该状态；显式取得它以固定页面唯一的滚动状态所有权。
+	(void)ScrollState;
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(SoundCardCtx, SoundPage, "sound", vCards, SettingsCardOrderModel(), &s_SoundScrollRegion, InputState, SettingsCardMotionSpec(), SoundVisualOptions);
+	if(DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 	const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
 	m_NeedRestartSound = m_NeedRestartSound || PackChanged;
-	EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);
 }
 
 void CMenus::PrepareLanguagePageCache(float MainViewWidth, bool ForceComplete)

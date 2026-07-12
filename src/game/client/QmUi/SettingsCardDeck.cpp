@@ -79,14 +79,16 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		return Result;
 
 	PrepareDefinitions(vCards, Model);
-	m_vActiveStateIndices.clear();
-	m_vActiveStateIndices.reserve(vCards.size());
-	for(int StateIndex = 0; StateIndex < (int)m_vDefinitionsByState.size(); ++StateIndex)
-	{
-		if(m_vDefinitionsByState[StateIndex] != nullptr)
-			m_vActiveStateIndices.push_back(StateIndex);
-	}
-	const std::array<std::vector<int>, 3> &aColumns = m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
+	auto RebuildActiveStateIndices = [&]() {
+		m_vActiveStateIndices.clear();
+		m_vActiveStateIndices.reserve(vCards.size());
+		for(int StateIndex = 0; StateIndex < (int)m_vDefinitionsByState.size(); ++StateIndex)
+		{
+			const SSettingsCardDefinition *pDefinition = m_vDefinitionsByState[StateIndex];
+			if(pDefinition != nullptr && (!pDefinition->m_IsVisible || pDefinition->m_IsVisible()))
+				m_vActiveStateIndices.push_back(StateIndex);
+		}
+	};
 
 	CUIRect ScrollViewport = Layout.m_ScrollViewport;
 	vec2 ScrollOffset(0.0f, 0.0f);
@@ -157,7 +159,27 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		return vPrepared;
 	};
 
+	RebuildActiveStateIndices();
+	std::array<std::vector<int>, 3> aColumns = m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
 	std::vector<SPreparedSettingsCard> vPrepared = BuildPreparedCards(aColumns);
+
+	// 先用当前 active snapshot 的几何处理控制器输入，再为最终 active snapshot 重新计算布局。
+	const std::vector<int> PreviousActiveStateIndices = m_vActiveStateIndices;
+	for(const SPreparedSettingsCard &Card : vPrepared)
+	{
+		const bool ControllerVisible = pScrollRegion == nullptr || !pScrollRegion->RectClipped(Card.m_Frame.m_Rect) || Card.m_pDefinition->m_RenderWhenClipped;
+		if(ControllerVisible && Card.m_pDefinition->m_VisibilityController && Card.m_pDefinition->m_PreLayoutInput)
+			Card.m_pDefinition->m_PreLayoutInput(Card.m_Frame.m_ContentRect);
+	}
+	RebuildActiveStateIndices();
+	if(m_vActiveStateIndices != PreviousActiveStateIndices)
+	{
+		std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);
+		aColumns = m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
+		vPrepared = BuildPreparedCards(aColumns);
+	}
+	if(m_Drag.Active() && std::find(m_vActiveStateIndices.begin(), m_vActiveStateIndices.end(), m_Drag.m_StateIndex) == m_vActiveStateIndices.end())
+		m_Drag.Reset();
 	if(m_Drag.Active() && !Input.m_MouseDown && !Input.m_MouseReleased)
 		m_Drag.Reset();
 	if(!m_Drag.Active() && DrawLayout.m_TwoColumns && Input.m_CtrlPressed && Input.m_MousePressed)
@@ -202,7 +224,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		if(Input.m_MouseReleased)
 		{
 			const char *pStableId = m_Drag.m_StateIndex >= 0 && m_Drag.m_StateIndex < Model.Count() ? Model.Entry(m_Drag.m_StateIndex).m_pStableId : nullptr;
-			Result.m_OrderChanged = CommitSettingsCardDeckDrop(Model, pTab, pStableId, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder);
+			Result.m_OrderChanged = CommitSettingsCardDeckDrop(Model, pTab, pStableId, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder, &m_vActiveStateIndices);
 			if(Result.m_OrderChanged && m_Drag.m_StateIndex >= 0 && m_Drag.m_StateIndex < (int)m_vRuntimeStates.size())
 			{
 				SRuntimeState &Runtime = m_vRuntimeStates[m_Drag.m_StateIndex];

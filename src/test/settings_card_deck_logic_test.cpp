@@ -75,6 +75,55 @@ TEST(SettingsCardDeck, CrossColumnDropMovesOnlyTheGlobalModel)
 	EXPECT_TRUE(Model.IsDirty());
 }
 
+TEST(SettingsCardDeck, CrossColumnDropUsesVisibleOrderWhenHiddenCardsInterleave)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"sound-toggle", "sound", 1, 0},
+		{"sound-hidden-before", "sound", 2, 0},
+		{"sound-visible", "sound", 2, 1},
+		{"sound-hidden-after", "sound", 2, 2},
+	});
+	const std::vector<int> vActiveStateIndices{
+		Model.StateIndexForStableId("sound-toggle"),
+		Model.StateIndexForStableId("sound-visible"),
+	};
+
+	// 拖拽只按当前可见卡片计数，隐藏卡片仍保留在持久化顺序中。
+	ASSERT_TRUE(CommitSettingsCardDeckDrop(Model, "sound", "sound-toggle", 2, 1, &vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"sound-hidden-before", "sound-visible", "sound-toggle", "sound-hidden-after"}));
+}
+
+TEST(SettingsCardDeck, EmptyVisibleColumnDropsBeforeHiddenCards)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"sound-toggle", "sound", 1, 0},
+		{"sound-hidden", "sound", 2, 0},
+	});
+	const std::vector<int> vActiveStateIndices{Model.StateIndexForStableId("sound-toggle")};
+
+	ASSERT_TRUE(CommitSettingsCardDeckDrop(Model, "sound", "sound-toggle", 2, 0, &vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"sound-toggle", "sound-hidden"}));
+}
+
+TEST(SettingsCardDeck, SameColumnVisualNoOpPreservesHiddenRelativeOrder)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"sound-toggle", "sound", 2, 0},
+		{"sound-hidden", "sound", 2, 1},
+		{"sound-visible", "sound", 2, 2},
+	});
+	const std::vector<int> vActiveStateIndices{
+		Model.StateIndexForStableId("sound-toggle"),
+		Model.StateIndexForStableId("sound-visible"),
+	};
+
+	EXPECT_FALSE(CommitSettingsCardDeckDrop(Model, "sound", "sound-toggle", 2, 0, &vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"sound-toggle", "sound-hidden", "sound-visible"}));
+}
+
 TEST(SettingsCardDeck, EdgeDragRequestsBoundedAutoScroll)
 {
 	const CUIRect Viewport{0.0f, 100.0f, 600.0f, 400.0f};

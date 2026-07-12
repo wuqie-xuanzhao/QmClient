@@ -1000,9 +1000,9 @@ int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool
 	return Ui()->DoButtonLogic(pButtonId, 0, pRect, BUTTONFLAG_LEFT);
 }
 
-int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags)
+int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, const bool ProcessInput)
 {
-	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, pBoxText, pRect, Flags, nullptr);
+	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, pBoxText, pRect, Flags, nullptr, ProcessInput);
 }
 
 void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const
@@ -1034,7 +1034,7 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 		*pScrollBarRect = ScrollBar;
 }
 
-int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement)
+int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, const bool ProcessInput)
 {
 	CUIRect Box, Label;
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
@@ -1082,7 +1082,7 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 			Ui()->DoLabel(&Label, pText, FontSize, TEXTALIGN_ML, Props);
 	}
 
-	return Ui()->DoButtonLogic(pId, 0, pRect, Flags);
+	return ProcessInput ? Ui()->DoButtonLogic(pId, 0, pRect, Flags) : 0;
 }
 
 int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)
@@ -1098,9 +1098,14 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 
 int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps)
 {
+	return DoSettingsButton_CheckBox(Page, Tab, Subtab, pId, pTextId, pText, Checked, pRect, LabelProps, true);
+}
+
+int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, const bool ProcessInput)
+{
 	if(pTextId == nullptr)
 	{
-		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT);
+		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, ProcessInput);
 	}
 	CUIRect Box, Label;
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
@@ -1117,7 +1122,7 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 		return 0;
 	}
 	CUIElement &LabelElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, &LabelElement);
+	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, &LabelElement, ProcessInput);
 }
 
 int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)

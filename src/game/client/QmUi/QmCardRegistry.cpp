@@ -91,7 +91,7 @@ namespace qm_card_registry
 			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, Localizable("Display modes"), "display modes graphics resolutions", Localizable("Available resolutions")},
 			{"deck:sound-toggle", "sound", ECardColumn::Left, 0, "Sound", "sound toggle audio"},
 			{"deck:sound-volume", "sound", ECardColumn::Left, 1, "Volume", "volume sound audio"},
-			{"deck:sound-audio-pack", "sound", ECardColumn::Left, 2, "Audio packs", "audio pack audio packs sound"},
+			{"deck:sound-audio-pack", "sound", ECardColumn::Right, 0, "Audio packs", "audio pack audio packs sound"},
 			{"deck:ddnet-demo", "ddnet", ECardColumn::Left, 0, "Demo", "demo ddnet"},
 			{"deck:ddnet-gameplay", "ddnet", ECardColumn::Left, 1, "Gameplay", "gameplay ddnet"},
 			{"deck:ddnet-background", "ddnet", ECardColumn::Left, 2, "Background", "background ddnet"},

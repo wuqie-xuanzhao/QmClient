@@ -80,7 +80,7 @@ float SettingsCardDeckAutoScrollDelta(float MouseY, const CUIRect &Viewport, flo
 	return 0.0f;
 }
 
-bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetColumn, int TargetOrder)
+bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetColumn, int TargetOrder, const std::vector<int> *pActiveStateIndices)
 {
 	if(pTab == nullptr || pStableId == nullptr || TargetColumn < 0 || TargetColumn > 2)
 		return false;
@@ -92,8 +92,60 @@ bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, 
 		return false;
 	const std::vector<int> vTargetEntries = Model.ColumnIndices(pTab, TargetColumn);
 	const bool SameColumn = Entry.m_Column == TargetColumn;
-	const int MaxOrder = std::max(0, (int)vTargetEntries.size() - (SameColumn ? 1 : 0));
-	const int ClampedOrder = std::clamp(TargetOrder, 0, MaxOrder);
+	std::vector<int> vTargetEntriesWithoutDragged;
+	vTargetEntriesWithoutDragged.reserve(vTargetEntries.size());
+	for(const int TargetEntry : vTargetEntries)
+	{
+		if(TargetEntry != Index)
+			vTargetEntriesWithoutDragged.push_back(TargetEntry);
+	}
+	int ClampedOrder = std::clamp(TargetOrder, 0, (int)vTargetEntriesWithoutDragged.size());
+	if(pActiveStateIndices != nullptr)
+	{
+		std::vector<int> vVisibleTargetEntries;
+		for(const int TargetEntry : vTargetEntriesWithoutDragged)
+		{
+			if(std::find(pActiveStateIndices->begin(), pActiveStateIndices->end(), TargetEntry) != pActiveStateIndices->end())
+				vVisibleTargetEntries.push_back(TargetEntry);
+		}
+		const int VisibleOrder = std::clamp(TargetOrder, 0, (int)vVisibleTargetEntries.size());
+		if(SameColumn)
+		{
+			int CurrentVisibleOrder = 0;
+			bool FoundDraggedEntry = false;
+			for(const int TargetEntry : vTargetEntries)
+			{
+				if(std::find(pActiveStateIndices->begin(), pActiveStateIndices->end(), TargetEntry) == pActiveStateIndices->end())
+					continue;
+				if(TargetEntry == Index)
+				{
+					FoundDraggedEntry = true;
+					break;
+				}
+				++CurrentVisibleOrder;
+			}
+			if(FoundDraggedEntry && CurrentVisibleOrder == VisibleOrder)
+				return false;
+		}
+		if(vVisibleTargetEntries.empty())
+		{
+			ClampedOrder = 0;
+		}
+		else if(VisibleOrder < (int)vVisibleTargetEntries.size())
+		{
+			const auto It = std::find(vTargetEntriesWithoutDragged.begin(), vTargetEntriesWithoutDragged.end(), vVisibleTargetEntries[VisibleOrder]);
+			ClampedOrder = It != vTargetEntriesWithoutDragged.end() ? (int)(It - vTargetEntriesWithoutDragged.begin()) : ClampedOrder;
+		}
+		else if(!vVisibleTargetEntries.empty())
+		{
+			const auto It = std::find(vTargetEntriesWithoutDragged.begin(), vTargetEntriesWithoutDragged.end(), vVisibleTargetEntries.back());
+			ClampedOrder = It != vTargetEntriesWithoutDragged.end() ? (int)(It - vTargetEntriesWithoutDragged.begin()) + 1 : ClampedOrder;
+		}
+	}
+	else if(SameColumn)
+	{
+		ClampedOrder = std::clamp(TargetOrder, 0, (int)vTargetEntriesWithoutDragged.size());
+	}
 	if(SameColumn && Entry.m_OrderInColumn == ClampedOrder)
 		return false;
 	Model.Move(pStableId, TargetColumn, ClampedOrder);

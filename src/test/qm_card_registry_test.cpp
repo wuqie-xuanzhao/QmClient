@@ -152,6 +152,16 @@ TEST(QmCardRegistry, GraphicsPilotPlacementSurvivesSerialization)
 		(std::vector<std::string>{"deck:graphics-modes"}));
 }
 
+// 意图：Sound 页的音频包卡必须默认位于右列，和运行时 Deck 的双列内容密度保持一致。
+TEST(QmCardRegistry, SoundStandardPageCardsPersistInVisualOrder)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "sound", 1),
+		(std::vector<std::string>{"deck:sound-toggle", "deck:sound-volume"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "sound", 2),
+		(std::vector<std::string>{"deck:sound-audio-pack"}));
+}
+
 // 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。
 TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
 {
@@ -231,7 +241,7 @@ TEST(QmCardRegistry, BuildDefaultEntriesCoversEveryRegisteredCard)
 	Model.Serialize(aBuf, sizeof(aBuf));
 	const std::string Serialized(aBuf);
 	EXPECT_NE(Serialized.find("tclient:auto-reply|tclient|left|8;"), std::string::npos);
-	EXPECT_NE(Serialized.find("deck:sound-audio-pack|sound|left|2;"), std::string::npos);
+	EXPECT_NE(Serialized.find("deck:sound-audio-pack|sound|right|0;"), std::string::npos);
 	EXPECT_NE(Serialized.find("deck:appearance-chat-preview|appearance-chat|left|1;"), std::string::npos);
 }
 

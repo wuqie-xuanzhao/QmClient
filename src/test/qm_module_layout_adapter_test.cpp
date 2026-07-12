@@ -505,7 +505,7 @@ TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderWritesPipeFormatAndMarksMigrat
 	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
 	EXPECT_NE(Result.find("qm:camera_view|visual|left|"), std::string::npos);
 	EXPECT_NE(Result.find("tclient:auto-reply|tclient|left|8;"), std::string::npos);
-	EXPECT_NE(Result.find("deck:sound-audio-pack|sound|left|2;"), std::string::npos);
+	EXPECT_NE(Result.find("deck:sound-audio-pack|sound|right|0;"), std::string::npos);
 	EXPECT_NE(Result.find("|"), std::string::npos);
 	EXPECT_EQ(Result.find("chat_bubble:right"), std::string::npos);
 }
