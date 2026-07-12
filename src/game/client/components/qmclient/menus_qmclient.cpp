@@ -1753,6 +1753,52 @@ void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float Lin
 	RenderValue("qmclient-weapon-trajectory-opacity", "Opacity", &s_QmWeaponTrajectoryAlphaInputId, &g_Config.m_QmWeaponTrajectoryAlpha, 0, 100, "%");
 }
 
+void CMenus::RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_friend_enter_text_inputs", 1.0f);
+	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderCheckbox = [&](const void *pId, const char *pTextId, const char *pText, int *pValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(pId, pTextId, Localize(pText), pValue, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	auto RenderText = [&](const char *pTextId, const char *pText, CLineInput *pInput, const char *pPlaceholder) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		pInput->SetEmptyText(Localize(pPlaceholder));
+		ui_widget::InputField(TextInputCtx, pInput, ControlColumn, Localize(pPlaceholder), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	static int s_QmFriendAutoFollowDelayInputId;
+	static int s_QmFriendOnlineRefreshSecondsInputId;
+	RenderCheckbox(&g_Config.m_QmFriendOnlineNotify, "Notify when friends come online", "Notify when friends come online", &g_Config.m_QmFriendOnlineNotify);
+	RenderCheckbox(&g_Config.m_QmFriendOnlineAutoRefresh, "Auto refresh server list", "Auto refresh server list", &g_Config.m_QmFriendOnlineAutoRefresh);
+	RenderValue("qmclient-friend-auto-follow-delay", "Auto-follow delay", &s_QmFriendAutoFollowDelayInputId, &g_Config.m_QmFriendAutoFollowDelay, 0, 30, "s");
+	if(g_Config.m_QmFriendOnlineAutoRefresh)
+		RenderValue("qmclient-friend-notifications-refresh-interval", "Refresh interval", &s_QmFriendOnlineRefreshSecondsInputId, &g_Config.m_QmFriendOnlineRefreshSeconds, 5, 300, "s");
+	RenderCheckbox(&g_Config.m_QmFriendEnterAutoGreet, "Auto greet friends entering map", "Auto greet friends entering map", &g_Config.m_QmFriendEnterAutoGreet);
+	RenderCheckbox(&g_Config.m_QmFriendEnterBroadcast, "Large text announcement for friend joining", "Large text announcement for friend joining", &g_Config.m_QmFriendEnterBroadcast);
+	if(g_Config.m_QmFriendEnterBroadcast)
+	{
+		static CLineInput s_FriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, sizeof(g_Config.m_QmFriendEnterBroadcastText));
+		RenderText("qmclient-friend-notifications-large-text-content", "Large text content", &s_FriendEnterBroadcastText, "Please use %s as friend name");
+	}
+	if(g_Config.m_QmFriendEnterAutoGreet)
+	{
+		static CLineInput s_FriendEnterGreetText(g_Config.m_QmFriendEnterGreetText, sizeof(g_Config.m_QmFriendEnterGreetText));
+		RenderText("qmclient-friend-notifications-greeting-text", "Greeting text", &s_FriendEnterGreetText, "Leave empty to disable");
+	}
+}
+
 void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
@@ -6076,67 +6122,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 6, Localize("Friend Notifications"), Localize("Friend online and join notifications"));
-				IUiContext QmClientFriendEnterTextInputCtx;
-				QmClientFriendEnterTextInputCtx.m_pUi = Ui();
-				QmClientFriendEnterTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-				QmClientFriendEnterTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-				QmClientFriendEnterTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_friend_enter_text_inputs");
-				QmClientFriendEnterTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendOnlineNotify, "Notify when friends come online", Localize("Notify when friends come online"), &g_Config.m_QmFriendOnlineNotify, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendOnlineAutoRefresh, "Auto refresh server list", Localize("Auto refresh server list"), &g_Config.m_QmFriendOnlineAutoRefresh, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-friend-auto-follow-delay", &LabelCol, Localize("Auto-follow delay"), LgBodySize);
-				static int s_QmFriendAutoFollowDelayInputId;
-				RenderSliderWithValueInput(&s_QmFriendAutoFollowDelayInputId, ControlCol, &g_Config.m_QmFriendAutoFollowDelay, 0, 30, "s");
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmFriendOnlineAutoRefresh)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-friend-notifications-refresh-interval", &LabelCol, Localize("Refresh interval"), LgBodySize);
-					static int s_QmFriendOnlineRefreshSecondsInputId;
-					RenderSliderWithValueInput(&s_QmFriendOnlineRefreshSecondsInputId, ControlCol, &g_Config.m_QmFriendOnlineRefreshSeconds, 5, 300, "s");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendEnterAutoGreet, "Auto greet friends entering map", Localize("Auto greet friends entering map"), &g_Config.m_QmFriendEnterAutoGreet, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendEnterBroadcast, "Large text announcement for friend joining", Localize("Large text announcement for friend joining"), &g_Config.m_QmFriendEnterBroadcast, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmFriendEnterBroadcast)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-friend-notifications-large-text-content", &LabelCol, Localize("Large text content"), LgBodySize);
-					static CLineInput s_FriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, sizeof(g_Config.m_QmFriendEnterBroadcastText));
-					s_FriendEnterBroadcastText.SetEmptyText(Localize("Please use %s as friend name"));
-					ui_widget::InputField(QmClientFriendEnterTextInputCtx, &s_FriendEnterBroadcastText, ControlCol, Localize("Please use %s as friend name"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-
-				if(g_Config.m_QmFriendEnterAutoGreet)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-friend-notifications-greeting-text", &LabelCol, Localize("Greeting text"), LgBodySize);
-					static CLineInput s_FriendEnterGreetText(g_Config.m_QmFriendEnterGreetText, sizeof(g_Config.m_QmFriendEnterGreetText));
-					s_FriendEnterGreetText.SetEmptyText(Localize("Leave empty to disable"));
-					ui_widget::InputField(QmClientFriendEnterTextInputCtx, &s_FriendEnterGreetText, ControlCol, Localize("Leave empty to disable"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmFunctionFriendNotifyContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;

@@ -7556,6 +7556,28 @@ TEST(QmMonitoringHelpers, P6FunctionShortCardContentExtractionKeepsPublicControl
 	EXPECT_EQ(WeaponTrajectoryBody.find("RegisterModuleCard"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionFriendNotifyContentExtractionKeepsDynamicInputs)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string FriendNotifyBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::FriendNotify:");
+	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::BlockWords:", LegacyCaseStart);
+	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
+	ASSERT_FALSE(FriendNotifyBody.empty());
+	ASSERT_FALSE(LegacyCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionFriendNotifyContent"), std::string::npos);
+	EXPECT_NE(FriendNotifyBody.find("settings_qmclient_friend_enter_text_inputs"), std::string::npos);
+	EXPECT_NE(FriendNotifyBody.find("m_QmFriendOnlineAutoRefresh"), std::string::npos);
+	EXPECT_NE(FriendNotifyBody.find("m_QmFriendEnterBroadcast"), std::string::npos);
+	EXPECT_NE(FriendNotifyBody.find("m_QmFriendEnterAutoGreet"), std::string::npos);
+	EXPECT_NE(FriendNotifyBody.find("ui_widget::InputField"), std::string::npos);
+	EXPECT_NE(FriendNotifyBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmFunctionFriendNotifyContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
+	EXPECT_EQ(FriendNotifyBody.find("RegisterModuleCard"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
