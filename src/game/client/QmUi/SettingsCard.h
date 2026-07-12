@@ -19,6 +19,7 @@ struct SSettingsCardVisualState
 	bool m_Hovered = false;
 	bool m_Focused = false;
 	bool m_Dragged = false;
+	bool m_Collapsed = false;
 	bool m_DropFeedback = false;
 	bool m_ReflowCompleteFeedback = false;
 	float m_DrawOffsetX = 0.0f;
@@ -29,8 +30,9 @@ struct SSettingsCardVisualState
 using FSettingsCardMeasure = std::function<float(float ContentWidth)>;
 using FSettingsCardRender = std::function<void(CUIRect ContentRect)>;
 using FSettingsCardPreLayoutInput = std::function<void(CUIRect ContentRect)>;
+using FSettingsCardHeaderAction = std::function<void(const SSettingsCardFrame &Frame, bool Collapsed)>;
 
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render);
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render);
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {});
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {});
 
 #endif

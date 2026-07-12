@@ -20,6 +20,8 @@ struct SSettingsCardDefinition
 	FSettingsCardMeasure m_Measure;
 	FSettingsCardRender m_Render;
 	FSettingsCardPreLayoutInput m_PreLayoutInput;
+	FSettingsCardHeaderAction m_HeaderAction;
+	std::function<bool()> m_IsCollapsed;
 	std::function<bool()> m_IsVisible;
 	// 控制其他卡片可见性的输入在最终布局前处理。
 	bool m_VisibilityController = false;

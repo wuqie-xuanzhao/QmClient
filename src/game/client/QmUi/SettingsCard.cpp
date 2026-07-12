@@ -49,16 +49,16 @@ namespace
 	}
 }
 
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render)
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction)
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * UiScale);
 	const float ContentHeight = Measure ? std::max(0.0f, Measure(ContentWidth)) : 0.0f;
 	const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, Spec, ContentHeight, UiScale);
-	return SettingsCard(Ctx, Frame, Spec, State, VisualOptions, Render);
+	return SettingsCard(Ctx, Frame, Spec, State, VisualOptions, Render, HeaderAction);
 }
 
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render)
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction)
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	SSettingsCardVisualState DrawState = State;
@@ -110,6 +110,8 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	}
 
 	RenderCanonicalSettingsCardHandle(Ctx, DrawFrame.m_HandleRect, DrawState.m_Hovered || DrawState.m_Focused || DrawState.m_Dragged, DrawState.m_DrawAlpha);
+	if(HeaderAction)
+		HeaderAction(DrawFrame, DrawState.m_Collapsed);
 	if(Render)
 		Render(DrawFrame.m_ContentRect);
 	return Frame;
