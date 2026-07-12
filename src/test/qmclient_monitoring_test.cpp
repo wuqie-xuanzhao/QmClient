@@ -7644,6 +7644,24 @@ TEST(QmMonitoringHelpers, P6FunctionBlockWordsContentExtractionPreservesItsLight
 	EXPECT_EQ(BlockWordsBody.find("RegisterModuleCard"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionKeywordReplyContentExtractionKeepsRuleRowsAndConfigCodec)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string KeywordReplyBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	ASSERT_FALSE(KeywordReplyBody.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionKeywordReplyContent"), std::string::npos);
+	EXPECT_NE(KeywordReplyBody.find("ParseAutoReplyRules"), std::string::npos);
+	EXPECT_NE(KeywordReplyBody.find("AutoReplyRowsMatchRules"), std::string::npos);
+	EXPECT_NE(KeywordReplyBody.find("QmKeywordReplyRules::DecodeFromConfig"), std::string::npos);
+	EXPECT_NE(KeywordReplyBody.find("QmKeywordReplyRules::EncodeForConfig"), std::string::npos);
+	EXPECT_NE(KeywordReplyBody.find("RenderQmFunctionCheckbox"), std::string::npos);
+	EXPECT_NE(KeywordReplyBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(KeywordReplyBody.find("IsAutoReplyRuleRowHalfFilled"), std::string::npos);
+	EXPECT_EQ(KeywordReplyBody.find("RegisterModuleCard"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
