@@ -1197,25 +1197,29 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, c
 	return DoSettingsScrollbarOption(Page, Tab, -1, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
 }
 
-bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
+bool CMenus::PrepareSettingsNumericFieldLabel(int Page, int Tab, int Subtab, const char *pTextId, const CUIRect &Rect, const char *pLabel, unsigned Flags, ui_widget::SNumericFieldOptions &Options)
 {
-	// 文本预收集：只收集 label，不在收集时绘制输入框
-	if(pTextId != nullptr)
+	if(pTextId == nullptr || pTextId[0] == '\0')
+		return false;
+
+	const CUIRect Label = ui_widget::SliderInputFieldLabelRect(Rect, pLabel != nullptr && pLabel[0] != '\0', Flags);
+	SLabelProperties Props;
+	Props.m_MaxWidth = Label.w;
+	if(m_MenuTextPlanCollecting)
 	{
-		const CUIRect Label = ui_widget::SliderInputFieldLabelRect(*pRect, pStr != nullptr && pStr[0] != '\0', Flags);
 		const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
-		SLabelProperties Props;
-		Props.m_MaxWidth = Label.w;
 		const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
-		if(m_MenuTextPlanCollecting)
-		{
-			CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pStr, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
-			return false;
-		}
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pLabel, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
+		return true;
 	}
 
-	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, Options.m_FontSize, Options.m_LabelAlign, Props);
+	Options.m_pLabelElement = &MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
+	return false;
+}
 
+bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
+{
 	ui_widget::SNumericFieldOptions Options;
 	Options.m_pLabel = pStr;
 	Options.m_pSuffix = pSuffix;
@@ -1225,15 +1229,10 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	Options.m_FontSize = pRect->h * CUi::ms_FontmodHeight * 0.8f;
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
-	if(pTextId != nullptr && pTextId[0] != '\0')
-	{
-		const CUIRect Label = ui_widget::SliderInputFieldLabelRect(*pRect, pStr != nullptr && pStr[0] != '\0', Flags);
-		SLabelProperties Props;
-		Props.m_MaxWidth = Label.w;
-		const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, Options.m_FontSize, Options.m_LabelAlign, Props);
-		Options.m_pLabelElement = &MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-	}
+	if(PrepareSettingsNumericFieldLabel(Page, Tab, Subtab, pTextId, *pRect, pStr, Flags, Options))
+		return false;
 
+	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
 	IUiContext InputCtx = SettingsUiContext("settings_slider_input");
 	return ui_widget::NumericField(InputCtx, pState, pId, pOption, Min, Max, *pRect, Options);
 }
@@ -4873,7 +4872,9 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 {
 	if(pTab == nullptr || pTab[0] == '\0')
 		return false;
-	if(str_comp(pTab, "visual") == 0)
+	if(str_comp(pTab, "general") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
+	else if(str_comp(pTab, "visual") == 0)
 	{
 		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
 		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;

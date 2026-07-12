@@ -2357,3 +2357,56 @@ TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
 	EXPECT_LT(UpdateResult, ActiveIndexSync);
 	EXPECT_LT(ActiveIndexSync, PopupRender);
 }
+
+TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string General = FunctionBody(Source, "void CMenus::RenderSettingsGeneral(CUIRect MainView)");
+	const std::string NumericLabelBridge = FunctionBody(Menus, "bool CMenus::PrepareSettingsNumericFieldLabel(");
+	ASSERT_FALSE(General.empty());
+	ASSERT_FALSE(NumericLabelBridge.empty());
+	EXPECT_NE(General.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(General.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(General.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(General.find("CQmScrollState"), std::string::npos);
+	EXPECT_NE(General.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_NE(General.find("QmScrollRegionParamsFromPolicy(ScrollPolicy)"), std::string::npos);
+	EXPECT_EQ(General.find("(void)QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_NE(General.find("PrepareSettingsNumericFieldLabel("), std::string::npos);
+	EXPECT_NE(NumericLabelBridge.find("if(m_MenuTextPlanCollecting)"), std::string::npos);
+	EXPECT_NE(NumericLabelBridge.find("CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
+	EXPECT_NE(General.find("ui_widget::NumericField("), std::string::npos);
+	EXPECT_NE(General.find("AddCard(GameSpec, 140.0f * UiScale"), std::string::npos);
+	EXPECT_NE(General.find("deck:general-game"), std::string::npos);
+	EXPECT_NE(General.find("deck:general-language"), std::string::npos);
+	EXPECT_NE(General.find("deck:general-client"), std::string::npos);
+	EXPECT_NE(General.find("deck:general-recording"), std::string::npos);
+	EXPECT_EQ(General.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(General.find("DoSettingsScrollbarOption("), std::string::npos);
+	EXPECT_EQ(General.find("Ui()->DoEditBox("), std::string::npos);
+	EXPECT_EQ(General.find("Ui()->DoScrollbarH("), std::string::npos);
+}
+TEST(QmNewUiMenuBranches, NestedLanguageListWheelOwnerOutranksGeneralPage)
+{
+	EXPECT_TRUE(QmHotScrollRegionPriorityWins(EUiWheelOwnerPriority::PAGE, EUiWheelOwnerPriority::COMPOSITE_CONTROL));
+	EXPECT_FALSE(QmHotScrollRegionPriorityWins(EUiWheelOwnerPriority::COMPOSITE_CONTROL, EUiWheelOwnerPriority::PAGE));
+	const std::string ScrollRegionSource = ReadTextFile("src/game/client/ui_scrollregion.cpp");
+	EXPECT_NE(ScrollRegionSource.find("Ui()->SetHotScrollRegion(this, m_Params.m_WheelOwnerPriority);"), std::string::npos);
+
+	CScrollWheelOwnership Ownership;
+	int OuterOwner = 0;
+	int InnerOwner = 0;
+	ASSERT_TRUE(Ownership.BeginFrame(1, 1.0f, false));
+	Ownership.Register(&OuterOwner, EUiWheelOwnerPriority::PAGE, true);
+	Ownership.Register(&InnerOwner, EUiWheelOwnerPriority::COMPOSITE_CONTROL, true);
+	float WheelDelta = 0.0f;
+	EXPECT_FALSE(Ownership.TryConsume(&OuterOwner, &WheelDelta));
+	EXPECT_TRUE(Ownership.TryConsume(&InnerOwner, &WheelDelta));
+	EXPECT_EQ(WheelDelta, 1.0f);
+
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string LanguageSelection = FunctionBody(Source, "bool CMenus::RenderLanguageSelection(CUIRect MainView)");
+	ASSERT_FALSE(LanguageSelection.empty());
+	EXPECT_NE(LanguageSelection.find("ScrollParams.m_WheelOwnerPriority = EUiWheelOwnerPriority::COMPOSITE_CONTROL;"), std::string::npos);
+}

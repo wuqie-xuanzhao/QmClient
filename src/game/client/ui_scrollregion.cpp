@@ -281,7 +281,7 @@ void CScrollRegion::DoScrollInput()
 	const bool WheelEligible = QmScrollRegionCanConsumeWheel(HotFromPreviousFrame, HotInPopupThisFrame, Ui()->UnderlyingScrollBlocked(), Ui()->RenderingPopupMenus());
 	const void *pWheelOwnerId = m_Params.m_pWheelOwnerId != nullptr ? m_Params.m_pWheelOwnerId : this;
 	if(!m_Params.m_WheelOwnerPreRegistered)
-		Ui()->RegisterWheelOwner(pWheelOwnerId, EUiWheelOwnerPriority::PAGE, m_ClipRect, ContentOverflows() && WheelEligible);
+		Ui()->RegisterWheelOwner(pWheelOwnerId, m_Params.m_WheelOwnerPriority, m_ClipRect, ContentOverflows() && WheelEligible);
 
 	float WheelDelta = 0.0f;
 	if(!Ui()->TryConsumeWheel(pWheelOwnerId, &WheelDelta))
@@ -302,7 +302,7 @@ void CScrollRegion::UpdateHotScrollRegion()
 
 	if(Ui()->Enabled() && Ui()->MouseHovered(&RegionRect))
 	{
-		Ui()->SetHotScrollRegion(this);
+		Ui()->SetHotScrollRegion(this, m_Params.m_WheelOwnerPriority);
 	}
 }
 

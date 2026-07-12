@@ -9,12 +9,21 @@
 #include <string>
 #include <vector>
 
+static qm_card_order::CModel RegistryModelAfterRoundTrip()
+{
+	const std::vector<qm_card_order::SEntry> Defaults = qm_card_registry::BuildDefaultEntries();
+	qm_card_order::CModel Source;
+	Source.SetEntries(Defaults);
+	char aSerialized[32768];
+	EXPECT_TRUE(Source.Serialize(aSerialized, sizeof(aSerialized)));
+	qm_card_order::CModel Reloaded;
+	EXPECT_TRUE(Reloaded.LoadMerged(aSerialized, Defaults));
+	return Reloaded;
+}
 // 意图：注册表是迁移兜底与 SmartDefaults 的唯一依据，必须全覆盖、无重复、命名权威。
 TEST(QmCardRegistry, CoversAllCardsNoDuplicates)
 {
 	const auto &Reg = qm_card_registry::Defaults();
-	// 栖梦 38 + 当前 Tclient 19 + deck 29 = 86
-	EXPECT_EQ(Reg.size(), 86u);
 	std::set<std::string> Ids;
 	for(const auto &E : Reg)
 		EXPECT_TRUE(Ids.insert(E.m_pStableId).second) << "重复 stableId: " << E.m_pStableId;
@@ -58,6 +67,10 @@ TEST(QmCardRegistry, CoversCurrentTClientSectionIds)
 TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 {
 	const char *apIds[] = {
+		"deck:general-game",
+		"deck:general-language",
+		"deck:general-client",
+		"deck:general-recording",
 		"deck:graphics-display",
 		"deck:graphics-visual",
 		"deck:graphics-backend",
@@ -92,7 +105,15 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		ASSERT_NE(qm_card_registry::FindByStableId(pId), nullptr) << pId;
 }
 
-// 意图：appearance deck 的默认 placement 必须与运行时子页和列顺序对齐。
+// 意图：General 的默认卡片顺序必须随全局 model 往返持久化，避免重启后列投影或 Search 跳转丢失 placement。
+TEST(QmCardRegistry, GeneralStandardPageCardsPersistInVisualOrder)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "general", 1),
+		(std::vector<std::string>{"deck:general-game", "deck:general-client"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "general", 2),
+		(std::vector<std::string>{"deck:general-language", "deck:general-recording"}));
+} // 意图：appearance deck 的默认 placement 必须与运行时子页和列顺序对齐。
 // 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。
 TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
 {

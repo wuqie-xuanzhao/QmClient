@@ -685,22 +685,51 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	CPerfTimer RenderTimer;
 	CScopedSettingsTextPerfStats TextStats(this);
 	char aBuf[128 + IO_MAX_PATH_LENGTH];
-	CUIRect Label, Button, Left, Right, Game, ClientSettings;
-	MainView.HSplitTop(190.0f, &Game, &ClientSettings);
+	const float UiScale = minimum(1.0f, maximum(0.85f, MainView.w / 800.0f));
+	const SSettingsPageLayoutFrame GeneralPage = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const IUiContext GeneralCardCtx = SettingsUiContext("settings_general", UiScale);
+	const SSettingsCardDeckVisualOptions GeneralVisualOptions = SettingsCardDeckVisualOptions();
+	static CScrollRegion s_GeneralSettingsScrollRegion;
 
-	// game
-	{
-		// headline
-		Game.HSplitTop(30.0f, &Label, &Game);
-		CUIRect GameLabel, LanguageLabel;
-		Label.VSplitMid(&GameLabel, &LanguageLabel, 20.0f);
-		DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "game-title", &GameLabel, Localize("Game"), 20.0f, TEXTALIGN_ML);
-		DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "language-title", &LanguageLabel, Localize("Language"), 20.0f, TEXTALIGN_ML);
-		Game.HSplitTop(5.0f, nullptr, &Game);
-		Game.VSplitMid(&Left, &Right, 20.0f);
+	const qm_card_registry::SCardDefault *pGameDefault = qm_card_registry::FindByStableId("deck:general-game");
+	const qm_card_registry::SCardDefault *pLanguageDefault = qm_card_registry::FindByStableId("deck:general-language");
+	const qm_card_registry::SCardDefault *pClientDefault = qm_card_registry::FindByStableId("deck:general-client");
+	const qm_card_registry::SCardDefault *pRecordingDefault = qm_card_registry::FindByStableId("deck:general-recording");
+	dbg_assert(pGameDefault != nullptr && pLanguageDefault != nullptr && pClientDefault != nullptr && pRecordingDefault != nullptr, "general settings cards must be registered");
+	if(pGameDefault == nullptr || pLanguageDefault == nullptr || pClientDefault == nullptr || pRecordingDefault == nullptr)
+		return;
 
-		// dynamic camera
-		Left.HSplitTop(20.0f, &Button, &Left);
+	const auto DoNumericField = [this, &GeneralCardCtx](const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel, int Min, int Max, unsigned Flags, const char *pSuffix = "") {
+		ui_widget::SNumericFieldOptions Options;
+		Options.m_pLabel = pLabel;
+		Options.m_pSuffix = pSuffix;
+		Options.m_pScale = &CUi::ms_LinearScrollbarScale;
+		Options.m_Flags = Flags;
+		Options.m_FontSize = Rect.h * CUi::ms_FontmodHeight * 0.8f;
+		Options.m_LabelAlign = TEXTALIGN_ML;
+		Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
+		if(PrepareSettingsNumericFieldLabel(SETTINGS_GENERAL, -1, -1, pTextId, Rect, pLabel, Flags, Options))
+			return false;
+		return ui_widget::NumericField(GeneralCardCtx, GetSettingsNumericFieldState(pId), pId, pOption, Min, Max, Rect, Options);
+	};
+
+	const SSettingsCardSpec GameSpec{pGameDefault->m_pStableId, Localize(pGameDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec LanguageSpec{pLanguageDefault->m_pStableId, Localize(pLanguageDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec ClientSpec{pClientDefault->m_pStableId, Localize(pClientDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec RecordingSpec{pRecordingDefault->m_pStableId, Localize(pRecordingDefault->m_pTitle), nullptr};
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(4);
+	const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float ContentHeight, FSettingsCardRender Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = Spec;
+		Definition.m_Measure = [ContentHeight](float) { return ContentHeight; };
+		Definition.m_Render = Render;
+		vCards.push_back(Definition);
+	};
+
+	AddCard(GameSpec, 140.0f * UiScale, [this, UiScale](CUIRect Content) {
+		CUIRect Button;
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
 		const bool IsDyncam = g_Config.m_ClDyncam || g_Config.m_ClMouseFollowfactor > 0;
 		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClDyncam, "general-dynamic-camera", Localize("Dynamic Camera"), IsDyncam, &Button))
 		{
@@ -710,195 +739,123 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				g_Config.m_ClMouseFollowfactor = 0;
 			}
 			else
-			{
 				g_Config.m_ClDyncam = 1;
-			}
 		}
-
-		// smooth dynamic camera
-		Left.HSplitTop(5.0f, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
-		if(g_Config.m_ClDyncam)
+		Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
+		if(g_Config.m_ClDyncam && DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClDyncamSmoothness, "general-smooth-dynamic-camera", Localize("Smooth Dynamic Camera"), g_Config.m_ClDyncamSmoothness, &Button))
 		{
-			if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClDyncamSmoothness, "general-smooth-dynamic-camera", Localize("Smooth Dynamic Camera"), g_Config.m_ClDyncamSmoothness, &Button))
+			if(g_Config.m_ClDyncamSmoothness)
+				g_Config.m_ClDyncamSmoothness = 0;
+			else
 			{
-				if(g_Config.m_ClDyncamSmoothness)
-				{
-					g_Config.m_ClDyncamSmoothness = 0;
-				}
-				else
-				{
-					g_Config.m_ClDyncamSmoothness = 50;
-					g_Config.m_ClDyncamStabilizing = 50;
-				}
+				g_Config.m_ClDyncamSmoothness = 50;
+				g_Config.m_ClDyncamStabilizing = 50;
 			}
 		}
-
-		// weapon pickup
-		Left.HSplitTop(5.0f, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
+		Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
 		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeapons, "general-switch-weapon-pickup", Localize("Switch weapon on pickup"), g_Config.m_ClAutoswitchWeapons, &Button))
 			g_Config.m_ClAutoswitchWeapons ^= 1;
-
-		// weapon out of ammo autoswitch
-		Left.HSplitTop(5.0f, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
+		Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
 		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeaponsOutOfAmmo, "general-switch-weapon-out-of-ammo", Localize("Switch weapon when out of ammo"), g_Config.m_ClAutoswitchWeaponsOutOfAmmo, &Button))
 			g_Config.m_ClAutoswitchWeaponsOutOfAmmo ^= 1;
+		Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
+		CUIRect Label, DropDown;
+		Button.VSplitLeft(minimum(150.0f * UiScale, Button.w * 0.55f), &Label, &DropDown);
+		DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "general-respawn-default-weapon-label", &Label, Localize("Respawn default weapon"), 14.0f * UiScale, TEXTALIGN_ML);
+		const char *apRespawnDefaultWeapons[] = {Localize("Off"), Localize("Hammer"), Localize("Gun"), Localize("Shotgun"), Localize("Grenade"), Localize("Laser")};
+		static CUi::SDropDownState s_RespawnDefaultWeaponDropDownState;
+		const int RespawnDefaultWeapon = Ui()->DoDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
+		if(RespawnDefaultWeapon != g_Config.m_QmRespawnDefaultWeapon)
+			g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
+	});
 
-		Left.HSplitTop(5.0f, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
-		{
-			CUIRect Label, DropDown;
-			Button.VSplitLeft(150.0f, &Label, &DropDown);
-			DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "general-respawn-default-weapon-label", &Label, Localize("Respawn default weapon"), 14.0f, TEXTALIGN_ML);
-			const char *apRespawnDefaultWeapons[] = {
-				Localize("Off"),
-				Localize("Hammer"),
-				Localize("Gun"),
-				Localize("Shotgun"),
-				Localize("Grenade"),
-				Localize("Laser")};
-			static CUi::SDropDownState s_RespawnDefaultWeaponDropDownState;
-			const int RespawnDefaultWeapon = Ui()->DoDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
-			if(RespawnDefaultWeapon != g_Config.m_QmRespawnDefaultWeapon)
-				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
-		}
+	AddCard(LanguageSpec, maximum(300.0f * UiScale, GeneralPage.m_ScrollViewport.h - 100.0f * UiScale), [this](CUIRect Content) {
+		PrepareLanguagePageCache(Content.w, false);
+		RenderLanguageSelection(Content);
+	});
 
-		Right.HSplitTop(5.0f, nullptr, &Right);
-		PrepareLanguagePageCache(Right.w, false);
-		RenderLanguageSelection(Right);
-	}
-
-	// client
-	{
-		// headline
-		ClientSettings.HSplitTop(30.0f, &Label, &ClientSettings);
-		DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "client-title", &Label, Localize("Client"), 20.0f, TEXTALIGN_ML);
-		ClientSettings.HSplitTop(5.0f, nullptr, &ClientSettings);
-		ClientSettings.VSplitMid(&Left, &Right, 20.0f);
-
-		// skip main menu
-		Left.HSplitTop(20.0f, &Button, &Left);
+	AddCard(ClientSpec, 340.0f * UiScale, [this, &aBuf, DoNumericField, UiScale](CUIRect Content) {
+		CUIRect Button;
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
 		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClSkipStartMenu, "general-skip-main-menu", Localize("Skip the main menu"), g_Config.m_ClSkipStartMenu, &Button))
 			g_Config.m_ClSkipStartMenu ^= 1;
-
-		Left.HSplitTop(10.0f, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
+		Content.HSplitTop(10.0f * UiScale, nullptr, &Content);
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
 		str_copy(aBuf, " ");
 		str_append(aBuf, Localize("Hz", "Hertz"));
-		DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, "general-refresh-rate", &g_Config.m_ClRefreshRate, &g_Config.m_ClRefreshRate, &Button, Localize("Update Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE | CUi::SCROLLBAR_OPTION_DELAYUPDATE, aBuf);
-		Left.HSplitTop(5.0f, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
+		DoNumericField("general-refresh-rate", &g_Config.m_ClRefreshRate, &g_Config.m_ClRefreshRate, Button, Localize("Update Rate"), 10, 1000, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE | CUi::SCROLLBAR_OPTION_DELAYUPDATE, aBuf);
+		Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+		Content.HSplitTop(20.0f * UiScale, &Button, &Content);
 		static int s_LowerRefreshRate;
 		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &s_LowerRefreshRate, "general-lower-refresh-rate", Localize("Save power by lowering update rate (higher input latency)"), g_Config.m_ClRefreshRate <= 480 && g_Config.m_ClRefreshRate != 0, &Button))
 			g_Config.m_ClRefreshRate = g_Config.m_ClRefreshRate > 480 || g_Config.m_ClRefreshRate == 0 ? 480 : 0;
-
-		CUIRect SettingsButton;
-		Left.HSplitBottom(20.0f, &Left, &SettingsButton);
-		Left.HSplitBottom(5.0f, &Left, nullptr);
-		static CButtonContainer s_SettingsButtonId;
-		if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &s_SettingsButtonId, "general-settings-file", Localize("Settings file"), 0, &SettingsButton))
-		{
-			Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[ConfigDomain::DDNET].m_aConfigPath, aBuf, sizeof(aBuf));
-			Client()->ViewFile(aBuf);
-		}
-		GameClient()->m_Tooltips.DoToolTip(&s_SettingsButtonId, &SettingsButton, Localize("Open the settings file"));
-
-		CUIRect SavesButton;
-		Left.HSplitBottom(20.0f, &Left, &SavesButton);
-		Left.HSplitBottom(5.0f, &Left, nullptr);
-		static CButtonContainer s_SavesButtonId;
-		if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &s_SavesButtonId, "general-saves-file", Localize("Saves file"), 0, &SavesButton))
-		{
-			Storage()->GetCompletePath(IStorage::TYPE_SAVE, SAVES_FILE, aBuf, sizeof(aBuf));
-			Client()->ViewFile(aBuf);
-		}
-		GameClient()->m_Tooltips.DoToolTip(&s_SavesButtonId, &SavesButton, Localize("Open the saves file"));
-
-		CUIRect ConfigButton;
-		Left.HSplitBottom(20.0f, &Left, &ConfigButton);
-		Left.HSplitBottom(5.0f, &Left, nullptr);
-		static CButtonContainer s_ConfigButtonId;
-		if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &s_ConfigButtonId, "general-config-directory", Localize("Config directory"), 0, &ConfigButton))
-		{
-			Storage()->GetCompletePath(IStorage::TYPE_SAVE, "", aBuf, sizeof(aBuf));
-			Client()->ViewFile(aBuf);
-		}
-		GameClient()->m_Tooltips.DoToolTip(&s_ConfigButtonId, &ConfigButton, Localize("Open the directory that contains the configuration and user files"));
-
-		CUIRect DirectoryButton;
-		Left.HSplitBottom(20.0f, &Left, &DirectoryButton);
-		Left.HSplitBottom(5.0f, &Left, nullptr);
-		static CButtonContainer s_ThemesButtonId;
-		if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &s_ThemesButtonId, "general-themes-directory", Localize("Themes directory"), 0, &DirectoryButton))
-		{
-			Storage()->GetCompletePath(IStorage::TYPE_SAVE, "themes", aBuf, sizeof(aBuf));
-			Storage()->CreateFolder("themes", IStorage::TYPE_SAVE);
-			Client()->ViewFile(aBuf);
-		}
-		GameClient()->m_Tooltips.DoToolTip(&s_ThemesButtonId, &DirectoryButton, Localize("Open the directory to add custom themes"));
-
-		Left.HSplitTop(20.0f, nullptr, &Left);
-		{
-			CPerfTimer StageTimer;
-			RenderThemeSelection(Left);
-			LogPerfStage(Client(), "general_theme_selection", StageTimer.ElapsedMs(), false, "page=general");
-		}
-
-		// automatic recording
-		CUIRect AutoRecordView = Right;
-		AutoRecordView.HSplitTop(40.0f, nullptr, &AutoRecordView);
-		{
+		Content.HSplitTop(12.0f * UiScale, nullptr, &Content);
+		static CButtonContainer s_SettingsButtonId, s_SavesButtonId, s_ConfigButtonId, s_ThemesButtonId;
+		const auto DoOpenButton = [this, &Content, UiScale](CButtonContainer &Id, const char *pTextId, const char *pText, const char *pPath, bool CreateDirectory, const char *pTooltip) {
+			CUIRect Button;
+			Content.HSplitTop(20.0f * UiScale, &Button, &Content);
+			if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &Id, pTextId, pText, 0, &Button))
 			{
-				CPerfTimer StageTimer;
-				AutoRecordView.HSplitTop(20.0f, &Button, &AutoRecordView);
-				if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoDemoRecord, "general-auto-demo-record", Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
-					g_Config.m_ClAutoDemoRecord ^= 1;
-
-				AutoRecordView.HSplitTop(2 * 20.0f, &Button, &AutoRecordView);
-				if(g_Config.m_ClAutoDemoRecord)
-					DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, "general-auto-demo-max", &g_Config.m_ClAutoDemoMax, &g_Config.m_ClAutoDemoMax, &Button, Localize("Max demos"), 1, 1000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_MULTILINE);
-
-				AutoRecordView.HSplitTop(10.0f, nullptr, &AutoRecordView);
-				AutoRecordView.HSplitTop(20.0f, &Button, &AutoRecordView);
-				if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoScreenshot, "general-auto-screenshot", Localize("Automatically take game over screenshot"), g_Config.m_ClAutoScreenshot, &Button))
-					g_Config.m_ClAutoScreenshot ^= 1;
-
-				AutoRecordView.HSplitTop(2 * 20.0f, &Button, &AutoRecordView);
-				if(g_Config.m_ClAutoScreenshot)
-					DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, "general-auto-screenshot-max", &g_Config.m_ClAutoScreenshotMax, &g_Config.m_ClAutoScreenshotMax, &Button, Localize("Max Screenshots"), 1, 1000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_MULTILINE);
-
-				LogPerfStage(Client(), "general_auto_record_core", StageTimer.ElapsedMs(), false, "page=general");
+				char aPath[IO_MAX_PATH_LENGTH];
+				Storage()->GetCompletePath(IStorage::TYPE_SAVE, pPath, aPath, sizeof(aPath));
+				if(CreateDirectory)
+					Storage()->CreateFolder(pPath, IStorage::TYPE_SAVE);
+				Client()->ViewFile(aPath);
 			}
+			GameClient()->m_Tooltips.DoToolTip(&Id, &Button, pTooltip);
+			Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+		};
+		DoOpenButton(s_SettingsButtonId, "general-settings-file", Localize("Settings file"), s_aConfigDomains[ConfigDomain::DDNET].m_aConfigPath, false, Localize("Open the settings file"));
+		DoOpenButton(s_SavesButtonId, "general-saves-file", Localize("Saves file"), SAVES_FILE, false, Localize("Open the saves file"));
+		DoOpenButton(s_ConfigButtonId, "general-config-directory", Localize("Config directory"), "", false, Localize("Open the directory that contains the configuration and user files"));
+		DoOpenButton(s_ThemesButtonId, "general-themes-directory", Localize("Themes directory"), "themes", true, Localize("Open the directory to add custom themes"));
+		Content.HSplitTop(12.0f * UiScale, nullptr, &Content);
+		RenderThemeSelection(Content);
+	});
 
+	AddCard(RecordingSpec, 300.0f * UiScale, [this, DoNumericField, UiScale](CUIRect Content) {
+		CUIRect Button;
+		const auto DoAutoRecord = [this, &Content, &Button, DoNumericField, UiScale](int *pEnabled, int *pMax, const char *pToggleId, const char *pToggleText, const char *pMaxId, const char *pMaxText) {
+			Content.HSplitTop(20.0f * UiScale, &Button, &Content);
+			if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, pEnabled, pToggleId, pToggleText, *pEnabled, &Button))
+				*pEnabled ^= 1;
+			Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+			if(*pEnabled)
 			{
-				CPerfTimer StageTimer;
-				AutoRecordView.HSplitTop(10.0f, nullptr, &AutoRecordView);
-				AutoRecordView.HSplitTop(20.0f, &Button, &AutoRecordView);
-				if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoStatboardScreenshot, "general-auto-statboard-screenshot", Localize("Automatically take statboard screenshot"), g_Config.m_ClAutoStatboardScreenshot, &Button))
-				{
-					g_Config.m_ClAutoStatboardScreenshot ^= 1;
-				}
-
-				AutoRecordView.HSplitTop(2 * 20.0f, &Button, &AutoRecordView);
-				if(g_Config.m_ClAutoStatboardScreenshot)
-					DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, "general-auto-statboard-screenshot-max", &g_Config.m_ClAutoStatboardScreenshotMax, &g_Config.m_ClAutoStatboardScreenshotMax, &Button, Localize("Max Screenshots"), 1, 1000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_MULTILINE);
-				AutoRecordView.HSplitTop(10.0f, nullptr, &AutoRecordView);
-				AutoRecordView.HSplitTop(20.0f, &Button, &AutoRecordView);
-				if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoCSV, "general-auto-csv", Localize("Automatically create statboard csv"), g_Config.m_ClAutoCSV, &Button))
-				{
-					g_Config.m_ClAutoCSV ^= 1;
-				}
-
-				AutoRecordView.HSplitTop(2 * 20.0f, &Button, &AutoRecordView);
-				if(g_Config.m_ClAutoCSV)
-					DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, "general-auto-csv-max", &g_Config.m_ClAutoCSVMax, &g_Config.m_ClAutoCSVMax, &Button, Localize("Max CSVs"), 1, 1000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_MULTILINE);
-
-				LogPerfStage(Client(), "general_auto_record_extended", StageTimer.ElapsedMs(), false, "page=general");
+				Content.HSplitTop(20.0f * UiScale, &Button, &Content);
+				DoNumericField(pMaxId, pMax, pMax, Button, pMaxText, 1, 1000, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_MULTILINE);
+				Content.HSplitTop(10.0f * UiScale, nullptr, &Content);
 			}
-		}
-	}
+		};
+		DoAutoRecord(&g_Config.m_ClAutoDemoRecord, &g_Config.m_ClAutoDemoMax, "general-auto-demo-record", Localize("Automatically record demos"), "general-auto-demo-max", Localize("Max demos"));
+		DoAutoRecord(&g_Config.m_ClAutoScreenshot, &g_Config.m_ClAutoScreenshotMax, "general-auto-screenshot", Localize("Automatically take game over screenshot"), "general-auto-screenshot-max", Localize("Max Screenshots"));
+		DoAutoRecord(&g_Config.m_ClAutoStatboardScreenshot, &g_Config.m_ClAutoStatboardScreenshotMax, "general-auto-statboard-screenshot", Localize("Automatically take statboard screenshot"), "general-auto-statboard-screenshot-max", Localize("Max Screenshots"));
+		DoAutoRecord(&g_Config.m_ClAutoCSV, &g_Config.m_ClAutoCSVMax, "general-auto-csv", Localize("Automatically create statboard csv"), "general-auto-csv-max", Localize("Max CSVs"));
+	});
+
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_GeneralSettingsScrollRegion.State();
+	// Deck 通过同一个 region 消费该状态；显式取得它以固定页面唯一的滚动状态所有权。
+	(void)ScrollState;
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(GeneralCardCtx, GeneralPage, "general", vCards, SettingsCardOrderModel(), &s_GeneralSettingsScrollRegion, InputState, SettingsCardMotionSpec(), GeneralVisualOptions);
+	if(DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+
 	LogSettingsSectionPerf(Client(), SETTINGS_GENERAL, -1, "general_page", RenderTimer.ElapsedMs(), "static_text", TextStats.Stats().m_New, TextStats.Stats().m_Reused);
 	LogPerfStage(Client(), "general_page_total", RenderTimer.ElapsedMs(), false, "page=general");
 }
@@ -4828,6 +4785,7 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 	vec2 ScrollOffset(0.0f, 0.0f);
 	static float s_PrevLanguageScrollY = 0.0f;
 	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
+	ScrollParams.m_WheelOwnerPriority = EUiWheelOwnerPriority::COMPOSITE_CONTROL;
 	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(gs_LanguageScrollRegion, &MainView, ScrollParams, s_PrevLanguageScrollY);
 	ScrollOffset = ScrollFrame.m_BeginOffset;
 

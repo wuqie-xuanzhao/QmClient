@@ -75,8 +75,11 @@ namespace qm_card_registry
 			{"tclient:background-draw", "tclient", ECardColumn::Left, 17, "Background draw", "background draw tclient"},
 			{"tclient:finish-name", "tclient", ECardColumn::Left, 18, "Finish name", "finish name tclient"},
 
-			// === 设置 deck（29）· deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
-			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, Localizable("Graphics display"), "graphics display monitor window", Localizable("Window and monitor")},
+			// === 设置 deck（33）· deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
+			{"deck:general-game", "general", ECardColumn::Left, 0, Localizable("Game"), "general game camera weapon"},
+			{"deck:general-language", "general", ECardColumn::Right, 0, Localizable("Language"), "general language localization"},
+			{"deck:general-client", "general", ECardColumn::Left, 1, Localizable("Client"), "general client theme files"},
+			{"deck:general-recording", "general", ECardColumn::Right, 1, Localizable("Demo"), "general demo screenshot csv recording"},			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, Localizable("Graphics display"), "graphics display monitor window", Localizable("Window and monitor")},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, Localizable("Visual"), "graphics visual rendering", Localizable("Rendering options")},
 			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, Localizable("Graphics backend"), "graphics backend renderer selection", Localizable("Renderer selection")},
 			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, Localizable("Display modes"), "display modes graphics resolutions", Localizable("Available resolutions")},

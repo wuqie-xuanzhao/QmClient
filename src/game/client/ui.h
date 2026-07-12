@@ -391,6 +391,11 @@ enum class EUiWheelOwnerPriority
 	POPUP = 2,
 };
 
+constexpr bool QmHotScrollRegionPriorityWins(EUiWheelOwnerPriority Current, EUiWheelOwnerPriority Candidate)
+{
+	return static_cast<int>(Candidate) >= static_cast<int>(Current);
+}
+
 class CScrollWheelOwnership
 {
 public:
@@ -568,6 +573,7 @@ private:
 	const void *m_pBecomingHotItem = nullptr;
 	CScrollRegion *m_pHotScrollRegion = nullptr;
 	CScrollRegion *m_pBecomingHotScrollRegion = nullptr;
+	EUiWheelOwnerPriority m_BecomingHotScrollRegionPriority = EUiWheelOwnerPriority::PAGE;
 	bool m_UnderlyingScrollBlocked = false;
 	bool m_RenderingPopupMenus = false;
 	CScrollWheelOwnership m_WheelOwnership;
@@ -787,7 +793,19 @@ public:
 		return false;
 	}
 	bool IsActiveItem(const void *pId) const { return m_pActiveItem == pId; }
-	void SetHotScrollRegion(CScrollRegion *pId) { m_pBecomingHotScrollRegion = pId; }
+	void SetHotScrollRegion(CScrollRegion *pId, EUiWheelOwnerPriority Priority = EUiWheelOwnerPriority::PAGE)
+	{
+		if(pId == nullptr)
+		{
+			m_pBecomingHotScrollRegion = nullptr;
+			m_BecomingHotScrollRegionPriority = EUiWheelOwnerPriority::PAGE;
+		}
+		else if(m_pBecomingHotScrollRegion == nullptr || QmHotScrollRegionPriorityWins(m_BecomingHotScrollRegionPriority, Priority))
+		{
+			m_pBecomingHotScrollRegion = pId;
+			m_BecomingHotScrollRegionPriority = Priority;
+		}
+	}
 	const void *HotItem() const { return m_pHotItem; }
 	const void *NextHotItem() const { return m_pBecomingHotItem; }
 	const void *ActiveItem() const { return m_pActiveItem; }

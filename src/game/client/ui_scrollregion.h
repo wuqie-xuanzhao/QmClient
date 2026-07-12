@@ -29,6 +29,7 @@ struct CScrollRegionParams
 	bool m_ScrollHorizontal;
 	const void *m_pWheelOwnerId;
 	bool m_WheelOwnerPreRegistered;
+	EUiWheelOwnerPriority m_WheelOwnerPriority;
 
 	CScrollRegionParams();
 
@@ -86,6 +87,7 @@ inline CScrollRegionParams::CScrollRegionParams()
 	m_ScrollHorizontal = false;
 	m_pWheelOwnerId = nullptr;
 	m_WheelOwnerPreRegistered = false;
+	m_WheelOwnerPriority = EUiWheelOwnerPriority::PAGE;
 }
 
 inline bool ScrollRegionShouldKeepNoScrollSliderActive(bool Active, bool MouseDown)
@@ -151,6 +153,10 @@ public:
 		SCROLLRELATIVE_NONE = 0,
 		SCROLLRELATIVE_DOWN = 1,
 	};
+
+public:
+	CQmScrollState &State() { return m_ScrollState; }
+	const CQmScrollState &State() const { return m_ScrollState; }
 
 private:
 	CQmScrollState m_ScrollState;

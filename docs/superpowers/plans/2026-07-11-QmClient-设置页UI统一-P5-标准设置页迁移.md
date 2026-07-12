@@ -1,7 +1,7 @@
 # QmClient 设置页 UI 统一 P5 标准设置页迁移 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-> **状态（2026-07-12）：可进入 Task 2。** P2 已提供并验证 `CSettingsCardDeck::Render(...)`、`SSettingsCardDefinition`、`SSettingsCardDeckResult` 和 `m_SettingsCardDeck`；P3/P4 的自动化实现也已完成。P2–P4 的真实客户端视觉与交互矩阵仍待人工反馈，但不再构成公共 primitive 阻断。后续页面迁移仍不得以 wrapper 或复制旧 deck 路径绕过现有契约。
+> **状态（2026-07-12）：Task 2（General）自动化迁移已完成，Task 3 尚未开始。** General 已接入公共 layout/deck、registry/导航、统一滚动 policy 与 NumericField 文本预热桥接；`run_cxx_tests`（2131 项）已通过。General 的真实客户端视觉/交互矩阵仍待用户反馈，P5 整体仍未完成。后续页面迁移不得以 wrapper 或复制旧 deck 路径绕过既有契约。
 
 **Goal:** 在不重做 P1–P4 公共 primitive 的前提下，将 General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 八个标准设置页完整迁移到统一 page layout、card、deck、input、numeric 与 scroll 契约，并逐页删除旧实现路径。
 
@@ -253,17 +253,18 @@ Expected: docs check PASS; one focused harness commit, with no page implementati
 
 **Files:**
 - Modify: `src/game/client/components/menus_settings.cpp:680-901`
+- Modify: `src/game/client/components/menus.cpp`、`src/game/client/components/menus.h`（复用 NumericField 标签/文本计划桥接）
+- Modify: `src/game/client/ui_scrollregion.h`（公开既有唯一滚动状态）
 - Modify: `src/game/client/QmUi/QmCardRegistry.cpp:72-101`
 - Modify: `src/game/client/components/qmclient/menus_qmclient.cpp:115-127`
-- Modify: `src/test/qm_card_registry_test.cpp`
-- Modify: `src/test/qm_new_ui_menu_branch_test.cpp`
+- Modify: `src/test/qm_card_registry_test.cpp`、`src/test/qm_new_ui_menu_branch_test.cpp`、`src/test/qmclient_monitoring_test.cpp`
 
 **Interfaces:**
 - Consumes: shared layout/card/deck/numeric/scroll interfaces; General uses `ui_widget::NumericField(...)` for update rate and retention limits and does not invent a text field.
 - Produces: stable IDs `deck:general-game`, `deck:general-language`, `deck:general-client`, `deck:general-recording`; navigation tab `general -> CMenus::SETTINGS_GENERAL`.
 - Produces test helper: `RegistryModelAfterRoundTrip() -> qm_card_order::CModel` for all later page-placement tests.
 
-- [ ] **Step 1: Write the failing behavior and deletion tests**
+- [x] **Step 1: Write the failing behavior and deletion tests**
 
 Add the reusable round-trip helper, append the four IDs to `CoversCurrentSettingsDeckIds`, and add a registry/model test using the reloaded model:
 
@@ -289,7 +290,7 @@ EXPECT_EQ(Model.StableIdOrder("deck:", "general", 2),
 
 Add `QmNewUiMenuBranches.GeneralStandardPageUsesUnifiedSettingsStack` asserting the General function and route contain the required common tokens/stable IDs and do not contain the common forbidden tokens. Extend the registry test by checking all four IDs individually plus the existing no-duplicate invariant; do not assert a global registry total.
 
-- [ ] **Step 2: Run the focused tests and verify red**
+- [x] **Step 2: Run the focused tests and verify red**
 
 ```powershell
 cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14
@@ -298,7 +299,7 @@ cmake-build-release/testrunner.exe --gtest_filter=QmCardRegistry.GeneralStandard
 
 Expected: FAIL because General registry entries, route and public stack calls are absent.
 
-- [ ] **Step 3: Implement the minimal General migration**
+- [x] **Step 3: Implement the minimal General migration**
 
 Keep current behavior and split content into the four declared definitions. Top-level width, columns, insets and overflow come only from `SSettingsPageLayoutFrame`; each definition renders only inside the content rect supplied by `CSettingsCardDeck::Render(...)`. Preserve the P3 `ui_widget::NumericField(...)` calls, including the already-unified `SCROLLBAR_OPTION_DELAYUPDATE` commit policy, and keep file/directory actions as buttons. Use one outer `CScrollRegion` adapter, its `State()` returning the only `CQmScrollState`, and a `QmResolveScrollPolicy(...)` settings-page policy; nested Language list keeps the P4 list adapter.
 
@@ -312,7 +313,7 @@ Add these exact registry/navigation rows:
 {"general", CMenus::SETTINGS_GENERAL},
 ```
 
-- [ ] **Step 4: Run green tests and page inventory**
+- [x] **Step 4: Run green tests and page inventory**
 
 ```powershell
 cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14
@@ -322,7 +323,9 @@ python qmclient_scripts/gate/check_settings_ui_migration.py --page general
 
 Expected: both commands PASS; inventory reports `general: clean`.
 
-- [ ] **Step 5: Commit the General slice**
+> **自动验证记录（2026-07-12）：** Focused red/green 已完成；`game-client` 构建通过；独立审查发现并收口了嵌套滚轮 hot-region/owner 优先级与 Game 内容高度问题。最终 `run_cxx_tests` 通过 2132 项、`check_docs.py` 通过、default gate 通过（仅保留既有 `qm_chat_edge_margin` / `qm_chat_anim_easing` 未使用配置警告）。视觉/真实操作仍由用户验收。
+
+- [x] **Step 5: Commit the General slice**
 
 ```powershell
 git add src/game/client/components/menus_settings.cpp src/game/client/QmUi/QmCardRegistry.cpp src/game/client/components/qmclient/menus_qmclient.cpp src/test/qm_card_registry_test.cpp src/test/qm_new_ui_menu_branch_test.cpp

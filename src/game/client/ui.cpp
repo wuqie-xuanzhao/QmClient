@@ -331,6 +331,7 @@ void CUi::Update()
 	m_pBecomingHotItem = nullptr;
 	m_pHotScrollRegion = m_pBecomingHotScrollRegion;
 	m_pBecomingHotScrollRegion = nullptr;
+	m_BecomingHotScrollRegionPriority = EUiWheelOwnerPriority::PAGE;
 	m_UnderlyingScrollBlocked = false;
 	for(const SPopupMenu &PopupMenu : m_vPopupMenus)
 	{

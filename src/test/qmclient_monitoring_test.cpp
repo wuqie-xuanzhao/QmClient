@@ -1902,7 +1902,7 @@ TEST(QmMonitoringHelpers, SettingsTextColdStartAvoidsGlobalLanguageCacheAndCache
 		EXPECT_EQ(Source.find("if(g_Config.m_UiSettingsPage == SETTINGS_LANGUAGE)"), std::string::npos);
 		EXPECT_NE(Source.find("PrepareLanguagePageCache(List.w, true);"), std::string::npos);
 		EXPECT_EQ(Source.find("PrepareLanguagePageCache(MainView.w, false)"), std::string::npos);
-		EXPECT_NE(Source.find("PrepareLanguagePageCache(Right.w, false);"), std::string::npos);
+		EXPECT_NE(Source.find("PrepareLanguagePageCache(Content.w, false);"), std::string::npos);
 		EXPECT_NE(Source.find("SettingsWarmupConsumeBudget(m_SettingsFrameBudget, ESettingsWarmupCost::TEXT_CONTAINER)"), std::string::npos);
 		EXPECT_NE(Source.find("const bool TextChanged = RectEl.m_Text != Language.m_Name.c_str();"), std::string::npos);
 		EXPECT_NE(Source.find("const bool SizeChanged = RectEl.m_Width != Label.w || RectEl.m_Height != Label.h;"), std::string::npos);
@@ -2104,16 +2104,16 @@ TEST(QmMonitoringHelpers, SettingsTextPlanCoversHighValueTClientAndQmClientStati
 		const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 		const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 
-		EXPECT_NE(Settings.find("DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, \"game-title\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, \"language-title\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, \"client-title\""), std::string::npos);
+		EXPECT_NE(Settings.find("\"deck:general-game\""), std::string::npos);
+		EXPECT_NE(Settings.find("\"deck:general-language\""), std::string::npos);
+		EXPECT_NE(Settings.find("\"deck:general-client\""), std::string::npos);
 		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClDyncam, \"general-dynamic-camera\""), std::string::npos);
 		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeapons, \"general-switch-weapon-pickup\""), std::string::npos);
 		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeaponsOutOfAmmo, \"general-switch-weapon-out-of-ammo\""), std::string::npos);
 		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClSkipStartMenu, \"general-skip-main-menu\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, \"general-refresh-rate\""), std::string::npos);
+		EXPECT_NE(Settings.find("DoNumericField(\"general-refresh-rate\""), std::string::npos);
 		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &s_LowerRefreshRate, \"general-lower-refresh-rate\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &s_SettingsButtonId, \"general-settings-file\""), std::string::npos);
+		EXPECT_NE(Settings.find("DoOpenButton(s_SettingsButtonId, \"general-settings-file\""), std::string::npos);
 
 		EXPECT_NE(Menus.find("static constexpr int s_aBaseSettingsPages[]"), std::string::npos);
 		EXPECT_NE(Menus.find("RenderSettings(MainView);"), std::string::npos);
@@ -2222,9 +2222,9 @@ TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
 	EXPECT_NE(Menus.find("switch(Item.m_StyleMode)"), std::string::npos);
 
 	const std::vector<std::string> vRequiredBaseIds = {
-		"\"game-title\"",
-		"\"language-title\"",
-		"\"client-title\"",
+		"\"deck:general-game\"",
+		"\"deck:general-language\"",
+		"\"deck:general-client\"",
 		"\"tee-name-label\"",
 		"\"tee-clan-label\"",
 		"\"ddnet-run-on-join-label\"",
@@ -2361,9 +2361,13 @@ TEST(QmMonitoringHelpers, SettingsStableTextPlanKeysMatchVisibleWrappers)
 	EXPECT_NE(ScrollbarBody.find("BuildMenuTextStyleKey("), std::string::npos);
 
 	const std::string ScrollbarOptionBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
+	const std::string NumericLabelBridge = ExtractSourceFunctionBody(Menus, "bool CMenus::PrepareSettingsNumericFieldLabel(");
 	ASSERT_FALSE(ScrollbarOptionBody.empty());
-	EXPECT_NE(ScrollbarOptionBody.find("ui_widget::SliderInputFieldLabelRect("), std::string::npos);
-	EXPECT_NE(ScrollbarOptionBody.find("BuildMenuTextStyleKey("), std::string::npos);
+	ASSERT_FALSE(NumericLabelBridge.empty());
+	EXPECT_NE(ScrollbarOptionBody.find("PrepareSettingsNumericFieldLabel("), std::string::npos);
+	EXPECT_NE(NumericLabelBridge.find("ui_widget::SliderInputFieldLabelRect("), std::string::npos);
+	EXPECT_NE(NumericLabelBridge.find("BuildMenuTextStyleKey("), std::string::npos);
+	EXPECT_NE(NumericLabelBridge.find("CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
 	EXPECT_EQ(ScrollbarOptionBody.find("DoSettingsMenuLabel(Page, Tab, Subtab, pTextId, &Label, pStr, FontSize, TEXTALIGN_ML, {}, (int)Label.w);"), std::string::npos);
 	const std::string SplitScrollbarBody = ExtractSourceFunctionBody(Menus, "void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const");
 	ASSERT_FALSE(SplitScrollbarBody.empty());
