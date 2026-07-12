@@ -19,6 +19,7 @@ struct SSettingsCardDefinition
 	SSettingsCardSpec m_Spec;
 	FSettingsCardMeasure m_Measure;
 	FSettingsCardRender m_Render;
+	FSettingsCardRenderMeasured m_RenderMeasured;
 	FSettingsCardPreLayoutInput m_PreLayoutInput;
 	FSettingsCardHeaderAction m_HeaderAction;
 	std::function<bool()> m_IsCollapsed;

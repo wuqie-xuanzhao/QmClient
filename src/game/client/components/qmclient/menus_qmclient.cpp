@@ -92,6 +92,45 @@ namespace
 {
 	std::function<bool()> g_QmClientEnsureSponsorQrTexture;
 	std::function<void(const CUIRect &, float)> g_QmClientRenderTexture;
+
+	// Visual Deck 需要完整的模块表，才能在切换单张卡片的折叠状态时保留其他 tab 的历史配置。
+	const std::array<qm_module::SQmModuleEntry, qm_module::QmModuleCount> s_aQmModuleDefaults = {{{qm_module::EQmModuleId::Info, qm_module::EQmModuleColumn::Full, 0, "info"},
+		{qm_module::EQmModuleId::ChatBubble, qm_module::EQmModuleColumn::Left, 0, "chat_bubble"},
+		{qm_module::EQmModuleId::SkinTransition, qm_module::EQmModuleColumn::Left, 1, "skin_transition"},
+		{qm_module::EQmModuleId::FocusMode, qm_module::EQmModuleColumn::Left, 2, "focus_mode"},
+		{qm_module::EQmModuleId::GoresActor, qm_module::EQmModuleColumn::Left, 3, "gores_actor"},
+		{qm_module::EQmModuleId::Gores, qm_module::EQmModuleColumn::Left, 4, "gores"},
+		{qm_module::EQmModuleId::KeyBinds, qm_module::EQmModuleColumn::Left, 5, "key_binds"},
+		{qm_module::EQmModuleId::MiniFeatures, qm_module::EQmModuleColumn::Left, 6, "mini_features"},
+		{qm_module::EQmModuleId::JumpHint, qm_module::EQmModuleColumn::Left, 7, "jump_hint"},
+		{qm_module::EQmModuleId::WeaponTrajectory, qm_module::EQmModuleColumn::Left, 8, "weapon_trajectory"},
+		{qm_module::EQmModuleId::Coords, qm_module::EQmModuleColumn::Left, 9, "coords"},
+		{qm_module::EQmModuleId::Streamer, qm_module::EQmModuleColumn::Left, 10, "streamer"},
+		{qm_module::EQmModuleId::FriendNotify, qm_module::EQmModuleColumn::Left, 11, "friend_notify"},
+		{qm_module::EQmModuleId::BlockWords, qm_module::EQmModuleColumn::Left, 12, "block_words"},
+		{qm_module::EQmModuleId::Translate, qm_module::EQmModuleColumn::Left, 14, "translate"},
+		{qm_module::EQmModuleId::TranslateUi, qm_module::EQmModuleColumn::Left, 15, "translate_ui"},
+		{qm_module::EQmModuleId::QiaFen, qm_module::EQmModuleColumn::Left, 13, "qiafen"},
+		{qm_module::EQmModuleId::PieMenu, qm_module::EQmModuleColumn::Left, 16, "pie_menu"},
+		{qm_module::EQmModuleId::CameraView, qm_module::EQmModuleColumn::Right, 0, "camera_view"},
+		{qm_module::EQmModuleId::WeaponAnimation, qm_module::EQmModuleColumn::Right, 1, "weapon_animation"},
+		{qm_module::EQmModuleId::EntityOverlay, qm_module::EQmModuleColumn::Right, 2, "entity_overlay"},
+		{qm_module::EQmModuleId::Laser, qm_module::EQmModuleColumn::Right, 3, "laser"},
+		{qm_module::EQmModuleId::PlayerStats, qm_module::EQmModuleColumn::Right, 4, "player_stats"},
+		{qm_module::EQmModuleId::CollisionHitbox, qm_module::EQmModuleColumn::Right, 5, "collision_hitbox"},
+		{qm_module::EQmModuleId::FavoriteMaps, qm_module::EQmModuleColumn::Right, 6, "favorite_maps"},
+		{qm_module::EQmModuleId::HJAssist, qm_module::EQmModuleColumn::Right, 7, "hj_assist"},
+		{qm_module::EQmModuleId::SpeedrunTimer, qm_module::EQmModuleColumn::Right, 8, "speedrun_timer"},
+		{qm_module::EQmModuleId::DebugGraph, qm_module::EQmModuleColumn::Right, 9, "debug_graph"},
+		{qm_module::EQmModuleId::InputOverlay, qm_module::EQmModuleColumn::Right, 10, "input_overlay"},
+		{qm_module::EQmModuleId::HudNotifications, qm_module::EQmModuleColumn::Right, 11, "hud_notifications"},
+		{qm_module::EQmModuleId::Voice, qm_module::EQmModuleColumn::Right, 12, "voice"},
+		{qm_module::EQmModuleId::DummyMiniView, qm_module::EQmModuleColumn::Right, 13, "dummy_miniview"},
+		{qm_module::EQmModuleId::DynamicIsland, qm_module::EQmModuleColumn::Right, 14, "dynamic_island"},
+		{qm_module::EQmModuleId::SystemMediaControls, qm_module::EQmModuleColumn::Right, 15, "system_media_controls"},
+		{qm_module::EQmModuleId::Lyrics, qm_module::EQmModuleColumn::Right, 16, "lyrics"},
+		{qm_module::EQmModuleId::Background3D, qm_module::EQmModuleColumn::Right, 17, "background_3d"},
+		{qm_module::EQmModuleId::CardAppearance, qm_module::EQmModuleColumn::Left, 17, "card_appearance"}}};
 }
 
 struct SQmGlobalSearchCard
@@ -1546,6 +1585,121 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 		SaveSettingsCardOrderModel();
 }
 
+void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)
+{
+	using namespace qm_module;
+	const float UiScale = std::clamp(MainView.w / 1000.0f, MainView.w < 680.0f ? 0.78f : 0.85f, 1.0f);
+	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
+	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
+	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
+	const float LabelMaxWidth = std::max(MainView.w < 680.0f ? 96.0f : 120.0f, MainView.w * (MainView.w < 680.0f ? 0.38f : 0.45f));
+	const float LabelWidth = std::clamp((MainView.w < 680.0f ? 148.0f : 170.0f) * UiScale, MainView.w < 680.0f ? 96.0f : 120.0f, LabelMaxWidth);
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	IUiContext CardCtx = SettingsUiContext("settings_qmclient_visual", UiScale);
+	if(PrewarmOnly)
+	{
+		CardCtx.m_pAnim = nullptr;
+		CardCtx.m_pTree = nullptr;
+	}
+	static CScrollRegion s_ScrollRegion;
+	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
+	static bool s_CollapsedInitialized = false;
+	const bool CollapsedConfigChanged = !s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0;
+	if(CollapsedConfigChanged)
+	{
+		ParseLegacyQmCollapsed(g_Config.m_QmSidebarCardCollapsed, s_aQmModuleDefaults, s_aCollapsed);
+		s_CollapsedInitialized = true;
+	}
+	char aNormalizedCollapsed[sizeof(g_Config.m_QmSidebarCardCollapsed)];
+	SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, aNormalizedCollapsed, sizeof(aNormalizedCollapsed));
+	if(str_comp(aNormalizedCollapsed, g_Config.m_QmSidebarCardCollapsed) != 0)
+		str_copy(g_Config.m_QmSidebarCardCollapsed, aNormalizedCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
+	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
+
+	auto ModuleStateIndex = [](EQmModuleId Id) { return std::clamp((int)Id, 0, (int)QmModuleCount - 1); };
+	auto ToggleCollapsed = [&](EQmModuleId Id) {
+		s_aCollapsed[ModuleStateIndex(Id)] = !s_aCollapsed[ModuleStateIndex(Id)];
+		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
+		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
+	};
+	static std::array<float, QmModuleCount> s_aContentHeights = {};
+	auto EstimateContentHeight = [LineHeight, BodySize, LineSpacing](EQmModuleId Id) {
+		const auto Rows = [LineHeight, LineSpacing](float Count) { return Count * LineHeight + std::max(0.0f, Count - 1.0f) * LineSpacing; };
+		switch(Id)
+		{
+		case EQmModuleId::ChatBubble:
+			return g_Config.m_QmChatBubble ? Rows(5.0f) + 2.0f * LineHeight + LineSpacing * 2.0f : Rows(1.0f);
+		case EQmModuleId::CameraView:
+			return Rows(3.0f + (g_Config.m_QmCameraDrift ? 3.0f : 0.0f) + (g_Config.m_QmDynamicFov ? 2.0f : 0.0f) + (g_Config.m_QmAspectPreset == 6 ? 1.0f : 0.0f)) + BodySize;
+		case EQmModuleId::SkinTransition:
+			return Rows(g_Config.m_QmSkinChangeTransition ? 12.0f : 8.0f) + BodySize * 3.0f;
+		case EQmModuleId::FocusMode:
+			return Rows(20.0f);
+		case EQmModuleId::WeaponAnimation:
+			return g_Config.m_QmWeaponSwitchAnim ? Rows(6.0f) + LineSpacing : Rows(1.0f) + LineSpacing;
+		case EQmModuleId::Streamer: return Rows(3.0f);
+		case EQmModuleId::EntityOverlay: return Rows(9.0f);
+		case EQmModuleId::CollisionHitbox:
+			return g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox ? Rows(7.0f) + 3.0f * LineHeight + LineSpacing * 3.0f : Rows(1.0f);
+		case EQmModuleId::TranslateUi: return Rows(6.0f);
+		case EQmModuleId::CardAppearance: return Rows(2.0f);
+		default: return Rows(1.0f);
+		}
+	};
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(10);
+	const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {pStableId, Localize(pTitle), Localize(pSubtitle)};
+		Definition.m_Measure = [Id, &ContentHeight = s_aContentHeights[ModuleStateIndex(Id)], EstimateContentHeight](float) { return ContentHeight > 0.0f ? ContentHeight : EstimateContentHeight(Id); };
+		Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
+		Definition.m_RenderMeasured = [Render, &ContentHeight = s_aContentHeights[ModuleStateIndex(Id)]](CUIRect &Content) {
+			const float StartY = Content.y;
+			Render(Content);
+			ContentHeight = std::max(0.0f, Content.y - StartY);
+		};
+		Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
+		Definition.m_HeaderAction = [this, Id, ToggleCollapsed, PrewarmOnly, ModuleStateIndex](const SSettingsCardFrame &Frame, bool Collapsed) {
+			static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
+			const int Index = ModuleStateIndex(Id);
+			if(!PrewarmOnly && DoButton_Menu(&s_aCollapseButtons[Index], Collapsed ? "+" : "-", 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
+				ToggleCollapsed(Id);
+			if(!PrewarmOnly && Ui()->MouseHovered(&Frame.m_HandleRect))
+				GameClient()->m_Tooltips.DoToolTip(&s_aCollapseButtons[Index], &Frame.m_HandleRect, Collapsed ? Localize("Expand module") : Localize("Collapse module"));
+		};
+		Definition.m_MeasureEachFrame = true;
+		vCards.push_back(std::move(Definition));
+	};
+
+	AddCard(EQmModuleId::ChatBubble, "qm:chat_bubble", "Chat Bubble", "Show chat messages above players", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualChatBubbleContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::CameraView, "qm:camera_view", "Camera & FOV", "Adjust game camera and FOV settings", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualCameraViewContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::SkinTransition, "qm:skin_transition", "Skin transition", "Configure hammer skin steal and skin transition animations", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualSkinTransitionContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::FocusMode, "qm:focus_mode", "Zen Mode", "Hide UI for focused gameplay", [this, LineHeight, BodySize, LineSpacing, LabelWidth](CUIRect &Content) { RenderQmVisualFocusModeContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, LabelWidth); });
+	AddCard(EQmModuleId::WeaponAnimation, "qm:weapon_animation", "Weapon animation", "Play a slide-in rotation animation when switching weapons", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualWeaponAnimationContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, LineSpacing, PrewarmOnly); });
+	AddCard(EQmModuleId::Streamer, "qm:streamer", "Streamer Mode", "Protect names and skins while streaming", [this, LineHeight, LineSpacing](CUIRect &Content) { RenderQmVisualStreamerContent(Content, LineHeight, LineSpacing); });
+	AddCard(EQmModuleId::EntityOverlay, "qm:entity_overlay", "Entity Layer Colors", "Adjust opacity of entity layers", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualEntityOverlayContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::CollisionHitbox, "qm:collision_hitbox", "Hitbox mode", "Show collision and weapon interaction", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualCollisionHitboxContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::TranslateUi, "qm:translate_ui", "Chat Translate Button UI", "Chat box button appearance settings", [this, LineHeight, BodySize, LineSpacing](CUIRect &Content) { RenderQmVisualTranslateUiContent(Content, LineHeight, BodySize, LineSpacing); });
+	AddCard(EQmModuleId::CardAppearance, "qm:card_appearance", "Card Appearance", "Card background blur and corner rounding", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualCardAppearanceContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = PrewarmOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = PrewarmOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !PrewarmOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !PrewarmOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !PrewarmOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !PrewarmOnly && Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = PrewarmOnly ? nullptr : &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(CardCtx, Page, "visual", vCards, SettingsCardOrderModel(), PrewarmOnly ? nullptr : &s_ScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!PrewarmOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+}
+
 void CMenus::RenderSettingsGlobalSearch(CUIRect MainView, bool PrewarmOnly)
 {
 	RenderSettingsGlobalSearchContent(MainView, PrewarmOnly);
@@ -1947,6 +2101,13 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_OVERVIEW)
 		{
 			RenderSettingsQmClientOverview(ContentView, PrewarmOnly);
+			if(TabTransitionActive)
+				Ui()->ClipDisable();
+			return;
+		}
+		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_VISUAL)
+		{
+			RenderSettingsQmClientVisualDeck(ContentView, PrewarmOnly);
 			if(TabTransitionActive)
 				Ui()->ClipDisable();
 			return;
@@ -2455,45 +2616,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		default: return "active_tab_total";
 		}
 	};
-
-	// Layout string format: key:column:order; entries separated by ';'.
-	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
-		{EQmModuleId::ChatBubble, EQmModuleColumn::Left, 0, "chat_bubble"},
-		{EQmModuleId::SkinTransition, EQmModuleColumn::Left, 1, "skin_transition"},
-		{EQmModuleId::FocusMode, EQmModuleColumn::Left, 2, "focus_mode"},
-		{EQmModuleId::GoresActor, EQmModuleColumn::Left, 3, "gores_actor"},
-		{EQmModuleId::Gores, EQmModuleColumn::Left, 4, "gores"},
-		{EQmModuleId::KeyBinds, EQmModuleColumn::Left, 5, "key_binds"},
-		{EQmModuleId::MiniFeatures, EQmModuleColumn::Left, 6, "mini_features"},
-		{EQmModuleId::JumpHint, EQmModuleColumn::Left, 7, "jump_hint"},
-		{EQmModuleId::WeaponTrajectory, EQmModuleColumn::Left, 8, "weapon_trajectory"},
-		{EQmModuleId::Coords, EQmModuleColumn::Left, 9, "coords"},
-		{EQmModuleId::Streamer, EQmModuleColumn::Left, 10, "streamer"},
-		{EQmModuleId::FriendNotify, EQmModuleColumn::Left, 11, "friend_notify"},
-		{EQmModuleId::BlockWords, EQmModuleColumn::Left, 12, "block_words"},
-		{EQmModuleId::Translate, EQmModuleColumn::Left, 14, "translate"},
-		{EQmModuleId::TranslateUi, EQmModuleColumn::Left, 15, "translate_ui"},
-		{EQmModuleId::QiaFen, EQmModuleColumn::Left, 13, "qiafen"},
-		{EQmModuleId::PieMenu, EQmModuleColumn::Left, 16, "pie_menu"},
-		{EQmModuleId::CameraView, EQmModuleColumn::Right, 0, "camera_view"},
-		{EQmModuleId::WeaponAnimation, EQmModuleColumn::Right, 1, "weapon_animation"},
-		{EQmModuleId::EntityOverlay, EQmModuleColumn::Right, 2, "entity_overlay"},
-		{EQmModuleId::Laser, EQmModuleColumn::Right, 3, "laser"},
-		{EQmModuleId::PlayerStats, EQmModuleColumn::Right, 4, "player_stats"},
-		{EQmModuleId::CollisionHitbox, EQmModuleColumn::Right, 5, "collision_hitbox"},
-		{EQmModuleId::FavoriteMaps, EQmModuleColumn::Right, 6, "favorite_maps"},
-		{EQmModuleId::HJAssist, EQmModuleColumn::Right, 7, "hj_assist"},
-		{EQmModuleId::SpeedrunTimer, EQmModuleColumn::Right, 8, "speedrun_timer"},
-		{EQmModuleId::DebugGraph, EQmModuleColumn::Right, 9, "debug_graph"},
-		{EQmModuleId::InputOverlay, EQmModuleColumn::Right, 10, "input_overlay"},
-		{EQmModuleId::HudNotifications, EQmModuleColumn::Right, 11, "hud_notifications"},
-		{EQmModuleId::Voice, EQmModuleColumn::Right, 12, "voice"},
-		{EQmModuleId::DummyMiniView, EQmModuleColumn::Right, 13, "dummy_miniview"},
-		{EQmModuleId::DynamicIsland, EQmModuleColumn::Right, 14, "dynamic_island"},
-		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 15, "system_media_controls"},
-		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 16, "lyrics"},
-		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"},
-		{EQmModuleId::CardAppearance, EQmModuleColumn::Left, 17, "card_appearance"}}};
 
 	static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {
 		EQmModuleId::ChatBubble, EQmModuleId::CameraView, EQmModuleId::SkinTransition,

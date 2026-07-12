@@ -7381,12 +7381,45 @@ TEST(QmMonitoringHelpers, P2DoesNotHalfMigrateQmClientOrTClientRenderers)
 	EXPECT_EQ(TClient.find("m_SettingsCardDeck.Render("), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6VisualQmClientMigrationRemainsExplicitlyUnclaimed)
+TEST(QmMonitoringHelpers, P6VisualQmClientMigrationUsesThePublicDeckOnly)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	EXPECT_EQ(QmClient.find("RenderSettingsQmClientVisualDeck"), std::string::npos);
-	EXPECT_NE(QmClient.find("RenderQmModuleHeadline(CardContent, 0, Localize(\"Chat Bubble\")"), std::string::npos);
-	EXPECT_NE(QmClient.find("RegisterModuleCard(pModule, ColumnId"), std::string::npos);
+	const std::string VisualDeckBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)");
+	const std::string QmClientBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(VisualDeckBody.empty());
+	ASSERT_FALSE(QmClientBody.empty());
+
+	EXPECT_NE(VisualDeckBody.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("SettingsCardOrderModel()"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("QmResolveScrollPolicy"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("QmScrollRegionParamsFromPolicy"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:chat_bubble"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:camera_view"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:skin_transition"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:focus_mode"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:weapon_animation"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:streamer"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:entity_overlay"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:collision_hitbox"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:translate_ui"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("qm:card_appearance"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("ParseLegacyQmCollapsed"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("SerializeLegacyQmCollapsed"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("m_MeasureEachFrame = true"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("m_RenderMeasured"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("ContentHeight = std::max(0.0f, Content.y - StartY)"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("const FSettingsCardRenderMeasured &Render"), std::string::npos);
+	EXPECT_NE(VisualDeckBody.find("(CUIRect &Content) { RenderQmVisual"), std::string::npos);
+	EXPECT_EQ(VisualDeckBody.find("s_GlassCards"), std::string::npos);
+	EXPECT_EQ(VisualDeckBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(VisualDeckBody.find("HandleModuleDragState"), std::string::npos);
+	EXPECT_EQ(VisualDeckBody.find("BeginSettingsQmScrollContainer"), std::string::npos);
+
+	const size_t VisualDispatch = QmClientBody.find("RenderSettingsQmClientVisualDeck(ContentView, PrewarmOnly)");
+	const size_t LegacyScroll = QmClientBody.find("BeginSettingsQmScrollContainer");
+	ASSERT_NE(VisualDispatch, std::string::npos);
+	ASSERT_NE(LegacyScroll, std::string::npos);
+	EXPECT_LT(VisualDispatch, LegacyScroll);
 }
 
 TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
@@ -7472,11 +7505,13 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Header.find("m_ReflowCompleteFeedbackRemaining"), std::string::npos);
 	EXPECT_NE(Header.find("m_vContentHeights"), std::string::npos);
 	EXPECT_NE(Header.find("m_MeasureEachFrame"), std::string::npos);
+	EXPECT_NE(Header.find("m_RenderMeasured"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardEntryNodeKey"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardReflowNodeKey"), std::string::npos);
 	EXPECT_NE(Source.find("EUiAnimProperty::ALPHA"), std::string::npos);
 	EXPECT_NE(Source.find("m_DisplayCycle"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCard(Ctx, Card.m_Frame"), std::string::npos);
+	EXPECT_NE(Source.find("Card.m_pDefinition->m_RenderMeasured"), std::string::npos);
 	EXPECT_NE(Source.find("ResolveSettingsPageLayoutForScrollViewport"), std::string::npos);
 	EXPECT_NE(Source.find("MouseInScrollViewport"), std::string::npos);
 	EXPECT_NE(Source.find("Input.m_MouseX >= DrawLayout.m_aColumns[0].x"), std::string::npos);
