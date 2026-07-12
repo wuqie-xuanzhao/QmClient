@@ -7503,6 +7503,47 @@ TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsThe
 	EXPECT_EQ(LegacyCase.find("RenderSliderWithValueInput"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6HudBasicContentExtractionsKeepLegacyRendererAsTheOnlyShellOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string DebugGraphBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudDebugGraphContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const std::string InputOverlayBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudInputOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const std::string DummyMiniViewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const size_t DebugGraphStart = QmClient.rfind("case EQmModuleId::DebugGraph:");
+	const size_t DebugGraphEnd = QmClient.find("case EQmModuleId::InputOverlay:", DebugGraphStart);
+	const size_t InputOverlayStart = QmClient.rfind("case EQmModuleId::InputOverlay:");
+	const size_t InputOverlayEnd = QmClient.find("case EQmModuleId::HudNotifications:", InputOverlayStart);
+	const size_t DummyMiniViewStart = QmClient.rfind("case EQmModuleId::DummyMiniView:");
+	const size_t DummyMiniViewEnd = QmClient.find("case EQmModuleId::Background3D:", DummyMiniViewStart);
+	const std::string DebugGraphCase = DebugGraphStart != std::string::npos && DebugGraphEnd != std::string::npos ? QmClient.substr(DebugGraphStart, DebugGraphEnd - DebugGraphStart) : "";
+	const std::string InputOverlayCase = InputOverlayStart != std::string::npos && InputOverlayEnd != std::string::npos ? QmClient.substr(InputOverlayStart, InputOverlayEnd - InputOverlayStart) : "";
+	const std::string DummyMiniViewCase = DummyMiniViewStart != std::string::npos && DummyMiniViewEnd != std::string::npos ? QmClient.substr(DummyMiniViewStart, DummyMiniViewEnd - DummyMiniViewStart) : "";
+	ASSERT_FALSE(DebugGraphBody.empty());
+	ASSERT_FALSE(InputOverlayBody.empty());
+	ASSERT_FALSE(DummyMiniViewBody.empty());
+	ASSERT_FALSE(DebugGraphCase.empty());
+	ASSERT_FALSE(InputOverlayCase.empty());
+	ASSERT_FALSE(DummyMiniViewCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmHudCheckbox"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmHudDebugGraphContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmHudInputOverlayContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmHudDummyMiniViewContent"), std::string::npos);
+	EXPECT_NE(DebugGraphBody.find("RenderQmHudKeyBindRow"), std::string::npos);
+	EXPECT_NE(InputOverlayBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(DummyMiniViewBody.find("RenderQmHudCheckbox"), std::string::npos);
+	EXPECT_EQ(DebugGraphBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(InputOverlayBody.find("HandleModuleDragState"), std::string::npos);
+	EXPECT_EQ(DummyMiniViewBody.find("s_GlassCards"), std::string::npos);
+	EXPECT_NE(DebugGraphCase.find("RenderQmHudDebugGraphContent"), std::string::npos);
+	EXPECT_NE(InputOverlayCase.find("RenderQmHudInputOverlayContent"), std::string::npos);
+	EXPECT_NE(DummyMiniViewCase.find("RenderQmHudDummyMiniViewContent"), std::string::npos);
+	EXPECT_EQ(DebugGraphCase.find("RenderSliderWithValueInput"), std::string::npos);
+	EXPECT_EQ(InputOverlayCase.find("RenderSliderWithValueInput"), std::string::npos);
+	EXPECT_EQ(DummyMiniViewCase.find("RenderSliderWithValueInput"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");

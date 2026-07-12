@@ -1585,6 +1585,52 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 		SaveSettingsCardOrderModel();
 }
 
+bool CMenus::RenderQmHudCheckbox(CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, const char *pTextId, const char *pText, int *pValue)
+{
+	CUIRect Row;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, &Row) != 0;
+	if(Changed)
+		*pValue ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	return Changed;
+}
+
+void CMenus::RenderQmHudLabel(const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign, const SLabelProperties &LabelProps)
+{
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pTextId, pRect, pText, FontSize, TextAlign, LabelProps, (int)pRect->w);
+}
+
+void CMenus::RenderQmHudKeyBindRow(CUIRect &Content, CButtonContainer &ReaderButton, CButtonContainer &ClearButton, const char *pLabel, const char *pCommand, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)
+{
+	CBindSlot Bind(KEY_UNKNOWN, KeyModifier::NONE);
+	const auto CurrentBindIt = g_CommandBindCache.find(pCommand);
+	if(CurrentBindIt != g_CommandBindCache.end())
+		Bind = CurrentBindIt->second;
+
+	CUIRect BindRow, BindLabel, BindKey;
+	Content.HSplitTop(LineHeight, &BindRow, &Content);
+	BindRow.VSplitLeft(LabelWidth, &BindLabel, &BindKey);
+	Ui()->DoLabel(&BindLabel, pLabel, BodySize, TEXTALIGN_ML);
+
+	const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&ReaderButton, &ClearButton, &BindKey, Bind, false);
+	if(Result.m_Bind != Bind)
+	{
+		if(Bind.m_Key != KEY_UNKNOWN)
+			GameClient()->m_Binds.Bind(Bind.m_Key, "", false, Bind.m_ModifierMask);
+		if(Result.m_Bind.m_Key != KEY_UNKNOWN)
+		{
+			GameClient()->m_Binds.Bind(Result.m_Bind.m_Key, pCommand, false, Result.m_Bind.m_ModifierMask);
+			g_CommandBindCache.insert_or_assign(std::string(pCommand), Result.m_Bind);
+		}
+		else
+		{
+			g_CommandBindCache.erase(pCommand);
+		}
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
@@ -1614,6 +1660,79 @@ void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight,
 	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &g_Config.m_QmSpeedrunTimerAutoDisable, "Auto disable when time expires", Localize("Auto disable when time expires"), g_Config.m_QmSpeedrunTimerAutoDisable, &Row))
 		g_Config.m_QmSpeedrunTimerAutoDisable ^= 1;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmHudDebugGraphContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	static CButtonContainer s_ReaderButtonDebugGraphToggle;
+	static CButtonContainer s_ClearButtonDebugGraphToggle;
+	RenderQmHudKeyBindRow(Content, s_ReaderButtonDebugGraphToggle, s_ClearButtonDebugGraphToggle, Localize("Global toggle key"), "toggle dbg_graphs 0 1", LineHeight, BodySize, LineSpacing, LabelWidth);
+
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmHudLabel("qmclient-debug-graph-panel-opacity", &LabelColumn, Localize("Panel opacity"), BodySize);
+	static int s_QmMonitoringHudOpacityInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmMonitoringHudOpacityInputId, ControlColumn, &g_Config.m_QmMonitoringHudOpacity, 0, 100, "%", PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmHudInputOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmInputOverlay, "Show inputs", Localize("Show inputs"), &g_Config.m_QmInputOverlay);
+	if(!g_Config.m_QmInputOverlay)
+		return;
+
+	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmHudLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, "%", PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_QmInputOverlayScaleInputId;
+	static int s_QmInputOverlayOpacityInputId;
+	static int s_QmInputOverlayPosXInputId;
+	static int s_QmInputOverlayPosYInputId;
+	RenderValue("qmclient-input-overlay-size", "Size", &s_QmInputOverlayScaleInputId, &g_Config.m_QmInputOverlayScale, 1, 200);
+	RenderValue("qmclient-input-overlay-opacity", "Opacity", &s_QmInputOverlayOpacityInputId, &g_Config.m_QmInputOverlayOpacity, 0, 100);
+	RenderValue("qmclient-input-overlay-horizontal-position", "Horizontal position", &s_QmInputOverlayPosXInputId, &g_Config.m_QmInputOverlayPosX, 0, 100);
+	RenderValue("qmclient-input-overlay-vertical-position", "Vertical position", &s_QmInputOverlayPosYInputId, &g_Config.m_QmInputOverlayPosY, 0, 100);
+
+	Content.HSplitTop(BodySize, &Row, &Content);
+	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+	RenderQmHudLabel("qmclient-input-overlay-config-file", &Row, Localize("Config file: data/input_overlay.json"), BodySize);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	Content.HSplitTop(BodySize, &Row, &Content);
+	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+	RenderQmHudLabel("qmclient-input-overlay-auto-hot-reload", &Row, Localize("Auto hot-reload after external saves"), BodySize);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmDummyMiniView, "Enable dummy window", Localize("Enable dummy window"), &g_Config.m_QmDummyMiniView);
+	Content.HSplitTop(LineHeight * 0.8f, nullptr, &Content);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(!g_Config.m_QmDummyMiniView)
+		return;
+
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmDummyMiniViewAuto, "Only show when the other Tee is not on screen", Localize("Only show when the other Tee is not on screen"), &g_Config.m_QmDummyMiniViewAuto);
+	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmHudLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, "%", PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_QmDummyMiniViewSizeInputId;
+	static int s_QmDummyMiniViewZoomInputId;
+	RenderValue("qmclient-dummy-window-size", "Dummy window size", &s_QmDummyMiniViewSizeInputId, &g_Config.m_QmDummyMiniViewSize, 50, 200);
+	RenderValue("qmclient-dummy-window-zoom", "Dummy window zoom", &s_QmDummyMiniViewZoomInputId, &g_Config.m_QmDummyMiniViewZoom, 10, 300);
 }
 
 void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)
@@ -2563,35 +2682,8 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		maximum(LgLineHeight * 6.0f, 220.0f * UiScale),
 	};
 	auto DoKeyBindRow = [&](CUIRect &Content, CButtonContainer &ReaderButton, CButtonContainer &ClearButton, const char *pLabel, const char *pCommand) {
-		CBindSlot Bind(KEY_UNKNOWN, KeyModifier::NONE);
-		const auto CurrentBindIt = CommandBindCache.find(pCommand);
-		if(CurrentBindIt != CommandBindCache.end())
-			Bind = CurrentBindIt->second;
-
-		CUIRect BindRow, BindLabel, BindKey;
-		Content.HSplitTop(LgLineHeight, &BindRow, &Content);
-		BindRow.VSplitLeft(LgLabelWidth, &BindLabel, &BindKey);
-		Ui()->DoLabel(&BindLabel, pLabel, LgBodySize, TEXTALIGN_ML);
-
-		const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&ReaderButton, &ClearButton, &BindKey, Bind, false);
-		if(Result.m_Bind != Bind)
-		{
-			if(Bind.m_Key != KEY_UNKNOWN)
-				GameClient()->m_Binds.Bind(Bind.m_Key, "", false, Bind.m_ModifierMask);
-			if(Result.m_Bind.m_Key != KEY_UNKNOWN)
-			{
-				GameClient()->m_Binds.Bind(Result.m_Bind.m_Key, pCommand, false, Result.m_Bind.m_ModifierMask);
-				CommandBindCache.insert_or_assign(std::string(pCommand), Result.m_Bind);
-			}
-			else
-			{
-				CommandBindCache.erase(pCommand);
-			}
-		}
-
-		Content.HSplitTop(LgLineSpacing, nullptr, &Content);
+		RenderQmHudKeyBindRow(Content, ReaderButton, ClearButton, pLabel, pCommand, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);
 	};
-
 	auto QmModuleIdName = [](EQmModuleId Id) -> const char * {
 		switch(Id)
 		{
@@ -6478,20 +6570,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 11, Localize("Debug graph"), Localize("Debug performance graph panel"));
-
-				static CButtonContainer s_ReaderButtonDebugGraphToggle, s_ClearButtonDebugGraphToggle;
-				DoKeyBindRow(CardContent, s_ReaderButtonDebugGraphToggle, s_ClearButtonDebugGraphToggle,
-					Localize("Global toggle key"), "toggle dbg_graphs 0 1");
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-debug-graph-panel-opacity", &LabelColValue, Localize("Panel opacity"), LgBodySize);
-					static int s_QmMonitoringHudOpacityInputId;
-					RenderSliderWithValueInput(&s_QmMonitoringHudOpacityInputId, ControlColValue, &g_Config.m_QmMonitoringHudOpacity, 0, 100, "%");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderQmHudDebugGraphContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -6512,62 +6591,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 11, Localize("Input overlay"), Localize("Input overlay display"));
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmInputOverlay, "Show inputs", Localize("Show inputs"), &g_Config.m_QmInputOverlay, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmInputOverlay)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-input-overlay-size", &LabelColValue, Localize("Size"), LgBodySize);
-						static int s_QmInputOverlayScaleInputId;
-						RenderSliderWithValueInput(&s_QmInputOverlayScaleInputId, ControlColValue, &g_Config.m_QmInputOverlayScale, 1, 200, "%");
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-input-overlay-opacity", &LabelColValue, Localize("Opacity"), LgBodySize);
-						static int s_QmInputOverlayOpacityInputId;
-						RenderSliderWithValueInput(&s_QmInputOverlayOpacityInputId, ControlColValue, &g_Config.m_QmInputOverlayOpacity, 0, 100, "%");
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-input-overlay-horizontal-position", &LabelColValue, Localize("Horizontal position"), LgBodySize);
-						static int s_QmInputOverlayPosXInputId;
-						RenderSliderWithValueInput(&s_QmInputOverlayPosXInputId, ControlColValue, &g_Config.m_QmInputOverlayPosX, 0, 100, "%");
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-input-overlay-vertical-position", &LabelColValue, Localize("Vertical position"), LgBodySize);
-						static int s_QmInputOverlayPosYInputId;
-						RenderSliderWithValueInput(&s_QmInputOverlayPosYInputId, ControlColValue, &g_Config.m_QmInputOverlayPosY, 0, 100, "%");
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
-					TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-					DoQmSettingsLabel("qmclient-input-overlay-config-file", &Row, Localize("Config file: data/input_overlay.json"), LgBodySize);
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
-					TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-					DoQmSettingsLabel("qmclient-input-overlay-auto-hot-reload", &Row, Localize("Auto hot-reload after external saves"), LgBodySize);
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmHudInputOverlayContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -7201,38 +7225,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 12, Localize("Dummy Window"), Localize("Is your dummy being bullied while you control the main tee?"));
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmDummyMiniView, "Enable dummy window", Localize("Enable dummy window"), &g_Config.m_QmDummyMiniView, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmDummyMiniView)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmDummyMiniViewAuto, "Only show when the other Tee is not on screen", Localize("Only show when the other Tee is not on screen"), &g_Config.m_QmDummyMiniViewAuto, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-dummy-window-size", &LabelColValue, Localize("Dummy window size"), LgBodySize);
-						static int s_QmDummyMiniViewSizeInputId;
-						RenderSliderWithValueInput(&s_QmDummyMiniViewSizeInputId, ControlColValue, &g_Config.m_QmDummyMiniViewSize, 50, 200, "%");
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-dummy-window-zoom", &LabelColValue, Localize("Dummy window zoom"), LgBodySize);
-						static int s_QmDummyMiniViewZoomInputId;
-						RenderSliderWithValueInput(&s_QmDummyMiniViewZoomInputId, ControlColValue, &g_Config.m_QmDummyMiniViewZoom, 10, 300, "%");
-					}
-				}
+				RenderQmHudDummyMiniViewContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
