@@ -239,6 +239,8 @@ namespace
 		switch(Navigation.m_SettingsPage)
 		{
 		case CMenus::SETTINGS_QMCLIENT:
+			if(Navigation.m_QmClientTab == CMenus::QMCLIENT_SETTINGS_TAB_OVERVIEW)
+				return Localize("Overview");
 			if(Navigation.m_QmClientTab == CMenus::QMCLIENT_SETTINGS_TAB_FUNCTION)
 				return Localize("QmClient / Function");
 			if(Navigation.m_QmClientTab == CMenus::QMCLIENT_SETTINGS_TAB_HUD)
@@ -740,7 +742,7 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	vCards.reserve(2);
 	const auto AddCard = [&](const char *pStableId, const char *pTitle, const int LineCount, const FSettingsCardRender &Render) {
 		SSettingsCardDefinition Definition;
-		Definition.m_Spec = {pStableId, Localize(pTitle), nullptr};
+		Definition.m_Spec = {pStableId, pTitle, nullptr};
 		Definition.m_Measure = [LineCount, LineHeight, CardSpacing](float) {
 			return LineCount * (LineHeight + CardSpacing * 0.35f);
 		};
@@ -748,13 +750,13 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 		vCards.push_back(std::move(Definition));
 	};
 
-	AddCard("deck:qmclient-overview-intro", "QmClient overview", 4, [&](CUIRect Content) {
+	AddCard("deck:qmclient-overview-intro", Localize("QmClient overview"), 4, [&](CUIRect Content) {
 		AddTextLine(Content, Localize("Use the top tabs to browse QmClient features by category"), TipSize, &TipColor);
 		AddTextLine(Content, Localize("Overview cards show a lightweight guide to the client and page structure"), BodySize);
 		AddTextLine(Content, Localize("The Visuals tab contains appearance and rendering options"), BodySize);
 		AddTextLine(Content, Localize("The Functions tab contains tools, automation, and gameplay helpers"), BodySize);
 	});
-	AddCard("deck:qmclient-overview-guide", "Page guide", 5, [&](CUIRect Content) {
+	AddCard("deck:qmclient-overview-guide", Localize("Page guide"), 5, [&](CUIRect Content) {
 		AddTextLine(Content, Localize("Each tab has a clear purpose"), TipSize, &TipColor);
 		AddTextLine(Content, Localize("The HUD tab collects overlays, counters, voice display, and top components"), BodySize);
 		AddTextLine(Content, Localize("The Config tab reuses QmClient's client config browser"), BodySize);
@@ -903,9 +905,13 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 			m_TClientSettingsTab = Navigation.m_TClientTab;
 		if(Navigation.m_AppearanceTab >= 0)
 			m_AppearanceSettingsTab = Navigation.m_AppearanceTab;
-		if(Navigation.m_SettingsPage == SETTINGS_GRAPHICS &&
-			Card.m_pStableId != nullptr && str_startswith(Card.m_pStableId, "deck:") != nullptr)
-			RequestSettingsCardFocus(Card.m_pStableId);
+		if(Card.m_pStableId != nullptr && str_startswith(Card.m_pStableId, "deck:") != nullptr)
+		{
+			if(Navigation.m_SettingsPage == SETTINGS_GRAPHICS)
+				RequestSettingsCardFocus(Card.m_pStableId);
+			else if(Navigation.m_SettingsPage == SETTINGS_QMCLIENT && Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW)
+				m_SettingsCardDeck.RequestReveal(Card.m_pStableId);
+		}
 		Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
 		m_GlobalCardSearchInput.Deactivate();
 	}

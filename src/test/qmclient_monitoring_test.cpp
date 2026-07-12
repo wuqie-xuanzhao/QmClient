@@ -6158,6 +6158,8 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(QmClient.find("Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_OVERVIEW;"), std::string::npos);
 	EXPECT_NE(QmClient.find("s_apQmTabNames[QMCLIENT_SETTINGS_TAB_OVERVIEW] = Localize(\"Overview\")"), std::string::npos);
 	EXPECT_NE(QmClient.find("InputState.m_MousePressed = !PrewarmOnly"), std::string::npos);
+	EXPECT_NE(QmClient.find("Localize(\"Overview\")"), std::string::npos);
+	EXPECT_NE(QmClient.find("m_SettingsCardDeck.RequestReveal(Card.m_pStableId);"), std::string::npos);
 	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
 	EXPECT_NE(MenusSource.find("str_comp(pTab, \"qmclient-overview\")"), std::string::npos);
 	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
