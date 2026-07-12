@@ -7524,6 +7524,38 @@ TEST(QmMonitoringHelpers, P6FunctionGoresActorContentExtractionKeepsInputAndCond
 	EXPECT_EQ(GoresActorBody.find("RegisterModuleCard"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionShortCardContentExtractionKeepsPublicControlsAndDynamicBranches)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string JumpHintBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const std::string WeaponTrajectoryBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const size_t JumpHintStart = QmClient.rfind("case EQmModuleId::JumpHint:");
+	const size_t JumpHintEnd = QmClient.find("case EQmModuleId::WeaponTrajectory:", JumpHintStart);
+	const size_t WeaponTrajectoryStart = QmClient.rfind("case EQmModuleId::WeaponTrajectory:");
+	const size_t WeaponTrajectoryEnd = QmClient.find("case EQmModuleId::SkinTransition:", WeaponTrajectoryStart);
+	const std::string JumpHintCase = JumpHintStart != std::string::npos && JumpHintEnd != std::string::npos ? QmClient.substr(JumpHintStart, JumpHintEnd - JumpHintStart) : "";
+	const std::string WeaponTrajectoryCase = WeaponTrajectoryStart != std::string::npos && WeaponTrajectoryEnd != std::string::npos ? QmClient.substr(WeaponTrajectoryStart, WeaponTrajectoryEnd - WeaponTrajectoryStart) : "";
+	ASSERT_FALSE(JumpHintBody.empty());
+	ASSERT_FALSE(WeaponTrajectoryBody.empty());
+	ASSERT_FALSE(JumpHintCase.empty());
+	ASSERT_FALSE(WeaponTrajectoryCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionJumpHintContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmFunctionWeaponTrajectoryContent"), std::string::npos);
+	EXPECT_NE(JumpHintBody.find("DoLine_ColorPicker"), std::string::npos);
+	EXPECT_NE(JumpHintBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(JumpHintBody.find("m_QmJumpHintSize"), std::string::npos);
+	EXPECT_NE(WeaponTrajectoryBody.find("DoDropDown"), std::string::npos);
+	EXPECT_NE(WeaponTrajectoryBody.find("m_QmWeaponTrajectory == 0"), std::string::npos);
+	EXPECT_NE(WeaponTrajectoryBody.find("DoLine_ColorPicker"), std::string::npos);
+	EXPECT_NE(WeaponTrajectoryBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(JumpHintCase.find("RenderQmFunctionJumpHintContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
+	EXPECT_NE(WeaponTrajectoryCase.find("RenderQmFunctionWeaponTrajectoryContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
+	EXPECT_EQ(JumpHintBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(WeaponTrajectoryBody.find("RegisterModuleCard"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");

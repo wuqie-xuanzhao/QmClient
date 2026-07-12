@@ -1694,6 +1694,65 @@ void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeigh
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
+void CMenus::RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmJumpHint, "Position jump hint", Localize("Position jump hint"), &g_Config.m_QmJumpHint, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	static CButtonContainer s_QmJumpHintColorId;
+	DoLine_ColorPicker(&s_QmJumpHintColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Text color"), &g_Config.m_QmJumpHintColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
+
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_QmJumpHintXInputId;
+	static int s_QmJumpHintYInputId;
+	static int s_QmJumpHintSizeInputId;
+	RenderValue("qmclient-jump-hint-horizontal-position", "Horizontal position", &s_QmJumpHintXInputId, &g_Config.m_QmJumpHintX, 0, 100, "%");
+	RenderValue("qmclient-jump-hint-vertical-position", "Vertical position", &s_QmJumpHintYInputId, &g_Config.m_QmJumpHintY, 0, 100, "%");
+	RenderValue("qmclient-jump-hint-font-size", "Font size", &s_QmJumpHintSizeInputId, &g_Config.m_QmJumpHintSize, 1, 50);
+}
+
+void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	CUIElement &DisplayModeLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-display-mode");
+	DoSettingsLabelStreamed(DisplayModeLabel, &LabelColumn, Localize("Display mode"), BodySize, TEXTALIGN_ML);
+	static std::vector<const char *> s_WeaponTrajectoryModeNames;
+	s_WeaponTrajectoryModeNames = {Localize("Off"), Localize("Show on key"), Localize("Always show")};
+	static CUi::SDropDownState s_WeaponTrajectoryModeDropDownState;
+	static CScrollRegion s_WeaponTrajectoryModeDropDownScrollRegion;
+	s_WeaponTrajectoryModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponTrajectoryModeDropDownScrollRegion;
+	const int WeaponTrajectoryModeNew = Ui()->DoDropDown(&ControlColumn, std::clamp(g_Config.m_QmWeaponTrajectory, 0, 2), s_WeaponTrajectoryModeNames.data(), s_WeaponTrajectoryModeNames.size(), s_WeaponTrajectoryModeDropDownState);
+	if(g_Config.m_QmWeaponTrajectory != WeaponTrajectoryModeNew)
+		g_Config.m_QmWeaponTrajectory = WeaponTrajectoryModeNew;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(g_Config.m_QmWeaponTrajectory == 0)
+		return;
+
+	static CButtonContainer s_WeaponTrajectoryColorId;
+	DoLine_ColorPicker(&s_WeaponTrajectoryColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Guide line color"), &g_Config.m_QmWeaponTrajectoryColor, ColorRGBA(1.0f, 0.6f, 0.2f, 1.0f), false);
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_QmWeaponTrajectoryWidthInputId;
+	static int s_QmWeaponTrajectoryAlphaInputId;
+	RenderValue("qmclient-weapon-trajectory-line-width", "Line width", &s_QmWeaponTrajectoryWidthInputId, &g_Config.m_QmWeaponTrajectoryWidth, 1, 10);
+	RenderValue("qmclient-weapon-trajectory-opacity", "Opacity", &s_QmWeaponTrajectoryAlphaInputId, &g_Config.m_QmWeaponTrajectoryAlpha, 0, 100, "%");
+}
+
 void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
@@ -5916,33 +5975,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 2, Localize("Position jump hint"), Localize("Jump hint text"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmJumpHint, "Position jump hint", Localize("Position jump hint"), &g_Config.m_QmJumpHint, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				static CButtonContainer s_QmJumpHintColorId;
-				DoLine_ColorPicker(&s_QmJumpHintColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Text color"), &g_Config.m_QmJumpHintColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-jump-hint-horizontal-position", &LabelCol, Localize("Horizontal position"), LgBodySize);
-				static int s_QmJumpHintXInputId;
-				RenderSliderWithValueInput(&s_QmJumpHintXInputId, ControlCol, &g_Config.m_QmJumpHintX, 0, 100, "%");
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-jump-hint-vertical-position", &LabelCol, Localize("Vertical position"), LgBodySize);
-				static int s_QmJumpHintYInputId;
-				RenderSliderWithValueInput(&s_QmJumpHintYInputId, ControlCol, &g_Config.m_QmJumpHintY, 0, 100, "%");
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-jump-hint-font-size", &LabelCol, Localize("Font size"), LgBodySize);
-				static int s_QmJumpHintSizeInputId;
-				RenderSliderWithValueInput(&s_QmJumpHintSizeInputId, ControlCol, &g_Config.m_QmJumpHintSize, 1, 50);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderQmFunctionJumpHintContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -5963,39 +5996,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 2, Localize("Weapon Trajectory"), Localize("Show grenade and laser trajectory preview"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				CUIElement &DisplayModeLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-display-mode");
-				DoSettingsLabelStreamed(DisplayModeLabel, &LabelCol, Localize("Display mode"), LgBodySize, TEXTALIGN_ML);
-				static std::vector<const char *> s_WeaponTrajectoryModeNames;
-				s_WeaponTrajectoryModeNames = {Localize("Off"), Localize("Show on key"), Localize("Always show")};
-				static CUi::SDropDownState s_WeaponTrajectoryModeDropDownState;
-				static CScrollRegion s_WeaponTrajectoryModeDropDownScrollRegion;
-				s_WeaponTrajectoryModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponTrajectoryModeDropDownScrollRegion;
-				const int WeaponTrajectoryModeNew = Ui()->DoDropDown(&ControlCol, std::clamp(g_Config.m_QmWeaponTrajectory, 0, 2), s_WeaponTrajectoryModeNames.data(), s_WeaponTrajectoryModeNames.size(), s_WeaponTrajectoryModeDropDownState);
-				if(g_Config.m_QmWeaponTrajectory != WeaponTrajectoryModeNew)
-					g_Config.m_QmWeaponTrajectory = WeaponTrajectoryModeNew;
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmWeaponTrajectory != 0)
-				{
-					static CButtonContainer s_WeaponTrajectoryColorId;
-					DoLine_ColorPicker(&s_WeaponTrajectoryColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Guide line color"), &g_Config.m_QmWeaponTrajectoryColor, ColorRGBA(1.0f, 0.6f, 0.2f, 1.0f), false);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-weapon-trajectory-line-width", &LabelCol, Localize("Line width"), LgBodySize);
-					static int s_QmWeaponTrajectoryWidthInputId;
-					RenderSliderWithValueInput(&s_QmWeaponTrajectoryWidthInputId, ControlCol, &g_Config.m_QmWeaponTrajectoryWidth, 1, 10);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-weapon-trajectory-opacity", &LabelCol, Localize("Opacity"), LgBodySize);
-					static int s_QmWeaponTrajectoryAlphaInputId;
-					RenderSliderWithValueInput(&s_QmWeaponTrajectoryAlphaInputId, ControlCol, &g_Config.m_QmWeaponTrajectoryAlpha, 0, 100, "%");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmFunctionWeaponTrajectoryContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
