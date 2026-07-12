@@ -1,6 +1,6 @@
 # QmClient 设置页 UI 统一 P6 迁移计划
 
-**状态（2026-07-13，基于 `639b5a4ee8`）：** P0-P5 公共 page/card/input/scroll 契约已存在。QmClient Overview 与 Contributors 已迁移并通过结构测试；QmClient module、Global Search、TClient 主页和复杂子页仍未迁移。P7 不在本计划范围内。
+**状态（2026-07-13，基于 `1fb68622ac`）：** P0-P5 公共 page/card/input/scroll 契约已存在。QmClient Overview 与 Contributors 已迁移并通过结构测试；公共 deck 已补齐普通标题拖拽与标题动作互斥契约。QmClient Visual/module、Global Search、TClient 主页和复杂子页仍未迁移。P7 不在本计划范围内。
 
 ## 目标与边界
 
@@ -21,6 +21,13 @@
 | TClient | 主页及复杂子页仍有 cache box/private inset/private drag/section height 路径 | 未迁移 |
 | Adapter/model | `QmCardRegistry`、`SettingsCardOrderModel()` 和显式 model adapter 已存在；`QmModuleLayoutModel()` 过渡 singleton 仍被旧 renderer 使用 | 迁移完成前不得删除兼容入口 |
 
+## 当前接手检查点
+
+- 已验证：`game-client`、`testrunner`、Visual 迁移边界 focused tests；`check_docs.py` 通过。
+- 已确认：Visual 的试迁移入口已撤回。旧 renderer 仍是生产路径，避免把缺少控件的半迁移路径交付。
+- Slice 1 的硬边界：旧配置入口必须逐项保留（dropdown、颜色、scope/keybind、legacy toggle）；卡片测量必须和实际内容同源并随配置/本地化/UI scale 重算；折叠读写必须复用 canonical parser，不能追加裸 `;key;` 格式。
+- 当前 gap：Visual、Functions/HUD、Global Search、TClient 尚未迁移；未做视觉验收、全量 C++ 回归和 default gate。
+
 ## 执行切片
 
 ### Slice 1：QmClient Visual module deck
@@ -31,7 +38,9 @@
 
 - 为每个 module 建立/校验 `qm:*` stable ID、默认 tab/column/order，提交 `SSettingsCardDefinition` 到公共 Deck。
 - module content 只接收 canonical `m_ContentRect`；card frame、header、hit/drag rect、滚动和自动滚动归 Deck/`CScrollRegion`。
-- 折叠、usage、新功能标记、P3 `InputField`/`NumericField`、颜色控件和 preview 行为保持不变。
+- 折叠、usage、新功能标记、P3 `InputField`/`NumericField`、dropdown、颜色控件、scope/keybind、legacy toggle 和 preview 行为保持不变。
+- `m_Measure` 必须与实际 render 共用动态行数/高度来源；不能用固定估算值覆盖条件控件，不能让内容超出 canonical `m_ContentRect`。
+- 折叠状态必须通过现有 canonical parser/serializer 读写，兼容历史 `key[:...]` 条目并保持持久化格式规范化。
 - Visual slice 完成前不得删除 adapter 的 legacy migration；不得保留“公共 wrapper + 旧绘制”双路径。
 
 出口：Visual 生产函数无 `s_GlassCards`/private drag/register/old scroll；registry 全覆盖；focused tests、`testrunner` build、`game-client` build、quick gate；人工检查 1280x720/100% 英文和 960x720/125% 简中下滚动、折叠、拖拽、输入、搜索 reveal。

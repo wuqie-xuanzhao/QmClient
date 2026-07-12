@@ -7381,27 +7381,12 @@ TEST(QmMonitoringHelpers, P2DoesNotHalfMigrateQmClientOrTClientRenderers)
 	EXPECT_EQ(TClient.find("m_SettingsCardDeck.Render("), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6VisualQmClientUsesCanonicalDeckProductionPath)
+TEST(QmMonitoringHelpers, P6VisualQmClientMigrationRemainsExplicitlyUnclaimed)
 {
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string VisualBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)");
-	ASSERT_FALSE(VisualBody.empty());
-
-	EXPECT_NE(Header.find("void RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(QmClient.find("RenderSettingsQmClientVisualDeck(ContentView, PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(VisualBody.find("std::vector<SSettingsCardDefinition> vCards;"), std::string::npos);
-	EXPECT_NE(VisualBody.find("m_SettingsCardDeck.Render(CardCtx, Page, \"visual\""), std::string::npos);
-	for(const char *pStableId : {
-		"qm:chat_bubble", "qm:camera_view", "qm:skin_transition", "qm:focus_mode", "qm:weapon_animation",
-		"qm:streamer", "qm:entity_overlay", "qm:collision_hitbox", "qm:translate_ui", "qm:card_appearance"})
-		EXPECT_NE(VisualBody.find(pStableId), std::string::npos) << pStableId;
-
-	EXPECT_EQ(VisualBody.find("s_GlassCards"), std::string::npos);
-	EXPECT_EQ(VisualBody.find("SQmModuleDragState"), std::string::npos);
-	EXPECT_EQ(VisualBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(VisualBody.find("BeginSettingsQmScrollContainer"), std::string::npos);
-	EXPECT_EQ(VisualBody.find("FinishSettingsQmScrollContainer"), std::string::npos);
+	EXPECT_EQ(QmClient.find("RenderSettingsQmClientVisualDeck"), std::string::npos);
+	EXPECT_NE(QmClient.find("RenderQmModuleHeadline(CardContent, 0, Localize(\"Chat Bubble\")"), std::string::npos);
+	EXPECT_NE(QmClient.find("RegisterModuleCard(pModule, ColumnId"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
