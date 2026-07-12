@@ -688,6 +688,64 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollS
 	return Frame;
 }
 
+void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly)
+{
+	const int OriginalValue = *pValue;
+	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
+	ui_widget::SNumericFieldOptions Options;
+	Options.m_pSuffix = pSuffix;
+	Options.m_FontSize = ControlColumn.h * CUi::ms_FontmodHeight * 0.8f;
+
+	IUiContext InputCtx;
+	InputCtx.m_pUi = Ui();
+	InputCtx.m_pAnim = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();
+	InputCtx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
+	InputCtx.m_ScopeHash = MakeUiScopeHash("qmclient_slider_input");
+	InputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	ui_widget::NumericField(InputCtx, pState, pId, pValue, MinValue, MaxValue, ControlColumn, Options);
+	if(PrewarmOnly || Ui()->RenderOnly())
+		*pValue = OriginalValue;
+}
+
+void CMenus::RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing)
+{
+	CUIRect Row;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmStreamerHideNames, "Replace non-friend names with ID", Localize("Replace non-friend names with ID"), g_Config.m_QmStreamerHideNames, &Row))
+		g_Config.m_QmStreamerHideNames ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmStreamerHideSkins, "Replace non-friend skins with default", Localize("Replace non-friend skins with default"), g_Config.m_QmStreamerHideSkins, &Row))
+		g_Config.m_QmStreamerHideSkins ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmStreamerScoreboardDefaultFlags, "Use default flags on scoreboard", Localize("Use default flags on scoreboard"), g_Config.m_QmStreamerScoreboardDefaultFlags, &Row))
+		g_Config.m_QmStreamerScoreboardDefaultFlags ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmVisualTranslateUiContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing)
+{
+	NTranslateUiSettings::RenderTranslateUiModule(this, Content, LineHeight, BodySize, LineSpacing);
+}
+
+void CMenus::RenderQmVisualCardAppearanceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	const int CheckboxResult = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmCardBackdropBlur, "qmclient-card-backdrop-blur", Localize("Card background blur (high performance only)"), g_Config.m_QmCardBackdropBlur, &Row);
+	if(CheckboxResult)
+		g_Config.m_QmCardBackdropBlur ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, "qmclient-card-corner-segments"), &LabelColumn, Localize("Corner segments"), BodySize, TEXTALIGN_ML);
+	static int s_QmCardCornerSegmentsInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmCardCornerSegmentsInputId, ControlColumn, &g_Config.m_QmRectCornerSegments, 8, 48, "", PrewarmOnly);
+}
+
 void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
 {
 	if(!Frame.m_Enabled)
@@ -4285,18 +4343,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 5, Localize("Streamer Mode"), Localize("Damn grenadiers, all go to spa!"));
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmStreamerHideNames, "Replace non-friend names with ID", Localize("Replace non-friend names with ID"), &g_Config.m_QmStreamerHideNames, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmStreamerHideSkins, "Replace non-friend skins with default", Localize("Replace non-friend skins with default"), &g_Config.m_QmStreamerHideSkins, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmStreamerScoreboardDefaultFlags, "Use default flags on scoreboard", Localize("Use default flags on scoreboard"), &g_Config.m_QmStreamerScoreboardDefaultFlags, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderQmVisualStreamerContent(CardContent, LgLineHeight, LgLineSpacing);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -5070,7 +5117,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 9, Localize("Translate button"), Localize("Customize translate button and menu colors"));
-				NTranslateUiSettings::RenderTranslateUiModule(this, CardContent, LgLineHeight, LgBodySize, LgLineSpacing);
+				RenderQmVisualTranslateUiContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -5695,14 +5742,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 0, Localize("Card Appearance"), Localize("Card background blur and corner rounding"));
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckbox(&g_Config.m_QmCardBackdropBlur, "qmclient-card-backdrop-blur", Localize("Card background blur (high performance only)"), &g_Config.m_QmCardBackdropBlur, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-card-corner-segments"), &LabelCol, Localize("Corner segments"), LgBodySize, TEXTALIGN_ML);
-				static int s_QmCardCornerSegmentsInputId;
-				RenderSliderWithValueInput(&s_QmCardCornerSegmentsInputId, ControlCol, &g_Config.m_QmRectCornerSegments, 8, 48, "");
+				RenderQmVisualCardAppearanceContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
