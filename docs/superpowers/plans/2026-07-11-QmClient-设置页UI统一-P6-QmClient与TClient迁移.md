@@ -2,7 +2,19 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**当前状态（2026-07-12，基于 `646dc4f20e`）：** Overview 与 Contributors 已接入公共 page/layout/deck/scroll，并有注册表与结构测试；Visual、Functions、HUD、Config 搜索以及 TClient 主页面和复杂子页仍未迁移。以下任务从 Task 2 继续，不能把已完成切片扩展解释为 P6 完成。
+**当前状态（2026-07-13，基于 `1dd871e463`）：** Overview 与 Contributors 已接入公共 page/layout/deck/scroll，并补齐 Contributors 的全局搜索路由、目标卡片 reveal、完整赞助名单的窄屏换行/动态测量和 `PrewarmOnly` QR 资源边界；Visual、Functions、HUD、Config 搜索以及 TClient 主页面和复杂子页仍未迁移。以下任务从 Task 2 继续，不能把已完成切片扩展解释为 P6 完成。
+
+**当前代码迁移审计（执行摘要）：**
+
+| 切片 | 当前生产路径 | 结论 |
+|---|---|---|
+| QmClient Overview | `ResolveSettingsPageLayout` + `CSettingsCardDeck` + `CScrollRegion` | 已迁移；保留搜索 reveal 与 `PrewarmOnly` 隔离 |
+| QmClient Contributors | 两张 full-column card + canonical viewport | 已迁移；搜索路由、赞助名单换行、QR 失败提示已收口 |
+| QmClient Visual/Functions/HUD | `RenderSettingsQmClientContent` 内仍有 `SQmModuleDragState`、`SQmModuleDropPreview`、`RegisterModuleCard`、旧滚动/glass 路径 | 未迁移；下一切片只处理 QmClient module deck，不扩展到 TClient |
+| QmClient Config/Global Search | Config 仍由 TClient config browser 直接渲染；Global Search 仍保留旧 glass/scroll 结果卡 | 未迁移；等 module deck 稳定后单独收口 |
+| TClient Settings/复杂子页 | 仍有 cache box、private inset、section height/drag 状态 | 未迁移；按 Task 3–6 串行推进 |
+
+**下一执行切片：** 先为 Visual/Functions/HUD module deck 建立 stable ID、全局 `SettingsCardOrderModel()` 约束和旧路径删除测试，再迁移一个 tab 的 content callback；只有该 tab 的 canonical frame、滚动、折叠、usage、拖拽和搜索边界通过 focused/build/gate 后，才扩展到下一个 tab。P7 不在当前切片范围内。
 
 **Goal:** 在不重造 P1–P4 primitive 的前提下，把 QmClient 与 TClient 主页面及复杂子页迁到唯一 page/card/scroll 平台，保持 P3 已收口的 input/numeric 路径，并从生产路径删除 QmClient glass/cached-height 与 TClient cache box/inset/cached-height 双路径。
 
