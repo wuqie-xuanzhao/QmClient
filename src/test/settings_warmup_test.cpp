@@ -355,7 +355,8 @@ TEST(SettingsWarmup, TClientPrewarmOnlyPathStillAdvancesVisibleSectionLoaders)
 	const std::string RightPrewarmBody = RenderBody.substr(RightPrewarmPos, RightElsePos - RightPrewarmPos);
 	EXPECT_NE(RightPrewarmBody.find("s_RightSectionLoader.Process();"), std::string::npos);
 	EXPECT_EQ(RightPrewarmBody.find("return;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("s_ScrollRegion.SetContentHeightForNextFrame("), std::string::npos);
+	EXPECT_NE(RenderBody.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
+	EXPECT_NE(RenderBody.find("s_TClientSettingsScrollRegion"), std::string::npos);
 }
 
 TEST(SettingsWarmup, TClientSectionLoadersEnableDeferredFarMeasurement)

@@ -388,8 +388,9 @@ public:
 	 */
 	void Begin(CUIRect MainView, float TimeBudgetMs = 5.0f);
 
-	/** Advance one frame. Returns true when there is still work left. */
-	bool Process();
+	/** Advance one frame. Returns true when there is still work left.
+	 * RenderSections 为 false 时只推进测量、缓存和状态机，由外部统一卡片容器绘制内容。 */
+	bool Process(bool RenderSections = true);
 
 	/** All visible sections have reached FULL state. */
 	bool IsComplete() const;
@@ -433,6 +434,7 @@ public:
 	int m_ActiveTab = -1;
 	float m_ScrollY = 0.0f;
 	CUIRect GetRunningColumn() const { return m_RunningColumn; }
+	float CachedHeightForStableCardId(const char *pStableCardId, float FallbackHeight) const;
 
 	// -- Profiling --
 

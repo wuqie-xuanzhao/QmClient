@@ -4756,7 +4756,6 @@ CMenus::SSettingsCardDeckLayout CMenus::BeginSettingsCardDeck(CUIRect MainView, 
 	Deck.m_UiScale = UiScale;
 	Deck.m_Page = Page;
 	Deck.m_Spacing = Deck.m_Style.m_Spacing;
-	m_vTClientSettingsCardDeckItems.clear();
 
 	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);
 	Deck.m_ScrollFrame = BeginSettingsScrollRegion(ScrollRegion, &MainView, ScrollParams, PreviousScrollY);
@@ -4863,13 +4862,7 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 		Card.m_ContentRect.HSplitTop(Deck.m_Style.m_Padding * 0.5f, nullptr, &Card.m_ContentRect);
 	}
 
-	SSettingsSection Section;
-	Section.m_pStableCardId = pGlobalStableId;
-	Section.m_pName = Deck.m_pDeckId;
-	SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(Section, Card.m_Column, OrderIndex, Card.m_Rect, Card.m_HandleRect);
 	Deck.m_CardCount++;
-	RegisterSettingsCardDeckItem(Item);
-	HandleSettingsCardDeckDrag(Item, Card.m_Column, Deck.m_pOrder, Deck.m_pDeckCoordinator);
 	return Card;
 }
 
@@ -4995,7 +4988,6 @@ void CMenus::EndSettingsCardDeck(SSettingsCardDeckLayout &Deck, float *pPrevious
 	Deck.m_EndRect.y = maximum(LeftBottom, RightBottom);
 	Deck.m_EndRect.h = Deck.m_Style.m_Spacing;
 	FinishSettingsScrollRegion(*Deck.m_pScrollRegion, Deck.m_ScrollFrame, &Deck.m_EndRect, Deck.m_Page);
-	RenderSettingsCardDeckDragOverlay(Deck);
 	if(pPreviousScrollY != nullptr)
 		*pPreviousScrollY = Deck.m_ScrollFrame.m_FinalOffsetY;
 }
@@ -5029,53 +5021,6 @@ void CMenus::RenderSettingsCardDragHandle(const CUIRect &Card, CUIRect *pHandleR
 		}
 	}
 	Graphics()->QuadsEnd();
-}
-
-void CMenus::RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck)
-{
-	if(!m_TClientSettingsCardDragState.m_Active)
-		return;
-	if(Ui()->MouseButton(0))
-	{
-		m_TClientSettingsCardDragState.m_DropColumn = Deck.m_TwoColumns ?
-								      SettingsCardDeckDropColumnForMouseX(Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1], Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn) :
-								      ESettingsCardDeckColumn::LEFT;
-		const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
-		m_TClientSettingsCardDragState.m_DropIndex = SettingsCardDeckDropIndexForColumnItems(
-			m_vTClientSettingsCardDeckItems,
-			DropColumn,
-			Ui()->MouseX(),
-			Ui()->MouseY(),
-			m_TClientSettingsCardDragState.m_DropIndex);
-		for(const SSettingsCardDeckItem &Item : m_vTClientSettingsCardDeckItems)
-		{
-			if(Item.m_Column != DropColumn)
-				continue;
-			const CUIRect DropIndicator = SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex, 4.0f);
-			if(Ui()->MouseHovered(&Item.m_Rect))
-				DropIndicator.Draw(ColorRGBA(1.0f, 0.72f, 0.35f, 0.85f), IGraphics::CORNER_ALL, 2.0f);
-		}
-		const float AutoScrollDelta = SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Deck.m_View.y, Deck.m_View.y + Deck.m_View.h, 32.0f, 60.0f * Deck.m_UiScale);
-		if(AutoScrollDelta != 0.0f && Deck.m_pScrollRegion != nullptr)
-			Deck.m_pScrollRegion->ScrollRelativeDirect(AutoScrollDelta);
-		CUIRect DragProxy = SettingsCardDeckProxyRect(m_TClientSettingsCardDragState.m_Item, Ui()->MouseX(), Ui()->MouseY());
-		RenderQmSettingsGlassCard(DragProxy, Deck.m_Style);
-		DragProxy.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, Deck.m_Style.m_CornerRadius);
-	}
-	else if(Ui()->LastMouseButton(0))
-	{
-		m_TClientSettingsCardDragState.m_DropColumn = Deck.m_TwoColumns ?
-								      SettingsCardDeckDropColumnForMouseX(Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1], Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn) :
-								      ESettingsCardDeckColumn::LEFT;
-		const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
-		const int DropIndex = SettingsCardDeckDropIndexForColumnItems(
-			m_vTClientSettingsCardDeckItems,
-			DropColumn,
-			Ui()->MouseX(),
-			Ui()->MouseY(),
-			m_TClientSettingsCardDragState.m_DropIndex);
-		CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropColumn, DropIndex, Deck.m_pDeckCoordinator);
-	}
 }
 
 void CMenus::StartSettingsPerfFixedWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, int MaxFrames)

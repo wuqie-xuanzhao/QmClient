@@ -2736,8 +2736,6 @@ private:
 	bool m_SettingsMenuTextPlanCollectionComplete = false;
 	SSettingsMenuTextPrebuildStats m_SettingsMenuTextLastPrebuildStats;
 	SSettingsMenuTextPlanCollectionStats m_SettingsMenuTextLastCollectionStats;
-	std::vector<std::string> m_vTClientLeftCardOrder;
-	std::vector<std::string> m_vTClientRightCardOrder;
 	std::unordered_map<std::string, std::vector<std::string>> m_SettingsCardDeckOrders;
 	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMeasuredHeights;
 	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMinHeights;
@@ -2749,9 +2747,6 @@ private:
 	uint64_t m_SettingsCardDeckDisplayKey = 0;
 	uint64_t m_SettingsCardDeckDisplayCycle = 0;
 	bool m_HasSettingsCardDeckDisplayKey = false;
-	std::vector<SSettingsCardDeckItem> m_vTClientSettingsCardDeckItems;
-	SSettingsCardDeckDragState m_TClientSettingsCardDragState;
-	bool m_TClientSettingsCardDeckOrderDirty = false;
 
 	CCommunityIcons m_CommunityIcons;
 	CMenusIngameTouchControls m_MenusIngameTouchControls;
@@ -2779,15 +2774,7 @@ private:
 	SSettingsSection BuildTClientHudCacheSection();
 	std::vector<SSettingsSection> BuildTClientLeftCacheSections();
 	std::vector<SSettingsSection> BuildTClientRightCacheSections();
-	CUIRect TClientCacheSectionBoxRect(CUIRect BoxRect) const;
-	void InsetTClientCacheSectionContent(CUIRect &ContentRect) const;
-	void DrawTClientCacheSectionBox(CUIRect BoxRect);
-	float RenderSettingsCardSection(const char *pSectionName, CUIRect &CurrentColumn, const std::function<float(CUIRect &, bool)> &LayoutSection, float TopMargin);
 	void ConfigureSettingsCardSection(SSettingsSection &Section, const char *pTitle, const char *pStableCardId, std::function<float(CUIRect &, bool)> LayoutSection, float TopMargin);
-	SSettingsCardDeckItem SettingsCardDeckItemFromSection(const SSettingsSection &Section, ESettingsCardDeckColumn Column, int Order, const CUIRect &Rect, const CUIRect &HeaderRect) const;
-	void RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item);
-	void HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder, settings_card_deck::CDeck *pDeckCoordinator = nullptr);
-	bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator = nullptr);
 	float RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float TopMargin, float (CMenus::*pLayoutSection)(CUIRect &, bool));
 	void ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin);
 	void BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);

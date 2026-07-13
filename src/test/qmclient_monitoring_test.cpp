@@ -754,7 +754,7 @@ TEST(QmMonitoringHelpers, SectionQuadBatchingDoesNotCrossTextOrClipBoundaries)
 		Buffer << File.rdbuf();
 		const std::string Source = Buffer.str();
 
-		EXPECT_NE(Source.find("CUiScopedQuadBatch QuadBatchScope(Ui());"), std::string::npos);
+		EXPECT_EQ(Source.find("CUiScopedQuadBatch QuadBatchScope(Ui());"), std::string::npos);
 	}
 }
 
@@ -1628,15 +1628,17 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 
 	EXPECT_EQ(Body.find("auto DrawSectionBox = "), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->RenderBatchableRect(&Section, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
-	EXPECT_NE(Body.find("DrawTClientCacheSectionBox(BoxRect);"), std::string::npos);
-	EXPECT_NE(Body.find("InsetTClientCacheSectionContent(MeasuredColumn);"), std::string::npos);
-	EXPECT_NE(Body.find("CUIRect BoxRect = LayoutSection(MeasuredColumn, false);"), std::string::npos);
-	EXPECT_NE(Body.find("BoxRect.x = Col.x;"), std::string::npos);
-	EXPECT_NE(Body.find("BoxRect.w = Col.w;"), std::string::npos);
-	EXPECT_NE(Body.find("InsetTClientCacheSectionContent(ContentColumn);"), std::string::npos);
-	EXPECT_NE(Body.find("Col.y = ContentColumn.y;"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(Body.find("AppendDeckCards(vLeftSections, s_VisualFontLoader);"), std::string::npos);
+	EXPECT_NE(Body.find("AppendDeckCards(vRightSections, s_RightSectionLoader);"), std::string::npos);
+	EXPECT_NE(Body.find("s_VisualFontLoader.Process(false);"), std::string::npos);
+	EXPECT_NE(Body.find("s_RightSectionLoader.Process(false);"), std::string::npos);
+	EXPECT_NE(Body.find("Loader.CachedHeightForStableCardId(pStableCardId, FallbackHeight)"), std::string::npos);
+	EXPECT_EQ(Body.find("Measure = Section.m_MeasureFn"), std::string::npos);
+	EXPECT_EQ(Body.find("DrawTClientCacheSectionBox("), std::string::npos);
+	EXPECT_EQ(Body.find("InsetTClientCacheSectionContent("), std::string::npos);
 	EXPECT_EQ(Source.find("ConfigureSplitCachedStaticLayer"), std::string::npos);
-	EXPECT_NE(Source.find("RenderSettingsCardSection"), std::string::npos);
+	EXPECT_EQ(Source.find("RenderSettingsCardSection"), std::string::npos);
 	EXPECT_NE(Source.find("ConfigureSettingsCardSection"), std::string::npos);
 	EXPECT_NE(Source.find("Section.m_pStableCardId = pStableCardId;"), std::string::npos);
 	EXPECT_NE(Header.find("void ConfigureSettingsCardSection(SSettingsSection &Section, const char *pTitle, const char *pStableCardId"), std::string::npos);
@@ -1704,37 +1706,10 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	EXPECT_NE(HudLayoutBody.find("return CurrentColumn.y - SavedY;"), std::string::npos);
 	EXPECT_EQ(HudLayoutBody.find("return CurrentColumn.y - BoxRect.y;"), std::string::npos);
 
-	const size_t DrawBoxRect = Source.find("CUIRect CMenus::TClientCacheSectionBoxRect(CUIRect BoxRect) const");
-	ASSERT_NE(DrawBoxRect, std::string::npos);
-	const size_t DrawBoxRectEnd = Source.find("void CMenus::InsetTClientCacheSectionContent", DrawBoxRect);
-	ASSERT_NE(DrawBoxRectEnd, std::string::npos);
-	const std::string DrawBoxRectBody = Source.substr(DrawBoxRect, DrawBoxRectEnd - DrawBoxRect);
-	EXPECT_NE(DrawBoxRectBody.find("BoxRect.h += Padding;"), std::string::npos);
-	EXPECT_NE(DrawBoxRectBody.find("BoxRect.y -= Padding * 0.5f;"), std::string::npos);
-	EXPECT_EQ(DrawBoxRectBody.find("BoxRect.w += Padding;"), std::string::npos);
-	EXPECT_EQ(DrawBoxRectBody.find("BoxRect.x -= Padding * 0.5f;"), std::string::npos);
-
-	const size_t DrawBox = Source.find("void CMenus::DrawTClientCacheSectionBox(CUIRect BoxRect)");
-	ASSERT_NE(DrawBox, std::string::npos);
-	const size_t DrawBoxEnd = Source.find("float CMenus::RenderSettingsCardSection", DrawBox);
-	ASSERT_NE(DrawBoxEnd, std::string::npos);
-	const std::string DrawBoxBody = Source.substr(DrawBox, DrawBoxEnd - DrawBox);
-	EXPECT_EQ(DrawBoxBody.find("CUi::ms_DarkButtonColorFunction.GetColor(false, false)"), std::string::npos);
-	EXPECT_EQ(Source.find("ColorRGBA TClientCacheSectionBackgroundColor()"), std::string::npos);
-	EXPECT_EQ(Source.find("return ColorRGBA(0.08f, 0.085f, 0.09f, 0.92f);"), std::string::npos);
-	EXPECT_NE(DrawBoxBody.find("RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));"), std::string::npos);
-	EXPECT_EQ(DrawBoxBody.find("Ui()->RenderBatchableRect(&BoxRect"), std::string::npos);
-	EXPECT_EQ(DrawBoxBody.find("BoxRect.w += Padding;"), std::string::npos);
-	EXPECT_EQ(DrawBoxBody.find("BoxRect.x -= Padding * 0.5f;"), std::string::npos);
-	EXPECT_EQ(DrawBoxBody.find("BoxRect = TClientCacheSectionBoxRect(BoxRect);"), std::string::npos);
-
-	const size_t InsetHelper = Source.find("void CMenus::InsetTClientCacheSectionContent(CUIRect &ContentRect) const");
-	ASSERT_NE(InsetHelper, std::string::npos);
-	const size_t InsetHelperEnd = Source.find("void CMenus::DrawTClientCacheSectionBox", InsetHelper);
-	ASSERT_NE(InsetHelperEnd, std::string::npos);
-	const std::string InsetHelperBody = Source.substr(InsetHelper, InsetHelperEnd - InsetHelper);
-	EXPECT_NE(InsetHelperBody.find("ContentRect.VSplitLeft(Margin, nullptr, &ContentRect);"), std::string::npos);
-	EXPECT_NE(InsetHelperBody.find("ContentRect.VSplitRight(Margin, &ContentRect, nullptr);"), std::string::npos);
+	EXPECT_EQ(Source.find("TClientCacheSectionBoxRect("), std::string::npos);
+	EXPECT_EQ(Source.find("InsetTClientCacheSectionContent("), std::string::npos);
+	EXPECT_EQ(Source.find("DrawTClientCacheSectionBox("), std::string::npos);
+	EXPECT_EQ(Source.find("RenderSettingsCardSection("), std::string::npos);
 
 	const std::string BindChatBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(BindChatBody.empty());
@@ -1746,65 +1721,64 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	EXPECT_EQ(BindChatBody.find("InsetTClientCacheSectionContent(ContentColumn);"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
+TEST(QmMonitoringHelpers, TClientSettingsCardDeckUsesPublicRuntimeOnly)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 
-	EXPECT_NE(Header.find("std::vector<std::string> m_vTClientLeftCardOrder;"), std::string::npos);
-	EXPECT_NE(Header.find("std::vector<std::string> m_vTClientRightCardOrder;"), std::string::npos);
-	EXPECT_NE(Header.find("SSettingsCardDeckDragState m_TClientSettingsCardDragState;"), std::string::npos);
-	EXPECT_NE(Source.find("RegisterSettingsCardDeckItem(Item);"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckCanStartDrag({&Item, false, HitRegion})"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckBeginPress(DragState, Item);"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckTryPromotePress(DragState);"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckClearPress(DragState);"), std::string::npos);
-	EXPECT_NE(Source.find("DragState.m_DropColumn = Column;"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckDropColumnForMouseX(LeftView, RightView, Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn)"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckMoveBetweenColumns(vSourceOrder, vTargetOrder, DragState.m_Item.m_pStableId, DropIndex)"), std::string::npos);
-	EXPECT_NE(Source.find("CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex, pDeckCoordinator);"), std::string::npos);
-	EXPECT_NE(Header.find("bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator = nullptr);"), std::string::npos);
-	EXPECT_NE(Source.find("m_TClientSettingsCardDeckOrderDirty = true;"), std::string::npos);
+	EXPECT_EQ(Header.find("std::vector<std::string> m_vTClientLeftCardOrder;"), std::string::npos);
+	EXPECT_EQ(Header.find("std::vector<std::string> m_vTClientRightCardOrder;"), std::string::npos);
+	EXPECT_EQ(Header.find("SSettingsCardDeckDragState m_TClientSettingsCardDragState;"), std::string::npos);
+	EXPECT_EQ(Source.find("RegisterSettingsCardDeckItem(Item);"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckCanStartDrag({&Item, false, HitRegion})"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckBeginPress(DragState, Item);"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckTryPromotePress(DragState);"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckClearPress(DragState);"), std::string::npos);
+	EXPECT_EQ(Source.find("DragState.m_DropColumn = Column;"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckDropColumnForMouseX(LeftView, RightView, Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn)"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckMoveBetweenColumns(vSourceOrder, vTargetOrder, DragState.m_Item.m_pStableId, DropIndex)"), std::string::npos);
+	EXPECT_EQ(Source.find("CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex, pDeckCoordinator);"), std::string::npos);
+	EXPECT_EQ(Header.find("bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator = nullptr);"), std::string::npos);
+	EXPECT_EQ(Source.find("m_TClientSettingsCardDeckOrderDirty = true;"), std::string::npos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
-	EXPECT_NE(Source.find("LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder)"), std::string::npos);
+	EXPECT_EQ(Source.find("LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder)"), std::string::npos);
 	EXPECT_NE(Source.find("Model.LoadExplicit(pConfig, qm_card_registry::BuildDefaultEntries())"), std::string::npos);
 	EXPECT_EQ(Source.find("const char *pEntry = pConfig;\n\t\tchar aToken[160];\n\t\twhile((pEntry = str_next_token(pEntry, \";\", aToken"), std::string::npos);
-	EXPECT_NE(Source.find("LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
-	EXPECT_NE(Source.find("const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
-	EXPECT_NE(Source.find("if(!HasGlobalTClientOrder)"), std::string::npos);
-	EXPECT_NE(Source.find("if(g_Config.m_QmGlobalCardOrder[0] == '\\0')"), std::string::npos);
-	EXPECT_NE(Source.find("else\n\t\t\t\t{\n\t\t\t\t\tm_vTClientLeftCardOrder.clear();\n\t\t\t\t\tm_vTClientRightCardOrder.clear();\n\t\t\t\t}"), std::string::npos);
-	EXPECT_NE(Source.find("const bool IsTClientMainOrder = pOrder == &m_vTClientLeftCardOrder || pOrder == &m_vTClientRightCardOrder;"), std::string::npos);
-	EXPECT_NE(Source.find("if(IsTClientMainOrder)"), std::string::npos);
-	EXPECT_NE(Source.find("SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder"), std::string::npos);
-	EXPECT_NE(Source.find("str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));"), std::string::npos);
+	EXPECT_EQ(Source.find("LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
+	EXPECT_EQ(Source.find("const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
+	EXPECT_EQ(Source.find("if(!HasGlobalTClientOrder)"), std::string::npos);
+	EXPECT_EQ(Source.find("if(g_Config.m_QmGlobalCardOrder[0] == '\\0')"), std::string::npos);
+	EXPECT_EQ(Source.find("else\n\t\t\t\t{\n\t\t\t\t\tm_vTClientLeftCardOrder.clear();\n\t\t\t\t\tm_vTClientRightCardOrder.clear();\n\t\t\t\t}"), std::string::npos);
+	EXPECT_EQ(Source.find("const bool IsTClientMainOrder = pOrder == &m_vTClientLeftCardOrder || pOrder == &m_vTClientRightCardOrder;"), std::string::npos);
+	EXPECT_EQ(Source.find("if(IsTClientMainOrder)"), std::string::npos);
+	EXPECT_EQ(Source.find("SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder"), std::string::npos);
+	EXPECT_EQ(Source.find("str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));"), std::string::npos);
 	EXPECT_EQ(Source.find("str_copy(g_Config.m_QmSettingsCardOrder, aSerialized"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckApplyOrder(vSections, vOrder);"), std::string::npos);
-	EXPECT_NE(Source.find("WrapSettingsCardDeckSections(vLeftSections, ESettingsCardDeckColumn::LEFT, m_vTClientLeftCardOrder);"), std::string::npos);
-	EXPECT_NE(Source.find("WrapSettingsCardDeckSections(vRightSections, ESettingsCardDeckColumn::RIGHT, m_vTClientRightCardOrder);"), std::string::npos);
-	EXPECT_NE(Source.find("const bool TClientSettingsCardDeckOrderDirtyAtFrameStart = !PrewarmOnly && m_TClientSettingsCardDeckOrderDirty;"), std::string::npos);
-	EXPECT_NE(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\tm_TClientSettingsCardDeckOrderDirty = false;"), std::string::npos);
-	EXPECT_NE(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\ts_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);"), std::string::npos);
-	EXPECT_NE(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\t\ts_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckApplyOrder(vSections, vOrder);"), std::string::npos);
+	EXPECT_EQ(Source.find("WrapSettingsCardDeckSections(vLeftSections, ESettingsCardDeckColumn::LEFT, m_vTClientLeftCardOrder);"), std::string::npos);
+	EXPECT_EQ(Source.find("WrapSettingsCardDeckSections(vRightSections, ESettingsCardDeckColumn::RIGHT, m_vTClientRightCardOrder);"), std::string::npos);
+	EXPECT_EQ(Source.find("const bool TClientSettingsCardDeckOrderDirtyAtFrameStart = !PrewarmOnly && m_TClientSettingsCardDeckOrderDirty;"), std::string::npos);
+	EXPECT_EQ(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\tm_TClientSettingsCardDeckOrderDirty = false;"), std::string::npos);
+	EXPECT_EQ(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\ts_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);"), std::string::npos);
+	EXPECT_EQ(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\t\ts_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);"), std::string::npos);
 	EXPECT_EQ(Source.find("if(!PrewarmOnly && m_TClientSettingsCardDeckOrderDirty)\n\t\tm_TClientSettingsCardDeckOrderDirty = false;"), std::string::npos);
 	EXPECT_NE(Source.find("s_VisualFontLoader.Register(std::move(vLeftSections));"), std::string::npos);
 	EXPECT_NE(Source.find("s_RightSectionLoader.Register(std::move(vRightSections));"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckIsDraggingItem(m_TClientSettingsCardDragState, Item)"), std::string::npos);
-	EXPECT_NE(Source.find("m_TClientSettingsCardDragState.m_DropColumn == ColumnId"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckDropIndexForColumnItems("), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckProxyRect(m_TClientSettingsCardDragState.m_Item, Ui()->MouseX(), Ui()->MouseY())"), std::string::npos);
-	EXPECT_NE(Source.find("if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))"), std::string::npos);
-	EXPECT_NE(Source.find("std::vector<std::string> *pOrder = m_TClientSettingsCardDragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? &m_vTClientLeftCardOrder : &m_vTClientRightCardOrder;"), std::string::npos);
-	EXPECT_NE(Source.find("if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Viewport.y, Viewport.y + Viewport.h"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckIsDraggingItem(m_TClientSettingsCardDragState, Item)"), std::string::npos);
+	EXPECT_EQ(Source.find("m_TClientSettingsCardDragState.m_DropColumn == ColumnId"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckDropIndexForColumnItems("), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckProxyRect(m_TClientSettingsCardDragState.m_Item, Ui()->MouseX(), Ui()->MouseY())"), std::string::npos);
+	EXPECT_EQ(Source.find("if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))"), std::string::npos);
+	EXPECT_EQ(Source.find("std::vector<std::string> *pOrder = m_TClientSettingsCardDragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? &m_vTClientLeftCardOrder : &m_vTClientRightCardOrder;"), std::string::npos);
+	EXPECT_EQ(Source.find("if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Viewport.y, Viewport.y + Viewport.h"), std::string::npos);
 	EXPECT_EQ(Source.find("SettingsCardDeckCanStartDrag({&Item, true"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsCardDeckGlobalOrderUsesSharedCardModel)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string TClientSource = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()");
 	const std::string SerializeBody = ExtractSourceFunctionBody(Source, "void CMenus::SerializeMergedSettingsCardDeckOrdersToGlobalConfig()");
 	ASSERT_FALSE(Body.empty());
@@ -1826,9 +1800,8 @@ TEST(QmMonitoringHelpers, SettingsCardDeckGlobalOrderUsesSharedCardModel)
 	EXPECT_NE(Source.find("if(PrefIt == pColumnPrefs->end() || (PrefIt->second & 0x10) == 0)"), std::string::npos);
 	EXPECT_NE(Source.find("const int CurrentColumnPref = SettingsCardDeckColumnPref(pColumnPrefs, pGlobalStableId);"), std::string::npos);
 	EXPECT_NE(Source.find("if(Deck.m_TwoColumns && (CurrentColumnPref & 0x10) != 0)"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckDropColumnForMouseX(Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1], Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn)"), std::string::npos);
-	EXPECT_NE(Source.find("else if(Ui()->LastMouseButton(0))\n\t{\n\t\tm_TClientSettingsCardDragState.m_DropColumn = Deck.m_TwoColumns ?"), std::string::npos);
-	EXPECT_NE(TClientSource.find("PrefIt->second = 0x10 | (DropColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);"), std::string::npos);
+	EXPECT_EQ(Source.find("m_TClientSettingsCardDragState"), std::string::npos);
+	EXPECT_EQ(Source.find("m_vTClientSettingsCardDeckItems"), std::string::npos);
 	EXPECT_EQ(SerializeBody.find("vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), 1, (int)i});"), std::string::npos);
 	EXPECT_EQ(Source.find("SettingsCardDeckParseGlobalColumn"), std::string::npos);
 	EXPECT_EQ(Body.find("const char *pEntry = g_Config.m_QmGlobalCardOrder;\n\tchar aToken[160];\n\twhile((pEntry = str_next_token(pEntry, \";\", aToken"), std::string::npos);
@@ -2055,9 +2028,9 @@ TEST(QmMonitoringHelpers, SettingsTextPlanPrebuildSeparatesInvisibleWarmupFromVi
 		ASSERT_FALSE(TClientSettingsBody.empty());
 		EXPECT_NE(ScrollRegionHeader.find("void SetContentHeightForNextFrame(float ContentHeight);"), std::string::npos);
 		EXPECT_EQ(TClientSettingsBody.find("LogSettingsStage(\"tclient_settings_right_prewarm\", RightColumnTimer);\n\t\t\treturn;"), std::string::npos);
-		EXPECT_NE(TClientSettingsBody.find("s_ScrollRegion.SetContentHeightForNextFrame("), std::string::npos);
-		EXPECT_NE(TClientSettingsBody.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);"), std::string::npos);
-		EXPECT_LT(TClientSettingsBody.find("s_ScrollRegion.SetContentHeightForNextFrame("), TClientSettingsBody.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);"));
+		EXPECT_NE(TClientSettingsBody.find("m_SettingsCardDeck.Render("), std::string::npos);
+		EXPECT_NE(TClientSettingsBody.find("s_TClientSettingsScrollRegion"), std::string::npos);
+		EXPECT_EQ(TClientSettingsBody.find("BeginSettingsScrollRegion("), std::string::npos);
 		EXPECT_EQ(Settings.find("DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord"), std::string::npos);
 		EXPECT_EQ(Settings.find("DoButton_CheckBox(&g_Config.m_ClAutoScreenshot"), std::string::npos);
 		EXPECT_EQ(Settings.find("DoButton_CheckBox(&g_Config.m_ClAutoStatboardScreenshot"), std::string::npos);
@@ -6113,8 +6086,9 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 
-	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
-	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
+	EXPECT_NE(TClient.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
+	EXPECT_EQ(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
+	EXPECT_EQ(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ConfigListScrollRegion, &ListArea, ScrollParams"), std::string::npos);
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ConfigListScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
 	EXPECT_NE(Controls.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);"), std::string::npos);
@@ -10076,16 +10050,13 @@ TEST(QmMonitoringHelpers, TClientSettingsDoesNotWriteScrollMetadataBeforeFinish)
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t BeginPos = Body.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams");
-	const size_t FinishPos = Body.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT");
-	ASSERT_NE(BeginPos, std::string::npos);
-	ASSERT_NE(FinishPos, std::string::npos);
-	EXPECT_LT(BeginPos, FinishPos);
-
-	const std::string BeforeFinish = Body.substr(0, FinishPos);
-	EXPECT_EQ(BeforeFinish.find("m_SettingsRuntimeMetadata.m_LastScrollY ="), std::string::npos);
-	EXPECT_EQ(BeforeFinish.find("m_SettingsRuntimeMetadata.m_LastScrollPage ="), std::string::npos);
-	EXPECT_EQ(BeforeFinish.find("m_SettingsRuntimeMetadata.m_Valid = true;"), std::string::npos);
+	const size_t DeckRenderPos = Body.find("m_SettingsCardDeck.Render(");
+	ASSERT_NE(DeckRenderPos, std::string::npos);
+	EXPECT_EQ(Body.find("BeginSettingsScrollRegion("), std::string::npos);
+	EXPECT_EQ(Body.find("FinishSettingsScrollRegion("), std::string::npos);
+	const std::string BeforeDeckRender = Body.substr(0, DeckRenderPos);
+	EXPECT_EQ(BeforeDeckRender.find("m_SettingsRuntimeMetadata.m_LastScrollY ="), std::string::npos);
+	EXPECT_EQ(BeforeDeckRender.find("m_SettingsRuntimeMetadata.m_LastScrollPage ="), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TClientTabNamesInitializeBeforeLanguageChange)

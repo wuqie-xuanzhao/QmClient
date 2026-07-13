@@ -64,6 +64,55 @@ TEST(SectionLoader, StateTransitions)
 	EXPECT_TRUE(Loader.IsComplete());
 }
 
+TEST(SectionLoader, CachedHeightLookupUsesMeasuredSectionWithoutRendering)
+{
+	CSectionLoader Loader;
+	int RenderCount = 0;
+	SSettingsSection Section = MakeTestSection("Cached section", 72.0f);
+	Section.m_pStableCardId = "tclient:cached-section";
+	Section.m_RenderFullFn = [&RenderCount](CUIRect &Rect) -> float {
+		++RenderCount;
+		return ConsumeHeight(Rect, 72.0f);
+	};
+	Loader.Register({Section});
+	Loader.Begin({0.0f, 0.0f, 400.0f, 600.0f}, 100.0f);
+	Loader.Process(false);
+
+	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:cached-section", 0.0f), 72.0f);
+	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:missing-section", 13.0f), 13.0f);
+	EXPECT_EQ(RenderCount, 0);
+}
+
+TEST(SectionLoader, CachedHeightLookupRefreshesAfterDependencyChangeWithoutRendering)
+{
+	CSectionLoader Loader;
+	int MeasuredHeight = 72;
+	int RenderCount = 0;
+	const auto MakeSection = [&]() {
+		SSettingsSection Section = MakeTestSection("Cached section", (float)MeasuredHeight);
+		Section.m_pStableCardId = "tclient:cached-section";
+		Section.m_DependencyConfigInts = {&MeasuredHeight};
+		Section.m_RenderFullFn = [&RenderCount](CUIRect &Rect) -> float {
+			++RenderCount;
+			return ConsumeHeight(Rect, 0.0f);
+		};
+		return Section;
+	};
+
+	Loader.Register({MakeSection()});
+	Loader.Begin({0.0f, 0.0f, 400.0f, 600.0f}, 100.0f);
+	Loader.Process(false);
+	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:cached-section", 0.0f), 72.0f);
+
+	MeasuredHeight = 128;
+	Loader.Register({MakeSection()});
+	Loader.Begin({0.0f, 0.0f, 400.0f, 600.0f}, 100.0f);
+	Loader.Process(false);
+
+	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:cached-section", 0.0f), 128.0f);
+	EXPECT_EQ(RenderCount, 0);
+}
+
 TEST(SettingsCardDeckDrag, CtrlHeaderStableIdStartsDrag)
 {
 	SSettingsCardDeckItem Item;

@@ -985,166 +985,27 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 	}
 }
 
-CUIRect CMenus::TClientCacheSectionBoxRect(CUIRect BoxRect) const
-{
-	const float Padding = MarginBetweenViews * 0.6666f;
-	BoxRect.h += Padding;
-	BoxRect.y -= Padding * 0.5f;
-	return BoxRect;
-}
-
-void CMenus::InsetTClientCacheSectionContent(CUIRect &ContentRect) const
-{
-	ContentRect.VSplitLeft(Margin, nullptr, &ContentRect);
-	ContentRect.VSplitRight(Margin, &ContentRect, nullptr);
-}
-
-void CMenus::DrawTClientCacheSectionBox(CUIRect BoxRect)
-{
-	RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));
-}
-
-float CMenus::RenderSettingsCardSection(const char *pSectionName, CUIRect &CurrentColumn, const std::function<float(CUIRect &, bool)> &LayoutSection, float TopMargin)
-{
-	CUiScopedQuadBatch QuadBatchScope(Ui());
-	const float SavedY = CurrentColumn.y;
-	CUIRect MeasuredColumn = CurrentColumn;
-	InsetTClientCacheSectionContent(MeasuredColumn);
-	LayoutSection(MeasuredColumn, false);
-	const float MeasuredHeight = MeasuredColumn.y - CurrentColumn.y;
-	CUIRect BoxRect = {CurrentColumn.x, CurrentColumn.y + TopMargin, CurrentColumn.w, MeasuredHeight - TopMargin};
-	DrawTClientCacheSectionBox(BoxRect);
-	CUIRect ContentColumn = CurrentColumn;
-	InsetTClientCacheSectionContent(ContentColumn);
-	LayoutSection(ContentColumn, true);
-	CurrentColumn.y = ContentColumn.y;
-	const float RenderedHeight = CurrentColumn.y - SavedY;
-	const float HeightDelta = RenderedHeight - MeasuredHeight;
-	const bool HeightStable = absolute(HeightDelta) <= 0.01f;
-	char aExtra[256];
-	str_format(aExtra, sizeof(aExtra), "frame=%" PRIu64 " operation=%s page=settings:tclient tab=%d subtab=%d section=%s section_height_measured=%.3f section_height_rendered=%.3f height_delta=%.3f stable=%d",
-		(uint64_t)Client()->PerfFrame(), SettingsPerfActiveOperation(), m_TClientSettingsTab, m_TClientSettingsTab,
-		pSectionName != nullptr ? pSectionName : "unknown", MeasuredHeight, RenderedHeight, HeightDelta, HeightStable ? 1 : 0);
-	LogTClientPerfStage("tclient_settings_section_height", 0.0, !HeightStable, aExtra);
-	return CurrentColumn.y - SavedY;
-}
-
-SSettingsCardDeckItem CMenus::SettingsCardDeckItemFromSection(const SSettingsSection &Section, ESettingsCardDeckColumn Column, int Order, const CUIRect &Rect, const CUIRect &HeaderRect) const
-{
-	SSettingsCardDeckItem Item;
-	Item.m_pStableId = Section.m_pStableCardId;
-	Item.m_pSectionName = Section.m_pName;
-	Item.m_Column = Column;
-	Item.m_Order = Order;
-	Item.m_CachedHeight = Rect.h;
-	Item.m_Rect = Rect;
-	Item.m_HeaderRect = HeaderRect;
-	return Item;
-}
-
-void CMenus::RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item)
-{
-	if(Item.m_pStableId == nullptr || Item.m_pStableId[0] == '\0')
-		return;
-	m_vTClientSettingsCardDeckItems.push_back(Item);
-}
-
-void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder, settings_card_deck::CDeck *pDeckCoordinator)
-{
-	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
-	if((DragState.m_Active || DragState.m_PressPending) && false)
-	{
-		DragState = {};
-		return;
-	}
-	if(DragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
-		DragState = {};
-	if(DragState.m_PressPending && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
-		SettingsCardDeckClearPress(DragState);
-
-	const ESettingsCardDragHitRegion HitRegion = Ui()->MouseHovered(&Item.m_HeaderRect) ? ESettingsCardDragHitRegion::CHROME : Ui()->MouseHovered(&Item.m_Rect) ? ESettingsCardDragHitRegion::CONTENT :
-																				      ESettingsCardDragHitRegion::NONE;
-	if(!DragState.m_Active && !DragState.m_PressPending && Ui()->MouseButtonClicked(0) && SettingsCardDeckCanStartDrag({&Item, false, HitRegion}))
-	{
-		SettingsCardDeckBeginPress(DragState, Item);
-		DragState.m_PressStartTime = time_get();
-	}
-	else if(!DragState.m_Active && DragState.m_PressPending && Ui()->MouseButton(0) && (time_get() - DragState.m_PressStartTime) / (float)time_freq() >= 0.3f)
-	{
-		SettingsCardDeckTryPromotePress(DragState);
-	}
-	else if(DragState.m_Active && HitRegion != ESettingsCardDragHitRegion::NONE && Ui()->MouseButton(0))
-	{
-		DragState.m_DropColumn = Column;
-		DragState.m_DropIndex = SettingsCardDeckDropIndexForHoveredItem(Item, Ui()->MouseY());
-	}
-	else if(DragState.m_Active && HitRegion != ESettingsCardDragHitRegion::NONE && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))
-	{
-		DragState.m_DropColumn = Column;
-		const int DropIndex = SettingsCardDeckDropIndexForHoveredItem(Item, Ui()->MouseY());
-		CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex, pDeckCoordinator);
-	}
-}
-
-bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator)
-{
-	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
-	if(!DragState.m_Active)
-		return false;
-	if(DropIndex < 0)
-		DropIndex = DragState.m_DropIndex;
-	bool Moved = false;
-	const bool IsTClientMainOrder = pOrder == &m_vTClientLeftCardOrder || pOrder == &m_vTClientRightCardOrder;
-	if(IsTClientMainOrder)
-	{
-		std::vector<std::string> &vSourceOrder = DragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? m_vTClientLeftCardOrder : m_vTClientRightCardOrder;
-		std::vector<std::string> &vTargetOrder = DropColumn == ESettingsCardDeckColumn::LEFT ? m_vTClientLeftCardOrder : m_vTClientRightCardOrder;
-		Moved = DragState.m_Item.m_Column == DropColumn ?
-				SettingsCardDeckMoveWithinColumn(vSourceOrder, DragState.m_Item.m_pStableId, DropIndex) :
-				SettingsCardDeckMoveBetweenColumns(vSourceOrder, vTargetOrder, DragState.m_Item.m_pStableId, DropIndex);
-		if(Moved)
-		{
-			m_TClientSettingsCardDeckOrderDirty = true;
-			char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
-				str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
-		}
-	}
-	else if(pDeckCoordinator != nullptr && pDeckCoordinator->CommitDrop(DragState.m_Item.m_pStableId, DropColumn == ESettingsCardDeckColumn::RIGHT ? 2 : 1, DropIndex))
-	{
-		Moved = true;
-	}
-	else if(pOrder != nullptr && SettingsCardDeckMoveWithinColumn(*pOrder, DragState.m_Item.m_pStableId, DropIndex))
-	{
-		Moved = true;
-		for(auto &DeckPrefs : m_SettingsCardDeckColumnPrefs)
-		{
-			const auto PrefIt = DeckPrefs.second.find(DragState.m_Item.m_pStableId);
-			if(PrefIt == DeckPrefs.second.end())
-				continue;
-			// 用户跨列拖拽后，这张卡后续按固定列持久化。
-			PrefIt->second = 0x10 | (DropColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);
-			break;
-		}
-		SerializeMergedSettingsCardDeckOrdersToGlobalConfig();
-	}
-	DragState = {};
-	return Moved;
-}
-
 void CMenus::ConfigureSettingsCardSection(SSettingsSection &Section, const char *pTitle, const char *pStableCardId, std::function<float(CUIRect &, bool)> LayoutSection, float TopMargin)
 {
 	Section.m_pStableCardId = pStableCardId;
-	Section.m_MeasureFn = [this, LayoutSection](CUIRect &Col) -> float {
+	const float LegacyHeaderHeight = TopMargin + HeadlineHeight + MarginSmall;
+	Section.m_MeasureFn = [LayoutSection, LegacyHeaderHeight](CUIRect &Col) -> float {
 		const float SavedY = Col.y;
-		CUIRect MeasuredColumn = Col;
-		InsetTClientCacheSectionContent(MeasuredColumn);
-		LayoutSection(MeasuredColumn, false);
-		Col.y = MeasuredColumn.y;
+		CUIRect LegacyContent = Col;
+		LayoutSection(LegacyContent, false);
+		Col.y = LegacyContent.y - LegacyHeaderHeight;
 		return Col.y - SavedY;
 	};
-	Section.m_RenderCompactFn = [this, pTitle, LayoutSection, TopMargin](CUIRect &Col) -> float {
-		return RenderSettingsCardSection(pTitle, Col, LayoutSection, TopMargin);
+	Section.m_RenderCompactFn = [this, LayoutSection, LegacyHeaderHeight](CUIRect &Col) -> float {
+		const float SavedY = Col.y;
+		CUIRect LegacyContent = Col;
+		LegacyContent.y -= LegacyHeaderHeight;
+		LegacyContent.h += LegacyHeaderHeight;
+		Ui()->ClipEnable(&Col);
+		LayoutSection(LegacyContent, true);
+		Ui()->ClipDisable();
+		Col.y = LegacyContent.y;
+		return Col.y - SavedY;
 	};
 	Section.m_RenderFullFn = Section.m_RenderCompactFn;
 }
@@ -1488,11 +1349,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	CUIRect Column, LeftView, RightView, Button, Label;
 	const CUIRect Viewport = MainView;
 	const bool TClientVisibleTargetFrame = !PrewarmOnly;
-
-	static CScrollRegion s_ScrollRegion;
+	const float UiScale = 1.0f;
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	static CScrollRegion s_TClientSettingsScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
-	SSettingsScrollRegionFrame ScrollFrame;
 	auto LogSettingsStage = [&](const char *pStage, const CPerfTimer &Timer) {
 		char aExtra[192];
 		str_format(aExtra, sizeof(aExtra), "frame=%" PRIu64 " operation=%s page=settings:tclient tab=%d subtab=%d scroll_y=%.1f",
@@ -1512,14 +1372,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		CPerfTimer StageTimer;
 		if(!PrewarmOnly)
 		{
-			const float PreviousScrollY = m_SettingsTClientCurrentScrollY;
 			if(m_SettingsTClientScrollRestorePending)
 			{
-				s_ScrollRegion.SetScrollOffsetY(m_SettingsRuntimeMetadata.m_LastScrollY);
+				s_TClientSettingsScrollRegion.SetScrollOffsetY(m_SettingsRuntimeMetadata.m_LastScrollY);
 				m_SettingsTClientScrollRestorePending = false;
 			}
-			ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, PreviousScrollY);
-			ScrollOffset = ScrollFrame.m_BeginOffset;
+			ScrollOffset.y = s_TClientSettingsScrollRegion.ContentScrollOffsetY();
 			m_SettingsTClientCurrentScrollY = ScrollOffset.y;
 		}
 		else if(m_SettingsRuntimeMetadata.m_Valid)
@@ -1545,43 +1403,70 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		CurrentColumn.HSplitTop(TopPadding + EstimatedHeight, nullptr, &CurrentColumn);
 	};
 	auto RenderBoxedFullSection = [&](const char *pSectionName, auto &LayoutSection, CUIRect &Col) -> float {
-		CUiScopedQuadBatch QuadBatchScope(Ui());
 		const float SavedY = Col.y;
-		CUIRect MeasuredColumn = Col;
-		InsetTClientCacheSectionContent(MeasuredColumn);
-		CUIRect BoxRect = LayoutSection(MeasuredColumn, false);
-		const float MeasuredHeight = MeasuredColumn.y - Col.y;
-		BoxRect.x = Col.x;
-		BoxRect.w = Col.w;
-		DrawTClientCacheSectionBox(BoxRect);
-		CUIRect ContentColumn = Col;
-		InsetTClientCacheSectionContent(ContentColumn);
-		LayoutSection(ContentColumn, true);
-		Col.y = ContentColumn.y;
+		CUIRect MeasuredContent = Col;
+		const CUIRect BoxRect = LayoutSection(MeasuredContent, false);
+		const float LegacyHeaderHeight = BoxRect.y - SavedY + HeadlineHeight + MarginSmall;
+		const float MeasuredHeight = MeasuredContent.y - SavedY - LegacyHeaderHeight;
+		CUIRect LegacyContent = Col;
+		LegacyContent.y -= LegacyHeaderHeight;
+		LegacyContent.h += LegacyHeaderHeight;
+		Ui()->ClipEnable(&Col);
+		LayoutSection(LegacyContent, true);
+		Ui()->ClipDisable();
+		Col.y = LegacyContent.y;
 		const float RenderedHeight = Col.y - SavedY;
 		LogTClientSectionHeightConsistency(pSectionName, MeasuredHeight, RenderedHeight);
-		return Col.y - SavedY;
+		return RenderedHeight;
 	};
 	auto FillCachedStaticLayer = [&](SSettingsSection &Section, auto &LayoutSection) {
-		Section.m_RenderCompactFn = [this, &LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName](CUIRect &Col) -> float {
-			CUiScopedQuadBatch QuadBatchScope(Ui());
+		Section.m_MeasureFn = [&LayoutSection](CUIRect &Col) -> float {
 			const float SavedY = Col.y;
-			CUIRect MeasuredColumn = Col;
-			InsetTClientCacheSectionContent(MeasuredColumn);
-			CUIRect BoxRect = LayoutSection(MeasuredColumn, false);
-			const float MeasuredHeight = MeasuredColumn.y - Col.y;
-			BoxRect.x = Col.x;
-			BoxRect.w = Col.w;
-			DrawTClientCacheSectionBox(BoxRect);
-			CUIRect ContentColumn = Col;
-			InsetTClientCacheSectionContent(ContentColumn);
-			LayoutSection(ContentColumn, true);
-			Col.y = ContentColumn.y;
-			const float RenderedHeight = Col.y - SavedY;
-			LogTClientSectionHeightConsistency(SectionName, MeasuredHeight, RenderedHeight);
+			CUIRect LegacyContent = Col;
+			const CUIRect BoxRect = LayoutSection(LegacyContent, false);
+			const float LegacyHeaderHeight = BoxRect.y - SavedY + HeadlineHeight + MarginSmall;
+			Col.y = LegacyContent.y - LegacyHeaderHeight;
 			return Col.y - SavedY;
 		};
+		Section.m_RenderCompactFn = [this, &LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName](CUIRect &Col) -> float {
+			const float SavedY = Col.y;
+			CUIRect MeasuredContent = Col;
+			const CUIRect BoxRect = LayoutSection(MeasuredContent, false);
+			const float LegacyHeaderHeight = BoxRect.y - SavedY + HeadlineHeight + MarginSmall;
+			const float MeasuredHeight = MeasuredContent.y - SavedY - LegacyHeaderHeight;
+			CUIRect LegacyContent = Col;
+			LegacyContent.y -= LegacyHeaderHeight;
+			LegacyContent.h += LegacyHeaderHeight;
+			Ui()->ClipEnable(&Col);
+			LayoutSection(LegacyContent, true);
+			Ui()->ClipDisable();
+			Col.y = LegacyContent.y;
+			const float RenderedHeight = Col.y - SavedY;
+			LogTClientSectionHeightConsistency(SectionName, MeasuredHeight, RenderedHeight);
+			return RenderedHeight;
+		};
 		Section.m_RenderFullFn = Section.m_RenderCompactFn;
+	};
+	std::vector<SSettingsCardDefinition> vDeckCards;
+	vDeckCards.reserve(19);
+	auto AppendDeckCards = [&vDeckCards](const std::vector<SSettingsSection> &vSections, const CSectionLoader &Loader) {
+		for(const SSettingsSection &Section : vSections)
+		{
+			if(Section.m_pStableCardId == nullptr || Section.m_pStableCardId[0] == '\0')
+				continue;
+			SSettingsCardDefinition Definition;
+			Definition.m_Spec = {Section.m_pStableCardId, Localize(Section.m_pName), nullptr};
+			Definition.m_Measure = [&Loader, pStableCardId = Section.m_pStableCardId, FallbackHeight = Section.m_CachedHeight](float) {
+				return Loader.CachedHeightForStableCardId(pStableCardId, FallbackHeight);
+			};
+			Definition.m_RenderMeasured = [Render = Section.m_RenderFullFn](CUIRect &Content) {
+				if(Render)
+					Render(Content);
+			};
+			// 高度始终从 loader 缓存同步，避免 Deck 重跑 legacy layout。
+			Definition.m_MeasureEachFrame = true;
+			vDeckCards.push_back(std::move(Definition));
+		}
 	};
 	[[maybe_unused]] auto CalcHudSectionHeight = [&]() {
 		float Height = 0.0f;
@@ -1617,92 +1502,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	[[maybe_unused]] static float s_BackgroundDrawSectionCachedHeight = 0.0f;
 	[[maybe_unused]] static float s_FinishNameSectionCachedHeight = 0.0f;
 
-	if(!PrewarmOnly)
-		m_vTClientSettingsCardDeckItems.clear();
-	const bool TClientSettingsCardDeckOrderDirtyAtFrameStart = !PrewarmOnly && m_TClientSettingsCardDeckOrderDirty;
-	if(TClientSettingsCardDeckOrderDirtyAtFrameStart)
-		m_TClientSettingsCardDeckOrderDirty = false;
-
-	// 持久化：从 config 解析卡片顺序（str_comp cache 检测变化，避免每帧覆盖拖拽中的 vOrder）
-	if(!PrewarmOnly)
-	{
-		static char s_TClientGlobalCardOrderCache[sizeof(g_Config.m_QmGlobalCardOrder)] = {};
-		static char s_TClientLegacyCardOrderCache[sizeof(g_Config.m_QmSettingsCardOrder)] = {};
-		if(str_comp(s_TClientGlobalCardOrderCache, g_Config.m_QmGlobalCardOrder) != 0 ||
-			str_comp(s_TClientLegacyCardOrderCache, g_Config.m_QmSettingsCardOrder) != 0)
-		{
-			str_copy(s_TClientGlobalCardOrderCache, g_Config.m_QmGlobalCardOrder, sizeof(s_TClientGlobalCardOrderCache));
-			str_copy(s_TClientLegacyCardOrderCache, g_Config.m_QmSettingsCardOrder, sizeof(s_TClientLegacyCardOrderCache));
-			const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
-			if(!HasGlobalTClientOrder)
-			{
-				if(g_Config.m_QmGlobalCardOrder[0] == '\0')
-					LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
-				else
-				{
-					m_vTClientLeftCardOrder.clear();
-					m_vTClientRightCardOrder.clear();
-				}
-			}
-		}
-	}
-
-	auto EnsureSettingsCardDeckOrder = [](std::vector<std::string> &vOrder, const std::vector<SSettingsSection> &vSections) {
-		for(const SSettingsSection &Section : vSections)
-		{
-			if(Section.m_pStableCardId == nullptr || Section.m_pStableCardId[0] == '\0')
-				continue;
-			if(std::find(vOrder.begin(), vOrder.end(), Section.m_pStableCardId) == vOrder.end())
-				vOrder.emplace_back(Section.m_pStableCardId);
-		}
-	};
-	auto WrapSettingsCardDeckSections = [&](std::vector<SSettingsSection> &vSections, ESettingsCardDeckColumn ColumnId, std::vector<std::string> &vOrder) {
-		EnsureSettingsCardDeckOrder(vOrder, vSections);
-		SettingsCardDeckApplyOrder(vSections, vOrder);
-		for(size_t i = 0; i < vSections.size(); ++i)
-		{
-			SSettingsSection SectionMeta = vSections[i];
-			dbg_assert(SectionMeta.m_pStableCardId != nullptr && SectionMeta.m_pStableCardId[0] != '\0', "TClient settings deck card requires a stable id");
-			if(SectionMeta.m_pStableCardId == nullptr)
-				continue;
-			auto WrapRenderFn = [this, SectionMeta, ColumnId, &vOrder, i](std::function<float(CUIRect &)> RenderFn) {
-				return [this, SectionMeta, ColumnId, &vOrder, i, RenderFn](CUIRect &Col) -> float {
-					const CUIRect StartRect = Col;
-					const float Height = RenderFn ? RenderFn(Col) : 0.0f;
-					CUIRect CardRect = {StartRect.x, StartRect.y, StartRect.w, Col.y - StartRect.y};
-					const CUIRect CardBoxRect = TClientCacheSectionBoxRect(CardRect);
-					CUIRect HandleRect;
-					RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));
-					const SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);
-					RegisterSettingsCardDeckItem(Item);
-					HandleSettingsCardDeckDrag(Item, ColumnId, &vOrder);
-					if(SettingsCardDeckIsDraggingItem(m_TClientSettingsCardDragState, Item))
-					{
-						CardRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, 10.0f);
-					}
-					else if(m_TClientSettingsCardDragState.m_Active &&
-						m_TClientSettingsCardDragState.m_DropColumn == ColumnId &&
-						Ui()->MouseHovered(&Item.m_Rect))
-					{
-						CUIRect DropIndicator = SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex, 4.0f);
-						DropIndicator.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f), IGraphics::CORNER_ALL, 2.0f);
-					}
-					return Height;
-				};
-			};
-			vSections[i].m_RenderCompactFn = WrapRenderFn(vSections[i].m_RenderCompactFn);
-			vSections[i].m_RenderFullFn = WrapRenderFn(vSections[i].m_RenderFullFn);
-		}
-	};
-
-	MainView.y += ScrollOffset.y;
-
-	MainView.VSplitRight(5.0f, &MainView, nullptr); // Padding for scrollbar
-	MainView.VSplitLeft(5.0f, nullptr, &MainView); // Padding for scrollbar
-
-	MainView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
-	LeftView.VSplitLeft(MarginSmall, nullptr, &LeftView);
-	RightView.VSplitRight(MarginSmall, &RightView, nullptr);
+	LeftView = Page.m_aColumns[0];
+	RightView = Page.m_aColumns[1];
 
 	// Initialize VisualFont section loader for this frame
 	s_VisualFontLoader.SetRuntimeKey(MakeSettingsSectionRuntimeKey(LeftView, Graphics()));
@@ -1710,8 +1511,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	s_VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 	s_VisualFontLoader.SetDeferredFarMeasurementEnabled(true);
 	s_VisualFontLoader.m_ScrollY = ScrollOffset.y;
-	if(TClientSettingsCardDeckOrderDirtyAtFrameStart)
-		s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);
 	s_VisualFontLoader.Begin(LeftView, 5.0f);
 
 	// ***** LeftView ***** //
@@ -2780,7 +2579,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 
 			// -- 宠物 --
 			vLeftSections.push_back(BuildTClientPetCacheSection());
-			WrapSettingsCardDeckSections(vLeftSections, ESettingsCardDeckColumn::LEFT, m_vTClientLeftCardOrder);
+			AppendDeckCards(vLeftSections, s_VisualFontLoader);
 			s_VisualFontLoader.Register(std::move(vLeftSections));
 		}
 
@@ -2793,7 +2592,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		}
 		else
 		{
-			s_VisualFontLoader.Process();
+			s_VisualFontLoader.Process(false);
 			Column = s_VisualFontLoader.GetRunningColumn();
 
 			LogSettingsStage("tclient_settings_left_visual_total", VisualSectionsTotalTimer);
@@ -2811,8 +2610,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		s_RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 		s_RightSectionLoader.SetDeferredFarMeasurementEnabled(true);
 		s_RightSectionLoader.m_ScrollY = ScrollOffset.y;
-		if(TClientSettingsCardDeckOrderDirtyAtFrameStart)
-			s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);
 		s_RightSectionLoader.Begin(RightView, 5.0f);
 
 		auto LayoutHudSection = [&](CUIRect &CurrentColumn, bool Render) {
@@ -3506,7 +3303,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			};
 			FillCachedStaticLayer(S, LayoutFinishNameSection);
 			vRightSections.push_back(S);
-			WrapSettingsCardDeckSections(vRightSections, ESettingsCardDeckColumn::RIGHT, m_vTClientRightCardOrder);
+			AppendDeckCards(vRightSections, s_RightSectionLoader);
 			s_RightSectionLoader.Register(std::move(vRightSections));
 		}
 
@@ -3519,7 +3316,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		}
 		else
 		{
-			s_RightSectionLoader.Process();
+			s_RightSectionLoader.Process(false);
 			Column = s_RightSectionLoader.GetRunningColumn();
 
 			// ***** END OF PAGE 1 SETTINGS ***** //
@@ -3527,53 +3324,32 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			LogSettingsStage("tclient_settings_right_column", RightColumnTimer);
 		}
 	}
-	// Scroll
-	CUIRect ScrollRegion;
-	ScrollRegion.x = MainView.x;
-	ScrollRegion.y = maximum(LeftView.y, RightView.y) + MarginSmall * 2.0f;
-	ScrollRegion.w = MainView.w;
-	ScrollRegion.h = 0.0f;
-	if(PrewarmOnly)
+	if(!PrewarmOnly)
 	{
-		const float ContentHeight = std::ceil(ScrollRegion.y - (Viewport.y + ScrollOffset.y));
-		s_ScrollRegion.SetContentHeightForNextFrame(ContentHeight);
-	}
-	else
-	{
-		if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
-			m_TClientSettingsCardDragState = {};
-		if(m_TClientSettingsCardDragState.m_Active && Ui()->MouseButton(0))
+		const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+		const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+		SSettingsCardDeckInput InputState;
+		InputState.m_MouseX = Ui()->MouseX();
+		InputState.m_MouseY = Ui()->MouseY();
+		InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+		InputState.m_MouseDown = Ui()->MouseButton(0);
+		InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+		InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+		InputState.m_AllowHeaderDrag = true;
+		InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+		InputState.m_pScrollParams = &ScrollParams;
+		if(str_startswith(m_SettingsCardFocusStableId.c_str(), "tclient:") != nullptr)
 		{
-			m_TClientSettingsCardDragState.m_DropColumn = SettingsCardDeckDropColumnForMouseX(LeftView, RightView, Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn);
-			const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
-			m_TClientSettingsCardDragState.m_DropIndex = SettingsCardDeckDropIndexForColumnItems(
-				m_vTClientSettingsCardDeckItems,
-				DropColumn,
-				Ui()->MouseX(),
-				Ui()->MouseY(),
-				m_TClientSettingsCardDragState.m_DropIndex);
-			const float AutoScrollDelta = SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Viewport.y, Viewport.y + Viewport.h, 32.0f, ScrollParams.m_ScrollUnit);
-			if(AutoScrollDelta != 0.0f)
-				s_ScrollRegion.ScrollRelativeDirect(AutoScrollDelta);
-			CUIRect DragProxy = SettingsCardDeckProxyRect(m_TClientSettingsCardDragState.m_Item, Ui()->MouseX(), Ui()->MouseY());
-			DrawTClientCacheSectionBox(DragProxy);
-			DragProxy.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 10.0f);
+			m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+			m_SettingsCardFocusStableId.clear();
 		}
-		if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))
-		{
-			m_TClientSettingsCardDragState.m_DropColumn = SettingsCardDeckDropColumnForMouseX(LeftView, RightView, Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn);
-			const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
-			std::vector<std::string> *pOrder = m_TClientSettingsCardDragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? &m_vTClientLeftCardOrder : &m_vTClientRightCardOrder;
-			const int DropIndex = SettingsCardDeckDropIndexForColumnItems(
-				m_vTClientSettingsCardDeckItems,
-				DropColumn,
-				Ui()->MouseX(),
-				Ui()->MouseY(),
-				m_TClientSettingsCardDragState.m_DropIndex);
-			CommitSettingsCardDeckDragDrop(pOrder, DropColumn, DropIndex);
-		}
-		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);
-		m_SettingsTClientCurrentScrollY = ScrollFrame.m_FinalOffsetY;
+		const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(SettingsUiContext("settings_tclient_main", UiScale), Page, "tclient", vDeckCards, SettingsCardOrderModel(), &s_TClientSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+		if(DeckResult.m_OrderChanged)
+			SaveSettingsCardOrderModel();
+		m_SettingsTClientCurrentScrollY = s_TClientSettingsScrollRegion.ContentScrollOffsetY();
+		m_SettingsRuntimeMetadata.m_LastScrollPage = SETTINGS_TCLIENT;
+		m_SettingsRuntimeMetadata.m_LastScrollY = m_SettingsTClientCurrentScrollY;
+		m_SettingsRuntimeMetadata.m_Valid = true;
 	}
 	if(!PrewarmOnly)
 	{

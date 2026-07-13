@@ -1869,15 +1869,15 @@ TEST(QmNewUiMenuBranches, TClientSettingsCardsUseSharedQmCardStyle)
 	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
 	ASSERT_FALSE(RenderSettingsTClientChatBinds.empty());
 
-	EXPECT_NE(Source.find("RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientSettings.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
+	EXPECT_EQ(Source.find("RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientSettings.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientChatBinds.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientChatBinds.find("CardDeck.Render("), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientChatBinds.find("BeginSettingsScrollRegion("), std::string::npos);
 	EXPECT_EQ(Source.find("ScrollParams.m_ScrollUnit = 60.0f;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientSettings.find("ScrollParams.m_ScrollbarMargin = 5.0f;"), std::string::npos);
 	EXPECT_EQ(Source.find("BoxRect.Draw(Ui()->ScaleBackgroundAlpha(MenuPanelColor(0.92f))"), std::string::npos);
-	EXPECT_NE(HeaderSource.find("void DrawTClientCacheSectionBox(CUIRect BoxRect);"), std::string::npos);
+	EXPECT_EQ(HeaderSource.find("void DrawTClientCacheSectionBox(CUIRect BoxRect);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, DDNetSettingsPageUsesSharedQmCards)
@@ -1927,7 +1927,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	const std::string BeginCard = FunctionBody(MenuSource, "CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(");
 	const std::string EndDeck = FunctionBody(MenuSource, "void CMenus::EndSettingsCardDeck(");
 	const std::string DeckOrder = FunctionBody(MenuSource, "std::vector<std::string> *CMenus::SettingsCardDeckOrder(");
-	const std::string CommitDrop = FunctionBody(TClientSource, "bool CMenus::CommitSettingsCardDeckDragDrop(");
+	const std::string SettingsDeck = ReadTextFile("src/game/client/QmUi/SettingsCardDeck.cpp");
 	const std::string RenderHandle = FunctionBody(MenuSource, "void CMenus::RenderSettingsCardDragHandle(");
 	EXPECT_NE(BeginDeck.find("QmSettingsScrollRegionParams(UiScale)"), std::string::npos);
 	EXPECT_NE(BeginDeck.find("Deck.m_pOrder = pOrder != nullptr ? pOrder : SettingsCardDeckOrder(pDeckId);"), std::string::npos);
@@ -1947,10 +1947,10 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(BeginCard.find("DoSettingsLabel(Deck.m_Page, -1, Card.m_pStableId, &Card.m_TitleRect, pTitle"), std::string::npos);
 	EXPECT_EQ(BeginCard.find("DoSettingsLabel(Deck.m_Page, -1, pStableId"), std::string::npos);
 	EXPECT_NE(BeginCard.find("RenderSettingsCardDragHandle(Card.m_Rect, &Card.m_HandleRect, Deck.m_Style);"), std::string::npos);
-	EXPECT_NE(BeginCard.find("Section.m_pStableCardId = pGlobalStableId;"), std::string::npos);
+	EXPECT_EQ(BeginCard.find("Section.m_pStableCardId = pGlobalStableId;"), std::string::npos);
 	EXPECT_EQ(BeginCard.find("Section.m_pStableCardId = pStableId;"), std::string::npos);
-	EXPECT_NE(EndDeck.find("RenderSettingsCardDeckDragOverlay(Deck);"), std::string::npos);
-	EXPECT_NE(CommitDrop.find("SerializeMergedSettingsCardDeckOrdersToGlobalConfig();"), std::string::npos);
+	EXPECT_EQ(EndDeck.find("RenderSettingsCardDeckDragOverlay(Deck);"), std::string::npos);
+	EXPECT_NE(SettingsDeck.find("CommitSettingsCardDeckDrop(Model, pTab, pStableId"), std::string::npos);
 	EXPECT_NE(RenderHandle.find("Input()->ModifierIsPressed()"), std::string::npos);
 	EXPECT_NE(RenderHandle.find("Card.VSplitRight(HandleSize"), std::string::npos);
 	EXPECT_EQ(RenderHandle.find("pHandleRect->Draw(HandleBg"), std::string::npos);
@@ -1997,7 +1997,6 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsSound.find("SLabelProperties{}, false"), std::string::npos);
 	EXPECT_EQ(RenderSettingsSound.find("AudioPackView.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f)"), std::string::npos);
 
-	const std::string SettingsDeck = ReadTextFile("src/game/client/QmUi/SettingsCardDeck.cpp");
 	const size_t RebuildActiveStateIndices = SettingsDeck.find("RebuildActiveStateIndices");
 	const size_t InitialBuild = SettingsDeck.find("std::vector<SPreparedSettingsCard> vPrepared = BuildPreparedCards(aColumns);");
 	const size_t PreLayoutInput = SettingsDeck.find("m_pDefinition->m_PreLayoutInput");
@@ -2032,15 +2031,14 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientChatBinds = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)");
-	const std::string HandleSettingsCardDeckDrag = FunctionBody(TClientSource, "void CMenus::HandleSettingsCardDeckDrag(");
 	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
 	ASSERT_FALSE(RenderSettingsTClientBindWheel.empty());
 	ASSERT_FALSE(RenderSettingsTClientChatBinds.empty());
 	ASSERT_FALSE(RenderSettingsTClientStatusBar.empty());
-	ASSERT_FALSE(HandleSettingsCardDeckDrag.empty());
-	EXPECT_NE(HandleSettingsCardDeckDrag.find("(time_get() - DragState.m_PressStartTime) / (float)time_freq() >= 0.3f"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientSettings.find("RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientSettings.find("SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);"), std::string::npos);
+	EXPECT_EQ(TClientSource.find("void CMenus::HandleSettingsCardDeckDrag("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientSettings.find("RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientSettings.find("SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientSettings.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("ResolveSettingsPageLayout(MainView, false, UiScale)"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-editor"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-preview"), std::string::npos);

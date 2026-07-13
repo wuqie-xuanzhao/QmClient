@@ -103,7 +103,7 @@ void CSectionLoader::Begin(CUIRect MainView, float TimeBudgetMs)
 	m_TotalFrameTimeMs = 0.0;
 }
 
-bool CSectionLoader::Process()
+bool CSectionLoader::Process(bool RenderSections)
 {
 	m_LastFrameStats = {};
 	m_LastFrameStats.m_SectionsTotal = (int)m_vSections.size();
@@ -207,7 +207,7 @@ bool CSectionLoader::Process()
 			if(Priority <= 1)
 			{
 				Section.m_State = ESettingsSectionState::COMPACT;
-				if(Section.m_RenderCompactFn)
+				if(RenderSections && Section.m_RenderCompactFn)
 				{
 					Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
 					Section.m_HasCachedHeight = true;
@@ -233,7 +233,7 @@ bool CSectionLoader::Process()
 			if(BudgetAvailable && UnlockedThisFrame < MaxUnlockPerFrame && Priority <= 1)
 			{
 				Section.m_State = ESettingsSectionState::FULL;
-				if(Section.m_RenderFullFn)
+				if(RenderSections && Section.m_RenderFullFn)
 				{
 					Section.m_CachedHeight = Section.m_RenderFullFn(m_RunningColumn);
 					Section.m_HasCachedHeight = true;
@@ -248,7 +248,7 @@ bool CSectionLoader::Process()
 				++m_CurrentIndex;
 				break;
 			}
-			if(Section.m_RenderCompactFn)
+			if(RenderSections && Section.m_RenderCompactFn)
 			{
 				Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
 				Section.m_HasCachedHeight = true;
@@ -274,7 +274,7 @@ bool CSectionLoader::Process()
 				++m_CurrentIndex;
 				break;
 			}
-			if(Section.m_RenderFullFn)
+			if(RenderSections && Section.m_RenderFullFn)
 			{
 				Section.m_CachedHeight = Section.m_RenderFullFn(m_RunningColumn);
 				Section.m_HasCachedHeight = true;
@@ -333,6 +333,18 @@ bool CSectionLoader::Process()
 bool CSectionLoader::IsComplete() const
 {
 	return m_Complete;
+}
+
+float CSectionLoader::CachedHeightForStableCardId(const char *pStableCardId, float FallbackHeight) const
+{
+	if(pStableCardId == nullptr || pStableCardId[0] == '\0')
+		return FallbackHeight;
+	for(const SSettingsSection &Section : m_vSections)
+	{
+		if(Section.m_pStableCardId != nullptr && str_comp(Section.m_pStableCardId, pStableCardId) == 0 && Section.m_HasCachedHeight)
+			return Section.m_CachedHeight;
+	}
+	return FallbackHeight;
 }
 
 void CSectionLoader::Reset()
