@@ -2809,7 +2809,7 @@ private:
 	void RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly = false);
-	void RenderSettingsTClientConfigs(CUIRect MainView);
+	void RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderSettingsTClientSidebar(CUIRect MainView);
 	void RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage = false, bool PrewarmOnly = false);
 	void RenderSettingsGlobalSearch(CUIRect MainView, bool PrewarmOnly = false);

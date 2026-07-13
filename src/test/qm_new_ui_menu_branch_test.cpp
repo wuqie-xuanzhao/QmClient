@@ -2254,6 +2254,22 @@ TEST(QmNewUiMenuBranches, TClientProfilesUsesPublicCardDeck)
 	EXPECT_NE(Registry.find("{\"deck:tclient-profiles-list\", \"tclient-profiles\", ECardColumn::Left, 1"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, TClientConfigsUsesPublicCardDeck)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Registry = ReadTextFile("src/game/client/QmUi/QmCardRegistry.cpp");
+	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
+	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ConfigsPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(Body.find("CardDeck.Render("), std::string::npos);
+	EXPECT_NE(Body.find("static CScrollRegion s_ConfigListScrollRegion;"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-configs-actions\", \"tclient-configs\", ECardColumn::Left, 0"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-configs-filters\", \"tclient-configs\", ECardColumn::Right, 0"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-configs-list\", \"tclient-configs\", ECardColumn::Left, 1"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, TClientWarListDefersDeletesAndValidatesSelections)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");

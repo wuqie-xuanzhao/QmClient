@@ -6115,8 +6115,8 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 
 	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
-	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams"), std::string::npos);
-	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
+	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ConfigListScrollRegion, &ListArea, ScrollParams"), std::string::npos);
+	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ConfigListScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
 	EXPECT_NE(Controls.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);"), std::string::npos);
 	EXPECT_EQ(Controls.find("ScrollParams.m_ScrollUnit = 6.0f * BUTTON_HEIGHT;"), std::string::npos);
 	EXPECT_EQ(Controls.find("ScrollParams.m_ForceShowScrollbar = true;"), std::string::npos);
@@ -6630,6 +6630,7 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationUsesTabRouteTable)
 	EXPECT_NE(QmClient.find("{\"tclient-status-bar\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"tclient-info\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"tclient-profiles\", CMenus::SETTINGS_PROFILES"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"tclient-configs\", CMenus::SETTINGS_QMCLIENT, -1, -1, CMenus::QMCLIENT_SETTINGS_TAB_CONFIG}"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-hud\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-chat\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-name-plate\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
@@ -8198,7 +8199,7 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 TEST(QmMonitoringHelpers, TClientConfigSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);

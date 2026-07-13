@@ -5478,9 +5478,21 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	LogTClientPerfStage("tclient_profiles_total", RenderTimer.ElapsedMs(), false);
 }
 
-void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
+void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 {
 	CPerfTimer RenderTimer;
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
+	const float UiScale = 1.0f;
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	std::unique_ptr<CUiRenderOnlyGuard> pRenderOnlyGuard;
+	if(ReadOnly && !Ui()->RenderOnly())
+		pRenderOnlyGuard = std::make_unique<CUiRenderOnlyGuard>(Ui());
+	IUiContext ConfigsCtx = SettingsUiContext("settings_tclient_configs", UiScale);
+	if(ReadOnly)
+	{
+		ConfigsCtx.m_pAnim = nullptr;
+		ConfigsCtx.m_pTree = nullptr;
+	}
 	// hi hello, this is a relatively self-contained mess, sorry if you're forking or need to modify this -Tater
 	// 你好, 这是一个相对独立的混乱，如果你要分叉或需要修改它，抱歉 -Tater
 	struct SIntStage
@@ -5547,14 +5559,6 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 
 	size_t ChangesCount = 0;
 
-	CUIRect ApplyBar, FilterBar, TagsBar, ListArea;
-	MainView.VSplitRight(5.0f, &MainView, nullptr); // padding for scrollbar
-	MainView.VSplitLeft(5.0f, nullptr, &MainView);
-	MainView.HSplitTop(LineSize + MarginSmall, &ApplyBar, &MainView);
-	MainView.HSplitTop(LineSize + MarginSmall, &FilterBar, &MainView);
-	MainView.HSplitTop((LineSize + MarginSmall) * 2, &TagsBar, &ListArea); // Two rows for tags
-	ListArea.HSplitTop(MarginSmall, nullptr, &ListArea);
-
 	static CLineInputBuffered<128> s_SearchInput;
 	static int s_TcUiTagVisual = 0;
 	static int s_TcUiTagHud = 0;
@@ -5568,7 +5572,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 	static int s_TcUiTagMisc = 0;
 
 	ChangesCount = s_StagedInts.size() + s_StagedStrs.size() + s_StagedCols.size();
-	{
+	auto RenderActions = [&](CUIRect ApplyBar) {
 		CPerfTimer ActionsTimer;
 		CUIRect Row = ApplyBar;
 		Row.HMargin(MarginSmall, &Row);
@@ -5627,10 +5631,13 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		str_format(aBuf, sizeof(aBuf), Localize("Changes: %d"), (int)ChangesCount);
 		Ui()->DoLabel(&Counter, aBuf, FontSize, TEXTALIGN_ML);
 		LogTClientPerfStageEx("tclient_configs", "actions", ETClientSettingsPerfStage::INTERACTIVE_LAYER, ActionsTimer.ElapsedMs(), false, aBuf);
-	}
+	};
 
-	const float SearchLabelW = 50.0f;
-	{
+	auto RenderFilters = [&](CUIRect Content) {
+		const float SearchLabelW = 50.0f;
+		CUIRect FilterBar, TagsBar;
+		Content.HSplitTop(LineSize + MarginSmall, &FilterBar, &Content);
+		Content.HSplitTop((LineSize + MarginSmall) * 2.0f, &TagsBar, &Content);
 		CPerfTimer FilterTimer;
 		CUIRect Row = FilterBar;
 		Row.HMargin(MarginSmall, &Row);
@@ -5766,450 +5773,497 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		TagsArea2.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea2);
 		if(DoTClientSettingsButton_CheckBox(&s_TcUiTagMisc, "tclient-ui-tag-misc", Localize("Misc"), s_TcUiTagMisc, &TagBtn))
 			s_TcUiTagMisc ^= 1;
-	}
-
-	const int FlagMask = CFGFLAG_CLIENT;
-	auto BuildConfigTagMask = [](const char *pScriptName) {
-		unsigned int Mask = 0;
-		for(EConfigTag Tag : ConfigTagsManager()->GetTagsForVariable(pScriptName))
-			Mask |= 1u << static_cast<unsigned int>(Tag);
-		return Mask;
 	};
-	static std::vector<const SConfigVariable *> s_vAllClientVars;
-	if(s_vAllClientVars.empty())
-	{
-		auto Collector = [](const SConfigVariable *pVar, void *pUserData) {
-			auto *pVec = static_cast<std::vector<const SConfigVariable *> *>(pUserData);
-			pVec->push_back(pVar);
+
+	auto RenderList = [&](CUIRect ListArea) {
+		const int FlagMask = CFGFLAG_CLIENT;
+		auto BuildConfigTagMask = [](const char *pScriptName) {
+			unsigned int Mask = 0;
+			for(EConfigTag Tag : ConfigTagsManager()->GetTagsForVariable(pScriptName))
+				Mask |= 1u << static_cast<unsigned int>(Tag);
+			return Mask;
 		};
-		std::vector<const SConfigVariable *> vCollectedVars;
-		ConfigManager()->PossibleConfigVariables("", FlagMask, Collector, &vCollectedVars);
-		s_vAllClientVars = std::move(vCollectedVars);
-		std::sort(s_vAllClientVars.begin(), s_vAllClientVars.end(), [](const SConfigVariable *a, const SConfigVariable *b) {
-			if(a->m_ConfigDomain != b->m_ConfigDomain)
-				return a->m_ConfigDomain < b->m_ConfigDomain;
-			return str_comp(a->m_pScriptName, b->m_pScriptName) < 0;
-		});
-	}
-	static std::vector<unsigned int> s_vAllClientVarTagMasks;
-	if(s_vAllClientVarTagMasks.size() != s_vAllClientVars.size())
-	{
-		s_vAllClientVarTagMasks.resize(s_vAllClientVars.size());
-		for(size_t i = 0; i < s_vAllClientVars.size(); ++i)
-			s_vAllClientVarTagMasks[i] = BuildConfigTagMask(s_vAllClientVars[i]->m_pScriptName);
-	}
-
-	auto GetConfigSource = [&](const SConfigVariable *pVar) {
-		if(pVar->m_ConfigDomain == ConfigDomain::DDNET)
-			return EConfigSource::DDNET;
-		const char *pName = pVar->m_pScriptName ? pVar->m_pScriptName : "";
-		if(str_startswith(pName, "qm_"))
-			return EConfigSource::QM;
-		return EConfigSource::TCLIENT;
-	};
-
-	auto SourceEnabled = [&](EConfigSource Source) {
-		switch(Source)
+		static std::vector<const SConfigVariable *> s_vAllClientVars;
+		if(s_vAllClientVars.empty())
 		{
-		case EConfigSource::DDNET: return g_Config.m_TcUiShowDDNet != 0;
-		case EConfigSource::TCLIENT: return g_Config.m_TcUiShowTClient != 0;
-		case EConfigSource::QM: return g_Config.m_TcUiShowQm != 0;
-		default: return false;
+			auto Collector = [](const SConfigVariable *pVar, void *pUserData) {
+				auto *pVec = static_cast<std::vector<const SConfigVariable *> *>(pUserData);
+				pVec->push_back(pVar);
+			};
+			std::vector<const SConfigVariable *> vCollectedVars;
+			ConfigManager()->PossibleConfigVariables("", FlagMask, Collector, &vCollectedVars);
+			s_vAllClientVars = std::move(vCollectedVars);
+			std::sort(s_vAllClientVars.begin(), s_vAllClientVars.end(), [](const SConfigVariable *a, const SConfigVariable *b) {
+				if(a->m_ConfigDomain != b->m_ConfigDomain)
+					return a->m_ConfigDomain < b->m_ConfigDomain;
+				return str_comp(a->m_pScriptName, b->m_pScriptName) < 0;
+			});
 		}
-	};
-
-	// Tags filter check
-	auto TagEnabled = [&](EConfigTag Tag) -> bool {
-		switch(Tag)
+		static std::vector<unsigned int> s_vAllClientVarTagMasks;
+		if(s_vAllClientVarTagMasks.size() != s_vAllClientVars.size())
 		{
-		case EConfigTag::VISUAL: return s_TcUiTagVisual != 0;
-		case EConfigTag::HUD: return s_TcUiTagHud != 0;
-		case EConfigTag::INPUT: return s_TcUiTagInput != 0;
-		case EConfigTag::CHAT: return s_TcUiTagChat != 0;
-		case EConfigTag::AUDIO: return s_TcUiTagAudio != 0;
-		case EConfigTag::AUTOMATION: return s_TcUiTagAutomation != 0;
-		case EConfigTag::SOCIAL: return s_TcUiTagSocial != 0;
-		case EConfigTag::CAMERA: return s_TcUiTagCamera != 0;
-		case EConfigTag::GAMEPLAY: return s_TcUiTagGameplay != 0;
-		case EConfigTag::MISC: return s_TcUiTagMisc != 0;
-		default: return true;
+			s_vAllClientVarTagMasks.resize(s_vAllClientVars.size());
+			for(size_t i = 0; i < s_vAllClientVars.size(); ++i)
+				s_vAllClientVarTagMasks[i] = BuildConfigTagMask(s_vAllClientVars[i]->m_pScriptName);
 		}
-	};
 
-	// Check if any tag filter is enabled
-	bool AnyTagEnabled = s_TcUiTagVisual || s_TcUiTagHud || s_TcUiTagInput ||
-			     s_TcUiTagChat || s_TcUiTagAudio || s_TcUiTagAutomation ||
-			     s_TcUiTagSocial || s_TcUiTagCamera || s_TcUiTagGameplay ||
-			     s_TcUiTagMisc;
+		auto GetConfigSource = [&](const SConfigVariable *pVar) {
+			if(pVar->m_ConfigDomain == ConfigDomain::DDNET)
+				return EConfigSource::DDNET;
+			const char *pName = pVar->m_pScriptName ? pVar->m_pScriptName : "";
+			if(str_startswith(pName, "qm_"))
+				return EConfigSource::QM;
+			return EConfigSource::TCLIENT;
+		};
 
-	const char *pSearch = s_SearchInput.GetString();
+		auto SourceEnabled = [&](EConfigSource Source) {
+			switch(Source)
+			{
+			case EConfigSource::DDNET: return g_Config.m_TcUiShowDDNet != 0;
+			case EConfigSource::TCLIENT: return g_Config.m_TcUiShowTClient != 0;
+			case EConfigSource::QM: return g_Config.m_TcUiShowQm != 0;
+			default: return false;
+			}
+		};
 
-	auto IsEffectiveDefaultVar = [&](const SConfigVariable *p) -> bool {
-		if(p->m_Type == SConfigVariable::VAR_INT)
-		{
-			const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(p);
-			auto Iter = s_StagedInts.find(p);
-			int v = Iter != s_StagedInts.end() ? Iter->second.m_Value : *pInt->m_pVariable;
-			return v == pInt->m_Default;
-		}
-		if(p->m_Type == SConfigVariable::VAR_STRING)
-		{
-			const SStringConfigVariable *pString = static_cast<const SStringConfigVariable *>(p);
-			auto Iter = s_StagedStrs.find(p);
-			const char *v = Iter != s_StagedStrs.end() ? Iter->second.m_Value.c_str() : pString->m_pStr;
-			return str_comp(v, pString->m_pDefault) == 0;
-		}
-		if(p->m_Type == SConfigVariable::VAR_COLOR)
-		{
-			const SColorConfigVariable *pColor = static_cast<const SColorConfigVariable *>(p);
-			auto Iter = s_StagedCols.find(p);
-			unsigned v = Iter != s_StagedCols.end() ? Iter->second.m_Value : *pColor->m_pVariable;
-			return v == pColor->m_Default;
-		}
-		return true;
-	};
+		// Tags filter check
+		auto TagEnabled = [&](EConfigTag Tag) -> bool {
+			switch(Tag)
+			{
+			case EConfigTag::VISUAL: return s_TcUiTagVisual != 0;
+			case EConfigTag::HUD: return s_TcUiTagHud != 0;
+			case EConfigTag::INPUT: return s_TcUiTagInput != 0;
+			case EConfigTag::CHAT: return s_TcUiTagChat != 0;
+			case EConfigTag::AUDIO: return s_TcUiTagAudio != 0;
+			case EConfigTag::AUTOMATION: return s_TcUiTagAutomation != 0;
+			case EConfigTag::SOCIAL: return s_TcUiTagSocial != 0;
+			case EConfigTag::CAMERA: return s_TcUiTagCamera != 0;
+			case EConfigTag::GAMEPLAY: return s_TcUiTagGameplay != 0;
+			case EConfigTag::MISC: return s_TcUiTagMisc != 0;
+			default: return true;
+			}
+		};
 
-	auto BuildLocalizedConfigHelpText = [](const SConfigVariable *pVar) {
-		const char *pHelpKey = pVar->m_pHelpLocalizeKey ? pVar->m_pHelpLocalizeKey : (pVar->m_pHelp ? pVar->m_pHelp : "");
-		const char *pHelpText = pHelpKey[0] != '\0' ? Localize(pHelpKey) : "";
-		char aHelp[512];
-		if(pVar->m_Type == SConfigVariable::VAR_INT)
-		{
-			const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(pVar);
-			if(pInt->m_Min == pInt->m_Max)
-				str_format(aHelp, sizeof(aHelp), "%s (%s: %d)", pHelpText, Localize("default"), pInt->m_Default);
-			else if(pInt->m_Max == 0)
-				str_format(aHelp, sizeof(aHelp), "%s (%s: %d, %s: %d)", pHelpText, Localize("default"), pInt->m_Default, Localize("minimum"), pInt->m_Min);
+		// Check if any tag filter is enabled
+		bool AnyTagEnabled = s_TcUiTagVisual || s_TcUiTagHud || s_TcUiTagInput ||
+				     s_TcUiTagChat || s_TcUiTagAudio || s_TcUiTagAutomation ||
+				     s_TcUiTagSocial || s_TcUiTagCamera || s_TcUiTagGameplay ||
+				     s_TcUiTagMisc;
+
+		const char *pSearch = s_SearchInput.GetString();
+
+		auto IsEffectiveDefaultVar = [&](const SConfigVariable *p) -> bool {
+			if(p->m_Type == SConfigVariable::VAR_INT)
+			{
+				const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(p);
+				auto Iter = s_StagedInts.find(p);
+				int v = Iter != s_StagedInts.end() ? Iter->second.m_Value : *pInt->m_pVariable;
+				return v == pInt->m_Default;
+			}
+			if(p->m_Type == SConfigVariable::VAR_STRING)
+			{
+				const SStringConfigVariable *pString = static_cast<const SStringConfigVariable *>(p);
+				auto Iter = s_StagedStrs.find(p);
+				const char *v = Iter != s_StagedStrs.end() ? Iter->second.m_Value.c_str() : pString->m_pStr;
+				return str_comp(v, pString->m_pDefault) == 0;
+			}
+			if(p->m_Type == SConfigVariable::VAR_COLOR)
+			{
+				const SColorConfigVariable *pColor = static_cast<const SColorConfigVariable *>(p);
+				auto Iter = s_StagedCols.find(p);
+				unsigned v = Iter != s_StagedCols.end() ? Iter->second.m_Value : *pColor->m_pVariable;
+				return v == pColor->m_Default;
+			}
+			return true;
+		};
+
+		auto BuildLocalizedConfigHelpText = [](const SConfigVariable *pVar) {
+			const char *pHelpKey = pVar->m_pHelpLocalizeKey ? pVar->m_pHelpLocalizeKey : (pVar->m_pHelp ? pVar->m_pHelp : "");
+			const char *pHelpText = pHelpKey[0] != '\0' ? Localize(pHelpKey) : "";
+			char aHelp[512];
+			if(pVar->m_Type == SConfigVariable::VAR_INT)
+			{
+				const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(pVar);
+				if(pInt->m_Min == pInt->m_Max)
+					str_format(aHelp, sizeof(aHelp), "%s (%s: %d)", pHelpText, Localize("default"), pInt->m_Default);
+				else if(pInt->m_Max == 0)
+					str_format(aHelp, sizeof(aHelp), "%s (%s: %d, %s: %d)", pHelpText, Localize("default"), pInt->m_Default, Localize("minimum"), pInt->m_Min);
+				else
+					str_format(aHelp, sizeof(aHelp), "%s (%s: %d, %s: %d, %s: %d)", pHelpText, Localize("default"), pInt->m_Default, Localize("minimum"), pInt->m_Min, Localize("maximum"), pInt->m_Max);
+			}
+			else if(pVar->m_Type == SConfigVariable::VAR_COLOR)
+			{
+				const SColorConfigVariable *pColor = static_cast<const SColorConfigVariable *>(pVar);
+				str_format(aHelp, sizeof(aHelp), "%s (%s: $%0*X)", pHelpText, Localize("default"), pColor->m_Alpha ? 8 : 6, color_cast<ColorRGBA>(ColorHSLA(pColor->m_Default, pColor->m_Alpha)).Pack(pColor->m_Alpha));
+			}
+			else if(pVar->m_Type == SConfigVariable::VAR_STRING)
+			{
+				const SStringConfigVariable *pString = static_cast<const SStringConfigVariable *>(pVar);
+				str_format(aHelp, sizeof(aHelp), "%s (%s: \"%s\", %s: %d)", pHelpText, Localize("default"), pString->m_pDefault, Localize("maximum"), (int)pString->m_MaxSize - 1);
+			}
 			else
-				str_format(aHelp, sizeof(aHelp), "%s (%s: %d, %s: %d, %s: %d)", pHelpText, Localize("default"), pInt->m_Default, Localize("minimum"), pInt->m_Min, Localize("maximum"), pInt->m_Max);
-		}
-		else if(pVar->m_Type == SConfigVariable::VAR_COLOR)
-		{
-			const SColorConfigVariable *pColor = static_cast<const SColorConfigVariable *>(pVar);
-			str_format(aHelp, sizeof(aHelp), "%s (%s: $%0*X)", pHelpText, Localize("default"), pColor->m_Alpha ? 8 : 6, color_cast<ColorRGBA>(ColorHSLA(pColor->m_Default, pColor->m_Alpha)).Pack(pColor->m_Alpha));
-		}
-		else if(pVar->m_Type == SConfigVariable::VAR_STRING)
-		{
-			const SStringConfigVariable *pString = static_cast<const SStringConfigVariable *>(pVar);
-			str_format(aHelp, sizeof(aHelp), "%s (%s: \"%s\", %s: %d)", pHelpText, Localize("default"), pString->m_pDefault, Localize("maximum"), (int)pString->m_MaxSize - 1);
-		}
-		else
-			str_copy(aHelp, pHelpText);
-		return std::string(aHelp);
-	};
+				str_copy(aHelp, pHelpText);
+			return std::string(aHelp);
+		};
 
-	unsigned int SelectedTagMask = 0;
-	for(int Tag = 1; Tag < static_cast<int>(EConfigTag::NUM_TAGS); ++Tag)
-	{
-		const EConfigTag TagValue = static_cast<EConfigTag>(Tag);
-		if(TagEnabled(TagValue))
-			SelectedTagMask |= 1u << static_cast<unsigned int>(TagValue);
-	}
-	const unsigned int MiscTagMask = 1u << static_cast<unsigned int>(EConfigTag::MISC);
-	const int DomainMask = (g_Config.m_TcUiShowDDNet != 0 ? 1 : 0) |
-			       (g_Config.m_TcUiShowTClient != 0 ? 2 : 0) |
-			       (g_Config.m_TcUiShowQm != 0 ? 4 : 0);
-	static std::vector<const SConfigVariable *> s_vFilteredConfigs;
-	static std::string s_CachedConfigSearch;
-	static int s_CachedConfigDomainMask = -1;
-	static int s_CachedConfigChangesCount = -1;
-	static int s_CachedConfigOnlyModified = -1;
-	static unsigned int s_CachedConfigTagMask = 0;
-	static size_t s_CachedConfigVarCount = 0;
-	static uint64_t s_CachedConfigLanguageHash = 0;
-	const uint64_t ConfigLanguageHash = str_quickhash(g_Config.m_ClLanguagefile);
-	if(s_CachedConfigSearch != (pSearch ? pSearch : "") ||
-		s_CachedConfigDomainMask != DomainMask ||
-		s_CachedConfigChangesCount != ChangesCount ||
-		s_CachedConfigOnlyModified != g_Config.m_TcUiOnlyModified ||
-		s_CachedConfigTagMask != SelectedTagMask ||
-		s_CachedConfigVarCount != s_vAllClientVars.size() ||
-		s_CachedConfigLanguageHash != ConfigLanguageHash)
-	{
-		s_vFilteredConfigs.clear();
-		s_vFilteredConfigs.reserve(s_vAllClientVars.size());
-		for(size_t i = 0; i < s_vAllClientVars.size(); ++i)
+		unsigned int SelectedTagMask = 0;
+		for(int Tag = 1; Tag < static_cast<int>(EConfigTag::NUM_TAGS); ++Tag)
 		{
-			const SConfigVariable *pVar = s_vAllClientVars[i];
-			if(!SourceEnabled(GetConfigSource(pVar)))
-				continue;
-			if(g_Config.m_TcUiOnlyModified && IsEffectiveDefaultVar(pVar))
-				continue;
-			if(pSearch && pSearch[0])
+			const EConfigTag TagValue = static_cast<EConfigTag>(Tag);
+			if(TagEnabled(TagValue))
+				SelectedTagMask |= 1u << static_cast<unsigned int>(TagValue);
+		}
+		const unsigned int MiscTagMask = 1u << static_cast<unsigned int>(EConfigTag::MISC);
+		const int DomainMask = (g_Config.m_TcUiShowDDNet != 0 ? 1 : 0) |
+				       (g_Config.m_TcUiShowTClient != 0 ? 2 : 0) |
+				       (g_Config.m_TcUiShowQm != 0 ? 4 : 0);
+		static std::vector<const SConfigVariable *> s_vFilteredConfigs;
+		static std::string s_CachedConfigSearch;
+		static int s_CachedConfigDomainMask = -1;
+		static int s_CachedConfigChangesCount = -1;
+		static int s_CachedConfigOnlyModified = -1;
+		static unsigned int s_CachedConfigTagMask = 0;
+		static size_t s_CachedConfigVarCount = 0;
+		static uint64_t s_CachedConfigLanguageHash = 0;
+		const uint64_t ConfigLanguageHash = str_quickhash(g_Config.m_ClLanguagefile);
+		if(s_CachedConfigSearch != (pSearch ? pSearch : "") ||
+			s_CachedConfigDomainMask != DomainMask ||
+			s_CachedConfigChangesCount != ChangesCount ||
+			s_CachedConfigOnlyModified != g_Config.m_TcUiOnlyModified ||
+			s_CachedConfigTagMask != SelectedTagMask ||
+			s_CachedConfigVarCount != s_vAllClientVars.size() ||
+			s_CachedConfigLanguageHash != ConfigLanguageHash)
+		{
+			s_vFilteredConfigs.clear();
+			s_vFilteredConfigs.reserve(s_vAllClientVars.size());
+			for(size_t i = 0; i < s_vAllClientVars.size(); ++i)
 			{
-				const char *pName = pVar->m_pScriptName ? pVar->m_pScriptName : "";
-				const char *pHelp = pVar->m_pHelp ? pVar->m_pHelp : "";
-				std::string LocalizedHelp = BuildLocalizedConfigHelpText(pVar);
-				if(!str_find_nocase(pName, pSearch) && !str_find_nocase(pHelp, pSearch) && !str_find_nocase(LocalizedHelp.c_str(), pSearch))
+				const SConfigVariable *pVar = s_vAllClientVars[i];
+				if(!SourceEnabled(GetConfigSource(pVar)))
 					continue;
-			}
-			if(AnyTagEnabled)
-			{
-				const unsigned int VarTagMask = s_vAllClientVarTagMasks[i];
-				if((VarTagMask & SelectedTagMask) == 0 && !(VarTagMask == 0 && (SelectedTagMask & MiscTagMask) != 0))
+				if(g_Config.m_TcUiOnlyModified && IsEffectiveDefaultVar(pVar))
 					continue;
+				if(pSearch && pSearch[0])
+				{
+					const char *pName = pVar->m_pScriptName ? pVar->m_pScriptName : "";
+					const char *pHelp = pVar->m_pHelp ? pVar->m_pHelp : "";
+					std::string LocalizedHelp = BuildLocalizedConfigHelpText(pVar);
+					if(!str_find_nocase(pName, pSearch) && !str_find_nocase(pHelp, pSearch) && !str_find_nocase(LocalizedHelp.c_str(), pSearch))
+						continue;
+				}
+				if(AnyTagEnabled)
+				{
+					const unsigned int VarTagMask = s_vAllClientVarTagMasks[i];
+					if((VarTagMask & SelectedTagMask) == 0 && !(VarTagMask == 0 && (SelectedTagMask & MiscTagMask) != 0))
+						continue;
+				}
+				s_vFilteredConfigs.push_back(pVar);
 			}
-			s_vFilteredConfigs.push_back(pVar);
+			s_CachedConfigSearch = pSearch ? pSearch : "";
+			s_CachedConfigDomainMask = DomainMask;
+			s_CachedConfigChangesCount = ChangesCount;
+			s_CachedConfigOnlyModified = g_Config.m_TcUiOnlyModified;
+			s_CachedConfigTagMask = SelectedTagMask;
+			s_CachedConfigVarCount = s_vAllClientVars.size();
+			s_CachedConfigLanguageHash = ConfigLanguageHash;
 		}
-		s_CachedConfigSearch = pSearch ? pSearch : "";
-		s_CachedConfigDomainMask = DomainMask;
-		s_CachedConfigChangesCount = ChangesCount;
-		s_CachedConfigOnlyModified = g_Config.m_TcUiOnlyModified;
-		s_CachedConfigTagMask = SelectedTagMask;
-		s_CachedConfigVarCount = s_vAllClientVars.size();
-		s_CachedConfigLanguageHash = ConfigLanguageHash;
-	}
-	const std::vector<const SConfigVariable *> &vpFiltered = s_vFilteredConfigs;
+		const std::vector<const SConfigVariable *> &vpFiltered = s_vFilteredConfigs;
 
-	static CScrollRegion s_ScrollRegion;
-	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
-	CPerfTimer ListTimer;
-	static float s_PrevConfigsScrollY = 0.0f;
-	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams, s_PrevConfigsScrollY);
-	ScrollOffset = ScrollFrame.m_BeginOffset;
+		static CScrollRegion s_ConfigListScrollRegion;
+		vec2 ScrollOffset(0.0f, 0.0f);
+		CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
+		CPerfTimer ListTimer;
+		static float s_PrevConfigsScrollY = 0.0f;
+		SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ConfigListScrollRegion, &ListArea, ScrollParams, s_PrevConfigsScrollY);
+		ScrollOffset = ScrollFrame.m_BeginOffset;
 
-	ListArea.y += ScrollOffset.y;
-	ListArea.VSplitRight(5.0f, &ListArea, nullptr);
-	CUIRect Content = ListArea;
+		ListArea.y += ScrollOffset.y;
+		ListArea.VSplitRight(5.0f, &ListArea, nullptr);
+		CUIRect Content = ListArea;
 
-	auto SourceName = [](EConfigSource Source) {
-		switch(Source)
-		{
-		case EConfigSource::DDNET: return "DDNet";
-		case EConfigSource::TCLIENT: return "TClient";
-		case EConfigSource::QM: return "QmClient";
-		default: return "Other";
-		}
-	};
-
-	bool HasCurrentSource = false;
-	EConfigSource CurrentSource = EConfigSource::DDNET;
-	for(const SConfigVariable *pVar : vpFiltered)
-	{
-		const EConfigSource Source = GetConfigSource(pVar);
-		if(!HasCurrentSource || Source != CurrentSource)
-		{
-			HasCurrentSource = true;
-			CurrentSource = Source;
-			CUIRect Header;
-			Content.HSplitTop(HeadlineHeight, &Header, &Content);
-			if(s_ScrollRegion.AddRect(Header))
-				Ui()->DoLabel(&Header, SourceName(CurrentSource), HeadlineFontSize, TEXTALIGN_ML);
-			Content.HSplitTop(MarginSmall, nullptr, &Content);
-		}
-
-		CUIRect RowItem;
-		const float RowHeight = g_Config.m_TcUiCompactList ? (std::max(LineSize, ColorPickerLineSize) + 5.0f) : 55.0f;
-		Content.HSplitTop(RowHeight, &RowItem, &Content);
-		Content.HSplitTop(MarginExtraSmall, nullptr, &Content);
-		const bool Visible = s_ScrollRegion.AddRect(RowItem);
-		if(!Visible)
-			continue;
-
-		const bool Modified = !IsEffectiveDefaultVar(pVar);
-		const ColorRGBA BgModified = ColorRGBA(1.0f, 0.8f, 0.0f, 0.15f);
-		const ColorRGBA BgNormal = ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f);
-		RowItem.Draw(Modified ? BgModified : BgNormal, IGraphics::CORNER_ALL, 6.0f);
-
-		CUIRect RowContent;
-		RowItem.Margin(5.0f, &RowContent);
-
-		CUIRect TopLine, Below;
-		IUiContext TClientConfigTextInputCtx;
-		TClientConfigTextInputCtx.m_pUi = Ui();
-		TClientConfigTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-		TClientConfigTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-		TClientConfigTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_config_text_inputs");
-		TClientConfigTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-		if(g_Config.m_TcUiCompactList)
-		{
-			const float UsedHeight = (pVar->m_Type == SConfigVariable::VAR_COLOR) ? ColorPickerLineSize : LineSize;
-			TopLine = RowContent;
-			TopLine.h = UsedHeight;
-			TopLine.y = round_to_int(RowContent.y + (RowContent.h - UsedHeight) / 2.0f);
-			Below = RowContent;
-		}
-		else
-		{
-			RowContent.HSplitTop(LineSize, &TopLine, &Below);
-		}
-		CUIRect NameLine, Right;
-		TopLine.VSplitRight(320.0f, &NameLine, &Right);
-		NameLine.VSplitLeft(10.0f, nullptr, &NameLine);
-
-		Ui()->DoLabel(&NameLine, pVar->m_pScriptName, FontSize, TEXTALIGN_ML);
-
-		CUIRect Controls, ResetRect;
-		Right.VSplitRight(120.0f, &Controls, &ResetRect);
-		Controls.h = LineSize;
-		Controls.y = TopLine.y + (TopLine.h - LineSize) / 2.0f;
-		ResetRect.h = LineSize;
-		ResetRect.y = Controls.y;
-		Controls.VSplitRight(MarginSmall, &Controls, nullptr);
-
-		if(!g_Config.m_TcUiCompactList)
-		{
-			CUIRect Help;
-			Below.HSplitTop(2.0f, nullptr, &Below);
-			Help = Below;
-			Help.VSplitLeft(10.0f, nullptr, &Help);
-			const std::string LocalizedHelp = BuildLocalizedConfigHelpText(pVar);
-			Ui()->DoLabel(&Help, LocalizedHelp.c_str(), 11.0f, TEXTALIGN_ML);
-		}
-
-		static std::unordered_map<const SConfigVariable *, CButtonContainer> s_ResetBtns;
-		if(Modified && pVar->m_Type != SConfigVariable::VAR_COLOR)
-		{
-			CButtonContainer &ResetBtn = s_ResetBtns[pVar];
-			if(DoTClientSettingsButton_Menu(&ResetBtn, "tclient-config-reset", Localize("Reset"), 0, &ResetRect))
+		auto SourceName = [](EConfigSource Source) {
+			switch(Source)
 			{
-				if(pVar->m_Type == SConfigVariable::VAR_INT)
-				{
-					const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(pVar);
-					s_StagedInts[pVar] = {pInt->m_Default};
-				}
-				else if(pVar->m_Type == SConfigVariable::VAR_STRING)
-				{
-					const SStringConfigVariable *pStr = static_cast<const SStringConfigVariable *>(pVar);
-					s_StagedStrs[pVar] = {std::string(pStr->m_pDefault)};
-				}
+			case EConfigSource::DDNET: return "DDNet";
+			case EConfigSource::TCLIENT: return "TClient";
+			case EConfigSource::QM: return "QmClient";
+			default: return "Other";
 			}
-		}
+		};
 
-		if(pVar->m_Type == SConfigVariable::VAR_INT)
+		bool HasCurrentSource = false;
+		EConfigSource CurrentSource = EConfigSource::DDNET;
+		for(const SConfigVariable *pVar : vpFiltered)
 		{
-			const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(pVar);
-			// treat 0 1 ints as checkboxes
-			if(pInt->m_Min == 0 && pInt->m_Max == 1)
+			const EConfigSource Source = GetConfigSource(pVar);
+			if(!HasCurrentSource || Source != CurrentSource)
 			{
-				const auto StagedInt = s_StagedInts.find(pVar);
-				const int Effective = StagedInt != s_StagedInts.end() ? StagedInt->second.m_Value : *pInt->m_pVariable;
-				if(DoButton_CheckBox(pVar, "", Effective, &Controls))
-				{
-					const int NewVal = Effective ? 0 : 1;
-					if(NewVal == *pInt->m_pVariable)
-						s_StagedInts.erase(pVar);
-					else
-						s_StagedInts[pVar] = {NewVal};
-				}
+				HasCurrentSource = true;
+				CurrentSource = Source;
+				CUIRect Header;
+				Content.HSplitTop(HeadlineHeight, &Header, &Content);
+				if(s_ConfigListScrollRegion.AddRect(Header))
+					Ui()->DoLabel(&Header, SourceName(CurrentSource), HeadlineFontSize, TEXTALIGN_ML);
+				Content.HSplitTop(MarginSmall, nullptr, &Content);
+			}
+
+			CUIRect RowItem;
+			const float RowHeight = g_Config.m_TcUiCompactList ? (std::max(LineSize, ColorPickerLineSize) + 5.0f) : 55.0f;
+			Content.HSplitTop(RowHeight, &RowItem, &Content);
+			Content.HSplitTop(MarginExtraSmall, nullptr, &Content);
+			const bool Visible = s_ConfigListScrollRegion.AddRect(RowItem);
+			if(!Visible)
+				continue;
+
+			const bool Modified = !IsEffectiveDefaultVar(pVar);
+			const ColorRGBA BgModified = ColorRGBA(1.0f, 0.8f, 0.0f, 0.15f);
+			const ColorRGBA BgNormal = ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f);
+			RowItem.Draw(Modified ? BgModified : BgNormal, IGraphics::CORNER_ALL, 6.0f);
+
+			CUIRect RowContent;
+			RowItem.Margin(5.0f, &RowContent);
+
+			CUIRect TopLine, Below;
+			IUiContext TClientConfigTextInputCtx;
+			TClientConfigTextInputCtx.m_pUi = Ui();
+			TClientConfigTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientConfigTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientConfigTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_config_text_inputs");
+			TClientConfigTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+			if(g_Config.m_TcUiCompactList)
+			{
+				const float UsedHeight = (pVar->m_Type == SConfigVariable::VAR_COLOR) ? ColorPickerLineSize : LineSize;
+				TopLine = RowContent;
+				TopLine.h = UsedHeight;
+				TopLine.y = round_to_int(RowContent.y + (RowContent.h - UsedHeight) / 2.0f);
+				Below = RowContent;
 			}
 			else
 			{
-				SIntState &State = s_IntInputs[pVar];
-				const auto StagedInt = s_StagedInts.find(pVar);
-				const int Effective = StagedInt != s_StagedInts.end() ? StagedInt->second.m_Value : *pInt->m_pVariable;
-				if(!State.m_Inited)
-				{
-					State.m_Input.SetInteger(Effective);
-					State.m_LastValue = Effective;
-					State.m_Inited = true;
-				}
-				else if(!State.m_Input.IsActive() && State.m_LastValue != Effective)
-				{
-					State.m_Input.SetInteger(Effective);
-					State.m_LastValue = Effective;
-				}
+				RowContent.HSplitTop(LineSize, &TopLine, &Below);
+			}
+			CUIRect NameLine, Right;
+			TopLine.VSplitRight(320.0f, &NameLine, &Right);
+			NameLine.VSplitLeft(10.0f, nullptr, &NameLine);
 
-				CUIRect InputBox, Dummy;
-				Controls.VSplitLeft(60.0f, &InputBox, &Dummy);
+			Ui()->DoLabel(&NameLine, pVar->m_pScriptName, FontSize, TEXTALIGN_ML);
 
-				if(ui_widget::InputField(TClientConfigTextInputCtx, &State.m_Input, InputBox, nullptr, EditBoxFontSize))
+			CUIRect Controls, ResetRect;
+			Right.VSplitRight(120.0f, &Controls, &ResetRect);
+			Controls.h = LineSize;
+			Controls.y = TopLine.y + (TopLine.h - LineSize) / 2.0f;
+			ResetRect.h = LineSize;
+			ResetRect.y = Controls.y;
+			Controls.VSplitRight(MarginSmall, &Controls, nullptr);
+
+			if(!g_Config.m_TcUiCompactList)
+			{
+				CUIRect Help;
+				Below.HSplitTop(2.0f, nullptr, &Below);
+				Help = Below;
+				Help.VSplitLeft(10.0f, nullptr, &Help);
+				const std::string LocalizedHelp = BuildLocalizedConfigHelpText(pVar);
+				Ui()->DoLabel(&Help, LocalizedHelp.c_str(), 11.0f, TEXTALIGN_ML);
+			}
+
+			static std::unordered_map<const SConfigVariable *, CButtonContainer> s_ResetBtns;
+			if(Modified && pVar->m_Type != SConfigVariable::VAR_COLOR)
+			{
+				CButtonContainer &ResetBtn = s_ResetBtns[pVar];
+				if(DoTClientSettingsButton_Menu(&ResetBtn, "tclient-config-reset", Localize("Reset"), 0, &ResetRect))
 				{
-					int NewVal = State.m_Input.GetInteger();
-					bool InRange = true;
-					if(pInt->m_Min != pInt->m_Max)
+					if(pVar->m_Type == SConfigVariable::VAR_INT)
 					{
-						if(NewVal < pInt->m_Min)
-							InRange = false;
-						if(pInt->m_Max != 0 && NewVal > pInt->m_Max)
-							InRange = false;
+						const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(pVar);
+						s_StagedInts[pVar] = {pInt->m_Default};
 					}
-					if(InRange && NewVal != State.m_LastValue)
+					else if(pVar->m_Type == SConfigVariable::VAR_STRING)
 					{
+						const SStringConfigVariable *pStr = static_cast<const SStringConfigVariable *>(pVar);
+						s_StagedStrs[pVar] = {std::string(pStr->m_pDefault)};
+					}
+				}
+			}
+
+			if(pVar->m_Type == SConfigVariable::VAR_INT)
+			{
+				const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(pVar);
+				// treat 0 1 ints as checkboxes
+				if(pInt->m_Min == 0 && pInt->m_Max == 1)
+				{
+					const auto StagedInt = s_StagedInts.find(pVar);
+					const int Effective = StagedInt != s_StagedInts.end() ? StagedInt->second.m_Value : *pInt->m_pVariable;
+					if(DoButton_CheckBox(pVar, "", Effective, &Controls))
+					{
+						const int NewVal = Effective ? 0 : 1;
 						if(NewVal == *pInt->m_pVariable)
 							s_StagedInts.erase(pVar);
 						else
 							s_StagedInts[pVar] = {NewVal};
-						State.m_LastValue = NewVal;
+					}
+				}
+				else
+				{
+					SIntState &State = s_IntInputs[pVar];
+					const auto StagedInt = s_StagedInts.find(pVar);
+					const int Effective = StagedInt != s_StagedInts.end() ? StagedInt->second.m_Value : *pInt->m_pVariable;
+					if(!State.m_Inited)
+					{
+						State.m_Input.SetInteger(Effective);
+						State.m_LastValue = Effective;
+						State.m_Inited = true;
+					}
+					else if(!State.m_Input.IsActive() && State.m_LastValue != Effective)
+					{
+						State.m_Input.SetInteger(Effective);
+						State.m_LastValue = Effective;
+					}
+
+					CUIRect InputBox, Dummy;
+					Controls.VSplitLeft(60.0f, &InputBox, &Dummy);
+
+					if(ui_widget::InputField(TClientConfigTextInputCtx, &State.m_Input, InputBox, nullptr, EditBoxFontSize))
+					{
+						int NewVal = State.m_Input.GetInteger();
+						bool InRange = true;
+						if(pInt->m_Min != pInt->m_Max)
+						{
+							if(NewVal < pInt->m_Min)
+								InRange = false;
+							if(pInt->m_Max != 0 && NewVal > pInt->m_Max)
+								InRange = false;
+						}
+						if(InRange && NewVal != State.m_LastValue)
+						{
+							if(NewVal == *pInt->m_pVariable)
+								s_StagedInts.erase(pVar);
+							else
+								s_StagedInts[pVar] = {NewVal};
+							State.m_LastValue = NewVal;
+						}
 					}
 				}
 			}
-		}
-		else if(pVar->m_Type == SConfigVariable::VAR_STRING)
-		{
-			const SStringConfigVariable *pStr = static_cast<const SStringConfigVariable *>(pVar);
-			SStrState &State = s_StrInputs[pVar];
-			const auto StagedStr = s_StagedStrs.find(pVar);
-			const char *Effective = StagedStr != s_StagedStrs.end() ? StagedStr->second.m_Value.c_str() : pStr->m_pStr;
-			if(!State.m_Inited)
+			else if(pVar->m_Type == SConfigVariable::VAR_STRING)
 			{
-				State.m_Input.Set(Effective);
-				State.m_Inited = true;
-			}
-			else if(!State.m_Input.IsActive())
-			{
-				if(str_comp(State.m_Input.GetString(), Effective) != 0)
+				const SStringConfigVariable *pStr = static_cast<const SStringConfigVariable *>(pVar);
+				SStrState &State = s_StrInputs[pVar];
+				const auto StagedStr = s_StagedStrs.find(pVar);
+				const char *Effective = StagedStr != s_StagedStrs.end() ? StagedStr->second.m_Value.c_str() : pStr->m_pStr;
+				if(!State.m_Inited)
+				{
 					State.m_Input.Set(Effective);
-			}
+					State.m_Inited = true;
+				}
+				else if(!State.m_Input.IsActive())
+				{
+					if(str_comp(State.m_Input.GetString(), Effective) != 0)
+						State.m_Input.Set(Effective);
+				}
 
-			if(ui_widget::InputField(TClientConfigTextInputCtx, &State.m_Input, Controls, nullptr, EditBoxFontSize))
-			{
-				const char *NewVal = State.m_Input.GetString();
-				if(str_comp(NewVal, pStr->m_pStr) == 0)
-					s_StagedStrs.erase(pVar);
-				else
-					s_StagedStrs[pVar] = {std::string(NewVal)};
+				if(ui_widget::InputField(TClientConfigTextInputCtx, &State.m_Input, Controls, nullptr, EditBoxFontSize))
+				{
+					const char *NewVal = State.m_Input.GetString();
+					if(str_comp(NewVal, pStr->m_pStr) == 0)
+						s_StagedStrs.erase(pVar);
+					else
+						s_StagedStrs[pVar] = {std::string(NewVal)};
+				}
 			}
-		}
-		else if(pVar->m_Type == SConfigVariable::VAR_COLOR)
-		{
-			const SColorConfigVariable *pCol = static_cast<const SColorConfigVariable *>(pVar);
-			CUIRect ColorRect;
-			ColorRect.x = Controls.x;
-			ColorRect.h = ColorPickerLineSize;
-			ColorRect.y = TopLine.y + (TopLine.h - ColorPickerLineSize) / 2.0f;
-			ColorRect.w = ColorPickerLineSize + 8.0f + 60.0f;
-			const ColorRGBA DefaultColor = color_cast<ColorRGBA>(ColorHSLA(pCol->m_Default, true).UnclampLighting(pCol->m_DarkestLighting));
-			static std::unordered_map<const SConfigVariable *, CButtonContainer> s_ColorResetIds;
-			CButtonContainer &ResetId = s_ColorResetIds[pVar];
+			else if(pVar->m_Type == SConfigVariable::VAR_COLOR)
+			{
+				const SColorConfigVariable *pCol = static_cast<const SColorConfigVariable *>(pVar);
+				CUIRect ColorRect;
+				ColorRect.x = Controls.x;
+				ColorRect.h = ColorPickerLineSize;
+				ColorRect.y = TopLine.y + (TopLine.h - ColorPickerLineSize) / 2.0f;
+				ColorRect.w = ColorPickerLineSize + 8.0f + 60.0f;
+				const ColorRGBA DefaultColor = color_cast<ColorRGBA>(ColorHSLA(pCol->m_Default, true).UnclampLighting(pCol->m_DarkestLighting));
+				static std::unordered_map<const SConfigVariable *, CButtonContainer> s_ColorResetIds;
+				CButtonContainer &ResetId = s_ColorResetIds[pVar];
 
-			SColState &ColState = s_ColInputs[pVar];
-			const auto StagedCol = s_StagedCols.find(pVar);
-			unsigned Effective = StagedCol != s_StagedCols.end() ? StagedCol->second.m_Value : *pCol->m_pVariable;
-			if(!ColState.m_Inited)
-			{
-				ColState.m_Working = Effective;
-				ColState.m_LastValue = Effective;
-				ColState.m_Inited = true;
-			}
-			else
-			{
-				const bool EditingThis = Ui()->IsPopupOpen(&m_ColorPickerPopupContext) && m_ColorPickerPopupContext.m_pHslaColor == &ColState.m_Working;
-				if(!EditingThis && ColState.m_Working != Effective)
+				SColState &ColState = s_ColInputs[pVar];
+				const auto StagedCol = s_StagedCols.find(pVar);
+				unsigned Effective = StagedCol != s_StagedCols.end() ? StagedCol->second.m_Value : *pCol->m_pVariable;
+				if(!ColState.m_Inited)
 				{
 					ColState.m_Working = Effective;
 					ColState.m_LastValue = Effective;
+					ColState.m_Inited = true;
+				}
+				else
+				{
+					const bool EditingThis = Ui()->IsPopupOpen(&m_ColorPickerPopupContext) && m_ColorPickerPopupContext.m_pHslaColor == &ColState.m_Working;
+					if(!EditingThis && ColState.m_Working != Effective)
+					{
+						ColState.m_Working = Effective;
+						ColState.m_LastValue = Effective;
+					}
+				}
+
+				DoLine_ColorPicker(&ResetId, ColorPickerLineSize, ColorPickerLabelSize, 0.0f, &ColorRect, "", &ColState.m_Working, DefaultColor, false, nullptr, pCol->m_Alpha);
+				if(ColState.m_Working != Effective)
+				{
+					if(ColState.m_Working == *pCol->m_pVariable)
+						s_StagedCols.erase(pVar);
+					else
+						s_StagedCols[pVar] = {ColState.m_Working};
+					ColState.m_LastValue = ColState.m_Working;
 				}
 			}
-
-			DoLine_ColorPicker(&ResetId, ColorPickerLineSize, ColorPickerLabelSize, 0.0f, &ColorRect, "", &ColState.m_Working, DefaultColor, false, nullptr, pCol->m_Alpha);
-			if(ColState.m_Working != Effective)
-			{
-				if(ColState.m_Working == *pCol->m_pVariable)
-					s_StagedCols.erase(pVar);
-				else
-					s_StagedCols[pVar] = {ColState.m_Working};
-				ColState.m_LastValue = ColState.m_Working;
-			}
 		}
-	}
 
-	CUIRect EndPad{Content.x, Content.y, Content.w, 5.0f};
-	FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad);
-	s_PrevConfigsScrollY = ScrollFrame.m_FinalOffsetY;
-	char aExtra[96];
-	str_format(aExtra, sizeof(aExtra), "filtered=%d scroll_y=%.1f", (int)vpFiltered.size(), ScrollFrame.m_FinalOffsetY);
-	LogTClientPerfStageEx("tclient_configs", "list", ETClientSettingsPerfStage::STATIC_LAYER, ListTimer.ElapsedMs(), false, aExtra);
+		CUIRect EndPad{Content.x, Content.y, Content.w, 5.0f};
+		FinishSettingsScrollRegion(s_ConfigListScrollRegion, ScrollFrame, &EndPad);
+		s_PrevConfigsScrollY = ScrollFrame.m_FinalOffsetY;
+		char aExtra[96];
+		str_format(aExtra, sizeof(aExtra), "filtered=%d scroll_y=%.1f", (int)vpFiltered.size(), ScrollFrame.m_FinalOffsetY);
+		LogTClientPerfStageEx("tclient_configs", "list", ETClientSettingsPerfStage::STATIC_LAYER, ListTimer.ElapsedMs(), false, aExtra);
+	};
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(3);
+	auto AddCard = [&vCards](const char *pStableId, const char *pTitle, float Height, const FSettingsCardRender &Render) {
+		SSettingsCardDefinition Card;
+		Card.m_Spec = {pStableId, Localize(pTitle), nullptr};
+		Card.m_Measure = [Height](float) { return Height; };
+		Card.m_Render = Render;
+		vCards.push_back(std::move(Card));
+	};
+	AddCard("deck:tclient-configs-actions", "Config Changes", LineSize, RenderActions);
+	AddCard("deck:tclient-configs-filters", "Config Filters", LineSize * 3.0f + MarginSmall * 2.0f, RenderFilters);
+	AddCard("deck:tclient-configs-list", "Configuration", 420.0f, RenderList);
+
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = ReadOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = ReadOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !ReadOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !ReadOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !ReadOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !ReadOnly && Input()->ModifierIsPressed();
+	InputState.m_AllowHeaderDrag = !ReadOnly;
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;
+	static CScrollRegion s_ConfigsScrollRegion;
+	static qm_card_order::CModel s_ConfigsPrewarmOrderModel;
+	static bool s_ConfigsPrewarmOrderModelInitialized = false;
+	static CSettingsCardDeck s_ConfigsPrewarmDeck;
+	if(ReadOnly && !s_ConfigsPrewarmOrderModelInitialized)
+	{
+		s_ConfigsPrewarmOrderModel.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+		s_ConfigsPrewarmOrderModelInitialized = true;
+	}
+	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_ConfigsPrewarmOrderModel : SettingsCardOrderModel();
+	CSettingsCardDeck &CardDeck = ReadOnly ? s_ConfigsPrewarmDeck : m_SettingsCardDeck;
+	if(!ReadOnly && str_startswith(m_SettingsCardFocusStableId.c_str(), "deck:tclient-configs-") != nullptr)
+	{
+		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+		m_SettingsCardFocusStableId.clear();
+	}
+	const SSettingsCardDeckResult DeckResult = CardDeck.Render(ConfigsCtx, Page, "tclient-configs", vCards, CardOrderModel, ReadOnly ? nullptr : &s_ConfigsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!ReadOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_configs_total", RenderTimer.ElapsedMs(), false);
 }

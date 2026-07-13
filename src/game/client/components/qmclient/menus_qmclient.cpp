@@ -155,6 +155,7 @@ struct SQmGlobalSearchTabRoute
 	int m_SettingsPage;
 	int m_TClientTab = -1;
 	int m_AppearanceTab = -1;
+	int m_QmClientTab = -1;
 };
 
 static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
@@ -172,6 +173,7 @@ static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
 	{"tclient-status-bar", CMenus::SETTINGS_TCLIENT, 4},
 	{"tclient-info", CMenus::SETTINGS_TCLIENT, 5},
 	{"tclient-profiles", CMenus::SETTINGS_PROFILES},
+	{"tclient-configs", CMenus::SETTINGS_QMCLIENT, -1, -1, CMenus::QMCLIENT_SETTINGS_TAB_CONFIG},
 	{"appearance-hud", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HUD},
 	{"appearance-chat", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_CHAT},
 	{"appearance-name-plate", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_NAME_PLATE},
@@ -284,6 +286,7 @@ namespace
 			Navigation.m_SettingsPage = Route.m_SettingsPage;
 			Navigation.m_TClientTab = Route.m_TClientTab;
 			Navigation.m_AppearanceTab = Route.m_AppearanceTab;
+			Navigation.m_QmClientTab = Route.m_QmClientTab;
 			break;
 		}
 		return Navigation;
@@ -5046,7 +5049,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 					else if(Navigation.m_SettingsPage == SETTINGS_TCLIENT)
 						RequestSettingsCardFocus(pCard->m_pStableId);
 					else if(Navigation.m_SettingsPage == SETTINGS_QMCLIENT &&
-						(Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW || Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS))
+						(Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW || Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS || Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONFIG))
 						m_SettingsCardDeck.RequestReveal(pCard->m_pStableId);
 				}
 				Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
