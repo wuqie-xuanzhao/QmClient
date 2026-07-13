@@ -167,6 +167,7 @@ static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
 	{"controls", CMenus::SETTINGS_CONTROLS},
 	{"qmclient-overview", CMenus::SETTINGS_QMCLIENT},
 	{"tclient-bind-wheel", CMenus::SETTINGS_TCLIENT, 1},
+	{"tclient-warlist", CMenus::SETTINGS_TCLIENT, 2},
 	{"tclient-chat-binds", CMenus::SETTINGS_TCLIENT, 3},
 	{"tclient-status-bar", CMenus::SETTINGS_TCLIENT, 4},
 	{"appearance-hud", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HUD},
@@ -5039,6 +5040,8 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 				if(pCard->m_pStableId != nullptr && str_startswith(pCard->m_pStableId, "deck:") != nullptr)
 				{
 					if(Navigation.m_SettingsPage == SETTINGS_GRAPHICS)
+						RequestSettingsCardFocus(pCard->m_pStableId);
+					else if(Navigation.m_SettingsPage == SETTINGS_TCLIENT)
 						RequestSettingsCardFocus(pCard->m_pStableId);
 					else if(Navigation.m_SettingsPage == SETTINGS_QMCLIENT &&
 						(Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW || Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS))

@@ -6608,6 +6608,8 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationTargetsSettingsPages)
 	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = Route.m_AppearanceTab;"), std::string::npos);
 	EXPECT_NE(CardBody.find("if(Navigation.m_AppearanceTab >= 0)"), std::string::npos);
 	EXPECT_NE(CardBody.find("m_AppearanceSettingsTab = Navigation.m_AppearanceTab;"), std::string::npos);
+	EXPECT_NE(CardBody.find("else if(Navigation.m_SettingsPage == SETTINGS_TCLIENT)\n\t\t\t\t\t\tRequestSettingsCardFocus(pCard->m_pStableId);"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("std::string m_SettingsCardFocusStableId;"), std::string::npos);
 	EXPECT_NE(MenusHeader.find("int m_AppearanceSettingsTab = APPEARANCE_TAB_HUD;"), std::string::npos);
 }
 
@@ -8207,7 +8209,7 @@ TEST(QmMonitoringHelpers, TClientConfigSearchUsesSharedQmSearchField)
 TEST(QmMonitoringHelpers, TClientWarListSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	const size_t EntriesSearchPos = Body.find("ui_widget::InputField(TClientWarListEntriesSearchCtx, &s_EntriesFilterInput, EntriesSearch, 14.0f");
@@ -8215,9 +8217,9 @@ TEST(QmMonitoringHelpers, TClientWarListSearchUsesSharedQmSearchField)
 	const size_t PlayerSearchPos = Body.find("ui_widget::InputField(TClientWarListPlayerSearchCtx, &s_PlayerSearchInput, PlayerSearch, 14.0f");
 	const size_t PlayerFilterPos = Body.find("if(!str_find_nocase(Client.m_aName, s_PlayerSearchInput.GetString())", PlayerSearchPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext TClientWarListEntriesSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientWarListEntriesSearchCtx = TClientWarListTextInputCtx;"), std::string::npos);
 	EXPECT_NE(Body.find("TClientWarListEntriesSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_warlist_entries_search\");"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext TClientWarListPlayerSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientWarListPlayerSearchCtx = TClientWarListTextInputCtx;"), std::string::npos);
 	EXPECT_NE(Body.find("TClientWarListPlayerSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_warlist_player_search\");"), std::string::npos);
 	EXPECT_NE(EntriesSearchPos, std::string::npos);
 	EXPECT_NE(EntriesFilterPos, std::string::npos);
@@ -8232,7 +8234,7 @@ TEST(QmMonitoringHelpers, TClientWarListSearchUsesSharedQmSearchField)
 TEST(QmMonitoringHelpers, TClientWarListTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);

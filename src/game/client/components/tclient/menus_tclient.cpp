@@ -946,7 +946,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		if(m_TClientSettingsTab == TCLIENT_TAB_BINDWHEEL)
 			RenderSettingsTClientBindWheel(ContentView, PrewarmOnly);
 		if(m_TClientSettingsTab == TCLIENT_TAB_WARLIST)
-			RenderSettingsTClientWarList(ContentView);
+			RenderSettingsTClientWarList(ContentView, PrewarmOnly);
 		if(m_TClientSettingsTab == TCLIENT_TAB_STATUSBAR)
 			RenderSettingsTClientStatusBar(ContentView, PrewarmOnly);
 		if(m_TClientSettingsTab == TCLIENT_TAB_INFO)
@@ -3840,6 +3840,11 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 	}
 	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_BindWheelPrewarmOrderModel : SettingsCardOrderModel();
 	CSettingsCardDeck &CardDeck = ReadOnly ? s_BindWheelPrewarmDeck : m_SettingsCardDeck;
+	if(!ReadOnly && str_startswith(m_SettingsCardFocusStableId.c_str(), "deck:tclient-bind-wheel-") != nullptr)
+	{
+		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+		m_SettingsCardFocusStableId.clear();
+	}
 	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientBindWheelTextInputCtx, Page, "tclient-bind-wheel", vCards, CardOrderModel, ReadOnly ? nullptr : &s_BindWheelSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
@@ -3939,40 +3944,44 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)
 	}
 	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_ChatBindsPrewarmOrderModel : SettingsCardOrderModel();
 	CSettingsCardDeck &CardDeck = ReadOnly ? s_ChatBindsPrewarmDeck : m_SettingsCardDeck;
+	if(!ReadOnly && str_startswith(m_SettingsCardFocusStableId.c_str(), "deck:tclient-chat-binds-") != nullptr)
+	{
+		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+		m_SettingsCardFocusStableId.clear();
+	}
 	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientChatBindsTextInputCtx, Page, "tclient-chat-binds", vCards, CardOrderModel, ReadOnly ? nullptr : &s_ChatBindsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_chatbinds_total", RenderTimer.ElapsedMs(), false);
 }
 
-void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
+void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 {
-	CUIRect RightView, LeftView, Column1, Column2, Column3, Column4, Button, ButtonL, ButtonR, Label;
 	CPerfTimer RenderTimer;
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
+	const float UiScale = 1.0f;
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	std::unique_ptr<CUiRenderOnlyGuard> pRenderOnlyGuard;
+	if(ReadOnly && !Ui()->RenderOnly())
+		pRenderOnlyGuard = std::make_unique<CUiRenderOnlyGuard>(Ui());
 
-	{
-		CPerfTimer LayoutTimer;
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.VSplitMid(&LeftView, &RightView, Margin);
-		LeftView.VSplitLeft(MarginSmall, nullptr, &LeftView);
-		RightView.VSplitRight(MarginSmall, &RightView, nullptr);
-		LogTClientPerfStageEx("tclient_warlist", "layout", ETClientSettingsPerfStage::SECTION_LAYOUT, LayoutTimer.ElapsedMs());
-	}
-
-	// WAR LIST will have 4 columns
-	//  [War entries] - [Entry Editing] - [Group Types] - [Recent Players]
-	//					 [Group Editing]
 	static char s_aEntryName[MAX_NAME_LENGTH];
 	static char s_aEntryClan[MAX_CLAN_LENGTH];
 	static char s_aEntryReason[MAX_WARLIST_REASON_LENGTH];
 	static bool s_IsClan = false;
 	static bool s_IsName = true;
-
-	LeftView.VSplitMid(&Column1, &Column2, Margin);
-	RightView.VSplitMid(&Column3, &Column4, Margin);
-
 	static CWarEntry *s_pSelectedEntry = nullptr;
 	static CWarType *s_pSelectedType = nullptr;
+	static char s_aTypeName[MAX_WARLIST_TYPE_LENGTH];
+	static ColorRGBA s_GroupColor = ColorRGBA(1, 1, 1, 1);
+	static CLineInputBuffered<128> s_EntriesFilterInput;
+	static CLineInputBuffered<128> s_PlayerSearchInput;
+	static CLineInput s_NameInput;
+	static CLineInput s_ClanInput;
+	static CLineInput s_ReasonInput;
+	static CLineInput s_TypeNameInput;
+	static CScrollRegion s_WarListScrollRegion;
+
 	auto WarTypeExists = [&](const CWarType *pType) {
 		return std::find(GameClient()->m_WarList.m_WarTypes.begin(), GameClient()->m_WarList.m_WarTypes.end(), pType) != GameClient()->m_WarList.m_WarTypes.end();
 	};
@@ -3988,43 +3997,38 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 	if(!WarEntryExists(s_pSelectedEntry))
 		s_pSelectedEntry = nullptr;
 
-	IUiContext TClientWarListEntriesSearchCtx;
-	TClientWarListEntriesSearchCtx.m_pUi = Ui();
-	TClientWarListEntriesSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	TClientWarListEntriesSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	TClientWarListEntriesSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_entries_search");
-	TClientWarListEntriesSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	IUiContext TClientWarListPlayerSearchCtx;
-	TClientWarListPlayerSearchCtx.m_pUi = Ui();
-	TClientWarListPlayerSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	TClientWarListPlayerSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	TClientWarListPlayerSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_player_search");
-	TClientWarListPlayerSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	IUiContext TClientWarListTextInputCtx;
 	TClientWarListTextInputCtx.m_pUi = Ui();
 	TClientWarListTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
 	TClientWarListTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	TClientWarListTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_text_inputs");
 	TClientWarListTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-
+	if(ReadOnly)
 	{
+		TClientWarListTextInputCtx.m_pAnim = nullptr;
+		TClientWarListTextInputCtx.m_pTree = nullptr;
+	}
+	IUiContext TClientWarListEntriesSearchCtx = TClientWarListTextInputCtx;
+	TClientWarListEntriesSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_entries_search");
+	IUiContext TClientWarListPlayerSearchCtx = TClientWarListTextInputCtx;
+	TClientWarListPlayerSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_player_search");
+
+	auto RenderEntries = [&](CUIRect &Column) {
 		CPerfTimer ListTimer;
-		Column1.HSplitTop(HeadlineHeight, &Label, &Column1);
-		Label.VSplitRight(25.0f, &Label, &Button);
-		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("War Entries"), HeadlineFontSize, TEXTALIGN_ML);
-		Column1.HSplitTop(MarginSmall, nullptr, &Column1);
+		CUIRect Button, EntriesSearch;
+		Column.HSplitTop(LineSize, &Button, &Column);
+		Button.VSplitRight(25.0f, nullptr, &Button);
 
 		static CButtonContainer s_ReverseEntries;
 		static bool s_Reversed = true;
-		if(Ui()->DoButton_FontIcon(&s_ReverseEntries, s_Reversed ? FONT_ICON_CHEVRON_UP : FONT_ICON_CHEVRON_DOWN, 0, &Button, IGraphics::CORNER_ALL))
+		if(!ReadOnly && Ui()->DoButton_FontIcon(&s_ReverseEntries, s_Reversed ? FONT_ICON_CHEVRON_UP : FONT_ICON_CHEVRON_DOWN, 0, &Button, IGraphics::CORNER_ALL))
 			s_Reversed = !s_Reversed;
-
-		CUIRect EntriesSearch;
-		Column1.HSplitBottom(25.0f, &Column1, &EntriesSearch);
-		EntriesSearch.HSplitTop(MarginSmall, nullptr, &EntriesSearch);
-
-		static CLineInputBuffered<128> s_EntriesFilterInput;
-		ui_widget::InputField(TClientWarListEntriesSearchCtx, &s_EntriesFilterInput, EntriesSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		Column.HSplitTop(25.0f, &EntriesSearch, &Column);
+		if(!ReadOnly)
+			ui_widget::InputField(TClientWarListEntriesSearchCtx, &s_EntriesFilterInput, EntriesSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		else
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-entries-search", &EntriesSearch, s_EntriesFilterInput.GetString(), FontSize, TEXTALIGN_ML);
 		static std::vector<CWarEntry *> s_vFilteredEntries;
 		static char s_aCachedEntriesFilter[128] = "";
 		static bool s_CachedReversed = false;
@@ -4052,7 +4056,8 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 
 		int SelectedOldEntry = -1;
 		static CListBox s_EntriesListBox;
-		s_EntriesListBox.DoStart(35.0f, s_vFilteredEntries.size(), 1, 2, SelectedOldEntry, &Column1);
+		s_EntriesListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		s_EntriesListBox.DoStart(35.0f, s_vFilteredEntries.size(), 1, 2, SelectedOldEntry, &Column);
 
 		static std::vector<unsigned char> s_vItemIds;
 		static std::vector<CButtonContainer> s_vDeleteButtons;
@@ -4077,7 +4082,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 			DeleteButton.HMargin(7.5f, &DeleteButton);
 			DeleteButton.VSplitLeft(MarginSmall, nullptr, &DeleteButton);
 			DeleteButton.VSplitRight(MarginExtraSmall, &DeleteButton, nullptr);
-			if(Ui()->DoButton_FontIcon(&s_vDeleteButtons[i], FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
+			if(!ReadOnly && Ui()->DoButton_FontIcon(&s_vDeleteButtons[i], FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
 			{
 				pEntryToRemove = pEntry;
 			}
@@ -4116,13 +4121,13 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		}
 
 		const int NewSelectedEntry = s_EntriesListBox.DoEnd();
-		if(pEntryToRemove != nullptr)
+		if(!ReadOnly && pEntryToRemove != nullptr)
 		{
 			GameClient()->m_WarList.RemoveWarEntry(pEntryToRemove);
 			s_pSelectedEntry = nullptr;
 			++s_TClientWarListFilterRevision;
 		}
-		else if(NewSelectedEntry >= 0 && NewSelectedEntry < (int)s_vFilteredEntries.size() &&
+		else if(!ReadOnly && NewSelectedEntry >= 0 && NewSelectedEntry < (int)s_vFilteredEntries.size() &&
 			(SelectedOldEntry != NewSelectedEntry || (Ui()->HotItem() == &s_vItemIds[NewSelectedEntry] && Ui()->MouseButtonClicked(0))))
 		{
 			s_pSelectedEntry = s_vFilteredEntries[NewSelectedEntry];
@@ -4148,55 +4153,38 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "entries=%d filtered=%d", (int)GameClient()->m_WarList.m_vWarEntries.size(), (int)s_vFilteredEntries.size());
 		LogTClientPerfStageEx("tclient_warlist", "list", ETClientSettingsPerfStage::TEXT_CACHE, ListTimer.ElapsedMs(), false, aExtra);
-	}
+	};
 
-	{
+	auto RenderEditor = [&](CUIRect &Column) {
 		CPerfTimer FilterTimer;
-		Column2.HSplitTop(HeadlineHeight, &Label, &Column2);
-		Label.VSplitRight(25.0f, &Label, &Button);
-		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Edit Entry"), HeadlineFontSize, TEXTALIGN_ML);
-		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
-		Column2.HSplitTop(HeadlineFontSize, &Button, &Column2);
+		CUIRect Button, ButtonL, ButtonR;
+		Column.HSplitTop(HeadlineFontSize, &Button, &Column);
 
 		Button.VSplitMid(&ButtonL, &ButtonR, MarginSmall);
-		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(s_aEntryName, sizeof(s_aEntryName));
 		s_NameInput.SetEmptyText(Localize("Name"));
-		if(s_IsName)
+		if(!ReadOnly && s_IsName)
 			ui_widget::InputField(TClientWarListTextInputCtx, &s_NameInput, ButtonL, Localize("Name"), 12.0f);
 		else
-		{
-			ButtonL.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 15, 3.0f);
-			Ui()->ClipEnable(&ButtonL);
-			ButtonL.VMargin(2.0f, &ButtonL);
-			s_NameInput.Render(&ButtonL, 12.0f, TEXTALIGN_ML, false, -1.0f, 0.0f);
-			Ui()->ClipDisable();
-		}
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-name", &ButtonL, s_aEntryName, FontSize, TEXTALIGN_ML);
 
-		static CLineInput s_ClanInput;
 		s_ClanInput.SetBuffer(s_aEntryClan, sizeof(s_aEntryClan));
 		s_ClanInput.SetEmptyText(Localize("Clan"));
-		if(s_IsClan)
+		if(!ReadOnly && s_IsClan)
 			ui_widget::InputField(TClientWarListTextInputCtx, &s_ClanInput, ButtonR, Localize("Clan"), 12.0f);
 		else
-		{
-			ButtonR.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 15, 3.0f);
-			Ui()->ClipEnable(&ButtonR);
-			ButtonR.VMargin(2.0f, &ButtonR);
-			s_ClanInput.Render(&ButtonR, 12.0f, TEXTALIGN_ML, false, -1.0f, 0.0f);
-			Ui()->ClipDisable();
-		}
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-clan", &ButtonR, s_aEntryClan, FontSize, TEXTALIGN_ML);
 
-		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
-		Column2.HSplitTop(LineSize, &Button, &Column2);
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		Column.HSplitTop(LineSize, &Button, &Column);
 		Button.VSplitMid(&ButtonL, &ButtonR, MarginSmall);
 		static unsigned char s_NameRadio, s_ClanRadio;
-		if(DoButton_CheckBox_Common(&s_NameRadio, Localize("Name"), s_IsName ? "X" : "", &ButtonL, BUTTONFLAG_LEFT))
+		if(!ReadOnly && DoButton_CheckBox_Common(&s_NameRadio, Localize("Name"), s_IsName ? "X" : "", &ButtonL, BUTTONFLAG_LEFT))
 		{
 			s_IsName = true;
 			s_IsClan = false;
 		}
-		if(DoButton_CheckBox_Common(&s_ClanRadio, Localize("Clan"), s_IsClan ? "X" : "", &ButtonR, BUTTONFLAG_LEFT))
+		if(!ReadOnly && DoButton_CheckBox_Common(&s_ClanRadio, Localize("Clan"), s_IsClan ? "X" : "", &ButtonR, BUTTONFLAG_LEFT))
 		{
 			s_IsName = false;
 			s_IsClan = true;
@@ -4206,18 +4194,20 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		if(!s_IsClan)
 			str_copy(s_aEntryClan, "");
 
-		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
-		Column2.HSplitTop(HeadlineFontSize, &Button, &Column2);
-		static CLineInput s_ReasonInput;
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		Column.HSplitTop(HeadlineFontSize, &Button, &Column);
 		s_ReasonInput.SetBuffer(s_aEntryReason, sizeof(s_aEntryReason));
 		s_ReasonInput.SetEmptyText(Localize("Reason"));
-		ui_widget::InputField(TClientWarListTextInputCtx, &s_ReasonInput, Button, Localize("Reason"), 12.0f);
+		if(!ReadOnly)
+			ui_widget::InputField(TClientWarListTextInputCtx, &s_ReasonInput, Button, Localize("Reason"), 12.0f);
+		else
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-reason", &Button, s_aEntryReason, FontSize, TEXTALIGN_ML);
 
 		static CButtonContainer s_AddButton, s_OverrideButton;
-		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
-		Column2.HSplitTop(LineSize * 2.0f, &Button, &Column2);
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		Column.HSplitTop(LineSize * 2.0f, &Button, &Column);
 		Button.VSplitMid(&ButtonL, &ButtonR, MarginSmall);
-		if(DoButtonLineSize_Menu(&s_OverrideButton, Localize("Override Entry"), 0, &ButtonL, LineSize) && s_pSelectedEntry)
+		if(!ReadOnly && DoButtonLineSize_Menu(&s_OverrideButton, Localize("Override Entry"), 0, &ButtonL, LineSize) && s_pSelectedEntry)
 		{
 			if(s_pSelectedEntry && s_pSelectedType && (str_comp(s_aEntryName, "") != 0 || str_comp(s_aEntryClan, "") != 0))
 			{
@@ -4228,7 +4218,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 				++s_TClientWarListFilterRevision;
 			}
 		}
-		if(DoButtonLineSize_Menu(&s_AddButton, Localize("Add Entry"), 0, &ButtonR, LineSize))
+		if(!ReadOnly && DoButtonLineSize_Menu(&s_AddButton, Localize("Add Entry"), 0, &ButtonR, LineSize))
 		{
 			if(s_pSelectedType)
 			{
@@ -4238,8 +4228,8 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 			}
 		}
 
-		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
-		Column2.HSplitTop(HeadlineFontSize + MarginSmall, &Button, &Column2);
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		Column.HSplitTop(HeadlineFontSize + MarginSmall, &Button, &Column);
 		if(s_pSelectedType)
 		{
 			float Shade = 0.0f;
@@ -4249,45 +4239,39 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 
-		Column2.HSplitBottom(150.0f, nullptr, &Column2);
-		Column2.HSplitTop(HeadlineHeight, &Label, &Column2);
-		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-settings-title", &Label, Localize("Settings"), HeadlineFontSize, TEXTALIGN_ML);
-		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
-		CUIRect CheckBoxRect;
-		Column2.HSplitTop(LineSize, &CheckBoxRect, &Column2);
-		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListAllowDuplicates, "tclient-warlist-allow-duplicates", Localize("Allow Duplicate Entries"), g_Config.m_TcWarListAllowDuplicates, &CheckBoxRect))
-			g_Config.m_TcWarListAllowDuplicates ^= 1;
-		Column2.HSplitTop(LineSize, &CheckBoxRect, &Column2);
-		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarList, "tclient-warlist-enable", Localize("Enable warlist"), g_Config.m_TcWarList, &CheckBoxRect))
-			g_Config.m_TcWarList ^= 1;
-		Column2.HSplitTop(LineSize, &CheckBoxRect, &Column2);
-		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListChat, "tclient-warlist-colors-chat", Localize("Colors in chat"), g_Config.m_TcWarListChat, &CheckBoxRect))
-			g_Config.m_TcWarListChat ^= 1;
-		Column2.HSplitTop(LineSize, &CheckBoxRect, &Column2);
-		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListScoreboard, "tclient-warlist-colors-scoreboard", Localize("Colors in scoreboard"), g_Config.m_TcWarListScoreboard, &CheckBoxRect))
-			g_Config.m_TcWarListScoreboard ^= 1;
-		Column2.HSplitTop(LineSize, &CheckBoxRect, &Column2);
-		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListSpectate, "tclient-warlist-colors-spectate", Localize("Show colors in spectator selection"), g_Config.m_TcWarListSpectate, &CheckBoxRect))
-			g_Config.m_TcWarListSpectate ^= 1;
-		Column2.HSplitTop(LineSize, &CheckBoxRect, &Column2);
-		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListShowClan, "tclient-warlist-show-clan", Localize("Show clan if war"), g_Config.m_TcWarListShowClan, &CheckBoxRect))
-			g_Config.m_TcWarListShowClan ^= 1;
 		LogTClientPerfStageEx("tclient_warlist", "filter", ETClientSettingsPerfStage::INTERACTIVE_LAYER, FilterTimer.ElapsedMs());
-	}
+	};
 
-	{
+	auto RenderSettings = [&](CUIRect &Column) {
+		CUIRect CheckBoxRect;
+		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListAllowDuplicates, "tclient-warlist-allow-duplicates", Localize("Allow Duplicate Entries"), g_Config.m_TcWarListAllowDuplicates, &CheckBoxRect))
+			g_Config.m_TcWarListAllowDuplicates ^= 1;
+		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarList, "tclient-warlist-enable", Localize("Enable warlist"), g_Config.m_TcWarList, &CheckBoxRect))
+			g_Config.m_TcWarList ^= 1;
+		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListChat, "tclient-warlist-colors-chat", Localize("Colors in chat"), g_Config.m_TcWarListChat, &CheckBoxRect))
+			g_Config.m_TcWarListChat ^= 1;
+		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListScoreboard, "tclient-warlist-colors-scoreboard", Localize("Colors in scoreboard"), g_Config.m_TcWarListScoreboard, &CheckBoxRect))
+			g_Config.m_TcWarListScoreboard ^= 1;
+		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListSpectate, "tclient-warlist-colors-spectate", Localize("Show colors in spectator selection"), g_Config.m_TcWarListSpectate, &CheckBoxRect))
+			g_Config.m_TcWarListSpectate ^= 1;
+		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListShowClan, "tclient-warlist-show-clan", Localize("Show clan if war"), g_Config.m_TcWarListShowClan, &CheckBoxRect))
+			g_Config.m_TcWarListShowClan ^= 1;
+	};
+
+	auto RenderGroups = [&](CUIRect &Column) {
 		CPerfTimer ActionsTimer;
-		Column3.HSplitTop(HeadlineHeight, &Label, &Column3);
-		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-groups-title", &Label, Localize("War Groups"), HeadlineFontSize, TEXTALIGN_ML);
-		Column3.HSplitTop(MarginSmall, nullptr, &Column3);
-
-		static char s_aTypeName[MAX_WARLIST_TYPE_LENGTH];
-		static ColorRGBA s_GroupColor = ColorRGBA(1, 1, 1, 1);
-		CUIRect WarTypeList;
-		Column3.HSplitBottom(180.0f, &WarTypeList, &Column3);
+		CUIRect WarTypeList, Button, ButtonL, ButtonR;
+		Column.HSplitTop(180.0f, &WarTypeList, &Column);
 		m_pRemoveWarType = nullptr;
 		int SelectedOldType = -1;
 		static CListBox s_WarTypeListBox;
+		s_WarTypeListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 		s_WarTypeListBox.DoStart(25.0f, GameClient()->m_WarList.m_WarTypes.size(), 1, 2, SelectedOldType, &WarTypeList, true, IGraphics::CORNER_ALL);
 
 		static std::vector<unsigned char> s_vTypeItemIds;
@@ -4315,7 +4299,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 				TypeRect.VSplitRight(20.0f, &TypeRect, &DeleteButton);
 				DeleteButton.HSplitTop(20.0f, &DeleteButton, nullptr);
 				DeleteButton.Margin(2.0f, &DeleteButton);
-				if(DoButtonNoRect_FontIcon(&s_vTypeDeleteButtons[i], FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
+				if(!ReadOnly && DoButtonNoRect_FontIcon(&s_vTypeDeleteButtons[i], FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
 					m_pRemoveWarType = pType;
 			}
 			TextRender()->TextColor(pType->m_Color);
@@ -4325,7 +4309,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 
 		const int NewSelectedType = s_WarTypeListBox.DoEnd();
 		const bool NewSelectedTypeValid = NewSelectedType >= 0 && NewSelectedType < (int)GameClient()->m_WarList.m_WarTypes.size();
-		if((SelectedOldType != NewSelectedType && NewSelectedTypeValid) || (NewSelectedTypeValid && Ui()->HotItem() == &s_vTypeItemIds[NewSelectedType] && Ui()->MouseButtonClicked(0)))
+		if(!ReadOnly && ((SelectedOldType != NewSelectedType && NewSelectedTypeValid) || (NewSelectedTypeValid && Ui()->HotItem() == &s_vTypeItemIds[NewSelectedType] && Ui()->MouseButtonClicked(0))))
 		{
 			s_pSelectedType = GameClient()->m_WarList.m_WarTypes[NewSelectedType];
 			if(!Ui()->LastMouseButton(1) && !Ui()->LastMouseButton(2))
@@ -4334,7 +4318,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 				s_GroupColor = s_pSelectedType->m_Color;
 			}
 		}
-		if(m_pRemoveWarType != nullptr)
+		if(!ReadOnly && m_pRemoveWarType != nullptr)
 		{
 			if(m_pRemoveWarType == s_pSelectedType)
 				s_pSelectedType = DefaultWarType();
@@ -4345,24 +4329,28 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 			PopupConfirm(Localize("Remove War Group"), aMessage, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmRemoveWarType);
 		}
 
-		static CLineInput s_TypeNameInput;
-		Column3.HSplitTop(MarginSmall, nullptr, &Column3);
-		Column3.HSplitTop(HeadlineFontSize + MarginSmall, &Button, &Column3);
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		Column.HSplitTop(HeadlineFontSize + MarginSmall, &Button, &Column);
 		s_TypeNameInput.SetBuffer(s_aTypeName, sizeof(s_aTypeName));
 		s_TypeNameInput.SetEmptyText(Localize("Group name"));
-		ui_widget::InputField(TClientWarListTextInputCtx, &s_TypeNameInput, Button, Localize("Group name"), 12.0f);
+		if(!ReadOnly)
+			ui_widget::InputField(TClientWarListTextInputCtx, &s_TypeNameInput, Button, Localize("Group name"), 12.0f);
+		else
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-group-name", &Button, s_aTypeName, FontSize, TEXTALIGN_ML);
 		static CButtonContainer s_AddGroupButton, s_OverrideGroupButton, s_GroupColorPicker;
 
-		Column3.HSplitTop(MarginSmall, nullptr, &Column3);
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		static unsigned int s_ColorValue = 0;
 		s_ColorValue = color_cast<ColorHSLA>(s_GroupColor).Pack(false);
-		ColorHSLA PickedColor = DoLine_ColorPicker(&s_GroupColorPicker, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Column3, Localize("Color"), &s_ColorValue, ColorRGBA(1.0f, 1.0f, 1.0f), true);
-		s_GroupColor = color_cast<ColorRGBA>(PickedColor);
+		if(!ReadOnly)
+			s_GroupColor = color_cast<ColorRGBA>(DoLine_ColorPicker(&s_GroupColorPicker, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Column, Localize("Color"), &s_ColorValue, ColorRGBA(1.0f, 1.0f, 1.0f), true));
+		else
+			Column.HSplitTop(ColorPickerLineSize + ColorPickerLineSpacing, nullptr, &Column);
 
-		Column3.HSplitTop(LineSize * 2.0f, &Button, &Column3);
+		Column.HSplitTop(LineSize * 2.0f, &Button, &Column);
 		Button.VSplitMid(&ButtonL, &ButtonR, MarginSmall);
 		bool OverrideDisabled = NewSelectedType == 0;
-		if(DoButtonLineSize_Menu(&s_OverrideGroupButton, Localize("Override Group"), 0, &ButtonL, LineSize, OverrideDisabled) && s_pSelectedType)
+		if(!ReadOnly && DoButtonLineSize_Menu(&s_OverrideGroupButton, Localize("Override Group"), 0, &ButtonL, LineSize, OverrideDisabled) && s_pSelectedType)
 		{
 			if(s_pSelectedType && str_comp(s_aTypeName, "") != 0)
 			{
@@ -4372,7 +4360,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 			}
 		}
 		bool AddDisabled = str_comp(GameClient()->m_WarList.FindWarType(s_aTypeName)->m_aWarName, "none") != 0 || str_comp(s_aTypeName, "none") == 0;
-		if(DoButtonLineSize_Menu(&s_AddGroupButton, Localize("Add Group"), 0, &ButtonR, LineSize, AddDisabled))
+		if(!ReadOnly && DoButtonLineSize_Menu(&s_AddGroupButton, Localize("Add Group"), 0, &ButtonR, LineSize, AddDisabled))
 		{
 			GameClient()->m_WarList.AddWarType(s_aTypeName, s_GroupColor);
 			++s_TClientWarListFilterRevision;
@@ -4381,23 +4369,21 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "groups=%d", (int)GameClient()->m_WarList.m_WarTypes.size());
 		LogTClientPerfStageEx("tclient_warlist", "actions", ETClientSettingsPerfStage::RESOURCE_PRETRIGGER, ActionsTimer.ElapsedMs(), false, aExtra);
-	}
+	};
 
-	{
+	auto RenderPlayers = [&](CUIRect &Column) {
 		CPerfTimer PlayersTimer;
-		Column4.HSplitTop(HeadlineHeight, &Label, &Column4);
-		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Online Players"), HeadlineFontSize, TEXTALIGN_ML);
-		Column4.HSplitTop(MarginSmall, nullptr, &Column4);
+		CUIRect PlayerSearch, PlayerList;
+		Column.HSplitTop(25.0f, &PlayerSearch, &Column);
+		if(!ReadOnly)
+			ui_widget::InputField(TClientWarListPlayerSearchCtx, &s_PlayerSearchInput, PlayerSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		else
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, "tclient-warlist-player-search", &PlayerSearch, s_PlayerSearchInput.GetString(), FontSize, TEXTALIGN_ML);
 
-		CUIRect PlayerSearch;
-		Column4.HSplitBottom(25.0f, &Column4, &PlayerSearch);
-		PlayerSearch.HSplitTop(MarginSmall, nullptr, &PlayerSearch);
-		static CLineInputBuffered<128> s_PlayerSearchInput;
-		ui_widget::InputField(TClientWarListPlayerSearchCtx, &s_PlayerSearchInput, PlayerSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
-
-		CUIRect PlayerList;
-		Column4.HSplitBottom(0.0f, &PlayerList, &Column4);
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		PlayerList = Column;
 		static CListBox s_PlayerListBox;
+		s_PlayerListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 		s_PlayerListBox.DoStart(30.0f, MAX_CLIENTS, 1, 2, -1, &PlayerList, true, IGraphics::CORNER_ALL);
 
 		static std::vector<unsigned char> s_vPlayerItemIds;
@@ -4435,7 +4421,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 												(Ui()->HotItem() == &s_vNameButtons[i] ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
 			PlayerRect.Draw(NameButtonColor, IGraphics::CORNER_L, 5.0f);
 			Ui()->DoLabel(&NameRect, Client.m_aName, StandardFontSize, TEXTALIGN_ML);
-			if(Ui()->DoButtonLogic(&s_vNameButtons[i], false, &PlayerRect, BUTTONFLAG_LEFT))
+			if(!ReadOnly && Ui()->DoButtonLogic(&s_vNameButtons[i], false, &PlayerRect, BUTTONFLAG_LEFT))
 			{
 				s_IsName = true;
 				s_IsClan = false;
@@ -4447,7 +4433,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 												(Ui()->HotItem() == &s_vClanButtons[i] ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
 			ClanRect.Draw(ClanButtonColor, IGraphics::CORNER_R, 5.0f);
 			Ui()->DoLabel(&ClanRect, Client.m_aClan, StandardFontSize, TEXTALIGN_ML);
-			if(Ui()->DoButtonLogic(&s_vClanButtons[i], false, &ClanRect, BUTTONFLAG_LEFT))
+			if(!ReadOnly && Ui()->DoButtonLogic(&s_vClanButtons[i], false, &ClanRect, BUTTONFLAG_LEFT))
 			{
 				s_IsName = false;
 				s_IsClan = true;
@@ -4464,7 +4450,53 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "players=%d filtered=%d", MAX_CLIENTS, VisiblePlayers);
 		LogTClientPerfStageEx("tclient_warlist", "players", ETClientSettingsPerfStage::STATIC_LAYER, PlayersTimer.ElapsedMs(), false, aExtra);
+	};
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(5);
+	const auto AddCard = [&](const char *pStableId, const char *pTitle, float ContentHeight, const FSettingsCardRenderMeasured &Render) {
+		SSettingsCardDefinition Card;
+		Card.m_Spec = {pStableId, Localize(pTitle), nullptr};
+		Card.m_Measure = [ContentHeight](float) { return ContentHeight; };
+		Card.m_RenderMeasured = Render;
+		vCards.push_back(std::move(Card));
+	};
+	AddCard("deck:tclient-warlist-entries", "War Entries", 360.0f, RenderEntries);
+	AddCard("deck:tclient-warlist-editor", "Edit Entry", 170.0f, RenderEditor);
+	AddCard("deck:tclient-warlist-settings", "Settings", LineSize * 6.0f, RenderSettings);
+	AddCard("deck:tclient-warlist-groups", "War Groups", 300.0f, RenderGroups);
+	AddCard("deck:tclient-warlist-players", "Online Players", 300.0f, RenderPlayers);
+
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = ReadOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = ReadOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !ReadOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !ReadOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !ReadOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !ReadOnly && Input()->ModifierIsPressed();
+	InputState.m_AllowHeaderDrag = !ReadOnly;
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;
+	static qm_card_order::CModel s_WarListPrewarmOrderModel;
+	static bool s_WarListPrewarmOrderModelInitialized = false;
+	static CSettingsCardDeck s_WarListPrewarmDeck;
+	if(ReadOnly && !s_WarListPrewarmOrderModelInitialized)
+	{
+		s_WarListPrewarmOrderModel.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+		s_WarListPrewarmOrderModelInitialized = true;
 	}
+	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_WarListPrewarmOrderModel : SettingsCardOrderModel();
+	CSettingsCardDeck &CardDeck = ReadOnly ? s_WarListPrewarmDeck : m_SettingsCardDeck;
+	if(!ReadOnly && str_startswith(m_SettingsCardFocusStableId.c_str(), "deck:tclient-warlist-") != nullptr)
+	{
+		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+		m_SettingsCardFocusStableId.clear();
+	}
+	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientWarListTextInputCtx, Page, "tclient-warlist", vCards, CardOrderModel, ReadOnly ? nullptr : &s_WarListScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!ReadOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 
 	LogTClientPerfStage("tclient_warlist_total", RenderTimer.ElapsedMs(), false);
 }
@@ -4865,6 +4897,11 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 	}
 	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_StatusBarPrewarmOrderModel : SettingsCardOrderModel();
 	CSettingsCardDeck &CardDeck = ReadOnly ? s_StatusBarPrewarmDeck : m_SettingsCardDeck;
+	if(!ReadOnly && str_startswith(m_SettingsCardFocusStableId.c_str(), "deck:tclient-status-bar-") != nullptr)
+	{
+		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+		m_SettingsCardFocusStableId.clear();
+	}
 	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientStatusSchemeTextInputCtx, Page, "tclient-status-bar", vCards, CardOrderModel, ReadOnly ? nullptr : &s_StatusBarSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();

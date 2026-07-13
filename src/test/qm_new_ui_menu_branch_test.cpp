@@ -2222,7 +2222,7 @@ TEST(QmNewUiMenuBranches, TClientSettingsTabsPreserveHiddenStateAndVisibleCorner
 TEST(QmNewUiMenuBranches, TClientWarListDefersDeletesAndValidatesSelections)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string RenderSettingsTClientWarList = FunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView)");
+	const std::string RenderSettingsTClientWarList = FunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)");
 
 	EXPECT_NE(RenderSettingsTClientWarList.find("static CWarType *s_pSelectedType = nullptr;"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientWarList.find("WarTypeExists"), std::string::npos);
@@ -2232,6 +2232,48 @@ TEST(QmNewUiMenuBranches, TClientWarListDefersDeletesAndValidatesSelections)
 	EXPECT_NE(RenderSettingsTClientWarList.find("s_pSelectedEntry = nullptr;"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientWarList.find("NewSelectedEntry < (int)s_vFilteredEntries.size()"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientWarList.find("NewSelectedType < (int)GameClient()->m_WarList.m_WarTypes.size()"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, TClientWarListUsesPublicCardDeck)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Registry = ReadTextFile("src/game/client/QmUi/QmCardRegistry.cpp");
+	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
+	EXPECT_NE(Body.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_WarListPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(Body.find("str_startswith(m_SettingsCardFocusStableId.c_str(), \"deck:tclient-warlist-\")"), std::string::npos);
+	EXPECT_NE(Body.find("CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());"), std::string::npos);
+	EXPECT_NE(Body.find("CardDeck.Render("), std::string::npos);
+	EXPECT_NE(Body.find("if(!ReadOnly)\n\t\t\tui_widget::InputField"), std::string::npos);
+	EXPECT_NE(Body.find("if(!ReadOnly && DeckResult.m_OrderChanged)"), std::string::npos);
+	EXPECT_EQ(Body.find("MainView.VSplitMid(&LeftView, &RightView, Margin);"), std::string::npos);
+	EXPECT_EQ(Body.find("LeftView.VSplitMid(&Column1, &Column2, Margin);"), std::string::npos);
+	EXPECT_EQ(Body.find("RightView.VSplitMid(&Column3, &Column4, Margin);"), std::string::npos);
+
+	EXPECT_NE(Registry.find("{\"deck:tclient-warlist-entries\", \"tclient-warlist\", ECardColumn::Left, 0"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-warlist-editor\", \"tclient-warlist\", ECardColumn::Right, 0"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-warlist-settings\", \"tclient-warlist\", ECardColumn::Right, 1"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-warlist-groups\", \"tclient-warlist\", ECardColumn::Left, 1"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-warlist-players\", \"tclient-warlist\", ECardColumn::Left, 2"), std::string::npos);
+
+	const size_t EntriesPriority = Body.find("s_EntriesListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);");
+	const size_t EntriesStart = Body.find("s_EntriesListBox.DoStart(");
+	const size_t GroupsPriority = Body.find("s_WarTypeListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);");
+	const size_t GroupsStart = Body.find("s_WarTypeListBox.DoStart(");
+	const size_t PlayersPriority = Body.find("s_PlayerListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);");
+	const size_t PlayersStart = Body.find("s_PlayerListBox.DoStart(");
+	ASSERT_NE(EntriesPriority, std::string::npos);
+	ASSERT_NE(EntriesStart, std::string::npos);
+	ASSERT_NE(GroupsPriority, std::string::npos);
+	ASSERT_NE(GroupsStart, std::string::npos);
+	ASSERT_NE(PlayersPriority, std::string::npos);
+	ASSERT_NE(PlayersStart, std::string::npos);
+	EXPECT_LT(EntriesPriority, EntriesStart);
+	EXPECT_LT(GroupsPriority, GroupsStart);
+	EXPECT_LT(PlayersPriority, PlayersStart);
 }
 
 TEST(QmNewUiMenuBranches, TClientProfilesAndStatusBarClampUiIndices)
