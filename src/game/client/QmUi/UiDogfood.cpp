@@ -109,17 +109,29 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 
 				// Row 3: TextField
 				Content.HSplitTop(RowH, &Row, &Content);
-				ui_widget::TextField(Ctx, &s_aTextField[Column], Row, Localize("Type something..."), ui_token::font::BODY * Scale);
+				ui_widget::SInputFieldOptions TextOptions;
+				TextOptions.m_pPlaceholder = Localize("Type something...");
+				TextOptions.m_FontSize = ui_token::font::BODY * Scale;
+				ui_widget::InputField(Ctx, &s_aTextField[Column], Row, TextOptions);
 				Content.HSplitTop(Gap, nullptr, &Content);
 
 				// Row 4: 带清除按钮的输入框
 				Content.HSplitTop(RowH, &Row, &Content);
-				ui_widget::ClearableTextField(Ctx, &s_aClearableTextField[Column], Row, Localize("Clearable text..."), ui_token::font::BODY * Scale);
+				ui_widget::SInputFieldOptions ClearableOptions;
+				ClearableOptions.m_pPlaceholder = Localize("Clearable text...");
+				ClearableOptions.m_Clearable = true;
+				ClearableOptions.m_FontSize = ui_token::font::BODY * Scale;
+				ui_widget::InputField(Ctx, &s_aClearableTextField[Column], Row, ClearableOptions);
 				Content.HSplitTop(Gap, nullptr, &Content);
 
 				// Row 5: 搜索输入框
 				Content.HSplitTop(RowH, &Row, &Content);
-				ui_widget::SearchField(Ctx, &s_aSearchField[Column], Row, ui_token::font::BODY * Scale, true);
+				ui_widget::SInputFieldOptions SearchOptions;
+				SearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+				SearchOptions.m_Clearable = true;
+				SearchOptions.m_SearchHotkeyEnabled = true;
+				SearchOptions.m_FontSize = ui_token::font::BODY * Scale;
+				ui_widget::InputField(Ctx, &s_aSearchField[Column], Row, SearchOptions);
 				Content.HSplitTop(Gap, nullptr, &Content);
 
 				// Row 6: Two toggles

@@ -1971,6 +1971,20 @@ TEST(UiV2ScrollPolicy, NonCardMenuListAndFilterGridUseResolvedSteps)
 	EXPECT_FALSE(Grid.m_ContentDragAllowed);
 }
 
+TEST(UiV2ScrollPolicy, FinalPresetMatrixCoversLargeMediumSmallAndHorizontal)
+{
+	const SQmResolvedScrollPolicy Large = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE, EQmScrollAxis::VERTICAL, 0.0f, 0}, 1.0f, 0.12f);
+	const SQmResolvedScrollPolicy Medium = QmResolveScrollPolicy({EQmScrollProfile::MENU_LIST, EQmScrollAxis::VERTICAL, 24.0f, 3}, 1.0f, 0.0f);
+	const SQmResolvedScrollPolicy Small = QmResolveScrollPolicy({EQmScrollProfile::POPUP_LIST, EQmScrollAxis::VERTICAL, 24.0f, 1}, 1.0f, 0.0f);
+	const SQmResolvedScrollPolicy Horizontal = QmResolveScrollPolicy({EQmScrollProfile::POPUP_LIST, EQmScrollAxis::HORIZONTAL, 24.0f, 1}, 1.0f, 0.0f);
+
+	EXPECT_GT(Large.m_Style.m_ScrollbarWidth, Medium.m_Style.m_ScrollbarWidth);
+	EXPECT_GT(Medium.m_Style.m_ScrollbarWidth, Small.m_Style.m_ScrollbarWidth);
+	EXPECT_EQ(Horizontal.m_Style.m_Axis, EQmScrollAxis::HORIZONTAL);
+	EXPECT_EQ(Small.m_MaxVisibleItems, 8);
+	EXPECT_FLOAT_EQ(Medium.m_AltMultiplier, 3.0f);
+}
+
 TEST(UiV2ScrollController, HiddenRailKeepsScrollableContentAtFullWidth)
 {
 	CQmScrollState State;

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <initializer_list>
 #include <memory>
@@ -8068,33 +8069,18 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
 	const std::string Navigation = ReadRepoFile("src/game/client/QmUi/UiNavigation.cpp");
 	const std::string TextFieldPlateBody = ExtractSourceFunctionBody(Forms, "void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)");
-	const std::string TextFieldBody = ExtractSourceFunctionBody(Forms, "bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)");
-	const std::string ClearableBody = ExtractSourceFunctionBody(Forms, "bool ClearableTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)");
-	const std::string SearchBody = ExtractSourceFunctionBody(Forms, "bool SearchField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)");
-	const std::string TextFieldExBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)");
-	const std::string ClearableExBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)");
-	const std::string SearchExBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)");
+	const std::string InputFieldBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options)");
 	const std::string ListItemBody = ExtractSourceFunctionBody(Navigation, "bool ListItem(const IUiContext &Ctx, const void *pId, const char *pText, const CUIRect &Rect, const SListItemProps &Props)");
 	ASSERT_FALSE(TextFieldPlateBody.empty());
-	ASSERT_FALSE(TextFieldBody.empty());
-	ASSERT_FALSE(ClearableBody.empty());
-	ASSERT_FALSE(SearchBody.empty());
-	ASSERT_FALSE(TextFieldExBody.empty());
-	ASSERT_FALSE(ClearableExBody.empty());
-	ASSERT_FALSE(SearchExBody.empty());
+	ASSERT_FALSE(InputFieldBody.empty());
 	ASSERT_FALSE(ListItemBody.empty());
 
-	EXPECT_NE(FormsHeader.find("bool ClearableTextField(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("bool SearchField(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options);"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("struct SInputFieldResult"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("struct STextFieldOptions"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("int m_Corners = IGraphics::CORNER_ALL;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("float m_CornerRadius = ui_token::radius::BASE;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("int m_TextAlign = TEXTALIGN_ML;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("inline SInputFieldResult BuildInputFieldResult(bool WasActive, bool IsActive, bool Changed, bool SubmitPressed, bool WasEmpty, bool IsEmpty, bool Clearable)"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("bool m_Changed = false;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("bool m_Committed = false;"), std::string::npos);
@@ -8118,42 +8104,21 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(TextFieldPlateBody.find("const SUiTheme &Theme = ThemeFor(Ctx);"), std::string::npos);
 	EXPECT_NE(TextFieldPlateBody.find("const ColorRGBA PlateColor = Active ? Theme.m_InputSurfaceFocused : (Hovered ? Theme.m_SurfaceHovered : Theme.m_InputSurface);"), std::string::npos);
 	EXPECT_EQ(TextFieldPlateBody.find("ui_token::color::SURFACE_ELEVATED"), std::string::npos);
-	EXPECT_NE(TextFieldExBody.find("return InputField(Ctx, pInput, Rect, InputOptions);"), std::string::npos);
-	EXPECT_EQ(TextFieldExBody.find("Ctx.m_pUi->DoEditBox("), std::string::npos);
-	EXPECT_EQ(TextFieldExBody.find("DrawTextFieldPlate("), std::string::npos);
-	EXPECT_EQ(TextFieldExBody.find("DoEditBox"), std::string::npos);
-	EXPECT_EQ(TextFieldExBody.find("DrawTextFieldPlaceholder("), std::string::npos);
-	EXPECT_EQ(TextFieldExBody.find("VMargin("), std::string::npos);
-	EXPECT_NE(ClearableExBody.find("InputOptions.m_Clearable = true;"), std::string::npos);
-	EXPECT_NE(ClearableExBody.find("return InputField(Ctx, pInput, Rect, InputOptions);"), std::string::npos);
-	EXPECT_EQ(ClearableExBody.find("DoEditBox"), std::string::npos);
-	EXPECT_EQ(ClearableExBody.find("DrawTextFieldPlate("), std::string::npos);
-	EXPECT_EQ(ClearableExBody.find("DrawTextFieldPlaceholder("), std::string::npos);
-	EXPECT_EQ(ClearableExBody.find("VMargin("), std::string::npos);
-	EXPECT_NE(SearchExBody.find("InputOptions.m_Mode = EInputFieldMode::SEARCH;"), std::string::npos);
-	EXPECT_NE(SearchExBody.find("return InputField(Ctx, pInput, Rect, InputOptions);"), std::string::npos);
-	EXPECT_EQ(SearchExBody.find("DoEditBox"), std::string::npos);
-	EXPECT_EQ(SearchExBody.find("VMargin("), std::string::npos);
+	EXPECT_NE(InputFieldBody.find("DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect);"), std::string::npos);
+	EXPECT_NE(Forms.find("const float Alpha = AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
 	EXPECT_NE(Ui.find("bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
 	EXPECT_NE(Ui.find("bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
 	EXPECT_NE(Ui.find("bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, float LineSpacing, int TextAlign, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
 	EXPECT_EQ(QmMenus.find("static bool DoEditBoxMultiLine("), std::string::npos);
 	EXPECT_EQ(TClientMenus.find("static bool DoEditBoxMultiLine("), std::string::npos);
 	EXPECT_NE(QmMenus.find("BlockWordsInputOptions.m_Mode = ui_widget::EInputFieldMode::MULTILINE;"), std::string::npos);
-	EXPECT_NE(TextFieldBody.find("return TextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;"), std::string::npos);
-	EXPECT_NE(ClearableBody.find("return ClearableTextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;"), std::string::npos);
-	EXPECT_NE(SearchBody.find("return SearchFieldEx(Ctx, pInput, Rect, FontSize, HotkeyEnabled).m_Changed;"), std::string::npos);
 	EXPECT_NE(Forms.find("Ctx.m_pUi->DoEditBox(pInput"), std::string::npos);
 	EXPECT_EQ(Forms.find("Ctx.m_pUi->DoClearableEditBox(pInput"), std::string::npos);
 	EXPECT_EQ(Forms.find("Ctx.m_pUi->DoEditBox_Search(pInput"), std::string::npos);
 	EXPECT_NE(Forms.find("return ui_widget::BuildInputFieldResult(WasActive, pInput->IsActive(), Changed, SubmitPressed, WasEmpty, pInput->IsEmpty(), Clearable);"), std::string::npos);
-	EXPECT_NE(ClearableExBody.find("return InputField(Ctx, pInput, Rect, InputOptions);"), std::string::npos);
-	EXPECT_NE(SearchExBody.find("return InputField(Ctx, pInput, Rect, InputOptions);"), std::string::npos);
 	EXPECT_NE(ListItemBody.find("AnimateStateValue(Ctx, pId, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
 	EXPECT_EQ(TextFieldPlateBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	EXPECT_EQ(TextFieldExBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	EXPECT_EQ(ClearableExBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	EXPECT_EQ(SearchBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
+	EXPECT_EQ(InputFieldBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(ListItemBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	const std::string SliderInputBody = ExtractSourceFunctionBody(Forms, "bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)");
 	ASSERT_FALSE(SliderInputBody.empty());
@@ -8866,18 +8831,20 @@ TEST(QmMonitoringHelpers, TouchControlsLayoutInputsUseSharedQmTextField)
 	const size_t CtxPos = Body.find("IUiContext TouchControlsLayoutTextInputCtx;");
 	const size_t UiPos = Body.find("TouchControlsLayoutTextInputCtx.m_pUi = Ui();", CtxPos);
 	const size_t ScopePos = Body.find("TouchControlsLayoutTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"touch_controls_layout_text_inputs\");", UiPos);
-	const size_t XFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputX, EditBox, nullptr, FONTSIZE)", ScopePos);
+	const size_t XFieldPos = Body.find("ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputX, EditBox, LayoutInputOptions).m_Changed", ScopePos);
 	const size_t XUpdatePos = Body.find("InputPosFunction(&m_InputX);", XFieldPos);
-	const size_t YFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputY, EditBox, nullptr, FONTSIZE)", XUpdatePos);
+	const size_t YFieldPos = Body.find("ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputY, EditBox, LayoutInputOptions).m_Changed", XUpdatePos);
 	const size_t YUpdatePos = Body.find("InputPosFunction(&m_InputY);", YFieldPos);
-	const size_t WFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputW, EditBox, nullptr, FONTSIZE)", YUpdatePos);
+	const size_t WFieldPos = Body.find("ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputW, EditBox, LayoutInputOptions).m_Changed", YUpdatePos);
 	const size_t WUpdatePos = Body.find("InputPosFunction(&m_InputW);", WFieldPos);
-	const size_t HFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputH, EditBox, nullptr, FONTSIZE)", WUpdatePos);
+	const size_t HFieldPos = Body.find("ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputH, EditBox, LayoutInputOptions).m_Changed", WUpdatePos);
 	const size_t HUpdatePos = Body.find("InputPosFunction(&m_InputH);", HFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(CtxPos, std::string::npos);
 	EXPECT_NE(UiPos, std::string::npos);
 	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(Body.find("LayoutInputOptions.m_Clearable = true;", ScopePos), std::string::npos);
+	EXPECT_NE(Body.find("LayoutInputOptions.m_FontSize = FONTSIZE;", ScopePos), std::string::npos);
 	EXPECT_NE(XFieldPos, std::string::npos);
 	EXPECT_NE(XUpdatePos, std::string::npos);
 	EXPECT_NE(YFieldPos, std::string::npos);
@@ -8911,18 +8878,20 @@ TEST(QmMonitoringHelpers, TouchControlsBehaviorInputsUseSharedQmTextField)
 	const size_t CtxPos = Body.find("IUiContext TouchControlsBehaviorTextInputCtx;");
 	const size_t UiPos = Body.find("TouchControlsBehaviorTextInputCtx.m_pUi = Ui();", CtxPos);
 	const size_t ScopePos = Body.find("TouchControlsBehaviorTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"touch_controls_behavior_text_inputs\");", UiPos);
-	const size_t BindCommandFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputCommand, MiddleButton, nullptr, 10.0f)", ScopePos);
+	const size_t BindCommandFieldPos = Body.find("ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputCommand, MiddleButton, BehaviorInputOptions).m_Changed", ScopePos);
 	const size_t BindCommandUpdatePos = Body.find("m_vBehaviorElements[0]->UpdateCommand();", BindCommandFieldPos);
-	const size_t BindLabelFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputLabel, MiddleButton, nullptr, 10.0f)", BindCommandUpdatePos);
+	const size_t BindLabelFieldPos = Body.find("ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputLabel, MiddleButton, BehaviorInputOptions).m_Changed", BindCommandUpdatePos);
 	const size_t BindLabelUpdatePos = Body.find("m_vBehaviorElements[0]->UpdateLabel();", BindLabelFieldPos);
-	const size_t ToggleCommandFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputCommand, MiddleButton, nullptr, 10.0f)", BindLabelUpdatePos);
+	const size_t ToggleCommandFieldPos = Body.find("ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputCommand, MiddleButton, BehaviorInputOptions).m_Changed", BindLabelUpdatePos);
 	const size_t ToggleCommandUpdatePos = Body.find("m_vBehaviorElements[CommandIndex]->UpdateCommand();", ToggleCommandFieldPos);
-	const size_t ToggleLabelFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputLabel, MiddleButton, nullptr, 10.0f)", ToggleCommandUpdatePos);
+	const size_t ToggleLabelFieldPos = Body.find("ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputLabel, MiddleButton, BehaviorInputOptions).m_Changed", ToggleCommandUpdatePos);
 	const size_t ToggleLabelUpdatePos = Body.find("m_vBehaviorElements[CommandIndex]->UpdateLabel();", ToggleLabelFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(CtxPos, std::string::npos);
 	EXPECT_NE(UiPos, std::string::npos);
 	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(Body.find("BehaviorInputOptions.m_Clearable = true;", ScopePos), std::string::npos);
+	EXPECT_NE(Body.find("BehaviorInputOptions.m_FontSize = 10.0f;", ScopePos), std::string::npos);
 	EXPECT_NE(BindCommandFieldPos, std::string::npos);
 	EXPECT_NE(BindCommandUpdatePos, std::string::npos);
 	EXPECT_NE(BindLabelFieldPos, std::string::npos);
@@ -8956,7 +8925,7 @@ TEST(QmMonitoringHelpers, TouchControlsButtonBrowserSearchUsesSharedQmSearchFiel
 	const size_t CtxPos = Body.find("IUiContext TouchControlsBrowserSearchCtx;");
 	const size_t UiPos = Body.find("TouchControlsBrowserSearchCtx.m_pUi = Ui();", CtxPos);
 	const size_t ScopePos = Body.find("TouchControlsBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash(\"touch_controls_button_browser_search\");", UiPos);
-	const size_t SearchFieldPos = Body.find("ui_widget::SearchField(TouchControlsBrowserSearchCtx, &m_FilterInput, EditBox, FONTSIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive())", ScopePos);
+	const size_t SearchFieldPos = Body.find("ui_widget::InputField(TouchControlsBrowserSearchCtx, &m_FilterInput, EditBox, BrowserSearchOptions).m_Changed", ScopePos);
 	const size_t NeedFilterPos = Body.find("m_NeedFilter = true;", SearchFieldPos);
 	const size_t SearchLabelPos = Body.find("str_format(aBufSearch, sizeof(aBufSearch), \"%s:\", Localize(\"Search\"));");
 	const size_t ManualSearchIconPos = Body.find("FontIcons::FONT_ICON_MAGNIFYING_GLASS");
@@ -8964,6 +8933,10 @@ TEST(QmMonitoringHelpers, TouchControlsButtonBrowserSearchUsesSharedQmSearchFiel
 	EXPECT_NE(CtxPos, std::string::npos);
 	EXPECT_NE(UiPos, std::string::npos);
 	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(Body.find("BrowserSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;", ScopePos), std::string::npos);
+	EXPECT_NE(Body.find("BrowserSearchOptions.m_Clearable = true;", ScopePos), std::string::npos);
+	EXPECT_NE(Body.find("BrowserSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();", ScopePos), std::string::npos);
+	EXPECT_NE(Body.find("BrowserSearchOptions.m_FontSize = FONTSIZE;", ScopePos), std::string::npos);
 	EXPECT_NE(SearchFieldPos, std::string::npos);
 	EXPECT_NE(NeedFilterPos, std::string::npos);
 	EXPECT_NE(SearchLabelPos, std::string::npos);
@@ -9035,7 +9008,7 @@ TEST(QmMonitoringHelpers, IngameCallvoteSearchUsesSharedQmSearchField)
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext CallvoteSearchCtx;"), std::string::npos);
 	EXPECT_NE(Body.find("CallvoteSearchCtx.m_ScopeHash = MakeUiScopeHash(\"ingame_callvote_search\");"), std::string::npos);
-	EXPECT_NE(Body.find("bool Searching = ui_widget::SearchField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, 14.0f"), std::string::npos);
+	EXPECT_NE(Body.find("bool Searching = ui_widget::InputField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, CallvoteSearchOptions).m_Changed;"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_FilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
@@ -9048,9 +9021,9 @@ TEST(QmMonitoringHelpers, IngameCallvoteTextInputsUseSharedQmTextField)
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext CallvoteTextInputCtx;"), std::string::npos);
 	EXPECT_NE(Body.find("CallvoteTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"ingame_callvote_text_inputs\");"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::TextField(CallvoteTextInputCtx, &m_CallvoteReasonInput, Reason, Localize(\"Reason\"), 14.0f);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::TextField(CallvoteTextInputCtx, &s_VoteDescriptionInput, Button, Localize(\"Vote description\"), 14.0f);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::TextField(CallvoteTextInputCtx, &s_VoteCommandInput, Button, Localize(\"Vote command\"), 14.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(CallvoteTextInputCtx, &m_CallvoteReasonInput, Reason, ReasonInputOptions);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(CallvoteTextInputCtx, &s_VoteDescriptionInput, Button, VoteDescriptionInputOptions);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(CallvoteTextInputCtx, &s_VoteCommandInput, Button, VoteCommandInputOptions);"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_CallvoteReasonInput, &Reason, 14.0f"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoteDescriptionInput, &Button, 14.0f"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoteCommandInput, &Button, 14.0f"), std::string::npos);
@@ -9062,7 +9035,7 @@ TEST(QmMonitoringHelpers, IngameUnfinishedMapsPlayerNameUsesSharedQmTextField)
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderUnfinishedMaps(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t TextFieldPos = Body.find("if(ui_widget::TextField(UnfinishedMapsTextInputCtx, &s_PlayerNameInput, Row, Client()->PlayerName(), 12.0f))");
+	const size_t TextFieldPos = Body.find("if(ui_widget::InputField(UnfinishedMapsTextInputCtx, &s_PlayerNameInput, Row, PlayerNameInputOptions).m_Changed)");
 	const size_t DirtyPos = Body.find("s_NameDirty = true;", TextFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext UnfinishedMapsTextInputCtx;"), std::string::npos);
@@ -9079,7 +9052,7 @@ TEST(QmMonitoringHelpers, IngameMapNoteUsesSharedQmTextField)
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerInfo(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t TextFieldPos = Body.find("if(ui_widget::TextField(ServerInfoTextInputCtx, &s_MapNoteInput, NoteInput, Localize(\"Note\"), FontSizeBody * 0.85f))");
+	const size_t TextFieldPos = Body.find("if(ui_widget::InputField(ServerInfoTextInputCtx, &s_MapNoteInput, NoteInput, MapNoteInputOptions).m_Changed)");
 	const size_t SaveNotePos = Body.find("GameClient()->m_TClient.SetMapNote(CurrentServerInfo.m_aMap, s_MapNoteInput.GetString());", TextFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext ServerInfoTextInputCtx;"), std::string::npos);
@@ -9426,17 +9399,112 @@ TEST(QmMonitoringHelpers, NonCardServerAndFriendsUseSharedRuntime)
 	EXPECT_NE(FriendsBody.find("QmResolveScrollPolicy("), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, NonCardMenuLegacyUiPathsAreGone)
+{
+	struct SFunctionScope
+	{
+		const char *m_pPath;
+		const char *m_pSignature;
+	};
+	const std::array<SFunctionScope, 7> aScopes = {{
+		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItemActivated)"},
+		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserFilters(CUIRect View)"},
+		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,"},
+		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserFriends(CUIRect View)"},
+		{"src/game/client/components/menus_demo.cpp", "void CMenus::RenderDemoBrowser(CUIRect MainView)"},
+		{"src/game/client/components/menus_demo.cpp", "void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivated)"},
+		{"src/game/client/components/menus_settings_assets.cpp", "void CMenus::RenderSettingsCustom(CUIRect MainView)"},
+	}};
+	const std::array<const char *, 11> apForbidden = {
+		"ui_widget::TextField(",
+		"ui_widget::SearchField(",
+		"ui_widget::ClearableTextField(",
+		"ui_widget::IconTextField(",
+		"KEY_MOUSE_WHEEL_UP",
+		"KEY_MOUSE_WHEEL_DOWN",
+		"ForceShowScrollbar",
+		"m_ScrollUnit =",
+		"SetScrollbarWidth(",
+		"SettingsCard(",
+		"RegisterSettingsCardDeckItem(",
+	};
+
+	for(const SFunctionScope &Scope : aScopes)
+	{
+		const std::string Source = ReadRepoFile(Scope.m_pPath);
+		const std::string Body = ExtractSourceFunctionBody(Source, Scope.m_pSignature);
+		ASSERT_FALSE(Body.empty()) << Scope.m_pPath << ": " << Scope.m_pSignature;
+		for(const char *pForbidden : apForbidden)
+			EXPECT_EQ(Body.find(pForbidden), std::string::npos) << Scope.m_pPath << ": " << pForbidden;
+	}
+}
+
+TEST(QmMonitoringHelpers, InputFieldForwardingAliasesAreDeletedAfterP7)
+{
+	const std::array<const char *, 9> apCallPatterns = {
+		"ui_widget::TextField(",
+		"ui_widget::TextFieldEx(",
+		"ui_widget::LegacyTextFieldEx(",
+		"ui_widget::SearchField(",
+		"ui_widget::SearchFieldEx(",
+		"ui_widget::ClearableTextField(",
+		"ui_widget::ClearableTextFieldEx(",
+		"ui_widget::IconTextField(",
+		"ui_widget::IconTextFieldEx(",
+	};
+	const std::filesystem::path ComponentsPath = TestSourcePath("src/game/client/components");
+	for(const std::filesystem::directory_entry &Entry : std::filesystem::recursive_directory_iterator(ComponentsPath))
+	{
+		if(!Entry.is_regular_file() || (Entry.path().extension() != ".cpp" && Entry.path().extension() != ".h"))
+			continue;
+		std::ifstream File(Entry.path());
+		ASSERT_TRUE(File.good()) << Entry.path().string();
+		std::stringstream Buffer;
+		Buffer << File.rdbuf();
+		const std::string Source = Buffer.str();
+		for(const char *pPattern : apCallPatterns)
+			EXPECT_EQ(Source.find(pPattern), std::string::npos) << Entry.path().string() << ": " << pPattern;
+	}
+
+	const std::array<const char *, 3> apQmUiPaths = {
+		"src/game/client/QmUi/UiForms.h",
+		"src/game/client/QmUi/UiForms.cpp",
+		"src/game/client/QmUi/UiDogfood.cpp",
+	};
+	const std::array<const char *, 9> apAliasNames = {
+		"TextFieldEx(const IUiContext",
+		"LegacyTextFieldEx(const IUiContext",
+		"bool TextField(const IUiContext",
+		"SearchFieldEx(const IUiContext",
+		"bool SearchField(const IUiContext",
+		"ClearableTextFieldEx(const IUiContext",
+		"bool ClearableTextField(const IUiContext",
+		"IconTextFieldEx(const IUiContext",
+		"bool IconTextField(const IUiContext",
+	};
+	for(const char *pPath : apQmUiPaths)
+	{
+		const std::string Source = ReadRepoFile(pPath);
+		for(const char *pAlias : apAliasNames)
+			EXPECT_EQ(Source.find(pAlias), std::string::npos) << pPath << ": " << pAlias;
+		for(const char *pPattern : apCallPatterns)
+			EXPECT_EQ(Source.find(pPattern), std::string::npos) << pPath << ": " << pPattern;
+	}
+}
+
 TEST(QmMonitoringHelpers, DemoSliceNameInputUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t TextFieldPos = Body.find("ui_widget::TextField(DemoSliceTextInputCtx, &m_DemoSliceInput, NameBox, Localize(\"New name\"), 12.0f);");
+	const size_t TextFieldPos = Body.find("ui_widget::InputField(DemoSliceTextInputCtx, &m_DemoSliceInput, NameBox, SliceNameInputOptions);");
 	const size_t OkButtonPos = Body.find("if(DoButton_Menu(&s_ButtonOk", TextFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext DemoSliceTextInputCtx;"), std::string::npos);
 	EXPECT_NE(Body.find("DemoSliceTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"demo_slice_text_input\");"), std::string::npos);
+	EXPECT_NE(Body.find("SliceNameInputOptions.m_pPlaceholder = Localize(\"New name\");"), std::string::npos);
+	EXPECT_NE(Body.find("SliceNameInputOptions.m_FontSize = 12.0f;"), std::string::npos);
 	EXPECT_NE(TextFieldPos, std::string::npos);
 	EXPECT_NE(OkButtonPos, std::string::npos);
 	EXPECT_LT(TextFieldPos, OkButtonPos);
@@ -9451,7 +9519,7 @@ TEST(QmMonitoringHelpers, DemoRenamePopupUsesSharedQmTextField)
 
 	const size_t RenamePopupPos = Body.find("else if(m_Popup == POPUP_RENAME_DEMO)");
 	const size_t OkButtonPos = Body.find("if(DoButton_Menu(&s_ButtonOk", RenamePopupPos);
-	const size_t TextFieldPos = Body.find("ui_widget::TextField(DemoRenameTextInputCtx, &m_DemoRenameInput, TextBox, Localize(\"New name\"), 12.0f);", OkButtonPos);
+	const size_t TextFieldPos = Body.find("ui_widget::InputField(DemoRenameTextInputCtx, &m_DemoRenameInput, TextBox, RenameInputOptions);", OkButtonPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext DemoRenameTextInputCtx;", RenamePopupPos), std::string::npos);
 	EXPECT_NE(Body.find("DemoRenameTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"demo_rename_text_input\");", RenamePopupPos), std::string::npos);
@@ -9470,7 +9538,7 @@ TEST(QmMonitoringHelpers, DemoRenderPopupUsesSharedQmTextField)
 
 	const size_t RenderPopupPos = Body.find("else if(m_Popup == POPUP_RENDER_DEMO)");
 	const size_t VideoNameLabelPos = Body.find("Ui()->DoLabel(&Label, Localize(\"Video name:\"), 12.8f, TEXTALIGN_ML);", RenderPopupPos);
-	const size_t TextFieldPos = Body.find("ui_widget::TextField(DemoRenderTextInputCtx, &m_DemoRenderInput, TextBox, Localize(\"Video name\"), 12.8f);", VideoNameLabelPos);
+	const size_t TextFieldPos = Body.find("ui_widget::InputField(DemoRenderTextInputCtx, &m_DemoRenderInput, TextBox, RenderInputOptions);", VideoNameLabelPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext DemoRenderTextInputCtx;", RenderPopupPos), std::string::npos);
 	EXPECT_NE(Body.find("DemoRenderTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"demo_render_text_input\");", RenderPopupPos), std::string::npos);
@@ -9495,7 +9563,7 @@ TEST(QmMonitoringHelpers, PopupClearableInputsUseSharedQmTextField)
 	const size_t PasswordCtxPos = Body.find("IUiContext PasswordPopupTextInputCtx;", PasswordLabelPos);
 	const size_t PasswordUiPos = Body.find("PasswordPopupTextInputCtx.m_pUi = Ui();", PasswordCtxPos);
 	const size_t PasswordScopePos = Body.find("PasswordPopupTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"password_popup_text_input\");", PasswordUiPos);
-	const size_t PasswordFieldPos = Body.find("ui_widget::ClearableTextField(PasswordPopupTextInputCtx, &m_PasswordInput, TextBox, nullptr, 12.0f);", PasswordScopePos);
+	const size_t PasswordFieldPos = Body.find("ui_widget::InputField(PasswordPopupTextInputCtx, &m_PasswordInput, TextBox, PasswordInputOptions);", PasswordScopePos);
 	const size_t AddressLabelPos = Body.find("Ui()->DoLabel(&Label, Localize(\"Address\"), 18.0f, TEXTALIGN_ML);", PasswordFieldPos);
 	const size_t SaveSkinPopupPos = Body.find("else if(m_Popup == POPUP_SAVE_SKIN)");
 	const size_t YesButtonPos = Body.find("if(DoButton_Menu(&s_ButtonYes", SaveSkinPopupPos);
@@ -9506,7 +9574,7 @@ TEST(QmMonitoringHelpers, PopupClearableInputsUseSharedQmTextField)
 	const size_t SaveSkinCtxPos = Body.find("IUiContext SaveSkinTextInputCtx;", SaveSkinLabelPos);
 	const size_t SaveSkinUiPos = Body.find("SaveSkinTextInputCtx.m_pUi = Ui();", SaveSkinCtxPos);
 	const size_t SaveSkinScopePos = Body.find("SaveSkinTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"save_skin_text_input\");", SaveSkinUiPos);
-	const size_t SaveSkinFieldPos = Body.find("ui_widget::ClearableTextField(SaveSkinTextInputCtx, &m_SkinNameInput, TextBox, nullptr, 12.0f);", SaveSkinScopePos);
+	const size_t SaveSkinFieldPos = Body.find("ui_widget::InputField(SaveSkinTextInputCtx, &m_SkinNameInput, TextBox, SaveSkinInputOptions);", SaveSkinScopePos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(PasswordBufferPos, std::string::npos);
 	EXPECT_NE(PasswordHiddenPos, std::string::npos);
@@ -9517,6 +9585,8 @@ TEST(QmMonitoringHelpers, PopupClearableInputsUseSharedQmTextField)
 	EXPECT_NE(PasswordCtxPos, std::string::npos);
 	EXPECT_NE(PasswordUiPos, std::string::npos);
 	EXPECT_NE(PasswordScopePos, std::string::npos);
+	EXPECT_NE(Body.find("PasswordInputOptions.m_Clearable = true;", PasswordScopePos), std::string::npos);
+	EXPECT_NE(Body.find("PasswordInputOptions.m_FontSize = 12.0f;", PasswordScopePos), std::string::npos);
 	EXPECT_NE(PasswordFieldPos, std::string::npos);
 	EXPECT_NE(AddressLabelPos, std::string::npos);
 	EXPECT_LT(PasswordPopupPos, ConnectPos);
@@ -9535,6 +9605,8 @@ TEST(QmMonitoringHelpers, PopupClearableInputsUseSharedQmTextField)
 	EXPECT_NE(SaveSkinCtxPos, std::string::npos);
 	EXPECT_NE(SaveSkinUiPos, std::string::npos);
 	EXPECT_NE(SaveSkinScopePos, std::string::npos);
+	EXPECT_NE(Body.find("SaveSkinInputOptions.m_Clearable = true;", SaveSkinScopePos), std::string::npos);
+	EXPECT_NE(Body.find("SaveSkinInputOptions.m_FontSize = 12.0f;", SaveSkinScopePos), std::string::npos);
 	EXPECT_NE(SaveSkinFieldPos, std::string::npos);
 	EXPECT_LT(YesButtonPos, ValidFilenamePos);
 	EXPECT_LT(ValidFilenamePos, SpecialSkinPos);
@@ -9557,7 +9629,7 @@ TEST(QmMonitoringHelpers, FirstLaunchPlayerNameUsesSharedQmTextField)
 
 	const size_t FirstLaunchPopupPos = Body.find("else if(m_Popup == POPUP_FIRST_LAUNCH)");
 	const size_t EmptyTextPos = Body.find("s_PlayerNameInput.SetEmptyText(Client()->PlayerName());", FirstLaunchPopupPos);
-	const size_t TextFieldPos = Body.find("ui_widget::TextField(FirstLaunchTextInputCtx, &s_PlayerNameInput, TextBox, Client()->PlayerName(), 12.0f);", EmptyTextPos);
+	const size_t TextFieldPos = Body.find("ui_widget::InputField(FirstLaunchTextInputCtx, &s_PlayerNameInput, TextBox, PlayerNameInputOptions);", EmptyTextPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext FirstLaunchTextInputCtx;", FirstLaunchPopupPos), std::string::npos);
 	EXPECT_NE(Body.find("FirstLaunchTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"first_launch_text_input\");", FirstLaunchPopupPos), std::string::npos);

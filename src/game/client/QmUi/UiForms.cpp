@@ -186,33 +186,6 @@ namespace ui_widget
 		InputOptions.m_TextAlign = Options.m_TextAlign;
 		return InputField(Ctx, pInput, Rect, InputOptions).m_Changed;
 	}
-	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
-	{
-		STextFieldOptions Options;
-		Options.m_pPlaceholder = pPlaceholder;
-		Options.m_FontSize = FontSize;
-		return TextFieldEx(Ctx, pInput, Rect, Options);
-	}
-
-	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
-	{
-		SInputFieldOptions InputOptions;
-		InputOptions.m_pPlaceholder = Options.m_pPlaceholder;
-		InputOptions.m_FontSize = Options.m_FontSize;
-		InputOptions.m_Corners = Options.m_Corners;
-		InputOptions.m_TextAlign = Options.m_TextAlign;
-		return InputField(Ctx, pInput, Rect, InputOptions);
-	}
-	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
-	{
-		return TextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;
-	}
-
-	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
-	{
-		return TextFieldEx(Ctx, pInput, Rect, Options).m_Changed;
-	}
-
 	void ReadOnlyTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
 		if(Ctx.m_pUi == nullptr || pInput == nullptr)
@@ -225,52 +198,6 @@ namespace ui_widget
 		pInput->Render(&TextRect, FontSize, TEXTALIGN_ML, false, -1.0f, 0.0f);
 		Ctx.m_pUi->ClipDisable();
 		DrawTextFieldFocusBorder(Ctx, pInput, Rect);
-	}
-
-	SInputFieldResult IconTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options, const char *pIcon, bool Clearable)
-	{
-		SInputFieldOptions InputOptions;
-		InputOptions.m_pPlaceholder = Options.m_pPlaceholder;
-		InputOptions.m_pLeadingIcon = pIcon != nullptr ? pIcon : FontIcons::FONT_ICON_MAGNIFYING_GLASS;
-		InputOptions.m_Clearable = Clearable;
-		InputOptions.m_FontSize = Options.m_FontSize;
-		InputOptions.m_Corners = Options.m_Corners;
-		InputOptions.m_TextAlign = Options.m_TextAlign;
-		return InputField(Ctx, pInput, Rect, InputOptions);
-	}
-	bool IconTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, const char *pIcon, bool Clearable)
-	{
-		STextFieldOptions Options;
-		Options.m_pPlaceholder = pPlaceholder;
-		Options.m_FontSize = FontSize;
-		return IconTextFieldEx(Ctx, pInput, Rect, Options, pIcon, Clearable).m_Changed;
-	}
-
-	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
-	{
-		SInputFieldOptions InputOptions;
-		InputOptions.m_pPlaceholder = pPlaceholder;
-		InputOptions.m_Clearable = true;
-		InputOptions.m_FontSize = FontSize;
-		return InputField(Ctx, pInput, Rect, InputOptions);
-	}
-	bool ClearableTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
-	{
-		return ClearableTextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;
-	}
-
-	SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)
-	{
-		SInputFieldOptions InputOptions;
-		InputOptions.m_Mode = EInputFieldMode::SEARCH;
-		InputOptions.m_Clearable = true;
-		InputOptions.m_SearchHotkeyEnabled = HotkeyEnabled;
-		InputOptions.m_FontSize = FontSize;
-		return InputField(Ctx, pInput, Rect, InputOptions);
-	}
-	bool SearchField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)
-	{
-		return SearchFieldEx(Ctx, pInput, Rect, FontSize, HotkeyEnabled).m_Changed;
 	}
 
 	SInputFieldResult IntegerField(const IUiContext &Ctx, CLineInputNumber *pInput, int *pValue, int Min, int Max, const CUIRect &Rect, const STextFieldOptions &Options)
@@ -288,9 +215,12 @@ namespace ui_widget
 			pInput->SelectAll();
 		}
 
-		STextFieldOptions FieldOptions = Options;
+		SInputFieldOptions FieldOptions;
 		FieldOptions.m_pPlaceholder = Options.m_pPlaceholder;
-		const SInputFieldResult Result = TextFieldEx(Ctx, pInput, Rect, FieldOptions);
+		FieldOptions.m_FontSize = Options.m_FontSize;
+		FieldOptions.m_Corners = Options.m_Corners;
+		FieldOptions.m_TextAlign = Options.m_TextAlign;
+		const SInputFieldResult Result = InputField(Ctx, pInput, Rect, FieldOptions);
 		if(!pInput->IsActive())
 		{
 			if(pInput->GetLength() > 0 && (Result.m_Changed || Result.m_Deactivated || pInput->GetInteger() != *pValue))
@@ -489,11 +419,11 @@ namespace ui_widget
 			pInput->Set(Options.m_pMaxText);
 		}
 
-		STextFieldOptions FieldOptions;
+		SInputFieldOptions FieldOptions;
 		const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
 		FieldOptions.m_FontSize = FieldFontSize;
 		FieldOptions.m_TextAlign = TEXTALIGN_MC;
-		SInputFieldResult Result = TextFieldEx(Ctx, pInput, InputField, FieldOptions);
+		SInputFieldResult Result = ui_widget::InputField(Ctx, pInput, InputField, FieldOptions);
 
 		if(bShowMaxText)
 			pInput->Set(aSavedInput);

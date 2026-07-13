@@ -234,10 +234,13 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 	IUiContext TouchControlsLayoutTextInputCtx;
 	TouchControlsLayoutTextInputCtx.m_pUi = Ui();
 	TouchControlsLayoutTextInputCtx.m_ScopeHash = MakeUiScopeHash("touch_controls_layout_text_inputs");
+	ui_widget::SInputFieldOptions LayoutInputOptions;
+	LayoutInputOptions.m_Clearable = true;
+	LayoutInputOptions.m_FontSize = FONTSIZE;
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosX, &EditBox);
-	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputX, EditBox, nullptr, FONTSIZE))
+	if(ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputX, EditBox, LayoutInputOptions).m_Changed)
 	{
 		InputPosFunction(&m_InputX);
 		Changed = true;
@@ -247,7 +250,7 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosY, &EditBox);
-	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputY, EditBox, nullptr, FONTSIZE))
+	if(ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputY, EditBox, LayoutInputOptions).m_Changed)
 	{
 		InputPosFunction(&m_InputY);
 		Changed = true;
@@ -256,7 +259,7 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosW, &EditBox);
-	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputW, EditBox, nullptr, FONTSIZE))
+	if(ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputW, EditBox, LayoutInputOptions).m_Changed)
 	{
 		InputPosFunction(&m_InputW);
 		Changed = true;
@@ -265,7 +268,7 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosH, &EditBox);
-	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputH, EditBox, nullptr, FONTSIZE))
+	if(ui_widget::InputField(TouchControlsLayoutTextInputCtx, &m_InputH, EditBox, LayoutInputOptions).m_Changed)
 	{
 		InputPosFunction(&m_InputH);
 		Changed = true;
@@ -320,6 +323,9 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 	IUiContext TouchControlsBehaviorTextInputCtx;
 	TouchControlsBehaviorTextInputCtx.m_pUi = Ui();
 	TouchControlsBehaviorTextInputCtx.m_ScopeHash = MakeUiScopeHash("touch_controls_behavior_text_inputs");
+	ui_widget::SInputFieldOptions BehaviorInputOptions;
+	BehaviorInputOptions.m_Clearable = true;
+	BehaviorInputOptions.m_FontSize = 10.0f;
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&LeftButton, &MiddleButton);
@@ -358,7 +364,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 		EditBox.VSplitMid(&LeftButton, &MiddleButton);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Command"));
 		Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-		if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputCommand, MiddleButton, nullptr, 10.0f))
+		if(ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputCommand, MiddleButton, BehaviorInputOptions).m_Changed)
 		{
 			m_vBehaviorElements[0]->UpdateCommand();
 			SetUnsavedChanges(true);
@@ -370,7 +376,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 		EditBox.VSplitMid(&LeftButton, &MiddleButton);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Label"));
 		Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-		if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputLabel, MiddleButton, nullptr, 10.0f))
+		if(ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputLabel, MiddleButton, BehaviorInputOptions).m_Changed)
 		{
 			m_vBehaviorElements[0]->UpdateLabel();
 			SetUnsavedChanges(true);
@@ -518,7 +524,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 				MiddleButton.VSplitLeft(ScrollParam.m_ScrollbarThickness / 2.0f, nullptr, &MiddleButton);
 				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Command"));
 				Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-				if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputCommand, MiddleButton, nullptr, 10.0f))
+				if(ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputCommand, MiddleButton, BehaviorInputOptions).m_Changed)
 				{
 					m_vBehaviorElements[CommandIndex]->UpdateCommand();
 					SetUnsavedChanges(true);
@@ -538,7 +544,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 				MiddleButton.VSplitLeft(ScrollParam.m_ScrollbarThickness / 2.0f, nullptr, &MiddleButton);
 				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Label"));
 				Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-				if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputLabel, MiddleButton, nullptr, 10.0f))
+				if(ui_widget::InputField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputLabel, MiddleButton, BehaviorInputOptions).m_Changed)
 				{
 					m_vBehaviorElements[CommandIndex]->UpdateLabel();
 					SetUnsavedChanges(true);
@@ -682,6 +688,11 @@ void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)
 	IUiContext TouchControlsBrowserSearchCtx;
 	TouchControlsBrowserSearchCtx.m_pUi = Ui();
 	TouchControlsBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash("touch_controls_button_browser_search");
+	ui_widget::SInputFieldOptions BrowserSearchOptions;
+	BrowserSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	BrowserSearchOptions.m_Clearable = true;
+	BrowserSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+	BrowserSearchOptions.m_FontSize = FONTSIZE;
 	MainView.h = 600.0f - 40.0f - MainView.y;
 	MainView.Draw(CMenus::ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
 	MainView.Margin(MAINMARGIN, &MainView);
@@ -728,7 +739,7 @@ void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)
 	str_format(aBufSearch, sizeof(aBufSearch), "%s:", Localize("Search"));
 	Ui()->DoLabel(&LeftButton, aBufSearch, FONTSIZE, TEXTALIGN_ML);
 
-	if(ui_widget::SearchField(TouchControlsBrowserSearchCtx, &m_FilterInput, EditBox, FONTSIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+	if(ui_widget::InputField(TouchControlsBrowserSearchCtx, &m_FilterInput, EditBox, BrowserSearchOptions).m_Changed)
 		m_NeedFilter = true;
 
 	MainView.HSplitTop(ROWGAP, nullptr, &MainView);

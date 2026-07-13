@@ -3413,7 +3413,10 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		IUiContext PasswordPopupTextInputCtx;
 		PasswordPopupTextInputCtx.m_pUi = Ui();
 		PasswordPopupTextInputCtx.m_ScopeHash = MakeUiScopeHash("password_popup_text_input");
-		ui_widget::ClearableTextField(PasswordPopupTextInputCtx, &m_PasswordInput, TextBox, nullptr, 12.0f);
+		ui_widget::SInputFieldOptions PasswordInputOptions;
+		PasswordInputOptions.m_Clearable = true;
+		PasswordInputOptions.m_FontSize = 12.0f;
+		ui_widget::InputField(PasswordPopupTextInputCtx, &m_PasswordInput, TextBox, PasswordInputOptions);
 
 		Box.HSplitBottom(32.0f, &Box, nullptr);
 		Box.HSplitBottom(24.0f, &Box, &Part);
@@ -3548,7 +3551,10 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		TextBox.VSplitLeft(20.0f, nullptr, &TextBox);
 		TextBox.VSplitRight(60.0f, &TextBox, nullptr);
 		Ui()->DoLabel(&Label, Localize("New name:"), 18.0f, TEXTALIGN_ML);
-		ui_widget::TextField(DemoRenameTextInputCtx, &m_DemoRenameInput, TextBox, Localize("New name"), 12.0f);
+		ui_widget::SInputFieldOptions RenameInputOptions;
+		RenameInputOptions.m_pPlaceholder = Localize("New name");
+		RenameInputOptions.m_FontSize = 12.0f;
+		ui_widget::InputField(DemoRenameTextInputCtx, &m_DemoRenameInput, TextBox, RenameInputOptions);
 	}
 #if defined(CONF_VIDEORECORDER)
 	else if(m_Popup == POPUP_RENDER_DEMO)
@@ -3660,7 +3666,10 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Row.VSplitLeft(110.0f, &Label, &TextBox);
 		TextBox.VSplitLeft(10.0f, nullptr, &TextBox);
 		Ui()->DoLabel(&Label, Localize("Video name:"), 12.8f, TEXTALIGN_ML);
-		ui_widget::TextField(DemoRenderTextInputCtx, &m_DemoRenderInput, TextBox, Localize("Video name"), 12.8f);
+		ui_widget::SInputFieldOptions RenderInputOptions;
+		RenderInputOptions.m_pPlaceholder = Localize("Video name");
+		RenderInputOptions.m_FontSize = 12.8f;
+		ui_widget::InputField(DemoRenderTextInputCtx, &m_DemoRenderInput, TextBox, RenderInputOptions);
 
 		// Warn about disconnect if online
 		if(Client()->State() == IClient::STATE_ONLINE)
@@ -3766,7 +3775,10 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Ui()->DoLabel(&Label, Localize("Nickname"), 16.0f, TEXTALIGN_ML);
 		static CLineInput s_PlayerNameInput(g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName));
 		s_PlayerNameInput.SetEmptyText(Client()->PlayerName());
-		ui_widget::TextField(FirstLaunchTextInputCtx, &s_PlayerNameInput, TextBox, Client()->PlayerName(), 12.0f);
+		ui_widget::SInputFieldOptions PlayerNameInputOptions;
+		PlayerNameInputOptions.m_pPlaceholder = Client()->PlayerName();
+		PlayerNameInputOptions.m_FontSize = 12.0f;
+		ui_widget::InputField(FirstLaunchTextInputCtx, &s_PlayerNameInput, TextBox, PlayerNameInputOptions);
 	}
 	else if(m_Popup == POPUP_JOIN_TUTORIAL)
 	{
@@ -4057,7 +4069,10 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		IUiContext SaveSkinTextInputCtx;
 		SaveSkinTextInputCtx.m_pUi = Ui();
 		SaveSkinTextInputCtx.m_ScopeHash = MakeUiScopeHash("save_skin_text_input");
-		ui_widget::ClearableTextField(SaveSkinTextInputCtx, &m_SkinNameInput, TextBox, nullptr, 12.0f);
+		ui_widget::SInputFieldOptions SaveSkinInputOptions;
+		SaveSkinInputOptions.m_Clearable = true;
+		SaveSkinInputOptions.m_FontSize = 12.0f;
+		ui_widget::InputField(SaveSkinTextInputCtx, &m_SkinNameInput, TextBox, SaveSkinInputOptions);
 	}
 	else
 	{

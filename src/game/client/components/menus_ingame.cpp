@@ -1996,7 +1996,10 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		NoteRow.VSplitLeft(72.0f, &NoteLabel, &NoteInput);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Note"));
 		DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-game-info-note", &NoteLabel, aBuf, FontSizeBody, TEXTALIGN_ML);
-		if(ui_widget::TextField(ServerInfoTextInputCtx, &s_MapNoteInput, NoteInput, Localize("Note"), FontSizeBody * 0.85f))
+		ui_widget::SInputFieldOptions MapNoteInputOptions;
+		MapNoteInputOptions.m_pPlaceholder = Localize("Note");
+		MapNoteInputOptions.m_FontSize = FontSizeBody * 0.85f;
+		if(ui_widget::InputField(ServerInfoTextInputCtx, &s_MapNoteInput, NoteInput, MapNoteInputOptions).m_Changed)
 			GameClient()->m_TClient.SetMapNote(CurrentServerInfo.m_aMap, s_MapNoteInput.GetString());
 	}
 
@@ -2348,7 +2351,12 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	CallvoteSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	CallvoteSearchCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_search");
 	CallvoteSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	bool Searching = ui_widget::SearchField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	ui_widget::SInputFieldOptions CallvoteSearchOptions;
+	CallvoteSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	CallvoteSearchOptions.m_Clearable = true;
+	CallvoteSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+	CallvoteSearchOptions.m_FontSize = 14.0f;
+	bool Searching = ui_widget::InputField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, CallvoteSearchOptions).m_Changed;
 	IUiContext CallvoteTextInputCtx;
 	CallvoteTextInputCtx.m_pUi = Ui();
 	CallvoteTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
@@ -2455,7 +2463,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		Ui()->SetActiveItem(&m_CallvoteReasonInput);
 		m_CallvoteReasonInput.SelectAll();
 	}
-	ui_widget::TextField(CallvoteTextInputCtx, &m_CallvoteReasonInput, Reason, Localize("Reason"), 14.0f);
+	ui_widget::SInputFieldOptions ReasonInputOptions;
+	ReasonInputOptions.m_pPlaceholder = Localize("Reason");
+	ReasonInputOptions.m_FontSize = 14.0f;
+	ui_widget::InputField(CallvoteTextInputCtx, &m_CallvoteReasonInput, Reason, ReasonInputOptions);
 
 	// vote option loading indicator
 	if(s_ControlPage == EServerControlTab::SETTINGS && GameClient()->m_Voting.IsReceivingOptions())
@@ -2539,10 +2550,16 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 			Bottom.VSplitLeft(5.0f, nullptr, &Bottom);
 			Bottom.VSplitLeft(250.0f, &Button, &Bottom);
-			ui_widget::TextField(CallvoteTextInputCtx, &s_VoteDescriptionInput, Button, Localize("Vote description"), 14.0f);
+			ui_widget::SInputFieldOptions VoteDescriptionInputOptions;
+			VoteDescriptionInputOptions.m_pPlaceholder = Localize("Vote description");
+			VoteDescriptionInputOptions.m_FontSize = 14.0f;
+			ui_widget::InputField(CallvoteTextInputCtx, &s_VoteDescriptionInput, Button, VoteDescriptionInputOptions);
 
 			Bottom.VMargin(20.0f, &Button);
-			ui_widget::TextField(CallvoteTextInputCtx, &s_VoteCommandInput, Button, Localize("Vote command"), 14.0f);
+			ui_widget::SInputFieldOptions VoteCommandInputOptions;
+			VoteCommandInputOptions.m_pPlaceholder = Localize("Vote command");
+			VoteCommandInputOptions.m_FontSize = 14.0f;
+			ui_widget::InputField(CallvoteTextInputCtx, &s_VoteCommandInput, Button, VoteCommandInputOptions);
 		}
 	}
 }
@@ -2577,7 +2594,10 @@ void CMenus::RenderUnfinishedMaps(CUIRect MainView)
 	UnfinishedMapsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	UnfinishedMapsTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_unfinished_maps_text_inputs");
 	UnfinishedMapsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	if(ui_widget::TextField(UnfinishedMapsTextInputCtx, &s_PlayerNameInput, Row, Client()->PlayerName(), 12.0f))
+	ui_widget::SInputFieldOptions PlayerNameInputOptions;
+	PlayerNameInputOptions.m_pPlaceholder = Client()->PlayerName();
+	PlayerNameInputOptions.m_FontSize = 12.0f;
+	if(ui_widget::InputField(UnfinishedMapsTextInputCtx, &s_PlayerNameInput, Row, PlayerNameInputOptions).m_Changed)
 		s_NameDirty = true;
 
 	MainView.HSplitTop(6.0f, nullptr, &MainView);

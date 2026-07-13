@@ -1050,7 +1050,10 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 	NameLabel.VSplitLeft(150.0f, &NameLabel, &NameBox);
 	NameBox.VSplitLeft(20.0f, nullptr, &NameBox);
 	Ui()->DoLabel(&NameLabel, Localize("New name:"), 18.0f, TEXTALIGN_ML);
-	ui_widget::TextField(DemoSliceTextInputCtx, &m_DemoSliceInput, NameBox, Localize("New name"), 12.0f);
+	ui_widget::SInputFieldOptions SliceNameInputOptions;
+	SliceNameInputOptions.m_pPlaceholder = Localize("New name");
+	SliceNameInputOptions.m_FontSize = 12.0f;
+	ui_widget::InputField(DemoSliceTextInputCtx, &m_DemoSliceInput, NameBox, SliceNameInputOptions);
 
 	// remove chat checkbox
 	static int s_RemoveChat = 0;
