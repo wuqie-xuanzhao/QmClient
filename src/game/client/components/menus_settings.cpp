@@ -1058,12 +1058,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	int *pCountry = m_Dummy ? &g_Config.m_ClDummyCountry : &g_Config.m_PlayerCountry;
 	static CLineInput s_NameInput;
 	static CLineInput s_ClanInput;
-	IUiContext PlayerIdentityTextInputCtx;
-	PlayerIdentityTextInputCtx.m_pUi = Ui();
-	PlayerIdentityTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	PlayerIdentityTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	PlayerIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_player_identity_text_inputs");
-	PlayerIdentityTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	const IUiContext PlayerIdentityTextInputCtx = SettingsUiContext("settings_player_identity_text_inputs", UiScale);
 	if(!m_Dummy)
 	{
 		s_NameInput.SetBuffer(g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName));
@@ -1087,12 +1082,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		if(str_find_nocase(Entry.m_aCountryCodeString, s_FlagFilterInput.GetString()))
 			s_vpFilteredFlags.push_back(&Entry);
 	}
-	IUiContext PlayerFlagSearchCtx;
-	PlayerFlagSearchCtx.m_pUi = Ui();
-	PlayerFlagSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	PlayerFlagSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	PlayerFlagSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_player_flag_search");
-	PlayerFlagSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	const IUiContext PlayerFlagSearchCtx = SettingsUiContext("settings_player_flag_search", UiScale);
 
 	const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), nullptr};
 	const SSettingsCardSpec CountrySpec{pCountryDefault->m_pStableId, Localize(pCountryDefault->m_pTitle), nullptr};
@@ -1135,8 +1125,9 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		QuickSearch.VSplitLeft(minimum(220.0f * UiScale, QuickSearch.w), &QuickSearch, nullptr);
 		int SelectedOld = -1;
 		static CListBox s_ListBox;
+		s_ListBox.SetScrollProfile(EQmScrollProfile::FILTER_GRID);
 		s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
-		s_ListBox.DoStart(48.0f * UiScale, s_vpFilteredFlags.size(), 10, 3, SelectedOld, &Content);
+		s_ListBox.DoStart(48.0f * UiScale, s_vpFilteredFlags.size(), 10, 2, SelectedOld, &Content);
 		for(size_t i = 0; i < s_vpFilteredFlags.size(); i++)
 		{
 			const CCountryFlags::CCountryFlag *pEntry = s_vpFilteredFlags[i];
@@ -1162,7 +1153,12 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			*pCountry = s_vpFilteredFlags[NewSelected]->m_CountryCode;
 			SetNeedSendInfo();
 		}
-		ui_widget::InputField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f * UiScale, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		ui_widget::SInputFieldOptions FlagSearchOptions;
+		FlagSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+		FlagSearchOptions.m_Clearable = true;
+		FlagSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+		FlagSearchOptions.m_FontSize = 14.0f * UiScale;
+		ui_widget::InputField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, FlagSearchOptions);
 	});
 
 	const SSettingsPageLayoutFrame PlayerPage = ResolveSettingsPageLayout(MainView, false, UiScale);
@@ -2346,6 +2342,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		const auto ListFrameStartTime = time_get_nanoseconds();
 		constexpr float TeeSkinListRowHeight = 50.0f;
 		constexpr int TeeSkinListItemsPerRow = 4;
+		s_ListBox.SetScrollProfile(EQmScrollProfile::FILTER_GRID);
 		s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 		s_ListBox.DoStart(TeeSkinListRowHeight, vSkinList.size(), TeeSkinListItemsPerRow, 2, OldSelected, &MainView);
 		if(m_SkinListScrollToSelected && OldSelected >= 0)
@@ -2996,13 +2993,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 		}
 
-		IUiContext TeeSkinSearchCtx;
-		TeeSkinSearchCtx.m_pUi = Ui();
-		TeeSkinSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-		TeeSkinSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-		TeeSkinSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_search");
-		TeeSkinSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-		if(ui_widget::InputField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+		const IUiContext TeeSkinSearchCtx = SettingsUiContext("settings_tee_skin_search");
+		ui_widget::SInputFieldOptions SkinSearchOptions;
+		SkinSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+		SkinSearchOptions.m_Clearable = true;
+		SkinSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+		SkinSearchOptions.m_FontSize = 14.0f;
+		if(ui_widget::InputField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, SkinSearchOptions).m_Changed)
 		{
 			SkinList.ForceRefresh();
 		}
@@ -4827,7 +4824,12 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 
 	vec2 ScrollOffset(0.0f, 0.0f);
 	static float s_PrevLanguageScrollY = 0.0f;
-	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
+	SQmScrollRequest ScrollRequest;
+	ScrollRequest.m_Profile = EQmScrollProfile::MENU_LIST;
+	ScrollRequest.m_RowExtent = LANGUAGE_ROW_HEIGHT;
+	ScrollRequest.m_RowsPerStep = 3;
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 	ScrollParams.m_WheelOwnerPriority = EUiWheelOwnerPriority::COMPOSITE_CONTROL;
 	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(gs_LanguageScrollRegion, &MainView, ScrollParams, s_PrevLanguageScrollY);
 	ScrollOffset = ScrollFrame.m_BeginOffset;

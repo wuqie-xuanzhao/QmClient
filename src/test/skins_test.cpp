@@ -525,7 +525,7 @@ TEST(Skins, SettingsAssetsListVirtualizationKeepsTotalListLength)
 	const size_t WorkshopListPos = Source.find("if(const SAssetResourceCategory *pCategory = AssetResourceCategoryByTab(s_CurCustomTab); UsesCombinedAssetList(pCategory) && WorkshopHudView.h > 0.0f)", LocalListPos);
 	ASSERT_NE(WorkshopListPos, std::string::npos);
 	const std::string LocalListBody = Source.substr(LocalListPos, WorkshopListPos - LocalListPos);
-	const size_t WorkshopListEnd = Source.find("if(ui_widget::SearchField(AssetsSearchCtx", WorkshopListPos);
+	const size_t WorkshopListEnd = Source.find("if(ui_widget::InputField(AssetsSearchCtx", WorkshopListPos);
 	ASSERT_NE(WorkshopListEnd, std::string::npos);
 	const std::string WorkshopListBody = Source.substr(WorkshopListPos, WorkshopListEnd - WorkshopListPos);
 
@@ -1258,6 +1258,36 @@ TEST(Skins, TeeSkinRefreshClearsListPreviewCacheBeforeReloadingSkinTextures)
 
 	EXPECT_NE(Menus.find("void ClearSettingsTeeListPreviewCache()"), std::string::npos);
 	EXPECT_NE(RefreshBody.find("ClearSettingsTeeListPreviewCache();"), std::string::npos);
+}
+
+TEST(Skins, TeeSkinListPreviewCacheKeysCoverPreviewVariantsAndStayBounded)
+{
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const size_t CachePos = Menus.find("struct SSettingsTeeListPreviewCache");
+	ASSERT_NE(CachePos, std::string::npos);
+	const size_t CacheEnd = Menus.find("SSettingsTeeListPreviewCache gs_TeeListPreviewCache;", CachePos);
+	ASSERT_NE(CacheEnd, std::string::npos);
+	const std::string CacheBody = Menus.substr(CachePos, CacheEnd - CachePos);
+
+	EXPECT_NE(CacheBody.find("static constexpr size_t MAX_ENTRIES = 192;"), std::string::npos);
+	EXPECT_NE(CacheBody.find("static std::string Key(const char *pSkinName, int Dummy, bool UseCustomColor, int ColorBody, int ColorFeet, int Emote)"), std::string::npos);
+	EXPECT_NE(CacheBody.find("pSkinName != nullptr ? pSkinName : \"\""), std::string::npos);
+	EXPECT_NE(CacheBody.find("Dummy,"), std::string::npos);
+	EXPECT_NE(CacheBody.find("UseCustomColor ? 1 : 0,"), std::string::npos);
+	EXPECT_NE(CacheBody.find("ColorBody,"), std::string::npos);
+	EXPECT_NE(CacheBody.find("ColorFeet,"), std::string::npos);
+	EXPECT_NE(CacheBody.find("Emote);"), std::string::npos);
+
+	const size_t PreviewKeyPos = Menus.find("const std::string PreviewCacheKey = SSettingsTeeListPreviewCache::Key(");
+	ASSERT_NE(PreviewKeyPos, std::string::npos);
+	const size_t PreviewKeyEnd = Menus.find(";", PreviewKeyPos);
+	ASSERT_NE(PreviewKeyEnd, std::string::npos);
+	const std::string PreviewKeyCall = Menus.substr(PreviewKeyPos, PreviewKeyEnd - PreviewKeyPos);
+	EXPECT_NE(PreviewKeyCall.find("m_Dummy"), std::string::npos);
+	EXPECT_NE(PreviewKeyCall.find("EntryUseCustomColor"), std::string::npos);
+	EXPECT_NE(PreviewKeyCall.find("EntryColorBody"), std::string::npos);
+	EXPECT_NE(PreviewKeyCall.find("EntryColorFeet"), std::string::npos);
+	EXPECT_NE(PreviewKeyCall.find("*pEmote"), std::string::npos);
 }
 
 TEST(Skins, TeeSkinListLoadingEntriesUseDefaultSkinFallbackWithLoadingIndicator)

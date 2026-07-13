@@ -8668,15 +8668,38 @@ TEST(QmMonitoringHelpers, TeeSkinSearchUsesSharedQmSearchField)
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t SearchPos = Body.find("ui_widget::InputField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f");
+	const size_t SearchPos = Body.find("ui_widget::InputField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, SkinSearchOptions).m_Changed");
 	const size_t RefreshPos = Body.find("SkinList.ForceRefresh();", SearchPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext TeeSkinSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("TeeSkinSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext TeeSkinSearchCtx = SettingsUiContext(\"settings_tee_skin_search\");"), std::string::npos);
 	EXPECT_NE(SearchPos, std::string::npos);
 	EXPECT_NE(RefreshPos, std::string::npos);
 	EXPECT_LT(SearchPos, RefreshPos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_SkinFilterInput, &QuickSearch, 14.0f"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SkinFlagLanguageBusinessItemsStayNonCardAndUseSharedRuntime)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string PlayerBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
+	const std::string TeeBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
+	const std::string LanguageBody = ExtractSourceFunctionBody(Source, "bool CMenus::RenderLanguageSelection(CUIRect MainView)");
+	ASSERT_FALSE(PlayerBody.empty());
+	ASSERT_FALSE(TeeBody.empty());
+	ASSERT_FALSE(LanguageBody.empty());
+
+	EXPECT_NE(PlayerBody.find("s_ListBox.SetScrollProfile(EQmScrollProfile::FILTER_GRID);"), std::string::npos);
+	EXPECT_NE(PlayerBody.find("s_ListBox.DoStart(48.0f * UiScale, s_vpFilteredFlags.size(), 10, 2"), std::string::npos);
+	EXPECT_NE(TeeBody.find("s_ListBox.SetScrollProfile(EQmScrollProfile::FILTER_GRID);"), std::string::npos);
+	EXPECT_NE(TeeBody.find("ui_widget::InputField(TeeSkinSearchCtx"), std::string::npos);
+	EXPECT_NE(LanguageBody.find("ScrollRequest.m_Profile = EQmScrollProfile::MENU_LIST;"), std::string::npos);
+	EXPECT_NE(LanguageBody.find("ScrollRequest.m_RowExtent = LANGUAGE_ROW_HEIGHT;"), std::string::npos);
+	EXPECT_NE(LanguageBody.find("ScrollRequest.m_RowsPerStep = 3;"), std::string::npos);
+	EXPECT_EQ(LanguageBody.find("QmSettingsScrollRegionParams("), std::string::npos);
+	EXPECT_EQ(PlayerBody.find("SettingsCard("), std::string::npos);
+	EXPECT_EQ(LanguageBody.find("SettingsCard("), std::string::npos);
+	EXPECT_NE(Source.find("MAX_ENTRIES = 192"), std::string::npos);
+	EXPECT_NE(Source.find("MAX_LANGUAGE_CACHE = 128"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TeeSkinClearableInputsUseSharedQmTextField)
@@ -8952,33 +8975,31 @@ TEST(QmMonitoringHelpers, TouchControlsButtonBrowserSearchUsesSharedQmSearchFiel
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_FilterInput, &EditBox, FONTSIZE"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
+TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmInputField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings7.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee7(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t SearchPos = Body.find("ui_widget::SearchField(Tee7SkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f");
+	const size_t SearchPos = Body.find("ui_widget::InputField(Tee7SkinSearchCtx, &s_SkinFilterInput, QuickSearch, SkinSearchOptions).m_Changed");
 	const size_t RefreshPos = Body.find("m_SkinList7LastRefreshTime = std::nullopt;", SearchPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext Tee7SkinSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("Tee7SkinSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee7_skin_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext Tee7SkinSearchCtx = SettingsUiContext(\"settings_tee7_skin_search\");"), std::string::npos);
 	EXPECT_NE(SearchPos, std::string::npos);
 	EXPECT_NE(RefreshPos, std::string::npos);
 	EXPECT_LT(SearchPos, RefreshPos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_SkinFilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, PlayerFlagSearchUsesSharedQmSearchField)
+TEST(QmMonitoringHelpers, PlayerFlagSearchUsesSharedQmInputField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext PlayerFlagSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("PlayerFlagSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_player_flag_search\");"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::InputField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext PlayerFlagSearchCtx = SettingsUiContext(\"settings_player_flag_search\", UiScale);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, FlagSearchOptions);"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_FlagFilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
@@ -8998,8 +9019,7 @@ TEST(QmMonitoringHelpers, PlayerIdentityTextInputsUseSharedQmTextField)
 	EXPECT_EQ(IdentityBody.find("Ui()->DoEditBox(&s_NameInput, &NameInputRect, 14.0f"), std::string::npos);
 	EXPECT_EQ(IdentityBody.find("Ui()->DoEditBox(&s_ClanInput, &ClanInput, 14.0f"), std::string::npos);
 
-	EXPECT_NE(PlayerBody.find("IUiContext PlayerIdentityTextInputCtx;"), std::string::npos);
-	EXPECT_NE(PlayerBody.find("PlayerIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_player_identity_text_inputs\");"), std::string::npos);
+	EXPECT_NE(PlayerBody.find("const IUiContext PlayerIdentityTextInputCtx = SettingsUiContext(\"settings_player_identity_text_inputs\", UiScale);"), std::string::npos);
 	EXPECT_NE(PlayerBody.find("ui_widget::InputField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), 14.0f)"), std::string::npos);
 	EXPECT_NE(PlayerBody.find("ui_widget::InputField(PlayerIdentityTextInputCtx, &s_ClanInput, Row, \"\", 14.0f)"), std::string::npos);
 	EXPECT_EQ(PlayerBody.find("Ui()->DoEditBox(&s_NameInput, &Row, 14.0f"), std::string::npos);
@@ -9112,12 +9132,9 @@ TEST(QmMonitoringHelpers, ServerBrowserStatusInputsUseSharedQmFields)
 	const size_t AddressFieldPos = Body.find("ui_widget::InputField(ServerBrowserAddressCtx, &s_ServerAddressInput, ServerAddrEditBox, AddressOptions).m_Changed");
 	const size_t RevealPos = Body.find("m_ServerBrowserShouldRevealSelection = true;", AddressFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext ServerBrowserSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("ServerBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_search\");"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext ServerBrowserExcludeCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("ServerBrowserExcludeCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_exclude\");"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext ServerBrowserAddressCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("ServerBrowserAddressCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_address\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext ServerBrowserSearchCtx = SettingsUiContext(\"server_browser_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext ServerBrowserExcludeCtx = SettingsUiContext(\"server_browser_exclude\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext ServerBrowserAddressCtx = SettingsUiContext(\"server_browser_address\");"), std::string::npos);
 	EXPECT_NE(SearchHotkeyPos, std::string::npos);
 	EXPECT_NE(SearchPopupGuardPos, std::string::npos);
 	EXPECT_NE(SearchSetActivePos, std::string::npos);
@@ -9160,34 +9177,28 @@ TEST(QmMonitoringHelpers, ServerBrowserFiltersTextInputsUseSharedQmTextField)
 	ASSERT_FALSE(Body.empty());
 
 	const size_t GameTypeInputPos = Body.find("static CLineInput s_GametypeInput(g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype));");
-	const size_t GameTypeCtxPos = Body.find("IUiContext ServerBrowserGameTypeCtx;", GameTypeInputPos);
-	const size_t GameTypeUiPos = Body.find("const IUiContext ServerBrowserGameTypeCtx = SettingsUiContext(\"server_browser_filter_game_type\");", GameTypeCtxPos);
-	const size_t GameTypeFieldPos = Body.find("ui_widget::InputField(ServerBrowserGameTypeCtx, &s_GametypeInput, Button, GameTypeOptions).m_Changed", GameTypeUiPos);
+	const size_t GameTypeCtxPos = Body.find("const IUiContext ServerBrowserGameTypeCtx = SettingsUiContext(\"server_browser_filter_game_type\");", GameTypeInputPos);
+	const size_t GameTypeFieldPos = Body.find("ui_widget::InputField(ServerBrowserGameTypeCtx, &s_GametypeInput, Button, GameTypeOptions).m_Changed", GameTypeCtxPos);
 	const size_t GameTypeRefreshPos = Body.find("Client()->ServerBrowserUpdate();", GameTypeFieldPos);
 	const size_t AddressInputPos = Body.find("static CLineInput s_FilterServerAddressInput(g_Config.m_BrFilterServerAddress, sizeof(g_Config.m_BrFilterServerAddress));");
-	const size_t AddressCtxPos = Body.find("IUiContext ServerBrowserFilterAddressCtx;", AddressInputPos);
-	const size_t AddressUiPos = Body.find("const IUiContext ServerBrowserFilterAddressCtx = SettingsUiContext(\"server_browser_filter_address\");", AddressCtxPos);
-	const size_t AddressFieldPos = Body.find("ui_widget::InputField(ServerBrowserFilterAddressCtx, &s_FilterServerAddressInput, Button, FilterAddressOptions).m_Changed", AddressUiPos);
+	const size_t AddressCtxPos = Body.find("const IUiContext ServerBrowserFilterAddressCtx = SettingsUiContext(\"server_browser_filter_address\");", AddressInputPos);
+	const size_t AddressFieldPos = Body.find("ui_widget::InputField(ServerBrowserFilterAddressCtx, &s_FilterServerAddressInput, Button, FilterAddressOptions).m_Changed", AddressCtxPos);
 	const size_t AddressRefreshPos = Body.find("Client()->ServerBrowserUpdate();", AddressFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(GameTypeInputPos, std::string::npos);
 	EXPECT_NE(GameTypeCtxPos, std::string::npos);
-	EXPECT_NE(GameTypeUiPos, std::string::npos);
 	EXPECT_NE(GameTypeFieldPos, std::string::npos);
 	EXPECT_NE(GameTypeRefreshPos, std::string::npos);
 	EXPECT_LT(GameTypeInputPos, GameTypeCtxPos);
-	EXPECT_LT(GameTypeCtxPos, GameTypeUiPos);
-	EXPECT_LT(GameTypeUiPos, GameTypeFieldPos);
+	EXPECT_LT(GameTypeCtxPos, GameTypeFieldPos);
 	EXPECT_LT(GameTypeFieldPos, GameTypeRefreshPos);
 	EXPECT_EQ(Body.find(";\n", GameTypeFieldPos), GameTypeRefreshPos + str_length("Client()->ServerBrowserUpdate()"));
 	EXPECT_NE(AddressInputPos, std::string::npos);
 	EXPECT_NE(AddressCtxPos, std::string::npos);
-	EXPECT_NE(AddressUiPos, std::string::npos);
 	EXPECT_NE(AddressFieldPos, std::string::npos);
 	EXPECT_NE(AddressRefreshPos, std::string::npos);
 	EXPECT_LT(AddressInputPos, AddressCtxPos);
-	EXPECT_LT(AddressCtxPos, AddressUiPos);
-	EXPECT_LT(AddressUiPos, AddressFieldPos);
+	EXPECT_LT(AddressCtxPos, AddressFieldPos);
 	EXPECT_LT(AddressFieldPos, AddressRefreshPos);
 	EXPECT_EQ(Body.find(";\n", AddressFieldPos), AddressRefreshPos + str_length("Client()->ServerBrowserUpdate()"));
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_GametypeInput, &Button, FontSize"), std::string::npos);
@@ -9201,9 +9212,8 @@ TEST(QmMonitoringHelpers, ServerBrowserAddFriendInputsUseSharedQmTextField)
 	ASSERT_FALSE(Body.empty());
 
 	const size_t NameInputPos = Body.find("static CLineInputBuffered<MAX_NAME_LENGTH> s_NameInput;");
-	const size_t TextInputCtxPos = Body.find("IUiContext ServerBrowserAddFriendTextInputCtx;", NameInputPos);
-	const size_t TextInputUiPos = Body.find("const IUiContext ServerBrowserAddFriendTextInputCtx = SettingsUiContext(\"server_browser_add_friend_text_inputs\");", TextInputCtxPos);
-	const size_t NameFieldPos = Body.find("ui_widget::InputField(ServerBrowserAddFriendTextInputCtx, &s_NameInput, Button, AddFriendInputOptions);", TextInputUiPos);
+	const size_t TextInputCtxPos = Body.find("const IUiContext ServerBrowserAddFriendTextInputCtx = SettingsUiContext(\"server_browser_add_friend_text_inputs\");", NameInputPos);
+	const size_t NameFieldPos = Body.find("ui_widget::InputField(ServerBrowserAddFriendTextInputCtx, &s_NameInput, Button, AddFriendInputOptions);", TextInputCtxPos);
 	const size_t ClanInputPos = Body.find("static CLineInputBuffered<MAX_CLAN_LENGTH> s_ClanInput;", NameFieldPos);
 	const size_t ClanFieldPos = Body.find("ui_widget::InputField(ServerBrowserAddFriendTextInputCtx, &s_ClanInput, Button, AddFriendInputOptions);", ClanInputPos);
 	const size_t AddFriendPos = Body.find("GameClient()->Friends()->AddFriend(s_NameInput.GetString(), s_ClanInput.GetString(), pCategory);", ClanFieldPos);
@@ -9214,7 +9224,6 @@ TEST(QmMonitoringHelpers, ServerBrowserAddFriendInputsUseSharedQmTextField)
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(NameInputPos, std::string::npos);
 	EXPECT_NE(TextInputCtxPos, std::string::npos);
-	EXPECT_NE(TextInputUiPos, std::string::npos);
 	EXPECT_NE(NameFieldPos, std::string::npos);
 	EXPECT_NE(ClanInputPos, std::string::npos);
 	EXPECT_NE(ClanFieldPos, std::string::npos);
@@ -9224,8 +9233,7 @@ TEST(QmMonitoringHelpers, ServerBrowserAddFriendInputsUseSharedQmTextField)
 	EXPECT_NE(FriendlistUpdatePos, std::string::npos);
 	EXPECT_NE(ServerBrowserUpdatePos, std::string::npos);
 	EXPECT_LT(NameInputPos, TextInputCtxPos);
-	EXPECT_LT(TextInputCtxPos, TextInputUiPos);
-	EXPECT_LT(TextInputUiPos, NameFieldPos);
+	EXPECT_LT(TextInputCtxPos, NameFieldPos);
 	EXPECT_LT(NameFieldPos, ClanInputPos);
 	EXPECT_LT(ClanInputPos, ClanFieldPos);
 	EXPECT_LT(ClanFieldPos, AddFriendPos);
@@ -9314,9 +9322,8 @@ TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 	ASSERT_FALSE(NoteBody.empty());
 
 	const size_t CategoryLabelPos = CategoryBody.find("pMenus->Ui()->DoLabel(&Label, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? Localize(\"Category name\") : Localize(\"New category name\"), FontSize, TEXTALIGN_ML);");
-	const size_t CategoryCtxPos = CategoryBody.find("IUiContext FriendsCategoryTextInputCtx;", CategoryLabelPos);
-	const size_t CategoryUiPos = CategoryBody.find("const IUiContext FriendsCategoryTextInputCtx = pMenus->SettingsUiContext(\"server_browser_friends_category_text_input\");", CategoryCtxPos);
-	const size_t CategoryFieldPos = CategoryBody.find("ui_widget::InputField(FriendsCategoryTextInputCtx, &pPopupContext->m_NameInput, Input, CategoryInputOptions);", CategoryUiPos);
+	const size_t CategoryCtxPos = CategoryBody.find("const IUiContext FriendsCategoryTextInputCtx = pMenus->SettingsUiContext(\"server_browser_friends_category_text_input\");", CategoryLabelPos);
+	const size_t CategoryFieldPos = CategoryBody.find("ui_widget::InputField(FriendsCategoryTextInputCtx, &pPopupContext->m_NameInput, Input, CategoryInputOptions);", CategoryCtxPos);
 	const size_t CategoryCancelPos = CategoryBody.find("const bool CancelPressed", CategoryFieldPos);
 	const size_t CategoryEscapePos = CategoryBody.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE)", CategoryCancelPos);
 	const size_t CategoryConfirmPos = CategoryBody.find("const bool ConfirmPressed", CategoryFieldPos);
@@ -9324,9 +9331,8 @@ TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 	const size_t CategoryTrimPos = CategoryBody.find("str_copy(aCategory, str_utf8_skip_whitespaces(pPopupContext->m_NameInput.GetString()), sizeof(aCategory));", CategoryConfirmPos);
 	const size_t CategoryUpdatePos = CategoryBody.find("pMenus->FriendlistOnUpdate();", CategoryTrimPos);
 	const size_t NoteLabelPos = NoteBody.find("pMenus->Ui()->DoLabel(&Label, Localize(\"Friend note\"), FontSize, TEXTALIGN_ML);");
-	const size_t NoteCtxPos = NoteBody.find("IUiContext FriendNoteTextInputCtx;", NoteLabelPos);
-	const size_t NoteUiPos = NoteBody.find("const IUiContext FriendNoteTextInputCtx = pMenus->SettingsUiContext(\"server_browser_friend_note_text_input\");", NoteCtxPos);
-	const size_t NoteFieldPos = NoteBody.find("ui_widget::InputField(FriendNoteTextInputCtx, &pPopupContext->m_NoteInput, Input, NoteInputOptions);", NoteUiPos);
+	const size_t NoteCtxPos = NoteBody.find("const IUiContext FriendNoteTextInputCtx = pMenus->SettingsUiContext(\"server_browser_friend_note_text_input\");", NoteLabelPos);
+	const size_t NoteFieldPos = NoteBody.find("ui_widget::InputField(FriendNoteTextInputCtx, &pPopupContext->m_NoteInput, Input, NoteInputOptions);", NoteCtxPos);
 	const size_t NoteCancelPos = NoteBody.find("const bool CancelPressed", NoteFieldPos);
 	const size_t NoteEscapePos = NoteBody.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE)", NoteCancelPos);
 	const size_t NoteConfirmPos = NoteBody.find("const bool ConfirmPressed", NoteFieldPos);
@@ -9336,7 +9342,6 @@ TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(CategoryLabelPos, std::string::npos);
 	EXPECT_NE(CategoryCtxPos, std::string::npos);
-	EXPECT_NE(CategoryUiPos, std::string::npos);
 	EXPECT_NE(CategoryFieldPos, std::string::npos);
 	EXPECT_NE(CategoryCancelPos, std::string::npos);
 	EXPECT_NE(CategoryEscapePos, std::string::npos);
@@ -9345,8 +9350,7 @@ TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 	EXPECT_NE(CategoryTrimPos, std::string::npos);
 	EXPECT_NE(CategoryUpdatePos, std::string::npos);
 	EXPECT_LT(CategoryLabelPos, CategoryCtxPos);
-	EXPECT_LT(CategoryCtxPos, CategoryUiPos);
-	EXPECT_LT(CategoryUiPos, CategoryFieldPos);
+	EXPECT_LT(CategoryCtxPos, CategoryFieldPos);
 	EXPECT_LT(CategoryFieldPos, CategoryCancelPos);
 	EXPECT_LT(CategoryCancelPos, CategoryEscapePos);
 	EXPECT_LT(CategoryEscapePos, CategoryConfirmPos);
@@ -9357,7 +9361,6 @@ TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 	EXPECT_LT(CategoryTrimPos, CategoryUpdatePos);
 	EXPECT_NE(NoteLabelPos, std::string::npos);
 	EXPECT_NE(NoteCtxPos, std::string::npos);
-	EXPECT_NE(NoteUiPos, std::string::npos);
 	EXPECT_NE(NoteFieldPos, std::string::npos);
 	EXPECT_NE(NoteCancelPos, std::string::npos);
 	EXPECT_NE(NoteEscapePos, std::string::npos);
@@ -9366,8 +9369,7 @@ TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 	EXPECT_NE(NoteCopyPos, std::string::npos);
 	EXPECT_NE(NoteSavePos, std::string::npos);
 	EXPECT_LT(NoteLabelPos, NoteCtxPos);
-	EXPECT_LT(NoteCtxPos, NoteUiPos);
-	EXPECT_LT(NoteUiPos, NoteFieldPos);
+	EXPECT_LT(NoteCtxPos, NoteFieldPos);
 	EXPECT_LT(NoteFieldPos, NoteCancelPos);
 	EXPECT_LT(NoteCancelPos, NoteEscapePos);
 	EXPECT_LT(NoteEscapePos, NoteConfirmPos);
