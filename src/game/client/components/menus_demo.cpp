@@ -2571,12 +2571,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 	const bool BrowsingScreenshots = DemoBrowserBrowsingScreenshots();
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
 	const char *pBaseFolder = DemoBrowserBaseFolder();
-	IUiContext DemoBrowserSearchCtx;
-	DemoBrowserSearchCtx.m_pUi = Ui();
-	DemoBrowserSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	DemoBrowserSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	DemoBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash("demo_browser_search");
-	DemoBrowserSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	const IUiContext DemoBrowserSearchCtx = SettingsUiContext("demo_browser_search");
 
 	const auto &&SetIconMode = [&](bool Enable) {
 		if(Enable)
@@ -2648,7 +2643,12 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			LeftGroup.VSplitLeft(minimum(SearchWidth, LeftGroup.w), &DemoSearch, &LeftGroup);
 			if(LeftGroup.w > TightSpacing)
 				LeftGroup.VSplitLeft(TightSpacing, nullptr, &LeftGroup);
-			if(ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 13.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+			ui_widget::SInputFieldOptions NewUiSearchOptions;
+			NewUiSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+			NewUiSearchOptions.m_Clearable = true;
+			NewUiSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+			NewUiSearchOptions.m_FontSize = 13.0f;
+			if(ui_widget::InputField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, NewUiSearchOptions).m_Changed)
 			{
 				RefreshFilteredDemos();
 				DemolistOnUpdate(false);
@@ -2894,7 +2894,12 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		CUIRect DemoSearch;
 		ButtonBarTop.VSplitLeft(ButtonBarBottom.h * 21.0f, &DemoSearch, &ButtonBarTop);
 		ButtonBarTop.VSplitLeft(ButtonBarTop.h / 2.0f, nullptr, &ButtonBarTop);
-		if(ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+		ui_widget::SInputFieldOptions LegacySearchOptions;
+		LegacySearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+		LegacySearchOptions.m_Clearable = true;
+		LegacySearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+		LegacySearchOptions.m_FontSize = 14.0f;
+		if(ui_widget::InputField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, LegacySearchOptions).m_Changed)
 		{
 			RefreshFilteredDemos();
 			DemolistOnUpdate(false);

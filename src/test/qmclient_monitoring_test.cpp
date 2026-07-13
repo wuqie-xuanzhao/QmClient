@@ -9070,19 +9070,18 @@ TEST(QmMonitoringHelpers, IngameMapNoteUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_MapNoteInput, &NoteInput, FontSizeBody * 0.85f"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmSearchField)
+TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmInputField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemActivated)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t NewUiSearchPos = Body.find("ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 13.0f");
+	const size_t NewUiSearchPos = Body.find("ui_widget::InputField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, NewUiSearchOptions).m_Changed");
 	const size_t NewUiRefreshPos = Body.find("RefreshFilteredDemos();", NewUiSearchPos);
-	const size_t LegacySearchPos = Body.find("ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 14.0f");
+	const size_t LegacySearchPos = Body.find("ui_widget::InputField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, LegacySearchOptions).m_Changed");
 	const size_t LegacyRefreshPos = Body.find("RefreshFilteredDemos();", LegacySearchPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext DemoBrowserSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("DemoBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash(\"demo_browser_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext DemoBrowserSearchCtx = SettingsUiContext(\"demo_browser_search\");"), std::string::npos);
 	EXPECT_NE(NewUiSearchPos, std::string::npos);
 	EXPECT_NE(NewUiRefreshPos, std::string::npos);
 	EXPECT_LT(NewUiSearchPos, NewUiRefreshPos);
@@ -9392,10 +9391,18 @@ TEST(QmMonitoringHelpers, NonCardServerAndFriendsUseSharedRuntime)
 		"CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRect View, bool Active)",
 	};
 	const std::array<const char *, 12> apForbidden = {
-		"ui_widget::TextField(", "ui_widget::SearchField(", "ui_widget::ClearableTextField(",
-		"ui_widget::IconTextField(", "DoEditBox(", "QmScrollRegionParamsForSize(",
-		"m_ScrollUnit =", "ForceShowScrollbar", "KEY_MOUSE_WHEEL_UP", "KEY_MOUSE_WHEEL_DOWN",
-		"SettingsCard(", "RegisterSettingsCardDeckItem(",
+		"ui_widget::TextField(",
+		"ui_widget::SearchField(",
+		"ui_widget::ClearableTextField(",
+		"ui_widget::IconTextField(",
+		"DoEditBox(",
+		"QmScrollRegionParamsForSize(",
+		"m_ScrollUnit =",
+		"ForceShowScrollbar",
+		"KEY_MOUSE_WHEEL_UP",
+		"KEY_MOUSE_WHEEL_DOWN",
+		"SettingsCard(",
+		"RegisterSettingsCardDeckItem(",
 	};
 
 	for(const char *pSignature : apSignatures)
