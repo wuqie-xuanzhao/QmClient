@@ -19,43 +19,43 @@
 - 同一 `cmake-build-release` 中 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 串行执行。
 - 协议、物理、预测、snapshot、Demo/地图/skin/配置格式、回放、rank 和服务端玩法不在本路线。
 - 完整组件覆盖 R1、设置 11 tab/Root Panel/L0–L2 R2、Phosphor/MSDF/SDF shader R3 只保留后续专项状态，不属于 P0–P7 完成条件。
-- P0–P6 不更新功能版本；P7 在全部行为、review、gate 和人工矩阵收口后执行一次 MMP 版本更新。
+- P0–P6 不更新功能版本；P7 在生产迁移、自动回归、独立 review 和自动 gate 收口后执行一次 MMP 版本更新。用户 runtime/视觉验收独立记录为 pending 或 complete，版本更新不代表该矩阵已完成。
 
 ---
 
 ## 1. 当前接手结论
 
-本规格可以继续执行。当前 checkout 已完成 P0 的显式 merge，P5 的八个标准设置页结构清单全量通过；下一工作面是 P6，不能跳到 P7。
+本规格的生产迁移和自动验证已完成。当前 checkout 已按顺序完成 P0-P7，最后两个架构收口提交为 `5cc856dfa1`（公共布局/排序与旧路径清退）和 `5f62c823e5`（TClient 主页 card height/scroll 双路径清退）。剩余工作只允许是用户执行的 `DDNet.exe` 视觉、交互和真实性能采样反馈；自动证据不得代替或虚报该矩阵。
 
 | 区域 | 当前代码起点 | 第一责任阶段 |
 |---|---|---|
 | Theme/token | 菜单有 `MenuUiColorSurface`/`MenuUiColorAccent`，QmUi color token 仍静态 | P1：已落地，待最终验收 |
-| Card shell | 标准页和 QmClient Overview/Contributors 已调用 shared deck；QmClient module、全局搜索、TClient 仍有旧 shell | P6：进行中 |
-| Registry/order | `QmCardRegistry`、`qm_card_order::CModel` 与 shared deck 已用于标准页和两个 QmClient 切片；TClient legacy coordinator 仍在 | P2：基础已落地，P6 清退 |
-| Search | registry Search API 已存在；QmClient 全局搜索仍维护 `SQmGlobalSearchCard` 和旧结果卡片 | P6：未完成 |
-| Input | 设置页结构清单已禁止 direct/legacy input；非卡片菜单 alias 仍由 P7 处理 | P3/P7：设置页已收口 |
-| Scroll | policy、AUTO/HIDDEN、Alt 三倍、dropdown ownership 已有；旧页面 adapter 仍需按 P6/P7 边界清退 | P4：基础已落地 |
-| 标准页 | General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 结构审计全量 `clean` | P5：结构完成，视觉矩阵待补 |
-| QmClient/TClient | Overview、Contributors 已迁移；Visual/Functions/HUD、Config 搜索和 TClient 主页/复杂子页仍未迁移 | P6：进行中 |
-| 非卡片菜单/性能 | 仍未进入执行；不能以现有局部 policy 视为 P7 完成 | P7：未开始 |
+| Card shell | 标准页、QmClient 和 TClient 均由 shared Deck/SettingsCard shell 产生 canonical frame | P1/P5/P6：生产迁移完成 |
+| Registry/order | `QmCardRegistry`、`qm_card_order::CModel` 与 `SettingsCardOrderModel()` 是唯一注册/排序事实源 | P2/P6：完成 |
+| Search | 全局搜索消费 registry result/navigation target，并通过公共 Deck reveal | P2/P6：完成 |
+| Input | 设置页及 P7 目标非卡片菜单均调用 `InputField`；NumericField 持有 slider/input/commit policy | P3/P7：完成 |
+| Scroll | `CQmScrollState` 是 offset/target/thumb 唯一状态；adapter 消费 policy 和统一 wheel owner | P4/P7：完成 |
+| 标准页 | General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 迁移 checker 全量 `clean` | P5：自动完成，用户矩阵待验收 |
+| QmClient/TClient | Overview、Contributors、Visual、Functions/HUD、Global Search、TClient 主页和复杂子页均迁公共 Deck | P6：自动完成，用户矩阵待验收 |
+| 非卡片菜单/性能 | 服务器、好友、Demo、资产、皮肤、国旗、语言保留列表/网格语义并接入公共 adapter/telemetry | P7：自动完成，用户真实性能采样待验收 |
 
-P0 merge commit 为 `01948ba392`，版本基线为 `2.74.23`；这轮不重复执行远端整合，也不 bump 版本。P6 只从已迁移的两个 QmClient 切片继续，任何未完成的测试、人工矩阵或 gate 都保持为 gap，不能把“结构清单通过”写成阶段完成。
+P0 merge commit 为 `01948ba392`，最终 MMP 版本为 `2.74.24`。当前自动证据记录在 `docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md`；其中 percentile 和游戏内 Actual 字段保持为用户 runtime 待采样，不再用 contract test 冒充实际数据。
 
 ### 当前下一步
 
-1. P6 Task 2：把 QmClient Visual、Functions、HUD 的 module 列表改为 `SSettingsCardDefinition` + `CSettingsCardDeck::Render(...)`，同一切片删除 `s_GlassCards`、module 私有 drag/order/search collapse 的生产路径。
-2. P6 Task 3：迁移 TClient 主页面和 `CSectionLoader` 高度契约；先覆盖主 Settings，再覆盖 BindWheel/StatusBar 以外的复杂子页。
-3. 每个切片先补结构/行为测试，再串行重建 `testrunner`；P6 全量完成前不启动 P7。
+1. 用户使用 `cmake-build-release/DDNet.exe` 完成报告中的视觉/交互矩阵。
+2. 用户按 P7 Task 7 固定场景采样 p50/p95/p99/max/1% low/menu max，并把结果反馈给实现侧。
+3. 若用户反馈任何非视觉行为或性能失败，重新进入对应 owner 修复并补自动回归；R1-R3 仍不属于本规格。
 
 ### 阶段状态口径
 
 | 阶段 | 当前状态 | 可继续动作 | 不能宣称 |
 |---|---|---|---|
-| P0 | 基线 merge 已存在，完整验收证据仍需按计划补齐 | 只在需要校准接口时回补证据 | “所有 P0 gate 已通过” |
-| P1–P4 | 公共契约已被当前页面消费，计划中的最终全量证据未统一收口 | 作为 P5/P6 的既有依赖使用 | “所有公共双路径已删除” |
-| P5 | 八页结构审计通过，视觉/全量 gate 仍是 gap | 不回退标准页；只修复发现的非视觉问题 | “P5 全部验收完成” |
-| P6 | Overview、Contributors 完成，其余 QmClient/TClient 未完成 | 按上述 Task 2/3 继续 | “QmClient/TClient 已迁移” |
-| P7 | 未开始 | 等 P6 exit gate | “最终收口完成” |
+| P0 | 显式 merge 与版本基线完成 | 仅保留历史证据 | “用户 runtime 已验收” |
+| P1–P4 | 公共 theme/card/deck/input/numeric/scroll/dropdown owner 已完成并被生产消费 | 修复用户反馈时只能改公共 owner | “用户 runtime 已验收” |
+| P5 | 八页生产迁移和结构审计完成 | 等用户矩阵 | “视觉/交互已通过” |
+| P6 | QmClient/TClient 生产迁移、旧路径删除和高度/滚动 owner 收口完成 | 等用户矩阵 | “视觉/交互已通过” |
+| P7 | 非卡片 adapter、telemetry、缓存边界、版本和自动证据完成 | 等用户 fixed-scene 采样 | “真实性能 percentile 已采集” |
 
 ## 2. 阶段依赖与计划文件
 
@@ -163,7 +163,7 @@ P7 最终报告只引用本表，不得把 R1–R3 未实施写成 P0–P7 功�
 - [ ] `RenderQmSettingsGlassCard`、TClient cache box/private drag、设置页 direct edit/old slider、scroll 双状态和临时 alias 均从目标生产路径删除。
 - [ ] 全量 C++/Rust、docs、default gate、独立 review 和性能固定场景均有当前 commit 的证据。
 - [ ] 只允许在最终报告中保留明确记录的视觉 gap；任何非视觉 finding、测试失败或结构双路径都必须先修复。
-- [ ] MMP 版本只在 P7 完成门槛后更新一次。
+- [x] MMP 版本在 P7 生产迁移和自动验证完成后更新一次；用户 runtime/视觉验收继续独立追踪。
 
 ---
 

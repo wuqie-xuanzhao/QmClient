@@ -1,5 +1,7 @@
 # QmClient 设置页 UI 统一 P7 非卡片菜单、性能与最终收口 Implementation Plan
 
+**状态（2026-07-14，基于 `dyl_dev`）：** 生产适配、公共 telemetry、缓存边界、旧路径删除、版本 `2.74.24` 和自动回归均已完成。八个固定场景的真实性能 percentile 与完整游戏内交互矩阵由用户按 Task 7 执行；报告必须保持 runtime pending，禁止用 contract test 代替采样值。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在不把业务条目卡片化的前提下，让服务器、好友、Demo、资产、皮肤、国旗、语言等列表/网格只使用 P1–P4 的公共 theme、input、scroll 与 dropdown runtime，并用有界缓存、固定性能预算、全量自动验证和人工矩阵完成 P0–P7 最终收口。
@@ -891,13 +893,13 @@ Expected: no overlap, stale text/rect, input offset, rail flash, wheel leak or b
 
 - [ ] **Step 5: Mark the evidence collected, verify green and commit**
 
-Only after every Task 7 matrix row has actual evidence, change the marker to `**P7 evidence status:** collected`.
+Only after every Task 7 matrix row has actual evidence, change the marker to `**P7 user runtime acceptance:** complete` and replace every `user runtime sampling required` / `runtime verdict pending` cell with the measured value and verdict.
 
 Run:
 
 ```powershell
 cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14
-cmake-build-release/testrunner.exe --gtest_filter=QmMonitoringHelpers.P7AcceptanceEvidenceIsCollected
+cmake-build-release/testrunner.exe --gtest_filter=QmMonitoringHelpers.P7AcceptanceDoesNotClaimUnsampledRuntimePercentiles
 git add docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md src/test/qmclient_monitoring_test.cpp
 git add src/game/client/components/qmclient/menus_qmclient.cpp
 git diff --cached --check

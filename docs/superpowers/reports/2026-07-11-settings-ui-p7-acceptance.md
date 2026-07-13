@@ -1,6 +1,7 @@
 # Settings UI P7 Acceptance Report
 
-**P7 evidence status:** collected
+**P7 automated evidence status:** complete
+**P7 user runtime acceptance:** pending
 **P7 status:** automated verification complete
 **Independent review status:** findings resolved
 **Version:** 2.74.24
@@ -9,10 +10,10 @@
 | Command | Result | Scope | Gap |
 |---|---|---|---|
 | game-client | passed | Windows release client linked | none |
-| run_cxx_tests | passed | 2160 C++ tests | none |
+| run_cxx_tests | passed | 2162 C++ tests | none |
 | run_rust_tests | passed | 24 Rust doc tests | none |
 | check_docs.py | unavailable | concurrent gate migration deleted the legacy entry point | current default gate does not expose a separate docs check |
-| check_gate.py --mode default | partial | task checks, migration contract, 2160 C++ tests and 24 Rust doc tests passed | concurrent files menus_settings_assets.cpp, menus_settings_controls.cpp and menus_tclient.cpp formatting blocked the repository-wide gate |
+| check_gate.py --mode default | partial | task checks, migration contract, 2162 C++ tests and 24 Rust doc tests passed | concurrent files menus_settings_assets.cpp, menus_settings_controls.cpp and menus_tclient.cpp formatting blocked the repository-wide gate |
 | check_gate.py --mode quick | partial | 8 settings pages passed the migration contract and all other quick checks passed | concurrent formatting changes in menus_settings_assets.cpp and the TClient Config tag bar blocked the repository-wide format check |
 | bun test.ts | passed | performance report contracts | none |
 | npx tsc --noEmit | passed | performance TypeScript | none |
@@ -20,14 +21,14 @@
 ## Fixed performance scenes
 | Operation | Viewport / UI scale / locale | Repetitions | p50 | p95 | p99 | max | 1% low | menu max | Verdict | Report |
 |---|---|---|---|---|---|---|---|---|---|---|
-| server_browser_scroll | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
-| friends_scroll | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
-| demo_browser_scroll | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
-| assets_grid_scroll | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
-| skins_grid_scroll | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
-| flags_grid_scroll | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
-| language_list_scroll | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
-| dropdown_first_wheel | 1920x1080 / 100% / zh-CN | contract test | budget contract | budget contract | budget contract | budget contract | budget contract | budget contract | automated contract passed | 00a1879e7d |
+| server_browser_scroll | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
+| friends_scroll | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
+| demo_browser_scroll | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
+| assets_grid_scroll | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
+| skins_grid_scroll | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
+| flags_grid_scroll | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
+| language_list_scroll | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
+| dropdown_first_wheel | user matrix | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | user runtime sampling required | telemetry owner verified; runtime verdict pending | 00a1879e7d |
 
 ## Manual matrix
 | Page | Viewport | UI scale | Locale | Action | Expected | Actual | Screenshot |
@@ -45,14 +46,14 @@
 | Severity | File | Finding | Resolution | Recheck |
 |---|---|---|---|---|
 | major | src/game/client/QmUi/SettingsCardDeckLogic.cpp | repeated narrow drag moved hidden cards from canonical slots | project complete canonical columns before commit | 12 SettingsCardDeck tests passed |
-| minor | src/test/qmclient_monitoring_test.cpp | deleted legacy structure tests also removed useful content-owner contracts | add focused content, dynamic branch and public Deck registration assertions | focused contract and 2160 C++ tests passed |
+| minor | src/test/qmclient_monitoring_test.cpp | deleted legacy structure tests also removed useful content-owner contracts | add focused content, dynamic branch and public Deck registration assertions | focused 4/4 and 2162 C++ tests passed |
 
 ## TClient main-page ownership follow-up
 
 - `SettingsCardDeck` now measures every TClient card through the section's canonical `m_MeasureFn`; it no longer reads `CSectionLoader` cached heights.
 - `CSectionLoader` no longer exposes mutable scroll state or stable-card height lookup. It consumes an explicit content-space viewport only for progressive prewarm priority.
 - The shared Deck remains the sole owner of card frames and page scrolling, while the loader retains only measurement/cache/progressive scheduling.
-- Verification: 36 focused loader/TClient/warmup tests, `game-client`, 2160 C++ tests, 24 Rust doc tests, and all 8 settings migration checks passed.
+- Verification: 36 focused loader/TClient/warmup tests, final audit focused 4/4, `game-client`, 2162 C++ tests, 24 Rust doc tests, and all 8 settings migration checks passed.
 
 ## Remaining visual gaps
 | Page | Exact visual difference | Evidence | Follow-up owner |

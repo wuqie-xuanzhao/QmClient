@@ -1,6 +1,6 @@
 # QmClient 设置页 UI 统一 P6 迁移计划
 
-**状态（2026-07-13，基于 `dyl_dev`）：** P0-P5 公共 page/card/input/scroll 契约已存在。QmClient Overview、Contributors、Visual、Functions/HUD 和 Global Search 已迁移；TClient BindWheel、WarList、ChatBinds、StatusBar、Info、Profiles、Configs 已迁移并保留只读预热隔离和标题拖拽。仅 TClient 主页仍未迁移。P7 不在本计划范围内。
+**状态（2026-07-14，基于 `dyl_dev`）：** P6 生产迁移与自动验证完成。QmClient、TClient 主页和全部已登记复杂子页均使用公共 Deck；`5f62c823e5` 已删除 TClient 主页的 loader height lookup 和可变 scroll truth，`CSectionLoader` 只消费显式 viewport 做 progressive 调度。剩余仅为用户执行的游戏内视觉/交互验收。
 
 ## 目标与边界
 
@@ -25,8 +25,8 @@
 | TClient Info | links/files/developers/tab visibility 对应四张 `deck:tclient-info-*`；ReadOnly 使用独立 deck/model，预热不会打开外部链接/文件或写 tab 配置，搜索可 reveal 目标卡片 | 已迁移 |
 | TClient Profiles | actions/options/saved list 对应三张 `deck:tclient-profiles-*`；ReadOnly 使用独立 deck/model，内嵌 `CListBox` 使用 `COMPOSITE_CONTROL`，搜索可 reveal 目标卡片 | 已迁移 |
 | TClient Configs | staged actions/filters/config list 对应三张 `deck:tclient-configs-*`；内部列表保留唯一 `CScrollRegion`，页面滚动/排序由公共 deck 管理，搜索可跳转至 QmClient Config tab | 已迁移 |
-| TClient | 主页仍有 cache box/private inset/private drag/section height 路径 | 部分迁移 |
-| Adapter/model | `QmCardRegistry`、`SettingsCardOrderModel()` 和显式 model adapter 已存在；`QmModuleLayoutModel()` 过渡 singleton 仍被旧 renderer 使用 | 迁移完成前不得删除兼容入口 |
+| TClient | 主页 Deck 直接消费 canonical measure callback；loader 不再拥有 card height/scroll truth | 已迁移 |
+| Adapter/model | `QmCardRegistry`、`SettingsCardOrderModel()` 和显式 model adapter 是生产事实源；旧 renderer/coordinator 已清退 | 已迁移 |
 
 ## 当前接手检查点
 
@@ -35,7 +35,7 @@
 - 已验证（本次 Info 切片）：TDD focused 结构/搜索路由测试、`game-client`、`git diff --check` 和本切片 C++ 文件 `clang-format --dry-run --Werror`；旧双栏 layout 已删除，链接、文件打开和 tab 配置写入均由 `ReadOnly` 守卫。
 - 已验证（本次 Profiles 切片）：TDD focused 结构/搜索路由测试、`game-client`、全量 C++ `2178/2178`、`check_docs.py`、`git diff --check` 和本切片 C++ 文件 `clang-format --dry-run --Werror`。原 profile 读写/应用语义保留，列表改由固定高度卡片内 `CListBox` 承载。
 - 已验证（本次 Configs 切片）：TDD focused 公共 Deck/搜索路由测试、`game-client`、全量 C++ `2179/2179`、`check_docs.py`、`git diff --check` 和本切片 C++ 文件 `clang-format --dry-run --Werror`。原 staged 配置、筛选、重置和内部列表滚动语义保留。
-- 当前 gap：仅 TClient 主页未迁移；所有已迁移页面仍需要最终 in-client 视觉/交互验收（含正常与非默认 UI scale 的滚动、拖拽、文本输入和预热），P6 default gate 未在本切片执行。quick gate 的历史失败来自未触碰的 `menus_settings.cpp`、`menus_settings_controls.cpp` clang-format 违规，以及未使用的 `qm_chat_anim_easing` / `qm_chat_edge_margin` 配置项；不随本切片修复。
+- 当前 gap：仅最终 in-client 视觉/交互验收（含正常与非默认 UI scale 的滚动、拖拽、文本输入和预热）。自动侧已通过 `game-client`、focused loader/TClient tests、全量 C++/Rust 和独立只读 review；仓库级 gate 的并发格式阻断按 P7 验收报告单独记录。
 
 ## 执行切片
 

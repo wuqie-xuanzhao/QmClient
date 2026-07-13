@@ -6613,7 +6613,7 @@ TEST(QmMonitoringHelpers, P6TClientBindWheelMigrationUsesThePublicDeckOnly)
 	EXPECT_EQ(BindWheelBody.find("s_BindWheelPreviewCardHeight"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
+TEST(QmMonitoringHelpers, P6VisualContentOwnersRemainShellFree)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
@@ -6731,9 +6731,9 @@ TEST(QmMonitoringHelpers, P6HudPlayerStatsContentExtractionKeepsProgressBranches
 	const std::string PlayerStatsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudPlayerStatsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	const size_t CaseStart = QmClient.rfind("case EQmModuleId::PlayerStats:");
 	const size_t CaseEnd = QmClient.find("case EQmModuleId::CollisionHitbox:", CaseStart);
-	const std::string LegacyCase = CaseStart != std::string::npos && CaseEnd != std::string::npos ? QmClient.substr(CaseStart, CaseEnd - CaseStart) : "";
+	const std::string DeckCase = CaseStart != std::string::npos && CaseEnd != std::string::npos ? QmClient.substr(CaseStart, CaseEnd - CaseStart) : "";
 	ASSERT_FALSE(PlayerStatsBody.empty());
-	ASSERT_FALSE(LegacyCase.empty());
+	ASSERT_FALSE(DeckCase.empty());
 
 	EXPECT_NE(PlayerStatsBody.find("m_QmPlayerStatsMapProgress"), std::string::npos);
 	EXPECT_NE(PlayerStatsBody.find("m_QmPlayerStatsMapProgressStyle"), std::string::npos);
@@ -6741,8 +6741,8 @@ TEST(QmMonitoringHelpers, P6HudPlayerStatsContentExtractionKeepsProgressBranches
 	EXPECT_NE(PlayerStatsBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
 	EXPECT_EQ(PlayerStatsBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(PlayerStatsBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmHudPlayerStatsContent"), std::string::npos);
-	EXPECT_EQ(LegacyCase.find("RenderSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(DeckCase.find("RenderQmHudPlayerStatsContent"), std::string::npos);
+	EXPECT_EQ(DeckCase.find("RenderSliderWithValueInput"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientContentOwnersPreserveInteractiveContracts)
@@ -9357,6 +9357,84 @@ TEST(QmMonitoringHelpers, MenuUiPerfOperationsAreEmittedFromRealListOwners)
 	EXPECT_EQ(Count(Demo, "QmLogMenuUiFramePerf("), 1u);
 	EXPECT_GE(Count(Settings, "QmLogMenuUiFramePerf("), 3u);
 	EXPECT_GE(Count(Assets, "QmLogMenuUiFramePerf("), 2u);
+}
+
+TEST(QmMonitoringHelpers, P7AcceptanceDoesNotClaimUnsampledRuntimePercentiles)
+{
+	const std::string Report = ReadRepoFile("docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md");
+	EXPECT_NE(Report.find("**P7 automated evidence status:** complete"), std::string::npos);
+	const bool RuntimePending = Report.find("**P7 user runtime acceptance:** pending") != std::string::npos;
+	const bool RuntimeComplete = Report.find("**P7 user runtime acceptance:** complete") != std::string::npos;
+	ASSERT_NE(RuntimePending, RuntimeComplete);
+
+	for(const char *pOperation : {"server_browser_scroll", "friends_scroll", "demo_browser_scroll", "assets_grid_scroll", "skins_grid_scroll", "flags_grid_scroll", "language_list_scroll", "dropdown_first_wheel"})
+	{
+		const size_t OperationPos = Report.find(pOperation);
+		ASSERT_NE(OperationPos, std::string::npos) << pOperation;
+		const size_t LineBegin = Report.rfind('\n', OperationPos);
+		const size_t LineEnd = Report.find('\n', OperationPos);
+		const std::string Row = Report.substr(LineBegin == std::string::npos ? 0 : LineBegin + 1, LineEnd - (LineBegin == std::string::npos ? 0 : LineBegin + 1));
+		EXPECT_NE(Row.find("telemetry owner verified"), std::string::npos) << Row;
+		if(RuntimePending)
+		{
+			EXPECT_NE(Row.find("user runtime sampling required"), std::string::npos) << Row;
+			EXPECT_NE(Row.find("runtime verdict pending"), std::string::npos) << Row;
+		}
+		else
+		{
+			EXPECT_EQ(Row.find("user runtime sampling required"), std::string::npos) << Row;
+			EXPECT_EQ(Row.find("runtime verdict pending"), std::string::npos) << Row;
+		}
+	}
+}
+
+TEST(QmMonitoringHelpers, SettingsUiMigrationFinalStructureContract)
+{
+	const std::array<const char *, 11> apRetiredSymbols = {
+		"RenderQmSettingsGlassCard",
+		"BeginSettingsCardDeck",
+		"RegisterSettingsCardDeckItemFromFrame",
+		"LegacyTextFieldEx",
+		"DoSettingsSliderInputField",
+		"m_TClientSettingsCardDragState",
+		"m_SettingsCardDeckOrders",
+		"ForceShowScrollbar",
+		"CachedHeightForStableCardId",
+		"DrawTClientCacheSectionBox",
+		"InsetTClientCacheSectionContent",
+	};
+	const std::filesystem::path ClientPath = TestSourcePath("src/game/client");
+	for(const std::filesystem::directory_entry &Entry : std::filesystem::recursive_directory_iterator(ClientPath))
+	{
+		if(!Entry.is_regular_file() || (Entry.path().extension() != ".cpp" && Entry.path().extension() != ".h"))
+			continue;
+		std::ifstream File(Entry.path());
+		ASSERT_TRUE(File.good()) << Entry.path().string();
+		std::stringstream Buffer;
+		Buffer << File.rdbuf();
+		const std::string Source = Buffer.str();
+		for(const char *pSymbol : apRetiredSymbols)
+			EXPECT_EQ(Source.find(pSymbol), std::string::npos) << Entry.path().string() << ": " << pSymbol;
+	}
+
+	const std::string ScrollHeader = ReadRepoFile("src/game/client/ui_scrollregion.h");
+	EXPECT_EQ(CountSubstring(ScrollHeader, "CQmScrollState m_ScrollState;"), 1u);
+	EXPECT_EQ(ScrollHeader.find("float m_ScrollPos;"), std::string::npos);
+	EXPECT_EQ(ScrollHeader.find("float m_AnimTargetScrollPos;"), std::string::npos);
+
+	const std::array<std::pair<const char *, const char *>, 4> aNonCardScopes = {{
+		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItemActivated)"},
+		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserFilters(CUIRect View)"},
+		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserFriends(CUIRect View)"},
+		{"src/game/client/components/menus_settings.cpp", "bool CMenus::RenderLanguageSelection(CUIRect MainView)"},
+	}};
+	for(const auto &[pPath, pSignature] : aNonCardScopes)
+	{
+		const std::string Body = ExtractSourceFunctionBody(ReadRepoFile(pPath), pSignature);
+		ASSERT_FALSE(Body.empty()) << pSignature;
+		EXPECT_EQ(Body.find("SettingsCard("), std::string::npos) << pSignature;
+		EXPECT_EQ(Body.find("m_SettingsCardDeck.Render("), std::string::npos) << pSignature;
+	}
 }
 
 TEST(QmMonitoringHelpers, MenuUiPerfScrollOwnersGateSamplesAndReuseOneFpsTracker)
