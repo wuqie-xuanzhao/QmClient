@@ -4143,12 +4143,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	}
 
 	CUIRect TabBar, CustomList, QuickSearch, DirectoryButton, ReloadButton, WorkshopHudView;
-	IUiContext AssetsSearchCtx;
-	AssetsSearchCtx.m_pUi = Ui();
-	AssetsSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	AssetsSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	AssetsSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_assets_search");
-	AssetsSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	const IUiContext AssetsSearchCtx = SettingsUiContext("settings_assets_search");
 	static bool s_AssetsTransitionInitialized = false;
 	static int s_PrevAssetsTab = ASSETS_TAB_ENTITIES;
 	static int s_AssetsTabSwitchFirstFrame = 0;
@@ -7426,7 +7421,12 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	CUIRect AssetsEditorButton;
 	QuickSearch.VSplitLeft(220.0f, &QuickSearch, &DirectoryButton);
 	QuickSearch.HSplitTop(5.0f, nullptr, &QuickSearch);
-	if(ui_widget::SearchField(AssetsSearchCtx, &s_aFilterInputs[s_CurCustomTab], QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+	ui_widget::SInputFieldOptions AssetsSearchOptions;
+	AssetsSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	AssetsSearchOptions.m_Clearable = true;
+	AssetsSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+	AssetsSearchOptions.m_FontSize = 14.0f;
+	if(ui_widget::InputField(AssetsSearchCtx, &s_aFilterInputs[s_CurCustomTab], QuickSearch, AssetsSearchOptions).m_Changed)
 	{
 		gs_aInitCustomList[s_CurCustomTab] = true;
 	}

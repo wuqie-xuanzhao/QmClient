@@ -9566,17 +9566,16 @@ TEST(QmMonitoringHelpers, FirstLaunchPlayerNameUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PlayerNameInput, &TextBox, 12.0f"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmSearchField)
+TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmInputField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t SearchPos = Body.find("ui_widget::SearchField(AssetsSearchCtx, &s_aFilterInputs[s_CurCustomTab], QuickSearch, 14.0f");
+	const size_t SearchPos = Body.find("ui_widget::InputField(AssetsSearchCtx, &s_aFilterInputs[s_CurCustomTab], QuickSearch, AssetsSearchOptions).m_Changed");
 	const size_t RefreshPos = Body.find("gs_aInitCustomList[s_CurCustomTab] = true;", SearchPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext AssetsSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("AssetsSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_assets_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext AssetsSearchCtx = SettingsUiContext(\"settings_assets_search\");"), std::string::npos);
 	EXPECT_NE(SearchPos, std::string::npos);
 	EXPECT_NE(RefreshPos, std::string::npos);
 	EXPECT_LT(SearchPos, RefreshPos);
@@ -9641,21 +9640,19 @@ TEST(QmMonitoringHelpers, SoundPageSwitchSkipsWholePageOffsetAnimation)
 	EXPECT_NE(Body.find("if(AnimateSettingsPageSwitch)\n\t\t\t\tTriggerUiSwitchAnimation(SettingsPageSwitchNode, 0.18f);"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, AssetsEditorSearchUsesSharedQmSearchField)
+TEST(QmMonitoringHelpers, AssetsEditorSearchUsesSharedQmInputField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_assets_editor.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderAssetsEditorScreen(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t DonorSearchPos = Body.find("ui_widget::SearchField(AssetsEditorDonorSearchCtx, &s_aDonorSearchInputs[m_AssetsEditorState.m_Type], DonorSearchBox, EditBoxFontSize, false)");
+	const size_t DonorSearchPos = Body.find("ui_widget::InputField(AssetsEditorDonorSearchCtx, &s_aDonorSearchInputs[m_AssetsEditorState.m_Type], DonorSearchBox, DonorSearchOptions);");
 	const size_t DonorFilterPos = Body.find("for(size_t Index = 0; Index < vFilteredDonorAssetIndices.size(); ++Index)", DonorSearchPos);
-	const size_t MainSearchPos = Body.find("ui_widget::SearchField(AssetsEditorMainSearchCtx, &s_aMainSearchInputs[m_AssetsEditorState.m_Type], MainSearchBox, EditBoxFontSize, false)");
+	const size_t MainSearchPos = Body.find("ui_widget::InputField(AssetsEditorMainSearchCtx, &s_aMainSearchInputs[m_AssetsEditorState.m_Type], MainSearchBox, MainSearchOptions);");
 	const size_t MainFilterPos = Body.find("for(size_t Index = 0; Index < vFilteredMainAssetIndices.size(); ++Index)", MainSearchPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext AssetsEditorDonorSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("AssetsEditorDonorSearchCtx.m_ScopeHash = MakeUiScopeHash(\"assets_editor_donor_search\");"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext AssetsEditorMainSearchCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("AssetsEditorMainSearchCtx.m_ScopeHash = MakeUiScopeHash(\"assets_editor_main_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext AssetsEditorDonorSearchCtx = SettingsUiContext(\"assets_editor_donor_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("const IUiContext AssetsEditorMainSearchCtx = SettingsUiContext(\"assets_editor_main_search\");"), std::string::npos);
 	EXPECT_NE(DonorSearchPos, std::string::npos);
 	EXPECT_NE(DonorFilterPos, std::string::npos);
 	EXPECT_LT(DonorSearchPos, DonorFilterPos);
@@ -9666,26 +9663,23 @@ TEST(QmMonitoringHelpers, AssetsEditorSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_aMainSearchInputs[m_AssetsEditorState.m_Type], &MainSearchBox"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, AssetsEditorExportNameUsesSharedQmTextField)
+TEST(QmMonitoringHelpers, AssetsEditorExportNameUsesSharedQmInputField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_assets_editor.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderAssetsEditorScreen(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
 	const size_t SetPlaceholderPos = Body.find("s_ExportNameInput.SetEmptyText(aExportPlaceholder);");
-	const size_t TextInputCtxPos = Body.find("IUiContext AssetsEditorExportNameCtx;", SetPlaceholderPos);
-	const size_t ScopeHashPos = Body.find("AssetsEditorExportNameCtx.m_ScopeHash = MakeUiScopeHash(\"assets_editor_export_name\");", TextInputCtxPos);
-	const size_t TextFieldPos = Body.find("ui_widget::TextField(AssetsEditorExportNameCtx, &s_ExportNameInput, ExportRow, nullptr, EditBoxFontSize)", ScopeHashPos);
+	const size_t TextInputCtxPos = Body.find("const IUiContext AssetsEditorExportNameCtx = SettingsUiContext(\"assets_editor_export_name\");", SetPlaceholderPos);
+	const size_t TextFieldPos = Body.find("ui_widget::InputField(AssetsEditorExportNameCtx, &s_ExportNameInput, ExportRow, ExportNameOptions).m_Changed", TextInputCtxPos);
 	const size_t CommitPos = Body.find("AssetsEditorCommitExportNameForType();", TextFieldPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(SetPlaceholderPos, std::string::npos);
 	EXPECT_NE(TextInputCtxPos, std::string::npos);
-	EXPECT_NE(ScopeHashPos, std::string::npos);
 	EXPECT_NE(TextFieldPos, std::string::npos);
 	EXPECT_NE(CommitPos, std::string::npos);
 	EXPECT_LT(SetPlaceholderPos, TextInputCtxPos);
-	EXPECT_LT(TextInputCtxPos, ScopeHashPos);
-	EXPECT_LT(ScopeHashPos, TextFieldPos);
+	EXPECT_LT(TextInputCtxPos, TextFieldPos);
 	EXPECT_LT(TextFieldPos, CommitPos);
 	EXPECT_EQ(Body.find(";\n", TextFieldPos), CommitPos + str_length("AssetsEditorCommitExportNameForType()"));
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_ExportNameInput, &ExportRow, EditBoxFontSize"), std::string::npos);
