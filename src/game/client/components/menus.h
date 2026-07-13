@@ -2808,7 +2808,7 @@ private:
 	void RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly);
-	void RenderSettingsTClientProfiles(CUIRect MainView);
+	void RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderSettingsTClientConfigs(CUIRect MainView);
 	void RenderSettingsTClientSidebar(CUIRect MainView);
 	void RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage = false, bool PrewarmOnly = false);

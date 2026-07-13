@@ -282,7 +282,7 @@ TEST(QmCardRegistry, BuildDefaultEntriesCoversEveryRegisteredCard)
 	EXPECT_GE(Model.StateIndexForStableId("deck:sound-audio-pack"), 0);
 	EXPECT_GE(Model.StateIndexForStableId("deck:appearance-chat-preview"), 0);
 
-	char aBuf[4096];
+	char aBuf[8192];
 	Model.Serialize(aBuf, sizeof(aBuf));
 	const std::string Serialized(aBuf);
 	EXPECT_NE(Serialized.find("tclient:auto-reply|tclient|left|8;"), std::string::npos);

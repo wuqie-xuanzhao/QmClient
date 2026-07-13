@@ -1,6 +1,6 @@
 # QmClient 设置页 UI 统一 P6 迁移计划
 
-**状态（2026-07-13，基于 `dyl_dev`）：** P0-P5 公共 page/card/input/scroll 契约已存在。QmClient Overview、Contributors、Visual、Functions/HUD 和 Global Search 已迁移；TClient BindWheel、WarList、ChatBinds、StatusBar、Info 已迁移并保留只读预热隔离和标题拖拽。TClient 主页及 Profiles、Configs 仍未迁移。P7 不在本计划范围内。
+**状态（2026-07-13，基于 `dyl_dev`）：** P0-P5 公共 page/card/input/scroll 契约已存在。QmClient Overview、Contributors、Visual、Functions/HUD 和 Global Search 已迁移；TClient BindWheel、WarList、ChatBinds、StatusBar、Info、Profiles 已迁移并保留只读预热隔离和标题拖拽。TClient 主页及 Configs 仍未迁移。P7 不在本计划范围内。
 
 ## 目标与边界
 
@@ -23,7 +23,8 @@
 | TClient StatusBar | 三张卡为 `deck:tclient-status-bar-*`；ReadOnly 使用独立 deck/model，非只读保留状态栏配置、scheme/dropdown、项目选择/交换和原最小总卡高 | 已迁移 |
 | TClient WarList | entries/editor/settings/groups/players 对应五张 `deck:tclient-warlist-*`；ReadOnly 使用独立 deck/model，固定高度内嵌列表以 `COMPOSITE_CONTROL` 获取滚轮，搜索通过 focus bridge reveal 目标卡片 | 已迁移 |
 | TClient Info | links/files/developers/tab visibility 对应四张 `deck:tclient-info-*`；ReadOnly 使用独立 deck/model，预热不会打开外部链接/文件或写 tab 配置，搜索可 reveal 目标卡片 | 已迁移 |
-| TClient | 主页及 Profiles、Configs 仍有 cache box/private inset/private drag/section height 路径 | 部分迁移 |
+| TClient Profiles | actions/options/saved list 对应三张 `deck:tclient-profiles-*`；ReadOnly 使用独立 deck/model，内嵌 `CListBox` 使用 `COMPOSITE_CONTROL`，搜索可 reveal 目标卡片 | 已迁移 |
+| TClient | 主页及 Configs 仍有 cache box/private inset/private drag/section height 路径 | 部分迁移 |
 | Adapter/model | `QmCardRegistry`、`SettingsCardOrderModel()` 和显式 model adapter 已存在；`QmModuleLayoutModel()` 过渡 singleton 仍被旧 renderer 使用 | 迁移完成前不得删除兼容入口 |
 
 ## 当前接手检查点
@@ -31,7 +32,8 @@
 - 已验证（本次 ChatBinds 切片）：`git submodule update --init --recursive`、focused 结构/输入/搜索路由测试 `6/6`、`game-client`、全量 C++ `2175/2175`、`check_docs.py`、`git diff --check` 和本切片 C++ 文件 `clang-format --dry-run --Werror`；删除旧 ChatBinds cache box/私有 scroll 路径，注册三个稳定卡片 ID，并让全局搜索路由到 `TCLIENT_TAB_BINDCHAT`。首次全量回归的三项旧结构断言已随新签名和公共 Deck 契约同步；后续重试通过。独立只读审查已收口默认双列 placement 和公共 header 重复绘制问题。
 - 已验证（本次 WarList 切片）：`git submodule update --init --recursive`、focused WarList/搜索路由测试 `7/7`、`game-client`、全量 C++ `2176/2176`、`git diff --check` 和本切片 C++ 文件 `clang-format --dry-run --Werror`。独立只读审查发现并收口：全局搜索通过 `m_SettingsCardFocusStableId` 交由四个已迁移 TClient deck 消费/reveal；WarList 三个固定高度 `CListBox` 在 `DoStart` 前注册 `COMPOSITE_CONTROL`，避免滚轮被外层页面抢占。
 - 已验证（本次 Info 切片）：TDD focused 结构/搜索路由测试、`game-client`、`git diff --check` 和本切片 C++ 文件 `clang-format --dry-run --Werror`；旧双栏 layout 已删除，链接、文件打开和 tab 配置写入均由 `ReadOnly` 守卫。
-- 当前 gap：TClient 主页及 Profiles、Configs 未迁移；所有已迁移页面仍需要最终 in-client 视觉/交互验收（含正常与非默认 UI scale 的滚动、拖拽、文本输入和预热），P6 default gate 未在本切片执行。quick gate 的历史失败来自未触碰的 `menus_settings.cpp`、`menus_settings_controls.cpp` clang-format 违规，以及未使用的 `qm_chat_anim_easing` / `qm_chat_edge_margin` 配置项；不随本切片修复。
+- 已验证（本次 Profiles 切片）：TDD focused 结构/搜索路由测试、`game-client`、全量 C++ `2178/2178`、`check_docs.py`、`git diff --check` 和本切片 C++ 文件 `clang-format --dry-run --Werror`。原 profile 读写/应用语义保留，列表改由固定高度卡片内 `CListBox` 承载。
+- 当前 gap：TClient 主页及 Configs 未迁移；所有已迁移页面仍需要最终 in-client 视觉/交互验收（含正常与非默认 UI scale 的滚动、拖拽、文本输入和预热），P6 default gate 未在本切片执行。quick gate 的历史失败来自未触碰的 `menus_settings.cpp`、`menus_settings_controls.cpp` clang-format 违规，以及未使用的 `qm_chat_anim_easing` / `qm_chat_edge_margin` 配置项；不随本切片修复。
 
 ## 执行切片
 

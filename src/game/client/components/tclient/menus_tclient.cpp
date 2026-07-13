@@ -5079,9 +5079,21 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly)
 	LogTClientPerfStage("tclient_info_total", RenderTimer.ElapsedMs(), false);
 }
 
-void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
+void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 {
 	CPerfTimer RenderTimer;
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
+	const float UiScale = 1.0f;
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	std::unique_ptr<CUiRenderOnlyGuard> pRenderOnlyGuard;
+	if(ReadOnly && !Ui()->RenderOnly())
+		pRenderOnlyGuard = std::make_unique<CUiRenderOnlyGuard>(Ui());
+	IUiContext ProfilesCtx = SettingsUiContext("settings_tclient_profiles", UiScale);
+	if(ReadOnly)
+	{
+		ProfilesCtx.m_pAnim = nullptr;
+		ProfilesCtx.m_pTree = nullptr;
+	}
 	int *pCurrentUseCustomColor = m_Dummy ? &g_Config.m_ClDummyUseCustomColor : &g_Config.m_ClPlayerUseCustomColor;
 
 	const char *pCurrentSkinName = m_Dummy ? g_Config.m_ClDummySkin : g_Config.m_ClPlayerSkin;
@@ -5269,7 +5281,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 			s_SelectedProfile = (int)vProfiles.size() - 1;
 	};
 
-	{
+	auto RenderActions = [&](CUIRect MainView) {
 		CPerfTimer ActionsTimer;
 		CUIRect Top;
 		MainView.HSplitTop(160.0f, &Top, &MainView);
@@ -5307,13 +5319,13 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 		{
 			Actions.HSplitTop(30.0f, &Button, &Actions);
 			static CButtonContainer s_LoadButton;
-			if(DoTClientSettingsButton_Menu(&s_LoadButton, "tclient-profile-load", Localize("Load"), 0, &Button))
+			if(!ReadOnly && DoTClientSettingsButton_Menu(&s_LoadButton, "tclient-profile-load", Localize("Load"), 0, &Button))
 				ApplySelectedProfile();
 			Actions.HSplitTop(5.0f, nullptr, &Actions);
 
 			Actions.HSplitTop(30.0f, &Button, &Actions);
 			static CButtonContainer s_SaveButton;
-			if(DoTClientSettingsButton_Menu(&s_SaveButton, "tclient-profile-save", Localize("Save"), 0, &Button))
+			if(!ReadOnly && DoTClientSettingsButton_Menu(&s_SaveButton, "tclient-profile-save", Localize("Save"), 0, &Button))
 			{
 				const CProfile ProfileToSave = BuildProfileFromCurrentSettings();
 				GameClient()->m_SkinProfiles.AddProfile(
@@ -5328,20 +5340,21 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 			Actions.HSplitTop(5.0f, nullptr, &Actions);
 
 			static int s_AllowDelete;
-			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&s_AllowDelete, "tclient-profile-enable-deleting", Localizable("Enable Deleting"), &s_AllowDelete, &Actions, LineSize);
+			if(!ReadOnly)
+				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&s_AllowDelete, "tclient-profile-enable-deleting", Localizable("Enable Deleting"), &s_AllowDelete, &Actions, LineSize);
 			Actions.HSplitTop(5.0f, nullptr, &Actions);
 
 			if(s_AllowDelete)
 			{
 				Actions.HSplitTop(30.0f, &Button, &Actions);
 				static CButtonContainer s_DeleteButton;
-				if(DoTClientSettingsButton_Menu(&s_DeleteButton, "tclient-profile-delete", Localize("Delete"), 0, &Button))
+				if(!ReadOnly && DoTClientSettingsButton_Menu(&s_DeleteButton, "tclient-profile-delete", Localize("Delete"), 0, &Button))
 					DeleteSelectedProfile();
 				Actions.HSplitTop(5.0f, nullptr, &Actions);
 
 				Actions.HSplitTop(30.0f, &Button, &Actions);
 				static CButtonContainer s_OverrideButton;
-				if(DoTClientSettingsButton_Menu(&s_OverrideButton, "tclient-profile-override", Localize("Override"), 0, &Button))
+				if(!ReadOnly && DoTClientSettingsButton_Menu(&s_OverrideButton, "tclient-profile-override", Localize("Override"), 0, &Button))
 				{
 					if(CProfile *pProfile = pSelectedProfile())
 						*pProfile = BuildProfileFromCurrentSettings();
@@ -5349,72 +5362,119 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 			}
 		}
 		LogTClientPerfStageEx("tclient_profiles", "actions", ETClientSettingsPerfStage::INTERACTIVE_LAYER, ActionsTimer.ElapsedMs(), false);
-	}
-	MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-	{
+	};
+
+	auto RenderOptions = [&](CUIRect MainView) {
 		CUIRect Options;
 		MainView.HSplitTop(LineSize, &Options, &MainView);
 
 		Options.VSplitLeft(150.0f, &Button, &Options);
-		if(DoTClientSettingsButton_CheckBox(&m_Dummy, "tclient-profile-dummy", Localize("Dummy"), m_Dummy, &Button))
+		if(!ReadOnly && DoTClientSettingsButton_CheckBox(&m_Dummy, "tclient-profile-dummy", Localize("Dummy"), m_Dummy, &Button))
 			m_Dummy = 1 - m_Dummy;
 
 		Options.VSplitLeft(150.0f, &Button, &Options);
 		static int s_CustomColorId = 0;
-		if(DoTClientSettingsButton_CheckBox(&s_CustomColorId, "tclient-profile-custom-colors", Localize("Custom colors"), *pCurrentUseCustomColor, &Button))
+		if(!ReadOnly && DoTClientSettingsButton_CheckBox(&s_CustomColorId, "tclient-profile-custom-colors", Localize("Custom colors"), *pCurrentUseCustomColor, &Button))
 		{
 			*pCurrentUseCustomColor = *pCurrentUseCustomColor ? 0 : 1;
 			SetNeedSendInfo();
 		}
 
 		Button = Options;
-		if(DoTClientSettingsButton_CheckBox(&g_Config.m_TcProfileOverwriteClanWithEmpty, "tclient-profile-overwrite-empty-clan", Localize("Overwrite clan even if empty"), g_Config.m_TcProfileOverwriteClanWithEmpty, &Button))
+		if(!ReadOnly && DoTClientSettingsButton_CheckBox(&g_Config.m_TcProfileOverwriteClanWithEmpty, "tclient-profile-overwrite-empty-clan", Localize("Overwrite clan even if empty"), g_Config.m_TcProfileOverwriteClanWithEmpty, &Button))
 			g_Config.m_TcProfileOverwriteClanWithEmpty = 1 - g_Config.m_TcProfileOverwriteClanWithEmpty;
-	}
-	MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-	{
+	};
+
+	auto RenderSavedProfiles = [&](CUIRect MainView) {
 		CUIRect SelectorRect;
-		MainView.HSplitBottom(LineSize + MarginSmall, &MainView, &SelectorRect);
-		SelectorRect.HSplitTop(MarginSmall, nullptr, &SelectorRect);
+		MainView.HSplitTop(LineSize, &SelectorRect, &MainView);
 
 		static CButtonContainer s_ProfilesFile;
 		SelectorRect.VSplitLeft(130.0f, &Button, &SelectorRect);
-		if(DoTClientSettingsButton_Menu(&s_ProfilesFile, "tclient-profiles-file", Localize("Profiles file"), 0, &Button))
+		if(!ReadOnly && DoTClientSettingsButton_Menu(&s_ProfilesFile, "tclient-profiles-file", Localize("Profiles file"), 0, &Button))
 		{
 			char aBuf[IO_MAX_PATH_LENGTH];
 			Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[ConfigDomain::TCLIENTPROFILES].m_aConfigPath, aBuf, sizeof(aBuf));
 			Client()->ViewFile(aBuf);
 		}
-	}
 
-	static CListBox s_ListBox;
-	CPerfTimer ListTimer;
-	const int ProfilesPerRow = maximum(1, (int)(MainView.w / 200.0f));
-	s_ListBox.DoStart(50.0f, vProfiles.size(), ProfilesPerRow, 3, s_SelectedProfile, &MainView, true, IGraphics::CORNER_ALL);
+		static CListBox s_ListBox;
+		s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		CPerfTimer ListTimer;
+		const int ProfilesPerRow = maximum(1, (int)(MainView.w / 200.0f));
+		s_ListBox.DoStart(50.0f, vProfiles.size(), ProfilesPerRow, 3, s_SelectedProfile, &MainView, true, IGraphics::CORNER_ALL);
 
-	static std::vector<int> s_vProfileItemIds;
-	if(s_vProfileItemIds.size() != vProfiles.size())
+		static std::vector<int> s_vProfileItemIds;
+		if(s_vProfileItemIds.size() != vProfiles.size())
+		{
+			s_vProfileItemIds.resize(vProfiles.size());
+			for(size_t i = 0; i < s_vProfileItemIds.size(); ++i)
+				s_vProfileItemIds[i] = (int)i;
+		}
+
+		for(size_t i = 0; i < vProfiles.size(); ++i)
+		{
+			CListboxItem Item = s_ListBox.DoNextItem(&s_vProfileItemIds[i], s_SelectedProfile >= 0 && (size_t)s_SelectedProfile == i);
+			if(!Item.m_Visible)
+				continue;
+
+			RenderProfile(Item.m_Rect, vProfiles[i], false);
+		}
+
+		const int SelectedProfile = s_ListBox.DoEnd();
+		if(!ReadOnly)
+			s_SelectedProfile = SelectedProfile;
+		if(!ReadOnly && s_ListBox.WasItemActivated())
+			ApplySelectedProfile();
+		char aExtra[96];
+		str_format(aExtra, sizeof(aExtra), "profiles=%d", (int)vProfiles.size());
+		LogTClientPerfStageEx("tclient_profiles", "list", ETClientSettingsPerfStage::STATIC_LAYER, ListTimer.ElapsedMs(), false, aExtra);
+	};
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(3);
+	auto AddCard = [&vCards](const char *pStableId, const char *pTitle, float Height, const FSettingsCardRender &Render) {
+		SSettingsCardDefinition Card;
+		Card.m_Spec = {pStableId, Localize(pTitle), nullptr};
+		Card.m_Measure = [Height](float) { return Height; };
+		Card.m_Render = Render;
+		vCards.push_back(std::move(Card));
+	};
+	AddCard("deck:tclient-profiles-actions", "Profiles", 160.0f, RenderActions);
+	AddCard("deck:tclient-profiles-options", "Profile Options", LineSize, RenderOptions);
+	AddCard("deck:tclient-profiles-list", "Saved Profiles", 300.0f, RenderSavedProfiles);
+
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = ReadOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = ReadOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !ReadOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !ReadOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !ReadOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !ReadOnly && Input()->ModifierIsPressed();
+	InputState.m_AllowHeaderDrag = !ReadOnly;
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;
+	static CScrollRegion s_ProfilesScrollRegion;
+	static qm_card_order::CModel s_ProfilesPrewarmOrderModel;
+	static bool s_ProfilesPrewarmOrderModelInitialized = false;
+	static CSettingsCardDeck s_ProfilesPrewarmDeck;
+	if(ReadOnly && !s_ProfilesPrewarmOrderModelInitialized)
 	{
-		s_vProfileItemIds.resize(vProfiles.size());
-		for(size_t i = 0; i < s_vProfileItemIds.size(); ++i)
-			s_vProfileItemIds[i] = (int)i;
+		s_ProfilesPrewarmOrderModel.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+		s_ProfilesPrewarmOrderModelInitialized = true;
 	}
-
-	for(size_t i = 0; i < vProfiles.size(); ++i)
+	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_ProfilesPrewarmOrderModel : SettingsCardOrderModel();
+	CSettingsCardDeck &CardDeck = ReadOnly ? s_ProfilesPrewarmDeck : m_SettingsCardDeck;
+	if(!ReadOnly && str_startswith(m_SettingsCardFocusStableId.c_str(), "deck:tclient-profiles-") != nullptr)
 	{
-		CListboxItem Item = s_ListBox.DoNextItem(&s_vProfileItemIds[i], s_SelectedProfile >= 0 && (size_t)s_SelectedProfile == i);
-		if(!Item.m_Visible)
-			continue;
-
-		RenderProfile(Item.m_Rect, vProfiles[i], false);
+		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+		m_SettingsCardFocusStableId.clear();
 	}
-
-	s_SelectedProfile = s_ListBox.DoEnd();
-	if(s_ListBox.WasItemActivated())
-		ApplySelectedProfile();
-	char aExtra[96];
-	str_format(aExtra, sizeof(aExtra), "profiles=%d", (int)vProfiles.size());
-	LogTClientPerfStageEx("tclient_profiles", "list", ETClientSettingsPerfStage::STATIC_LAYER, ListTimer.ElapsedMs(), false, aExtra);
+	const SSettingsCardDeckResult DeckResult = CardDeck.Render(ProfilesCtx, Page, "tclient-profiles", vCards, CardOrderModel, ReadOnly ? nullptr : &s_ProfilesScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!ReadOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_profiles_total", RenderTimer.ElapsedMs(), false);
 }
 
