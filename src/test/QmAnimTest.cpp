@@ -1950,6 +1950,27 @@ TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
 	EXPECT_NEAR(PopupPolicy.m_Config.m_WheelScale, 60.0f, 0.01f);
 }
 
+TEST(UiV2ScrollPolicy, NonCardMenuListAndFilterGridUseResolvedSteps)
+{
+	SQmScrollRequest ListRequest;
+	ListRequest.m_Profile = EQmScrollProfile::MENU_LIST;
+	ListRequest.m_RowExtent = 24.0f;
+	ListRequest.m_RowsPerStep = 3;
+	const SQmResolvedScrollPolicy List = QmResolveScrollPolicy(ListRequest, 1.0f, 0.0f);
+	EXPECT_FLOAT_EQ(List.m_Config.m_WheelScale, 72.0f);
+	EXPECT_EQ(List.m_RailVisibility, EQmScrollRailVisibility::AUTO);
+	EXPECT_FLOAT_EQ(List.m_AltMultiplier, 3.0f);
+
+	SQmScrollRequest GridRequest;
+	GridRequest.m_Profile = EQmScrollProfile::FILTER_GRID;
+	GridRequest.m_RowExtent = 30.0f;
+	GridRequest.m_RowsPerStep = 2;
+	const SQmResolvedScrollPolicy Grid = QmResolveScrollPolicy(GridRequest, 1.0f, 0.0f);
+	EXPECT_FLOAT_EQ(Grid.m_Config.m_WheelScale, 60.0f);
+	EXPECT_EQ(Grid.m_RailVisibility, EQmScrollRailVisibility::HIDDEN);
+	EXPECT_FALSE(Grid.m_ContentDragAllowed);
+}
+
 TEST(UiV2ScrollController, HiddenRailKeepsScrollableContentAtFullWidth)
 {
 	CQmScrollState State;

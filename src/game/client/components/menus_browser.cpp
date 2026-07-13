@@ -1113,10 +1113,12 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 			Ui()->SetActiveItem(&s_FilterInput);
 			s_FilterInput.SelectAll();
 		}
-		IUiContext ServerBrowserSearchCtx;
-		ServerBrowserSearchCtx.m_pUi = Ui();
-		ServerBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash("server_browser_search");
-		if(ui_widget::SearchField(ServerBrowserSearchCtx, &s_FilterInput, QuickSearch, 12.0f, false))
+		const IUiContext ServerBrowserSearchCtx = SettingsUiContext("server_browser_search");
+		ui_widget::SInputFieldOptions SearchOptions;
+		SearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+		SearchOptions.m_Clearable = true;
+		SearchOptions.m_FontSize = 12.0f;
+		if(ui_widget::InputField(ServerBrowserSearchCtx, &s_FilterInput, QuickSearch, SearchOptions).m_Changed)
 			Client()->ServerBrowserUpdate();
 	}
 
@@ -1145,10 +1147,12 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 			Ui()->SetActiveItem(&s_ExcludeInput);
 			s_ExcludeInput.SelectAll();
 		}
-		IUiContext ServerBrowserExcludeCtx;
-		ServerBrowserExcludeCtx.m_pUi = Ui();
-		ServerBrowserExcludeCtx.m_ScopeHash = MakeUiScopeHash("server_browser_exclude");
-		if(ui_widget::SearchField(ServerBrowserExcludeCtx, &s_ExcludeInput, QuickExclude, 12.0f, false))
+		const IUiContext ServerBrowserExcludeCtx = SettingsUiContext("server_browser_exclude");
+		ui_widget::SInputFieldOptions SearchOptions;
+		SearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+		SearchOptions.m_Clearable = true;
+		SearchOptions.m_FontSize = 12.0f;
+		if(ui_widget::InputField(ServerBrowserExcludeCtx, &s_ExcludeInput, QuickExclude, SearchOptions).m_Changed)
 			Client()->ServerBrowserUpdate();
 	}
 
@@ -1202,10 +1206,11 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 
 		Ui()->DoLabel(&ServerAddrLabel, Localize("Server address:"), 14.0f, TEXTALIGN_ML);
 		static CLineInput s_ServerAddressInput(g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress));
-		IUiContext ServerBrowserAddressCtx;
-		ServerBrowserAddressCtx.m_pUi = Ui();
-		ServerBrowserAddressCtx.m_ScopeHash = MakeUiScopeHash("server_browser_address");
-		if(ui_widget::ClearableTextField(ServerBrowserAddressCtx, &s_ServerAddressInput, ServerAddrEditBox, nullptr, 12.0f))
+		const IUiContext ServerBrowserAddressCtx = SettingsUiContext("server_browser_address");
+		ui_widget::SInputFieldOptions AddressOptions;
+		AddressOptions.m_Clearable = true;
+		AddressOptions.m_FontSize = 12.0f;
+		if(ui_widget::InputField(ServerBrowserAddressCtx, &s_ServerAddressInput, ServerAddrEditBox, AddressOptions).m_Changed)
 			m_ServerBrowserShouldRevealSelection = true;
 	}
 
@@ -1319,10 +1324,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	Ui()->DoLabel(&Button, Localize("Game types:"), FontSize, TEXTALIGN_ML);
 	Button.VSplitRight(60.0f, nullptr, &Button);
 	static CLineInput s_GametypeInput(g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype));
-	IUiContext ServerBrowserGameTypeCtx;
-	ServerBrowserGameTypeCtx.m_pUi = Ui();
-	ServerBrowserGameTypeCtx.m_ScopeHash = MakeUiScopeHash("server_browser_filter_game_type");
-	if(ui_widget::TextField(ServerBrowserGameTypeCtx, &s_GametypeInput, Button, nullptr, FontSize))
+	const IUiContext ServerBrowserGameTypeCtx = SettingsUiContext("server_browser_filter_game_type");
+	ui_widget::SInputFieldOptions GameTypeOptions;
+	GameTypeOptions.m_FontSize = FontSize;
+	if(ui_widget::InputField(ServerBrowserGameTypeCtx, &s_GametypeInput, Button, GameTypeOptions).m_Changed)
 		Client()->ServerBrowserUpdate();
 
 	// server address
@@ -1332,10 +1337,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	Ui()->DoLabel(&Button, Localize("Server address:"), FontSize, TEXTALIGN_ML);
 	Button.VSplitRight(60.0f, nullptr, &Button);
 	static CLineInput s_FilterServerAddressInput(g_Config.m_BrFilterServerAddress, sizeof(g_Config.m_BrFilterServerAddress));
-	IUiContext ServerBrowserFilterAddressCtx;
-	ServerBrowserFilterAddressCtx.m_pUi = Ui();
-	ServerBrowserFilterAddressCtx.m_ScopeHash = MakeUiScopeHash("server_browser_filter_address");
-	if(ui_widget::TextField(ServerBrowserFilterAddressCtx, &s_FilterServerAddressInput, Button, nullptr, FontSize))
+	const IUiContext ServerBrowserFilterAddressCtx = SettingsUiContext("server_browser_filter_address");
+	ui_widget::SInputFieldOptions FilterAddressOptions;
+	FilterAddressOptions.m_FontSize = FontSize;
+	if(ui_widget::InputField(ServerBrowserFilterAddressCtx, &s_FilterServerAddressInput, Button, FilterAddressOptions).m_Changed)
 		Client()->ServerBrowserUpdate();
 
 	// player country
@@ -1502,7 +1507,7 @@ void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,
 	IFilterList &Filter,
 	float ItemHeight, int MaxItems, int ItemsPerRow,
 	CScrollRegion &ScrollRegion, std::vector<unsigned char> &vItemIds,
-	bool UpdateCommunityCacheOnChange, bool HideScrollbar,
+	bool UpdateCommunityCacheOnChange,
 	const std::function<const char *(int ItemIndex)> &GetItemName,
 	const std::function<void(int ItemIndex, CUIRect Item, const void *pItemId, bool Active)> &RenderItem)
 {
@@ -1512,9 +1517,9 @@ void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,
 	SQmScrollRequest ScrollRequest;
 	ScrollRequest.m_Profile = EQmScrollProfile::FILTER_GRID;
 	ScrollRequest.m_RowExtent = ItemHeight;
+	ScrollRequest.m_RowsPerStep = 2;
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
-	ScrollParams.m_HideScrollbar = HideScrollbar;
 	ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
@@ -1698,7 +1703,7 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 	};
 
 	s_vFavoriteButtonIds.resize(MaxEntries);
-	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CommunitiesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, true, false, GetItemName, RenderItem);
+	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CommunitiesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, true, GetItemName, RenderItem);
 }
 
 void CMenus::RenderServerbrowserCountriesFilter(CUIRect View)
@@ -1723,7 +1728,7 @@ void CMenus::RenderServerbrowserCountriesFilter(CUIRect View)
 		GameClient()->m_CountryFlags.Render(ServerBrowser()->CommunityCache().SelectableCountries()[ItemIndex]->FlagId(), ColorRGBA(1.0f, 1.0f, 1.0f, (Active ? 0.9f : 0.2f) + (Ui()->HotItem() == pItemId ? 0.1f : 0.0f)), Item.x, Item.y, Item.w, Item.h);
 	};
 
-	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CountriesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, true, GetItemName, RenderItem);
+	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CountriesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, GetItemName, RenderItem);
 }
 
 void CMenus::RenderServerbrowserTypesFilter(CUIRect View)
@@ -1747,7 +1752,7 @@ void CMenus::RenderServerbrowserTypesFilter(CUIRect View)
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	};
 
-	RenderServerbrowserDDNetFilter(View, ServerBrowser()->TypesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, false, GetItemName, RenderItem);
+	RenderServerbrowserDDNetFilter(View, ServerBrowser()->TypesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, GetItemName, RenderItem);
 }
 
 CUi::EPopupMenuFunctionResult CMenus::PopupCountrySelection(void *pContext, CUIRect View, bool Active)
@@ -2173,8 +2178,12 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	// friends list
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
-	ScrollParams.m_ScrollUnit = 80.0f;
+	SQmScrollRequest ScrollRequest;
+	ScrollRequest.m_Profile = EQmScrollProfile::MENU_LIST;
+	ScrollRequest.m_RowExtent = 24.0f;
+	ScrollRequest.m_RowsPerStep = 3;
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 	s_ScrollRegion.Begin(&List, &ScrollOffset, &ScrollParams);
 	List.y += ScrollOffset.y;
 
@@ -2915,10 +2924,10 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		Ui()->DoLabel(&Button, aBuf, FontSize + 2.0f, TEXTALIGN_ML);
 		Button.VSplitLeft(80.0f, nullptr, &Button);
 		static CLineInputBuffered<MAX_NAME_LENGTH> s_NameInput;
-		IUiContext ServerBrowserAddFriendTextInputCtx;
-		ServerBrowserAddFriendTextInputCtx.m_pUi = Ui();
-		ServerBrowserAddFriendTextInputCtx.m_ScopeHash = MakeUiScopeHash("server_browser_add_friend_text_inputs");
-		ui_widget::TextField(ServerBrowserAddFriendTextInputCtx, &s_NameInput, Button, nullptr, FontSize + 2.0f);
+		const IUiContext ServerBrowserAddFriendTextInputCtx = SettingsUiContext("server_browser_add_friend_text_inputs");
+		ui_widget::SInputFieldOptions AddFriendInputOptions;
+		AddFriendInputOptions.m_FontSize = FontSize + 2.0f;
+		ui_widget::InputField(ServerBrowserAddFriendTextInputCtx, &s_NameInput, Button, AddFriendInputOptions);
 
 		ServerFriends.HSplitTop(3.0f, nullptr, &ServerFriends);
 		ServerFriends.HSplitTop(18.0f, &Button, &ServerFriends);
@@ -2926,7 +2935,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		Ui()->DoLabel(&Button, aBuf, FontSize + 2.0f, TEXTALIGN_ML);
 		Button.VSplitLeft(80.0f, nullptr, &Button);
 		static CLineInputBuffered<MAX_CLAN_LENGTH> s_ClanInput;
-		ui_widget::TextField(ServerBrowserAddFriendTextInputCtx, &s_ClanInput, Button, nullptr, FontSize + 2.0f);
+		ui_widget::InputField(ServerBrowserAddFriendTextInputCtx, &s_ClanInput, Button, AddFriendInputOptions);
 
 		ServerFriends.HSplitTop(3.0f, nullptr, &ServerFriends);
 		ServerFriends.HSplitTop(18.0f, &Button, &ServerFriends);
@@ -3071,10 +3080,10 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Input, &View);
-	IUiContext FriendsCategoryTextInputCtx;
-	FriendsCategoryTextInputCtx.m_pUi = pMenus->Ui();
-	FriendsCategoryTextInputCtx.m_ScopeHash = MakeUiScopeHash("server_browser_friends_category_text_input");
-	ui_widget::TextField(FriendsCategoryTextInputCtx, &pPopupContext->m_NameInput, Input, nullptr, FontSize + 1.0f);
+	const IUiContext FriendsCategoryTextInputCtx = pMenus->SettingsUiContext("server_browser_friends_category_text_input");
+	ui_widget::SInputFieldOptions CategoryInputOptions;
+	CategoryInputOptions.m_FontSize = FontSize + 1.0f;
+	ui_widget::InputField(FriendsCategoryTextInputCtx, &pPopupContext->m_NameInput, Input, CategoryInputOptions);
 
 	View.HSplitTop(6.0f, nullptr, &View);
 	View.HSplitTop(20.0f, &Buttons, &View);
@@ -3130,10 +3139,10 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendNote(void *pContext, CUIRect Vi
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Input, &View);
-	IUiContext FriendNoteTextInputCtx;
-	FriendNoteTextInputCtx.m_pUi = pMenus->Ui();
-	FriendNoteTextInputCtx.m_ScopeHash = MakeUiScopeHash("server_browser_friend_note_text_input");
-	ui_widget::TextField(FriendNoteTextInputCtx, &pPopupContext->m_NoteInput, Input, nullptr, FontSize + 1.0f);
+	const IUiContext FriendNoteTextInputCtx = pMenus->SettingsUiContext("server_browser_friend_note_text_input");
+	ui_widget::SInputFieldOptions NoteInputOptions;
+	NoteInputOptions.m_FontSize = FontSize + 1.0f;
+	ui_widget::InputField(FriendNoteTextInputCtx, &pPopupContext->m_NoteInput, Input, NoteInputOptions);
 
 	View.HSplitTop(4.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Buttons, &View);

@@ -1971,7 +1971,7 @@ protected:
 		IFilterList &Filter,
 		float ItemHeight, int MaxItems, int ItemsPerRow,
 		CScrollRegion &ScrollRegion, std::vector<unsigned char> &vItemIds,
-		bool UpdateCommunityCacheOnChange, bool HideScrollbar,
+		bool UpdateCommunityCacheOnChange,
 		const std::function<const char *(int ItemIndex)> &GetItemName,
 		const std::function<void(int ItemIndex, CUIRect Item, const void *pItemId, bool Active)> &RenderItem);
 	void RenderServerbrowserCommunitiesFilter(CUIRect View);
