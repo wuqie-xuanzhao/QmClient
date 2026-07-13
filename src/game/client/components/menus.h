@@ -2807,7 +2807,7 @@ private:
 	void RenderSettingsTClientChatBinds(CUIRect MainView);
 	void RenderSettingsTClientWarList(CUIRect MainView);
 	void RenderSettingsTClientInfo(CUIRect MainView);
-	void RenderSettingsTClientStatusBar(CUIRect MainView);
+	void RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientProfiles(CUIRect MainView);
 	void RenderSettingsTClientConfigs(CUIRect MainView);
 	void RenderSettingsTClientSidebar(CUIRect MainView);

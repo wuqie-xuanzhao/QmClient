@@ -8554,7 +8554,7 @@ TEST(QmMonitoringHelpers, TClientFinishNameTextInputUsesSharedQmTextField)
 TEST(QmMonitoringHelpers, TClientStatusSchemeTextInputUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	const size_t CtxPos = Body.find("IUiContext TClientStatusSchemeTextInputCtx;");
@@ -8576,14 +8576,14 @@ TEST(QmMonitoringHelpers, TClientStatusSchemeTextInputUsesSharedQmTextField)
 	EXPECT_LT(TreePos, ScopePos);
 	EXPECT_LT(ScopePos, FrameDtPos);
 	const size_t LabelPos = Body.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, \"tclient-statusbar-scheme-label\", &Label, Localize(\"Status Scheme:\"), FontSize, TEXTALIGN_MR);");
-	const size_t InputPos = Body.find("static CLineInput s_StatusScheme(g_Config.m_TcStatusBarScheme, sizeof(g_Config.m_TcStatusBarScheme));", LabelPos);
+	const size_t InputPos = Body.find("static CLineInput s_StatusScheme(g_Config.m_TcStatusBarScheme, sizeof(g_Config.m_TcStatusBarScheme));");
 	const size_t EmptyTextPos = Body.find("s_StatusScheme.SetEmptyText(\"\");", InputPos);
 	const size_t TextFieldPos = Body.find("ui_widget::InputField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, StatusScheme, nullptr, EditBoxFontSize);", EmptyTextPos);
 	EXPECT_NE(LabelPos, std::string::npos);
 	EXPECT_NE(InputPos, std::string::npos);
 	EXPECT_NE(EmptyTextPos, std::string::npos);
 	EXPECT_NE(TextFieldPos, std::string::npos);
-	EXPECT_LT(LabelPos, InputPos);
+	EXPECT_LT(InputPos, LabelPos);
 	EXPECT_LT(InputPos, EmptyTextPos);
 	EXPECT_LT(EmptyTextPos, TextFieldPos);
 	EXPECT_EQ(Body.find("ui_widget::InputField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, StatusScheme, \"\", EditBoxFontSize);"), std::string::npos);

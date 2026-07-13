@@ -2029,7 +2029,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 
 	const std::string RenderSettingsTClientSettings = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
-	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)");
+	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)");
 	const std::string HandleSettingsCardDeckDrag = FunctionBody(TClientSource, "void CMenus::HandleSettingsCardDeckDrag(");
 	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
 	ASSERT_FALSE(RenderSettingsTClientBindWheel.empty());
@@ -2049,17 +2049,27 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsTClientBindWheel.find("EndSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientBindWheel.find("MainView.VSplitLeft(MainView.w / 2.1f"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, \"tclient-bind-wheel\", SETTINGS_TCLIENT, nullptr)"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeck(MainView, s_StatusBarSettingsScrollRegion"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard(StatusBarDeck, \"tclient-status-bar-settings\", Localize(\"Status Bar\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard(StatusBarDeck, \"tclient-status-bar-items\", Localize(\"Status Bar Codes\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard(StatusBarDeck, \"tclient-status-bar-preview\", Localize(\"Preview\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("RenderStatusBarCodes(RightView, 0, true);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("EndSettingsCardDeck(StatusBarDeck, &s_StatusBarSettingsScrollY);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-settings"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-items"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-preview"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_StatusBarPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("CardDeck.Render("), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("const int Rows = ContentWidth > 360.0f ? (StatusBarCodeCount + 1) / 2 : StatusBarCodeCount;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(View.w > 360.0f)"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("View.HSplitTop(LineSize, &Label, &View);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(!ReadOnly && DoSettingsButton_Menu"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(!ReadOnly && DoSettingsButton_CheckBox"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(!ReadOnly && DoButtonLineSize_Menu"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("EndSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientStatusBar.find("MainView.HSplitBottom(100.0f, &MainView, &StatusBar);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientStatusBar.find("LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientStatusBar.find("tclient-statusbar-seconds\", Localize(\"Show seconds on clock\"), g_Config.m_TcStatusBarLocalTimeSeconds, &CheckBoxRect))\n\t\t\tg_Config.m_TcStatusBarLocalTimeSeconds ^= 1;\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\t{\n\t\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("float StatusBarSettingsContentBottom = LeftView.y;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("float StatusBarPreviewContentBottom = StatusBar.y + StatusBar.h;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("s_StatusBarSettingsCardHeight"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("s_StatusBarSettingsScrollY"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("const float EditorContentHeight = maximum("), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
@@ -2208,7 +2218,7 @@ TEST(QmNewUiMenuBranches, TClientProfilesAndStatusBarClampUiIndices)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string RenderSettingsTClientProfiles = FunctionBody(Source, "void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)");
-	const std::string RenderSettingsTClientStatusBar = FunctionBody(Source, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)");
+	const std::string RenderSettingsTClientStatusBar = FunctionBody(Source, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)");
 
 	EXPECT_NE(RenderSettingsTClientProfiles.find("Profile.m_FeetColor >= 0"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientProfiles.find("ProfilesPerRow = maximum(1"), std::string::npos);

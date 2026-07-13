@@ -1,6 +1,6 @@
 # QmClient 设置页 UI 统一 P6 迁移计划
 
-**状态（2026-07-13，基于 `46985e176b`）：** P0-P5 公共 page/card/input/scroll 契约已存在。QmClient Overview、Contributors、Visual、Functions/HUD 和 Global Search 已迁移；TClient BindWheel 已迁移并保留只读预热隔离、标题拖拽和原最小卡高。TClient 主页及其余复杂子页仍未迁移。P7 不在本计划范围内。
+**状态（2026-07-13，基于 `114b87d262`）：** P0-P5 公共 page/card/input/scroll 契约已存在。QmClient Overview、Contributors、Visual、Functions/HUD 和 Global Search 已迁移；TClient BindWheel、StatusBar 已迁移并保留只读预热隔离、标题拖拽和原最小卡高。TClient 主页及其余复杂子页仍未迁移。P7 不在本计划范围内。
 
 ## 目标与边界
 
@@ -19,13 +19,14 @@
 | QmClient Visual/Functions/HUD | 各生产 deck 均使用 `ResolveSettingsPageLayout`、`CSettingsCardDeck`、`CScrollRegion` 和全局排序 model | 已迁移 |
 | QmClient Global Search | 输入与结果为 `deck:global-search-*` 公共卡片，ReadOnly 使用独立 deck/model | 已迁移 |
 | TClient BindWheel | editor/preview 为 `deck:tclient-bind-wheel-*`；ReadOnly 使用独立 deck/model，非只读保留标题拖拽、绑定编辑和原 320px 最小总卡高 | 已迁移 |
-| TClient | 主页及 StatusBar、ChatBinds、WarList、Info、Profiles、Configs 仍有 cache box/private inset/private drag/section height 路径 | 部分迁移 |
+| TClient StatusBar | 三张卡为 `deck:tclient-status-bar-*`；ReadOnly 使用独立 deck/model，非只读保留状态栏配置、scheme/dropdown、项目选择/交换和原最小总卡高 | 已迁移 |
+| TClient | 主页及 ChatBinds、WarList、Info、Profiles、Configs 仍有 cache box/private inset/private drag/section height 路径 | 部分迁移 |
 | Adapter/model | `QmCardRegistry`、`SettingsCardOrderModel()` 和显式 model adapter 已存在；`QmModuleLayoutModel()` 过渡 singleton 仍被旧 renderer 使用 | 迁移完成前不得删除兼容入口 |
 
 ## 当前接手检查点
 
-- 已验证（本次 BindWheel 切片）：focused 结构测试、`game-client`、全量 C++ `2175/2175`、quick gate、`check_docs.py`、独立只读审查。
-- 当前 gap：TClient 主页及其余子页未迁移；所有已迁移页面仍需要最终 in-client 视觉/交互验收，P6 default gate 未在本切片执行。
+- 已验证（本次 StatusBar 切片）：focused 结构测试、`game-client`、全量 C++ `2175/2175`、`check_docs.py`、StatusBar 目标文件 clang-format 干跑；独立只读审查已发现并收口窄宽度状态码卡的测量/渲染不一致。全仓 quick gate 被并行 `menus_settings.cpp` 的既有 clang-format 违规阻断。
+- 当前 gap：TClient 主页及 ChatBinds、WarList、Info、Profiles、Configs 未迁移；所有已迁移页面仍需要最终 in-client 视觉/交互验收，P6 default gate 未在本切片执行。
 
 ## 执行切片
 
@@ -60,7 +61,7 @@
 
 ### Slice 4：TClient 主页与复杂子页
 
-范围：TClient Settings 主页/`CSectionLoader`、StatusBar、ChatBinds、WarList、Info、Profiles、Configs；BindWheel 已完成，不重复迁移。
+范围：TClient Settings 主页/`CSectionLoader`、ChatBinds、WarList、Info、Profiles、Configs；BindWheel、StatusBar 已完成，不重复迁移。
 
 做法：
 
