@@ -2028,7 +2028,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(SettingsDeck.find("vRenderedStates"), std::string::npos);
 
 	const std::string RenderSettingsTClientSettings = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
-	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)");
+	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)");
 	const std::string HandleSettingsCardDeckDrag = FunctionBody(TClientSource, "void CMenus::HandleSettingsCardDeckDrag(");
 	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
@@ -2038,10 +2038,15 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(HandleSettingsCardDeckDrag.find("(time_get() - DragState.m_PressStartTime) / (float)time_freq() >= 0.3f"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientSettings.find("RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientSettings.find("SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeckCard(BindWheelDeck, \"tclient-bind-wheel-editor\", Localize(\"Bind Wheel\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeckCard(BindWheelDeck, \"tclient-bind-wheel-preview\", Localize(\"Preview\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("EndSettingsCardDeck(BindWheelDeck, &s_BindWheelSettingsScrollY);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("ResolveSettingsPageLayout(MainView, false, UiScale)"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-editor"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-preview"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_BindWheelPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("CardDeck.Render("), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("SettingsCardOrderModel()"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeckCard("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientBindWheel.find("EndSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientBindWheel.find("MainView.VSplitLeft(MainView.w / 2.1f"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, \"tclient-bind-wheel\", SETTINGS_TCLIENT, nullptr)"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeck(MainView, s_StatusBarSettingsScrollRegion"), std::string::npos);
@@ -2055,8 +2060,10 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsTClientStatusBar.find("tclient-statusbar-seconds\", Localize(\"Show seconds on clock\"), g_Config.m_TcStatusBarLocalTimeSeconds, &CheckBoxRect))\n\t\t\tg_Config.m_TcStatusBarLocalTimeSeconds ^= 1;\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\t{\n\t\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("float StatusBarSettingsContentBottom = LeftView.y;"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("float StatusBarPreviewContentBottom = StatusBar.y + StatusBar.h;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("const float BindWheelEditorContentBottom = LeftView.y;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("s_BindWheelEditorCardHeight = maximum(BindWheelEditorBottom + BindWheelDeck.m_Style.m_Padding - BindWheelEditorCard.m_Rect.y, 320.0f);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("const float EditorContentHeight = maximum("), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientBindWheel.find("s_BindWheelEditorCardHeight"), std::string::npos);
 
 	const std::string RenderSettingsGraphics = FunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsGraphics.empty());

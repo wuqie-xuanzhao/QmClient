@@ -944,7 +944,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		if(m_TClientSettingsTab == TCLIENT_TAB_BINDCHAT)
 			RenderSettingsTClientChatBinds(ContentView);
 		if(m_TClientSettingsTab == TCLIENT_TAB_BINDWHEEL)
-			RenderSettingsTClientBindWheel(ContentView);
+			RenderSettingsTClientBindWheel(ContentView, PrewarmOnly);
 		if(m_TClientSettingsTab == TCLIENT_TAB_WARLIST)
 			RenderSettingsTClientWarList(ContentView);
 		if(m_TClientSettingsTab == TCLIENT_TAB_STATUSBAR)
@@ -3647,116 +3647,42 @@ void CMenus::SaveSettingsRuntimeCacheMetadata()
 	CSectionLoader::SaveSessionCache(SessionCache, SETTINGS_RUNTIME_CACHE_METADATA_FILE, Storage());
 }
 
-void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
+void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 {
-	CUIRect LeftView, RightView, Label, Button;
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
+	const float UiScale = 1.0f;
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	IUiContext TClientBindWheelTextInputCtx = SettingsUiContext("settings_tclient_bindwheel_text_inputs", UiScale);
+	if(ReadOnly)
+	{
+		TClientBindWheelTextInputCtx.m_pAnim = nullptr;
+		TClientBindWheelTextInputCtx.m_pTree = nullptr;
+	}
 	static CScrollRegion s_BindWheelSettingsScrollRegion;
-	static float s_BindWheelSettingsScrollY = 0.0f;
-	static float s_BindWheelEditorCardHeight = 0.0f;
-	static float s_BindWheelPreviewCardHeight = 0.0f;
-	SSettingsCardDeckLayout BindWheelDeck = BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, "tclient-bind-wheel", SETTINGS_TCLIENT);
-	SSettingsCardDeckCard BindWheelEditorCard = BeginSettingsCardDeckCard(BindWheelDeck, "tclient-bind-wheel-editor", Localize("Bind Wheel"), 320.0f, s_BindWheelEditorCardHeight);
-	SSettingsCardDeckCard BindWheelPreviewCard = BeginSettingsCardDeckCard(BindWheelDeck, "tclient-bind-wheel-preview", Localize("Preview"), 320.0f, s_BindWheelPreviewCardHeight);
-	IUiContext TClientBindWheelTextInputCtx;
-	TClientBindWheelTextInputCtx.m_pUi = Ui();
-	TClientBindWheelTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	TClientBindWheelTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	TClientBindWheelTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_bindwheel_text_inputs");
-	TClientBindWheelTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	LeftView = BindWheelEditorCard.m_ContentRect;
-	RightView = BindWheelPreviewCard.m_ContentRect;
-
-	const float Radius = minimum(RightView.w, RightView.h) / 2.0f;
-	vec2 Center = RightView.Center();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f);
-	Graphics()->DrawCircle(Center.x, Center.y, Radius, 64);
-	Graphics()->QuadsEnd();
-
 	static char s_aBindName[BINDWHEEL_MAX_NAME];
 	static char s_aBindCommand[BINDWHEEL_MAX_CMD];
-
 	static int s_SelectedBindIndex = -1;
-	int HoveringIndex = -1;
-
-	float MouseDist = distance(Center, Ui()->MousePos());
-	const int SegmentCount = GameClient()->m_BindWheel.m_vBinds.size();
-	if(MouseDist < Radius && MouseDist > Radius * 0.25f && SegmentCount > 0)
-	{
-		float SegmentAngle = 2.0f * pi / SegmentCount;
-		float HoveringAngle = angle(Ui()->MousePos() - Center) + SegmentAngle / 2.0f;
-		if(HoveringAngle < 0.0f)
-			HoveringAngle += 2.0f * pi;
-
-		HoveringIndex = (int)(HoveringAngle / (2.0f * pi) * SegmentCount);
-		HoveringIndex = std::clamp(HoveringIndex, 0, SegmentCount - 1);
-		if(Ui()->MouseButtonClicked(0))
-		{
-			s_SelectedBindIndex = HoveringIndex;
-			str_copy(s_aBindName, GameClient()->m_BindWheel.m_vBinds[HoveringIndex].m_aName);
-			str_copy(s_aBindCommand, GameClient()->m_BindWheel.m_vBinds[HoveringIndex].m_aCommand);
-		}
-		else if(Ui()->MouseButtonClicked(1) && s_SelectedBindIndex >= 0 && HoveringIndex >= 0 && HoveringIndex != s_SelectedBindIndex)
-		{
-			CBindWheel::CBind BindA = GameClient()->m_BindWheel.m_vBinds[s_SelectedBindIndex];
-			CBindWheel::CBind BindB = GameClient()->m_BindWheel.m_vBinds[HoveringIndex];
-			str_copy(GameClient()->m_BindWheel.m_vBinds[s_SelectedBindIndex].m_aName, BindB.m_aName);
-			str_copy(GameClient()->m_BindWheel.m_vBinds[s_SelectedBindIndex].m_aCommand, BindB.m_aCommand);
-			str_copy(GameClient()->m_BindWheel.m_vBinds[HoveringIndex].m_aName, BindA.m_aName);
-			str_copy(GameClient()->m_BindWheel.m_vBinds[HoveringIndex].m_aCommand, BindA.m_aCommand);
-		}
-		else if(Ui()->MouseButtonClicked(2))
-		{
-			s_SelectedBindIndex = HoveringIndex;
-		}
-	}
-	else if(MouseDist < Radius && Ui()->MouseButtonClicked(0))
-	{
-		s_SelectedBindIndex = -1;
-		str_copy(s_aBindName, "");
-		str_copy(s_aBindCommand, "");
-	}
-
-	{
-		CPerfTimer WheelTimer;
-		const float Theta = pi * 2.0f / std::max<float>(1.0f, GameClient()->m_BindWheel.m_vBinds.size());
-		for(int i = 0; i < static_cast<int>(GameClient()->m_BindWheel.m_vBinds.size()); i++)
-		{
-			TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-
-			float SegmentFontSize = FontSize * 1.1f;
-			if(i == s_SelectedBindIndex)
-			{
-				SegmentFontSize = FontSize * 1.7f;
-				TextRender()->TextColor(ColorRGBA(0.5f, 1.0f, 0.75f, 1.0f));
-			}
-			else if(i == HoveringIndex)
-			{
-				SegmentFontSize = FontSize * 1.35f;
-			}
-
-			const CBindWheel::CBind &Bind = GameClient()->m_BindWheel.m_vBinds[i];
-			const float Angle = Theta * i;
-			const vec2 Pos = direction(Angle) * (Radius * 0.75f) + Center;
-			const CUIRect Rect = CUIRect{Pos.x - 50.0f, Pos.y - 50.0f, 100.0f, 100.0f};
-			Ui()->DoLabel(&Rect, Bind.m_aName, SegmentFontSize, TEXTALIGN_MC);
-		}
-		char aExtra[96];
-		str_format(aExtra, sizeof(aExtra), "count=%d", SegmentCount);
-		LogTClientPerfStage("tclient_bindwheel_wheel", WheelTimer.ElapsedMs(), false, aExtra);
-	}
-	TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-
-	{
+	const float CardChromeHeight = ui_token::settings::CARD_PADDING * 2.0f + ui_token::settings::CARD_HEADER_TITLE_HEIGHT + ui_token::settings::CARD_HEADER_GAP;
+	const float EditorContentHeight = maximum(LineSize * 7.8f + MarginSmall * 4.0f, 320.0f - CardChromeHeight);
+	const float PreviewContentHeight = 280.0f;
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(2);
+	SSettingsCardDefinition EditorCard;
+	EditorCard.m_Spec = {"deck:tclient-bind-wheel-editor", Localize("Bind Wheel"), nullptr};
+	EditorCard.m_Measure = [EditorContentHeight](float) { return EditorContentHeight; };
+	EditorCard.m_RenderMeasured = [this, &TClientBindWheelTextInputCtx, ReadOnly](CUIRect &Content) {
 		CPerfTimer EditorTimer;
+		CUIRect LeftView = Content, Label, Button;
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
 		Button.VSplitLeft(100.0f, &Label, &Button);
 		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-name-label", &Label, Localize("Name:"), FontSize, TEXTALIGN_ML);
 		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(s_aBindName, sizeof(s_aBindName));
 		s_NameInput.SetEmptyText(Localize("Name"));
-		ui_widget::InputField(TClientBindWheelTextInputCtx, &s_NameInput, Button, Localize("Name"), EditBoxFontSize);
+		if(!ReadOnly)
+			ui_widget::InputField(TClientBindWheelTextInputCtx, &s_NameInput, Button, Localize("Name"), EditBoxFontSize);
+		else
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-name-value", &Button, s_aBindName, FontSize, TEXTALIGN_ML);
 
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
@@ -3765,73 +3691,158 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 		static CLineInput s_BindInput;
 		s_BindInput.SetBuffer(s_aBindCommand, sizeof(s_aBindCommand));
 		s_BindInput.SetEmptyText(Localize("Command"));
-		ui_widget::InputField(TClientBindWheelTextInputCtx, &s_BindInput, Button, Localize("Command"), EditBoxFontSize);
+		if(!ReadOnly)
+			ui_widget::InputField(TClientBindWheelTextInputCtx, &s_BindInput, Button, Localize("Command"), EditBoxFontSize);
+		else
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-command-value", &Button, s_aBindCommand, FontSize, TEXTALIGN_ML);
 
 		static CButtonContainer s_AddButton, s_RemoveButton, s_OverrideButton;
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
-		if(DoSettingsButton_Menu(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &s_OverrideButton, "tclient-bindwheel-override-selected", Localize("Override Selected"), 0, &Button) && s_SelectedBindIndex >= 0 && s_SelectedBindIndex < static_cast<int>(GameClient()->m_BindWheel.m_vBinds.size()))
+		if(!ReadOnly && DoSettingsButton_Menu(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &s_OverrideButton, "tclient-bindwheel-override-selected", Localize("Override Selected"), 0, &Button) && s_SelectedBindIndex >= 0 && s_SelectedBindIndex < static_cast<int>(GameClient()->m_BindWheel.m_vBinds.size()))
 		{
 			CBindWheel::CBind TempBind;
-			if(str_length(s_aBindName) == 0)
-				str_copy(TempBind.m_aName, "*");
-			else
-				str_copy(TempBind.m_aName, s_aBindName);
-
+			str_copy(TempBind.m_aName, str_length(s_aBindName) == 0 ? "*" : s_aBindName);
 			str_copy(GameClient()->m_BindWheel.m_vBinds[s_SelectedBindIndex].m_aName, TempBind.m_aName);
 			str_copy(GameClient()->m_BindWheel.m_vBinds[s_SelectedBindIndex].m_aCommand, s_aBindCommand);
 		}
+		else if(ReadOnly)
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-override-selected", &Button, Localize("Override Selected"), FontSize, TEXTALIGN_MC);
+
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
 		CUIRect ButtonAdd, ButtonRemove;
 		Button.VSplitMid(&ButtonRemove, &ButtonAdd, MarginSmall);
-		if(DoSettingsButton_Menu(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &s_AddButton, "tclient-bindwheel-add-bind", Localize("Add Bind"), 0, &ButtonAdd))
+		if(!ReadOnly && DoSettingsButton_Menu(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &s_AddButton, "tclient-bindwheel-add-bind", Localize("Add Bind"), 0, &ButtonAdd))
 		{
 			CBindWheel::CBind TempBind;
-			if(str_length(s_aBindName) == 0)
-				str_copy(TempBind.m_aName, "*");
-			else
-				str_copy(TempBind.m_aName, s_aBindName);
-
+			str_copy(TempBind.m_aName, str_length(s_aBindName) == 0 ? "*" : s_aBindName);
 			GameClient()->m_BindWheel.AddBind(TempBind.m_aName, s_aBindCommand);
 			s_SelectedBindIndex = static_cast<int>(GameClient()->m_BindWheel.m_vBinds.size()) - 1;
 		}
-		if(DoSettingsButton_Menu(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &s_RemoveButton, "tclient-bindwheel-remove-bind", Localize("Remove Bind"), 0, &ButtonRemove) && s_SelectedBindIndex >= 0)
+		else if(ReadOnly)
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-add-bind", &ButtonAdd, Localize("Add Bind"), FontSize, TEXTALIGN_MC);
+		if(!ReadOnly && DoSettingsButton_Menu(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &s_RemoveButton, "tclient-bindwheel-remove-bind", Localize("Remove Bind"), 0, &ButtonRemove) && s_SelectedBindIndex >= 0)
 		{
 			GameClient()->m_BindWheel.RemoveBind(s_SelectedBindIndex);
 			s_SelectedBindIndex = -1;
 		}
-		LogTClientPerfStage("tclient_bindwheel_editor", EditorTimer.ElapsedMs(), false);
-	}
+		else if(ReadOnly)
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-remove-bind", &ButtonRemove, Localize("Remove Bind"), FontSize, TEXTALIGN_MC);
 
-	CPerfTimer FooterTextTimer;
-	LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
-	LeftView.HSplitTop(LineSize, &Label, &LeftView);
-	DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-console", &Label, Localize("Commands run in the console"), FontSize, TEXTALIGN_ML);
-	LeftView.HSplitTop(LineSize * 0.8f, &Label, &LeftView);
-	DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-mouse", &Label, Localize("L select  R swap  M select only"), FontSize * 0.8f, TEXTALIGN_ML);
-	LogTClientPerfStage("tclient_bindwheel_footer_text", FooterTextTimer.ElapsedMs(), false);
-	const float BindWheelEditorContentBottom = LeftView.y;
-	float BindWheelEditorBottom = maximum(BindWheelEditorContentBottom, Label.y + Label.h);
+		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
+		LeftView.HSplitTop(LineSize, &Label, &LeftView);
+		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-console", &Label, Localize("Commands run in the console"), FontSize, TEXTALIGN_ML);
+		LeftView.HSplitTop(LineSize * 0.8f, &Label, &LeftView);
+		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-mouse", &Label, Localize("L select  R swap  M select only"), FontSize * 0.8f, TEXTALIGN_ML);
 
-	{
-		CPerfTimer FooterControlsTimer;
 		LeftView.HSplitBottom(LineSize, &LeftView, &Label);
-		BindWheelEditorBottom = maximum(BindWheelEditorBottom, Label.y + Label.h);
 		static CButtonContainer s_ReaderButtonWheel, s_ClearButtonWheel;
-		DoLine_KeyReader(Label, s_ReaderButtonWheel, s_ClearButtonWheel, Localize("Bind Wheel Key"), "+bindwheel");
-
+		if(!ReadOnly)
+			DoLine_KeyReader(Label, s_ReaderButtonWheel, s_ClearButtonWheel, Localize("Bind Wheel Key"), "+bindwheel");
+		else
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-key", &Label, Localize("Bind Wheel Key"), FontSize, TEXTALIGN_ML);
 		LeftView.HSplitBottom(LineSize, &LeftView, &Label);
-		BindWheelEditorBottom = maximum(BindWheelEditorBottom, Label.y + Label.h);
 		CUIRect CheckBoxRect;
 		Label.HSplitTop(LineSize, &CheckBoxRect, &Label);
-		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &g_Config.m_TcResetBindWheelMouse, "tclient-bindwheel-reset-mouse", Localize("Reset position of mouse when opening bindwheel"), g_Config.m_TcResetBindWheelMouse, &CheckBoxRect))
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &g_Config.m_TcResetBindWheelMouse, "tclient-bindwheel-reset-mouse", Localize("Reset position of mouse when opening bindwheel"), g_Config.m_TcResetBindWheelMouse, &CheckBoxRect))
 			g_Config.m_TcResetBindWheelMouse ^= 1;
-		LogTClientPerfStage("tclient_bindwheel_footer_controls", FooterControlsTimer.ElapsedMs(), false);
+		else if(ReadOnly)
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-reset-mouse", &CheckBoxRect, Localize("Reset position of mouse when opening bindwheel"), FontSize, TEXTALIGN_ML);
+		LogTClientPerfStage("tclient_bindwheel_editor", EditorTimer.ElapsedMs(), false);
+	};
+	vCards.push_back(std::move(EditorCard));
+
+	SSettingsCardDefinition PreviewCard;
+	PreviewCard.m_Spec = {"deck:tclient-bind-wheel-preview", Localize("Preview"), nullptr};
+	PreviewCard.m_Measure = [PreviewContentHeight](float) { return PreviewContentHeight; };
+	PreviewCard.m_Render = [this, ReadOnly](CUIRect RightView) {
+		CPerfTimer WheelTimer;
+		const float Radius = minimum(RightView.w, RightView.h) / 2.0f;
+		const vec2 Center = RightView.Center();
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f);
+		Graphics()->DrawCircle(Center.x, Center.y, Radius, 64);
+		Graphics()->QuadsEnd();
+
+		int HoveringIndex = -1;
+		const int SegmentCount = GameClient()->m_BindWheel.m_vBinds.size();
+		const float MouseDist = distance(Center, Ui()->MousePos());
+		if(MouseDist < Radius && MouseDist > Radius * 0.25f && SegmentCount > 0)
+		{
+			float HoveringAngle = angle(Ui()->MousePos() - Center) + pi / SegmentCount;
+			if(HoveringAngle < 0.0f)
+				HoveringAngle += 2.0f * pi;
+			HoveringIndex = std::clamp((int)(HoveringAngle / (2.0f * pi) * SegmentCount), 0, SegmentCount - 1);
+			if(!ReadOnly && Ui()->MouseButtonClicked(0))
+			{
+				s_SelectedBindIndex = HoveringIndex;
+				str_copy(s_aBindName, GameClient()->m_BindWheel.m_vBinds[HoveringIndex].m_aName);
+				str_copy(s_aBindCommand, GameClient()->m_BindWheel.m_vBinds[HoveringIndex].m_aCommand);
+			}
+			else if(!ReadOnly && Ui()->MouseButtonClicked(1) && s_SelectedBindIndex >= 0 && s_SelectedBindIndex < SegmentCount && HoveringIndex != s_SelectedBindIndex)
+			{
+				std::swap(GameClient()->m_BindWheel.m_vBinds[s_SelectedBindIndex], GameClient()->m_BindWheel.m_vBinds[HoveringIndex]);
+			}
+			else if(!ReadOnly && Ui()->MouseButtonClicked(2))
+				s_SelectedBindIndex = HoveringIndex;
+		}
+		else if(!ReadOnly && MouseDist < Radius && Ui()->MouseButtonClicked(0))
+		{
+			s_SelectedBindIndex = -1;
+			str_copy(s_aBindName, "");
+			str_copy(s_aBindCommand, "");
+		}
+
+		const float Theta = pi * 2.0f / std::max<float>(1.0f, SegmentCount);
+		for(int Index = 0; Index < SegmentCount; ++Index)
+		{
+			TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+			float SegmentFontSize = FontSize * 1.1f;
+			if(Index == s_SelectedBindIndex)
+			{
+				SegmentFontSize = FontSize * 1.7f;
+				TextRender()->TextColor(ColorRGBA(0.5f, 1.0f, 0.75f, 1.0f));
+			}
+			else if(Index == HoveringIndex)
+				SegmentFontSize = FontSize * 1.35f;
+			const vec2 Pos = direction(Theta * Index) * (Radius * 0.75f) + Center;
+			const CUIRect Rect{Pos.x - 50.0f, Pos.y - 50.0f, 100.0f, 100.0f};
+			Ui()->DoLabel(&Rect, GameClient()->m_BindWheel.m_vBinds[Index].m_aName, SegmentFontSize, TEXTALIGN_MC);
+		}
+		TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+		char aExtra[96];
+		str_format(aExtra, sizeof(aExtra), "count=%d", SegmentCount);
+		LogTClientPerfStage("tclient_bindwheel_wheel", WheelTimer.ElapsedMs(), false, aExtra);
+	};
+	vCards.push_back(std::move(PreviewCard));
+
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = ReadOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = ReadOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !ReadOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !ReadOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !ReadOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !ReadOnly && Input()->ModifierIsPressed();
+	InputState.m_AllowHeaderDrag = !ReadOnly;
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;
+	static qm_card_order::CModel s_BindWheelPrewarmOrderModel;
+	static bool s_BindWheelPrewarmOrderModelInitialized = false;
+	static CSettingsCardDeck s_BindWheelPrewarmDeck;
+	if(ReadOnly && !s_BindWheelPrewarmOrderModelInitialized)
+	{
+		s_BindWheelPrewarmOrderModel.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+		s_BindWheelPrewarmOrderModelInitialized = true;
 	}
-	s_BindWheelEditorCardHeight = maximum(BindWheelEditorBottom + BindWheelDeck.m_Style.m_Padding - BindWheelEditorCard.m_Rect.y, 320.0f);
-	s_BindWheelPreviewCardHeight = maximum(BindWheelPreviewCard.m_ContentRect.y + BindWheelPreviewCard.m_ContentRect.h + BindWheelDeck.m_Style.m_Padding - BindWheelPreviewCard.m_Rect.y, 320.0f);
-	EndSettingsCardDeck(BindWheelDeck, &s_BindWheelSettingsScrollY);
+	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_BindWheelPrewarmOrderModel : SettingsCardOrderModel();
+	CSettingsCardDeck &CardDeck = ReadOnly ? s_BindWheelPrewarmDeck : m_SettingsCardDeck;
+	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientBindWheelTextInputCtx, Page, "tclient-bind-wheel", vCards, CardOrderModel, ReadOnly ? nullptr : &s_BindWheelSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!ReadOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 }
 
 void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)

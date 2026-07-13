@@ -7275,12 +7275,30 @@ TEST(QmMonitoringHelpers, GraphicsDeckRemovesOnlyThePublicBridge)
 	EXPECT_EQ(Body.find("RenderSettingsCardDeckDragOverlay("), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6KeepsTClientOnTheLegacyRendererUntilItsMigration)
+TEST(QmMonitoringHelpers, P6TClientBindWheelMigrationUsesThePublicDeckOnly)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string BindWheelBody = ExtractSourceFunctionBody(TClient, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
 	EXPECT_NE(QmClient.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_EQ(TClient.find("m_SettingsCardDeck.Render("), std::string::npos);
+	ASSERT_FALSE(BindWheelBody.empty());
+	EXPECT_NE(BindWheelBody.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_BindWheelPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("CardDeck.Render("), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("SettingsCardOrderModel()"), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("CScrollRegion s_BindWheelSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("deck:tclient-bind-wheel-editor"), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("deck:tclient-bind-wheel-preview"), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("s_BindWheelPrewarmOrderModel.LoadMerged(\"\", qm_card_registry::BuildDefaultEntries())"), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("const float EditorContentHeight = maximum("), std::string::npos);
+	EXPECT_NE(BindWheelBody.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
+	EXPECT_EQ(BindWheelBody.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(BindWheelBody.find("BeginSettingsCardDeckCard("), std::string::npos);
+	EXPECT_EQ(BindWheelBody.find("EndSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(BindWheelBody.find("s_BindWheelSettingsScrollY"), std::string::npos);
+	EXPECT_EQ(BindWheelBody.find("s_BindWheelEditorCardHeight"), std::string::npos);
+	EXPECT_EQ(BindWheelBody.find("s_BindWheelPreviewCardHeight"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, P6VisualQmClientMigrationUsesThePublicDeckOnly)
@@ -8621,12 +8639,11 @@ TEST(QmMonitoringHelpers, TClientConfigEditorTextInputsUseSharedQmTextField)
 TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(Body.find("IUiContext TClientBindWheelTextInputCtx;"), std::string::npos);
-	EXPECT_NE(Body.find("TClientBindWheelTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_bindwheel_text_inputs\");"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientBindWheelTextInputCtx = SettingsUiContext(\"settings_tclient_bindwheel_text_inputs\", UiScale);"), std::string::npos);
 	EXPECT_NE(Body.find("ui_widget::InputField(TClientBindWheelTextInputCtx, &s_NameInput, Button, Localize(\"Name\"), EditBoxFontSize);"), std::string::npos);
 	EXPECT_NE(Body.find("ui_widget::InputField(TClientBindWheelTextInputCtx, &s_BindInput, Button, Localize(\"Command\"), EditBoxFontSize);"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_NameInput, &Button, EditBoxFontSize"), std::string::npos);
