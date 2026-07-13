@@ -438,6 +438,11 @@ struct SAutoReplyRuleInputRow
 	}
 };
 
+static std::vector<std::unique_ptr<SAutoReplyRuleInputRow>> s_vKeywordRuleRows;
+static bool s_KeywordRuleRowsInited = false;
+static CButtonContainer s_KeywordAddRuleButton;
+static std::vector<CButtonContainer> s_vKeywordRemoveRuleButtons;
+
 static char *ParseAutoReplyRulePrefixes(char *pLine, bool &OutAutoRename, bool &OutRegex, bool &OutHasExplicitRenameFlag, bool &OutHasExplicitRegexFlag)
 {
 	OutAutoRename = false;
@@ -534,6 +539,8 @@ static void ParseAutoReplyRules(const char *pRules, std::vector<SAutoReplyRulePl
 		bool HasExplicitRenameFlag = false;
 		bool HasExplicitRegexFlag = false;
 		char *pRuleText = ParseAutoReplyRulePrefixes(pLine, AutoRename, RegexRule, HasExplicitRenameFlag, HasExplicitRegexFlag);
+		(void)AutoRename;
+		(void)RegexRule;
 		(void)HasExplicitRenameFlag;
 		(void)HasExplicitRegexFlag;
 
@@ -554,6 +561,52 @@ static void ParseAutoReplyRules(const char *pRules, std::vector<SAutoReplyRulePl
 
 		vOutRules.push_back({pKeywords, pReply, AutoRename, RegexRule});
 	}
+}
+
+static size_t CountAutoReplyRules(const char *pRules)
+{
+	if(!pRules || pRules[0] == '\0')
+		return 0;
+
+	size_t Count = 0;
+	const char *pCursor = pRules;
+	while(*pCursor)
+	{
+		char aLine[1024];
+		int LineLen = 0;
+		while(*pCursor && *pCursor != '\n' && *pCursor != '\r')
+		{
+			if(LineLen < (int)sizeof(aLine) - 1)
+				aLine[LineLen++] = *pCursor;
+			pCursor++;
+		}
+		aLine[LineLen] = '\0';
+		while(*pCursor == '\n' || *pCursor == '\r')
+			pCursor++;
+
+		char *pLine = (char *)str_utf8_skip_whitespaces(aLine);
+		str_utf8_trim_right(pLine);
+		if(pLine[0] == '\0' || pLine[0] == '#')
+			continue;
+		bool AutoRename = false;
+		bool RegexRule = false;
+		bool HasExplicitRenameFlag = false;
+		bool HasExplicitRegexFlag = false;
+		char *pRuleText = ParseAutoReplyRulePrefixes(pLine, AutoRename, RegexRule, HasExplicitRenameFlag, HasExplicitRegexFlag);
+		const char *pArrowConst = str_find(pRuleText, "=>");
+		if(!pArrowConst)
+			continue;
+		char *pArrow = pRuleText + (pArrowConst - pRuleText);
+		*pArrow = '\0';
+		pArrow += 2;
+		char *pKeywords = (char *)str_utf8_skip_whitespaces(pRuleText);
+		str_utf8_trim_right(pKeywords);
+		char *pReply = (char *)str_utf8_skip_whitespaces(pArrow);
+		str_utf8_trim_right(pReply);
+		if(pKeywords[0] != '\0' && pReply[0] != '\0')
+			++Count;
+	}
+	return Count;
 }
 
 static bool AutoReplyRowsMatchRules(const std::vector<std::unique_ptr<SAutoReplyRuleInputRow>> &vRows, const std::vector<SAutoReplyRulePlain> &vRules)
@@ -2048,10 +2101,6 @@ void CMenus::RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale
 	RenderCheckbox(&g_Config.m_QmKeywordReplyEnabled, "Enable keyword reply", &g_Config.m_QmKeywordReplyEnabled);
 	RenderCheckbox(&g_Config.m_QmKeywordReplyUseDummy, "Reply with dummy", &g_Config.m_QmKeywordReplyUseDummy);
 
-	static std::vector<std::unique_ptr<SAutoReplyRuleInputRow>> s_vKeywordRuleRows;
-	static bool s_KeywordRuleRowsInited = false;
-	static CButtonContainer s_KeywordAddRuleButton;
-	static std::vector<CButtonContainer> s_vKeywordRemoveRuleButtons;
 	auto SyncRuleRowsFromConfig = [](std::vector<std::unique_ptr<SAutoReplyRuleInputRow>> &vRows, bool &Inited, const char *pConfigRules) {
 		std::vector<SAutoReplyRulePlain> vParsedRules;
 		ParseAutoReplyRules(pConfigRules, vParsedRules);
@@ -2125,7 +2174,8 @@ void CMenus::RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale
 
 	char aEncodedRules[sizeof(g_Config.m_QmKeywordReplyRules)];
 	BuildAutoReplyRulesFromRows(s_vKeywordRuleRows, aEncodedRules, sizeof(aEncodedRules));
-	QmKeywordReplyRules::EncodeForConfig(aEncodedRules, g_Config.m_QmKeywordReplyRules, sizeof(g_Config.m_QmKeywordReplyRules));
+	if(!Ui()->RenderOnly())
+		QmKeywordReplyRules::EncodeForConfig(aEncodedRules, g_Config.m_QmKeywordReplyRules, sizeof(g_Config.m_QmKeywordReplyRules));
 	const bool HalfFilled = std::any_of(s_vKeywordRuleRows.begin(), s_vKeywordRuleRows.end(), [](const auto &pRule) { return IsAutoReplyRuleRowHalfFilled(*pRule); });
 	if(!HalfFilled)
 		return;
@@ -2944,7 +2994,11 @@ void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale
 	static float s_NextFullScan = 0.0f;
 	IServerBrowser *pServerBrowser = ServerBrowser();
 	const float Now = Client()->LocalTime();
-	if(!pServerBrowser || FavMaps.empty())
+	if(Ui()->RenderOnly())
+	{
+		// 文本预热只读取现有分类快照，不能扫描服务器或写入磁盘缓存。
+	}
+	else if(!pServerBrowser || FavMaps.empty())
 	{
 		s_MapCategories.clear();
 		s_MapCategoryScanIndex = 0;
@@ -4530,7 +4584,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	}
 	char aNormalizedCollapsed[sizeof(g_Config.m_QmSidebarCardCollapsed)];
 	SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, aNormalizedCollapsed, sizeof(aNormalizedCollapsed));
-	if(str_comp(aNormalizedCollapsed, g_Config.m_QmSidebarCardCollapsed) != 0)
+	if(!Ui()->RenderOnly() && str_comp(aNormalizedCollapsed, g_Config.m_QmSidebarCardCollapsed) != 0)
 		str_copy(g_Config.m_QmSidebarCardCollapsed, aNormalizedCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
 	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 
@@ -4615,6 +4669,171 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	InputState.m_pScrollParams = PrewarmOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(CardCtx, Page, "hud", vCards, SettingsCardOrderModel(), PrewarmOnly ? nullptr : &s_ScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!PrewarmOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+}
+
+void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly)
+{
+	using namespace qm_module;
+	const float UiScale = std::clamp(MainView.w / 1000.0f, MainView.w < 680.0f ? 0.78f : 0.85f, 1.0f);
+	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
+	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
+	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
+	const float LabelMaxWidth = std::max(MainView.w < 680.0f ? 96.0f : 120.0f, MainView.w * (MainView.w < 680.0f ? 0.38f : 0.45f));
+	const float LabelWidth = std::clamp((MainView.w < 680.0f ? 148.0f : 170.0f) * UiScale, MainView.w < 680.0f ? 96.0f : 120.0f, LabelMaxWidth);
+	const SQmSettingsCardStyle CardStyle = QmSettingsCardStyle(UiScale);
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	IUiContext CardCtx = SettingsUiContext("settings_qmclient_function", UiScale);
+	if(PrewarmOnly)
+	{
+		CardCtx.m_pAnim = nullptr;
+		CardCtx.m_pTree = nullptr;
+	}
+	static CScrollRegion s_ScrollRegion;
+	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
+	static bool s_CollapsedInitialized = false;
+	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
+	{
+		ParseLegacyQmCollapsed(g_Config.m_QmSidebarCardCollapsed, s_aQmModuleDefaults, s_aCollapsed);
+		s_CollapsedInitialized = true;
+	}
+	char aNormalizedCollapsed[sizeof(g_Config.m_QmSidebarCardCollapsed)];
+	SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, aNormalizedCollapsed, sizeof(aNormalizedCollapsed));
+	if(!Ui()->RenderOnly() && str_comp(aNormalizedCollapsed, g_Config.m_QmSidebarCardCollapsed) != 0)
+		str_copy(g_Config.m_QmSidebarCardCollapsed, aNormalizedCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
+	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
+
+	auto ModuleStateIndex = [](EQmModuleId Id) { return std::clamp((int)Id, 0, (int)QmModuleCount - 1); };
+	auto ToggleCollapsed = [&](EQmModuleId Id) {
+		s_aCollapsed[ModuleStateIndex(Id)] = !s_aCollapsed[ModuleStateIndex(Id)];
+		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
+		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
+	};
+	static uint64_t s_LastFunctionRenderFrame = 0;
+	static bool s_HasLastFunctionRenderFrame = false;
+	const uint64_t CurrentFrame = Client()->PerfFrame();
+	const bool FunctionFirstFrameLightPath = !PrewarmOnly && !m_MenuTextPlanCollecting && (!s_HasLastFunctionRenderFrame || CurrentFrame != s_LastFunctionRenderFrame + 1);
+	if(!PrewarmOnly && !m_MenuTextPlanCollecting)
+	{
+		s_LastFunctionRenderFrame = CurrentFrame;
+		s_HasLastFunctionRenderFrame = true;
+	}
+	auto MeasureContentHeight = [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, FunctionFirstFrameLightPath](EQmModuleId Id, float ContentWidth) {
+		const auto Rows = [LineHeight, LineSpacing](float Count) { return Count * LineHeight + std::max(0.0f, Count - 1.0f) * LineSpacing; };
+		const auto Row = [LineHeight, LineSpacing](float Spacing = 1.0f) { return LineHeight + LineSpacing * Spacing; };
+		switch(Id)
+		{
+		case EQmModuleId::GoresActor:
+			return !g_Config.m_TcFreezeChatEnabled ? Row() : Row() * (g_Config.m_TcFreezeChatEmoticon ? 5.0f : 4.0f);
+		case EQmModuleId::Gores:
+			if(FunctionFirstFrameLightPath)
+				return LineHeight;
+			return Row() + LineHeight +
+			       (g_Config.m_QmAxiomAutoLogin ? Row(0.35f) * 2.0f : 0.0f) + Row(0.35f) +
+			       ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? Row() * 5.0f : 0.0f) + LineHeight;
+		case EQmModuleId::KeyBinds: return Rows(8.0f);
+		case EQmModuleId::MiniFeatures: return Rows(16.0f);
+		case EQmModuleId::JumpHint: return Row() * 5.0f;
+		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 4.0f;
+		case EQmModuleId::FriendNotify:
+			return Row() * (5.0f + (g_Config.m_QmFriendOnlineAutoRefresh ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterBroadcast ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterAutoGreet ? 1.0f : 0.0f));
+		case EQmModuleId::BlockWords:
+			if(FunctionFirstFrameLightPath)
+				return Row() + LineHeight;
+			return Row() * 6.0f + CalcQiaFenInputHeight(TextRender(), g_Config.m_QmBlockWordsList, std::max(1.0f, ContentWidth - LabelWidth), BodySize, std::clamp(2.0f * UiScale, 1.0f, 2.0f), LineHeight);
+		case EQmModuleId::Translate:
+		{
+			const bool IsTencentCloudBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "tencentcloud") == 0;
+			const bool IsLibreTranslateBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "libretranslate") == 0;
+			const bool IsLlmBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "llm") == 0;
+			const bool IsFtapiBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "ftapi") == 0;
+			float Height = Rows(9.0f) + LineHeight * 1.6f + LineSpacing * 1.35f;
+			if(IsFtapiBackend)
+				Height += Row() + LineHeight * 0.8f + LineSpacing;
+			if(IsTencentCloudBackend)
+				Height += Row() * 4.0f;
+			else if(IsLibreTranslateBackend)
+				Height += Row() * 2.0f;
+			if(IsLlmBackend)
+			{
+				Height += Row() * 7.0f + LineHeight + LineSpacing * 0.5f;
+				if(g_Config.m_QmTranslateLlmEnableThinking && (g_Config.m_QmTranslateLlmProvider == 2 || g_Config.m_QmTranslateLlmProvider == 3))
+					Height += LineHeight * 0.8f + LineSpacing;
+			}
+			return Height;
+		}
+		case EQmModuleId::TranslateUi: return Rows(5.0f);
+		case EQmModuleId::QiaFen:
+		{
+			char aDecodedRules[sizeof(g_Config.m_QmKeywordReplyRules)];
+			QmKeywordReplyRules::DecodeFromConfig(g_Config.m_QmKeywordReplyRules, aDecodedRules, sizeof(aDecodedRules));
+			const size_t RuleCount = s_KeywordRuleRowsInited ? s_vKeywordRuleRows.size() : CountAutoReplyRules(aDecodedRules);
+			const bool HalfFilled = s_KeywordRuleRowsInited && std::any_of(s_vKeywordRuleRows.begin(), s_vKeywordRuleRows.end(), [](const auto &pRule) { return IsAutoReplyRuleRowHalfFilled(*pRule); });
+			return Row() * (4.0f + (float)RuleCount) + (HalfFilled ? LineHeight * 0.8f + LineSpacing : 0.0f);
+		}
+		case EQmModuleId::PieMenu:
+			if(FunctionFirstFrameLightPath || !g_Config.m_QmPieMenuEnabled)
+				return Row();
+			return Row() * 5.0f + BodySize + LineSpacing * 3.0f + std::min(ContentWidth, std::clamp(ContentWidth * 0.88f, LineHeight * 10.0f, LineHeight * 13.5f)) * 0.8f;
+		case EQmModuleId::FavoriteMaps:
+		{
+			const size_t FavoriteCount = GameClient()->TClientComponent().GetFavoriteMaps().size();
+			return Rows((float)std::max<size_t>(1, std::min<size_t>(FavoriteCount, 64)));
+		}
+		case EQmModuleId::HJAssist: return Row() * (g_Config.m_QmAutoTeamLock ? 6.0f : 5.0f);
+		default: return Rows(1.0f);
+		}
+	};
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(14);
+	const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {pStableId, Localize(pTitle), Localize(pSubtitle)};
+		Definition.m_Measure = [Id, MeasureContentHeight](float ContentWidth) { return MeasureContentHeight(Id, ContentWidth); };
+		Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
+		Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
+		Definition.m_HeaderAction = [this, Id, ToggleCollapsed, PrewarmOnly, ModuleStateIndex](const SSettingsCardFrame &Frame, bool Collapsed) {
+			static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
+			const int Index = ModuleStateIndex(Id);
+			if(!PrewarmOnly && DoButton_Menu(&s_aCollapseButtons[Index], Collapsed ? "+" : "-", 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
+				ToggleCollapsed(Id);
+			if(!PrewarmOnly && Ui()->MouseHovered(&Frame.m_HandleRect))
+				GameClient()->m_Tooltips.DoToolTip(&s_aCollapseButtons[Index], &Frame.m_HandleRect, Collapsed ? Localize("Expand module") : Localize("Collapse module"));
+		};
+		Definition.m_MeasureEachFrame = true;
+		vCards.push_back(std::move(Definition));
+	};
+
+	AddCard(EQmModuleId::GoresActor, "qm:gores_actor", "Gores Actor", "Auto chat when dying in water", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmFunctionGoresActorContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::Gores, "qm:gores", "Gores Mode", "Gores auto weapon switch", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly, FunctionFirstFrameLightPath](CUIRect &Content) { RenderQmFunctionGoresContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly, FunctionFirstFrameLightPath); });
+	AddCard(EQmModuleId::KeyBinds, "qm:key_binds", "Key Bindings", "Common key bindings", [this, LineHeight, BodySize, LineSpacing, LabelWidth](CUIRect &Content) { RenderQmFunctionKeyBindsContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth); });
+	AddCard(EQmModuleId::MiniFeatures, "qm:mini_features", "Dream Features", "Only what you can't imagine, nothing Dream can't do", [this, LineHeight, LineSpacing, PrewarmOnly](CUIRect &Content) { RenderQmFunctionMiniFeaturesContent(Content, LineHeight, LineSpacing, PrewarmOnly); });
+	AddCard(EQmModuleId::JumpHint, "qm:jump_hint", "Position jump hint", "Jump hint text", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmFunctionJumpHintContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::WeaponTrajectory, "qm:weapon_trajectory", "Weapon Trajectory", "Show grenade and laser trajectory preview", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmFunctionWeaponTrajectoryContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::FriendNotify, "qm:friend_notify", "Friend Notifications", "Friend online and join notifications", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmFunctionFriendNotifyContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::BlockWords, "qm:block_words", "Word Filter", "Chat word filtering", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly, FunctionFirstFrameLightPath](CUIRect &Content) { RenderQmFunctionBlockWordsContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly, FunctionFirstFrameLightPath); });
+	AddCard(EQmModuleId::Translate, "qm:translate", "Translate", "Chat translation settings", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmFunctionTranslateContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::TranslateUi, "qm:translate_ui", "Translate button", "Customize translate button and menu colors", [this, LineHeight, BodySize, LineSpacing](CUIRect &Content) { RenderQmVisualTranslateUiContent(Content, LineHeight, BodySize, LineSpacing); });
+	AddCard(EQmModuleId::QiaFen, "qm:qiafen", "Keyword Reply", "I am a robot", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmFunctionKeywordReplyContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::PieMenu, "qm:pie_menu", "Pie Menu", "Quick action menu for players", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, CardStyle, PrewarmOnly, FunctionFirstFrameLightPath](CUIRect &Content) { RenderQmFunctionPieMenuContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, CardStyle.m_Padding, CardStyle.m_CornerRadius, PrewarmOnly, FunctionFirstFrameLightPath); });
+	AddCard(EQmModuleId::FavoriteMaps, "qm:favorite_maps", "Favorite maps", "Your favorite map manager", [this, UiScale, LineHeight, BodySize, LineSpacing, PrewarmOnly](CUIRect &Content) { RenderQmFunctionFavoriteMapsContent(Content, UiScale, LineHeight, BodySize, LineSpacing, PrewarmOnly); });
+	AddCard(EQmModuleId::HJAssist, "qm:hj_assist", "HJ Assist", "What's done is done, no use saying more", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmFunctionHJAssistContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = PrewarmOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = PrewarmOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !PrewarmOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !PrewarmOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !PrewarmOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !PrewarmOnly && Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = PrewarmOnly ? nullptr : &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(CardCtx, Page, "function", vCards, SettingsCardOrderModel(), PrewarmOnly ? nullptr : &s_ScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
 	if(!PrewarmOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 }
@@ -4715,7 +4934,6 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	AddCard(EQmModuleId::Streamer, "qm:streamer", "Streamer Mode", "Protect names and skins while streaming", [this, LineHeight, LineSpacing](CUIRect &Content) { RenderQmVisualStreamerContent(Content, LineHeight, LineSpacing); });
 	AddCard(EQmModuleId::EntityOverlay, "qm:entity_overlay", "Entity Layer Colors", "Adjust opacity of entity layers", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualEntityOverlayContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
 	AddCard(EQmModuleId::CollisionHitbox, "qm:collision_hitbox", "Hitbox mode", "Show collision and weapon interaction", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualCollisionHitboxContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
-	AddCard(EQmModuleId::TranslateUi, "qm:translate_ui", "Chat Translate Button UI", "Chat box button appearance settings", [this, LineHeight, BodySize, LineSpacing](CUIRect &Content) { RenderQmVisualTranslateUiContent(Content, LineHeight, BodySize, LineSpacing); });
 	AddCard(EQmModuleId::CardAppearance, "qm:card_appearance", "Card Appearance", "Card background blur and corner rounding", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmVisualCardAppearanceContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
@@ -5142,6 +5360,13 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_VISUAL)
 		{
 			RenderSettingsQmClientVisualDeck(ContentView, PrewarmOnly);
+			if(TabTransitionActive)
+				Ui()->ClipDisable();
+			return;
+		}
+		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_FUNCTION)
+		{
+			RenderSettingsQmClientFunctionDeck(ContentView, PrewarmOnly);
 			if(TabTransitionActive)
 				Ui()->ClipDisable();
 			return;
@@ -5634,11 +5859,11 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {
 		EQmModuleId::ChatBubble, EQmModuleId::CameraView, EQmModuleId::SkinTransition,
 		EQmModuleId::FocusMode, EQmModuleId::WeaponAnimation, EQmModuleId::Streamer, EQmModuleId::EntityOverlay,
-		EQmModuleId::CollisionHitbox, EQmModuleId::TranslateUi, EQmModuleId::CardAppearance};
-	static constexpr std::array<EQmModuleId, 13> s_aQmFunctionModules = {
+		EQmModuleId::CollisionHitbox, EQmModuleId::CardAppearance};
+	static constexpr std::array<EQmModuleId, 14> s_aQmFunctionModules = {
 		EQmModuleId::GoresActor, EQmModuleId::Gores, EQmModuleId::KeyBinds,
 		EQmModuleId::MiniFeatures, EQmModuleId::JumpHint, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
-		EQmModuleId::BlockWords, EQmModuleId::Translate, EQmModuleId::QiaFen,
+		EQmModuleId::BlockWords, EQmModuleId::Translate, EQmModuleId::TranslateUi, EQmModuleId::QiaFen,
 		EQmModuleId::PieMenu, EQmModuleId::FavoriteMaps, EQmModuleId::HJAssist};
 	static constexpr std::array<EQmModuleId, 12> s_aQmHudModules = {
 		EQmModuleId::DummyMiniView, EQmModuleId::Coords, EQmModuleId::PlayerStats,

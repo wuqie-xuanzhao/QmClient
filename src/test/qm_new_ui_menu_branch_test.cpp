@@ -774,9 +774,11 @@ TEST(QmNewUiMenuBranches, ProcessPriorityAndImeHaveVisibleSettings)
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmProcessHighPriority, qm_process_high_priority, 0, 0, 1"), std::string::npos);
 	EXPECT_NE(ClientSource.find("ApplyProcessPriorityConfig();"), std::string::npos);
 	EXPECT_NE(ClientSource.find("m_pConsole->Chain(\"qm_process_high_priority\", ConchainProcessHighPriority, this);"), std::string::npos);
-	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmProcessHighPriority"), std::string::npos);
-	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmImeAutoManage"), std::string::npos);
-	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmNewIme"), std::string::npos);
+	const std::string MiniFeaturesBody = FunctionBody(MenusSource, "void CMenus::RenderQmFunctionMiniFeaturesContent(");
+	ASSERT_FALSE(MiniFeaturesBody.empty());
+	EXPECT_NE(MiniFeaturesBody.find("&g_Config.m_QmProcessHighPriority"), std::string::npos);
+	EXPECT_NE(MiniFeaturesBody.find("&g_Config.m_QmImeAutoManage"), std::string::npos);
+	EXPECT_NE(MiniFeaturesBody.find("&g_Config.m_QmNewIme"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ConfigPageLocalizesVariableHelpText)
@@ -1333,8 +1335,10 @@ TEST(QmNewUiMenuBranches, FriendAutoFollowDistinguishesManualAndAutomaticConnect
 	EXPECT_NE(Source.find("if(Intent == EConnectIntent::Manual)"), std::string::npos);
 	EXPECT_NE(Source.find("StopFriendAutoFollow(m_FriendAutoFollowState);"), std::string::npos);
 	EXPECT_NE(Source.find("Connect(g_Config.m_UiServerAddress, EConnectIntent::AutoFollow)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Localize(\"Auto-follow delay\")"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("&g_Config.m_QmFriendAutoFollowDelay, 0, 30, \"s\""), std::string::npos);
+	const std::string FriendNotifyBody = FunctionBody(QmMenusSource, "void CMenus::RenderQmFunctionFriendNotifyContent(");
+	ASSERT_FALSE(FriendNotifyBody.empty());
+	EXPECT_NE(FriendNotifyBody.find("RenderValue(\"qmclient-friend-auto-follow-delay\", \"Auto-follow delay\""), std::string::npos);
+	EXPECT_NE(FriendNotifyBody.find("&g_Config.m_QmFriendAutoFollowDelay, 0, 30, \"s\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ShortServerNamesCoverKnownFamilies)

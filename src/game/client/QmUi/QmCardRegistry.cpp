@@ -24,7 +24,7 @@ namespace qm_card_registry
 			{"qm:entity_overlay", "visual", ECardColumn::Right, 2, "Entity overlay", "实体层颜色 shiti ceng yanse 实体层 shiti entity overlay 死亡透明度 siwang 冻结透明度 dongjie 解冻透明度 jiedong 深度冻结 shendu dongjie 深度解冻 shendu jiedong 传送透明度 chuansong cp点透明度 cp checkpoint 开关透明度 kaiguan 叠层透明度 dieceng visual"},
 			{"qm:collision_hitbox", "visual", ECardColumn::Right, 5, "Collision hitbox", "碰撞箱模式 pengzhuangxiang moshi 碰撞体积可视化 pengzhuang tiji keshihua collision hitbox hitbox mode 显示碰撞 武器交互 透明度 visual"},
 			{"qm:streamer", "visual", ECardColumn::Left, 10, "Streamer mode", "主播模式 zhubo moshi 直播 zhibo 隐私 yinsi 非好友昵称改id feihaoyou nicheng id 非好友皮肤默认 pifu moren 计分板默认国旗 guoqi visual"},
-			{"qm:translate_ui", "visual", ECardColumn::Left, 15, "Translate UI", "fanyi ui 颜色 yanse color 按钮 anniu button 菜单 caidan menu rgba 自定义 zidingyi custom visual"},
+			{"qm:translate_ui", "function", ECardColumn::Left, 15, "Translate UI", "fanyi ui 颜色 yanse color 按钮 anniu button 菜单 caidan menu rgba 自定义 zidingyi custom function"},
 			{"qm:card_appearance", "visual", ECardColumn::Left, 17, "Card appearance", "卡片外观 kapian waiguan card appearance backdrop blur 毛玻璃 maoboli 圆角 yuanjiao corner segments visual"},
 			{"qm:gores_actor", "function", ECardColumn::Left, 3, "Gores actor", "gores 演员 actor 掉水 diaoshui 自动发言 zidong fayan 表情 biaoqing 表情id emoticon 发送概率 gaolv function"},
 			{"qm:gores", "function", ECardColumn::Left, 4, "Gores", "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang 自动切锤 zidong qiechui gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家 function"},

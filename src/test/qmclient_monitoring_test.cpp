@@ -646,24 +646,22 @@ TEST(QmMonitoringHelpers, JumpHintLegacyConfigMigratesAllFieldsToQmConfig)
 TEST(QmMonitoringHelpers, JumpHintSettingsCardExposesAllQmFields)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const size_t ModuleMarker = Source.find("// ========== 模块: 位置跳跃提示 ==========");
-	ASSERT_NE(ModuleMarker, std::string::npos);
-	const size_t ModuleEnd = Source.find("case EQmModuleId::WeaponTrajectory:", ModuleMarker);
-	ASSERT_NE(ModuleEnd, std::string::npos);
-	const std::string Body = Source.substr(ModuleMarker, ModuleEnd - ModuleMarker);
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionJumpHintContent(");
+	ASSERT_FALSE(Body.empty());
 
 	// Jump hint migrated from tc_jump_hint* to qm_jump_hint*. The settings page
 	// must expose the whole qm_* surface, not just the enable toggle, otherwise
 	// users can render the HUD element but cannot adjust its color, position, or
 	// size without using console commands.
-	EXPECT_NE(Body.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmJumpHint"), std::string::npos);
+	EXPECT_NE(Body.find("RenderQmFunctionCheckbox(&g_Config.m_QmJumpHint"), std::string::npos);
 	EXPECT_NE(Body.find("&g_Config.m_QmJumpHintColor"), std::string::npos);
 	EXPECT_NE(Body.find("&g_Config.m_QmJumpHintX"), std::string::npos);
 	EXPECT_NE(Body.find("&g_Config.m_QmJumpHintY"), std::string::npos);
 	EXPECT_NE(Body.find("&g_Config.m_QmJumpHintSize"), std::string::npos);
-	EXPECT_NE(Body.find("RenderSliderWithValueInput(&s_QmJumpHintXInputId"), std::string::npos);
-	EXPECT_NE(Body.find("RenderSliderWithValueInput(&s_QmJumpHintYInputId"), std::string::npos);
-	EXPECT_NE(Body.find("RenderSliderWithValueInput(&s_QmJumpHintSizeInputId"), std::string::npos);
+	EXPECT_NE(Body.find("RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue"), std::string::npos);
+	EXPECT_NE(Body.find("&s_QmJumpHintXInputId, &g_Config.m_QmJumpHintX"), std::string::npos);
+	EXPECT_NE(Body.find("&s_QmJumpHintYInputId, &g_Config.m_QmJumpHintY"), std::string::npos);
+	EXPECT_NE(Body.find("&s_QmJumpHintSizeInputId, &g_Config.m_QmJumpHintSize"), std::string::npos);
 	EXPECT_EQ(Body.find("m_TcJumpHint"), std::string::npos);
 }
 
@@ -2156,9 +2154,9 @@ TEST(QmMonitoringHelpers, SettingsTextPlanCoversHighValueTClientAndQmClientStati
 		EXPECT_NE(Source.find("RenderValue(\"qmclient-chat-bubble-duration\", \"Duration\""), std::string::npos);
 		EXPECT_NE(Source.find("RenderValue(\"qmclient-chat-bubble-opacity\", \"Bubble opacity\""), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, \"qmclient-display-mode\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, \"qmclient-translation-service\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, \"qmclient-target-language\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, \"qmclient-llm-provider\")"), std::string::npos);
+		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, \"qmclient-translation-service\")"), std::string::npos);
+		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, \"qmclient-target-language\")"), std::string::npos);
+		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, \"qmclient-llm-provider\")"), std::string::npos);
 		const std::string RenderBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
 		ASSERT_FALSE(RenderBody.empty());
 		EXPECT_NE(RenderBody.find("auto DoQmSettingsCheckboxAuto ="), std::string::npos);
@@ -6681,188 +6679,96 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationRouteTableCoversRegistryDeckTa
 TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Source.find("function_first_frame_light_path"), std::string::npos);
 	EXPECT_NE(Body.find("const bool FunctionFirstFrameLightPath"), std::string::npos);
-	EXPECT_NE(Body.find("QmFunctionModuleUsesLightFirstFramePath("), std::string::npos);
-	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"pie_menu_layout\""), std::string::npos);
-	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"pie_menu_controls\""), std::string::npos);
-	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"block_words_layout\""), std::string::npos);
-	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"block_words_controls\""), std::string::npos);
-	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_layout\""), std::string::npos);
-	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_controls\""), std::string::npos);
-	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_bind_lookup\""), std::string::npos);
+	EXPECT_NE(Body.find("FunctionFirstFrameLightPath"), std::string::npos);
+	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"pie_menu_layout\""), std::string::npos);
+	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"pie_menu_controls\""), std::string::npos);
+	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"block_words_layout\""), std::string::npos);
+	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"block_words_controls\""), std::string::npos);
+	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"gores_layout\""), std::string::npos);
+	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"gores_controls\""), std::string::npos);
+	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"gores_bind_lookup\""), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientFriendEnterTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceBlock(Source, "CUIRect CardFriendNotifyStart = Column;", "case EQmModuleId::BlockWords:");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionFriendNotifyContent(");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t CtxPos = Body.find("IUiContext QmClientFriendEnterTextInputCtx;");
-	const size_t UiPos = Body.find("QmClientFriendEnterTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientFriendEnterTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientFriendEnterTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientFriendEnterTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_friend_enter_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientFriendEnterTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
-
-	const size_t BroadcastInputPos = Body.find("static CLineInput s_FriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, sizeof(g_Config.m_QmFriendEnterBroadcastText));");
-	const size_t BroadcastEmptyTextPos = Body.find("s_FriendEnterBroadcastText.SetEmptyText(Localize(\"Please use %s as friend name\"));", BroadcastInputPos);
-	const size_t BroadcastTextFieldPos = Body.find("ui_widget::InputField(QmClientFriendEnterTextInputCtx, &s_FriendEnterBroadcastText, ControlCol, Localize(\"Please use %s as friend name\"), LgBodySize);", BroadcastEmptyTextPos);
-	EXPECT_NE(BroadcastInputPos, std::string::npos);
-	EXPECT_NE(BroadcastEmptyTextPos, std::string::npos);
-	EXPECT_NE(BroadcastTextFieldPos, std::string::npos);
-	EXPECT_LT(BroadcastInputPos, BroadcastEmptyTextPos);
-	EXPECT_LT(BroadcastEmptyTextPos, BroadcastTextFieldPos);
-
-	const size_t GreetInputPos = Body.find("static CLineInput s_FriendEnterGreetText(g_Config.m_QmFriendEnterGreetText, sizeof(g_Config.m_QmFriendEnterGreetText));");
-	const size_t GreetEmptyTextPos = Body.find("s_FriendEnterGreetText.SetEmptyText(Localize(\"Leave empty to disable\"));", GreetInputPos);
-	const size_t GreetTextFieldPos = Body.find("ui_widget::InputField(QmClientFriendEnterTextInputCtx, &s_FriendEnterGreetText, ControlCol, Localize(\"Leave empty to disable\"), LgBodySize);", GreetEmptyTextPos);
-	EXPECT_NE(GreetInputPos, std::string::npos);
-	EXPECT_NE(GreetEmptyTextPos, std::string::npos);
-	EXPECT_NE(GreetTextFieldPos, std::string::npos);
-	EXPECT_LT(GreetInputPos, GreetEmptyTextPos);
-	EXPECT_LT(GreetEmptyTextPos, GreetTextFieldPos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FriendEnterBroadcastText, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FriendEnterGreetText, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsUiContext(\"settings_qmclient_friend_enter_text_inputs\", 1.0f)"), std::string::npos);
+	EXPECT_NE(Body.find("pInput->SetEmptyText(Localize(pPlaceholder));"), std::string::npos);
+	EXPECT_NE(Body.find("RenderText(\"qmclient-friend-notifications-large-text-content\", \"Large text content\", &s_FriendEnterBroadcastText, \"Please use %s as friend name\");"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, pInput, ControlColumn, Localize(pPlaceholder), BodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("s_FriendEnterGreetText"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FriendEnterBroadcastText"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FriendEnterGreetText"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientGoresActorChatInputUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceBlock(Source, "CUIRect Card2Start = Column;", "case EQmModuleId::Gores:");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionGoresActorContent(");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t CtxPos = Body.find("IUiContext QmClientGoresActorTextInputCtx;");
-	const size_t UiPos = Body.find("QmClientGoresActorTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientGoresActorTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientGoresActorTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientGoresActorTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_gores_actor_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientGoresActorTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
-
-	const size_t InputPos = Body.find("static CLineInput s_FreezeChatMessageQmClient(g_Config.m_TcFreezeChatMessage, sizeof(g_Config.m_TcFreezeChatMessage));");
-	const size_t EmptyTextPos = Body.find("s_FreezeChatMessageQmClient.SetEmptyText(Localize(\"Leave empty to disable\"));", InputPos);
-	const size_t TextFieldPos = Body.find("ui_widget::InputField(QmClientGoresActorTextInputCtx, &s_FreezeChatMessageQmClient, ControlCol, Localize(\"Leave empty to disable\"), LgBodySize);", EmptyTextPos);
-	EXPECT_NE(InputPos, std::string::npos);
-	EXPECT_NE(EmptyTextPos, std::string::npos);
-	EXPECT_NE(TextFieldPos, std::string::npos);
-	EXPECT_LT(InputPos, EmptyTextPos);
-	EXPECT_LT(EmptyTextPos, TextFieldPos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FreezeChatMessageQmClient, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsUiContext(\"settings_qmclient_gores_actor_text_inputs\", 1.0f)"), std::string::npos);
+	EXPECT_NE(Body.find("s_FreezeChatMessageQmClient.SetEmptyText(Localize(\"Leave empty to disable\"));"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, &s_FreezeChatMessageQmClient, ControlColumn, Localize(\"Leave empty to disable\"), BodySize);"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FreezeChatMessageQmClient"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientPieMenuRenameQueueUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceBlock(Source, "CUIRect Card36Start = Column;", "case EQmModuleId::Voice:");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionPieMenuContent(");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t CtxPos = Body.find("IUiContext QmClientPieMenuTextInputCtx;");
-	const size_t UiPos = Body.find("QmClientPieMenuTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientPieMenuTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientPieMenuTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientPieMenuTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_pie_menu_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientPieMenuTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
-
-	const size_t InputPos = Body.find("static CLineInput s_PieMenuRenameQueue(g_Config.m_QmPieMenuRenameQueue, sizeof(g_Config.m_QmPieMenuRenameQueue));");
-	const size_t EmptyTextPos = Body.find("s_PieMenuRenameQueue.SetEmptyText(Localize(\"Example: name1|name2|name3\"));", InputPos);
-	const size_t TextFieldPos = Body.find("ui_widget::InputField(QmClientPieMenuTextInputCtx, &s_PieMenuRenameQueue, ControlCol, Localize(\"Example: name1|name2|name3\"), LgBodySize);", EmptyTextPos);
-	EXPECT_NE(InputPos, std::string::npos);
-	EXPECT_NE(EmptyTextPos, std::string::npos);
-	EXPECT_NE(TextFieldPos, std::string::npos);
-	EXPECT_LT(InputPos, EmptyTextPos);
-	EXPECT_LT(EmptyTextPos, TextFieldPos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PieMenuRenameQueue, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsUiContext(\"settings_qmclient_pie_menu_text_inputs\", 1.0f)"), std::string::npos);
+	EXPECT_NE(Body.find("s_PieMenuRenameQueue.SetEmptyText(Localize(\"Example: name1|name2|name3\"));"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, &s_PieMenuRenameQueue, ControlColumn, Localize(\"Example: name1|name2|name3\"), BodySize);"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PieMenuRenameQueue"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientTranslateSettingsInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceBlock(Source, "CUIRect CardTranslateStart = Column;", "case EQmModuleId::LiveTools:");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionTranslateContent(");
 	ASSERT_FALSE(Body.empty());
 
-	const size_t CtxPos = Body.find("IUiContext QmClientTranslateTextInputCtx;");
-	const size_t UiPos = Body.find("QmClientTranslateTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientTranslateTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientTranslateTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientTranslateTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_translate_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientTranslateTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
+	EXPECT_NE(Body.find("SettingsUiContext(\"settings_qmclient_translate_text_inputs\", 1.0f)"), std::string::npos);
 
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, \"https://tmt.tencentcloudapi.com/\", LgBodySize);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, \"http://localhost:5000\", LgBodySize);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateRegion, ControlCol, \"ap-guangzhou\", LgBodySize);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateSecretId, ControlCol, Localize(\"Tencent Cloud SecretId\"), LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, &s_TranslateEndpoint, ControlCol, \"https://tmt.tencentcloudapi.com/\", BodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, &s_TranslateEndpoint, ControlCol, \"http://localhost:5000\", BodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, &s_TranslateRegion, ControlCol, \"ap-guangzhou\", BodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, &s_TranslateSecretId, ControlCol, Localize(\"Tencent Cloud SecretId\"), BodySize);"), std::string::npos);
 	const size_t TcSecretKeyHiddenPos = Body.find("s_TranslateSecretKey.SetHidden(true);");
-	const size_t TcSecretKeyTextFieldPos = Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateSecretKey, ControlCol, Localize(\"Tencent Cloud SecretKey\"), LgBodySize);", TcSecretKeyHiddenPos);
+	const size_t TcSecretKeyTextFieldPos = Body.find("ui_widget::InputField(TextInputCtx, &s_TranslateSecretKey, ControlCol, Localize(\"Tencent Cloud SecretKey\"), BodySize);", TcSecretKeyHiddenPos);
 	EXPECT_NE(TcSecretKeyHiddenPos, std::string::npos);
 	EXPECT_NE(TcSecretKeyTextFieldPos, std::string::npos);
 	EXPECT_LT(TcSecretKeyHiddenPos, TcSecretKeyTextFieldPos);
 	const size_t LibreKeyHiddenPos = Body.find("s_TranslateKey.SetHidden(true);");
-	const size_t LibreKeyTextFieldPos = Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateKey, ControlCol, \"\", LgBodySize);", LibreKeyHiddenPos);
+	const size_t LibreKeyTextFieldPos = Body.find("ui_widget::InputField(TextInputCtx, &s_TranslateKey, ControlCol, \"\", BodySize);", LibreKeyHiddenPos);
 	EXPECT_NE(LibreKeyHiddenPos, std::string::npos);
 	EXPECT_NE(LibreKeyTextFieldPos, std::string::npos);
 	EXPECT_LT(LibreKeyHiddenPos, LibreKeyTextFieldPos);
 
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), LgBodySize);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), LgBodySize);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), LgBodySize);"), std::string::npos);
-	EXPECT_NE(Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &s_CustomPrompt, ControlCol, Localize(\"Leave empty to use default prompt\"), LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), BodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), BodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), BodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::InputField(TextInputCtx, &s_CustomPrompt, ControlCol, Localize(\"Leave empty to use default prompt\"), BodySize);"), std::string::npos);
 	const size_t LanguageOptionsPos = Body.find("ui_widget::STextFieldOptions LanguageInputOptions;");
 	const size_t LanguagePlaceholderPos = Body.find("LanguageInputOptions.m_pPlaceholder = pEmptyText;", LanguageOptionsPos);
-	const size_t LanguageFontPos = Body.find("LanguageInputOptions.m_FontSize = LgBodySize;", LanguagePlaceholderPos);
+	const size_t LanguageFontPos = Body.find("LanguageInputOptions.m_FontSize = BodySize;", LanguagePlaceholderPos);
 	const size_t LanguageCornersPos = Body.find("LanguageInputOptions.m_Corners = IGraphics::CORNER_ALL;", LanguageFontPos);
 	const size_t LanguageAlignPos = Body.find("LanguageInputOptions.m_TextAlign = TEXTALIGN_MC;", LanguageCornersPos);
-	const size_t LanguageTextFieldPos = Body.find("ui_widget::InputField(QmClientTranslateTextInputCtx, &LineInput, EditRect, LanguageInputOptions);", LanguageAlignPos);
+	const size_t LanguageTextFieldPos = Body.find("ui_widget::InputField(TextInputCtx, &LineInput, EditRect, LanguageInputOptions);", LanguageAlignPos);
 	const size_t LanguageWriteBackPos = Body.find("str_copy(pConfigValue, LineInput.GetString(), ConfigValueSize);", LanguageTextFieldPos);
 	EXPECT_NE(LanguageOptionsPos, std::string::npos);
 	EXPECT_NE(LanguagePlaceholderPos, std::string::npos);
@@ -6878,16 +6784,16 @@ TEST(QmMonitoringHelpers, QmClientTranslateSettingsInputsUseSharedQmTextField)
 	EXPECT_LT(LanguageAlignPos, LanguageTextFieldPos);
 	EXPECT_LT(LanguageTextFieldPos, LanguageWriteBackPos);
 
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateEndpoint, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateRegion, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateSecretId, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateSecretKey, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateKey, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveKeyInput, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveEndpointInput, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveModelInput, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_CustomPrompt, &ControlCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&LineInput, &EditRect, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateEndpoint"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateRegion"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateSecretId"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateSecretKey"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateKey"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveKeyInput"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveEndpointInput"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveModelInput"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_CustomPrompt"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&LineInput"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientVoiceTextInputsUseSharedQmTextField)
@@ -7400,7 +7306,7 @@ TEST(QmMonitoringHelpers, P6VisualQmClientMigrationUsesThePublicDeckOnly)
 	EXPECT_NE(VisualDeckBody.find("qm:streamer"), std::string::npos);
 	EXPECT_NE(VisualDeckBody.find("qm:entity_overlay"), std::string::npos);
 	EXPECT_NE(VisualDeckBody.find("qm:collision_hitbox"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:translate_ui"), std::string::npos);
+	EXPECT_EQ(VisualDeckBody.find("qm:translate_ui"), std::string::npos);
 	EXPECT_NE(VisualDeckBody.find("qm:card_appearance"), std::string::npos);
 	EXPECT_NE(VisualDeckBody.find("ParseLegacyQmCollapsed"), std::string::npos);
 	EXPECT_NE(VisualDeckBody.find("SerializeLegacyQmCollapsed"), std::string::npos);
@@ -7955,6 +7861,51 @@ TEST(QmMonitoringHelpers, P6FunctionTranslateKeepsProviderControlsInItsContentOw
 	EXPECT_NE(TranslateCase.find("RenderQmFunctionTranslateContent"), std::string::npos);
 	EXPECT_EQ(TranslateCase.find("RenderLanguageDropDownWithCustomInput"), std::string::npos);
 	EXPECT_EQ(TranslateCase.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, P6FunctionDeckOwnsProductionCardLayout)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Registry = ReadRepoFile("src/game/client/QmUi/QmCardRegistry.cpp");
+	const std::string FunctionDeckBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientFunctionDeck(");
+	const std::string VisualDeckBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientVisualDeck(");
+	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	const size_t FunctionDispatch = FunctionPageBody.find("RenderSettingsQmClientFunctionDeck(ContentView, PrewarmOnly)");
+	const size_t LegacyScroll = FunctionPageBody.find("BeginSettingsQmScrollContainer");
+	ASSERT_FALSE(FunctionDeckBody.empty());
+	ASSERT_FALSE(VisualDeckBody.empty());
+	ASSERT_NE(FunctionDispatch, std::string::npos);
+	ASSERT_NE(LegacyScroll, std::string::npos);
+
+	EXPECT_NE(Header.find("RenderSettingsQmClientFunctionDeck"), std::string::npos);
+	EXPECT_LT(FunctionDispatch, LegacyScroll);
+	EXPECT_NE(FunctionDeckBody.find("m_SettingsCardDeck.Render"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("SettingsCardOrderModel"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("ParseLegacyQmCollapsed"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("QmResolveScrollPolicy"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("qm:translate_ui"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("qm:qiafen"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("GetFavoriteMaps().size()"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("MeasureContentHeight"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("CalcQiaFenInputHeight(TextRender(), g_Config.m_QmBlockWordsList"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("QmKeywordReplyRules::DecodeFromConfig"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("CountAutoReplyRules(aDecodedRules)"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("m_QmTranslateLlmProvider == 2 || g_Config.m_QmTranslateLlmProvider == 3"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("m_QmFriendOnlineAutoRefresh"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("m_QmAutoTeamLock"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("Definition.m_MeasureEachFrame = true"), std::string::npos);
+	EXPECT_NE(FunctionDeckBody.find("if(!Ui()->RenderOnly() && str_comp(aNormalizedCollapsed"), std::string::npos);
+	EXPECT_EQ(FunctionDeckBody.find("s_aContentHeights"), std::string::npos);
+	EXPECT_EQ(FunctionDeckBody.find("m_RenderMeasured"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"qm:translate_ui\", \"function\""), std::string::npos);
+	EXPECT_NE(Registry.find("{\"qm:qiafen\", \"function\""), std::string::npos);
+	EXPECT_EQ(VisualDeckBody.find("qm:translate_ui"), std::string::npos);
+	EXPECT_EQ(FunctionDeckBody.find("s_GlassCards"), std::string::npos);
+	EXPECT_EQ(FunctionDeckBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(FunctionDeckBody.find("HandleModuleDragState"), std::string::npos);
+	EXPECT_EQ(FunctionDeckBody.find("BeginSettingsQmScrollContainer"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
