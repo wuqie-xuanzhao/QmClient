@@ -65,6 +65,22 @@ namespace
 		EXPECT_TRUE(Off.m_KeepDropFeedback);
 		EXPECT_TRUE(Off.m_KeepReflowCompleteFeedback);
 	}
+
+	TEST(SettingsCard, HeaderTextUsesCanonicalBoundedEllipsisContract)
+	{
+		const std::string Source = ReadTestSourceFile("src/game/client/QmUi/SettingsCard.cpp");
+		EXPECT_NE(Source.find("TitleProps.m_MaxWidth = DrawFrame.m_TitleRect.w;"), std::string::npos);
+		EXPECT_NE(Source.find("TitleProps.m_EllipsisAtEnd = true;"), std::string::npos);
+		EXPECT_NE(Source.find("SubtitleProps.m_MaxWidth = DrawFrame.m_SubtitleRect.w;"), std::string::npos);
+		EXPECT_NE(Source.find("SubtitleProps.m_EllipsisAtEnd = true;"), std::string::npos);
+	}
+
+	TEST(SettingsCard, DeckMeasuresContentFromCanonicalPaddingToken)
+	{
+		const std::string Source = ReadTestSourceFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+		EXPECT_NE(Source.find("2.0f * ui_token::settings::CARD_PADDING"), std::string::npos);
+		EXPECT_EQ(Source.find("Slot.w - 28.0f"), std::string::npos);
+	}
 	TEST(SettingsPageLayout, WideViewportUsesEqualColumnsBelowFullWidthTabs)
 	{
 		const SSettingsPageLayoutFrame Frame = ResolveSettingsPageLayout({0.0f, 0.0f, 1000.0f, 700.0f}, true, 1.0f);
@@ -102,6 +118,15 @@ namespace
 		EXPECT_FLOAT_EQ(Zero.m_CardGap, Base.m_CardGap);
 		EXPECT_FLOAT_EQ(Zero.m_ContentViewport.w, Base.m_ContentViewport.w);
 		EXPECT_FLOAT_EQ(Zero.m_aColumns[0].w, Base.m_aColumns[0].w);
+	}
+
+	TEST(SettingsPageLayout, ContentMetricsReserveControlWidthWithoutPageMagicNumbers)
+	{
+		const SSettingsContentMetrics Narrow = ResolveSettingsContentMetrics(420.0f);
+		const SSettingsContentMetrics Wide = ResolveSettingsContentMetrics(900.0f);
+		EXPECT_GE(420.0f - Narrow.m_LabelWidth, 160.0f * Narrow.m_UiScale);
+		EXPECT_GE(900.0f - Wide.m_LabelWidth, 160.0f * Wide.m_UiScale);
+		EXPECT_LT(Narrow.m_LabelWidth, Wide.m_LabelWidth);
 	}
 
 	TEST(UiTheme, RuntimeThemeTracksBaseColorAndOpacity)

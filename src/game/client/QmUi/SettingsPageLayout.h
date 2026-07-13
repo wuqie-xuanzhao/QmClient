@@ -20,6 +20,29 @@ struct SSettingsPageLayoutFrame
 	bool m_TwoColumns = false;
 };
 
+struct SSettingsContentMetrics
+{
+	float m_UiScale = 1.0f;
+	float m_LineHeight = 20.0f;
+	float m_BodySize = 12.0f;
+	float m_LineSpacing = 5.0f;
+	float m_LabelWidth = 120.0f;
+};
+
+inline SSettingsContentMetrics ResolveSettingsContentMetrics(const float ContentWidth)
+{
+	SSettingsContentMetrics Metrics;
+	Metrics.m_UiScale = std::clamp(ContentWidth / 1000.0f, ContentWidth < 680.0f ? 0.78f : 0.85f, 1.0f);
+	Metrics.m_LineHeight = std::clamp(ui_token::settings::ROW_HEIGHT * Metrics.m_UiScale, 16.0f, ui_token::settings::ROW_HEIGHT);
+	Metrics.m_BodySize = std::clamp(ui_token::font::BODY * Metrics.m_UiScale, 10.0f, ui_token::font::BODY);
+	Metrics.m_LineSpacing = std::clamp(ui_token::settings::ROW_GAP * Metrics.m_UiScale, 3.0f, ui_token::settings::ROW_GAP);
+	const float MinimumControlWidth = 160.0f * Metrics.m_UiScale;
+	const float Gap = 8.0f * Metrics.m_UiScale;
+	const float PreferredLabelWidth = ContentWidth * 0.32f;
+	Metrics.m_LabelWidth = std::clamp(PreferredLabelWidth, 96.0f * Metrics.m_UiScale, std::max(96.0f * Metrics.m_UiScale, ContentWidth - MinimumControlWidth - Gap));
+	return Metrics;
+}
+
 inline SSettingsPageLayoutFrame ResolveSettingsPageLayout(const CUIRect &PageRect, const bool HasSubTabs, const float UiScale = 1.0f)
 {
 	const float Scale = UiScale > 0.0f ? UiScale : 1.0f;

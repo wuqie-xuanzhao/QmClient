@@ -72,6 +72,8 @@ namespace ui_token::settings
 	inline constexpr float SUB_TAB_HEIGHT = 40.0f;
 	inline constexpr float SUB_TAB_GAP = 12.0f;
 	inline constexpr float CARD_GAP = 16.0f;
+	inline constexpr float ROW_HEIGHT = 20.0f;
+	inline constexpr float ROW_GAP = 5.0f;
 	inline constexpr float TWO_COLUMN_MIN_WIDTH = 760.0f;
 	inline constexpr float CARD_PADDING = 14.0f;
 	inline constexpr float CARD_HEADER_TITLE_HEIGHT = 18.0f;

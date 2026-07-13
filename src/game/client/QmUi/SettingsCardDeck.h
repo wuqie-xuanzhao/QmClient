@@ -98,26 +98,4 @@ private:
 	settings_card_deck_logic::CProjectionCache m_ProjectionCache;
 };
 
-// 过渡适配器：尚未迁移到 CSettingsCardDeck 的页面继续通过它读写既有全局配置。
-namespace settings_card_deck
-{
-	class CDeck
-	{
-	public:
-		void Load(const char *pDeckId, char *pGlobalOrder, int GlobalOrderSize);
-		bool CommitDrop(const char *pStableId, int Column, int Order);
-		const std::vector<std::string> &OrderedStableIds() const { return m_vOrderedStableIds; }
-		int ColumnForStableId(const char *pStableId) const;
-
-	private:
-		void RebuildProjection();
-
-		std::string m_DeckId;
-		char *m_pGlobalOrder = nullptr;
-		int m_GlobalOrderSize = 0;
-		settings_card_deck_logic::CLogic m_Logic;
-		std::vector<std::string> m_vOrderedStableIds;
-	};
-} // namespace settings_card_deck
-
 #endif // GAME_CLIENT_QMUI_SETTINGSCARDDECK_H

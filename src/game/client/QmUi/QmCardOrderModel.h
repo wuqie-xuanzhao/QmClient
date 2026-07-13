@@ -7,10 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
-// 卡片顺序数据模型（阶段 2 拖拽架构的地基）。
-// 唯一权威的卡片顺序数据源，替代当前散落的 s_aQmModuleLayout / m_vTClientLeftCardOrder /
-// m_SettingsCardDeckOrders 三套并存。以栖梦 ParseQmModuleLayout / SerializeQmModuleLayout /
-// NormalizeQmModuleLayoutColumns 为骨架演进。
+// 全部设置卡片共享的唯一顺序与列归属数据源。
+// 页面只通过 CSettingsCardDeck 投影和更新该模型，不再维护页面私有顺序。
 namespace qm_card_order
 {
 	struct SEntry

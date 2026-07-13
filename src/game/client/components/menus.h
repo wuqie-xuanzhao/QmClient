@@ -2594,41 +2594,6 @@ private:
 		ColorRGBA m_ShadowColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f); // 保留字段，置透明（不再绘制，为以后内嵌阴影留口子）
 	};
 
-	struct SSettingsCardDeckCard
-	{
-		const char *m_pStableId = nullptr;
-		const char *m_pTitle = nullptr;
-		ESettingsCardDeckColumn m_Column = ESettingsCardDeckColumn::LEFT;
-		CUIRect m_Rect;
-		CUIRect m_ContentRect;
-		CUIRect m_HandleRect;
-		CUIRect m_TitleRect;
-	};
-
-	struct SSettingsCardDeckLayout
-	{
-		const char *m_pDeckId = nullptr;
-		CScrollRegion *m_pScrollRegion = nullptr;
-		SSettingsScrollRegionFrame m_ScrollFrame;
-		SQmSettingsCardStyle m_Style;
-		CUIRect m_View;
-		CUIRect m_aColumns[2];
-		CUIRect m_aBaseColumns[2];
-		CUIRect m_EndRect;
-		std::vector<std::string> *m_pOrder = nullptr;
-		std::vector<std::string> m_vActiveCardIds;
-		std::deque<std::string> m_vStableIds;
-		float m_UiScale = 1.0f;
-		float m_Spacing = 16.0f;
-		const IUiContext *m_pCardContext = nullptr;
-		int m_Page = -1;
-		bool m_TwoColumns = false;
-		bool m_UseCanonicalCardShell = false;
-		bool m_RainbowTitles = false;
-		settings_card_deck::CDeck *m_pDeckCoordinator = nullptr;
-		int m_CardCount = 0;
-	};
-
 	struct SSettingsUiBudgetFrame
 	{
 		double m_LayoutMs = 0.0;
@@ -2650,20 +2615,9 @@ private:
 	void FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive = true);
 	SQmSettingsCardStyle QmSettingsCardStyle(float UiScale) const;
 	CScrollRegionParams QmSettingsScrollRegionParams(float UiScale) const;
-	void RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const;
-	SSettingsCardDeckLayout BeginSettingsCardDeck(CUIRect MainView, CScrollRegion &ScrollRegion, float PreviousScrollY, float UiScale, const char *pDeckId, int Page, std::vector<std::string> *pOrder = nullptr, const std::vector<std::string> *pActiveCardIds = nullptr);
-	SSettingsCardDeckCard BeginSettingsCardDeckCard(SSettingsCardDeckLayout &Deck, const char *pStableId, const char *pTitle, float MinHeight, float LastMeasuredHeight, ESettingsCardDeckColumn PreferredColumn = ESettingsCardDeckColumn::LEFT, bool ForcePreferredColumn = false);
-	void EndSettingsCardDeck(SSettingsCardDeckLayout &Deck, float *pPreviousScrollY);
 	bool SetSettingsPageFromCardTab(const char *pTab);
 	void NavigateToSettingsCard(const qm_card_registry::SCardNavigationTarget &Target);
 	void RequestSettingsCardFocus(const char *pStableId);
-	bool ConsumeSettingsCardFocus(SSettingsCardDeckLayout &Deck, const SSettingsCardDeckCard &Card);
-	void RenderSettingsCardDragHandle(const CUIRect &Card, CUIRect *pHandleRect, const SQmSettingsCardStyle &Style);
-	void RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck);
-	std::vector<std::string> *SettingsCardDeckOrder(const char *pDeckId);
-	void LoadSettingsCardDeckOrdersFromGlobalConfig();
-	void SerializeMergedSettingsCardDeckOrdersToGlobalConfig();
-	bool SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Deck, const std::string &StableId) const;
 	void PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input);
 	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer Consumer, const char *pSource, SSettingsAdaptiveBudgetInput Input);
 	bool MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor);
@@ -2745,10 +2699,6 @@ private:
 	bool m_SettingsMenuTextPlanCollectionComplete = false;
 	SSettingsMenuTextPrebuildStats m_SettingsMenuTextLastPrebuildStats;
 	SSettingsMenuTextPlanCollectionStats m_SettingsMenuTextLastCollectionStats;
-	std::unordered_map<std::string, std::vector<std::string>> m_SettingsCardDeckOrders;
-	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMeasuredHeights;
-	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMinHeights;
-	std::unordered_map<std::string, std::unordered_map<std::string, int>> m_SettingsCardDeckColumnPrefs;
 	std::string m_SettingsCardFocusStableId;
 	qm_card_order::CModel m_SettingsCardOrderModel;
 	bool m_SettingsCardOrderLoaded = false;

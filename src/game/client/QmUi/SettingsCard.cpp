@@ -98,13 +98,19 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		}
 		TitleColor.a *= DrawState.m_DrawAlpha;
 		Ctx.m_pTextRender->TextColor(TitleColor);
-		Ctx.m_pUi->DoLabel(&DrawFrame.m_TitleRect, Spec.m_pTitle != nullptr ? Spec.m_pTitle : "", ui_token::font::TITLE * UiScale, TEXTALIGN_ML);
+		SLabelProperties TitleProps;
+		TitleProps.m_MaxWidth = DrawFrame.m_TitleRect.w;
+		TitleProps.m_EllipsisAtEnd = true;
+		Ctx.m_pUi->DoLabel(&DrawFrame.m_TitleRect, Spec.m_pTitle != nullptr ? Spec.m_pTitle : "", ui_token::font::TITLE * UiScale, TEXTALIGN_ML, TitleProps);
 		if(Spec.m_pSubtitle != nullptr && (DrawState.m_Hovered || DrawState.m_Focused))
 		{
 			ColorRGBA SubtitleColor = Theme.m_TextSmall;
 			SubtitleColor.a *= DrawState.m_DrawAlpha;
 			Ctx.m_pTextRender->TextColor(SubtitleColor);
-			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, Spec.m_pSubtitle, ui_token::font::SMALL * UiScale, TEXTALIGN_ML);
+			SLabelProperties SubtitleProps;
+			SubtitleProps.m_MaxWidth = DrawFrame.m_SubtitleRect.w;
+			SubtitleProps.m_EllipsisAtEnd = true;
+			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, Spec.m_pSubtitle, ui_token::font::SMALL * UiScale, TEXTALIGN_ML, SubtitleProps);
 		}
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 	}

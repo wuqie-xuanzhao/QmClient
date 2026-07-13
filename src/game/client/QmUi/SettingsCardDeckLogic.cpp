@@ -50,6 +50,35 @@ void ApplySettingsCardDeckDragPlacement(std::array<std::vector<int>, 3> &aColumn
 	vTarget.insert(vTarget.begin() + InsertAt, ActiveStateIndex);
 }
 
+void ApplySettingsCardDeckSingleColumnDragPlacement(std::array<std::vector<int>, 3> &aColumns, int ActiveStateIndex, int TargetOrder)
+{
+	int SourceColumn = -1;
+	for(int Column = 0; Column < (int)aColumns.size(); ++Column)
+	{
+		if(std::find(aColumns[Column].begin(), aColumns[Column].end(), ActiveStateIndex) != aColumns[Column].end())
+		{
+			SourceColumn = Column;
+			break;
+		}
+	}
+	if(SourceColumn < 0)
+		return;
+	if(SourceColumn == 0)
+	{
+		ApplySettingsCardDeckDragPlacement(aColumns, ActiveStateIndex, 0, TargetOrder);
+		return;
+	}
+
+	const int LeftCount = (int)aColumns[1].size();
+	std::vector<int> vVisualOrder = aColumns[1];
+	vVisualOrder.insert(vVisualOrder.end(), aColumns[2].begin(), aColumns[2].end());
+	vVisualOrder.erase(std::remove(vVisualOrder.begin(), vVisualOrder.end(), ActiveStateIndex), vVisualOrder.end());
+	const int InsertAt = std::clamp(TargetOrder, 0, (int)vVisualOrder.size());
+	vVisualOrder.insert(vVisualOrder.begin() + InsertAt, ActiveStateIndex);
+	aColumns[1].assign(vVisualOrder.begin(), vVisualOrder.begin() + std::min(LeftCount, (int)vVisualOrder.size()));
+	aColumns[2].assign(vVisualOrder.begin() + aColumns[1].size(), vVisualOrder.end());
+}
+
 int ResolveSettingsCardDeckDropOrder(float MouseY, int TargetColumn, const std::vector<SSettingsCardDeckItemGeometry> &vItems, int IgnoredStateIndex)
 {
 	int Order = 0;
@@ -162,56 +191,47 @@ bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, 
 	return true;
 }
 
-namespace settings_card_deck_logic
+bool CommitSettingsCardDeckSingleColumnDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetOrder, const std::vector<int> &vActiveStateIndices)
 {
-	void CLogic::Load(const char *pDeckId, const char *pGlobalOrder)
+	const int Index = Model.FindByStableId(pStableId);
+	if(Index < 0 || Model.Entry(Index).m_pDefaultTab == nullptr || str_comp(Model.Entry(Index).m_pDefaultTab, pTab != nullptr ? pTab : "") != 0)
+		return false;
+	const int SourceColumn = Model.Entry(Index).m_Column;
+	if(SourceColumn == 0)
+		return CommitSettingsCardDeckDrop(Model, pTab, pStableId, 0, TargetOrder, &vActiveStateIndices);
+	if(SourceColumn != 1 && SourceColumn != 2)
+		return false;
+
+	std::array<std::vector<int>, 3> aColumns = BuildSettingsCardDeckColumnOrder(Model, pTab, vActiveStateIndices);
+	const std::array<std::vector<int>, 3> aPreviousColumns = aColumns;
+	ApplySettingsCardDeckSingleColumnDragPlacement(aColumns, Index, TargetOrder);
+	if(aColumns == aPreviousColumns)
+		return false;
+
+	std::array<std::vector<int>, 3> aCanonicalColumns;
+	for(const int Column : {1, 2})
 	{
-		m_DeckId = pDeckId != nullptr ? pDeckId : "";
-		const std::vector<qm_card_order::SEntry> vDefaults = qm_card_registry::BuildDefaultEntries();
-		m_Model.LoadMerged(pGlobalOrder, vDefaults);
-		for(const qm_card_order::SEntry &Default : vDefaults)
+		const std::vector<int> vCurrentColumn = Model.ColumnIndices(pTab, Column);
+		size_t VisibleIndex = 0;
+		aCanonicalColumns[Column].reserve(vCurrentColumn.size());
+		for(const int StateIndex : vCurrentColumn)
 		{
-			if(Default.m_pStableId == nullptr || Default.m_pDefaultTab == nullptr || str_startswith(Default.m_pStableId, "deck:") == nullptr || str_comp(Default.m_pDefaultTab, m_DeckId.c_str()) != 0)
-				continue;
-			const int Index = m_Model.FindByStableId(Default.m_pStableId);
-			if(Index < 0 || m_Model.Entry(Index).m_pDefaultTab == nullptr || str_comp(m_Model.Entry(Index).m_pDefaultTab, m_DeckId.c_str()) != 0)
-				m_Model.MoveToTab(Default.m_pStableId, m_DeckId.c_str(), Default.m_Column, Default.m_OrderInColumn);
+			if(std::find(vActiveStateIndices.begin(), vActiveStateIndices.end(), StateIndex) == vActiveStateIndices.end())
+				aCanonicalColumns[Column].push_back(StateIndex);
+			else if(VisibleIndex < aColumns[Column].size())
+				aCanonicalColumns[Column].push_back(aColumns[Column][VisibleIndex++]);
 		}
 	}
 
-	bool CLogic::Move(const char *pStableId, int Column, int Order)
+	// 先固定完整 canonical 顺序再提交，避免连续移动时动态可见锚点把隐藏卡推离原槽位。
+	for(const int Column : {1, 2})
 	{
-		const int Index = m_Model.FindByStableId(pStableId);
-		if(Index < 0 || m_DeckId.empty() || Column < 0 || Column > 2)
-			return false;
-		const qm_card_order::SEntry &Entry = m_Model.Entry(Index);
-		if(Entry.m_pDefaultTab == nullptr || str_comp(Entry.m_pDefaultTab, m_DeckId.c_str()) != 0 || str_startswith(Entry.m_pStableId, "deck:") == nullptr)
-			return false;
-		m_Model.Move(pStableId, Column, Order);
-		return true;
-	}
-
-	int CLogic::ColumnForStableId(const char *pStableId) const
-	{
-		const int Index = m_Model.FindByStableId(pStableId);
-		return Index >= 0 ? m_Model.Entry(Index).m_Column : -1;
-	}
-	std::vector<std::string> CLogic::StableIdOrder(int Column) const
-
-	{
-		return m_Model.StableIdOrder("deck:", m_DeckId.c_str(), Column);
-	}
-
-	bool CLogic::SerializeMerged(const char *pExistingGlobalOrder, char *pOut, int OutSize) const
-	{
-		std::vector<qm_card_order::SEntry> vEntries;
-		vEntries.reserve(m_Model.Count());
-		for(int i = 0; i < m_Model.Count(); ++i)
+		for(int Order = 0; Order < (int)aCanonicalColumns[Column].size(); ++Order)
 		{
-			const qm_card_order::SEntry &Entry = m_Model.Entry(i);
-			if(Entry.m_pStableId != nullptr && str_startswith(Entry.m_pStableId, "deck:") != nullptr)
-				vEntries.push_back(Entry);
+			const int StateIndex = aCanonicalColumns[Column][Order];
+			if(StateIndex >= 0 && StateIndex < Model.Count())
+				Model.Move(Model.Entry(StateIndex).m_pStableId, Column, Order);
 		}
-		return qm_card_order::SerializeMergedReplacingPrefix(pExistingGlobalOrder, "deck:", vEntries, pOut, OutSize);
 	}
-} // namespace settings_card_deck_logic
+	return true;
+}

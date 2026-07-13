@@ -1,5 +1,3 @@
-#include <base/system.h>
-
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/SettingsCardDeckLogic.h>
 
@@ -7,60 +5,6 @@
 
 #include <array>
 
-TEST(SettingsCardDeckLogic, MovesGraphicsAcrossColumnsWithoutOverwritingOtherDecks)
-{
-	settings_card_deck_logic::CLogic Logic;
-	Logic.Load("graphics", "deck:graphics-display|sound|left|0;deck:graphics-visual|graphics|left|1;deck:sound-toggle|sound|left|0;deck:ddnet-demo|ddnet|left|0;qm:chat_bubble|visual|left|0;");
-
-	ASSERT_TRUE(Logic.Move("deck:graphics-visual", 2, 0));
-	EXPECT_EQ(Logic.StableIdOrder(1), (std::vector<std::string>{"deck:graphics-display", "deck:graphics-backend"}));
-	EXPECT_EQ(Logic.StableIdOrder(2), (std::vector<std::string>{"deck:graphics-visual", "deck:graphics-modes"}));
-	EXPECT_FALSE(Logic.Move("deck:sound-toggle", 2, 0));
-	EXPECT_FALSE(Logic.Move("deck:graphics-visual", 3, 0));
-
-	char aSerialized[8192];
-	ASSERT_TRUE(Logic.SerializeMerged("deck:graphics-display|sound|left|0;deck:graphics-visual|graphics|left|1;deck:sound-toggle|sound|left|0;deck:ddnet-demo|ddnet|left|0;qm:chat_bubble|visual|left|0;", aSerialized, sizeof(aSerialized)));
-	EXPECT_NE(str_find(aSerialized, "deck:graphics-display|graphics|left|0"), nullptr);
-	EXPECT_NE(str_find(aSerialized, "deck:graphics-visual|graphics|right|0"), nullptr);
-	EXPECT_NE(str_find(aSerialized, "deck:sound-toggle|sound|left|0"), nullptr);
-	EXPECT_NE(str_find(aSerialized, "deck:ddnet-demo|ddnet|left|0"), nullptr);
-	EXPECT_NE(str_find(aSerialized, "qm:chat_bubble|visual|left|0"), nullptr);
-
-	settings_card_deck_logic::CLogic Reloaded;
-	Reloaded.Load("graphics", aSerialized);
-	EXPECT_EQ(Reloaded.StableIdOrder(1), (std::vector<std::string>{"deck:graphics-display", "deck:graphics-backend"}));
-	EXPECT_EQ(Reloaded.StableIdOrder(2), (std::vector<std::string>{"deck:graphics-visual", "deck:graphics-modes"}));
-}
-
-TEST(SettingsCardDeckLogic, SerializesCommittedProjection)
-{
-	char aGlobalOrder[8192] = "deck:graphics-display|graphics|left|0;deck:graphics-visual|graphics|left|1;deck:sound-toggle|sound|left|0;";
-	settings_card_deck_logic::CLogic Logic;
-	Logic.Load("graphics", aGlobalOrder);
-
-	ASSERT_TRUE(Logic.Move("deck:graphics-visual", 2, 0));
-	EXPECT_EQ(Logic.ColumnForStableId("deck:graphics-visual"), 2);
-	char aSerialized[8192];
-	ASSERT_TRUE(Logic.SerializeMerged(aGlobalOrder, aSerialized, sizeof(aSerialized)));
-	EXPECT_NE(str_find(aSerialized, "deck:graphics-visual|graphics|right|0"), nullptr);
-	EXPECT_NE(str_find(aSerialized, "deck:sound-toggle|sound|left|0"), nullptr);
-	EXPECT_EQ(Logic.StableIdOrder(2), (std::vector<std::string>{"deck:graphics-visual", "deck:graphics-modes"}));
-}
-
-TEST(SettingsCardDeckLogic, CommitFailureKeepsProjectionConsistentWithGlobalOrder)
-{
-	const char *pGlobalOrder = "deck:graphics-display|graphics|left|0;deck:graphics-visual|graphics|left|1;";
-	settings_card_deck_logic::CLogic Logic;
-	Logic.Load("graphics", pGlobalOrder);
-
-	ASSERT_TRUE(Logic.Move("deck:graphics-visual", 2, 0));
-	char aSerialized[8];
-	ASSERT_FALSE(Logic.SerializeMerged(pGlobalOrder, aSerialized, sizeof(aSerialized)));
-	settings_card_deck_logic::CLogic Reloaded;
-	Reloaded.Load("graphics", pGlobalOrder);
-	EXPECT_EQ(Reloaded.ColumnForStableId("deck:graphics-visual"), 1);
-	EXPECT_EQ(Reloaded.StableIdOrder(1), (std::vector<std::string>{"deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend"}));
-}
 TEST(SettingsCardDeck, CrossColumnDropMovesOnlyTheGlobalModel)
 {
 	qm_card_order::CModel Model;
@@ -160,6 +104,86 @@ TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)
 		{8, 2, {500.0f, 236.0f, 300.0f, 120.0f}},
 	};
 	EXPECT_EQ(ResolveSettingsCardDeckDropOrder(200.0f, 2, vItems, 7), 1);
+}
+
+TEST(SettingsCardDeck, SingleColumnDragPreservesCanonicalColumnCapacity)
+{
+	std::array<std::vector<int>, 3> aColumns{
+		std::vector<int>{2},
+		std::vector<int>{4, 7},
+		std::vector<int>{9, 11},
+	};
+	ApplySettingsCardDeckSingleColumnDragPlacement(aColumns, 11, 1);
+	EXPECT_EQ(aColumns[0], (std::vector<int>{2}));
+	EXPECT_EQ(aColumns[1], (std::vector<int>{4, 11}));
+	EXPECT_EQ(aColumns[2], (std::vector<int>{7, 9}));
+}
+
+TEST(SettingsCardDeck, SingleColumnDropRestoresDeterministicWideLayout)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"full", "sound", 0, 0},
+		{"left-a", "sound", 1, 0},
+		{"left-b", "sound", 1, 1},
+		{"right-a", "sound", 2, 0},
+		{"right-b", "sound", 2, 1},
+	});
+	const std::vector<int> vActiveStateIndices{
+		Model.StateIndexForStableId("full"),
+		Model.StateIndexForStableId("left-a"),
+		Model.StateIndexForStableId("left-b"),
+		Model.StateIndexForStableId("right-a"),
+		Model.StateIndexForStableId("right-b"),
+	};
+
+	ASSERT_TRUE(CommitSettingsCardDeckSingleColumnDrop(Model, "sound", "right-b", 1, vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 0), (std::vector<std::string>{"full"}));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 1), (std::vector<std::string>{"left-a", "right-b"}));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"left-b", "right-a"}));
+}
+
+TEST(SettingsCardDeck, SingleColumnDropPreservesHiddenCardsInCanonicalColumns)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"left-a", "sound", 1, 0},
+		{"left-hidden", "sound", 1, 1},
+		{"left-b", "sound", 1, 2},
+		{"right-hidden", "sound", 2, 0},
+		{"right-a", "sound", 2, 1},
+		{"right-b", "sound", 2, 2},
+	});
+	const std::vector<int> vActiveStateIndices{
+		Model.StateIndexForStableId("left-a"),
+		Model.StateIndexForStableId("left-b"),
+		Model.StateIndexForStableId("right-a"),
+		Model.StateIndexForStableId("right-b"),
+	};
+
+	ASSERT_TRUE(CommitSettingsCardDeckSingleColumnDrop(Model, "sound", "right-b", 1, vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 1), (std::vector<std::string>{"left-a", "left-hidden", "right-b"}));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"right-hidden", "left-b", "right-a"}));
+
+	ASSERT_TRUE(CommitSettingsCardDeckSingleColumnDrop(Model, "sound", "left-a", 3, vActiveStateIndices));
+	const std::vector<std::string> vExpectedLeft{"right-b", "left-hidden", "left-b"};
+	const std::vector<std::string> vExpectedRight{"right-hidden", "right-a", "left-a"};
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 1), vExpectedLeft);
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), vExpectedRight);
+
+	char aSerialized[1024];
+	ASSERT_TRUE(Model.Serialize(aSerialized, sizeof(aSerialized)));
+	qm_card_order::CModel Reloaded;
+	ASSERT_TRUE(Reloaded.LoadExplicit(aSerialized, {
+							       {"left-a", "sound", 1, 0},
+							       {"left-hidden", "sound", 1, 1},
+							       {"left-b", "sound", 1, 2},
+							       {"right-hidden", "sound", 2, 0},
+							       {"right-a", "sound", 2, 1},
+							       {"right-b", "sound", 2, 2},
+						       }));
+	EXPECT_EQ(Reloaded.StableIdOrder("", "sound", 1), vExpectedLeft);
+	EXPECT_EQ(Reloaded.StableIdOrder("", "sound", 2), vExpectedRight);
 }
 
 TEST(SettingsCardDeck, ColumnProjectionExcludesInactiveDefinitions)

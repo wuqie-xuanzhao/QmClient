@@ -116,7 +116,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 				ContentHeight = 0.0f;
 			else if(SettingsCardDeckNeedsContentMeasure(Collapsed, pDefinition->m_MeasureEachFrame, ContentHeight))
 			{
-				const float ContentWidth = std::max(0.0f, Slot.w - 28.0f * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
+				const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
 				ContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;
 			}
 			const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, pDefinition->m_Spec, ContentHeight, Ctx.m_UiScale);
@@ -157,7 +157,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		{
 			float CursorY = DrawLayout.m_ContentViewport.y;
 			for(const int Column : {0, 1, 2})
-				AppendColumn(aDisplayColumns[Column], 0, DrawLayout.m_ContentViewport, CursorY);
+				AppendColumn(aDisplayColumns[Column], Column, DrawLayout.m_ContentViewport, CursorY);
 		}
 		return vPrepared;
 	};
@@ -185,13 +185,13 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		m_Drag.Reset();
 	if(m_Drag.Active() && !Input.m_MouseDown && !Input.m_MouseReleased)
 		m_Drag.Reset();
-	if(!m_Drag.Active() && DrawLayout.m_TwoColumns && (Input.m_CtrlPressed || Input.m_AllowHeaderDrag) && Input.m_MousePressed)
+	if(!m_Drag.Active() && (Input.m_CtrlPressed || Input.m_AllowHeaderDrag) && Input.m_MousePressed)
 	{
 		for(const SPreparedSettingsCard &Card : vPrepared)
 		{
 			const bool InHeader = PointInRect(Card.m_Frame.m_HeaderRect, Input.m_MouseX, Input.m_MouseY);
 			const bool InHeaderAction = Card.m_pDefinition->m_HeaderAction && PointInRect(Card.m_Frame.m_HandleRect, Input.m_MouseX, Input.m_MouseY);
-			if((Card.m_Column == 1 || Card.m_Column == 2) && InHeader && !InHeaderAction)
+			if(InHeader && !InHeaderAction)
 			{
 				m_Drag.m_StateIndex = Card.m_StateIndex;
 				m_Drag.m_SourceColumn = Card.m_Column;
@@ -203,20 +203,30 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		}
 	}
 
-	if(m_Drag.Active() && DrawLayout.m_TwoColumns)
+	if(m_Drag.Active())
 	{
 		const bool MouseInScrollViewport = PointInRect(ScrollViewport, Input.m_MouseX, Input.m_MouseY);
-		if(MouseInScrollViewport && Input.m_MouseX >= DrawLayout.m_aColumns[0].x && Input.m_MouseX <= DrawLayout.m_aColumns[0].x + DrawLayout.m_aColumns[0].w)
-			m_Drag.m_TargetColumn = 1;
-		else if(MouseInScrollViewport && Input.m_MouseX >= DrawLayout.m_aColumns[1].x && Input.m_MouseX <= DrawLayout.m_aColumns[1].x + DrawLayout.m_aColumns[1].w)
-			m_Drag.m_TargetColumn = 2;
+		if(DrawLayout.m_TwoColumns && m_Drag.m_SourceColumn != 0)
+		{
+			if(MouseInScrollViewport && Input.m_MouseX >= DrawLayout.m_aColumns[0].x && Input.m_MouseX <= DrawLayout.m_aColumns[0].x + DrawLayout.m_aColumns[0].w)
+				m_Drag.m_TargetColumn = 1;
+			else if(MouseInScrollViewport && Input.m_MouseX >= DrawLayout.m_aColumns[1].x && Input.m_MouseX <= DrawLayout.m_aColumns[1].x + DrawLayout.m_aColumns[1].w)
+				m_Drag.m_TargetColumn = 2;
+		}
 		std::vector<SSettingsCardDeckItemGeometry> vGeometry;
 		vGeometry.reserve(vPrepared.size());
 		for(const SPreparedSettingsCard &Card : vPrepared)
-			vGeometry.push_back({Card.m_StateIndex, Card.m_Column, Card.m_Frame.m_Rect});
-		m_Drag.m_TargetOrder = ResolveSettingsCardDeckDropOrder(Input.m_MouseY, m_Drag.m_TargetColumn, vGeometry, m_Drag.m_StateIndex);
+		{
+			const int GeometryColumn = !DrawLayout.m_TwoColumns && m_Drag.m_SourceColumn != 0 && Card.m_Column != 0 ? 1 : Card.m_Column;
+			vGeometry.push_back({Card.m_StateIndex, GeometryColumn, Card.m_Frame.m_Rect});
+		}
+		const int GeometryTargetColumn = !DrawLayout.m_TwoColumns && m_Drag.m_SourceColumn != 0 ? 1 : m_Drag.m_TargetColumn;
+		m_Drag.m_TargetOrder = ResolveSettingsCardDeckDropOrder(Input.m_MouseY, GeometryTargetColumn, vGeometry, m_Drag.m_StateIndex);
 		std::array<std::vector<int>, 3> aDragColumns = aColumns;
-		ApplySettingsCardDeckDragPlacement(aDragColumns, m_Drag.m_StateIndex, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder);
+		if(DrawLayout.m_TwoColumns)
+			ApplySettingsCardDeckDragPlacement(aDragColumns, m_Drag.m_StateIndex, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder);
+		else
+			ApplySettingsCardDeckSingleColumnDragPlacement(aDragColumns, m_Drag.m_StateIndex, m_Drag.m_TargetOrder);
 		vPrepared = BuildPreparedCards(aDragColumns);
 
 		if(pScrollRegion != nullptr && MouseInScrollViewport)
@@ -229,7 +239,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		if(Input.m_MouseReleased)
 		{
 			const char *pStableId = m_Drag.m_StateIndex >= 0 && m_Drag.m_StateIndex < Model.Count() ? Model.Entry(m_Drag.m_StateIndex).m_pStableId : nullptr;
-			Result.m_OrderChanged = CommitSettingsCardDeckDrop(Model, pTab, pStableId, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder, &m_vActiveStateIndices);
+			Result.m_OrderChanged = DrawLayout.m_TwoColumns ? CommitSettingsCardDeckDrop(Model, pTab, pStableId, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder, &m_vActiveStateIndices) : CommitSettingsCardDeckSingleColumnDrop(Model, pTab, pStableId, m_Drag.m_TargetOrder, m_vActiveStateIndices);
 			if(Result.m_OrderChanged && m_Drag.m_StateIndex >= 0 && m_Drag.m_StateIndex < (int)m_vRuntimeStates.size())
 			{
 				SRuntimeState &Runtime = m_vRuntimeStates[m_Drag.m_StateIndex];
@@ -244,11 +254,6 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			m_Drag.Reset();
 		}
 	}
-	else if(m_Drag.Active() && Input.m_MouseReleased)
-	{
-		m_Drag.Reset();
-	}
-
 	Result.m_vFrames.reserve(vPrepared.size());
 	for(const SPreparedSettingsCard &Card : vPrepared)
 	{
@@ -338,47 +343,3 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 	}
 	return Result;
 }
-
-namespace settings_card_deck
-{
-	void CDeck::Load(const char *pDeckId, char *pGlobalOrder, int GlobalOrderSize)
-	{
-		m_DeckId = pDeckId != nullptr ? pDeckId : "";
-		m_pGlobalOrder = pGlobalOrder;
-		m_GlobalOrderSize = GlobalOrderSize;
-		m_Logic.Load(m_DeckId.c_str(), m_pGlobalOrder);
-		RebuildProjection();
-	}
-
-	bool CDeck::CommitDrop(const char *pStableId, int Column, int Order)
-	{
-		if(m_pGlobalOrder == nullptr || m_GlobalOrderSize <= 0 || !m_Logic.Move(pStableId, Column, Order))
-			return false;
-		std::vector<char> vMergedGlobalOrder(m_GlobalOrderSize);
-		if(!m_Logic.SerializeMerged(m_pGlobalOrder, vMergedGlobalOrder.data(), (int)vMergedGlobalOrder.size()))
-		{
-			m_Logic.Load(m_DeckId.c_str(), m_pGlobalOrder);
-			RebuildProjection();
-			return false;
-		}
-		str_copy(m_pGlobalOrder, vMergedGlobalOrder.data(), m_GlobalOrderSize);
-		m_Logic.Load(m_DeckId.c_str(), m_pGlobalOrder);
-		RebuildProjection();
-		return true;
-	}
-
-	int CDeck::ColumnForStableId(const char *pStableId) const
-	{
-		return m_Logic.ColumnForStableId(pStableId);
-	}
-
-	void CDeck::RebuildProjection()
-	{
-		m_vOrderedStableIds.clear();
-		for(const int Column : {1, 2, 0})
-		{
-			const std::vector<std::string> vColumnIds = m_Logic.StableIdOrder(Column);
-			m_vOrderedStableIds.insert(m_vOrderedStableIds.end(), vColumnIds.begin(), vColumnIds.end());
-		}
-	}
-} // namespace settings_card_deck

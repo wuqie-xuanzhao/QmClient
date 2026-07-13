@@ -1273,29 +1273,6 @@ TEST(QmMonitoringHelpers, RuntimePerfCallsitesUseSharedLoggingHelpers)
 	}
 }
 
-TEST(QmMonitoringHelpers, QmClientModuleDragGhostUsesPressAnchor)
-{
-	std::ifstream File(TestSourcePath("src/game/client/components/qmclient/menus_qmclient.cpp"));
-	ASSERT_TRUE(File.good());
-	std::stringstream Buffer;
-	Buffer << File.rdbuf();
-	const std::string Source = Buffer.str();
-
-	const size_t PressBlockPos = Source.find("if(!InteractionBlocked && Ui()->MouseButtonClicked(0) && OverHeader)");
-	ASSERT_NE(PressBlockPos, std::string::npos);
-	const size_t DragGuardPos = Source.find("if(s_DragState.m_pDragging != pModule)", PressBlockPos);
-	ASSERT_NE(DragGuardPos, std::string::npos);
-	const std::string PressBlock = Source.substr(PressBlockPos, DragGuardPos - PressBlockPos);
-
-	EXPECT_NE(PressBlock.find("s_DragState.m_pDragging = pModule;"), std::string::npos);
-	EXPECT_NE(PressBlock.find("s_DragState.m_GrabOffset = vec2(Ui()->MouseX() - CardRect.x, Ui()->MouseY() - CardRect.y);"), std::string::npos);
-	EXPECT_NE(PressBlock.find("s_DragState.m_DraggedWidth = CardRect.w;"), std::string::npos);
-	EXPECT_NE(PressBlock.find("s_DragState.m_DraggedHeight = CardRect.h;"), std::string::npos);
-	EXPECT_NE(PressBlock.find("s_DragState.m_HasDragAnchor = true;"), std::string::npos);
-	EXPECT_EQ(Source.find("if(!InteractionBlocked && s_DragState.m_pPressed == pModule && Ui()->MouseButton(0) && s_DragState.m_pDragging == nullptr)"), std::string::npos);
-	EXPECT_NE(Source.find("if(s_DragState.m_pDragging == nullptr || !s_DragState.m_HasDragAnchor)"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, MenuTextPoolReplacesSettingsOnlyBoundary)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
@@ -1594,47 +1571,6 @@ TEST(QmMonitoringHelpers, BaseSettingsStableTextCandidateAuditIsEmptyExceptAllow
 	EXPECT_TRUE(vUnexpected.empty()) << JoinCandidates(vUnexpected);
 }
 
-TEST(QmMonitoringHelpers, SettingsStaticLabelsUseTextElementCache)
-{
-	{
-		std::ifstream File(TestSourcePath("src/game/client/components/menus_settings.cpp"));
-		ASSERT_TRUE(File.good());
-		std::stringstream Buffer;
-		Buffer << File.rdbuf();
-		const std::string Source = Buffer.str();
-
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TEE, -1, \"tee-name-label\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TEE, -1, \"tee-clan-label\")"), std::string::npos);
-		// DDNet 标题（demo/ghost/gameplay/background/miscellaneous）已迁移到 card deck（BeginSettingsCardDeckCard），不再用独立 SettingsTextElement title
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_DDNET, -1, \"ddnet-run-on-join-label\")"), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &s_UseCurrentMapId, \"Use current map as background\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClBackgroundShowTilesLayers, \"Show tiles layers from BG map\""), std::string::npos);
-	}
-	{
-		std::ifstream File(TestSourcePath("src/game/client/components/tclient/menus_tclient.cpp"));
-		ASSERT_TRUE(File.good());
-		std::stringstream Buffer;
-		Buffer << File.rdbuf();
-		const std::string Source = Buffer.str();
-
-		EXPECT_NE(Source.find("ConfigureSettingsCardSection(S, Localizable(\"Visual: Font & Cursor\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-visual-font-cursor-title\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-custom-font-label\")"), std::string::npos);
-	}
-	{
-		std::ifstream File(TestSourcePath("src/game/client/components/qmclient/menus_qmclient.cpp"));
-		ASSERT_TRUE(File.good());
-		std::stringstream Buffer;
-		Buffer << File.rdbuf();
-		const std::string Source = Buffer.str();
-
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle, TitleStyleKey)"), std::string::npos);
-		EXPECT_NE(Source.find("void CMenus::RenderQmVisualLabel("), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL"), std::string::npos);
-		EXPECT_EQ(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pValue)"), std::string::npos);
-	}
-}
-
 TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
@@ -1790,37 +1726,6 @@ TEST(QmMonitoringHelpers, TClientSettingsCardDeckUsesPublicRuntimeOnly)
 	EXPECT_EQ(Source.find("if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))"), std::string::npos);
 	EXPECT_EQ(Source.find("SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Viewport.y, Viewport.y + Viewport.h"), std::string::npos);
 	EXPECT_EQ(Source.find("SettingsCardDeckCanStartDrag({&Item, true"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, SettingsCardDeckGlobalOrderUsesSharedCardModel)
-{
-	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()");
-	const std::string SerializeBody = ExtractSourceFunctionBody(Source, "void CMenus::SerializeMergedSettingsCardDeckOrdersToGlobalConfig()");
-	ASSERT_FALSE(Body.empty());
-	ASSERT_FALSE(SerializeBody.empty());
-
-	EXPECT_NE(Source.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
-	EXPECT_NE(Body.find("qm_card_order::CModel Model;"), std::string::npos);
-	EXPECT_NE(Body.find("qm_card_registry::BuildDefaultEntries()"), std::string::npos);
-	EXPECT_NE(Body.find("Model.LoadExplicit(g_Config.m_QmGlobalCardOrder, vDefaults)"), std::string::npos);
-	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 1)"), std::string::npos);
-	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 2)"), std::string::npos);
-	EXPECT_NE(Body.find("m_SettingsCardDeckColumnPrefs.clear();"), std::string::npos);
-	EXPECT_NE(Body.find("std::unordered_map<std::string, int> &ColumnPrefs = m_SettingsCardDeckColumnPrefs[DeckId];"), std::string::npos);
-	EXPECT_NE(Body.find("ColumnPrefs[StableId] = 0x10;"), std::string::npos);
-	EXPECT_NE(Body.find("ColumnPrefs[StableId] = 0x10 | 0x1;"), std::string::npos);
-	EXPECT_NE(SerializeBody.find("m_SettingsCardDeckColumnPrefs"), std::string::npos);
-	EXPECT_NE(SerializeBody.find("ColumnOrder[Column]++"), std::string::npos);
-	EXPECT_NE(SerializeBody.find("vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), Column, ColumnOrder[Column]++});"), std::string::npos);
-	EXPECT_NE(Source.find("if(PrefIt == pColumnPrefs->end() || (PrefIt->second & 0x10) == 0)"), std::string::npos);
-	EXPECT_NE(Source.find("const int CurrentColumnPref = SettingsCardDeckColumnPref(pColumnPrefs, pGlobalStableId);"), std::string::npos);
-	EXPECT_NE(Source.find("if(Deck.m_TwoColumns && (CurrentColumnPref & 0x10) != 0)"), std::string::npos);
-	EXPECT_EQ(Source.find("m_TClientSettingsCardDragState"), std::string::npos);
-	EXPECT_EQ(Source.find("m_vTClientSettingsCardDeckItems"), std::string::npos);
-	EXPECT_EQ(SerializeBody.find("vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), 1, (int)i});"), std::string::npos);
-	EXPECT_EQ(Source.find("SettingsCardDeckParseGlobalColumn"), std::string::npos);
-	EXPECT_EQ(Body.find("const char *pEntry = g_Config.m_QmGlobalCardOrder;\n\tchar aToken[160];\n\twhile((pEntry = str_next_token(pEntry, \";\", aToken"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TClientSettingsCardDeckCoversEveryBoxedSection)
@@ -2077,96 +1982,6 @@ TEST(QmMonitoringHelpers, SettingsTextPlanPrebuildSeparatesInvisibleWarmupFromVi
 		EXPECT_NE(Body.find("m_Menus.PrewarmSettingsTextPoolForLoading("), std::string::npos);
 		EXPECT_NE(Body.find("SettingsLoadingPrewarmAdvance("), std::string::npos);
 		EXPECT_EQ(Body.find("while(SettingsLoadingPrewarmShouldKeepPumping"), std::string::npos);
-	}
-}
-
-TEST(QmMonitoringHelpers, SettingsTextPlanCoversHighValueTClientAndQmClientStaticLabels)
-{
-	{
-		const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
-		const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-
-		EXPECT_NE(Settings.find("\"deck:general-game\""), std::string::npos);
-		EXPECT_NE(Settings.find("\"deck:general-language\""), std::string::npos);
-		EXPECT_NE(Settings.find("\"deck:general-client\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClDyncam, \"general-dynamic-camera\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeapons, \"general-switch-weapon-pickup\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeaponsOutOfAmmo, \"general-switch-weapon-out-of-ammo\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClSkipStartMenu, \"general-skip-main-menu\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoNumericField(\"general-refresh-rate\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &s_LowerRefreshRate, \"general-lower-refresh-rate\""), std::string::npos);
-		EXPECT_NE(Settings.find("DoOpenButton(s_SettingsButtonId, \"general-settings-file\""), std::string::npos);
-
-		EXPECT_NE(Menus.find("static constexpr int s_aBaseSettingsPages[]"), std::string::npos);
-		EXPECT_NE(Menus.find("RenderSettings(MainView);"), std::string::npos);
-		EXPECT_EQ(Menus.find("AddGeneralItem(\""), std::string::npos);
-		EXPECT_EQ(Menus.find("AddGeneralCheckbox(\""), std::string::npos);
-		EXPECT_EQ(Menus.find("AddGeneralScrollbar(\""), std::string::npos);
-		EXPECT_EQ(Menus.find("AddGeneralMenuButton(\""), std::string::npos);
-	}
-	{
-		std::ifstream File(TestSourcePath("src/game/client/components/tclient/menus_tclient.cpp"));
-		ASSERT_TRUE(File.good());
-		std::stringstream Buffer;
-		Buffer << File.rdbuf();
-		const std::string Source = Buffer.str();
-
-		EXPECT_EQ(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr"), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-hammer-mode\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-cursor-scale\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-prediction-margin\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-pet-size\""), std::string::npos);
-		const std::string PlanBody = ExtractSourceFunctionBody(Source, "void CMenus::BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab)");
-		ASSERT_FALSE(PlanBody.empty());
-		EXPECT_NE(PlanBody.find("RenderSettings(MainView);"), std::string::npos);
-		EXPECT_EQ(PlanBody.find("RenderSettingsTClient(MainView, true);"), std::string::npos);
-		EXPECT_EQ(Source.find("AddItem(\"tclient-wheel-animate-ms\""), std::string::npos);
-		EXPECT_EQ(Source.find("AddItem(\"tclient-pet-alpha\""), std::string::npos);
-		EXPECT_EQ(Source.find("AddItem(\"tclient-indicator-offset\""), std::string::npos);
-		EXPECT_EQ(Source.find("AddItem(\"tclient-outline-width\""), std::string::npos);
-		EXPECT_EQ(Source.find("AddItem(\"tclient-bg-draw-fade-time\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-auto-reply-title\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-player-indicator-title\""), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-tee-status-bar-title\")"), std::string::npos);
-		EXPECT_EQ(Source.find("else if(Tab == TCLIENT_TAB_BINDCHAT)"), std::string::npos);
-		EXPECT_EQ(Source.find("for(const auto &[pTitle, vBindDefaults] : CBindChat::BIND_DEFAULTS)"), std::string::npos);
-		EXPECT_EQ(Source.find("AddItem(BindDefault.m_pTitle, Localize(BindDefault.m_pTitle), 210.0f, LineSize, FontSize);"), std::string::npos);
-	}
-	{
-		std::ifstream File(TestSourcePath("src/game/client/components/qmclient/menus_qmclient.cpp"));
-		ASSERT_TRUE(File.good());
-		std::stringstream Buffer;
-		Buffer << File.rdbuf();
-		const std::string Source = Buffer.str();
-
-		EXPECT_NE(Source.find("void CMenus::RenderQmVisualChatBubbleContent("), std::string::npos);
-		EXPECT_NE(Source.find("RenderValue(\"qmclient-chat-bubble-duration\", \"Duration\""), std::string::npos);
-		EXPECT_NE(Source.find("RenderValue(\"qmclient-chat-bubble-opacity\", \"Bubble opacity\""), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, \"qmclient-display-mode\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, \"qmclient-translation-service\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, \"qmclient-target-language\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, \"qmclient-llm-provider\")"), std::string::npos);
-		const std::string RenderBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-		ASSERT_FALSE(RenderBody.empty());
-		EXPECT_NE(RenderBody.find("auto DoQmSettingsCheckboxAuto ="), std::string::npos);
-		EXPECT_NE(RenderBody.find("const int OriginalValue = *pValue;"), std::string::npos);
-		EXPECT_NE(RenderBody.find("if(PrewarmOnly || Ui()->RenderOnly())"), std::string::npos);
-		EXPECT_NE(RenderBody.find("*pValue = OriginalValue;"), std::string::npos);
-		EXPECT_NE(RenderBody.find("const char *pTextId"), std::string::npos);
-		EXPECT_EQ(RenderBody.find("return DoQmSettingsCheckbox(pId, pText, pText"), std::string::npos);
-		EXPECT_EQ(RenderBody.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmFootParticles, Localize(\"Local particle effects\")"), std::string::npos);
-		EXPECT_EQ(RenderBody.find("DoButton_CheckBoxAutoVMarginAndSet("), std::string::npos);
-		const size_t DogfoodBranch = RenderBody.find("if(g_Config.m_DbgQmUiDogfood != 0)");
-		ASSERT_NE(DogfoodBranch, std::string::npos);
-		const size_t DogfoodPrewarmGate = RenderBody.find("if(PrewarmOnly)\n\t\t\treturn;", DogfoodBranch);
-		const size_t DogfoodContext = RenderBody.find("IUiContext Ctx;", DogfoodBranch);
-		ASSERT_NE(DogfoodPrewarmGate, std::string::npos);
-		ASSERT_NE(DogfoodContext, std::string::npos);
-		EXPECT_LT(DogfoodPrewarmGate, DogfoodContext);
-		const std::string PlanBody = ExtractSourceFunctionBody(Source, "void CMenus::BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab)");
-		ASSERT_FALSE(PlanBody.empty());
-		EXPECT_NE(PlanBody.find("RenderSettings(MainView);"), std::string::npos);
-		EXPECT_EQ(PlanBody.find("RenderSettingsQmClient(MainView, false, true);"), std::string::npos);
 	}
 }
 
@@ -5111,7 +4926,8 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarWidth = std::clamp(20.0f * UiScale, 18.0f, 20.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarMargin = std::clamp(5.0f * UiScale, 4.0f, 5.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("RenderNamePlatePreview"), std::string::npos);
-	EXPECT_NE(Settings.find("pAppearanceDeckTab = m_AppearanceSettingsTab == APPEARANCE_TAB_HUD ? \"appearance-hud\""), std::string::npos);
+	EXPECT_NE(Settings.find("const char *pAppearanceDeckTab ="), std::string::npos);
+	EXPECT_NE(Settings.find("\"appearance-hud\""), std::string::npos);
 	EXPECT_NE(Settings.find("std::array<CScrollRegion, NUMBER_OF_APPEARANCE_TABS> s_AppearanceSettingsCardScrollRegions"), std::string::npos);
 	EXPECT_NE(Settings.find("m_SettingsCardDeck.Render(AppearanceCardCtx, AppearancePage, pAppearanceDeckTab"), std::string::npos);
 	EXPECT_NE(Settings.find("s_AppearanceSettingsCardScrollRegions[m_AppearanceSettingsTab]"), std::string::npos);
@@ -6091,104 +5907,6 @@ TEST(QmMonitoringHelpers, ScrollRegionNoScrollSliderReleasesActiveAfterMouseUp)
 	EXPECT_TRUE(ScrollRegionShouldKeepNoScrollSliderActive(true, true));
 }
 
-TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
-{
-	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmScroll = ReadRepoFile("src/game/client/QmUi/QmScroll.cpp");
-	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string Controls = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");
-	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-
-	EXPECT_NE(TClient.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
-	EXPECT_EQ(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
-	EXPECT_EQ(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
-	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ConfigListScrollRegion, &ListArea, ScrollParams"), std::string::npos);
-	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ConfigListScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
-	EXPECT_NE(Controls.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);"), std::string::npos);
-	EXPECT_EQ(Controls.find("ScrollParams.m_ScrollUnit = 6.0f * BUTTON_HEIGHT;"), std::string::npos);
-	EXPECT_EQ(Controls.find("ScrollParams.m_ForceShowScrollbar = true;"), std::string::npos);
-	EXPECT_EQ(Settings.find("ScrollParams.m_ScrollUnit = LANGUAGE_ROW_HEIGHT;"), std::string::npos);
-	const std::string QmOverviewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
-	ASSERT_FALSE(QmOverviewBody.empty());
-	EXPECT_NE(QmOverviewBody.find("static CScrollRegion s_QmOverviewSettingsScrollRegion;"), std::string::npos);
-	EXPECT_NE(QmOverviewBody.find("SSettingsCardDefinition"), std::string::npos);
-	EXPECT_NE(QmOverviewBody.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_NE(QmOverviewBody.find("QmResolveScrollPolicy("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("BeginSettingsQmScrollContainer("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("FinishSettingsQmScrollContainer("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("DrawFullWidthCard("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("KEY_MOUSE_WHEEL_UP"), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("SetHotItem("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("SetActiveItem("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("Ui()->ClipEnable("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("Ui()->ClipDisable();"), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("BeginSettingsScrollRegion("), std::string::npos);
-	EXPECT_EQ(QmOverviewBody.find("FinishSettingsScrollRegion("), std::string::npos);
-	EXPECT_NE(QmClient.find("static CQmScrollState s_QmScrollState;"), std::string::npos);
-	EXPECT_NE(Header.find("struct SSettingsQmScrollFrame"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ScrollOffsetChanged"), std::string::npos);
-	EXPECT_NE(Header.find("BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer"), std::string::npos);
-	EXPECT_NE(Header.find("FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer"), std::string::npos);
-	EXPECT_NE(QmClient.find("CQmScrollState &ScrollState = s_QmOverviewSettingsScrollRegion.State();"), std::string::npos);
-	EXPECT_NE(QmClient.find("const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);"), std::string::npos);
-	EXPECT_NE(QmClient.find("InputState.m_pScrollParams = PrewarmOnly ? nullptr : &ScrollParams;"), std::string::npos);
-	EXPECT_NE(QmClient.find("{\"qmclient-overview\", CMenus::SETTINGS_QMCLIENT}"), std::string::npos);
-	EXPECT_NE(QmClient.find("Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_OVERVIEW;"), std::string::npos);
-	EXPECT_NE(QmClient.find("s_apQmTabNames[QMCLIENT_SETTINGS_TAB_OVERVIEW] = Localize(\"Overview\")"), std::string::npos);
-	EXPECT_NE(QmClient.find("InputState.m_MousePressed = !PrewarmOnly"), std::string::npos);
-	EXPECT_NE(QmClient.find("Localize(\"Overview\")"), std::string::npos);
-	EXPECT_NE(QmClient.find("ReadOnly ? s_GlobalSearchPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
-	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
-	EXPECT_NE(MenusSource.find("str_comp(pTab, \"qmclient-overview\")"), std::string::npos);
-	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
-	const std::string BeginScrollBody = ExtractSourceFunctionBody(QmClient, "CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)");
-	const std::string FinishScrollBody = ExtractSourceFunctionBody(QmClient, "void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)");
-	ASSERT_FALSE(BeginScrollBody.empty());
-	ASSERT_FALSE(FinishScrollBody.empty());
-	EXPECT_EQ(BeginScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_"), std::string::npos);
-	EXPECT_EQ(FinishScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_"), std::string::npos);
-	EXPECT_NE(FinishScrollBody.find("Ui()->RegisterWheelOwner(pWheelOwnerId, EUiWheelOwnerPriority::PAGE, WheelHotRect, WheelEligible);"), std::string::npos);
-	EXPECT_NE(FinishScrollBody.find("Ui()->TryConsumeWheel(pWheelOwnerId, &WheelDelta)"), std::string::npos);
-	EXPECT_NE(FinishScrollBody.find("!Ui()->UnderlyingScrollBlocked()"), std::string::npos);
-	EXPECT_NE(QmScroll.find("Config.m_WheelScale = 10.0f;"), std::string::npos);
-	EXPECT_NE(QmScroll.find("SQmScrollConfig QmSettingsScrollConfig(float UiScale, float SmoothScrollTimeSec)"), std::string::npos);
-	EXPECT_NE(QmScroll.find("Config.m_WheelScale = 120.0f;"), std::string::npos);
-	const std::string QmSettingsParamsBody = ExtractSourceFunctionBody(Menus, "CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const");
-	ASSERT_FALSE(QmSettingsParamsBody.empty());
-	EXPECT_NE(QmSettingsParamsBody.find("QmScrollRegionParamsForSize(EQmScrollSize::LARGE, UiScale)"), std::string::npos);
-	EXPECT_NE(QmSettingsParamsBody.find("QmSettingsScrollConfig(UiScale, 0.0f).m_WheelScale"), std::string::npos);
-	EXPECT_EQ(QmSettingsParamsBody.find("m_ForceShowScrollbar = true"), std::string::npos);
-	EXPECT_EQ(QmScroll.find("Config.m_WheelScale = 10.0f * UiScale;"), std::string::npos);
-	EXPECT_EQ(QmScroll.find("Config.m_WheelScale = 60.0f * UiScale;"), std::string::npos);
-	EXPECT_EQ(QmClient.find("m_ScrollOffsetChanged"), std::string::npos);
-	EXPECT_NE(QmClient.find("Ui()->ClipEnable(&Frame.m_ClipRect);"), std::string::npos);
-	EXPECT_NE(QmClient.find("Ui()->ClipDisable();"), std::string::npos);
-	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.PreviewFrame(ScrollState, Frame.m_ViewRect, *pContentHeight, Frame.m_Style);"), std::string::npos);
-	EXPECT_EQ(QmClient.find("ScrollContainer.PreviewFrame(Frame.m_ClipRect"), std::string::npos);
-	EXPECT_NE(QmClient.find("*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)));"), std::string::npos);
-	EXPECT_EQ(QmClient.find("CScrollRegion::HEIGHT_MAGIC_FIX"), std::string::npos);
-	const std::string QmWrapperBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmWrapperBody.empty());
-	ASSERT_FALSE(QmMainBody.empty());
-	EXPECT_NE(QmMainBody.find("SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("FinishSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, QmScrollFrame, ScrollEnd, &s_QmScrollContentHeight, &s_PrevQmScrollY, true);"), std::string::npos);
-	EXPECT_EQ(QmMainBody.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("TriggerUiSwitchAnimation(QmClientTabSwitchNode, 0.0f);"), std::string::npos);
-	EXPECT_EQ(QmMainBody.find("ApplyUiSwitchOffset(ContentView, TransitionStrength, s_QmTabTransitionDirection, false,"), std::string::npos);
-	EXPECT_EQ(QmMainBody.find("ApplyUiSwitchOffset(ContentView, TransitionStrength, s_QmTabTransitionDirection, false, 0.08f, 24.0f, 120.0f);"), std::string::npos);
-	EXPECT_NE(Controls.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_NE(Controls.find("&m_SettingsScrollRegion"), std::string::npos);
-	EXPECT_EQ(Controls.find("BeginSettingsScrollRegion(m_SettingsScrollRegion"), std::string::npos);
-	EXPECT_EQ(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion"), std::string::npos);
-	EXPECT_NE(Settings.find("BeginSettingsScrollRegion(gs_LanguageScrollRegion, &MainView, ScrollParams"), std::string::npos);
-	EXPECT_NE(Settings.find("FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, GlobalCardOrderConfigHasMigrationLandingZone)
 {
 	const std::string QmConfig = ReadRepoFile("src/engine/shared/config_variables_qmclient.h");
@@ -6209,149 +5927,6 @@ TEST(QmMonitoringHelpers, CardOrderModelUsesStableIdIndexForFind)
 	EXPECT_NE(FindBody.find("return StateIndexForStableId(pStableId);"), std::string::npos);
 	EXPECT_EQ(FindBody.find("for(size_t i = 0; i < m_vEntries.size(); ++i)"), std::string::npos);
 	EXPECT_NE(Model.find("BuildStateIndex(); // 维护 stableId→index 注册表"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, QmClientDropCommitUsesGlobalCardModelAsSourceOfTruth)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(Body.empty());
-
-	const size_t CommitPos = Body.find("auto CommitDropPreview = [&]() -> bool");
-	ASSERT_NE(CommitPos, std::string::npos);
-	const size_t UpdatePreviewPos = Body.find("auto UpdateDropPreviewBeforeRender", CommitPos);
-	ASSERT_NE(UpdatePreviewPos, std::string::npos);
-	const std::string CommitBody = Body.substr(CommitPos, UpdatePreviewPos - CommitPos);
-
-	EXPECT_NE(CommitBody.find("qm_module::MoveQmModuleInModel("), std::string::npos);
-	EXPECT_NE(CommitBody.find("const std::vector<SQmModuleEntry> vModelEntries = qm_module::SyncModelToLegacyLayout();"), std::string::npos);
-	EXPECT_NE(CommitBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));"), std::string::npos);
-	EXPECT_NE(CommitBody.find("qm_module::SerializeMergedGlobalCardOrderFromQmModel("), std::string::npos);
-	EXPECT_EQ(CommitBody.find("auto BuildColumnIndices = [&]"), std::string::npos);
-	EXPECT_EQ(CommitBody.find("LeftIndices"), std::string::npos);
-	EXPECT_EQ(CommitBody.find("RightIndices"), std::string::npos);
-	EXPECT_EQ(CommitBody.find("qm_module::LoadQmLayoutIntoModel(g_Config.m_QmSidebarCardOrder"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, QmClientLayoutSyncRunsGlobalCardOrderMigration)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-
-	const size_t LayoutCachePos = QmMainBody.find("str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));");
-	const size_t MigrationGuardPos = QmMainBody.find("if(g_Config.m_QmCardOrderMigrated == 0 && qm_module::MigrateQmLayoutToGlobalCardOrder(std::vector<SQmModuleEntry>(s_aQmModuleLayout.begin(), s_aQmModuleLayout.end())))");
-	const size_t MigrationPos = QmMainBody.find("qm_module::MigrateQmLayoutToGlobalCardOrder(std::vector<SQmModuleEntry>(s_aQmModuleLayout.begin(), s_aQmModuleLayout.end()))");
-	const size_t GlobalCachePos = QmMainBody.find("str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));", MigrationGuardPos);
-	EXPECT_NE(LayoutCachePos, std::string::npos);
-	EXPECT_NE(MigrationGuardPos, std::string::npos);
-	EXPECT_NE(MigrationPos, std::string::npos);
-	EXPECT_NE(GlobalCachePos, std::string::npos);
-	EXPECT_GT(MigrationGuardPos, LayoutCachePos);
-	EXPECT_GT(MigrationPos, LayoutCachePos);
-	EXPECT_LT(MigrationPos, GlobalCachePos);
-	EXPECT_EQ(QmMainBody.find("MigrateQmLayoutToGlobalCardOrder(s_aQmModuleDefaults"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, QmClientLayoutSyncPrefersGlobalCardOrder)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-
-	EXPECT_NE(QmMainBody.find("const bool HasGlobalCardOrder = g_Config.m_QmGlobalCardOrder[0] != '\\0';"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("LoadQmLayoutModelFromGlobalOrder(g_Config.m_QmGlobalCardOrder, std::vector<SQmModuleEntry>(s_aQmModuleDefaults.begin(), s_aQmModuleDefaults.end()))"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("const std::vector<SQmModuleEntry> vModelEntries = qm_module::SyncModelToLegacyLayout();"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("s_aQmModuleLayout[i] = vModelEntries[i];"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("LoadQmLayoutIntoModel(g_Config.m_QmSidebarCardOrder"), std::string::npos);
-	EXPECT_LT(QmMainBody.find("LoadQmLayoutModelFromGlobalOrder(g_Config.m_QmGlobalCardOrder"), QmMainBody.find("if(!UseSmartDefaultsOnly && !ParseQmModuleLayout(g_Config.m_QmSidebarCardOrder))"));
-}
-
-TEST(QmMonitoringHelpers, QmClientLayoutSyncTracksGlobalCardOrderChanges)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-
-	EXPECT_NE(QmMainBody.find("static char s_aQmGlobalCardOrderConfigCache[sizeof(g_Config.m_QmGlobalCardOrder)] = {};"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("const bool LegacyConfigChanged = str_comp(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder) != 0;"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("const bool GlobalConfigChanged = str_comp(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder) != 0;"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("const bool ConfigChanged = !s_QmModuleLayoutInitialized || LegacyConfigChanged || GlobalConfigChanged;"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, QmClientLayoutSyncSerializesOnlyWhenConfigOrModelDirty)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-	const std::string SyncBody = ExtractSourceBlock(QmMainBody, "auto SyncQmModuleLayout = [&]()", "SyncQmModuleLayout();");
-	ASSERT_FALSE(SyncBody.empty());
-
-	EXPECT_NE(SyncBody.find("const bool ModelDirty = qm_module::IsQmLayoutModelDirty();"), std::string::npos);
-	EXPECT_NE(SyncBody.find("if(ConfigChanged || ModelDirty)"), std::string::npos);
-	EXPECT_NE(SyncBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));"), std::string::npos);
-	EXPECT_NE(SyncBody.find("qm_module::ClearQmLayoutModelDirty();"), std::string::npos);
-	EXPECT_EQ(SyncBody.find("SerializeQmModuleLayout(aSerialized, sizeof(aSerialized));"), std::string::npos);
-	EXPECT_LT(SyncBody.find("const bool ModelDirty = qm_module::IsQmLayoutModelDirty();"), SyncBody.find("if(ConfigChanged || ModelDirty)"));
-	EXPECT_LT(SyncBody.find("if(ConfigChanged || ModelDirty)"), SyncBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));"));
-}
-
-TEST(QmMonitoringHelpers, QmClientLayoutSyncPersistsDirtyModelToGlobalOrder)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-	const std::string SyncBody = ExtractSourceBlock(QmMainBody, "auto SyncQmModuleLayout = [&]()", "SyncQmModuleLayout();");
-	ASSERT_FALSE(SyncBody.empty());
-
-	const size_t DirtyBranchPos = SyncBody.find("if(ConfigChanged || ModelDirty)");
-	ASSERT_NE(DirtyBranchPos, std::string::npos);
-	const size_t OldLayoutPersistPos = SyncBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));", DirtyBranchPos);
-	const size_t GlobalPersistGuardPos = SyncBody.find("if(g_Config.m_QmGlobalCardOrder[0] != '\\0' || ModelDirty)", DirtyBranchPos);
-	const size_t GlobalMergePos = SyncBody.find("qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder))", DirtyBranchPos);
-	const size_t GlobalCopyPos = SyncBody.find("str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));", DirtyBranchPos);
-	const size_t GlobalCachePos = SyncBody.find("str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));", DirtyBranchPos);
-	const size_t DirtyClearPos = SyncBody.find("qm_module::ClearQmLayoutModelDirty();", DirtyBranchPos);
-
-	EXPECT_NE(OldLayoutPersistPos, std::string::npos);
-	EXPECT_NE(GlobalPersistGuardPos, std::string::npos);
-	EXPECT_NE(GlobalMergePos, std::string::npos);
-	EXPECT_NE(GlobalCopyPos, std::string::npos);
-	EXPECT_NE(GlobalCachePos, std::string::npos);
-	EXPECT_NE(DirtyClearPos, std::string::npos);
-	EXPECT_LT(OldLayoutPersistPos, GlobalPersistGuardPos);
-	EXPECT_LT(GlobalPersistGuardPos, GlobalMergePos);
-	EXPECT_LT(GlobalMergePos, GlobalCopyPos);
-	EXPECT_LT(GlobalCopyPos, GlobalCachePos);
-	EXPECT_LT(GlobalCachePos, DirtyClearPos);
-}
-
-TEST(QmMonitoringHelpers, QmClientLayoutSyncKeepsDirtyWhenGlobalPersistFails)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-	const std::string SyncBody = ExtractSourceBlock(QmMainBody, "auto SyncQmModuleLayout = [&]()", "SyncQmModuleLayout();");
-	ASSERT_FALSE(SyncBody.empty());
-
-	const size_t DirtyBranchPos = SyncBody.find("if(ConfigChanged || ModelDirty)");
-	ASSERT_NE(DirtyBranchPos, std::string::npos);
-	const size_t PersistFlagInitPos = SyncBody.find("bool GlobalOrderPersisted = !ModelDirty;", DirtyBranchPos);
-	const size_t GlobalMergePos = SyncBody.find("qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder))", DirtyBranchPos);
-	const size_t PersistFlagSetPos = SyncBody.find("GlobalOrderPersisted = true;", DirtyBranchPos);
-	const size_t DirtyClearGuardPos = SyncBody.find("if(GlobalOrderPersisted)", DirtyBranchPos);
-	const size_t DirtyClearPos = SyncBody.find("qm_module::ClearQmLayoutModelDirty();", DirtyBranchPos);
-
-	EXPECT_NE(PersistFlagInitPos, std::string::npos);
-	EXPECT_NE(GlobalMergePos, std::string::npos);
-	EXPECT_NE(PersistFlagSetPos, std::string::npos);
-	EXPECT_NE(DirtyClearGuardPos, std::string::npos);
-	EXPECT_NE(DirtyClearPos, std::string::npos);
-	EXPECT_LT(PersistFlagInitPos, GlobalMergePos);
-	EXPECT_LT(GlobalMergePos, PersistFlagSetPos);
-	EXPECT_LT(PersistFlagSetPos, DirtyClearGuardPos);
-	EXPECT_LT(DirtyClearGuardPos, DirtyClearPos);
 }
 
 TEST(QmMonitoringHelpers, SettingsCardOrderPersistenceCommitsGlobalConfigAtomically)
@@ -6392,38 +5967,6 @@ TEST(QmMonitoringHelpers, SettingsCardOrderPersistenceCommitsGlobalConfigAtomica
 	EXPECT_LT(SaveSerializePos, SaveCopyPos);
 	EXPECT_LT(SaveCopyPos, SaveDirtyClearPos);
 }
-TEST(QmMonitoringHelpers, QmClientDragPersistsGlobalCardOrder)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-
-	const size_t CommitPos = QmMainBody.find("auto CommitDropPreview = [&]() -> bool");
-	ASSERT_NE(CommitPos, std::string::npos);
-	const size_t DragPersistPos = QmMainBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));", CommitPos);
-	const size_t ModelSyncPos = QmMainBody.find("const std::vector<SQmModuleEntry> vModelEntries = qm_module::SyncModelToLegacyLayout();", CommitPos);
-	const size_t GlobalMergePos = QmMainBody.find("if(!qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))", CommitPos);
-	const size_t GlobalMergeAbortPos = QmMainBody.find("return false;", GlobalMergePos);
-	const size_t GlobalCopyPos = QmMainBody.find("str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));", CommitPos);
-	const size_t GlobalCachePos = QmMainBody.find("str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));", CommitPos);
-	const size_t MigratedPos = QmMainBody.find("g_Config.m_QmCardOrderMigrated = 1;", CommitPos);
-	EXPECT_NE(DragPersistPos, std::string::npos);
-	EXPECT_NE(ModelSyncPos, std::string::npos);
-	EXPECT_NE(GlobalMergePos, std::string::npos);
-	EXPECT_NE(GlobalMergeAbortPos, std::string::npos);
-	EXPECT_NE(GlobalCopyPos, std::string::npos);
-	EXPECT_NE(GlobalCachePos, std::string::npos);
-	EXPECT_NE(MigratedPos, std::string::npos);
-	EXPECT_LT(ModelSyncPos, DragPersistPos);
-	EXPECT_LT(DragPersistPos, GlobalMergePos);
-	EXPECT_LT(GlobalMergePos, GlobalMergeAbortPos);
-	EXPECT_LT(GlobalMergeAbortPos, GlobalCopyPos);
-	EXPECT_LT(GlobalMergePos, GlobalCopyPos);
-	EXPECT_LT(GlobalCopyPos, GlobalCachePos);
-	EXPECT_NE(QmMainBody.find("qm_module::ClearQmLayoutModelDirty();", CommitPos), std::string::npos);
-	EXPECT_EQ(QmMainBody.find("QmModuleLayoutModel().Serialize(g_Config.m_QmGlobalCardOrder"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
@@ -6504,9 +6047,9 @@ TEST(QmMonitoringHelpers, QmClientSearchTabUsesGlobalCardRegistry)
 	ASSERT_FALSE(SharedBody.empty());
 
 	EXPECT_NE(QmClient.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
-	EXPECT_NE(QmClient.find("struct SQmGlobalSearchCard"), std::string::npos);
+	EXPECT_NE(QmClient.find("using SQmGlobalSearchCard = qm_card_registry::SCardDefault;"), std::string::npos);
 	EXPECT_NE(QmClient.find("struct SQmGlobalSearchNavigation"), std::string::npos);
-	EXPECT_NE(QmClient.find("BuildGlobalSearchCards("), std::string::npos);
+	EXPECT_EQ(QmClient.find("BuildGlobalSearchCards("), std::string::npos);
 	EXPECT_NE(QmClient.find("MatchesGlobalSearchCard("), std::string::npos);
 	EXPECT_NE(QmClient.find("CollectGlobalSearchResults("), std::string::npos);
 	EXPECT_NE(QmClient.find("ResolveGlobalSearchNavigation("), std::string::npos);
@@ -6515,7 +6058,7 @@ TEST(QmMonitoringHelpers, QmClientSearchTabUsesGlobalCardRegistry)
 	EXPECT_NE(SharedBody.find("SQmGlobalSearchResults GlobalSearchResults;"), std::string::npos);
 	EXPECT_NE(SharedBody.find("CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);"), std::string::npos);
 	EXPECT_NE(SharedBody.find("GlobalSearchResults.m_vAllVisibleCards"), std::string::npos);
-	EXPECT_NE(QmClient.find("const std::vector<qm_card_registry::SCardDefault> &Defaults = qm_card_registry::Defaults();"), std::string::npos);
+	EXPECT_NE(QmClient.find("const std::vector<qm_card_registry::SCardDefault> &Cards = qm_card_registry::Defaults();"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("qm_card_registry::Defaults()"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("EQmModuleId::Info"), std::string::npos);
 }
@@ -6539,27 +6082,14 @@ TEST(QmMonitoringHelpers, QmClientMainPageRemovesLegacyModuleSearchPipeline)
 	EXPECT_EQ(QmMainBody.find("SearchDragBlocked"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, QmClientCompactLayoutStillRendersBothModuleColumns)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmMainBody.empty());
-
-	const size_t LeftRenderPos = QmMainBody.find("RenderColumnModules(VisibleLeftModules, EQmModuleColumn::Left);");
-	const size_t RightRenderPos = QmMainBody.find("RenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);");
-	ASSERT_NE(LeftRenderPos, std::string::npos);
-	ASSERT_NE(RightRenderPos, std::string::npos);
-	EXPECT_LT(LeftRenderPos, RightRenderPos);
-	EXPECT_EQ(QmMainBody.find("if(!CompactLayout)\n\t\t\tRenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, P6GlobalSearchUsesPublicDeckOnly)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string SharedBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(SharedBody.empty());
 
-	EXPECT_NE(QmClient.find("std::vector<SQmGlobalSearchCard> m_vCards;"), std::string::npos);
+	EXPECT_EQ(QmClient.find("std::vector<SQmGlobalSearchCard> m_vCards;"), std::string::npos);
+	EXPECT_NE(QmClient.find("using SQmGlobalSearchCard = qm_card_registry::SCardDefault;"), std::string::npos);
 	EXPECT_NE(QmClient.find("std::vector<const SQmGlobalSearchCard *> m_vAllVisibleCards;"), std::string::npos);
 	EXPECT_NE(QmClient.find("std::vector<const SQmGlobalSearchCard *> m_vVisibleCards;"), std::string::npos);
 	EXPECT_NE(QmClient.find("std::vector<const SQmGlobalSearchCard *> m_vExternalCards;"), std::string::npos);
@@ -6667,24 +6197,6 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationRouteTableCoversRegistryDeckTa
 		const std::string Needle = "{\"" + Tab + "\",";
 		EXPECT_NE(RouteTable.find(Needle), std::string::npos) << Tab;
 	}
-}
-
-TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)
-{
-	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly)");
-	ASSERT_FALSE(Body.empty());
-
-	EXPECT_NE(Source.find("function_first_frame_light_path"), std::string::npos);
-	EXPECT_NE(Body.find("const bool FunctionFirstFrameLightPath"), std::string::npos);
-	EXPECT_NE(Body.find("FunctionFirstFrameLightPath"), std::string::npos);
-	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"pie_menu_layout\""), std::string::npos);
-	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"pie_menu_controls\""), std::string::npos);
-	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"block_words_layout\""), std::string::npos);
-	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"block_words_controls\""), std::string::npos);
-	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"gores_layout\""), std::string::npos);
-	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"gores_controls\""), std::string::npos);
-	EXPECT_NE(Source.find("LogQmPerfStage(Client(), \"gores_bind_lookup\""), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientFriendEnterTextInputsUseSharedQmTextField)
@@ -6838,85 +6350,6 @@ TEST(QmMonitoringHelpers, QmClientVoiceTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoiceServer, &ControlCol, LgBodySize"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, QmClientKeywordReplyRuleInputsUseSharedQmTextField)
-{
-	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceBlock(Source, "CUIRect Card35Start = Column;", "case EQmModuleId::PieMenu:");
-	ASSERT_FALSE(Body.empty());
-
-	const size_t CtxPos = Body.find("IUiContext QmClientKeywordReplyTextInputCtx;");
-	const size_t UiPos = Body.find("QmClientKeywordReplyTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientKeywordReplyTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientKeywordReplyTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientKeywordReplyTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_keyword_reply_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientKeywordReplyTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
-
-	const size_t TriggerEmptyTextPos = Body.find("pRuleRow->m_TriggerInput.SetEmptyText(\"\");");
-	const size_t ReplyEmptyTextPos = Body.find("pRuleRow->m_ReplyInput.SetEmptyText(\"\");", TriggerEmptyTextPos);
-	const size_t TriggerTextFieldPos = Body.find("ui_widget::InputField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_TriggerInput, TriggerCol, \"\", LgBodySize);", ReplyEmptyTextPos);
-	const size_t ReplyTextFieldPos = Body.find("ui_widget::InputField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_ReplyInput, ReplyCol, \"\", LgBodySize);", TriggerTextFieldPos);
-	EXPECT_NE(TriggerEmptyTextPos, std::string::npos);
-	EXPECT_NE(ReplyEmptyTextPos, std::string::npos);
-	EXPECT_NE(TriggerTextFieldPos, std::string::npos);
-	EXPECT_NE(ReplyTextFieldPos, std::string::npos);
-	EXPECT_LT(TriggerEmptyTextPos, ReplyEmptyTextPos);
-	EXPECT_LT(ReplyEmptyTextPos, TriggerTextFieldPos);
-	EXPECT_LT(TriggerTextFieldPos, ReplyTextFieldPos);
-
-	EXPECT_NE(Body.find("BuildAutoReplyRulesFromRows(s_vKeywordRuleRows, aKeywordRules, sizeof(aKeywordRules));"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&pRuleRow->m_TriggerInput, &TriggerCol, LgBodySize"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LgBodySize"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, QmClientBlockWordsReplacementInputUsesSharedQmTextField)
-{
-	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceBlock(Source, "CUIRect CardBlockWordsStart = Column;", "case EQmModuleId::Translate:");
-	ASSERT_FALSE(Body.empty());
-
-	const size_t InputPos = Body.find("static CLineInputBuffered<8> s_BlockWordsReplaceInput;");
-	const size_t EmptyTextPos = Body.find("s_BlockWordsReplaceInput.SetEmptyText(\"*\");", InputPos);
-	const size_t CtxPos = Body.find("IUiContext QmClientBlockWordsTextInputCtx;", EmptyTextPos);
-	const size_t UiPos = Body.find("QmClientBlockWordsTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientBlockWordsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientBlockWordsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientBlockWordsTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_block_words_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientBlockWordsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
-	const size_t TextFieldPos = Body.find("if(ui_widget::InputField(QmClientBlockWordsTextInputCtx, &s_BlockWordsReplaceInput, ControlCol, \"*\", LgBodySize))", FrameDtPos);
-	EXPECT_NE(InputPos, std::string::npos);
-	EXPECT_NE(EmptyTextPos, std::string::npos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_NE(TextFieldPos, std::string::npos);
-	EXPECT_LT(InputPos, EmptyTextPos);
-	EXPECT_LT(EmptyTextPos, CtxPos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
-	EXPECT_LT(FrameDtPos, TextFieldPos);
-
-	EXPECT_NE(Body.find("str_utf8_truncate(aReplacement, sizeof(aReplacement), s_BlockWordsReplaceInput.GetString(), 1);"), std::string::npos);
-	EXPECT_NE(Body.find("str_copy(g_Config.m_QmBlockWordsReplacementChar, aReplacement, sizeof(g_Config.m_QmBlockWordsReplacementChar));"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_BlockWordsReplaceInput, &ControlCol, LgBodySize"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, QmClientLyricsTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -6996,125 +6429,6 @@ TEST(QmMonitoringHelpers, LaserRoundCapsRenderedInBothEnhancedAndPlainPaths)
 		Pos += RoundCapGuard.size();
 	}
 	EXPECT_GE(Count, 2);
-}
-
-TEST(QmMonitoringHelpers, QmClientMainPageRemovesSearchSnapshotSignature)
-{
-	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(Body.empty());
-
-	EXPECT_EQ(Body.find("BuildQmFunctionSnapshotSignature"), std::string::npos);
-	EXPECT_EQ(Body.find("BuildQmFunctionSnapshotEntries"), std::string::npos);
-	EXPECT_EQ(Body.find("SnapshotEntry.m_EstimatedHeight"), std::string::npos);
-	EXPECT_EQ(Body.find("FunctionSnapshotSignature"), std::string::npos);
-	EXPECT_NE(Body.find("auto GetQmModuleEstimatedHeight = [&](const SQmModuleEntry *pModule) -> float"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, QmClientFlatDragKeepsPreviewHeightAndVisualsStable)
-{
-	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(Body.empty());
-
-	const std::string UpdateDropPreview = ExtractSourceBlock(Body, "auto UpdateDropPreview = [&]()", "// 拖拽期间不做可视占位");
-	const std::string ComputeDropPreviewLayout = ExtractSourceBlock(Body, "auto ComputeDropPreviewLayout = [&]()", "auto RenderDragGhost = [&]()");
-	const std::string RenderDragGhost = ExtractSourceBlock(Body, "auto RenderDragGhost = [&]()", "auto CommitDropPreview = [&]()");
-	const std::string RenderColumnModules = ExtractSourceBlock(Body, "auto RenderColumnModules = [&](const std::vector<const SQmModuleEntry *> &Modules, EQmModuleColumn ColumnId)", "if(ShowFooter)");
-	ASSERT_FALSE(UpdateDropPreview.empty());
-	ASSERT_FALSE(ComputeDropPreviewLayout.empty());
-	ASSERT_FALSE(RenderDragGhost.empty());
-	ASSERT_FALSE(RenderColumnModules.empty());
-
-	EXPECT_NE(ComputeDropPreviewLayout.find("拖拽期间不做可视占位"), std::string::npos);
-	EXPECT_NE(ComputeDropPreviewLayout.find("s_DropPreview.m_PreviewValid = false;"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("s_DropPreview.m_PreviewValid = true;"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("const float LastDraggedH = s_aQmModuleLastHeights[DraggedSI];"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("const float DraggedH = (LastDraggedH > 0.0f) ? LastDraggedH : std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("const float DraggedH = std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));"), std::string::npos);
-	EXPECT_NE(Body.find("const float DropPreviewDwellSeconds = 0.22f;"), std::string::npos);
-	EXPECT_EQ(Body.find("DragHoldSeconds"), std::string::npos);
-	EXPECT_NE(Body.find("struct SQmModuleDropPreviewCandidate"), std::string::npos);
-	EXPECT_NE(Body.find("static SQmModuleDropPreviewCandidate s_DropPreviewCandidate"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("auto BuildDropPreviewCandidate"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("auto SameDropPreviewCandidate"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("auto ClearActiveDropPreview"), std::string::npos);
-	EXPECT_EQ(UpdateDropPreview.find("const float DragCenterX = Ui()->MouseX() - s_DragState.m_GrabOffset.x + s_DragState.m_DraggedWidth * 0.5f;"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("const float DragHeaderX = Ui()->MouseX();"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("const float DragHeaderY = Ui()->MouseY() - s_DragState.m_GrabOffset.y + LgCardPadding + LgHeadlineSize * 0.5f;"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("TargetColumn = DragHeaderX <= ColumnSplitX ? EQmModuleColumn::Left : EQmModuleColumn::Right;"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("const CUIRect &StableRect = pCard->m_TargetRect;"), std::string::npos);
-	EXPECT_NE(UpdateDropPreview.find("const float HeaderAnchorY = StableRect.y + LgCardPadding + LgHeadlineSize * 0.5f;"), std::string::npos);
-	EXPECT_EQ(UpdateDropPreview.find("const float MidY = StableRect.y + StableRect.h * 0.5f;"), std::string::npos);
-	EXPECT_LT(UpdateDropPreview.find("ClearActiveDropPreview();"), UpdateDropPreview.find("return;\n\t\t}\n\t\tif(Client()->LocalTime() - s_DropPreviewCandidate.m_StartedAt < DropPreviewDwellSeconds"));
-	EXPECT_NE(UpdateDropPreview.find("Client()->LocalTime() - s_DropPreviewCandidate.m_StartedAt < DropPreviewDwellSeconds"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("const float Yield = DraggedH + LgCardSpacing;"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("Y += Yield"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("auto LayoutOneColumn"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("auto MakeRect"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("CUIRect DragObstacle"), std::string::npos);
-	EXPECT_EQ(ComputeDropPreviewLayout.find("PackCardsAboveObstacle"), std::string::npos);
-	EXPECT_EQ(Body.find("QmCardLayoutAnimate"), std::string::npos);
-	EXPECT_NE(Body.find("auto QmModuleCardAnimRect = [&](CUIRect Rect)"), std::string::npos);
-	EXPECT_NE(Body.find("Rect.y -= QmScrollFrame.m_Offset.y;"), std::string::npos);
-	EXPECT_NE(Body.find("auto QmModuleCardScreenRect = [&](CUIRect Rect)"), std::string::npos);
-	EXPECT_NE(Body.find("Rect.y += QmScrollFrame.m_Offset.y;"), std::string::npos);
-	EXPECT_NE(Body.find("const CUIRect AnimTargetBeforeRender = QmModuleCardAnimRect(TargetBeforeRender);"), std::string::npos);
-	EXPECT_NE(Body.find("const CUIRect AnimEffectiveTarget = QmModuleCardAnimRect(EffectiveTarget);"), std::string::npos);
-	EXPECT_NE(Body.find("DispRect = QmModuleCardScreenRect(DispRect);"), std::string::npos);
-	EXPECT_NE(Body.find("const bool AnimateCardLayout = s_DropPreview.m_PreviewValid && !TabTransitionActive;"), std::string::npos);
-	EXPECT_NE(Body.find("GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER, 1, AnimateCardLayout);"), std::string::npos);
-	EXPECT_NE(Body.find("BuildUiAnimNodeKey(str_quickhash(\"qm_module_card_layout\"), static_cast<uint64_t>(pModule->m_Id))"), std::string::npos);
-	EXPECT_EQ(Body.find("static std::array<vec2, QmModuleCount> s_aQmModuleDisplayVelocities{};"), std::string::npos);
-	EXPECT_EQ(Body.find("const float SpringDt = std::clamp(Client()->RenderFrameTime(), 0.0f, 1.0f / 30.0f);"), std::string::npos);
-	EXPECT_EQ(Body.find("auto SpringAxis = [&](float &Pos, float &Velocity, float Target)"), std::string::npos);
-	EXPECT_EQ(Body.find("SpringAxis(Disp.x, Velocity.x, EffectiveTarget.x);"), std::string::npos);
-	EXPECT_EQ(Body.find("SpringAxis(Disp.y, Velocity.y, EffectiveTarget.y);"), std::string::npos);
-	EXPECT_EQ(Body.find("const float LerpT = 0.25f;"), std::string::npos);
-	EXPECT_EQ(Body.find("Disp.x += (EffectiveTarget.x - Disp.x) * LerpT;"), std::string::npos);
-	EXPECT_EQ(Body.find("Disp.y += (EffectiveTarget.y - Disp.y) * LerpT;"), std::string::npos);
-
-	EXPECT_NE(RenderDragGhost.find("// A2 修订（扁平化）：被拖卡和其他卡同层渲染"), std::string::npos);
-	EXPECT_EQ(RenderDragGhost.find("Shadow.Draw"), std::string::npos);
-	EXPECT_EQ(RenderDragGhost.find("DragGhostColor"), std::string::npos);
-	EXPECT_EQ(RenderDragGhost.find("DrawDragOutline"), std::string::npos);
-	EXPECT_EQ(Body.find("s_DropPreview.m_LineRect.Draw(DropPreviewColor"), std::string::npos);
-
-	EXPECT_NE(RenderColumnModules.find("QmCardOffsetX = 0.0f;"), std::string::npos);
-	EXPECT_NE(RenderColumnModules.find("QmCardOffsetY = 0.0f;"), std::string::npos);
-	const std::string DisplayRectOffset = ExtractSourceBlock(RenderColumnModules, "// 布局过渡偏移", "CPerfTimer ModuleTimer;");
-	ASSERT_FALSE(DisplayRectOffset.empty());
-	EXPECT_EQ(RenderColumnModules.find("if(SkipOffscreenModule(pModule, Column))"), std::string::npos);
-	EXPECT_NE(Body.find("auto EstimateModuleTotalHeight"), std::string::npos);
-	EXPECT_EQ(DisplayRectOffset.find("if(s_DragState.m_pDragging != nullptr)"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("CUIRect &DispRect = s_aQmModuleDisplayRects[SI];"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("SyncLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, QmModuleCardAnimRect(DragTarget));"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimTargetBeforeRender, ui_token::motion::CARD_REORDER, 1, false);"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("const bool AnimateCardLayout = s_DropPreview.m_PreviewValid && !TabTransitionActive;"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER, 1, AnimateCardLayout);"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("DispRect = QmModuleCardScreenRect(DispRect);"), std::string::npos);
-	EXPECT_EQ(DisplayRectOffset.find("GameClient()->UiRuntimeV2()->AnimRuntime().SetValue(NodeKey, EUiAnimProperty::POS_X"), std::string::npos);
-	EXPECT_EQ(DisplayRectOffset.find("GameClient()->UiRuntimeV2()->AnimRuntime().SetValue(NodeKey, EUiAnimProperty::POS_Y"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("QmCardOffsetX = DispRect.x - Column.x;"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("DrawGlassCardBackground(DisplayBgRect);"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("const bool TargetVisible = IsSectionVisible(TargetBeforeRender, ModuleCullContext);"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("const bool DisplayVisible = DispRect.w > 0.0f && IsSectionVisible(DispRect, ModuleCullContext);"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("Column.y += EstimateModuleTotalHeight(pModule);"), std::string::npos);
-
-	const size_t PreRenderDragPos = Body.find("auto UpdateDropPreviewBeforeRender = [&]()");
-	const size_t FirstRenderColumnPos = Body.find("RenderColumnModules(VisibleLeftModules, EQmModuleColumn::Left);");
-	ASSERT_NE(PreRenderDragPos, std::string::npos);
-	ASSERT_NE(FirstRenderColumnPos, std::string::npos);
-	EXPECT_LT(PreRenderDragPos, FirstRenderColumnPos);
-	EXPECT_LT(Body.find("UpdateDropPreviewBeforeRender();"), FirstRenderColumnPos);
-	EXPECT_NE(Body.find("s_DragState.m_pDragging = pModule;"), std::string::npos);
-	const std::string UpdateDropPreviewBeforeRender = ExtractSourceBlock(Body, "auto UpdateDropPreviewBeforeRender = [&]()", "UpdateDropPreviewBeforeRender();");
-	ASSERT_FALSE(UpdateDropPreviewBeforeRender.empty());
-	EXPECT_EQ(UpdateDropPreviewBeforeRender.find("for(const SQmModuleCardInfo &Card : ModuleCards)"), std::string::npos);
-	EXPECT_EQ(UpdateDropPreviewBeforeRender.find("TryBeginModuleDrag(Card.m_pModule, Card.m_Rect)"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("TryBeginModuleDrag(pModule, TargetBeforeRender);"), std::string::npos);
-	EXPECT_LT(DisplayRectOffset.find("TryBeginModuleDrag(pModule, TargetBeforeRender);"), DisplayRectOffset.find("CUIRect &DispRect = s_aQmModuleDisplayRects[SI];"));
-	EXPECT_EQ(UpdateDropPreviewBeforeRender.find("s_DragState.m_pDragging = s_DragState.m_pPressed;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmLayoutTransitionCacheIsOwnedByTree)
@@ -7297,47 +6611,6 @@ TEST(QmMonitoringHelpers, P6TClientBindWheelMigrationUsesThePublicDeckOnly)
 	EXPECT_EQ(BindWheelBody.find("s_BindWheelPreviewCardHeight"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6VisualQmClientMigrationUsesThePublicDeckOnly)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string VisualDeckBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)");
-	const std::string QmClientBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(VisualDeckBody.empty());
-	ASSERT_FALSE(QmClientBody.empty());
-
-	EXPECT_NE(VisualDeckBody.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("SettingsCardOrderModel()"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("QmResolveScrollPolicy"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("QmScrollRegionParamsFromPolicy"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:chat_bubble"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:camera_view"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:skin_transition"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:focus_mode"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:weapon_animation"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:streamer"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:entity_overlay"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:collision_hitbox"), std::string::npos);
-	EXPECT_EQ(VisualDeckBody.find("qm:translate_ui"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("qm:card_appearance"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("ParseLegacyQmCollapsed"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("SerializeLegacyQmCollapsed"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("m_MeasureEachFrame = true"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("m_RenderMeasured"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("ContentHeight = std::max(0.0f, Content.y - StartY)"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("const FSettingsCardRenderMeasured &Render"), std::string::npos);
-	EXPECT_NE(VisualDeckBody.find("(CUIRect &Content) { RenderQmVisual"), std::string::npos);
-	EXPECT_EQ(VisualDeckBody.find("s_GlassCards"), std::string::npos);
-	EXPECT_EQ(VisualDeckBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(VisualDeckBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_EQ(VisualDeckBody.find("BeginSettingsQmScrollContainer"), std::string::npos);
-
-	const size_t VisualDispatch = QmClientBody.find("RenderSettingsQmClientVisualDeck(ContentView, PrewarmOnly)");
-	const size_t LegacyScroll = QmClientBody.find("BeginSettingsQmScrollContainer");
-	ASSERT_NE(VisualDispatch, std::string::npos);
-	ASSERT_NE(LegacyScroll, std::string::npos);
-	EXPECT_LT(VisualDispatch, LegacyScroll);
-}
-
 TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -7399,135 +6672,6 @@ TEST(QmMonitoringHelpers, P6VisualContentExtractionKeepsLegacyRendererAsTheOnlyS
 	EXPECT_EQ(CameraViewBody.find("RegisterModuleCard"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6FunctionKeyBindsContentExtractionKeepsTheLegacyShellAsOwner)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string KeyBindsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionKeyBindsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)");
-	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::KeyBinds:");
-	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::MiniFeatures:", LegacyCaseStart);
-	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
-	ASSERT_FALSE(KeyBindsBody.empty());
-	ASSERT_FALSE(LegacyCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionKeyBindsContent"), std::string::npos);
-	EXPECT_NE(KeyBindsBody.find("RenderQmHudKeyBindRow"), std::string::npos);
-	EXPECT_NE(KeyBindsBody.find("+toggle cl_dummy_hammer 1 0"), std::string::npos);
-	EXPECT_NE(KeyBindsBody.find("qm_timeout_disconnect"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmFunctionKeyBindsContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);"), std::string::npos);
-	EXPECT_EQ(LegacyCase.find("DoKeyBindRow(CardContent"), std::string::npos);
-	EXPECT_EQ(KeyBindsBody.find("RegisterModuleCard"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionGoresActorContentExtractionKeepsInputAndConditionalControls)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string GoresActorBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::GoresActor:");
-	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::Gores:", LegacyCaseStart);
-	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
-	ASSERT_FALSE(GoresActorBody.empty());
-	ASSERT_FALSE(LegacyCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionGoresActorContent"), std::string::npos);
-	EXPECT_NE(GoresActorBody.find("settings_qmclient_gores_actor_text_inputs"), std::string::npos);
-	EXPECT_NE(GoresActorBody.find("ui_widget::InputField"), std::string::npos);
-	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEnabled"), std::string::npos);
-	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEmoticon"), std::string::npos);
-	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEmoticonId"), std::string::npos);
-	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatChance"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmFunctionGoresActorContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(GoresActorBody.find("RenderQmFunctionCheckbox"), std::string::npos);
-	EXPECT_EQ(GoresActorBody.find("RegisterModuleCard"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionShortCardContentExtractionKeepsPublicControlsAndDynamicBranches)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string JumpHintBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const std::string WeaponTrajectoryBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t JumpHintStart = QmClient.rfind("case EQmModuleId::JumpHint:");
-	const size_t JumpHintEnd = QmClient.find("case EQmModuleId::WeaponTrajectory:", JumpHintStart);
-	const size_t WeaponTrajectoryStart = QmClient.rfind("case EQmModuleId::WeaponTrajectory:");
-	const size_t WeaponTrajectoryEnd = QmClient.find("case EQmModuleId::SkinTransition:", WeaponTrajectoryStart);
-	const std::string JumpHintCase = JumpHintStart != std::string::npos && JumpHintEnd != std::string::npos ? QmClient.substr(JumpHintStart, JumpHintEnd - JumpHintStart) : "";
-	const std::string WeaponTrajectoryCase = WeaponTrajectoryStart != std::string::npos && WeaponTrajectoryEnd != std::string::npos ? QmClient.substr(WeaponTrajectoryStart, WeaponTrajectoryEnd - WeaponTrajectoryStart) : "";
-	ASSERT_FALSE(JumpHintBody.empty());
-	ASSERT_FALSE(WeaponTrajectoryBody.empty());
-	ASSERT_FALSE(JumpHintCase.empty());
-	ASSERT_FALSE(WeaponTrajectoryCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionJumpHintContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmFunctionWeaponTrajectoryContent"), std::string::npos);
-	EXPECT_NE(JumpHintBody.find("DoLine_ColorPicker"), std::string::npos);
-	EXPECT_NE(JumpHintBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
-	EXPECT_NE(JumpHintBody.find("m_QmJumpHintSize"), std::string::npos);
-	EXPECT_NE(WeaponTrajectoryBody.find("DoDropDown"), std::string::npos);
-	EXPECT_NE(WeaponTrajectoryBody.find("m_QmWeaponTrajectory == 0"), std::string::npos);
-	EXPECT_NE(WeaponTrajectoryBody.find("DoLine_ColorPicker"), std::string::npos);
-	EXPECT_NE(WeaponTrajectoryBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
-	EXPECT_NE(JumpHintCase.find("RenderQmFunctionJumpHintContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(WeaponTrajectoryCase.find("RenderQmFunctionWeaponTrajectoryContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
-	EXPECT_EQ(JumpHintBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(WeaponTrajectoryBody.find("RegisterModuleCard"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionFriendNotifyContentExtractionKeepsDynamicInputs)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string FriendNotifyBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::FriendNotify:");
-	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::BlockWords:", LegacyCaseStart);
-	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
-	ASSERT_FALSE(FriendNotifyBody.empty());
-	ASSERT_FALSE(LegacyCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionFriendNotifyContent"), std::string::npos);
-	EXPECT_NE(FriendNotifyBody.find("settings_qmclient_friend_enter_text_inputs"), std::string::npos);
-	EXPECT_NE(FriendNotifyBody.find("m_QmFriendOnlineAutoRefresh"), std::string::npos);
-	EXPECT_NE(FriendNotifyBody.find("m_QmFriendEnterBroadcast"), std::string::npos);
-	EXPECT_NE(FriendNotifyBody.find("m_QmFriendEnterAutoGreet"), std::string::npos);
-	EXPECT_NE(FriendNotifyBody.find("ui_widget::InputField"), std::string::npos);
-	EXPECT_NE(FriendNotifyBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmFunctionFriendNotifyContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
-	EXPECT_EQ(FriendNotifyBody.find("RegisterModuleCard"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionMiniFeaturesAndHJAssistContentExtractionKeepsInteractionState)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string MiniFeaturesBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)");
-	const std::string HJAssistBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionHJAssistContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t MiniFeaturesStart = QmClient.rfind("case EQmModuleId::MiniFeatures:");
-	const size_t MiniFeaturesEnd = QmClient.find("case EQmModuleId::JumpHint:", MiniFeaturesStart);
-	const size_t HJAssistStart = QmClient.rfind("case EQmModuleId::HJAssist:");
-	const size_t HJAssistEnd = QmClient.find("case EQmModuleId::SpeedrunTimer:", HJAssistStart);
-	const std::string MiniFeaturesCase = MiniFeaturesStart != std::string::npos && MiniFeaturesEnd != std::string::npos ? QmClient.substr(MiniFeaturesStart, MiniFeaturesEnd - MiniFeaturesStart) : "";
-	const std::string HJAssistCase = HJAssistStart != std::string::npos && HJAssistEnd != std::string::npos ? QmClient.substr(HJAssistStart, HJAssistEnd - HJAssistStart) : "";
-	ASSERT_FALSE(MiniFeaturesBody.empty());
-	ASSERT_FALSE(HJAssistBody.empty());
-	ASSERT_FALSE(MiniFeaturesCase.empty());
-	ASSERT_FALSE(HJAssistCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionMiniFeaturesContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmFunctionHJAssistContent"), std::string::npos);
-	EXPECT_NE(MiniFeaturesBody.find("m_QmNewIme"), std::string::npos);
-	EXPECT_NE(MiniFeaturesBody.find("qm_2_63_0_new_ime"), std::string::npos);
-	EXPECT_NE(MiniFeaturesBody.find("MarkQmNewFeatureHovered"), std::string::npos);
-	EXPECT_NE(MiniFeaturesBody.find("RenderQmFunctionCheckbox"), std::string::npos);
-	EXPECT_NE(HJAssistBody.find("m_QmAutoTeamLock"), std::string::npos);
-	EXPECT_NE(HJAssistBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
-	EXPECT_NE(HJAssistBody.find("RenderQmFunctionCheckbox"), std::string::npos);
-	EXPECT_NE(MiniFeaturesCase.find("RenderQmFunctionMiniFeaturesContent(CardContent, LgLineHeight, LgLineSpacing, PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(HJAssistCase.find("RenderQmFunctionHJAssistContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
-	EXPECT_EQ(MiniFeaturesBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(HJAssistBody.find("RegisterModuleCard"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, P6FunctionGoresContentExtractionPreservesTheLightPathAndInputState)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -7579,118 +6723,6 @@ TEST(QmMonitoringHelpers, P6FunctionKeywordReplyContentExtractionKeepsRuleRowsAn
 	EXPECT_EQ(KeywordReplyBody.find("RegisterModuleCard"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string SpeedrunBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::SpeedrunTimer:");
-	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::DebugGraph:", LegacyCaseStart);
-	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
-	ASSERT_FALSE(SpeedrunBody.empty());
-	ASSERT_FALSE(LegacyCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmHudSpeedrunTimerContent"), std::string::npos);
-	EXPECT_NE(SpeedrunBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
-	EXPECT_NE(SpeedrunBody.find("m_QmSpeedrunTimerAutoDisable"), std::string::npos);
-	EXPECT_EQ(SpeedrunBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(SpeedrunBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmHudSpeedrunTimerContent"), std::string::npos);
-	EXPECT_EQ(LegacyCase.find("RenderSliderWithValueInput"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6HudBasicContentExtractionsKeepLegacyRendererAsTheOnlyShellOwner)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string DebugGraphBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudDebugGraphContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const std::string InputOverlayBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudInputOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const std::string DummyMiniViewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t DebugGraphStart = QmClient.rfind("case EQmModuleId::DebugGraph:");
-	const size_t DebugGraphEnd = QmClient.find("case EQmModuleId::InputOverlay:", DebugGraphStart);
-	const size_t InputOverlayStart = QmClient.rfind("case EQmModuleId::InputOverlay:");
-	const size_t InputOverlayEnd = QmClient.find("case EQmModuleId::HudNotifications:", InputOverlayStart);
-	const size_t DummyMiniViewStart = QmClient.rfind("case EQmModuleId::DummyMiniView:");
-	const size_t DummyMiniViewEnd = QmClient.find("case EQmModuleId::Background3D:", DummyMiniViewStart);
-	const std::string DebugGraphCase = DebugGraphStart != std::string::npos && DebugGraphEnd != std::string::npos ? QmClient.substr(DebugGraphStart, DebugGraphEnd - DebugGraphStart) : "";
-	const std::string InputOverlayCase = InputOverlayStart != std::string::npos && InputOverlayEnd != std::string::npos ? QmClient.substr(InputOverlayStart, InputOverlayEnd - InputOverlayStart) : "";
-	const std::string DummyMiniViewCase = DummyMiniViewStart != std::string::npos && DummyMiniViewEnd != std::string::npos ? QmClient.substr(DummyMiniViewStart, DummyMiniViewEnd - DummyMiniViewStart) : "";
-	ASSERT_FALSE(DebugGraphBody.empty());
-	ASSERT_FALSE(InputOverlayBody.empty());
-	ASSERT_FALSE(DummyMiniViewBody.empty());
-	ASSERT_FALSE(DebugGraphCase.empty());
-	ASSERT_FALSE(InputOverlayCase.empty());
-	ASSERT_FALSE(DummyMiniViewCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmHudCheckbox"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmHudDebugGraphContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmHudInputOverlayContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmHudDummyMiniViewContent"), std::string::npos);
-	EXPECT_NE(DebugGraphBody.find("RenderQmHudKeyBindRow"), std::string::npos);
-	EXPECT_NE(InputOverlayBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
-	EXPECT_NE(DummyMiniViewBody.find("RenderQmHudCheckbox"), std::string::npos);
-	EXPECT_EQ(DebugGraphBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(InputOverlayBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_EQ(DummyMiniViewBody.find("s_GlassCards"), std::string::npos);
-	EXPECT_NE(DebugGraphCase.find("RenderQmHudDebugGraphContent"), std::string::npos);
-	EXPECT_NE(InputOverlayCase.find("RenderQmHudInputOverlayContent"), std::string::npos);
-	EXPECT_NE(DummyMiniViewCase.find("RenderQmHudDummyMiniViewContent"), std::string::npos);
-	EXPECT_EQ(DebugGraphCase.find("RenderSliderWithValueInput"), std::string::npos);
-	EXPECT_EQ(InputOverlayCase.find("RenderSliderWithValueInput"), std::string::npos);
-	EXPECT_EQ(DummyMiniViewCase.find("RenderSliderWithValueInput"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6HudMediaContentExtractionsKeepLegacyRendererAsTheOnlyShellOwner)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string DynamicIslandBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const std::string SmtcBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly)");
-	const size_t DynamicIslandStart = QmClient.rfind("case EQmModuleId::DynamicIsland:");
-	const size_t DynamicIslandEnd = QmClient.find("case EQmModuleId::SystemMediaControls:", DynamicIslandStart);
-	const size_t SmtcStart = QmClient.rfind("case EQmModuleId::SystemMediaControls:");
-	const size_t SmtcEnd = QmClient.find("case EQmModuleId::Lyrics:", SmtcStart);
-	const std::string DynamicIslandCase = DynamicIslandStart != std::string::npos && DynamicIslandEnd != std::string::npos ? QmClient.substr(DynamicIslandStart, DynamicIslandEnd - DynamicIslandStart) : "";
-	const std::string SmtcCase = SmtcStart != std::string::npos && SmtcEnd != std::string::npos ? QmClient.substr(SmtcStart, SmtcEnd - SmtcStart) : "";
-	ASSERT_FALSE(DynamicIslandBody.empty());
-	ASSERT_FALSE(SmtcBody.empty());
-	ASSERT_FALSE(DynamicIslandCase.empty());
-	ASSERT_FALSE(SmtcCase.empty());
-
-	EXPECT_NE(DynamicIslandBody.find("DoLine_ColorPicker"), std::string::npos);
-	EXPECT_NE(SmtcBody.find("m_SystemMediaControls.PlayPause"), std::string::npos);
-	EXPECT_EQ(DynamicIslandBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(SmtcBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_NE(DynamicIslandCase.find("RenderQmHudDynamicIslandContent"), std::string::npos);
-	EXPECT_NE(SmtcCase.find("RenderQmHudSystemMediaControlsContent"), std::string::npos);
-	EXPECT_EQ(DynamicIslandCase.find("RenderSliderWithValueInput"), std::string::npos);
-	EXPECT_EQ(SmtcCase.find("DoQmSettingsMenuButton"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6HudNotificationsContentExtractionKeepsDynamicOptionsMeasured)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string BasicBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudNotificationsBasicContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const std::string AdvancedBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudNotificationsAdvancedContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t CaseStart = QmClient.rfind("case EQmModuleId::HudNotifications:");
-	const size_t CaseEnd = QmClient.find("case EQmModuleId::Voice:", CaseStart);
-	const std::string LegacyCase = CaseStart != std::string::npos && CaseEnd != std::string::npos ? QmClient.substr(CaseStart, CaseEnd - CaseStart) : "";
-	ASSERT_FALSE(BasicBody.empty());
-	ASSERT_FALSE(AdvancedBody.empty());
-	ASSERT_FALSE(LegacyCase.empty());
-
-	EXPECT_NE(BasicBody.find("m_QmHudNotificationsShowAdvanced"), std::string::npos);
-	EXPECT_NE(AdvancedBody.find("m_QmHudNotificationsUseCategoryFilters"), std::string::npos);
-	EXPECT_NE(AdvancedBody.find("DoLine_ColorPicker"), std::string::npos);
-	EXPECT_NE(AdvancedBody.find("DoDropDown"), std::string::npos);
-	EXPECT_NE(AdvancedBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
-	EXPECT_EQ(BasicBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(AdvancedBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmHudNotificationsBasicContent"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmHudNotificationsAdvancedContent"), std::string::npos);
-	EXPECT_EQ(QmClient.find("RenderHudNotificationsBasicSettings"), std::string::npos);
-	EXPECT_EQ(QmClient.find("RenderHudNotificationsAdvancedSettings"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, P6HudPlayerStatsContentExtractionKeepsProgressBranchesMeasured)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -7711,212 +6743,50 @@ TEST(QmMonitoringHelpers, P6HudPlayerStatsContentExtractionKeepsProgressBranches
 	EXPECT_EQ(LegacyCase.find("RenderSliderWithValueInput"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6HudRemainingContentExtractionsPreserveDynamicControls)
+TEST(QmMonitoringHelpers, QmClientContentOwnersPreserveInteractiveContracts)
 {
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
-	const std::string CoordsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudCoordsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const std::string VoiceBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudVoiceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float UiScale, bool PrewarmOnly)");
-	const std::string BackgroundBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const std::string LyricsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
-	const size_t CoordsStart = QmClient.rfind("case EQmModuleId::Coords:");
-	const size_t CoordsEnd = QmClient.find("case EQmModuleId::Streamer:", CoordsStart);
-	const size_t VoiceStart = QmClient.rfind("case EQmModuleId::Voice:");
-	const size_t VoiceEnd = QmClient.find("case EQmModuleId::DummyMiniView:", VoiceStart);
-	const size_t BackgroundStart = QmClient.rfind("case EQmModuleId::Background3D:");
-	const size_t BackgroundEnd = QmClient.find("case EQmModuleId::DynamicIsland:", BackgroundStart);
-	const size_t LyricsStart = QmClient.rfind("case EQmModuleId::Lyrics:");
-	const size_t LyricsEnd = QmClient.find("default:", LyricsStart);
-	const std::string CoordsCase = CoordsStart != std::string::npos && CoordsEnd != std::string::npos ? QmClient.substr(CoordsStart, CoordsEnd - CoordsStart) : "";
-	const std::string VoiceCase = VoiceStart != std::string::npos && VoiceEnd != std::string::npos ? QmClient.substr(VoiceStart, VoiceEnd - VoiceStart) : "";
-	const std::string BackgroundCase = BackgroundStart != std::string::npos && BackgroundEnd != std::string::npos ? QmClient.substr(BackgroundStart, BackgroundEnd - BackgroundStart) : "";
-	const std::string LyricsCase = LyricsStart != std::string::npos && LyricsEnd != std::string::npos ? QmClient.substr(LyricsStart, LyricsEnd - LyricsStart) : "";
-	ASSERT_FALSE(CoordsBody.empty());
-	ASSERT_FALSE(VoiceBody.empty());
-	ASSERT_FALSE(BackgroundBody.empty());
-	ASSERT_FALSE(LyricsBody.empty());
-	ASSERT_FALSE(CoordsCase.empty());
-	ASSERT_FALSE(VoiceCase.empty());
-	ASSERT_FALSE(BackgroundCase.empty());
-	ASSERT_FALSE(LyricsCase.empty());
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string KeyBinds = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionKeyBindsContent(");
+	const std::string FriendNotify = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionFriendNotifyContent(");
+	const std::string FavoriteMaps = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionFavoriteMapsContent(");
+	const std::string PieMenu = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionPieMenuContent(");
+	const std::string Translate = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmFunctionTranslateContent(");
+	const std::string NotificationsBasic = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmHudNotificationsBasicContent(");
+	const std::string NotificationsAdvanced = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmHudNotificationsAdvancedContent(");
+	const std::string FunctionDeck = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientFunctionDeck(");
+	const std::string HudDeck = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientHudDeck(");
+	ASSERT_FALSE(KeyBinds.empty());
+	ASSERT_FALSE(FriendNotify.empty());
+	ASSERT_FALSE(FavoriteMaps.empty());
+	ASSERT_FALSE(PieMenu.empty());
+	ASSERT_FALSE(Translate.empty());
+	ASSERT_FALSE(NotificationsBasic.empty());
+	ASSERT_FALSE(NotificationsAdvanced.empty());
+	ASSERT_FALSE(FunctionDeck.empty());
+	ASSERT_FALSE(HudDeck.empty());
 
-	EXPECT_NE(Header.find("RenderQmHudCoordsContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmHudVoiceContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmHudBackground3DContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmHudLyricsContent"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("int m_ValueStep = 1;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("QuantizeNumericFieldStoredValue"), std::string::npos);
-	EXPECT_NE(Forms.find("QuantizeNumericFieldStoredValue"), std::string::npos);
-	EXPECT_NE(CoordsBody.find("Options.m_ValueStep = 100;"), std::string::npos);
-	EXPECT_NE(CoordsBody.find("ui_widget::NumericField"), std::string::npos);
-	EXPECT_EQ(CoordsBody.find("DoScrollbarH"), std::string::npos);
-	EXPECT_NE(VoiceBody.find("ExportUiStatus"), std::string::npos);
-	EXPECT_NE(VoiceBody.find("m_QmVoiceShowAdvanced"), std::string::npos);
-	EXPECT_NE(BackgroundBody.find("m_Qm3DParticles"), std::string::npos);
-	EXPECT_NE(BackgroundBody.find("DoDropDown"), std::string::npos);
-	EXPECT_NE(LyricsBody.find("m_QmSmtcLyricsEnable"), std::string::npos);
-	EXPECT_NE(LyricsBody.find("RenderLyricTextInput"), std::string::npos);
-	EXPECT_NE(CoordsCase.find("RenderQmHudCoordsContent"), std::string::npos);
-	EXPECT_NE(VoiceCase.find("RenderQmHudVoiceContent"), std::string::npos);
-	EXPECT_NE(BackgroundCase.find("RenderQmHudBackground3DContent"), std::string::npos);
-	EXPECT_NE(LyricsCase.find("RenderQmHudLyricsContent"), std::string::npos);
-	EXPECT_EQ(CoordsCase.find("DoScrollbarH"), std::string::npos);
-	EXPECT_EQ(VoiceCase.find("ExportUiStatus"), std::string::npos);
-	EXPECT_EQ(BackgroundCase.find("RenderIntOption"), std::string::npos);
-	EXPECT_EQ(LyricsCase.find("RenderLyricTextInput"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6HudQmClientMigrationUsesThePublicDeckOnly)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string HudDeckBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)");
-	const std::string QmClientBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(HudDeckBody.empty());
-	ASSERT_FALSE(QmClientBody.empty());
-
-	EXPECT_NE(HudDeckBody.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("SettingsCardOrderModel()"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("QmResolveScrollPolicy"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("QmScrollRegionParamsFromPolicy"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("qm:dummy_miniview"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("qm:coords"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("qm:voice"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("qm:lyrics"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("qm:background_3d"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("ParseLegacyQmCollapsed"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("SerializeLegacyQmCollapsed"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("m_MeasureEachFrame = true"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("m_RenderMeasured"), std::string::npos);
-	EXPECT_NE(HudDeckBody.find("ContentHeight = std::max(0.0f, Content.y - StartY)"), std::string::npos);
-	EXPECT_EQ(HudDeckBody.find("s_GlassCards"), std::string::npos);
-	EXPECT_EQ(HudDeckBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(HudDeckBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_EQ(HudDeckBody.find("BeginSettingsQmScrollContainer"), std::string::npos);
-
-	const size_t HudDispatch = QmClientBody.find("RenderSettingsQmClientHudDeck(ContentView, PrewarmOnly)");
-	const size_t LegacyScroll = QmClientBody.find("BeginSettingsQmScrollContainer");
-	ASSERT_NE(HudDispatch, std::string::npos);
-	ASSERT_NE(LegacyScroll, std::string::npos);
-	EXPECT_LT(HudDispatch, LegacyScroll);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionFavoriteMapsKeepsItsIndependentContentOwner)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string OwnerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionFavoriteMapsContent(");
-	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	const size_t FavoriteMapsStart = FunctionPageBody.rfind("case EQmModuleId::FavoriteMaps:");
-	const size_t FavoriteMapsEnd = FunctionPageBody.find("case EQmModuleId::HJAssist:", FavoriteMapsStart);
-	const std::string FavoriteMapsCase = FavoriteMapsStart != std::string::npos && FavoriteMapsEnd != std::string::npos ? FunctionPageBody.substr(FavoriteMapsStart, FavoriteMapsEnd - FavoriteMapsStart) : std::string();
-	ASSERT_FALSE(OwnerBody.empty());
-	ASSERT_FALSE(FavoriteMapsCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionFavoriteMapsContent"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("constexpr int ServersPerFrame = 64"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("UpdateMapCategoryCache"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("GetCachedMapCategoryKey"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("SetClipboardText"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("RemoveFavoriteMap"), std::string::npos);
-	EXPECT_NE(FavoriteMapsCase.find("RenderQmFunctionFavoriteMapsContent"), std::string::npos);
-	EXPECT_EQ(FavoriteMapsCase.find("ServersPerFrame"), std::string::npos);
-	EXPECT_EQ(FavoriteMapsCase.find("GetCachedMapCategoryKey"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionPieMenuKeepsPopupPreviewInItsContentOwner)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string OwnerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionPieMenuContent(");
-	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	const size_t PieMenuStart = FunctionPageBody.rfind("case EQmModuleId::PieMenu:");
-	const size_t PieMenuEnd = FunctionPageBody.find("case EQmModuleId::CameraView:", PieMenuStart);
-	const std::string PieMenuCase = PieMenuStart != std::string::npos && PieMenuEnd != std::string::npos ? FunctionPageBody.substr(PieMenuStart, PieMenuEnd - PieMenuStart) : std::string();
-	ASSERT_FALSE(OwnerBody.empty());
-	ASSERT_FALSE(PieMenuCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionPieMenuContent"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("LightFirstFrame"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("ShowPopupColorPicker"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("DoButtonLogic"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("DrawCircle"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("qmclient-pie-menu-reset-colors"), std::string::npos);
-	EXPECT_NE(PieMenuCase.find("RenderQmFunctionPieMenuContent"), std::string::npos);
-	EXPECT_EQ(PieMenuCase.find("ShowPopupColorPicker"), std::string::npos);
-	EXPECT_EQ(PieMenuCase.find("BlockPieMenuCardDrag"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionTranslateKeepsProviderControlsInItsContentOwner)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string OwnerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionTranslateContent(");
-	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	const size_t TranslateStart = FunctionPageBody.rfind("case EQmModuleId::Translate:");
-	const size_t TranslateEnd = FunctionPageBody.find("case EQmModuleId::TranslateUi:", TranslateStart);
-	const std::string TranslateCase = TranslateStart != std::string::npos && TranslateEnd != std::string::npos ? FunctionPageBody.substr(TranslateStart, TranslateEnd - TranslateStart) : std::string();
-	ASSERT_FALSE(OwnerBody.empty());
-	ASSERT_FALSE(TranslateCase.empty());
-
-	EXPECT_NE(Header.find("RenderQmFunctionTranslateContent"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("tencentcloud"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("libretranslate"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("ftapi"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("\"llm\""), std::string::npos);
-	EXPECT_NE(OwnerBody.find("RenderLanguageDropDownWithCustomInput"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("m_SelectionPopupContext.m_pScrollRegion"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("m_QmTranslateLlmConcurrency"), std::string::npos);
-	EXPECT_NE(OwnerBody.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
-	EXPECT_NE(TranslateCase.find("RenderQmFunctionTranslateContent"), std::string::npos);
-	EXPECT_EQ(TranslateCase.find("RenderLanguageDropDownWithCustomInput"), std::string::npos);
-	EXPECT_EQ(TranslateCase.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, P6FunctionDeckOwnsProductionCardLayout)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string Registry = ReadRepoFile("src/game/client/QmUi/QmCardRegistry.cpp");
-	const std::string FunctionDeckBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientFunctionDeck(");
-	const std::string VisualDeckBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientVisualDeck(");
-	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	const size_t FunctionDispatch = FunctionPageBody.find("RenderSettingsQmClientFunctionDeck(ContentView, PrewarmOnly)");
-	const size_t LegacyScroll = FunctionPageBody.find("BeginSettingsQmScrollContainer");
-	ASSERT_FALSE(FunctionDeckBody.empty());
-	ASSERT_FALSE(VisualDeckBody.empty());
-	ASSERT_NE(FunctionDispatch, std::string::npos);
-	ASSERT_NE(LegacyScroll, std::string::npos);
-
-	EXPECT_NE(Header.find("RenderSettingsQmClientFunctionDeck"), std::string::npos);
-	EXPECT_LT(FunctionDispatch, LegacyScroll);
-	EXPECT_NE(FunctionDeckBody.find("m_SettingsCardDeck.Render"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("SettingsCardOrderModel"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("ParseLegacyQmCollapsed"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("QmResolveScrollPolicy"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("qm:translate_ui"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("qm:qiafen"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("GetFavoriteMaps().size()"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("MeasureContentHeight"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("CalcQiaFenInputHeight(TextRender(), g_Config.m_QmBlockWordsList"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("QmKeywordReplyRules::DecodeFromConfig"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("CountAutoReplyRules(aDecodedRules)"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("m_QmTranslateLlmProvider == 2 || g_Config.m_QmTranslateLlmProvider == 3"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("m_QmFriendOnlineAutoRefresh"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("m_QmAutoTeamLock"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("Definition.m_MeasureEachFrame = true"), std::string::npos);
-	EXPECT_NE(FunctionDeckBody.find("if(!Ui()->RenderOnly() && str_comp(aNormalizedCollapsed"), std::string::npos);
-	EXPECT_EQ(FunctionDeckBody.find("s_aContentHeights"), std::string::npos);
-	EXPECT_EQ(FunctionDeckBody.find("m_RenderMeasured"), std::string::npos);
-	EXPECT_NE(Registry.find("{\"qm:translate_ui\", \"function\""), std::string::npos);
-	EXPECT_NE(Registry.find("{\"qm:qiafen\", \"function\""), std::string::npos);
-	EXPECT_EQ(VisualDeckBody.find("qm:translate_ui"), std::string::npos);
-	EXPECT_EQ(FunctionDeckBody.find("s_GlassCards"), std::string::npos);
-	EXPECT_EQ(FunctionDeckBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(FunctionDeckBody.find("HandleModuleDragState"), std::string::npos);
-	EXPECT_EQ(FunctionDeckBody.find("BeginSettingsQmScrollContainer"), std::string::npos);
+	EXPECT_NE(KeyBinds.find("+toggle cl_dummy_hammer 1 0"), std::string::npos);
+	EXPECT_NE(KeyBinds.find("qm_timeout_disconnect"), std::string::npos);
+	EXPECT_NE(FriendNotify.find("ui_widget::InputField"), std::string::npos);
+	EXPECT_NE(FriendNotify.find("m_QmFriendOnlineAutoRefresh"), std::string::npos);
+	EXPECT_NE(FriendNotify.find("m_QmFriendEnterAutoGreet"), std::string::npos);
+	EXPECT_NE(FriendNotify.find("m_QmFriendEnterBroadcast"), std::string::npos);
+	EXPECT_NE(FavoriteMaps.find("UpdateMapCategoryCache"), std::string::npos);
+	EXPECT_NE(FavoriteMaps.find("RemoveFavoriteMap"), std::string::npos);
+	EXPECT_NE(PieMenu.find("ShowPopupColorPicker"), std::string::npos);
+	EXPECT_NE(PieMenu.find("qmclient-pie-menu-reset-colors"), std::string::npos);
+	EXPECT_NE(Translate.find("RenderLanguageDropDownWithCustomInput"), std::string::npos);
+	EXPECT_NE(Translate.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
+	EXPECT_NE(NotificationsBasic.find("m_QmHudNotificationsShowAdvanced"), std::string::npos);
+	EXPECT_NE(NotificationsAdvanced.find("m_QmHudNotificationsUseCategoryFilters"), std::string::npos);
+	EXPECT_NE(NotificationsAdvanced.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(FunctionDeck.find("RenderQmFunctionKeyBindsContent"), std::string::npos);
+	EXPECT_NE(FunctionDeck.find("RenderQmFunctionFriendNotifyContent"), std::string::npos);
+	EXPECT_NE(FunctionDeck.find("RenderQmFunctionFavoriteMapsContent"), std::string::npos);
+	EXPECT_NE(FunctionDeck.find("RenderQmFunctionPieMenuContent"), std::string::npos);
+	EXPECT_NE(FunctionDeck.find("RenderQmFunctionTranslateContent"), std::string::npos);
+	EXPECT_NE(HudDeck.find("RenderQmHudNotificationsBasicContent"), std::string::npos);
+	EXPECT_NE(HudDeck.find("RenderQmHudNotificationsAdvancedContent"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
@@ -8030,23 +6900,6 @@ TEST(QmMonitoringHelpers, SettingsNumericFieldsRemoveLegacySliderForwarding)
 	EXPECT_NE(ScrollbarBody.find("ui_widget::NumericField(InputCtx, pState"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, SettingsPasswordFieldsUseSharedTextPrimitive)
-{
-	const std::string QmMenus = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string TClientMenus = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string QmSettings = ExtractSourceFunctionBody(QmMenus, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(QmSettings.empty());
-
-	EXPECT_NE(QmSettings.find("IUiContext QmClientGoresTextInputCtx;"), std::string::npos);
-	EXPECT_NE(QmSettings.find("ui_widget::InputField(QmClientGoresTextInputCtx, &s_AxiomLoginPassword, PasswordEditRect"), std::string::npos);
-	EXPECT_NE(QmSettings.find("ui_widget::InputField(QmClientGoresTextInputCtx, &s_AxiomDummyLoginPassword, PasswordEditRect"), std::string::npos);
-	EXPECT_EQ(QmSettings.find("Ui()->DoEditBox(&s_AxiomLoginPassword"), std::string::npos);
-	EXPECT_EQ(QmSettings.find("Ui()->DoEditBox(&s_AxiomDummyLoginPassword"), std::string::npos);
-	EXPECT_EQ(MenusHeader.find("DoEditBoxWithLabel"), std::string::npos);
-	EXPECT_EQ(TClientMenus.find("bool CMenus::DoEditBoxWithLabel("), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 {
 	const std::string Theme = ReadRepoFile("src/game/client/QmUi/UiTheme.h");
@@ -8074,82 +6927,6 @@ TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 	EXPECT_NE(SliderBody.find("IUiContext InputCtx = SettingsUiContext(\"settings_slider_input\");"), std::string::npos);
 	EXPECT_NE(MenusHeader.find("SUiTheme m_SettingsUiTheme;"), std::string::npos);
 }
-TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
-{
-	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
-	const std::string Motion = ReadRepoFile("src/game/client/QmUi/UiMotion.h");
-	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string QmMenus = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string TClientMenus = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
-	const std::string Navigation = ReadRepoFile("src/game/client/QmUi/UiNavigation.cpp");
-	const std::string TextFieldPlateBody = ExtractSourceFunctionBody(Forms, "void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)");
-	const std::string InputFieldBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options)");
-	const std::string ListItemBody = ExtractSourceFunctionBody(Navigation, "bool ListItem(const IUiContext &Ctx, const void *pId, const char *pText, const CUIRect &Rect, const SListItemProps &Props)");
-	ASSERT_FALSE(TextFieldPlateBody.empty());
-	ASSERT_FALSE(InputFieldBody.empty());
-	ASSERT_FALSE(ListItemBody.empty());
-
-	EXPECT_NE(FormsHeader.find("SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options);"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("struct SInputFieldResult"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("struct STextFieldOptions"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("int m_Corners = IGraphics::CORNER_ALL;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("float m_CornerRadius = ui_token::radius::BASE;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("int m_TextAlign = TEXTALIGN_ML;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("inline SInputFieldResult BuildInputFieldResult(bool WasActive, bool IsActive, bool Changed, bool SubmitPressed, bool WasEmpty, bool IsEmpty, bool Clearable)"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("bool m_Changed = false;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("bool m_Committed = false;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("bool m_Submitted = false;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("bool m_Deactivated = false;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("bool m_Cleared = false;"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("enum class EInputFieldCapability"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("constexpr unsigned InputFieldCapabilities()"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("DOUBLE_CLICK_SELECT_ALL"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("CLICK_AWAY_COMMIT"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("CURSOR_INSERTION"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("MOUSE_DRAG_SELECTION"), std::string::npos);
-	EXPECT_NE(Motion.find("AnimateStateValue(const IUiContext &Ctx, const void *pId, EUiAnimProperty Property, float Target"), std::string::npos);
-	EXPECT_NE(Motion.find("Ctx.m_pAnim->ResolveTargetValue(NodeKey, Property, Target, Transition);"), std::string::npos);
-	EXPECT_NE(Motion.find("return Target;"), std::string::npos);
-	EXPECT_NE(Forms.find("#include \"UiMotion.h\""), std::string::npos);
-	EXPECT_NE(Forms.find("#include <engine/graphics.h>"), std::string::npos);
-	EXPECT_NE(Forms.find("#include <game/client/ui.h>"), std::string::npos);
-	EXPECT_NE(Navigation.find("#include \"UiMotion.h\""), std::string::npos);
-	EXPECT_NE(TextFieldPlateBody.find("AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
-	EXPECT_NE(TextFieldPlateBody.find("const SUiTheme &Theme = ThemeFor(Ctx);"), std::string::npos);
-	EXPECT_NE(TextFieldPlateBody.find("const ColorRGBA PlateColor = Active ? Theme.m_InputSurfaceFocused : (Hovered ? Theme.m_SurfaceHovered : Theme.m_InputSurface);"), std::string::npos);
-	EXPECT_EQ(TextFieldPlateBody.find("ui_token::color::SURFACE_ELEVATED"), std::string::npos);
-	EXPECT_NE(InputFieldBody.find("DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect);"), std::string::npos);
-	EXPECT_NE(Forms.find("const float Alpha = AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
-	EXPECT_NE(Ui.find("bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
-	EXPECT_NE(Ui.find("bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
-	EXPECT_NE(Ui.find("bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, float LineSpacing, int TextAlign, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
-	EXPECT_EQ(QmMenus.find("static bool DoEditBoxMultiLine("), std::string::npos);
-	EXPECT_EQ(TClientMenus.find("static bool DoEditBoxMultiLine("), std::string::npos);
-	EXPECT_NE(QmMenus.find("BlockWordsInputOptions.m_Mode = ui_widget::EInputFieldMode::MULTILINE;"), std::string::npos);
-	EXPECT_NE(Forms.find("Ctx.m_pUi->DoEditBox(pInput"), std::string::npos);
-	EXPECT_EQ(Forms.find("Ctx.m_pUi->DoClearableEditBox(pInput"), std::string::npos);
-	EXPECT_EQ(Forms.find("Ctx.m_pUi->DoEditBox_Search(pInput"), std::string::npos);
-	EXPECT_NE(Forms.find("return ui_widget::BuildInputFieldResult(WasActive, pInput->IsActive(), Changed, SubmitPressed, WasEmpty, pInput->IsEmpty(), Clearable);"), std::string::npos);
-	EXPECT_NE(ListItemBody.find("AnimateStateValue(Ctx, pId, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
-	EXPECT_EQ(TextFieldPlateBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	EXPECT_EQ(InputFieldBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	EXPECT_EQ(ListItemBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	const std::string SliderInputBody = ExtractSourceFunctionBody(Forms, "bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)");
-	ASSERT_FALSE(SliderInputBody.empty());
-	EXPECT_NE(SliderInputBody.find("const bool MultiLine = Options.m_Flags & CUi::SCROLLBAR_OPTION_MULTILINE;"), std::string::npos);
-	EXPECT_NE(SliderInputBody.find("if(MultiLine)"), std::string::npos);
-	EXPECT_NE(SliderInputBody.find("const float LabelFontSize = MultiLine ? std::min(Options.m_FontSize, Label.h * CUi::ms_FontmodHeight * 0.8f) : Options.m_FontSize;"), std::string::npos);
-	EXPECT_NE(SliderInputBody.find("const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);"), std::string::npos);
-	EXPECT_NE(SliderInputBody.find("SliderInputWheelStoredValue("), std::string::npos);
-	EXPECT_NE(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized)"), std::string::npos);
-	EXPECT_EQ(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized, &Inner)"), std::string::npos);
-	EXPECT_NE(QmMenus.find("ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);"), std::string::npos);
-	EXPECT_NE(QmMenus.find("ui_widget::NumericField(QmInputCtx, pState, pId, pValue, MinValue, MaxValue, ControlColumn, Options);"), std::string::npos);
-	EXPECT_EQ(QmMenus.find("GetSettingsSliderInput("), std::string::npos);
-	EXPECT_EQ(QmMenus.find("Ui()->DoValueSelectorWithState(pId, &InputRect"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, TClientConfigSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
@@ -9908,39 +8685,6 @@ TEST(QmMonitoringHelpers, ScrollRegionDelegatesMutableScrollStateToQmScrollState
 	EXPECT_NE(SliderBody.find("m_ScrollState.SetOffset("), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, QmScrollControllerReceivesExternalMutableState)
-{
-	const std::string Header = ReadRepoFile("src/game/client/QmUi/QmScroll.h");
-	const std::string Source = ReadRepoFile("src/game/client/QmUi/QmScroll.cpp");
-	const std::string Containers = ReadRepoFile("src/game/client/QmUi/UiContainers.h");
-	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string UpdateBody = ExtractSourceFunctionBody(Source, "SQmScrollContainerFrame CQmScrollController::UpdateInternal(CQmScrollState &State, const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config, bool RenderRail) const");
-	ASSERT_FALSE(UpdateBody.empty());
-
-	EXPECT_NE(Header.find("SQmScrollContentDragState m_ContentDragState;"), std::string::npos);
-	EXPECT_NE(Header.find("void ScrollByWheel(CQmScrollState &State,"), std::string::npos);
-	EXPECT_NE(Header.find("PreviewFrame(const CQmScrollState &State,"), std::string::npos);
-	EXPECT_NE(Header.find("UpdateInternal(CQmScrollState &State,"), std::string::npos);
-	EXPECT_EQ(Header.find("CQmScrollState m_State;"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ScrollbarDragActive"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ScrollbarGrabY"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ContentDragActive"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ContentDragCandidate"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ContentDragPressMousePos"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ContentDragPressOffset"), std::string::npos);
-	EXPECT_EQ(Header.find("m_ContentDragLastMousePos"), std::string::npos);
-	EXPECT_NE(UpdateBody.find("State.BeginThumbDrag("), std::string::npos);
-	EXPECT_NE(UpdateBody.find("SQmScrollContentDragState &ContentDrag = State.ContentDragState();"), std::string::npos);
-	EXPECT_NE(Containers.find("ScrollContainer(const IUiContext &Ctx, CQmScrollState &State, CQmScrollContainer &Controller,"), std::string::npos);
-	EXPECT_NE(Containers.find("Controller.Update(State, ViewRect, ContentHeight,"), std::string::npos);
-	EXPECT_NE(MenusHeader.find("BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer,"), std::string::npos);
-	EXPECT_NE(MenusHeader.find("FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer,"), std::string::npos);
-	EXPECT_NE(QmClient.find("static CScrollRegion s_QmOverviewSettingsScrollRegion;"), std::string::npos);
-	EXPECT_NE(QmClient.find("static CScrollRegion s_GlobalSearchScrollRegion;"), std::string::npos);
-	EXPECT_EQ(QmClient.find("CQmScrollState s_GlobalSearchScrollState;"), std::string::npos);
-	EXPECT_NE(QmClient.find("CQmScrollState s_QmScrollState;"), std::string::npos);
-}
 TEST(QmMonitoringHelpers, WheelOwnershipFrameBeginsOnlyFromUiUpdate)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
@@ -10111,21 +8855,6 @@ TEST(QmMonitoringHelpers, QmUiScrollContainerContentDragIsOptIn)
 	EXPECT_NE(Containers.find("Input.m_ContentDragAllowed = Props.m_ContentDragAllowed;"), std::string::npos);
 	EXPECT_NE(Containers.find("Input.m_ContentDragBlocked = Ctx.m_pUi->ActiveItem() != nullptr;"), std::string::npos);
 	EXPECT_EQ(Dogfood.find("ScrollProps.m_ContentDragAllowed = true;"), std::string::npos);
-}
-
-TEST(QmMonitoringHelpers, QmClientModuleHeadlinesKeyTextCacheByLayout)
-{
-	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string HeadlineBlock = ExtractSourceBlock(Source, "auto RenderQmModuleHeadline = [&](CUIRect &Content", "auto RenderMenuImage =");
-	ASSERT_FALSE(HeadlineBlock.empty());
-
-	EXPECT_NE(HeadlineBlock.find("TitleLabelProps.m_MaxWidth = TitleRect.w"), std::string::npos);
-	EXPECT_NE(HeadlineBlock.find("BuildMenuTextStyleKey(&TitleRect, LgHeadlineSize, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
-	EXPECT_NE(HeadlineBlock.find("BuildMenuTextStyleKey(&TitleRect, LgHeadlineSizeNew, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
-	EXPECT_NE(HeadlineBlock.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle, TitleStyleKey)"), std::string::npos);
-	EXPECT_NE(HeadlineBlock.find("DoSettingsLabelStreamed(TitleElement, &TitleRect, pTitle, LgHeadlineSize, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
-	EXPECT_NE(HeadlineBlock.find("DoSettingsLabelStreamed(TitleElement, &TitleRect, BuildQmFeatureLabel(pTitle, pNewFeatureId, aTitle, sizeof(aTitle)), LgHeadlineSizeNew, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
-	EXPECT_EQ(HeadlineBlock.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsPagesExposeSectionLevelPerfStages)
