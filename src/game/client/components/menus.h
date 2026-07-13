@@ -2865,8 +2865,6 @@ private:
 	void RenderQmHudBackground3DContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly = false);
-	void RenderGlobalSearchResultCard(CUIRect &MainView, const struct SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
-	void RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const struct SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
 	void RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderTeeCute(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool CuteEyes, float Alpha = 1.0f);
 

@@ -6151,7 +6151,7 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(QmClient.find("s_apQmTabNames[QMCLIENT_SETTINGS_TAB_OVERVIEW] = Localize(\"Overview\")"), std::string::npos);
 	EXPECT_NE(QmClient.find("InputState.m_MousePressed = !PrewarmOnly"), std::string::npos);
 	EXPECT_NE(QmClient.find("Localize(\"Overview\")"), std::string::npos);
-	EXPECT_NE(QmClient.find("m_SettingsCardDeck.RequestReveal(Card.m_pStableId);"), std::string::npos);
+	EXPECT_NE(QmClient.find("ReadOnly ? s_GlobalSearchPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
 	EXPECT_NE(MenusSource.find("str_comp(pTab, \"qmclient-overview\")"), std::string::npos);
 	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
@@ -6473,15 +6473,27 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 	EXPECT_EQ(QmMainBody.find("SearchTabActive"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("CLineInputBuffered<128> &ModuleSearchInput = m_GlobalCardSearchInput;"), std::string::npos);
 	EXPECT_EQ(SearchContentBody.find("m_QmClientModuleSearchInput"), std::string::npos);
-	EXPECT_NE(SearchContentBody.find("IUiContext SearchCtx;"), std::string::npos);
-	EXPECT_NE(SearchContentBody.find("SearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_global_search\");"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("IUiContext SearchCtx = SettingsUiContext(\"settings_global_search\", UiScale);"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("ui_widget::InputField(SearchCtx, &ModuleSearchInput, Row, BodySize"), std::string::npos);
 	EXPECT_EQ(SearchContentBody.find("Ui()->DoEditBox_Search(&ModuleSearchInput"), std::string::npos);
-	EXPECT_NE(SearchContentBody.find("DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, \"qmclient-search-feature-search-title\""), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("InputCard.m_Spec = {\"deck:global-search-input\""), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("ResultsCard.m_Spec = {\"deck:global-search-results\""), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, \"qmclient-search-no-matching-features\""), std::string::npos);
 	EXPECT_EQ(SearchContentBody.find("DoSettingsMenuLabel(SETTINGS_QMCLIENT"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);"), std::string::npos);
-	EXPECT_NE(SearchContentBody.find("RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("CardDeck.Render(SearchCtx, Page, \"global-search\""), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("static CScrollRegion s_GlobalSearchScrollRegion;"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("s_GlobalSearchPrewarmOrderModel.LoadMerged(\"\", qm_card_registry::BuildDefaultEntries());"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("ReadOnly ? s_GlobalSearchPrewarmOrderModel : SettingsCardOrderModel();"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("static CSettingsCardDeck s_GlobalSearchPrewarmDeck;"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("ReadOnly ? s_GlobalSearchPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("if(ReadOnly)\n\t{\n\t\tSearchCtx.m_pAnim = nullptr;"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("ReadOnly ? nullptr : &s_GlobalSearchScrollRegion"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("const bool Clicked = !ReadOnly && Ui()->DoButtonLogic"), std::string::npos);
+	EXPECT_EQ(SearchContentBody.find("BeginSettingsQmScrollContainer"), std::string::npos);
+	EXPECT_EQ(SearchContentBody.find("RenderQmSettingsGlassCard"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("GlobalSearchPage"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("SearchTabActive"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("ShowSearchModuleControls"), std::string::npos);
@@ -6551,7 +6563,7 @@ TEST(QmMonitoringHelpers, QmClientCompactLayoutStillRendersBothModuleColumns)
 	EXPECT_EQ(QmMainBody.find("if(!CompactLayout)\n\t\t\tRenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
+TEST(QmMonitoringHelpers, P6GlobalSearchUsesPublicDeckOnly)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string SharedBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly)");
@@ -6563,33 +6575,16 @@ TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
 	EXPECT_NE(QmClient.find("std::vector<const SQmGlobalSearchCard *> m_vExternalCards;"), std::string::npos);
 	EXPECT_NE(QmClient.find("IsQmGlobalSearchCard("), std::string::npos);
 	EXPECT_NE(QmClient.find("Out.m_vExternalCards.push_back("), std::string::npos);
-	EXPECT_NE(QmClient.find("void CMenus::RenderGlobalSearchResultCard("), std::string::npos);
-	EXPECT_NE(QmClient.find("void CMenus::RenderGlobalSearchResults("), std::string::npos);
-	EXPECT_NE(SharedBody.find("RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);"), std::string::npos);
 	EXPECT_NE(SharedBody.find("const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vAllVisibleCards;"), std::string::npos);
 	EXPECT_NE(QmClient.find("Out.m_vAllVisibleCards.push_back(&GlobalSearchCard);"), std::string::npos);
-	EXPECT_EQ(SharedBody.find("RenderGlobalSearchResults(MainView, SearchVisibleExternalCards"), std::string::npos);
-	EXPECT_EQ(SharedBody.find("auto RenderGlobalSearchCard = [&]"), std::string::npos);
-	EXPECT_EQ(SharedBody.find("s_aGlobalSearchCardButtons"), std::string::npos);
-	EXPECT_EQ(SharedBody.find("ResolveGlobalSearchNavigation(pCard)"), std::string::npos);
-	const std::string ResultsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)");
-	ASSERT_FALSE(ResultsBody.empty());
-	EXPECT_NE(ResultsBody.find("s_GlobalSearchCardButtonIndex = 0;"), std::string::npos);
-	EXPECT_NE(ResultsBody.find("RenderGlobalSearchResultCard(MainView, *pCard, QmCardStyle, UiScale, PrewarmOnly, vGlassCards);"), std::string::npos);
-	const std::string CardBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)");
-	ASSERT_FALSE(CardBody.empty());
-	EXPECT_NE(CardBody.find("Ui()->DoButtonLogic(&s_aGlobalSearchCardButtons[ButtonIndex], 0, &CardRect, BUTTONFLAG_LEFT)"), std::string::npos);
-	EXPECT_NE(CardBody.find("const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(Card);"), std::string::npos);
-	EXPECT_NE(CardBody.find("pCardTitle != nullptr ? Localize(pCardTitle) : Localize(\"Global card\")"), std::string::npos);
-	EXPECT_LT(CardBody.find("qmclient-search-global-card-title"), CardBody.find("qmclient-search-global-card-id"));
-	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-title\")"), std::string::npos);
-	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-tab\")"), std::string::npos);
-	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-destination\")"), std::string::npos);
-	EXPECT_NE(CardBody.find("GlobalSearchNavigationLabel(Navigation)"), std::string::npos);
-	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-id\")"), std::string::npos);
-	EXPECT_EQ(CardBody.find("SettingsTextElement(SETTINGS_QMCLIENT"), std::string::npos);
-	EXPECT_NE(CardBody.find("Card.m_pStableId"), std::string::npos);
-	EXPECT_NE(CardBody.find("Card.m_pDefaultTab"), std::string::npos);
+	EXPECT_NE(SharedBody.find("ResultsCard.m_MeasureEachFrame = true;"), std::string::npos);
+	EXPECT_NE(SharedBody.find("ResolveGlobalSearchNavigation(*pCard)"), std::string::npos);
+	EXPECT_NE(SharedBody.find("Ui()->DoButtonLogic(pCard->m_pStableId, 0, &ResultRect, BUTTONFLAG_LEFT)"), std::string::npos);
+	EXPECT_NE(SharedBody.find("GlobalSearchNavigationLabel(Navigation)"), std::string::npos);
+	EXPECT_NE(SharedBody.find("m_SettingsCardDeck.RequestReveal(pCard->m_pStableId);"), std::string::npos);
+	EXPECT_EQ(QmClient.find("void CMenus::RenderGlobalSearchResultCard("), std::string::npos);
+	EXPECT_EQ(QmClient.find("void CMenus::RenderGlobalSearchResults("), std::string::npos);
+	EXPECT_EQ(QmClient.find("s_GlobalSearchCardButtonIndex"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientSearchNavigationTargetsSettingsPages)
@@ -6599,7 +6594,7 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationTargetsSettingsPages)
 	const size_t NavigationPos = QmClient.find("SQmGlobalSearchNavigation ResolveGlobalSearchNavigation");
 	ASSERT_NE(NavigationPos, std::string::npos);
 	const std::string NavigationBody = QmClient.substr(NavigationPos, 4200);
-	const std::string CardBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)");
+	const std::string CardBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(CardBody.empty());
 
 	EXPECT_NE(NavigationBody.find("str_startswith(pStableId, \"qm:\")"), std::string::npos);
@@ -6671,6 +6666,8 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationRouteTableCoversRegistryDeckTa
 			EXPECT_NE(QmClient.find("if(str_comp(pTab, \"qmclient-contributors\") == 0)"), std::string::npos);
 			continue;
 		}
+		if(Tab == "global-search")
+			continue;
 		const std::string Needle = "{\"" + Tab + "\",";
 		EXPECT_NE(RouteTable.find(Needle), std::string::npos) << Tab;
 	}
@@ -7200,13 +7197,13 @@ TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
 {
 	const std::string SearchSource = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-	const std::string SearchCardBody = ExtractSourceFunctionBody(SearchSource, "void CMenus::RenderGlobalSearchResultCard");
+	const std::string SearchCardBody = ExtractSourceFunctionBody(SearchSource, "void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly)");
 	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(SearchCardBody.empty());
 	ASSERT_FALSE(GraphicsBody.empty());
 
 	EXPECT_NE(SearchCardBody.find("Navigation.m_SettingsPage == SETTINGS_GRAPHICS"), std::string::npos);
-	EXPECT_NE(SearchCardBody.find("RequestSettingsCardFocus(Card.m_pStableId);"), std::string::npos);
+	EXPECT_NE(SearchCardBody.find("RequestSettingsCardFocus(pCard->m_pStableId);"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.Render("), std::string::npos);
 }
@@ -9825,7 +9822,8 @@ TEST(QmMonitoringHelpers, QmScrollControllerReceivesExternalMutableState)
 	EXPECT_NE(MenusHeader.find("BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer,"), std::string::npos);
 	EXPECT_NE(MenusHeader.find("FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer,"), std::string::npos);
 	EXPECT_NE(QmClient.find("static CScrollRegion s_QmOverviewSettingsScrollRegion;"), std::string::npos);
-	EXPECT_NE(QmClient.find("CQmScrollState s_GlobalSearchScrollState;"), std::string::npos);
+	EXPECT_NE(QmClient.find("static CScrollRegion s_GlobalSearchScrollRegion;"), std::string::npos);
+	EXPECT_EQ(QmClient.find("CQmScrollState s_GlobalSearchScrollState;"), std::string::npos);
 	EXPECT_NE(QmClient.find("CQmScrollState s_QmScrollState;"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, WheelOwnershipFrameBeginsOnlyFromUiUpdate)

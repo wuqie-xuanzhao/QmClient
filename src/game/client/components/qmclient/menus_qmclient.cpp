@@ -184,8 +184,6 @@ struct SQmGlobalSearchResults
 	std::vector<const SQmGlobalSearchCard *> m_vExternalCards;
 };
 
-static int s_GlobalSearchCardButtonIndex = 0;
-
 namespace
 {
 	void BuildGlobalSearchCards(std::vector<SQmGlobalSearchCard> &vOut)
@@ -229,6 +227,8 @@ namespace
 		Out.m_vExternalCards.reserve(Out.m_vCards.size());
 		for(const SQmGlobalSearchCard &GlobalSearchCard : Out.m_vCards)
 		{
+			if(GlobalSearchCard.m_pDefaultTab != nullptr && str_comp(GlobalSearchCard.m_pDefaultTab, "global-search") == 0)
+				continue;
 			if(!MatchesGlobalSearchCard(&GlobalSearchCard, pSearch))
 				continue;
 			Out.m_vAllVisibleCards.push_back(&GlobalSearchCard);
@@ -4964,39 +4964,21 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly)
 {
-	const float ViewWidth = MainView.w;
-	const bool CompactLayout = ViewWidth < 680.0f;
-	const float UiScale = std::clamp(ViewWidth / 1000.0f, CompactLayout ? 0.78f : 0.85f, 1.0f);
-	const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);
-	const float CardPadding = QmCardStyle.m_Padding;
-	const float CardSpacing = QmCardStyle.m_Spacing;
+	const float UiScale = std::clamp(MainView.w / 1000.0f, MainView.w < 680.0f ? 0.78f : 0.85f, 1.0f);
 	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
 	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
 	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
-
-	static CQmScrollState s_GlobalSearchScrollState;
-	static CQmScrollContainer s_GlobalSearchScrollContainer;
-	static float s_GlobalSearchScrollContentHeight = 0.0f;
-	static float s_PrevGlobalSearchScrollY = 0.0f;
-	static std::vector<CUIRect> s_GlassCards;
-	SSettingsQmScrollFrame SearchScrollFrame = BeginSettingsQmScrollContainer(s_GlobalSearchScrollState, s_GlobalSearchScrollContainer, &MainView, s_GlobalSearchScrollContentHeight, QmCardStyle, UiScale, s_PrevGlobalSearchScrollY, !PrewarmOnly);
-
-	MainView.y += SearchScrollFrame.m_Offset.y;
-	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
-	MainView.VSplitRight(OuterMargin, &MainView, nullptr);
-	MainView.VSplitLeft(OuterMargin, nullptr, &MainView);
-	s_GlassCards.clear();
-
-	IUiContext SearchCtx;
-	SearchCtx.m_pUi = Ui();
-	SearchCtx.m_pMenus = this;
-	SearchCtx.m_pTextRender = TextRender();
-	SearchCtx.m_pTooltips = &GameClient()->m_Tooltips;
-	SearchCtx.m_pAnim = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();
-	SearchCtx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
-	SearchCtx.m_pIconManager = GameClient()->QmIconManager();
-	SearchCtx.m_ScopeHash = MakeUiScopeHash("settings_global_search");
-	SearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	const float CardGap = ui_token::settings::CARD_GAP * UiScale;
+	const float ResultHeight = std::clamp(84.0f * UiScale, 70.0f, 84.0f);
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
+	IUiContext SearchCtx = SettingsUiContext("settings_global_search", UiScale);
+	if(ReadOnly)
+	{
+		SearchCtx.m_pAnim = nullptr;
+		SearchCtx.m_pTree = nullptr;
+	}
+	static CScrollRegion s_GlobalSearchScrollRegion;
 
 	CLineInputBuffered<128> &ModuleSearchInput = m_GlobalCardSearchInput;
 	const char *pModuleSearch = ModuleSearchInput.GetString();
@@ -5005,122 +4987,104 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vAllVisibleCards;
 	const int SearchMatchedGlobalCardCount = (int)GlobalSearchResults.m_vAllVisibleCards.size();
 
-	CUIRect Row;
-	{
-		const float SearchCardStartY = MainView.y;
-		CUIRect SearchCard = MainView;
-		CUIRect SearchContent = MainView;
-		SearchContent.VSplitLeft(CardPadding, nullptr, &SearchContent);
-		SearchContent.VSplitRight(CardPadding, &SearchContent, nullptr);
-		SearchContent.HSplitTop(CardPadding, nullptr, &SearchContent);
-		SearchContent.HSplitTop(BodySize + LineSpacing, &Row, &SearchContent);
-		DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-feature-search-title", &Row, Localize("Feature Search"), BodySize + 2.0f, TEXTALIGN_ML, {}, (int)Row.w);
-		SearchContent.HSplitTop(LineSpacing * 0.5f, nullptr, &SearchContent);
-		SearchContent.HSplitTop(LineHeight, &Row, &SearchContent);
-		ui_widget::InputField(SearchCtx, &ModuleSearchInput, Row, BodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
-		SearchContent.HSplitTop(LineSpacing * 0.65f, nullptr, &SearchContent);
-
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(2);
+	SSettingsCardDefinition InputCard;
+	InputCard.m_Spec = {"deck:global-search-input", Localize("Feature Search"), nullptr};
+	InputCard.m_Measure = [LineHeight, LineSpacing](float) { return LineHeight * 1.85f + LineSpacing * 0.65f; };
+	InputCard.m_Render = [this, &ModuleSearchInput, &SearchCtx, BodySize, LineHeight, LineSpacing, SearchMatchedGlobalCardCount, ReadOnly](CUIRect Content) {
+		CUIRect Row;
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		ui_widget::InputField(SearchCtx, &ModuleSearchInput, Row, BodySize, !ReadOnly && !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		Content.HSplitTop(LineSpacing * 0.65f, nullptr, &Content);
+		Content.HSplitTop(LineHeight * 0.85f, &Row, &Content);
 		char aSearchHint[64];
 		str_format(aSearchHint, sizeof(aSearchHint), Localize("Found %d global cards"), SearchMatchedGlobalCardCount);
-		SearchContent.HSplitTop(LineHeight * 0.85f, &Row, &SearchContent);
 		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.82f));
-		if(SearchMatchedGlobalCardCount == 0)
-			DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-no-matching-features", &Row, Localize("No matching features found. Try other keywords"), BodySize * 0.92f, TEXTALIGN_ML, {}, (int)Row.w);
-		else
-			Ui()->DoLabel(&Row, aSearchHint, BodySize * 0.92f, TEXTALIGN_ML);
+		Ui()->DoLabel(&Row, aSearchHint, BodySize * 0.92f, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	};
+	vCards.push_back(std::move(InputCard));
 
-		SearchContent.HSplitTop(CardPadding, nullptr, &SearchContent);
-		const float SearchCardHeight = SearchContent.y - SearchCardStartY;
-		SearchCard.y = SearchCardStartY;
-		SearchCard.h = SearchCardHeight;
-		RenderQmSettingsGlassCard(SearchCard, QmCardStyle);
-		if(!PrewarmOnly && Ui()->MouseButtonClicked(0) && !Ui()->MouseHovered(&SearchCard) &&
-			(Ui()->ActiveItem() == &ModuleSearchInput || ModuleSearchInput.IsActive()))
+	SSettingsCardDefinition ResultsCard;
+	ResultsCard.m_Spec = {"deck:global-search-results", Localize("Search"), nullptr};
+	ResultsCard.m_Measure = [SearchMatchedGlobalCardCount, ResultHeight, CardGap, LineHeight](float) {
+		return SearchMatchedGlobalCardCount == 0 ? LineHeight : SearchMatchedGlobalCardCount * ResultHeight + std::max(0, SearchMatchedGlobalCardCount - 1) * CardGap;
+	};
+	ResultsCard.m_Render = [this, &SearchVisibleGlobalCards, BodySize, LineHeight, LineSpacing, ResultHeight, CardGap, ReadOnly](CUIRect Content) {
+		if(SearchVisibleGlobalCards.empty())
 		{
-			Ui()->ReleaseActiveTextInput(&ModuleSearchInput);
-			ModuleSearchInput.Deactivate();
+			DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-no-matching-features", &Content, Localize("No matching features found. Try other keywords"), BodySize * 0.92f, TEXTALIGN_ML, {}, (int)Content.w);
+			return;
 		}
-		MainView.HSplitTop(SearchCardHeight, nullptr, &MainView);
-		MainView.HSplitTop(CardSpacing, nullptr, &MainView);
-	}
-
-	RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);
-	for(const CUIRect &CardRect : s_GlassCards)
-		RenderQmSettingsGlassCard(CardRect, QmCardStyle);
-
-	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
-	FinishSettingsQmScrollContainer(s_GlobalSearchScrollState, s_GlobalSearchScrollContainer, SearchScrollFrame, EndPad, &s_GlobalSearchScrollContentHeight, &s_PrevGlobalSearchScrollY, !m_MenuTextPlanCollecting);
-}
-
-void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)
-{
-	static CButtonContainer s_aGlobalSearchCardButtons[160];
-	if(s_GlobalSearchCardButtonIndex >= (int)std::size(s_aGlobalSearchCardButtons))
-		s_GlobalSearchCardButtonIndex = 0;
-	MainView.HSplitTop(QmCardStyle.m_Spacing, nullptr, &MainView);
-	const float CardHeight = std::clamp(108.0f * UiScale, 92.0f, 120.0f);
-	CUIRect CardRect = MainView;
-	CardRect.h = CardHeight;
-	const int ButtonIndex = std::clamp(s_GlobalSearchCardButtonIndex++, 0, (int)std::size(s_aGlobalSearchCardButtons) - 1);
-	const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(Card);
-	const int Clicked = Ui()->DoButtonLogic(&s_aGlobalSearchCardButtons[ButtonIndex], 0, &CardRect, BUTTONFLAG_LEFT);
-	if(!PrewarmOnly && Clicked)
-	{
-		g_Config.m_UiSettingsPage = Navigation.m_SettingsPage;
-		if(Navigation.m_QmClientTab >= 0)
-			m_QmClientSettingsTab = Navigation.m_QmClientTab;
-		if(Navigation.m_TClientTab >= 0)
-			m_TClientSettingsTab = Navigation.m_TClientTab;
-		if(Navigation.m_AppearanceTab >= 0)
-			m_AppearanceSettingsTab = Navigation.m_AppearanceTab;
-		if(Card.m_pStableId != nullptr && str_startswith(Card.m_pStableId, "deck:") != nullptr)
+		for(size_t Index = 0; Index < SearchVisibleGlobalCards.size(); ++Index)
 		{
-			if(Navigation.m_SettingsPage == SETTINGS_GRAPHICS)
-				RequestSettingsCardFocus(Card.m_pStableId);
-			else if(Navigation.m_SettingsPage == SETTINGS_QMCLIENT &&
-				(Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW || Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS))
-				m_SettingsCardDeck.RequestReveal(Card.m_pStableId);
+			const SQmGlobalSearchCard *pCard = SearchVisibleGlobalCards[Index];
+			if(pCard == nullptr)
+				continue;
+			CUIRect ResultRect;
+			Content.HSplitTop(ResultHeight, &ResultRect, &Content);
+			const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(*pCard);
+			const bool Clicked = !ReadOnly && Ui()->DoButtonLogic(pCard->m_pStableId, 0, &ResultRect, BUTTONFLAG_LEFT);
+			if(Clicked)
+			{
+				g_Config.m_UiSettingsPage = Navigation.m_SettingsPage;
+				if(Navigation.m_QmClientTab >= 0)
+					m_QmClientSettingsTab = Navigation.m_QmClientTab;
+				if(Navigation.m_TClientTab >= 0)
+					m_TClientSettingsTab = Navigation.m_TClientTab;
+				if(Navigation.m_AppearanceTab >= 0)
+					m_AppearanceSettingsTab = Navigation.m_AppearanceTab;
+				if(pCard->m_pStableId != nullptr && str_startswith(pCard->m_pStableId, "deck:") != nullptr)
+				{
+					if(Navigation.m_SettingsPage == SETTINGS_GRAPHICS)
+						RequestSettingsCardFocus(pCard->m_pStableId);
+					else if(Navigation.m_SettingsPage == SETTINGS_QMCLIENT &&
+						(Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW || Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS))
+						m_SettingsCardDeck.RequestReveal(pCard->m_pStableId);
+				}
+				Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
+				m_GlobalCardSearchInput.Deactivate();
+			}
+			CUIRect ResultContent;
+			ResultRect.Margin(std::max(4.0f, LineSpacing), &ResultContent);
+			CUIRect Row;
+			ResultContent.HSplitTop(LineHeight, &Row, &ResultContent);
+			DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-title"), &Row, pCard->m_pTitle != nullptr ? Localize(pCard->m_pTitle) : Localize("Global card"), BodySize, TEXTALIGN_ML);
+			ResultContent.HSplitTop(LineSpacing * 0.3f, nullptr, &ResultContent);
+			ResultContent.HSplitTop(LineHeight, &Row, &ResultContent);
+			DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-destination"), &Row, GlobalSearchNavigationLabel(Navigation), BodySize * 0.9f, TEXTALIGN_ML);
+			if(Index + 1 < SearchVisibleGlobalCards.size())
+				Content.HSplitTop(CardGap, nullptr, &Content);
 		}
-		Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
-		m_GlobalCardSearchInput.Deactivate();
-	}
-	CUIRect Content = CardRect;
-	Content.Margin(QmCardStyle.m_Padding, &Content);
-	vGlassCards.push_back(CardRect);
+	};
+	ResultsCard.m_MeasureEachFrame = true;
+	vCards.push_back(std::move(ResultsCard));
 
-	const float HeadlineSize = std::clamp(14.0f * UiScale, 12.0f, 14.0f);
-	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
-	const float TipSize = std::clamp(BodySize * 0.7f, 8.0f, BodySize);
-	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
-	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
-
-	CUIRect Row;
-	Content.HSplitTop(HeadlineSize, &Row, &Content);
-	const char *pCardTitle = Card.m_pTitle;
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-title"), &Row, pCardTitle != nullptr ? Localize(pCardTitle) : Localize("Global card"), HeadlineSize, TEXTALIGN_ML);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	const char *pTab = Card.m_pDefaultTab != nullptr ? Card.m_pDefaultTab : "global";
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-tab"), &Row, pTab, BodySize, TEXTALIGN_ML);
-	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-destination"), &Row, GlobalSearchNavigationLabel(Navigation), BodySize, TEXTALIGN_ML);
-	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-id"), &Row, Card.m_pStableId != nullptr ? Card.m_pStableId : "", TipSize, TEXTALIGN_ML);
-
-	MainView.HSplitTop(CardHeight, nullptr, &MainView);
-}
-
-void CMenus::RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)
-{
-	s_GlobalSearchCardButtonIndex = 0;
-	for(const SQmGlobalSearchCard *pCard : vCards)
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = ReadOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = ReadOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !ReadOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !ReadOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !ReadOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !ReadOnly && Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;
+	static qm_card_order::CModel s_GlobalSearchPrewarmOrderModel;
+	static bool s_GlobalSearchPrewarmOrderModelInitialized = false;
+	static CSettingsCardDeck s_GlobalSearchPrewarmDeck;
+	if(ReadOnly && !s_GlobalSearchPrewarmOrderModelInitialized)
 	{
-		if(pCard != nullptr)
-			RenderGlobalSearchResultCard(MainView, *pCard, QmCardStyle, UiScale, PrewarmOnly, vGlassCards);
+		s_GlobalSearchPrewarmOrderModel.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+		s_GlobalSearchPrewarmOrderModelInitialized = true;
 	}
+	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_GlobalSearchPrewarmOrderModel : SettingsCardOrderModel();
+	CSettingsCardDeck &CardDeck = ReadOnly ? s_GlobalSearchPrewarmDeck : m_SettingsCardDeck;
+	const SSettingsCardDeckResult DeckResult = CardDeck.Render(SearchCtx, Page, "global-search", vCards, CardOrderModel, ReadOnly ? nullptr : &s_GlobalSearchScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!ReadOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 }
 
 void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)

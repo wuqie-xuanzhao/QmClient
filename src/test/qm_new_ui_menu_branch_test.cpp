@@ -118,7 +118,7 @@ TEST(QmNewUiMenuBranches, P6QmClientOverviewUsesCanonicalPageCardAndScroll)
 	EXPECT_NE(Dispatch.find("QMCLIENT_SETTINGS_TAB_OVERVIEW"), std::string::npos);
 	EXPECT_NE(Dispatch.find("RenderSettingsQmClientOverview(ContentView, PrewarmOnly)"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Overview\")"), std::string::npos);
-	EXPECT_NE(Source.find("m_SettingsCardDeck.RequestReveal(Card.m_pStableId);"), std::string::npos);
+	EXPECT_NE(Source.find("ReadOnly ? s_GlobalSearchPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)

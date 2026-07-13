@@ -80,6 +80,8 @@ namespace qm_card_registry
 			{"deck:qmclient-overview-guide", "qmclient-overview", ECardColumn::Full, 1, "Page guide", "qmclient page guide tabs"},
 			{"deck:qmclient-contributors-community", "qmclient-contributors", ECardColumn::Full, 0, "QmClient Community", "community links qmclient"},
 			{"deck:qmclient-contributors-sponsors", "qmclient-contributors", ECardColumn::Full, 1, "Sponsor support", "sponsor support qmclient"},
+			{"deck:global-search-input", "global-search", ECardColumn::Full, 0, "Feature Search", "global search feature cards"},
+			{"deck:global-search-results", "global-search", ECardColumn::Full, 1, "Search", "global search result cards"},
 			{"deck:general-game", "general", ECardColumn::Left, 0, Localizable("Game"), "general game camera weapon"},
 			{"deck:general-language", "general", ECardColumn::Right, 0, Localizable("Language"), "general language localization"},
 			{"deck:general-client", "general", ECardColumn::Left, 1, Localizable("Client"), "general client theme files"},
