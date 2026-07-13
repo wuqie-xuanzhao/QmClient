@@ -2804,7 +2804,7 @@ private:
 	bool PrewarmSettingsPageResources(int Page, int Tab, const CUIRect &ContentView);
 	bool PrewarmSettingsAssetResources();
 	void RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly = false);
-	void RenderSettingsTClientChatBinds(CUIRect MainView);
+	void RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientWarList(CUIRect MainView);
 	void RenderSettingsTClientInfo(CUIRect MainView);
 	void RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly);

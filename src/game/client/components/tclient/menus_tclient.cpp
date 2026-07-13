@@ -942,7 +942,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 			RenderSettingsTClientSettings(ContentView, PrewarmOnly);
 		}
 		if(m_TClientSettingsTab == TCLIENT_TAB_BINDCHAT)
-			RenderSettingsTClientChatBinds(ContentView);
+			RenderSettingsTClientChatBinds(ContentView, PrewarmOnly);
 		if(m_TClientSettingsTab == TCLIENT_TAB_BINDWHEEL)
 			RenderSettingsTClientBindWheel(ContentView, PrewarmOnly);
 		if(m_TClientSettingsTab == TCLIENT_TAB_WARLIST)
@@ -3845,130 +3845,103 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 		SaveSettingsCardOrderModel();
 }
 
-void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
+void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)
 {
-	CUIRect LeftView, RightView, Button, Label;
 	CPerfTimer RenderTimer;
-
-	static CScrollRegion s_ScrollRegion;
-	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
-	static float s_PrevChatBindsScrollY = 0.0f;
-	SSettingsScrollRegionFrame ScrollFrame;
-	{
-		CPerfTimer LayoutTimer;
-		ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevChatBindsScrollY);
-		ScrollOffset = ScrollFrame.m_BeginOffset;
-		char aExtra[96];
-		str_format(aExtra, sizeof(aExtra), "scroll_y=%.1f", ScrollOffset.y);
-		LogTClientPerfStageEx("tclient_chatbinds", "layout", ETClientSettingsPerfStage::SECTION_LAYOUT, LayoutTimer.ElapsedMs(), false, aExtra);
-	}
-
-	MainView.y += ScrollOffset.y;
-
-	MainView.HSplitTop(Margin, nullptr, &MainView);
-	MainView.VSplitRight(5.0f, &MainView, nullptr); // Padding for scrollbar
-	MainView.VSplitLeft(5.0f, nullptr, &MainView); // Padding for scrollbar
-
-	MainView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
-	LeftView.VSplitLeft(MarginSmall, nullptr, &LeftView);
-	RightView.VSplitRight(MarginSmall, &RightView, nullptr);
-
-	// ***** All the stuff ***** //
-
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
+	const float UiScale = 1.0f;
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
 	IUiContext TClientChatBindsTextInputCtx;
 	TClientChatBindsTextInputCtx.m_pUi = Ui();
 	TClientChatBindsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
 	TClientChatBindsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	TClientChatBindsTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_chatbinds_text_inputs");
 	TClientChatBindsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	if(ReadOnly)
+	{
+		TClientChatBindsTextInputCtx.m_pAnim = nullptr;
+		TClientChatBindsTextInputCtx.m_pTree = nullptr;
+	}
 
+	static CScrollRegion s_ChatBindsScrollRegion;
 	auto DoBindchatDefault = [&](CUIRect &Column, CBindChat::CBindDefault &BindDefault) {
+		CUIRect Button, Input, Title;
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		Column.HSplitTop(LineSize, &Button, &Column);
 		CBindChat::CBind *pOldBind = GameClient()->m_BindChat.GetBind(BindDefault.m_Bind.m_aCommand);
 		static char s_aTempName[BINDCHAT_MAX_NAME] = "";
-		char *pName;
-		if(pOldBind == nullptr)
-			pName = s_aTempName;
-		else
-			pName = pOldBind->m_aName;
-		CUIRect Input, Title;
+		char *pName = pOldBind == nullptr ? s_aTempName : pOldBind->m_aName;
 		Button.VSplitLeft(210.0f, &Title, &Input);
 		CUIElement &TitleElement = SettingsTextElement(SETTINGS_TCLIENT, TCLIENT_TAB_BINDCHAT, BindDefault.m_pTitle);
 		DoSettingsLabelStreamed(TitleElement, &Title, Localize(BindDefault.m_pTitle), FontSize, TEXTALIGN_ML);
 		BindDefault.m_LineInput.SetBuffer(pName, BINDCHAT_MAX_NAME);
 		BindDefault.m_LineInput.SetEmptyText(BindDefault.m_Bind.m_aName);
-		if(ui_widget::InputField(TClientChatBindsTextInputCtx, &BindDefault.m_LineInput, Input, BindDefault.m_Bind.m_aName, EditBoxFontSize) && BindDefault.m_LineInput.IsActive())
+		if(!ReadOnly && ui_widget::InputField(TClientChatBindsTextInputCtx, &BindDefault.m_LineInput, Input, BindDefault.m_Bind.m_aName, EditBoxFontSize) && BindDefault.m_LineInput.IsActive())
 		{
 			if(!pOldBind && pName[0] != '\0')
 			{
 				auto BindNew = BindDefault.m_Bind;
 				str_copy(BindNew.m_aName, pName);
-				GameClient()->m_BindChat.RemoveBind(pName); // Prevent duplicates
+				GameClient()->m_BindChat.RemoveBind(pName);
 				GameClient()->m_BindChat.AddBind(BindNew);
 				s_aTempName[0] = '\0';
 			}
 			if(pOldBind && pName[0] == '\0')
-			{
 				GameClient()->m_BindChat.RemoveBind(pName);
-			}
 		}
+		else if(ReadOnly)
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDCHAT, BindDefault.m_Bind.m_aName, &Input, pName, FontSize, TEXTALIGN_ML);
 	};
 
-	auto DoBindchatDefaults = [&](CUIRect &Column, const char *pTitleKey, const char *pTitle, std::vector<CBindChat::CBindDefault> &vBindchatDefaults) {
-		const float SectionHeight = HeadlineHeight + MarginSmall + vBindchatDefaults.size() * (MarginSmall + LineSize);
-		CUIRect Section = Column;
-		Section.h = SectionHeight;
-
-		if(!s_ScrollRegion.AddRect(TClientCacheSectionBoxRect(Section)))
-		{
-			Column.y += SectionHeight + MarginBetweenSections;
-			return;
-		}
-		DrawTClientCacheSectionBox(Section);
-
-		CUIRect ContentColumn = Column;
-		InsetTClientCacheSectionContent(ContentColumn);
-		ContentColumn.HSplitTop(HeadlineHeight, &Label, &ContentColumn);
-		CUIElement &TitleElement = SettingsTextElement(SETTINGS_TCLIENT, TCLIENT_TAB_BINDCHAT, pTitleKey);
-		DoSettingsLabelStreamed(TitleElement, &Label, pTitle, HeadlineFontSize, TEXTALIGN_ML);
-		ContentColumn.HSplitTop(MarginSmall, nullptr, &ContentColumn);
-		for(CBindChat::CBindDefault &BindchatDefault : vBindchatDefaults)
-			DoBindchatDefault(ContentColumn, BindchatDefault);
-		Column.y = ContentColumn.y;
-		Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
+	constexpr const char *apStableIds[] = {
+		"deck:tclient-chat-binds-kaomoji",
+		"deck:tclient-chat-binds-warlist",
+		"deck:tclient-chat-binds-other",
 	};
-
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(CBindChat::BIND_DEFAULTS.size());
+	for(size_t Index = 0; Index < CBindChat::BIND_DEFAULTS.size(); ++Index)
 	{
-		CPerfTimer ListTimer;
-		float SizeL = 0.0f, SizeR = 0.0f;
-		for(auto &[pTitle, vBindDefaults] : CBindChat::BIND_DEFAULTS)
-		{
-			float &Size = SizeL > SizeR ? SizeR : SizeL;
-			CUIRect &Column = SizeL > SizeR ? RightView : LeftView;
-			DoBindchatDefaults(Column, pTitle, Localize(pTitle), vBindDefaults);
-			Size += vBindDefaults.size() * (MarginSmall + LineSize) + HeadlineHeight + HeadlineFontSize + MarginSmall * 2.0f;
-		}
-		char aExtra[96];
-		str_format(aExtra, sizeof(aExtra), "groups=%d", (int)CBindChat::BIND_DEFAULTS.size());
-		LogTClientPerfStageEx("tclient_chatbinds", "list", ETClientSettingsPerfStage::TEXT_CACHE, ListTimer.ElapsedMs(), false, aExtra);
+		auto &[pTitle, vBindDefaults] = CBindChat::BIND_DEFAULTS[Index];
+		if(Index >= std::size(apStableIds))
+			break;
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {apStableIds[Index], Localize(pTitle), nullptr};
+		Definition.m_Measure = [&vBindDefaults](float) {
+			return vBindDefaults.size() * (MarginSmall + LineSize);
+		};
+		Definition.m_RenderMeasured = [&](CUIRect &Content) {
+			for(CBindChat::CBindDefault &BindDefault : vBindDefaults)
+				DoBindchatDefault(Content, BindDefault);
+		};
+		vCards.push_back(std::move(Definition));
 	}
 
-	// Scroll
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = ReadOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = ReadOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !ReadOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !ReadOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !ReadOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !ReadOnly && Input()->ModifierIsPressed();
+	InputState.m_AllowHeaderDrag = !ReadOnly;
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;
+	static qm_card_order::CModel s_ChatBindsPrewarmOrderModel;
+	static bool s_ChatBindsPrewarmOrderModelInitialized = false;
+	static CSettingsCardDeck s_ChatBindsPrewarmDeck;
+	if(ReadOnly && !s_ChatBindsPrewarmOrderModelInitialized)
 	{
-		CPerfTimer ButtonTimer;
-		CUIRect ScrollRegion;
-		ScrollRegion.x = MainView.x;
-		ScrollRegion.y = maximum(LeftView.y, RightView.y) + MarginSmall * 2.0f;
-		ScrollRegion.w = MainView.w;
-		ScrollRegion.h = 0.0f;
-		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion);
-		s_PrevChatBindsScrollY = ScrollFrame.m_FinalOffsetY;
-		char aExtra[96];
-		str_format(aExtra, sizeof(aExtra), "scroll_y=%.1f", ScrollFrame.m_FinalOffsetY);
-		LogTClientPerfStageEx("tclient_chatbinds", "buttons", ETClientSettingsPerfStage::INTERACTIVE_LAYER, ButtonTimer.ElapsedMs(), false, aExtra);
+		s_ChatBindsPrewarmOrderModel.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+		s_ChatBindsPrewarmOrderModelInitialized = true;
 	}
+	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_ChatBindsPrewarmOrderModel : SettingsCardOrderModel();
+	CSettingsCardDeck &CardDeck = ReadOnly ? s_ChatBindsPrewarmDeck : m_SettingsCardDeck;
+	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientChatBindsTextInputCtx, Page, "tclient-chat-binds", vCards, CardOrderModel, ReadOnly ? nullptr : &s_ChatBindsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!ReadOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_chatbinds_total", RenderTimer.ElapsedMs(), false);
 }
 

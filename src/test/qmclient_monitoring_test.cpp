@@ -1736,14 +1736,14 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	EXPECT_NE(InsetHelperBody.find("ContentRect.VSplitLeft(Margin, nullptr, &ContentRect);"), std::string::npos);
 	EXPECT_NE(InsetHelperBody.find("ContentRect.VSplitRight(Margin, &ContentRect, nullptr);"), std::string::npos);
 
-	const std::string BindChatBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)");
+	const std::string BindChatBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(BindChatBody.empty());
-	EXPECT_EQ(BindChatBody.find("Background.w += Padding;"), std::string::npos);
-	EXPECT_EQ(BindChatBody.find("Background.x -= Padding * 0.5f;"), std::string::npos);
-	EXPECT_EQ(BindChatBody.find("Background.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
-	EXPECT_NE(BindChatBody.find("DrawTClientCacheSectionBox(Section);"), std::string::npos);
-	EXPECT_NE(BindChatBody.find("s_ScrollRegion.AddRect(TClientCacheSectionBoxRect(Section))"), std::string::npos);
-	EXPECT_NE(BindChatBody.find("InsetTClientCacheSectionContent(ContentColumn);"), std::string::npos);
+	EXPECT_NE(BindChatBody.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(BindChatBody.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ChatBindsPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(BindChatBody.find("CardDeck.Render("), std::string::npos);
+	EXPECT_EQ(BindChatBody.find("DrawTClientCacheSectionBox(Section);"), std::string::npos);
+	EXPECT_EQ(BindChatBody.find("s_ScrollRegion.AddRect(TClientCacheSectionBoxRect(Section))"), std::string::npos);
+	EXPECT_EQ(BindChatBody.find("InsetTClientCacheSectionContent(ContentColumn);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
@@ -6624,6 +6624,7 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationUsesTabRouteTable)
 	EXPECT_NE(QmClient.find("{\"sound\", CMenus::SETTINGS_SOUND"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"ddnet\", CMenus::SETTINGS_DDNET"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"tclient-bind-wheel\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"tclient-chat-binds\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"tclient-status-bar\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-hud\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-chat\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
@@ -8653,16 +8654,18 @@ TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 TEST(QmMonitoringHelpers, TClientChatBindsTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	const size_t TextFieldPos = Body.find("ui_widget::InputField(TClientChatBindsTextInputCtx, &BindDefault.m_LineInput, Input, BindDefault.m_Bind.m_aName, EditBoxFontSize)");
 	const size_t ActiveGuardPos = Body.find("&& BindDefault.m_LineInput.IsActive()", TextFieldPos);
+	const size_t ReadOnlyGuardPos = Source.find("if(!ReadOnly && ui_widget::InputField(TClientChatBindsTextInputCtx");
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext TClientChatBindsTextInputCtx;"), std::string::npos);
 	EXPECT_NE(Body.find("TClientChatBindsTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_chatbinds_text_inputs\");"), std::string::npos);
 	EXPECT_NE(TextFieldPos, std::string::npos);
 	EXPECT_NE(ActiveGuardPos, std::string::npos);
+	EXPECT_NE(ReadOnlyGuardPos, std::string::npos);
 	EXPECT_LT(TextFieldPos, ActiveGuardPos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&BindDefault.m_LineInput, &Input, EditBoxFontSize"), std::string::npos);
 }

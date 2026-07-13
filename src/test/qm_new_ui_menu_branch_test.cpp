@@ -1865,16 +1865,17 @@ TEST(QmNewUiMenuBranches, TClientSettingsCardsUseSharedQmCardStyle)
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");
 	const std::string RenderSettingsTClientSettings = FunctionBody(Source, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
-	const std::string RenderSettingsTClientChatBinds = FunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)");
+	const std::string RenderSettingsTClientChatBinds = FunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
 	ASSERT_FALSE(RenderSettingsTClientChatBinds.empty());
 
 	EXPECT_NE(Source.find("RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientSettings.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("CardDeck.Render("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientChatBinds.find("BeginSettingsScrollRegion("), std::string::npos);
 	EXPECT_EQ(Source.find("ScrollParams.m_ScrollUnit = 60.0f;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientSettings.find("ScrollParams.m_ScrollbarMargin = 5.0f;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientChatBinds.find("ScrollParams.m_ScrollbarMargin = 5.0f;"), std::string::npos);
 	EXPECT_EQ(Source.find("BoxRect.Draw(Ui()->ScaleBackgroundAlpha(MenuPanelColor(0.92f))"), std::string::npos);
 	EXPECT_NE(HeaderSource.find("void DrawTClientCacheSectionBox(CUIRect BoxRect);"), std::string::npos);
 }
@@ -2029,10 +2030,12 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 
 	const std::string RenderSettingsTClientSettings = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
+	const std::string RenderSettingsTClientChatBinds = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)");
 	const std::string HandleSettingsCardDeckDrag = FunctionBody(TClientSource, "void CMenus::HandleSettingsCardDeckDrag(");
 	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
 	ASSERT_FALSE(RenderSettingsTClientBindWheel.empty());
+	ASSERT_FALSE(RenderSettingsTClientChatBinds.empty());
 	ASSERT_FALSE(RenderSettingsTClientStatusBar.empty());
 	ASSERT_FALSE(HandleSettingsCardDeckDrag.empty());
 	EXPECT_NE(HandleSettingsCardDeckDrag.find("(time_get() - DragState.m_PressStartTime) / (float)time_freq() >= 0.3f"), std::string::npos);
@@ -2074,6 +2077,23 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientBindWheel.find("s_BindWheelEditorCardHeight"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("deck:tclient-chat-binds-kaomoji"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("deck:tclient-chat-binds-warlist"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("deck:tclient-chat-binds-other"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ChatBindsPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("CardDeck.Render("), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("if(!ReadOnly && ui_widget::InputField"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("return vBindDefaults.size() * (MarginSmall + LineSize);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientChatBinds.find("Content.HSplitTop(HeadlineHeight, &Label, &Content);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientChatBinds.find("BeginSettingsScrollRegion("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientChatBinds.find("FinishSettingsScrollRegion("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientChatBinds.find("TClientCacheSectionBoxRect("), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientChatBinds.find("s_PrevChatBindsScrollY"), std::string::npos);
+	const std::string CardRegistry = ReadTextFile("src/game/client/QmUi/QmCardRegistry.cpp");
+	EXPECT_NE(CardRegistry.find("{\"deck:tclient-chat-binds-kaomoji\", \"tclient-chat-binds\", ECardColumn::Left, 0"), std::string::npos);
+	EXPECT_NE(CardRegistry.find("{\"deck:tclient-chat-binds-warlist\", \"tclient-chat-binds\", ECardColumn::Right, 0"), std::string::npos);
+	EXPECT_NE(CardRegistry.find("{\"deck:tclient-chat-binds-other\", \"tclient-chat-binds\", ECardColumn::Left, 1"), std::string::npos);
 
 	const std::string RenderSettingsGraphics = FunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsGraphics.empty());
