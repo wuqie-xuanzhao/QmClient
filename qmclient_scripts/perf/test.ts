@@ -9,6 +9,8 @@ import {
   operationSignature,
 } from './lib/quality_core.ts';
 import {
+  NON_CARD_MENU_BASELINES,
+  nonCardMenuBudgetSummary,
   reportQuality,
   summarizeForBundle,
 } from './lib/quality.ts';
@@ -1489,6 +1491,66 @@ function testAnalyzeWritesBundleAndArchiveSummaryFiles() {
   assert.match(source, /summarizeForBundle/);
 }
 
+function nonCardMenuFixture(options: { missingCache?: boolean; missingRealSample?: boolean; exceed?: boolean } = {}) {
+  return Object.entries(NON_CARD_MENU_BASELINES).flatMap(([operation, budget], index) => {
+    const p99 = options.exceed && index === 0 ? budget.p99 + 1 : budget.p99 - 1;
+    const onePctSource = options.missingRealSample && index === 1 ? 'p99_derived' : 'real_sampled';
+    const cacheFields = options.missingCache && index === 2 ? '' : ' cache_hits=9 cache_misses=1 cache_evictions=0';
+    return [
+      `2026-07-13 12:00:${String(index).padStart(2, '0')} I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"${operation}","context":"scroll","page":"menu","tab":"none","sample_frames":120,"sample_seconds":2,"fps_avg":120,"fps_min":60,"fps_max":240,"fps_1pct_low":90,"fps_1pct_source":"${onePctSource}","window_start_frame":${index * 200},"window_end_frame":${index * 200 + 119},"frame_ms_avg":4,"frame_ms_p95":${budget.p95 - 1},"frame_ms_p99":${p99},"frame_ms_max":${budget.max - 1},"menu_ms_max":${budget.menuMax - 1},"cap_limited":0}`,
+      `2026-07-13 12:01:${String(index).padStart(2, '0')} I perf/menu-ui: event=menu_ui_frame page=menu operation=${operation} frame=${index * 200 + 10} items_total=100 items_visible=10 items_processed=10 items_skipped=90 ui_ms=3.000 layout_ms=-1.000 text_ms=-1.000 heap_allocs=-1${cacheFields} source=qm_ui_perf`,
+    ];
+  }).join('\n');
+}
+
+function testNonCardMenuBudgetsCoverEightOperationsAndRejectIncompleteEvidence() {
+  assert.equal(Object.keys(NON_CARD_MENU_BASELINES).length, 8);
+  const passing = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture()));
+  assert.equal(passing.operations.length, 8);
+  assert.ok(passing.operations.every(operation => operation.verdict === 'PASS'));
+
+  const missingReal = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture({ missingRealSample: true })));
+  assert.equal(missingReal.operations.find(operation => operation.operation === 'friends_scroll')?.verdict, 'FAIL');
+  assert.match(missingReal.operations.find(operation => operation.operation === 'friends_scroll')?.reason ?? '', /real_sampled/);
+
+  const missingCache = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture({ missingCache: true })));
+  assert.equal(missingCache.operations.find(operation => operation.operation === 'demo_browser_scroll')?.verdict, 'WARN');
+  assert.match(missingCache.operations.find(operation => operation.operation === 'demo_browser_scroll')?.reason ?? '', /cache/i);
+
+  const exceeded = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture({ exceed: true })));
+  const server = exceeded.operations.find(operation => operation.operation === 'server_browser_scroll');
+  assert.equal(server?.verdict, 'FAIL');
+  assert.match(server?.reason ?? '', /p99.*16\.7/);
+
+  const fpsOnly = parseLog(nonCardMenuFixture().split('\n').filter(line => line.includes('perf/fps')).join('\n'));
+  const missingAllMenuWork = nonCardMenuBudgetSummary(fpsOnly);
+  assert.equal(missingAllMenuWork.available, true);
+  assert.ok(missingAllMenuWork.operations.every(operation => operation.verdict === 'FAIL'));
+
+  const mismatchedFrames = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture().replace(/frame=(\d+)/g, (_match, frame) => `frame=${Number(frame) + 1000}`)));
+  assert.ok(mismatchedFrames.operations.every(operation => operation.verdict === 'FAIL'));
+}
+
+function testNonCardMenuReportShowsFixedBudgetAndCacheWorkTable() {
+  const html = generateReport(parseLog(nonCardMenuFixture()), 'qm_perf_non_card_menu.log', null);
+  assert.match(html, /非卡片菜单预算/);
+  assert.match(html, /server_browser_scroll/);
+  assert.match(html, /dropdown_first_wheel/);
+  assert.match(html, /Cache Hit/);
+  assert.match(html, /Cache Miss/);
+  assert.match(html, /Eviction/);
+  assert.match(html, /Processed/);
+  assert.match(html, /Skipped/);
+}
+
+function testAnalyzeSupportsExactOutputAndSiblingSummary() {
+  const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'analyze.ts'), 'utf-8');
+  assert.match(source, /--output/);
+  assert.match(source, /resolve\(outputPath\)/);
+  assert.match(source, /extname\(outPath\)/);
+  assert.match(source, /summary\.json/);
+}
+
 testParseKeepsEventOnlyPerfLines();
 testParseSupportsJsonLinesEvents();
 testParseLogWithDiagnosticsCountsInvalidLines();
@@ -1565,5 +1627,8 @@ testReportSamplesLargeEmbeddedChartData();
 testSummaryJsonCanBeSerializedForDebugBundle();
 testSummaryJsonMarksUnavailableVerdictForEmptyFrameSamples();
 testAnalyzeWritesBundleAndArchiveSummaryFiles();
+testNonCardMenuBudgetsCoverEightOperationsAndRejectIncompleteEvidence();
+testNonCardMenuReportShowsFixedBudgetAndCacheWorkTable();
+testAnalyzeSupportsExactOutputAndSiblingSummary();
 
 console.log('qmclient perf tests passed');

@@ -163,6 +163,7 @@ private:
 	float m_ContentSize;
 	EScrollRelative m_ScrollDirection;
 	float m_ScrollSpeedMultiplier;
+	bool m_WheelConsumedThisFrame = false;
 
 	CUIRect m_ClipRect;
 	CUIRect m_RailRect;
@@ -203,6 +204,7 @@ public:
 	float ContentAreaSize() const;
 	float MaxScroll() const;
 	const CScrollRegionParams &Params() const { return m_Params; }
+	bool WheelConsumedThisFrame() const { return m_WheelConsumedThisFrame; }
 
 private:
 	CUIRect SplitContentArea();

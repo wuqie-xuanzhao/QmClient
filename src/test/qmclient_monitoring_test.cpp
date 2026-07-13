@@ -2,6 +2,7 @@
 #include <engine/client/gpu_upload_limiter.h>
 
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmUiPerf.h>
 #include <game/client/components/qmclient/monitoring/monitoring.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
@@ -1007,6 +1008,20 @@ TEST(QmMonitoringHelpers, SettingsPerfWindowStartFlushesInterruptedWindow)
 	EXPECT_EQ(Interrupted.m_Summary.m_SampleFrames, 2);
 	EXPECT_TRUE(Tracker.HasActiveWindow());
 	EXPECT_STREQ(Tracker.ActiveOperation(), "settings_tee_scroll");
+}
+
+TEST(QmMonitoringHelpers, SettingsPerfWindowEnsureDoesNotRestartMatchingScrollOperation)
+{
+	CQmSettingsPerfWindowTracker Tracker;
+	Tracker.EnsureScrollWindow("server_browser_scroll", "offline", "server_browser", "none", 0.250f, false, 100);
+	Tracker.RecordFrame(0.010f, 3.0, true, 100);
+
+	const SQmSettingsPerfWindowFrameResult Reused = Tracker.EnsureScrollWindow("server_browser_scroll", "offline", "server_browser", "none", 0.250f, false, 101);
+	EXPECT_FALSE(Reused.m_ShouldFlush);
+	const SQmSettingsPerfWindowSummary Summary = Tracker.FinishActiveWindow();
+	EXPECT_EQ(Summary.m_SampleFrames, 1);
+	EXPECT_EQ(Summary.m_WindowStartFrame, 100u);
+	EXPECT_EQ(Summary.m_WindowEndFrame, 100u);
 }
 
 TEST(QmMonitoringHelpers, SettingsOpenWindowIsProtectedFromStalePreviousSettingsState)
@@ -3010,7 +3025,7 @@ TEST(QmMonitoringHelpers, AssetsCardMetadataUsesDedicatedCache)
 	EXPECT_NE(Source.find("m_Installed"), std::string::npos);
 	EXPECT_NE(Source.find("m_DownloadFailed"), std::string::npos);
 	EXPECT_NE(Source.find("m_LocalOnly"), std::string::npos);
-	EXPECT_NE(Source.find("SETTINGS_ASSETS_CARD_METADATA_CACHE_MAX_ENTRIES"), std::string::npos);
+	EXPECT_NE(Source.find("QM_ASSET_METADATA_CACHE_CAPACITY"), std::string::npos);
 	EXPECT_NE(Source.find("TrimAssetsCardMetadataCacheForInsert("), std::string::npos);
 	EXPECT_NE(Source.find("static std::unordered_map<SSettingsAssetsCardCacheKey, SSettingsAssetsCardMetadataCacheEntry"), std::string::npos);
 	EXPECT_NE(Source.find("BuildAssetsCardCacheKey("), std::string::npos);
@@ -8663,8 +8678,8 @@ TEST(QmMonitoringHelpers, SkinFlagLanguageBusinessItemsStayNonCardAndUseSharedRu
 	EXPECT_EQ(LanguageBody.find("QmSettingsScrollRegionParams("), std::string::npos);
 	EXPECT_EQ(PlayerBody.find("SettingsCard("), std::string::npos);
 	EXPECT_EQ(LanguageBody.find("SettingsCard("), std::string::npos);
-	EXPECT_NE(Source.find("MAX_ENTRIES = 192"), std::string::npos);
-	EXPECT_NE(Source.find("MAX_LANGUAGE_CACHE = 128"), std::string::npos);
+	EXPECT_NE(Source.find("QM_TEE_PREVIEW_CACHE_CAPACITY"), std::string::npos);
+	EXPECT_NE(Source.find("QM_LANGUAGE_ROW_CACHE_CAPACITY"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TeeSkinClearableInputsUseSharedQmTextField)
@@ -10301,7 +10316,8 @@ TEST(QmMonitoringHelpers, MenuPerfEventsExposePageAttributionFields)
 		const std::string Source = Buffer.str();
 
 		EXPECT_NE(Source.find("event=list_frame page=demo_browser items_total=%d rows_visible=%d rows_processed=%d rows_skipped=%d dur_ms=%.3f"), std::string::npos);
-		EXPECT_NE(Source.find("const double ListFrameDurationMs = ListFrameTimer.ElapsedMs();"), std::string::npos);
+		EXPECT_NE(Source.find("const auto ListFrameStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();"), std::string::npos);
+		EXPECT_NE(Source.find("const double ListFrameDurationMs = MenuUiPerfEnabled ? std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count() : -1.0;"), std::string::npos);
 		EXPECT_NE(Source.find("ListFrameDurationMs >= QmPerfThresholdMs()"), std::string::npos);
 		EXPECT_NE(Source.find("ListFrameDurationMs);"), std::string::npos);
 	}
@@ -10510,6 +10526,139 @@ TEST(QmMonitoringHelpers, FrameSchedulerResetClearsConsumerStateAndFrameScope)
 		EXPECT_EQ(Scheduler->LastOutput(Consumer).m_VisibleTokens, 0);
 		EXPECT_EQ(Scheduler->LastOutput(Consumer).m_TextContainerTokens, 0);
 	}
+}
+
+TEST(QmMonitoringHelpers, MenuUiPerfFacadeKeepsOneStableSchemaAndDisabledFastPath)
+{
+	const std::string Header = ReadRepoFile("src/game/client/QmUi/QmUiPerf.h");
+	const std::string Source = ReadRepoFile("src/game/client/QmUi/QmUiPerf.cpp");
+	const std::string Cmake = ReadRepoFile("CMakeLists.txt");
+
+	ASSERT_FALSE(Header.empty());
+	ASSERT_FALSE(Source.empty());
+	EXPECT_NE(Header.find("struct SQmMenuUiFramePerf"), std::string::npos);
+	EXPECT_NE(Header.find("void QmLogMenuUiFramePerf(const SQmMenuUiFramePerf &Frame, const IClient *pClient);"), std::string::npos);
+	EXPECT_LT(Source.find("if(!QmPerfEnabled())"), Source.find("str_format("));
+	EXPECT_NE(Source.find("QmPerfLogPayload(\"perf/menu-ui\", pPayload, pClient);"), std::string::npos);
+
+	const std::array<const char *, 16> apFields = {
+		"event=menu_ui_frame", "page=%s", "operation=%s", "frame=%", "items_total=%d", "items_visible=%d",
+		"items_processed=%d", "items_skipped=%d", "ui_ms=%.3f", "layout_ms=%.3f", "text_ms=%.3f", "heap_allocs=%d",
+		"cache_hits=%d", "cache_misses=%d", "cache_evictions=%d", "source=qm_ui_perf"};
+	for(const char *pField : apFields)
+		EXPECT_NE(Source.find(pField), std::string::npos) << pField;
+
+	EXPECT_NE(Cmake.find("QmUi/QmUiPerf.cpp"), std::string::npos);
+	EXPECT_NE(Cmake.find("QmUi/QmUiPerf.h"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MenuUiPerfTreatsImmediateWheelConsumptionAsActiveScroll)
+{
+	EXPECT_TRUE(QmMenuUiScrollPerfActive(true, false, false));
+	EXPECT_TRUE(QmMenuUiScrollPerfActive(false, true, false));
+	EXPECT_TRUE(QmMenuUiScrollPerfActive(false, false, true));
+	EXPECT_FALSE(QmMenuUiScrollPerfActive(false, false, false));
+}
+
+TEST(QmMonitoringHelpers, MenuUiCacheBoundaryConstantsAreExplicitAndBounded)
+{
+	const std::string PerfHeader = ReadRepoFile("src/game/client/QmUi/QmUiPerf.h");
+	const std::string AnimHeader = ReadRepoFile("src/game/client/QmUi/QmAnim.h");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string AssetsSource = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+
+	EXPECT_EQ(PerfHeader.find("QM_MENU_PAGE_LAYOUT_CACHE_CAPACITY"), std::string::npos);
+	EXPECT_NE(PerfHeader.find("QM_MENU_TEXT_CACHE_CAPACITY = 4096"), std::string::npos);
+	EXPECT_NE(PerfHeader.find("QM_MENU_TEXT_CACHE_MAX_AGE_FRAMES = 600"), std::string::npos);
+	EXPECT_EQ(PerfHeader.find("QM_MENU_FILTER_GENERATIONS"), std::string::npos);
+	EXPECT_NE(PerfHeader.find("QM_ASSET_METADATA_CACHE_CAPACITY = 512"), std::string::npos);
+	EXPECT_NE(PerfHeader.find("QM_TEE_PREVIEW_CACHE_CAPACITY = 192"), std::string::npos);
+	EXPECT_NE(PerfHeader.find("QM_LANGUAGE_ROW_CACHE_CAPACITY = 128"), std::string::npos);
+	EXPECT_NE(AnimHeader.find("MAX_LAST_TARGETS_SOFT = 4096"), std::string::npos);
+	EXPECT_NE(AnimHeader.find("MAX_LAST_TARGETS_HARD = 8192"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("#include <game/client/QmUi/QmUiPerf.h>"), std::string::npos);
+	EXPECT_NE(ReadRepoFile("src/game/client/components/menus.cpp").find("QM_MENU_TEXT_CACHE_CAPACITY"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("QM_TEE_PREVIEW_CACHE_CAPACITY"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("QM_LANGUAGE_ROW_CACHE_CAPACITY"), std::string::npos);
+	EXPECT_NE(AssetsSource.find("QM_ASSET_METADATA_CACHE_CAPACITY"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MenuTextCacheEvictionCancelsPendingBuildRequestsBeforeErase)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string TrimBody = ExtractSourceFunctionBody(Source, "int CMenus::TrimMenuTextPoolForInsert(uint64_t CurrentFrame)");
+	const std::string InvalidateBody = ExtractSourceFunctionBody(Source, "void CMenus::InvalidateMenuTextPool(const char *pReason)");
+
+	ASSERT_FALSE(TrimBody.empty());
+	ASSERT_FALSE(InvalidateBody.empty());
+	EXPECT_LT(TrimBody.find("RemoveMenuTextContainerBuildRequest(It->second.m_Element);"), TrimBody.find("m_MenuTextPool.erase(It)"));
+	EXPECT_LT(TrimBody.find("RemoveMenuTextContainerBuildRequest(Oldest->second.m_Element);"), TrimBody.find("m_MenuTextPool.erase(Oldest)"));
+	EXPECT_LT(InvalidateBody.find("m_vMenuTextContainerBuildRequests.clear();"), InvalidateBody.find("m_MenuTextPool.clear();"));
+}
+
+TEST(QmMonitoringHelpers, MenuUiPerfOperationsAreEmittedFromRealListOwners)
+{
+	const auto Count = [](const std::string &Haystack, const char *pNeedle) {
+		size_t Result = 0;
+		for(size_t Pos = 0; (Pos = Haystack.find(pNeedle, Pos)) != std::string::npos; Pos += str_length(pNeedle))
+			++Result;
+		return Result;
+	};
+	const std::string Browser = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string Demo = ReadRepoFile("src/game/client/components/menus_demo.cpp");
+	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Assets = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Scroll = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
+
+	for(const char *pOperation : {"server_browser_scroll", "friends_scroll"})
+		EXPECT_NE(Browser.find(pOperation), std::string::npos) << pOperation;
+	EXPECT_NE(Demo.find("demo_browser_scroll"), std::string::npos);
+	for(const char *pOperation : {"skins_grid_scroll", "flags_grid_scroll", "language_list_scroll"})
+		EXPECT_NE(Settings.find(pOperation), std::string::npos) << pOperation;
+	EXPECT_NE(Assets.find("assets_grid_scroll"), std::string::npos);
+	EXPECT_NE(Ui.find("dropdown_first_wheel"), std::string::npos);
+	EXPECT_NE(Ui.find("WheelConsumedThisFrame()"), std::string::npos);
+	EXPECT_NE(Scroll.find("m_WheelConsumedThisFrame = true;"), std::string::npos);
+
+	EXPECT_EQ(Count(Browser, "QmLogMenuUiFramePerf("), 2u);
+	EXPECT_EQ(Count(Demo, "QmLogMenuUiFramePerf("), 1u);
+	EXPECT_GE(Count(Settings, "QmLogMenuUiFramePerf("), 3u);
+	EXPECT_GE(Count(Assets, "QmLogMenuUiFramePerf("), 2u);
+}
+
+TEST(QmMonitoringHelpers, MenuUiPerfScrollOwnersGateSamplesAndReuseOneFpsTracker)
+{
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Browser = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string Demo = ReadRepoFile("src/game/client/components/menus_demo.cpp");
+	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Assets = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string ListBoxHeader = ReadRepoFile("src/game/client/ui_listbox.h");
+	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
+	const std::string UiSource = ReadRepoFile("src/game/client/ui.cpp");
+
+	EXPECT_NE(MenusHeader.find("StartSettingsPerfScrollWindow(const char *pOperation"), std::string::npos);
+	EXPECT_NE(MenusSource.find("m_SettingsPerfWindowTracker.EnsureScrollWindow("), std::string::npos);
+	EXPECT_NE(MenusSource.find("Ui()->ConsumeMenuUiFirstWheelPerf()"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool ConsumeMenuUiFirstWheelPerf()"), std::string::npos);
+	EXPECT_NE(UiSource.find("pUI->m_MenuUiFirstWheelPerf = MenuUiPerfEnabled;"), std::string::npos);
+	EXPECT_NE(UiSource.find("m_MenuUiFirstWheelPerf = false;"), std::string::npos);
+	EXPECT_NE(ListBoxHeader.find("bool WheelConsumedThisFrame() const { return m_ScrollRegion.WheelConsumedThisFrame(); }"), std::string::npos);
+
+	for(const auto &[Source, Guard] : std::array<std::pair<const std::string *, const char *>, 7>{
+		    std::pair{&Browser, "if(ListScrollActive)"},
+		    std::pair{&Browser, "if(FriendsScrollActive)"},
+		    std::pair{&Demo, "if(ListScrollActive)"},
+		    std::pair{&Settings, "if(FlagListScrollActive)"},
+		    std::pair{&Settings, "if(SkinListScrollActive)"},
+		    std::pair{&Settings, "if(LanguageScrollActive)"},
+		    std::pair{&Assets, "if(ListScrollActive)"}})
+		EXPECT_NE(Source->find(Guard), std::string::npos) << Guard;
+	for(const std::string *pSource : {&Browser, &Demo, &Settings, &Assets})
+		EXPECT_NE(pSource->find("WheelConsumedThisFrame()"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, AndroidBundledCryptoUsesBoringSslAndSystemCertificates)

@@ -3,6 +3,7 @@
 #include "menus.h"
 
 #include <base/log.h>
+#include <base/perf_timer.h>
 
 #include <engine/engine.h>
 #include <engine/favorites.h>
@@ -1000,9 +1001,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	}
 
 	const int NewSelected = s_ListBox.DoEnd();
+	const bool ListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
+	const double ListFrameDurationMs = PerfListFrameEnabled ? std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count() : -1.0;
 	if(PerfListFrameEnabled)
 	{
-		const double ListFrameDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count();
 		if(QmPerfShouldLogDuration(ListFrameDurationMs, false))
 		{
 			char aPayload[256];
@@ -1013,6 +1015,19 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				ItemsTotal, RowsVisible, RowsRendered, RowsIterated, RowsSkipped, ListFrameDurationMs);
 			QmPerfLogPayload("perf/interaction", aPayload, Client(), "server_browser");
 		}
+	}
+	if(ListScrollActive)
+	{
+		StartSettingsPerfScrollWindow("server_browser_scroll", SettingsPerfContextName(), "server_browser", "none");
+		SQmMenuUiFramePerf MenuUiPerf;
+		MenuUiPerf.m_pPage = "server_browser";
+		MenuUiPerf.m_pOperation = "server_browser_scroll";
+		MenuUiPerf.m_ItemsTotal = NumServers;
+		MenuUiPerf.m_ItemsVisible = RowsVisible;
+		MenuUiPerf.m_ItemsProcessed = RowsIterated;
+		MenuUiPerf.m_ItemsSkipped = maximum(0, NumServers - RowsRendered);
+		MenuUiPerf.m_UiMs = (float)ListFrameDurationMs;
+		QmLogMenuUiFramePerf(MenuUiPerf, Client());
 	}
 	if(NumServers * ms_ListheaderHeight > ListView.h)
 	{
@@ -2073,6 +2088,8 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 
 void CMenus::RenderServerbrowserFriends(CUIRect View)
 {
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto MenuUiStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	const float FontSize = 10.0f;
 	const float SpacingH = 2.0f;
 
@@ -2174,6 +2191,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		TotalFriendItems += (int)vFriends.size();
 	m_vFriendTooltipText.clear();
 	m_vFriendTooltipText.resize(TotalFriendItems);
+	int VisibleFriendItems = 0;
 
 	// friends list
 	static CScrollRegion s_ScrollRegion;
@@ -2402,6 +2420,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				s_ScrollRegion.AddRect(Rect);
 				if(s_ScrollRegion.RectClipped(Rect))
 					continue;
+				++VisibleFriendItems;
 
 				const bool Inside = Ui()->MouseHovered(&Rect);
 				int ButtonResult = Ui()->DoButtonLogic(pListItemId, 0, &Rect, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
@@ -2782,6 +2801,20 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	}
 
 	s_ScrollRegion.End();
+	const bool FriendsScrollActive = QmMenuUiScrollPerfActive(s_ScrollRegion.WheelConsumedThisFrame(), s_ScrollRegion.Active(), s_ScrollRegion.Animating());
+	if(FriendsScrollActive)
+	{
+		StartSettingsPerfScrollWindow("friends_scroll", SettingsPerfContextName(), "friends", "none");
+		SQmMenuUiFramePerf MenuUiPerf;
+		MenuUiPerf.m_pPage = "friends";
+		MenuUiPerf.m_pOperation = "friends_scroll";
+		MenuUiPerf.m_ItemsTotal = TotalFriendItems;
+		MenuUiPerf.m_ItemsVisible = VisibleFriendItems;
+		MenuUiPerf.m_ItemsProcessed = VisibleFriendItems;
+		MenuUiPerf.m_ItemsSkipped = maximum(0, TotalFriendItems - VisibleFriendItems);
+		MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - MenuUiStartTime).count() : -1.0f;
+		QmLogMenuUiFramePerf(MenuUiPerf, Client());
+	}
 
 	if(m_HasFriendAction && m_FriendsActionPopupContext.m_pSelection != nullptr)
 	{

@@ -1269,7 +1269,7 @@ TEST(Skins, TeeSkinListPreviewCacheKeysCoverPreviewVariantsAndStayBounded)
 	ASSERT_NE(CacheEnd, std::string::npos);
 	const std::string CacheBody = Menus.substr(CachePos, CacheEnd - CachePos);
 
-	EXPECT_NE(CacheBody.find("static constexpr size_t MAX_ENTRIES = 192;"), std::string::npos);
+	EXPECT_NE(CacheBody.find("QM_TEE_PREVIEW_CACHE_CAPACITY"), std::string::npos);
 	EXPECT_NE(CacheBody.find("static std::string Key(const char *pSkinName, int Dummy, bool UseCustomColor, int ColorBody, int ColorFeet, int Emote)"), std::string::npos);
 	EXPECT_NE(CacheBody.find("pSkinName != nullptr ? pSkinName : \"\""), std::string::npos);
 	EXPECT_NE(CacheBody.find("Dummy,"), std::string::npos);

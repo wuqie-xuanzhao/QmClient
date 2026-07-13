@@ -23,6 +23,7 @@
 #include <generated/client_data.h>
 
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/QmUiPerf.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui_listbox.h>
@@ -300,8 +301,10 @@ namespace
 		}
 	};
 
-	static constexpr size_t SETTINGS_ASSETS_CARD_METADATA_CACHE_MAX_ENTRIES = 512;
 	static std::unordered_map<SSettingsAssetsCardCacheKey, SSettingsAssetsCardMetadataCacheEntry, SSettingsAssetsCardCacheKeyHash> gs_SettingsAssetsCardMetadataCache;
+	static int gs_SettingsAssetsCardMetadataCacheHits = 0;
+	static int gs_SettingsAssetsCardMetadataCacheMisses = 0;
+	static int gs_SettingsAssetsCardMetadataCacheEvictions = 0;
 	static std::deque<SSettingsAssetsCardMetadataRequest> gs_SettingsAssetsCardMetadataRequests;
 	static std::unordered_set<SSettingsAssetsCardCacheKey, SSettingsAssetsCardCacheKeyHash> gs_SettingsAssetsCardMetadataRequestKeys;
 	static CSettingsResourcePreviewCache gs_SettingsAssetsResourcePreviewCache;
@@ -353,17 +356,22 @@ namespace
 	{
 		const auto It = gs_SettingsAssetsCardMetadataCache.find(Key);
 		if(It == gs_SettingsAssetsCardMetadataCache.end() || !It->second.m_Ready)
+		{
+			++gs_SettingsAssetsCardMetadataCacheMisses;
 			return nullptr;
+		}
+		++gs_SettingsAssetsCardMetadataCacheHits;
 		return &It->second;
 	}
 
 	static void TrimAssetsCardMetadataCacheForInsert(const SSettingsAssetsCardCacheKey &Key)
 	{
-		if(gs_SettingsAssetsCardMetadataCache.size() < SETTINGS_ASSETS_CARD_METADATA_CACHE_MAX_ENTRIES)
+		if(gs_SettingsAssetsCardMetadataCache.size() < QM_ASSET_METADATA_CACHE_CAPACITY)
 			return;
 		if(gs_SettingsAssetsCardMetadataCache.find(Key) != gs_SettingsAssetsCardMetadataCache.end())
 			return;
 		gs_SettingsAssetsCardMetadataCache.erase(gs_SettingsAssetsCardMetadataCache.begin());
+		++gs_SettingsAssetsCardMetadataCacheEvictions;
 	}
 
 	static SSettingsAssetsCardMetadataCacheEntry *HydrateAssetsCardMetadata(const SSettingsAssetsCardCacheKey &Key, const char *pTitle, const char *pAuthor, const char *pStatusLabel, bool Installed, bool DownloadFailed, bool LocalOnly)
@@ -590,6 +598,16 @@ namespace
 		gs_SettingsAssetsResourcePreviewUploadScheduler.Drain(UploadBudget, ResourcePreviewTelemetry, gs_SettingsAssetsResourcePreviewCache, pGraphics);
 	}
 
+}
+
+void CMenus::ClearSettingsAssetsCardMetadataCache()
+{
+	gs_SettingsAssetsCardMetadataCache.clear();
+	gs_SettingsAssetsCardMetadataRequests.clear();
+	gs_SettingsAssetsCardMetadataRequestKeys.clear();
+	gs_SettingsAssetsCardMetadataCacheHits = 0;
+	gs_SettingsAssetsCardMetadataCacheMisses = 0;
+	gs_SettingsAssetsCardMetadataCacheEvictions = 0;
 }
 
 typedef std::function<void()> TMenuAssetScanLoadedFunc;
@@ -4151,7 +4169,11 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	static bool s_AssetsResetListScrollOnTabSwitch = false;
 	static float s_AssetsTransitionDirection = 0.0f;
 	const uint64_t AssetsTabSwitchNode = UiAnimNodeKey("settings_assets_tab_switch");
-	CPerfTimer AssetsUiBudgetTimer;
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto AssetsUiBudgetStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+	gs_SettingsAssetsCardMetadataCacheHits = 0;
+	gs_SettingsAssetsCardMetadataCacheMisses = 0;
+	gs_SettingsAssetsCardMetadataCacheEvictions = 0;
 	auto LogAssetsFramePerfStage = [&](const char *pStage, double DurationMs, bool Force = false, const char *pExtra = nullptr) {
 		LogAssetsPerfStageForClient(Client(), pStage, DurationMs, Force, pExtra);
 	};
@@ -5897,9 +5919,24 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			s_CurCustomTab, LocalVisibleRange.m_TotalItems, LocalVisibleRange.m_RenderedItems, LocalVisibleRange.m_SkippedItems,
 			LocalVisibleRange.m_TotalRows, LocalVisibleRange.m_VisibleRows, LocalVisibleRange.m_FirstItem, LocalVisibleRange.m_EndItem);
 		LogAssetsFramePerfStage("assets_local_list_frame", 0.0, true, aLocalListFrameExtra);
-
 		const int NewSelected = s_ListBox.DoEnd();
-		const bool ListScrollActive = s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating();
+		const bool ListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
+		if(ListScrollActive)
+		{
+			StartSettingsPerfScrollWindow("assets_grid_scroll", SettingsPerfContextName(), "settings:assets", "none");
+			SQmMenuUiFramePerf MenuUiPerf;
+			MenuUiPerf.m_pPage = "settings:assets";
+			MenuUiPerf.m_pOperation = "assets_grid_scroll";
+			MenuUiPerf.m_ItemsTotal = LocalVisibleRange.m_TotalItems;
+			MenuUiPerf.m_ItemsVisible = LocalVisibleRange.m_RenderedItems;
+			MenuUiPerf.m_ItemsProcessed = LocalVisibleRange.m_RenderedItems;
+			MenuUiPerf.m_ItemsSkipped = LocalVisibleRange.m_SkippedItems;
+			MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - AssetsUiBudgetStartTime).count() : -1.0f;
+			MenuUiPerf.m_CacheHits = gs_SettingsAssetsCardMetadataCacheHits;
+			MenuUiPerf.m_CacheMisses = gs_SettingsAssetsCardMetadataCacheMisses;
+			MenuUiPerf.m_CacheEvictions = gs_SettingsAssetsCardMetadataCacheEvictions;
+			QmLogMenuUiFramePerf(MenuUiPerf, Client());
+		}
 		const int PreviousFirstVisibleIndex = s_AssetsLastFirstVisibleIndex[s_CurCustomTab];
 		const int PreviousLastVisibleIndex = s_AssetsLastLastVisibleIndex[s_CurCustomTab];
 		const int VisibleJumpThreshold = maximum(1, LocalColumns) * 2;
@@ -7253,9 +7290,24 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				s_CurCustomTab, WorkshopVisibleRange.m_TotalItems, WorkshopVisibleRange.m_RenderedItems, WorkshopVisibleRange.m_SkippedItems,
 				WorkshopVisibleRange.m_TotalRows, WorkshopVisibleRange.m_VisibleRows, WorkshopVisibleRange.m_FirstItem, WorkshopVisibleRange.m_EndItem);
 			LogAssetsFramePerfStage("assets_workshop_list_frame", 0.0, true, aWorkshopListFrameExtra);
-
 			const int NewCombinedSelected = s_WorkshopAssetsListBox.DoEnd();
-			const bool WorkshopListScrollActive = s_WorkshopAssetsListBox.ScrollbarActive() || s_WorkshopAssetsListBox.ScrollbarAnimating();
+			const bool WorkshopListScrollActive = QmMenuUiScrollPerfActive(s_WorkshopAssetsListBox.WheelConsumedThisFrame(), s_WorkshopAssetsListBox.ScrollbarActive(), s_WorkshopAssetsListBox.ScrollbarAnimating());
+			if(WorkshopListScrollActive)
+			{
+				StartSettingsPerfScrollWindow("assets_grid_scroll", SettingsPerfContextName(), "settings:assets", "none");
+				SQmMenuUiFramePerf MenuUiPerf;
+				MenuUiPerf.m_pPage = "settings:assets";
+				MenuUiPerf.m_pOperation = "assets_grid_scroll";
+				MenuUiPerf.m_ItemsTotal = WorkshopVisibleRange.m_TotalItems;
+				MenuUiPerf.m_ItemsVisible = WorkshopVisibleRange.m_RenderedItems;
+				MenuUiPerf.m_ItemsProcessed = WorkshopVisibleRange.m_RenderedItems;
+				MenuUiPerf.m_ItemsSkipped = WorkshopVisibleRange.m_SkippedItems;
+				MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - AssetsUiBudgetStartTime).count() : -1.0f;
+				MenuUiPerf.m_CacheHits = gs_SettingsAssetsCardMetadataCacheHits;
+				MenuUiPerf.m_CacheMisses = gs_SettingsAssetsCardMetadataCacheMisses;
+				MenuUiPerf.m_CacheEvictions = gs_SettingsAssetsCardMetadataCacheEvictions;
+				QmLogMenuUiFramePerf(MenuUiPerf, Client());
+			}
 			RefreshAssetsScrollUploadCooldownForOffset(WorkshopListScrollActive, s_WorkshopAssetsListBox.ScrollOffsetY(), s_aAssetsLastWorkshopScrollOffsetY[s_CurCustomTab], WorkshopRowHeight, WorkshopListJumpScrollActive);
 			RefreshWorkshopAssetsUploadBudget();
 			s_AssetsLastFirstVisibleCombinedIndex[s_CurCustomTab] = WorkshopVisibleRange.m_FirstItem < WorkshopVisibleRange.m_EndItem ? WorkshopVisibleRange.m_FirstItem : -1;

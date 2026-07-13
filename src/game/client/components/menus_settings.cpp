@@ -22,6 +22,7 @@
 
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmUiPerf.h>
 #include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
@@ -225,10 +226,19 @@ namespace
 
 	struct SSettingsTeeListPreviewCache
 	{
-		static constexpr size_t MAX_ENTRIES = 192;
-
 		std::unordered_map<std::string, SSettingsTeeListPreviewCacheEntry> m_Cache;
 		uint64_t m_Frame = 0;
+		int m_Hits = 0;
+		int m_Misses = 0;
+		int m_Evictions = 0;
+
+		void BeginFrame()
+		{
+			++m_Frame;
+			m_Hits = 0;
+			m_Misses = 0;
+			m_Evictions = 0;
+		}
 
 		static std::string Key(const char *pSkinName, int Dummy, bool UseCustomColor, int ColorBody, int ColorFeet, int Emote)
 		{
@@ -247,7 +257,11 @@ namespace
 		{
 			auto It = m_Cache.find(Key);
 			if(It == m_Cache.end())
+			{
+				++m_Misses;
 				return nullptr;
+			}
+			++m_Hits;
 			It->second.m_LastUsedFrame = m_Frame;
 			return It->second.m_pManagedRenderInfo.get();
 		}
@@ -260,14 +274,17 @@ namespace
 			SSettingsTeeListPreviewCacheEntry &Entry = m_Cache[std::move(Key)];
 			Entry.m_pManagedRenderInfo = pManagedRenderInfo;
 			Entry.m_LastUsedFrame = m_Frame;
-			if(m_Cache.size() <= MAX_ENTRIES)
+			if(m_Cache.size() <= QM_TEE_PREVIEW_CACHE_CAPACITY)
 				return;
 
 			const auto Oldest = std::min_element(m_Cache.begin(), m_Cache.end(), [](const auto &A, const auto &B) {
 				return A.second.m_LastUsedFrame < B.second.m_LastUsedFrame;
 			});
 			if(Oldest != m_Cache.end())
+			{
 				m_Cache.erase(Oldest);
+				++m_Evictions;
+			}
 		}
 
 		void Clear()
@@ -543,15 +560,14 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 
 namespace
 {
-	constexpr size_t MAX_LANGUAGE_CACHE = 128;
 	constexpr float LANGUAGE_ROW_HEIGHT = 28.0f;
 	constexpr float LANGUAGE_FONT_SIZE = 16.0f;
 	constexpr float LANGUAGE_SCROLLBAR_WIDTH = 20.0f;
 
 	CScrollRegion gs_LanguageScrollRegion;
 	bool gs_LanguageScrollToSelected = false;
-	std::array<unsigned char, MAX_LANGUAGE_CACHE> gs_aLanguageRowIds{};
-	std::array<CUIElement, MAX_LANGUAGE_CACHE> gs_aLanguageLabelElements;
+	std::array<unsigned char, QM_LANGUAGE_ROW_CACHE_CAPACITY> gs_aLanguageRowIds{};
+	std::array<CUIElement, QM_LANGUAGE_ROW_CACHE_CAPACITY> gs_aLanguageLabelElements;
 	bool gs_LanguageLabelElementsInit = false;
 	float gs_LanguageLabelWidth = -1.0f;
 	bool gs_LanguagePageCacheComplete = false;
@@ -591,7 +607,7 @@ namespace
 
 	bool UseLanguagePageCache()
 	{
-		return g_Localization.Languages().size() <= MAX_LANGUAGE_CACHE;
+		return g_Localization.Languages().size() <= QM_LANGUAGE_ROW_CACHE_CAPACITY;
 	}
 
 	const char *SettingsPageName(const int Page)
@@ -678,6 +694,23 @@ namespace
 		return true;
 	}
 
+}
+
+void CMenus::ClearSettingsTeePreviewCache()
+{
+	ClearSettingsTeeListPreviewCache();
+}
+
+void CMenus::ClearSettingsLanguageRowCache()
+{
+	if(gs_LanguageLabelElementsInit)
+	{
+		for(CUIElement &LabelElement : gs_aLanguageLabelElements)
+			Ui()->ResetUIElement(LabelElement);
+	}
+	gs_LanguageLabelWidth = -1.0f;
+	gs_LanguagePageCacheComplete = false;
+	gs_aLanguageCacheLanguageFile[0] = '\0';
 }
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
@@ -1119,6 +1152,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		});
 	});
 	AddCard(CountrySpec, 520.0f * UiScale, [this, pCountry, &PlayerFlagSearchCtx, UiScale](CUIRect Content) {
+		const bool MenuUiPerfEnabled = QmPerfEnabled();
+		const auto MenuUiStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		CUIRect QuickSearch, Label;
 		Content.HSplitBottom(20.0f * UiScale, &Content, &QuickSearch);
 		Content.HSplitBottom(5.0f * UiScale, &Content, nullptr);
@@ -1128,6 +1163,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		s_ListBox.SetScrollProfile(EQmScrollProfile::FILTER_GRID);
 		s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 		s_ListBox.DoStart(48.0f * UiScale, s_vpFilteredFlags.size(), 10, 2, SelectedOld, &Content);
+		int VisibleFlags = 0;
 		for(size_t i = 0; i < s_vpFilteredFlags.size(); i++)
 		{
 			const CCountryFlags::CCountryFlag *pEntry = s_vpFilteredFlags[i];
@@ -1136,6 +1172,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			const CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, SelectedOld >= 0 && (size_t)SelectedOld == i);
 			if(!Item.m_Visible)
 				continue;
+			++VisibleFlags;
 			CUIRect FlagRect;
 			Item.m_Rect.Margin(5.0f * UiScale, &FlagRect);
 			FlagRect.HSplitBottom(12.0f * UiScale, &FlagRect, &Label);
@@ -1148,6 +1185,20 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 				Ui()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f * UiScale, TEXTALIGN_MC);
 		}
 		const int NewSelected = s_ListBox.DoEnd();
+		const bool FlagListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
+		if(FlagListScrollActive)
+		{
+			StartSettingsPerfScrollWindow("flags_grid_scroll", SettingsPerfContextName(), "settings:player", "none");
+			SQmMenuUiFramePerf MenuUiPerf;
+			MenuUiPerf.m_pPage = "settings:player";
+			MenuUiPerf.m_pOperation = "flags_grid_scroll";
+			MenuUiPerf.m_ItemsTotal = (int)s_vpFilteredFlags.size();
+			MenuUiPerf.m_ItemsVisible = VisibleFlags;
+			MenuUiPerf.m_ItemsProcessed = VisibleFlags;
+			MenuUiPerf.m_ItemsSkipped = maximum(0, (int)s_vpFilteredFlags.size() - VisibleFlags);
+			MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - MenuUiStartTime).count() : -1.0f;
+			QmLogMenuUiFramePerf(MenuUiPerf, Client());
+		}
 		if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)s_vpFilteredFlags.size())
 		{
 			*pCountry = s_vpFilteredFlags[NewSelected]->m_CountryCode;
@@ -2275,7 +2326,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 		std::vector<CSkins::CSkinListEntry> &vSkinList = SkinList.Skins();
 		static std::vector<size_t> s_vVisibleSkinIndices;
-		++gs_TeeListPreviewCache.m_Frame;
+		gs_TeeListPreviewCache.BeginFrame();
 		s_vVisibleSkinIndices.clear();
 		if(s_vVisibleSkinIndices.capacity() < 32)
 			s_vVisibleSkinIndices.reserve(32);
@@ -2939,9 +2990,9 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 		}
 		const int NewSelected = s_ListBox.DoEnd();
+		const double ListFrameDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count();
 		if(PerfDebugEnabled())
 		{
-			const double ListFrameDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count();
 			if(QmPerfShouldLogDuration(ListFrameDurationMs, false))
 			{
 				const int RowsSkipped = maximum(0, VisibleRange.m_TotalRows - RowsRendered);
@@ -2952,8 +3003,23 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
 			}
 		}
-
-		const bool SkinListScrollActive = s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating();
+		const bool SkinListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
+		if(SkinListScrollActive)
+		{
+			StartSettingsPerfScrollWindow("skins_grid_scroll", SettingsPerfContextName(), "settings:tee", "none");
+			SQmMenuUiFramePerf MenuUiPerf;
+			MenuUiPerf.m_pPage = "settings:tee";
+			MenuUiPerf.m_pOperation = "skins_grid_scroll";
+			MenuUiPerf.m_ItemsTotal = (int)vSkinList.size();
+			MenuUiPerf.m_ItemsVisible = maximum(0, VisibleRange.m_EndItem - VisibleRange.m_FirstItem);
+			MenuUiPerf.m_ItemsProcessed = MenuUiPerf.m_ItemsVisible;
+			MenuUiPerf.m_ItemsSkipped = maximum(0, (int)vSkinList.size() - MenuUiPerf.m_ItemsProcessed);
+			MenuUiPerf.m_UiMs = (float)ListFrameDurationMs;
+			MenuUiPerf.m_CacheHits = gs_TeeListPreviewCache.m_Hits;
+			MenuUiPerf.m_CacheMisses = gs_TeeListPreviewCache.m_Misses;
+			MenuUiPerf.m_CacheEvictions = gs_TeeListPreviewCache.m_Evictions;
+			QmLogMenuUiFramePerf(MenuUiPerf, Client());
+		}
 		m_SettingsScrollActive = m_SettingsScrollActive || SkinListScrollActive;
 		gs_TeeSettingsPageState.m_SkinListScrollActiveLastFrame = SkinListScrollActive;
 		if(OldSelected != NewSelected)
@@ -4720,7 +4786,7 @@ void CMenus::PrepareLanguagePageCache(float MainViewWidth, bool ForceComplete)
 	const bool LabelWidthChanged = absolute(gs_LanguageLabelWidth - LabelWidth) > 0.01f;
 	if(LanguageChanged || LabelWidthChanged)
 		gs_LanguagePageCacheComplete = false;
-	bool LabelCacheInvalid = g_Localization.Languages().size() > MAX_LANGUAGE_CACHE;
+	bool LabelCacheInvalid = g_Localization.Languages().size() > QM_LANGUAGE_ROW_CACHE_CAPACITY;
 	if(ForceComplete && !LabelCacheInvalid)
 	{
 		for(size_t i = 0; i < g_Localization.Languages().size(); ++i)
@@ -4801,6 +4867,8 @@ void CMenus::RenderLanguageSettings(CUIRect MainView)
 
 bool CMenus::RenderLanguageSelection(CUIRect MainView)
 {
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto MenuUiStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	static int s_SelectedLanguage = -2; // -2 = unloaded, -1 = unset
 	EnsureLanguagePageCacheInit(Ui());
 	const bool UseCache = UseLanguagePageCache();
@@ -4836,6 +4904,9 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 
 	CUIRect Content = MainView;
 	Content.y += ScrollOffset.y;
+	int VisibleLanguages = 0;
+	int CacheHits = 0;
+	int CacheMisses = 0;
 	for(size_t i = 0; i < g_Localization.Languages().size(); ++i)
 	{
 		const auto &Language = g_Localization.Languages()[i];
@@ -4845,6 +4916,7 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 		const bool Visible = gs_LanguageScrollRegion.AddRect(ItemRect, gs_LanguageScrollToSelected && Selected);
 		if(!Visible)
 			continue;
+		++VisibleLanguages;
 
 		void *pRowId = UseCache ? static_cast<void *>(&gs_aLanguageRowIds[i]) : const_cast<char *>(Language.m_Filename.c_str());
 		const int ButtonResult = Ui()->DoButtonLogic(pRowId, 0, &ItemRect, BUTTONFLAG_LEFT);
@@ -4867,6 +4939,10 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 		if(UseCache)
 		{
 			CUIElement &LabelElement = SettingsTextElement(SETTINGS_LANGUAGE, -1, Language.m_Filename.c_str());
+			if(LabelElement.Rect(0)->m_UITextContainer.Valid())
+				++CacheHits;
+			else
+				++CacheMisses;
 			DoSettingsLabelStreamed(LabelElement, &Label, Language.m_Name.c_str(), LANGUAGE_FONT_SIZE, TEXTALIGN_ML);
 		}
 		else
@@ -4880,6 +4956,22 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 	ScrollRegion.h = 0.0f;
 	FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE);
 	s_PrevLanguageScrollY = ScrollFrame.m_FinalOffsetY;
+	const bool LanguageScrollActive = QmMenuUiScrollPerfActive(gs_LanguageScrollRegion.WheelConsumedThisFrame(), gs_LanguageScrollRegion.Active(), gs_LanguageScrollRegion.Animating());
+	if(LanguageScrollActive)
+	{
+		StartSettingsPerfScrollWindow("language_list_scroll", SettingsPerfContextName(), "settings:language", "none");
+		SQmMenuUiFramePerf MenuUiPerf;
+		MenuUiPerf.m_pPage = "settings:language";
+		MenuUiPerf.m_pOperation = "language_list_scroll";
+		MenuUiPerf.m_ItemsTotal = (int)g_Localization.Languages().size();
+		MenuUiPerf.m_ItemsVisible = VisibleLanguages;
+		MenuUiPerf.m_ItemsProcessed = VisibleLanguages;
+		MenuUiPerf.m_ItemsSkipped = maximum(0, MenuUiPerf.m_ItemsTotal - VisibleLanguages);
+		MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - MenuUiStartTime).count() : -1.0f;
+		MenuUiPerf.m_CacheHits = CacheHits;
+		MenuUiPerf.m_CacheMisses = CacheMisses;
+		QmLogMenuUiFramePerf(MenuUiPerf, Client());
+	}
 
 	if(SelectedOld != s_SelectedLanguage)
 	{
@@ -4927,9 +5019,6 @@ void CMenus::RenderSettings(CUIRect MainView)
 		m_SettingsCardDeckDisplayKey = DisplayKey;
 		m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle);
 	}
-	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage == SETTINGS_TEE && m_SettingsScrollActive)
-		StartSettingsPerfScrollWindow(SettingsPerfContextName(), CurrentQmUiPerfPage(), "none");
-
 	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage != SETTINGS_ASSETS && (m_AssetsEditorState.m_Open || m_AssetsEditorState.m_Initialized))
 		AssetsEditorCloseNow();
 	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage != SETTINGS_SOUND && (m_AudioPackEditorState.m_Open || m_AudioPackEditorState.m_Initialized))

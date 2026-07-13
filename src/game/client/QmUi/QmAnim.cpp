@@ -515,19 +515,19 @@ bool CUiV2AnimationRuntime::HasActiveAnimation(uint64_t NodeKey, EUiAnimProperty
 void CUiV2AnimationRuntime::PruneResolveTargetCache(uint64_t CurrentUseCounter)
 {
 	if(m_LastTargets.empty())
-		m_LastTargets.reserve(4096);
+		m_LastTargets.reserve(MAX_LAST_TARGETS_SOFT);
 
-	if((CurrentUseCounter % 1024) != 0 || m_LastTargets.size() <= 4096)
+	if((CurrentUseCounter % 1024) != 0 || m_LastTargets.size() <= MAX_LAST_TARGETS_SOFT)
 		return;
 
 	for(auto It = m_LastTargets.begin(); It != m_LastTargets.end();)
 	{
-		if(CurrentUseCounter - It->second.m_LastUseCounter > 8192)
+		if(CurrentUseCounter - It->second.m_LastUseCounter > MAX_LAST_TARGETS_HARD)
 			It = m_LastTargets.erase(It);
 		else
 			++It;
 	}
-	if(m_LastTargets.size() > 4096 * 2)
+	if(m_LastTargets.size() > MAX_LAST_TARGETS_HARD)
 		m_LastTargets.clear();
 }
 

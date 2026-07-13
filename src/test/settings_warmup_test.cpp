@@ -850,7 +850,7 @@ TEST(SettingsResourceJobs, AssetsLocalListFinalizesHeavyPreviewWorkOnlyAfterList
 	const std::string LocalListBody = Source.substr(LocalListPos, LocalListEnd - LocalListPos);
 
 	const size_t DoEndPos = LocalListBody.find("const int NewSelected = s_ListBox.DoEnd();");
-	const size_t ScrollPos = LocalListBody.find("const bool ListScrollActive = s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating();");
+	const size_t ScrollPos = LocalListBody.find("const bool ListScrollActive = QmMenuUiScrollPerfActive(");
 	const size_t FrameContextPos = LocalListBody.find("const SSettingsResourceFrameContext PreviewUploadFrameContext = SettingsBuildFrameContext(");
 	const size_t ClampPos = LocalListBody.find("RemainingHeavyResourceBatches = SettingsResourceClampSharedHeavyBudget(");
 	const size_t FinalizePos = LocalListBody.find("FinalizeReadyPreviewDecodes(PreviewUploadFrameContext);");
@@ -885,7 +885,7 @@ TEST(SettingsResourceJobs, AssetsWorkshopListFinalizesPreviewAndThumbWorkOnlyAft
 	const std::string WorkshopListBody = Source.substr(WorkshopListPos, WorkshopListEnd - WorkshopListPos);
 
 	const size_t DoEndPos = WorkshopListBody.find("const int NewCombinedSelected = s_WorkshopAssetsListBox.DoEnd();");
-	const size_t ScrollPos = WorkshopListBody.find("const bool WorkshopListScrollActive = s_WorkshopAssetsListBox.ScrollbarActive() || s_WorkshopAssetsListBox.ScrollbarAnimating();");
+	const size_t ScrollPos = WorkshopListBody.find("const bool WorkshopListScrollActive = QmMenuUiScrollPerfActive(");
 	const size_t FrameContextPos = WorkshopListBody.find("const SSettingsResourceFrameContext WorkshopUploadFrameContext = SettingsBuildFrameContext(");
 	const size_t ClampPos = WorkshopListBody.find("RemainingHeavyResourceBatches = SettingsResourceClampSharedHeavyBudget(");
 	const size_t PreviewFinalizePos = WorkshopListBody.find("FinalizeReadyPreviewDecodes(WorkshopUploadFrameContext);");

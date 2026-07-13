@@ -576,6 +576,7 @@ private:
 	EUiWheelOwnerPriority m_BecomingHotScrollRegionPriority = EUiWheelOwnerPriority::PAGE;
 	bool m_UnderlyingScrollBlocked = false;
 	bool m_RenderingPopupMenus = false;
+	bool m_MenuUiFirstWheelPerf = false;
 	CScrollWheelOwnership m_WheelOwnership;
 	bool m_ActiveItemValid = false;
 
@@ -681,6 +682,12 @@ public:
 
 	void Init(IKernel *pKernel);
 	IClient *Client() const { return m_pClient; }
+	bool ConsumeMenuUiFirstWheelPerf()
+	{
+		const bool Result = m_MenuUiFirstWheelPerf;
+		m_MenuUiFirstWheelPerf = false;
+		return Result;
+	}
 	IGraphics *Graphics() const { return m_pGraphics; }
 	IInput *Input() const { return m_pInput; }
 	ITextRender *TextRender() const { return m_pTextRender; }
@@ -1046,6 +1053,7 @@ public:
 		bool m_AnchorVisible = true;
 		bool m_PopupVisible = true;
 		bool m_BlockUnderlyingScroll = false;
+		bool m_MenuUiFirstWheelLogged = false;
 		CUIRect m_Viewport{};
 		SQmDropdownPopupPolicy m_PopupPolicy;
 

@@ -522,15 +522,15 @@ Add tests that require these exact boundaries:
 
 | Cache | Capacity | Key / invalidation | Cleanup |
 |---|---:|---|---|
-| page layout | 64 entries | page/subpage, viewport width+height, UI scale, theme generation, locale generation | LRU on insert; clear on menu shutdown/backend reset |
+| page layout | 不保留缓存 | `ResolveSettingsPageLayout(...)` 保持纯计算，不引入跨帧状态 | 无清理责任；若量化后需要缓存，必须先定义真实 owner 和完整 key |
 | menu text layout | 4096 entries | text hash, font preset/size/flags, alignment/max width, locale/font/theme generation, UI scale | evict entries unused for 600 UI frames; hard trim to 4096; clear on language/font/backend reset |
-| list filter/visibility plan | current + previous generation per page | source revision, filter text, sort, category/tab, viewport, row extent | replace older generation; clear on page data reset/shutdown |
+| list filter/visibility plan | 不新增共享缓存 | 直接消费各页面现有数据 owner 的当前筛选/排序结果 | 不制造跨页面 generation；未来只能在真实 owner 内按量化结果引入 |
 | animation target | soft 4096, hard 8192 | node key, property, target/driver | retain existing prune every 1024 uses and age 8192; clear runtime reset |
 | asset metadata | 512 entries | asset/tab/locale/UI scale/tile width/status/install flags | bounded eviction; clear resource directory/backend/shutdown |
 | tee preview | 192 entries | skin/dummy/custom colors/emote/source generation | LRU; clear skin reload/shutdown |
 | language rows | 128 entries | language inventory/file, font, UI scale, theme generation | invalidate generation; uncached visible-row fallback above 128 |
 
-The test must assert capacities from headers/source and verify that changing each key dimension causes a miss, while a stable key causes a hit. Add a telemetry contract test that searches the format string for every `menu_ui_frame` field and proves payload formatting is skipped when `QmPerfEnabled()` is false.
+The test must assert capacities from real cache owners and reject ownerless page-layout/filter cache constants. For retained caches, verify stable keys reuse entries and invalidation clears stale state. Add a telemetry contract test that searches the format string for every `menu_ui_frame` field and proves payload formatting is skipped when `QmPerfEnabled()` is false.
 
 - [ ] **Step 2: Write failing TypeScript budget/report tests**
 

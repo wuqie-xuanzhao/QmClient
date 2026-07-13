@@ -22,6 +22,7 @@ void CScrollRegion::Reset()
 	m_ContentSize = 0.0f;
 	m_ScrollDirection = SCROLLRELATIVE_NONE;
 	m_ScrollSpeedMultiplier = 1.0f;
+	m_WheelConsumedThisFrame = false;
 	m_ClipRect = m_RailRect = m_LastAddedRect = CUIRect{0.0f, 0.0f, 0.0f, 0.0f};
 	m_Params = CScrollRegionParams();
 }
@@ -48,6 +49,7 @@ vec2 CScrollRegion::ContentScrollOffset() const
 
 void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollRegionParams *pParams)
 {
+	m_WheelConsumedThisFrame = false;
 	if(pParams)
 		m_Params = *pParams;
 	m_ClipRect = *pClipRect;
@@ -286,6 +288,7 @@ void CScrollRegion::DoScrollInput()
 	float WheelDelta = 0.0f;
 	if(!Ui()->TryConsumeWheel(pWheelOwnerId, &WheelDelta))
 		return;
+	m_WheelConsumedThisFrame = true;
 	m_ScrollState.AddWheelImpulse(WheelDelta, ScrollMetrics(), ScrollConfig());
 }
 

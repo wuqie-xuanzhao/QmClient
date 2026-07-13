@@ -2214,7 +2214,8 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	int VisibleRows = 0;
 	int FirstVisibleIndex = -1;
 	int EndVisibleIndex = -1;
-	CPerfTimer ListFrameTimer;
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto ListFrameStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	for(auto &pItem : m_vpFilteredDemos)
 	{
 		ItemIndex++;
@@ -2317,6 +2318,7 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	const int OldSelected = m_DemolistSelectedIndex;
 	const bool WasItemSelected = s_ListBox.WasItemSelected();
 	const int NewSelected = s_ListBox.DoEnd();
+	const bool ListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
 	const bool PlainItemClick = WasItemSelected && !Input()->ShiftIsPressed() && !Input()->ModifierIsPressed();
 	if(WasItemSelected && NewSelected >= 0)
 	{
@@ -2387,13 +2389,26 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	m_DemoBrowserMetadataBackgroundAllowed = true;
 	s_DemoLastFirstVisibleIndex = FirstVisibleIndex;
 	s_DemoLastEndVisibleIndex = EndVisibleIndex;
-	const double ListFrameDurationMs = ListFrameTimer.ElapsedMs();
+	const double ListFrameDurationMs = MenuUiPerfEnabled ? std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count() : -1.0;
 	if(QmPerfEnabled() && ListFrameDurationMs >= QmPerfThresholdMs())
 	{
 		char aPayload[160];
 		str_format(aPayload, sizeof(aPayload), "event=list_frame page=demo_browser items_total=%d rows_visible=%d rows_processed=%d rows_skipped=%d dur_ms=%.3f",
 			(int)m_vpFilteredDemos.size(), VisibleRows, VisibleRows, (int)m_vpFilteredDemos.size() - VisibleRows, ListFrameDurationMs);
 		QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
+	}
+	if(ListScrollActive)
+	{
+		StartSettingsPerfScrollWindow("demo_browser_scroll", SettingsPerfContextName(), "demo_browser", "none");
+		SQmMenuUiFramePerf MenuUiPerf;
+		MenuUiPerf.m_pPage = "demo_browser";
+		MenuUiPerf.m_pOperation = "demo_browser_scroll";
+		MenuUiPerf.m_ItemsTotal = (int)m_vpFilteredDemos.size();
+		MenuUiPerf.m_ItemsVisible = VisibleRows;
+		MenuUiPerf.m_ItemsProcessed = VisibleRows;
+		MenuUiPerf.m_ItemsSkipped = maximum(0, (int)m_vpFilteredDemos.size() - VisibleRows);
+		MenuUiPerf.m_UiMs = (float)ListFrameDurationMs;
+		QmLogMenuUiFramePerf(MenuUiPerf, Client());
 	}
 }
 

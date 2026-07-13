@@ -6,7 +6,7 @@
 
 import { createReadStream, writeFileSync, readdirSync, statSync, mkdirSync, existsSync } from 'node:fs';
 import { createInterface } from 'node:readline';
-import { join, basename } from 'node:path';
+import { join, basename, dirname, extname, resolve } from 'node:path';
 
 const PERF_DIR = () => join(process.env.APPDATA ?? '', 'DDNet', 'dumps', 'QmClient_Perf');
 const REPORT_DIR = () => join(PERF_DIR(), 'Perf_Report');
@@ -74,7 +74,13 @@ async function main() {
     return { entries, diagnostics: { totalLines, invalidLines } };
   }
 
-  const logPath = process.argv[2] ?? findLatestLog();
+  const args = process.argv.slice(2);
+  const outputIndex = args.indexOf('--output');
+  const outputPath = outputIndex >= 0 ? args[outputIndex + 1] : undefined;
+  if (outputIndex >= 0 && !outputPath) {
+    throw new Error('--output requires an HTML path');
+  }
+  const logPath = args.find((arg, index) => arg !== '--output' && index !== outputIndex + 1) ?? findLatestLog();
   console.log(`读取: ${logPath}`);
 
   console.log('解析中...（流式读取）');
@@ -118,22 +124,23 @@ async function main() {
   const summaryJson = summarizeForBundle(entries, logPath, parsed.diagnostics);
 
   // 输出到 Perf_Report/ 子目录
-  const reportDir = REPORT_DIR();
+  const outPath = outputPath ? resolve(outputPath) : join(REPORT_DIR(), `${basename(logPath).replace('.log', '')}_report.html`);
+  const reportDir = dirname(outPath);
   if (!existsSync(reportDir)) {
     mkdirSync(reportDir, { recursive: true });
   }
 
-  const logName = basename(logPath).replace('.log', '');
-  const outPath = join(reportDir, `${logName}_report.html`);
   writeFileSync(outPath, reportHtml, 'utf-8');
   const summaryText = JSON.stringify(summaryJson, null, 2);
-  const archiveSummaryPath = join(reportDir, `${logName}_summary.json`);
+  const logName = basename(logPath).replace('.log', '');
+  const outputBase = basename(outPath, extname(outPath));
+  const archiveSummaryPath = outputPath ? join(reportDir, `${outputBase}_summary.json`) : join(reportDir, `${logName}_summary.json`);
   const bundleSummaryPath = join(reportDir, 'perf_summary.json');
   writeFileSync(archiveSummaryPath, summaryText, 'utf-8');
-  writeFileSync(bundleSummaryPath, summaryText, 'utf-8');
+  if (!outputPath) writeFileSync(bundleSummaryPath, summaryText, 'utf-8');
   console.log(`报表已生成: ${outPath}`);
   console.log(`摘要已生成: ${archiveSummaryPath}`);
-  console.log(`Debug bundle 摘要已生成: ${bundleSummaryPath}`);
+  if (!outputPath) console.log(`Debug bundle 摘要已生成: ${bundleSummaryPath}`);
 }
 
 main();

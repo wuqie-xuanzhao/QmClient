@@ -83,6 +83,7 @@ public:
 	float ScrollbarWidth() const { return ScrollbarShown() ? ScrollbarWidthMax() : 0.0f; }
 	bool ScrollbarActive() const { return m_ScrollRegion.Active(); }
 	bool ScrollbarAnimating() const { return m_ScrollRegion.Animating(); }
+	bool WheelConsumedThisFrame() const { return m_ScrollRegion.WheelConsumedThisFrame(); }
 	float ScrollbarWidthMax() const { return m_ScrollbarWidth; }
 	void SetScrollbarWidth(float Width)
 	{

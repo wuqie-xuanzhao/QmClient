@@ -21,6 +21,7 @@
 #include <generated/client_data.h>
 
 #include <game/client/QmUi/QmScroll.h>
+#include <game/client/QmUi/QmUiPerf.h>
 #include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTheme.h>
@@ -2449,7 +2450,7 @@ public:
 	void InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason Reason);
 	void FinalizeTeeListDrainPerfSession();
 	void StartSettingsPerfFixedWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, int MaxFrames);
-	void StartSettingsPerfScrollWindow(const char *pContext, const char *pPage, const char *pTab);
+	void StartSettingsPerfScrollWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab);
 	void RecordSettingsPerfWindowFrame(double MenuDurationMs);
 	void LogSettingsPerfWindowSummary(const SQmSettingsPerfWindowSummary &Summary);
 	const char *SettingsPerfContextName() const;
@@ -2485,6 +2486,7 @@ private:
 		CUIElement m_Element;
 		SMenuTextStyleKey m_StyleKey{};
 		uint64_t m_Generation = 0;
+		uint64_t m_LastUsedFrame = 0;
 		bool m_Built = false;
 	};
 
@@ -2668,8 +2670,13 @@ private:
 	bool RequestMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, int StrLen, const CTextCursor *pReadCursor);
 	void QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor);
 	void DrainMenuTextContainerBuildRequests();
+	void RemoveMenuTextContainerBuildRequest(const CUIElement &Element);
+	int TrimMenuTextPoolForInsert(uint64_t CurrentFrame);
 	void DrainMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated);
 	void CountMenuTextImmediateFallback();
+	void ClearSettingsAssetsCardMetadataCache();
+	void ClearSettingsTeePreviewCache();
+	void ClearSettingsLanguageRowCache();
 	void LogSettingsUiBudget(const char *pPage, const SSettingsUiBudgetFrame &Frame) const;
 
 	SSettingsRuntimeMetadata m_SettingsRuntimeMetadata;
@@ -2684,6 +2691,7 @@ private:
 	bool m_SettingsTClientScrollRestorePending = false;
 	bool m_SettingsPageSwitchActive = false;
 	bool m_SettingsScrollActive = false;
+	bool m_MenuUiPerfScrollActive = false;
 	int m_SettingsPostScrollRecoveryFrames = 0;
 	bool m_SettingsHighPrioritySettled = false;
 	int m_SettingsTextContextPage = -1;
@@ -2691,6 +2699,7 @@ private:
 	int m_SettingsTextContextSubtab = -1;
 	int *m_pSettingsTextPrebuildBudget = nullptr;
 	std::unordered_map<std::string, SMenuTextPoolEntry> m_MenuTextPool;
+	uint64_t m_MenuTextLastTrimFrame = ~uint64_t{0};
 	CUIElement m_MenuTextFallbackElement;
 	uint64_t m_MenuTextPoolGeneration = 1;
 	uint64_t m_MenuTextPoolLanguageHash = 0;

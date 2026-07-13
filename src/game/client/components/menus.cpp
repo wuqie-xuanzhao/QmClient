@@ -34,6 +34,7 @@
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmModuleLayoutAdapter.h>
 #include <game/client/QmUi/QmTree.h>
+#include <game/client/QmUi/QmUiPerf.h>
 #include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
@@ -2749,6 +2750,7 @@ bool CMenus::CanDisplayWarning() const
 void CMenus::Render()
 {
 	CPerfTimer RenderTimer;
+	m_MenuUiPerfScrollActive = false;
 	Ui()->MapScreen();
 	Ui()->SetMouseSlow(false);
 
@@ -5054,14 +5056,13 @@ void CMenus::StartSettingsPerfFixedWindow(const char *pOperation, const char *pC
 		LogSettingsPerfWindowSummary(Interrupted.m_Summary);
 }
 
-void CMenus::StartSettingsPerfScrollWindow(const char *pContext, const char *pPage, const char *pTab)
+void CMenus::StartSettingsPerfScrollWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab)
 {
 	if(!PerfDebugEnabled())
 		return;
-	if(str_comp(m_SettingsPerfWindowTracker.ActiveOperation(), "settings_tee_scroll") == 0)
-		return;
-	const SQmSettingsPerfWindowFrameResult Interrupted = m_SettingsPerfWindowTracker.StartScrollWindow(
-		"settings_tee_scroll",
+	m_MenuUiPerfScrollActive = true;
+	const SQmSettingsPerfWindowFrameResult Interrupted = m_SettingsPerfWindowTracker.EnsureScrollWindow(
+		pOperation,
 		pContext,
 		pPage,
 		pTab,
@@ -5076,7 +5077,9 @@ void CMenus::RecordSettingsPerfWindowFrame(double MenuDurationMs)
 {
 	if(!PerfDebugEnabled())
 		return;
-	const SQmSettingsPerfWindowFrameResult Result = m_SettingsPerfWindowTracker.RecordFrame(Client()->RenderFrameTime(), MenuDurationMs, m_SettingsScrollActive, Client()->PerfFrame());
+	if(Ui()->ConsumeMenuUiFirstWheelPerf())
+		StartSettingsPerfScrollWindow("dropdown_first_wheel", SettingsPerfContextName(), "dropdown", "none");
+	const SQmSettingsPerfWindowFrameResult Result = m_SettingsPerfWindowTracker.RecordFrame(Client()->RenderFrameTime(), MenuDurationMs, m_MenuUiPerfScrollActive, Client()->PerfFrame());
 	if(Result.m_ShouldFlush)
 		LogSettingsPerfWindowSummary(Result.m_Summary);
 }
@@ -5152,6 +5155,9 @@ void CMenus::OnShutdown()
 	}
 	SaveSettingsRuntimeCacheMetadata();
 	InvalidateSettingsTextPool();
+	ClearSettingsAssetsCardMetadataCache();
+	ClearSettingsTeePreviewCache();
+	ClearSettingsLanguageRowCache();
 	ResetDemoScreenshotPreview();
 	m_CommunityIcons.Shutdown();
 }
@@ -5414,6 +5420,7 @@ CUIElement &CMenus::MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int
 
 	const std::string Key = MenuTextCacheKey(Scope, Page, Tab, Subtab, pTextId, StyleKey);
 	auto It = m_MenuTextPool.find(Key);
+	const uint64_t CurrentFrame = Client()->PerfFrame();
 	const bool HasDescriptor = m_SettingsMenuTextPlannedDescriptors.find(MenuTextDescriptorKey(Scope, Page, Tab, Subtab, pTextId)) != m_SettingsMenuTextPlannedDescriptors.end();
 	const bool KeyPlanned = m_SettingsMenuTextPlannedKeys.find(Key) != m_SettingsMenuTextPlannedKeys.end();
 	if(m_MenuTextPoolVisibleGuard)
@@ -5447,6 +5454,7 @@ CUIElement &CMenus::MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int
 				m_MenuTextFallbackElement.Init(Ui(), 1);
 			return m_MenuTextFallbackElement;
 		}
+		TrimMenuTextPoolForInsert(CurrentFrame);
 		It = m_MenuTextPool.try_emplace(Key).first;
 		It->second.m_Element.Init(Ui(), 1);
 		It->second.m_StyleKey = StyleKey;
@@ -5467,7 +5475,43 @@ CUIElement &CMenus::MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int
 		It->second.m_Generation = m_MenuTextPoolGeneration;
 		It->second.m_Built = false;
 	}
+	It->second.m_LastUsedFrame = CurrentFrame;
 	return It->second.m_Element;
+}
+
+int CMenus::TrimMenuTextPoolForInsert(uint64_t CurrentFrame)
+{
+	int Evictions = 0;
+	if(CurrentFrame != m_MenuTextLastTrimFrame)
+	{
+		m_MenuTextLastTrimFrame = CurrentFrame;
+		for(auto It = m_MenuTextPool.begin(); It != m_MenuTextPool.end();)
+		{
+			const bool Expired = CurrentFrame > It->second.m_LastUsedFrame && CurrentFrame - It->second.m_LastUsedFrame > QM_MENU_TEXT_CACHE_MAX_AGE_FRAMES;
+			if(!Expired)
+			{
+				++It;
+				continue;
+			}
+			RemoveMenuTextContainerBuildRequest(It->second.m_Element);
+			Ui()->ResetUIElement(It->second.m_Element);
+			It = m_MenuTextPool.erase(It);
+			++Evictions;
+		}
+	}
+	while(m_MenuTextPool.size() >= QM_MENU_TEXT_CACHE_CAPACITY)
+	{
+		const auto Oldest = std::min_element(m_MenuTextPool.begin(), m_MenuTextPool.end(), [](const auto &A, const auto &B) {
+			return A.second.m_LastUsedFrame < B.second.m_LastUsedFrame;
+		});
+		if(Oldest == m_MenuTextPool.end())
+			break;
+		RemoveMenuTextContainerBuildRequest(Oldest->second.m_Element);
+		Ui()->ResetUIElement(Oldest->second.m_Element);
+		m_MenuTextPool.erase(Oldest);
+		++Evictions;
+	}
+	return Evictions;
 }
 
 void CMenus::DoSettingsLabelStreamed(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)
@@ -5563,6 +5607,15 @@ void CMenus::DrainMenuTextContainerBuildRequests()
 			}
 		}
 	}
+}
+
+void CMenus::RemoveMenuTextContainerBuildRequest(const CUIElement &Element)
+{
+	m_vMenuTextContainerBuildRequests.erase(
+		std::remove_if(m_vMenuTextContainerBuildRequests.begin(), m_vMenuTextContainerBuildRequests.end(), [&Element](const SMenuTextContainerBuildRequest &Request) {
+			return Request.m_pElement == &Element;
+		}),
+		m_vMenuTextContainerBuildRequests.end());
 }
 
 void CMenus::DrainMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated)
@@ -6408,6 +6461,14 @@ void CMenus::InvalidateMenuTextPool(const char *pReason)
 	m_SettingsMenuTextPlanMetadataDirty = true;
 	if(!m_MenuTextPoolVisibleGuard)
 	{
+		m_vMenuTextContainerBuildRequests.clear();
+		for(auto &[Key, Entry] : m_MenuTextPool)
+		{
+			(void)Key;
+			Ui()->ResetUIElement(Entry.m_Element);
+		}
+		m_MenuTextPool.clear();
+		m_MenuTextLastTrimFrame = ~uint64_t{0};
 		m_vSettingsMenuTextPrebuildPlan.clear();
 		m_vSettingsMenuTextPlanCollectionUnits.clear();
 		m_SettingsMenuTextPlannedDescriptors.clear();
@@ -6456,7 +6517,17 @@ void CMenus::InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason Reason)
 	}
 
 	if(ClearsResource)
+	{
 		InvalidateSettingsAssetResourcePlan();
+		ClearSettingsAssetsCardMetadataCache();
+	}
+
+	if(Reason == ESettingsInvalidationReason::LANGUAGE_CHANGED ||
+		Reason == ESettingsInvalidationReason::FONT_CHANGED ||
+		Reason == ESettingsInvalidationReason::BACKEND_CHANGED)
+		ClearSettingsLanguageRowCache();
+	if(Reason == ESettingsInvalidationReason::BACKEND_CHANGED)
+		ClearSettingsTeePreviewCache();
 }
 
 bool CMenus::PrewarmSettingsPageResources(int Page, int Tab, const CUIRect &ContentView)

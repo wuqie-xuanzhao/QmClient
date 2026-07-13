@@ -2620,6 +2620,8 @@ if(CLIENT)
   set_src(GAME_CLIENT GLOB_RECURSE src/game/client
     QmUi/QmAnim.cpp
     QmUi/QmAnim.h
+    QmUi/QmUiPerf.cpp
+    QmUi/QmUiPerf.h
     QmUi/QmAnimCurves.h
     QmUi/QmDropdown.cpp
     QmUi/QmDropdown.h

@@ -202,6 +202,8 @@ private:
 		uint64_t m_LastUseCounter = 0;
 	};
 	void PruneResolveTargetCache(uint64_t CurrentUseCounter);
+	static constexpr size_t MAX_LAST_TARGETS_SOFT = 4096;
+	static constexpr size_t MAX_LAST_TARGETS_HARD = 8192;
 	std::unordered_map<STrackKey, SResolveTargetState, STrackKeyHasher> m_LastTargets;
 	uint64_t m_ResolveUseCounter = 0;
 	struct SColorTargetState

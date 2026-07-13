@@ -3,10 +3,13 @@
 #include "ui.h"
 
 #include "QmUi/QmDropdown.h"
+#include "QmUi/QmUiPerf.h"
+#include "components/qmclient/perf_logging.h"
 #include "ui_scrollregion.h"
 
 #include <base/log.h>
 #include <base/math.h>
+#include <base/perf_timer.h>
 #include <base/system.h>
 
 #include <engine/client.h>
@@ -268,6 +271,7 @@ bool CUi::TryConsumeWheel(const void *pOwnerId, float *pDelta)
 void CUi::Update()
 {
 	BeginWheelOwnershipFrame();
+	m_MenuUiFirstWheelPerf = false;
 	const vec2 WindowSize = vec2(Graphics()->WindowWidth(), Graphics()->WindowHeight());
 	const CUIRect *pScreen = Screen();
 
@@ -2464,6 +2468,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_AnchorVisible = true;
 	m_PopupVisible = true;
 	m_BlockUnderlyingScroll = false;
+	m_MenuUiFirstWheelLogged = false;
 	m_Viewport = {};
 	m_PopupPolicy = {};
 	m_SpecialFontRenderMode = false;
@@ -2471,6 +2476,8 @@ void CUi::SSelectionPopupContext::Reset()
 
 CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)
 {
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto MenuUiStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	SSelectionPopupContext *pSelectionPopup = static_cast<SSelectionPopupContext *>(pContext);
 	CUi *pUI = pSelectionPopup->m_pUI;
 	CScrollRegion *pScrollRegion = pSelectionPopup->m_pScrollRegion;
@@ -2506,6 +2513,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	pSelectionPopup->m_vButtonContainers.resize(pSelectionPopup->m_vEntries.size());
 
 	size_t Index = 0;
+	int VisibleEntries = 0;
 	for(const auto &Entry : pSelectionPopup->m_vEntries)
 	{
 		// TClient
@@ -2517,6 +2525,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		View.HSplitTop(pSelectionPopup->m_EntryHeight, &Slot, &View);
 		if(pScrollRegion->AddRect(Slot))
 		{
+			++VisibleEntries;
 			const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);
 			const std::optional<ColorRGBA> ButtonColor = ActiveEntry ? std::optional<ColorRGBA>(ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f)) : std::nullopt;
 			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons, true, ButtonColor))
@@ -2532,6 +2541,20 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		pUI->TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 
 	pScrollRegion->End();
+	if(!pSelectionPopup->m_MenuUiFirstWheelLogged && pScrollRegion->WheelConsumedThisFrame())
+	{
+		pUI->m_MenuUiFirstWheelPerf = MenuUiPerfEnabled;
+		SQmMenuUiFramePerf MenuUiPerf;
+		MenuUiPerf.m_pPage = "dropdown";
+		MenuUiPerf.m_pOperation = "dropdown_first_wheel";
+		MenuUiPerf.m_ItemsTotal = (int)pSelectionPopup->m_vEntries.size();
+		MenuUiPerf.m_ItemsVisible = VisibleEntries;
+		MenuUiPerf.m_ItemsProcessed = VisibleEntries;
+		MenuUiPerf.m_ItemsSkipped = maximum(0, MenuUiPerf.m_ItemsTotal - VisibleEntries);
+		MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? std::chrono::duration<double, std::milli>(time_get_nanoseconds() - MenuUiStartTime).count() : -1.0;
+		QmLogMenuUiFramePerf(MenuUiPerf, pUI->Client());
+		pSelectionPopup->m_MenuUiFirstWheelLogged = true;
+	}
 
 	return pSelectionPopup->m_pSelection == nullptr ? CUi::POPUP_KEEP_OPEN : CUi::POPUP_CLOSE_CURRENT;
 }
