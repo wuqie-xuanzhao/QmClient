@@ -387,6 +387,7 @@ public:
 	 * @param TimeBudgetMs Per-frame CPU budget in milliseconds (default 5.0).
 	 */
 	void Begin(CUIRect MainView, float TimeBudgetMs = 5.0f);
+	void Begin(CUIRect MainView, CUIRect Viewport, float TimeBudgetMs);
 
 	/** Advance one frame. Returns true when there is still work left.
 	 * RenderSections 为 false 时只推进测量、缓存和状态机，由外部统一卡片容器绘制内容。 */
@@ -429,12 +430,10 @@ public:
 	void SetDeferredFarMeasurementEnabled(bool Enabled);
 	void SetMaxSectionsPerFrame(int MaxSectionsPerFrame);
 
-	// -- State exposed for the rendering loop (updated externally) --
+	// -- State exposed for the rendering loop --
 
 	int m_ActiveTab = -1;
-	float m_ScrollY = 0.0f;
 	CUIRect GetRunningColumn() const { return m_RunningColumn; }
-	float CachedHeightForStableCardId(const char *pStableCardId, float FallbackHeight) const;
 
 	// -- Profiling --
 
@@ -444,6 +443,7 @@ public:
 private:
 	std::vector<SSettingsSection> m_vSections;
 	CUIRect m_MainView;
+	CUIRect m_Viewport;
 	CUIRect m_RunningColumn;
 	double m_BudgetPerFrameMs = 5.0;
 

@@ -1449,21 +1449,23 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	};
 	std::vector<SSettingsCardDefinition> vDeckCards;
 	vDeckCards.reserve(19);
-	auto AppendDeckCards = [&vDeckCards](const std::vector<SSettingsSection> &vSections, const CSectionLoader &Loader) {
+	auto AppendDeckCards = [&vDeckCards](const std::vector<SSettingsSection> &vSections) {
 		for(const SSettingsSection &Section : vSections)
 		{
 			if(Section.m_pStableCardId == nullptr || Section.m_pStableCardId[0] == '\0')
 				continue;
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = {Section.m_pStableCardId, Localize(Section.m_pName), nullptr};
-			Definition.m_Measure = [&Loader, pStableCardId = Section.m_pStableCardId, FallbackHeight = Section.m_CachedHeight](float) {
-				return Loader.CachedHeightForStableCardId(pStableCardId, FallbackHeight);
+			Definition.m_Measure = [Measure = Section.m_MeasureFn](float ContentWidth) {
+				if(!Measure)
+					return 0.0f;
+				CUIRect MeasureColumn{0.0f, 0.0f, ContentWidth, 0.0f};
+				return Measure(MeasureColumn);
 			};
 			Definition.m_RenderMeasured = [Render = Section.m_RenderFullFn](CUIRect &Content) {
 				if(Render)
 					Render(Content);
 			};
-			// 高度始终从 loader 缓存同步，避免 Deck 重跑 legacy layout。
 			Definition.m_MeasureEachFrame = true;
 			vDeckCards.push_back(std::move(Definition));
 		}
@@ -1510,8 +1512,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	s_VisualFontLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
 	s_VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 	s_VisualFontLoader.SetDeferredFarMeasurementEnabled(true);
-	s_VisualFontLoader.m_ScrollY = ScrollOffset.y;
-	s_VisualFontLoader.Begin(LeftView, 5.0f);
+	CUIRect LeftLoaderViewport = LeftView;
+	LeftLoaderViewport.y -= ScrollOffset.y;
+	s_VisualFontLoader.Begin(LeftView, LeftLoaderViewport, 5.0f);
 
 	// ***** LeftView ***** //
 	{
@@ -2579,7 +2582,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 
 			// -- 宠物 --
 			vLeftSections.push_back(BuildTClientPetCacheSection());
-			AppendDeckCards(vLeftSections, s_VisualFontLoader);
+			AppendDeckCards(vLeftSections);
 			s_VisualFontLoader.Register(std::move(vLeftSections));
 		}
 
@@ -2609,8 +2612,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		s_RightSectionLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
 		s_RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 		s_RightSectionLoader.SetDeferredFarMeasurementEnabled(true);
-		s_RightSectionLoader.m_ScrollY = ScrollOffset.y;
-		s_RightSectionLoader.Begin(RightView, 5.0f);
+		CUIRect RightLoaderViewport = RightView;
+		RightLoaderViewport.y -= ScrollOffset.y;
+		s_RightSectionLoader.Begin(RightView, RightLoaderViewport, 5.0f);
 
 		auto LayoutHudSection = [&](CUIRect &CurrentColumn, bool Render) {
 			CUIRect BoxRect;
@@ -3303,7 +3307,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			};
 			FillCachedStaticLayer(S, LayoutFinishNameSection);
 			vRightSections.push_back(S);
-			AppendDeckCards(vRightSections, s_RightSectionLoader);
+			AppendDeckCards(vRightSections);
 			s_RightSectionLoader.Register(std::move(vRightSections));
 		}
 

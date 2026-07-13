@@ -64,55 +64,6 @@ TEST(SectionLoader, StateTransitions)
 	EXPECT_TRUE(Loader.IsComplete());
 }
 
-TEST(SectionLoader, CachedHeightLookupUsesMeasuredSectionWithoutRendering)
-{
-	CSectionLoader Loader;
-	int RenderCount = 0;
-	SSettingsSection Section = MakeTestSection("Cached section", 72.0f);
-	Section.m_pStableCardId = "tclient:cached-section";
-	Section.m_RenderFullFn = [&RenderCount](CUIRect &Rect) -> float {
-		++RenderCount;
-		return ConsumeHeight(Rect, 72.0f);
-	};
-	Loader.Register({Section});
-	Loader.Begin({0.0f, 0.0f, 400.0f, 600.0f}, 100.0f);
-	Loader.Process(false);
-
-	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:cached-section", 0.0f), 72.0f);
-	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:missing-section", 13.0f), 13.0f);
-	EXPECT_EQ(RenderCount, 0);
-}
-
-TEST(SectionLoader, CachedHeightLookupRefreshesAfterDependencyChangeWithoutRendering)
-{
-	CSectionLoader Loader;
-	int MeasuredHeight = 72;
-	int RenderCount = 0;
-	const auto MakeSection = [&]() {
-		SSettingsSection Section = MakeTestSection("Cached section", (float)MeasuredHeight);
-		Section.m_pStableCardId = "tclient:cached-section";
-		Section.m_DependencyConfigInts = {&MeasuredHeight};
-		Section.m_RenderFullFn = [&RenderCount](CUIRect &Rect) -> float {
-			++RenderCount;
-			return ConsumeHeight(Rect, 0.0f);
-		};
-		return Section;
-	};
-
-	Loader.Register({MakeSection()});
-	Loader.Begin({0.0f, 0.0f, 400.0f, 600.0f}, 100.0f);
-	Loader.Process(false);
-	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:cached-section", 0.0f), 72.0f);
-
-	MeasuredHeight = 128;
-	Loader.Register({MakeSection()});
-	Loader.Begin({0.0f, 0.0f, 400.0f, 600.0f}, 100.0f);
-	Loader.Process(false);
-
-	EXPECT_FLOAT_EQ(Loader.CachedHeightForStableCardId("tclient:cached-section", 0.0f), 128.0f);
-	EXPECT_EQ(RenderCount, 0);
-}
-
 TEST(SettingsCardDeckDrag, CtrlHeaderStableIdStartsDrag)
 {
 	SSettingsCardDeckItem Item;
@@ -589,9 +540,8 @@ TEST(SectionLoader, FarFullSectionRendersAfterScrollingIntoView)
 	EXPECT_FALSE(Loader.Process());
 	EXPECT_EQ(FarFullRenderCount, 0);
 
-	Loader.m_ScrollY = -900.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(CUIRect{0, -900.0f, 400, 240}, 100.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 900.0f, 400, 240}, 100.0f);
 	EXPECT_FALSE(Loader.Process());
 	EXPECT_EQ(FarFullRenderCount, 1);
 }
@@ -748,9 +698,8 @@ TEST(SectionLoader, FarCompactSectionAdvancesWithoutRendering)
 	EXPECT_TRUE(Loader.Process());
 	EXPECT_EQ(FarCompactRenderCount, 1);
 
-	Loader.m_ScrollY = -1000.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(CUIRect{0, 0, 400, 240}, 0.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 1000.0f, 400, 240}, 0.0f);
 	EXPECT_TRUE(Loader.Process());
 
 	EXPECT_EQ(FarCompactRenderCount, 1);
@@ -785,9 +734,8 @@ TEST(SectionLoader, CompactRenderUpdatesCachedHeightForSkippedFrames)
 	EXPECT_EQ(CompactRenderCount, 1);
 	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 80.0f);
 
-	Loader.m_ScrollY = -1000.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(CUIRect{0, 0, 400, 240}, 0.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 1000.0f, 400, 240}, 0.0f);
 	EXPECT_TRUE(Loader.Process());
 	EXPECT_EQ(CompactRenderCount, 1);
 	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 80.0f);
@@ -841,15 +789,14 @@ TEST(SectionLoader, ScrollOffsetPromotesScrolledIntoViewSection)
 		return std::vector<SSettingsSection>{First, Second};
 	};
 
-	CUIRect ScrolledMainView{0, -500.0f, 400, 600};
-	Loader.m_ScrollY = -500.0f;
+	CUIRect MainView{0, 0, 400, 600};
+	CUIRect ScrolledViewport{0, 500.0f, 400, 600};
 	Loader.Register(MakeSections());
-	Loader.Begin(ScrolledMainView, 100.0f);
+	Loader.Begin(MainView, ScrolledViewport, 100.0f);
 	EXPECT_TRUE(Loader.Process());
 
-	Loader.m_ScrollY = -500.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(ScrolledMainView, 100.0f);
+	Loader.Begin(MainView, ScrolledViewport, 100.0f);
 	EXPECT_TRUE(Loader.Process());
 	EXPECT_EQ(CompactRenderCount, 1);
 }
@@ -1327,14 +1274,24 @@ TEST(SectionLoader, VisibilityTelemetryUsesMeasuredSectionRect)
 	Section.m_RenderCompactFn = Section.m_MeasureFn;
 	Section.m_RenderFullFn = Section.m_MeasureFn;
 
-	Loader.m_ScrollY = -400.0f;
 	Loader.Register({Section});
-	Loader.Begin(CUIRect{0, -400.0f, 400, 240}, 100.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 400.0f, 400, 240}, 100.0f);
 
 	EXPECT_FALSE(Loader.Process());
 	EXPECT_EQ(Loader.LastFrameStats().m_SectionsTotal, 1);
 	EXPECT_EQ(Loader.LastFrameStats().m_SectionsVisible, 1);
 	EXPECT_EQ(Loader.LastFrameStats().m_SectionsSkipped, 0);
+}
+
+TEST(SectionLoader, ExplicitViewportDoesNotShiftContentGeometry)
+{
+	CSectionLoader Loader;
+	Loader.SetProgressiveEnabled(false);
+	Loader.Register({MakeTestSection("Top", 900.0f), MakeTestSection("Visible after scroll", 50.0f)});
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 900.0f, 400, 240}, 100.0f);
+
+	EXPECT_FALSE(Loader.Process());
+	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 950.0f);
 }
 
 TEST(SectionLoader, RejectsVisibleSummarySectionNames)
@@ -1374,4 +1331,17 @@ TEST(SectionLoaderCleanup, HeaderNoLongerExposesRecordedTargetCacheApi)
 	EXPECT_EQ(Source.find("DrawCachedSectionByName"), std::string::npos);
 	EXPECT_EQ(Source.find("MakeRenderTargetCacheRectForTests"), std::string::npos);
 	EXPECT_EQ(Source.find("m_LiveStaticCacheRecordingEnabled"), std::string::npos);
+}
+
+TEST(SectionLoaderCleanup, HeaderNoLongerExposesCardHeightOrScrollTruth)
+{
+	std::ifstream File(TestSourcePath("src/game/client/components/section_loader.h"));
+	ASSERT_TRUE(File.good());
+	std::stringstream Buffer;
+	Buffer << File.rdbuf();
+	const std::string Source = Buffer.str();
+
+	EXPECT_EQ(Source.find("CachedHeightForStableCardId"), std::string::npos);
+	EXPECT_EQ(Source.find("m_ScrollY"), std::string::npos);
+	EXPECT_NE(Source.find("void Begin(CUIRect MainView, CUIRect Viewport, float TimeBudgetMs);"), std::string::npos);
 }

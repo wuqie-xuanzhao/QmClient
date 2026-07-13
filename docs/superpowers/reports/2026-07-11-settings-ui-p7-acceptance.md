@@ -13,6 +13,7 @@
 | run_rust_tests | passed | 24 Rust doc tests | none |
 | check_docs.py | unavailable | concurrent gate migration deleted the legacy entry point | current default gate does not expose a separate docs check |
 | check_gate.py --mode default | partial | task checks, migration contract, 2160 C++ tests and 24 Rust doc tests passed | concurrent files menus_settings_assets.cpp, menus_settings_controls.cpp and menus_tclient.cpp formatting blocked the repository-wide gate |
+| check_gate.py --mode quick | partial | 8 settings pages passed the migration contract and all other quick checks passed | concurrent formatting changes in menus_settings_assets.cpp and the TClient Config tag bar blocked the repository-wide format check |
 | bun test.ts | passed | performance report contracts | none |
 | npx tsc --noEmit | passed | performance TypeScript | none |
 
@@ -45,6 +46,13 @@
 |---|---|---|---|---|
 | major | src/game/client/QmUi/SettingsCardDeckLogic.cpp | repeated narrow drag moved hidden cards from canonical slots | project complete canonical columns before commit | 12 SettingsCardDeck tests passed |
 | minor | src/test/qmclient_monitoring_test.cpp | deleted legacy structure tests also removed useful content-owner contracts | add focused content, dynamic branch and public Deck registration assertions | focused contract and 2160 C++ tests passed |
+
+## TClient main-page ownership follow-up
+
+- `SettingsCardDeck` now measures every TClient card through the section's canonical `m_MeasureFn`; it no longer reads `CSectionLoader` cached heights.
+- `CSectionLoader` no longer exposes mutable scroll state or stable-card height lookup. It consumes an explicit content-space viewport only for progressive prewarm priority.
+- The shared Deck remains the sole owner of card frames and page scrolling, while the loader retains only measurement/cache/progressive scheduling.
+- Verification: 36 focused loader/TClient/warmup tests, `game-client`, 2160 C++ tests, 24 Rust doc tests, and all 8 settings migration checks passed.
 
 ## Remaining visual gaps
 | Page | Exact visual difference | Evidence | Follow-up owner |

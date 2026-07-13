@@ -95,7 +95,13 @@ void CSectionLoader::SetMaxSectionsPerFrame(int MaxSectionsPerFrame)
 
 void CSectionLoader::Begin(CUIRect MainView, float TimeBudgetMs)
 {
+	Begin(MainView, MainView, TimeBudgetMs);
+}
+
+void CSectionLoader::Begin(CUIRect MainView, CUIRect Viewport, float TimeBudgetMs)
+{
 	m_MainView = MainView;
+	m_Viewport = Viewport;
 	m_BudgetPerFrameMs = (double)TimeBudgetMs;
 	m_CurrentIndex = 0;
 
@@ -333,18 +339,6 @@ bool CSectionLoader::Process(bool RenderSections)
 bool CSectionLoader::IsComplete() const
 {
 	return m_Complete;
-}
-
-float CSectionLoader::CachedHeightForStableCardId(const char *pStableCardId, float FallbackHeight) const
-{
-	if(pStableCardId == nullptr || pStableCardId[0] == '\0')
-		return FallbackHeight;
-	for(const SSettingsSection &Section : m_vSections)
-	{
-		if(Section.m_pStableCardId != nullptr && str_comp(Section.m_pStableCardId, pStableCardId) == 0 && Section.m_HasCachedHeight)
-			return Section.m_CachedHeight;
-	}
-	return FallbackHeight;
 }
 
 void CSectionLoader::Reset()
@@ -614,8 +608,8 @@ const char *CSectionLoader::GetPerfReport() const
 
 int CSectionLoader::ComputeViewportPriority(const CUIRect &SectionRect) const
 {
-	const float ViewportTop = m_MainView.y - m_ScrollY;
-	const float ViewportBottom = ViewportTop + m_MainView.h;
+	const float ViewportTop = m_Viewport.y;
+	const float ViewportBottom = m_Viewport.y + m_Viewport.h;
 	const float PrefetchMargin = 200.0f;
 
 	if(SectionRect.y + SectionRect.h >= ViewportTop - PrefetchMargin &&

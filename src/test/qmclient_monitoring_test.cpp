@@ -1581,12 +1581,14 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	EXPECT_EQ(Body.find("auto DrawSectionBox = "), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->RenderBatchableRect(&Section, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
 	EXPECT_NE(Body.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_NE(Body.find("AppendDeckCards(vLeftSections, s_VisualFontLoader);"), std::string::npos);
-	EXPECT_NE(Body.find("AppendDeckCards(vRightSections, s_RightSectionLoader);"), std::string::npos);
+	EXPECT_NE(Body.find("AppendDeckCards(vLeftSections);"), std::string::npos);
+	EXPECT_NE(Body.find("AppendDeckCards(vRightSections);"), std::string::npos);
 	EXPECT_NE(Body.find("s_VisualFontLoader.Process(false);"), std::string::npos);
 	EXPECT_NE(Body.find("s_RightSectionLoader.Process(false);"), std::string::npos);
-	EXPECT_NE(Body.find("Loader.CachedHeightForStableCardId(pStableCardId, FallbackHeight)"), std::string::npos);
-	EXPECT_EQ(Body.find("Measure = Section.m_MeasureFn"), std::string::npos);
+	EXPECT_EQ(Body.find("CachedHeightForStableCardId("), std::string::npos);
+	EXPECT_NE(Body.find("Measure = Section.m_MeasureFn"), std::string::npos);
+	EXPECT_EQ(Body.find("s_VisualFontLoader.m_ScrollY"), std::string::npos);
+	EXPECT_EQ(Body.find("s_RightSectionLoader.m_ScrollY"), std::string::npos);
 	EXPECT_EQ(Body.find("DrawTClientCacheSectionBox("), std::string::npos);
 	EXPECT_EQ(Body.find("InsetTClientCacheSectionContent("), std::string::npos);
 	EXPECT_EQ(Source.find("ConfigureSplitCachedStaticLayer"), std::string::npos);

@@ -379,7 +379,9 @@ TEST(SettingsWarmup, TClientSectionLoadersEnableDeferredFarMeasurement)
 	ASSERT_NE(LeftMaxSectionsPos, std::string::npos);
 	const size_t LeftDeferredPos = RenderBody.find("s_VisualFontLoader.SetDeferredFarMeasurementEnabled(true);", LeftMaxSectionsPos);
 	ASSERT_NE(LeftDeferredPos, std::string::npos);
-	const size_t LeftBeginPos = RenderBody.find("s_VisualFontLoader.Begin(LeftView, 5.0f);", LeftDeferredPos);
+	const size_t LeftViewportPos = RenderBody.find("LeftLoaderViewport.y -= ScrollOffset.y;", LeftDeferredPos);
+	ASSERT_NE(LeftViewportPos, std::string::npos);
+	const size_t LeftBeginPos = RenderBody.find("s_VisualFontLoader.Begin(LeftView, LeftLoaderViewport, 5.0f);", LeftViewportPos);
 	ASSERT_NE(LeftBeginPos, std::string::npos);
 
 	const size_t RightProgressivePos = RenderBody.find("s_RightSectionLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);");
@@ -388,8 +390,11 @@ TEST(SettingsWarmup, TClientSectionLoadersEnableDeferredFarMeasurement)
 	ASSERT_NE(RightMaxSectionsPos, std::string::npos);
 	const size_t RightDeferredPos = RenderBody.find("s_RightSectionLoader.SetDeferredFarMeasurementEnabled(true);", RightMaxSectionsPos);
 	ASSERT_NE(RightDeferredPos, std::string::npos);
-	const size_t RightBeginPos = RenderBody.find("s_RightSectionLoader.Begin(RightView, 5.0f);", RightDeferredPos);
+	const size_t RightViewportPos = RenderBody.find("RightLoaderViewport.y -= ScrollOffset.y;", RightDeferredPos);
+	ASSERT_NE(RightViewportPos, std::string::npos);
+	const size_t RightBeginPos = RenderBody.find("s_RightSectionLoader.Begin(RightView, RightLoaderViewport, 5.0f);", RightViewportPos);
 	ASSERT_NE(RightBeginPos, std::string::npos);
+	EXPECT_EQ(RenderBody.find(".m_ScrollY"), std::string::npos);
 }
 
 TEST(SettingsRuntimeCache, BudgetStopsEveryMainThreadCost)
