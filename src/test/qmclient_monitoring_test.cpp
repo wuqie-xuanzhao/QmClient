@@ -6628,6 +6628,7 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationUsesTabRouteTable)
 	EXPECT_NE(QmClient.find("{\"tclient-bind-wheel\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"tclient-chat-binds\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"tclient-status-bar\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"tclient-info\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-hud\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-chat\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
 	EXPECT_NE(QmClient.find("{\"appearance-name-plate\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);

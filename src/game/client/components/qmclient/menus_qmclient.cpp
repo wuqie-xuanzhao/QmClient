@@ -170,6 +170,7 @@ static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
 	{"tclient-warlist", CMenus::SETTINGS_TCLIENT, 2},
 	{"tclient-chat-binds", CMenus::SETTINGS_TCLIENT, 3},
 	{"tclient-status-bar", CMenus::SETTINGS_TCLIENT, 4},
+	{"tclient-info", CMenus::SETTINGS_TCLIENT, 5},
 	{"appearance-hud", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HUD},
 	{"appearance-chat", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_CHAT},
 	{"appearance-name-plate", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_NAME_PLATE},

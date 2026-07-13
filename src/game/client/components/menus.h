@@ -2806,7 +2806,7 @@ private:
 	void RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly);
-	void RenderSettingsTClientInfo(CUIRect MainView);
+	void RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsTClientProfiles(CUIRect MainView);
 	void RenderSettingsTClientConfigs(CUIRect MainView);
