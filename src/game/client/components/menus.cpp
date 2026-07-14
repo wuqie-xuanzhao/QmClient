@@ -547,7 +547,7 @@ SCardMotionSpec CMenus::SettingsCardMotionSpec() const
 SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
 {
 	SSettingsCardDeckVisualOptions Options;
-	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 && g_Config.m_QmExtraAnimations != 0;
+	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;
 	return Options;
 }
 
@@ -576,6 +576,44 @@ void CMenus::LoadSettingsCardOrderModel()
 			m_SettingsCardOrderModel.ClearDirty();
 			g_Config.m_QmCardOrderMigrated = 1;
 		}
+	}
+	if(g_Config.m_QmCardLayoutVersion < 1)
+	{
+		bool LayoutChanged = false;
+		const auto IsAtOldDefault = [&](const char *pStableId, const char *pTab, int OldColumn, int OldOrder) {
+			const int Index = m_SettingsCardOrderModel.FindByStableId(pStableId);
+			if(Index < 0)
+				return false;
+			const qm_card_order::SEntry &Entry = m_SettingsCardOrderModel.Entry(Index);
+			return str_comp(Entry.m_pDefaultTab, pTab) == 0 && Entry.m_Column == OldColumn && Entry.m_OrderInColumn == OldOrder;
+		};
+		const bool ContributorsStillOldDefault =
+			IsAtOldDefault("deck:qmclient-contributors-community", "qmclient-contributors", 0, 0) &&
+			IsAtOldDefault("deck:qmclient-contributors-sponsors", "qmclient-contributors", 0, 1);
+		if(ContributorsStillOldDefault)
+		{
+			m_SettingsCardOrderModel.MoveToTab("deck:qmclient-contributors-sponsors", "qmclient-contributors", 2, 0);
+			m_SettingsCardOrderModel.MoveToTab("deck:qmclient-contributors-community", "qmclient-contributors", 1, 0);
+			LayoutChanged = true;
+		}
+		const bool BindWheelStillOldDefault =
+			IsAtOldDefault("deck:tclient-bind-wheel-editor", "tclient-bind-wheel", 1, 0) &&
+			IsAtOldDefault("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 1, 1);
+		if(BindWheelStillOldDefault)
+		{
+			m_SettingsCardOrderModel.MoveToTab("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 2, 0);
+			LayoutChanged = true;
+		}
+		if(LayoutChanged)
+		{
+			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+			{
+				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+				m_SettingsCardOrderModel.ClearDirty();
+			}
+		}
+		g_Config.m_QmCardLayoutVersion = 1;
 	}
 	m_SettingsCardOrderLoaded = true;
 }

@@ -25,7 +25,6 @@
 |------|------|
 | `qmclient_scripts/gate/check_gate.py` | Python 版仓库级门禁总入口 |
 | `checks/strict_build` | 严格构建与静态分析（`check_gate.py` 调度模块） |
-| `qmclient_scripts/gate/check_docs.py` | 治理文档一致性检查（可带 `--sync-only`） |
 | `qmclient_scripts/gate/check_settings_ui_migration.py` | P5 标准设置页统一 UI 迁移结构清单（按页面或全量） |
 | `qmclient_scripts/gate/baseline_debt_allowlist.json` | 基线白名单数据 |
 
@@ -33,7 +32,6 @@
 
 - 跑仓库级 `quick/default/full` 门禁
 - 跑严格构建、`/analyze`、clang-tidy、ASan
-- 校验 `AGENTS.md` / `CLAUDE.md` / 精简 `docs/ai-workflow/` / CI 入口是否一致
 - 维护 baseline debt allowlist
 
 ### 2. 构建与平台辅助
@@ -110,13 +108,6 @@ python qmclient_scripts/gate/check_gate.py --mode default
 python qmclient_scripts/gate/check_gate.py --mode full
 ```
 
-### 文档入口一致性
-
-```bash
-python qmclient_scripts/gate/check_docs.py
-python qmclient_scripts/gate/check_docs.py --sync-only --prefer agents
-```
-
 ### P5 设置页迁移结构清单
 
 ```bash
@@ -160,7 +151,7 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 它负责：
 
 - 把源码卫生检查、严格调试检查、测试、allowlist 与 JSON 报告收口成统一工作流
-- 用 `check_docs.py` 的内建最小规则校验根规则和文档入口是否齐全
+- 通过声明式检查注册表统一 mode、skip、scope 和特殊参数，避免在主流程按检查名分支
 - 区分“已知历史债务”和“当前新增阻断”
 
 ### 模式
@@ -174,10 +165,11 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 默认内容：
 
 - 配置变量使用检查
-- 文档一致性检查
 - 头文件 guard 检查
 - 标准头文件检查
 - `fix_style.py -n`
+- 改动触及统一设置页文件时，运行 P5 设置页迁移结构清单
+- 构建或测试前检查递归 Git 子模块是否已经初始化
 
 #### `default`
 
@@ -218,6 +210,10 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 - `环境/工具`
 - `仓库基线债务`
 - `当前改动/构建阻断`
+
+JSON 与控制台报告同时区分 `RUN`、显式 `SKIP` 和按范围 `NOT_APPLICABLE`。必需检查被显式跳过时，结果标记为 `DEGRADED`，不能表述为完整 mode 通过；`--dry-run` 标记为 `DRY_RUN`。报告写入失败属于 gate 失败，必须返回非零退出码。
+
+scope 同时保留全部改动路径和首方 C/C++ 子集：前者用于按路径触发翻译、文档、设置页等专项检查，后者继续用于格式、命名和 clang-tidy 等 C/C++ 检查。
 
 ### 常用命令
 

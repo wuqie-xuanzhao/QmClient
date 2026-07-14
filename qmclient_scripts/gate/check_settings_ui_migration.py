@@ -11,7 +11,7 @@ import sys
 PAGE_STABLE_IDS = {
     "general": ("deck:general-game", "deck:general-language", "deck:general-client", "deck:general-recording"),
     "player": ("deck:player-identity", "deck:player-country"),
-    "tee": ("deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list"),
+    "tee": ("deck:tee-identity",),
     "graphics": ("deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend", "deck:graphics-modes"),
     "sound": ("deck:sound-toggle", "deck:sound-volume", "deck:sound-audio-pack"),
     "ddnet": ("deck:ddnet-demo", "deck:ddnet-gameplay", "deck:ddnet-background", "deck:ddnet-miscellaneous"),

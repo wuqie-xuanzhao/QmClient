@@ -33,20 +33,6 @@ namespace
 		}
 	}
 
-	void RenderCanonicalSettingsCardHandle(const IUiContext &Ctx, const CUIRect &HandleRect, const bool Active, const float DrawAlpha)
-	{
-		SUiTheme Fallback;
-		const SUiTheme &Theme = SettingsCardTheme(Ctx, Fallback);
-		ColorRGBA Color = Active ? Theme.m_Accent : Theme.m_TextSmall;
-		Color.a *= DrawAlpha;
-		const float Stroke = std::max(2.0f, 2.0f * Ctx.m_UiScale);
-		const float Width = std::max(0.0f, HandleRect.w * 0.5f);
-		for(int LineIndex = -1; LineIndex <= 1; ++LineIndex)
-		{
-			const CUIRect Line{HandleRect.x + (HandleRect.w - Width) * 0.5f, HandleRect.y + HandleRect.h * 0.5f + LineIndex * Stroke * 2.0f - Stroke * 0.5f, Width, Stroke};
-			Line.Draw(Color, IGraphics::CORNER_ALL, Stroke * 0.5f);
-		}
-	}
 }
 
 SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction, const FSettingsCardRenderMeasured &RenderMeasured)
@@ -76,16 +62,15 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      Theme.m_Border;
 	Border.a *= DrawState.m_DrawAlpha;
-	DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, ui_token::settings::CARD_RADIUS * UiScale);
-	DrawFrame.m_Rect.DrawOutline(Border);
-	if(DrawState.m_Focused)
-	{
-		CUIRect FocusRect = DrawFrame.m_Rect;
-		FocusRect.Margin(-Theme.m_FocusRingWidth * UiScale, &FocusRect);
-		ColorRGBA FocusRing = Theme.m_FocusRing;
-		FocusRing.a *= DrawState.m_DrawAlpha;
-		FocusRect.DrawOutline(FocusRing);
-	}
+	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
+	const float BorderBaseWidth = DrawState.m_Focused ? 3.0f : 2.0f;
+	const float BorderWidth = std::max(BorderBaseWidth, BorderBaseWidth * UiScale);
+	const CUIRect BorderRect = DrawFrame.m_Rect;
+	BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
+	CUIRect SurfaceRect;
+	BorderRect.Margin(BorderWidth, &SurfaceRect);
+	const float InnerRadius = std::max(0.0f, CardRadius - BorderWidth);
+	SurfaceRect.Draw(Surface, IGraphics::CORNER_ALL, InnerRadius);
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
 	{
@@ -115,7 +100,6 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
-	RenderCanonicalSettingsCardHandle(Ctx, DrawFrame.m_HandleRect, DrawState.m_Hovered || DrawState.m_Focused || DrawState.m_Dragged, DrawState.m_DrawAlpha);
 	if(HeaderAction)
 		HeaderAction(DrawFrame, DrawState.m_Collapsed);
 	if(RenderMeasured)

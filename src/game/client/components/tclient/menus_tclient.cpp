@@ -1420,7 +1420,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		return RenderedHeight;
 	};
 	auto FillCachedStaticLayer = [&](SSettingsSection &Section, auto &LayoutSection) {
-		Section.m_MeasureFn = [&LayoutSection](CUIRect &Col) -> float {
+		Section.m_MeasureFn = [LayoutSection](CUIRect &Col) -> float {
 			const float SavedY = Col.y;
 			CUIRect LegacyContent = Col;
 			const CUIRect BoxRect = LayoutSection(LegacyContent, false);
@@ -1428,7 +1428,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			Col.y = LegacyContent.y - LegacyHeaderHeight;
 			return Col.y - SavedY;
 		};
-		Section.m_RenderCompactFn = [this, &LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName](CUIRect &Col) -> float {
+		Section.m_RenderCompactFn = [this, LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName](CUIRect &Col) -> float {
 			const float SavedY = Col.y;
 			CUIRect MeasuredContent = Col;
 			const CUIRect BoxRect = LayoutSection(MeasuredContent, false);
@@ -4379,7 +4379,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 	};
 
 	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(3);
+	vCards.reserve(1);
 	SSettingsCardDefinition SettingsCard;
 	SettingsCard.m_Spec = {"deck:tclient-status-bar-settings", Localize("Status Bar"), nullptr};
 	SettingsCard.m_Measure = [SettingsContentHeight](float) { return SettingsContentHeight; };
@@ -5220,9 +5220,24 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		Card.m_Render = Render;
 		vCards.push_back(std::move(Card));
 	};
-	AddCard("deck:tclient-profiles-actions", "Profiles", 160.0f, RenderActions);
-	AddCard("deck:tclient-profiles-options", "Profile Options", LineSize, RenderOptions);
-	AddCard("deck:tclient-profiles-list", "Saved Profiles", 300.0f, RenderSavedProfiles);
+	const float SectionHeadingHeight = 24.0f;
+	const float SectionGap = 10.0f;
+	const float ProfilesContentHeight = 160.0f + LineSize + 300.0f + SectionHeadingHeight * 2.0f + SectionGap * 2.0f;
+	AddCard("deck:tclient-profiles-actions", "Profiles", ProfilesContentHeight, [&](CUIRect Content) {
+		CUIRect Actions, OptionsHeading, Options, SavedProfilesHeading, SavedProfiles;
+		Content.HSplitTop(160.0f, &Actions, &Content);
+		Content.HSplitTop(SectionGap, nullptr, &Content);
+		Content.HSplitTop(SectionHeadingHeight, &OptionsHeading, &Content);
+		Content.HSplitTop(LineSize, &Options, &Content);
+		Content.HSplitTop(SectionGap, nullptr, &Content);
+		Content.HSplitTop(SectionHeadingHeight, &SavedProfilesHeading, &Content);
+		Content.HSplitTop(300.0f, &SavedProfiles, &Content);
+		DoSettingsMenuLabel(g_Config.m_UiSettingsPage, m_TClientSettingsTab, -1, "tclient-profile-options-heading", &OptionsHeading, Localize("Profile Options"), 16.0f, TEXTALIGN_ML);
+		DoSettingsMenuLabel(g_Config.m_UiSettingsPage, m_TClientSettingsTab, -1, "tclient-saved-profiles-heading", &SavedProfilesHeading, Localize("Saved Profiles"), 16.0f, TEXTALIGN_ML);
+		RenderActions(Actions);
+		RenderOptions(Options);
+		RenderSavedProfiles(SavedProfiles);
+	});
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -5470,9 +5485,8 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		if(DoTClientSettingsButton_CheckBox(&g_Config.m_TcUiOnlyModified, "tclient-ui-only-modified", Localize("Modified"), g_Config.m_TcUiOnlyModified, &FilterModified))
 			g_Config.m_TcUiOnlyModified ^= 1;
 		LogTClientPerfStageEx("tclient_configs", "filter", ETClientSettingsPerfStage::TEXT_CACHE, FilterTimer.ElapsedMs());
-	}
 
-	// Tags Filter Bar - Row 1
+		// Tags Filter Bar - Row 1
 	{
 		CUIRect TagsRow = TagsBar;
 		TagsRow.h = LineSize;
@@ -5553,6 +5567,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		TagsArea2.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea2);
 		if(DoTClientSettingsButton_CheckBox(&s_TcUiTagMisc, "tclient-ui-tag-misc", Localize("Misc"), s_TcUiTagMisc, &TagBtn))
 			s_TcUiTagMisc ^= 1;
+	}
 	};
 
 	auto RenderList = [&](CUIRect ListArea) {
@@ -6002,7 +6017,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 	};
 
 	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(3);
+	vCards.reserve(1);
 	auto AddCard = [&vCards](const char *pStableId, const char *pTitle, float Height, const FSettingsCardRender &Render) {
 		SSettingsCardDefinition Card;
 		Card.m_Spec = {pStableId, Localize(pTitle), nullptr};
@@ -6010,9 +6025,25 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		Card.m_Render = Render;
 		vCards.push_back(std::move(Card));
 	};
-	AddCard("deck:tclient-configs-actions", "Config Changes", LineSize, RenderActions);
-	AddCard("deck:tclient-configs-filters", "Config Filters", LineSize * 3.0f + MarginSmall * 2.0f, RenderFilters);
-	AddCard("deck:tclient-configs-list", "Configuration", 420.0f, RenderList);
+	const float SectionHeadingHeight = 24.0f;
+	const float SectionGap = 10.0f;
+	const float FiltersHeight = LineSize * 3.0f + MarginSmall * 2.0f;
+	const float ConfigsContentHeight = LineSize + FiltersHeight + 420.0f + SectionHeadingHeight * 2.0f + SectionGap * 2.0f;
+	AddCard("deck:tclient-configs-actions", "Configuration", ConfigsContentHeight, [&](CUIRect Content) {
+		CUIRect ChangesHeading, Actions, FiltersHeading, Filters, List;
+		Content.HSplitTop(SectionHeadingHeight, &ChangesHeading, &Content);
+		Content.HSplitTop(LineSize, &Actions, &Content);
+		Content.HSplitTop(SectionGap, nullptr, &Content);
+		Content.HSplitTop(SectionHeadingHeight, &FiltersHeading, &Content);
+		Content.HSplitTop(FiltersHeight, &Filters, &Content);
+		Content.HSplitTop(SectionGap, nullptr, &Content);
+		Content.HSplitTop(420.0f, &List, &Content);
+		DoSettingsMenuLabel(g_Config.m_UiSettingsPage, m_TClientSettingsTab, -1, "tclient-config-changes-heading", &ChangesHeading, Localize("Config Changes"), 16.0f, TEXTALIGN_ML);
+		DoSettingsMenuLabel(g_Config.m_UiSettingsPage, m_TClientSettingsTab, -1, "tclient-config-filters-heading", &FiltersHeading, Localize("Config Filters"), 16.0f, TEXTALIGN_ML);
+		RenderActions(Actions);
+		RenderFilters(Filters);
+		RenderList(List);
+	});
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);

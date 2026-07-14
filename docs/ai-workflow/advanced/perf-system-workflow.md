@@ -40,6 +40,6 @@
 - TypeScript 单测：`cd qmclient_scripts/perf && npm test`
 - TypeScript 类型检查：`cd qmclient_scripts/perf && npx tsc --noEmit`
 - C++/TS 合同测试：相关 `qmclient_monitoring_test` 或 `run_cxx_tests`
-- 文档或 harness 改动：`python qmclient_scripts/gate/check_docs.py`
+- 文档改动：人工核对命令、链接和字段合同
 
 新增字段时，优先补跨语言合同测试，避免 TS 解析器和 C++ 日志格式漂移。

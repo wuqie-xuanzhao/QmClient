@@ -192,7 +192,9 @@ def strip_cpp_comments(content: str) -> str:
     return "".join(out)
 
 
-def _find_matching_paren(content: str, open_index: int) -> int:
+def _find_matching_delimiter(
+    content: str, open_index: int, open_char: str, close_char: str
+) -> int:
     depth = 1
     i = open_index + 1
     while i < len(content):
@@ -208,14 +210,18 @@ def _find_matching_paren(content: str, open_index: int) -> int:
                     break
                 i += 1
             continue
-        if ch == "(":
+        if ch == open_char:
             depth += 1
-        elif ch == ")":
+        elif ch == close_char:
             depth -= 1
             if depth == 0:
                 return i
         i += 1
     return -1
+
+
+def _find_matching_paren(content: str, open_index: int) -> int:
+    return _find_matching_delimiter(content, open_index, "(", ")")
 
 
 def _split_top_level_args(arg_src: str) -> list[str]:
@@ -320,6 +326,54 @@ def extract_localize_key_records(content: str) -> list[SourceKeyRecord]:
             records.append(
                 SourceKeyRecord(key, "localize_or_localizable", None, context, line)
             )
+    return records
+
+
+def extract_qm_card_registry_records(content: str) -> list[SourceKeyRecord]:
+    records: list[SourceKeyRecord] = []
+    entry_re = re.compile(r'^\s*\{\s*"(?:qm|tclient|deck):', re.MULTILINE)
+    for match in entry_re.finditer(content):
+        open_brace = content.find("{", match.start())
+        close_brace = _find_matching_delimiter(content, open_brace, "{", "}")
+        if close_brace == -1:
+            continue
+        args = _split_top_level_args(content[open_brace + 1 : close_brace])
+        if len(args) < 6:
+            continue
+        line_number = _line_number(content, match.start())
+        for index in (4, 6):
+            if index >= len(args):
+                continue
+            literals = _extract_string_literals(args[index])
+            if len(literals) == 1 and literals[0]:
+                records.append(
+                    SourceKeyRecord(
+                        literals[0], "card_registry", None, "", line_number
+                    )
+                )
+    return records
+
+
+def extract_qm_runtime_card_records(content: str) -> list[SourceKeyRecord]:
+    records: list[SourceKeyRecord] = []
+    for match in re.finditer(r"\bAddCard\s*\(", content):
+        open_paren = content.find("(", match.start())
+        close_paren = _find_matching_paren(content, open_paren)
+        if close_paren == -1:
+            continue
+        args = _split_top_level_args(content[open_paren + 1 : close_paren])
+        if len(args) < 4:
+            continue
+        stable_id = _decode_string_argument(args[1])
+        if stable_id is None or not stable_id.startswith("qm:"):
+            continue
+        line_number = _line_number(content, match.start())
+        for index in (2, 3):
+            key = _decode_string_argument(args[index])
+            if key:
+                records.append(
+                    SourceKeyRecord(key, "card_runtime", None, "", line_number)
+                )
     return records
 
 
@@ -632,6 +686,18 @@ def collect_source_key_records(
             )
             for record in extract_register_help_records(content)
         )
+        records.extend(
+            SourceKeyRecord(
+                record.key, record.category, path, record.context, record.line
+            )
+            for record in extract_qm_card_registry_records(content)
+        )
+        records.extend(
+            SourceKeyRecord(
+                record.key, record.category, path, record.context, record.line
+            )
+            for record in extract_qm_runtime_card_records(content)
+        )
         records.extend(extract_known_indirect_records(path, content))
     return sorted(
         records,
@@ -677,6 +743,14 @@ def collect_file_source_key_records(path: Path) -> list[SourceKeyRecord]:
     records.extend(
         SourceKeyRecord(record.key, record.category, path, record.context, record.line)
         for record in extract_register_help_records(content)
+    )
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_qm_card_registry_records(content)
+    )
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_qm_runtime_card_records(content)
     )
     records.extend(extract_known_indirect_records(path, content))
     return sorted(records, key=_source_record_sort_key)

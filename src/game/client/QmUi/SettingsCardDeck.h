@@ -39,7 +39,7 @@ struct SSettingsCardDeckInput
 	bool m_MouseDown = false;
 	bool m_MouseReleased = false;
 	bool m_CtrlPressed = false;
-	bool m_AllowHeaderDrag = false;
+	bool m_AllowHeaderDrag = true;
 	float m_FrameDt = 1.0f / 60.0f;
 	const CScrollRegionParams *m_pScrollParams = nullptr;
 };

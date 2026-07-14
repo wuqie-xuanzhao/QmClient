@@ -15,6 +15,46 @@ class SourceKeysTest(unittest.TestCase):
             {("Open", ""), ("Close", "Menu")},
         )
 
+    def test_extracts_qm_card_registry_titles_and_descriptions(self):
+        content = "\n".join(
+            (
+                'static const std::vector<SCardDefault> s_aDefaults = {',
+                '{"qm:camera_view", "visual", ECardColumn::Right, 0, "Camera view", "camera keywords"},',
+                '{"deck:graphics-display", "graphics", ECardColumn::Left, 0,',
+                ' Localizable("Graphics display"), "monitor keywords",',
+                ' Localizable("Window and monitor")},',
+                '};',
+            )
+        )
+
+        records = source_keys.extract_qm_card_registry_records(content)
+
+        self.assertEqual(
+            {(record.key, record.category) for record in records},
+            {
+                ("Camera view", "card_registry"),
+                ("Graphics display", "card_registry"),
+                ("Window and monitor", "card_registry"),
+            },
+        )
+
+    def test_extracts_qm_runtime_card_titles_and_subtitles(self):
+        content = "\n".join(
+            (
+                "AddCard(",
+                '    EQmModuleId::CameraView, "qm:camera_view",',
+                '    "Camera & FOV", "Adjust game camera and FOV settings",',
+                "    Render);",
+            )
+        )
+
+        records = source_keys.extract_qm_runtime_card_records(content)
+
+        self.assertEqual(
+            {record.key for record in records},
+            {"Camera & FOV", "Adjust game camera and FOV settings"},
+        )
+
     def test_extracts_concatenated_literals_in_first_argument(self):
         content = 'Localize("Demo " "Player");'
         self.assertEqual(

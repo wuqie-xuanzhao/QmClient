@@ -49,4 +49,6 @@ bool CommitSettingsCardDeckSingleColumnDrop(qm_card_order::CModel &Model, const 
 // 折叠卡保留 header shell，但不得触发内容测量或内容绘制。
 bool SettingsCardDeckNeedsContentMeasure(bool Collapsed, bool MeasureEachFrame, float CachedContentHeight);
 bool SettingsCardDeckRendersContent(bool Collapsed);
+// 卡片视觉位置与静态布局不一致时，禁止用静态 header 几何开始拖拽。
+bool SettingsCardDeckAllowsDragStart(bool EntryPending, bool EntryPositionActive, bool ReflowTargetChanged, bool ReflowPositionActive);
 #endif // GAME_CLIENT_QMUI_SETTINGSCARDDECKLOGIC_H

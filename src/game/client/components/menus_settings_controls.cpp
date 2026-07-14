@@ -11,11 +11,11 @@
 #include <engine/shared/localization.h>
 #include <engine/textrender.h>
 
-#include <game/client/QmUi/UiForms.h>
-#include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/key_binder.h>
@@ -253,7 +253,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	const auto FindCard = [](const char *pId) { return qm_card_registry::FindByStableId(pId); };
 	std::vector<SSettingsCardDefinition> vCards;
 	vCards.reserve(9);
-	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false) {
+	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardHeaderAction HeaderAction = {}) {
 		const qm_card_registry::SCardDefault *pDefault = FindCard(pId);
 		if(pDefault == nullptr)
 			return;
@@ -262,13 +262,15 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 		Definition.m_Measure = [Measure, MinHeight](float Width) { return std::max(MinHeight, Measure ? Measure(Width) : 0.0f); };
 		Definition.m_Render = std::move(Render);
 		Definition.m_IsVisible = std::move(IsVisible);
+		Definition.m_IsCollapsed = std::move(IsCollapsed);
+		Definition.m_HeaderAction = std::move(HeaderAction);
 		Definition.m_MeasureEachFrame = true;
 		Definition.m_RenderWhenClipped = RenderWhenClipped;
 		vCards.push_back(std::move(Definition));
 	};
 	const auto BindHeight = [this](EBindOptionGroup Group, float) {
 		const bool Expanded = m_aBindGroupExpanded[(int)Group];
-		return HEADER_FONT_SIZE + MARGIN + (Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f);
+		return Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f;
 	};
 	if(m_SearchMatchReveal && !m_vSearchMatches.empty() && m_CurrentSearchMatch >= 0 && m_CurrentSearchMatch < (int)m_vSearchMatches.size())
 	{
@@ -287,7 +289,14 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	for(const auto &[Group, pId] : aBindCards)
 	{
 		const bool IsCustom = Group == EBindOptionGroup::CUSTOM;
-		AddCard(pId, HEADER_FONT_SIZE + MARGIN, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>(), true);
+		const auto IsCollapsed = [this, Group] { return !m_aBindGroupExpanded[(int)Group]; };
+		const auto HeaderAction = [this, Group](const SSettingsCardFrame &Frame, bool Collapsed) {
+			const int GroupIndex = (int)Group;
+			if(Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
+				m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
+			DoSettingsControlsLabel(Collapsed ? "controls-expand-collapse-icon-closed" : "controls-expand-collapse-icon-open", &Frame.m_HandleRect, Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, HEADER_FONT_SIZE, TEXTALIGN_MC);
+		};
+		AddCard(pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>(), true, IsCollapsed, HeaderAction);
 	}
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
@@ -478,19 +487,7 @@ void CMenusSettingsControls::UpdateSearchMatches()
 
 void CMenusSettingsControls::RenderSettingsBindCard(EBindOptionGroup Group, CUIRect View)
 {
-	static const char *const apTitles[(int)EBindOptionGroup::NUM] = {"Movement", "Weapon", "Voting", "Chat", "Dummy", "Miscellaneous", "Custom"};
-	const int GroupIndex = (int)Group;
-	CUIRect Header;
-	View.HSplitTop(HEADER_FONT_SIZE, &Header, &View);
-	// 卡片标题由 canonical SettingsCard 绘制；这里仅保留展开操作，避免依赖未提供的 header action hook。
-	CUIRect ExpandButton;
-	Header.VSplitRight(20.0f, &Header, &ExpandButton);
-	if(Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], 0, &ExpandButton, BUTTONFLAG_LEFT))
-		m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
-	DoSettingsControlsLabel(m_aBindGroupExpanded[GroupIndex] ? "controls-expand-collapse-icon-open" : "controls-expand-collapse-icon-closed", &ExpandButton, m_aBindGroupExpanded[GroupIndex] ? FONT_ICON_CHEVRON_UP : FONT_ICON_CHEVRON_DOWN, HEADER_FONT_SIZE, TEXTALIGN_MC);
-	View.HSplitTop(MARGIN, nullptr, &View);
-	if(m_aBindGroupExpanded[GroupIndex])
-		RenderSettingsBinds(Group, View);
+	RenderSettingsBinds(Group, View);
 }
 
 float CMenusSettingsControls::MeasureSettingsBindsHeight(EBindOptionGroup Group) const

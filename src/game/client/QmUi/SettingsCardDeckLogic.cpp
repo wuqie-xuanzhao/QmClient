@@ -119,6 +119,11 @@ bool SettingsCardDeckRendersContent(const bool Collapsed)
 	return !Collapsed;
 }
 
+bool SettingsCardDeckAllowsDragStart(const bool EntryPending, const bool EntryPositionActive, const bool ReflowTargetChanged, const bool ReflowPositionActive)
+{
+	return !EntryPending && !EntryPositionActive && !ReflowTargetChanged && !ReflowPositionActive;
+}
+
 bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetColumn, int TargetOrder, const std::vector<int> *pActiveStateIndices)
 {
 	if(pTab == nullptr || pStableId == nullptr || TargetColumn < 0 || TargetColumn > 2)

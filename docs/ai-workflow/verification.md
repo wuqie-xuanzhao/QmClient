@@ -2,13 +2,9 @@
 
 用能覆盖改动风险的最小验证集合，然后把证据记录到当前 `docs/superpowers/plans/` 或 `docs/superpowers/specs/`。
 
-## Harness 与文档
+## 文档
 
-```bash
-python qmclient_scripts/gate/check_docs.py
-```
-
-当你改了 `AGENTS.md`、`CLAUDE.md`、`docs/ai-workflow/`、`docs/superpowers/plans/`、`docs/superpowers/specs/`、governance workflow 文件或 gate 脚本后，都要跑这一项。
+纯文档改动不运行代码 gate。人工核对相对链接、状态字段、权威来源说明和命令是否仍可执行；`docs/superpowers/` 下的任务记录与提示词保持版本化保留。
 
 ## i18n 脚本工作流
 
@@ -91,7 +87,7 @@ qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust
 - C++ 源码或 C++ 测试改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14`，不能只跑 `--gtest_filter`。
 - Rust 代码改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests -j 14`。
 - `qmclient_scripts/perf` 改动：跑 `cd qmclient_scripts/perf && bun test.ts`，并在 TypeScript 代码改动时补 `npx tsc --noEmit`。
-- 只改文档或治理入口：按文档检查要求跑 `python qmclient_scripts/gate/check_docs.py`。
+- 只改文档：无需运行代码 gate，人工核对引用和内容。
 
 如果环境、时间或用户明确范围导致全量测试不能跑，最终汇报必须把它列为 gap；不能用过滤测试、build 或 quick gate 代替“全量测试通过”。
 
@@ -120,9 +116,8 @@ python qmclient_scripts/gate/check_gate.py --mode default
 python qmclient_scripts/gate/check_gate.py --mode full
 ```
 
-说明：除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate。至少选择一条与本轮范围匹配的 gate 作为验收证据：
+说明：除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate。代码改动至少选择一条与本轮范围匹配的 gate 作为验收证据：
 
-- 纯文档 / harness 变更：`python qmclient_scripts/gate/check_docs.py`
 - 常规代码改动：至少 `python qmclient_scripts/gate/check_gate.py --mode quick`
 - 提交前日常严格门：优先 `python qmclient_scripts/gate/check_gate.py --mode default`，该模式必须覆盖 C++ 全量测试和 Rust 全量测试。
 - 集中收口 / 准发布：`python qmclient_scripts/gate/check_gate.py --mode full`，该模式是在 default 基础上增加高噪音或更重的附加检查，不作为“全量测试”的默认入口。

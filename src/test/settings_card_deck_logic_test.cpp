@@ -86,6 +86,15 @@ TEST(SettingsCardDeck, CollapsedCardsSkipContentWorkAndExpandedDynamicCardsRemea
 	EXPECT_TRUE(SettingsCardDeckRendersContent(false));
 }
 
+TEST(SettingsCardDeck, ActiveCardMotionBlocksHeaderDragStart)
+{
+	EXPECT_TRUE(SettingsCardDeckAllowsDragStart(false, false, false, false));
+	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(true, false, false, false));
+	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(false, true, false, false));
+	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(false, false, true, false));
+	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(false, false, false, true));
+}
+
 TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)
 {
 	std::array<std::vector<int>, 3> aColumns{

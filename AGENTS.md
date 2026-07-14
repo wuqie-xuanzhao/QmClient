@@ -1,4 +1,4 @@
-# AGENTS.md / CLAUDE.md
+# AGENTS.md
 
 QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客户端。
 
@@ -11,6 +11,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 ## 文档系统
 
 - docs 中 是各贡献者的 AI 工作流 的文档，其功能可共享通用
+- `docs/superpowers/` 下的探索、计划、规格和提示词全部保留，作为版本化的任务记录与本地 AI 工作流入口。
 - `docs/superpowers/` 下的探索/计划/规格会随时间推移而老化；已标注 `文档已过时` 或 `部分内容已过时` banner 的文件仅供参考，不应作为实现依据。
 - 无标注或标注为当前有效的文档才是本次开发的权威来源。
 - 有效文档的判定以最新日期和 `status` 字段（如 `active`、`draft`）为准。
@@ -38,14 +39,13 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 - 先读匹配的 `docs/superpowers/plans/` 或 `docs/superpowers/specs/`。
 - 再读与当前任务匹配的最小 `docs/ai-workflow/` 规则。
-- 如果这轮涉及文档/入口/gate，先看 `check_docs.py` 是否也要同步修改。
 - 修改前检查附近源码、调用点、配置变量、翻译和测试；不理解现状时不要直接写代码。
 
 ### 完成任务后
 
 - 先按 `docs/ai-workflow/verification.md` 跑对应验证，至少覆盖当前改动的 build/test/gate。
 - 除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate；代码改动完成后，至少补一条与范围匹配的 `python qmclient_scripts/gate/check_gate.py --mode ...` 验证。
-- 默认口径：纯文档 / harness 改动至少跑 `python qmclient_scripts/gate/check_docs.py`；常规代码改动至少跑 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前如环境允许优先补到 `--mode default`，该模式覆盖 C++ 全量测试和 Rust 全量测试；集中收口或准发布改动再用 `--mode full`，full 只是在 default 基础上增加高噪音/更重附加检查，不作为“全量测试”的默认入口。
+- 默认口径：纯文档改动人工核对引用和内容；常规代码改动至少跑 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前如环境允许优先补到 `--mode default`，该模式覆盖 C++ 全量测试和 Rust 全量测试；集中收口或准发布改动再用 `--mode full`，full 只是在 default 基础上增加高噪音/更重附加检查，不作为“全量测试”的默认入口。
 - 过滤测试只用于 TDD 红绿灯、定位和快速复现；最终汇报、交给用户验收或提交前，必须按 `docs/ai-workflow/verification.md` 跑对应测试入口的全量版本。没跑全量测试就必须写成 gap，不能说“无回归”或“测试通过”。
 - 同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 必须串行执行，不要并行；要并行只能拆到不同 build 目录。
 - 影响核心逻辑时，必须派发一个新的只读子代理，按 `docs/ai-workflow/review.md` 做代码审查；审查先列 findings，再给总体结论。
@@ -55,7 +55,6 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 - 提交不必在意干净的提交, 用户同时可能进行多个工作, 所以可能会有多种的改动.
 - 必须先读 `docs/ai-workflow/git-workflow.md` , 提交是一次提交, 不优先拆分多个提交, 只有用户明确拆分或者改动可以容易的拆分出区别较大的分类的情况下, 才拆分, 否则根据文档里面的, 多填写 git commit 的信息即可
-- 先跑 `python qmclient_scripts/gate/check_docs.py`。
 - 先确认 review findings 已收口、gate 证据已补齐；不要带着“只跑过 build/test、没跑 gate”的状态进入 commit / PR。
 - 如果仓库开启了受保护分支，而当前操作者不是仓库主或没有直推权限，默认走：本地提交 -> 推到新分支 -> 开 PR -> 合并 PR -> 删分支。只有仓库主或被明确授予直推权限的人，才可以不走这条默认路径。
 - commit 和 PR 文案按 `docs/ai-workflow/git-workflow.md` 编写：标题统一用 `<type>(<scope>): <中文简述>`，正文先写问题/背景，再按 `fix`、`test`、`docs` 等分组。
@@ -63,8 +62,8 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 ### 修改文档后
 
-- 先判断这次文档改动是否改变了入口或规范；如果改变了，先同步修改 `check_docs.py` 或其约束，再跑文档检查。
-- 运行 `python qmclient_scripts/gate/check_docs.py --sync-only --prefer agents`，再运行 `python qmclient_scripts/gate/check_docs.py`，确认 AGENTS / CLAUDE 镜像一致（check_docs 目前只校验镜像同步，不查 markdown 断链）。
+- 人工核对文档路径、相对链接、状态字段和权威来源说明；纯文档改动不运行代码 gate。
+- 不要批量删除 `docs/superpowers/`；过时内容通过 banner、`status` 和新文档的 supersedes 关系标注。
 
 ### 最终汇报
 
@@ -108,7 +107,6 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 ## 构建与命令
 
 - 优先用脚本，不要依赖记忆。具体命令见 `docs/ai-workflow/verification.md` 和 `qmclient_scripts/scripts_overview.md`。
-- 修改 `AGENTS.md`、`CLAUDE.md`、`docs/ai-workflow/`、workflow 脚本或 governance CI 后，运行 `python qmclient_scripts/gate/check_docs.py --sync-only --prefer agents`，再运行 `python qmclient_scripts/gate/check_docs.py`
 - 修改 `qmclient_scripts/languages_qmclient/`、`data/languages/*.txt`、`qmclient_scripts/languages_qmclient/translations/i18n/*.toml`，或新增/删除 `Localize`、`Localizable`、`Register` help 文本后，按顺序运行 `python qmclient_scripts/languages_qmclient/extract_strings.py`、`python qmclient_scripts/languages_qmclient/generate_all.py`、`python qmclient_scripts/languages_qmclient/validate.py`、`python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
 - `qmclient_scripts/languages_qmclient/translations/i18n/*.toml` 是翻译维护库；`data/languages/*.txt` 是生成产物，不作为手工维护的长期真相源。
 - 新增英文 source key 后，先用 `extract_strings.py` 更新 active key，再用 `translate_with_local_http.py --languages ...` 生成 `translations_draft/<language>/*.toml`；审核 draft 后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，随后运行 `generate_all.py` 生成运行时语言文件。

@@ -1587,6 +1587,10 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	EXPECT_NE(Body.find("s_RightSectionLoader.Process(false);"), std::string::npos);
 	EXPECT_EQ(Body.find("CachedHeightForStableCardId("), std::string::npos);
 	EXPECT_NE(Body.find("Measure = Section.m_MeasureFn"), std::string::npos);
+	EXPECT_NE(Body.find("Section.m_MeasureFn = [LayoutSection]"), std::string::npos);
+	EXPECT_NE(Body.find("Section.m_RenderCompactFn = [this, LayoutSection,"), std::string::npos);
+	EXPECT_EQ(Body.find("Section.m_MeasureFn = [&LayoutSection]"), std::string::npos);
+	EXPECT_EQ(Body.find("Section.m_RenderCompactFn = [this, &LayoutSection,"), std::string::npos);
 	EXPECT_EQ(Body.find("s_VisualFontLoader.m_ScrollY"), std::string::npos);
 	EXPECT_EQ(Body.find("s_RightSectionLoader.m_ScrollY"), std::string::npos);
 	EXPECT_EQ(Body.find("DrawTClientCacheSectionBox("), std::string::npos);
@@ -1776,6 +1780,8 @@ TEST(QmMonitoringHelpers, QmClientFocusModeSectionLabelsUseDisplayTextNotTransla
 	EXPECT_NE(FocusModeBody.find("RenderSection(LeftColumn, \"qmclient-focus-section-visuals\", \"Visuals\");"), std::string::npos);
 	EXPECT_NE(FocusModeBody.find("RenderSection(RightColumn, \"qmclient-focus-section-audio\", \"Audio\");"), std::string::npos);
 	EXPECT_NE(FocusModeBody.find("RenderSection(RightColumn, \"qmclient-focus-section-chat\", \"Chat\");"), std::string::npos);
+	EXPECT_NE(Source.find("RenderQmVisualFocusModeContent(Content, LineHeight, BodySize, LineSpacing, LineSpacing, LabelWidth);"), std::string::npos);
+	EXPECT_EQ(Source.find("RenderQmVisualFocusModeContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, LabelWidth);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsTextColdStartAvoidsGlobalLanguageCacheAndCachesCheckboxLabels)
@@ -5969,6 +5975,21 @@ TEST(QmMonitoringHelpers, SettingsCardOrderPersistenceCommitsGlobalConfigAtomica
 	EXPECT_LT(SaveSerializePos, SaveCopyPos);
 	EXPECT_LT(SaveCopyPos, SaveDirtyClearPos);
 }
+
+TEST(QmMonitoringHelpers, SettingsCardLayoutVersionMigrationRequiresWholeLegacyGroups)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string LoadBody = ExtractSourceFunctionBody(Menus, "void CMenus::LoadSettingsCardOrderModel()");
+	ASSERT_FALSE(LoadBody.empty());
+
+	EXPECT_NE(LoadBody.find("const bool ContributorsStillOldDefault"), std::string::npos);
+	EXPECT_NE(LoadBody.find("IsAtOldDefault(\"deck:qmclient-contributors-community\""), std::string::npos);
+	EXPECT_NE(LoadBody.find("IsAtOldDefault(\"deck:qmclient-contributors-sponsors\""), std::string::npos);
+	EXPECT_NE(LoadBody.find("const bool BindWheelStillOldDefault"), std::string::npos);
+	EXPECT_NE(LoadBody.find("IsAtOldDefault(\"deck:tclient-bind-wheel-editor\""), std::string::npos);
+	EXPECT_NE(LoadBody.find("IsAtOldDefault(\"deck:tclient-bind-wheel-preview\""), std::string::npos);
+	EXPECT_EQ(LoadBody.find("MoveIfStillAtOldDefault"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
@@ -6495,6 +6516,9 @@ TEST(QmMonitoringHelpers, InputFieldsConsumeSharedLayoutHelper)
 TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 {
 	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");
+	const std::string DeckHeader = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string QmClientSource = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 
 	EXPECT_NE(Source.find("State.m_DrawOffsetY"), std::string::npos);
 	EXPECT_NE(Source.find("DrawState.m_DrawAlpha"), std::string::npos);
@@ -6502,7 +6526,26 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("DrawState.m_ReflowCompleteFeedback"), std::string::npos);
 	EXPECT_NE(Source.find("DrawState.m_Hovered || DrawState.m_Focused"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
-	EXPECT_NE(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
+	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
+	EXPECT_NE(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("SurfaceRect.Draw(Surface, IGraphics::CORNER_ALL, InnerRadius);"), std::string::npos);
+	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);
+	EXPECT_NE(DeckHeader.find("bool m_AllowHeaderDrag = true;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
+	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP"), std::string::npos);
+	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MigratedQmClientCardTitlesRemainLocalized)
+{
+	const std::string Language = ReadRepoFile("data/languages/simplified_chinese.txt");
+
+	EXPECT_NE(Language.find("Weapon animation\n== 武器动画"), std::string::npos);
+	EXPECT_NE(Language.find("Hitbox mode\n== 碰撞箱模式"), std::string::npos);
+	EXPECT_NE(Language.find("Chat Bubble\n== 消息气泡"), std::string::npos);
+	EXPECT_NE(Language.find("Streamer Mode\n== 主播模式"), std::string::npos);
+	EXPECT_NE(Language.find("Camera & FOV\n== 镜头与视野"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
@@ -6674,15 +6717,15 @@ TEST(QmMonitoringHelpers, P6VisualContentOwnersRemainShellFree)
 	EXPECT_EQ(CameraViewBody.find("RegisterModuleCard"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6FunctionGoresContentExtractionPreservesTheLightPathAndInputState)
+TEST(QmMonitoringHelpers, P6FunctionGoresContentExtractionKeepsStableHeightAndInputState)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string GoresBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly, bool LightFirstFrame)");
+	const std::string GoresBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	ASSERT_FALSE(GoresBody.empty());
 
 	EXPECT_NE(Header.find("RenderQmFunctionGoresContent"), std::string::npos);
-	EXPECT_NE(GoresBody.find("if(LightFirstFrame)"), std::string::npos);
+	EXPECT_EQ(GoresBody.find("LightFirstFrame"), std::string::npos);
 	EXPECT_NE(GoresBody.find("settings_qmclient_gores_text_inputs"), std::string::npos);
 	EXPECT_NE(GoresBody.find("s_AxiomLoginPassword"), std::string::npos);
 	EXPECT_NE(GoresBody.find("s_AxiomDummyLoginPassword"), std::string::npos);
@@ -6691,15 +6734,15 @@ TEST(QmMonitoringHelpers, P6FunctionGoresContentExtractionPreservesTheLightPathA
 	EXPECT_EQ(GoresBody.find("RegisterModuleCard"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P6FunctionBlockWordsContentExtractionPreservesItsLightPathAndInputContracts)
+TEST(QmMonitoringHelpers, P6FunctionBlockWordsContentExtractionKeepsStableHeightAndInputContracts)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string BlockWordsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly, bool LightFirstFrame)");
+	const std::string BlockWordsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	ASSERT_FALSE(BlockWordsBody.empty());
 
 	EXPECT_NE(Header.find("RenderQmFunctionBlockWordsContent"), std::string::npos);
-	EXPECT_NE(BlockWordsBody.find("if(LightFirstFrame)"), std::string::npos);
+	EXPECT_EQ(BlockWordsBody.find("LightFirstFrame"), std::string::npos);
 	EXPECT_NE(BlockWordsBody.find("str_utf8_truncate"), std::string::npos);
 	EXPECT_NE(BlockWordsBody.find("EInputFieldMode::MULTILINE"), std::string::npos);
 	EXPECT_NE(BlockWordsBody.find("CalcQiaFenInputHeight"), std::string::npos);
@@ -6817,7 +6860,8 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Header.find("m_RenderMeasured"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardEntryNodeKey"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardReflowNodeKey"), std::string::npos);
-	EXPECT_NE(Source.find("EUiAnimProperty::ALPHA"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckAllowsDragStart(EntryPending, EntryPositionActive, ReflowTargetChanged, ReflowPositionActive)"), std::string::npos);
+	EXPECT_EQ(Source.find("EUiAnimProperty::ALPHA"), std::string::npos);
 	EXPECT_NE(Source.find("m_DisplayCycle"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCard(Ctx, Card.m_Frame"), std::string::npos);
 	EXPECT_NE(Source.find("Card.m_pDefinition->m_RenderMeasured"), std::string::npos);

@@ -280,14 +280,12 @@ TEST(QmNewUiMenuBranches, AppearanceNamePlateContainsNameplateTextControlsWithou
 	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 
-	const size_t NamePlateTitlePos = NamePlateBranch.find("Localize(\"Name Plate\")");
 	const size_t TextSettingsPos = NamePlateBranch.find("Localize(\"Nameplate text\")");
 	const size_t HookStrengthPos = NamePlateBranch.find("Localize(\"Hook Strength\")");
-	ASSERT_NE(NamePlateTitlePos, std::string::npos);
 	ASSERT_NE(TextSettingsPos, std::string::npos);
 	ASSERT_NE(HookStrengthPos, std::string::npos);
-	EXPECT_LT(NamePlateTitlePos, TextSettingsPos);
 	EXPECT_LT(TextSettingsPos, HookStrengthPos);
+	EXPECT_EQ(NamePlateBranch.find("appearance-name-plate-title"), std::string::npos);
 
 	EXPECT_NE(NamePlateBranch.find("g_Config.m_QmNameplateTextEffects"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("QM_TEXT_EFFECT_BORDER"), std::string::npos);
@@ -1690,7 +1688,7 @@ TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 	EXPECT_NE(LaserBranch.find("UpdateMeasuredCardHeight(s_LaserMeasuredEnhancedCardHeight"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("UpdateMeasuredCardHeight(s_LaserMeasuredColorCardHeight"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("UpdateMeasuredCardHeight(s_LaserMeasuredPreviewCardHeight"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("DoAppearanceHeading(EnhancedCardContent, \"appearance-laser-enhancement-title\", Localize(\"Laser settings\"), HeadlineFontSize, HeadlineHeight);"), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("appearance-laser-enhancement-title"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, &g_Config.m_QmLaserEnhanced"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserGlowIntensity"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserSize"), std::string::npos);
@@ -1774,8 +1772,9 @@ TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 	const std::string Body = ReadTextFile("src/game/client/QmUi/SettingsCard.cpp");
 	ASSERT_FALSE(Body.empty());
 	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
-	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Surface"), std::string::npos);
-	EXPECT_NE(Body.find("DrawFrame.m_Rect.DrawOutline(Border)"), std::string::npos);
+	EXPECT_NE(Body.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
+	EXPECT_NE(Body.find("SurfaceRect.Draw(Surface, IGraphics::CORNER_ALL, InnerRadius)"), std::string::npos);
+	EXPECT_EQ(Body.find("DrawOutline(Border)"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("RenderQmSettingsGlassCard"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("m_QmCardBackdropBlur"), std::string::npos);
 }
@@ -1794,8 +1793,8 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 
 	const std::string HudBranch = BlockBodyAfter(RenderSettingsAppearance, "if(m_AppearanceSettingsTab == APPEARANCE_TAB_HUD)");
 	ASSERT_FALSE(HudBranch.empty());
-	EXPECT_NE(HudBranch.find("AddCard(0, HudMinCardHeight"), std::string::npos);
-	EXPECT_NE(HudBranch.find("AddCard(1, HudMinCardHeight"), std::string::npos);
+	EXPECT_NE(HudBranch.find("AddCard(0, HudLeftMinCardHeight"), std::string::npos);
+	EXPECT_NE(HudBranch.find("AddCard(1, HudRightMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsAppearance.find("\"deck:appearance-hud-main\""), std::string::npos);
 	EXPECT_NE(RenderSettingsAppearance.find("\"deck:appearance-hud-ddrace\""), std::string::npos);
 	EXPECT_NE(HudBranch.find("UpdateMeasuredCardHeight(s_HudMeasuredLeftCardHeight"), std::string::npos);
@@ -2195,9 +2194,9 @@ TEST(QmNewUiMenuBranches, TClientProfilesUsesPublicCardDeck)
 	EXPECT_NE(Body.find("s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);"), std::string::npos);
 	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ProfilesPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.Render("), std::string::npos);
-	EXPECT_NE(Registry.find("{\"deck:tclient-profiles-actions\", \"tclient-profiles\", ECardColumn::Left, 0"), std::string::npos);
-	EXPECT_NE(Registry.find("{\"deck:tclient-profiles-options\", \"tclient-profiles\", ECardColumn::Right, 0"), std::string::npos);
-	EXPECT_NE(Registry.find("{\"deck:tclient-profiles-list\", \"tclient-profiles\", ECardColumn::Left, 1"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-profiles-actions\", \"tclient-profiles\", ECardColumn::Full, 0"), std::string::npos);
+	EXPECT_EQ(Registry.find("deck:tclient-profiles-options"), std::string::npos);
+	EXPECT_EQ(Registry.find("deck:tclient-profiles-list"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, TClientConfigsUsesPublicCardDeck)
@@ -2211,9 +2210,9 @@ TEST(QmNewUiMenuBranches, TClientConfigsUsesPublicCardDeck)
 	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ConfigsPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.Render("), std::string::npos);
 	EXPECT_NE(Body.find("static CScrollRegion s_ConfigListScrollRegion;"), std::string::npos);
-	EXPECT_NE(Registry.find("{\"deck:tclient-configs-actions\", \"tclient-configs\", ECardColumn::Left, 0"), std::string::npos);
-	EXPECT_NE(Registry.find("{\"deck:tclient-configs-filters\", \"tclient-configs\", ECardColumn::Right, 0"), std::string::npos);
-	EXPECT_NE(Registry.find("{\"deck:tclient-configs-list\", \"tclient-configs\", ECardColumn::Left, 1"), std::string::npos);
+	EXPECT_NE(Registry.find("{\"deck:tclient-configs-actions\", \"tclient-configs\", ECardColumn::Full, 0"), std::string::npos);
+	EXPECT_EQ(Registry.find("deck:tclient-configs-filters"), std::string::npos);
+	EXPECT_EQ(Registry.find("deck:tclient-configs-list"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, TClientWarListDefersDeletesAndValidatesSelections)
@@ -2613,18 +2612,17 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	ASSERT_NE(RefreshAfterDeck, std::string::npos);
 	EXPECT_LT(SkinListPriority, SkinListStart);
 	EXPECT_LT(DeckRender, RefreshAfterDeck);
-	const size_t ListCardStart = Tee.find("AddCard(ListSpec, 760.0f * UiScale");
-	const size_t ListCardEnd = Tee.find("const SSettingsPageLayoutFrame TeePage", ListCardStart);
-	ASSERT_NE(ListCardStart, std::string::npos);
-	ASSERT_NE(ListCardEnd, std::string::npos);
-	EXPECT_NE(Tee.substr(ListCardStart, ListCardEnd - ListCardStart).find("}, true);"), std::string::npos);
+	EXPECT_NE(Tee.find("AddCard(IdentitySpec, TeeCardContentHeight"), std::string::npos);
+	EXPECT_NE(Tee.find("RenderIdentity(IdentityContent);"), std::string::npos);
+	EXPECT_NE(Tee.find("RenderOptions(OptionsContent);"), std::string::npos);
+	EXPECT_NE(Tee.find("RenderList(ListContent);"), std::string::npos);
 	EXPECT_NE(DeckSource.find("if(DrawLayout.m_TwoColumns && !aDisplayColumns[0].empty())"), std::string::npos);
 	EXPECT_NE(DeckSource.find("const size_t NumLayers = std::max({aDisplayColumns[0].size(), aDisplayColumns[1].size(), aDisplayColumns[2].size()});"), std::string::npos);
 	EXPECT_NE(DeckSource.find("AppendColumn(aDisplayColumns[1], 1, DrawLayout.m_aColumns[0], LeftY);"), std::string::npos);
 	EXPECT_NE(DeckSource.find("if(Visible || Card.m_pDefinition->m_RenderWhenClipped)"), std::string::npos);
 	EXPECT_NE(Tee.find("deck:tee-identity"), std::string::npos);
-	EXPECT_NE(Tee.find("deck:tee-skin-options"), std::string::npos);
-	EXPECT_NE(Tee.find("deck:tee-skin-list"), std::string::npos);
+	EXPECT_EQ(Tee.find("deck:tee-skin-options"), std::string::npos);
+	EXPECT_EQ(Tee.find("deck:tee-skin-list"), std::string::npos);
 	EXPECT_NE(Navigation.find("{\"tee\", CMenus::SETTINGS_TEE}"), std::string::npos);
 	EXPECT_EQ(Tee.find("BeginSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(Tee.find("DoSettingsScrollbarOption("), std::string::npos);

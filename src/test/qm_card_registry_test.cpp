@@ -50,9 +50,22 @@ TEST(QmCardRegistry, P6QmClientContributorsCards)
 	ASSERT_NE(pSponsors, nullptr);
 	EXPECT_STREQ(pCommunity->m_pDefaultTab, "qmclient-contributors");
 	EXPECT_STREQ(pSponsors->m_pDefaultTab, "qmclient-contributors");
-	EXPECT_EQ(pCommunity->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
-	EXPECT_EQ(pSponsors->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
-	EXPECT_LT(pCommunity->m_DefaultOrder, pSponsors->m_DefaultOrder);
+	EXPECT_EQ(pCommunity->m_DefaultColumn, qm_card_registry::ECardColumn::Left);
+	EXPECT_EQ(pSponsors->m_DefaultColumn, qm_card_registry::ECardColumn::Right);
+	EXPECT_EQ(pCommunity->m_DefaultOrder, 0);
+	EXPECT_EQ(pSponsors->m_DefaultOrder, 0);
+}
+
+TEST(QmCardRegistry, BindWheelUsesTwoColumnsByDefault)
+{
+	const auto *pEditor = qm_card_registry::FindByStableId("deck:tclient-bind-wheel-editor");
+	const auto *pPreview = qm_card_registry::FindByStableId("deck:tclient-bind-wheel-preview");
+	ASSERT_NE(pEditor, nullptr);
+	ASSERT_NE(pPreview, nullptr);
+	EXPECT_EQ(pEditor->m_DefaultColumn, qm_card_registry::ECardColumn::Left);
+	EXPECT_EQ(pPreview->m_DefaultColumn, qm_card_registry::ECardColumn::Right);
+	EXPECT_EQ(pEditor->m_DefaultOrder, 0);
+	EXPECT_EQ(pPreview->m_DefaultOrder, 0);
 }
 
 // 意图：注册表必须覆盖当前 Tclient 运行时 section 的 stable card id。
@@ -98,8 +111,6 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:general-client",
 		"deck:general-recording",
 		"deck:tee-identity",
-		"deck:tee-skin-options",
-		"deck:tee-skin-list",
 		"deck:graphics-display",
 		"deck:player-identity",
 		"deck:player-country",
@@ -166,15 +177,13 @@ TEST(QmCardRegistry, PlayerStandardPageCardsPersistInVisualOrder)
 		(std::vector<std::string>{"deck:player-country"}));
 }
 
-// 意图：Tee 页的身份、选项和皮肤列表必须在重启后保持全宽/左列 placement，
-// 否则全局 Search 或自定义排序会丢失皮肤列表的目标卡片。
-TEST(QmCardRegistry, TeeStandardPageCardsPersistInVisualOrder)
+// 意图：Tee 页的身份、选项和皮肤列表属于同一功能，注册表只能暴露一个公共卡片。
+TEST(QmCardRegistry, TeeStandardPageUsesOneFunctionalCard)
 {
 	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
 	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 0),
-		(std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-list"}));
-	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 1),
-		(std::vector<std::string>{"deck:tee-skin-options"}));
+		(std::vector<std::string>{"deck:tee-identity"}));
+	EXPECT_TRUE(Model.StableIdOrder("deck:", "tee", 1).empty());
 }
 
 // 意图：Graphics 试点卡片的 placement 已是公共 registry 的事实源；补齐滚动时不得破坏序列化后的列顺序。

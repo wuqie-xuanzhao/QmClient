@@ -185,7 +185,32 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		m_Drag.Reset();
 	if(m_Drag.Active() && !Input.m_MouseDown && !Input.m_MouseReleased)
 		m_Drag.Reset();
-	if(!m_Drag.Active() && (Input.m_CtrlPressed || Input.m_AllowHeaderDrag) && Input.m_MousePressed)
+	bool EntryPending = false;
+	bool EntryPositionActive = false;
+	bool ReflowTargetChanged = false;
+	bool ReflowPositionActive = false;
+	if(Ctx.m_pAnim != nullptr)
+	{
+		for(const SPreparedSettingsCard &Card : vPrepared)
+		{
+			const SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
+			const char *pStableId = Card.m_pDefinition->m_Spec.m_pStableId;
+			if(Motion.m_EntryDuration > 0.0f)
+			{
+				const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId, m_DisplayCycle);
+				EntryPending = EntryPending || Runtime.m_EntryDisplayCycle != m_DisplayCycle;
+				EntryPositionActive = EntryPositionActive || Ctx.m_pAnim->HasActiveAnimation(EntryKey, EUiAnimProperty::POS_Y);
+			}
+			if(Motion.m_ReflowDuration > 0.0f && Runtime.m_ReflowInitialized)
+			{
+				const uint64_t ReflowKey = SettingsCardReflowNodeKey(pTab, pStableId);
+				const float ReflowTargetY = Card.m_Frame.m_Rect.y - ScrollOffset.y;
+				ReflowTargetChanged = ReflowTargetChanged || std::abs(Runtime.m_LastReflowTargetY - ReflowTargetY) > 0.001f;
+				ReflowPositionActive = ReflowPositionActive || Ctx.m_pAnim->HasActiveAnimation(ReflowKey, EUiAnimProperty::POS_Y);
+			}
+		}
+	}
+	if(!m_Drag.Active() && SettingsCardDeckAllowsDragStart(EntryPending, EntryPositionActive, ReflowTargetChanged, ReflowPositionActive) && (Input.m_CtrlPressed || Input.m_AllowHeaderDrag) && Input.m_MousePressed)
 	{
 		for(const SPreparedSettingsCard &Card : vPrepared)
 		{
@@ -267,17 +292,14 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			{
 				Runtime.m_EntryDisplayCycle = m_DisplayCycle;
 				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::POS_Y, Motion.m_EntryDistance);
-				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::ALPHA, 0.0f);
 			}
 			if(Motion.m_EntryDuration > 0.0f)
 			{
 				State.m_DrawOffsetY += ResolveUiAnimValue(*Ctx.m_pAnim, EntryKey, EUiAnimProperty::POS_Y, 0.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
-				State.m_DrawAlpha = ResolveUiAnimValue(*Ctx.m_pAnim, EntryKey, EUiAnimProperty::ALPHA, 1.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
 			}
 			else
 			{
 				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::POS_Y, 0.0f);
-				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::ALPHA, 1.0f);
 			}
 
 			const uint64_t ReflowKey = SettingsCardReflowNodeKey(pTab, pStableId);
