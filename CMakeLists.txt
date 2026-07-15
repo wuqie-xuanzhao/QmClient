@@ -4357,7 +4357,7 @@ if(CLIENT AND DMGBUILD_FOUND)
   if(VIDEORECORDER AND FFMPEG_FOUND AND FFMPEG_COPY_FILES)
     foreach(file ${FFMPEG_COPY_FILES})
       list(APPEND DMG_FFMPEG_COPY_COMMANDS
-        COMMAND ${CMAKE_COMMAND} -E copy ${file} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/)
+        COMMAND ${CMAKE_COMMAND} -E copy "${file}" "${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/")
     endforeach()
   endif()
 
