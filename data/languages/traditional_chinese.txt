@@ -35,10 +35,10 @@
 == %d 條新被提及消息
 
 %d of %d server
-== %d/%d 個服務器
+== %d/%d 個伺服器
 
 %d of %d servers
-== %d/%d 個服務器
+== %d/%d 個伺服器
 
 %d player
 == %d 在線玩家
@@ -50,10 +50,10 @@
 == 已刪除 %d 個選中項，但有 %d 項無法刪除。第一個失敗項是“%s”。
 
 %d servers, %d users
-== %d 個服務器，%d 個用戶
+== %d 個伺服器，%d 個用戶
 
 %d servers, %d users, %d dummies
-== %d 個服務器，%d 個用戶，%d 個分身
+== %d 個伺服器，%d 個用戶，%d 個分身
 
 %d teams
 == %d 個隊伍
@@ -149,7 +149,7 @@
 == '%s' 發起了伺服器選項投票：%s
 
 '%s' called vote to change server option: %s (reason: %s)
-== '%s' 發起了服務器選項投票：%s（原因：%s）
+== '%s' 發起了伺服器選項投票：%s（原因：%s）
 
 '%s' disabled practice mode for your team
 == '%s' 關閉了你們隊伍的練習模式
@@ -167,7 +167,7 @@
 == '%s' 邀請你加入 %s 隊。使用 /team %s 即可加入
 
 '%s' is not a valid option on this server
-== '%s' 不是本服務器可用的投票選項
+== '%s' 不是本伺服器可用的投票選項
 
 '%s' joined team %s
 == '%s' 加入了 %s 隊
@@ -212,10 +212,10 @@
 == - 您在這張地圖有 %d 個存檔！
 
 /map is disabled
-== 本服務器已禁用 /map
+== 本伺服器已禁用 /map
 
 /times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
-== /times ?s?i 顯示服務器最近 5 次成績，或名稱以 s 開頭玩家從第 i 條開始的成績（i 默認 1，-1 表示第一條）
+== /times ?s?i 顯示伺服器最近 5 次成績，或名稱以 s 開頭玩家從第 i 條開始的成績（i 默認 1，-1 表示第一條）
 
 0 - Disabled, 1-9999 minutes
 == 0 - 禁用，1-9999 分鐘
@@ -399,7 +399,7 @@ Add a rcon key
 == 添加 rcon 鍵
 
 Add a server as a favorite
-== 將服務器添加為收藏夾
+== 將伺服器添加為收藏夾
 
 Add a skin as a favorite
 == 將皮膚添加為收藏夾
@@ -417,7 +417,7 @@ Add a skin to the queue
 == 將皮膚添加到隊列中
 
 add a sqlserver
-== 添加一個 SQL 服務器
+== 添加一個 SQL 伺服器
 
 Add a type to the exclusion filter for a specific community
 == 將類型加入指定社區的排除篩選
@@ -507,7 +507,7 @@ Address
 == 地址
 
 Address to bind the external console. Anything other than "localhost" is dangerous.
-== 綁定外部控制檯的地址。除了“localhost”之外的任何內容都是危險的
+== 綁定外部控制台的地址。除了“localhost”之外的任何內容都是危險的
 
 Adds a specific war entry
 == 添加指定敵對條目
@@ -519,7 +519,7 @@ Adjust game camera and FOV settings
 == 調整遊戲鏡頭和視野設置
 
 Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
-== 調整本地/遠程控制檯中的信息量（-3 = 無，-2 = 僅錯誤，-1 = 警告，0 = 信息，1 = 調試，2 = 跟蹤）
+== 調整本地/遠程控制台中的信息量（-3 = 無，-2 = 僅錯誤，-1 = 警告，0 = 信息，1 = 調試，2 = 跟蹤）
 
 Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == 調整日誌文件中的信息量（-3 = 無，-2 = 僅錯誤，-1 = 警告，0 = 信息，1 = 調試，2 = 跟蹤）
@@ -528,13 +528,13 @@ Adjust opacity of entity layers
 == 調整各個實體層的透明度
 
 Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
-== 調整系統控制檯中的信息量（-3 = 無，-2 = 僅錯誤，-1 = 警告，0 = 信息，1 = 調試，2 = 跟蹤）
+== 調整系統控制台中的信息量（-3 = 無，-2 = 僅錯誤，-1 = 警告，0 = 信息，1 = 調試，2 = 跟蹤）
 
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 == 調整其他隊伍實體（如 Tee 和名牌）的不透明度
 
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
-== 調整外部控制檯中的信息量（-3 = 無、-2 = 僅錯誤、-1 = 警告、0 = 信息、1 = 調試、2 = 跟蹤）
+== 調整外部控制台中的信息量（-3 = 無、-2 = 僅錯誤、-1 = 警告、0 = 信息、1 = 調試、2 = 跟蹤）
 
 Adjust your prediction margin while frozen
 == 調整凍結時的預測量
@@ -816,7 +816,7 @@ Are you sure that you want to disconnect and play this demo?
 == 確定要斷開當前連接並播放這個錄像嗎？
 
 Are you sure that you want to disconnect and switch to a different server?
-== 確定要斷開此服務器連接並進入其他服務器嗎？
+== 確定要斷開此伺服器連接並進入其他伺服器嗎？
 
 Are you sure that you want to disconnect your dummy?
 == 確定要斷開分身連接嗎？
@@ -987,7 +987,7 @@ Auto hot-reload after external saves
 == 外部儲存後自動熱重新載入
 
 Auto login Axiom server
-== 自動登錄 Axiom 服務器
+== 自動登錄 Axiom 伺服器
 
 Auto manage IME while typing
 == 輸入時自動管理 IME
@@ -1002,7 +1002,7 @@ Auto record demo
 == 自動錄製 demo
 
 Auto refresh server list
-== 自動刷新服務器列表
+== 自動刷新伺服器列表
 
 Auto reject vote
 == 自動拒絕投票
@@ -1086,7 +1086,7 @@ Auto-lock delay (seconds)
 == 自動鎖定延遲（秒）
 
 Auto-login after entering Axiom community server
-== 進入 Axiom 社區服務器後自動登錄
+== 進入 Axiom 社區伺服器後自動登錄
 
 Auto-record replay when player sets a new personal best time.
 == 玩家打破個人最佳紀錄時自動錄製回放
@@ -1374,7 +1374,7 @@ Best match
 == 最佳匹配
 
 Bind address for client/server
-== 綁定客戶端/服務器的地址
+== 綁定客戶端/伺服器的地址
 
 Bind key to execute a command or view keybindings
 == 綁定按鍵以執行命令或查看按鍵綁定
@@ -1443,13 +1443,13 @@ Broadcast message
 == 廣播消息
 
 Broadcast shown to players using old DDNet client
-== 廣播以向使用舊版本 DDNet 客戶端的玩家顯示
+== 向使用舊版本 DDNet 客戶端的玩家顯示
 
 Broadcast shown to players with known bot client
-== 廣播以向具有已知機器人客戶端的玩家顯示
+== 向具有已知機器人客戶端的玩家顯示
 
 Broadcast shown to players without DDNet client
-== 廣播以向沒有 DDNet 客戶端的玩家顯示
+== 向沒有 DDNet 客戶端的玩家顯示
 
 Browser
 == 瀏覽
@@ -1542,7 +1542,7 @@ Can't enable team 0 mode with practice mode on.
 == 開啟練習模式時無法啟用 team 0 模式。
 
 Can't find a Tutorial server
-== 無法找到教學服務器
+== 無法找到教學伺服器
 
 Can't invite players to this team
 == 目前這個隊伍無法邀請玩家
@@ -1704,7 +1704,7 @@ Chat word filtering
 == 聊天屏蔽詞過濾
 
 Check if voice server address is reachable
-== 建議檢查語音服務器地址是否可用
+== 建議檢查語音伺服器地址是否可用
 
 Check input device, system default mic, and mic permission first
 == 建議先檢查輸入設備、系統默認麥克風和麥克風權限
@@ -1812,13 +1812,13 @@ Clear friend note
 == 清除好友備註
 
 Clear local console
-== 清空本地控制檯
+== 清空本地控制台
 
 Clear note
 == 移除備註
 
 Clear remote console
-== 清空遠程控制檯
+== 清空遠程控制台
 
 Clearable text...
 == 可清除文本……
@@ -1962,7 +1962,7 @@ Command executed by tc_mod_weapon, target id appended at end
 == tc_mod_weapon 執行的命令，目標 id 會附加在命令末尾
 
 Command executed when pointing at someone and shooting (default kill, only works when remote console is authenticated)
-== 指向某人並射擊時執行命令（默認 kill，僅在遠程控制檯已鑑權時生效）
+== 指向某人並射擊時執行命令（默認 kill，僅在遠程控制台已鑑權時生效）
 
 Command is not available on solo servers
 == 此命令在 solo 伺服器上不可用
@@ -1974,7 +1974,7 @@ Command:
 == 指令：
 
 Commands run in the console
-== 在控制檯中執行的命令
+== 在控制台中執行的命令
 
 Common key bindings
 == 常見的按鍵綁定
@@ -1989,7 +1989,7 @@ Compact
 == 緊湊列表
 
 Compatible with single-player area hints from other servers
-== 兼容其他服務器的類似單人區域提示
+== 兼容其他伺服器的類似單人區域提示
 
 Compressor attack time (ms)
 == 壓縮器攻擊時間（毫秒）
@@ -2010,7 +2010,7 @@ Concurrency (0 = auto)
 == 併發數（0 = 自動）
 
 Concurrent requests when refreshing server browser
-== 刷新服務器瀏覽器時使用的併發請求數
+== 刷新伺服器瀏覽器時使用的併發請求數
 
 Config
 == 配置
@@ -2058,10 +2058,10 @@ Confirm clear finished
 == 確認清空已完成
 
 Confirm disconnect after game end (minutes, -1 off, 0 always)
-== 遊戲結束後斷開連接之前彈出確認窗口（以分鐘為單位，-1 表示關閉，0 表示始終打開）
+== 遊戲結束後斷開連接之前彈出確認窗口（分鐘，-1 表示關閉，0 表示始終打開）
 
 Confirm quit after game end (minutes, -1 off, 0 always)
-== 遊戲結束後退出前彈出確認窗口（以分鐘為單位，-1 關閉，0 始終打開）
+== 遊戲結束後退出前彈出確認窗口（分鐘，-1 關閉，0 始終打開）
 
 Connect address error
 == 連接地址錯誤
@@ -2073,10 +2073,10 @@ Connect dummy to enable
 == 連接分身後可啟用
 
 Connect to a server first
-== 需要先連接到服務器
+== 需要先連接到伺服器
 
 Connect to server first to establish voice network link
-== 需要先進入服務器，語音網絡鏈路才會建立
+== 需要先進入伺服器，語音網絡鏈路才會建立
 
 Connect to the specified host/ip
 == 連接到指定主機 /IP
@@ -2130,16 +2130,16 @@ Connlimit: time window for IP connection count
 == Connlimit：IP 連接數統計時間
 
 Console
-== 控制檯
+== 控制台
 
 Console color
-== 控制檯顏色
+== 控制台顏色
 
 Console command executed after joining server
-== 進入服務器後執行的控制檯命令
+== 進入伺服器後執行的控制台命令
 
 Console command executed before connecting to server
-== 連接服務器前執行的控制檯命令
+== 連接伺服器前執行的控制台命令
 
 Continue anyway?
 == 仍要退出？
@@ -2196,7 +2196,7 @@ Copy
 == 複製
 
 Copy info
-== 複製服務器信息
+== 複製伺服器信息
 
 Copy name
 == 複製名字
@@ -2229,34 +2229,34 @@ Could not find your Team
 == 找不到你的隊伍
 
 Could not get current server address
-== 無法獲取當前服務器地址
+== 無法獲取當前伺服器地址
 
 Could not get server list from master server
-== 無法從主服務器獲取服務器列表
+== 無法從主伺服器獲取伺服器列表
 
 Could not load default touch controls from file. See local console for details.
-== 無法從文件加載默認觸控設置。檢查本地控制檯以獲取詳情。
+== 無法從文件加載默認觸控設置。檢查本地控制台以獲取詳情。
 
 Could not load sponsor QR code. Check the Base64 data
 == 無法加載支持二維碼。請檢查 Base64 內容
 
 Could not load touch controls from clipboard. See local console for details.
-== 無法從剪貼板加載觸控設置。檢查本地控制檯以獲取詳情。
+== 無法從剪貼板加載觸控設置。檢查本地控制台以獲取詳情。
 
 Could not load touch controls from file. See local console for details.
-== 無法從文件加載觸控設置。檢查本地控制檯以獲取詳情。
+== 無法從文件加載觸控設置。檢查本地控制台以獲取詳情。
 
 Could not preview this image
 == 無法預覽這張圖片
 
 Could not resolve connect address '%s'. See local console for details.
-== 無法解析連接地址 '%s'。檢查本地控制檯以獲取詳情。
+== 無法解析連接地址 '%s'。檢查本地控制台以獲取詳情。
 
 Could not save downloaded map. Try manually deleting this file: %s
 == 地圖下載失敗，請嘗試手動刪除此文件：%s
 
 Could not save touch controls to file. See local console for details.
-== 無法將觸控設置保存到文件。檢查本地控制檯以獲取詳情。
+== 無法將觸控設置保存到文件。檢查本地控制台以獲取詳情。
 
 Count players only
 == 屏蔽旁觀位
@@ -2475,7 +2475,7 @@ DDRace HUD
 == DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
-== DDraceNetwork 是一款在線合作遊戲，你和你團體裡的 Tee 的目標是抵達地圖的終點。作為新手你應該從有著最簡單的地圖的簡單（Novice）服務器入門。根據延遲來選擇離你相近的服務器。
+== DDraceNetwork 是一款在線合作遊戲，你和你團體裡的 Tee 的目標是抵達地圖的終點。作為新手你應該從有著最簡單的地圖的簡單（Novice）伺服器入門。根據延遲來選擇離你相近的伺服器。
 
 Deactivate
 == 停用
@@ -2781,7 +2781,7 @@ Disconnect dummy
 == 斷開分身連線
 
 Disconnect from the server
-== 與服務器斷開連接
+== 與伺服器斷開連接
 
 Disconnected
 == 已斷線
@@ -2835,7 +2835,7 @@ Displays resend-based packet loss estimate
 == 顯示基於重發的丟包估計
 
 Displays server snapshot latency
-== 顯示服務器快照延遲
+== 顯示伺服器快照延遲
 
 Displays X and Y velocity
 == 顯示 X 和 Y 速度
@@ -2850,7 +2850,7 @@ Displays your local time
 == 顯示你的本地時間
 
 Displays your ping to the current server
-== 顯示你到當前服務器的 Ping
+== 顯示你到當前伺服器的 Ping
 
 Dissolve
 == 消散
@@ -2874,7 +2874,7 @@ Do not predict other players when frozen
 == 自己被凍結時不預測其他玩家
 
 Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== 不要設置此變量，而是在 settings_ddnet.cfg 旁邊創建 ddnet-serverlist-urls.cfg 以指定所有可能的服務器列表 URL
+== 不要設置此變量，而是在 settings_ddnet.cfg 旁邊創建 ddnet-serverlist-urls.cfg 以指定所有可能的伺服器列表 URL
 
 Do not set, used to mark official tutorial server
 == 勿修改：用於標記官方教學伺服器
@@ -2883,7 +2883,7 @@ Do not show Tees visible on screen
 == 不顯示屏幕內可見的 Tee
 
 Do not translate server messages
-== 不翻譯服務器消息
+== 不翻譯伺服器消息
 
 Donor (drag parts from left)
 == 來源材質（從左側拖拽部件）
@@ -2985,7 +2985,7 @@ Drop on right canvas to replace one part.
 == 拖到右側畫布可替換一個部件。
 
 Dummies are not allowed on this server
-== 此服務器不允許分身
+== 此伺服器不允許分身
 
 Dummy
 == 分身
@@ -3018,7 +3018,7 @@ Dummy eyes color
 == 分身眼睛顏色
 
 Dummy eyes when joining server (0=normal, 1=pain, 2=happy, 3=surprised, 4=angry, 5=blink)
-== 加入服務器時分身的眼睛（0 = 正常，1 = 痛苦，2 = 開心，3 = 驚訝，4 = 生氣，5 = 眨眼）
+== 加入伺服器時分身的眼睛（0 = 正常，1 = 痛苦，2 = 開心，3 = 驚訝，4 = 生氣，5 = 眨眼）
 
 Dummy feet color
 == 分身腳顏色
@@ -3048,7 +3048,7 @@ Dummy hook
 == 分身鉤索
 
 Dummy is allowed on this server.
-== 此服務器允許分身。
+== 此伺服器允許分身。
 
 Dummy is currently connected.
 == 分身當前已連接。
@@ -3108,7 +3108,7 @@ Dump zone tuning in zone x
 == 導出區域 x 的調參配置
 
 dumps all sqlservers readservers = r, writeservers = w
-== 導出全部 SQL 服務器（readservers = r, writeservers = w）
+== 導出全部 SQL 伺服器（readservers = r, writeservers = w）
 
 Dumps the antibot status
 == 導出反機器人狀態
@@ -3123,7 +3123,7 @@ Duration in seconds to mute a player for spam triggering. 0 = off
 == 如果玩家對垃圾郵件觸發靜音，則靜音多少秒。0 = 關閉
 
 Duration of smooth zoom animation in game (ms) (0 = off)
-== 遊戲中平滑縮放動畫的時間（以毫秒為單位）（0 表示關閉）
+== 遊戲中平滑縮放動畫的時間（毫秒）（0 表示關閉）
 
 Dynamic Camera
 == 動態視野
@@ -3225,7 +3225,7 @@ Emote ID to send when entering freeze (0-15)
 == 進入凍結狀態時發送的表情 ID（0-15）
 
 Emotes are disabled.
-== 本服務器已禁用表情功能
+== 本伺服器已禁用表情功能
 
 Emoticon
 == 表情
@@ -3291,10 +3291,10 @@ Enable cheats for your current team's run, but you can't earn a rank
 == 為你當前隊伍啟用作弊，但將無法獲得排名
 
 Enable colored console output
-== 啟用控制檯彩色輸出
+== 啟用控制台彩色輸出
 
 Enable coloring and hearts for friends
-== 為朋友啟用著色和愛心
+== 為好友啟用著色和愛心
 
 Enable controller
 == 使用手柄
@@ -3333,7 +3333,7 @@ Enable enhanced laser effect (glow + pulse animation)
 == 啟用增強激光特效（輝光+脈衝動畫）
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
-== 啟用事件觸發（服務器在某些節日的眼睜表情，客戶端的聖誕皮膚）
+== 啟用事件觸發（伺服器在某些節日的眼睜表情，客戶端的聖誕皮膚）
 
 Enable fast input for other players in Gores mode
 == Gores 模式下對其他玩家也啟用快速輸入
@@ -3348,7 +3348,7 @@ Enable fat skin
 == 啟用脂肪皮
 
 Enable freeze call sound
-== 啟用凍結呼喊聲
+== 啟用凍結呼叫聲
 
 Enable FTAPI auto-translate (may overload the service)
 == 啟用 FTAPI 自動翻譯（可能導致服務過載）
@@ -3402,7 +3402,7 @@ Enable local lyrics cache
 == 啟用本地歌詞快取
 
 Enable long pain sound (used when shooting in freeze)
-== 啟用凍結呼叫聲
+== 啟用長痛音效（凍結中射擊時使用）
 
 Enable lyric HUD overlay
 == 啟用歌詞 HUD 疊加層
@@ -3420,7 +3420,7 @@ Enable mod weapon on %d: %s
 == 在 %d 上啟用模組武器：%s
 
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
-== 啟用 MySQL 後端而不是 SQLite 後端（當沒有 MySQL 服務器可訪問時，sv_sqlite_file 仍用作後備寫入服務器）
+== 啟用 MySQL 後端而不是 SQLite 後端（當沒有 MySQL 伺服器可訪問時，sv_sqlite_file 仍用作後備寫入伺服器）
 
 Enable new IME candidate bar
 == 啟用新版 IME 候選欄
@@ -3477,7 +3477,7 @@ Enable saving games (/save and /load)
 == 启用保存游戏（/save 和 /load）
 
 Enable server message sound
-== 啟用服務器消息提示音
+== 啟用伺服器消息提示音
 
 Enable Sixup connection.
 == 啟用 Sixup 連接
@@ -3744,7 +3744,7 @@ Exported to %s
 == 已導出到 %s
 
 External console password. Must be set to enable economy.
-== 外部控制檯密碼。需要設置此選項才能啟用經濟。
+== 外部控制台密碼。需要設置此選項才能啟用經濟。
 
 Extra animations
 == 額外動畫
@@ -3870,10 +3870,10 @@ Fetch Info
 == 回放信息
 
 Fifo file (non-Windows) or named pipe (Windows) for server console input
-== Fifo 文件（非 Windows）或命名管道 (Windows) 用作服務器控制檯的輸入
+== Fifo 文件（非 Windows）或命名管道 (Windows) 用作伺服器控制台的輸入
 
 Fifo file (non-Windows) or named pipe (Windows) used as input for client console
-== Fifo 文件（非 Windows）或命名管道 (Windows) 用作客戶端控制檯的輸入
+== Fifo 文件（非 Windows）或命名管道 (Windows) 用作客戶端控制台的輸入
 
 File
 == 文件
@@ -3885,10 +3885,10 @@ File already exists, do you want to overwrite it?
 == 文件已存在，是否覆蓋？
 
 File executed on map change/reload to set default server settings
-== 在地圖更改或重新加載時執行的文件以設置默認服務器設置
+== 在地圖更改或重新加載時執行的文件以設置默認伺服器設置
 
 File for storing ranks if sv_use_sql is disabled or as backup SQL server.
-== 用於存儲排名的文件，以防 sv_use_sql 關閉或用作備份 sql 服務器
+== 用於存儲排名的文件，以防 sv_use_sql 關閉或用作備份 sql 伺服器
 
 File with announcements, one per line.
 == 包含公告的文件，每行一個
@@ -3900,10 +3900,10 @@ Filter connecting players
 == 篩選正在連接的玩家
 
 Filter empty servers in browser
-== 過濾掉瀏覽器中的空服務器
+== 過濾掉瀏覽器中的空伺服器
 
 Filter full servers in browser
-== 在瀏覽器中過濾掉完整的服務器
+== 在瀏覽器中過濾掉完整的伺服器
 
 Filter game type
 == 要過濾的遊戲類型
@@ -3912,13 +3912,13 @@ Filter off
 == 關閉過濾
 
 Filter out password protected servers in browser
-== 在瀏覽器中過濾掉受密碼保護的服務器
+== 在瀏覽器中過濾掉受密碼保護的伺服器
 
 Filter out servers that require login
-== 過濾掉需要登錄的服務器
+== 過濾掉需要登錄的伺服器
 
 Filter out servers with player country mismatch (ISO 3166-1 numeric)
-== 過濾掉玩家所在國家/地區不匹配的服務器（ISO 3166-1 數字）
+== 過濾掉玩家所在國家/地區不匹配的伺服器（ISO 3166-1 數字）
 
 Filter out servers without friends
 == 過濾掉沒有好友的伺服器
@@ -3933,7 +3933,7 @@ Filter: Team %d
 == 過濾：隊伍 %d
 
 Filtered word console color
-== 被屏蔽詞控制檯顏色
+== 被屏蔽詞控制台顏色
 
 Find all ban records for the specified IP address
 == 查詢指定 IP 的全部封禁記錄
@@ -3960,7 +3960,7 @@ Fire
 == 開火
 
 First page in console
-== 控制檯第一頁
+== 控制台第一頁
 
 Flip:
 == 翻轉：
@@ -4056,16 +4056,16 @@ Freeze Collision Border Color
 == 凍結碰撞邊框顏色
 
 Freeze Laser Inner Color
-== 凍結雷射實心顏色
+== 凍結雷射內色
 
 Freeze laser inner color
-== 凍結雷射內部顏色
+== 凍結雷射內色
 
 Freeze Laser Outline Color
-== 凍結雷射外框顏色
+== 凍結雷射外框色
 
 Freeze laser outline color
-== 凍結的雷射輪廓顏色
+== 凍結雷射外框色
 
 Freeze opacity
 == 凍結不透明度
@@ -4209,7 +4209,7 @@ Game/predicted tick
 == 遊戲/預測 tick
 
 Gamemode. When enabled, players join as spectators
-== 比賽模式。啟用時玩家以觀眾身份加入服務器
+== 比賽模式。啟用時玩家以觀眾身份加入伺服器
 
 Gamepad sensitivity in menu/editor
 == 菜單/編輯器中的手柄靈敏度
@@ -4233,7 +4233,7 @@ Getting game info
 == 正在獲取遊戲信息
 
 Getting server list from master server
-== 正在從主服務器獲取服務器列表
+== 正在從主伺服器獲取伺服器列表
 
 Ghost
 == 影子
@@ -4548,13 +4548,13 @@ Hide names
 == 隱藏名字
 
 Hide non-friend names/clans and show client ID
-== 隱藏非好友姓名/部落並顯示客戶端 ID
+== 隱藏非好友姓名/戰隊並顯示客戶端 ID
 
 Hide other players' ghosts when frozen
 == 如果其他玩家的幽靈被凍結則隱藏
 
 Hide own chat bubble (only when authenticated in remote console)
-== 隱藏自己的聊天氣泡（僅在遠程控制檯已鑑權時生效）
+== 隱藏自己的聊天氣泡（僅在遠程控制台已鑑權時生效）
 
 Hide player messages
 == 隱藏玩家消息
@@ -4584,10 +4584,10 @@ Hide server information on join
 == 進圖時隱藏伺服器資訊
 
 Hide server prompt notifications
-== 隱藏服務器提示通知
+== 隱藏伺服器提示通知
 
 Hide server tip notifications (including notification bar) in Zen mode
-== 禪模式下隱藏服務器提示通知（包括通知欄）
+== 禪模式下隱藏伺服器提示通知（包括通知欄）
 
 Hide Settings Tabs
 == 隱藏設置選項卡
@@ -4596,7 +4596,7 @@ Hide sponsor QR code
 == 隱藏贊助碼
 
 Hide toast
-== 隱藏 toast
+== 隱藏提示
 
 Hide typing emoji during input
 == 輸入時不顯示打字表情
@@ -4692,7 +4692,7 @@ Hook collision line length follows cursor distance
 == 鉤子輔助線長度跟隨光標距離
 
 Hook collision line opacity
-== 輔助線不透明度
+== 鉤子輔助線不透明度
 
 Hook Collisions
 == 鉤子輔助線
@@ -4743,7 +4743,7 @@ How long expression lasts
 == 眼神的表情能持續多久
 
 How long the server message of the day is displayed
-== 當天服務器消息顯示多長時間
+== 當天伺服器消息顯示多長時間
 
 How many seconds players stay frozen (applies to all except delay freeze in switch layer and deep freeze).
 == 玩家將保持凍結狀態多少秒（適用於除切換層和深度凍結中的延遲凍結之外的所有情況）
@@ -4755,7 +4755,7 @@ How to handle inactive players (0 = move to spectators, 1 = move to free spec sl
 == 如何處理不活躍玩家（0 = 移到觀眾，1 = 移到空閒觀眾槽位/踢出，2 = 踢出）
 
 HTTP map download: connection phase timeout (in ms, 0=disabled)
-== HTTP 地圖下載：連接階段超時（以毫秒為單位）（0 表示禁用）
+== HTTP 地圖下載：連接階段超時（毫秒）（0 表示禁用）
 
 HTTP map download: low speed limit (in bytes/s, 0=disabled)
 == HTTP 地圖下載：設置低速限制（以每秒字節數為單位）（0 表示禁用）
@@ -4872,7 +4872,7 @@ Inactive line opacity
 == 非當前行不透明度
 
 Include clan when saving/loading config preset
-== 保存/加載配置方案時包含部落
+== 保存/加載配置方案時包含戰隊
 
 Include color when saving/loading config preset
 == 保存/加載配置方案時包含顏色
@@ -5082,10 +5082,10 @@ Invite a person to a locked team
 == 邀請某人加入鎖定的隊伍
 
 Invites are disabled
-== 本服務器已禁用隊伍邀請
+== 本伺服器已禁用隊伍邀請
 
 It's recommended that you check the settings to adjust them to your liking before joining a server.
-== 建議你在進入服務器前檢查一下設置並根據你的喜好進行調整。
+== 建議你在進入伺服器前檢查一下設置並根據你的喜好進行調整。
 
 Item
 == 項目
@@ -5133,7 +5133,7 @@ Join the team of the specified player
 == 加入指定玩家的隊伍
 
 Join Tutorial Server
-== 進入教學服務器
+== 進入教學伺服器
 
 Join, version, rules, and help messages stay in chat instead of popups
 == 入服、版本、規則和幫助消息會留在聊天裡，不彈出顯示
@@ -5319,7 +5319,7 @@ Last entered
 == 最後進入
 
 Last page in console
-== 控制檯最後一頁
+== 控制台最後一頁
 
 Latency
 == 延遲
@@ -5340,7 +5340,7 @@ Leak IP
 == 暴露 IP
 
 Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
-== 通過逐個 ping 服務器洩露你的 IP，同時會獲取延遲
+== 通過逐個 ping 伺服器洩露你的 IP，同時會獲取延遲
 
 Learn
 == 教程 Wiki
@@ -5370,10 +5370,10 @@ Lenny:
 == Lenny ͡° ͜ʖ ͡°：
 
 Let server start ghost
-== 讓服務器啟動 ghost
+== 讓伺服器啟動 ghost
 
 Let server start race recorder
-== 讓服務器啟動比賽記錄器
+== 讓伺服器啟動比賽記錄器
 
 Lets you join team i (shows your team if left blank)
 == 讓你加入隊伍 i（留空則顯示你的隊伍）
@@ -5610,7 +5610,7 @@ Local test mode
 == 本地測試模式
 
 Local test mode, no server needed
-== 本地測試模式，無需服務器
+== 本地測試模式，無需伺服器
 
 Local Time
 == 本地時間
@@ -5844,7 +5844,7 @@ Map sound volume
 == 地圖音效音量
 
 Map to use on server
-== 在服務器上使用的地圖
+== 在伺服器上使用的地圖
 
 Map type:
 == 地圖類型：
@@ -5877,7 +5877,7 @@ Marquee speed
 == 歌詞跑馬燈速度
 
 Master server URL to register
-== 要註冊的主服務器 URL
+== 要註冊的主伺服器 URL
 
 Match %d of %d
 == 匹配 %d/%d
@@ -5892,7 +5892,7 @@ Matched with callable peer
 == 已匹配到可通話對端
 
 Max attempts for remote console authentication
-== 遠程控制檯身份驗證的最大嘗試次數
+== 遠程控制台身份驗證的最大嘗試次數
 
 Max CSVs
 == 最大 CSV 數
@@ -5904,7 +5904,7 @@ Max distance for variable offset calculation
 == 可變偏移計算的最大距離
 
 Max number of full server info responses sent per second (0 = unlimited).
-== 每秒發送的完整服務器信息響應的最大數量（0 表示無限制）
+== 每秒發送的完整伺服器信息響應的最大數量（0 表示無限制）
 
 Max offset distance for variable offset
 == 可變偏移時的最大偏移距離
@@ -5937,7 +5937,7 @@ Maximum auto-saves retained per map name (0=unlimited)
 == 每個地圖名稱保留的最大自動保存數量（0 = 無限制）
 
 Maximum clients per IP
-== 同一 IP 可連接服務器的客戶端最大數量
+== 同一 IP 可連接伺服器的客戶端最大數量
 
 Maximum cursor distance
 == 最大光標距離
@@ -5970,7 +5970,7 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 == 自動創建的統計板屏幕截圖的最大數量（0 = 無限制）
 
 Maximum number of clients on server
-== 服務器上允許的最大客戶端數
+== 伺服器上允許的最大客戶端數
 
 Maximum number of skins loaded simultaneously
 == 最多可同時加載皮膚數量
@@ -5985,7 +5985,7 @@ Maximum team size.
 == 最大隊伍規模
 
 Maximum undo steps in editor history (editor, envelope editor, and server settings editor are independent)
-== 編輯器歷史記錄中的最大撤銷次數（編輯器、包絡編輯器和服務器設置編輯器不共享）
+== 編輯器歷史記錄中的最大撤銷次數（編輯器、包絡編輯器和伺服器設置編輯器不共享）
 
 may cause delay
 == 可能會產生延遲
@@ -6036,7 +6036,7 @@ Message color
 == 留言顏色
 
 Message displayed to players on join.
-== 將向加入服務器的玩家顯示的消息
+== 將向加入伺服器的玩家顯示的消息
 
 Message to reply when game minimized
 == 遊戲最小化時回覆的消息
@@ -6129,13 +6129,13 @@ Minimum time between map votes (in seconds)
 == 地圖投票之間的最短時間（秒）
 
 Minimum width for name column in server browser
-== 服務器瀏覽器中名稱列的最小寬度
+== 伺服器瀏覽器中名稱列的最小寬度
 
 Minutes
 == 分鐘
 
 Minutes on server before a player can call a map change vote (0 = disabled)
-== 玩家可以否決地圖更改投票之前服務器上的時間分鐘數（0 = 禁用）
+== 玩家可以否決地圖更改投票之前伺服器上的時間分鐘數（0 = 禁用）
 
 Minutes to save replay on ESC menu
 == ESC 菜單保存回放的分鐘數
@@ -6501,7 +6501,7 @@ Next line lyric color
 == 歌詞下一行顏色
 
 Next page in console
-== 控制檯下一頁
+== 控制台下一頁
 
 Next weapon
 == 下一個武器
@@ -6519,7 +6519,7 @@ No animation
 == 無動畫
 
 No answer from server yet.
-== 服務器無響應
+== 伺服器無響應
 
 No assets
 == 沒有資源
@@ -6594,7 +6594,7 @@ No local saves file found (ddnet-saves.txt)
 == 未找到本地存檔文件（ddnet-saves.txt）
 
 No local servers found (ports %d-%d)
-== 未找到本地服務器（端口 %d-%d）
+== 未找到本地伺服器（端口 %d-%d）
 
 No login required
 == 無需登錄
@@ -6648,13 +6648,13 @@ No screenshot selected
 == 未選擇截圖
 
 No server selected
-== 未選擇服務器
+== 未選擇伺服器
 
 No servers found
-== 未檢測到任何服務器
+== 未檢測到任何伺服器
 
 No servers match your filter criteria
-== 沒有服務器滿足設置的篩選條件
+== 沒有伺服器滿足設置的篩選條件
 
 No skins match your filter criteria
 == 沒有皮膚滿足設置的篩選條件
@@ -6699,10 +6699,10 @@ NOT CONNECTED
 == 連接未成功
 
 Not connected to a game server
-== 未連接到遊戲服務器
+== 未連接到遊戲伺服器
 
 Not connected to server
-== 未進入服務器
+== 未進入伺服器
 
 Not downloaded
 == 未下載
@@ -6747,19 +6747,19 @@ Notification bar overrides echo messages
 == 通知欄接管 echo 消息
 
 Notification bar overrides server system messages (except version info)
-== 通知欄接管服務器系統提示（入場版本信息除外）
+== 通知欄接管伺服器系統提示（入場版本信息除外）
 
 Notification bar shows basic server info
-== 通知欄顯示基礎服務器信息
+== 通知欄顯示基礎伺服器信息
 
 Notification bar shows important server hints
-== 通知欄顯示重要服務器提示
+== 通知欄顯示重要伺服器提示
 
 Notification bar shows server help
-== 通知欄顯示服務器幫助說明
+== 通知欄顯示伺服器幫助說明
 
 Notification bar shows unknown server messages
-== 通知欄顯示未知服務器消息
+== 通知欄顯示未知伺服器消息
 
 Notification bar system message text color
 == 通知欄系統提示文字顏色
@@ -7035,7 +7035,7 @@ Override
 == 覆蓋
 
 Override current clan even if preset clan name is empty
-== 即使配置方案裡的部落名為空也覆蓋當前部落
+== 即使配置方案裡的戰隊名為空也覆蓋當前戰隊
 
 Override Death Tile Entity Alpha (0-100)
 == 覆蓋死亡圖塊的實體 alpha (0-100)
@@ -7080,7 +7080,7 @@ Parent Folder
 == 上級目錄
 
 Parsing voice server address
-== 正在解析語音服務器地址
+== 正在解析語音伺服器地址
 
 Part color updated.
 == 部件顏色已更新。
@@ -7218,7 +7218,7 @@ Ping
 == Ping
 
 Ping the current server
-== Ping 當前服務器
+== Ping 當前伺服器
 
 Pistol
 == 手槍
@@ -7272,7 +7272,7 @@ Player country (ISO 3166-1 numeric code)
 == 玩家國家（ISO 3166-1 數字碼）
 
 Player country filter in server browser (ISO 3166-1 numeric)
-== 在服務器瀏覽器中過濾的玩家國家/地區（ISO 3166-1 數字）
+== 在伺服器瀏覽器中過濾的玩家國家/地區（ISO 3166-1 數字）
 
 Player country:
 == 玩家國家/地區：
@@ -7287,7 +7287,7 @@ Player eyes color
 == 玩家眼睛顏色
 
 Player eyes on join. 0 = normal, 1 = pain, 2 = happy, 3 = surprised, 4 = angry, 5 = blink
-== 加入服務器時玩家的眼睛。0 = 正常，1 = 疼痛，2 = 高興，3 = 驚訝，4 = 生氣，5 = 眨眼
+== 加入伺服器時玩家的眼睛。0 = 正常，1 = 疼痛，2 = 高興，3 = 驚訝，4 = 生氣，5 = 眨眼
 
 Player feet color
 == 玩家腳顏色
@@ -7380,16 +7380,16 @@ Players are not allowed to chat from VPNs at this time
 == 當前使用 VPN 的玩家不允許發言
 
 Players can collide on this server
-== 本服務器允許玩家碰撞
+== 本伺服器允許玩家碰撞
 
 Players can hook each other on this server
-== 本服務器允許玩家互鉤
+== 本伺服器允許玩家互鉤
 
 Players can't collide on this server
-== 本服務器不允許玩家碰撞
+== 本伺服器不允許玩家碰撞
 
 Players can't hook each other on this server
-== 本服務器不允許玩家互鉤
+== 本伺服器不允許玩家互鉤
 
 Playing effects
 == 播放效果
@@ -7428,19 +7428,19 @@ Popup animation
 == 彈出動畫
 
 Port for client to server connection (0=random, >=1024 sets manual port)
-== 用於客戶端連接到服務器的端口（0 選擇隨機端口，1024 或更高設置手動端口）
+== 用於客戶端連接到伺服器的端口（0 選擇隨機端口，1024 或更高設置手動端口）
 
 Port for dummy connection to server (0=random, >=1024 sets manual port)
-== 用於與服務器建立分身連接的端口（0 選擇隨機端口，1024 或更高設置手動端口）
+== 用於與伺服器建立分身連接的端口（0 選擇隨機端口，1024 或更高設置手動端口）
 
 Port for master server registration, useful if behind NAT, otherwise just use sv_port
-== 主服務器註冊服務器的端口，如果你位於 NAT 之後，則很有用，否則你只需要 sv_port
+== 主伺服器註冊伺服器的端口，如果你位於 NAT 之後，則很有用，否則你只需要 sv_port
 
 Port for server info connection to server (0=random, >=1024 sets manual port)
 == 伺服器資訊連接埠（0=隨機，≥1024 為手動埠）
 
 Port for the external console.
-== 用於外部控制檯的端口
+== 用於外部控制台的端口
 
 Position
 == 位置
@@ -7464,7 +7464,7 @@ Practice mode enabled for your team, happy practicing!
 == 你的隊伍已開啟練習模式，祝你練習愉快！
 
 Practice mode is disabled
-== 本服務器已禁用練習模式
+== 本伺服器已禁用練習模式
 
 Pre-warm settings page on startup and menu idle
 == 啟動和菜單空閒時預熱設置頁
@@ -7593,13 +7593,13 @@ Previous
 == 上一個
 
 Previous page in console
-== 控制檯上一頁
+== 控制台上一頁
 
 Primary
 == 主要
 
 Print broadcast messages to console
-== 將廣播消息打印到控制檯
+== 將廣播消息打印到控制台
 
 Print command executed by this keybinding or all binds
 == 打印此鍵綁定或所有綁定執行的命令
@@ -7608,7 +7608,7 @@ Print command executed by this name or all chat binds
 == 打印該名稱或所有聊天綁定執行的命令
 
 Print daily messages to console
-== 將每日消息打印到控制檯
+== 將每日消息打印到控制台
 
 Privately messages someone's current time in this current running race (your time by default)
 == 私聊發送某人在當前競速中的時間（默認發送你的時間）
@@ -7677,7 +7677,7 @@ Push-to-talk for voice chat
 == 語音聊天按鍵說話
 
 Puts you into deep freeze
-== 讓你陷入深度凍結
+== 讓你進入深度凍結
 
 Puts you into freeze
 == 讓你陷入凍結狀態
@@ -7686,13 +7686,13 @@ Puts you into solo part
 == 使你進入單人區域
 
 Puts you out of deep freeze
-== 讓你擺脫深度冰凍
+== 讓你解除深度凍結
 
 Puts you out of freeze
-== 讓你擺脫冰凍狀態
+== 讓你解除凍結
 
 Puts you out of live freeze
-== 讓你擺脫實時凍結
+== 讓你解除存活凍結
 
 Puts you out of solo part
 == 使你退出 solo 狀態
@@ -7803,7 +7803,7 @@ Query rank for %s
 == 查詢玩家 %s 的排名
 
 Query server setting: %s
-== 查詢服務器設置：%s
+== 查詢伺服器設置：%s
 
 Query team rank for %s
 == 查詢玩家 %s 所在隊伍的排名
@@ -7977,7 +7977,7 @@ Region
 == 地域
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
-== 向主服務器註冊服務器以進行公開列表，還可以接受要註冊的以逗號分隔的協議列表，例如“ipv4，ipv6”
+== 向主伺服器註冊伺服器以進行公開列表，還可以接受要註冊的以逗號分隔的協議列表，例如“ipv4，ipv6”
 
 Regular background color
 == 原圖層背景顏色
@@ -7998,7 +7998,7 @@ Reload
 == 重新加載
 
 Reload map when empty (1 = once, 2 = each time)
-== 服務器空時重新加載地圖（1 = 重新加載一次，2 = 每次服務器空時重新加載）
+== 伺服器空時重新加載地圖（1 = 重新加載一次，2 = 每次伺服器空時重新加載）
 
 Reload the announcements
 == 重新加載公告
@@ -8022,16 +8022,16 @@ Reloaded images. %d slot(s) fell back to main asset.
 == 已重新加載圖像。%d 個槽位已回退到主材質。
 
 Remote console
-== 遠程控制檯
+== 遠程控制台
 
 Remote console password (full access)
-== 遠程控制檯密碼（完全訪問）
+== 遠程控制台密碼（完全訪問）
 
 Remote console password for helper (limited access)
-== 幫助者的遠程控制檯密碼（有限訪問）
+== 幫助者的遠程控制台密碼（有限訪問）
 
 Remote console password for moderator (limited access)
-== 主持人的遠程控制檯密碼（有限訪問）
+== 主持人的遠程控制台密碼（有限訪問）
 
 Remote particle effects
 == 遠程粒子效果
@@ -8085,7 +8085,7 @@ Remove a rcon key
 == 刪除 rcon 密鑰
 
 Remove a server from favorites
-== 從收藏夾中刪除服務器
+== 從收藏夾中刪除伺服器
 
 Remove a skin from the favorites
 == 從收藏夾中刪除皮膚
@@ -8334,7 +8334,7 @@ Report service URL
 == 舉報服務地址
 
 Reports are not available on Axiom servers
-== Axiom 服務器內不可使用舉報功能
+== Axiom 伺服器內不可使用舉報功能
 
 Request a position swap
 == 請求交換位置
@@ -8361,7 +8361,7 @@ Rescue to a nearby air tile
 == 救援到附近空氣格
 
 Rescue/Freeze: %d/%d
-== 被救/落水：%d/%d
+== 救援/凍結：%d/%d
 
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == 救援：自動模式下傳送出凍結；手動模式下落地記錄救援點，凍結時傳送出去
@@ -8421,10 +8421,10 @@ Reset position of mouse when opening bindwheel
 == 打開快捷綁定輪盤時重置鼠標位置
 
 Reset stats on server join (0=persistent, 1=reset on join)
-== 進入服務器時重置統計（0=累計統計，1=每次進服重置）
+== 進入伺服器時重置統計（0=累計統計，1=每次進服重置）
 
 Reset stats when joining a server
-== 進入服務器時重置統計
+== 進入伺服器時重置統計
 
 Reset to defaults
 == 恢復默認設置
@@ -8514,7 +8514,7 @@ Room password
 == 房間密碼
 
 Rotate all server player skins
-== 輪換服務器所有人皮膚
+== 輪換伺服器所有人皮膚
 
 Rotate hammer with cursor like other weapons
 == 讓錘子像其他武器一樣隨光標旋轉
@@ -8562,7 +8562,7 @@ Rule line 9.
 == 規則第 9 行
 
 Run "hot_reload" on local server with rcon auth on map save
-== 在本地服務器上運行“hot_reload”，同時在地圖保存上進行 rcon 驗證
+== 在本地伺服器上運行“hot_reload”，同時在地圖保存上進行 rcon 驗證
 
 Run chai script
 == 運行 chai 腳本
@@ -8574,7 +8574,7 @@ Run profiler to check 3D/2D array texture sampling works correctly
 == 運行分析器來檢查 3D/2D 陣列紋理採樣是否正常工作
 
 Run server
-== 運行服務器
+== 運行伺服器
 
 SA
 == 南美
@@ -8670,7 +8670,7 @@ Save unsent chat draft
 == 保存未發送的聊天草稿
 
 Save-function is disabled on this server
-== 本服務器已禁用存檔功能
+== 本伺服器已禁用存檔功能
 
 Save/Load Clan
 == 保存/加載戰隊
@@ -8715,10 +8715,10 @@ Scale uncertainty duration by ping (100=1.0x)
 == 按 ping 比例縮放不確定性時長（100=1.0 倍）
 
 Scanning current server
-== 正在掃描當前服務器
+== 正在掃描當前伺服器
 
 Scanning current server...
-== 正在掃描當前服務器……
+== 正在掃描當前伺服器……
 
 Score
 == 分數
@@ -8751,10 +8751,10 @@ Scoreboard transparency
 == 計分板透明度
 
 Scores are private on this server
-== 本服務器的成績是私密的
+== 本伺服器的成績是私密的
 
 Scores are public on this server
-== 本服務器的成績是公開的
+== 本伺服器的成績是公開的
 
 Screen
 == 屏幕
@@ -8808,7 +8808,7 @@ Seconds
 == 秒
 
 Seconds to wait before reconnecting (0=off, when server is full)
-== 重新連接前等待多少秒（服務器已滿時，0 表示關閉）
+== 重新連接前等待多少秒（伺服器已滿時，0 表示關閉）
 
 Seconds to wait before reconnecting (after timeout, 0 to disable).
 == 重新連接前等待多少秒（超時後，0 表示關閉）
@@ -8841,7 +8841,7 @@ Selected candidate %d/%d under cursor.
 == 已選中光標下的候選項 %d/%d。
 
 Selected server
-== 已選中服務器
+== 已選中伺服器
 
 Selected timertype is not supported by your client
 == 你當前客戶端不支持所選計時器類型
@@ -8868,13 +8868,13 @@ Send a moderator alert message to player
 == 向玩家發送管理員提醒消息
 
 Send a server alert message to all players
-== 向所有玩家發送服務器警報消息
+== 向所有玩家發送伺服器警報消息
 
 Send aim data with sub-tick precision
 == 以亞 tick 精度發送瞄準數據
 
 Send client input to others before correct input (increases server bandwidth)
-== 在正確的報價之前將客戶端輸入發送給其他客戶端。增加服務器所需的帶寬
+== 在正確的報價之前將客戶端輸入發送給其他客戶端。增加伺服器所需的帶寬
 
 Send emote when entering freeze
 == 進入凍結狀態發送表情
@@ -8925,94 +8925,94 @@ Sequential
 == 按順序
 
 Server
-== 服務器
+== 伺服器
 
 Server address to filter
-== 要過濾的服務器地址
+== 要過濾的伺服器地址
 
 Server address:
-== 服務器地址：
+== 伺服器地址：
 
 Server alert
-== 服務器提醒
+== 伺服器提醒
 
 Server best:
-== 服務器最佳：
+== 伺服器最佳：
 
 Server browser exclude string
-== 服務器瀏覽器排除字符串
+== 伺服器瀏覽器排除字符串
 
 Server browser filter string
-== 服務器瀏覽器過濾字符串
+== 伺服器瀏覽器過濾字符串
 
 Server browser sort column
-== 服務器瀏覽器中的排序列
+== 伺服器瀏覽器中的排序列
 
 Server could not be started
-== 無法啟動服務器
+== 無法啟動伺服器
 
 Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
 == 無法啟動伺服器。請在應用設定中授予通知權限，以便伺服器在背景執行。
 
 Server does not allow voting to kick players
-== 本服務器不允許發起踢人投票
+== 本伺服器不允許發起踢人投票
 
 Server does not allow voting to move players to spectators
-== 本服務器不允許發起移至旁觀投票
+== 本伺服器不允許發起移至旁觀投票
 
 Server executable not found, can't run server
-== 未檢測到服務器的可執行文件，無法運行服務器
+== 未檢測到伺服器的可執行文件，無法運行伺服器
 
 Server filter
-== 服務器篩選
+== 伺服器篩選
 
 Server hostname (0.7 only)
-== 服務器主機名（僅限 0.7）
+== 伺服器主機名（僅限 0.7）
 
 Server info
-== 服務器信息
+== 伺服器信息
 
 Server IP
-== 服務器 IP
+== 伺服器 IP
 
 Server kick/spec votes are no longer actively moderated.
-== 服務器的踢人/旁觀投票已不再由主動管理員模式接管
+== 伺服器的踢人/旁觀投票已不再由主動管理員模式接管
 
 Server kick/spec votes will now be actively moderated.
-== 服務器的踢人/旁觀投票現在會被主動管理員模式接管
+== 伺服器的踢人/旁觀投票現在會被主動管理員模式接管
 
 Server name
-== 服務器名稱
+== 伺服器名稱
 
 Server not full
-== 服務器未滿
+== 伺服器未滿
 
 Server password
-== 服務器密碼
+== 伺服器密碼
 
 Server port (only 8303-8310 work in LAN browser, 0=auto find free in 8303-8310). If behind NAT, see sv_register_port for external port
-== 服務器使用的端口（僅端口 8303-8310 在 LAN 服務器瀏覽器中工作，0 自動在 8303-8310 中查找空閒端口）。如果你位於 NAT 之後，請參閱 sv_register_port 瞭解外部端口
+== 伺服器使用的端口（僅端口 8303-8310 在 LAN 伺服器瀏覽器中工作，0 自動在 8303-8310 中查找空閒端口）。如果你位於 NAT 之後，請參閱 sv_register_port 瞭解外部端口
 
 Server preset
-== 服務器預設
+== 伺服器預設
 
 Server region. Used for region bans
-== 服務器區域。用於地區禁令
+== 伺服器區域。用於地區禁令
 
 Server rollback
-== 服務器回滾
+== 伺服器回滾
 
 Server RTT is elevated, response path is unstable
-== 服務器 RTT 偏高，響應鏈路不穩定
+== 伺服器 RTT 偏高，響應鏈路不穩定
 
 Server stress (debug builds only).
-== 服務器壓力（僅限調試版本）
+== 伺服器壓力（僅限調試版本）
 
 Server type (novice, moderate, etc.)
-== 服務器類型（novice、moderate 等）
+== 伺服器類型（novice、moderate 等）
 
 Set a voice server to enable QmClient distribution
-== 需要先配置語音服務器，才能啟用棲夢客戶端在線分佈
+== 需要先配置語音伺服器，才能啟用棲夢客戶端在線分佈
 
 Set all to Rifle
 == 統一為激光槍顏色
@@ -9051,7 +9051,7 @@ Set microphone mute state (0=on, 1=mute)
 == 設置麥克風靜音狀態（0=開啟，1=靜音）
 
 Set server to singleplayer mode (no player interaction, must be set before loading map)
-== 將服務器設置為單人模式（沒有玩家交互，必須在加載地圖之前設置）
+== 將伺服器設置為單人模式（沒有玩家交互，必須在加載地圖之前設置）
 
 Set team for a player (spectators = -1, game = 0)
 == 設置玩家隊伍（旁觀 = -1，遊戲 = 0）
@@ -9099,7 +9099,7 @@ Shape
 == 形狀
 
 Short server names
-== 短服務器名稱
+== 短伺服器名稱
 
 Shotgun
 == 霰彈槍
@@ -9159,10 +9159,10 @@ Show banlist (page 1 by default, 20 entries per page)
 == 顯示封禁列表（默認第 1 頁，每頁 20 條）
 
 Show basic server information
-== 顯示基礎服務器信息
+== 顯示基礎伺服器信息
 
 Show blocked words in console
-== 在控制檯中顯示被屏蔽的詞語
+== 在控制台中顯示被屏蔽的詞語
 
 Show bounds of selected quads. Shows bounding rectangle bounds for multiple quads. Useful when aligning a group
 == 顯示所選四邊形的邊界。如果有多個四邊形，它會顯示包圍矩形的邊界。對齊一組四邊形時很有幫助
@@ -9195,7 +9195,7 @@ Show clan name on nameplate
 == 在名牌上顯示戰隊名稱
 
 Show clan on nameplates for enemies
-== 敵對關係時在名字板顯示部落
+== 敵對關係時在名字板顯示戰隊
 
 Show client ID
 == 顯示客戶端 ID
@@ -9258,7 +9258,7 @@ Show DDNet map completion (transmits player name to info.ddnet.org/info)
 == 顯示你是否已完成 DDNet 地圖（將你的玩家姓名傳輸至 info.ddnet.org/info）
 
 Show DDNet map finishes in server browser
-== 在服務器瀏覽器中顯示已完成的 DDNet 地圖
+== 在伺服器瀏覽器中顯示已完成的 DDNet 地圖
 
 Show DDRace HUD
 == 顯示 DDRace HUD
@@ -9336,7 +9336,7 @@ Show feat-003 shared UI primitives dogfood page (takes over QmClient settings pa
 == 展示 feat-003 共享 UI 原語 dogfood 頁面（接管 QmClient 設置頁，用於視覺驗證 11 個原語 + spring/easing 動畫）
 
 Show filtered words in console
-== 控制檯顯示被屏蔽詞
+== 控制台顯示被屏蔽詞
 
 Show finish messages
 == 顯示完成消息
@@ -9363,7 +9363,7 @@ Show friend join in large text
 == 大字顯示好友進服
 
 Show friend tag (♥) on nametag
-== 在名牌上顯示朋友標記 (♥ )
+== 在名牌上顯示好友標記 (♥ )
 
 Show friends only
 == 只顯示好友
@@ -9426,13 +9426,13 @@ Show important messages when rendering video
 == 渲染視頻時顯示重要提示
 
 Show important server prompts
-== 顯示重要服務器提示
+== 顯示重要伺服器提示
 
 Show important server prompts and Echo messages as popups
-== 把重要服務器提示和 Echo 消息彈出顯示
+== 把重要伺服器提示和 Echo 消息彈出顯示
 
 Show important server prompts as notifications
-== 重要服務器提示改走通知欄
+== 重要伺服器提示改走通知欄
 
 Show in Dynamic Island
 == 顯示在靈動島內
@@ -9498,7 +9498,7 @@ Show in-game packet loss rate
 == 顯示遊戲內丟包率
 
 Show in-game prediction time (in milliseconds)
-== 顯示遊戲內預測時間（以毫秒為單位）
+== 顯示遊戲內預測時間（毫秒）
 
 Show indicators only within team
 == 僅在隊伍內顯示指示器
@@ -9507,7 +9507,7 @@ Show info about the map with name r gives (current map by default)
 == 顯示有關名稱為 r 的地圖的信息（默認為當前地圖）
 
 Show information about this server
-== 顯示服務器信息
+== 顯示伺服器信息
 
 Show ingame HUD
 == 顯示 HUD
@@ -9636,7 +9636,7 @@ Show only modified config variables
 == 只顯示修改的配置變量
 
 Show only servers with unfinished maps
-== 僅顯示未完成地圖的服務器
+== 僅顯示未完成地圖的伺服器
 
 Show only team chat messages
 == 只顯示隊伍聊天消息
@@ -9777,16 +9777,16 @@ Show seconds on clock
 == 在時間處顯示秒數
 
 Show server chat messages
-== 顯示來自服務器的聊天消息
+== 顯示來自伺服器的聊天消息
 
 Show server help and usage messages
-== 顯示服務器幫助和用法說明
+== 顯示伺服器幫助和用法說明
 
 Show server settings
-== 查看服務器設置列表
+== 查看伺服器設置列表
 
 Show short server names in browser
-== 在服務器瀏覽器中顯示簡短服務器名
+== 在伺服器瀏覽器中顯示簡短伺服器名
 
 Show skin date and author
 == 顯示皮膚日期和作者
@@ -9870,13 +9870,13 @@ Show the screen center line
 == 顯示屏幕中心線
 
 Show the server rules
-== 顯示服務器規則
+== 顯示伺服器規則
 
 Show tiles layers from BG map
 == 顯示實體層背景地圖的圖塊層
 
 Show toast
-== 顯示 toast
+== 顯示提示
 
 Show translation
 == 顯示翻譯
@@ -9888,7 +9888,7 @@ Show unfreeze/deep unfreeze tile outlines
 == 顯示解凍/深解凍圖塊輪廓
 
 Show unknown server messages
-== 顯示未知服務器消息
+== 顯示未知伺服器消息
 
 Show unpredictable shadow tee (0 = off, 1 = self, 2 = others only, 3 = all)
 == 顯示不可預測的陰影 tee（0 = 關閉，1 = 自己，2 = 僅其他玩家，3 = 全部）
@@ -9933,34 +9933,34 @@ Show zzz emoji next to afk players
 == 在掛機玩家旁顯示 zzz 表情
 
 Showing players from other teams is disabled
-== 本服務器已禁用顯示其他隊伍玩家
+== 本伺服器已禁用顯示其他隊伍玩家
 
 Showing the checkpoint times for '%s' with a race time of %s
 == 正在顯示 '%s' 的檢查點用時，當前成績為 %s
 
 Showing the checkpoint times is not allowed on this server.
-== 本服務器不允許查看檢查點用時
+== 本伺服器不允許查看檢查點用時
 
 Showing the global points of other players is not allowed on this server.
-== 本服務器不允許查看其他玩家的全局積分
+== 本伺服器不允許查看其他玩家的全局積分
 
 Showing the global top points is not allowed on this server.
-== 本服務器不允許查看全局積分排行榜
+== 本伺服器不允許查看全局積分排行榜
 
 Showing the rank of other players is not allowed on this server.
-== 本服務器不允許查看其他玩家的排名
+== 本伺服器不允許查看其他玩家的排名
 
 Showing the team rank of other players is not allowed on this server.
-== 本服務器不允許查看其他玩家的隊伍排名
+== 本伺服器不允許查看其他玩家的隊伍排名
 
 Showing the team top 5 is not allowed on this server.
-== 本服務器不允許查看隊伍前 5 名
+== 本伺服器不允許查看隊伍前 5 名
 
 Showing the times of others is not allowed on this server.
-== 本服務器不允許查看其他玩家的成績
+== 本伺服器不允許查看其他玩家的成績
 
 Showing the top is not allowed on this server.
-== 本服務器不允許查看排行榜
+== 本伺服器不允許查看排行榜
 
 Shows five points of the global point ladder beginning with rank i (1 by default)
 == 顯示全局積分榜從第 i 名開始的 5 條（默認 1）
@@ -9969,7 +9969,7 @@ Shows five team ranks of the ladder or of a player beginning with rank i (1 by d
 == 顯示天梯隊伍排名（或玩家排名）從第 i 名開始的 5 條（默認 1，-1 為最差）
 
 Shows gameplay information for this server
-== 顯示該服務器的遊戲信息
+== 顯示該伺服器的遊戲信息
 
 Shows help to command r, general help if left blank
 == 顯示命令 r 的幫助，如果留空則顯示一般幫助
@@ -9999,10 +9999,10 @@ Shut down
 == 關閉
 
 Shutdown server when empty
-== 一旦沒有人在服務器上就關閉服務器
+== 一旦沒有人在伺服器上就關閉伺服器
 
 Silently disconnect from the current server while keeping Tee timeout protection
-== 靜默斷開當前服務器連接，用於保留 Tee 超時保護
+== 靜默斷開當前伺服器連接，用於保留 Tee 超時保護
 
 Simple
 == 簡單
@@ -10035,7 +10035,7 @@ Skin could not be found.
 == 未找到皮膚。
 
 Skin could not be loaded due to an error. Check the local console for details.
-== 加載皮膚時出錯。檢查本地控制檯以獲取詳細信息。
+== 加載皮膚時出錯。檢查本地控制台以獲取詳細信息。
 
 Skin Database
 == 皮膚數據庫
@@ -10143,7 +10143,7 @@ Smart
 == 智能
 
 Smooth camera switch animation time when spectating (in ms, 0=off)
-== 觀看時平滑攝像機切換動畫的時間（以毫秒為單位）（0 表示關閉）
+== 觀看時平滑攝像機切換動畫的時間（毫秒）（0 表示關閉）
 
 Smooth Dynamic Camera
 == 平滑動態視野
@@ -10161,10 +10161,10 @@ Smooth scroll animation duration in menu/editor (ms, 0=off)
 == 菜單/編輯器中平滑滾動動畫的時間（單位：毫秒，0 為關閉）
 
 Smooth zoom animation time in editor (in ms, 0=off)
-== 編輯器中平滑縮放動畫的時間（以毫秒為單位）（0 表示關閉）
+== 編輯器中平滑縮放動畫的時間（毫秒）（0 表示關閉）
 
 Smoothness of multi-view zoom (in ms, higher = slower)
-== 設置多視圖縮放的平滑度（以毫秒為單位，較高=較慢）
+== 設置多視圖縮放的平滑度（毫秒，較高=較慢）
 
 SMTC
 == 系統媒體控制
@@ -10188,13 +10188,13 @@ Solo
 == 單人
 
 Some fonts could not be loaded. Check the local console for details.
-== 未能加載某些字體。檢查本地控制檯以獲取詳情。
+== 未能加載某些字體。檢查本地控制台以獲取詳情。
 
 Some map images could not be loaded. Check the local console for details.
-== 未能加載某些地圖圖片。檢查本地控制檯以獲取詳情。
+== 未能加載某些地圖圖片。檢查本地控制台以獲取詳情。
 
 Some map sounds could not be loaded. Check the local console for details.
-== 未能加載某些地圖音效。檢查本地控制檯以獲取詳情。
+== 未能加載某些地圖音效。檢查本地控制台以獲取詳情。
 
 Something hookable
 == 可鉤物體
@@ -10212,7 +10212,7 @@ Sort order in replay browser
 == 回放瀏覽器中的排序順序
 
 Sort order in server browser
-== 服務器瀏覽器中的排序順序
+== 伺服器瀏覽器中的排序順序
 
 Sound
 == 聲音
@@ -10362,10 +10362,10 @@ Star
 == 星形
 
 Start and connect to local server
-== 啟動並連接到本地服務器
+== 啟動並連接到本地伺服器
 
 Start here to quickly diagnose if the issue is with device, server, or room
-== 先看這裡，可以快速判斷卡在設備、服務器還是房間
+== 先看這裡，可以快速判斷卡在設備、伺服器還是房間
 
 Start holding the hook before loading the savegame to keep the hook
 == 如果想保留鉤子狀態，請在讀檔前先按住鉤子
@@ -10464,7 +10464,7 @@ Stop rendering text overlays in editor or with entities: higher = less detail = 
 == 停止在編輯器中或使用實體渲染文本覆蓋：高值 = 更少的細節 = 更快的速度
 
 Stop server
-== 停止服務器
+== 停止伺服器
 
 Stop the current demo
 == 結束回放
@@ -10533,10 +10533,10 @@ Swap ghosts with regular players
 == 交換影子與普通玩家
 
 Swap is disabled on this server.
-== 本服務器已禁用交換功能
+== 本伺服器已禁用交換功能
 
 Swap is not available on forced solo servers.
-== 強制 solo 服務器上不能使用交換功能
+== 強制 solo 伺服器上不能使用交換功能
 
 Swap option color
 == 交換選項顏色
@@ -10737,7 +10737,7 @@ Team mode change disabled
 == 當前不允許切換隊伍模式
 
 Team mode change is disabled on this server.
-== 本服務器已禁用隊伍模式切換
+== 本伺服器已禁用隊伍模式切換
 
 Team save already in progress
 == 隊伍存檔尚未完成
@@ -10761,13 +10761,13 @@ Teams
 == 組隊
 
 Teams are available on this server; if the team is locked, any team member dying will kill the whole team
-== 本服務器允許組隊；隊伍上鎖後，隊內任意玩家死亡都會導致全隊死亡
+== 本伺服器允許組隊；隊伍上鎖後，隊內任意玩家死亡都會導致全隊死亡
 
 Teams are disabled
 == 隊伍功能已禁用
 
 Teams are not available on this server; if the team is locked, any team member dying will kill the whole team
-== 本服務器不允許組隊；隊伍上鎖後，隊內任意玩家死亡都會導致全隊死亡
+== 本伺服器不允許組隊；隊伍上鎖後，隊內任意玩家死亡都會導致全隊死亡
 
 Tee
 == Tee
@@ -10947,7 +10947,7 @@ The selected part stays highlighted while you adjust its color.
 == 調色時會持續高亮當前選中的部件。
 
 The server is running a non-standard tuning on a pure game type.
-== 此服務器運行著經過調整的非標準遊戲模式。
+== 此伺服器運行著經過調整的非標準遊戲模式。
 
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == 紋理文件 %s 的寬度無法被 %d 整除，或者高度無法被 %d 整除，這可能會導致顯示錯誤。
@@ -11001,7 +11001,7 @@ This name cannot be used for files and folders
 == 此名稱不能用於文件和文件夾
 
 This server has an initial chat delay, you will be able to talk in %s seconds.
-== 本服務器啟用了初始發言延遲，你還需要等待 %s 秒才能說話
+== 本伺服器啟用了初始發言延遲，你還需要等待 %s 秒才能說話
 
 This skin name cannot be used.
 == 此皮膚名稱不能使用。
@@ -11049,10 +11049,10 @@ Time
 == 時間
 
 Time (ms) player must wait before next overhead emote sent to all clients (must be >= sv_emoticon_ms_delay to take effect).
-== 玩家在允許發送到所有客戶端的下一個開銷表情符號之前必須等待的時間（以毫秒為單位）（此配置必須高於或等於 sv_emoticon_ms_delay 才能生效）
+== 玩家在允許發送到所有客戶端的下一個開銷表情符號之前必須等待的時間（毫秒）（此配置必須高於或等於 sv_emoticon_ms_delay 才能生效）
 
 Time (ms) player must wait before next overhead emote.
-== 玩家在允許下一個頭頂表情符號之前必須等待的時間（以毫秒為單位）
+== 玩家在允許下一個頭頂表情符號之前必須等待的時間（毫秒）
 
 Time (seconds) between eye emote changes.
 == 眼睛表情符號變化之間的時間（秒）
@@ -11082,7 +11082,7 @@ Time client is banned if economy authentication fails. 0 just closes connection.
 == 如果經濟身份驗證失敗，客戶端被禁止的時間。0 只是關閉連接
 
 Time client is banned if remote console auth fails. 0 to only use kick
-== 如果遠程控制檯身份驗證失敗，客戶端被禁止的時間。0 讓它只使用踢
+== 如果遠程控制台身份驗證失敗，客戶端被禁止的時間。0 讓它只使用踢
 
 TIME EXPIRED!
 == 時間耗盡！
@@ -11154,7 +11154,7 @@ Toggle custom color
 == 切換是否使用自定義顏色
 
 Toggle Do Not Disturb (no chat and server messages)
-== 切換請勿打擾（無聊天和服務器消息）
+== 切換請勿打擾（無聊天和伺服器消息）
 
 Toggle dummy
 == 切換分身
@@ -11175,7 +11175,7 @@ Toggle keyboard shortcuts
 == 啟用/禁用鍵盤快捷鍵
 
 Toggle local console
-== 切換本地控制檯
+== 切換本地控制台
 
 Toggle microphone mute
 == 切換麥克風靜音
@@ -11187,7 +11187,7 @@ Toggle receiving whispers
 == 切換接收私語
 
 Toggle remote console
-== 切換遠程控制檯
+== 切換遠程控制台
 
 Toggle scoreboard cursor
 == 切換計分板光標
@@ -11253,7 +11253,7 @@ Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off 
 == 打開/關閉標準眼睛表情的使用，eyeemote s，其中 s = on 表示打開，off 表示關閉，toggle 表示切換，不顯示當前狀態
 
 Token to register this server to a specific community
-== 用於將此服務器註冊到特定社區的令牌
+== 用於將此伺服器註冊到特定社區的令牌
 
 Too many translation tasks
 == 翻譯任務過多
@@ -11376,7 +11376,7 @@ Try to predict other entities to reduce lag feeling at high latency
 == 嘗試預測其他實體來降低高延遲帶來的卡頓感
 
 Try toggling voice or reconnecting to server
-== 建議重新切換語音開關或重試進入服務器
+== 建議重新切換語音開關或重試進入伺服器
 
 Trying Axiom auto login
 == 正在嘗試 Axiom 自動登錄
@@ -11451,7 +11451,7 @@ UI scale
 == UI 大小
 
 UI server address
-== 界面服務器地址
+== 界面伺服器地址
 
 UI size percentage
 == UI 大小百分比
@@ -11556,7 +11556,7 @@ Uninvite player from team
 == 取消對玩家的隊伍邀請
 
 Unix socket server for IP address recording (Unix only)
-== 用於 IP 地址記錄的 Unix 套接字服務器（僅限 Unix）
+== 用於 IP 地址記錄的 Unix 套接字伺服器（僅限 Unix）
 
 Unknown
 == 未知
@@ -11718,7 +11718,7 @@ Use enemy list to drive player indicators
 == 用敵對列表驅動玩家指示器
 
 Use high bandwidth mode (doubles server bandwidth, LAN only)
-== 使用高帶寬模式。服務器所需的帶寬加倍。僅限局域網使用
+== 使用高帶寬模式。伺服器所需的帶寬加倍。僅限局域網使用
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == 使用 K 鍵自殺（重新開始），Q 鍵暫停並旁觀其他玩家。其他按鍵綁定可在設置中查看。
@@ -11940,7 +11940,7 @@ Voice room token (optional)
 == 語音房間 Token（可選）
 
 Voice server address host:port
-== 語音服務器地址 host:port
+== 語音伺服器地址 host:port
 
 Voice stereo output
 == 語音立體聲輸出
@@ -11949,7 +11949,7 @@ Voice stereo width (percent)
 == 語音立體聲寬度（百分比）
 
 Voice test mode (0=Off 1=Local 2=Server Loopback)
-== 語音測試模式（0=關 1=本地 2=服務器迴環）
+== 語音測試模式（0=關 1=本地 2=伺服器迴環）
 
 Voice whitelist (comma-separated)
 == 語音白名單（逗號分隔）
@@ -12243,22 +12243,22 @@ Width and height are required to be within the range from %d to %d.
 == 按鍵的寬和高需要在 %d 到 %d 內。
 
 Width of friends column in server browser
-== 服務器瀏覽器中好友列的寬度
+== 伺服器瀏覽器中好友列的寬度
 
 Width of latency column in server browser
-== 服務器瀏覽器中延遲列的寬度
+== 伺服器瀏覽器中延遲列的寬度
 
 Width of map column in server browser
-== 服務器瀏覽器中地圖列的寬度
+== 伺服器瀏覽器中地圖列的寬度
 
 Width of others' hook collision line
 == 其他玩家的鉤子輔助線線寬度
 
 Width of players column in server browser
-== 服務器瀏覽器中玩家列的寬度
+== 伺服器瀏覽器中玩家列的寬度
 
 Width of type column in server browser
-== 服務器瀏覽器中類型列的寬度
+== 伺服器瀏覽器中類型列的寬度
 
 Width of your own hook collision line
 == 自己的鉤子輔助線線寬度
@@ -12282,13 +12282,13 @@ Word highlight soft edge width (px)
 == 逐字邊緣軟過渡寬度 px
 
 Write local console contents to a text file
-== 將本地控制檯內容寫入文本文件
+== 將本地控制台內容寫入文本文件
 
 Write performance debug logs to dedicated file
 == 將性能調試日誌寫入專用文件
 
 Write remote console contents to a text file
-== 將遠程控制檯內容寫入文本文件
+== 將遠程控制台內容寫入文本文件
 
 Writing item %d failed
 == 寫入第 %d 項失敗
@@ -12510,13 +12510,13 @@ You must wait %s seconds before making your first vote.
 == 首次發起投票前還需要等待 %s 秒
 
 You will be disconnected from the server.
-== 你將從當前服務器斷開連接。
+== 你將從當前伺服器斷開連接。
 
 You will no longer see all tees on this server
 == 你將不再看到本服全部 Tee
 
 You will not receive any further global chat and server messages
-== 你將不再接收全局聊天和服務器消息
+== 你將不再接收全局聊天和伺服器消息
 
 You will not receive any further whispers
 == 你將不再收到私聊訊息

@@ -3927,7 +3927,7 @@ Filter out spectators from player count
 == İzleyicileri oyuncu sayısından filtrele
 
 Filter Team %d
-== Takımı Filtrele %d
+== Takım %d filtrele
 
 Filter: Team %d
 == Filtre: Takım %d
@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == Bir takımda olmalısınız (1-63 arası)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== Bu sunucuda oynamak için bir takımda olmalısınız ve takım kilitliyse tüm takımınız ölecektir
+== Bu sunucuda oynamak için bir takımda olmalısın; takım kilitliyken bir üye ölürse tüm takım ölür
 
 You have to wait %s seconds until you can swap
 == Takas yapana kadar %s saniye beklemeniz gerekiyor

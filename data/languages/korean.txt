@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == 팀에 속해 있어야 합니다 (1-63)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== 이 서버에서 플레이하려면 팀에 속해야 하며, 팀이 잠겨 있으면 팀원 중 한 명이 죽으면 모두 죽습니다
+== 이 서버에서 플레이하려면 팀에 있어야 하며, 팀이 잠긴 상태에서는 팀원 중 한 명이 죽으면 모두 죽습니다
 
 You have to wait %s seconds until you can swap
 == 교환하려면 %s초를 기다려야 합니다

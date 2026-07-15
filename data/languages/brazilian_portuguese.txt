@@ -3927,10 +3927,10 @@ Filter out spectators from player count
 == Filtrar espectadores da contagem de jogadores
 
 Filter Team %d
-== Filtrar Time %d
+== Filtrar time %d
 
 Filter: Team %d
-== Filtrar: Time %d
+== Filtro: time %d
 
 Filtered word console color
 == Cor do console para palavras bloqueadas
@@ -12147,16 +12147,16 @@ Whether a switch is deactivated by default (otherwise activated)
 == Se um switch é desativado por padrão (caso contrário ativado)
 
 Whether dummy copies your movement
-== Se o Dummy copia seu movimento
+== O Dummy copia seus movimentos
 
 Whether dummy fires (requires cl_dummy_control 1)
-== Se o Dummy atira (requer cl_dummy_control 1)
+== O Dummy atira (requer cl_dummy_control 1)
 
 Whether dummy hooks (requires cl_dummy_control 1)
-== Se o Dummy usa gancho (requer cl_dummy_control 1)
+== O Dummy usa o gancho (requer cl_dummy_control 1)
 
 Whether dummy jumps (requires cl_dummy_control 1)
-== Se o Dummy pula (requer cl_dummy_control 1)
+== O Dummy pula (requer cl_dummy_control 1)
 
 Whether non-voting players count as 'no' (0) or ignored (1)
 == Se jogadores sem direito a voto contam como 'não' (0) ou são ignorados (1)
@@ -12192,7 +12192,7 @@ Whether to save worse scores when you already have a better score.
 == Se deve salvar pontuações piores quando você já tem uma pontuação melhor.
 
 Whether to show message when players pause and resume.
-== Se deve mostrar mensagem quando jogadores pausam e retomam.
+== Mostrar mensagem quando jogadores pausam ou retomam
 
 Whether to show players at any distance (off by default), optional i = 0 for off else for on
 == Se mostrar jogadores a qualquer distância (desligado por padrão), opcional i = 0 para desligar, senão para ligar
@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == Você precisa estar em um time (de 1 a 63)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== Você precisa estar em um time para jogar neste servidor e todo o seu time morrerá se o time estiver trancado
+== Você precisa estar em um time para jogar neste servidor; se o time estiver trancado, a morte de um membro mata o time inteiro
 
 You have to wait %s seconds until you can swap
 == Você precisa esperar %s segundos até poder trocar

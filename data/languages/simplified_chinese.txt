@@ -1443,13 +1443,13 @@ Broadcast message
 == 广播消息
 
 Broadcast shown to players using old DDNet client
-== 广播以向使用旧版本 DDNet 客户端的玩家显示
+== 向使用旧版本 DDNet 客户端的玩家显示
 
 Broadcast shown to players with known bot client
-== 广播以向具有已知机器人客户端的玩家显示
+== 向具有已知机器人客户端的玩家显示
 
 Broadcast shown to players without DDNet client
-== 广播以向没有 DDNet 客户端的玩家显示
+== 向没有 DDNet 客户端的玩家显示
 
 Browser
 == 浏览
@@ -2058,10 +2058,10 @@ Confirm clear finished
 == 确认清空已完成
 
 Confirm disconnect after game end (minutes, -1 off, 0 always)
-== 游戏结束后断开连接之前弹出确认窗口（以分钟为单位，-1 表示关闭，0 表示始终打开）
+== 游戏结束后断开连接之前弹出确认窗口（分钟，-1 表示关闭，0 表示始终打开）
 
 Confirm quit after game end (minutes, -1 off, 0 always)
-== 游戏结束后退出前弹出确认窗口（以分钟为单位，-1 关闭，0 始终打开）
+== 游戏结束后退出前弹出确认窗口（分钟，-1 关闭，0 始终打开）
 
 Connect address error
 == 连接地址错误
@@ -3123,7 +3123,7 @@ Duration in seconds to mute a player for spam triggering. 0 = off
 == 如果玩家对垃圾邮件触发静音，则静音多少秒。0 = 关闭
 
 Duration of smooth zoom animation in game (ms) (0 = off)
-== 游戏中平滑缩放动画的时间（以毫秒为单位）（0 表示关闭）
+== 游戏中平滑缩放动画的时间（毫秒）（0 表示关闭）
 
 Dynamic Camera
 == 动态视野
@@ -3294,7 +3294,7 @@ Enable colored console output
 == 启用控制台彩色输出
 
 Enable coloring and hearts for friends
-== 为朋友启用着色和爱心
+== 为好友启用着色和爱心
 
 Enable controller
 == 使用手柄
@@ -3402,7 +3402,7 @@ Enable local lyrics cache
 == 启用本地歌词缓存
 
 Enable long pain sound (used when shooting in freeze)
-== 启用冻结呼叫声
+== 启用长痛音效（冻结中射击时使用）
 
 Enable lyric HUD overlay
 == 启用歌词 HUD 叠加层
@@ -4056,16 +4056,16 @@ Freeze Collision Border Color
 == 冻结碰撞边框颜色
 
 Freeze Laser Inner Color
-== 冻结激光实心颜色
+== 冻结激光内色
 
 Freeze laser inner color
-== 激光内色冻结
+== 冻结激光内色
 
 Freeze Laser Outline Color
-== 冻结激光外框颜色
+== 冻结激光外框色
 
 Freeze laser outline color
-== 冻结的激光轮廓颜色
+== 冻结激光外框色
 
 Freeze opacity
 == 冻结不透明度
@@ -4548,7 +4548,7 @@ Hide names
 == 隐藏名字
 
 Hide non-friend names/clans and show client ID
-== 隐藏非好友姓名/部落并显示客户端 ID
+== 隐藏非好友姓名/战队并显示客户端 ID
 
 Hide other players' ghosts when frozen
 == 如果其他玩家的幽灵被冻结则隐藏
@@ -4692,7 +4692,7 @@ Hook collision line length follows cursor distance
 == 钩子辅助线长度跟随光标距离
 
 Hook collision line opacity
-== 辅助线不透明度
+== 钩子辅助线不透明度
 
 Hook Collisions
 == 钩子辅助线
@@ -4755,7 +4755,7 @@ How to handle inactive players (0 = move to spectators, 1 = move to free spec sl
 == 如何处理不活跃玩家（0 = 移到观众，1 = 移到空闲观众槽位/踢出，2 = 踢出）
 
 HTTP map download: connection phase timeout (in ms, 0=disabled)
-== HTTP 地图下载：连接阶段超时（以毫秒为单位）（0 表示禁用）
+== HTTP 地图下载：连接阶段超时（毫秒）（0 表示禁用）
 
 HTTP map download: low speed limit (in bytes/s, 0=disabled)
 == HTTP 地图下载：设置低速限制（以每秒字节数为单位）（0 表示禁用）
@@ -4872,7 +4872,7 @@ Inactive line opacity
 == 非当前行不透明度
 
 Include clan when saving/loading config preset
-== 保存/加载配置方案时包含部落
+== 保存/加载配置方案时包含战队
 
 Include color when saving/loading config preset
 == 保存/加载配置方案时包含颜色
@@ -7035,7 +7035,7 @@ Override
 == 覆盖
 
 Override current clan even if preset clan name is empty
-== 即使配置方案里的部落名为空也覆盖当前部落
+== 即使配置方案里的战队名为空也覆盖当前战队
 
 Override Death Tile Entity Alpha (0-100)
 == 覆盖死亡图块的实体 alpha (0-100)
@@ -7677,7 +7677,7 @@ Push-to-talk for voice chat
 == 语音聊天按键说话
 
 Puts you into deep freeze
-== 让你陷入深度冻结
+== 让你进入深度冻结
 
 Puts you into freeze
 == 让你陷入冻结状态
@@ -7686,13 +7686,13 @@ Puts you into solo part
 == 使你进入单人区域
 
 Puts you out of deep freeze
-== 让你摆脱深度冰冻
+== 让你解除深度冻结
 
 Puts you out of freeze
-== 让你摆脱冰冻状态
+== 让你解除冻结
 
 Puts you out of live freeze
-== 让你摆脱实时冻结
+== 让你解除存活冻结
 
 Puts you out of solo part
 == 使你退出 solo 状态
@@ -8361,7 +8361,7 @@ Rescue to a nearby air tile
 == 救援到附近空气格
 
 Rescue/Freeze: %d/%d
-== 被救/落水：%d/%d
+== 救援/冻结：%d/%d
 
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == 救援：自动模式下传送出冻结；手动模式下落地记录救援点，冻结时传送出去
@@ -9195,7 +9195,7 @@ Show clan name on nameplate
 == 在名牌上显示战队名称
 
 Show clan on nameplates for enemies
-== 敌对关系时在名字板显示部落
+== 敌对关系时在名字板显示战队
 
 Show client ID
 == 显示客户端 ID
@@ -9363,7 +9363,7 @@ Show friend join in large text
 == 大字显示好友进服
 
 Show friend tag (♥) on nametag
-== 在名牌上显示朋友标记 (♥ )
+== 在名牌上显示好友标记 (♥ )
 
 Show friends only
 == 只显示好友
@@ -9498,7 +9498,7 @@ Show in-game packet loss rate
 == 显示游戏内丢包率
 
 Show in-game prediction time (in milliseconds)
-== 显示游戏内预测时间（以毫秒为单位）
+== 显示游戏内预测时间（毫秒）
 
 Show indicators only within team
 == 仅在队伍内显示指示器
@@ -10143,7 +10143,7 @@ Smart
 == 智能
 
 Smooth camera switch animation time when spectating (in ms, 0=off)
-== 观看时平滑摄像机切换动画的时间（以毫秒为单位）（0 表示关闭）
+== 观看时平滑摄像机切换动画的时间（毫秒）（0 表示关闭）
 
 Smooth Dynamic Camera
 == 平滑动态视野
@@ -10161,10 +10161,10 @@ Smooth scroll animation duration in menu/editor (ms, 0=off)
 == 菜单/编辑器中平滑滚动动画的时间（单位：毫秒，0 为关闭）
 
 Smooth zoom animation time in editor (in ms, 0=off)
-== 编辑器中平滑缩放动画的时间（以毫秒为单位）（0 表示关闭）
+== 编辑器中平滑缩放动画的时间（毫秒）（0 表示关闭）
 
 Smoothness of multi-view zoom (in ms, higher = slower)
-== 设置多视图缩放的平滑度（以毫秒为单位，较高=较慢）
+== 设置多视图缩放的平滑度（毫秒，较高=较慢）
 
 SMTC
 == 系统媒体控制
@@ -11049,10 +11049,10 @@ Time
 == 时间
 
 Time (ms) player must wait before next overhead emote sent to all clients (must be >= sv_emoticon_ms_delay to take effect).
-== 玩家在允许发送到所有客户端的下一个开销表情符号之前必须等待的时间（以毫秒为单位）（此配置必须高于或等于 sv_emoticon_ms_delay 才能生效）
+== 玩家在允许发送到所有客户端的下一个开销表情符号之前必须等待的时间（毫秒）（此配置必须高于或等于 sv_emoticon_ms_delay 才能生效）
 
 Time (ms) player must wait before next overhead emote.
-== 玩家在允许下一个头顶表情符号之前必须等待的时间（以毫秒为单位）
+== 玩家在允许下一个头顶表情符号之前必须等待的时间（毫秒）
 
 Time (seconds) between eye emote changes.
 == 眼睛表情符号变化之间的时间（秒）

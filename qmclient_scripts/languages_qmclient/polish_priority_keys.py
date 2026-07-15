@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
 """Rewrite selected keys for non-SC languages via DeepSeek, optional write-back.
 
+Safety:
+  - Default is **draft-only** (writes translations_draft/). Do not pass --write-back
+    from multiple parallel agents: write_language_store rewrites the whole TOML store
+    and concurrent processes will clobber each other.
+  - Parallelize by language with drafts only; a single process (or Main) should
+    merge write-back serially after review.
+  - Every listed key is rewritten for the target language (no skip-if-good).
+
 Usage:
   py -3 polish_priority_keys.py \\
     --languages japanese,korean \\
-    --keys-file ../../tmp/i18n_polish_priority_keys.json \\
-    --write-back
+    --keys-file ../../tmp/i18n_polish_priority_keys.json
+  # after reviewing drafts:
+  py -3 polish_priority_keys.py --languages japanese --keys-file ... --write-back
 """
 from __future__ import annotations
 

@@ -3927,10 +3927,10 @@ Filter out spectators from player count
 == Filtrar espectadores da contagem de jogadores
 
 Filter Team %d
-== Filtrar equipe %d
+== Filtrar equipa %d
 
 Filter: Team %d
-== Filtrar: Equipe %d
+== Filtro: equipa %d
 
 Filtered word console color
 == Cor da consola para palavras bloqueadas
@@ -12147,16 +12147,16 @@ Whether a switch is deactivated by default (otherwise activated)
 == Se um interruptor está desativado por predefinição (caso contrário ativado)
 
 Whether dummy copies your movement
-== Se o dummy copia o teu movimento
+== O Dummy copia os teus movimentos
 
 Whether dummy fires (requires cl_dummy_control 1)
-== Se o dummy dispara (requer cl_dummy_control 1)
+== O Dummy dispara (requer cl_dummy_control 1)
 
 Whether dummy hooks (requires cl_dummy_control 1)
-== Se o dummy usa gancho (requer cl_dummy_control 1)
+== O Dummy usa o gancho (requer cl_dummy_control 1)
 
 Whether dummy jumps (requires cl_dummy_control 1)
-== Se o dummy salta (requer cl_dummy_control 1)
+== O Dummy salta (requer cl_dummy_control 1)
 
 Whether non-voting players count as 'no' (0) or ignored (1)
 == Se jogadores sem voto contam como 'não' (0) ou ignorados (1)
@@ -12192,7 +12192,7 @@ Whether to save worse scores when you already have a better score.
 == Se deve guardar pontuações piores quando já tens uma pontuação melhor.
 
 Whether to show message when players pause and resume.
-== Se deve mostrar mensagem quando os jogadores pausam e retomam.
+== Mostrar mensagem quando os jogadores pausam ou retomam
 
 Whether to show players at any distance (off by default), optional i = 0 for off else for on
 == Se mostra jogadores a qualquer distância (desligado por predefinição), opcional i = 0 para desligado, senão para ligado
@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == Tens de estar numa equipa (de 1 a 63)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== Tens de estar numa equipa para jogar neste servidor e toda a tua equipa morrerá se a equipa estiver bloqueada
+== Tens de estar numa equipa para jogar neste servidor; se a equipa estiver bloqueada, a morte de um membro mata toda a equipa
 
 You have to wait %s seconds until you can swap
 == Tens de esperar %s segundos até poderes trocar

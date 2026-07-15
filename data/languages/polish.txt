@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == Musisz być w drużynie (od 1 do 63)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== Musisz być w drużynie, aby grać na tym serwerze, a cała twoja drużyna umrze, jeśli drużyna jest zablokowana
+== Aby grać na tym serwerze, musisz być w drużynie; gdy drużyna jest zablokowana, śmierć jednego członka zabija całą drużynę
 
 You have to wait %s seconds until you can swap
 == Musisz poczekać %s sekund, zanim będziesz mógł zamienić

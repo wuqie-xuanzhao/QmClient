@@ -8493,16 +8493,16 @@ Ring
 == Шумоподавление RNNoise
 
 RNNoise noise reduction
-== Шумоподавление RNNoise (недоступно в этой сборке)
+== Шумоподавление RNNoise
 
 RNNoise noise reduction (unavailable in this build)
-== Сила шумоподавления RNNoise
+== Шумоподавление RNNoise (недоступно в этой сборке)
 
 RNNoise noise reduction strength
-== RNNoise не интегрирован в текущую сборку, будет использовано простое шумоподавление.
+== Сила шумоподавления RNNoise
 
 RNNoise not integrated in current build, will fallback to simple noise reduction
-== Частота отката
+== RNNoise не интегрирован в текущую сборку, будет использовано простое шумоподавление
 
 Rollback rate
 == Частота откатов
@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == Вы должны быть в команде (от 1 до 63)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== Вы должны быть в команде, чтобы играть на этом сервере, и вся ваша команда умрёт, если команда заблокирована
+== Чтобы играть на этом сервере, нужно быть в команде; если команда заблокирована, смерть одного участника убивает всю команду
 
 You have to wait %s seconds until you can swap
 == Вы должны подождать %s секунд, прежде чем сможете обменяться

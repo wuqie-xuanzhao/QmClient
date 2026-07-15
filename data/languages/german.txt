@@ -3930,7 +3930,7 @@ Filter Team %d
 == Team %d filtern
 
 Filter: Team %d
-== Filter: Team %d
+== Teamfilter: %d
 
 Filtered word console color
 == Konsolenfarbe für blockierte Wörter
@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == Du musst in einem Team sein (von 1-63)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== Du musst in einem Team sein, um auf diesem Server zu spielen, und dein ganzes Team stirbt, wenn das Team gesperrt ist
+== Du musst in einem Team sein, um auf diesem Server zu spielen. Ist das Team gesperrt, stirbt das gesamte Team, wenn ein Mitglied stirbt
 
 You have to wait %s seconds until you can swap
 == Du musst %s Sekunden warten, bis du tauschen kannst

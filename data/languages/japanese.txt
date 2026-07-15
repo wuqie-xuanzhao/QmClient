@@ -3927,7 +3927,7 @@ Filter out spectators from player count
 == プレイヤー数から観戦者を除外
 
 Filter Team %d
-== フィルターチーム %d
+== チーム %d をフィルター
 
 Filter: Team %d
 == フィルター: チーム %d
@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == チーム（1～63）に所属している必要があります
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== このサーバーでプレイするにはチームに所属する必要があり、チームがロックされるとチームメイト全員が死亡します
+== このサーバーでプレイするにはチームに入る必要があります。チームがロックされている場合、チームメイトの誰かが死ぬと全員が死亡します
 
 You have to wait %s seconds until you can swap
 == 交換できるようになるまで %s 秒待つ必要があります

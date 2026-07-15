@@ -12147,16 +12147,16 @@ Whether a switch is deactivated by default (otherwise activated)
 == Si un interrupteur est désactivé par défaut (sinon activé)
 
 Whether dummy copies your movement
-== Si le Dummy copie vos mouvements
+== Le Dummy copie vos mouvements
 
 Whether dummy fires (requires cl_dummy_control 1)
-== Si le Dummy tire (nécessite cl_dummy_control 1)
+== Le Dummy tire (nécessite cl_dummy_control 1)
 
 Whether dummy hooks (requires cl_dummy_control 1)
-== Si le Dummy crochète (nécessite cl_dummy_control 1)
+== Le Dummy crochète (nécessite cl_dummy_control 1)
 
 Whether dummy jumps (requires cl_dummy_control 1)
-== Si le Dummy saute (nécessite cl_dummy_control 1)
+== Le Dummy saute (nécessite cl_dummy_control 1)
 
 Whether non-voting players count as 'no' (0) or ignored (1)
 == Si les joueurs ne votant pas comptent comme 'non' (0) ou sont ignorés (1)
@@ -12180,31 +12180,31 @@ Whether players see others by default (own team = 2)
 == Si les joueurs voient les autres par défaut (propre équipe = 2)
 
 Whether to control dummy simultaneously (cl_dummy_jump, cl_dummy_fire, cl_dummy_hook)
-== Si contrôler le Dummy simultanément (cl_dummy_jump, cl_dummy_fire, cl_dummy_hook)
+== Contrôler le Dummy simultanément (cl_dummy_jump, cl_dummy_fire, cl_dummy_hook)
 
 Whether to limit zoom in editor (0=unlimited)
-== Si limiter le zoom dans l'éditeur (0 = illimité)
+== Limiter le zoom dans l'éditeur (0 = illimité)
 
 Whether to publish player scores.
-== Si publier les scores des joueurs.
+== Publier les scores des joueurs.
 
 Whether to save worse scores when you already have a better score.
-== Si sauvegarder les scores moins bons lorsque vous avez déjà un meilleur score.
+== Sauvegarder les scores moins bons lorsque vous avez déjà un meilleur score.
 
 Whether to show message when players pause and resume.
-== Si afficher un message lorsque les joueurs mettent en pause et reprennent.
+== Afficher un message lorsque les joueurs mettent en pause ou reprennent
 
 Whether to show players at any distance (off by default), optional i = 0 for off else for on
-== Si afficher les joueurs à toute distance (désactivé par défaut), i = 0 pour désactiver, sinon activer
+== Afficher les joueurs à toute distance (désactivé par défaut), i = 0 pour désactiver, sinon activer
 
 Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only
-== Si afficher les joueurs des autres équipes ou non (désactivé par défaut), i = 0 pour désactiver, i = 1 pour activer, i = 2 pour sa propre équipe uniquement
+== Afficher les joueurs des autres équipes ou non (désactivé par défaut), i = 0 pour désactiver, i = 1 pour activer, i = 2 pour sa propre équipe uniquement
 
 Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on
-== Si afficher les joueurs des autres équipes en mode spectateur (activé par défaut), i = 0 pour désactiver, sinon activer
+== Afficher les joueurs des autres équipes en mode spectateur (activé par défaut), i = 0 pour désactiver, sinon activer
 
 Whether to use ninja jetpack or not. Makes jetpack look more awesome
-== Si utiliser le jetpack ninja ou non. Rend le jetpack plus impressionnant
+== Utiliser le jetpack ninja ou non. Rend le jetpack plus impressionnant
 
 Whether unnamed tees have a score
 == Si les tees sans nom ont un score
@@ -12477,7 +12477,7 @@ You have to be in a team (from 1-63)
 == Vous devez être dans une équipe (de 1 à 63)
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== Vous devez être dans une équipe pour jouer sur ce serveur et toute votre équipe mourra si l'équipe est verrouillée
+== Vous devez être dans une équipe pour jouer sur ce serveur ; si l’équipe est verrouillée, la mort d’un membre tue toute l’équipe
 
 You have to wait %s seconds until you can swap
 == Vous devez attendre %s secondes avant de pouvoir échanger
