@@ -4758,7 +4758,7 @@ HTTP map download: connection phase timeout (in ms, 0=disabled)
 == HTTP 地圖下載：連接階段超時（毫秒）（0 表示禁用）
 
 HTTP map download: low speed limit (in bytes/s, 0=disabled)
-== HTTP 地圖下載：設置低速限制（以每秒字節數為單位）（0 表示禁用）
+== HTTP 地圖下載：低速限制（位元組/秒，0=停用）
 
 HTTP map download: low speed limit period (0=disabled)
 == HTTP 地圖下載：設置低速限制時間段（0 為禁用）
@@ -6447,7 +6447,7 @@ Netlimit: exponential moving average alpha
 == Netlimit：指數移動平均線的 Alpha
 
 Netlimit: maximum traffic allowed per client (kb/s)
-== Netlimit：允許客戶端使用的最大流量（以 kb/s 為單位）
+== Netlimit：每用戶端最大流量（kb/s）
 
 Netversion
 == 網絡版本

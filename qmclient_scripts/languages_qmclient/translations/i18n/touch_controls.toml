@@ -599,6 +599,8 @@ polish = "Kolor nieaktywny"
 [[message]]
 key = "Info"
 [message.translations]
+simplified_chinese = "信息"
+traditional_chinese = "信息"
 japanese = "情報"
 german = "Info"
 

@@ -82,6 +82,7 @@ polish = "%s nie znaleziono"
 key = "+%d more codes"
 [message.translations]
 simplified_chinese = "还有 %d 个代码"
+traditional_chinese = "還有 %d 個代碼"
 korean = "+%d개의 코드 더 있음"
 russian = "ещё %d кодов"
 german = "+%d weitere Codes"
@@ -671,6 +672,8 @@ polish = "Wygładzanie anty-pingowe"
 [[message]]
 key = "Apply"
 [message.translations]
+simplified_chinese = "应用"
+traditional_chinese = "應用"
 japanese = "適用"
 
 [[message]]

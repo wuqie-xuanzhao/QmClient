@@ -897,6 +897,8 @@ polish = "Automatyczne logowanie Axiom powiodło się"
 [[message]]
 key = "Background"
 [message.translations]
+simplified_chinese = "背景"
+traditional_chinese = "背景"
 japanese = "背景"
 
 [[message]]
@@ -1254,6 +1256,8 @@ polish = "Zmień zoom"
 [[message]]
 key = "Chat"
 [message.translations]
+simplified_chinese = "聊天"
+traditional_chinese = "聊天"
 german = "Chat"
 spanish = "Chat"
 french = "Chat"
@@ -1295,6 +1299,8 @@ polish = "Eksport czatu nie powiódł się"
 [[message]]
 key = "Choose country flag"
 [message.translations]
+simplified_chinese = "选择国家旗帜"
+traditional_chinese = "選擇國家旗幟"
 japanese = "国旗を選択"
 
 [[message]]
@@ -1380,6 +1386,8 @@ polish = "Wyczyść zdalną konsolę"
 [[message]]
 key = "Clearable text..."
 [message.translations]
+simplified_chinese = "可清除文本……"
+traditional_chinese = "可清除文本……"
 japanese = "クリア可能なテキスト..."
 korean = "지울 수 있는 텍스트..."
 russian = "Очищаемый текст..."
@@ -1410,6 +1418,8 @@ polish = "Czyści opcje głosowania"
 [[message]]
 key = "Client"
 [message.translations]
+simplified_chinese = "客户端"
+traditional_chinese = "客戶端"
 german = "Client"
 french = "Client"
 
@@ -1432,6 +1442,8 @@ polish = "Hitbox kolizji"
 [[message]]
 key = "Config Files"
 [message.translations]
+simplified_chinese = "配置文件"
+traditional_chinese = "配置文件"
 japanese = "設定ファイル"
 
 [[message]]
@@ -1517,6 +1529,8 @@ polish = "Problemy z połączeniem…"
 [[message]]
 key = "Controller"
 [message.translations]
+simplified_chinese = "手柄"
+traditional_chinese = "手柄"
 german = "Controller"
 
 [[message]]
@@ -1714,6 +1728,7 @@ polish = "Dane"
 [[message]]
 key = "DDRace HUD"
 [message.translations]
+simplified_chinese = "DDRace HUD"
 traditional_chinese = "DDRace HUD"
 japanese = "DDRace HUD"
 korean = "DDRace HUD"
@@ -1756,6 +1771,8 @@ polish = "Tryb debugowania włączony. Naciśnij Ctrl+Shift+D, aby wyłączyć t
 [[message]]
 key = "Demo"
 [message.translations]
+simplified_chinese = "回放"
+traditional_chinese = "回放"
 german = "Demo"
 spanish = "Demo"
 brazilian_portuguese = "Demo"
@@ -1862,6 +1879,8 @@ polish = "Rozłącz się z serwerem"
 [[message]]
 key = "Display modes"
 [message.translations]
+simplified_chinese = "显示模式"
+traditional_chinese = "顯示模式"
 japanese = "表示モード"
 
 [[message]]
@@ -1915,6 +1934,8 @@ polish = "Remis!"
 [[message]]
 key = "Dummy"
 [message.translations]
+simplified_chinese = "分身"
+traditional_chinese = "分身"
 german = "Dummy"
 spanish = "Dummy"
 french = "Dummy"
@@ -2069,6 +2090,8 @@ polish = "Wyświetl tekst"
 [[message]]
 key = "Edit Entry"
 [message.translations]
+simplified_chinese = "编辑条目"
+traditional_chinese = "編輯條目"
 japanese = "エントリを編集"
 
 [[message]]
@@ -2218,6 +2241,8 @@ polish = "Wykonaj pliki po naciśnięciu/zwolnieniu klawisza"
 [[message]]
 key = "Execute on join"
 [message.translations]
+simplified_chinese = "进服时执行"
+traditional_chinese = "進服時執行"
 japanese = "参加時に実行"
 
 [[message]]
@@ -2303,6 +2328,8 @@ polish = "Nie udało się zapisać powtórki!"
 [[message]]
 key = "Favorite maps"
 [message.translations]
+simplified_chinese = "收藏地图"
+traditional_chinese = "收藏地圖"
 japanese = "お気に入りのマップ"
 
 [[message]]
@@ -2324,6 +2351,8 @@ polish = "feat-003 dogfood: tokeny + 12 widgetów"
 [[message]]
 key = "Feature Search"
 [message.translations]
+simplified_chinese = "功能搜索"
+traditional_chinese = "功能搜索"
 japanese = "機能検索"
 
 [[message]]
@@ -2857,6 +2886,8 @@ polish = "Złapania"
 [[message]]
 key = "Graphics display"
 [message.translations]
+simplified_chinese = "图像显示"
+traditional_chinese = "圖像顯示"
 japanese = "グラフィック表示"
 
 [[message]]
@@ -2926,6 +2957,8 @@ polish = "Pomoc: %s"
 [[message]]
 key = "Hide Settings Tabs"
 [message.translations]
+simplified_chinese = "隐藏设置选项卡"
+traditional_chinese = "隱藏設置選項卡"
 japanese = "設定タブを非表示"
 
 [[message]]
@@ -2963,6 +2996,8 @@ polish = "Przytrzymaj lewy przycisk, aby uzyskać swobodną kamerę"
 [[message]]
 key = "Hook collision line"
 [message.translations]
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
 japanese = "フック衝突線"
 
 [[message]]
@@ -3016,6 +3051,7 @@ polish = "https://wiki.ddnet.org/wiki/Mapping"
 [[message]]
 key = "HUD"
 [message.translations]
+simplified_chinese = "HUD"
 traditional_chinese = "HUD"
 japanese = "HUD"
 korean = "HUD"
@@ -3087,16 +3123,22 @@ polish = "Ulepszone anty-ping"
 [[message]]
 key = "Info Messages"
 [message.translations]
+simplified_chinese = "消息"
+traditional_chinese = "消息"
 japanese = "情報メッセージ"
 
 [[message]]
 key = "Input"
 [message.translations]
+simplified_chinese = "输入"
+traditional_chinese = "輸入"
 japanese = "入力"
 
 [[message]]
 key = "Input overlay"
 [message.translations]
+simplified_chinese = "按键显示"
+traditional_chinese = "按鍵顯示"
 japanese = "入力オーバーレイ"
 
 [[message]]
@@ -3230,6 +3272,8 @@ polish = "k = Utrata ponownego wysłania"
 [[message]]
 key = "Kaomoji"
 [message.translations]
+simplified_chinese = "表情符号"
+traditional_chinese = "表情符號"
 japanese = "顔文字"
 german = "Kaomoji"
 spanish = "Kaomoji"
@@ -3418,11 +3462,15 @@ polish = "l = Czas lokalny"
 [[message]]
 key = "Language"
 [message.translations]
+simplified_chinese = "语言"
+traditional_chinese = "語言"
 japanese = "言語"
 
 [[message]]
 key = "Laser"
 [message.translations]
+simplified_chinese = "激光"
+traditional_chinese = "激光"
 german = "Laser"
 french = "Laser"
 brazilian_portuguese = "Laser"
@@ -3448,6 +3496,8 @@ polish = "Kolory lasera"
 [[message]]
 key = "Laser settings"
 [message.translations]
+simplified_chinese = "激光设置"
+traditional_chinese = "激光設置"
 japanese = "レーザー設定"
 
 [[message]]
@@ -3900,6 +3950,8 @@ polish = "Wyloguj z rcon"
 [[message]]
 key = "Lyrics"
 [message.translations]
+simplified_chinese = "歌词"
+traditional_chinese = "歌詞"
 japanese = "歌詞"
 
 [[message]]
@@ -4273,6 +4325,8 @@ polish = "Minimalizuj klienta"
 [[message]]
 key = "Miscellaneous"
 [message.translations]
+simplified_chinese = "杂项"
+traditional_chinese = "雜項"
 japanese = "その他"
 
 [[message]]
@@ -4326,6 +4380,8 @@ polish = "Informacja zwrotna o ruchu i skupieniu"
 [[message]]
 key = "Mouse"
 [message.translations]
+simplified_chinese = "鼠标"
+traditional_chinese = "鼠標"
 brazilian_portuguese = "Mouse"
 
 [[message]]
@@ -4411,6 +4467,8 @@ polish = "Przeniesiony w grze"
 [[message]]
 key = "Movement"
 [message.translations]
+simplified_chinese = "移动"
+traditional_chinese = "移動"
 japanese = "移動"
 
 [[message]]
@@ -4816,6 +4874,8 @@ polish = "Zrezygnuj z liczenia obserwatorów i ukryj status autoryzacji przed ni
 [[message]]
 key = "Other"
 [message.translations]
+simplified_chinese = "其他"
+traditional_chinese = "其他"
 japanese = "その他"
 
 [[message]]
@@ -6453,6 +6513,8 @@ polish = "Wynik"
 [[message]]
 key = "Search"
 [message.translations]
+simplified_chinese = "搜索"
+traditional_chinese = "搜索"
 japanese = "検索"
 
 [[message]]
@@ -7114,6 +7176,8 @@ polish = "Ustaw emotkę oczu swojego tee"
 [[message]]
 key = "Settings"
 [message.translations]
+simplified_chinese = "设置"
+traditional_chinese = "設置"
 japanese = "設定"
 
 [[message]]
@@ -7567,6 +7631,8 @@ polish = "Wyszukiwanie skórki"
 [[message]]
 key = "Skin transition"
 [message.translations]
+simplified_chinese = "皮肤切换"
+traditional_chinese = "皮膚切換"
 japanese = "スキン遷移"
 
 [[message]]
@@ -8340,6 +8406,8 @@ polish = "Zrób zrzut ekranu"
 [[message]]
 key = "TClient Developers"
 [message.translations]
+simplified_chinese = "TClient 开发人员"
+traditional_chinese = "TClient 開發人員"
 japanese = "TClient 開発者"
 
 [[message]]
@@ -8697,6 +8765,8 @@ polish = "Ta podpowiedź pochodzi z ui_widget::Tooltip, cienkiej nakładki na CT
 [[message]]
 key = "Tile outlines"
 [message.translations]
+simplified_chinese = "墙体轮廓"
+traditional_chinese = "牆體輪廓"
 japanese = "タイルのアウトライン"
 
 [[message]]
@@ -9086,6 +9156,8 @@ polish = "Łącznie"
 [[message]]
 key = "Translate"
 [message.translations]
+simplified_chinese = "翻译"
+traditional_chinese = "翻譯"
 japanese = "翻訳"
 
 [[message]]
@@ -9571,6 +9643,8 @@ polish = "Wyświetl teleport znaleziony (z offsetem) o podanym numerze"
 [[message]]
 key = "Visual"
 [message.translations]
+simplified_chinese = "视觉效果"
+traditional_chinese = "視覺效果"
 spanish = "Visual"
 brazilian_portuguese = "Visual"
 portuguese = "Visual"
@@ -9594,11 +9668,15 @@ polish = "Efekty wizualne"
 [[message]]
 key = "Voice"
 [message.translations]
+simplified_chinese = "语音"
+traditional_chinese = "語音"
 japanese = "音声"
 
 [[message]]
 key = "Volume"
 [message.translations]
+simplified_chinese = "音量"
+traditional_chinese = "音量"
 japanese = "音量"
 french = "Volume"
 brazilian_portuguese = "Volume"
@@ -9639,6 +9717,7 @@ polish = "Głosuj tak/nie"
 [[message]]
 key = "Voting"
 [message.translations]
+simplified_chinese = "投票"
 traditional_chinese = "投票"
 japanese = "投票"
 
@@ -9661,16 +9740,22 @@ polish = "Oczekiwanie na snapshot"
 [[message]]
 key = "War Entries"
 [message.translations]
+simplified_chinese = "敌对条目"
+traditional_chinese = "敵對條目"
 japanese = "戦争エントリ"
 
 [[message]]
 key = "War Groups"
 [message.translations]
+simplified_chinese = "敌对群组"
+traditional_chinese = "敵對群組"
 japanese = "戦争グループ"
 
 [[message]]
 key = "Warlist"
 [message.translations]
+simplified_chinese = "敌对列表"
+traditional_chinese = "敵對列表"
 japanese = "戦争リスト"
 
 [[message]]
@@ -9692,16 +9777,22 @@ polish = "Rozgrzewka"
 [[message]]
 key = "Weapon"
 [message.translations]
+simplified_chinese = "武器"
+traditional_chinese = "武器"
 japanese = "武器"
 
 [[message]]
 key = "Weapon animation"
 [message.translations]
+simplified_chinese = "武器动画"
+traditional_chinese = "武器動畫"
 japanese = "武器アニメーション"
 
 [[message]]
 key = "Weapon trajectory"
 [message.translations]
+simplified_chinese = "武器弹道辅助线"
+traditional_chinese = "武器彈道輔助線"
 japanese = "武器軌跡"
 
 [[message]]

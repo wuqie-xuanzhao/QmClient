@@ -449,6 +449,8 @@ polish = "Wiązanie celowania"
 [[message]]
 key = "All players"
 [message.translations]
+simplified_chinese = "所有人"
+traditional_chinese = "所有人"
 japanese = "すべてのプレイヤー"
 
 [[message]]
@@ -1637,6 +1639,7 @@ polish = "Kolor tła (obiektów)"
 key = "Background color"
 [message.translations]
 simplified_chinese = "背景颜色"
+traditional_chinese = "背景顏色"
 
 [[message]]
 key = "Background image in menu"
@@ -1833,16 +1836,22 @@ polish = "Ciało"
 [[message]]
 key = "Border"
 [message.translations]
+simplified_chinese = "边框"
+traditional_chinese = "邊框"
 japanese = "境界線"
 
 [[message]]
 key = "Border color"
 [message.translations]
+simplified_chinese = "边框颜色"
+traditional_chinese = "邊框顏色"
 japanese = "境界線の色"
 
 [[message]]
 key = "Border range"
 [message.translations]
+simplified_chinese = "边框范围"
+traditional_chinese = "邊框範圍"
 japanese = "境界線の範囲"
 
 [[message]]
@@ -3381,6 +3390,7 @@ polish = "Klient DDNet wymaga ponownego uruchomienia, aby zakończyć aktualizac
 key = "DDRace HUD"
 [message.translations]
 simplified_chinese = "DDRace HUD"
+traditional_chinese = "DDRace HUD"
 spanish = "HUD de DDRace"
 french = "HUD DDRace"
 brazilian_portuguese = "HUD DDRace"
@@ -6205,6 +6215,7 @@ polish = "Plik z ogłoszeniami, jedno na linię"
 key = "Filter connecting players"
 [message.translations]
 simplified_chinese = "筛选正在连接的玩家"
+traditional_chinese = "篩選正在連接的玩家"
 
 [[message]]
 key = "Filter empty servers in browser"
@@ -6913,16 +6924,22 @@ polish = "Katalog duchów"
 [[message]]
 key = "Glow color"
 [message.translations]
+simplified_chinese = "辉光颜色"
+traditional_chinese = "輝光顏色"
 japanese = "グロー色"
 
 [[message]]
 key = "Glow intensity"
 [message.translations]
+simplified_chinese = "辉光强度"
+traditional_chinese = "輝光強度"
 japanese = "グロー強度"
 
 [[message]]
 key = "Glow range"
 [message.translations]
+simplified_chinese = "辉光范围"
+traditional_chinese = "輝光範圍"
 japanese = "グロー範囲"
 
 [[message]]
@@ -6944,6 +6961,8 @@ polish = "Nazwa GPU, wybrana przez backend (jeśli obsługiwany)"
 [[message]]
 key = "Gradient"
 [message.translations]
+simplified_chinese = "渐变"
+traditional_chinese = "漸變"
 polish = "Gradient"
 
 [[message]]
@@ -7587,8 +7606,8 @@ polish = "Pobieranie mapy HTTP: limit czasu fazy połączenia (w ms, 0=wyłączo
 [[message]]
 key = "HTTP map download: low speed limit (in bytes/s, 0=disabled)"
 [message.translations]
-simplified_chinese = "HTTP 地图下载：设置低速限制（以每秒字节数为单位）（0 表示禁用）"
-traditional_chinese = "HTTP 地圖下載：設置低速限制（以每秒字節數為單位）（0 表示禁用）"
+simplified_chinese = "HTTP 地图下载：低速限制（字节/秒，0=禁用）"
+traditional_chinese = "HTTP 地圖下載：低速限制（位元組/秒，0=停用）"
 japanese = "HTTP マップダウンロード：低速制限（バイト/秒、0=無効）"
 korean = "HTTP 맵 다운로드: 저속 제한 (bytes/s, 0=비활성화)"
 russian = "HTTP загрузка карт: лимит низкой скорости (в байтах/с, 0=отключено)"
@@ -7651,6 +7670,8 @@ polish = "https://wiki.ddnet.org/"
 [[message]]
 key = "https://wiki.ddnet.org/wiki/Touch_controls"
 [message.translations]
+simplified_chinese = "https://wiki.ddnet.org/wiki/Touch_controls/zh"
+traditional_chinese = "https://wiki.ddnet.org/wiki/Touch_controls/zh"
 japanese = "https://wiki.ddnet.org/wiki/Touch_controls"
 korean = "https://wiki.ddnet.org/wiki/Touch_controls"
 russian = "https://wiki.ddnet.org/wiki/Touch_controls"
@@ -7666,6 +7687,7 @@ polish = "https://wiki.ddnet.org/wiki/Touch_controls"
 key = "HUD"
 [message.translations]
 simplified_chinese = "HUD"
+traditional_chinese = "HUD"
 
 [[message]]
 key = "HUD animation speed (percent)"
@@ -8240,6 +8262,8 @@ turkish = "Lazer"
 [[message]]
 key = "Laser effect enhancement"
 [message.translations]
+simplified_chinese = "激光效果增强"
+traditional_chinese = "激光效果增強"
 japanese = "レーザーエフェクト強調"
 
 [[message]]
@@ -8517,6 +8541,8 @@ polish = "Główny zasób"
 [[message]]
 key = "Manual scope"
 [message.translations]
+simplified_chinese = "手动范围"
+traditional_chinese = "手動範圍"
 japanese = "手動スコープ"
 
 [[message]]
@@ -8538,6 +8564,8 @@ polish = "Ręczny plik źródłowy"
 [[message]]
 key = "Manual target"
 [message.translations]
+simplified_chinese = "手动目标"
+traditional_chinese = "手動目標"
 japanese = "手動ターゲット"
 
 [[message]]
@@ -9900,8 +9928,8 @@ polish = "Netlimit: alfa wykładniczej średniej ruchomej"
 [[message]]
 key = "Netlimit: maximum traffic allowed per client (kb/s)"
 [message.translations]
-simplified_chinese = "Netlimit：允许客户端使用的最大流量（以 kb/s 为单位）"
-traditional_chinese = "Netlimit：允許客戶端使用的最大流量（以 kb/s 為單位）"
+simplified_chinese = "Netlimit：每客户端最大流量（kb/s）"
+traditional_chinese = "Netlimit：每用戶端最大流量（kb/s）"
 japanese = "Netlimit: クライアントごとの最大許可トラフィック（kb/s）"
 korean = "Netlimit: 클라이언트당 허용되는 최대 트래픽 (kb/s)"
 russian = "Netlimit: максимальный трафик на клиента (кб/с)"
@@ -10714,6 +10742,8 @@ polish = "Inni"
 [[message]]
 key = "Others only"
 [message.translations]
+simplified_chinese = "仅他人"
+traditional_chinese = "僅他人"
 japanese = "他人のみ"
 
 [[message]]
@@ -11343,6 +11373,8 @@ polish = "Znakowanie skóry gracza"
 [[message]]
 key = "Playing effects"
 [message.translations]
+simplified_chinese = "播放效果"
+traditional_chinese = "播放效果"
 japanese = "エフェクトの再生"
 
 [[message]]
@@ -11795,11 +11827,15 @@ polish = "Drukuj codzienne wiadomości do konsoli"
 [[message]]
 key = "Pulse amplitude"
 [message.translations]
+simplified_chinese = "脉冲幅度"
+traditional_chinese = "脈衝幅度"
 japanese = "パルス振幅"
 
 [[message]]
 key = "Pulse speed"
 [message.translations]
+simplified_chinese = "脉冲速度"
+traditional_chinese = "脈衝速度"
 japanese = "パルス速度"
 
 [[message]]
@@ -11917,6 +11953,8 @@ polish = "Losowy wybór"
 [[message]]
 key = "Reason"
 [message.translations]
+simplified_chinese = "原因"
+traditional_chinese = "原因"
 japanese = "理由"
 
 [[message]]
@@ -12770,6 +12808,8 @@ polish = "Runda"
 [[message]]
 key = "Rounded caps"
 [message.translations]
+simplified_chinese = "圆角端点"
+traditional_chinese = "圓角端點"
 japanese = "丸キャップ"
 
 [[message]]
@@ -13638,11 +13678,15 @@ polish = "Ja"
 [[message]]
 key = "Self and friends"
 [message.translations]
+simplified_chinese = "自己和好友"
+traditional_chinese = "自己和好友"
 japanese = "自分とフレンドのみ"
 
 [[message]]
 key = "Self only"
 [message.translations]
+simplified_chinese = "仅自己"
+traditional_chinese = "僅自己"
 japanese = "自分のみ"
 
 [[message]]
@@ -16544,6 +16588,8 @@ polish = "Określa, czy przybliżenie powinno być ograniczone w grze (0 = bez o
 [[message]]
 key = "Spectate effects"
 [message.translations]
+simplified_chinese = "观战特效"
+traditional_chinese = "觀戰特效"
 japanese = "観戦エフェクト"
 
 [[message]]
@@ -16613,11 +16659,15 @@ polish = "Teleport obserwacji"
 [[message]]
 key = "Spectated player"
 [message.translations]
+simplified_chinese = "被观战玩家"
+traditional_chinese = "被觀戰玩家"
 japanese = "観戦中のプレイヤー"
 
 [[message]]
 key = "Spectated player and friends"
 [message.translations]
+simplified_chinese = "被观战的玩家与好友"
+traditional_chinese = "被觀戰的玩家與好友"
 japanese = "観戦中のプレイヤーとフレンド"
 
 [[message]]

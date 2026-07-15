@@ -433,6 +433,8 @@ polish = "Członkowie klanu"
 [[message]]
 key = "Clear all history"
 [message.translations]
+simplified_chinese = "清空所有历史"
+traditional_chinese = "清空所有歷史"
 japanese = "すべての履歴をクリア"
 korean = "모든 기록 지우기"
 russian = "Очистить всю историю"
@@ -447,6 +449,8 @@ polish = "Wyczyść całą historię"
 [[message]]
 key = "Clear finished"
 [message.translations]
+simplified_chinese = "清空已完成"
+traditional_chinese = "清空已完成"
 japanese = "完了したものをクリア"
 korean = "완료된 항목 지우기"
 russian = "Очистить завершённые"
@@ -605,6 +609,8 @@ polish = "Społeczności"
 [[message]]
 key = "Confirm clear all"
 [message.translations]
+simplified_chinese = "确认清空全部"
+traditional_chinese = "確認清空全部"
 japanese = "すべてクリアの確認"
 korean = "전체 지우기 확인"
 russian = "Подтвердить очистку всего"
@@ -619,6 +625,8 @@ polish = "Potwierdź wyczyszczenie wszystkiego"
 [[message]]
 key = "Confirm clear finished"
 [message.translations]
+simplified_chinese = "确认清空已完成"
+traditional_chinese = "確認清空已完成"
 japanese = "完了したものをクリアの確認"
 korean = "완료된 항목 지우기 확인"
 russian = "Подтвердить очистку завершённых"
@@ -824,6 +832,8 @@ polish = "Nie znaleziono ddnet-saves.txt"
 [[message]]
 key = "Deaths"
 [message.translations]
+simplified_chinese = "死亡数"
+traditional_chinese = "死亡數"
 japanese = "デス数"
 
 [[message]]
@@ -1015,6 +1025,8 @@ polish = "Filtruj łączących się graczy"
 [[message]]
 key = "Finished"
 [message.translations]
+simplified_chinese = "已完成"
+traditional_chinese = "已完成"
 japanese = "完了"
 korean = "완료됨"
 russian = "Завершённые"
@@ -1188,6 +1200,8 @@ polish = "Insane"
 [[message]]
 key = "Last entered"
 [message.translations]
+simplified_chinese = "最后进入"
+traditional_chinese = "最後進入"
 japanese = "最後に入力"
 korean = "마지막 입력"
 russian = "Последние введённые"
@@ -1266,6 +1280,8 @@ polish = "Mapa"
 [[message]]
 key = "Map play history"
 [message.translations]
+simplified_chinese = "地图游玩历史"
+traditional_chinese = "地圖遊玩歷史"
 japanese = "マッププレイ履歴"
 korean = "맵 플레이 기록"
 russian = "История прохождения карт"
@@ -1408,6 +1424,8 @@ polish = "Logowanie nie jest wymagane"
 [[message]]
 key = "No map play history yet"
 [message.translations]
+simplified_chinese = "暂无地图游玩历史"
+traditional_chinese = "暫無地圖遊玩歷史"
 japanese = "マッププレイ履歴がまだありません"
 korean = "아직 맵 플레이 기록이 없습니다"
 russian = "История прохождения карт пока пуста"
@@ -1646,6 +1664,8 @@ polish = "Dystrybucja online QmClient"
 [[message]]
 key = "Recent"
 [message.translations]
+simplified_chinese = "最近"
+traditional_chinese = "最近"
 japanese = "最近"
 korean = "최근"
 russian = "Недавние"
@@ -1676,6 +1696,8 @@ polish = "Usuń znajomego"
 [[message]]
 key = "Remove from history"
 [message.translations]
+simplified_chinese = "从历史中移除"
+traditional_chinese = "從歷史中移除"
 japanese = "履歴から削除"
 korean = "기록에서 제거"
 russian = "Удалить из истории"
@@ -1898,6 +1920,8 @@ polish = "Uruchom i połącz z lokalnym serwerem"
 [[message]]
 key = "Status"
 [message.translations]
+simplified_chinese = "状态"
+traditional_chinese = "狀態"
 german = "Status"
 brazilian_portuguese = "Status"
 polish = "Status"

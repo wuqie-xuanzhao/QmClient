@@ -687,6 +687,24 @@ simplified_chinese = "退出"
             any("unexpected identity returned" in item for item in failures)
         )
 
+    def test_extract_placeholders_ignores_percentage_ranges(self):
+        self.assertEqual(
+            translate_with_local_http.extract_placeholders(
+                "Size of entity text data (20% to 100%)"
+            ),
+            [],
+        )
+        self.assertEqual(
+            translate_with_local_http.extract_placeholders(
+                "Tamanho (20% a 100%)"
+            ),
+            [],
+        )
+        self.assertEqual(
+            translate_with_local_http.extract_placeholders("Player %s at 50%"),
+            ["%s"],
+        )
+
     def test_placeholder_quality_distinguishes_escaped_percent(self):
         self.assertEqual(
             translate_with_local_http.extract_placeholders("Progress: 100%%"),

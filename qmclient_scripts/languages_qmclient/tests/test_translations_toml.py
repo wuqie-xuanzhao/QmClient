@@ -654,6 +654,26 @@ spanish = "Aplicar"
             report.warnings,
         )
 
+    def test_translation_quality_ignores_percentage_ranges_as_placeholders(self):
+        store = {
+            "menus": {
+                ("Size of entity text data (20% to 100%)", ""): {
+                    "simplified_chinese": "实体文本数据的大小（20% 到 100%）",
+                    "brazilian_portuguese": "Tamanho dos dados de texto da entidade (20% a 100%)",
+                    "polish": "Rozmiar danych tekstu entity (20% do 100%)",
+                    "french": "Taille des données texte d'entité (20% à 100%)",
+                }
+            }
+        }
+
+        report = i18n_store.translation_quality_report(store)
+
+        self.assertEqual(report.errors, [])
+        self.assertFalse(
+            any("placeholder mismatch" in item for item in report.warnings),
+            report.warnings,
+        )
+
     def test_translation_quality_checks_dynamic_printf_precision(self):
         store = {
             "menus": {
