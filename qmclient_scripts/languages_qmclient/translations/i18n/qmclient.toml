@@ -193,8 +193,8 @@ polish = "'%s' wezwał(a) do głosowania nad wyciszeniem '%s' (powód: %s)"
 [[message]]
 key = "'%s' called vote to %s practice mode for your team. Current votes %s/%s"
 [message.translations]
-simplified_chinese = "'%s' 发起了 %s 队伍练习模式投票。当前票数 %s/%s"
-traditional_chinese = "'%s' 發起了 %s 隊伍練習模式投票。當前票數 %s/%s"
+simplified_chinese = "'%s' 发起了 %s 本队练习模式的投票。当前票数 %s/%s"
+traditional_chinese = "'%s' 發起了 %s 本隊練習模式的投票。當前票數 %s/%s"
 japanese = "'%s' があなたのチームの練習モードを %s する投票を呼びかけました。現在の票数 %s/%s"
 korean = "'%s'가 당신 팀의 연습 모드를 %s하는 투표를 요청했습니다. 현재 투표 %s/%s"
 russian = "'%s' инициировал(а) голосование за %s режим тренировки для вашей команды. Текущие голоса: %s/%s"
@@ -385,8 +385,8 @@ polish = "'%s' zablokował(a) twoją drużynę."
 [[message]]
 key = "'%s' locked your team. After the race starts, killing will kill everyone in your team."
 [message.translations]
-simplified_chinese = "'%s' 锁定了你们的队伍。比赛开始后，任何人 kill 都会导致整队死亡"
-traditional_chinese = "'%s' 鎖定了你們的隊伍。比賽開始後，任何人 kill 都會導致整隊死亡"
+simplified_chinese = "'%s' 锁定了你们的队伍。比赛开始后，任何人使用 kill 都会导致整队死亡"
+traditional_chinese = "'%s' 鎖定了你們的隊伍。比賽開始後，任何人使用 kill 都會導致整隊死亡"
 japanese = "'%s' があなたのチームをロックしました。レース開始後、キルするとチーム全員が死亡します。"
 korean = "'%s'가 당신의 팀을 잠갔습니다. 레이스가 시작된 후 죽으면 팀 전체가 사망합니다."
 russian = "'%s' заблокировал(а) вашу команду. После старта заезда убийство убьёт всех в команде."
@@ -15460,8 +15460,8 @@ polish = "Wymaga dodatkowych animacji"
 [[message]]
 key = "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled."
 [message.translations]
-simplified_chinese = "本服未开启 rescue，且你所在队伍也没有开启 /practice。注意：练习模式下无法获得排名"
-traditional_chinese = "本服未開啟 rescue，且你所在隊伍也沒有開啟 /practice。注意：練習模式下無法獲得排名"
+simplified_chinese = "本服未开启救援功能，且你所在队伍也没有开启 /practice。注意：练习模式下无法获得排名"
+traditional_chinese = "本服未開啟救援功能，且你所在隊伍也沒有開啟 /practice。注意：練習模式下無法獲得排名"
 japanese = "このサーバーではレスキューが有効ではなく、/practice が有効なチームにも参加していません。練習モードではランクを獲得できないことに注意してください。"
 korean = "이 서버에서 Rescue 가 활성화되어 있지 않으며 /practice 가 켜진 팀에도 속해 있지 않습니다. 연습 모드에서는 순위를 얻을 수 없습니다."
 russian = "Rescue не включён на этом сервере, и вы не в команде с включённым /practice. Обратите внимание, что с включённым тренировочным режимом нельзя получить рейтинг."
@@ -22424,8 +22424,8 @@ polish = "Anulowałeś zamianę z %s"
 [[message]]
 key = "You died, but will stay in practice until you use kill."
 [message.translations]
-simplified_chinese = "你已经死亡，但会继续保持练习模式，直到你输入 kill"
-traditional_chinese = "你已經死亡，但會繼續保持練習模式，直到你輸入 kill"
+simplified_chinese = "你已经死亡，但会继续保持练习模式，直到你使用 kill"
+traditional_chinese = "你已經死亡，但會繼續保持練習模式，直到你使用 kill"
 japanese = "死亡しましたが、kill を使用するまで練習モードが継続されます。"
 korean = "죽었지만, kill을 입력할 때까지 연습 모드가 유지됩니다."
 russian = "Вы умерли, но останетесь в тренировочном режиме, пока не используете kill."
@@ -22488,8 +22488,8 @@ polish = "Nie masz już nieskończonych skoków w powietrzu"
 [[message]]
 key = "You have a jetpack gun"
 [message.translations]
-simplified_chinese = "你现在拥有喷气背包枪"
-traditional_chinese = "你現在擁有噴氣揹包槍"
+simplified_chinese = "你现在拥有喷气枪"
+traditional_chinese = "你現在擁有噴氣槍"
 japanese = "ジェットパックガンを所持しています"
 korean = "제트팩 총을 가지고 있습니다"
 russian = "У вас есть реактивная пушка"
@@ -22648,8 +22648,8 @@ polish = "Wcześniej nie teleportowałeś się. Użyj /tp przed użyciem tego po
 [[message]]
 key = "You lost your jetpack gun"
 [message.translations]
-simplified_chinese = "你失去了喷气背包枪"
-traditional_chinese = "你失去了噴氣揹包槍"
+simplified_chinese = "你失去了喷气枪"
+traditional_chinese = "你失去了噴氣槍"
 japanese = "ジェットパックガンを失いました"
 korean = "제트팩 총을 잃었습니다"
 russian = "Вы потеряли реактивную пушку"
@@ -22744,8 +22744,8 @@ polish = "Nie będziesz otrzymywać dalszych wiadomości z czatu globalnego i se
 [[message]]
 key = "You will not receive any further whispers"
 [message.translations]
-simplified_chinese = "你将不再接收悄悄话"
-traditional_chinese = "你將不再接收悄悄話"
+simplified_chinese = "你将不再收到私聊消息"
+traditional_chinese = "你將不再收到私聊訊息"
 japanese = "ウィスパーを受信しなくなります"
 korean = "더 이상 귓속말을 받지 않습니다"
 russian = "Вы больше не будете получать шёпот"
@@ -22776,8 +22776,8 @@ polish = "Będziesz teraz widzieć wszystkie Tee na tym serwerze, niezależnie o
 [[message]]
 key = "You will receive global chat and server messages"
 [message.translations]
-simplified_chinese = "你将继续接收全局聊天和服务器消息"
-traditional_chinese = "你將繼續接收全局聊天和服務器消息"
+simplified_chinese = "你将接收全局聊天和服务器消息"
+traditional_chinese = "你將接收全域聊天和伺服器訊息"
 japanese = "グローバルチャットとサーバーメッセージを受信します"
 korean = "글로벌 채팅 및 서버 메시지를 받습니다"
 russian = "Вы будете получать глобальные сообщения чата и сервера"
@@ -22792,8 +22792,8 @@ polish = "Będziesz otrzymywać wiadomości z czatu globalnego i serwera"
 [[message]]
 key = "You will receive whispers"
 [message.translations]
-simplified_chinese = "你将继续接收悄悄话"
-traditional_chinese = "你將繼續接收悄悄話"
+simplified_chinese = "你现在会收到私聊消息"
+traditional_chinese = "你現在會收到私聊訊息"
 japanese = "ウィスパーを受信します"
 korean = "귓속말을 받습니다"
 russian = "Вы будете получать шёпот"
@@ -22856,8 +22856,8 @@ polish = "Twój ulubiony menedżer map"
 [[message]]
 key = "Your locked team was killed because '%s' %s"
 [message.translations]
-simplified_chinese = "你的锁队全员被处死，因为 '%s' %s 了"
-traditional_chinese = "你的鎖隊全員被處死，因為 '%s' %s 了"
+simplified_chinese = "你的锁队因 '%s' %s 而被全员处死"
+traditional_chinese = "你的鎖隊因 '%s' %s 而被全員處死"
 japanese = "'%s' が %s したため、ロックされたチームが全滅しました"
 korean = "잠긴 팀이 '%s' %s 로 인해 사망했습니다"
 russian = "Ваша заблокированная команда была убита, потому что '%s' %s"
@@ -22952,8 +22952,8 @@ polish = "Twoja drużyna została zabita, ponieważ nie mogła już ukończyć i
 [[message]]
 key = "Your team was unlocked by an unlock team tile"
 [message.translations]
-simplified_chinese = "你的队伍已被解锁队伍图块解除锁定"
-traditional_chinese = "你的隊伍已被解鎖隊伍圖塊解除鎖定"
+simplified_chinese = "你的队伍已被「解锁队伍」图块解锁"
+traditional_chinese = "你的隊伍已被「解鎖隊伍」圖塊解鎖"
 japanese = "チームロック解除タイルによってチームがロック解除されました"
 korean = "팀 잠금 해제 타일로 인해 팀이 잠금 해제되었습니다"
 russian = "Ваша команда была разблокирована тайлом разблокировки команды"
@@ -22968,8 +22968,8 @@ polish = "Twoja drużyna została odblokowana przez kafelek odblokowania drużyn
 [[message]]
 key = "Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee"
 [message.translations]
-simplified_chinese = "你的 timeout code 已设置。0.7 客户端超时后无法取回自己的 tee，但 0.6 客户端可以接管你的 tee"
-traditional_chinese = "你的 timeout code 已設置。0.7 客戶端超時後無法取回自己的 tee，但 0.6 客戶端可以接管你的 tee"
+simplified_chinese = "你的超时保护码已设置。0.7 客户端超时后无法取回自己的 tee，但 0.6 客户端可以接管你的 tee"
+traditional_chinese = "你的逾時保護碼已設置。0.7 客戶端逾時後無法取回自己的 tee，但 0.6 客戶端可以接管你的 tee"
 japanese = "タイムアウトコードが設定されました。0.7 クライアントはタイムアウト時に Tee を取り戻せませんが、0.6 クライアントはあなたの Tee を引き継げます"
 korean = "타임아웃 코드가 설정되었습니다. 0.7 클라이언트는 타임아웃 시 티를 되찾을 수 없지만, 0.6 클라이언트는 당신의 티를 차지할 수 있습니다"
 russian = "Ваш код тайм-аута установлен. Клиенты 0.7 не могут вернуть своих ти после тайм-аута; однако клиент 0.6 может завладеть вашим ти"

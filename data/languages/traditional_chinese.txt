@@ -143,7 +143,7 @@
 == '%s' 發起了禁言 '%s' 的投票（原因：%s）
 
 '%s' called vote to %s practice mode for your team. Current votes %s/%s
-== '%s' 發起了 %s 隊伍練習模式投票。當前票數 %s/%s
+== '%s' 發起了 %s 本隊練習模式的投票。當前票數 %s/%s
 
 '%s' called vote to change server option: %s
 == '%s' 發起了服務器選項投票：%s
@@ -179,7 +179,7 @@
 == '%s' 鎖定了你們的隊伍
 
 '%s' locked your team. After the race starts, killing will kill everyone in your team.
-== '%s' 鎖定了你們的隊伍。比賽開始後，任何人 kill 都會導致整隊死亡
+== '%s' 鎖定了你們的隊伍。比賽開始後，任何人使用 kill 都會導致整隊死亡
 
 '%s' unlocked your team.
 == '%s' 解鎖了你們的隊伍
@@ -8352,7 +8352,7 @@ Require KCP-capable client to upgrade session (keep off during grayscale for fal
 == 要求支持 KCP 的客戶端才能升級會話（灰度期保持關閉以允許 fallback）
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
-== 本服未開啟 rescue，且你所在隊伍也沒有開啟 /practice。注意：練習模式下無法獲得排名
+== 本服未開啟救援功能，且你所在隊伍也沒有開啟 /practice。注意：練習模式下無法獲得排名
 
 Rescue mode switched to %s
 == 救援模式已切換為 %s
@@ -12450,7 +12450,7 @@ You canceled the swap with %s
 == 你已取消與 %s 的交換
 
 You died, but will stay in practice until you use kill.
-== 你已經死亡，但會繼續保持練習模式，直到你輸入 kill
+== 你已經死亡，但會繼續保持練習模式，直到你使用 kill
 
 You do not have a pending swap request.
 == 你當前沒有待處理的交換請求
@@ -12462,7 +12462,7 @@ You don't have unlimited air jumps
 == 你現在沒有無限空跳了
 
 You have a jetpack gun
-== 你現在擁有噴氣揹包槍
+== 你現在擁有噴氣槍
 
 You have already requested to swap with %s.
 == 你已經向 %s 發過交換請求了
@@ -12495,7 +12495,7 @@ You haven't previously teleported. Use /tp before using this command.
 == 你之前沒有傳送過，請先使用 /tp
 
 You lost your jetpack gun
-== 你失去了噴氣揹包槍
+== 你失去了噴氣槍
 
 You must join a team and play with somebody or else you can't play
 == 你必須加入一個隊伍並和其他人一起玩，否則無法開始
@@ -12519,16 +12519,16 @@ You will not receive any further global chat and server messages
 == 你將不再接收全局聊天和服務器消息
 
 You will not receive any further whispers
-== 你將不再接收悄悄話
+== 你將不再收到私聊訊息
 
 You will now see all tees on this server, no matter the distance
 == 你現在會看到本服所有 tee，不再受距離限制
 
 You will receive global chat and server messages
-== 你將繼續接收全局聊天和服務器消息
+== 你將接收全域聊天和伺服器訊息
 
 You will receive whispers
-== 你將繼續接收悄悄話
+== 你現在會收到私聊訊息
 
 You'll lose unsaved changes after deselecting.
 == 你的更改在取消選擇後不會被保存。
@@ -12558,7 +12558,7 @@ Your friend %s is online and currently on map %s!
 == 你的好友 %s 在線，當前在地圖 %s！
 
 Your locked team was killed because '%s' %s
-== 你的鎖隊全員被處死，因為 '%s' %s 了
+== 你的鎖隊因 '%s' %s 而被全員處死
 
 Your movements are not taken into account when calculating the line colors
 == 計算線條顏色時不考慮你的移動
@@ -12588,10 +12588,10 @@ Your team was killed because it couldn't finish anymore and hasn't entered /prac
 == 你的隊伍因已無法完賽且未進入 /practice 模式而被處死
 
 Your team was unlocked by an unlock team tile
-== 你的隊伍已被解鎖隊伍圖塊解除鎖定
+== 你的隊伍已被「解鎖隊伍」圖塊解鎖
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
-== 你的 timeout code 已設置。0.7 客戶端超時後無法取回自己的 tee，但 0.6 客戶端可以接管你的 tee
+== 你的逾時保護碼已設置。0.7 客戶端逾時後無法取回自己的 tee，但 0.6 客戶端可以接管你的 tee
 
 yourself
 == 自己
