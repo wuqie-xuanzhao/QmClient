@@ -663,10 +663,10 @@ Always show nameplates regardless of distance
 == 無論距離如何，始終顯示銘牌
 
 Always show other players' hook collision lines
-== 始終顯示其他玩家的鉤索輔助線
+== 始終顯示其他玩家的鉤子輔助線
 
 Always show own player's hook collision line
-== 始終顯示自己的鉤索輔助線
+== 始終顯示自己的鉤子輔助線
 
 Always translate
 == 始終翻譯
@@ -735,7 +735,7 @@ Appearance / Chat
 == 外觀/聊天
 
 Appearance / Hook Collision
-== 外觀/鉤子碰撞線
+== 外觀/鉤子輔助線
 
 Appearance / HUD
 == 外觀 /HUD
@@ -1923,7 +1923,7 @@ Color of authenticated player names on scoreboard
 == 計分板中已認證玩家的名稱顏色
 
 Color of hook collision line tip segment
-== 指定鉤子碰撞線末端提示段的顏色。
+== 指定鉤子輔助線末端提示段的顏色。
 
 Color of hook line hitting hookable tile
 == 指定擊中可掛鉤圖塊的掛鉤線的顏色。
@@ -4284,7 +4284,7 @@ Gives you endless hook
 == 給予你無限鉤子
 
 Gives you infinite jump
-== 給你無限跳躍
+== 給你無限跳
 
 Glitch
 == 故障
@@ -4683,22 +4683,22 @@ Hook
 == 鉤索
 
 Hook collision line
-== 鉤索輔助線
+== 鉤子輔助線
 
 Hook collision line alpha (0 invisible, 100 fully visible)
-== 鉤子碰撞線 Alpha（0 不可見，100 完全可見）
+== 鉤子輔助線 Alpha（0 不可見，100 完全可見）
 
 Hook collision line length follows cursor distance
-== 鉤子碰撞線長度跟隨光標距離
+== 鉤子輔助線長度跟隨光標距離
 
 Hook collision line opacity
 == 輔助線不透明度
 
 Hook Collisions
-== 瞄準輔助
+== 鉤子輔助線
 
 Hook collisions
-== 鉤索碰撞
+== 鉤子輔助線
 
 Hook line tip
 == 輔助線提示
@@ -6978,7 +6978,7 @@ Other lines font size
 == 其他行字號
 
 Other players' hook line width
-== 其他玩家的鉤索輔助線寬度
+== 其他玩家的鉤子輔助線寬度
 
 Others
 == 他人
@@ -7065,7 +7065,7 @@ Overwrite clan even if empty
 == 即使戰隊為空也覆蓋
 
 Own hook line width
-== 自己的鉤索輔助線寬度
+== 自己的鉤子輔助線寬度
 
 p = Ping latency
 == p = Ping 延遲
@@ -7560,7 +7560,7 @@ Preview
 == 預覽
 
 Preview 'Hook collisions' being pressed
-== 預覽按下時的鉤索輔助線
+== 預覽按下時的鉤子輔助線
 
 Preview built with %d skipped slot(s).
 == 預覽已生成，但跳過了 %d 個槽位。
@@ -8157,7 +8157,7 @@ Removes endless hook from you
 == 移除你的無限鉤子
 
 Removes infinite jump from you
-== 消除你的無限跳躍
+== 消除你的無限跳
 
 Removes ninja from you
 == 移除你身上的忍者
@@ -8460,7 +8460,7 @@ Restarting. Please wait…
 == 正在重啟，請稍等
 
 Restore old single-segment hook collision line behavior
-== 恢復舊版單段鉤子碰撞線行為
+== 恢復舊版單段鉤子輔助線行為
 
 Retrying…
 == 正在重試…
@@ -9123,7 +9123,7 @@ Show a small view of the dummy
 == 顯示分身的小視窗
 
 Show air jump indicator
-== 顯示空中跳躍指示器
+== 顯示空中跳指示器
 
 Show all
 == 顯示所有玩家
@@ -9645,13 +9645,13 @@ Show other players' coordinates
 == 顯示他人座標
 
 Show other players' hook collision lines
-== 顯示其他玩家的鉤索輔助線
+== 顯示其他玩家的鉤子輔助線
 
 Show other players' hook collision lines (2 always shown)
-== 顯示其他玩家的鉤子碰撞線（2 條始終顯示）
+== 顯示其他玩家的鉤子輔助線（2 條始終顯示）
 
 Show other players' hook collision lines when rendering video
-== 渲染視頻時顯示其他玩家的鉤子碰撞線
+== 渲染視頻時顯示其他玩家的鉤子輔助線
 
 Show other team players (2=own team only)
 == 顯示其他隊伍的玩家（2 只顯示自己隊伍）
@@ -9681,7 +9681,7 @@ Show own coordinates
 == 顯示自己座標
 
 Show own hook collision lines (2 always shown)
-== 顯示自己玩家的鉤子碰撞線（2 始終顯示）
+== 顯示自己玩家的鉤子輔助線（2 始終顯示）
 
 Show own nameplate coordinates
 == 名字牌顯示自己座標
@@ -9690,7 +9690,7 @@ Show own nametag (for demo recording)
 == 顯示自己的銘牌（用於回放錄製）
 
 Show own player's hook collision line
-== 顯示自己的鉤索輔助線
+== 顯示自己的鉤子輔助線
 
 Show pause/play indicator when changing
 == 在更改時顯示暫停/播放指示器
@@ -12252,7 +12252,7 @@ Width of map column in server browser
 == 服務器瀏覽器中地圖列的寬度
 
 Width of others' hook collision line
-== 其他玩家的鉤索碰撞線寬度
+== 其他玩家的鉤子輔助線線寬度
 
 Width of players column in server browser
 == 服務器瀏覽器中玩家列的寬度
@@ -12261,7 +12261,7 @@ Width of type column in server browser
 == 服務器瀏覽器中類型列的寬度
 
 Width of your own hook collision line
-== 自己的鉤索碰撞線寬度
+== 自己的鉤子輔助線線寬度
 
 Window and monitor
 == 視窗和顯示器

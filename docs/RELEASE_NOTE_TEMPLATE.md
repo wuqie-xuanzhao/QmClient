@@ -7,9 +7,28 @@ related: docs/CHANGELOG_QmClient.md
 
 # QmClient 发布说明（Release Note）写作规范
 
-> **与生成脚本的关系**：`qmclient_scripts/generate_release_notes.py` 生成的是**机械化草稿**，只实现本规范的可机械化子集——✅ 按功能领域分组（commit scope → 领域映射）、✅ 保留完整 type 前缀（feat/fix/perf/refactor）、✅ 纯中文。本规范里需要人类判断的部分（玩家视角改写、合并条目、性质单一时省略前缀、「其他」≤4 条、移除 refactor）脚本做不到，由维护者按本规范手工润色。
+> **与生成脚本的关系**：`qmclient_scripts/generate_release_notes.py` 生成的是**机械化草稿**，只实现本规范的可机械化子集——✅ 区分正式版 / 预发布通道、✅ 按功能领域分组（commit scope → 领域映射）、✅ 中文优先、✅ 保留 type 前缀。本规范里需要人类判断的部分（玩家视角改写、合并条目、性质单一时省略前缀、「其他」≤4 条、移除 refactor）脚本做不到，由维护者按本规范手工润色。
 >
-> **工作流**：CI 跑脚本生成草稿 → 贴到 GitHub Release → 维护者按本规范润色 → 发布。脚本输出 ≠ 终稿。
+> **工作流**：CI 跑脚本生成草稿 → 贴到 GitHub Release → **正式版**维护者按本规范润色后发布；**Nightly 预发布**以脚本草稿 + 风险提示为准（可被下次覆盖）。脚本输出 ≠ 正式版终稿。
+
+---
+
+## 0. 发布通道（正式版 vs 预发布）
+
+面向中文 GitHub 协作团队，发布说明必须先标明**通道**，避免玩家把 Nightly 当成稳定版。
+
+| 通道 | GitHub Release | Tag 约定 | 读者预期 | 说明文案要点 |
+|------|----------------|----------|----------|--------------|
+| **正式版 Stable** | 普通 Release（`prerelease: false`，可标 Latest） | `vX.Y.Z`（如 `v2.74.9`） | 日常使用 | 标题带「正式版」；写玩家可感知变更；可润色合并 |
+| **预发布 Pre-release** | Pre-release（`prerelease: true`，`latest=false`） | 当前为 **`nightly`**（可 force 覆盖）；以及 `*-rc*` / `*-beta*` 等 | 内测 / 尝鲜 | 标题带「预发布」；**必须**写不稳定、会被覆盖；相对最近正式版的变更范围 |
+
+规则：
+
+1. **正式版 = Stable**：只有打 `vX.Y.Z` 并走正式发版流水线时使用；不要用正式版文案包装 Nightly。
+2. **Nightly = Pre-release**：对应仓库里的 `nightly` tag + GitHub Pre-release；每次构建可覆盖同名 Release。
+3. 脚本 `--channel auto`：`vX.Y.Z` → stable；`nightly` / 含 rc|beta|alpha|pre → pre-release。
+4. 预发布相对范围默认对比**最近正式版 tag**（不是上一次 nightly），方便回答「比 stable 多了什么」。
+5. AI / 维护者写发版说明前：先定通道，再套对应模板；禁止把工程类 commit 堆进玩家说明。
 
 ## 1. 这个文档解决什么
 

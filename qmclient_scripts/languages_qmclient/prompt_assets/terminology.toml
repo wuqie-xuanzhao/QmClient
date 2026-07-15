@@ -257,18 +257,9 @@ polish = "hak"
 [[term]]
 source = "Hook collision line"
 enforce = "exact"
-simplified_chinese = "钩索辅助线"
-traditional_chinese = "鉤索輔助線"
-korean = "갈고리 충돌선"
-japanese = "フック衝突線"
-russian = "линия столкновения крюка"
-german = "Haken-Kollisionslinie"
-spanish = "línea de colisión de gancho"
-french = "ligne de collision de crochet"
-brazilian_portuguese = "linha de colisão de gancho"
-portuguese = "linha de colisão de gancho"
-turkish = "kanca çarpışma çizgisi"
-polish = "linia kolizji haka"
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
+
 
 [[term]]
 source = "Strong hook"
@@ -520,3 +511,34 @@ simplified_chinese = "JSON"
 source = "UI"
 enforce = "exact"
 simplified_chinese = "UI"
+
+[[term]]
+source = "Hook collisions"
+enforce = "exact"
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
+
+[[term]]
+source = "Hook Collisions"
+enforce = "exact"
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
+
+[[term]]
+source = "Air jump"
+enforce = "pattern"
+simplified_chinese = "空中跳"
+traditional_chinese = "空中跳"
+
+[[term]]
+source = "Unlimited air jumps"
+enforce = "pattern"
+simplified_chinese = "无限空跳"
+traditional_chinese = "無限空跳"
+
+[[term]]
+source = "Infinite jump"
+enforce = "pattern"
+simplified_chinese = "无限跳"
+traditional_chinese = "无限跳"
+

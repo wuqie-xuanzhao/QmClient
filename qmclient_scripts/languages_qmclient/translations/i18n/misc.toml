@@ -2793,8 +2793,8 @@ polish = "Daje ci nieskończony hak"
 [[message]]
 key = "Gives you infinite jump"
 [message.translations]
-simplified_chinese = "给你无限跳跃"
-traditional_chinese = "給你無限跳躍"
+simplified_chinese = "给你无限跳"
+traditional_chinese = "給你無限跳"
 japanese = "無限ジャンプをあなたに与える"
 korean = "무한 점프를 줍니다"
 russian = "Даёт вам бесконечный прыжок"
@@ -5877,8 +5877,8 @@ polish = "Usuwa nieskończony hak z ciebie"
 [[message]]
 key = "Removes infinite jump from you"
 [message.translations]
-simplified_chinese = "消除你的无限跳跃"
-traditional_chinese = "消除你的無限跳躍"
+simplified_chinese = "消除你的无限跳"
+traditional_chinese = "消除你的無限跳"
 japanese = "あなたから無限ジャンプを削除"
 korean = "당신에게서 무한 점프를 제거합니다"
 russian = "Удаляет у вас бесконечный прыжок"

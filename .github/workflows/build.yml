@@ -639,6 +639,7 @@ jobs:
           python3 qmclient_scripts/generate_release_notes.py \
             --version "$TAG_VERSION" \
             --current-tag "$TAG_VERSION" \
+            --channel auto \
             --output release-assets/release-notes.md
 
       - name: Show release notes

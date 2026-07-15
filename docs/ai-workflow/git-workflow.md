@@ -248,11 +248,28 @@ PR 正文默认使用以下结构：
 
 ## Release 说明
 
-GitHub release 说明由 `qmclient_scripts/generate_release_notes.py` 统一生成，输出按「功能领域」分组（依据 commit 的 scope）、纯中文；工程类提交（ci/build/gate 等）不进 release note。
+GitHub release 说明由 `qmclient_scripts/generate_release_notes.py` 统一生成：
 
-脚本输出是机械化草稿，终稿需按 `docs/RELEASE_NOTE_TEMPLATE.md` 人工润色（改写为玩家视角、合并相近条目、删除冗余前缀等）。
+- **正式版（Stable）**：tag `vX.Y.Z` → 普通 Release；输出标题含「正式版」
+- **预发布（Pre-release）**：tag `nightly`（及 rc/beta 等）→ GitHub Pre-release；输出含风险提示，可被下次 Nightly 覆盖
 
-如果某个提交需要更稳定的发布说明，可以在 commit body 里补：
+输出按功能领域分组（commit scope）、中文优先；工程类提交（ci/build/gate 等）不进正文。  
+脚本草稿终稿规范见 `docs/RELEASE_NOTE_TEMPLATE.md`（**第 0 节通道** + 领域×前缀模型）。
+
+命令示例：
+
+```bash
+# 正式版
+python qmclient_scripts/generate_release_notes.py \
+  --version v2.74.9 --current-tag v2.74.9 --channel auto
+
+# Nightly 预发布（CI 会带 commit / 构建时间）
+python qmclient_scripts/generate_release_notes.py \
+  --version nightly --current-tag nightly --channel pre-release \
+  --commit "$SHA" --branch main --built-at "2026-07-15 12:00:00 UTC"
+```
+
+若某提交需要更稳定的发布说明，在 commit body 补：
 
 ```text
 Release-ZH: 中文发布说明
@@ -260,16 +277,15 @@ Release-ZH: 中文发布说明
 
 规则：
 
-- `Release-ZH:` 是可选项
-- 如果缺失，脚本回退到 commit subject 的描述
-- 面向用户的重要功能或修复，优先补 `Release-ZH:`
-- 主题分组依赖 commit 的 scope，提交时务必带规范 scope（如 `feat(settings):`）
+- `Release-ZH:` 可选；缺失则用 subject 描述
+- 面向用户的重要功能/修复优先补 `Release-ZH:`
+- 主题分组依赖 scope，提交务必带规范 scope（如 `feat(settings):`）
 
 ### Release 补发与重发（边界）
 
-- **补发产物**：tag 已存在但 GitHub Release 缺失或产物不全时，重新 `git push origin <tag>` 不会重新触发 CI（tag 未变）。需在 GitHub Actions 中从对应 tag ref 手动运行 `build.yml`，让 release jobs 按该 tag 重建 Release。
-- **不要强推正式 tag**：`vX.Y.Z` 一旦发布不要 `git tag -f` 强推，会破坏已下载用户的版本标识；要修正只能发新版本。
-- **nightly 可覆盖**：`nightly` tag 每次 nightly 构建都 force-push 覆盖，属正常行为。
+- **补发产物**：tag 已在但 Release 缺失时，重新 `git push origin <tag>` 不会重跑 CI；需在 Actions 对应该 tag 手动跑 `build.yml`。
+- **不要强推正式 tag**：`vX.Y.Z` 发布后禁止 `git tag -f`；修正请发新版本。
+- **nightly 可覆盖**：`nightly` tag 每次 Nightly 构建 force-push 属正常行为（Pre-release）。
 
 ## 版本 / Tag / Release
 

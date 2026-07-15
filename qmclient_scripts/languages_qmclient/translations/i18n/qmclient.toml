@@ -928,8 +928,8 @@ polish = "Wygląd / Czat"
 [[message]]
 key = "Appearance / Hook Collision"
 [message.translations]
-simplified_chinese = "外观/钩子碰撞线"
-traditional_chinese = "外觀/鉤子碰撞線"
+simplified_chinese = "外观/钩子辅助线"
+traditional_chinese = "外觀/鉤子輔助線"
 japanese = "外観 / フック衝突線"
 korean = "외형 / 갈고리 충돌선"
 russian = "Внешний вид / Столкновение крюка"
