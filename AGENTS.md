@@ -12,6 +12,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 - docs 中 是各贡献者的 AI 工作流 的文档，其功能可共享通用
 - `docs/superpowers/` 下的探索、计划、规格和提示词全部保留，作为版本化的任务记录与本地 AI 工作流入口。
+- 项目级 Agent skills 放在 `.agents/skills/<name>/SKILL.md`，供 **Codex** 与 **OMP** 共同发现；说明见 `.agents/README.md`。`docs/superpowers/prompts/` 保留长文提示词，不再作为 skill 入口。
 - `docs/superpowers/` 下的探索/计划/规格会随时间推移而老化；已标注 `文档已过时` 或 `部分内容已过时` banner 的文件仅供参考，不应作为实现依据。
 - 无标注或标注为当前有效的文档才是本次开发的权威来源。
 - 有效文档的判定以最新日期和 `status` 字段（如 `active`、`draft`）为准。
@@ -27,6 +28,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 | `docs/ai-workflow/git-workflow.md` | Git - commit、PR 标题/描述和最终汇报格式规范。 | 提交 git 和 PR 时 |
 | `docs/ai-workflow/advanced/README.md` | 性能、量化系统、重构、安全、内存、jobs、观测和回归防护等专项稳定规则的阅读路由。 | 任务涉及对应专项风险时 |
 | `qmclient_scripts/scripts_overview.md` | 脚本分层、推荐入口和 gate 工作流语义。 | 使用脚本时 |
+| `.agents/skills/` | 项目级 skills（i18n、gate、质量审计等） | 任务匹配 skill 描述时，或用户显式 `/skill:` |
 
 ## 极简工作流
 

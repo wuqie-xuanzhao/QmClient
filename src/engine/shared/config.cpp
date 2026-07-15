@@ -442,7 +442,8 @@ bool CConfigManager::Save()
 			continue;
 		if(!m_aConfigFile[ConfigDomain])
 			continue;
-		char aLineBuf[2048];
+		// 最大字符串配置为 8000 字节，转义引号和反斜杠后最坏会接近两倍。
+		char aLineBuf[32768];
 		for(const SConfigVariable *pVariable : m_vpAllVariables)
 		{
 			if(pVariable->m_ConfigDomain == ConfigDomain && (pVariable->m_Flags & CFGFLAG_SAVE) != 0 && !pVariable->IsDefault())

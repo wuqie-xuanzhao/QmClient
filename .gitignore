@@ -7,8 +7,11 @@ data/
 docs/dyl/BestClient/
 .ruff_cache
 
-# Agent workspace files
-.agents/
+# Agent workspace files（项目 skills 例外：.agents/skills 需版本化）
+.agents/*
+!.agents/README.md
+!.agents/skills/
+!.agents/skills/**
 .codex/
 .codegraph/
 .env

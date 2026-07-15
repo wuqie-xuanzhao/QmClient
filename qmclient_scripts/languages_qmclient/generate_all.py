@@ -49,10 +49,15 @@ SIMPLIFIED_CHINESE_PASSTHROUGH_KEYS = {
     "HDF",
     "HUD",
     "LLM API",
+    "LibreTranslate",
     "OpenAI",
+    "QmClient / HUD",
     "TClient",
     "Tee",
     "Tee 0.7",
+    "https://ddnet.org/discord",
+    "https://wiki.ddnet.org/",
+    "https://wiki.ddnet.org/wiki/Mapping",
 }
 SIMPLIFIED_CHINESE_PASSTHROUGH_IDENTITIES = {
     ("Hz", "Hertz"),
@@ -101,6 +106,9 @@ def format_language_entry(key: str, context: str, translation: str) -> str:
     translation = translation.replace("\r", "\\r").replace("\n", "\\n")
     if context:
         return f"[{context}]\n{key}\n== {translation}"
+    # 运行时解析器会把所有以 '[' 开头的行视为上下文；显式空上下文可保护这类 source key。
+    if key.startswith("["):
+        return f"[]\n{key}\n== {translation}"
     return f"{key}\n== {translation}"
 
 

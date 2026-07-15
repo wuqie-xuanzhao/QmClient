@@ -1,0 +1,4503 @@
+[
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_predict",
+    "old": "预测客户端移动",
+    "new": "Predict client movement",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_predict_dummy",
+    "old": "预测分身移动",
+    "new": "Predict dummy movement",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_predict_events",
+    "old": "预测事件（声音、粒子）",
+    "new": "Predict events (sounds, particles)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_limit",
+    "old": "为抗延迟添加延迟（0 为禁用）",
+    "new": "Add latency for antiping (0 to disable)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_percent",
+    "old": "抗延迟预测的提前量，使用 antiping limit 时忽略此项",
+    "new": "Antiping prediction offset, ignored when using antiping limit",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping",
+    "old": "启用抗延迟，即更激进的预测",
+    "new": "Enable antiping (more aggressive prediction)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_players",
+    "old": "更激进地预测其他玩家的移动（仅在 cl_antiping 为 1 时生效）",
+    "new": "More aggressive prediction of other players' movement (only with cl_antiping 1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_grenade",
+    "old": "预测榴弹炮轨迹（仅在 cl_antiping 为 1 时生效）",
+    "new": "Predict grenade trajectory (only with cl_antiping 1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_weapons",
+    "old": "预测武器投射物（仅在 cl_antiping 为 1 时生效）",
+    "new": "Predict weapon projectiles (only with cl_antiping 1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_smooth",
+    "old": "使其他玩家的移动预测更平滑",
+    "new": "Smooth other players' predicted movement",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_gunfire",
+    "old": "预测枪火并显示预测的武器物理效果（需配合 cl_antiping_grenade 1 和 cl_antiping_weapons 1）",
+    "new": "Predict fire and show predicted weapon physics (requires cl_antiping_grenade 1 and cl_antiping_weapons 1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_antiping_preinput",
+    "old": "使用预输入预测其他玩家以获得更精确的输入预测",
+    "new": "Use pre-input to predict other players for more accurate input prediction",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_prediction_margin",
+    "old": "预测边界（单位：毫秒，增加延迟但可减少因 ping 波动导致的卡顿）",
+    "new": "Prediction boundary (ms, increases latency but reduces ping jitter)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_sub_tick_aiming",
+    "old": "以亚 tick 精度发送瞄准数据",
+    "new": "Send aim data with sub-tick precision",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_touch_controls",
+    "old": "启用游戏内触摸控制",
+    "new": "Enable in-game touch controls",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates",
+    "old": "显示昵称",
+    "new": "Show name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_always",
+    "old": "无论距离如何，始终显示铭牌",
+    "new": "Always show nameplates regardless of distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_teamcolors",
+    "old": "用队伍颜色显示昵称",
+    "new": "Show name in team color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_size",
+    "old": "铭牌尺寸",
+    "new": "Nameplate size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_clan",
+    "old": "在名牌上显示战队名称",
+    "new": "Show clan name on nameplate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_clan_size",
+    "old": "铭牌上战队名称的大小",
+    "new": "Clan name size on nameplate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_coords_size",
+    "old": "铭牌中坐标的大小",
+    "new": "Coordinate size on nameplate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_ids",
+    "old": "显示客户端 ID",
+    "new": "Show client ID",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_ids_size",
+    "old": "铭牌中客户端 ID 的大小",
+    "new": "Client ID size on nameplate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_ids_seperate_line",
+    "old": "在铭牌中的单独行中显示客户端 ID",
+    "new": "Show client ID on a separate line in nametag",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_offset",
+    "old": "三通与铭牌间隙尺寸",
+    "new": "Gap between tee and nametag",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_own",
+    "old": "显示自己的铭牌（用于回放录制）",
+    "new": "Show own nametag (for demo recording)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_friendmark",
+    "old": "在名牌上显示朋友标记 (♥ )",
+    "new": "Show friend tag (♥) on nametag",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_strong",
+    "old": "在铭牌中显示强/弱（0 - 关闭、1 - 图标、2 - 图标 + 数字）",
+    "new": "Show strength/weakness in nametag (0=off, 1=icon, 2=icon+number)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_nameplates_strong_size",
+    "old": "强/弱状态图标和数字的大小",
+    "new": "Size of strength/weakness icon and number",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_afk_emote",
+    "old": "在挂机玩家旁显示 zzz 表情",
+    "new": "Show zzz emoji next to afk players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_text_entities",
+    "old": "渲染实体文本数据",
+    "new": "Render entity text data",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_text_entities_size",
+    "old": "实体文本数据的大小（20% 到 100%）",
+    "new": "Size of entity text data (20% to 100%)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_text_entities_editor",
+    "old": "在编辑器中渲染实体文本数据",
+    "new": "Render entity text data in editor",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_streamer_mode",
+    "old": "隐藏敏感信息，如 /save 密码",
+    "new": "Hide sensitive info like /save password",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_authed_player_color",
+    "old": "计分板中已认证玩家的名称颜色",
+    "new": "Color of authenticated player names on scoreboard",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_same_clan_color",
+    "old": "计分板中与你同战队的玩家的战队颜色",
+    "new": "Team color of clan members on scoreboard",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_enable_ping_color",
+    "old": "计分板中是否对 ping 值着色",
+    "new": "Colorize ping on scoreboard",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_autoswitch_weapons",
+    "old": "拾取时自动切换武器",
+    "new": "Auto switch weapon on pickup",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_autoswitch_weapons_out_of_ammo",
+    "old": "弹药耗尽时自动切换武器",
+    "new": "Auto switch weapon on ammo depletion",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud",
+    "old": "显示游戏内 HUD",
+    "new": "Show in-game HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_healthammo",
+    "old": "显示游戏内 HUD（血量 + 弹药）",
+    "new": "Show in-game HUD (health + ammo)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_score",
+    "old": "显示游戏内 HUD（分数）",
+    "new": "Show in-game HUD (score)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_timer",
+    "old": "显示游戏内 HUD（计时器）",
+    "new": "Show in-game HUD (timer)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_time_cp_diff",
+    "old": "显示游戏内 HUD（检查点时间差）",
+    "new": "Show in-game HUD (checkpoint time diff)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_spectator_count",
+    "old": "显示游戏内 HUD（观众人数）",
+    "new": "Show in-game HUD (spectator count)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_dummy_actions",
+    "old": "显示游戏内 HUD（分身操作）",
+    "new": "Show in-game HUD (dummy controls)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_key_status_reset",
+    "old": "显示游戏内 HUD（卡键状态）",
+    "new": "Show in-game HUD (keyboard blocking status)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_key_status_hammer",
+    "old": "显示游戏内 HUD（锤状态）",
+    "new": "Show in-game HUD (hammer state)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_key_status_control",
+    "old": "显示游戏内 HUD（分身控制状态）",
+    "new": "Show in-game HUD (clone control state)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_key_status_sync",
+    "old": "显示游戏内 HUD（分身同步状态）",
+    "new": "Show in-game HUD (clone sync state)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_player_position",
+    "old": "显示游戏内 HUD（玩家位置）",
+    "new": "Show in-game HUD (player position)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_player_speed",
+    "old": "显示游戏内 HUD（玩家速度）",
+    "new": "Show in-game HUD (player speed)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_player_angle",
+    "old": "显示游戏内 HUD（玩家瞄准角度）",
+    "new": "Show in-game HUD (player aim angle)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hud_animations",
+    "old": "启用 HUD 动画",
+    "new": "Enable HUD animations",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hud_animation_speed",
+    "old": "HUD 动画速度（百分比）",
+    "new": "HUD animation speed (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hud_rainbow_colors",
+    "old": "启用 HUD 彩虹色",
+    "new": "Enable HUD rainbow colors",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_ddrace",
+    "old": "显示游戏内 HUD (DDRace HUD)",
+    "new": "Show in-game HUD (DDRace HUD)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_jumps_indicator",
+    "old": "显示游戏中的 HUD（你已经使用过的跳跃）",
+    "new": "Show in-game HUD (jumps used)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showhud_spectator",
+    "old": "显示游戏内 HUD（观众 HUD）",
+    "new": "Show in-game HUD (spectator HUD)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_freeze_bars",
+    "old": "是否在冻结玩家下方显示冻结条以指示解冻时间",
+    "new": "Show freeze bar under frozen players indicating thaw time",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_freezebars_alpha_inside_freeze",
+    "old": "冻结内冻结条的不透明度（0 不可见，100 完全可见）",
+    "new": "Freeze bar opacity (0 invisible, 100 fully visible)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showrecord",
+    "old": "显示旧式 DDRace 客户端记录",
+    "new": "Show old DDRace client records",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_shownotifications",
+    "old": "当有人突出显示你时让客户通知",
+    "new": "Notify when someone highlights you",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showemotes",
+    "old": "显示 tee表情",
+    "new": "Show tee emotes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showchat",
+    "old": "显示聊天（2 始终显示大聊天区域）",
+    "new": "Show chat (2 always show large chat area)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_chat_friends",
+    "old": "只显示好友聊天消息",
+    "new": "Show only friend chat messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_chat_team_members_only",
+    "old": "只显示队伍聊天消息",
+    "new": "Show only team chat messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_chat_system",
+    "old": "显示来自服务器的聊天消息",
+    "new": "Show server chat messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showkillmessages",
+    "old": "显示击杀消息",
+    "new": "Show kill messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_finish_messages",
+    "old": "显示完成消息",
+    "new": "Show finish messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_votes_after_voting",
+    "old": "投票后不关闭投票窗口",
+    "new": "Keep vote window open after voting",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_local_time_always",
+    "old": "始终显示当地时间",
+    "new": "Always show local time",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showfps",
+    "old": "显示游戏内 FPS ",
+    "new": "Show in-game FPS",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showpred",
+    "old": "显示游戏内预测时间（以毫秒为单位）",
+    "new": "Show in-game prediction time (in milliseconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_packet_loss",
+    "old": "显示游戏内丢包率",
+    "new": "Show in-game packet loss rate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_eye_wheel",
+    "old": "显示眼轮和表情",
+    "new": "Show eye wheel and expressions",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_eye_duration",
+    "old": "眼神的表情能持续多久",
+    "new": "How long expression lasts",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_freeze_stars",
+    "old": "显示冷冻 tee的粒子",
+    "new": "Show frozen tee particles",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_spec_cursor",
+    "old": "启用观看玩家的光标（如果可用）",
+    "new": "Enable spectator cursor (if available)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_spec_auto_sync",
+    "old": "如果可用，自动与观看玩家的摄像机设置同步（0 = 禁用，1 = 重置缩放时启用）",
+    "new": "Auto-sync with spectated player's camera (0=Off, 1=On when resetting zoom)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_airjumpindicator",
+    "old": "显示空中跳跃指示器",
+    "new": "Show air jump indicator",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_threadsoundloading",
+    "old": "加载声音文件线程",
+    "new": "Load sound files in thread",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_warning_teambalance",
+    "old": "关于队伍平衡的警告",
+    "new": "Warn about team balance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_mouse_deadzone",
+    "old": "相机跟随光标的死区",
+    "new": "Camera follow cursor dead zone",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_mouse_followfactor",
+    "old": "相机跟随光标的因素",
+    "new": "Camera follow cursor factor",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_mouse_max_distance",
+    "old": "最大光标距离",
+    "new": "Maximum cursor distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_mouse_min_distance",
+    "old": "最小光标距离",
+    "new": "Minimum cursor distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam",
+    "old": "启用动态摄像头",
+    "new": "Enable dynamic camera",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam_max_distance",
+    "old": "最大动态相机光标距离",
+    "new": "Maximum dynamic camera cursor distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam_min_distance",
+    "old": "最小动态相机光标距离",
+    "new": "Minimum dynamic camera cursor distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam_mousesens",
+    "old": "开启动态摄像头时使用鼠标感应",
+    "new": "Use mouse sensitivity when dynamic camera is on",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam_deadzone",
+    "old": "动态相机跟随光标的死区",
+    "new": "Dynamic camera follow cursor dead zone",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam_follow_factor",
+    "old": "动态相机跟随光标的因素",
+    "new": "Dynamic camera follow cursor factor",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam_smoothness",
+    "old": "相机移动的过渡量，0=即时，100=缓慢且平滑",
+    "new": "Camera movement transition amount, 0=instant, 100=slow and smooth",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dyncam_stabilizing",
+    "old": "光标快速移动期间相机减速的量。高值可能会导致相机移动延迟",
+    "new": "Camera slowdown during fast cursor movement. High values may cause delayed camera movement",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_multiview_sensitivity",
+    "old": "设置相机移动到所需位置的速度（越高=越快）",
+    "new": "Speed of camera moving to desired position (higher = faster)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_multiview_zoom_smoothness",
+    "old": "设置多视图缩放的平滑度（以毫秒为单位，较高=较慢）",
+    "new": "Smoothness of multi-view zoom (in ms, higher = slower)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_spectator_mouseclicks",
+    "old": "允许左键单击在观看最近的玩家和自由观看之间切换",
+    "new": "Allow left-click to toggle between spectating nearest player and free view",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_smooth_spectating_time",
+    "old": "观看时平滑摄像机切换动画的时间（以毫秒为单位）（0表示关闭）",
+    "new": "Smooth camera switch animation time when spectating (in ms, 0=off)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_autosave_interval",
+    "old": "当前编辑器地图副本自动保存到“auto”文件夹的时间间隔（0 表示关闭）",
+    "new": "Interval for auto-saving current editor map copy to \"auto\" folder (0=off)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_autosave_max",
+    "old": "每个地图名称保留的最大自动保存数量（0 = 无限制）",
+    "new": "Maximum auto-saves retained per map name (0=unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_smooth_zoom_time",
+    "old": "编辑器中平滑缩放动画的时间（以毫秒为单位）（0 表示关闭）",
+    "new": "Smooth zoom animation time in editor (in ms, 0=off)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_limit_max_zoom_level",
+    "old": "指定是否应限制编辑器中的缩放（0 = 无限制）",
+    "new": "Whether to limit zoom in editor (0=unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_zoom_target",
+    "old": "缩放到当前鼠标目标",
+    "new": "Zoom to current mouse target",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_showkeys",
+    "old": "显示按下的按键",
+    "new": "Show pressed keys",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_align_quads",
+    "old": "启用/禁用四边形对齐。启用后，红线显示移动四边形/点时如何对齐并捕捉到其他四边形/点",
+    "new": "Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_show_quads_rect",
+    "old": "显示所选四边形的边界。如果有多个四边形，它会显示包围矩形的边界。对齐一组四边形时很有帮助",
+    "new": "Show bounds of selected quads. Shows bounding rectangle bounds for multiple quads. Useful when aligning a group",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_auto_map_reload",
+    "old": "在本地服务器上运行“hot_reload”，同时在地图保存上进行 rcon 验证",
+    "new": "Run \"hot_reload\" on local server with rcon auth on map save",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_layer_selector",
+    "old": "Ctrl+右键单击图块以在编辑器中选择其图层",
+    "new": "Ctrl+right-click a tile to select its layer in editor",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ed_show_ingame_entities",
+    "old": "展示武​​器、盾牌、红心和旗帜如何在游戏中出现",
+    "new": "Show how weapons, shields, hearts, and flags appear in game",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_welcome",
+    "old": "显示欢迎消息，指示首次启动客户端",
+    "new": "Show welcome message indicating first client launch",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_motd_time",
+    "old": "当天服务器消息显示多长时间",
+    "new": "How long the server message of the day is displayed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_map_download_url",
+    "old": "用于下载地图的 URL（必须以 https:// 开头）",
+    "new": "URL for downloading maps (must start with https://)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_map_download_connect_timeout_ms",
+    "old": "HTTP 地图下载：连接阶段超时（以毫秒为单位）（0 表示禁用）",
+    "new": "HTTP map download: connection phase timeout (in ms, 0=disabled)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_map_download_low_speed_limit",
+    "old": "HTTP 地图下载：设置低速限制（以每秒字节数为单位）（0 表示禁用）",
+    "new": "HTTP map download: low speed limit (in bytes/s, 0=disabled)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_map_download_low_speed_time",
+    "old": "HTTP地图下载：设置低速限制时间段（0为禁用）",
+    "new": "HTTP map download: low speed limit period (0=disabled)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_languagefile",
+    "old": "使用什么语言文件",
+    "new": "Language file to use",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_skins_loaded_max",
+    "old": "最多可同时加载皮肤数量",
+    "new": "Maximum number of skins loaded simultaneously",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_skin_download_url",
+    "old": "用于下载皮肤的 URL",
+    "new": "URL for downloading skins",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_skin_community_download_url",
+    "old": "用于下载社区皮肤的 URL",
+    "new": "URL for downloading community skins",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_vanilla_skins_only",
+    "old": "仅显示 Vanilla Teeworlds 中可用的皮肤",
+    "new": "Only show skins available in Vanilla Teeworlds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_download_skins",
+    "old": "从 cl_skin_download_url 即时下载皮肤",
+    "new": "Download skins immediately from cl_skin_download_url",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_download_community_skins",
+    "old": "允许下载社区创建的皮肤。使用 cl_skin_community_download_url 而不是 cl_skin_download_url 进行下载",
+    "new": "Allow downloading community-created skins. Use cl_skin_community_download_url instead of cl_skin_download_url for download",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_statboard_screenshot",
+    "old": "自动游戏结束统计板屏幕截图",
+    "new": "Automatic game-end scoreboard screenshot",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_statboard_screenshot_max",
+    "old": "自动创建的统计板屏幕截图的最大数量（0 = 无限制）",
+    "new": "Maximum number of automatic scoreboard screenshots (0 = unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_default_zoom",
+    "old": "默认缩放级别",
+    "new": "Default zoom level",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_smooth_zoom_time",
+    "old": "游戏中平滑缩放动画的时间（以毫秒为单位）（0 表示关闭）",
+    "new": "Duration of smooth zoom animation in game (ms) (0 = off)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_limit_max_zoom_level",
+    "old": "指定是否应限制游戏中的缩放（0 = 无限制）",
+    "new": "Specifies whether zoom should be limited in game (0 = unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_use_custom_color",
+    "old": "切换自定义颜色的使用",
+    "new": "Toggle use of custom colors",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_color_body",
+    "old": "玩家身体颜色",
+    "new": "Player body color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_color_feet",
+    "old": "玩家脚颜色",
+    "new": "Player feet color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_skin",
+    "old": "玩家皮肤",
+    "new": "Player skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_default_eyes",
+    "old": "加入服务器时玩家的眼睛。 0 = 正常，1 = 疼痛，2 = 高兴，3 = 惊讶，4 = 生气，5 = 眨眼",
+    "new": "Player eyes on join. 0 = normal, 1 = pain, 2 = happy, 3 = surprised, 4 = angry, 5 = blink",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_skin_prefix",
+    "old": "将皮肤替换为带有此前缀的皮肤（例如小猫、圣诞老人）",
+    "new": "Replace skin with one having this prefix (e.g. cats, santa)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_fat_skins",
+    "old": "启用脂肪皮",
+    "new": "Enable fat skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_color_marking",
+    "old": "玩家标记颜色",
+    "new": "Player marker color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_color_decoration",
+    "old": "玩家装饰颜色",
+    "new": "Player decoration color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_color_hands",
+    "old": "玩家手部颜色",
+    "new": "Player hands color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_color_eyes",
+    "old": "玩家眼睛颜色",
+    "new": "Player eyes color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_use_custom_color_body",
+    "old": "切换身体自定义颜色的使用",
+    "new": "Toggle use of custom body color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_use_custom_color_marking",
+    "old": "切换使用自定义颜色进行标记",
+    "new": "Toggle use of custom color for marker",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_use_custom_color_decoration",
+    "old": "切换使用自定义颜色进行装饰",
+    "new": "Toggle use of custom color for decoration",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_use_custom_color_hands",
+    "old": "切换手部自定义颜色的使用",
+    "new": "Toggle use of custom hand color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_use_custom_color_feet",
+    "old": "切换脚的自定义颜色的使用",
+    "new": "Toggle use of custom color for feet",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_use_custom_color_eyes",
+    "old": "切换眼睛自定义颜色的使用",
+    "new": "Toggle use of custom color for eyes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_skin_body",
+    "old": "玩家皮肤身体",
+    "new": "Player skin body",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_skin_marking",
+    "old": "玩家皮肤标记",
+    "new": "Player skin marking",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_skin_decoration",
+    "old": "玩家皮肤装饰",
+    "new": "Player skin decoration",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_skin_hands",
+    "old": "玩家皮肤手",
+    "new": "Player skin hand",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_skin_feet",
+    "old": "玩家脚皮",
+    "new": "Player feet skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player7_skin_eyes",
+    "old": "玩家皮肤眼睛",
+    "new": "Player skin eyes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_color_body",
+    "old": "分身身体颜色",
+    "new": "Dummy body color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_color_feet",
+    "old": "假脚颜色",
+    "new": "Dummy feet color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_color_marking",
+    "old": "分身标记颜色",
+    "new": "Dummy marking color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_color_decoration",
+    "old": "分身装饰颜色",
+    "new": "Dummy decoration color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_color_hands",
+    "old": "分身手部颜色",
+    "new": "Dummy hand color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_color_eyes",
+    "old": "分身眼睛颜色",
+    "new": "Dummy eyes color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_use_custom_color_feet",
+    "old": "切换脚部的自定义颜色的使用",
+    "new": "Toggle use of custom color for feet (dummy7_use_custom_color_feet)",
+    "method": "deepseek_deduped"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_skin",
+    "old": "分身皮肤",
+    "new": "Dummy skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_skin_body",
+    "old": "分身身体皮肤",
+    "new": "Dummy body skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_skin_marking",
+    "old": "分身皮肤标记",
+    "new": "Dummy skin marking",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_skin_decoration",
+    "old": "分身皮肤装饰",
+    "new": "Dummy skin decoration",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_skin_hands",
+    "old": "分身手部皮肤",
+    "new": "Dummy hand skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_skin_feet",
+    "old": "分身脚部皮肤",
+    "new": "Dummy feet skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy7_skin_eyes",
+    "old": "分身皮肤眼睛",
+    "new": "Dummy skin eyes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_page",
+    "old": "界面页面",
+    "new": "Interface page",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_settings_page",
+    "old": "界面设置页面",
+    "new": "Interface settings page",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_toolbox_page",
+    "old": "工具箱页面",
+    "new": "Toolbox page",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_server_address",
+    "old": "界面服务器地址",
+    "new": "UI server address",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_mousesens",
+    "old": "菜单/编辑器中的鼠标灵敏度",
+    "new": "Mouse sensitivity in menu/editor",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_controller_sens",
+    "old": "菜单/编辑器中的手柄灵敏度",
+    "new": "Gamepad sensitivity in menu/editor",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_smooth_scroll_time",
+    "old": "菜单/编辑器中平滑滚动动画的时间（单位：毫秒，0 为关闭）",
+    "new": "Smooth scroll animation duration in menu/editor (ms, 0=off)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_color",
+    "old": "界面颜色",
+    "new": "UI color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_menu_panel_color",
+    "old": "菜单主面板底色",
+    "new": "Menu main panel background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_menu_panel_opacity",
+    "old": "菜单主面板透明度",
+    "new": "Menu main panel opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_menu_panel_elevated_opacity",
+    "old": "菜单强调面板透明度",
+    "new": "Menu accent panel opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_settings_tabbar_opacity",
+    "old": "设置页右侧设置栏透明度",
+    "new": "Settings page right panel opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_colorize_ping",
+    "old": "高亮显示 ping 值",
+    "new": "Highlight ping value",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_colorize_gametype",
+    "old": "高亮显示游戏类型",
+    "new": "Highlight game type",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_close_window_after_changing_setting",
+    "old": "更改设置后关闭窗口",
+    "new": "Close window after changing settings",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ui_unread_news",
+    "old": "是否有未读新闻",
+    "new": "Has unread news",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_noclip",
+    "old": "禁用裁剪",
+    "new": "Disable clipping",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy_name",
+    "old": "分身的名称",
+    "new": "Dummy name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy_clan",
+    "old": "分身的战队",
+    "new": "Dummy clan",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy_country",
+    "old": "分身的国家（ISO 3166-1 数字码）",
+    "new": "Dummy country (ISO 3166-1 numeric)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy_use_custom_color",
+    "old": "切换是否使用自定义颜色",
+    "new": "Toggle custom color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy_color_feet",
+    "old": "分身脚部颜色",
+    "new": "Dummy feet color (dummy_color_feet)",
+    "method": "deepseek_deduped"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dummy_default_eyes",
+    "old": "加入服务器时分身的眼睛（0 = 正常，1 = 痛苦，2 = 开心，3 = 惊讶，4 = 生气，5 = 眨眼）",
+    "new": "Dummy eyes when joining server (0=normal, 1=pain, 2=happy, 3=surprised, 4=angry, 5=blink)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy",
+    "old": "控制玩家（0）还是分身（1）",
+    "new": "Control player (0) or dummy (1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_hammer",
+    "old": "分身是否正在敲锤子（用于锤子飞）",
+    "new": "Dummy hammering (for hammer fly)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_resetonswitch",
+    "old": "切换时分身或玩家是否停止按键（0 = 关闭，1 = 分身，2 = 玩家）",
+    "new": "Stop key input on switch (0=off, 1=dummy, 2=player)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_restore_weapon",
+    "old": "锤子飞后分身是否切换回上一把武器",
+    "new": "After hammer fly, whether dummy switches back to previous weapon",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_copy_moves",
+    "old": "分身是否复制你的移动",
+    "new": "Whether dummy copies your movement",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_control",
+    "old": "是否可以同时控制分身（cl_dummy_jump、cl_dummy_fire、cl_dummy_hook）",
+    "new": "Whether to control dummy simultaneously (cl_dummy_jump, cl_dummy_fire, cl_dummy_hook)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_jump",
+    "old": "分身是否跳跃（需要 cl_dummy_control 1）",
+    "new": "Whether dummy jumps (requires cl_dummy_control 1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_fire",
+    "old": "分身是否开火（需要 cl_dummy_control 1）",
+    "new": "Whether dummy fires (requires cl_dummy_control 1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_hook",
+    "old": "分身是否钩人（需要 cl_dummy_control 1）",
+    "new": "Whether dummy hooks (requires cl_dummy_control 1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_start_menu_images",
+    "old": "显示开始菜单图片",
+    "new": "Show start menu image",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_skip_start_menu",
+    "old": "跳过开始菜单",
+    "new": "Skip start menu",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_warmup",
+    "old": "回合开始前的热身时间（单位：秒）",
+    "new": "Warmup time before round (in seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_motd",
+    "old": "显示给客户端的每日消息",
+    "new": "Show daily message to client",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_gametype",
+    "old": "游戏类型（ddnet、mod）",
+    "new": "Game type (ddnet, mod)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_tournament_mode",
+    "old": "比赛模式。启用时玩家以观众身份加入服务器",
+    "new": "Gamemode. When enabled, players join as spectators",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_spamprotection",
+    "old": "刷屏保护：防止切换队伍、聊天、换皮肤、表情和投票的刷屏",
+    "new": "Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_spectator_slots",
+    "old": "为观众保留的槽位数",
+    "new": "Number of slots reserved for spectators",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_qm_live_observer",
+    "old": "允许 QmLiveClient 以隐藏只读 observer 连接",
+    "new": "Allow QmLiveClient to connect as hidden read-only observer",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_qm_live_max_observers",
+    "old": "最多允许的 QmLive observer 连接数",
+    "new": "Maximum number of allowed QmLive observer connections",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_inactivekick_time",
+    "old": "处理不活跃玩家前等待的时间（单位：分钟）",
+    "new": "Time to wait before handling inactive players (in minutes)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_inactivekick",
+    "old": "如何处理不活跃玩家（0 = 移到观众，1 = 移到空闲观众槽位/踢出，2 = 踢出）",
+    "new": "How to handle inactive players (0 = move to spectators, 1 = move to free spec slot/kick, 2 = kick)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_strict_spectate_mode",
+    "old": "限制观战模式中的信息",
+    "new": "Limit information in spectator mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_spectate",
+    "old": "允许投票将玩家移到观众",
+    "new": "Allow voting to move players to spectators",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_spectate_rejoindelay",
+    "old": "被投票移到观众后玩家重新加入前的等待时间（单位：分钟）",
+    "new": "Wait time before a player can rejoin after being voted to spectators (in minutes)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_kick",
+    "old": "允许投票踢出玩家",
+    "new": "Allow voting to kick players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_kick_min",
+    "old": "发起踢人投票所需的最少玩家数",
+    "new": "Minimum players required to initiate a kick vote",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_kick_bantime",
+    "old": "被投票踢出后的封禁时间（单位：分钟，0 为仅踢出不封禁）",
+    "new": "Ban time after being voted kicked (in minutes, 0 = kick only, no ban)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_kick_mutetime",
+    "old": "来自不同队伍的玩家被投票后的禁言时间（单位：秒，0 为禁用禁言）",
+    "new": "Mute time for players from different teams after a vote (seconds, 0 to disable mute)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_join_vote_delay",
+    "old": "新加入玩家发起投票或参与踢人/观战投票前的延迟（单位：秒）",
+    "new": "Delay before new players can start votes or participate in kick/spectate votes (seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_old_teleport_weapons",
+    "old": "所有武器的传送（已弃用，请使用特殊实体代替）",
+    "new": "Teleport all weapons (deprecated, use special entities instead)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_old_teleport_hook",
+    "old": "钩子穿过传送器（已弃用，请使用特殊实体代替）",
+    "new": "Hook through teleporters (deprecated, use special entities instead)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_teleport_hold_hook",
+    "old": "传送时保持钩子",
+    "new": "Keep hook when teleporting",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_teleport_lose_weapons",
+    "old": "传送时失去武器（对某些竞速地图有用）",
+    "new": "Lose weapons when teleporting (useful for race maps)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_deepfly",
+    "old": "允许在深度冻结时发射非自动武器",
+    "new": "Allow firing non-auto weapons while deep frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_destroy_bullets_on_death",
+    "old": "玩家死亡时销毁其子弹",
+    "new": "Destroy player's bullets on death",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_destroy_lasers_on_death",
+    "old": "玩家死亡时销毁其激光",
+    "new": "Destroy player's lasers on death",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_mapupdaterate",
+    "old": "64 玩家 ID 与原版 ID 的映射更新率",
+    "new": "Update rate for mapping 64 player IDs to vanilla IDs",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_server_type",
+    "old": "服务器类型（novice、moderate 等）",
+    "new": "Server type (novice, moderate, etc.)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_send_votes_per_tick",
+    "old": "每 tick 发送的投票选项数量",
+    "new": "Number of vote options sent per tick",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rescue",
+    "old": "允许 /rescue 命令，让玩家可以从冻结中传送自己（仅在初始配置中生效）",
+    "new": "Allow /rescue command to teleport out of freeze (only applies in initial config)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rescue_delay",
+    "old": "两次营救之间的延迟（单位：秒）",
+    "new": "Delay between rescues (seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_practice",
+    "old": "为队伍启用练习模式。意味着可以使用 /rescue，但成绩不计入排行榜",
+    "new": "Enable practice mode for teams. Allows /rescue but scores not recorded",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_practice_by_default",
+    "old": "默认启用练习命令。需要 sv_test_cmds 1",
+    "new": "Enable practice commands by default. Requires sv_test_cmds 1",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_pausewithdemo",
+    "old": "demo 播放暂停时暂停视频渲染",
+    "new": "Pause video rendering when demo playback is paused",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_showhud",
+    "old": "渲染视频时显示游戏内 HUD",
+    "new": "Show in-game HUD when rendering video",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_showchat",
+    "old": "渲染视频时显示聊天",
+    "new": "Show chat when rendering video",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_sound_enable",
+    "old": "渲染视频时启用声音",
+    "new": "Enable sound when rendering video",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_show_hook_coll_other",
+    "old": "渲染视频时显示其他玩家的钩子碰撞线",
+    "new": "Show other players' hook collision lines when rendering video",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_show_direction",
+    "old": "渲染视频时显示玩家的按键（1 = 其他玩家，2 = 包括自己，3 = 仅自己）",
+    "new": "Show player key presses when rendering video (1=others, 2=include self, 3=self only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_show_important_alerts",
+    "old": "渲染视频时显示重要提示",
+    "new": "Show important messages when rendering video",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_crf",
+    "old": "使用 libx264 编码视频时的 CRF 值（0 为最高质量，51 为最低）",
+    "new": "CRF value for libx264 video encoding (0=best quality, 51=worst)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_preset",
+    "old": "使用 libx264 编码视频时的预设，默认 5（medium），0 为 ultrafast，9 为 placebo（最慢，不推荐）",
+    "new": "Preset when encoding video with libx264, default 5 (medium), 0 is ultrafast, 9 is placebo (slowest, not recommended)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_dummies",
+    "old": "向服务器添加调试用分身（仅 Debug 构建）",
+    "new": "Add debug dummy to server (Debug build only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_tuning",
+    "old": "显示影响自身玩家的调整参数信息（0 = 关闭，1 = 显示已改变的，2 = 显示全部）",
+    "new": "Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_name",
+    "old": "玩家名称",
+    "new": "Player name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_clan",
+    "old": "玩家战队",
+    "new": "Player clan",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "player_country",
+    "old": "玩家国家（ISO 3166-1 数字码）",
+    "new": "Player country (ISO 3166-1 numeric code)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "password",
+    "old": "服务器密码",
+    "new": "Server password",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "events",
+    "old": "启用事件触发（服务器在某些节日的眼睁表情，客户端的圣诞皮肤）",
+    "new": "Enable event triggers (server eye-emotes on holidays, client Christmas skin)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "steam_name",
+    "old": " Steam 个人资料名称",
+    "new": "Steam profile name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "logfile",
+    "old": "日志输出文件名",
+    "new": "Log output filename",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "logappend",
+    "old": "追加到日志文件而不是每次覆盖",
+    "new": "Append to log file instead of overwriting",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "loglevel",
+    "old": "调整日志文件中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）",
+    "new": "Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "stdout_output_level",
+    "old": "调整系统控制台中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）",
+    "new": "Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "console_output_level",
+    "old": "调整本地/远程控制台中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）",
+    "new": "Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "console_enable_colors",
+    "old": "启用控制台彩色输出",
+    "new": "Enable colored console output",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_save_settings",
+    "old": "退出时保存设置文件",
+    "new": "Save settings file on exit",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_refresh_rate",
+    "old": "游戏更新率（单位：Hz）",
+    "new": "Game update rate (Hz)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_refresh_rate_inactive",
+    "old": "窗口不活动时游戏更新的刷新率（单位：Hz）",
+    "new": "Game update rate when window inactive (Hz)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_editor",
+    "old": "打开地图编辑器",
+    "new": "Open map editor",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_skin_filter_string",
+    "old": "皮肤过滤字符串",
+    "new": "Skin filter string",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_editor_max_history",
+    "old": "编辑器历史记录中的最大撤销次数（编辑器、包络编辑器和服务器设置编辑器不共享）",
+    "new": "Maximum undo steps in editor history (editor, envelope editor, and server settings editor are independent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_demo_record",
+    "old": "自动录制 demo",
+    "new": "Auto record demo",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_demo_on_connect",
+    "old": "若为 1，仅在连接时自动开始录制一次 demo；若为 0，游戏结束后也会重新自动开始录制",
+    "new": "If 1, auto record only once on connect; if 0, auto record restarts after game end",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_demo_max",
+    "old": "自动录制 demo 的最大数量（0 = 无限制）",
+    "new": "Maximum number of auto recorded demos (0 = unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_screenshot",
+    "old": "游戏结束时自动截图",
+    "new": "Auto-screenshot on game end",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_screenshot_max",
+    "old": "自动截图的最大数量（0 = 无限制）",
+    "new": "Maximum number of auto-screenshots (0 = unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_csv",
+    "old": "游戏结束时自动创建 CSV",
+    "new": "Auto-create CSV on game end",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_csv_max",
+    "old": "自动创建 CSV 的最大数量（0 = 无限制）",
+    "new": "Maximum number of auto-CSV files (0 = unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_broadcasts",
+    "old": "在游戏中显示广播消息",
+    "new": "Show broadcast messages in-game",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_print_broadcasts",
+    "old": "将广播消息打印到控制台",
+    "new": "Print broadcast messages to console",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_print_motd",
+    "old": "将每日消息打印到控制台",
+    "new": "Print daily messages to console",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_friends_ignore_clan",
+    "old": "搜索好友时忽略战队标签",
+    "new": "Ignore clan tag when searching friends",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_friends_list_friend_color",
+    "old": "好友列表中好友条目颜色",
+    "new": "Friend entry color in friend list",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_friends_list_clan_color",
+    "old": "好友列表中战队成员条目颜色",
+    "new": "Clan member entry color in friend list",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_friends_category_expanded",
+    "old": "好友栏分类展开状态(1=展开,0=收起)",
+    "new": "Friend bar category expand state (1=expanded, 0=collapsed)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_assets_entities",
+    "old": "实体的资产",
+    "new": "Entity assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_game",
+    "old": "游戏资产",
+    "new": "Game assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_emoticons",
+    "old": "表情资源",
+    "new": "Emote assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_particles",
+    "old": "粒子资产",
+    "new": "Particle assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_hud",
+    "old": "HUD 的资产",
+    "new": "HUD assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_extras",
+    "old": "非来自 Teeworlds 的游戏图形资产",
+    "new": "Game graphics assets not from Teeworlds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_gui_cursor",
+    "old": "GUI 光标资源",
+    "new": "GUI cursor assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_arrow",
+    "old": "箭头资源",
+    "new": "Arrow assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_asset_strong_weak",
+    "old": "强弱图标资源",
+    "new": "Strength icons assets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_string",
+    "old": "服务器浏览器过滤字符串",
+    "new": "Server browser filter string",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_exclude_string",
+    "old": "服务器浏览器排除字符串",
+    "new": "Server browser exclude string",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_full",
+    "old": "在浏览器中过滤掉完整的服务器",
+    "new": "Filter full servers in browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_empty",
+    "old": "过滤掉浏览器中的空服务器",
+    "new": "Filter empty servers in browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_spectators",
+    "old": "从玩家号码中过滤掉观众",
+    "new": "Filter out spectators from player count",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_friends",
+    "old": "过滤掉没有好友的服务器",
+    "new": "Filter out servers without friends",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_country",
+    "old": "过滤掉玩家所在国家/地区不匹配的服务器（ISO 3166-1 数字）",
+    "new": "Filter out servers with player country mismatch (ISO 3166-1 numeric)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_country_index",
+    "old": "在服务器浏览器中过滤的玩家国家/地区（ISO 3166-1 数字）",
+    "new": "Player country filter in server browser (ISO 3166-1 numeric)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_pw",
+    "old": "在浏览器中过滤掉受密码保护的服务器",
+    "new": "Filter out password protected servers in browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_gametype",
+    "old": "要过滤的游戏类型",
+    "new": "Filter game type",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_gametype_strict",
+    "old": "严格游戏模式筛选",
+    "new": "Strict game type filter",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_connecting_players",
+    "old": "筛选正在连接的玩家",
+    "new": "Filter connecting players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_serveraddress",
+    "old": "要过滤的服务器地址",
+    "new": "Server address to filter",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_unfinished_map",
+    "old": "仅显示未完成地图的服务器",
+    "new": "Show only servers with unfinished maps",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_filter_login",
+    "old": "过滤掉需要登录的服务器",
+    "new": "Filter out servers that require login",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_indicate_finished",
+    "old": "显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）",
+    "new": "Show DDNet map completion (transmits player name to info.ddnet.org/info)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_location",
+    "old": "覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲",
+    "new": "Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_cached_best_serverinfo_url",
+    "old": "不要设置此变量，而是在 settings_ddnet.cfg 旁边创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL",
+    "new": "Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_sort",
+    "old": "服务器浏览器中的排序列",
+    "new": "Server browser sort column",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_sort_order",
+    "old": "服务器浏览器中的排序顺序",
+    "new": "Sort order in server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_max_requests",
+    "old": "刷新服务器浏览器时使用的并发请求数",
+    "new": "Concurrent requests when refreshing server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_col_width_name",
+    "old": "服务器浏览器中名称列的最小宽度",
+    "new": "Minimum width for name column in server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_col_width_gametype",
+    "old": "服务器浏览器中类型列的宽度",
+    "new": "Width of type column in server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_col_width_map",
+    "old": "服务器浏览器中地图列的宽度",
+    "new": "Width of map column in server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_col_width_friends",
+    "old": "服务器浏览器中好友列的宽度",
+    "new": "Width of friends column in server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_col_width_players",
+    "old": "服务器浏览器中玩家列的宽度",
+    "new": "Width of players column in server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_col_width_ping",
+    "old": "服务器浏览器中延迟列的宽度",
+    "new": "Width of latency column in server browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_demo_sort",
+    "old": "回放浏览器中的排序列",
+    "new": "Sort column in replay browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_demo_sort_order",
+    "old": "回放浏览器中的排序顺序",
+    "new": "Sort order in replay browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "br_demo_fetch_info",
+    "old": "刷新时是否自动获取回放信息",
+    "new": "Auto fetch replay info on refresh",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gh_sort",
+    "old": "幽灵列表中的排序列",
+    "new": "Sort column in ghost list",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gh_sort_order",
+    "old": "幽灵列表中的排序顺序",
+    "new": "Sort order in ghost list",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_buffer_size",
+    "old": "声音缓冲区大小（大的话可能会导致延迟）",
+    "new": "Sound buffer size (large may cause delay)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_rate",
+    "old": "混音率",
+    "new": "Mix rate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_enable",
+    "old": "声音启用",
+    "new": "Enable sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_enable_music",
+    "old": "播放背景音乐",
+    "new": "Play background music",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_volume",
+    "old": "音量",
+    "new": "Volume",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_chat_volume",
+    "old": "聊天提示音量",
+    "new": "Chat beep volume",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_game_volume",
+    "old": "游戏音效音量",
+    "new": "Game sound volume",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_ambient_volume",
+    "old": "地图声音音量",
+    "new": "Map sound volume",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_background_music_volume",
+    "old": "背景音乐音量",
+    "new": "Background music volume",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_nonactive_mute",
+    "old": "窗口未激活时静音",
+    "new": "Mute when window inactive",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_game",
+    "old": "启用游戏声音",
+    "new": "Enable game sounds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_gun",
+    "old": "启用手枪声音",
+    "new": "Enable pistol sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_long_pain",
+    "old": "启用冻结呼叫声",
+    "new": "Enable freeze call sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_weapon",
+    "old": "武器声音静音",
+    "new": "Mute weapon sounds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_weapon_switch",
+    "old": "静音武器开关声音",
+    "new": "Mute weapon switch sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_weapon_noammo",
+    "old": "武器无弹药静音",
+    "new": "Mute weapon out of ammo sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_hook",
+    "old": "静音挂钩声音",
+    "new": "Mute hook sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_movement",
+    "old": "静音运动声音",
+    "new": "Mute movement sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_player_state",
+    "old": "静音玩家状态声音",
+    "new": "Mute player status sounds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_pickup",
+    "old": "静音拾音器声音",
+    "new": "Mute pick-up sounds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_flag",
+    "old": "使旗帜声音静音",
+    "new": "Mute flag sounds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_snd_mute_mapsound",
+    "old": "静音地图声音",
+    "new": "Mute map sounds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_chat",
+    "old": "启用聊天消息提示音",
+    "new": "Enable chat message sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_team_chat",
+    "old": "启用队伍聊天消息提示音",
+    "new": "Enable team chat message sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_servermessage",
+    "old": "启用服务器消息提示音",
+    "new": "Enable server message sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_highlight",
+    "old": "启用聊天被提及消息提示音",
+    "new": "Enable chat mention sound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "snd_pack",
+    "old": "音频包",
+    "new": "Audio packets",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_screen",
+    "old": "画面索引",
+    "new": "Display index",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_screen_width",
+    "old": "屏幕分辨率宽度（仅纯全屏模式）",
+    "new": "Screen resolution width (only fullscreen)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_screen_height",
+    "old": "屏幕分辨率高度（仅纯全屏模式）",
+    "new": "Screen resolution height (only fullscreen)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_screen_refresh_rate",
+    "old": "屏幕刷新率（单位：Hz；仅纯全屏模式）",
+    "new": "Screen refresh rate (Hz, only fullscreen)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_borderless",
+    "old": "无边框窗口（不适用于全屏）",
+    "new": "Borderless window (not for fullscreen)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_fullscreen",
+    "old": "设置全屏模式：0=无全屏，1=纯全屏，2=桌面全屏，3=窗口全屏",
+    "new": "Set fullscreen mode: 0=off, 1=exclusive, 2=desktop, 3=windowed fullscreen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_color_depth",
+    "old": "帧缓冲区的颜色位（仅限全屏）",
+    "new": "Framebuffer color bits (only fullscreen)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_vsync",
+    "old": "垂直同步（可能会导致延迟）",
+    "new": "Vertical sync (may cause lag)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_display_all_video_modes",
+    "old": "显示所有视频模式",
+    "new": "Show all video modes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_high_detail",
+    "old": "显示地图细节",
+    "new": "Show map details",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_fsaa_samples",
+    "old": "FSAA 样本（可能会导致延迟）",
+    "new": "FSAA samples (may cause lag)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_refresh_rate",
+    "old": "渲染帧刷新率（单位：Hz；受 cl_refresh_rate 限制）",
+    "new": "Render refresh rate (Hz, limited by cl_refresh_rate)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_backgroundrender",
+    "old": "当窗口处于后台时渲染图形",
+    "new": "Render graphics when window is in background",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_text_overlay",
+    "old": "停止在编辑器中或使用实体渲染文本覆盖：高值 = 更少的细节 = 更快的速度",
+    "new": "Stop rendering text overlays in editor or with entities: higher = less detail = faster",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_asyncrender_old",
+    "old": "在更新周期期间，如果渲染周期需要等待前一个渲染周期完成，则跳过渲染周期",
+    "new": "Skip render frames if waiting for previous frame during update cycle",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_quad_as_triangle",
+    "old": "将四边形渲染为三角形（修复了某些 GPU 上的四边形着色）",
+    "new": "Render quads as triangles (fixes quad shading on some GPUs)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_mousesens",
+    "old": "鼠标灵敏度",
+    "new": "Mouse sensitivity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_translated_keys",
+    "old": "在解释按键之前先翻译按键，尊重键盘布局",
+    "new": "Translate keys before interpreting them, respect keyboard layout",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_ignored_modifiers",
+    "old": "忽略键盘修饰符掩码",
+    "new": "Ignore keyboard modifier mask",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_ime_native_ui",
+    "old": "使用本机 UI 进行 IME（可能会导致 IME 无法在全屏模式下工作）（更改需要重新启动）",
+    "new": "Use native UI for IME (may break IME in fullscreen mode, requires restart)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_controller_enable",
+    "old": "启用控制器",
+    "new": "Enable controller",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_controller_guid",
+    "old": "唯一标识活动控制器的控制器 GUID",
+    "new": "Controller GUID of the active controller",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_controller_absolute",
+    "old": "在游戏中启用绝对控制器瞄准",
+    "new": "Enable absolute controller aiming in game",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_controller_sens",
+    "old": "游戏内控制器灵敏度",
+    "new": "In-game controller sensitivity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_controller_x",
+    "old": "控制光标X轴的控制器轴",
+    "new": "Controller axis for cursor X",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_controller_y",
+    "old": "控制光标Y轴的控制器轴",
+    "new": "Controller axis for cursor Y",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "inp_controller_tolerance",
+    "old": "考虑抖动的控制器轴容差",
+    "new": "Controller axis tolerance for jitter",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_port",
+    "old": "用于客户端连接到服务器的端口（0 选择随机端口，1024 或更高设置手动端口）",
+    "new": "Port for client to server connection (0=random, >=1024 sets manual port)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_port",
+    "old": "用于与服务器建立分身连接的端口（0 选择随机端口，1024 或更高设置手动端口）",
+    "new": "Port for dummy connection to server (0=random, >=1024 sets manual port)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_contact_port",
+    "old": "用于与服务器进行 serverinfo 连接的端口（0 选择随机端口，1024 或更高设置手动端口）",
+    "new": "Port for server info connection to server (0=random, >=1024 sets manual port)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_name",
+    "old": "服务器名称",
+    "new": "Server name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "bindaddr",
+    "old": "绑定客户端/服务器的地址",
+    "new": "Bind address for client/server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_ipv4only",
+    "old": "是否仅绑定到 ipv4，否则绑定到所有可用接口",
+    "new": "Bind only to IPv4, otherwise bind to all interfaces",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_port",
+    "old": "服务器使用的端口（仅端口 8303-8310 在 LAN 服务器浏览器中工作，0 自动在 8303-8310 中查找空闲端口）。如果你位于 NAT 之后，请参阅 sv_register_port 了解外部端口",
+    "new": "Server port (only 8303-8310 work in LAN browser, 0=auto find free in 8303-8310). If behind NAT, see sv_register_port for external port",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_hostname",
+    "old": "服务器主机名（仅限 0.7）",
+    "new": "Server hostname (0.7 only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_map",
+    "old": "在服务器上使用的地图",
+    "new": "Map to use on server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_max_clients",
+    "old": "服务器上允许的最大客户端数",
+    "new": "Maximum number of clients on server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_max_clients_per_ip",
+    "old": "同一IP可连接服务器的客户端最大数量",
+    "new": "Maximum clients per IP",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_high_bandwidth",
+    "old": "使用高带宽模式。服务器所需的带宽加倍。仅限局域网使用",
+    "new": "Use high bandwidth mode (doubles server bandwidth, LAN only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_preinput",
+    "old": "在正确的报价之前将客户端输入发送给其他客户端。增加服务器所需的带宽",
+    "new": "Send client input to others before correct input (increases server bandwidth)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_register",
+    "old": "向主服务器注册服务器以进行公开列表，还可以接受要注册的以逗号分隔的协议列表，例如“ipv4，ipv6”",
+    "new": "Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_register_extra",
+    "old": "要发送到寄存器端点的额外标头，以逗号分隔的“标头：值”对",
+    "new": "Additional headers for register endpoint, comma-separated \"header:value\" pairs",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_register_url",
+    "old": "要注册的主服务器 URL",
+    "new": "Master server URL to register",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_register_port",
+    "old": "主服务器注册服务器的端口，如果你位于 NAT 之后，则很有用，否则你只需要 sv_port",
+    "new": "Port for master server registration, useful if behind NAT, otherwise just use sv_port",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_register_community_token",
+    "old": "用于将此服务器注册到特定社区的令牌",
+    "new": "Token to register this server to a specific community",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_flag",
+    "old": "将此社区分组的国家/地区标志（ISO 3166-1 数字）",
+    "new": "Country flag for grouping this community (ISO 3166-1 numeric)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_official_tutorial",
+    "old": "这个不要设置，用来标记官方教程服务器",
+    "new": "Do not set, used to mark official tutorial server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_maps_base_url",
+    "old": "用于向客户端提供 HTTPS 地图下载 URL 的基本路径",
+    "new": "Base path for HTTPS map download URLs to clients",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rcon_password",
+    "old": "远程控制台密码（完全访问）",
+    "new": "Remote console password (full access)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rcon_mod_password",
+    "old": "主持人的远程控制台密码（有限访问）",
+    "new": "Remote console password for moderator (limited access)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rcon_helper_password",
+    "old": "帮助者的远程控制台密码（有限访问）",
+    "new": "Remote console password for helper (limited access)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rcon_max_tries",
+    "old": "远程控制台身份验证的最大尝试次数",
+    "new": "Max attempts for remote console authentication",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rcon_bantime",
+    "old": "如果远程控制台身份验证失败，客户端被禁止的时间。 0 让它只使用踢",
+    "new": "Time client is banned if remote console auth fails. 0 to only use kick",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_auto_demo_record",
+    "old": "自动录制回放",
+    "new": "Automatically record replays",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_auto_demo_max",
+    "old": "自动录制回放的最大数量（0 = 无限制）",
+    "new": "Maximum number of automatic replays (0 = unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_tee_historian",
+    "old": "激活将完整游戏数据写入磁盘的tee历史记录（警告：这将使用大量磁盘空间）",
+    "new": "Activate tee history writing full game data to disk (warning: uses lots of disk space)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vanilla_antispoof",
+    "old": "启用普通反欺骗",
+    "new": "Enable basic anti-spoof",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dnsbl",
+    "old": "启用 DNSBL（基于 DNS 的黑洞列表）",
+    "new": "Enable DNSBL (DNS-based Blackhole List)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dnsbl_host",
+    "old": "用于 IP 验证的 DNSBL 提供商的主机名",
+    "new": "Hostname of DNSBL provider for IP verification",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dnsbl_key",
+    "old": "指定 DNSBL 提供商的可选身份验证密钥",
+    "new": "Optional authentication key for the DNSBL provider",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dnsbl_vote",
+    "old": "通过黑名单地址阻止投票",
+    "new": "Block votes from blacklisted addresses",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dnsbl_ban",
+    "old": "自动禁止黑名单地址",
+    "new": "Automatically ban blacklisted addresses",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dnsbl_ban_reason",
+    "old": "“sv_dnsbl_ban”的禁止原因",
+    "new": "Ban reason for \"sv_dnsbl_ban\"",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dnsbl_chat",
+    "old": "不允许来自黑名单地址的聊天",
+    "new": "Disallow chat from blacklisted addresses",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rcon_vote",
+    "old": "只允许经过授权的客户端进行投票",
+    "new": "Only allow authorized clients to vote",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_player_demo_record",
+    "old": "当玩家设定新的个人最佳时间时，自动录制回放。",
+    "new": "Auto-record replay when player sets a new personal best time.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_demo_chat",
+    "old": "录制聊天回放",
+    "new": "Record chat replays.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_server_info_per_second",
+    "old": "每秒发送的完整服务器信息响应的最大数量（0 表示无限制）",
+    "new": "Max number of full server info responses sent per second (0 = unlimited).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_van_conn_per_second",
+    "old": "反欺骗特定速率限制（0 表示无限制）",
+    "new": "Anti-spoof specific rate limit (0 = unlimited).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_sixup",
+    "old": "启用 Sixup 连接",
+    "new": "Enable Sixup connection.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_skill_level",
+    "old": "Teeworlds 的难度级别 0.7（0：休闲，1：普通，2：竞技）",
+    "new": "Teeworlds 0.7 difficulty level (0 = Casual, 1 = Normal, 2 = Competitive).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ec_bindaddr",
+    "old": "绑定外部控制台的地址。除了“localhost”之外的任何内容都是危险的",
+    "new": "Address to bind the external console. Anything other than \"localhost\" is dangerous.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ec_port",
+    "old": "用于外部控制台的端口",
+    "new": "Port for the external console.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ec_password",
+    "old": "外部控制台密码。需要设置此选项才能启用经济。",
+    "new": "External console password. Must be set to enable economy.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ec_bantime",
+    "old": "如果经济身份验证失败，客户端被禁止的时间。 0 只是关闭连接",
+    "new": "Time client is banned if economy authentication fails. 0 just closes connection.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ec_auth_timeout",
+    "old": "经济身份验证超时之前的时间（以秒为单位）",
+    "new": "Time in seconds before economy authentication timeout.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "ec_output_level",
+    "old": "调整外部控制台中的信息量（-3 = 无、-2 = 仅错误、-1 = 警告、0 = 信息、1 = 调试、2 = 跟踪）",
+    "new": "Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "debug",
+    "old": "调试模式",
+    "new": "Debug mode.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_sql",
+    "old": "调试SQL",
+    "new": "Debug SQL.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_curl",
+    "old": "调试卷曲",
+    "new": "Debug Curl.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_graphs",
+    "old": "显示性能图表",
+    "new": "Show performance graphs.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_gfx",
+    "old": "如果 GPU 支持，则显示图形库警告和错误（0：无、1：最小、2：影响性能、3：详细、4：全部）",
+    "new": "Show graphics library warnings and errors if GPU supports (0 = none, 1 = minimal, 2 = impacting performance, 3 = verbose, 4 = all).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_render_group_clips",
+    "old": "调试组裁剪",
+    "new": "Debug group clipping.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_render_quad_clips",
+    "old": "调试四层裁剪",
+    "new": "Debug quad layer clipping.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_render_cluster_clips",
+    "old": "调试四层簇裁剪",
+    "new": "Debug quad layer cluster clipping.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_render_tile_clips",
+    "old": "调试图块图层裁剪",
+    "new": "Debug tile layer clipping.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_stress",
+    "old": "压力系统（仅限调试版本）",
+    "new": "Stress system (debug builds only).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "dbg_stress_server",
+    "old": "服务器压力（仅限调试版本）",
+    "new": "Server stress (debug builds only).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "http_allow_insecure",
+    "old": "除了安全的 HTTPS 协议之外，还允许使用不安全的 HTTP 协议。主要用于测试。",
+    "new": "Allow insecure HTTP protocol in addition to secure HTTPS. Primarily for testing.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_welcome",
+    "old": "将向加入服务器的玩家显示的消息",
+    "new": "Message displayed to players on join.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_reserved_slots",
+    "old": "为特殊玩家保留的槽位数量",
+    "new": "Number of reserved slots for special players.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_reserved_slots_pass",
+    "old": "使用预留插槽所需的密码",
+    "new": "Password required to use reserved slots.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_reserved_slots_auth_level",
+    "old": "使用保留插槽所需的最低 rcon 身份验证级别。 4 = rcon 身份验证已禁用",
+    "new": "Minimum rcon auth level to use reserved slots. 4 = rcon auth disabled.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_hit",
+    "old": "玩家是否可以互相锤击/榴弹炮/激光",
+    "new": "Whether players can hammer/grenade/laser each other.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_endless_drag",
+    "old": "打开/关闭无限挂钩",
+    "new": "Enable/disable infinite hook.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_test_cmds",
+    "old": "打开/关闭测试命令（又名作弊）（设置仅在初始配置中有效）",
+    "new": "Enable/disable test commands (aka cheats) (setting only effective in initial config).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_freeze_delay",
+    "old": "玩家将保持冻结状态多少秒（适用于除切换层和深度冻结中的延迟冻结之外的所有情况）",
+    "new": "How many seconds players stay frozen (applies to all except delay freeze in switch layer and deep freeze).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_binds_set",
+    "old": "DDRace 绑定设置为什么级别（这是自动的，你不需要使用它）",
+    "new": "What level DDRace binding is set to (automatic, you don't need to use it).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_endless_super_hook",
+    "old": "超级玩家开/关的无尽钩子",
+    "new": "Infinite hook for super players on/off.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_hide_score",
+    "old": "是否公布玩家得分",
+    "new": "Whether to publish player scores.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_save_worse_scores",
+    "old": "当你已经有了更好的分数时是否保存更差的分数",
+    "new": "Whether to save worse scores when you already have a better score.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_pauseable",
+    "old": "玩家是否可以暂停角色",
+    "new": "Whether players can pause their character.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_pause_messages",
+    "old": "玩家暂停和恢复时是否显示消息",
+    "new": "Whether to show message when players pause and resume.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_pause_frequency",
+    "old": "/spec 之间允许的最小延迟",
+    "new": "Minimum delay allowed between /spec.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_invite",
+    "old": "玩家是否可以邀请其他玩家加入队伍",
+    "new": "Whether players can invite other players to team.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_invite_frequency",
+    "old": "邀请之间允许的最短延迟",
+    "new": "Minimum delay allowed between invitations.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_tele_others_auth_level",
+    "old": "你向其他人发送电话所需的身份验证级别",
+    "new": "Auth level required to send phone to others.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_regional_rankings",
+    "old": "在/rank、/top5和/top5team中显示区域排名",
+    "new": "Show region rankings in /rank, /top5, and /top5team.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_emotional_tees",
+    "old": "是否启用表情符号换眼功能 = 1，不启用 = 0，-1 不启用",
+    "new": "Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_emoticon_ms_delay",
+    "old": "玩家在允许下一个头顶表情符号之前必须等待的时间（以毫秒为单位）",
+    "new": "Time (ms) player must wait before next overhead emote.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_global_emoticon_ms_delay",
+    "old": "玩家在允许发送到所有客户端的下一个开销表情符号之前必须等待的时间（以毫秒为单位）（此配置必须高于或等于 sv_emoticon_ms_delay 才能生效）",
+    "new": "Time (ms) player must wait before next overhead emote sent to all clients (must be >= sv_emoticon_ms_delay to take effect).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_eye_emote_change_delay",
+    "old": "眼睛表情符号变化之间的时间（以秒为单位）",
+    "new": "Time (seconds) between eye emote changes.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_chat_delay",
+    "old": "聊天消息之间的时间间隔（以秒为单位）",
+    "new": "Time interval (seconds) between chat messages.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_team_change_delay",
+    "old": "队伍更换之间的时间（以秒为单位）（观众/比赛中）",
+    "new": "Time between team changes (in seconds) (spectator/in-game)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_info_change_delay",
+    "old": "信息更改（名称/皮肤/颜色）之间的时间（以秒为单位），为了避免 ranbow mod 将其设置为非常高的时间",
+    "new": "Time between info changes (name/skin/color) (in seconds), set very high to avoid rainbow mod",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_time",
+    "old": "投票持续时间（以秒为单位）",
+    "new": "Vote duration (in seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_map_delay",
+    "old": "地图投票之间的最短时间（以秒为单位）",
+    "new": "Minimum time between map votes (in seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_delay",
+    "old": "任何投票之间的时间间隔（以秒为单位）",
+    "new": "Time between any votes (in seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_kick_delay",
+    "old": "踢票之间的最短时间（以秒为单位）",
+    "new": "Minimum time between kick votes (in seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_yes_percentage",
+    "old": "超过这个比例的玩家需要同意投票才能成功",
+    "new": "Fraction of players needed to pass a vote",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_majority",
+    "old": "无投票权的玩家是否被视为投票“否”（0）或被忽略（1）",
+    "new": "Whether non-voting players count as 'no' (0) or ignored (1)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_max_total",
+    "old": "最多可有多少玩家参与投票（0 = 无限制）",
+    "new": "Maximum players participating in a vote (0 = unlimited)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_veto_time",
+    "old": "玩家可以否决地图更改投票之前服务器上的时间分钟数（0 = 禁用）",
+    "new": "Minutes on server before a player can call a map change vote (0 = disabled)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_kill_delay",
+    "old": "击杀之间的最短时间（以秒为单位）",
+    "new": "Minimum time between kills (in seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_map_window",
+    "old": "地图下载发送窗口",
+    "new": "Map download send window",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_fast_download",
+    "old": "实现地图的快速下载",
+    "new": "Enable fast map download",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_shotgun_bullet_sound",
+    "old": "疯狂霰弹枪子弹声音开/关",
+    "new": "Crazy shotgun bullet sound on/off",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_region_name",
+    "old": "服务器区域。用于地区禁令",
+    "new": "Server region. Used for region bans",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_sql_servername",
+    "old": "插入记录表的 SQL Server 名称",
+    "new": "SQL Server name for record table",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_savegames",
+    "old": "启用保存游戏（/保存和/加载）",
+    "new": "Enable saving games (/save and /load)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_saveswapgames_delay",
+    "old": "加载保存游戏或交换之前延迟几秒",
+    "new": "Delay in seconds before loading a saved game or swapping",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_saveswapgames_penalty",
+    "old": "保存或交换位置的惩罚以秒为单位",
+    "new": "Penalty in seconds for saving or swapping positions",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_swap_timeout",
+    "old": "交换选项到期前的超时（以秒为单位）",
+    "new": "Timeout in seconds before swap option expires",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_swap",
+    "old": "启用/交换",
+    "new": "Enable /swap",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_team0mode",
+    "old": "启用/team0模式",
+    "new": "Enable /team0 mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_use_sql",
+    "old": "启用 MySQL 后端而不是 SQLite 后端（当没有 MySQL 服务器可访问时，sv_sqlite_file 仍用作后备写入服务器）",
+    "new": "Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_sql_queries_delay",
+    "old": "单个玩家的 SQL 查询之间的延迟（以秒为单位）",
+    "new": "Delay between SQL queries for a single player (in seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_sqlite_file",
+    "old": "用于存储排名的文件，以防 sv_use_sql 关闭或用作备份 sql 服务器",
+    "new": "File for storing ranks if sv_use_sql is disabled or as backup SQL server.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_use_upnp",
+    "old": "启用 UPnP 支持。 （编译时需要-DCONF_UPNP=ON）",
+    "new": "Enable UPnP support (requires -DCONF_UPNP=ON at compile time).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_ddrace_rules",
+    "old": "是否显示默认mod规则",
+    "new": "Show default mod rules.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line1",
+    "old": "规则第 1 行",
+    "new": "Rule line 1.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line2",
+    "old": "规则第 2 行",
+    "new": "Rule line 2.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line3",
+    "old": "规则第 3 行",
+    "new": "Rule line 3.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line4",
+    "old": "规则第 4 行",
+    "new": "Rule line 4.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line5",
+    "old": "规则第 5 行",
+    "new": "Rule line 5.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line6",
+    "old": "规则第 6 行",
+    "new": "Rule line 6.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line7",
+    "old": "规则第 7 行",
+    "new": "Rule line 7.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line8",
+    "old": "规则第 8 行",
+    "new": "Rule line 8.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line9",
+    "old": "规则第 9 行",
+    "new": "Rule line 9.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rules_line10",
+    "old": "规则第 10 行",
+    "new": "Rule line 10.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_team",
+    "old": "队伍配置（0 = 关闭，1 = 开启但可选，2 = 必须仅与队伍一起玩，3 = 强制随机队伍仅适合你）",
+    "new": "Team configuration (0=Off, 1=On but optional, 2=Must play only with team, 3=Force random team only for you).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_min_team_size",
+    "old": "最小队伍规模（在小于此规模的队伍中完成比赛不会给你带来队伍排名）",
+    "new": "Minimum team size (finishing in smaller team won't give team rank).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_max_team_size",
+    "old": "最大队伍规模",
+    "new": "Maximum team size.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_map_vote",
+    "old": "是否允许/map",
+    "new": "Allow /map.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_announcement_filename",
+    "old": "包含公告的文件，每行一个",
+    "new": "File with announcements, one per line.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_announcement_interval",
+    "old": "公告文件中显示公告的时间（分钟）",
+    "new": "Time between announcements from file (minutes).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_announcement_random",
+    "old": "公告是顺序的还是随机的",
+    "new": "Announcements sequential or random.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_old_laser",
+    "old": "如果你射击它们，激光是否可以击中你，并且它们将你拉向弹跳原点（所有新地图为 0），或者如果你射击它们，激光就不能击中你，并且它们将其他人拉向射击者",
+    "new": "If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_rejoin_team_0",
+    "old": "让队伍在完成后自动重新加入队伍0（仅当未锁定时）",
+    "new": "Automatically re-join team 0 after finish (only if unlocked).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_no_weak_hook",
+    "old": "是否对世界刻度使用替代计算，这使得钩子的行为就像所有玩家都具有强项一样。",
+    "new": "Use alternative world tick calculation making hooks behave as if all players have Strong.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_reconnect_timeout",
+    "old": "重新连接前等待多少秒（超时后，0表示关闭）",
+    "new": "Seconds to wait before reconnecting (after timeout, 0 to disable).",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_reconnect_full",
+    "old": "重新连接前等待多少秒（服务器已满时，0表示关闭）",
+    "new": "Seconds to wait before reconnecting (0=off, when server is full)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_system_color",
+    "old": "系统消息颜色",
+    "new": "System message color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_client_color",
+    "old": "客户端消息颜色",
+    "new": "Client message color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_highlight_color",
+    "old": "突出显示的消息颜色",
+    "new": "Highlighted message color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_team_color",
+    "old": "队伍消息颜色",
+    "new": "Team message color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_color",
+    "old": "留言颜色",
+    "new": "Message color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_rifle_inner_color",
+    "old": "步枪激光内色",
+    "new": "Rifle laser inner color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_rifle_outline_color",
+    "old": "步枪的激光轮廓颜色",
+    "new": "Rifle laser outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_sg_inner_color",
+    "old": "霰弹枪激光内色",
+    "new": "Shotgun laser inner color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_sg_outline_color",
+    "old": "霰弹枪的激光轮廓颜色",
+    "new": "Shotgun laser outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_door_inner_color",
+    "old": "门内激光颜色",
+    "new": "Door laser inner color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_door_outline_color",
+    "old": "门的激光轮廓颜色",
+    "new": "Door laser outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_freeze_inner_color",
+    "old": "激光内色冻结",
+    "new": "Freeze laser inner color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_freeze_outline_color",
+    "old": "冻结的激光轮廓颜色",
+    "new": "Freeze laser outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_dragger_inner_color",
+    "old": "拖拉机的激光内部颜色",
+    "new": "Dragger laser inner color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_laser_dragger_outline_color",
+    "old": "拖动器的激光轮廓颜色",
+    "new": "Dragger laser outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_kill_message_normal_color",
+    "old": "杀死消息正常颜色",
+    "new": "Kill message normal color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_kill_message_highlight_color",
+    "old": "终止消息高亮颜色",
+    "new": "Kill message highlight color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_friend",
+    "old": "为朋友启用着色和爱心",
+    "new": "Enable coloring and hearts for friends",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_friend_color",
+    "old": "好友留言颜色",
+    "new": "Friend message color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_message_friend_heart_color",
+    "old": "好友消息爱心颜色",
+    "new": "Friend message heart color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "conn_timeout",
+    "old": "网络超时",
+    "new": "Network timeout",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "conn_timeout_protection",
+    "old": "网络超时保护",
+    "new": "Network timeout protection",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_ids",
+    "old": "是否在记分板、聊天和观众菜单中显示客户端 ID",
+    "new": "Show client ID in scoreboard, chat and spectator menu",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_auto_race_record",
+    "old": "保存每场游戏最佳记录的回放",
+    "new": "Save replay of best time per game",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_replays",
+    "old": "启用/禁用重播",
+    "new": "Enable/disable replays",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_replay_length",
+    "old": "设置重播的默认长度",
+    "new": "Set default replay length",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_esc_replay_length_minutes",
+    "old": "ESC菜单保存回放的分钟数",
+    "new": "Minutes to save replay on ESC menu",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_record_server_control",
+    "old": "让服务器启动比赛记录器",
+    "new": "Let server start race recorder",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_demo_name",
+    "old": "在回放中保存玩家名称",
+    "new": "Save player names in replay",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_ghost",
+    "old": "启用影子",
+    "new": "Enable ghost",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_ghost_server_control",
+    "old": "让服务器启动ghost",
+    "new": "Let server start ghost",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_show_ghost",
+    "old": "显示影子",
+    "new": "Show ghost",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_save_ghost",
+    "old": "保存影子",
+    "new": "Save ghost",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_ghost_strict_map",
+    "old": "按地图版本而不是仅按地图名称匹配鬼魂",
+    "new": "Match ghost by map version instead of map name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_ghost_save_best",
+    "old": "只保存比之前记录更好的鬼魂。",
+    "new": "Only save ghost if better than previous record",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_race_ghost_alpha",
+    "old": "鬼魂的可见性（alpha值，0不可见，100完全可见）",
+    "new": "Ghost visibility (alpha, 0=invisible, 100=visible)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_reset_pickups",
+    "old": "武器是否在通过起始方块时重置",
+    "new": "Reset weapons when passing start tile",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_others",
+    "old": "显示其他队伍的玩家（2只显示自己队伍）",
+    "new": "Show other team players (2=own team only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_others_alpha",
+    "old": "显示其他队伍的玩家（alpha值，0不可见，100完全可见）",
+    "new": "Show other team players (alpha, 0=invisible, 100=visible)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_overlay_entities",
+    "old": "以一定百分比的不透明度覆盖游戏图块",
+    "new": "Overlay game tiles with opacity percentage",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_showquads",
+    "old": "显示背景四边形（仅对映射者感兴趣，或者如果你的系统性能极差）",
+    "new": "Show background quads (only for mappers or if system is very slow)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_background_color",
+    "old": "背景颜色",
+    "new": "Background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_background_entities_color",
+    "old": "背景（实体）颜色",
+    "new": "Background (entity) color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_background_entities",
+    "old": "背景（实体）",
+    "new": "Background (entities)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_background_video_fps",
+    "old": "实体层视频背景的最大帧率",
+    "new": "Maximum framerate for entity layer video background",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_run_on_join",
+    "old": "加入服务器时运行的命令",
+    "new": "Command to run when joining server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_menu_map",
+    "old": "菜单中的背景图",
+    "new": "Background image in menu",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_rotation_radius",
+    "old": "菜单相机旋转半径",
+    "new": "Menu camera rotation radius",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_rotation_speed",
+    "old": "菜单相机以秒为单位旋转",
+    "new": "Menu camera rotation time in seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_camera_speed",
+    "old": "菜单相机速度",
+    "new": "Menu camera speed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_background_show_tiles_layers",
+    "old": "使用自定义背景（实体）时是否绘制图块图层",
+    "new": "Draw tile layers when using custom background (solid)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_show_others",
+    "old": "玩家是否可以使用showother命令",
+    "new": "Whether players can use the showother command",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_show_others_default",
+    "old": "玩家是否默认看到其他人（本队为2）",
+    "new": "Whether players see others by default (own team = 2)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_show_all_default",
+    "old": "玩家是否默认看到所有tee",
+    "new": "Whether players see all tees by default",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_max_afk_time",
+    "old": "玩家离开的时间（以秒为单位）（0 = 禁用）",
+    "new": "Time before a player leaves in seconds (0 = disabled)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_plasma_range",
+    "old": "等离子枪将跟踪tee多远",
+    "new": "How far the plasma gun tracks a tee",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_plasma_per_sec",
+    "old": "等离子枪每秒发射多少发子弹",
+    "new": "Plasma gun shots per second",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_dragger_range",
+    "old": "拖拉机将跟踪tee多远",
+    "new": "How far the tractor tracks a tee",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_pause",
+    "old": "允许投票暂停玩家（而不是转向观众）",
+    "new": "Allow voting to pause players (instead of moving to spectators)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_vote_pause_time",
+    "old": "投票暂停时玩家必须等待的时间（以秒为单位）",
+    "new": "Time a player must wait when paused by vote in seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_tune_reset",
+    "old": "每次地图更改后是否重置调整",
+    "new": "Reset tuning after each map change",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_reset_file",
+    "old": "在地图更改或重新加载时执行的文件以设置默认服务器设置",
+    "new": "File executed on map change/reload to set default server settings",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_input_fifo",
+    "old": "Fifo 文件（非 Windows）或命名管道 (Windows) 用作服务器控制台的输入",
+    "new": "Fifo file (non-Windows) or named pipe (Windows) for server console input",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_ddrace_tune_reset",
+    "old": "每次地图更改后是否重置 DDRace 调整（sv_hit、sv_endless_drag 和 sv_old_laser）",
+    "new": "Reset DDRace tuning (sv_hit, sv_endless_drag, sv_old_laser) after each map change",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_nameless_score",
+    "old": "无名Tee是否有分数",
+    "new": "Whether unnamed tees have a score",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_time_in_broadcast_interval",
+    "old": "播出时间多久更新一次",
+    "new": "How often the broadcast time updates",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_default_timer_type",
+    "old": "显示时间的默认方式是游戏/回合计时器或广播。 0 = 游戏/回合计时器，1 = 广播，2 = 0+1，3 = 无",
+    "new": "Default display mode for time: game/round timer or broadcast. 0 = game/round timer, 1 = broadcast, 2 = 0+1, 3 = none",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_chat_initial_delay",
+    "old": "发送第一条消息之前的时间（以秒为单位）",
+    "new": "Time before sending the first message in seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_chat_penalty",
+    "old": "每条消息的聊天分数都会增加，并且每次勾选都会减少 1。",
+    "new": "Chat score increases per message and decreases by 1 per tick",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_chat_threshold",
+    "old": "如果聊天分数超过此值，玩家将被静音 sv_spam_mute_duration 秒",
+    "new": "If chat score exceeds this value, the player is muted for sv_spam_mute_duration seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_spam_mute_duration",
+    "old": "如果玩家对垃圾邮件触发静音，则静音多少秒。 0 = 关闭",
+    "new": "Duration in seconds to mute a player for spam triggering. 0 = off",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_shutdown_when_empty",
+    "old": "一旦没有人在服务器上就关闭服务器",
+    "new": "Shutdown server when empty",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_reload_when_empty",
+    "old": "服务器空时重新加载地图（1 = 重新加载一次，2 = 每次服务器空时重新加载）",
+    "new": "Reload map when empty (1 = once, 2 = each time)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_kill_protection",
+    "old": "0 - 禁用，1-9999 分钟",
+    "new": "0 - Disabled, 1-9999 minutes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_solo_server",
+    "old": "将服务器设置为单人模式（没有玩家交互，必须在加载地图之前设置）",
+    "new": "Set server to singleplayer mode (no player interaction, must be set before loading map)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_client_suggestion",
+    "old": "广播以向没有 DDNet 客户端的玩家显示",
+    "new": "Broadcast shown to players without DDNet client",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_client_suggestion_old",
+    "old": "广播以向使用旧版本 DDNet 客户端的玩家显示",
+    "new": "Broadcast shown to players using old DDNet client",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_client_suggestion_bot",
+    "old": "广播以向具有已知机器人客户端的玩家显示",
+    "new": "Broadcast shown to players with known bot client",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_banned_versions",
+    "old": "加入时将被踢出的以逗号分隔的被禁止客户端列表",
+    "new": "Comma-separated list of banned clients to be kicked on join",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_netlimit",
+    "old": "Netlimit：允许客户端使用的最大流量（以kb/s为单位）",
+    "new": "Netlimit: maximum traffic allowed per client (kb/s)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_netlimit_alpha",
+    "old": "Netlimit：指数移动平均线的 Alpha",
+    "new": "Netlimit: exponential moving average alpha",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_kcp",
+    "old": "启用 UDP 上层 KCP 传输协商（旧客户端保持 legacy UDP，可热关闭回退）",
+    "new": "Enable UDP KCP transport negotiation (old clients keep legacy UDP, hot-switch fallback)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_kcp_required",
+    "old": "要求支持 KCP 的客户端才能升级会话（灰度期保持关闭以允许 fallback）",
+    "new": "Require KCP-capable client to upgrade session (keep off during grayscale for fallback)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_kcp_debug",
+    "old": "输出 KCP 协商、fallback 和会话生命周期调试日志",
+    "new": "Output KCP negotiation, fallback, and session lifecycle debug logs",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_kcp_stats",
+    "old": "启用 KCP/legacy 传输统计查询与采样输出",
+    "new": "Enable KCP/legacy transport statistics query and sample output",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_net_fake_loss",
+    "old": "弱网测试：服务端收包随机丢包百分比",
+    "new": "Weak network test: server receive random packet loss percentage",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_net_fake_jitter",
+    "old": "弱网测试：服务端收包随机抖动范围（毫秒）",
+    "new": "Weak network test: server receive random jitter range (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_net_fake_rtt",
+    "old": "弱网测试：服务端收包模拟 RTT（毫秒，单向延迟取一半）",
+    "new": "Weak network test: server receive simulated RTT (ms, half for one-way delay)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_net_fake_reorder",
+    "old": "弱网测试：服务端收包额外乱序概率百分比",
+    "new": "Weak network test: server receive extra reorder probability percentage",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_connlimit",
+    "old": "Connlimit：一个IP在一段时间内允许的连接数",
+    "new": "Connlimit: number of connections allowed per IP in a time period",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_connlimit_time",
+    "old": "Connlimit：IP连接数统计时间",
+    "new": "Connlimit: time window for IP connection count",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "sv_conn_logging_server",
+    "old": "用于 IP 地址记录的 Unix 套接字服务器（仅限 Unix）",
+    "new": "Unix socket server for IP address recording (Unix only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_unpredicted_shadow",
+    "old": "显示不可预测的阴影 tee（0 = 关闭，1 = 自己，2 = 仅其他玩家，3 = 全部）",
+    "new": "Show unpredictable shadow tee (0 = off, 1 = self, 2 = others only, 3 = all)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_unpredicted_shadow_alpha",
+    "old": "不可预测的阴影 tee 透明度（0 不可见，100 完全可见）",
+    "new": "Unpredictable shadow tee transparency (0 invisible, 100 fully visible)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_predict_freeze",
+    "old": "预测冻结图块（0 = 关闭，1 = 开启，2 = 部分（允许冻结时少量移动）",
+    "new": "Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when frozen))",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_ninja",
+    "old": "显示忍者皮肤",
+    "new": "Show ninja skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_hook_coll_other",
+    "old": "显示其他玩家的钩子碰撞线（2条始终显示）",
+    "new": "Show other players' hook collision lines (2 always shown)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_hook_coll_own",
+    "old": "显示自己玩家的钩子碰撞线（2始终显示）",
+    "new": "Show own hook collision lines (2 always shown)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hook_coll_size",
+    "old": "自己的钩索辅助线宽度",
+    "new": "Own hook line width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hook_coll_size_other",
+    "old": "其他玩家的钩索辅助线宽度",
+    "new": "Other players' hook line width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hook_coll_alpha",
+    "old": "钩子碰撞线Alpha（0不可见，100完全可见）",
+    "new": "Hook collision line alpha (0 invisible, 100 fully visible)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hook_coll_color_no_coll",
+    "old": "指定未触及任何物体的钩线的颜色。",
+    "new": "Color of hook line not hitting anything",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hook_coll_color_hookable_coll",
+    "old": "指定击中可挂钩图块的挂钩线的颜色。",
+    "new": "Color of hook line hitting hookable tile",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hook_coll_color_tee_coll",
+    "old": "指定击中球座的钩线的颜色。",
+    "new": "Color of hook line hitting tee",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_hook_coll_tip_color",
+    "old": "指定钩子碰撞线末端提示段的颜色。",
+    "new": "Color of hook collision line tip segment",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_chat_teamcolors",
+    "old": "以队伍颜色显示玩家昵称",
+    "new": "Show player names in team color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_chat_reset",
+    "old": "按退出键时重置聊天",
+    "new": "Reset chat on escape",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_chat_old",
+    "old": "旧的聊天风格：无球座，无背景",
+    "new": "Old chat style: no tee icons, no background",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_chat_size",
+    "old": "聊天字体大小",
+    "new": "Chat font size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_chat_width",
+    "old": "聊天框宽度",
+    "new": "Chat box width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_chat_background_color",
+    "old": "聊天背景色",
+    "new": "Chat background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_show_direction",
+    "old": "显示按键（1 = 其他玩家的、2 = 所有人、3 = 仅你自己的）",
+    "new": "Show key presses (1 = others, 2 = all, 3 = own only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_direction_size",
+    "old": "按键显示图标大小",
+    "new": "Key press icon size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_old_gun_position",
+    "old": "像 TW 0.6.1 及更早版本一样，tee将枪握得更高一点",
+    "new": "Hold gun higher like TW 0.6.1 and earlier",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_confirm_disconnect_time",
+    "old": "游戏结束后断开连接之前弹出确认窗口（以分钟为单位，-1 表示关闭，0 表示始终打开）",
+    "new": "Confirm disconnect after game end (minutes, -1 off, 0 always)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_confirm_quit_time",
+    "old": "游戏结束后退出前弹出确认窗口（以分钟为单位，-1 关闭，0 始终打开）",
+    "new": "Confirm quit after game end (minutes, -1 off, 0 always)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_timeout_code",
+    "old": "使用的超时代码",
+    "new": "Timeout code used",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_dummy_timeout_code",
+    "old": "要使用的分身超时代码",
+    "new": "Timeout code to use for dummy",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_timeout_seed",
+    "old": "超时种子",
+    "new": "Timeout seed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_input_fifo",
+    "old": "Fifo 文件（非 Windows）或命名管道 (Windows) 用作客户端控制台的输入",
+    "new": "Fifo file (non-Windows) or named pipe (Windows) used as input for client console",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_config_version",
+    "old": "配置版本。帮助新客户修复旧配置的错误。",
+    "new": "Config version. Helps new client fix old config errors.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_demo_slice_begin",
+    "old": "回放切片的开始标记",
+    "new": "Start marker of replay slice",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_demo_slice_end",
+    "old": "回放切片的结束标记",
+    "new": "End marker of replay slice",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_demo_show_speed",
+    "old": "显示变化时的速度计",
+    "new": "Show speedometer when changing",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_demo_show_pause",
+    "old": "在更改时显示暂停/播放指示器",
+    "new": "Show pause/play indicator when changing",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_demo_keyboard_shortcuts",
+    "old": "在回放玩家中启用键盘快捷键",
+    "new": "Enable keyboard shortcuts in replay player",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_gl_major",
+    "old": "图形库主要版本",
+    "new": "Graphics library major version",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_gl_minor",
+    "old": "图形库次要版本",
+    "new": "Graphics library minor version",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_gl_patch",
+    "old": "图库补丁版本",
+    "new": "Graphics library patch version",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_gl_texture_lod_bias",
+    "old": "图形库纹理采样的 lod 偏差乘以 1000",
+    "new": "Graphics library texture sampling lod bias multiplied by 1000",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_3d_texture_analysis_ran",
+    "old": "运行分析器来检查 3D/2D 阵列纹理采样是否正常工作",
+    "new": "Run profiler to check 3D/2D array texture sampling works correctly",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_3d_texture_analysis_renderer",
+    "old": "执行分析的渲染器",
+    "new": "Renderer performing the analysis",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_3d_texture_analysis_version",
+    "old": "执行分析的版本",
+    "new": "Version performing the analysis",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_gpu_name",
+    "old": "GPU的名称，由后端选择。 （如果后端支持的话）",
+    "new": "GPU name, chosen by backend (if supported)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_backend",
+    "old": "要使用的后端（例如 OpenGL 或 Vulkan）",
+    "new": "Backend to use (e.g. OpenGL or Vulkan)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_render_thread_count",
+    "old": "后端可用于渲染的线程数。 （注：该值可以被后端忽略）",
+    "new": "Number of threads backend can use for rendering (Note: value may be ignored by backend)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "gfx_driver_is_blocked",
+    "old": "如果为 1，则当前驱动程序处于阻塞错误状态。",
+    "new": "If 1, current driver is in blocking error state.",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables.h",
+    "script_name": "cl_video_recorder_fps",
+    "old": "录像机应以哪个 FPS 录制回放。",
+    "new": "The FPS at which the recorder should record replay.",
+    "method": "deepseek"
+  }
+]

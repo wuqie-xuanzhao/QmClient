@@ -27,6 +27,11 @@ CPP_STRING_LITERAL_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 LOCALIZE_CALL_RE = re.compile(r"\b(?:Localize|Localizable)\s*\(")
 REGISTER_CALL_RE = re.compile(r"\bRegister\s*\(")
 CONFIG_MACRO_CALL_RE = re.compile(r"\bMACRO_CONFIG_(?:INT|COL|STR)\s*\(")
+CONFIG_MACRO_HELP_HEADERS = (
+    "src/engine/shared/config_variables.h",
+    "src/engine/shared/config_variables_qmclient.h",
+    "src/engine/shared/config_variables_tclient.h",
+)
 CONFIG_OR_COMMAND_TOKEN_RE = re.compile(r"^(?:\+?[a-z][a-z0-9_./:-]*|[A-Z0-9_./:-]+)$")
 PATH_OR_URL_RE = re.compile(
     r"^(?:https?://|[a-z0-9_./-]+\.(?:cfg|csv|exe|json|png|txt|toml|wav|webp|zip)|"
@@ -434,6 +439,25 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
     string_literal = r'"((?:[^"\\]|\\.)*)"'
 
     if normalized.endswith("src/game/client/components/qmclient/menus_qmclient.cpp"):
+        localized_wrapper_re = re.compile(
+            r"\b(?:RenderCheckbox|RenderDropDown|RenderIntOption|RenderLabel|RenderLyricsSlider|"
+            r"RenderLyricSlider|RenderPassword|RenderSection|RenderSlider|RenderText|RenderValue)\s*\("
+        )
+        for match in localized_wrapper_re.finditer(content):
+            if _is_inside_string_literal(content, match.start()):
+                continue
+            open_paren = content.find("(", match.start())
+            close_paren = _find_matching_paren(content, open_paren)
+            if close_paren == -1:
+                continue
+            line_number = _line_number(content, match.start())
+            for argument in _split_top_level_args(content[open_paren + 1 : close_paren]):
+                key = _decode_string_argument(argument)
+                if key and looks_like_localized_wrapper_label(key):
+                    records.append(
+                        SourceKeyRecord(key, "indirect", path, "", line_number)
+                    )
+
         helper_pattern = re.compile(
             rf"DoFocus(?:SectionLabel|Checkbox)\([^;\n]*,\s*{string_literal}\s*\)"
         )
@@ -447,6 +471,29 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
                     _line_number(content, match.start()),
                 )
             )
+
+    if normalized.endswith("src/game/client/components/tclient/menus_tclient.cpp"):
+        for match in re.finditer(r"\bAddCard\s*\(", content):
+            if _is_inside_string_literal(content, match.start()):
+                continue
+            open_paren = content.find("(", match.start())
+            close_paren = _find_matching_paren(content, open_paren)
+            if close_paren == -1:
+                continue
+            args = _split_top_level_args(content[open_paren + 1 : close_paren])
+            if len(args) < 2:
+                continue
+            title = _decode_string_argument(args[1])
+            if title:
+                records.append(
+                    SourceKeyRecord(
+                        title,
+                        "indirect",
+                        path,
+                        "",
+                        _line_number(content, match.start()),
+                    )
+                )
 
     if normalized.endswith(
         "src/game/client/components/qmclient/monitoring/monitoring.cpp"
@@ -535,7 +582,7 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
                 )
             )
 
-    if normalized.endswith("src/engine/shared/config_variables_qmclient.h"):
+    if any(normalized.endswith(header) for header in CONFIG_MACRO_HELP_HEADERS):
         for match in CONFIG_MACRO_CALL_RE.finditer(content):
             open_paren = content.find("(", match.start())
             close_paren = _find_matching_paren(content, open_paren)
@@ -904,6 +951,19 @@ def looks_human_readable(value: str) -> bool:
     if has_cjk(value):
         return True
     return " " in value and any(ch.isalpha() for ch in value)
+
+
+def looks_like_localized_wrapper_label(value: str) -> bool:
+    text = value.strip()
+    if looks_human_readable(text):
+        return True
+    if text in {"d", "ms", "s", "deg", "%", "px", ""}:
+        return False
+    if CONFIG_OR_COMMAND_TOKEN_RE.match(text) and any(
+        token in text for token in ("_", "/", ".", ":", "-")
+    ):
+        return False
+    return len(text) >= 2 and bool(re.fullmatch(r"[A-Za-z][A-Za-z+]*", text))
 
 
 def _looks_like_business_literal(value: str) -> tuple[bool, str]:
@@ -1395,6 +1455,7 @@ def _business_data_records_from_path(
             if (
                 re.fullmatch(r"DDmaX (?:Easy|Next|Pro|Nut)", text)
                 or text == "%d/5 ★"
+                or text == ", SettingsPerfContextName(), "
                 or text in {"Address: ddnet://%s\\n", "Map: %s\\n"}
                 or "&&" in text
                 or "||" in text
@@ -1482,6 +1543,136 @@ def _business_data_records_from_path(
                     )
                 )
         # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/QmUi/QmCardRegistry.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            records.append(
+                StringAuditRecord(
+                    path,
+                    line,
+                    text,
+                    "business_data",
+                    "settings card registry metadata or search keyword data",
+                )
+            )
+        # Card titles that are user-visible are separately covered by Localizable/Localize.
+        # Continue with generic rules for the remaining source files.
+
+    if normalized.endswith("src/game/client/components/ghost.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            records.append(
+                StringAuditRecord(
+                    path, line, text, "business_data", "ghost parser diagnostic text"
+                )
+            )
+
+    if normalized.endswith("src/game/client/live/live_match_replay.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            records.append(
+                StringAuditRecord(
+                    path, line, text, "business_data", "QmLive recorder diagnostic text"
+                )
+            )
+
+    if normalized.endswith("src/game/client/components/qmclient/menus_qmclient.cpp"):
+        # 贡献者、服务商、语言名、地图名和歌词预览是运行时数据，不是翻译源文案。
+        DataTexts = {
+            "栖梦(璇梦),夏日,DYL",
+            "腾讯云",
+            "中文",
+            "日本語",
+            "繁體中文",
+            "tab=function module=pie_menu",
+            "DDmaX Easy",
+            "DDmaX Next",
+            "DDmaX Pro",
+            "DDmaX Nut",
+            "AMLL TTML DB",
+            "Apple Music",
+            "Stop and stare",
+            "I think I'm moving but I go nowhere",
+            "Yeah I know that everyone gets scared",
+        }
+        sponsor_array_start = content.find("s_apSponsors[]")
+        sponsor_array_end = content.find("};", sponsor_array_start)
+        sponsor_line_start = _line_number(content, sponsor_array_start)
+        sponsor_line_end = _line_number(content, sponsor_array_end)
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts or sponsor_line_start <= line <= sponsor_line_end:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "contributor or preview sample data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/gameclient.cpp"):
+        DataTexts = {
+            "s[tuning] ?f[value]",
+            "i[zone] s[tuning] f[value]",
+            "Current Rank #%d",
+            "JSON sidecar",
+            "QmLive full match recording started",
+            "QmLive full match recording stopped",
+            "QmLive team filter expects a DDRace team from 1 to 63",
+            "QmLive team filter disabled",
+        }
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "diagnostic or formatting data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/menus.cpp"):
+        DataTexts = {"sv_motd ", "sv_motd \"", "sv_map Tutorial", "sv_register 0"}
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "server command fixture data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/menus.h"):
+        DataTexts = {"活动", "极限", "训练", "娱乐"}
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "server game type matcher data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/menus_browser.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text == ", SettingsPerfContextName(), ":
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "performance call syntax fragment",
+                    )
+                )
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "SettingsPerfContextName()" in line_text:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "performance context metadata"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/menus_settings.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text == "Vulkan QmClient":
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "graphics backend brand data"
+                    )
+                )
 
     if normalized.endswith("src/game/client/components/qmclient/axiom_auto_login.cpp"):
         for text, line in _extract_cpp_string_literal_records(content):

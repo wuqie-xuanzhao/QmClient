@@ -23,6 +23,16 @@ class GenerateAllTest(unittest.TestCase):
             "[ctx]\nLine one\\nLine two\n== 第一行\\n第二行",
         )
 
+    def test_format_language_entry_escapes_bracket_prefixed_source_key(self):
+        self.assertEqual(
+            generate_all.format_language_entry(
+                "[%s] %s (Map: %s, Time: %s)",
+                "",
+                "[%s] %s (地图：%s，时间：%s)",
+            ),
+            "[]\n[%s] %s (Map: %s, Time: %s)\n== [%s] %s (地图：%s，时间：%s)",
+        )
+
     def test_generate_configured_languages_writes_each_language(self):
         strings = [
             generate_all.SourceString("Server"),
@@ -63,6 +73,11 @@ class GenerateAllTest(unittest.TestCase):
             self.assertIn(
                 "== Сервер", (out_dir / "russian.txt").read_text(encoding="utf-8")
             )
+
+    def test_libretranslate_is_an_intentional_simplified_chinese_passthrough(self):
+        self.assertIn(
+            "LibreTranslate", generate_all.SIMPLIFIED_CHINESE_PASSTHROUGH_KEYS
+        )
 
     def test_simplified_chinese_generation_drops_stale_runtime_entries(self):
         strings = [generate_all.SourceString("Server")]

@@ -10,6 +10,26 @@
 - `data/languages/*.txt` 是生成产物；当前由 `generate_all.py` 统一生成 `GENERATED_LANGUAGES` 中登记的运行时语言文件。
 - `translations_draft/<language>/*.toml` 是模型生成的待审核草稿，不参与运行时生成链。
 
+## 配置项帮助文本（config MACRO Desc）
+
+`MACRO_CONFIG_INT` / `MACRO_CONFIG_COL` / `MACRO_CONFIG_STR` 的最后参数 `Desc` 是 **Localize 的 source key**，运行时写入 `m_pHelpLocalizeKey`，设置页通过 `Localize(Desc)` 显示。
+
+硬约束：
+
+- **Desc 必须使用英文**。不要把中文、繁中或其他语言写进头文件 Desc。
+- 各语言译文写在 `translations/i18n/*.toml` 的对应语言字段；简体中文在 `simplified_chinese`，不要用中文 Desc 冒充 source。
+- 英文 UI 在缺少译文时会回退显示 source：若 Desc 是中文，英文界面会直接显示中文。
+
+当前会从下列头文件提取 MACRO Desc：
+
+| 头文件 | 模块 |
+|--------|------|
+| `src/engine/shared/config_variables.h` | `menus` |
+| `src/engine/shared/config_variables_qmclient.h` | `qmclient` |
+| `src/engine/shared/config_variables_tclient.h` | `tclient` |
+
+若历史代码把中文写进了 Desc，使用 `migrate_cjk_config_help.py`（`--generate-map` / `--apply`）迁成英文 key，并同步重映射 TOML。映射文件在 `translations/_migrations/`。
+
 ## 常规 i18n 工作流
 
 修改 `Localize`、`Localizable`、`Register` help 文本，或修改翻译 TOML 后，按顺序运行：

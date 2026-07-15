@@ -55,6 +55,48 @@ class SourceKeysTest(unittest.TestCase):
             {"Camera & FOV", "Adjust game camera and FOV settings"},
         )
 
+    def test_extracts_qmclient_localized_wrapper_labels(self):
+        path = Path("src/game/client/components/qmclient/menus_qmclient.cpp")
+        content = "\n".join(
+            (
+                'RenderCheckbox(&Config, "Show blocked words in console", &Config);',
+                'RenderValue("qmclient-duration", "Weapon switch duration", &Id, &Value, 0, 100);',
+                'RenderCheckbox(Column, &Config, "qmclient-hide-hud", "Hide HUD");',
+                'RenderValue("qmclient-short-duration", "Duration", &Id, &Value, 0, 100);',
+                'RenderValue("qmclient-days", "Days", &Id, &Value, 0, 100, "d");',
+            )
+        )
+
+        records = source_keys.extract_known_indirect_records(path, content)
+
+        self.assertEqual(
+            {record.key for record in records},
+            {
+                "Show blocked words in console",
+                "Weapon switch duration",
+                "Hide HUD",
+                "Duration",
+                "Days",
+            },
+        )
+
+    def test_extracts_tclient_dynamic_card_titles(self):
+        path = Path("src/game/client/components/tclient/menus_tclient.cpp")
+        content = "\n".join(
+            (
+                'AddCard("deck:tclient-warlist-entries", "War Entries", 360.0f, Render);',
+                'AddCard("deck:tclient-info-links", "TClient Links", 100.0f, Render);',
+                'AddCard("deck:tclient-settings", "Settings", 100.0f, Render);',
+            )
+        )
+
+        records = source_keys.extract_known_indirect_records(path, content)
+
+        self.assertEqual(
+            {record.key for record in records},
+            {"War Entries", "TClient Links", "Settings"},
+        )
+
     def test_extracts_concatenated_literals_in_first_argument(self):
         content = 'Localize("Demo " "Player");'
         self.assertEqual(
@@ -333,9 +375,74 @@ class SourceKeysTest(unittest.TestCase):
         records = source_keys.extract_known_indirect_records(path, content)
         keys = {record.key for record in records}
 
-        self.assertIn("计分板查分", keys)
-        self.assertIn("通知栏接管服务器系统提示（入场版本信息除外）", keys)
+        self.assertGreaterEqual(len(keys), 400)
+        self.assertTrue(all(record.source == path for record in records))
         self.assertNotIn("qm_scoreboard_points", keys)
+        self.assertFalse(any(source_keys.has_cjk(key) for key in keys))
+
+    def test_extracts_tclient_config_descriptions(self):
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "engine"
+            / "shared"
+            / "config_variables_tclient.h"
+        )
+        content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))
+        records = source_keys.extract_known_indirect_records(path, content)
+        keys = {record.key for record in records}
+
+        self.assertGreaterEqual(len(keys), 150)
+        self.assertTrue(all(record.source == path for record in records if record.source))
+        self.assertFalse(any(source_keys.has_cjk(key) for key in keys))
+
+    def test_module_name_for_tclient_config_header(self):
+        from qmclient_scripts.languages_qmclient import i18n_store
+
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "engine"
+            / "shared"
+            / "config_variables_tclient.h"
+        )
+        self.assertEqual(i18n_store.module_name_for_source(path), "tclient")
+        qm_path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "engine"
+            / "shared"
+            / "config_variables_qmclient.h"
+        )
+        self.assertEqual(i18n_store.module_name_for_source(qm_path), "qmclient")
+
+    def test_extracts_ddnet_config_descriptions(self):
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "engine"
+            / "shared"
+            / "config_variables.h"
+        )
+        content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))
+        records = source_keys.extract_known_indirect_records(path, content)
+        keys = {record.key for record in records}
+
+        self.assertGreaterEqual(len(keys), 500)
+        self.assertTrue(all(record.source == path for record in records if record.source))
+        self.assertFalse(any(source_keys.has_cjk(key) for key in keys))
+
+    def test_module_name_for_ddnet_config_header(self):
+        from qmclient_scripts.languages_qmclient import i18n_store
+
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "engine"
+            / "shared"
+            / "config_variables.h"
+        )
+        self.assertEqual(i18n_store.module_name_for_source(path), "menus")
 
     def test_extracts_asset_editor_blend_modes_with_context(self):
         path = (
@@ -456,6 +563,48 @@ class SourceKeysTest(unittest.TestCase):
         review_texts = {record.text for record in report.needs_review}
         self.assertIn("Review this user-facing string", review_texts)
 
+    def test_audit_marks_settings_registry_metadata_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = root / "src" / "game" / "client" / "QmUi" / "QmCardRegistry.cpp"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                '{"deck:sample", "general", ECardColumn::Left, 0, "Sample", "sample search keyword"};\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        review_texts = {record.text for record in report.needs_review}
+        self.assertIn("sample search keyword", business_texts)
+        self.assertNotIn("sample search keyword", review_texts)
+
+    def test_audit_marks_tutorial_command_and_perf_fragments_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            menus = root / "src" / "game" / "client" / "components" / "menus.cpp"
+            browser = root / "src" / "game" / "client" / "components" / "menus_browser.cpp"
+            menus.parent.mkdir(parents=True, exist_ok=True)
+            menus.write_text('str_copy(aMotd, "sv_motd ");\n', encoding="utf-8")
+            menus.write_text(
+                'str_copy(aMotd, "sv_motd ");\nconst char *pFragment = ", SettingsPerfContextName(), ";\n',
+                encoding="utf-8",
+            )
+            browser.write_text(
+                'StartSettingsPerfScrollWindow("server", SettingsPerfContextName(), "page", "none");\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        review_texts = {record.text for record in report.needs_review}
+        self.assertIn("sv_motd ", business_texts)
+        self.assertIn("server", business_texts)
+        self.assertNotIn("sv_motd ", review_texts)
+        self.assertNotIn("server", review_texts)
+
     def test_audit_marks_obvious_machine_literals_as_business_data(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -496,20 +645,20 @@ class SourceKeysTest(unittest.TestCase):
         self.assertIn("中文提示", violation_texts)
 
     def test_audit_accepts_qmclient_config_descriptions_as_indirect_i18n(self):
-        report = source_keys.build_string_audit_report(
-            paths=(
-                source_keys.PROJECT_ROOT
-                / "src"
-                / "engine"
-                / "shared"
-                / "config_variables_qmclient.h",
-            )
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "engine"
+            / "shared"
+            / "config_variables_qmclient.h"
         )
+        report = source_keys.build_string_audit_report(paths=(path,))
 
         must_i18n_texts = {record.text for record in report.must_i18n}
         violation_texts = {record.text for record in report.violation}
-        self.assertIn("计分板查分", must_i18n_texts)
-        self.assertNotIn("计分板查分", violation_texts)
+        self.assertGreaterEqual(len(must_i18n_texts), 400)
+        self.assertFalse(any(source_keys.has_cjk(text) for text in must_i18n_texts))
+        self.assertFalse(any(source_keys.has_cjk(text) for text in violation_texts))
 
     def test_audit_report_round_trips_through_json_file(self):
         report = source_keys.StringAuditReport(

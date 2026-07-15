@@ -199,9 +199,6 @@
 (Update required)
 == （需要更新）
 
-+%d more codes
-== 还有 %d 个代码
-
 - Save codes in order:
 == - 密码依次为：
 
@@ -217,6 +214,9 @@
 /times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
 == /times ?s?i 显示服务器最近 5 次成绩，或名称以 s 开头玩家从第 i 条开始的成绩（i 默认 1，-1 表示第一条）
 
+0 - Disabled, 1-9999 minutes
+== 0 - 禁用，1-9999 分钟
+
 1 new mention
 == 1 条新被提及消息
 
@@ -226,13 +226,13 @@
 2 stars
 == 2 星
 
-2 秒内连续钩中或锤中玩家时显示连击提示
-== 2 秒内连续钩中或锤中玩家时显示连击提示
-
 3 stars
 == 3 星
 
 3D Background
+== 3D 背景
+
+3D background
 == 3D 背景
 
 4 stars
@@ -253,6 +253,7 @@
 === Saves for '%s' ===
 == === '%s' 的存档 ===
 
+[]
 [%s] %s (Map: %s, Time: %s)
 == [%s] %s (地图：%s，时间：%s)
 
@@ -278,7 +279,7 @@ A Tee
 == 其他玩家
 
 A vote is currently active.
-== A vote is currently active.
+== 已有投票正在进行。
 
 Abort
 == 取消
@@ -289,6 +290,9 @@ Activate
 Activate all
 == 全部启用
 
+Activate tee history writing full game data to disk (warning: uses lots of disk space)
+== 激活将完整游戏数据写入磁盘的 tee 历史记录（警告：这将使用大量磁盘空间）
+
 Active color
 == 按键激活时颜色
 
@@ -298,8 +302,14 @@ Active disconnect
 Active line font size
 == 当前行字号
 
+Active line font size (px)
+== 活动行字号 px
+
 Active line scale
 == 当前行缩放
+
+Active line scale (%)
+== 活动行缩放百分比
 
 Active moderator mode disabled because you are afk.
 == 由于你已挂机，主动管理员模式已关闭
@@ -427,6 +437,9 @@ Add command
 Add current cut to the export list
 == 将当前片段加入导出列表
 
+Add debug dummy to server (Debug build only)
+== 向服务器添加调试用分身（仅 Debug 构建）
+
 Add demo timeline marker
 == 添加回放时间线标记
 
@@ -444,6 +457,9 @@ Add Group
 
 Add Item
 == 添加项
+
+Add latency for antiping (0 to disable)
+== 为抗延迟添加延迟（0 为禁用）
 
 Add one
 == 加一
@@ -481,8 +497,14 @@ Added %d missing required slot(s).
 Added %s as friend
 == 已将 %s 添加为好友
 
+Additional headers for register endpoint, comma-separated "header:value" pairs
+== 要发送到寄存器端点的额外标头，以逗号分隔的“标头：值”对
+
 Address
 == 地址
+
+Address to bind the external console. Anything other than "localhost" is dangerous.
+== 绑定外部控制台的地址。除了“localhost”之外的任何内容都是危险的
 
 Adds a specific war entry
 == 添加指定敌对条目
@@ -493,11 +515,23 @@ Adds default chat binds
 Adjust game camera and FOV settings
 == 调整游戏镜头和视野设置
 
+Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
+== 调整本地/远程控制台中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）
+
+Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
+== 调整日志文件中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）
+
 Adjust opacity of entity layers
 == 调整各个实体层的透明度
 
+Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
+== 调整系统控制台中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）
+
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 == 调整其他队伍实体（如 Tee 和名牌）的不透明度
+
+Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
+== 调整外部控制台中的信息量（-3 = 无、-2 = 仅错误、-1 = 警告、0 = 信息、1 = 调试、2 = 跟踪）
 
 Adjust your prediction margin while frozen
 == 调整冻结时的预测量
@@ -510,6 +544,9 @@ Advanced options
 
 AFR
 == 非洲
+
+After hammer fly, whether dummy switches back to previous weapon
+== 锤子飞后分身是否切换回上一把武器
 
 After Load
 == 加载后
@@ -526,6 +563,21 @@ Aim
 Aim bind
 == 操作轴绑定
 
+Alive notification color
+== 存活提醒颜色
+
+Alive notification font size
+== 存活提醒字体大小
+
+Alive notification horizontal position (percentage of screen width)
+== 存活提醒水平位置（占屏幕宽度百分比）
+
+Alive notification text
+== 存活提醒文本
+
+Alive notification vertical position (percentage of screen height)
+== 存活提醒垂直位置（占屏幕高度百分比）
+
 Alive: %.1fs/%.1fs
 == 存活：%.1fs/%.1fs
 
@@ -541,11 +593,50 @@ All players
 All stars
 == 全部星级
 
+Allow /map.
+== 是否允许 /map
+
+Allow /rescue command to teleport out of freeze (only applies in initial config)
+== 允许 /rescue 命令，让玩家可以从冻结中传送自己（仅在初始配置中生效）
+
+Allow arbitrary game resolution when scaling (may cause issues on Windows)
+== 允许缩放时使用任意游戏分辨率（Windows 上可能有问题）
+
+Allow downloading community-created skins. Use cl_skin_community_download_url instead of cl_skin_download_url for download
+== 允许下载社区创建的皮肤。使用 cl_skin_community_download_url 而不是 cl_skin_download_url 进行下载
+
+Allow duplicate enemy entries
+== 允许重复的敌对条目
+
 Allow Duplicate Entries
 == 允许重复条目
 
+Allow firing non-auto weapons while deep frozen
+== 允许在深度冻结时发射非自动武器
+
+Allow FTAPI auto-translate (may cause overload)
+== 允许 FTAPI 自动翻译（可能导致过载）
+
+Allow insecure HTTP protocol in addition to secure HTTPS. Primarily for testing.
+== 除了安全的 HTTPS 协议之外，还允许使用不安全的 HTTP 协议。主要用于测试。
+
+Allow left-click to toggle between spectating nearest player and free view
+== 允许左键单击在观看最近的玩家和自由观看之间切换
+
 Allow mic permission in system settings, then reopen voice
 == 需要在系统设置里允许麦克风权限，然后重新打开语音
+
+Allow QmLiveClient to connect as hidden read-only observer
+== 允许 QmLiveClient 以隐藏只读 observer 连接
+
+Allow voting to kick players
+== 允许投票踢出玩家
+
+Allow voting to move players to spectators
+== 允许投票将玩家移到观众
+
+Allow voting to pause players (instead of moving to spectators)
+== 允许投票暂停玩家（而不是转向观众）
 
 Allows maps to render with more detail
 == 允许地图渲染更多细节
@@ -562,6 +653,12 @@ Always show
 Always show chat
 == 始终显示聊天框
 
+Always show local time
+== 始终显示当地时间
+
+Always show nameplates regardless of distance
+== 无论距离如何，始终显示铭牌
+
 Always show other players' hook collision lines
 == 始终显示其他玩家的钩索辅助线
 
@@ -571,7 +668,7 @@ Always show own player's hook collision line
 Always translate
 == 始终翻译
 
-AMLL TTML DB API 基地址（可改成镜像）
+AMLL TTML DB API base URL (mirror)
 == AMLL TTML DB API 基地址（可改成镜像）
 
 Amount
@@ -595,14 +692,26 @@ Animation duration
 Animation range
 == 动画范围
 
+Announcements sequential or random.
+== 公告是顺序的还是随机的
+
 Anti Latency Tools
+== 延迟补偿工具
+
+Anti latency tools
 == 延迟补偿工具
 
 Anti Ping Smoothing
 == 平滑预测
 
+Anti-spoof specific rate limit (0 = unlimited).
+== 反欺骗特定速率限制（0 表示无限制）
+
 AntiPing (latency compensation)
 == 延迟补偿（AntiPing）
+
+Antiping prediction offset, ignored when using antiping limit
+== 抗延迟预测的提前量，使用 antiping limit 时忽略此项
 
 AntiPing: predict grenade path
 == 延迟补偿：预测榴弹枪路径
@@ -637,6 +746,9 @@ Appearance / Laser
 Appearance / Name Plate
 == 外观/名牌
 
+Append to log file instead of overwriting
+== 追加到日志文件而不是每次覆盖
+
 Apple Music media-user-token
 == Apple Music 媒体用户令牌
 
@@ -655,8 +767,23 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == 先应用一个可编辑的预设
 
+Apply Best input to other Tees
+== 将 Best input 应用于其他 Tee
+
 Apply Changes
 == 应用更改
+
+Apply input early before next tick for prediction
+== 在下一 tick 前提前应用输入进行预测
+
+Apply quick input to other Tees as well
+== 对其他 Tee 也应用快速输入
+
+Apply Saiko+ to other Tees
+== 将 Saiko+ 应用于其他 Tee
+
+Apply squishy Tee deformation to other players
+== 将 Q 弹 Tee 形变应用到其他玩家
 
 Apply this preset
 == 应用此预设
@@ -724,11 +851,17 @@ Are you sure you want to delete this asset?
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
 == 你确定要保存皮肤吗？如果已经存在同名皮肤，将会被替换。
 
+Arrow assets
+== 箭头资源
+
 ASI
 == 亚洲
 
 Aspect ratio preset
 == 纵横比预设
+
+Aspect ratio preset (0=off, 1=5:4, 2=4:3, 3=3:2, 4=16:9, 5=21:9, 6=custom)
+== 画面纵横比预设（0=关闭，1=5:4，2=4:3，3=3:2，4=16:9，5=21:9，6=自定义）
 
 Asset with this name already exists.
 == 同名材质已存在。
@@ -769,6 +902,9 @@ Audio pack directory
 Audio pack exported.
 == 音频包已导出
 
+Audio packets
+== 音频包
+
 Audio packs
 == 音频包
 
@@ -777,6 +913,9 @@ Audio slots
 
 AUS
 == 澳洲
+
+Auth level required to send phone to others.
+== 你向其他人发送电话所需的身份验证级别
 
 Authed name color in scoreboard
 == 管理权限者名字在计分板上的颜色
@@ -796,6 +935,9 @@ Auto
 auto
 == 自动
 
+Auto adjust prediction margin (fixed base margin when off)
+== 自动调整预测边距（关闭后固定使用基础预测边距）
+
 Auto agree vote
 == 自动同意投票
 
@@ -814,14 +956,26 @@ Auto disable when time expires
 Auto enable in Gores mode
 == Gores 模式自动启用
 
+Auto enable/disable IME on text focus
+== 根据文本输入焦点自动启用或关闭 IME
+
 Auto execute
 == 自动执行
 
 Auto fetch lyrics
 == 自动获取歌词
 
+Auto fetch replay info on refresh
+== 刷新时是否自动获取回放信息
+
 Auto gain control for mic (AGC, experimental)
 == 自动平衡麦克风音量（AGC，实验性）
+
+Auto greet friend on map join
+== 好友进图自动打招呼
+
+Auto greet friend text
+== 好友进图自动打招呼文本
 
 Auto greet friends entering map
 == 自动问候进图的好友
@@ -839,7 +993,10 @@ Auto map vote
 == 自动地图投票
 
 Auto margin
-== Auto margin
+== 自动边距
+
+Auto record demo
+== 自动录制 demo
 
 Auto refresh server list
 == 自动刷新服务器列表
@@ -853,6 +1010,12 @@ Auto reply
 Auto reply cooldown
 == 自动回复冷却
 
+Auto reply cooldown (seconds)
+== 自动回复冷却时间（秒）
+
+Auto save and load background strokes
+== 自动保存并加载背景描线
+
 Auto save chat log
 == 自动保存聊天记录
 
@@ -861,6 +1024,12 @@ Auto start vote
 
 Auto switch to the tee that got unfrozen
 == 自动切换到解冻的 Tee
+
+Auto switch weapon on ammo depletion
+== 弹药耗尽时自动切换武器
+
+Auto switch weapon on pickup
+== 拾取时自动切换武器
 
 Auto team lock
 == 自动锁队
@@ -877,14 +1046,77 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == 解冻自动取消旁观
 
+Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)
+== 达到最小时长后自动处理换图投票（0=关闭，1=反对，2=同意）
+
 Auto weapon switch
 == 自动切锤
+
+Auto-close chat after unfreeze
+== 解冻后自动关闭聊天
+
+Auto-create CSV on game end
+== 游戏结束时自动创建 CSV
+
+Auto-disable speedrun timer when time runs out
+== 时间耗尽后自动禁用速通计时器
+
+Auto-fetch all players' skins for dummy rotation queue
+== 自动获取全图玩家皮肤并作为分身轮换队列
+
+Auto-fetch all players' skins for rotation queue
+== 自动获取全图玩家皮肤并作为轮换队列
+
+Auto-fetch lyrics on detecting new song
+== 检测新歌时自动联网拉取歌词
 
 Auto-follow delay
 == 自动跟随延迟
 
+Auto-follow friend server switch delay (seconds)
+== 自动跟随好友换服延迟（秒）
+
+Auto-lock after joining lockable team
+== 加入可锁定队伍后自动锁定
+
+Auto-lock delay (seconds)
+== 自动锁定延迟（秒）
+
+Auto-login after entering Axiom community server
+== 进入 Axiom 社区服务器后自动登录
+
+Auto-record replay when player sets a new personal best time.
+== 当玩家设定新的个人最佳时间时，自动录制回放。
+
+Auto-refresh server list for friend notifications
+== 好友提醒自动刷新服务器列表
+
+Auto-reply to muted players
+== 自动回复已静音玩家的消息
+
+Auto-reply when game minimized
+== 游戏最小化时自动回复
+
+Auto-save chat log
+== 自动保存聊天记录
+
+Auto-save history count (0=disable)
+== 自动保存历史数量（0=禁用自动过图历史记录）
+
+Auto-screenshot on game end
+== 游戏结束时自动截图
+
+Auto-send emote and chat message when entering freeze
+== 进入冻结时自动发送表情和聊天消息
+
+Auto-switch to first unfrozen when both frozen
+== 本体和分身都被冻结时，自动切换到先解冻的那个
+
 Auto-sync player camera
 == 自动同步玩家视角
+
+Auto-sync with spectated player's camera (0=Off, 1=On when resetting zoom)
+== 如果可用，自动与观看玩家的摄像机设置同步（0 = 禁用，1 = 重置缩放时启用）
 
 Auto-toggle fast input
 == 自动开关快速输入
@@ -898,11 +1130,26 @@ Auto-translate incoming messages
 Auto-translate outgoing messages
 == 自动翻译发送的消息
 
+Auto-translation mode (0=Trigger on common source languages only, 1=Always translate)
+== 自动翻译模式 (0=仅常见源语言输入时触发，1=始终翻译)
+
+Auto-unspec when unfrozen
+== 被解冻时自动取消旁观
+
+Automatic gain control (0=off 1=on)
+== 自动增益控制（0=关闭 1=开启）
+
+Automatic game-end scoreboard screenshot
+== 自动游戏结束统计板屏幕截图
+
 Automatic updates are only supported on Windows
 == 自动更新仅支持 Windows
 
 Automatically adds voting options for all maps
 == 自动为所有地图添加投票选项
+
+Automatically ban blacklisted addresses
+== 自动禁止黑名单地址
 
 Automatically close the current chat after waking from freeze
 == 从冻结状态中醒来自动关闭聊天框
@@ -910,7 +1157,16 @@ Automatically close the current chat after waking from freeze
 Automatically create statboard csv
 == 自动将统计板导出为 csv 文件
 
+Automatically enable Gores auto-switch in Gores game mode
+== 在 Gores 游戏模式中自动启用 Gores 自动切换
+
+Automatically re-join team 0 after finish (only if unlocked).
+== 让队伍在完成后自动重新加入队伍 0（仅当未锁定时）
+
 Automatically record demos
+== 自动录制回放
+
+Automatically record replays
 == 自动录制回放
 
 Automatically reply to muted players
@@ -918,6 +1174,9 @@ Automatically reply to muted players
 
 Automatically reply while the window is unfocused
 == 切屏时自动回复
+
+Automatically switch hammer/gun in Gores mode
+== Gores 模式下自动锤枪切换
 
 Automatically take game over screenshot
 == 自动对游戏结束画面截图
@@ -946,17 +1205,80 @@ Axiom dummy password
 Axiom main account password
 == Axiom 主号密码
 
-Axiom 主号自动登录密码
-== Axiom 主号自动登录密码
-
-Axiom 分身自动登录密码
-== Axiom 分身自动登录密码
-
 Axis
 == 轴
 
+Backend to use (e.g. OpenGL or Vulkan)
+== 要使用的后端（例如 OpenGL 或 Vulkan）
+
 Background
 == 背景
+
+Background (entities)
+== 背景（实体）
+
+Background (entity) color
+== 背景（实体）颜色
+
+Background 3D particle base speed
+== 背景 3D 粒子基础速度
+
+Background 3D particle collision
+== 背景 3D 粒子之间碰撞
+
+Background 3D particle color mode: 1=Custom, 2=Random
+== 背景 3D 粒子颜色模式：1=自定义，2=随机
+
+Background 3D particle count
+== 背景 3D 粒子数量
+
+Background 3D particle custom color
+== 背景 3D 粒子自定义颜色
+
+Background 3D particle depth range
+== 背景 3D 粒子深度范围
+
+Background 3D particle fade-in time
+== 背景 3D 粒子淡入时间
+
+Background 3D particle fade-out time
+== 背景 3D 粒子淡出时间
+
+Background 3D particle flicker intensity
+== 背景 3D 粒子闪烁强度
+
+Background 3D particle glow offset
+== 背景 3D 粒子辉光偏移
+
+Background 3D particle glow opacity
+== 背景 3D 粒子辉光透明度
+
+Background 3D particle margin outside view
+== 背景 3D 粒子视野外保留边距
+
+Background 3D particle maximum size
+== 背景 3D 粒子最大尺寸
+
+Background 3D particle minimum size
+== 背景 3D 粒子最小尺寸
+
+Background 3D particle opacity
+== 背景 3D 粒子透明度
+
+Background 3D particle pulse intensity
+== 背景 3D 粒子脉冲强度
+
+Background 3D particle pulse speed
+== 背景 3D 粒子脉冲速度
+
+Background 3D particle trail length
+== 背景 3D 粒子拖尾长度
+
+Background 3D particle trail opacity
+== 背景 3D 粒子拖尾透明度
+
+Background 3D particle type: 1=Cube, 2=Heart, 3=Mix, 4=Sphere, 5=Pyramid, 6=Diamond, 7=Torus, 8=Star, 9=Crescent
+== 背景 3D 粒子类型：1=方块，2=爱心，3=混合，4=球体，5=金字塔，6=钻石，7=圆环，8=星形，9=月牙
 
 Background color
 == 背景颜色
@@ -964,11 +1286,23 @@ Background color
 Background Draw
 == 背景绘制
 
+Background draw
+== 背景绘制
+
+Background image in menu
+== 菜单中的背景图
+
 Background music volume
 == 背景音乐音量
 
 Background opacity
 == 背景透明度
+
+Background stroke color
+== 背景描边颜色
+
+Background stroke width
+== 背景描边宽度
 
 Ban a certain nickname
 == 禁止某个昵称
@@ -988,8 +1322,14 @@ Ban player with ip/client id for x minutes for any reason
 Ban range in a region
 == 封禁指定区域内的 IP 段
 
-Based on a pile of Windows... stuff
-== 基于 Win 的一坨所拉的一泡
+Ban reason for "sv_dnsbl_ban"
+== “sv_dnsbl_ban”的禁止原因
+
+Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
+== 被投票踢出后的封禁时间（单位：分钟，0 为仅踢出不封禁）
+
+Base path for HTTPS map download URLs to clients
+== 用于向客户端提供 HTTPS 地图下载 URL 的基本路径
 
 Basic
 == 基本
@@ -1010,28 +1350,34 @@ Best
 == 最高
 
 Best input
-== Best input
+== 最佳输入
 
-Best input others
-== Best input others
-
-Best input 平滑百分比
-== Best input 平滑百分比
-
-Best input 延迟补偿百分比
+Best input delay compensation percentage
 == Best input 延迟补偿百分比
 
-Best input 插值模式（1=linear 2=cubic 3=smooth）
+Best input interpolation mode (1=linear 2=cubic 3=smooth)
 == Best input 插值模式（1=linear 2=cubic 3=smooth）
 
-Best input 预测偏移（0.01 tick）
+Best input others
+== 最佳输入（他人）
+
+Best input prediction offset (0.01 tick)
 == Best input 预测偏移（0.01 tick）
+
+Best input smooth percentage
+== Best input 平滑百分比
 
 Best match
 == 最佳匹配
 
+Bind address for client/server
+== 绑定客户端/服务器的地址
+
 Bind key to execute a command or view keybindings
 == 绑定按键以执行命令或查看按键绑定
+
+Bind only to IPv4, otherwise bind to all interfaces
+== 是否仅绑定到 ipv4，否则绑定到所有可用接口
 
 Bind Wheel
 == 绑定轮盘
@@ -1039,11 +1385,20 @@ Bind Wheel
 Bind Wheel Key
 == 唤出滚轮绑键
 
+Bit flags for disabling settings tabs
+== 用于禁用设置标签页的位标志
+
 Black
 == 黑色
 
 Blend mode
 == 叠加模式
+
+Block votes from blacklisted addresses
+== 通过黑名单地址阻止投票
+
+Block words
+== 屏蔽词
 
 Blue
 == 蓝色
@@ -1066,6 +1421,9 @@ Border color
 Border range
 == 边框范围
 
+Borderless window (not for fullscreen)
+== 无边框窗口（不适用于全屏）
+
 Both
 == 两者
 
@@ -1080,6 +1438,15 @@ Brightness shift
 
 Broadcast message
 == 广播消息
+
+Broadcast shown to players using old DDNet client
+== 广播以向使用旧版本 DDNet 客户端的玩家显示
+
+Broadcast shown to players with known bot client
+== 广播以向具有已知机器人客户端的玩家显示
+
+Broadcast shown to players without DDNet client
+== 广播以向没有 DDNet 客户端的玩家显示
 
 Browser
 == 浏览
@@ -1103,7 +1470,7 @@ Button - Enabled
 == 按钮 - 已启用
 
 Button browser
-== Button browser
+== 按键浏览器
 
 Button position is outside of the screen.
 == 按键的位置在屏幕之外。
@@ -1112,13 +1479,13 @@ Buttons
 == 按键
 
 Buttons with this behavior cycle between executing one of two or more specified commands.
-== Buttons with this behavior cycle between executing one of two or more specified commands.
+== 具有此行为的按键会循环执行多个指定命令中的一个。
 
 Buttons with this behavior execute console commands like regular key binds.
-== Buttons with this behavior execute console commands like regular key binds.
+== 具有此行为的按键会像键盘按键绑定一样执行控制台命令。
 
 Buttons with this behavior execute some predefined actions.
-== Buttons with this behavior execute some predefined actions.
+== 具有此行为的按键会执行部分预设动作。
 
 c = Player position
 == c = 玩家坐标
@@ -1137,6 +1504,27 @@ Camera
 
 Camera & FOV
 == 镜头与视野
+
+Camera drift intensity (0-200)
+== 相机漂移强度（0-200）
+
+Camera drift smoothness (0=instant, 100=smoothest)
+== 相机漂移平滑度（0=瞬时，100=最平滑）
+
+Camera follow cursor dead zone
+== 相机跟随光标的死区
+
+Camera follow cursor factor
+== 相机跟随光标的因素
+
+Camera movement transition amount, 0=instant, 100=slow and smooth
+== 相机移动的过渡量，0=即时，100=缓慢且平滑
+
+Camera slowdown during fast cursor movement. High values may cause delayed camera movement
+== 光标快速移动期间相机减速的量。高值可能会导致相机移动延迟
+
+Camera view
+== 摄像机视角
 
 Can only drop onto same-size parts.
 == 只能拖放到同尺寸部件上。
@@ -1178,19 +1566,37 @@ Cannot swap: the other player is not in your team
 == 无法交换：对方不在你的队伍中
 
 Card Appearance
-== Card Appearance
+== 卡片外观
+
+Card appearance
+== 卡片外观
 
 Card background blur (high performance only)
-== Card background blur (high performance only)
+== 卡片背景模糊（仅高性能模式）
 
 Card background blur and corner rounding
-== Card background blur and corner rounding
+== 卡片背景模糊与圆角
+
+Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
+== 卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
 
 Category
 == 分类
 
 Category name
 == 分类名称
+
+Censor replacement character
+== 屏蔽词替换字符
+
+Censor word list (comma-separated)
+== 屏蔽词列表（用 , 分隔）
+
+Center line color (requires tc_show_center)
+== 中心线颜色（需启用 tc_show_center）
+
+Center line width (requires tc_show_center)
+== 中心线宽度（需启用 tc_show_center）
 
 Change indicator offset based on distance to other tees
 == 根据与其他 Tee 的距离更改指示器偏移量
@@ -1222,14 +1628,38 @@ Chat
 Chat background color
 == 聊天背景色
 
+Chat beep volume
+== 聊天提示音量
+
 Chat Binds
 == 聊天绑定
 
-Chat box button appearance settings
-== 聊天框按钮外观设置
+Chat box width
+== 聊天框宽度
 
 Chat Bubble
 == 消息气泡
+
+Chat bubble
+== 聊天气泡
+
+Chat bubble background color
+== 聊天气泡背景颜色
+
+Chat bubble disappear animation (0=Fade, 1=Shrink, 2=Slide up)
+== 聊天气泡消失动画（0=淡出，1=缩小，2=上滑）
+
+Chat bubble display duration (seconds)
+== 聊天气泡显示时长（秒）
+
+Chat bubble font size
+== 聊天气泡字体大小
+
+Chat bubble text color
+== 聊天气泡文字颜色
+
+Chat bubble transparency (0-100)
+== 聊天气泡透明度（0-100）
 
 Chat command
 == 聊天框指令（/）
@@ -1240,6 +1670,9 @@ Chat command (e.g. showall 1)
 Chat export failed
 == 聊天记录导出失败
 
+Chat fade smooth time (milliseconds)
+== 聊天消息淡出平滑时间（毫秒）
+
 Chat font size
 == 聊天字体大小
 
@@ -1249,11 +1682,14 @@ Chat log retention days
 Chat message
 == 聊天消息
 
+Chat messages to send when entering freeze, comma-separated (empty=none)
+== 进入冻结状态时发送的聊天消息，以逗号分隔（空=无消息）
+
+Chat score increases per message and decreases by 1 per tick
+== 每条消息的聊天分数都会增加，并且每次勾选都会减少 1。
+
 Chat sound volume
 == 聊天提示音量
-
-Chat Translate Button UI
-== 聊天翻译按钮 UI
 
 Chat translation settings
 == 聊天翻译设置
@@ -1266,9 +1702,6 @@ Chat word filtering
 
 Check if voice server address is reachable
 == 建议检查语音服务器地址是否可用
-
-Check if your dummy is being bullied while you control the main tee
-== 看看你操控本体的时候分身有没有被别人欺负
 
 Check input device, system default mic, and mic permission first
 == 建议先检查输入设备、系统默认麦克风和麦克风权限
@@ -1294,10 +1727,16 @@ Choose export name first.
 Choose whether to browse replays or screenshots
 == 选择浏览录像还是截图
 
+Clamp mouse to screen
+== 将鼠标限制在屏幕范围内
+
 Clan
 == 战队
 
 Clan color in friends list
+== 好友列表中战队成员条目颜色
+
+Clan member entry color in friend list
 == 好友列表中战队成员条目颜色
 
 Clan Members
@@ -1305,6 +1744,9 @@ Clan Members
 
 Clan Name
 == 战队名称
+
+Clan name size on nameplate
+== 铭牌上战队名称的大小
 
 Clan plates size
 == 战队名称大小
@@ -1387,9 +1829,6 @@ Click to add this community to favorites
 Click to copy map name
 == 点击复制地图名
 
-Click to copy QQ group number
-== 点击复制 QQ 群号
-
 Click to copy the map name
 == 点击复制地图名
 
@@ -1429,11 +1868,20 @@ Client data overview
 Client frame time is abnormal
 == 客户端帧时间异常
 
+Client ID size on nameplate
+== 铭牌中客户端 ID 的大小
+
 Client IDs size
 == 客户端 ID 大小
 
 Client message
 == 客户端消息
+
+Client message color
+== 客户端消息颜色
+
+Client message text gradient color
+== 客户端消息文字渐变颜色
 
 Client performance pressure is high
 == 客户端性能压力偏高
@@ -1444,6 +1892,9 @@ Client prediction time is high
 Client uptime
 == 客户端启动时间
 
+Clock drift hard cut threshold (ms)
+== 时钟漂移硬切阈值 ms
+
 Clock drift hard-snap
 == 时钟漂移硬切阈值
 
@@ -1453,8 +1904,35 @@ Close
 Close the demo player
 == 关闭回放
 
+Close window after changing settings
+== 更改设置后关闭窗口
+
+Collision hitbox
+== 碰撞箱
+
+Collision Line Opacity
+== 碰撞体积线条透明度
+
 Color
 == 颜色
+
+Color of authenticated player names on scoreboard
+== 计分板中已认证玩家的名称颜色
+
+Color of hook collision line tip segment
+== 指定钩子碰撞线末端提示段的颜色。
+
+Color of hook line hitting hookable tile
+== 指定击中可挂钩图块的挂钩线的颜色。
+
+Color of hook line hitting tee
+== 指定击中球座的钩线的颜色。
+
+Color of hook line not hitting anything
+== 指定未触及任何物体的钩线的颜色。
+
+Colorize ping on scoreboard
+== 计分板中是否对 ping 值着色
 
 Colors
 == 颜色
@@ -1471,11 +1949,23 @@ Colors of the hook collision line, in case of a possible collision with:
 Combo
 == 连击
 
+Comma-separated list of banned clients to be kicked on join
+== 加入时将被踢出的以逗号分隔的被禁止客户端列表
+
 Command
 == 命令
 
+Command executed by tc_mod_weapon, target id appended at end
+== tc_mod_weapon 执行的命令，目标 id 会附加在命令末尾
+
+Command executed when pointing at someone and shooting (default kill, only works when remote console is authenticated)
+== 指向某人并射击时执行命令（默认 kill，仅在远程控制台已鉴权时生效）
+
 Command is not available on solo servers
 == 这个命令在 solo 服务器上不可用
+
+Command to run when joining server
+== 加入服务器时运行的命令
 
 Command:
 == 指令：
@@ -1492,17 +1982,38 @@ Communities
 Community
 == 社区
 
-Community links, updates, and sponsors moved to the Contributors tab
-== 社区链接、更新与赞助名单已移到贡献者页
-
 Compact
 == 紧凑列表
+
+Compatible with single-player area hints from other servers
+== 兼容其他服务器的类似单人区域提示
+
+Compressor attack time (ms)
+== 压缩器攻击时间（毫秒）
+
+Compressor makeup gain (percent)
+== 压缩器补偿增益（百分比）
+
+Compressor ratio (x10)
+== 压缩器比率（x10）
+
+Compressor release time (ms)
+== 压缩器释放时间（毫秒）
+
+Compressor threshold (percent)
+== 压缩器阈值（百分比）
 
 Concurrency (0 = auto)
 == 并发数（0 = 自动）
 
+Concurrent requests when refreshing server browser
+== 刷新服务器浏览器时使用的并发请求数
+
 Config
 == 配置
+
+Config Changes
+== 配置更改
 
 Config directory
 == 配置目录（cfg）
@@ -1513,8 +2024,17 @@ Config file: data/input_overlay.json
 Config Files
 == 配置文件
 
+Config Filters
+== 配置过滤器
+
+Config version. Helps new client fix old config errors.
+== 配置版本。帮助新客户修复旧配置的错误。
+
 Configs
 == 客户端配置
+
+Configuration
+== 配置
 
 Configure background 3D particle effects
 == 配置背景 3D 粒子效果
@@ -1533,6 +2053,12 @@ Confirm clear all
 
 Confirm clear finished
 == 确认清空已完成
+
+Confirm disconnect after game end (minutes, -1 off, 0 always)
+== 游戏结束后断开连接之前弹出确认窗口（以分钟为单位，-1 表示关闭，0 表示始终打开）
+
+Confirm quit after game end (minutes, -1 off, 0 always)
+== 游戏结束后退出前弹出确认窗口（以分钟为单位，-1 关闭，0 始终打开）
 
 Connect address error
 == 连接地址错误
@@ -1594,11 +2120,23 @@ Connection severely abnormal
 Connection upstream
 == 连接上行
 
+Connlimit: number of connections allowed per IP in a time period
+== Connlimit：一个 IP 在一段时间内允许的连接数
+
+Connlimit: time window for IP connection count
+== Connlimit：IP 连接数统计时间
+
 Console
 == 控制台
 
 Console color
 == 控制台颜色
+
+Console command executed after joining server
+== 进入服务器后执行的控制台命令
+
+Console command executed before connecting to server
+== 连接服务器前执行的控制台命令
 
 Continue anyway?
 == 仍要退出？
@@ -1609,8 +2147,23 @@ Contributors
 Control dummy
 == 控制分身
 
+Control player (0) or dummy (1)
+== 控制玩家（0）还是分身（1）
+
 Controller
 == 手柄
+
+Controller axis for cursor X
+== 控制光标 X 轴的控制器轴
+
+Controller axis for cursor Y
+== 控制光标 Y 轴的控制器轴
+
+Controller axis tolerance for jitter
+== 考虑抖动的控制器轴容差
+
+Controller GUID of the active controller
+== 唯一标识活动控制器的控制器 GUID
 
 Controller jitter tolerance
 == 摇杆死区
@@ -1623,6 +2176,12 @@ Converse
 
 Converse with the last person you whispered to (private message)
 == 与上一个私聊对象继续对话（私聊）
+
+Coordinate size on nameplate
+== 铭牌中坐标的大小
+
+Coordinates
+== 坐标
 
 Coords size
 == 坐标大小
@@ -1642,8 +2201,11 @@ Copy name
 Copy skin
 == 复制皮肤
 
+Copy skin option color
+== 复制皮肤选项颜色
+
 Corner segments
-== Corner segments
+== 圆角分段数
 
 Could not check for existing player with your name. Check your internet connection.
 == 无法验证是否已存在相同名称的玩家。请检查你的网络连接。
@@ -1655,10 +2217,10 @@ Could not create report scan request
 == 创建举报扫描请求失败
 
 Could not find a Tutorial server. Check your internet connection.
-== Could not find a Tutorial server. Check your internet connection.
+== 未找到教程服务器。请检查你的网络连接。
 
 Could not find online Tutorial server.\nStarting and connecting to local server…
-== Could not find online Tutorial server.\nStarting and connecting to local server…
+== 未找到在线教程服务器。\n 正在启动并加入本地服务器…
 
 Could not find your Team
 == 找不到你的队伍
@@ -1699,11 +2261,17 @@ Count players only
 Countries
 == 国家
 
+Country flag for grouping this community (ISO 3166-1 numeric)
+== 将此社区分组的国家/地区标志（ISO 3166-1 数字）
+
+CP border overlay alpha (0-100)
+== CP 点边界的覆盖实体 alpha（0-100）
+
 CP opacity
 == CP 点不透明度
 
-CP点边界的覆盖实体 alpha (0-100)
-== CP 点边界的覆盖实体 alpha（0-100）
+Crazy shotgun bullet sound on/off
+== 疯狂霰弹枪子弹声音开/关
 
 Create a random skin
 == 随机创造皮肤
@@ -1719,6 +2287,15 @@ Credits
 
 Crescent
 == 月牙
+
+CRF value for libx264 video encoding (0=best quality, 51=worst)
+== 使用 libx264 编码视频时的 CRF 值（0 为最高质量，51 为最低）
+
+Crosshair opacity in free spectate
+== 自由视角旁观时准星透明度
+
+Ctrl+right-click a tile to select its layer in editor
+== Ctrl+右键单击图块以在编辑器中选择其图层
 
 Cube
 == 方块
@@ -1740,6 +2317,9 @@ Current file
 
 Current line color
 == 当前行颜色
+
+Current line lyric color
+== 歌词当前行颜色
 
 Current rescue mode: %s
 == 当前救援模式：%s
@@ -1771,14 +2351,35 @@ Custom API key
 Custom aspect ratio
 == 自定义宽高比
 
+Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)
+== 自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
+
 Custom colors
 == 自定义颜色
+
+Custom community list fetch URL (must be https, leave empty to disable)
+== 自定义社区列表的获取 URL（必须是 https，留空则禁用）
+
+Custom font
+== 自定义字体
 
 Custom Font:
 == 自定义字体：
 
 Custom prompt template
 == 自定义提示词模板
+
+Custom Provider API Key
+== 自定义 Provider API Key
+
+Custom Provider endpoint
+== 自定义 Provider 端点
+
+Custom Provider model name
+== 自定义 Provider 模型名称
+
+Custom translation prompt (overrides built-in)
+== 自定义翻译提示词（覆盖内置提示词）
 
 Customize translate button and menu colors
 == 自定义翻译按钮和菜单颜色
@@ -1798,17 +2399,23 @@ Cute:
 Cycle custom Tee hue
 == 循环自定义 Tee 色调
 
+Cycle custom Tee hue for dummy simultaneously
+== 同时循环分身自定义 Tee 色调
+
+Cycle custom Tee hue for main
+== 循环本体自定义 Tee 色调
+
+Cycle custom Tee hue speed (deg/s)
+== 循环本体自定义 Tee 色调速度（度/秒）
+
 Cycle through emotes
 == 循环显示表情
 
 d = Prediction latency
 == d = 预测延迟
 
-Damn grenadiers, all go to spa!
-== 他妈的炸弹人全给我去 Spa！
-
-Damn grenadiers, just die!
-== 他妈的炸弹人都给我死啊！
+Darken Tee color when frozen (0-100)
+== 冻结时加深 Tee 颜色（0-100）
 
 Data
 == 数据
@@ -1876,17 +2483,47 @@ Deactivate all
 Death opacity
 == 死亡不透明度
 
+Death tile outline color
+== 死亡图块轮廓颜色
+
+Death tile outline width
+== 死亡图块轮廓宽度
+
 Deaths
 == 死亡数
+
+Debug Curl.
+== 调试卷曲
 
 Debug graph
 == 调试图表
 
+Debug graph panel opacity (percent)
+== 调试图表面板不透明度（百分比）
+
+Debug group clipping.
+== 调试组裁剪
+
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == 调试模式已启用。按 Ctrl+Shift+D 禁用调试模式。
 
+Debug mode.
+== 调试模式
+
 Debug performance graph panel
 == 调试性能图表面板
+
+Debug quad layer clipping.
+== 调试四层裁剪
+
+Debug quad layer cluster clipping.
+== 调试四层簇裁剪
+
+Debug SQL.
+== 调试 SQL
+
+Debug tile layer clipping.
+== 调试图块图层裁剪
 
 Deep freeze color
 == 深度冻结颜色
@@ -1894,13 +2531,19 @@ Deep freeze color
 Deep freeze opacity
 == 深度冻结不透明度
 
+Deep freeze tile outline color
+== 深冻图块轮廓颜色
+
 Deep unfreeze color
 == 深度解冻颜色
 
 Deep unfreeze opacity
 == 深度解冻不透明度
 
-Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
+Deep unfreeze tile outline color
+== 深解冻图块轮廓颜色
+
+Deepfly mode (0=Normal, 1=DF, 2=HDF, 3=Custom)
 == Deepfly 模式（0=正常，1=DF，2=HDF，3=自定义）
 
 DeepSeek
@@ -1912,17 +2555,20 @@ DeepSeek API Key
 DeepSeek API key
 == DeepSeek API 密钥
 
-DeepSeek 模型名称
-== DeepSeek 模型名称
-
-DeepSeek 端点（留空使用默认）
+DeepSeek endpoint (leave empty for default)
 == DeepSeek 端点（留空使用默认）
+
+DeepSeek model name
+== DeepSeek 模型名称
 
 Default
 == 默认
 
 default
 == 默认
+
+Default display mode for time: game/round timer or broadcast. 0 = game/round timer, 1 = broadcast, 2 = 0+1, 3 = none
+== 显示时间的默认方式是游戏/回合计时器或广播。0 = 游戏/回合计时器，1 = 广播，2 = 0+1，3 = 无
 
 Default input open failed
 == 默认输入打开失败
@@ -1936,11 +2582,32 @@ Default output open failed
 Default preset
 == 默认预设
 
+Default weapon on respawn (0=Off, 1=Hammer, 2=Pistol, 3=Shotgun, 4=Grenade, 5=Laser)
+== 重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
+
 Default zoom
 == 默认缩放
 
+Default zoom level
+== 默认缩放级别
+
 Delay
 == 延迟
+
+Delay before executing tc_execute_on_join (milliseconds)
+== 执行 tc_execute_on_join 前的延迟（毫秒）
+
+Delay before new players can start votes or participate in kick/spectate votes (seconds)
+== 新加入玩家发起投票或参与踢人/观战投票前的延迟（单位：秒）
+
+Delay between rescues (seconds)
+== 两次营救之间的延迟（单位：秒）
+
+Delay between SQL queries for a single player (in seconds)
+== 单个玩家的 SQL 查询之间的延迟（以秒为单位）
+
+Delay in seconds before loading a saved game or swapping
+== 加载保存游戏或交换之前延迟几秒
 
 Delete
 == 删除
@@ -1982,7 +2649,7 @@ Demo marker added
 == 已添加回放标记
 
 Demo player is currently active.
-== Demo player is currently active.
+== 回放播放器正在运行。
 
 Demo target
 == Demo 目标
@@ -2005,11 +2672,41 @@ Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <
 Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'
 == 已弃用。使用“vote_muteid <client_id> <秒数> <原因>”或“vote_muteip <ip> <秒数> <原因>”
 
+Deprecated: jump hint color, migrated to qm_jump_hint_color on startup
+== 已废弃：跳跃提示颜色，启动时迁移到 qm_jump_hint_color
+
+Deprecated: jump hint font size, migrated to qm_jump_hint_size on startup
+== 已废弃：跳跃提示字体大小，启动时迁移到 qm_jump_hint_size
+
+Deprecated: jump hint text, migrated to qm_jump_hint_text on startup (use \n for newline)
+== 已废弃：跳跃提示文本，启动时迁移到 qm_jump_hint_text（使用\n 换行）
+
+Deprecated: jump hint toggle, migrated to qm_jump_hint on startup
+== 已废弃：跳跃提示开关，启动时迁移到 qm_jump_hint
+
+Deprecated: jump hint X position, migrated to qm_jump_hint_x on startup
+== 已废弃：跳跃提示水平位置，启动时迁移到 qm_jump_hint_x
+
+Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
+== 已废弃：跳跃提示垂直位置，启动时迁移到 qm_jump_hint_y
+
+Depth freeze tile overlay alpha (0-100)
+== 深度冻结图块的叠加实体 alpha (0-100)
+
+Depth unfreeze tile overlay alpha (0-100)
+== 深度解冻图块的叠加实体 alpha (0-100)
+
 Deselect
 == 取消选择
 
 Desktop fullscreen
 == 无边框全屏
+
+Destroy player's bullets on death
+== 玩家死亡时销毁其子弹
+
+Destroy player's lasers on death
+== 玩家死亡时销毁其激光
 
 Detailed reason
 == 详细原因
@@ -2022,9 +2719,6 @@ Detection distance
 
 Detection time
 == 判定时间
-
-Developers and sponsors
-== 开发以及赞助者
 
 DF
 == DF
@@ -2053,6 +2747,12 @@ disable
 Disable after picking up other weapons
 == 拿到其他武器时停用
 
+Disable clipping
+== 禁用裁剪
+
+Disable Gores auto-switch when picking up extra weapon
+== 拿到额外武器时停用 Gores 自动切换
+
 Disable QmLive team preview/render filter
 == 关闭 QmLive 队伍预览/渲染过滤
 
@@ -2061,6 +2761,9 @@ Disabled
 
 Disagree
 == 反对
+
+Disallow chat from blacklisted addresses
+== 不允许来自黑名单地址的聊天
 
 Discard
 == 舍弃更改
@@ -2082,6 +2785,9 @@ Disconnected
 
 Discord
 == Discord
+
+Display index
+== 画面索引
 
 Display mode
 == 显示模式
@@ -2152,6 +2858,27 @@ Distance fade per line
 Distance scale falloff
 == 远离行缩小幅度
 
+Distant line opacity decay per line (%)
+== 远离行每行透明度衰减 %
+
+Distant line shrink per line (%)
+== 远离行每行缩小百分比
+
+Do not auto-show server info on entering map
+== 进图时不自动显示服务器信息
+
+Do not predict other players when frozen
+== 自己被冻结时不预测其他玩家
+
+Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
+== 不要设置此变量，而是在 settings_ddnet.cfg 旁边创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+Do not set, used to mark official tutorial server
+== 这个不要设置，用来标记官方教程服务器
+
+Do not show Tees visible on screen
+== 不显示屏幕内可见的 Tee
+
 Do not translate server messages
 == 不翻译服务器消息
 
@@ -2170,8 +2897,14 @@ DONT USE THIS! USE add_bindwheel INSTEAD!
 Door Laser Inner Color
 == 激光门实心颜色
 
+Door laser inner color
+== 门内激光颜色
+
 Door Laser Outline Color
 == 激光门外框颜色
+
+Door laser outline color
+== 门的激光轮廓颜色
 
 Download community skins
 == 下载社区皮肤
@@ -2181,6 +2914,9 @@ Download failed
 
 Download skins
 == 下载官方皮肤
+
+Download skins immediately from cl_skin_download_url
+== 从 cl_skin_download_url 即时下载皮肤
 
 Download this asset?
 == 确定要下载此资源吗？
@@ -2195,7 +2931,7 @@ Downloading update...
 == 正在下载更新……
 
 Downscaled (0.78)
-== 降采样缩放 (0.78)
+== 缩小 (0.78)
 
 Drag HUD modules with the left mouse button
 == 按住鼠标左键拖动 HUD 模块
@@ -2203,23 +2939,32 @@ Drag HUD modules with the left mouse button
 Dragger Inner Color
 == 光索实心颜色
 
+Dragger laser inner color
+== 拖拉机的激光内部颜色
+
+Dragger laser outline color
+== 拖动器的激光轮廓颜色
+
 Dragger Outline Color
 == 光索外框颜色
 
-Dragging, collapsing, search, and usage history are preserved per category
-== 拖拽、折叠、搜索和使用历史会在每个分类中保留
+Draw lines showing screen/clickbox center
+== 绘制线条显示屏幕/点击框中心
 
 Draw on the in game background
 == 在游戏背景上绘制
+
+Draw shadow behind emote
+== 在表情后绘制阴影
+
+Draw tile layers when using custom background (solid)
+== 使用自定义背景（实体）时是否绘制图块图层
 
 Draw where mouse is
 == 绘制鼠标所在位置
 
 Draw!
 == 平局！
-
-Drawing a big pie in the sky
-== 画一张大饼
 
 Dream Features
 == 梦的小功能
@@ -2242,17 +2987,56 @@ Dummies are not allowed on this server
 Dummy
 == 分身
 
+Dummy body color
+== 分身身体颜色
+
+Dummy body skin
+== 分身身体皮肤
+
+Dummy clan
+== 分身的战队
+
 Dummy Control: %s
 == 分身控制：%s
 
 Dummy copy
 == 分身同步动作
 
+Dummy country (ISO 3166-1 numeric)
+== 分身的国家（ISO 3166-1 数字码）
+
+Dummy decoration color
+== 分身装饰颜色
+
+Dummy eyes color
+== 分身眼睛颜色
+
+Dummy eyes when joining server (0=normal, 1=pain, 2=happy, 3=surprised, 4=angry, 5=blink)
+== 加入服务器时分身的眼睛（0 = 正常，1 = 痛苦，2 = 开心，3 = 惊讶，4 = 生气，5 = 眨眼）
+
+Dummy feet color
+== 分身脚颜色
+
+Dummy feet color (dummy_color_feet)
+== 分身脚部颜色
+
+Dummy feet skin
+== 分身脚部皮肤
+
 Dummy fire
 == 分身开火
 
 Dummy hammer fly
 == 分身锤飞
+
+Dummy hammering (for hammer fly)
+== 分身是否正在敲锤子（用于锤子飞）
+
+Dummy hand color
+== 分身手部颜色
+
+Dummy hand skin
+== 分身手部皮肤
 
 Dummy hook
 == 分身钩
@@ -2266,8 +3050,41 @@ Dummy is currently connected.
 Dummy jump
 == 分身跳
 
+Dummy marking color
+== 分身标记颜色
+
 Dummy mini view
 == 分身小窗
+
+Dummy mini view size (percent)
+== 分身迷你视图大小（百分比）
+
+Dummy mini view zoom (percent)
+== 分身迷你视图缩放（百分比）
+
+Dummy name
+== 分身的名称
+
+Dummy skin
+== 分身皮肤
+
+Dummy skin decoration
+== 分身皮肤装饰
+
+Dummy skin eyes
+== 分身皮肤眼睛
+
+Dummy skin marking
+== 分身皮肤标记
+
+Dummy skin queue current position
+== 分身皮肤队列当前位置
+
+Dummy skin queue max length
+== 分身皮肤队列最大长度
+
+Dummy skin queue switch interval (ms)
+== 分身皮肤队列切换间隔（毫秒）
 
 Dummy sync: %s
 == 分身同步：%s
@@ -2299,20 +3116,47 @@ Duplicate
 Duration
 == 持续时间
 
+Duration in seconds to mute a player for spam triggering. 0 = off
+== 如果玩家对垃圾邮件触发静音，则静音多少秒。0 = 关闭
+
+Duration of smooth zoom animation in game (ms) (0 = off)
+== 游戏中平滑缩放动画的时间（以毫秒为单位）（0 表示关闭）
+
 Dynamic Camera
 == 动态视野
+
+Dynamic camera follow cursor dead zone
+== 动态相机跟随光标的死区
+
+Dynamic camera follow cursor factor
+== 动态相机跟随光标的因素
 
 Dynamic FOV intensity
 == 动态视野强度
 
+Dynamic FOV intensity (0-200)
+== 动态视野强度（0 - 200）
+
 Dynamic FOV smoothness
 == 动态视野平滑度
+
+Dynamic FOV smoothness (0=instant, 100=smoothest)
+== 动态视野平滑度（0 = 瞬时，100 = 最平滑）
 
 Dynamic Island
 == 灵动岛
 
-Each tab has a clear purpose
-== 每个标签页都有明确职责
+Dynamic island
+== 动态岛
+
+Dynamic Island background alpha
+== 灵动岛背景透明度
+
+Dynamic Island background color
+== 灵动岛背景颜色
+
+Dynamic Island HUD editor edge margin px
+== 灵动岛 HUD 编辑器贴边外边距 px
 
 Ease in out quad
 == 缓入缓出二次
@@ -2368,6 +3212,15 @@ Elastic back
 Elevated
 == 提升的
 
+Emote and binding wheel animation duration (ms, 0=No animation, 1000=1 sec)
+== 表情轮和绑定轮动画时长（毫秒，0=无动画，1000=1 秒）
+
+Emote assets
+== 表情资源
+
+Emote ID to send when entering freeze (0-15)
+== 进入冻结状态时发送的表情 ID（0-15）
+
 Emotes are disabled.
 == 本服务器已禁用表情功能
 
@@ -2386,11 +3239,47 @@ Emoticons
 enable
 == 开启
 
+Enable /swap
+== 启用/交换
+
+Enable /team0 mode
+== 启用 /team0 模式
+
 Enable 3D background particles
 == 启用 3D 背景粒子
 
+Enable absolute controller aiming in game
+== 在游戏中启用绝对控制器瞄准
+
+Enable antiping (more aggressive prediction)
+== 启用抗延迟，即更激进的预测
+
+Enable background 3D particle flicker
+== 启用背景 3D 粒子闪烁
+
+Enable background 3D particle glow
+== 启用背景 3D 粒子辉光
+
+Enable background 3D particle pulse scaling
+== 启用背景 3D 粒子脉冲缩放
+
+Enable background 3D particle trail
+== 启用背景 3D 粒子拖尾
+
+Enable basic anti-spoof
+== 启用普通反欺骗
+
 Enable camera drift
 == 启用镜头漂移
+
+Enable camera drift effect, slightly drags camera based on speed
+== 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
+
+Enable chat mention sound
+== 启用聊天被提及消息提示音
+
+Enable chat message sound
+== 启用聊天消息提示音
 
 Enable chat with all/team mode
 == 启用与所有人/队伍聊天模式
@@ -2398,17 +3287,65 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == 为你当前队伍启用作弊，但将无法获得排名
 
+Enable colored console output
+== 启用控制台彩色输出
+
+Enable coloring and hearts for friends
+== 为朋友启用着色和爱心
+
 Enable controller
 == 使用手柄
+
+Enable custom prediction margin when frozen
+== 冻结时启用自定义预测边距
 
 Enable Deleting
 == 启用删除
 
+Enable Discord RPC (requires restart)
+== 启用 Discord RPC（需要重启）
+
+Enable DNSBL (DNS-based Blackhole List)
+== 启用 DNSBL（基于 DNS 的黑洞列表）
+
+Enable dummy skin queue rotation
+== 启用分身皮肤队列轮换
+
 Enable dummy window
 == 启用分身小窗
 
+Enable dynamic camera
+== 启用动态摄像头
+
 Enable dynamic FOV
 == 启用动态视野
+
+Enable dynamic FOV, wider view at higher speed
+== 启用动态视野，移动越快视野越宽
+
+Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
+== 是否启用表情符号换眼功能 = 1，不启用 = 0，-1 不启用
+
+Enable enhanced laser effect (glow + pulse animation)
+== 启用增强激光特效（辉光+脉冲动画）
+
+Enable event triggers (server eye-emotes on holidays, client Christmas skin)
+== 启用事件触发（服务器在某些节日的眼睁表情，客户端的圣诞皮肤）
+
+Enable fast input for other players in Gores mode
+== Gores 模式下对其他玩家也启用快速输入
+
+Enable fast input in Gores mode
+== Gores 模式下启用快速输入
+
+Enable fast map download
+== 实现地图的快速下载
+
+Enable fat skin
+== 启用脂肪皮
+
+Enable freeze call sound
+== 启用冻结呼叫声
 
 Enable FTAPI auto-translate (may overload the service)
 == 启用 FTAPI 自动翻译（可能导致服务过载）
@@ -2422,23 +3359,56 @@ Enable ghost
 Enable Gores mode
 == 启用 Gores 模式
 
+Enable Gores mode (King of Gores helper tools)
+== 启用 Gores 模式（King of Gores 辅助工具集合）
+
 Enable gun sound
 == 启用手枪声音
 
 Enable highlighted chat sound
 == 启用聊天被提及消息提示音
 
+Enable HUD animations
+== 启用 HUD 动画
+
+Enable HUD rainbow colors
+== 启用 HUD 彩虹色
+
+Enable in-game touch controls
+== 启用游戏内触摸控制
+
 Enable Jelly Tee
 == 启用 Q 弹 Tee
+
+Enable KCP/legacy transport statistics query and sample output
+== 启用 KCP/legacy 传输统计查询与采样输出
+
+Enable keyboard shortcuts in replay player
+== 在回放玩家中启用键盘快捷键
 
 Enable keyword reply
 == 启用关键词回复
 
+Enable left swipe offset on chat fade
+== 聊天消息淡出时启用左滑偏移
+
+Enable LLM thinking mode (may increase response time)
+== 启用 LLM 思考模式（可能增加响应时间）
+
+Enable local lyrics cache
+== 启用本地歌词缓存
+
 Enable long pain sound (used when shooting in freeze)
 == 启用冻结呼叫声
 
+Enable lyric HUD overlay
+== 启用歌词 HUD 叠加层
+
 Enable lyrics
 == 启用歌词
+
+Enable main thread and render stage performance debug logging
+== 启用主线程与渲染阶段性能调试日志
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == 使用指定 bug 启用地图兼容模式（例如：grenade-doubleexplosion@ddnet.tw）
@@ -2446,8 +3416,47 @@ Enable map compatibility mode using the specified bug (example: grenade-doubleex
 Enable mod weapon on %d: %s
 == 在 %d 上启用模组武器：%s
 
+Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
+== 启用 MySQL 后端而不是 SQLite 后端（当没有 MySQL 服务器可访问时，sv_sqlite_file 仍用作后备写入服务器）
+
+Enable new IME candidate bar
+== 启用新版 IME 候选栏
+
+Enable new settings page UI
+== 启用新版设置页面 UI
+
+Enable Pie Menu
+== 启用饼菜单
+
 Enable pie menu
 == 启用饼菜单
+
+Enable pistol sound
+== 启用手枪声音
+
+Enable player statistics panel
+== 启用玩家统计面板
+
+Enable practice commands by default. Requires sv_test_cmds 1
+== 默认启用练习命令。需要 sv_test_cmds 1
+
+Enable practice mode for teams. Allows /rescue but scores not recorded
+== 为队伍启用练习模式。意味着可以使用 /rescue，但成绩不计入排行榜
+
+Enable QmClient style background 3D particles
+== 启用 QmClient 风格背景 3D 粒子
+
+Enable rainbow rendering for hook
+== 启用钩子彩虹渲染
+
+Enable rainbow rendering for other players' Tees
+== 对其他玩家也启用 Tee 彩虹渲染
+
+Enable rainbow rendering for Tee
+== 启用 Tee 彩虹渲染
+
+Enable rainbow rendering for weapon
+== 启用武器彩虹渲染
 
 Enable regular chat sound
 == 启用聊天消息提示音
@@ -2455,17 +3464,44 @@ Enable regular chat sound
 Enable repeat
 == 启用复读
 
+Enable repeat function
+== 启用复读功能
+
 Enable replays
 == 启用短时回放
+
+Enable saving games (/save and /load)
+== 启用保存游戏（/保存和/加载）
 
 Enable server message sound
 == 启用服务器消息提示音
 
+Enable Sixup connection.
+== 启用 Sixup 连接
+
 Enable skin queue rotation
 == 启用皮肤队列轮换
 
+Enable skin switch animation
+== 启用皮肤切换动画
+
+Enable sound
+== 声音启用
+
+Enable sound when rendering video
+== 渲染视频时启用声音
+
+Enable spectator cursor (if available)
+== 启用观看玩家的光标（如果可用）
+
 Enable speedrun timer
 == 启用速通计时器
+
+Enable squishy Tee deformation
+== 启用 Q 弹 Tee 形变
+
+Enable status bar
+== 启用状态栏
 
 Enable stereo positioning
 == 启用立体声定位
@@ -2473,8 +3509,20 @@ Enable stereo positioning
 Enable system media control
 == 启用系统媒体控制
 
+Enable system media lyrics
+== 启用系统媒体歌词
+
+Enable system media transport control integration
+== 启用系统媒体传输控制集成
+
+Enable team chat message sound
+== 启用队伍聊天消息提示音
+
 Enable team chat sound
 == 启用队伍聊天消息提示音
+
+Enable Tee trail
+== 启用 Tee 轨迹
 
 Enable tee trails
 == 启用 Tee 拖尾
@@ -2482,8 +3530,32 @@ Enable tee trails
 Enable thinking mode (slower)
 == 启用思考模式（较慢）
 
+Enable tile outlines
+== 启用图块轮廓
+
+Enable UDP KCP transport negotiation (old clients keep legacy UDP, hot-switch fallback)
+== 启用 UDP 上层 KCP 传输协商（旧客户端保持 legacy UDP，可热关闭回退）
+
+Enable UI runtime v2 debug logging
+== 启用 UI 运行时 v2 调试日志
+
+Enable UPnP support (requires -DCONF_UPNP=ON at compile time).
+== 启用 UPnP 支持。（编译时需要-DCONF_UPNP=ON）
+
+Enable visual markers for enemy list
+== 启用敌对列表视觉标记
+
 Enable voice
 == 启用语音
+
+Enable voice activation (VAD)
+== 启用语音激活（VAD）
+
+Enable voice chat
+== 启用语音聊天
+
+Enable voice filtering (highpass/compressor/limiter)
+== 启用语音滤波（高通/压缩/限幅）
 
 Enable warlist
 == 启用敌对列表
@@ -2491,11 +3563,32 @@ Enable warlist
 Enable word filter list
 == 启用屏蔽词列表
 
+Enable word-by-word highlighting
+== 启用歌词逐字高亮
+
+Enable Zen Mode
+== 启用禅模式（Zen Mode）
+
 Enable Zen mode
 == 启用禅模式
 
+Enable/disable infinite hook.
+== 打开/关闭无限挂钩
+
+Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others
+== 启用/禁用四边形对齐。启用后，红线显示移动四边形/点时如何对齐并捕捉到其他四边形/点
+
+Enable/disable replays
+== 启用/禁用重播
+
+Enable/disable test commands (aka cheats) (setting only effective in initial config).
+== 打开/关闭测试命令（又名作弊）（设置仅在初始配置中有效）
+
 Enables/disables active moderator mode for the player
 == 启用/禁用该玩家的活跃管理员模式
+
+End marker of replay slice
+== 回放切片的结束标记
 
 Endless hook has been activated
 == 无限钩已开启
@@ -2524,14 +3617,23 @@ Entities
 Entities background color
 == 实体层背景颜色
 
+Entity assets
+== 实体的资产
+
 Entity Background Image
 == 实体层背景图
 
 Entity Layer Colors
 == 实体层颜色
 
+Entity overlay
+== 实体层叠加
+
 Entity Preview
 == 实体层预览
+
+Entity wall outline opacity
+== 实体墙轮廓透明度
 
 entity_bg (Workshop)
 == entity_bg（Workshop）
@@ -2546,7 +3648,7 @@ Error checking player name
 == 检查玩家名称时出错
 
 Error joining Tutorial server
-== Error joining Tutorial server
+== 加入教程服务器失败
 
 Error loading communities
 == 加载社区列表失败
@@ -2611,9 +3713,6 @@ Execute the specified file
 Existing Player
 == 玩家已存在
 
-Expand module
-== 展开模块
-
 Export
 == 导出
 
@@ -2641,8 +3740,14 @@ Exported %d chat messages
 Exported to %s
 == 已导出到 %s
 
+External console password. Must be set to enable economy.
+== 外部控制台密码。需要设置此选项才能启用经济。
+
 Extra animations
 == 额外动画
+
+Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
+== 额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
 
 Extras
 == 其他
@@ -2661,6 +3766,9 @@ Fade in
 
 Fade only
 == 仅淡入淡出
+
+Fade opacity along trail length
+== 沿轨迹长度逐渐淡出透明度
 
 Fade out
 == 淡出
@@ -2717,7 +3825,7 @@ Fallback simple noise reduction strength
 == 回退后的简单降噪强度
 
 Fast input
-== Fast input
+== 快速输入
 
 Fast input (reduce visual latency)
 == 快速输入（降低视觉延迟）
@@ -2747,7 +3855,7 @@ Favorites
 == 收藏夹
 
 feat-003 dogfood: tokens + 12 widgets
-== feat-003 dogfood: token + 12 个控件
+== feat-003 dogfood：tokens + 12 widgets
 
 Feature Search
 == 功能搜索
@@ -2758,6 +3866,12 @@ Feet
 Fetch Info
 == 回放信息
 
+Fifo file (non-Windows) or named pipe (Windows) for server console input
+== Fifo 文件（非 Windows）或命名管道 (Windows) 用作服务器控制台的输入
+
+Fifo file (non-Windows) or named pipe (Windows) used as input for client console
+== Fifo 文件（非 Windows）或命名管道 (Windows) 用作客户端控制台的输入
+
 File
 == 文件
 
@@ -2767,17 +3881,56 @@ File '%s' already exists, do you want to overwrite it?
 File already exists, do you want to overwrite it?
 == 文件已存在，是否覆盖？
 
+File executed on map change/reload to set default server settings
+== 在地图更改或重新加载时执行的文件以设置默认服务器设置
+
+File for storing ranks if sv_use_sql is disabled or as backup SQL server.
+== 用于存储排名的文件，以防 sv_use_sql 关闭或用作备份 sql 服务器
+
+File with announcements, one per line.
+== 包含公告的文件，每行一个
+
+Filter chat messages by regular expression
+== 按正则表达式过滤聊天消息
+
 Filter connecting players
 == 筛选正在连接的玩家
 
+Filter empty servers in browser
+== 过滤掉浏览器中的空服务器
+
+Filter full servers in browser
+== 在浏览器中过滤掉完整的服务器
+
+Filter game type
+== 要过滤的游戏类型
+
 Filter off
 == 关闭过滤
+
+Filter out password protected servers in browser
+== 在浏览器中过滤掉受密码保护的服务器
+
+Filter out servers that require login
+== 过滤掉需要登录的服务器
+
+Filter out servers with player country mismatch (ISO 3166-1 numeric)
+== 过滤掉玩家所在国家/地区不匹配的服务器（ISO 3166-1 数字）
+
+Filter out servers without friends
+== 过滤掉没有好友的服务器
+
+Filter out spectators from player count
+== 从玩家号码中过滤掉观众
 
 Filter Team %d
 == 过滤队伍 %d
 
 Filter: Team %d
 == 过滤：队伍 %d
+
+Filtered word console color
+== 被屏蔽词控制台颜色
 
 Find all ban records for the specified IP address
 == 查询指定 IP 的全部封禁记录
@@ -2787,6 +3940,9 @@ Finish data source
 
 Finish Name
 == 终点前改名
+
+Finish name
+== 通关名称
 
 Finish Name:
 == 恰分名称：
@@ -2806,6 +3962,12 @@ First page in console
 Flip:
 == 翻转：
 
+Focus color
+== 焦点颜色
+
+Focus mode
+== 专注模式
+
 Folder
 == 文件夹
 
@@ -2817,6 +3979,9 @@ Follow
 
 Following
 == 当前
+
+Font cursor
+== 字体光标
 
 Font size
 == 字体大小
@@ -2848,6 +4013,9 @@ FPM
 FPS
 == FPS
 
+Fraction of players needed to pass a vote
+== 超过这个比例的玩家需要同意投票才能成功
+
 Frags
 == 击杀数
 
@@ -2856,6 +4024,9 @@ Frame rate
 
 Frame time
 == 帧耗时
+
+Framebuffer color bits (only fullscreen)
+== 帧缓冲区的颜色位（仅限全屏）
 
 Frankenstein (drop parts on right)
 == 拼合结果（将部件拖放到右侧）
@@ -2872,14 +4043,26 @@ Freeview cursor opacity
 Freeze
 == 冻结
 
+Freeze bar opacity (0 invisible, 100 fully visible)
+== 冻结内冻结条的不透明度（0 不可见，100 完全可见）
+
 Freeze border color
 == Freeze 边框颜色
+
+Freeze Collision Border Color
+== Freeze 碰撞边框颜色
 
 Freeze Laser Inner Color
 == 冻结激光实心颜色
 
+Freeze laser inner color
+== 激光内色冻结
+
 Freeze Laser Outline Color
 == 冻结激光外框颜色
+
+Freeze laser outline color
+== 冻结的激光轮廓颜色
 
 Freeze opacity
 == 冻结不透明度
@@ -2887,13 +4070,22 @@ Freeze opacity
 Freeze stars
 == 显示冻结效果的星星动画
 
-Freeze碰撞边框颜色
-== Freeze 碰撞边框颜色
+Freeze tile outline color
+== 冻结图块轮廓颜色
+
+Freeze/Deep freeze tile outline width
+== 冻结/深冻图块轮廓宽度
 
 Friend
 == 好友
 
+Friend bar category expand state (1=expanded, 0=collapsed)
+== 好友栏分类展开状态(1=展开，0=收起)
+
 Friend color in friends list
+== 好友列表中好友条目颜色
+
+Friend entry color in friend list
 == 好友列表中好友条目颜色
 
 Friend heart
@@ -2902,14 +4094,35 @@ Friend heart
 Friend message
 == 好友消息
 
+Friend message color
+== 好友留言颜色
+
+Friend message heart color
+== 好友消息爱心颜色
+
+Friend message text gradient color
+== 好友消息文字渐变颜色
+
 Friend note
 == 好友备注
+
+Friend notification refresh interval (sec)
+== 好友提醒刷新间隔（秒）
 
 Friend Notifications
 == 好友提醒
 
+Friend notify
+== 好友通知
+
 Friend online and join notifications
 == 好友上线和加入提醒
+
+Friend online notification
+== 好友上线提醒
+
+Friend option color
+== 好友选项颜色
 
 Friends
 == 好友
@@ -2923,11 +4136,17 @@ Frozen Margin
 FSAA samples
 == 全屏抗锯齿（FSAA）采样倍数
 
+FSAA samples (may cause lag)
+== FSAA 样本（可能会导致延迟）
+
 FTAPI
 == FTAPI
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == FTAPI 自动翻译已禁用以防止过载。如需启用请在设置中配置。
+
+Full
+== 完整
 
 Full demo + sidecar
 == 完整 demo + sidecar
@@ -2947,6 +4166,12 @@ Functions
 Game
 == 游戏
 
+Game assets
+== 游戏资产
+
+Game graphics assets not from Teeworlds
+== 非来自 Teeworlds 的游戏图形资产
+
 Game info
 == 游戏信息
 
@@ -2965,11 +4190,26 @@ Game time margin
 Game type
 == 游戏模式
 
+Game type (ddnet, mod)
+== 游戏类型（ddnet、mod）
+
 Game types:
 == 游戏模式：
 
+Game update rate (Hz)
+== 游戏更新率（单位：Hz）
+
+Game update rate when window inactive (Hz)
+== 窗口不活动时游戏更新的刷新率（单位：Hz）
+
 Game/predicted tick
 == 游戏/预测 tick
+
+Gamemode. When enabled, players join as spectators
+== 比赛模式。启用时玩家以观众身份加入服务器
+
+Gamepad sensitivity in menu/editor
+== 菜单/编辑器中的手柄灵敏度
 
 Gameplay
 == 游戏玩法
@@ -2979,6 +4219,9 @@ Gap aim rescue
 
 Gap between statusbar items
 == 状态栏项目之间的间隔
+
+Gap between tee and nametag
+== 三通与铭牌间隙尺寸
 
 General
 == 常规
@@ -2994,6 +4237,9 @@ Ghost
 
 Ghost tools
 == 影子工具
+
+Ghost visibility (alpha, 0=invisible, 100=visible)
+== 鬼魂的可见性（alpha 值，0 不可见，100 完全可见）
 
 Ghosts directory
 == 影子目录
@@ -3043,6 +4289,12 @@ Glitch
 Global card
 == 全局卡片
 
+Global card ordering (format: stableId|tab|col|order; semicolon-separated)
+== 全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+
+Global card ordering old config migration completed flag
+== 全局卡片排序旧配置迁移完成标记
+
 Global toggle key
 == 全局开关键
 
@@ -3082,8 +4334,14 @@ Go forward one tick
 Go forward the specified duration
 == 快进指定时长
 
+Gores
+== Gores
+
 Gores Actor
 == Gores 演员专用
+
+Gores actor
+== Gores 角色
 
 Gores auto weapon switch
 == Gores 自动武器切换
@@ -3094,17 +4352,8 @@ Gores Mode
 Gores mode key
 == Gores 模式按键
 
-Gores 模式下启用快速输入
-== Gores 模式下启用快速输入
-
-Gores 模式下对其他玩家也启用快速输入
-== Gores 模式下对其他玩家也启用快速输入
-
-Gores 模式下自动锤枪切换
-== Gores 模式下自动锤枪切换
-
-Gores 模式下隐藏辅助线
-== Gores 模式下隐藏辅助线
+GPU name, chosen by backend (if supported)
+== GPU 的名称，由后端选择。（如果后端支持的话）
 
 Grabs
 == 得旗数
@@ -3127,6 +4376,18 @@ Graphics card
 Graphics display
 == 图像显示
 
+Graphics library major version
+== 图形库主要版本
+
+Graphics library minor version
+== 图形库次要版本
+
+Graphics library patch version
+== 图库补丁版本
+
+Graphics library texture sampling lod bias multiplied by 1000
+== 图形库纹理采样的 lod 偏差乘以 1000
+
 Greeting text
 == 打招呼文本
 
@@ -3135,6 +4396,9 @@ Grenade
 
 Group name
 == 分组名称
+
+GUI cursor assets
+== GUI 光标资源
 
 Guide line color
 == 辅助线颜色
@@ -3160,6 +4424,9 @@ Has people playing
 Has save
 == 有存档
 
+Has unread news
+== 是否有未读新闻
+
 HDF
 == HDF
 
@@ -3175,11 +4442,23 @@ Hello from ui_widget::Modal
 Help: %s
 == 帮助：%s
 
+Helpful for Gores: allow negative internal certainty for more conservative prediction
+== 对 Gores 有帮助：允许内部确定性为负值，使预测更保守
+
+Hide basic system info (join, version, rules) in Zen mode
+== 禅模式下隐藏入场、版本和规则等基础系统信息
+
 Hide Chat
 == 隐藏聊天框
 
 Hide death/respawn effects
 == 隐藏死亡/重生特效
+
+Hide death/respawn effects in Zen Mode
+== 禅模式下隐藏死亡/重生特效
+
+Hide direction in Zen mode
+== 禅模式下隐藏方向
 
 Hide direction indicators
 == 隐藏方向
@@ -3187,11 +4466,17 @@ Hide direction indicators
 Hide Echo messages
 == 隐藏 Echo 消息
 
+Hide Echo messages in Zen mode
+== 禅模式下隐藏 Echo 消息
+
 Hide explosion effects
 == 隐藏炮击特效
 
 Hide freeze effects
 == 隐藏冻结特效
+
+Hide freeze effects in Zen Mode
+== 禅模式下隐藏冻结特效
 
 Hide ghosts of frozen players
 == 隐藏冻结玩家的影子
@@ -3202,8 +4487,20 @@ Hide guide lines
 Hide hammer effects
 == 隐藏锤击特效
 
+Hide hammer effects in Zen Mode
+== 禅模式下隐藏锤击特效
+
+Hide helper lines in Gores mode
+== Gores 模式下隐藏辅助线
+
+Hide helper lines in Zen mode
+== 禅模式下隐藏辅助线
+
 Hide HUD
 == 隐藏 HUD
+
+Hide HUD in Zen mode
+== 禅模式下隐藏 HUD
 
 Hide indicator for tees on your screen
 == 其他玩家在屏幕内时隐藏指示器
@@ -3217,11 +4514,26 @@ Hide join/version prompts
 Hide jump effects
 == 隐藏跳跃特效
 
+Hide jump effects in Zen Mode
+== 禅模式下隐藏跳跃特效
+
+Hide kill and finish messages in Zen mode
+== 禅模式下隐藏击杀和完成消息
+
 Hide kill/finish messages
 == 隐藏死亡/完成消息
 
+Hide lyrics on pause
+== 暂停时隐藏歌词
+
+Hide lyrics when no system media
+== 无系统媒体状态时隐藏歌词
+
 Hide map progress
 == 隐藏地图进度
+
+Hide map progress bar in Zen mode
+== 禅模式下隐藏地图进度条
 
 Hide nameplates
 == 隐藏名字板
@@ -3229,17 +4541,47 @@ Hide nameplates
 Hide names
 == 隐藏名字
 
+Hide non-friend names/clans and show client ID
+== 隐藏非好友姓名/部落并显示客户端 ID
+
+Hide other players' ghosts when frozen
+== 如果其他玩家的幽灵被冻结则隐藏
+
+Hide own chat bubble (only when authenticated in remote console)
+== 隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
+
 Hide player messages
 == 隐藏玩家消息
 
+Hide player messages in Zen mode
+== 禅模式下隐藏玩家消息
+
+Hide player name plates in Zen Mode
+== 禅模式下隐藏玩家名字板
+
+Hide player names in Zen Mode
+== 禅模式下隐藏玩家名字
+
+Hide projectile effects in Zen Mode
+== 禅模式下隐藏炮击特效
+
 Hide scoreboard
 == 隐藏计分板
+
+Hide scoreboard in Zen mode
+== 禅模式下隐藏计分板
+
+Hide sensitive info like /save password
+== 隐藏敏感信息，如 /save 密码
 
 Hide server information on join
 == 进图时隐藏服务器信息
 
 Hide server prompt notifications
 == 隐藏服务器提示通知
+
+Hide server tip notifications (including notification bar) in Zen mode
+== 禅模式下隐藏服务器提示通知（包括通知栏）
 
 Hide Settings Tabs
 == 隐藏设置选项卡
@@ -3248,13 +4590,22 @@ Hide sponsor QR code
 == 隐藏赞助码
 
 Hide toast
-== 隐藏 toast
+== 隐藏通知
+
+Hide typing emoji during input
+== 输入时不显示打字表情
 
 Hide UI for focused gameplay
 == 隐去 UI 专注游戏
 
+Hide weapon fire effects in Zen Mode
+== 禅模式下隐藏武器火焰特效
+
 Hide weapon muzzle flashes
 == 隐藏武器火焰
+
+Hide when no lyrics found (instead of showing hint)
+== 未找到歌词时隐藏（而非显示提示）
 
 Hide when paused
 == 暂停时隐藏
@@ -3274,17 +4625,50 @@ High to low
 Highlight Color
 == 相关信息颜色
 
+Highlight game type
+== 高亮显示游戏类型
+
+Highlight message text gradient color
+== 突出显示消息文字渐变颜色
+
+Highlight ping value
+== 高亮显示 ping 值
+
 Highlighted message
 == 被提及消息
 
+Highlighted message color
+== 突出显示的消息颜色
+
 Hitbox mode
 == 碰撞箱模式
+
+Hitbox Mode Freeze Border Color
+== 碰撞箱模式 Freeze 边界颜色
+
+Hitbox Mode Global Opacity
+== 碰撞箱模式全局透明度
+
+Hitbox Mode Override
+== 碰撞箱模式总开关 (Hitbox mode)
+
+Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all
+== 碰撞箱模式玩家范围：0=本地 1=本地+分身 2=所有玩家
+
+Hitbox Mode Tee Collision Color
+== 碰撞箱模式 Tee 碰撞体颜色
+
+Hitbox Mode Weapon Interaction Color
+== 碰撞箱模式武器交互颜色
 
 HJ Assist
 == HJ 辅助
 
 HJ assist
 == HJ 大佬辅助
+
+Hold gun higher like TW 0.6.1 and earlier
+== 像 TW 0.6.1 及更早版本一样，tee 将枪握得更高一点
 
 Hold left click for free camera
 == 按住左键自由镜头
@@ -3294,6 +4678,12 @@ Hook
 
 Hook collision line
 == 钩索辅助线
+
+Hook collision line alpha (0 invisible, 100 fully visible)
+== 钩子碰撞线 Alpha（0 不可见，100 完全可见）
+
+Hook collision line length follows cursor distance
+== 钩子碰撞线长度跟随光标距离
 
 Hook collision line opacity
 == 辅助线不透明度
@@ -3313,17 +4703,59 @@ Hook Strength
 Hook strength scope
 == 钩索强度范围
 
+Hook through teleporters (deprecated, use special entities instead)
+== 钩子穿过传送器（已弃用，请使用特殊实体代替）
+
+Hookable/Unhookable tile outline color
+== 可钩/不可钩图块轮廓颜色
+
+Hookable/unhookable tile outline width
+== 可钩/不可钩图块轮廓宽度
+
 Hooking L/R: %.0f%%/%.0f%%
 == 出钩 L/R：%.0f%%/%.0f%%
 
 Horizontal position
 == 水平位置
 
+Hostname of DNSBL provider for IP verification
+== 用于 IP 验证的 DNSBL 提供商的主机名
+
 Hours
 == 小时
 
 Hover for tooltip
-== 悬停查看提示
+== 悬停显示提示
+
+How far the plasma gun tracks a tee
+== 等离子枪将跟踪 tee 多远
+
+How far the tractor tracks a tee
+== 拖拉机将跟踪 tee 多远
+
+How long expression lasts
+== 眼神的表情能持续多久
+
+How long the server message of the day is displayed
+== 当天服务器消息显示多长时间
+
+How many seconds players stay frozen (applies to all except delay freeze in switch layer and deep freeze).
+== 玩家将保持冻结状态多少秒（适用于除切换层和深度冻结中的延迟冻结之外的所有情况）
+
+How often the broadcast time updates
+== 播出时间多久更新一次
+
+How to handle inactive players (0 = move to spectators, 1 = move to free spec slot/kick, 2 = kick)
+== 如何处理不活跃玩家（0 = 移到观众，1 = 移到空闲观众槽位/踢出，2 = 踢出）
+
+HTTP map download: connection phase timeout (in ms, 0=disabled)
+== HTTP 地图下载：连接阶段超时（以毫秒为单位）（0 表示禁用）
+
+HTTP map download: low speed limit (in bytes/s, 0=disabled)
+== HTTP 地图下载：设置低速限制（以每秒字节数为单位）（0 表示禁用）
+
+HTTP map download: low speed limit period (0=disabled)
+== HTTP 地图下载：设置低速限制时间段（0 为禁用）
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3340,17 +4772,26 @@ https://wiki.ddnet.org/wiki/Touch_controls
 HUD
 == HUD
 
+HUD animation speed (percent)
+== HUD 动画速度（百分比）
+
+HUD assets
+== HUD 的资产
+
+HUD editor layout
+== HUD 编辑器布局
+
 HUD editor preview
 == HUD 编辑器预览
 
+HUD island appearance settings
+== HUD 岛屿外观设置
+
+HUD notifications
+== HUD 通知
+
 HUD rainbow colors
 == HUD 彩虹色
-
-HUD 灵动岛显示队伍
-== HUD 灵动岛显示队伍
-
-HUD 编辑器布局
-== HUD 编辑器布局
 
 Hue
 == 色调
@@ -3370,11 +4811,32 @@ I am away from the game window
 I muted you
 == 我屏蔽你了
 
-Idiot word filter
-== 傻逼词过滤器
+If 1, auto record only once on connect; if 0, auto record restarts after game end
+== 若为 1，仅在连接时自动开始录制一次 demo；若为 0，游戏结束后也会重新自动开始录制
+
+If 1, current driver is in blocking error state.
+== 如果为 1，则当前驱动程序处于阻塞错误状态。
+
+If chat score exceeds this value, the player is muted for sv_spam_mute_duration seconds
+== 如果聊天分数超过此值，玩家将被静音 sv_spam_mute_duration 秒
+
+If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
+== 如果你射击它们，激光是否可以击中你，并且它们将你拉向弹跳原点（所有新地图为 0），或者如果你射击它们，激光就不能击中你，并且它们将其他人拉向射击者
 
 Ignore cache providers
 == 忽略缓存来源
+
+Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
+== 歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+
+Ignore clan tag when searching friends
+== 搜索好友时忽略战队标签
+
+Ignore keyboard modifier mask
+== 忽略键盘修饰符掩码
+
+Ignore voice distance attenuation
+== 忽略语音距离衰减
 
 Import from clipboard
 == 从剪贴板导入
@@ -3382,14 +4844,47 @@ Import from clipboard
 Improved Anti Ping
 == 改进 Anti Ping
 
+Improved anti ping
+== 改进版延迟补偿
+
 In memory of me
 == 谨以此端，回忆我
+
+In-game controller sensitivity
+== 游戏内控制器灵敏度
+
+In-game crosshair scale percent (50=half, 200=double)
+== 游戏内准星缩放百分比（50=一半，200=两倍）
 
 Inactive color
 == 按键未激活时颜色
 
+Inactive line font size (px)
+== 非活动行字号 px
+
 Inactive line opacity
 == 非当前行不透明度
+
+Include clan when saving/loading config preset
+== 保存/加载配置方案时包含部落
+
+Include color when saving/loading config preset
+== 保存/加载配置方案时包含颜色
+
+Include country flag when saving/loading config preset
+== 保存/加载配置方案时包含国旗
+
+Include emoticon when saving/loading config preset
+== 保存/加载配置方案时包含表情
+
+Include name when saving/loading config preset
+== 保存/加载配置方案时包含名字
+
+Include seconds in local time display
+== 在本地时间显示中包含秒
+
+Include skin when saving/loading config preset
+== 保存/加载配置方案时包含皮肤
 
 Incoming language
 == 接收语言
@@ -3412,17 +4907,32 @@ Indicator max offset
 Indicator min offset
 == 指示器最小偏移量
 
+Indicator moves farther away as distance increases
+== 距离越远，指示器离自己越远
+
 Indicator offset
 == 指示器偏移量
 
+Indicator offset distance
+== 指示器偏移距离
+
 Indicator opacity
 == 指示器不透明度
+
+Indicator radius
+== 指示器半径
 
 Indicator safe color
 == 指示器安全颜色
 
 Indicator size
 == 显示大小
+
+Indicator transparency
+== 指示器透明度
+
+Infinite hook for super players on/off.
+== 超级玩家开/关的无尽钩子
 
 Info
 == 信息
@@ -3466,14 +4976,29 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == 输入设备打开失败，建议重插耳机/麦克风后刷新，或重新选择输入设备
 
+Input focus color
+== 界面输入焦点颜色
+
 Input overlay
 == 按键显示
 
 Input overlay display
 == 按键显示叠加
 
+Input overlay opacity (percent)
+== 输入叠加不透明度（百分比）
+
+Input overlay scale (percent)
+== 输入叠加比例（百分比）
+
+Input overlay X position (percent)
+== 输入叠加 X 位置（百分比）
+
+Input overlay Y position (percent)
+== 输入叠加 Y 位置（百分比）
+
 Input smoothing
-== Input smoothing
+== 输入平滑
 
 Input switch
 == 输入切换
@@ -3483,6 +5008,21 @@ Insane
 
 Interface
 == 界面
+
+Interface animations
+== 界面动画
+
+Interface color
+== 界面颜色
+
+Interface page
+== 界面页面
+
+Interface settings page
+== 界面设置页面
+
+Interface transparency
+== 通用界面透明度
 
 Intermediate
 == 中阶
@@ -3494,7 +5034,10 @@ Internet (From online source)
 == Internet（来源于网络）
 
 Interpolation
-== Interpolation
+== 插值
+
+Interval for auto-saving current editor map copy to "auto" folder (0=off)
+== 当前编辑器地图副本自动保存到“auto”文件夹的时间间隔（0 表示关闭）
 
 Invalid client id to kick
 == 用于踢人的客户端 ID 无效
@@ -3523,6 +5066,9 @@ Invalid X coordinate.
 Invalid Y coordinate.
 == 无效的 Y 坐标
 
+Invert camera drift direction
+== 反转相机漂移方向
+
 Invite %s to the locked team
 == 邀请 %s 加入锁定队伍
 
@@ -3532,14 +5078,14 @@ Invite a person to a locked team
 Invites are disabled
 == 本服务器已禁用队伍邀请
 
-Is your dummy being bullied while you control the main tee?
-== 在你操控本体的时候分身有没有被欺负呢？
-
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == 建议你在进入服务器前检查一下设置并根据你的喜好进行调整。
 
 Item
-== 项目
+== 物品
+
+Item type
+== 物品类型
 
 j = Latency jitter
 == j = 延迟抖动
@@ -3587,13 +5133,31 @@ Join, version, rules, and help messages stay in chat instead of popups
 == 入服、版本、规则和帮助消息会留在聊天里，不弹出显示
 
 Joining Tutorial server
-== Joining Tutorial server
+== 正在加入教程服务器
 
 Jump
 == 跳跃
 
+Jump hint
+== 跳跃提示
+
+Jump hint color
+== 跳跃提示颜色
+
+Jump hint font size
+== 跳跃提示字体大小
+
+Jump hint horizontal position (% of screen width)
+== 跳跃提示水平位置（占屏幕宽度百分比）
+
 Jump hint text
 == 跳跃提示文本
+
+Jump hint text (use \n for newline)
+== 跳跃提示文本（使用\n 换行）
+
+Jump hint vertical position (% of screen height)
+== 跳跃提示垂直位置（占屏幕高度百分比）
 
 k = Resend loss
 == k = 重发丢包率
@@ -3604,8 +5168,23 @@ Kaomoji
 Karaoke edge softness
 == 逐字高亮边缘柔化
 
+Keep hook when teleporting
+== 传送时保持钩子
+
+Keep unsent message on chat close
+== 关闭聊天时保留未发送内容
+
+Keep vote window open after voting
+== 投票后不关闭投票窗口
+
 Key Bindings
 == 按键绑定
+
+Key binds
+== 按键绑定
+
+Key press icon size
+== 按键显示图标大小
 
 Key Presses
 == 按键显示
@@ -3625,6 +5204,15 @@ Key Sticking: Reset Self
 Keyword Reply
 == 关键词回复
 
+Keyword reply
+== 关键词回复
+
+Keyword reply rules (each line: [rename] [regex] keyword=>reply)
+== 关键词回复规则（每行：[rename] [regex] 关键词=>回复）
+
+Keyword reply use Dummy
+== 关键词回复使用分身
+
 Keyword rules
 == 关键词规则
 
@@ -3639,6 +5227,12 @@ Kick voting requires %s players
 
 Kill
 == 自杀
+
+Kill message highlight color
+== 终止消息高亮颜色
+
+Kill message normal color
+== 杀死消息正常颜色
 
 Kill Protection enabled. If you really want to join the spectators, first type /kill
 == 已启用防自杀保护。如果你确实想进入旁观，请先输入 /kill
@@ -3658,9 +5252,6 @@ Kills a player and announces the kill
 Kills team and disables practice mode
 == 处死队伍并关闭练习模式
 
-King of Gores auto weapon switch
-== King of Gores 自动切换枪
-
 l = Local time
 == l = 本地时间
 
@@ -3679,26 +5270,44 @@ LAN
 Language
 == 语言
 
+Language file to use
+== 使用什么语言文件
+
 Large text announcement for friend joining
 == 大字播报进服好友
 
 Large text content
 == 大字文案
 
+Large text for friend join (use %s for friend name)
+== 好友进服大字提示文本（使用 %s 表示好友名）
+
 Laser
 == 激光
+
+Laser colors
+== 激光颜色
 
 Laser effect enhancement
 == 激光效果增强
 
-Laser Enhancement
-== 激光增强
+Laser glow intensity (0-100)
+== 激光辉光强度 (0-100)
+
+Laser Opacity (0=transparent, 100=opaque)
+== 激光半透明度 (0=完全透明，100=不透明)
+
+Laser Rounded Ends (0=square, 1=round)
+== 激光圆角端点 (0=方角，1=圆角)
 
 Laser settings
 == 激光设置
 
 Laser size
 == 激光大小
+
+Laser Size/Thickness (percentage, 100=default)
+== 激光大小/粗细 (百分比，100=默认)
 
 Last entered
 == 最后进入
@@ -3710,7 +5319,7 @@ Latency
 == 延迟
 
 Latency compensation
-== Latency compensation
+== 延迟补偿
 
 Latency Jitter
 == 延迟抖动
@@ -3754,6 +5363,12 @@ Length
 Lenny:
 == Lenny ͡° ͜ʖ ͡°:
 
+Let server start ghost
+== 让服务器启动 ghost
+
+Let server start race recorder
+== 让服务器启动比赛记录器
+
 Lets you join team i (shows your team if left blank)
 == 让你加入队伍 i（留空则显示你的队伍）
 
@@ -3766,14 +5381,23 @@ LibreTranslate
 LibreTranslate API Key
 == LibreTranslate API 密钥
 
-LibreTranslate 端点
+LibreTranslate endpoint
 == LibreTranslate 端点
+
+Limit information in spectator mode
+== 限制观战模式中的信息
+
+Limiter threshold (percent)
+== 限幅器阈值（百分比）
 
 Line scroll duration
 == 行切换滚动时长
 
 Line spacing
 == 行间距
+
+Line switch scroll duration (ms)
+== 行切换滚动时长 ms
 
 Line width
 == 线宽
@@ -3790,8 +5414,14 @@ Lines %d - %d (%s)
 Lines above active
 == 当前行上方行数
 
+Lines above active line
+== 活动行上方显示行数
+
 Lines below active
 == 当前行下方行数
+
+Lines below active line
+== 活动行下方显示行数
 
 List all commands that are available in practice mode
 == 列出练习模式下可用的所有命令
@@ -3820,6 +5450,9 @@ List available voice devices
 List connected players with optional case-insensitive substring matching filter
 == 列出在线玩家，可选不区分大小写的子串筛选
 
+List filter mode
+== 名单过滤模式
+
 List foes
 == 列出敌人
 
@@ -3834,6 +5467,9 @@ List local saves for current map (or specified map)
 
 List players containing name or all players
 == 列出名称匹配的玩家，或列出全部玩家
+
+Listen from camera center when spectating
+== 旁观时按镜头中心收听
 
 Literal
 == 字面
@@ -3850,10 +5486,10 @@ LLM provider
 LLM Provider (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Custom)
 == LLM 提供商（0=智谱 AI，1=DeepSeek，2=OpenAI，3=自定义）
 
-LLM 翻译并发数（0=自动）
+LLM translation concurrency (0=auto)
 == LLM 翻译并发数（0=自动）
 
-LLM 翻译默认并发数（智能调整）
+LLM translation default concurrency (smart adjustment)
 == LLM 翻译默认并发数（智能调整）
 
 Load
@@ -3864,6 +5500,9 @@ Load drawings from a given csv file (defaults to map name)
 
 Load save %s
 == 载入存档 %s
+
+Load sound files in thread
+== 加载声音文件线程
 
 Load with code r. /load to check your existing saves
 == 使用代码 r 载入；可用 /load 查看已有存档
@@ -3943,6 +5582,9 @@ Local LRC file
 Local media folders
 == 本地媒体目录
 
+Local media library directories (separate by |)
+== 歌词本地媒体库目录（多个目录用 | 分隔）
+
 Local music file
 == 本地音乐文件
 
@@ -3951,6 +5593,9 @@ Local only
 
 Local particle effects
 == 本地粒子效果
+
+Local particles: show particles behind own Tee (e.g. freeze snow)
+== 本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）
 
 Local saves
 == 本地存档
@@ -3982,6 +5627,9 @@ Lock the team so other players cannot join directly
 Locked
 == 锁定
 
+Log output filename
+== 日志输出文件名
+
 Log the network
 == 记录网络
 
@@ -3991,17 +5639,68 @@ Logout of econ
 Logout of rcon
 == 退出 rcon 登录
 
+Lose weapons when teleporting (useful for race maps)
+== 传送时失去武器（对某些竞速地图有用）
+
 Low to high
 == 由低到高
 
-LRCLIB API 基地址（可改成镜像）
+LRCLIB API base URL (mirror)
 == LRCLIB API 基地址（可改成镜像）
+
+Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
+== 歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+
+Lyric background color
+== 歌词背景颜色
+
+Lyric background opacity
+== 歌词背景透明度
+
+Lyric fade in/out time
+== 歌词淡入淡出时间
+
+Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
+== 歌词 HTTP 代理（如 http://127.0.0.1:7890）
+
+Lyric HTTP request timeout (ms)
+== 歌词 HTTP 请求超时 ms
+
+Lyric HUD edge margin (px)
+== 歌词 HUD 贴边外边距 px
+
+Lyric outline color
+== 歌词描边颜色
+
+Lyric outline opacity
+== 歌词描边透明度
+
+Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
+== 歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+
+Lyric snap to Dynamic Island threshold
+== 歌词吸附灵动岛阈值
+
+Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
+== 歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+
+Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
+== 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 
 Lyrics
 == 歌词
 
+Lyrics cache expiration days (0=forever)
+== 歌词缓存过期天数（0=永久）
+
+Lyrics fuzzy match score threshold
+== 歌词模糊匹配分数阈值
+
 Lyrics HTTP timeout
 == 歌词 HTTP 超时
+
+Lyrics line spacing (px)
+== 歌词行间距 px
 
 Lyrics search type
 == 歌词搜索策略
@@ -4011,6 +5710,9 @@ Lyrics source
 
 Lyrics source order
 == 歌词来源顺序
+
+Lyrics translation/transliteration color
+== 歌词翻译/音译颜色
 
 Lyrics: empty track
 == 歌词：歌词为空
@@ -4029,6 +5731,9 @@ Main Asset
 
 Main menu
 == 主菜单
+
+Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
+== 让排球模式中的冻结玩家看起来更像排球（0=禁用，1=仅排球地图，2=始终）
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == 确保后端支持 OpenAI 兼容的思考参数
@@ -4063,6 +5768,9 @@ Manual
 Manual concurrency: %d
 == 手动并发数：%d
 
+Manual lyric timeline offset (ms, step 500ms)
+== 歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+
 Manual scope
 == 手动范围
 
@@ -4081,8 +5789,14 @@ Map browser color
 Map browser opacity
 == 地图浏览器不透明度
 
+Map browser transparency
+== 地图浏览器透明度
+
 Map danger border
 == 地图危险边界
+
+Map download send window
+== 地图下载发送窗口
 
 Map play history
 == 地图游玩历史
@@ -4092,6 +5806,24 @@ Map Preview TODO
 
 Map progress bar
 == 地图进度条
+
+Map progress bar color
+== 地图进度条颜色
+
+Map progress bar height
+== 地图进度条高度
+
+Map progress bar horizontal position (center, % of screen width)
+== 地图进度条水平位置（中心点，占屏幕宽度百分比）
+
+Map progress bar style (0=bottom bar, 1=HUD overlay)
+== 地图进度条样式（0=底部横条，1=HUD 内嵌）
+
+Map progress bar vertical position (top edge, % of screen height)
+== 地图进度条垂直位置（顶边，占屏幕高度百分比）
+
+Map progress bar width (percentage of screen width)
+== 地图进度条宽度（占屏幕宽度百分比）
 
 Map Progress: %.1f%%
 == 地图进度：%.1f%%
@@ -4105,8 +5837,14 @@ Map size
 Map sound volume
 == 地图音效音量
 
+Map to use on server
+== 在服务器上使用的地图
+
 Map type:
 == 地图类型：
+
+Margin when notification is docked
+== 通知栏贴边时预留边距
 
 Mark demo
 == 标记回放
@@ -4126,8 +5864,20 @@ Mark the end of a demo cut
 Markers
 == 标记
 
+Marquee for long lyrics
+== 歌词超长时跑马灯
+
+Marquee speed
+== 歌词跑马灯速度
+
+Master server URL to register
+== 要注册的主服务器 URL
+
 Match %d of %d
 == 匹配 %d/%d
+
+Match ghost by map version instead of map name
+== 按地图版本而不是仅按地图名称匹配鬼魂
 
 Match score threshold
 == 匹配评分阈值
@@ -4135,11 +5885,32 @@ Match score threshold
 Matched with callable peer
 == 已匹配到可通话对端
 
+Max attempts for remote console authentication
+== 远程控制台身份验证的最大尝试次数
+
 Max CSVs
 == 最大 CSV 数
 
 Max demos
 == 最大回放数
+
+Max distance for variable offset calculation
+== 可变偏移计算的最大距离
+
+Max number of full server info responses sent per second (0 = unlimited).
+== 每秒发送的完整服务器信息响应的最大数量（0 表示无限制）
+
+Max offset distance for variable offset
+== 可变偏移时的最大偏移距离
+
+Max player detection distance
+== 玩家检测最大距离
+
+Max prediction ticks reduced
+== 最多减少的预测 tick 数
+
+Max rows in frozen Tee HUD
+== 冻结 Tee HUD 的最大行数
 
 Max Screenshots
 == 最大截图数
@@ -4147,14 +5918,68 @@ Max Screenshots
 Max size
 == 最大尺寸
 
+Max stroke entries to keep
+== 最多保留的描边条目数
+
 Max visible notifications
 == 最多同时显示几条
 
 maximum
 == 最大值
 
+Maximum auto-saves retained per map name (0=unlimited)
+== 每个地图名称保留的最大自动保存数量（0 = 无限制）
+
+Maximum clients per IP
+== 同一 IP 可连接服务器的客户端最大数量
+
+Maximum cursor distance
+== 最大光标距离
+
+Maximum dynamic camera cursor distance
+== 最大动态相机光标距离
+
+Maximum framerate for entity layer video background
+== 实体层视频背景的最大帧率
+
+Maximum notification count
+== 通知栏最大显示数量
+
+Maximum number of allowed QmLive observer connections
+== 最多允许的 QmLive observer 连接数
+
+Maximum number of auto recorded demos (0 = unlimited)
+== 自动录制 demo 的最大数量（0 = 无限制）
+
+Maximum number of auto-CSV files (0 = unlimited)
+== 自动创建 CSV 的最大数量（0 = 无限制）
+
+Maximum number of auto-screenshots (0 = unlimited)
+== 自动截图的最大数量（0 = 无限制）
+
+Maximum number of automatic replays (0 = unlimited)
+== 自动录制回放的最大数量（0 = 无限制）
+
+Maximum number of automatic scoreboard screenshots (0 = unlimited)
+== 自动创建的统计板屏幕截图的最大数量（0 = 无限制）
+
+Maximum number of clients on server
+== 服务器上允许的最大客户端数
+
+Maximum number of skins loaded simultaneously
+== 最多可同时加载皮肤数量
+
+Maximum players participating in a vote (0 = unlimited)
+== 最多可有多少玩家参与投票（0 = 无限制）
+
 Maximum rows
 == 最大行数
+
+Maximum team size.
+== 最大队伍规模
+
+Maximum undo steps in editor history (editor, envelope editor, and server settings editor are independent)
+== 编辑器历史记录中的最大撤销次数（编辑器、包络编辑器和服务器设置编辑器不共享）
 
 may cause delay
 == 可能会产生延迟
@@ -4165,8 +5990,32 @@ Memory
 Mention
 == 提及
 
+Mention option color
+== 提及选项颜色
+
+Menu accent panel opacity
+== 菜单强调面板透明度
+
 Menu background
 == 菜单背景
+
+Menu camera rotation radius
+== 菜单相机旋转半径
+
+Menu camera rotation time in seconds
+== 菜单相机以秒为单位旋转
+
+Menu camera speed
+== 菜单相机速度
+
+Menu main panel background color
+== 菜单主面板底色
+
+Menu main panel opacity
+== 菜单主面板透明度
+
+Menu opacity (0-100)
+== 菜单不透明度 (Menu opacity 0-100)
 
 Menu opened. Press Esc key again to close menu.
 == 菜单已打开，再次点击 Esc 以关闭
@@ -4177,8 +6026,20 @@ Menu option - normal
 Menu option - selected
 == 菜单选项 - 选中
 
+Message color
+== 留言颜色
+
+Message displayed to players on join.
+== 将向加入服务器的玩家显示的消息
+
+Message to reply when game minimized
+== 游戏最小化时回复的消息
+
 Message to send in chat:
 == 要在聊天中发送的消息：
+
+Message to send on auto vote, leave empty to not send
+== 自动投票时发送的消息，留空则不发送
 
 Messages
 == 消息
@@ -4195,14 +6056,23 @@ Microphone permission denied by system
 Microphone volume
 == 麦克风音量
 
+Microphone volume (percent)
+== 麦克风音量（百分比）
+
 Milliseconds
 == 毫秒
+
+Milliseconds to apply quick input early
+== 快速输入提前应用的毫秒数
 
 Min size
 == 最小尺寸
 
-Minimize module
-== 最小化模块
+Mini features
+== 迷你功能
+
+Mini voting UI
+== 缩小投票界面
 
 Minimize the client
 == 最小化客户端
@@ -4210,20 +6080,68 @@ Minimize the client
 minimum
 == 最小值
 
+Minimum characters for local target language detection
+== 本地目标语言识别最小字符数
+
+Minimum cursor distance
+== 最小光标距离
+
+Minimum delay allowed between /spec.
+== /spec 之间允许的最小延迟
+
+Minimum delay allowed between invitations.
+== 邀请之间允许的最短延迟
+
+Minimum dynamic camera cursor distance
+== 最小动态相机光标距离
+
+Minimum inactive line opacity (%)
+== 非活动行最小不透明度 %
+
 Minimum match chars
 == 最少匹配字符数
+
+Minimum players required to initiate a kick vote
+== 发起踢人投票所需的最少玩家数
+
+Minimum rcon auth level to use reserved slots. 4 = rcon auth disabled.
+== 使用保留插槽所需的最低 rcon 身份验证级别。4 = rcon 身份验证已禁用
+
+Minimum team size (finishing in smaller team won't give team rank).
+== 最小队伍规模（在小于此规模的队伍中完成比赛不会给你带来队伍排名）
 
 Minimum time
 == 最短时间
 
+Minimum time between kick votes (in seconds)
+== 踢票之间的最短时间（以秒为单位）
+
+Minimum time between kills (in seconds)
+== 击杀之间的最短时间（以秒为单位）
+
+Minimum time between map votes (in seconds)
+== 地图投票之间的最短时间（以秒为单位）
+
+Minimum width for name column in server browser
+== 服务器浏览器中名称列的最小宽度
+
 Minutes
 == 分钟
+
+Minutes on server before a player can call a map change vote (0 = disabled)
+== 玩家可以否决地图更改投票之前服务器上的时间分钟数（0 = 禁用）
+
+Minutes to save replay on ESC menu
+== ESC 菜单保存回放的分钟数
 
 Misc
 == 其他杂项
 
 Miscellaneous
 == 杂项
+
+Mix rate
+== 混音率
 
 Mixed
 == 混合
@@ -4246,11 +6164,26 @@ Modified
 Modules snap to screen edges, center lines and other HUD modules while dragging
 == 拖动时模块会吸附到屏幕边缘、中线和其他 HUD 模块
 
+More aggressive prediction of other players' movement (only with cl_antiping 1)
+== 更激进地预测其他玩家的移动（仅在 cl_antiping 为 1 时生效）
+
+More optimistic prediction along Tee's stable direction, reduces delay to stabilize
+== 沿 Tee 的稳定方向进行更乐观的预测，减少稳定下来所需的延迟
+
 MOTD
 == 公告
 
+Motion and focus feedback
+== 动作与焦点反馈
+
 Mouse
 == 鼠标
+
+Mouse sensitivity
+== 鼠标灵敏度
+
+Mouse sensitivity in menu/editor
+== 菜单/编辑器中的鼠标灵敏度
 
 Move left
 == 向左移动
@@ -4282,23 +6215,50 @@ Multi-View
 Mute
 == 静音
 
+Mute death/respawn sound in Zen Mode
+== 禅模式下静音死亡/重生音效
+
 Mute death/respawn sounds
 == 静音死亡/重生
 
 Mute emoticons
 == 屏蔽表情
 
+Mute flag sounds
+== 使旗帜声音静音
+
+Mute hammer sound in Zen mode
+== 禅模式下静音锤击音效
+
 Mute hammer sounds
 == 静音锤击
+
+Mute hook sound
+== 静音挂钩声音
+
+Mute jump sound in Zen Mode
+== 禅模式下静音跳跃音效
 
 Mute jump sounds
 == 静音跳跃
 
+Mute map sounds
+== 静音地图声音
+
 Mute microphone
 == 静音麦克风
 
+Mute movement sound
+== 静音运动声音
+
+Mute pick-up sounds
+== 静音拾音器声音
+
 Mute player
 == 屏蔽玩家
+
+Mute player status sounds
+== 静音玩家状态声音
 
 Mute player with client ID
 == 使用客户端 ID 将玩家静音
@@ -4306,8 +6266,23 @@ Mute player with client ID
 Mute player with IP address
 == 按 IP 地址静音玩家
 
+Mute time for players from different teams after a vote (seconds, 0 to disable mute)
+== 来自不同队伍的玩家被投票后的禁言时间（单位：秒，0 为禁用禁言）
+
+Mute weapon out of ammo sound
+== 武器无弹药静音
+
+Mute weapon sounds
+== 武器声音静音
+
+Mute weapon switch sound
+== 静音武器开关声音
+
 Mute when not active
 == 在后台时静音
+
+Mute when window inactive
+== 窗口未激活时静音
 
 Mute:
 == 禁言：
@@ -4330,11 +6305,53 @@ Name
 Name Plate
 == 昵称板块
 
+Name plate clan line X offset
+== 名字板战队行 X 偏移
+
+Name plate clan line Y offset
+== 名字板战队行 Y 偏移
+
+Name plate coord line X offset
+== 名字板坐标行 X 偏移
+
+Name plate coord line Y offset
+== 名字板坐标行 Y 偏移
+
+Name plate elements allow free X movement
+== 名字板元素允许 X 轴自由移动
+
+Name plate elements allow free Y movement
+== 名字板元素允许 Y 轴自由移动
+
+Name plate elements freely movable within bounds
+== 名字板元素允许在框内自由移动
+
+Name plate key line X offset
+== 名字板按键行 X 偏移
+
+Name plate key line Y offset
+== 名字板按键行 Y 偏移
+
+Name plate name line X offset
+== 名字板昵称行 X 偏移
+
+Name plate name line Y offset
+== 名字板昵称行 Y 偏移
+
+Name plate strength line X offset
+== 名字板强弱行 X 偏移
+
+Name plate strength line Y offset
+== 名字板强弱行 Y 偏移
+
 Name plates offset
 == 昵称距离
 
 Name plates size
 == 昵称大小
+
+Name to change to near finish (when tc_change_name_near_finish enabled)
+== 接近终点时要改成的名字（启用 tc_change_name_near_finish 时生效）
 
 Name:
 == 名称：
@@ -4344,6 +6361,15 @@ Name: %s
 
 Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
 == 名牌钩子强度图标范围（0=自己 1=他人 2=强钩 3=弱钩 4=所有玩家）
+
+Nameplate position X
+== 名字牌显示坐标 X
+
+Nameplate position Y
+== 名字牌显示坐标 Y
+
+Nameplate size
+== 铭牌尺寸
 
 Nameplate strong hook icon color
 == 名牌强钩图标颜色
@@ -4384,6 +6410,21 @@ Nameplate text gradient color
 Nameplate weak hook icon color
 == 铭牌弱钩图标颜色
 
+Nameplate X alignment hint duration window (ms)
+== 名字牌 X 对齐提示持续判定窗口（毫秒）
+
+Nameplate X alignment hint highlight color
+== 名字牌 X 对齐提示高亮颜色
+
+Nameplate X alignment hint strict mode
+== 名字牌 X 对齐提示严格模式
+
+Nameplate X alignment hint with local player
+== 名字牌显示与本地玩家 X 对齐的提示
+
+Nameplates
+== 名牌
+
 Native scale (1.0)
 == 原生缩放 (1.0)
 
@@ -4396,14 +6437,26 @@ Negative stability buffer (for Gores)
 Net
 == 净击杀
 
+Netlimit: exponential moving average alpha
+== Netlimit：指数移动平均线的 Alpha
+
+Netlimit: maximum traffic allowed per client (kb/s)
+== Netlimit：允许客户端使用的最大流量（以 kb/s 为单位）
+
 Netversion
 == 网络版本
 
 Network
 == 网络
 
+Network timeout
+== 网络超时
+
+Network timeout protection
+== 网络超时保护
+
 new
-== 新增
+== 新
 
 New button
 == 新按键
@@ -4437,6 +6490,9 @@ Next
 
 Next line color
 == 下一行颜色
+
+Next line lyric color
+== 歌词下一行颜色
 
 Next page in console
 == 控制台下一页
@@ -4546,9 +6602,6 @@ No matching assets.
 No matching features found. Try other keywords
 == 未找到匹配的功能模块。请尝试其他关键词
 
-No more blocking entity layers in the world of TeeWorlds
-== Teeworlds 的世界不会再出现挡人的实体层了
-
 No noise reduction
 == 不降噪
 
@@ -4612,6 +6665,15 @@ No unfinished maps available
 Noise reduction mode
 == 降噪模式
 
+Noise suppression mode (0=off 1=simple 2=RNNoise)
+== 噪声抑制模式（0=关闭 1=简单 2=RNNoise）
+
+Noise suppression strength (percent)
+== 噪声抑制强度（百分比）
+
+Non-friends use default skin
+== 非好友使用默认皮肤
+
 None
 == 无
 
@@ -4623,6 +6685,9 @@ Normal Color
 
 Normal message
 == 普通消息
+
+Normal message text gradient color
+== 普通消息文字渐变颜色
 
 NOT CONNECTED
 == 连接未成功
@@ -4657,8 +6722,47 @@ Note:
 Nothing hookable
 == 未瞄准任何实体物
 
+Notification animation duration (ms)
+== 通知栏动画时间（毫秒）
+
+Notification animation type (0=Fade+Slide, 1=Fade only, 2=No animation)
+== 通知栏动画类型（0=淡入滑入 1=仅淡入 2=无动画）
+
 Notification background
 == 通知背景
+
+Notification bar background color
+== 通知栏背景颜色
+
+Notification bar echo inherits chat echo color
+== 通知栏 echo 继承聊天 echo 颜色
+
+Notification bar overrides echo messages
+== 通知栏接管 echo 消息
+
+Notification bar overrides server system messages (except version info)
+== 通知栏接管服务器系统提示（入场版本信息除外）
+
+Notification bar shows basic server info
+== 通知栏显示基础服务器信息
+
+Notification bar shows important server hints
+== 通知栏显示重要服务器提示
+
+Notification bar shows server help
+== 通知栏显示服务器帮助说明
+
+Notification bar shows unknown server messages
+== 通知栏显示未知服务器消息
+
+Notification bar system message text color
+== 通知栏系统提示文字颜色
+
+Notification display duration (ms)
+== 通知栏停留时间（毫秒）
+
+Notification echo overlay text color
+== 通知栏 echo 覆盖文字颜色
 
 Notification hold time
 == 每条显示多久
@@ -4675,8 +6779,23 @@ Notify when friends come online
 Notify when only one tee is still alive:
 == 当只剩一名存活者时提示：
 
+Notify when someone highlights you
+== 当有人突出显示你时让客户通知
+
 Novice
 == 简单
+
+Number of reserved slots for special players.
+== 为特殊玩家保留的槽位数量
+
+Number of slots reserved for spectators
+== 为观众保留的槽位数
+
+Number of threads backend can use for rendering (Note: value may be ignored by backend)
+== 后端可用于渲染的线程数。（注：该值可以被后端忽略）
+
+Number of vote options sent per tick
+== 每 tick 发送的投票选项数量
 
 Numeric-only messages will be skipped
 == 纯数字消息会直接跳过
@@ -4696,11 +6815,11 @@ Official community links
 Offline
 == 离线
 
-Ohhhhhhhhhhhhhhhh
-== 噢噢噢噢噢噢噢噢噢噢噢噢噢噢噢噢
-
 Ok
 == 确定
+
+Old chat style: no tee icons, no background
+== 旧的聊天风格：无球座，无背景
 
 Oldschool
 == 传统
@@ -4720,8 +6839,11 @@ Only .wv files are supported right now.
 Only affects custom Tee colors.
 == 仅对自定义 Tee 颜色生效。
 
-Only Apple Can Do
-== 只有 Apple 才能做到
+Only allow authorized clients to vote
+== 只允许经过授权的客户端进行投票
+
+Only save ghost if better than previous record
+== 只保存比之前记录更好的鬼魂。
 
 Only save improvements
 == 只保存更佳记录
@@ -4732,14 +6854,14 @@ Only show after joining a team
 Only show outlines in the entities layer
 == 仅在实体层中显示轮廓
 
+Only show skins available in Vanilla Teeworlds
+== 仅显示 Vanilla Teeworlds 中可用的皮肤
+
 Only show when the other Tee is not on screen
 == 仅当另一个 Tee 不在屏幕上时显示
 
 Only what you can't imagine, nothing Dream can't do
 == 只有你想不到，没有梦做不到
-
-Only what you can't imagine, nothing Dream can't do!
-== 只有你想不到，没有梦做不到！
 
 Opacity
 == 不透明度
@@ -4754,13 +6876,16 @@ Open color picker
 == 打开选色
 
 Open DDNet Wiki
-== Open DDNet Wiki
+== 打开 DDNet Wiki
 
 Open emote selector
 == 打开表情选择器
 
+Open map editor
+== 打开地图编辑器
+
 Open modal
-== 打开弹窗
+== 打开模态框
 
 Open pie menu
 == 打开饼菜单
@@ -4793,10 +6918,10 @@ Open the saves file
 == 打开存档密码文件
 
 Open the selected folder
-== Open the selected folder
+== 打开所选文件夹
 
 Open the selected screenshot
-== Open the selected screenshot
+== 打开所选截图
 
 Open the settings file
 == 打开设置文件
@@ -4810,23 +6935,23 @@ OpenAI API Key
 OpenAI API key
 == OpenAI API 密钥
 
-OpenAI 模型名称
-== OpenAI 模型名称
-
-OpenAI 端点（留空使用默认）
+OpenAI endpoint (leave empty for default)
 == OpenAI 端点（留空使用默认）
+
+OpenAI model name
+== OpenAI 模型名称
 
 Opened
 == 已打开
 
 Opens the emoticon selector (this does not work with binds).
-== Opens the emoticon selector (this does not work with binds).
+== 打开表情选择器（不适用于按键绑定）。
 
 Opens the ingame menu immediately when released.
-== Opens the ingame menu immediately when released.
+== 松开时立刻打开游戏内菜单。
 
 Opens the spectator menu (this does not work with binds).
-== Opens the spectator menu (this does not work with binds).
+== 打开旁观菜单（不适用于按键绑定）。
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == 选择退出观众计数并对未经授权的玩家隐藏身份验证状态（1 = 隐藏，0 = 显示）
@@ -4837,11 +6962,17 @@ Optimistic prediction along stable direction
 Option color
 == 选项颜色
 
+Optional authentication key for the DNSBL provider
+== 指定 DNSBL 提供商的可选身份验证密钥
+
 Other
 == 其他
 
 Other lines font size
 == 其他行字号
+
+Other players' hook line width
+== 其他玩家的钩索辅助线宽度
 
 Others
 == 他人
@@ -4852,11 +6983,17 @@ Others only
 Outgoing language
 == 发送语言
 
+Outgoing translation target language code
+== 出站翻译目标语言代码
+
 Outline color
 == 描边颜色
 
+Outline global opacity
+== 轮廓全局透明度
+
 Outline opacity
-== 轮廓不透明度
+== 描边不透明度
 
 Output device
 == 输出设备
@@ -4870,20 +7007,47 @@ Output device open failed
 Output device open failed, try reconnecting speakers/headphones or reselecting output device
 == 输出设备打开失败，建议重插耳机/扬声器后刷新，或重新选择输出设备
 
+Output KCP negotiation, fallback, and session lifecycle debug logs
+== 输出 KCP 协商、fallback 和会话生命周期调试日志
+
 Output switch
 == 输出切换
+
+Output voice debug log
+== 输出语音调试日志
+
+Overall lyrics opacity (%)
+== 歌词整体不透明度 %
 
 Overlay entities
 == 显示实体层
 
+Overlay game tiles with opacity percentage
+== 以一定百分比的不透明度覆盖游戏图块
+
 Override
 == 覆盖
+
+Override current clan even if preset clan name is empty
+== 即使配置方案里的部落名为空也覆盖当前部落
+
+Override Death Tile Entity Alpha (0-100)
+== 覆盖死亡图块的实体 alpha (0-100)
+
+Override Entity Alpha for Unfreeze Tiles (0-100)
+== 覆盖实体 alpha 以解冻图块 (0-100)
 
 Override Entry
 == 覆盖条目
 
+Override Freeze Tile Entity Alpha (0-100)
+== 覆盖冻结图块的实体 alpha (0-100)
+
 Override Group
 == 覆盖群组
+
+Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
 
 Override Selected
 == 覆盖选定项
@@ -4891,20 +7055,17 @@ Override Selected
 Overview
 == 概览
 
-Overview cards show a lightweight guide to the client and page structure
-== 概览卡展示客户端与页面结构的轻量说明
-
 Overwrite clan even if empty
 == 即使战队为空也覆盖
+
+Own hook line width
+== 自己的钩索辅助线宽度
 
 p = Ping latency
 == p = Ping 延迟
 
 Pack name
 == 包名
-
-Page guide
-== 页面说明
 
 Panel opacity
 == 面板不透明度
@@ -4926,6 +7087,9 @@ Part updated.
 
 Particle alpha
 == 粒子透明度
+
+Particle assets
+== 粒子资产
 
 Particle collision
 == 粒子碰撞
@@ -4963,8 +7127,17 @@ Particles
 Password
 == 密码
 
+Password for Axiom alt account auto-login
+== Axiom 分身自动登录密码
+
+Password for Axiom main account auto-login
+== Axiom 主号自动登录密码
+
 Password incorrect
 == 密码错误
+
+Password required to use reserved slots.
+== 使用预留插槽所需的密码
 
 Pause
 == 暂停
@@ -4972,11 +7145,26 @@ Pause
 Pause the current demo
 == 暂停回放
 
+Pause video rendering when demo playback is paused
+== demo 播放暂停时暂停视频渲染
+
+Pause voice when window unfocused
+== 窗口失焦时暂停语音
+
 Pause/unpause game
 == 暂停/恢复游戏
 
+Penalty in seconds for saving or swapping positions
+== 保存或交换位置的惩罚以秒为单位
+
+Per-name volume (name=percent)
+== 按名字单独音量（name=percent）
+
 Per-word highlight (karaoke)
 == 逐字高亮（卡拉 OK）
+
+Performance debug log threshold (ms)
+== 性能调试日志阈值（毫秒）
 
 Personal best:
 == 个人最佳：
@@ -4990,8 +7178,17 @@ Pet
 Pet alpha
 == 宠物透明度
 
+Pet opacity (100=Opaque, 50=Semi-transparent)
+== 宠物透明度（100=完全不透明，50=半透明）
+
 Pet size
 == 宠物大小
+
+Pet size relative to normal player
+== 宠物相对普通玩家的大小比例
+
+Pet skin
+== 宠物皮肤
 
 Pet Skin:
 == 宠物皮肤：
@@ -5008,6 +7205,9 @@ Pie Menu
 Pie menu
 == 饼菜单
 
+Pie menu rename list (separate with |, e.g., name1|name2)
+== 饼菜单改名名单（使用 | 分隔，如：璇梦 1|璇梦 2）
+
 Ping
 == Ping
 
@@ -5016,6 +7216,9 @@ Ping the current server
 
 Pistol
 == 手枪
+
+Plasma gun shots per second
+== 等离子枪每秒发射多少发子弹
 
 Play a slide-in rotation animation when switching weapons
 == 切换武器时播放滑入旋转动画
@@ -5026,11 +7229,14 @@ Play back a demo
 Play background music
 == 播放背景音乐
 
+Play slide-in rotation animation when switching weapon
+== 切换武器时播放滑入旋转动画
+
 Play the current demo
 == 播放回放
 
 Play the selected demo
-== Play the selected demo
+== 播放所选回放
 
 Play/Pause
 == 播放/暂停
@@ -5050,11 +7256,41 @@ Player
 Player already invited
 == 该玩家已经被邀请过了
 
+Player body color
+== 玩家身体颜色
+
+Player clan
+== 玩家战队
+
+Player country (ISO 3166-1 numeric code)
+== 玩家国家（ISO 3166-1 数字码）
+
+Player country filter in server browser (ISO 3166-1 numeric)
+== 在服务器浏览器中过滤的玩家国家/地区（ISO 3166-1 数字）
+
 Player country:
 == 玩家国家/地区：
 
 Player data
 == 玩家数据
+
+Player decoration color
+== 玩家装饰颜色
+
+Player eyes color
+== 玩家眼睛颜色
+
+Player eyes on join. 0 = normal, 1 = pain, 2 = happy, 3 = surprised, 4 = angry, 5 = blink
+== 加入服务器时玩家的眼睛。0 = 正常，1 = 疼痛，2 = 高兴，3 = 惊讶，4 = 生气，5 = 眨眼
+
+Player feet color
+== 玩家脚颜色
+
+Player feet skin
+== 玩家脚皮
+
+Player hands color
+== 玩家手部颜色
 
 Player Indicator
 == 玩家指示器
@@ -5062,14 +7298,29 @@ Player Indicator
 Player indicator
 == 玩家指示器
 
+Player indicator alive Tee color
+== 玩家指示器中存活 Tee 的颜色
+
+Player indicator frozen Tee color
+== 玩家指示器中冻结 Tee 的颜色
+
+Player indicator unfreezing Tee color
+== 玩家指示器中脱困中 Tee 的颜色
+
 Player is currently authed in rcon.
-== Player is currently authed in rcon.
+== 玩家已登入管理员。
 
 Player is ingame, i.e. not spectating.
-== Player is ingame, i.e. not spectating.
+== 玩家在游戏内（非旁观状态）。
 
 Player is on a different team
 == 目标玩家不在你的队伍里
+
+Player marker color
+== 玩家标记颜色
+
+Player name
+== 玩家名称
 
 Player name:
 == 玩家名：
@@ -5077,10 +7328,40 @@ Player name:
 Player not found
 == 未找到该玩家
 
+Player preview
+== 玩家预览
+
+Player push radius for background 3D particles
+== 玩家推动背景 3D 粒子的半径
+
+Player push strength for background 3D particles
+== 玩家推动背景 3D 粒子的强度
+
 Player range
 == 玩家范围
 
-Player Stats
+Player skin
+== 玩家皮肤
+
+Player skin body
+== 玩家皮肤身体
+
+Player skin decoration
+== 玩家皮肤装饰
+
+Player skin eyes
+== 玩家皮肤眼睛
+
+Player skin hand
+== 玩家皮肤手
+
+Player skin marking
+== 玩家皮肤标记
+
+Player skin used for volleyball appearance
+== 排球外观使用的玩家皮肤
+
+Player stats
 == 玩家统计
 
 Player stats and info display
@@ -5140,6 +7421,21 @@ Points
 Popup animation
 == 弹出动画
 
+Port for client to server connection (0=random, >=1024 sets manual port)
+== 用于客户端连接到服务器的端口（0 选择随机端口，1024 或更高设置手动端口）
+
+Port for dummy connection to server (0=random, >=1024 sets manual port)
+== 用于与服务器建立分身连接的端口（0 选择随机端口，1024 或更高设置手动端口）
+
+Port for master server registration, useful if behind NAT, otherwise just use sv_port
+== 主服务器注册服务器的端口，如果你位于 NAT 之后，则很有用，否则你只需要 sv_port
+
+Port for server info connection to server (0=random, >=1024 sets manual port)
+== 用于与服务器进行 serverinfo 连接的端口（0 选择随机端口，1024 或更高设置手动端口）
+
+Port for the external console.
+== 用于外部控制台的端口
+
 Position
 == 位置
 
@@ -5164,14 +7460,44 @@ Practice mode enabled for your team, happy practicing!
 Practice mode is disabled
 == 本服务器已禁用练习模式
 
+Pre-warm settings page on startup and menu idle
+== 启动和菜单空闲时预热设置页
+
+Predict client movement
+== 预测客户端移动
+
+Predict dummy movement
+== 预测分身移动
+
 Predict events (experimental)
 == 预测事件（实验性）
+
+Predict events (sounds, particles)
+== 预测事件（声音、粒子）
+
+Predict fire and show predicted weapon physics (requires cl_antiping_grenade 1 and cl_antiping_weapons 1)
+== 预测枪火并显示预测的武器物理效果（需配合 cl_antiping_grenade 1 和 cl_antiping_weapons 1）
+
+Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when frozen))
+== 预测冻结图块（0 = 关闭，1 = 开启，2 = 部分（允许冻结时少量移动）
+
+Predict grenade trajectory (only with cl_antiping 1)
+== 预测榴弹炮轨迹（仅在 cl_antiping 为 1 时生效）
+
+Predict weapon projectiles (only with cl_antiping 1)
+== 预测武器投射物（仅在 cl_antiping 为 1 时生效）
 
 Predicted ghost opacity
 == 预测影子不透明度
 
 Prediction
 == 预测
+
+Prediction boundary (ms, increases latency but reduces ping jitter)
+== 预测边界（单位：毫秒，增加延迟但可减少因 ping 波动导致的卡顿）
+
+Prediction ghost opacity (0-100)
+== 预测幽灵透明度（0-100）
 
 Prediction jitter is obvious, latency changes are large
 == 预测抖动明显，延迟变化较大
@@ -5189,10 +7515,13 @@ Prediction Margin
 == 预测量
 
 Prediction margin
-== 预测边距
+== 预测余量
+
+Prediction margin when frozen
+== 冻结时的预测边距
 
 Prediction offset
-== Prediction offset
+== 预测偏移
 
 Prediction time
 == 预测耗时
@@ -5206,11 +7535,14 @@ Preset %d
 Preset bar
 == 预设栏
 
+Preset when encoding video with libx264, default 5 (medium), 0 is ultrafast, 9 is placebo (slowest, not recommended)
+== 使用 libx264 编码视频时的预设，默认 5（medium），0 为 ultrafast，9 为 placebo（最慢，不推荐）
+
 Press a key…
 == 按任意键…
 
 Press ESC to close. Watch the scale-in spring on open.
-== 按 ESC 关闭。打开时可以观察缩放弹簧动画。
+== 按 Esc 关闭。打开时观察缩放弹入动画。
 
 Press Esc to exit the HUD editor
 == 按 Esc 退出 HUD 编辑器
@@ -5243,7 +7575,7 @@ Preview selected file
 == 试听已选文件
 
 Preview visibilities
-== Preview visibilities
+== 预览可见度
 
 Preview/render only one DDRace team from a full match demo
 == 从完整比赛 demo 中只预览/渲染一个 DDRace 队伍
@@ -5260,17 +7592,29 @@ Previous page in console
 Primary
 == 主要
 
+Print broadcast messages to console
+== 将广播消息打印到控制台
+
 Print command executed by this keybinding or all binds
 == 打印此键绑定或所有绑定执行的命令
 
 Print command executed by this name or all chat binds
 == 打印该名称或所有聊天绑定执行的命令
 
+Print daily messages to console
+== 将每日消息打印到控制台
+
 Privately messages someone's current time in this current running race (your time by default)
 == 私聊发送某人在当前竞速中的时间（默认发送你的时间）
 
 Privately shows you your current time in this current running race in the broadcast message
 == 在广播中私聊显示你当前竞速时间
+
+Probability of sending freeze chat message (0-100%)
+== 发送冻结聊天消息的概率（0-100%）
+
+Profile Options
+== 预设选项
 
 Profiles
 == 配置文件
@@ -5287,10 +7631,13 @@ Progress bar height
 Progress bar width
 == 进度条宽度
 
+Protect names and skins while streaming
+== 直播时保护名称和皮肤
+
 Provider thresholds
 == 来源匹配阈值
 
-PTT 释放延迟（毫秒）
+PTT release delay (ms)
 == PTT 释放延迟（毫秒）
 
 Publicly messages everyone your current time in this current running race
@@ -5301,6 +7648,12 @@ Pulse
 
 Pulse amplitude
 == 脉冲幅度
+
+Pulse Amplitude (0-100)
+== 脉冲振幅 (0-100)
+
+Pulse animation speed (percentage, 100=normal)
+== 脉冲动画速度 ( 百分比，100=正常)
 
 Pulse speed
 == 脉冲速度
@@ -5344,12 +7697,6 @@ Pyramid
 q = Connection quality
 == q = 连接质量
 
-Q 弹 Tee 形变强度
-== Q 弹 Tee 形变强度
-
-Q 弹 Tee 形变持续时间
-== Q 弹 Tee 形变持续时间
-
 Qm
 == 栖梦
 
@@ -5377,55 +7724,58 @@ QmClient Community
 QmClient online distribution
 == 栖梦客户端在线分布
 
-QmClient overview
-== 栖梦边栏概览
-
 QmClient Settings
 == QmClient 设置
 
-QmLiveClient：单队隔离预览/渲染队伍，0=关闭
-== QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+QmClient sidebar module collapse state
+== 栖梦侧栏模块折叠状态
 
-QmLiveClient：启用单队隔离画面过滤
-== QmLiveClient：启用单队隔离画面过滤
+QmClient sidebar module order
+== 栖梦侧栏模块排序
 
-QmLiveClient：启用单队隔离音效过滤
-== QmLiveClient：启用单队隔离音效过滤
-
-QmLiveClient：完成排名卡片不透明度百分比
-== QmLiveClient：完成排名卡片不透明度百分比
-
-QmLiveClient：完成排名卡片显示秒数
-== QmLiveClient：完成排名卡片显示秒数
-
-QmLiveClient：完成排名卡片缩放百分比
-== QmLiveClient：完成排名卡片缩放百分比
-
-QmLiveClient：完整比赛 demo 录制开关
-== QmLiveClient：完整比赛 demo 录制开关
-
-QmLiveClient：排名 HUD 队伍范围上限
-== QmLiveClient：排名 HUD 队伍范围上限
-
-QmLiveClient：排名 HUD 队伍范围下限
-== QmLiveClient：排名 HUD 队伍范围下限
-
-QmLiveClient：无法识别来源的玩家型事件默认过滤
+QmLiveClient: Default filter for unrecognized source player events
 == QmLiveClient：无法识别来源的玩家型事件默认过滤
 
-QmLiveClient：显示配置范围外队伍的完成卡片
-== QmLiveClient：显示配置范围外队伍的完成卡片
+QmLiveClient: Enable single team isolation audio filter
+== QmLiveClient：启用单队隔离音效过滤
 
-QmLiveClient：显示队伍完成排名卡片
-== QmLiveClient：显示队伍完成排名卡片
+QmLiveClient: Enable single team isolation visual filter
+== QmLiveClient：启用单队隔离画面过滤
 
-QmLiveClient：隐藏非目标队伍完成提示
+QmLiveClient: Finish ranking card display seconds
+== QmLiveClient：完成排名卡片显示秒数
+
+QmLiveClient: Finish ranking card opacity percent
+== QmLiveClient：完成排名卡片不透明度百分比
+
+QmLiveClient: Finish ranking card scale percent
+== QmLiveClient：完成排名卡片缩放百分比
+
+QmLiveClient: Full match demo recording toggle
+== QmLiveClient：完整比赛 demo 录制开关
+
+QmLiveClient: Hide non-target team finish prompts
 == QmLiveClient：隐藏非目标队伍完成提示
 
-QmUi 动效强度：0=关闭 1=降低 2=完整
+QmLiveClient: Ranking HUD team range lower bound
+== QmLiveClient：排名 HUD 队伍范围下限
+
+QmLiveClient: Ranking HUD team range upper bound
+== QmLiveClient：排名 HUD 队伍范围上限
+
+QmLiveClient: Show finish cards for teams outside range
+== QmLiveClient：显示配置范围外队伍的完成卡片
+
+QmLiveClient: Show team finish ranking card
+== QmLiveClient：显示队伍完成排名卡片
+
+QmLiveClient: Single team isolation preview/render team, 0=Off
+== QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+
+QmUi animation intensity: 0=Off, 1=Reduced, 2=Full
 == QmUi 动效强度：0=关闭 1=降低 2=完整
 
-QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform
 == QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
 
 QQ group: 1076765929 (click to copy)
@@ -5461,6 +7811,9 @@ Queue preset: %s
 Quick action menu for players
 == 对玩家快捷操作菜单
 
+Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
+== 快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+
 Quit
 == 退出
 
@@ -5488,11 +7841,17 @@ Rainbow card titles
 Rainbow hook
 == 彩虹色钩索
 
+Rainbow mode (1=Rainbow, 2=Pulse, 3=Dark, 4=Random)
+== 彩虹模式（1=彩虹，2=脉冲，3=暗色，4=随机）
+
 Rainbow others
 == 将彩虹带给每个人！
 
 Rainbow speed
 == 颜色变化速度
+
+Rainbow speed percent (50=half speed, 200=double)
+== 彩虹变化速度百分比（50=半速，200=双倍）
 
 Rainbow Tees
 == 彩虹色 Tee
@@ -5505,6 +7864,9 @@ Random
 
 Random Colors
 == 随机颜色
+
+Random emote when hit by hammer/grenade
+== 被锤/榴弹击中时随机表情
 
 Random emoticon
 == 随机表情
@@ -5524,6 +7886,12 @@ Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example
 Ratio
 == K/D
 
+Ratio threshold for local target language detection
+== 本地目标语言识别占比阈值
+
+Read new feature indicators
+== 已读的设置界面新功能标识
+
 Reason
 == 原因
 
@@ -5542,6 +7910,12 @@ Receive Rate
 Receive rate
 == 接收速率
 
+Receive VAD speakers
+== 接收 VAD 讲话者
+
+Receive voice from spectators/inactive players
+== 接收旁观/非活跃玩家语音
+
 Receiving
 == 正在接收
 
@@ -5550,6 +7924,9 @@ Recent
 
 Reconnect in %d sec
 == %d 秒后重新连接
+
+Record chat replays.
+== 录制聊天回放
 
 Record demo
 == 录制回放
@@ -5569,6 +7946,12 @@ Red team
 Red team wins!
 == 红队胜利！
 
+Reduce antiping and player prediction when frozen
+== 冻结时减少 antiping 和玩家预测
+
+Reduced
+== 精简
+
 Refresh
 == 刷新
 
@@ -5579,13 +7962,16 @@ Refresh Rate
 == 刷新率
 
 Refresh the demo list
-== Refresh the demo list
+== 刷新回放列表
 
 Regex
 == 正则
 
 Region
 == 地域
+
+Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
+== 向主服务器注册服务器以进行公开列表，还可以接受要注册的以逗号分隔的协议列表，例如“ipv4，ipv6”
 
 Regular background color
 == 原图层背景颜色
@@ -5596,8 +7982,17 @@ Regular expression
 Relative path
 == 相对路径
 
+Relative X position of the draggable back button
+== Relative X position of the draggable back button
+
+Relative Y position of the draggable back button
+== Relative Y position of the draggable back button
+
 Reload
 == 重新加载
+
+Reload map when empty (1 = once, 2 = each time)
+== 服务器空时重新加载地图（1 = 重新加载一次，2 = 每次服务器空时重新加载）
 
 Reload the announcements
 == 重新加载公告
@@ -5623,8 +8018,20 @@ Reloaded images. %d slot(s) fell back to main asset.
 Remote console
 == 远程控制台
 
+Remote console password (full access)
+== 远程控制台密码（完全访问）
+
+Remote console password for helper (limited access)
+== 帮助者的远程控制台密码（有限访问）
+
+Remote console password for moderator (limited access)
+== 主持人的远程控制台密码（有限访问）
+
 Remote particle effects
 == 远程粒子效果
+
+Remote particles: sync and render other players via central server (requires both local+remote enabled)
+== 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
 
 Remove
 == 删除
@@ -5729,7 +8136,7 @@ Remove war name:
 == 删除敌对玩家：
 
 Removed %s from friends
-== 已将 %s 移出好友
+== 已将 %s 从好友中移除
 
 Removes all bindwheel binds
 == 移除全部绑定轮盘绑定
@@ -5791,8 +8198,14 @@ Rename: %s
 Render all custom colored feet as white feet skin
 == 将所有自定义脚部颜色渲染为白色
 
+Render all feet as solid white base
+== 将所有脚部渲染为纯白底色
+
 Render complete
 == 渲染完毕
+
+Render crosshair in free spectate mode
+== 自由视角旁观时渲染准星
 
 Render cut to video
 == 渲染裁剪部分
@@ -5800,11 +8213,32 @@ Render cut to video
 Render demo
 == 渲染回放
 
+Render entity text data
+== 渲染实体文本数据
+
+Render entity text data in editor
+== 在编辑器中渲染实体文本数据
+
 Render ghosts as circles
 == 将影子渲染为圆圈
 
+Render ghosts as circles instead of Tee
+== 将幽灵渲染为圆圈而不是 Tee
+
+Render graphics when window is in background
+== 当窗口处于后台时渲染图形
+
+Render quads as triangles (fixes quad shading on some GPUs)
+== 将四边形渲染为三角形（修复了某些 GPU 上的四边形着色）
+
+Render refresh rate (Hz, limited by cl_refresh_rate)
+== 渲染帧刷新率（单位：Hz；受 cl_refresh_rate 限制）
+
 Render tiny tees instead of circles
 == 渲染成迷你 Tee 而不是圆圈
+
+Renderer performing the analysis
+== 执行分析的渲染器
 
 Renderer selection
 == 渲染器选择
@@ -5821,14 +8255,23 @@ Repeat message
 Repeat the latest chat message
 == 复读最新聊天消息
 
+Replace censored words with length-based chars
+== 按屏蔽词长度多字符替换
+
 Replace mode
 == 替换模式
+
+Replace mode 0=Regex 1=Full 2=Both
+== 替换方式 0=Regex 1=Full 2=Both
 
 Replace non-friend names with ID
 == 用 ID 替换非好友名称
 
 Replace non-friend skins with default
 == 用默认皮肤替换非好友皮肤
+
+Replace skin with one having this prefix (e.g. cats, santa)
+== 将皮肤替换为带有此前缀的皮肤（例如小猫、圣诞老人）
 
 Replace video
 == 替换视频
@@ -5844,6 +8287,9 @@ Replay feature is disabled!
 
 Reply
 == 回复
+
+Reply to messages from muted players
+== 回复静音玩家的消息
 
 Reply to the last whisper target
 == 回复上一个私聊对象
@@ -5872,6 +8318,15 @@ Report request is already in progress
 Report scan request submitted
 == 举报扫描请求已提交
 
+Report service App ID
+== 举报服务 App ID
+
+Report service signing key
+== 举报服务签名密钥
+
+Report service URL
+== 举报服务地址
+
 Reports are not available on Axiom servers
 == Axiom 服务器内不可使用举报功能
 
@@ -5887,8 +8342,8 @@ Request to swap your tee with another team member
 Requesting to join the game
 == 正在请求加入游戏
 
-Requires extra animations
-== 需要启用额外动画
+Require KCP-capable client to upgrade session (keep off during grayscale for fallback)
+== 要求支持 KCP 的客户端才能升级会话（灰度期保持关闭以允许 fallback）
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == 本服未开启 rescue，且你所在队伍也没有开启 /practice。注意：练习模式下无法获得排名
@@ -5929,11 +8384,17 @@ Reset all drawings on the background
 Reset all or one tuning variable to default
 == 将全部或单个调参变量重置为默认值
 
+Reset chat on escape
+== 按退出键时重置聊天
+
 Reset column widths
 == 重置列宽
 
 Reset controls
 == 恢复默认设置
+
+Reset DDRace tuning (sv_hit, sv_endless_drag, sv_old_laser) after each map change
+== 每次地图更改后是否重置 DDRace 调整（sv_hit、sv_endless_drag 和 sv_old_laser）
 
 Reset default
 == 恢复默认
@@ -5947,8 +8408,14 @@ Reset filter
 Reset layout
 == 重置布局
 
+Reset mouse position when opening bind wheel
+== 打开绑定轮时重置鼠标位置
+
 Reset position of mouse when opening bindwheel
 == 打开快捷绑定轮盘时重置鼠标位置
+
+Reset stats on server join (0=persistent, 1=reset on join)
+== 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 
 Reset stats when joining a server
 == 进入服务器时重置统计
@@ -5956,8 +8423,20 @@ Reset stats when joining a server
 Reset to defaults
 == 恢复默认设置
 
+Reset tuning after each map change
+== 每次地图更改后是否重置调整
+
+Reset weapons when passing start tile
+== 武器是否在通过起始方块时重置
+
 Reset zone tuning in zone x or in all zones
 == 重置区域 x（或全部区域）的调参配置
+
+Resource preview VRAM budget override (MB, 0=auto)
+== 资源预览显存预算覆盖（MB，0=自动）
+
+Resource preview VRAM budget percentage (based on device local VRAM budget)
+== 资源预览显存预算百分比（基于设备本地显存预算）
 
 Respawn default weapon
 == 重生默认武器
@@ -5974,14 +8453,23 @@ Restart the client
 Restarting. Please wait…
 == 正在重启，请稍等
 
+Restore old single-segment hook collision line behavior
+== 恢复旧版单段钩子碰撞线行为
+
 Retrying…
-== Retrying…
+== 正在重试…
 
 Rifle Laser Inner Color
 == 激光枪弹道实心颜色
 
+Rifle laser inner color
+== 步枪激光内色
+
 Rifle Laser Outline Color
 == 激光枪弹道外框颜色
+
+Rifle laser outline color
+== 步枪的激光轮廓颜色
 
 Right jump
 == 右跳
@@ -6022,6 +8510,9 @@ Room password
 Rotate all server player skins
 == 轮换服务器所有人皮肤
 
+Rotate hammer with cursor like other weapons
+== 让锤子像其他武器一样随光标旋转
+
 Round
 == 回合数
 
@@ -6034,11 +8525,47 @@ Rounded caps
 Route Echo messages to notifications
 == Echo 消息改走通知栏
 
+Rule line 1.
+== 规则第 1 行
+
+Rule line 10.
+== 规则第 10 行
+
+Rule line 2.
+== 规则第 2 行
+
+Rule line 3.
+== 规则第 3 行
+
+Rule line 4.
+== 规则第 4 行
+
+Rule line 5.
+== 规则第 5 行
+
+Rule line 6.
+== 规则第 6 行
+
+Rule line 7.
+== 规则第 7 行
+
+Rule line 8.
+== 规则第 8 行
+
+Rule line 9.
+== 规则第 9 行
+
+Run "hot_reload" on local server with rcon auth on map save
+== 在本地服务器上运行“hot_reload”，同时在地图保存上进行 rcon 验证
+
 Run chai script
 == 运行 chai 脚本
 
 Run on join
 == 进入时执行
+
+Run profiler to check 3D/2D array texture sampling works correctly
+== 运行分析器来检查 3D/2D 阵列纹理采样是否正常工作
 
 Run server
 == 运行服务器
@@ -6046,14 +8573,20 @@ Run server
 SA
 == 南美
 
-Saiko+ 输入量（0.01 tick）
+Saiko+ input amount (0.01 tick)
 == Saiko+ 输入量（0.01 tick）
+
+Saiko+ others
+== Saiko+ 他人
 
 Same as "vote no"
 == 与“投反对票”相同
 
 Same clan color in scoreboard
 == 相同战队在计分板上的颜色
+
+Same group full map listening
+== 同组全图收听
 
 Sat.
 == 饱和度
@@ -6100,8 +8633,17 @@ Save ghost
 Save last %d min
 == 保存前 %d 分钟
 
+Save player names in replay
+== 在回放中保存玩家名称
+
 Save power by lowering update rate (higher input latency)
-== Save power by lowering update rate (higher input latency)
+== 降低刷新率以节约功耗（增加输入延迟）
+
+Save replay of best time per game
+== 保存每场游戏最佳记录的回放
+
+Save settings file on exit
+== 退出时保存设置文件
 
 Save skin
 == 保存皮肤
@@ -6142,6 +8684,9 @@ Save/Load Name
 Save/Load Skin
 == 保存/加载皮肤
 
+Saved Profiles
+== 已保存的预设
+
 Saves file
 == 存档密码文件
 
@@ -6150,6 +8695,18 @@ Say in chat
 
 Say in team chat
 == 在队伍聊天中说
+
+Scale down other Tees as well
+== 同时缩小其他 Tee
+
+Scale down Tee
+== 缩小 Tee
+
+Scale max mouse distance to 1000 for better aim
+== 将最大鼠标距离缩放到 1000，以提高瞄准精度
+
+Scale uncertainty duration by ping (100=1.0x)
+== 按 ping 比例缩放不确定性时长（100=1.0 倍）
 
 Scanning current server
 == 正在扫描当前服务器
@@ -6178,6 +8735,15 @@ Scoreboard opacity
 Scoreboard point check
 == 计分板积分检查
 
+Scoreboard score lookup
+== 计分板查分
+
+Scoreboard sort mode (0=Score, 1=Points)
+== 记分牌排序模式（0=分数，1=分）
+
+Scoreboard transparency
+== 计分板透明度
+
 Scores are private on this server
 == 本服务器的成绩是私密的
 
@@ -6192,6 +8758,15 @@ Screen center line color
 
 Screen center line width
 == 屏幕中心线宽度
+
+Screen refresh rate (Hz, only fullscreen)
+== 屏幕刷新率（单位：Hz；仅纯全屏模式）
+
+Screen resolution height (only fullscreen)
+== 屏幕分辨率高度（仅纯全屏模式）
+
+Screen resolution width (only fullscreen)
+== 屏幕分辨率宽度（仅纯全屏模式）
 
 Screenshot
 == 截图
@@ -6226,14 +8801,17 @@ Secondary
 Seconds
 == 秒
 
+Seconds to wait before reconnecting (0=off, when server is full)
+== 重新连接前等待多少秒（服务器已满时，0 表示关闭）
+
+Seconds to wait before reconnecting (after timeout, 0 to disable).
+== 重新连接前等待多少秒（超时后，0 表示关闭）
+
 SecretId
 == 密钥 ID
 
 SecretKey
 == 密钥
-
-See how much you act
-== 看看你有多演
 
 Select all chat
 == 全选聊天记录
@@ -6286,6 +8864,15 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == 向所有玩家发送服务器警报消息
 
+Send aim data with sub-tick precision
+== 以亚 tick 精度发送瞄准数据
+
+Send client input to others before correct input (increases server bandwidth)
+== 在正确的报价之前将客户端输入发送给其他客户端。增加服务器所需的带宽
+
+Send emote when entering freeze
+== 进入冻结状态发送表情
+
 Send emoticon in water
 == 水中发送表情
 
@@ -6334,6 +8921,9 @@ Sequential
 Server
 == 服务器
 
+Server address to filter
+== 要过滤的服务器地址
+
 Server address:
 == 服务器地址：
 
@@ -6342,6 +8932,15 @@ Server alert
 
 Server best:
 == 服务器最佳：
+
+Server browser exclude string
+== 服务器浏览器排除字符串
+
+Server browser filter string
+== 服务器浏览器过滤字符串
+
+Server browser sort column
+== 服务器浏览器中的排序列
 
 Server could not be started
 == 无法启动服务器
@@ -6361,6 +8960,9 @@ Server executable not found, can't run server
 Server filter
 == 服务器筛选
 
+Server hostname (0.7 only)
+== 服务器主机名（仅限 0.7）
+
 Server info
 == 服务器信息
 
@@ -6373,17 +8975,35 @@ Server kick/spec votes are no longer actively moderated.
 Server kick/spec votes will now be actively moderated.
 == 服务器的踢人/旁观投票现在会被主动管理员模式接管
 
+Server name
+== 服务器名称
+
 Server not full
 == 服务器未满
 
+Server password
+== 服务器密码
+
+Server port (only 8303-8310 work in LAN browser, 0=auto find free in 8303-8310). If behind NAT, see sv_register_port for external port
+== 服务器使用的端口（仅端口 8303-8310 在 LAN 服务器浏览器中工作，0 自动在 8303-8310 中查找空闲端口）。如果你位于 NAT 之后，请参阅 sv_register_port 了解外部端口
+
 Server preset
 == 服务器预设
+
+Server region. Used for region bans
+== 服务器区域。用于地区禁令
 
 Server rollback
 == 服务器回滚
 
 Server RTT is elevated, response path is unstable
 == 服务器 RTT 偏高，响应链路不稳定
+
+Server stress (debug builds only).
+== 服务器压力（仅限调试版本）
+
+Server type (novice, moderate, etc.)
+== 服务器类型（novice、moderate 等）
 
 Set a voice server to enable QmClient distribution
 == 需要先配置语音服务器，才能启用栖梦客户端在线分布
@@ -6406,6 +9026,9 @@ Set current demo speed
 Set ddrace team for a player
 == 为玩家设置 DDRace 队伍
 
+Set default replay length
+== 设置重播的默认长度
+
 Set force-pause timer of i to 0.
 == 将 i 的强制暂停计时器设置为 0。
 
@@ -6415,8 +9038,14 @@ Set friend category
 Set friend note
 == 设置好友备注
 
+Set fullscreen mode: 0=off, 1=exclusive, 2=desktop, 3=windowed fullscreen
+== 设置全屏模式：0=无全屏，1=纯全屏，2=桌面全屏，3=窗口全屏
+
 Set microphone mute state (0=on, 1=mute)
 == 设置麦克风静音状态（0=开启，1=静音）
+
+Set server to singleplayer mode (no player interaction, must be set before loading map)
+== 将服务器设置为单人模式（没有玩家交互，必须在加载地图之前设置）
 
 Set team for a player (spectators = -1, game = 0)
 == 设置玩家队伍（旁观 = -1，游戏 = 0）
@@ -6445,8 +9074,17 @@ Sets your tee's eye emote
 Settings
 == 设置
 
+Settings card default layout migration version
+== 设置卡片默认布局迁移版本
+
+Settings card titles use rainbow colors
+== 设置卡片标题使用彩虹色
+
 Settings file
 == 设置文件
+
+Settings page right panel opacity
+== 设置页右侧设置栏透明度
 
 Severe
 == 严重
@@ -6463,11 +9101,23 @@ Shotgun
 Shotgun Laser Inner Color
 == 霰弹枪弹道实心颜色
 
+Shotgun laser inner color
+== 霰弹枪激光内色
+
 Shotgun Laser Outline Color
 == 霰弹枪弹道外框颜色
 
+Shotgun laser outline color
+== 霰弹枪的激光轮廓颜色
+
 Show %s group
 == 显示 %s 分组
+
+Show a small view of the dummy
+== 显示分身小视图
+
+Show air jump indicator
+== 显示空中跳跃指示器
 
 Show all
 == 显示所有玩家
@@ -6477,6 +9127,12 @@ Show all buttons
 
 Show all enabled outlines
 == 显示所有启用的轮廓
+
+Show all enemy groups
+== 显示所有敌对分组
+
+Show all video modes
+== 显示所有视频模式
 
 Show all votes (page 0 by default, 20 entries per page)
 == 显示全部投票（默认第 0 页，每页 20 条）
@@ -6490,6 +9146,9 @@ Show any enabled Indicators
 Show background quads
 == 显示背景贴图
 
+Show background quads (only for mappers or if system is very slow)
+== 显示背景四边形（仅对映射者感兴趣，或者如果你的系统性能极差）
+
 Show banlist (page 1 by default, 20 entries per page)
 == 显示封禁列表（默认第 1 页，每页 20 条）
 
@@ -6499,23 +9158,47 @@ Show basic server information
 Show blocked words in console
 == 在控制台中显示被屏蔽的词语
 
+Show bounds of selected quads. Shows bounding rectangle bounds for multiple quads. Useful when aligning a group
+== 显示所选四边形的边界。如果有多个四边形，它会显示包围矩形的边界。对齐一组四边形时很有帮助
+
+Show broadcast messages in-game
+== 在游戏中显示广播消息
+
 Show chat
 == 显示聊天框
+
+Show chat (2 always show large chat area)
+== 显示聊天（2 始终显示大聊天区域）
 
 Show chat bubbles above players
 == 在玩家头顶显示聊天气泡
 
-Show chat bubbles above Tees
-== 在 Tee 上方显示对话气泡
-
 Show chat messages above players
 == 在玩家头顶显示聊天消息
+
+Show chat when rendering video
+== 渲染视频时显示聊天
 
 Show clan above name plates
 == 显示战队名称
 
 Show clan if war
 == 如果有敌对则显示战队
+
+Show clan name on nameplate
+== 在名牌上显示战队名称
+
+Show clan on nameplates for enemies
+== 敌对关系时在名字板显示部落
+
+Show client ID
+== 显示客户端 ID
+
+Show client ID in scoreboard, chat and spectator menu
+== 是否在记分板、聊天和观众菜单中显示客户端 ID
+
+Show client ID on a separate line in nametag
+== 在铭牌中的单独行中显示客户端 ID
 
 Show client IDs (scoreboard, chat, spectating)
 == 显示客户端 ID（计分板、聊天、观战）
@@ -6526,11 +9209,20 @@ Show client IDs in name plates
 Show client IDs on a separate line
 == 客户端 ID 换行显示
 
+Show client-generated chat messages, e.g., echo
+== 显示客户端生成的聊天消息，例如 echo
+
 Show collision and weapon interaction
 == 显示碰撞和武器交互
 
+Show Collision Borders
+== 显示碰撞体积边框
+
 Show colors in spectator selection
 == 旁观选择中显示颜色
+
+Show combo hint when hooking or hammering player within 2 seconds
+== 2 秒内连续钩中或锤中玩家时显示连击提示
 
 Show compact vote HUD
 == 显示小型投票 HUD
@@ -6541,14 +9233,23 @@ Show Coordinates
 Show coordinates above players
 == 在玩家头顶显示坐标
 
-Show coordinates of yourself and others
-== 显示自己和他人的坐标
-
 Show country flags in nameplates
 == 在玩家昵称旁显示国旗
 
 Show current and next lyric lines on HUD
 == 在 HUD 上显示当前和下一句歌词
+
+Show daily message to client
+== 显示给客户端的每日消息
+
+Show Danger Tiles in Hitbox Mode
+== 碰撞箱模式显示地图危险边界
+
+Show DDNet config variables
+== 显示 DDNet 配置变量
+
+Show DDNet map completion (transmits player name to info.ddnet.org/info)
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
 
 Show DDNet map finishes in server browser
 == 在服务器浏览器中显示已完成的 DDNet 地图
@@ -6556,20 +9257,65 @@ Show DDNet map finishes in server browser
 Show DDRace HUD
 == 显示 DDRace HUD
 
+Show death tile outlines
+== 显示死亡图块轮廓
+
+Show default flag in scoreboard
+== 在记分牌中显示默认国旗
+
+Show default mod rules.
+== 是否显示默认 mod 规则
+
 Show Directory
 == 显示目录
 
 Show dotted map route debug
 == 显示地图点状路线调试
 
+Show draggable virtual back button
+== Show draggable virtual back button
+
 Show dummy actions
 == 显示分身状态
+
+Show dummy angle in movement info HUD
+== 在运动信息 HUD 中显示分身角度
 
 Show dummy control status
 == 显示分身控制状态
 
+Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
+== 在玩家身上显示分身 CTF 旗帜（0=关闭，1=红旗，2=蓝旗）
+
+Show dummy mini view only when other tee leaves current view
+== 仅在另一只 tee 离开当前视角时显示分身迷你视图
+
+Show dummy mini view window
+== 显示分身迷你视图窗口
+
+Show dummy position in movement info HUD
+== 在运动信息 HUD 中显示分身位置
+
 Show dummy sync status
 == 显示分身同步状态
+
+Show dummy velocity in movement info HUD
+== 在运动信息 HUD 中显示分身速度
+
+Show enemy color in chat
+== 在聊天中显示敌对颜色
+
+Show enemy color in scoreboard
+== 在计分板中显示敌对颜色
+
+Show enemy color in spectator menu
+== 在旁观菜单中显示敌对颜色
+
+Show enemy group players
+== 显示敌对组玩家
+
+Show enemy reason
+== 显示敌对原因
 
 Show entities
 == 实体层显示开关
@@ -6577,23 +9323,62 @@ Show entities
 Show existing saves
 == 查看已有存档
 
+Show eye wheel and expressions
+== 显示眼轮和表情
+
+Show feat-003 shared UI primitives dogfood page (takes over QmClient settings page, for visual verification of 11 primitives + spring/easing animations)
+== 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
+
+Show filtered words in console
+== 控制台显示被屏蔽词
+
 Show finish messages
 == 显示完成消息
+
+Show flag on name plate
+== 名字板上显示国旗
 
 Show FPS
 == 显示 FPS
 
+Show freeze bar under frozen players indicating thaw time
+== 是否在冻结玩家下方显示冻结条以指示解冻时间
+
 Show freeze bars
 == 显示解冻进度条
+
+Show freeze/deep freeze tile outlines
+== 显示冻结/深冻图块轮廓
 
 Show friend icon in name plates
 == 在昵称中显示好友图标
 
+Show friend join in large text
+== 大字显示好友进服
+
+Show friend tag (♥) on nametag
+== 在名牌上显示朋友标记 (♥ )
+
 Show friends only
 == 只显示好友
 
+Show frozen Tee HUD
+== 显示冻结 Tee HUD
+
+Show frozen Tee HUD only in team
+== 仅在队伍内显示冻结 Tee HUD
+
+Show frozen tee particles
+== 显示冷冻 tee 的粒子
+
 Show ghost
 == 显示影子
+
+Show ghost at unpredictable position of other players
+== 在其他玩家的不可预测位置显示幽灵
+
+Show graphics library warnings and errors if GPU supports (0 = none, 1 = minimal, 2 = impacting performance, 3 = verbose, 4 = all).
+== 如果 GPU 支持，则显示图形库警告和错误（0：无、1：最小、2：影响性能、3：详细、4：全部）
 
 Show grenade and laser trajectory preview
 == 显示榴弹枪和激光轨迹预览
@@ -6607,6 +9392,9 @@ Show hammer status
 Show health, shields and ammo
 == 显示生命、护甲与弹药栏
 
+Show hint at random top-left/right of player when main or dummy is hammered awake
+== 本体或分身被锤醒时，在对应玩家随机的左上或右上角显示提示
+
 Show hitbox mode
 == 显示碰撞箱模式
 
@@ -6619,8 +9407,17 @@ Show hook strength icon indicator
 Show hook strength number indicator
 == 显示钩索强度数值
 
+Show hookable/unhookable tile outlines
+== 显示可钩/不可钩图块轮廓
+
+Show how weapons, shields, hearts, and flags appear in game
+== 展示武​​器、盾牌、红心和旗帜如何在游戏中出现
+
 Show HUD
 == HUD 开关
+
+Show important messages when rendering video
+== 渲染视频时显示重要提示
 
 Show important server prompts
 == 显示重要服务器提示
@@ -6634,6 +9431,72 @@ Show important server prompts as notifications
 Show in Dynamic Island
 == 显示在灵动岛内
 
+Show in-game FPS
+== 显示游戏内 FPS 
+
+Show in-game HUD
+== 显示游戏内 HUD
+
+Show in-game HUD (checkpoint time diff)
+== 显示游戏内 HUD（检查点时间差）
+
+Show in-game HUD (clone control state)
+== 显示游戏内 HUD（分身控制状态）
+
+Show in-game HUD (clone sync state)
+== 显示游戏内 HUD（分身同步状态）
+
+Show in-game HUD (DDRace HUD)
+== 显示游戏内 HUD (DDRace HUD)
+
+Show in-game HUD (dummy controls)
+== 显示游戏内 HUD（分身操作）
+
+Show in-game HUD (hammer state)
+== 显示游戏内 HUD（锤状态）
+
+Show in-game HUD (health + ammo)
+== 显示游戏内 HUD（血量 + 弹药）
+
+Show in-game HUD (jumps used)
+== 显示游戏中的 HUD（你已经使用过的跳跃）
+
+Show in-game HUD (keyboard blocking status)
+== 显示游戏内 HUD（卡键状态）
+
+Show in-game HUD (player aim angle)
+== 显示游戏内 HUD（玩家瞄准角度）
+
+Show in-game HUD (player position)
+== 显示游戏内 HUD（玩家位置）
+
+Show in-game HUD (player speed)
+== 显示游戏内 HUD（玩家速度）
+
+Show in-game HUD (score)
+== 显示游戏内 HUD（分数）
+
+Show in-game HUD (spectator count)
+== 显示游戏内 HUD（观众人数）
+
+Show in-game HUD (spectator HUD)
+== 显示游戏内 HUD（观众 HUD）
+
+Show in-game HUD (timer)
+== 显示游戏内 HUD（计时器）
+
+Show in-game HUD when rendering video
+== 渲染视频时显示游戏内 HUD
+
+Show in-game packet loss rate
+== 显示游戏内丢包率
+
+Show in-game prediction time (in milliseconds)
+== 显示游戏内预测时间（以毫秒为单位）
+
+Show indicators only within team
+== 仅在队伍内显示指示器
+
 Show info about the map with name r gives (current map by default)
 == 显示有关名称为 r 的地图的信息（默认为当前地图）
 
@@ -6643,17 +9506,29 @@ Show information about this server
 Show ingame HUD
 == 显示 HUD
 
+Show input overlay
+== 显示输入覆盖
+
 Show inputs
 == 显示按键
 
 Show IP addresses in rcon commands (1 = on, 0 = off)
 == 在 rcon 命令中显示 IP 地址（1 = 打开，0 = 关闭）
 
+Show jump hint based on fractional part of position
+== 根据位置小数部分显示跳跃提示
+
 Show jumps indicator
 == 显示可跳跃次数
 
 Show katan on frozen players
 == 在被冻结的玩家身上显示武士刀
+
+Show katana on frozen players (restores old behavior)
+== 在冻结玩家身上显示武士刀（恢复旧行为）
+
+Show key presses (1 = others, 2 = all, 3 = own only)
+== 显示按键（1 = 其他玩家的、2 = 所有人、3 = 仅你自己的）
 
 Show key stuck status
 == 显示卡键状态
@@ -6673,11 +9548,41 @@ Show list of vote mutes (page 1 by default, 20 entries per page)
 Show local time always
 == 始终显示本地时间
 
+Show local time seconds
+== 显示本地时间秒数
+
 Show logs of the last i seconds
 == 显示最后 i 秒的日志
 
+Show lyrics inside Dynamic Island
+== 将歌词显示在灵动岛内
+
+Show lyrics translation (if available)
+== 显示歌词翻译（若有）
+
+Show lyrics transliteration (if available)
+== 显示歌词音译（若有）
+
+Show map details
+== 显示地图细节
+
+Show map progress bar (beta)
+== 显示地图进度条（内测中）
+
+Show map progress test point route
+== 显示地图进度调试点路线
+
 Show moving tiles in entities
 == 在实体层显示移动方块
+
+Show moving tiles in entity layer
+== 在实体层显示移动图块
+
+Show name
+== 显示昵称
+
+Show name in team color
+== 用队伍颜色显示昵称
 
 Show name plates
 == 显示昵称
@@ -6685,8 +9590,23 @@ Show name plates
 Show names in chat in team colors
 == 以队伍颜色显示玩家昵称
 
+Show ninja skin
+== 显示忍者皮肤
+
+Show notification bar advanced settings
+== 显示通知栏高级设置
+
+Show notification when only one Tee alive
+== 仅剩一个 Tee 存活时显示提示
+
+Show number of frozen Tees in team (0=Off, 1=Show active Tee, 2=Show frozen Tee)
+== 显示队伍中冻结 Tee 的数量（0=关闭，1=显示活动 Tee，2=显示冻结 Tee）
+
 Show number of spectators
 == 显示旁观者人数
+
+Show old DDRace client records
+== 显示旧式 DDRace 客户端记录
 
 Show on key
 == 按键显示
@@ -6700,11 +9620,38 @@ Show only chat messages from team members
 Show only freeze Players
 == 仅显示冻结玩家
 
+Show only friend chat messages
+== 只显示好友聊天消息
+
+Show only frozen Tees in indicators
+== 仅在指示器中显示冻结 Tee
+
+Show only modified config variables
+== 只显示修改的配置变量
+
+Show only servers with unfinished maps
+== 仅显示未完成地图的服务器
+
+Show only team chat messages
+== 只显示队伍聊天消息
+
 Show other players' coordinates
 == 显示他人坐标
 
 Show other players' hook collision lines
 == 显示其他玩家的钩索辅助线
+
+Show other players' hook collision lines (2 always shown)
+== 显示其他玩家的钩子碰撞线（2 条始终显示）
+
+Show other players' hook collision lines when rendering video
+== 渲染视频时显示其他玩家的钩子碰撞线
+
+Show other team players (2=own team only)
+== 显示其他队伍的玩家（2 只显示自己队伍）
+
+Show other team players (alpha, 0=invisible, 100=visible)
+== 显示其他队伍的玩家（alpha 值，0 不可见，100 完全可见）
 
 Show other tees' trails
 == 显示其他 Tee 的拖尾
@@ -6715,17 +9662,56 @@ Show others
 Show others (own team only)
 == 仅显示同队伍
 
+Show others' nameplate coordinates
+== 名字牌显示他人坐标
+
 Show outdated version warning
 == 显示版本过旧提示
+
+Show outlines only on entity layer
+== 仅在实体层显示轮廓
 
 Show own coordinates
 == 显示自己坐标
 
+Show own hook collision lines (2 always shown)
+== 显示自己玩家的钩子碰撞线（2 始终显示）
+
+Show own nameplate coordinates
+== 名字牌显示自己坐标
+
+Show own nametag (for demo recording)
+== 显示自己的铭牌（用于回放录制）
+
 Show own player's hook collision line
 == 显示自己的钩索辅助线
 
+Show pause/play indicator when changing
+== 在更改时显示暂停/播放指示器
+
+Show performance graphs.
+== 显示性能图表
+
+Show pet
+== 显示宠物
+
+Show Pickup Ranges in Hitbox Mode
+== 碰撞箱模式显示拾取物范围
+
 Show ping colored circle in nameplates
 == 在玩家昵称旁显示延迟颜色圆圈
+
+Show ping ring on name plate
+== 在名字板上显示 Ping 圆环
+
+Show player hitboxes (1=predicted only, 2=predicted and unpredicted)
+== 显示玩家命中框（1=仅预测，2=预测和未预测）
+
+Show player key presses when rendering video (1=others, 2=include self, 3=self only)
+== 渲染视频时显示玩家的按键（1 = 其他玩家，2 = 包括自己，3 = 仅自己）
+
+Show player names in team color
+== 以队伍颜色显示玩家昵称
 
 Show player position
 == 显示玩家坐标
@@ -6745,8 +9731,32 @@ Show players' key presses
 Show position and angle (mini debug)
 == 显示位置和角度（小型调试）
 
+Show position and angle debug info
+== 显示位置和角度调试信息
+
+Show predicted position as ghost, original as unpredictable player
+== 将预测位置显示为幽灵，原始位置显示为不可预测玩家
+
+Show pressed keys
+== 显示按下的按键
+
 Show Qm badge
 == 显示 Qm 标识
+
+Show Qm badge: identify via central server and mark QmClient users on nameplate/scoreboard
+== 显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
+
+Show QmClient config variables
+== 显示栖梦配置变量
+
+Show radial indicators of other Tees
+== 显示其他 Tee 的径向指示器
+
+Show region rankings in /rank, /top5, and /top5team.
+== 在 /rank、/top5 和 /top5team 中显示区域排名
+
+Show release date and author when sorted by date
+== 按发布时间排序时显示皮肤发布日期和作者
 
 Show score
 == 显示分数
@@ -6760,14 +9770,23 @@ Show scoreboard after death
 Show seconds on clock
 == 在时间处显示秒数
 
+Show server chat messages
+== 显示来自服务器的聊天消息
+
 Show server help and usage messages
 == 显示服务器帮助和用法说明
 
 Show server settings
 == 查看服务器设置列表
 
+Show short server names in browser
+== 在服务器浏览器中显示简短服务器名
+
 Show skin date and author
 == 显示皮肤日期和作者
+
+Show skin name on name plate to find missing skins
+== 在名字板上显示皮肤名，便于查找缺失皮肤
 
 Show skin names in nameplate
 == 在玩家昵称旁显示皮肤名
@@ -6778,8 +9797,14 @@ Show song info in top-left corner
 Show spectator cursor
 == 显示旁观者光标
 
+Show speedometer when changing
+== 显示变化时的速度计
+
 Show sponsor QR code
 == 显示赞助码
+
+Show start menu image
+== 显示开始菜单图片
 
 Show stats
 == 显示统计数据
@@ -6787,14 +9812,38 @@ Show stats
 Show status bar
 == 显示状态栏
 
+Show strength/weakness in nametag (0=off, 1=icon, 2=icon+number)
+== 在铭牌中显示强/弱（0 - 关闭、1 - 图标、2 - 图标 + 数字）
+
+Show system media info on HUD
+== 在 HUD 上显示系统媒体信息
+
+Show TClient config variables
+== 显示 TClient 配置变量
+
 Show team
 == 显示队伍
+
+Show team group players
+== 显示队伍组玩家
+
+Show team on HUD Dynamic Island
+== HUD 灵动岛显示队伍
+
+Show Tee Collision in Hitbox Mode
+== 碰撞箱模式显示 Tee 碰撞体
+
+Show tee emotes
+== 显示 tee 表情
 
 Show tee status bar
 == 显示 Tee 状态栏
 
-Show Tee, map, and weapon interaction hitboxes
-== 显示 Tee、地图和武器交互碰撞箱
+Show Tee trail for others
+== 为其他玩家显示 Tee 轨迹
+
+Show teleporter tile outlines
+== 显示传送图块轮廓
 
 Show text entities
 == 显示文本实体
@@ -6821,16 +9870,28 @@ Show tiles layers from BG map
 == 显示实体层背景地图的图块层
 
 Show toast
-== 显示 toast
+== 显示提示消息
 
 Show translation
 == 显示翻译
 
+Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
+== 显示影响自身玩家的调整参数信息（0 = 关闭，1 = 显示已改变的，2 = 显示全部）
+
+Show unfreeze/deep unfreeze tile outlines
+== 显示解冻/深解冻图块轮廓
+
 Show unknown server messages
 == 显示未知服务器消息
 
+Show unpredictable shadow tee (0 = off, 1 = self, 2 = others only, 3 = all)
+== 显示不可预测的阴影 tee（0 = 关闭，1 = 自己，2 = 仅其他玩家，3 = 全部）
+
 Show unpredicted ghosts for other players
 == 显示其他玩家未预测的影子
+
+Show voice advanced options
+== 显示语音高级选项
 
 Show voice connection status
 == 显示语音连接状态
@@ -6841,8 +9902,14 @@ Show votes window after voting
 Show wake-up popup on the other tee
 == 在另一侧 Tee 显示唤醒提示
 
+Show Weapon Interactions in Hitbox Mode
+== 碰撞箱模式显示武器交互
+
 Show weapon trajectory guide
 == 显示武器弹道辅助线
+
+Show welcome message indicating first client launch
+== 显示欢迎消息，指示首次启动客户端
 
 Show Workshop Assets
 == 显示商店资源
@@ -6855,6 +9922,9 @@ Show Y
 
 Show your current team
 == 查看自己所在队伍
+
+Show zzz emoji next to afk players
+== 在挂机玩家旁显示 zzz 表情
 
 Showing players from other teams is disabled
 == 本服务器已禁用显示其他队伍玩家
@@ -6922,6 +9992,9 @@ Shrug:
 Shut down
 == 关闭
 
+Shutdown server when empty
+== 一旦没有人在服务器上就关闭服务器
+
 Silently disconnect from the current server while keeping Tee timeout protection
 == 静默断开当前服务器连接，用于保留 Tee 超时保护
 
@@ -6937,11 +10010,17 @@ Simple noise reduction strength
 Size
 == 大小
 
+Size of entity text data (20% to 100%)
+== 实体文本数据的大小（20% 到 100%）
+
 Size of hook strength icon and number indicator
 == 钩索强度图标与数值的大小
 
 Size of key press icons
 == 按键显示图标大小
+
+Size of strength/weakness icon and number
+== 强/弱状态图标和数字的大小
 
 Skin
 == 皮肤
@@ -6955,8 +10034,17 @@ Skin could not be loaded due to an error. Check the local console for details.
 Skin Database
 == 皮肤数据库
 
+Skin filter string
+== 皮肤过滤字符串
+
 Skin is loading.
 == 皮肤正在加载。
+
+Skin list sort mode (0=Name, 1=Release date)
+== 皮肤列表排序模式（0=名称，1=发布时间）
+
+Skin options
+== 皮肤选项
 
 Skin prefix
 == 皮肤名称前缀
@@ -6964,8 +10052,35 @@ Skin prefix
 Skin queue
 == 皮肤队列
 
+Skin queue current position
+== 皮肤队列当前位置
+
+Skin queue max length
+== 皮肤队列最大长度
+
+Skin queue switch interval (ms)
+== 皮肤队列切换间隔（毫秒）
+
+Skin search
+== 皮肤搜索
+
 Skin sort
 == 皮肤排序
+
+Skin switch animation duration (ms, 0=No animation)
+== 皮肤切换动画持续时间（毫秒，0=无动画）
+
+Skin switch animation easing mode
+== 皮肤切换动画缓动模式
+
+Skin switch animation intensity percentage
+== 皮肤切换动画强度百分比
+
+Skin switch animation range: 0=Self, 1=Local+Dummy, 2=All players
+== 皮肤切换动画范围：0=仅自己 1=本地+分身 2=所有玩家
+
+Skin switch animation type (0=Ghost pop, 1=Soft fade, 2=Slide left, 3=Rotate pop, 4=Light dark switch, 5=Glitch shake, 6=Elastic scale)
+== 皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
 
 Skin transition
 == 皮肤切换
@@ -6985,11 +10100,20 @@ Skin transition intensity
 Skin transition type
 == 换皮动画类型
 
+Skin used for white feet base
+== 白脚底使用的皮肤
+
 Skin: %s
 == 皮肤：%s
 
 Skins directory
 == 皮肤目录
+
+Skip render frames if waiting for previous frame during update cycle
+== 在更新周期期间，如果渲染周期需要等待前一个渲染周期完成，则跳过渲染周期
+
+Skip start menu
+== 跳过开始菜单
 
 Skip the main menu
 == 跳过主菜单
@@ -7003,17 +10127,38 @@ Slide left
 Slow down the demo
 == 减慢播放速度
 
+Small Tee size
+== 小 Tee 尺寸
+
 Smaller tees
 == 小尺寸 Tee
 
 Smart
 == 智能
 
+Smooth camera switch animation time when spectating (in ms, 0=off)
+== 观看时平滑摄像机切换动画的时间（以毫秒为单位）（0 表示关闭）
+
 Smooth Dynamic Camera
 == 平滑动态视野
 
 Smooth fade
 == 柔和淡变
+
+Smooth other players' predicted movement
+== 使其他玩家的移动预测更平滑
+
+Smooth prediction margin (weakens ping jitter correction, restores old behavior)
+== 平滑过渡预测边距（会削弱 ping 抖动修正，恢复旧行为）
+
+Smooth scroll animation duration in menu/editor (ms, 0=off)
+== 菜单/编辑器中平滑滚动动画的时间（单位：毫秒，0 为关闭）
+
+Smooth zoom animation time in editor (in ms, 0=off)
+== 编辑器中平滑缩放动画的时间（以毫秒为单位）（0 表示关闭）
+
+Smoothness of multi-view zoom (in ms, higher = slower)
+== 设置多视图缩放的平滑度（以毫秒为单位，较高=较慢）
 
 SMTC
 == 系统媒体控制
@@ -7048,8 +10193,26 @@ Some map sounds could not be loaded. Check the local console for details.
 Something hookable
 == 可钩索的方块
 
+Sort column in ghost list
+== 幽灵列表中的排序列
+
+Sort column in replay browser
+== 回放浏览器中的排序列
+
+Sort order in ghost list
+== 幽灵列表中的排序顺序
+
+Sort order in replay browser
+== 回放浏览器中的排序顺序
+
+Sort order in server browser
+== 服务器浏览器中的排序顺序
+
 Sound
 == 声音
+
+Sound buffer size (large may cause delay)
+== 声音缓冲区大小（大的话可能会导致延迟）
 
 Sound error
 == 音频错误
@@ -7063,17 +10226,26 @@ Source file does not exist.
 Source file is empty.
 == 源文件为空
 
+Source language code for translation (auto=auto-detect)
+== 翻译源语言代码（auto=自动检测）
+
 Space
 == 间隔
 
+Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
+== 刷屏保护：防止切换队伍、聊天、换皮肤、表情和投票的刷屏
+
 Speaker
 == 扬声器
+
+Specifies whether zoom should be limited in game (0 = unlimited)
+== 指定是否应限制游戏中的缩放（0 = 无限制）
 
 Specify command accessibility for given access level
 == 为指定访问级别设置命令可访问性
 
 Spectate
-== 旁观
+== 观战
 
 Spectate a player by Id
 == 按 ID 旁观玩家
@@ -7086,6 +10258,9 @@ Spectate mode
 
 Spectate next
 == 旁观下一个
+
+Spectate option color
+== 观战选项颜色
 
 Spectate previous
 == 旁观上一个
@@ -7117,6 +10292,9 @@ Speech trigger threshold
 Speed
 == 速度
 
+Speed of camera moving to desired position (higher = faster)
+== 设置相机移动到所需位置的速度（越高=越快）
+
 Speed up the demo
 == 加快播放速度
 
@@ -7129,14 +10307,29 @@ Speedrun countdown timer
 Speedrun Timer
 == 速通计时器
 
+Speedrun timer
+== 速通计时器
+
+Speedrun timer hours
+== 速通计时器小时
+
+Speedrun timer milliseconds
+== 速通计时器毫秒
+
+Speedrun timer minutes
+== 速通计时器分钟
+
+Speedrun timer seconds
+== 速通计时器秒
+
+Speedrun timer time (MM:SS, legacy)
+== 速通计时器时间（MMSS 格式，兼容旧版）
+
 Sphere
 == 球体
 
 Spin pop
 == 旋转弹出
-
-Sponsor QR code Base64 data is not configured
-== 支持二维码的 Base64 内容未配置
 
 Sponsor support
 == 赞助支持
@@ -7146,6 +10339,15 @@ Sponsors:
 
 Spree
 == 连杀
+
+SQL Server name for record table
+== 插入记录表的 SQL Server 名称
+
+Squishy Tee deformation duration
+== Q 弹 Tee 形变持续时间
+
+Squishy Tee deformation intensity
+== Q 弹 Tee 形变强度
 
 Staging memory
 == 暂存内存
@@ -7161,6 +10363,9 @@ Start here to quickly diagnose if the issue is with device, server, or room
 
 Start holding the hook before loading the savegame to keep the hook
 == 如果想保留钩子状态，请在读档前先按住钩子
+
+Start marker of replay slice
+== 回放切片的开始标记
 
 Start playback of ghosts
 == 开始播放鬼影
@@ -7192,6 +10397,12 @@ Status Bar
 Status bar alpha
 == 状态栏透明度
 
+Status bar background color
+== 状态栏背景颜色
+
+Status bar background opacity
+== 状态栏背景透明度
+
 Status Bar Codes
 == 状态栏代码
 
@@ -7201,11 +10412,26 @@ Status bar color
 Status bar height
 == 状态栏高度
 
+Status bar item order
+== 状态栏项目显示顺序
+
+Status bar text color
+== 状态栏文字颜色
+
+Status bar text opacity
+== 状态栏文字透明度
+
 Status normal, check details below if still experiencing issues
 == 当前状态正常，如仍异常请查看下方详细原因
 
 Status Scheme:
 == 状态方案：
+
+Steam profile name
+==  Steam 个人资料名称
+
+Stop key input on switch (0=off, 1=dummy, 2=player)
+== 切换时分身或玩家是否停止按键（0 = 关闭，1 = 分身，2 = 玩家）
 
 Stop match record
 == 停止比赛录制
@@ -7228,6 +10454,9 @@ Stop recording a demo
 Stop recording a video
 == 停止录制视频
 
+Stop rendering text overlays in editor or with entities: higher = less detail = faster
+== 停止在编辑器中或使用实体渲染文本覆盖：高值 = 更少的细节 = 更快的速度
+
 Stop server
 == 停止服务器
 
@@ -7240,6 +10469,18 @@ Streamed memory
 Streamer Mode
 == 主播模式
 
+Streamer mode
+== 主播模式
+
+Strength icons assets
+== 强弱图标资源
+
+Stress system (debug builds only).
+== 压力系统（仅限调试版本）
+
+Strict game type filter
+== 严格游戏模式筛选
+
 Strict gametype filter
 == 严格游戏模式筛选
 
@@ -7248,6 +10489,9 @@ Strict mode
 
 Stroke fade time
 == 笔画消失时间
+
+Stroke retention time (0=Never disappear)
+== 描边保留时间（0=永不消失）
 
 Strong hook
 == 强钩
@@ -7288,8 +10532,11 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == 强制 solo 服务器上不能使用交换功能
 
+Swap option color
+== 交换选项颜色
+
 Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
-== Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== 切换触控输入和虚拟摇杆的当前动作（开火和钩索）。
 
 Switch
 == 切换
@@ -7303,11 +10550,17 @@ Switch interval
 Switch opacity
 == 开关不透明度
 
+Switch skin on hammer
+== 锤人换皮肤
+
 Switch spectator mode
 == 切换旁观模式
 
 Switch team
 == 切换队伍
+
+Switch tile overlay alpha (0-100)
+== 开关图块的覆盖实体 alpha (0-100)
 
 Switch to grenade
 == 切换到榴弹枪
@@ -7360,8 +10613,26 @@ System default
 System media control
 == 系统媒体控制
 
+System media controls
+== 系统媒体控制
+
+System media lyric font size
+== 系统媒体歌词字体大小
+
+System media lyrics display lines
+== 系统媒体歌词显示行数
+
+System media lyrics time offset (milliseconds)
+== 系统媒体歌词时间偏移（毫秒）
+
 System message
 == 系统消息
+
+System message color
+== 系统消息颜色
+
+System message text gradient color
+== 系统消息文字渐变颜色
 
 System prompt text color
 == 系统提示文字颜色
@@ -7372,11 +10643,17 @@ Tags
 Take a screenshot
 == 截图
 
+Taper trail ends
+== 轨迹末端渐细
+
 Taper trail width
 == 锥形拖尾宽度
 
 Target language
 == 目标语言
+
+Target language code (e.g. zh, en, ja, zh-TW)
+== 翻译目标语言代码（如 zh、en、ja、zh-TW）
 
 Target language ratio
 == 目标语言比例
@@ -7396,7 +10673,7 @@ TClient Developers
 TClient Links
 == TClient 链接
 
-Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+Tclient settings card ordering (format: id:col:order; semicolon-separated)
 == Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
 
 Team
@@ -7426,6 +10703,12 @@ Team can't be saved while in team 0 mode
 Team chat
 == 队伍聊天
 
+Team color of clan members on scoreboard
+== 计分板中与你同战队的玩家的战队颜色
+
+Team configuration (0=Off, 1=On but optional, 2=Must play only with team, 3=Force random team only for you).
+== 队伍配置（0 = 关闭，1 = 开启但可选，2 = 必须仅与队伍一起玩，3 = 强制随机队伍仅适合你）
+
 Team is already in practice mode
 == 队伍已经处于练习模式
 
@@ -7434,6 +10717,12 @@ Team load already in progress
 
 Team message
 == 队伍消息
+
+Team message color
+== 队伍消息颜色
+
+Team message text gradient color
+== 队伍消息文字渐变颜色
 
 Team mode can't be changed while racing
 == 比赛进行中时不能切换队伍模式
@@ -7489,6 +10778,9 @@ Tee hitbox
 Tee hitbox color
 == Tee 碰撞箱颜色
 
+Tee icon size in frozen Tee HUD (default 15)
+== 冻结 Tee HUD 中 Tee 图标大小（默认 15）
+
 Tee size
 == Tee 大小
 
@@ -7498,11 +10790,23 @@ Tee status bar
 Tee trail color
 == Tee 拖尾颜色
 
+Tee trail color mode (1=Solid, 2=Current Tee color, 3=Rainbow, 4=Tee speed, 5=Random)
+== Tee 轨迹颜色模式（1=纯色，2=当前 Tee 颜色，3=彩虹，4=按 Tee 速度着色，5=随机）
+
 Tee Trails
 == Tee 拖尾
 
+Tee trails
+== Tee 轨迹
+
+Teeworlds 0.7 difficulty level (0 = Casual, 1 = Normal, 2 = Competitive).
+== Teeworlds 的难度级别 0.7（0：休闲，1：普通，2：竞技）
+
 Tele
 == 传送轮廓
+
+Teleport all weapons (deprecated, use special entities instead)
+== 所有武器的传送（已弃用，请使用特殊实体代替）
 
 Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
 == 在悬停的传送入口/出口或检查点传送点与其对应点之间传送自由观战镜头
@@ -7528,6 +10832,12 @@ Teleport laser enabled
 Teleport opacity
 == 传送不透明度
 
+Teleport tile outline color
+== 传送图块轮廓颜色
+
+Teleport tile outline width
+== 传送图块轮廓宽度
+
 Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)
 == 若启用自动救援模式，则直接将你传送出冻结；否则，落地时会记录救援位置，未落地则直接传送出冻结（用 sv_rescue 1 启用）
 
@@ -7552,7 +10862,7 @@ Teleports you to checkpoint teleporter i
 Teleports you to teleporter i
 == 将你传送到传送器 i
 
-Teletile 的覆盖实体 alpha (0-100)
+Teletile overlay alpha (0-100)
 == Teletile 的覆盖实体 alpha (0-100)
 
 Temporarily set a config value while pressed
@@ -7569,6 +10879,18 @@ Tencent Cloud SecretId
 
 Tencent Cloud SecretKey
 == 腾讯云密钥
+
+Tencent Cloud Translation endpoint
+== 腾讯云翻译端点
+
+Tencent Cloud Translation region
+== 腾讯云翻译地域
+
+Tencent Cloud Translation SecretId
+== 腾讯云翻译 SecretId
+
+Tencent Cloud Translation SecretKey
+== 腾讯云翻译 SecretKey
 
 Text
 == 文字
@@ -7591,17 +10913,11 @@ Thanks for supporting QmClient
 The audio device couldn't be initialised.
 == 初始化音频设备失败。
 
-The best voice chat, of course!
-== 当然是最好的语音聊天啦！
-
-The Config tab reuses QmClient's client config browser
-== 配置页复用栖梦里的客户端配置浏览器
-
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
-== The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== 额外菜单按钮，用于切换所有具有“额外菜单”可见度的按钮的可见度。长按时也会打开游戏菜单。
 
 The extra menu with the given number is activated.
-== The extra menu with the given number is activated.
+== 指定编号的额外菜单已激活。
 
 The force pause timer is now over, you can exit with /spec
 == 强制暂停计时已结束，你现在可以用 /spec 退出
@@ -7609,11 +10925,8 @@ The force pause timer is now over, you can exit with /spec
 The format of texture %s is not RGBA which will cause visual bugs.
 == 纹理文件 %s 并非 RGBA 格式，这可能会导致显示错误。
 
-The Functions tab contains tools, automation, and gameplay helpers
-== 功能页包含工具、自动化和游戏辅助
-
-The HUD tab collects overlays, counters, voice display, and top components
-== HUD 页收集叠加层、计数器、语音显示和顶部组件
+The FPS at which the recorder should record replay.
+== 录像机应以哪个 FPS 录制回放。
 
 The name "default" is reserved.
 == “default” 是保留名称。
@@ -7630,9 +10943,6 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == 此服务器运行着经过调整的非标准游戏模式。
 
-The Visuals tab contains appearance and rendering options
-== 视觉页包含外观和渲染相关选项
-
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == 纹理文件 %s 的宽度无法被 %d 整除，或者高度无法被 %d 整除，这可能会导致显示错误。
 
@@ -7643,7 +10953,7 @@ Themes directory
 == 主题目录
 
 There are no Tutorial servers available
-== There are no Tutorial servers available
+== 没有可用的教程服务器
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == 触控控件编辑器中有未保存的更改，建议先保存。
@@ -7718,7 +11028,10 @@ This team was disbanded because there are more players than allowed in the team.
 == 该队伍因人数超过允许上限而被解散
 
 This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
-== 这个提示由 ui_widget::Tooltip 提供，它是 CTooltips 上的一层薄封装。
+== 此提示由 ui_widget::Tooltip 提供——一个基于 CTooltips 的薄层封装。
+
+Ticks after freeze before applying max prediction reduction
+== 冻结后经过多少 tick 才应用最大预测减少
 
 tile
 == 瓦片
@@ -7729,8 +11042,50 @@ Tile outlines
 Time
 == 时间
 
+Time (ms) player must wait before next overhead emote sent to all clients (must be >= sv_emoticon_ms_delay to take effect).
+== 玩家在允许发送到所有客户端的下一个开销表情符号之前必须等待的时间（以毫秒为单位）（此配置必须高于或等于 sv_emoticon_ms_delay 才能生效）
+
+Time (ms) player must wait before next overhead emote.
+== 玩家在允许下一个头顶表情符号之前必须等待的时间（以毫秒为单位）
+
+Time (seconds) between eye emote changes.
+== 眼睛表情符号变化之间的时间（以秒为单位）
+
+Time a player must wait when paused by vote in seconds
+== 投票暂停时玩家必须等待的时间（以秒为单位）
+
+Time before a player leaves in seconds (0 = disabled)
+== 玩家离开的时间（以秒为单位）（0 = 禁用）
+
+Time before sending the first message in seconds
+== 发送第一条消息之前的时间（以秒为单位）
+
+Time between announcements from file (minutes).
+== 公告文件中显示公告的时间（分钟）
+
+Time between any votes (in seconds)
+== 任何投票之间的时间间隔（以秒为单位）
+
+Time between info changes (name/skin/color) (in seconds), set very high to avoid rainbow mod
+== 信息更改（名称/皮肤/颜色）之间的时间（以秒为单位），为了避免 ranbow mod 将其设置为非常高的时间
+
+Time between team changes (in seconds) (spectator/in-game)
+== 队伍更换之间的时间（以秒为单位）（观众/比赛中）
+
+Time client is banned if economy authentication fails. 0 just closes connection.
+== 如果经济身份验证失败，客户端被禁止的时间。0 只是关闭连接
+
+Time client is banned if remote console auth fails. 0 to only use kick
+== 如果远程控制台身份验证失败，客户端被禁止的时间。0 让它只使用踢
+
 TIME EXPIRED!
 == 时间耗尽！
+
+Time in seconds before economy authentication timeout.
+== 经济身份验证超时之前的时间（以秒为单位）
+
+Time interval (seconds) between chat messages.
+== 聊天消息之间的时间间隔（以秒为单位）
 
 Time limit
 == 时间限制
@@ -7743,6 +11098,21 @@ Time offset
 
 Time to wait before changing team: %s
 == 距离下次切换队伍还需等待：%s
+
+Time to wait before handling inactive players (in minutes)
+== 处理不活跃玩家前等待的时间（单位：分钟）
+
+Timeout code to use for dummy
+== 要使用的分身超时代码
+
+Timeout code used
+== 使用的超时代码
+
+Timeout in seconds before swap option expires
+== 交换选项到期前的超时（以秒为单位）
+
+Timeout seed
+== 超时种子
 
 Timer is displayed in %s
 == 计时器当前显示在 %s
@@ -7757,7 +11127,7 @@ To save all players in your team have to be alive and not in '/spec'
 == 要保存队伍，队内所有玩家都必须存活且不能处于 '/spec'
 
 Toast uses UiTokens + QmMotion slide
-== Toast 使用 UiTokens + QmMotion 滑入效果
+== Toast 使用 UiTokens + QmMotion 滑动效果
 
 Toggle auto camera
 == 切换自动视角
@@ -7765,11 +11135,17 @@ Toggle auto camera
 Toggle between game scene preview and raw texture
 == 在游戏场景预览和原始材质之间切换
 
+Toggle client process normal/high priority on Windows
+== 在 Windows 上切换客户端进程的普通/高优先级
+
 Toggle config value
 == 切换配置值
 
 Toggle config value via keypress
 == 通过按键切换配置值
+
+Toggle custom color
+== 切换是否使用自定义颜色
 
 Toggle Do Not Disturb (no chat and server messages)
 == 切换请勿打扰（无聊天和服务器消息）
@@ -7819,6 +11195,30 @@ Toggle team lock so no one else can join and so the team restarts when a player 
 Toggle tune variable
 == 切换调整变量
 
+Toggle use of custom body color
+== 切换身体自定义颜色的使用
+
+Toggle use of custom color for decoration
+== 切换使用自定义颜色进行装饰
+
+Toggle use of custom color for eyes
+== 切换眼睛自定义颜色的使用
+
+Toggle use of custom color for feet
+== 切换脚的自定义颜色的使用
+
+Toggle use of custom color for feet (dummy7_use_custom_color_feet)
+== 切换脚部的自定义颜色的使用
+
+Toggle use of custom color for marker
+== 切换使用自定义颜色进行标记
+
+Toggle use of custom colors
+== 切换自定义颜色的使用
+
+Toggle use of custom hand color
+== 切换手部自定义颜色的使用
+
 Toggles collision
 == 切换碰撞
 
@@ -7846,8 +11246,14 @@ Toggles spec on the currently voted player
 Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status
 == 打开/关闭标准眼睛表情的使用，eyeemote s，其中 s = on 表示打开，off 表示关闭，toggle 表示切换，不显示当前状态
 
+Token to register this server to a specific community
+== 用于将此服务器注册到特定社区的令牌
+
 Too many translation tasks
 == 翻译任务过多
+
+Toolbox page
+== 工具箱页面
 
 Total
 == 总计
@@ -7864,8 +11270,14 @@ Traditional
 Trail alpha
 == 拖尾透明度
 
+Trail color
+== 轨迹颜色
+
 Trail length
 == 拖尾长度
+
+Trail opacity
+== 轨迹透明度
 
 Trail width
 == 拖尾宽度
@@ -7879,6 +11291,9 @@ Translate button
 Translate ID:
 == 翻译 ID：
 
+Translate keys before interpreting them, respect keyboard layout
+== 在解释按键之前先翻译按键，尊重键盘布局
+
 Translate last message (of a given name)
 == 翻译最后一条消息（给定名称）
 
@@ -7887,6 +11302,9 @@ Translate last message of the person with this id
 
 Translate only when needed
 == 仅在需要时翻译
+
+Translate UI
+== 翻译 UI
 
 Translate:
 == 翻译：
@@ -7897,11 +11315,29 @@ Translated text hidden due to streamer mode
 Translating to %s...
 == 正在翻译为 %s……
 
+Translation backend (llm/tencentcloud/libretranslate/ftapi)
+== 翻译后端（llm/tencentcloud/libretranslate/ftapi）
+
 Translation backend invalid, sending original
 == 翻译后端无效，发送原文
 
+Translation button active color
+== 翻译按钮开启时的颜色
+
+Translation button cancel color
+== 翻译按钮取消时的颜色
+
 Translation color
 == 翻译颜色
+
+Translation menu background color
+== 翻译菜单背景颜色
+
+Translation menu normal color
+== 翻译菜单正常颜色
+
+Translation menu selected color
+== 翻译菜单选中时颜色
 
 Translation queue full, sending original
 == 翻译队列已满，发送原文
@@ -7926,6 +11362,9 @@ Try reselecting input device, confirm default mic or headset mic is online
 
 Try reselecting output device, confirm headphones/speakers are online
 == 建议重新选择输出设备，并确认耳机或扬声器仍在线
+
+Try to change name near finish
+== 接近终点时尝试改名
 
 Try to predict other entities to reduce lag feeling at high latency
 == 尝试预测其他实体来降低高延迟带来的卡顿感
@@ -7964,7 +11403,7 @@ Type
 == 类型
 
 Type something...
-== 输入点什么……
+== 输入内容……
 
 Type switch vote started automatically
 == 已自动发起切换类型投票
@@ -7999,13 +11438,16 @@ UI mouse sens.
 UI opacity
 == 界面不透明度
 
+UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
+== UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+
 UI scale
 == UI 大小
 
-UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
-== UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+UI server address
+== 界面服务器地址
 
-UI大小百分比 (UI scale percentage)
+UI size percentage
 == UI 大小百分比
 
 Unable to delete %d selected items. The first failing item was '%s'.
@@ -8095,14 +11537,20 @@ Unflip:
 Unfreeze
 == 解冻
 
-Unfreeze automation helpers
-== 解冻相关自动化辅助
-
 Unfreeze opacity
 == 解冻不透明度
 
+Unfreeze tile outline color
+== 解冻图块轮廓颜色
+
+Unfreeze/Deep unfreeze tile outline width
+== 解冻/深解冻图块轮廓宽度
+
 Uninvite player from team
 == 取消对玩家的队伍邀请
+
+Unix socket server for IP address recording (Unix only)
+== 用于 IP 地址记录的 Unix 套接字服务器（仅限 Unix）
 
 Unknown
 == 未知
@@ -8146,6 +11594,12 @@ Unmute:
 Unplayed word color
 == 未播放词颜色
 
+Unpredictable ghost opacity (0-100)
+== 不可预测幽灵透明度（0-100）
+
+Unpredictable shadow tee transparency (0 invisible, 100 fully visible)
+== 不可预测的阴影 tee 透明度（0 不可见，100 完全可见）
+
 Unpredicted ghost opacity
 == 未预测影子不透明度
 
@@ -8180,10 +11634,22 @@ Update or add a specific war group
 == 更新或添加指定敌对分组
 
 Update Rate
-== Update Rate
+== 客户端刷新率
+
+Update rate for mapping 64 player IDs to vanilla IDs
+== 64 玩家 ID 与原版 ID 的映射更新率
 
 Uploading map data to GPU
 == 正在将地图数据传输至显卡
+
+URL for downloading community skins
+== 用于下载社区皮肤的 URL
+
+URL for downloading maps (must start with https://)
+== 用于下载地图的 URL（必须以 https:// 开头）
+
+URL for downloading skins
+== 用于下载皮肤的 URL
 
 Usage
 == 用法
@@ -8197,8 +11663,20 @@ Usage: /%s %s
 Use 12 hour clock
 == 使用 12 小时制
 
+Use 12-hour clock for local time
+== 本地时间使用 12 小时制
+
+Use alternative antiping smoothing, incompatible with cl_antiping_smooth
+== 使用另一套 antiping 平滑算法，与 cl_antiping_smooth 不兼容
+
+Use alternative world tick calculation making hooks behave as if all players have Strong.
+== 是否对世界刻度使用替代计算，这使得钩子的行为就像所有玩家都具有强项一样。
+
 Use colored skins for frozen tees
 == 冻结 Tee 使用彩色皮肤
+
+Use compact list view for config variables
+== 对配置变量使用紧凑列表视图
 
 Use current map as background
 == 使用当前地图作为实体层背景地图
@@ -8227,14 +11705,35 @@ Use embedded HUD progress bar
 Use emote
 == 使用表情
 
+Use enemy color instead of frozen color
+== 使用敌对颜色而不是冻结颜色
+
+Use enemy list to drive player indicators
+== 用敌对列表驱动玩家指示器
+
+Use high bandwidth mode (doubles server bandwidth, LAN only)
+== 使用高带宽模式。服务器所需的带宽加倍。仅限局域网使用
+
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == 使用 K 键自杀（重新开始），Q 键暂停并旁观其他玩家。其他按键绑定可在设置中查看。
+
+Use mouse sensitivity when dynamic camera is on
+== 开启动态摄像头时使用鼠标感应
 
 Use multi-char replacement based on word length
 == 根据词语长度使用多字符替换
 
+Use native UI for IME (may break IME in fullscreen mode, requires restart)
+== 使用本机 UI 进行 IME（可能会导致 IME 无法在全屏模式下工作）（更改需要重新启动）
+
 Use new smoothing algorithm
 == 使用新的平滑算法
+
+Use ninja or dark skin in frozen Tee HUD
+== 在冻结 Tee HUD 中使用忍者皮肤或深色皮肤
+
+Use notification bar category filter
+== 使用通知栏分类过滤
 
 Use notification category filters
 == 使用通知栏分类过滤
@@ -8242,8 +11741,23 @@ Use notification category filters
 Use old chat style
 == 旧版聊天框
 
+Use old rainbow team colors (restores old behavior)
+== 使用旧版彩虹队伍颜色（恢复旧行为）
+
 Use original style
 == 使用原始样式
+
+Use original style for Dynamic Island
+== 灵动岛使用原版样式
+
+Use pre-input to predict other players for more accurate input prediction
+== 使用预输入预测其他玩家以获得更精确的输入预测
+
+Use skin color for frozen Tee's feet
+== 冻结 Tee 的脚部也使用皮肤颜色
+
+Use skin color when Tee is frozen
+== 冻结 Tee 时使用皮肤颜色
 
 Use sounds
 == 开启声音
@@ -8251,11 +11765,11 @@ Use sounds
 Use team colors for name plates
 == 用队伍颜色显示昵称
 
+Use Tee icons instead of circles
+== 用 Tee 图标代替圆圈
+
 Use the mouse wheel on a hovered module to scale it by 5%
 == 将鼠标悬停在 HUD 模块上并滚动滚轮可按 5% 缩放
-
-Use the top tabs to browse QmClient features by category
-== 通过顶部页签按分类浏览 QmClient 功能
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == 在 `add_favorite` 之后使用它来对收藏夹进行分组。从 `begin_favorite_group` 开始
@@ -8270,7 +11784,7 @@ Use warlist groups for indicator
 == 使用敌对列表作为指示器
 
 Uses the active action with the current aiming position.
-== Uses the active action with the current aiming position.
+== 对瞄准位置执行当前动作。
 
 v = Velocity
 == v = 速度
@@ -8278,13 +11792,13 @@ v = Velocity
 V-Sync
 == 垂直同步
 
-VAD 允许名单（逗号分隔）
+VAD allow list (comma-separated)
 == VAD 允许名单（逗号分隔）
 
-VAD 释放延迟（毫秒）
+VAD release delay (ms)
 == VAD 释放延迟（毫秒）
 
-VAD 阈值（百分比）
+VAD threshold (percent)
 == VAD 阈值（百分比）
 
 Vanilla skins only
@@ -8296,8 +11810,14 @@ Velocity
 Version
 == 版本
 
+Version performing the analysis
+== 执行分析的版本
+
 Vertical position
 == 垂直位置
+
+Vertical sync (may cause lag)
+== 垂直同步（可能会导致延迟）
 
 Video Background
 == 视频背景
@@ -8327,21 +11847,27 @@ View tele found (at offset) with given number
 == 查看给定编号找到的传送点（在偏移处）
 
 Virtual joystick which always uses fire.
-== Virtual joystick which always uses fire.
+== 始终用于开火的虚拟摇杆。
 
 Virtual joystick which always uses hook.
-== Virtual joystick which always uses hook.
+== 始终用于钩索的虚拟摇杆。
 
 Virtual joystick which only aims without using an action.
-== Virtual joystick which only aims without using an action.
+== 仅用于瞄准而不执行动作的虚拟摇杆。
 
 Virtual joystick which uses the active action.
-== Virtual joystick which uses the active action.
+== 执行当前动作的虚拟摇杆。
 
 Visibility
 == 可见度
 
+Visibility filter mode
+== 可见性过滤模式
+
 Visual
+== 视觉效果
+
+Visual effects
 == 视觉效果
 
 Visual: Effects
@@ -8362,14 +11888,65 @@ Voice
 Voice activation release delay
 == 语音激活释放延迟
 
+Voice audio backend (SDL driver name, empty=auto)
+== 语音音频后端（SDL 驱动名，空为自动）
+
 Voice bitrate
 == 语音码率
+
+Voice bitrate (0=auto 1=24kbps 2=32kbps 3=48kbps 4=64kbps)
+== 语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）
+
+Voice blacklist (comma-separated)
+== 语音黑名单（逗号分隔）
 
 Voice chat
 == 语音聊天
 
+Voice chat settings and diagnostics
+== 语音聊天设置与诊断
+
+Voice distance radius (Tiles)
+== 语音距离半径（Tiles）
+
 Voice distance radius (tiles)
 == 语音距离半径（格）
+
+Voice group mode
+== 语音分组模式
+
+Voice input device (empty=default)
+== 语音输入设备（空为默认）
+
+Voice mute list (comma-separated)
+== 语音静音名单（逗号分隔）
+
+Voice output device (empty=default)
+== 语音输出设备（空为默认）
+
+Voice playback volume (percent)
+== 语音播放音量（百分比）
+
+Voice protocol version
+== 语音协议版本
+
+Voice room token (optional)
+== 语音房间 Token（可选）
+
+Voice server address host:port
+== 语音服务器地址 host:port
+
+Voice stereo output
+== 语音立体声输出
+
+Voice stereo width (percent)
+== 语音立体声宽度（百分比）
+
+Voice test mode (0=Off 1=Local 2=Server Loopback)
+== 语音测试模式（0=关 1=本地 2=服务器回环）
+
+Voice whitelist (comma-separated)
+== 语音白名单（逗号分隔）
 
 Volume
 == 音量
@@ -8389,6 +11966,9 @@ Vote description
 Vote description:
 == 投票描述：
 
+Vote duration (in seconds)
+== 投票持续时间（以秒为单位）
+
 Vote no
 == 反对
 
@@ -8407,11 +11987,17 @@ Voting
 Wait for current vote to end before calling a new one.
 == 请先等待当前投票结束，再发起新的投票
 
+Wait time before a player can rejoin after being voted to spectators (in minutes)
+== 被投票移到观众后玩家重新加入前的等待时间（单位：分钟）
+
+Wait time before triggering auto vote
+== 触发自动投票前的等待时间
+
 Waiting for local server to start…
-== Waiting for local server to start…
+== 等待本地服务器启动…
 
 Waiting for local server to stop…
-== Waiting for local server to stop…
+== 等待本地服务器关闭…
 
 Waiting for snapshot
 == 等待快照
@@ -8440,6 +12026,12 @@ Warlist
 Warmup
 == 热身
 
+Warmup time before round (in seconds)
+== 回合开始前的热身时间（单位：秒）
+
+Warn about team balance
+== 关于队伍平衡的警告
+
 Warning
 == 警告
 
@@ -8448,6 +12040,18 @@ Weak hook
 
 Weak hook color
 == 弱钩颜色
+
+Weak network test: server receive extra reorder probability percentage
+== 弱网测试：服务端收包额外乱序概率百分比
+
+Weak network test: server receive random jitter range (ms)
+== 弱网测试：服务端收包随机抖动范围（毫秒）
+
+Weak network test: server receive random packet loss percentage
+== 弱网测试：服务端收包随机丢包百分比
+
+Weak network test: server receive simulated RTT (ms, half for one-way delay)
+== 弱网测试：服务端收包模拟 RTT（毫秒，单向延迟取一半）
 
 Weapon
 == 武器
@@ -8463,6 +12067,21 @@ Weapon range color
 
 Weapon switch animation
 == 武器切换动画
+
+Weapon switch animation duration (ms)
+== 武器切换动画持续时间（毫秒）
+
+Weapon switch animation easing mode
+== 武器切换动画缓动模式
+
+Weapon switch animation rotation angle
+== 武器切换动画旋转角度
+
+Weapon switch animation scope: 0=Self, 1=Local+dummy, 2=All players
+== 武器切换动画范围：0=仅自己 1=本地+分身 2=所有玩家
+
+Weapon switch animation slide distance
+== 武器切换动画滑入距离
 
 Weapon switch distance
 == 武器切换距离
@@ -8482,6 +12101,18 @@ Weapon Trajectory
 Weapon trajectory
 == 武器弹道辅助线
 
+Weapon trajectory helper alpha
+== 武器弹道辅助线透明度
+
+Weapon trajectory helper color
+== 武器弹道辅助线颜色
+
+Weapon trajectory helper mode (0=Off, 1=On key, 2=Always)
+== 武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）
+
+Weapon trajectory helper width
+== 武器弹道辅助线宽度
+
 Weapons
 == 武器
 
@@ -8491,17 +12122,8 @@ Website
 Welcome to DDNet
 == 欢迎加入 DDNet
 
-What kind of blockbuster do you want to shoot?
-== 你想拍出怎样的大片？
-
-What kind of Gores do you want to run?
-== 你想跑出怎样的 Gores？
-
-What kind of laser do you want?
-== 你想做出怎样的激光？
-
-What kind of life do you want to run?
-== 你想跑出怎样的人生？
+What level DDRace binding is set to (automatic, you don't need to use it).
+== DDRace 绑定设置为什么级别（这是自动的，你不需要使用它）
 
 What's done is done, no use saying more
 == 事已至此，多说无益
@@ -8518,6 +12140,54 @@ When you cross the start line, show a ghost tee replicating the movements of you
 Whether a switch is deactivated by default (otherwise activated)
 == 开关是否默认禁用（否则激活）
 
+Whether dummy copies your movement
+== 分身是否复制你的移动
+
+Whether dummy fires (requires cl_dummy_control 1)
+== 分身是否开火（需要 cl_dummy_control 1）
+
+Whether dummy hooks (requires cl_dummy_control 1)
+== 分身是否钩人（需要 cl_dummy_control 1）
+
+Whether dummy jumps (requires cl_dummy_control 1)
+== 分身是否跳跃（需要 cl_dummy_control 1）
+
+Whether non-voting players count as 'no' (0) or ignored (1)
+== 无投票权的玩家是否被视为投票“否”（0）或被忽略（1）
+
+Whether players can hammer/grenade/laser each other.
+== 玩家是否可以互相锤击/榴弹炮/激光
+
+Whether players can invite other players to team.
+== 玩家是否可以邀请其他玩家加入队伍
+
+Whether players can pause their character.
+== 玩家是否可以暂停角色
+
+Whether players can use the showother command
+== 玩家是否可以使用 showother 命令
+
+Whether players see all tees by default
+== 玩家是否默认看到所有 tee
+
+Whether players see others by default (own team = 2)
+== 玩家是否默认看到其他人（本队为 2）
+
+Whether to control dummy simultaneously (cl_dummy_jump, cl_dummy_fire, cl_dummy_hook)
+== 是否可以同时控制分身（cl_dummy_jump、cl_dummy_fire、cl_dummy_hook）
+
+Whether to limit zoom in editor (0=unlimited)
+== 指定是否应限制编辑器中的缩放（0 = 无限制）
+
+Whether to publish player scores.
+== 是否公布玩家得分
+
+Whether to save worse scores when you already have a better score.
+== 当你已经有了更好的分数时是否保存更差的分数
+
+Whether to show message when players pause and resume.
+== 玩家暂停和恢复时是否显示消息
+
 Whether to show players at any distance (off by default), optional i = 0 for off else for on
 == 是否显示任意距离的玩家（默认关闭），可选 i = 0 为关闭，否则为打开
 
@@ -8530,6 +12200,9 @@ Whether to show players from other teams when spectating (on by default), option
 Whether to use ninja jetpack or not. Makes jetpack look more awesome
 == 是否使用忍者喷气背包。让喷气背包看起来更酷
 
+Whether unnamed tees have a score
+== 无名 Tee 是否有分数
+
 Which message to display on zone enter; use 0 for normal area
 == 进入区域时显示哪些消息；使用 0 表示正常区域
 
@@ -8538,6 +12211,9 @@ Which message to display on zone leave; use 0 for normal area
 
 Whisper
 == 私聊
+
+Whisper option color
+== 私聊选项颜色
 
 Whisper something to someone (private message)
 == 向某人发送私聊消息
@@ -8551,9 +12227,6 @@ Whisper to %s: %s
 Whisper: /w player message
 == 发送私聊：/w 玩家名 内容
 
-Who stuffed OBS in here
-== 谁把 OBS 塞进来了
-
 Why are you slowmo replaying to read this?
 == 所以你为什么要慢速回放来看这个？
 
@@ -8563,8 +12236,23 @@ Width
 Width and height are required to be within the range from %d to %d.
 == 按键的宽和高需要在 %d 到 %d 内。
 
+Width of friends column in server browser
+== 服务器浏览器中好友列的宽度
+
+Width of latency column in server browser
+== 服务器浏览器中延迟列的宽度
+
+Width of map column in server browser
+== 服务器浏览器中地图列的宽度
+
 Width of others' hook collision line
 == 其他玩家的钩索碰撞线宽度
+
+Width of players column in server browser
+== 服务器浏览器中玩家列的宽度
+
+Width of type column in server browser
+== 服务器浏览器中类型列的宽度
 
 Width of your own hook collision line
 == 自己的钩索碰撞线宽度
@@ -8584,8 +12272,14 @@ Windowed fullscreen
 Word Filter
 == 屏蔽词
 
+Word highlight soft edge width (px)
+== 逐字边缘软过渡宽度 px
+
 Write local console contents to a text file
 == 将本地控制台内容写入文本文件
+
+Write performance debug logs to dedicated file
+== 将性能调试日志写入专用文件
 
 Write remote console contents to a text file
 == 将远程控制台内容写入文本文件
@@ -8672,7 +12366,7 @@ You can kick only your team member
 == 你只能踢自己队伍里的成员
 
 You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
-== You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== 你可以在此管理你的触控设置。更改只有在保存后才能在重启客户端后生效。你可以将设置导出到剪切板来和他人分享触控设置。\n\n 你可以在 DDNet Wiki 找到更多关于触控的详细信息。
 
 You can now jump %s times
 == 你现在可以跳跃 %s 次
@@ -8690,7 +12384,7 @@ You can see other players. To disable this use DDNet client and type /showothers
 == 你当前可以看到其他玩家。要关闭此功能，请使用 DDNet 客户端并输入 /showothers
 
 You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
-== You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== 你可以直接在下方列表中选择按键，也可以长按屏幕来选择按键。你还可以直接移动按键位置或者调整按键大小。
 
 You can shoot others with grenade
 == 你现在可以用榴弹枪攻击其他玩家
@@ -8837,7 +12531,7 @@ You're not in a team with /practice turned on. Note that you can't earn a rank w
 == 你当前不在开启了 /practice 的队伍中。注意：练习模式下无法获得排名
 
 You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
-== You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== 由于未找到在线教程服务器，你正在本地服务器游玩。\n\n 你的记录只会被保存在本地。
 
 You're the last one!
 == 就你一个啦！
@@ -8911,6 +12605,15 @@ Zhipu AI
 Zhipu API key
 == 智谱 API 密钥
 
+ZhipuAI API Key
+== 智谱 AI API Key
+
+ZhipuAI endpoint (leave empty for default)
+== 智谱 AI 端点（留空使用默认）
+
+ZhipuAI model name
+== 智谱 AI 模型名称
+
 Zoom
 == 缩放
 
@@ -8924,10 +12627,13 @@ Zoom increase
 == 放大视角
 
 Zoom is allowed on this server.
-== Zoom is allowed on this server.
+== 此服务器允许使用缩放。
 
 Zoom out
 == 缩小视野
+
+Zoom to current mouse target
+== 缩放到当前鼠标目标
 
 ⚠️ FTAPI is a free service. Excessive use may cause service suspension.
 == ⚠️ FTAPI 是免费服务，过度使用可能导致服务暂停
@@ -8940,1293 +12646,6 @@ Zoom out
 
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 腾讯云 API 密钥未配置
-
-举报服务 App ID
-== 举报服务 App ID
-
-举报服务地址
-== 举报服务地址
-
-举报服务签名密钥
-== 举报服务签名密钥
-
-交换选项颜色
-== 交换选项颜色
-
-仅在另一只 tee 离开当前视角时显示分身迷你视图
-== 仅在另一只 tee 离开当前视角时显示分身迷你视图
-
-使用通知栏分类过滤
-== 使用通知栏分类过滤
-
-允许 FTAPI 自动翻译（可能导致过载）
-== 允许 FTAPI 自动翻译（可能导致过载）
-
-全局卡片排序旧配置迁移完成标记
-== 全局卡片排序旧配置迁移完成标记
-
-全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
-== 全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
-
-关键词回复使用Dummy
-== 关键词回复使用分身
-
-关键词回复规则（每行: [rename] [regex] 关键词=>回复）
-== 关键词回复规则（每行：[rename] [regex] 关键词=>回复）
-
-关闭聊天时保留未发送内容
-== 关闭聊天时保留未发送内容
-
-兼容其他服务器的类似单人区域提示
-== 兼容其他服务器的类似单人区域提示
-
-出站翻译目标语言代码
-== 出站翻译目标语言代码
-
-分身皮肤队列切换间隔（毫秒）
-== 分身皮肤队列切换间隔（毫秒）
-
-分身皮肤队列当前位置
-== 分身皮肤队列当前位置
-
-分身皮肤队列最大长度
-== 分身皮肤队列最大长度
-
-分身迷你视图大小（百分比）
-== 分身迷你视图大小（百分比）
-
-分身迷你视图缩放（百分比）
-== 分身迷你视图缩放（百分比）
-
-切换武器时播放滑入旋转动画
-== 切换武器时播放滑入旋转动画
-
-加入可锁定队伍后自动锁定
-== 加入可锁定队伍后自动锁定
-
-动态视野平滑度（0=瞬时，100=最平滑）
-== 动态视野平滑度（0 = 瞬时，100 = 最平滑）
-
-动态视野强度（0-200）
-== 动态视野强度（0 - 200）
-
-卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
-== 卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
-
-压缩器攻击时间（毫秒）
-== 压缩器攻击时间（毫秒）
-
-压缩器比率（x10）
-== 压缩器比率（x10）
-
-压缩器补偿增益（百分比）
-== 压缩器补偿增益（百分比）
-
-压缩器释放时间（毫秒）
-== 压缩器释放时间（毫秒）
-
-压缩器阈值（百分比）
-== 压缩器阈值（百分比）
-
-反转相机漂移方向
-== 反转相机漂移方向
-
-可见性过滤模式
-== 可见性过滤模式
-
-同时循环分身自定义 Tee 色调
-== 同时循环分身自定义 Tee 色调
-
-同组全图收听
-== 同组全图收听
-
-名单过滤模式
-== 名单过滤模式
-
-名字板元素允许 X 轴自由移动
-== 名字板元素允许 X 轴自由移动
-
-名字板元素允许 Y 轴自由移动
-== 名字板元素允许 Y 轴自由移动
-
-名字板元素允许在框内自由移动
-== 名字板元素允许在框内自由移动
-
-名字板坐标行 X 偏移
-== 名字板坐标行 X 偏移
-
-名字板坐标行 Y 偏移
-== 名字板坐标行 Y 偏移
-
-名字板强弱行 X 偏移
-== 名字板强弱行 X 偏移
-
-名字板强弱行 Y 偏移
-== 名字板强弱行 Y 偏移
-
-名字板战队行 X 偏移
-== 名字板战队行 X 偏移
-
-名字板战队行 Y 偏移
-== 名字板战队行 Y 偏移
-
-名字板按键行 X 偏移
-== 名字板按键行 X 偏移
-
-名字板按键行 Y 偏移
-== 名字板按键行 Y 偏移
-
-名字板昵称行 X 偏移
-== 名字板昵称行 X 偏移
-
-名字板昵称行 Y 偏移
-== 名字板昵称行 Y 偏移
-
-名字牌X对齐提示严格模式
-== 名字牌 X 对齐提示严格模式
-
-名字牌X对齐提示持续判定窗口（毫秒）
-== 名字牌 X 对齐提示持续判定窗口（毫秒）
-
-名字牌X对齐提示高亮颜色
-== 名字牌 X 对齐提示高亮颜色
-
-名字牌显示与本地玩家X对齐的提示
-== 名字牌显示与本地玩家 X 对齐的提示
-
-名字牌显示他人坐标
-== 名字牌显示他人坐标
-
-名字牌显示坐标X
-== 名字牌显示坐标 X
-
-名字牌显示坐标Y
-== 名字牌显示坐标 Y
-
-名字牌显示自己坐标
-== 名字牌显示自己坐标
-
-启动和菜单空闲时预热设置页
-== 启动和菜单空闲时预热设置页
-
-启用 Gores 模式（King of Gores 辅助工具集合）
-== 启用 Gores 模式（King of Gores 辅助工具集合）
-
-启用 LLM 思考模式（可能增加响应时间）
-== 启用 LLM 思考模式（可能增加响应时间）
-
-启用 Q 弹 Tee 形变
-== 启用 Q 弹 Tee 形变
-
-启用 QmClient 风格背景 3D 粒子
-== 启用 QmClient 风格背景 3D 粒子
-
-启用 UI 运行时 v2 调试日志
-== 启用 UI 运行时 v2 调试日志
-
-启用主线程与渲染阶段性能调试日志
-== 启用主线程与渲染阶段性能调试日志
-
-启用关键词回复
-== 启用关键词回复
-
-启用分身皮肤队列轮换
-== 启用分身皮肤队列轮换
-
-启用动态视野，移动越快视野越宽
-== 启用动态视野，移动越快视野越宽
-
-启用增强激光特效（辉光+脉冲动画）
-== 启用增强激光特效（辉光+脉冲动画）
-
-启用复读功能
-== 启用复读功能
-
-启用屏蔽词列表
-== 启用屏蔽词列表
-
-启用新版 IME 候选栏
-== 启用新版 IME 候选栏
-
-启用新版设置页面 UI
-== 启用新版设置页面 UI
-
-启用歌词 HUD 叠加层
-== 启用歌词 HUD 叠加层
-
-启用歌词本地缓存
-== 启用歌词本地缓存
-
-启用歌词逐字高亮
-== 启用歌词逐字高亮
-
-启用玩家统计面板
-== 启用玩家统计面板
-
-启用皮肤切换动画
-== 启用皮肤切换动画
-
-启用皮肤队列轮换
-== 启用皮肤队列轮换
-
-启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
-== 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
-
-启用禅模式（Zen Mode）
-== 启用禅模式（Zen Mode）
-
-启用系统媒体传输控制集成
-== 启用系统媒体传输控制集成
-
-启用系统媒体歌词
-== 启用系统媒体歌词
-
-启用背景 3D 粒子拖尾
-== 启用背景 3D 粒子拖尾
-
-启用背景 3D 粒子脉冲缩放
-== 启用背景 3D 粒子脉冲缩放
-
-启用背景 3D 粒子辉光
-== 启用背景 3D 粒子辉光
-
-启用背景 3D 粒子闪烁
-== 启用背景 3D 粒子闪烁
-
-启用语音滤波（高通/压缩/限幅）
-== 启用语音滤波（高通/压缩/限幅）
-
-启用语音激活（VAD）
-== 启用语音激活（VAD）
-
-启用语音聊天
-== 启用语音聊天
-
-启用饼菜单
-== 启用饼菜单
-
-噪声抑制强度（百分比）
-== 噪声抑制强度（百分比）
-
-噪声抑制模式（0=关闭 1=简单 2=RNNoise）
-== 噪声抑制模式（0=关闭 1=简单 2=RNNoise）
-
-在 Gores 游戏模式中自动启用 Gores 自动切换
-== 在 Gores 游戏模式中自动启用 Gores 自动切换
-
-在 HUD 上显示系统媒体信息
-== 在 HUD 上显示系统媒体信息
-
-在 Windows 上切换客户端进程的普通/高优先级
-== 在 Windows 上切换客户端进程的普通/高优先级
-
-在服务器浏览器中显示简短服务器名
-== 在服务器浏览器中显示简短服务器名
-
-在玩家头顶显示聊天气泡
-== 在玩家头顶显示聊天气泡
-
-在表情后绘制阴影
-== 在表情后绘制阴影
-
-在记分牌中显示默认国旗
-== 在记分牌中显示默认国旗
-
-地图浏览器透明度
-== 地图浏览器透明度
-
-地图浏览器颜色
-== 地图浏览器颜色
-
-地图进度条垂直位置（顶边，占屏幕高度百分比）
-== 地图进度条垂直位置（顶边，占屏幕高度百分比）
-
-地图进度条宽度（占屏幕宽度百分比）
-== 地图进度条宽度（占屏幕宽度百分比）
-
-地图进度条样式（0=底部横条，1=HUD 内嵌）
-== 地图进度条样式（0=底部横条，1=HUD 内嵌）
-
-地图进度条水平位置（中心点，占屏幕宽度百分比）
-== 地图进度条水平位置（中心点，占屏幕宽度百分比）
-
-地图进度条颜色
-== 地图进度条颜色
-
-地图进度条高度
-== 地图进度条高度
-
-复制皮肤选项颜色
-== 复制皮肤选项颜色
-
-大字显示好友进服
-== 大字显示好友进服
-
-好友上线提醒
-== 好友上线提醒
-
-好友提醒刷新间隔(秒)
-== 好友提醒刷新间隔（秒）
-
-好友提醒自动刷新服务器列表
-== 好友提醒自动刷新服务器列表
-
-好友消息文字渐变颜色
-== 好友消息文字渐变颜色
-
-好友进图自动打招呼
-== 好友进图自动打招呼
-
-好友进图自动打招呼文本
-== 好友进图自动打招呼文本
-
-好友进服大字提示文本（使用%s表示好友名）
-== 好友进服大字提示文本（使用 %s 表示好友名）
-
-好友选项颜色
-== 好友选项颜色
-
-客户端消息文字渐变颜色
-== 客户端消息文字渐变颜色
-
-将 Best input 应用于其他 Tee
-== 将 Best input 应用于其他 Tee
-
-将 Q 弹 Tee 形变应用到其他玩家
-== 将 Q 弹 Tee 形变应用到其他玩家
-
-将 Saiko+ 应用于其他 Tee
-== 将 Saiko+ 应用于其他 Tee
-
-将性能调试日志写入专用文件
-== 将性能调试日志写入专用文件
-
-将歌词显示在灵动岛内
-== 将歌词显示在灵动岛内
-
-屏蔽词列表（用,分隔）
-== 屏蔽词列表（用 , 分隔）
-
-屏蔽词替换字符
-== 屏蔽词替换字符
-
-展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
-== 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
-
-已播放词颜色
-== 已播放词颜色
-
-已读的设置界面新功能标识
-== 已读的设置界面新功能标识
-
-开关图块的覆盖实体 alpha (0-100)
-== 开关图块的覆盖实体 alpha (0-100)
-
-循环本体自定义 Tee 色调
-== 循环本体自定义 Tee 色调
-
-循环本体自定义 Tee 色调速度（度/秒）
-== 循环本体自定义 Tee 色调速度（度/秒）
-
-快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
-== 快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
-
-忽略语音距离衰减
-== 忽略语音距离衰减
-
-性能调试日志阈值（毫秒）
-== 性能调试日志阈值（毫秒）
-
-拿到额外武器时停用 Gores 自动切换
-== 拿到额外武器时停用 Gores 自动切换
-
-按发布时间排序时显示皮肤发布日期和作者
-== 按发布时间排序时显示皮肤发布日期和作者
-
-按名字单独音量（name=percent）
-== 按名字单独音量（name=percent）
-
-按屏蔽词长度多字符替换
-== 按屏蔽词长度多字符替换
-
-接收 VAD 讲话者
-== 接收 VAD 讲话者
-
-接收旁观/非活跃玩家语音
-== 接收旁观/非活跃玩家语音
-
-控制台显示被屏蔽词
-== 控制台显示被屏蔽词
-
-提及选项颜色
-== 提及选项颜色
-
-旁观时按镜头中心收听
-== 旁观时按镜头中心收听
-
-无系统媒体状态时隐藏歌词
-== 无系统媒体状态时隐藏歌词
-
-时钟漂移硬切阈值 ms
-== 时钟漂移硬切阈值 ms
-
-时间耗尽后自动禁用速通计时器
-== 时间耗尽后自动禁用速通计时器
-
-显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
-== 显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
-
-显示分身迷你视图窗口
-== 显示分身迷你视图窗口
-
-显示地图进度条（内测中）
-== 显示地图进度条（内测中）
-
-显示地图进度调试点路线
-== 显示地图进度调试点路线
-
-显示歌词翻译（若有）
-== 显示歌词翻译（若有）
-
-显示歌词音译（若有）
-== 显示歌词音译（若有）
-
-显示版本过旧提示
-== 显示版本过旧提示
-
-显示碰撞体积边框
-== 显示碰撞体积边框
-
-显示语音连接状态
-== 显示语音连接状态
-
-显示语音高级选项
-== 显示语音高级选项
-
-显示输入覆盖
-== 显示输入覆盖
-
-显示通知栏高级设置
-== 显示通知栏高级设置
-
-普通消息文字渐变颜色
-== 普通消息文字渐变颜色
-
-智谱AI API Key
-== 智谱 AI API Key
-
-智谱AI 模型名称
-== 智谱 AI 模型名称
-
-智谱AI 端点（留空使用默认）
-== 智谱 AI 端点（留空使用默认）
-
-暂停时隐藏歌词
-== 暂停时隐藏歌词
-
-替换方式 0=Regex 1=Full 2=Both
-== 替换方式 0=Regex 1=Full 2=Both
-
-未找到歌词时隐藏（而非显示提示）
-== 未找到歌词时隐藏（而非显示提示）
-
-未播放词颜色
-== 未播放词颜色
-
-本体和分身都被冻结时，自动切换到先解冻的那个
-== 本体和分身都被冻结时，自动切换到先解冻的那个
-
-本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
-== 本体或分身被锤醒时，在对应玩家随机的左上或右上角显示提示
-
-本地目标语言识别占比阈值
-== 本地目标语言识别占比阈值
-
-本地目标语言识别最小字符数
-== 本地目标语言识别最小字符数
-
-本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）
-== 本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）
-
-栖梦侧栏模块使用频率
-== 栖梦侧栏模块使用频率
-
-栖梦侧栏模块折叠状态
-== 栖梦侧栏模块折叠状态
-
-栖梦侧栏模块排序
-== 栖梦侧栏模块排序
-
-根据位置小数部分显示跳跃提示
-== 根据位置小数部分显示跳跃提示
-
-根据文本输入焦点自动启用或关闭 IME
-== 根据文本输入焦点自动启用或关闭 IME
-
-检测新歌时自动联网拉取歌词
-== 检测新歌时自动联网拉取歌词
-
-歌词 HTTP 代理（如 http://127.0.0.1:7890）
-== 歌词 HTTP 代理（如 http://127.0.0.1:7890）
-
-歌词 HTTP 请求超时 ms
-== 歌词 HTTP 请求超时 ms
-
-歌词 HUD 贴边外边距 px
-== 歌词 HUD 贴边外边距 px
-
-歌词下一行颜色
-== 歌词下一行颜色
-
-歌词吸附灵动岛阈值
-== 歌词吸附灵动岛阈值
-
-歌词当前行颜色
-== 歌词当前行颜色
-
-歌词手动时间轴偏移 ms（运行时按 500ms 步进）
-== 歌词手动时间轴偏移 ms（运行时按 500ms 步进）
-
-歌词描边透明度
-== 歌词描边透明度
-
-歌词描边颜色
-== 歌词描边颜色
-
-歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
-== 歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
-
-歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
-== 歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
-
-歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
-== 歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
-
-歌词整体不透明度 %
-== 歌词整体不透明度 %
-
-歌词本地媒体库目录（多个目录用 | 分隔）
-== 歌词本地媒体库目录（多个目录用 | 分隔）
-
-歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
-== 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
-
-歌词模糊匹配评分阈值
-== 歌词模糊匹配评分阈值
-
-歌词淡入淡出时间
-== 歌词淡入淡出时间
-
-歌词缓存过期天数（0=永久）
-== 歌词缓存过期天数（0=永久）
-
-歌词翻译/音译颜色
-== 歌词翻译/音译颜色
-
-歌词背景透明度
-== 歌词背景透明度
-
-歌词背景颜色
-== 歌词背景颜色
-
-歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
-== 歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
-
-歌词行间距 px
-== 歌词行间距 px
-
-歌词超长时跑马灯
-== 歌词超长时跑马灯
-
-歌词跑马灯速度
-== 歌词跑马灯速度
-
-武器切换动画持续时间（毫秒）
-== 武器切换动画持续时间（毫秒）
-
-武器切换动画旋转角度
-== 武器切换动画旋转角度
-
-武器切换动画滑入距离
-== 武器切换动画滑入距离
-
-武器切换动画缓动模式
-== 武器切换动画缓动模式
-
-武器切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
-== 武器切换动画范围：0=仅自己 1=本地+分身 2=所有玩家
-
-武器弹道辅助线宽度
-== 武器弹道辅助线宽度
-
-武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）
-== 武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）
-
-武器弹道辅助线透明度
-== 武器弹道辅助线透明度
-
-武器弹道辅助线颜色
-== 武器弹道辅助线颜色
-
-死亡后显示记分牌
-== 死亡后显示记分牌
-
-活动行上方显示行数
-== 活动行上方显示行数
-
-活动行下方显示行数
-== 活动行下方显示行数
-
-活动行字号 px
-== 活动行字号 px
-
-活动行缩放百分比
-== 活动行缩放百分比
-
-深度冻结图块的叠加实体 alpha (0-100)
-== 深度冻结图块的叠加实体 alpha (0-100)
-
-深度解冻图块的叠加实体 alpha (0-100)
-== 深度解冻图块的叠加实体 alpha (0-100)
-
-激光半透明度 (0=完全透明, 100=不透明)
-== 激光半透明度 (0=完全透明，100=不透明)
-
-激光圆角端点 (0=方角, 1=圆角)
-== 激光圆角端点 (0=方角，1=圆角)
-
-激光大小/粗细 (百分比, 100=默认)
-== 激光大小/粗细 (百分比，100=默认)
-
-激光辉光强度 (0-100)
-== 激光辉光强度 (0-100)
-
-灵动岛 HUD 编辑器贴边外边距 px
-== 灵动岛 HUD 编辑器贴边外边距 px
-
-灵动岛使用原版样式
-== 灵动岛使用原版样式
-
-灵动岛背景透明度
-== 灵动岛背景透明度
-
-灵动岛背景颜色
-== 灵动岛背景颜色
-
-玩家推动背景 3D 粒子的半径
-== 玩家推动背景 3D 粒子的半径
-
-玩家推动背景 3D 粒子的强度
-== 玩家推动背景 3D 粒子的强度
-
-玩家检测最大距离
-== 玩家检测最大距离
-
-画面纵横比预设（0=关闭，1=5:4，2=4:3，3=3:2，4=16:9，5=21:9，6=自定义）
-== 画面纵横比预设（0=关闭，1=5:4，2=4:3，3=3:2，4=16:9，5=21:9，6=自定义）
-
-界面颜色
-== 界面颜色
-
-皮肤切换动画强度百分比
-== 皮肤切换动画强度百分比
-
-皮肤切换动画持续时间（毫秒，0=无动画）
-== 皮肤切换动画持续时间（毫秒，0=无动画）
-
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
-== 皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
-
-皮肤切换动画缓动模式
-== 皮肤切换动画缓动模式
-
-皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
-== 皮肤切换动画范围：0=仅自己 1=本地+分身 2=所有玩家
-
-皮肤列表排序模式（0=名称，1=发布时间）
-== 皮肤列表排序模式（0=名称，1=发布时间）
-
-皮肤队列切换间隔（毫秒）
-== 皮肤队列切换间隔（毫秒）
-
-皮肤队列当前位置
-== 皮肤队列当前位置
-
-皮肤队列最大长度
-== 皮肤队列最大长度
-
-相机漂移平滑度（0=瞬时，100=最平滑）
-== 相机漂移平滑度（0=瞬时，100=最平滑）
-
-相机漂移强度（0-200）
-== 相机漂移强度（0-200）
-
-碰撞体积线条透明度
-== 碰撞体积线条透明度
-
-碰撞箱模式Freeze边界颜色
-== 碰撞箱模式 Freeze 边界颜色
-
-碰撞箱模式Tee碰撞体颜色
-== 碰撞箱模式 Tee 碰撞体颜色
-
-碰撞箱模式全局透明度
-== 碰撞箱模式全局透明度
-
-碰撞箱模式总开关 (Hitbox mode)
-== 碰撞箱模式总开关 (Hitbox mode)
-
-碰撞箱模式显示Tee碰撞体
-== 碰撞箱模式显示 Tee 碰撞体
-
-碰撞箱模式显示地图危险边界
-== 碰撞箱模式显示地图危险边界
-
-碰撞箱模式显示拾取物范围
-== 碰撞箱模式显示拾取物范围
-
-碰撞箱模式显示武器交互
-== 碰撞箱模式显示武器交互
-
-碰撞箱模式武器交互颜色
-== 碰撞箱模式武器交互颜色
-
-碰撞箱模式玩家范围: 0=本地 1=本地+分身 2=所有玩家
-== 碰撞箱模式玩家范围：0=本地 1=本地+分身 2=所有玩家
-
-禅模式下隐藏 Echo 消息
-== 禅模式下隐藏 Echo 消息
-
-禅模式下隐藏 HUD
-== 禅模式下隐藏 HUD
-
-禅模式下隐藏入场、版本和规则等基础系统信息
-== 禅模式下隐藏入场、版本和规则等基础系统信息
-
-禅模式下隐藏冻结特效
-== 禅模式下隐藏冻结特效
-
-禅模式下隐藏击杀和完成消息
-== 禅模式下隐藏击杀和完成消息
-
-禅模式下隐藏地图进度条
-== 禅模式下隐藏地图进度条
-
-禅模式下隐藏方向
-== 禅模式下隐藏方向
-
-禅模式下隐藏服务器提示通知（包括通知栏）
-== 禅模式下隐藏服务器提示通知（包括通知栏）
-
-禅模式下隐藏武器火焰特效
-== 禅模式下隐藏武器火焰特效
-
-禅模式下隐藏死亡/重生特效
-== 禅模式下隐藏死亡/重生特效
-
-禅模式下隐藏炮击特效
-== 禅模式下隐藏炮击特效
-
-禅模式下隐藏玩家名字
-== 禅模式下隐藏玩家名字
-
-禅模式下隐藏玩家名字板
-== 禅模式下隐藏玩家名字板
-
-禅模式下隐藏玩家消息
-== 禅模式下隐藏玩家消息
-
-禅模式下隐藏计分板
-== 禅模式下隐藏计分板
-
-禅模式下隐藏跳跃特效
-== 禅模式下隐藏跳跃特效
-
-禅模式下隐藏辅助线
-== 禅模式下隐藏辅助线
-
-禅模式下隐藏锤击特效
-== 禅模式下隐藏锤击特效
-
-禅模式下静音死亡/重生音效
-== 禅模式下静音死亡/重生音效
-
-禅模式下静音跳跃音效
-== 禅模式下静音跳跃音效
-
-禅模式下静音锤击音效
-== 禅模式下静音锤击音效
-
-私聊选项颜色
-== 私聊选项颜色
-
-突出显示消息文字渐变颜色
-== 突出显示消息文字渐变颜色
-
-窗口失焦时暂停语音
-== 窗口失焦时暂停语音
-
-系统媒体歌词字体大小
-== 系统媒体歌词字体大小
-
-系统媒体歌词时间偏移（毫秒）
-== 系统媒体歌词时间偏移（毫秒）
-
-系统媒体歌词显示行数
-== 系统媒体歌词显示行数
-
-系统消息文字渐变颜色
-== 系统消息文字渐变颜色
-
-翻译后端（llm/tencentcloud/libretranslate/ftapi）
-== 翻译后端（llm/tencentcloud/libretranslate/ftapi）
-
-翻译按钮取消时的颜色
-== 翻译按钮取消时的颜色
-
-翻译按钮开启时的颜色
-== 翻译按钮开启时的颜色
-
-翻译源语言代码（auto=自动检测）
-== 翻译源语言代码（auto=自动检测）
-
-翻译目标语言代码（如 zh、en、ja、zh-TW）
-== 翻译目标语言代码（如 zh、en、ja、zh-TW）
-
-翻译菜单正常颜色
-== 翻译菜单正常颜色
-
-翻译菜单背景颜色
-== 翻译菜单背景颜色
-
-翻译菜单选中时颜色
-== 翻译菜单选中时颜色
-
-聊天框贴边留白
-== 聊天框贴边留白
-
-聊天气泡字体大小
-== 聊天气泡字体大小
-
-聊天气泡文字颜色
-== 聊天气泡文字颜色
-
-聊天气泡显示时长（秒）
-== 聊天气泡显示时长（秒）
-
-聊天气泡消失动画（0=淡出，1=缩小，2=上滑）
-== 聊天气泡消失动画（0=淡出，1=缩小，2=上滑）
-
-聊天气泡背景颜色
-== 聊天气泡背景颜色
-
-聊天气泡透明度（0-100）
-== 聊天气泡透明度（0-100）
-
-聊天消息淡出平滑时间（毫秒）
-== 聊天消息淡出平滑时间（毫秒）
-
-聊天消息淡出时启用左滑偏移
-== 聊天消息淡出时启用左滑偏移
-
-聊天消息淡出缓动模式
-== 聊天消息淡出缓动模式
-
-聊天记录保留天数
-== 聊天记录保留天数
-
-背景 3D 粒子之间碰撞
-== 背景 3D 粒子之间碰撞
-
-背景 3D 粒子基础速度
-== 背景 3D 粒子基础速度
-
-背景 3D 粒子拖尾透明度
-== 背景 3D 粒子拖尾透明度
-
-背景 3D 粒子拖尾长度
-== 背景 3D 粒子拖尾长度
-
-背景 3D 粒子数量
-== 背景 3D 粒子数量
-
-背景 3D 粒子最大尺寸
-== 背景 3D 粒子最大尺寸
-
-背景 3D 粒子最小尺寸
-== 背景 3D 粒子最小尺寸
-
-背景 3D 粒子淡入时间
-== 背景 3D 粒子淡入时间
-
-背景 3D 粒子淡出时间
-== 背景 3D 粒子淡出时间
-
-背景 3D 粒子深度范围
-== 背景 3D 粒子深度范围
-
-背景 3D 粒子类型：1=方块，2=爱心，3=混合，4=球体，5=金字塔，6=钻石，7=圆环，8=星形，9=月牙
-== 背景 3D 粒子类型：1=方块，2=爱心，3=混合，4=球体，5=金字塔，6=钻石，7=圆环，8=星形，9=月牙
-
-背景 3D 粒子脉冲强度
-== 背景 3D 粒子脉冲强度
-
-背景 3D 粒子脉冲速度
-== 背景 3D 粒子脉冲速度
-
-背景 3D 粒子自定义颜色
-== 背景 3D 粒子自定义颜色
-
-背景 3D 粒子视野外保留边距
-== 背景 3D 粒子视野外保留边距
-
-背景 3D 粒子辉光偏移
-== 背景 3D 粒子辉光偏移
-
-背景 3D 粒子辉光透明度
-== 背景 3D 粒子辉光透明度
-
-背景 3D 粒子透明度
-== 背景 3D 粒子透明度
-
-背景 3D 粒子闪烁强度
-== 背景 3D 粒子闪烁强度
-
-背景 3D 粒子颜色模式：1=自定义，2=随机
-== 背景 3D 粒子颜色模式：1=自定义，2=随机
-
-脉冲动画速度 ( 百分比, 100=正常)
-== 脉冲动画速度 ( 百分比，100=正常)
-
-脉冲振幅 (0-100)
-== 脉冲振幅 (0-100)
-
-腾讯云翻译 SecretId
-== 腾讯云翻译 SecretId
-
-腾讯云翻译 SecretKey
-== 腾讯云翻译 SecretKey
-
-腾讯云翻译地域
-== 腾讯云翻译地域
-
-腾讯云翻译端点
-== 腾讯云翻译端点
-
-自动保存历史数量（0=禁用自动过图历史记录）
-== 自动保存历史数量（0=禁用自动过图历史记录）
-
-自动保存聊天记录
-== 自动保存聊天记录
-
-自动回复冷却时间（秒）
-== 自动回复冷却时间（秒）
-
-自动增益控制（0=关闭 1=开启）
-== 自动增益控制（0=关闭 1=开启）
-
-自动翻译入站消息
-== 自动翻译入站消息
-
-自动翻译发送的消息
-== 自动翻译发送的消息
-
-自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)
-== 自动翻译模式 (0=仅常见源语言输入时触发，1=始终翻译)
-
-自动获取全图玩家皮肤并作为分身轮换队列
-== 自动获取全图玩家皮肤并作为分身轮换队列
-
-自动获取全图玩家皮肤并作为轮换队列
-== 自动获取全图玩家皮肤并作为轮换队列
-
-自动调整预测边距（关闭后固定使用基础预测边距）
-== 自动调整预测边距（关闭后固定使用基础预测边距）
-
-自动跟随好友换服延迟（秒）
-== 自动跟随好友换服延迟（秒）
-
-自动锁定延迟（秒）
-== 自动锁定延迟（秒）
-
-自定义 Provider API Key
-== 自定义 Provider API Key
-
-自定义 Provider 模型名称
-== 自定义 Provider 模型名称
-
-自定义 Provider 端点
-== 自定义 Provider 端点
-
-自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
-== 自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
-
-自定义翻译提示词（覆盖内置提示词）
-== 自定义翻译提示词（覆盖内置提示词）
-
-菜单不透明度 (Menu opacity 0-100)
-== 菜单不透明度 (Menu opacity 0-100)
-
-行切换滚动时长 ms
-== 行切换滚动时长 ms
-
-被屏蔽词控制台颜色
-== 被屏蔽词控制台颜色
-
-被解冻时自动取消旁观
-== 被解冻时自动取消旁观
-
-被锤/榴弹击中时随机表情
-== 被锤/榴弹击中时随机表情
-
-覆盖冻结图块的实体 alpha (0-100)
-== 覆盖冻结图块的实体 alpha (0-100)
-
-覆盖实体 alpha 以解冻图块 (0-100)
-== 覆盖实体 alpha 以解冻图块 (0-100)
-
-覆盖死亡图块的实体 alpha (0-100)
-== 覆盖死亡图块的实体 alpha (0-100)
-
-观战选项颜色
-== 观战选项颜色
-
-解冻后自动关闭聊天
-== 解冻后自动关闭聊天
-
-计分板查分
-== 计分板查分
-
-计分板透明度
-== 计分板透明度
-
-计分板颜色
-== 计分板颜色
-
-记分牌排序模式（0=分数，1=分）
-== 记分牌排序模式（0=分数，1=分）
-
-设置卡片标题使用彩虹色（需要额外动画）
-== 设置卡片标题使用彩虹色（需要额外动画）
-
-语音分组模式
-== 语音分组模式
-
-语音协议版本
-== 语音协议版本
-
-语音房间 Token（可选）
-== 语音房间 Token（可选）
-
-语音播放音量（百分比）
-== 语音播放音量（百分比）
-
-语音服务器地址 host:port
-== 语音服务器地址 host:port
-
-语音测试模式（0=关 1=本地 2=服务器回环）
-== 语音测试模式（0=关 1=本地 2=服务器回环）
-
-语音白名单（逗号分隔）
-== 语音白名单（逗号分隔）
-
-语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）
-== 语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）
-
-语音立体声宽度（百分比）
-== 语音立体声宽度（百分比）
-
-语音立体声输出
-== 语音立体声输出
-
-语音距离半径（Tiles）
-== 语音距离半径（Tiles）
-
-语音输入设备（空为默认）
-== 语音输入设备（空为默认）
-
-语音输出设备（空为默认）
-== 语音输出设备（空为默认）
-
-语音静音名单（逗号分隔）
-== 语音静音名单（逗号分隔）
-
-语音音频后端（SDL 驱动名，空为自动）
-== 语音音频后端（SDL 驱动名，空为自动）
-
-语音黑名单（逗号分隔）
-== 语音黑名单（逗号分隔）
-
-调试图表面板不透明度（百分比）
-== 调试图表面板不透明度（百分比）
-
-资源预览显存预算百分比（基于设备本地显存预算）
-== 资源预览显存预算百分比（基于设备本地显存预算）
-
-资源预览显存预算覆盖（MB，0=自动）
-== 资源预览显存预算覆盖（MB，0=自动）
-
-跳跃提示垂直位置（占屏幕高度百分比）
-== 跳跃提示垂直位置（占屏幕高度百分比）
-
-跳跃提示字体大小
-== 跳跃提示字体大小
-
-跳跃提示文本（使用\n换行）
-== 跳跃提示文本（使用\n 换行）
-
-跳跃提示水平位置（占屏幕宽度百分比）
-== 跳跃提示水平位置（占屏幕宽度百分比）
-
-跳跃提示颜色
-== 跳跃提示颜色
-
-输入叠加 X 位置（百分比）
-== 输入叠加 X 位置（百分比）
-
-输入叠加 Y 位置（百分比）
-== 输入叠加 Y 位置（百分比）
-
-输入叠加不透明度（百分比）
-== 输入叠加不透明度（百分比）
-
-输入叠加比例（百分比）
-== 输入叠加比例（百分比）
-
-输入时不显示打字表情
-== 输入时不显示打字表情
-
-输出语音调试日志
-== 输出语音调试日志
-
-进入 Axiom 社区服务器后自动登录
-== 进入 Axiom 社区服务器后自动登录
-
-进入服务器时重置统计（0=累计统计，1=每次进服重置）
-== 进入服务器时重置统计（0=累计统计，1=每次进服重置）
-
-进图时不自动显示服务器信息
-== 进图时不自动显示服务器信息
-
-远离行每行缩小百分比
-== 远离行每行缩小百分比
-
-远离行每行透明度衰减 %
-== 远离行每行透明度衰减 %
-
-远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
-== 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
-
-逐字边缘软过渡宽度 px
-== 逐字边缘软过渡宽度 px
-
-通用界面透明度
-== 通用界面透明度
-
-通知栏 echo 继承聊天 echo 颜色
-== 通知栏 echo 继承聊天 echo 颜色
-
-通知栏 echo 覆盖文字颜色
-== 通知栏 echo 覆盖文字颜色
-
-通知栏停留时间（毫秒）
-== 通知栏停留时间（毫秒）
-
-通知栏动画时间（毫秒）
-== 通知栏动画时间（毫秒）
-
-通知栏动画类型（0=淡入滑入 1=仅淡入 2=无动画）
-== 通知栏动画类型（0=淡入滑入 1=仅淡入 2=无动画）
-
-通知栏接管 echo 消息
-== 通知栏接管 echo 消息
-
-通知栏接管服务器系统提示（入场版本信息除外）
-== 通知栏接管服务器系统提示（入场版本信息除外）
-
-通知栏文字大小
-== 通知栏文字大小
-
-通知栏显示基础服务器信息
-== 通知栏显示基础服务器信息
-
-通知栏显示服务器帮助说明
-== 通知栏显示服务器帮助说明
-
-通知栏显示未知服务器消息
-== 通知栏显示未知服务器消息
-
-通知栏显示重要服务器提示
-== 通知栏显示重要服务器提示
-
-通知栏最大显示数量
-== 通知栏最大显示数量
-
-通知栏系统提示文字颜色
-== 通知栏系统提示文字颜色
-
-通知栏背景颜色
-== 通知栏背景颜色
-
-通知栏贴边时预留边距
-== 通知栏贴边时预留边距
-
-速通倒计时器
-== 速通倒计时器
-
-速通计时器分钟
-== 速通计时器分钟
-
-速通计时器小时
-== 速通计时器小时
-
-速通计时器时间（MMSS 格式，兼容旧版）
-== 速通计时器时间（MMSS 格式，兼容旧版）
-
-速通计时器毫秒
-== 速通计时器毫秒
-
-速通计时器秒
-== 速通计时器秒
-
-重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
-== 重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
-
-锤人换皮肤
-== 锤人换皮肤
-
-队伍消息文字渐变颜色
-== 队伍消息文字渐变颜色
-
-限幅器阈值（百分比）
-== 限幅器阈值（百分比）
-
-隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
-== 隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
-
-隐藏非好友姓名/部落并显示客户端 ID
-== 隐藏非好友姓名/部落并显示客户端 ID
-
-静音麦克风
-== 静音麦克风
-
-非好友使用默认皮肤
-== 非好友使用默认皮肤
-
-非活动行字号 px
-== 非活动行字号 px
-
-非活动行最小不透明度 %
-== 非活动行最小不透明度 %
-
-额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
-== 额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
-
-饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
-== 饼菜单改名名单（使用 | 分隔，如：璇梦 1|璇梦 2）
-
-麦克风音量（百分比）
-== 麦克风音量（百分比）
 
 [Assets editor blend mode]
 Multiply

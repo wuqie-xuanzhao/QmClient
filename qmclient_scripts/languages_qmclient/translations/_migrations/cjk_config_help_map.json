@@ -1,0 +1,4713 @@
+[
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_perf_debug",
+    "old": "启用主线程与渲染阶段性能调试日志",
+    "new": "Enable main thread and render stage performance debug logging",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_perf_logfile",
+    "old": "将性能调试日志写入专用文件",
+    "new": "Write performance debug logs to dedicated file",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_perf_debug_threshold_ms",
+    "old": "性能调试日志阈值（毫秒）",
+    "new": "Performance debug log threshold (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_process_high_priority",
+    "old": "在 Windows 上切换客户端进程的普通/高优先级",
+    "new": "Toggle client process normal/high priority on Windows",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_assets_preview_budget_mb_override",
+    "old": "资源预览显存预算覆盖（MB，0=自动）",
+    "new": "Resource preview VRAM budget override (MB, 0=auto)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_assets_preview_budget_percent",
+    "old": "资源预览显存预算百分比（基于设备本地显存预算）",
+    "new": "Resource preview VRAM budget percentage (based on device local VRAM budget)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ui_runtime_v2_debug",
+    "old": "启用 UI 运行时 v2 调试日志",
+    "new": "Enable UI runtime v2 debug logging",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ui_motion_level",
+    "old": "QmUi 动效强度：0=关闭 1=降低 2=完整",
+    "new": "QmUi animation intensity: 0=Off, 1=Reduced, 2=Full",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_extra_animations",
+    "old": "额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画",
+    "new": "Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ui_card_rainbow_titles",
+    "old": "设置卡片标题使用彩虹色",
+    "new": "Settings card titles use rainbow colors",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ui_color_interpolation",
+    "old": "QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀",
+    "new": "QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_card_backdrop_blur",
+    "old": "卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）",
+    "new": "Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_rect_corner_segments",
+    "old": "UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）",
+    "new": "UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_global_card_order",
+    "old": "全局卡片排序（格式 stableId|tab|col|order; 分号分隔）",
+    "new": "Global card ordering (format: stableId|tab|col|order; semicolon-separated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_card_order_migrated",
+    "old": "全局卡片排序旧配置迁移完成标记",
+    "new": "Global card ordering old config migration completed flag",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_card_layout_version",
+    "old": "设置卡片默认布局迁移版本",
+    "new": "Settings card default layout migration version",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_settings_card_order",
+    "old": "Tclient 设置卡片排序（格式 id:col:order; 分号分隔）",
+    "new": "Tclient settings card ordering (format: id:col:order; semicolon-separated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "dbg_qm_ui_dogfood",
+    "old": "展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）",
+    "new": "Show feat-003 shared UI primitives dogfood page (takes over QmClient settings page, for visual verification of 11 primitives + spring/easing animations)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_new_ui",
+    "old": "启用新版设置页面 UI",
+    "new": "Enable new settings page UI",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ui_color",
+    "old": "界面颜色",
+    "new": "Interface color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ui_focus_color",
+    "old": "界面输入焦点颜色",
+    "new": "Input focus color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_map_browser_color",
+    "old": "地图浏览器颜色",
+    "new": "Map browser color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_scoreboard_color",
+    "old": "计分板颜色",
+    "new": "Scoreboard color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ui_opacity",
+    "old": "通用界面透明度",
+    "new": "Interface transparency",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_map_browser_opacity",
+    "old": "地图浏览器透明度",
+    "new": "Map browser transparency",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_scoreboard_opacity",
+    "old": "计分板透明度",
+    "new": "Scoreboard transparency",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_show_outdated_version_warning",
+    "old": "显示版本过旧提示",
+    "new": "Show outdated version warning",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_new_feature_marks_read",
+    "old": "已读的设置界面新功能标识",
+    "new": "Read new feature indicators",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_ime_auto_manage",
+    "old": "根据文本输入焦点自动启用或关闭 IME",
+    "new": "Auto enable/disable IME on text focus",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_new_ime",
+    "old": "启用新版 IME 候选栏",
+    "new": "Enable new IME candidate bar",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_save_history_count",
+    "old": "自动保存历史数量（0=禁用自动过图历史记录）",
+    "new": "Auto-save history count (0=disable)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_short_server_names",
+    "old": "在服务器浏览器中显示简短服务器名",
+    "new": "Show short server names in browser",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_sort_mode",
+    "old": "皮肤列表排序模式（0=名称，1=发布时间）",
+    "new": "Skin list sort mode (0=Name, 1=Release date)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_show_metadata",
+    "old": "按发布时间排序时显示皮肤发布日期和作者",
+    "new": "Show release date and author when sorted by date",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_report_endpoint",
+    "old": "举报服务地址",
+    "new": "Report service URL",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_report_app_id",
+    "old": "举报服务 App ID",
+    "new": "Report service App ID",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_report_secret",
+    "old": "举报服务签名密钥",
+    "new": "Report service signing key",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_scoreboard_points",
+    "old": "计分板查分",
+    "new": "Scoreboard score lookup",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_scoreboard_sort_mode",
+    "old": "记分牌排序模式（0=分数，1=分）",
+    "new": "Scoreboard sort mode (0=Score, 1=Points)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_scoreboard_on_death",
+    "old": "死亡后显示记分牌",
+    "new": "Show scoreboard after death",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hide_join_server_info",
+    "old": "进图时不自动显示服务器信息",
+    "new": "Do not auto-show server info on entering map",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "cl_message_system_gradient",
+    "old": "系统消息文字渐变颜色",
+    "new": "System message text gradient color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "cl_message_client_gradient",
+    "old": "客户端消息文字渐变颜色",
+    "new": "Client message text gradient color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "cl_message_highlight_gradient",
+    "old": "突出显示消息文字渐变颜色",
+    "new": "Highlight message text gradient color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "cl_message_team_gradient",
+    "old": "队伍消息文字渐变颜色",
+    "new": "Team message text gradient color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "cl_message_gradient",
+    "old": "普通消息文字渐变颜色",
+    "new": "Normal message text gradient color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "cl_message_friend_gradient",
+    "old": "好友消息文字渐变颜色",
+    "new": "Friend message text gradient color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_log_auto_save",
+    "old": "自动保存聊天记录",
+    "new": "Auto-save chat log",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_log_keep_days",
+    "old": "聊天记录保留天数",
+    "new": "Chat log retention days",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coord_x",
+    "old": "名字牌显示坐标X",
+    "new": "Nameplate position X",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coord_x_align_hint",
+    "old": "名字牌显示与本地玩家X对齐的提示",
+    "new": "Nameplate X alignment hint with local player",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coord_x_align_hint_strict",
+    "old": "名字牌X对齐提示严格模式",
+    "new": "Nameplate X alignment hint strict mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coord_x_align_hint_window_ms",
+    "old": "名字牌X对齐提示持续判定窗口（毫秒）",
+    "new": "Nameplate X alignment hint duration window (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coord_x_align_hint_color",
+    "old": "名字牌X对齐提示高亮颜色",
+    "new": "Nameplate X alignment hint highlight color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coord_y",
+    "old": "名字牌显示坐标Y",
+    "new": "Nameplate position Y",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coords_own",
+    "old": "名字牌显示自己坐标",
+    "new": "Show own nameplate coordinates",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coords",
+    "old": "名字牌显示他人坐标",
+    "new": "Show others' nameplate coordinates",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_laser_enhanced",
+    "old": "启用增强激光特效（辉光+脉冲动画）",
+    "new": "Enable enhanced laser effect (glow + pulse animation)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_laser_glow_intensity",
+    "old": "激光辉光强度 (0-100)",
+    "new": "Laser glow intensity (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_laser_pulse_speed",
+    "old": "脉冲动画速度 ( 百分比, 100=正常)",
+    "new": "Pulse animation speed (percentage, 100=normal)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_laser_pulse_amplitude",
+    "old": "脉冲振幅 (0-100)",
+    "new": "Pulse Amplitude (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_laser_size",
+    "old": "激光大小/粗细 (百分比, 100=默认)",
+    "new": "Laser Size/Thickness (percentage, 100=default)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_laser_round_caps",
+    "old": "激光圆角端点 (0=方角, 1=圆角)",
+    "new": "Laser Rounded Ends (0=square, 1=round)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_laser_alpha",
+    "old": "激光半透明度 (0=完全透明, 100=不透明)",
+    "new": "Laser Opacity (0=transparent, 100=opaque)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_show_collision_hitbox",
+    "old": "显示碰撞体积边框",
+    "new": "Show Collision Borders",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_collision_hitbox_color_freeze",
+    "old": "Freeze碰撞边框颜色",
+    "new": "Freeze Collision Border Color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_collision_hitbox_alpha",
+    "old": "碰撞体积线条透明度",
+    "new": "Collision Line Opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_mode",
+    "old": "碰撞箱模式总开关 (Hitbox mode)",
+    "new": "Hitbox Mode Override",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_show_map",
+    "old": "碰撞箱模式显示地图危险边界",
+    "new": "Show Danger Tiles in Hitbox Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_show_tees",
+    "old": "碰撞箱模式显示Tee碰撞体",
+    "new": "Show Tee Collision in Hitbox Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_show_pickups",
+    "old": "碰撞箱模式显示拾取物范围",
+    "new": "Show Pickup Ranges in Hitbox Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_show_weapons",
+    "old": "碰撞箱模式显示武器交互",
+    "new": "Show Weapon Interactions in Hitbox Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_alpha",
+    "old": "碰撞箱模式全局透明度",
+    "new": "Hitbox Mode Global Opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_player_scope",
+    "old": "碰撞箱模式玩家范围: 0=本地 1=本地+分身 2=所有玩家",
+    "new": "Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_color_freeze",
+    "old": "碰撞箱模式Freeze边界颜色",
+    "new": "Hitbox Mode Freeze Border Color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_color_tee",
+    "old": "碰撞箱模式Tee碰撞体颜色",
+    "new": "Hitbox Mode Tee Collision Color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hitbox_color_weapon",
+    "old": "碰撞箱模式武器交互颜色",
+    "new": "Hitbox Mode Weapon Interaction Color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_death_alpha",
+    "old": "覆盖死亡图块的实体 alpha (0-100)",
+    "new": "Override Death Tile Entity Alpha (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_freeze_alpha",
+    "old": "覆盖冻结图块的实体 alpha (0-100)",
+    "new": "Override Freeze Tile Entity Alpha (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_unfreeze_alpha",
+    "old": "覆盖实体 alpha 以解冻图块 (0-100)",
+    "new": "Override Entity Alpha for Unfreeze Tiles (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_deep_freeze_alpha",
+    "old": "深度冻结图块的叠加实体 alpha (0-100)",
+    "new": "Depth freeze tile overlay alpha (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_deep_unfreeze_alpha",
+    "old": "深度解冻图块的叠加实体 alpha (0-100)",
+    "new": "Depth unfreeze tile overlay alpha (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_tele_alpha",
+    "old": "Teletile 的覆盖实体 alpha (0-100)",
+    "new": "Teletile overlay alpha (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_tele_checkpoint_alpha",
+    "old": "CP点边界的覆盖实体 alpha (0-100)",
+    "new": "CP border overlay alpha (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_entity_overlay_switch_alpha",
+    "old": "开关图块的覆盖实体 alpha (0-100)",
+    "new": "Switch tile overlay alpha (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_client_mark_trail",
+    "old": "远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）",
+    "new": "Remote particles: sync and render other players via central server (requires both local+remote enabled)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_client_show_badge",
+    "old": "显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户",
+    "new": "Show Qm badge: identify via central server and mark QmClient users on nameplate/scoreboard",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_margin",
+    "old": "自动调整预测边距（关闭后固定使用基础预测边距）",
+    "new": "Auto adjust prediction margin (fixed base margin when off)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_fast_input_mode",
+    "old": "快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）",
+    "new": "Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_best_input_offset",
+    "old": "Best input 预测偏移（0.01 tick）",
+    "new": "Best input prediction offset (0.01 tick)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_best_input_smoothing",
+    "old": "Best input 平滑百分比",
+    "new": "Best input smooth percentage",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_best_input_latency_comp",
+    "old": "Best input 延迟补偿百分比",
+    "new": "Best input delay compensation percentage",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_best_input_interpolation",
+    "old": "Best input 插值模式（1=linear 2=cubic 3=smooth）",
+    "new": "Best input interpolation mode (1=linear 2=cubic 3=smooth)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_saiko_plus_amount",
+    "old": "Saiko+ 输入量（0.01 tick）",
+    "new": "Saiko+ input amount (0.01 tick)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_best_input_others",
+    "old": "将 Best input 应用于其他 Tee",
+    "new": "Apply Best input to other Tees",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_saiko_plus_others",
+    "old": "将 Saiko+ 应用于其他 Tee",
+    "new": "Apply Saiko+ to other Tees",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_keyword_reply_enabled",
+    "old": "启用关键词回复",
+    "new": "Enable keyword reply",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_keyword_reply_use_dummy",
+    "old": "关键词回复使用Dummy",
+    "new": "Keyword reply use Dummy",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_keyword_reply_rules",
+    "old": "关键词回复规则（每行: [rename] [regex] 关键词=>回复）",
+    "new": "Keyword reply rules (each line: [rename] [regex] keyword=>reply)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_reply_cooldown",
+    "old": "自动回复冷却时间（秒）",
+    "new": "Auto reply cooldown (seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_enabled",
+    "old": "启用饼菜单",
+    "new": "Enable Pie Menu",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_max_distance",
+    "old": "玩家检测最大距离",
+    "new": "Max player detection distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_scale",
+    "old": "UI大小百分比 (UI scale percentage)",
+    "new": "UI size percentage",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_opacity",
+    "old": "菜单不透明度 (Menu opacity 0-100)",
+    "new": "Menu opacity (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_rename_queue",
+    "old": "饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）",
+    "new": "Pie menu rename list (separate with |, e.g., name1|name2)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_color_friend",
+    "old": "好友选项颜色",
+    "new": "Friend option color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_color_whisper",
+    "old": "私聊选项颜色",
+    "new": "Whisper option color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_color_mention",
+    "old": "提及选项颜色",
+    "new": "Mention option color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_color_copy_skin",
+    "old": "复制皮肤选项颜色",
+    "new": "Copy skin option color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_color_swap",
+    "old": "交换选项颜色",
+    "new": "Swap option color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_pie_menu_color_spectate",
+    "old": "观战选项颜色",
+    "new": "Spectate option color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_repeat_enabled",
+    "old": "启用复读功能",
+    "new": "Enable repeat function",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_say_nopop",
+    "old": "输入时不显示打字表情",
+    "new": "Hide typing emoji during input",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hammer_swap_skin",
+    "old": "锤人换皮肤",
+    "new": "Switch skin on hammer",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_change_transition",
+    "old": "启用皮肤切换动画",
+    "new": "Enable skin switch animation",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_change_transition_scope",
+    "old": "皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家",
+    "new": "Skin switch animation range: 0=Self, 1=Local+Dummy, 2=All players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_change_transition_type",
+    "old": "皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）",
+    "new": "Skin switch animation type (0=Ghost pop, 1=Soft fade, 2=Slide left, 3=Rotate pop, 4=Light dark switch, 5=Glitch shake, 6=Elastic scale)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_change_transition_ms",
+    "old": "皮肤切换动画持续时间（毫秒，0=无动画）",
+    "new": "Skin switch animation duration (ms, 0=No animation)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_change_transition_easing",
+    "old": "皮肤切换动画缓动模式",
+    "new": "Skin switch animation easing mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_change_transition_intensity",
+    "old": "皮肤切换动画强度百分比",
+    "new": "Skin switch animation intensity percentage",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_cycle_tee_hue",
+    "old": "循环本体自定义 Tee 色调",
+    "new": "Cycle custom Tee hue for main",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_cycle_tee_hue_dummy",
+    "old": "同时循环分身自定义 Tee 色调",
+    "new": "Cycle custom Tee hue for dummy simultaneously",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_cycle_tee_hue_speed",
+    "old": "循环本体自定义 Tee 色调速度（度/秒）",
+    "new": "Cycle custom Tee hue speed (deg/s)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_random_emote_on_hit",
+    "old": "被锤/榴弹击中时随机表情",
+    "new": "Random emote when hit by hammer/grenade",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_emoticon_shadow",
+    "old": "在表情后绘制阴影",
+    "new": "Draw shadow behind emote",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_trajectory",
+    "old": "武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）",
+    "new": "Weapon trajectory helper mode (0=Off, 1=On key, 2=Always)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_trajectory_color",
+    "old": "武器弹道辅助线颜色",
+    "new": "Weapon trajectory helper color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_trajectory_width",
+    "old": "武器弹道辅助线宽度",
+    "new": "Weapon trajectory helper width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_trajectory_alpha",
+    "old": "武器弹道辅助线透明度",
+    "new": "Weapon trajectory helper alpha",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_switch_anim",
+    "old": "切换武器时播放滑入旋转动画",
+    "new": "Play slide-in rotation animation when switching weapon",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_switch_anim_scope",
+    "old": "武器切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家",
+    "new": "Weapon switch animation scope: 0=Self, 1=Local+dummy, 2=All players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_switch_anim_duration_ms",
+    "old": "武器切换动画持续时间（毫秒）",
+    "new": "Weapon switch animation duration (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_switch_anim_distance",
+    "old": "武器切换动画滑入距离",
+    "new": "Weapon switch animation slide distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_switch_anim_rotation",
+    "old": "武器切换动画旋转角度",
+    "new": "Weapon switch animation rotation angle",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_weapon_switch_anim_easing",
+    "old": "武器切换动画缓动模式",
+    "new": "Weapon switch animation easing mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_respawn_default_weapon",
+    "old": "重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）",
+    "new": "Default weapon on respawn (0=Off, 1=Hammer, 2=Pistol, 3=Shotgun, 4=Grenade, 5=Laser)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_deepfly_mode",
+    "old": "Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）",
+    "new": "Deepfly mode (0=Normal, 1=DF, 2=HDF, 3=Custom)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_unspec_on_unfreeze",
+    "old": "被解冻时自动取消旁观",
+    "new": "Auto-unspec when unfrozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_switch_on_unfreeze",
+    "old": "本体和分身都被冻结时，自动切换到先解冻的那个",
+    "new": "Auto-switch to first unfrozen when both frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_close_chat_on_unfreeze",
+    "old": "解冻后自动关闭聊天",
+    "new": "Auto-close chat after unfreeze",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_freeze_wakeup_popup",
+    "old": "本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示",
+    "new": "Show hint at random top-left/right of player when main or dummy is hammered awake",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_team_lock",
+    "old": "加入可锁定队伍后自动锁定",
+    "new": "Auto-lock after joining lockable team",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_auto_team_lock_delay",
+    "old": "自动锁定延迟（秒）",
+    "new": "Auto-lock delay (seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_input_overlay",
+    "old": "显示输入覆盖",
+    "new": "Show input overlay",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_input_overlay_scale",
+    "old": "输入叠加比例（百分比）",
+    "new": "Input overlay scale (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_input_overlay_opacity",
+    "old": "输入叠加不透明度（百分比）",
+    "new": "Input overlay opacity (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_input_overlay_pos_x",
+    "old": "输入叠加 X 位置（百分比）",
+    "new": "Input overlay X position (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_input_overlay_pos_y",
+    "old": "输入叠加 Y 位置（百分比）",
+    "new": "Input overlay Y position (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_system",
+    "old": "通知栏接管服务器系统提示（入场版本信息除外）",
+    "new": "Notification bar overrides server system messages (except version info)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_echo",
+    "old": "通知栏接管 echo 消息",
+    "new": "Notification bar overrides echo messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_show_advanced",
+    "old": "显示通知栏高级设置",
+    "new": "Show notification bar advanced settings",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_use_category_filters",
+    "old": "使用通知栏分类过滤",
+    "new": "Use notification bar category filter",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_show_basic_info",
+    "old": "通知栏显示基础服务器信息",
+    "new": "Notification bar shows basic server info",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_show_help_info",
+    "old": "通知栏显示服务器帮助说明",
+    "new": "Notification bar shows server help",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_show_prompts",
+    "old": "通知栏显示重要服务器提示",
+    "new": "Notification bar shows important server hints",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_show_unknown",
+    "old": "通知栏显示未知服务器消息",
+    "new": "Notification bar shows unknown server messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_compat_solo",
+    "old": "兼容其他服务器的类似单人区域提示",
+    "new": "Compatible with single-player area hints from other servers",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_bg_color",
+    "old": "通知栏背景颜色",
+    "new": "Notification bar background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_text_color",
+    "old": "通知栏系统提示文字颜色",
+    "new": "Notification bar system message text color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_echo_inherit_color",
+    "old": "通知栏 echo 继承聊天 echo 颜色",
+    "new": "Notification bar echo inherits chat echo color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_echo_text_color",
+    "old": "通知栏 echo 覆盖文字颜色",
+    "new": "Notification echo overlay text color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_text_size",
+    "old": "通知栏文字大小",
+    "new": "Notification text size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_hold_ms",
+    "old": "通知栏停留时间（毫秒）",
+    "new": "Notification display duration (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_anim_type",
+    "old": "通知栏动画类型（0=淡入滑入 1=仅淡入 2=无动画）",
+    "new": "Notification animation type (0=Fade+Slide, 1=Fade only, 2=No animation)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_anim_ms",
+    "old": "通知栏动画时间（毫秒）",
+    "new": "Notification animation duration (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_max_visible",
+    "old": "通知栏最大显示数量",
+    "new": "Maximum notification count",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_notifications_edge_margin",
+    "old": "通知栏贴边时预留边距",
+    "new": "Margin when notification is docked",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_rank_hud",
+    "old": "QmLiveClient：显示队伍完成排名卡片",
+    "new": "QmLiveClient: Show team finish ranking card",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_rank_team_min",
+    "old": "QmLiveClient：排名 HUD 队伍范围下限",
+    "new": "QmLiveClient: Ranking HUD team range lower bound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_rank_team_max",
+    "old": "QmLiveClient：排名 HUD 队伍范围上限",
+    "new": "QmLiveClient: Ranking HUD team range upper bound",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_rank_popup_seconds",
+    "old": "QmLiveClient：完成排名卡片显示秒数",
+    "new": "QmLiveClient: Finish ranking card display seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_rank_show_out_of_range",
+    "old": "QmLiveClient：显示配置范围外队伍的完成卡片",
+    "new": "QmLiveClient: Show finish cards for teams outside range",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_rank_scale",
+    "old": "QmLiveClient：完成排名卡片缩放百分比",
+    "new": "QmLiveClient: Finish ranking card scale percent",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_rank_alpha",
+    "old": "QmLiveClient：完成排名卡片不透明度百分比",
+    "new": "QmLiveClient: Finish ranking card opacity percent",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_match_record",
+    "old": "QmLiveClient：完整比赛 demo 录制开关",
+    "new": "QmLiveClient: Full match demo recording toggle",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_team_filter",
+    "old": "QmLiveClient：单队隔离预览/渲染队伍，0=关闭",
+    "new": "QmLiveClient: Single team isolation preview/render team, 0=Off",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_team_filter_preview",
+    "old": "QmLiveClient：启用单队隔离画面过滤",
+    "new": "QmLiveClient: Enable single team isolation visual filter",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_team_filter_audio",
+    "old": "QmLiveClient：启用单队隔离音效过滤",
+    "new": "QmLiveClient: Enable single team isolation audio filter",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_team_filter_hide_external_finish",
+    "old": "QmLiveClient：隐藏非目标队伍完成提示",
+    "new": "QmLiveClient: Hide non-target team finish prompts",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_live_team_filter_strict_unknown_events",
+    "old": "QmLiveClient：无法识别来源的玩家型事件默认过滤",
+    "new": "QmLiveClient: Default filter for unrecognized source player events",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_monitoring_hud_opacity",
+    "old": "调试图表面板不透明度（百分比）",
+    "new": "Debug graph panel opacity (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_enable",
+    "old": "启用语音聊天",
+    "new": "Enable voice chat",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_agc_enable",
+    "old": "自动增益控制（0=关闭 1=开启）",
+    "new": "Automatic gain control (0=off 1=on)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_protocol_version",
+    "old": "语音协议版本",
+    "new": "Voice protocol version",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_server",
+    "old": "语音服务器地址 host:port",
+    "new": "Voice server address host:port",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_audio_backend",
+    "old": "语音音频后端（SDL 驱动名，空为自动）",
+    "new": "Voice audio backend (SDL driver name, empty=auto)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_input_device",
+    "old": "语音输入设备（空为默认）",
+    "new": "Voice input device (empty=default)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_output_device",
+    "old": "语音输出设备（空为默认）",
+    "new": "Voice output device (empty=default)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_stereo",
+    "old": "语音立体声输出",
+    "new": "Voice stereo output",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_stereo_width",
+    "old": "语音立体声宽度（百分比）",
+    "new": "Voice stereo width (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_token",
+    "old": "语音房间 Token（可选）",
+    "new": "Voice room token (optional)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_group_mode",
+    "old": "语音分组模式",
+    "new": "Voice group mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_filter_enable",
+    "old": "启用语音滤波（高通/压缩/限幅）",
+    "new": "Enable voice filtering (highpass/compressor/limiter)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_bitrate_profile",
+    "old": "语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）",
+    "new": "Voice bitrate (0=auto 1=24kbps 2=32kbps 3=48kbps 4=64kbps)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_noise_suppress_enable",
+    "old": "噪声抑制模式（0=关闭 1=简单 2=RNNoise）",
+    "new": "Noise suppression mode (0=off 1=simple 2=RNNoise)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_noise_suppress_strength",
+    "old": "噪声抑制强度（百分比）",
+    "new": "Noise suppression strength (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_comp_threshold",
+    "old": "压缩器阈值（百分比）",
+    "new": "Compressor threshold (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_comp_ratio",
+    "old": "压缩器比率（x10）",
+    "new": "Compressor ratio (x10)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_comp_attack_ms",
+    "old": "压缩器攻击时间（毫秒）",
+    "new": "Compressor attack time (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_comp_release_ms",
+    "old": "压缩器释放时间（毫秒）",
+    "new": "Compressor release time (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_comp_makeup",
+    "old": "压缩器补偿增益（百分比）",
+    "new": "Compressor makeup gain (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_limiter",
+    "old": "限幅器阈值（百分比）",
+    "new": "Limiter threshold (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_radius",
+    "old": "语音距离半径（Tiles）",
+    "new": "Voice distance radius (Tiles)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_volume",
+    "old": "语音播放音量（百分比）",
+    "new": "Voice playback volume (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_mic_volume",
+    "old": "麦克风音量（百分比）",
+    "new": "Microphone volume (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_mic_mute",
+    "old": "静音麦克风",
+    "new": "Mute microphone",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_show_connection_status",
+    "old": "显示语音连接状态",
+    "new": "Show voice connection status",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_show_advanced",
+    "old": "显示语音高级选项",
+    "new": "Show voice advanced options",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_test_mode",
+    "old": "语音测试模式（0=关 1=本地 2=服务器回环）",
+    "new": "Voice test mode (0=Off 1=Local 2=Server Loopback)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_vad_enable",
+    "old": "启用语音激活（VAD）",
+    "new": "Enable voice activation (VAD)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_vad_threshold",
+    "old": "VAD 阈值（百分比）",
+    "new": "VAD threshold (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_vad_release_delay_ms",
+    "old": "VAD 释放延迟（毫秒）",
+    "new": "VAD release delay (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_ignore_distance",
+    "old": "忽略语音距离衰减",
+    "new": "Ignore voice distance attenuation",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_group_global",
+    "old": "同组全图收听",
+    "new": "Same group full map listening",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_visibility_mode",
+    "old": "可见性过滤模式",
+    "new": "Visibility filter mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_list_mode",
+    "old": "名单过滤模式",
+    "new": "List filter mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_whitelist",
+    "old": "语音白名单（逗号分隔）",
+    "new": "Voice whitelist (comma-separated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_blacklist",
+    "old": "语音黑名单（逗号分隔）",
+    "new": "Voice blacklist (comma-separated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_mute",
+    "old": "语音静音名单（逗号分隔）",
+    "new": "Voice mute list (comma-separated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_hear_vad",
+    "old": "接收 VAD 讲话者",
+    "new": "Receive VAD speakers",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_vad_allow",
+    "old": "VAD 允许名单（逗号分隔）",
+    "new": "VAD allow list (comma-separated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_name_volumes",
+    "old": "按名字单独音量（name=percent）",
+    "new": "Per-name volume (name=percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_debug",
+    "old": "输出语音调试日志",
+    "new": "Output voice debug log",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_off_nonactive",
+    "old": "窗口失焦时暂停语音",
+    "new": "Pause voice when window unfocused",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_ptt_release_delay_ms",
+    "old": "PTT 释放延迟（毫秒）",
+    "new": "PTT release delay (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_hear_on_spec_pos",
+    "old": "旁观时按镜头中心收听",
+    "new": "Listen from camera center when spectating",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_voice_hear_peoples_in_spectate",
+    "old": "接收旁观/非活跃玩家语音",
+    "new": "Receive voice from spectators/inactive players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_streamer_hide_names",
+    "old": "隐藏非好友姓名/部落并显示客户端 ID",
+    "new": "Hide non-friend names/clans and show client ID",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_streamer_hide_skins",
+    "old": "非好友使用默认皮肤",
+    "new": "Non-friends use default skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_streamer_scoreboard_default_flags",
+    "old": "在记分牌中显示默认国旗",
+    "new": "Show default flag in scoreboard",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_online_notify",
+    "old": "好友上线提醒",
+    "new": "Friend online notification",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_online_auto_refresh",
+    "old": "好友提醒自动刷新服务器列表",
+    "new": "Auto-refresh server list for friend notifications",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_online_refresh_seconds",
+    "old": "好友提醒刷新间隔(秒)",
+    "new": "Friend notification refresh interval (sec)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_enter_auto_greet",
+    "old": "好友进图自动打招呼",
+    "new": "Auto greet friend on map join",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_enter_broadcast",
+    "old": "大字显示好友进服",
+    "new": "Show friend join in large text",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_enter_broadcast_text",
+    "old": "好友进服大字提示文本（使用%s表示好友名）",
+    "new": "Large text for friend join (use %s for friend name)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_enter_greet_text",
+    "old": "好友进图自动打招呼文本",
+    "new": "Auto greet friend text",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_block_words_enabled",
+    "old": "启用屏蔽词列表",
+    "new": "Enable word filter list",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_block_words_show_console",
+    "old": "控制台显示被屏蔽词",
+    "new": "Show filtered words in console",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_block_words_console_color",
+    "old": "被屏蔽词控制台颜色",
+    "new": "Filtered word console color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_block_words_multi_replace",
+    "old": "按屏蔽词长度多字符替换",
+    "new": "Replace censored words with length-based chars",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_block_words_mode",
+    "old": "替换方式 0=Regex 1=Full 2=Both",
+    "new": "Replace mode 0=Regex 1=Full 2=Both",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_block_words_replacement_char",
+    "old": "屏蔽词替换字符",
+    "new": "Censor replacement character",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_block_words_list",
+    "old": "屏蔽词列表（用,分隔）",
+    "new": "Censor word list (comma-separated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_sidebar_card_order",
+    "old": "栖梦侧栏模块排序",
+    "new": "QmClient sidebar module order",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_sidebar_card_collapsed",
+    "old": "栖梦侧栏模块折叠状态",
+    "new": "QmClient sidebar module collapse state",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_free_move",
+    "old": "名字板元素允许在框内自由移动",
+    "new": "Name plate elements freely movable within bounds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_free_move_x",
+    "old": "名字板元素允许 X 轴自由移动",
+    "new": "Name plate elements allow free X movement",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_free_move_y",
+    "old": "名字板元素允许 Y 轴自由移动",
+    "new": "Name plate elements allow free Y movement",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_keys_offset_x",
+    "old": "名字板按键行 X 偏移",
+    "new": "Name plate key line X offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_keys_offset_y",
+    "old": "名字板按键行 Y 偏移",
+    "new": "Name plate key line Y offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coords_offset_x",
+    "old": "名字板坐标行 X 偏移",
+    "new": "Name plate coord line X offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_coords_offset_y",
+    "old": "名字板坐标行 Y 偏移",
+    "new": "Name plate coord line Y offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_hook_offset_x",
+    "old": "名字板强弱行 X 偏移",
+    "new": "Name plate strength line X offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_hook_offset_y",
+    "old": "名字板强弱行 Y 偏移",
+    "new": "Name plate strength line Y offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_clan_offset_x",
+    "old": "名字板战队行 X 偏移",
+    "new": "Name plate clan line X offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_clan_offset_y",
+    "old": "名字板战队行 Y 偏移",
+    "new": "Name plate clan line Y offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_name_offset_x",
+    "old": "名字板昵称行 X 偏移",
+    "new": "Name plate name line X offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_nameplate_name_offset_y",
+    "old": "名字板昵称行 Y 偏移",
+    "new": "Name plate name line Y offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_gores",
+    "old": "启用 Gores 模式（King of Gores 辅助工具集合）",
+    "new": "Enable Gores mode (King of Gores helper tools)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_gores_auto_weapon_switch",
+    "old": "Gores 模式下自动锤枪切换",
+    "new": "Automatically switch hammer/gun in Gores mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_gores_disable_if_weapons",
+    "old": "拿到额外武器时停用 Gores 自动切换",
+    "new": "Disable Gores auto-switch when picking up extra weapon",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_gores_auto_enable",
+    "old": "在 Gores 游戏模式中自动启用 Gores 自动切换",
+    "new": "Automatically enable Gores auto-switch in Gores game mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_gores_fast_input",
+    "old": "Gores 模式下启用快速输入",
+    "new": "Enable fast input in Gores mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_gores_fast_input_others",
+    "old": "Gores 模式下对其他玩家也启用快速输入",
+    "new": "Enable fast input for other players in Gores mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_gores_hide_guides",
+    "old": "Gores 模式下隐藏辅助线",
+    "new": "Hide helper lines in Gores mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_axiom_auto_login",
+    "old": "进入 Axiom 社区服务器后自动登录",
+    "new": "Auto-login after entering Axiom community server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_axiom_login_password",
+    "old": "Axiom 主号自动登录密码",
+    "new": "Password for Axiom main account auto-login",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_axiom_dummy_login_password",
+    "old": "Axiom 分身自动登录密码",
+    "new": "Password for Axiom alt account auto-login",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode",
+    "old": "启用禅模式（Zen Mode）",
+    "new": "Enable Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_names",
+    "old": "禅模式下隐藏玩家名字",
+    "new": "Hide player names in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_nameplates",
+    "old": "禅模式下隐藏玩家名字板",
+    "new": "Hide player name plates in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_jump_effects",
+    "old": "禅模式下隐藏跳跃特效",
+    "new": "Hide jump effects in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_kill_effects",
+    "old": "禅模式下隐藏死亡/重生特效",
+    "new": "Hide death/respawn effects in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_explosion_effects",
+    "old": "禅模式下隐藏炮击特效",
+    "new": "Hide projectile effects in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_freeze_effects",
+    "old": "禅模式下隐藏冻结特效",
+    "new": "Hide freeze effects in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_hammer_effects",
+    "old": "禅模式下隐藏锤击特效",
+    "new": "Hide hammer effects in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_muzzle_effects",
+    "old": "禅模式下隐藏武器火焰特效",
+    "new": "Hide weapon fire effects in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_mute_jump_sounds",
+    "old": "禅模式下静音跳跃音效",
+    "new": "Mute jump sound in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_mute_death_sounds",
+    "old": "禅模式下静音死亡/重生音效",
+    "new": "Mute death/respawn sound in Zen Mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_mute_hammer_sounds",
+    "old": "禅模式下静音锤击音效",
+    "new": "Mute hammer sound in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_hud",
+    "old": "禅模式下隐藏 HUD",
+    "new": "Hide HUD in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_chat",
+    "old": "禅模式下隐藏玩家消息",
+    "new": "Hide player messages in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_system_info_messages",
+    "old": "禅模式下隐藏入场、版本和规则等基础系统信息",
+    "new": "Hide basic system info (join, version, rules) in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_system_messages",
+    "old": "禅模式下隐藏服务器提示通知（包括通知栏）",
+    "new": "Hide server tip notifications (including notification bar) in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_echo",
+    "old": "禅模式下隐藏 Echo 消息",
+    "new": "Hide Echo messages in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_map_progress",
+    "old": "禅模式下隐藏地图进度条",
+    "new": "Hide map progress bar in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_info_messages",
+    "old": "禅模式下隐藏击杀和完成消息",
+    "new": "Hide kill and finish messages in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_scoreboard",
+    "old": "禅模式下隐藏计分板",
+    "new": "Hide scoreboard in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_direction_indicators",
+    "old": "禅模式下隐藏方向",
+    "new": "Hide direction in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_focus_mode_hide_guide_lines",
+    "old": "禅模式下隐藏辅助线",
+    "new": "Hide helper lines in Zen mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_hud",
+    "old": "启用玩家统计面板",
+    "new": "Enable player statistics panel",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress",
+    "old": "显示地图进度条（内测中）",
+    "new": "Show map progress bar (beta)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress_style",
+    "old": "地图进度条样式（0=底部横条，1=HUD 内嵌）",
+    "new": "Map progress bar style (0=bottom bar, 1=HUD overlay)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress_color",
+    "old": "地图进度条颜色",
+    "new": "Map progress bar color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress_width",
+    "old": "地图进度条宽度（占屏幕宽度百分比）",
+    "new": "Map progress bar width (percentage of screen width)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress_height",
+    "old": "地图进度条高度",
+    "new": "Map progress bar height",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress_pos_x",
+    "old": "地图进度条水平位置（中心点，占屏幕宽度百分比）",
+    "new": "Map progress bar horizontal position (center, % of screen width)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress_pos_y",
+    "old": "地图进度条垂直位置（顶边，占屏幕高度百分比）",
+    "new": "Map progress bar vertical position (top edge, % of screen height)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_map_progress_dbg_route",
+    "old": "显示地图进度调试点路线",
+    "new": "Show map progress test point route",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_player_stats_reset_on_join",
+    "old": "进入服务器时重置统计（0=累计统计，1=每次进服重置）",
+    "new": "Reset stats on server join (0=persistent, 1=reset on join)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_island_use_original_style",
+    "old": "灵动岛使用原版样式",
+    "new": "Use original style for Dynamic Island",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_island_show_team",
+    "old": "HUD 灵动岛显示队伍",
+    "new": "Show team on HUD Dynamic Island",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_island_bg_color",
+    "old": "灵动岛背景颜色",
+    "new": "Dynamic Island background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_island_bg_opacity",
+    "old": "灵动岛背景透明度",
+    "new": "Dynamic Island background alpha",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_island_edge_margin",
+    "old": "灵动岛 HUD 编辑器贴边外边距 px",
+    "new": "Dynamic Island HUD editor edge margin px",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hud_editor_layout",
+    "old": "HUD 编辑器布局",
+    "new": "HUD editor layout",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_camera_drift",
+    "old": "启用相机漂移效果，让镜头根据移动速度产生轻微拖拽",
+    "new": "Enable camera drift effect, slightly drags camera based on speed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_camera_drift_amount",
+    "old": "相机漂移强度（0-200）",
+    "new": "Camera drift intensity (0-200)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_camera_drift_smoothness",
+    "old": "相机漂移平滑度（0=瞬时，100=最平滑）",
+    "new": "Camera drift smoothness (0=instant, 100=smoothest)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_camera_drift_reverse",
+    "old": "反转相机漂移方向",
+    "new": "Invert camera drift direction",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dynamic_fov",
+    "old": "启用动态视野，移动越快视野越宽",
+    "new": "Enable dynamic FOV, wider view at higher speed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dynamic_fov_amount",
+    "old": "动态视野强度（0-200）",
+    "new": "Dynamic FOV intensity (0-200)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dynamic_fov_smoothness",
+    "old": "动态视野平滑度（0=瞬时，100=最平滑）",
+    "new": "Dynamic FOV smoothness (0=instant, 100=smoothest)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_aspect_preset",
+    "old": "画面纵横比预设（0=关闭，1=5:4，2=4:3，3=3:2，4=16:9，5=21:9，6=自定义）",
+    "new": "Aspect ratio preset (0=off, 1=5:4, 2=4:3, 3=3:2, 4=16:9, 5=21:9, 6=custom)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_aspect_ratio",
+    "old": "自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）",
+    "new": "Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jelly_tee",
+    "old": "启用 Q 弹 Tee 形变",
+    "new": "Enable squishy Tee deformation",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jelly_tee_others",
+    "old": "将 Q 弹 Tee 形变应用到其他玩家",
+    "new": "Apply squishy Tee deformation to other players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jelly_tee_strength",
+    "old": "Q 弹 Tee 形变强度",
+    "new": "Squishy Tee deformation intensity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jelly_tee_duration",
+    "old": "Q 弹 Tee 形变持续时间",
+    "new": "Squishy Tee deformation duration",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles",
+    "old": "启用 QmClient 风格背景 3D 粒子",
+    "new": "Enable QmClient style background 3D particles",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_type",
+    "old": "背景 3D 粒子类型：1=方块，2=爱心，3=混合，4=球体，5=金字塔，6=钻石，7=圆环，8=星形，9=月牙",
+    "new": "Background 3D particle type: 1=Cube, 2=Heart, 3=Mix, 4=Sphere, 5=Pyramid, 6=Diamond, 7=Torus, 8=Star, 9=Crescent",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_count",
+    "old": "背景 3D 粒子数量",
+    "new": "Background 3D particle count",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_speed",
+    "old": "背景 3D 粒子基础速度",
+    "new": "Background 3D particle base speed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_size_min",
+    "old": "背景 3D 粒子最小尺寸",
+    "new": "Background 3D particle minimum size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_size_max",
+    "old": "背景 3D 粒子最大尺寸",
+    "new": "Background 3D particle maximum size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_depth",
+    "old": "背景 3D 粒子深度范围",
+    "new": "Background 3D particle depth range",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_view_margin",
+    "old": "背景 3D 粒子视野外保留边距",
+    "new": "Background 3D particle margin outside view",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_alpha",
+    "old": "背景 3D 粒子透明度",
+    "new": "Background 3D particle opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_fade_in_ms",
+    "old": "背景 3D 粒子淡入时间",
+    "new": "Background 3D particle fade-in time",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_fade_out_ms",
+    "old": "背景 3D 粒子淡出时间",
+    "new": "Background 3D particle fade-out time",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_collide",
+    "old": "背景 3D 粒子之间碰撞",
+    "new": "Background 3D particle collision",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_push_radius",
+    "old": "玩家推动背景 3D 粒子的半径",
+    "new": "Player push radius for background 3D particles",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_push_strength",
+    "old": "玩家推动背景 3D 粒子的强度",
+    "new": "Player push strength for background 3D particles",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_color_mode",
+    "old": "背景 3D 粒子颜色模式：1=自定义，2=随机",
+    "new": "Background 3D particle color mode: 1=Custom, 2=Random",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_color",
+    "old": "背景 3D 粒子自定义颜色",
+    "new": "Background 3D particle custom color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_glow",
+    "old": "启用背景 3D 粒子辉光",
+    "new": "Enable background 3D particle glow",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_glow_alpha",
+    "old": "背景 3D 粒子辉光透明度",
+    "new": "Background 3D particle glow opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_glow_offset",
+    "old": "背景 3D 粒子辉光偏移",
+    "new": "Background 3D particle glow offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_trail",
+    "old": "启用背景 3D 粒子拖尾",
+    "new": "Enable background 3D particle trail",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_trail_length",
+    "old": "背景 3D 粒子拖尾长度",
+    "new": "Background 3D particle trail length",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_trail_alpha",
+    "old": "背景 3D 粒子拖尾透明度",
+    "new": "Background 3D particle trail opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_pulse",
+    "old": "启用背景 3D 粒子脉冲缩放",
+    "new": "Enable background 3D particle pulse scaling",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_pulse_strength",
+    "old": "背景 3D 粒子脉冲强度",
+    "new": "Background 3D particle pulse intensity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_pulse_speed",
+    "old": "背景 3D 粒子脉冲速度",
+    "new": "Background 3D particle pulse speed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_twinkle",
+    "old": "启用背景 3D 粒子闪烁",
+    "new": "Enable background 3D particle flicker",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_3d_particles_twinkle_strength",
+    "old": "背景 3D 粒子闪烁强度",
+    "new": "Background 3D particle flicker intensity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_queue_enabled",
+    "old": "启用皮肤队列轮换",
+    "new": "Enable skin queue rotation",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_queue_interval",
+    "old": "皮肤队列切换间隔（毫秒）",
+    "new": "Skin queue switch interval (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_queue_length",
+    "old": "皮肤队列最大长度",
+    "new": "Skin queue max length",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_queue_index",
+    "old": "皮肤队列当前位置",
+    "new": "Skin queue current position",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_skin_queue_rotate_map",
+    "old": "自动获取全图玩家皮肤并作为轮换队列",
+    "new": "Auto-fetch all players' skins for rotation queue",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_skin_queue_enabled",
+    "old": "启用分身皮肤队列轮换",
+    "new": "Enable dummy skin queue rotation",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_skin_queue_interval",
+    "old": "分身皮肤队列切换间隔（毫秒）",
+    "new": "Dummy skin queue switch interval (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_skin_queue_length",
+    "old": "分身皮肤队列最大长度",
+    "new": "Dummy skin queue max length",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_skin_queue_index",
+    "old": "分身皮肤队列当前位置",
+    "new": "Dummy skin queue current position",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_skin_queue_rotate_map",
+    "old": "自动获取全图玩家皮肤并作为分身轮换队列",
+    "new": "Auto-fetch all players' skins for dummy rotation queue",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_foot_particles",
+    "old": "本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）",
+    "new": "Local particles: show particles behind own Tee (e.g. freeze snow)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_settings_prewarm",
+    "old": "启动和菜单空闲时预热设置页",
+    "new": "Pre-warm settings page on startup and menu idle",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_save_draft",
+    "old": "关闭聊天时保留未发送内容",
+    "new": "Keep unsent message on chat close",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_anim_slide_out",
+    "old": "聊天消息淡出时启用左滑偏移",
+    "new": "Enable left swipe offset on chat fade",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_anim_fade_duration_ms",
+    "old": "聊天消息淡出平滑时间（毫秒）",
+    "new": "Chat fade smooth time (milliseconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_hide_chat_bubbles",
+    "old": "隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）",
+    "new": "Hide own chat bubble (only when authenticated in remote console)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_bubble",
+    "old": "在玩家头顶显示聊天气泡",
+    "new": "Show chat bubbles above players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_bubble_duration",
+    "old": "聊天气泡显示时长（秒）",
+    "new": "Chat bubble display duration (seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_bubble_alpha",
+    "old": "聊天气泡透明度（0-100）",
+    "new": "Chat bubble transparency (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_bubble_font_size",
+    "old": "聊天气泡字体大小",
+    "new": "Chat bubble font size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_bubble_bg_color",
+    "old": "聊天气泡背景颜色",
+    "new": "Chat bubble background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_bubble_text_color",
+    "old": "聊天气泡文字颜色",
+    "new": "Chat bubble text color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_chat_bubble_animation",
+    "old": "聊天气泡消失动画（0=淡出，1=缩小，2=上滑）",
+    "new": "Chat bubble disappear animation (0=Fade, 1=Shrink, 2=Slide up)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_combo_popup",
+    "old": "2 秒内连续钩中或锤中玩家时显示连击提示",
+    "new": "Show combo hint when hooking or hammering player within 2 seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_miniview",
+    "old": "显示分身迷你视图窗口",
+    "new": "Show dummy mini view window",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_miniview_auto",
+    "old": "仅在另一只 tee 离开当前视角时显示分身迷你视图",
+    "new": "Show dummy mini view only when other tee leaves current view",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_miniview_size",
+    "old": "分身迷你视图大小（百分比）",
+    "new": "Dummy mini view size (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_dummy_miniview_zoom",
+    "old": "分身迷你视图缩放（百分比）",
+    "new": "Dummy mini view zoom (percent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_smtc_enable",
+    "old": "启用系统媒体传输控制集成",
+    "new": "Enable system media transport control integration",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_smtc_show_hud",
+    "old": "在 HUD 上显示系统媒体信息",
+    "new": "Show system media info on HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_smtc_lyrics_enable",
+    "old": "启用系统媒体歌词",
+    "new": "Enable system media lyrics",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_smtc_lyrics_offset_ms",
+    "old": "系统媒体歌词时间偏移（毫秒）",
+    "new": "System media lyrics time offset (milliseconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_smtc_lyrics_lines",
+    "old": "系统媒体歌词显示行数",
+    "new": "System media lyrics display lines",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_smtc_lyrics_font_size",
+    "old": "系统媒体歌词字体大小",
+    "new": "System media lyric font size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_color",
+    "old": "歌词当前行颜色",
+    "new": "Current line lyric color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_next_color",
+    "old": "歌词下一行颜色",
+    "new": "Next line lyric color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_bg_color",
+    "old": "歌词背景颜色",
+    "new": "Lyric background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_bg_opacity",
+    "old": "歌词背景透明度",
+    "new": "Lyric background opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_outline_color",
+    "old": "歌词描边颜色",
+    "new": "Lyric outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_outline_opacity",
+    "old": "歌词描边透明度",
+    "new": "Lyric outline opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_marquee",
+    "old": "歌词超长时跑马灯",
+    "new": "Marquee for long lyrics",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_marquee_speed",
+    "old": "歌词跑马灯速度",
+    "new": "Marquee speed",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_auto_hide_no_smtc",
+    "old": "无系统媒体状态时隐藏歌词",
+    "new": "Hide lyrics when no system media",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_fade_duration_ms",
+    "old": "歌词淡入淡出时间",
+    "new": "Lyric fade in/out time",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_snap_threshold",
+    "old": "歌词吸附灵动岛阈值",
+    "new": "Lyric snap to Dynamic Island threshold",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics",
+    "old": "启用歌词 HUD 叠加层",
+    "new": "Enable lyric HUD overlay",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_in_media_island",
+    "old": "将歌词显示在灵动岛内",
+    "new": "Show lyrics inside Dynamic Island",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_source",
+    "old": "歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）",
+    "new": "Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_search_type",
+    "old": "歌词搜索策略（0=按来源顺序，1=并发最佳匹配）",
+    "new": "Lyric search strategy (0=Sequential by source, 1=Concurrent best match)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_source_order",
+    "old": "歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）",
+    "new": "Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_provider_thresholds",
+    "old": "歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）",
+    "new": "Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_ignore_cache_providers",
+    "old": "歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）",
+    "new": "Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_auto_fetch",
+    "old": "检测新歌时自动联网拉取歌词",
+    "new": "Auto-fetch lyrics on detecting new song",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_cache_enable",
+    "old": "启用歌词本地缓存",
+    "new": "Enable local lyrics cache",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_cache_ttl_days",
+    "old": "歌词缓存过期天数（0=永久）",
+    "new": "Lyrics cache expiration days (0=forever)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_match_threshold",
+    "old": "歌词模糊匹配评分阈值",
+    "new": "Lyrics fuzzy match score threshold",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_lines_above",
+    "old": "活动行上方显示行数",
+    "new": "Lines above active line",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_lines_below",
+    "old": "活动行下方显示行数",
+    "new": "Lines below active line",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_font_size",
+    "old": "活动行字号 px",
+    "new": "Active line font size (px)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_font_size_other",
+    "old": "非活动行字号 px",
+    "new": "Inactive line font size (px)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_line_spacing",
+    "old": "歌词行间距 px",
+    "new": "Lyrics line spacing (px)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_opacity",
+    "old": "歌词整体不透明度 %",
+    "new": "Overall lyrics opacity (%)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_inactive_opacity",
+    "old": "非活动行最小不透明度 %",
+    "new": "Minimum inactive line opacity (%)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_color_played",
+    "old": "已播放词颜色",
+    "new": "Played word color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_color_unplayed",
+    "old": "未播放词颜色",
+    "new": "Unplayed word color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_color_translation",
+    "old": "歌词翻译/音译颜色",
+    "new": "Lyrics translation/transliteration color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_show_translation",
+    "old": "显示歌词翻译（若有）",
+    "new": "Show lyrics translation (if available)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_show_transliteration",
+    "old": "显示歌词音译（若有）",
+    "new": "Show lyrics transliteration (if available)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_karaoke",
+    "old": "启用歌词逐字高亮",
+    "new": "Enable word-by-word highlighting",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_highlight_edge_soft",
+    "old": "逐字边缘软过渡宽度 px",
+    "new": "Word highlight soft edge width (px)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_scale_active",
+    "old": "活动行缩放百分比",
+    "new": "Active line scale (%)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_scale_falloff",
+    "old": "远离行每行缩小百分比",
+    "new": "Distant line shrink per line (%)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_fade_per_line",
+    "old": "远离行每行透明度衰减 %",
+    "new": "Distant line opacity decay per line (%)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_scroll_ms",
+    "old": "行切换滚动时长 ms",
+    "new": "Line switch scroll duration (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_drift_correct_ms",
+    "old": "时钟漂移硬切阈值 ms",
+    "new": "Clock drift hard cut threshold (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_edge_margin",
+    "old": "歌词 HUD 贴边外边距 px",
+    "new": "Lyric HUD edge margin (px)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_http_timeout_ms",
+    "old": "歌词 HTTP 请求超时 ms",
+    "new": "Lyric HTTP request timeout (ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_lrclib_base",
+    "old": "LRCLIB API 基地址（可改成镜像）",
+    "new": "LRCLIB API base URL (mirror)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_amll_ttml_db_base",
+    "old": "AMLL TTML DB API 基地址（可改成镜像）",
+    "new": "AMLL TTML DB API base URL (mirror)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_local_media_folders",
+    "old": "歌词本地媒体库目录（多个目录用 | 分隔）",
+    "new": "Local media library directories (separate by |)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_http_proxy",
+    "old": "歌词 HTTP 代理（如 http://127.0.0.1:7890）",
+    "new": "Lyric HTTP proxy (e.g. http://127.0.0.1:7890)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_offset_ms",
+    "old": "歌词手动时间轴偏移 ms（运行时按 500ms 步进）",
+    "new": "Manual lyric timeline offset (ms, step 500ms)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_hide_when_paused",
+    "old": "暂停时隐藏歌词",
+    "new": "Hide lyrics on pause",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_lyrics_hide_no_lyrics",
+    "old": "未找到歌词时隐藏（而非显示提示）",
+    "new": "Hide when no lyrics found (instead of showing hint)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_speedrun_timer",
+    "old": "速通倒计时器",
+    "new": "Speedrun countdown timer",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_speedrun_timer_time",
+    "old": "速通计时器时间（MMSS 格式，兼容旧版）",
+    "new": "Speedrun timer time (MM:SS, legacy)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_speedrun_timer_hours",
+    "old": "速通计时器小时",
+    "new": "Speedrun timer hours",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_speedrun_timer_minutes",
+    "old": "速通计时器分钟",
+    "new": "Speedrun timer minutes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_speedrun_timer_seconds",
+    "old": "速通计时器秒",
+    "new": "Speedrun timer seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_speedrun_timer_milliseconds",
+    "old": "速通计时器毫秒",
+    "new": "Speedrun timer milliseconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_speedrun_timer_auto_disable",
+    "old": "时间耗尽后自动禁用速通计时器",
+    "new": "Auto-disable speedrun timer when time runs out",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_backend",
+    "old": "翻译后端（llm/tencentcloud/libretranslate/ftapi）",
+    "new": "Translation backend (llm/tencentcloud/libretranslate/ftapi)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_target",
+    "old": "翻译目标语言代码（如 zh、en、ja、zh-TW）",
+    "new": "Target language code (e.g. zh, en, ja, zh-TW)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_auto",
+    "old": "自动翻译入站消息",
+    "new": "Auto-translate incoming messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_local_detect_min_chars",
+    "old": "本地目标语言识别最小字符数",
+    "new": "Minimum characters for local target language detection",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_local_detect_ratio",
+    "old": "本地目标语言识别占比阈值",
+    "new": "Ratio threshold for local target language detection",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_ftapi_auto_enable",
+    "old": "允许 FTAPI 自动翻译（可能导致过载）",
+    "new": "Allow FTAPI auto-translate (may cause overload)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_model_zhipu",
+    "old": "智谱AI 模型名称",
+    "new": "ZhipuAI model name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_model_deepseek",
+    "old": "DeepSeek 模型名称",
+    "new": "DeepSeek model name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_model_openai",
+    "old": "OpenAI 模型名称",
+    "new": "OpenAI model name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_model_custom",
+    "old": "自定义 Provider 模型名称",
+    "new": "Custom Provider model name",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_endpoint_zhipu",
+    "old": "智谱AI 端点（留空使用默认）",
+    "new": "ZhipuAI endpoint (leave empty for default)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_endpoint_deepseek",
+    "old": "DeepSeek 端点（留空使用默认）",
+    "new": "DeepSeek endpoint (leave empty for default)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_endpoint_openai",
+    "old": "OpenAI 端点（留空使用默认）",
+    "new": "OpenAI endpoint (leave empty for default)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_endpoint_custom",
+    "old": "自定义 Provider 端点",
+    "new": "Custom Provider endpoint",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_key_zhipu",
+    "old": "智谱AI API Key",
+    "new": "ZhipuAI API Key",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_key_custom",
+    "old": "自定义 Provider API Key",
+    "new": "Custom Provider API Key",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_concurrency",
+    "old": "LLM 翻译并发数（0=自动）",
+    "new": "LLM translation concurrency (0=auto)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_concurrency_default",
+    "old": "LLM 翻译默认并发数（智能调整）",
+    "new": "LLM translation default concurrency (smart adjustment)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_llm_enable_thinking",
+    "old": "启用 LLM 思考模式（可能增加响应时间）",
+    "new": "Enable LLM thinking mode (may increase response time)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_system_prompt",
+    "old": "自定义翻译提示词（覆盖内置提示词）",
+    "new": "Custom translation prompt (overrides built-in)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_source",
+    "old": "翻译源语言代码（auto=自动检测）",
+    "new": "Source language code for translation (auto=auto-detect)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_auto_outgoing",
+    "old": "自动翻译发送的消息",
+    "new": "Auto-translate outgoing messages",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_auto_outgoing_mode",
+    "old": "自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)",
+    "new": "Auto-translation mode (0=Trigger on common source languages only, 1=Always translate)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_outgoing_target",
+    "old": "出站翻译目标语言代码",
+    "new": "Outgoing translation target language code",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_tc_endpoint",
+    "old": "腾讯云翻译端点",
+    "new": "Tencent Cloud Translation endpoint",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_tc_secret_id",
+    "old": "腾讯云翻译 SecretId",
+    "new": "Tencent Cloud Translation SecretId",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_tc_secret_key",
+    "old": "腾讯云翻译 SecretKey",
+    "new": "Tencent Cloud Translation SecretKey",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_tc_region",
+    "old": "腾讯云翻译地域",
+    "new": "Tencent Cloud Translation region",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_libre_endpoint",
+    "old": "LibreTranslate 端点",
+    "new": "LibreTranslate endpoint",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_btn_color_disabled",
+    "old": "翻译按钮取消时的颜色",
+    "new": "Translation button cancel color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_btn_color_enabled",
+    "old": "翻译按钮开启时的颜色",
+    "new": "Translation button active color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_menu_bg_color",
+    "old": "翻译菜单背景颜色",
+    "new": "Translation menu background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_menu_option_selected",
+    "old": "翻译菜单选中时颜色",
+    "new": "Translation menu selected color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_translate_menu_option_normal",
+    "old": "翻译菜单正常颜色",
+    "new": "Translation menu normal color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jump_hint",
+    "old": "根据位置小数部分显示跳跃提示",
+    "new": "Show jump hint based on fractional part of position",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jump_hint_text",
+    "old": "跳跃提示文本（使用\\n换行）",
+    "new": "Jump hint text (use \\n for newline)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jump_hint_color",
+    "old": "跳跃提示颜色",
+    "new": "Jump hint color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jump_hint_x",
+    "old": "跳跃提示水平位置（占屏幕宽度百分比）",
+    "new": "Jump hint horizontal position (% of screen width)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jump_hint_y",
+    "old": "跳跃提示垂直位置（占屏幕高度百分比）",
+    "new": "Jump hint vertical position (% of screen height)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_jump_hint_size",
+    "old": "跳跃提示字体大小",
+    "new": "Jump hint font size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_qmclient.h",
+    "script_name": "qm_friend_auto_follow_delay",
+    "old": "自动跟随好友换服延迟（秒）",
+    "new": "Auto-follow friend server switch delay (seconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_allow_any_res",
+    "old": "允许缩放时使用任意游戏分辨率（Windows 上可能有问题）",
+    "new": "Allow arbitrary game resolution when scaling (may cause issues on Windows)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_show_chat_client",
+    "old": "显示客户端生成的聊天消息，例如 echo",
+    "new": "Show client-generated chat messages, e.g., echo",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_frozen_tees_text",
+    "old": "显示队伍中冻结 Tee 的数量（0=关闭，1=显示活动 Tee，2=显示冻结 Tee）",
+    "new": "Show number of frozen Tees in team (0=Off, 1=Show active Tee, 2=Show frozen Tee)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_frozen_tees_hud",
+    "old": "显示冻结 Tee HUD",
+    "new": "Show frozen Tee HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_frozen_tees_hud_skins",
+    "old": "在冻结 Tee HUD 中使用忍者皮肤或深色皮肤",
+    "new": "Use ninja or dark skin in frozen Tee HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_frozen_tees_size",
+    "old": "冻结 Tee HUD 中 Tee 图标大小（默认 15）",
+    "new": "Tee icon size in frozen Tee HUD (default 15)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_frozen_tees_max_rows",
+    "old": "冻结 Tee HUD 的最大行数",
+    "new": "Max rows in frozen Tee HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_frozen_tees_only_inteam",
+    "old": "仅在队伍内显示冻结 Tee HUD",
+    "new": "Show frozen Tee HUD only in team",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_nameplate_ping_circle",
+    "old": "在名字板上显示 Ping 圆环",
+    "new": "Show ping ring on name plate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_nameplate_country",
+    "old": "名字板上显示国旗",
+    "new": "Show flag on name plate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_nameplate_skins",
+    "old": "在名字板上显示皮肤名，便于查找缺失皮肤",
+    "new": "Show skin name on name plate to find missing skins",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_fake_ctf_flags",
+    "old": "在玩家身上显示伪 CTF 旗帜（0=关闭，1=红旗，2=蓝旗）",
+    "new": "Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_limit_mouse_to_screen",
+    "old": "将鼠标限制在屏幕范围内",
+    "new": "Clamp mouse to screen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_scale_mouse_distance",
+    "old": "将最大鼠标距离缩放到 1000，以提高瞄准精度",
+    "new": "Scale max mouse distance to 1000 for better aim",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_hammer_rotates_with_cursor",
+    "old": "让锤子像其他武器一样随光标旋转",
+    "new": "Rotate hammer with cursor like other weapons",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_mini_vote_hud",
+    "old": "缩小投票界面",
+    "new": "Mini voting UI",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_remove_anti",
+    "old": "冻结时减少 antiping 和玩家预测",
+    "new": "Reduce antiping and player prediction when frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_remove_anti_ticks",
+    "old": "最多减少的预测 tick 数",
+    "new": "Max prediction ticks reduced",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_remove_anti_delay_ticks",
+    "old": "冻结后经过多少 tick 才应用最大预测减少",
+    "new": "Ticks after freeze before applying max prediction reduction",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_unpred_others_in_freeze",
+    "old": "自己被冻结时不预测其他玩家",
+    "new": "Do not predict other players when frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_pred_margin_in_freeze",
+    "old": "冻结时启用自定义预测边距",
+    "new": "Enable custom prediction margin when frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_pred_margin_in_freeze_amount",
+    "old": "冻结时的预测边距",
+    "new": "Prediction margin when frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_show_others_ghosts",
+    "old": "在其他玩家的不可预测位置显示幽灵",
+    "new": "Show ghost at unpredictable position of other players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_swap_ghosts",
+    "old": "将预测位置显示为幽灵，原始位置显示为不可预测玩家",
+    "new": "Show predicted position as ghost, original as unpredictable player",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_hide_frozen_ghosts",
+    "old": "如果其他玩家的幽灵被冻结则隐藏",
+    "new": "Hide other players' ghosts when frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_pred_ghosts_alpha",
+    "old": "预测幽灵透明度（0-100）",
+    "new": "Prediction ghost opacity (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_unpred_ghosts_alpha",
+    "old": "不可预测幽灵透明度（0-100）",
+    "new": "Unpredictable ghost opacity (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_render_ghost_as_circle",
+    "old": "将幽灵渲染为圆圈而不是 Tee",
+    "new": "Render ghosts as circles instead of Tee",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_show_center",
+    "old": "绘制线条显示屏幕/点击框中心",
+    "new": "Draw lines showing screen/clickbox center",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_show_center_width",
+    "old": "中心线宽度（需启用 tc_show_center）",
+    "new": "Center line width (requires tc_show_center)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_show_center_color",
+    "old": "中心线颜色（需启用 tc_show_center）",
+    "new": "Center line color (requires tc_show_center)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_hook_coll_cursor",
+    "old": "钩子碰撞线长度跟随光标距离",
+    "new": "Hook collision line length follows cursor distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_fast_input",
+    "old": "在下一 tick 前提前应用输入进行预测",
+    "new": "Apply input early before next tick for prediction",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_fast_input_amount",
+    "old": "快速输入提前应用的毫秒数",
+    "new": "Milliseconds to apply quick input early",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_fast_input_others",
+    "old": "对其他 Tee 也应用快速输入",
+    "new": "Apply quick input to other Tees as well",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_antiping_improved",
+    "old": "使用另一套 antiping 平滑算法，与 cl_antiping_smooth 不兼容",
+    "new": "Use alternative antiping smoothing, incompatible with cl_antiping_smooth",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_antiping_negative_buffer",
+    "old": "对 Gores 有帮助：允许内部确定性为负值，使预测更保守",
+    "new": "Helpful for Gores: allow negative internal certainty for more conservative prediction",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_antiping_stable_direction",
+    "old": "沿 Tee 的稳定方向进行更乐观的预测，减少稳定下来所需的延迟",
+    "new": "More optimistic prediction along Tee's stable direction, reduces delay to stabilize",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_antiping_uncertainty_scale",
+    "old": "按 ping 比例缩放不确定性时长（100=1.0 倍）",
+    "new": "Scale uncertainty duration by ping (100=1.0x)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_color_freeze",
+    "old": "冻结 Tee 时使用皮肤颜色",
+    "new": "Use skin color when Tee is frozen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_color_freeze_darken",
+    "old": "冻结时加深 Tee 颜色（0-100）",
+    "new": "Darken Tee color when frozen (0-100)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_color_freeze_feet",
+    "old": "冻结 Tee 的脚部也使用皮肤颜色",
+    "new": "Use skin color for frozen Tee's feet",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_prediction_margin_smooth",
+    "old": "平滑过渡预测边距（会削弱 ping 抖动修正，恢复旧行为）",
+    "new": "Smooth prediction margin (weakens ping jitter correction, restores old behavior)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_frozen_katana",
+    "old": "在冻结玩家身上显示武士刀（恢复旧行为）",
+    "new": "Show katana on frozen players (restores old behavior)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_old_team_colors",
+    "old": "使用旧版彩虹队伍颜色（恢复旧行为）",
+    "new": "Use old rainbow team colors (restores old behavior)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_revert_hook_line",
+    "old": "恢复旧版单段钩子碰撞线行为",
+    "new": "Restore old single-segment hook collision line behavior",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_freeze_chat_enabled",
+    "old": "进入冻结时自动发送表情和聊天消息",
+    "new": "Auto-send emote and chat message when entering freeze",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_freeze_chat_emoticon",
+    "old": "进入冻结状态发送表情",
+    "new": "Send emote when entering freeze",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_freeze_chat_emoticon_id",
+    "old": "进入冻结状态时发送的表情 ID（0-15）",
+    "new": "Emote ID to send when entering freeze (0-15)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_freeze_chat_message",
+    "old": "进入冻结状态时发送的聊天消息，以逗号分隔（空=无消息）",
+    "new": "Chat messages to send when entering freeze, comma-separated (empty=none)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_freeze_chat_chance",
+    "old": "发送冻结聊天消息的概率（0-100%）",
+    "new": "Probability of sending freeze chat message (0-100%)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline",
+    "old": "启用图块轮廓",
+    "new": "Enable tile outlines",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_in_entities",
+    "old": "仅在实体层显示轮廓",
+    "new": "Show outlines only on entity layer",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_alpha",
+    "old": "轮廓全局透明度",
+    "new": "Outline global opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_solid_alpha",
+    "old": "实体墙轮廓透明度",
+    "new": "Entity wall outline opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_solid",
+    "old": "显示可钩/不可钩图块轮廓",
+    "new": "Show hookable/unhookable tile outlines",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_freeze",
+    "old": "显示冻结/深冻图块轮廓",
+    "new": "Show freeze/deep freeze tile outlines",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_unfreeze",
+    "old": "显示解冻/深解冻图块轮廓",
+    "new": "Show unfreeze/deep unfreeze tile outlines",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_kill",
+    "old": "显示死亡图块轮廓",
+    "new": "Show death tile outlines",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_tele",
+    "old": "显示传送图块轮廓",
+    "new": "Show teleporter tile outlines",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_width_solid",
+    "old": "可钩/不可钩图块轮廓宽度",
+    "new": "Hookable/unhookable tile outline width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_width_freeze",
+    "old": "冻结/深冻图块轮廓宽度",
+    "new": "Freeze/Deep freeze tile outline width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_width_unfreeze",
+    "old": "解冻/深解冻图块轮廓宽度",
+    "new": "Unfreeze/Deep unfreeze tile outline width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_width_kill",
+    "old": "死亡图块轮廓宽度",
+    "new": "Death tile outline width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_width_tele",
+    "old": "传送图块轮廓宽度",
+    "new": "Teleport tile outline width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_color_solid",
+    "old": "可钩/不可钩图块轮廓颜色",
+    "new": "Hookable/Unhookable tile outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_color_freeze",
+    "old": "冻结图块轮廓颜色",
+    "new": "Freeze tile outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_color_deep_freeze",
+    "old": "深冻图块轮廓颜色",
+    "new": "Deep freeze tile outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_color_unfreeze",
+    "old": "解冻图块轮廓颜色",
+    "new": "Unfreeze tile outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_color_deep_unfreeze",
+    "old": "深解冻图块轮廓颜色",
+    "new": "Deep unfreeze tile outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_color_kill",
+    "old": "死亡图块轮廓颜色",
+    "new": "Death tile outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_outline_color_tele",
+    "old": "传送图块轮廓颜色",
+    "new": "Teleport tile outline color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_alive",
+    "old": "玩家指示器中存活 Tee 的颜色",
+    "new": "Player indicator alive Tee color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_freeze",
+    "old": "玩家指示器中冻结 Tee 的颜色",
+    "new": "Player indicator frozen Tee color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_dead",
+    "old": "玩家指示器中脱困中 Tee 的颜色",
+    "new": "Player indicator unfreezing Tee color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_offset",
+    "old": "指示器偏移距离",
+    "new": "Indicator offset distance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_offset_max",
+    "old": "可变偏移时的最大偏移距离",
+    "new": "Max offset distance for variable offset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_variable_distance",
+    "old": "距离越远，指示器离自己越远",
+    "new": "Indicator moves farther away as distance increases",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_variable_max_distance",
+    "old": "可变偏移计算的最大距离",
+    "new": "Max distance for variable offset calculation",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_radius",
+    "old": "指示器半径",
+    "new": "Indicator radius",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_opacity",
+    "old": "指示器透明度",
+    "new": "Indicator transparency",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_player_indicator",
+    "old": "显示其他 Tee 的径向指示器",
+    "new": "Show radial indicators of other Tees",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_player_indicator_freeze",
+    "old": "仅在指示器中显示冻结 Tee",
+    "new": "Show only frozen Tees in indicators",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_inteam",
+    "old": "仅在队伍内显示指示器",
+    "new": "Show indicators only within team",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_tees",
+    "old": "用 Tee 图标代替圆圈",
+    "new": "Use Tee icons instead of circles",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_hide_visible_tees",
+    "old": "不显示屏幕内可见的 Tee",
+    "new": "Do not show Tees visible on screen",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_reset_bindwheel_mouse",
+    "old": "打开绑定轮时重置鼠标位置",
+    "new": "Reset mouse position when opening bind wheel",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_regex_chat_ignore",
+    "old": "按正则表达式过滤聊天消息",
+    "new": "Filter chat messages by regular expression",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_white_feet",
+    "old": "将所有脚部渲染为纯白底色",
+    "new": "Render all feet as solid white base",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_white_feet_skin",
+    "old": "白脚底使用的皮肤",
+    "new": "Skin used for white feet base",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_moving_tiles_entities",
+    "old": "在实体层显示移动图块",
+    "new": "Show moving tiles in entity layer",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_mini_debug",
+    "old": "显示位置和角度调试信息",
+    "new": "Show position and angle debug info",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_showhud_dummy_position",
+    "old": "在运动信息 HUD 中显示分身位置",
+    "new": "Show dummy position in movement info HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_showhud_dummy_speed",
+    "old": "在运动信息 HUD 中显示分身速度",
+    "new": "Show dummy velocity in movement info HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_showhud_dummy_angle",
+    "old": "在运动信息 HUD 中显示分身角度",
+    "new": "Show dummy angle in movement info HUD",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_show_local_time_seconds",
+    "old": "在本地时间显示中包含秒",
+    "new": "Include seconds in local time display",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_last_notify",
+    "old": "仅剩一个 Tee 存活时显示提示",
+    "new": "Show notification when only one Tee alive",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_last_notify_text",
+    "old": "存活提醒文本",
+    "new": "Alive notification text",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_last_notify_color",
+    "old": "存活提醒颜色",
+    "new": "Alive notification color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_last_notify_x",
+    "old": "存活提醒水平位置（占屏幕宽度百分比）",
+    "new": "Alive notification horizontal position (percentage of screen width)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_last_notify_y",
+    "old": "存活提醒垂直位置（占屏幕高度百分比）",
+    "new": "Alive notification vertical position (percentage of screen height)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_last_notify_size",
+    "old": "存活提醒字体大小",
+    "new": "Alive notification font size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_jump_hint",
+    "old": "已废弃：跳跃提示开关，启动时迁移到 qm_jump_hint",
+    "new": "Deprecated: jump hint toggle, migrated to qm_jump_hint on startup",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_jump_hint_text",
+    "old": "已废弃：跳跃提示文本，启动时迁移到 qm_jump_hint_text（使用\\n换行）",
+    "new": "Deprecated: jump hint text, migrated to qm_jump_hint_text on startup (use \\n for newline)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_jump_hint_color",
+    "old": "已废弃：跳跃提示颜色，启动时迁移到 qm_jump_hint_color",
+    "new": "Deprecated: jump hint color, migrated to qm_jump_hint_color on startup",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_jump_hint_x",
+    "old": "已废弃：跳跃提示水平位置，启动时迁移到 qm_jump_hint_x",
+    "new": "Deprecated: jump hint X position, migrated to qm_jump_hint_x on startup",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_jump_hint_y",
+    "old": "已废弃：跳跃提示垂直位置，启动时迁移到 qm_jump_hint_y",
+    "new": "Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_jump_hint_size",
+    "old": "已废弃：跳跃提示字体大小，启动时迁移到 qm_jump_hint_size",
+    "new": "Deprecated: jump hint font size, migrated to qm_jump_hint_size on startup",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_cursor_in_spec",
+    "old": "自由视角旁观时渲染准星",
+    "new": "Render crosshair in free spectate mode",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_cursor_in_spec_alpha",
+    "old": "自由视角旁观时准星透明度",
+    "new": "Crosshair opacity in free spectate",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tiny_tees",
+    "old": "缩小 Tee",
+    "new": "Scale down Tee",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_indicator_tees_size",
+    "old": "小 Tee 尺寸",
+    "new": "Small Tee size",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tiny_tees_others",
+    "old": "同时缩小其他 Tee",
+    "new": "Scale down other Tees as well",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_cursor_scale",
+    "old": "游戏内准星缩放百分比（50=一半，200=两倍）",
+    "new": "In-game crosshair scale percent (50=half, 200=double)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_profile_skin",
+    "old": "保存/加载配置方案时包含皮肤",
+    "new": "Include skin when saving/loading config preset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_profile_name",
+    "old": "保存/加载配置方案时包含名字",
+    "new": "Include name when saving/loading config preset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_profile_clan",
+    "old": "保存/加载配置方案时包含部落",
+    "new": "Include clan when saving/loading config preset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_profile_flag",
+    "old": "保存/加载配置方案时包含国旗",
+    "new": "Include country flag when saving/loading config preset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_profile_colors",
+    "old": "保存/加载配置方案时包含颜色",
+    "new": "Include color when saving/loading config preset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_profile_emote",
+    "old": "保存/加载配置方案时包含表情",
+    "new": "Include emoticon when saving/loading config preset",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_profile_overwrite_clan_with_empty",
+    "old": "即使配置方案里的部落名为空也覆盖当前部落",
+    "new": "Override current clan even if preset clan name is empty",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_rainbow_tees",
+    "old": "启用 Tee 彩虹渲染",
+    "new": "Enable rainbow rendering for Tee",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_rainbow_hook",
+    "old": "启用钩子彩虹渲染",
+    "new": "Enable rainbow rendering for hook",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_rainbow_weapon",
+    "old": "启用武器彩虹渲染",
+    "new": "Enable rainbow rendering for weapon",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_rainbow_others",
+    "old": "对其他玩家也启用 Tee 彩虹渲染",
+    "new": "Enable rainbow rendering for other players' Tees",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_rainbow_mode",
+    "old": "彩虹模式（1=彩虹，2=脉冲，3=暗色，4=随机）",
+    "new": "Rainbow mode (1=Rainbow, 2=Pulse, 3=Dark, 4=Random)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_rainbow_speed",
+    "old": "彩虹变化速度百分比（50=半速，200=双倍）",
+    "new": "Rainbow speed percent (50=half speed, 200=double)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist",
+    "old": "启用敌对列表视觉标记",
+    "new": "Enable visual markers for enemy list",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_show_clan_if_war",
+    "old": "敌对关系时在名字板显示部落",
+    "new": "Show clan on nameplates for enemies",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_reason",
+    "old": "显示敌对原因",
+    "new": "Show enemy reason",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_chat",
+    "old": "在聊天中显示敌对颜色",
+    "new": "Show enemy color in chat",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_scoreboard",
+    "old": "在计分板中显示敌对颜色",
+    "new": "Show enemy color in scoreboard",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_allow_duplicates",
+    "old": "允许重复的敌对条目",
+    "new": "Allow duplicate enemy entries",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_spectate",
+    "old": "在旁观菜单中显示敌对颜色",
+    "new": "Show enemy color in spectator menu",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_indicator",
+    "old": "用敌对列表驱动玩家指示器",
+    "new": "Use enemy list to drive player indicators",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_indicator_colors",
+    "old": "使用敌对颜色而不是冻结颜色",
+    "new": "Use enemy color instead of frozen color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_indicator_all",
+    "old": "显示所有敌对分组",
+    "new": "Show all enemy groups",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_indicator_enemy",
+    "old": "显示敌对组玩家",
+    "new": "Show enemy group players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_warlist_indicator_team",
+    "old": "显示队伍组玩家",
+    "new": "Show team group players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar",
+    "old": "启用状态栏",
+    "new": "Enable status bar",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_12_hour_clock",
+    "old": "本地时间使用 12 小时制",
+    "new": "Use 12-hour clock for local time",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_local_time_seconds",
+    "old": "显示本地时间秒数",
+    "new": "Show local time seconds",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_height",
+    "old": "状态栏高度",
+    "new": "Status bar height",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_color",
+    "old": "状态栏背景颜色",
+    "new": "Status bar background color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_text_color",
+    "old": "状态栏文字颜色",
+    "new": "Status bar text color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_alpha",
+    "old": "状态栏背景透明度",
+    "new": "Status bar background opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_text_alpha",
+    "old": "状态栏文字透明度",
+    "new": "Status bar text opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_labels",
+    "old": "在状态栏条目上显示标签",
+    "new": "Show labels on status bar items",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_statusbar_scheme",
+    "old": "状态栏项目显示顺序",
+    "new": "Status bar item order",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail",
+    "old": "启用 Tee 轨迹",
+    "new": "Enable Tee trail",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_others",
+    "old": "为其他玩家显示 Tee 轨迹",
+    "new": "Show Tee trail for others",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_width",
+    "old": "轨迹宽度",
+    "new": "Trail width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_length",
+    "old": "轨迹长度",
+    "new": "Trail length",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_alpha",
+    "old": "轨迹透明度",
+    "new": "Trail opacity",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_color",
+    "old": "轨迹颜色",
+    "new": "Trail color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_taper",
+    "old": "轨迹末端渐细",
+    "new": "Taper trail ends",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_fade",
+    "old": "沿轨迹长度逐渐淡出透明度",
+    "new": "Fade opacity along trail length",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tee_trail_color_mode",
+    "old": "Tee 轨迹颜色模式（1=纯色，2=当前 Tee 颜色，3=彩虹，4=按 Tee 速度着色，5=随机）",
+    "new": "Tee trail color mode (1=Solid, 2=Current Tee color, 3=Rainbow, 4=Tee speed, 5=Random)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_auto_reply_muted",
+    "old": "自动回复已静音玩家的消息",
+    "new": "Auto-reply to muted players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_auto_reply_muted_message",
+    "old": "回复静音玩家的消息",
+    "new": "Reply to messages from muted players",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_auto_reply_minimized",
+    "old": "游戏最小化时自动回复",
+    "new": "Auto-reply when game minimized",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_auto_reply_minimized_message",
+    "old": "游戏最小化时回复的消息",
+    "new": "Message to reply when game minimized",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_auto_vote_when_far",
+    "old": "达到最小时长后自动处理换图投票（0=关闭，1=反对，2=同意）",
+    "new": "Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_auto_vote_when_far_message",
+    "old": "自动投票时发送的消息，留空则不发送",
+    "new": "Message to send on auto vote, leave empty to not send",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_auto_vote_when_far_time",
+    "old": "触发自动投票前的等待时间",
+    "new": "Wait time before triggering auto vote",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_custom_font",
+    "old": "自定义字体",
+    "new": "Custom font",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_bg_draw_width",
+    "old": "背景描边宽度",
+    "new": "Background stroke width",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_bg_draw_fade_time",
+    "old": "描边保留时间（0=永不消失）",
+    "new": "Stroke retention time (0=Never disappear)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_bg_draw_max_items",
+    "old": "最多保留的描边条目数",
+    "new": "Max stroke entries to keep",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_bg_draw_color",
+    "old": "背景描边颜色",
+    "new": "Background stroke color",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_bg_draw_auto_save_load",
+    "old": "自动保存并加载背景描线",
+    "new": "Auto save and load background strokes",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_animate_wheel_time",
+    "old": "表情轮和绑定轮动画时长（毫秒，0=无动画，1000=1 秒）",
+    "new": "Emote and binding wheel animation duration (ms, 0=No animation, 1000=1 sec)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_pet_show",
+    "old": "显示宠物",
+    "new": "Show pet",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_pet_skin",
+    "old": "宠物皮肤",
+    "new": "Pet skin",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_pet_size",
+    "old": "宠物相对普通玩家的大小比例",
+    "new": "Pet size relative to normal player",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_pet_alpha",
+    "old": "宠物透明度（100=完全不透明，50=半透明）",
+    "new": "Pet opacity (100=Opaque, 50=Semi-transparent)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_change_name_near_finish",
+    "old": "接近终点时尝试改名",
+    "new": "Try to change name near finish",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_finish_name",
+    "old": "接近终点时要改成的名字（启用 tc_change_name_near_finish 时生效）",
+    "new": "Name to change to near finish (when tc_change_name_near_finish enabled)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_tclient_settings_tabs",
+    "old": "用于禁用设置标签页的位标志",
+    "new": "Bit flags for disabling settings tabs",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_volleyball_better_ball",
+    "old": "让排球模式中的冻结玩家看起来更像排球（0=禁用，1=仅排球地图，2=始终）",
+    "new": "Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_volleyball_better_ball_skin",
+    "old": "排球外观使用的玩家皮肤",
+    "new": "Player skin used for volleyball appearance",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_show_player_hit_boxes",
+    "old": "显示玩家命中框（1=仅预测，2=预测和未预测）",
+    "new": "Show player hitboxes (1=predicted only, 2=predicted and unpredicted)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_mod_weapon",
+    "old": "指向某人并射击时执行命令（默认 kill，仅在远程控制台已鉴权时生效）",
+    "new": "Command executed when pointing at someone and shooting (default kill, only works when remote console is authenticated)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_mod_weapon_command",
+    "old": "tc_mod_weapon 执行的命令，目标 id 会附加在命令末尾",
+    "new": "Command executed by tc_mod_weapon, target id appended at end",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_execute_on_connect",
+    "old": "连接服务器前执行的控制台命令",
+    "new": "Console command executed before connecting to server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_execute_on_join",
+    "old": "进入服务器后执行的控制台命令",
+    "new": "Console command executed after joining server",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_execute_on_join_delay",
+    "old": "执行 tc_execute_on_join 前的延迟（毫秒）",
+    "new": "Delay before executing tc_execute_on_join (milliseconds)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_custom_communities_url",
+    "old": "自定义社区列表的获取 URL（必须是 https，留空则禁用）",
+    "new": "Custom community list fetch URL (must be https, leave empty to disable)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_discord_rpc",
+    "old": "启用 Discord RPC（需要重启）",
+    "new": "Enable Discord RPC (requires restart)",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_ui_show_tclient",
+    "old": "显示 TClient 配置变量",
+    "new": "Show TClient config variables",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_ui_show_ddnet",
+    "old": "显示 DDNet 配置变量",
+    "new": "Show DDNet config variables",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_ui_show_qm",
+    "old": "显示栖梦配置变量",
+    "new": "Show QmClient config variables",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_ui_compact_list",
+    "old": "对配置变量使用紧凑列表视图",
+    "new": "Use compact list view for config variables",
+    "method": "deepseek"
+  },
+  {
+    "header": "src/engine/shared/config_variables_tclient.h",
+    "script_name": "tc_ui_only_modified",
+    "old": "只显示修改的配置变量",
+    "new": "Show only modified config variables",
+    "method": "deepseek"
+  }
+]

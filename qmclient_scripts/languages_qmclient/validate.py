@@ -184,7 +184,7 @@ translation_quality_report = i18n_store.translation_quality_report(
         for record in current_records
     },
     terminology_by_language=terminology_by_language,
-    limit=20,
+    limit=None,
 )
 translation_quality_errors = translation_quality_report.errors
 if translation_quality_errors:
@@ -203,6 +203,18 @@ if translation_quality_report.warnings:
         print(f"    - {warning}")
 else:
     print("  OK: TOML translation quality warnings")
+
+store_integrity_errors = i18n_store.store_integrity_errors(
+    loaded_i18n_store,
+    active_identities=set(active_source_keys),
+)
+if store_integrity_errors:
+    errors.append(f"TOML store integrity errors: {len(store_integrity_errors)}")
+    print(f"  FAIL: TOML store integrity errors: {len(store_integrity_errors)}")
+    for error in store_integrity_errors[:10]:
+        print(f"    - {error}")
+else:
+    print("  OK: TOML store integrity checks")
 
 toml_format_errors = []
 for path in sorted(i18n_store.TRANSLATIONS_DIR.glob("*.toml")):

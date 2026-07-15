@@ -32,7 +32,14 @@ LANGUAGE_ORDER = (
 )
 CHINESE_LANGUAGES = {"simplified_chinese", "traditional_chinese"}
 CJK_TOLERANT_LANGUAGES = CHINESE_LANGUAGES | {"japanese", "korean"}
-PLACEHOLDER_RE = re.compile(r"%[sdifc]|%\.[0-9]+[fd]|%%|\{[A-Za-z0-9_]+\}")
+PLACEHOLDER_RE = re.compile(
+    r"%%|%(?:[-+0 #]*)(?:\d+|\*)?(?:\.(?:\d+|\*))?"
+    r"(?:hh|ll|h|l|j|z|t|L|w|I32|I64)?[cCdiouxXeEfgGaAnpsSZ]"
+    r"|\{[A-Za-z0-9_]+\}"
+)
+PENDING_TRANSLATION_RE = re.compile(
+    r"^Pending ([a-z_]+) translation(?:\s+.+)?$"
+)
 
 
 @dataclass(frozen=True)
@@ -66,8 +73,12 @@ def module_name_for_source(source: Path | None) -> str:
         return "misc"
 
     normalized = source.as_posix()
+    if normalized.endswith("src/engine/shared/config_variables.h"):
+        return "menus"
     if normalized.endswith("src/engine/shared/config_variables_qmclient.h"):
         return "qmclient"
+    if normalized.endswith("src/engine/shared/config_variables_tclient.h"):
+        return "tclient"
     if "/menus_browser." in normalized:
         return "server_browser"
     if "/menus_demo." in normalized:
@@ -163,6 +174,12 @@ def translation_quality_errors(
                     errors.append(
                         f"{module_name}: [{context}] {key}: {language} repeats English source key"
                     )
+                if translation.strip() == f"{key} setting":
+                    # "{source} setting" is a common pseudo-translation failure mode.
+                    errors.append(
+                        f"{module_name}: [{context}] {key}: {language} "
+                        f"pseudo-translation {toml_quote(translation)}"
+                    )
                 if (
                     language not in CJK_TOLERANT_LANGUAGES
                     and source_keys.has_cjk(translation)
@@ -231,16 +248,30 @@ def translation_quality_warnings(
                 and (key, context) not in active_identities
             ):
                 continue
-            source_placeholders = sorted(PLACEHOLDER_RE.findall(key))
+            source_placeholders = PLACEHOLDER_RE.findall(key)
             for language, translation in sorted(translations.items()):
-                translation_placeholders = sorted(PLACEHOLDER_RE.findall(translation))
+                pending_match = PENDING_TRANSLATION_RE.fullmatch(translation.strip())
+                if pending_match:
+                    warnings.append(
+                        f"{module_name}: [{context}] {key}: {language} "
+                        "pending translation placeholder"
+                    )
+                    if limit is not None and len(warnings) >= limit:
+                        return warnings
+                    continue
+                translation_placeholders = PLACEHOLDER_RE.findall(translation)
                 if source_placeholders != translation_placeholders:
                     warnings.append(
                         f"{module_name}: [{context}] {key}: {language} "
                         f"placeholder mismatch: source {source_placeholders} "
                         f"translation {translation_placeholders}"
                     )
-                if len(key) > 10 and len(translation) > len(key) * 2.5:
+                # 中文 source 与拉丁文字译文的字符密度不同，不能用同一长度比率判定 UI 风险。
+                if (
+                    not source_keys.has_cjk(key)
+                    and len(key) > 10
+                    and len(translation) > len(key) * 2.5
+                ):
                     warnings.append(
                         f"{module_name}: [{context}] {key}: {language} length risk: "
                         f"source {len(key)} translation {len(translation)}"
@@ -248,6 +279,109 @@ def translation_quality_warnings(
                 if limit is not None and len(warnings) >= limit:
                     return warnings
     return warnings
+
+
+def store_integrity_errors(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+    *,
+    active_identities: set[tuple[str, str]] | None = None,
+    limit: int | None = None,
+) -> list[str]:
+    """Report store-level integrity failures across modules and raw TOML files.
+
+    Cross-module translation conflicts are reported here so language_map_for can
+    keep first-wins semantics without silently discarding later module values.
+    """
+
+    errors: list[str] = []
+
+    # Same-module duplicate [[message]] identities from raw TOML (dict collapses them).
+    if TRANSLATIONS_DIR.exists():
+        for path in sorted(TRANSLATIONS_DIR.glob("*.toml")):
+            seen: dict[tuple[str, str], int] = {}
+            text = path.read_text(encoding="utf-8")
+            lines = text.splitlines()
+            index = 0
+            while index < len(lines):
+                if lines[index].strip() != "[[message]]":
+                    index += 1
+                    continue
+                start = index
+                index += 1
+                while index < len(lines) and lines[index].strip() != "[[message]]":
+                    index += 1
+                identity = _block_identity(lines[start:index])
+                if identity is None:
+                    continue
+                key, context = identity
+                count = seen.get(identity, 0) + 1
+                seen[identity] = count
+                if count == 2:
+                    errors.append(
+                        f"{path.stem}: duplicate message identity "
+                        f"[{context}] {key}"
+                    )
+                    if limit is not None and len(errors) >= limit:
+                        return errors
+
+    # Cross-module same (key, context) with different translation for a language.
+    seen_values: dict[tuple[str, str, str], tuple[str, str]] = {}
+    for module_name, module_entries in sorted(store.items()):
+        for (key, context), translations in sorted(module_entries.items()):
+            if (
+                active_identities is not None
+                and (key, context) not in active_identities
+            ):
+                continue
+            for language, translation in sorted(translations.items()):
+                if not translation:
+                    continue
+                identity_lang = (key, context, language)
+                previous = seen_values.get(identity_lang)
+                if previous is None:
+                    seen_values[identity_lang] = (module_name, translation)
+                    continue
+                previous_module, previous_translation = previous
+                if previous_translation != translation:
+                    errors.append(
+                        f"cross-module conflict [{context}] {key}: {language} "
+                        f"{previous_module}={toml_quote(previous_translation)} "
+                        f"{module_name}={toml_quote(translation)}"
+                    )
+                    if limit is not None and len(errors) >= limit:
+                        return errors
+
+    # Mass-shared long translation pollution across many distinct identities.
+    shared_usage: dict[tuple[str, str], set[tuple[str, str]]] = {}
+    for module_name, module_entries in store.items():
+        for (key, context), translations in module_entries.items():
+            if (
+                active_identities is not None
+                and (key, context) not in active_identities
+            ):
+                continue
+            for language, translation in translations.items():
+                if not translation or len(translation) <= 4:
+                    continue
+                shared_usage.setdefault((language, translation), set()).add(
+                    (key, context)
+                )
+
+    for (language, translation), identities in sorted(
+        shared_usage.items(), key=lambda item: (-len(item[1]), item[0][0], item[0][1])
+    ):
+        count = len(identities)
+        if count < 5:
+            continue
+        errors.append(
+            f"mass-shared translation {language}: {toml_quote(translation)} "
+            f"used by {count} identities"
+        )
+        if limit is not None and len(errors) >= limit:
+            return errors
+
+    return errors
+
 
 
 def _terminology_quality_failure(
@@ -358,6 +492,8 @@ def _may_keep_source_text(source: str) -> bool:
     if source in {
         "DDNet",
         "QmClient",
+        "QmClient / HUD",
+        "QmClient / Visual",
         "TClient",
         "OpenAI",
         "API",
@@ -498,13 +634,23 @@ def load_language_store() -> dict[str, dict[tuple[str, str], dict[str, str]]]:
 def language_map_for(
     store: dict[str, dict[tuple[str, str], dict[str, str]]], language: str
 ) -> dict[tuple[str, str], str]:
+    """Flatten one language across modules using first non-empty wins.
+
+    Later modules never overwrite an existing non-empty translation. Cross-module
+    conflicts must be reported via store_integrity_errors instead.
+    """
+
     flattened: dict[tuple[str, str], str] = {}
     for module_entries in store.values():
         for identity, translations in module_entries.items():
             translation = translations.get(language, "")
-            if translation:
-                flattened[identity] = translation
+            if not translation:
+                continue
+            if identity in flattened:
+                continue
+            flattened[identity] = translation
     return flattened
+
 
 
 def missing_translations_for(
@@ -611,6 +757,8 @@ def _patch_message_block(lines: list[str], entries: dict[str, str]) -> list[str]
     for language, translation in entries.items():
         if translation:
             translations[language] = translation
+        elif language in translations:
+            del translations[language]
     return dump_message_block(Message(*identity), translations).splitlines()
 
 

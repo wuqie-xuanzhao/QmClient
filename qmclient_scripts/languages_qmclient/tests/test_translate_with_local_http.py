@@ -739,6 +739,338 @@ simplified_chinese = "退出"
             ),
         )
 
+    def test_language_quality_rejects_pseudo_english_setting_suffix(self):
+        self.assertIn(
+            "setting",
+            translate_with_local_http.language_quality_failure(
+                "german", "Prediction margin", "Prediction margin setting"
+            ).casefold(),
+        )
+        self.assertIn(
+            "setting",
+            translate_with_local_http.language_quality_failure(
+                "german", "Prediction margin", "prediction margin SETTING"
+            ).casefold(),
+        )
+        self.assertEqual(
+            translate_with_local_http.language_quality_failure(
+                "german", "Prediction margin", "Vorhersagemarge"
+            ),
+            "",
+        )
+
+    def test_digit_gate_allows_one_as_arabic_or_omitted(self):
+        self.assertEqual(
+            translate_with_local_http.language_quality_failure(
+                "japanese", "Go back one tick", "1ティック戻る"
+            ),
+            "",
+        )
+        self.assertEqual(
+            translate_with_local_http.language_quality_failure(
+                "simplified_chinese", "Go back one tick", "上一个 tick"
+            ),
+            "",
+        )
+
+    def test_digit_gate_still_requires_source_numerics(self):
+        self.assertIn(
+            "digit mismatch",
+            translate_with_local_http.language_quality_failure(
+                "japanese", "wait 60 seconds", "六十秒待つ"
+            ),
+        )
+        self.assertIn(
+            "digit mismatch",
+            translate_with_local_http.language_quality_failure(
+                "german", "plain text", "Version 2"
+            ),
+        )
+
+    def test_digit_gate_allows_five_word_as_optional_digit(self):
+        source = "Shows five points of the ladder (1 by default)"
+        self.assertEqual(
+            translate_with_local_http.language_quality_failure(
+                "simplified_chinese",
+                source,
+                "显示天梯的 5 个点（默认 1）",
+            ),
+            "",
+        )
+
+    def test_collect_tasks_recollects_when_existing_fails_terminology(self):
+        records = [
+            mock.Mock(
+                key="Grenade",
+                source=Path("src/game/client/components/menus.cpp"),
+                identity=mock.Mock(return_value=("Grenade", "")),
+            ),
+            mock.Mock(
+                key="Play",
+                source=Path("src/game/client/components/menus.cpp"),
+                identity=mock.Mock(return_value=("Play", "")),
+            ),
+        ]
+        store = {
+            "menus": {
+                ("Grenade", ""): {"simplified_chinese": "榴弹炮"},
+                ("Play", ""): {"simplified_chinese": "开始游戏"},
+            }
+        }
+        terminology = {
+            "Grenade": translate_with_local_http.TerminologyTerm("榴弹枪", "exact")
+        }
+        with (
+            mock.patch.object(
+                translate_with_local_http.source_keys,
+                "collect_source_key_records",
+                return_value=records,
+            ),
+            mock.patch.object(
+                translate_with_local_http.i18n_store,
+                "load_language_store",
+                return_value=store,
+            ),
+        ):
+            tasks = translate_with_local_http.collect_tasks(
+                "simplified_chinese", terminology=terminology
+            )
+        self.assertEqual([task.identity for task in tasks], [("Grenade", "")])
+
+    def test_collect_tasks_loads_terminology_from_assets_when_not_passed(self):
+        records = [
+            mock.Mock(
+                key="Grenade",
+                source=Path("src/game/client/components/menus.cpp"),
+                identity=mock.Mock(return_value=("Grenade", "")),
+            ),
+        ]
+        store = {
+            "menus": {
+                ("Grenade", ""): {"simplified_chinese": "榴弹炮"},
+            }
+        }
+        terminology = {
+            "Grenade": translate_with_local_http.TerminologyTerm("榴弹枪", "exact")
+        }
+        with (
+            mock.patch.object(
+                translate_with_local_http.source_keys,
+                "collect_source_key_records",
+                return_value=records,
+            ),
+            mock.patch.object(
+                translate_with_local_http.i18n_store,
+                "load_language_store",
+                return_value=store,
+            ),
+            mock.patch.object(
+                translate_with_local_http,
+                "load_prompt_assets",
+                return_value=("# Rules", "[[term]]\nsource = \"Grenade\"\n", ""),
+            ) as load_assets,
+            mock.patch.object(
+                translate_with_local_http,
+                "terminology_terms_for_language_from_assets",
+                return_value=terminology,
+            ) as load_terms,
+        ):
+            tasks = translate_with_local_http.collect_tasks("simplified_chinese")
+
+        load_assets.assert_called()
+        load_terms.assert_called()
+        self.assertEqual([task.identity for task in tasks], [("Grenade", "")])
+
+    def test_write_back_draft_overwrites_quality_failure_without_rewrite_flag(self):
+        record = mock.Mock(
+            key="Progress: %d%%",
+            source=Path("src/game/client/components/menus_settings.cpp"),
+            identity=mock.Mock(return_value=("Progress: %d%%", "")),
+        )
+        # existing has placeholder mismatch (missing %%)
+        store = {
+            "menus": {
+                ("Progress: %d%%", ""): {"simplified_chinese": "进度：%d%"},
+            }
+        }
+        source_texts = {("Progress: %d%%", ""): "Progress: %d%%"}
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            language_dir = draft_root / "simplified_chinese"
+            language_dir.mkdir(parents=True)
+            draft_path = language_dir / "menus.toml"
+            draft_path.write_text(
+                """[[message]]
+key = "Progress: %d%%"
+[message.translations]
+simplified_chinese = "进度：%d%%"
+""",
+                encoding="utf-8",
+            )
+            translations_dir = Path(tmp) / "i18n"
+            translations_dir.mkdir()
+            (translations_dir / "menus.toml").write_text(
+                """[[message]]
+key = "Progress: %d%%"
+[message.translations]
+simplified_chinese = "进度：%d%"
+""",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "TRANSLATIONS_DIR",
+                    translations_dir,
+                ),
+            ):
+                written, failures = translate_with_local_http.write_back_draft(
+                    "simplified_chinese",
+                    modules={"menus"},
+                    source_records=[record],
+                    source_texts=source_texts,
+                    store=store,
+                    rewrite_existing=False,
+                )
+
+            self.assertEqual(failures, [])
+            self.assertEqual(written, 1)
+            content = (translations_dir / "menus.toml").read_text(encoding="utf-8")
+            self.assertIn('simplified_chinese = "进度：%d%%"', content)
+            self.assertEqual(
+                store["menus"][("Progress: %d%%", "")]["simplified_chinese"],
+                "进度：%d%%",
+            )
+
+    def test_write_back_draft_skips_good_existing_without_rewrite_flag(self):
+        record = mock.Mock(
+            key="Play",
+            source=Path("src/game/client/components/menus_settings.cpp"),
+            identity=mock.Mock(return_value=("Play", "")),
+        )
+        store = {"menus": {("Play", ""): {"simplified_chinese": "开始游戏"}}}
+        source_texts = {("Play", ""): "Play"}
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            language_dir = draft_root / "simplified_chinese"
+            language_dir.mkdir(parents=True)
+            draft_path = language_dir / "menus.toml"
+            draft_path.write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+simplified_chinese = "游玩"
+""",
+                encoding="utf-8",
+            )
+            translations_dir = Path(tmp) / "i18n"
+            translations_dir.mkdir()
+            menus_path = translations_dir / "menus.toml"
+            menus_path.write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+simplified_chinese = "开始游戏"
+""",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "TRANSLATIONS_DIR",
+                    translations_dir,
+                ),
+            ):
+                written, failures = translate_with_local_http.write_back_draft(
+                    "simplified_chinese",
+                    modules={"menus"},
+                    source_records=[record],
+                    source_texts=source_texts,
+                    store=store,
+                    rewrite_existing=False,
+                )
+
+            self.assertEqual(failures, [])
+            self.assertEqual(written, 0)
+            content = menus_path.read_text(encoding="utf-8")
+            self.assertIn('simplified_chinese = "开始游戏"', content)
+            self.assertNotIn("游玩", content)
+            self.assertEqual(
+                store["menus"][("Play", "")]["simplified_chinese"], "开始游戏"
+            )
+
+    def test_write_back_draft_overwrites_pseudo_setting_suffix_existing(self):
+        record = mock.Mock(
+            key="Prediction margin",
+            source=Path("src/game/client/components/menus_settings.cpp"),
+            identity=mock.Mock(return_value=("Prediction margin", "")),
+        )
+        store = {
+            "menus": {
+                ("Prediction margin", ""): {
+                    "german": "Prediction margin setting"
+                }
+            }
+        }
+        source_texts = {("Prediction margin", ""): "Prediction margin"}
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            language_dir = draft_root / "german"
+            language_dir.mkdir(parents=True)
+            (language_dir / "menus.toml").write_text(
+                """[[message]]
+key = "Prediction margin"
+[message.translations]
+german = "Vorhersagemarge"
+""",
+                encoding="utf-8",
+            )
+            translations_dir = Path(tmp) / "i18n"
+            translations_dir.mkdir()
+            menus_path = translations_dir / "menus.toml"
+            menus_path.write_text(
+                """[[message]]
+key = "Prediction margin"
+[message.translations]
+german = "Prediction margin setting"
+""",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "TRANSLATIONS_DIR",
+                    translations_dir,
+                ),
+            ):
+                written, failures = translate_with_local_http.write_back_draft(
+                    "german",
+                    modules={"menus"},
+                    source_records=[record],
+                    source_texts=source_texts,
+                    store=store,
+                    rewrite_existing=False,
+                )
+
+            self.assertEqual(failures, [])
+            self.assertEqual(written, 1)
+            content = menus_path.read_text(encoding="utf-8")
+            self.assertIn('german = "Vorhersagemarge"', content)
+            self.assertEqual(
+                store["menus"][("Prediction margin", "")]["german"],
+                "Vorhersagemarge",
+            )
+
+
     def test_load_existing_draft_identities_reads_existing_module_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             draft_root = Path(tmp)

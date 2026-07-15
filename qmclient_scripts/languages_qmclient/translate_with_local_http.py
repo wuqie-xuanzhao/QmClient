@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import collections
 import json
 import os
 import re
@@ -553,11 +554,16 @@ def collect_tasks(
     rewrite_existing: bool = False,
     records=None,
     store=None,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
+    prompt_assets: tuple[str, str, str] | None = None,
 ) -> list[TranslationTask]:
     records = (
         records if records is not None else source_keys.collect_source_key_records()
     )
     store = store if store is not None else i18n_store.load_language_store()
+    if terminology is None:
+        assets = prompt_assets if prompt_assets is not None else load_prompt_assets()
+        terminology = terminology_terms_for_language_from_assets(language, assets)
     translations = i18n_store.language_map_for(store, language)
     skipped = existing_draft_identities or set()
     tasks: list[TranslationTask] = []
@@ -576,7 +582,9 @@ def collect_tasks(
         if (
             existing
             and not rewrite_existing
-            and not language_quality_failure(language, record.key, existing)
+            and not language_quality_failure(
+                language, record.key, existing, terminology=terminology
+            )
         ):
             continue
         tasks.append(TranslationTask(module, identity, record.key, existing))
@@ -700,14 +708,49 @@ def digit_sort_key(value: str) -> tuple[int, float | str, str]:
         return (1, value.casefold(), value)
 
 
-def extract_digits(text: str) -> list[str]:
-    digits = re.findall(r"\d+(?:\.\d+)?", text)
-    word_digits = {"five": "5"}
+ENGLISH_WORD_DIGITS = {
+    "zero": "0",
+    "one": "1",
+    "two": "2",
+    "three": "3",
+    "four": "4",
+    "five": "5",
+    "six": "6",
+    "seven": "7",
+    "eight": "8",
+    "nine": "9",
+    "ten": "10",
+}
+
+
+def numeric_digits(text: str) -> list[str]:
+    return sorted(re.findall(r"\d+(?:\.\d+)?", text), key=digit_sort_key)
+
+
+def word_number_digits(text: str) -> list[str]:
+    found: list[str] = []
     for word in re.findall(r"\b[a-zA-Z]+\b", text):
-        digit = word_digits.get(word.lower())
+        digit = ENGLISH_WORD_DIGITS.get(word.lower())
         if digit is not None:
-            digits.append(digit)
-    return sorted(digits, key=digit_sort_key)
+            found.append(digit)
+    return sorted(found, key=digit_sort_key)
+
+
+def extract_digits(text: str) -> list[str]:
+    # Union for callers/debug; quality compare uses digits_compatible.
+    return sorted(numeric_digits(text) + word_number_digits(text), key=digit_sort_key)
+
+
+def _multiset_sub(a: list[str], b: list[str]) -> bool:
+    ca, cb = collections.Counter(a), collections.Counter(b)
+    return all(cb[k] >= v for k, v in ca.items())
+
+
+def digits_compatible(source: str, translation: str) -> bool:
+    required = numeric_digits(source)
+    allowed = required + word_number_digits(source)
+    got = numeric_digits(translation)
+    return _multiset_sub(required, got) and _multiset_sub(got, allowed)
 
 
 def contains_hangul(text: str) -> bool:
@@ -888,13 +931,19 @@ def language_quality_failure(
     translation = translation.strip()
     if not translation:
         return "empty translation returned"
+    if translation.casefold() == f"{source.strip()} setting".casefold():
+        return "pseudo-english setting suffix"
     if extract_placeholders(source) != extract_placeholders(translation):
         return (
             f"placeholder mismatch: expected {extract_placeholders(source)!r}, "
             f"got {extract_placeholders(translation)!r}"
         )
-    if extract_digits(source) != extract_digits(translation):
-        return f"digit mismatch: expected {extract_digits(source)!r}, got {extract_digits(translation)!r}"
+    if not digits_compatible(source, translation):
+        return (
+            f"digit mismatch: expected required={numeric_digits(source)!r} "
+            f"allowed_extra={word_number_digits(source)!r}, "
+            f"got {numeric_digits(translation)!r}"
+        )
     if source.strip() == translation and not may_keep_source_text_for_language(
         language, source
     ):
@@ -1292,7 +1341,16 @@ def write_back_draft(
         if not translation:
             continue
         existing = store.get(module, {}).get(identity, {}).get(language, "")
-        if existing and not rewrite_existing:
+        if (
+            existing
+            and not rewrite_existing
+            and not language_quality_failure(
+                language,
+                source_texts.get(identity, identity[0]),
+                existing,
+                terminology=terminology,
+            )
+        ):
             continue
         active_by_module.setdefault(module, []).append(
             TranslationTask(module, identity, record.key, existing)
