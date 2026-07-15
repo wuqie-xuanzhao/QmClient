@@ -97,8 +97,8 @@ polish = "(wstrzymane)"
 [[message]]
 key = "A demo with this name already exists"
 [message.translations]
-simplified_chinese = "已经存在同名回放"
-traditional_chinese = "已經存在同名回放"
+simplified_chinese = "已有同名回放"
+traditional_chinese = "已有同名回放"
 japanese = "この名前のデモは既に存在します"
 korean = "이 이름의 데모가 이미 존재합니다."
 russian = "Демо с таким именем уже существует"
@@ -113,8 +113,8 @@ polish = "Demo o tej nazwie już istnieje"
 [[message]]
 key = "A folder with this name already exists"
 [message.translations]
-simplified_chinese = "已经存在同名文件夹"
-traditional_chinese = "已經存在同名文件夾"
+simplified_chinese = "已有同名文件夹"
+traditional_chinese = "已有同名資料夾"
 japanese = "この名前のフォルダーは既に存在します"
 korean = "이 이름의 폴더가 이미 존재합니다."
 russian = "Папка с таким именем уже существует"
@@ -129,8 +129,8 @@ polish = "Folder o tej nazwie już istnieje"
 [[message]]
 key = "A screenshot with this name already exists"
 [message.translations]
-simplified_chinese = "已经存在同名截图"
-traditional_chinese = "已經存在同名截圖"
+simplified_chinese = "已有同名截图"
+traditional_chinese = "已有同名截圖"
 japanese = "この名前のスクリーンショットは既に存在します"
 korean = "이 이름의 스크린샷이 이미 존재합니다."
 russian = "Скриншот с таким именем уже существует"
@@ -225,8 +225,8 @@ polish = "Czy na pewno chcesz zrestartować?"
 [[message]]
 key = "Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced."
 [message.translations]
-simplified_chinese = "你确定要保存皮肤吗？如果已经存在同名皮肤，将会被替换。"
-traditional_chinese = "你確定要保存皮膚嗎？如果已經存在同名皮膚，將會被替換。"
+simplified_chinese = "确定保存该皮肤？若已有同名皮肤，将被覆盖。"
+traditional_chinese = "確定保存該皮膚？若已有同名皮膚，將被覆蓋。"
 japanese = "スキンを保存してもよろしいですか？ 同じ名前のスキンが既に存在する場合は、置き換えられます。"
 korean = "스킨을 저장하시겠습니까? 같은 이름의 스킨이 이미 존재하면 덮어씌워집니다."
 russian = "Вы уверены, что хотите сохранить скин? Если скин с таким именем уже существует, он будет заменён."
@@ -516,8 +516,8 @@ japanese = "マスターサーバーからサーバーリストを取得でき�
 [[message]]
 key = "Current time: %s\\n- Uptime and playtime are calculated from official JSON data\\n- Same as above\\n- Same as above above\\n"
 [message.translations]
-simplified_chinese = "当前时间：%s\\n- 启动时间与游玩时长根据官方 JSON 数据计算\\n- 同上\\n- 同上上\\n"
-traditional_chinese = "當前時間：%s\\n- 啟動時間與遊玩時長根據官方 JSON 數據計算\\n- 同上\\n- 同上上\\n"
+simplified_chinese = "当前时间：%s\n- 启动时长与游玩时长来自官方 JSON\n- 同上\n- 同上\n"
+traditional_chinese = "當前時間：%s\n- 啟動時長與遊玩時長來自官方 JSON\n- 同上\n- 同上\n"
 japanese = "現在時刻: %s\\n- 稼働時間とプレイ時間は公式 JSON データから計算されます\\n- 同上\\n- 同上上\\n"
 korean = "현재 시간: %s\\n- 가동 시간과 플레이 시간은 공식 JSON 데이터를 기반으로 계산됩니다\\n- 위와 동일\\n- 위와 동일\\n"
 russian = "Текущее время: %s\n- Время работы и игры рассчитывается по официальным JSON-данным\n- То же, что выше\n- То же, что выше выше\n"
@@ -786,8 +786,8 @@ polish = "Ulubione"
 [[message]]
 key = "File '%s' already exists, do you want to overwrite it?"
 [message.translations]
-simplified_chinese = "文件 '%s' 已经存在，是否要覆盖该文件？"
-traditional_chinese = "文件 '%s' 已經存在，是否要覆蓋該文件？"
+simplified_chinese = "文件「%s」已存在，是否覆盖？"
+traditional_chinese = "檔案「%s」已存在，是否覆蓋？"
 japanese = "ファイル '%s' は既に存在します。上書きしますか？"
 korean = "파일 '%s'이(가) 이미 존재합니다. 덮어쓰시겠습니까?"
 russian = "Файл «%s» уже существует. Перезаписать его?"

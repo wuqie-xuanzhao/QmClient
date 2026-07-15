@@ -1381,8 +1381,8 @@ polish = "Automatycznie twórz CSV po zakończeniu gry"
 [[message]]
 key = "Auto-record replay when player sets a new personal best time."
 [message.translations]
-simplified_chinese = "当玩家设定新的个人最佳时间时，自动录制回放。"
-traditional_chinese = "當玩家設定新的個人最佳時間時，自動錄製回放。"
+simplified_chinese = "刷新个人最佳成绩时自动录制回放"
+traditional_chinese = "刷新個人最佳成績時自動錄製回放"
 japanese = "プレイヤーが新しい自己ベストタイムを記録したときにリプレイを自動録画"
 korean = "플레이어가 새로운 개인 최고 기록을 세울 때 리플레이 자동 녹화."
 russian = "Автоматически записывать повтор, когда игрок устанавливает новый личный рекорд."
@@ -1477,8 +1477,8 @@ polish = "Automatycznie twórz csv tablicy statystyk"
 [[message]]
 key = "Automatically re-join team 0 after finish (only if unlocked)."
 [message.translations]
-simplified_chinese = "让队伍在完成后自动重新加入队伍 0（仅当未锁定时）"
-traditional_chinese = "讓隊伍在完成後自動重新加入隊伍 0（僅當未鎖定時）"
+simplified_chinese = "完赛后自动回到 0 队（仅未锁定时）"
+traditional_chinese = "完賽後自動回到 0 隊（僅未鎖定時）"
 japanese = "フィニッシュ後にチーム 0 に自動的に再参加（ロック解除されている場合のみ）"
 korean = "완료 후 팀 0에 자동 재가입 (잠금 해제된 경우에만)."
 russian = "Автоматически возвращаться в команду 0 после финиша (только если разблокировано)."
@@ -2645,8 +2645,8 @@ polish = "Kolorowanie pingu na tablicy wyników"
 [[message]]
 key = "Colors of the hook collision line, in case of a possible collision with:"
 [message.translations]
-simplified_chinese = "辅助线颜色（当瞄准以下实体物时）："
-traditional_chinese = "輔助線顏色（當瞄準以下實體物時）："
+simplified_chinese = "钩子辅助线颜色（瞄准以下目标时）："
+traditional_chinese = "鉤子輔助線顏色（瞄準以下目標時）："
 japanese = "フック衝突線の色（以下のものと衝突する可能性がある場合）："
 korean = "후크 충돌선 색상 (다음과 충돌 가능한 경우):"
 russian = "Цвета линии столкновения крюка при возможном столкновении с:"
@@ -3677,8 +3677,8 @@ polish = "Opóźnienie między ratunkami (sekundy)"
 [[message]]
 key = "Delay between SQL queries for a single player (in seconds)"
 [message.translations]
-simplified_chinese = "单个玩家的 SQL 查询之间的延迟（以秒为单位）"
-traditional_chinese = "單個玩家的 SQL 查詢之間的延遲（以秒為單位）"
+simplified_chinese = "单个玩家的 SQL 查询之间的延迟（秒）"
+traditional_chinese = "單個玩家的 SQL 查詢之間的延遲（秒）"
 japanese = "単一プレイヤーに対する SQL クエリ間の遅延（秒）"
 korean = "단일 플레이어에 대한 SQL 쿼리 사이의 지연 시간 (초)"
 russian = "Задержка между SQL-запросами для одного игрока (в секундах)."
@@ -3964,8 +3964,8 @@ polish = "Nie ustawiaj tej zmiennej, zamiast tego utwórz ddnet-serverlist-urls.
 [[message]]
 key = "Do not set, used to mark official tutorial server"
 [message.translations]
-simplified_chinese = "这个不要设置，用来标记官方教程服务器"
-traditional_chinese = "這個不要設置，用來標記官方教程服務器"
+simplified_chinese = "勿修改：用于标记官方教程服"
+traditional_chinese = "勿修改：用於標記官方教學服"
 japanese = "設定しないでください。公式チュートリアルサーバーをマークするために使用されます"
 korean = "설정하지 마세요. 공식 튜토리얼 서버를 표시하는 데 사용됩니다"
 russian = "Не устанавливать, используется для пометки официального обучающего сервера."
@@ -7252,8 +7252,8 @@ polish = "Wyróżniona wiadomość"
 [[message]]
 key = "Highlighted message color"
 [message.translations]
-simplified_chinese = "突出显示的消息颜色"
-traditional_chinese = "突出顯示的消息顏色"
+simplified_chinese = "提及消息颜色"
+traditional_chinese = "提及訊息顏色"
 japanese = "ハイライトされたメッセージの色"
 korean = "강조된 메시지 색상"
 russian = "Цвет выделенного сообщения"
@@ -9103,8 +9103,8 @@ polish = "Promień obrotu kamery menu"
 [[message]]
 key = "Menu camera rotation time in seconds"
 [message.translations]
-simplified_chinese = "菜单相机以秒为单位旋转"
-traditional_chinese = "菜單相機以秒為單位旋轉"
+simplified_chinese = "菜单相机旋转周期（秒）"
+traditional_chinese = "選單相機旋轉週期（秒）"
 japanese = "メニューカメラの回転時間（秒）"
 korean = "메뉴 카메라 회전 시간 (초)"
 russian = "Время вращения камеры в меню в секундах"
@@ -9327,8 +9327,8 @@ polish = "Minimalny rozmiar drużyny (ukończenie w mniejszej drużynie nie da r
 [[message]]
 key = "Minimum time between kick votes (in seconds)"
 [message.translations]
-simplified_chinese = "踢票之间的最短时间（以秒为单位）"
-traditional_chinese = "踢票之間的最短時間（以秒為單位）"
+simplified_chinese = "踢票之间的最短时间（秒）"
+traditional_chinese = "踢票之間的最短時間（秒）"
 japanese = "キック投票間の最小時間（秒）"
 korean = "추방 투표 사이의 최소 시간 (초)"
 russian = "Минимальное время между голосованиями за кик (в секундах)"
@@ -9343,8 +9343,8 @@ polish = "Minimalny czas między głosowaniami nad wyrzuceniem (w sekundach)"
 [[message]]
 key = "Minimum time between kills (in seconds)"
 [message.translations]
-simplified_chinese = "击杀之间的最短时间（以秒为单位）"
-traditional_chinese = "擊殺之間的最短時間（以秒為單位）"
+simplified_chinese = "击杀之间的最短时间（秒）"
+traditional_chinese = "擊殺之間的最短時間（秒）"
 japanese = "キル間の最小時間（秒）"
 korean = "처치 사이의 최소 시간 (초)"
 russian = "Минимальное время между убийствами (в секундах)"
@@ -9359,8 +9359,8 @@ polish = "Minimalny czas między zabójstwami (w sekundach)"
 [[message]]
 key = "Minimum time between map votes (in seconds)"
 [message.translations]
-simplified_chinese = "地图投票之间的最短时间（以秒为单位）"
-traditional_chinese = "地圖投票之間的最短時間（以秒為單位）"
+simplified_chinese = "地图投票之间的最短时间（秒）"
+traditional_chinese = "地圖投票之間的最短時間（秒）"
 japanese = "マップ投票間の最小時間（秒）"
 korean = "맵 투표 사이의 최소 시간 (초)"
 russian = "Минимальное время между голосованиями за карту (в секундах)"
@@ -10284,8 +10284,8 @@ polish = "Nie pobrano"
 [[message]]
 key = "Nothing hookable"
 [message.translations]
-simplified_chinese = "未瞄准任何实体物"
-traditional_chinese = "未瞄準任何實體物"
+simplified_chinese = "未瞄准可钩物体"
+traditional_chinese = "未瞄準可鉤物體"
 japanese = "フック可能なものはありません"
 korean = "걸 수 있는 대상 없음"
 russian = "Ничего не зацепляется"
@@ -10300,8 +10300,8 @@ polish = "Nic do zahaczenia"
 [[message]]
 key = "Notify when someone highlights you"
 [message.translations]
-simplified_chinese = "当有人突出显示你时让客户通知"
-traditional_chinese = "當有人突出顯示你時讓客戶通知"
+simplified_chinese = "有人提及你时通知"
+traditional_chinese = "有人提及你時通知"
 japanese = "誰かがあなたをハイライトしたときに通知"
 korean = "누군가 나를 하이라이트할 때 알림"
 russian = "Уведомлять, когда кто-то выделяет вас"
@@ -10943,8 +10943,8 @@ polish = "Wstrzymaj renderowanie wideo, gdy odtwarzanie dema jest wstrzymane"
 [[message]]
 key = "Penalty in seconds for saving or swapping positions"
 [message.translations]
-simplified_chinese = "保存或交换位置的惩罚以秒为单位"
-traditional_chinese = "保存或交換位置的懲罰以秒為單位"
+simplified_chinese = "保存或交换位置的惩罚时间（秒）"
+traditional_chinese = "保存或交換位置的懲罰時間（秒）"
 japanese = "位置の保存または交換に対するペナルティ（秒単位）"
 korean = "위치 저장 또는 교체에 대한 초 단위 패널티"
 russian = "Штраф в секундах за сохранение или обмен позициями"
@@ -11427,8 +11427,8 @@ polish = "Port do rejestracji serwera głównego, przydatny za NAT, w przeciwnym
 [[message]]
 key = "Port for server info connection to server (0=random, >=1024 sets manual port)"
 [message.translations]
-simplified_chinese = "用于与服务器进行 serverinfo 连接的端口（0 选择随机端口，1024 或更高设置手动端口）"
-traditional_chinese = "用於與服務器進行 serverinfo 連接的端口（0 選擇隨機端口，1024 或更高設置手動端口）"
+simplified_chinese = "服务器信息连接端口（0=随机，≥1024 为手动端口）"
+traditional_chinese = "伺服器資訊連接埠（0=隨機，≥1024 為手動埠）"
 japanese = "サーバー情報接続用ポート（0=ランダム, >=1024 で手動設定）"
 korean = "서버 정보 연결 포트 (0=랜덤, >=1024는 수동 포트 설정)"
 russian = "Порт для подключения server info к серверу (0 = случайный, >=1024 задаёт ручной порт)"
@@ -11523,8 +11523,8 @@ polish = "Przewiduj zdarzenia (dźwięki, cząsteczki)"
 [[message]]
 key = "Predict fire and show predicted weapon physics (requires cl_antiping_grenade 1 and cl_antiping_weapons 1)"
 [message.translations]
-simplified_chinese = "预测枪火并显示预测的武器物理效果（需配合 cl_antiping_grenade 1 和 cl_antiping_weapons 1）"
-traditional_chinese = "預測槍火併顯示預測的武器物理效果（需配合 cl_antiping_grenade 1 和 cl_antiping_weapons 1）"
+simplified_chinese = "预测开火并显示武器物理预测（需 cl_antiping_grenade 1 与 cl_antiping_weapons 1）"
+traditional_chinese = "預測開火並顯示武器物理預測（需 cl_antiping_grenade 1 與 cl_antiping_weapons 1）"
 japanese = "発射を予測し、予測された武器物理を表示（cl_antiping_grenade 1 と cl_antiping_weapons 1 が必要）"
 korean = "발사 예측 및 예측된 무기 물리 표시 (cl_antiping_grenade 1 및 cl_antiping_weapons 1 필요)"
 russian = "Прогнозировать стрельбу и показывать прогнозируемую физику оружия (требуется cl_antiping_grenade 1 и cl_antiping_weapons 1)"
@@ -11555,8 +11555,8 @@ polish = "Przewiduj kafelki zamrożenia (0 = wył., 1 = wł., 2 = częściowe (p
 [[message]]
 key = "Predict grenade trajectory (only with cl_antiping 1)"
 [message.translations]
-simplified_chinese = "预测榴弹炮轨迹（仅在 cl_antiping 为 1 时生效）"
-traditional_chinese = "預測榴彈炮軌跡（僅在 cl_antiping 為 1 時生效）"
+simplified_chinese = "预测榴弹轨迹（仅在 cl_antiping 为 1 时）"
+traditional_chinese = "預測榴彈軌跡（僅在 cl_antiping 為 1 時）"
 japanese = "グレネードの軌道を予測（cl_antiping 1 の場合のみ）"
 korean = "유탄 궤적 예측 (cl_antiping 1에서만)"
 russian = "Прогнозировать траекторию гранатомёта (только с cl_antiping 1)"
@@ -12046,6 +12046,38 @@ brazilian_portuguese = "Caminho relativo"
 portuguese = "Caminho relativo"
 turkish = "Göreceli yol"
 polish = "Ścieżka względna"
+
+[[message]]
+key = "Relative X position of the draggable back button"
+[message.translations]
+simplified_chinese = "Relative X position of the draggable back button"
+traditional_chinese = "Relative X position of the draggable back button"
+japanese = "ドラッグ可能な戻るボタンの相対 X 位置"
+korean = "드래그 가능한 뒤로 가기 버튼의 상대적 X 위치"
+russian = "Относительная позиция X перетаскиваемой кнопки «Назад»"
+german = "Relative X-Position des verschiebbaren Zurück-Buttons"
+spanish = "Posición X relativa del botón de retroceso arrastrable"
+french = "Position X relative du bouton de retour déplaçable"
+brazilian_portuguese = "Posição X relativa do botão de voltar arrastável"
+portuguese = "Posição X relativa do botão de voltar arrastável"
+turkish = "Sürüklenebilir geri düğmesinin bağıl X konumu"
+polish = "Względna pozycja X przeciągalnego przycisku wstecz"
+
+[[message]]
+key = "Relative Y position of the draggable back button"
+[message.translations]
+simplified_chinese = "Relative Y position of the draggable back button"
+traditional_chinese = "Relative Y position of the draggable back button"
+japanese = "ドラッグ可能な戻るボタンの相対 Y 位置"
+korean = "드래그 가능한 뒤로 가기 버튼의 상대적 Y 위치"
+russian = "Относительная позиция Y перетаскиваемой кнопки «Назад»"
+german = "Relative Y-Position des verschiebbaren Zurück-Buttons"
+spanish = "Posición Y relativa del botón de retroceso arrastrable"
+french = "Position Y relative du bouton de retour déplaçable"
+brazilian_portuguese = "Posição Y relativa do botão de voltar arrastável"
+portuguese = "Posição Y relativa do botão de voltar arrastável"
+turkish = "Sürüklenebilir geri düğmesinin bağıl Y konumu"
+polish = "Względna pozycja Y przeciągalnego przycisku wstecz"
 
 [[message]]
 key = "Reload"
@@ -14350,6 +14382,22 @@ turkish = "Varsayılan mod kurallarını göster."
 polish = "Pokaż domyślne zasady modyfikacji."
 
 [[message]]
+key = "Show draggable virtual back button"
+[message.translations]
+simplified_chinese = "Show draggable virtual back button"
+traditional_chinese = "Show draggable virtual back button"
+japanese = "ドラッグ可能な仮想戻るボタンを表示"
+korean = "드래그 가능한 가상 뒤로가기 버튼 표시"
+russian = "Показывать перетаскиваемую виртуальную кнопку назад"
+german = "Verschiebbaren virtuellen Zurück-Button anzeigen"
+spanish = "Mostrar botón virtual de retroceso arrastrable"
+french = "Afficher un bouton de retour virtuel déplaçable"
+brazilian_portuguese = "Mostrar botão virtual de voltar arrastável"
+portuguese = "Mostrar botão virtual de voltar arrastável"
+turkish = "Sürüklenebilir sanal geri düğmesini göster"
+polish = "Pokaż przeciągalny wirtualny przycisk wstecz"
+
+[[message]]
 key = "Show dummy actions"
 [message.translations]
 simplified_chinese = "显示分身状态"
@@ -14766,22 +14814,6 @@ turkish = "Oyunda HUD göster (klon kontrol durumu)"
 polish = "Pokaż HUD w grze (stan sterowania klonem)"
 
 [[message]]
-key = "Show in-game HUD (dummy copy state)"
-[message.translations]
-simplified_chinese = "显示游戏内 HUD（分身同步状态）"
-traditional_chinese = "顯示遊戲內 HUD（分身同步狀態）"
-japanese = "ゲーム内 HUD を表示（クローン同期状態）"
-korean = "게임 내 HUD 표시 (복제 동기화 상태)"
-russian = "Показывать HUD в игре (состояние синхронизации клона)"
-german = "HUD im Spiel anzeigen (Klon-Synchronisationsstatus)"
-spanish = "Mostrar HUD en el juego (estado de sincronización del clon)"
-french = "Afficher le HUD en jeu (état de synchronisation du clone)"
-brazilian_portuguese = "Mostrar HUD no jogo (estado de sincronia do clone)"
-portuguese = "Mostrar HUD no jogo (estado de sincronização do clone)"
-turkish = "Oyunda HUD göster (klon senkronizasyon durumu)"
-polish = "Pokaż HUD w grze (stan synchronizacji klona)"
-
-[[message]]
 key = "Show in-game HUD (DDRace HUD)"
 [message.translations]
 simplified_chinese = "显示游戏内 HUD (DDRace HUD)"
@@ -14800,8 +14832,8 @@ polish = "Pokaż HUD w grze (DDRace HUD)"
 [[message]]
 key = "Show in-game HUD (dummy controls)"
 [message.translations]
-simplified_chinese = "显示游戏内 HUD（分身操作）"
-traditional_chinese = "顯示遊戲內 HUD（分身操作）"
+simplified_chinese = "显示游戏内 HUD（分身控制）"
+traditional_chinese = "顯示遊戲內 HUD（分身控制）"
 japanese = "ゲーム内 HUD を表示（ダミー操作）"
 korean = "게임 내 HUD 표시 (더미 컨트롤)"
 russian = "Показывать HUD в игре (управление дамми)"
@@ -14812,6 +14844,22 @@ brazilian_portuguese = "Mostrar HUD no jogo (controles do Dummy)"
 portuguese = "Mostrar HUD no jogo (controles do dummy)"
 turkish = "Oyunda HUD göster (dummy kontrolleri)"
 polish = "Pokaż HUD w grze (sterowanie kukłą)"
+
+[[message]]
+key = "Show in-game HUD (dummy copy state)"
+[message.translations]
+simplified_chinese = "显示游戏内 HUD（分身同步状态）"
+traditional_chinese = "顯示遊戲內 HUD（分身同步狀態）"
+japanese = "ゲーム内 HUD を表示（クローン同期状態）"
+korean = "게임 내 HUD 표시 (복제 동기화 상태)"
+russian = "Показывать HUD в игре (состояние синхронизации клона)"
+german = "HUD im Spiel anzeigen (Klon-Synchronisationsstatus)"
+spanish = "Mostrar HUD en el juego (estado de sincronización del clon)"
+french = "Afficher le HUD en jeu (état de synchronisation du clone)"
+brazilian_portuguese = "Mostrar HUD no jogo (estado de sincronia do clone)"
+portuguese = "Mostrar HUD no jogo (estado de sincronização do clone)"
+turkish = "Oyunda HUD göster (klon senkronizasyon durumu)"
+polish = "Pokaż HUD w grze (stan synchronizacji klona)"
 
 [[message]]
 key = "Show in-game HUD (hammer state)"
@@ -16304,8 +16352,8 @@ polish = "Płynność zoomu w widoku wieloekranowym (w ms, wyższe = wolniejsze)
 [[message]]
 key = "Something hookable"
 [message.translations]
-simplified_chinese = "可钩索的方块"
-traditional_chinese = "可鉤索的方塊"
+simplified_chinese = "可钩物体"
+traditional_chinese = "可鉤物體"
 japanese = "フック可能なブロック"
 korean = "갈고리 가능한 블록"
 russian = "Что-то зацепляемое"
@@ -17244,8 +17292,8 @@ polish = "Czas (ms), jaki gracz musi odczekać przed następną emotką nad gło
 [[message]]
 key = "Time (seconds) between eye emote changes."
 [message.translations]
-simplified_chinese = "眼睛表情符号变化之间的时间（以秒为单位）"
-traditional_chinese = "眼睛表情符號變化之間的時間（以秒為單位）"
+simplified_chinese = "眼睛表情符号变化之间的时间（秒）"
+traditional_chinese = "眼睛表情符號變化之間的時間（秒）"
 japanese = "目のエモート変更の間隔（秒）"
 korean = "눈 이모트 변경 사이의 시간 (초)"
 russian = "Время (секунды) между сменами эмоций глаз."
@@ -17260,8 +17308,8 @@ polish = "Czas (sekundy) między zmianami emotek oczu."
 [[message]]
 key = "Time a player must wait when paused by vote in seconds"
 [message.translations]
-simplified_chinese = "投票暂停时玩家必须等待的时间（以秒为单位）"
-traditional_chinese = "投票暫停時玩家必須等待的時間（以秒為單位）"
+simplified_chinese = "投票暂停时玩家必须等待的时间（秒）"
+traditional_chinese = "投票暫停時玩家必須等待的時間（秒）"
 japanese = "投票による一時停止時にプレイヤーが待機する時間（秒）"
 korean = "투표로 일시 정지되었을 때 플레이어가 기다려야 하는 시간 (초)"
 russian = "Время в секундах, которое игрок должен ждать при паузе по голосованию"
@@ -17276,8 +17324,8 @@ polish = "Czas w sekundach, jaki gracz musi odczekać, gdy jest wstrzymany przez
 [[message]]
 key = "Time before a player leaves in seconds (0 = disabled)"
 [message.translations]
-simplified_chinese = "玩家离开的时间（以秒为单位）（0 = 禁用）"
-traditional_chinese = "玩家離開的時間（以秒為單位）（0 = 禁用）"
+simplified_chinese = "玩家离开的时间（秒）（0 = 禁用）"
+traditional_chinese = "玩家離開的時間（秒）（0 = 禁用）"
 japanese = "プレイヤーが離脱するまでの時間（秒）（0 = 無効）"
 korean = "플레이어가 떠나기 전 시간 (초) (0 = 비활성화)"
 russian = "Время в секундах до выхода игрока (0 = отключено)"
@@ -17292,8 +17340,8 @@ polish = "Czas przed opuszczeniem gry przez gracza w sekundach (0 = wyłączone)
 [[message]]
 key = "Time before sending the first message in seconds"
 [message.translations]
-simplified_chinese = "发送第一条消息之前的时间（以秒为单位）"
-traditional_chinese = "發送第一條消息之前的時間（以秒為單位）"
+simplified_chinese = "发送第一条消息之前的时间（秒）"
+traditional_chinese = "發送第一條消息之前的時間（秒）"
 japanese = "最初のメッセージ送信までの時間（秒）"
 korean = "첫 번째 메시지를 보내기 전 시간 (초)"
 russian = "Время в секундах перед отправкой первого сообщения"
@@ -17324,8 +17372,8 @@ polish = "Czas między ogłoszeniami z pliku (minuty)."
 [[message]]
 key = "Time between any votes (in seconds)"
 [message.translations]
-simplified_chinese = "任何投票之间的时间间隔（以秒为单位）"
-traditional_chinese = "任何投票之間的時間間隔（以秒為單位）"
+simplified_chinese = "任何投票之间的时间间隔（秒）"
+traditional_chinese = "任何投票之間的時間間隔（秒）"
 japanese = "投票間の時間（秒）"
 korean = "투표 사이의 시간 (초)"
 russian = "Время между любыми голосованиями (в секундах)"
@@ -17340,8 +17388,8 @@ polish = "Czas między dowolnymi głosowaniami (w sekundach)"
 [[message]]
 key = "Time between info changes (name/skin/color) (in seconds), set very high to avoid rainbow mod"
 [message.translations]
-simplified_chinese = "信息更改（名称/皮肤/颜色）之间的时间（以秒为单位），为了避免 ranbow mod 将其设置为非常高的时间"
-traditional_chinese = "信息更改（名稱/皮膚/顏色）之間的時間（以秒為單位），為了避免 ranbow mod 將其設置為非常高的時間"
+simplified_chinese = "名称/皮肤/颜色变更的最小间隔（秒）；调大可避免彩虹模组刷屏"
+traditional_chinese = "名稱/皮膚/顏色變更的最小間隔（秒）；調大可避免彩虹模組刷屏"
 japanese = "情報変更（名前/スキン/色）の間隔（秒）、レインボーモッドを避けるため非常に高く設定"
 korean = "정보 변경 (이름/스킨/색상) 사이의 시간 (초), 레인보우 모드를 방지하려면 매우 높게 설정"
 russian = "Время между изменениями информации (имя/скин/цвет) (в секундах), установите очень высокое, чтобы избежать радужного мода"
@@ -17356,8 +17404,8 @@ polish = "Czas między zmianami informacji (nazwa/skórka/kolor) (w sekundach), 
 [[message]]
 key = "Time between team changes (in seconds) (spectator/in-game)"
 [message.translations]
-simplified_chinese = "队伍更换之间的时间（以秒为单位）（观众/比赛中）"
-traditional_chinese = "隊伍更換之間的時間（以秒為單位）（觀眾/比賽中）"
+simplified_chinese = "队伍更换之间的时间（秒）（观众/比赛中）"
+traditional_chinese = "隊伍更換之間的時間（秒）（觀眾/比賽中）"
 japanese = "チーム変更の間隔（秒）（観戦/ゲーム内）"
 korean = "팀 변경 사이의 시간 (초) (관전자/게임 중)"
 russian = "Время между сменами команды (в секундах) (наблюдатель/в игре)"
@@ -17404,8 +17452,8 @@ polish = "Czas, na jaki klient jest banowany, jeśli uwierzytelnienie zdalnej ko
 [[message]]
 key = "Time in seconds before economy authentication timeout."
 [message.translations]
-simplified_chinese = "经济身份验证超时之前的时间（以秒为单位）"
-traditional_chinese = "經濟身份驗證超時之前的時間（以秒為單位）"
+simplified_chinese = "经济身份验证超时之前的时间（秒）"
+traditional_chinese = "經濟身份驗證超時之前的時間（秒）"
 japanese = "エコノミー認証のタイムアウトまでの時間（秒）"
 korean = "경제 인증 시간 초과 전 시간 (초)"
 russian = "Время в секундах до тайм-аута аутентификации экономики."
@@ -17420,8 +17468,8 @@ polish = "Czas w sekundach przed przekroczeniem limitu czasu uwierzytelnienia ek
 [[message]]
 key = "Time interval (seconds) between chat messages."
 [message.translations]
-simplified_chinese = "聊天消息之间的时间间隔（以秒为单位）"
-traditional_chinese = "聊天消息之間的時間間隔（以秒為單位）"
+simplified_chinese = "聊天消息之间的时间间隔（秒）"
+traditional_chinese = "聊天消息之間的時間間隔（秒）"
 japanese = "チャットメッセージ間の時間間隔（秒）"
 korean = "채팅 메시지 사이의 시간 간격 (초)"
 russian = "Интервал времени (секунды) между сообщениями чата."
@@ -17500,8 +17548,8 @@ polish = "Użyty kod limitu czasu"
 [[message]]
 key = "Timeout in seconds before swap option expires"
 [message.translations]
-simplified_chinese = "交换选项到期前的超时（以秒为单位）"
-traditional_chinese = "交換選項到期前的超時（以秒為單位）"
+simplified_chinese = "交换选项到期前的超时（秒）"
+traditional_chinese = "交換選項到期前的超時（秒）"
 japanese = "スワップオプションが期限切れになるまでのタイムアウト（秒）"
 korean = "교환 옵션 만료 전 타임아웃 (초)"
 russian = "Тайм-аут в секундах до истечения опции обмена"
@@ -18480,8 +18528,8 @@ polish = "Opis głosowania:"
 [[message]]
 key = "Vote duration (in seconds)"
 [message.translations]
-simplified_chinese = "投票持续时间（以秒为单位）"
-traditional_chinese = "投票持續時間（以秒為單位）"
+simplified_chinese = "投票持续时间（秒）"
+traditional_chinese = "投票持續時間（秒）"
 japanese = "投票時間（秒）"
 korean = "투표 지속 시간 (초)"
 russian = "Длительность голосования (в секундах)"
@@ -18781,8 +18829,8 @@ polish = "Poziom ustawienia wiązania DDRace (automatyczny, nie musisz go używa
 [[message]]
 key = "When you cross the start line, show a ghost tee replicating the movements of your best time"
 [message.translations]
-simplified_chinese = "当越过起跑线时，显示一个影子回放你的最佳成绩"
-traditional_chinese = "當越過起跑線時，顯示一個影子回放你的最佳成績"
+simplified_chinese = "越过起跑线时，显示复现最佳成绩的影子 Tee"
+traditional_chinese = "越過起跑線時，顯示復現最佳成績的影子 Tee"
 japanese = "スタートラインを越えると、自分のベストタイムの動きを再現するゴーストティーを表示します"
 korean = "출발선을 넘으면 최고 기록의 움직임을 재현하는 고스트 티를 표시합니다"
 russian = "Когда пересекаешь стартовую линию, показывать призрачного ти, повторяющего движения твоего лучшего времени"
@@ -18877,8 +18925,8 @@ polish = "Czy gracze bez prawa głosu liczą się jako 'nie' (0) czy są ignorow
 [[message]]
 key = "Whether players can hammer/grenade/laser each other."
 [message.translations]
-simplified_chinese = "玩家是否可以互相锤击/榴弹炮/激光"
-traditional_chinese = "玩家是否可以互相錘擊/榴彈炮/激光"
+simplified_chinese = "玩家是否可用锤子/榴弹/激光互相攻击"
+traditional_chinese = "玩家是否可用錘子/榴彈/激光互相攻擊"
 japanese = "プレイヤー同士がハンマー/グレネード/レーザーを使用できるかどうか。"
 korean = "플레이어가 서로 망치/유탄/레이저를 사용할 수 있는지 여부"
 russian = "Могут ли игроки бить друг друга молотом/гранатомётом/лазером."
@@ -19021,8 +19069,8 @@ polish = "Czy publikować wyniki graczy."
 [[message]]
 key = "Whether to save worse scores when you already have a better score."
 [message.translations]
-simplified_chinese = "当你已经有了更好的分数时是否保存更差的分数"
-traditional_chinese = "當你已經有了更好的分數時是否保存更差的分數"
+simplified_chinese = "已有更好成绩时，是否仍保存更差成绩"
+traditional_chinese = "已有更好成績時，是否仍保存更差成績"
 japanese = "より良いスコアを既に持っている場合に、悪いスコアを保存するかどうか。"
 korean = "이미 더 나은 점수가 있을 때 더 나쁜 점수를 저장할지 여부"
 russian = "Сохранять ли худшие результаты, если уже есть лучший результат."
@@ -19728,51 +19776,3 @@ brazilian_portuguese = "Tradução para português brasileiro pela comunidade DD
 portuguese = "Tradução portuguesa pela equipa DDNet e contribuidores QmClient"
 turkish = "Çeviri DDNet Ekibi ve QmClient Katkıda Bulunanları tarafından sağlanmaktadır"
 polish = "Tłumaczenie angielskie przez zespół DDNet"
-
-[[message]]
-key = "Relative X position of the draggable back button"
-[message.translations]
-simplified_chinese = "Relative X position of the draggable back button"
-traditional_chinese = "Relative X position of the draggable back button"
-japanese = "ドラッグ可能な戻るボタンの相対 X 位置"
-korean = "드래그 가능한 뒤로 가기 버튼의 상대적 X 위치"
-russian = "Относительная позиция X перетаскиваемой кнопки «Назад»"
-german = "Relative X-Position des verschiebbaren Zurück-Buttons"
-spanish = "Posición X relativa del botón de retroceso arrastrable"
-french = "Position X relative du bouton de retour déplaçable"
-brazilian_portuguese = "Posição X relativa do botão de voltar arrastável"
-portuguese = "Posição X relativa do botão de voltar arrastável"
-turkish = "Sürüklenebilir geri düğmesinin bağıl X konumu"
-polish = "Względna pozycja X przeciągalnego przycisku wstecz"
-
-[[message]]
-key = "Relative Y position of the draggable back button"
-[message.translations]
-simplified_chinese = "Relative Y position of the draggable back button"
-traditional_chinese = "Relative Y position of the draggable back button"
-japanese = "ドラッグ可能な戻るボタンの相対 Y 位置"
-korean = "드래그 가능한 뒤로 가기 버튼의 상대적 Y 위치"
-russian = "Относительная позиция Y перетаскиваемой кнопки «Назад»"
-german = "Relative Y-Position des verschiebbaren Zurück-Buttons"
-spanish = "Posición Y relativa del botón de retroceso arrastrable"
-french = "Position Y relative du bouton de retour déplaçable"
-brazilian_portuguese = "Posição Y relativa do botão de voltar arrastável"
-portuguese = "Posição Y relativa do botão de voltar arrastável"
-turkish = "Sürüklenebilir geri düğmesinin bağıl Y konumu"
-polish = "Względna pozycja Y przeciągalnego przycisku wstecz"
-
-[[message]]
-key = "Show draggable virtual back button"
-[message.translations]
-simplified_chinese = "Show draggable virtual back button"
-traditional_chinese = "Show draggable virtual back button"
-japanese = "ドラッグ可能な仮想戻るボタンを表示"
-korean = "드래그 가능한 가상 뒤로가기 버튼 표시"
-russian = "Показывать перетаскиваемую виртуальную кнопку назад"
-german = "Verschiebbaren virtuellen Zurück-Button anzeigen"
-spanish = "Mostrar botón virtual de retroceso arrastrable"
-french = "Afficher un bouton de retour virtuel déplaçable"
-brazilian_portuguese = "Mostrar botão virtual de voltar arrastável"
-portuguese = "Mostrar botão virtual de voltar arrastável"
-turkish = "Sürüklenebilir sanal geri düğmesini göster"
-polish = "Pokaż przeciągalny wirtualny przycisk wstecz"

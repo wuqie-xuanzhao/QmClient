@@ -267,16 +267,16 @@ a = View angle
 == a = 視角角度
 
 A demo with this name already exists
-== 已經存在同名回放
+== 已有同名回放
 
 A folder with this name already exists
-== 已經存在同名文件夾
+== 已有同名資料夾
 
 a player
 == 一名玩家
 
 A screenshot with this name already exists
-== 已經存在同名截圖
+== 已有同名截圖
 
 A Tee
 == 其他玩家
@@ -852,7 +852,7 @@ Are you sure you want to delete this asset?
 == 確定要刪除此資源嗎？
 
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== 你確定要保存皮膚嗎？如果已經存在同名皮膚，將會被替換。
+== 確定保存該皮膚？若已有同名皮膚，將被覆蓋。
 
 Arrow assets
 == 箭頭資源
@@ -1089,7 +1089,7 @@ Auto-login after entering Axiom community server
 == 進入 Axiom 社區服務器後自動登錄
 
 Auto-record replay when player sets a new personal best time.
-== 當玩家設定新的個人最佳時間時，自動錄製回放。
+== 刷新個人最佳成績時自動錄製回放
 
 Auto-refresh server list for friend notifications
 == 好友提醒自動刷新服務器列表
@@ -1164,7 +1164,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == 在 Gores 遊戲模式中自動啟用 Gores 自動切換
 
 Automatically re-join team 0 after finish (only if unlocked).
-== 讓隊伍在完成後自動重新加入隊伍 0（僅當未鎖定時）
+== 完賽後自動回到 0 隊（僅未鎖定時）
 
 Automatically record demos
 == 自動錄製回放
@@ -1857,7 +1857,7 @@ Click to select server. Double click to join your friend.
 == 單擊以選擇此服務器。雙擊加入好友所在服務器。
 
 Click to set color
-== 點擊以設置顏色
+== 點擊設置顏色
 
 Client
 == 客戶端
@@ -1947,7 +1947,7 @@ Colors in scoreboard
 == 計分板中的顏色
 
 Colors of the hook collision line, in case of a possible collision with:
-== 輔助線顏色（當瞄準以下實體物時）：
+== 鉤子輔助線顏色（瞄準以下目標時）：
 
 Combo
 == 連擊
@@ -2331,7 +2331,7 @@ Current status
 == 當前狀態
 
 Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
-== 當前時間：%s\n- 啟動時間與遊玩時長根據官方 JSON 數據計算\n- 同上\n- 同上上\n
+== 當前時間：%s\n- 啟動時長與遊玩時長來自官方 JSON\n- 同上\n- 同上\n
 
 Current: Ranks
 == 當前：查分
@@ -2607,7 +2607,7 @@ Delay between rescues (seconds)
 == 兩次營救之間的延遲（單位：秒）
 
 Delay between SQL queries for a single player (in seconds)
-== 單個玩家的 SQL 查詢之間的延遲（以秒為單位）
+== 單個玩家的 SQL 查詢之間的延遲（秒）
 
 Delay in seconds before loading a saved game or swapping
 == 加載保存遊戲或交換之前延遲幾秒
@@ -2877,7 +2877,7 @@ Do not set this variable, instead create ddnet-serverlist-urls.cfg next to setti
 == 不要設置此變量，而是在 settings_ddnet.cfg 旁邊創建 ddnet-serverlist-urls.cfg 以指定所有可能的服務器列表 URL
 
 Do not set, used to mark official tutorial server
-== 這個不要設置，用來標記官方教程服務器
+== 勿修改：用於標記官方教學服
 
 Do not show Tees visible on screen
 == 不顯示屏幕內可見的 Tee
@@ -3879,7 +3879,7 @@ File
 == 文件
 
 File '%s' already exists, do you want to overwrite it?
-== 文件 '%s' 已經存在，是否要覆蓋該文件？
+== 檔案「%s」已存在，是否覆蓋？
 
 File already exists, do you want to overwrite it?
 == 文件已存在，是否覆蓋？
@@ -4260,7 +4260,7 @@ Give back right to vote to player with list index
 == 將投票權歸還給列表索引的玩家
 
 Gives a grenade launcher to you
-== 給你一個榴彈炮發射器
+== 獲得榴彈發射器
 
 Gives a laser to you
 == 給予你激光槍
@@ -4635,7 +4635,7 @@ Highlight game type
 == 高亮顯示遊戲類型
 
 Highlight message text gradient color
-== 突出顯示消息文字漸變顏色
+== 提及訊息文字漸變色
 
 Highlight ping value
 == 高亮顯示 ping 值
@@ -4644,7 +4644,7 @@ Highlighted message
 == 被提及消息
 
 Highlighted message color
-== 突出顯示的消息顏色
+== 提及訊息顏色
 
 Hitbox mode
 == 碰撞箱模式
@@ -5748,7 +5748,7 @@ Makes you a ninja
 == 讓你成為一名忍者
 
 Makes you live frozen
-== 使你進入 live freeze 狀態
+== 使你進入存活凍結狀態
 
 Makes you move 1 tile down
 == 讓你向下移動 1 個方塊
@@ -6009,7 +6009,7 @@ Menu camera rotation radius
 == 菜單相機旋轉半徑
 
 Menu camera rotation time in seconds
-== 菜單相機以秒為單位旋轉
+== 選單相機旋轉週期（秒）
 
 Menu camera speed
 == 菜單相機速度
@@ -6120,13 +6120,13 @@ Minimum time
 == 最短時間
 
 Minimum time between kick votes (in seconds)
-== 踢票之間的最短時間（以秒為單位）
+== 踢票之間的最短時間（秒）
 
 Minimum time between kills (in seconds)
-== 擊殺之間的最短時間（以秒為單位）
+== 擊殺之間的最短時間（秒）
 
 Minimum time between map votes (in seconds)
-== 地圖投票之間的最短時間（以秒為單位）
+== 地圖投票之間的最短時間（秒）
 
 Minimum width for name column in server browser
 == 服務器瀏覽器中名稱列的最小寬度
@@ -6726,7 +6726,7 @@ Note:
 == 備註：
 
 Nothing hookable
-== 未瞄準任何實體物
+== 未瞄準可鉤物體
 
 Notification animation duration (ms)
 == 通知欄動畫時間（毫秒）
@@ -6786,7 +6786,7 @@ Notify when only one tee is still alive:
 == 當只剩一名存活者時提示：
 
 Notify when someone highlights you
-== 當有人突出顯示你時讓客戶通知
+== 有人提及你時通知
 
 Novice
 == 簡單
@@ -7161,7 +7161,7 @@ Pause/unpause game
 == 暫停/恢復遊戲
 
 Penalty in seconds for saving or swapping positions
-== 保存或交換位置的懲罰以秒為單位
+== 保存或交換位置的懲罰時間（秒）
 
 Per-name volume (name=percent)
 == 按名字單獨音量（name=percent）
@@ -7437,7 +7437,7 @@ Port for master server registration, useful if behind NAT, otherwise just use sv
 == 主服務器註冊服務器的端口，如果你位於 NAT 之後，則很有用，否則你只需要 sv_port
 
 Port for server info connection to server (0=random, >=1024 sets manual port)
-== 用於與服務器進行 serverinfo 連接的端口（0 選擇隨機端口，1024 或更高設置手動端口）
+== 伺服器資訊連接埠（0=隨機，≥1024 為手動埠）
 
 Port for the external console.
 == 用於外部控制檯的端口
@@ -7482,13 +7482,13 @@ Predict events (sounds, particles)
 == 預測事件（聲音、粒子）
 
 Predict fire and show predicted weapon physics (requires cl_antiping_grenade 1 and cl_antiping_weapons 1)
-== 預測槍火併顯示預測的武器物理效果（需配合 cl_antiping_grenade 1 和 cl_antiping_weapons 1）
+== 預測開火並顯示武器物理預測（需 cl_antiping_grenade 1 與 cl_antiping_weapons 1）
 
 Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when frozen))
 == 預測凍結圖塊（0 = 關閉，1 = 開啟，2 = 部分（允許凍結時少量移動）
 
 Predict grenade trajectory (only with cl_antiping 1)
-== 預測榴彈炮軌跡（僅在 cl_antiping 為 1 時生效）
+== 預測榴彈軌跡（僅在 cl_antiping 為 1 時）
 
 Predict weapon projectiles (only with cl_antiping 1)
 == 預測武器投射物（僅在 cl_antiping 為 1 時生效）
@@ -7683,7 +7683,7 @@ Puts you into freeze
 == 讓你陷入凍結狀態
 
 Puts you into solo part
-== 使你進入 solo 狀態
+== 使你進入單人區域
 
 Puts you out of deep freeze
 == 讓你擺脫深度冰凍
@@ -7872,7 +7872,7 @@ Random Colors
 == 隨機顏色
 
 Random emote when hit by hammer/grenade
-== 被錘/榴彈擊中時隨機表情
+== 被錘子/榴彈擊中時隨機表情
 
 Random emoticon
 == 隨機表情
@@ -8166,7 +8166,7 @@ Removes super from you
 == 移除你的超級狀態
 
 Removes the grenade launcher from you
-== 移除你身上的榴彈炮發射器
+== 移除榴彈發射器
 
 Removes the jetpack from you
 == 從你身上取下噴氣揹包
@@ -8952,7 +8952,7 @@ Server could not be started
 == 無法啟動服務器
 
 Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
-== 無法啟動服務器。請確保在應用程序設置中授予通知權限，以便服務器可以在後臺運行。
+== 無法啟動伺服器。請在應用設定中授予通知權限，以便伺服器在背景執行。
 
 Server does not allow voting to kick players
 == 本服務器不允許發起踢人投票
@@ -9453,7 +9453,7 @@ Show in-game HUD (DDRace HUD)
 == 顯示遊戲內 HUD (DDRace HUD)
 
 Show in-game HUD (dummy controls)
-== 顯示遊戲內 HUD（分身操作）
+== 顯示遊戲內 HUD（分身控制）
 
 Show in-game HUD (dummy copy state)
 == 顯示遊戲內 HUD（分身同步狀態）
@@ -10197,7 +10197,7 @@ Some map sounds could not be loaded. Check the local console for details.
 == 未能加載某些地圖音效。檢查本地控制檯以獲取詳情。
 
 Something hookable
-== 可鉤索的方塊
+== 可鉤物體
 
 Sort column in ghost list
 == 幽靈列表中的排序列
@@ -10698,7 +10698,7 @@ Team can't be loaded while practice is enabled
 == 開啟練習模式時不能讀檔
 
 Team can't be loaded while racing
-== 比賽進行中時不能讀檔
+== 比賽中不能讀檔
 
 Team can't be saved while a dragger is active
 == 有拖拽器生效時不能保存隊伍存檔
@@ -10719,7 +10719,7 @@ Team is already in practice mode
 == 隊伍已經處於練習模式
 
 Team load already in progress
-== 隊伍讀檔已在進行中
+== 隊伍讀檔尚未完成
 
 Team message
 == 隊伍消息
@@ -10731,7 +10731,7 @@ Team message text gradient color
 == 隊伍消息文字漸變顏色
 
 Team mode can't be changed while racing
-== 比賽進行中時不能切換隊伍模式
+== 比賽中不能切換隊伍模式
 
 Team mode change disabled
 == 當前不允許切換隊伍模式
@@ -10740,16 +10740,16 @@ Team mode change is disabled on this server.
 == 本服務器已禁用隊伍模式切換
 
 Team save already in progress
-== 隊伍存檔已在進行中
+== 隊伍存檔尚未完成
 
 Team save disabled for teams in practice mode
 == 練習模式下不能保存隊伍存檔
 
 Team save in progress. You'll be able to load with '/load %s'
-== 隊伍存檔進行中，之後可以用 '/load %s' 載入
+== 正在保存隊伍進度，之後可用「/load %s」讀取
 
 Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails
-== 隊伍存檔進行中，成功後可用 '/load %s' 載入，失敗時可用 '/load %s' 載入
+== 正在保存隊伍進度：成功後可用「/load %s」讀取，失敗則用「/load %s」
 
 Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue
 == 隊伍已由 %s 成功存檔。數據庫連接失敗，因此改用生成的存檔碼避免衝突。請在 %s 上用 '/load %s' 繼續
@@ -11055,28 +11055,28 @@ Time (ms) player must wait before next overhead emote.
 == 玩家在允許下一個頭頂表情符號之前必須等待的時間（以毫秒為單位）
 
 Time (seconds) between eye emote changes.
-== 眼睛表情符號變化之間的時間（以秒為單位）
+== 眼睛表情符號變化之間的時間（秒）
 
 Time a player must wait when paused by vote in seconds
-== 投票暫停時玩家必須等待的時間（以秒為單位）
+== 投票暫停時玩家必須等待的時間（秒）
 
 Time before a player leaves in seconds (0 = disabled)
-== 玩家離開的時間（以秒為單位）（0 = 禁用）
+== 玩家離開的時間（秒）（0 = 禁用）
 
 Time before sending the first message in seconds
-== 發送第一條消息之前的時間（以秒為單位）
+== 發送第一條消息之前的時間（秒）
 
 Time between announcements from file (minutes).
 == 公告文件中顯示公告的時間（分鐘）
 
 Time between any votes (in seconds)
-== 任何投票之間的時間間隔（以秒為單位）
+== 任何投票之間的時間間隔（秒）
 
 Time between info changes (name/skin/color) (in seconds), set very high to avoid rainbow mod
-== 信息更改（名稱/皮膚/顏色）之間的時間（以秒為單位），為了避免 ranbow mod 將其設置為非常高的時間
+== 名稱/皮膚/顏色變更的最小間隔（秒）；調大可避免彩虹模組刷屏
 
 Time between team changes (in seconds) (spectator/in-game)
-== 隊伍更換之間的時間（以秒為單位）（觀眾/比賽中）
+== 隊伍更換之間的時間（秒）（觀眾/比賽中）
 
 Time client is banned if economy authentication fails. 0 just closes connection.
 == 如果經濟身份驗證失敗，客戶端被禁止的時間。0 只是關閉連接
@@ -11088,10 +11088,10 @@ TIME EXPIRED!
 == 時間耗盡！
 
 Time in seconds before economy authentication timeout.
-== 經濟身份驗證超時之前的時間（以秒為單位）
+== 經濟身份驗證超時之前的時間（秒）
 
 Time interval (seconds) between chat messages.
-== 聊天消息之間的時間間隔（以秒為單位）
+== 聊天消息之間的時間間隔（秒）
 
 Time limit
 == 時間限制
@@ -11115,7 +11115,7 @@ Timeout code used
 == 使用的超時代碼
 
 Timeout in seconds before swap option expires
-== 交換選項到期前的超時（以秒為單位）
+== 交換選項到期前的超時（秒）
 
 Timeout seed
 == 超時種子
@@ -11973,7 +11973,7 @@ Vote description:
 == 投票描述：
 
 Vote duration (in seconds)
-== 投票持續時間（以秒為單位）
+== 投票持續時間（秒）
 
 Vote no
 == 反對
@@ -12141,7 +12141,7 @@ When TClient rainbow Tee is enabled, this feature has no effect.
 == 已啟用 TClient 彩虹 Tee 時，本功能不會生效。
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
-== 當越過起跑線時，顯示一個影子回放你的最佳成績
+== 越過起跑線時，顯示復現最佳成績的影子 Tee
 
 Whether a switch is deactivated by default (otherwise activated)
 == 開關是否默認禁用（否則激活）
@@ -12162,7 +12162,7 @@ Whether non-voting players count as 'no' (0) or ignored (1)
 == 無投票權的玩家是否被視為投票“否”（0）或被忽略（1）
 
 Whether players can hammer/grenade/laser each other.
-== 玩家是否可以互相錘擊/榴彈炮/激光
+== 玩家是否可用錘子/榴彈/激光互相攻擊
 
 Whether players can invite other players to team.
 == 玩家是否可以邀請其他玩家加入隊伍
@@ -12189,7 +12189,7 @@ Whether to publish player scores.
 == 是否公佈玩家得分
 
 Whether to save worse scores when you already have a better score.
-== 當你已經有了更好的分數時是否保存更差的分數
+== 已有更好成績時，是否仍保存更差成績
 
 Whether to show message when players pause and resume.
 == 玩家暫停和恢復時是否顯示消息
@@ -12459,7 +12459,7 @@ You don't have any eye emotes, remember to bind some.
 == 你當前沒有可用的眼部表情，記得先綁定
 
 You don't have unlimited air jumps
-== 你現在沒有無限空跳了
+== 你不再擁有無限空中跳
 
 You have a jetpack gun
 == 你現在擁有噴氣槍
@@ -12483,7 +12483,7 @@ You have to wait %s seconds until you can swap
 == 你還需要等待 %s 秒才能交換
 
 You have unlimited air jumps
-== 你現在擁有無限空跳
+== 你擁有無限空中跳
 
 You have unsaved changes.
 == 你有未保存的更改。

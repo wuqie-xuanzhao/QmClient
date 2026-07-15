@@ -1939,22 +1939,6 @@ turkish = "Dummy Kontrolü: %s"
 polish = "Sterowanie kukłą: %s"
 
 [[message]]
-key = "Dummy mini view"
-[message.translations]
-simplified_chinese = "分身小窗"
-traditional_chinese = "分身小窗"
-japanese = "ダミーミニビュー"
-korean = "더미 미니 뷰"
-russian = "Мини-вид дамми"
-german = "Dummy-Miniansicht"
-spanish = "Vista miniatura del dummy"
-french = "Mini-vue du Dummy"
-brazilian_portuguese = "Mini visão do dummy"
-portuguese = "Mini-vista do dummy"
-turkish = "Dummy küçük görünümü"
-polish = "Mini widok kukły"
-
-[[message]]
 key = "Dummy copy: %s"
 [message.translations]
 simplified_chinese = "分身同步：%s"
@@ -1969,6 +1953,22 @@ brazilian_portuguese = "Sincronia do dummy: %s"
 portuguese = "Sincronização do dummy: %s"
 turkish = "Dummy senkronizasyonu: %s"
 polish = "Synchronizacja kukły: %s"
+
+[[message]]
+key = "Dummy mini view"
+[message.translations]
+simplified_chinese = "分身小窗"
+traditional_chinese = "分身小窗"
+japanese = "ダミーミニビュー"
+korean = "더미 미니 뷰"
+russian = "Мини-вид дамми"
+german = "Dummy-Miniansicht"
+spanish = "Vista miniatura del dummy"
+french = "Mini-vue du Dummy"
+brazilian_portuguese = "Mini visão do dummy"
+portuguese = "Mini-vista do dummy"
+turkish = "Dummy küçük görünümü"
+polish = "Mini widok kukły"
 
 [[message]]
 key = "Dump the current savestring"
@@ -2665,8 +2665,8 @@ polish = "Przywróć prawo do głosowania graczowi z indeksem listy"
 [[message]]
 key = "Gives a grenade launcher to you"
 [message.translations]
-simplified_chinese = "给你一个榴弹炮发射器"
-traditional_chinese = "給你一個榴彈炮發射器"
+simplified_chinese = "获得榴弹发射器"
+traditional_chinese = "獲得榴彈發射器"
 japanese = "グレネードランチャーをあなたに与える"
 korean = "당신에게 유탄 발사기를 줍니다"
 russian = "Даёт вам гранатомёт"
@@ -4017,8 +4017,8 @@ polish = "Czyni cię ninją"
 [[message]]
 key = "Makes you live frozen"
 [message.translations]
-simplified_chinese = "使你进入 live freeze 状态"
-traditional_chinese = "使你進入 live freeze 狀態"
+simplified_chinese = "使你进入存活冻结状态"
+traditional_chinese = "使你進入存活凍結狀態"
 japanese = "あなたをライブフリーズ状態にします"
 korean = "당신을 라이브 프리즈 상태로 만듭니다"
 russian = "Делает вас живым замороженным"
@@ -5253,8 +5253,8 @@ polish = "Wprowadza cię w zamrożenie"
 [[message]]
 key = "Puts you into solo part"
 [message.translations]
-simplified_chinese = "使你进入 solo 状态"
-traditional_chinese = "使你進入 solo 狀態"
+simplified_chinese = "使你进入单人区域"
+traditional_chinese = "使你進入單人區域"
 japanese = "ソロパート状態にする"
 korean = "솔로 파트로 만듭니다"
 russian = "Помещает вас в соло-часть"
@@ -5925,8 +5925,8 @@ polish = "Usuwa super z ciebie"
 [[message]]
 key = "Removes the grenade launcher from you"
 [message.translations]
-simplified_chinese = "移除你身上的榴弹炮发射器"
-traditional_chinese = "移除你身上的榴彈炮發射器"
+simplified_chinese = "移除榴弹发射器"
+traditional_chinese = "移除榴彈發射器"
 japanese = "あなたからグレネードランチャーを削除"
 korean = "당신에게서 유탄 발사기를 제거합니다"
 russian = "Удаляет у вас гранатомёт"
@@ -6874,8 +6874,8 @@ polish = "Nie można uruchomić serwera"
 [[message]]
 key = "Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background."
 [message.translations]
-simplified_chinese = "无法启动服务器。请确保在应用程序设置中授予通知权限，以便服务器可以在后台运行。"
-traditional_chinese = "無法啟動服務器。請確保在應用程序設置中授予通知權限，以便服務器可以在後臺運行。"
+simplified_chinese = "无法启动服务器。请在应用设置中授予通知权限，以便服务器在后台运行。"
+traditional_chinese = "無法啟動伺服器。請在應用設定中授予通知權限，以便伺服器在背景執行。"
 japanese = "サーバーを起動できませんでした。アプリ設定で通知許可を付与して、サーバーがバックグラウンドで実行できるようにしてください。"
 korean = "서버를 시작할 수 없습니다. 서버가 백그라운드에서 실행될 수 있도록 앱 설정에서 알림 권한을 부여했는지 확인하세요."
 russian = "Не удалось запустить сервер. Убедитесь, что в настройках приложения предоставлено разрешение на уведомления, чтобы сервер мог работать в фоновом режиме."
@@ -8377,8 +8377,8 @@ polish = "Drużyna %d (%d/%d)"
 [[message]]
 key = "Team save in progress. You'll be able to load with '/load %s'"
 [message.translations]
-simplified_chinese = "队伍存档进行中，之后可以用 '/load %s' 载入"
-traditional_chinese = "隊伍存檔進行中，之後可以用 '/load %s' 載入"
+simplified_chinese = "正在保存队伍进度，之后可用「/load %s」读取"
+traditional_chinese = "正在保存隊伍進度，之後可用「/load %s」讀取"
 japanese = "チームセーブ進行中。ロードするには '/load %s' を使用できます"
 korean = "팀 저장 진행 중. '/load %s' 로 불러올 수 있습니다"
 russian = "Сохранение команды выполняется. Вы сможете загрузиться с помощью '/load %s'"
@@ -8393,8 +8393,8 @@ polish = "Trwa zapisywanie drużyny. Będziesz mógł załadować za pomocą '/l
 [[message]]
 key = "Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails"
 [message.translations]
-simplified_chinese = "队伍存档进行中，成功后可用 '/load %s' 载入，失败时可用 '/load %s' 载入"
-traditional_chinese = "隊伍存檔進行中，成功後可用 '/load %s' 載入，失敗時可用 '/load %s' 載入"
+simplified_chinese = "正在保存队伍进度：成功后可用「/load %s」读取，失败则用「/load %s」"
+traditional_chinese = "正在保存隊伍進度：成功後可用「/load %s」讀取，失敗則用「/load %s」"
 japanese = "チームセーブ進行中。成功した場合は '/load %s'、失敗した場合は '/load %s' でロードできます"
 korean = "팀 저장 진행 중. 성공 시 '/load %s' 로, 실패 시 '/load %s' 로 불러올 수 있습니다"
 russian = "Сохранение команды выполняется. Вы сможете загрузиться с помощью '/load %s' в случае успеха или '/load %s' в случае неудачи"

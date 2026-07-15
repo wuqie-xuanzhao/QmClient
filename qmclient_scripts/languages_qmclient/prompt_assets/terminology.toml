@@ -531,8 +531,8 @@ traditional_chinese = "空中跳"
 [[term]]
 source = "Unlimited air jumps"
 enforce = "pattern"
-simplified_chinese = "无限空跳"
-traditional_chinese = "無限空跳"
+simplified_chinese = "无限空中跳"
+traditional_chinese = "無限空中跳"
 
 
 [[term]]

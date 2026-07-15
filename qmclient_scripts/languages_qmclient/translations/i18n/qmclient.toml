@@ -95,6 +95,22 @@ turkish = "%s, seninle yer değiştirmek istedi. Yer değiştirme işlemini tama
 polish = "%s poprosił(a) o zamianę miejsc z tobą. Aby dokończyć proces zamiany, poczekaj %s sekund, a następnie wpisz /swap %s."
 
 [[message]]
+key = "%s joined this server"
+[message.translations]
+simplified_chinese = "%s 好友进入本服"
+traditional_chinese = "%s好友進入本服"
+japanese = "%sがこのサーバーに参加しました"
+korean = "%s님이 이 서버에 입장했습니다"
+russian = "%s зашёл на этот сервер"
+german = "%s ist diesem Server beigetreten"
+spanish = "%s se unió a este servidor"
+french = "%s a rejoint ce serveur"
+brazilian_portuguese = "%s entrou neste servidor"
+portuguese = "%s entrou neste servidor"
+turkish = "%s bu sunucuya katıldı"
+polish = "%s dołączył do tego serwera"
+
+[[message]]
 key = "'%s' called for vote to force-pause '%s' for %s seconds (reason: %s)"
 [message.translations]
 simplified_chinese = "'%s' 发起了暂停 '%s' %s 秒的投票（原因：%s）"
@@ -3259,8 +3275,8 @@ traditional_chinese = "點擊恢復完整比賽"
 [[message]]
 key = "Click to set color"
 [message.translations]
-simplified_chinese = "点击以设置颜色"
-traditional_chinese = "點擊以設置顏色"
+simplified_chinese = "点击设置颜色"
+traditional_chinese = "點擊設置顏色"
 japanese = "クリックして色を設定"
 korean = "클릭하여 색상 설정"
 russian = "Нажмите, чтобы установить цвет"
@@ -4661,7 +4677,8 @@ polish = "Czas wykrywania"
 [[message]]
 key = "Developers and sponsors"
 [message.translations]
-simplified_chinese = "开发以及赞助者"
+simplified_chinese = "开发者与赞助者"
+traditional_chinese = "開發者與贊助者"
 korean = "개발자 및 스폰서"
 russian = "Разработчики и спонсоры"
 german = "Entwickler und Sponsoren"
@@ -7253,6 +7270,22 @@ turkish = "Kalp"
 polish = "Serce"
 
 [[message]]
+key = "Hi!"
+[message.translations]
+simplified_chinese = "你好啊！"
+traditional_chinese = "你好啊!"
+japanese = "やあ!"
+korean = "안녕!"
+russian = "Привет!"
+german = "Hi!"
+spanish = "¡Hola!"
+french = "Salut !"
+brazilian_portuguese = "Oi!"
+portuguese = "Olá!"
+turkish = "Merhaba!"
+polish = "Cześć!"
+
+[[message]]
 key = "Hide basic system info (join, version, rules) in Zen mode"
 [message.translations]
 simplified_chinese = "禅模式下隐藏入场、版本和规则等基础系统信息"
@@ -8087,8 +8120,8 @@ polish = "Wysoki priorytet procesu"
 [[message]]
 key = "Highlight message text gradient color"
 [message.translations]
-simplified_chinese = "突出显示消息文字渐变颜色"
-traditional_chinese = "突出顯示消息文字漸變顏色"
+simplified_chinese = "提及消息文字渐变色"
+traditional_chinese = "提及訊息文字漸變色"
 japanese = "ハイライトメッセージ文字のグラデーション色"
 korean = "강조 메시지 텍스트 그라데이션 색상"
 russian = "Цвет градиента текста выделенных сообщений"
@@ -15022,8 +15055,8 @@ polish = "Losowy"
 [[message]]
 key = "Random emote when hit by hammer/grenade"
 [message.translations]
-simplified_chinese = "被锤/榴弹击中时随机表情"
-traditional_chinese = "被錘/榴彈擊中時隨機表情"
+simplified_chinese = "被锤子/榴弹击中时随机表情"
+traditional_chinese = "被錘子/榴彈擊中時隨機表情"
 japanese = "ハンマー/グレネード被弾時にランダム表情"
 korean = "해머/유탄에 맞을 때 무작위 이모티콘"
 russian = "Случайная эмоция при попадании молотом/гранатой"
@@ -18997,8 +19030,8 @@ polish = "Drużyna nie może być wczytana, gdy włączony jest tryb treningowy"
 [[message]]
 key = "Team can't be loaded while racing"
 [message.translations]
-simplified_chinese = "比赛进行中时不能读档"
-traditional_chinese = "比賽進行中時不能讀檔"
+simplified_chinese = "比赛中不能读档"
+traditional_chinese = "比賽中不能讀檔"
 japanese = "レース中はチームをロードできません"
 korean = "레이스 중에는 팀을 불러올 수 없습니다"
 russian = "Команду нельзя загрузить во время забега"
@@ -19061,8 +19094,8 @@ polish = "Drużyna jest już w trybie treningowym"
 [[message]]
 key = "Team load already in progress"
 [message.translations]
-simplified_chinese = "队伍读档已在进行中"
-traditional_chinese = "隊伍讀檔已在進行中"
+simplified_chinese = "队伍读档尚未完成"
+traditional_chinese = "隊伍讀檔尚未完成"
 japanese = "チームロードは既に進行中です"
 korean = "팀 불러오기가 이미 진행 중입니다"
 russian = "Загрузка команды уже выполняется"
@@ -19093,8 +19126,8 @@ polish = "Kolor gradientu tekstu wiadomości drużynowych"
 [[message]]
 key = "Team mode can't be changed while racing"
 [message.translations]
-simplified_chinese = "比赛进行中时不能切换队伍模式"
-traditional_chinese = "比賽進行中時不能切換隊伍模式"
+simplified_chinese = "比赛中不能切换队伍模式"
+traditional_chinese = "比賽中不能切換隊伍模式"
 japanese = "レース中はチームモードを変更できません"
 korean = "레이스 중에는 팀 모드를 변경할 수 없습니다"
 russian = "Режим команды нельзя изменить во время забега"
@@ -19141,8 +19174,8 @@ polish = "Zmiana trybu drużyny jest wyłączona na tym serwerze."
 [[message]]
 key = "Team save already in progress"
 [message.translations]
-simplified_chinese = "队伍存档已在进行中"
-traditional_chinese = "隊伍存檔已在進行中"
+simplified_chinese = "队伍存档尚未完成"
+traditional_chinese = "隊伍存檔尚未完成"
 japanese = "チーム保存は既に進行中です"
 korean = "팀 저장이 이미 진행 중입니다"
 russian = "Сохранение команды уже выполняется"
@@ -22472,8 +22505,8 @@ polish = "Nie masz żadnych emotek oczu, pamiętaj, aby jakieś przypisać."
 [[message]]
 key = "You don't have unlimited air jumps"
 [message.translations]
-simplified_chinese = "你现在没有无限空跳了"
-traditional_chinese = "你現在沒有無限空跳了"
+simplified_chinese = "你不再拥有无限空中跳"
+traditional_chinese = "你不再擁有無限空中跳"
 japanese = "無制限空中ジャンプがなくなりました"
 korean = "무한 공중 점프가 더 이상 없습니다"
 russian = "У вас больше нет бесконечных прыжков в воздухе"
@@ -22600,8 +22633,8 @@ polish = "Musisz poczekać %s sekund, zanim będziesz mógł zamienić"
 [[message]]
 key = "You have unlimited air jumps"
 [message.translations]
-simplified_chinese = "你现在拥有无限空跳"
-traditional_chinese = "你現在擁有無限空跳"
+simplified_chinese = "你拥有无限空中跳"
+traditional_chinese = "你擁有無限空中跳"
 japanese = "無制限空中ジャンプを獲得しました"
 korean = "무한 공중 점프가 있습니다"
 russian = "У вас есть бесконечные прыжки в воздухе"
@@ -23167,35 +23200,3 @@ brazilian_portuguese = "Usar cores de arco-íris nos títulos dos cartões de co
 portuguese = "Usar cores arco-íris nos títulos dos cartões de definições (requer animações extra)"
 turkish = "Ayar kartı başlıklarında gökkuşağı renklerini kullan (ek animasyonlar gerekir)"
 polish = "Używaj tęczowych kolorów w tytułach kart ustawień (wymaga dodatkowych animacji)"
-
-[[message]]
-key = "%s joined this server"
-[message.translations]
-simplified_chinese = "%s好友进入本服"
-traditional_chinese = "%s好友進入本服"
-japanese = "%sがこのサーバーに参加しました"
-korean = "%s님이 이 서버에 입장했습니다"
-russian = "%s зашёл на этот сервер"
-german = "%s ist diesem Server beigetreten"
-spanish = "%s se unió a este servidor"
-french = "%s a rejoint ce serveur"
-brazilian_portuguese = "%s entrou neste servidor"
-portuguese = "%s entrou neste servidor"
-turkish = "%s bu sunucuya katıldı"
-polish = "%s dołączył do tego serwera"
-
-[[message]]
-key = "Hi!"
-[message.translations]
-simplified_chinese = "你好啊!"
-traditional_chinese = "你好啊!"
-japanese = "やあ!"
-korean = "안녕!"
-russian = "Привет!"
-german = "Hi!"
-spanish = "¡Hola!"
-french = "Salut !"
-brazilian_portuguese = "Oi!"
-portuguese = "Olá!"
-turkish = "Merhaba!"
-polish = "Cześć!"
