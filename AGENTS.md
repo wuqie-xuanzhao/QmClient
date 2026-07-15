@@ -10,7 +10,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 ## 文档系统
 
-- 可执行 AI 工作流规则在 `.agents/skills/`（原 `docs/ai-workflow/` 已合并为 skills + references）
+- 可执行 AI 工作流规则**只在** `.agents/skills/<name>/SKILL.md`（专项细则在 skill 内 `references/`，如 advanced）；**不再使用** `docs/ai-workflow/`
 - `docs/superpowers/` 下的探索、计划、规格和提示词全部保留，作为版本化的任务记录与本地 AI 工作流入口。
 - 项目级 Agent skills 放在 `.agents/skills/<name>/SKILL.md`，供 **Codex** 与 **OMP** 共同发现；说明见 `.agents/README.md`。`docs/superpowers/prompts/` 保留长文提示词，不再作为 skill 入口。
 - `docs/superpowers/` 下的探索/计划/规格会随时间推移而老化；已标注 `文档已过时` 或 `部分内容已过时` banner 的文件仅供参考，不应作为实现依据。
@@ -22,13 +22,12 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 | 路径 | 内容 | 何时阅读 |
 |------|--------------|--------------|
 | `.agents/README.md` | skills 边界与布局：什么进 skill / references，什么进 superpowers。 | 维护 agent 工作流时 |
-| `.agents/skills/qmclient-cpp-conventions/` | C++ 规则、兼容性、风格、热路径；`references/advanced/` 为专项路由。 | 修改 cpp/h 或专项工程风险时 |
-| `.agents/skills/qmclient-verification-gate/` | 构建、测试、gate 模式、视觉与证据标准。 | 完成任务后 / 验收前 |
-| `.agents/skills/qmclient-code-review/` | 代码审查立场、严重级别、findings 格式。 | review / 核心逻辑改完后 |
-| `.agents/skills/qmclient-git-commit/` | commit、PR、汇报与 Release 文案。 | 提交 git 和 PR 时 |
+| `.agents/skills/qmclient-cpp-conventions/SKILL.md` | C++ 规则全文；`references/advanced/` 仅专项。 | 修改 cpp/h 或专项工程风险时 |
+| `.agents/skills/qmclient-verification-gate/SKILL.md` | 构建、测试、gate、视觉与证据全文。 | 完成任务后 / 验收前 |
+| `.agents/skills/qmclient-code-review/SKILL.md` | 代码审查立场与 findings 格式全文。 | review / 核心逻辑改完后 |
+| `.agents/skills/qmclient-git-commit/SKILL.md` | commit、PR、汇报与 Release 文案全文。 | 提交 git 和 PR 时 |
 | `.agents/skills/qmclient-i18n-workflow/` 等 | i18n / 质量审计 / codegraph | 任务匹配 skill 描述时 |
 | `qmclient_scripts/scripts_overview.md` | 脚本分层、推荐入口和 gate 工作流语义。 | 使用脚本时 |
-| `docs/ai-workflow/` | **仅跳转桩**（旧链接兼容），正文已迁入 `.agents/skills`。 | 跟随旧文档链接时 |
 
 ## 极简工作流
 
@@ -45,7 +44,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 ### 完成任务后
 
-- 先按 `qmclient-verification-gate`（`references/verification.md`）跑对应验证，至少覆盖当前改动的 build/test/gate。
+- 先按 `qmclient-verification-gate` 跑对应验证，至少覆盖当前改动的 build/test/gate。
 - 除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate；代码改动完成后，至少补一条与范围匹配的 `python qmclient_scripts/gate/check_gate.py --mode ...` 验证。
 - 默认口径：纯文档改动人工核对引用和内容；常规代码改动至少跑 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前如环境允许优先补到 `--mode default`，该模式覆盖 C++ 全量测试和 Rust 全量测试；集中收口或准发布改动再用 `--mode full`，full 只是在 default 基础上增加高噪音/更重附加检查，不作为“全量测试”的默认入口。
 - 过滤测试只用于 TDD 红绿灯、定位和快速复现；最终汇报、交给用户验收或提交前，必须按 `qmclient-verification-gate` 跑对应测试入口的全量版本。没跑全量测试就必须写成 gap，不能说“无回归”或“测试通过”。
@@ -56,7 +55,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 ### 提交 commit / PR 前（用户说要提交改动的时候）
 
 - 提交不必在意干净的提交, 用户同时可能进行多个工作, 所以可能会有多种的改动.
-- 必须先用 `qmclient-git-commit`（`references/git-workflow.md`）， 提交是一次提交, 不优先拆分多个提交, 只有用户明确拆分或者改动可以容易的拆分出区别较大的分类的情况下, 才拆分, 否则根据文档里面的, 多填写 git commit 的信息即可
+- 必须先用 `qmclient-git-commit`， 提交是一次提交, 不优先拆分多个提交, 只有用户明确拆分或者改动可以容易的拆分出区别较大的分类的情况下, 才拆分, 否则根据文档里面的, 多填写 git commit 的信息即可
 - 先确认 review findings 已收口、gate 证据已补齐；不要带着“只跑过 build/test、没跑 gate”的状态进入 commit / PR。
 - 如果仓库开启了受保护分支，而当前操作者不是仓库主或没有直推权限，默认走：本地提交 -> 推到新分支 -> 开 PR -> 合并 PR -> 删分支。只有仓库主或被明确授予直推权限的人，才可以不走这条默认路径。
 - commit 和 PR 文案按 `qmclient-git-commit` 编写：标题统一用 `<type>(<scope>): <中文简述>`，正文先写问题/背景，再按 `fix`、`test`、`docs` 等分组。

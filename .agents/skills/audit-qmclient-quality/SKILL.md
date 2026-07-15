@@ -22,23 +22,23 @@ description: 用功能级与横向精准模板审计 QmClient 当前 diff/模块
    - 再读第 2 节相关横向专项  
    - 无功能模板时按第 0 节构造临时功能模板  
    - 提交/发布审计额外读第 5 节  
-4. 改代码 → `ddnet-development.md`；审查 → `review.md`；验证 → `verification.md`  
-5. 仅在触发对应风险时读 advanced 文档（见下表），禁止一次全载  
+4. 改代码 → `qmclient-cpp-conventions`；审查 → `qmclient-code-review`；验证 → `qmclient-verification-gate`  
+5. 仅在触发对应风险时读 `qmclient-cpp-conventions/references/advanced/*`（见下表），禁止一次全载  
 
 ## Advanced 路由
 | 触发风险 | 必读 |
 |----------|------|
-| 新功能 / 新配置 / 用户可见行为 | `advanced/feature-introduction.md` |
-| 卡顿 / 长帧 / 性能 | `advanced/performance-workflow.md` |
-| telemetry / perf 系统本身 | `advanced/perf-system-workflow.md` |
-| 缓存 / 纹理 / 指针 / UI element / 异步结果 | `advanced/memory-lifetime.md` |
-| 后台任务 / 取消 / 队列 / 主线程 / GPU context | `advanced/threading-jobs.md` |
-| debug 面板 / 日志 / 复现证据 | `advanced/observability-debugging.md` |
-| 文件 / 下载 / 解压 / 外部输入 / 隐私 | `advanced/safety-security.md` |
-| 行为保持型重构 | `advanced/refactor-workflow.md` |
-| 回归 / 固定场景 / release checklist | `advanced/regression-prevention.md` |
+| 新功能 / 新配置 / 用户可见行为 | `../qmclient-cpp-conventions/references/advanced/feature-introduction.md` |
+| 卡顿 / 长帧 / 性能 | `../qmclient-cpp-conventions/references/advanced/performance-workflow.md` |
+| telemetry / perf 系统本身 | `../qmclient-cpp-conventions/references/advanced/perf-system-workflow.md` |
+| 缓存 / 纹理 / 指针 / UI element / 异步结果 | `../qmclient-cpp-conventions/references/advanced/memory-lifetime.md` |
+| 后台任务 / 取消 / 队列 / 主线程 / GPU context | `../qmclient-cpp-conventions/references/advanced/threading-jobs.md` |
+| debug 面板 / 日志 / 复现证据 | `../qmclient-cpp-conventions/references/advanced/observability-debugging.md` |
+| 文件 / 下载 / 解压 / 外部输入 / 隐私 | `../qmclient-cpp-conventions/references/advanced/safety-security.md` |
+| 行为保持型重构 | `../qmclient-cpp-conventions/references/advanced/refactor-workflow.md` |
+| 回归 / 固定场景 / release checklist | `../qmclient-cpp-conventions/references/advanced/regression-prevention.md` |
 
-路径均相对 `docs/ai-workflow/`。与 DDNet 兼容性冲突时，**优先 DDNet 与当前有效规范**，并记录冲突。
+advanced 路径相对 `qmclient-cpp-conventions/references/advanced/`。改代码 → `qmclient-cpp-conventions`；审查 → `qmclient-code-review`；验证 → `qmclient-verification-gate`。与 DDNet 兼容性冲突时优先 DDNet，并记录冲突。
 
 ## 强制精准模板
 通用扫描只做路由，不能当主体：

@@ -129,7 +129,7 @@ class GateLibraryContractTest(unittest.TestCase):
 	def test_scope_keeps_all_paths_and_cpp_subset(self):
 		result = scope.collect_scope(
 			explicit_files=[
-				"docs/ai-workflow/verification.md",
+				"AGENTS.md",
 				"qmclient_scripts/gate/check_gate.py",
 				"src/game/client/gameclient.cpp",
 			]
@@ -138,7 +138,7 @@ class GateLibraryContractTest(unittest.TestCase):
 		self.assertEqual(
 			result.changed,
 			[
-				"docs/ai-workflow/verification.md",
+				"AGENTS.md",
 				"qmclient_scripts/gate/check_gate.py",
 				"src/game/client/gameclient.cpp",
 			],
@@ -147,6 +147,12 @@ class GateLibraryContractTest(unittest.TestCase):
 
 	def test_settings_ui_check_is_scope_aware(self):
 		self.assertTrue(settings_ui.should_run(["src/game/client/components/menus_settings.cpp"]))
+		self.assertTrue(settings_ui.should_run(["src/game/client/QmUi/SettingsCardDeck.cpp"]))
+		self.assertTrue(settings_ui.should_run(["src/game/client/QmUi/UiForms.cpp"]))
+		self.assertTrue(settings_ui.should_run(["src/game/client/QmUi/QmScroll.cpp"]))
+		self.assertTrue(settings_ui.should_run(["src/game/client/QmUi/SettingsPageLayout.h"]))
+		self.assertTrue(settings_ui.should_run(["src/game/client/components/menus.cpp"]))
+		self.assertTrue(settings_ui.should_run(["src/game/client/components/tclient/menus_tclient.cpp"]))
 		self.assertFalse(settings_ui.should_run(["src/game/client/gameclient.cpp"]))
 
 	def test_settings_ui_irrelevant_scope_is_not_applicable(self):

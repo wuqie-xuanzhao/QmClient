@@ -231,4 +231,4 @@ python qmclient_scripts/gate/check_gate.py --mode default --explain-scope --repo
 ## 关联文档
 
 - `.agents/README.md`
-- `.agents/skills/qmclient-verification-gate/references/verification.md`
+- `.agents/skills/qmclient-verification-gate/SKILL.md`
