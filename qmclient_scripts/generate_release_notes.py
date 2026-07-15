@@ -6,11 +6,12 @@
 - stable（正式版）：tag 形如 vX.Y.Z，对应 GitHub 正式 Release
 - pre-release（预发布）：nightly / rc / beta 等，对应 GitHub Pre-release
 
-输出按「功能领域」分组、中文优先，例如：
-
-# QmClient v2.74.9 · 正式版（Stable）
-> 通道：正式发布 · 建议日常使用
-...
+输出按「功能领域」分组、中文优先，并对条目做确定性自动润色：
+- Conventional type → 中文玩家前缀（feat→新增 等）
+- 同领域性质单一时省略前缀
+- 同领域相同/近相同 release_zh 去重
+- 「其他」上限 4 条并附未列出提示
+- 轻量文案清理（空白折叠、去句末标点）
 
 工程类 commit（ci/build/gate 等）解析但不渲染。
 优先读取 commit body：
@@ -19,7 +20,8 @@
 
 缺失时回退 subject 描述。
 
-脚本输出是机械化草稿；正式版终稿按 docs/RELEASE_NOTE_TEMPLATE.md 人工润色。
+Nightly 终稿即本脚本输出（无需人工润色）；正式版可选手动再改。
+规范见 docs/RELEASE_NOTE_TEMPLATE.md。
 """
 
 from __future__ import annotations
@@ -52,6 +54,16 @@ PRE_RELEASE_HINT_RE = re.compile(
 PLAYER_TYPES = {"feat", "fix", "perf", "improve", "revert"}
 OPTIONAL_PLAYER_TYPES = {"refactor"}
 
+# Conventional type → 玩家向中文前缀（确定性，不调用外部 AI）
+TYPE_LABEL: dict[str, str] = {
+    "feat": "新增",
+    "fix": "修复",
+    "perf": "优化",
+    "improve": "改进",
+    "revert": "回退",
+    "refactor": "重构",
+}
+
 # 组内排序：feat 在前，revert 在后
 TYPE_PRIORITY = {
     "feat": 0,
@@ -61,6 +73,9 @@ TYPE_PRIORITY = {
     "refactor": 4,
     "revert": 5,
 }
+
+# 「其他」领域展示上限（超出后追加省略提示）
+FALLBACK_DOMAIN_CAP = 4
 
 DOMAIN_ORDER = [
     "界面与视觉",
@@ -194,9 +209,13 @@ class CommitNote:
     domain: str
 
     def format_prefix(self) -> str:
+        """调试/兼容用：英文 conventional 前缀。渲染玩家文案请用 format_player_prefix。"""
         if self.scope:
             return f"{self.commit_type}({self.scope})"
         return self.commit_type
+
+    def format_player_prefix(self) -> str:
+        return TYPE_LABEL.get(self.commit_type, self.commit_type)
 
 
 def run_git(args: list[str]) -> str:
@@ -284,6 +303,39 @@ def parse_commit(
     )
 
 
+def cleanup_release_text(text: str) -> str:
+    """轻量清理：折叠空白、去掉句末句号/点号。"""
+    cleaned = re.sub(r"\s+", " ", (text or "").strip())
+    cleaned = re.sub(r"[。.．.]+$", "", cleaned).strip()
+    return cleaned
+
+
+def normalize_for_dedupe(text: str) -> str:
+    """近相同判定：清理后再去掉常见标点与空白差异。"""
+    cleaned = cleanup_release_text(text)
+    return re.sub(r"[\s，,。．.!！?？:：;；、]+", "", cleaned).casefold()
+
+
+def dedupe_notes(notes: list[CommitNote]) -> list[CommitNote]:
+    """同领域内按近相同 release_zh 去重，保留首次出现。"""
+    seen: set[str] = set()
+    result: list[CommitNote] = []
+    for note in notes:
+        key = normalize_for_dedupe(note.release_zh)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        result.append(note)
+    return result
+
+
+def format_player_bullet(note: CommitNote, *, omit_prefix: bool) -> str:
+    text = cleanup_release_text(note.release_zh)
+    if omit_prefix:
+        return f"- {text}"
+    return f"- {note.format_player_prefix()}：{text}"
+
+
 def list_tags_by_creatordate() -> list[str]:
     raw = run_git(["tag", "--sort=-creatordate"])
     return [line.strip() for line in raw.splitlines() if line.strip()]
@@ -350,9 +402,23 @@ def render_domain(domain: str, notes: list[CommitNote]) -> list[str]:
     if not grouped:
         return []
     grouped.sort(key=lambda note: TYPE_PRIORITY.get(note.commit_type, 99))
+    grouped = dedupe_notes(grouped)
+    if not grouped:
+        return []
+
+    omitted = 0
+    if domain == FALLBACK_DOMAIN and len(grouped) > FALLBACK_DOMAIN_CAP:
+        omitted = len(grouped) - FALLBACK_DOMAIN_CAP
+        grouped = grouped[:FALLBACK_DOMAIN_CAP]
+
+    types = {note.commit_type for note in grouped}
+    omit_prefix = len(types) == 1
+
     lines = [f"## {domain}"]
     for note in grouped:
-        lines.append(f"- {note.format_prefix()}: {note.release_zh}")
+        lines.append(format_player_bullet(note, omit_prefix=omit_prefix))
+    if omitted:
+        lines.append(f"- …另有 {omitted} 条未列出，见完整变更")
     lines.append("")
     return lines
 
@@ -380,7 +446,12 @@ def render_header(
         lines.append("")
         lines.append("> **通道**：预发布 / 内部测试 · **Nightly 构建**")
         lines.append("> **注意**：可能不稳定；`nightly` 会被下一次构建覆盖，**不建议当主力客户端**")
-        lines.append("> **说明来源**：由区间内 commit 自动汇总（`feat`/`fix`/`perf`/`improve`/`revert`；默认不含 `refactor`/工程类）")
+        lines.append(
+            "> **说明来源**：由区间内 commit **自动汇总并润色**"
+            "（中文前缀 / 同质省略前缀 / 去重 / 「其他」上限；"
+            "含 `feat`/`fix`/`perf`/`improve`/`revert`，默认不含 `refactor`/工程类；"
+            "无需人工润色）"
+        )
         lines.append(f"> **Tag**：`{current_tag}`")
         if branch:
             lines.append(f"> **分支**：`{branch}`")

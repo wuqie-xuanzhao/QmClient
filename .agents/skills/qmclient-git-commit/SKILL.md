@@ -256,13 +256,13 @@ PR 正文默认使用以下结构：
 
 ## Release 说明
 
-GitHub release 说明由 `qmclient_scripts/generate_release_notes.py` 统一生成：
+GitHub release 说明由 `qmclient_scripts/generate_release_notes.py` **确定性自动生成并润色**（中文前缀 / 同质省略前缀 / 去重 / 「其他」上限 / 轻量文案清理；**不调用外部 AI / LLM**）：
 
-- **正式版（Stable）**：tag `vX.Y.Z` → 普通 Release；输出标题含「正式版」
-- **预发布（Pre-release）**：tag `nightly`（及 rc/beta 等）→ GitHub Pre-release；输出含风险提示，可被下次 Nightly 覆盖
+- **正式版（Stable）**：tag `vX.Y.Z` → 普通 Release；输出标题含「正式版」；脚本输出已应玩家可读，**可选手动**再润色
+- **预发布（Pre-release / Nightly）**：tag `nightly`（及 rc/beta 等）→ GitHub Pre-release；输出含风险提示；**脚本输出即为终稿，无需人工润色**；可被下次 Nightly 覆盖
 
 输出按功能领域分组（commit scope）、中文优先；工程类提交（ci/build/gate 等）不进正文。  
-脚本草稿终稿规范见 `docs/RELEASE_NOTE_TEMPLATE.md`（**第 0 节通道** + 领域×前缀模型）。
+规范见 `docs/RELEASE_NOTE_TEMPLATE.md`（**§0 通道** + 领域×前缀模型 + 与脚本关系）。
 
 命令示例：
 
