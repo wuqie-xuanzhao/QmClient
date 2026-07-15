@@ -428,7 +428,7 @@ Demo/Ghost；语音与音频；外部输入安全；上游同步；预测与快�
 
 ### 2.16 文档、规格与实现漂移
 
-推荐入口：当前有效 specs/plans、`docs/ai-workflow/`、实际代码和测试。
+推荐入口：当前有效 specs/plans、`.agents/skills/`（含 `audit-qmclient-quality` 与相关 skill）、实际代码和测试。
 
 ```text
 先按日期、status、过时 banner 和 supersedes 关系确定权威文档：

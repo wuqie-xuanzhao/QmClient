@@ -3,7 +3,7 @@
 本目录是 **Codex CLI** 与 **Oh My Pi (OMP)** 共用的项目级 skills 根。  
 正文统一用**中文**撰写（命令、路径、标识符保持原文）。
 
-**可执行 AI 工作流规则只在这里**——已删除 `docs/ai-workflow/`，不要再往 `docs/` 写 agent 规则正文。
+**可执行 AI 工作流规则只在这里**——不要再往 `docs/` 写 agent 规则正文。
 
 ## 布局
 
@@ -27,7 +27,15 @@
 | `qmclient-i18n-workflow` | 翻译流水线 | `SKILL.md` |
 | `qmclient-i18n-audit` | i18n 污染与绿线 | `SKILL.md` |
 | `qmclient-codegraph-usage` | codegraph 优先 | `SKILL.md` |
-| `audit-qmclient-quality` | 客户端质量审计 | `SKILL.md` + 可选 `references/` 长提示词 |
+| `audit-qmclient-quality` | 客户端质量审计 | `SKILL.md` + `references/quality-scan-prompt.md` |
+
+### audit-qmclient-quality 细则
+
+| 文件 | 内容 |
+|------|------|
+| `SKILL.md` | 审计模式、加载顺序、advanced 路由、模板强制、完成标准 |
+| `references/quality-scan-prompt.md` | 质量扫描长提示词（第 0–5 节模板合同） |
+| `agents/openai.yaml` | Codex/OMP 展示名与默认 prompt |
 
 ## 文档边界
 
@@ -38,7 +46,7 @@
 - 仅真正「按需加载、很长」的专项进 `references/`（如 advanced、质量扫描长提示词）
 - 可机械化约束优先脚本 / gate
 
-**不要放进 skills / 不要再放 docs/ai-workflow**
+**不要放进 skills**
 
 - 改动历史、会话交接、feature status JSON
 - 与 `docs/superpowers/` 重叠的任务计划 / 探索记录
@@ -52,6 +60,7 @@
 | 稳定规格 | `docs/superpowers/specs/` |
 | 探索记录 | `docs/superpowers/explore/` |
 | 脚本说明 | `qmclient_scripts/` |
+| 旧 `docs/superpowers/prompts/` | 仅 README 跳转；正文已在 audit skill |
 
 ## 用户级 skills
 
