@@ -1,3 +1,8 @@
+# QmClient / DDNet 术语表（机翻与人工审校共用）
+# enforce: exact=译文须含该译名；pattern=短语命中时优先；prompt_only=只进提示词不强校验
+# Dummy copy（cl_dummy_copy_moves）中文社区习惯称「分身同步」，英文 source 用 Copy 不用 Sync
+# Hook collisions 指钩子瞄准辅助线，不是物理“碰撞”字面
+
 [[term]]
 source = "Clan"
 enforce = "exact"
@@ -16,19 +21,10 @@ polish = "Klan"
 
 [[term]]
 source = "Dummy"
-enforce = "pattern"
+enforce = "exact"
 simplified_chinese = "分身"
 traditional_chinese = "分身"
-korean = "더미"
-japanese = "ダミー"
-russian = "Дамми"
-german = "Dummy"
-spanish = "Dummy"
-french = "Dummy"
-brazilian_portuguese = "Dummy"
-portuguese = "Dummy"
-turkish = "Dummy"
-polish = "Kukła"
+
 
 [[term]]
 source = "Server"
@@ -243,16 +239,7 @@ source = "Hook"
 enforce = "exact"
 simplified_chinese = "钩索"
 traditional_chinese = "鉤索"
-korean = "갈고리"
-japanese = "フック"
-russian = "крюк"
-german = "Haken"
-spanish = "gancho"
-french = "crochet"
-brazilian_portuguese = "gancho"
-portuguese = "gancho"
-turkish = "kanca"
-polish = "hak"
+
 
 [[term]]
 source = "Hook collision line"
@@ -267,11 +254,13 @@ enforce = "exact"
 simplified_chinese = "强钩"
 traditional_chinese = "強鉤"
 
+
 [[term]]
 source = "Weak hook"
 enforce = "exact"
 simplified_chinese = "弱钩"
 traditional_chinese = "弱鉤"
+
 
 [[term]]
 source = "Zhipu AI"
@@ -396,16 +385,22 @@ simplified_chinese = "投票"
 source = "Spectate"
 enforce = "prompt_only"
 simplified_chinese = "旁观"
+traditional_chinese = "旁觀"
+
 
 [[term]]
 source = "Freeze"
 enforce = "prompt_only"
 simplified_chinese = "冻结"
+traditional_chinese = "凍結"
+
 
 [[term]]
 source = "Unfreeze"
 enforce = "prompt_only"
 simplified_chinese = "解冻"
+traditional_chinese = "解凍"
+
 
 [[term]]
 source = "Skin"
@@ -518,11 +513,13 @@ enforce = "exact"
 simplified_chinese = "钩子辅助线"
 traditional_chinese = "鉤子輔助線"
 
+
 [[term]]
 source = "Hook Collisions"
 enforce = "exact"
 simplified_chinese = "钩子辅助线"
 traditional_chinese = "鉤子輔助線"
+
 
 [[term]]
 source = "Air jump"
@@ -530,15 +527,72 @@ enforce = "pattern"
 simplified_chinese = "空中跳"
 traditional_chinese = "空中跳"
 
+
 [[term]]
 source = "Unlimited air jumps"
 enforce = "pattern"
 simplified_chinese = "无限空跳"
 traditional_chinese = "無限空跳"
 
+
 [[term]]
 source = "Infinite jump"
 enforce = "pattern"
 simplified_chinese = "无限跳"
-traditional_chinese = "无限跳"
+traditional_chinese = "無限跳"
+
+
+[[term]]
+source = "Dummy copy"
+enforce = "exact"
+simplified_chinese = "分身同步"
+traditional_chinese = "分身同步"
+
+[[term]]
+source = "Dummy Copy"
+enforce = "exact"
+simplified_chinese = "分身同步"
+traditional_chinese = "分身同步"
+
+[[term]]
+source = "Dummy control"
+enforce = "pattern"
+simplified_chinese = "分身控制"
+traditional_chinese = "分身控制"
+
+[[term]]
+source = "Dummy Control"
+enforce = "pattern"
+simplified_chinese = "分身控制"
+traditional_chinese = "分身控制"
+
+[[term]]
+source = "Spectator"
+enforce = "prompt_only"
+simplified_chinese = "旁观"
+traditional_chinese = "旁觀"
+
+[[term]]
+source = "Practice mode"
+enforce = "prompt_only"
+simplified_chinese = "练习模式"
+traditional_chinese = "練習模式"
+
+[[term]]
+source = "Team 0"
+enforce = "prompt_only"
+simplified_chinese = "0 队"
+traditional_chinese = "0 隊"
+
+[[term]]
+source = "Deepfly"
+enforce = "prompt_only"
+simplified_chinese = "深飞"
+traditional_chinese = "深飛"
+
+[[term]]
+source = "Edgebug"
+enforce = "exact"
+simplified_chinese = "Edgebug"
+traditional_chinese = "Edgebug"
 

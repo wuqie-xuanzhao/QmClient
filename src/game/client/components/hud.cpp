@@ -4840,7 +4840,8 @@ namespace
 		if(Lines.m_ShowSync)
 		{
 			const char *pSyncState = DummyCopyMoves ? Localize("On") : Localize("Off");
-			str_format(Lines.m_aSyncLine, sizeof(Lines.m_aSyncLine), Localize("Dummy sync: %s"), pSyncState);
+			// 对应 cl_dummy_copy_moves：英文用 Dummy copy，中文术语「分身同步」
+			str_format(Lines.m_aSyncLine, sizeof(Lines.m_aSyncLine), Localize("Dummy copy: %s"), pSyncState);
 		}
 
 		return Lines;

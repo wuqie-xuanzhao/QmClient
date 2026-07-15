@@ -3005,6 +3005,9 @@ Dummy Control: %s
 Dummy copy
 == Kopiowanie kukły
 
+Dummy copy: %s
+== Synchronizacja kukły: %s
+
 Dummy country (ISO 3166-1 numeric)
 == Kraj kukły (ISO 3166-1 numeryczny)
 
@@ -3088,9 +3091,6 @@ Dummy skin queue max length
 
 Dummy skin queue switch interval (ms)
 == Interwał przełączania kolejki skórek kukły (ms)
-
-Dummy sync: %s
-== Synchronizacja kukły: %s
 
 Dummy Window
 == Okno kukły
@@ -9290,6 +9290,9 @@ Show dummy angle in movement info HUD
 Show dummy control status
 == Pokaż status sterowania kukłą
 
+Show dummy copy status
+== Pokaż status synchronizacji kukły
+
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 == Pokaż flagi CTF kukły na graczach (0=Wyłączone, 1=Czerwona flaga, 2=Niebieska flaga)
 
@@ -9301,9 +9304,6 @@ Show dummy mini view window
 
 Show dummy position in movement info HUD
 == Pokaż pozycję kukły w HUD informacji o ruchu
-
-Show dummy sync status
-== Pokaż status synchronizacji kukły
 
 Show dummy velocity in movement info HUD
 == Pokaż prędkość kukły w HUD informacji o ruchu
@@ -9449,14 +9449,14 @@ Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
 == Pokaż HUD w grze (stan sterowania klonem)
 
-Show in-game HUD (clone sync state)
-== Pokaż HUD w grze (stan synchronizacji klona)
-
 Show in-game HUD (DDRace HUD)
 == Pokaż HUD w grze (DDRace HUD)
 
 Show in-game HUD (dummy controls)
 == Pokaż HUD w grze (sterowanie kukłą)
+
+Show in-game HUD (dummy copy state)
+== Pokaż HUD w grze (stan synchronizacji klona)
 
 Show in-game HUD (hammer state)
 == Pokaż HUD w grze (stan młotka)

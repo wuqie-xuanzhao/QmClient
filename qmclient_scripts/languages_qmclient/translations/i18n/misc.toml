@@ -1955,7 +1955,7 @@ turkish = "Dummy küçük görünümü"
 polish = "Mini widok kukły"
 
 [[message]]
-key = "Dummy sync: %s"
+key = "Dummy copy: %s"
 [message.translations]
 simplified_chinese = "分身同步：%s"
 traditional_chinese = "分身同步：%s"
@@ -7167,8 +7167,8 @@ polish = "Pokaż katalog"
 [[message]]
 key = "Show Hook Collision"
 [message.translations]
-simplified_chinese = "显示钩子碰撞"
-traditional_chinese = "顯示鉤子碰撞"
+simplified_chinese = "显示钩子辅助线"
+traditional_chinese = "顯示鉤子輔助線"
 japanese = "フック衝突を表示"
 korean = "갈고리 충돌 표시"
 russian = "Показать коллизию крюка"
@@ -8958,8 +8958,8 @@ polish = "Przełącz trafianie innych"
 [[message]]
 key = "Toggles hook collision"
 [message.translations]
-simplified_chinese = "切换钩子碰撞"
-traditional_chinese = "切換鉤子碰撞"
+simplified_chinese = "切换钩子辅助线"
+traditional_chinese = "切換鉤子輔助線"
 japanese = "フック衝突を切り替え"
 korean = "갈고리 충돌 전환"
 russian = "Переключить коллизию крюка"

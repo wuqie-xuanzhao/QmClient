@@ -3005,6 +3005,9 @@ Dummy Control: %s
 Dummy copy
 == Dummy kopyala
 
+Dummy copy: %s
+== Dummy senkronizasyonu: %s
+
 Dummy country (ISO 3166-1 numeric)
 == Dummy ülkesi (ISO 3166-1 sayısal)
 
@@ -3088,9 +3091,6 @@ Dummy skin queue max length
 
 Dummy skin queue switch interval (ms)
 == Dummy skin sırası değiştirme aralığı (ms)
-
-Dummy sync: %s
-== Dummy senkronizasyonu: %s
 
 Dummy Window
 == Dummy Penceresi
@@ -9290,6 +9290,9 @@ Show dummy angle in movement info HUD
 Show dummy control status
 == Dummy kontrol durumunu göster
 
+Show dummy copy status
+== Dummy senkronizasyon durumunu göster
+
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 == Oyuncular üzerinde dummy CTF bayraklarını göster (0=Kapalı, 1=Kırmızı bayrak, 2=Mavi bayrak)
 
@@ -9301,9 +9304,6 @@ Show dummy mini view window
 
 Show dummy position in movement info HUD
 == Hareket bilgisi HUD'unda dummy konumunu göster
-
-Show dummy sync status
-== Dummy senkronizasyon durumunu göster
 
 Show dummy velocity in movement info HUD
 == Hareket bilgisi HUD'unda dummy hızını göster
@@ -9449,14 +9449,14 @@ Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
 == Oyunda HUD göster (klon kontrol durumu)
 
-Show in-game HUD (clone sync state)
-== Oyunda HUD göster (klon senkronizasyon durumu)
-
 Show in-game HUD (DDRace HUD)
 == Oyunda HUD göster (DDRace HUD)
 
 Show in-game HUD (dummy controls)
 == Oyunda HUD göster (dummy kontrolleri)
+
+Show in-game HUD (dummy copy state)
+== Oyunda HUD göster (klon senkronizasyon durumu)
 
 Show in-game HUD (hammer state)
 == Oyunda HUD göster (çekiç durumu)

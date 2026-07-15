@@ -53,6 +53,8 @@ class RenderHeaderTests(unittest.TestCase):
         text = "\n".join(lines)
         self.assertIn("预发布", text)
         self.assertIn("不建议当主力", text)
+        self.assertIn("说明来源", text)
+        self.assertIn("Nightly", text)
         self.assertIn("abc123", text)
 
     def test_empty_notes_markdown(self) -> None:

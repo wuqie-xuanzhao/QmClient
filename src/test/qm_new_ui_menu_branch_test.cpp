@@ -102,23 +102,23 @@ namespace
 
 } // namespace
 
-TEST(QmNewUiMenuBranches, P6QmClientOverviewUsesCanonicalPageCardAndScroll)
+TEST(QmNewUiMenuBranches, SettingsShellAndOuterScrollbarUseStableContracts)
 {
-	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
-	ASSERT_FALSE(Body.empty());
-	EXPECT_NE(Body.find("ResolveSettingsPageLayout("), std::string::npos);
-	EXPECT_NE(Body.find("SSettingsCardDefinition"), std::string::npos);
-	EXPECT_NE(Body.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_NE(Body.find(".State()"), std::string::npos);
-	EXPECT_NE(Body.find("QmResolveScrollPolicy("), std::string::npos);
-	EXPECT_EQ(Body.find("BeginSettingsQmScrollContainer("), std::string::npos);
-	EXPECT_EQ(Body.find("RenderQmSettingsGlassCard("), std::string::npos);
-	const std::string Dispatch = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	EXPECT_NE(Dispatch.find("QMCLIENT_SETTINGS_TAB_OVERVIEW"), std::string::npos);
-	EXPECT_NE(Dispatch.find("RenderSettingsQmClientOverview(ContentView, PrewarmOnly)"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Overview\")"), std::string::npos);
-	EXPECT_NE(Source.find("ReadOnly ? s_GlobalSearchPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
+	const std::string ShellSource = ReadTextFile("src/game/client/QmUi/SettingsPageLayout.h");
+	const std::string TokenSource = ReadTextFile("src/game/client/QmUi/UiTokens.h");
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string ScrollSource = ReadTextFile("src/game/client/QmUi/QmScroll.cpp");
+	const std::string AssetsSource = ReadTextFile("src/game/client/components/menus_settings_assets.cpp");
+	EXPECT_NE(TokenSource.find("MAX_CONTENT_WIDTH = 1000.0f"), std::string::npos);
+	EXPECT_NE(ShellSource.find("ResolveSettingsShellLayout"), std::string::npos);
+	EXPECT_NE(ShellSource.find("Frame.m_ShellRect.VSplitRight"), std::string::npos);
+	EXPECT_NE(ShellSource.find("Frame.m_ContentRect.Margin(PanelMargin"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("ResolveSettingsShellLayout(MainView, NeedRestart ? 30.0f : 0.0f)"), std::string::npos);
+	EXPECT_NE(ScrollSource.find("SETTINGS_OUTER"), std::string::npos);
+	EXPECT_NE(ScrollSource.find("QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f)"), std::string::npos);
+	EXPECT_NE(AssetsSource.find("s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_OUTER);"), std::string::npos);
+	EXPECT_NE(AssetsSource.find("s_WorkshopAssetsListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_OUTER);"), std::string::npos);
+	EXPECT_NE(AssetsSource.find("StableCustomList.w / (Margin + TextureWidth)"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
@@ -126,7 +126,7 @@ TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
 	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
-	EXPECT_NE(Body.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Body.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(Body.find("SSettingsCardDefinition"), std::string::npos);
 	EXPECT_NE(Body.find("m_SettingsCardDeck.Render("), std::string::npos);
 	EXPECT_NE(Body.find("deck:qmclient-contributors-community"), std::string::npos);
@@ -497,7 +497,7 @@ TEST(QmNewUiMenuBranches, SettingsShellKeepsExplicitQmNewUiContainerBranch)
 
 	EXPECT_NE(Source.find("const bool UseNewSettingsUi = g_Config.m_QmNewUi != 0;"), std::string::npos);
 	EXPECT_NE(UseNewSettingsUiBlock.find("TabBar.Draw(SettingsTabbarColor()"), std::string::npos);
-	EXPECT_NE(UseNewSettingsUiBlock.find("MainView.Draw(MenuPanelColor()"), std::string::npos);
+	EXPECT_NE(UseNewSettingsUiBlock.find("Shell.m_ContentPanelRect.Draw(MenuPanelColor()"), std::string::npos);
 	EXPECT_EQ(UseNewSettingsUiBlock.find("MainView.Draw(ms_ColorTabbarActive"), std::string::npos);
 	EXPECT_NE(OldSettingsUiBlock.find("MainView.Draw(ms_ColorTabbarActive"), std::string::npos);
 	EXPECT_EQ(OldSettingsUiBlock.find("SettingsTabbarColor()"), std::string::npos);
@@ -663,6 +663,7 @@ TEST(QmNewUiMenuBranches, QmDefaultOffMigrationKeepsExplicitLegacyValues)
 	EXPECT_NE(ConfigSource.find("pVariable->m_ConfigDomain == ConfigDomain && (pVariable->m_Flags & CFGFLAG_SAVE) != 0 && !pVariable->IsDefault()"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("pVariable->Serialize(aLineBuf, sizeof(aLineBuf));"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("WriteLine(aLineBuf, ConfigDomain);"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("char aLineBuf[32768];"), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("Reset(\"qm_"), std::string::npos);
 }
 
@@ -1148,7 +1149,7 @@ TEST(QmNewUiMenuBranches, HudDummyStatusLabelsUseEnglishKeys)
 	EXPECT_NE(Source.find("Localize(\"Key Sticking: Reset Self\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Hammer: %s\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Dummy Control: %s\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Dummy sync: %s\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Dummy copy: %s\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, TranslationAndDemoUiLabelsUseEnglishKeys)
@@ -1713,10 +1714,11 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 
 	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
 	EXPECT_NE(MenuSource.find("CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const"), std::string::npos);
-	EXPECT_NE(MenuSource.find("const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);"), std::string::npos);
+	EXPECT_NE(MenuSource.find("const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);"), std::string::npos);
 	EXPECT_NE(MenuSource.find("Style.m_ScrollbarWidth = ScrollStyle.m_ScrollbarWidth;"), std::string::npos);
-	EXPECT_NE(MenuSource.find("CScrollRegionParams Params = QmScrollRegionParamsForSize(EQmScrollSize::LARGE, UiScale);"), std::string::npos);
-	EXPECT_NE(MenuSource.find("Params.m_ScrollUnit = QmSettingsScrollConfig(UiScale, 0.0f).m_WheelScale;"), std::string::npos);
+	EXPECT_NE(MenuSource.find("Request.m_Profile = EQmScrollProfile::SETTINGS_OUTER;"), std::string::npos);
+	EXPECT_NE(MenuSource.find("return QmScrollRegionParamsFromPolicy(QmResolveScrollPolicy(Request, UiScale, 0.0f));"), std::string::npos);
+	EXPECT_EQ(MenuSource.find("QmScrollRegionParamsForSize(EQmScrollSize::LARGE, UiScale)"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("Params.m_ScrollUnit = 60.0f * UiScale;"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("Params.m_ScrollbarThickness = Style.m_ScrollbarWidth;"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;"), std::string::npos);
@@ -1755,15 +1757,6 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 		EXPECT_EQ(pDeck->find("BeginSettingsQmScrollContainer("), std::string::npos);
 		EXPECT_EQ(pDeck->find("s_GlassCards"), std::string::npos);
 	}
-
-	const std::string RenderSettingsQmClientOverview = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
-	ASSERT_FALSE(RenderSettingsQmClientOverview.empty());
-	EXPECT_NE(RenderSettingsQmClientOverview.find("ResolveSettingsPageLayout("), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClientOverview.find("SSettingsCardDefinition"), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClientOverview.find("m_SettingsCardDeck.Render("), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClientOverview.find("QmResolveScrollPolicy("), std::string::npos);
-	EXPECT_EQ(RenderSettingsQmClientOverview.find("BeginSettingsQmScrollContainer("), std::string::npos);
-	EXPECT_EQ(RenderSettingsQmClientOverview.find("RenderQmSettingsGlassCard("), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
@@ -1777,6 +1770,16 @@ TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 	EXPECT_EQ(Body.find("DrawOutline(Border)"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("RenderQmSettingsGlassCard"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("m_QmCardBackdropBlur"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SettingsNumericFieldRectanglesInitializeBeforeLayoutBranching)
+{
+	const std::string Source = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string Body = FunctionBody(Source, "bool NumericField(const IUiContext &Ctx");
+	ASSERT_FALSE(Body.empty());
+	EXPECT_NE(Body.find("CUIRect Label{}, Controls{}, ValueRect{}, ScrollBar{}, InputField{};"), std::string::npos);
+	EXPECT_NE(Body.find("Controls.VSplitRight(ValueWidth, &ScrollBar, &InputField);"), std::string::npos);
+	EXPECT_NE(Body.find("FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
@@ -1847,7 +1850,7 @@ TEST(QmNewUiMenuBranches, TClientSettingsCardsUseSharedQmCardStyle)
 
 	EXPECT_EQ(Source.find("RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientSettings.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("SettingsPageLayout(MainView, UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientChatBinds.find("CardDeck.Render("), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientChatBinds.find("BeginSettingsScrollRegion("), std::string::npos);
 	EXPECT_EQ(Source.find("ScrollParams.m_ScrollUnit = 60.0f;"), std::string::npos);
@@ -1862,7 +1865,7 @@ TEST(QmNewUiMenuBranches, DDNetSettingsPageUsesSharedQmCards)
 	const std::string RenderSettingsDDNet = FunctionBody(SettingsSource, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsDDNet.empty());
 
-	EXPECT_NE(RenderSettingsDDNet.find("const SSettingsPageLayoutFrame DDNetPage = ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("const SSettingsPageLayoutFrame DDNetPage = SettingsPageLayout(MainView, UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsDDNet.find("const IUiContext DDNetCardCtx = SettingsUiContext(\"settings_ddnet\", UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsDDNet.find("static CScrollRegion s_DDNetSettingsCardScrollRegion;"), std::string::npos);
 	EXPECT_NE(RenderSettingsDDNet.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy("), std::string::npos);
@@ -1911,7 +1914,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(FormatBackendDisplayName.find("\"OpenGL_QmClient_%d_%d\""), std::string::npos);
 	const std::string RenderSettingsSound = FunctionBody(SettingsSource, "void CMenus::RenderSettingsSound(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsSound.empty());
-	EXPECT_NE(RenderSettingsSound.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(RenderSettingsSound.find("QmResolveScrollPolicy("), std::string::npos);
 	EXPECT_NE(RenderSettingsSound.find("CQmScrollState"), std::string::npos);
 	EXPECT_NE(RenderSettingsSound.find("m_SettingsCardDeck.Render(SoundCardCtx, SoundPage, \"sound\""), std::string::npos);
@@ -1950,7 +1953,6 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	const size_t PreLayoutClipCheck = SettingsDeck.find("pScrollRegion == nullptr || !pScrollRegion->RectClipped", InitialBuild);
 	const size_t ActiveStateRebuild = SettingsDeck.find("RebuildActiveStateIndices();", PreLayoutInput);
 	const size_t FinalBuild = SettingsDeck.find("vPrepared = BuildPreparedCards(aColumns);", ActiveStateRebuild);
-	const size_t HeightInvalidation = SettingsDeck.find("std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);", ActiveStateRebuild);
 	const size_t ScrollRegistration = SettingsDeck.find("pScrollRegion->AddRect", FinalBuild);
 	const size_t SettingsCardRender = SettingsDeck.find("SettingsCard(Ctx, Card.m_Frame", FinalBuild);
 	const size_t VisibleDropCommit = SettingsDeck.find("CommitSettingsCardDeckDrop(Model, pTab, pStableId, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder, &m_vActiveStateIndices)");
@@ -1960,7 +1962,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	ASSERT_NE(PreLayoutClipCheck, std::string::npos);
 	ASSERT_NE(ActiveStateRebuild, std::string::npos);
 	ASSERT_NE(FinalBuild, std::string::npos);
-	ASSERT_NE(HeightInvalidation, std::string::npos);
+	EXPECT_EQ(SettingsDeck.find("std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);"), std::string::npos);
 	ASSERT_NE(ScrollRegistration, std::string::npos);
 	ASSERT_NE(SettingsCardRender, std::string::npos);
 	ASSERT_NE(VisibleDropCommit, std::string::npos);
@@ -1968,7 +1970,6 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_LT(PreLayoutClipCheck, PreLayoutInput);
 	EXPECT_LT(PreLayoutInput, ActiveStateRebuild);
 	EXPECT_LT(ActiveStateRebuild, FinalBuild);
-	EXPECT_LT(ActiveStateRebuild, HeightInvalidation);
 	EXPECT_LT(FinalBuild, ScrollRegistration);
 	EXPECT_LT(FinalBuild, SettingsCardRender);
 	EXPECT_EQ(SettingsDeck.find("PrioritizeVisibilityControllers"), std::string::npos);
@@ -1986,7 +1987,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsTClientSettings.find("RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientSettings.find("SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientSettings.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("ResolveSettingsPageLayout(MainView, false, UiScale)"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("SettingsPageLayout(MainView, UiScale)"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-editor"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-preview"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_BindWheelPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
@@ -2042,17 +2043,20 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 
 	const std::string RenderSettingsGraphics = FunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsGraphics.empty());
-	EXPECT_NE(RenderSettingsGraphics.find("const SSettingsPageLayoutFrame GraphicsPage = ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const SSettingsPageLayoutFrame GraphicsPage = SettingsPageLayout(MainView, UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-display\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-visual\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-backend\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-modes\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-interaction\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("Localize(pBackendDefault->m_pTitle)"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmExtraAnimations, \"extra-animations\", Localize(\"Extra animations\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardRainbowTitles, \"rainbow-card-titles\", Localize(\"Rainbow card titles\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiMotionLevel, &g_Config.m_QmUiMotionLevel, Button, Localize(\"UI motion level\"), 0, 2"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("DoSettingsLabel(SETTINGS_GRAPHICS, -1, \"graphics-ui-motion-level-label\""), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const char *apMotionLabels[] = {Localize(\"Off\"), Localize(\"Reduced\"), Localize(\"Full\")}"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(DisplaySpec, GraphicsDisplayMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(VisualSpec, GraphicsVisualMinCardHeight"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("AddCard(InteractionSpec, GraphicsInteractionMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(BackendSpec, GraphicsBackendMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(ModesSpec, GraphicsModesMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap);"), std::string::npos);
@@ -2074,12 +2078,28 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsAppearance.find("UpdateMeasuredCardHeight"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, SettingsTransitionsDoNotChangePageBrightness)
+{
+	const std::vector<const char *> vFiles = {
+		"src/game/client/components/menus_settings.cpp",
+		"src/game/client/components/menus_settings7.cpp",
+		"src/game/client/components/tclient/menus_tclient.cpp",
+		"src/game/client/components/qmclient/menus_qmclient.cpp",
+	};
+	for(const char *pFile : vFiles)
+	{
+		const std::string Source = ReadTextFile(pFile);
+		EXPECT_EQ(Source.find("ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)"), std::string::npos) << pFile;
+		EXPECT_EQ(Source.find("ColorRGBA(0.0f, 0.0f, 0.0f, TabTransitionAlpha)"), std::string::npos) << pFile;
+	}
+}
+
 TEST(QmNewUiMenuBranches, SettingsCardFeedbackFixesUseStableLayouts)
 {
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string RenderSettingsDDNet = FunctionBody(SettingsSource, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsDDNet.empty());
-	EXPECT_NE(RenderSettingsDDNet.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(RenderSettingsDDNet.find("AddCard(DemoSpec"), std::string::npos);
 	EXPECT_NE(RenderSettingsDDNet.find("AddCard(GameplaySpec"), std::string::npos);
 	EXPECT_NE(RenderSettingsDDNet.find("AddCard(BackgroundSpec"), std::string::npos);
@@ -2172,7 +2192,7 @@ TEST(QmNewUiMenuBranches, TClientInfoUsesPublicCardDeck)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Body.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
-	EXPECT_NE(Body.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsPageLayout(MainView, UiScale);"), std::string::npos);
 	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_InfoPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.Render("), std::string::npos);
 	EXPECT_EQ(Body.find("MainView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);"), std::string::npos);
@@ -2190,7 +2210,7 @@ TEST(QmNewUiMenuBranches, TClientProfilesUsesPublicCardDeck)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Body.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
-	EXPECT_NE(Body.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsPageLayout(MainView, UiScale);"), std::string::npos);
 	EXPECT_NE(Body.find("s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);"), std::string::npos);
 	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ProfilesPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.Render("), std::string::npos);
@@ -2210,6 +2230,8 @@ TEST(QmNewUiMenuBranches, TClientConfigsUsesPublicCardDeck)
 	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ConfigsPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.Render("), std::string::npos);
 	EXPECT_NE(Body.find("static CScrollRegion s_ConfigListScrollRegion;"), std::string::npos);
+	EXPECT_NE(Body.find("ConfigListScrollRequest.m_Profile = EQmScrollProfile::MENU_LIST;"), std::string::npos);
+	EXPECT_EQ(Body.find("QmSettingsScrollRegionParams(1.0f)"), std::string::npos);
 	EXPECT_NE(Registry.find("{\"deck:tclient-configs-actions\", \"tclient-configs\", ECardColumn::Full, 0"), std::string::npos);
 	EXPECT_EQ(Registry.find("deck:tclient-configs-filters"), std::string::npos);
 	EXPECT_EQ(Registry.find("deck:tclient-configs-list"), std::string::npos);
@@ -2238,7 +2260,7 @@ TEST(QmNewUiMenuBranches, TClientWarListUsesPublicCardDeck)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Body.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
-	EXPECT_NE(Body.find("ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsPageLayout(MainView, UiScale);"), std::string::npos);
 	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_WarListPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(Body.find("str_startswith(m_SettingsCardFocusStableId.c_str(), \"deck:tclient-warlist-\")"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());"), std::string::npos);
@@ -2531,7 +2553,7 @@ TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 	const std::string NumericLabelBridge = FunctionBody(Menus, "bool CMenus::PrepareSettingsNumericFieldLabel(");
 	ASSERT_FALSE(General.empty());
 	ASSERT_FALSE(NumericLabelBridge.empty());
-	EXPECT_NE(General.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(General.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(General.find("SSettingsCardDefinition"), std::string::npos);
 	EXPECT_NE(General.find("m_SettingsCardDeck.Render("), std::string::npos);
 	EXPECT_NE(General.find("CQmScrollState"), std::string::npos);
@@ -2542,26 +2564,42 @@ TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(NumericLabelBridge.find("if(m_MenuTextPlanCollecting)"), std::string::npos);
 	EXPECT_NE(NumericLabelBridge.find("CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
 	EXPECT_NE(General.find("ui_widget::NumericField("), std::string::npos);
-	EXPECT_NE(General.find("AddCard(GameSpec, 140.0f * UiScale"), std::string::npos);
+	EXPECT_NE(General.find("AddCard(GameSpec, 120.0f * UiScale"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-game"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-language"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-client"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-recording"), std::string::npos);
+	EXPECT_NE(General.find("RecordingDefinition.m_MeasureRevision"), std::string::npos);
+	EXPECT_NE(General.find("return (100.0f + 30.0f * EnabledRows) * UiScale;"), std::string::npos);
+	EXPECT_EQ(General.find("AddCard(RecordingSpec"), std::string::npos);
 	EXPECT_EQ(General.find("BeginSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(General.find("DoSettingsScrollbarOption("), std::string::npos);
 	EXPECT_EQ(General.find("Ui()->DoEditBox("), std::string::npos);
 	EXPECT_EQ(General.find("Ui()->DoScrollbarH("), std::string::npos);
 }
+
+TEST(QmNewUiMenuBranches, SettingsCardContentHeightsExcludeSharedHeaderChrome)
+{
+	const std::string ControlsSource = ReadTextFile("src/game/client/components/menus_settings_controls.cpp");
+	const std::string ContributorsSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string MouseMeasure = FunctionBody(ControlsSource, "float CMenusSettingsControls::MeasureSettingsMouseHeight() const");
+	const std::string Contributors = FunctionBody(ContributorsSource, "void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(MouseMeasure.empty());
+	ASSERT_FALSE(Contributors.empty());
+	EXPECT_NE(MouseMeasure.find("return 2.0f * BUTTON_HEIGHT + BUTTON_SPACING;"), std::string::npos);
+	EXPECT_EQ(MouseMeasure.find("CARD_HEADER"), std::string::npos);
+	EXPECT_NE(Contributors.find("Community.m_Measure = [LineHeight](float) { return LineHeight * 3.5f; };"), std::string::npos);
+}
 TEST(QmNewUiMenuBranches, PlayerStandardPageUsesUnifiedSettingsStack)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string Navigation = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Identity = FunctionBody(Source, "void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)");
+	const std::string Identity = FunctionBody(Source, "void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton, float BodySize)");
 	const std::string Player = FunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
 	ASSERT_FALSE(Identity.empty());
 	ASSERT_FALSE(Player.empty());
 	EXPECT_NE(Identity.find("ui_widget::InputField("), std::string::npos);
-	EXPECT_NE(Player.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Player.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(Player.find("SSettingsCardDefinition"), std::string::npos);
 	EXPECT_NE(Player.find("m_SettingsCardDeck.Render("), std::string::npos);
 	EXPECT_NE(Player.find("CQmScrollState"), std::string::npos);
@@ -2593,7 +2631,7 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	const std::string Navigation = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Tee = FunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
 	ASSERT_FALSE(Tee.empty());
-	EXPECT_NE(Tee.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Tee.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(Tee.find("SSettingsCardDefinition"), std::string::npos);
 	EXPECT_NE(Tee.find("m_SettingsCardDeck.Render("), std::string::npos);
 	EXPECT_NE(Tee.find("CQmScrollState"), std::string::npos);
@@ -2612,17 +2650,25 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	ASSERT_NE(RefreshAfterDeck, std::string::npos);
 	EXPECT_LT(SkinListPriority, SkinListStart);
 	EXPECT_LT(DeckRender, RefreshAfterDeck);
-	EXPECT_NE(Tee.find("AddCard(IdentitySpec, TeeCardContentHeight"), std::string::npos);
-	EXPECT_NE(Tee.find("RenderIdentity(IdentityContent);"), std::string::npos);
-	EXPECT_NE(Tee.find("RenderOptions(OptionsContent);"), std::string::npos);
-	EXPECT_NE(Tee.find("RenderList(ListContent);"), std::string::npos);
+	EXPECT_NE(Tee.find("AddCard(IdentitySpec, 180.0f * UiScale"), std::string::npos);
+	EXPECT_NE(Tee.find("if(TeeSectionVisible(IdentityContent))"), std::string::npos);
+	EXPECT_NE(Tee.find("if(TeeSectionVisible(OptionsContent))"), std::string::npos);
+	EXPECT_NE(Tee.find("if(TeeSectionVisible(ListContent))"), std::string::npos);
+	EXPECT_NE(Tee.find("AdvanceListOffscreen();"), std::string::npos);
+	EXPECT_NE(Tee.find("gs_TeeListPreviewCache.BeginFrame();"), std::string::npos);
+	EXPECT_NE(Tee.find("BeginSettingsUiFrameScheduler("), std::string::npos);
+	EXPECT_NE(Tee.find("SettingsSkinBackgroundRequestBudgetDecision({"), std::string::npos);
+	EXPECT_NE(Tee.find("RequestLoad(ESettingsResourcePriority::VISIBLE)"), std::string::npos);
+	EXPECT_NE(Tee.find("SetSettingsTeeVisibleSnapshot(VisibleSnapshot)"), std::string::npos);
+	EXPECT_NE(Tee.find("gs_TeeListDrainPerfSession.m_LastLoads = LoadsNow;"), std::string::npos);
+	EXPECT_NE(Tee.find("gs_TeeSettingsPageState.m_LastRequestBudgetBlockReason = BackgroundBudgetDecision.m_BlockReason;"), std::string::npos);
 	EXPECT_NE(DeckSource.find("if(DrawLayout.m_TwoColumns && !aDisplayColumns[0].empty())"), std::string::npos);
 	EXPECT_NE(DeckSource.find("const size_t NumLayers = std::max({aDisplayColumns[0].size(), aDisplayColumns[1].size(), aDisplayColumns[2].size()});"), std::string::npos);
 	EXPECT_NE(DeckSource.find("AppendColumn(aDisplayColumns[1], 1, DrawLayout.m_aColumns[0], LeftY);"), std::string::npos);
 	EXPECT_NE(DeckSource.find("if(Visible || Card.m_pDefinition->m_RenderWhenClipped)"), std::string::npos);
 	EXPECT_NE(Tee.find("deck:tee-identity"), std::string::npos);
-	EXPECT_EQ(Tee.find("deck:tee-skin-options"), std::string::npos);
-	EXPECT_EQ(Tee.find("deck:tee-skin-list"), std::string::npos);
+	EXPECT_NE(Tee.find("deck:tee-skin-options"), std::string::npos);
+	EXPECT_NE(Tee.find("deck:tee-skin-list"), std::string::npos);
 	EXPECT_NE(Navigation.find("{\"tee\", CMenus::SETTINGS_TEE}"), std::string::npos);
 	EXPECT_EQ(Tee.find("BeginSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(Tee.find("DoSettingsScrollbarOption("), std::string::npos);
@@ -2635,7 +2681,7 @@ TEST(QmNewUiMenuBranches, GraphicsPilotHasNoRemainingLegacyInputOrScrollPath)
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Graphics.empty());
-	EXPECT_NE(Graphics.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Graphics.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(Graphics.find("SSettingsCardDefinition"), std::string::npos);
 	EXPECT_NE(Graphics.find("m_SettingsCardDeck.Render("), std::string::npos);
 	EXPECT_NE(Graphics.find("ui_widget::NumericField("), std::string::npos);
@@ -2680,7 +2726,7 @@ TEST(QmNewUiMenuBranches, ControlsStandardPageUsesUnifiedSettingsStack)
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings_controls.cpp");
 	const std::string Header = ReadTextFile("src/game/client/components/menus_settings_controls.h");
 	const std::string Navigation = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	EXPECT_NE(Source.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Source.find("SettingsPageLayout("), std::string::npos);
 	EXPECT_NE(Source.find("SSettingsCardDefinition"), std::string::npos);
 	EXPECT_NE(Source.find("m_SettingsCardDeck.Render"), std::string::npos);
 	EXPECT_NE(Source.find("ui_widget::InputField("), std::string::npos);

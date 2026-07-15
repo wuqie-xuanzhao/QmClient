@@ -6661,8 +6661,8 @@ polish = "Czas klatki"
 [[message]]
 key = "Freeze border color"
 [message.translations]
-simplified_chinese = "Freeze 边框颜色"
-traditional_chinese = "Freeze 邊框顏色"
+simplified_chinese = "冻结边框颜色"
+traditional_chinese = "凍結邊框顏色"
 japanese = "Freeze ボーダー色"
 korean = "Freeze 테두리 색상"
 russian = "Цвет границы Freeze"
@@ -6677,8 +6677,8 @@ polish = "Kolor obramowania zamrożenia"
 [[message]]
 key = "Freeze Collision Border Color"
 [message.translations]
-simplified_chinese = "Freeze 碰撞边框颜色"
-traditional_chinese = "Freeze 碰撞邊框顏色"
+simplified_chinese = "冻结碰撞边框颜色"
+traditional_chinese = "凍結碰撞邊框顏色"
 japanese = "Freeze 衝突ボーダー色"
 korean = "Freeze 충돌 테두리 색상"
 russian = "Цвет границы столкновения Freeze"
@@ -8119,8 +8119,8 @@ polish = "Tryb hitboxów"
 [[message]]
 key = "Hitbox Mode Freeze Border Color"
 [message.translations]
-simplified_chinese = "碰撞箱模式 Freeze 边界颜色"
-traditional_chinese = "碰撞箱模式 Freeze 邊界顏色"
+simplified_chinese = "碰撞箱模式冻结边框颜色"
+traditional_chinese = "碰撞箱模式凍結邊框顏色"
 japanese = "衝突ボックスモード Freeze 境界色"
 korean = "히트박스 모드 Freeze 경계 색상"
 russian = "Цвет границ Freeze в режиме хитбоксов"

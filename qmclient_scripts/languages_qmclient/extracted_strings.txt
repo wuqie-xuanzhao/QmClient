@@ -1000,6 +1000,7 @@ Dummy body skin
 Dummy clan
 Dummy Control: %s
 Dummy copy
+Dummy copy: %s
 Dummy country (ISO 3166-1 numeric)
 Dummy decoration color
 Dummy eyes color
@@ -1028,7 +1029,6 @@ Dummy skin marking
 Dummy skin queue current position
 Dummy skin queue max length
 Dummy skin queue switch interval (ms)
-Dummy sync: %s
 Dummy Window
 Dummy window size
 Dummy window zoom
@@ -3095,11 +3095,11 @@ Show draggable virtual back button
 Show dummy actions
 Show dummy angle in movement info HUD
 Show dummy control status
+Show dummy copy status
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 Show dummy mini view only when other tee leaves current view
 Show dummy mini view window
 Show dummy position in movement info HUD
-Show dummy sync status
 Show dummy velocity in movement info HUD
 Show enemy color in chat
 Show enemy color in scoreboard
@@ -3148,9 +3148,9 @@ Show in-game FPS
 Show in-game HUD
 Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
-Show in-game HUD (clone sync state)
 Show in-game HUD (DDRace HUD)
 Show in-game HUD (dummy controls)
+Show in-game HUD (dummy copy state)
 Show in-game HUD (hammer state)
 Show in-game HUD (health + ammo)
 Show in-game HUD (jumps used)

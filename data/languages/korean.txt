@@ -3005,6 +3005,9 @@ Dummy Control: %s
 Dummy copy
 == 더미 복사
 
+Dummy copy: %s
+== 더미 동기화: %s
+
 Dummy country (ISO 3166-1 numeric)
 == 더미 국가 (ISO 3166-1 숫자 코드)
 
@@ -3088,9 +3091,6 @@ Dummy skin queue max length
 
 Dummy skin queue switch interval (ms)
 == 더미 스킨 큐 전환 간격 (밀리초)
-
-Dummy sync: %s
-== 더미 동기화: %s
 
 Dummy Window
 == 더미 창
@@ -9290,6 +9290,9 @@ Show dummy angle in movement info HUD
 Show dummy control status
 == 더미 제어 상태 표시
 
+Show dummy copy status
+== 더미 동기화 상태 표시
+
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 == 플레이어에 더미 CTF 깃발 표시 (0=끄기, 1=빨간 깃발, 2=파란 깃발)
 
@@ -9301,9 +9304,6 @@ Show dummy mini view window
 
 Show dummy position in movement info HUD
 == 이동 정보 HUD에 더미 위치 표시
-
-Show dummy sync status
-== 더미 동기화 상태 표시
 
 Show dummy velocity in movement info HUD
 == 이동 정보 HUD에 더미 속도 표시
@@ -9449,14 +9449,14 @@ Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
 == 게임 내 HUD 표시 (복제 제어 상태)
 
-Show in-game HUD (clone sync state)
-== 게임 내 HUD 표시 (복제 동기화 상태)
-
 Show in-game HUD (DDRace HUD)
 == 게임 내 HUD 표시 (DDRace HUD)
 
 Show in-game HUD (dummy controls)
 == 게임 내 HUD 표시 (더미 컨트롤)
+
+Show in-game HUD (dummy copy state)
+== 게임 내 HUD 표시 (복제 동기화 상태)
 
 Show in-game HUD (hammer state)
 == 게임 내 HUD 표시 (망치 상태)

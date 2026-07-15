@@ -3005,6 +3005,9 @@ Dummy Control: %s
 Dummy copy
 == Copia de Dummy
 
+Dummy copy: %s
+== Sincronización del dummy: %s
+
 Dummy country (ISO 3166-1 numeric)
 == País del Dummy (ISO 3166-1 numérico)
 
@@ -3088,9 +3091,6 @@ Dummy skin queue max length
 
 Dummy skin queue switch interval (ms)
 == Intervalo de cambio de cola de skins del Dummy (ms)
-
-Dummy sync: %s
-== Sincronización del dummy: %s
 
 Dummy Window
 == Ventana del dummy
@@ -9290,6 +9290,9 @@ Show dummy angle in movement info HUD
 Show dummy control status
 == Mostrar estado de control del Dummy
 
+Show dummy copy status
+== Mostrar estado de sincronización del Dummy
+
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 == Mostrar banderas CTF del Dummy en jugadores (0=Desactivado, 1=Bandera roja, 2=Bandera azul)
 
@@ -9301,9 +9304,6 @@ Show dummy mini view window
 
 Show dummy position in movement info HUD
 == Mostrar posición del Dummy en el HUD de información de movimiento
-
-Show dummy sync status
-== Mostrar estado de sincronización del Dummy
 
 Show dummy velocity in movement info HUD
 == Mostrar velocidad del Dummy en el HUD de información de movimiento
@@ -9449,14 +9449,14 @@ Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
 == Mostrar HUD en el juego (estado de control del clon)
 
-Show in-game HUD (clone sync state)
-== Mostrar HUD en el juego (estado de sincronización del clon)
-
 Show in-game HUD (DDRace HUD)
 == Mostrar HUD en el juego (HUD de DDRace)
 
 Show in-game HUD (dummy controls)
 == Mostrar HUD en el juego (controles del Dummy)
+
+Show in-game HUD (dummy copy state)
+== Mostrar HUD en el juego (estado de sincronización del clon)
 
 Show in-game HUD (hammer state)
 == Mostrar HUD en el juego (estado del martillo)

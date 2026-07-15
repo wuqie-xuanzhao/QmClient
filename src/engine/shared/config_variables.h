@@ -75,7 +75,7 @@ MACRO_CONFIG_INT(ClShowhudDummyActions, cl_showhud_dummy_actions, 1, 0, 1, CFGFL
 MACRO_CONFIG_INT(ClShowhudKeyStatusReset, cl_showhud_key_status_reset, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (keyboard blocking status)")
 MACRO_CONFIG_INT(ClShowhudKeyStatusHammer, cl_showhud_key_status_hammer, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (hammer state)")
 MACRO_CONFIG_INT(ClShowhudKeyStatusControl, cl_showhud_key_status_control, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (clone control state)")
-MACRO_CONFIG_INT(ClShowhudKeyStatusSync, cl_showhud_key_status_sync, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (clone sync state)")
+MACRO_CONFIG_INT(ClShowhudKeyStatusSync, cl_showhud_key_status_sync, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (dummy copy state)")
 MACRO_CONFIG_INT(ClShowhudPlayerPosition, cl_showhud_player_position, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (player position)")
 MACRO_CONFIG_INT(ClShowhudPlayerSpeed, cl_showhud_player_speed, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (player speed)")
 MACRO_CONFIG_INT(ClShowhudPlayerAngle, cl_showhud_player_angle, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show in-game HUD (player aim angle)")

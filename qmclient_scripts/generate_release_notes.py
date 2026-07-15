@@ -47,8 +47,12 @@ PRE_RELEASE_HINT_RE = re.compile(
     r"(?i)(nightly|rc\d*|alpha|beta|pre|preview|snapshot|dev)"
 )
 
-PLAYER_TYPES = {"feat", "fix", "perf", "refactor", "improve", "revert"}
+# 玩家可感知的 commit type。
+# refactor 默认不进发布说明（实现重构玩家无感）；可用 --include-refactor 打开。
+PLAYER_TYPES = {"feat", "fix", "perf", "improve", "revert"}
+OPTIONAL_PLAYER_TYPES = {"refactor"}
 
+# 组内排序：feat 在前，revert 在后
 TYPE_PRIORITY = {
     "feat": 0,
     "improve": 1,
@@ -251,12 +255,18 @@ def parse_trailers(body: str) -> str:
     return ""
 
 
-def parse_commit(commit_hash: str, subject: str, body: str) -> CommitNote | None:
+def parse_commit(
+    commit_hash: str,
+    subject: str,
+    body: str,
+    player_types: set[str] | None = None,
+) -> CommitNote | None:
     match = SUBJECT_RE.match(subject.strip())
     if not match:
         return None
     commit_type = match.group("type").lower()
-    if commit_type not in PLAYER_TYPES:
+    allowed = player_types if player_types is not None else PLAYER_TYPES
+    if commit_type not in allowed:
         return None
     scope = (match.group("scope") or "").strip()
     description = match.group("desc").strip()
@@ -303,8 +313,11 @@ def resolve_previous_tag(current_tag: str, channel: str) -> str | None:
             return tag
     return None
 
-
-def collect_notes(current_tag: str, previous_tag: str | None) -> list[CommitNote]:
+def collect_notes(
+    current_tag: str,
+    previous_tag: str | None,
+    player_types: set[str] | None = None,
+) -> list[CommitNote]:
     revspec = f"{previous_tag}..{current_tag}" if previous_tag else current_tag
     raw = run_git(
         [
@@ -321,7 +334,12 @@ def collect_notes(current_tag: str, previous_tag: str | None) -> list[CommitNote
         parts = entry.split(FIELD_SEPARATOR, 2)
         if len(parts) != 3:
             continue
-        note = parse_commit(parts[0].strip(), parts[1].strip(), parts[2])
+        note = parse_commit(
+            parts[0].strip(),
+            parts[1].strip(),
+            parts[2],
+            player_types=player_types,
+        )
         if note is not None:
             notes.append(note)
     return notes
@@ -337,6 +355,7 @@ def render_domain(domain: str, notes: list[CommitNote]) -> list[str]:
         lines.append(f"- {note.format_prefix()}: {note.release_zh}")
     lines.append("")
     return lines
+
 
 
 def render_header(
@@ -359,8 +378,9 @@ def render_header(
         title = "Nightly" if current_tag == "nightly" else version
         lines.append(f"# QmClient {title} · 预发布（Pre-release）")
         lines.append("")
-        lines.append("> **通道**：预发布 / 内部测试")
+        lines.append("> **通道**：预发布 / 内部测试 · **Nightly 构建**")
         lines.append("> **注意**：可能不稳定；`nightly` 会被下一次构建覆盖，**不建议当主力客户端**")
+        lines.append("> **说明来源**：由区间内 commit 自动汇总（`feat`/`fix`/`perf`/`improve`/`revert`；默认不含 `refactor`/工程类）")
         lines.append(f"> **Tag**：`{current_tag}`")
         if branch:
             lines.append(f"> **分支**：`{branch}`")
@@ -467,6 +487,11 @@ def main() -> int:
         default=None,
         help="输出 Markdown 路径；不传则打印到 stdout",
     )
+    parser.add_argument(
+        "--include-refactor",
+        action="store_true",
+        help="把 refactor 提交也写入发布说明（默认排除）",
+    )
     args = parser.parse_args()
 
     channel = detect_channel(args.current_tag) if args.channel == "auto" else args.channel
@@ -484,7 +509,10 @@ def main() -> int:
 
     previous_tag = args.previous_tag or resolve_previous_tag(args.current_tag, channel)
     output_path = resolve_repo_path(args.output)
-    notes = collect_notes(args.current_tag, previous_tag)
+    player_types = set(PLAYER_TYPES)
+    if args.include_refactor:
+        player_types |= OPTIONAL_PLAYER_TYPES
+    notes = collect_notes(args.current_tag, previous_tag, player_types=player_types)
     markdown = render_markdown(
         version=args.version,
         current_tag=args.current_tag,

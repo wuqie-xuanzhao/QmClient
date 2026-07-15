@@ -3005,6 +3005,9 @@ Dummy Control: %s
 Dummy copy
 == ダミーコピー
 
+Dummy copy: %s
+== ダミー同期：%s
+
 Dummy country (ISO 3166-1 numeric)
 == ダミー国（ISO 3166-1 数値コード）
 
@@ -3088,9 +3091,6 @@ Dummy skin queue max length
 
 Dummy skin queue switch interval (ms)
 == ダミースキンキュー切り替え間隔（ミリ秒）
-
-Dummy sync: %s
-== ダミー同期：%s
 
 Dummy Window
 == ダミーウィンドウ
@@ -9290,6 +9290,9 @@ Show dummy angle in movement info HUD
 Show dummy control status
 == ダミーコントロール状態を表示
 
+Show dummy copy status
+== ダミー同期状態を表示
+
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 == プレイヤーにダミー CTF フラグを表示 (0=オフ, 1=赤旗, 2=青旗)
 
@@ -9301,9 +9304,6 @@ Show dummy mini view window
 
 Show dummy position in movement info HUD
 == 移動情報 HUD にダミー位置を表示
-
-Show dummy sync status
-== ダミー同期状態を表示
 
 Show dummy velocity in movement info HUD
 == 移動情報 HUD にダミー速度を表示
@@ -9449,14 +9449,14 @@ Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
 == ゲーム内 HUD を表示（クローン制御状態）
 
-Show in-game HUD (clone sync state)
-== ゲーム内 HUD を表示（クローン同期状態）
-
 Show in-game HUD (DDRace HUD)
 == ゲーム内 HUD を表示（DDRace HUD）
 
 Show in-game HUD (dummy controls)
 == ゲーム内 HUD を表示（ダミー操作）
+
+Show in-game HUD (dummy copy state)
+== ゲーム内 HUD を表示（クローン同期状態）
 
 Show in-game HUD (hammer state)
 == ゲーム内 HUD を表示（ハンマー状態）

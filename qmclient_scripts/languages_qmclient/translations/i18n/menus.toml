@@ -4332,8 +4332,8 @@ polish = "Klan kukły"
 [[message]]
 key = "Dummy copy"
 [message.translations]
-simplified_chinese = "分身同步动作"
-traditional_chinese = "分身同步動作"
+simplified_chinese = "分身同步"
+traditional_chinese = "分身同步"
 japanese = "ダミーコピー"
 korean = "더미 복사"
 russian = "Копия дамми"
@@ -14382,7 +14382,7 @@ turkish = "Dummy kontrol durumunu göster"
 polish = "Pokaż status sterowania kukłą"
 
 [[message]]
-key = "Show dummy sync status"
+key = "Show dummy copy status"
 [message.translations]
 simplified_chinese = "显示分身同步状态"
 traditional_chinese = "顯示分身同步狀態"
@@ -14766,7 +14766,7 @@ turkish = "Oyunda HUD göster (klon kontrol durumu)"
 polish = "Pokaż HUD w grze (stan sterowania klonem)"
 
 [[message]]
-key = "Show in-game HUD (clone sync state)"
+key = "Show in-game HUD (dummy copy state)"
 [message.translations]
 simplified_chinese = "显示游戏内 HUD（分身同步状态）"
 traditional_chinese = "顯示遊戲內 HUD（分身同步狀態）"

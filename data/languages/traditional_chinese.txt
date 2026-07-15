@@ -3003,7 +3003,10 @@ Dummy Control: %s
 == 分身控制：%s
 
 Dummy copy
-== 分身同步動作
+== 分身同步
+
+Dummy copy: %s
+== 分身同步：%s
 
 Dummy country (ISO 3166-1 numeric)
 == 分身的國家（ISO 3166-1 數字碼）
@@ -3088,9 +3091,6 @@ Dummy skin queue max length
 
 Dummy skin queue switch interval (ms)
 == 分身皮膚隊列切換間隔（毫秒）
-
-Dummy sync: %s
-== 分身同步：%s
 
 Dummy Window
 == 分身小窗
@@ -4050,10 +4050,10 @@ Freeze bar opacity (0 invisible, 100 fully visible)
 == 凍結內凍結條的不透明度（0 不可見，100 完全可見）
 
 Freeze border color
-== Freeze 邊框顏色
+== 凍結邊框顏色
 
 Freeze Collision Border Color
-== Freeze 碰撞邊框顏色
+== 凍結碰撞邊框顏色
 
 Freeze Laser Inner Color
 == 凍結激光實心顏色
@@ -4650,7 +4650,7 @@ Hitbox mode
 == 碰撞箱模式
 
 Hitbox Mode Freeze Border Color
-== 碰撞箱模式 Freeze 邊界顏色
+== 碰撞箱模式凍結邊框顏色
 
 Hitbox Mode Global Opacity
 == 碰撞箱模式全域透明度
@@ -9290,6 +9290,9 @@ Show dummy angle in movement info HUD
 Show dummy control status
 == 顯示分身控制狀態
 
+Show dummy copy status
+== 顯示分身同步狀態
+
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 == 在玩家身上顯示分身 CTF 旗幟（0=關閉，1=紅旗，2=藍旗）
 
@@ -9301,9 +9304,6 @@ Show dummy mini view window
 
 Show dummy position in movement info HUD
 == 在運動信息 HUD 中顯示分身位置
-
-Show dummy sync status
-== 顯示分身同步狀態
 
 Show dummy velocity in movement info HUD
 == 在運動信息 HUD 中顯示分身速度
@@ -9405,7 +9405,7 @@ Show hitbox mode
 == 顯示碰撞箱模式
 
 Show Hook Collision
-== 顯示鉤子碰撞
+== 顯示鉤子輔助線
 
 Show hook strength icon indicator
 == 顯示鉤索強度圖標
@@ -9449,14 +9449,14 @@ Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
 == 顯示遊戲內 HUD（分身控制狀態）
 
-Show in-game HUD (clone sync state)
-== 顯示遊戲內 HUD（分身同步狀態）
-
 Show in-game HUD (DDRace HUD)
 == 顯示遊戲內 HUD (DDRace HUD)
 
 Show in-game HUD (dummy controls)
 == 顯示遊戲內 HUD（分身操作）
+
+Show in-game HUD (dummy copy state)
+== 顯示遊戲內 HUD（分身同步狀態）
 
 Show in-game HUD (hammer state)
 == 顯示遊戲內 HUD（錘狀態）
@@ -11232,7 +11232,7 @@ Toggles hit others
 == 切換打別人
 
 Toggles hook collision
-== 切換鉤子碰撞
+== 切換鉤子輔助線
 
 Toggles invincible mode
 == 切換無敵模式

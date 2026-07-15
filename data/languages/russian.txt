@@ -3005,6 +3005,9 @@ Dummy Control: %s
 Dummy copy
 == Копия дамми
 
+Dummy copy: %s
+== Синхронизация дамми: %s
+
 Dummy country (ISO 3166-1 numeric)
 == Страна дамми (ISO 3166-1 числовой).
 
@@ -3088,9 +3091,6 @@ Dummy skin queue max length
 
 Dummy skin queue switch interval (ms)
 == Интервал переключения очереди скинов дамми (мс)
-
-Dummy sync: %s
-== Синхронизация дамми: %s
 
 Dummy Window
 == Окно дамми
@@ -9290,6 +9290,9 @@ Show dummy angle in movement info HUD
 Show dummy control status
 == Показать статус управления дамми
 
+Show dummy copy status
+== Показать статус синхронизации дамми
+
 Show dummy CTF flags on players (0=Off, 1=Red flag, 2=Blue flag)
 == Показывать флаги CTF дамми на игроках (0=Выкл, 1=Красный флаг, 2=Синий флаг)
 
@@ -9301,9 +9304,6 @@ Show dummy mini view window
 
 Show dummy position in movement info HUD
 == Показывать позицию дамми в HUD информации о движении
-
-Show dummy sync status
-== Показать статус синхронизации дамми
 
 Show dummy velocity in movement info HUD
 == Показывать скорость дамми в HUD информации о движении
@@ -9449,14 +9449,14 @@ Show in-game HUD (checkpoint time diff)
 Show in-game HUD (clone control state)
 == Показывать HUD в игре (состояние управления клоном)
 
-Show in-game HUD (clone sync state)
-== Показывать HUD в игре (состояние синхронизации клона)
-
 Show in-game HUD (DDRace HUD)
 == Показывать HUD в игре (DDRace HUD)
 
 Show in-game HUD (dummy controls)
 == Показывать HUD в игре (управление дамми)
+
+Show in-game HUD (dummy copy state)
+== Показывать HUD в игре (состояние синхронизации клона)
 
 Show in-game HUD (hammer state)
 == Показывать HUD в игре (состояние молота)
