@@ -137,7 +137,7 @@
 == '%s' инициировал(а) голосование за перемещение '%s' в зрители (причина: %s)
 
 '%s' called for vote to move you to spectators
-== '%s' инициировал(а) голосование за ваше перемещение в зрители
+== '%s' инициировал(а) голосование за перемещение вас в наблюдатели
 
 '%s' called for vote to mute '%s' (reason: %s)
 == '%s' инициировал(а) голосование за мут '%s' (причина: %s)
@@ -152,7 +152,7 @@
 == '%s' инициировал(а) голосование за изменение опции сервера: %s (причина: %s)
 
 '%s' disabled practice mode for your team
-== '%s' отключил(а) режим тренировки для вашей команды
+== '%s' отключил(а) тренировочный режим для вашей команды
 
 '%s' disabled team 0 mode.
 == '%s' отключил(а) режим команды 0.
@@ -164,16 +164,16 @@
 == '%s' пригласил(а) '%s' в вашу команду.
 
 '%s' invited you to team %s. Use /team %s to join
-== '%s' пригласил(а) вас в команду %s. Используйте /team %s, чтобы присоединиться.
+== '%s' пригласил(а) вас в команду %s. Используйте /team %s, чтобы присоединиться
 
 '%s' is not a valid option on this server
 == '%s' не является допустимой опцией на этом сервере
 
 '%s' joined team %s
-== '%s' присоединился(ась) к команде %s
+== '%s' присоединился к команде %s
 
 '%s' joined team 0
-== '%s' присоединился(ась) к команде 0
+== '%s' присоединился к команде 0
 
 '%s' locked your team.
 == '%s' заблокировал(а) вашу команду.
@@ -185,7 +185,7 @@
 == '%s' разблокировал(а) вашу команду.
 
 '%s' was force-paused for %s seconds
-== '%s' был(а) принудительно поставлен(а) на паузу на %s секунд
+== '%s' был(а) принудительно приостановлен(а) на %s секунд
 
 '%s' would have timed out, but can use timeout protection now
 == '%s' мог(ла) бы вылететь по таймауту, но использует защиту от таймаута
@@ -441,7 +441,7 @@ Add current cut to the export list
 == Добавить текущий отрезок в список экспорта
 
 Add debug dummy to server (Debug build only)
-== Добавить отладочного дамми на сервер (только для Debug-сборки)
+== Добавить отладочного дамми на сервер (только для отладочной сборки)
 
 Add demo timeline marker
 == Добавить маркер временной шкалы демо
@@ -648,7 +648,7 @@ Alpha
 == Альфа
 
 Also apply to dummy
-== Также применять к dummy
+== Также применить к дамми
 
 Always show
 == Всегда показывать
@@ -663,10 +663,10 @@ Always show nameplates regardless of distance
 == Всегда показывать таблички с именами независимо от расстояния
 
 Always show other players' hook collision lines
-== Всегда показывать линии столкновения крюка других игроков
+== Всегда показывать линии захвата других игроков
 
 Always show own player's hook collision line
-== Всегда показывать линию столкновения собственного крюка
+== Всегда показывать свою линию захвата
 
 Always translate
 == Всегда переводить
@@ -735,7 +735,7 @@ Appearance / Chat
 == Внешний вид / Чат
 
 Appearance / Hook Collision
-== Внешний вид / Столкновение крюка
+== Внешний вид / Вспомогательные линии крюка
 
 Appearance / HUD
 == Внешний вид / HUD
@@ -852,7 +852,7 @@ Are you sure you want to delete this asset?
 == Вы уверены, что хотите удалить этот ресурс?
 
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== Вы уверены, что хотите сохранить скин? Если скин с таким именем уже существует, он будет заменён.
+== Вы уверены, что хотите сохранить свой скин? Если скин с таким именем уже существует, он будет заменен.
 
 Arrow assets
 == Ресурсы стрелок
@@ -930,7 +930,7 @@ Authenticate to rcon with a username
 == Аутентификация в rcon с именем пользователя
 
 Authorized player forced vote '%s'
-== Авторизованный игрок принудительно установил голосование '%s'
+== Уполномоченный игрок принудительно выставил голосование '%s'
 
 Auto
 == Авто
@@ -978,13 +978,13 @@ Auto greet friend on map join
 == Автоматически приветствовать друга при входе на карту
 
 Auto greet friend text
-== Текст автоматического приветствия друга при входе на карту
+== Текст автоматического приветствия друга
 
 Auto greet friends entering map
-== Автоприветствие друзей, заходящих на карту
+== Автоматически приветствовать друзей, входящих на карту
 
 Auto hot-reload after external saves
-== Автогорячая перезагрузка после внешнего сохранения
+== Автоматическая горячая перезагрузка после внешнего сохранения
 
 Auto login Axiom server
 == Автовход на сервер Axiom
@@ -1020,10 +1020,10 @@ Auto save and load background strokes
 == Автоматически сохранять и загружать фоновые штрихи
 
 Auto save chat log
-== Автосохранение лога чата
+== Автоматически сохранять журнал чата
 
 Auto start vote
-== Автоматически начать голосование
+== Автоматически начинать голосование
 
 Auto switch to the tee that got unfrozen
 == Автопереключение на ти, который разморозился
@@ -1035,7 +1035,7 @@ Auto switch weapon on pickup
 == Автоматически переключать оружие при подборе
 
 Auto team lock
-== Автоблокировка команды
+== Автоматическая блокировка команды
 
 Auto translate received messages
 == Автоперевод полученных сообщений
@@ -1047,7 +1047,7 @@ Auto unmute when speaking
 == Автовключение микрофона при речи
 
 Auto unspec on unfreeze
-== Автовыход из зрителей при разморозке
+== Автоматически прекращать наблюдение при разморозке
 
 Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)
 == Автоматическое голосование за смену карты после минимальной длительности (0=Выкл, 1=Против, 2=За)
@@ -1077,10 +1077,10 @@ Auto-follow delay
 == Задержка авто-следования
 
 Auto-follow friend server switch delay (seconds)
-== Задержка автоматического следования за другом при смене сервера (сек)
+== Задержка автоматического переключения на сервер друга (сек)
 
 Auto-lock after joining lockable team
-== Автоматически блокировать команду при вступлении в блокируемую команду
+== Автоматически блокировать после вступления в блокируемую команду
 
 Auto-lock delay (seconds)
 == Задержка автоблокировки (сек)
@@ -1089,10 +1089,10 @@ Auto-login after entering Axiom community server
 == Автоматический вход на серверы сообщества Axiom
 
 Auto-record replay when player sets a new personal best time.
-== Автоматически записывать повтор, когда игрок устанавливает новый личный рекорд.
+== Автоматически записывать повтор при установлении нового личного рекорда
 
 Auto-refresh server list for friend notifications
-== Автоматически обновлять список серверов для уведомлений о друзьях
+== Автоматическое обновление списка серверов для уведомлений о друзьях
 
 Auto-reply to muted players
 == Автоответ заглушённым игрокам
@@ -1101,10 +1101,10 @@ Auto-reply when game minimized
 == Автоответ при свёрнутом окне игры
 
 Auto-save chat log
-== Автосохранение истории чата
+== Автоматическое сохранение журнала чата
 
 Auto-save history count (0=disable)
-== Количество автоматически сохраняемых историй (0=отключить автоматическую запись истории прохождения карт)
+== Количество автоматически сохраняемых записей (0 = отключено)
 
 Auto-screenshot on game end
 == Автоматический скриншот при завершении игры
@@ -1164,7 +1164,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Автоматически включать авто-переключение Gores в игровом режиме Gores
 
 Automatically re-join team 0 after finish (only if unlocked).
-== Автоматически возвращаться в команду 0 после финиша (только если разблокировано).
+== Автоматически возвращаться в команду 0 после финиша (только если не заблокировано)
 
 Automatically record demos
 == Автоматически записывать демки
@@ -1203,7 +1203,7 @@ Axiom auto login succeeded
 == Автоматический вход в Axiom выполнен успешно
 
 Axiom dummy password
-== Пароль дамми на Axiom
+== Пароль дубля Axiom
 
 Axiom main account password
 == Пароль основной учётной записи Axiom
@@ -1539,13 +1539,13 @@ Can't disable team 0 mode. This team exceeds the maximum allowed size of %s play
 == Нельзя отключить режим команды 0. Эта команда превышает максимально допустимый размер в %s игроков для обычной команды.
 
 Can't enable team 0 mode with practice mode on.
-== Нельзя включить режим команды 0 при включённом режиме тренировки.
+== Нельзя включить режим команды 0, пока включён режим тренировки
 
 Can't find a Tutorial server
 == Не удалось найти обучающий сервер
 
 Can't invite players to this team
-== Нельзя приглашать игроков в эту команду
+== Нельзя пригласить игроков в эту команду
 
 Can't invite this quickly
 == Нельзя приглашать так быстро
@@ -1560,13 +1560,13 @@ Cancel
 == Отмена
 
 Cancel your swap request
-== Отменить ваш запрос на обмен
+== Отменить запрос на обмен
 
 Candidate files
 == Файлы-кандидаты
 
 Cannot swap: the other player is not in your team
-== Нельзя обменяться: другой игрок не в вашей команде
+== Невозможно обменяться: другой игрок не в вашей команде
 
 Card Appearance
 == Внешний вид карточки
@@ -1722,7 +1722,7 @@ Choose country flag
 == Выбрать флаг страны
 
 Choose default eyes when joining a server
-== Выбрать выражение лица по умолчанию при входе на сервер
+== Выбирать глаза по умолчанию при подключении к серверу
 
 Choose export name first.
 == Сначала введите имя экспорта.
@@ -1737,7 +1737,7 @@ Clan
 == Клан
 
 Clan color in friends list
-== Цвет клана в списке друзей
+== Цвет участника клана в списке друзей
 
 Clan member entry color in friend list
 == Цвет записи участника клана в списке друзей
@@ -1809,7 +1809,7 @@ Clear finished
 == Очистить завершённые
 
 Clear friend note
-== Очистить заметку друга
+== Очистить заметку о друге
 
 Clear local console
 == Очистить локальную консоль
@@ -1857,7 +1857,7 @@ Click to select server. Double click to join your friend.
 == Нажмите, чтобы выбрать сервер. Дважды нажмите, чтобы присоединиться к другу.
 
 Click to set color
-== Нажмите, чтобы установить цвет
+== Нажмите, чтобы задать цвет
 
 Client
 == Клиент
@@ -1923,16 +1923,16 @@ Color of authenticated player names on scoreboard
 == Цвет имён авторизованных игроков на табло
 
 Color of hook collision line tip segment
-== Цвет концевого сегмента линии столкновения крюка
+== Цвет конечного сегмента линии захвата
 
 Color of hook line hitting hookable tile
-== Цвет линии крюка, попадающей в зацепляемый тайл
+== Цвет линии захвата при попадании на зацепляемый блок
 
 Color of hook line hitting tee
-== Цвет линии крюка, попадающей в ти
+== Цвет линии захвата при попадании на ти
 
 Color of hook line not hitting anything
-== Цвет линии крюка, не попадающей ни во что
+== Цвет линии захвата, когда ни во что не попали
 
 Colorize ping on scoreboard
 == Раскрашивать пинг на табло
@@ -1947,7 +1947,7 @@ Colors in scoreboard
 == Цвета в таблице результатов
 
 Colors of the hook collision line, in case of a possible collision with:
-== Цвета линии столкновения крюка при возможном столкновении с:
+== Цвета линии захвата при возможном столкновении с:
 
 Combo
 == Комбо
@@ -1968,7 +1968,7 @@ Command is not available on solo servers
 == Команда недоступна на соло-серверах
 
 Command to run when joining server
-== Команда для выполнения при подключении к серверу
+== Команда, выполняемая при подключении к серверу
 
 Command:
 == Команда:
@@ -2067,10 +2067,10 @@ Connect address error
 == Ошибка адреса подключения
 
 Connect dummy
-== Подключить дамми
+== Подключить дубль
 
 Connect dummy to enable
-== Подключите дамми для включения
+== Подключите дамми, чтобы включить
 
 Connect to a server first
 == Сначала подключитесь к серверу
@@ -2091,7 +2091,7 @@ Connected, waiting for first ping
 == Подключено, ожидание первого пинга
 
 Connecting dummy
-== Подключение дамми
+== Подключение дубля
 
 Connecting to
 == Подключение к
@@ -2403,7 +2403,7 @@ Cycle custom Tee hue
 == Циклически менять оттенок пользовательского Tee
 
 Cycle custom Tee hue for dummy simultaneously
-== Циклически менять оттенок пользовательского Tee для дамми
+== Циклическая смена оттенка Tee для куклы одновременно
 
 Cycle custom Tee hue for main
 == Циклически менять оттенок пользовательского Tee для основного
@@ -2694,10 +2694,10 @@ Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
 == Устарело: позиция Y подсказки прыжка, перенесено в qm_jump_hint_y при запуске
 
 Depth freeze tile overlay alpha (0-100)
-== Альфа наложения для тайлов глубокой заморозки (0-100)
+== Прозрачность наложения для плитки глубокой заморозки (0-100)
 
 Depth unfreeze tile overlay alpha (0-100)
-== Альфа наложения для тайлов глубокой разморозки (0-100)
+== Прозрачность наложения для плитки глубокой разморозки (0-100)
 
 Deselect
 == Отменить выбор
@@ -2715,7 +2715,7 @@ Detailed reason
 == Подробная причина
 
 Detect compatible solo prompts from custom servers
-== Определять совместимые соло-подсказки с пользовательских серверов
+== Обнаружение совместимых подсказок соло на пользовательских серверах
 
 Detection distance
 == Дистанция обнаружения
@@ -2877,7 +2877,7 @@ Do not set this variable, instead create ddnet-serverlist-urls.cfg next to setti
 == Не устанавливайте эту переменную, вместо этого создайте ddnet-serverlist-urls.cfg рядом с settings_ddnet.cfg, чтобы указать все возможные URL-адреса списков серверов.
 
 Do not set, used to mark official tutorial server
-== Не устанавливать, используется для пометки официального обучающего сервера.
+== Не устанавливайте, используется для обозначения официального обучающего сервера
 
 Do not show Tees visible on screen
 == Не показывать Tee, видимых на экране
@@ -2910,22 +2910,22 @@ Door laser outline color
 == Цвет контура лазера двери.
 
 Download community skins
-== Загрузить скины сообщества
+== Скачать скины сообщества
 
 Download failed
-== Загрузка не удалась
+== Скачивание не удалось
 
 Download skins
-== Загрузить скины
+== Скачать скины
 
 Download skins immediately from cl_skin_download_url
 == Немедленно загружать скины из cl_skin_download_url.
 
 Download this asset?
-== Загрузить этот ресурс?
+== Скачать этот ресурс?
 
 Downloaded
-== Загружено
+== Скачано
 
 Downloading map
 == Загрузка карты
@@ -2991,58 +2991,58 @@ Dummy
 == Дамми
 
 Dummy body color
-== Цвет тела дамми.
+== Цвет тела дамми
 
 Dummy body skin
-== Скин тела дамми.
+== Скин тела куклы
 
 Dummy clan
-== Клан дамми.
+== Клан куклы
 
 Dummy Control: %s
 == Управление дамми: %s
 
 Dummy copy
-== Копия дамми
+== Копия куклы
 
 Dummy copy: %s
-== Синхронизация дамми: %s
+== Синхронизация дубля: %s
 
 Dummy country (ISO 3166-1 numeric)
-== Страна дамми (ISO 3166-1 числовой).
+== Страна куклы (ISO 3166-1 числовой код)
 
 Dummy decoration color
-== Цвет украшения дамми.
+== Цвет украшения куклы
 
 Dummy eyes color
-== Цвет глаз дамми.
+== Цвет глаз куклы
 
 Dummy eyes when joining server (0=normal, 1=pain, 2=happy, 3=surprised, 4=angry, 5=blink)
 == Глаза дамми при присоединении к серверу (0=нормальные, 1=боль, 2=счастливые, 3=удивлённые, 4=злые, 5=моргание).
 
 Dummy feet color
-== Цвет ног дамми.
+== Цвет ног куклы
 
 Dummy feet color (dummy_color_feet)
-== Цвет ног дамми (dummy_color_feet).
+== Цвет ног куклы (dummy_color_feet)
 
 Dummy feet skin
-== Скин ног дамми.
+== Скин ног куклы
 
 Dummy fire
-== Огонь дамми
+== Огонь куклы
 
 Dummy hammer fly
-== Hammer fly дамми
+== Дамми-молот полёт
 
 Dummy hammering (for hammer fly)
-== Использование молота дамми (для полёта с молотом).
+== Дамми молотит (для молот-полёта)
 
 Dummy hand color
-== Цвет рук дамми.
+== Цвет рук дамми
 
 Dummy hand skin
-== Скин рук дамми.
+== Скин рук дамми
 
 Dummy hook
 == Крюк дамми
@@ -3057,49 +3057,49 @@ Dummy jump
 == Прыжок дамми
 
 Dummy marking color
-== Цвет отметки дамми.
+== Цвет метки дамми
 
 Dummy mini view
-== Мини-вид дамми
+== Мини-вид дубля
 
 Dummy mini view size (percent)
-== Размер мини-вида дамми (в процентах)
+== Размер мини-вида куклы (в процентах)
 
 Dummy mini view zoom (percent)
-== Масштаб мини-вида дамми (в процентах)
+== Масштаб мини-окна Дами (%)
 
 Dummy name
-== Имя дамми.
+== Имя дамми
 
 Dummy skin
-== Скин дамми.
+== Скин дамми
 
 Dummy skin decoration
-== Украшение скина дамми.
+== Декорация скина дамми
 
 Dummy skin eyes
-== Глаза скина дамми.
+== Глаза скина дамми
 
 Dummy skin marking
-== Отметка скина дамми.
+== Маркировка скина дамми
 
 Dummy skin queue current position
-== Текущая позиция в очереди скинов дамми
+== Текущая позиция в очереди скинов Дами
 
 Dummy skin queue max length
-== Максимальная длина очереди скинов дамми
+== Максимальная длина очереди скинов Дами
 
 Dummy skin queue switch interval (ms)
-== Интервал переключения очереди скинов дамми (мс)
+== Интервал переключения очереди скинов Дами (ms)
 
 Dummy Window
-== Окно дамми
+== Окно Дами
 
 Dummy window size
-== Размер окна дамми
+== Размер окна Дами
 
 Dummy window zoom
-== Масштаб окна дамми
+== Масштаб окна Дами
 
 Dump the current savestring
 == Сбросить текущую строку сохранения
@@ -3243,7 +3243,7 @@ enable
 == включить
 
 Enable /swap
-== Включить /swap.
+== Включить /swap
 
 Enable /team0 mode
 == Включить режим /team0.
@@ -3285,7 +3285,7 @@ Enable chat message sound
 == Включить звук сообщений чата
 
 Enable chat with all/team mode
-== Включить чат со всеми/командой
+== Включить режим чата со всеми/командой
 
 Enable cheats for your current team's run, but you can't earn a rank
 == Включить читы для текущего забега вашей команды, но вы не сможете получить ранг
@@ -3312,10 +3312,10 @@ Enable DNSBL (DNS-based Blackhole List)
 == Включить DNSBL (DNS-черный список)
 
 Enable dummy skin queue rotation
-== Включить ротацию очереди скинов дамми
+== Включить ротацию очереди скинов Дами
 
 Enable dummy window
-== Включить окно дамми
+== Включить окно Дами
 
 Enable dynamic camera
 == Включить динамическую камеру
@@ -3348,7 +3348,7 @@ Enable fat skin
 == Включить толстый скин
 
 Enable freeze call sound
-== Включить звук заморозки
+== Включить звук вызова заморозки
 
 Enable FTAPI auto-translate (may overload the service)
 == Включить автоперевод FTAPI (может перегрузить сервис)
@@ -3576,7 +3576,7 @@ Enable Zen mode
 == Включить Zen-режим
 
 Enable/disable infinite hook.
-== Включить/отключить бесконечный крюк.
+== Включить/отключить бесконечный крюк
 
 Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others
 == Включить/отключить выравнивание квадов. При включении красные линии показывают, как движущиеся квады/точки выравниваются и привязываются к другим
@@ -3660,7 +3660,7 @@ Error loading demo
 == Ошибка загрузки демо
 
 Error loading touch controls
-== Ошибка загрузки сенсорного управления
+== Ошибка загрузки настроек сенсорного управления
 
 Error opening screenshot
 == Ошибка открытия скриншота
@@ -3837,7 +3837,7 @@ Fast input others
 == Быстрый ввод для других
 
 Fast practice
-== Быстрая практика
+== Быстрая тренировка
 
 Fat skins (DDFat)
 == Толстые скины (DDFat)
@@ -3879,7 +3879,7 @@ File
 == Файл
 
 File '%s' already exists, do you want to overwrite it?
-== Файл «%s» уже существует. Перезаписать его?
+== Файл '%s' уже существует. Хотите его перезаписать?
 
 File already exists, do you want to overwrite it?
 == Файл уже существует, перезаписать его?
@@ -3921,7 +3921,7 @@ Filter out servers with player country mismatch (ISO 3166-1 numeric)
 == Фильтровать серверы с несовпадением страны игрока (ISO 3166-1 numeric)
 
 Filter out servers without friends
-== Фильтровать серверы без друзей
+== Отфильтровать серверы без друзей
 
 Filter out spectators from player count
 == Исключить зрителей из количества игроков
@@ -3990,7 +3990,7 @@ Font size
 == Размер шрифта
 
 Force a vote to yes/no
-== Принудительно принять/отклонить голосование
+== Принудительно проголосовать за/против
 
 Force a voting option
 == Принудительный вариант голосования
@@ -3999,7 +3999,7 @@ Force high bandwidth mode when spectating (1 = on, 0 = off)
 == Принудительный режим высокой пропускной способности при наблюдении (1 = вкл, 0 = выкл)
 
 Force i to pause for i seconds
-== Принудительно поставить на паузу i на i секунд
+== Заставить игрока i приостановиться на i секунд
 
 Force vote
 == Принудительное голосование
@@ -4050,22 +4050,22 @@ Freeze bar opacity (0 invisible, 100 fully visible)
 == Непрозрачность полоски заморозки (0 невидимо, 100 полностью видимо)
 
 Freeze border color
-== Цвет границы Freeze
+== Цвет границы заморозки
 
 Freeze Collision Border Color
-== Цвет границы столкновения Freeze
+== Цвет границы коллизии заморозки
 
 Freeze Laser Inner Color
-== Внутренний цвет лазера заморозки
+== Цвет внутренней части лазера заморозки
 
 Freeze laser inner color
-== Внутренний цвет лазера заморозки
+== Цвет внутренней части лазера заморозки
 
 Freeze Laser Outline Color
-== Внешний цвет лазера заморозки
+== Цвет контура лазера заморозки
 
 Freeze laser outline color
-== Цвет контура лазера заморозки
+== Цвет контура лазера при заморозке
 
 Freeze opacity
 == Непрозрачность заморозки
@@ -4092,7 +4092,7 @@ Friend entry color in friend list
 == Цвет записи друга в списке друзей
 
 Friend heart
-== Сердечко друга
+== Сердце друга
 
 Friend message
 == Сообщение друга
@@ -4101,19 +4101,19 @@ Friend message color
 == Цвет сообщения друга
 
 Friend message heart color
-== Цвет сердечка сообщения друга
+== Цвет сердца сообщения друга
 
 Friend message text gradient color
-== Цвет градиента текста сообщений друзей
+== Цвет градиента текста сообщения друга
 
 Friend note
 == Заметка о друге
 
 Friend notification refresh interval (sec)
-== Интервал обновления уведомлений о друзьях (сек)
+== Интервал обновления уведомлений друга (сек)
 
 Friend Notifications
-== Уведомления о друзьях
+== Уведомления друга
 
 Friend notify
 == Уведомление о друзьях

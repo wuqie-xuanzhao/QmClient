@@ -107,7 +107,7 @@
 == %s があなたとの交換をリクエストしました。交換を完了するには %s 秒待ってから /swap %s と入力してください。
 
 %s joined this server
-== %sがこのサーバーに参加しました
+== %s がこのサーバーに参加しました
 
 %s not found
 == %s が見つかりません
@@ -146,7 +146,7 @@
 == '%s' があなたのチームの練習モードを %s する投票を呼びかけました。現在の票数 %s/%s
 
 '%s' called vote to change server option: %s
-== '%s' がサーバーオプションを変更する投票を呼びかけました：%s
+== '%s' がサーバーオプション変更の投票を呼びかけました：%s
 
 '%s' called vote to change server option: %s (reason: %s)
 == '%s' がサーバーオプションを変更する投票を呼びかけました：%s（理由：%s）
@@ -155,13 +155,13 @@
 == '%s' があなたのチームの練習モードを無効にしました
 
 '%s' disabled team 0 mode.
-== '%s' がチーム 0 モードを無効にしました。
+== '%s' がチーム0モードを無効にしました
 
 '%s' enabled team 0 mode. This will make your team behave like team 0.
 == '%s' がチーム 0 モードを有効にしました。あなたのチームはチーム 0 のように動作します。
 
 '%s' invited '%s' to your team.
-== '%s' が '%s' をあなたのチームに招待しました。
+== '%s' が '%s' をあなたのチームに招待しました
 
 '%s' invited you to team %s. Use /team %s to join
 == '%s' があなたをチーム %s に招待しました。参加するには /team %s と入力してください
@@ -173,7 +173,7 @@
 == '%s' がチーム %s に参加しました
 
 '%s' joined team 0
-== '%s' がチーム 0 に参加しました
+== '%s' がチーム0に参加しました
 
 '%s' locked your team.
 == '%s' があなたのチームをロックしました。
@@ -203,10 +203,10 @@
 == （アップデートが必要です）
 
 - Save codes in order:
-== - セーブコードを順に保存：
+== - セーブコードを順に：
 
 - Save owners in order:
-== - セーブ所有者を順に保存：
+== - セーブの所有者を順に：
 
 - You have %d saves on this map!
 == - このマップに %d 個のセーブがあります！
@@ -411,7 +411,7 @@ Add a skin to a queue preset
 == キュープリセットにスキンを追加
 
 Add a skin to the dummy queue
-== ダミーキューにスキンを追加
+== スキンをダミーキューに追加
 
 Add a skin to the queue
 == キューにスキンを追加
@@ -441,7 +441,7 @@ Add current cut to the export list
 == 現在のカットをエクスポートリストに追加
 
 Add debug dummy to server (Debug build only)
-== デバッグ用ダミーをサーバーに追加（デバッグビルドのみ）
+== サーバーにデバッグダミーを追加（Debug ビルドのみ）
 
 Add demo timeline marker
 == デモタイムラインマーカーを追加
@@ -498,7 +498,7 @@ Added %d missing required slot(s).
 == 不足している必須スロット %d 個を追加しました。
 
 Added %s as friend
-== %s をフレンドに追加しました
+== %s をフレンドとして追加しました
 
 Additional headers for register endpoint, comma-separated "header:value" pairs
 == レジスターエンドポイント用の追加ヘッダー、カンマ区切りの「ヘッダー:値」ペア
@@ -618,7 +618,7 @@ Allow firing non-auto weapons while deep frozen
 == 深いフリーズ中に非自動武器の発射を許可
 
 Allow FTAPI auto-translate (may cause overload)
-== FTAPI の自動翻訳を許可（過負荷の可能性あり）
+== FTAPI 自動翻訳を許可（過負荷の可能性あり）
 
 Allow insecure HTTP protocol in addition to secure HTTPS. Primarily for testing.
 == 安全な HTTPS に加えて、安全でない HTTP プロトコルも許可。主にテスト用。
@@ -648,7 +648,7 @@ Alpha
 == アルファ
 
 Also apply to dummy
-== ダミーにも適用
+== ダミーにも適用する
 
 Always show
 == 常に表示
@@ -663,10 +663,10 @@ Always show nameplates regardless of distance
 == 距離に関係なく常にネームプレートを表示
 
 Always show other players' hook collision lines
-== 他のプレイヤーのフック衝突線を常に表示
+== 常に他のプレイヤーのフック補助線を表示
 
 Always show own player's hook collision line
-== 自分のフック衝突線を常に表示
+== 常に自分のフック補助線を表示
 
 Always translate
 == 常に翻訳
@@ -735,7 +735,7 @@ Appearance / Chat
 == 外観 / チャット
 
 Appearance / Hook Collision
-== 外観 / フック衝突線
+== 外観/フック補助線
 
 Appearance / HUD
 == 外観 / HUD
@@ -852,7 +852,7 @@ Are you sure you want to delete this asset?
 == このアセットを削除してもよろしいですか？
 
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== スキンを保存してもよろしいですか？ 同じ名前のスキンが既に存在する場合は、置き換えられます。
+== スキンを保存してもよろしいですか？この名前のスキンが既に存在する場合は上書きされます。
 
 Arrow assets
 == 矢印アセット
@@ -930,7 +930,7 @@ Authenticate to rcon with a username
 == ユーザー名で rcon 認証
 
 Authorized player forced vote '%s'
-== 権限のあるプレイヤーが投票を '%s' に強制しました
+== 権限のあるプレイヤーが投票を強制 '%s' に設定しました
 
 Auto
 == 自動
@@ -975,10 +975,10 @@ Auto gain control for mic (AGC, experimental)
 == マイクの自動ゲイン制御（AGC、実験的）
 
 Auto greet friend on map join
-== フレンドのマップ参加時に自動で挨拶
+== マップ参加時にフレンドに自動挨拶
 
 Auto greet friend text
-== フレンドのマップ参加時の自動挨拶テキスト
+== フレンド自動挨拶テキスト
 
 Auto greet friends entering map
 == マップに入ったフレンドに自動挨拶
@@ -1047,7 +1047,7 @@ Auto unmute when speaking
 == 発話時に自動ミュート解除
 
 Auto unspec on unfreeze
-== フリーズ解除時に自動観戦解除
+== 凍結解除時に自動で観戦解除
 
 Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)
 == 最小時間経過後のマップ変更時の自動投票（0=オフ、1=反対、2=賛成）
@@ -1056,7 +1056,7 @@ Auto weapon switch
 == 自動武器切り替え
 
 Auto-close chat after unfreeze
-== フリーズ解除後に自動でチャットを閉じる
+== 凍結解除後にチャットを自動で閉じる
 
 Auto-create CSV on game end
 == ゲーム終了時に CSV を自動作成
@@ -1077,10 +1077,10 @@ Auto-follow delay
 == 自動追従遅延
 
 Auto-follow friend server switch delay (seconds)
-== フレンドのサーバー移動に自動追従する遅延（秒）
+== フレンド自動追従サーバー切り替え遅延（秒）
 
 Auto-lock after joining lockable team
-== ロック可能なチームに参加したら自動ロック
+== ロック可能なチームに参加後、自動ロック
 
 Auto-lock delay (seconds)
 == 自動ロック遅延（秒）
@@ -1089,10 +1089,10 @@ Auto-login after entering Axiom community server
 == Axiom コミュニティサーバー参加時に自動ログイン
 
 Auto-record replay when player sets a new personal best time.
-== プレイヤーが新しい自己ベストタイムを記録したときにリプレイを自動録画
+== 自己ベストタイムを更新したときにリプレイを自動録画
 
 Auto-refresh server list for friend notifications
-== フレンド通知でサーバーリストを自動更新
+== フレンド通知のためのサーバーリスト自動更新
 
 Auto-reply to muted players
 == ミュートされたプレイヤーへの自動返信
@@ -1101,10 +1101,10 @@ Auto-reply when game minimized
 == ゲーム最小化時の自動返信
 
 Auto-save chat log
-== チャットログを自動保存
+== チャットログ自動保存
 
 Auto-save history count (0=disable)
-== 自動保存履歴数（0=自動マップ移動履歴を無効化）
+== 自動保存履歴数（0=無効）
 
 Auto-screenshot on game end
 == ゲーム終了時に自動スクリーンショット
@@ -1164,7 +1164,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Gores ゲームモードで自動的に Gores 自動切り替えを有効化
 
 Automatically re-join team 0 after finish (only if unlocked).
-== フィニッシュ後にチーム 0 に自動的に再参加（ロック解除されている場合のみ）
+== 完走後に自動でチーム 0 に再参加（ロック解除時のみ）
 
 Automatically record demos
 == デモを自動録画
@@ -1332,7 +1332,7 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 == 投票キック後の禁止時間（分単位、0 = キックのみ、禁止なし）
 
 Base path for HTTPS map download URLs to clients
-== HTTPS マップダウンロード URL をクライアントに提供するためのベースパス
+== クライアント向け HTTPS マップダウンロード URL のベースパス
 
 Basic
 == 基本
@@ -1398,7 +1398,7 @@ Blend mode
 == ブレンドモード
 
 Block votes from blacklisted addresses
-== ブラックリストに登録されたアドレスからの投票をブロックする
+== ブラックリストのアドレスからの投票をブロック
 
 Block words
 == ブロックワード
@@ -1410,7 +1410,7 @@ Blue team
 == 青チーム
 
 Blue team wins!
-== 青チームの勝利！
+== ブルーチームの勝利！
 
 Body
 == ボディ
@@ -1539,34 +1539,34 @@ Can't disable team 0 mode. This team exceeds the maximum allowed size of %s play
 == チーム 0 モードを無効にできません。このチームは通常チームの最大許容人数 %s を超えています。
 
 Can't enable team 0 mode with practice mode on.
-== 練習モードが有効な場合、チーム 0 モードを有効にできません。
+== 練習モードがオンの場合、チーム0モードを有効にできません。
 
 Can't find a Tutorial server
 == チュートリアルサーバーが見つかりません
 
 Can't invite players to this team
-== このチームにプレイヤーを招待できません。
+== このチームにプレイヤーを招待できません
 
 Can't invite this quickly
-== 招待が早すぎます。しばらくしてから再試行してください。
+== 招待があまりに速すぎます
 
 Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
 == 指定された引数を認識できません。使用方法: /tpxy x y、例: /tpxy 9 3。
 
 Can't swap with yourself
-== 自分自身と交換することはできません。
+== 自分自身と交換できません
 
 Cancel
 == キャンセル
 
 Cancel your swap request
-== スワップリクエストをキャンセルする
+== 交換リクエストをキャンセル
 
 Candidate files
 == 候補ファイル
 
 Cannot swap: the other player is not in your team
-== 交換できません：相手はあなたのチームにいません
+== 交換できません：相手があなたのチームにいません
 
 Card Appearance
 == カード外観
@@ -1740,7 +1740,7 @@ Clan color in friends list
 == フレンドリストのクラン色
 
 Clan member entry color in friend list
-== フレンドリストにおけるクランメンバーエントリの色
+== フレンドリストのクランメンバー項目の色
 
 Clan Members
 == クランメンバー
@@ -1854,7 +1854,7 @@ Click to restore full match
 == クリックしてフルマッチを復元
 
 Click to select server. Double click to join your friend.
-== クリックしてサーバーを選択。ダブルクリックでフレンドのいるサーバーに参加。
+== クリックでサーバー選択、ダブルクリックで友達のサーバーに参加。
 
 Click to set color
 == クリックして色を設定
@@ -1923,16 +1923,16 @@ Color of authenticated player names on scoreboard
 == スコアボード上の認証済みプレイヤー名の色
 
 Color of hook collision line tip segment
-== フック衝突線の先端セグメントの色
+== フック補助線の先端セグメントの色
 
 Color of hook line hitting hookable tile
-== フック可能なタイルに当たるフック線の色
+== フック可能なタイルに当たったフックラインの色
 
 Color of hook line hitting tee
-== Tee に当たるフック線の色
+== Tee に当たったフックラインの色
 
 Color of hook line not hitting anything
-== 何にも当たらないフック線の色
+== 何も当たらなかったフックラインの色
 
 Colorize ping on scoreboard
 == スコアボード上の Ping 値に色を付ける
@@ -1947,7 +1947,7 @@ Colors in scoreboard
 == スコアボード内の色
 
 Colors of the hook collision line, in case of a possible collision with:
-== フック衝突線の色（以下のものと衝突する可能性がある場合）：
+== フック補助線の色（以下の対象と衝突する可能性がある場合）：
 
 Combo
 == コンボ
@@ -1965,7 +1965,7 @@ Command executed when pointing at someone and shooting (default kill, only works
 == 誰かを狙って射撃したときに実行されるコマンド（デフォルトは kill、リモートコンソールが認証されている場合のみ動作）
 
 Command is not available on solo servers
-== このコマンドはソロサーバーでは使用できません
+== コマンドはソロサーバーでは使用できません
 
 Command to run when joining server
 == サーバー参加時に実行するコマンド
@@ -2070,7 +2070,7 @@ Connect dummy
 == ダミーに接続
 
 Connect dummy to enable
-== ダミー接続で有効化
+== ダミーに接続すると有効になります
 
 Connect to a server first
 == 最初にサーバーに接続してください
@@ -2148,10 +2148,10 @@ Contributors
 == コントリビューター
 
 Control dummy
-== ダミーを制御
+== ダミーを操作
 
 Control player (0) or dummy (1)
-== プレイヤー（0）またはダミー（1）を制御
+== プレイヤー (0) またはダミー (1) を操作
 
 Controller
 == コントローラー
@@ -2403,7 +2403,7 @@ Cycle custom Tee hue
 == カスタム Tee の色相を切り替え
 
 Cycle custom Tee hue for dummy simultaneously
-== ダミーのカスタム Tee 色相も同時に循環
+== 分身のカスタム Tee 色相を同時にサイクル
 
 Cycle custom Tee hue for main
 == 自分のカスタム Tee 色相をループ
@@ -2532,7 +2532,7 @@ Deep freeze color
 == ディープフリーズ色
 
 Deep freeze opacity
-== ディープフリーズの不透明度
+== 深層凍結の不透明度
 
 Deep freeze tile outline color
 == ディープフリーズタイルのアウトライン色
@@ -2541,7 +2541,7 @@ Deep unfreeze color
 == ディープアンフリーズ色
 
 Deep unfreeze opacity
-== ディープアンフリーズの不透明度
+== 深層解凍の不透明度
 
 Deep unfreeze tile outline color
 == ディープアンフリーズタイルのアウトライン色
@@ -2694,10 +2694,10 @@ Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
 == 非推奨：ジャンプヒントの Y 位置、起動時に qm_jump_hint_y に移行
 
 Depth freeze tile overlay alpha (0-100)
-== ディープフリーズタイルのオーバーレイエンティティアルファ (0-100)
+== 深層凍結タイルのオーバーレイアルファ (0-100)
 
 Depth unfreeze tile overlay alpha (0-100)
-== ディープアンフリーズタイルのオーバーレイエンティティアルファ (0-100)
+== 深層解凍タイルのオーバーレイアルファ (0-100)
 
 Deselect
 == 選択解除
@@ -2715,7 +2715,7 @@ Detailed reason
 == 詳細な理由
 
 Detect compatible solo prompts from custom servers
-== カスタムサーバーからの互換性のあるソロエリアプロンプトを検出
+== カスタムサーバーからの互換性のあるソロプロンプトを検出
 
 Detection distance
 == 検出距離
@@ -2778,7 +2778,7 @@ Disconnect
 == 切断
 
 Disconnect dummy
-== ダミーの切断
+== ダミーを切断
 
 Disconnect from the server
 == サーバーから切断
@@ -2877,7 +2877,7 @@ Do not set this variable, instead create ddnet-serverlist-urls.cfg next to setti
 == この変数は設定しないでください。代わりに settings_ddnet.cfg の隣に ddnet-serverlist-urls.cfg を作成して、すべてのサーバーリスト URL を指定してください
 
 Do not set, used to mark official tutorial server
-== 設定しないでください。公式チュートリアルサーバーをマークするために使用されます
+== 設定しないでください。公式チュートリアルサーバーを示すために使用されます
 
 Do not show Tees visible on screen
 == 画面内に表示されている Tee を表示しない
@@ -2991,43 +2991,43 @@ Dummy
 == ダミー
 
 Dummy body color
-== ダミー体色
+== ダミーのボディカラー
 
 Dummy body skin
-== ダミー体スキン
+== ダミーのボディスキン
 
 Dummy clan
-== ダミークラン
+== ダミーのクラン
 
 Dummy Control: %s
-== ダミー操作：%s
+== ダミーコントロール：%s
 
 Dummy copy
 == ダミーコピー
 
 Dummy copy: %s
-== ダミー同期：%s
+== ダミーコピー：%s
 
 Dummy country (ISO 3166-1 numeric)
-== ダミー国（ISO 3166-1 数値コード）
+== ダミーの国（ISO 3166-1 数字コード）
 
 Dummy decoration color
-== ダミー装飾色
+== ダミーの装飾色
 
 Dummy eyes color
-== ダミー目色
+== ダミーの目の色
 
 Dummy eyes when joining server (0=normal, 1=pain, 2=happy, 3=surprised, 4=angry, 5=blink)
 == サーバー参加時のダミーの目（0 = 通常、1 = 痛み、2 = 幸せ、3 = 驚き、4 = 怒り、5 = まばたき）
 
 Dummy feet color
-== ダミー足色
+== ダミーの足の色
 
 Dummy feet color (dummy_color_feet)
-== ダミー足色（dummy_color_feet）
+== ダミーの足の色（dummy_color_feet）
 
 Dummy feet skin
-== ダミー足スキン
+== ダミーのフットスキン
 
 Dummy fire
 == ダミー発射
@@ -3036,13 +3036,13 @@ Dummy hammer fly
 == ダミーハンマーフライ
 
 Dummy hammering (for hammer fly)
-== ダミーハンマー中（ハンマーフライ用）
+== ダミーハンマー（ハンマーフライ用）
 
 Dummy hand color
-== ダミー手色
+== ダミーの手の色
 
 Dummy hand skin
-== ダミー手スキン
+== ダミーの手のスキン
 
 Dummy hook
 == ダミーフック
@@ -3063,10 +3063,10 @@ Dummy mini view
 == ダミーミニビュー
 
 Dummy mini view size (percent)
-== ダミーミニビューのサイズ（パーセント）
+== ダミーミニビューサイズ (パーセント)
 
 Dummy mini view zoom (percent)
-== ダミーミニビューのズーム（パーセント）
+== ダミーミニビュー拡大率（パーセント）
 
 Dummy name
 == ダミー名
@@ -3078,10 +3078,10 @@ Dummy skin decoration
 == ダミースキン装飾
 
 Dummy skin eyes
-== ダミースキン目
+== ダミースキンの目
 
 Dummy skin marking
-== ダミースキンマーキング
+== ダミースキンのマーキング
 
 Dummy skin queue current position
 == ダミースキンキューの現在位置
@@ -3090,19 +3090,19 @@ Dummy skin queue max length
 == ダミースキンキューの最大長
 
 Dummy skin queue switch interval (ms)
-== ダミースキンキュー切り替え間隔（ミリ秒）
+== ダミースキンキュー切り替え間隔 (ms)
 
 Dummy Window
 == ダミーウィンドウ
 
 Dummy window size
-== ダミーウィンドウのサイズ
+== ダミーウィンドウサイズ
 
 Dummy window zoom
-== ダミーウィンドウのズーム
+== ダミーウィンドウズーム
 
 Dump the current savestring
-== 現在のセーブ文字列をダンプ
+== 現在のセーブ文字列をダンプする
 
 Dump zone tuning in zone x
 == ゾーン x のゾーンチューニングをダンプ
@@ -3243,7 +3243,7 @@ enable
 == 有効
 
 Enable /swap
-== /swap を有効化
+== /swap を有効にする
 
 Enable /team0 mode
 == /team0 モードを有効化
@@ -3285,7 +3285,7 @@ Enable chat message sound
 == チャットメッセージ音を有効にする
 
 Enable chat with all/team mode
-== 全体/チームチャットモードを有効化
+== 全体/チームチャットモードを有効にする
 
 Enable cheats for your current team's run, but you can't earn a rank
 == 現在のチームのランでチートを有効にしますが、ランクは獲得できません
@@ -3294,7 +3294,7 @@ Enable colored console output
 == コンソールのカラー出力を有効にする
 
 Enable coloring and hearts for friends
-== フレンドの色付けとハート表示を有効にする
+== フレンドの色付けとハートを有効にする
 
 Enable controller
 == コントローラーを有効化
@@ -3312,10 +3312,10 @@ Enable DNSBL (DNS-based Blackhole List)
 == DNSBL（DNS ベースのブラックホールリスト）を有効にする
 
 Enable dummy skin queue rotation
-== ダミースキンキューローテーションを有効化
+== ダミースキンキューローテーションを有効にする
 
 Enable dummy window
-== ダミーウィンドウを有効化
+== ダミーウィンドウを有効にする
 
 Enable dynamic camera
 == 動的カメラを有効にする
@@ -3474,7 +3474,7 @@ Enable replays
 == リプレイを有効化
 
 Enable saving games (/save and /load)
-== ゲームの保存（/save と /load）を有効にする
+== ゲーム保存（/save と /load）を有効にする
 
 Enable server message sound
 == サーバーメッセージサウンドを有効化
@@ -3522,7 +3522,7 @@ Enable team chat message sound
 == チームチャットメッセージ音を有効にする
 
 Enable team chat sound
-== チームチャットサウンドを有効化
+== チームチャット音を有効にする
 
 Enable Tee trail
 == Tee トレイルを有効にする
@@ -3576,7 +3576,7 @@ Enable Zen mode
 == Zen モードを有効にする
 
 Enable/disable infinite hook.
-== 無限フックの有効/無効を切り替える
+== 無限フックの有効/無効
 
 Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others
 == クワッド整列の有効/無効を切り替える。有効にすると、移動するクワッド/ポイントが他のクワッド/ポイントにどのように整列してスナップするかを赤い線で表示する
@@ -3594,10 +3594,10 @@ End marker of replay slice
 == リプレイスライスの終了マーカー
 
 Endless hook has been activated
-== エンドレスフックが有効になりました
+== 無限フックが有効になりました
 
 Endless hook has been deactivated
-== エンドレスフックが無効になりました
+== エンドレスフックが無効化されました
 
 Endpoint
 == エンドポイント
@@ -3801,10 +3801,10 @@ Failed to export skin files.
 == スキンファイルのエクスポートに失敗しました。
 
 Failed to load
-== 読み込みに失敗しました
+== ロードに失敗しました
 
 Failed to load main asset: %s
-== メインアセットの読み込みに失敗しました：%s
+== メインアセットのロードに失敗しました: %s
 
 Failed to prepare main asset image.
 == メインアセット画像の準備に失敗しました。
@@ -3837,7 +3837,7 @@ Fast input others
 == 他のプレイヤーの Fast input
 
 Fast practice
-== 高速練習
+== 高速プラクティス
 
 Fat skins (DDFat)
 == ふっくらスキン（DDFat）
@@ -3879,7 +3879,7 @@ File
 == ファイル
 
 File '%s' already exists, do you want to overwrite it?
-== ファイル '%s' は既に存在します。上書きしますか？
+== ファイル「%s」は既に存在します、上書きしますか？
 
 File already exists, do you want to overwrite it?
 == ファイルは既に存在します。上書きしますか？
@@ -3921,13 +3921,13 @@ Filter out servers with player country mismatch (ISO 3166-1 numeric)
 == プレイヤーの国不一致のサーバーをフィルタリング（ISO 3166-1 数値）
 
 Filter out servers without friends
-== フレンドがいないサーバーをフィルタリング
+== フレンドのいないサーバーをフィルター
 
 Filter out spectators from player count
 == プレイヤー数から観戦者を除外
 
 Filter Team %d
-== チーム %d をフィルター
+== フィルターチーム %d
 
 Filter: Team %d
 == フィルター: チーム %d
@@ -3990,7 +3990,7 @@ Font size
 == フォントサイズ
 
 Force a vote to yes/no
-== 投票を賛成/反対に強制
+== 投票を賛成/反対に強制する
 
 Force a voting option
 == 投票オプションを強制
@@ -3999,7 +3999,7 @@ Force high bandwidth mode when spectating (1 = on, 0 = off)
 == 観戦時に高帯域幅モードを強制（1 = オン，0 = オフ）
 
 Force i to pause for i seconds
-== i を i 秒間強制停止
+== プレイヤー i を i 秒間一時停止させる
 
 Force vote
 == 強制投票
@@ -4050,10 +4050,10 @@ Freeze bar opacity (0 invisible, 100 fully visible)
 == フリーズバーの不透明度（0 不可視、100 完全可視）
 
 Freeze border color
-== Freeze ボーダー色
+== フリーズの境界線の色
 
 Freeze Collision Border Color
-== Freeze 衝突ボーダー色
+== フリーズ衝突境界線の色
 
 Freeze Laser Inner Color
 == フリーズレーザー内側の色
@@ -4062,13 +4062,13 @@ Freeze laser inner color
 == フリーズレーザー内側の色
 
 Freeze Laser Outline Color
-== フリーズレーザー外枠の色
+== フリーズレーザー外側の色
 
 Freeze laser outline color
-== フリーズレーザーアウトラインの色
+== フリーズレーザーの輪郭色
 
 Freeze opacity
-== フリーズ不透明度
+== フリーズの不透明度
 
 Freeze stars
 == フリーズスター
@@ -4086,10 +4086,10 @@ Friend bar category expand state (1=expanded, 0=collapsed)
 == フレンドバーカテゴリの展開状態（1=展開、0=折りたたみ）
 
 Friend color in friends list
-== フレンドリストのフレンド色
+== フレンドリスト内のフレンド色
 
 Friend entry color in friend list
-== フレンドリスト内のフレンドエントリの色
+== フレンドリストのエントリー色
 
 Friend heart
 == フレンドハート
@@ -4104,7 +4104,7 @@ Friend message heart color
 == フレンドメッセージのハートの色
 
 Friend message text gradient color
-== フレンドメッセージ文字のグラデーション色
+== フレンドメッセージテキストのグラデーションカラー
 
 Friend note
 == フレンドメモ

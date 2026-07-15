@@ -131,13 +131,13 @@
 == '%s' iniciou uma votação para expulsar '%s' (motivo: %s)
 
 '%s' called for vote to kick you
-== '%s' iniciou uma votação para o expulsar
+== '%s' iniciou uma votação para expulsar você
 
 '%s' called for vote to move '%s' to spectators (reason: %s)
 == '%s' iniciou uma votação para mover '%s' para os espectadores (motivo: %s)
 
 '%s' called for vote to move you to spectators
-== '%s' iniciou uma votação para o mover para os espectadores
+== '%s' iniciou uma votação para movê-lo para os espectadores
 
 '%s' called for vote to mute '%s' (reason: %s)
 == '%s' iniciou uma votação para silenciar '%s' (motivo: %s)
@@ -152,28 +152,28 @@
 == '%s' iniciou uma votação para alterar a opção do servidor: %s (motivo: %s)
 
 '%s' disabled practice mode for your team
-== '%s' desativou o modo de prática para a sua equipa
+== '%s' desativou o modo de prática para a sua equipe
 
 '%s' disabled team 0 mode.
-== '%s' desativou o modo de equipa 0.
+== '%s' desativou o modo da equipe 0.
 
 '%s' enabled team 0 mode. This will make your team behave like team 0.
 == '%s' ativou o modo de equipa 0. Isto fará com que a sua equipa se comporte como a equipa 0.
 
 '%s' invited '%s' to your team.
-== '%s' convidou '%s' para a sua equipa.
+== '%s' convidou '%s' para a sua equipe.
 
 '%s' invited you to team %s. Use /team %s to join
-== '%s' convidou-o para a equipa %s. Use /team %s para entrar
+== '%s' convidou você para a equipe %s. Use /team %s para entrar
 
 '%s' is not a valid option on this server
 == '%s' não é uma opção válida neste servidor
 
 '%s' joined team %s
-== '%s' entrou na equipa %s
+== '%s' entrou na equipe %s
 
 '%s' joined team 0
-== '%s' entrou na equipa 0
+== '%s' entrou na equipe 0
 
 '%s' locked your team.
 == '%s' bloqueou a sua equipa.
@@ -203,13 +203,13 @@
 == (Atualização necessária)
 
 - Save codes in order:
-== - Códigos de salvamento por ordem:
+== - Códigos de salvamento em ordem:
 
 - Save owners in order:
-== - Donos dos salvamentos por ordem:
+== - Donos dos saves em ordem:
 
 - You have %d saves on this map!
-== - Tens %d salvamentos neste mapa!
+== - Você tem %d saves neste mapa!
 
 /map is disabled
 == /map está desativado
@@ -348,13 +348,13 @@ Add a clan war entry
 == Adicionar uma entrada de guerra de clã
 
 Add a colored skin to a dummy queue preset
-== Adicionar uma skin colorida a uma predefinição da fila do dummy
+== Adicionar uma skin colorida a uma predefinição de fila de dummy
 
 Add a colored skin to a queue preset
 == Adicionar uma skin colorida a uma predefinição da fila
 
 Add a colored skin to the dummy queue
-== Adicionar uma skin colorida à fila do dummy
+== Adicionar uma skin colorida à fila de dummy
 
 Add a colored skin to the queue
 == Adicionar uma skin colorida à fila
@@ -369,7 +369,7 @@ Add a country to the exclusion filter for a specific community (ISO 3166-1 numer
 == Adicionar um país ao filtro de exclusão para uma comunidade específica (ISO 3166-1 numérico)
 
 Add a dummy queue preset
-== Adicionar uma predefinição da fila do dummy
+== Adicionar uma predefinição de fila de dummy
 
 Add a foe
 == Adicionar um inimigo
@@ -378,7 +378,7 @@ Add a friend
 == Adicionar um amigo
 
 Add a friend category
-== Adicionar uma categoria de amigos
+== Adicionar uma categoria de amigo
 
 Add a map to favorites
 == Adicionar um mapa aos favoritos
@@ -405,13 +405,13 @@ Add a skin as a favorite
 == Adicionar uma skin como favorita
 
 Add a skin to a dummy queue preset
-== Adicionar uma skin a uma predefinição da fila do dummy
+== Adicionar uma skin a uma predefinição de fila de dummy
 
 Add a skin to a queue preset
 == Adicionar uma skin a uma predefinição da fila
 
 Add a skin to the dummy queue
-== Adicionar uma skin à fila do dummy
+== Adicionar uma skin à fila de dummy
 
 Add a skin to the queue
 == Adicionar uma skin à fila
@@ -441,7 +441,7 @@ Add current cut to the export list
 == Adicionar corte atual à lista de exportação
 
 Add debug dummy to server (Debug build only)
-== Adicionar dummy de depuração ao servidor (apenas build de depuração)
+== Adicionar dummy de depuração ao servidor (apenas compilação de depuração)
 
 Add demo timeline marker
 == Adicionar marcador de linha temporal da demo
@@ -498,7 +498,7 @@ Added %d missing required slot(s).
 == %d espaço(s) obrigatório(s) em falta adicionado(s).
 
 Added %s as friend
-== %s foi adicionado como amigo
+== Adicionado %s como amigo
 
 Additional headers for register endpoint, comma-separated "header:value" pairs
 == Cabeçalhos adicionais para endpoint de registo, pares "cabeçalho:valor" separados por vírgulas
@@ -618,7 +618,7 @@ Allow firing non-auto weapons while deep frozen
 == Permitir disparar armas não automáticas enquanto profundamente congelado
 
 Allow FTAPI auto-translate (may cause overload)
-== Permitir tradução automática FTAPI (pode causar sobrecarga)
+== Permitir tradução automática do FTAPI (pode causar sobrecarga)
 
 Allow insecure HTTP protocol in addition to secure HTTPS. Primarily for testing.
 == Permitir protocolo HTTP inseguro além do HTTPS seguro. Principalmente para testes.
@@ -663,10 +663,10 @@ Always show nameplates regardless of distance
 == Mostrar sempre placas de nome independentemente da distância
 
 Always show other players' hook collision lines
-== Mostrar sempre as linhas de colisão de gancho de outros jogadores
+== Mostrar sempre as linhas de colisão do gancho de outros jogadores
 
 Always show own player's hook collision line
-== Mostrar sempre a linha de colisão de gancho do próprio jogador
+== Mostrar sempre a linha de colisão do gancho do próprio jogador
 
 Always translate
 == Traduzir sempre
@@ -735,7 +735,7 @@ Appearance / Chat
 == Aparência / Chat
 
 Appearance / Hook Collision
-== Aparência / Colisão de Gancho
+== Aparência / Colisão do Gancho
 
 Appearance / HUD
 == Aparência / HUD
@@ -852,7 +852,7 @@ Are you sure you want to delete this asset?
 == Tem a certeza de que quer eliminar este recurso?
 
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== Tens a certeza de que queres guardar a tua skin? Se já existir uma skin com este nome, será substituída.
+== Tem a certeza de que deseja salvar a sua skin? Se já existir uma skin com este nome, será substituída.
 
 Arrow assets
 == Recursos de seta
@@ -975,16 +975,16 @@ Auto gain control for mic (AGC, experimental)
 == Controlo automático de ganho para o microfone (AGC, experimental)
 
 Auto greet friend on map join
-== Saudação automática ao amigo entrar no mapa
+== Cumprimentar amigo automaticamente ao entrar no mapa
 
 Auto greet friend text
-== Texto da saudação automática ao amigo entrar no mapa
+== Texto de cumprimento automático para amigo
 
 Auto greet friends entering map
 == Cumprimentar automaticamente amigos ao entrar no mapa
 
 Auto hot-reload after external saves
-== Recarregamento automático após guardar externamente
+== Recarregamento automático após salvamentos externos
 
 Auto login Axiom server
 == Início de sessão automático no servidor Axiom
@@ -1020,7 +1020,7 @@ Auto save and load background strokes
 == Salvar e carregar automaticamente traços de fundo
 
 Auto save chat log
-== Guardar automaticamente o registo do chat
+== Salvar automaticamente o registro de chat
 
 Auto start vote
 == Iniciar votação automaticamente
@@ -1035,7 +1035,7 @@ Auto switch weapon on pickup
 == Trocar arma automaticamente ao pegar
 
 Auto team lock
-== Bloqueio automático de equipa
+== Bloqueio automático de equipe
 
 Auto translate received messages
 == Traduzir automaticamente mensagens recebidas
@@ -1047,7 +1047,7 @@ Auto unmute when speaking
 == Ativar microfone automaticamente ao falar
 
 Auto unspec on unfreeze
-== Sair de espectador automaticamente ao descongelar
+== Auto sair de espectador ao descongelar
 
 Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)
 == Votação automática na mudança de mapa após duração mínima (0=Desligado, 1=Opor, 2=Concordar)
@@ -1056,7 +1056,7 @@ Auto weapon switch
 == Troca de arma automática
 
 Auto-close chat after unfreeze
-== Fechar chat automaticamente ao ser descongelado
+== Fechar chat automaticamente após descongelar
 
 Auto-create CSV on game end
 == Criar CSV automaticamente no fim do jogo
@@ -1077,10 +1077,10 @@ Auto-follow delay
 == Atraso de seguimento automático
 
 Auto-follow friend server switch delay (seconds)
-== Atraso ao seguir amigos automaticamente para outro servidor (segundos)
+== Atraso para trocar de servidor ao seguir amigo (segundos)
 
 Auto-lock after joining lockable team
-== Bloquear automaticamente ao entrar numa equipa bloqueável
+== Auto-bloqueio após entrar em equipa bloqueável
 
 Auto-lock delay (seconds)
 == Atraso do bloqueio automático (segundos)
@@ -1089,10 +1089,10 @@ Auto-login after entering Axiom community server
 == Iniciar sessão automaticamente ao entrar no servidor da comunidade Axiom
 
 Auto-record replay when player sets a new personal best time.
-== Gravar replay automaticamente quando o jogador define um novo melhor tempo pessoal.
+== Gravar automaticamente replay quando o jogador estabelecer um novo recorde pessoal
 
 Auto-refresh server list for friend notifications
-== Atualizar automaticamente a lista de servidores para notificações de amigos
+== Atualização automática da lista de servidores para notificações de amigos
 
 Auto-reply to muted players
 == Resposta automática a jogadores silenciados
@@ -1101,10 +1101,10 @@ Auto-reply when game minimized
 == Resposta automática quando o jogo está minimizado
 
 Auto-save chat log
-== Guardar histórico de chat automaticamente
+== Guardar automaticamente o registo do chat
 
 Auto-save history count (0=disable)
-== Número de histórico de salvamento automático (0=desativar registo automático de histórico de mapas)
+== Contagem do histórico de guardar automaticamente (0=desativar)
 
 Auto-screenshot on game end
 == Captura de ecrã automática no fim do jogo
@@ -1164,7 +1164,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Ativar troca automática Gores no modo de jogo Gores
 
 Automatically re-join team 0 after finish (only if unlocked).
-== Reentrar automaticamente na equipa 0 após terminar (apenas se desbloqueado).
+== Reentrar automaticamente na equipa 0 após terminar (apenas se desbloqueado)
 
 Automatically record demos
 == Gravar demos automaticamente
@@ -1203,7 +1203,7 @@ Axiom auto login succeeded
 == Início de sessão automático do Axiom bem-sucedido
 
 Axiom dummy password
-== Palavra-passe do dummy Axiom
+== Senha do dummy Axiom
 
 Axiom main account password
 == Palavra-passe da conta principal Axiom
@@ -1332,7 +1332,7 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 == Tempo de ban após ser expulso por votação (em minutos, 0 = apenas expulsão, sem ban)
 
 Base path for HTTPS map download URLs to clients
-== Caminho base para URLs de download de mapa HTTPS para clientes
+== Caminho base para URLs de download de mapas HTTPS para os clientes
 
 Basic
 == Básico
@@ -1410,7 +1410,7 @@ Blue team
 == Equipa azul
 
 Blue team wins!
-== Equipa azul venceu!
+== A equipa azul venceu!
 
 Body
 == Corpo
@@ -1539,7 +1539,7 @@ Can't disable team 0 mode. This team exceeds the maximum allowed size of %s play
 == Não é possível desativar o modo de equipa 0. Esta equipa excede o tamanho máximo permitido de %s jogadores para uma equipa normal
 
 Can't enable team 0 mode with practice mode on.
-== Não é possível ativar o modo de equipa 0 com o modo de prática ligado.
+== Não é possível ativar o modo equipa 0 com o modo de treino ativado.
 
 Can't find a Tutorial server
 == Não é possível encontrar um servidor de Tutorial
@@ -1548,13 +1548,13 @@ Can't invite players to this team
 == Não é possível convidar jogadores para esta equipa
 
 Can't invite this quickly
-== Não pode convidar tão rapidamente
+== Não é possível convidar tão rapidamente
 
 Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
 == Não é possível reconhecer os argumentos especificados. Uso: /tpxy x y, ex: /tpxy 9 3.
 
 Can't swap with yourself
-== Não pode trocar de lugar consigo mesmo
+== Não é possível trocar consigo mesmo
 
 Cancel
 == Cancelar
@@ -1722,7 +1722,7 @@ Choose country flag
 == Escolher bandeira do país
 
 Choose default eyes when joining a server
-== Escolher olhos predefinidos ao entrar num servidor
+== Escolher olhos padrão ao entrar num servidor
 
 Choose export name first.
 == Escolha primeiro o nome de exportação.
@@ -1740,7 +1740,7 @@ Clan color in friends list
 == Cor do clã na lista de amigos
 
 Clan member entry color in friend list
-== Cor da entrada de membro do clã na lista de amigos
+== Cor da entrada de membros do clã na lista de amigos
 
 Clan Members
 == Membros do Clã
@@ -1854,7 +1854,7 @@ Click to restore full match
 == Clique para restaurar partida completa
 
 Click to select server. Double click to join your friend.
-== Clique para selecionar o servidor. Clique duas vezes para entrar no servidor do seu amigo.
+== Clique para selecionar servidor. Duplo clique para entrar no servidor do seu amigo.
 
 Click to set color
 == Clique para definir a cor
@@ -1923,16 +1923,16 @@ Color of authenticated player names on scoreboard
 == Cor dos nomes de jogadores autenticados no placar
 
 Color of hook collision line tip segment
-== Cor do segmento da ponta da linha de colisão de gancho
+== Cor do segmento de ponta da linha de colisão do gancho
 
 Color of hook line hitting hookable tile
-== Cor da linha de gancho a atingir um bloco enganchável
+== Cor da linha do gancho atingindo um bloco engatável
 
 Color of hook line hitting tee
-== Cor da linha de gancho a atingir um tee
+== Cor da linha do gancho atingindo um tee
 
 Color of hook line not hitting anything
-== Cor da linha de gancho a não atingir nada
+== Cor da linha do gancho não atingindo nada
 
 Colorize ping on scoreboard
 == Colorir ping no placar
@@ -1947,7 +1947,7 @@ Colors in scoreboard
 == Cores no placar
 
 Colors of the hook collision line, in case of a possible collision with:
-== Cores da linha de colisão de gancho, em caso de possível colisão com:
+== Cores da linha de colisão do gancho, em caso de possível colisão com:
 
 Combo
 == Combo
@@ -1968,7 +1968,7 @@ Command is not available on solo servers
 == O comando não está disponível em servidores solo
 
 Command to run when joining server
-== Comando a executar ao entrar no servidor
+== Comando para executar ao entrar no servidor
 
 Command:
 == Comando:
@@ -2067,10 +2067,10 @@ Connect address error
 == Erro de endereço de conexão
 
 Connect dummy
-== Ligar Dummy
+== Conectar dummy
 
 Connect dummy to enable
-== Conectar dummy para ativar
+== Conecta o dummy para ativar
 
 Connect to a server first
 == Liga-te primeiro a um servidor
@@ -2091,7 +2091,7 @@ Connected, waiting for first ping
 == Conectado, à espera do primeiro ping
 
 Connecting dummy
-== A ligar Dummy
+== Conectando dummy
 
 Connecting to
 == A ligar a
@@ -2148,7 +2148,7 @@ Contributors
 == Contribuidores
 
 Control dummy
-== Controlar Dummy
+== Controlar dummy
 
 Control player (0) or dummy (1)
 == Controlar jogador (0) ou dummy (1)
@@ -2403,7 +2403,7 @@ Cycle custom Tee hue
 == Alternar matiz personalizada do Tee
 
 Cycle custom Tee hue for dummy simultaneously
-== Ciclar simultaneamente o matiz personalizado do Tee Dummy
+== Ciclar matiz personalizado do Tee para o dummy simultaneamente
 
 Cycle custom Tee hue for main
 == Ciclar matiz personalizado do Tee principal
@@ -2532,7 +2532,7 @@ Deep freeze color
 == Cor de congelamento profundo
 
 Deep freeze opacity
-== Opacidade do congelamento profundo
+== Opacidade de congelamento profundo
 
 Deep freeze tile outline color
 == Cor do contorno do tile de freeze profundo
@@ -2541,7 +2541,7 @@ Deep unfreeze color
 == Cor de descongelamento profundo
 
 Deep unfreeze opacity
-== Opacidade do descongelamento profundo
+== Opacidade de descongelamento profundo
 
 Deep unfreeze tile outline color
 == Cor do contorno do tile de unfreeze profundo
@@ -2694,10 +2694,10 @@ Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
 == Obsoleto: posição Y da dica de salto, migrado para qm_jump_hint_y ao iniciar
 
 Depth freeze tile overlay alpha (0-100)
-== Alpha da entidade sobreposta do tile de congelamento profundo (0-100)
+== Alfa de sobreposição do tile de congelamento profundo (0-100)
 
 Depth unfreeze tile overlay alpha (0-100)
-== Alpha da entidade sobreposta do tile de descongelamento profundo (0-100)
+== Alfa de sobreposição do tile de descongelamento profundo (0-100)
 
 Deselect
 == Desselecionar
@@ -2715,7 +2715,7 @@ Detailed reason
 == Motivo detalhado
 
 Detect compatible solo prompts from custom servers
-== Detetar avisos de solo compatíveis de servidores personalizados
+== Detectar avisos compatíveis de solo de servidores personalizados
 
 Detection distance
 == Distância de deteção
@@ -2757,7 +2757,7 @@ Disable Gores auto-switch when picking up extra weapon
 == Desativar troca automática do Gores ao obter arma extra
 
 Disable QmLive team preview/render filter
-== Desativar filtro de pré-visualização/renderização de equipe do QmLive
+== Desativar filtro de pré-visualização/ renderização da equipe QmLive
 
 Disabled
 == Desativado
@@ -2778,7 +2778,7 @@ Disconnect
 == Desligar
 
 Disconnect dummy
-== Desligar Dummy
+== Desconectar dummy
 
 Disconnect from the server
 == Desconectar do servidor
@@ -2877,7 +2877,7 @@ Do not set this variable, instead create ddnet-serverlist-urls.cfg next to setti
 == Não defina esta variável, em vez disso crie ddnet-serverlist-urls.cfg ao lado de settings_ddnet.cfg para especificar todos os URLs possíveis da lista de servidores
 
 Do not set, used to mark official tutorial server
-== Não definir, usado para marcar servidor tutorial oficial
+== Não definir, usado para marcar servidor de tutorial oficial
 
 Do not show Tees visible on screen
 == Não mostrar Tees visíveis no ecrã
@@ -2910,22 +2910,22 @@ Door laser outline color
 == Cor do contorno do laser da porta
 
 Download community skins
-== Descarregar skins da comunidade
+== Baixar skins da comunidade
 
 Download failed
-== Descarregamento falhou
+== Falha ao baixar
 
 Download skins
-== Descarregar skins oficiais
+== Baixar skins oficiais
 
 Download skins immediately from cl_skin_download_url
 == Descarregar skins imediatamente de cl_skin_download_url
 
 Download this asset?
-== Descarregar este recurso?
+== Baixar este recurso?
 
 Downloaded
-== Descarregado
+== Baixado
 
 Downloading map
 == A transferir mapa
@@ -2991,25 +2991,25 @@ Dummy
 == Dummy
 
 Dummy body color
-== Cor do corpo do Dummy
+== Cor do corpo do dummy
 
 Dummy body skin
-== Skin do corpo do Dummy
+== Pele do corpo do Dummy
 
 Dummy clan
 == Clã do Dummy
 
 Dummy Control: %s
-== Controlo do Dummy: %s
+== Controle do Dummy: %s
 
 Dummy copy
 == Cópia do Dummy
 
 Dummy copy: %s
-== Sincronização do dummy: %s
+== Cópia do Dummy: %s
 
 Dummy country (ISO 3166-1 numeric)
-== País do Dummy (ISO 3166-1 numérico)
+== País do Dummy (numérico ISO 3166-1)
 
 Dummy decoration color
 == Cor da decoração do Dummy
@@ -3027,25 +3027,25 @@ Dummy feet color (dummy_color_feet)
 == Cor dos pés do Dummy (dummy_color_feet)
 
 Dummy feet skin
-== Skin dos pés do Dummy
+== Pele dos pés do Dummy
 
 Dummy fire
-== Dummy dispara
+== Fogo do Dummy
 
 Dummy hammer fly
-== Dummy martelo voar
+== Voo de martelo do dummy
 
 Dummy hammering (for hammer fly)
-== Martelar do Dummy (para martelo voador)
+== Martelada do dummy (para voo de martelo)
 
 Dummy hand color
-== Cor da mão do Dummy
+== Cor da mão do dummy
 
 Dummy hand skin
-== Skin da mão do Dummy
+== Pele da mão do dummy
 
 Dummy hook
-== Dummy gancho
+== Gancho do dummy
 
 Dummy is allowed on this server.
 == Dummy é permitido neste servidor.
@@ -3054,28 +3054,28 @@ Dummy is currently connected.
 == Dummy está atualmente conectado.
 
 Dummy jump
-== Dummy salta
+== Salto do dummy
 
 Dummy marking color
-== Cor da marcação do Dummy
+== Cor da marcação do dummy
 
 Dummy mini view
-== Mini-vista do dummy
+== Mini visão do Dummy
 
 Dummy mini view size (percent)
-== Tamanho da vista em miniatura do Dummy (percentagem)
+== Tamanho da visualização mini do dummy (porcentagem)
 
 Dummy mini view zoom (percent)
-== Zoom da vista em miniatura do Dummy (percentagem)
+== Zoom da mini-visualização do Dummy (percentagem)
 
 Dummy name
-== Nome do Dummy
+== Nome do dummy
 
 Dummy skin
-== Skin do Dummy
+== Pele do dummy
 
 Dummy skin decoration
-== Decoração da skin do Dummy
+== Decoração da pele do dummy
 
 Dummy skin eyes
 == Olhos da skin do Dummy
@@ -3096,13 +3096,13 @@ Dummy Window
 == Janela do Dummy
 
 Dummy window size
-== Tamanho da janela do dummy
+== Tamanho da janela do Dummy
 
 Dummy window zoom
-== Zoom da janela do dummy
+== Zoom da janela do Dummy
 
 Dump the current savestring
-== Despejar a string de salvamento atual
+== Exportar a string de salvamento atual
 
 Dump zone tuning in zone x
 == Despejar afinação de zona na zona x
@@ -3312,10 +3312,10 @@ Enable DNSBL (DNS-based Blackhole List)
 == Ativar DNSBL (Lista Negra Baseada em DNS)
 
 Enable dummy skin queue rotation
-== Ativar rotação de fila de skins do Dummy
+== Ativar rotação da fila de skins do Dummy
 
 Enable dummy window
-== Ativar janela do dummy
+== Ativar janela do Dummy
 
 Enable dynamic camera
 == Ativar câmera dinâmica
@@ -3474,7 +3474,7 @@ Enable replays
 == Ativar replays
 
 Enable saving games (/save and /load)
-== Ativar jogos guardados (/save e /load)
+== Ativar salvamento de jogos (/save e /load)
 
 Enable server message sound
 == Ativar som de mensagem do servidor
@@ -3519,10 +3519,10 @@ Enable system media transport control integration
 == Ativar integração de controlo de transporte multimédia do sistema
 
 Enable team chat message sound
-== Ativar som de mensagem de chat de equipa
+== Ativar som de mensagem de chat da equipe
 
 Enable team chat sound
-== Ativar som de chat de equipa
+== Ativar som de chat da equipe
 
 Enable Tee trail
 == Ativar rastro do Tee
@@ -3576,7 +3576,7 @@ Enable Zen mode
 == Ativar modo Zen
 
 Enable/disable infinite hook.
-== Ativar/desativar gancho infinito.
+== Ativar/desativar gancho infinito
 
 Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others
 == Ativar/desativar alinhamento de quads. Quando ativado, linhas vermelhas mostram como quads/pontos em movimento se alinham e encaixam noutros
@@ -3594,7 +3594,7 @@ End marker of replay slice
 == Marcador final da fatia de replay
 
 Endless hook has been activated
-== Gancho infinito foi ativado
+== O gancho infinito foi ativado
 
 Endless hook has been deactivated
 == Gancho infinito foi desativado
@@ -3660,7 +3660,7 @@ Error loading demo
 == Erro ao carregar demo
 
 Error loading touch controls
-== Erro ao carregar controlos tácteis
+== Erro ao carregar os controlos táteis
 
 Error opening screenshot
 == Erro ao abrir captura de ecrã
@@ -3879,7 +3879,7 @@ File
 == Ficheiro
 
 File '%s' already exists, do you want to overwrite it?
-== O ficheiro '%s' já existe, queres sobrescrevê-lo?
+== O ficheiro '%s' já existe, deseja substituí-lo?
 
 File already exists, do you want to overwrite it?
 == O ficheiro já existe, deseja sobrescrevê-lo?
@@ -3927,10 +3927,10 @@ Filter out spectators from player count
 == Filtrar espectadores da contagem de jogadores
 
 Filter Team %d
-== Filtrar Equipe %d
+== Filtrar equipe %d
 
 Filter: Team %d
-== Filtro: Equipe %d
+== Filtrar: Equipe %d
 
 Filtered word console color
 == Cor da consola para palavras bloqueadas
@@ -3999,7 +3999,7 @@ Force high bandwidth mode when spectating (1 = on, 0 = off)
 == Forçar modo de alta largura de banda ao espetar (1 = ligado, 0 = desligado)
 
 Force i to pause for i seconds
-== Forçar i a pausar por i segundos
+== Forçar o jogador de ID i a pausar por i segundos
 
 Force vote
 == Forçar votação
@@ -4050,25 +4050,25 @@ Freeze bar opacity (0 invisible, 100 fully visible)
 == Opacidade da barra de congelamento (0 invisível, 100 totalmente visível)
 
 Freeze border color
-== Cor da borda do congelamento
+== Cor da borda de congelamento
 
 Freeze Collision Border Color
-== Cor da borda de colisão Freeze
+== Cor da borda de colisão de congelamento
 
 Freeze Laser Inner Color
-== Cor interior do laser de freeze
-
-Freeze laser inner color
 == Cor interna do laser de congelamento
 
+Freeze laser inner color
+== Cor interna do laser congelada
+
 Freeze Laser Outline Color
-== Cor do contorno do laser de freeze
+== Cor do contorno do laser de congelamento
 
 Freeze laser outline color
 == Cor do contorno do laser de congelamento
 
 Freeze opacity
-== Opacidade do congelamento
+== Opacidade de congelamento
 
 Freeze stars
 == Estrelas de congelamento
@@ -4092,28 +4092,28 @@ Friend entry color in friend list
 == Cor da entrada de amigo na lista de amigos
 
 Friend heart
-== Coração de amigo
+== Coração do amigo
 
 Friend message
-== Mensagem de amigo
+== Mensagem do amigo
 
 Friend message color
-== Cor da mensagem de amigo
+== Cor da mensagem do amigo
 
 Friend message heart color
-== Cor do coração da mensagem de amigo
+== Cor do coração da mensagem do amigo
 
 Friend message text gradient color
-== Cor gradiente do texto de mensagens de amigos
+== Cor gradiente do texto da mensagem de amigo
 
 Friend note
 == Nota de amigo
 
 Friend notification refresh interval (sec)
-== Intervalo de atualização de notificações de amigos (segundos)
+== Intervalo de atualização de notificação de amigo (seg)
 
 Friend Notifications
-== Notificações de Amigos
+== Notificações de amigo
 
 Friend notify
 == Notificar amigo

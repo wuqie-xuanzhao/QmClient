@@ -137,7 +137,7 @@
 == '%s'가 '%s'를 관전자로 이동하는 투표를 요청했습니다 (사유: %s)
 
 '%s' called for vote to move you to spectators
-== '%s'가 당신을 관전자로 이동하는 투표를 요청했습니다
+== '%s'가 당신을 관전자로 이동시키는 투표를 요청했습니다
 
 '%s' called for vote to mute '%s' (reason: %s)
 == '%s'가 '%s'를 음소거하는 투표를 요청했습니다 (사유: %s)
@@ -155,13 +155,13 @@
 == '%s'가 당신 팀의 연습 모드를 비활성화했습니다
 
 '%s' disabled team 0 mode.
-== '%s'가 team 0 모드를 비활성화했습니다.
+== '%s'가 0팀 모드를 비활성화했습니다.
 
 '%s' enabled team 0 mode. This will make your team behave like team 0.
 == '%s'가 team 0 모드를 활성화했습니다. 이제 당신의 팀이 team 0처럼 작동합니다.
 
 '%s' invited '%s' to your team.
-== '%s'가 '%s'를 당신의 팀에 초대했습니다.
+== '%s'가 '%s'를 당신 팀에 초대했습니다.
 
 '%s' invited you to team %s. Use /team %s to join
 == '%s'가 당신을 %s팀에 초대했습니다. /team %s를 입력하여 참여하세요
@@ -185,7 +185,7 @@
 == '%s'가 당신의 팀 잠금을 해제했습니다.
 
 '%s' was force-paused for %s seconds
-== '%s'가 %s초 동안 강제 일시정지되었습니다
+== '%s'가 %s초 동안 강제 일시정지 되었습니다
 
 '%s' would have timed out, but can use timeout protection now
 == '%s'가 타임아웃될 뻔했지만, 지금 타임아웃 보호를 사용할 수 있습니다
@@ -203,10 +203,10 @@
 == (업데이트 필요)
 
 - Save codes in order:
-== - 저장 코드 순서:
+== - 저장 코드를 순서대로:
 
 - Save owners in order:
-== - 저장 소유자 순서:
+== - 소유자를 순서대로:
 
 - You have %d saves on this map!
 == - 이 맵에 %d 개의 저장이 있습니다!
@@ -348,13 +348,13 @@ Add a clan war entry
 == 클랜 전쟁 항목 추가
 
 Add a colored skin to a dummy queue preset
-== 더미 큐 프리셋에 컬러 스킨 추가
+== 더미 대기열 프리셋에 색상 스킨 추가
 
 Add a colored skin to a queue preset
 == 큐 프리셋에 컬러 스킨 추가
 
 Add a colored skin to the dummy queue
-== 더미 큐에 컬러 스킨 추가
+== 더미 대기열에 색상 스킨 추가
 
 Add a colored skin to the queue
 == 큐에 컬러 스킨 추가
@@ -369,7 +369,7 @@ Add a country to the exclusion filter for a specific community (ISO 3166-1 numer
 == 특정 커뮤니티의 제외 필터에 국가 추가 (ISO 3166-1 숫자 코드)
 
 Add a dummy queue preset
-== 더미 큐 프리셋 추가
+== 더미 대기열 프리셋 추가
 
 Add a foe
 == 적 추가
@@ -405,13 +405,13 @@ Add a skin as a favorite
 == 스킨을 즐겨찾기에 추가
 
 Add a skin to a dummy queue preset
-== 더미 큐 프리셋에 스킨 추가
+== 더미 대기열 프리셋에 스킨 추가
 
 Add a skin to a queue preset
 == 큐 프리셋에 스킨 추가
 
 Add a skin to the dummy queue
-== 더미 큐에 스킨 추가
+== 더미 대기열에 스킨 추가
 
 Add a skin to the queue
 == 큐에 스킨 추가
@@ -441,7 +441,7 @@ Add current cut to the export list
 == 현재 잘라낸 구간을 내보내기 목록에 추가
 
 Add debug dummy to server (Debug build only)
-== 서버에 디버그 더미 추가 (Debug 빌드 전용)
+== 서버에 디버그 더미 추가 (디버그 빌드 전용)
 
 Add demo timeline marker
 == 데모 타임라인 마커 추가
@@ -498,7 +498,7 @@ Added %d missing required slot(s).
 == 누락된 필수 슬롯 %d개를 추가했습니다.
 
 Added %s as friend
-== %s 님을 친구로 추가했습니다
+== %s을(를) 친구로 추가했습니다
 
 Additional headers for register endpoint, comma-separated "header:value" pairs
 == 등록 엔드포인트용 추가 헤더, 쉼표로 구분된 "헤더:값" 쌍
@@ -618,7 +618,7 @@ Allow firing non-auto weapons while deep frozen
 == 깊은 프리즈 상태에서 비자동 무기 발사 허용
 
 Allow FTAPI auto-translate (may cause overload)
-== FTAPI 자동 번역 허용 (과부하 발생 가능)
+== FTAPI 자동 번역 허용 (과부하 가능성)
 
 Allow insecure HTTP protocol in addition to secure HTTPS. Primarily for testing.
 == 안전한 HTTPS 외에 안전하지 않은 HTTP 프로토콜도 허용. 주로 테스트용입니다.
@@ -663,10 +663,10 @@ Always show nameplates regardless of distance
 == 거리에 관계없이 항상 이름표 표시
 
 Always show other players' hook collision lines
-== 다른 플레이어의 갈고리 충돌선 항상 표시
+== 다른 플레이어의 갈고리 보조선 항상 표시
 
 Always show own player's hook collision line
-== 자신의 갈고리 충돌선 항상 표시
+== 자신의 갈고리 보조선 항상 표시
 
 Always translate
 == 항상 번역
@@ -735,7 +735,7 @@ Appearance / Chat
 == 외형 / 채팅
 
 Appearance / Hook Collision
-== 외형 / 갈고리 충돌선
+== 외관 / 갈고리 보조선
 
 Appearance / HUD
 == 외형 / HUD
@@ -852,7 +852,7 @@ Are you sure you want to delete this asset?
 == 이 에셋을 삭제하시겠습니까?
 
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== 스킨을 저장하시겠습니까? 같은 이름의 스킨이 이미 존재하면 덮어씌워집니다.
+== 정말로 스킨을 저장하시겠습니까? 동일한 이름의 스킨이 이미 존재하면 덮어쓰여집니다.
 
 Arrow assets
 == 화살표 에셋
@@ -975,13 +975,13 @@ Auto gain control for mic (AGC, experimental)
 == 마이크 자동 게인 제어 (AGC, 실험적)
 
 Auto greet friend on map join
-== 친구 맵 입장 시 자동 인사
+== 맵 입장 시 친구에게 자동 인사
 
 Auto greet friend text
-== 친구 맵 입장 시 자동 인사 텍스트
+== 자동 인사 텍스트
 
 Auto greet friends entering map
-== 맵에 들어온 친구에게 자동 인사
+== 맵에 입장하는 친구에게 자동 인사
 
 Auto hot-reload after external saves
 == 외부 저장 후 자동 핫 리로드
@@ -1023,7 +1023,7 @@ Auto save chat log
 == 채팅 로그 자동 저장
 
 Auto start vote
-== 투표 자동 시작
+== 자동 투표 시작
 
 Auto switch to the tee that got unfrozen
 == 해동된 티로 자동 전환
@@ -1047,7 +1047,7 @@ Auto unmute when speaking
 == 말할 때 자동 음소거 해제
 
 Auto unspec on unfreeze
-== 해동 시 자동 관전 해제
+== 얼음 해제 시 자동 관전 해제
 
 Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)
 == 최소 시간 후 맵 변경 자동 투표 (0=끄기, 1=반대, 2=찬성)
@@ -1056,7 +1056,7 @@ Auto weapon switch
 == 자동 무기 전환
 
 Auto-close chat after unfreeze
-== 해동 후 자동으로 채팅 닫기
+== 얼음 해제 후 자동 채팅 닫기
 
 Auto-create CSV on game end
 == 게임 종료 시 CSV 자동 생성
@@ -1077,10 +1077,10 @@ Auto-follow delay
 == 자동 따라가기 지연
 
 Auto-follow friend server switch delay (seconds)
-== 친구 따라 서버 변경 자동 지연 (초)
+== 친구 자동 따라가기 서버 전환 지연 시간(초)
 
 Auto-lock after joining lockable team
-== 잠글 수 있는 팀에 가입 시 자동 잠금
+== 잠금 가능한 팀에 참가한 후 자동 잠금
 
 Auto-lock delay (seconds)
 == 자동 잠금 지연 (초)
@@ -1089,10 +1089,10 @@ Auto-login after entering Axiom community server
 == Axiom 커뮤니티 서버 입장 시 자동 로그인
 
 Auto-record replay when player sets a new personal best time.
-== 플레이어가 새로운 개인 최고 기록을 세울 때 리플레이 자동 녹화.
+== 플레이어가 새로운 개인 최고 기록을 세울 때 리플레이 자동 녹화
 
 Auto-refresh server list for friend notifications
-== 친구 알림 시 서버 목록 자동 새로고침
+== 친구 알림을 위해 서버 목록 자동 새로고침
 
 Auto-reply to muted players
 == 음소거된 플레이어에게 자동 답장
@@ -1101,10 +1101,10 @@ Auto-reply when game minimized
 == 게임 최소화 시 자동 답장
 
 Auto-save chat log
-== 채팅 기록 자동 저장
+== 채팅 로그 자동 저장
 
 Auto-save history count (0=disable)
-== 자동 저장 기록 수 (0=자동 맵 변경 기록 비활성화)
+== 자동 저장 기록 개수 (0=비활성화)
 
 Auto-screenshot on game end
 == 게임 종료 시 자동 스크린샷
@@ -1164,7 +1164,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Gores 게임 모드에서 Gores 자동 전환 자동 활성화
 
 Automatically re-join team 0 after finish (only if unlocked).
-== 완료 후 팀 0에 자동 재가입 (잠금 해제된 경우에만).
+== 완주 후 자동으로 0팀 재가입 (잠금 해제된 경우에만)
 
 Automatically record demos
 == 데모 자동 녹화
@@ -1332,7 +1332,7 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 == 추방 투표 후 차단 시간 (분 단위, 0 = 추방만, 차단 없음)
 
 Base path for HTTPS map download URLs to clients
-== HTTPS 맵 다운로드 URL을 클라이언트에 제공하기 위한 기본 경로
+== 클라이언트에 HTTPS 맵 다운로드 URL을 제공하기 위한 기본 경로
 
 Basic
 == 기본
@@ -1410,7 +1410,7 @@ Blue team
 == 블루 팀
 
 Blue team wins!
-== 블루 팀 승리!
+== 파란 팀 승리!
 
 Body
 == 몸통
@@ -1539,7 +1539,7 @@ Can't disable team 0 mode. This team exceeds the maximum allowed size of %s play
 == 팀 0 모드를 비활성화할 수 없습니다. 이 팀은 일반 팀의 최대 허용 인원 %s명을 초과합니다.
 
 Can't enable team 0 mode with practice mode on.
-== 연습 모드가 켜져 있을 때는 팀 0 모드를 활성화할 수 없습니다.
+== 연습 모드가 켜져 있을 때 team 0 모드를 활성화할 수 없습니다.
 
 Can't find a Tutorial server
 == 튜토리얼 서버를 찾을 수 없습니다
@@ -1560,13 +1560,13 @@ Cancel
 == 취소
 
 Cancel your swap request
-== 교환 요청을 취소합니다
+== 스왑 요청 취소
 
 Candidate files
 == 후보 파일
 
 Cannot swap: the other player is not in your team
-== 교환 불가: 상대방이 당신의 팀에 없습니다
+== 스왑할 수 없음: 상대방이 당신의 팀에 없습니다
 
 Card Appearance
 == 카드 외형
@@ -1722,7 +1722,7 @@ Choose country flag
 == 국가 국기 선택
 
 Choose default eyes when joining a server
-== 서버 접속 시 기본 눈 모양 선택
+== 서버 접속 시 기본 눈 선택
 
 Choose export name first.
 == 내보내기 이름을 먼저 입력하세요.
@@ -1854,7 +1854,7 @@ Click to restore full match
 == 클릭하여 전체 매치 복원
 
 Click to select server. Double click to join your friend.
-== 클릭하여 서버를 선택하세요. 더블 클릭하여 친구가 있는 서버에 접속하세요.
+== 클릭하여 서버를 선택하세요. 더블 클릭하여 친구의 서버에 접속하세요.
 
 Click to set color
 == 클릭하여 색상 설정
@@ -1923,16 +1923,16 @@ Color of authenticated player names on scoreboard
 == 점수판에 인증된 플레이어 이름 색상
 
 Color of hook collision line tip segment
-== 갈고리 충돌선 끝 부분 색상
+== 갈고리 보조선 끝 부분 색상
 
 Color of hook line hitting hookable tile
-== 갈고리 가능 타일에 닿는 갈고리선 색상
+== 갈고리 가능 타일에 닿은 갈고리 선 색상
 
 Color of hook line hitting tee
-== 티에 닿는 갈고리선 색상
+== 티에 맞은 갈고리 선 색상
 
 Color of hook line not hitting anything
-== 아무것도 닿지 않는 갈고리선 색상
+== 아무것도 맞지 않은 갈고리 선 색상
 
 Colorize ping on scoreboard
 == 점수판에서 핑 색상화
@@ -1947,7 +1947,7 @@ Colors in scoreboard
 == 점수판에서의 색상
 
 Colors of the hook collision line, in case of a possible collision with:
-== 후크 충돌선 색상 (다음과 충돌 가능한 경우):
+== 갈고리 보조선 색상 (다음 대상에 충돌 가능할 경우):
 
 Combo
 == 콤보
@@ -1965,10 +1965,10 @@ Command executed when pointing at someone and shooting (default kill, only works
 == 누군가를 조준하고 발사할 때 실행되는 명령 (기본 kill, 원격 콘솔이 인증된 경우에만 작동)
 
 Command is not available on solo servers
-== 이 명령은 솔로 서버에서 사용할 수 없습니다
+== 명령을 솔로 서버에서 사용할 수 없습니다
 
 Command to run when joining server
-== 서버 접속 시 실행할 명령어
+== 서버에 접속할 때 실행할 명령어
 
 Command:
 == 명령어:
@@ -2070,7 +2070,7 @@ Connect dummy
 == 더미 연결
 
 Connect dummy to enable
-== 더미 연결 시 활성화
+== 더미 연결 후 활성화
 
 Connect to a server first
 == 먼저 서버에 연결하세요
@@ -2214,7 +2214,7 @@ Could not check for existing player with your name. Check your internet connecti
 == 사용자 이름과 일치하는 기존 플레이어를 확인할 수 없습니다. 인터넷 연결을 확인하세요.
 
 Could not connect dummy
-== 더미를 연결할 수 없습니다
+== 더미에 연결할 수 없습니다
 
 Could not create report scan request
 == 신고 스캔 요청을 생성할 수 없습니다
@@ -2403,7 +2403,7 @@ Cycle custom Tee hue
 == 사용자 지정 Tee 색조 순환
 
 Cycle custom Tee hue for dummy simultaneously
-== 더미 사용자 정의 Tee 색조 동시 순환
+== 더미 사용자 정의 티 색조 동시 순환
 
 Cycle custom Tee hue for main
 == 본체 사용자 정의 Tee 색조 순환
@@ -2532,7 +2532,7 @@ Deep freeze color
 == 깊은 얼음 색상
 
 Deep freeze opacity
-== 깊은 얼음 불투명도
+== 심층 빙결 불투명도
 
 Deep freeze tile outline color
 == 깊은 프리즈 타일 외곽선 색상
@@ -2541,7 +2541,7 @@ Deep unfreeze color
 == 깊은 해동 색상
 
 Deep unfreeze opacity
-== 깊은 해동 불투명도
+== 심층 빙결 해제 불투명도
 
 Deep unfreeze tile outline color
 == 깊은 언프리즈 타일 외곽선 색상
@@ -2694,10 +2694,10 @@ Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
 == 사용 중단됨: 점프 힌트 Y 위치, 시작 시 qm_jump_hint_y로 마이그레이션됨
 
 Depth freeze tile overlay alpha (0-100)
-== 깊은 빙결 타일의 오버레이 엔티티 알파 (0-100)
+== 심층 빙결 타일 오버레이 알파 (0-100)
 
 Depth unfreeze tile overlay alpha (0-100)
-== 깊은 해동 타일의 오버레이 엔티티 알파 (0-100)
+== 심층 빙결 해제 타일 오버레이 알파 (0-100)
 
 Deselect
 == 선택 해제
@@ -2715,7 +2715,7 @@ Detailed reason
 == 상세 사유
 
 Detect compatible solo prompts from custom servers
-== 사용자 정의 서버의 호환 가능한 솔로 프롬프트 감지
+== 커스텀 서버에서 호환되는 솔로 프롬프트 감지
 
 Detection distance
 == 감지 거리
@@ -2778,7 +2778,7 @@ Disconnect
 == 연결 끊기
 
 Disconnect dummy
-== 더미 연결 끊기
+== 더미 연결 해제
 
 Disconnect from the server
 == 서버에서 연결 해제
@@ -2877,7 +2877,7 @@ Do not set this variable, instead create ddnet-serverlist-urls.cfg next to setti
 == 이 변수를 설정하지 말고, 대신 settings_ddnet.cfg 옆에 ddnet-serverlist-urls.cfg를 생성하여 모든 가능한 서버 목록 URL을 지정하세요
 
 Do not set, used to mark official tutorial server
-== 설정하지 마세요. 공식 튜토리얼 서버를 표시하는 데 사용됩니다
+== 설정하지 마세요, 공식 튜토리얼 서버 표시용
 
 Do not show Tees visible on screen
 == 화면에 보이는 Tee 표시 안 함
@@ -2925,7 +2925,7 @@ Download this asset?
 == 이 에셋을 다운로드하시겠습니까?
 
 Downloaded
-== 다운로드됨
+== 다운로드 완료
 
 Downloading map
 == 맵 다운로드 중
@@ -2991,10 +2991,10 @@ Dummy
 == 더미
 
 Dummy body color
-== 더미 몸 색상
+== 더미 바디 색상
 
 Dummy body skin
-== 더미 몸 스킨
+== 더미 바디 스킨
 
 Dummy clan
 == 더미 클랜
@@ -3006,7 +3006,7 @@ Dummy copy
 == 더미 복사
 
 Dummy copy: %s
-== 더미 동기화: %s
+== 더미 복사: %s
 
 Dummy country (ISO 3166-1 numeric)
 == 더미 국가 (ISO 3166-1 숫자 코드)
@@ -3033,10 +3033,10 @@ Dummy fire
 == 더미 발사
 
 Dummy hammer fly
-== 더미 해머 플라이
+== 더미 망치 비행
 
 Dummy hammering (for hammer fly)
-== 더미 망치질 (망치 날기용)
+== 더미 망치질 (망치 비행용)
 
 Dummy hand color
 == 더미 손 색상
@@ -3045,7 +3045,7 @@ Dummy hand skin
 == 더미 손 스킨
 
 Dummy hook
-== 더미 후크
+== 더미 갈고리
 
 Dummy is allowed on this server.
 == 이 서버에서 더미가 허용됩니다.
@@ -3057,7 +3057,7 @@ Dummy jump
 == 더미 점프
 
 Dummy marking color
-== 더미 표식 색상
+== 더미 마킹 색상
 
 Dummy mini view
 == 더미 미니 뷰
@@ -3066,7 +3066,7 @@ Dummy mini view size (percent)
 == 더미 미니 뷰 크기 (백분율)
 
 Dummy mini view zoom (percent)
-== 더미 미니 뷰 확대/축소 (백분율)
+== 더미 미니 뷰 줌 (퍼센트)
 
 Dummy name
 == 더미 이름
@@ -3081,7 +3081,7 @@ Dummy skin eyes
 == 더미 스킨 눈
 
 Dummy skin marking
-== 더미 스킨 표식
+== 더미 스킨 마킹
 
 Dummy skin queue current position
 == 더미 스킨 큐 현재 위치
@@ -3090,7 +3090,7 @@ Dummy skin queue max length
 == 더미 스킨 큐 최대 길이
 
 Dummy skin queue switch interval (ms)
-== 더미 스킨 큐 전환 간격 (밀리초)
+== 더미 스킨 큐 전환 간격 (ms)
 
 Dummy Window
 == 더미 창
@@ -3099,7 +3099,7 @@ Dummy window size
 == 더미 창 크기
 
 Dummy window zoom
-== 더미 창 확대/축소
+== 더미 창 줌
 
 Dump the current savestring
 == 현재 저장 문자열 덤프
@@ -3285,7 +3285,7 @@ Enable chat message sound
 == 채팅 메시지 소리 활성화
 
 Enable chat with all/team mode
-== 전체/팀 채팅 모드 전환
+== 전체/팀 채팅 모드 활성화
 
 Enable cheats for your current team's run, but you can't earn a rank
 == 현재 팀의 실행에 치트를 활성화하지만, 순위를 획득할 수 없습니다
@@ -3294,7 +3294,7 @@ Enable colored console output
 == 콘솔 컬러 출력 활성화
 
 Enable coloring and hearts for friends
-== 친구에 대한 색상 및 하트 활성화
+== 친구에게 색상 및 하트 표시 활성화
 
 Enable controller
 == 컨트롤러 사용
@@ -3348,7 +3348,7 @@ Enable fat skin
 == 뚱뚱한 스킨 활성화
 
 Enable freeze call sound
-== 프리즈 콜 소리 활성화
+== 프리즈 콜 사운드 활성화
 
 Enable FTAPI auto-translate (may overload the service)
 == FTAPI 자동 번역 활성화 (서비스에 과부하가 걸릴 수 있음)
@@ -3519,7 +3519,7 @@ Enable system media transport control integration
 == 시스템 미디어 전송 제어 통합 활성화
 
 Enable team chat message sound
-== 팀 채팅 메시지 소리 활성화
+== 팀 채팅 메시지 사운드 활성화
 
 Enable team chat sound
 == 팀 채팅 사운드 활성화
@@ -3660,7 +3660,7 @@ Error loading demo
 == 데모 로드 오류
 
 Error loading touch controls
-== 터치 컨트롤 로딩 오류
+== 터치 컨트롤 로드 오류
 
 Error opening screenshot
 == 스크린샷 열기 오류
@@ -3804,7 +3804,7 @@ Failed to load
 == 로드 실패
 
 Failed to load main asset: %s
-== 주요 에셋 로드 실패: %s
+== 기본 에셋 로드 실패: %s
 
 Failed to prepare main asset image.
 == 주요 에셋 이미지를 준비하지 못했습니다.
@@ -3990,7 +3990,7 @@ Font size
 == 글꼴 크기
 
 Force a vote to yes/no
-== 투표를 찬성/반대로 강제합니다
+== 투표를 찬성/반대로 강제
 
 Force a voting option
 == 투표 옵션을 강제합니다
@@ -3999,7 +3999,7 @@ Force high bandwidth mode when spectating (1 = on, 0 = off)
 == 관전 시 고대역폭 모드 강제 (1 = 켜짐, 0 = 꺼짐)
 
 Force i to pause for i seconds
-== i 를 i 초 동안 일시정지시킵니다
+== 플레이어 i를 i초 동안 일시 정지로 강제
 
 Force vote
 == 강제 투표
@@ -4050,25 +4050,25 @@ Freeze bar opacity (0 invisible, 100 fully visible)
 == 빙결 바 불투명도 (0 투명, 100 완전 불투명)
 
 Freeze border color
-== Freeze 테두리 색상
+== 얼음 테두리 색상
 
 Freeze Collision Border Color
-== Freeze 충돌 테두리 색상
+== 얼음 충돌 테두리 색상
 
 Freeze Laser Inner Color
-== 얼음 레이저 내부 색상
+== 프리즈 레이저 내부 색상
 
 Freeze laser inner color
-== 빙결 레이저 내부 색상
+== 레이저 내부 색상 프리즈
 
 Freeze Laser Outline Color
-== 얼음 레이저 외곽선 색상
+== 프리즈 레이저 외곽선 색상
 
 Freeze laser outline color
-== 빙결 레이저 외곽선 색상
+== 동결 레이저 외곽선 색상
 
 Freeze opacity
-== Freeze 불투명도
+== 얼음 불투명도
 
 Freeze stars
 == 얼음 별
@@ -4086,10 +4086,10 @@ Friend bar category expand state (1=expanded, 0=collapsed)
 == 친구 바 카테고리 확장 상태 (1=확장, 0=축소)
 
 Friend color in friends list
-== 친구 목록에서 친구 색상
+== 친구 목록의 친구 색상
 
 Friend entry color in friend list
-== 친구 목록에서 친구 항목 색상
+== 친구 목록의 항목 색상
 
 Friend heart
 == 친구 하트
@@ -4110,7 +4110,7 @@ Friend note
 == 친구 메모
 
 Friend notification refresh interval (sec)
-== 친구 알림 새로고침 간격(초)
+== 친구 알림 새로고침 간격 (초)
 
 Friend Notifications
 == 친구 알림

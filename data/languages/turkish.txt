@@ -128,43 +128,43 @@
 == '%s', '%s' için %s saniye zorunlu duraklatma oylaması başlattı (sebep: %s)
 
 '%s' called for vote to kick '%s' (reason: %s)
-== '%s', '%s'yi atma oylaması başlattı (sebep: %s)
+== '%s', '%s' oyundan atılması için oylama başlattı (sebep: %s)
 
 '%s' called for vote to kick you
-== '%s', seni atma oylaması başlattı
+== '%s' seni oyundan atma oylaması başlattı
 
 '%s' called for vote to move '%s' to spectators (reason: %s)
 == '%s', '%s'yi izleyiciye taşıma oylaması başlattı (sebep: %s)
 
 '%s' called for vote to move you to spectators
-== '%s', seni izleyiciye taşıma oylaması başlattı
+== '%s' seni izleyiciye taşıma oylaması başlattı
 
 '%s' called for vote to mute '%s' (reason: %s)
-== '%s', '%s'yi susturma oylaması başlattı (sebep: %s)
+== '%s', '%s' için susturma oylaması başlattı (sebep: %s)
 
 '%s' called vote to %s practice mode for your team. Current votes %s/%s
 == '%s', takımın için %s antrenman modu oylaması başlattı. Mevcut oylar %s/%s
 
 '%s' called vote to change server option: %s
-== '%s', sunucu seçeneğini değiştirme oylaması başlattı: %s
+== '%s', sunucu seçeneğini değiştirmek için oylama başlattı: %s
 
 '%s' called vote to change server option: %s (reason: %s)
 == '%s', sunucu seçeneğini değiştirme oylaması başlattı: %s (sebep: %s)
 
 '%s' disabled practice mode for your team
-== '%s', takımın için antrenman modunu kapattı
+== '%s', takımınız için pratik modunu devre dışı bıraktı
 
 '%s' disabled team 0 mode.
-== '%s', takım 0 modunu kapattı.
+== '%s', takım 0 modunu devre dışı bıraktı.
 
 '%s' enabled team 0 mode. This will make your team behave like team 0.
 == '%s', takım 0 modunu açtı. Bu, takımının takım 0 gibi davranmasını sağlayacak.
 
 '%s' invited '%s' to your team.
-== '%s', '%s'yi takımına davet etti.
+== '%s', '%s' takımınıza davet etti.
 
 '%s' invited you to team %s. Use /team %s to join
-== '%s', seni %s takımına davet etti. Katılmak için /team %s yaz
+== '%s', sizi %s takımına davet etti. Katılmak için /team %s yazın
 
 '%s' is not a valid option on this server
 == '%s' bu sunucuda geçerli bir seçenek değil
@@ -203,10 +203,10 @@
 == (Güncelleme Gerekli)
 
 - Save codes in order:
-== - Kodları sırayla kaydet:
+== - Kayıt kodları sırayla:
 
 - Save owners in order:
-== - Sahipleri sırayla kaydet:
+== - Kayıt sahipleri sırayla:
 
 - You have %d saves on this map!
 == - Bu haritada %d kaydınız var!
@@ -348,13 +348,13 @@ Add a clan war entry
 == Bir klan savaşı girişi ekle
 
 Add a colored skin to a dummy queue preset
-== Bir dummy kuyruk ön ayarına renkli bir skin ekle
+== Bir kukla kuyruğu ön ayarına renkli bir skin ekle
 
 Add a colored skin to a queue preset
 == Bir kuyruk ön ayarına renkli bir skin ekle
 
 Add a colored skin to the dummy queue
-== Dummy kuyruğuna renkli bir skin ekle
+== Kukla kuyruğuna renkli bir skin ekle
 
 Add a colored skin to the queue
 == Kuyruğa renkli bir skin ekle
@@ -369,7 +369,7 @@ Add a country to the exclusion filter for a specific community (ISO 3166-1 numer
 == Belirli bir topluluk için hariç tutma filtresine bir ülke ekle (ISO 3166-1 sayısal)
 
 Add a dummy queue preset
-== Bir dummy kuyruk ön ayarı ekle
+== Bir kukla kuyruğu ön ayarı ekle
 
 Add a foe
 == Bir düşman ekle
@@ -405,13 +405,13 @@ Add a skin as a favorite
 == Bir skin'i favorilere ekle
 
 Add a skin to a dummy queue preset
-== Bir dummy kuyruk ön ayarına skin ekle
+== Bir kukla kuyruğu ön ayarına bir skin ekle
 
 Add a skin to a queue preset
 == Bir kuyruk ön ayarına skin ekle
 
 Add a skin to the dummy queue
-== Dummy kuyruğuna skin ekle
+== Dublör kuyruğuna bir skin ekle
 
 Add a skin to the queue
 == Kuyruğa skin ekle
@@ -618,7 +618,7 @@ Allow firing non-auto weapons while deep frozen
 == Derin donma sırasında otomatik olmayan silahları ateşlemeye izin ver
 
 Allow FTAPI auto-translate (may cause overload)
-== FTAPI otomatik çevirisine izin ver (aşırı yüklenmeye neden olabilir)
+== FTAPI otomatik çeviriye izin ver (aşırı yüklenmeye neden olabilir)
 
 Allow insecure HTTP protocol in addition to secure HTTPS. Primarily for testing.
 == Güvenli HTTPS protokolüne ek olarak güvenli olmayan HTTP protokolüne izin ver. Öncelikle test amaçlıdır.
@@ -648,7 +648,7 @@ Alpha
 == Alfa
 
 Also apply to dummy
-== Dummy'ye de uygula
+== Ayrıca dummy'e de uygula
 
 Always show
 == Her zaman göster
@@ -735,7 +735,7 @@ Appearance / Chat
 == Görünüm / Sohbet
 
 Appearance / Hook Collision
-== Görünüm / Kanca Çarpışması
+== Görünüm / Kanca yardım çizgileri
 
 Appearance / HUD
 == Görünüm / HUD
@@ -852,7 +852,7 @@ Are you sure you want to delete this asset?
 == Bu varlığı silmek istediğinizden emin misiniz?
 
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== Skin'inizi kaydetmek istediğinize emin misiniz? Bu isimde bir skin zaten varsa, değiştirilecektir.
+== Skininizi kaydetmek istediğinizden emin misiniz? Bu isimde bir skin zaten varsa, üzerine yazılacaktır.
 
 Arrow assets
 == Ok varlıkları
@@ -930,7 +930,7 @@ Authenticate to rcon with a username
 == Bir kullanıcı adı ile rcon'a kimlik doğrulaması yap
 
 Authorized player forced vote '%s'
-== Yetkili oyuncu oylamayı '%s' olarak zorladı
+== Yetkili oyuncu '%s' oylamasını zorla başlattı
 
 Auto
 == Otomatik
@@ -975,16 +975,16 @@ Auto gain control for mic (AGC, experimental)
 == Mikrofon için otomatik kazanç kontrolü (AGC, deneysel)
 
 Auto greet friend on map join
-== Arkadaş haritaya girdiğinde otomatik selamla
+== Haritaya katıldığında arkadaşı otomatik selamla
 
 Auto greet friend text
-== Arkadaş haritaya girdiğinde otomatik selam metni
+== Haritaya katıldığında arkadaşı otomatik selamlama metni
 
 Auto greet friends entering map
 == Haritaya giren arkadaşları otomatik selamla
 
 Auto hot-reload after external saves
-== Harici kaydetmelerden sonra otomatik sıcak yeniden yükle
+== Harici kaydetmelerden sonra otomatik yeniden yükle
 
 Auto login Axiom server
 == Axiom sunucusuna otomatik giriş
@@ -1020,7 +1020,7 @@ Auto save and load background strokes
 == Arka plan vuruşlarını otomatik kaydet ve yükle
 
 Auto save chat log
-== Sohbet günlüğünü otomatik kaydet
+== Sohbet kaydını otomatik kaydet
 
 Auto start vote
 == Oylamayı otomatik başlat
@@ -1047,7 +1047,7 @@ Auto unmute when speaking
 == Konuşurken otomatik sessizi aç
 
 Auto unspec on unfreeze
-== Çözülmede otomatik izleyiciden çık
+== Çözülünce otomatik seyirciden çık
 
 Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)
 == Minimum süre sonunda harita değişikliğinde otomatik oyla (0=Kapalı, 1=Karşı, 2=Kabul)
@@ -1056,7 +1056,7 @@ Auto weapon switch
 == Otomatik silah değiştirme
 
 Auto-close chat after unfreeze
-== Çözülünce Sohbeti Otomatik Kapat
+== Çözülmeden sonra sohbeti otomatik kapat
 
 Auto-create CSV on game end
 == Oyun sonunda otomatik CSV oluştur
@@ -1077,10 +1077,10 @@ Auto-follow delay
 == Otomatik takip gecikmesi
 
 Auto-follow friend server switch delay (seconds)
-== Arkadaşı Otomatik Takip Etme Sunucu Değiştirme Gecikmesi (saniye)
+== Arkadaşı otomatik takip etme sunucu değiştirme gecikmesi (saniye)
 
 Auto-lock after joining lockable team
-== Kilitlenebilir bir takıma katıldıktan sonra otomatik kilitle
+== Kilitlenebilir takıma katıldıktan sonra otomatik kilitlen
 
 Auto-lock delay (seconds)
 == Otomatik Kilitleme Gecikmesi (saniye)
@@ -1089,10 +1089,10 @@ Auto-login after entering Axiom community server
 == Axiom Topluluk Sunucusuna Katıldığında Otomatik Olarak Giriş Yap
 
 Auto-record replay when player sets a new personal best time.
-== Oyuncu yeni bir kişisel en iyi süre belirlediğinde tekrarı otomatik kaydet.
+== Oyuncu yeni bir kişisel en iyi zaman belirlediğinde tekrarı otomatik kaydet
 
 Auto-refresh server list for friend notifications
-== Arkadaş bildirimi için sunucu listesini otomatik yenile
+== Arkadaş bildirimleri için sunucu listesini otomatik yenile
 
 Auto-reply to muted players
 == Sessize alınmış oyunculara otomatik yanıtla
@@ -1101,10 +1101,10 @@ Auto-reply when game minimized
 == Oyun simge durumuna küçültüldüğünde otomatik yanıtla
 
 Auto-save chat log
-== Sohbet Geçmişini Otomatik Kaydet
+== Sohbet kaydını otomatik kaydet
 
 Auto-save history count (0=disable)
-== Otomatik kaydetme geçmişi sayısı (0=otomatik harita geçmişini devre dışı bırak)
+== Otomatik kayıt geçmiş sayısı (0=devre dışı)
 
 Auto-screenshot on game end
 == Oyun sonunda otomatik ekran görüntüsü al
@@ -1164,7 +1164,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Gores oyun modunda Gores otomatik geçişini otomatik olarak etkinleştir
 
 Automatically re-join team 0 after finish (only if unlocked).
-== Bitirdikten sonra otomatik olarak takım 0'a yeniden katıl (yalnızca kilitli değilse).
+== Bitişten sonra otomatik olarak 0 takımına yeniden katıl (yalnızca kilitli değilse)
 
 Automatically record demos
 == Demoları otomatik kaydet
@@ -1203,7 +1203,7 @@ Axiom auto login succeeded
 == Axiom otomatik girişi başarılı oldu
 
 Axiom dummy password
-== Axiom dummy şifresi
+== Axiom kukla şifresi
 
 Axiom main account password
 == Axiom ana hesap şifresi
@@ -1332,7 +1332,7 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 == Oy kullanılarak atıldıktan sonraki yasaklama süresi (dakika cinsinden, 0 = yalnızca atma, yasaklama yok)
 
 Base path for HTTPS map download URLs to clients
-== HTTPS harita indirme URL'lerini istemcilere sağlamak için temel yol
+== İstemcilere HTTPS harita indirme URL'leri için temel yol
 
 Basic
 == Temel
@@ -1398,7 +1398,7 @@ Blend mode
 == Karışım modu
 
 Block votes from blacklisted addresses
-== Kara listedeki adreslerden gelen oyları engelle
+== Kara listedeki adreslerden gelen oylamaları engelle
 
 Block words
 == Engellenen kelimeler
@@ -1548,7 +1548,7 @@ Can't invite players to this team
 == Bu takıma oyuncu davet edilemez
 
 Can't invite this quickly
-== Bu kadar hızlı davet edilemez
+== Bu kadar hızlı davet edemezsin
 
 Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
 == Belirtilen argümanlar tanınamıyor. Kullanım: /tpxy x y, örn. /tpxy 9 3.
@@ -1566,7 +1566,7 @@ Candidate files
 == Aday dosyalar
 
 Cannot swap: the other player is not in your team
-== Swap yapılamaz: diğer oyuncu takımında değil
+== Takas yapılamıyor: diğer oyuncu takımında değil
 
 Card Appearance
 == Kart Görünümü
@@ -1722,7 +1722,7 @@ Choose country flag
 == Ülke bayrağı seç
 
 Choose default eyes when joining a server
-== Bir sunucuya katılırken varsayılan göz ifadesini seç
+== Sunucuya katılırken varsayılan gözleri seç
 
 Choose export name first.
 == Önce dışa aktarma adını seçin.
@@ -1857,7 +1857,7 @@ Click to select server. Double click to join your friend.
 == Sunucuyu seçmek için tıklayın. Arkadaşınıza katılmak için çift tıklayın.
 
 Click to set color
-== Renk ayarlamak için tıklayın
+== Rengi ayarlamak için tıkla
 
 Client
 == İstemci
@@ -1923,16 +1923,16 @@ Color of authenticated player names on scoreboard
 == Skor tablosunda doğrulanmış oyuncu adlarının rengi
 
 Color of hook collision line tip segment
-== Kanca çarpışma çizgisi uç bölümünün rengi
+== Kanca yardım çizgisi uç bölümünün rengi
 
 Color of hook line hitting hookable tile
-== Kancalanabilir bir karoya çarpan kanca çizgisinin rengi
+== Kancalanabilir karoya çarpan kanca çizgisi rengi
 
 Color of hook line hitting tee
-== Bir tee'ye çarpan kanca çizgisinin rengi
+== Tee'ye çarpan kanca çizgisi rengi
 
 Color of hook line not hitting anything
-== Hiçbir şeye çarpmayan kanca çizgisinin rengi
+== Hiçbir şeye çarpmayan kanca çizgisi rengi
 
 Colorize ping on scoreboard
 == Skor tablosunda ping'i renklendir
@@ -1947,7 +1947,7 @@ Colors in scoreboard
 == Skor tablosundaki renkler
 
 Colors of the hook collision line, in case of a possible collision with:
-== Olası bir çarpışma durumunda kanca çarpışma çizgisinin renkleri:
+== Olası çarpma durumunda kanca yardım çizgisi renkleri:
 
 Combo
 == Kombo
@@ -1965,7 +1965,7 @@ Command executed when pointing at someone and shooting (default kill, only works
 == Birini işaret edip ateş ederken yürütülen komut (varsayılan kill, yalnızca uzak konsol kimlik doğrulandığında çalışır)
 
 Command is not available on solo servers
-== Bu komut solo sunucularda kullanılamaz
+== Komut solo sunucularda kullanılamaz.
 
 Command to run when joining server
 == Sunucuya katılırken çalıştırılacak komut
@@ -2070,7 +2070,7 @@ Connect dummy
 == Dummy bağla
 
 Connect dummy to enable
-== Etkinleştirmek için dummy bağla
+== Etkinleştirmek için dublör bağla
 
 Connect to a server first
 == Önce bir sunucuya bağlan
@@ -2148,10 +2148,10 @@ Contributors
 == Katkıda Bulunanlar
 
 Control dummy
-== Dummy'yi kontrol et
+== Yapayı kontrol et
 
 Control player (0) or dummy (1)
-== Oyuncuyu (0) veya dummy'yi (1) kontrol et
+== Oyuncuyu (0) veya yapayı (1) kontrol et
 
 Controller
 == Kumanda
@@ -2214,7 +2214,7 @@ Could not check for existing player with your name. Check your internet connecti
 == Adınızla mevcut bir oyuncu kontrol edilemedi. İnternet bağlantınızı kontrol edin.
 
 Could not connect dummy
-== Dummy bağlanamadı
+== Dublör bağlanamadı
 
 Could not create report scan request
 == Rapor tarama isteği oluşturulamadı
@@ -2403,7 +2403,7 @@ Cycle custom Tee hue
 == Özel Tee tonunu döngüye al
 
 Cycle custom Tee hue for dummy simultaneously
-== Dummy için aynı anda özel Tee tonunu döngüle
+== Aynı anda kukla için özel Tee tonunu döngüle.
 
 Cycle custom Tee hue for main
 == Ana karakter için özel Tee tonunu döngüle
@@ -2532,7 +2532,7 @@ Deep freeze color
 == Derin donma rengi
 
 Deep freeze opacity
-== Derin donma opaklığı
+== Derin donma opaklığı.
 
 Deep freeze tile outline color
 == Derin donma bloğu anahat rengi
@@ -2541,7 +2541,7 @@ Deep unfreeze color
 == Derin çözülme rengi
 
 Deep unfreeze opacity
-== Derin çözülme opaklığı
+== Derin çözülme opaklığı.
 
 Deep unfreeze tile outline color
 == Derin çözülme bloğu anahat rengi
@@ -2694,10 +2694,10 @@ Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
 == Kullanımdan kaldırıldı: zıplama ipucu Y konumu, başlangıçta qm_jump_hint_y'ye taşındı
 
 Depth freeze tile overlay alpha (0-100)
-== Derin donmuş blokların üst üste binen varlık alfası (0-100)
+== Derin donma karo kaplama alfa (0-100).
 
 Depth unfreeze tile overlay alpha (0-100)
-== Derin çözülmüş blokların üst üste binen varlık alfası (0-100)
+== Derin çözülme karo kaplama alfa (0-100).
 
 Deselect
 == Seçimi kaldır
@@ -2715,7 +2715,7 @@ Detailed reason
 == Ayrıntılı sebep
 
 Detect compatible solo prompts from custom servers
-== Özel sunuculardaki uyumlu solo uyarılarını algıla
+== Özel sunuculardan uyumlu solo ipuçlarını algıla.
 
 Detection distance
 == Algılama mesafesi
@@ -2757,7 +2757,7 @@ Disable Gores auto-switch when picking up extra weapon
 == Ekstra silah alındığında Gores otomatik değiştirmeyi devre dışı bırak
 
 Disable QmLive team preview/render filter
-== QmLive takım önizleme/oluşturma filtresini devre dışı bırak
+== QmLive takım önizleme/oluşturma filtresini devre dışı bırak.
 
 Disabled
 == Devre dışı
@@ -2778,7 +2778,7 @@ Disconnect
 == Bağlantıyı kes
 
 Disconnect dummy
-== Dummy bağlantısını kes
+== Yapay oyuncunun bağlantısını kes
 
 Disconnect from the server
 == Sunucudan bağlantıyı kes
@@ -2910,13 +2910,13 @@ Door laser outline color
 == Kapı lazer dış çizgi rengi
 
 Download community skins
-== Topluluk skinlerini indir
+== Topluluk görünümlerini indir
 
 Download failed
 == İndirme başarısız
 
 Download skins
-== Skinleri indir
+== Görünümleri indir
 
 Download skins immediately from cl_skin_download_url
 == cl_skin_download_url adresinden skinleri hemen indir
@@ -2991,61 +2991,61 @@ Dummy
 == Dummy
 
 Dummy body color
-== Dummy vücut rengi
+== Yapay gövde rengi
 
 Dummy body skin
-== Dummy vücut skin
+== Yapay vücut derisi
 
 Dummy clan
-== Dummy klanı
+== Yapay klanı
 
 Dummy Control: %s
-== Dummy Kontrolü: %s
+== Dublör Kontrolü: %s
 
 Dummy copy
-== Dummy kopyala
+== Yapay kopyalama
 
 Dummy copy: %s
-== Dummy senkronizasyonu: %s
+== Dummy kopyası: %s
 
 Dummy country (ISO 3166-1 numeric)
-== Dummy ülkesi (ISO 3166-1 sayısal)
+== Yapay ülkesi (ISO 3166-1 sayısal)
 
 Dummy decoration color
-== Dummy dekorasyon rengi
+== Yapay süsleme rengi
 
 Dummy eyes color
-== Dummy göz rengi
+== Yapay göz rengi
 
 Dummy eyes when joining server (0=normal, 1=pain, 2=happy, 3=surprised, 4=angry, 5=blink)
 == Sunucuya katılırken Dummy gözleri (0=normal, 1=acı, 2=mutlu, 3=şaşkın, 4=kızgın, 5=göz kırpma)
 
 Dummy feet color
-== Dummy ayak rengi
+== Yapay ayak rengi
 
 Dummy feet color (dummy_color_feet)
-== Dummy ayak rengi (dummy_color_feet)
+== Yapay ayak rengi (dummy_color_feet)
 
 Dummy feet skin
-== Dummy ayak skin
+== Yapay ayak derisi
 
 Dummy fire
-== Dummy ateş et
+== Yapay ateş etme
 
 Dummy hammer fly
-== Dummy çekiç uçuşu
+== Kukla çekiç uçuşu
 
 Dummy hammering (for hammer fly)
-== Dummy çekiçleme (çekiç uçuşu için)
+== Kukla çekiçleme (çekiç uçuşu için)
 
 Dummy hand color
-== Dummy el rengi
+== Kukla el rengi
 
 Dummy hand skin
-== Dummy el skin
+== Kukla el derisi
 
 Dummy hook
-== Dummy kancası
+== Kukla kancası
 
 Dummy is allowed on this server.
 == Bu sunucuda Dummy'ye izin veriliyor.
@@ -3054,55 +3054,55 @@ Dummy is currently connected.
 == Dummy şu anda bağlı.
 
 Dummy jump
-== Dummy zıpla
+== Kukla zıplaması
 
 Dummy marking color
-== Dummy işaretleme rengi
+== Kukla işaret rengi
 
 Dummy mini view
-== Dummy küçük görünümü
+== Dummy mini görünüm
 
 Dummy mini view size (percent)
-== Dummy mini görünüm boyutu (yüzde)
+== Kukla mini görünüm boyutu (yüzde).
 
 Dummy mini view zoom (percent)
-== Dummy mini görünüm yakınlaştırması (yüzde)
+== Kukla mini görünüm zoom (yüzde)
 
 Dummy name
-== Dummy adı
+== Kukla adı
 
 Dummy skin
-== Kukla skin
+== Kukla derisi
 
 Dummy skin decoration
-== Dummy skin dekorasyonu
+== Kukla derisi süslemesi
 
 Dummy skin eyes
-== Dummy skin gözleri
+== Dummy cilt gözleri
 
 Dummy skin marking
-== Dummy skin işaretlemesi
+== Dummy cilt işareti
 
 Dummy skin queue current position
-== Dummy skin sırası geçerli konumu
+== Kukla skin kuyruğu mevcut konum
 
 Dummy skin queue max length
-== Dummy skin sırası maksimum uzunluğu
+== Kukla skin kuyruğu maksimum uzunluk
 
 Dummy skin queue switch interval (ms)
-== Dummy skin sırası değiştirme aralığı (ms)
+== Kukla skin kuyruğu değiştirme aralığı (ms)
 
 Dummy Window
-== Dummy Penceresi
+== Kukla Penceresi
 
 Dummy window size
-== Dummy pencere boyutu
+== Kukla pencere boyutu
 
 Dummy window zoom
-== Dummy pencere yakınlaştırması
+== Kukla pencere zoom
 
 Dump the current savestring
-== Geçerli kayıt dizesini dök
+== Mevcut kayıt dizesini dök
 
 Dump zone tuning in zone x
 == x bölgesindeki bölge ayarını dök
@@ -3243,7 +3243,7 @@ enable
 == etkinleştir
 
 Enable /swap
-== /swap özelliğini etkinleştir
+== /swap'ı etkinleştir
 
 Enable /team0 mode
 == /team0 modunu etkinleştir
@@ -3285,7 +3285,7 @@ Enable chat message sound
 == Sohbet mesajı sesini etkinleştir
 
 Enable chat with all/team mode
-== Herkesle/takımla sohbet modunu etkinleştir
+== Tüm/takım sohbet modunu etkinleştir
 
 Enable cheats for your current team's run, but you can't earn a rank
 == Mevcut takımının koşusu için hileleri etkinleştir, ancak sıralama kazanamazsın
@@ -3312,10 +3312,10 @@ Enable DNSBL (DNS-based Blackhole List)
 == DNSBL'yi (DNS Tabanlı Kara Liste) etkinleştir
 
 Enable dummy skin queue rotation
-== Dummy cilt sırası döngüsünü etkinleştir
+== Kukla skin kuyruğu döndürmeyi etkinleştir
 
 Enable dummy window
-== Dummy penceresini etkinleştir
+== Kukla pencereyi etkinleştir
 
 Enable dynamic camera
 == Dinamik kamerayı etkinleştir
@@ -3522,7 +3522,7 @@ Enable team chat message sound
 == Takım sohbet mesajı sesini etkinleştir
 
 Enable team chat sound
-== Takım sohbeti sesini etkinleştir
+== Takım sohbet sesini etkinleştir
 
 Enable Tee trail
 == Tee izini etkinleştir
@@ -3576,7 +3576,7 @@ Enable Zen mode
 == Zen modunu etkinleştir
 
 Enable/disable infinite hook.
-== Sonsuz kancayı etkinleştir/devre dışı bırak.
+== Sınırsız kancayı etkinleştir/kapat
 
 Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others
 == Dörtlü hizalamayı etkinleştir/devre dışı bırak. Etkinleştirildiğinde, kırmızı çizgiler hareket eden dörtlülerin/noktaların diğerlerine nasıl hizalandığını ve yapıştığını gösterir
@@ -3660,7 +3660,7 @@ Error loading demo
 == Demo yüklenirken hata oluştu
 
 Error loading touch controls
-== Dokunmatik kontroller yüklenirken hata
+== Dokunmatik kontroller yüklenirken hata oluştu
 
 Error opening screenshot
 == Ekran görüntüsü açılırken hata oluştu
@@ -3837,7 +3837,7 @@ Fast input others
 == Diğer oyuncular için hızlı giriş
 
 Fast practice
-== Hızlı pratik
+== Hızlı antrenman
 
 Fat skins (DDFat)
 == Şişman skinler (DDFat)
@@ -3927,7 +3927,7 @@ Filter out spectators from player count
 == İzleyicileri oyuncu sayısından filtrele
 
 Filter Team %d
-== Filtre Takım %d
+== Takımı Filtrele %d
 
 Filter: Team %d
 == Filtre: Takım %d
@@ -3990,7 +3990,7 @@ Font size
 == Yazı tipi boyutu
 
 Force a vote to yes/no
-== Bir oylamayı evet/hayır olarak zorla
+== Oylamayı evet/hayıra zorla
 
 Force a voting option
 == Bir oylama seçeneğini zorla
@@ -3999,10 +3999,10 @@ Force high bandwidth mode when spectating (1 = on, 0 = off)
 == İzlerken yüksek bant genişliği modunu zorla (1 = açık, 0 = kapalı)
 
 Force i to pause for i seconds
-== i'yi i saniye duraklamaya zorla
+== i'yi i saniye duraklatmaya zorla
 
 Force vote
-== Oylamayı zorla
+== Zorla oylama
 
 Forms
 == Formlar
@@ -4050,22 +4050,22 @@ Freeze bar opacity (0 invisible, 100 fully visible)
 == Donma çubuğu opaklığı (0 görünmez, 100 tamamen görünür)
 
 Freeze border color
-== Donma kenarlık rengi
+== Donma kenar rengi
 
 Freeze Collision Border Color
-== Freeze çarpışma kenarlık rengi
+== Donma çarpışma kenar rengi
 
 Freeze Laser Inner Color
-== Dondurucu Lazer İç Rengi
+== Donma Lazer İç Rengi
 
 Freeze laser inner color
 == Donma lazer iç rengi
 
 Freeze Laser Outline Color
-== Dondurucu Lazer Dış Çizgi Rengi
+== Donma Lazer Anahat Rengi
 
 Freeze laser outline color
-== Donma lazer dış hat rengi
+== Donma lazer anahat rengi
 
 Freeze opacity
 == Donma opaklığı
@@ -4086,10 +4086,10 @@ Friend bar category expand state (1=expanded, 0=collapsed)
 == Arkadaş çubuğu kategori genişletme durumu (1=genişletilmiş, 0=daraltılmış)
 
 Friend color in friends list
-== Arkadaş listesinde arkadaş rengi
+== Arkadaş listesindeki arkadaş rengi
 
 Friend entry color in friend list
-== Arkadaş listesinde arkadaş giriş rengi
+== Arkadaş listesindeki arkadaş ögesi rengi
 
 Friend heart
 == Arkadaş kalbi
@@ -4098,10 +4098,10 @@ Friend message
 == Arkadaş mesajı
 
 Friend message color
-== Arkadaş mesaj rengi
+== Arkadaş mesajı rengi
 
 Friend message heart color
-== Arkadaş mesaj kalp rengi
+== Arkadaş mesajı kalp rengi
 
 Friend message text gradient color
 == Arkadaş mesajı metin gradyan rengi
@@ -4110,7 +4110,7 @@ Friend note
 == Arkadaş notu
 
 Friend notification refresh interval (sec)
-== Arkadaş bildirimi yenileme aralığı (saniye)
+== Arkadaş bildirimi yenileme aralığı (sn)
 
 Friend Notifications
 == Arkadaş Bildirimleri

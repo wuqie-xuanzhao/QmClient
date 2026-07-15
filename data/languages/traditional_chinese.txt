@@ -146,7 +146,7 @@
 == '%s' 發起了 %s 本隊練習模式的投票。當前票數 %s/%s
 
 '%s' called vote to change server option: %s
-== '%s' 發起了服務器選項投票：%s
+== '%s' 發起了伺服器選項投票：%s
 
 '%s' called vote to change server option: %s (reason: %s)
 == '%s' 發起了服務器選項投票：%s（原因：%s）
@@ -155,16 +155,16 @@
 == '%s' 關閉了你們隊伍的練習模式
 
 '%s' disabled team 0 mode.
-== '%s' 關閉了 team 0 模式
+== '%s' 關閉了 0 隊模式。
 
 '%s' enabled team 0 mode. This will make your team behave like team 0.
 == '%s' 開啟了 team 0 模式。你們的隊伍現在會按 team 0 規則運作
 
 '%s' invited '%s' to your team.
-== '%s' 邀請了 '%s' 加入你們的隊伍
+== '%s' 邀請了 '%s' 加入你們的隊伍。
 
 '%s' invited you to team %s. Use /team %s to join
-== '%s' 邀請你加入 %s 隊。輸入 /team %s 即可加入
+== '%s' 邀請你加入 %s 隊。使用 /team %s 即可加入
 
 '%s' is not a valid option on this server
 == '%s' 不是本服務器可用的投票選項
@@ -206,10 +206,10 @@
 == - 密碼依次為：
 
 - Save owners in order:
-== - 保存者按順序是：
+== - 保存者依次為：
 
 - You have %d saves on this map!
-== - 您在這張圖有 %d 個存檔！
+== - 您在這張地圖有 %d 個存檔！
 
 /map is disabled
 == 本服務器已禁用 /map
@@ -411,7 +411,7 @@ Add a skin to a queue preset
 == 將皮膚添加到隊列預設
 
 Add a skin to the dummy queue
-== 向分身隊列添加皮膚
+== 向分身队列添加皮肤
 
 Add a skin to the queue
 == 將皮膚添加到隊列中
@@ -441,7 +441,7 @@ Add current cut to the export list
 == 將當前片段加入導出列表
 
 Add debug dummy to server (Debug build only)
-== 向服務器添加調試用分身（僅 Debug 構建）
+== 向伺服器新增除錯用分身（僅 Debug 建置）
 
 Add demo timeline marker
 == 添加回放時間線標記
@@ -498,7 +498,7 @@ Added %d missing required slot(s).
 == 已補充 %d 個缺失的必需槽位。
 
 Added %s as friend
-== 已將 %s 新增為好友
+== 已將 %s 添加為好友
 
 Additional headers for register endpoint, comma-separated "header:value" pairs
 == 要發送到寄存器端點的額外標頭，以逗號分隔的“標頭：值”對
@@ -735,7 +735,7 @@ Appearance / Chat
 == 外觀/聊天
 
 Appearance / Hook Collision
-== 外觀/鉤子輔助線
+== 外觀 / 鉤子輔助線
 
 Appearance / HUD
 == 外觀 /HUD
@@ -852,7 +852,7 @@ Are you sure you want to delete this asset?
 == 確定要刪除此資源嗎？
 
 Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== 確定保存該皮膚？若已有同名皮膚，將被覆蓋。
+== 確定儲存該皮膚？若已有同名皮膚，將被覆蓋。
 
 Arrow assets
 == 箭頭資源
@@ -930,7 +930,7 @@ Authenticate to rcon with a username
 == 使用用戶名進行 rcon 認證
 
 Authorized player forced vote '%s'
-== 授權玩家強制將當前投票設為 '%s'
+== 授權玩家強制將投票設為 '%s'
 
 Auto
 == 自動
@@ -978,13 +978,13 @@ Auto greet friend on map join
 == 好友進圖自動打招呼
 
 Auto greet friend text
-== 好友進圖自動打招呼文本
+== 好友進圖自動打招呼文字
 
 Auto greet friends entering map
 == 自動問候進圖的好友
 
 Auto hot-reload after external saves
-== 外部保存後自動熱重載
+== 外部儲存後自動熱重新載入
 
 Auto login Axiom server
 == 自動登錄 Axiom 服務器
@@ -1020,7 +1020,7 @@ Auto save and load background strokes
 == 自動保存並加載背景描線
 
 Auto save chat log
-== 自動保存聊天記錄
+== 自動儲存聊天記錄
 
 Auto start vote
 == 自動發起投票
@@ -1077,7 +1077,7 @@ Auto-follow delay
 == 自動跟隨延遲
 
 Auto-follow friend server switch delay (seconds)
-== 自動跟隨好友換服延遲（秒）
+== 自動跟隨好友換伺服器延遲（秒）
 
 Auto-lock after joining lockable team
 == 加入可鎖定隊伍後自動鎖定
@@ -1089,10 +1089,10 @@ Auto-login after entering Axiom community server
 == 進入 Axiom 社區服務器後自動登錄
 
 Auto-record replay when player sets a new personal best time.
-== 刷新個人最佳成績時自動錄製回放
+== 玩家打破個人最佳紀錄時自動錄製回放
 
 Auto-refresh server list for friend notifications
-== 好友提醒自動刷新服務器列表
+== 好友提醒自動重新整理伺服器列表
 
 Auto-reply to muted players
 == 自動回覆已靜音玩家的消息
@@ -1101,10 +1101,10 @@ Auto-reply when game minimized
 == 遊戲最小化時自動回覆
 
 Auto-save chat log
-== 自動保存聊天記錄
+== 自動儲存聊天記錄
 
 Auto-save history count (0=disable)
-== 自動保存歷史數量（0=禁用自動過圖歷史記錄）
+== 自動儲存歷史記錄數量（0=停用）
 
 Auto-screenshot on game end
 == 遊戲結束時自動截圖
@@ -1398,7 +1398,7 @@ Blend mode
 == 疊加模式
 
 Block votes from blacklisted addresses
-== 通過黑名單地址阻止投票
+== 阻擋來自黑名單位址的投票
 
 Block words
 == 屏蔽詞
@@ -1539,16 +1539,16 @@ Can't disable team 0 mode. This team exceeds the maximum allowed size of %s play
 == 無法關閉 team 0 模式。該隊伍人數已超過普通隊伍允許上限 %s
 
 Can't enable team 0 mode with practice mode on.
-== 開啟練習模式時不能啟用 team 0 模式。
+== 開啟練習模式時無法啟用 team 0 模式。
 
 Can't find a Tutorial server
 == 無法找到教學服務器
 
 Can't invite players to this team
-== 當前這個隊伍不能邀請玩家
+== 目前這個隊伍無法邀請玩家
 
 Can't invite this quickly
-== 你發送邀請太快了，請稍後再試
+== 你傳送邀請太快了，請稍後再試
 
 Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
 == 無法識別指定參數。用法：/tpxy x y，例如 /tpxy 9 3。
@@ -1722,7 +1722,7 @@ Choose country flag
 == 選擇國家旗幟
 
 Choose default eyes when joining a server
-== 進入服務器時的默認表情
+== 連線至伺服器時選擇預設表情
 
 Choose export name first.
 == 請先填寫導出名稱。
@@ -1854,10 +1854,10 @@ Click to restore full match
 == 點擊恢復完整比賽
 
 Click to select server. Double click to join your friend.
-== 單擊以選擇此服務器。雙擊加入好友所在服務器。
+== 點擊選擇伺服器。雙擊加入好友所在伺服器。
 
 Click to set color
-== 點擊設置顏色
+== 點擊設定顏色
 
 Client
 == 客戶端
@@ -1923,16 +1923,16 @@ Color of authenticated player names on scoreboard
 == 計分板中已認證玩家的名稱顏色
 
 Color of hook collision line tip segment
-== 指定鉤子輔助線末端提示段的顏色。
+== 鉤子輔助線末端提示段顏色
 
 Color of hook line hitting hookable tile
-== 指定擊中可掛鉤圖塊的掛鉤線的顏色。
+== 擊中可掛鈎圖塊的鉤線顏色
 
 Color of hook line hitting tee
-== 指定擊中球座的鉤線的顏色。
+== 擊中球座的鉤線顏色
 
 Color of hook line not hitting anything
-== 指定未觸及任何物體的鉤線的顏色。
+== 未擊中任何物體的鉤線顏色
 
 Colorize ping on scoreboard
 == 計分板中是否對 ping 值著色
@@ -1965,10 +1965,10 @@ Command executed when pointing at someone and shooting (default kill, only works
 == 指向某人並射擊時執行命令（默認 kill，僅在遠程控制檯已鑑權時生效）
 
 Command is not available on solo servers
-== 這個命令在 solo 服務器上不可用
+== 此命令在 solo 伺服器上不可用
 
 Command to run when joining server
-== 加入服務器時運行的命令
+== 加入伺服器時執行的命令
 
 Command:
 == 指令：
@@ -2403,7 +2403,7 @@ Cycle custom Tee hue
 == 循環自定義 Tee 色調
 
 Cycle custom Tee hue for dummy simultaneously
-== 同時循環分身自定義 Tee 色調
+== 同時循環分身自訂 Tee 色調
 
 Cycle custom Tee hue for main
 == 循環本體自定義 Tee 色調
@@ -2694,10 +2694,10 @@ Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
 == 已廢棄：跳躍提示垂直位置，啟動時遷移到 qm_jump_hint_y
 
 Depth freeze tile overlay alpha (0-100)
-== 深度凍結圖塊的疊加實體 alpha (0-100)
+== 深度凍結圖塊疊加 Alpha (0-100)
 
 Depth unfreeze tile overlay alpha (0-100)
-== 深度解凍圖塊的疊加實體 alpha (0-100)
+== 深度解凍圖塊疊加 Alpha (0-100)
 
 Deselect
 == 取消選擇
@@ -2715,7 +2715,7 @@ Detailed reason
 == 詳細原因
 
 Detect compatible solo prompts from custom servers
-== 檢測自定義服務器的兼容單人區域提示
+== 檢測自訂伺服器的相容單人區域提示
 
 Detection distance
 == 檢測距離
@@ -2778,7 +2778,7 @@ Disconnect
 == 斷開連接
 
 Disconnect dummy
-== 斷開分身連接
+== 斷開分身連線
 
 Disconnect from the server
 == 與服務器斷開連接
@@ -2877,7 +2877,7 @@ Do not set this variable, instead create ddnet-serverlist-urls.cfg next to setti
 == 不要設置此變量，而是在 settings_ddnet.cfg 旁邊創建 ddnet-serverlist-urls.cfg 以指定所有可能的服務器列表 URL
 
 Do not set, used to mark official tutorial server
-== 勿修改：用於標記官方教學服
+== 勿修改：用於標記官方教學伺服器
 
 Do not show Tees visible on screen
 == 不顯示屏幕內可見的 Tee
@@ -2910,7 +2910,7 @@ Door laser outline color
 == 門的激光輪廓顏色
 
 Download community skins
-== 下載社區皮膚
+== 下載社群皮膚
 
 Download failed
 == 下載失敗
@@ -2997,7 +2997,7 @@ Dummy body skin
 == 分身身體皮膚
 
 Dummy clan
-== 分身的戰隊
+== 分身戰隊
 
 Dummy Control: %s
 == 分身控制：%s
@@ -3009,7 +3009,7 @@ Dummy copy: %s
 == 分身同步：%s
 
 Dummy country (ISO 3166-1 numeric)
-== 分身的國家（ISO 3166-1 數字碼）
+== 分身國家（ISO 3166-1 數字碼）
 
 Dummy decoration color
 == 分身裝飾顏色
@@ -3024,7 +3024,7 @@ Dummy feet color
 == 分身腳顏色
 
 Dummy feet color (dummy_color_feet)
-== 分身腳部顏色
+== 分身腳部顏色（dummy_color_feet）
 
 Dummy feet skin
 == 分身腳部皮膚
@@ -3033,10 +3033,10 @@ Dummy fire
 == 分身開火
 
 Dummy hammer fly
-== 分身錘飛
+== 分身槌子飛
 
 Dummy hammering (for hammer fly)
-== 分身是否正在敲錘子（用於錘子飛）
+== 分身槌打（用於槌子飛）
 
 Dummy hand color
 == 分身手部顏色
@@ -3045,7 +3045,7 @@ Dummy hand skin
 == 分身手部皮膚
 
 Dummy hook
-== 分身鉤
+== 分身鉤索
 
 Dummy is allowed on this server.
 == 此服務器允許分身。
@@ -3063,13 +3063,13 @@ Dummy mini view
 == 分身小窗
 
 Dummy mini view size (percent)
-== 分身迷你視圖大小（百分比）
+== 分身迷你檢視大小（百分比）
 
 Dummy mini view zoom (percent)
 == 分身迷你視圖縮放（百分比）
 
 Dummy name
-== 分身的名稱
+== 分身名稱
 
 Dummy skin
 == 分身皮膚
@@ -3078,19 +3078,19 @@ Dummy skin decoration
 == 分身皮膚裝飾
 
 Dummy skin eyes
-== 分身皮膚眼睛
+== 分身皮肤眼睛
 
 Dummy skin marking
-== 分身皮膚標記
+== 分身皮肤标记
 
 Dummy skin queue current position
-== 分身皮膚隊列當前位置
+== 分身皮膚佇列當前位置
 
 Dummy skin queue max length
-== 分身皮膚隊列最大長度
+== 分身皮膚佇列最大長度
 
 Dummy skin queue switch interval (ms)
-== 分身皮膚隊列切換間隔（毫秒）
+== 分身皮膚佇列切換間隔（ms）
 
 Dummy Window
 == 分身小窗
@@ -3102,7 +3102,7 @@ Dummy window zoom
 == 分身小窗縮放
 
 Dump the current savestring
-== 導出當前存檔字符串
+== 匯出目前存檔字串
 
 Dump zone tuning in zone x
 == 導出區域 x 的調參配置
@@ -3243,7 +3243,7 @@ enable
 == 開啟
 
 Enable /swap
-== 啟用/交換
+== 启用 /swap
 
 Enable /team0 mode
 == 啟用 /team0 模式
@@ -3285,7 +3285,7 @@ Enable chat message sound
 == 啟用聊天消息提示音
 
 Enable chat with all/team mode
-== 啟用與所有人/隊伍聊天模式
+== 啟用與全體/隊伍聊天模式
 
 Enable cheats for your current team's run, but you can't earn a rank
 == 為你當前隊伍啟用作弊，但將無法獲得排名
@@ -3312,7 +3312,7 @@ Enable DNSBL (DNS-based Blackhole List)
 == 啟用 DNSBL（基於 DNS 的黑洞列表）
 
 Enable dummy skin queue rotation
-== 啟用分身皮膚隊列輪換
+== 啟用分身皮膚佇列輪換
 
 Enable dummy window
 == 啟用分身小窗
@@ -3342,13 +3342,13 @@ Enable fast input in Gores mode
 == Gores 模式下啟用快速輸入
 
 Enable fast map download
-== 實現地圖的快速下載
+== 啟用快速地圖下載
 
 Enable fat skin
 == 啟用脂肪皮
 
 Enable freeze call sound
-== 啟用凍結呼叫聲
+== 啟用凍結呼喊聲
 
 Enable FTAPI auto-translate (may overload the service)
 == 啟用 FTAPI 自動翻譯（可能導致服務過載）
@@ -3474,7 +3474,7 @@ Enable replays
 == 啟用短時回放
 
 Enable saving games (/save and /load)
-== 啟用保存遊戲（/保存和/加載）
+== 启用保存游戏（/save 和 /load）
 
 Enable server message sound
 == 啟用服務器消息提示音
@@ -3519,10 +3519,10 @@ Enable system media transport control integration
 == 啟用系統媒體傳輸控制集成
 
 Enable team chat message sound
-== 啟用隊伍聊天消息提示音
+== 啟用隊伍聊天訊息提示音
 
 Enable team chat sound
-== 啟用隊伍聊天消息提示音
+== 啟用隊伍聊天提示音
 
 Enable Tee trail
 == 啟用 Tee 軌跡
@@ -3576,7 +3576,7 @@ Enable Zen mode
 == 啟用禪模式
 
 Enable/disable infinite hook.
-== 打開/關閉無限掛鉤
+== 启用/禁用无限钩索
 
 Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others
 == 啟用/禁用四邊形對齊。啟用後，紅線顯示移動四邊形/點時如何對齊並捕捉到其他四邊形/點
@@ -3660,7 +3660,7 @@ Error loading demo
 == 回放加載錯誤
 
 Error loading touch controls
-== 加載觸控設置錯誤
+== 載入觸控設定錯誤
 
 Error opening screenshot
 == 打開截圖時出錯
@@ -3801,10 +3801,10 @@ Failed to export skin files.
 == 導出皮膚文件失敗。
 
 Failed to load
-== 加載失敗
+== 載入失敗
 
 Failed to load main asset: %s
-== 加載主材質失敗：%s
+== 載入主素材失敗：%s
 
 Failed to prepare main asset image.
 == 準備主要資源圖片失敗。
@@ -3921,7 +3921,7 @@ Filter out servers with player country mismatch (ISO 3166-1 numeric)
 == 過濾掉玩家所在國家/地區不匹配的服務器（ISO 3166-1 數字）
 
 Filter out servers without friends
-== 過濾掉沒有好友的服務器
+== 過濾掉沒有好友的伺服器
 
 Filter out spectators from player count
 == 從玩家號碼中過濾掉觀眾
@@ -4017,7 +4017,7 @@ FPS
 == FPS
 
 Fraction of players needed to pass a vote
-== 超過這個比例的玩家需要同意投票才能成功
+== 投票通過所需的玩家比例
 
 Frags
 == 擊殺數
@@ -4056,16 +4056,16 @@ Freeze Collision Border Color
 == 凍結碰撞邊框顏色
 
 Freeze Laser Inner Color
-== 凍結激光實心顏色
+== 凍結雷射實心顏色
 
 Freeze laser inner color
-== 激光內色凍結
+== 凍結雷射內部顏色
 
 Freeze Laser Outline Color
-== 凍結激光外框顏色
+== 凍結雷射外框顏色
 
 Freeze laser outline color
-== 凍結的激光輪廓顏色
+== 凍結的雷射輪廓顏色
 
 Freeze opacity
 == 凍結不透明度
@@ -4095,25 +4095,25 @@ Friend heart
 == 好友愛心
 
 Friend message
-== 好友消息
+== 好友訊息
 
 Friend message color
 == 好友留言顏色
 
 Friend message heart color
-== 好友消息愛心顏色
+== 好友訊息愛心顏色
 
 Friend message text gradient color
-== 好友消息文字漸變顏色
+== 好友訊息文字漸層顏色
 
 Friend note
 == 好友備註
 
 Friend notification refresh interval (sec)
-== 好友提醒刷新間隔（秒）
+== 好友通知刷新間隔（秒）
 
 Friend Notifications
-== 好友提醒
+== 好友通知
 
 Friend notify
 == 好友通知
@@ -5241,7 +5241,7 @@ Kill message normal color
 == 殺死消息正常顏色
 
 Kill Protection enabled. If you really want to join the spectators, first type /kill
-== 已啟用防自殺保護。如果你確實想進入旁觀，請先輸入 /kill
+== 已開啟防自殺保護。若確要旁觀，請先輸入 /kill
 
 Kill yourself to restart
 == 自殺重新開始
@@ -6798,7 +6798,7 @@ Number of slots reserved for spectators
 == 為觀眾保留的槽位數
 
 Number of threads backend can use for rendering (Note: value may be ignored by backend)
-== 後端可用於渲染的線程數。（注：該值可以被後端忽略）
+== 渲染後端可用執行緒數（後端可能忽略該設定）
 
 Number of vote options sent per tick
 == 每 tick 發送的投票選項數量
@@ -7260,7 +7260,7 @@ Player
 == 玩家
 
 Player already invited
-== 該玩家已經被邀請過了
+== 該玩家已被邀請
 
 Player body color
 == 玩家身體顏色
@@ -8232,7 +8232,7 @@ Render ghosts as circles instead of Tee
 == 將幽靈渲染為圓圈而不是 Tee
 
 Render graphics when window is in background
-== 當窗口處於後臺時渲染圖形
+== 視窗在背景時仍渲染畫面
 
 Render quads as triangles (fixes quad shading on some GPUs)
 == 將四邊形渲染為三角形（修復了某些 GPU 上的四邊形著色）
@@ -8502,7 +8502,7 @@ RNNoise noise reduction strength
 == RNNoise 降噪強度
 
 RNNoise not integrated in current build, will fallback to simple noise reduction
-== 當前構建未集成 RNNoise，將自動回退到簡單降噪
+== 當前建置未整合 RNNoise，自動回退簡單降噪
 
 Rollback rate
 == 回滾率
@@ -9270,7 +9270,7 @@ Show default flag in scoreboard
 == 在記分牌中顯示默認國旗
 
 Show default mod rules.
-== 是否顯示默認 mod 規則
+== 顯示預設模組規則
 
 Show Directory
 == 顯示目錄
@@ -10152,7 +10152,7 @@ Smooth fade
 == 柔和淡變
 
 Smooth other players' predicted movement
-== 使其他玩家的移動預測更平滑
+== 平滑其他玩家的預測移動
 
 Smooth prediction margin (weakens ping jitter correction, restores old behavior)
 == 平滑過渡預測邊距（會削弱 ping 抖動修正，恢復舊行為）
@@ -11355,7 +11355,7 @@ Translation Settings
 == 翻譯設置
 
 transmits your player name to info.ddnet.org
-== 將會發送你的玩家暱稱到 info.ddnet.org
+== 會將玩家暱稱發送到 info.ddnet.org
 
 Troubleshooting suggestions
 == 建議排查
@@ -11466,7 +11466,7 @@ Unable to delete the demo '%s'
 == 無法刪除回放文件“%s”
 
 Unable to delete the folder '%s'. Make sure it's empty first.
-== 無法刪除文件夾“%s”，請確保先清空該文件夾
+== 無法刪除資料夾「%s」，請先清空
 
 Unable to delete the screenshot '%s'
 == 無法刪除截圖“%s”
@@ -12165,13 +12165,13 @@ Whether players can hammer/grenade/laser each other.
 == 玩家是否可用錘子/榴彈/激光互相攻擊
 
 Whether players can invite other players to team.
-== 玩家是否可以邀請其他玩家加入隊伍
+== 是否允許邀請他人入隊
 
 Whether players can pause their character.
-== 玩家是否可以暫停角色
+== 是否允許暫停角色
 
 Whether players can use the showother command
-== 玩家是否可以使用 showother 命令
+== 是否允許使用 showother 命令
 
 Whether players see all tees by default
 == 玩家是否默認看到所有 tee
@@ -12180,7 +12180,7 @@ Whether players see others by default (own team = 2)
 == 玩家是否默認看到其他人（本隊為 2）
 
 Whether to control dummy simultaneously (cl_dummy_jump, cl_dummy_fire, cl_dummy_hook)
-== 是否可以同時控制分身（cl_dummy_jump、cl_dummy_fire、cl_dummy_hook）
+== 是否同時控制分身（cl_dummy_jump、cl_dummy_fire、cl_dummy_hook）
 
 Whether to limit zoom in editor (0=unlimited)
 == 指定是否應限制編輯器中的縮放（0 = 無限制）
@@ -12192,7 +12192,7 @@ Whether to save worse scores when you already have a better score.
 == 已有更好成績時，是否仍保存更差成績
 
 Whether to show message when players pause and resume.
-== 玩家暫停和恢復時是否顯示消息
+== 玩家暫停/恢復時是否提示
 
 Whether to show players at any distance (off by default), optional i = 0 for off else for on
 == 是否顯示任意距離的玩家（默認關閉），可選 i = 0 為關閉，否則為打開
@@ -12372,7 +12372,7 @@ You can kick only your team member
 == 你只能踢自己隊伍裡的成員
 
 You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
-== 您可以在這個頁面管理觸控控制設定。只有已儲存的變更會在重新啟動客戶端後生效。您可以透過匯出到剪貼簿來與他人分享您的觸控控制設定。\n\n您可以在 DDNet Wiki 上找到更多關於觸控控制的詳細資訊。
+== 可在此管理觸控設定；須保存後重啟才生效。可匯出到剪貼簿分享。\n\n更多說明見 DDNet Wiki。
 
 You can now jump %s times
 == 你現在可以跳躍 %s 次
@@ -12390,7 +12390,7 @@ You can see other players. To disable this use DDNet client and type /showothers
 == 你當前可以看到其他玩家。要關閉此功能，請使用 DDNet 客戶端並輸入 /showothers
 
 You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
-== 您可以直接在下方列表中選擇按鈕，或長按螢幕上的觸控按鈕來選取它。您也可以透過觸控來移動和調整按鈕大小。
+== 可在下方列表選擇按鍵，也可長按螢幕選擇；還可直接拖動或縮放按鍵。
 
 You can shoot others with grenade
 == 你現在可以用榴彈槍攻擊其他玩家
@@ -12474,10 +12474,10 @@ You have started racing already
 == 你已經開始比賽了
 
 You have to be in a team (from 1-63)
-== 你必須在隊伍中（1 到 63 隊）
+== 必須處於 1–63 號隊伍中
 
 You have to be in a team to play on this server and all of your team will die if the team is locked
-== 你必須加入隊伍才能在本服務器遊玩；隊伍上鎖後，隊內任意玩家死亡都會導致全隊死亡
+== 必須組隊才能遊玩；隊伍上鎖後任一人死亡則全隊死亡
 
 You have to wait %s seconds until you can swap
 == 你還需要等待 %s 秒才能交換
@@ -12498,7 +12498,7 @@ You lost your jetpack gun
 == 你失去了噴氣槍
 
 You must join a team and play with somebody or else you can't play
-== 你必須加入一個隊伍並和其他人一起玩，否則無法開始
+== 必須加入隊伍並與他人一起玩，否則無法開始
 
 You must restart the game for all settings to take effect.
 == 你需要重啟遊戲來使所有設置生效。
@@ -12513,7 +12513,7 @@ You will be disconnected from the server.
 == 你將從當前服務器斷開連接。
 
 You will no longer see all tees on this server
-== 你現在不會再看到本服所有 tee 了
+== 你將不再看到本服全部 Tee
 
 You will not receive any further global chat and server messages
 == 你將不再接收全局聊天和服務器消息

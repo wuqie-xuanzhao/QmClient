@@ -1245,8 +1245,8 @@ polish = "Nieprawidłowe ustawienia przycisku"
 [[message]]
 key = "You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\\n\\nYou can find more detailed information about the touch controls on the DDNet Wiki."
 [message.translations]
-simplified_chinese = "你可以在此管理你的触控设置。更改只有在保存后才能在重启客户端后生效。你可以将设置导出到剪切板来和他人分享触控设置。\\n\\n 你可以在 DDNet Wiki 找到更多关于触控的详细信息。"
-traditional_chinese = "您可以在這個頁面管理觸控控制設定。只有已儲存的變更會在重新啟動客戶端後生效。您可以透過匯出到剪貼簿來與他人分享您的觸控控制設定。\\n\\n您可以在 DDNet Wiki 上找到更多關於觸控控制的詳細資訊。"
+simplified_chinese = "可在此管理触控设置；须保存后重启才生效。可导出到剪贴板分享。\n\n更多说明见 DDNet Wiki。"
+traditional_chinese = "可在此管理觸控設定；須保存後重啟才生效。可匯出到剪貼簿分享。\n\n更多說明見 DDNet Wiki。"
 japanese = "このページでタッチコントロールの設定を管理できます。保存された変更のみがクライアント再起動後に有効になります。クリップボードにエクスポートすることで、タッチコントロールを他の人と共有できます。\\n\\nタッチコントロールの詳細については、DDNet Wiki をご覧ください。"
 korean = "이 페이지에서 터치 컨트롤 설정을 관리할 수 있습니다. 저장된 변경 사항만 클라이언트를 다시 시작한 후에 적용됩니다. 터치 컨트롤을 클립보드로 내보내 다른 사람과 공유할 수 있습니다.\\n\\n터치 컨트롤에 대한 자세한 정보는 DDNet Wiki 에서 확인할 수 있습니다."
 russian = "Вы можете управлять настройками сенсорного управления на этой странице. Только сохранённые изменения будут доступны после перезапуска клиента. Вы можете поделиться своими настройками сенсорного управления с другими, экспортировав их в буфер обмена.\\n\\nБолее подробную информацию о сенсорном управлении можно найти на DDNet Wiki."
@@ -1261,8 +1261,8 @@ polish = "Możesz zarządzać ustawieniami sterowania dotykowego na tej stronie.
 [[message]]
 key = "You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch."
 [message.translations]
-simplified_chinese = "你可以直接在下方列表中选择按键，也可以长按屏幕来选择按键。你还可以直接移动按键位置或者调整按键大小。"
-traditional_chinese = "您可以直接在下方列表中選擇按鈕，或長按螢幕上的觸控按鈕來選取它。您也可以透過觸控來移動和調整按鈕大小。"
+simplified_chinese = "可在下方列表选择按键，也可长按屏幕选择；还可直接拖动或缩放按键。"
+traditional_chinese = "可在下方列表選擇按鍵，也可長按螢幕選擇；還可直接拖動或縮放按鍵。"
 japanese = "以下のリストから直接ボタンを選択するか、画面上のタッチボタンを長押しして選択できます。また、タッチでボタンを移動およびサイズ変更することもできます。"
 korean = "아래 목록에서 직접 버튼을 선택하거나, 화면의 터치 버튼을 길게 눌러 선택할 수 있습니다. 터치로 버튼을 이동하거나 크기를 조정할 수도 있습니다."
 russian = "Вы можете выбирать кнопки непосредственно в списке ниже или долгим нажатием на сенсорную кнопку на экране. Вы также можете перемещать и изменять размер кнопок касанием."

@@ -1307,8 +1307,8 @@ polish = "Nie można usunąć demo „%s”"
 [[message]]
 key = "Unable to delete the folder '%s'. Make sure it's empty first."
 [message.translations]
-simplified_chinese = "无法删除文件夹“%s”，请确保先清空该文件夹"
-traditional_chinese = "無法刪除文件夾“%s”，請確保先清空該文件夾"
+simplified_chinese = "无法删除文件夹「%s」，请先清空"
+traditional_chinese = "無法刪除資料夾「%s」，請先清空"
 japanese = "フォルダ「%s」を削除できませんでした。最初に空であることを確認してください。"
 korean = "폴더 '%s'을(를) 삭제할 수 없습니다. 먼저 비어 있는지 확인하세요."
 russian = "Не удалось удалить папку «%s». Убедитесь, что она пуста."
