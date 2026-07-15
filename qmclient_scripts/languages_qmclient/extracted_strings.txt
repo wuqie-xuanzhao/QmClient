@@ -34,6 +34,7 @@
 %s from %s
 %s has requested to swap with %s
 %s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
+%s joined this server
 %s not found
 %s translating to %s
 %s translating to %s before send
@@ -1480,6 +1481,7 @@ Height
 Hello from ui_widget::Modal
 Help: %s
 Helpful for Gores: allow negative internal certainty for more conservative prediction
+Hi!
 Hide basic system info (join, version, rules) in Zen mode
 Hide Chat
 Hide death/respawn effects

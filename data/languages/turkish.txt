@@ -106,6 +106,9 @@
 %s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
 == %s, seninle yer değiştirmek istedi. Yer değiştirme işlemini tamamlamak için lütfen %s saniye bekleyin ve ardından /swap %s yazın.
 
+%s joined this server
+== %s bu sunucuya katıldı
+
 %s not found
 == %s bulunamadı
 
@@ -4444,6 +4447,9 @@ Help: %s
 
 Helpful for Gores: allow negative internal certainty for more conservative prediction
 == Gores için faydalı: daha muhafazakar tahmin için negatif iç kesinliğe izin ver
+
+Hi!
+== Merhaba!
 
 Hide basic system info (join, version, rules) in Zen mode
 == Zen modunda giriş, sürüm ve kurallar gibi temel sistem mesajlarını gizle

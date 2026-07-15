@@ -106,6 +106,9 @@
 %s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
 == %s запросил(а) обмен с вами. Чтобы завершить обмен, подождите %s секунд и введите /swap %s.
 
+%s joined this server
+== %s зашёл на этот сервер
+
 %s not found
 == %s не найден
 
@@ -4444,6 +4447,9 @@ Help: %s
 
 Helpful for Gores: allow negative internal certainty for more conservative prediction
 == Полезно для Gores: разрешить отрицательную внутреннюю уверенность для более консервативного предсказания
+
+Hi!
+== Привет!
 
 Hide basic system info (join, version, rules) in Zen mode
 == Скрывать базовые системные сообщения (вход, версия, правила и т.д.) в режиме дзен

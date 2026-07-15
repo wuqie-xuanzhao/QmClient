@@ -23167,3 +23167,35 @@ brazilian_portuguese = "Usar cores de arco-íris nos títulos dos cartões de co
 portuguese = "Usar cores arco-íris nos títulos dos cartões de definições (requer animações extra)"
 turkish = "Ayar kartı başlıklarında gökkuşağı renklerini kullan (ek animasyonlar gerekir)"
 polish = "Używaj tęczowych kolorów w tytułach kart ustawień (wymaga dodatkowych animacji)"
+
+[[message]]
+key = "%s joined this server"
+[message.translations]
+simplified_chinese = "%s好友进入本服"
+traditional_chinese = "%s好友進入本服"
+japanese = "%sがこのサーバーに参加しました"
+korean = "%s님이 이 서버에 입장했습니다"
+russian = "%s зашёл на этот сервер"
+german = "%s ist diesem Server beigetreten"
+spanish = "%s se unió a este servidor"
+french = "%s a rejoint ce serveur"
+brazilian_portuguese = "%s entrou neste servidor"
+portuguese = "%s entrou neste servidor"
+turkish = "%s bu sunucuya katıldı"
+polish = "%s dołączył do tego serwera"
+
+[[message]]
+key = "Hi!"
+[message.translations]
+simplified_chinese = "你好啊!"
+traditional_chinese = "你好啊!"
+japanese = "やあ!"
+korean = "안녕!"
+russian = "Привет!"
+german = "Hi!"
+spanish = "¡Hola!"
+french = "Salut !"
+brazilian_portuguese = "Oi!"
+portuguese = "Olá!"
+turkish = "Merhaba!"
+polish = "Cześć!"

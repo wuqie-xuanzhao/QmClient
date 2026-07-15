@@ -106,6 +106,9 @@
 %s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
 == %s 請求與你交換。請等待 %s 秒後輸入 /swap %s 完成
 
+%s joined this server
+== %s好友進入本服
+
 %s not found
 == 未找到 %s
 
@@ -4444,6 +4447,9 @@ Help: %s
 
 Helpful for Gores: allow negative internal certainty for more conservative prediction
 == 對 Gores 有幫助：允許內部確定性為負值，使預測更保守
+
+Hi!
+== 你好啊!
 
 Hide basic system info (join, version, rules) in Zen mode
 == 禪模式下隱藏入場、版本和規則等基礎系統信息

@@ -104,7 +104,33 @@ static constexpr const char *s_apKeywordClauseContrastWords[] = {
 	"然而",
 	"可是",
 };
+// 好友进服默认文案：英文 source key（extract 靠下方 Localize 字面量收录）
 static constexpr const char *s_pFriendEnterBroadcastDefaultText = "%s joined this server";
+static constexpr const char *s_pFriendEnterGreetDefaultText = "Hi!";
+
+// 配置为空或仍是出厂默认时走 Localize(字面量)；用户自定义文案再 Localize（无译文则回退原文）
+// 兼容旧版中文默认：映射到英文 source 后再 Localize，避免英文界面锁死中文
+static const char *ResolveFriendEnterLocalizeText(const char *pConfigText, const char *pDefaultEnglish)
+{
+	if(pConfigText != nullptr)
+	{
+		if(str_comp(pConfigText, "%s好友进入本服") == 0)
+			pConfigText = s_pFriendEnterBroadcastDefaultText;
+		else if(str_comp(pConfigText, "你好啊!") == 0)
+			pConfigText = s_pFriendEnterGreetDefaultText;
+	}
+
+	const bool UseDefault = pConfigText == nullptr || pConfigText[0] == '\0' || str_comp(pConfigText, pDefaultEnglish) == 0;
+	if(UseDefault)
+	{
+		if(pDefaultEnglish == s_pFriendEnterBroadcastDefaultText || str_comp(pDefaultEnglish, s_pFriendEnterBroadcastDefaultText) == 0)
+			return Localize("%s joined this server");
+		if(pDefaultEnglish == s_pFriendEnterGreetDefaultText || str_comp(pDefaultEnglish, s_pFriendEnterGreetDefaultText) == 0)
+			return Localize("Hi!");
+		return Localize(pDefaultEnglish);
+	}
+	return Localize(pConfigText);
+}
 
 static int AutoReplySeparatorLength(const char *pStr);
 static bool AppendAutoReplyRuleBlock(char *pOutRules, size_t OutRulesSize, const char *pRules);
@@ -2616,6 +2642,7 @@ void CTClient::CheckFriendEnterGreet()
 	const float Now = LocalTime();
 	if(AutoGreetEnabled && !m_FriendEnterPendingNames.empty() && Now >= m_FriendEnterPendingSendAt)
 	{
+		// 空配置表示关闭问候；非空则按当前语言 Localize 后再发送
 		if(g_Config.m_QmFriendEnterGreetText[0] != '\0')
 		{
 			char aMsg[256];
@@ -2623,7 +2650,7 @@ void CTClient::CheckFriendEnterGreet()
 			str_append(aMsg, m_FriendEnterPendingNames.c_str(), sizeof(aMsg));
 			if(aMsg[0] != '\0')
 				str_append(aMsg, ": ", sizeof(aMsg));
-			str_append(aMsg, g_Config.m_QmFriendEnterGreetText, sizeof(aMsg));
+			str_append(aMsg, ResolveFriendEnterLocalizeText(g_Config.m_QmFriendEnterGreetText, s_pFriendEnterGreetDefaultText), sizeof(aMsg));
 
 			if(aMsg[0] != '\0')
 				GameClient()->m_Chat.SendChat(0, aMsg);
@@ -2703,7 +2730,10 @@ void CTClient::CheckFriendEnterGreet()
 
 	if(BroadcastEnabled)
 	{
-		const std::string BroadcastText = BuildFriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, NewNames);
+		// 配置默认是英文 source；Localize 后替换 %s 好友名
+		const std::string BroadcastText = BuildFriendEnterBroadcastText(
+			ResolveFriendEnterLocalizeText(g_Config.m_QmFriendEnterBroadcastText, s_pFriendEnterBroadcastDefaultText),
+			NewNames);
 		if(!BroadcastText.empty())
 			GameClient()->m_Broadcast.DoBroadcast(BroadcastText.c_str());
 	}

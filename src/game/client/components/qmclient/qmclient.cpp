@@ -153,6 +153,7 @@ static constexpr float QMCLIENT_FREEZE_WAKEUP_POPUP_DURATION = 2.0f;
 	"然而",
 	"可是",
 };
+// 与 tclient 一致：默认英文 source key，空模板回退用
 static constexpr const char *s_pFriendEnterBroadcastDefaultText = "%s joined this server";
 
 [[maybe_unused]] static int AutoReplySeparatorLength(const char *pStr);

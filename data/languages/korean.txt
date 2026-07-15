@@ -106,6 +106,9 @@
 %s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
 == %s가 당신에게 교환을 요청했습니다. 교환을 완료하려면 %s초 기다린 후 /swap %s를 입력하세요.
 
+%s joined this server
+== %s님이 이 서버에 입장했습니다
+
 %s not found
 == %s를 찾을 수 없음
 
@@ -4444,6 +4447,9 @@ Help: %s
 
 Helpful for Gores: allow negative internal certainty for more conservative prediction
 == Gores에 유용: 더 보수적인 예측을 위해 내부 확신도를 음수로 허용
+
+Hi!
+== 안녕!
 
 Hide basic system info (join, version, rules) in Zen mode
 == 선 모드에서 입장, 버전, 규칙 등 기본 시스템 정보 숨기기

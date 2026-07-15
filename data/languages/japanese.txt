@@ -106,6 +106,9 @@
 %s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
 == %s があなたとの交換をリクエストしました。交換を完了するには %s 秒待ってから /swap %s と入力してください。
 
+%s joined this server
+== %sがこのサーバーに参加しました
+
 %s not found
 == %s が見つかりません
 
@@ -4444,6 +4447,9 @@ Help: %s
 
 Helpful for Gores: allow negative internal certainty for more conservative prediction
 == Gores に役立つ：より保守的な予測のために内部確実性を負の値にする
+
+Hi!
+== やあ!
 
 Hide basic system info (join, version, rules) in Zen mode
 == 禅モードで入場、バージョン、ルールなどの基本システム情報を非表示
