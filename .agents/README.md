@@ -60,7 +60,6 @@
 | 稳定规格 | `docs/superpowers/specs/` |
 | 探索记录 | `docs/superpowers/explore/` |
 | 脚本说明 | `qmclient_scripts/` |
-| 旧 `docs/superpowers/prompts/` | 仅 README 跳转；正文已在 audit skill |
 
 ## 用户级 skills
 

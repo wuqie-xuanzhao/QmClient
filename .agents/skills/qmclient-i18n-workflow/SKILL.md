@@ -59,4 +59,4 @@ python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-gr
 - 草稿未审核不得 write-back  
 - 数字门禁：`required = 数字(src) ⊆ 数字(tgt) ⊆ required ∪ 英文词 one…ten`  
 - 跨模块同一 identity：first-wins + integrity 报错；合并后删除非首选副本  
-- 项目 skills 入口仅 `.agents/skills`（不要再用 `docs/superpowers/prompts/*/SKILL.md`）
+- 项目 skills 入口仅 `.agents/skills`
