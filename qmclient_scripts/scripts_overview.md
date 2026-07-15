@@ -230,5 +230,5 @@ python qmclient_scripts/gate/check_gate.py --mode default --explain-scope --repo
 
 ## 关联文档
 
-- `docs/ai-workflow/meta.md`
-- `docs/ai-workflow/verification.md`
+- `.agents/README.md`
+- `.agents/skills/qmclient-verification-gate/references/verification.md`

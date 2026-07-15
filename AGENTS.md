@@ -10,7 +10,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 ## 文档系统
 
-- docs 中 是各贡献者的 AI 工作流 的文档，其功能可共享通用
+- 可执行 AI 工作流规则在 `.agents/skills/`（原 `docs/ai-workflow/` 已合并为 skills + references）
 - `docs/superpowers/` 下的探索、计划、规格和提示词全部保留，作为版本化的任务记录与本地 AI 工作流入口。
 - 项目级 Agent skills 放在 `.agents/skills/<name>/SKILL.md`，供 **Codex** 与 **OMP** 共同发现；说明见 `.agents/README.md`。`docs/superpowers/prompts/` 保留长文提示词，不再作为 skill 入口。
 - `docs/superpowers/` 下的探索/计划/规格会随时间推移而老化；已标注 `文档已过时` 或 `部分内容已过时` banner 的文件仅供参考，不应作为实现依据。
@@ -21,14 +21,14 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 | 路径 | 内容 | 何时阅读 |
 |------|--------------|--------------|
-| `docs/ai-workflow/meta.md` | `docs/ai-workflow/` 自身的边界：什么该放这里，什么不该放这里。 | 需要修改 ai 工作流文档时 |
-| `docs/ai-workflow/ddnet-development.md` | DDNet/QmClient 的 C++ 规则、兼容性约束、风格、所有权、性能和风险边界。 | 每次修改 cpp、h 文件 代码实现时 |
-| `docs/ai-workflow/verification.md` | 构建、测试、quick/default/full gate 命令、视觉检查和证据标准。 | 完成任务后 |
-| `docs/ai-workflow/review.md` | 代码审查立场、严重级别格式、DDNet 特有风险点和输出格式。 | 完成任务后 |
-| `docs/ai-workflow/git-workflow.md` | Git - commit、PR 标题/描述和最终汇报格式规范。 | 提交 git 和 PR 时 |
-| `docs/ai-workflow/advanced/README.md` | 性能、量化系统、重构、安全、内存、jobs、观测和回归防护等专项稳定规则的阅读路由。 | 任务涉及对应专项风险时 |
+| `.agents/README.md` | skills 边界与布局：什么进 skill / references，什么进 superpowers。 | 维护 agent 工作流时 |
+| `.agents/skills/qmclient-cpp-conventions/` | C++ 规则、兼容性、风格、热路径；`references/advanced/` 为专项路由。 | 修改 cpp/h 或专项工程风险时 |
+| `.agents/skills/qmclient-verification-gate/` | 构建、测试、gate 模式、视觉与证据标准。 | 完成任务后 / 验收前 |
+| `.agents/skills/qmclient-code-review/` | 代码审查立场、严重级别、findings 格式。 | review / 核心逻辑改完后 |
+| `.agents/skills/qmclient-git-commit/` | commit、PR、汇报与 Release 文案。 | 提交 git 和 PR 时 |
+| `.agents/skills/qmclient-i18n-workflow/` 等 | i18n / 质量审计 / codegraph | 任务匹配 skill 描述时 |
 | `qmclient_scripts/scripts_overview.md` | 脚本分层、推荐入口和 gate 工作流语义。 | 使用脚本时 |
-| `.agents/skills/` | 项目级 skills（i18n、gate、质量审计等） | 任务匹配 skill 描述时，或用户显式 `/skill:` |
+| `docs/ai-workflow/` | **仅跳转桩**（旧链接兼容），正文已迁入 `.agents/skills`。 | 跟随旧文档链接时 |
 
 ## 极简工作流
 
@@ -40,26 +40,26 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 ### 启动顺序
 
 - 先读匹配的 `docs/superpowers/plans/` 或 `docs/superpowers/specs/`。
-- 再读与当前任务匹配的最小 `docs/ai-workflow/` 规则。
+- 再加载与当前任务匹配的最小 `.agents/skills/*`（读 `SKILL.md`，需要时再读 `references/`）。
 - 修改前检查附近源码、调用点、配置变量、翻译和测试；不理解现状时不要直接写代码。
 
 ### 完成任务后
 
-- 先按 `docs/ai-workflow/verification.md` 跑对应验证，至少覆盖当前改动的 build/test/gate。
+- 先按 `qmclient-verification-gate`（`references/verification.md`）跑对应验证，至少覆盖当前改动的 build/test/gate。
 - 除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate；代码改动完成后，至少补一条与范围匹配的 `python qmclient_scripts/gate/check_gate.py --mode ...` 验证。
 - 默认口径：纯文档改动人工核对引用和内容；常规代码改动至少跑 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前如环境允许优先补到 `--mode default`，该模式覆盖 C++ 全量测试和 Rust 全量测试；集中收口或准发布改动再用 `--mode full`，full 只是在 default 基础上增加高噪音/更重附加检查，不作为“全量测试”的默认入口。
-- 过滤测试只用于 TDD 红绿灯、定位和快速复现；最终汇报、交给用户验收或提交前，必须按 `docs/ai-workflow/verification.md` 跑对应测试入口的全量版本。没跑全量测试就必须写成 gap，不能说“无回归”或“测试通过”。
+- 过滤测试只用于 TDD 红绿灯、定位和快速复现；最终汇报、交给用户验收或提交前，必须按 `qmclient-verification-gate` 跑对应测试入口的全量版本。没跑全量测试就必须写成 gap，不能说“无回归”或“测试通过”。
 - 同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 必须串行执行，不要并行；要并行只能拆到不同 build 目录。
-- 影响核心逻辑时，必须派发一个新的只读子代理，按 `docs/ai-workflow/review.md` 做代码审查；审查先列 findings，再给总体结论。
+- 影响核心逻辑时，必须派发一个新的只读子代理，按 `qmclient-code-review` 做代码审查；审查先列 findings，再给总体结论。
 - 子代理指出的问题修完后，再看这次改动能否最小化提交：只保留和当前任务直接相关的文件与说明。
 
 ### 提交 commit / PR 前（用户说要提交改动的时候）
 
 - 提交不必在意干净的提交, 用户同时可能进行多个工作, 所以可能会有多种的改动.
-- 必须先读 `docs/ai-workflow/git-workflow.md` , 提交是一次提交, 不优先拆分多个提交, 只有用户明确拆分或者改动可以容易的拆分出区别较大的分类的情况下, 才拆分, 否则根据文档里面的, 多填写 git commit 的信息即可
+- 必须先用 `qmclient-git-commit`（`references/git-workflow.md`）， 提交是一次提交, 不优先拆分多个提交, 只有用户明确拆分或者改动可以容易的拆分出区别较大的分类的情况下, 才拆分, 否则根据文档里面的, 多填写 git commit 的信息即可
 - 先确认 review findings 已收口、gate 证据已补齐；不要带着“只跑过 build/test、没跑 gate”的状态进入 commit / PR。
 - 如果仓库开启了受保护分支，而当前操作者不是仓库主或没有直推权限，默认走：本地提交 -> 推到新分支 -> 开 PR -> 合并 PR -> 删分支。只有仓库主或被明确授予直推权限的人，才可以不走这条默认路径。
-- commit 和 PR 文案按 `docs/ai-workflow/git-workflow.md` 编写：标题统一用 `<type>(<scope>): <中文简述>`，正文先写问题/背景，再按 `fix`、`test`、`docs` 等分组。
+- commit 和 PR 文案按 `qmclient-git-commit` 编写：标题统一用 `<type>(<scope>): <中文简述>`，正文先写问题/背景，再按 `fix`、`test`、`docs` 等分组。
 - 如果准备提 PR，先确保这轮审查结论已经收口，不要带着已知 review finding 进入 PR。
 
 ### 修改文档后
@@ -80,9 +80,9 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 4. CI（`.github/workflows/build.yml` 的 `release-desktop` / `release-android`）自动构建多平台产物、调 `generate_release_notes.py` 生成 release note 并发布 GitHub Release。
 5. release note 是机械草稿，按 `docs/RELEASE_NOTE_TEMPLATE.md` 人工润色后编辑该 Release。
 
-> nightly 由 `.github/workflows/nightly.yml` 定时构建并覆盖 `nightly` tag，无需手动发版。补发/重发见 `docs/ai-workflow/git-workflow.md`「Release 补发与重发」。
+> nightly 由 `.github/workflows/nightly.yml` 定时构建并覆盖 `nightly` tag，无需手动发版。补发/重发见 `qmclient-git-commit` references「Release 补发与重发」。
 
-## 全局硬约束（简略版，详细看 `docs/ai-workflow/ddnet-development.md`）
+## 全局硬约束（简略版，详细看 `qmclient-cpp-conventions`）
 
 - 仓库就是记录系统：决策、计划、功能状态、验证证据和交接说明都应该写进版本化文件。
 - 一次只处理一个功能。直接以当前用户请求和对应的 superpowers plan/spec 作为范围边界。
@@ -101,14 +101,14 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - 工程实现默认走 TDD：先写失败测试，再做最小实现通过测试，最后再整理代码
 - 编码必须使用 UTF-8，保留原 BOM 状态（如有）
 - 修改前检测原文件换行符（CRLF/LF）和缩进风格（Tab/空格数），修改后保持一致
-- 真实 commit / PR 标题按 `docs/ai-workflow/git-workflow.md`：`<type>(<scope>): <中文简述>`，并默认补全 commit body
+- 真实 commit / PR 标题按 `qmclient-git-commit`：`<type>(<scope>): <中文简述>`，并默认补全 commit body
 - `FEAT`、`FIX`、`DEL` 可用于 commit body 分组，也可用于最终汇报分组
 - 仓库文档中的文件、命令行和目录路径统一使用前斜杠 `/`（如 `src/game/client/components/qmclient/`, `qmclient_scripts/cmake-windows.cmd`）
 - 注释必须使用中文（如 `// 这是一个注释`）
 
 ## 构建与命令
 
-- 优先用脚本，不要依赖记忆。具体命令见 `docs/ai-workflow/verification.md` 和 `qmclient_scripts/scripts_overview.md`。
+- 优先用脚本，不要依赖记忆。具体命令见 `qmclient-verification-gate` 和 `qmclient_scripts/scripts_overview.md`。
 - 修改 `qmclient_scripts/languages_qmclient/`、`data/languages/*.txt`、`qmclient_scripts/languages_qmclient/translations/i18n/*.toml`，或新增/删除 `Localize`、`Localizable`、`Register` help 文本后，按顺序运行 `python qmclient_scripts/languages_qmclient/extract_strings.py`、`python qmclient_scripts/languages_qmclient/generate_all.py`、`python qmclient_scripts/languages_qmclient/validate.py`、`python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
 - `qmclient_scripts/languages_qmclient/translations/i18n/*.toml` 是翻译维护库；`data/languages/*.txt` 是生成产物，不作为手工维护的长期真相源。
 - 新增英文 source key 后，先用 `extract_strings.py` 更新 active key，再用 `translate_with_local_http.py --languages ...` 生成 `translations_draft/<language>/*.toml`；审核 draft 后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，随后运行 `generate_all.py` 生成运行时语言文件。

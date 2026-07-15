@@ -2,7 +2,7 @@
 """
 校验 commit message subject 是否符合 <type>(<scope>): <简述> 规范。
 
-规范见 docs/ai-workflow/git-workflow.md。
+规范见 .agents/skills/qmclient-git-commit/references/git-workflow.md。
 
 用法：
   # 直接校验一段文本
@@ -129,7 +129,7 @@ def main() -> int:
         f"  原因：{reason}\n"
         f"  期望：<type>(<scope>): <中文简述>，如 fix(hud): 修复通知栏位置\n"
         f"  type 可选：{', '.join(sorted(KNOWN_TYPES))}\n"
-        f"  规范见 docs/ai-workflow/git-workflow.md"
+        f"  规范见 .agents/skills/qmclient-git-commit/references/git-workflow.md"
     )
     print(hint, file=sys.stderr)
     return 1 if args.strict else 0
