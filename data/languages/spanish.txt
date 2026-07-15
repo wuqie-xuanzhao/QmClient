@@ -1020,7 +1020,7 @@ Auto save and load background strokes
 == Guardar y cargar automáticamente trazos de fondo
 
 Auto save chat log
-== Guardar automáticamente el registro del chat
+== Autoguardar chat
 
 Auto start vote
 == Iniciar votación automáticamente
@@ -1035,7 +1035,7 @@ Auto switch weapon on pickup
 == Cambiar arma automáticamente al recoger
 
 Auto team lock
-== Bloqueo automático de equipo
+== Bloqueo de equipo auto
 
 Auto translate received messages
 == Traducir automáticamente los mensajes recibidos
@@ -1101,7 +1101,7 @@ Auto-reply when game minimized
 == Responder automáticamente cuando el juego está minimizado
 
 Auto-save chat log
-== Guardar automáticamente el registro de chat
+== Autoguardar chat
 
 Auto-save history count (0=disable)
 == Cantidad de historial guardado automáticamente (0=deshabilitar)
@@ -1113,7 +1113,7 @@ Auto-send emote and chat message when entering freeze
 == Enviar automáticamente emoción y mensaje de chat al entrar en congelación
 
 Auto-switch to first unfrozen when both frozen
-== Cuando tanto el cuerpo principal como el Dummy estén congelados, cambiar automáticamente al que se descongele primero
+== Si ambos congelados, ir al no congelado
 
 Auto-sync player camera
 == Sincronizar cámara del jugador automáticamente
@@ -1893,7 +1893,7 @@ Client prediction time is high
 == El tiempo de predicción del cliente es alto
 
 Client uptime
-== Tiempo activo del cliente
+== Uptime del cliente
 
 Clock drift hard cut threshold (ms)
 == Clock drift hard-snap threshold ms
@@ -2409,7 +2409,7 @@ Cycle custom Tee hue for main
 == Ciclar tono personalizado del Tee principal
 
 Cycle custom Tee hue speed (deg/s)
-== Velocidad de ciclo de tono personalizado del Tee principal (grados/segundo)
+== Vel. matiz Tee (°/s)
 
 Cycle through emotes
 == Ciclar entre emotes
@@ -3162,7 +3162,7 @@ Dynamic Island HUD editor edge margin px
 == Margen del borde del editor Dynamic Island HUD (px)
 
 Ease in out quad
-== Cuádrica suave de entrada y salida
+== Ease in-out quad
 
 Ease out cubic
 == Cúbica suave de salida
@@ -4656,7 +4656,7 @@ Hitbox Mode Global Opacity
 == Transparencia global del modo hitbox
 
 Hitbox Mode Override
-== Interruptor general del modo hitbox
+== Forzar modo hitbox
 
 Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all
 == Alcance del modo hitbox para jugadores: 0=local, 1=local + Dummy, 2=todos los jugadores
@@ -4854,7 +4854,7 @@ Improved anti ping
 == Antiping mejorado
 
 In memory of me
-== Que este cliente me recuerde
+== En memoria mía
 
 In-game controller sensitivity
 == Sensibilidad del controlador en el juego
@@ -4983,7 +4983,7 @@ Input device open failed, try reconnecting headset/mic or reselecting input devi
 == Fallo al abrir el dispositivo de entrada, intenta reconectar los auriculares/micrófono o seleccionar otro dispositivo de entrada
 
 Input focus color
-== Color de foco de entrada de la interfaz
+== Color de foco
 
 Input overlay
 == Superposición de entrada
@@ -5262,7 +5262,7 @@ l = Local time
 == l = Hora local
 
 L select  R swap  M select only
-== L seleccionar  R intercambiar  M seleccionar solo
+== I sel.  D interc.  C solo sel.
 
 Label
 == Etiqueta
@@ -5874,7 +5874,7 @@ Marquee for long lyrics
 == Desplazamiento horizontal para letras muy largas
 
 Marquee speed
-== Velocidad del desplazamiento horizontal de la letra
+== Velocidad del marquesina
 
 Master server URL to register
 == URL del servidor maestro para registrar
@@ -7896,7 +7896,7 @@ Ratio threshold for local target language detection
 == Umbral de porcentaje de identificación del idioma objetivo local
 
 Read new feature indicators
-== Indicadores de nuevas funciones ya leídos en la interfaz de configuración
+== Indicadores nuevos leídos
 
 Reason
 == Motivo
@@ -9615,7 +9615,7 @@ Show old DDRace client records
 == Mostrar registros antiguos del cliente DDRace
 
 Show on key
-== Mostrar al presionar tecla
+== Al pulsar tecla
 
 Show only chat messages from friends
 == Mostrar solo mensajes de chat de amigos
@@ -11160,7 +11160,7 @@ Toggle dummy
 == Alternar Dummy
 
 Toggle dyncam
-== Alternar cámara dinámica
+== Alternar dyncam
 
 Toggle fast practice mode
 == Alternar modo de práctica rápida
@@ -11436,10 +11436,10 @@ UI controller sens.
 == Sensibilidad del mando en la interfaz
 
 UI motion level
-== Intensidad de animación de la interfaz
+== Animación UI
 
 UI mouse sens.
-== Sensibilidad del ratón en la interfaz
+== Sens. ratón UI
 
 UI opacity
 == Opacidad de la interfaz de usuario
@@ -11454,7 +11454,7 @@ UI server address
 == Dirección del servidor de UI
 
 UI size percentage
-== Porcentaje de tamaño de UI
+== Tamaño UI (%)
 
 Unable to delete %d selected items. The first failing item was '%s'.
 == No se pudieron eliminar %d elementos seleccionados. El primer elemento fallido fue '%s'.
@@ -12476,8 +12476,8 @@ You have started racing already
 You have to be in a team (from 1-63)
 == Tienes que estar en un equipo (del 1 al 63)
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
-== Debes estar en un equipo para jugar en este servidor; si el equipo está bloqueado, cuando muere un miembro muere todo el equipo
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
+== Debes estar en un equipo para jugar aquí; si el equipo está bloqueado, la muerte de un miembro mata a todo el equipo
 
 You have to wait %s seconds until you can swap
 == Tienes que esperar %s segundos hasta que puedas intercambiar

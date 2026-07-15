@@ -12476,8 +12476,8 @@ You have started racing already
 You have to be in a team (from 1-63)
 == Bir takımda olmalısınız (1-63 arası)
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
-== Bu sunucuda oynamak için bir takımda olmalısın; takım kilitliyken bir üye ölürse tüm takım ölür
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
+== Bu sunucuda oynamak için takımda olmalısın; takım kilitliyken bir üye ölürse tüm takım ölür
 
 You have to wait %s seconds until you can swap
 == Takas yapana kadar %s saniye beklemeniz gerekiyor

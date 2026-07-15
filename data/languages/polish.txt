@@ -5874,7 +5874,7 @@ Marquee for long lyrics
 == Przewijanie tekstu utworu, gdy jest zbyt długi
 
 Marquee speed
-== Szybkość przewijania tekstu utworu
+== Szybkość paska tekstu
 
 Master server URL to register
 == Adres URL serwera głównego do rejestracji
@@ -12476,7 +12476,7 @@ You have started racing already
 You have to be in a team (from 1-63)
 == Musisz być w drużynie (od 1 do 63)
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
 == Aby grać na tym serwerze, musisz być w drużynie; gdy drużyna jest zablokowana, śmierć jednego członka zabija całą drużynę
 
 You have to wait %s seconds until you can swap

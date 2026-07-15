@@ -438,7 +438,13 @@ traditional_chinese = "回放"
 japanese = "デモ"
 korean = "데모"
 russian = "Демо"
+german = "Demo"
+spanish = "Demo"
 french = "Démo"
+brazilian_portuguese = "Demo"
+portuguese = "Demo"
+turkish = "Demo"
+polish = "Demo"
 
 [[message]]
 key = "Demofile: %s"

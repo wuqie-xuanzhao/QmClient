@@ -1020,7 +1020,7 @@ Auto save and load background strokes
 == Sauvegarder et charger automatiquement les traits d'arrière-plan
 
 Auto save chat log
-== Sauvegarde automatique du journal de discussion
+== Auto-sauver le chat
 
 Auto start vote
 == Lancement automatique du vote
@@ -1035,7 +1035,7 @@ Auto switch weapon on pickup
 == Changer automatiquement d'arme lors de la récupération
 
 Auto team lock
-== Verrouillage automatique de l'équipe
+== Verrou d’équipe auto
 
 Auto translate received messages
 == Traduire automatiquement les messages reçus
@@ -1101,7 +1101,7 @@ Auto-reply when game minimized
 == Réponse automatique lorsque le jeu est minimisé
 
 Auto-save chat log
-== Sauvegarde automatique du journal de discussion
+== Auto-sauver le chat
 
 Auto-save history count (0=disable)
 == Nombre d'historique de sauvegarde automatique (0=désactiver)
@@ -1113,7 +1113,7 @@ Auto-send emote and chat message when entering freeze
 == Envoyer automatiquement une émoticône et un message de chat lors de l'entrée en gel
 
 Auto-switch to first unfrozen when both frozen
-== Lorsque le personnage principal et le Dummy sont gelés, basculer automatiquement vers celui qui dégèle en premier
+== Si les deux gelés, aller au non gelé
 
 Auto-sync player camera
 == Synchronisation automatique de la caméra du joueur
@@ -1893,7 +1893,7 @@ Client prediction time is high
 == Le temps de prédiction du client est élevé
 
 Client uptime
-== Temps de fonctionnement du client
+== Uptime client
 
 Clock drift hard cut threshold (ms)
 == Clock drift hard-snap threshold ms
@@ -2364,7 +2364,7 @@ Custom community list fetch URL (must be https, leave empty to disable)
 == URL de récupération de la liste de communauté personnalisée (doit être https, laisser vide pour désactiver)
 
 Custom font
-== Police personnalisée
+== Police perso
 
 Custom Font:
 == Police personnalisée :
@@ -2409,7 +2409,7 @@ Cycle custom Tee hue for main
 == Faire défiler la teinte Tee personnalisée du personnage principal
 
 Cycle custom Tee hue speed (deg/s)
-== Vitesse de teinte personnalisée du Tee du corps cyclique (degrés/s)
+== Vitesse teinte Tee (°/s)
 
 Cycle through emotes
 == Parcourir les émoticônes
@@ -3162,7 +3162,7 @@ Dynamic Island HUD editor edge margin px
 == Marge de bord de l'éditeur Dynamic Island HUD (px)
 
 Ease in out quad
-== Quadratique entrée-sortie
+== Ease in-out quad
 
 Ease out cubic
 == Cubique sortie
@@ -4656,7 +4656,7 @@ Hitbox Mode Global Opacity
 == Transparence globale du mode Hitbox
 
 Hitbox Mode Override
-== Interrupteur général du mode Hitbox
+== Forcer mode hitbox
 
 Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all
 == Portée du mode Hitbox : 0=Local, 1=Local+Dummy, 2=Tous les joueurs
@@ -4815,7 +4815,7 @@ I am away from the game window
 == Je suis loin de la fenêtre du jeu
 
 I muted you
-== Je t'ai masqué
+== Je t’ai mute
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == Si 1, enregistrement automatique une seule fois à la connexion ; si 0, l'enregistrement automatique redémarre après la fin de la partie
@@ -4854,7 +4854,7 @@ Improved anti ping
 == Anti-ping amélioré
 
 In memory of me
-== Que ce client garde mon souvenir
+== En mémoire de moi
 
 In-game controller sensitivity
 == Sensibilité de la manette en jeu
@@ -4983,7 +4983,7 @@ Input device open failed, try reconnecting headset/mic or reselecting input devi
 == Échec de l'ouverture du périphérique d'entrée, essayez de rebrancher le casque/micro ou de resélectionner le périphérique d'entrée
 
 Input focus color
-== Couleur de focus de saisie de l'interface
+== Couleur focus
 
 Input overlay
 == Superposition de saisie
@@ -5262,7 +5262,7 @@ l = Local time
 == l = Heure locale
 
 L select  R swap  M select only
-== Clic gauche sélectionne  Clic droit échange  Clic milieu sélectionne uniquement
+== G sel.  D échange  M sel. seul
 
 Label
 == Étiquette
@@ -5874,7 +5874,7 @@ Marquee for long lyrics
 == Défilement horizontal des paroles trop longues
 
 Marquee speed
-== Vitesse du défilement horizontal des paroles
+== Vitesse du défilement
 
 Master server URL to register
 == URL du serveur maître pour l'enregistrement
@@ -6261,7 +6261,7 @@ Mute pick-up sounds
 == Couper les sons de ramassage
 
 Mute player
-== Mettre le joueur en sourdine
+== Mute joueur
 
 Mute player status sounds
 == Couper les sons d'état du joueur
@@ -7896,7 +7896,7 @@ Ratio threshold for local target language detection
 == Seuil de proportion de reconnaissance de la langue cible locale
 
 Read new feature indicators
-== Indicateurs de nouvelles fonctionnalités déjà lus dans l'interface des paramètres
+== Badges nouveautés lus
 
 Reason
 == Raison
@@ -9615,7 +9615,7 @@ Show old DDRace client records
 == Afficher les anciens records du client DDRace
 
 Show on key
-== Afficher sur la touche
+== Sur touche
 
 Show only chat messages from friends
 == Afficher uniquement les messages de chat des amis
@@ -11160,7 +11160,7 @@ Toggle dummy
 == Basculer le dummy
 
 Toggle dyncam
-== Activer/désactiver la caméra dynamique
+== Basculer dyncam
 
 Toggle fast practice mode
 == Activer/désactiver le mode pratique rapide
@@ -11436,10 +11436,10 @@ UI controller sens.
 == Sensibilité manette (interface)
 
 UI motion level
-== Intensité des animations de l'interface
+== Animations UI
 
 UI mouse sens.
-== Sensibilité souris (interface)
+== Sens. souris UI
 
 UI opacity
 == Opacité de l'interface utilisateur
@@ -11454,7 +11454,7 @@ UI server address
 == Adresse du serveur UI
 
 UI size percentage
-== Pourcentage de la taille de l'interface utilisateur
+== Taille UI (%)
 
 Unable to delete %d selected items. The first failing item was '%s'.
 == Impossible de supprimer %d éléments sélectionnés. Le premier élément en échec était '%s'.
@@ -12476,8 +12476,8 @@ You have started racing already
 You have to be in a team (from 1-63)
 == Vous devez être dans une équipe (de 1 à 63)
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
-== Vous devez être dans une équipe pour jouer sur ce serveur ; si l’équipe est verrouillée, la mort d’un membre tue toute l’équipe
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
+== Vous devez être en équipe pour jouer ici ; si l’équipe est verrouillée, la mort d’un membre tue toute l’équipe
 
 You have to wait %s seconds until you can swap
 == Vous devez attendre %s secondes avant de pouvoir échanger

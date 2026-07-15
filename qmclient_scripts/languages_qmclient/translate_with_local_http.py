@@ -695,9 +695,9 @@ def render_prompt(
 
 
 def extract_placeholders(text: str) -> list[str]:
-    # %% first; (?<![0-9]) blocks percentage ranges like "20% to 100%".
+    # %% first; (?<![0-9]) blocks "20% to". No space in flags so "% of" ≠ %o.
     return re.findall(
-        r"%%|(?<![0-9])%(?:\d+\$)?[+#0\- ]?(?:\d+|\*)?(?:\.\d+|\.\*)?[hljztL]*[diuoxXfFeEgGaAcspn]",
+        r"%%|(?<![0-9])%(?:\d+\$)?[+#0\-]?(?:\d+|\*)?(?:\.\d+|\.\*)?[hljztL]*[diuoxXfFeEgGaAcspn]",
         text,
     )
 

@@ -4157,7 +4157,7 @@ You have already requested to swap with %s.
 You have requested to swap with %s. Use /cancelswap to cancel the request.
 You have started racing already
 You have to be in a team (from 1-63)
-You have to be in a team to play on this server and all of your team will die if the team is locked
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
 You have to wait %s seconds until you can swap
 You have unlimited air jumps
 You have unsaved changes.

@@ -12476,7 +12476,7 @@ You have started racing already
 You have to be in a team (from 1-63)
 == 必須處於 1–63 號隊伍中
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
 == 必須組隊才能遊玩；隊伍上鎖後任一人死亡則全隊死亡
 
 You have to wait %s seconds until you can swap

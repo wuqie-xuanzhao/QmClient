@@ -12476,7 +12476,7 @@ You have started racing already
 You have to be in a team (from 1-63)
 == チーム（1～63）に所属している必要があります
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
 == このサーバーでプレイするにはチームに入る必要があります。チームがロックされている場合、チームメイトの誰かが死ぬと全員が死亡します
 
 You have to wait %s seconds until you can swap

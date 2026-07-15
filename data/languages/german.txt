@@ -1020,7 +1020,7 @@ Auto save and load background strokes
 == Hintergrundstriche automatisch speichern und laden
 
 Auto save chat log
-== Chat-Log automatisch speichern
+== Chat auto speichern
 
 Auto start vote
 == Abstimmung automatisch starten
@@ -1035,7 +1035,7 @@ Auto switch weapon on pickup
 == Waffe beim Aufheben automatisch wechseln
 
 Auto team lock
-== Team automatisch sperren
+== Auto-Team-Lock
 
 Auto translate received messages
 == Empfangene Nachrichten automatisch übersetzen
@@ -1101,7 +1101,7 @@ Auto-reply when game minimized
 == Automatische Antwort bei minimiertem Spiel
 
 Auto-save chat log
-== Chatprotokoll automatisch speichern
+== Chat auto speichern
 
 Auto-save history count (0=disable)
 == Anzahl automatisch gespeicherter Verläufe (0=deaktiviert)
@@ -1113,7 +1113,7 @@ Auto-send emote and chat message when entering freeze
 == Emote und Chatnachricht beim Betreten von Freeze automatisch senden
 
 Auto-switch to first unfrozen when both frozen
-== Wenn sowohl der Hauptcharakter als auch der Dummy eingefroren sind, automatisch zu dem wechseln, der zuerst auftaut
+== Bei beider Freeze: zum Ungefrorenen
 
 Auto-sync player camera
 == Spielerkamera automatisch synchronisieren
@@ -2364,7 +2364,7 @@ Custom community list fetch URL (must be https, leave empty to disable)
 == Benutzerdefinierte Community-Listen-URL (muss https sein, leer zum Deaktivieren)
 
 Custom font
-== Benutzerdefinierte Schriftart
+== Eigene Schrift
 
 Custom Font:
 == Benutzerdefinierte Schriftart:
@@ -2409,7 +2409,7 @@ Cycle custom Tee hue for main
 == Farbton des benutzerdefinierten Haupt-Tees zyklisch ändern
 
 Cycle custom Tee hue speed (deg/s)
-== Geschwindigkeit des Farbtonzyklus des benutzerdefinierten Haupt-Tees (Grad/Sekunde)
+== Tee-Farbton-Tempo (°/s)
 
 Cycle through emotes
 == Durch Emotes wechseln
@@ -3162,7 +3162,7 @@ Dynamic Island HUD editor edge margin px
 == Randabstand des Dynamic-Island-HUD-Editors (px)
 
 Ease in out quad
-== Leicht aus/ein quadratisch
+== Ease in-out quad
 
 Ease out cubic
 == Leicht aus kubisch
@@ -4656,7 +4656,7 @@ Hitbox Mode Global Opacity
 == Hitbox-Modus globale Transparenz
 
 Hitbox Mode Override
-== Hitbox-Modus Hauptschalter
+== Hitbox-Modus erzwingen
 
 Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all
 == Hitbox-Modus Spielerbereich: 0=Lokal, 1=Lokal+Dummy, 2=Alle Spieler
@@ -4815,7 +4815,7 @@ I am away from the game window
 == Ich bin nicht am Spielfenster
 
 I muted you
-== Ich habe dich stummgeschaltet
+== Ich mute dich
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == Wenn 1, nur einmal beim Verbinden automatisch aufnehmen; wenn 0, startet die automatische Aufnahme nach Spielende neu
@@ -4854,7 +4854,7 @@ Improved anti ping
 == Verbessertes Anti-Ping
 
 In memory of me
-== Dieser Client erinnert an mich
+== In Erinnerung an mich
 
 In-game controller sensitivity
 == Controller-Empfindlichkeit im Spiel
@@ -4983,7 +4983,7 @@ Input device open failed, try reconnecting headset/mic or reselecting input devi
 == Eingabegerät öffnen fehlgeschlagen, versuche Kopfhörer/Mikrofon neu anzuschließen oder wähle ein anderes Eingabegerät aus
 
 Input focus color
-== Farbe des Eingabefokus in der Benutzeroberfläche
+== Fokusfarbe
 
 Input overlay
 == Eingabe-Overlay
@@ -5262,7 +5262,7 @@ l = Local time
 == l = Ortszeit
 
 L select  R swap  M select only
-== L Auswählen  R Tauschen  M Nur auswählen
+== L wählen  R tauschen  M nur wählen
 
 Label
 == Beschriftung
@@ -5874,7 +5874,7 @@ Marquee for long lyrics
 == Laufschrift bei überlangem Songtext
 
 Marquee speed
-== Geschwindigkeit der Songtext-Laufschrift
+== Laufschrift-Geschwindigkeit
 
 Master server URL to register
 == Master-Server-URL zur Registrierung
@@ -7896,7 +7896,7 @@ Ratio threshold for local target language detection
 == Schwellwert für lokale Zielsprachenerkennung in Prozent
 
 Read new feature indicators
-== Gelesene Kennzeichnungen für neue Funktionen in den Einstellungen
+== Neue-Feature-Marker gelesen
 
 Reason
 == Grund
@@ -9615,7 +9615,7 @@ Show old DDRace client records
 == Zeige alte DDRace-Client-Aufzeichnungen
 
 Show on key
-== Bei Tastendruck anzeigen
+== Bei Taste
 
 Show only chat messages from friends
 == Nur Chat-Nachrichten von Freunden anzeigen
@@ -11436,10 +11436,10 @@ UI controller sens.
 == Controller-Empfindlichkeit (UI)
 
 UI motion level
-== UI-Animationsstärke
+== UI-Animation
 
 UI mouse sens.
-== Maus-Empfindlichkeit (UI)
+== UI-Mausempfindl.
 
 UI opacity
 == UI-Deckkraft
@@ -11454,7 +11454,7 @@ UI server address
 == UI-Serveradresse
 
 UI size percentage
-== UI-Größenprozentsatz
+== UI-Größe (%)
 
 Unable to delete %d selected items. The first failing item was '%s'.
 == %d ausgewählte Elemente konnten nicht gelöscht werden. Das erste fehlgeschlagene Element war '%s'.
@@ -12476,8 +12476,8 @@ You have started racing already
 You have to be in a team (from 1-63)
 == Du musst in einem Team sein (von 1-63)
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
-== Du musst in einem Team sein, um auf diesem Server zu spielen. Ist das Team gesperrt, stirbt das gesamte Team, wenn ein Mitglied stirbt
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
+== Du musst in einem Team sein, um auf diesem Server zu spielen. Ist das Team gesperrt, stirbt bei Tod eines Mitglieds das ganze Team
 
 You have to wait %s seconds until you can swap
 == Du musst %s Sekunden warten, bis du tauschen kannst

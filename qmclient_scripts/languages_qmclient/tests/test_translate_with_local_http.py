@@ -704,6 +704,12 @@ simplified_chinese = "退出"
             translate_with_local_http.extract_placeholders("Player %s at 50%"),
             ["%s"],
         )
+        self.assertEqual(
+            translate_with_local_http.extract_placeholders(
+                "Jump hint horizontal position (% of screen width)"
+            ),
+            [],
+        )
 
     def test_placeholder_quality_distinguishes_escaped_percent(self):
         self.assertEqual(

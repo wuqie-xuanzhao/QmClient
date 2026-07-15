@@ -1113,7 +1113,7 @@ Auto-send emote and chat message when entering freeze
 == Enviar automaticamente emote e mensagem de chat ao entrar em freeze
 
 Auto-switch to first unfrozen when both frozen
-== Quando o corpo principal e o Dummy estão congelados, mudar automaticamente para o que descongelar primeiro
+== Se ambos frozen, ir ao descongelado
 
 Auto-sync player camera
 == Sincronizar câmara do jogador automaticamente
@@ -4656,7 +4656,7 @@ Hitbox Mode Global Opacity
 == Opacidade global do modo de caixa de colisão
 
 Hitbox Mode Override
-== Ativar/desativar modo de caixa de colisão (Hitbox mode)
+== Forçar modo hitbox
 
 Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all
 == Âmbito do modo de caixa de colisão: 0=local, 1=local+Dummy, 2=todos os jogadores
@@ -5874,7 +5874,7 @@ Marquee for long lyrics
 == Efeito de marquee para letras muito longas
 
 Marquee speed
-== Velocidade do marquee da letra
+== Velocidade do letreiro
 
 Master server URL to register
 == URL do servidor mestre para registar
@@ -7896,7 +7896,7 @@ Ratio threshold for local target language detection
 == Limiar de percentagem de reconhecimento do idioma alvo local
 
 Read new feature indicators
-== Identificadores de novas funcionalidades já lidos na interface de definições
+== Indicadores novos lidos
 
 Reason
 == Motivo
@@ -11436,7 +11436,7 @@ UI controller sens.
 == Sensibilidade do comando na IU
 
 UI motion level
-== Intensidade das animações da interface
+== Animação UI
 
 UI mouse sens.
 == Sensibilidade do rato na IU
@@ -12476,8 +12476,8 @@ You have started racing already
 You have to be in a team (from 1-63)
 == Tens de estar numa equipa (de 1 a 63)
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
-== Tens de estar numa equipa para jogar neste servidor; se a equipa estiver bloqueada, a morte de um membro mata toda a equipa
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
+== Tens de estar numa equipa para jogar aqui; se a equipa estiver bloqueada, a morte de um membro mata toda a equipa
 
 You have to wait %s seconds until you can swap
 == Tens de esperar %s segundos até poderes trocar

@@ -33,9 +33,8 @@ LANGUAGE_ORDER = (
 CHINESE_LANGUAGES = {"simplified_chinese", "traditional_chinese"}
 CJK_TOLERANT_LANGUAGES = CHINESE_LANGUAGES | {"japanese", "korean"}
 PLACEHOLDER_RE = re.compile(
-    # %% first; then printf forms. (?<![0-9]) avoids "20% to 100%" false positives
-    # where "% to" was parsed as flags+length t+type o.
-    r"%%|(?<![0-9])%(?:[-+0 #]*)(?:\d+|\*)?(?:\.(?:\d+|\*))?"
+    # %% first; (?<![0-9]) blocks "20% to". No space in flags so "% of" ≠ %o.
+    r"%%|(?<![0-9])%(?:[-+0#]*)(?:\d+|\*)?(?:\.(?:\d+|\*))?"
     r"(?:hh|ll|h|l|j|z|t|L|w|I32|I64)?[cCdiouxXeEfgGaAnpsSZ]"
     r"|\{[A-Za-z0-9_]+\}"
 )

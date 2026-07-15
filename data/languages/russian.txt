@@ -1020,7 +1020,7 @@ Auto save and load background strokes
 == Автоматически сохранять и загружать фоновые штрихи
 
 Auto save chat log
-== Автоматически сохранять журнал чата
+== Автосохранение чата
 
 Auto start vote
 == Автоматически начинать голосование
@@ -1035,7 +1035,7 @@ Auto switch weapon on pickup
 == Автоматически переключать оружие при подборе
 
 Auto team lock
-== Автоматическая блокировка команды
+== Автолок команды
 
 Auto translate received messages
 == Автоперевод полученных сообщений
@@ -1101,7 +1101,7 @@ Auto-reply when game minimized
 == Автоответ при свёрнутом окне игры
 
 Auto-save chat log
-== Автоматическое сохранение журнала чата
+== Автосохранение чата
 
 Auto-save history count (0=disable)
 == Количество автоматически сохраняемых записей (0 = отключено)
@@ -1113,7 +1113,7 @@ Auto-send emote and chat message when entering freeze
 == Автоматически отправлять эмоцию и сообщение в чат при входе в заморозку
 
 Auto-switch to first unfrozen when both frozen
-== Автоматически переключаться на того, кто первым разморозится, когда и основное тело, и дамми заморожены
+== Если оба в freeze — к размороженному
 
 Auto-sync player camera
 == Автосинхронизация камеры игрока
@@ -1893,7 +1893,7 @@ Client prediction time is high
 == Высокое время предсказания клиента
 
 Client uptime
-== Время работы клиента
+== Аптайм клиента
 
 Clock drift hard cut threshold (ms)
 == Порог жёсткого переключения при дрейфе тактов ms
@@ -2364,7 +2364,7 @@ Custom community list fetch URL (must be https, leave empty to disable)
 == URL для загрузки пользовательского списка сообществ (должен быть https, оставьте пустым для отключения)
 
 Custom font
-== Пользовательский шрифт
+== Свой шрифт
 
 Custom Font:
 == Пользовательский шрифт:
@@ -2409,7 +2409,7 @@ Cycle custom Tee hue for main
 == Циклически менять оттенок пользовательского Tee для основного
 
 Cycle custom Tee hue speed (deg/s)
-== Скорость циклического изменения оттенка пользовательского Tee для основного (градусов/сек)
+== Скорость цикла оттенка Tee (°/с)
 
 Cycle through emotes
 == Циклическое переключение эмоций
@@ -3162,7 +3162,7 @@ Dynamic Island HUD editor edge margin px
 == Внешний отступ редактора Dynamic Island HUD от края, px
 
 Ease in out quad
-== Плавное замедление-ускорение квадратичное
+== Ease in-out quad
 
 Ease out cubic
 == Плавное замедление кубическое
@@ -4656,7 +4656,7 @@ Hitbox Mode Global Opacity
 == Глобальная прозрачность в режиме хитбоксов
 
 Hitbox Mode Override
-== Общий переключатель режима хитбоксов (Hitbox mode)
+== Принуд. режим hitbox
 
 Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all
 == Область действия режима хитбоксов: 0=локальный, 1=локальный + дамми, 2=все игроки
@@ -4815,7 +4815,7 @@ I am away from the game window
 == Я отошёл от окна игры
 
 I muted you
-== Я вас заглушил
+== Я тебя замьютил
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == Если 1, автоматическая запись только один раз при подключении; если 0, автоматическая запись перезапускается после окончания игры
@@ -4854,7 +4854,7 @@ Improved anti ping
 == Улучшенный антипинг
 
 In memory of me
-== Пусть этот клиент хранит память обо мне
+== В память обо мне
 
 In-game controller sensitivity
 == Чувствительность контроллера в игре
@@ -4983,7 +4983,7 @@ Input device open failed, try reconnecting headset/mic or reselecting input devi
 == Ошибка открытия устройства ввода, попробуйте переподключить гарнитуру/микрофон или выбрать другое устройство ввода.
 
 Input focus color
-== Цвет фокуса ввода интерфейса
+== Цвет фокуса
 
 Input overlay
 == Наложение ввода
@@ -5262,7 +5262,7 @@ l = Local time
 == l = Местное время
 
 L select  R swap  M select only
-== ЛКМ выбрать  ПКМ обменять  СКМ только выбрать
+== Л выб.  П обмен  С только выб.
 
 Label
 == Метка
@@ -5874,7 +5874,7 @@ Marquee for long lyrics
 == Бегущая строка для длинного текста песни
 
 Marquee speed
-== Скорость бегущей строки текста песни
+== Скорость бегущей строки
 
 Master server URL to register
 == URL мастер-сервера для регистрации
@@ -7215,7 +7215,7 @@ Pie menu rename list (separate with |, e.g., name1|name2)
 == Список переименований в меню-пироге (разделитель |, напр.: Сюаньмэн1|Сюаньмэн2)
 
 Ping
-== Пинг
+== Ping
 
 Ping the current server
 == Пинговать текущий сервер
@@ -7719,7 +7719,7 @@ QmClient / HUD
 == QmClient / HUD
 
 QmClient / Visual
-== QmClient / Визуал
+== QmClient / Визуальные
 
 QmClient chat log
 == Лог чата QmClient
@@ -7896,7 +7896,7 @@ Ratio threshold for local target language detection
 == Порог доли распознавания локального целевого языка
 
 Read new feature indicators
-== Прочитанные метки новых функций в интерфейсе настроек
+== Прочитанные новинки
 
 Reason
 == Причина
@@ -8304,7 +8304,7 @@ Reply to the last whisper target: %s
 == Ответить последнему адресату шепота: %s
 
 Reply with dummy
-== Спасение не включено на этом сервере, и вы не в команде с включённым /practice. Обратите внимание, что с включённым режимом тренировки нельзя получить ранг.
+== Ответить дамми
 
 Report
 == Пожаловаться
@@ -8526,7 +8526,7 @@ Round %d/%d
 == Раунд %d/%d
 
 Rounded caps
-== Направлять сообщения Echo в уведомления
+== Скруглённые концы
 
 Route Echo messages to notifications
 == Направлять сообщения Echo в уведомления
@@ -8565,7 +8565,7 @@ Run "hot_reload" on local server with rcon auth on map save
 == Запускать «hot_reload» на локальном сервере с rcon-авторизацией при сохранении карты
 
 Run chai script
-== Функция сохранения отключена на этом сервере
+== Запустить chai-скрипт
 
 Run on join
 == Выполнить при входе
@@ -9615,7 +9615,7 @@ Show old DDRace client records
 == Показывать старые рекорды DDRace-клиента
 
 Show on key
-== Показывать по нажатию клавиши
+== По клавише
 
 Show only chat messages from friends
 == Показывать только сообщения чата от друзей
@@ -11160,7 +11160,7 @@ Toggle dummy
 == Переключить дамми
 
 Toggle dyncam
-== Переключить динамическую камеру
+== Переключить dyncam
 
 Toggle fast practice mode
 == Переключить режим быстрой практики
@@ -11436,10 +11436,10 @@ UI controller sens.
 == Чувствительность контроллера (интерфейс)
 
 UI motion level
-== Интенсивность анимации интерфейса
+== Анимация UI
 
 UI mouse sens.
-== Чувствительность мыши (интерфейс)
+== Чувств. мыши UI
 
 UI opacity
 == Прозрачность интерфейса
@@ -11454,7 +11454,7 @@ UI server address
 == Адрес сервера UI
 
 UI size percentage
-== Процент размера UI
+== Размер UI (%)
 
 Unable to delete %d selected items. The first failing item was '%s'.
 == Не удалось удалить %d выбранных элементов. Первый неудачный элемент: «%s».
@@ -12476,7 +12476,7 @@ You have started racing already
 You have to be in a team (from 1-63)
 == Вы должны быть в команде (от 1 до 63)
 
-You have to be in a team to play on this server and all of your team will die if the team is locked
+You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team
 == Чтобы играть на этом сервере, нужно быть в команде; если команда заблокирована, смерть одного участника убивает всю команду
 
 You have to wait %s seconds until you can swap
