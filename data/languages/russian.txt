@@ -2147,9 +2147,6 @@ Continue anyway?
 Contributors
 == Авторы
 
-Control dummy
-== Управление дамми
-
 Control player (0) or dummy (1)
 == Управление игроком (0) или дамми (1)
 
@@ -2999,6 +2996,9 @@ Dummy body skin
 Dummy clan
 == Клан куклы
 
+Dummy Control
+== Управление дамми
+
 Dummy Control: %s
 == Управление дамми: %s
 
@@ -3401,9 +3401,6 @@ Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
 == Включить локальный кэш текстов песен
 
-Enable long pain sound (used when shooting in freeze)
-== Включить длинный звук боли (используется при стрельбе в заморозке)
-
 Enable lyric HUD overlay
 == Включить наложение HUD текста песни
 
@@ -3478,6 +3475,9 @@ Enable saving games (/save and /load)
 
 Enable server message sound
 == Включить звук сообщения сервера
+
+Enable shout when holding fire while in water
+== Включить крик при удержании кнопки огня в воде
 
 Enable Sixup connection.
 == Включить соединение Sixup.
@@ -7610,6 +7610,9 @@ Print command executed by this name or all chat binds
 Print daily messages to console
 == Выводить ежедневные сообщения в консоль
 
+Prioritize outgoing game traffic on Windows (best effort)
+== Prioritize outgoing game traffic on Windows (best effort)
+
 Privately messages someone's current time in this current running race (your time by default)
 == Приватно сообщить чьё-то текущее время в этом забеге (по умолчанию ваше время)
 
@@ -9673,6 +9676,9 @@ Show others' nameplate coordinates
 
 Show outdated version warning
 == Показывать предупреждение об устаревшей версии
+
+Show outgoing game traffic QoS status
+== Show outgoing game traffic QoS status
 
 Show outlines only on entity layer
 == Показывать контуры только на слое объектов

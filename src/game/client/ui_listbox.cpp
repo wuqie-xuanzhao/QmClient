@@ -121,6 +121,8 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	m_ScrollbarMargin = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarMargin, m_ScrollbarMargin, m_ScrollbarMarginOverridden);
 	ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;
 	ScrollParams.m_ScrollbarMargin = m_ScrollbarMargin;
+	const int NumRows = (m_ListBoxNumItems + maximum(1, m_ListBoxItemsPerRow) - 1) / maximum(1, m_ListBoxItemsPerRow);
+	m_ScrollRegion.SetContentHeightForNextFrame(NumRows * m_ListBoxRowHeight + maximum(0, NumRows - 1) * m_AutoSpacing);
 	m_ScrollRegion.Begin(&m_ListBoxView, &ScrollOffset, &ScrollParams);
 	m_ListBoxView.y += ScrollOffset.y;
 }

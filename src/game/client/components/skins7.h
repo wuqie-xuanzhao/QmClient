@@ -131,6 +131,7 @@ public:
 
 	const std::vector<CSkin> &GetSkins() const;
 	const std::vector<CSkinPart> &GetSkinParts(int Part) const;
+	const CSkin *FindSkin(const char *pName, bool AllowSpecialSkin) const;
 	const CSkinPart *FindSkinPartOrNullptr(int Part, const char *pName, bool AllowSpecialPart) const;
 	const CSkinPart *FindDefaultSkinPart(int Part) const;
 	const CSkinPart *FindSkinPart(int Part, const char *pName, bool AllowSpecialPart) const;
@@ -144,7 +145,7 @@ public:
 	bool ValidateSkinParts(char *apPartNames[protocol7::NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const;
 
 	bool SaveSkinfile(const char *pName, int Dummy);
-	bool RemoveSkin(const CSkin *pSkin);
+	bool RemoveSkin(const char *pName);
 
 	IGraphics::CTextureHandle XmasHatTexture() const { return m_XmasHatTexture; }
 	IGraphics::CTextureHandle BotDecorationTexture() const { return m_BotTexture; }

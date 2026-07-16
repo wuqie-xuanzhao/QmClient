@@ -488,4 +488,24 @@ namespace qm_card_order
 		ClearDirty();
 		return Parsed;
 	}
+
+	bool MigrateLegacyDefaultGroup(CModel &Model, const char *pSerialized, const std::vector<SEntry> &vLegacyDefaults, const char *pSurvivingStableId, const char *pTargetTab, int TargetColumn, int TargetOrder)
+	{
+		CModel LegacyModel;
+		if(!LegacyModel.LoadExplicit(pSerialized, vLegacyDefaults))
+			return false;
+		for(const SEntry &Default : vLegacyDefaults)
+		{
+			const int Index = LegacyModel.FindByStableId(Default.m_pStableId);
+			if(Index < 0)
+				return false;
+			const SEntry &Entry = LegacyModel.Entry(Index);
+			if((Entry.m_pDefaultTab != nullptr && !SameTab(Entry.m_pDefaultTab, Default.m_pDefaultTab)) || Entry.m_Column != Default.m_Column || Entry.m_OrderInColumn != Default.m_OrderInColumn)
+				return false;
+		}
+		if(Model.FindByStableId(pSurvivingStableId) < 0)
+			return false;
+		Model.MoveToTab(pSurvivingStableId, pTargetTab, TargetColumn, TargetOrder);
+		return true;
+	}
 } // namespace qm_card_order

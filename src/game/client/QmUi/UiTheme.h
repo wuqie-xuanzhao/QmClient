@@ -26,7 +26,7 @@ struct SUiTheme
 	float m_FocusRingInset = 1.0f;
 };
 
-inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity)
+inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const ColorHSLA FocusColor = ColorHSLA(0.60f, 0.78f, 0.52f, 1.0f))
 {
 	Opacity = std::clamp(Opacity, 0.0f, 1.0f);
 	const ColorRGBA SurfaceBase = color_cast<ColorRGBA>(BaseColor.UnclampLighting(0.42f));
@@ -41,14 +41,22 @@ inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity)
 	Theme.m_Border = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * Opacity);
 	Theme.m_BorderHovered = AccentBase.WithAlpha(0.45f * Opacity);
 	Theme.m_BorderFocused = AccentBase.WithAlpha(0.75f * Opacity);
-	Theme.m_InputSurface = Theme.m_Surface;
+	Theme.m_InputSurface = ColorRGBA(
+		std::clamp(Theme.m_Surface.r * 0.88f, 0.0f, 1.0f),
+		std::clamp(Theme.m_Surface.g * 0.88f, 0.0f, 1.0f),
+		std::clamp(Theme.m_Surface.b * 0.88f, 0.0f, 1.0f), Theme.m_Surface.a);
 	Theme.m_InputSurfaceFocused = Theme.m_InputSurface;
-	Theme.m_FocusRing = AccentBase.WithAlpha(0.90f * Opacity);
+	Theme.m_FocusRing = color_cast<ColorRGBA>(FocusColor).WithAlpha(0.90f * Opacity);
 	Theme.m_Accent = AccentBase.WithAlpha(std::clamp(std::max(AccentBase.a, 0.85f) * Opacity, 0.0f, 1.0f));
 	Theme.m_TextTitle = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	Theme.m_TextBody = ColorRGBA(0.92f, 0.92f, 0.94f, 1.0f);
 	Theme.m_TextSmall = ColorRGBA(0.72f, 0.74f, 0.78f, 1.0f);
 	return Theme;
+}
+
+inline SUiTheme ResolveInputFallbackTheme(const unsigned FocusColor)
+{
+	return ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f, ColorHSLA(FocusColor));
 }
 
 #endif

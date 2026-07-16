@@ -32,18 +32,28 @@
 
 using namespace FontIcons;
 
-inline constexpr float HEADER_FONT_SIZE = 16.0f;
-inline constexpr float FONT_SIZE = 13.0f;
+static float HEADER_FONT_SIZE = ui_token::font::HEADLINE;
+static float FONT_SIZE = ui_token::font::BODY;
 inline constexpr float MARGIN = 10.0f;
-inline constexpr float BUTTON_HEIGHT = 20.0f;
-inline constexpr float BUTTON_SPACING = 2.0f;
-inline constexpr float BIND_OPTION_SPACING = 4.0f;
+static float BUTTON_HEIGHT = ui_token::settings::ROW_HEIGHT;
+static float BUTTON_SPACING = ui_token::settings::ROW_GAP;
+static float BIND_OPTION_SPACING = ui_token::settings::ROW_GAP;
 
 namespace
 {
 	void LogControlsPerfStage(IClient *pClient, const char *pStage, double DurationMs, bool Force = false, const char *pExtra = nullptr)
 	{
 		QmPerfLogStage("perf/menu", pStage, DurationMs, Force, pClient, nullptr, nullptr, pExtra);
+	}
+
+	void ApplyControlsContentMetrics(const float ContentWidth)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(ContentWidth);
+		HEADER_FONT_SIZE = std::clamp(ui_token::font::HEADLINE * Metrics.m_UiScale, 13.0f, ui_token::font::HEADLINE);
+		FONT_SIZE = Metrics.m_BodySize;
+		BUTTON_HEIGHT = Metrics.m_LineHeight;
+		BUTTON_SPACING = Metrics.m_LineSpacing;
+		BIND_OPTION_SPACING = Metrics.m_LineSpacing;
 	}
 }
 
@@ -117,7 +127,7 @@ void CMenusSettingsControls::OnInterfacesInit(CGameClient *pClient)
 		{EBindOptionGroup::DUMMY, Localizable("Dummy hook"), "+toggle_restore cl_dummy_hook 1"},
 		{EBindOptionGroup::DUMMY, Localizable("Dummy copy"), "toggle cl_dummy_copy_moves 0 1"},
 		{EBindOptionGroup::DUMMY, Localizable("Dummy hammer fly"), "toggle cl_dummy_hammer 0 1"},
-		{EBindOptionGroup::DUMMY, Localizable("Control dummy"), "toggle cl_dummy_control 1 0"},
+		{EBindOptionGroup::DUMMY, Localizable("Dummy Control"), "toggle cl_dummy_control 1 0"},
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Emoticon"), "+emote"},
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Spectate mode"), "+spectate"},
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Spectate teleport"), "qm_spec_teleport"},
@@ -164,17 +174,18 @@ bool CMenusSettingsControls::DoSettingsControlsNumericField(const char *pTextId,
 	Options.m_pLabel = pLabel;
 	Options.m_pScale = pScale;
 	Options.m_Flags = Flags;
-	Options.m_FontSize = Rect.h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_FontSize = std::min(FONT_SIZE, Rect.h * CUi::ms_FontmodHeight * 0.8f);
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 	if(GameClient()->m_Menus.PrepareSettingsNumericFieldLabel(CMenus::SETTINGS_CONTROLS, -1, -1, pTextId, Rect, pLabel, Flags, Options))
 		return false;
-	IUiContext Context = GameClient()->m_Menus.SettingsUiContext("settings_controls");
+	IUiContext Context = GameClient()->m_Menus.SettingsUiContext("settings_controls", FONT_SIZE / ui_token::font::BODY);
 	return ui_widget::NumericField(Context, GameClient()->m_Menus.GetSettingsNumericFieldState(pId), pId, pOption, Min, Max, Rect, Options);
 }
 
 void CMenusSettingsControls::Render(CUIRect MainView)
 {
+	ApplyControlsContentMetrics(MainView.w);
 	CPerfTimer ShellTimer;
 	if(m_BindOptionsDirty || GameClient()->m_KeyBinder.IsActive())
 	{
@@ -193,12 +204,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	MainView.HSplitBottom(MARGIN, &MainView, nullptr);
 
 	// Quick search
-	IUiContext ControlsSearchCtx;
-	ControlsSearchCtx.m_pUi = Ui();
-	ControlsSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	ControlsSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	ControlsSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_controls_search");
-	ControlsSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	IUiContext ControlsSearchCtx = GameClient()->m_Menus.SettingsUiContext("settings_controls_search", FONT_SIZE / ui_token::font::BODY);
 	if(ui_widget::InputField(ControlsSearchCtx, &m_FilterInput, QuickSearch, FONT_SIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && !GameClient()->m_KeyBinder.IsActive()))
 	{
 		m_CurrentSearchMatch = 0;
@@ -245,15 +251,15 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 
 	CQmScrollState &ScrollState = m_SettingsScrollRegion.State();
 	(void)ScrollState;
-	const float UiScale = 1.0f;
-	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const float UiScale = GameClient()->m_Menus.SettingsPageUiScale(MainView.w);
+	const SSettingsPageLayoutFrame Page = GameClient()->m_Menus.SettingsPageLayout(MainView, UiScale);
 	const IUiContext CardCtx = GameClient()->m_Menus.SettingsUiContext("settings_controls", UiScale);
 	const SSettingsCardDeckVisualOptions VisualOptions = GameClient()->m_Menus.SettingsCardDeckVisualOptions();
 	CPerfTimer BindListTimer;
 	const auto FindCard = [](const char *pId) { return qm_card_registry::FindByStableId(pId); };
 	std::vector<SSettingsCardDefinition> vCards;
 	vCards.reserve(9);
-	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardHeaderAction HeaderAction = {}) {
+	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
 		const qm_card_registry::SCardDefault *pDefault = FindCard(pId);
 		if(pDefault == nullptr)
 			return;
@@ -264,7 +270,8 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 		Definition.m_IsVisible = std::move(IsVisible);
 		Definition.m_IsCollapsed = std::move(IsCollapsed);
 		Definition.m_HeaderAction = std::move(HeaderAction);
-		Definition.m_MeasureEachFrame = true;
+		Definition.m_MeasureEachFrame = MeasureEachFrame;
+		Definition.m_MeasureRevision = MeasureRevision;
 		Definition.m_RenderWhenClipped = RenderWhenClipped;
 		vCards.push_back(std::move(Definition));
 	};
@@ -280,8 +287,8 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			"deck:controls-dummy", "deck:controls-miscellaneous", "deck:controls-custom"};
 		GameClient()->m_Menus.m_SettingsCardDeck.RequestReveal(apCardIds[(int)Group]);
 	}
-	AddCard("deck:controls-mouse", MeasureSettingsMouseHeight(), [this](float) { return HEADER_FONT_SIZE + MARGIN + MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
-	AddCard("deck:controls-controller", MeasureSettingsJoystickHeight(), [this](float) { return HEADER_FONT_SIZE + MARGIN + MeasureSettingsJoystickHeight(); }, [this](CUIRect Rect) { RenderSettingsJoystick(Rect); });
+	AddCard("deck:controls-mouse", MeasureSettingsMouseHeight(), [this](float) { return MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
+	AddCard("deck:controls-controller", MeasureSettingsJoystickHeight(), [this](float) { return MeasureSettingsJoystickHeight(); }, [this](CUIRect Rect) { RenderSettingsJoystick(Rect); }, {}, false, {}, {}, true);
 	const std::pair<EBindOptionGroup, const char *> aBindCards[] = {
 		{EBindOptionGroup::MOVEMENT, "deck:controls-movement"}, {EBindOptionGroup::WEAPON, "deck:controls-weapon"},
 		{EBindOptionGroup::VOTING, "deck:controls-voting"}, {EBindOptionGroup::CHAT, "deck:controls-chat"},
@@ -296,9 +303,9 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 				m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
 			DoSettingsControlsLabel(Collapsed ? "controls-expand-collapse-icon-closed" : "controls-expand-collapse-icon-open", &Frame.m_HandleRect, Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, HEADER_FONT_SIZE, TEXTALIGN_MC);
 		};
-		AddCard(pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>(), true, IsCollapsed, HeaderAction);
+		AddCard(pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>(), true, IsCollapsed, HeaderAction, false, m_BindLayoutRevision);
 	}
-	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 	SSettingsCardDeckInput InputState;
@@ -455,6 +462,7 @@ void CMenusSettingsControls::UpdateBindOptions()
 	m_vBindOptions.erase(std::remove_if(m_vBindOptions.begin() + m_NumPredefinedBindOptions, m_vBindOptions.end(),
 				     [&](const CBindOption &Option) { return Option.m_ToBeDeleted; }),
 		m_vBindOptions.end());
+	++m_BindLayoutRevision;
 }
 
 void CMenusSettingsControls::UpdateSearchMatches()
@@ -499,11 +507,7 @@ float CMenusSettingsControls::MeasureSettingsBindsHeight(EBindOptionGroup Group)
 		{
 			continue;
 		}
-		if(Height > 0.0f)
-		{
-			Height += BIND_OPTION_SPACING;
-		}
-		Height += BUTTON_HEIGHT * BindOption.m_vCurrentBinds.size() + BUTTON_SPACING * (BindOption.m_vCurrentBinds.size() - 1) + BIND_OPTION_SPACING;
+		Height += BUTTON_HEIGHT * BindOption.m_vCurrentBinds.size() + BUTTON_SPACING * (BindOption.m_vCurrentBinds.size() - 1) + 4.0f + BIND_OPTION_SPACING;
 	}
 	return Height;
 }

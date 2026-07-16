@@ -10,6 +10,8 @@ constexpr float QmScrollAltMultiplier()
 	return 3.0f;
 }
 
+constexpr int QM_POPUP_LIST_MAX_VISIBLE_ITEMS = 8;
+
 struct SQmScrollMetrics
 {
 	float m_ViewportSize = 0.0f;
@@ -61,6 +63,7 @@ struct SQmScrollContainerStyle
 	float m_ScrollbarMargin = 2.0f;
 	float m_MinThumbHeight = 24.0f;
 	float m_ContentDragThreshold = 6.0f;
+	bool m_ReserveScrollbarSpace = false;
 };
 
 enum class EQmScrollSize
@@ -72,9 +75,12 @@ enum class EQmScrollSize
 
 enum class EQmScrollProfile
 {
+	SETTINGS_OUTER,
 	SETTINGS_PAGE,
+	SETTINGS_INNER,
 	MENU_LIST,
 	POPUP_LIST,
+	GRID,
 	FILTER_GRID,
 };
 
@@ -100,6 +106,7 @@ struct SQmResolvedScrollPolicy
 	float m_AltMultiplier = QmScrollAltMultiplier();
 	int m_MaxVisibleItems = 0;
 	bool m_ContentDragAllowed = true;
+	bool m_ScrollbarAlwaysReserved = false;
 };
 
 SQmScrollContainerStyle QmScrollContainerStyleForSize(EQmScrollSize Size, float UiScale = 1.0f);

@@ -219,10 +219,11 @@ bool CScrollRegion::Active() const
 CUIRect CScrollRegion::SplitContentArea()
 {
 	CUIRect ScrollbarBg;
+	const bool ReserveScrollbarSpace = m_Params.m_ScrollbarAlwaysReserved || ScrollbarShown();
 	if(m_Params.m_ScrollHorizontal)
-		m_ClipRect.HSplitBottom(m_Params.m_ScrollbarThickness, ScrollbarShown() ? &m_ClipRect : nullptr, &ScrollbarBg);
+		m_ClipRect.HSplitBottom(m_Params.m_ScrollbarThickness, ReserveScrollbarSpace ? &m_ClipRect : nullptr, &ScrollbarBg);
 	else
-		m_ClipRect.VSplitRight(m_Params.m_ScrollbarThickness, ScrollbarShown() ? &m_ClipRect : nullptr, &ScrollbarBg);
+		m_ClipRect.VSplitRight(m_Params.m_ScrollbarThickness, ReserveScrollbarSpace ? &m_ClipRect : nullptr, &ScrollbarBg);
 	if(m_Params.m_ScrollbarNoOuterMargin)
 	{
 		if(m_Params.m_ScrollHorizontal)
@@ -279,11 +280,11 @@ void CScrollRegion::DoScrollInput()
 	}
 
 	const bool HotFromPreviousFrame = Ui()->HotScrollRegion() == this;
-	const bool HotInPopupThisFrame = Ui()->RenderingPopupMenus() && Ui()->NextHotScrollRegion() == this;
-	const bool WheelEligible = QmScrollRegionCanConsumeWheel(HotFromPreviousFrame, HotInPopupThisFrame, Ui()->UnderlyingScrollBlocked(), Ui()->RenderingPopupMenus());
+	const bool HotThisFrame = Ui()->NextHotScrollRegion() == this;
+	const bool WheelEligible = QmScrollRegionCanConsumeWheel(HotFromPreviousFrame, HotThisFrame, Ui()->UnderlyingScrollBlocked(), Ui()->RenderingPopupMenus());
 	const void *pWheelOwnerId = m_Params.m_pWheelOwnerId != nullptr ? m_Params.m_pWheelOwnerId : this;
 	if(!m_Params.m_WheelOwnerPreRegistered)
-		Ui()->RegisterWheelOwner(pWheelOwnerId, m_Params.m_WheelOwnerPriority, m_ClipRect, ContentOverflows() && WheelEligible);
+		Ui()->RegisterWheelOwner(pWheelOwnerId, m_Params.m_WheelOwnerPriority, WheelHotRect(), ContentOverflows() && WheelEligible);
 
 	float WheelDelta = 0.0f;
 	if(!Ui()->TryConsumeWheel(pWheelOwnerId, &WheelDelta))
@@ -292,7 +293,7 @@ void CScrollRegion::DoScrollInput()
 	m_ScrollState.AddWheelImpulse(WheelDelta, ScrollMetrics(), ScrollConfig());
 }
 
-void CScrollRegion::UpdateHotScrollRegion()
+CUIRect CScrollRegion::WheelHotRect() const
 {
 	CUIRect RegionRect = m_ClipRect;
 	if(ScrollbarShown())
@@ -302,6 +303,12 @@ void CScrollRegion::UpdateHotScrollRegion()
 		else
 			RegionRect.w += m_Params.m_ScrollbarThickness;
 	}
+	return RegionRect;
+}
+
+void CScrollRegion::UpdateHotScrollRegion()
+{
+	const CUIRect RegionRect = WheelHotRect();
 
 	if(Ui()->Enabled() && Ui()->MouseHovered(&RegionRect))
 	{

@@ -13,14 +13,6 @@
 
 namespace
 {
-	struct SPreparedSettingsCard
-	{
-		const SSettingsCardDefinition *m_pDefinition = nullptr;
-		int m_StateIndex = -1;
-		int m_Column = 0;
-		SSettingsCardFrame m_Frame;
-	};
-
 	bool PointInRect(const CUIRect &Rect, float X, float Y)
 	{
 		return X >= Rect.x && X <= Rect.x + Rect.w && Y >= Rect.y && Y <= Rect.y + Rect.h;
@@ -31,11 +23,10 @@ namespace
 		Rect.y += OffsetY;
 	}
 
-	uint64_t SettingsCardEntryNodeKey(const char *pTab, const char *pStableId, uint64_t DisplayCycle)
+	uint64_t SettingsCardEntryNodeKey(const char *pTab, const char *pStableId)
 	{
 		const uint64_t TabKey = str_quickhash(pTab != nullptr ? pTab : "");
-		const uint64_t CycleKey = BuildUiAnimNodeKey(str_quickhash("settings-card-entry"), DisplayCycle);
-		return BuildUiAnimNodeKey(BuildUiAnimNodeKey(CycleKey, TabKey), str_quickhash(pStableId != nullptr ? pStableId : ""));
+		return BuildUiAnimNodeKey(BuildUiAnimNodeKey(str_quickhash("settings-card-entry"), TabKey), str_quickhash(pStableId != nullptr ? pStableId : ""));
 	}
 
 	uint64_t SettingsCardReflowNodeKey(const char *pTab, const char *pStableId)
@@ -47,17 +38,33 @@ namespace
 
 void CSettingsCardDeck::PrepareDefinitions(const std::vector<SSettingsCardDefinition> &vCards, const qm_card_order::CModel &Model)
 {
-	m_vDefinitionsByState.assign(Model.Count(), nullptr);
+	if(m_vDefinitionsByState.size() != (size_t)Model.Count())
+	{
+		m_vDefinitionsByState.assign(Model.Count(), nullptr);
+		m_vBoundDefinitionStateIndices.clear();
+	}
+	else
+	{
+		for(const int StateIndex : m_vBoundDefinitionStateIndices)
+			m_vDefinitionsByState[StateIndex] = nullptr;
+		m_vBoundDefinitionStateIndices.clear();
+	}
+	m_vBoundDefinitionStateIndices.reserve(vCards.size());
 	for(const SSettingsCardDefinition &Definition : vCards)
 	{
 		if(Definition.m_Spec.m_pStableId == nullptr)
 			continue;
 		const int StateIndex = Model.StateIndexForStableId(Definition.m_Spec.m_pStableId);
 		if(StateIndex >= 0)
+		{
 			m_vDefinitionsByState[StateIndex] = &Definition;
+			m_vBoundDefinitionStateIndices.push_back(StateIndex);
+		}
 	}
 	m_vRuntimeStates.resize(Model.Count());
-	m_vContentHeights.assign(Model.Count(), -1.0f);
+	m_vContentHeights.resize(Model.Count(), -1.0f);
+	m_vContentWidths.resize(Model.Count(), -1.0f);
+	m_vMeasureRevisions.resize(Model.Count(), UINT64_MAX);
 }
 
 void CSettingsCardDeck::RequestReveal(const char *pStableId)
@@ -65,11 +72,23 @@ void CSettingsCardDeck::RequestReveal(const char *pStableId)
 	m_PendingRevealStableId = pStableId != nullptr ? pStableId : "";
 }
 
-void CSettingsCardDeck::BeginDisplayCycle(uint64_t DisplayCycle)
+void CSettingsCardDeck::BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry)
 {
 	if(m_DisplayCycle != DisplayCycle)
+	{
 		m_Drag.Reset();
+		m_SuppressHoverFeedbackOnce = true;
+		m_HasScrollOffset = false;
+		m_vLastRenderedActiveStateIndices.clear();
+		for(SRuntimeState &Runtime : m_vRuntimeStates)
+		{
+			Runtime.m_ReflowInitialized = false;
+			Runtime.m_ReflowWasActive = false;
+			Runtime.m_CollapsedInitialized = false;
+		}
+	}
 	m_DisplayCycle = DisplayCycle;
+	m_AnimateEntry = AnimateEntry;
 }
 
 SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions)
@@ -77,12 +96,24 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 	SSettingsCardDeckResult Result;
 	if(pTab == nullptr)
 		return Result;
+	if(m_LastRenderedTab != pTab)
+	{
+		m_LastRenderedTab = pTab;
+		m_SuppressHoverFeedbackOnce = true;
+		m_vLastRenderedActiveStateIndices.clear();
+		for(SRuntimeState &Runtime : m_vRuntimeStates)
+		{
+			Runtime.m_ReflowInitialized = false;
+			Runtime.m_ReflowWasActive = false;
+			Runtime.m_CollapsedInitialized = false;
+		}
+	}
 
 	PrepareDefinitions(vCards, Model);
 	auto RebuildActiveStateIndices = [&]() {
 		m_vActiveStateIndices.clear();
 		m_vActiveStateIndices.reserve(vCards.size());
-		for(int StateIndex = 0; StateIndex < (int)m_vDefinitionsByState.size(); ++StateIndex)
+		for(const int StateIndex : m_vBoundDefinitionStateIndices)
 		{
 			const SSettingsCardDefinition *pDefinition = m_vDefinitionsByState[StateIndex];
 			if(pDefinition != nullptr && (!pDefinition->m_IsVisible || pDefinition->m_IsVisible()))
@@ -90,19 +121,33 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		}
 	};
 
-	CUIRect ScrollViewport = Layout.m_ScrollViewport;
+	// 有真实滚动容器时由 Begin 扣除固定槽位；预热阶段没有容器，直接使用壳层提供的有效 viewport。
+	CUIRect ScrollViewport = pScrollRegion != nullptr ? Layout.m_UnreservedScrollViewport : Layout.m_ScrollViewport;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	if(pScrollRegion != nullptr)
 		pScrollRegion->Begin(&ScrollViewport, &ScrollOffset, Input.m_pScrollParams);
+	if(std::abs(m_LastViewportHeight - ScrollViewport.h) > 0.01f)
+	{
+		m_LastViewportHeight = ScrollViewport.h;
+		std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);
+	}
+	bool ScrollMovedThisFrame = false;
+	if(pScrollRegion != nullptr)
+	{
+		ScrollMovedThisFrame = SettingsCardDeckScrollMoved(m_HasScrollOffset, m_LastScrollOffsetY, ScrollOffset.y);
+		m_LastScrollOffsetY = ScrollOffset.y;
+		m_HasScrollOffset = true;
+	}
 
 	SSettingsPageLayoutFrame DrawLayout = ResolveSettingsPageLayoutForScrollViewport(Layout, ScrollViewport, Ctx.m_UiScale);
 	OffsetRectY(DrawLayout.m_ContentViewport, ScrollOffset.y);
 	OffsetRectY(DrawLayout.m_aColumns[0], ScrollOffset.y);
 	OffsetRectY(DrawLayout.m_aColumns[1], ScrollOffset.y);
 
+	bool MeasuredGeometryChanged = false;
 	auto BuildPreparedCards = [&](const std::array<std::vector<int>, 3> &aDisplayColumns) {
-		std::vector<SPreparedSettingsCard> vPrepared;
-		vPrepared.reserve(m_vActiveStateIndices.size());
+		m_vPreparedCards.clear();
+		m_vPreparedCards.reserve(m_vActiveStateIndices.size());
 		auto AppendCard = [&](int StateIndex, int Column, CUIRect ColumnRect, float &CursorY) {
 			if(StateIndex < 0 || StateIndex >= (int)m_vDefinitionsByState.size())
 				return;
@@ -110,17 +155,31 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			if(pDefinition == nullptr)
 				return;
 			CUIRect Slot{ColumnRect.x, CursorY, ColumnRect.w, 0.0f};
-			float &ContentHeight = m_vContentHeights[StateIndex];
+			float &CachedContentHeight = m_vContentHeights[StateIndex];
+			float &CachedContentWidth = m_vContentWidths[StateIndex];
+			uint64_t &CachedMeasureRevision = m_vMeasureRevisions[StateIndex];
+			const float PreviousContentHeight = CachedContentHeight;
 			const bool Collapsed = pDefinition->m_IsCollapsed && pDefinition->m_IsCollapsed();
-			if(Collapsed)
-				ContentHeight = 0.0f;
-			else if(SettingsCardDeckNeedsContentMeasure(Collapsed, pDefinition->m_MeasureEachFrame, ContentHeight))
+			const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
+			if(std::abs(CachedContentWidth - ContentWidth) > 0.01f)
 			{
-				const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
-				ContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;
+				MeasuredGeometryChanged = MeasuredGeometryChanged || PreviousContentHeight >= 0.0f;
+				CachedContentWidth = ContentWidth;
+				CachedContentHeight = -1.0f;
 			}
+			if(CachedMeasureRevision != pDefinition->m_MeasureRevision)
+			{
+				CachedMeasureRevision = pDefinition->m_MeasureRevision;
+				CachedContentHeight = -1.0f;
+			}
+			if(SettingsCardDeckNeedsContentMeasure(Collapsed, pDefinition->m_MeasureEachFrame, CachedContentHeight))
+			{
+				CachedContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;
+				MeasuredGeometryChanged = MeasuredGeometryChanged || SettingsCardDeckContentHeightChanged(PreviousContentHeight, CachedContentHeight);
+			}
+			const float ContentHeight = Collapsed ? 0.0f : std::max(0.0f, CachedContentHeight);
 			const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, pDefinition->m_Spec, ContentHeight, Ctx.m_UiScale);
-			vPrepared.push_back({pDefinition, StateIndex, Column, Frame});
+			m_vPreparedCards.push_back({pDefinition, StateIndex, Column, Frame});
 			CursorY = Frame.m_Rect.y + Frame.m_Rect.h + DrawLayout.m_CardGap;
 		};
 		auto AppendColumn = [&](const std::vector<int> &vStateIndices, int Column, CUIRect ColumnRect, float &CursorY) {
@@ -131,19 +190,22 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		if(DrawLayout.m_TwoColumns && !aDisplayColumns[0].empty())
 		{
 			const size_t NumLayers = std::max({aDisplayColumns[0].size(), aDisplayColumns[1].size(), aDisplayColumns[2].size()});
-			float CursorY = DrawLayout.m_ContentViewport.y;
+			float LeftY = DrawLayout.m_aColumns[0].y;
+			float RightY = DrawLayout.m_aColumns[1].y;
 			for(size_t Layer = 0; Layer < NumLayers; ++Layer)
 			{
-				if(Layer < aDisplayColumns[0].size())
-					AppendCard(aDisplayColumns[0][Layer], 0, DrawLayout.m_ContentViewport, CursorY);
-
-				float LeftY = std::max(DrawLayout.m_aColumns[0].y, CursorY);
-				float RightY = std::max(DrawLayout.m_aColumns[1].y, CursorY);
 				if(Layer < aDisplayColumns[1].size())
 					AppendCard(aDisplayColumns[1][Layer], 1, DrawLayout.m_aColumns[0], LeftY);
 				if(Layer < aDisplayColumns[2].size())
 					AppendCard(aDisplayColumns[2][Layer], 2, DrawLayout.m_aColumns[1], RightY);
-				CursorY = std::max(LeftY, RightY);
+
+				if(Layer < aDisplayColumns[0].size())
+				{
+					float FullY = std::max(LeftY, RightY);
+					AppendCard(aDisplayColumns[0][Layer], 0, DrawLayout.m_ContentViewport, FullY);
+					LeftY = FullY;
+					RightY = FullY;
+				}
 			}
 		}
 		else if(DrawLayout.m_TwoColumns)
@@ -156,30 +218,46 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		else
 		{
 			float CursorY = DrawLayout.m_ContentViewport.y;
-			for(const int Column : {0, 1, 2})
-				AppendColumn(aDisplayColumns[Column], Column, DrawLayout.m_ContentViewport, CursorY);
+			ForEachSettingsCardDeckVisualOrder(aDisplayColumns, [&](int StateIndex, int Column) {
+				AppendCard(StateIndex, Column, DrawLayout.m_ContentViewport, CursorY);
+			});
 		}
-		return vPrepared;
 	};
 
 	RebuildActiveStateIndices();
-	std::array<std::vector<int>, 3> aColumns = m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
-	std::vector<SPreparedSettingsCard> vPrepared = BuildPreparedCards(aColumns);
+	bool GeometryStateChanged = m_vActiveStateIndices != m_vLastRenderedActiveStateIndices;
+	const std::array<std::vector<int>, 3> *pColumns = &m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
+	BuildPreparedCards(*pColumns);
+	GeometryStateChanged = GeometryStateChanged || MeasuredGeometryChanged;
 
 	// 先用当前 active snapshot 的几何处理控制器输入，再为最终 active snapshot 重新计算布局。
-	const std::vector<int> PreviousActiveStateIndices = m_vActiveStateIndices;
-	for(const SPreparedSettingsCard &Card : vPrepared)
+	m_vPreviousActiveStateIndices = m_vActiveStateIndices;
+	bool PreLayoutGeometryChanged = false;
+	for(const SPreparedCard &Card : m_vPreparedCards)
 	{
 		const bool ControllerVisible = pScrollRegion == nullptr || !pScrollRegion->RectClipped(Card.m_Frame.m_Rect) || Card.m_pDefinition->m_RenderWhenClipped;
-		if(ControllerVisible && Card.m_pDefinition->m_VisibilityController && Card.m_pDefinition->m_PreLayoutInput)
-			Card.m_pDefinition->m_PreLayoutInput(Card.m_Frame.m_ContentRect);
+		if(ControllerVisible && Card.m_pDefinition->m_VisibilityController && Card.m_pDefinition->m_PreLayoutInput && Card.m_pDefinition->m_PreLayoutInput(Card.m_Frame.m_ContentRect))
+		{
+			m_vContentHeights[Card.m_StateIndex] = -1.0f;
+			PreLayoutGeometryChanged = true;
+		}
 	}
 	RebuildActiveStateIndices();
-	if(m_vActiveStateIndices != PreviousActiveStateIndices)
+	if(m_vActiveStateIndices != m_vPreviousActiveStateIndices || PreLayoutGeometryChanged)
 	{
-		std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);
-		aColumns = m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
-		vPrepared = BuildPreparedCards(aColumns);
+		GeometryStateChanged = true;
+		pColumns = &m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
+		BuildPreparedCards(*pColumns);
+	}
+	GeometryStateChanged = GeometryStateChanged || MeasuredGeometryChanged;
+	for(const SPreparedCard &Card : m_vPreparedCards)
+	{
+		SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
+		const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
+		if(Runtime.m_CollapsedInitialized && Runtime.m_LastCollapsed != Collapsed)
+			GeometryStateChanged = true;
+		Runtime.m_CollapsedInitialized = true;
+		Runtime.m_LastCollapsed = Collapsed;
 	}
 	if(m_Drag.Active() && std::find(m_vActiveStateIndices.begin(), m_vActiveStateIndices.end(), m_Drag.m_StateIndex) == m_vActiveStateIndices.end())
 		m_Drag.Reset();
@@ -189,15 +267,16 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 	bool EntryPositionActive = false;
 	bool ReflowTargetChanged = false;
 	bool ReflowPositionActive = false;
+	const bool SnapReflow = SettingsCardDeckShouldSnapReflow(GeometryStateChanged, m_Drag.Active());
 	if(Ctx.m_pAnim != nullptr)
 	{
-		for(const SPreparedSettingsCard &Card : vPrepared)
+		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
 			const SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
 			const char *pStableId = Card.m_pDefinition->m_Spec.m_pStableId;
 			if(Motion.m_EntryDuration > 0.0f)
 			{
-				const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId, m_DisplayCycle);
+				const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId);
 				EntryPending = EntryPending || Runtime.m_EntryDisplayCycle != m_DisplayCycle;
 				EntryPositionActive = EntryPositionActive || Ctx.m_pAnim->HasActiveAnimation(EntryKey, EUiAnimProperty::POS_Y);
 			}
@@ -212,7 +291,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 	}
 	if(!m_Drag.Active() && SettingsCardDeckAllowsDragStart(EntryPending, EntryPositionActive, ReflowTargetChanged, ReflowPositionActive) && (Input.m_CtrlPressed || Input.m_AllowHeaderDrag) && Input.m_MousePressed)
 	{
-		for(const SPreparedSettingsCard &Card : vPrepared)
+		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
 			const bool InHeader = PointInRect(Card.m_Frame.m_HeaderRect, Input.m_MouseX, Input.m_MouseY);
 			const bool InHeaderAction = Card.m_pDefinition->m_HeaderAction && PointInRect(Card.m_Frame.m_HandleRect, Input.m_MouseX, Input.m_MouseY);
@@ -238,21 +317,21 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			else if(MouseInScrollViewport && Input.m_MouseX >= DrawLayout.m_aColumns[1].x && Input.m_MouseX <= DrawLayout.m_aColumns[1].x + DrawLayout.m_aColumns[1].w)
 				m_Drag.m_TargetColumn = 2;
 		}
-		std::vector<SSettingsCardDeckItemGeometry> vGeometry;
-		vGeometry.reserve(vPrepared.size());
-		for(const SPreparedSettingsCard &Card : vPrepared)
+		m_vDragGeometry.clear();
+		m_vDragGeometry.reserve(m_vPreparedCards.size());
+		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
 			const int GeometryColumn = !DrawLayout.m_TwoColumns && m_Drag.m_SourceColumn != 0 && Card.m_Column != 0 ? 1 : Card.m_Column;
-			vGeometry.push_back({Card.m_StateIndex, GeometryColumn, Card.m_Frame.m_Rect});
+			m_vDragGeometry.push_back({Card.m_StateIndex, GeometryColumn, Card.m_Frame.m_Rect});
 		}
 		const int GeometryTargetColumn = !DrawLayout.m_TwoColumns && m_Drag.m_SourceColumn != 0 ? 1 : m_Drag.m_TargetColumn;
-		m_Drag.m_TargetOrder = ResolveSettingsCardDeckDropOrder(Input.m_MouseY, GeometryTargetColumn, vGeometry, m_Drag.m_StateIndex);
-		std::array<std::vector<int>, 3> aDragColumns = aColumns;
+		m_Drag.m_TargetOrder = ResolveSettingsCardDeckDropOrder(Input.m_MouseY, GeometryTargetColumn, m_vDragGeometry, m_Drag.m_StateIndex);
+		m_aDragColumns = *pColumns;
 		if(DrawLayout.m_TwoColumns)
-			ApplySettingsCardDeckDragPlacement(aDragColumns, m_Drag.m_StateIndex, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder);
+			ApplySettingsCardDeckDragPlacement(m_aDragColumns, m_Drag.m_StateIndex, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder);
 		else
-			ApplySettingsCardDeckSingleColumnDragPlacement(aDragColumns, m_Drag.m_StateIndex, m_Drag.m_TargetOrder);
-		vPrepared = BuildPreparedCards(aDragColumns);
+			ApplySettingsCardDeckSingleColumnDragPlacement(m_aDragColumns, m_Drag.m_StateIndex, m_Drag.m_TargetOrder);
+		BuildPreparedCards(m_aDragColumns);
 
 		if(pScrollRegion != nullptr && MouseInScrollViewport)
 		{
@@ -279,23 +358,24 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			m_Drag.Reset();
 		}
 	}
-	Result.m_vFrames.reserve(vPrepared.size());
-	for(const SPreparedSettingsCard &Card : vPrepared)
+	for(const SPreparedCard &Card : m_vPreparedCards)
 	{
 		SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
 		const char *pStableId = Card.m_pDefinition->m_Spec.m_pStableId;
 		SSettingsCardVisualState State;
+		bool EntryAnimationActive = false;
 		if(Ctx.m_pAnim != nullptr)
 		{
-			const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId, m_DisplayCycle);
+			const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId);
 			if(Runtime.m_EntryDisplayCycle != m_DisplayCycle)
 			{
 				Runtime.m_EntryDisplayCycle = m_DisplayCycle;
-				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::POS_Y, Motion.m_EntryDistance);
+				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::POS_Y, m_AnimateEntry ? Motion.m_EntryDistance : 0.0f);
 			}
 			if(Motion.m_EntryDuration > 0.0f)
 			{
 				State.m_DrawOffsetY += ResolveUiAnimValue(*Ctx.m_pAnim, EntryKey, EUiAnimProperty::POS_Y, 0.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
+				EntryAnimationActive = Ctx.m_pAnim->HasActiveAnimation(EntryKey, EUiAnimProperty::POS_Y);
 			}
 			else
 			{
@@ -310,7 +390,12 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 				Runtime.m_ReflowInitialized = true;
 				Ctx.m_pAnim->SetValue(ReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY);
 			}
-			if(Motion.m_ReflowDuration > 0.0f)
+			if(SnapReflow)
+			{
+				Ctx.m_pAnim->SetValue(ReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY);
+				Runtime.m_ReflowWasActive = false;
+			}
+			else if(Motion.m_ReflowDuration > 0.0f)
 			{
 				const float ReflowY = ResolveUiAnimValue(*Ctx.m_pAnim, ReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY, Motion.m_ReflowDuration, EEasing::EASE_OUT);
 				State.m_DrawOffsetY += ReflowY - ReflowTargetY;
@@ -349,11 +434,12 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		{
 			const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
 			State.m_Collapsed = Collapsed;
+			State.m_HoverFeedbackEnabled = !m_SuppressHoverFeedbackOnce && !ScrollMovedThisFrame && !EntryAnimationActive &&
+						       !ReflowTargetChanged && !ReflowPositionActive;
 			SettingsCard(Ctx, Card.m_Frame, Card.m_pDefinition->m_Spec, State, VisualOptions,
 				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_Render : FSettingsCardRender{}, Card.m_pDefinition->m_HeaderAction,
 				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_RenderMeasured : FSettingsCardRenderMeasured{});
 		}
-		Result.m_vFrames.push_back(Card.m_Frame);
 	}
 
 	if(pScrollRegion != nullptr)
@@ -363,5 +449,15 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		Runtime.m_DropFeedbackRemaining = std::max(0.0f, Runtime.m_DropFeedbackRemaining - std::max(0.0f, Input.m_FrameDt));
 		Runtime.m_ReflowCompleteFeedbackRemaining = std::max(0.0f, Runtime.m_ReflowCompleteFeedbackRemaining - std::max(0.0f, Input.m_FrameDt));
 	}
+	// 入场或重排期间鼠标可能仍停在卡片最终位置；只有布局稳定后再次移动鼠标才恢复 hover 亮度，
+	// 避免动画结束的首帧从普通背景突然跳到高亮背景。
+	const bool LayoutStable = !EntryPending && !EntryPositionActive && !ReflowTargetChanged && !ReflowPositionActive;
+	if(m_SuppressHoverFeedbackOnce && LayoutStable && m_HasPointerPosition &&
+		(std::abs(Input.m_MouseX - m_LastPointerX) > 0.001f || std::abs(Input.m_MouseY - m_LastPointerY) > 0.001f))
+		m_SuppressHoverFeedbackOnce = false;
+	m_LastPointerX = Input.m_MouseX;
+	m_LastPointerY = Input.m_MouseY;
+	m_HasPointerPosition = true;
+	m_vLastRenderedActiveStateIndices = m_vActiveStateIndices;
 	return Result;
 }

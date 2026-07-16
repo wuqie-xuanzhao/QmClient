@@ -566,18 +566,34 @@ float CUi::PixelSize()
 	return Screen()->w / Graphics()->ScreenWidth();
 }
 
+void CUi::BeginRenderOnly()
+{
+	if(m_RenderOnlyDepth++ == 0)
+	{
+		CUIRect RenderOnlyClip = IsClipped() ? *ClipArea() : *Screen();
+		// 锚定在现有裁剪区右下角，确保后续嵌套裁剪不会产生负宽高。
+		RenderOnlyClip.x += RenderOnlyClip.w;
+		RenderOnlyClip.y += RenderOnlyClip.h;
+		RenderOnlyClip.w = 0.0f;
+		RenderOnlyClip.h = 0.0f;
+		ClipEnable(&RenderOnlyClip);
+	}
+}
+
+void CUi::EndRenderOnly()
+{
+	dbg_assert(m_RenderOnlyDepth > 0, "render-only UI scope underflow");
+	if(--m_RenderOnlyDepth == 0)
+		ClipDisable();
+}
+
 void CUi::ClipEnable(const CUIRect *pRect)
 {
 	FlushQuadBatch();
 	if(IsClipped())
 	{
 		const CUIRect *pOldRect = ClipArea();
-		CUIRect Intersection;
-		Intersection.x = std::max(pRect->x, pOldRect->x);
-		Intersection.y = std::max(pRect->y, pOldRect->y);
-		Intersection.w = std::min(pRect->x + pRect->w, pOldRect->x + pOldRect->w) - pRect->x;
-		Intersection.h = std::min(pRect->y + pRect->h, pOldRect->y + pOldRect->h) - pRect->y;
-		m_vClips.push_back(Intersection);
+		m_vClips.push_back(pRect->Intersection(*pOldRect));
 	}
 	else
 	{
@@ -2493,6 +2509,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	ScrollRequest.m_RowExtent = pSelectionPopup->m_EntryHeight + pSelectionPopup->m_EntrySpacing;
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	ScrollParams.m_HideScrollbar = !pSelectionPopup->m_BlockUnderlyingScroll;
 	ScrollParams.m_ScrollbarNoOuterMargin = true;
 	ScrollParams.m_pWheelOwnerId = pSelectionPopup;
 	ScrollParams.m_WheelOwnerPreRegistered = true;
@@ -2523,10 +2540,10 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		if(pSelectionPopup->m_aMessage[0] != '\0' || Index != 0)
 			View.HSplitTop(pSelectionPopup->m_EntrySpacing, nullptr, &View);
 		View.HSplitTop(pSelectionPopup->m_EntryHeight, &Slot, &View);
-		if(pScrollRegion->AddRect(Slot))
+		const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);
+		if(pScrollRegion->AddRect(Slot, ActiveEntry))
 		{
 			++VisibleEntries;
-			const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);
 			const std::optional<ColorRGBA> ButtonColor = ActiveEntry ? std::optional<ColorRGBA>(ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f)) : std::nullopt;
 			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons, true, ButtonColor))
 			{

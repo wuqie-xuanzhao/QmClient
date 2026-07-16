@@ -2147,9 +2147,6 @@ Continue anyway?
 Contributors
 == Contribuidores
 
-Control dummy
-== Controlar dummy
-
 Control player (0) or dummy (1)
 == Controlar jugador (0) o dummy (1)
 
@@ -2999,6 +2996,9 @@ Dummy body skin
 Dummy clan
 == Clan del Dummy
 
+Dummy Control
+== Controlar dummy
+
 Dummy Control: %s
 == Control de dummy: %s
 
@@ -3401,9 +3401,6 @@ Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
 == Habilitar caché local de letras
 
-Enable long pain sound (used when shooting in freeze)
-== Habilitar sonido de dolor largo (usado al disparar en hielo)
-
 Enable lyric HUD overlay
 == Enable lyrics HUD overlay
 
@@ -3478,6 +3475,9 @@ Enable saving games (/save and /load)
 
 Enable server message sound
 == Habilitar sonido de mensaje del servidor
+
+Enable shout when holding fire while in water
+== Activar grito al mantener pulsado el botón de disparo en el agua
 
 Enable Sixup connection.
 == Habilitar conexión Sixup.
@@ -7610,6 +7610,9 @@ Print command executed by this name or all chat binds
 Print daily messages to console
 == Imprimir mensajes diarios en la consola
 
+Prioritize outgoing game traffic on Windows (best effort)
+== Prioritize outgoing game traffic on Windows (best effort)
+
 Privately messages someone's current time in this current running race (your time by default)
 == Envía privadamente el tiempo actual de alguien en esta carrera en curso (tu tiempo por defecto)
 
@@ -9673,6 +9676,9 @@ Show others' nameplate coordinates
 
 Show outdated version warning
 == Mostrar advertencia de versión desactualizada
+
+Show outgoing game traffic QoS status
+== Show outgoing game traffic QoS status
 
 Show outlines only on entity layer
 == Mostrar contornos solo en la capa de entidades

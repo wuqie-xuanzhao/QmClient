@@ -49,6 +49,7 @@ namespace qm_card_registry
 
 	// 按 stableId 查默认 Placement（未命中或 nullptr 返回 nullptr）
 	const SCardDefault *FindByStableId(const char *pStableId);
+	SCardNavigationTarget ResolveCardNavigationTarget(const SCardDefault &Default, const qm_card_order::CModel &Model);
 
 	// 栖梦旧 key（持久化 key）→ stableId 迁移映射（从注册表派生，DRY）。
 	// 命中返回 "qm:<key>"，未命中或 nullptr 返回 nullptr。

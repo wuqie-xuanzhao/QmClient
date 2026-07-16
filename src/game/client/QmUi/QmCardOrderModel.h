@@ -11,6 +11,8 @@
 // 页面只通过 CSettingsCardDeck 投影和更新该模型，不再维护页面私有顺序。
 namespace qm_card_order
 {
+	class CModel;
+
 	struct SEntry
 	{
 		const char *m_pStableId = nullptr; // 稳定 id（栖梦用 m_pKey 如 "chat_bubble"，Tclient 用 stable id）
@@ -21,6 +23,7 @@ namespace qm_card_order
 
 	// 保留既有全局配置中不匹配 pStableIdPrefix 的 token，并用 vReplacementEntries 替换该命名空间。
 	bool SerializeMergedReplacingPrefix(const char *pExistingGlobalOrder, const char *pStableIdPrefix, const std::vector<SEntry> &vReplacementEntries, char *pOut, int OutSize);
+	bool MigrateLegacyDefaultGroup(CModel &Model, const char *pSerialized, const std::vector<SEntry> &vLegacyDefaults, const char *pSurvivingStableId, const char *pTargetTab, int TargetColumn, int TargetOrder);
 
 	class CModel
 	{

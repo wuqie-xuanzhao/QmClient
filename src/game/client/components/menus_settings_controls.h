@@ -9,6 +9,7 @@
 #include <game/client/ui.h>
 #include <game/client/ui_scrollregion.h>
 
+#include <cstdint>
 #include <vector>
 
 enum class EBindOptionGroup
@@ -66,6 +67,7 @@ private:
 	std::vector<CBindOption> m_vBindOptions;
 	size_t m_NumPredefinedBindOptions;
 	bool m_BindOptionsDirty = true;
+	uint64_t m_BindLayoutRevision = 1;
 	void UpdateBindOptions();
 
 	CScrollRegion m_SettingsScrollRegion;

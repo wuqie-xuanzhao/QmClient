@@ -4,7 +4,19 @@
 
 #include <engine/graphics.h>
 
+#include <algorithm>
+
 IGraphics *CUIRect::ms_pGraphics = nullptr;
+
+CUIRect CUIRect::Intersection(const CUIRect &Other) const
+{
+	CUIRect Result;
+	Result.x = std::max(x, Other.x);
+	Result.y = std::max(y, Other.y);
+	Result.w = std::max(0.0f, std::min(x + w, Other.x + Other.w) - Result.x);
+	Result.h = std::max(0.0f, std::min(y + h, Other.y + Other.h) - Result.y);
+	return Result;
+}
 
 void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing) const
 {

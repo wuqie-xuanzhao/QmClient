@@ -2895,6 +2895,7 @@ void CSkins::ProcessSkinListPlanJob()
 		{
 			m_SkinList.m_vSkins = std::move(m_vPendingSkinListEntries);
 			m_SkinList.m_UnfilteredCount = m_PendingSkinListUnfilteredCount;
+			++m_SkinList.m_Revision;
 		}
 		if(MergeComplete)
 		{

@@ -1,3 +1,10 @@
+#include "test.h"
+
+#include <engine/console.h>
+#include <engine/kernel.h>
+#include <engine/shared/config.h>
+#include <engine/storage.h>
+
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/localization.h>
 
@@ -26,20 +33,11 @@ TEST(QmCardRegistry, CoversAllCardsNoDuplicates)
 	const auto &Reg = qm_card_registry::Defaults();
 	std::set<std::string> Ids;
 	for(const auto &E : Reg)
+	{
 		EXPECT_TRUE(Ids.insert(E.m_pStableId).second) << "重复 stableId: " << E.m_pStableId;
-}
-
-TEST(QmCardRegistry, P6RegistersQmClientOverviewCards)
-{
-	const auto *pIntro = qm_card_registry::FindByStableId("deck:qmclient-overview-intro");
-	const auto *pGuide = qm_card_registry::FindByStableId("deck:qmclient-overview-guide");
-	ASSERT_NE(pIntro, nullptr);
-	ASSERT_NE(pGuide, nullptr);
-	EXPECT_STREQ(pIntro->m_pDefaultTab, "qmclient-overview");
-	EXPECT_STREQ(pGuide->m_pDefaultTab, "qmclient-overview");
-	EXPECT_EQ(pIntro->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
-	EXPECT_EQ(pGuide->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
-	EXPECT_LT(pIntro->m_DefaultOrder, pGuide->m_DefaultOrder);
+		EXPECT_NE(E.m_pTitle, nullptr) << E.m_pStableId;
+		EXPECT_NE(E.m_pTitle != nullptr ? E.m_pTitle[0] : '\0', '\0') << E.m_pStableId;
+	}
 }
 
 TEST(QmCardRegistry, P6QmClientContributorsCards)
@@ -111,12 +109,15 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:general-client",
 		"deck:general-recording",
 		"deck:tee-identity",
+		"deck:tee-skin-options",
+		"deck:tee-skin-list",
 		"deck:graphics-display",
 		"deck:player-identity",
 		"deck:player-country",
 		"deck:graphics-visual",
 		"deck:graphics-backend",
 		"deck:graphics-modes",
+		"deck:graphics-interaction",
 		"deck:sound-toggle",
 		"deck:sound-volume",
 		"deck:sound-audio-pack",
@@ -142,8 +143,15 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:appearance-laser-enhanced",
 		"deck:appearance-laser-colors",
 		"deck:appearance-laser-preview",
-		"deck:controls-mouse", "deck:controls-controller", "deck:controls-movement", "deck:controls-weapon",
-		"deck:controls-voting", "deck:controls-chat", "deck:controls-dummy", "deck:controls-miscellaneous", "deck:controls-custom",
+		"deck:controls-mouse",
+		"deck:controls-controller",
+		"deck:controls-movement",
+		"deck:controls-weapon",
+		"deck:controls-voting",
+		"deck:controls-chat",
+		"deck:controls-dummy",
+		"deck:controls-miscellaneous",
+		"deck:controls-custom",
 	};
 	for(const char *pId : apIds)
 		ASSERT_NE(qm_card_registry::FindByStableId(pId), nullptr) << pId;
@@ -177,13 +185,59 @@ TEST(QmCardRegistry, PlayerStandardPageCardsPersistInVisualOrder)
 		(std::vector<std::string>{"deck:player-country"}));
 }
 
-// 意图：Tee 页的身份、选项和皮肤列表属于同一功能，注册表只能暴露一个公共卡片。
-TEST(QmCardRegistry, TeeStandardPageUsesOneFunctionalCard)
+// 意图：Tee 页按预览、选项、列表拆卡后，宽屏默认保持预览与选项左右排列、搜索列表全宽。
+TEST(QmCardRegistry, TeeStandardPageUsesThreeFunctionalCards)
 {
 	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
 	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 0),
+		(std::vector<std::string>{"deck:tee-skin-list"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 1),
 		(std::vector<std::string>{"deck:tee-identity"}));
-	EXPECT_TRUE(Model.StableIdOrder("deck:", "tee", 1).empty());
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 2),
+		(std::vector<std::string>{"deck:tee-skin-options"}));
+}
+
+// 意图：Tee 拆卡后搜索词必须落到实际承载功能的卡片，而不是都跳到预览卡。
+TEST(QmCardRegistry, TeeFunctionalSearchTargetsSplitCards)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	for(const auto &[pQuery, pExpectedId] : {std::pair{"colors", "deck:tee-skin-options"}, std::pair{"eyes", "deck:tee-skin-options"}, std::pair{"search", "deck:tee-skin-list"}, std::pair{"filter", "deck:tee-skin-list"}})
+	{
+		const auto vResults = qm_card_registry::SearchCards(pQuery, Model);
+		const auto It = std::find_if(vResults.begin(), vResults.end(), [pExpectedId](const auto &Result) {
+			return std::string(Result.m_pStableId) == pExpectedId;
+		});
+		ASSERT_NE(It, vResults.end()) << pQuery;
+		EXPECT_STREQ(It->m_Target.m_pTab, "tee");
+	}
+}
+
+TEST(QmCardRegistry, LegacyMergedFunctionalCardMigratesOnlyOldDefaultGroup)
+{
+	const std::vector<qm_card_order::SEntry> vLegacyDefaults = {
+		{"deck:tclient-profiles-actions", "tclient-profiles", 0, 0},
+	};
+	const auto vDefaults = qm_card_registry::BuildDefaultEntries();
+	qm_card_order::CModel Model;
+	const char *pLegacySerialized = "deck:tclient-profiles-actions|tclient-profiles|full|0;";
+	Model.LoadMerged(pLegacySerialized, vDefaults);
+
+	EXPECT_TRUE(qm_card_order::MigrateLegacyDefaultGroup(Model,
+		pLegacySerialized, vLegacyDefaults, "deck:tclient-profiles-actions", "tclient-profiles", 1, 0));
+	const auto &Entry = Model.Entry(Model.FindByStableId("deck:tclient-profiles-actions"));
+	EXPECT_EQ(Entry.m_Column, 1);
+	EXPECT_EQ(Entry.m_OrderInColumn, 0);
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tclient-profiles", 1),
+		(std::vector<std::string>{"deck:tclient-profiles-actions", "deck:tclient-profiles-list"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tclient-profiles", 2),
+		(std::vector<std::string>{"deck:tclient-profiles-options"}));
+
+	qm_card_order::CModel CustomizedModel;
+	const char *pCustomizedSerialized = "deck:tclient-profiles-actions|tclient-profiles|right|0;";
+	CustomizedModel.LoadMerged(pCustomizedSerialized, vDefaults);
+	EXPECT_FALSE(qm_card_order::MigrateLegacyDefaultGroup(CustomizedModel,
+		pCustomizedSerialized, vLegacyDefaults, "deck:tclient-profiles-actions", "tclient-profiles", 1, 0));
+	EXPECT_EQ(CustomizedModel.Entry(CustomizedModel.FindByStableId("deck:tclient-profiles-actions")).m_Column, 2);
 }
 
 // 意图：Graphics 试点卡片的 placement 已是公共 registry 的事实源；补齐滚动时不得破坏序列化后的列顺序。
@@ -193,7 +247,7 @@ TEST(QmCardRegistry, GraphicsPilotPlacementSurvivesSerialization)
 	EXPECT_EQ(Model.StableIdOrder("deck:", "graphics", 1),
 		(std::vector<std::string>{"deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend"}));
 	EXPECT_EQ(Model.StableIdOrder("deck:", "graphics", 2),
-		(std::vector<std::string>{"deck:graphics-modes"}));
+		(std::vector<std::string>{"deck:graphics-modes", "deck:graphics-interaction"}));
 }
 
 // 意图：Sound 页的音频包卡必须默认位于右列，和运行时 Deck 的双列内容密度保持一致。
@@ -214,6 +268,247 @@ TEST(QmCardRegistry, DDNetStandardPageCardsPersistInVisualOrder)
 		(std::vector<std::string>{"deck:ddnet-demo", "deck:ddnet-gameplay"}));
 	EXPECT_EQ(Model.StableIdOrder("deck:", "ddnet", 2),
 		(std::vector<std::string>{"deck:ddnet-background", "deck:ddnet-miscellaneous"}));
+}
+
+// 意图：敌对列表是一个完整编辑器，registry 只能暴露一张全宽卡片，避免卡片化破坏功能布局。
+TEST(QmCardRegistry, TClientWarListUsesSingleFullWidthCard)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tclient-warlist", 0),
+		(std::vector<std::string>{"deck:tclient-warlist"}));
+	EXPECT_TRUE(Model.StableIdOrder("deck:", "tclient-warlist", 1).empty());
+	EXPECT_TRUE(Model.StableIdOrder("deck:", "tclient-warlist", 2).empty());
+
+	const auto *pCard = qm_card_registry::FindByStableId("deck:tclient-warlist");
+	ASSERT_NE(pCard, nullptr);
+	EXPECT_STREQ(pCard->m_pTitle, "War List");
+	for(const char *pLegacyStableId : {
+		    "deck:tclient-warlist-entries",
+		    "deck:tclient-warlist-editor",
+		    "deck:tclient-warlist-settings",
+		    "deck:tclient-warlist-groups",
+		    "deck:tclient-warlist-players",
+	    })
+		EXPECT_EQ(qm_card_registry::FindByStableId(pLegacyStableId), nullptr);
+}
+
+// 意图：旧五卡配置经过新 registry 清洗并写回后，全新实例只能恢复完整敌对列表卡片。
+TEST(QmCardRegistry, TClientWarListLegacyCardsStayRemovedAfterFreshReload)
+{
+	const char *pLegacySerialized =
+		"deck:tclient-warlist-entries|tclient-warlist|left|0;"
+		"deck:tclient-warlist-editor|tclient-warlist|right|0;"
+		"deck:tclient-warlist-settings|tclient-warlist|right|1;"
+		"deck:tclient-warlist-groups|tclient-warlist|left|1;"
+		"deck:tclient-warlist-players|tclient-warlist|left|2;";
+	qm_card_order::CModel Migrated;
+	EXPECT_FALSE(Migrated.LoadMerged(pLegacySerialized, qm_card_registry::BuildDefaultEntries()));
+	char aSerialized[8192];
+	ASSERT_TRUE(Migrated.Serialize(aSerialized, sizeof(aSerialized)));
+
+	qm_card_order::CModel Reloaded;
+	ASSERT_TRUE(Reloaded.LoadMerged(aSerialized, qm_card_registry::BuildDefaultEntries()));
+	EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-warlist", 0),
+		(std::vector<std::string>{"deck:tclient-warlist"}));
+	EXPECT_TRUE(Reloaded.StableIdOrder("deck:", "tclient-warlist", 1).empty());
+	EXPECT_TRUE(Reloaded.StableIdOrder("deck:", "tclient-warlist", 2).empty());
+	for(const char *pLegacyStableId : {
+		    "deck:tclient-warlist-entries",
+		    "deck:tclient-warlist-editor",
+		    "deck:tclient-warlist-settings",
+		    "deck:tclient-warlist-groups",
+		    "deck:tclient-warlist-players",
+	    })
+		EXPECT_EQ(Reloaded.FindByStableId(pLegacyStableId), -1);
+}
+
+// 意图：状态栏三张卡片默认按左右交替铺开，避免宽屏下全部堆在左列。
+TEST(QmCardRegistry, TClientStatusBarCardsPersistInAlternatingColumns)
+{
+	qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tclient-status-bar", 1),
+		(std::vector<std::string>{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tclient-status-bar", 2),
+		(std::vector<std::string>{"deck:tclient-status-bar-items"}));
+
+	Model.Move("deck:tclient-status-bar-preview", 2, 1);
+	char aSerialized[8192];
+	ASSERT_TRUE(Model.Serialize(aSerialized, sizeof(aSerialized)));
+	qm_card_order::CModel Reloaded;
+	ASSERT_TRUE(Reloaded.LoadMerged(aSerialized, qm_card_registry::BuildDefaultEntries()));
+	EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-status-bar", 2),
+		(std::vector<std::string>{"deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"}));
+}
+
+TEST(QmCardRegistry, TClientStatusBarMigrationPreservesCustomizedLayouts)
+{
+	const std::vector<qm_card_order::SEntry> vLegacyDefaults = {
+		{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
+		{"deck:tclient-status-bar-items", "tclient-status-bar", 1, 1},
+		{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 2},
+	};
+	const char *pLegacySerialized =
+		"deck:tclient-status-bar-settings|tclient-status-bar|left|0;"
+		"deck:tclient-status-bar-items|tclient-status-bar|left|1;"
+		"deck:tclient-status-bar-preview|tclient-status-bar|left|2;";
+	qm_card_order::CModel LegacyModel;
+	LegacyModel.LoadMerged(pLegacySerialized, qm_card_registry::BuildDefaultEntries());
+	EXPECT_TRUE(qm_card_order::MigrateLegacyDefaultGroup(LegacyModel, pLegacySerialized, vLegacyDefaults,
+		"deck:tclient-status-bar-items", "tclient-status-bar", 2, 0));
+	EXPECT_TRUE(qm_card_order::MigrateLegacyDefaultGroup(LegacyModel, pLegacySerialized, vLegacyDefaults,
+		"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1));
+	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tclient-status-bar", 1),
+		(std::vector<std::string>{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"}));
+	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tclient-status-bar", 2),
+		(std::vector<std::string>{"deck:tclient-status-bar-items"}));
+
+	const char *pCustomizedSerialized =
+		"deck:tclient-status-bar-settings|tclient-status-bar|left|0;"
+		"deck:tclient-status-bar-items|tclient-status-bar|right|0;"
+		"deck:tclient-status-bar-preview|tclient-status-bar|right|1;";
+	qm_card_order::CModel CustomizedModel;
+	CustomizedModel.LoadMerged(pCustomizedSerialized, qm_card_registry::BuildDefaultEntries());
+	EXPECT_FALSE(qm_card_order::MigrateLegacyDefaultGroup(CustomizedModel, pCustomizedSerialized, vLegacyDefaults,
+		"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1));
+	EXPECT_EQ(CustomizedModel.StableIdOrder("deck:", "tclient-status-bar", 2),
+		(std::vector<std::string>{"deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"}));
+}
+
+TEST(QmCardRegistry, TClientStatusBarMigrationAcceptsLegacyColonFormat)
+{
+	const std::vector<qm_card_order::SEntry> vLegacyDefaults = {
+		{"status-settings", "tclient-status-bar", 1, 0},
+		{"status-items", "tclient-status-bar", 1, 1},
+		{"status-preview", "tclient-status-bar", 1, 2},
+	};
+	const char *pLegacySerialized =
+		"status-settings:1:0;"
+		"status-items:1:1;"
+		"status-preview:1:2;";
+	qm_card_order::CModel Model;
+	Model.LoadMerged(pLegacySerialized, vLegacyDefaults);
+	EXPECT_TRUE(qm_card_order::MigrateLegacyDefaultGroup(Model, pLegacySerialized, vLegacyDefaults,
+		"status-items", "tclient-status-bar", 2, 0));
+}
+
+TEST(QmCardRegistry, TeeMigrationOnlyReflowsLegacyDefaultLayout)
+{
+	const std::vector<qm_card_order::SEntry> vLegacyDefaults = {
+		{"deck:tee-identity", "tee", 0, 0},
+		{"deck:tee-skin-options", "tee", 1, 0},
+		{"deck:tee-skin-list", "tee", 2, 0},
+	};
+	const char *pLegacySerialized =
+		"deck:tee-identity|tee|full|0;"
+		"deck:tee-skin-options|tee|left|0;"
+		"deck:tee-skin-list|tee|right|0;";
+	qm_card_order::CModel LegacyModel;
+	LegacyModel.LoadMerged(pLegacySerialized, qm_card_registry::BuildDefaultEntries());
+	EXPECT_TRUE(qm_card_order::MigrateLegacyDefaultGroup(LegacyModel, pLegacySerialized, vLegacyDefaults, "deck:tee-identity", "tee", 1, 0));
+	EXPECT_TRUE(qm_card_order::MigrateLegacyDefaultGroup(LegacyModel, pLegacySerialized, vLegacyDefaults, "deck:tee-skin-options", "tee", 2, 0));
+	EXPECT_TRUE(qm_card_order::MigrateLegacyDefaultGroup(LegacyModel, pLegacySerialized, vLegacyDefaults, "deck:tee-skin-list", "tee", 0, 0));
+	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 0), (std::vector<std::string>{"deck:tee-skin-list"}));
+	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity"}));
+	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 2), (std::vector<std::string>{"deck:tee-skin-options"}));
+
+	const char *pCustomizedSerialized =
+		"deck:tee-identity|tee|left|0;"
+		"deck:tee-skin-options|tee|left|1;"
+		"deck:tee-skin-list|tee|right|0;";
+	qm_card_order::CModel CustomizedModel;
+	CustomizedModel.LoadMerged(pCustomizedSerialized, qm_card_registry::BuildDefaultEntries());
+	EXPECT_FALSE(qm_card_order::MigrateLegacyDefaultGroup(CustomizedModel, pCustomizedSerialized, vLegacyDefaults, "deck:tee-skin-list", "tee", 0, 0));
+	EXPECT_EQ(CustomizedModel.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-options"}));
+}
+
+TEST(QmCardRegistry, GlobalCardOrderMaximumValueFitsConsoleCommand)
+{
+	auto pConsole = CreateConsole(CFGFLAG_CLIENT);
+	std::string ParsedValue;
+	pConsole->Register("qm_global_card_order", "s", CFGFLAG_CLIENT, [](IConsole::IResult *pResult, void *pUser) { *static_cast<std::string *>(pUser) = pResult->GetString(0); }, &ParsedValue, "");
+
+	std::string Value(sizeof(g_Config.m_QmGlobalCardOrder) - 1, 'a');
+	const std::string Command = "qm_global_card_order \"" + Value + "\"";
+	pConsole->ExecuteLine(Command.c_str());
+	EXPECT_EQ(ParsedValue, Value);
+}
+
+TEST(QmCardRegistry, RegisteredCardsFitGlobalOrderConfig)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries(qm_card_registry::BuildDefaultEntries());
+	char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+	EXPECT_TRUE(Model.Serialize(aSerialized, sizeof(aSerialized)));
+}
+
+// 意图：卡片顺序必须经过真实 qmclient.cfg 写盘，并能由全新的配置管理器实例完整恢复。
+TEST(QmCardRegistry, GlobalCardOrderSurvivesFreshConfigManagerReload)
+{
+	struct SConfigRestore
+	{
+		int m_SaveSettings = g_Config.m_ClSaveSettings;
+		std::string m_GlobalCardOrder = g_Config.m_QmGlobalCardOrder;
+		~SConfigRestore()
+		{
+			g_Config.m_ClSaveSettings = m_SaveSettings;
+			str_copy(g_Config.m_QmGlobalCardOrder, m_GlobalCardOrder.c_str(), sizeof(g_Config.m_QmGlobalCardOrder));
+		}
+	} ConfigRestore;
+	CTestInfo TestInfo;
+	std::unique_ptr<IStorage> pStorage = TestInfo.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	qm_card_order::CModel CustomizedModel;
+	const std::vector<qm_card_order::SEntry> Defaults = qm_card_registry::BuildDefaultEntries();
+	ASSERT_FALSE(CustomizedModel.LoadMerged("", Defaults));
+	// 模拟用户拖拽：Move 后再序列化，不能只验证手写配置字符串能被读取。
+	CustomizedModel.Move("deck:tee-skin-list", 0, 0);
+	CustomizedModel.Move("deck:tclient-status-bar-items", 1, 0);
+	CustomizedModel.Move("deck:tclient-status-bar-settings", 2, 0);
+	CustomizedModel.Move("deck:tclient-status-bar-preview", 2, 1);
+	CustomizedModel.Move("deck:tclient-profiles-actions", 2, 0);
+	CustomizedModel.Move("deck:tclient-profiles-options", 1, 0);
+	CustomizedModel.Move("deck:tclient-profiles-list", 2, 1);
+	char aCustomizedSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+	ASSERT_TRUE(CustomizedModel.Serialize(aCustomizedSerialized, sizeof(aCustomizedSerialized)));
+	const char *pExpected = aCustomizedSerialized;
+
+	{
+		std::unique_ptr<IKernel> pKernel(IKernel::Create());
+		pKernel->RegisterInterface(pStorage.get(), false);
+		IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT).release();
+		pKernel->RegisterInterface(pConsole);
+		IConfigManager *pConfigManager = CreateConfigManager();
+		pKernel->RegisterInterface(pConfigManager);
+		pConsole->Init();
+		pConfigManager->Init();
+		g_Config.m_ClSaveSettings = 1;
+		str_copy(g_Config.m_QmGlobalCardOrder, pExpected, sizeof(g_Config.m_QmGlobalCardOrder));
+		ASSERT_TRUE(pConfigManager->Save());
+	}
+
+	g_Config.m_QmGlobalCardOrder[0] = '\0';
+	{
+		std::unique_ptr<IKernel> pKernel(IKernel::Create());
+		pKernel->RegisterInterface(pStorage.get(), false);
+		IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT).release();
+		pKernel->RegisterInterface(pConsole);
+		IConfigManager *pConfigManager = CreateConfigManager();
+		pKernel->RegisterInterface(pConfigManager);
+		pConsole->Init();
+		pConfigManager->Init();
+		ASSERT_TRUE(pConsole->ExecuteFile(s_aConfigDomains[ConfigDomain::QMCLIENT].m_aConfigPath, IConsole::CLIENT_ID_UNSPECIFIED, true, IStorage::TYPE_SAVE));
+		EXPECT_STREQ(g_Config.m_QmGlobalCardOrder, pExpected);
+
+		qm_card_order::CModel Reloaded;
+		ASSERT_TRUE(Reloaded.LoadMerged(g_Config.m_QmGlobalCardOrder, qm_card_registry::BuildDefaultEntries()));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 0), (std::vector<std::string>{"deck:tee-skin-list"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 2), (std::vector<std::string>{"deck:tee-skin-options"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-status-bar", 1), (std::vector<std::string>{"deck:tclient-status-bar-items"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-status-bar", 2), (std::vector<std::string>{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-profiles", 1), (std::vector<std::string>{"deck:tclient-profiles-options"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-profiles", 2), (std::vector<std::string>{"deck:tclient-profiles-actions", "deck:tclient-profiles-list"}));
+	}
 }
 
 // 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。

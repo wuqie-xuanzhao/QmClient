@@ -732,12 +732,8 @@ public:
 
 	void SetEnabled(bool Enabled) { m_Enabled = Enabled; }
 	bool Enabled() const { return m_Enabled; }
-	void BeginRenderOnly() { ++m_RenderOnlyDepth; }
-	void EndRenderOnly()
-	{
-		dbg_assert(m_RenderOnlyDepth > 0, "render-only UI scope underflow");
-		--m_RenderOnlyDepth;
-	}
+	void BeginRenderOnly();
+	void EndRenderOnly();
 	bool RenderOnly() const { return m_RenderOnlyDepth > 0; }
 	void Update();
 	void DebugRender(float X, float Y);
@@ -981,6 +977,7 @@ public:
 	void SetOnBackButtonPressedCallback(std::function<void()> pfnCallback) { m_OnBackButtonPressedFunction = std::move(pfnCallback); }
 
 	// popup menu
+	static constexpr float PopupMenuContentInset() { return (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2.0f; }
 	void DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props = {});
 	void RenderPopupMenus();
 	void ClosePopupMenu(const SPopupMenuId *pId, bool IncludeDescendants = false);

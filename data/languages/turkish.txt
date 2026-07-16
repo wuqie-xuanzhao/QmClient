@@ -2147,9 +2147,6 @@ Continue anyway?
 Contributors
 == Katkıda Bulunanlar
 
-Control dummy
-== Yapayı kontrol et
-
 Control player (0) or dummy (1)
 == Oyuncuyu (0) veya yapayı (1) kontrol et
 
@@ -2999,6 +2996,9 @@ Dummy body skin
 Dummy clan
 == Yapay klanı
 
+Dummy Control
+== Yapayı kontrol et
+
 Dummy Control: %s
 == Dublör Kontrolü: %s
 
@@ -3401,9 +3401,6 @@ Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
 == Yerel şarkı sözü önbelleğini etkinleştir
 
-Enable long pain sound (used when shooting in freeze)
-== Uzun acı sesini etkinleştir (dondurucuda ateş ederken kullanılır)
-
 Enable lyric HUD overlay
 == Enable lyrics HUD overlay
 
@@ -3478,6 +3475,9 @@ Enable saving games (/save and /load)
 
 Enable server message sound
 == Sunucu mesajı sesini etkinleştir
+
+Enable shout when holding fire while in water
+== Sudayken ateş tuşunu basılı tutunca çığlığı etkinleştir
 
 Enable Sixup connection.
 == Sixup bağlantısını etkinleştir.
@@ -7610,6 +7610,9 @@ Print command executed by this name or all chat binds
 Print daily messages to console
 == Günlük mesajları konsola yazdır
 
+Prioritize outgoing game traffic on Windows (best effort)
+== Prioritize outgoing game traffic on Windows (best effort)
+
 Privately messages someone's current time in this current running race (your time by default)
 == Birinin bu devam eden yarıştaki geçerli süresini özel olarak mesajla (varsayılan olarak senin süren)
 
@@ -9673,6 +9676,9 @@ Show others' nameplate coordinates
 
 Show outdated version warning
 == Eski sürüm uyarısını göster
+
+Show outgoing game traffic QoS status
+== Show outgoing game traffic QoS status
 
 Show outlines only on entity layer
 == Anahatları yalnızca varlık katmanında göster

@@ -140,7 +140,7 @@ The script must define these page keys and stable IDs exactly:
 PAGE_STABLE_IDS = {
     "general": ("deck:general-game", "deck:general-language", "deck:general-client", "deck:general-recording"),
     "player": ("deck:player-identity", "deck:player-country"),
-    "tee": ("deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list"),
+    "tee": ("deck:tee-identity",),
     "graphics": ("deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend", "deck:graphics-modes"),
     "sound": ("deck:sound-toggle", "deck:sound-volume", "deck:sound-audio-pack"),
     "ddnet": ("deck:ddnet-demo", "deck:ddnet-gameplay", "deck:ddnet-background", "deck:ddnet-miscellaneous"),
@@ -413,19 +413,18 @@ git commit -m "refactor(settings): 迁移 Player 标准设置页"
 
 **Interfaces:**
 - Consumes: shared layout/card/deck/input/numeric/scroll interfaces; Tee skin list continues to consume existing cache/resource scheduling APIs unchanged.
-- Produces: `deck:tee-identity` (Full/0), `deck:tee-skin-options` (Left/0), `deck:tee-skin-list` (Full/1); navigation tab `tee -> CMenus::SETTINGS_TEE`.
+- Produces: `deck:tee-identity` (Full/0)，内部合并身份、皮肤选项和皮肤列表；navigation tab `tee -> CMenus::SETTINGS_TEE`.
 
 - [x] **Step 1: Write failing Tee behavior and deletion tests**
 
 ```cpp
 const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
 EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 0),
-	(std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-list"}));
-EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 1),
-	(std::vector<std::string>{"deck:tee-skin-options"}));
+	(std::vector<std::string>{"deck:tee-identity"}));
+EXPECT_TRUE(Model.StableIdOrder("deck:", "tee", 1).empty());
 ```
 
-Append all three Tee IDs to `CoversCurrentSettingsDeckIds`. Add a source test requiring the three IDs, unified stack, `ui_widget::InputField(...)` and `ui_widget::NumericField(...)`, while preserving calls that update visible skin/resource telemetry. Check the IDs and uniqueness semantically; do not introduce a fixed total.
+Append the single Tee ID to `CoversCurrentSettingsDeckIds`. Add a source test requiring the merged card, `ui_widget::InputField(...)` and `ui_widget::NumericField(...)`, while preserving calls that update visible skin/resource telemetry. Check the ID and uniqueness semantically; do not introduce a fixed total.
 
 - [x] **Step 2: Verify the focused red state**
 
@@ -438,16 +437,16 @@ Expected: FAIL on missing Tee registry/route and legacy skin-prefix/search input
 
 - [x] **Step 3: Implement the minimal Tee migration**
 
-Keep Player/Dummy/Profiles tabs full width; Profiles continues to dispatch to its existing page and is not card-wrapped by P5. Use the identity definition for preview/identity, the options definition for download/custom-color/eyes controls, and the full-width list definition for skin filter/list. Preserve the P3 `ui_widget::InputField(...)` / `ui_widget::NumericField(...)` paths while moving them into content callbacks; retain current list virtualization, background request budgets, preview cache, `SetSettingsTeeVisibleSnapshot` and perf logging exactly.
+Keep Player/Dummy/Profiles tabs full width; Profiles continues to dispatch to its existing page and is not card-wrapped by P5. The single full-width card contains identity, options and skin-list sections; each section clips against the viewport independently while the skin list continues the necessary off-screen state updates. Preserve the P3 `ui_widget::InputField(...)` / `ui_widget::NumericField(...)` paths, list virtualization, background request budgets, preview cache, `SetSettingsTeeVisibleSnapshot` and perf logging exactly.
 
 Add these exact registry/navigation rows:
 
 ```cpp
 {"deck:tee-identity", "tee", ECardColumn::Full, 0, "Player", "tee player dummy identity preview"},
-{"deck:tee-skin-options", "tee", ECardColumn::Left, 0, "Skin", "tee skin options colors eyes"},
-{"deck:tee-skin-list", "tee", ECardColumn::Full, 1, "Search", "tee skins search filter list"},
 {"tee", CMenus::SETTINGS_TEE},
 ```
+
+The `deck:tee-identity` search metadata must include `skin skins search filter list colors eyes` so merging cards does not remove global-search reachability.
 
 - [x] **Step 4: Run green tests and Tee regression filters**
 

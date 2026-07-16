@@ -25,7 +25,7 @@ MACRO_CONFIG_INT(QmCardBackdropBlur, qm_card_backdrop_blur, 0, 0, 1, CFGFLAG_CLI
 MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 32, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)")
 MACRO_CONFIG_STR(QmGlobalCardOrder, qm_global_card_order, 8000, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Global card ordering (format: stableId|tab|col|order; semicolon-separated)")
 MACRO_CONFIG_INT(QmCardOrderMigrated, qm_card_order_migrated, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Global card ordering old config migration completed flag")
-MACRO_CONFIG_INT(QmCardLayoutVersion, qm_card_layout_version, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings card default layout migration version")
+MACRO_CONFIG_INT(QmCardLayoutVersion, qm_card_layout_version, 0, 0, 5, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings card default layout migration version")
 MACRO_CONFIG_STR(QmSettingsCardOrder, qm_settings_card_order, 2048, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tclient settings card ordering (format: id:col:order; semicolon-separated)")
 MACRO_CONFIG_INT(DbgQmUiDogfood, dbg_qm_ui_dogfood, 0, 0, 1, CFGFLAG_CLIENT, "Show feat-003 shared UI primitives dogfood page (takes over QmClient settings page, for visual verification of 11 primitives + spring/easing animations)")
 MACRO_CONFIG_INT(QmNewUi, qm_new_ui, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable new settings page UI")

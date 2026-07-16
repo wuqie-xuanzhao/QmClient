@@ -20,19 +20,26 @@ namespace
 	SQmScrollContainerFrame BuildScrollContainerFrame(const CUIRect &ViewRect, float ContentSize, float Offset, const SQmScrollContainerStyle &Style, bool RenderRail)
 	{
 		const bool Horizontal = ScrollAxisHorizontal(Style);
-		SQmScrollMetrics Metrics;
-		Metrics.m_ViewportSize = ScrollAxisViewportSize(ViewRect, Style);
-		Metrics.m_ContentSize = ContentSize;
-
-		const bool Scrollable = Metrics.MaxOffset() > 0.0f;
-		const bool ScrollbarVisible = Scrollable && RenderRail;
 		CUIRect ClipRect = ViewRect;
-		CUIRect ScrollbarRect;
-		if(ScrollbarVisible)
+		if(Style.m_ReserveScrollbarSpace)
 		{
 			if(Horizontal)
 				ClipRect.h = std::max(0.0f, ViewRect.h - Style.m_ScrollbarWidth);
 			else
+				ClipRect.w = std::max(0.0f, ViewRect.w - Style.m_ScrollbarWidth);
+		}
+		SQmScrollMetrics Metrics;
+		Metrics.m_ViewportSize = ScrollAxisViewportSize(ClipRect, Style);
+		Metrics.m_ContentSize = ContentSize;
+
+		const bool Scrollable = Metrics.MaxOffset() > 0.0f;
+		const bool ScrollbarVisible = Scrollable && RenderRail;
+		CUIRect ScrollbarRect;
+		if(ScrollbarVisible)
+		{
+			if(!Style.m_ReserveScrollbarSpace && Horizontal)
+				ClipRect.h = std::max(0.0f, ViewRect.h - Style.m_ScrollbarWidth);
+			else if(!Style.m_ReserveScrollbarSpace)
 				ClipRect.w = std::max(0.0f, ViewRect.w - Style.m_ScrollbarWidth);
 			if(Horizontal)
 			{
@@ -150,12 +157,16 @@ SQmResolvedScrollPolicy QmResolveScrollPolicy(const SQmScrollRequest &Request, f
 	Policy.m_Style.m_Axis = Request.m_Axis;
 	Policy.m_Config = QmNativeWheelScrollConfig(UiScale, SmoothScrollTimeSec);
 	const float RowExtent = std::max(0.0f, Request.m_RowExtent);
-	const int RowsPerStep = std::max(1, Request.m_RowsPerStep);
+	const int RowsPerStep = Request.m_RowsPerStep > 0 ? Request.m_RowsPerStep : 2;
 
 	switch(Request.m_Profile)
 	{
+	case EQmScrollProfile::SETTINGS_OUTER:
 	case EQmScrollProfile::SETTINGS_PAGE:
-		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);
+		// 设置页外层滚动条沿用 Assets 的 20/5/10 逻辑尺寸，不随页面宽度变化。
+		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);
+		Policy.m_Style.m_ReserveScrollbarSpace = true;
+		Policy.m_ScrollbarAlwaysReserved = true;
 		Policy.m_Config = QmSettingsScrollConfig(UiScale, SmoothScrollTimeSec);
 		break;
 	case EQmScrollProfile::MENU_LIST:
@@ -163,14 +174,25 @@ SQmResolvedScrollPolicy QmResolveScrollPolicy(const SQmScrollRequest &Request, f
 		if(RowExtent > 0.0f)
 			Policy.m_Config.m_WheelScale = RowExtent * RowsPerStep;
 		break;
+	case EQmScrollProfile::SETTINGS_INNER:
+		// 卡片内部列表拥有独立滚动状态，但沿用统一的紧凑轨道语义。
+		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, UiScale);
+		if(RowExtent > 0.0f)
+			Policy.m_Config.m_WheelScale = RowExtent * RowsPerStep;
+		break;
 	case EQmScrollProfile::POPUP_LIST:
 		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, UiScale);
 		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * 3.0f : Policy.m_Config.m_WheelScale;
-		Policy.m_MaxVisibleItems = 8;
+		Policy.m_MaxVisibleItems = QM_POPUP_LIST_MAX_VISIBLE_ITEMS;
+		break;
+	case EQmScrollProfile::GRID:
+		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, UiScale);
+		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * RowsPerStep : Policy.m_Config.m_WheelScale;
+		Policy.m_ContentDragAllowed = false;
 		break;
 	case EQmScrollProfile::FILTER_GRID:
 		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, UiScale);
-		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * 2.0f : Policy.m_Config.m_WheelScale;
+		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * RowsPerStep : Policy.m_Config.m_WheelScale;
 		Policy.m_RailVisibility = EQmScrollRailVisibility::HIDDEN;
 		Policy.m_ContentDragAllowed = false;
 		break;
@@ -269,7 +291,8 @@ void CQmScrollState::AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &M
 
 	if(Config.m_NativeWheelStep)
 	{
-		const float WheelSteps = WheelDelta < 0.0f ? 1.0f : -1.0f;
+		const float StepCount = std::max(1.0f, std::abs(WheelDelta) / 120.0f);
+		const float WheelSteps = WheelDelta < 0.0f ? StepCount : -StepCount;
 		const float AnimationTime = std::max(0.0f, Config.m_NativeWheelAnimationTime);
 		const float BaseOffset = m_AnimTime > 0.0f ? m_AnimTargetOffset : m_Offset;
 		const float TargetOffset = std::clamp(BaseOffset + WheelSteps * Config.m_WheelScale, 0.0f, MaxOffset);
@@ -434,8 +457,16 @@ SQmScrollContainerFrame CQmScrollController::Update(CQmScrollState &State, const
 SQmScrollContainerFrame CQmScrollController::UpdateInternal(CQmScrollState &State, const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config, bool RenderRail) const
 {
 	const bool Horizontal = ScrollAxisHorizontal(Style);
+	CUIRect MetricsView = ViewRect;
+	if(Style.m_ReserveScrollbarSpace)
+	{
+		if(Horizontal)
+			MetricsView.h = std::max(0.0f, MetricsView.h - Style.m_ScrollbarWidth);
+		else
+			MetricsView.w = std::max(0.0f, MetricsView.w - Style.m_ScrollbarWidth);
+	}
 	SQmScrollMetrics Metrics;
-	Metrics.m_ViewportSize = ScrollAxisViewportSize(ViewRect, Style);
+	Metrics.m_ViewportSize = ScrollAxisViewportSize(MetricsView, Style);
 	Metrics.m_ContentSize = ContentHeight;
 	SQmScrollConfig EffectiveConfig = Config;
 	if(Input.m_AltPressed)

@@ -75,7 +75,7 @@ authority: 本规格、当前代码审计、GitHub 合并前审查、人工验�
 
 ### 4.3 Header
 
-全部设置卡片具有统一 header：标题、可选副标题和由 `SettingsCard` shell 绘制的唯一 drag handle。有副标题时其 rect 始终保留布局高度，文字只在 hover/focus 时显示，不因显隐引起 reflow；没有副标题时不预留空白。标题默认持续彩虹流动，`qm_ui_card_rainbow_titles` 关闭后使用静态高可读颜色，不改变 header 尺寸或层级。
+全部设置卡片具有统一 header：标题、可选副标题和右上角唯一的展开/折叠箭头。标题行本身是拖拽热区，交互控件和折叠箭头不启动拖拽，不再绘制独立 drag handle。有副标题时其 rect 始终保留布局高度，文字只在 hover/focus 时显示，不因显隐引起 reflow；没有副标题时不预留空白。标题默认持续彩虹流动，`qm_ui_card_rainbow_titles` 关闭后使用静态高可读颜色，不改变 header 尺寸或层级。
 
 ## 5. Settings Card Platform
 
@@ -121,9 +121,9 @@ Search 仅索引 `SettingsCard` 注册的 stable ID、标题、描述和导航�
 
 必要动效始终保留：hover/focus 边框反馈、drag proxy、drop/释放和 reflow-complete 完成反馈、dropdown 状态变化。motion level `0` 可取消让位 tween，但仍必须立即显示 proxy 并在 drop/reflow 完成时给出必要的短反馈；不能改变 hit-test、布局、持久化或交互完成时机。
 
-首次进入设置页、切换子 tab 或 card 首次插入当前 deck 时，可播放统一的短距离漂移加透明度 entry 动效。entry 必须在最终布局完成后仅作为绘制 transform/alpha 应用；它不改变命中或拖拽 rect。同一 `page/tab/card stable ID` 在一次展示周期只播放一次，滚动、重排、文本刷新不得重复触发。
+首次进入设置页和 display cycle 初始化必须直接同步稳定状态，不改变卡片或页面亮度。真实切换 page/sub-tab 时可播放统一的短距离位移动效，但不得叠加黑色遮罩或透明度 entry；动效仅作为最终布局后的绘制 transform，不改变命中或拖拽 rect。同一 `page/tab/card stable ID` 在一次展示周期只播放一次，滚动、重排、文本刷新不得重复触发。
 
-持续彩虹标题和表面微光属于装饰动效，由 `qm_extra_animations` 控制。`qm_ui_motion_level` 统一缩短或关闭非必要 tween/spring。公开 UI 配置至少包含：额外动画、卡片标题彩虹流动和动效强度。`CMenus` 统一解释它们并把 `SSettingsCardDeckVisualOptions`/`SCardMotionSpec` 显式传给 Deck，页面不得自行读配置。
+表面微光等装饰动效由 `qm_extra_animations` 控制；持续彩虹标题由 `qm_ui_card_rainbow_titles` 独立控制。`qm_ui_motion_level` 统一缩短或关闭非必要 tween/spring。公开 UI 配置至少包含：额外动画、卡片标题彩虹流动、动效强度和输入焦点颜色。`CMenus` 统一解释它们并把 `SSettingsCardDeckVisualOptions`/`SCardMotionSpec` 显式传给 Deck，页面不得自行读配置。
 
 ## 7. 公共输入与数值控件
 

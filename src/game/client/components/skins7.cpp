@@ -661,8 +661,11 @@ void CSkins7::AddSkinFromConfigVariables(const char *pName, int Dummy)
 	m_LastRefreshTime = time_get_nanoseconds();
 }
 
-bool CSkins7::RemoveSkin(const CSkin *pSkin)
+bool CSkins7::RemoveSkin(const char *pName)
 {
+	const CSkin *pSkin = FindSkin(pName, true);
+	if(pSkin == nullptr)
+		return false;
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), SKINS_DIR "/%s.json", pSkin->m_aName);
 	if(!Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE))
@@ -685,6 +688,18 @@ const std::vector<CSkins7::CSkin> &CSkins7::GetSkins() const
 const std::vector<CSkins7::CSkinPart> &CSkins7::GetSkinParts(int Part) const
 {
 	return m_avSkinParts[Part];
+}
+
+const CSkins7::CSkin *CSkins7::FindSkin(const char *pName, bool AllowSpecialSkin) const
+{
+	if(pName == nullptr)
+		return nullptr;
+	for(const CSkin &Skin : m_vSkins)
+	{
+		if((AllowSpecialSkin || (Skin.m_Flags & SKINFLAG_SPECIAL) == 0) && str_comp(Skin.m_aName, pName) == 0)
+			return &Skin;
+	}
+	return nullptr;
 }
 
 const CSkins7::CSkinPart *CSkins7::FindSkinPartOrNullptr(int Part, const char *pName, bool AllowSpecialPart) const

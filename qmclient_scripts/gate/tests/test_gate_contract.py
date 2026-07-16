@@ -147,6 +147,7 @@ class GateLibraryContractTest(unittest.TestCase):
 
 	def test_settings_ui_check_is_scope_aware(self):
 		self.assertTrue(settings_ui.should_run(["src/game/client/components/menus_settings.cpp"]))
+		self.assertTrue(settings_ui.should_run(["src/game/client/components/menus_settings7.cpp"]))
 		self.assertTrue(settings_ui.should_run(["src/game/client/QmUi/SettingsCardDeck.cpp"]))
 		self.assertTrue(settings_ui.should_run(["src/game/client/QmUi/UiForms.cpp"]))
 		self.assertTrue(settings_ui.should_run(["src/game/client/QmUi/QmScroll.cpp"]))

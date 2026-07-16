@@ -86,6 +86,23 @@ TEST(SettingsCardDeck, CollapsedCardsSkipContentWorkAndExpandedDynamicCardsRemea
 	EXPECT_TRUE(SettingsCardDeckRendersContent(false));
 }
 
+TEST(SettingsCardDeck, CollapseAndVisibilityChangesSnapWithoutDisablingDragReflow)
+{
+	EXPECT_FALSE(SettingsCardDeckContentHeightChanged(-1.0f, 96.0f));
+	EXPECT_FALSE(SettingsCardDeckContentHeightChanged(96.0f, 96.005f));
+	EXPECT_TRUE(SettingsCardDeckContentHeightChanged(96.0f, 120.0f));
+	EXPECT_TRUE(SettingsCardDeckShouldSnapReflow(true, false));
+	EXPECT_FALSE(SettingsCardDeckShouldSnapReflow(false, false));
+	EXPECT_FALSE(SettingsCardDeckShouldSnapReflow(true, true));
+}
+
+TEST(SettingsCardDeck, ScrollMovementOnlySuppressesHoverAfterAnInitializedOffset)
+{
+	EXPECT_FALSE(SettingsCardDeckScrollMoved(false, 0.0f, 12.0f));
+	EXPECT_FALSE(SettingsCardDeckScrollMoved(true, 12.0f, 12.0005f));
+	EXPECT_TRUE(SettingsCardDeckScrollMoved(true, 12.0f, 13.0f));
+}
+
 TEST(SettingsCardDeck, ActiveCardMotionBlocksHeaderDragStart)
 {
 	EXPECT_TRUE(SettingsCardDeckAllowsDragStart(false, false, false, false));
@@ -124,8 +141,37 @@ TEST(SettingsCardDeck, SingleColumnDragPreservesCanonicalColumnCapacity)
 	};
 	ApplySettingsCardDeckSingleColumnDragPlacement(aColumns, 11, 1);
 	EXPECT_EQ(aColumns[0], (std::vector<int>{2}));
-	EXPECT_EQ(aColumns[1], (std::vector<int>{4, 11}));
-	EXPECT_EQ(aColumns[2], (std::vector<int>{7, 9}));
+	EXPECT_EQ(aColumns[1], (std::vector<int>{4, 9}));
+	EXPECT_EQ(aColumns[2], (std::vector<int>{11, 7}));
+
+	std::array<std::vector<int>, 3> aUnevenColumns{
+		std::vector<int>{},
+		std::vector<int>{10, 11},
+		std::vector<int>{20},
+	};
+	ApplySettingsCardDeckSingleColumnDragPlacement(aUnevenColumns, 11, 1);
+	EXPECT_EQ(aUnevenColumns[1], (std::vector<int>{10, 20}));
+	EXPECT_EQ(aUnevenColumns[2], (std::vector<int>{11}));
+	std::vector<int> vVisualOrder;
+	ForEachSettingsCardDeckVisualOrder(aUnevenColumns, [&](int StateIndex, int Column) {
+		if(Column != 0)
+			vVisualOrder.push_back(StateIndex);
+	});
+	EXPECT_EQ(vVisualOrder, (std::vector<int>{10, 11, 20}));
+}
+
+TEST(SettingsCardDeck, SingleColumnVisualOrderPreservesWideReadingLayers)
+{
+	const std::array<std::vector<int>, 3> aColumns{
+		std::vector<int>{30},
+		std::vector<int>{10, 11},
+		std::vector<int>{20},
+	};
+	std::vector<std::pair<int, int>> vVisualOrder;
+	ForEachSettingsCardDeckVisualOrder(aColumns, [&](int StateIndex, int Column) {
+		vVisualOrder.emplace_back(StateIndex, Column);
+	});
+	EXPECT_EQ(vVisualOrder, (std::vector<std::pair<int, int>>{{10, 1}, {20, 2}, {30, 0}, {11, 1}}));
 }
 
 TEST(SettingsCardDeck, SingleColumnDropRestoresDeterministicWideLayout)
@@ -148,8 +194,8 @@ TEST(SettingsCardDeck, SingleColumnDropRestoresDeterministicWideLayout)
 
 	ASSERT_TRUE(CommitSettingsCardDeckSingleColumnDrop(Model, "sound", "right-b", 1, vActiveStateIndices));
 	EXPECT_EQ(Model.StableIdOrder("", "sound", 0), (std::vector<std::string>{"full"}));
-	EXPECT_EQ(Model.StableIdOrder("", "sound", 1), (std::vector<std::string>{"left-a", "right-b"}));
-	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"left-b", "right-a"}));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 1), (std::vector<std::string>{"left-a", "right-a"}));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"right-b", "left-b"}));
 }
 
 TEST(SettingsCardDeck, SingleColumnDropPreservesHiddenCardsInCanonicalColumns)
@@ -171,8 +217,8 @@ TEST(SettingsCardDeck, SingleColumnDropPreservesHiddenCardsInCanonicalColumns)
 	};
 
 	ASSERT_TRUE(CommitSettingsCardDeckSingleColumnDrop(Model, "sound", "right-b", 1, vActiveStateIndices));
-	EXPECT_EQ(Model.StableIdOrder("", "sound", 1), (std::vector<std::string>{"left-a", "left-hidden", "right-b"}));
-	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"right-hidden", "left-b", "right-a"}));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 1), (std::vector<std::string>{"left-a", "left-hidden", "right-a"}));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"right-hidden", "right-b", "left-b"}));
 
 	ASSERT_TRUE(CommitSettingsCardDeckSingleColumnDrop(Model, "sound", "left-a", 3, vActiveStateIndices));
 	const std::vector<std::string> vExpectedLeft{"right-b", "left-hidden", "left-b"};

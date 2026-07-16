@@ -268,7 +268,14 @@ TEST(SettingsWarmup, LoadingPrewarmDoesNotPumpResourceWork)
 	EXPECT_EQ(PrewarmBody.find("SettingsTextPoolEntryCount()"), std::string::npos);
 	EXPECT_EQ(PrewarmBody.find("(void)pLoadingCaption;"), std::string::npos);
 	EXPECT_EQ(PrewarmBody.find("(void)pLoadingMessage;"), std::string::npos);
-	EXPECT_EQ(PrewarmBody.find("return;"), std::string::npos);
+	const size_t DisabledGuard = PrewarmBody.find("if(g_Config.m_QmSettingsPrewarm == 0)");
+	const size_t DisabledReturn = PrewarmBody.find("return;", DisabledGuard);
+	const size_t PagePrewarm = PrewarmBody.find("m_Menus.PrewarmSettingsPages();");
+	ASSERT_NE(DisabledGuard, std::string::npos);
+	ASSERT_NE(DisabledReturn, std::string::npos);
+	ASSERT_NE(PagePrewarm, std::string::npos);
+	EXPECT_LT(DisabledGuard, DisabledReturn);
+	EXPECT_LT(DisabledReturn, PagePrewarm);
 	EXPECT_NE(GameClientSource.find("PrewarmSettingsRuntimeCachesDuringLoading(pLoadingDDNetCaption, pLoadingMessageAssets);"), std::string::npos);
 	EXPECT_EQ(PrewarmBody.find("maximum(CMenus::SettingsRuntimeCacheWarmupSteps() * 4, 1)"), std::string::npos);
 	EXPECT_EQ(PrewarmBody.find("m_Skins.OnUpdate();"), std::string::npos);
@@ -395,6 +402,39 @@ TEST(SettingsWarmup, TClientSectionLoadersEnableDeferredFarMeasurement)
 	const size_t RightBeginPos = RenderBody.find("s_RightSectionLoader.Begin(RightView, RightLoaderViewport, 5.0f);", RightViewportPos);
 	ASSERT_NE(RightBeginPos, std::string::npos);
 	EXPECT_EQ(RenderBody.find(".m_ScrollY"), std::string::npos);
+}
+
+TEST(SettingsWarmup, TClientVisibleLoadersDoNotHashAllConfigsEveryFrame)
+{
+	std::ifstream TClientFile(TestSourcePath("src/game/client/components/tclient/menus_tclient.cpp"));
+	ASSERT_TRUE(TClientFile.good());
+	std::stringstream TClientBuffer;
+	TClientBuffer << TClientFile.rdbuf();
+	const std::string TClientSource = TClientBuffer.str();
+	const size_t RenderPos = TClientSource.find("void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
+	const size_t RenderEnd = TClientSource.find("void CMenus::LoadSettingsRuntimeCacheMetadata()", RenderPos);
+	ASSERT_NE(RenderPos, std::string::npos);
+	ASSERT_NE(RenderEnd, std::string::npos);
+	const std::string RenderBody = TClientSource.substr(RenderPos, RenderEnd - RenderPos);
+	EXPECT_NE(RenderBody.find("MakeSettingsSectionRuntimeKey(LeftView, Graphics(), false)"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("HashTClientSettingsConfig("), std::string::npos);
+	EXPECT_EQ(RenderBody.find("MakeSettingsSectionRuntimeKey(RightView, Graphics())"), std::string::npos);
+}
+
+TEST(SettingsWarmup, SixupTeeUsesUnifiedOuterAndNestedGridScrollProfiles)
+{
+	std::ifstream Tee7File(TestSourcePath("src/game/client/components/menus_settings7.cpp"));
+	ASSERT_TRUE(Tee7File.good());
+	std::stringstream Tee7Buffer;
+	Tee7Buffer << Tee7File.rdbuf();
+	const std::string Tee7Source = Tee7Buffer.str();
+	EXPECT_NE(Tee7Source.find("SettingsPageLayout(MainView, UiScale)"), std::string::npos);
+	EXPECT_NE(Tee7Source.find("EQmScrollProfile::SETTINGS_OUTER"), std::string::npos);
+	EXPECT_NE(Tee7Source.find("SetScrollProfile(EQmScrollProfile::GRID)"), std::string::npos);
+	EXPECT_NE(Tee7Source.find("RenderSettingsTee7Content(Content, Metrics)"), std::string::npos);
+	EXPECT_NE(Tee7Source.find("SettingsCardDeckForRenderPass().Render("), std::string::npos);
+	EXPECT_NE(Tee7Source.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);
+	EXPECT_NE(Tee7Source.find("RenderOnly ? nullptr : &s_Tee7SettingsScrollRegion"), std::string::npos);
 }
 
 TEST(SettingsRuntimeCache, BudgetStopsEveryMainThreadCost)
@@ -1373,6 +1413,7 @@ TEST(SettingsResourceJobs, IdlePrewarmSkipsImmediateModeRenderPasses)
 
 	EXPECT_EQ(PrewarmBody.find("RenderSettingsTClient(ContentView, true)"), std::string::npos);
 	EXPECT_EQ(PrewarmBody.find("RenderSettingsQmClient(ContentView, false, true)"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("ResolveSettingsShellLayout(MainView, NeedRestart ? 30.0f : 0.0f)"), std::string::npos);
 }
 
 TEST(SettingsResourceJobs, SkinListWarmupCountsCoverVisibleAndPrefetchRows)
@@ -1386,6 +1427,19 @@ TEST(SettingsResourceJobs, SkinListWarmupCountsCoverVisibleAndPrefetchRows)
 	EXPECT_EQ(SettingsSkinListPrefetchCount(7, 9, 1, 2, 10), 0);
 	EXPECT_EQ(SettingsSkinListBackgroundWarmupCount(20, 6), 6);
 	EXPECT_EQ(SettingsSkinListBackgroundWarmupCount(3, 6), 3);
+}
+
+TEST(SettingsResourceJobs, SkinBackgroundScanKeepsOneStableStartCursorPerPass)
+{
+	constexpr size_t ItemCount = 4;
+	constexpr size_t StartCursor = 3;
+	EXPECT_EQ(SettingsSkinBackgroundScanIndex(StartCursor, 0, ItemCount), 3u);
+	EXPECT_EQ(SettingsSkinBackgroundScanIndex(StartCursor, 1, ItemCount), 0u);
+	EXPECT_EQ(SettingsSkinBackgroundScanIndex(StartCursor, 2, ItemCount), 1u);
+	EXPECT_EQ(SettingsSkinBackgroundScanIndex(StartCursor, 3, ItemCount), 2u);
+	EXPECT_EQ(SettingsSkinBackgroundScanNextCursor(StartCursor, 2, ItemCount), 1u);
+	EXPECT_EQ(SettingsSkinBackgroundScanNextCursor(StartCursor, ItemCount, ItemCount), StartCursor);
+	EXPECT_EQ(SettingsSkinBackgroundScanIndex(StartCursor, 0, 0), 0u);
 }
 
 TEST(SettingsResourceJobs, LoadingPrewarmAttemptBudgetReservesExtraTeeSourceSettlePasses)
@@ -2178,6 +2232,57 @@ TEST(SettingsResourceJobs, TeeBackgroundWindowShrinksWhenDecodeJobsSaturate)
 	EXPECT_EQ(Update.m_Decision, ESettingsSkinBackgroundWindowDecision::DECREASE);
 }
 
+TEST(SettingsResourceJobs, TeeOffscreenLifecycleWaitsForNonemptyValidSettledList)
+{
+	bool DrainSessionActive = true;
+	const auto Advance = [&](int TotalEntries, int ValidEntries, int SettledEntries, bool PerfDebugEnabled) {
+		const auto Decision = SettingsTeeOffscreenLifecycleDecision({
+			TotalEntries,
+			ValidEntries,
+			SettledEntries,
+			DrainSessionActive,
+			PerfDebugEnabled,
+		});
+		if(Decision.m_CompleteDrainSession)
+			DrainSessionActive = false;
+		return Decision;
+	};
+
+	const auto Empty = Advance(0, 0, 0, false);
+	EXPECT_FALSE(Empty.m_FullListReady);
+	EXPECT_FALSE(Empty.m_CompleteDrainSession);
+	EXPECT_TRUE(DrainSessionActive);
+
+	const auto MissingContainer = Advance(3, 2, 2, false);
+	EXPECT_FALSE(MissingContainer.m_FullListReady);
+	EXPECT_FALSE(MissingContainer.m_CompleteDrainSession);
+	EXPECT_TRUE(DrainSessionActive);
+
+	const auto Loading = Advance(3, 3, 2, false);
+	EXPECT_FALSE(Loading.m_FullListReady);
+	EXPECT_FALSE(Loading.m_CompleteDrainSession);
+	EXPECT_TRUE(DrainSessionActive);
+
+	const auto Complete = Advance(3, 3, 3, false);
+	EXPECT_TRUE(Complete.m_FullListReady);
+	EXPECT_TRUE(Complete.m_CompleteDrainSession);
+	EXPECT_FALSE(Complete.m_LogCompletion);
+	EXPECT_FALSE(DrainSessionActive);
+}
+
+TEST(SettingsResourceJobs, TeeOffscreenLifecycleLogsCompletionOnlyForActivePerfSession)
+{
+	const auto Inactive = SettingsTeeOffscreenLifecycleDecision({3, 3, 3, false, true});
+	EXPECT_TRUE(Inactive.m_FullListReady);
+	EXPECT_FALSE(Inactive.m_CompleteDrainSession);
+	EXPECT_FALSE(Inactive.m_LogCompletion);
+
+	const auto Active = SettingsTeeOffscreenLifecycleDecision({3, 3, 3, true, true});
+	EXPECT_TRUE(Active.m_FullListReady);
+	EXPECT_TRUE(Active.m_CompleteDrainSession);
+	EXPECT_TRUE(Active.m_LogCompletion);
+}
+
 TEST(SettingsResourceJobs, SourceBytesEstimateExceedsZeroForLoadedSkin)
 {
 	EXPECT_GT(SettingsSkinSourceBytesEstimate(256, 128, 2), 0u);
@@ -2209,6 +2314,10 @@ TEST(SettingsWarmup, MenuTextPrebuildDoesNotRenderPages)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/components/menus.h");
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const std::string UiHeader = ReadTestSourceFile("src/game/client/ui.h");
+	const std::string UiSource = ReadTestSourceFile("src/game/client/ui.cpp");
+	const std::string SettingsCard = ReadTestSourceFile("src/game/client/QmUi/SettingsCard.cpp");
+	const std::string Settings = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
 	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string QmClient = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 
@@ -2224,6 +2333,19 @@ TEST(SettingsWarmup, MenuTextPrebuildDoesNotRenderPages)
 	EXPECT_EQ(Menus.find("PrebuildVisibleSettingsTextPool(ContentView"), std::string::npos);
 	EXPECT_EQ(Menus.find("RenderSettingsTClient(MainView, true)"), std::string::npos);
 	EXPECT_EQ(Menus.find("RenderSettingsQmClient(MainView, false, true)"), std::string::npos);
+	EXPECT_NE(UiHeader.find("void BeginRenderOnly();"), std::string::npos);
+	EXPECT_NE(UiHeader.find("void EndRenderOnly();"), std::string::npos);
+	EXPECT_NE(UiSource.find("if(m_RenderOnlyDepth++ == 0)"), std::string::npos);
+	EXPECT_NE(UiSource.find("RenderOnlyClip.x += RenderOnlyClip.w;"), std::string::npos);
+	EXPECT_NE(UiSource.find("RenderOnlyClip.y += RenderOnlyClip.h;"), std::string::npos);
+	EXPECT_NE(UiSource.find("ClipEnable(&RenderOnlyClip);"), std::string::npos);
+	EXPECT_NE(UiSource.find("if(--m_RenderOnlyDepth == 0)"), std::string::npos);
+	EXPECT_NE(UiSource.find("ClipDisable();"), std::string::npos);
+	EXPECT_NE(SettingsCard.find("!Ctx.m_pUi->RenderOnly()"), std::string::npos);
+	EXPECT_NE(Menus.find("SettingsCardDeckForRenderPass()"), std::string::npos);
+	EXPECT_NE(Menus.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);
+	EXPECT_NE(Settings.find("RenderOnly ? nullptr : &s_GeneralSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(Settings.find("RenderOnly ? nullptr : &s_AppearanceSettingsCardScrollRegions[m_AppearanceSettingsTab]"), std::string::npos);
 	EXPECT_NE(TClient.find("PrewarmOnly"), std::string::npos);
 	EXPECT_NE(QmClient.find("PrewarmOnly"), std::string::npos);
 }
@@ -2234,6 +2356,159 @@ TEST(SettingsWarmup, SettingsPrewarmDefaultDisabled)
 
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSettingsPrewarm, qm_settings_prewarm, 0, 0, 1,"), std::string::npos);
 	EXPECT_EQ(Config.find("MACRO_CONFIG_INT(QmSettingsPrewarm, qm_settings_prewarm, 1, 0, 1,"), std::string::npos);
+}
+
+TEST(SettingsWarmup, SettingsPageCachePrewarmRespectsDisabledConfigAtUnifiedEntry)
+{
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string QmClient = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const size_t FunctionStart = Menus.find("void CMenus::PrewarmSettingsPages()");
+	const size_t FunctionEnd = Menus.find("void CMenus::ConchainBackgroundEntities", FunctionStart);
+	ASSERT_NE(FunctionStart, std::string::npos);
+	ASSERT_NE(FunctionEnd, std::string::npos);
+	const std::string Body = Menus.substr(FunctionStart, FunctionEnd - FunctionStart);
+
+	const size_t DisabledGuard = Body.find("if(g_Config.m_QmSettingsPrewarm == 0)");
+	const size_t BindCacheAccess = Body.find("EnsureSettingsBindCache();");
+	const size_t SkinListAccess = Body.find("GameClient()->m_Skins.SkinList(0);");
+	ASSERT_NE(DisabledGuard, std::string::npos);
+	ASSERT_NE(BindCacheAccess, std::string::npos);
+	ASSERT_NE(SkinListAccess, std::string::npos);
+	EXPECT_LT(DisabledGuard, BindCacheAccess);
+	EXPECT_LT(DisabledGuard, SkinListAccess);
+	EXPECT_NE(Menus.find("void CMenus::EnsureSettingsBindCache()"), std::string::npos);
+	EXPECT_NE(TClient.find("if(!PrewarmOnly)\n\t\tEnsureSettingsBindCache();"), std::string::npos);
+	EXPECT_NE(QmClient.find("if(!PrewarmOnly)\n\t\tEnsureSettingsBindCache();"), std::string::npos);
+}
+
+TEST(SettingsWarmup, TClientCardMeasurementCachesUntilRelevantConfigChanges)
+{
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	EXPECT_NE(TClient.find("HashTClientSettingsCardLayout(Section.m_pStableCardId)"), std::string::npos);
+	EXPECT_EQ(TClient.find("Definition.m_MeasureRevision = HashTClientSettingsConfig();"), std::string::npos);
+	EXPECT_EQ(TClient.find("Definition.m_MeasureEachFrame = true;"), std::string::npos);
+	EXPECT_NE(TClient.find("HashValueFnv1a64(Hash, QmFastInputNormalizedMode(g_Config.m_QmFastInputMode))"), std::string::npos);
+	EXPECT_NE(TClient.find("HashValueFnv1a64(Hash, g_Config.m_TcWarListIndicator)"), std::string::npos);
+	EXPECT_NE(TClient.find("HashValueFnv1a64(Hash, g_Config.m_TcWarListIndicatorColors)"), std::string::npos);
+	EXPECT_NE(TClient.find("for(int RowIndex = 0; RowIndex < (UiMode == 3 ? 4 : 1); ++RowIndex)"), std::string::npos);
+	EXPECT_NE(TClient.find("Rows.Next();"), std::string::npos);
+	const size_t LayoutHashStart = TClient.find("uint64_t HashTClientSettingsCardLayout(");
+	const size_t RuntimeKeyStart = TClient.find("SSettingsSectionCacheRuntimeKey MakeSettingsSectionRuntimeKey(", LayoutHashStart);
+	ASSERT_NE(LayoutHashStart, std::string::npos);
+	ASSERT_NE(RuntimeKeyStart, std::string::npos);
+	const std::string LayoutHash = TClient.substr(LayoutHashStart, RuntimeKeyStart - LayoutHashStart);
+	EXPECT_EQ(LayoutHash.find("m_TcNotifyWhenLastColor"), std::string::npos);
+}
+
+TEST(SettingsWarmup, RemainingSettingsPagesUseResponsiveContentMetrics)
+{
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Controls = ReadTestSourceFile("src/game/client/components/menus_settings_controls.cpp");
+	const std::string Assets = ReadTestSourceFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Settings = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+
+	EXPECT_NE(TClient.find("const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(ContentWidth);"), std::string::npos);
+	EXPECT_NE(TClient.find("FontSize = Metrics.m_BodySize;"), std::string::npos);
+	EXPECT_NE(TClient.find("LineSize = Metrics.m_LineHeight;"), std::string::npos);
+	EXPECT_NE(TClient.find("MarginSmall = Metrics.m_LineSpacing;"), std::string::npos);
+	EXPECT_NE(Controls.find("ApplyControlsContentMetrics(MainView.w);"), std::string::npos);
+	EXPECT_NE(Controls.find("BUTTON_HEIGHT = Metrics.m_LineHeight;"), std::string::npos);
+	EXPECT_NE(Controls.find("BUTTON_SPACING = Metrics.m_LineSpacing;"), std::string::npos);
+	EXPECT_NE(Assets.find("const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(MainView.w);"), std::string::npos);
+	EXPECT_NE(Assets.find("Localize(\"Loading assets...\"), ContentMetrics.m_BodySize"), std::string::npos);
+	EXPECT_NE(Assets.find("Localize(\"No assets\"), ContentMetrics.m_BodySize"), std::string::npos);
+	EXPECT_NE(Settings.find("pCheckBoxValue, float LineHeight, float LineSpacing, float BodySize)"), std::string::npos);
+	EXPECT_NE(Settings.find("Localize(\"Text\"), BodySize"), std::string::npos);
+	EXPECT_NE(Settings.find("const float LineHeight = SoundMetrics.m_LineHeight;"), std::string::npos);
+	EXPECT_NE(Settings.find("const float LineSpacing = SoundMetrics.m_LineSpacing;"), std::string::npos);
+	EXPECT_NE(Settings.find("SoundToggleCardHeight = ToggleChromeHeight + LineHeight * ToggleRowCount"), std::string::npos);
+	EXPECT_EQ(Settings.find("s_SoundToggleCardHeight"), std::string::npos);
+}
+
+TEST(SettingsWarmup, TClientSettingsRowsSeparateControlHeightFromSpacing)
+{
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	auto Section = [&](const char *pBegin, const char *pEnd) {
+		const size_t Begin = TClient.find(pBegin);
+		const size_t End = TClient.find(pEnd, Begin);
+		EXPECT_NE(Begin, std::string::npos);
+		EXPECT_NE(End, std::string::npos);
+		return Begin != std::string::npos && End != std::string::npos ? TClient.substr(Begin, End - Begin) : std::string();
+	};
+
+	const std::string RowAllocator = Section("class CTClientSettingsRowAllocator", "static void ApplyTClientContentMetrics");
+	EXPECT_NE(RowAllocator.find("m_Column.HSplitTop(MarginSmall, nullptr, &m_Column);"), std::string::npos);
+	EXPECT_NE(RowAllocator.find("m_Column.HSplitTop(Height, &Row, &m_Column);"), std::string::npos);
+
+	const std::string Hud = Section("float CMenus::LayoutTClientHudCacheSection", "SSettingsSection CMenus::BuildTClientThemeCacheSection");
+	EXPECT_NE(Hud.find("CTClientSettingsRowAllocator Rows(CurrentColumn);"), std::string::npos);
+	EXPECT_NE(Hud.find("DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniVoteHud"), std::string::npos);
+	EXPECT_NE(Hud.find("&Row, LineSize);"), std::string::npos);
+	EXPECT_EQ(Hud.find("LineSize * 3.0f"), std::string::npos);
+
+	const std::string Nameplates = Section("auto LayoutVisualNameplateSection", "auto LayoutVisualEffectsSection");
+	EXPECT_NE(Nameplates.find("TClientSettingsRowsHeight(8)"), std::string::npos);
+	EXPECT_NE(Nameplates.find("CUIRect FeetBox = Rows.Next();"), std::string::npos);
+	EXPECT_EQ(Nameplates.find("LineSize * 7.0f"), std::string::npos);
+	EXPECT_EQ(Nameplates.find("&CurrentColumn, LineSize"), std::string::npos);
+
+	const std::string Input = Section("auto LayoutInputSection", "auto LayoutAntiLatencyToolsSection");
+	EXPECT_NE(Input.find("CTClientSettingsRowAllocator Rows(CurrentColumn);"), std::string::npos);
+	EXPECT_NE(Input.find("for(int RowIndex = 0; RowIndex < (UiMode == 3 ? 4 : 1); ++RowIndex)"), std::string::npos);
+	EXPECT_NE(Input.find("DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClSubTickAiming"), std::string::npos);
+	EXPECT_EQ(Input.find("&CurrentColumn, LineSize"), std::string::npos);
+
+	const std::string FinishName = Section("auto LayoutFinishNameSection", "std::vector<SSettingsSection> vRightSections");
+	EXPECT_NE(FinishName.find("CUIRect ToggleRow = Rows.Next();"), std::string::npos);
+	EXPECT_NE(FinishName.find("FinishNameBox = Rows.Next();"), std::string::npos);
+	EXPECT_EQ(FinishName.find("LineSize + MarginExtraSmall"), std::string::npos);
+}
+
+TEST(SettingsWarmup, ControlsCardMeasurementsAvoidIdleBindingRescan)
+{
+	const std::string Controls = ReadTestSourceFile("src/game/client/components/menus_settings_controls.cpp");
+	EXPECT_EQ(Controls.find("Definition.m_MeasureEachFrame = true;"), std::string::npos);
+	EXPECT_NE(Controls.find("Definition.m_MeasureRevision = MeasureRevision;"), std::string::npos);
+	EXPECT_NE(Controls.find("m_BindLayoutRevision"), std::string::npos);
+	EXPECT_NE(Controls.find("++m_BindLayoutRevision;"), std::string::npos);
+}
+
+TEST(SettingsWarmup, SettingsCardsAvoidIdlePerFrameMeasurement)
+{
+	const std::string Settings = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const std::string QmClient = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+
+	EXPECT_EQ(Settings.find("Definition.m_MeasureEachFrame = true;"), std::string::npos);
+	EXPECT_EQ(QmClient.find("m_MeasureEachFrame = true;"), std::string::npos);
+	EXPECT_EQ(TClient.find("m_MeasureEachFrame = true;"), std::string::npos);
+	EXPECT_NE(Settings.find("Definition.m_MeasureRevision = static_cast<uint64_t>"), std::string::npos);
+	EXPECT_EQ(QmClient.find("Definition.m_MeasureRevision = static_cast<uint64_t>"), std::string::npos);
+	EXPECT_NE(QmClient.find("Definition.m_MeasureRevision = MeasureContentRevision(Id);"), std::string::npos);
+}
+
+TEST(SettingsWarmup, TeeOffscreenDrainRequiresExplicitPrewarm)
+{
+	const std::string Settings = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const size_t AdvanceStart = Settings.find("const auto AdvanceListOffscreen = [&]() {");
+	ASSERT_NE(AdvanceStart, std::string::npos);
+	const size_t SkinListAccess = Settings.find("SkinList.Skins()", AdvanceStart);
+	ASSERT_NE(SkinListAccess, std::string::npos);
+	const size_t PrewarmGuard = Settings.find("g_Config.m_QmSettingsPrewarm == 0", AdvanceStart);
+	ASSERT_NE(PrewarmGuard, std::string::npos);
+	EXPECT_LT(PrewarmGuard, SkinListAccess);
+	EXPECT_NE(Settings.find("m_BackgroundRequestScanComplete", AdvanceStart), std::string::npos);
+	EXPECT_NE(Settings.find("m_BackgroundRequestScanRevision != SkinList.Revision()", AdvanceStart), std::string::npos);
+	EXPECT_NE(Settings.find("g_Config.m_QmSettingsPrewarm != 0 && VisibleSourceSettled"), std::string::npos);
+	EXPECT_NE(Settings.find("g_Config.m_QmSettingsPrewarm != 0 && m_SettingsHighPrioritySettled"), std::string::npos);
+}
+
+TEST(SettingsWarmup, CardHeightCacheInvalidatesWhenViewportHeightChanges)
+{
+	const std::string Deck = ReadTestSourceFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+	EXPECT_NE(Deck.find("m_LastViewportHeight"), std::string::npos);
+	EXPECT_NE(Deck.find("std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f)"), std::string::npos);
 }
 
 TEST(SettingsWarmup, TextPlanCollectionUsesPrewarmOnlyRenderers)

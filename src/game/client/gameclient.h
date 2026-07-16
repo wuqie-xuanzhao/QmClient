@@ -481,7 +481,7 @@ public:
 	// NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
 	IKernel *Kernel() { return IInterface::Kernel(); }
 	IEngine *Engine() const { return m_pEngine; }
-	class IFrameScheduler *FrameScheduler() const { return m_pFrameScheduler; }
+	class IFrameScheduler *FrameScheduler() const;
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IClient *Client() const { return m_pClient; }
 	class CUi *Ui() { return &m_UI; }

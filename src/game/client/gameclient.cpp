@@ -365,6 +365,11 @@ void CGameClient::StopRaceRecordIfRecording() const
 		m_pClient->RaceRecord_Stop();
 }
 
+IFrameScheduler *CGameClient::FrameScheduler() const
+{
+	return m_pFrameScheduler;
+}
+
 void CGameClient::OnConsoleInit()
 {
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
@@ -836,6 +841,9 @@ void CGameClient::OnInit()
 
 void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoadingCaption, const char *pLoadingMessage)
 {
+	if(g_Config.m_QmSettingsPrewarm == 0)
+		return;
+
 	m_Menus.PrewarmSettingsPages();
 
 	constexpr int TEXT_PREWARM_BUDGET_PER_STEP = 8;

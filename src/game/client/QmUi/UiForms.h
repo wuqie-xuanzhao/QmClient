@@ -21,7 +21,6 @@ class IScrollbarScale;
 
 namespace ui_widget
 {
-
 	enum class EInputFieldCapability : unsigned
 	{
 		DOUBLE_CLICK_SELECT_ALL = 1u << 0,
@@ -79,9 +78,10 @@ namespace ui_widget
 		CUIRect m_ContentRect;
 		CUIRect m_IconRect;
 		CUIRect m_ClearRect;
+		CUIRect m_TrailingRect;
 	};
 
-	inline SInputFieldLayout ResolveInputFieldLayout(const CUIRect &Rect, bool HasIcon, bool Clearable, float UiScale = 1.0f)
+	inline SInputFieldLayout ResolveInputFieldLayout(const CUIRect &Rect, bool HasIcon, bool Clearable, float UiScale = 1.0f, float TrailingWidth = 0.0f)
 	{
 		SInputFieldLayout Layout{};
 		Layout.m_ShellRect = Rect;
@@ -107,10 +107,18 @@ namespace ui_widget
 		}
 		if(Clearable)
 		{
-			Layout.m_ClearRect = Layout.m_ContentRect;
-			Layout.m_ClearRect.w = std::min(SlotWidth, Layout.m_ContentRect.w);
-			Layout.m_ClearRect.x = Layout.m_ContentRect.x + std::max(0.0f, Layout.m_ContentRect.w - Layout.m_ClearRect.w);
+			Layout.m_ClearRect = Rect;
+			Layout.m_ClearRect.w = std::min(SlotWidth, std::max(0.0f, Rect.w));
+			Layout.m_ClearRect.x = Rect.x + std::max(0.0f, Rect.w - Layout.m_ClearRect.w);
 			const float Consumed = std::min(Layout.m_ContentRect.w, SlotWidth + Gap);
+			Layout.m_ContentRect.w = std::max(0.0f, Layout.m_ContentRect.w - Consumed);
+		}
+		if(TrailingWidth > 0.0f)
+		{
+			Layout.m_TrailingRect = Rect;
+			Layout.m_TrailingRect.w = std::min(TrailingWidth, std::max(0.0f, Rect.w));
+			Layout.m_TrailingRect.x = Rect.x + std::max(0.0f, Rect.w - Layout.m_TrailingRect.w);
+			const float Consumed = std::min(Layout.m_ContentRect.w, Layout.m_TrailingRect.w + Gap);
 			Layout.m_ContentRect.w = std::max(0.0f, Layout.m_ContentRect.w - Consumed);
 		}
 		return Layout;
@@ -142,6 +150,8 @@ namespace ui_widget
 	{
 		const char *m_pPlaceholder = nullptr;
 		const char *m_pLeadingIcon = nullptr;
+		const char *m_pTrailingText = nullptr;
+		float m_TrailingWidth = 0.0f;
 		EInputFieldMode m_Mode = EInputFieldMode::TEXT;
 		EInputTextStyle m_TextStyle = EInputTextStyle::BODY;
 		bool m_Clearable = false;

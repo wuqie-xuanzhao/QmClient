@@ -5,210 +5,444 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-import sys
 
 
 PAGE_STABLE_IDS = {
-    "general": ("deck:general-game", "deck:general-language", "deck:general-client", "deck:general-recording"),
-    "player": ("deck:player-identity", "deck:player-country"),
-    "tee": ("deck:tee-identity",),
-    "graphics": ("deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend", "deck:graphics-modes"),
-    "sound": ("deck:sound-toggle", "deck:sound-volume", "deck:sound-audio-pack"),
-    "ddnet": ("deck:ddnet-demo", "deck:ddnet-gameplay", "deck:ddnet-background", "deck:ddnet-miscellaneous"),
-    "appearance": (
-        "deck:appearance-hud-main", "deck:appearance-hud-ddrace",
-        "deck:appearance-chat-settings", "deck:appearance-chat-messages", "deck:appearance-chat-preview",
-        "deck:appearance-name-plate-settings", "deck:appearance-name-plate-preview",
-        "deck:appearance-hook-collision-main", "deck:appearance-hook-collision-preview",
-        "deck:appearance-info-messages", "deck:appearance-laser-enhanced",
-        "deck:appearance-laser-colors", "deck:appearance-laser-preview",
-    ),
-    "controls": (
-        "deck:controls-movement", "deck:controls-weapon", "deck:controls-voting",
-        "deck:controls-chat", "deck:controls-dummy", "deck:controls-miscellaneous",
-        "deck:controls-custom", "deck:controls-mouse", "deck:controls-controller",
-    ),
+	"general": ("deck:general-game", "deck:general-language", "deck:general-client", "deck:general-recording"),
+	"player": ("deck:player-identity", "deck:player-country"),
+	"tee": ("deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list"),
+	"tee7": ("deck:tee7-editor",),
+	"graphics": ("deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend", "deck:graphics-modes", "deck:graphics-interaction"),
+	"sound": ("deck:sound-toggle", "deck:sound-volume", "deck:sound-audio-pack"),
+	"ddnet": ("deck:ddnet-demo", "deck:ddnet-gameplay", "deck:ddnet-background", "deck:ddnet-miscellaneous"),
+	"appearance": (
+		"deck:appearance-hud-main",
+		"deck:appearance-hud-ddrace",
+		"deck:appearance-chat-settings",
+		"deck:appearance-chat-messages",
+		"deck:appearance-chat-preview",
+		"deck:appearance-name-plate-settings",
+		"deck:appearance-name-plate-preview",
+		"deck:appearance-hook-collision-main",
+		"deck:appearance-hook-collision-preview",
+		"deck:appearance-info-messages",
+		"deck:appearance-laser-enhanced",
+		"deck:appearance-laser-colors",
+		"deck:appearance-laser-preview",
+	),
+	"controls": (
+		"deck:controls-movement",
+		"deck:controls-weapon",
+		"deck:controls-voting",
+		"deck:controls-chat",
+		"deck:controls-dummy",
+		"deck:controls-miscellaneous",
+		"deck:controls-custom",
+		"deck:controls-mouse",
+		"deck:controls-controller",
+	),
+	"qmclient_hud": (
+		"qm:coords",
+		"qm:player_stats",
+		"qm:speedrun_timer",
+		"qm:debug_graph",
+		"qm:input_overlay",
+		"qm:hud_notifications",
+		"qm:voice",
+		"qm:dummy_miniview",
+		"qm:dynamic_island",
+		"qm:system_media_controls",
+		"qm:lyrics",
+		"qm:background_3d",
+	),
+	"qmclient_function": (
+		"qm:translate_ui",
+		"qm:gores_actor",
+		"qm:gores",
+		"qm:key_binds",
+		"qm:mini_features",
+		"qm:jump_hint",
+		"qm:weapon_trajectory",
+		"qm:friend_notify",
+		"qm:block_words",
+		"qm:qiafen",
+		"qm:translate",
+		"qm:pie_menu",
+		"qm:favorite_maps",
+		"qm:hj_assist",
+	),
+	"qmclient_visual": (
+		"qm:chat_bubble",
+		"qm:camera_view",
+		"qm:skin_transition",
+		"qm:focus_mode",
+		"qm:weapon_animation",
+		"qm:entity_overlay",
+		"qm:collision_hitbox",
+		"qm:streamer",
+		"qm:card_appearance",
+	),
+	"contributors": ("deck:qmclient-contributors-community", "deck:qmclient-contributors-sponsors"),
+	"global_search": ("deck:global-search-input", "deck:global-search-results"),
+	"tclient": (
+		"tclient:visual-font-cursor",
+		"tclient:visual-nameplates",
+		"tclient:visual-effects",
+		"tclient:input",
+		"tclient:anti-latency-tools",
+		"tclient:improved-anti-ping",
+		"tclient:execute-on-join",
+		"tclient:voting",
+		"tclient:auto-reply",
+		"tclient:player-indicator",
+		"tclient:pet",
+		"tclient:hud",
+		"tclient:tee-status-bar",
+		"tclient:tile-outlines",
+		"tclient:ghost-tools",
+		"tclient:rainbow",
+		"tclient:tee-trails",
+		"tclient:background-draw",
+		"tclient:finish-name",
+	),
+	"tclient_bind_wheel": ("deck:tclient-bind-wheel-editor", "deck:tclient-bind-wheel-preview"),
+	"tclient_chat_binds": ("deck:tclient-chat-binds-kaomoji", "deck:tclient-chat-binds-warlist", "deck:tclient-chat-binds-other"),
+	"tclient_warlist": ("deck:tclient-warlist",),
+	"tclient_status_bar": ("deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"),
+	"tclient_info": ("deck:tclient-info-links", "deck:tclient-info-files", "deck:tclient-info-developers", "deck:tclient-info-tabs"),
+	"tclient_profiles": ("deck:tclient-profiles-actions",),
+	"tclient_configs": ("deck:tclient-configs-actions",),
+	"assets": (),
 }
 
 PAGE_FUNCTIONS = {
-    "general": ("CMenus::RenderSettingsGeneral",),
-    "player": ("CMenus::RenderSettingsTeeIdentity", "CMenus::RenderSettingsPlayer"),
-    "tee": ("CMenus::RenderSettingsTee(CUIRect MainView)",),
-    "graphics": ("CMenus::RenderSettingsGraphics",),
-    "sound": ("CMenus::RenderSettingsSound",),
-    "ddnet": ("CMenus::RenderSettingsDDNet",),
-    "appearance": ("CMenus::RenderSettingsAppearance",),
-    "controls": ("CMenusSettingsControls::Render",),
+	"general": ("CMenus::RenderSettingsGeneral",),
+	"player": ("CMenus::RenderSettingsTeeIdentity", "CMenus::RenderSettingsPlayer"),
+	"tee": ("CMenus::RenderSettingsTee(CUIRect MainView)",),
+	"tee7": ("CMenus::RenderSettingsTee7(CUIRect MainView)", "CMenus::RenderSettingsTee7Content"),
+	"graphics": ("CMenus::RenderSettingsGraphics",),
+	"sound": ("CMenus::RenderSettingsSound",),
+	"ddnet": ("CMenus::RenderSettingsDDNet",),
+	"appearance": ("CMenus::RenderSettingsAppearance",),
+	"controls": ("CMenusSettingsControls::Render",),
+	"qmclient_hud": ("CMenus::RenderSettingsQmClientHudDeck",),
+	"qmclient_function": ("CMenus::RenderSettingsQmClientFunctionDeck",),
+	"qmclient_visual": ("CMenus::RenderSettingsQmClientVisualDeck",),
+	"contributors": ("CMenus::RenderSettingsQmClientContributors",),
+	"global_search": ("CMenus::RenderSettingsGlobalSearchContent",),
+	"tclient": ("CMenus::RenderSettingsTClientSettings",),
+	"tclient_bind_wheel": ("CMenus::RenderSettingsTClientBindWheel",),
+	"tclient_chat_binds": ("CMenus::RenderSettingsTClientChatBinds",),
+	"tclient_warlist": ("CMenus::RenderSettingsTClientWarList",),
+	"tclient_status_bar": ("CMenus::RenderSettingsTClientStatusBar",),
+	"tclient_info": ("CMenus::RenderSettingsTClientInfo",),
+	"tclient_profiles": ("CMenus::RenderSettingsTClientProfiles",),
+	"tclient_configs": ("CMenus::RenderSettingsTClientConfigs",),
+	"assets": ("CMenus::RenderSettingsCustom",),
+}
+
+PRODUCER_COMPLETE_PAGES = {
+	"appearance",
+	"qmclient_hud",
+	"qmclient_function",
+	"qmclient_visual",
+	"contributors",
+	"tclient_configs",
+	"tclient_warlist",
 }
 
 PAGE_ROUTE_TABS = {
-    "general": ("general",),
-    "player": ("player",),
-    "tee": ("tee",),
-    "graphics": ("graphics",),
-    "sound": ("sound",),
-    "ddnet": ("ddnet",),
-    "appearance": (
-        "appearance-hud", "appearance-chat", "appearance-name-plate",
-        "appearance-hook-collision", "appearance-info-messages", "appearance-laser",
-    ),
-    "controls": ("controls",),
+	"general": ("general",),
+	"player": ("player",),
+	"tee": ("tee",),
+	"tee7": ("tee7",),
+	"graphics": ("graphics",),
+	"sound": ("sound",),
+	"ddnet": ("ddnet",),
+	"appearance": (
+		"appearance-hud",
+		"appearance-chat",
+		"appearance-name-plate",
+		"appearance-hook-collision",
+		"appearance-info-messages",
+		"appearance-laser",
+	),
+	"controls": ("controls",),
+	"qmclient_hud": ("hud",),
+	"qmclient_function": ("function",),
+	"qmclient_visual": ("visual",),
+	"contributors": ("qmclient-contributors",),
+	"global_search": (),
+	"tclient": ("tclient",),
+	"tclient_bind_wheel": ("tclient-bind-wheel",),
+	"tclient_chat_binds": ("tclient-chat-binds",),
+	"tclient_warlist": ("tclient-warlist",),
+	"tclient_status_bar": ("tclient-status-bar",),
+	"tclient_info": ("tclient-info",),
+	"tclient_profiles": ("tclient-profiles",),
+	"tclient_configs": ("tclient-configs",),
+	"assets": (),
 }
 
 COMMON_REQUIRED = (
-    "ResolveSettingsPageLayout(", "SSettingsPageLayoutFrame", "SSettingsCardDefinition",
-    "m_SettingsCardDeck.Render(", "SSettingsCardDeckResult", ".State()", "CQmScrollState", "QmResolveScrollPolicy(",
+	"SettingsPageLayout(",
+	"SSettingsPageLayoutFrame",
+	"SSettingsCardDefinition",
+	"SSettingsCardDeckResult",
+	"QmResolveScrollPolicy(",
+	"EQmScrollProfile::SETTINGS_OUTER",
 )
 COMMON_FORBIDDEN = (
-    "SettingsCard(",
-    "BeginSettingsCardDeck(", "BeginSettingsCardDeckCard(",
-    "DoSettingsScrollbarOption(", "DoSettingsSliderInputField(",
-    "ui_widget::TextFieldEx(", "ui_widget::SearchFieldEx(",
-    "ui_widget::ClearableTextFieldEx(", "ui_widget::IconTextFieldEx(",
-    "ui_widget::LegacyTextFieldEx(",
-    "ui_widget::TextField(", "ui_widget::SearchField(",
-    "ui_widget::ClearableTextField(", "ui_widget::IconTextField(",
-    "Ui()->DoEditBox(", "Ui()->DoScrollbarH(",
+	"SettingsCard(",
+	"BeginSettingsCardDeck(",
+	"BeginSettingsCardDeckCard(",
+	"DoSettingsScrollbarOption(",
+	"DoSettingsSliderInputField(",
+	"ui_widget::TextFieldEx(",
+	"ui_widget::SearchFieldEx(",
+	"ui_widget::ClearableTextFieldEx(",
+	"ui_widget::IconTextFieldEx(",
+	"ui_widget::LegacyTextFieldEx(",
+	"ui_widget::TextField(",
+	"ui_widget::SearchField(",
+	"ui_widget::ClearableTextField(",
+	"ui_widget::IconTextField(",
+	"Ui()->DoEditBox(",
+	"Ui()->DoScrollbarH(",
 )
+STRICT_LEGACY_PAGES = {"general", "player", "tee", "tee7", "graphics", "sound", "ddnet", "appearance", "controls"}
+DECK_LEGACY_FORBIDDEN = ("BeginSettingsCardDeck(", "BeginSettingsCardDeckCard(")
 PAGE_REQUIRED = {
-    "general": ("ui_widget::NumericField(",),
-    "player": ("ui_widget::InputField(",),
-    "tee": ("ui_widget::InputField(", "ui_widget::NumericField("),
-    "graphics": ("ui_widget::NumericField(",),
-    "sound": ("ui_widget::NumericField(",),
-    "ddnet": ("ui_widget::InputField(", "ui_widget::NumericField("),
-    "appearance": ("ui_widget::NumericField(",),
-    "controls": ("ui_widget::InputField(", "ui_widget::NumericField("),
+	"general": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
+	"player": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField("),
+	"tee": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField(", "ui_widget::NumericField("),
+	"tee7": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField(", "EQmScrollProfile::GRID"),
+	"graphics": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
+	"sound": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
+	"ddnet": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField(", "ui_widget::NumericField("),
+	"appearance": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
+	"controls": ("m_SettingsCardDeck.Render(", "ui_widget::InputField(", "ui_widget::NumericField("),
+	"qmclient_hud": ("CardDeck.Render(",),
+	"qmclient_function": ("CardDeck.Render(",),
+	"qmclient_visual": ("CardDeck.Render(",),
+	"contributors": ("CardDeck.Render(",),
+	"global_search": ("CardDeck.Render(",),
+	"tclient": ("m_SettingsCardDeck.Render(",),
+	"tclient_bind_wheel": ("CardDeck.Render(",),
+	"tclient_chat_binds": ("CardDeck.Render(",),
+	"tclient_warlist": ("CardDeck.Render(",),
+	"tclient_status_bar": ("CardDeck.Render(",),
+	"tclient_info": ("CardDeck.Render(",),
+	"tclient_profiles": ("CardDeck.Render(",),
+	"tclient_configs": ("CardDeck.Render(",),
+	"assets": (
+		"ResolveSettingsContentMetrics(",
+		"s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_OUTER)",
+		"s_WorkshopAssetsListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_OUTER)",
+	),
+}
+PAGE_METRICS_REQUIRED = {
+	"controls": "ApplyControlsContentMetrics(MainView.w)",
+	"tclient": "ApplyTClientContentMetrics(MainView.w)",
+	"tclient_bind_wheel": "ApplyTClientContentMetrics(MainView.w)",
+	"tclient_chat_binds": "ApplyTClientContentMetrics(MainView.w)",
+	"tclient_warlist": "ApplyTClientContentMetrics(MainView.w)",
+	"tclient_status_bar": "ApplyTClientContentMetrics(MainView.w)",
+	"tclient_info": "ApplyTClientContentMetrics(MainView.w)",
+	"tclient_profiles": "ApplyTClientContentMetrics(MainView.w)",
+	"tclient_configs": "ApplyTClientContentMetrics(MainView.w)",
 }
 PAGE_FORBIDDEN = {
-    "graphics": ("s_GraphicsSettingsScrollRegion",),
-    "sound": ("s_SoundSettingsScrollRegion",),
-    "ddnet": ("s_DDNetSettingsScrollRegion",),
-    "appearance": (
-        "BeginAppearanceCard", "s_ChatSettingsScrollRegion",
-        "s_NamePlateSettingsScrollRegion", "s_LaserSettingsScrollRegion",
-    ),
-    "controls": ("RenderSettingsBlock",),
+	"graphics": ("s_GraphicsSettingsScrollRegion",),
+	"sound": ("s_SoundSettingsScrollRegion",),
+	"ddnet": ("s_DDNetSettingsScrollRegion",),
+	"appearance": (
+		"BeginAppearanceCard",
+		"s_ChatSettingsScrollRegion",
+		"s_NamePlateSettingsScrollRegion",
+		"s_LaserSettingsScrollRegion",
+	),
+	"controls": ("RenderSettingsBlock",),
+	"tclient_warlist": (
+		"deck:tclient-warlist-entries",
+		"deck:tclient-warlist-editor",
+		"deck:tclient-warlist-settings",
+		"deck:tclient-warlist-groups",
+		"deck:tclient-warlist-players",
+	),
+}
+
+PAGE_PRODUCER_REQUIRED = {
+	"tclient_warlist": ('m_Spec = {"deck:tclient-warlist"',),
+}
+
+REGISTRY_FORBIDDEN = {
+	"tclient_warlist": PAGE_FORBIDDEN["tclient_warlist"],
 }
 
 _PAGE_SOURCE = {
-    "controls": Path("src/game/client/components/menus_settings_controls.cpp"),
+	"controls": Path("src/game/client/components/menus_settings_controls.cpp"),
+	"tee7": Path("src/game/client/components/menus_settings7.cpp"),
+	"qmclient_hud": Path("src/game/client/components/qmclient/menus_qmclient.cpp"),
+	"qmclient_function": Path("src/game/client/components/qmclient/menus_qmclient.cpp"),
+	"qmclient_visual": Path("src/game/client/components/qmclient/menus_qmclient.cpp"),
+	"contributors": Path("src/game/client/components/qmclient/menus_qmclient.cpp"),
+	"global_search": Path("src/game/client/components/qmclient/menus_qmclient.cpp"),
+	"tclient": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"tclient_bind_wheel": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"tclient_chat_binds": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"tclient_warlist": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"tclient_status_bar": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"tclient_info": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"tclient_profiles": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"tclient_configs": Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	"assets": Path("src/game/client/components/menus_settings_assets.cpp"),
 }
 _DEFAULT_SOURCE = Path("src/game/client/components/menus_settings.cpp")
 _REGISTRY_SOURCE = Path("src/game/client/QmUi/QmCardRegistry.cpp")
-_NAVIGATION_SOURCE = Path("src/game/client/components/qmclient/menus_qmclient.cpp")
+_NAVIGATION_SOURCE = Path("src/game/client/components/menus.cpp")
+PAGE_CONTRACT_HELPERS = {
+	"controls": ("ApplyControlsContentMetrics", "CMenusSettingsControls::DoSettingsControlsNumericField"),
+	"tee7": ("CMenus::RenderSkinSelection7", "CMenus::RenderSkinPartSelection7"),
+}
 
 
 def _extract_function_body(source: str, symbol: str) -> str | None:
-    """Return a C++ function body using a small brace-aware scanner."""
-    symbol_pos = source.find(symbol)
-    if symbol_pos < 0:
-        return None
-    open_brace = source.find("{", symbol_pos)
-    if open_brace < 0:
-        return None
+	"""Return a C++ function body using a small brace-aware scanner."""
+	symbol_pos = source.find(symbol)
+	if symbol_pos < 0:
+		return None
+	open_brace = source.find("{", symbol_pos)
+	if open_brace < 0:
+		return None
 
-    depth = 0
-    index = open_brace
-    quote = ""
-    line_comment = False
-    block_comment = False
-    while index < len(source):
-        char = source[index]
-        next_char = source[index + 1] if index + 1 < len(source) else ""
-        if line_comment:
-            if char == "\n":
-                line_comment = False
-        elif block_comment:
-            if char == "*" and next_char == "/":
-                block_comment = False
-                index += 1
-        elif quote:
-            if char == "\\":
-                index += 1
-            elif char == quote:
-                quote = ""
-        elif char == "/" and next_char == "/":
-            line_comment = True
-            index += 1
-        elif char == "/" and next_char == "*":
-            block_comment = True
-            index += 1
-        elif char in ('"', "'"):
-            quote = char
-        elif char == "{":
-            depth += 1
-        elif char == "}":
-            depth -= 1
-            if depth == 0:
-                return source[symbol_pos:index + 1]
-        index += 1
-    return None
+	depth = 0
+	index = open_brace
+	quote = ""
+	line_comment = False
+	block_comment = False
+	while index < len(source):
+		char = source[index]
+		next_char = source[index + 1] if index + 1 < len(source) else ""
+		if line_comment:
+			if char == "\n":
+				line_comment = False
+		elif block_comment:
+			if char == "*" and next_char == "/":
+				block_comment = False
+				index += 1
+		elif quote:
+			if char == "\\":
+				index += 1
+			elif char == quote:
+				quote = ""
+		elif char == "/" and next_char == "/":
+			line_comment = True
+			index += 1
+		elif char == "/" and next_char == "*":
+			block_comment = True
+			index += 1
+		elif char in ('"', "'"):
+			quote = char
+		elif char == "{":
+			depth += 1
+		elif char == "}":
+			depth -= 1
+			if depth == 0:
+				return source[symbol_pos : index + 1]
+		index += 1
+	return None
 
 
 def _read(root: Path, relative: Path) -> str:
-    path = root / relative
-    try:
-        return path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return ""
+	path = root / relative
+	try:
+		return path.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		return ""
+
+
+def _navigation_has_route(navigation: str, route: str) -> bool:
+	set_page_body = _extract_function_body(navigation, "CMenus::SetSettingsPageFromCardTab") or ""
+	return f'str_comp(pTab, "{route}") == 0' in set_page_body
 
 
 def audit_page(repo_root: Path, page: str) -> list[str]:
-    if page not in PAGE_STABLE_IDS:
-        raise ValueError(f"unknown settings page: {page}")
+	if page not in PAGE_STABLE_IDS:
+		raise ValueError(f"unknown settings page: {page}")
 
-    errors: list[str] = []
-    source = _read(repo_root, _PAGE_SOURCE.get(page, _DEFAULT_SOURCE))
-    bodies: list[str] = []
-    for symbol in PAGE_FUNCTIONS[page]:
-        body = _extract_function_body(source, symbol)
-        if body is None:
-            errors.append(f"{page}: {symbol}: function body missing")
-        else:
-            bodies.append(body)
-    page_source = "\n".join(bodies)
-    if page == "controls":
-        # Controls keeps small render helpers outside Render; inspect them as part of the page contract.
-        page_source += "\n" + source
+	errors: list[str] = []
+	source = _read(repo_root, _PAGE_SOURCE.get(page, _DEFAULT_SOURCE))
+	bodies: list[str] = []
+	for symbol in PAGE_FUNCTIONS[page]:
+		body = _extract_function_body(source, symbol)
+		if body is None:
+			errors.append(f"{page}: {symbol}: function body missing")
+		else:
+			bodies.append(body)
+	page_source = "\n".join(bodies)
+	for helper_symbol in PAGE_CONTRACT_HELPERS.get(page, ()):
+		# 只允许明确列出的 helper 承载入口函数委托的组件契约。
+		helper = _extract_function_body(source, helper_symbol)
+		if helper is None:
+			errors.append(f"{page}: {helper_symbol}: function body missing")
+		else:
+			page_source += "\n" + helper
 
-    for token in COMMON_REQUIRED + PAGE_REQUIRED[page]:
-        if token not in page_source:
-            errors.append(f"{page}: {token}: required unified contract missing")
-    for token in COMMON_FORBIDDEN + PAGE_FORBIDDEN.get(page, ()):
-        if token in page_source:
-            errors.append(f"{page}: {token}: legacy path remains")
+	required = PAGE_REQUIRED[page] if page == "assets" else COMMON_REQUIRED + PAGE_REQUIRED[page]
+	metrics_required = PAGE_METRICS_REQUIRED.get(page, "ResolveSettingsContentMetrics(")
+	required += (metrics_required,)
+	for token in required:
+		if token not in page_source:
+			errors.append(f"{page}: {token}: required unified contract missing")
+	if page == "assets":
+		forbidden = PAGE_FORBIDDEN.get(page, ())
+	elif page in STRICT_LEGACY_PAGES:
+		forbidden = COMMON_FORBIDDEN + PAGE_FORBIDDEN.get(page, ())
+	else:
+		forbidden = DECK_LEGACY_FORBIDDEN + PAGE_FORBIDDEN.get(page, ())
+	for token in forbidden:
+		if token in page_source:
+			errors.append(f"{page}: {token}: legacy path remains")
 
-    registry = _read(repo_root, _REGISTRY_SOURCE)
-    navigation = _read(repo_root, _NAVIGATION_SOURCE)
-    for stable_id in PAGE_STABLE_IDS[page]:
-        if stable_id not in registry:
-            errors.append(f"{page}: {stable_id}: registry/navigation entry missing")
-    for route in PAGE_ROUTE_TABS[page]:
-        if route not in navigation:
-            errors.append(f"{page}: {route}: registry/navigation entry missing")
-    return errors
+	registry = _read(repo_root, _REGISTRY_SOURCE)
+	navigation = _read(repo_root, _NAVIGATION_SOURCE)
+	for stable_id in PAGE_STABLE_IDS[page]:
+		if stable_id not in registry:
+			errors.append(f"{page}: {stable_id}: registry/navigation entry missing")
+		if page in PRODUCER_COMPLETE_PAGES and stable_id not in page_source and page not in PAGE_PRODUCER_REQUIRED:
+			errors.append(f"{page}: {stable_id}: page producer entry missing")
+	for token in PAGE_PRODUCER_REQUIRED.get(page, ()):
+		if token not in page_source:
+			errors.append(f"{page}: {token}: page producer entry missing")
+	for token in REGISTRY_FORBIDDEN.get(page, ()):
+		if token in registry:
+			errors.append(f"{page}: {token}: legacy registry entry remains")
+	for route in PAGE_ROUTE_TABS[page]:
+		if not _navigation_has_route(navigation, route):
+			errors.append(f"{page}: {route}: registry/navigation entry missing")
+	return errors
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--page", choices=tuple(PAGE_STABLE_IDS))
-    group.add_argument("--all", action="store_true")
-    parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
-    args = parser.parse_args()
+	parser = argparse.ArgumentParser(description=__doc__)
+	group = parser.add_mutually_exclusive_group(required=True)
+	group.add_argument("--page", choices=tuple(PAGE_STABLE_IDS))
+	group.add_argument("--all", action="store_true")
+	parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
+	args = parser.parse_args()
 
-    pages = tuple(PAGE_STABLE_IDS) if args.all else (args.page,)
-    errors = [error for page in pages for error in audit_page(args.repo_root, page)]
-    if errors:
-        print("P5 设置页迁移结构清单失败：")
-        for error in errors:
-            print(f"- {error}")
-        return 1
-    for page in pages:
-        print(f"{page}: clean")
-    return 0
+	pages = tuple(PAGE_STABLE_IDS) if args.all else (args.page,)
+	errors = [error for page in pages for error in audit_page(args.repo_root, page)]
+	if errors:
+		print("P5 设置页迁移结构清单失败：")
+		for error in errors:
+			print(f"- {error}")
+		return 1
+	for page in pages:
+		print(f"{page}: clean")
+	return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+	raise SystemExit(main())

@@ -17,6 +17,9 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/SettingsCardDeck.h>
+#include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
@@ -39,29 +42,81 @@ using namespace FontIcons;
 
 void CMenus::RenderSettingsTee7(CUIRect MainView)
 {
+	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(MainView.w);
+	const float UiScale = Metrics.m_UiScale;
+	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
+	const qm_card_registry::SCardDefault *pEditorDefault = qm_card_registry::FindByStableId("deck:tee7-editor");
+	dbg_assert(pEditorDefault != nullptr, "sixup tee settings card must be registered");
+	if(pEditorDefault == nullptr)
+		return;
+
+	const float ContentHeight = maximum(520.0f * UiScale, Page.m_ScrollViewport.h - 2.0f * ui_token::settings::CARD_PADDING * UiScale);
+	std::vector<SSettingsCardDefinition> vCards;
+	SSettingsCardDefinition EditorCard;
+	EditorCard.m_Spec = {pEditorDefault->m_pStableId, Localize(pEditorDefault->m_pTitle), nullptr};
+	EditorCard.m_Measure = [ContentHeight](float) { return ContentHeight; };
+	EditorCard.m_Render = [this, Metrics](CUIRect Content) { RenderSettingsTee7Content(Content, Metrics); };
+	vCards.push_back(std::move(EditorCard));
+
+	static CScrollRegion s_Tee7SettingsScrollRegion;
+	const bool RenderOnly = Ui()->RenderOnly();
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f));
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = RenderOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = RenderOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !RenderOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !RenderOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !RenderOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !RenderOnly && Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
+	const IUiContext CardCtx = SettingsUiContext("settings_tee7", UiScale);
+	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().Render(CardCtx, Page, "tee7", vCards, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_Tee7SettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!RenderOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+}
+
+void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentMetrics &Metrics)
+{
 	CUIRect SkinPreview, NormalSkinPreview, RedTeamSkinPreview, BlueTeamSkinPreview, Buttons, QuickSearch, DirectoryButton, RefreshButton, SaveDeleteButton, EditTextureButton, TabBars, TabBar, LeftTab, RightTab, InfoRow;
+	const float LineHeight = Metrics.m_LineHeight;
+	const float LineSpacing = Metrics.m_LineSpacing;
+	const float BodySize = Metrics.m_BodySize;
 	static bool s_Tee7TransitionInitialized = false;
 	static bool s_PrevTee7Dummy = false;
 	static bool s_PrevTee7Custom = false;
 	static float s_Tee7TransitionDirection = 0.0f;
 	const uint64_t Tee7SwitchNode = UiAnimNodeKey("settings_tee7_tab_switch");
-	MainView.HSplitBottom(20.0f, &MainView, &Buttons);
-	MainView.HSplitBottom(5.0f, &MainView, nullptr);
-	Buttons.VSplitRight(25.0f, &Buttons, &RefreshButton);
-	Buttons.VSplitRight(10.0f, &Buttons, nullptr);
-	Buttons.VSplitRight(140.0f, &Buttons, &DirectoryButton);
-	Buttons.VSplitLeft(220.0f, &QuickSearch, &Buttons);
-	Buttons.VSplitLeft(10.0f, nullptr, &Buttons);
-	Buttons.VSplitLeft(120.0f, &SaveDeleteButton, &Buttons);
-	Buttons.VSplitLeft(10.0f, nullptr, &Buttons);
-	Buttons.VSplitLeft(140.0f, &EditTextureButton, &Buttons);
-	MainView.HSplitTop(50.0f, &TabBars, &MainView);
-	MainView.HSplitTop(10.0f, nullptr, &MainView);
+	const bool CompactToolbar = MainView.w < 700.0f;
+	MainView.HSplitBottom(LineHeight * (CompactToolbar ? 2.0f : 1.0f) + LineSpacing * (CompactToolbar ? 2.0f : 1.0f), &MainView, &Buttons);
+	if(CompactToolbar)
+	{
+		CUIRect SearchRow, ActionRow;
+		Buttons.HSplitTop(LineHeight, &SearchRow, &ActionRow);
+		ActionRow.HSplitTop(LineSpacing, nullptr, &ActionRow);
+		SearchRow.VSplitRight(25.0f, &SearchRow, &RefreshButton);
+		SearchRow.VSplitRight(LineSpacing * 2.0f, &SearchRow, nullptr);
+		SearchRow.VSplitRight(minimum(140.0f, SearchRow.w * 0.36f), &QuickSearch, &DirectoryButton);
+		ActionRow.VSplitMid(&SaveDeleteButton, &EditTextureButton, LineSpacing * 2.0f);
+	}
+	else
+	{
+		Buttons.VSplitRight(25.0f, &Buttons, &RefreshButton);
+		Buttons.VSplitRight(10.0f, &Buttons, nullptr);
+		Buttons.VSplitRight(140.0f, &Buttons, &DirectoryButton);
+		Buttons.VSplitRight(10.0f, &Buttons, nullptr);
+		Buttons.VSplitRight(140.0f, &Buttons, &EditTextureButton);
+		Buttons.VSplitRight(10.0f, &Buttons, nullptr);
+		Buttons.VSplitRight(120.0f, &QuickSearch, &SaveDeleteButton);
+	}
+	MainView.HSplitTop(LineHeight * 2.0f + LineSpacing * 2.0f, &TabBars, &MainView);
+	MainView.HSplitTop(LineSpacing * 2.0f, nullptr, &MainView);
 	TabBars.VSplitMid(&TabBars, &SkinPreview, 20.0f);
 
-	TabBars.HSplitTop(20.0f, &TabBar, &TabBars);
+	TabBars.HSplitTop(LineHeight, &TabBar, &TabBars);
 	TabBar.VSplitMid(&LeftTab, &RightTab);
-	TabBars.HSplitTop(10.0f, nullptr, &TabBars);
+	TabBars.HSplitTop(LineSpacing * 2.0f, nullptr, &TabBars);
 
 	SkinPreview.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 5.0f);
 	SkinPreview.VMargin(10.0f, &SkinPreview);
@@ -83,8 +138,10 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	{
 		m_Dummy = true;
 	}
+	const CSkins7::CSkin *pSelectedSkin = GameClient()->m_Skins7.FindSkin(CSkins7::ms_apSkinNameVariables[m_Dummy], false);
+	m_SelectedSkin7Name = pSelectedSkin != nullptr ? pSelectedSkin->m_aName : "";
 
-	TabBars.HSplitTop(20.0f, &TabBar, &TabBars);
+	TabBars.HSplitTop(LineHeight, &TabBar, &TabBars);
 	TabBar.VSplitMid(&LeftTab, &RightTab);
 
 	static CButtonContainer s_BasicTabButton;
@@ -97,16 +154,16 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	if(DoButton_MenuTab(&s_CustomTabButton, Localize("Custom"), m_CustomSkinMenu, &RightTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
 		m_CustomSkinMenu = true;
-		if(m_CustomSkinMenu && m_pSelectedSkin)
+		if(m_CustomSkinMenu && pSelectedSkin)
 		{
-			if(m_pSelectedSkin->m_Flags & CSkins7::SKINFLAG_STANDARD)
+			if(pSelectedSkin->m_Flags & CSkins7::SKINFLAG_STANDARD)
 			{
 				m_SkinNameInput.Set("copy_");
-				m_SkinNameInput.Append(m_pSelectedSkin->m_aName);
+				m_SkinNameInput.Append(pSelectedSkin->m_aName);
 			}
 			else
 			{
-				m_SkinNameInput.Set(m_pSelectedSkin->m_aName);
+				m_SkinNameInput.Set(pSelectedSkin->m_aName);
 			}
 		}
 	}
@@ -135,7 +192,6 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	const float TransitionStrength = ReadUiSwitchAnimation(Tee7SwitchNode);
 	const bool TransitionActive = TransitionStrength > 0.0f && s_Tee7TransitionDirection != 0.0f;
 	const CUIRect ContentClip = MainView;
-	const float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
 	if(TransitionActive)
 	{
 		Ui()->ClipEnable(&ContentClip);
@@ -178,7 +234,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 
 	char aBuf[128 + IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Your skin"));
-	Ui()->DoLabel(&SkinPreview, aBuf, 14.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&SkinPreview, aBuf, BodySize, TEXTALIGN_ML);
 
 	vec2 OffsetToMid;
 	CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &OwnSkinInfo, OffsetToMid);
@@ -229,9 +285,9 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(-1, 0), BlueTeamSkinPreview.Center() + OffsetToMid);
 
 	if(m_CustomSkinMenu)
-		RenderSettingsTeeCustom7(MainView);
+		RenderSettingsTeeCustom7(MainView, BodySize);
 	else
-		RenderSkinSelection7(MainView);
+		RenderSkinSelection7(MainView, BodySize);
 
 	if(m_CustomSkinMenu)
 	{
@@ -243,12 +299,12 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 			Ui()->SetActiveItem(&m_SkinNameInput);
 		}
 	}
-	else if(m_pSelectedSkin && (m_pSelectedSkin->m_Flags & CSkins7::SKINFLAG_STANDARD) == 0)
+	else if(pSelectedSkin && (pSelectedSkin->m_Flags & CSkins7::SKINFLAG_STANDARD) == 0)
 	{
 		static CButtonContainer s_CustomSkinDeleteButton;
 		if(DoButton_Menu(&s_CustomSkinDeleteButton, Localize("Delete"), 0, &SaveDeleteButton) || Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE))
 		{
-			str_format(aBuf, sizeof(aBuf), Localize("Are you sure that you want to delete '%s'?"), m_pSelectedSkin->m_aName);
+			str_format(aBuf, sizeof(aBuf), Localize("Are you sure that you want to delete '%s'?"), pSelectedSkin->m_aName);
 			PopupConfirm(Localize("Delete skin"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDeleteSkin7);
 		}
 	}
@@ -263,7 +319,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	SkinSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
 	SkinSearchOptions.m_Clearable = true;
 	SkinSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
-	SkinSearchOptions.m_FontSize = 14.0f;
+	SkinSearchOptions.m_FontSize = BodySize;
 	if(ui_widget::InputField(Tee7SkinSearchCtx, &s_SkinFilterInput, QuickSearch, SkinSearchOptions).m_Changed)
 	{
 		m_SkinList7LastRefreshTime = std::nullopt;
@@ -289,14 +345,13 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		GameClient()->RefreshSkins(CSkinDescriptor::FLAG_SEVEN);
+		m_SelectedSkin7Name.clear();
+		m_SkinList7LastRefreshTime = std::nullopt;
+		m_SkinPartsList7LastRefreshTime = std::nullopt;
 	}
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
-	if(TransitionActive && TransitionAlpha > 0.0f)
-	{
-		ContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
-	}
 	if(TransitionActive)
 	{
 		Ui()->ClipDisable();
@@ -305,17 +360,17 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 
 void CMenus::PopupConfirmDeleteSkin7()
 {
-	dbg_assert(m_pSelectedSkin, "no skin selected for deletion");
+	dbg_assert(!m_SelectedSkin7Name.empty(), "no skin selected for deletion");
 
-	if(!GameClient()->m_Skins7.RemoveSkin(m_pSelectedSkin))
+	if(!GameClient()->m_Skins7.RemoveSkin(m_SelectedSkin7Name.c_str()))
 	{
 		PopupMessage(Localize("Error"), Localize("Unable to delete skin"), Localize("Ok"));
 		return;
 	}
-	m_pSelectedSkin = nullptr;
+	m_SelectedSkin7Name.clear();
 }
 
-void CMenus::RenderSettingsTeeCustom7(CUIRect MainView)
+void CMenus::RenderSettingsTeeCustom7(CUIRect MainView, float BodySize)
 {
 	CUIRect ButtonBar, SkinPartSelection, CustomColors;
 	static bool s_SkinPartTransitionInitialized = false;
@@ -354,7 +409,6 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView)
 	const float TransitionStrength = ReadUiSwitchAnimation(SkinPartSwitchNode);
 	const bool TransitionActive = TransitionStrength > 0.0f && s_SkinPartTransitionDirection != 0.0f;
 	const CUIRect ContentClip = MainView;
-	const float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
 	if(TransitionActive)
 	{
 		Ui()->ClipEnable(&ContentClip);
@@ -369,7 +423,7 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView)
 	CustomColorsButton.VSplitRight(30.0f, &CustomColorsButton, &RandomSkinButton);
 	CustomColorsButton.VSplitRight(20.0f, &CustomColorsButton, nullptr);
 
-	RenderSkinPartSelection7(SkinPartSelection);
+	RenderSkinPartSelection7(SkinPartSelection, BodySize);
 
 	int *pUseCustomColor = CSkins7::ms_apUCCVariables[(int)m_Dummy][m_TeePartSelected];
 	if(DoButton_CheckBox(pUseCustomColor, Localize("Custom colors"), *pUseCustomColor, &CustomColorsButton))
@@ -406,25 +460,24 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView)
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	GameClient()->m_Tooltips.DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
 
-	if(TransitionActive && TransitionAlpha > 0.0f)
-	{
-		ContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
-	}
 	if(TransitionActive)
 	{
 		Ui()->ClipDisable();
 	}
 }
 
-void CMenus::RenderSkinSelection7(CUIRect MainView)
+void CMenus::RenderSkinSelection7(CUIRect MainView, float BodySize)
 {
 	static float s_LastSelectionTime = -10.0f;
-	static std::vector<const CSkins7::CSkin *> s_vpSkinList;
+	static std::vector<std::string> s_vSkinNames;
 	static CListBox s_ListBox;
+	s_ListBox.SetScrollProfile(EQmScrollProfile::GRID);
+	s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 
-	if(!m_SkinList7LastRefreshTime.has_value() || m_SkinList7LastRefreshTime.value() != m_SkinList7LastRefreshTime)
+	const auto RefreshTime = GameClient()->m_Skins7.LastRefreshTime();
+	if(GameClient()->m_Skins7.IsLoading() || !m_SkinList7LastRefreshTime.has_value() || m_SkinList7LastRefreshTime.value() != RefreshTime)
 	{
-		s_vpSkinList.clear();
+		s_vSkinNames.clear();
 		for(const CSkins7::CSkin &Skin : GameClient()->m_Skins7.GetSkins())
 		{
 			if((Skin.m_Flags & CSkins7::SKINFLAG_SPECIAL) != 0)
@@ -432,28 +485,31 @@ void CMenus::RenderSkinSelection7(CUIRect MainView)
 			if(g_Config.m_ClSkinFilterString[0] != '\0' && !str_utf8_find_nocase(Skin.m_aName, g_Config.m_ClSkinFilterString))
 				continue;
 
-			s_vpSkinList.emplace_back(&Skin);
+			s_vSkinNames.emplace_back(Skin.m_aName);
 		}
+		m_SkinList7LastRefreshTime = RefreshTime;
 	}
 
-	m_pSelectedSkin = nullptr;
+	m_SelectedSkin7Name.clear();
 	int OldSelected = -1;
-	for(int i = 0; i < (int)s_vpSkinList.size(); ++i)
+	for(int i = 0; i < (int)s_vSkinNames.size(); ++i)
 	{
-		const CSkins7::CSkin *pSkin = s_vpSkinList[i];
-		if(!str_comp(pSkin->m_aName, CSkins7::ms_apSkinNameVariables[m_Dummy]))
+		if(!str_comp(s_vSkinNames[i].c_str(), CSkins7::ms_apSkinNameVariables[m_Dummy]))
 		{
-			m_pSelectedSkin = pSkin;
+			m_SelectedSkin7Name = s_vSkinNames[i];
 			OldSelected = i;
 			break;
 		}
 	}
-	s_ListBox.DoStart(50.0f, s_vpSkinList.size(), 4, 1, OldSelected, &MainView);
+	s_ListBox.DoStart(50.0f, s_vSkinNames.size(), 4, 1, OldSelected, &MainView);
 
-	for(const CSkins7::CSkin *pSkin : s_vpSkinList)
+	for(const std::string &SkinName : s_vSkinNames)
 	{
-		const CListboxItem Item = s_ListBox.DoNextItem(pSkin);
+		const CSkins7::CSkin *pSkin = GameClient()->m_Skins7.FindSkin(SkinName.c_str(), false);
+		const CListboxItem Item = s_ListBox.DoNextItem(SkinName.c_str());
 		if(!Item.m_Visible)
+			continue;
+		if(pSkin == nullptr)
 			continue;
 
 		CUIRect TeePreview, Label;
@@ -477,34 +533,40 @@ void CMenus::RenderSkinSelection7(CUIRect MainView)
 
 		SLabelProperties Props;
 		Props.m_MaxWidth = Label.w - 5.0f;
-		Ui()->DoLabel(&Label, pSkin->m_aName, 12.0f, TEXTALIGN_ML, Props);
+		Ui()->DoLabel(&Label, pSkin->m_aName, BodySize, TEXTALIGN_ML, Props);
 	}
 
 	const int NewSelected = s_ListBox.DoEnd();
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		s_LastSelectionTime = Client()->GlobalTime();
-		m_pSelectedSkin = s_vpSkinList[NewSelected];
-		str_copy(CSkins7::ms_apSkinNameVariables[m_Dummy], m_pSelectedSkin->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
+		const CSkins7::CSkin *pNewSkin = GameClient()->m_Skins7.FindSkin(s_vSkinNames[NewSelected].c_str(), false);
+		if(pNewSkin == nullptr)
+			return;
+		m_SelectedSkin7Name = pNewSkin->m_aName;
+		str_copy(CSkins7::ms_apSkinNameVariables[m_Dummy], pNewSkin->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
 		for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
 		{
-			str_copy(CSkins7::ms_apSkinVariables[(int)m_Dummy][Part], m_pSelectedSkin->m_apParts[Part]->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
-			*CSkins7::ms_apUCCVariables[(int)m_Dummy][Part] = m_pSelectedSkin->m_aUseCustomColors[Part];
-			*CSkins7::ms_apColorVariables[(int)m_Dummy][Part] = m_pSelectedSkin->m_aPartColors[Part];
+			str_copy(CSkins7::ms_apSkinVariables[(int)m_Dummy][Part], pNewSkin->m_apParts[Part]->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
+			*CSkins7::ms_apUCCVariables[(int)m_Dummy][Part] = pNewSkin->m_aUseCustomColors[Part];
+			*CSkins7::ms_apColorVariables[(int)m_Dummy][Part] = pNewSkin->m_aPartColors[Part];
 		}
 		SetNeedSendInfo();
 	}
 }
 
-void CMenus::RenderSkinPartSelection7(CUIRect MainView)
+void CMenus::RenderSkinPartSelection7(CUIRect MainView, float BodySize)
 {
-	static std::vector<const CSkins7::CSkinPart *> s_avpList[protocol7::NUM_SKINPARTS];
+	static std::vector<std::string> s_avPartNames[protocol7::NUM_SKINPARTS];
 	static CListBox s_ListBox;
-	for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+	s_ListBox.SetScrollProfile(EQmScrollProfile::GRID);
+	s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+	const auto RefreshTime = GameClient()->m_Skins7.LastRefreshTime();
+	if(GameClient()->m_Skins7.IsLoading() || !m_SkinPartsList7LastRefreshTime.has_value() || m_SkinPartsList7LastRefreshTime.value() != RefreshTime)
 	{
-		if(!m_SkinList7LastRefreshTime.has_value() || m_SkinList7LastRefreshTime.value() != GameClient()->m_Skins7.LastRefreshTime())
+		for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
 		{
-			s_avpList[Part].clear();
+			s_avPartNames[Part].clear();
 			for(const CSkins7::CSkinPart &SkinPart : GameClient()->m_Skins7.GetSkinParts(Part))
 			{
 				if((SkinPart.m_Flags & CSkins7::SKINFLAG_SPECIAL) != 0)
@@ -513,32 +575,35 @@ void CMenus::RenderSkinPartSelection7(CUIRect MainView)
 				if(g_Config.m_ClSkinFilterString[0] != '\0' && !str_utf8_find_nocase(SkinPart.m_aName, g_Config.m_ClSkinFilterString))
 					continue;
 
-				s_avpList[Part].emplace_back(&SkinPart);
+				s_avPartNames[Part].emplace_back(SkinPart.m_aName);
 			}
 		}
+		m_SkinPartsList7LastRefreshTime = RefreshTime;
 	}
 
 	int OldSelected = -1;
-	for(int i = 0; i < (int)s_avpList[m_TeePartSelected].size(); ++i)
+	for(int i = 0; i < (int)s_avPartNames[m_TeePartSelected].size(); ++i)
 	{
-		const CSkins7::CSkinPart *pPart = s_avpList[m_TeePartSelected][i];
-		if(!str_comp(pPart->m_aName, CSkins7::ms_apSkinVariables[(int)m_Dummy][m_TeePartSelected]))
+		if(!str_comp(s_avPartNames[m_TeePartSelected][i].c_str(), CSkins7::ms_apSkinVariables[(int)m_Dummy][m_TeePartSelected]))
 		{
 			OldSelected = i;
 			break;
 		}
 	}
-	s_ListBox.DoStart(72.0f, s_avpList[m_TeePartSelected].size(), 4, 1, OldSelected, &MainView, false, IGraphics::CORNER_NONE);
+	s_ListBox.DoStart(72.0f, s_avPartNames[m_TeePartSelected].size(), 4, 1, OldSelected, &MainView, false, IGraphics::CORNER_NONE);
 
-	for(const CSkins7::CSkinPart *pPart : s_avpList[m_TeePartSelected])
+	for(const std::string &PartName : s_avPartNames[m_TeePartSelected])
 	{
-		CListboxItem Item = s_ListBox.DoNextItem(pPart);
+		const CSkins7::CSkinPart *pPart = GameClient()->m_Skins7.FindSkinPartOrNullptr(m_TeePartSelected, PartName.c_str(), false);
+		CListboxItem Item = s_ListBox.DoNextItem(PartName.c_str());
 		if(!Item.m_Visible)
+			continue;
+		if(pPart == nullptr)
 			continue;
 
 		CUIRect Label;
 		Item.m_Rect.Margin(5.0f, &Item.m_Rect);
-		Item.m_Rect.HSplitBottom(12.0f, &Item.m_Rect, &Label);
+		Item.m_Rect.HSplitBottom(BodySize, &Item.m_Rect, &Label);
 
 		CTeeRenderInfo Info;
 		for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
@@ -563,13 +628,13 @@ void CMenus::RenderSkinPartSelection7(CUIRect MainView)
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, TeePartEmote, vec2(1.0f, 0.0f), TeePos);
 
-		Ui()->DoLabel(&Label, pPart->m_aName, 12.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&Label, pPart->m_aName, BodySize, TEXTALIGN_MC);
 	}
 
 	const int NewSelected = s_ListBox.DoEnd();
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
-		str_copy(CSkins7::ms_apSkinVariables[(int)m_Dummy][m_TeePartSelected], s_avpList[m_TeePartSelected][NewSelected]->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
+		str_copy(CSkins7::ms_apSkinVariables[(int)m_Dummy][m_TeePartSelected], s_avPartNames[m_TeePartSelected][NewSelected].c_str(), protocol7::MAX_SKIN_ARRAY_SIZE);
 		CSkins7::ms_apSkinNameVariables[m_Dummy][0] = '\0';
 		SetNeedSendInfo();
 	}

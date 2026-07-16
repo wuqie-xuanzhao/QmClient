@@ -76,8 +76,6 @@ namespace qm_card_registry
 			{"tclient:finish-name", "tclient", ECardColumn::Left, 18, "Finish name", "finish name tclient"},
 
 			// === 设置 deck · deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
-			{"deck:qmclient-overview-intro", "qmclient-overview", ECardColumn::Full, 0, "QmClient overview", "qmclient overview guide"},
-			{"deck:qmclient-overview-guide", "qmclient-overview", ECardColumn::Full, 1, "Page guide", "qmclient page guide tabs"},
 			{"deck:qmclient-contributors-community", "qmclient-contributors", ECardColumn::Left, 0, "QmClient Community", "community links qmclient"},
 			{"deck:qmclient-contributors-sponsors", "qmclient-contributors", ECardColumn::Right, 0, "Sponsor support", "sponsor support qmclient"},
 			{"deck:global-search-input", "global-search", ECardColumn::Full, 0, "Feature Search", "global search feature cards"},
@@ -88,11 +86,15 @@ namespace qm_card_registry
 			{"deck:general-recording", "general", ECardColumn::Right, 1, Localizable("Demo"), "general demo screenshot csv recording"},
 			{"deck:player-identity", "player", ECardColumn::Left, 0, Localizable("Player"), "player dummy name clan identity"},
 			{"deck:player-country", "player", ECardColumn::Right, 0, Localizable("Choose country flag"), "player dummy country flag"},
-			{"deck:tee-identity", "tee", ECardColumn::Full, 0, "Player", "tee player dummy identity preview"},
+			{"deck:tee-identity", "tee", ECardColumn::Left, 0, "Player preview", "tee player dummy identity preview"},
+			{"deck:tee-skin-options", "tee", ECardColumn::Right, 0, "Skin options", "tee skin colors eyes options prefix"},
+			{"deck:tee-skin-list", "tee", ECardColumn::Full, 0, "Skin search", "tee skins search filter list"},
+			{"deck:tee7-editor", "tee7", ECardColumn::Full, 0, "Skin", "tee sixup skin editor"},
 			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, Localizable("Graphics display"), "graphics display monitor window", Localizable("Window and monitor")},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, Localizable("Visual"), "graphics visual rendering", Localizable("Rendering options")},
 			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, Localizable("Graphics backend"), "graphics backend renderer selection", Localizable("Renderer selection")},
 			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, Localizable("Display modes"), "display modes graphics resolutions", Localizable("Available resolutions")},
+			{"deck:graphics-interaction", "graphics", ECardColumn::Right, 1, Localizable("Interface animations"), "interface ui motion animations focus rainbow", Localizable("Motion and focus feedback")},
 			{"deck:sound-toggle", "sound", ECardColumn::Left, 0, "Sound", "sound toggle audio"},
 			{"deck:sound-volume", "sound", ECardColumn::Left, 1, "Volume", "volume sound audio"},
 			{"deck:sound-audio-pack", "sound", ECardColumn::Right, 0, "Audio packs", "audio pack audio packs sound"},
@@ -103,21 +105,19 @@ namespace qm_card_registry
 			{"deck:tclient-bind-wheel-editor", "tclient-bind-wheel", ECardColumn::Left, 0, "Bind Wheel", "bind wheel tclient"},
 			{"deck:tclient-bind-wheel-preview", "tclient-bind-wheel", ECardColumn::Right, 0, "Preview", "preview bind wheel tclient"},
 			{"deck:tclient-status-bar-settings", "tclient-status-bar", ECardColumn::Left, 0, "Status Bar", "status bar tclient"},
-			{"deck:tclient-status-bar-items", "tclient-status-bar", ECardColumn::Left, 1, "Status Bar Codes", "status bar codes tclient"},
-			{"deck:tclient-status-bar-preview", "tclient-status-bar", ECardColumn::Left, 2, "Preview", "preview status bar tclient"},
+			{"deck:tclient-status-bar-items", "tclient-status-bar", ECardColumn::Right, 0, "Status Bar Codes", "status bar codes tclient"},
+			{"deck:tclient-status-bar-preview", "tclient-status-bar", ECardColumn::Left, 1, "Preview", "preview status bar tclient"},
 			{"deck:tclient-chat-binds-kaomoji", "tclient-chat-binds", ECardColumn::Left, 0, "Kaomoji", "chat binds kaomoji tclient"},
 			{"deck:tclient-chat-binds-warlist", "tclient-chat-binds", ECardColumn::Right, 0, "Warlist", "chat binds warlist tclient"},
 			{"deck:tclient-chat-binds-other", "tclient-chat-binds", ECardColumn::Left, 1, "Other", "chat binds other tclient"},
-			{"deck:tclient-warlist-entries", "tclient-warlist", ECardColumn::Left, 0, "War Entries", "war list entries tclient"},
-			{"deck:tclient-warlist-editor", "tclient-warlist", ECardColumn::Right, 0, "Edit Entry", "war list entry editor tclient"},
-			{"deck:tclient-warlist-settings", "tclient-warlist", ECardColumn::Right, 1, "Settings", "war list settings tclient"},
-			{"deck:tclient-warlist-groups", "tclient-warlist", ECardColumn::Left, 1, "War Groups", "war list groups tclient"},
-			{"deck:tclient-warlist-players", "tclient-warlist", ECardColumn::Left, 2, "Online Players", "war list online players tclient"},
+			{"deck:tclient-warlist", "tclient-warlist", ECardColumn::Full, 0, "War List", "enemy hostile war list entries groups players settings tclient"},
 			{"deck:tclient-info-links", "tclient-info", ECardColumn::Left, 0, "TClient Links", "tclient links discord website github support"},
 			{"deck:tclient-info-files", "tclient-info", ECardColumn::Left, 1, "Config Files", "config files settings profiles war list chat binds"},
 			{"deck:tclient-info-developers", "tclient-info", ECardColumn::Right, 0, "TClient Developers", "tclient developers tater sollybunny pebox teero chillerdragon"},
 			{"deck:tclient-info-tabs", "tclient-info", ECardColumn::Right, 1, "Hide Settings Tabs", "hide settings tabs bind wheel war list chat binds status bar"},
-			{"deck:tclient-profiles-actions", "tclient-profiles", ECardColumn::Full, 0, "Profiles", "profiles save load delete options saved profile list"},
+			{"deck:tclient-profiles-actions", "tclient-profiles", ECardColumn::Left, 0, "Profiles", "profiles save load delete"},
+			{"deck:tclient-profiles-options", "tclient-profiles", ECardColumn::Right, 0, "Profile Options", "profiles options dummy colors fields"},
+			{"deck:tclient-profiles-list", "tclient-profiles", ECardColumn::Left, 1, "Saved Profiles", "profiles saved list"},
 			{"deck:tclient-configs-actions", "tclient-configs", ECardColumn::Full, 0, "Configuration", "configs changes filters variables values reset"},
 			{"deck:appearance-hud-main", "appearance-hud", ECardColumn::Left, 0, "HUD", "appearance hud main"},
 			{"deck:appearance-hud-ddrace", "appearance-hud", ECardColumn::Right, 0, "DDRace HUD", "appearance ddrace hud"},
@@ -171,6 +171,15 @@ namespace qm_card_registry
 		}
 	}
 
+	SCardNavigationTarget ResolveCardNavigationTarget(const SCardDefault &Default, const qm_card_order::CModel &Model)
+	{
+		const int StateIndex = Default.m_pStableId != nullptr ? Model.FindByStableId(Default.m_pStableId) : -1;
+		const char *pCurrentTab = StateIndex >= 0 ? Model.Entry(StateIndex).m_pDefaultTab : nullptr;
+		if(pCurrentTab == nullptr)
+			pCurrentTab = Default.m_pDefaultTab;
+		return {pCurrentTab, Default.m_pStableId};
+	}
+
 	std::vector<SCardSearchResult> SearchCards(const char *pQuery, const qm_card_order::CModel &Model)
 	{
 		std::vector<SCardSearchResult> vResults;
@@ -190,15 +199,11 @@ namespace qm_card_registry
 				!SearchTextMatches(Default.m_pSearchKeywords, pQuery))
 				continue;
 
-			const int StateIndex = Model.FindByStableId(Default.m_pStableId);
-			const char *pCurrentTab = StateIndex >= 0 ? Model.Entry(StateIndex).m_pDefaultTab : nullptr;
-			if(pCurrentTab == nullptr)
-				pCurrentTab = Default.m_pDefaultTab;
 			SCardSearchResult Result;
 			Result.m_pStableId = Default.m_pStableId;
 			Result.m_Title = pLocalizedTitle;
 			Result.m_Description = pLocalizedDescription;
-			Result.m_Target = {pCurrentTab, Default.m_pStableId};
+			Result.m_Target = ResolveCardNavigationTarget(Default, Model);
 			vResults.push_back(std::move(Result));
 		}
 		return vResults;

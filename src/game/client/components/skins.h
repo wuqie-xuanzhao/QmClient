@@ -346,11 +346,13 @@ public:
 	public:
 		std::vector<CSkinListEntry> &Skins() { return m_vSkins; }
 		int UnfilteredCount() const { return m_UnfilteredCount; }
+		uint64_t Revision() const { return m_Revision; }
 		void ForceRefresh() { m_NeedsUpdate = true; }
 
 	private:
 		std::vector<CSkinListEntry> m_vSkins;
 		int m_UnfilteredCount = 0;
+		uint64_t m_Revision = 0;
 		int m_Dummy = -1;
 		CSkinListEntry::SColorKey m_MainColorKey;
 		CSkinListEntry::SColorKey m_DummyColorKey;

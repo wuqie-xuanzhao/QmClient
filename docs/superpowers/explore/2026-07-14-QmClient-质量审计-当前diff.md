@@ -3,12 +3,12 @@ type: quality-audit
 date: 2026-07-14
 updated: 2026-07-14
 status: active
-mode: readonly
+mode: implementation-followup
 baseline: working-tree-vs-HEAD
 branch: dyl_dev
 commit: 3cbef99a14
 skill: docs/superpowers/prompts/audit-qmclient-quality/SKILL.md
-authority: 当前代码、有效规格、gate 实现；本报告只记录已验证 finding，不授权自动修复
+authority: 当前代码、有效规格、gate 实现；原始只读 finding 已按实施结果复核
 scope:
   - src/game/client/QmUi/SettingsCard*
   - src/game/client/components/menus*.cpp
@@ -22,6 +22,8 @@ scope:
 ---
 
 # QmClient 质量审计报告（当前 diff · 只读）
+
+> 2026-07-14 实施复核：拖拽契约已校准为标题行热区且右上角只保留折叠按钮；彩虹标题已与额外动画解耦；`settings_ui` trigger 已覆盖公共卡片、输入框、滚动物理和 TClient。原始 findings 保留作为审计记录，以上三项不再是当前阻断项。Profiles/Configs 旧默认布局迁移、Tee 单卡搜索元数据、输入框单层 focus ring、Alt 1:3 native-step、Voice attempt 去重及独立动效卡已落地，最终状态以本轮全量测试和复审结果为准。
 
 ## 任务参数
 
@@ -47,6 +49,8 @@ scope:
 
 ### [重要] SettingsCard 删除 canonical drag handle，与有效规格冲突
 
+**复核：已解决。** 产品契约明确选择标题行拖拽，不恢复独立三点 handle；有效规格和测试已同步。
+
 - 文件：`src/game/client/QmUi/SettingsCard.cpp`（删除 `RenderCanonicalSettingsCardHandle`）
 - 规格：`docs/superpowers/specs/2026-07-10-QmClient-设置页UI统一与滚动体系规格.md` §4.3 / §5.2
 - 触发条件：打开任意标准设置页卡片；无 `HeaderAction` 时 header 可拖但无可视 handle
@@ -58,6 +62,8 @@ scope:
 - 结果：已确认
 
 ### [重要] `settings_ui` 触发面与审计面错位
+
+**复核：已解决 trigger 缺口。** 当前 trigger 已包含 `SettingsCard*`、`UiForms`、`QmScroll` 和 `menus_tclient.cpp`；行为覆盖仍由 C++ 测试与 default gate 共同承担。
 
 - 文件：`qmclient_scripts/gate/checks/settings_ui.py:13-22`；`qmclient_scripts/gate/check_settings_ui_migration.py`（仅 P5 八页）
 - 触发条件：只改 `SettingsCard*` / `menus_tclient.cpp`；或只改 Qm Visual/Function/HUD
@@ -79,6 +85,8 @@ scope:
 - 结果：已确认
 
 ### [重要] 规格仍要求彩虹受 `qm_extra_animations` 控制，实现已解耦
+
+**复核：已解决。** 有效规格现明确 `qm_ui_card_rainbow_titles` 独立控制，不再依赖 `qm_extra_animations`。
 
 - 文件：规格 §6.2；`src/game/client/components/menus.cpp` `SettingsCardDeckVisualOptions`；`src/engine/shared/config_variables_qmclient.h`
 - 触发条件：按规格验收彩虹；或关额外动画期望彩虹关闭

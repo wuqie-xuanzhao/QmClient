@@ -34,6 +34,7 @@ bool CKeyBinder::OnInput(const IInput::CEvent &Event)
 CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderButton, CButtonContainer *pClearButton, const CUIRect *pRect, const CBindSlot &CurrentBind, bool Activate)
 {
 	CKeyReaderResult Result = {CurrentBind, false};
+	const bool ReadOnly = Ui()->RenderOnly();
 
 	CUIRect KeyReaderButton, ClearButton;
 	pRect->VSplitRight(pRect->h, &KeyReaderButton, &ClearButton);
@@ -44,18 +45,18 @@ CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderBu
 		&ClearButton, BUTTONFLAG_LEFT, IGraphics::CORNER_R);
 
 	const int ButtonResult = Ui()->DoButtonLogic(pReaderButton, 0, &KeyReaderButton, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
-	if(ButtonResult == 1 || Activate)
+	if(!ReadOnly && (ButtonResult == 1 || Activate))
 	{
 		m_pKeyReaderId = pReaderButton;
 		m_TakeKey = true;
 		m_Key = std::nullopt;
 	}
-	else if(ButtonResult == 2 || ClearButtonResult != 0)
+	else if(!ReadOnly && (ButtonResult == 2 || ClearButtonResult != 0))
 	{
 		Result.m_Bind = CBindSlot(KEY_UNKNOWN, KeyModifier::NONE);
 	}
 
-	if(m_pKeyReaderId == pReaderButton && m_Key.has_value())
+	if(!ReadOnly && m_pKeyReaderId == pReaderButton && m_Key.has_value())
 	{
 		if(m_Key.value().m_Key == KEY_ESCAPE)
 		{

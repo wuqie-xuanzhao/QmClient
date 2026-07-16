@@ -47,11 +47,12 @@ SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRe
 	return Result;
 }
 
-SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight)
+SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight, int MinimumVisibleItems)
 {
 	SQmDropdownPopupPolicy Policy;
 	const int ClampedItemCount = std::max(0, ItemCount);
-	const int VisibleItemCount = std::min(ClampedItemCount, Policy.m_MaxVisibleItems);
+	Policy.m_ItemCount = ClampedItemCount;
+	const int VisibleItemCount = std::min(std::max(ClampedItemCount, std::max(0, MinimumVisibleItems)), Policy.m_MaxVisibleItems);
 	const float ResolvedEntryHeight = std::max(0.0f, EntryHeight);
 	const float ResolvedEntrySpacing = std::max(0.0f, EntrySpacing);
 	const float ResolvedMessageHeight = HasMessage ? std::max(0.0f, MessageHeight) : 0.0f;

@@ -28,6 +28,8 @@ struct SSettingsCardDefinition
 	bool m_VisibilityController = false;
 	// 内容高度依赖配置或运行时状态时，每帧重新测量。
 	bool m_MeasureEachFrame = false;
+	// 非零版本变化时重新测量，用于避免空闲帧重复执行昂贵布局。
+	uint64_t m_MeasureRevision = 0;
 	bool m_RenderWhenClipped = false;
 };
 
@@ -46,7 +48,6 @@ struct SSettingsCardDeckInput
 
 struct SSettingsCardDeckResult
 {
-	std::vector<SSettingsCardFrame> m_vFrames;
 	const char *m_pRevealedStableId = nullptr;
 	float m_AutoScrollDelta = 0.0f;
 	bool m_DropFeedbackConsumed = false;
@@ -60,9 +61,17 @@ class CSettingsCardDeck
 public:
 	SSettingsCardDeckResult Render(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions);
 	void RequestReveal(const char *pStableId);
-	void BeginDisplayCycle(uint64_t DisplayCycle);
+	void BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry);
 
 private:
+	struct SPreparedCard
+	{
+		const SSettingsCardDefinition *m_pDefinition = nullptr;
+		int m_StateIndex = -1;
+		int m_Column = 0;
+		SSettingsCardFrame m_Frame;
+	};
+
 	struct SRuntimeState
 	{
 		float m_DropFeedbackRemaining = 0.0f;
@@ -71,6 +80,8 @@ private:
 		uint64_t m_EntryDisplayCycle = UINT64_MAX;
 		bool m_ReflowInitialized = false;
 		bool m_ReflowWasActive = false;
+		bool m_CollapsedInitialized = false;
+		bool m_LastCollapsed = false;
 	};
 
 	struct SDragState
@@ -89,12 +100,29 @@ private:
 	void PrepareDefinitions(const std::vector<SSettingsCardDefinition> &vCards, const qm_card_order::CModel &Model);
 
 	uint64_t m_DisplayCycle = 0;
+	bool m_AnimateEntry = false;
+	bool m_SuppressHoverFeedbackOnce = false;
+	bool m_HasPointerPosition = false;
+	bool m_HasScrollOffset = false;
+	float m_LastPointerX = 0.0f;
+	float m_LastPointerY = 0.0f;
+	float m_LastScrollOffsetY = 0.0f;
+	float m_LastViewportHeight = -1.0f;
+	std::string m_LastRenderedTab;
 	std::string m_PendingRevealStableId;
 	SDragState m_Drag;
 	std::vector<SRuntimeState> m_vRuntimeStates;
 	std::vector<float> m_vContentHeights;
+	std::vector<float> m_vContentWidths;
+	std::vector<uint64_t> m_vMeasureRevisions;
 	std::vector<const SSettingsCardDefinition *> m_vDefinitionsByState;
+	std::vector<int> m_vBoundDefinitionStateIndices;
 	std::vector<int> m_vActiveStateIndices;
+	std::vector<int> m_vPreviousActiveStateIndices;
+	std::vector<int> m_vLastRenderedActiveStateIndices;
+	std::vector<SPreparedCard> m_vPreparedCards;
+	std::vector<SSettingsCardDeckItemGeometry> m_vDragGeometry;
+	std::array<std::vector<int>, 3> m_aDragColumns;
 	settings_card_deck_logic::CProjectionCache m_ProjectionCache;
 };
 

@@ -5,6 +5,30 @@
 
 namespace QmKeywordReplyRules
 {
+	struct SEditorChanges
+	{
+		bool m_Added = false;
+		bool m_Removed = false;
+		bool m_TriggerText = false;
+		bool m_ReplyText = false;
+		bool m_Rename = false;
+		bool m_Regex = false;
+
+		bool Any() const
+		{
+			return m_Added || m_Removed || m_TriggerText || m_ReplyText || m_Rename || m_Regex;
+		}
+
+		bool ShouldCommit(bool RenderOnly) const
+		{
+			return Any() && !RenderOnly;
+		}
+	};
+
+	inline bool EditorConfigChanged(bool Initialized, const char *pCachedConfig, const char *pConfig)
+	{
+		return !Initialized || str_comp(pCachedConfig != nullptr ? pCachedConfig : "", pConfig != nullptr ? pConfig : "") != 0;
+	}
 
 	inline void EncodeForConfig(const char *pRules, char *pOut, size_t OutSize)
 	{

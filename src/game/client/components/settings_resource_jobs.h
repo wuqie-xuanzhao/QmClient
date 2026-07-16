@@ -123,6 +123,22 @@ struct SSettingsSkinBackgroundRequestBudgetOutput
 	ESettingsSkinBackgroundRequestBlockReason m_BlockReason = ESettingsSkinBackgroundRequestBlockReason::NONE;
 };
 
+struct SSettingsTeeOffscreenLifecycleInput
+{
+	int m_TotalEntries = 0;
+	int m_ValidEntries = 0;
+	int m_SettledEntries = 0;
+	bool m_DrainSessionActive = false;
+	bool m_PerfDebugEnabled = false;
+};
+
+struct SSettingsTeeOffscreenLifecycleOutput
+{
+	bool m_FullListReady = false;
+	bool m_CompleteDrainSession = false;
+	bool m_LogCompletion = false;
+};
+
 struct SSettingsSkinSourceAdmissionInput
 {
 	bool m_BackgroundRequested = false;
@@ -398,6 +414,8 @@ bool SettingsLoadingPrewarmMadeProgress(int PreviousTextPoolEntries, int NewText
 void SettingsLoadingPrewarmAdvance(SSettingsLoadingPrewarmState &State, int NewTextPoolEntries, int MissingTextPlanItems, int MissingTextPlanCollectionUnits);
 int SettingsSkinListPrefetchCount(int FirstVisibleIndex, int LastVisibleIndex, int ItemsPerRow, int PrefetchRows, int TotalEntries);
 int SettingsSkinListBackgroundWarmupCount(int TotalEntries, int MaxEntriesPerFrame);
+size_t SettingsSkinBackgroundScanIndex(size_t StartCursor, size_t Attempt, size_t ItemCount);
+size_t SettingsSkinBackgroundScanNextCursor(size_t StartCursor, size_t ScannedCount, size_t ItemCount);
 bool SettingsSkinBackgroundWarmupShouldRun(bool PageVisible, bool VisibleBacklog, bool InputActive);
 bool SettingsSkinBackgroundWarmupWindowFull(size_t Loaded, size_t Loading, size_t Pending, int LoadedMax);
 bool SettingsSkinListHasProgressiveWarmEntries(int PublishedEntries, int RequestedEntries, int PlannedEntries);
@@ -416,6 +434,7 @@ int SettingsSkinGpuUploadLimiterUnits(const SSettingsResourceFrameContext &Conte
 bool SettingsSkinBackgroundDrainActive(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive);
 int SettingsSkinBackgroundRequestFrameBudget(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive);
 SSettingsSkinBackgroundRequestBudgetOutput SettingsSkinBackgroundRequestBudgetDecision(const SSettingsSkinBackgroundRequestBudgetInput &Input);
+SSettingsTeeOffscreenLifecycleOutput SettingsTeeOffscreenLifecycleDecision(const SSettingsTeeOffscreenLifecycleInput &Input);
 SSettingsSkinSourceAdmissionOutput SettingsSkinSourceAdmissionDecision(const SSettingsSkinSourceAdmissionInput &Input);
 int SettingsSkinSourceLoadNormalWindow(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive, int LoadedMax);
 int SettingsSkinSourceLoadVisibleWindow(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive, int LoadedMax);

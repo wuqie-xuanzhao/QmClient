@@ -48,16 +48,16 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	SSettingsCardVisualState DrawState = State;
-	DrawState.m_Hovered = Ctx.m_pUi != nullptr && Ctx.m_pUi->MouseHovered(&Frame.m_Rect);
+	DrawState.m_Hovered = State.m_HoverFeedbackEnabled && Ctx.m_pUi != nullptr && Ctx.m_pUi->MouseHovered(&Frame.m_Rect);
 	SSettingsCardFrame DrawFrame = Frame;
 	OffsetSettingsCardFrame(DrawFrame, State.m_DrawOffsetX, State.m_DrawOffsetY);
 
 	SUiTheme Fallback;
 	const SUiTheme &Theme = SettingsCardTheme(Ctx, Fallback);
-	const float FeedbackAlpha = DrawState.m_DropFeedback ? 0.94f : DrawState.m_ReflowCompleteFeedback ? 0.97f :
-													    1.0f;
-	ColorRGBA Surface = DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface;
-	Surface.a *= DrawState.m_DrawAlpha * FeedbackAlpha;
+	const bool DrawCardChrome = Ctx.m_pUi == nullptr || !Ctx.m_pUi->RenderOnly();
+	ColorRGBA Surface = Theme.m_Surface;
+	// 重排与拖放反馈只改变边框，卡片背景透明度保持稳定，避免滚动或切页时闪烁。
+	Surface.a *= DrawState.m_DrawAlpha;
 	const bool InteractionComplete = DrawState.m_DropFeedback || DrawState.m_ReflowCompleteFeedback;
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      Theme.m_Border;
@@ -66,11 +66,14 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	const float BorderBaseWidth = DrawState.m_Focused ? 3.0f : 2.0f;
 	const float BorderWidth = std::max(BorderBaseWidth, BorderBaseWidth * UiScale);
 	const CUIRect BorderRect = DrawFrame.m_Rect;
-	BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
-	CUIRect SurfaceRect;
-	BorderRect.Margin(BorderWidth, &SurfaceRect);
-	const float InnerRadius = std::max(0.0f, CardRadius - BorderWidth);
-	SurfaceRect.Draw(Surface, IGraphics::CORNER_ALL, InnerRadius);
+	if(DrawCardChrome)
+	{
+		BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
+		CUIRect SurfaceRect;
+		BorderRect.Margin(BorderWidth, &SurfaceRect);
+		const float InnerRadius = std::max(0.0f, CardRadius - BorderWidth);
+		SurfaceRect.Draw(Surface, IGraphics::CORNER_ALL, InnerRadius);
+	}
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
 	{
@@ -100,7 +103,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
-	if(HeaderAction)
+	if(HeaderAction && DrawCardChrome)
 		HeaderAction(DrawFrame, DrawState.m_Collapsed);
 	if(RenderMeasured)
 	{

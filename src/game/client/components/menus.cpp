@@ -523,7 +523,7 @@ CMenus::CMenus()
 
 IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 {
-	m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f);
+	m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));
 	IUiContext Context;
 	Context.m_pUi = Ui();
 	Context.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
@@ -536,6 +536,11 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 	Context.m_ScopeHash = MakeUiScopeHash(pScope);
 	Context.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	Context.m_UiScale = UiScale;
+	if(Ui()->RenderOnly())
+	{
+		Context.m_pAnim = nullptr;
+		Context.m_pTree = nullptr;
+	}
 	return Context;
 }
 
@@ -556,6 +561,19 @@ qm_card_order::CModel &CMenus::SettingsCardOrderModel()
 	if(!m_SettingsCardOrderLoaded)
 		LoadSettingsCardOrderModel();
 	return m_SettingsCardOrderModel;
+}
+
+qm_card_order::CModel &CMenus::SettingsCardOrderModelForRenderPass()
+{
+	if(!Ui()->RenderOnly())
+		return SettingsCardOrderModel();
+	m_SettingsCardRenderOnlyOrderModel.LoadMerged(g_Config.m_QmGlobalCardOrder, qm_card_registry::BuildDefaultEntries());
+	return m_SettingsCardRenderOnlyOrderModel;
+}
+
+CSettingsCardDeck &CMenus::SettingsCardDeckForRenderPass()
+{
+	return Ui()->RenderOnly() ? m_SettingsCardRenderOnlyDeck : m_SettingsCardDeck;
 }
 
 void CMenus::LoadSettingsCardOrderModel()
@@ -614,6 +632,79 @@ void CMenus::LoadSettingsCardOrderModel()
 			}
 		}
 		g_Config.m_QmCardLayoutVersion = 1;
+	}
+	if(g_Config.m_QmCardLayoutVersion < 2)
+	{
+		const std::vector<qm_card_order::SEntry> vLegacyProfileDefaults = {
+			{"deck:tclient-profiles-actions", "tclient-profiles", 0, 0},
+		};
+		const bool LayoutChanged =
+			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyProfileDefaults, "deck:tclient-profiles-actions", "tclient-profiles", 1, 0);
+		if(LayoutChanged)
+		{
+			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+			{
+				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+				m_SettingsCardOrderModel.ClearDirty();
+			}
+		}
+		g_Config.m_QmCardLayoutVersion = 2;
+	}
+	if(g_Config.m_QmCardLayoutVersion < 3)
+	{
+		const std::vector<qm_card_order::SEntry> vLegacyStatusBarDefaults = {
+			{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
+			{"deck:tclient-status-bar-items", "tclient-status-bar", 1, 1},
+			{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 2},
+		};
+		const bool LayoutChanged =
+			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, "deck:tclient-status-bar-items", "tclient-status-bar", 2, 0) |
+			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, "deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1);
+		if(LayoutChanged)
+		{
+			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+			{
+				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+				m_SettingsCardOrderModel.ClearDirty();
+			}
+		}
+		g_Config.m_QmCardLayoutVersion = 3;
+	}
+	if(g_Config.m_QmCardLayoutVersion < 4)
+	{
+		const std::vector<qm_card_order::SEntry> vLegacyTeeDefaults = {
+			{"deck:tee-identity", "tee", 0, 0},
+			{"deck:tee-skin-options", "tee", 1, 0},
+			{"deck:tee-skin-list", "tee", 2, 0},
+		};
+		const bool LayoutChanged =
+			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-identity", "tee", 1, 0) |
+			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-skin-options", "tee", 2, 0) |
+			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-skin-list", "tee", 0, 0);
+		if(LayoutChanged)
+		{
+			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+			{
+				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+				m_SettingsCardOrderModel.ClearDirty();
+			}
+		}
+		g_Config.m_QmCardLayoutVersion = 4;
+	}
+	if(g_Config.m_QmCardLayoutVersion < 5)
+	{
+		// 敌对列表从五张独立卡收敛为一个完整编辑器；LoadMerged 已按新 registry
+		// 清理旧 stable ID，这里把规范化后的结果写回，避免每次启动重复迁移。
+		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+		{
+			str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+			m_SettingsCardOrderModel.ClearDirty();
+		}
+		g_Config.m_QmCardLayoutVersion = 5;
 	}
 	m_SettingsCardOrderLoaded = true;
 }
@@ -1073,7 +1164,7 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 		*pScrollBarRect = ScrollBar;
 }
 
-int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, const bool ProcessInput)
+int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, const bool ProcessInput, const float LabelFontSize)
 {
 	CUIRect Box, Label;
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
@@ -1109,7 +1200,7 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 	}
 
 	TextRender()->SetRenderFlags(0);
-	const float FontSize = Box.h * CUi::ms_FontmodHeight;
+	const float FontSize = LabelFontSize > 0.0f ? LabelFontSize : Box.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
 	Props.m_MinimumFontSize = FontSize * 0.7f;
@@ -1154,14 +1245,16 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	Props.m_MaxWidth = Label.w;
 	if(Props.m_MinimumFontSize <= 0.0f)
 		Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
-	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML, Props);
+	const float BodySize = ui_token::font::BODY * SettingsPageUiScale(pRect->w);
+	const float FontSize = std::min(BodySize, Box.h * CUi::ms_FontmodHeight);
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
 	if(m_MenuTextPlanCollecting)
 	{
-		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Label, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML, Props, StyleKey);
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
 		return 0;
 	}
 	CUIElement &LabelElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, &LabelElement, ProcessInput);
+	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, &LabelElement, ProcessInput, FontSize);
 }
 
 int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)
@@ -1251,7 +1344,7 @@ bool CMenus::PrepareSettingsNumericFieldLabel(int Page, int Tab, int Subtab, con
 	Props.m_MaxWidth = Label.w;
 	if(m_MenuTextPlanCollecting)
 	{
-		const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
+		const float FontSize = Options.m_FontSize;
 		const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
 		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pLabel, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
 		return true;
@@ -1270,14 +1363,14 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	Options.m_pScale = pScale;
 	Options.m_Flags = Flags;
 	Options.m_pMaxText = pMaxText;
-	Options.m_FontSize = pRect->h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_FontSize = std::min(ui_token::font::BODY * SettingsPageUiScale(pRect->w), pRect->h * CUi::ms_FontmodHeight * 0.8f);
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 	if(PrepareSettingsNumericFieldLabel(Page, Tab, Subtab, pTextId, *pRect, pStr, Flags, Options))
 		return false;
 
 	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
-	IUiContext InputCtx = SettingsUiContext("settings_slider_input");
+	IUiContext InputCtx = SettingsUiContext("settings_slider_input", Options.m_FontSize / ui_token::font::BODY);
 	return ui_widget::NumericField(InputCtx, pState, pId, pOption, Min, Max, *pRect, Options);
 }
 
@@ -2673,7 +2766,7 @@ void CMenus::OnInit()
 	PrewarmSettingsPages();
 }
 
-void CMenus::PrewarmSettingsPages()
+void CMenus::EnsureSettingsBindCache()
 {
 	// NOLINTNEXTLINE(readability-identifier-naming)
 	extern std::unordered_map<std::string, CBindSlot> g_CommandBindCache;
@@ -2696,6 +2789,14 @@ void CMenus::PrewarmSettingsPages()
 		}
 	}
 	g_CommandBindCacheInitialized = true;
+}
+
+void CMenus::PrewarmSettingsPages()
+{
+	if(g_Config.m_QmSettingsPrewarm == 0)
+		return;
+
+	EnsureSettingsBindCache();
 
 	// Preload skin list to avoid lag when first entering settings
 	GameClient()->m_Skins.SkinList(0);
@@ -2915,7 +3016,6 @@ void CMenus::Render()
 			const CUIRect MainViewClip = MainView;
 			const float TransitionStrength = ReadUiSwitchAnimation(UiAnimNodeKey("menu_page_switch"));
 			const bool TransitionActive = TransitionStrength > 0.0f && m_MenuPageTransitionDirection != 0.0f;
-			float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
 			const char *pPageName = MenuPageName(m_MenuPage);
 			if(m_MenuPage != PAGE_SETTINGS)
 				PrepareSettingsTabLabelCache(MainView.w);
@@ -2982,10 +3082,6 @@ void CMenus::Render()
 				return;
 			}
 
-			if(TransitionActive && TransitionAlpha > 0.0f)
-			{
-				MainViewClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
-			}
 			if(TransitionActive)
 			{
 				Ui()->ClipDisable();
@@ -3018,7 +3114,6 @@ void CMenus::Render()
 			const CUIRect MainViewClip = MainView;
 			const float TransitionStrength = ReadUiSwitchAnimation(UiAnimNodeKey("game_page_switch"));
 			const bool TransitionActive = TransitionStrength > 0.0f && m_GamePageTransitionDirection != 0.0f;
-			float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
 			const char *pPageName = GamePageName(m_GamePage);
 			const char *pOperationName = SettingsPerfActiveOperation();
 			if(pOperationName == nullptr || pOperationName[0] == '\0' || str_comp(pOperationName, "none") == 0)
@@ -3128,10 +3223,6 @@ void CMenus::Render()
 				return;
 			}
 
-			if(TransitionActive && TransitionAlpha > 0.0f)
-			{
-				MainViewClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
-			}
 			if(TransitionActive)
 			{
 				Ui()->ClipDisable();
@@ -4539,6 +4630,9 @@ int CMenus::IdleRenderFrameRate() const
 
 	if(Ui()->ActiveItem() != nullptr || CLineInput::GetActiveInput() != nullptr || GameClient()->m_KeyBinder.IsActive() || Ui()->IsPopupOpen())
 		return 0;
+	// 性能采样期间解除空闲节流，普通设置页空闲时仍限制功耗。
+	if(IsSettingsPageActive() && (g_Config.m_QmPerfDebug != 0 || m_SettingsPerfWindowTracker.HasActiveWindow()))
+		return 0;
 
 	if(GameClient()->m_MenuBackground.IsLoading())
 		return 0;
@@ -4546,22 +4640,6 @@ int CMenus::IdleRenderFrameRate() const
 	const SUiV2PerfStats &UiRuntimeStats = GameClient()->UiRuntimeV2()->LastStats();
 	if(UiRuntimeStats.m_ActiveAnimCount > 0 || UiRuntimeStats.m_QueuedAnimCount > 0)
 		return 0;
-
-	if(IsSettingsPageActive())
-	{
-		if(m_SettingsPerfWindowTracker.HasActiveWindow() ||
-			m_SettingsPageSwitchActive ||
-			m_SettingsScrollActive ||
-			m_SettingsPostScrollRecoveryFrames > 0 ||
-			m_MenuTextPlanCollecting ||
-			m_MenuTextPlanPendingActive ||
-			SettingsTextPlanCollectionRemaining() > 0 ||
-			SettingsTextPrebuildRemaining() > 0 ||
-			CountMissingSettingsMenuTextPlanItems() > 0)
-		{
-			return 0;
-		}
-	}
 
 	if(time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME)
 		return 0;
@@ -4600,7 +4678,7 @@ CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 {
 	SQmSettingsCardStyle Style;
 	const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale);
-	const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);
+	const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);
 	Style.m_Padding = CardProps.m_Padding;
 	Style.m_Spacing = std::clamp(16.0f * UiScale, 10.0f, 16.0f);
 	Style.m_CornerRadius = CardProps.m_Radius;
@@ -4614,9 +4692,34 @@ CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 
 CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
 {
-	CScrollRegionParams Params = QmScrollRegionParamsForSize(EQmScrollSize::LARGE, UiScale);
-	Params.m_ScrollUnit = QmSettingsScrollConfig(UiScale, 0.0f).m_WheelScale;
-	return Params;
+	SQmScrollRequest Request;
+	Request.m_Profile = EQmScrollProfile::SETTINGS_OUTER;
+	return QmScrollRegionParamsFromPolicy(QmResolveScrollPolicy(Request, UiScale, 0.0f));
+}
+
+float CMenus::SettingsPageUiScale(float ContentWidth) const
+{
+	return m_SettingsShellLayoutValid ? m_SettingsShellLayout.m_UiScale : ResolveSettingsUiScale(ContentWidth);
+}
+
+SSettingsPageLayoutFrame CMenus::SettingsPageLayout(const CUIRect &ContentView, float UiScale) const
+{
+	SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(ContentView, false, m_SettingsShellLayoutValid ? m_SettingsShellLayout.m_UiScale : UiScale);
+	if(!m_SettingsShellLayoutValid)
+		return Page;
+
+	const float OffsetX = ContentView.x - m_SettingsShellLayout.m_ContentRect.x;
+	const float OffsetY = ContentView.y - m_SettingsShellLayout.m_ContentRect.y;
+	auto OffsetRect = [OffsetX, OffsetY](CUIRect Rect) {
+		Rect.x += OffsetX;
+		Rect.y += OffsetY;
+		return Rect;
+	};
+	Page.m_CardGap = m_SettingsShellLayout.m_CardGap;
+	const CUIRect ShellScrollViewport = OffsetRect(m_SettingsShellLayout.m_ScrollViewport);
+	Page.m_ScrollViewport.x = ShellScrollViewport.x;
+	Page.m_ScrollViewport.w = ShellScrollViewport.w;
+	return ResolveSettingsPageLayoutForScrollViewport(Page, Page.m_ScrollViewport, m_SettingsShellLayout.m_UiScale);
 }
 
 bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
@@ -4625,6 +4728,12 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 		return false;
 	if(str_comp(pTab, "general") == 0)
 		g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
+	else if(str_comp(pTab, "player") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
+	else if(str_comp(pTab, "tee") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_TEE;
+	else if(str_comp(pTab, "tee7") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_TEE;
 	else if(str_comp(pTab, "visual") == 0)
 	{
 		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
@@ -4643,7 +4752,7 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 	else if(str_comp(pTab, "qmclient-overview") == 0)
 	{
 		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
-		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_OVERVIEW;
+		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 	}
 	else if(str_comp(pTab, "qmclient-contributors") == 0)
 	{
@@ -4660,10 +4769,32 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
 		m_TClientSettingsTab = 1;
 	}
+	else if(str_comp(pTab, "tclient-warlist") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
+		m_TClientSettingsTab = 2;
+	}
+	else if(str_comp(pTab, "tclient-chat-binds") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
+		m_TClientSettingsTab = 3;
+	}
 	else if(str_comp(pTab, "tclient-status-bar") == 0)
 	{
 		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
 		m_TClientSettingsTab = 4;
+	}
+	else if(str_comp(pTab, "tclient-info") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
+		m_TClientSettingsTab = 5;
+	}
+	else if(str_comp(pTab, "tclient-profiles") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_PROFILES;
+	else if(str_comp(pTab, "tclient-configs") == 0)
+	{
+		g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
+		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_CONFIG;
 	}
 	else if(str_comp(pTab, "graphics") == 0)
 		g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
@@ -6253,12 +6384,21 @@ bool CMenus::PrewarmSettingsPageResources(int Page, int Tab, const CUIRect &Cont
 
 void CMenus::PrewarmVisibleSettingsResources(CUIRect MainView)
 {
-	CUIRect ContentView = MainView;
-	const float TabBarWidth = std::clamp(ContentView.w * 0.16f, 132.0f, 168.0f);
-	ContentView.VSplitRight(TabBarWidth, &ContentView, nullptr);
-	ContentView.VSplitRight(10.0f, &ContentView, nullptr);
-	ContentView.Margin(10.0f, &ContentView);
-	if(m_NeedRestartGraphics || m_NeedRestartSound || m_NeedRestartUpdate)
+	CUIRect ContentView;
+	const bool NeedRestart = m_NeedRestartGraphics || m_NeedRestartSound || m_NeedRestartUpdate;
+	if(g_Config.m_QmNewUi != 0)
+	{
+		const SSettingsShellLayoutFrame Shell = ResolveSettingsShellLayout(MainView, NeedRestart ? 30.0f : 0.0f);
+		ContentView = Shell.m_ContentRect;
+	}
+	else
+	{
+		ContentView = MainView;
+		const float TabBarWidth = std::clamp(ContentView.w * 0.14f, 108.0f, 120.0f);
+		ContentView.VSplitRight(TabBarWidth, &ContentView, nullptr);
+		ContentView.Margin(std::clamp(ContentView.w * 0.02f, 12.0f, 20.0f), &ContentView);
+	}
+	if(g_Config.m_QmNewUi == 0 && NeedRestart)
 	{
 		ContentView.HSplitBottom(20.0f, &ContentView, nullptr);
 		ContentView.HSplitBottom(10.0f, &ContentView, nullptr);

@@ -2147,9 +2147,6 @@ Continue anyway?
 Contributors
 == 貢獻者
 
-Control dummy
-== 控制分身
-
 Control player (0) or dummy (1)
 == 控制玩家（0）還是分身（1）
 
@@ -2999,6 +2996,9 @@ Dummy body skin
 Dummy clan
 == 分身戰隊
 
+Dummy Control
+== 分身控制
+
 Dummy Control: %s
 == 分身控制：%s
 
@@ -3401,9 +3401,6 @@ Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
 == 啟用本地歌詞快取
 
-Enable long pain sound (used when shooting in freeze)
-== 啟用長痛音效（凍結中射擊時使用）
-
 Enable lyric HUD overlay
 == 啟用歌詞 HUD 疊加層
 
@@ -3478,6 +3475,9 @@ Enable saving games (/save and /load)
 
 Enable server message sound
 == 啟用伺服器消息提示音
+
+Enable shout when holding fire while in water
+== 進水時按住開火鍵發出吶喊
 
 Enable Sixup connection.
 == 啟用 Sixup 連接
@@ -7610,6 +7610,9 @@ Print command executed by this name or all chat binds
 Print daily messages to console
 == 將每日消息打印到控制台
 
+Prioritize outgoing game traffic on Windows (best effort)
+== Prioritize outgoing game traffic on Windows (best effort)
+
 Privately messages someone's current time in this current running race (your time by default)
 == 私聊發送某人在當前競速中的時間（默認發送你的時間）
 
@@ -9673,6 +9676,9 @@ Show others' nameplate coordinates
 
 Show outdated version warning
 == 顯示版本過舊提示
+
+Show outgoing game traffic QoS status
+== Show outgoing game traffic QoS status
 
 Show outlines only on entity layer
 == 僅在實體層顯示輪廓

@@ -2147,9 +2147,6 @@ Continue anyway?
 Contributors
 == コントリビューター
 
-Control dummy
-== ダミーを操作
-
 Control player (0) or dummy (1)
 == プレイヤー (0) またはダミー (1) を操作
 
@@ -2999,6 +2996,9 @@ Dummy body skin
 Dummy clan
 == ダミーのクラン
 
+Dummy Control
+== ダミーを操作
+
 Dummy Control: %s
 == ダミーコントロール：%s
 
@@ -3401,9 +3401,6 @@ Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
 == ローカルの歌詞キャッシュを有効にする
 
-Enable long pain sound (used when shooting in freeze)
-== ロングペインサウンドを有効化（フリーズ中に射撃したとき）
-
 Enable lyric HUD overlay
 == 歌詞 HUD オーバーレイを有効化
 
@@ -3478,6 +3475,9 @@ Enable saving games (/save and /load)
 
 Enable server message sound
 == サーバーメッセージサウンドを有効化
+
+Enable shout when holding fire while in water
+== 水中で射撃キーを押し続けている間、叫び声を再生する
 
 Enable Sixup connection.
 == Sixup 接続を有効にする
@@ -7610,6 +7610,9 @@ Print command executed by this name or all chat binds
 Print daily messages to console
 == デイリーメッセージをコンソールに表示
 
+Prioritize outgoing game traffic on Windows (best effort)
+== Prioritize outgoing game traffic on Windows (best effort)
+
 Privately messages someone's current time in this current running race (your time by default)
 == 現在のレース中の誰かのタイムをプライベートメッセージで送信（デフォルトは自分のタイム）
 
@@ -9673,6 +9676,9 @@ Show others' nameplate coordinates
 
 Show outdated version warning
 == バージョンが古い警告を表示
+
+Show outgoing game traffic QoS status
+== Show outgoing game traffic QoS status
 
 Show outlines only on entity layer
 == エンティティレイヤーのみにアウトラインを表示

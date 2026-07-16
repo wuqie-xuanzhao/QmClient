@@ -60,6 +60,8 @@ flowchart TB
 
 ## 1. 设置页 UI / 布局（现行 · 高置信）
 
+> 2026-07-14 实施更新：卡片拖拽契约为“标题行全宽热区，交互控件和右上角 V 形折叠按钮排除”；Profiles/Configs 仅在整组仍为旧默认时迁移为 Full/0 单卡；Tee 保持一张 Full/0 卡并恢复 skin/search/filter/colors/eyes 搜索元数据。Graphics 新增独立“界面动效与交互”卡，焦点色由 `qm_ui_focus_color` 独立配置；彩虹标题不依赖额外动画。native-step 滚动保留滚轮幅值，因此 Alt 链路为普通滚动的三倍。
+
 ### 1.1 坐标与缩放
 
 - `CUi::Screen()`：`h=600`，`w=aspect*600`（`ui.cpp:551-555`）

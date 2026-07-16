@@ -714,7 +714,6 @@ Console command executed after joining server
 Console command executed before connecting to server
 Continue anyway?
 Contributors
-Control dummy
 Control player (0) or dummy (1)
 Controller
 Controller axis for cursor X
@@ -998,6 +997,7 @@ Dummy
 Dummy body color
 Dummy body skin
 Dummy clan
+Dummy Control
 Dummy Control: %s
 Dummy copy
 Dummy copy: %s
@@ -1132,7 +1132,6 @@ Enable keyword reply
 Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
-Enable long pain sound (used when shooting in freeze)
 Enable lyric HUD overlay
 Enable lyrics
 Enable main thread and render stage performance debug logging
@@ -1158,6 +1157,7 @@ Enable repeat function
 Enable replays
 Enable saving games (/save and /load)
 Enable server message sound
+Enable shout when holding fire while in water
 Enable Sixup connection.
 Enable skin queue rotation
 Enable skin switch animation
@@ -2535,6 +2535,7 @@ Print broadcast messages to console
 Print command executed by this keybinding or all binds
 Print command executed by this name or all chat binds
 Print daily messages to console
+Prioritize outgoing game traffic on Windows (best effort)
 Privately messages someone's current time in this current running race (your time by default)
 Privately shows you your current time in this current running race in the broadcast message
 Probability of sending freeze chat message (0-100%)
@@ -3223,6 +3224,7 @@ Show others
 Show others (own team only)
 Show others' nameplate coordinates
 Show outdated version warning
+Show outgoing game traffic QoS status
 Show outlines only on entity layer
 Show own coordinates
 Show own hook collision lines (2 always shown)

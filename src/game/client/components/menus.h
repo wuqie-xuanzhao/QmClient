@@ -129,6 +129,8 @@ private:
 	SCardMotionSpec SettingsCardMotionSpec() const;
 	SSettingsCardDeckVisualOptions SettingsCardDeckVisualOptions() const;
 	qm_card_order::CModel &SettingsCardOrderModel();
+	qm_card_order::CModel &SettingsCardOrderModelForRenderPass();
+	CSettingsCardDeck &SettingsCardDeckForRenderPass();
 	void LoadSettingsCardOrderModel();
 	bool SaveSettingsCardOrderModel();
 	uint64_t UiAnimNodeKey(const char *pScope, uint64_t Id = 0) const;
@@ -142,14 +144,14 @@ private:
 	void PrepareSettingsTabLabelCache(float MainViewWidth);
 	void PrepareLanguagePageCache(float MainViewWidth, bool ForceComplete);
 	void SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const;
-	int DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, unsigned Flags, CUIElement *pLabelElement, bool ProcessInput = true);
+	int DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, unsigned Flags, CUIElement *pLabelElement, bool ProcessInput = true, float LabelFontSize = -1.0f);
 	int DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
 	int DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin);
 
 	CUi::SColorPickerPopupContext m_ColorPickerPopupContext;
 	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, float LineSize, float LabelSize, float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false);
 	ColorHSLA DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHslaColor, bool Alpha);
-	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr);
+	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, float LineHeight = ui_token::settings::ROW_HEIGHT, float LineSpacing = ui_token::settings::ROW_GAP, float BodySize = ui_token::font::BODY);
 
 	void DoLaserPreview(const CUIRect *pRect, ColorHSLA OutlineColor, ColorHSLA InnerColor, int LaserType);
 	int DoButton_GridHeader(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Align = TEXTALIGN_ML);
@@ -1384,7 +1386,7 @@ protected:
 	// 0.7 skins
 	bool m_CustomSkinMenu = false;
 	int m_TeePartSelected = protocol7::SKINPART_BODY;
-	const CSkins7::CSkin *m_pSelectedSkin = nullptr;
+	std::string m_SelectedSkin7Name;
 	CLineInputBuffered<protocol7::MAX_SKIN_ARRAY_SIZE, protocol7::MAX_SKIN_LENGTH> m_SkinNameInput;
 	bool m_SkinPartListNeedsUpdate = false;
 	void PopupConfirmDeleteSkin7();
@@ -2024,12 +2026,13 @@ protected:
 	void RenderThemeSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
-	void RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton);
+	void RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton, float BodySize = ui_token::font::BODY);
 	void RenderSettingsTee(CUIRect MainView);
 	void RenderSettingsTee7(CUIRect MainView);
-	void RenderSettingsTeeCustom7(CUIRect MainView);
-	void RenderSkinSelection7(CUIRect MainView);
-	void RenderSkinPartSelection7(CUIRect MainView);
+	void RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentMetrics &Metrics);
+	void RenderSettingsTeeCustom7(CUIRect MainView, float BodySize);
+	void RenderSkinSelection7(CUIRect MainView, float BodySize);
+	void RenderSkinPartSelection7(CUIRect MainView, float BodySize);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
@@ -2109,6 +2112,7 @@ public:
 	void RenderLoading(const char *pCaption, const char *pContent, int IncreaseCounter);
 	void FinishLoading();
 	void PrewarmSettingsPages();
+	void EnsureSettingsBindCache();
 
 	bool IsInit() const { return m_IsInit; }
 
@@ -2187,7 +2191,6 @@ public:
 		QMCLIENT_SETTINGS_TAB_HUD,
 		QMCLIENT_SETTINGS_TAB_CONTRIBUTORS,
 		QMCLIENT_SETTINGS_TAB_CONFIG,
-		QMCLIENT_SETTINGS_TAB_OVERVIEW,
 
 		NUMBER_OF_QMCLIENT_SETTINGS_TABS,
 	};
@@ -2586,8 +2589,8 @@ private:
 		float m_Padding = 14.0f;
 		float m_Spacing = 16.0f;
 		float m_CornerRadius = 10.0f; // 12 → 10（macOS 更克制）
-		float m_ScrollbarWidth = 28.0f;
-		float m_ScrollbarMargin = 8.0f;
+		float m_ScrollbarWidth = 20.0f;
+		float m_ScrollbarMargin = 5.0f;
 		ColorRGBA m_GlassColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f); // 现代移动端深色 surface：更亮清透（配合 qm_card_backdrop_blur 毛玻璃）
 		ColorRGBA m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f); // 0.05 → 0.06（hairline 旁维持可读）
 		ColorRGBA m_HairlineColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f); // 新增：hairline 边框色
@@ -2615,6 +2618,8 @@ private:
 	void FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive = true);
 	SQmSettingsCardStyle QmSettingsCardStyle(float UiScale) const;
 	CScrollRegionParams QmSettingsScrollRegionParams(float UiScale) const;
+	float SettingsPageUiScale(float ContentWidth) const;
+	SSettingsPageLayoutFrame SettingsPageLayout(const CUIRect &ContentView, float UiScale) const;
 	bool SetSettingsPageFromCardTab(const char *pTab);
 	void NavigateToSettingsCard(const qm_card_registry::SCardNavigationTarget &Target);
 	void RequestSettingsCardFocus(const char *pStableId);
@@ -2703,9 +2708,13 @@ private:
 	qm_card_order::CModel m_SettingsCardOrderModel;
 	bool m_SettingsCardOrderLoaded = false;
 	CSettingsCardDeck m_SettingsCardDeck;
+	qm_card_order::CModel m_SettingsCardRenderOnlyOrderModel;
+	CSettingsCardDeck m_SettingsCardRenderOnlyDeck;
 	uint64_t m_SettingsCardDeckDisplayKey = 0;
 	uint64_t m_SettingsCardDeckDisplayCycle = 0;
 	bool m_HasSettingsCardDeckDisplayKey = false;
+	SSettingsShellLayoutFrame m_SettingsShellLayout;
+	bool m_SettingsShellLayoutValid = false;
 
 	CCommunityIcons m_CommunityIcons;
 	CMenusIngameTouchControls m_MenusIngameTouchControls;
@@ -2800,8 +2809,8 @@ private:
 	void RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudDebugGraphContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudInputOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
-	void RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
-	void RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
+	void RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool Expanded, bool PrewarmOnly);
+	void RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool OriginalStyle, bool PrewarmOnly);
 	void RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly);
 	void RenderQmHudNotificationsBasicContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudNotificationsAdvancedContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
@@ -2811,7 +2820,6 @@ private:
 	void RenderQmHudBackground3DContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly = false);
-	void RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderTeeCute(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool CuteEyes, float Alpha = 1.0f);
 
 	const CWarType *m_pRemoveWarType = nullptr;

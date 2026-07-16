@@ -2147,9 +2147,6 @@ Continue anyway?
 Contributors
 == 기여자
 
-Control dummy
-== 더미 제어
-
 Control player (0) or dummy (1)
 == 플레이어(0) 또는 더미(1) 제어
 
@@ -2999,6 +2996,9 @@ Dummy body skin
 Dummy clan
 == 더미 클랜
 
+Dummy Control
+== 더미 제어
+
 Dummy Control: %s
 == 더미 제어: %s
 
@@ -3401,9 +3401,6 @@ Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
 == 로컬 가사 캐시 활성화
 
-Enable long pain sound (used when shooting in freeze)
-== 긴 고통 사운드 활성화 (프리즈에서 쏠 때 사용)
-
 Enable lyric HUD overlay
 == 가사 HUD 오버레이 활성화
 
@@ -3478,6 +3475,9 @@ Enable saving games (/save and /load)
 
 Enable server message sound
 == 서버 메시지 사운드 활성화
+
+Enable shout when holding fire while in water
+== 물속에서 발사 키를 누르고 있을 때 비명 소리 재생
 
 Enable Sixup connection.
 == Sixup 연결 활성화
@@ -7610,6 +7610,9 @@ Print command executed by this name or all chat binds
 Print daily messages to console
 == 일일 메시지를 콘솔에 출력
 
+Prioritize outgoing game traffic on Windows (best effort)
+== Prioritize outgoing game traffic on Windows (best effort)
+
 Privately messages someone's current time in this current running race (your time by default)
 == 현재 진행 중인 레이스에서 특정 플레이어의 현재 시간을 귓속말로 보냅니다 (기본값은 당신의 시간)
 
@@ -9673,6 +9676,9 @@ Show others' nameplate coordinates
 
 Show outdated version warning
 == 버전이 오래되었다는 경고 표시
+
+Show outgoing game traffic QoS status
+== Show outgoing game traffic QoS status
 
 Show outlines only on entity layer
 == 엔티티 레이어에서만 윤곽선 표시

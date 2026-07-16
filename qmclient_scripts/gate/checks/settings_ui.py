@@ -11,15 +11,27 @@ from lib.report import ResultCollector
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 TRIGGER_PATHS = {
+	"src/game/client/QmUi/QmScroll.h",
 	"src/game/client/QmUi/QmCardRegistry.cpp",
+	"src/game/client/QmUi/QmScroll.cpp",
+	"src/game/client/QmUi/SettingsPageLayout.h",
+	"src/game/client/QmUi/UiForms.cpp",
+	"src/game/client/QmUi/UiForms.h",
+	"src/game/client/components/menus.cpp",
 	"src/game/client/components/menus_settings.cpp",
+	"src/game/client/components/menus_settings7.cpp",
+	"src/game/client/components/menus_settings_assets.cpp",
 	"src/game/client/components/menus_settings_controls.cpp",
 	"src/game/client/components/qmclient/menus_qmclient.cpp",
+	"src/game/client/components/tclient/menus_tclient.cpp",
 }
+
+TRIGGER_PREFIXES = ("src/game/client/QmUi/SettingsCard",)
 
 
 def should_run(changed: list[str]) -> bool:
-	return bool(TRIGGER_PATHS.intersection(path.replace("\\", "/") for path in changed))
+	normalized = [path.replace("\\", "/") for path in changed]
+	return bool(TRIGGER_PATHS.intersection(normalized)) or any(path.startswith(TRIGGER_PREFIXES) for path in normalized)
 
 
 def run(results: ResultCollector, changed: list[str], dry_run: bool = False) -> None:

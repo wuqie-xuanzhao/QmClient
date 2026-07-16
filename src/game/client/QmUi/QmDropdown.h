@@ -3,6 +3,8 @@
 #ifndef GAME_CLIENT_QMUI_QMDROPDOWN_H
 #define GAME_CLIENT_QMUI_QMDROPDOWN_H
 
+#include "QmScroll.h"
+
 #include <game/client/ui_rect.h>
 
 struct SQmDropdownGeometryConfig
@@ -25,7 +27,8 @@ struct SQmDropdownGeometryResult
 
 struct SQmDropdownPopupPolicy
 {
-	int m_MaxVisibleItems = 8;
+	int m_ItemCount = 0;
+	int m_MaxVisibleItems = QM_POPUP_LIST_MAX_VISIBLE_ITEMS;
 	float m_ContentHeight = 0.0f;
 	float m_PreferredHeight = 0.0f;
 };
@@ -51,7 +54,7 @@ struct SQmDropdownUpdateResult
 };
 
 SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRect, const CUIRect &ViewportRect, const SQmDropdownGeometryConfig &Config);
-SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight);
+SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight, int MinimumVisibleItems = 0);
 bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupHeight);
 
 class CQmDropdownState

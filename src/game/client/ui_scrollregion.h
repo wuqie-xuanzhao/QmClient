@@ -7,15 +7,16 @@
 
 #include <game/client/QmUi/QmScroll.h>
 
-constexpr bool QmScrollRegionCanConsumeWheel(bool HotFromPreviousFrame, bool HotInPopupThisFrame, bool UnderlyingScrollBlocked, bool RenderingPopup)
+constexpr bool QmScrollRegionCanConsumeWheel(bool HotFromPreviousFrame, bool HotThisFrame, bool UnderlyingScrollBlocked, bool RenderingPopup)
 {
-	return (HotFromPreviousFrame || HotInPopupThisFrame) && (!UnderlyingScrollBlocked || RenderingPopup);
+	return (HotFromPreviousFrame || HotThisFrame) && (!UnderlyingScrollBlocked || RenderingPopup);
 }
 
 struct CScrollRegionParams
 {
 	float m_ScrollbarThickness;
 	float m_ScrollbarMargin;
+	bool m_ScrollbarAlwaysReserved;
 	bool m_ScrollbarNoOuterMargin;
 	float m_SliderMinSize;
 	float m_ScrollUnit;
@@ -61,6 +62,7 @@ inline CScrollRegionParams QmScrollRegionParamsFromPolicy(const SQmResolvedScrol
 	CScrollRegionParams Params;
 	Params.m_ScrollbarThickness = Policy.m_Style.m_ScrollbarWidth;
 	Params.m_ScrollbarMargin = Policy.m_Style.m_ScrollbarMargin;
+	Params.m_ScrollbarAlwaysReserved = Policy.m_ScrollbarAlwaysReserved;
 	Params.m_SliderMinSize = Policy.m_Style.m_MinThumbHeight;
 	Params.m_ScrollUnit = Policy.m_Config.m_WheelScale;
 	Params.m_HideScrollbar = Policy.m_RailVisibility == EQmScrollRailVisibility::HIDDEN;
@@ -74,6 +76,7 @@ inline CScrollRegionParams::CScrollRegionParams()
 	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.0f);
 	m_ScrollbarThickness = Style.m_ScrollbarWidth;
 	m_ScrollbarMargin = Style.m_ScrollbarMargin;
+	m_ScrollbarAlwaysReserved = false;
 	m_ScrollbarNoOuterMargin = false;
 	m_SliderMinSize = 25.0f;
 	m_ScrollUnit = Config.m_WheelScale;
@@ -213,6 +216,7 @@ private:
 	SQmScrollConfig ScrollConfig() const;
 	vec2 ContentScrollOffset() const;
 	void DoScrollInput();
+	CUIRect WheelHotRect() const;
 	void UpdateHotScrollRegion();
 	void AdvanceAnimation();
 	void MaintainNoScrollSliderActive();

@@ -340,6 +340,16 @@ int SettingsSkinListBackgroundWarmupCount(int TotalEntries, int MaxEntriesPerFra
 	return std::min(TotalEntries, MaxEntriesPerFrame);
 }
 
+size_t SettingsSkinBackgroundScanIndex(size_t StartCursor, size_t Attempt, size_t ItemCount)
+{
+	return ItemCount == 0 ? 0 : (StartCursor + Attempt) % ItemCount;
+}
+
+size_t SettingsSkinBackgroundScanNextCursor(size_t StartCursor, size_t ScannedCount, size_t ItemCount)
+{
+	return SettingsSkinBackgroundScanIndex(StartCursor, ScannedCount, ItemCount);
+}
+
 bool SettingsSkinBackgroundWarmupShouldRun(bool PageVisible, bool VisibleBacklog, bool InputActive)
 {
 	return PageVisible && !VisibleBacklog && !InputActive;
@@ -522,6 +532,17 @@ SSettingsSkinBackgroundRequestBudgetOutput SettingsSkinBackgroundRequestBudgetDe
 	}
 
 	Output.m_RequestBudget = minimum(Input.m_DefaultBudget, maximum(0, Available - VisibleReserve));
+	return Output;
+}
+
+SSettingsTeeOffscreenLifecycleOutput SettingsTeeOffscreenLifecycleDecision(const SSettingsTeeOffscreenLifecycleInput &Input)
+{
+	SSettingsTeeOffscreenLifecycleOutput Output;
+	Output.m_FullListReady = Input.m_TotalEntries > 0 &&
+				 Input.m_ValidEntries == Input.m_TotalEntries &&
+				 Input.m_SettledEntries == Input.m_TotalEntries;
+	Output.m_CompleteDrainSession = Input.m_DrainSessionActive && Output.m_FullListReady;
+	Output.m_LogCompletion = Output.m_CompleteDrainSession && Input.m_PerfDebugEnabled;
 	return Output;
 }
 

@@ -69,14 +69,31 @@ void ApplySettingsCardDeckSingleColumnDragPlacement(std::array<std::vector<int>,
 		return;
 	}
 
-	const int LeftCount = (int)aColumns[1].size();
-	std::vector<int> vVisualOrder = aColumns[1];
-	vVisualOrder.insert(vVisualOrder.end(), aColumns[2].begin(), aColumns[2].end());
+	std::vector<int> vVisualOrder;
+	std::vector<int> vVisualColumnSlots;
+	vVisualOrder.reserve(aColumns[1].size() + aColumns[2].size());
+	vVisualColumnSlots.reserve(vVisualOrder.capacity());
+	const size_t NumLayers = std::max(aColumns[1].size(), aColumns[2].size());
+	for(size_t Layer = 0; Layer < NumLayers; ++Layer)
+	{
+		if(Layer < aColumns[1].size())
+		{
+			vVisualOrder.push_back(aColumns[1][Layer]);
+			vVisualColumnSlots.push_back(1);
+		}
+		if(Layer < aColumns[2].size())
+		{
+			vVisualOrder.push_back(aColumns[2][Layer]);
+			vVisualColumnSlots.push_back(2);
+		}
+	}
 	vVisualOrder.erase(std::remove(vVisualOrder.begin(), vVisualOrder.end(), ActiveStateIndex), vVisualOrder.end());
 	const int InsertAt = std::clamp(TargetOrder, 0, (int)vVisualOrder.size());
 	vVisualOrder.insert(vVisualOrder.begin() + InsertAt, ActiveStateIndex);
-	aColumns[1].assign(vVisualOrder.begin(), vVisualOrder.begin() + std::min(LeftCount, (int)vVisualOrder.size()));
-	aColumns[2].assign(vVisualOrder.begin() + aColumns[1].size(), vVisualOrder.end());
+	aColumns[1].clear();
+	aColumns[2].clear();
+	for(size_t i = 0; i < vVisualOrder.size(); ++i)
+		aColumns[vVisualColumnSlots[i]].push_back(vVisualOrder[i]);
 }
 
 int ResolveSettingsCardDeckDropOrder(float MouseY, int TargetColumn, const std::vector<SSettingsCardDeckItemGeometry> &vItems, int IgnoredStateIndex)
@@ -117,6 +134,21 @@ bool SettingsCardDeckNeedsContentMeasure(const bool Collapsed, const bool Measur
 bool SettingsCardDeckRendersContent(const bool Collapsed)
 {
 	return !Collapsed;
+}
+
+bool SettingsCardDeckContentHeightChanged(const float PreviousContentHeight, const float ContentHeight)
+{
+	return PreviousContentHeight >= 0.0f && std::abs(PreviousContentHeight - ContentHeight) > 0.01f;
+}
+
+bool SettingsCardDeckShouldSnapReflow(const bool GeometryStateChanged, const bool DragActive)
+{
+	return GeometryStateChanged && !DragActive;
+}
+
+bool SettingsCardDeckScrollMoved(const bool HasPreviousOffset, const float PreviousOffsetY, const float CurrentOffsetY)
+{
+	return HasPreviousOffset && std::abs(PreviousOffsetY - CurrentOffsetY) > 0.001f;
 }
 
 bool SettingsCardDeckAllowsDragStart(const bool EntryPending, const bool EntryPositionActive, const bool ReflowTargetChanged, const bool ReflowPositionActive)
