@@ -3222,13 +3222,13 @@ void CGraphics_Threaded::SetForcedAspect(bool Force)
 		ResizeListener();
 }
 
-void CGraphics_Threaded::SetScreenAspectOverride(float Aspect)
+void CGraphics_Threaded::SetGameScreenAspectOverride(float Aspect)
 {
 	Aspect = maximum(0.0f, Aspect);
-	if(absolute(m_ScreenAspectOverride - Aspect) < 0.0001f)
+	if(absolute(m_GameScreenAspectOverride - Aspect) < 0.0001f)
 		return;
 
-	m_ScreenAspectOverride = Aspect;
+	m_GameScreenAspectOverride = Aspect;
 	if(!IsBackendInitialized())
 		return;
 

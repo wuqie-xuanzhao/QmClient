@@ -17,8 +17,18 @@ namespace QmChatCompletion
 			const char *m_pReading;
 		};
 
+		struct SOfficialDdnetMapCategory
+		{
+			const char *m_pMapName;
+			const char *m_pCategory;
+		};
+
 		static constexpr SPinyinEntry s_aPinyinEntries[] = {
 #include "chat_completion_pinyin.inc"
+		};
+
+		static constexpr SOfficialDdnetMapCategory s_aOfficialDdnetMapCategories[] = {
+#include "chat_completion_ddnet_maps.inc"
 		};
 
 		const char *PinyinReading(int Codepoint)
@@ -261,6 +271,65 @@ namespace QmChatCompletion
 			return false;
 		Category = pCategory;
 		return true;
+	}
+
+	bool FindOfficialDdnetMapCategory(const char *pMapName, std::string &Category)
+	{
+		Category.clear();
+		if(pMapName == nullptr || pMapName[0] == '\0')
+			return false;
+
+		static const std::vector<const SOfficialDdnetMapCategory *> s_vpSortedCategories = []() {
+			std::vector<const SOfficialDdnetMapCategory *> vpCategories;
+			vpCategories.reserve(std::size(s_aOfficialDdnetMapCategories));
+			for(const SOfficialDdnetMapCategory &Entry : s_aOfficialDdnetMapCategories)
+				vpCategories.push_back(&Entry);
+			std::sort(vpCategories.begin(), vpCategories.end(), [](const auto *pLeft, const auto *pRight) {
+				return str_comp(pLeft->m_pMapName, pRight->m_pMapName) < 0;
+			});
+			return vpCategories;
+		}();
+
+		const auto It = std::lower_bound(s_vpSortedCategories.begin(), s_vpSortedCategories.end(), pMapName, [](const auto *pEntry, const char *pName) {
+			return str_comp(pEntry->m_pMapName, pName) < 0;
+		});
+		if(It != s_vpSortedCategories.end() && str_comp((*It)->m_pMapName, pMapName) == 0)
+		{
+			Category = (*It)->m_pCategory;
+			return true;
+		}
+
+		const char *pCaseInsensitiveCategory = nullptr;
+		for(const SOfficialDdnetMapCategory &Entry : s_aOfficialDdnetMapCategories)
+		{
+			if(str_utf8_comp_nocase(Entry.m_pMapName, pMapName) != 0)
+				continue;
+			if(pCaseInsensitiveCategory != nullptr && str_comp(pCaseInsensitiveCategory, Entry.m_pCategory) != 0)
+				return false;
+			pCaseInsensitiveCategory = Entry.m_pCategory;
+		}
+		if(pCaseInsensitiveCategory == nullptr)
+			return false;
+		Category = pCaseInsensitiveCategory;
+		return true;
+	}
+
+	void ResolveMapCompletionCategory(const char *pMapName, bool IsDdnetMode, const char *pFallbackCategory, std::string &Category)
+	{
+		if(IsDdnetMode)
+		{
+			if(!FindOfficialDdnetMapCategory(pMapName, Category))
+				Category = "Other";
+			return;
+		}
+		Category = pFallbackCategory != nullptr ? pFallbackCategory : "";
+	}
+
+	float CalculateCandidatePopupWidth(float MaximumWidth, float ContentWidth, bool HasScrollbar)
+	{
+		const float HorizontalPadding = 10.0f;
+		const float ScrollbarSpace = HasScrollbar ? 4.0f : 0.0f;
+		return std::min(std::max(80.0f, ContentWidth + HorizontalPadding + ScrollbarSpace), std::max(80.0f, MaximumWidth));
 	}
 
 	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin, const char *pDetail)

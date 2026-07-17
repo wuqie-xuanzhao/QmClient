@@ -346,9 +346,10 @@ class CTClient : public CComponent
 
 	// Swap倒计时提示
 	bool m_aSwapCountdownActive[NUM_DUMMIES] = {false, false};
+	bool m_aSwapCountdownOutgoing[NUM_DUMMIES] = {false, false};
 	int m_aSwapCountdownStartTick[NUM_DUMMIES] = {0, 0};
-	char m_aaSwapCountdownRequester[NUM_DUMMIES][MAX_NAME_LENGTH] = {{0}, {0}};
-	void StartSwapCountdown(int Dummy, const char *pRequester);
+	char m_aaSwapCountdownCounterpart[NUM_DUMMIES][MAX_NAME_LENGTH] = {{0}, {0}};
+	void StartSwapCountdown(int Dummy, const char *pCounterpart, bool Outgoing);
 	void ClearSwapCountdown(int Dummy = -1);
 
 	// 好友上线提醒
@@ -435,7 +436,8 @@ public:
 	void HandleSwapCountdownMessage(const char *pText, int Dummy);
 	bool HasSwapCountdown(int Dummy = -1) const;
 	int GetSwapCountdownStartTick(int Dummy = -1) const;
-	const char *GetSwapCountdownRequester(int Dummy) const;
+	const char *GetSwapCountdownCounterpart(int Dummy) const;
+	bool IsSwapCountdownOutgoing(int Dummy) const;
 
 	// 收藏地图公开接口
 	bool IsFavoriteMap(const char *pMapName) const;

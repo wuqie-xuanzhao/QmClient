@@ -89,6 +89,28 @@ TEST(SystemMediaAlbumArt, DecodeSizeKeepsSmallCoversAndRejectsEmptyDimensions)
 	EXPECT_EQ(EmptyHeight.m_Height, 0u);
 }
 
+TEST(SystemMediaAlbumArt, CircularMaskKeepsCenterAndRejectsOutside)
+{
+	constexpr float Feather = 4.0f;
+	EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(128.0f, 128.0f, 256, 256, Feather), 1.0f);
+	EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(0.0f, 0.0f, 256, 256, Feather), 0.0f);
+	EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(256.0f, 128.0f, 256, 256, Feather), 0.0f);
+	EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(128.0f, 128.0f, 0, 256, Feather), 0.0f);
+}
+
+TEST(SystemMediaAlbumArt, CircularMaskUsesSmoothInwardFeather)
+{
+	constexpr float Feather = 4.0f;
+	const float TransparentEdge = SystemMediaControls::AlbumArtCircleMaskAlpha(255.5f, 128.0f, 256, 256, Feather);
+	const float FeatherMiddle = SystemMediaControls::AlbumArtCircleMaskAlpha(253.5f, 128.0f, 256, 256, Feather);
+	const float OpaqueInside = SystemMediaControls::AlbumArtCircleMaskAlpha(251.0f, 128.0f, 256, 256, Feather);
+
+	EXPECT_FLOAT_EQ(TransparentEdge, 0.0f);
+	EXPECT_GT(FeatherMiddle, 0.0f);
+	EXPECT_LT(FeatherMiddle, 1.0f);
+	EXPECT_FLOAT_EQ(OpaqueInside, 1.0f);
+}
+
 TEST(SystemMediaAlbumArt, ExpensivePixelMaskRunsBeforeWorkerPublishesCover)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/system_media_controls.cpp"));
@@ -104,9 +126,25 @@ TEST(SystemMediaAlbumArt, ExpensivePixelMaskRunsBeforeWorkerPublishesCover)
 	ASSERT_LT(DecodeBegin, MainThreadBegin);
 	const std::string DecodeBody = Source.substr(DecodeBegin, MainThreadBegin - DecodeBegin);
 	const std::string MainThreadBody = Source.substr(MainThreadBegin);
+	EXPECT_NE(DecodeBody.find("BitmapAlphaMode::Straight"), std::string::npos);
+	EXPECT_NE(DecodeBody.find("ApplyCircularFeatherMask(CircularCopy"), std::string::npos);
+	EXPECT_LT(DecodeBody.find("ApplyCircularFeatherMask(CircularCopy"), DecodeBody.find("SetSharedAlbumArt"));
 	EXPECT_NE(DecodeBody.find("ApplyRoundedMask(Copy"), std::string::npos);
 	EXPECT_LT(DecodeBody.find("ApplyRoundedMask(Copy"), DecodeBody.find("SetSharedAlbumArt"));
+	EXPECT_EQ(MainThreadBody.find("ApplyCircularFeatherMask"), std::string::npos);
 	EXPECT_EQ(MainThreadBody.find("ApplyRoundedMask"), std::string::npos);
+}
+
+TEST(SystemMediaAlbumArt, CircularMediaIslandTextureDoesNotReplaceLegacyCover)
+{
+	std::ifstream File(TestSourcePath("src/game/client/components/hud.cpp"));
+	ASSERT_TRUE(File.good());
+	std::stringstream Buffer;
+	Buffer << File.rdbuf();
+	const std::string Source = Buffer.str();
+
+	EXPECT_NE(Source.find("TrackInput.m_Cover = MediaState.m_AlbumArtCircular;"), std::string::npos);
+	EXPECT_NE(Source.find("Graphics()->TextureSet(MediaState.m_AlbumArt);"), std::string::npos);
 }
 
 TEST(SystemMediaTimeline, LastUpdatedChangeAdvancesTimelineGeneration)

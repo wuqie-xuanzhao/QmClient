@@ -14,37 +14,6 @@
 #include <game/client/gameclient.h>
 #include <game/localization.h>
 
-#include <initializer_list>
-
-static constexpr int QMCLIENT_AXIOM_AUTO_LOGIN_MAX_ATTEMPTS = 3;
-static constexpr int QMCLIENT_AXIOM_AUTO_LOGIN_RETRY_DELAY_SECONDS = 2;
-static constexpr int QMCLIENT_AXIOM_AUTO_LOGIN_REPLY_TIMEOUT_SECONDS = 8;
-static constexpr int QMCLIENT_AXIOM_AUTO_LOGIN_SLOW_RETRY_SECONDS = 30;
-
-static bool QmTextContainsAny(const char *pText, const std::initializer_list<const char *> &Tokens)
-{
-	if(!pText || pText[0] == '\0')
-		return false;
-
-	for(const char *pToken : Tokens)
-	{
-		if(pToken && pToken[0] != '\0' && str_find_nocase(pText, pToken))
-			return true;
-	}
-	return false;
-}
-
-static bool IsLoginContextMessage(const char *pText)
-{
-	return QmTextContainsAny(pText, {"login", "logged in", "password", "登入", "登录", "密码"});
-}
-
-static bool IsHardLoginFailure(const char *pText)
-{
-	return IsLoginContextMessage(pText) &&
-	       QmTextContainsAny(pText, {"incorrect", "invalid", "wrong", "password incorrect", "wrong password", "密码错误", "密码不正确"});
-}
-
 const char *CQmAxiomAutoLogin::CurrentCommunityId() const
 {
 	IServerBrowser *pServerBrowser = ServerBrowser();
@@ -95,37 +64,12 @@ void CQmAxiomAutoLogin::DisableDummyReconnectForServer()
 
 void CQmAxiomAutoLogin::ResetState()
 {
-	m_AutoLoginAnnounced = false;
-	m_AutoLoginSucceeded = false;
-	m_AutoLoginWaitingReply = false;
-	m_AutoLoginSlowRetryMode = false;
-	m_AutoLoginHardFailed = false;
-	m_AutoLoginAttempts = 0;
-	m_AutoLoginNextTryTick = 0;
-	m_AutoLoginEnabledLastFrame = false;
+	m_AutoLoginState = {};
 	m_aAutoLoginServer[0] = '\0';
 	m_DummyAutoLoginSent = false;
 	m_DummyWasConnected = false;
 	m_DummyLoginAllowedThisServer = false;
 	m_aDummyAutoLoginServer[0] = '\0';
-}
-
-void CQmAxiomAutoLogin::ScheduleSlowRetry()
-{
-	m_AutoLoginSlowRetryMode = true;
-	m_AutoLoginNextTryTick = time_get() + (int64_t)QMCLIENT_AXIOM_AUTO_LOGIN_SLOW_RETRY_SECONDS * time_freq();
-}
-
-void CQmAxiomAutoLogin::ScheduleSoftRetry()
-{
-	if(m_AutoLoginAttempts < QMCLIENT_AXIOM_AUTO_LOGIN_MAX_ATTEMPTS)
-	{
-		m_AutoLoginNextTryTick = time_get() + (int64_t)QMCLIENT_AXIOM_AUTO_LOGIN_RETRY_DELAY_SECONDS * time_freq();
-	}
-	else
-	{
-		ScheduleSlowRetry();
-	}
 }
 
 void CQmAxiomAutoLogin::TrySendLogin()
@@ -134,7 +78,7 @@ void CQmAxiomAutoLogin::TrySendLogin()
 		return;
 	if(Client()->State() != IClient::STATE_ONLINE || !IsAxiomCommunity())
 		return;
-	if(m_AutoLoginSucceeded || m_AutoLoginHardFailed)
+	if(m_AutoLoginState.m_Succeeded || m_AutoLoginState.m_HardFailed)
 		return;
 
 	char aServerAddress[NETADDR_MAXSTRSIZE] = "";
@@ -146,16 +90,14 @@ void CQmAxiomAutoLogin::TrySendLogin()
 
 	char aLoginCommand[192];
 	str_format(aLoginCommand, sizeof(aLoginCommand), "/login %s", g_Config.m_QmAxiomLoginPassword);
-	GameClient()->m_Chat.SendChat(0, aLoginCommand);
+	GameClient()->m_Chat.SendChatOnConn(IClient::CONN_MAIN, 0, aLoginCommand);
 
-	m_AutoLoginAttempts++;
-	m_AutoLoginWaitingReply = true;
-	m_AutoLoginNextTryTick = time_get() + (int64_t)QMCLIENT_AXIOM_AUTO_LOGIN_REPLY_TIMEOUT_SECONDS * time_freq();
+	QmMarkAxiomAutoLoginAttempt(m_AutoLoginState, time_get(), time_freq());
 
-	if(!m_AutoLoginAnnounced)
+	if(!m_AutoLoginState.m_Announced)
 	{
 		GameClient()->Echo(Localize("Trying Axiom auto login"));
-		m_AutoLoginAnnounced = true;
+		m_AutoLoginState.m_Announced = true;
 	}
 }
 
@@ -194,39 +136,26 @@ void CQmAxiomAutoLogin::OnMessage(int MsgType, void *pRawMsg)
 		return;
 
 	const char *pText = pMsg->m_pMessage;
-	if(!m_AutoLoginWaitingReply || !IsAxiomCommunity() || !pText || pText[0] == '\0')
+	if(m_AutoLoginState.m_Succeeded || m_AutoLoginState.m_HardFailed || !IsAxiomCommunity() || !pText || pText[0] == '\0')
 		return;
 
-	if(IsHardLoginFailure(pText))
+	const EQmAxiomLoginReply Reply = QmClassifyAxiomLoginReply(pText);
+	const EQmAxiomLoginReply AppliedReply = QmApplyAxiomLoginReply(m_AutoLoginState, Reply, time_get(), time_freq());
+	if(AppliedReply == EQmAxiomLoginReply::IGNORE || AppliedReply == EQmAxiomLoginReply::PENDING)
+		return;
+
+	if(AppliedReply == EQmAxiomLoginReply::HARD_FAILURE)
 	{
-		m_AutoLoginWaitingReply = false;
-		m_AutoLoginHardFailed = true;
-		m_AutoLoginSlowRetryMode = false;
-		m_AutoLoginNextTryTick = 0;
 		GameClient()->Echo(Localize("Axiom auto login failed"));
 		return;
 	}
 
-	const bool IsLoginMessage = QmTextContainsAny(pText, {"login", "logged in", "登入", "登录"});
-	if(!IsLoginMessage)
-		return;
-
-	const bool Success = QmTextContainsAny(pText, {"success", "successful", "logged in", "welcome", "succeeded", "登入成功", "登录成功", "欢迎"});
-	const bool Failure = QmTextContainsAny(pText, {"fail", "failed", "incorrect", "invalid", "wrong", "denied", "error", "password incorrect", "登入失败", "登录失败", "密码错误"});
-
-	if(Success)
+	if(AppliedReply == EQmAxiomLoginReply::SUCCESS)
 	{
-		m_AutoLoginSucceeded = true;
-		m_AutoLoginWaitingReply = false;
-		m_AutoLoginSlowRetryMode = false;
-		m_AutoLoginHardFailed = false;
-		m_AutoLoginNextTryTick = 0;
 		GameClient()->Echo(Localize("Axiom auto login succeeded"));
 	}
-	else if(Failure)
+	else if(AppliedReply == EQmAxiomLoginReply::RETRYABLE_FAILURE)
 	{
-		m_AutoLoginWaitingReply = false;
-		ScheduleSoftRetry();
 		GameClient()->Echo(Localize("Axiom auto login failed, retrying"));
 	}
 }
@@ -286,31 +215,12 @@ void CQmAxiomAutoLogin::OnUpdate()
 
 	if(g_Config.m_QmAxiomLoginPassword[0] == '\0')
 	{
-		m_AutoLoginAnnounced = false;
-		m_AutoLoginSucceeded = false;
-		m_AutoLoginWaitingReply = false;
-		m_AutoLoginSlowRetryMode = false;
-		m_AutoLoginHardFailed = false;
-		m_AutoLoginAttempts = 0;
-		m_AutoLoginNextTryTick = 0;
+		m_AutoLoginState = {};
 		m_aAutoLoginServer[0] = '\0';
 	}
-	else if(!m_AutoLoginSucceeded && !m_AutoLoginWaitingReply)
+	else if(QmUpdateAxiomAutoLoginState(m_AutoLoginState, time_get(), time_freq()))
 	{
-		const int64_t Now = time_get();
-		if(!m_AutoLoginHardFailed && (m_AutoLoginAttempts == 0 || (m_AutoLoginNextTryTick > 0 && Now >= m_AutoLoginNextTryTick)))
-			TrySendLogin();
-		if(m_AutoLoginSlowRetryMode && m_AutoLoginNextTryTick == 0 && !m_AutoLoginHardFailed)
-			ScheduleSlowRetry();
-	}
-	else if(m_AutoLoginWaitingReply)
-	{
-		const int64_t Now = time_get();
-		if(m_AutoLoginNextTryTick > 0 && Now >= m_AutoLoginNextTryTick)
-		{
-			m_AutoLoginWaitingReply = false;
-			ScheduleSoftRetry();
-		}
+		TrySendLogin();
 	}
 }
 

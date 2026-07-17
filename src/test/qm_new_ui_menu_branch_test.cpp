@@ -6,6 +6,7 @@
 #include <test/test.h>
 
 #include <game/client/components/camera.h>
+#include <game/client/components/qmclient/axiom_auto_login.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
 
@@ -1335,6 +1336,15 @@ TEST(QmNewUiMenuBranches, ScoreboardBackgroundsUseScoreboardOpacity)
 	EXPECT_NE(Source.find("Row.Draw(ScoreboardDecorationColor(ColorRGBA(0.7f, 0.7f, 0.7f, 0.7f * ItemAlpha))"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, ScoreboardFewPlayerDdTeamLabelIsLeftAligned)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/scoreboard.cpp");
+	const std::string RenderScoreboard = FunctionBody(Source, "void CScoreboard::RenderScoreboard(");
+
+	EXPECT_NE(RenderScoreboard.find("TextRender()->Text(Row.x + 5.0f, Row.y + Row.h, TeamFontSize, aBuf);"), std::string::npos);
+	EXPECT_EQ(RenderScoreboard.find("Row.x + Row.w / 2.0f - TextRender()->TextWidth(TeamFontSize, aBuf) / 2.0f + 5.0f"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, ScoreboardMediaButtonSymbolsFollowContentAlpha)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/scoreboard.cpp");
@@ -1799,18 +1809,13 @@ TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
 	EXPECT_NE(DummyDisconnectBody.find("GameClient()->OnDummyManualDisconnect();"), std::string::npos);
 	EXPECT_NE(DummyDisconnectBody.find("DummyDisconnect(nullptr);"), std::string::npos);
 	EXPECT_NE(Source.find("bool CQmAxiomAutoLogin::IsAxiomCommunity() const"), std::string::npos);
-	EXPECT_NE(Source.find("QMCLIENT_AXIOM_AUTO_LOGIN_SLOW_RETRY_SECONDS"), std::string::npos);
-	EXPECT_NE(Source.find("m_AutoLoginSlowRetryMode"), std::string::npos);
-	EXPECT_NE(Source.find("m_AutoLoginHardFailed"), std::string::npos);
-	EXPECT_NE(Source.find("ScheduleSlowRetry"), std::string::npos);
-	EXPECT_NE(Source.find("IsHardLoginFailure"), std::string::npos);
-	EXPECT_NE(Source.find("IsLoginContextMessage"), std::string::npos);
-	EXPECT_NE(Source.find("return IsLoginContextMessage(pText) &&"), std::string::npos);
-	const size_t HardFailureCheck = Source.find("IsHardLoginFailure(pText)");
-	const size_t LoginMessageFilter = Source.find("const bool IsLoginMessage");
-	EXPECT_NE(HardFailureCheck, std::string::npos);
-	EXPECT_NE(LoginMessageFilter, std::string::npos);
-	EXPECT_LT(HardFailureCheck, LoginMessageFilter);
+	EXPECT_NE(Header.find("QMCLIENT_AXIOM_AUTO_LOGIN_SLOW_RETRY_SECONDS"), std::string::npos);
+	EXPECT_NE(Header.find("SQmAxiomAutoLoginState m_AutoLoginState;"), std::string::npos);
+	EXPECT_NE(Header.find("m_SlowRetryMode"), std::string::npos);
+	EXPECT_NE(Header.find("m_HardFailed"), std::string::npos);
+	EXPECT_NE(Header.find("QmScheduleAxiomAutoLoginRetry"), std::string::npos);
+	EXPECT_NE(Source.find("QmClassifyAxiomLoginReply(pText)"), std::string::npos);
+	EXPECT_NE(Source.find("QmApplyAxiomLoginReply"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Trying Axiom auto login\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Trying Axiom dummy auto login\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Axiom auto login succeeded\")"), std::string::npos);
@@ -2965,6 +2970,53 @@ TEST(QmNewUiMenuBranches, GraphicsCurrentModeLabelSanitizesScaleAndAspectRatio)
 	EXPECT_NE(Source.find("const int AspectGcd = G > 0 ? G : 1;"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_GfxScreenWidth / AspectGcd"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_GfxScreenHeight / AspectGcd"), std::string::npos);
+}
+
+TEST(QmCameraAspectRatio, KeepsUiAspectPhysicalAndOverridesOnlyGameWorld)
+{
+	const std::string GraphicsHeader = ReadTextFile("src/engine/graphics.h");
+	const std::string GraphicsSource = ReadTextFile("src/engine/graphics.cpp");
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string GameClientSource = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string ControlsSource = ReadTextFile("src/game/client/components/controls.cpp");
+	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
+	const std::string TouchControlsSource = ReadTextFile("src/game/client/components/touch_controls.cpp");
+	const std::string CollisionHitboxSource = ReadTextFile("src/game/client/components/qmclient/collision_hitbox.cpp");
+	const std::string BackgroundParticlesSource = ReadTextFile("src/game/client/components/tclient/background_particles.cpp");
+	const std::string RenderLayerSource = ReadTextFile("src/game/map/render_layer.cpp");
+	const std::string MapRendererSource = ReadTextFile("src/game/map/map_renderer.cpp");
+	const std::string MovingTilesSource = ReadTextFile("src/game/client/components/tclient/moving_tiles.cpp");
+	const std::string NameplatesSource = ReadTextFile("src/game/client/components/nameplates.cpp");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+
+	EXPECT_NE(GraphicsHeader.find("float ScreenAspect() const { return (float)ScreenWidth() / (float)ScreenHeight(); }"), std::string::npos);
+	EXPECT_NE(GraphicsHeader.find("float GameScreenAspect() const { return m_GameScreenAspectOverride > 0.0f ? m_GameScreenAspectOverride : ScreenAspect(); }"), std::string::npos);
+	EXPECT_NE(TClientSource.find("Graphics()->SetGameScreenAspectOverride(GameScreenAspectOverride);"), std::string::npos);
+	EXPECT_EQ(TClientSource.find("SetScreenAspectOverride"), std::string::npos);
+	EXPECT_NE(RenderLayerSource.find("Graphics()->GameScreenAspect()"), std::string::npos);
+	EXPECT_NE(RenderLayerSource.find("Graphics()->MapScreenToGameInterface("), std::string::npos);
+	EXPECT_NE(MapRendererSource.find("Graphics()->MapScreenToGameInterface("), std::string::npos);
+	EXPECT_NE(MovingTilesSource.find("Graphics()->MapScreenToGameInterface("), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("This.Graphics()->MapScreenToGameInterface("), std::string::npos);
+	EXPECT_NE(GameClientSource.find("CalcScreenParams(Graphics()->GameScreenAspect(), ShowDistanceZoom"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("m_LastScreenAspect = Graphics()->GameScreenAspect();"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("CalcScreenParams(Graphics()->GameScreenAspect(), m_Camera.m_Zoom"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("CalcScreenParams(Graphics()->GameScreenAspect(), 1.0f"), std::string::npos);
+	EXPECT_NE(HudSource.find("CalcScreenParams(pGraphics->GameScreenAspect(), GameClient.m_Camera.m_Zoom"), std::string::npos);
+	EXPECT_NE(HudSource.find("Graphics()->GameScreenAspect(), MiniZoom, aPoints"), std::string::npos);
+	EXPECT_NE(HudSource.find("Graphics()->GameScreenAspect(), 1.0f, aPoints"), std::string::npos);
+	EXPECT_NE(TouchControlsSource.find("CalcScreenParams(m_pTouchControls->Graphics()->GameScreenAspect()"), std::string::npos);
+	EXPECT_NE(TouchControlsSource.find("CalcScreenParams(Graphics()->GameScreenAspect(), Zoom"), std::string::npos);
+	EXPECT_NE(CollisionHitboxSource.find("Graphics()->GameScreenAspect(), GameClient()->m_Camera.m_Zoom"), std::string::npos);
+	EXPECT_NE(BackgroundParticlesSource.find("Graphics()->GameScreenAspect(), Zoom, aPoints"), std::string::npos);
+
+	const std::string MapScreenToInterface = FunctionBody(GraphicsSource, "void IGraphics::MapScreenToInterface(");
+	const std::string MapScreenToGameInterface = FunctionBody(GraphicsSource, "void IGraphics::MapScreenToGameInterface(");
+	EXPECT_NE(MapScreenToInterface.find("ScreenAspect()"), std::string::npos);
+	EXPECT_EQ(MapScreenToInterface.find("GameScreenAspect()"), std::string::npos);
+	EXPECT_NE(MapScreenToGameInterface.find("GameScreenAspect()"), std::string::npos);
+	EXPECT_NE(UiSource.find("Graphics()->ScreenAspect()"), std::string::npos);
+	EXPECT_EQ(UiSource.find("GameScreenAspect()"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesQmClientDisplayNames)

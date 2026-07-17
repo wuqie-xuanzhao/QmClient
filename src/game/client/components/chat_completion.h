@@ -40,6 +40,9 @@ namespace QmChatCompletion
 	bool ApplyCandidate(const char *pInput, const SContext &Context, const char *pCandidate, char *pOutput, size_t OutputSize, size_t &CursorOffset);
 	bool ExtractMapNameFromVoteOption(const char *pDescription, std::string &MapName);
 	bool ExtractMapCategory(const char *pCommunityType, const char *pServerName, std::string &Category);
+	bool FindOfficialDdnetMapCategory(const char *pMapName, std::string &Category);
+	void ResolveMapCompletionCategory(const char *pMapName, bool IsDdnetMode, const char *pFallbackCategory, std::string &Category);
+	float CalculateCandidatePopupWidth(float MaximumWidth, float ContentWidth, bool HasScrollbar);
 	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin = false, const char *pDetail = nullptr);
 	void SortCandidates(std::vector<SCandidate> &vCandidates);
 }

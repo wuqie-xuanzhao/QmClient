@@ -1201,7 +1201,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 							str_format(aBuf, sizeof(aBuf), Localize("Team %d (%d/%d)"), DDTeam, CurrentDDTeamSize, MaxTeamSize);
 						else
 							str_format(aBuf, sizeof(aBuf), Localize("Team %d"), DDTeam);
-						TextRender()->Text(Row.x + Row.w / 2.0f - TextRender()->TextWidth(TeamFontSize, aBuf) / 2.0f + 5.0f, Row.y + Row.h, TeamFontSize, aBuf);
+						TextRender()->Text(Row.x + 5.0f, Row.y + Row.h, TeamFontSize, aBuf);
 					}
 
 					CurrentDDTeamSize = 0;

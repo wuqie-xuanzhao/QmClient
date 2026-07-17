@@ -6,7 +6,9 @@
 
 #include <game/client/component.h>
 
+#include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <thread>
@@ -35,6 +37,26 @@ namespace SystemMediaControls
 		}
 		const uint32_t ScaledWidth = (uint32_t)(((uint64_t)Width * ALBUM_ART_MAX_DIMENSION + Height / 2) / Height);
 		return {ScaledWidth > 0 ? ScaledWidth : 1, ALBUM_ART_MAX_DIMENSION};
+	}
+
+	inline float AlbumArtCircleMaskAlpha(float PixelCenterX, float PixelCenterY, uint32_t Width, uint32_t Height, float Feather)
+	{
+		if(Width == 0 || Height == 0 || Feather <= 0.0f)
+			return 0.0f;
+
+		const float CenterX = Width * 0.5f;
+		const float CenterY = Height * 0.5f;
+		const float RadiusX = CenterX - 0.5f;
+		const float RadiusY = CenterY - 0.5f;
+		if(RadiusX <= 0.0f || RadiusY <= 0.0f)
+			return 0.0f;
+
+		const float NormalizedX = (PixelCenterX - CenterX) / RadiusX;
+		const float NormalizedY = (PixelCenterY - CenterY) / RadiusY;
+		const float NormalizedDistance = std::sqrt(NormalizedX * NormalizedX + NormalizedY * NormalizedY);
+		const float DistanceInside = (1.0f - NormalizedDistance) * std::min(RadiusX, RadiusY);
+		const float Coverage = std::clamp(DistanceInside / Feather, 0.0f, 1.0f);
+		return Coverage * Coverage * (3.0f - 2.0f * Coverage);
 	}
 
 } // namespace SystemMediaControls
@@ -68,6 +90,7 @@ public:
 		uint64_t m_TimelineGeneration = 0;
 		double m_PlaybackRate = 1.0;
 		IGraphics::CTextureHandle m_AlbumArt;
+		IGraphics::CTextureHandle m_AlbumArtCircular;
 		int m_AlbumArtWidth = 0;
 		int m_AlbumArtHeight = 0;
 	};

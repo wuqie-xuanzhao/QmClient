@@ -53,3 +53,11 @@ void IGraphics::MapScreenToInterface(float CenterX, float CenterY, float Zoom)
 		0, 0, ScreenAspect(), Zoom, aPoints);
 	MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }
+
+void IGraphics::MapScreenToGameInterface(float CenterX, float CenterY, float Zoom)
+{
+	float aPoints[4];
+	MapScreenToWorld(CenterX, CenterY, 100.0f, 100.0f, 100.0f,
+		0, 0, GameScreenAspect(), Zoom, aPoints);
+	MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
+}

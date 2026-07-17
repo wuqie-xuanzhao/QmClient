@@ -781,7 +781,7 @@ void CCollisionHitbox::OnRender()
 		GameClient()->m_Camera.m_Center.y,
 		100.0f, 100.0f, 100.0f,
 		0.0f, 0.0f,
-		Graphics()->ScreenAspect(), GameClient()->m_Camera.m_Zoom, aPoints);
+		Graphics()->GameScreenAspect(), GameClient()->m_Camera.m_Zoom, aPoints);
 	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 
 	if(LegacyMode || g_Config.m_QmHitboxShowMap)

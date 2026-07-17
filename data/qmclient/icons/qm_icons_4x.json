@@ -1,9 +1,9 @@
 {
   "atlas": {
-    "height": 384,
+    "height": 512,
     "image": "qmclient/icons/qm_icons_4x.png",
     "padding": 16,
-    "width": 384
+    "width": 512
   },
   "icons": {
     "chevron-down": {
@@ -16,7 +16,7 @@
       "h": 96,
       "w": 96,
       "x": 144,
-      "y": 272
+      "y": 400
     },
     "eye": {
       "h": 96,
@@ -33,29 +33,65 @@
     "plus": {
       "h": 96,
       "w": 96,
+      "x": 400,
+      "y": 16
+    },
+    "satellite-check": {
+      "h": 96,
+      "w": 96,
       "x": 16,
       "y": 144
     },
-    "search": {
+    "satellite-mute": {
       "h": 96,
       "w": 96,
       "x": 144,
       "y": 144
     },
-    "star": {
+    "satellite-swap": {
+      "h": 96,
+      "w": 96,
+      "x": 16,
+      "y": 272
+    },
+    "satellite-swap-incoming": {
       "h": 96,
       "w": 96,
       "x": 272,
       "y": 144
     },
+    "satellite-swap-outgoing": {
+      "h": 96,
+      "w": 96,
+      "x": 400,
+      "y": 144
+    },
+    "satellite-switch": {
+      "h": 96,
+      "w": 96,
+      "x": 144,
+      "y": 272
+    },
+    "search": {
+      "h": 96,
+      "w": 96,
+      "x": 272,
+      "y": 272
+    },
+    "star": {
+      "h": 96,
+      "w": 96,
+      "x": 400,
+      "y": 272
+    },
     "trash": {
       "h": 96,
       "w": 96,
       "x": 16,
-      "y": 272
+      "y": 400
     }
   },
   "scale": 4,
-  "source": "Tabler Icons SVG, rendered at build time",
+  "source": "QmClient SVG icon sources, rendered at build time",
   "version": 1
 }

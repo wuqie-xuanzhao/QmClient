@@ -75,6 +75,7 @@ struct CSystemMediaControls::SShared
 	bool m_HasMedia = false;
 	std::deque<ECommand> m_Commands;
 	std::vector<uint8_t> m_AlbumArtRgba;
+	std::vector<uint8_t> m_AlbumArtCircularRgba;
 	int m_AlbumArtWidth = 0;
 	int m_AlbumArtHeight = 0;
 	bool m_AlbumArtDirty = false;
@@ -103,7 +104,12 @@ static void ClearAlbumArtLocal(CSystemMediaControls::SWinrt *pWinrt, IGraphics *
 	{
 		pGraphics->UnloadTexture(&pWinrt->m_State.m_AlbumArt);
 	}
+	if(pGraphics && pWinrt->m_State.m_AlbumArtCircular.IsValid())
+	{
+		pGraphics->UnloadTexture(&pWinrt->m_State.m_AlbumArtCircular);
+	}
 	pWinrt->m_State.m_AlbumArt.Invalidate();
+	pWinrt->m_State.m_AlbumArtCircular.Invalidate();
 	pWinrt->m_State.m_AlbumArtWidth = 0;
 	pWinrt->m_State.m_AlbumArtHeight = 0;
 }
@@ -119,15 +125,17 @@ static void ClearSharedAlbumArt(CSystemMediaControls::SShared *pShared)
 {
 	std::scoped_lock Lock(pShared->m_Mutex);
 	pShared->m_AlbumArtRgba.clear();
+	pShared->m_AlbumArtCircularRgba.clear();
 	pShared->m_AlbumArtWidth = 0;
 	pShared->m_AlbumArtHeight = 0;
 	pShared->m_AlbumArtDirty = true;
 }
 
-static void SetSharedAlbumArt(CSystemMediaControls::SShared *pShared, std::vector<uint8_t> &&Pixels, int Width, int Height)
+static void SetSharedAlbumArt(CSystemMediaControls::SShared *pShared, std::vector<uint8_t> &&Pixels, std::vector<uint8_t> &&CircularPixels, int Width, int Height)
 {
 	std::scoped_lock Lock(pShared->m_Mutex);
 	pShared->m_AlbumArtRgba = std::move(Pixels);
+	pShared->m_AlbumArtCircularRgba = std::move(CircularPixels);
 	pShared->m_AlbumArtWidth = Width;
 	pShared->m_AlbumArtHeight = Height;
 	pShared->m_AlbumArtDirty = true;
@@ -207,6 +215,7 @@ static void ResetSharedState(CSystemMediaControls::SShared *pShared, SPlainState
 }
 
 static void ApplyRoundedMask(std::vector<uint8_t> &Pixels, int Width, int Height, float Radius);
+static void ApplyCircularFeatherMask(std::vector<uint8_t> &Pixels, int Width, int Height);
 
 static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const winrt::Windows::Storage::Streams::IRandomAccessStreamReference &Thumbnail, const std::atomic_bool &StopFlag)
 {
@@ -256,7 +265,7 @@ static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const win
 		Transform.InterpolationMode(winrt::Windows::Graphics::Imaging::BitmapInterpolationMode::Fant);
 		const auto PixelDataOp = Decoder.GetPixelDataAsync(
 			winrt::Windows::Graphics::Imaging::BitmapPixelFormat::Rgba8,
-			winrt::Windows::Graphics::Imaging::BitmapAlphaMode::Premultiplied,
+			winrt::Windows::Graphics::Imaging::BitmapAlphaMode::Straight,
 			Transform,
 			winrt::Windows::Graphics::Imaging::ExifOrientationMode::IgnoreExifOrientation,
 			winrt::Windows::Graphics::Imaging::ColorManagementMode::DoNotColorManage);
@@ -281,10 +290,12 @@ static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const win
 		}
 
 		std::vector<uint8_t> Copy(Pixels.begin(), Pixels.begin() + ExpectedSize);
+		std::vector<uint8_t> CircularCopy = Copy;
+		ApplyCircularFeatherMask(CircularCopy, (int)DecodeSize.m_Width, (int)DecodeSize.m_Height);
 		const float RoundingRatio = 2.0f / 14.0f;
 		const float Radius = (float)std::min(DecodeSize.m_Width, DecodeSize.m_Height) * RoundingRatio;
 		ApplyRoundedMask(Copy, (int)DecodeSize.m_Width, (int)DecodeSize.m_Height, Radius);
-		SetSharedAlbumArt(pShared, std::move(Copy), (int)DecodeSize.m_Width, (int)DecodeSize.m_Height);
+		SetSharedAlbumArt(pShared, std::move(Copy), std::move(CircularCopy), (int)DecodeSize.m_Width, (int)DecodeSize.m_Height);
 	}
 	catch(const winrt::hresult_error &)
 	{
@@ -363,20 +374,64 @@ static void ApplyRoundedMask(std::vector<uint8_t> &Pixels, int Width, int Height
 			const size_t Index = (size_t)(y * Width + x) * 4;
 			if(Alpha <= 0.0f)
 			{
-				Pixels[Index + 0] = 0;
-				Pixels[Index + 1] = 0;
-				Pixels[Index + 2] = 0;
 				Pixels[Index + 3] = 0;
 			}
 			else if(Alpha < 1.0f)
 			{
-				Pixels[Index + 0] = (uint8_t)std::round(Pixels[Index + 0] * Alpha);
-				Pixels[Index + 1] = (uint8_t)std::round(Pixels[Index + 1] * Alpha);
-				Pixels[Index + 2] = (uint8_t)std::round(Pixels[Index + 2] * Alpha);
 				Pixels[Index + 3] = (uint8_t)std::round(Pixels[Index + 3] * Alpha);
 			}
 		}
 	}
+}
+
+static void ApplyCircularFeatherMask(std::vector<uint8_t> &Pixels, int Width, int Height)
+{
+	if(Width <= 0 || Height <= 0)
+		return;
+	const size_t ExpectedSize = (size_t)Width * (size_t)Height * 4;
+	if(Pixels.size() < ExpectedSize)
+		return;
+
+	const float Feather = std::clamp((float)std::min(Width, Height) / 64.0f, 1.0f, 6.0f);
+	for(int y = 0; y < Height; ++y)
+	{
+		for(int x = 0; x < Width; ++x)
+		{
+			const float Alpha = SystemMediaControls::AlbumArtCircleMaskAlpha((float)x + 0.5f, (float)y + 0.5f, Width, Height, Feather);
+			if(Alpha >= 1.0f)
+				continue;
+
+			const size_t Index = (size_t)(y * Width + x) * 4;
+			if(Alpha <= 0.0f)
+			{
+				Pixels[Index + 3] = 0;
+			}
+			else
+			{
+				Pixels[Index + 3] = (uint8_t)std::round(Pixels[Index + 3] * Alpha);
+			}
+		}
+	}
+}
+
+static IGraphics::CTextureHandle LoadAlbumArtTexture(IGraphics *pGraphics, const std::vector<uint8_t> &Pixels, int Width, int Height, const char *pName)
+{
+	if(pGraphics == nullptr || Width <= 0 || Height <= 0)
+		return {};
+	const size_t ExpectedSize = (size_t)Width * (size_t)Height * 4;
+	if(Pixels.size() < ExpectedSize)
+		return {};
+
+	CImageInfo Image;
+	Image.m_Width = (size_t)Width;
+	Image.m_Height = (size_t)Height;
+	Image.m_Format = CImageInfo::FORMAT_RGBA;
+	Image.m_pData = static_cast<uint8_t *>(malloc(ExpectedSize));
+	if(!Image.m_pData)
+		return {};
+
+	mem_copy(Image.m_pData, Pixels.data(), ExpectedSize);
+	return pGraphics->LoadTextureRawMove(Image, 0, pName);
 }
 
 static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemMediaControls::SWinrt *pWinrt, IGraphics *pGraphics, const IClient *pClient)
@@ -388,6 +443,7 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 	int AlbumArtWidth = 0;
 	int AlbumArtHeight = 0;
 	std::vector<uint8_t> AlbumArtPixels;
+	std::vector<uint8_t> AlbumArtCircularPixels;
 	{
 		std::scoped_lock Lock(pShared->m_Mutex);
 		if(pShared->m_AlbumArtDirty)
@@ -396,7 +452,9 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 			AlbumArtWidth = pShared->m_AlbumArtWidth;
 			AlbumArtHeight = pShared->m_AlbumArtHeight;
 			AlbumArtPixels = std::move(pShared->m_AlbumArtRgba);
+			AlbumArtCircularPixels = std::move(pShared->m_AlbumArtCircularRgba);
 			pShared->m_AlbumArtRgba.clear();
+			pShared->m_AlbumArtCircularRgba.clear();
 			pShared->m_AlbumArtDirty = false;
 		}
 	}
@@ -407,28 +465,16 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 
 	ClearAlbumArtLocal(pWinrt, pGraphics);
 
-	const size_t ExpectedSize = (size_t)AlbumArtWidth * (size_t)AlbumArtHeight * 4;
-	if(AlbumArtWidth > 0 && AlbumArtHeight > 0 && AlbumArtPixels.size() >= ExpectedSize)
+	pWinrt->m_State.m_AlbumArt = LoadAlbumArtTexture(pGraphics, AlbumArtPixels, AlbumArtWidth, AlbumArtHeight, "smtc_album_art");
+	pWinrt->m_State.m_AlbumArtCircular = LoadAlbumArtTexture(pGraphics, AlbumArtCircularPixels, AlbumArtWidth, AlbumArtHeight, "smtc_album_art_circular");
+	if(pWinrt->m_State.m_AlbumArt.IsValid())
 	{
-		CImageInfo Image;
-		Image.m_Width = (size_t)AlbumArtWidth;
-		Image.m_Height = (size_t)AlbumArtHeight;
-		Image.m_Format = CImageInfo::FORMAT_RGBA;
-		Image.m_pData = static_cast<uint8_t *>(malloc(ExpectedSize));
-		if(Image.m_pData)
-		{
-			mem_copy(Image.m_pData, AlbumArtPixels.data(), ExpectedSize);
-			pWinrt->m_State.m_AlbumArt = pGraphics->LoadTextureRawMove(Image, 0, "smtc_album_art");
-			if(pWinrt->m_State.m_AlbumArt.IsValid())
-			{
-				pWinrt->m_State.m_AlbumArtWidth = AlbumArtWidth;
-				pWinrt->m_State.m_AlbumArtHeight = AlbumArtHeight;
-			}
-		}
+		pWinrt->m_State.m_AlbumArtWidth = AlbumArtWidth;
+		pWinrt->m_State.m_AlbumArtHeight = AlbumArtHeight;
 	}
 
 	char aExtra[128];
-	str_format(aExtra, sizeof(aExtra), "width=%d height=%d bytes=%zu valid=%d", AlbumArtWidth, AlbumArtHeight, ExpectedSize, pWinrt->m_State.m_AlbumArt.IsValid() ? 1 : 0);
+	str_format(aExtra, sizeof(aExtra), "width=%d height=%d valid=%d circular_valid=%d", AlbumArtWidth, AlbumArtHeight, pWinrt->m_State.m_AlbumArt.IsValid() ? 1 : 0, pWinrt->m_State.m_AlbumArtCircular.IsValid() ? 1 : 0);
 	QmPerfLogStage("perf/system_media_controls", "album_art_apply", ApplyTimer.ElapsedMs(), true, pClient, nullptr, nullptr, aExtra);
 }
 #endif

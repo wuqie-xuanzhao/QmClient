@@ -185,7 +185,7 @@ void CBackgroundParticles::CurrentWorldView(float &Left, float &Top, float &Righ
 	const vec2 Center = GameClient()->m_Camera.m_Center;
 	const float Zoom = GameClient()->m_Camera.m_Zoom;
 	float aPoints[4];
-	Graphics()->MapScreenToWorld(Center.x, Center.y, 100, 100, 100, 0, 0, Graphics()->ScreenAspect(), Zoom, aPoints);
+	Graphics()->MapScreenToWorld(Center.x, Center.y, 100, 100, 100, 0, 0, Graphics()->GameScreenAspect(), Zoom, aPoints);
 	Left = minimum(aPoints[0], aPoints[2]);
 	Top = minimum(aPoints[1], aPoints[3]);
 	Right = maximum(aPoints[0], aPoints[2]);

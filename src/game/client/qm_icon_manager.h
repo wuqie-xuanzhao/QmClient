@@ -26,6 +26,11 @@ enum class EQmIcon
 	CHEVRON_DOWN,
 	PLUS,
 	TRASH,
+	SATELLITE_SWAP_INCOMING,
+	SATELLITE_SWAP_OUTGOING,
+	SATELLITE_SWITCH,
+	SATELLITE_MUTE,
+	SATELLITE_CHECK,
 	COUNT,
 };
 
@@ -105,6 +110,11 @@ public:
 		case EQmIcon::CHEVRON_DOWN: return "chevron-down";
 		case EQmIcon::PLUS: return "plus";
 		case EQmIcon::TRASH: return "trash";
+		case EQmIcon::SATELLITE_SWAP_INCOMING: return "satellite-swap-incoming";
+		case EQmIcon::SATELLITE_SWAP_OUTGOING: return "satellite-swap-outgoing";
+		case EQmIcon::SATELLITE_SWITCH: return "satellite-switch";
+		case EQmIcon::SATELLITE_MUTE: return "satellite-mute";
+		case EQmIcon::SATELLITE_CHECK: return "satellite-check";
 		case EQmIcon::COUNT: break;
 		}
 		return "";

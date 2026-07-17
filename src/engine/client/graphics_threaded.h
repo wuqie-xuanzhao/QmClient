@@ -1410,7 +1410,7 @@ public:
 
 	// TClient
 	void SetForcedAspect(bool Force) override;
-	void SetScreenAspectOverride(float Aspect) override;
+	void SetGameScreenAspectOverride(float Aspect) override;
 };
 
 extern bool g_GraphicsForcedAspect;

@@ -1,6 +1,11 @@
 # Qm Icon Sources
 
-Place Tabler SVG source files in `datasrc/qm_icons/tabler/`.
+Place supported SVG source files in `datasrc/qm_icons/tabler/`. The directory
+name is retained for compatibility with the existing build target, but the
+atlas may contain attributed sources from more than one icon family.
+
+The `satellite-*` icons are from Lucide. Their license is stored in
+`datasrc/qm_icons/LICENSE_LUCIDE.txt`.
 
 SVG files are build-time inputs only. Runtime code must load the generated
 `data/qmclient/icons/qm_icons_*x.png` atlas and matching JSON manifest through

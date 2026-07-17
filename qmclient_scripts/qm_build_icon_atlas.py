@@ -60,6 +60,185 @@ def _parse_points(points: str) -> list[tuple[float, float]]:
     return list(zip(values[0::2], values[1::2]))
 
 
+_PATH_TOKEN_RE = re.compile(r"[AaHhLlMmVvZz]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
+
+
+def _vector_angle(ux: float, uy: float, vx: float, vy: float) -> float:
+    dot = ux * vx + uy * vy
+    length = math.hypot(ux, uy) * math.hypot(vx, vy)
+    if length <= 1e-12:
+        return 0.0
+    angle = math.acos(max(-1.0, min(1.0, dot / length)))
+    return -angle if ux * vy - uy * vx < 0.0 else angle
+
+
+def _sample_svg_arc(
+    start: tuple[float, float],
+    rx: float,
+    ry: float,
+    rotation: float,
+    large_arc: bool,
+    sweep: bool,
+    end: tuple[float, float],
+) -> list[tuple[float, float]]:
+    x1, y1 = start
+    x2, y2 = end
+    rx = abs(rx)
+    ry = abs(ry)
+    if rx <= 1e-12 or ry <= 1e-12 or (x1 == x2 and y1 == y2):
+        return [end]
+
+    phi = math.radians(rotation % 360.0)
+    cos_phi = math.cos(phi)
+    sin_phi = math.sin(phi)
+    dx = (x1 - x2) * 0.5
+    dy = (y1 - y2) * 0.5
+    x1p = cos_phi * dx + sin_phi * dy
+    y1p = -sin_phi * dx + cos_phi * dy
+
+    radius_scale = x1p * x1p / (rx * rx) + y1p * y1p / (ry * ry)
+    if radius_scale > 1.0:
+        scale = math.sqrt(radius_scale)
+        rx *= scale
+        ry *= scale
+
+    numerator = max(
+        0.0,
+        rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p,
+    )
+    denominator = rx * rx * y1p * y1p + ry * ry * x1p * x1p
+    coefficient = 0.0
+    if denominator > 1e-12:
+        coefficient = math.sqrt(numerator / denominator)
+        if large_arc == sweep:
+            coefficient = -coefficient
+
+    cxp = coefficient * rx * y1p / ry
+    cyp = -coefficient * ry * x1p / rx
+    cx = cos_phi * cxp - sin_phi * cyp + (x1 + x2) * 0.5
+    cy = sin_phi * cxp + cos_phi * cyp + (y1 + y2) * 0.5
+
+    ux = (x1p - cxp) / rx
+    uy = (y1p - cyp) / ry
+    vx = (-x1p - cxp) / rx
+    vy = (-y1p - cyp) / ry
+    start_angle = _vector_angle(1.0, 0.0, ux, uy)
+    delta_angle = _vector_angle(ux, uy, vx, vy)
+    if not sweep and delta_angle > 0.0:
+        delta_angle -= 2.0 * math.pi
+    elif sweep and delta_angle < 0.0:
+        delta_angle += 2.0 * math.pi
+
+    segments = max(2, math.ceil(abs(delta_angle) / (math.pi / 16.0)))
+    points: list[tuple[float, float]] = []
+    for index in range(1, segments + 1):
+        angle = start_angle + delta_angle * index / segments
+        cos_angle = math.cos(angle)
+        sin_angle = math.sin(angle)
+        points.append(
+            (
+                cx + cos_phi * rx * cos_angle - sin_phi * ry * sin_angle,
+                cy + sin_phi * rx * cos_angle + cos_phi * ry * sin_angle,
+            )
+        )
+    points[-1] = end
+    return points
+
+
+def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
+    tokens = _PATH_TOKEN_RE.findall(path_data.replace(",", " "))
+    polylines: list[list[tuple[float, float]]] = []
+    current_polyline: list[tuple[float, float]] = []
+    current = (0.0, 0.0)
+    subpath_start = (0.0, 0.0)
+    command = ""
+    index = 0
+
+    def number() -> float:
+        nonlocal index
+        if index >= len(tokens) or tokens[index].isalpha():
+            raise ValueError(f"Missing path parameter in {path_data!r}")
+        value = float(tokens[index])
+        index += 1
+        return value
+
+    def append(point: tuple[float, float]) -> None:
+        nonlocal current
+        current = point
+        if not current_polyline or current_polyline[-1] != point:
+            current_polyline.append(point)
+
+    def flush() -> None:
+        nonlocal current_polyline
+        if len(current_polyline) >= 2:
+            polylines.append(current_polyline)
+        current_polyline = []
+
+    while index < len(tokens):
+        if tokens[index].isalpha():
+            command = tokens[index]
+            index += 1
+        if not command:
+            raise ValueError(f"Path data starts without command: {path_data!r}")
+
+        relative = command.islower()
+        upper = command.upper()
+        if upper == "M":
+            x = number()
+            y = number()
+            if relative:
+                x += current[0]
+                y += current[1]
+            flush()
+            current = (x, y)
+            subpath_start = current
+            current_polyline = [current]
+            command = "l" if relative else "L"
+        elif upper == "L":
+            x = number()
+            y = number()
+            if relative:
+                x += current[0]
+                y += current[1]
+            append((x, y))
+        elif upper == "H":
+            x = number()
+            if relative:
+                x += current[0]
+            append((x, current[1]))
+        elif upper == "V":
+            y = number()
+            if relative:
+                y += current[1]
+            append((current[0], y))
+        elif upper == "A":
+            rx = number()
+            ry = number()
+            rotation = number()
+            large_arc = number() != 0.0
+            sweep = number() != 0.0
+            x = number()
+            y = number()
+            if relative:
+                x += current[0]
+                y += current[1]
+            end = (x, y)
+            for point in _sample_svg_arc(
+                current, rx, ry, rotation, large_arc, sweep, end
+            ):
+                append(point)
+        elif upper == "Z":
+            append(subpath_start)
+            flush()
+            current = subpath_start
+            command = ""
+        else:
+            raise ValueError(f"Unsupported SVG path command {command!r}")
+
+    flush()
+    return polylines
+
+
 def _local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
@@ -141,12 +320,23 @@ def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
             draw.rounded_rectangle(
                 (x, y, x + w, y + h), radius=radius, outline=fill, width=stroke_width
             )
-        elif tag == "path" and not node.attrib.get("d"):
-            continue
         elif tag == "path":
-            raise SystemExit(
-                f"Fallback SVG renderer does not support path data in {source}"
-            )
+            path_data = node.attrib.get("d", "")
+            if not path_data:
+                continue
+            try:
+                polylines = _parse_path_polylines(path_data)
+            except ValueError as exc:
+                raise SystemExit(
+                    f"Unsupported SVG path data in {source}: {exc}"
+                ) from exc
+            for points in polylines:
+                _draw_round_line(
+                    draw,
+                    [(sx(x), sy(y)) for x, y in points],
+                    stroke_width,
+                    fill,
+                )
         else:
             raise SystemExit(
                 f"Fallback SVG renderer does not support <{tag}> in {source}"
@@ -288,7 +478,7 @@ def build_scale(
     manifest = {
         "version": 1,
         "scale": scale,
-        "source": "Tabler Icons SVG, rendered at build time",
+        "source": "QmClient SVG icon sources, rendered at build time",
         "atlas": {
             "image": f"qmclient/icons/{image_name}",
             "width": atlas_w,
@@ -297,9 +487,10 @@ def build_scale(
         },
         "icons": icons,
     }
-    (output_dir / manifest_name).write_text(
-        json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    with (output_dir / manifest_name).open(
+        "w", encoding="utf-8", newline="\n"
+    ) as manifest_file:
+        manifest_file.write(json.dumps(manifest, indent=2, sort_keys=True))
 
 
 def main() -> int:

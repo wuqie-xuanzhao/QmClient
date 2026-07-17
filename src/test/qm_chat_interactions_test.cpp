@@ -436,6 +436,14 @@ TEST(QmChatCompletion, KeepsMapTypeAsDisplayOnlyMetadata)
 	EXPECT_STREQ(aOutput, "/map \"Kobra 3\" ");
 }
 
+TEST(QmChatCompletion, SizesCandidatePopupToContent)
+{
+	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(500.0f, 42.0f, false), 80.0f);
+	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(500.0f, 170.0f, false), 180.0f);
+	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(500.0f, 170.0f, true), 184.0f);
+	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(160.0f, 170.0f, true), 160.0f);
+}
+
 TEST(QmChatCompletion, ExtractsDifficultyCategoryInsteadOfGameType)
 {
 	std::string Category;
@@ -447,6 +455,36 @@ TEST(QmChatCompletion, ExtractsDifficultyCategoryInsteadOfGameType)
 	EXPECT_EQ(Category, "Novice");
 	EXPECT_FALSE(QmChatCompletion::ExtractMapCategory("None", "DDNet GER", Category));
 	EXPECT_TRUE(Category.empty());
+}
+
+TEST(QmChatCompletion, UsesOfficialDdnetMapRepositoryCategories)
+{
+	std::string Category;
+	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("#wontfix", Category));
+	EXPECT_EQ(Category, "Moderate");
+	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("Away", Category));
+	EXPECT_EQ(Category, "DDmaX Next");
+	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("kobra 3", Category));
+	EXPECT_EQ(Category, "Novice");
+	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("Experiment", Category));
+	EXPECT_EQ(Category, "DDmaX Next");
+	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("experiment", Category));
+	EXPECT_EQ(Category, "Oldschool");
+	EXPECT_FALSE(QmChatCompletion::FindOfficialDdnetMapCategory("EXPERIMENT", Category));
+	EXPECT_TRUE(Category.empty());
+	EXPECT_FALSE(QmChatCompletion::FindOfficialDdnetMapCategory("001", Category));
+	EXPECT_TRUE(Category.empty());
+}
+
+TEST(QmChatCompletion, LabelsUnknownMapsAsOtherOnlyInDdnetMode)
+{
+	std::string Category;
+	QmChatCompletion::ResolveMapCompletionCategory("#wontfix", true, "Insane", Category);
+	EXPECT_EQ(Category, "Moderate");
+	QmChatCompletion::ResolveMapCompletionCategory("001", true, "Insane", Category);
+	EXPECT_EQ(Category, "Other");
+	QmChatCompletion::ResolveMapCompletionCategory("001", false, "Insane", Category);
+	EXPECT_EQ(Category, "Insane");
 }
 
 TEST(QmChatCompletion, PrefersKnownCategoryForDuplicateMaps)

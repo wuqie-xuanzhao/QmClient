@@ -43,6 +43,11 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::CHEVRON_DOWN), "chevron-down");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::PLUS), "plus");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TRASH), "trash");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SWAP_INCOMING), "satellite-swap-incoming");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SWAP_OUTGOING), "satellite-swap-outgoing");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SWITCH), "satellite-switch");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_MUTE), "satellite-mute");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_CHECK), "satellite-check");
 }
 
 TEST(QmIconAtlas, GeneratedManifestsContainEveryRuntimeIcon)
