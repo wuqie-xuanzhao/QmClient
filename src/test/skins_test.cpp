@@ -1752,7 +1752,7 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_EQ(Menus.find("Localize(\"Enable skin queue\"), QueueEnabled"), std::string::npos);
 	EXPECT_EQ(Menus.find("CUIRect QueueEnabledRect"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueSection.HSplitTop(QueueSection.h * 0.62f, &QueueList"), std::string::npos);
-	EXPECT_NE(Menus.find("QueueList.HSplitTop(18.0f, &QueueListHeader"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueList.HSplitTop(TeeMetrics.m_LineHeight, &QueueListHeader"), std::string::npos);
 	EXPECT_NE(Menus.find("CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;"), std::string::npos);
 	EXPECT_NE(Menus.find("Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel"), std::string::npos);
 	EXPECT_EQ(Menus.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee_queue_list_label\", &QueueListHeaderLabel, Localize(\"Skin queue\")"), std::string::npos);

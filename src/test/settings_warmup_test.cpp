@@ -2342,6 +2342,10 @@ TEST(SettingsWarmup, MenuTextPrebuildDoesNotRenderPages)
 	EXPECT_NE(UiSource.find("if(--m_RenderOnlyDepth == 0)"), std::string::npos);
 	EXPECT_NE(UiSource.find("ClipDisable();"), std::string::npos);
 	EXPECT_NE(SettingsCard.find("!Ctx.m_pUi->RenderOnly()"), std::string::npos);
+	EXPECT_NE(SettingsCard.find("BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(SettingsCard.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);"), std::string::npos);
+	EXPECT_NE(SettingsCard.find("IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd)"), std::string::npos);
+	EXPECT_EQ(SettingsCard.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_NE(Menus.find("SettingsCardDeckForRenderPass()"), std::string::npos);
 	EXPECT_NE(Menus.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);
 	EXPECT_NE(Settings.find("RenderOnly ? nullptr : &s_GeneralSettingsScrollRegion"), std::string::npos);
@@ -2419,7 +2423,8 @@ TEST(SettingsWarmup, RemainingSettingsPagesUseResponsiveContentMetrics)
 	EXPECT_NE(Assets.find("Localize(\"Loading assets...\"), ContentMetrics.m_BodySize"), std::string::npos);
 	EXPECT_NE(Assets.find("Localize(\"No assets\"), ContentMetrics.m_BodySize"), std::string::npos);
 	EXPECT_NE(Settings.find("pCheckBoxValue, float LineHeight, float LineSpacing, float BodySize)"), std::string::npos);
-	EXPECT_NE(Settings.find("Localize(\"Text\"), BodySize"), std::string::npos);
+	EXPECT_EQ(Settings.find("Localize(\"Text\"), BodySize"), std::string::npos);
+	EXPECT_NE(Settings.find("DoSettingsMenuLabel(SETTINGS_APPEARANCE, Tab, Tab, pLabelTextId, &Label, pLabel, BodySize"), std::string::npos);
 	EXPECT_NE(Settings.find("const float LineHeight = SoundMetrics.m_LineHeight;"), std::string::npos);
 	EXPECT_NE(Settings.find("const float LineSpacing = SoundMetrics.m_LineSpacing;"), std::string::npos);
 	EXPECT_NE(Settings.find("SoundToggleCardHeight = ToggleChromeHeight + LineHeight * ToggleRowCount"), std::string::npos);

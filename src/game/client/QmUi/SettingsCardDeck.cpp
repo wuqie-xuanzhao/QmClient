@@ -82,6 +82,7 @@ void CSettingsCardDeck::BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEnt
 		m_vLastRenderedActiveStateIndices.clear();
 		for(SRuntimeState &Runtime : m_vRuntimeStates)
 		{
+			Runtime.m_EntryWasActive = false;
 			Runtime.m_ReflowInitialized = false;
 			Runtime.m_ReflowWasActive = false;
 			Runtime.m_CollapsedInitialized = false;
@@ -103,6 +104,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		m_vLastRenderedActiveStateIndices.clear();
 		for(SRuntimeState &Runtime : m_vRuntimeStates)
 		{
+			Runtime.m_EntryWasActive = false;
 			Runtime.m_ReflowInitialized = false;
 			Runtime.m_ReflowWasActive = false;
 			Runtime.m_CollapsedInitialized = false;
@@ -276,16 +278,22 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			const char *pStableId = Card.m_pDefinition->m_Spec.m_pStableId;
 			if(Motion.m_EntryDuration > 0.0f)
 			{
-				const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId);
-				EntryPending = EntryPending || Runtime.m_EntryDisplayCycle != m_DisplayCycle;
-				EntryPositionActive = EntryPositionActive || Ctx.m_pAnim->HasActiveAnimation(EntryKey, EUiAnimProperty::POS_Y);
+				EntryPending = EntryPending || (m_AnimateEntry && Runtime.m_EntryDisplayCycle != m_DisplayCycle);
+				if(Runtime.m_EntryWasActive)
+				{
+					const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId);
+					EntryPositionActive = EntryPositionActive || Ctx.m_pAnim->HasActiveAnimation(EntryKey, EUiAnimProperty::POS_Y);
+				}
 			}
 			if(Motion.m_ReflowDuration > 0.0f && Runtime.m_ReflowInitialized)
 			{
-				const uint64_t ReflowKey = SettingsCardReflowNodeKey(pTab, pStableId);
 				const float ReflowTargetY = Card.m_Frame.m_Rect.y - ScrollOffset.y;
 				ReflowTargetChanged = ReflowTargetChanged || std::abs(Runtime.m_LastReflowTargetY - ReflowTargetY) > 0.001f;
-				ReflowPositionActive = ReflowPositionActive || Ctx.m_pAnim->HasActiveAnimation(ReflowKey, EUiAnimProperty::POS_Y);
+				if(Runtime.m_ReflowWasActive)
+				{
+					const uint64_t ReflowKey = SettingsCardReflowNodeKey(pTab, pStableId);
+					ReflowPositionActive = ReflowPositionActive || Ctx.m_pAnim->HasActiveAnimation(ReflowKey, EUiAnimProperty::POS_Y);
+				}
 			}
 		}
 	}
@@ -366,47 +374,75 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		bool EntryAnimationActive = false;
 		if(Ctx.m_pAnim != nullptr)
 		{
-			const uint64_t EntryKey = SettingsCardEntryNodeKey(pTab, pStableId);
-			if(Runtime.m_EntryDisplayCycle != m_DisplayCycle)
+			uint64_t EntryKey = 0;
+			bool HasEntryKey = false;
+			const auto ResolveEntryKey = [&]() {
+				if(!HasEntryKey)
+				{
+					EntryKey = SettingsCardEntryNodeKey(pTab, pStableId);
+					HasEntryKey = true;
+				}
+				return EntryKey;
+			};
+			const bool EntryCycleChanged = Runtime.m_EntryDisplayCycle != m_DisplayCycle;
+			if(EntryCycleChanged)
 			{
 				Runtime.m_EntryDisplayCycle = m_DisplayCycle;
-				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::POS_Y, m_AnimateEntry ? Motion.m_EntryDistance : 0.0f);
+				Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, m_AnimateEntry ? Motion.m_EntryDistance : 0.0f);
+				Runtime.m_EntryWasActive = m_AnimateEntry && Motion.m_EntryDuration > 0.0f;
 			}
-			if(Motion.m_EntryDuration > 0.0f)
-			{
-				State.m_DrawOffsetY += ResolveUiAnimValue(*Ctx.m_pAnim, EntryKey, EUiAnimProperty::POS_Y, 0.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
-				EntryAnimationActive = Ctx.m_pAnim->HasActiveAnimation(EntryKey, EUiAnimProperty::POS_Y);
-			}
-			else
-			{
-				Ctx.m_pAnim->SetValue(EntryKey, EUiAnimProperty::POS_Y, 0.0f);
-			}
-
-			const uint64_t ReflowKey = SettingsCardReflowNodeKey(pTab, pStableId);
+			const bool ReflowInitializedThisFrame = !Runtime.m_ReflowInitialized;
 			const float ReflowTargetY = Card.m_Frame.m_Rect.y - ScrollOffset.y;
 			const bool TargetChanged = Runtime.m_ReflowInitialized && std::abs(Runtime.m_LastReflowTargetY - ReflowTargetY) > 0.001f;
-			if(!Runtime.m_ReflowInitialized)
+			const SSettingsCardAnimationWork AnimationWork = ResolveSettingsCardAnimationWork(Motion.m_EntryDuration, Runtime.m_EntryWasActive, ReflowInitializedThisFrame, SnapReflow, Motion.m_ReflowDuration, TargetChanged, Runtime.m_ReflowWasActive);
+			if(AnimationWork.m_ResolveEntry)
+			{
+				const uint64_t ResolvedEntryKey = ResolveEntryKey();
+				State.m_DrawOffsetY += ResolveUiAnimValue(*Ctx.m_pAnim, ResolvedEntryKey, EUiAnimProperty::POS_Y, 0.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
+				EntryAnimationActive = Ctx.m_pAnim->HasActiveAnimation(ResolvedEntryKey, EUiAnimProperty::POS_Y);
+				Runtime.m_EntryWasActive = EntryAnimationActive;
+			}
+			else if(AnimationWork.m_ResetEntry)
+			{
+				Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, 0.0f);
+				Runtime.m_EntryWasActive = false;
+			}
+
+			uint64_t ReflowKey = 0;
+			bool HasReflowKey = false;
+			const auto ResolveReflowKey = [&]() {
+				if(!HasReflowKey)
+				{
+					ReflowKey = SettingsCardReflowNodeKey(pTab, pStableId);
+					HasReflowKey = true;
+				}
+				return ReflowKey;
+			};
+			if(ReflowInitializedThisFrame)
 			{
 				Runtime.m_ReflowInitialized = true;
-				Ctx.m_pAnim->SetValue(ReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY);
+				Ctx.m_pAnim->SetValue(ResolveReflowKey(), EUiAnimProperty::POS_Y, ReflowTargetY);
 			}
 			if(SnapReflow)
 			{
-				Ctx.m_pAnim->SetValue(ReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY);
+				if(AnimationWork.m_SetReflowTarget)
+					Ctx.m_pAnim->SetValue(ResolveReflowKey(), EUiAnimProperty::POS_Y, ReflowTargetY);
 				Runtime.m_ReflowWasActive = false;
 			}
-			else if(Motion.m_ReflowDuration > 0.0f)
+			else if(AnimationWork.m_ResolveReflow)
 			{
-				const float ReflowY = ResolveUiAnimValue(*Ctx.m_pAnim, ReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY, Motion.m_ReflowDuration, EEasing::EASE_OUT);
+				const uint64_t ResolvedReflowKey = ResolveReflowKey();
+				const float ReflowY = ResolveUiAnimValue(*Ctx.m_pAnim, ResolvedReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY, Motion.m_ReflowDuration, EEasing::EASE_OUT);
 				State.m_DrawOffsetY += ReflowY - ReflowTargetY;
-				const bool ReflowActive = Ctx.m_pAnim->HasActiveAnimation(ReflowKey, EUiAnimProperty::POS_Y);
+				const bool ReflowActive = Ctx.m_pAnim->HasActiveAnimation(ResolvedReflowKey, EUiAnimProperty::POS_Y);
 				if(Runtime.m_ReflowWasActive && !ReflowActive && Motion.m_KeepReflowCompleteFeedback)
 					Runtime.m_ReflowCompleteFeedbackRemaining = Motion.m_ReflowCompleteFeedbackDuration;
 				Runtime.m_ReflowWasActive = ReflowActive;
 			}
 			else
 			{
-				Ctx.m_pAnim->SetValue(ReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY);
+				if(AnimationWork.m_SetReflowTarget)
+					Ctx.m_pAnim->SetValue(ResolveReflowKey(), EUiAnimProperty::POS_Y, ReflowTargetY);
 				if(TargetChanged && Motion.m_KeepReflowCompleteFeedback)
 					Runtime.m_ReflowCompleteFeedbackRemaining = Motion.m_ReflowCompleteFeedbackDuration;
 				Runtime.m_ReflowWasActive = false;

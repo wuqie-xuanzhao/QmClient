@@ -156,6 +156,17 @@ bool SettingsCardDeckAllowsDragStart(const bool EntryPending, const bool EntryPo
 	return !EntryPending && !EntryPositionActive && !ReflowTargetChanged && !ReflowPositionActive;
 }
 
+SSettingsCardAnimationWork ResolveSettingsCardAnimationWork(const float EntryDuration, const bool EntryWasActive, const bool ReflowInitializedThisFrame, const bool SnapReflow, const float ReflowDuration, const bool ReflowTargetChanged, const bool ReflowWasActive)
+{
+	SSettingsCardAnimationWork Work;
+	Work.m_ResolveEntry = EntryDuration > 0.0f && EntryWasActive;
+	Work.m_ResetEntry = EntryDuration <= 0.0f && EntryWasActive;
+	const bool ReflowNeedsWork = ReflowTargetChanged || ReflowWasActive;
+	Work.m_ResolveReflow = !SnapReflow && ReflowDuration > 0.0f && ReflowNeedsWork;
+	Work.m_SetReflowTarget = !ReflowInitializedThisFrame && ReflowNeedsWork && !Work.m_ResolveReflow;
+	return Work;
+}
+
 bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetColumn, int TargetOrder, const std::vector<int> *pActiveStateIndices)
 {
 	if(pTab == nullptr || pStableId == nullptr || TargetColumn < 0 || TargetColumn > 2)

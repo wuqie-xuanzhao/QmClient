@@ -462,18 +462,15 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 	const float BottomMargin = LineSpacing;
 	const float ColorButtonSize = LineHeight;
 	const float ColorButtonSpacing = LineSpacing;
-	const float ChangeButtonSize = std::max(0.0f, LineHeight - 2.0f);
+	const float ChangeButtonSize = LineHeight;
 
 	bool Changed = false;
-	CUIRect Section, Label, TextLabel, ResetButton;
+	CUIRect Section, Label, ResetButton;
 	pView->HSplitTop(TopLineHeight, &Section, pView);
 	pView->HSplitTop(LineSpacing, nullptr, pView);
 
 	Section.VSplitRight(60.0f, &Section, &ResetButton);
 	Section.VSplitRight(8.0f, &Section, nullptr);
-	Section.VSplitRight(55.0f, &Section, &TextLabel);
-	TextLabel.HMargin(2.0f, &TextLabel);
-	DoSettingsMenuLabel(SETTINGS_APPEARANCE, -1, -1, "appearance-chat-message-gradient-text-label", &TextLabel, Localize("Text"), BodySize, TEXTALIGN_MC);
 	Label = Section;
 
 	if(pCheckBoxValue != nullptr)
@@ -493,7 +490,6 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 	if(pCheckBoxValue == nullptr)
 		DoSettingsMenuLabel(SETTINGS_APPEARANCE, Tab, Tab, pLabelTextId, &Label, pLabel, BodySize, TEXTALIGN_ML);
 
-	ResetButton.HMargin(2.0f, &ResetButton);
 	if(DoSettingsButton_Menu(SETTINGS_APPEARANCE, Tab, Tab, pResetButton, "appearance-chat-gradient-reset", Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 4.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 0.1f))
 	{
 		*pBaseColor = color_cast<ColorHSLA>(DefaultColor).Pack(false);
@@ -1924,12 +1920,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		QueuePanelWidth = std::clamp(QueuePanelWidth, 160.0f, 250.0f);
 		QueuePanelWidth = std::min(QueuePanelWidth, MainView.w * 0.38f);
 		MainView.VSplitRight(QueuePanelWidth, &MainView, &QueuePanel);
-		QueuePanel.VSplitLeft(10.0f, nullptr, &QueuePanel);
+		QueuePanel.VSplitLeft(TeeMetrics.m_SectionGap, nullptr, &QueuePanel);
 
 		{
 			CUIRect QueueSection = QueuePanel;
+			QueueSection.Draw(ui_token::color::SURFACE_OVERLAY, IGraphics::CORNER_ALL, ui_token::radius::CARD);
+			QueueSection.Margin(TeeMetrics.m_LineSpacing, &QueueSection);
 			CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
-			QueueSection.HSplitTop(22.0f, &QueueHeader, &QueueSection);
+			QueueSection.HSplitTop(TeeMetrics.m_LineHeight, &QueueHeader, &QueueSection);
 			char aQueueLabel[64];
 			str_format(aQueueLabel, sizeof(aQueueLabel), "%s (%d)", Localize("Skin queue"), (int)SkinQueue.size());
 			SLabelProperties QueueTitleLabelProps;
@@ -1954,24 +1952,37 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CurrentQueueLabelProps.m_DisallowNewline = true;
 			CurrentQueueLabelProps.m_StopAtEnd = true;
 			CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
-			QueueSection.HSplitTop(8.0f, nullptr, &QueueSection);
+			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
 
+			const float QueueValueInputWidth = 58.0f * UiScale;
+			const float QueueValueUnitWidth = maximum(18.0f * UiScale, TextRender()->TextWidth(TeeMetrics.m_SmallSize, "ms") + TeeMetrics.m_LineSpacing);
+			const float QueueIntervalControlsWidth = QueueValueInputWidth + QueueValueUnitWidth;
+			const bool StackQueueInterval = QueueSection.w < 82.0f * UiScale + TeeMetrics.m_LineSpacing + QueueIntervalControlsWidth;
+			const float QueueIntervalRowHeight = StackQueueInterval ? TeeMetrics.m_LineHeight + TeeMetrics.m_LineSpacing + TeeMetrics.m_InputHeight : TeeMetrics.m_InputHeight;
 			CUIRect IntervalRow, IntervalLabel, IntervalControls;
-			QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);
+			QueueSection.HSplitTop(QueueIntervalRowHeight, &IntervalRow, &QueueSection);
 			CUIRect IntervalInputGroup, IntervalInput, IntervalUnit;
-			const float QueueControlLabelWidth = 82.0f;
-			const float QueueValueInputWidth = 58.0f;
-			const float QueueValueUnitWidth = 18.0f;
-			IntervalRow.VSplitLeft(QueueControlLabelWidth, &IntervalLabel, &IntervalControls);
-			IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);
-			IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);
-			IntervalInput.VMargin(1.0f, &IntervalInput);
+			if(StackQueueInterval)
+			{
+				IntervalRow.HSplitTop(TeeMetrics.m_LineHeight, &IntervalLabel, &IntervalControls);
+				IntervalControls.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &IntervalControls);
+				IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalControls);
+			}
+			else
+			{
+				IntervalRow.VSplitRight(QueueIntervalControlsWidth, &IntervalLabel, &IntervalControls);
+				IntervalLabel.VSplitRight(TeeMetrics.m_LineSpacing, &IntervalLabel, nullptr);
+			}
+			IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalInputGroup);
+			const float ResolvedQueueValueUnitWidth = minimum(IntervalInputGroup.w, QueueValueUnitWidth);
+			IntervalInputGroup.VSplitRight(ResolvedQueueValueUnitWidth, &IntervalInput, &IntervalUnit);
+			IntervalInput.VMargin(minimum(1.0f * UiScale, IntervalInput.w * 0.5f), &IntervalInput);
 			SLabelProperties QueueControlLabelProps;
 			QueueControlLabelProps.m_MaxWidth = IntervalLabel.w;
 			QueueControlLabelProps.m_DisallowNewline = true;
 			QueueControlLabelProps.m_StopAtEnd = true;
 			QueueControlLabelProps.m_MinimumFontSize = 6.0f;
-			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, Localize("Switch interval"), IntervalLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, Localize("Switch interval"), BodySize, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
 			static ui_widget::SNumericFieldState s_aQueueIntervalStates[NUM_DUMMIES];
 			IUiContext TeeSkinQueueIntervalCtx;
 			TeeSkinQueueIntervalCtx.m_pUi = Ui();
@@ -1983,14 +1994,18 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			QueueIntervalOptions.m_FontSize = BodySize;
 			QueueIntervalOptions.m_CommitPolicy = ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT;
 			ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInput, QueueIntervalOptions);
-			Ui()->DoLabel(&IntervalUnit, "ms", IntervalUnit.h * CUi::ms_FontmodHeight * 0.75f, TEXTALIGN_MC);
+			Ui()->DoLabel(&IntervalUnit, "ms", TeeMetrics.m_SmallSize, TEXTALIGN_MC);
 
-			QueueSection.HSplitTop(3.0f, nullptr, &QueueSection);
+			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
 			QueueSection.HSplitTop(QueueSection.h * 0.62f, &QueueList, &QueuePresets);
-			QueuePresets.HSplitTop(6.0f, nullptr, &QueuePresets);
+			QueueList.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 4.0f);
+			QueueList.Margin(TeeMetrics.m_LineSpacing, &QueueList);
+			QueuePresets.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueuePresets);
+			QueuePresets.Draw(ColorRGBA(0.35f, 0.55f, 0.85f, 0.09f), IGraphics::CORNER_ALL, 4.0f);
+			QueuePresets.Margin(TeeMetrics.m_LineSpacing, &QueuePresets);
 
 			CUIRect QueueListHeader, QueueListBody;
-			QueueList.HSplitTop(18.0f, &QueueListHeader, &QueueListBody);
+			QueueList.HSplitTop(TeeMetrics.m_LineHeight, &QueueListHeader, &QueueListBody);
 			CUIRect QueueListHeaderLabel, ClearQueueRect;
 			QueueListHeader.VSplitRight(18.0f, &QueueListHeaderLabel, &ClearQueueRect);
 			CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;
@@ -2048,7 +2063,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 				s_QueueListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 				s_QueueListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
-				s_QueueListBox.DoStart(20.0f, (int)SkinQueue.size(), 1, 1, -1, &QueueListBody, true, IGraphics::CORNER_ALL);
+				s_QueueListBox.DoStart(TeeMetrics.m_ListRowHeight, (int)SkinQueue.size(), 1, 1, -1, &QueueListBody, true, IGraphics::CORNER_ALL);
 				for(size_t i = 0; i < SkinQueue.size(); ++i)
 				{
 					const CListboxItem Item = s_QueueListBox.DoNextItem(&s_QueueItemIds[i], false, 3.0f);
@@ -2087,7 +2102,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					DragRect.VSplitRight(20.0f, &DragRect, &RemoveRect);
 					CUIRect DragArea = DragRect;
 
-					const float TeeSize = 16.0f;
+					const float TeeSize = minimum(16.0f, TeeMetrics.m_ListRowHeight - 4.0f);
 					CUIRect TeeRect, LabelRect;
 					DragRect.VSplitLeft(TeeSize + 6.0f, &TeeRect, &LabelRect);
 					TeeRect.VSplitLeft(3.0f, nullptr, &TeeRect);
@@ -2112,7 +2127,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 					const float RemoveAlpha = Ui()->HotItem() == &s_QueueRemoveIds[i] ? 0.2f : 0.0f;
 					TextRender()->TextColor(ColorRGBA(0.9f, 0.3f, 0.3f, 0.7f + RemoveAlpha));
-					Ui()->DoLabel(&RemoveRect, FONT_ICON_TRASH, 12.0f, TEXTALIGN_MC);
+					Ui()->DoLabel(&RemoveRect, FONT_ICON_TRASH, TeeMetrics.m_SmallSize, TEXTALIGN_MC);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					TextRender()->SetRenderFlags(0);
 					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -2209,17 +2224,17 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			{
 				QueuePresets.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f), IGraphics::CORNER_ALL, 4.0f);
 				CUIRect PresetHeader, PresetControls, PresetList;
-				QueuePresets.HSplitTop(18.0f, &PresetHeader, &QueuePresets);
+				QueuePresets.HSplitTop(TeeMetrics.m_LineHeight, &PresetHeader, &QueuePresets);
 				char aPresetLabel[64];
 				str_format(aPresetLabel, sizeof(aPresetLabel), "%s (%d)", Localize("Preset bar"), (int)vQueuePresets.size());
-				PresetHeader.VSplitLeft(6.0f, nullptr, &PresetHeader);
+				PresetHeader.VSplitLeft(TeeMetrics.m_LineSpacing, nullptr, &PresetHeader);
 				Ui()->DoLabel(&PresetHeader, aPresetLabel, BodySize, TEXTALIGN_ML);
 
-				QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
-				QueuePresets.HSplitTop(20.0f, &PresetControls, &QueuePresets);
+				QueuePresets.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueuePresets);
+				QueuePresets.HSplitTop(TeeMetrics.m_ButtonHeight, &PresetControls, &QueuePresets);
 				CUIRect PresetControlsTop = PresetControls;
 				CUIRect SaveButton, SaveAsButton, RenamePresetButton, RemovePresetButton;
-				const float ActionGapWidth = 4.0f;
+				const float ActionGapWidth = TeeMetrics.m_LineSpacing;
 				const float ActionButtonWidth = (PresetControlsTop.w - ActionGapWidth * 3.0f) / 4.0f;
 				PresetControlsTop.VSplitLeft(ActionButtonWidth, &SaveButton, &PresetControlsTop);
 				PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &PresetControlsTop);
@@ -2259,7 +2274,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				}
 				GameClient()->m_Tooltips.DoToolTip(&s_RemoveSelectedPresetButton, &RemovePresetButton, CanRemovePreset ? Localize("Delete this preset") : Localize("Apply a preset first"));
 
-				QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
+				QueuePresets.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueuePresets);
 				PresetList = QueuePresets;
 				if(vQueuePresets.empty())
 				{
@@ -2275,16 +2290,16 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					const int PresetSelectedOld = ActivePresetIndex >= 0 ? ActivePresetIndex : -1;
 					s_PresetListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 					s_PresetListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
-					s_PresetListBox.DoStart(20.0f, (int)vQueuePresets.size(), 1, 1, PresetSelectedOld, &PresetList, true, IGraphics::CORNER_ALL);
+					s_PresetListBox.DoStart(TeeMetrics.m_ListRowHeight, (int)vQueuePresets.size(), 1, 1, PresetSelectedOld, &PresetList, true, IGraphics::CORNER_ALL);
 					for(size_t i = 0; i < vQueuePresets.size(); ++i)
 					{
-						const CListboxItem Item = s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, 3.0f);
+						const CListboxItem Item = s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, TeeMetrics.m_LineSpacing * 0.5f);
 						if(!Item.m_Visible)
 							continue;
 
 						CUIRect SelectRect = Item.m_Rect;
 						CUIRect NameRect = SelectRect;
-						NameRect.VSplitLeft(4.0f, nullptr, &NameRect);
+						NameRect.VSplitLeft(TeeMetrics.m_LineSpacing, nullptr, &NameRect);
 
 						if(ActivePresetIndex == (int)i)
 						{
@@ -2384,6 +2399,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		{
 			const float ControlsWidth = minimum(Toolbar.w, DesiredControlsWidth);
 			Toolbar.VSplitRight(ControlsWidth, &QuickSearch, &ControlsArea);
+			QuickSearch.VSplitRight(SkinControlGap, &QuickSearch, nullptr);
 		}
 		const float AvailableLabelButtonWidth = maximum(0.0f, ControlsArea.w - SkinControlGap * 3.0f - SkinRefreshButtonWidth);
 		const float LabelButtonWidthScale = DesiredLabelButtonWidth > 0.0f ? minimum(1.0f, AvailableLabelButtonWidth / DesiredLabelButtonWidth) : 1.0f;
@@ -3168,11 +3184,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		if(SkinList.UnfilteredCount() > 0 && vSkinList.empty())
 		{
 			CUIRect FilterLabel, ResetButton;
-			MainView.HMargin((MainView.h - (16.0f + 18.0f + 8.0f)) / 2.0f, &FilterLabel);
-			FilterLabel.HSplitTop(16.0f, &FilterLabel, &ResetButton);
-			ResetButton.HSplitTop(8.0f, nullptr, &ResetButton);
-			ResetButton.VMargin((ResetButton.w - 200.0f) / 2.0f, &ResetButton);
-			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_skins_match_label", &FilterLabel, Localize("No skins match your filter criteria"), 16.0f, TEXTALIGN_MC);
+			const float EmptyStateHeight = TeeMetrics.m_LineHeight + TeeMetrics.m_LineSpacing + TeeMetrics.m_ButtonHeight;
+			MainView.HMargin(maximum(0.0f, (MainView.h - EmptyStateHeight) / 2.0f), &FilterLabel);
+			FilterLabel.HSplitTop(TeeMetrics.m_LineHeight, &FilterLabel, &ResetButton);
+			ResetButton.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &ResetButton);
+			ResetButton.HSplitTop(TeeMetrics.m_ButtonHeight, &ResetButton, nullptr);
+			ResetButton.VMargin(maximum(0.0f, (ResetButton.w - 200.0f * UiScale) / 2.0f), &ResetButton);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_skins_match_label", &FilterLabel, Localize("No skins match your filter criteria"), BodySize, TEXTALIGN_MC);
 			static CButtonContainer s_ResetButton;
 			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_ResetButton, "tee-reset-filter", Localize("Reset filter"), 0, &ResetButton))
 			{
@@ -3420,9 +3438,9 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	const float OptionsContentHeight = OptionsTopHeight + EyesHeight + CustomColorsHeight;
 	const float TopContentHeight = maximum(IdentityContentHeight, OptionsContentHeight);
 	constexpr float TeeSkinGridRowHeight = 50.0f;
-	constexpr int TeeSkinGridVisibleRows = 4;
+	constexpr int TeeSkinGridVisibleRows = 6;
 	const float TeeSkinToolbarHeight = TeeMetrics.m_InputHeight * 2.0f + TeeMetrics.m_LineSpacing;
-	const float TeeQueuePanelMinHeight = 360.0f * UiScale;
+	const float TeeQueuePanelMinHeight = 440.0f * UiScale;
 	const float ListContentHeight = maximum(TeeQueuePanelMinHeight, TeeSkinGridVisibleRows * TeeSkinGridRowHeight + TeeSkinToolbarHeight);
 	AddCard(IdentitySpec, [TopContentHeight](float) { return TopContentHeight; }, RenderIdentity, false, *pUseCustomColor != 0);
 	AddCard(OptionsSpec, [TopContentHeight](float) { return TopContentHeight; }, RenderOptions, false, *pUseCustomColor != 0);
@@ -3578,6 +3596,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	}
 	const uint32_t FoundBackendCount = (uint32_t)s_vSupportedBackendInfos.size();
 	const auto &GpuList = Graphics()->GetGpus();
+	const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
+	static const int s_NumWindowMode = std::size(apWindowModes);
+	const int OldWindowMode = g_Config.m_GfxFullscreen ? (g_Config.m_GfxFullscreen == 1 ? 4 : (g_Config.m_GfxFullscreen == 2 ? 3 : 2)) : (g_Config.m_GfxBorderless ? 1 : 0);
 	const int GraphicsBackendRowCount = (FoundBackendCount > 1 ? 1 : 0) + (GpuList.m_vGpus.size() > 1 ? 2 : 0);
 	const qm_card_registry::SCardDefault *pDisplayDefault = qm_card_registry::FindByStableId("deck:graphics-display");
 	const qm_card_registry::SCardDefault *pVisualDefault = qm_card_registry::FindByStableId("deck:graphics-visual");
@@ -3605,14 +3626,43 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsBackendMinCardHeight = BackendChromeHeight + GraphicsBackendContentHeight;
 	constexpr int GraphicsModesMaxVisibleRows = 8;
 	const int GraphicsModesVisibleRows = std::clamp(s_NumNodes, 1, GraphicsModesMaxVisibleRows);
-	const float GraphicsModesContentHeight = GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
+	const float GraphicsModesTargetContentHeight = GraphicsMetrics.m_RowStep * 2.0f + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
+	float GraphicsModesContentHeight = GraphicsModesTargetContentHeight;
+	const SCardMotionSpec GraphicsCardMotion = SettingsCardMotionSpec();
+	static bool s_GraphicsModesHeightInitialized = false;
+	static bool s_GraphicsModesHeightAnimationActive = false;
+	static float s_GraphicsModesLastTargetContentHeight = 0.0f;
+	if(!Ui()->RenderOnly() && GraphicsCardCtx.m_pAnim != nullptr)
+	{
+		const uint64_t GraphicsModesHeightNode = UiAnimNodeKey("settings-graphics-modes-height");
+		const bool TargetChanged = !s_GraphicsModesHeightInitialized || std::abs(s_GraphicsModesLastTargetContentHeight - GraphicsModesTargetContentHeight) > 0.01f;
+		if(!s_GraphicsModesHeightInitialized || GraphicsCardMotion.m_ReflowDuration <= 0.0f)
+		{
+			if(TargetChanged || s_GraphicsModesHeightAnimationActive)
+				GraphicsCardCtx.m_pAnim->SetValue(GraphicsModesHeightNode, EUiAnimProperty::HEIGHT, GraphicsModesTargetContentHeight);
+			s_GraphicsModesHeightAnimationActive = false;
+		}
+		else
+		{
+			if(TargetChanged)
+				s_GraphicsModesHeightAnimationActive = true;
+			if(s_GraphicsModesHeightAnimationActive)
+			{
+				GraphicsModesContentHeight = ResolveUiAnimValue(*GraphicsCardCtx.m_pAnim, GraphicsModesHeightNode, EUiAnimProperty::HEIGHT, GraphicsModesTargetContentHeight, GraphicsCardMotion.m_ReflowDuration, EEasing::EASE_OUT);
+				s_GraphicsModesHeightAnimationActive = GraphicsCardCtx.m_pAnim->HasActiveAnimation(GraphicsModesHeightNode, EUiAnimProperty::HEIGHT);
+			}
+		}
+		s_GraphicsModesHeightInitialized = true;
+		s_GraphicsModesLastTargetContentHeight = GraphicsModesTargetContentHeight;
+	}
+	const uint64_t GraphicsModesMeasureRevision = (static_cast<uint64_t>(std::max(0, s_NumNodes)) << 32) ^ static_cast<uint64_t>(std::llround(GraphicsModesContentHeight * 1000.0f));
 	const float GraphicsModesMinCardHeight = ModesChromeHeight + GraphicsModesContentHeight;
-	const int GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);
+	const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
-	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(5, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(4, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 
 	std::vector<SSettingsCardDefinition> vCards;
@@ -3630,6 +3680,26 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	AddCard(ModesSpec, GraphicsModesMinCardHeight, ModesChromeHeight, [&](CUIRect ContentRect) {
 		CUIRect ModeList = ContentRect;
+		CUIRect WindowModeDropDown;
+		ModeList.HSplitTop(GraphicsMetrics.m_LineHeight, &WindowModeDropDown, &ModeList);
+		ModeList.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ModeList);
+		static CUi::SDropDownState s_WindowModeDropDownState;
+		static CScrollRegion s_WindowModeDropDownScrollRegion;
+		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
+		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
+		if(OldWindowMode != NewWindowMode)
+		{
+			if(NewWindowMode == 0)
+				Graphics()->SetWindowParams(0, false);
+			else if(NewWindowMode == 1)
+				Graphics()->SetWindowParams(0, true);
+			else if(NewWindowMode == 2)
+				Graphics()->SetWindowParams(3, false);
+			else if(NewWindowMode == 3)
+				Graphics()->SetWindowParams(2, false);
+			else if(NewWindowMode == 4)
+				Graphics()->SetWindowParams(1, false);
+		}
 		CUIRect ModeLabel;
 		ModeList.HSplitTop(GraphicsMetrics.m_RowStep, &ModeLabel, &ModeList); // display mode list
 		static CListBox s_ListBox;
@@ -3683,7 +3753,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				g_Config.m_GfxScreenRefreshRate = s_aModes[NewSelected].m_RefreshRate;
 				Graphics()->ResizeToScreen();
 			}
-		} }, static_cast<uint64_t>(std::max(0, s_NumNodes)));
+		} }, GraphicsModesMeasureRevision);
 	AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [&](CUIRect ContentRect) {
 		CUIRect CardView = ContentRect; // switches
 		int RowsRemaining = GraphicsDisplayRowCount;
@@ -3694,31 +3764,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
 			return Row;
 		};
-		CUIRect WindowModeDropDown = NextRow();
-
-		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
-		static const int s_NumWindowMode = std::size(apWindowModes);
-
-		const int OldWindowMode = (g_Config.m_GfxFullscreen ? (g_Config.m_GfxFullscreen == 1 ? 4 : (g_Config.m_GfxFullscreen == 2 ? 3 : 2)) : (g_Config.m_GfxBorderless ? 1 : 0));
-
-		static CUi::SDropDownState s_WindowModeDropDownState;
-		static CScrollRegion s_WindowModeDropDownScrollRegion;
-		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
-		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
-		if(OldWindowMode != NewWindowMode)
-		{
-			if(NewWindowMode == 0)
-				Graphics()->SetWindowParams(0, false);
-			else if(NewWindowMode == 1)
-				Graphics()->SetWindowParams(0, true);
-			else if(NewWindowMode == 2)
-				Graphics()->SetWindowParams(3, false);
-			else if(NewWindowMode == 3)
-				Graphics()->SetWindowParams(2, false);
-			else if(NewWindowMode == 4)
-				Graphics()->SetWindowParams(1, false);
-		}
-
 		if(Graphics()->GetNumScreens() > 1)
 		{
 			CUIRect ScreenDropDown = NextRow();
@@ -3855,7 +3900,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	});
 	AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [&](CUIRect ContentRect) {
 		CUIRect CardView = ContentRect;
-		int RowsRemaining = 5;
+		int RowsRemaining = 4;
 		const auto NextRow = [&]() {
 			CUIRect Row;
 			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
@@ -3863,9 +3908,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
 			return Row;
 		};
-		CUIRect Label = NextRow();
+		CUIRect MotionRow = NextRow();
+		CUIRect Label, Segments;
+		MotionRow.VSplitLeft(std::clamp(MotionRow.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
+		Segments.VSplitLeft(GraphicsMetrics.m_LineSpacing, nullptr, &Segments);
 		DoSettingsLabel(SETTINGS_GRAPHICS, -1, "graphics-ui-motion-level-label", &Label, Localize("UI motion level"), BodySize, TEXTALIGN_ML);
-		CUIRect Segments = NextRow();
 		static CButtonContainer s_aMotionButtons[3];
 		const char *apMotionLabels[] = {Localize("Off"), Localize("Reduced"), Localize("Full")};
 		for(int i = 0; i < 3; ++i)
@@ -5400,8 +5447,6 @@ void CMenus::RenderSettings(CUIRect MainView)
 
 	static bool s_SettingsTransitionInitialized = false;
 	static int s_PrevSettingsPage = SETTINGS_GENERAL;
-	static float s_SettingsTransitionDirection = 0.0f;
-	const uint64_t SettingsPageSwitchNode = UiAnimNodeKey("settings_main_page_switch");
 
 	// render background
 	const int64_t ShellLayoutStartTime = PerfDebugStartTime();
@@ -5579,24 +5624,14 @@ void CMenus::RenderSettings(CUIRect MainView)
 			}
 			if(m_SettingsPerfLastPage != -1)
 				StartSettingsPerfFixedWindow("settings_tab_switch", SettingsPerfContextName(), CurrentQmUiPerfPage(), pWindowTab, 30);
-			const bool AnimateSettingsPageSwitch = UseNewSettingsUi && g_Config.m_UiSettingsPage != SETTINGS_SOUND;
-			s_SettingsTransitionDirection = AnimateSettingsPageSwitch ? (g_Config.m_UiSettingsPage > s_PrevSettingsPage ? 1.0f : -1.0f) : 0.0f;
-			if(AnimateSettingsPageSwitch)
-				TriggerUiSwitchAnimation(SettingsPageSwitchNode, 0.18f);
+			// 设置页卡片使用稳定位置呈现。整页位移会在半透明卡片移动时露出壳层底色，
+			// 表现为仅在开启动效后出现的背景闪烁。
 			s_PrevSettingsPage = g_Config.m_UiSettingsPage;
 		}
 	}
 
 	CUIRect ContentView = MainView;
-	const float TransitionStrength = ReadUiSwitchAnimation(SettingsPageSwitchNode);
-	const bool TransitionActive = !CollectingMenuTextPlan && TransitionStrength > 0.0f && s_SettingsTransitionDirection != 0.0f;
-	m_SettingsPageSwitchActive = TransitionActive;
-	const CUIRect ContentClip = MainView;
-	if(TransitionActive)
-	{
-		Ui()->ClipEnable(&ContentClip);
-		ApplyUiSwitchOffset(ContentView, TransitionStrength, s_SettingsTransitionDirection, true, 0.08f, 24.0f, 90.0f);
-	}
+	m_SettingsPageSwitchActive = false;
 
 	{
 		CPerfTimer StageTimer;
@@ -5709,8 +5744,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		if(SettingsPerfEnabled)
 		{
 			char aContentExtra[192];
-			str_format(aContentExtra, sizeof(aContentExtra), "context=%s page=%s transition=%d sections=%d sections_visible=%d tab=%s operation=%s", SettingsPerfContextName(), SettingsPageName(g_Config.m_UiSettingsPage), TransitionActive ? 1 : 0, NumSections, NumSectionsVisible, pTab, SettingsPerfActiveOperation());
-			LogPerfStage(Client(), "settings_page_content", StageTimer.ElapsedMs(), TransitionActive, aContentExtra);
+			str_format(aContentExtra, sizeof(aContentExtra), "context=%s page=%s transition=0 sections=%d sections_visible=%d tab=%s operation=%s", SettingsPerfContextName(), SettingsPageName(g_Config.m_UiSettingsPage), NumSections, NumSectionsVisible, pTab, SettingsPerfActiveOperation());
+			LogPerfStage(Client(), "settings_page_content", StageTimer.ElapsedMs(), false, aContentExtra);
 		}
 		m_SettingsTextContextPage = PreviousTextContextPage;
 		m_SettingsTextContextTab = PreviousTextContextTab;
@@ -5744,10 +5779,6 @@ void CMenus::RenderSettings(CUIRect MainView)
 
 	{
 		const int64_t StageStartTime = PerfDebugStartTime();
-		if(TransitionActive)
-		{
-			Ui()->ClipDisable();
-		}
 		if(SettingsPerfEnabled)
 		{
 			char aSettingsPerfTab[16];
@@ -5763,9 +5794,9 @@ void CMenus::RenderSettings(CUIRect MainView)
 				pSettingsPerfTab = aSettingsPerfTab;
 			}
 			char aOverlayExtra[160];
-			str_format(aOverlayExtra, sizeof(aOverlayExtra), "context=%s page=%s tab=%s operation=%s active=%d",
-				SettingsPerfContextName(), SettingsPageName(g_Config.m_UiSettingsPage), pSettingsPerfTab, SettingsPerfActiveOperation(), TransitionActive ? 1 : 0);
-			LogPerfStage(Client(), "settings_transition_overlay", PerfDebugElapsedMs(StageStartTime), TransitionActive, aOverlayExtra);
+			str_format(aOverlayExtra, sizeof(aOverlayExtra), "context=%s page=%s tab=%s operation=%s active=0",
+				SettingsPerfContextName(), SettingsPageName(g_Config.m_UiSettingsPage), pSettingsPerfTab, SettingsPerfActiveOperation());
+			LogPerfStage(Client(), "settings_transition_overlay", PerfDebugElapsedMs(StageStartTime), false, aOverlayExtra);
 		}
 	}
 	if(NeedRestart)
@@ -6097,10 +6128,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	const SSettingsContentMetrics AppearanceMetrics = ResolveSettingsContentMetrics(MainView.w);
 	const float AppearanceUiScale = AppearanceMetrics.m_UiScale;
 	const float AppearanceBodySize = AppearanceMetrics.m_BodySize;
-	static bool s_AppearanceTransitionInitialized = false;
-	static int s_PrevAppearanceTab = 0;
-	static float s_AppearanceTransitionDirection = 0.0f;
-	const uint64_t AppearanceTabSwitchNode = UiAnimNodeKey("settings_appearance_tab_switch");
 
 	CUIRect TabBar, LeftView, RightView, Button;
 
@@ -6144,33 +6171,13 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	const float ColorPickerLabelSize = AppearanceBodySize;
 	const float ColorPickerLineSpacing = AppearanceMetrics.m_LineSpacing;
 
-	if(!s_AppearanceTransitionInitialized)
-	{
-		s_PrevAppearanceTab = m_AppearanceSettingsTab;
-		s_AppearanceTransitionInitialized = true;
-	}
-	else if(m_AppearanceSettingsTab != s_PrevAppearanceTab)
-	{
-		s_AppearanceTransitionDirection = m_AppearanceSettingsTab > s_PrevAppearanceTab ? 1.0f : -1.0f;
-		TriggerUiSwitchAnimation(AppearanceTabSwitchNode, 0.18f);
-		s_PrevAppearanceTab = m_AppearanceSettingsTab;
-	}
-
 	CUIRect ContentView = MainView;
-	const float TransitionStrength = ReadUiSwitchAnimation(AppearanceTabSwitchNode);
-	const bool TransitionActive = TransitionStrength > 0.0f && s_AppearanceTransitionDirection != 0.0f;
-	const CUIRect ContentClip = MainView;
 	auto DoAppearanceHeading = [this](CUIRect &View, const char *pTextId, const char *pText, float FontSize, float LineHeight) {
 		CUIRect Heading;
 		View.HSplitTop(LineHeight, &Heading, &View);
 		CUIElement &HeadingElement = SettingsTextElement(SETTINGS_APPEARANCE, m_AppearanceSettingsTab, pTextId);
 		DoSettingsLabelStreamed(HeadingElement, &Heading, pText, FontSize, TEXTALIGN_ML);
 	};
-	if(TransitionActive)
-	{
-		Ui()->ClipEnable(&ContentClip);
-		ApplyUiSwitchOffset(ContentView, TransitionStrength, s_AppearanceTransitionDirection, false, 0.08f, 24.0f, 120.0f);
-	}
 	const SSettingsPageLayoutFrame AppearancePage = SettingsPageLayout(ContentView, AppearanceUiScale);
 	const IUiContext AppearanceCardCtx = SettingsUiContext("settings_appearance", AppearanceUiScale);
 	const SSettingsCardDeckVisualOptions AppearanceVisualOptions = SettingsCardDeckVisualOptions();
@@ -6991,18 +6998,26 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			if(g_Config.m_ClShowDirection > 0)
 				DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-key-press-icons-size", &g_Config.m_ClDirectionSize, &g_Config.m_ClDirectionSize, Button, Localize("Size of key press icons"), -50, 100);
 		});
-		const float NamePlatePreviewAreaHeight = std::clamp(160.0f * AppearanceUiScale, 130.0f, 160.0f);
-		const float NamePlatePreviewMinCardHeight = NamePlatePreviewAreaHeight + LineSize * 3.0f + MarginSmall;
+		const float NamePlatePreviewAreaHeight = std::clamp(190.0f * AppearanceUiScale, 160.0f, 210.0f);
+		const float NamePlatePreviewControlsHeight = ResolveSettingsRowsHeight(3, LineSize, MarginSmall);
+		const float NamePlatePreviewMinCardHeight = NamePlatePreviewAreaHeight + MarginSmall + NamePlatePreviewControlsHeight;
 		AddCard(6, NamePlatePreviewMinCardHeight, [&](CUIRect ContentRect) {
 			CUIRect RightView = ContentRect;
+			CUIRect PreviewArea, Controls;
+			RightView.HSplitBottom(NamePlatePreviewControlsHeight, &PreviewArea, &Controls);
+			PreviewArea.HSplitBottom(MarginSmall, &PreviewArea, nullptr);
+			PreviewArea.Draw(ui_token::color::SURFACE_OVERLAY, IGraphics::CORNER_ALL, ui_token::radius::CARD);
+			const auto NextPreviewControl = [&](CUIRect &Row) {
+				Controls.HSplitTop(LineSize, &Row, &Controls);
+				if(Controls.h > 0.0f)
+					Controls.HSplitTop(MarginSmall, nullptr, &Controls);
+			};
 
-			// ***** Name Plate Preview ***** //
-			// ***** Name Plate Dummy Preview ***** //
-			RightView.HSplitBottom(LineSize, &RightView, &Button);
+			NextPreviewControl(Button);
 			if(DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, &m_DummyNamePlatePreview, g_Config.m_ClDummy ? "appearance-preview-player-nameplate" : "appearance-preview-dummy-nameplate", g_Config.m_ClDummy ? Localize("Preview player nameplate") : Localize("Preview dummy nameplate"), m_DummyNamePlatePreview, &Button))
 				m_DummyNamePlatePreview = !m_DummyNamePlatePreview;
 
-			RightView.HSplitBottom(LineSize, &RightView, &Button);
+			NextPreviewControl(Button);
 			const bool NameplateFreeMoveEnabled = g_Config.m_QmNameplateFreeMove != 0 || g_Config.m_QmNameplateFreeMoveX != 0 || g_Config.m_QmNameplateFreeMoveY != 0;
 			if(DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, &g_Config.m_QmNameplateFreeMove, "appearance-nameplate-free-move", Localize("Free move"), NameplateFreeMoveEnabled, &Button))
 			{
@@ -7012,7 +7027,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				g_Config.m_QmNameplateFreeMoveY = 0;
 			}
 
-			RightView.HSplitBottom(LineSize, &RightView, &Button);
+			NextPreviewControl(Button);
 			static CButtonContainer s_NameplateResetLayoutButton;
 			if(DoSettingsButton_Menu(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, APPEARANCE_TAB_NAME_PLATE, &s_NameplateResetLayoutButton, "appearance-nameplate-reset-layout", Localize("Reset layout"), 0, &Button))
 			{
@@ -7027,12 +7042,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				g_Config.m_QmNameplateNameOffsetX = 0;
 				g_Config.m_QmNameplateNameOffsetY = 0;
 			}
-			RightView.HSplitBottom(MarginSmall, &RightView, nullptr);
-
 			int Dummy = g_Config.m_ClDummy != (m_DummyNamePlatePreview ? 1 : 0);
-
-			const vec2 Position = RightView.Center();
-
+			const vec2 Position = PreviewArea.Center();
 			GameClient()->m_NamePlates.RenderNamePlatePreview(Position, Dummy);
 		});
 	}
@@ -7166,10 +7177,15 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			static bool s_HookCollPressed = false;
 
 			CUIRect PreviewColl;
+			const auto PrepareHookPreviewRow = [&](CUIRect &Preview) {
+				Preview.Draw(ui_token::color::SURFACE_OVERLAY, IGraphics::CORNER_ALL, ui_token::radius::CARD);
+				Preview.Margin(MarginSmall, &Preview);
+			};
 
 			// ***** Unhookable Tile Preview *****
 			CUIRect PreviewNoColl;
 			RightView.HSplitTop(50.0f, &PreviewNoColl, &RightView);
+			PrepareHookPreviewRow(PreviewNoColl);
 			RightView.HSplitTop(4 * MarginSmall, nullptr, &RightView);
 			TeeRenderPos = vec2(PreviewNoColl.x + LeftMargin, PreviewNoColl.y + PreviewNoColl.h / 2.0f);
 			DoHookCollision(TeeRenderPos, PreviewNoColl.w - LineLength, g_Config.m_ClHookCollSize, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorNoColl)), ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f), s_HookCollPressed);
@@ -7188,6 +7204,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 			// ***** Hookable Tile Preview *****
 			RightView.HSplitTop(50.0f, &PreviewColl, &RightView);
+			PrepareHookPreviewRow(PreviewColl);
 			RightView.HSplitTop(4 * MarginSmall, nullptr, &RightView);
 			TeeRenderPos = vec2(PreviewColl.x + LeftMargin, PreviewColl.y + PreviewColl.h / 2.0f);
 			DoHookCollision(TeeRenderPos, PreviewColl.w - LineLength, g_Config.m_ClHookCollSize, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorHookableColl)), ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f), s_HookCollPressed);
@@ -7206,6 +7223,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 			// ***** Hook Dummy Preview *****
 			RightView.HSplitTop(50.0f, &PreviewColl, &RightView);
+			PrepareHookPreviewRow(PreviewColl);
 			RightView.HSplitTop(4 * MarginSmall, nullptr, &RightView);
 			TeeRenderPos = vec2(PreviewColl.x + LeftMargin, PreviewColl.y + PreviewColl.h / 2.0f);
 			DummyRenderPos = vec2(PreviewColl.x + PreviewColl.w - LineLength - 5.f + LeftMargin, PreviewColl.y + PreviewColl.h / 2.0f);
@@ -7215,6 +7233,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 			// ***** Hook Dummy Reverse Preview *****
 			RightView.HSplitTop(50.0f, &PreviewColl, &RightView);
+			PrepareHookPreviewRow(PreviewColl);
 			RightView.HSplitTop(4 * MarginSmall, nullptr, &RightView);
 			TeeRenderPos = vec2(PreviewColl.x + LeftMargin, PreviewColl.y + PreviewColl.h / 2.0f);
 			DummyRenderPos = vec2(PreviewColl.x + PreviewColl.w - LineLength - 5.f + LeftMargin, PreviewColl.y + PreviewColl.h / 2.0f);
@@ -7224,6 +7243,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 			// ***** Hook tip preview *****
 			RightView.HSplitTop(50.0f, &PreviewColl, &RightView);
+			PrepareHookPreviewRow(PreviewColl);
 			RightView.HSplitTop(4 * MarginSmall, nullptr, &RightView);
 			TeeRenderPos = vec2(PreviewColl.x + LeftMargin, PreviewColl.y + PreviewColl.h / 2.0f);
 			DoHookCollision(TeeRenderPos, PreviewColl.w - LineLength - 15.f, g_Config.m_ClHookCollSize, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorNoColl)), color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollTipColor, true)), s_HookCollPressed);
@@ -7430,10 +7450,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().Render(AppearanceCardCtx, AppearancePage, pAppearanceDeckTab, vCards, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_AppearanceSettingsCardScrollRegions[m_AppearanceSettingsTab], InputState, SettingsCardMotionSpec(), AppearanceVisualOptions);
 	if(!RenderOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
-	if(TransitionActive)
-	{
-		Ui()->ClipDisable();
-	}
 }
 
 void CMenus::RenderSettingsDDNet(CUIRect MainView)

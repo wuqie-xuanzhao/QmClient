@@ -17,6 +17,14 @@ struct SSettingsCardDeckItemGeometry
 	CUIRect m_Rect;
 };
 
+struct SSettingsCardAnimationWork
+{
+	bool m_ResolveEntry = false;
+	bool m_ResetEntry = false;
+	bool m_ResolveReflow = false;
+	bool m_SetReflowTarget = false;
+};
+
 // 以下函数是公共 Deck 的无渲染决策层；仅处理 model/order/geometry，不能依赖 UI renderer。
 // 活动 state 集合由当前页面 definitions 决定，未注册的条件卡不得占用任何 layout slot。
 std::array<std::vector<int>, 3> BuildSettingsCardDeckColumnOrder(const qm_card_order::CModel &Model, const char *pTab, const std::vector<int> &vActiveStateIndices);
@@ -75,4 +83,6 @@ bool SettingsCardDeckShouldSnapReflow(bool GeometryStateChanged, bool DragActive
 bool SettingsCardDeckScrollMoved(bool HasPreviousOffset, float PreviousOffsetY, float CurrentOffsetY);
 // 卡片视觉位置与静态布局不一致时，禁止用静态 header 几何开始拖拽。
 bool SettingsCardDeckAllowsDragStart(bool EntryPending, bool EntryPositionActive, bool ReflowTargetChanged, bool ReflowPositionActive);
+// 稳定帧不得访问动画 runtime；仅目标变化、活动轨道或关闭动效后的复位需要工作。
+SSettingsCardAnimationWork ResolveSettingsCardAnimationWork(float EntryDuration, bool EntryWasActive, bool ReflowInitializedThisFrame, bool SnapReflow, float ReflowDuration, bool ReflowTargetChanged, bool ReflowWasActive);
 #endif // GAME_CLIENT_QMUI_SETTINGSCARDDECKLOGIC_H

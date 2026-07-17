@@ -78,6 +78,7 @@ private:
 		float m_ReflowCompleteFeedbackRemaining = 0.0f;
 		float m_LastReflowTargetY = 0.0f;
 		uint64_t m_EntryDisplayCycle = UINT64_MAX;
+		bool m_EntryWasActive = false;
 		bool m_ReflowInitialized = false;
 		bool m_ReflowWasActive = false;
 		bool m_CollapsedInitialized = false;

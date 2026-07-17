@@ -3894,14 +3894,16 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesSharedIntervalNumericF
 	EXPECT_EQ(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee_queue_list_label\", &QueueListHeaderLabel, Localize(\"Skin queue\")"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Enable skin queue\"), QueueEnabled"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect IntervalRow, IntervalLabel, IntervalControls;"), std::string::npos);
-	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);"), std::string::npos);
-	EXPECT_NE(Body.find("IntervalRow.VSplitLeft(QueueControlLabelWidth, &IntervalLabel, &IntervalControls);"), std::string::npos);
+	EXPECT_NE(Body.find("const bool StackQueueInterval = QueueSection.w <"), std::string::npos);
+	EXPECT_NE(Body.find("QueueSection.HSplitTop(QueueIntervalRowHeight, &IntervalRow, &QueueSection);"), std::string::npos);
+	EXPECT_NE(Body.find("if(StackQueueInterval)"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Enabled\")"), std::string::npos);
 	EXPECT_EQ(Body.find("tee-skin-queue-enabled-heading"), std::string::npos);
-	EXPECT_NE(Body.find("IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);"), std::string::npos);
-	EXPECT_NE(Body.find("IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);"), std::string::npos);
-	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f"), std::string::npos);
-	EXPECT_NE(Body.find("const float QueueValueUnitWidth = 18.0f"), std::string::npos);
+	EXPECT_NE(Body.find("IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalInputGroup);"), std::string::npos);
+	EXPECT_NE(Body.find("const float ResolvedQueueValueUnitWidth = minimum(IntervalInputGroup.w, QueueValueUnitWidth);"), std::string::npos);
+	EXPECT_NE(Body.find("IntervalInputGroup.VSplitRight(ResolvedQueueValueUnitWidth, &IntervalInput, &IntervalUnit);"), std::string::npos);
+	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f * UiScale"), std::string::npos);
+	EXPECT_NE(Body.find("TextRender()->TextWidth(TeeMetrics.m_SmallSize, \"ms\")"), std::string::npos);
 	EXPECT_NE(Body.find("SLabelProperties QueueControlLabelProps;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueControlLabelProps.m_DisallowNewline = true"), std::string::npos);
 	EXPECT_NE(Body.find("QueueControlLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
@@ -6555,8 +6557,10 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
-	EXPECT_NE(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
-	EXPECT_NE(Source.find("SurfaceRect.Draw(Surface, IGraphics::CORNER_ALL, InnerRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd)"), std::string::npos);
+	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);
 	EXPECT_NE(DeckHeader.find("bool m_AllowHeaderDrag = true;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
@@ -7000,6 +7004,31 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 
 	const std::string CardSource = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");
 	EXPECT_NE(CardSource.find("HeaderAction(DrawFrame, DrawState.m_Collapsed)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsCardsKeepStableBackgroundPositionDuringPageSwitches)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string RenderSettings = ExtractSourceFunctionBody(Settings, "void CMenus::RenderSettings(CUIRect MainView)");
+	const std::string RenderAppearance = ExtractSourceFunctionBody(Settings, "void CMenus::RenderSettingsAppearance(CUIRect MainView)");
+
+	EXPECT_NE(Menus.find("const bool ContentTransitionActive = TransitionActive && m_MenuPage != PAGE_SETTINGS;"), std::string::npos);
+	EXPECT_NE(Menus.find("const bool ContentTransitionActive = TransitionActive && m_GamePage != PAGE_SETTINGS;"), std::string::npos);
+	EXPECT_EQ(RenderSettings.find("settings_main_page_switch"), std::string::npos);
+	EXPECT_EQ(RenderSettings.find("ApplyUiSwitchOffset(ContentView"), std::string::npos);
+	EXPECT_NE(RenderSettings.find("m_SettingsPageSwitchActive = false;"), std::string::npos);
+	EXPECT_EQ(RenderAppearance.find("settings_appearance_tab_switch"), std::string::npos);
+	EXPECT_EQ(RenderAppearance.find("ApplyUiSwitchOffset(ContentView"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsCardDeckSkipsAnimationRuntimeOnStableFrames)
+{
+	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+
+	EXPECT_NE(Source.find("ResolveSettingsCardAnimationWork("), std::string::npos);
+	EXPECT_NE(Source.find("if(AnimationWork.m_ResolveEntry)"), std::string::npos);
+	EXPECT_NE(Source.find("else if(AnimationWork.m_ResolveReflow)"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 {
@@ -8649,15 +8678,16 @@ TEST(QmMonitoringHelpers, AudioPackDirectoryOpensWritableSaveFolder)
 	EXPECT_EQ(Body.find("Storage()->GetCompletePath(IStorage::TYPE_ALL, \"audio\""), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, SoundPageSwitchSkipsWholePageOffsetAnimation)
+TEST(QmMonitoringHelpers, SettingsPageSwitchesSkipWholePageOffsetAnimation)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettings(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	EXPECT_NE(Body.find("const bool AnimateSettingsPageSwitch = UseNewSettingsUi && g_Config.m_UiSettingsPage != SETTINGS_SOUND;"), std::string::npos);
-	EXPECT_NE(Body.find("s_SettingsTransitionDirection = AnimateSettingsPageSwitch ? (g_Config.m_UiSettingsPage > s_PrevSettingsPage ? 1.0f : -1.0f) : 0.0f;"), std::string::npos);
-	EXPECT_NE(Body.find("if(AnimateSettingsPageSwitch)\n\t\t\t\tTriggerUiSwitchAnimation(SettingsPageSwitchNode, 0.18f);"), std::string::npos);
+	EXPECT_EQ(Body.find("SettingsPageSwitchNode"), std::string::npos);
+	EXPECT_EQ(Body.find("s_SettingsTransitionDirection"), std::string::npos);
+	EXPECT_EQ(Body.find("ApplyUiSwitchOffset(ContentView"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsPageSwitchActive = false;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, AssetsEditorSearchUsesSharedQmInputField)
@@ -9146,7 +9176,7 @@ TEST(QmMonitoringHelpers, MenuPerfEventsExposePageAttributionFields)
 		EXPECT_NE(Source.find("TextStats.Stats().m_Reused"), std::string::npos);
 		EXPECT_EQ(Source.find("SectionCacheHit ? \"clean\" : \"cache_miss\", 0, 0"), std::string::npos);
 		EXPECT_EQ(Source.find("\"cache_miss\""), std::string::npos);
-		EXPECT_NE(Source.find("page=%s transition=%d sections=%d sections_visible=%d tab=%s"), std::string::npos);
+		EXPECT_NE(Source.find("page=%s transition=0 sections=%d sections_visible=%d tab=%s"), std::string::npos);
 	}
 	{
 		std::ifstream File(TestSourcePath("src/game/client/components/menus.h"));

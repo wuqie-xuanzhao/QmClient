@@ -112,6 +112,38 @@ TEST(SettingsCardDeck, ActiveCardMotionBlocksHeaderDragStart)
 	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(false, false, false, true));
 }
 
+TEST(SettingsCardDeck, StableAnimationFramesSkipRuntimeWork)
+{
+	const SSettingsCardAnimationWork Stable = ResolveSettingsCardAnimationWork(0.16f, false, false, false, 0.18f, false, false);
+	EXPECT_FALSE(Stable.m_ResolveEntry);
+	EXPECT_FALSE(Stable.m_ResetEntry);
+	EXPECT_FALSE(Stable.m_ResolveReflow);
+	EXPECT_FALSE(Stable.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork TargetChanged = ResolveSettingsCardAnimationWork(0.16f, false, false, false, 0.18f, true, false);
+	EXPECT_TRUE(TargetChanged.m_ResolveReflow);
+	EXPECT_FALSE(TargetChanged.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork Active = ResolveSettingsCardAnimationWork(0.16f, true, false, false, 0.18f, false, true);
+	EXPECT_TRUE(Active.m_ResolveEntry);
+	EXPECT_TRUE(Active.m_ResolveReflow);
+}
+
+TEST(SettingsCardDeck, DisabledOrSnappedAnimationsOnlyResetTargets)
+{
+	const SSettingsCardAnimationWork Disabled = ResolveSettingsCardAnimationWork(0.0f, true, false, false, 0.0f, true, true);
+	EXPECT_TRUE(Disabled.m_ResetEntry);
+	EXPECT_FALSE(Disabled.m_ResolveReflow);
+	EXPECT_TRUE(Disabled.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork Snapped = ResolveSettingsCardAnimationWork(0.16f, false, false, true, 0.18f, true, true);
+	EXPECT_FALSE(Snapped.m_ResolveReflow);
+	EXPECT_TRUE(Snapped.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork FirstFrame = ResolveSettingsCardAnimationWork(0.16f, false, true, false, 0.18f, false, false);
+	EXPECT_FALSE(FirstFrame.m_SetReflowTarget);
+}
+
 TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)
 {
 	std::array<std::vector<int>, 3> aColumns{

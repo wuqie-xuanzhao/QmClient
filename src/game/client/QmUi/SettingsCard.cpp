@@ -14,6 +14,7 @@
 #include <game/client/ui.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 namespace
@@ -31,6 +32,60 @@ namespace
 			pRect->x += OffsetX;
 			pRect->y += OffsetY;
 		}
+	}
+
+	void DrawSettingsCardBorderRing(IGraphics *pGraphics, const CUIRect &Rect, const ColorRGBA &Color, const float Width, const float Radius)
+	{
+		if(pGraphics == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
+			return;
+		const float BorderWidth = std::clamp(Width, 0.0f, std::min(Rect.w, Rect.h) * 0.5f);
+		if(BorderWidth <= 0.0f)
+			return;
+
+		const float OuterRadius = std::clamp(Radius, 0.0f, std::min(Rect.w, Rect.h) * 0.5f);
+		const float InnerRadius = std::max(0.0f, OuterRadius - BorderWidth);
+		std::array<IGraphics::CQuadItem, 4> aEdges;
+		int NumEdges = 0;
+		if(Rect.w > 2.0f * OuterRadius)
+		{
+			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x + OuterRadius, Rect.y, Rect.w - 2.0f * OuterRadius, BorderWidth);
+			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x + OuterRadius, Rect.y + Rect.h - BorderWidth, Rect.w - 2.0f * OuterRadius, BorderWidth);
+		}
+		if(Rect.h > 2.0f * OuterRadius)
+		{
+			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x, Rect.y + OuterRadius, BorderWidth, Rect.h - 2.0f * OuterRadius);
+			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x + Rect.w - BorderWidth, Rect.y + OuterRadius, BorderWidth, Rect.h - 2.0f * OuterRadius);
+		}
+
+		constexpr int CornerSegments = 3;
+		constexpr float Pi = 3.14159265358979323846f;
+		std::array<IGraphics::CFreeformItem, CornerSegments * 4> aCorners;
+		int NumCorners = 0;
+		const auto AddCornerSegment = [&](const float CenterX, const float CenterY, const float XDirection, const float YDirection, const float AngleStart, const float AngleEnd) {
+			const vec2 InnerStart(CenterX + XDirection * std::cos(AngleStart) * InnerRadius, CenterY + YDirection * std::sin(AngleStart) * InnerRadius);
+			const vec2 OuterStart(CenterX + XDirection * std::cos(AngleStart) * OuterRadius, CenterY + YDirection * std::sin(AngleStart) * OuterRadius);
+			const vec2 OuterEnd(CenterX + XDirection * std::cos(AngleEnd) * OuterRadius, CenterY + YDirection * std::sin(AngleEnd) * OuterRadius);
+			const vec2 InnerEnd(CenterX + XDirection * std::cos(AngleEnd) * InnerRadius, CenterY + YDirection * std::sin(AngleEnd) * InnerRadius);
+			aCorners[NumCorners++] = IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd);
+		};
+		for(int Segment = 0; Segment < CornerSegments; ++Segment)
+		{
+			const float AngleStart = Segment * Pi * 0.5f / CornerSegments;
+			const float AngleEnd = (Segment + 1) * Pi * 0.5f / CornerSegments;
+			AddCornerSegment(Rect.x + OuterRadius, Rect.y + OuterRadius, -1.0f, -1.0f, AngleStart, AngleEnd);
+			AddCornerSegment(Rect.x + Rect.w - OuterRadius, Rect.y + OuterRadius, 1.0f, -1.0f, AngleStart, AngleEnd);
+			AddCornerSegment(Rect.x + OuterRadius, Rect.y + Rect.h - OuterRadius, -1.0f, 1.0f, AngleStart, AngleEnd);
+			AddCornerSegment(Rect.x + Rect.w - OuterRadius, Rect.y + Rect.h - OuterRadius, 1.0f, 1.0f, AngleStart, AngleEnd);
+		}
+
+		pGraphics->TextureClear();
+		pGraphics->QuadsBegin();
+		pGraphics->SetColor(Color);
+		if(NumEdges > 0)
+			pGraphics->QuadsDrawTL(aEdges.data(), NumEdges);
+		if(NumCorners > 0)
+			pGraphics->QuadsDrawFreeform(aCorners.data(), NumCorners);
+		pGraphics->QuadsEnd();
 	}
 
 }
@@ -68,11 +123,8 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	const CUIRect BorderRect = DrawFrame.m_Rect;
 	if(DrawCardChrome)
 	{
-		BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
-		CUIRect SurfaceRect;
-		BorderRect.Margin(BorderWidth, &SurfaceRect);
-		const float InnerRadius = std::max(0.0f, CardRadius - BorderWidth);
-		SurfaceRect.Draw(Surface, IGraphics::CORNER_ALL, InnerRadius);
+		BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
+		DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);
 	}
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)

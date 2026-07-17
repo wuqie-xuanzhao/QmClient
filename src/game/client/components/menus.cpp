@@ -1548,7 +1548,6 @@ ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float Lin
 
 	const ColorHSLA PickedColor = DoButton_ColorPicker(&ColorPickerButton, pColorValue, Alpha);
 
-	ResetButton.HMargin(2.0f, &ResetButton);
 	if(DoButton_Menu(pResetId, Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.1f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)))
 	{
 		*pColorValue = color_cast<ColorHSLA>(DefaultColor).Pack(Alpha);
@@ -3016,10 +3015,11 @@ void CMenus::Render()
 			const CUIRect MainViewClip = MainView;
 			const float TransitionStrength = ReadUiSwitchAnimation(UiAnimNodeKey("menu_page_switch"));
 			const bool TransitionActive = TransitionStrength > 0.0f && m_MenuPageTransitionDirection != 0.0f;
+			const bool ContentTransitionActive = TransitionActive && m_MenuPage != PAGE_SETTINGS;
 			const char *pPageName = MenuPageName(m_MenuPage);
 			if(m_MenuPage != PAGE_SETTINGS)
 				PrepareSettingsTabLabelCache(MainView.w);
-			if(TransitionActive)
+			if(ContentTransitionActive)
 			{
 				ApplyUiSwitchOffset(MainView, TransitionStrength, m_MenuPageTransitionDirection, false, 0.04f, 18.0f, 48.0f);
 				Ui()->ClipEnable(&MainViewClip);
@@ -3074,7 +3074,7 @@ void CMenus::Render()
 			LogPerfStage(Client(), "offline_page_content", ContentTimer.ElapsedMs(), TransitionActive, aContentExtra);
 			if(Client()->State() != ClientState)
 			{
-				if(TransitionActive)
+				if(ContentTransitionActive)
 					Ui()->ClipDisable();
 				const double TotalDurationMs = RenderTimer.ElapsedMs();
 				LogPerfStage(Client(), "menus_render_total", TotalDurationMs, true, "state=changed_during_offline_content");
@@ -3082,7 +3082,7 @@ void CMenus::Render()
 				return;
 			}
 
-			if(TransitionActive)
+			if(ContentTransitionActive)
 			{
 				Ui()->ClipDisable();
 			}
@@ -3114,6 +3114,7 @@ void CMenus::Render()
 			const CUIRect MainViewClip = MainView;
 			const float TransitionStrength = ReadUiSwitchAnimation(UiAnimNodeKey("game_page_switch"));
 			const bool TransitionActive = TransitionStrength > 0.0f && m_GamePageTransitionDirection != 0.0f;
+			const bool ContentTransitionActive = TransitionActive && m_GamePage != PAGE_SETTINGS;
 			const char *pPageName = GamePageName(m_GamePage);
 			const char *pOperationName = SettingsPerfActiveOperation();
 			if(pOperationName == nullptr || pOperationName[0] == '\0' || str_comp(pOperationName, "none") == 0)
@@ -3122,7 +3123,7 @@ void CMenus::Render()
 			str_format(aEscPerfExtra, sizeof(aEscPerfExtra), "operation=%s context=online page=%s tab=none frame=%" PRIu64, pOperationName, pPageName, Client()->PerfFrame());
 			if(m_GamePage != PAGE_SETTINGS)
 				PrepareSettingsTabLabelCache(MainView.w);
-			if(TransitionActive)
+			if(ContentTransitionActive)
 			{
 				ApplyUiSwitchOffset(MainView, TransitionStrength, m_GamePageTransitionDirection, false, 0.04f, 18.0f, 48.0f);
 				Ui()->ClipEnable(&MainViewClip);
@@ -3215,7 +3216,7 @@ void CMenus::Render()
 			LogPerfStage(Client(), "ingame_page_content", ContentTimer.ElapsedMs(), TransitionActive, aContentExtra);
 			if(Client()->State() != ClientState)
 			{
-				if(TransitionActive)
+				if(ContentTransitionActive)
 					Ui()->ClipDisable();
 				const double TotalDurationMs = RenderTimer.ElapsedMs();
 				LogPerfStage(Client(), "menus_render_total", TotalDurationMs, true, "state=changed_during_ingame_content");
@@ -3223,7 +3224,7 @@ void CMenus::Render()
 				return;
 			}
 
-			if(TransitionActive)
+			if(ContentTransitionActive)
 			{
 				Ui()->ClipDisable();
 			}
