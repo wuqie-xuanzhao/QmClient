@@ -140,12 +140,38 @@ inline float ResolveSettingsInlineRowMinimumWidth(const float FixedControlsWidth
 	return std::max(0.0f, FixedControlsWidth) + std::max(0.0f, Gap) * std::max(0, GapCount);
 }
 
+inline float ResolveSettingsCheckboxFontSize(const float BodySize, const float RequestedFontSize, const float RowHeight, const float BoxHeight, const float FontmodHeight)
+{
+	// 显式字号属于页面 metrics 契约，使用整行高度限幅；默认路径保留按图标内框限幅的旧行为。
+	const float AvailableHeight = RequestedFontSize > 0.0f ? RowHeight : BoxHeight;
+	return std::min(std::max(0.0f, BodySize), std::max(0.0f, AvailableHeight) * std::max(0.0f, FontmodHeight));
+}
+
 inline float ResolveAppearanceChatMessagesHeight(const SSettingsContentMetrics &Metrics)
 {
 	constexpr int MessageGradientCount = 6;
 	const float MessageGradientHeight = 2.0f * Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing;
-	const float ColorPickerHeight = Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing;
+	const float ColorPickerHeight = Metrics.m_LineHeight + Metrics.m_LineSpacing;
 	return MessageGradientCount * MessageGradientHeight + ColorPickerHeight;
+}
+
+inline float ResolveQmHudCoordsHeight(const SSettingsContentMetrics &Metrics)
+{
+	// 六个复选框、一个数值输入和一个颜色选择器都会消费一行及其底部间距。
+	return 8.0f * Metrics.m_RowStep;
+}
+
+inline float ResolveQmHudNotificationsHeight(const SSettingsContentMetrics &Metrics, const bool Advanced, const bool CategoryFilters)
+{
+	// 基础区域：两个开关、两个数值输入和高级选项开关。
+	float Height = 5.0f * Metrics.m_RowStep;
+	if(!Advanced)
+		return Height;
+
+	// 高级区域固定消费十行；分类过滤启用后再显示四个分类开关。
+	Height += (10.0f + (CategoryFilters ? 4.0f : 0.0f)) * Metrics.m_RowStep;
+	// 说明文字使用 Body 字号高度，并保留与其他行相同的底部间距。
+	return Height + Metrics.m_BodySize + Metrics.m_LineSpacing;
 }
 
 inline float ResolveAppearanceLaserColorsHeight(const SSettingsContentMetrics &Metrics)

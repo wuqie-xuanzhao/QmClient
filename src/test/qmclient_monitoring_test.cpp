@@ -1816,7 +1816,9 @@ TEST(QmMonitoringHelpers, SettingsTextColdStartAvoidsGlobalLanguageCacheAndCache
 
 		EXPECT_NE(Source.find("int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)"), std::string::npos);
 		EXPECT_NE(Source.find("int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)"), std::string::npos);
-		EXPECT_NE(Source.find("const float BodySize = ui_token::font::BODY * SettingsPageUiScale(pRect->w);"), std::string::npos);
+		EXPECT_NE(Source.find("const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : ui_token::font::BODY * SettingsPageUiScale(pRect->w);"), std::string::npos);
+		EXPECT_NE(Source.find("ResolveSettingsCheckboxFontSize(BodySize, RequestedFontSize, pRect->h, Box.h, CUi::ms_FontmodHeight)"), std::string::npos);
+		EXPECT_NE(Source.find("Props.m_MinimumFontSize = FontSize * 0.7f;"), std::string::npos);
 		EXPECT_NE(Source.find("const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);"), std::string::npos);
 		EXPECT_NE(Source.find("CUIElement &LabelElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);"), std::string::npos);
 		EXPECT_NE(Source.find("DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? \"X\" : \"\", pRect, BUTTONFLAG_LEFT, &LabelElement, ProcessInput, FontSize);"), std::string::npos);
@@ -6921,7 +6923,7 @@ TEST(QmMonitoringHelpers, QmClientDeckMeasureRevisionsDoNotPreMeasureContent)
 	}
 	EXPECT_EQ(FunctionDeck.find("QmKeywordReplyRules::DecodeFromConfig", FunctionDeckMeasure + 1), std::string::npos);
 
-	for(const char *pState : {"DummyMiniViewExpanded", "g_Config.m_QmPlayerStatsMapProgress", "g_Config.m_QmSpeedrunTimer", "g_Config.m_QmInputOverlay", "g_Config.m_QmHudNotificationsShowAdvanced", "g_Config.m_QmVoiceEnable", "g_Config.m_QmVoiceShowAdvanced", "DynamicIslandOriginalStyle", "g_Config.m_QmSmtcEnable", "g_Config.m_Qm3DParticles"})
+	for(const char *pState : {"DummyMiniViewExpanded", "g_Config.m_QmPlayerStatsMapProgress", "g_Config.m_QmSpeedrunTimer", "g_Config.m_QmInputOverlay", "g_Config.m_QmHudNotificationsShowAdvanced", "g_Config.m_QmHudNotificationsUseCategoryFilters", "g_Config.m_QmVoiceEnable", "g_Config.m_QmVoiceShowAdvanced", "DynamicIslandOriginalStyle", "g_Config.m_QmSmtcEnable", "g_Config.m_Qm3DParticles"})
 		EXPECT_NE(HudDeck.find(pState), std::string::npos) << pState;
 	for(const char *pState : {"g_Config.m_TcFreezeChatEnabled", "g_Config.m_TcFreezeChatEmoticon", "g_Config.m_QmAxiomAutoLogin", "g_Config.m_QmGores", "g_Config.m_QmGoresAutoEnable", "g_Config.m_QmWeaponTrajectory", "g_Config.m_QmFriendOnlineAutoRefresh", "g_Config.m_QmFriendEnterBroadcast", "g_Config.m_QmFriendEnterAutoGreet", "s_BlockWordsLayoutRevision", "g_Config.m_QmTranslateBackend", "g_Config.m_QmTranslateLlmEnableThinking", "g_Config.m_QmTranslateLlmProvider", "s_KeywordRulesLayoutRevision", "g_Config.m_QmPieMenuEnabled", "s_FavoriteMapsLayoutRevision", "g_Config.m_QmAutoTeamLock"})
 		EXPECT_NE(FunctionDeck.find(pState), std::string::npos) << pState;

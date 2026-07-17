@@ -4546,17 +4546,17 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	};
 	const bool DummyMiniViewExpanded = g_Config.m_QmDummyMiniView != 0;
 	const bool DynamicIslandOriginalStyle = g_Config.m_QmHudIslandUseOriginalStyle != 0;
-	auto EstimateContentHeight = [LineHeight, LineSpacing, DummyMiniViewExpanded, DynamicIslandOriginalStyle](EQmModuleId Id) {
+	auto EstimateContentHeight = [Metrics, LineHeight, LineSpacing, DummyMiniViewExpanded, DynamicIslandOriginalStyle](EQmModuleId Id) {
 		const auto Rows = [LineHeight, LineSpacing](float Count) { return Count * (LineHeight + LineSpacing); };
 		switch(Id)
 		{
 		case EQmModuleId::DummyMiniView: return DummyMiniViewExpanded ? Rows(4.0f) + LineHeight * 0.8f + LineSpacing : Rows(1.0f);
-		case EQmModuleId::Coords: return Rows(8.0f) + LineHeight;
+		case EQmModuleId::Coords: return ResolveQmHudCoordsHeight(Metrics);
 		case EQmModuleId::PlayerStats: return g_Config.m_QmPlayerStatsMapProgress ? Rows(10.0f) + LineHeight * 2.0f : Rows(3.0f);
 		case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? Rows(6.0f) : Rows(1.0f);
 		case EQmModuleId::DebugGraph: return Rows(2.0f);
 		case EQmModuleId::InputOverlay: return g_Config.m_QmInputOverlay ? Rows(7.0f) : Rows(1.0f);
-		case EQmModuleId::HudNotifications: return g_Config.m_QmHudNotificationsShowAdvanced ? Rows(15.0f) + LineHeight * 3.0f : Rows(4.0f);
+		case EQmModuleId::HudNotifications: return ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0);
 		case EQmModuleId::Voice: return g_Config.m_QmVoiceEnable ? (g_Config.m_QmVoiceShowAdvanced ? Rows(38.0f) : Rows(8.0f)) : Rows(1.0f);
 		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? Rows(3.0f) : Rows(5.0f);
 		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(3.0f) : Rows(1.0f);
@@ -4572,7 +4572,13 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::PlayerStats: return g_Config.m_QmPlayerStatsMapProgress ? 1u : 0u;
 		case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? 1u : 0u;
 		case EQmModuleId::InputOverlay: return g_Config.m_QmInputOverlay ? 1u : 0u;
-		case EQmModuleId::HudNotifications: return g_Config.m_QmHudNotificationsShowAdvanced ? 1u : 0u;
+		case EQmModuleId::HudNotifications:
+		{
+			uint64_t Revision = g_Config.m_QmHudNotificationsShowAdvanced ? 1u : 0u;
+			if(g_Config.m_QmHudNotificationsShowAdvanced && g_Config.m_QmHudNotificationsUseCategoryFilters)
+				Revision |= 2u;
+			return Revision;
+		}
 		case EQmModuleId::Voice:
 			return g_Config.m_QmVoiceEnable ? 1u | (g_Config.m_QmVoiceShowAdvanced ? 2u : 0u) : 0u;
 		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? 1u : 0u;

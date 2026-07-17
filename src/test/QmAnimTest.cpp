@@ -199,18 +199,33 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveSettingsInlineRowMinimumWidth(-1.0f, 5.0f, -1), 0.0f);
 	}
 
+	TEST(SettingsPageLayout, ExplicitCheckboxBodySizeUsesRowHeightLimit)
+	{
+		EXPECT_FLOAT_EQ(ResolveSettingsCheckboxFontSize(10.0f, 10.0f, 16.0f, 12.0f, 0.8f), 10.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsCheckboxFontSize(12.0f, 12.0f, 20.0f, 16.0f, 0.8f), 12.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsCheckboxFontSize(10.0f, -1.0f, 16.0f, 12.0f, 0.8f), 9.6f);
+	}
+
 	TEST(SettingsPageLayout, AppearanceDynamicCardsMatchConsumedPrimitivesAtBothScales)
 	{
 		const SSettingsContentMetrics Compact = ResolveSettingsContentMetrics(640.0f);
 		EXPECT_FLOAT_EQ(Compact.m_UiScale, 0.78f);
-		EXPECT_NEAR(ResolveAppearanceChatMessagesHeight(Compact), 262.6f, 0.001f);
+		EXPECT_NEAR(ResolveAppearanceChatMessagesHeight(Compact), 258.7f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudCoordsHeight(Compact), 159.2f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, false, false), 99.5f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 312.4f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 392.0f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserColorsHeight(Compact), 358.8f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, false), 95.6f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, true), 135.4f, 0.001f);
 
 		const SSettingsContentMetrics Standard = ResolveSettingsContentMetrics(1000.0f);
 		EXPECT_FLOAT_EQ(Standard.m_UiScale, 1.0f);
-		EXPECT_FLOAT_EQ(ResolveAppearanceChatMessagesHeight(Standard), 330.0f);
+		EXPECT_FLOAT_EQ(ResolveAppearanceChatMessagesHeight(Standard), 325.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudCoordsHeight(Standard), 200.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, false, false), 125.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 392.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 492.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserColorsHeight(Standard), 450.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, false), 120.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, true), 170.0f);

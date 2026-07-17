@@ -475,8 +475,8 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 
 	if(pCheckBoxValue != nullptr)
 	{
-		Label.Margin(2.0f, &Label);
-		if(DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, Tab, pCheckBoxValue, pLabelTextId, pLabel, *pCheckBoxValue, &Label))
+		SLabelProperties LabelProps;
+		if(DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, Tab, Tab, pCheckBoxValue, pLabelTextId, pLabel, *pCheckBoxValue, &Label, LabelProps, true, BodySize))
 		{
 			*pCheckBoxValue ^= 1;
 			Changed = true;

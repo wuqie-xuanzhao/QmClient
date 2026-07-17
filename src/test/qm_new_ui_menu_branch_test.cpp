@@ -1730,6 +1730,10 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	ASSERT_FALSE(HudDeck.empty());
 	EXPECT_NE(HudDeck.find("const bool DummyMiniViewExpanded = g_Config.m_QmDummyMiniView != 0;"), std::string::npos);
 	EXPECT_NE(HudDeck.find("Rows(4.0f) + LineHeight * 0.8f + LineSpacing"), std::string::npos);
+	EXPECT_NE(HudDeck.find("case EQmModuleId::Coords: return ResolveQmHudCoordsHeight(Metrics);"), std::string::npos);
+	EXPECT_NE(HudDeck.find("ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0)"), std::string::npos);
+	EXPECT_EQ(HudDeck.find("case EQmModuleId::Coords: return Rows(8.0f) + LineHeight;"), std::string::npos);
+	EXPECT_EQ(HudDeck.find("case EQmModuleId::HudNotifications: return g_Config.m_QmHudNotificationsShowAdvanced ? Rows(15.0f) + LineHeight * 3.0f : Rows(4.0f);"), std::string::npos);
 	EXPECT_NE(HudDeck.find("const bool DynamicIslandOriginalStyle = g_Config.m_QmHudIslandUseOriginalStyle != 0;"), std::string::npos);
 	EXPECT_NE(HudDeck.find("DynamicIslandOriginalStyle ? Rows(3.0f) : Rows(5.0f)"), std::string::npos);
 	EXPECT_NE(HudDeck.find("RenderQmHudDummyMiniViewContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, DummyMiniViewExpanded, ReadOnly)"), std::string::npos);
@@ -1827,6 +1831,8 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 	EXPECT_NE(ChatBranch.find("if(ChatLogAutoSaveLayout)"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("ResolveAppearanceChatMessagesHeight(AppearanceMetrics)"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("DoMessageGradientLine(Chat"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, Tab, Tab, pCheckBoxValue, pLabelTextId, pLabel, *pCheckBoxValue, &Label, LabelProps, true, BodySize)"), std::string::npos);
+	EXPECT_EQ(SettingsSource.find("Label.Margin(2.0f, &Label);"), std::string::npos);
 	EXPECT_EQ(SettingsSource.find("Section.VSplitRight(55.0f, &Section, &TextLabel);"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("const float ChangeButtonSize = LineHeight;"), std::string::npos);
 	EXPECT_EQ(SettingsSource.find("ResetButton.HMargin(2.0f, &ResetButton);"), std::string::npos);

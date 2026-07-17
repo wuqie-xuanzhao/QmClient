@@ -1231,7 +1231,7 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	return DoSettingsButton_CheckBox(Page, Tab, Subtab, pId, pTextId, pText, Checked, pRect, LabelProps, true);
 }
 
-int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, const bool ProcessInput)
+int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, const bool ProcessInput, const float RequestedFontSize)
 {
 	if(pTextId == nullptr)
 	{
@@ -1243,10 +1243,11 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	Box.Margin(2.0f, &Box);
 	SLabelProperties Props = LabelProps;
 	Props.m_MaxWidth = Label.w;
-	if(Props.m_MinimumFontSize <= 0.0f)
-		Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
-	const float BodySize = ui_token::font::BODY * SettingsPageUiScale(pRect->w);
-	const float FontSize = std::min(BodySize, Box.h * CUi::ms_FontmodHeight);
+	const bool AutoMinimumFontSize = Props.m_MinimumFontSize <= 0.0f;
+	const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : ui_token::font::BODY * SettingsPageUiScale(pRect->w);
+	const float FontSize = ResolveSettingsCheckboxFontSize(BodySize, RequestedFontSize, pRect->h, Box.h, CUi::ms_FontmodHeight);
+	if(AutoMinimumFontSize)
+		Props.m_MinimumFontSize = FontSize * 0.7f;
 	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
 	if(m_MenuTextPlanCollecting)
 	{
