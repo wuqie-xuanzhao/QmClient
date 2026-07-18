@@ -5124,7 +5124,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	const auto BuildDefinitions = [this, UiScale, BodySize, LineHeight, LineSpacing, ResultHeight, CardGap, SearchMatchedGlobalCardCount, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(2);
 		SSettingsCardDefinition InputCard;
-		InputCard.m_Spec = {"deck:global-search-input", Localize("Feature Search"), nullptr};
+		InputCard.m_Spec = {"deck:global-search-input", Localize("Feature Search"), qm_card_registry::ResolveLocalizedDescription("deck:global-search-input")};
 		InputCard.m_Measure = [LineHeight, LineSpacing](float) { return LineHeight * 1.85f + LineSpacing * 0.65f; };
 		InputCard.m_Render = [this, UiScale, BodySize, LineHeight, LineSpacing, SearchMatchedGlobalCardCount, ReadOnly](CUIRect Content) {
 			CUIRect Row;
@@ -5147,7 +5147,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		vCards.push_back(std::move(InputCard));
 
 		SSettingsCardDefinition ResultsCard;
-		ResultsCard.m_Spec = {"deck:global-search-results", Localize("Search"), nullptr};
+		ResultsCard.m_Spec = {"deck:global-search-results", Localize("Search"), qm_card_registry::ResolveLocalizedDescription("deck:global-search-results")};
 		ResultsCard.m_Measure = [SearchMatchedGlobalCardCount, ResultHeight, CardGap, LineHeight](float) {
 			return SearchMatchedGlobalCardCount == 0 ? LineHeight : SearchMatchedGlobalCardCount * ResultHeight + std::max(0, SearchMatchedGlobalCardCount - 1) * CardGap;
 		};

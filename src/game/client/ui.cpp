@@ -2666,6 +2666,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 
 	SQmDropdownInput DropDownInput;
 	DropDownInput.m_TogglePressed = TogglePressed;
+	DropDownInput.m_InitialIndex = CurSelection;
 	if(PopupOpen && State.m_SelectionPopupContext.m_SelectionIndex < 0)
 	{
 		DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);

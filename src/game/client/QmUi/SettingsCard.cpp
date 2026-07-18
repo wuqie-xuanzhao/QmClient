@@ -103,16 +103,16 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	SSettingsCardVisualState DrawState = State;
-	DrawState.m_Hovered = State.m_HoverFeedbackEnabled && Ctx.m_pUi != nullptr && Ctx.m_pUi->MouseHovered(&Frame.m_Rect);
 	SSettingsCardFrame DrawFrame = Frame;
 	OffsetSettingsCardFrame(DrawFrame, State.m_DrawOffsetX, State.m_DrawOffsetY);
+	DrawState.m_PointerInside = Ctx.m_pUi != nullptr && Ctx.m_pUi->MouseHovered(&DrawFrame.m_Rect);
+	DrawState.m_Hovered = State.m_HoverFeedbackEnabled && DrawState.m_PointerInside;
 
 	SUiTheme Fallback;
 	const SUiTheme &Theme = SettingsCardTheme(Ctx, Fallback);
 	const bool DrawCardChrome = Ctx.m_pUi == nullptr || !Ctx.m_pUi->RenderOnly();
-	ColorRGBA Surface = Theme.m_Surface;
+	const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);
 	// 重排与拖放反馈只改变边框，卡片背景透明度保持稳定，避免滚动或切页时闪烁。
-	Surface.a *= DrawState.m_DrawAlpha;
 	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
 	// 否则半透明卡片在展开、折叠或首次布局时会表现为一次亮闪。
 	const bool InteractionComplete = DrawState.m_DropFeedback;
@@ -144,7 +144,8 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		TitleProps.m_MaxWidth = DrawFrame.m_TitleRect.w;
 		TitleProps.m_EllipsisAtEnd = true;
 		Ctx.m_pUi->DoLabel(&DrawFrame.m_TitleRect, Spec.m_pTitle != nullptr ? Spec.m_pTitle : "", ui_token::font::TITLE * UiScale, TEXTALIGN_ML, TitleProps);
-		if(Spec.m_pSubtitle != nullptr && (DrawState.m_Hovered || DrawState.m_Focused))
+		const char *pSubtitle = Spec.m_pSubtitle;
+		if(pSubtitle != nullptr && SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_Focused))
 		{
 			ColorRGBA SubtitleColor = Theme.m_TextSmall;
 			SubtitleColor.a *= DrawState.m_DrawAlpha;
@@ -153,7 +154,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 			SubtitleProps.m_MaxWidth = DrawFrame.m_SubtitleRect.w;
 			SubtitleProps.m_EllipsisAtEnd = true;
 			const float SubtitleSize = std::clamp(ui_token::font::SMALL * UiScale, 9.0f, ui_token::font::SMALL);
-			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, Spec.m_pSubtitle, SubtitleSize, TEXTALIGN_ML, SubtitleProps);
+			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, pSubtitle, SubtitleSize, TEXTALIGN_ML, SubtitleProps);
 		}
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 	}

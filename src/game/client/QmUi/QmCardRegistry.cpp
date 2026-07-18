@@ -163,6 +163,55 @@ namespace qm_card_registry
 		return nullptr;
 	}
 
+	const char *ResolveDescriptionKey(const SCardDefault &Default)
+	{
+		if(Default.m_pDescription != nullptr && Default.m_pDescription[0] != '\0')
+			return Default.m_pDescription;
+		const char *pTab = Default.m_pDefaultTab;
+		if(pTab == nullptr)
+			return Localizable("Configure these settings");
+		if(str_comp(pTab, "visual") == 0)
+			return Localizable("Customize QmClient visuals and effects");
+		if(str_comp(pTab, "function") == 0)
+			return Localizable("Configure QmClient gameplay helpers");
+		if(str_comp(pTab, "hud") == 0)
+			return Localizable("Configure QmClient HUD elements");
+		if(str_comp(pTab, "general") == 0)
+			return Localizable("Configure game and client preferences");
+		if(str_comp(pTab, "player") == 0)
+			return Localizable("Configure player identity and country");
+		if(str_comp(pTab, "tee") == 0 || str_comp(pTab, "tee7") == 0)
+			return Localizable("Configure Tee appearance and skins");
+		if(str_comp(pTab, "graphics") == 0)
+			return Localizable("Configure display and rendering");
+		if(str_comp(pTab, "sound") == 0)
+			return Localizable("Configure sound and audio packs");
+		if(str_comp(pTab, "ddnet") == 0)
+			return Localizable("Configure DDNet gameplay preferences");
+		if(str_comp(pTab, "controls") == 0)
+			return Localizable("Configure controls and key bindings");
+		if(str_startswith(pTab, "appearance-") != nullptr)
+			return Localizable("Customize interface appearance and previews");
+		if(str_comp(pTab, "tclient") == 0 || str_startswith(pTab, "tclient-") != nullptr)
+			return Localizable("Configure TClient tools and profiles");
+		if(str_comp(pTab, "qmclient-contributors") == 0)
+			return Localizable("QmClient community and project information");
+		if(str_comp(pTab, "global-search") == 0)
+			return Localizable("Search and navigate settings");
+		return Localizable("Configure these settings");
+	}
+
+	const char *ResolveLocalizedDescription(const SCardDefault &Default)
+	{
+		return Localize(ResolveDescriptionKey(Default));
+	}
+
+	const char *ResolveLocalizedDescription(const char *pStableId)
+	{
+		const SCardDefault *pDefault = FindByStableId(pStableId);
+		return pDefault != nullptr ? ResolveLocalizedDescription(*pDefault) : nullptr;
+	}
+
 	namespace
 	{
 		bool SearchTextMatches(const char *pText, const char *pQuery)

@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == Hintergrund-3D-Partikeleffekte konfigurieren
 
+Configure controls and key bindings
+== Steuerung und Tastenbelegung konfigurieren
+
+Configure DDNet gameplay preferences
+== DDNet-Spieleinstellungen konfigurieren
+
+Configure display and rendering
+== Anzeige und Rendering konfigurieren
+
+Configure game and client preferences
+== Spiel- und Client-Einstellungen konfigurieren
+
 Configure hammer skin steal and skin transition animations
 == Hammer-Skin-Diebstahl und Skin-Übergangsanimationen konfigurieren
 
+Configure player identity and country
+== Spieleridentität und Land konfigurieren
+
 Configure qm_report_app_id and qm_report_secret first
 == Konfiguriere zuerst qm_report_app_id und qm_report_secret
+
+Configure QmClient gameplay helpers
+== QmClient-Spielhilfen konfigurieren
+
+Configure QmClient HUD elements
+== QmClient-HUD-Elemente konfigurieren
+
+Configure sound and audio packs
+== Sound und Audiopakete konfigurieren
+
+Configure TClient tools and profiles
+== TClient-Werkzeuge und -Profile konfigurieren
+
+Configure Tee appearance and skins
+== Tee-Aussehen und Skins konfigurieren
+
+Configure these settings
+== Diese Einstellungen konfigurieren
 
 Confirm both are on same server, same room, and support voice
 == Bestätige, dass beide auf demselben Server, im selben Raum sind und Sprachchat unterstützen
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == Benutzerdefinierter Übersetzungs-Prompt (überschreibt den integrierten Prompt)
+
+Customize interface appearance and previews
+== Oberfläche und Vorschauen anpassen
+
+Customize QmClient visuals and effects
+== QmClient-Optik und -Effekte anpassen
 
 Customize translate button and menu colors
 == Übersetzungs-Button- und Menüfarben anpassen
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == QmClient-Community
 
+QmClient community and project information
+== QmClient-Community und Projektinformationen
+
 QmClient online distribution
 == QmClient Online-Verteilung
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == Suchen
+
+Search and navigate settings
+== Einstellungen suchen und aufrufen
 
 Search donor asset
 == Spender-Asset suchen

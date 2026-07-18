@@ -57,7 +57,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	const auto BuildDefinitions = [this, Metrics, ContentHeight, pEditorDefault](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(1);
 		SSettingsCardDefinition EditorCard;
-		EditorCard.m_Spec = {pEditorDefault->m_pStableId, Localize(pEditorDefault->m_pTitle), nullptr};
+		EditorCard.m_Spec = {pEditorDefault->m_pStableId, Localize(pEditorDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pEditorDefault)};
 		EditorCard.m_Measure = [ContentHeight](float) { return ContentHeight; };
 		EditorCard.m_Render = [this, Metrics](CUIRect Content) { RenderSettingsTee7Content(Content, Metrics); };
 		vCards.push_back(std::move(EditorCard));
@@ -292,7 +292,7 @@ void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentM
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(-1, 0), BlueTeamSkinPreview.Center() + OffsetToMid);
 
 	if(m_CustomSkinMenu)
-		RenderSettingsTeeCustom7(MainView, BodySize);
+		RenderSettingsTeeCustom7(MainView, Metrics);
 	else
 		RenderSkinSelection7(MainView, BodySize);
 
@@ -377,9 +377,10 @@ void CMenus::PopupConfirmDeleteSkin7()
 	m_SelectedSkin7Name.clear();
 }
 
-void CMenus::RenderSettingsTeeCustom7(CUIRect MainView, float BodySize)
+void CMenus::RenderSettingsTeeCustom7(CUIRect MainView, const SSettingsContentMetrics &Metrics)
 {
 	CUIRect ButtonBar, SkinPartSelection, CustomColors;
+	const float BodySize = Metrics.m_BodySize;
 	static bool s_SkinPartTransitionInitialized = false;
 	static int s_PrevSkinPart = 0;
 	static float s_SkinPartTransitionDirection = 0.0f;
@@ -445,10 +446,10 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView, float BodySize)
 	if(*pUseCustomColor)
 	{
 		CUIRect CustomColorScrollbars;
-		CustomColors.HSplitTop(5.0f, nullptr, &CustomColors);
-		CustomColors.HSplitTop(95.0f, &CustomColorScrollbars, &CustomColors);
+		CustomColors.HSplitTop(Metrics.m_LineSpacing, nullptr, &CustomColors);
+		CustomColors.HSplitTop(ResolveSettingsHslaRowsHeight(Metrics, m_TeePartSelected == protocol7::SKINPART_MARKING), &CustomColorScrollbars, &CustomColors);
 
-		if(RenderHslaScrollbars(&CustomColorScrollbars, CSkins7::ms_apColorVariables[(int)m_Dummy][m_TeePartSelected], m_TeePartSelected == protocol7::SKINPART_MARKING, ColorHSLA::DARKEST_LGT7))
+		if(RenderHslaScrollbars(&CustomColorScrollbars, CSkins7::ms_apColorVariables[(int)m_Dummy][m_TeePartSelected], m_TeePartSelected == protocol7::SKINPART_MARKING, ColorHSLA::DARKEST_LGT7, Metrics))
 		{
 			SetNeedSendInfo();
 		}

@@ -341,7 +341,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	bool ReflowTargetChanged = false;
 	bool ReflowPositionActive = false;
 	// 入场由整个 Deck 共享一个偏移；高度变化按当前动画底边顺排后续卡片，始终保持无重叠几何。
-	bool SnapReflow = SettingsCardDeckShouldSnapReflow(GeometryStateChanged, m_Drag.Active()) || m_Drag.Active() || ContentHeightTargetChanged || ContentHeightAnimationActive;
+	bool SnapReflow = SettingsCardDeckShouldSnapReflow(GeometryStateChanged, m_Drag.Active()) || ContentHeightTargetChanged || ContentHeightAnimationActive;
 	if(Ctx.m_pAnim != nullptr)
 	{
 		uint64_t EntryKey = 0;
@@ -409,7 +409,6 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 
 	if(m_Drag.Active())
 	{
-		SnapReflow = true;
 		const bool MouseInScrollViewport = PointInRect(ScrollViewport, Input.m_MouseX, Input.m_MouseY);
 		if(DrawLayout.m_TwoColumns && m_Drag.m_SourceColumn != 0)
 		{

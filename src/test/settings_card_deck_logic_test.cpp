@@ -1,4 +1,5 @@
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/SettingsCardDeckLogic.h>
 
 #include <gtest/gtest.h>
@@ -94,6 +95,47 @@ TEST(SettingsCardDeck, CollapseAndVisibilityChangesSnapWithoutDisablingDragReflo
 	EXPECT_TRUE(SettingsCardDeckShouldSnapReflow(true, false));
 	EXPECT_FALSE(SettingsCardDeckShouldSnapReflow(false, false));
 	EXPECT_FALSE(SettingsCardDeckShouldSnapReflow(true, true));
+}
+
+TEST(SettingsCardDeck, SubtitleVisibilityUsesPointerContainmentInsteadOfHoverAnimationFeedback)
+{
+	EXPECT_TRUE(SettingsCardSubtitleVisible(true, false));
+	EXPECT_TRUE(SettingsCardSubtitleVisible(false, true));
+	EXPECT_FALSE(SettingsCardSubtitleVisible(false, false));
+}
+
+TEST(SettingsCardDeck, CardSurfaceColorIgnoresBorderInteractionState)
+{
+	const ColorRGBA BaseSurface(0.12f, 0.24f, 0.36f, 0.48f);
+	SSettingsCardVisualState Resting;
+	Resting.m_DrawAlpha = 0.75f;
+	SSettingsCardVisualState Interactive = Resting;
+	Interactive.m_Hovered = true;
+	Interactive.m_Focused = true;
+	Interactive.m_DropFeedback = true;
+
+	const ColorRGBA RestingSurface = ResolveSettingsCardSurfaceColor(BaseSurface, Resting);
+	const ColorRGBA InteractiveSurface = ResolveSettingsCardSurfaceColor(BaseSurface, Interactive);
+	EXPECT_FLOAT_EQ(RestingSurface.r, InteractiveSurface.r);
+	EXPECT_FLOAT_EQ(RestingSurface.g, InteractiveSurface.g);
+	EXPECT_FLOAT_EQ(RestingSurface.b, InteractiveSurface.b);
+	EXPECT_FLOAT_EQ(RestingSurface.a, InteractiveSurface.a);
+	EXPECT_FLOAT_EQ(RestingSurface.a, BaseSurface.a * Resting.m_DrawAlpha);
+}
+
+TEST(SettingsCardDeck, EveryRegisteredCardResolvesANonEmptyDescriptionKey)
+{
+	ASSERT_FALSE(qm_card_registry::Defaults().empty());
+	for(const qm_card_registry::SCardDefault &Default : qm_card_registry::Defaults())
+	{
+		SCOPED_TRACE(Default.m_pStableId != nullptr ? Default.m_pStableId : "<null>");
+		ASSERT_NE(Default.m_pStableId, nullptr);
+		EXPECT_NE(Default.m_pStableId[0], '\0');
+		const char *pDescription = qm_card_registry::ResolveDescriptionKey(Default);
+		ASSERT_NE(pDescription, nullptr);
+		EXPECT_NE(pDescription[0], '\0');
+	}
+	EXPECT_EQ(qm_card_registry::ResolveLocalizedDescription(static_cast<const char *>(nullptr)), nullptr);
 }
 
 TEST(SettingsCardDeck, ScrollMovementOnlySuppressesHoverAfterAnInitializedOffset)

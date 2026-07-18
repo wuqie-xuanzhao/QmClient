@@ -757,13 +757,13 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		return ui_widget::NumericField(GeneralCardCtx, GetSettingsNumericFieldState(pId), pId, pOption, Min, Max, Rect, Options);
 	};
 
-	const SSettingsCardSpec GameSpec{pGameDefault->m_pStableId, Localize(pGameDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec LanguageSpec{pLanguageDefault->m_pStableId, Localize(pLanguageDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec ClientSpec{pClientDefault->m_pStableId, Localize(pClientDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec RecordingSpec{pRecordingDefault->m_pStableId, Localize(pRecordingDefault->m_pTitle), nullptr};
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, GameSpec, LanguageSpec, ClientSpec, RecordingSpec, GeneralMetrics, GeneralPage, UiScale, BodySize, DoNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pGameDefault, pLanguageDefault, pClientDefault, pRecordingDefault, GeneralMetrics, GeneralPage, UiScale, BodySize, DoNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(4);
+		const SSettingsCardSpec GameSpec{pGameDefault->m_pStableId, Localize(pGameDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pGameDefault)};
+		const SSettingsCardSpec LanguageSpec{pLanguageDefault->m_pStableId, Localize(pLanguageDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pLanguageDefault)};
+		const SSettingsCardSpec ClientSpec{pClientDefault->m_pStableId, Localize(pClientDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pClientDefault)};
+		const SSettingsCardSpec RecordingSpec{pRecordingDefault->m_pStableId, Localize(pRecordingDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pRecordingDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float ContentHeight, FSettingsCardRender Render) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = Spec;
@@ -1188,11 +1188,11 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	}
 	const IUiContext PlayerFlagSearchCtx = SettingsUiContext("settings_player_flag_search", UiScale);
 
-	const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec CountrySpec{pCountryDefault->m_pStableId, Localize(pCountryDefault->m_pTitle), nullptr};
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, IdentitySpec, CountrySpec, DrawAnimatedContent, PlayerIdentityTextInputCtx, PlayerFlagSearchCtx, pCountry, UiScale, BodySize](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pIdentityDefault, pCountryDefault, DrawAnimatedContent, PlayerIdentityTextInputCtx, PlayerFlagSearchCtx, pCountry, UiScale, BodySize](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(2);
+		const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pIdentityDefault)};
+		const SSettingsCardSpec CountrySpec{pCountryDefault->m_pStableId, Localize(pCountryDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pCountryDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float ContentHeight, FSettingsCardRender Render) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = Spec;
@@ -1395,7 +1395,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		{
 			m_HasSettingsCardDeckDisplayKey = true;
 			m_SettingsCardDeckDisplayKey = TeeDisplayKey;
-			m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, false);
+			m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);
 		}
 	}
 
@@ -1473,9 +1473,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	const qm_card_registry::SCardDefault *pListDefault = qm_card_registry::FindByStableId("deck:tee-skin-list");
 	if(pOptionsDefault == nullptr || pListDefault == nullptr)
 		return;
-	const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec OptionsSpec{pOptionsDefault->m_pStableId, Localize(pOptionsDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec ListSpec{pListDefault->m_pStableId, Localize(pListDefault->m_pTitle), nullptr};
 	const float ControlLineHeight = TeeMetrics.m_LineHeight;
 	const float ControlSpacing = TeeMetrics.m_LineSpacing;
 	const float OptionsCheckboxHeight = ResolveSettingsRowsHeight(4, ControlLineHeight, ControlSpacing);
@@ -1483,8 +1480,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	const float OptionsTopHeight = maximum(OptionsCheckboxHeight, OptionsPrefixHeight);
 	constexpr int EyesPerRow = 3;
 	const float EyesHeight = ResolveSettingsGridHeight(NUM_EMOTES, EyesPerRow, EyeLineSize, ControlSpacing);
-	const float CustomColorsHeight = *pUseCustomColor ? 95.0f * UiScale + ControlSpacing * 2.0f : ControlSpacing * 2.0f;
-	const auto RenderOptions = [this, OptionsTopHeight, EyesHeight, ControlLineHeight, ControlSpacing, EyeLineSize, UiScale, BodySize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
+	const float CustomColorsHeight = ResolveSettingsTeeCustomColorsLayout({}, *pUseCustomColor != 0, TeeMetrics).m_Height;
+	const auto RenderOptions = [this, OptionsTopHeight, EyesHeight, ControlLineHeight, ControlSpacing, EyeLineSize, UiScale, BodySize, TeeMetrics, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
 		CUIRect MainView = Content;
 		CUIRect OptionsTop, Checkboxes, SkinPrefix, Eyes, Button, Label, SortModeControl;
 		const CSkin *pDefaultSkin = GameClient()->m_Skins.Find("default");
@@ -1632,29 +1629,22 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 		}
 
-		// Custom color pickers
-		MainView.HSplitTop(ControlSpacing, nullptr, &MainView);
+		// 身体和脚使用上下两个全宽分组，避免半宽卡片内再次横切导致滑条被裁剪。
+		const SSettingsTeeCustomColorsLayout CustomColors = ResolveSettingsTeeCustomColorsLayout(MainView, *pUseCustomColor != 0, TeeMetrics);
 		if(*pUseCustomColor)
 		{
-			CUIRect CustomColors;
-			MainView.HSplitTop(95.0f * UiScale, &CustomColors, &MainView);
-			CUIRect aRects[2];
-			CustomColors.VSplitMid(&aRects[0], &aRects[1], 20.0f);
-
-			unsigned *apColors[] = {pColorBody, pColorFeet};
-			const char *apParts[] = {Localize("Body"), Localize("Feet")};
-
-			for(int i = 0; i < 2; i++)
+			CustomColors.m_BodyGroup.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 5.0f * UiScale);
+			CustomColors.m_FeetGroup.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 5.0f * UiScale);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_custom_color_body_label", &CustomColors.m_BodyTitle, Localize("Body"), BodySize, TEXTALIGN_ML);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_custom_color_feet_label", &CustomColors.m_FeetTitle, Localize("Feet"), BodySize, TEXTALIGN_ML);
+			CUIRect BodyControls = CustomColors.m_BodyControls;
+			CUIRect FeetControls = CustomColors.m_FeetControls;
+			if(RenderHslaScrollbars(&BodyControls, pColorBody, false, ColorHSLA::DARKEST_LGT, TeeMetrics) ||
+				RenderHslaScrollbars(&FeetControls, pColorFeet, false, ColorHSLA::DARKEST_LGT, TeeMetrics))
 			{
-				aRects[i].HSplitTop(ControlLineHeight, &Label, &aRects[i]);
-				Ui()->DoLabel(&Label, apParts[i], BodySize, TEXTALIGN_ML);
-				if(RenderHslaScrollbars(&aRects[i], apColors[i], false, ColorHSLA::DARKEST_LGT))
-				{
-					SetNeedSendInfo();
-				}
+				SetNeedSendInfo();
 			}
 		}
-		MainView.HSplitTop(ControlSpacing, nullptr, &MainView);
 	};
 	const auto RenderIdentity = [this, TransitionActive, TransitionStrength, UiScale, BodySize, ControlSpacing, ControlLineHeight, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
 		CUIRect MainView = Content;
@@ -2562,7 +2552,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			1);
 		int RowsIterated = 0;
 		int RowsRendered = 0;
-		const bool ShowSkinMetadata = g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata;
+		const bool ShowSkinMetadata = g_Config.m_QmSkinShowMetadata != 0;
 		auto DoButtonSkinQueue = [&](const void *pButtonId, const void *pParentId, bool InQueue, bool Disabled, const CUIRect *pRect) {
 			if(InQueue || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId)
 			{
@@ -3466,8 +3456,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	const float TeeQueuePanelMinHeight = 440.0f * UiScale;
 	const float ListContentHeight = maximum(TeeQueuePanelMinHeight, TeeSkinGridVisibleRows * TeeSkinGridRowHeight + TeeSkinToolbarHeight);
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [IdentitySpec, OptionsSpec, ListSpec, TopContentHeight, ListContentHeight, RenderIdentity, RenderOptions, RenderList, AdvanceListOffscreen, TeeSectionVisible, pUseCustomColor](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [pIdentityDefault, pOptionsDefault, pListDefault, TopContentHeight, ListContentHeight, RenderIdentity, RenderOptions, RenderList, AdvanceListOffscreen, TeeSectionVisible, pUseCustomColor](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(3);
+		const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pIdentityDefault)};
+		const SSettingsCardSpec OptionsSpec{pOptionsDefault->m_pStableId, Localize(pOptionsDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pOptionsDefault)};
+		const SSettingsCardSpec ListSpec{pListDefault->m_pStableId, Localize(pListDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pListDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, FSettingsCardMeasure Measure, FSettingsCardRender Render, bool RenderWhenClipped = false, uint64_t MeasureRevision = 0) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = Spec;
@@ -3650,19 +3643,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(pDisplayDefault == nullptr || pVisualDefault == nullptr || pBackendDefault == nullptr || pModesDefault == nullptr || pInteractionDefault == nullptr)
 		return;
 
-	const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec VisualSpec{pVisualDefault->m_pStableId, Localize(pVisualDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec BackendSpec{pBackendDefault->m_pStableId, Localize(pBackendDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec InteractionSpec{pInteractionDefault->m_pStableId, Localize(pInteractionDefault->m_pTitle), nullptr};
-	const auto CardChromeHeight = [UiScale](const SSettingsCardSpec &Spec) {
-		return BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, Spec, 0.0f, UiScale).m_Rect.h;
-	};
-	const float DisplayChromeHeight = CardChromeHeight(DisplaySpec);
-	const float VisualChromeHeight = CardChromeHeight(VisualSpec);
-	const float BackendChromeHeight = CardChromeHeight(BackendSpec);
-	const float ModesChromeHeight = CardChromeHeight(ModesSpec);
-	const float InteractionChromeHeight = CardChromeHeight(InteractionSpec);
+	const float CardChromeHeight = BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, {nullptr, nullptr, "subtitle"}, 0.0f, UiScale).m_Rect.h;
+	const float DisplayChromeHeight = CardChromeHeight;
+	const float VisualChromeHeight = CardChromeHeight;
+	const float BackendChromeHeight = CardChromeHeight;
+	const float ModesChromeHeight = CardChromeHeight;
+	const float InteractionChromeHeight = CardChromeHeight;
 	const float GraphicsBackendContentHeight = ResolveSettingsRowsHeight(GraphicsBackendRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsBackendMinCardHeight = BackendChromeHeight + GraphicsBackendContentHeight;
 	constexpr int GraphicsModesMaxVisibleRows = 8;
@@ -3707,8 +3693,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, ModesSpec, DisplaySpec, VisualSpec, InteractionSpec, BackendSpec, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsBackendMinCardHeight, BackendChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, pBackendDefault, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsBackendMinCardHeight, BackendChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(5);
+		const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pModesDefault)};
+		const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDisplayDefault)};
+		const SSettingsCardSpec VisualSpec{pVisualDefault->m_pStableId, Localize(pVisualDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pVisualDefault)};
+		const SSettingsCardSpec InteractionSpec{pInteractionDefault->m_pStableId, Localize(pInteractionDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pInteractionDefault)};
+		const SSettingsCardSpec BackendSpec{pBackendDefault->m_pStableId, Localize(pBackendDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pBackendDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float MinHeight, float ChromeHeight, FSettingsCardRender Render, uint64_t MeasureRevision = 0) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = Spec;
@@ -4976,15 +4967,10 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	if(pToggleDefault == nullptr || pVolumeDefault == nullptr || pAudioPackDefault == nullptr)
 		return;
 
-	const SSettingsCardSpec ToggleSpec{pToggleDefault->m_pStableId, Localize(pToggleDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec VolumeSpec{pVolumeDefault->m_pStableId, Localize(pVolumeDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec AudioPackSpec{pAudioPackDefault->m_pStableId, Localize(pAudioPackDefault->m_pTitle), nullptr};
-	const auto CardChromeHeight = [UiScale](const SSettingsCardSpec &Spec) {
-		return BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, Spec, 0.0f, UiScale).m_Rect.h;
-	};
-	const float ToggleChromeHeight = CardChromeHeight(ToggleSpec);
-	const float VolumeChromeHeight = CardChromeHeight(VolumeSpec);
-	const float AudioPackChromeHeight = CardChromeHeight(AudioPackSpec);
+	const float CardChromeHeight = BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, {nullptr, nullptr, "subtitle"}, 0.0f, UiScale).m_Rect.h;
+	const float ToggleChromeHeight = CardChromeHeight;
+	const float VolumeChromeHeight = CardChromeHeight;
+	const float AudioPackChromeHeight = CardChromeHeight;
 	EnsureSharedAudioPacks(Storage());
 	const int ToggleRowCount = g_Config.m_SndEnable ? 10 : 1;
 	const float SoundToggleCardHeight = ToggleChromeHeight + LineHeight * ToggleRowCount + LineSpacing * maximum(0, ToggleRowCount - 1);
@@ -4993,8 +4979,11 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	const float SoundAudioPackContentHeight = LineHeight + LineSpacing + SoundAudioPackVisibleRows * SoundMetrics.m_ListRowHeight + 16.0f;
 	const float SoundAudioPackCardHeight = AudioPackChromeHeight + SoundAudioPackContentHeight;
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, ToggleSpec, VolumeSpec, AudioPackSpec, SoundToggleCardHeight, ToggleChromeHeight, SoundVolumeCardHeight, VolumeChromeHeight, SoundAudioPackCardHeight, AudioPackChromeHeight, SoundMetrics, LineHeight, LineSpacing, BodySize, DoSoundNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pToggleDefault, pVolumeDefault, pAudioPackDefault, SoundToggleCardHeight, ToggleChromeHeight, SoundVolumeCardHeight, VolumeChromeHeight, SoundAudioPackCardHeight, AudioPackChromeHeight, SoundMetrics, LineHeight, LineSpacing, BodySize, DoSoundNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(3);
+		const SSettingsCardSpec ToggleSpec{pToggleDefault->m_pStableId, Localize(pToggleDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pToggleDefault)};
+		const SSettingsCardSpec VolumeSpec{pVolumeDefault->m_pStableId, Localize(pVolumeDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pVolumeDefault)};
+		const SSettingsCardSpec AudioPackSpec{pAudioPackDefault->m_pStableId, Localize(pAudioPackDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pAudioPackDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float TotalHeight, float ChromeHeight, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool VisibilityController = false, FSettingsCardPreLayoutInput PreLayoutInput = {}, uint64_t MeasureRevision = 0) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = Spec;
@@ -5659,7 +5648,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 	{
 		m_HasSettingsCardDeckDisplayKey = true;
 		m_SettingsCardDeckDisplayKey = DisplayKey;
-		m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, false);
+		m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);
 	}
 
 	if(!CollectingMenuTextPlan)
@@ -5941,20 +5930,22 @@ void CMenus::RenderSettings(CUIRect MainView)
 	m_SettingsShellLayoutValid = false;
 }
 
-bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alpha, float DarkestLight)
+bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alpha, float DarkestLight, const SSettingsContentMetrics &Metrics)
 {
 	const unsigned PrevPackedColor = *pColor;
 	ColorHSLA Color(*pColor, Alpha);
 	const ColorHSLA OriginalColor = Color;
 	const char *apLabels[] = {Localize("Hue"), Localize("Sat."), Localize("Lht."), Localize("Alpha")};
-	const float SizePerEntry = 20.0f;
-	const float MarginPerEntry = 5.0f;
-	const float PreviewMargin = 2.5f;
-	const float PreviewHeight = 40.0f + 2 * PreviewMargin;
-	const float OffY = (SizePerEntry + MarginPerEntry) * (3 + (Alpha ? 1 : 0)) - PreviewHeight;
+	const float SizePerEntry = Metrics.m_LineHeight;
+	const float MarginPerEntry = Metrics.m_LineSpacing;
+	const float PreviewMargin = std::max(1.0f, Metrics.m_LineSpacing * 0.5f);
+	const float RowsHeight = ResolveSettingsHslaRowsHeight(Metrics, Alpha);
+	const float PreviewHeight = std::min(RowsHeight, Metrics.m_LineHeight * 2.0f + Metrics.m_LineSpacing);
+	const float OffY = std::max(0.0f, RowsHeight - PreviewHeight);
 
 	CUIRect Preview;
 	pRect->VSplitLeft(PreviewHeight, &Preview, pRect);
+	pRect->VSplitLeft(Metrics.m_LineSpacing, nullptr, pRect);
 	Preview.HSplitTop(OffY / 2.0f, nullptr, &Preview);
 	Preview.HSplitTop(PreviewHeight, &Preview, nullptr);
 
@@ -6128,13 +6119,18 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 	};
 
-	for(int i = 0; i < 3 + Alpha; i++)
+	const int EntryCount = 3 + Alpha;
+	for(int i = 0; i < EntryCount; i++)
 	{
 		CUIRect Button, Label;
 		pRect->HSplitTop(SizePerEntry, &Button, pRect);
-		pRect->HSplitTop(MarginPerEntry, nullptr, pRect);
-		Button.VSplitLeft(140.0f, &Label, &Button);
-		Label.VMargin(10.0f, &Label);
+		if(i + 1 < EntryCount)
+			pRect->HSplitTop(MarginPerEntry, nullptr, pRect);
+		const float MinimumLabelWidth = 72.0f * Metrics.m_UiScale;
+		const float MaximumLabelWidth = std::max(MinimumLabelWidth, pRect->w - 80.0f * Metrics.m_UiScale);
+		const float LabelWidth = std::clamp(pRect->w * 0.36f, MinimumLabelWidth, MaximumLabelWidth);
+		Button.VSplitLeft(LabelWidth, &Label, &Button);
+		Label.VMargin(Metrics.m_LineSpacing, &Label);
 
 		Button.Draw(ColorRGBA(0.15f, 0.15f, 0.15f, 1.0f), IGraphics::CORNER_ALL, 1.0f);
 
@@ -6156,7 +6152,7 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		// Sat and Alpha
 		else
 			str_format(aBuf, sizeof(aBuf), "%s: %.1f%% (%03d)", apLabels[i], Color[i] * 100.0f, round_to_int(Color[i] * 255.0f));
-		Ui()->DoLabel(&Label, aBuf, 12.0f, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, aBuf, Metrics.m_BodySize, TEXTALIGN_ML);
 
 		ColorRGBA HandleColor;
 		Graphics()->TextureClear();
@@ -6232,7 +6228,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	}
 
 	const float LineSize = AppearanceMetrics.m_LineHeight;
-	const float ColorPickerLineSize = AppearanceMetrics.m_LineHeight + AppearanceMetrics.m_LineSpacing;
+	const float ColorPickerLineSize = AppearanceMetrics.m_ButtonHeight;
 	const float HeadlineFontSize = AppearanceMetrics.m_HeadlineSize;
 	const float HeadlineHeight = AppearanceMetrics.m_LineHeight + AppearanceMetrics.m_LineSpacing * 2.0f;
 	const float MarginSmall = AppearanceMetrics.m_LineSpacing;
@@ -6276,7 +6272,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		if(aAppearanceDefaults[i] == nullptr)
 			return;
 	}
-	const auto CardSpec = [aAppearanceDefaults](size_t Index) { return SSettingsCardSpec{aAppearanceDefaults[Index]->m_pStableId, Localize(aAppearanceDefaults[Index]->m_pTitle), nullptr}; };
+	const auto CardSpec = [aAppearanceDefaults](size_t Index) { return SSettingsCardSpec{aAppearanceDefaults[Index]->m_pStableId, Localize(aAppearanceDefaults[Index]->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*aAppearanceDefaults[Index])}; };
 	const bool RenderOnly = Ui()->RenderOnly();
 	const char *pAppearanceDeckTab = m_AppearanceSettingsTab == APPEARANCE_TAB_HUD            ? "appearance-hud" :
 					 m_AppearanceSettingsTab == APPEARANCE_TAB_CHAT           ? "appearance-chat" :
@@ -6309,18 +6305,18 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			CPerfTimer HudShellTimer;
 			LogPerfStage(Client(), "appearance_hud_text_cache", HudShellTimer.ElapsedMs(), false, "page=appearance tab=hud section=text_cache");
 			LogPerfStage(Client(), "appearance_hud_tab_shell", HudShellTimer.ElapsedMs(), false, "page=appearance tab=hud");
-			const float HudLeftMinCardHeight = LineSize * 6.0f + MarginBetweenViews + HeadlineHeight + MarginSmall + (ColorPickerLineSize + ColorPickerLineSpacing) * 4.0f;
-			const int HudRightRowCount = 12 + (g_Config.m_ClShowhudDDRace ? 2 : 0) + (g_Config.m_ClShowFreezeBars ? 1 : 0);
-			const float HudRightMinCardHeight = LineSize * HudRightRowCount + MarginSmall * 2.0f;
+			const float HudLeftMinCardHeight = ResolveSettingsRowsHeight(6, LineSize, MarginSmall) + MarginSmall + MarginBetweenViews + HeadlineHeight + MarginSmall + (ColorPickerLineSize + ColorPickerLineSpacing) * 4.0f;
+			const int HudRightCheckboxRowCount = 12 + (g_Config.m_ClShowhudDDRace ? 2 : 0);
+			const float HudRightMinCardHeight = ResolveSettingsRowsHeight(HudRightCheckboxRowCount, LineSize, MarginSmall) + MarginSmall * 3.0f + (g_Config.m_ClShowFreezeBars ? LineSize : 0.0f);
 			AddCard(0, HudLeftMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect LeftView = ContentRect;
 				CPerfTimer HudCoreTimer;
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhud, "appearance-show-ingame-hud", Localize("Show ingame HUD"), &g_Config.m_ClShowhud, &LeftView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudHealthAmmo, "appearance-show-health-shields-ammo", Localize("Show health, shields and ammo"), &g_Config.m_ClShowhudHealthAmmo, &LeftView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudScore, "appearance-show-score", Localize("Show score"), &g_Config.m_ClShowhudScore, &LeftView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowLocalTimeAlways, "appearance-show-local-time-always", Localize("Show local time always"), &g_Config.m_ClShowLocalTimeAlways, &LeftView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClSpecCursor, "appearance-show-spectator-cursor", Localize("Show spectator cursor"), &g_Config.m_ClSpecCursor, &LeftView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowVotesAfterVoting, "appearance-show-votes-after-voting", Localize("Show votes window after voting"), &g_Config.m_ClShowVotesAfterVoting, &LeftView, LineSize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhud, "appearance-show-ingame-hud", Localize("Show ingame HUD"), &g_Config.m_ClShowhud, &LeftView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudHealthAmmo, "appearance-show-health-shields-ammo", Localize("Show health, shields and ammo"), &g_Config.m_ClShowhudHealthAmmo, &LeftView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudScore, "appearance-show-score", Localize("Show score"), &g_Config.m_ClShowhudScore, &LeftView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowLocalTimeAlways, "appearance-show-local-time-always", Localize("Show local time always"), &g_Config.m_ClShowLocalTimeAlways, &LeftView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClSpecCursor, "appearance-show-spectator-cursor", Localize("Show spectator cursor"), &g_Config.m_ClSpecCursor, &LeftView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowVotesAfterVoting, "appearance-show-votes-after-voting", Localize("Show votes window after voting"), &g_Config.m_ClShowVotesAfterVoting, &LeftView, LineSize, MarginSmall, AppearanceBodySize);
 				LeftView.HSplitTop(MarginBetweenViews, nullptr, &LeftView);
 				CUIRect ScoreboardTitle;
 				LeftView.HSplitTop(HeadlineHeight, &ScoreboardTitle, &LeftView);
@@ -6338,27 +6334,27 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			AddCard(1, HudRightMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect RightView = ContentRect;
 				CPerfTimer HudDdraceTimer;
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowIds, "appearance-show-client-ids", Localize("Show client IDs (scoreboard, chat, spectating)"), &g_Config.m_ClShowIds, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudDDRace, "appearance-show-ddrace-hud", Localize("Show DDRace HUD"), &g_Config.m_ClShowhudDDRace, &RightView, LineSize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowIds, "appearance-show-client-ids", Localize("Show client IDs (scoreboard, chat, spectating)"), &g_Config.m_ClShowIds, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudDDRace, "appearance-show-ddrace-hud", Localize("Show DDRace HUD"), &g_Config.m_ClShowhudDDRace, &RightView, LineSize, MarginSmall, AppearanceBodySize);
 				if(g_Config.m_ClShowhudDDRace)
 				{
-					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClHudRainbowColors, "appearance-hud-rainbow-colors", Localize("HUD rainbow colors"), &g_Config.m_ClHudRainbowColors, &RightView, LineSize);
-					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudJumpsIndicator, "appearance-show-jumps-indicator", Localize("Show jumps indicator"), &g_Config.m_ClShowhudJumpsIndicator, &RightView, LineSize);
+					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClHudRainbowColors, "appearance-hud-rainbow-colors", Localize("HUD rainbow colors"), &g_Config.m_ClHudRainbowColors, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudJumpsIndicator, "appearance-show-jumps-indicator", Localize("Show jumps indicator"), &g_Config.m_ClShowhudJumpsIndicator, &RightView, LineSize, MarginSmall, AppearanceBodySize);
 				}
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudSpectatorCount, "appearance-show-spectator-count", Localize("Show number of spectators"), &g_Config.m_ClShowhudSpectatorCount, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudDummyActions, "appearance-show-dummy-actions", Localize("Show dummy actions"), &g_Config.m_ClShowhudDummyActions, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusReset, "appearance-show-key-stuck-status", Localize("Show key stuck status"), &g_Config.m_ClShowhudKeyStatusReset, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusHammer, "appearance-show-hammer-status", Localize("Show hammer status"), &g_Config.m_ClShowhudKeyStatusHammer, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusControl, "appearance-show-dummy-control-status", Localize("Show dummy control status"), &g_Config.m_ClShowhudKeyStatusControl, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusSync, "appearance-show-dummy-copy-status", Localize("Show dummy copy status"), &g_Config.m_ClShowhudKeyStatusSync, &RightView, LineSize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudSpectatorCount, "appearance-show-spectator-count", Localize("Show number of spectators"), &g_Config.m_ClShowhudSpectatorCount, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudDummyActions, "appearance-show-dummy-actions", Localize("Show dummy actions"), &g_Config.m_ClShowhudDummyActions, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusReset, "appearance-show-key-stuck-status", Localize("Show key stuck status"), &g_Config.m_ClShowhudKeyStatusReset, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusHammer, "appearance-show-hammer-status", Localize("Show hammer status"), &g_Config.m_ClShowhudKeyStatusHammer, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusControl, "appearance-show-dummy-control-status", Localize("Show dummy control status"), &g_Config.m_ClShowhudKeyStatusControl, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudKeyStatusSync, "appearance-show-dummy-copy-status", Localize("Show dummy copy status"), &g_Config.m_ClShowhudKeyStatusSync, &RightView, LineSize, MarginSmall, AppearanceBodySize);
 				RightView.HSplitTop(MarginSmall, nullptr, &RightView);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudPlayerPosition, "appearance-show-player-position", Localize("Show player position"), &g_Config.m_ClShowhudPlayerPosition, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudPlayerSpeed, "appearance-show-player-speed", Localize("Show player speed"), &g_Config.m_ClShowhudPlayerSpeed, &RightView, LineSize);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudPlayerAngle, "appearance-show-player-target-angle", Localize("Show player target angle"), &g_Config.m_ClShowhudPlayerAngle, &RightView, LineSize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudPlayerPosition, "appearance-show-player-position", Localize("Show player position"), &g_Config.m_ClShowhudPlayerPosition, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudPlayerSpeed, "appearance-show-player-speed", Localize("Show player speed"), &g_Config.m_ClShowhudPlayerSpeed, &RightView, LineSize, MarginSmall, AppearanceBodySize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowhudPlayerAngle, "appearance-show-player-target-angle", Localize("Show player target angle"), &g_Config.m_ClShowhudPlayerAngle, &RightView, LineSize, MarginSmall, AppearanceBodySize);
 				LogPerfStage(Client(), "appearance_hud_ddrace_section", HudDdraceTimer.ElapsedMs(), false, "page=appearance tab=hud section=ddrace");
 				CPerfTimer HudFreezeBarsTimer;
 				RightView.HSplitTop(MarginSmall, nullptr, &RightView);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowFreezeBars, "appearance-show-freeze-bars", Localize("Show freeze bars"), &g_Config.m_ClShowFreezeBars, &RightView, LineSize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, &g_Config.m_ClShowFreezeBars, "appearance-show-freeze-bars", Localize("Show freeze bars"), &g_Config.m_ClShowFreezeBars, &RightView, LineSize, MarginSmall, AppearanceBodySize);
 				if(g_Config.m_ClShowFreezeBars)
 				{
 					RightView.HSplitTop(LineSize, &Button, &RightView);
@@ -6382,7 +6378,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 				};
 				const auto DoChatCheckBox = [&](const void *pId, const char *pTextId, const char *pText, int *pValue) {
-					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_CHAT, pId, pTextId, pText, pValue, &LeftView, LineSize);
+					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_CHAT, pId, pTextId, pText, pValue, &LeftView, LineSize, 0.0f, AppearanceBodySize);
 					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 				};
 				// General chat settings
@@ -6410,7 +6406,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					DoAppearanceNumericField(APPEARANCE_TAB_CHAT, "appearance-chat-log-keep-days", &g_Config.m_QmChatLogKeepDays, &g_Config.m_QmChatLogKeepDays, Button, Localize("Chat log retention days"), 0, 3650, &CUi::ms_LinearScrollbarScale, 0, "", Localize("Days"));
 				}
 
-				if(DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_CHAT, &g_Config.m_ClChatOld, "appearance-use-old-chat-style", Localize("Use old chat style"), &g_Config.m_ClChatOld, &LeftView, LineSize))
+				if(DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_CHAT, &g_Config.m_ClChatOld, "appearance-use-old-chat-style", Localize("Use old chat style"), &g_Config.m_ClChatOld, &LeftView, LineSize, 0.0f, AppearanceBodySize))
 					GameClient()->m_Chat.RebuildChat();
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 
@@ -6851,7 +6847,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 				};
 				const auto DoNamePlateCheckBox = [&](const void *pId, const char *pTextId, const char *pText, int *pValue) {
-					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, pId, pTextId, pText, pValue, &LeftView, LineSize);
+					DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, pId, pTextId, pText, pValue, &LeftView, LineSize, 0.0f, AppearanceBodySize);
 					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 				};
 				// ***** Name Plate ***** //
@@ -7380,7 +7376,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			AddCard(10, LaserEnhancedMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect EnhancedCardContent = ContentRect;
 
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, &g_Config.m_QmLaserEnhanced, "appearance-laser-effect-enhancement", Localize("Laser effect enhancement"), &g_Config.m_QmLaserEnhanced, &EnhancedCardContent, LineSize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, &g_Config.m_QmLaserEnhanced, "appearance-laser-effect-enhancement", Localize("Laser effect enhancement"), &g_Config.m_QmLaserEnhanced, &EnhancedCardContent, LineSize, 0.0f, AppearanceBodySize);
 				EnhancedCardContent.HSplitTop(MarginSmall, nullptr, &EnhancedCardContent);
 				EnhancedCardContent.HSplitTop(LineSize, &Button, &EnhancedCardContent);
 				DoAppearanceNumericField(APPEARANCE_TAB_LASER, "appearance-laser-glow-intensity", &g_Config.m_QmLaserGlowIntensity, &g_Config.m_QmLaserGlowIntensity, Button, Localize("Glow intensity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
@@ -7391,7 +7387,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				EnhancedCardContent.HSplitTop(LineSize, &Button, &EnhancedCardContent);
 				DoAppearanceNumericField(APPEARANCE_TAB_LASER, "appearance-laser-opacity", &g_Config.m_QmLaserAlpha, &g_Config.m_QmLaserAlpha, Button, Localize("Opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 				EnhancedCardContent.HSplitTop(MarginSmall, nullptr, &EnhancedCardContent);
-				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, &g_Config.m_QmLaserRoundCaps, "appearance-laser-rounded-caps", Localize("Rounded caps"), &g_Config.m_QmLaserRoundCaps, &EnhancedCardContent, LineSize);
+				DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, &g_Config.m_QmLaserRoundCaps, "appearance-laser-rounded-caps", Localize("Rounded caps"), &g_Config.m_QmLaserRoundCaps, &EnhancedCardContent, LineSize, 0.0f, AppearanceBodySize);
 				if(LaserEnhancedLayout)
 				{
 					EnhancedCardContent.HSplitTop(MarginSmall, nullptr, &EnhancedCardContent);
@@ -7582,16 +7578,14 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	dbg_assert(pDemoDefault != nullptr && pGameplayDefault != nullptr && pBackgroundDefault != nullptr && pMiscellaneousDefault != nullptr, "DDNet settings cards must be registered");
 	if(pDemoDefault == nullptr || pGameplayDefault == nullptr || pBackgroundDefault == nullptr || pMiscellaneousDefault == nullptr)
 		return;
-	const SSettingsCardSpec DemoSpec{pDemoDefault->m_pStableId, Localize(pDemoDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec GameplaySpec{pGameplayDefault->m_pStableId, Localize(pGameplayDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec BackgroundSpec{pBackgroundDefault->m_pStableId, Localize(pBackgroundDefault->m_pTitle), nullptr};
-	const SSettingsCardSpec MiscellaneousSpec{pMiscellaneousDefault->m_pStableId, Localize(pMiscellaneousDefault->m_pTitle), nullptr};
-	const auto CardChromeHeight = [UiScale](const SSettingsCardSpec &Spec) {
-		return BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, Spec, 0.0f, UiScale).m_Rect.h;
-	};
+	const float CardChromeHeight = BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, {nullptr, nullptr, "subtitle"}, 0.0f, UiScale).m_Rect.h;
 	const bool RenderOnly = Ui()->RenderOnly();
 	const auto BuildDefinitions = [=, this](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(4);
+		const SSettingsCardSpec DemoSpec{pDemoDefault->m_pStableId, Localize(pDemoDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDemoDefault)};
+		const SSettingsCardSpec GameplaySpec{pGameplayDefault->m_pStableId, Localize(pGameplayDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pGameplayDefault)};
+		const SSettingsCardSpec BackgroundSpec{pBackgroundDefault->m_pStableId, Localize(pBackgroundDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pBackgroundDefault)};
+		const SSettingsCardSpec MiscellaneousSpec{pMiscellaneousDefault->m_pStableId, Localize(pMiscellaneousDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pMiscellaneousDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float MinHeight, float ChromeHeight, FSettingsCardRender Render) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = Spec;
@@ -7606,8 +7600,8 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		const bool RaceGhostLayout = g_Config.m_ClRaceGhost != 0;
 		const bool RaceSaveGhostLayout = g_Config.m_ClRaceSaveGhost != 0;
 		const float DemoRows = ResolveDDNetDemoRows(RaceGhostLayout, RaceSaveGhostLayout);
-		const float DemoMinCardHeight = CardChromeHeight(DemoSpec) + DDNetRowPitch * DemoRows;
-		AddCard(DemoSpec, DemoMinCardHeight, CardChromeHeight(DemoSpec), [=, this](CUIRect ContentRect) mutable {
+		const float DemoMinCardHeight = CardChromeHeight + DDNetRowPitch * DemoRows;
+		AddCard(DemoSpec, DemoMinCardHeight, CardChromeHeight, [=, this](CUIRect ContentRect) mutable {
 			CPerfTimer DemoSectionTimer;
 			CUIRect Demo = ContentRect;
 			Left = Demo;
@@ -7677,8 +7671,8 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		// gameplay
 		const bool TextEntitiesLayout = g_Config.m_ClTextEntities != 0;
 		const bool AntiPingLayout = g_Config.m_ClAntiPing != 0;
-		const float GameplayMinCardHeight = CardChromeHeight(GameplaySpec) + DDNetRowPitch * ResolveDDNetGameplayRows(TextEntitiesLayout, AntiPingLayout);
-		AddCard(GameplaySpec, GameplayMinCardHeight, CardChromeHeight(GameplaySpec), [=, this](CUIRect ContentRect) mutable {
+		const float GameplayMinCardHeight = CardChromeHeight + DDNetRowPitch * ResolveDDNetGameplayRows(TextEntitiesLayout, AntiPingLayout);
+		AddCard(GameplaySpec, GameplayMinCardHeight, CardChromeHeight, [=, this](CUIRect ContentRect) mutable {
 			CPerfTimer GameplaySectionTimer;
 			CUIRect Gameplay = ContentRect;
 			CUIRect GameplayRow;
@@ -7766,10 +7760,10 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 			LogPerfStage(Client(), "ddnet_gameplay_section", GameplaySectionTimer.ElapsedMs(), false, "page=ddnet section=gameplay");
 		});
 
-		const float DDNetColorPickerLineSize = DDNetMetrics.m_LineHeight + DDNetMetrics.m_LineSpacing;
-		const float BackgroundMinCardHeight = CardChromeHeight(BackgroundSpec) + (DDNetColorPickerLineSize + DDNetMetrics.m_LineSpacing) * 2.0f + DDNetRowPitch * 3.0f + 2.0f;
+		const float DDNetColorPickerLineSize = DDNetMetrics.m_ButtonHeight;
+		const float BackgroundMinCardHeight = CardChromeHeight + (DDNetColorPickerLineSize + DDNetMetrics.m_LineSpacing) * 2.0f + DDNetRowPitch * 3.0f + 2.0f;
 		CPerfTimer ControlsSectionTimer;
-		AddCard(BackgroundSpec, BackgroundMinCardHeight, CardChromeHeight(BackgroundSpec), [=, this](CUIRect ContentRect) mutable {
+		AddCard(BackgroundSpec, BackgroundMinCardHeight, CardChromeHeight, [=, this](CUIRect ContentRect) mutable {
 			CUIRect Background = ContentRect;
 
 			// background
@@ -7858,8 +7852,8 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 #if defined(CONF_FAMILY_WINDOWS)
 		MiscellaneousMinContentHeight += DDNetRowPitch + 10.0f;
 #endif
-		const float MiscellaneousMinCardHeight = CardChromeHeight(MiscellaneousSpec) + MiscellaneousMinContentHeight;
-		AddCard(MiscellaneousSpec, MiscellaneousMinCardHeight, CardChromeHeight(MiscellaneousSpec), [=, this](CUIRect ContentRect) mutable {
+		const float MiscellaneousMinCardHeight = CardChromeHeight + MiscellaneousMinContentHeight;
+		AddCard(MiscellaneousSpec, MiscellaneousMinCardHeight, CardChromeHeight, [=, this](CUIRect ContentRect) mutable {
 			CUIRect Miscellaneous = ContentRect;
 			// miscellaneous
 			static CButtonContainer s_ButtonTimeout;

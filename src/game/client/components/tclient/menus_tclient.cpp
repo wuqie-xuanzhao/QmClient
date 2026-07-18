@@ -69,11 +69,6 @@ int CMenus::DoTClientSettingsButton_CheckBox(const void *pId, const char *pTextI
 	return DoSettingsButton_CheckBox(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, pId, pTextId, pText, Checked, pRect);
 }
 
-int CMenus::DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)
-{
-	return DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_TCLIENT, m_TClientSettingsTab, pId, pTextId, pText, pValue, pRect, VMargin);
-}
-
 int CMenus::DoTClientSettingsButton_Menu(CButtonContainer *pButtonContainer, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)
 {
 	return DoSettingsButton_Menu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, pButtonContainer, pTextId, pText, Checked, pRect, Flags, Corners, Rounding);
@@ -579,6 +574,11 @@ static void ApplyTClientContentMetrics(const float ContentWidth)
 	MarginBetweenSections = Metrics.m_SectionGap;
 	ColorPickerLabelSize = Metrics.m_BodySize;
 	ColorPickerLineSpacing = Metrics.m_LineSpacing;
+}
+
+int CMenus::DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)
+{
+	return DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_TCLIENT, m_TClientSettingsTab, pId, pTextId, pText, pValue, pRect, VMargin, 0.0f, FontSize);
 }
 
 static constexpr const char *SETTINGS_RUNTIME_CACHE_METADATA_FILE = "qmclient/settings_section_cache_metadata.cfg";
@@ -3486,7 +3486,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			{
 				CTClientSettingsCardFrameBinding *pBinding = &s_aDeckCardBindings[Index];
 				SSettingsCardDefinition Definition;
-				Definition.m_Spec = {s_aDeckCardSpecs[Index].first, Localize(s_aDeckCardSpecs[Index].second), nullptr};
+				Definition.m_Spec = {s_aDeckCardSpecs[Index].first, Localize(s_aDeckCardSpecs[Index].second), qm_card_registry::ResolveLocalizedDescription(s_aDeckCardSpecs[Index].first)};
 				Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 				Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
 				Definition.m_MeasureRevision = HashTClientSettingsCardLayout(s_aDeckCardSpecs[Index].first);
@@ -3771,7 +3771,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 		{
 			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), qm_card_registry::ResolveLocalizedDescription(aSpecs[Index].first)};
 			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 			Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
 			vCards.push_back(std::move(Definition));
@@ -3879,7 +3879,7 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)
 		{
 			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {apStableIds[Index], Localize(CBindChat::BIND_DEFAULTS[Index].first), nullptr};
+			Definition.m_Spec = {apStableIds[Index], Localize(CBindChat::BIND_DEFAULTS[Index].first), qm_card_registry::ResolveLocalizedDescription(apStableIds[Index])};
 			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 			Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
 			vCards.push_back(std::move(Definition));
@@ -4545,7 +4545,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 	const uint64_t MeasureRevision = ((uint64_t)GameClient()->m_WarList.m_vWarEntries.size() << 32) ^ (uint64_t)GameClient()->m_WarList.m_WarTypes.size();
 	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
 		SSettingsCardDefinition Definition;
-		Definition.m_Spec = {"deck:tclient-warlist", Localize("War List"), nullptr};
+		Definition.m_Spec = {"deck:tclient-warlist", Localize("War List"), qm_card_registry::ResolveLocalizedDescription("deck:tclient-warlist")};
 		Definition.m_Measure = [](float ContentWidth) { return s_CardBinding.Measure(ContentWidth); };
 		Definition.m_RenderMeasured = [](CUIRect &Content) { s_CardBinding.Render(Content); };
 		Definition.m_MeasureRevision = MeasureRevision;
@@ -4968,7 +4968,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		{
 			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), qm_card_registry::ResolveLocalizedDescription(aSpecs[Index].first)};
 			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 			Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
 			vCards.push_back(std::move(Definition));
@@ -5168,7 +5168,7 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly)
 		{
 			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), qm_card_registry::ResolveLocalizedDescription(aSpecs[Index].first)};
 			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 			Definition.m_Render = [pBinding](CUIRect Content) { pBinding->Render(Content); };
 			vCards.push_back(std::move(Definition));
@@ -5600,7 +5600,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		{
 			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), qm_card_registry::ResolveLocalizedDescription(aSpecs[Index].first)};
 			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 			Definition.m_Render = [pBinding](CUIRect Content) { pBinding->Render(Content); };
 			Definition.m_MeasureRevision = Index == 0 ? ProfilesLayoutRevision : 0;
@@ -5707,6 +5707,12 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 	static std::unordered_map<const SConfigVariable *, SIntState> s_IntInputs;
 	static std::unordered_map<const SConfigVariable *, SStrState> s_StrInputs;
 	static std::unordered_map<const SConfigVariable *, SColState> s_ColInputs;
+	static std::unordered_map<const SConfigVariable *, SIntState> s_ReadOnlyIntInputs;
+	static std::unordered_map<const SConfigVariable *, SStrState> s_ReadOnlyStrInputs;
+	static std::unordered_map<const SConfigVariable *, SColState> s_ReadOnlyColInputs;
+	auto &IntInputs = ReadOnly ? s_ReadOnlyIntInputs : s_IntInputs;
+	auto &StrInputs = ReadOnly ? s_ReadOnlyStrInputs : s_StrInputs;
+	auto &ColInputs = ReadOnly ? s_ReadOnlyColInputs : s_ColInputs;
 
 	auto ClearStagedAndCaches = [&]() {
 		s_StagedInts.clear();
@@ -6268,7 +6274,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 				CurrentSource = Source;
 				CUIRect Header;
 				Content.HSplitTop(HeadlineHeight, &Header, &Content);
-				if(s_ConfigListScrollRegion.AddRect(Header))
+				if(ConfigListScrollRegion.AddRect(Header))
 					Ui()->DoLabel(&Header, SourceName(CurrentSource), HeadlineFontSize, TEXTALIGN_ML);
 				Content.HSplitTop(MarginSmall, nullptr, &Content);
 			}
@@ -6277,7 +6283,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 			const float RowHeight = ConfigRowHeight;
 			Content.HSplitTop(RowHeight, &RowItem, &Content);
 			Content.HSplitTop(MarginExtraSmall, nullptr, &Content);
-			const bool Visible = s_ConfigListScrollRegion.AddRect(RowItem);
+			const bool Visible = ConfigListScrollRegion.AddRect(RowItem);
 			if(!Visible)
 				continue;
 
@@ -6377,7 +6383,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 				}
 				else
 				{
-					SIntState &State = s_IntInputs[pVar];
+					SIntState &State = IntInputs[pVar];
 					const auto StagedInt = s_StagedInts.find(pVar);
 					const int Effective = StagedInt != s_StagedInts.end() ? StagedInt->second.m_Value : *pInt->m_pVariable;
 					if(!State.m_Inited)
@@ -6420,7 +6426,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 			else if(pVar->m_Type == SConfigVariable::VAR_STRING)
 			{
 				const SStringConfigVariable *pStr = static_cast<const SStringConfigVariable *>(pVar);
-				SStrState &State = s_StrInputs[pVar];
+				SStrState &State = StrInputs[pVar];
 				const auto StagedStr = s_StagedStrs.find(pVar);
 				const char *Effective = StagedStr != s_StagedStrs.end() ? StagedStr->second.m_Value.c_str() : pStr->m_pStr;
 				if(!State.m_Inited)
@@ -6455,7 +6461,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 				static std::unordered_map<const SConfigVariable *, CButtonContainer> s_ColorResetIds;
 				CButtonContainer &ResetId = s_ColorResetIds[pVar];
 
-				SColState &ColState = s_ColInputs[pVar];
+				SColState &ColState = ColInputs[pVar];
 				const auto StagedCol = s_StagedCols.find(pVar);
 				unsigned Effective = StagedCol != s_StagedCols.end() ? StagedCol->second.m_Value : *pCol->m_pVariable;
 				if(!ColState.m_Inited)
@@ -6528,7 +6534,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 	const uint64_t ConfigsLayoutRevision = static_cast<uint64_t>(g_Config.m_TcUiCompactList != 0);
 	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
 		SSettingsCardDefinition Definition;
-		Definition.m_Spec = {"deck:tclient-configs-actions", Localize("Configuration"), nullptr};
+		Definition.m_Spec = {"deck:tclient-configs-actions", Localize("Configuration"), qm_card_registry::ResolveLocalizedDescription("deck:tclient-configs-actions")};
 		Definition.m_Measure = [](float ContentWidth) { return s_CardBinding.Measure(ContentWidth); };
 		Definition.m_Render = [](CUIRect Content) { s_CardBinding.Render(Content); };
 		Definition.m_MeasureRevision = ConfigsLayoutRevision;

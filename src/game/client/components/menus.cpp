@@ -1281,12 +1281,15 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, &LabelElement, ProcessInput, FontSize);
 }
 
-int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)
+int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float RowHeight, float RowSpacing, float BodySize)
 {
 	CUIRect CheckBoxRect;
-	pRect->HSplitTop(VMargin, &CheckBoxRect, pRect);
+	pRect->HSplitTop(RowHeight, &CheckBoxRect, pRect);
+	if(RowSpacing > 0.0f)
+		pRect->HSplitTop(RowSpacing, nullptr, pRect);
 
-	const int Logic = DoSettingsButton_CheckBox(Page, Tab, pId, pTextId, pText, *pValue, &CheckBoxRect);
+	SLabelProperties LabelProps;
+	const int Logic = DoSettingsButton_CheckBox(Page, Tab, -1, pId, pTextId, pText, *pValue, &CheckBoxRect, LabelProps, true, BodySize);
 	if(Logic)
 		*pValue ^= 1;
 	return Logic;

@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == Configurar efeitos de partículas 3D de fundo
 
+Configure controls and key bindings
+== Configurar controles e atalhos de teclado
+
+Configure DDNet gameplay preferences
+== Configurar preferências de jogo do DDNet
+
+Configure display and rendering
+== Configurar exibição e renderização
+
+Configure game and client preferences
+== Configurar preferências do jogo e do cliente
+
 Configure hammer skin steal and skin transition animations
 == Configurar roubo de skin do martelo e animações de transição de skin
 
+Configure player identity and country
+== Configurar identidade e país do jogador
+
 Configure qm_report_app_id and qm_report_secret first
 == Configure qm_report_app_id e qm_report_secret primeiro
+
+Configure QmClient gameplay helpers
+== Configurar assistentes de jogo do QmClient
+
+Configure QmClient HUD elements
+== Configurar elementos da HUD do QmClient
+
+Configure sound and audio packs
+== Configurar som e pacotes de áudio
+
+Configure TClient tools and profiles
+== Configurar ferramentas e perfis do TClient
+
+Configure Tee appearance and skins
+== Configurar aparência e skins do Tee
+
+Configure these settings
+== Configurar estas opções
 
 Confirm both are on same server, same room, and support voice
 == Confirme que ambos estão no mesmo servidor, mesma sala e suportam voz
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == Prompt de tradução personalizado (substitui o prompt interno)
+
+Customize interface appearance and previews
+== Personalizar interface e prévias
+
+Customize QmClient visuals and effects
+== Personalizar visuais e efeitos do QmClient
 
 Customize translate button and menu colors
 == Personalizar cores do botão de tradução e menu
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == Comunidade QmClient
 
+QmClient community and project information
+== Comunidade e informações do projeto QmClient
+
 QmClient online distribution
 == Distribuição online do QmClient
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == Pesquisar
+
+Search and navigate settings
+== Pesquisar e navegar pelas configurações
 
 Search donor asset
 == Pesquisar asset doador

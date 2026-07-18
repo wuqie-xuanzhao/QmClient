@@ -202,6 +202,24 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveSettingsRowsHeight(0, 20.0f, 5.0f), 0.0f);
 	}
 
+	TEST(SettingsPageLayout, TeeCustomColorsUseTwoStackedFullWidthGroups)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(500.0f);
+		const CUIRect View{10.0f, 20.0f, 300.0f, 600.0f};
+		const SSettingsTeeCustomColorsLayout Layout = ResolveSettingsTeeCustomColorsLayout(View, true, Metrics);
+
+		EXPECT_FLOAT_EQ(Layout.m_BodyGroup.w, View.w);
+		EXPECT_FLOAT_EQ(Layout.m_FeetGroup.w, View.w);
+		EXPECT_LE(Layout.m_BodyGroup.y + Layout.m_BodyGroup.h, Layout.m_FeetGroup.y);
+		EXPECT_FLOAT_EQ(Layout.m_BodyControls.h, ResolveSettingsHslaRowsHeight(Metrics, false));
+		EXPECT_FLOAT_EQ(Layout.m_FeetControls.h, ResolveSettingsHslaRowsHeight(Metrics, false));
+		EXPECT_FLOAT_EQ(Layout.m_Height, Layout.m_FeetGroup.y + Layout.m_FeetGroup.h - View.y + Metrics.m_LineSpacing);
+
+		const SSettingsTeeCustomColorsLayout Disabled = ResolveSettingsTeeCustomColorsLayout(View, false, Metrics);
+		EXPECT_FLOAT_EQ(Disabled.m_Height, Metrics.m_LineSpacing * 2.0f);
+		EXPECT_FLOAT_EQ(Disabled.m_BodyGroup.h, 0.0f);
+	}
+
 	TEST(SettingsPageLayout, RadioRowsUseMetricsAndStackOnlyWhenRequired)
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(640.0f);
@@ -3362,16 +3380,17 @@ TEST(UiV2DropdownIntegration, ShortPopupKeepsOpenAndLetsParentConsumeWheel)
 	EXPECT_TRUE(QmTryConsumeWheel(Ownership, &ParentRegion, &Delta));
 	EXPECT_FLOAT_EQ(Delta, -120.0f);
 }
-TEST(UiV2DropdownState, OpensWithFirstItemAndClosesOnEscape)
+TEST(UiV2DropdownState, OpensWithCurrentItemAndClosesOnEscape)
 {
 	CQmDropdownState State;
 	SQmDropdownInput Input;
 	Input.m_TogglePressed = true;
+	Input.m_InitialIndex = 2;
 
 	SQmDropdownUpdateResult Result = State.Update(Input, 3);
 	EXPECT_TRUE(Result.m_Opened);
 	EXPECT_TRUE(State.IsOpen());
-	EXPECT_EQ(State.ActiveIndex(), 0);
+	EXPECT_EQ(State.ActiveIndex(), 2);
 
 	Input = {};
 	Input.m_KeyEscape = true;
@@ -3379,6 +3398,18 @@ TEST(UiV2DropdownState, OpensWithFirstItemAndClosesOnEscape)
 	EXPECT_TRUE(Result.m_Closed);
 	EXPECT_FALSE(State.IsOpen());
 	EXPECT_EQ(State.ActiveIndex(), -1);
+}
+
+TEST(UiV2DropdownState, InvalidCurrentItemFallsBackToFirstItem)
+{
+	CQmDropdownState State;
+	SQmDropdownInput Input;
+	Input.m_TogglePressed = true;
+	Input.m_InitialIndex = 9;
+
+	const SQmDropdownUpdateResult Result = State.Update(Input, 3);
+	EXPECT_TRUE(Result.m_Opened);
+	EXPECT_EQ(State.ActiveIndex(), 0);
 }
 
 TEST(UiV2DropdownState, KeyboardNavigationWrapsAndEnterSelects)

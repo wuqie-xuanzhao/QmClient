@@ -290,7 +290,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			if(pDefault == nullptr)
 				return;
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {pDefault->m_pStableId, Localize(pDefault->m_pTitle), nullptr};
+			Definition.m_Spec = {pDefault->m_pStableId, Localize(pDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDefault)};
 			Definition.m_Measure = [Measure, MinHeight](float Width) { return std::max(MinHeight, Measure ? Measure(Width) : 0.0f); };
 			Definition.m_Render = std::move(Render);
 			Definition.m_IsVisible = std::move(IsVisible);

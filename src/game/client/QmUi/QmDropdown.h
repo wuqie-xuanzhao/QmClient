@@ -36,6 +36,7 @@ struct SQmDropdownPopupPolicy
 struct SQmDropdownInput
 {
 	bool m_TogglePressed = false;
+	int m_InitialIndex = -1;
 	bool m_ClickOutside = false;
 	bool m_KeyUp = false;
 	bool m_KeyDown = false;

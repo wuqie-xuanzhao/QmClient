@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == Настройка фоновых 3D-частиц
 
+Configure controls and key bindings
+== Настроить управление и привязки клавиш
+
+Configure DDNet gameplay preferences
+== Настроить игровые параметры DDNet
+
+Configure display and rendering
+== Настроить экран и рендеринг
+
+Configure game and client preferences
+== Настроить параметры игры и клиента
+
 Configure hammer skin steal and skin transition animations
 == Настройка анимаций кражи скина молотом и смены скина
 
+Configure player identity and country
+== Настроить профиль игрока и флаг
+
 Configure qm_report_app_id and qm_report_secret first
 == Сначала настройте qm_report_app_id и qm_report_secret
+
+Configure QmClient gameplay helpers
+== Настроить игровые помощники QmClient
+
+Configure QmClient HUD elements
+== Настроить элементы HUD QmClient
+
+Configure sound and audio packs
+== Настроить звук и аудиопакеты
+
+Configure TClient tools and profiles
+== Настроить инструменты и профили TClient
+
+Configure Tee appearance and skins
+== Настроить внешний вид и скины Tee
+
+Configure these settings
+== Настроить эти параметры
 
 Confirm both are on same server, same room, and support voice
 == Убедитесь, что оба находятся на одном сервере, в одной комнате и поддерживают голос.
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == Пользовательский промпт для перевода (переопределяет встроенный)
+
+Customize interface appearance and previews
+== Настроить вид интерфейса и предпросмотр
+
+Customize QmClient visuals and effects
+== Настроить визуальные эффекты QmClient
 
 Customize translate button and menu colors
 == Настройка цветов кнопки перевода и меню
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == Сообщество QmClient
 
+QmClient community and project information
+== Сообщество и сведения о проекте QmClient
+
 QmClient online distribution
 == Онлайн-распределение QmClient
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == Поиск
+
+Search and navigate settings
+== Поиск и переход к настройкам
 
 Search donor asset
 == Поиск ресурса донора

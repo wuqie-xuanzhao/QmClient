@@ -88,7 +88,7 @@ SQmDropdownUpdateResult CQmDropdownState::Update(const SQmDropdownInput &Input, 
 		if(Input.m_TogglePressed && ItemCount > 0)
 		{
 			m_Open = true;
-			m_ActiveIndex = 0;
+			m_ActiveIndex = Input.m_InitialIndex >= 0 && Input.m_InitialIndex < ItemCount ? Input.m_InitialIndex : 0;
 			Result.m_Opened = true;
 		}
 		return Result;

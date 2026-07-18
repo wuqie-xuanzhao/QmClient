@@ -17,6 +17,7 @@ struct SSettingsCardDeckVisualOptions
 struct SSettingsCardVisualState
 {
 	bool m_Hovered = false;
+	bool m_PointerInside = false;
 	bool m_HoverFeedbackEnabled = true;
 	bool m_Focused = false;
 	bool m_Dragged = false;
@@ -28,6 +29,18 @@ struct SSettingsCardVisualState
 	float m_DrawOffsetY = 0.0f;
 	float m_DrawAlpha = 1.0f;
 };
+
+inline bool SettingsCardSubtitleVisible(const bool PointerInside, const bool Focused)
+{
+	return PointerInside || Focused;
+}
+
+inline ColorRGBA ResolveSettingsCardSurfaceColor(ColorRGBA Surface, const SSettingsCardVisualState &State)
+{
+	// Hover、焦点与拖放反馈只属于边框；卡片内部仅跟随整个 Deck 的绘制透明度。
+	Surface.a *= State.m_DrawAlpha;
+	return Surface;
+}
 
 using FSettingsCardMeasure = std::function<float(float ContentWidth)>;
 using FSettingsCardRender = std::function<void(CUIRect ContentRect)>;

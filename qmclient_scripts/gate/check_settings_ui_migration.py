@@ -448,15 +448,24 @@ def audit_page(repo_root: Path, page: str) -> list[str]:
 def audit_shared_contracts(repo_root: Path) -> list[str]:
 	errors: list[str] = []
 	menu_source = _read(repo_root, _NAVIGATION_SOURCE)
+	tclient_source = _read(repo_root, Path("src/game/client/components/tclient/menus_tclient.cpp"))
 	if "ResolveSettingsRadioRowLayout(" not in menu_source:
 		errors.append("shared: responsive settings radio resolver missing")
 	if "SettingsPageUiScale(pRect->w)" in menu_source:
 		errors.append("shared: settings control font still derives from local rect width")
+	if "float RowHeight, float RowSpacing, float BodySize" not in menu_source:
+		errors.append("shared: streamed settings checkbox rows do not consume explicit metrics")
+	if re.search(r"DoSettingsButton_CheckBoxAutoVMarginAndSet\([^;{]+float RowSpacing\s*=", menu_source) or re.search(r"DoSettingsButton_CheckBoxAutoVMarginAndSet\([^;{]+float BodySize\s*=", menu_source):
+		errors.append("shared: streamed settings checkbox metrics still have implicit defaults")
+	if "VMargin, 0.0f, FontSize" not in tclient_source:
+		errors.append("tclient: streamed checkbox rows do not use the shared BodySize")
 
 	for relative in _TYPOGRAPHY_SOURCES:
 		source = _read(repo_root, relative)
 		if "SetScrollProfile(EQmScrollProfile::GRID)" in source:
 			errors.append(f"{relative}: settings grid still uses generic GRID profile")
+		if re.search(r"\w*ColorPickerLineSize\s*=\s*\w+Metrics\.m_LineHeight\s*\+\s*\w+Metrics\.m_LineSpacing", source):
+			errors.append(f"{relative}: color picker control height still includes row spacing")
 		for line_number, line in enumerate(source.splitlines(), 1):
 			if _RAW_FONT_CALL.search(line) and not any(token in line for token in _RAW_FONT_ALLOWLIST):
 				errors.append(f"{relative}:{line_number}: raw settings font literal is not allowlisted")

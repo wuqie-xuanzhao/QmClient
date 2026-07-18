@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == Arka plan 3D parçacık efektlerini yapılandır
 
+Configure controls and key bindings
+== Kontrolleri ve tuş atamalarını yapılandır
+
+Configure DDNet gameplay preferences
+== DDNet oyun tercihlerini yapılandır
+
+Configure display and rendering
+== Görüntü ve işlemeyi yapılandır
+
+Configure game and client preferences
+== Oyun ve istemci tercihlerini yapılandır
+
 Configure hammer skin steal and skin transition animations
 == Çekiç deri çalma ve deri geçiş animasyonlarını yapılandır
 
+Configure player identity and country
+== Oyuncu kimliğini ve ülkesini yapılandır
+
 Configure qm_report_app_id and qm_report_secret first
 == Önce qm_report_app_id ve qm_report_secret ayarla
+
+Configure QmClient gameplay helpers
+== QmClient oyun yardımcılarını yapılandır
+
+Configure QmClient HUD elements
+== QmClient HUD öğelerini yapılandır
+
+Configure sound and audio packs
+== Ses ve ses paketlerini yapılandır
+
+Configure TClient tools and profiles
+== TClient araçlarını ve profillerini yapılandır
+
+Configure Tee appearance and skins
+== Tee görünümünü ve kostümlerini yapılandır
+
+Configure these settings
+== Bu ayarları yapılandır
 
 Confirm both are on same server, same room, and support voice
 == Her ikisinin de aynı sunucuda, aynı odada olduğunu ve sesi desteklediğini onaylayın
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == Özel Çeviri İstemi (Yerleşik İstemi Geçersiz Kılar)
+
+Customize interface appearance and previews
+== Arayüz görünümünü ve önizlemeleri özelleştir
+
+Customize QmClient visuals and effects
+== QmClient görsellerini ve efektlerini özelleştir
 
 Customize translate button and menu colors
 == Çevir düğmesi ve menü renklerini özelleştir
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == QmClient Topluluğu
 
+QmClient community and project information
+== QmClient topluluğu ve proje bilgileri
+
 QmClient online distribution
 == QmClient çevrimiçi dağılımı
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == Ara
+
+Search and navigate settings
+== Ayarları ara ve gezin
 
 Search donor asset
 == Kaynak varlık ara

@@ -6570,9 +6570,18 @@ TEST(QmMonitoringHelpers, SettingsRenderOnlyTraversalDoesNotConsumeDeckAnimation
 	ExpectInactiveBeforeStart(TClientProfiles, "ProfilesListBox");
 	EXPECT_NE(TClientProfiles.find("if(!ReadOnly)\n\t\ts_SelectedProfile = SelectedProfile;"), std::string::npos);
 	EXPECT_NE(TClientConfigs.find("CScrollRegion &ConfigListScrollRegion = ReadOnly ? s_ConfigListReadOnlyScrollRegion : s_ConfigListScrollRegion;"), std::string::npos);
+	EXPECT_NE(TClientConfigs.find("ConfigListScrollRegion.AddRect(Header)"), std::string::npos);
+	EXPECT_NE(TClientConfigs.find("ConfigListScrollRegion.AddRect(RowItem)"), std::string::npos);
+	EXPECT_EQ(TClientConfigs.find("s_ConfigListScrollRegion.AddRect("), std::string::npos);
 	EXPECT_NE(TClientConfigs.find("float &PrevConfigsScrollY = ReadOnly ? s_PrevConfigsReadOnlyScrollY : s_PrevConfigsScrollY;"), std::string::npos);
 	EXPECT_NE(TClientConfigs.find("PrevConfigsScrollY = ScrollFrame.m_FinalOffsetY;"), std::string::npos);
 	EXPECT_EQ(TClientConfigs.find("s_PrevConfigsScrollY = ScrollFrame.m_FinalOffsetY;"), std::string::npos);
+	EXPECT_NE(TClientConfigs.find("auto &IntInputs = ReadOnly ? s_ReadOnlyIntInputs : s_IntInputs;"), std::string::npos);
+	EXPECT_NE(TClientConfigs.find("auto &StrInputs = ReadOnly ? s_ReadOnlyStrInputs : s_StrInputs;"), std::string::npos);
+	EXPECT_NE(TClientConfigs.find("auto &ColInputs = ReadOnly ? s_ReadOnlyColInputs : s_ColInputs;"), std::string::npos);
+	EXPECT_EQ(TClientConfigs.find("SIntState &State = s_IntInputs[pVar];"), std::string::npos);
+	EXPECT_EQ(TClientConfigs.find("SStrState &State = s_StrInputs[pVar];"), std::string::npos);
+	EXPECT_EQ(TClientConfigs.find("SColState &ColState = s_ColInputs[pVar];"), std::string::npos);
 
 	const std::string RenderPassOrderModel = ExtractSourceFunctionBody(MenusSource, "qm_card_order::CModel &CMenus::SettingsCardOrderModelForRenderPass()");
 	ASSERT_FALSE(RenderPassOrderModel.empty());
@@ -6692,8 +6701,8 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("DrawState.m_DropFeedback"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_ReflowCompleteFeedback"), std::string::npos);
 	EXPECT_NE(Source.find("const bool InteractionComplete = DrawState.m_DropFeedback;"), std::string::npos);
-	EXPECT_NE(Source.find("DrawState.m_Hovered || DrawState.m_Focused"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA Surface = Theme.m_Surface;"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_Focused)"), std::string::npos);
+	EXPECT_NE(Source.find("const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
@@ -6795,7 +6804,8 @@ TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
 	ASSERT_FALSE(SetActiveBody.empty());
 	EXPECT_EQ(SetActiveBody.find("m_HasSettingsCardDeckDisplayKey = false;"), std::string::npos);
 	EXPECT_EQ(SettingsBody.find("const bool AnimateEntry = m_HasSettingsCardDeckDisplayKey;"), std::string::npos);
-	EXPECT_NE(SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, false);"), std::string::npos);
+	EXPECT_NE(SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);"), std::string::npos);
+	EXPECT_EQ(SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, false);"), std::string::npos);
 	EXPECT_EQ(GraphicsBody.find("m_SettingsCardDeck.BeginDisplayCycle"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);
@@ -7119,6 +7129,8 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_EQ(Source.find("CursorY = ResolveSettingsCardColumnFrame"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckShouldSnapReflow(GeometryStateChanged, m_Drag.Active())"), std::string::npos);
 	EXPECT_NE(Source.find("if(SnapReflow)"), std::string::npos);
+	EXPECT_EQ(Source.find("|| m_Drag.Active() || ContentHeightTargetChanged"), std::string::npos);
+	EXPECT_EQ(Source.find("SnapReflow = true;"), std::string::npos);
 	EXPECT_EQ(Source.find("EUiAnimProperty::ALPHA"), std::string::npos);
 	EXPECT_NE(Source.find("m_DisplayCycle"), std::string::npos);
 	EXPECT_NE(Source.find("m_AnimateEntry ? Motion.m_EntryDistance : 0.0f"), std::string::npos);

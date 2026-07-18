@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == 배경 3D 입자 효과 구성
 
+Configure controls and key bindings
+== 컨트롤 및 키 바인딩 구성
+
+Configure DDNet gameplay preferences
+== DDNet 게임 환경 설정 구성
+
+Configure display and rendering
+== 디스플레이 및 렌더링 구성
+
+Configure game and client preferences
+== 게임 및 클라이언트 환경 설정 구성
+
 Configure hammer skin steal and skin transition animations
 == 해머 스킨 도용 및 스킨 전환 애니메이션 구성
 
+Configure player identity and country
+== 플레이어 정보 및 국기 구성
+
 Configure qm_report_app_id and qm_report_secret first
 == 먼저 qm_report_app_id와 qm_report_secret을 설정하세요
+
+Configure QmClient gameplay helpers
+== QmClient 게임 도우미 구성
+
+Configure QmClient HUD elements
+== QmClient HUD 요소 구성
+
+Configure sound and audio packs
+== 사운드 및 오디오 팩 구성
+
+Configure TClient tools and profiles
+== TClient 도구 및 프로필 구성
+
+Configure Tee appearance and skins
+== Tee 외형 및 스킨 구성
+
+Configure these settings
+== 이 설정 구성
 
 Confirm both are on same server, same room, and support voice
 == 둘 다 같은 서버, 같은 방에 있으며 음성을 지원하는지 확인
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == 사용자 정의 번역 프롬프트 (내장 프롬프트 덮어쓰기)
+
+Customize interface appearance and previews
+== 인터페이스 모양 및 미리 보기 사용자 지정
+
+Customize QmClient visuals and effects
+== QmClient 시각 효과 사용자 지정
 
 Customize translate button and menu colors
 == 번역 버튼 및 메뉴 색상 사용자 정의
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == QmClient 커뮤니티
 
+QmClient community and project information
+== QmClient 커뮤니티 및 프로젝트 정보
+
 QmClient online distribution
 == QmClient 온라인 배포
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == 검색
+
+Search and navigate settings
+== 설정 검색 및 이동
 
 Search donor asset
 == 기증자 에셋 검색

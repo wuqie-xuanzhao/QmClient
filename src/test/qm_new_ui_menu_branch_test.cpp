@@ -1811,7 +1811,8 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 	ASSERT_FALSE(HudBranch.empty());
 	EXPECT_NE(HudBranch.find("AddCard(0, HudLeftMinCardHeight"), std::string::npos);
 	EXPECT_NE(HudBranch.find("AddCard(1, HudRightMinCardHeight"), std::string::npos);
-	EXPECT_NE(HudBranch.find("const int HudRightRowCount = 12 + (g_Config.m_ClShowhudDDRace ? 2 : 0) + (g_Config.m_ClShowFreezeBars ? 1 : 0);"), std::string::npos);
+	EXPECT_NE(HudBranch.find("const int HudRightCheckboxRowCount = 12 + (g_Config.m_ClShowhudDDRace ? 2 : 0);"), std::string::npos);
+	EXPECT_NE(HudBranch.find("ResolveSettingsRowsHeight(HudRightCheckboxRowCount, LineSize, MarginSmall)"), std::string::npos);
 	EXPECT_EQ(HudBranch.find("LineSize * 16.0f"), std::string::npos);
 	EXPECT_EQ(HudBranch.find("RightView.HSplitTop(LineSize * 2.0f, nullptr, &RightView);"), std::string::npos);
 	EXPECT_NE(RenderSettingsAppearance.find("\"deck:appearance-hud-main\""), std::string::npos);
@@ -2928,6 +2929,9 @@ TEST(QmNewUiMenuBranches, TeeOptionsMeasureAllRowsAndPlayerDummyChangeDisplayCyc
 	ASSERT_FALSE(Settings.empty());
 	EXPECT_NE(Tee.find("ResolveSettingsRowsHeight(4, ControlLineHeight, ControlSpacing)"), std::string::npos);
 	EXPECT_NE(Tee.find("ResolveSettingsRowsHeight(6, ControlLineHeight, ControlSpacing)"), std::string::npos);
+	EXPECT_NE(Tee.find("ResolveSettingsTeeCustomColorsLayout"), std::string::npos);
+	EXPECT_NE(Tee.find("g_Config.m_QmSkinShowMetadata != 0"), std::string::npos);
+	EXPECT_EQ(Tee.find("g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata"), std::string::npos);
 	EXPECT_NE(Tee.find("const auto NextCheckboxRow"), std::string::npos);
 	EXPECT_NE(Tee.find("const auto NextPrefixRow"), std::string::npos);
 	EXPECT_NE(Tee.find("s_QueueListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);"), std::string::npos);

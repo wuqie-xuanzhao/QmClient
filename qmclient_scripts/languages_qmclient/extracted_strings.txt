@@ -679,8 +679,19 @@ Config version. Helps new client fix old config errors.
 Configs
 Configuration
 Configure background 3D particle effects
+Configure controls and key bindings
+Configure DDNet gameplay preferences
+Configure display and rendering
+Configure game and client preferences
 Configure hammer skin steal and skin transition animations
+Configure player identity and country
 Configure qm_report_app_id and qm_report_secret first
+Configure QmClient gameplay helpers
+Configure QmClient HUD elements
+Configure sound and audio packs
+Configure TClient tools and profiles
+Configure Tee appearance and skins
+Configure these settings
 Confirm both are on same server, same room, and support voice
 Confirm clear all
 Confirm clear finished
@@ -792,6 +803,8 @@ Custom Provider API Key
 Custom Provider endpoint
 Custom Provider model name
 Custom translation prompt (overrides built-in)
+Customize interface appearance and previews
+Customize QmClient visuals and effects
 Customize translate button and menu colors
 Cut interval
 Cut length
@@ -2575,6 +2588,7 @@ QmClient / HUD
 QmClient / Visual
 QmClient chat log
 QmClient Community
+QmClient community and project information
 QmClient online distribution
 QmClient Settings
 QmClient sidebar module collapse state
@@ -2930,6 +2944,7 @@ Screenshots directory
 Scroll long lines
 Scroll speed
 Search
+Search and navigate settings
 Search donor asset
 Search main asset
 Searching

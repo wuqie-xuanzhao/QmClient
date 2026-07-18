@@ -159,6 +159,47 @@ inline float ResolveSettingsRowsHeight(const int RowCount, const float RowHeight
 	return RowCount * std::max(0.0f, RowHeight) + std::max(0, RowCount - 1) * std::max(0.0f, RowSpacing);
 }
 
+inline float ResolveSettingsHslaRowsHeight(const SSettingsContentMetrics &Metrics, const bool Alpha)
+{
+	return ResolveSettingsRowsHeight(Alpha ? 4 : 3, Metrics.m_LineHeight, Metrics.m_LineSpacing);
+}
+
+struct SSettingsTeeCustomColorsLayout
+{
+	CUIRect m_BodyGroup{};
+	CUIRect m_BodyTitle{};
+	CUIRect m_BodyControls{};
+	CUIRect m_FeetGroup{};
+	CUIRect m_FeetTitle{};
+	CUIRect m_FeetControls{};
+	float m_Height = 0.0f;
+};
+
+inline SSettingsTeeCustomColorsLayout ResolveSettingsTeeCustomColorsLayout(const CUIRect &View, const bool Enabled, const SSettingsContentMetrics &Metrics)
+{
+	SSettingsTeeCustomColorsLayout Layout;
+	const float Spacing = std::max(0.0f, Metrics.m_LineSpacing);
+	Layout.m_Height = Spacing * 2.0f;
+	if(!Enabled)
+		return Layout;
+
+	const float ControlsHeight = ResolveSettingsHslaRowsHeight(Metrics, false);
+	const float GroupHeight = Spacing * 2.0f + Metrics.m_LineHeight + Spacing + ControlsHeight;
+	Layout.m_BodyGroup = {View.x, View.y + Spacing, View.w, GroupHeight};
+	Layout.m_FeetGroup = {View.x, Layout.m_BodyGroup.y + Layout.m_BodyGroup.h + Metrics.m_SectionGap, View.w, GroupHeight};
+	const auto ResolveGroup = [&](const CUIRect &Group, CUIRect &Title, CUIRect &Controls) {
+		CUIRect Inner;
+		Group.Margin(Spacing, &Inner);
+		Inner.HSplitTop(Metrics.m_LineHeight, &Title, &Inner);
+		Inner.HSplitTop(Spacing, nullptr, &Inner);
+		Inner.HSplitTop(ControlsHeight, &Controls, nullptr);
+	};
+	ResolveGroup(Layout.m_BodyGroup, Layout.m_BodyTitle, Layout.m_BodyControls);
+	ResolveGroup(Layout.m_FeetGroup, Layout.m_FeetTitle, Layout.m_FeetControls);
+	Layout.m_Height = Layout.m_FeetGroup.y + Layout.m_FeetGroup.h - View.y + Spacing;
+	return Layout;
+}
+
 inline SSettingsRadioRowLayout ResolveSettingsRadioRowLayout(const CUIRect &View, const int OptionCount, const SSettingsContentMetrics &Metrics)
 {
 	SSettingsRadioRowLayout Layout;

@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == Configurar efectos de partículas 3D de fondo
 
+Configure controls and key bindings
+== Configurar los controles y las teclas
+
+Configure DDNet gameplay preferences
+== Configurar las preferencias de juego de DDNet
+
+Configure display and rendering
+== Configurar la pantalla y el renderizado
+
+Configure game and client preferences
+== Configurar las preferencias del juego y del cliente
+
 Configure hammer skin steal and skin transition animations
 == Configurar animaciones de robo de skin con martillo y transición de skin
 
+Configure player identity and country
+== Configurar la identidad y el país del jugador
+
 Configure qm_report_app_id and qm_report_secret first
 == Configura primero qm_report_app_id y qm_report_secret
+
+Configure QmClient gameplay helpers
+== Configurar las ayudas de juego de QmClient
+
+Configure QmClient HUD elements
+== Configurar los elementos del HUD de QmClient
+
+Configure sound and audio packs
+== Configurar el sonido y los paquetes de audio
+
+Configure TClient tools and profiles
+== Configurar las herramientas y perfiles de TClient
+
+Configure Tee appearance and skins
+== Configurar la apariencia y las apariencias de Tee
+
+Configure these settings
+== Configurar estos ajustes
 
 Confirm both are on same server, same room, and support voice
 == Confirma que ambos están en el mismo servidor, misma sala y son compatibles con voz
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == Prompt de traducción personalizado (sobrescribe el prompt integrado)
+
+Customize interface appearance and previews
+== Personalizar la interfaz y las vistas previas
+
+Customize QmClient visuals and effects
+== Personalizar los efectos visuales de QmClient
 
 Customize translate button and menu colors
 == Personalizar colores del botón de traducción y del menú
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == Comunidad QmClient
 
+QmClient community and project information
+== Comunidad e información del proyecto QmClient
+
 QmClient online distribution
 == Distribución en línea de QmClient
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == Buscar
+
+Search and navigate settings
+== Buscar y navegar por los ajustes
 
 Search donor asset
 == Buscar activo donante

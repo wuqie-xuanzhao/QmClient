@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == 背景の 3D パーティクルエフェクトを設定
 
+Configure controls and key bindings
+== 操作とキーバインドを設定
+
+Configure DDNet gameplay preferences
+== DDNet のゲーム設定を構成
+
+Configure display and rendering
+== 表示とレンダリングを設定
+
+Configure game and client preferences
+== ゲームとクライアントの設定を構成
+
 Configure hammer skin steal and skin transition animations
 == ハンマースキン盗用とスキン切り替えアニメーションを設定
 
+Configure player identity and country
+== プレイヤー情報と国旗を設定
+
 Configure qm_report_app_id and qm_report_secret first
 == 最初に qm_report_app_id と qm_report_secret を設定してください
+
+Configure QmClient gameplay helpers
+== QmClient のゲーム補助機能を設定
+
+Configure QmClient HUD elements
+== QmClient の HUD 要素を設定
+
+Configure sound and audio packs
+== サウンドとオーディオパックを設定
+
+Configure TClient tools and profiles
+== TClient のツールとプロファイルを設定
+
+Configure Tee appearance and skins
+== Tee の外観とスキンを設定
+
+Configure these settings
+== これらの設定を構成
 
 Confirm both are on same server, same room, and support voice
 == 両方が同じサーバー、同じルームにいて、音声をサポートしていることを確認する
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == カスタム翻訳プロンプト（内蔵プロンプトを上書き）
+
+Customize interface appearance and previews
+== インターフェースの外観とプレビューをカスタマイズ
+
+Customize QmClient visuals and effects
+== QmClient の表示とエフェクトをカスタマイズ
 
 Customize translate button and menu colors
 == 翻訳ボタンとメニューの色をカスタマイズ
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == QmClient コミュニティ
 
+QmClient community and project information
+== QmClient のコミュニティとプロジェクト情報
+
 QmClient online distribution
 == QmClient オンライン分布
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == 検索
+
+Search and navigate settings
+== 設定を検索して移動
 
 Search donor asset
 == ドナーアセットを検索

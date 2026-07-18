@@ -368,7 +368,8 @@ TEST(Skins, TeeSkinListSortModeKeepsFavoritesPinnedThenUsesOfficialDate)
 	EXPECT_EQ(SortChangeBody.find("SkinList(m_Dummy).ForceRefresh"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("Localize(\"Show skin date and author\")"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("g_Config.m_QmSkinShowMetadata"), std::string::npos);
-	EXPECT_NE(RenderTeeBody.find("const bool ShowSkinMetadata = g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata;"), std::string::npos);
+	EXPECT_EQ(RenderTeeBody.find("g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("g_Config.m_QmSkinShowMetadata != 0"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("pSkinContainer->OfficialCreator()"), std::string::npos);
 	const size_t TimeTranslationPos = MenusI18nSource.find("key = \"Time\"");
 	ASSERT_NE(TimeTranslationPos, std::string::npos);

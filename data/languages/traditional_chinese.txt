@@ -2042,11 +2042,44 @@ Configuration
 Configure background 3D particle effects
 == 配置背景 3D 粒子效果
 
+Configure controls and key bindings
+== 設定控制與按鍵綁定
+
+Configure DDNet gameplay preferences
+== 設定 DDNet 遊戲偏好
+
+Configure display and rendering
+== 設定顯示與渲染選項
+
+Configure game and client preferences
+== 設定遊戲與客戶端偏好
+
 Configure hammer skin steal and skin transition animations
 == 調整錘中偷皮和換皮動畫
 
+Configure player identity and country
+== 設定玩家身分與國旗
+
 Configure qm_report_app_id and qm_report_secret first
 == 請先設置 qm_report_app_id 和 qm_report_secret
+
+Configure QmClient gameplay helpers
+== 設定 QmClient 遊戲輔助功能
+
+Configure QmClient HUD elements
+== 設定 QmClient HUD 元素
+
+Configure sound and audio packs
+== 設定音效與音效包
+
+Configure TClient tools and profiles
+== 設定 TClient 工具與設定檔
+
+Configure Tee appearance and skins
+== 設定 Tee 外觀與造型
+
+Configure these settings
+== 配置這些設定
 
 Confirm both are on same server, same room, and support voice
 == 建議確認雙方在同服、同房間，並且對方也支持語音
@@ -2380,6 +2413,12 @@ Custom Provider model name
 
 Custom translation prompt (overrides built-in)
 == 自定義翻譯提示詞（覆蓋內置提示詞）
+
+Customize interface appearance and previews
+== 自訂介面外觀與預覽
+
+Customize QmClient visuals and effects
+== 自訂 QmClient 視覺與特效
 
 Customize translate button and menu colors
 == 自定義翻譯按鈕和菜單顏色
@@ -7730,6 +7769,9 @@ QmClient chat log
 QmClient Community
 == 棲夢社區
 
+QmClient community and project information
+== 查看 QmClient 社群與專案資訊
+
 QmClient online distribution
 == 棲夢客戶端在線分佈
 
@@ -8794,6 +8836,9 @@ Scroll speed
 
 Search
 == 搜索
+
+Search and navigate settings
+== 搜尋並前往設定
 
 Search donor asset
 == 搜索來源材質
