@@ -220,6 +220,41 @@ namespace
 		EXPECT_FLOAT_EQ(Disabled.m_BodyGroup.h, 0.0f);
 	}
 
+	TEST(SettingsPageLayout, ColorRowsUseCanonicalControlHeightAndSpacing)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(640.0f);
+		const CUIRect View{10.0f, 20.0f, 360.0f, 200.0f};
+		const SSettingsColorRowLayout Layout = ResolveSettingsColorRowLayout(View, Metrics, false);
+
+		EXPECT_FLOAT_EQ(Layout.m_RowRect.h, Metrics.m_ButtonHeight);
+		EXPECT_FLOAT_EQ(Layout.m_LabelRect.h, Metrics.m_ButtonHeight);
+		EXPECT_FLOAT_EQ(Layout.m_ColorButtonRect.h, Metrics.m_ButtonHeight);
+		EXPECT_FLOAT_EQ(Layout.m_ResetButtonRect.h, Metrics.m_ButtonHeight);
+		EXPECT_FLOAT_EQ(Layout.m_ConsumedHeight, Metrics.m_ButtonHeight + Metrics.m_LineSpacing);
+		EXPECT_LE(Layout.m_LabelRect.x + Layout.m_LabelRect.w, Layout.m_ColorButtonRect.x);
+		EXPECT_LE(Layout.m_ColorButtonRect.x + Layout.m_ColorButtonRect.w, Layout.m_ResetButtonRect.x);
+
+		const SSettingsColorRowLayout Indented = ResolveSettingsColorRowLayout(View, Metrics, true);
+		EXPECT_GT(Indented.m_LabelRect.x, Layout.m_LabelRect.x);
+		EXPECT_FLOAT_EQ(Indented.m_ColorButtonRect.h, Layout.m_ColorButtonRect.h);
+		EXPECT_FLOAT_EQ(Indented.m_ResetButtonRect.h, Layout.m_ResetButtonRect.h);
+
+		const CUIRect NarrowView{10.0f, 20.0f, 100.0f, 200.0f};
+		const SSettingsColorRowLayout Narrow = ResolveSettingsColorRowLayout(NarrowView, Metrics, false);
+		EXPECT_GE(Narrow.m_LabelRect.w, 0.0f);
+		EXPECT_GE(Narrow.m_ColorButtonRect.w, 0.0f);
+		EXPECT_GE(Narrow.m_ResetButtonRect.w, 0.0f);
+		EXPECT_GE(Narrow.m_LabelRect.x, NarrowView.x);
+		EXPECT_LE(Narrow.m_ResetButtonRect.x + Narrow.m_ResetButtonRect.w, NarrowView.x + NarrowView.w);
+
+		SSettingsContentMetrics NoBottomSpacing = Metrics;
+		NoBottomSpacing.m_LineSpacing = 0.0f;
+		const SSettingsColorRowLayout NoBottomSpacingLayout = ResolveSettingsColorRowLayout(View, NoBottomSpacing, false);
+		EXPECT_FLOAT_EQ(NoBottomSpacingLayout.m_ConsumedHeight, Metrics.m_ButtonHeight);
+		EXPECT_LT(NoBottomSpacingLayout.m_LabelRect.x + NoBottomSpacingLayout.m_LabelRect.w, NoBottomSpacingLayout.m_ColorButtonRect.x);
+		EXPECT_LT(NoBottomSpacingLayout.m_ColorButtonRect.x + NoBottomSpacingLayout.m_ColorButtonRect.w, NoBottomSpacingLayout.m_ResetButtonRect.x);
+	}
+
 	TEST(SettingsPageLayout, RadioRowsUseMetricsAndStackOnlyWhenRequired)
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(640.0f);
@@ -258,7 +293,7 @@ namespace
 		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, false, false), 99.5f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 311.4f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 391.0f, 0.001f);
-		EXPECT_NEAR(ResolveAppearanceLaserColorsHeight(Compact), 358.8f, 0.001f);
+		EXPECT_NEAR(ResolveAppearanceLaserColorsHeight(Compact), 319.8f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, false), 95.6f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, true), 135.4f, 0.001f);
 
@@ -269,9 +304,17 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, false, false), 125.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 390.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 490.0f);
-		EXPECT_FLOAT_EQ(ResolveAppearanceLaserColorsHeight(Standard), 450.0f);
+		EXPECT_FLOAT_EQ(ResolveAppearanceLaserColorsHeight(Standard), 400.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, false), 120.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, true), 170.0f);
+	}
+
+	TEST(SettingsPageLayout, BothSettingsShellsUseFinalContentWidthMetrics)
+	{
+		const SSettingsContentMetrics LegacyMetrics = ResolveSettingsContentMetrics(640.0f);
+		const SSettingsContentMetrics NewMetrics = ResolveSettingsContentMetrics(1000.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsColorRowLayout({0.0f, 0.0f, 640.0f, 100.0f}, LegacyMetrics, false).m_ConsumedHeight, LegacyMetrics.m_RowStep);
+		EXPECT_FLOAT_EQ(ResolveSettingsColorRowLayout({0.0f, 0.0f, 1000.0f, 100.0f}, NewMetrics, false).m_ConsumedHeight, NewMetrics.m_RowStep);
 	}
 
 	TEST(SettingsPageLayout, QmHudDynamicCardsMatchEveryVisibleState)

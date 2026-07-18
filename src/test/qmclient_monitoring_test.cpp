@@ -1810,6 +1810,20 @@ TEST(QmMonitoringHelpers, SettingsTextColdStartAvoidsGlobalLanguageCacheAndCache
 		EXPECT_NE(Source.find("DoSettingsButton_CheckBox(SETTINGS_GRAPHICS"), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsButton_CheckBox(SETTINGS_SOUND"), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsButton_CheckBox(SETTINGS_DDNET"), std::string::npos);
+		const size_t NewShellMetrics = Source.find("m_SettingsContentMetrics = ResolveSettingsContentMetrics(Shell.m_ContentRect.w);");
+		const size_t LegacyShellSplit = Source.find("MainView.VSplitRight(TabBarWidth, &MainView, &TabBar);");
+		const size_t LegacyShellMargin = Source.find("MainView.Margin(std::clamp(MainView.w * 0.02f, 12.0f, 20.0f), &MainView);");
+		const size_t LegacyShellMetrics = Source.find("m_SettingsContentMetrics = ResolveSettingsContentMetrics(MainView.w);");
+		const size_t FirstPageRender = Source.find("if(g_Config.m_UiSettingsPage == SETTINGS_GENERAL)");
+		ASSERT_NE(NewShellMetrics, std::string::npos);
+		ASSERT_NE(LegacyShellSplit, std::string::npos);
+		ASSERT_NE(LegacyShellMargin, std::string::npos);
+		ASSERT_NE(LegacyShellMetrics, std::string::npos);
+		ASSERT_NE(FirstPageRender, std::string::npos);
+		EXPECT_LT(NewShellMetrics, LegacyShellSplit);
+		EXPECT_LT(LegacyShellSplit, LegacyShellMargin);
+		EXPECT_LT(LegacyShellMargin, LegacyShellMetrics);
+		EXPECT_LT(LegacyShellMetrics, FirstPageRender);
 	}
 	{
 		std::ifstream File(TestSourcePath("src/game/client/components/menus.cpp"));
@@ -1820,10 +1834,12 @@ TEST(QmMonitoringHelpers, SettingsTextColdStartAvoidsGlobalLanguageCacheAndCache
 
 		EXPECT_NE(Source.find("int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)"), std::string::npos);
 		EXPECT_NE(Source.find("int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)"), std::string::npos);
-		EXPECT_NE(Source.find("const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : std::clamp(ui_token::font::BODY * SettingsPageUiScale(0.0f), 10.0f, ui_token::font::BODY);"), std::string::npos);
+		EXPECT_NE(Source.find("const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : CurrentSettingsContentMetrics().m_BodySize;"), std::string::npos);
+		EXPECT_EQ(Source.find("SettingsPageUiScale(0.0f)"), std::string::npos);
 		EXPECT_EQ(Source.find("SettingsPageUiScale(pRect->w)"), std::string::npos);
 		EXPECT_NE(Source.find("ResolveSettingsCheckboxFontSize(BodySize, RequestedFontSize, pRect->h, Box.h, CUi::ms_FontmodHeight)"), std::string::npos);
 		EXPECT_NE(Source.find("Props.m_MinimumFontSize = FontSize * 0.7f;"), std::string::npos);
+		EXPECT_NE(Source.find("return m_SettingsContentMetrics;"), std::string::npos);
 		EXPECT_NE(Source.find("const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);"), std::string::npos);
 		EXPECT_NE(Source.find("CUIElement &LabelElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);"), std::string::npos);
 		EXPECT_NE(Source.find("DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? \"X\" : \"\", pRect, BUTTONFLAG_LEFT, &LabelElement, ProcessInput, FontSize);"), std::string::npos);
@@ -6701,12 +6717,14 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("DrawState.m_DropFeedback"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_ReflowCompleteFeedback"), std::string::npos);
 	EXPECT_NE(Source.find("const bool InteractionComplete = DrawState.m_DropFeedback;"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_Focused)"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused)"), std::string::npos);
+	EXPECT_EQ(Source.find("PointInRect(DrawRect"), std::string::npos);
 	EXPECT_NE(Source.find("const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
 	EXPECT_NE(Source.find("BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("if(DrawInteractionBorder)"), std::string::npos);
 	EXPECT_NE(Source.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);"), std::string::npos);
 	EXPECT_NE(Source.find("IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd)"), std::string::npos);
 	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
@@ -7111,6 +7129,7 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Source.find("SettingsCardDeckAutoScrollDelta("), std::string::npos);
 	EXPECT_NE(Source.find("CommitSettingsCardDeckDrop("), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCard("), std::string::npos);
+	EXPECT_NE(Source.find("bool PointerInsideCurrentFrame = false;"), std::string::npos);
 	EXPECT_NE(Header.find("std::string m_PendingRevealStableId"), std::string::npos);
 	EXPECT_EQ(Header.find("m_ReflowCompleteFeedbackRemaining"), std::string::npos);
 	EXPECT_NE(Header.find("m_CollapsedInitialized"), std::string::npos);

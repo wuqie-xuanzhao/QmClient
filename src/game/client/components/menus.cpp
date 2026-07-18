@@ -1256,9 +1256,10 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 
 int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, const bool ProcessInput, const float RequestedFontSize)
 {
+	const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : CurrentSettingsContentMetrics().m_BodySize;
 	if(pTextId == nullptr)
 	{
-		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, ProcessInput);
+		return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, nullptr, ProcessInput, BodySize);
 	}
 	CUIRect Box, Label;
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
@@ -1267,7 +1268,6 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	SLabelProperties Props = LabelProps;
 	Props.m_MaxWidth = Label.w;
 	const bool AutoMinimumFontSize = Props.m_MinimumFontSize <= 0.0f;
-	const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : std::clamp(ui_token::font::BODY * SettingsPageUiScale(0.0f), 10.0f, ui_token::font::BODY);
 	const float FontSize = ResolveSettingsCheckboxFontSize(BodySize, RequestedFontSize, pRect->h, Box.h, CUi::ms_FontmodHeight);
 	if(AutoMinimumFontSize)
 		Props.m_MinimumFontSize = FontSize * 0.7f;
@@ -1339,7 +1339,7 @@ void CMenus::DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTex
 int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding, const ColorRGBA &Color, float FontFactor, float BodySize)
 {
 	dbg_assert(pBC != nullptr, "settings menu button requires a stable button container");
-	const float ResolvedBodySize = BodySize > 0.0f ? BodySize : std::clamp(ui_token::font::BODY * SettingsPageUiScale(0.0f), 10.0f, ui_token::font::BODY);
+	const float ResolvedBodySize = BodySize > 0.0f ? BodySize : CurrentSettingsContentMetrics().m_BodySize;
 	if(pTextId == nullptr)
 	{
 		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, nullptr, ResolvedBodySize);
@@ -1355,6 +1355,11 @@ int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContaine
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
 	return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement, ResolvedBodySize);
+}
+
+int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SSettingsContentMetrics &Metrics, int Flags, int Corners, float Rounding, const ColorRGBA &Color, float FontFactor)
+{
+	return DoSettingsButton_Menu(Page, Tab, Subtab, pBC, pTextId, pText, Checked, pRect, Flags, Corners, Rounding, Color, FontFactor, Metrics.m_BodySize);
 }
 
 bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
@@ -1391,7 +1396,7 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	Options.m_pScale = pScale;
 	Options.m_Flags = Flags;
 	Options.m_pMaxText = pMaxText;
-	Options.m_FontSize = std::min(std::clamp(ui_token::font::BODY * SettingsPageUiScale(0.0f), 10.0f, ui_token::font::BODY), pRect->h * CUi::ms_FontmodHeight * 0.8f);
+	Options.m_FontSize = std::min(CurrentSettingsContentMetrics().m_BodySize, pRect->h * CUi::ms_FontmodHeight * 0.8f);
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 	if(PrepareSettingsNumericFieldLabel(Page, Tab, Subtab, pTextId, *pRect, pStr, Flags, Options))
@@ -1544,41 +1549,42 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 	return Pressed;
 }
 
-ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float LineSize, const float LabelSize, const float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha)
+ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha)
 {
-	CUIRect Section, ColorPickerButton, ResetButton, Label;
-
-	pMainRect->HSplitTop(LineSize, &Section, pMainRect);
-	pMainRect->HSplitTop(BottomMargin, nullptr, pMainRect);
-
-	Section.VSplitRight(60.0f, &Section, &ResetButton);
-	Section.VSplitRight(8.0f, &Section, nullptr);
-	Section.VSplitRight(Section.h, &Section, &ColorPickerButton);
-	Section.VSplitRight(8.0f, &Label, nullptr);
+	const SSettingsColorRowLayout Layout = ResolveSettingsColorRowLayout(*pMainRect, Metrics, CheckBoxSpacing && pCheckBoxValue == nullptr);
+	pMainRect->y += Layout.m_ConsumedHeight;
+	pMainRect->h = std::max(0.0f, pMainRect->h - Layout.m_ConsumedHeight);
+	CUIRect Label = Layout.m_LabelRect;
 
 	if(pCheckBoxValue != nullptr)
 	{
-		Label.Margin(2.0f, &Label);
-		if(DoButton_CheckBox(pCheckBoxValue, pText, *pCheckBoxValue, &Label))
+		if(DoButton_CheckBox(pCheckBoxValue, pText, *pCheckBoxValue, &Label, Metrics.m_BodySize))
 			*pCheckBoxValue ^= 1;
-	}
-	else if(CheckBoxSpacing)
-	{
-		Label.VSplitLeft(Label.h + 5.0f, nullptr, &Label);
 	}
 	if(pCheckBoxValue == nullptr)
 	{
-		Ui()->DoLabel(&Label, pText, LabelSize, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, pText, Metrics.m_BodySize, TEXTALIGN_ML);
 	}
 
-	const ColorHSLA PickedColor = DoButton_ColorPicker(&ColorPickerButton, pColorValue, Alpha);
+	const ColorHSLA PickedColor = DoButton_ColorPicker(&Layout.m_ColorButtonRect, pColorValue, Alpha);
 
-	if(DoButton_Menu(pResetId, Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.1f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), nullptr, LabelSize))
+	if(DoButton_Menu(pResetId, Localize("Reset"), 0, &Layout.m_ResetButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.1f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), nullptr, Metrics.m_BodySize))
 	{
 		*pColorValue = color_cast<ColorHSLA>(DefaultColor).Pack(Alpha);
 	}
 
 	return PickedColor;
+}
+
+ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float LineSize, const float LabelSize, const float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha)
+{
+	SSettingsContentMetrics Metrics;
+	Metrics.m_UiScale = std::clamp(LineSize / ui_token::settings::ROW_HEIGHT, 0.5f, 1.5f);
+	Metrics.m_LineHeight = std::max(0.0f, LineSize);
+	Metrics.m_ButtonHeight = std::max(0.0f, LineSize);
+	Metrics.m_BodySize = std::max(0.0f, LabelSize);
+	Metrics.m_LineSpacing = std::max(0.0f, BottomMargin);
+	return DoLine_ColorPicker(pResetId, Metrics, pMainRect, pText, pColorValue, DefaultColor, CheckBoxSpacing, pCheckBoxValue, Alpha);
 }
 
 ColorHSLA CMenus::DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHslaColor, bool Alpha)
@@ -1625,9 +1631,9 @@ int CMenus::DoButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTex
 	return Logic;
 }
 
-int CMenus::DoButton_CheckBox(const void *pId, const char *pText, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_CheckBox(const void *pId, const char *pText, int Checked, const CUIRect *pRect, const float BodySize)
 {
-	return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT);
+	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, nullptr, true, BodySize);
 }
 
 int CMenus::DoButton_CheckBox_Number(const void *pId, const char *pText, int Checked, const CUIRect *pRect)
@@ -4728,6 +4734,11 @@ CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
 float CMenus::SettingsPageUiScale(float ContentWidth) const
 {
 	return m_SettingsShellLayoutValid ? m_SettingsShellLayout.m_UiScale : ResolveSettingsUiScale(ContentWidth);
+}
+
+SSettingsContentMetrics CMenus::CurrentSettingsContentMetrics() const
+{
+	return m_SettingsContentMetrics;
 }
 
 SSettingsPageLayoutFrame CMenus::SettingsPageLayout(const CUIRect &ContentView, float UiScale) const

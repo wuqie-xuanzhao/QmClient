@@ -90,22 +90,24 @@ namespace
 
 }
 
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction, const FSettingsCardRenderMeasured &RenderMeasured)
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction, const FSettingsCardRenderMeasured &RenderMeasured, bool *pPointerInside)
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * UiScale);
 	const float ContentHeight = Measure ? std::max(0.0f, Measure(ContentWidth)) : 0.0f;
 	const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, Spec, ContentHeight, UiScale);
-	return SettingsCard(Ctx, Frame, Spec, State, VisualOptions, Render, HeaderAction, RenderMeasured);
+	return SettingsCard(Ctx, Frame, Spec, State, VisualOptions, Render, HeaderAction, RenderMeasured, pPointerInside);
 }
 
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction, const FSettingsCardRenderMeasured &RenderMeasured)
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction, const FSettingsCardRenderMeasured &RenderMeasured, bool *pPointerInside)
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	SSettingsCardVisualState DrawState = State;
 	SSettingsCardFrame DrawFrame = Frame;
 	OffsetSettingsCardFrame(DrawFrame, State.m_DrawOffsetX, State.m_DrawOffsetY);
 	DrawState.m_PointerInside = Ctx.m_pUi != nullptr && Ctx.m_pUi->MouseHovered(&DrawFrame.m_Rect);
+	if(pPointerInside != nullptr)
+		*pPointerInside = DrawState.m_PointerInside;
 	DrawState.m_Hovered = State.m_HoverFeedbackEnabled && DrawState.m_PointerInside;
 
 	SUiTheme Fallback;
@@ -116,6 +118,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
 	// 否则半透明卡片在展开、折叠或首次布局时会表现为一次亮闪。
 	const bool InteractionComplete = DrawState.m_DropFeedback;
+	const bool DrawInteractionBorder = SettingsCardInteractionBorderVisible(DrawState);
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      Theme.m_Border;
 	Border.a *= DrawState.m_DrawAlpha;
@@ -126,7 +129,10 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	if(DrawCardChrome)
 	{
 		BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
-		DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);
+		// 静止态只绘制一次带抗锯齿的圆角 Surface。若再叠加默认圆角描边，
+		// Surface 的外沿抗锯齿会与描边混合成双层阴影。描边仅用于明确交互状态。
+		if(DrawInteractionBorder)
+			DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);
 	}
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
@@ -145,7 +151,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		TitleProps.m_EllipsisAtEnd = true;
 		Ctx.m_pUi->DoLabel(&DrawFrame.m_TitleRect, Spec.m_pTitle != nullptr ? Spec.m_pTitle : "", ui_token::font::TITLE * UiScale, TEXTALIGN_ML, TitleProps);
 		const char *pSubtitle = Spec.m_pSubtitle;
-		if(pSubtitle != nullptr && SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_Focused))
+		if(pSubtitle != nullptr && SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused))
 		{
 			ColorRGBA SubtitleColor = Theme.m_TextSmall;
 			SubtitleColor.a *= DrawState.m_DrawAlpha;

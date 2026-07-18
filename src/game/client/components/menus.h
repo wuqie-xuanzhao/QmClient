@@ -116,7 +116,7 @@ public:
 	ColorRGBA SettingsTabbarColor(float AlphaScale = 1.0f) const;
 
 	int DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, unsigned Flags, bool ProcessInput = true);
-	int DoButton_CheckBox(const void *pId, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_CheckBox(const void *pId, const char *pText, int Checked, const CUIRect *pRect, float BodySize = -1.0f);
 	int DoButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pText, int *pValue, CUIRect *pRect, float VMargin);
 	int DoButton_CheckBox_Number(const void *pId, const char *pText, int Checked, const CUIRect *pRect);
 
@@ -149,6 +149,7 @@ private:
 	int DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float RowHeight, float RowSpacing, float BodySize);
 
 	CUi::SColorPickerPopupContext m_ColorPickerPopupContext;
+	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false);
 	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, float LineSize, float LabelSize, float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false);
 	ColorHSLA DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHslaColor, bool Alpha);
 	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, float LineHeight = ui_token::settings::ROW_HEIGHT, float LineSpacing = ui_token::settings::ROW_GAP, float BodySize = ui_token::font::BODY);
@@ -2421,6 +2422,7 @@ public:
 	void DoSettingsLabel(int Page, int Tab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, bool Render = true);
 	void DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &Props = {}, int MaxWidth = -1);
 	int DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), float FontFactor = 0.0f, float BodySize = -1.0f);
+	int DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SSettingsContentMetrics &Metrics, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), float FontFactor = 0.0f);
 	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
 	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps);
 	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, bool ProcessInput, float RequestedFontSize = -1.0f);
@@ -2619,6 +2621,7 @@ private:
 	SQmSettingsCardStyle QmSettingsCardStyle(float UiScale) const;
 	CScrollRegionParams QmSettingsScrollRegionParams(float UiScale) const;
 	float SettingsPageUiScale(float ContentWidth) const;
+	SSettingsContentMetrics CurrentSettingsContentMetrics() const;
 	SSettingsPageLayoutFrame SettingsPageLayout(const CUIRect &ContentView, float UiScale) const;
 	bool SetSettingsPageFromCardTab(const char *pTab);
 	void NavigateToSettingsCard(const qm_card_registry::SCardNavigationTarget &Target);
@@ -2716,6 +2719,7 @@ private:
 	uint64_t m_SettingsCardDeckDisplayCycle = 0;
 	bool m_HasSettingsCardDeckDisplayKey = false;
 	SSettingsShellLayoutFrame m_SettingsShellLayout;
+	SSettingsContentMetrics m_SettingsContentMetrics;
 	bool m_SettingsShellLayoutValid = false;
 
 	CCommunityIcons m_CommunityIcons;

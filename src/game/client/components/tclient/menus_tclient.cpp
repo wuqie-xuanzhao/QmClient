@@ -1454,7 +1454,7 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 		s_LastInput.SetEmptyText(Localize("You're the last one!"));
 		ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 		static CButtonContainer s_ClientNotifyWhenLastColor;
-		DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, LineSize, ColorPickerLabelSize, 0.0f, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+		DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, CurrentSettingsContentMetrics(), &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 		Button = Rows.Next();
 		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-x", &g_Config.m_TcNotifyWhenLastX, &g_Config.m_TcNotifyWhenLastX, &Button, Localize("Horizontal position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 		Button = Rows.Next();
@@ -1475,7 +1475,7 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 	if(Render && g_Config.m_TcShowCenter)
 	{
 		static CButtonContainer s_ShowCenterLineColor;
-		DoLine_ColorPicker(&s_ShowCenterLineColor, LineSize, ColorPickerLabelSize, 0.0f, &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
+		DoLine_ColorPicker(&s_ShowCenterLineColor, CurrentSettingsContentMetrics(), &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
 		Button = Rows.Next();
 		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-center-line-width", &g_Config.m_TcShowCenterWidth, &g_Config.m_TcShowCenterWidth, &Button, Localize("Screen center line width"), 0, 20);
 	}
@@ -2595,9 +2595,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				{
 					CPerfTimer ColorsTimer;
 					static CButtonContainer s_IndicatorAliveColorId, s_IndicatorDeadColorId, s_IndicatorSavedColorId;
-					DoLine_ColorPicker(&s_IndicatorAliveColorId, LineSize, ColorPickerLabelSize, 0.0f, &AliveColorRow, Localize("Indicator alive color"), &g_Config.m_TcIndicatorAlive, ColorRGBA(0.0f, 0.0f, 0.0f), false);
-					DoLine_ColorPicker(&s_IndicatorDeadColorId, LineSize, ColorPickerLabelSize, 0.0f, &FreezeColorRow, Localize("Indicator in freeze color"), &g_Config.m_TcIndicatorFreeze, ColorRGBA(0.0f, 0.0f, 0.0f), false);
-					DoLine_ColorPicker(&s_IndicatorSavedColorId, LineSize, ColorPickerLabelSize, 0.0f, &SavedColorRow, Localize("Indicator safe color"), &g_Config.m_TcIndicatorSaved, ColorRGBA(0.0f, 0.0f, 0.0f), false);
+					DoLine_ColorPicker(&s_IndicatorAliveColorId, CurrentSettingsContentMetrics(), &AliveColorRow, Localize("Indicator alive color"), &g_Config.m_TcIndicatorAlive, ColorRGBA(0.0f, 0.0f, 0.0f), false);
+					DoLine_ColorPicker(&s_IndicatorDeadColorId, CurrentSettingsContentMetrics(), &FreezeColorRow, Localize("Indicator in freeze color"), &g_Config.m_TcIndicatorFreeze, ColorRGBA(0.0f, 0.0f, 0.0f), false);
+					DoLine_ColorPicker(&s_IndicatorSavedColorId, CurrentSettingsContentMetrics(), &SavedColorRow, Localize("Indicator safe color"), &g_Config.m_TcIndicatorSaved, ColorRGBA(0.0f, 0.0f, 0.0f), false);
 					LogSettingsStage("tclient_settings_left_player_indicator_colors", ColorsTimer);
 				}
 			}
@@ -2859,7 +2859,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					Button.HSplitTop(MarginSmall, nullptr, &Button);
 					ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 					static CButtonContainer s_ClientNotifyWhenLastColor;
-					DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+					DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, CurrentSettingsContentMetrics(), &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
 					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-x", &g_Config.m_TcNotifyWhenLastX, &g_Config.m_TcNotifyWhenLastX, &Button, Localize("Horizontal position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -2893,7 +2893,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				if(g_Config.m_TcShowCenter)
 				{
 					static CButtonContainer s_ShowCenterLineColor;
-					DoLine_ColorPicker(&s_ShowCenterLineColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
+					DoLine_ColorPicker(&s_ShowCenterLineColor, CurrentSettingsContentMetrics(), &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
 					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
 					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-center-line-width", &g_Config.m_TcShowCenterWidth, &g_Config.m_TcShowCenterWidth, &Button, Localize("Screen center line width"), 0, 20);
 				}
@@ -2941,7 +2941,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				Button.HSplitTop(MarginSmall, nullptr, &Button);
 				ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 				static CButtonContainer s_ClientNotifyWhenLastColor;
-				DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, CurrentSettingsContentMetrics(), &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
 				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-x", &g_Config.m_TcNotifyWhenLastX, &g_Config.m_TcNotifyWhenLastX, &Button, Localize("Horizontal position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -2959,7 +2959,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			if(g_Config.m_TcShowCenter)
 			{
 				static CButtonContainer s_ShowCenterLineColor;
-				DoLine_ColorPicker(&s_ShowCenterLineColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
+				DoLine_ColorPicker(&s_ShowCenterLineColor, CurrentSettingsContentMetrics(), &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
 				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
 				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-center-line-width", &g_Config.m_TcShowCenterWidth, &g_Config.m_TcShowCenterWidth, &Button, Localize("Screen center line width"), 0, 20);
 			}
@@ -3052,7 +3052,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				if(RenderRows)
 				{
 					CPerfTimer OutlineTypeTimer;
-					DoLine_ColorPicker(&ButtonContainer, LineSize, ColorPickerLabelSize, 0.0f, &ColorRow, pName, &Color, ColorDefault, true, &Enable, true);
+					DoLine_ColorPicker(&ButtonContainer, CurrentSettingsContentMetrics(), &ColorRow, pName, &Color, ColorDefault, true, &Enable, true);
 					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-outline-width", &Width, &Width, &WidthRow, Localize("Width", "Outlines"), 1, 16);
 					LogSettingsStage(pStage, OutlineTypeTimer);
 				}
@@ -3069,7 +3069,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				if(RenderColorRow)
 				{
 					CPerfTimer DeepFreezeTimer;
-					DoLine_ColorPicker(&s_OutlineDeepFreezeColorId, LineSize, ColorPickerLabelSize, 0.0f, &ColorRow, Localize("Deep freeze color"), &g_Config.m_TcOutlineColorDeepFreeze, DefaultConfig::TcOutlineColorDeepFreeze, false, nullptr, true);
+					DoLine_ColorPicker(&s_OutlineDeepFreezeColorId, CurrentSettingsContentMetrics(), &ColorRow, Localize("Deep freeze color"), &g_Config.m_TcOutlineColorDeepFreeze, DefaultConfig::TcOutlineColorDeepFreeze, false, nullptr, true);
 					LogSettingsStage("tclient_settings_right_tile_outlines_deepfreeze_color", DeepFreezeTimer);
 				}
 			}
@@ -3080,7 +3080,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				if(RenderColorRow)
 				{
 					CPerfTimer DeepUnfreezeTimer;
-					DoLine_ColorPicker(&s_OutlineDeepUnfreezeColorId, LineSize, ColorPickerLabelSize, 0.0f, &ColorRow, Localize("Deep unfreeze color"), &g_Config.m_TcOutlineColorDeepUnfreeze, DefaultConfig::TcOutlineColorDeepUnfreeze, false, nullptr, true);
+					DoLine_ColorPicker(&s_OutlineDeepUnfreezeColorId, CurrentSettingsContentMetrics(), &ColorRow, Localize("Deep unfreeze color"), &g_Config.m_TcOutlineColorDeepUnfreeze, DefaultConfig::TcOutlineColorDeepUnfreeze, false, nullptr, true);
 					LogSettingsStage("tclient_settings_right_tile_outlines_deepunfreeze_color", DeepUnfreezeTimer);
 				}
 			}
@@ -3212,7 +3212,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			{
 				CPerfTimer ColorTimer;
 				static CButtonContainer s_TeeTrailColor;
-				DoLine_ColorPicker(&s_TeeTrailColor, LineSize, ColorPickerLabelSize, 0.0f, &ColorRow, Localize("Tee trail color"), &g_Config.m_TcTeeTrailColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_TeeTrailColor, CurrentSettingsContentMetrics(), &ColorRow, Localize("Tee trail color"), &g_Config.m_TcTeeTrailColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 				LogSettingsStage("tclient_settings_right_tee_trails_color", ColorTimer);
 			}
 			CUIRect WidthRow = Rows.Next();
@@ -3242,7 +3242,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect ColorRow = Rows.Next();
 			static CButtonContainer s_BgDrawColor;
 			if(Render)
-				DoLine_ColorPicker(&s_BgDrawColor, LineSize, ColorPickerLabelSize, 0.0f, &ColorRow, Localize("Color"), &g_Config.m_TcBgDrawColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_BgDrawColor, CurrentSettingsContentMetrics(), &ColorRow, Localize("Color"), &g_Config.m_TcBgDrawColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 
 			Button = Rows.Next();
 			if(Render)
@@ -4325,7 +4325,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		static unsigned int s_ColorValue = 0;
 		s_ColorValue = color_cast<ColorHSLA>(s_GroupColor).Pack(false);
 		if(!ReadOnly)
-			s_GroupColor = color_cast<ColorRGBA>(DoLine_ColorPicker(&s_GroupColorPicker, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Column, Localize("Color"), &s_ColorValue, ColorRGBA(1.0f, 1.0f, 1.0f), true));
+			s_GroupColor = color_cast<ColorRGBA>(DoLine_ColorPicker(&s_GroupColorPicker, CurrentSettingsContentMetrics(), &Column, Localize("Color"), &s_ColorValue, ColorRGBA(1.0f, 1.0f, 1.0f), true));
 		else
 			Column.HSplitTop(ColorPickerLineSize + ColorPickerLineSpacing, nullptr, &Column);
 
@@ -4727,9 +4727,9 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		{
 			static CButtonContainer s_StatusbarColor, s_StatusbarTextColor;
 			CUIRect ColorRow = Rows.Next(ColorPickerLineSize);
-			DoLine_ColorPicker(&s_StatusbarColor, ColorPickerLineSize, ColorPickerLabelSize, 0.0f, &ColorRow, Localize("Status bar color"), &g_Config.m_TcStatusBarColor, ColorRGBA(0.0f, 0.0f, 0.0f), false);
+			DoLine_ColorPicker(&s_StatusbarColor, CurrentSettingsContentMetrics(), &ColorRow, Localize("Status bar color"), &g_Config.m_TcStatusBarColor, ColorRGBA(0.0f, 0.0f, 0.0f), false);
 			ColorRow = Rows.Next(ColorPickerLineSize);
-			DoLine_ColorPicker(&s_StatusbarTextColor, ColorPickerLineSize, ColorPickerLabelSize, 0.0f, &ColorRow, Localize("Text color"), &g_Config.m_TcStatusBarTextColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+			DoLine_ColorPicker(&s_StatusbarTextColor, CurrentSettingsContentMetrics(), &ColorRow, Localize("Text color"), &g_Config.m_TcStatusBarTextColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 		}
 		else
 		{
@@ -6480,7 +6480,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 					}
 				}
 
-				DoLine_ColorPicker(&ResetId, ColorPickerLineSize, ColorPickerLabelSize, 0.0f, &ColorRect, "", &ColState.m_Working, DefaultColor, false, nullptr, pCol->m_Alpha);
+				DoLine_ColorPicker(&ResetId, CurrentSettingsContentMetrics(), &ColorRect, "", &ColState.m_Working, DefaultColor, false, nullptr, pCol->m_Alpha);
 				if(ColState.m_Working != Effective)
 				{
 					if(ColState.m_Working == *pCol->m_pVariable)

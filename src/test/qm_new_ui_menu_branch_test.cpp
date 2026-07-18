@@ -2684,8 +2684,10 @@ TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
 	EXPECT_NE(SelectionReset.find("m_ActiveIndex = -1;"), std::string::npos);
 	EXPECT_NE(PopupButton.find("ButtonColor.has_value() || !TransparentInactive"), std::string::npos);
 	EXPECT_NE(PopupSelection.find("const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("ActiveEntry ? std::optional<ColorRGBA>(ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f)) : std::nullopt"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("pSelectionPopup->m_TransparentButtons, true, ButtonColor"), std::string::npos);
+	EXPECT_EQ(PopupSelection.find("ActiveEntry ? std::optional<ColorRGBA>"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("if(ActiveEntry)"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("Accent.VSplitLeft(2.0f"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("pSelectionPopup->m_TransparentButtons, true)"), std::string::npos);
 	const size_t UpdateResult = DoDropDown.find("const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);");
 	const size_t ActiveIndexSync = DoDropDown.find("State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();");
 	const size_t PopupRender = DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);");

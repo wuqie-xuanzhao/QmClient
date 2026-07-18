@@ -95,6 +95,10 @@ void CSettingsCardDeck::BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEnt
 			Runtime.m_ContentHeightInitialized = false;
 			Runtime.m_ContentHeightWasActive = false;
 			Runtime.m_CollapsedInitialized = false;
+			Runtime.m_PointerInsideLastFrame = false;
+			Runtime.m_SubtitleMotionWasActive = false;
+			Runtime.m_SubtitleVisibleDuringMotion = false;
+			Runtime.m_MotionGeometryInitialized = false;
 		}
 	}
 	m_DisplayCycle = DisplayCycle;
@@ -125,6 +129,10 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			Runtime.m_ContentHeightInitialized = false;
 			Runtime.m_ContentHeightWasActive = false;
 			Runtime.m_CollapsedInitialized = false;
+			Runtime.m_PointerInsideLastFrame = false;
+			Runtime.m_SubtitleMotionWasActive = false;
+			Runtime.m_SubtitleVisibleDuringMotion = false;
+			Runtime.m_MotionGeometryInitialized = false;
 		}
 	}
 
@@ -513,6 +521,12 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			}
 			Runtime.m_LastReflowTargetY = ReflowTargetY;
 		}
+		const float MotionY = Card.m_Frame.m_Rect.y + State.m_DrawOffsetY;
+		const float MotionHeight = Card.m_Frame.m_Rect.h;
+		const bool GeometryMotionActive = SettingsCardDeckGeometryMoved(Runtime.m_MotionGeometryInitialized, Runtime.m_LastMotionY, Runtime.m_LastMotionHeight, MotionY, MotionHeight);
+		Runtime.m_MotionGeometryInitialized = true;
+		Runtime.m_LastMotionY = MotionY;
+		Runtime.m_LastMotionHeight = MotionHeight;
 		State.m_Dragged = m_Drag.Active() && Card.m_StateIndex == m_Drag.m_StateIndex;
 		if(State.m_Dragged)
 		{
@@ -521,6 +535,10 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		}
 		State.m_DropFeedback = Runtime.m_DropFeedbackRemaining > 0.0f;
 		State.m_ReflowCompleteFeedback = false;
+		const bool SubtitleMotionActive = EntryPositionActive || Runtime.m_ReflowWasActive || Card.m_ContentHeightAnimationActive || GeometryMotionActive;
+		Runtime.m_SubtitleVisibleDuringMotion = ResolveSettingsCardSubtitleMotionLatch(Runtime.m_PointerInsideLastFrame, SubtitleMotionActive, Runtime.m_SubtitleMotionWasActive, Runtime.m_SubtitleVisibleDuringMotion);
+		Runtime.m_SubtitleMotionWasActive = SubtitleMotionActive;
+		State.m_SubtitleVisibleDuringMotion = Runtime.m_SubtitleVisibleDuringMotion;
 		Result.m_DropFeedbackConsumed = Result.m_DropFeedbackConsumed || State.m_DropFeedback;
 		const bool Reveal = !m_PendingRevealStableId.empty() && str_comp(pStableId, m_PendingRevealStableId.c_str()) == 0;
 		const bool Visible = pScrollRegion == nullptr || pScrollRegion->AddRect(Card.m_Frame.m_Rect, Reveal);
@@ -535,10 +553,14 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			State.m_Collapsed = Collapsed;
 			State.m_HoverFeedbackEnabled = !m_SuppressHoverFeedbackOnce && !ScrollMovedThisFrame && !EntryPositionActive &&
 						       !ContentHeightAnimationActive && !ReflowTargetChanged && !ReflowPositionActive;
+			bool PointerInsideCurrentFrame = false;
 			SettingsCard(Ctx, Card.m_Frame, Card.m_pDefinition->m_Spec, State, VisualOptions,
 				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_Render : FSettingsCardRender{}, Card.m_pDefinition->m_HeaderAction,
-				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_RenderMeasured : FSettingsCardRenderMeasured{});
+				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_RenderMeasured : FSettingsCardRenderMeasured{}, &PointerInsideCurrentFrame);
+			Runtime.m_PointerInsideLastFrame = PointerInsideCurrentFrame;
 		}
+		else
+			Runtime.m_PointerInsideLastFrame = false;
 	}
 
 	if(pScrollRegion != nullptr)

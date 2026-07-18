@@ -924,11 +924,11 @@ void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHe
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	static CButtonContainer s_FreezeColorId;
-	DoLine_ColorPicker(&s_FreezeColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Freeze border color"), &g_Config.m_QmHitboxColorFreeze, ColorRGBA(1.0f, 0.0f, 1.0f), false);
+	DoLine_ColorPicker(&s_FreezeColorId, CurrentSettingsContentMetrics(), &Content, Localize("Freeze border color"), &g_Config.m_QmHitboxColorFreeze, ColorRGBA(1.0f, 0.0f, 1.0f), false);
 	static CButtonContainer s_TeeColorId;
-	DoLine_ColorPicker(&s_TeeColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Tee hitbox color"), &g_Config.m_QmHitboxColorTee, ColorRGBA(0.0f, 1.0f, 1.0f), false);
+	DoLine_ColorPicker(&s_TeeColorId, CurrentSettingsContentMetrics(), &Content, Localize("Tee hitbox color"), &g_Config.m_QmHitboxColorTee, ColorRGBA(0.0f, 1.0f, 1.0f), false);
 	static CButtonContainer s_WeaponColorId;
-	DoLine_ColorPicker(&s_WeaponColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Weapon range color"), &g_Config.m_QmHitboxColorWeapon, ColorRGBA(1.0f, 1.0f, 0.0f), false);
+	DoLine_ColorPicker(&s_WeaponColorId, CurrentSettingsContentMetrics(), &Content, Localize("Weapon range color"), &g_Config.m_QmHitboxColorWeapon, ColorRGBA(1.0f, 1.0f, 0.0f), false);
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
@@ -1040,8 +1040,8 @@ void CMenus::RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight,
 
 	static CButtonContainer s_ChatBubbleBgColorId;
 	static CButtonContainer s_ChatBubbleTextColorId;
-	DoLine_ColorPicker(&s_ChatBubbleBgColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Background color"), &g_Config.m_QmChatBubbleBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.8f), false, nullptr, true);
-	DoLine_ColorPicker(&s_ChatBubbleTextColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Text color"), &g_Config.m_QmChatBubbleTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
+	DoLine_ColorPicker(&s_ChatBubbleBgColorId, CurrentSettingsContentMetrics(), &Content, Localize("Background color"), &g_Config.m_QmChatBubbleBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.8f), false, nullptr, true);
+	DoLine_ColorPicker(&s_ChatBubbleTextColorId, CurrentSettingsContentMetrics(), &Content, Localize("Text color"), &g_Config.m_QmChatBubbleTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 }
 
 void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
@@ -1756,7 +1756,7 @@ void CMenus::RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight,
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	static CButtonContainer s_QmJumpHintColorId;
-	DoLine_ColorPicker(&s_QmJumpHintColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Text color"), &g_Config.m_QmJumpHintColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
+	DoLine_ColorPicker(&s_QmJumpHintColorId, CurrentSettingsContentMetrics(), &Content, Localize("Text color"), &g_Config.m_QmJumpHintColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 
 	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		Content.HSplitTop(LineHeight, &Row, &Content);
@@ -1793,7 +1793,7 @@ void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float Lin
 		return;
 
 	static CButtonContainer s_WeaponTrajectoryColorId;
-	DoLine_ColorPicker(&s_WeaponTrajectoryColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Guide line color"), &g_Config.m_QmWeaponTrajectoryColor, ColorRGBA(1.0f, 0.6f, 0.2f, 1.0f), false);
+	DoLine_ColorPicker(&s_WeaponTrajectoryColorId, CurrentSettingsContentMetrics(), &Content, Localize("Guide line color"), &g_Config.m_QmWeaponTrajectoryColor, ColorRGBA(1.0f, 0.6f, 0.2f, 1.0f), false);
 	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
@@ -1899,7 +1899,7 @@ void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, 
 	};
 	RenderCheckbox(&g_Config.m_QmBlockWordsShowConsole, "Show blocked words in console", &g_Config.m_QmBlockWordsShowConsole);
 	static CButtonContainer s_BlockWordsConsoleColorId;
-	DoLine_ColorPicker(&s_BlockWordsConsoleColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Console color"), &g_Config.m_QmBlockWordsConsoleColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
+	DoLine_ColorPicker(&s_BlockWordsConsoleColorId, CurrentSettingsContentMetrics(), &Content, Localize("Console color"), &g_Config.m_QmBlockWordsConsoleColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 	RenderCheckbox(&g_Config.m_QmBlockWordsEnabled, "Enable word filter list", &g_Config.m_QmBlockWordsEnabled);
 	RenderCheckbox(&g_Config.m_QmBlockWordsMultiReplace, "Use multi-char replacement based on word length", &g_Config.m_QmBlockWordsMultiReplace);
 
@@ -3238,7 +3238,7 @@ void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight,
 	RenderQmSettingsSliderWithValueInput(&s_QmHudIslandBgOpacityInputId, ControlColumn, &g_Config.m_QmHudIslandBgOpacity, 0, 100, "%", PrewarmOnly);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	static CButtonContainer s_DynamicIslandBgColorId;
-	DoLine_ColorPicker(&s_DynamicIslandBgColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Background color"), &g_Config.m_QmHudIslandBgColor, ColorRGBA(0.04f, 0.05f, 0.07f, 1.0f), false);
+	DoLine_ColorPicker(&s_DynamicIslandBgColorId, CurrentSettingsContentMetrics(), &Content, Localize("Background color"), &g_Config.m_QmHudIslandBgColor, ColorRGBA(0.04f, 0.05f, 0.07f, 1.0f), false);
 }
 
 void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly)
@@ -3312,12 +3312,12 @@ void CMenus::RenderQmHudNotificationsAdvancedContent(CUIRect &Content, const SSe
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	static CButtonContainer s_QmHudNotificationBgColorId;
-	DoLine_ColorPicker(&s_QmHudNotificationBgColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Notification background"), &g_Config.m_QmHudNotificationsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), false, nullptr, true);
+	DoLine_ColorPicker(&s_QmHudNotificationBgColorId, Metrics, &Content, Localize("Notification background"), &g_Config.m_QmHudNotificationsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), false, nullptr, true);
 	static CButtonContainer s_QmHudNotificationTextColorId;
-	DoLine_ColorPicker(&s_QmHudNotificationTextColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("System prompt text color"), &g_Config.m_QmHudNotificationsTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_QmHudNotificationTextColorId, Metrics, &Content, Localize("System prompt text color"), &g_Config.m_QmHudNotificationsTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudNotificationsEchoInheritColor, "Echo follows the original chat color", Localize("Echo follows the original chat color"), &g_Config.m_QmHudNotificationsEchoInheritColor);
 	static CButtonContainer s_QmHudNotificationEchoTextColorId;
-	DoLine_ColorPicker(&s_QmHudNotificationEchoTextColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Echo text color when not inheriting chat color"), &g_Config.m_QmHudNotificationsEchoTextColor, ColorRGBA(0.5f, 0.78f, 1.0f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_QmHudNotificationEchoTextColorId, Metrics, &Content, Localize("Echo text color when not inheriting chat color"), &g_Config.m_QmHudNotificationsEchoTextColor, ColorRGBA(0.5f, 0.78f, 1.0f, 1.0f), false, nullptr, true);
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
@@ -3356,7 +3356,7 @@ void CMenus::RenderQmHudPlayerStatsContent(CUIRect &Content, float LineHeight, f
 		if(g_Config.m_QmPlayerStatsMapProgressStyle == 0)
 		{
 			static CButtonContainer s_MapProgressColorId;
-			DoLine_ColorPicker(&s_MapProgressColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Progress bar color"), &g_Config.m_QmPlayerStatsMapProgressColor, ColorRGBA(36.0f / 255.0f, 199.0f / 255.0f, 100.0f / 255.0f, 1.0f), false, nullptr, true);
+			DoLine_ColorPicker(&s_MapProgressColorId, CurrentSettingsContentMetrics(), &Content, Localize("Progress bar color"), &g_Config.m_QmPlayerStatsMapProgressColor, ColorRGBA(36.0f / 255.0f, 199.0f / 255.0f, 100.0f / 255.0f, 1.0f), false, nullptr, true);
 			CUIRect Row, LabelColumn, ControlColumn;
 			auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 				Content.HSplitTop(LineHeight, &Row, &Content);
@@ -3441,7 +3441,7 @@ void CMenus::RenderQmHudCoordsContent(CUIRect &Content, const SSettingsContentMe
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	static CButtonContainer s_CoordXAlignHintColorId;
-	DoLine_ColorPicker(&s_CoordXAlignHintColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("X alignment color"), &g_Config.m_QmNameplateCoordXAlignHintColor, ColorRGBA(1.0f, 0.82f, 0.2f, 1.0f), false);
+	DoLine_ColorPicker(&s_CoordXAlignHintColorId, Metrics, &Content, Localize("X alignment color"), &g_Config.m_QmNameplateCoordXAlignHintColor, ColorRGBA(1.0f, 0.82f, 0.2f, 1.0f), false);
 }
 
 void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)
@@ -4162,7 +4162,7 @@ void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsCon
 		if(g_Config.m_Qm3DParticlesColorMode == 1)
 		{
 			static CButtonContainer s_Qm3DParticleColorId;
-			DoLine_ColorPicker(&s_Qm3DParticleColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Particle color"), &g_Config.m_Qm3DParticlesColor, ColorRGBA(0.56f, 0.72f, 0.62f, 1.0f), false, nullptr, true);
+			DoLine_ColorPicker(&s_Qm3DParticleColorId, Metrics, &Content, Localize("Particle color"), &g_Config.m_Qm3DParticlesColor, ColorRGBA(0.56f, 0.72f, 0.62f, 1.0f), false, nullptr, true);
 		}
 
 		Content.HSplitTop(LineHeight, &Row, &Content);
@@ -4273,13 +4273,13 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMe
 	RenderLyricsSlider(&s_QmLyricsSnapThresholdInputId, "qmclient-lyrics-snap-threshold", Localize("Snap threshold"), &g_Config.m_QmLyricsSnapThreshold, 0, 40);
 
 	static CButtonContainer s_LyricsCurrentColorId;
-	DoLine_ColorPicker(&s_LyricsCurrentColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Current line color"), &g_Config.m_QmLyricsColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_LyricsCurrentColorId, Metrics, &Content, Localize("Current line color"), &g_Config.m_QmLyricsColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
 	static CButtonContainer s_LyricsNextColorId;
-	DoLine_ColorPicker(&s_LyricsNextColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Next line color"), &g_Config.m_QmLyricsNextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.54f), false, nullptr, true);
+	DoLine_ColorPicker(&s_LyricsNextColorId, Metrics, &Content, Localize("Next line color"), &g_Config.m_QmLyricsNextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.54f), false, nullptr, true);
 	static CButtonContainer s_LyricsBgColorId;
-	DoLine_ColorPicker(&s_LyricsBgColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Background color"), &g_Config.m_QmLyricsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_LyricsBgColorId, Metrics, &Content, Localize("Background color"), &g_Config.m_QmLyricsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
 	static CButtonContainer s_LyricsOutlineColorId;
-	DoLine_ColorPicker(&s_LyricsOutlineColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Outline color"), &g_Config.m_QmLyricsOutlineColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_LyricsOutlineColorId, Metrics, &Content, Localize("Outline color"), &g_Config.m_QmLyricsOutlineColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoFetch, "Auto fetch lyrics", Localize("Auto fetch lyrics"), &g_Config.m_QmLyricsAutoFetch, &Row, LineHeight);
@@ -4432,11 +4432,11 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMe
 	RenderLyricSlider(&s_QmLyricsCacheTtlDays, "qmclient-lyrics-cache-ttl-days", Localize("Cache TTL"), &g_Config.m_QmLyricsCacheTtlDays, 0, 3650, " d");
 
 	static CButtonContainer s_LyricsColorPlayedId;
-	DoLine_ColorPicker(&s_LyricsColorPlayedId, LineHeight, BodySize, LineSpacing, &Content, Localize("Played word color"), &g_Config.m_QmLyricsColorPlayed, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_LyricsColorPlayedId, CurrentSettingsContentMetrics(), &Content, Localize("Played word color"), &g_Config.m_QmLyricsColorPlayed, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
 	static CButtonContainer s_LyricsColorUnplayedId;
-	DoLine_ColorPicker(&s_LyricsColorUnplayedId, LineHeight, BodySize, LineSpacing, &Content, Localize("Unplayed word color"), &g_Config.m_QmLyricsColorUnplayed, ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_LyricsColorUnplayedId, CurrentSettingsContentMetrics(), &Content, Localize("Unplayed word color"), &g_Config.m_QmLyricsColorUnplayed, ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f), false, nullptr, true);
 	static CButtonContainer s_LyricsColorTranslationId;
-	DoLine_ColorPicker(&s_LyricsColorTranslationId, LineHeight, BodySize, LineSpacing, &Content, Localize("Translation color"), &g_Config.m_QmLyricsColorTranslation, ColorRGBA(0.55f, 0.55f, 0.55f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_LyricsColorTranslationId, CurrentSettingsContentMetrics(), &Content, Localize("Translation color"), &g_Config.m_QmLyricsColorTranslation, ColorRGBA(0.55f, 0.55f, 0.55f, 1.0f), false, nullptr, true);
 	CUIRect Preview;
 	const float PreviewFont = (float)g_Config.m_QmSmtcLyricsFontSize;
 	const float PreviewPaddingX = 10.0f;

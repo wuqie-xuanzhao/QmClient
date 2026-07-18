@@ -457,21 +457,24 @@ namespace
 
 bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing, int *pCheckBoxValue, float LineHeight, float LineSpacing, float BodySize)
 {
-	const float TopLineHeight = LineHeight;
 	const float ColorLineHeight = LineHeight;
 	const float BottomMargin = LineSpacing;
 	const float ColorButtonSize = LineHeight;
 	const float ColorButtonSpacing = LineSpacing;
 	const float ChangeButtonSize = LineHeight;
+	SSettingsContentMetrics Metrics;
+	Metrics.m_UiScale = std::clamp(LineHeight / ui_token::settings::ROW_HEIGHT, 0.5f, 1.5f);
+	Metrics.m_LineHeight = LineHeight;
+	Metrics.m_ButtonHeight = LineHeight;
+	Metrics.m_BodySize = BodySize;
+	Metrics.m_LineSpacing = LineSpacing;
 
 	bool Changed = false;
-	CUIRect Section, Label, ResetButton;
-	pView->HSplitTop(TopLineHeight, &Section, pView);
-	pView->HSplitTop(LineSpacing, nullptr, pView);
-
-	Section.VSplitRight(60.0f, &Section, &ResetButton);
-	Section.VSplitRight(8.0f, &Section, nullptr);
-	Label = Section;
+	const SSettingsColorRowLayout TopLayout = ResolveSettingsColorRowLayout(*pView, Metrics, CheckBoxSpacing && pCheckBoxValue == nullptr);
+	pView->y += TopLayout.m_ConsumedHeight;
+	pView->h = std::max(0.0f, pView->h - TopLayout.m_ConsumedHeight);
+	CUIRect Label = TopLayout.m_LabelRect;
+	Label.w = TopLayout.m_ColorButtonRect.x + TopLayout.m_ColorButtonRect.w - Label.x;
 
 	if(pCheckBoxValue != nullptr)
 	{
@@ -482,15 +485,10 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 			Changed = true;
 		}
 	}
-	else if(CheckBoxSpacing)
-	{
-		Label.VSplitLeft(Label.h + 5.0f, nullptr, &Label);
-	}
-
 	if(pCheckBoxValue == nullptr)
 		DoSettingsMenuLabel(SETTINGS_APPEARANCE, Tab, Tab, pLabelTextId, &Label, pLabel, BodySize, TEXTALIGN_ML);
 
-	if(DoSettingsButton_Menu(SETTINGS_APPEARANCE, Tab, Tab, pResetButton, "appearance-chat-gradient-reset", Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 4.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 0.1f))
+	if(DoSettingsButton_Menu(SETTINGS_APPEARANCE, Tab, Tab, pResetButton, "appearance-chat-gradient-reset", Localize("Reset"), 0, &TopLayout.m_ResetButtonRect, Metrics, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 4.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 0.1f))
 	{
 		*pBaseColor = color_cast<ColorHSLA>(DefaultColor).Pack(false);
 		CMessageGradient::Reset(pGradient, GradientSize);
@@ -3900,19 +3898,19 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CUIRect Button;
 			static CButtonContainer s_UiColorResetId;
 			const unsigned OldQmUiColor = g_Config.m_QmUiColor;
-			DoLine_ColorPicker(&s_UiColorResetId, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_BodySize, GraphicsMetrics.m_LineSpacing, &CardView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor)), false, nullptr, false);
+			DoLine_ColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor)), false, nullptr, false);
 			if(OldQmUiColor != g_Config.m_QmUiColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_MapBrowserColorResetId;
 			const unsigned OldQmMapBrowserColor = g_Config.m_QmMapBrowserColor;
-			DoLine_ColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_BodySize, GraphicsMetrics.m_LineSpacing, &CardView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmMapBrowserColor)), false, nullptr, false);
+			DoLine_ColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmMapBrowserColor)), false, nullptr, false);
 			if(OldQmMapBrowserColor != g_Config.m_QmMapBrowserColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_ScoreboardColorResetId;
 			const unsigned OldQmScoreboardColor = g_Config.m_QmScoreboardColor;
-			DoLine_ColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_BodySize, GraphicsMetrics.m_LineSpacing, &CardView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmScoreboardColor)), false, nullptr, false);
+			DoLine_ColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmScoreboardColor)), false, nullptr, false);
 			if(OldQmScoreboardColor != g_Config.m_QmScoreboardColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
@@ -3973,7 +3971,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			static CButtonContainer s_FocusColorResetId;
 			const unsigned OldFocusColor = g_Config.m_QmUiFocusColor;
 			CUIRect FocusColorRow = NextRow();
-			DoLine_ColorPicker(&s_FocusColorResetId, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_BodySize, 0.0f, &FocusColorRow, Localize("Focus color"), &g_Config.m_QmUiFocusColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiFocusColor)), false, nullptr, false);
+			SSettingsContentMetrics FocusColorMetrics = GraphicsMetrics;
+			FocusColorMetrics.m_LineSpacing = 0.0f;
+			DoLine_ColorPicker(&s_FocusColorResetId, FocusColorMetrics, &FocusColorRow, Localize("Focus color"), &g_Config.m_QmUiFocusColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiFocusColor)), false, nullptr, false);
 			if(OldFocusColor != g_Config.m_QmUiFocusColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 		});
@@ -5516,6 +5516,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 	{
 		const SSettingsShellLayoutFrame Shell = ResolveSettingsShellLayout(MainView, NeedRestart ? 30.0f : 0.0f);
 		m_SettingsShellLayout = Shell;
+		m_SettingsContentMetrics = ResolveSettingsContentMetrics(Shell.m_ContentRect.w);
 		m_SettingsShellLayoutValid = true;
 		MainView = Shell.m_ContentRect;
 		TabBar = Shell.m_TabBarRect;
@@ -5535,6 +5536,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		if(!CollectingMenuTextPlan)
 			MainView.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
 		MainView.Margin(std::clamp(MainView.w * 0.02f, 12.0f, 20.0f), &MainView);
+		m_SettingsContentMetrics = ResolveSettingsContentMetrics(MainView.w);
 	}
 
 	if(!UseNewSettingsUi && NeedRestart)
@@ -6228,14 +6230,11 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	}
 
 	const float LineSize = AppearanceMetrics.m_LineHeight;
-	const float ColorPickerLineSize = AppearanceMetrics.m_ButtonHeight;
+	const float ColorPickerRowHeight = AppearanceMetrics.m_ButtonHeight + AppearanceMetrics.m_LineSpacing;
 	const float HeadlineFontSize = AppearanceMetrics.m_HeadlineSize;
 	const float HeadlineHeight = AppearanceMetrics.m_LineHeight + AppearanceMetrics.m_LineSpacing * 2.0f;
 	const float MarginSmall = AppearanceMetrics.m_LineSpacing;
 	const float MarginBetweenViews = AppearanceMetrics.m_SectionGap * 2.0f;
-
-	const float ColorPickerLabelSize = AppearanceBodySize;
-	const float ColorPickerLineSpacing = AppearanceMetrics.m_LineSpacing;
 
 	CUIRect ContentView = MainView;
 	auto DoAppearanceHeading = [this](CUIRect &View, const char *pTextId, const char *pText, float FontSize, float LineHeight) {
@@ -6305,7 +6304,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			CPerfTimer HudShellTimer;
 			LogPerfStage(Client(), "appearance_hud_text_cache", HudShellTimer.ElapsedMs(), false, "page=appearance tab=hud section=text_cache");
 			LogPerfStage(Client(), "appearance_hud_tab_shell", HudShellTimer.ElapsedMs(), false, "page=appearance tab=hud");
-			const float HudLeftMinCardHeight = ResolveSettingsRowsHeight(6, LineSize, MarginSmall) + MarginSmall + MarginBetweenViews + HeadlineHeight + MarginSmall + (ColorPickerLineSize + ColorPickerLineSpacing) * 4.0f;
+			const float HudLeftMinCardHeight = ResolveSettingsRowsHeight(6, LineSize, MarginSmall) + MarginSmall + MarginBetweenViews + HeadlineHeight + MarginSmall + ColorPickerRowHeight * 4.0f;
 			const int HudRightCheckboxRowCount = 12 + (g_Config.m_ClShowhudDDRace ? 2 : 0);
 			const float HudRightMinCardHeight = ResolveSettingsRowsHeight(HudRightCheckboxRowCount, LineSize, MarginSmall) + MarginSmall * 3.0f + (g_Config.m_ClShowFreezeBars ? LineSize : 0.0f);
 			AddCard(0, HudLeftMinCardHeight, [=, this](CUIRect ContentRect) mutable {
@@ -6325,10 +6324,10 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 				ColorRGBA GreenDefault(0.78f, 1.0f, 0.8f, 1.0f);
 				static CButtonContainer s_AuthedColor, s_SameClanColor, s_FriendsListFriendColor, s_FriendsListClanColor;
-				DoLine_ColorPicker(&s_AuthedColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Authed name color in scoreboard"), &g_Config.m_ClAuthedPlayerColor, GreenDefault, false);
-				DoLine_ColorPicker(&s_SameClanColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Same clan color in scoreboard"), &g_Config.m_ClSameClanColor, GreenDefault, false);
-				DoLine_ColorPicker(&s_FriendsListFriendColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Friend color in friends list"), &g_Config.m_ClFriendsListFriendColor, ColorRGBA(0.949f, 0.806f, 0.368f), false);
-				DoLine_ColorPicker(&s_FriendsListClanColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Clan color in friends list"), &g_Config.m_ClFriendsListClanColor, ColorRGBA(0.336f, 0.231f, 0.867f), false);
+				DoLine_ColorPicker(&s_AuthedColor, AppearanceMetrics, &LeftView, Localize("Authed name color in scoreboard"), &g_Config.m_ClAuthedPlayerColor, GreenDefault, false);
+				DoLine_ColorPicker(&s_SameClanColor, AppearanceMetrics, &LeftView, Localize("Same clan color in scoreboard"), &g_Config.m_ClSameClanColor, GreenDefault, false);
+				DoLine_ColorPicker(&s_FriendsListFriendColor, AppearanceMetrics, &LeftView, Localize("Friend color in friends list"), &g_Config.m_ClFriendsListFriendColor, ColorRGBA(0.949f, 0.806f, 0.368f), false);
+				DoLine_ColorPicker(&s_FriendsListClanColor, AppearanceMetrics, &LeftView, Localize("Clan color in friends list"), &g_Config.m_ClFriendsListClanColor, ColorRGBA(0.336f, 0.231f, 0.867f), false);
 				LogPerfStage(Client(), "appearance_hud_core_section", HudCoreTimer.ElapsedMs(), false, "page=appearance tab=hud section=core");
 			});
 			AddCard(1, HudRightMinCardHeight, [=, this](CUIRect ContentRect) mutable {
@@ -6370,7 +6369,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			// ***** Chat ***** //
 			// 绘制顺序包含 10 个基础行；自动保存开启时还会增加保留天数行。
 			const int ChatSettingsRowCount = 10 + (ChatLogAutoSaveLayout ? 1 : 0);
-			const float ChatSettingsMinCardHeight = ResolveSettingsRowsHeight(ChatSettingsRowCount, LineSize, MarginSmall) + MarginSmall + ColorPickerLineSize + ColorPickerLineSpacing;
+			const float ChatSettingsMinCardHeight = ResolveSettingsRowsHeight(ChatSettingsRowCount, LineSize, MarginSmall) + MarginSmall + ColorPickerRowHeight;
 			AddCard(2, ChatSettingsMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect LeftView = ContentRect;
 				const auto NextChatRow = [&](CUIRect &Row) {
@@ -6427,7 +6426,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				}
 
 				static CButtonContainer s_BackgroundColor;
-				DoLine_ColorPicker(&s_BackgroundColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Chat background color"), &g_Config.m_ClChatBackgroundColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ClChatBackgroundColor, true)), false, nullptr, true);
+				DoLine_ColorPicker(&s_BackgroundColor, AppearanceMetrics, &LeftView, Localize("Chat background color"), &g_Config.m_ClChatBackgroundColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ClChatBackgroundColor, true)), false, nullptr, true);
 			});
 			const float ChatMessagesMinCardHeight = ResolveAppearanceChatMessagesHeight(AppearanceMetrics);
 			AddCard(3, ChatMessagesMinCardHeight, [=, this](CUIRect ContentRect) mutable {
@@ -6463,7 +6462,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 				static CButtonContainer s_FriendMessageHeartReset;
 				const unsigned OldFriendMessageHeartColor = g_Config.m_ClMessageFriendHeartColor;
-				DoLine_ColorPicker(&s_FriendMessageHeartReset, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &RightView, Localize("Friend heart"), &g_Config.m_ClMessageFriendHeartColor, ColorRGBA(1.0f, 0.0f, 0.0f), true);
+				DoLine_ColorPicker(&s_FriendMessageHeartReset, AppearanceMetrics, &RightView, Localize("Friend heart"), &g_Config.m_ClMessageFriendHeartColor, ColorRGBA(1.0f, 0.0f, 0.0f), true);
 				if(g_Config.m_ClMessageFriendHeartColor != OldFriendMessageHeartColor)
 				{
 					pChat->RebuildChat();
@@ -6832,7 +6831,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			const bool NamePlateStrongLayout = g_Config.m_ClNamePlatesStrong != 0;
 			const float NamePlateRadioLineHeight = 22.0f;
 			const float NamePlateSectionHeaderHeight = MarginBetweenViews + HeadlineHeight + MarginSmall;
-			const float NamePlateColorPickerHeight = ColorPickerLineSize + ColorPickerLineSpacing;
+			const float NamePlateColorPickerHeight = ColorPickerRowHeight;
 			const float NamePlateGeneralContentHeight = NamePlateRadioLineHeight + MarginSmall + ResolveSettingsRowsHeight(10, LineSize, MarginSmall);
 			const float NamePlateTextContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(10, LineSize, MarginSmall) + MarginSmall + NamePlateColorPickerHeight * 3.0f;
 			const float NamePlateHookScopeHeight = NamePlateStrongLayout ? NamePlateRadioLineHeight : LineSize;
@@ -7006,11 +7005,11 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-nameplate-text-glow-range", &g_Config.m_QmNameplateTextGlowRange, &g_Config.m_QmNameplateTextGlowRange, Button, Localize("Glow range"), 0, 12);
 
 				static CButtonContainer s_NameplateTextBorderColorId;
-				DoLine_ColorPicker(&s_NameplateTextBorderColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Border color"), &g_Config.m_QmNameplateTextBorderColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), false, nullptr, true);
+				DoLine_ColorPicker(&s_NameplateTextBorderColorId, AppearanceMetrics, &LeftView, Localize("Border color"), &g_Config.m_QmNameplateTextBorderColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), false, nullptr, true);
 				static CButtonContainer s_NameplateTextGradientColorId;
-				DoLine_ColorPicker(&s_NameplateTextGradientColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Gradient color"), &g_Config.m_QmNameplateTextGradientColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+				DoLine_ColorPicker(&s_NameplateTextGradientColorId, AppearanceMetrics, &LeftView, Localize("Gradient color"), &g_Config.m_QmNameplateTextGradientColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
 				static CButtonContainer s_NameplateTextGlowColorId;
-				DoLine_ColorPicker(&s_NameplateTextGlowColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Glow color"), &g_Config.m_QmNameplateTextGlowColor, ColorRGBA(0.30f, 0.78f, 1.0f, 0.40f), false, nullptr, true);
+				DoLine_ColorPicker(&s_NameplateTextGlowColorId, AppearanceMetrics, &LeftView, Localize("Glow color"), &g_Config.m_QmNameplateTextGlowColor, ColorRGBA(0.30f, 0.78f, 1.0f, 0.40f), false, nullptr, true);
 
 				// ***** Hook Strength ***** //
 				LeftView.HSplitTop(MarginBetweenViews, nullptr, &LeftView);
@@ -7048,8 +7047,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				{
 					static CButtonContainer s_StrongHookColorResetId;
 					static CButtonContainer s_WeakHookColorResetId;
-					DoLine_ColorPicker(&s_StrongHookColorResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Strong hook color"), &g_Config.m_QmNameplateStrongHookColor, color_cast<ColorRGBA>(ColorHSLA(6401973)), false);
-					DoLine_ColorPicker(&s_WeakHookColorResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Weak hook color"), &g_Config.m_QmNameplateWeakHookColor, color_cast<ColorRGBA>(ColorHSLA(41131)), false);
+					DoLine_ColorPicker(&s_StrongHookColorResetId, AppearanceMetrics, &LeftView, Localize("Strong hook color"), &g_Config.m_QmNameplateStrongHookColor, color_cast<ColorRGBA>(ColorHSLA(6401973)), false);
+					DoLine_ColorPicker(&s_WeakHookColorResetId, AppearanceMetrics, &LeftView, Localize("Weak hook color"), &g_Config.m_QmNameplateWeakHookColor, color_cast<ColorRGBA>(ColorHSLA(41131)), false);
 				}
 
 				NextNamePlateRow(Button);
@@ -7129,7 +7128,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		{
 			const float HookCollisionLeftMinCardHeight =
 				ResolveSettingsRowsHeight(7, LineSize, MarginSmall) + MarginSmall +
-				HeadlineHeight + ColorPickerLineSize * 4.0f + ColorPickerLineSpacing * 4.0f;
+				HeadlineHeight + ColorPickerRowHeight * 4.0f;
 			const float HookCollisionRightMinCardHeight =
 				(50.0f + 4.0f * MarginSmall) * 5.0f + LineSize;
 			AddCard(7, HookCollisionLeftMinCardHeight, [=, this](CUIRect ContentRect) mutable {
@@ -7187,10 +7186,10 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 				Ui()->RegisterPassiveHotItem(&s_HookCollToolTip, &LeftView);
 				GameClient()->m_Tooltips.DoToolTip(&s_HookCollToolTip, &LeftView, Localize("Your movements are not taken into account when calculating the line colors"));
-				DoLine_ColorPicker(&s_HookCollNoCollResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Nothing hookable"), &g_Config.m_ClHookCollColorNoColl, ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f), false);
-				DoLine_ColorPicker(&s_HookCollHookableCollResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Something hookable"), &g_Config.m_ClHookCollColorHookableColl, ColorRGBA(130.0f / 255.0f, 232.0f / 255.0f, 160.0f / 255.0f, 1.0f), false);
-				DoLine_ColorPicker(&s_HookCollTeeCollResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("A Tee"), &g_Config.m_ClHookCollColorTeeColl, ColorRGBA(1.0f, 1.0f, 0.0f, 1.0f), false);
-				DoLine_ColorPicker(&s_HookCollTipColorResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Hook line tip"), &g_Config.m_ClHookCollTipColor, ColorRGBA(1.0f, 1.0f, 0.0f, 0.5f), false, nullptr, true);
+				DoLine_ColorPicker(&s_HookCollNoCollResetId, AppearanceMetrics, &LeftView, Localize("Nothing hookable"), &g_Config.m_ClHookCollColorNoColl, ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_HookCollHookableCollResetId, AppearanceMetrics, &LeftView, Localize("Something hookable"), &g_Config.m_ClHookCollColorHookableColl, ColorRGBA(130.0f / 255.0f, 232.0f / 255.0f, 160.0f / 255.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_HookCollTeeCollResetId, AppearanceMetrics, &LeftView, Localize("A Tee"), &g_Config.m_ClHookCollColorTeeColl, ColorRGBA(1.0f, 1.0f, 0.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_HookCollTipColorResetId, AppearanceMetrics, &LeftView, Localize("Hook line tip"), &g_Config.m_ClHookCollTipColor, ColorRGBA(1.0f, 1.0f, 0.0f, 0.5f), false, nullptr, true);
 			});
 			AddCard(8, HookCollisionRightMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect RightView = ContentRect;
@@ -7335,7 +7334,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		}
 		else if(m_AppearanceSettingsTab == APPEARANCE_TAB_INFO_MESSAGES)
 		{
-			const float InfoMessagesMinCardHeight = ResolveSettingsRowsHeight(2, LineSize, MarginSmall) + MarginSmall + ColorPickerLineSize * 2.0f + ColorPickerLineSpacing * 2.0f;
+			const float InfoMessagesMinCardHeight = ResolveSettingsRowsHeight(2, LineSize, MarginSmall) + MarginSmall + ColorPickerRowHeight * 2.0f;
 			AddCard(9, InfoMessagesMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect LeftView = ContentRect;
 				int RowsRemaining = 2;
@@ -7362,8 +7361,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 
 				static CButtonContainer s_KillMessageNormalColorId, s_KillMessageHighlightColorId;
-				DoLine_ColorPicker(&s_KillMessageNormalColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Normal Color"), &g_Config.m_ClKillMessageNormalColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
-				DoLine_ColorPicker(&s_KillMessageHighlightColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Highlight Color"), &g_Config.m_ClKillMessageHighlightColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_KillMessageNormalColorId, AppearanceMetrics, &LeftView, Localize("Normal Color"), &g_Config.m_ClKillMessageNormalColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+				DoLine_ColorPicker(&s_KillMessageHighlightColorId, AppearanceMetrics, &LeftView, Localize("Highlight Color"), &g_Config.m_ClKillMessageHighlightColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 			});
 		}
 		else if(m_AppearanceSettingsTab == APPEARANCE_TAB_LASER)
@@ -7407,10 +7406,10 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				// General weapon laser settings
 				static CButtonContainer s_LaserRifleOutResetId, s_LaserRifleInResetId, s_LaserShotgunOutResetId, s_LaserShotgunInResetId;
 
-				ColorHSLA LaserRifleOutlineColor = DoLine_ColorPicker(&s_LaserRifleOutResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Rifle Laser Outline Color"), &g_Config.m_ClLaserRifleOutlineColor, ColorRGBA(0.074402f, 0.074402f, 0.247166f, 1.0f), false);
-				ColorHSLA LaserRifleInnerColor = DoLine_ColorPicker(&s_LaserRifleInResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Rifle Laser Inner Color"), &g_Config.m_ClLaserRifleInnerColor, ColorRGBA(0.498039f, 0.498039f, 1.0f, 1.0f), false);
-				ColorHSLA LaserShotgunOutlineColor = DoLine_ColorPicker(&s_LaserShotgunOutResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Shotgun Laser Outline Color"), &g_Config.m_ClLaserShotgunOutlineColor, ColorRGBA(0.125490f, 0.098039f, 0.043137f, 1.0f), false);
-				ColorHSLA LaserShotgunInnerColor = DoLine_ColorPicker(&s_LaserShotgunInResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Shotgun Laser Inner Color"), &g_Config.m_ClLaserShotgunInnerColor, ColorRGBA(0.570588f, 0.417647f, 0.252941f, 1.0f), false);
+				ColorHSLA LaserRifleOutlineColor = DoLine_ColorPicker(&s_LaserRifleOutResetId, AppearanceMetrics, &ColorCardContent, Localize("Rifle Laser Outline Color"), &g_Config.m_ClLaserRifleOutlineColor, ColorRGBA(0.074402f, 0.074402f, 0.247166f, 1.0f), false);
+				ColorHSLA LaserRifleInnerColor = DoLine_ColorPicker(&s_LaserRifleInResetId, AppearanceMetrics, &ColorCardContent, Localize("Rifle Laser Inner Color"), &g_Config.m_ClLaserRifleInnerColor, ColorRGBA(0.498039f, 0.498039f, 1.0f, 1.0f), false);
+				ColorHSLA LaserShotgunOutlineColor = DoLine_ColorPicker(&s_LaserShotgunOutResetId, AppearanceMetrics, &ColorCardContent, Localize("Shotgun Laser Outline Color"), &g_Config.m_ClLaserShotgunOutlineColor, ColorRGBA(0.125490f, 0.098039f, 0.043137f, 1.0f), false);
+				ColorHSLA LaserShotgunInnerColor = DoLine_ColorPicker(&s_LaserShotgunInResetId, AppearanceMetrics, &ColorCardContent, Localize("Shotgun Laser Inner Color"), &g_Config.m_ClLaserShotgunInnerColor, ColorRGBA(0.570588f, 0.417647f, 0.252941f, 1.0f), false);
 
 				// ***** Entities ***** //
 				ColorCardContent.HSplitTop(10.0f, nullptr, &ColorCardContent);
@@ -7420,12 +7419,12 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				// General entity laser settings
 				static CButtonContainer s_LaserDoorOutResetId, s_LaserDoorInResetId, s_LaserFreezeOutResetId, s_LaserFreezeInResetId, s_LaserDraggerOutResetId, s_LaserDraggerInResetId;
 
-				ColorHSLA LaserDoorOutlineColor = DoLine_ColorPicker(&s_LaserDoorOutResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Door Laser Outline Color"), &g_Config.m_ClLaserDoorOutlineColor, ColorRGBA(0.0f, 0.131372f, 0.096078f, 1.0f), false);
-				ColorHSLA LaserDoorInnerColor = DoLine_ColorPicker(&s_LaserDoorInResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Door Laser Inner Color"), &g_Config.m_ClLaserDoorInnerColor, ColorRGBA(0.262745f, 0.760784f, 0.639215f, 1.0f), false);
-				ColorHSLA LaserFreezeOutlineColor = DoLine_ColorPicker(&s_LaserFreezeOutResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Freeze Laser Outline Color"), &g_Config.m_ClLaserFreezeOutlineColor, ColorRGBA(0.131372f, 0.123529f, 0.182352f, 1.0f), false);
-				ColorHSLA LaserFreezeInnerColor = DoLine_ColorPicker(&s_LaserFreezeInResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Freeze Laser Inner Color"), &g_Config.m_ClLaserFreezeInnerColor, ColorRGBA(0.482352f, 0.443137f, 0.564705f, 1.0f), false);
-				ColorHSLA LaserDraggerOutlineColor = DoLine_ColorPicker(&s_LaserDraggerOutResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Dragger Outline Color"), &g_Config.m_ClLaserDraggerOutlineColor, ColorRGBA(0.1640625f, 0.015625f, 0.015625f, 1.0f), false);
-				ColorHSLA LaserDraggerInnerColor = DoLine_ColorPicker(&s_LaserDraggerInResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &ColorCardContent, Localize("Dragger Inner Color"), &g_Config.m_ClLaserDraggerInnerColor, ColorRGBA(.8666666f, .3725490f, .3725490f, 1.0f), false);
+				ColorHSLA LaserDoorOutlineColor = DoLine_ColorPicker(&s_LaserDoorOutResetId, AppearanceMetrics, &ColorCardContent, Localize("Door Laser Outline Color"), &g_Config.m_ClLaserDoorOutlineColor, ColorRGBA(0.0f, 0.131372f, 0.096078f, 1.0f), false);
+				ColorHSLA LaserDoorInnerColor = DoLine_ColorPicker(&s_LaserDoorInResetId, AppearanceMetrics, &ColorCardContent, Localize("Door Laser Inner Color"), &g_Config.m_ClLaserDoorInnerColor, ColorRGBA(0.262745f, 0.760784f, 0.639215f, 1.0f), false);
+				ColorHSLA LaserFreezeOutlineColor = DoLine_ColorPicker(&s_LaserFreezeOutResetId, AppearanceMetrics, &ColorCardContent, Localize("Freeze Laser Outline Color"), &g_Config.m_ClLaserFreezeOutlineColor, ColorRGBA(0.131372f, 0.123529f, 0.182352f, 1.0f), false);
+				ColorHSLA LaserFreezeInnerColor = DoLine_ColorPicker(&s_LaserFreezeInResetId, AppearanceMetrics, &ColorCardContent, Localize("Freeze Laser Inner Color"), &g_Config.m_ClLaserFreezeInnerColor, ColorRGBA(0.482352f, 0.443137f, 0.564705f, 1.0f), false);
+				ColorHSLA LaserDraggerOutlineColor = DoLine_ColorPicker(&s_LaserDraggerOutResetId, AppearanceMetrics, &ColorCardContent, Localize("Dragger Outline Color"), &g_Config.m_ClLaserDraggerOutlineColor, ColorRGBA(0.1640625f, 0.015625f, 0.015625f, 1.0f), false);
+				ColorHSLA LaserDraggerInnerColor = DoLine_ColorPicker(&s_LaserDraggerInResetId, AppearanceMetrics, &ColorCardContent, Localize("Dragger Inner Color"), &g_Config.m_ClLaserDraggerInnerColor, ColorRGBA(.8666666f, .3725490f, .3725490f, 1.0f), false);
 
 				static CButtonContainer s_AllToRifleResetId, s_AllToDefaultResetId;
 
@@ -7760,8 +7759,8 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 			LogPerfStage(Client(), "ddnet_gameplay_section", GameplaySectionTimer.ElapsedMs(), false, "page=ddnet section=gameplay");
 		});
 
-		const float DDNetColorPickerLineSize = DDNetMetrics.m_ButtonHeight;
-		const float BackgroundMinCardHeight = CardChromeHeight + (DDNetColorPickerLineSize + DDNetMetrics.m_LineSpacing) * 2.0f + DDNetRowPitch * 3.0f + 2.0f;
+		const float DDNetColorPickerRowHeight = DDNetMetrics.m_ButtonHeight + DDNetMetrics.m_LineSpacing;
+		const float BackgroundMinCardHeight = CardChromeHeight + DDNetColorPickerRowHeight * 2.0f + DDNetRowPitch * 3.0f + 2.0f;
 		CPerfTimer ControlsSectionTimer;
 		AddCard(BackgroundSpec, BackgroundMinCardHeight, CardChromeHeight, [=, this](CUIRect ContentRect) mutable {
 			CUIRect Background = ContentRect;
@@ -7770,10 +7769,10 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 			ColorRGBA GreyDefault(0.5f, 0.5f, 0.5f, 1);
 
 			static CButtonContainer s_ResetId1;
-			DoLine_ColorPicker(&s_ResetId1, DDNetColorPickerLineSize, BodySize, DDNetMetrics.m_LineSpacing, &Background, Localize("Regular background color"), &g_Config.m_ClBackgroundColor, GreyDefault, false);
+			DoLine_ColorPicker(&s_ResetId1, DDNetMetrics, &Background, Localize("Regular background color"), &g_Config.m_ClBackgroundColor, GreyDefault, false);
 
 			static CButtonContainer s_ResetId2;
-			DoLine_ColorPicker(&s_ResetId2, DDNetColorPickerLineSize, BodySize, DDNetMetrics.m_LineSpacing, &Background, Localize("Entities background color"), &g_Config.m_ClBackgroundEntitiesColor, GreyDefault, false);
+			DoLine_ColorPicker(&s_ResetId2, DDNetMetrics, &Background, Localize("Entities background color"), &g_Config.m_ClBackgroundEntitiesColor, GreyDefault, false);
 
 			CUIRect EditBox, ReloadButton;
 			SplitDDNetRow(Background, &Label);

@@ -5,6 +5,7 @@
 
 #include "SettingsCardGeometry.h"
 
+#include <cmath>
 #include <functional>
 
 struct IUiContext;
@@ -18,6 +19,7 @@ struct SSettingsCardVisualState
 {
 	bool m_Hovered = false;
 	bool m_PointerInside = false;
+	bool m_SubtitleVisibleDuringMotion = false;
 	bool m_HoverFeedbackEnabled = true;
 	bool m_Focused = false;
 	bool m_Dragged = false;
@@ -30,9 +32,28 @@ struct SSettingsCardVisualState
 	float m_DrawAlpha = 1.0f;
 };
 
-inline bool SettingsCardSubtitleVisible(const bool PointerInside, const bool Focused)
+inline bool SettingsCardSubtitleVisible(const bool PointerInside, const bool SubtitleVisibleDuringMotion, const bool Focused)
 {
-	return PointerInside || Focused;
+	return PointerInside || SubtitleVisibleDuringMotion || Focused;
+}
+
+inline bool ResolveSettingsCardSubtitleMotionLatch(const bool PointerInsideLastFrame, const bool MotionActive, const bool MotionWasActive, const bool VisibleDuringMotion)
+{
+	if(!MotionActive)
+		return false;
+	if(!MotionWasActive)
+		return PointerInsideLastFrame;
+	return VisibleDuringMotion;
+}
+
+inline bool SettingsCardDeckGeometryMoved(const bool Initialized, const float LastY, const float LastHeight, const float CurrentY, const float CurrentHeight)
+{
+	return Initialized && (std::abs(LastY - CurrentY) > 0.001f || std::abs(LastHeight - CurrentHeight) > 0.001f);
+}
+
+inline bool SettingsCardInteractionBorderVisible(const SSettingsCardVisualState &State)
+{
+	return State.m_Hovered || State.m_Focused || State.m_DropFeedback;
 }
 
 inline ColorRGBA ResolveSettingsCardSurfaceColor(ColorRGBA Surface, const SSettingsCardVisualState &State)
@@ -48,7 +69,7 @@ using FSettingsCardRenderMeasured = std::function<void(CUIRect &ContentRect)>;
 using FSettingsCardPreLayoutInput = std::function<bool(CUIRect ContentRect)>;
 using FSettingsCardHeaderAction = std::function<void(const SSettingsCardFrame &Frame, bool Collapsed)>;
 
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {}, const FSettingsCardRenderMeasured &RenderMeasured = {});
-SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {}, const FSettingsCardRenderMeasured &RenderMeasured = {});
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {}, const FSettingsCardRenderMeasured &RenderMeasured = {}, bool *pPointerInside = nullptr);
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {}, const FSettingsCardRenderMeasured &RenderMeasured = {}, bool *pPointerInside = nullptr);
 
 #endif

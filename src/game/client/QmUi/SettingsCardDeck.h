@@ -98,6 +98,12 @@ private:
 		bool m_ContentHeightWasActive = false;
 		bool m_CollapsedInitialized = false;
 		bool m_LastCollapsed = false;
+		bool m_PointerInsideLastFrame = false;
+		bool m_SubtitleMotionWasActive = false;
+		bool m_SubtitleVisibleDuringMotion = false;
+		bool m_MotionGeometryInitialized = false;
+		float m_LastMotionY = 0.0f;
+		float m_LastMotionHeight = 0.0f;
 	};
 
 	struct SDragState

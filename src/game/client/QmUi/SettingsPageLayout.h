@@ -200,6 +200,42 @@ inline SSettingsTeeCustomColorsLayout ResolveSettingsTeeCustomColorsLayout(const
 	return Layout;
 }
 
+struct SSettingsColorRowLayout
+{
+	CUIRect m_RowRect{};
+	CUIRect m_LabelRect{};
+	CUIRect m_ColorButtonRect{};
+	CUIRect m_ResetButtonRect{};
+	float m_ConsumedHeight = 0.0f;
+};
+
+inline SSettingsColorRowLayout ResolveSettingsColorRowLayout(const CUIRect &View, const SSettingsContentMetrics &Metrics, const bool ReserveCheckboxIndent)
+{
+	SSettingsColorRowLayout Layout;
+	const float RowHeight = std::max(0.0f, Metrics.m_ButtonHeight);
+	const float ColorButtonWidth = std::min(RowHeight, std::max(0.0f, View.w * 0.20f));
+	const float StandardHorizontalGap = std::clamp(ui_token::settings::ROW_GAP * Metrics.m_UiScale, 3.0f, ui_token::settings::ROW_GAP);
+	const float Gap = std::min(StandardHorizontalGap, std::max(0.0f, (View.w - ColorButtonWidth) * 0.10f));
+	Layout.m_RowRect = {View.x, View.y, View.w, RowHeight};
+	Layout.m_ConsumedHeight = RowHeight + std::max(0.0f, Metrics.m_LineSpacing);
+
+	const float MaximumResetWidth = std::max(0.0f, View.w - ColorButtonWidth - Gap * 2.0f);
+	const float MinimumResetWidth = std::min(60.0f * Metrics.m_UiScale, MaximumResetWidth);
+	const float PreferredResetWidth = 72.0f * Metrics.m_UiScale;
+	const float ResetWidth = std::clamp(std::min(PreferredResetWidth, View.w * 0.30f), MinimumResetWidth, MaximumResetWidth);
+	CUIRect Remaining = Layout.m_RowRect;
+	Remaining.VSplitRight(ResetWidth, &Remaining, &Layout.m_ResetButtonRect);
+	Remaining.VSplitRight(Gap, &Remaining, nullptr);
+	Remaining.VSplitRight(ColorButtonWidth, &Remaining, &Layout.m_ColorButtonRect);
+	Remaining.VSplitRight(Gap, &Layout.m_LabelRect, nullptr);
+	if(ReserveCheckboxIndent)
+	{
+		const float Indent = std::min(Layout.m_LabelRect.w, RowHeight + Gap);
+		Layout.m_LabelRect.VSplitLeft(Indent, nullptr, &Layout.m_LabelRect);
+	}
+	return Layout;
+}
+
 inline SSettingsRadioRowLayout ResolveSettingsRadioRowLayout(const CUIRect &View, const int OptionCount, const SSettingsContentMetrics &Metrics)
 {
 	SSettingsRadioRowLayout Layout;
@@ -369,7 +405,7 @@ inline float ResolveAppearanceLaserColorsHeight(const SSettingsContentMetrics &M
 	constexpr int ColorPickerCount = 10;
 	constexpr float EntitySectionGap = 10.0f;
 	const float HeadingHeight = Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing;
-	const float ColorPickerHeight = Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing;
+	const float ColorPickerHeight = Metrics.m_ButtonHeight + Metrics.m_LineSpacing;
 	return 2.0f * HeadingHeight + 8.0f * Metrics.m_LineSpacing + ColorPickerCount * ColorPickerHeight + EntitySectionGap + 2.0f * Metrics.m_LineHeight;
 }
 

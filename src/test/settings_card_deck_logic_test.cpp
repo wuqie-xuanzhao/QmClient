@@ -97,11 +97,42 @@ TEST(SettingsCardDeck, CollapseAndVisibilityChangesSnapWithoutDisablingDragReflo
 	EXPECT_FALSE(SettingsCardDeckShouldSnapReflow(true, true));
 }
 
-TEST(SettingsCardDeck, SubtitleVisibilityUsesPointerContainmentInsteadOfHoverAnimationFeedback)
+TEST(SettingsCardDeck, SubtitleVisibilityUsesCurrentPointerMotionLatchAndFocus)
 {
-	EXPECT_TRUE(SettingsCardSubtitleVisible(true, false));
-	EXPECT_TRUE(SettingsCardSubtitleVisible(false, true));
-	EXPECT_FALSE(SettingsCardSubtitleVisible(false, false));
+	EXPECT_TRUE(SettingsCardSubtitleVisible(true, false, false));
+	EXPECT_TRUE(SettingsCardSubtitleVisible(false, true, false));
+	EXPECT_TRUE(SettingsCardSubtitleVisible(false, false, true));
+	EXPECT_FALSE(SettingsCardSubtitleVisible(false, false, false));
+}
+
+TEST(SettingsCardDeck, SubtitleVisibilityLatchesOnlyWhileCardIsMoving)
+{
+	EXPECT_TRUE(ResolveSettingsCardSubtitleMotionLatch(true, true, false, false));
+	EXPECT_TRUE(ResolveSettingsCardSubtitleMotionLatch(false, true, true, true));
+	EXPECT_FALSE(ResolveSettingsCardSubtitleMotionLatch(false, true, true, false));
+	EXPECT_FALSE(ResolveSettingsCardSubtitleMotionLatch(false, false, true, true));
+}
+
+TEST(SettingsCardDeck, GeometryMotionIncludesCardsPushedByAnEarlierHeightAnimation)
+{
+	EXPECT_FALSE(SettingsCardDeckGeometryMoved(false, 100.0f, 80.0f, 120.0f, 80.0f));
+	EXPECT_FALSE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 100.0f, 80.0f));
+	EXPECT_TRUE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 120.0f, 80.0f));
+	EXPECT_TRUE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 100.0f, 90.0f));
+}
+
+TEST(SettingsCardDeck, RestingCardsDoNotDrawASecondRoundedBorder)
+{
+	SSettingsCardVisualState State;
+	EXPECT_FALSE(SettingsCardInteractionBorderVisible(State));
+	State.m_Hovered = true;
+	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
+	State.m_Hovered = false;
+	State.m_Focused = true;
+	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
+	State.m_Focused = false;
+	State.m_DropFeedback = true;
+	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
 }
 
 TEST(SettingsCardDeck, CardSurfaceColorIgnoresBorderInteractionState)

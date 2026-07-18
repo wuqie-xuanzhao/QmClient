@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from qmclient_scripts.gate.check_settings_ui_migration import PAGE_STABLE_IDS, PRODUCER_COMPLETE_PAGES, audit_page
+from qmclient_scripts.gate.check_settings_ui_migration import _find_legacy_color_picker_geometry, _find_raw_font_literals, PAGE_STABLE_IDS, PRODUCER_COMPLETE_PAGES, audit_page
 
 
 class SettingsUiMigrationAuditTest(unittest.TestCase):
@@ -25,7 +25,7 @@ class SettingsUiMigrationAuditTest(unittest.TestCase):
     QmResolveScrollPolicy(Request, 1.0f, 0.1f);
     Request.m_Profile = EQmScrollProfile::SETTINGS_OUTER;
     ui_widget::NumericField(Context);
-    const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().Render(Context, Frame, "general", vCards, SettingsCardOrderModelForRenderPass(), &ScrollRegion, Input, SettingsCardMotionSpec());
+    const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(Context, Frame, "general", vCards, SettingsCardOrderModelForRenderPass(), &ScrollRegion, Input, SettingsCardMotionSpec(), 1);
 }
 """
 		source = source.replace("\n}\n", f"\n    {add}\n}}\n", 1).replace(drop, "")
@@ -68,7 +68,7 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
     SSettingsCardDeckResult Result;
     QmResolveScrollPolicy(Request, 1.0f, 0.1f);
     Request.m_Profile = EQmScrollProfile::SETTINGS_OUTER;
-    Result = CardDeck.Render(Context, Frame, "tclient-warlist", vCards, Model, &ScrollRegion, Input, Motion);
+    Result = CardDeck.RenderCached(Context, Frame, "tclient-warlist", vCards, Model, &ScrollRegion, Input, Motion, 1);
 }
 """
 		source = source.replace("\n}\n", f"\n    {add}\n}}\n", 1).replace(drop, "")
@@ -91,14 +91,14 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 		self.assertEqual(audit_page(self.make_repo(), "general"), [])
 
 	def test_missing_public_contract_fails(self):
-		errors = audit_page(self.make_repo(drop="SettingsCardDeckForRenderPass().Render("), "general")
-		self.assertTrue(any("SettingsCardDeckForRenderPass().Render" in item for item in errors))
+		errors = audit_page(self.make_repo(drop="SettingsCardDeckForRenderPass().RenderCached("), "general")
+		self.assertTrue(any("SettingsCardDeckForRenderPass().RenderCached" in item for item in errors))
 
 	def test_tee7_requires_render_pass_isolated_deck(self):
 		from qmclient_scripts.gate.check_settings_ui_migration import PAGE_REQUIRED
 
-		self.assertIn("SettingsCardDeckForRenderPass().Render(", PAGE_REQUIRED["tee7"])
-		self.assertNotIn("m_SettingsCardDeck.Render(", PAGE_REQUIRED["tee7"])
+		self.assertIn("SettingsCardDeckForRenderPass().RenderCached(", PAGE_REQUIRED["tee7"])
+		self.assertNotIn("m_SettingsCardDeck.RenderCached(", PAGE_REQUIRED["tee7"])
 
 	def test_manifest_covers_every_new_settings_page(self):
 		self.assertTrue(
@@ -164,6 +164,89 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 	def test_missing_content_metrics_fails(self):
 		errors = audit_page(self.make_repo(drop="ResolveSettingsContentMetrics("), "general")
 		self.assertTrue(any("ResolveSettingsContentMetrics" in item for item in errors))
+
+	def test_scalar_color_picker_call_is_rejected(self):
+		self.assertEqual(_find_legacy_color_picker_geometry("DoLine_ColorPicker(&Reset, LineHeight, BodySize, LineSpacing, &View, Text, &Color, Default);"), [(1, "LineHeight")])
+		self.assertEqual(_find_legacy_color_picker_geometry("const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(640.0f);\nDoLine_ColorPicker(&Reset, Metrics, &View, Text, &Color, Default);"), [])
+		self.assertEqual(_find_legacy_color_picker_geometry("DoLine_ColorPicker(&Reset, CurrentSettingsContentMetrics(), &View, Text, &Color, Default);"), [])
+
+	def test_multiline_scalar_color_picker_call_is_rejected(self):
+		source = """const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(640.0f);
+DoLine_ColorPicker(
+    &Reset,
+    LineHeight,
+    BodySize,
+    LineSpacing,
+    &View,
+    Text,
+    &Color,
+    Default);
+DoLine_ColorPicker(
+    &Reset,
+    Metrics,
+    &View,
+    Text,
+    &Color,
+    Default);
+"""
+		self.assertEqual(_find_legacy_color_picker_geometry(source), [(2, "LineHeight")])
+
+	def test_undeclared_metrics_lookalike_is_rejected(self):
+		self.assertEqual(_find_legacy_color_picker_geometry("DoLine_ColorPicker(&Reset, FakeMetrics, &View, Text, &Color, Default);"), [(1, "FakeMetrics")])
+
+	def test_comment_and_string_metrics_declarations_are_rejected(self):
+		comment = "// SSettingsContentMetrics FakeMetrics;\nDoLine_ColorPicker(&Reset, FakeMetrics, &View, Text, &Color, Default);"
+		string = 'const char *pText = "SSettingsContentMetrics FakeMetrics;";\nDoLine_ColorPicker(&Reset, FakeMetrics, &View, Text, &Color, Default);'
+		self.assertEqual(_find_legacy_color_picker_geometry(comment), [(2, "FakeMetrics")])
+		self.assertEqual(_find_legacy_color_picker_geometry(string), [(2, "FakeMetrics")])
+
+	def test_scalar_shadow_after_metrics_declaration_is_rejected(self):
+		source = """SSettingsContentMetrics Metrics;
+{
+    float Metrics = 0.0f;
+    DoLine_ColorPicker(&Reset, Metrics, &View, Text, &Color, Default);
+}
+"""
+		self.assertEqual(_find_legacy_color_picker_geometry(source), [(4, "Metrics")])
+
+	def test_nested_brace_and_bracket_commas_do_not_shift_second_argument(self):
+		source = """DoLine_ColorPicker(
+    BuildResetId(std::array<int, 2>{1, 2}[0]),
+    LineHeight,
+    BodySize,
+    LineSpacing,
+    &View,
+    Text,
+    &Color,
+    Default);
+"""
+		self.assertEqual(_find_legacy_color_picker_geometry(source), [(1, "LineHeight")])
+
+	def test_template_commas_do_not_shift_second_argument(self):
+		source = "DoLine_ColorPicker(BuildResetId<std::array<int, 2>>(), Metrics, &View, Text, &Color, Default);"
+		self.assertEqual(_find_legacy_color_picker_geometry("SSettingsContentMetrics Metrics;\n" + source), [])
+
+	def test_spaced_template_commas_do_not_shift_second_argument(self):
+		source = "DoLine_ColorPicker(BuildResetId <1, 2>(), Metrics, &View, Text, &Color, Default);"
+		self.assertEqual(_find_legacy_color_picker_geometry("SSettingsContentMetrics Metrics;\n" + source), [])
+
+	def test_comparison_operator_does_not_hide_second_argument(self):
+		source = "SSettingsContentMetrics Metrics;\nDoLine_ColorPicker(Left < Right, Metrics, &View, Text, &Color, Default);"
+		self.assertEqual(_find_legacy_color_picker_geometry(source), [])
+
+	def test_raw_strings_cannot_declare_fake_metrics_or_fonts(self):
+		source = '''const char *pText = R"tag(SSettingsContentMetrics FakeMetrics; "quoted" DoLabel(&View, Text, 14.0f, Align);)tag";
+DoLine_ColorPicker(&Reset, FakeMetrics, &View, Text, &Color, Default);'''
+		self.assertEqual(_find_legacy_color_picker_geometry(source), [(2, "FakeMetrics")])
+		self.assertEqual(_find_raw_font_literals(source), [])
+
+	def test_multiline_raw_font_literal_is_rejected(self):
+		source = """Ui()->DoLabel(
+    &View,
+    Text,
+    14.0f,
+    TEXTALIGN_ML);"""
+		self.assertEqual(_find_raw_font_literals(source), [1])
 
 	def test_legacy_path_fails(self):
 		errors = audit_page(self.make_repo(add="DoSettingsScrollbarOption("), "general")

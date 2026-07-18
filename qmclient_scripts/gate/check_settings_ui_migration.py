@@ -321,7 +321,8 @@ _RAW_FONT_ALLOWLIST = (
 	"&Icon, pIconType",
 	"&Label, aLabelText",
 )
-_RAW_FONT_CALL = re.compile(r"(?:DoLabel|DoSettingsLabel|DoSettingsMenuLabel)\([^\n]*(?:9|10|12|13|14|16|20|24|25)\.0f")
+_RAW_FONT_LITERAL = re.compile(r"\b(?:9|10|12|13|14|16|20|24|25)\.0f\b")
+_CPP_RAW_STRING_START = re.compile(r'(?:u8|u|U|L)?R"(?P<delimiter>[^ ()\\\t\r\n]{0,16})\(')
 PAGE_CONTRACT_HELPERS = {
 	"controls": ("ApplyControlsContentMetrics", "CMenusSettingsControls::DoSettingsControlsNumericField"),
 	"tee7": ("CMenus::RenderSkinSelection7", "CMenus::RenderSkinPartSelection7"),
@@ -386,6 +387,152 @@ def _read(root: Path, relative: Path) -> str:
 def _navigation_has_route(navigation: str, route: str) -> bool:
 	set_page_body = _extract_function_body(navigation, "CMenus::SetSettingsPageFromCardTab") or ""
 	return f'str_comp(pTab, "{route}") == 0' in set_page_body
+
+
+def _mask_cpp_comments_and_strings(source: str) -> str:
+	masked = list(source)
+	index = 0
+	quote = ""
+	line_comment = False
+	block_comment = False
+	while index < len(source):
+		char = source[index]
+		next_char = source[index + 1] if index + 1 < len(source) else ""
+		if line_comment:
+			if char == "\n":
+				line_comment = False
+			else:
+				masked[index] = " "
+		elif block_comment:
+			if char != "\n":
+				masked[index] = " "
+			if char == "*" and next_char == "/":
+				masked[index + 1] = " "
+				block_comment = False
+				index += 1
+		elif quote:
+			if char != "\n":
+				masked[index] = " "
+			if char == "\\":
+				if index + 1 < len(source) and source[index + 1] != "\n":
+					masked[index + 1] = " "
+				index += 1
+			elif char == quote:
+				quote = ""
+		elif char == "/" and next_char == "/":
+			masked[index] = masked[index + 1] = " "
+			line_comment = True
+			index += 1
+		elif char == "/" and next_char == "*":
+			masked[index] = masked[index + 1] = " "
+			block_comment = True
+			index += 1
+		elif (index == 0 or not (source[index - 1].isalnum() or source[index - 1] == "_")) and (raw_match := _CPP_RAW_STRING_START.match(source, index)) is not None:
+			raw_end_marker = ")" + raw_match.group("delimiter") + '"'
+			raw_end = source.find(raw_end_marker, raw_match.end())
+			masked_end = len(source) if raw_end < 0 else raw_end + len(raw_end_marker)
+			for raw_index in range(index, masked_end):
+				if source[raw_index] != "\n":
+					masked[raw_index] = " "
+			index = masked_end - 1
+		elif char in ('"', "'"):
+			masked[index] = " "
+			quote = char
+		index += 1
+	return "".join(masked)
+
+
+def _looks_like_template_angle_open(code: str, index: int) -> bool:
+	previous = index - 1
+	while previous >= 0 and code[previous].isspace():
+		previous -= 1
+	if previous < 0 or not (code[previous].isalnum() or code[previous] in "_>:"):
+		return False
+	depth = 1
+	cursor = index + 1
+	while cursor < len(code):
+		if code[cursor] == "<":
+			depth += 1
+		elif code[cursor] == ">":
+			depth -= 1
+			if depth == 0:
+				following = cursor + 1
+				while following < len(code) and code[following].isspace():
+					following += 1
+				return following == len(code) or code[following] in "({[,:>)"
+		elif code[cursor] == ";" or (code[cursor] == "\n" and depth == 1):
+			return False
+		cursor += 1
+	return False
+
+
+def _iter_cpp_call_arguments(source: str, function_name: str):
+	code = _mask_cpp_comments_and_strings(source)
+	pattern = re.compile(rf"\b{re.escape(function_name)}\s*\(")
+	for match in pattern.finditer(code):
+		open_paren = code.find("(", match.start())
+		paren_depth = 1
+		bracket_depth = 0
+		brace_depth = 0
+		angle_depth = 0
+		index = open_paren + 1
+		argument_start = index
+		arguments: list[str] = []
+		while index < len(code):
+			char = code[index]
+			if char == "(":
+				paren_depth += 1
+			elif char == ")":
+				paren_depth -= 1
+				if paren_depth == 0:
+					arguments.append(code[argument_start:index].strip())
+					yield match.start(), index + 1, code.count("\n", 0, match.start()) + 1, arguments
+					break
+			elif char == "[":
+				bracket_depth += 1
+			elif char == "]":
+				bracket_depth = max(0, bracket_depth - 1)
+			elif char == "{":
+				brace_depth += 1
+			elif char == "}":
+				brace_depth = max(0, brace_depth - 1)
+			elif char == "<" and _looks_like_template_angle_open(code, index):
+				angle_depth += 1
+			elif char == ">" and angle_depth > 0:
+				angle_depth -= 1
+			elif char == "," and paren_depth == 1 and bracket_depth == 0 and brace_depth == 0 and angle_depth == 0:
+				arguments.append(code[argument_start:index].strip())
+				argument_start = index + 1
+			index += 1
+
+
+def _find_raw_font_literals(source: str) -> list[int]:
+	code = _mask_cpp_comments_and_strings(source)
+	result: list[int] = []
+	for function_name in ("DoLabel", "DoSettingsLabel", "DoSettingsMenuLabel"):
+		for call_start, call_end, line_number, _ in _iter_cpp_call_arguments(source, function_name):
+			call = code[call_start:call_end]
+			if _RAW_FONT_LITERAL.search(call) and not any(token in call for token in _RAW_FONT_ALLOWLIST):
+				result.append(line_number)
+	return sorted(result)
+
+
+def _find_legacy_color_picker_geometry(source: str) -> list[tuple[int, str]]:
+	code = _mask_cpp_comments_and_strings(source)
+	declaration_pattern = re.compile(r"\b(?P<type>SSettingsContentMetrics|float|double|int|unsigned|long|short|auto)\s+(?:const\s+)?[&*]?\s*(?P<name>[A-Za-z_]\w*)\s*(?=[=;,){}\[])")
+	legacy: list[tuple[int, str]] = []
+	for call_position, _, line_number, arguments in _iter_cpp_call_arguments(source, "DoLine_ColorPicker"):
+		if len(arguments) < 2:
+			continue
+		argument = arguments[1]
+		if argument == "CurrentSettingsContentMetrics()":
+			continue
+		if re.fullmatch(r"[A-Za-z_]\w*", argument) is not None:
+			declarations = [match for match in declaration_pattern.finditer(code, 0, call_position) if match.group("name") == argument]
+			if declarations and declarations[-1].group("type") == "SSettingsContentMetrics":
+				continue
+		legacy.append((line_number, argument))
+	return legacy
 
 
 def audit_page(repo_root: Path, page: str) -> list[str]:
@@ -453,6 +600,10 @@ def audit_shared_contracts(repo_root: Path) -> list[str]:
 		errors.append("shared: responsive settings radio resolver missing")
 	if "SettingsPageUiScale(pRect->w)" in menu_source:
 		errors.append("shared: settings control font still derives from local rect width")
+	if "SettingsPageUiScale(0.0f)" in menu_source:
+		errors.append("shared: settings control font still derives from a synthetic zero width")
+	if "CurrentSettingsContentMetrics().m_BodySize" not in menu_source:
+		errors.append("shared: settings buttons do not consume the shell content metrics")
 	if "float RowHeight, float RowSpacing, float BodySize" not in menu_source:
 		errors.append("shared: streamed settings checkbox rows do not consume explicit metrics")
 	if re.search(r"DoSettingsButton_CheckBoxAutoVMarginAndSet\([^;{]+float RowSpacing\s*=", menu_source) or re.search(r"DoSettingsButton_CheckBoxAutoVMarginAndSet\([^;{]+float BodySize\s*=", menu_source):
@@ -466,9 +617,10 @@ def audit_shared_contracts(repo_root: Path) -> list[str]:
 			errors.append(f"{relative}: settings grid still uses generic GRID profile")
 		if re.search(r"\w*ColorPickerLineSize\s*=\s*\w+Metrics\.m_LineHeight\s*\+\s*\w+Metrics\.m_LineSpacing", source):
 			errors.append(f"{relative}: color picker control height still includes row spacing")
-		for line_number, line in enumerate(source.splitlines(), 1):
-			if _RAW_FONT_CALL.search(line) and not any(token in line for token in _RAW_FONT_ALLOWLIST):
-				errors.append(f"{relative}:{line_number}: raw settings font literal is not allowlisted")
+		for line_number, argument in _find_legacy_color_picker_geometry(source):
+			errors.append(f"{relative}:{line_number}: settings color row still uses scalar geometry ({argument})")
+		for line_number in _find_raw_font_literals(source):
+			errors.append(f"{relative}:{line_number}: raw settings font literal is not allowlisted")
 	return errors
 
 
