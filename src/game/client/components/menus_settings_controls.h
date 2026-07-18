@@ -79,8 +79,8 @@ private:
 	void UpdateSearchMatches();
 
 	float MeasureSettingsBindsHeight(EBindOptionGroup Group) const;
-	void RenderSettingsBinds(EBindOptionGroup Group, CUIRect View);
-	void RenderSettingsBindCard(EBindOptionGroup Group, CUIRect View);
+	void RenderSettingsBinds(EBindOptionGroup Group, CUIRect View, bool ReadOnly);
+	void RenderSettingsBindCard(EBindOptionGroup Group, CUIRect View, bool ReadOnly);
 
 	float MeasureSettingsMouseHeight() const;
 	void RenderSettingsMouse(CUIRect View);
@@ -89,8 +89,8 @@ private:
 	CScrollRegion m_JoystickDropDownScrollRegion;
 	CUi::SDropDownState m_JoystickDropDownState;
 	float MeasureSettingsJoystickHeight() const;
-	void RenderSettingsJoystick(CUIRect View);
-	void RenderJoystickAxisPicker(CUIRect View);
+	void RenderSettingsJoystick(CUIRect View, bool ReadOnly);
+	void RenderJoystickAxisPicker(CUIRect View, bool ReadOnly);
 	void RenderJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
 	bool DoSettingsControlsNumericField(const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u);
 

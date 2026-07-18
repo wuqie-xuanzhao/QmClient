@@ -113,7 +113,9 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	ColorRGBA Surface = Theme.m_Surface;
 	// 重排与拖放反馈只改变边框，卡片背景透明度保持稳定，避免滚动或切页时闪烁。
 	Surface.a *= DrawState.m_DrawAlpha;
-	const bool InteractionComplete = DrawState.m_DropFeedback || DrawState.m_ReflowCompleteFeedback;
+	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
+	// 否则半透明卡片在展开、折叠或首次布局时会表现为一次亮闪。
+	const bool InteractionComplete = DrawState.m_DropFeedback;
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      Theme.m_Border;
 	Border.a *= DrawState.m_DrawAlpha;
@@ -150,13 +152,17 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 			SLabelProperties SubtitleProps;
 			SubtitleProps.m_MaxWidth = DrawFrame.m_SubtitleRect.w;
 			SubtitleProps.m_EllipsisAtEnd = true;
-			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, Spec.m_pSubtitle, ui_token::font::SMALL * UiScale, TEXTALIGN_ML, SubtitleProps);
+			const float SubtitleSize = std::clamp(ui_token::font::SMALL * UiScale, 9.0f, ui_token::font::SMALL);
+			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, Spec.m_pSubtitle, SubtitleSize, TEXTALIGN_ML, SubtitleProps);
 		}
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
 	if(HeaderAction && DrawCardChrome)
 		HeaderAction(DrawFrame, DrawState.m_Collapsed);
+	const bool ClipContent = DrawState.m_ClipContent && Ctx.m_pUi != nullptr && DrawFrame.m_ContentRect.w > 0.0f && DrawFrame.m_ContentRect.h > 0.0f;
+	if(ClipContent)
+		Ctx.m_pUi->ClipEnable(&DrawFrame.m_ContentRect);
 	if(RenderMeasured)
 	{
 		CUIRect ContentRect = DrawFrame.m_ContentRect;
@@ -164,5 +170,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	}
 	else if(Render)
 		Render(DrawFrame.m_ContentRect);
+	if(ClipContent)
+		Ctx.m_pUi->ClipDisable();
 	return Frame;
 }

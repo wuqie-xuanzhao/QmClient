@@ -170,6 +170,16 @@ namespace
 		EXPECT_FLOAT_EQ(Standard.m_CardGap, ui_token::settings::CARD_GAP);
 	}
 
+	TEST(SettingsPageLayout, CardDefinitionRevisionChangesOnlyForStructuralInputs)
+	{
+		const uint64_t Stable = ResolveSettingsCardDefinitionsRevision(4, 7, 800.0f, 3);
+		EXPECT_EQ(ResolveSettingsCardDefinitionsRevision(4, 7, 800.0f, 3), Stable);
+		EXPECT_NE(ResolveSettingsCardDefinitionsRevision(5, 7, 800.0f, 3), Stable);
+		EXPECT_NE(ResolveSettingsCardDefinitionsRevision(4, 8, 800.0f, 3), Stable);
+		EXPECT_NE(ResolveSettingsCardDefinitionsRevision(4, 7, 801.0f, 3), Stable);
+		EXPECT_NE(ResolveSettingsCardDefinitionsRevision(4, 7, 800.0f, 4), Stable);
+	}
+
 	TEST(SettingsPageLayout, CardMetricsUseColumnWidthForTwoColumnControls)
 	{
 		const SSettingsContentMetrics PageMetrics = ResolveSettingsContentMetrics(1600.0f);
@@ -190,6 +200,21 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveSettingsRowsHeight(6, 20.0f, 5.0f), 145.0f);
 		EXPECT_FLOAT_EQ(ResolveSettingsRowsHeight(1, 20.0f, 5.0f), 20.0f);
 		EXPECT_FLOAT_EQ(ResolveSettingsRowsHeight(0, 20.0f, 5.0f), 0.0f);
+	}
+
+	TEST(SettingsPageLayout, RadioRowsUseMetricsAndStackOnlyWhenRequired)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(640.0f);
+		const SSettingsRadioRowLayout Inline = ResolveSettingsRadioRowLayout({0.0f, 0.0f, 600.0f, 100.0f}, 3, Metrics);
+		EXPECT_FALSE(Inline.m_Stacked);
+		EXPECT_FLOAT_EQ(Inline.m_Height, Metrics.m_ButtonHeight);
+		EXPECT_FLOAT_EQ(Inline.m_LabelRect.h, Metrics.m_LineHeight);
+		EXPECT_FLOAT_EQ(Inline.m_ButtonsRect.h, Metrics.m_ButtonHeight);
+
+		const SSettingsRadioRowLayout Stacked = ResolveSettingsRadioRowLayout({0.0f, 0.0f, 140.0f, 100.0f}, 3, Metrics);
+		EXPECT_TRUE(Stacked.m_Stacked);
+		EXPECT_FLOAT_EQ(Stacked.m_Height, Metrics.m_LineHeight + Metrics.m_LineSpacing + Metrics.m_ButtonHeight);
+		EXPECT_FLOAT_EQ(Stacked.m_ButtonsRect.y, Metrics.m_LineHeight + Metrics.m_LineSpacing);
 	}
 
 	TEST(SettingsPageLayout, InlineRowMinimumWidthIncludesEveryGap)
@@ -213,8 +238,8 @@ namespace
 		EXPECT_NEAR(ResolveAppearanceChatMessagesHeight(Compact), 258.7f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudCoordsHeight(Compact), 159.2f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, false, false), 99.5f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 312.4f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 392.0f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 311.4f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 391.0f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserColorsHeight(Compact), 358.8f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, false), 95.6f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, true), 135.4f, 0.001f);
@@ -224,11 +249,45 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveAppearanceChatMessagesHeight(Standard), 325.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudCoordsHeight(Standard), 200.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, false, false), 125.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 392.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 492.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 390.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 490.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserColorsHeight(Standard), 450.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, false), 120.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, true), 170.0f);
+	}
+
+	TEST(SettingsPageLayout, QmHudDynamicCardsMatchEveryVisibleState)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, false, false), 75.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, true), 125.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, false), 250.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, false), 25.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 155.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 390.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 490.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 46.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, true), 121.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, false, false, false, 0, false, false), 25.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, false, false, 0, false, false), 150.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, true, false, 0, false, false), 430.75f);
+		EXPECT_NEAR(ResolveQmHudVoiceHeight(Metrics, true, true, true, 1, true, true), 803.7f, 0.001f);
+		EXPECT_FLOAT_EQ(ResolveQmHudLyricsPreviewHeight(4, 1), 42.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudLyricsPreviewHeight(12, 2), 43.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudLyricsHeight(Metrics, 12, 2), 1248.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, false, false, false, false, false, false), 25.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, false, false, false, false, false), 475.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, true, true, true, true, true), 675.0f);
+	}
+
+	TEST(SettingsPageLayout, QmHudRevisionsCoverEveryHeightBranch)
+	{
+		EXPECT_NE(ResolveQmHudVoiceRevision(true, true, false, 0, false, false), ResolveQmHudVoiceRevision(true, true, true, 0, false, false));
+		EXPECT_NE(ResolveQmHudVoiceRevision(true, true, true, 0, false, false), ResolveQmHudVoiceRevision(true, true, true, 1, false, false));
+		EXPECT_NE(ResolveQmHudVoiceRevision(true, true, true, 1, false, false), ResolveQmHudVoiceRevision(true, true, true, 1, true, false));
+		EXPECT_NE(ResolveQmHudVoiceRevision(true, true, true, 1, true, false), ResolveQmHudVoiceRevision(true, true, true, 1, true, true));
+		EXPECT_NE(ResolveQmHudBackground3DRevision(true, false, false, false, false, false), ResolveQmHudBackground3DRevision(true, true, false, false, false, false));
+		EXPECT_NE(ResolveQmHudBackground3DRevision(true, true, false, false, false, false), ResolveQmHudBackground3DRevision(true, true, true, true, true, true));
 	}
 
 	TEST(SettingsPageLayout, ConditionalRowsUseFrameSnapshotUntilNextLayout)
@@ -292,7 +351,7 @@ namespace
 		const std::string Source = ReadTestSourceFile("src/game/client/QmUi/SettingsCardDeck.cpp");
 		EXPECT_NE(Source.find("const bool LayoutStable = !EntryPending && !EntryPositionActive"), std::string::npos);
 		EXPECT_NE(Source.find("LayoutStable && m_HasPointerPosition"), std::string::npos);
-		EXPECT_NE(Source.find("!EntryAnimationActive"), std::string::npos);
+		EXPECT_NE(Source.find("!ContentHeightAnimationActive"), std::string::npos);
 		EXPECT_NE(Source.find("!ReflowTargetChanged"), std::string::npos);
 		EXPECT_NE(Source.find("!ReflowPositionActive"), std::string::npos);
 	}
@@ -2202,7 +2261,7 @@ TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
 	EXPECT_FALSE(FilterPolicy.m_ContentDragAllowed);
 
 	SQmScrollRequest Grid;
-	Grid.m_Profile = EQmScrollProfile::GRID;
+	Grid.m_Profile = EQmScrollProfile::SETTINGS_GRID;
 	Grid.m_RowExtent = 18.0f;
 	Grid.m_RowsPerStep = 1;
 	const SQmResolvedScrollPolicy GridPolicy = QmResolveScrollPolicy(Grid, 1.0f, 0.0f);
@@ -2216,6 +2275,25 @@ TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
 	const SQmResolvedScrollPolicy PopupPolicy = QmResolveScrollPolicy(Popup, 1.0f, 0.0f);
 	EXPECT_EQ(PopupPolicy.m_MaxVisibleItems, QM_POPUP_LIST_MAX_VISIBLE_ITEMS);
 	EXPECT_NEAR(PopupPolicy.m_Config.m_WheelScale, 60.0f, 0.01f);
+}
+
+TEST(UiV2ScrollController, SettingsGridShowsRailOnlyWhenContentOverflows)
+{
+	const SQmResolvedScrollPolicy Policy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_GRID, EQmScrollAxis::VERTICAL, 40.0f, 2});
+	CQmScrollController Controller;
+	CQmScrollState State;
+	const CUIRect View{0.0f, 0.0f, 200.0f, 100.0f};
+	const SQmScrollContainerFrame Fits = Controller.PreviewFrame(State, View, 100.0f, Policy.m_Style);
+	EXPECT_FALSE(Fits.m_Scrollable);
+	EXPECT_FALSE(Fits.m_ScrollbarVisible);
+	EXPECT_FLOAT_EQ(Fits.m_ClipRect.w, View.w);
+
+	const SQmScrollContainerFrame Overflows = Controller.PreviewFrame(State, View, 101.0f, Policy.m_Style);
+	EXPECT_TRUE(Overflows.m_Scrollable);
+	EXPECT_TRUE(Overflows.m_ScrollbarVisible);
+	EXPECT_LT(Overflows.m_ClipRect.w, View.w);
+	EXPECT_EQ(Policy.m_RailVisibility, EQmScrollRailVisibility::AUTO);
+	EXPECT_FALSE(Policy.m_ContentDragAllowed);
 }
 
 TEST(UiV2ScrollController, SettingsOuterReservesSlotBeforeOverflowIsKnown)

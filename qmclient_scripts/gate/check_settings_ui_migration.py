@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 
@@ -213,28 +214,28 @@ COMMON_FORBIDDEN = (
 STRICT_LEGACY_PAGES = {"general", "player", "tee", "tee7", "graphics", "sound", "ddnet", "appearance", "controls"}
 DECK_LEGACY_FORBIDDEN = ("BeginSettingsCardDeck(", "BeginSettingsCardDeckCard(")
 PAGE_REQUIRED = {
-	"general": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
-	"player": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField("),
-	"tee": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField(", "ui_widget::NumericField("),
-	"tee7": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField(", "EQmScrollProfile::GRID"),
-	"graphics": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
-	"sound": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
-	"ddnet": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::InputField(", "ui_widget::NumericField("),
-	"appearance": ("SettingsCardDeckForRenderPass().Render(", "ui_widget::NumericField("),
-	"controls": ("m_SettingsCardDeck.Render(", "ui_widget::InputField(", "ui_widget::NumericField("),
-	"qmclient_hud": ("CardDeck.Render(",),
-	"qmclient_function": ("CardDeck.Render(",),
-	"qmclient_visual": ("CardDeck.Render(",),
-	"contributors": ("CardDeck.Render(",),
-	"global_search": ("CardDeck.Render(",),
-	"tclient": ("m_SettingsCardDeck.Render(",),
-	"tclient_bind_wheel": ("CardDeck.Render(",),
-	"tclient_chat_binds": ("CardDeck.Render(",),
-	"tclient_warlist": ("CardDeck.Render(",),
-	"tclient_status_bar": ("CardDeck.Render(",),
-	"tclient_info": ("CardDeck.Render(",),
-	"tclient_profiles": ("CardDeck.Render(",),
-	"tclient_configs": ("CardDeck.Render(",),
+	"general": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::NumericField("),
+	"player": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::InputField("),
+	"tee": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::InputField(", "ui_widget::NumericField("),
+	"tee7": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::InputField(", "EQmScrollProfile::SETTINGS_GRID"),
+	"graphics": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::NumericField("),
+	"sound": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::NumericField("),
+	"ddnet": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::InputField(", "ui_widget::NumericField("),
+	"appearance": ("SettingsCardDeckForRenderPass().RenderCached(", "ui_widget::NumericField("),
+	"controls": ("SettingsCardDeckForRenderPass().RenderCached(", "SettingsCardOrderModelForRenderPass()", "ui_widget::InputField(", "ui_widget::NumericField("),
+	"qmclient_hud": ("CardDeck.RenderCached(", "ResolveSettingsCardDefinitionsRevision("),
+	"qmclient_function": ("CardDeck.RenderCached(", "ResolveSettingsCardDefinitionsRevision("),
+	"qmclient_visual": ("CardDeck.RenderCached(", "ResolveSettingsCardDefinitionsRevision("),
+	"contributors": ("CardDeck.RenderCached(",),
+	"global_search": ("CardDeck.RenderCached(",),
+	"tclient": ('RenderCached(SettingsUiContext("settings_tclient_main"',),
+	"tclient_bind_wheel": ("CardDeck.RenderCached(",),
+	"tclient_chat_binds": ("CardDeck.RenderCached(",),
+	"tclient_warlist": ("CardDeck.RenderCached(",),
+	"tclient_status_bar": ("CardDeck.RenderCached(",),
+	"tclient_info": ("CardDeck.RenderCached(",),
+	"tclient_profiles": ("CardDeck.RenderCached(",),
+	"tclient_configs": ("CardDeck.RenderCached(",),
 	"assets": (
 		"ResolveSettingsContentMetrics(",
 		"s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_OUTER)",
@@ -301,6 +302,26 @@ _PAGE_SOURCE = {
 _DEFAULT_SOURCE = Path("src/game/client/components/menus_settings.cpp")
 _REGISTRY_SOURCE = Path("src/game/client/QmUi/QmCardRegistry.cpp")
 _NAVIGATION_SOURCE = Path("src/game/client/components/menus.cpp")
+_TYPOGRAPHY_SOURCES = (
+	Path("src/game/client/components/menus_settings.cpp"),
+	Path("src/game/client/components/menus_settings7.cpp"),
+	Path("src/game/client/components/menus_settings_controls.cpp"),
+	Path("src/game/client/components/tclient/menus_tclient.cpp"),
+	Path("src/game/client/components/qmclient/menus_qmclient.cpp"),
+)
+# 特殊视觉元素不属于设置内容文字：国旗代码、Tee/皮肤状态图标、统计预览、
+# 颜色拾取器和地图 popup。新增例外必须在这里集中说明，禁止在业务页静默散落裸字号。
+_RAW_FONT_ALLOWLIST = (
+	"Entry.m_aCountryCodeString",
+	"pEntry->m_aCountryCodeString",
+	"&ChangeInfo, aStats",
+	"FONT_ICON_QUESTION",
+	"FONT_ICON_SQUARE_MINUS",
+	"&Label, aBuf, 12.0f",
+	"&Icon, pIconType",
+	"&Label, aLabelText",
+)
+_RAW_FONT_CALL = re.compile(r"(?:DoLabel|DoSettingsLabel|DoSettingsMenuLabel)\([^\n]*(?:9|10|12|13|14|16|20|24|25)\.0f")
 PAGE_CONTRACT_HELPERS = {
 	"controls": ("ApplyControlsContentMetrics", "CMenusSettingsControls::DoSettingsControlsNumericField"),
 	"tee7": ("CMenus::RenderSkinSelection7", "CMenus::RenderSkinPartSelection7"),
@@ -424,6 +445,24 @@ def audit_page(repo_root: Path, page: str) -> list[str]:
 	return errors
 
 
+def audit_shared_contracts(repo_root: Path) -> list[str]:
+	errors: list[str] = []
+	menu_source = _read(repo_root, _NAVIGATION_SOURCE)
+	if "ResolveSettingsRadioRowLayout(" not in menu_source:
+		errors.append("shared: responsive settings radio resolver missing")
+	if "SettingsPageUiScale(pRect->w)" in menu_source:
+		errors.append("shared: settings control font still derives from local rect width")
+
+	for relative in _TYPOGRAPHY_SOURCES:
+		source = _read(repo_root, relative)
+		if "SetScrollProfile(EQmScrollProfile::GRID)" in source:
+			errors.append(f"{relative}: settings grid still uses generic GRID profile")
+		for line_number, line in enumerate(source.splitlines(), 1):
+			if _RAW_FONT_CALL.search(line) and not any(token in line for token in _RAW_FONT_ALLOWLIST):
+				errors.append(f"{relative}:{line_number}: raw settings font literal is not allowlisted")
+	return errors
+
+
 def main() -> int:
 	parser = argparse.ArgumentParser(description=__doc__)
 	group = parser.add_mutually_exclusive_group(required=True)
@@ -434,6 +473,7 @@ def main() -> int:
 
 	pages = tuple(PAGE_STABLE_IDS) if args.all else (args.page,)
 	errors = [error for page in pages for error in audit_page(args.repo_root, page)]
+	errors.extend(audit_shared_contracts(args.repo_root))
 	if errors:
 		print("P5 设置页迁移结构清单失败：")
 		for error in errors:

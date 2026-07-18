@@ -167,6 +167,28 @@ SSettingsCardAnimationWork ResolveSettingsCardAnimationWork(const float EntryDur
 	return Work;
 }
 
+SSettingsCardHeightAnimationWork ResolveSettingsCardHeightAnimationWork(const bool InitializedThisFrame, const bool TargetChanged, const bool AnimationWasActive, const float Duration, const bool Snap)
+{
+	SSettingsCardHeightAnimationWork Work;
+	if(InitializedThisFrame)
+		return Work;
+	const bool NeedsWork = TargetChanged || AnimationWasActive;
+	Work.m_ResolveHeight = !Snap && Duration > 0.0f && NeedsWork;
+	Work.m_SetHeightTarget = NeedsWork && !Work.m_ResolveHeight;
+	return Work;
+}
+
+bool SettingsCardDeckShouldClipContent(const bool CardHeightAnimationActive)
+{
+	return CardHeightAnimationActive;
+}
+
+SSettingsCardColumnFrame ResolveSettingsCardColumnFrame(const float CursorY, const float CardHeight, const float CardGap)
+{
+	const float ResolvedHeight = std::max(0.0f, CardHeight);
+	return {CursorY, ResolvedHeight, CursorY + ResolvedHeight + std::max(0.0f, CardGap)};
+}
+
 bool CommitSettingsCardDeckDrop(qm_card_order::CModel &Model, const char *pTab, const char *pStableId, int TargetColumn, int TargetOrder, const std::vector<int> *pActiveStateIndices)
 {
 	if(pTab == nullptr || pStableId == nullptr || TargetColumn < 0 || TargetColumn > 2)

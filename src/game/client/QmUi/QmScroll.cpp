@@ -185,6 +185,7 @@ SQmResolvedScrollPolicy QmResolveScrollPolicy(const SQmScrollRequest &Request, f
 		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * 3.0f : Policy.m_Config.m_WheelScale;
 		Policy.m_MaxVisibleItems = QM_POPUP_LIST_MAX_VISIBLE_ITEMS;
 		break;
+	case EQmScrollProfile::SETTINGS_GRID:
 	case EQmScrollProfile::GRID:
 		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, UiScale);
 		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * RowsPerStep : Policy.m_Config.m_WheelScale;

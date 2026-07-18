@@ -23,6 +23,7 @@ struct SSettingsCardVisualState
 	bool m_Collapsed = false;
 	bool m_DropFeedback = false;
 	bool m_ReflowCompleteFeedback = false;
+	bool m_ClipContent = false;
 	float m_DrawOffsetX = 0.0f;
 	float m_DrawOffsetY = 0.0f;
 	float m_DrawAlpha = 1.0f;

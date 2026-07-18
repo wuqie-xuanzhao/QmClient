@@ -186,8 +186,9 @@ bool CMenusSettingsControls::DoSettingsControlsNumericField(const char *pTextId,
 void CMenusSettingsControls::Render(CUIRect MainView)
 {
 	ApplyControlsContentMetrics(MainView.w);
+	const bool ReadOnly = Ui()->RenderOnly();
 	CPerfTimer ShellTimer;
-	if(m_BindOptionsDirty || GameClient()->m_KeyBinder.IsActive())
+	if(!ReadOnly && (m_BindOptionsDirty || GameClient()->m_KeyBinder.IsActive()))
 	{
 		UpdateBindOptions();
 		m_BindOptionsDirty = false;
@@ -205,13 +206,13 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 
 	// Quick search
 	IUiContext ControlsSearchCtx = GameClient()->m_Menus.SettingsUiContext("settings_controls_search", FONT_SIZE / ui_token::font::BODY);
-	if(ui_widget::InputField(ControlsSearchCtx, &m_FilterInput, QuickSearch, FONT_SIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && !GameClient()->m_KeyBinder.IsActive()))
+	if(!ReadOnly && ui_widget::InputField(ControlsSearchCtx, &m_FilterInput, QuickSearch, FONT_SIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && !GameClient()->m_KeyBinder.IsActive()))
 	{
 		m_CurrentSearchMatch = 0;
 		UpdateSearchMatches();
 		m_SearchMatchReveal = true;
 	}
-	else if(!m_vSearchMatches.empty() && (Ui()->ConsumeHotkey(CUi::EHotkey::HOTKEY_ENTER) || Ui()->ConsumeHotkey(CUi::EHotkey::HOTKEY_TAB)))
+	else if(!ReadOnly && !m_vSearchMatches.empty() && (Ui()->ConsumeHotkey(CUi::EHotkey::HOTKEY_ENTER) || Ui()->ConsumeHotkey(CUi::EHotkey::HOTKEY_TAB)))
 	{
 		UpdateSearchMatches();
 		m_CurrentSearchMatch += Input()->ShiftIsPressed() ? -1 : 1;
@@ -249,37 +250,81 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	LogControlsPerfStage(GameClient()->Client(), "controls_interactive_layer", InteractiveTimer.ElapsedMs(), false, "page=controls section=interactive");
 	LogControlsPerfStage(GameClient()->Client(), "controls_text_cache", ShellTimer.ElapsedMs(), false, "page=controls section=text_cache");
 
-	CQmScrollState &ScrollState = m_SettingsScrollRegion.State();
-	(void)ScrollState;
+	if(!ReadOnly)
+	{
+		CQmScrollState &ScrollState = m_SettingsScrollRegion.State();
+		(void)ScrollState;
+	}
 	const float UiScale = GameClient()->m_Menus.SettingsPageUiScale(MainView.w);
 	const SSettingsPageLayoutFrame Page = GameClient()->m_Menus.SettingsPageLayout(MainView, UiScale);
 	const IUiContext CardCtx = GameClient()->m_Menus.SettingsUiContext("settings_controls", UiScale);
 	const SSettingsCardDeckVisualOptions VisualOptions = GameClient()->m_Menus.SettingsCardDeckVisualOptions();
 	CPerfTimer BindListTimer;
-	const auto FindCard = [](const char *pId) { return qm_card_registry::FindByStableId(pId); };
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(9);
-	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
-		const qm_card_registry::SCardDefault *pDefault = FindCard(pId);
-		if(pDefault == nullptr)
-			return;
-		SSettingsCardDefinition Definition;
-		Definition.m_Spec = {pDefault->m_pStableId, Localize(pDefault->m_pTitle), nullptr};
-		Definition.m_Measure = [Measure, MinHeight](float Width) { return std::max(MinHeight, Measure ? Measure(Width) : 0.0f); };
-		Definition.m_Render = std::move(Render);
-		Definition.m_IsVisible = std::move(IsVisible);
-		Definition.m_IsCollapsed = std::move(IsCollapsed);
-		Definition.m_HeaderAction = std::move(HeaderAction);
-		Definition.m_MeasureEachFrame = MeasureEachFrame;
-		Definition.m_MeasureRevision = MeasureRevision;
-		Definition.m_RenderWhenClipped = RenderWhenClipped;
-		vCards.push_back(std::move(Definition));
+	uint64_t CardLayoutRevision = str_quickhash("controls");
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (ReadOnly ? 1u : 0u);
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ m_BindLayoutRevision;
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ str_quickhash(m_FilterInput.GetString());
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)m_vSearchMatches.size();
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)(g_Config.m_InpControllerEnable != 0);
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)(g_Config.m_InpControllerAbsolute != 0);
+	const int NumJoysticks = Input()->NumJoysticks();
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)maximum(0, NumJoysticks);
+	if(NumJoysticks > 0)
+	{
+		const IInput::IJoystick *pActiveJoystick = Input()->GetActiveJoystick();
+		if(pActiveJoystick != nullptr)
+		{
+			CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)maximum(0, pActiveJoystick->GetIndex());
+			CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)maximum(0, pActiveJoystick->GetNumAxes());
+		}
+	}
+	for(bool Expanded : m_aBindGroupExpanded)
+		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (Expanded ? 1u : 0u);
+	const bool HasCustomBinds = std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; });
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (HasCustomBinds ? 1u : 0u);
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(GameClient()->m_Menus.m_SettingsCardDeckDisplayCycle, GameClient()->m_Menus.m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
+	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
+		vCards.reserve(9);
+		const auto AddCard = [this](std::vector<SSettingsCardDefinition> &Cards, const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
+			const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(pId);
+			if(pDefault == nullptr)
+				return;
+			SSettingsCardDefinition Definition;
+			Definition.m_Spec = {pDefault->m_pStableId, Localize(pDefault->m_pTitle), nullptr};
+			Definition.m_Measure = [Measure, MinHeight](float Width) { return std::max(MinHeight, Measure ? Measure(Width) : 0.0f); };
+			Definition.m_Render = std::move(Render);
+			Definition.m_IsVisible = std::move(IsVisible);
+			Definition.m_IsCollapsed = std::move(IsCollapsed);
+			Definition.m_HeaderAction = std::move(HeaderAction);
+			Definition.m_MeasureEachFrame = MeasureEachFrame;
+			Definition.m_MeasureRevision = MeasureRevision;
+			Definition.m_RenderWhenClipped = RenderWhenClipped;
+			Cards.push_back(std::move(Definition));
+		};
+		const auto BindHeight = [this](EBindOptionGroup Group, float) {
+			const bool Expanded = m_aBindGroupExpanded[(int)Group];
+			return Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f;
+		};
+		AddCard(vCards, "deck:controls-mouse", 0.0f, [this](float) { return MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
+		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float) { return MeasureSettingsJoystickHeight(); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); });
+		const std::pair<EBindOptionGroup, const char *> aBindCards[] = {
+			{EBindOptionGroup::MOVEMENT, "deck:controls-movement"}, {EBindOptionGroup::WEAPON, "deck:controls-weapon"},
+			{EBindOptionGroup::VOTING, "deck:controls-voting"}, {EBindOptionGroup::CHAT, "deck:controls-chat"},
+			{EBindOptionGroup::DUMMY, "deck:controls-dummy"}, {EBindOptionGroup::MISCELLANEOUS, "deck:controls-miscellaneous"}, {EBindOptionGroup::CUSTOM, "deck:controls-custom"}};
+		for(const auto &[Group, pId] : aBindCards)
+		{
+			const bool IsCustom = Group == EBindOptionGroup::CUSTOM;
+			const auto IsCollapsed = [this, Group] { return !m_aBindGroupExpanded[(int)Group]; };
+			const auto HeaderAction = [this, Group](const SSettingsCardFrame &Frame, bool Collapsed) {
+				const int GroupIndex = (int)Group;
+				if(Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
+					m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
+				DoSettingsControlsLabel(Collapsed ? "controls-expand-collapse-icon-closed" : "controls-expand-collapse-icon-open", &Frame.m_HandleRect, Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, HEADER_FONT_SIZE, TEXTALIGN_MC);
+			};
+			AddCard(vCards, pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group, ReadOnly](CUIRect Rect) { RenderSettingsBindCard(Group, Rect, ReadOnly); }, IsCustom ? std::function<bool()>([HasCustomBinds] { return HasCustomBinds; }) : std::function<bool()>(), true, IsCollapsed, HeaderAction, false, m_BindLayoutRevision);
+		}
 	};
-	const auto BindHeight = [this](EBindOptionGroup Group, float) {
-		const bool Expanded = m_aBindGroupExpanded[(int)Group];
-		return Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f;
-	};
-	if(m_SearchMatchReveal && !m_vSearchMatches.empty() && m_CurrentSearchMatch >= 0 && m_CurrentSearchMatch < (int)m_vSearchMatches.size())
+	if(!ReadOnly && m_SearchMatchReveal && !m_vSearchMatches.empty() && m_CurrentSearchMatch >= 0 && m_CurrentSearchMatch < (int)m_vSearchMatches.size())
 	{
 		const EBindOptionGroup Group = m_vBindOptions[m_vSearchMatches[m_CurrentSearchMatch]].m_Group;
 		static const char *const apCardIds[(int)EBindOptionGroup::NUM] = {
@@ -287,38 +332,23 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			"deck:controls-dummy", "deck:controls-miscellaneous", "deck:controls-custom"};
 		GameClient()->m_Menus.m_SettingsCardDeck.RequestReveal(apCardIds[(int)Group]);
 	}
-	AddCard("deck:controls-mouse", MeasureSettingsMouseHeight(), [this](float) { return MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
-	AddCard("deck:controls-controller", MeasureSettingsJoystickHeight(), [this](float) { return MeasureSettingsJoystickHeight(); }, [this](CUIRect Rect) { RenderSettingsJoystick(Rect); }, {}, false, {}, {}, true);
-	const std::pair<EBindOptionGroup, const char *> aBindCards[] = {
-		{EBindOptionGroup::MOVEMENT, "deck:controls-movement"}, {EBindOptionGroup::WEAPON, "deck:controls-weapon"},
-		{EBindOptionGroup::VOTING, "deck:controls-voting"}, {EBindOptionGroup::CHAT, "deck:controls-chat"},
-		{EBindOptionGroup::DUMMY, "deck:controls-dummy"}, {EBindOptionGroup::MISCELLANEOUS, "deck:controls-miscellaneous"}, {EBindOptionGroup::CUSTOM, "deck:controls-custom"}};
-	for(const auto &[Group, pId] : aBindCards)
-	{
-		const bool IsCustom = Group == EBindOptionGroup::CUSTOM;
-		const auto IsCollapsed = [this, Group] { return !m_aBindGroupExpanded[(int)Group]; };
-		const auto HeaderAction = [this, Group](const SSettingsCardFrame &Frame, bool Collapsed) {
-			const int GroupIndex = (int)Group;
-			if(Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
-				m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
-			DoSettingsControlsLabel(Collapsed ? "controls-expand-collapse-icon-closed" : "controls-expand-collapse-icon-open", &Frame.m_HandleRect, Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, HEADER_FONT_SIZE, TEXTALIGN_MC);
-		};
-		AddCard(pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>(), true, IsCollapsed, HeaderAction, false, m_BindLayoutRevision);
-	}
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 	SSettingsCardDeckInput InputState;
-	InputState.m_MouseX = Ui()->MouseX();
-	InputState.m_MouseY = Ui()->MouseY();
-	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
-	InputState.m_MouseDown = Ui()->MouseButton(0);
-	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
-	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
-	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
-	const SSettingsCardDeckResult DeckResult = GameClient()->m_Menus.m_SettingsCardDeck.Render(CardCtx, Page, "controls", vCards, GameClient()->m_Menus.SettingsCardOrderModel(), &m_SettingsScrollRegion, InputState, GameClient()->m_Menus.SettingsCardMotionSpec(), VisualOptions);
-	if(DeckResult.m_OrderChanged)
+	if(!ReadOnly)
+	{
+		InputState.m_MouseX = Ui()->MouseX();
+		InputState.m_MouseY = Ui()->MouseY();
+		InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+		InputState.m_MouseDown = Ui()->MouseButton(0);
+		InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+		InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+		InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+		InputState.m_pScrollParams = &ScrollParams;
+	}
+	const SSettingsCardDeckResult DeckResult = GameClient()->m_Menus.SettingsCardDeckForRenderPass().RenderCached(CardCtx, Page, "controls", DefinitionsRevision, BuildDefinitions, GameClient()->m_Menus.SettingsCardOrderModelForRenderPass(), ReadOnly ? nullptr : &m_SettingsScrollRegion, InputState, GameClient()->m_Menus.SettingsCardMotionSpec(), VisualOptions);
+	if(!ReadOnly && DeckResult.m_OrderChanged)
 		GameClient()->m_Menus.SaveSettingsCardOrderModel();
 	LogControlsPerfStage(GameClient()->Client(), "controls_bind_list", BindListTimer.ElapsedMs(), false, "page=controls section=bind_list");
 }
@@ -493,9 +523,9 @@ void CMenusSettingsControls::UpdateSearchMatches()
 	}
 }
 
-void CMenusSettingsControls::RenderSettingsBindCard(EBindOptionGroup Group, CUIRect View)
+void CMenusSettingsControls::RenderSettingsBindCard(EBindOptionGroup Group, CUIRect View, bool ReadOnly)
 {
-	RenderSettingsBinds(Group, View);
+	RenderSettingsBinds(Group, View, ReadOnly);
 }
 
 float CMenusSettingsControls::MeasureSettingsBindsHeight(EBindOptionGroup Group) const
@@ -512,7 +542,7 @@ float CMenusSettingsControls::MeasureSettingsBindsHeight(EBindOptionGroup Group)
 	return Height;
 }
 
-void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect View)
+void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect View, bool ReadOnly)
 {
 	for(CBindOption &BindOption : m_vBindOptions)
 	{
@@ -524,7 +554,7 @@ void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect
 		CUIRect KeyReaders;
 		View.HSplitTop(BUTTON_HEIGHT * BindOption.m_vCurrentBinds.size() + BUTTON_SPACING * (BindOption.m_vCurrentBinds.size() - 1) + 4.0f, &KeyReaders, &View);
 		View.HSplitTop(BIND_OPTION_SPACING, nullptr, &View);
-		if(!m_SettingsScrollRegion.AddRect(KeyReaders) && !m_SearchMatchReveal)
+		if(!ReadOnly && !m_SettingsScrollRegion.AddRect(KeyReaders) && !m_SearchMatchReveal)
 		{
 			continue;
 		}
@@ -541,7 +571,7 @@ void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect
 
 		const auto SearchMatch = std::find(m_vSearchMatches.begin(), m_vSearchMatches.end(), &BindOption - m_vBindOptions.data());
 		const bool SearchMatchSelected = SearchMatch != m_vSearchMatches.end() && m_CurrentSearchMatch == (int)(SearchMatch - m_vSearchMatches.begin());
-		if(SearchMatchSelected && m_SearchMatchReveal)
+		if(!ReadOnly && SearchMatchSelected && m_SearchMatchReveal)
 		{
 			m_SearchMatchReveal = false;
 			// Scroll to reveal search match
@@ -570,6 +600,8 @@ void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect
 			KeyReaders.HSplitTop(BUTTON_HEIGHT, &KeyReader, &KeyReaders);
 			KeyReaders.HSplitTop(BUTTON_SPACING, nullptr, &KeyReaders);
 			const bool ActivateKeyReader = BindOption.m_AddNewBindActivate && CurrentBind.m_Bind == EMPTY_BIND_SLOT;
+			if(ReadOnly)
+				continue;
 			const CKeyBinder::CKeyReaderResult KeyReaderResult = GameClient()->m_KeyBinder.DoKeyReader(
 				&CurrentBind.m_KeyReaderButton, &CurrentBind.m_KeyResetButton,
 				&KeyReader, CurrentBind.m_Bind, ActivateKeyReader);
@@ -640,7 +672,7 @@ float CMenusSettingsControls::MeasureSettingsJoystickHeight() const
 	return NumOptions * (BUTTON_HEIGHT + BUTTON_SPACING) + (NumOptions == 1 ? 0.0f : BUTTON_SPACING);
 }
 
-void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View)
+void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View, bool ReadOnly)
 {
 	CUIRect Button;
 	View.HSplitTop(BUTTON_SPACING, nullptr, &View);
@@ -699,7 +731,8 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View)
 			{"controls-ingame-controller-mode-relative", "controls-ingame-controller-mode-absolute"},
 			{Localize("Relative", "Ingame controller mode"), Localize("Absolute", "Ingame controller mode")},
 			{0, 1},
-			g_Config.m_InpControllerAbsolute);
+			g_Config.m_InpControllerAbsolute,
+			ResolveSettingsContentMetrics(View.w));
 
 		if(!WasAbsolute) // Use old value because this was used to allocate the available height
 		{
@@ -719,10 +752,10 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View)
 		DoSettingsControlsNumericField("controls-controller-jitter-tolerance-label", &g_Config.m_InpControllerTolerance, &g_Config.m_InpControllerTolerance, Button, Localize("Controller jitter tolerance"), 0, 50);
 
 		View.HSplitTop(BUTTON_SPACING, nullptr, &View);
-		if(m_SettingsScrollRegion.AddRect(View))
+		if(ReadOnly || m_SettingsScrollRegion.AddRect(View))
 		{
 			View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);
-			RenderJoystickAxisPicker(View);
+			RenderJoystickAxisPicker(View, ReadOnly);
 		}
 	}
 	else
@@ -733,7 +766,7 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View)
 	}
 }
 
-void CMenusSettingsControls::RenderJoystickAxisPicker(CUIRect View)
+void CMenusSettingsControls::RenderJoystickAxisPicker(CUIRect View, bool ReadOnly)
 {
 	const float AxisWidth = 0.2f * View.w;
 	const float StatusWidth = 0.4f * View.w;
@@ -758,7 +791,7 @@ void CMenusSettingsControls::RenderJoystickAxisPicker(CUIRect View)
 	{
 		View.HSplitTop(BUTTON_SPACING, nullptr, &View);
 		View.HSplitTop(BUTTON_HEIGHT, &Row, &View);
-		if(!m_SettingsScrollRegion.AddRect(Row))
+		if(!ReadOnly && !m_SettingsScrollRegion.AddRect(Row))
 		{
 			continue;
 		}

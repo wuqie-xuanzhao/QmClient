@@ -143,6 +143,18 @@ namespace ui_widget
 		const bool HasIcon = Options.m_pLeadingIcon != nullptr || Search;
 		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, Options.m_TrailingWidth);
 		const float FontSize = std::min(Options.m_FontSize, Layout.m_ContentRect.h * CUi::ms_FontmodHeight * 0.8f);
+		if(Ctx.m_pUi->RenderOnly())
+		{
+			// 文本计划只收集稳定文本，不绘制输入框 chrome，也不修改输入、焦点或动画状态。
+			const char *pPlaceholder = Options.m_pPlaceholder != nullptr ? Options.m_pPlaceholder : (Search ? Localize("Search") : nullptr);
+			if(WasEmpty && pPlaceholder != nullptr)
+				Ctx.m_pUi->DoLabel(&Layout.m_ContentRect, pPlaceholder, FontSize, ResolveInputFieldTextAlign(Options));
+			else if(!WasEmpty && !pInput->IsHidden())
+				Ctx.m_pUi->DoLabel(&Layout.m_ContentRect, pInput->GetString(), FontSize, ResolveInputFieldTextAlign(Options));
+			if(Options.m_pTrailingText != nullptr && Layout.m_TrailingRect.w > 0.0f)
+				Ctx.m_pUi->DoLabel(&Layout.m_TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
+			return {};
+		}
 		const SUiTheme &Theme = ThemeFor(Ctx);
 		const bool Hovered = Ctx.m_pUi->HotItem() == pInput;
 		const ColorRGBA PlateColor = Hovered && !pInput->IsActive() ? Theme.m_SurfaceHovered : Theme.m_InputSurface;
@@ -238,6 +250,14 @@ namespace ui_widget
 	{
 		if(Ctx.m_pUi == nullptr || pInput == nullptr || pValue == nullptr)
 			return {};
+		if(Ctx.m_pUi->RenderOnly())
+		{
+			char aValue[32];
+			str_format(aValue, sizeof(aValue), "%d", std::clamp(*pValue, Min, Max));
+			const float FontSize = std::min(Options.m_FontSize, Rect.h * CUi::ms_FontmodHeight * 0.8f);
+			Ctx.m_pUi->DoLabel(&Rect, aValue, FontSize, Options.m_TextAlign);
+			return {};
+		}
 
 		const int ClampedValue = std::clamp(*pValue, Min, Max);
 		if(ClampedValue != *pValue)
@@ -347,6 +367,25 @@ namespace ui_widget
 			}
 			else
 				Ctx.m_pUi->DoLabel(&Label, Options.m_pLabel, LabelFontSize, Options.m_LabelAlign);
+		}
+		if(RenderOnly)
+		{
+			const int PreviewStoredValue = *pValue;
+			const bool IsInfinite = SliderInputIsInfiniteValue(PreviewStoredValue, Infinite);
+			int StoredValue = PreviewStoredValue;
+			if(!IsInfinite && !NoClampValue)
+				StoredValue = std::clamp(StoredValue, SliderMin, SliderInputStoredMaximum(Max, Multiplier));
+			const int DisplayValue = IsInfinite ? Max : SliderInputDisplayValue(StoredValue, Multiplier);
+			char aValue[64];
+			if(IsInfinite)
+				str_copy(aValue, "\xe2\x88\x9e");
+			else if(Options.m_pMaxText != nullptr && DisplayValue == Max)
+				str_copy(aValue, Options.m_pMaxText);
+			else
+				str_format(aValue, sizeof(aValue), "%d%s", DisplayValue, HasSuffix ? Options.m_pSuffix : "");
+			const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
+			Ctx.m_pUi->DoLabel(&InputField, aValue, FieldFontSize, TEXTALIGN_MC);
+			return false;
 		}
 
 		bool Changed = false;

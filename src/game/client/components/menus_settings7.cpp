@@ -51,15 +51,19 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 		return;
 
 	const float ContentHeight = maximum(520.0f * UiScale, Page.m_ScrollViewport.h - 2.0f * ui_token::settings::CARD_PADDING * UiScale);
-	std::vector<SSettingsCardDefinition> vCards;
-	SSettingsCardDefinition EditorCard;
-	EditorCard.m_Spec = {pEditorDefault->m_pStableId, Localize(pEditorDefault->m_pTitle), nullptr};
-	EditorCard.m_Measure = [ContentHeight](float) { return ContentHeight; };
-	EditorCard.m_Render = [this, Metrics](CUIRect Content) { RenderSettingsTee7Content(Content, Metrics); };
-	vCards.push_back(std::move(EditorCard));
+	const bool RenderOnly = Ui()->RenderOnly();
+	const uint64_t CardLayoutRevision = ((uint64_t)str_quickhash("tee7") << 32) ^ (uint64_t)maximum(0, (int)(ContentHeight * 100.0f + 0.5f)) ^ (RenderOnly ? 1u : 0u);
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
+	const auto BuildDefinitions = [this, Metrics, ContentHeight, pEditorDefault](std::vector<SSettingsCardDefinition> &vCards) {
+		vCards.reserve(1);
+		SSettingsCardDefinition EditorCard;
+		EditorCard.m_Spec = {pEditorDefault->m_pStableId, Localize(pEditorDefault->m_pTitle), nullptr};
+		EditorCard.m_Measure = [ContentHeight](float) { return ContentHeight; };
+		EditorCard.m_Render = [this, Metrics](CUIRect Content) { RenderSettingsTee7Content(Content, Metrics); };
+		vCards.push_back(std::move(EditorCard));
+	};
 
 	static CScrollRegion s_Tee7SettingsScrollRegion;
-	const bool RenderOnly = Ui()->RenderOnly();
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f));
 	SSettingsCardDeckInput InputState;
@@ -72,7 +76,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const IUiContext CardCtx = SettingsUiContext("settings_tee7", UiScale);
-	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().Render(CardCtx, Page, "tee7", vCards, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_Tee7SettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(CardCtx, Page, "tee7", DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_Tee7SettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
 	if(!RenderOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 }
@@ -172,21 +176,24 @@ void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentM
 	TabBars.HSplitTop(28.0f, &InfoRow, &TabBars);
 	RenderSettingsTeeIdentity(InfoRow, nullptr);
 
-	if(!s_Tee7TransitionInitialized)
+	if(!Ui()->RenderOnly())
 	{
-		s_PrevTee7Dummy = m_Dummy;
-		s_PrevTee7Custom = m_CustomSkinMenu;
-		s_Tee7TransitionInitialized = true;
-	}
-	else if(m_Dummy != s_PrevTee7Dummy || m_CustomSkinMenu != s_PrevTee7Custom)
-	{
-		if(m_CustomSkinMenu != s_PrevTee7Custom)
-			s_Tee7TransitionDirection = m_CustomSkinMenu ? 1.0f : -1.0f;
-		else
-			s_Tee7TransitionDirection = m_Dummy ? 1.0f : -1.0f;
-		TriggerUiSwitchAnimation(Tee7SwitchNode, 0.18f);
-		s_PrevTee7Dummy = m_Dummy;
-		s_PrevTee7Custom = m_CustomSkinMenu;
+		if(!s_Tee7TransitionInitialized)
+		{
+			s_PrevTee7Dummy = m_Dummy;
+			s_PrevTee7Custom = m_CustomSkinMenu;
+			s_Tee7TransitionInitialized = true;
+		}
+		else if(m_Dummy != s_PrevTee7Dummy || m_CustomSkinMenu != s_PrevTee7Custom)
+		{
+			if(m_CustomSkinMenu != s_PrevTee7Custom)
+				s_Tee7TransitionDirection = m_CustomSkinMenu ? 1.0f : -1.0f;
+			else
+				s_Tee7TransitionDirection = m_Dummy ? 1.0f : -1.0f;
+			TriggerUiSwitchAnimation(Tee7SwitchNode, 0.18f);
+			s_PrevTee7Dummy = m_Dummy;
+			s_PrevTee7Custom = m_CustomSkinMenu;
+		}
 	}
 
 	const float TransitionStrength = ReadUiSwitchAnimation(Tee7SwitchNode);
@@ -338,8 +345,8 @@ void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentM
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 	static CButtonContainer s_SkinRefreshButton;
-	if(DoButton_Menu(&s_SkinRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) ||
-		(!Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && (Input()->KeyPress(KEY_F5) || (Input()->ModifierIsPressed() && Input()->KeyPress(KEY_R)))))
+	if(!Ui()->RenderOnly() && (DoButton_Menu(&s_SkinRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) ||
+					  (!Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && (Input()->KeyPress(KEY_F5) || (Input()->ModifierIsPressed() && Input()->KeyPress(KEY_R))))))
 	{
 		// reset render flags for possible loading screen
 		TextRender()->SetRenderFlags(0);
@@ -394,16 +401,19 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView, float BodySize)
 		}
 	}
 
-	if(!s_SkinPartTransitionInitialized)
+	if(!Ui()->RenderOnly())
 	{
-		s_PrevSkinPart = m_TeePartSelected;
-		s_SkinPartTransitionInitialized = true;
-	}
-	else if(m_TeePartSelected != s_PrevSkinPart)
-	{
-		s_SkinPartTransitionDirection = m_TeePartSelected > s_PrevSkinPart ? 1.0f : -1.0f;
-		TriggerUiSwitchAnimation(SkinPartSwitchNode, 0.18f);
-		s_PrevSkinPart = m_TeePartSelected;
+		if(!s_SkinPartTransitionInitialized)
+		{
+			s_PrevSkinPart = m_TeePartSelected;
+			s_SkinPartTransitionInitialized = true;
+		}
+		else if(m_TeePartSelected != s_PrevSkinPart)
+		{
+			s_SkinPartTransitionDirection = m_TeePartSelected > s_PrevSkinPart ? 1.0f : -1.0f;
+			TriggerUiSwitchAnimation(SkinPartSwitchNode, 0.18f);
+			s_PrevSkinPart = m_TeePartSelected;
+		}
 	}
 
 	const float TransitionStrength = ReadUiSwitchAnimation(SkinPartSwitchNode);
@@ -471,7 +481,7 @@ void CMenus::RenderSkinSelection7(CUIRect MainView, float BodySize)
 	static float s_LastSelectionTime = -10.0f;
 	static std::vector<std::string> s_vSkinNames;
 	static CListBox s_ListBox;
-	s_ListBox.SetScrollProfile(EQmScrollProfile::GRID);
+	s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_GRID);
 	s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 
 	const auto RefreshTime = GameClient()->m_Skins7.LastRefreshTime();
@@ -559,7 +569,7 @@ void CMenus::RenderSkinPartSelection7(CUIRect MainView, float BodySize)
 {
 	static std::vector<std::string> s_avPartNames[protocol7::NUM_SKINPARTS];
 	static CListBox s_ListBox;
-	s_ListBox.SetScrollProfile(EQmScrollProfile::GRID);
+	s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_GRID);
 	s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 	const auto RefreshTime = GameClient()->m_Skins7.LastRefreshTime();
 	if(GameClient()->m_Skins7.IsLoading() || !m_SkinPartsList7LastRefreshTime.has_value() || m_SkinPartsList7LastRefreshTime.value() != RefreshTime)

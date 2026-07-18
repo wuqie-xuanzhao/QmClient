@@ -25,6 +25,44 @@ struct SSettingsCardAnimationWork
 	bool m_SetReflowTarget = false;
 };
 
+struct SSettingsCardHeightAnimationWork
+{
+	bool m_ResolveHeight = false;
+	bool m_SetHeightTarget = false;
+};
+
+struct SSettingsCardColumnFrame
+{
+	float m_Y = 0.0f;
+	float m_Height = 0.0f;
+	float m_NextY = 0.0f;
+};
+
+class CSettingsCardColumnFramePlan
+{
+public:
+	CSettingsCardColumnFramePlan(float CursorY, float CardGap) :
+		m_CursorY(CursorY),
+		m_CardGap(std::max(0.0f, CardGap))
+	{
+	}
+
+	SSettingsCardColumnFrame Append(float CardHeight)
+	{
+		const float ResolvedHeight = std::max(0.0f, CardHeight);
+		const SSettingsCardColumnFrame Frame{m_CursorY, ResolvedHeight, m_CursorY + ResolvedHeight + m_CardGap};
+		m_CursorY = Frame.m_NextY;
+		return Frame;
+	}
+
+	float CursorY() const { return m_CursorY; }
+	void SetCursorY(float CursorY) { m_CursorY = CursorY; }
+
+private:
+	float m_CursorY;
+	float m_CardGap;
+};
+
 // 以下函数是公共 Deck 的无渲染决策层；仅处理 model/order/geometry，不能依赖 UI renderer。
 // 活动 state 集合由当前页面 definitions 决定，未注册的条件卡不得占用任何 layout slot。
 std::array<std::vector<int>, 3> BuildSettingsCardDeckColumnOrder(const qm_card_order::CModel &Model, const char *pTab, const std::vector<int> &vActiveStateIndices);
@@ -85,4 +123,10 @@ bool SettingsCardDeckScrollMoved(bool HasPreviousOffset, float PreviousOffsetY, 
 bool SettingsCardDeckAllowsDragStart(bool EntryPending, bool EntryPositionActive, bool ReflowTargetChanged, bool ReflowPositionActive);
 // 稳定帧不得访问动画 runtime；仅目标变化、活动轨道或关闭动效后的复位需要工作。
 SSettingsCardAnimationWork ResolveSettingsCardAnimationWork(float EntryDuration, bool EntryWasActive, bool ReflowInitializedThisFrame, bool SnapReflow, float ReflowDuration, bool ReflowTargetChanged, bool ReflowWasActive);
+// 首帧直接采用稳定目标；之后仅在高度目标变化或轨道仍活动时访问动画 runtime。
+SSettingsCardHeightAnimationWork ResolveSettingsCardHeightAnimationWork(bool InitializedThisFrame, bool TargetChanged, bool AnimationWasActive, float Duration, bool Snap);
+// 只裁剪正在改变高度的卡片；同 Deck 的其他卡片不得跟随闪烁或截断 focus ring。
+bool SettingsCardDeckShouldClipContent(bool CardHeightAnimationActive);
+// 每一帧都从前一张卡当前动画底边继续，保证动态高度全过程同列卡片不重叠。
+SSettingsCardColumnFrame ResolveSettingsCardColumnFrame(float CursorY, float CardHeight, float CardGap);
 #endif // GAME_CLIENT_QMUI_SETTINGSCARDDECKLOGIC_H

@@ -567,7 +567,12 @@ qm_card_order::CModel &CMenus::SettingsCardOrderModelForRenderPass()
 {
 	if(!Ui()->RenderOnly())
 		return SettingsCardOrderModel();
-	m_SettingsCardRenderOnlyOrderModel.LoadMerged(g_Config.m_QmGlobalCardOrder, qm_card_registry::BuildDefaultEntries());
+	if(!m_SettingsCardRenderOnlyOrderInitialized || m_SettingsCardRenderOnlyOrderSource != g_Config.m_QmGlobalCardOrder)
+	{
+		m_SettingsCardRenderOnlyOrderModel.LoadMerged(g_Config.m_QmGlobalCardOrder, qm_card_registry::BuildDefaultEntries());
+		m_SettingsCardRenderOnlyOrderSource = g_Config.m_QmGlobalCardOrder;
+		m_SettingsCardRenderOnlyOrderInitialized = true;
+	}
 	return m_SettingsCardRenderOnlyOrderModel;
 }
 
@@ -729,6 +734,9 @@ uint64_t CMenus::UiAnimNodeKey(const char *pScope, const uint64_t Id) const
 
 void CMenus::TriggerUiSwitchAnimation(const uint64_t NodeKey, const float DurationSec)
 {
+	if(Ui()->RenderOnly())
+		return;
+
 	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
 	AnimRuntime.SetValue(NodeKey, EUiAnimProperty::POS_X, 1.0f);
 
@@ -746,6 +754,9 @@ void CMenus::TriggerUiSwitchAnimation(const uint64_t NodeKey, const float Durati
 
 float CMenus::ReadUiSwitchAnimation(const uint64_t NodeKey) const
 {
+	if(Ui()->RenderOnly())
+		return 0.0f;
+
 	const CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
 	return std::clamp(AnimRuntime.GetValue(NodeKey, EUiAnimProperty::POS_X, 0.0f), 0.0f, 1.0f);
 }
@@ -772,6 +783,9 @@ float CMenus::ApplyUiSwitchOffset(CUIRect &View, const float Strength, const flo
 float CMenus::ResolveMenuTabAnimationValue(const void *pButtonId, const bool Active, const float DurationSec) const
 {
 	const float Target = Active ? 1.0f : 0.0f;
+	if(Ui()->RenderOnly())
+		return Target;
+
 	static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_tab_hover"));
 	const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pButtonId));
 	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
@@ -811,10 +825,14 @@ ColorRGBA CMenus::SettingsTabbarColor(float AlphaScale) const
 int CMenus::DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, bool Active, const unsigned Flags)
 {
 	const float HoverTarget = Active && Ui()->HotItem() == pId ? 1.0f : 0.0f;
-	static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_toggle_hover"));
-	const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pId));
-	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
-	const float HoverAlpha = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, HoverTarget, 0.10f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	float HoverAlpha = HoverTarget;
+	if(!Ui()->RenderOnly())
+	{
+		static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_toggle_hover"));
+		const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pId));
+		CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+		HoverAlpha = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, HoverTarget, 0.10f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	}
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIBUTTONS].m_Id);
 	Graphics()->QuadsBegin();
@@ -836,16 +854,20 @@ int CMenus::DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, 
 	return Active ? Ui()->DoButtonLogic(pId, Checked, pRect, Flags) : 0;
 }
 
-int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement)
+int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement, float TextFontSize)
 {
 	CUIRect Text = *pRect;
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
 	const bool Pressed = Ui()->CheckActiveItem(pButtonContainer);
 	const float HoverTarget = Checked || MouseInside || Pressed ? 1.0f : 0.0f;
-	static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_button_hover"));
-	const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pButtonContainer));
-	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
-	const float HoverStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, HoverTarget, 0.11f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	float HoverStrength = HoverTarget;
+	if(!Ui()->RenderOnly())
+	{
+		static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_button_hover"));
+		const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pButtonContainer));
+		CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+		HoverStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, HoverTarget, 0.11f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	}
 	const float HoverLift = -1.25f * HoverStrength;
 
 	if(Checked)
@@ -884,10 +906,11 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 	Text = MenuButtonTextRect(&Text, FontFactor, HoverLift);
 	if(pText != nullptr && pText[0] != '\0')
 	{
+		const float ResolvedTextFontSize = TextFontSize > 0.0f ? std::min(TextFontSize, Text.h * CUi::ms_FontmodHeight) : Text.h * CUi::ms_FontmodHeight;
 		if(pTextUiElement != nullptr)
-			DoSettingsLabelStreamed(*pTextUiElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			DoSettingsLabelStreamed(*pTextUiElement, &Text, pText, ResolvedTextFontSize, TEXTALIGN_MC);
 		else
-			Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			Ui()->DoLabel(&Text, pText, ResolvedTextFontSize, TEXTALIGN_MC);
 	}
 
 	return Ui()->DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
@@ -1244,7 +1267,7 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	SLabelProperties Props = LabelProps;
 	Props.m_MaxWidth = Label.w;
 	const bool AutoMinimumFontSize = Props.m_MinimumFontSize <= 0.0f;
-	const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : ui_token::font::BODY * SettingsPageUiScale(pRect->w);
+	const float BodySize = RequestedFontSize > 0.0f ? RequestedFontSize : std::clamp(ui_token::font::BODY * SettingsPageUiScale(0.0f), 10.0f, ui_token::font::BODY);
 	const float FontSize = ResolveSettingsCheckboxFontSize(BodySize, RequestedFontSize, pRect->h, Box.h, CUi::ms_FontmodHeight);
 	if(AutoMinimumFontSize)
 		Props.m_MinimumFontSize = FontSize * 0.7f;
@@ -1310,24 +1333,25 @@ void CMenus::DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTex
 	DoSettingsLabelStreamed(Element, pLabelRect, pText, Size, Align, LabelProps, -1, nullptr, true);
 }
 
-int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding, const ColorRGBA &Color, float FontFactor)
+int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding, const ColorRGBA &Color, float FontFactor, float BodySize)
 {
 	dbg_assert(pBC != nullptr, "settings menu button requires a stable button container");
+	const float ResolvedBodySize = BodySize > 0.0f ? BodySize : std::clamp(ui_token::font::BODY * SettingsPageUiScale(0.0f), 10.0f, ui_token::font::BODY);
 	if(pTextId == nullptr)
 	{
-		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding);
+		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, nullptr, ResolvedBodySize);
 	}
 	CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
 	SLabelProperties Props;
 	Props.m_MaxWidth = Text.w;
-	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, ResolvedBodySize, TEXTALIGN_MC, Props);
 	if(m_MenuTextPlanCollecting)
 	{
-		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Text, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props, StyleKey);
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Text, ResolvedBodySize, TEXTALIGN_MC, Props, StyleKey);
 		return 0;
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-	return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement);
+	return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement, ResolvedBodySize);
 }
 
 bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
@@ -1364,7 +1388,7 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	Options.m_pScale = pScale;
 	Options.m_Flags = Flags;
 	Options.m_pMaxText = pMaxText;
-	Options.m_FontSize = std::min(ui_token::font::BODY * SettingsPageUiScale(pRect->w), pRect->h * CUi::ms_FontmodHeight * 0.8f);
+	Options.m_FontSize = std::min(std::clamp(ui_token::font::BODY * SettingsPageUiScale(0.0f), 10.0f, ui_token::font::BODY), pRect->h * CUi::ms_FontmodHeight * 0.8f);
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 	if(PrepareSettingsNumericFieldLabel(Page, Tab, Subtab, pTextId, *pRect, pStr, Flags, Options))
@@ -1486,20 +1510,17 @@ bool CMenus::DoLine_RadioMenu(CUIRect &View, const char *pLabel, std::vector<CBu
 	return Pressed;
 }
 
-bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value)
+bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value, const SSettingsContentMetrics &Metrics)
 {
 	dbg_assert(vButtonContainers.size() == vValues.size(), "vButtonContainers and vValues must have the same size");
 	dbg_assert(vButtonContainers.size() == vLabels.size(), "vButtonContainers and vLabels must have the same size");
 	dbg_assert(vButtonContainers.size() == vButtonTextIds.size(), "vButtonContainers and vButtonTextIds must have the same size");
 	const int N = vButtonContainers.size();
-	const float Spacing = 2.0f;
-	const float ButtonHeight = 20.0f;
-	CUIRect Label, Buttons;
-	View.HSplitTop(Spacing, nullptr, &View);
-	View.HSplitTop(ButtonHeight, &Buttons, &View);
-	Buttons.VSplitMid(&Label, &Buttons, 10.0f);
-	Buttons.HMargin(2.0f, &Buttons);
-	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, 13.0f, TEXTALIGN_ML);
+	const SSettingsRadioRowLayout Layout = ResolveSettingsRadioRowLayout(View, N, Metrics);
+	CUIRect Label = Layout.m_LabelRect;
+	CUIRect Buttons = Layout.m_ButtonsRect;
+	View.HSplitTop(Layout.m_Height, nullptr, &View);
+	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, Metrics.m_BodySize, TEXTALIGN_ML);
 	const float W = Buttons.w / N;
 	bool Pressed = false;
 	for(int i = 0; i < N; ++i)
@@ -1511,7 +1532,7 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 			Corner = IGraphics::CORNER_L;
 		if(i == N - 1)
 			Corner = IGraphics::CORNER_R;
-		if(DoSettingsButton_Menu(Page, Tab, Subtab, &vButtonContainers[i], vButtonTextIds[i], vLabels[i], vValues[i] == Value, &Button, BUTTONFLAG_LEFT, Corner))
+		if(DoSettingsButton_Menu(Page, Tab, Subtab, &vButtonContainers[i], vButtonTextIds[i], vLabels[i], vValues[i] == Value, &Button, BUTTONFLAG_LEFT, Corner, 5.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), 0.0f, Metrics.m_BodySize))
 		{
 			Pressed = true;
 			Value = vValues[i];
@@ -1549,7 +1570,7 @@ ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float Lin
 
 	const ColorHSLA PickedColor = DoButton_ColorPicker(&ColorPickerButton, pColorValue, Alpha);
 
-	if(DoButton_Menu(pResetId, Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.1f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)))
+	if(DoButton_Menu(pResetId, Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.1f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), nullptr, LabelSize))
 	{
 		*pColorValue = color_cast<ColorHSLA>(DefaultColor).Pack(Alpha);
 	}
@@ -4443,9 +4464,11 @@ void CMenus::RenderThemeSelection(CUIRect MainView)
 	CPerfTimer RenderTimer;
 	static CListBox s_ListBox;
 	auto &MenuBackground = GameClient()->m_MenuBackground;
+	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(MainView.w);
+	s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
 
-	const float HeaderHeight = 20.0f;
-	const float HeaderSpacing = 2.0f;
+	const float HeaderHeight = Metrics.m_LineHeight;
+	const float HeaderSpacing = Metrics.m_LineSpacing;
 	CUIRect HeaderView = MainView;
 	CUIRect Header, HeaderRow;
 	HeaderView.HSplitTop(HeaderHeight + HeaderSpacing, &Header, nullptr);
@@ -4455,9 +4478,9 @@ void CMenus::RenderThemeSelection(CUIRect MainView)
 
 	static CButtonContainer s_RefreshButton;
 	CUIRect RefreshButton;
-	HeaderRow.VSplitRight(80.0f, nullptr, &RefreshButton);
-	RefreshButton.VMargin(2.0f, &RefreshButton);
-	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshButton))
+	HeaderRow.VSplitRight(80.0f * Metrics.m_UiScale, nullptr, &RefreshButton);
+	RefreshButton.VMargin(Metrics.m_LineSpacing * 0.5f, &RefreshButton);
+	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), nullptr, Metrics.m_BodySize))
 		MenuBackground.RefreshThemes();
 
 	const std::vector<CTheme> &vThemes = MenuBackground.GetThemes();
@@ -4473,7 +4496,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView)
 	}
 	const int OldSelected = SelectedTheme;
 
-	s_ListBox.DoStart(20.0f, vThemes.size(), 1, 3, SelectedTheme);
+	s_ListBox.DoStart(Metrics.m_ListRowHeight, vThemes.size(), 1, 3, SelectedTheme);
 
 	for(int i = 0; i < (int)vThemes.size(); i++)
 	{
@@ -4509,7 +4532,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView)
 		else
 			str_copy(aName, Theme.m_Name.c_str());
 
-		Ui()->DoLabel(&Label, aName, 16.0f * CUi::ms_FontmodHeight, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, aName, Metrics.m_BodySize, TEXTALIGN_ML);
 	}
 
 	SelectedTheme = s_ListBox.DoEnd();

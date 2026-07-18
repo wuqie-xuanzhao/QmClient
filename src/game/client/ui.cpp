@@ -2632,6 +2632,12 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)
 {
 	static CScrollRegion s_DefaultDropDownScrollRegion;
+	if(RenderOnly())
+	{
+		if(pRect != nullptr && pStrs != nullptr && CurSelection >= 0 && CurSelection < Num)
+			DoLabel(pRect, pStrs[CurSelection], pRect->h * ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
+		return CurSelection;
+	}
 
 	if(!State.m_Init)
 	{

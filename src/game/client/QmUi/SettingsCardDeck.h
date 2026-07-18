@@ -60,6 +60,19 @@ class CSettingsCardDeck
 {
 public:
 	SSettingsCardDeckResult Render(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions);
+	template<typename FBuildDefinitions>
+	SSettingsCardDeckResult RenderCached(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, uint64_t DefinitionsRevision, FBuildDefinitions &&BuildDefinitions, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions)
+	{
+		if(!m_CachedDefinitionsInitialized || m_CachedDefinitionsRevision != DefinitionsRevision)
+		{
+			m_vCachedDefinitions.clear();
+			BuildDefinitions(m_vCachedDefinitions);
+			m_CachedDefinitionsRevision = DefinitionsRevision;
+			m_CachedDefinitionsInitialized = true;
+			m_CachedDefinitionsDirty = true;
+		}
+		return RenderInternal(Ctx, Layout, pTab, m_vCachedDefinitions, Model, pScrollRegion, Input, Motion, VisualOptions, true);
+	}
 	void RequestReveal(const char *pStableId);
 	void BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry);
 
@@ -70,17 +83,19 @@ private:
 		int m_StateIndex = -1;
 		int m_Column = 0;
 		SSettingsCardFrame m_Frame;
+		bool m_ContentHeightAnimationActive = false;
 	};
 
 	struct SRuntimeState
 	{
 		float m_DropFeedbackRemaining = 0.0f;
-		float m_ReflowCompleteFeedbackRemaining = 0.0f;
 		float m_LastReflowTargetY = 0.0f;
-		uint64_t m_EntryDisplayCycle = UINT64_MAX;
-		bool m_EntryWasActive = false;
+		float m_AnimatedContentHeight = 0.0f;
+		float m_LastContentHeightTarget = 0.0f;
 		bool m_ReflowInitialized = false;
 		bool m_ReflowWasActive = false;
+		bool m_ContentHeightInitialized = false;
+		bool m_ContentHeightWasActive = false;
 		bool m_CollapsedInitialized = false;
 		bool m_LastCollapsed = false;
 	};
@@ -99,9 +114,12 @@ private:
 	};
 
 	void PrepareDefinitions(const std::vector<SSettingsCardDefinition> &vCards, const qm_card_order::CModel &Model);
+	SSettingsCardDeckResult RenderInternal(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions, bool PersistentDefinitions);
 
 	uint64_t m_DisplayCycle = 0;
+	uint64_t m_EntryDisplayCycle = UINT64_MAX;
 	bool m_AnimateEntry = false;
+	bool m_EntryWasActive = false;
 	bool m_SuppressHoverFeedbackOnce = false;
 	bool m_HasPointerPosition = false;
 	bool m_HasScrollOffset = false;
@@ -116,6 +134,15 @@ private:
 	std::vector<float> m_vContentHeights;
 	std::vector<float> m_vContentWidths;
 	std::vector<uint64_t> m_vMeasureRevisions;
+	std::vector<SSettingsCardDefinition> m_vCachedDefinitions;
+	uint64_t m_CachedDefinitionsRevision = 0;
+	bool m_CachedDefinitionsInitialized = false;
+	bool m_CachedDefinitionsDirty = false;
+	int m_PreparedDefinitionModelCount = -1;
+	const SSettingsCardDefinition *m_pPreparedDefinitionData = nullptr;
+	size_t m_PreparedDefinitionCount = 0;
+	std::string m_PreparedDefinitionTab;
+	std::vector<const char *> m_vPreparedStableIds;
 	std::vector<const SSettingsCardDefinition *> m_vDefinitionsByState;
 	std::vector<int> m_vBoundDefinitionStateIndices;
 	std::vector<int> m_vActiveStateIndices;

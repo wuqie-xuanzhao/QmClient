@@ -397,6 +397,123 @@ namespace
 		CUi *m_pUi;
 	};
 
+	// Deck definitions are cached across frames, while several TClient pages still
+	// build frame-local layout callbacks. The cached callbacks only retain this
+	// stable bridge and the bridge is rebound for the synchronous RenderCached call.
+	class CTClientSettingsCardFrameBinding
+	{
+	public:
+		template<typename TMeasure, typename TRender>
+		void Bind(const TMeasure &Measure, const TRender &Render)
+		{
+			m_SectionMeasure = nullptr;
+			m_SectionRender = nullptr;
+			m_pIndexedMeasureObject = nullptr;
+			m_pIndexedRenderObject = nullptr;
+			m_Index = 0;
+			m_pMeasureObject = &Measure;
+			m_pMeasure = [](const void *pObject, float ContentWidth) {
+				return (*static_cast<const TMeasure *>(pObject))(ContentWidth);
+			};
+			m_pRenderObject = &Render;
+			m_pRender = [](const void *pObject, CUIRect &Content) {
+				(*static_cast<const TRender *>(pObject))(Content);
+			};
+		}
+
+		template<typename TMeasure, typename TRender>
+		void BindIndexed(const TMeasure &Measure, const TRender &Render, size_t Index)
+		{
+			m_SectionMeasure = nullptr;
+			m_SectionRender = nullptr;
+			m_Index = Index;
+			m_pMeasure = [](const void *pObject, float ContentWidth) {
+				const auto *pSelf = static_cast<const CTClientSettingsCardFrameBinding *>(pObject);
+				return (*static_cast<const TMeasure *>(pSelf->m_pIndexedMeasureObject))(pSelf->m_Index, ContentWidth);
+			};
+			m_pIndexedMeasureObject = &Measure;
+			m_pMeasureObject = this;
+			m_pRenderObject = this;
+			m_pIndexedRenderObject = &Render;
+			m_pRender = [](const void *pObject, CUIRect &Content) {
+				const auto *pSelf = static_cast<const CTClientSettingsCardFrameBinding *>(pObject);
+				(*static_cast<const TRender *>(pSelf->m_pIndexedRenderObject))(pSelf->m_Index, Content);
+			};
+		}
+
+		void BindSection(SSettingsSection &Section)
+		{
+			// Deck 与 loader 在当前帧同步消费同一组回调。把较大的 frame-local
+			// function 移入稳定 bridge，并给 loader 留下小型转发器。
+			m_SectionMeasure = std::move(Section.m_MeasureFn);
+			m_SectionRender = std::move(Section.m_RenderFullFn);
+			Section.m_MeasureFn = [this](CUIRect &MeasureColumn) {
+				return m_SectionMeasure ? m_SectionMeasure(MeasureColumn) : 0.0f;
+			};
+			m_pIndexedMeasureObject = nullptr;
+			m_pIndexedRenderObject = nullptr;
+			m_Index = 0;
+			m_pMeasureObject = this;
+			m_pMeasure = [](const void *pObject, float ContentWidth) {
+				const auto *pSelf = static_cast<const CTClientSettingsCardFrameBinding *>(pObject);
+				if(!pSelf->m_SectionMeasure)
+					return 0.0f;
+				CUIRect MeasureColumn{0.0f, 0.0f, ContentWidth, 0.0f};
+				return pSelf->m_SectionMeasure(MeasureColumn);
+			};
+			m_pRenderObject = this;
+			m_pRender = [](const void *pObject, CUIRect &Content) {
+				const auto *pSelf = static_cast<const CTClientSettingsCardFrameBinding *>(pObject);
+				if(pSelf->m_SectionRender)
+					pSelf->m_SectionRender(Content);
+			};
+		}
+
+		float Measure(float ContentWidth) const
+		{
+			return m_pMeasure != nullptr ? m_pMeasure(m_pMeasureObject, ContentWidth) : 0.0f;
+		}
+
+		void Render(CUIRect &Content) const
+		{
+			if(m_pRender != nullptr)
+				m_pRender(m_pRenderObject, Content);
+		}
+
+		void Clear()
+		{
+			m_pMeasureObject = nullptr;
+			m_pMeasure = nullptr;
+			m_pRenderObject = nullptr;
+			m_pRender = nullptr;
+			m_pIndexedMeasureObject = nullptr;
+			m_pIndexedRenderObject = nullptr;
+			m_Index = 0;
+			m_SectionMeasure = nullptr;
+			m_SectionRender = nullptr;
+		}
+
+	private:
+		const void *m_pMeasureObject = nullptr;
+		float (*m_pMeasure)(const void *, float) = nullptr;
+		const void *m_pRenderObject = nullptr;
+		void (*m_pRender)(const void *, CUIRect &) = nullptr;
+		const void *m_pIndexedMeasureObject = nullptr;
+		const void *m_pIndexedRenderObject = nullptr;
+		size_t m_Index = 0;
+		std::function<float(CUIRect &)> m_SectionMeasure;
+		FSettingsCardRenderMeasured m_SectionRender;
+	};
+
+	uint64_t TClientCardDefinitionsLayoutRevision(bool ReadOnly, int Tab, const char *pDeckTab, uint64_t DynamicRevision = 0)
+	{
+		uint64_t Revision = 1469598103934665603ull;
+		Revision = HashValueFnv1a64(Revision, ReadOnly);
+		Revision = HashValueFnv1a64(Revision, Tab);
+		Revision = HashStringFnv1a64(Revision, pDeckTab);
+		return HashValueFnv1a64(Revision, DynamicRevision);
+	}
+
 }
 
 static float FontSize = ui_token::font::BODY;
@@ -410,8 +527,7 @@ static float HeadlineHeight = ui_token::font::HEADLINE;
 const float Margin = 10.0f;
 static float MarginSmall = ui_token::settings::ROW_GAP;
 static float MarginExtraSmall = ui_token::settings::ROW_GAP;
-const float MarginBetweenSections = 30.0f;
-const float MarginBetweenViews = 30.0f;
+static float MarginBetweenSections = ui_token::settings::ROW_GAP * 2.0f;
 
 static float ColorPickerLabelSize = ui_token::font::BODY;
 static float ColorPickerLineSpacing = ui_token::settings::ROW_GAP;
@@ -454,12 +570,13 @@ static void ApplyTClientContentMetrics(const float ContentWidth)
 	FontSize = Metrics.m_BodySize;
 	EditBoxFontSize = Metrics.m_BodySize;
 	LineSize = Metrics.m_LineHeight;
-	ColorPickerLineSize = Metrics.m_LineHeight + Metrics.m_LineSpacing;
+	ColorPickerLineSize = Metrics.m_ButtonHeight;
 	HeadlineFontSize = Metrics.m_HeadlineSize;
 	StandardFontSize = Metrics.m_BodySize;
-	HeadlineHeight = HeadlineFontSize;
+	HeadlineHeight = Metrics.m_LineHeight;
 	MarginSmall = Metrics.m_LineSpacing;
 	MarginExtraSmall = Metrics.m_LineSpacing;
+	MarginBetweenSections = Metrics.m_SectionGap;
 	ColorPickerLabelSize = Metrics.m_BodySize;
 	ColorPickerLineSpacing = Metrics.m_LineSpacing;
 }
@@ -930,12 +1047,13 @@ void CMenus::PopupConfirmRemoveWarType()
 
 void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 {
-	if(!PrewarmOnly)
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
+	if(!ReadOnly)
 		EnsureSettingsBindCache();
 
 	ApplyTClientContentMetrics(MainView.w);
 	CPerfTimer RenderTimer;
-	if(!PrewarmOnly)
+	if(!ReadOnly)
 	{
 		s_Time += Client()->RenderFrameTime() * (1.0f / 100.0f);
 		if(!s_StartedTime)
@@ -951,21 +1069,23 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 	const uint64_t TClientTabSwitchNode = UiAnimNodeKey("settings_tclient_tab_switch");
 
 	CUIRect TabBar, Button;
+	int ActiveTab = m_TClientSettingsTab;
 	int TabCount = NUMBER_OF_TCLIENT_TABS;
 	for(int Tab = 0; Tab < NUMBER_OF_TCLIENT_TABS; ++Tab)
 	{
 		if(IsFlagSet(g_Config.m_TcTClientSettingsTabs, Tab))
 		{
 			TabCount--;
-			if(m_TClientSettingsTab == Tab)
-				m_TClientSettingsTab++;
+			if(ActiveTab == Tab)
+				ActiveTab++;
 		}
 	}
 	if(TabCount <= 0)
 	{
-		SetFlag(g_Config.m_TcTClientSettingsTabs, TCLIENT_TAB_INFO, false);
+		if(!ReadOnly)
+			SetFlag(g_Config.m_TcTClientSettingsTabs, TCLIENT_TAB_INFO, false);
 		TabCount = 1;
-		m_TClientSettingsTab = TCLIENT_TAB_INFO;
+		ActiveTab = TCLIENT_TAB_INFO;
 	}
 	auto FirstVisibleTab = []() -> int {
 		for(int Tab = 0; Tab < NUMBER_OF_TCLIENT_TABS; ++Tab)
@@ -973,8 +1093,10 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 				return Tab;
 		return TCLIENT_TAB_INFO;
 	};
-	if(m_TClientSettingsTab < 0 || m_TClientSettingsTab >= NUMBER_OF_TCLIENT_TABS || IsFlagSet(g_Config.m_TcTClientSettingsTabs, m_TClientSettingsTab))
-		m_TClientSettingsTab = FirstVisibleTab();
+	if(ActiveTab < 0 || ActiveTab >= NUMBER_OF_TCLIENT_TABS || IsFlagSet(g_Config.m_TcTClientSettingsTabs, ActiveTab))
+		ActiveTab = FirstVisibleTab();
+	if(!ReadOnly)
+		m_TClientSettingsTab = ActiveTab;
 
 	MainView = TClientSettingsContentView(MainView, &TabBar);
 	const float TabWidth = TabBar.w / TabCount;
@@ -986,8 +1108,11 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 	{
 		s_TClientTabNamesInitialized = true;
 		str_copy(s_aTClientLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aTClientLanguageFile));
-		s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::LANGUAGE);
-		s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::LANGUAGE);
+		if(!ReadOnly)
+		{
+			s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::LANGUAGE);
+			s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::LANGUAGE);
+		}
 		s_apTClientTabNames[TCLIENT_TAB_SETTINGS] = Localize("Settings");
 		s_apTClientTabNames[TCLIENT_TAB_BINDWHEEL] = Localize("Bind Wheel");
 		s_apTClientTabNames[TCLIENT_TAB_WARLIST] = Localize("War List");
@@ -1005,32 +1130,30 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
 		const int Corners = VisibleTabIndex == 0 ? IGraphics::CORNER_L : VisibleTabIndex == TabCount - 1 ? IGraphics::CORNER_R :
 														   IGraphics::CORNER_NONE;
-		if(DoButton_MenuTab(&s_aPageTabs[Tab], s_apTClientTabNames[Tab], m_TClientSettingsTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		if(DoButton_MenuTab(&s_aPageTabs[Tab], s_apTClientTabNames[Tab], ActiveTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f) && !ReadOnly)
+		{
 			m_TClientSettingsTab = Tab;
+			ActiveTab = Tab;
+		}
 		++VisibleTabIndex;
 	}
 
-	if(PrewarmOnly)
+	if(!ReadOnly && !s_CustomTabTransitionInitialized)
 	{
-		if(!s_CustomTabTransitionInitialized)
-			s_PrevCustomTab = m_TClientSettingsTab;
-	}
-	else if(!s_CustomTabTransitionInitialized)
-	{
-		s_PrevCustomTab = m_TClientSettingsTab;
+		s_PrevCustomTab = ActiveTab;
 		s_CustomTabTransitionInitialized = true;
 	}
-	else if(m_TClientSettingsTab != s_PrevCustomTab)
+	else if(!ReadOnly && ActiveTab != s_PrevCustomTab)
 	{
-		s_CustomTabTransitionDirection = m_TClientSettingsTab > s_PrevCustomTab ? 1.0f : -1.0f;
+		s_CustomTabTransitionDirection = ActiveTab > s_PrevCustomTab ? 1.0f : -1.0f;
 		TriggerUiSwitchAnimation(TClientTabSwitchNode, 0.0f);
-		s_PrevCustomTab = m_TClientSettingsTab;
+		s_PrevCustomTab = ActiveTab;
 	}
 
 	CUIRect ContentView = MainView;
-	const float TransitionStrength = PrewarmOnly ? 0.0f : ReadUiSwitchAnimation(TClientTabSwitchNode);
+	const float TransitionStrength = ReadOnly ? 0.0f : ReadUiSwitchAnimation(TClientTabSwitchNode);
 	const bool TransitionActive = TransitionStrength > 0.0f && s_CustomTabTransitionDirection != 0.0f;
-	if(!PrewarmOnly)
+	if(!ReadOnly)
 		m_SettingsPageSwitchActive = m_SettingsPageSwitchActive || TransitionActive;
 	const CUIRect ContentClip = MainView;
 	if(TransitionActive)
@@ -1041,25 +1164,25 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 
 	{
 		CPerfTimer StageTimer;
-		if(m_TClientSettingsTab == TCLIENT_TAB_SETTINGS)
+		if(ActiveTab == TCLIENT_TAB_SETTINGS)
 		{
-			RenderSettingsTClientSettings(ContentView, PrewarmOnly);
+			RenderSettingsTClientSettings(ContentView, ReadOnly);
 		}
-		if(m_TClientSettingsTab == TCLIENT_TAB_BINDCHAT)
-			RenderSettingsTClientChatBinds(ContentView, PrewarmOnly);
-		if(m_TClientSettingsTab == TCLIENT_TAB_BINDWHEEL)
-			RenderSettingsTClientBindWheel(ContentView, PrewarmOnly);
-		if(m_TClientSettingsTab == TCLIENT_TAB_WARLIST)
-			RenderSettingsTClientWarList(ContentView, PrewarmOnly);
-		if(m_TClientSettingsTab == TCLIENT_TAB_STATUSBAR)
-			RenderSettingsTClientStatusBar(ContentView, PrewarmOnly);
-		if(m_TClientSettingsTab == TCLIENT_TAB_INFO)
-			RenderSettingsTClientInfo(ContentView, PrewarmOnly);
+		if(ActiveTab == TCLIENT_TAB_BINDCHAT)
+			RenderSettingsTClientChatBinds(ContentView, ReadOnly);
+		if(ActiveTab == TCLIENT_TAB_BINDWHEEL)
+			RenderSettingsTClientBindWheel(ContentView, ReadOnly);
+		if(ActiveTab == TCLIENT_TAB_WARLIST)
+			RenderSettingsTClientWarList(ContentView, ReadOnly);
+		if(ActiveTab == TCLIENT_TAB_STATUSBAR)
+			RenderSettingsTClientStatusBar(ContentView, ReadOnly);
+		if(ActiveTab == TCLIENT_TAB_INFO)
+			RenderSettingsTClientInfo(ContentView, ReadOnly);
 		char aExtra[96];
-		str_format(aExtra, sizeof(aExtra), "tab=%d transition=%d", m_TClientSettingsTab, TransitionActive ? 1 : 0);
+		str_format(aExtra, sizeof(aExtra), "tab=%d transition=%d", ActiveTab, TransitionActive ? 1 : 0);
 		LogTClientPerfStageEx("tclient_tab", nullptr, ETClientSettingsPerfStage::TAB_SHELL, StageTimer.ElapsedMs(), TransitionActive, aExtra);
 		const char *pTabShellStage = nullptr;
-		switch(m_TClientSettingsTab)
+		switch(ActiveTab)
 		{
 		case TCLIENT_TAB_BINDCHAT: pTabShellStage = "tclient_tab_3_shell"; break;
 		case TCLIENT_TAB_STATUSBAR: pTabShellStage = "tclient_tab_4_shell"; break;
@@ -1076,11 +1199,11 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		Ui()->ClipDisable();
 	}
 	char aExtra[96];
-	str_format(aExtra, sizeof(aExtra), "tab=%d transition=%d", m_TClientSettingsTab, TransitionActive ? 1 : 0);
+	str_format(aExtra, sizeof(aExtra), "tab=%d transition=%d", ActiveTab, TransitionActive ? 1 : 0);
 	LogTClientPerfStage("tclient_page_total", RenderTimer.ElapsedMs(), false, aExtra);
-	if(!PrewarmOnly)
+	if(!ReadOnly)
 	{
-		m_SettingsRuntimeMetadata.m_LastTClientTab = m_TClientSettingsTab;
+		m_SettingsRuntimeMetadata.m_LastTClientTab = ActiveTab;
 		m_SettingsRuntimeMetadata.m_Valid = true;
 	}
 }
@@ -1434,15 +1557,20 @@ void CMenus::InvalidateTClientSettingsRuntimeCacheSections(ESettingsCacheDirtyRe
 
 void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 {
+	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
 	ApplyTClientContentMetrics(MainView.w);
 	CPerfTimer RenderTimer;
 	CPerfTimer LayoutBudgetTimer;
 	CUIRect Column, LeftView, RightView, Button, Label;
 	const CUIRect Viewport = MainView;
-	const bool TClientVisibleTargetFrame = !PrewarmOnly;
+	const bool TClientVisibleTargetFrame = !ReadOnly;
 	const float UiScale = SettingsPageUiScale(MainView.w);
 	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
 	static CScrollRegion s_TClientSettingsScrollRegion;
+	static CSectionLoader s_VisualFontReadOnlyLoader;
+	static CSectionLoader s_RightSectionReadOnlyLoader;
+	CSectionLoader &VisualFontLoader = ReadOnly ? s_VisualFontReadOnlyLoader : s_VisualFontLoader;
+	CSectionLoader &RightSectionLoader = ReadOnly ? s_RightSectionReadOnlyLoader : s_RightSectionLoader;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	auto LogSettingsStage = [&](const char *pStage, const CPerfTimer &Timer) {
 		char aExtra[192];
@@ -1461,7 +1589,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	};
 	{
 		CPerfTimer StageTimer;
-		if(!PrewarmOnly)
+		if(!ReadOnly)
 		{
 			if(m_SettingsTClientScrollRestorePending)
 			{
@@ -1538,27 +1666,18 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		};
 		Section.m_RenderFullFn = Section.m_RenderCompactFn;
 	};
-	std::vector<SSettingsCardDefinition> vDeckCards;
-	vDeckCards.reserve(19);
-	auto AppendDeckCards = [&vDeckCards](const std::vector<SSettingsSection> &vSections) {
-		for(const SSettingsSection &Section : vSections)
+	static std::array<CTClientSettingsCardFrameBinding, 19> s_aDeckCardBindings;
+	size_t DeckCardBindingIndex = 0;
+	auto AppendDeckCards = [&](std::vector<SSettingsSection> &vSections) {
+		if(ReadOnly)
+			return;
+		for(SSettingsSection &Section : vSections)
 		{
 			if(Section.m_pStableCardId == nullptr || Section.m_pStableCardId[0] == '\0')
 				continue;
-			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {Section.m_pStableCardId, Localize(Section.m_pName), nullptr};
-			Definition.m_Measure = [Measure = Section.m_MeasureFn](float ContentWidth) {
-				if(!Measure)
-					return 0.0f;
-				CUIRect MeasureColumn{0.0f, 0.0f, ContentWidth, 0.0f};
-				return Measure(MeasureColumn);
-			};
-			Definition.m_RenderMeasured = [Render = Section.m_RenderFullFn](CUIRect &Content) {
-				if(Render)
-					Render(Content);
-			};
-			Definition.m_MeasureRevision = HashTClientSettingsCardLayout(Section.m_pStableCardId);
-			vDeckCards.push_back(std::move(Definition));
+			dbg_assert(DeckCardBindingIndex < s_aDeckCardBindings.size(), "too many TClient settings cards");
+			if(DeckCardBindingIndex < s_aDeckCardBindings.size())
+				s_aDeckCardBindings[DeckCardBindingIndex++].BindSection(Section);
 		}
 	};
 	[[maybe_unused]] auto CalcHudSectionHeight = [&]() {
@@ -1600,13 +1719,13 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	const SSettingsSectionCacheRuntimeKey LiveRuntimeKey = MakeSettingsSectionRuntimeKey(LeftView, Graphics(), false);
 
 	// Initialize VisualFont section loader for this frame
-	s_VisualFontLoader.SetRuntimeKey(LiveRuntimeKey);
-	s_VisualFontLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
-	s_VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
-	s_VisualFontLoader.SetDeferredFarMeasurementEnabled(true);
+	VisualFontLoader.SetRuntimeKey(LiveRuntimeKey);
+	VisualFontLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
+	VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
+	VisualFontLoader.SetDeferredFarMeasurementEnabled(true);
 	CUIRect LeftLoaderViewport = LeftView;
 	LeftLoaderViewport.y -= ScrollOffset.y;
-	s_VisualFontLoader.Begin(LeftView, LeftLoaderViewport, 5.0f);
+	VisualFontLoader.Begin(LeftView, LeftLoaderViewport, 5.0f);
 
 	// ***** LeftView ***** //
 	{
@@ -1674,8 +1793,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 					{
 						str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
-						s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
-						s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
+						VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
+						RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 						TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 						InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
 						TextRender()->OnPreWindowResize();
@@ -1785,8 +1904,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 				{
 					str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
-					s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
-					s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
+					VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
+					RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 					TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 					InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
 					TextRender()->OnPreWindowResize();
@@ -1919,14 +2038,16 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Visual: Effects"), HeadlineFontSize, TEXTALIGN_ML);
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 			CTClientSettingsRowAllocator Rows(CurrentColumn);
-			const bool RenderTinyTeeMode = ShouldRenderVisualBlock(22.0f);
-			CUIRect Row = Rows.Next(22.0f);
+			const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(MainView.w);
+			const float TinyTeeModeHeight = ResolveSettingsRadioRowLayout(CurrentColumn, 3, ContentMetrics).m_Height;
+			const bool RenderTinyTeeMode = ShouldRenderVisualBlock(TinyTeeModeHeight);
+			CUIRect Row = Rows.Next(TinyTeeModeHeight);
 			if(RenderTinyTeeMode)
 			{
 				static std::vector<CButtonContainer> s_vButtonContainers = {{}, {}, {}};
 				int Value = g_Config.m_TcTinyTees ? (g_Config.m_TcTinyTeesOthers ? 2 : 1) : 0;
 				CPerfTimer TinyTeeModeTimer;
-				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, Row, "tclient-smaller-tees-label", Localize("Smaller tees"), s_vButtonContainers, {"tclient-smaller-tees-none", "tclient-smaller-tees-self", "tclient-smaller-tees-all"}, {Localize("None"), Localize("Self"), Localize("All")}, {0, 1, 2}, Value))
+				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, Row, "tclient-smaller-tees-label", Localize("Smaller tees"), s_vButtonContainers, {"tclient-smaller-tees-none", "tclient-smaller-tees-self", "tclient-smaller-tees-all"}, {Localize("None"), Localize("Self"), Localize("All")}, {0, 1, 2}, Value, ContentMetrics))
 				{
 					g_Config.m_TcTinyTees = Value > 0 ? 1 : 0;
 					g_Config.m_TcTinyTeesOthers = Value > 1 ? 1 : 0;
@@ -1965,15 +2086,16 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					LogSettingsStage("tclient_settings_left_visual_jelly", JellyTimer);
 				}
 			}
-			const bool RenderFakeFlags = ShouldRenderVisualBlock(TClientSettingsRowsHeight(2) + 2.0f);
-			CUIRect FakeFlagsRow = Rows.Next(22.0f);
+			const float FakeFlagsHeight = ResolveSettingsRadioRowLayout(CurrentColumn, 3, ContentMetrics).m_Height;
+			const bool RenderFakeFlags = ShouldRenderVisualBlock(FakeFlagsHeight + MarginSmall + LineSize);
+			CUIRect FakeFlagsRow = Rows.Next(FakeFlagsHeight);
 			CUIRect MovingTilesRow = Rows.Next();
 			if(RenderFakeFlags)
 			{
 				static std::vector<CButtonContainer> s_vButtonContainers = {{}, {}, {}};
 				int Value = g_Config.m_TcFakeCtfFlags;
 				CPerfTimer FakeFlagsTimer;
-				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, FakeFlagsRow, "tclient-fake-ctf-flags-label", Localize("Fake CTF flags"), s_vButtonContainers, {"tclient-fake-ctf-flags-none", "tclient-fake-ctf-flags-red", "tclient-fake-ctf-flags-blue"}, {Localize("None"), Localize("Red"), Localize("Blue")}, {0, 1, 2}, Value))
+				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, FakeFlagsRow, "tclient-fake-ctf-flags-label", Localize("Fake CTF flags"), s_vButtonContainers, {"tclient-fake-ctf-flags-none", "tclient-fake-ctf-flags-red", "tclient-fake-ctf-flags-blue"}, {Localize("None"), Localize("Red"), Localize("Blue")}, {0, 1, 2}, Value, ContentMetrics))
 					g_Config.m_TcFakeCtfFlags = Value;
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMovingTilesEntities, "tclient-moving-tiles-entities", Localize("Show moving tiles in entities"), &g_Config.m_TcMovingTilesEntities, &MovingTilesRow, LineSize);
 				LogSettingsStage("tclient_settings_left_visual_fake_flags", FakeFlagsTimer);
@@ -2004,7 +2126,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				static CButtonContainer s_FastInputModeBest;
 				static CButtonContainer s_FastInputModeSaikoPlus;
 				CUIRect FastButton, BestButton, SaikoButton, ButtonsRest;
-				const float Spacing = 2.0f;
+				const float Spacing = MarginSmall;
 				const float ButtonWidth = (Button.w - Spacing * 2.0f) / 3.0f;
 				Button.VSplitLeft(ButtonWidth, &FastButton, &ButtonsRest);
 				ButtonsRest.VSplitLeft(Spacing, nullptr, &ButtonsRest);
@@ -2195,13 +2317,15 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Voting"), HeadlineFontSize, TEXTALIGN_ML);
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 			CTClientSettingsRowAllocator Rows(CurrentColumn);
-			CUIRect Row = Rows.Next(LineSize + 2.0f);
+			const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(MainView.w);
+			const float AutoVoteHeight = ResolveSettingsRadioRowLayout(CurrentColumn, 3, ContentMetrics).m_Height;
+			CUIRect Row = Rows.Next(AutoVoteHeight);
 
 			if(Render)
 			{
 				static std::vector<CButtonContainer> s_vAutoMapVoteButtons = {{}, {}, {}};
 				int AutoMapVote = std::clamp(g_Config.m_TcAutoVoteWhenFar, 0, 2);
-				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, Row, "tclient-auto-map-vote-label", Localize("Auto map vote"), s_vAutoMapVoteButtons, {"tclient-auto-map-vote-off", "tclient-auto-map-vote-agree", "tclient-auto-map-vote-reject"}, {Localize("Off"), Localize("Auto agree vote"), Localize("Auto reject vote")}, {0, 2, 1}, AutoMapVote))
+				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, Row, "tclient-auto-map-vote-label", Localize("Auto map vote"), s_vAutoMapVoteButtons, {"tclient-auto-map-vote-off", "tclient-auto-map-vote-agree", "tclient-auto-map-vote-reject"}, {Localize("Off"), Localize("Auto agree vote"), Localize("Auto reject vote")}, {0, 2, 1}, AutoMapVote, ContentMetrics))
 					g_Config.m_TcAutoVoteWhenFar = AutoMapVote;
 			}
 			Button = Rows.Next();
@@ -2647,20 +2771,20 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- 宠物 --
 			vLeftSections.push_back(BuildTClientPetCacheSection());
 			AppendDeckCards(vLeftSections);
-			s_VisualFontLoader.Register(std::move(vLeftSections));
+			VisualFontLoader.Register(std::move(vLeftSections));
 		}
 
-		if(PrewarmOnly)
+		if(ReadOnly)
 		{
-			s_VisualFontLoader.Process();
-			Column = s_VisualFontLoader.GetRunningColumn();
+			VisualFontLoader.Process();
+			Column = VisualFontLoader.GetRunningColumn();
 			LeftView = Column;
 			LogSettingsStage("tclient_settings_left_prewarm_budgeted", VisualSectionsTotalTimer);
 		}
 		else
 		{
-			s_VisualFontLoader.Process(false);
-			Column = s_VisualFontLoader.GetRunningColumn();
+			VisualFontLoader.Process(false);
+			Column = VisualFontLoader.GetRunningColumn();
 
 			LogSettingsStage("tclient_settings_left_visual_total", VisualSectionsTotalTimer);
 			LeftView = Column;
@@ -2675,13 +2799,13 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		SSettingsSectionCacheRuntimeKey RightRuntimeKey = LiveRuntimeKey;
 		RightRuntimeKey.m_ViewportWidth = SettingsRuntimeCacheDimensionKey(RightView.w);
 		RightRuntimeKey.m_ViewportHeight = SettingsRuntimeCacheDimensionKey(RightView.h);
-		s_RightSectionLoader.SetRuntimeKey(RightRuntimeKey);
-		s_RightSectionLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
-		s_RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
-		s_RightSectionLoader.SetDeferredFarMeasurementEnabled(true);
+		RightSectionLoader.SetRuntimeKey(RightRuntimeKey);
+		RightSectionLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
+		RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
+		RightSectionLoader.SetDeferredFarMeasurementEnabled(true);
 		CUIRect RightLoaderViewport = RightView;
 		RightLoaderViewport.y -= ScrollOffset.y;
-		s_RightSectionLoader.Begin(RightView, RightLoaderViewport, 5.0f);
+		RightSectionLoader.Begin(RightView, RightLoaderViewport, 5.0f);
 
 		auto LayoutHudSection = [&](CUIRect &CurrentColumn, bool Render) {
 			CUIRect BoxRect;
@@ -3312,28 +3436,67 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			FillCachedStaticLayer(S, LayoutFinishNameSection);
 			vRightSections.push_back(S);
 			AppendDeckCards(vRightSections);
-			s_RightSectionLoader.Register(std::move(vRightSections));
+			RightSectionLoader.Register(std::move(vRightSections));
 		}
 
-		if(PrewarmOnly)
+		if(ReadOnly)
 		{
-			s_RightSectionLoader.Process();
-			Column = s_RightSectionLoader.GetRunningColumn();
+			RightSectionLoader.Process();
+			Column = RightSectionLoader.GetRunningColumn();
 			RightView = Column;
 			LogSettingsStage("tclient_settings_right_prewarm_budgeted", RightColumnTimer);
 		}
 		else
 		{
-			s_RightSectionLoader.Process(false);
-			Column = s_RightSectionLoader.GetRunningColumn();
+			RightSectionLoader.Process(false);
+			Column = RightSectionLoader.GetRunningColumn();
 
 			// ***** END OF PAGE 1 SETTINGS ***** //
 			RightView = Column;
 			LogSettingsStage("tclient_settings_right_column", RightColumnTimer);
 		}
 	}
-	if(!PrewarmOnly)
+	if(!ReadOnly)
 	{
+		static constexpr std::array<std::pair<const char *, const char *>, 19> s_aDeckCardSpecs = {{
+			{"tclient:visual-font-cursor", "Visual: Font & Cursor"},
+			{"tclient:visual-nameplates", "Visual: Nameplates"},
+			{"tclient:visual-effects", "Visual: Effects"},
+			{"tclient:input", "Input"},
+			{"tclient:anti-latency-tools", "Anti Latency Tools"},
+			{"tclient:improved-anti-ping", "Improved Anti Ping"},
+			{"tclient:execute-on-join", "Execute on join"},
+			{"tclient:voting", "Voting"},
+			{"tclient:auto-reply", "Auto reply"},
+			{"tclient:player-indicator", "Player Indicator"},
+			{"tclient:pet", "Pet"},
+			{"tclient:hud", "HUD"},
+			{"tclient:tee-status-bar", "Tee status bar"},
+			{"tclient:tile-outlines", "Tile outlines"},
+			{"tclient:ghost-tools", "Ghost tools"},
+			{"tclient:rainbow", "Rainbow"},
+			{"tclient:tee-trails", "Tee Trails"},
+			{"tclient:background-draw", "Background Draw"},
+			{"tclient:finish-name", "Finish Name"},
+		}};
+		dbg_assert(DeckCardBindingIndex == s_aDeckCardBindings.size(), "missing TClient settings card binding");
+		auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+			vCards.reserve(s_aDeckCardSpecs.size());
+			for(size_t Index = 0; Index < s_aDeckCardSpecs.size(); ++Index)
+			{
+				CTClientSettingsCardFrameBinding *pBinding = &s_aDeckCardBindings[Index];
+				SSettingsCardDefinition Definition;
+				Definition.m_Spec = {s_aDeckCardSpecs[Index].first, Localize(s_aDeckCardSpecs[Index].second), nullptr};
+				Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
+				Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
+				Definition.m_MeasureRevision = HashTClientSettingsCardLayout(s_aDeckCardSpecs[Index].first);
+				vCards.push_back(std::move(Definition));
+			}
+		};
+		uint64_t CardLayoutRevision = TClientCardDefinitionsLayoutRevision(Ui()->RenderOnly(), m_TClientSettingsTab, "tclient");
+		for(const auto &Spec : s_aDeckCardSpecs)
+			CardLayoutRevision = HashValueFnv1a64(CardLayoutRevision, HashTClientSettingsCardLayout(Spec.first));
+		const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
 		const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 		const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 		SSettingsCardDeckInput InputState;
@@ -3351,7 +3514,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 			m_SettingsCardFocusStableId.clear();
 		}
-		const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(SettingsUiContext("settings_tclient_main", UiScale), Page, "tclient", vDeckCards, SettingsCardOrderModel(), &s_TClientSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+		const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.RenderCached(SettingsUiContext("settings_tclient_main", UiScale), Page, "tclient", DefinitionsRevision, BuildDefinitions, SettingsCardOrderModel(), &s_TClientSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+		for(CTClientSettingsCardFrameBinding &Binding : s_aDeckCardBindings)
+			Binding.Clear();
 		if(DeckResult.m_OrderChanged)
 			SaveSettingsCardOrderModel();
 		m_SettingsTClientCurrentScrollY = s_TClientSettingsScrollRegion.ContentScrollOffsetY();
@@ -3359,7 +3524,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		m_SettingsRuntimeMetadata.m_LastScrollY = m_SettingsTClientCurrentScrollY;
 		m_SettingsRuntimeMetadata.m_Valid = true;
 	}
-	if(!PrewarmOnly)
+	if(!ReadOnly)
 	{
 		SSettingsUiBudgetFrame UiBudget;
 		UiBudget.m_LayoutMs = LayoutBudgetTimer.ElapsedMs();
@@ -3370,7 +3535,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		UiBudget.m_Vertices = 0;
 		UiBudget.m_Indices = 0;
 		UiBudget.m_HeapAllocs = 0;
-		UiBudget.m_VisibleWidgets = s_VisualFontLoader.LastFrameStats().m_SectionsVisible + s_RightSectionLoader.LastFrameStats().m_SectionsVisible;
+		UiBudget.m_VisibleWidgets = VisualFontLoader.LastFrameStats().m_SectionsVisible + RightSectionLoader.LastFrameStats().m_SectionsVisible;
 		UiBudget.m_Tab = m_TClientSettingsTab;
 		UiBudget.m_Subtab = m_TClientSettingsTab;
 		LogSettingsUiBudget("settings:tclient", UiBudget);
@@ -3450,12 +3615,8 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 	const float CardChromeHeight = ui_token::settings::CARD_PADDING * 2.0f + ui_token::settings::CARD_HEADER_TITLE_HEIGHT + ui_token::settings::CARD_HEADER_GAP;
 	const float EditorContentHeight = maximum(LineSize * 7.8f + MarginSmall * 4.0f, 320.0f - CardChromeHeight);
 	const float PreviewContentHeight = 280.0f;
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(2);
-	SSettingsCardDefinition EditorCard;
-	EditorCard.m_Spec = {"deck:tclient-bind-wheel-editor", Localize("Bind Wheel"), nullptr};
-	EditorCard.m_Measure = [EditorContentHeight](float) { return EditorContentHeight; };
-	EditorCard.m_RenderMeasured = [this, &TClientBindWheelTextInputCtx, ReadOnly](CUIRect &Content) {
+	const auto MeasureEditor = [EditorContentHeight](float) { return EditorContentHeight; };
+	const auto RenderEditor = [this, &TClientBindWheelTextInputCtx, ReadOnly](CUIRect &Content) {
 		CPerfTimer EditorTimer;
 		CUIRect LeftView = Content, Label, Button;
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
@@ -3536,12 +3697,8 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-reset-mouse", &CheckBoxRect, Localize("Reset position of mouse when opening bindwheel"), FontSize, TEXTALIGN_ML);
 		LogTClientPerfStage("tclient_bindwheel_editor", EditorTimer.ElapsedMs(), false);
 	};
-	vCards.push_back(std::move(EditorCard));
-
-	SSettingsCardDefinition PreviewCard;
-	PreviewCard.m_Spec = {"deck:tclient-bind-wheel-preview", Localize("Preview"), nullptr};
-	PreviewCard.m_Measure = [PreviewContentHeight](float) { return PreviewContentHeight; };
-	PreviewCard.m_Render = [this, ReadOnly](CUIRect RightView) {
+	const auto MeasurePreview = [PreviewContentHeight](float) { return PreviewContentHeight; };
+	const auto RenderPreview = [this, ReadOnly](CUIRect RightView) {
 		CPerfTimer WheelTimer;
 		const float Radius = minimum(RightView.w, RightView.h) / 2.0f;
 		const vec2 Center = RightView.Center();
@@ -3601,7 +3758,26 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 		str_format(aExtra, sizeof(aExtra), "count=%d", SegmentCount);
 		LogTClientPerfStage("tclient_bindwheel_wheel", WheelTimer.ElapsedMs(), false, aExtra);
 	};
-	vCards.push_back(std::move(PreviewCard));
+	static std::array<CTClientSettingsCardFrameBinding, 2> s_aCardBindings;
+	s_aCardBindings[0].Bind(MeasureEditor, RenderEditor);
+	s_aCardBindings[1].Bind(MeasurePreview, RenderPreview);
+	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+		vCards.reserve(s_aCardBindings.size());
+		constexpr std::array<std::pair<const char *, const char *>, 2> aSpecs = {{
+			{"deck:tclient-bind-wheel-editor", "Bind Wheel"},
+			{"deck:tclient-bind-wheel-preview", "Preview"},
+		}};
+		for(size_t Index = 0; Index < aSpecs.size(); ++Index)
+		{
+			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
+			SSettingsCardDefinition Definition;
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
+			Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
+			vCards.push_back(std::move(Definition));
+		}
+	};
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TClientCardDefinitionsLayoutRevision(ReadOnly, m_TClientSettingsTab, "tclient-bind-wheel"));
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -3630,7 +3806,9 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientBindWheelTextInputCtx, Page, "tclient-bind-wheel", vCards, CardOrderModel, ReadOnly ? nullptr : &s_BindWheelSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(TClientBindWheelTextInputCtx, Page, "tclient-bind-wheel", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_BindWheelSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	for(CTClientSettingsCardFrameBinding &Binding : s_aCardBindings)
+		Binding.Clear();
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 }
@@ -3684,24 +3862,31 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)
 		"deck:tclient-chat-binds-warlist",
 		"deck:tclient-chat-binds-other",
 	};
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(CBindChat::BIND_DEFAULTS.size());
-	for(size_t Index = 0; Index < CBindChat::BIND_DEFAULTS.size(); ++Index)
-	{
-		auto &[pTitle, vBindDefaults] = CBindChat::BIND_DEFAULTS[Index];
-		if(Index >= std::size(apStableIds))
-			break;
-		SSettingsCardDefinition Definition;
-		Definition.m_Spec = {apStableIds[Index], Localize(pTitle), nullptr};
-		Definition.m_Measure = [&vBindDefaults](float) {
-			return vBindDefaults.size() * (MarginSmall + LineSize);
-		};
-		Definition.m_RenderMeasured = [&](CUIRect &Content) {
-			for(CBindChat::CBindDefault &BindDefault : vBindDefaults)
-				DoBindchatDefault(Content, BindDefault);
-		};
-		vCards.push_back(std::move(Definition));
-	}
+	static std::array<CTClientSettingsCardFrameBinding, std::size(apStableIds)> s_aCardBindings;
+	const auto MeasureCard = [](size_t Index, float) {
+		return CBindChat::BIND_DEFAULTS[Index].second.size() * (MarginSmall + LineSize);
+	};
+	const auto RenderCard = [&](size_t Index, CUIRect &Content) {
+		for(CBindChat::CBindDefault &BindDefault : CBindChat::BIND_DEFAULTS[Index].second)
+			DoBindchatDefault(Content, BindDefault);
+	};
+	const size_t CardCount = minimum(CBindChat::BIND_DEFAULTS.size(), std::size(apStableIds));
+	for(size_t Index = 0; Index < CardCount; ++Index)
+		s_aCardBindings[Index].BindIndexed(MeasureCard, RenderCard, Index);
+	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+		vCards.reserve(CardCount);
+		for(size_t Index = 0; Index < CardCount; ++Index)
+		{
+			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
+			SSettingsCardDefinition Definition;
+			Definition.m_Spec = {apStableIds[Index], Localize(CBindChat::BIND_DEFAULTS[Index].first), nullptr};
+			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
+			Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
+			vCards.push_back(std::move(Definition));
+		}
+	};
+	const uint64_t DynamicRevision = HashValueFnv1a64(1469598103934665603ull, CardCount);
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TClientCardDefinitionsLayoutRevision(ReadOnly, m_TClientSettingsTab, "tclient-chat-binds", DynamicRevision));
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -3730,7 +3915,9 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)
 		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientChatBindsTextInputCtx, Page, "tclient-chat-binds", vCards, CardOrderModel, ReadOnly ? nullptr : &s_ChatBindsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(TClientChatBindsTextInputCtx, Page, "tclient-chat-binds", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_ChatBindsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	for(size_t Index = 0; Index < CardCount; ++Index)
+		s_aCardBindings[Index].Clear();
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_chatbinds_total", RenderTimer.ElapsedMs(), false);
@@ -3765,6 +3952,8 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 	static CLineInput s_ReasonInput;
 	static CLineInput s_TypeNameInput;
 	static CScrollRegion s_WarListScrollRegion;
+	CWarEntry *pSelectedEntry = s_pSelectedEntry;
+	CWarType *pSelectedType = s_pSelectedType;
 
 	auto WarTypeExists = [&](const CWarType *pType) {
 		return std::find(GameClient()->m_WarList.m_WarTypes.begin(), GameClient()->m_WarList.m_WarTypes.end(), pType) != GameClient()->m_WarList.m_WarTypes.end();
@@ -3772,14 +3961,14 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 	auto DefaultWarType = [&]() -> CWarType * {
 		return GameClient()->m_WarList.m_WarTypes.empty() ? nullptr : GameClient()->m_WarList.m_WarTypes[0];
 	};
-	if(s_pSelectedType == nullptr || !WarTypeExists(s_pSelectedType))
-		s_pSelectedType = DefaultWarType();
+	if(pSelectedType == nullptr || !WarTypeExists(pSelectedType))
+		pSelectedType = DefaultWarType();
 	auto WarEntryExists = [&](const CWarEntry *pEntry) {
 		return pEntry != nullptr && std::find_if(GameClient()->m_WarList.m_vWarEntries.begin(), GameClient()->m_WarList.m_vWarEntries.end(),
 						    [pEntry](const CWarEntry &Entry) { return &Entry == pEntry; }) != GameClient()->m_WarList.m_vWarEntries.end();
 	};
-	if(!WarEntryExists(s_pSelectedEntry))
-		s_pSelectedEntry = nullptr;
+	if(!WarEntryExists(pSelectedEntry))
+		pSelectedEntry = nullptr;
 
 	IUiContext TClientWarListTextInputCtx = SettingsUiContext("settings_tclient_warlist_text_inputs", UiScale);
 	if(ReadOnly)
@@ -3835,9 +4024,12 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 
 		int SelectedOldEntry = -1;
 		static CListBox s_EntriesListBox;
-		s_EntriesListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
-		s_EntriesListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
-		s_EntriesListBox.DoStart(ListRowHeight, s_vFilteredEntries.size(), 1, 2, SelectedOldEntry, &Column);
+		static CListBox s_EntriesReadOnlyListBox;
+		CListBox &EntriesListBox = ReadOnly ? s_EntriesReadOnlyListBox : s_EntriesListBox;
+		EntriesListBox.SetActive(!ReadOnly);
+		EntriesListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+		EntriesListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		EntriesListBox.DoStart(ListRowHeight, s_vFilteredEntries.size(), 1, 2, SelectedOldEntry, &Column);
 
 		static std::vector<unsigned char> s_vItemIds;
 		static std::vector<CButtonContainer> s_vDeleteButtons;
@@ -3849,10 +4041,10 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		for(size_t i = 0; i < s_vFilteredEntries.size(); i++)
 		{
 			CWarEntry *pEntry = s_vFilteredEntries[i];
-			if(s_pSelectedEntry && pEntry == s_pSelectedEntry)
+			if(pSelectedEntry && pEntry == pSelectedEntry)
 				SelectedOldEntry = (int)i;
 
-			const CListboxItem Item = s_EntriesListBox.DoNextItem(&s_vItemIds[i], SelectedOldEntry >= 0 && (size_t)SelectedOldEntry == i);
+			const CListboxItem Item = EntriesListBox.DoNextItem(&s_vItemIds[i], SelectedOldEntry >= 0 && (size_t)SelectedOldEntry == i);
 			if(!Item.m_Visible)
 				continue;
 
@@ -3900,23 +4092,23 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 
-		const int NewSelectedEntry = s_EntriesListBox.DoEnd();
+		const int NewSelectedEntry = EntriesListBox.DoEnd();
 		if(!ReadOnly && pEntryToRemove != nullptr)
 		{
 			GameClient()->m_WarList.RemoveWarEntry(pEntryToRemove);
-			s_pSelectedEntry = nullptr;
+			pSelectedEntry = nullptr;
 			++s_TClientWarListFilterRevision;
 		}
 		else if(!ReadOnly && NewSelectedEntry >= 0 && NewSelectedEntry < (int)s_vFilteredEntries.size() &&
 			(SelectedOldEntry != NewSelectedEntry || (Ui()->HotItem() == &s_vItemIds[NewSelectedEntry] && Ui()->MouseButtonClicked(0))))
 		{
-			s_pSelectedEntry = s_vFilteredEntries[NewSelectedEntry];
+			pSelectedEntry = s_vFilteredEntries[NewSelectedEntry];
 			if(!Ui()->LastMouseButton(1) && !Ui()->LastMouseButton(2))
 			{
-				str_copy(s_aEntryName, s_pSelectedEntry->m_aName);
-				str_copy(s_aEntryClan, s_pSelectedEntry->m_aClan);
-				str_copy(s_aEntryReason, s_pSelectedEntry->m_aReason);
-				if(str_comp(s_pSelectedEntry->m_aClan, "") != 0)
+				str_copy(s_aEntryName, pSelectedEntry->m_aName);
+				str_copy(s_aEntryClan, pSelectedEntry->m_aClan);
+				str_copy(s_aEntryReason, pSelectedEntry->m_aReason);
+				if(str_comp(pSelectedEntry->m_aClan, "") != 0)
 				{
 					s_IsName = false;
 					s_IsClan = true;
@@ -3926,7 +4118,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 					s_IsName = true;
 					s_IsClan = false;
 				}
-				s_pSelectedType = s_pSelectedEntry->m_pWarType;
+				pSelectedType = pSelectedEntry->m_pWarType;
 			}
 		}
 
@@ -3987,35 +4179,35 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		Column.HSplitTop(LineSize * 2.0f, &Button, &Column);
 		Button.VSplitMid(&ButtonL, &ButtonR, MarginSmall);
-		if(!ReadOnly && DoButtonLineSize_Menu(&s_OverrideButton, Localize("Override Entry"), 0, &ButtonL, LineSize) && s_pSelectedEntry)
+		if(!ReadOnly && DoButtonLineSize_Menu(&s_OverrideButton, Localize("Override Entry"), 0, &ButtonL, LineSize) && pSelectedEntry)
 		{
-			if(s_pSelectedEntry && s_pSelectedType && (str_comp(s_aEntryName, "") != 0 || str_comp(s_aEntryClan, "") != 0))
+			if(pSelectedEntry && pSelectedType && (str_comp(s_aEntryName, "") != 0 || str_comp(s_aEntryClan, "") != 0))
 			{
-				str_copy(s_pSelectedEntry->m_aName, s_aEntryName);
-				str_copy(s_pSelectedEntry->m_aClan, s_aEntryClan);
-				str_copy(s_pSelectedEntry->m_aReason, s_aEntryReason);
-				s_pSelectedEntry->m_pWarType = s_pSelectedType;
+				str_copy(pSelectedEntry->m_aName, s_aEntryName);
+				str_copy(pSelectedEntry->m_aClan, s_aEntryClan);
+				str_copy(pSelectedEntry->m_aReason, s_aEntryReason);
+				pSelectedEntry->m_pWarType = pSelectedType;
 				++s_TClientWarListFilterRevision;
 			}
 		}
 		if(!ReadOnly && DoButtonLineSize_Menu(&s_AddButton, Localize("Add Entry"), 0, &ButtonR, LineSize))
 		{
-			if(s_pSelectedType)
+			if(pSelectedType)
 			{
-				GameClient()->m_WarList.AddWarEntry(s_aEntryName, s_aEntryClan, s_aEntryReason, s_pSelectedType->m_aWarName);
-				s_pSelectedEntry = nullptr;
+				GameClient()->m_WarList.AddWarEntry(s_aEntryName, s_aEntryClan, s_aEntryReason, pSelectedType->m_aWarName);
+				pSelectedEntry = nullptr;
 				++s_TClientWarListFilterRevision;
 			}
 		}
 
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		Column.HSplitTop(HeadlineFontSize + MarginSmall, &Button, &Column);
-		if(s_pSelectedType)
+		if(pSelectedType)
 		{
 			float Shade = 0.0f;
 			Button.Draw(ColorRGBA(Shade, Shade, Shade, 0.25f), 15, 3.0f);
-			TextRender()->TextColor(s_pSelectedType->m_Color);
-			Ui()->DoLabel(&Button, s_pSelectedType->m_aWarName, HeadlineFontSize, TEXTALIGN_MC);
+			TextRender()->TextColor(pSelectedType->m_Color);
+			Ui()->DoLabel(&Button, pSelectedType->m_aWarName, HeadlineFontSize, TEXTALIGN_MC);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 
@@ -4057,9 +4249,12 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		m_pRemoveWarType = nullptr;
 		int SelectedOldType = -1;
 		static CListBox s_WarTypeListBox;
-		s_WarTypeListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
-		s_WarTypeListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
-		s_WarTypeListBox.DoStart(ListRowHeight, GameClient()->m_WarList.m_WarTypes.size(), 1, 2, SelectedOldType, &WarTypeList, true, IGraphics::CORNER_ALL);
+		static CListBox s_WarTypeReadOnlyListBox;
+		CListBox &WarTypeListBox = ReadOnly ? s_WarTypeReadOnlyListBox : s_WarTypeListBox;
+		WarTypeListBox.SetActive(!ReadOnly);
+		WarTypeListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+		WarTypeListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		WarTypeListBox.DoStart(ListRowHeight, GameClient()->m_WarList.m_WarTypes.size(), 1, 2, SelectedOldType, &WarTypeList, true, IGraphics::CORNER_ALL);
 
 		static std::vector<unsigned char> s_vTypeItemIds;
 		static std::vector<CButtonContainer> s_vTypeDeleteButtons;
@@ -4072,10 +4267,10 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			CWarType *pType = GameClient()->m_WarList.m_WarTypes[i];
 			if(!pType)
 				continue;
-			if(s_pSelectedType && pType == s_pSelectedType)
+			if(pSelectedType && pType == pSelectedType)
 				SelectedOldType = i;
 
-			const CListboxItem Item = s_WarTypeListBox.DoNextItem(&s_vTypeItemIds[i], SelectedOldType >= 0 && SelectedOldType == i);
+			const CListboxItem Item = WarTypeListBox.DoNextItem(&s_vTypeItemIds[i], SelectedOldType >= 0 && SelectedOldType == i);
 			if(!Item.m_Visible)
 				continue;
 
@@ -4094,21 +4289,21 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 
-		const int NewSelectedType = s_WarTypeListBox.DoEnd();
+		const int NewSelectedType = WarTypeListBox.DoEnd();
 		const bool NewSelectedTypeValid = NewSelectedType >= 0 && NewSelectedType < (int)GameClient()->m_WarList.m_WarTypes.size();
 		if(!ReadOnly && ((SelectedOldType != NewSelectedType && NewSelectedTypeValid) || (NewSelectedTypeValid && Ui()->HotItem() == &s_vTypeItemIds[NewSelectedType] && Ui()->MouseButtonClicked(0))))
 		{
-			s_pSelectedType = GameClient()->m_WarList.m_WarTypes[NewSelectedType];
+			pSelectedType = GameClient()->m_WarList.m_WarTypes[NewSelectedType];
 			if(!Ui()->LastMouseButton(1) && !Ui()->LastMouseButton(2))
 			{
-				str_copy(s_aTypeName, s_pSelectedType->m_aWarName);
-				s_GroupColor = s_pSelectedType->m_Color;
+				str_copy(s_aTypeName, pSelectedType->m_aWarName);
+				s_GroupColor = pSelectedType->m_Color;
 			}
 		}
 		if(!ReadOnly && m_pRemoveWarType != nullptr)
 		{
-			if(m_pRemoveWarType == s_pSelectedType)
-				s_pSelectedType = DefaultWarType();
+			if(m_pRemoveWarType == pSelectedType)
+				pSelectedType = DefaultWarType();
 			char aMessage[256];
 			str_format(aMessage, sizeof(aMessage),
 				Localize("Are you sure that you want to remove '%s' from your war groups?"),
@@ -4137,12 +4332,12 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		Column.HSplitTop(LineSize * 2.0f, &Button, &Column);
 		Button.VSplitMid(&ButtonL, &ButtonR, MarginSmall);
 		bool OverrideDisabled = NewSelectedType == 0;
-		if(!ReadOnly && DoButtonLineSize_Menu(&s_OverrideGroupButton, Localize("Override Group"), 0, &ButtonL, LineSize, OverrideDisabled) && s_pSelectedType)
+		if(!ReadOnly && DoButtonLineSize_Menu(&s_OverrideGroupButton, Localize("Override Group"), 0, &ButtonL, LineSize, OverrideDisabled) && pSelectedType)
 		{
-			if(s_pSelectedType && str_comp(s_aTypeName, "") != 0)
+			if(pSelectedType && str_comp(s_aTypeName, "") != 0)
 			{
-				str_copy(s_pSelectedType->m_aWarName, s_aTypeName);
-				s_pSelectedType->m_Color = s_GroupColor;
+				str_copy(pSelectedType->m_aWarName, s_aTypeName);
+				pSelectedType->m_Color = s_GroupColor;
 				++s_TClientWarListFilterRevision;
 			}
 		}
@@ -4170,8 +4365,11 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		PlayerList = Column;
 		static CListBox s_PlayerListBox;
-		s_PlayerListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
-		s_PlayerListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		static CListBox s_PlayerReadOnlyListBox;
+		CListBox &PlayerListBox = ReadOnly ? s_PlayerReadOnlyListBox : s_PlayerListBox;
+		PlayerListBox.SetActive(!ReadOnly);
+		PlayerListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+		PlayerListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 		static std::vector<int> s_vFilteredPlayerIds;
 		s_vFilteredPlayerIds.clear();
 		s_vFilteredPlayerIds.reserve(MAX_CLIENTS);
@@ -4184,7 +4382,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 				str_find_nocase(Client.m_aClan, s_PlayerSearchInput.GetString()))
 				s_vFilteredPlayerIds.push_back(ClientId);
 		}
-		s_PlayerListBox.DoStart(ListRowHeight, s_vFilteredPlayerIds.size(), 1, 2, -1, &PlayerList, true, IGraphics::CORNER_ALL);
+		PlayerListBox.DoStart(ListRowHeight, s_vFilteredPlayerIds.size(), 1, 2, -1, &PlayerList, true, IGraphics::CORNER_ALL);
 
 		static std::vector<unsigned char> s_vPlayerItemIds;
 		static std::vector<CButtonContainer> s_vNameButtons;
@@ -4197,7 +4395,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		{
 			const auto &Client = GameClient()->m_aClients[ClientId];
 
-			const CListboxItem Item = s_PlayerListBox.DoNextItem(&s_vPlayerItemIds[ClientId], false);
+			const CListboxItem Item = PlayerListBox.DoNextItem(&s_vPlayerItemIds[ClientId], false);
 			if(!Item.m_Visible)
 				continue;
 
@@ -4237,7 +4435,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			TeeInfo.m_Size = ListRowHeight;
 			RenderTeeCute(CAnimState::GetIdle(), &TeeInfo, 0, vec2(1.0f, 0.0f), TeeRect.Center() + vec2(-1.0f, 2.5f), true);
 		}
-		s_PlayerListBox.DoEnd();
+		PlayerListBox.DoEnd();
 
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "players=%d filtered=%d", MAX_CLIENTS, (int)s_vFilteredPlayerIds.size());
@@ -4341,14 +4539,19 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		}
 	};
 
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(1);
-	SSettingsCardDefinition WarListCard;
-	WarListCard.m_Spec = {"deck:tclient-warlist", Localize("War List"), nullptr};
-	WarListCard.m_Measure = WarListContentHeight;
-	WarListCard.m_RenderMeasured = [&](CUIRect &ContentRect) { RenderWarListLayout(ContentRect, true); };
-	WarListCard.m_MeasureRevision = ((uint64_t)GameClient()->m_WarList.m_vWarEntries.size() << 32) ^ (uint64_t)GameClient()->m_WarList.m_WarTypes.size();
-	vCards.push_back(std::move(WarListCard));
+	const auto RenderWarListCard = [&](CUIRect &ContentRect) { RenderWarListLayout(ContentRect, true); };
+	static CTClientSettingsCardFrameBinding s_CardBinding;
+	s_CardBinding.Bind(WarListContentHeight, RenderWarListCard);
+	const uint64_t MeasureRevision = ((uint64_t)GameClient()->m_WarList.m_vWarEntries.size() << 32) ^ (uint64_t)GameClient()->m_WarList.m_WarTypes.size();
+	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {"deck:tclient-warlist", Localize("War List"), nullptr};
+		Definition.m_Measure = [](float ContentWidth) { return s_CardBinding.Measure(ContentWidth); };
+		Definition.m_RenderMeasured = [](CUIRect &Content) { s_CardBinding.Render(Content); };
+		Definition.m_MeasureRevision = MeasureRevision;
+		vCards.push_back(std::move(Definition));
+	};
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TClientCardDefinitionsLayoutRevision(ReadOnly, m_TClientSettingsTab, "tclient-warlist", MeasureRevision));
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -4377,7 +4580,13 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientWarListTextInputCtx, Page, "tclient-warlist", vCards, CardOrderModel, ReadOnly ? nullptr : &s_WarListScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(TClientWarListTextInputCtx, Page, "tclient-warlist", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_WarListScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	s_CardBinding.Clear();
+	if(!ReadOnly)
+	{
+		s_pSelectedEntry = pSelectedEntry;
+		s_pSelectedType = pSelectedType;
+	}
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 
@@ -4480,12 +4689,8 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		}
 	};
 
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(1);
-	SSettingsCardDefinition SettingsCard;
-	SettingsCard.m_Spec = {"deck:tclient-status-bar-settings", Localize("Status Bar"), nullptr};
-	SettingsCard.m_Measure = [SettingsContentHeight](float) { return SettingsContentHeight; };
-	SettingsCard.m_RenderMeasured = [this, ReadOnly](CUIRect &View) {
+	const auto MeasureSettings = [SettingsContentHeight](float) { return SettingsContentHeight; };
+	const auto RenderSettings = [this, ReadOnly](CUIRect &View) {
 		CPerfTimer SectionsTimer;
 		CUIRect CheckBoxRect, Button, Label;
 		CTClientSettingsRowAllocator Rows(View);
@@ -4545,25 +4750,17 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-text-alpha", &Button, Localize("Text alpha"), FontSize, TEXTALIGN_ML);
 		LogTClientPerfStageEx("tclient_statusbar", "sections", ETClientSettingsPerfStage::INTERACTIVE_LAYER, SectionsTimer.ElapsedMs());
 	};
-	vCards.push_back(std::move(SettingsCard));
-
-	SSettingsCardDefinition ItemsCard;
-	ItemsCard.m_Spec = {"deck:tclient-status-bar-items", Localize("Status Bar Codes"), nullptr};
-	ItemsCard.m_Measure = [](const float ContentWidth) {
+	const auto MeasureItems = [](const float ContentWidth) {
 		const int Rows = ContentWidth > 360.0f ? (StatusBarCodeCount + 1) / 2 : StatusBarCodeCount;
 		return Rows * LineSize + maximum(0, Rows - 1) * MarginSmall;
 	};
-	ItemsCard.m_Render = [RenderStatusBarCodes](CUIRect View) {
+	const auto RenderItems = [RenderStatusBarCodes](CUIRect View) {
 		CPerfTimer CodesTimer;
 		RenderStatusBarCodes(View);
 		LogTClientPerfStageEx("tclient_statusbar", "codes", ETClientSettingsPerfStage::TEXT_CACHE, CodesTimer.ElapsedMs());
 	};
-	vCards.push_back(std::move(ItemsCard));
-
-	SSettingsCardDefinition PreviewCard;
-	PreviewCard.m_Spec = {"deck:tclient-status-bar-preview", Localize("Preview"), nullptr};
-	PreviewCard.m_Measure = [PreviewContentHeight](float) { return PreviewContentHeight; };
-	PreviewCard.m_RenderMeasured = [this, &TClientStatusSchemeTextInputCtx, &GetStatusBarEditorLabel, &RenderStatusBarPreview, ReadOnly](CUIRect &StatusBar) {
+	const auto MeasurePreview = [PreviewContentHeight](float) { return PreviewContentHeight; };
+	const auto RenderPreview = [this, &TClientStatusSchemeTextInputCtx, &GetStatusBarEditorLabel, &RenderStatusBarPreview, ReadOnly](CUIRect &StatusBar) {
 		CPerfTimer EditorTimer;
 		const int StatusItemTypeCount = (int)GameClient()->m_StatusBar.m_StatusItemTypes.size();
 		if(s_TypeSelectedOld >= StatusItemTypeCount)
@@ -4756,7 +4953,29 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 			s_SelectedItem = std::max(-1, s_SelectedItem);
 		LogTClientPerfStageEx("tclient_statusbar", "editor", ETClientSettingsPerfStage::STATIC_LAYER, EditorTimer.ElapsedMs());
 	};
-	vCards.push_back(std::move(PreviewCard));
+	static std::array<CTClientSettingsCardFrameBinding, 3> s_aCardBindings;
+	s_aCardBindings[0].Bind(MeasureSettings, RenderSettings);
+	s_aCardBindings[1].Bind(MeasureItems, RenderItems);
+	s_aCardBindings[2].Bind(MeasurePreview, RenderPreview);
+	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+		constexpr std::array<std::pair<const char *, const char *>, 3> aSpecs = {{
+			{"deck:tclient-status-bar-settings", "Status Bar"},
+			{"deck:tclient-status-bar-items", "Status Bar Codes"},
+			{"deck:tclient-status-bar-preview", "Preview"},
+		}};
+		vCards.reserve(aSpecs.size());
+		for(size_t Index = 0; Index < aSpecs.size(); ++Index)
+		{
+			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
+			SSettingsCardDefinition Definition;
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
+			Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
+			vCards.push_back(std::move(Definition));
+		}
+	};
+	const uint64_t StatusLayoutRevision = ((uint64_t)GameClient()->m_StatusBar.m_StatusItemTypes.size() << 32) ^ (uint64_t)GameClient()->m_StatusBar.m_StatusBarItems.size();
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TClientCardDefinitionsLayoutRevision(ReadOnly, m_TClientSettingsTab, "tclient-status-bar", StatusLayoutRevision));
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -4785,7 +5004,9 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	const SSettingsCardDeckResult DeckResult = CardDeck.Render(TClientStatusSchemeTextInputCtx, Page, "tclient-status-bar", vCards, CardOrderModel, ReadOnly ? nullptr : &s_StatusBarSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(TClientStatusSchemeTextInputCtx, Page, "tclient-status-bar", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_StatusBarSettingsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	for(CTClientSettingsCardFrameBinding &Binding : s_aCardBindings)
+		Binding.Clear();
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 }
@@ -4915,19 +5136,45 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly)
 		LogTClientPerfStageEx("tclient_info", "settings_tabs", ETClientSettingsPerfStage::INTERACTIVE_LAYER, TabsTimer.ElapsedMs());
 	};
 
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(4);
-	auto AddCard = [&vCards](const char *pStableId, const char *pTitle, float Height, const FSettingsCardRender &Render) {
-		SSettingsCardDefinition Card;
-		Card.m_Spec = {pStableId, Localize(pTitle), nullptr};
-		Card.m_Measure = [Height](float) { return Height; };
-		Card.m_Render = Render;
-		vCards.push_back(std::move(Card));
+	const std::array<float, 4> aCardHeights = {
+		LineSize * 4.0f + MarginSmall,
+		LineSize * 4.0f + MarginSmall,
+		(50.0f + MarginSmall) * 5.0f,
+		LineSize * 3.0f,
 	};
-	AddCard("deck:tclient-info-links", "TClient Links", LineSize * 4.0f + MarginSmall, RenderLinks);
-	AddCard("deck:tclient-info-files", "Config Files", LineSize * 4.0f + MarginSmall, RenderFiles);
-	AddCard("deck:tclient-info-developers", "TClient Developers", (50.0f + MarginSmall) * 5.0f, RenderDevelopers);
-	AddCard("deck:tclient-info-tabs", "Hide Settings Tabs", LineSize * 3.0f, RenderTabs);
+	const auto MeasureCard = [&](size_t Index, float) { return aCardHeights[Index]; };
+	const auto RenderCard = [&](size_t Index, CUIRect &Content) {
+		switch(Index)
+		{
+		case 0: RenderLinks(Content); break;
+		case 1: RenderFiles(Content); break;
+		case 2: RenderDevelopers(Content); break;
+		case 3: RenderTabs(Content); break;
+		default: break;
+		}
+	};
+	static std::array<CTClientSettingsCardFrameBinding, 4> s_aCardBindings;
+	for(size_t Index = 0; Index < s_aCardBindings.size(); ++Index)
+		s_aCardBindings[Index].BindIndexed(MeasureCard, RenderCard, Index);
+	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+		constexpr std::array<std::pair<const char *, const char *>, 4> aSpecs = {{
+			{"deck:tclient-info-links", "TClient Links"},
+			{"deck:tclient-info-files", "Config Files"},
+			{"deck:tclient-info-developers", "TClient Developers"},
+			{"deck:tclient-info-tabs", "Hide Settings Tabs"},
+		}};
+		vCards.reserve(aSpecs.size());
+		for(size_t Index = 0; Index < aSpecs.size(); ++Index)
+		{
+			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
+			SSettingsCardDefinition Definition;
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
+			Definition.m_Render = [pBinding](CUIRect Content) { pBinding->Render(Content); };
+			vCards.push_back(std::move(Definition));
+		}
+	};
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TClientCardDefinitionsLayoutRevision(ReadOnly, m_TClientSettingsTab, "tclient-info"));
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -4957,7 +5204,9 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly)
 		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	const SSettingsCardDeckResult DeckResult = CardDeck.Render(InfoCtx, Page, "tclient-info", vCards, CardOrderModel, ReadOnly ? nullptr : &s_InfoScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(InfoCtx, Page, "tclient-info", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_InfoScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	for(CTClientSettingsCardFrameBinding &Binding : s_aCardBindings)
+		Binding.Clear();
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_info_total", RenderTimer.ElapsedMs(), false);
@@ -5001,8 +5250,9 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	static int s_SelectedProfile = -1;
 	static int s_AllowDelete = 0;
 	auto &vProfiles = GameClient()->m_SkinProfiles.m_Profiles;
-	if(s_SelectedProfile >= (int)vProfiles.size())
-		s_SelectedProfile = vProfiles.empty() ? -1 : (int)vProfiles.size() - 1;
+	int SelectedProfile = s_SelectedProfile;
+	if(SelectedProfile >= (int)vProfiles.size())
+		SelectedProfile = vProfiles.empty() ? -1 : (int)vProfiles.size() - 1;
 
 	CUIRect Label, Button;
 
@@ -5094,19 +5344,19 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	};
 
 	auto IsSelectedProfileValid = [&]() {
-		return s_SelectedProfile >= 0 && s_SelectedProfile < (int)vProfiles.size();
+		return SelectedProfile >= 0 && SelectedProfile < (int)vProfiles.size();
 	};
 
 	auto pSelectedProfile = [&]() -> CProfile * {
 		if(!IsSelectedProfileValid())
 			return nullptr;
-		return &vProfiles[s_SelectedProfile];
+		return &vProfiles[SelectedProfile];
 	};
 
 	auto pConstSelectedProfile = [&]() -> const CProfile * {
 		if(!IsSelectedProfileValid())
 			return nullptr;
-		return &vProfiles[s_SelectedProfile];
+		return &vProfiles[SelectedProfile];
 	};
 
 	auto BuildProfileFromCurrentSettings = [&]() {
@@ -5155,11 +5405,11 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	auto DeleteSelectedProfile = [&]() {
 		if(!IsSelectedProfileValid())
 			return;
-		vProfiles.erase(vProfiles.begin() + s_SelectedProfile);
+		vProfiles.erase(vProfiles.begin() + SelectedProfile);
 		if(vProfiles.empty())
-			s_SelectedProfile = -1;
-		else if(s_SelectedProfile >= (int)vProfiles.size())
-			s_SelectedProfile = (int)vProfiles.size() - 1;
+			SelectedProfile = -1;
+		else if(SelectedProfile >= (int)vProfiles.size())
+			SelectedProfile = (int)vProfiles.size() - 1;
 	};
 
 	auto RenderProfilePreview = [&](CUIRect Profiles) {
@@ -5288,12 +5538,15 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 			Client()->ViewFile(aBuf);
 		}
 
-		static CListBox s_ListBox;
-		s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
-		s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		static CListBox s_ProfilesListBox;
+		static CListBox s_ProfilesReadOnlyListBox;
+		CListBox &ProfilesListBox = ReadOnly ? s_ProfilesReadOnlyListBox : s_ProfilesListBox;
+		ProfilesListBox.SetActive(!ReadOnly);
+		ProfilesListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+		ProfilesListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 		CPerfTimer ListTimer;
 		const int ProfilesPerRow = maximum(1, (int)(MainView.w / 200.0f));
-		s_ListBox.DoStart(LineSize * 3.0f, vProfiles.size(), ProfilesPerRow, 3, s_SelectedProfile, &MainView, true, IGraphics::CORNER_ALL);
+		ProfilesListBox.DoStart(LineSize * 3.0f, vProfiles.size(), ProfilesPerRow, 3, SelectedProfile, &MainView, true, IGraphics::CORNER_ALL);
 
 		static std::vector<int> s_vProfileItemIds;
 		if(s_vProfileItemIds.size() != vProfiles.size())
@@ -5305,41 +5558,56 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 
 		for(size_t i = 0; i < vProfiles.size(); ++i)
 		{
-			CListboxItem Item = s_ListBox.DoNextItem(&s_vProfileItemIds[i], s_SelectedProfile >= 0 && (size_t)s_SelectedProfile == i);
+			CListboxItem Item = ProfilesListBox.DoNextItem(&s_vProfileItemIds[i], SelectedProfile >= 0 && (size_t)SelectedProfile == i);
 			if(!Item.m_Visible)
 				continue;
 
 			RenderProfile(Item.m_Rect, vProfiles[i], false);
 		}
 
-		const int SelectedProfile = s_ListBox.DoEnd();
+		const int NewSelectedProfile = ProfilesListBox.DoEnd();
 		if(!ReadOnly)
-			s_SelectedProfile = SelectedProfile;
-		if(!ReadOnly && s_ListBox.WasItemActivated())
+			SelectedProfile = NewSelectedProfile;
+		if(!ReadOnly && ProfilesListBox.WasItemActivated())
 			ApplySelectedProfile();
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "profiles=%d", (int)vProfiles.size());
 		LogTClientPerfStageEx("tclient_profiles", "list", ETClientSettingsPerfStage::STATIC_LAYER, ListTimer.ElapsedMs(), false, aExtra);
 	};
 
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(3);
-	auto AddCard = [&vCards](const char *pStableId, const char *pTitle, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, uint64_t MeasureRevision = 0) {
-		SSettingsCardDefinition Card;
-		Card.m_Spec = {pStableId, Localize(pTitle), nullptr};
-		Card.m_Measure = Measure;
-		Card.m_Render = Render;
-		Card.m_MeasureRevision = MeasureRevision;
-		vCards.push_back(std::move(Card));
-	};
 	const bool HasSelectedProfile = pConstSelectedProfile() != nullptr;
 	const float ProfilePreviewHeight = HasSelectedProfile ? LineSize * 8.0f + MarginSmall * 3.0f : LineSize * 4.0f + MarginSmall;
 	const float ProfileActionsHeight = s_AllowDelete ? LineSize * 5.0f + MarginSmall * 4.0f : LineSize * 3.0f + MarginSmall * 2.0f;
-	AddCard("deck:tclient-profiles-actions", "Profiles", [ProfilePreviewHeight, ProfileActionsHeight](float ContentWidth) { return ContentWidth >= 520.0f ? std::max(ProfilePreviewHeight, ProfileActionsHeight) : ProfilePreviewHeight + MarginSmall + ProfileActionsHeight; }, RenderActions, (static_cast<uint64_t>(HasSelectedProfile) << 0) | (static_cast<uint64_t>(s_AllowDelete != 0) << 1));
-	AddCard("deck:tclient-profiles-options", "Profile Options", [](float ContentWidth) {
+	const auto MeasureActions = [ProfilePreviewHeight, ProfileActionsHeight](float ContentWidth) { return ContentWidth >= 520.0f ? std::max(ProfilePreviewHeight, ProfileActionsHeight) : ProfilePreviewHeight + MarginSmall + ProfileActionsHeight; };
+	const auto MeasureOptions = [](float ContentWidth) {
 		const float Rows = ContentWidth >= 440.0f ? 6.0f : 9.0f;
-		return Rows * LineSize + (Rows - 1.0f) * MarginSmall; }, RenderOptions);
-	AddCard("deck:tclient-profiles-list", "Saved Profiles", [this](float ContentWidth) { return std::max(LineSize * 6.0f, std::min(360.0f, ContentWidth * 0.75f)); }, RenderSavedProfiles);
+		return Rows * LineSize + (Rows - 1.0f) * MarginSmall;
+	};
+	const auto MeasureSavedProfiles = [](float ContentWidth) { return std::max(LineSize * 6.0f, std::min(360.0f, ContentWidth * 0.75f)); };
+	static std::array<CTClientSettingsCardFrameBinding, 3> s_aCardBindings;
+	s_aCardBindings[0].Bind(MeasureActions, RenderActions);
+	s_aCardBindings[1].Bind(MeasureOptions, RenderOptions);
+	s_aCardBindings[2].Bind(MeasureSavedProfiles, RenderSavedProfiles);
+	const uint64_t ProfilesLayoutRevision = (static_cast<uint64_t>(HasSelectedProfile) << 0) | (static_cast<uint64_t>(s_AllowDelete != 0) << 1) | (static_cast<uint64_t>(vProfiles.size()) << 2);
+	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+		constexpr std::array<std::pair<const char *, const char *>, 3> aSpecs = {{
+			{"deck:tclient-profiles-actions", "Profiles"},
+			{"deck:tclient-profiles-options", "Profile Options"},
+			{"deck:tclient-profiles-list", "Saved Profiles"},
+		}};
+		vCards.reserve(aSpecs.size());
+		for(size_t Index = 0; Index < aSpecs.size(); ++Index)
+		{
+			CTClientSettingsCardFrameBinding *pBinding = &s_aCardBindings[Index];
+			SSettingsCardDefinition Definition;
+			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), nullptr};
+			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
+			Definition.m_Render = [pBinding](CUIRect Content) { pBinding->Render(Content); };
+			Definition.m_MeasureRevision = Index == 0 ? ProfilesLayoutRevision : 0;
+			vCards.push_back(std::move(Definition));
+		}
+	};
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TClientCardDefinitionsLayoutRevision(ReadOnly, m_TClientSettingsTab, "tclient-profiles", ProfilesLayoutRevision));
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -5369,7 +5637,11 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	const SSettingsCardDeckResult DeckResult = CardDeck.Render(ProfilesCtx, Page, "tclient-profiles", vCards, CardOrderModel, ReadOnly ? nullptr : &s_ProfilesScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(ProfilesCtx, Page, "tclient-profiles", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_ProfilesScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	for(CTClientSettingsCardFrameBinding &Binding : s_aCardBindings)
+		Binding.Clear();
+	if(!ReadOnly)
+		s_SelectedProfile = SelectedProfile;
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_profiles_total", RenderTimer.ElapsedMs(), false);
@@ -5953,6 +6225,8 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		const std::vector<const SConfigVariable *> &vpFiltered = s_vFilteredConfigs;
 
 		static CScrollRegion s_ConfigListScrollRegion;
+		static CScrollRegion s_ConfigListReadOnlyScrollRegion;
+		CScrollRegion &ConfigListScrollRegion = ReadOnly ? s_ConfigListReadOnlyScrollRegion : s_ConfigListScrollRegion;
 		vec2 ScrollOffset(0.0f, 0.0f);
 		SQmScrollRequest ConfigListScrollRequest;
 		ConfigListScrollRequest.m_Profile = EQmScrollProfile::SETTINGS_INNER;
@@ -5964,7 +6238,9 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(QmResolveScrollPolicy(ConfigListScrollRequest, UiScale, 0.0f));
 		CPerfTimer ListTimer;
 		static float s_PrevConfigsScrollY = 0.0f;
-		SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ConfigListScrollRegion, &ListArea, ScrollParams, s_PrevConfigsScrollY);
+		static float s_PrevConfigsReadOnlyScrollY = 0.0f;
+		float &PrevConfigsScrollY = ReadOnly ? s_PrevConfigsReadOnlyScrollY : s_PrevConfigsScrollY;
+		SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(ConfigListScrollRegion, &ListArea, ScrollParams, PrevConfigsScrollY);
 		ScrollOffset = ScrollFrame.m_BeginOffset;
 
 		ListArea.y += ScrollOffset.y;
@@ -6211,22 +6487,13 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		}
 
 		CUIRect EndPad{Content.x, Content.y, Content.w, 5.0f};
-		FinishSettingsScrollRegion(s_ConfigListScrollRegion, ScrollFrame, &EndPad);
-		s_PrevConfigsScrollY = ScrollFrame.m_FinalOffsetY;
+		FinishSettingsScrollRegion(ConfigListScrollRegion, ScrollFrame, &EndPad);
+		PrevConfigsScrollY = ScrollFrame.m_FinalOffsetY;
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "filtered=%d scroll_y=%.1f", (int)vpFiltered.size(), ScrollFrame.m_FinalOffsetY);
 		LogTClientPerfStageEx("tclient_configs", "list", ETClientSettingsPerfStage::STATIC_LAYER, ListTimer.ElapsedMs(), false, aExtra);
 	};
 
-	std::vector<SSettingsCardDefinition> vCards;
-	vCards.reserve(1);
-	auto AddCard = [&vCards](const char *pStableId, const char *pTitle, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render) {
-		SSettingsCardDefinition Card;
-		Card.m_Spec = {pStableId, Localize(pTitle), nullptr};
-		Card.m_Measure = Measure;
-		Card.m_Render = Render;
-		vCards.push_back(std::move(Card));
-	};
 	const float SectionHeadingHeight = HeadlineHeight + MarginSmall;
 	const float SectionGap = MarginSmall * 2.0f;
 	const auto ConfigListViewportHeightForWidth = [](float ContentWidth) {
@@ -6239,7 +6506,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 	const auto ConfigsContentHeightForWidth = [ConfigListViewportHeightForWidth, SectionHeadingHeight, SectionGap, FiltersHeightForWidth](float ContentWidth) {
 		return LineSize + FiltersHeightForWidth(ContentWidth) + ConfigListViewportHeightForWidth(ContentWidth) + SectionHeadingHeight * 2.0f + SectionGap * 2.0f;
 	};
-	AddCard("deck:tclient-configs-actions", "Configuration", ConfigsContentHeightForWidth, [&](CUIRect Content) {
+	const auto RenderConfigCard = [&](CUIRect Content) {
 		CUIRect ChangesHeading, Actions, FiltersHeading, Filters, List;
 		const float FiltersHeight = FiltersHeightForWidth(Content.w);
 		const float ListViewportHeight = ConfigListViewportHeightForWidth(Content.w);
@@ -6255,7 +6522,19 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		RenderActions(Actions);
 		RenderFilters(Filters);
 		RenderList(List);
-	});
+	};
+	static CTClientSettingsCardFrameBinding s_CardBinding;
+	s_CardBinding.Bind(ConfigsContentHeightForWidth, RenderConfigCard);
+	const uint64_t ConfigsLayoutRevision = static_cast<uint64_t>(g_Config.m_TcUiCompactList != 0);
+	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {"deck:tclient-configs-actions", Localize("Configuration"), nullptr};
+		Definition.m_Measure = [](float ContentWidth) { return s_CardBinding.Measure(ContentWidth); };
+		Definition.m_Render = [](CUIRect Content) { s_CardBinding.Render(Content); };
+		Definition.m_MeasureRevision = ConfigsLayoutRevision;
+		vCards.push_back(std::move(Definition));
+	};
+	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TClientCardDefinitionsLayoutRevision(ReadOnly, m_TClientSettingsTab, "tclient-configs", ConfigsLayoutRevision));
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
@@ -6285,7 +6564,8 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		CardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	const SSettingsCardDeckResult DeckResult = CardDeck.Render(ConfigsCtx, Page, "tclient-configs", vCards, CardOrderModel, ReadOnly ? nullptr : &s_ConfigsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(ConfigsCtx, Page, "tclient-configs", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_ConfigsScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	s_CardBinding.Clear();
 	if(!ReadOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 	LogTClientPerfStage("tclient_configs_total", RenderTimer.ElapsedMs(), false);

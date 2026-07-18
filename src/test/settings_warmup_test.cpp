@@ -334,7 +334,7 @@ TEST(SettingsResourceJobs, LoadingPrewarmProgressDetectionIsStrictlyIncreasing)
 	EXPECT_FALSE(SettingsLoadingPrewarmMadeProgress(4, 4, 2, 2, 2, 2));
 }
 
-TEST(SettingsWarmup, TClientPrewarmOnlyPathStillAdvancesVisibleSectionLoaders)
+TEST(SettingsWarmup, TClientReadOnlyPathUsesIsolatedSectionLoaders)
 {
 	std::ifstream TClientFile(TestSourcePath("src/game/client/components/tclient/menus_tclient.cpp"));
 	ASSERT_TRUE(TClientFile.good());
@@ -348,22 +348,28 @@ TEST(SettingsWarmup, TClientPrewarmOnlyPathStillAdvancesVisibleSectionLoaders)
 	ASSERT_NE(RenderEnd, std::string::npos);
 	const std::string RenderBody = TClientSource.substr(RenderPos, RenderEnd - RenderPos);
 
-	const size_t LeftPrewarmPos = RenderBody.find("if(PrewarmOnly)\n\t\t{", RenderBody.find("s_VisualFontLoader.Register"));
+	EXPECT_NE(RenderBody.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
+	EXPECT_NE(RenderBody.find("CSectionLoader &VisualFontLoader = ReadOnly ? s_VisualFontReadOnlyLoader : s_VisualFontLoader;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("CSectionLoader &RightSectionLoader = ReadOnly ? s_RightSectionReadOnlyLoader : s_RightSectionLoader;"), std::string::npos);
+	const size_t LeftPrewarmPos = RenderBody.find("if(ReadOnly)\n\t\t{", RenderBody.find("VisualFontLoader.Register"));
 	ASSERT_NE(LeftPrewarmPos, std::string::npos);
 	const size_t RightColumnPos = RenderBody.find("// ***** RightView *****", LeftPrewarmPos);
 	ASSERT_NE(RightColumnPos, std::string::npos);
 	const std::string LeftPrewarmBody = RenderBody.substr(LeftPrewarmPos, RightColumnPos - LeftPrewarmPos);
-	EXPECT_NE(LeftPrewarmBody.find("s_VisualFontLoader.Process();"), std::string::npos);
+	EXPECT_NE(LeftPrewarmBody.find("VisualFontLoader.Process();"), std::string::npos);
 
-	const size_t RightPrewarmPos = RenderBody.find("if(PrewarmOnly)\n\t\t{", RenderBody.find("s_RightSectionLoader.Register"));
+	const size_t RightPrewarmPos = RenderBody.find("if(ReadOnly)\n\t\t{", RenderBody.find("RightSectionLoader.Register"));
 	ASSERT_NE(RightPrewarmPos, std::string::npos);
 	const size_t RightElsePos = RenderBody.find("else\n\t\t{", RightPrewarmPos);
 	ASSERT_NE(RightElsePos, std::string::npos);
 	const std::string RightPrewarmBody = RenderBody.substr(RightPrewarmPos, RightElsePos - RightPrewarmPos);
-	EXPECT_NE(RightPrewarmBody.find("s_RightSectionLoader.Process();"), std::string::npos);
+	EXPECT_NE(RightPrewarmBody.find("RightSectionLoader.Process();"), std::string::npos);
 	EXPECT_EQ(RightPrewarmBody.find("return;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("m_SettingsCardDeck.Render(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
-	EXPECT_NE(RenderBody.find("s_TClientSettingsScrollRegion"), std::string::npos);
+	const size_t VisibleDeckGuard = RenderBody.find("if(!ReadOnly)", RightPrewarmPos);
+	const size_t VisibleDeckRender = RenderBody.find("m_SettingsCardDeck.RenderCached(SettingsUiContext(\"settings_tclient_main\"", VisibleDeckGuard);
+	ASSERT_NE(VisibleDeckGuard, std::string::npos);
+	ASSERT_NE(VisibleDeckRender, std::string::npos);
+	EXPECT_LT(VisibleDeckGuard, VisibleDeckRender);
 }
 
 TEST(SettingsWarmup, TClientSectionLoadersEnableDeferredFarMeasurement)
@@ -380,26 +386,26 @@ TEST(SettingsWarmup, TClientSectionLoadersEnableDeferredFarMeasurement)
 	ASSERT_NE(RenderEnd, std::string::npos);
 	const std::string RenderBody = TClientSource.substr(RenderPos, RenderEnd - RenderPos);
 
-	const size_t LeftProgressivePos = RenderBody.find("s_VisualFontLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);");
+	const size_t LeftProgressivePos = RenderBody.find("VisualFontLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);");
 	ASSERT_NE(LeftProgressivePos, std::string::npos);
-	const size_t LeftMaxSectionsPos = RenderBody.find("s_VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ?", LeftProgressivePos);
+	const size_t LeftMaxSectionsPos = RenderBody.find("VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ?", LeftProgressivePos);
 	ASSERT_NE(LeftMaxSectionsPos, std::string::npos);
-	const size_t LeftDeferredPos = RenderBody.find("s_VisualFontLoader.SetDeferredFarMeasurementEnabled(true);", LeftMaxSectionsPos);
+	const size_t LeftDeferredPos = RenderBody.find("VisualFontLoader.SetDeferredFarMeasurementEnabled(true);", LeftMaxSectionsPos);
 	ASSERT_NE(LeftDeferredPos, std::string::npos);
 	const size_t LeftViewportPos = RenderBody.find("LeftLoaderViewport.y -= ScrollOffset.y;", LeftDeferredPos);
 	ASSERT_NE(LeftViewportPos, std::string::npos);
-	const size_t LeftBeginPos = RenderBody.find("s_VisualFontLoader.Begin(LeftView, LeftLoaderViewport, 5.0f);", LeftViewportPos);
+	const size_t LeftBeginPos = RenderBody.find("VisualFontLoader.Begin(LeftView, LeftLoaderViewport, 5.0f);", LeftViewportPos);
 	ASSERT_NE(LeftBeginPos, std::string::npos);
 
-	const size_t RightProgressivePos = RenderBody.find("s_RightSectionLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);");
+	const size_t RightProgressivePos = RenderBody.find("RightSectionLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);");
 	ASSERT_NE(RightProgressivePos, std::string::npos);
-	const size_t RightMaxSectionsPos = RenderBody.find("s_RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ?", RightProgressivePos);
+	const size_t RightMaxSectionsPos = RenderBody.find("RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ?", RightProgressivePos);
 	ASSERT_NE(RightMaxSectionsPos, std::string::npos);
-	const size_t RightDeferredPos = RenderBody.find("s_RightSectionLoader.SetDeferredFarMeasurementEnabled(true);", RightMaxSectionsPos);
+	const size_t RightDeferredPos = RenderBody.find("RightSectionLoader.SetDeferredFarMeasurementEnabled(true);", RightMaxSectionsPos);
 	ASSERT_NE(RightDeferredPos, std::string::npos);
 	const size_t RightViewportPos = RenderBody.find("RightLoaderViewport.y -= ScrollOffset.y;", RightDeferredPos);
 	ASSERT_NE(RightViewportPos, std::string::npos);
-	const size_t RightBeginPos = RenderBody.find("s_RightSectionLoader.Begin(RightView, RightLoaderViewport, 5.0f);", RightViewportPos);
+	const size_t RightBeginPos = RenderBody.find("RightSectionLoader.Begin(RightView, RightLoaderViewport, 5.0f);", RightViewportPos);
 	ASSERT_NE(RightBeginPos, std::string::npos);
 	EXPECT_EQ(RenderBody.find(".m_ScrollY"), std::string::npos);
 }
@@ -430,9 +436,9 @@ TEST(SettingsWarmup, SixupTeeUsesUnifiedOuterAndNestedGridScrollProfiles)
 	const std::string Tee7Source = Tee7Buffer.str();
 	EXPECT_NE(Tee7Source.find("SettingsPageLayout(MainView, UiScale)"), std::string::npos);
 	EXPECT_NE(Tee7Source.find("EQmScrollProfile::SETTINGS_OUTER"), std::string::npos);
-	EXPECT_NE(Tee7Source.find("SetScrollProfile(EQmScrollProfile::GRID)"), std::string::npos);
+	EXPECT_NE(Tee7Source.find("SetScrollProfile(EQmScrollProfile::SETTINGS_GRID)"), std::string::npos);
 	EXPECT_NE(Tee7Source.find("RenderSettingsTee7Content(Content, Metrics)"), std::string::npos);
-	EXPECT_NE(Tee7Source.find("SettingsCardDeckForRenderPass().Render("), std::string::npos);
+	EXPECT_NE(Tee7Source.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
 	EXPECT_NE(Tee7Source.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);
 	EXPECT_NE(Tee7Source.find("RenderOnly ? nullptr : &s_Tee7SettingsScrollRegion"), std::string::npos);
 }
@@ -2382,14 +2388,14 @@ TEST(SettingsWarmup, SettingsPageCachePrewarmRespectsDisabledConfigAtUnifiedEntr
 	EXPECT_LT(DisabledGuard, BindCacheAccess);
 	EXPECT_LT(DisabledGuard, SkinListAccess);
 	EXPECT_NE(Menus.find("void CMenus::EnsureSettingsBindCache()"), std::string::npos);
-	EXPECT_NE(TClient.find("if(!PrewarmOnly)\n\t\tEnsureSettingsBindCache();"), std::string::npos);
+	EXPECT_NE(TClient.find("if(!ReadOnly)\n\t\tEnsureSettingsBindCache();"), std::string::npos);
 	EXPECT_NE(QmClient.find("if(!PrewarmOnly)\n\t\tEnsureSettingsBindCache();"), std::string::npos);
 }
 
 TEST(SettingsWarmup, TClientCardMeasurementCachesUntilRelevantConfigChanges)
 {
 	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
-	EXPECT_NE(TClient.find("HashTClientSettingsCardLayout(Section.m_pStableCardId)"), std::string::npos);
+	EXPECT_NE(TClient.find("HashTClientSettingsCardLayout(s_aDeckCardSpecs[Index].first)"), std::string::npos);
 	EXPECT_EQ(TClient.find("Definition.m_MeasureRevision = HashTClientSettingsConfig();"), std::string::npos);
 	EXPECT_EQ(TClient.find("Definition.m_MeasureEachFrame = true;"), std::string::npos);
 	EXPECT_NE(TClient.find("HashValueFnv1a64(Hash, QmFastInputNormalizedMode(g_Config.m_QmFastInputMode))"), std::string::npos);
@@ -2474,9 +2480,30 @@ TEST(SettingsWarmup, ControlsCardMeasurementsAvoidIdleBindingRescan)
 {
 	const std::string Controls = ReadTestSourceFile("src/game/client/components/menus_settings_controls.cpp");
 	EXPECT_EQ(Controls.find("Definition.m_MeasureEachFrame = true;"), std::string::npos);
+	const size_t ControllerCard = Controls.find("AddCard(vCards, \"deck:controls-controller\"");
+	ASSERT_NE(ControllerCard, std::string::npos);
+	const size_t ControllerCardEnd = Controls.find(";", ControllerCard);
+	ASSERT_NE(ControllerCardEnd, std::string::npos);
+	EXPECT_EQ(Controls.substr(ControllerCard, ControllerCardEnd - ControllerCard).find("true"), std::string::npos);
+	const size_t RevisionStart = Controls.find("uint64_t CardLayoutRevision");
+	const size_t DefinitionsStart = Controls.find("const auto BuildDefinitions", RevisionStart);
+	ASSERT_NE(RevisionStart, std::string::npos);
+	ASSERT_NE(DefinitionsStart, std::string::npos);
+	const std::string RevisionBody = Controls.substr(RevisionStart, DefinitionsStart - RevisionStart);
+	EXPECT_EQ(RevisionBody.find("MeasureSettingsMouseHeight()"), std::string::npos);
+	EXPECT_EQ(RevisionBody.find("MeasureSettingsJoystickHeight()"), std::string::npos);
+	EXPECT_NE(RevisionBody.find("g_Config.m_InpControllerEnable"), std::string::npos);
+	EXPECT_NE(RevisionBody.find("pActiveJoystick->GetNumAxes()"), std::string::npos);
 	EXPECT_NE(Controls.find("Definition.m_MeasureRevision = MeasureRevision;"), std::string::npos);
 	EXPECT_NE(Controls.find("m_BindLayoutRevision"), std::string::npos);
 	EXPECT_NE(Controls.find("++m_BindLayoutRevision;"), std::string::npos);
+	EXPECT_NE(Controls.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
+	EXPECT_NE(Controls.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);
+	EXPECT_NE(Controls.find("ReadOnly ? nullptr : &m_SettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(Controls.find("if(!ReadOnly && ui_widget::InputField("), std::string::npos);
+	EXPECT_NE(Controls.find("else if(!ReadOnly && !m_vSearchMatches.empty()"), std::string::npos);
+	EXPECT_NE(Controls.find("if(!ReadOnly && m_SearchMatchReveal"), std::string::npos);
+	EXPECT_NE(Controls.find("if(!ReadOnly && DeckResult.m_OrderChanged)"), std::string::npos);
 }
 
 TEST(SettingsWarmup, SettingsCardsAvoidIdlePerFrameMeasurement)
@@ -2496,13 +2523,23 @@ TEST(SettingsWarmup, SettingsCardsAvoidIdlePerFrameMeasurement)
 TEST(SettingsWarmup, TeeOffscreenDrainRequiresExplicitPrewarm)
 {
 	const std::string Settings = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
-	const size_t AdvanceStart = Settings.find("const auto AdvanceListOffscreen = [&]() {");
+	const size_t AdvanceStart = Settings.find("const auto AdvanceListOffscreen = [this, QueueDummy]() {");
 	ASSERT_NE(AdvanceStart, std::string::npos);
+	const size_t SkinListLookup = Settings.find("GameClient()->m_Skins.SkinList(QueueDummy)", AdvanceStart);
+	ASSERT_NE(SkinListLookup, std::string::npos);
 	const size_t SkinListAccess = Settings.find("SkinList.Skins()", AdvanceStart);
 	ASSERT_NE(SkinListAccess, std::string::npos);
 	const size_t PrewarmGuard = Settings.find("g_Config.m_QmSettingsPrewarm == 0", AdvanceStart);
 	ASSERT_NE(PrewarmGuard, std::string::npos);
+	EXPECT_LT(PrewarmGuard, SkinListLookup);
 	EXPECT_LT(PrewarmGuard, SkinListAccess);
+	const size_t ListCard = Settings.find("AddCard(ListSpec", AdvanceStart);
+	ASSERT_NE(ListCard, std::string::npos);
+	const size_t OffscreenCall = Settings.find("AdvanceListOffscreen();", ListCard);
+	ASSERT_NE(OffscreenCall, std::string::npos);
+	const size_t CallGuard = Settings.rfind("else if(g_Config.m_QmSettingsPrewarm != 0)", OffscreenCall);
+	ASSERT_NE(CallGuard, std::string::npos);
+	EXPECT_GT(CallGuard, ListCard);
 	EXPECT_NE(Settings.find("m_BackgroundRequestScanComplete", AdvanceStart), std::string::npos);
 	EXPECT_NE(Settings.find("m_BackgroundRequestScanRevision != SkinList.Revision()", AdvanceStart), std::string::npos);
 	EXPECT_NE(Settings.find("g_Config.m_QmSettingsPrewarm != 0 && VisibleSourceSettled"), std::string::npos);

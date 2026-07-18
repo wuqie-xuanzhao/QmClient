@@ -144,6 +144,60 @@ TEST(SettingsCardDeck, DisabledOrSnappedAnimationsOnlyResetTargets)
 	EXPECT_FALSE(FirstFrame.m_SetReflowTarget);
 }
 
+TEST(SettingsCardDeck, ContentHeightAnimationSkipsStableFramesAndSnapsFirstLayout)
+{
+	const SSettingsCardHeightAnimationWork FirstLayout = ResolveSettingsCardHeightAnimationWork(true, false, false, 0.18f, false);
+	EXPECT_FALSE(FirstLayout.m_ResolveHeight);
+	EXPECT_FALSE(FirstLayout.m_SetHeightTarget);
+
+	const SSettingsCardHeightAnimationWork Stable = ResolveSettingsCardHeightAnimationWork(false, false, false, 0.18f, false);
+	EXPECT_FALSE(Stable.m_ResolveHeight);
+	EXPECT_FALSE(Stable.m_SetHeightTarget);
+
+	const SSettingsCardHeightAnimationWork Changed = ResolveSettingsCardHeightAnimationWork(false, true, false, 0.18f, false);
+	EXPECT_TRUE(Changed.m_ResolveHeight);
+	EXPECT_FALSE(Changed.m_SetHeightTarget);
+
+	const SSettingsCardHeightAnimationWork Active = ResolveSettingsCardHeightAnimationWork(false, false, true, 0.18f, false);
+	EXPECT_TRUE(Active.m_ResolveHeight);
+	EXPECT_FALSE(Active.m_SetHeightTarget);
+
+	const SSettingsCardHeightAnimationWork Disabled = ResolveSettingsCardHeightAnimationWork(false, true, true, 0.0f, false);
+	EXPECT_FALSE(Disabled.m_ResolveHeight);
+	EXPECT_TRUE(Disabled.m_SetHeightTarget);
+
+	const SSettingsCardHeightAnimationWork DragSnap = ResolveSettingsCardHeightAnimationWork(false, true, true, 0.18f, true);
+	EXPECT_FALSE(DragSnap.m_ResolveHeight);
+	EXPECT_TRUE(DragSnap.m_SetHeightTarget);
+}
+
+TEST(SettingsCardDeck, AnimatedColumnFramesNeverOverlapFollowingCards)
+{
+	for(const float Progress : {0.0f, 0.2f, 0.5f, 0.8f, 1.0f})
+	{
+		CSettingsCardColumnFramePlan ColumnPlan(100.0f, 10.0f);
+		const SSettingsCardColumnFrame First = ColumnPlan.Append(240.0f + (60.0f - 240.0f) * Progress);
+		const SSettingsCardColumnFrame Second = ColumnPlan.Append(90.0f + (180.0f - 90.0f) * Progress);
+		const SSettingsCardColumnFrame Third = ColumnPlan.Append(120.0f + (40.0f - 120.0f) * Progress);
+		EXPECT_FLOAT_EQ(Second.m_Y, First.m_NextY);
+		EXPECT_FLOAT_EQ(Third.m_Y, Second.m_NextY);
+		EXPECT_GE(Second.m_Y, First.m_Y + First.m_Height + 10.0f);
+		EXPECT_GE(Third.m_Y, Second.m_Y + Second.m_Height + 10.0f);
+		EXPECT_FLOAT_EQ(ColumnPlan.CursorY(), Third.m_NextY);
+	}
+
+	CSettingsCardColumnFramePlan ClampedPlan(50.0f, -5.0f);
+	const SSettingsCardColumnFrame Clamped = ClampedPlan.Append(-20.0f);
+	EXPECT_FLOAT_EQ(Clamped.m_Height, 0.0f);
+	EXPECT_FLOAT_EQ(Clamped.m_NextY, 50.0f);
+}
+
+TEST(SettingsCardDeck, HeightAnimationClipsOnlyTheAnimatedCard)
+{
+	EXPECT_TRUE(SettingsCardDeckShouldClipContent(true));
+	EXPECT_FALSE(SettingsCardDeckShouldClipContent(false));
+}
+
 TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)
 {
 	std::array<std::vector<int>, 3> aColumns{

@@ -1257,7 +1257,7 @@ TEST(Skins, SkinRefreshKeepsExistingListWhileNewPlanLoads)
 TEST(Skins, TeeSkinRefreshClearsListPreviewCacheBeforeReloadingSkinTextures)
 {
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
-	const size_t RefreshBranch = Menus.find("if(ShouldRefresh)");
+	const size_t RefreshBranch = Menus.find("if(!RenderOnly && ShouldRefresh)");
 	ASSERT_NE(RefreshBranch, std::string::npos);
 	const size_t RefreshSkins = Menus.find("GameClient()->RefreshSkins(CSkinDescriptor::FLAG_SIX);", RefreshBranch);
 	ASSERT_NE(RefreshSkins, std::string::npos);
