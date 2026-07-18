@@ -3818,6 +3818,7 @@ void CHud::RenderMediaIsland()
 	constexpr float BottomRowPaddingY = 2.5f;
 	constexpr float BottomRowDividerInset = 10.0f;
 	const float MaxUnifiedWidth = std::max(0.0f, m_Width - ScreenPadding * 2.0f);
+	const float MaxTitleWidth = std::clamp(m_Width * 0.18f, 42.0f, 88.0f);
 
 	const float TimeSlotWidth = std::round(TextRender()->TextBoundingBox(MetaFontSize, aTimeSlotBuf).m_W);
 	const float TimeTextWidth = std::round(TextRender()->TextBoundingBox(MetaFontSize, aTimeDisplayBuf).m_W);
@@ -3836,7 +3837,6 @@ void CHud::RenderMediaIsland()
 	const float FrozenSummaryTextWidth = ShowFrozenSummaryInStatus ? std::round(TextRender()->TextBoundingBox(StatusFontSize, aFrozenSummaryBuf).m_W) : 0.0f;
 	const float FrozenSummaryStatusWidth = ShowFrozenSummaryInStatus ? (StatusPaddingLeft + FrozenSummaryTextWidth + StatusPaddingRight) : 0.0f;
 	const bool ShowBottomRow = ShowLyricsIslandLine || ShowFrozenSummaryInBottomRow;
-	const float LyricsBottomContentWidth = ShowLyricsIslandLine ? std::round(TextRender()->TextBoundingBox(BottomFontSize, aLyricsIslandBuf).m_W) : 0.0f;
 	struct SBottomTextLayoutItem
 	{
 		const char *m_pText = nullptr;
@@ -3859,9 +3859,14 @@ void CHud::RenderMediaIsland()
 	if(BottomLayoutItemCount > 1)
 		UtilityBottomContentWidth += BottomRowItemGap * (BottomLayoutItemCount - 1);
 	const int BottomRowLineCount = (ShowLyricsIslandLine ? 1 : 0) + (BottomLayoutItemCount > 0 ? 1 : 0);
-	const float MaxBottomContentWidth = std::max(0.0f, MaxUnifiedWidth - BottomRowPaddingX * 2.0f);
-	const float NaturalBottomContentWidth = std::min(MaxBottomContentWidth, std::max(LyricsBottomContentWidth, UtilityBottomContentWidth));
-	const float DesiredBottomUnifiedWidth = BottomRowLineCount > 0 ? (NaturalBottomContentWidth + BottomRowPaddingX * 2.0f) : 0.0f;
+	const float DesiredBottomUnifiedWidth = QmHudMediaIslandDesiredBottomWidth(
+		ShowLyricsIslandLine,
+		ShowTopRow,
+		BottomLayoutItemCount > 0,
+		UtilityBottomContentWidth,
+		MaxTitleWidth,
+		MaxUnifiedWidth,
+		BottomRowPaddingX);
 	const bool ShowCover = HasMediaState;
 	const int MetaItemCount = (ShowTeam ? 1 : 0) + (ShowLocalTime ? 1 : 0);
 	float BaseWidth = PaddingX;
@@ -3880,7 +3885,6 @@ void CHud::RenderMediaIsland()
 		BaseWidth = 0.0f;
 	if(HasSatellitePresentation)
 		BaseWidth = std::max(BaseWidth, BaseIslandHeight);
-	const float MaxTitleWidth = std::clamp(m_Width * 0.18f, 42.0f, 88.0f);
 	const float TimerBoxX = TimerCapsule.m_Visible ? std::round(m_Width * 0.5f - TimerCapsule.m_BoxW * 0.5f) : TimerCapsule.m_BoxX;
 	const float TimerTextX = TimerCapsule.m_Visible ? std::round(m_Width * 0.5f - TimerInfo.m_W * 0.5f) : TimerCapsule.m_TextX;
 	const float TimerBoxRight = TimerBoxX + TimerCapsule.m_BoxW;

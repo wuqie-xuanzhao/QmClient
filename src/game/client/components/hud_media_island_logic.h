@@ -399,6 +399,28 @@ inline float QmHudMediaIslandCountdownProgress(const SHudMediaIslandCountdownInp
 	return std::clamp((Input.m_EndTick - Now) / static_cast<float>(Input.m_DurationTicks), 0.0f, 1.0f);
 }
 
+inline float QmHudMediaIslandDesiredBottomWidth(
+	bool ShowLyrics,
+	bool ShowTopRow,
+	bool HasUtilityContent,
+	float UtilityContentWidth,
+	float LyricsOnlyContentWidth,
+	float MaxUnifiedWidth,
+	float HorizontalPadding)
+{
+	if(!HasUtilityContent && (!ShowLyrics || ShowTopRow))
+		return 0.0f;
+
+	const float ClampedMaxWidth = std::max(0.0f, MaxUnifiedWidth);
+	const float ClampedPadding = std::max(0.0f, HorizontalPadding);
+	const float MaxContentWidth = std::max(0.0f, ClampedMaxWidth - ClampedPadding * 2.0f);
+	float ContentWidth = HasUtilityContent ? std::max(0.0f, UtilityContentWidth) : 0.0f;
+	if(ShowLyrics && !ShowTopRow)
+		ContentWidth = std::max(ContentWidth, std::max(0.0f, LyricsOnlyContentWidth));
+	ContentWidth = std::min(ContentWidth, MaxContentWidth);
+	return std::min(ClampedMaxWidth, ContentWidth + ClampedPadding * 2.0f);
+}
+
 inline float QmHudMediaIslandSatelliteWidth(int ItemCount, float Diameter, float ItemGap)
 {
 	if(ItemCount <= 0 || Diameter <= 0.0f)
