@@ -309,6 +309,7 @@ _TYPOGRAPHY_SOURCES = (
 	Path("src/game/client/components/tclient/menus_tclient.cpp"),
 	Path("src/game/client/components/qmclient/menus_qmclient.cpp"),
 )
+_FONT_ASSIGNMENT_SOURCES = _TYPOGRAPHY_SOURCES + (_NAVIGATION_SOURCE,)
 # 特殊视觉元素不属于设置内容文字：国旗代码、Tee/皮肤状态图标、统计预览、
 # 颜色拾取器和地图 popup。新增例外必须在这里集中说明，禁止在业务页静默散落裸字号。
 _RAW_FONT_ALLOWLIST = (
@@ -517,6 +518,37 @@ def _find_raw_font_literals(source: str) -> list[int]:
 	return sorted(result)
 
 
+def _find_rect_derived_font_arguments(source: str) -> list[tuple[int, str]]:
+	"""Find settings labels whose font argument is derived from a control rectangle."""
+	result: list[tuple[int, str]] = []
+	font_argument_indices = {
+		"DoLabel": 2,
+		"DoSettingsLabel": 5,
+		"DoSettingsMenuLabel": 6,
+	}
+	for function_name, font_argument_index in font_argument_indices.items():
+		for _, _, line_number, arguments in _iter_cpp_call_arguments(source, function_name):
+			if len(arguments) <= font_argument_index:
+				continue
+			font_argument = arguments[font_argument_index]
+			if re.search(r"\b[A-Za-z_]\w*(?:\.|->)h\b", font_argument):
+				result.append((line_number, font_argument))
+	return sorted(result)
+
+
+def _find_rect_derived_font_assignments(source: str) -> list[tuple[int, str]]:
+	"""Find every m_FontSize assignment whose right-hand side depends on a rectangle height."""
+	code = _mask_cpp_comments_and_strings(source)
+	result: list[tuple[int, str]] = []
+	pattern = re.compile(r"\b[A-Za-z_]\w*(?:\.|->)m_FontSize\s*=(?!=)\s*(?P<rhs>[^;]+);")
+	for match in pattern.finditer(code):
+		rhs = match.group("rhs").strip()
+		if re.search(r"\b[A-Za-z_]\w*(?:\.|->)h\b", rhs):
+			original_rhs = source[match.start("rhs"):match.end("rhs")].strip()
+			result.append((code.count("\n", 0, match.start()) + 1, original_rhs))
+	return result
+
+
 def _find_legacy_color_picker_geometry(source: str) -> list[tuple[int, str]]:
 	code = _mask_cpp_comments_and_strings(source)
 	declaration_pattern = re.compile(r"\b(?P<type>SSettingsContentMetrics|float|double|int|unsigned|long|short|auto)\s+(?:const\s+)?[&*]?\s*(?P<name>[A-Za-z_]\w*)\s*(?=[=;,){}\[])")
@@ -595,7 +627,9 @@ def audit_page(repo_root: Path, page: str) -> list[str]:
 def audit_shared_contracts(repo_root: Path) -> list[str]:
 	errors: list[str] = []
 	menu_source = _read(repo_root, _NAVIGATION_SOURCE)
+	settings_shell_source = _read(repo_root, _DEFAULT_SOURCE)
 	tclient_source = _read(repo_root, Path("src/game/client/components/tclient/menus_tclient.cpp"))
+	ui_source = _read(repo_root, Path("src/game/client/ui.cpp"))
 	if "ResolveSettingsRadioRowLayout(" not in menu_source:
 		errors.append("shared: responsive settings radio resolver missing")
 	if "SettingsPageUiScale(pRect->w)" in menu_source:
@@ -610,6 +644,10 @@ def audit_shared_contracts(repo_root: Path) -> list[str]:
 		errors.append("shared: streamed settings checkbox metrics still have implicit defaults")
 	if "VMargin, 0.0f, FontSize" not in tclient_source:
 		errors.append("tclient: streamed checkbox rows do not use the shared BodySize")
+	if "Ui()->SetDropDownFontSize(m_SettingsContentMetrics.m_BodySize);" not in settings_shell_source:
+		errors.append("shared: settings shell does not provide the BodySize dropdown context")
+	if "Props.m_FontSize = ResolvedFontSize;" not in ui_source or "State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;" not in ui_source:
+		errors.append("shared: dropdown trigger and popup do not inherit one resolved font size")
 
 	for relative in _TYPOGRAPHY_SOURCES:
 		source = _read(repo_root, relative)
@@ -621,6 +659,11 @@ def audit_shared_contracts(repo_root: Path) -> list[str]:
 			errors.append(f"{relative}:{line_number}: settings color row still uses scalar geometry ({argument})")
 		for line_number in _find_raw_font_literals(source):
 			errors.append(f"{relative}:{line_number}: raw settings font literal is not allowlisted")
+		for line_number, argument in _find_rect_derived_font_arguments(source):
+			errors.append(f"{relative}:{line_number}: settings font still derives from control geometry ({argument})")
+	for relative in _FONT_ASSIGNMENT_SOURCES:
+		for line_number, argument in _find_rect_derived_font_assignments(_read(repo_root, relative)):
+			errors.append(f"{relative}:{line_number}: settings font assignment still derives from control geometry ({argument})")
 	return errors
 
 

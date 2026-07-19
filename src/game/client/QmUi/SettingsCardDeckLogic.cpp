@@ -39,6 +39,94 @@ namespace settings_card_deck_logic
 	}
 } // namespace settings_card_deck_logic
 
+bool CSettingsCardDeckFrameRuntime::BeginDisplayCycle(const uint64_t DisplayCycle, const bool AnimateEntry)
+{
+	const bool Changed = m_DisplayCycle != DisplayCycle;
+	if(Changed)
+	{
+		m_EntryDisplayCycle = UINT64_MAX;
+		m_EntryWasActive = false;
+	}
+	m_DisplayCycle = DisplayCycle;
+	m_AnimateEntry = AnimateEntry;
+	return Changed;
+}
+
+void CSettingsCardDeckFrameRuntime::OnTabChanged()
+{
+	// 子 Tab 的字符串变化只使布局缓存失效；入场必须由新的 display cycle 显式触发。
+	m_EntryWasActive = false;
+}
+
+bool CSettingsCardDeckFrameRuntime::ConsumeEntryCycle()
+{
+	if(!EntryCyclePending())
+		return false;
+	m_EntryDisplayCycle = m_DisplayCycle;
+	return true;
+}
+
+void CSettingsCardDeckFrameRuntime::BeginFrame(SSettingsCardDeckFrameDiagnostics *pDiagnostics)
+{
+	m_pDiagnostics = pDiagnostics;
+	if(m_pDiagnostics != nullptr)
+		*m_pDiagnostics = {};
+}
+
+void CSettingsCardDeckFrameRuntime::CountDefinitionsPrepare()
+{
+	if(m_pDiagnostics != nullptr)
+		++m_pDiagnostics->m_DefinitionsPrepareCount;
+}
+
+void CSettingsCardDeckFrameRuntime::CountMeasure()
+{
+	if(m_pDiagnostics != nullptr)
+		++m_pDiagnostics->m_MeasureCount;
+}
+
+void CSettingsCardDeckFrameRuntime::CountEntryAnimationResolve()
+{
+	if(m_pDiagnostics != nullptr)
+		++m_pDiagnostics->m_EntryAnimationResolveCount;
+}
+
+void CSettingsCardDeckFrameRuntime::CountHeightAnimationResolve()
+{
+	if(m_pDiagnostics != nullptr)
+		++m_pDiagnostics->m_HeightAnimationResolveCount;
+}
+
+void CSettingsCardDeckFrameRuntime::CountReflowAnimationResolve()
+{
+	if(m_pDiagnostics != nullptr)
+		++m_pDiagnostics->m_ReflowAnimationResolveCount;
+}
+
+void CSettingsCardDeckFrameRuntime::CountRenderedCard(const bool ChromePlanned)
+{
+	if(m_pDiagnostics == nullptr)
+		return;
+	++m_pDiagnostics->m_RenderedCardCount;
+	if(ChromePlanned)
+		++m_pDiagnostics->m_ChromePlanCount;
+}
+
+void CSettingsCardDeckFrameRuntime::MarkFirstLayout()
+{
+	if(m_pDiagnostics != nullptr)
+		m_pDiagnostics->m_FirstLayout = true;
+}
+
+void CSettingsCardDeckFrameRuntime::RecordGeometry(const SSettingsCardDeckDiagnosticGeometry &Geometry)
+{
+	if(m_pDiagnostics == nullptr)
+		return;
+	++m_pDiagnostics->m_TotalGeometryCount;
+	if(m_pDiagnostics->m_GeometryCount < m_pDiagnostics->m_aGeometry.size())
+		m_pDiagnostics->m_aGeometry[m_pDiagnostics->m_GeometryCount++] = Geometry;
+}
+
 void ApplySettingsCardDeckDragPlacement(std::array<std::vector<int>, 3> &aColumns, int ActiveStateIndex, int TargetColumn, int TargetOrder)
 {
 	if(ActiveStateIndex < 0 || TargetColumn < 0 || TargetColumn >= (int)aColumns.size())

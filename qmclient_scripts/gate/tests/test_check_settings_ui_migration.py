@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from qmclient_scripts.gate.check_settings_ui_migration import _find_legacy_color_picker_geometry, _find_raw_font_literals, PAGE_STABLE_IDS, PRODUCER_COMPLETE_PAGES, audit_page
+from qmclient_scripts.gate.check_settings_ui_migration import _find_legacy_color_picker_geometry, _find_raw_font_literals, _find_rect_derived_font_arguments, _find_rect_derived_font_assignments, PAGE_STABLE_IDS, PRODUCER_COMPLETE_PAGES, audit_page, audit_shared_contracts
 
 
 class SettingsUiMigrationAuditTest(unittest.TestCase):
@@ -80,6 +80,20 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
     return str_comp(pTab, "tclient-warlist") == 0;
 }
 """,
+		}
+		for relative, content in files.items():
+			path = self.root / relative
+			path.parent.mkdir(parents=True, exist_ok=True)
+			path.write_text(content, encoding="utf-8")
+		return self.root
+
+	def make_shared_contract_repo(self) -> Path:
+		files = {
+			"src/game/client/components/menus.cpp": "ResolveSettingsRadioRowLayout(); CurrentSettingsContentMetrics().m_BodySize; float RowHeight, float RowSpacing, float BodySize;",
+			"src/game/client/components/menus_settings.cpp": "Ui()->SetDropDownFontSize(m_SettingsContentMetrics.m_BodySize);",
+			"src/game/client/components/qmclient/menus_qmclient.cpp": "",
+			"src/game/client/components/tclient/menus_tclient.cpp": "VMargin, 0.0f, FontSize",
+			"src/game/client/ui.cpp": "Props.m_FontSize = ResolvedFontSize; State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;",
 		}
 		for relative, content in files.items():
 			path = self.root / relative
@@ -247,6 +261,46 @@ DoLine_ColorPicker(&Reset, FakeMetrics, &View, Text, &Color, Default);'''
     14.0f,
     TEXTALIGN_ML);"""
 		self.assertEqual(_find_raw_font_literals(source), [1])
+
+	def test_rect_derived_label_font_is_rejected(self):
+		self.assertEqual(_find_rect_derived_font_arguments("Ui()->DoLabel(&Text, Label, Text.h * 0.8f, TEXTALIGN_MC);"), [(1, "Text.h * 0.8f")])
+		self.assertEqual(_find_rect_derived_font_arguments("DoSettingsLabel(Page, Tab, Subtab, &Text, Label, Text.h * 0.8f, Align);"), [(1, "Text.h * 0.8f")])
+		self.assertEqual(_find_rect_derived_font_arguments("DoSettingsMenuLabel(Page, Tab, Subtab, Id, &Text, Label, Text.h * 0.8f, Align);"), [(1, "Text.h * 0.8f")])
+		self.assertEqual(_find_rect_derived_font_arguments("Ui()->DoLabel(&Text, Label, CurrentSettingsContentMetrics().m_BodySize, TEXTALIGN_MC);"), [])
+
+	def test_rect_derived_font_detection_ignores_comments_and_strings(self):
+		source = '// Ui()->DoLabel(&Text, Label, Text.h * 0.8f, TEXTALIGN_MC);\nconst char *pText = "DoLabel(&Text, Label, Rect.h * 0.8f, Align)";'
+		self.assertEqual(_find_rect_derived_font_arguments(source), [])
+
+	def test_rect_derived_font_assignment_rejects_nested_and_arbitrary_rect_names(self):
+		source = '''
+Options.m_FontSize = std::min(BodySize, ControlColumn.h * 0.8f);
+Props.m_FontSize = Rect.h * 0.8f;
+Style.m_FontSize = (pControl->h - Padding) * 0.8f;
+Clean.m_FontSize = Metrics.m_BodySize;
+'''
+		self.assertEqual(
+			_find_rect_derived_font_assignments(source),
+			[(2, "std::min(BodySize, ControlColumn.h * 0.8f)"), (3, "Rect.h * 0.8f"), (4, "(pControl->h - Padding) * 0.8f")],
+		)
+
+	def test_rect_derived_font_assignment_ignores_comments_and_strings(self):
+		source = '// Options.m_FontSize = Rect.h * 0.8f;\nconst char *pText = "Props.m_FontSize = Other.h;";'
+		self.assertEqual(_find_rect_derived_font_assignments(source), [])
+
+	def test_rect_derived_font_assignment_ignores_comparisons(self):
+		self.assertEqual(_find_rect_derived_font_assignments("Props.m_FontSize == Rect.h;"), [])
+
+	def test_shared_contract_audit_rejects_numeric_and_dropdown_font_bypasses(self):
+		root = self.make_shared_contract_repo()
+		self.assertEqual(audit_shared_contracts(root), [])
+		qmclient = root / "src/game/client/components/qmclient/menus_qmclient.cpp"
+		qmclient.write_text("Options.m_FontSize = std::min(BodySize, ControlColumn.h * 0.8f);", encoding="utf-8")
+		self.assertTrue(any("settings font assignment still derives" in item for item in audit_shared_contracts(root)))
+		qmclient.write_text("", encoding="utf-8")
+		ui = root / "src/game/client/ui.cpp"
+		ui.write_text("Props.m_FontSize = ResolvedFontSize;", encoding="utf-8")
+		self.assertTrue(any("dropdown trigger and popup" in item for item in audit_shared_contracts(root)))
 
 	def test_legacy_path_fails(self):
 		errors = audit_page(self.make_repo(add="DoSettingsScrollbarOption("), "general")

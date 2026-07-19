@@ -17,6 +17,64 @@ struct SSettingsCardDeckItemGeometry
 	CUIRect m_Rect;
 };
 
+struct SSettingsCardDeckDiagnosticGeometry
+{
+	const char *m_pStableId = nullptr;
+	int m_Column = 0;
+	CUIRect m_Rect;
+	float m_TargetContentHeight = 0.0f;
+	float m_AnimatedContentHeight = 0.0f;
+	bool m_FirstLayout = false;
+	bool m_HeightAnimationActive = false;
+};
+
+struct SSettingsCardDeckFrameDiagnostics
+{
+	static constexpr size_t MAX_GEOMETRY = 64;
+
+	uint32_t m_DefinitionsPrepareCount = 0;
+	uint32_t m_MeasureCount = 0;
+	uint32_t m_EntryAnimationResolveCount = 0;
+	uint32_t m_HeightAnimationResolveCount = 0;
+	uint32_t m_ReflowAnimationResolveCount = 0;
+	uint32_t m_RenderedCardCount = 0;
+	uint32_t m_ChromePlanCount = 0;
+	uint32_t m_TotalGeometryCount = 0;
+	size_t m_GeometryCount = 0;
+	bool m_FirstLayout = false;
+	std::array<SSettingsCardDeckDiagnosticGeometry, MAX_GEOMETRY> m_aGeometry;
+};
+
+// Deck 与无图形测试共同使用的本帧状态。诊断默认关闭，稳定帧不清零或复制诊断几何。
+class CSettingsCardDeckFrameRuntime
+{
+public:
+	bool BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry);
+	void OnTabChanged();
+	bool EntryCyclePending() const { return m_EntryDisplayCycle != m_DisplayCycle; }
+	bool ConsumeEntryCycle();
+	bool AnimateEntry() const { return m_AnimateEntry; }
+	bool EntryWasActive() const { return m_EntryWasActive; }
+	void SetEntryActive(bool Active) { m_EntryWasActive = Active; }
+
+	void BeginFrame(SSettingsCardDeckFrameDiagnostics *pDiagnostics);
+	void CountDefinitionsPrepare();
+	void CountMeasure();
+	void CountEntryAnimationResolve();
+	void CountHeightAnimationResolve();
+	void CountReflowAnimationResolve();
+	void CountRenderedCard(bool ChromePlanned);
+	void MarkFirstLayout();
+	void RecordGeometry(const SSettingsCardDeckDiagnosticGeometry &Geometry);
+
+private:
+	uint64_t m_DisplayCycle = 0;
+	uint64_t m_EntryDisplayCycle = UINT64_MAX;
+	bool m_AnimateEntry = false;
+	bool m_EntryWasActive = false;
+	SSettingsCardDeckFrameDiagnostics *m_pDiagnostics = nullptr;
+};
+
 struct SSettingsCardAnimationWork
 {
 	bool m_ResolveEntry = false;

@@ -56,6 +56,18 @@ inline bool SettingsCardInteractionBorderVisible(const SSettingsCardVisualState 
 	return State.m_Hovered || State.m_Focused || State.m_DropFeedback;
 }
 
+inline bool SettingsCardShouldDrawChrome(const bool RenderOnly)
+{
+	return !RenderOnly;
+}
+
+inline CUIRect ResolveSettingsCardInteractionBorderRect(const CUIRect &SurfaceRect, const float BorderWidth)
+{
+	const float MaxInset = std::max(0.0f, std::min(SurfaceRect.w, SurfaceRect.h) * 0.5f);
+	const float Inset = std::clamp(std::max(0.0f, BorderWidth) * 0.5f, 0.0f, MaxInset);
+	return {SurfaceRect.x + Inset, SurfaceRect.y + Inset, std::max(0.0f, SurfaceRect.w - 2.0f * Inset), std::max(0.0f, SurfaceRect.h - 2.0f * Inset)};
+}
+
 inline ColorRGBA ResolveSettingsCardSurfaceColor(ColorRGBA Surface, const SSettingsCardVisualState &State)
 {
 	// Hover、焦点与拖放反馈只属于边框；卡片内部仅跟随整个 Deck 的绘制透明度。

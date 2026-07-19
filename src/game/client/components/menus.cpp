@@ -1396,7 +1396,7 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	Options.m_pScale = pScale;
 	Options.m_Flags = Flags;
 	Options.m_pMaxText = pMaxText;
-	Options.m_FontSize = std::min(CurrentSettingsContentMetrics().m_BodySize, pRect->h * CUi::ms_FontmodHeight * 0.8f);
+	Options.m_FontSize = CurrentSettingsContentMetrics().m_BodySize;
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 	if(PrepareSettingsNumericFieldLabel(Page, Tab, Subtab, pTextId, *pRect, pStr, Flags, Options))
@@ -1549,9 +1549,9 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 	return Pressed;
 }
 
-ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha)
+ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha, bool TrailingSpacing)
 {
-	const SSettingsColorRowLayout Layout = ResolveSettingsColorRowLayout(*pMainRect, Metrics, CheckBoxSpacing && pCheckBoxValue == nullptr);
+	const SSettingsColorRowLayout Layout = ResolveSettingsColorRowLayout(*pMainRect, Metrics, CheckBoxSpacing && pCheckBoxValue == nullptr, TrailingSpacing);
 	pMainRect->y += Layout.m_ConsumedHeight;
 	pMainRect->h = std::max(0.0f, pMainRect->h - Layout.m_ConsumedHeight);
 	CUIRect Label = Layout.m_LabelRect;
@@ -2970,6 +2970,9 @@ void CMenus::Render()
 	// Determine the client state once before rendering because it can change
 	// while rendering which causes frames with broken user interface.
 	const IClient::EClientState ClientState = Client()->State();
+	const int VisibleMenuPage = ClientState == IClient::STATE_ONLINE || ClientState == IClient::STATE_DEMOPLAYBACK ? m_GamePage : m_MenuPage;
+	if(VisibleMenuPage != PAGE_SETTINGS)
+		m_SettingsCardDeckDisplayState.LeaveSettings();
 
 	if(ClientState == IClient::STATE_ONLINE || ClientState == IClient::STATE_DEMOPLAYBACK)
 	{
@@ -6590,6 +6593,7 @@ void CMenus::OnRender()
 
 	if(!IsActive())
 	{
+		m_SettingsCardDeckDisplayState.LeaveSettings();
 		if(Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE))
 		{
 			if(Client()->State() == IClient::STATE_ONLINE)

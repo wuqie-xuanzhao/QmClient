@@ -80,14 +80,13 @@ void CSettingsCardDeck::RequestReveal(const char *pStableId)
 
 void CSettingsCardDeck::BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry)
 {
-	if(m_DisplayCycle != DisplayCycle)
+	if(m_FrameRuntime.BeginDisplayCycle(DisplayCycle, AnimateEntry))
 	{
 		m_Drag.Reset();
 		m_SuppressHoverFeedbackOnce = true;
 		m_HasScrollOffset = false;
 		m_vLastRenderedActiveStateIndices.clear();
-		m_EntryDisplayCycle = UINT64_MAX;
-		m_EntryWasActive = false;
+		m_FrameRuntime.SetEntryActive(false);
 		for(SRuntimeState &Runtime : m_vRuntimeStates)
 		{
 			Runtime.m_ReflowInitialized = false;
@@ -101,8 +100,6 @@ void CSettingsCardDeck::BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEnt
 			Runtime.m_MotionGeometryInitialized = false;
 		}
 	}
-	m_DisplayCycle = DisplayCycle;
-	m_AnimateEntry = AnimateEntry;
 }
 
 SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions)
@@ -113,15 +110,15 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions, bool PersistentDefinitions)
 {
 	SSettingsCardDeckResult Result;
+	m_FrameRuntime.BeginFrame(Input.m_pDiagnostics);
 	if(pTab == nullptr)
 		return Result;
 	if(m_LastRenderedTab != pTab)
 	{
 		m_LastRenderedTab = pTab;
+		m_FrameRuntime.OnTabChanged();
 		m_SuppressHoverFeedbackOnce = true;
 		m_vLastRenderedActiveStateIndices.clear();
-		m_EntryDisplayCycle = UINT64_MAX;
-		m_EntryWasActive = false;
 		for(SRuntimeState &Runtime : m_vRuntimeStates)
 		{
 			Runtime.m_ReflowInitialized = false;
@@ -150,6 +147,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	}
 	if(!PersistentDefinitions || m_CachedDefinitionsDirty || m_PreparedDefinitionModelCount != Model.Count() || m_pPreparedDefinitionData != vCards.data() || m_PreparedDefinitionCount != vCards.size() || m_PreparedDefinitionTab != pTab || StableIdsChanged)
 	{
+		if(Input.m_pDiagnostics != nullptr)
+			m_FrameRuntime.CountDefinitionsPrepare();
 		PrepareDefinitions(vCards, Model);
 		m_CachedDefinitionsDirty = false;
 		m_PreparedDefinitionModelCount = Model.Count();
@@ -226,6 +225,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			}
 			if(SettingsCardDeckNeedsContentMeasure(Collapsed, pDefinition->m_MeasureEachFrame, CachedContentHeight))
 			{
+				if(Input.m_pDiagnostics != nullptr)
+					m_FrameRuntime.CountMeasure();
 				CachedContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;
 				MeasuredGeometryChanged = MeasuredGeometryChanged || SettingsCardDeckContentHeightChanged(PreviousContentHeight, CachedContentHeight);
 			}
@@ -236,6 +237,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			const SSettingsCardHeightAnimationWork HeightWork = ResolveSettingsCardHeightAnimationWork(HeightInitializedThisFrame, HeightTargetChanged, Runtime.m_ContentHeightWasActive, Motion.m_ReflowDuration, m_Drag.Active() || Ctx.m_pAnim == nullptr);
 			if(HeightInitializedThisFrame)
 			{
+				if(Input.m_pDiagnostics != nullptr)
+					m_FrameRuntime.MarkFirstLayout();
 				Runtime.m_ContentHeightInitialized = true;
 				Runtime.m_AnimatedContentHeight = TargetContentHeight;
 				if(Ctx.m_pAnim != nullptr)
@@ -243,6 +246,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			}
 			else if(HeightWork.m_ResolveHeight)
 			{
+				if(Input.m_pDiagnostics != nullptr)
+					m_FrameRuntime.CountHeightAnimationResolve();
 				const uint64_t HeightKey = SettingsCardHeightNodeKey(pTab, pDefinition->m_Spec.m_pStableId);
 				Runtime.m_AnimatedContentHeight = ResolveUiAnimValue(*Ctx.m_pAnim, HeightKey, EUiAnimProperty::HEIGHT, TargetContentHeight, Motion.m_ReflowDuration, EEasing::EASE_OUT);
 				Runtime.m_ContentHeightWasActive = Ctx.m_pAnim->HasActiveAnimation(HeightKey, EUiAnimProperty::HEIGHT);
@@ -259,7 +264,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			ContentHeightAnimationActive = ContentHeightAnimationActive || Runtime.m_ContentHeightWasActive;
 			const float ContentHeight = std::max(0.0f, Runtime.m_AnimatedContentHeight);
 			const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, pDefinition->m_Spec, ContentHeight, Ctx.m_UiScale);
-			m_vPreparedCards.push_back({pDefinition, StateIndex, Column, Frame, Runtime.m_ContentHeightWasActive});
+			m_vPreparedCards.push_back({pDefinition, StateIndex, Column, Frame, TargetContentHeight, HeightInitializedThisFrame, Runtime.m_ContentHeightWasActive});
 			ColumnPlan.Append(Frame.m_Rect.h);
 		};
 		auto AppendColumn = [&](const std::vector<int> &vStateIndices, int Column, CUIRect ColumnRect, CSettingsCardColumnFramePlan &ColumnPlan) {
@@ -343,7 +348,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		m_Drag.Reset();
 	if(m_Drag.Active() && !Input.m_MouseDown && !Input.m_MouseReleased)
 		m_Drag.Reset();
-	bool EntryPending = m_AnimateEntry && m_EntryDisplayCycle != m_DisplayCycle;
+	bool EntryPending = m_FrameRuntime.AnimateEntry() && m_FrameRuntime.EntryCyclePending();
 	bool EntryPositionActive = false;
 	float DeckEntryOffsetY = 0.0f;
 	bool ReflowTargetChanged = false;
@@ -362,23 +367,24 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			}
 			return EntryKey;
 		};
-		if(m_EntryDisplayCycle != m_DisplayCycle)
+		if(m_FrameRuntime.ConsumeEntryCycle())
 		{
-			m_EntryDisplayCycle = m_DisplayCycle;
-			Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, m_AnimateEntry ? Motion.m_EntryDistance : 0.0f);
-			m_EntryWasActive = m_AnimateEntry && Motion.m_EntryDuration > 0.0f;
+			Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, m_FrameRuntime.AnimateEntry() ? Motion.m_EntryDistance : 0.0f);
+			m_FrameRuntime.SetEntryActive(m_FrameRuntime.AnimateEntry() && Motion.m_EntryDuration > 0.0f);
 		}
-		if(m_EntryWasActive && Motion.m_EntryDuration > 0.0f)
+		if(m_FrameRuntime.EntryWasActive() && Motion.m_EntryDuration > 0.0f)
 		{
+			if(Input.m_pDiagnostics != nullptr)
+				m_FrameRuntime.CountEntryAnimationResolve();
 			const uint64_t ResolvedEntryKey = ResolveEntryKey();
 			DeckEntryOffsetY = ResolveUiAnimValue(*Ctx.m_pAnim, ResolvedEntryKey, EUiAnimProperty::POS_Y, 0.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
 			EntryPositionActive = Ctx.m_pAnim->HasActiveAnimation(ResolvedEntryKey, EUiAnimProperty::POS_Y);
-			m_EntryWasActive = EntryPositionActive;
+			m_FrameRuntime.SetEntryActive(EntryPositionActive);
 		}
-		else if(m_EntryWasActive)
+		else if(m_FrameRuntime.EntryWasActive())
 		{
 			Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, 0.0f);
-			m_EntryWasActive = false;
+			m_FrameRuntime.SetEntryActive(false);
 		}
 		EntryPending = false;
 		for(const SPreparedCard &Card : m_vPreparedCards)
@@ -461,6 +467,21 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			m_Drag.Reset();
 		}
 	}
+	if(Input.m_pDiagnostics != nullptr)
+	{
+		for(const SPreparedCard &Card : m_vPreparedCards)
+		{
+			m_FrameRuntime.RecordGeometry({
+				Card.m_pDefinition->m_Spec.m_pStableId,
+				Card.m_Column,
+				Card.m_Frame.m_Rect,
+				Card.m_TargetContentHeight,
+				std::max(0.0f, Card.m_Frame.m_ContentRect.h),
+				Card.m_FirstLayout,
+				Card.m_ContentHeightAnimationActive,
+			});
+		}
+	}
 	for(const SPreparedCard &Card : m_vPreparedCards)
 	{
 		SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
@@ -507,6 +528,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			}
 			else if(AnimationWork.m_ResolveReflow)
 			{
+				if(Input.m_pDiagnostics != nullptr)
+					m_FrameRuntime.CountReflowAnimationResolve();
 				const uint64_t ResolvedReflowKey = ResolveReflowKey();
 				const float ReflowY = ResolveUiAnimValue(*Ctx.m_pAnim, ResolvedReflowKey, EUiAnimProperty::POS_Y, ReflowTargetY, Motion.m_ReflowDuration, EEasing::EASE_OUT);
 				State.m_DrawOffsetY += ReflowY - ReflowTargetY;
@@ -549,6 +572,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		}
 		if(Visible || Card.m_pDefinition->m_RenderWhenClipped)
 		{
+			if(Input.m_pDiagnostics != nullptr)
+				m_FrameRuntime.CountRenderedCard(SettingsCardShouldDrawChrome(Ctx.m_pUi != nullptr && Ctx.m_pUi->RenderOnly()));
 			const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
 			State.m_Collapsed = Collapsed;
 			State.m_HoverFeedbackEnabled = !m_SuppressHoverFeedbackOnce && !ScrollMovedThisFrame && !EntryPositionActive &&

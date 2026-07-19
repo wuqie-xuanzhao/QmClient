@@ -6722,10 +6722,12 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
+	EXPECT_NE(Source.find("ResolveSettingsSmallFontSize(UiScale)"), std::string::npos);
+	EXPECT_EQ(Source.find("ui_token::font::SMALL * UiScale"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
-	EXPECT_NE(Source.find("BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_NE(Source.find("if(DrawInteractionBorder)"), std::string::npos);
-	EXPECT_NE(Source.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, BorderRadius);"), std::string::npos);
 	EXPECT_NE(Source.find("IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd)"), std::string::npos);
 	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);
@@ -6808,20 +6810,14 @@ TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
 	EXPECT_NE(MenusHeader.find("CSettingsCardDeck m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(MenusHeader.find("m_SettingsCardDeckDisplayCycle"), std::string::npos);
 	EXPECT_EQ(MenusHeader.find("m_GraphicsSettingsCardDeck"), std::string::npos);
-	const size_t DisplayKey = SettingsBody.find("uint64_t DisplayKey");
-	ASSERT_NE(DisplayKey, std::string::npos);
-	const size_t CycleGuard = SettingsBody.find("if(!CollectingMenuTextPlan &&", DisplayKey);
-	const size_t BeginDisplayCycle = SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle", DisplayKey);
+	const size_t CycleGuard = SettingsBody.find("m_SettingsCardDeckDisplayState.EnterPage(g_Config.m_UiSettingsPage)");
+	const size_t BeginDisplayCycle = SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle", CycleGuard);
 	ASSERT_NE(CycleGuard, std::string::npos);
 	ASSERT_NE(BeginDisplayCycle, std::string::npos);
 	EXPECT_LT(CycleGuard, BeginDisplayCycle);
-	EXPECT_NE(SettingsBody.find("m_SettingsCardDeckDisplayKey != DisplayKey"), std::string::npos);
-	EXPECT_NE(SettingsBody.find("m_QmClientSettingsTab + 1"), std::string::npos);
-	EXPECT_NE(SettingsBody.find("m_TClientSettingsTab + 1"), std::string::npos);
-	const std::string SetActiveBody = ExtractSourceFunctionBody(MenusSource, "void CMenus::SetActive(bool Active)");
-	ASSERT_FALSE(SetActiveBody.empty());
-	EXPECT_EQ(SetActiveBody.find("m_HasSettingsCardDeckDisplayKey = false;"), std::string::npos);
-	EXPECT_EQ(SettingsBody.find("const bool AnimateEntry = m_HasSettingsCardDeckDisplayKey;"), std::string::npos);
+	EXPECT_EQ(SettingsBody.find("m_QmClientSettingsTab + 1"), std::string::npos);
+	EXPECT_EQ(SettingsBody.find("m_TClientSettingsTab + 1"), std::string::npos);
+	EXPECT_NE(MenusSource.find("m_SettingsCardDeckDisplayState.LeaveSettings();"), std::string::npos);
 	EXPECT_NE(SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);"), std::string::npos);
 	EXPECT_EQ(SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, false);"), std::string::npos);
 	EXPECT_EQ(GraphicsBody.find("m_SettingsCardDeck.BeginDisplayCycle"), std::string::npos);
@@ -7114,6 +7110,7 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
 	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+	const std::string LogicHeader = ReadRepoFile("src/game/client/QmUi/SettingsCardDeckLogic.h");
 
 	EXPECT_NE(Header.find("struct SSettingsCardDefinition"), std::string::npos);
 	EXPECT_NE(Header.find("struct SSettingsCardDeckInput"), std::string::npos);
@@ -7151,8 +7148,9 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_EQ(Source.find("|| m_Drag.Active() || ContentHeightTargetChanged"), std::string::npos);
 	EXPECT_EQ(Source.find("SnapReflow = true;"), std::string::npos);
 	EXPECT_EQ(Source.find("EUiAnimProperty::ALPHA"), std::string::npos);
-	EXPECT_NE(Source.find("m_DisplayCycle"), std::string::npos);
-	EXPECT_NE(Source.find("m_AnimateEntry ? Motion.m_EntryDistance : 0.0f"), std::string::npos);
+	EXPECT_NE(Header.find("CSettingsCardDeckFrameRuntime m_FrameRuntime"), std::string::npos);
+	EXPECT_NE(LogicHeader.find("uint64_t m_DisplayCycle"), std::string::npos);
+	EXPECT_NE(Source.find("m_FrameRuntime.AnimateEntry() ? Motion.m_EntryDistance : 0.0f"), std::string::npos);
 	EXPECT_NE(Source.find("m_SuppressHoverFeedbackOnce = true"), std::string::npos);
 	EXPECT_NE(Source.find("State.m_HoverFeedbackEnabled = !m_SuppressHoverFeedbackOnce"), std::string::npos);
 	EXPECT_NE(Source.find("std::abs(Input.m_MouseX - m_LastPointerX)"), std::string::npos);
@@ -7211,7 +7209,7 @@ TEST(QmMonitoringHelpers, SettingsCardDeckSkipsAnimationRuntimeOnStableFrames)
 
 	EXPECT_NE(Source.find("ResolveSettingsCardAnimationWork("), std::string::npos);
 	EXPECT_NE(Source.find("ResolveSettingsCardHeightAnimationWork("), std::string::npos);
-	EXPECT_NE(Source.find("if(m_EntryWasActive && Motion.m_EntryDuration > 0.0f)"), std::string::npos);
+	EXPECT_NE(Source.find("if(m_FrameRuntime.EntryWasActive() && Motion.m_EntryDuration > 0.0f)"), std::string::npos);
 	EXPECT_NE(Source.find("State.m_DrawOffsetY = DeckEntryOffsetY;"), std::string::npos);
 	EXPECT_NE(Source.find("else if(AnimationWork.m_ResolveReflow)"), std::string::npos);
 	EXPECT_NE(Source.find("State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_ContentHeightAnimationActive);"), std::string::npos);
@@ -7225,10 +7223,13 @@ TEST(QmMonitoringHelpers, RenderOnlyNumericFieldsAndDropDownsDoNotMutateControlS
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
 	const std::string IntegerField = ExtractSourceFunctionBody(Forms, "SInputFieldResult IntegerField(");
 	const std::string NumericField = ExtractSourceFunctionBody(Forms, "bool NumericField(");
-	const std::string DropDown = ExtractSourceFunctionBody(Ui, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)");
+	const std::string DropDown = ExtractSourceFunctionBody(Ui, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
 	ASSERT_FALSE(IntegerField.empty());
 	ASSERT_FALSE(NumericField.empty());
 	ASSERT_FALSE(DropDown.empty());
+	EXPECT_NE(DropDown.find("m_DropDownFontSize > 0.0f ? m_DropDownFontSize"), std::string::npos);
+	EXPECT_NE(DropDown.find("State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;"), std::string::npos);
+	EXPECT_NE(DropDown.find("ButtonProps.m_FontSize = ResolvedFontSize;"), std::string::npos);
 
 	const size_t IntegerRenderOnly = IntegerField.find("if(Ctx.m_pUi->RenderOnly())");
 	const size_t IntegerWrite = IntegerField.find("*pValue = ClampedValue;");

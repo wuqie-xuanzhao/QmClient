@@ -1776,8 +1776,8 @@ TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 	const std::string Body = ReadTextFile("src/game/client/QmUi/SettingsCard.cpp");
 	ASSERT_FALSE(Body.empty());
 	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
-	EXPECT_NE(Body.find("BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
-	EXPECT_NE(Body.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius)"), std::string::npos);
+	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
+	EXPECT_NE(Body.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, BorderRadius)"), std::string::npos);
 	EXPECT_NE(Body.find("IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd)"), std::string::npos);
 	EXPECT_EQ(Body.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
 	EXPECT_EQ(Body.find("DrawOutline(Border)"), std::string::npos);
@@ -2640,10 +2640,13 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesQmClientDisplayNames)
 TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 {
 	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)");
+	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
+	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
+	const std::string DoDropDownActive = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled)");
 	const std::string DoPopupMenu = FunctionBody(UiSource, "void CUi::DoPopupMenu(");
 
 	ASSERT_FALSE(DoDropDown.empty());
+	ASSERT_FALSE(DoDropDownActive.empty());
 	ASSERT_FALSE(DoPopupMenu.empty());
 	EXPECT_NE(DoDropDown.find("bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("if(PopupOpen)"), std::string::npos);
@@ -2665,6 +2668,16 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 	EXPECT_NE(DoPopupMenu.find("std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end()"), std::string::npos);
 	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.x = X;"), std::string::npos);
 	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.y = Y;"), std::string::npos);
+	const size_t DisabledBranch = DoDropDown.find("if(!DropDownProps.m_Enabled)");
+	const size_t CloseWhenDisabled = DoDropDown.find("if(DropDownProps.m_ClosePopupWhenDisabled)", DisabledBranch);
+	const size_t CloseDisabledPopup = DoDropDown.find("ClosePopupMenu(&State.m_SelectionPopupContext);", DisabledBranch);
+	ASSERT_NE(DisabledBranch, std::string::npos);
+	ASSERT_NE(CloseWhenDisabled, std::string::npos);
+	ASSERT_NE(CloseDisabledPopup, std::string::npos);
+	EXPECT_LT(CloseWhenDisabled, CloseDisabledPopup);
+	EXPECT_LT(DisabledBranch, CloseDisabledPopup);
+	EXPECT_NE(UiHeader.find("bool m_ClosePopupWhenDisabled = true;"), std::string::npos);
+	EXPECT_NE(DoDropDownActive.find("DropDownProps.m_ClosePopupWhenDisabled = false;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
@@ -2674,7 +2687,7 @@ TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
 	const std::string SelectionReset = FunctionBody(UiSource, "void CUi::SSelectionPopupContext::Reset()");
 	const std::string PopupSelection = FunctionBody(UiSource, "CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)");
 	const std::string PopupButton = FunctionBody(UiSource, "int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer");
-	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)");
+	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
 
 	ASSERT_FALSE(SelectionReset.empty());
 	ASSERT_FALSE(PopupSelection.empty());
@@ -2943,7 +2956,7 @@ TEST(QmNewUiMenuBranches, TeeOptionsMeasureAllRowsAndPlayerDummyChangeDisplayCyc
 	ASSERT_NE(DummyInput, std::string::npos);
 	ASSERT_NE(DisplayCycle, std::string::npos);
 	EXPECT_LT(DummyInput, DisplayCycle);
-	EXPECT_NE(Tee.find("m_SettingsCardDeckDisplayKey != TeeDisplayKey", DisplayCycle), std::string::npos);
+	EXPECT_NE(Tee.find("m_SettingsCardDeckDisplayState.EnterView(TeeDisplayKey)", DisplayCycle), std::string::npos);
 	EXPECT_NE(Settings.find("g_Config.m_UiSettingsPage != SETTINGS_TEE"), std::string::npos);
 	EXPECT_EQ(Settings.find("m_Dummy + 1"), std::string::npos);
 }

@@ -78,6 +78,12 @@ void CQmDropdownState::Reset()
 	m_ActiveIndex = -1;
 }
 
+bool CQmDropdownState::Disable(const bool PopupOpen)
+{
+	Reset();
+	return PopupOpen;
+}
+
 SQmDropdownUpdateResult CQmDropdownState::Update(const SQmDropdownInput &Input, int ItemCount)
 {
 	SQmDropdownUpdateResult Result;

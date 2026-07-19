@@ -61,6 +61,31 @@ struct SSettingsContentMetrics
 	float m_CardGap = ui_token::settings::CARD_GAP;
 };
 
+struct SSettingsCardDeckDisplayCycleState
+{
+	bool EnterPage(const int Page)
+	{
+		return EnterView((uint64_t)(uint32_t)Page);
+	}
+
+	bool EnterView(const uint64_t Key)
+	{
+		const bool StartCycle = !m_Visible || m_Key != Key;
+		m_Visible = true;
+		m_Key = Key;
+		return StartCycle;
+	}
+
+	void LeaveSettings()
+	{
+		m_Visible = false;
+	}
+
+private:
+	uint64_t m_Key = 0;
+	bool m_Visible = false;
+};
+
 inline uint64_t ResolveSettingsCardDefinitionsRevision(uint64_t DisplayCycle, uint64_t TextGeneration, float ContentWidth, uint64_t LayoutRevision = 0)
 {
 	const uint64_t QuantizedWidth = (uint64_t)std::max(0, (int)(ContentWidth * 100.0f + 0.5f));
@@ -99,13 +124,18 @@ inline float ResolveSettingsUiScale(const float ContentWidth)
 	return std::clamp(std::max(ContentWidth / 1000.0f, CompactBaseline), 0.78f, 1.0f);
 }
 
+inline float ResolveSettingsSmallFontSize(const float UiScale)
+{
+	return std::clamp(ui_token::font::SMALL * std::max(0.0f, UiScale), 9.0f, ui_token::font::SMALL);
+}
+
 inline SSettingsContentMetrics ResolveSettingsContentMetrics(const float ContentWidth)
 {
 	SSettingsContentMetrics Metrics;
 	Metrics.m_UiScale = ResolveSettingsUiScale(ContentWidth);
 	Metrics.m_LineHeight = std::clamp(ui_token::settings::ROW_HEIGHT * Metrics.m_UiScale, 16.0f, ui_token::settings::ROW_HEIGHT);
 	Metrics.m_BodySize = std::clamp(ui_token::font::BODY * Metrics.m_UiScale, 10.0f, ui_token::font::BODY);
-	Metrics.m_SmallSize = std::clamp(ui_token::font::SMALL * Metrics.m_UiScale, 9.0f, ui_token::font::SMALL);
+	Metrics.m_SmallSize = ResolveSettingsSmallFontSize(Metrics.m_UiScale);
 	Metrics.m_HeadlineSize = std::clamp(ui_token::font::HEADLINE * Metrics.m_UiScale, 12.0f, ui_token::font::HEADLINE);
 	Metrics.m_LineSpacing = std::clamp(ui_token::settings::ROW_GAP * Metrics.m_UiScale, 3.0f, ui_token::settings::ROW_GAP);
 	Metrics.m_RowStep = Metrics.m_LineHeight + Metrics.m_LineSpacing;
@@ -209,7 +239,7 @@ struct SSettingsColorRowLayout
 	float m_ConsumedHeight = 0.0f;
 };
 
-inline SSettingsColorRowLayout ResolveSettingsColorRowLayout(const CUIRect &View, const SSettingsContentMetrics &Metrics, const bool ReserveCheckboxIndent)
+inline SSettingsColorRowLayout ResolveSettingsColorRowLayout(const CUIRect &View, const SSettingsContentMetrics &Metrics, const bool ReserveCheckboxIndent, const bool TrailingSpacing = true)
 {
 	SSettingsColorRowLayout Layout;
 	const float RowHeight = std::max(0.0f, Metrics.m_ButtonHeight);
@@ -217,7 +247,7 @@ inline SSettingsColorRowLayout ResolveSettingsColorRowLayout(const CUIRect &View
 	const float StandardHorizontalGap = std::clamp(ui_token::settings::ROW_GAP * Metrics.m_UiScale, 3.0f, ui_token::settings::ROW_GAP);
 	const float Gap = std::min(StandardHorizontalGap, std::max(0.0f, (View.w - ColorButtonWidth) * 0.10f));
 	Layout.m_RowRect = {View.x, View.y, View.w, RowHeight};
-	Layout.m_ConsumedHeight = RowHeight + std::max(0.0f, Metrics.m_LineSpacing);
+	Layout.m_ConsumedHeight = RowHeight + (TrailingSpacing ? std::max(0.0f, Metrics.m_LineSpacing) : 0.0f);
 
 	const float MaximumResetWidth = std::max(0.0f, View.w - ColorButtonWidth - Gap * 2.0f);
 	const float MinimumResetWidth = std::min(60.0f * Metrics.m_UiScale, MaximumResetWidth);
@@ -269,9 +299,10 @@ inline float ResolveSettingsInlineRowMinimumWidth(const float FixedControlsWidth
 
 inline float ResolveSettingsCheckboxFontSize(const float BodySize, const float RequestedFontSize, const float RowHeight, const float BoxHeight, const float FontmodHeight)
 {
-	// 显式字号属于页面 metrics 契约，使用整行高度限幅；默认路径保留按图标内框限幅的旧行为。
-	const float AvailableHeight = RequestedFontSize > 0.0f ? RowHeight : BoxHeight;
-	return std::min(std::max(0.0f, BodySize), std::max(0.0f, AvailableHeight) * std::max(0.0f, FontmodHeight));
+	// 设置文本由整行高度约束，不能跟随缩进后的勾选框图标再次缩小。
+	(void)BoxHeight;
+	const float ResolvedBodySize = RequestedFontSize > 0.0f ? RequestedFontSize : BodySize;
+	return std::min(std::max(0.0f, ResolvedBodySize), std::max(0.0f, RowHeight) * std::max(0.0f, FontmodHeight));
 }
 
 inline float ResolveAppearanceChatMessagesHeight(const SSettingsContentMetrics &Metrics)
@@ -284,8 +315,8 @@ inline float ResolveAppearanceChatMessagesHeight(const SSettingsContentMetrics &
 
 inline float ResolveQmHudCoordsHeight(const SSettingsContentMetrics &Metrics)
 {
-	// 六个复选框、一个数值输入和一个颜色选择器都会消费一行及其底部间距。
-	return 8.0f * Metrics.m_RowStep;
+	// 六个复选框和一个数值输入保留行距；末尾颜色行不再追加卡片底部空白。
+	return 7.0f * Metrics.m_RowStep + Metrics.m_ButtonHeight;
 }
 
 inline float ResolveQmHudNotificationsHeight(const SSettingsContentMetrics &Metrics, const bool Advanced, const bool CategoryFilters)
@@ -293,26 +324,26 @@ inline float ResolveQmHudNotificationsHeight(const SSettingsContentMetrics &Metr
 	// 基础区域：两个开关、两个数值输入和高级选项开关。
 	float Height = 5.0f * Metrics.m_RowStep;
 	if(!Advanced)
-		return Height;
+		return Height - Metrics.m_LineSpacing;
 
 	// 高级区域固定消费十行；分类过滤启用后再显示四个分类开关。
 	Height += (10.0f + (CategoryFilters ? 4.0f : 0.0f)) * Metrics.m_RowStep;
 	// 说明文字使用 Small 语义，并保留与其他行相同的安全间距。
-	return Height + Metrics.m_SmallSize + Metrics.m_LineSpacing;
+	return Height + Metrics.m_SmallSize;
 }
 
 inline float ResolveQmHudPlayerStatsHeight(const SSettingsContentMetrics &Metrics, const bool MapProgress, const bool EmbeddedProgress)
 {
 	if(!MapProgress)
-		return 3.0f * Metrics.m_RowStep;
-	return (EmbeddedProgress ? 5.0f : 10.0f) * Metrics.m_RowStep;
+		return 3.0f * Metrics.m_RowStep - Metrics.m_LineSpacing;
+	return (EmbeddedProgress ? 5.0f : 10.0f) * Metrics.m_RowStep - Metrics.m_LineSpacing;
 }
 
 inline float ResolveQmHudInputOverlayHeight(const SSettingsContentMetrics &Metrics, const bool Enabled)
 {
 	if(!Enabled)
-		return Metrics.m_RowStep;
-	return 5.0f * Metrics.m_RowStep + 2.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing);
+		return Metrics.m_LineHeight;
+	return 5.0f * Metrics.m_RowStep + 2.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing) - Metrics.m_LineSpacing;
 }
 
 inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metrics, const bool Expanded)
@@ -324,12 +355,12 @@ inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metr
 inline float ResolveQmHudVoiceHeight(const SSettingsContentMetrics &Metrics, const bool Enabled, const bool Advanced, const bool ShowStatus, const int NoiseSuppressMode, const bool VadEnabled, const bool StereoEnabled)
 {
 	if(!Enabled)
-		return Metrics.m_RowStep;
+		return Metrics.m_LineHeight;
 
 	// 常规区域：启用、房间密码、静音、麦克风音量、VAD 和高级选项。
 	float Height = 6.0f * Metrics.m_RowStep;
 	if(!Advanced)
-		return Height;
+		return Height - Metrics.m_LineSpacing;
 
 	// 高级固定区域：状态开关、服务器/设备/编码/降噪、AGC、播放、立体声、半径和房间范围。
 	Height += 11.0f * Metrics.m_RowStep + Metrics.m_LineSpacing * 1.15f;
@@ -350,7 +381,7 @@ inline float ResolveQmHudVoiceHeight(const SSettingsContentMetrics &Metrics, con
 		Height += 10.0f * (Metrics.m_LineHeight + Metrics.m_LineSpacing * 0.75f);
 		Height += Metrics.m_LineSpacing * 0.5f;
 	}
-	return Height;
+	return Height - Metrics.m_LineSpacing;
 }
 
 inline float ResolveQmHudLyricsPreviewHeight(const int FontSize, const int LineCount)
@@ -363,13 +394,13 @@ inline float ResolveQmHudLyricsPreviewHeight(const int FontSize, const int LineC
 
 inline float ResolveQmHudLyricsHeight(const SSettingsContentMetrics &Metrics, const int PreviewFontSize, const int PreviewLineCount)
 {
-	return 48.0f * Metrics.m_RowStep + ResolveQmHudLyricsPreviewHeight(PreviewFontSize, PreviewLineCount) + Metrics.m_LineSpacing;
+	return 48.0f * Metrics.m_RowStep + ResolveQmHudLyricsPreviewHeight(PreviewFontSize, PreviewLineCount);
 }
 
 inline float ResolveQmHudBackground3DHeight(const SSettingsContentMetrics &Metrics, const float ContentWidth, const bool Enabled, const bool CustomColor, const bool Glow, const bool Trail, const bool Pulse, const bool Twinkle)
 {
 	if(!Enabled)
-		return Metrics.m_RowStep;
+		return Metrics.m_LineHeight;
 	const SSettingsRadioRowLayout Radio = ResolveSettingsRadioRowLayout({0.0f, 0.0f, ContentWidth, Metrics.m_LineHeight * 2.0f + Metrics.m_LineSpacing}, 2, Metrics);
 	float Height = 18.0f * Metrics.m_RowStep + Radio.m_Height + Metrics.m_LineSpacing;
 	Height += CustomColor ? Metrics.m_RowStep : 0.0f;
@@ -377,7 +408,7 @@ inline float ResolveQmHudBackground3DHeight(const SSettingsContentMetrics &Metri
 	Height += Trail ? 2.0f * Metrics.m_RowStep : 0.0f;
 	Height += Pulse ? 2.0f * Metrics.m_RowStep : 0.0f;
 	Height += Twinkle ? Metrics.m_RowStep : 0.0f;
-	return Height;
+	return Height - Metrics.m_LineSpacing;
 }
 
 inline uint64_t ResolveQmHudVoiceRevision(const bool Enabled, const bool Advanced, const bool ShowStatus, const int NoiseSuppressMode, const bool VadEnabled, const bool StereoEnabled)

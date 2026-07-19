@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "SettingsCard.h"
 
+#include "SettingsPageLayout.h"
 #include "UiContext.h"
 #include "UiTheme.h"
 #include "UiTokens.h"
@@ -112,7 +113,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 
 	SUiTheme Fallback;
 	const SUiTheme &Theme = SettingsCardTheme(Ctx, Fallback);
-	const bool DrawCardChrome = Ctx.m_pUi == nullptr || !Ctx.m_pUi->RenderOnly();
+	const bool DrawCardChrome = SettingsCardShouldDrawChrome(Ctx.m_pUi != nullptr && Ctx.m_pUi->RenderOnly());
 	const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);
 	// 重排与拖放反馈只改变边框，卡片背景透明度保持稳定，避免滚动或切页时闪烁。
 	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
@@ -125,14 +126,15 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
 	const float BorderBaseWidth = DrawState.m_Focused ? 3.0f : 2.0f;
 	const float BorderWidth = std::max(BorderBaseWidth, BorderBaseWidth * UiScale);
-	const CUIRect BorderRect = DrawFrame.m_Rect;
+	const CUIRect BorderRect = ResolveSettingsCardInteractionBorderRect(DrawFrame.m_Rect, BorderWidth);
+	const float BorderRadius = std::max(0.0f, CardRadius - BorderWidth * 0.5f);
 	if(DrawCardChrome)
 	{
-		BorderRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
+		DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
 		// 静止态只绘制一次带抗锯齿的圆角 Surface。若再叠加默认圆角描边，
 		// Surface 的外沿抗锯齿会与描边混合成双层阴影。描边仅用于明确交互状态。
 		if(DrawInteractionBorder)
-			DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, CardRadius);
+			DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, BorderRadius);
 	}
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
@@ -159,7 +161,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 			SLabelProperties SubtitleProps;
 			SubtitleProps.m_MaxWidth = DrawFrame.m_SubtitleRect.w;
 			SubtitleProps.m_EllipsisAtEnd = true;
-			const float SubtitleSize = std::clamp(ui_token::font::SMALL * UiScale, 9.0f, ui_token::font::SMALL);
+			const float SubtitleSize = ResolveSettingsSmallFontSize(UiScale);
 			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, pSubtitle, SubtitleSize, TEXTALIGN_ML, SubtitleProps);
 		}
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));

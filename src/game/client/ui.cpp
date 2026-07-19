@@ -1439,6 +1439,7 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 	CUIRect Text = *pRect, DropDownIcon;
 	Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Text);
 	Text.HMargin((Text.h * Props.m_FontFactor) / 2.0f, &Text);
+	const float FontSize = Props.m_FontSize > 0.0f ? Props.m_FontSize : Text.h * CUi::ms_FontmodHeight;
 	if(Props.m_ShowDropDownIcon)
 	{
 		Text.VSplitRight(pRect->h * 0.25f, &Text, nullptr);
@@ -1452,7 +1453,7 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 		{
 			if(UIElement.AreRectsInit())
 			{
-				if(UIElement.Rect(0)->m_X != pRect->x || UIElement.Rect(0)->m_Y != pRect->y || UIElement.Rect(0)->m_Width != pRect->w || UIElement.Rect(0)->m_Height != pRect->h || UIElement.Rect(0)->m_Rounding != Props.m_Rounding || UIElement.Rect(0)->m_Corners != Props.m_Corners || UIElement.Rect(0)->m_BackgroundAlphaScale != m_BackgroundAlphaScale)
+				if(UIElement.Rect(0)->m_X != pRect->x || UIElement.Rect(0)->m_Y != pRect->y || UIElement.Rect(0)->m_Width != pRect->w || UIElement.Rect(0)->m_Height != pRect->h || UIElement.Rect(0)->m_Rounding != Props.m_Rounding || UIElement.Rect(0)->m_Corners != Props.m_Corners || UIElement.Rect(0)->m_BackgroundAlphaScale != m_BackgroundAlphaScale || UIElement.Rect(0)->m_FontSize != FontSize)
 				{
 					NeedsRecalc = true;
 				}
@@ -1509,7 +1510,7 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 					NewRect.m_Text = pText;
 					if(Props.m_UseIconFont)
 						TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-					DoLabel(NewRect, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+					DoLabel(NewRect, &Text, pText, FontSize, TEXTALIGN_MC);
 					if(Props.m_UseIconFont)
 						TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				}
@@ -2636,13 +2637,15 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 	DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);
 }
 
-int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)
+int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)
 {
 	static CScrollRegion s_DefaultDropDownScrollRegion;
+	const float ResolvedFontSize = DropDownProps.m_FontSize > 0.0f ? DropDownProps.m_FontSize : m_DropDownFontSize > 0.0f ? m_DropDownFontSize :
+																pRect->h * ms_FontmodHeight * 0.8f;
 	if(RenderOnly())
 	{
 		if(pRect != nullptr && pStrs != nullptr && CurSelection >= 0 && CurSelection < Num)
-			DoLabel(pRect, pStrs[CurSelection], pRect->h * ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
+			DoLabel(pRect, pStrs[CurSelection], ResolvedFontSize, TEXTALIGN_MC);
 		return CurSelection;
 	}
 
@@ -2660,11 +2663,30 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	const auto LabelFunc = [CurSelection, pStrs]() {
 		return CurSelection > -1 ? pStrs[CurSelection] : "";
 	};
+	if(!DropDownProps.m_Enabled)
+	{
+		if(DropDownProps.m_ClosePopupWhenDisabled)
+		{
+			if(State.m_DropDownState.Disable(PopupOpen))
+				ClosePopupMenu(&State.m_SelectionPopupContext);
+			State.m_SelectionPopupContext.m_SelectionIndex = -1;
+			State.m_SelectionPopupContext.m_ActiveIndex = -1;
+		}
+		SMenuButtonProperties ButtonProps;
+		ButtonProps.m_Enabled = false;
+		ButtonProps.m_HintRequiresStringCheck = true;
+		ButtonProps.m_HintCanChangePositionOrSize = true;
+		ButtonProps.m_ShowDropDownIcon = true;
+		ButtonProps.m_FontSize = ResolvedFontSize;
+		DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, ButtonProps);
+		return CurSelection;
+	}
 
 	SMenuButtonProperties Props;
 	Props.m_HintRequiresStringCheck = true;
 	Props.m_HintCanChangePositionOrSize = true;
 	Props.m_ShowDropDownIcon = true;
+	Props.m_FontSize = ResolvedFontSize;
 	if(PopupOpen)
 	{
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
@@ -2685,6 +2707,11 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
 	if(PopupOpen)
 	{
+		State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;
+		State.m_SelectionPopupContext.m_EntryHeight = pRect->h;
+		State.m_SelectionPopupContext.m_EntryPadding = pRect->h >= 20.0f ? 2.0f : 1.0f;
+		State.m_SelectionPopupContext.m_Width = pRect->w;
+		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
 		State.m_SelectionPopupContext.m_Viewport = Viewport;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 		PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
@@ -2704,7 +2731,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 			State.m_SelectionPopupContext.m_vEntries.emplace_back(pStrs[i]);
 		State.m_SelectionPopupContext.m_EntryHeight = pRect->h;
 		State.m_SelectionPopupContext.m_EntryPadding = pRect->h >= 20.0f ? 2.0f : 1.0f;
-		State.m_SelectionPopupContext.m_FontSize = (State.m_SelectionPopupContext.m_EntryHeight - 2 * State.m_SelectionPopupContext.m_EntryPadding) * CUi::ms_FontmodHeight;
+		State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;
 		State.m_SelectionPopupContext.m_Width = pRect->w;
 		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
 		State.m_SelectionPopupContext.m_TransparentButtons = true;
@@ -2736,28 +2763,10 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 
 int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled)
 {
-	if(Enabled)
-		return DoDropDown(pRect, CurSelection, pStrs, Num, State);
-
-	if(!State.m_Init)
-	{
-		State.m_UiElement.Init(this, -1);
-		State.m_Init = true;
-	}
-
-	const auto LabelFunc = [CurSelection, pStrs]() {
-		return CurSelection > -1 ? pStrs[CurSelection] : "";
-	};
-
-	SMenuButtonProperties Props;
-	Props.m_Enabled = false;
-	Props.m_HintRequiresStringCheck = true;
-	Props.m_HintCanChangePositionOrSize = true;
-	Props.m_ShowDropDownIcon = true;
-	if(IsPopupOpen(&State.m_SelectionPopupContext))
-		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
-	DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props);
-	return CurSelection;
+	SDropDownProperties DropDownProps;
+	DropDownProps.m_Enabled = Enabled;
+	DropDownProps.m_ClosePopupWhenDisabled = false;
+	return DoDropDown(pRect, CurSelection, pStrs, Num, State, DropDownProps);
 }
 
 CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View, bool Active)

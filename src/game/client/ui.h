@@ -319,6 +319,7 @@ struct SMenuButtonProperties
 	int m_Corners = IGraphics::CORNER_ALL;
 	float m_Rounding = 5.0f;
 	float m_FontFactor = 0.0f;
+	float m_FontSize = -1.0f;
 	ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
 	unsigned m_Flags = BUTTONFLAG_LEFT;
 };
@@ -561,6 +562,7 @@ private:
 
 	bool m_Enabled;
 	int m_RenderOnlyDepth = 0;
+	float m_DropDownFontSize = -1.0f;
 	mutable int m_QuadBatchDepth = 0;
 	mutable int m_QuadBatchContainerIndex = -1;
 	mutable ColorRGBA m_QuadBatchColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -735,6 +737,8 @@ public:
 	void BeginRenderOnly();
 	void EndRenderOnly();
 	bool RenderOnly() const { return m_RenderOnlyDepth > 0; }
+	void SetDropDownFontSize(float FontSize) { m_DropDownFontSize = FontSize; }
+	float DropDownFontSize() const { return m_DropDownFontSize; }
 	void Update();
 	void DebugRender(float X, float Y);
 
@@ -1096,7 +1100,13 @@ public:
 		CButtonContainer m_ButtonContainer;
 		bool m_Init = false;
 	};
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State);
+	struct SDropDownProperties
+	{
+		float m_FontSize = -1.0f;
+		bool m_Enabled = true;
+		bool m_ClosePopupWhenDisabled = true;
+	};
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
 	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled);
 };
 

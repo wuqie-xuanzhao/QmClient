@@ -910,7 +910,7 @@ bool CMenus::DoSliderWithScaledValue(const void *pId, int *pOption, const CUIRec
 	Options.m_pSuffix = pSuffix;
 	Options.m_pScale = pScale;
 	Options.m_Flags = Flags;
-	Options.m_FontSize = pRect->h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_FontSize = CurrentSettingsContentMetrics().m_BodySize;
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_ValueMultiplier = Scale;
 
@@ -940,7 +940,7 @@ int CMenus::DoButtonLineSize_Menu(CButtonContainer *pButtonContainer, const char
 	Text.HMargin((Text.h - ButtonLineSize) / 2.0f, &Text);
 	Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Text);
 	Text.HMargin((Text.h * FontFactor) / 2.0f, &Text);
-	Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+	Ui()->DoLabel(&Text, pText, CurrentSettingsContentMetrics().m_BodySize, TEXTALIGN_MC);
 
 	if(Fake)
 		return 0;
@@ -1031,7 +1031,7 @@ int CMenus::DoButtonNoRect_FontIcon(CButtonContainer *pButtonContainer, const ch
 	}
 	CUIRect Temp;
 	pRect->HMargin(0.0f, &Temp);
-	Ui()->DoLabel(&Temp, pText, Temp.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+	Ui()->DoLabel(&Temp, pText, CurrentSettingsContentMetrics().m_BodySize, TEXTALIGN_MC);
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 

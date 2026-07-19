@@ -170,16 +170,17 @@ int CMenusSettingsControls::DoSettingsControlsCheckBox(const void *pId, const ch
 
 bool CMenusSettingsControls::DoSettingsControlsNumericField(const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags)
 {
+	const float BodySize = GameClient()->m_Menus.CurrentSettingsContentMetrics().m_BodySize;
 	ui_widget::SNumericFieldOptions Options;
 	Options.m_pLabel = pLabel;
 	Options.m_pScale = pScale;
 	Options.m_Flags = Flags;
-	Options.m_FontSize = std::min(FONT_SIZE, Rect.h * CUi::ms_FontmodHeight * 0.8f);
+	Options.m_FontSize = BodySize;
 	Options.m_LabelAlign = TEXTALIGN_ML;
 	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 	if(GameClient()->m_Menus.PrepareSettingsNumericFieldLabel(CMenus::SETTINGS_CONTROLS, -1, -1, pTextId, Rect, pLabel, Flags, Options))
 		return false;
-	IUiContext Context = GameClient()->m_Menus.SettingsUiContext("settings_controls", FONT_SIZE / ui_token::font::BODY);
+	IUiContext Context = GameClient()->m_Menus.SettingsUiContext("settings_controls", BodySize / ui_token::font::BODY);
 	return ui_widget::NumericField(Context, GameClient()->m_Menus.GetSettingsNumericFieldState(pId), pId, pOption, Min, Max, Rect, Options);
 }
 

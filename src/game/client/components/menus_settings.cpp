@@ -747,7 +747,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Options.m_pSuffix = pSuffix;
 		Options.m_pScale = &CUi::ms_LinearScrollbarScale;
 		Options.m_Flags = Flags;
-		Options.m_FontSize = std::min(BodySize, Rect.h * CUi::ms_FontmodHeight * 0.8f);
+		Options.m_FontSize = BodySize;
 		Options.m_LabelAlign = TEXTALIGN_ML;
 		Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 		if(PrepareSettingsNumericFieldLabel(SETTINGS_GENERAL, -1, -1, pTextId, Rect, pLabel, Flags, Options))
@@ -1389,10 +1389,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	if(!m_MenuTextPlanCollecting)
 	{
 		const uint64_t TeeDisplayKey = ((uint64_t)(unsigned)SETTINGS_TEE << 32) | (uint64_t)(unsigned)(s_TeeSubTab + 1);
-		if(!m_HasSettingsCardDeckDisplayKey || m_SettingsCardDeckDisplayKey != TeeDisplayKey)
+		if(m_SettingsCardDeckDisplayState.EnterView(TeeDisplayKey))
 		{
-			m_HasSettingsCardDeckDisplayKey = true;
-			m_SettingsCardDeckDisplayKey = TeeDisplayKey;
 			m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);
 		}
 	}
@@ -3574,7 +3572,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Options.m_Flags = Flags;
 		Options.m_InputMin = InputMin;
 		Options.m_InputMax = InputMax;
-		Options.m_FontSize = std::min(BodySize, Rect.h * CUi::ms_FontmodHeight * 0.8f);
+		Options.m_FontSize = BodySize;
 		Options.m_LabelAlign = TEXTALIGN_ML;
 		Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 		if(PrepareSettingsNumericFieldLabel(SETTINGS_GRAPHICS, -1, -1, pTextId, Rect, pLabel, Flags, Options))
@@ -4954,7 +4952,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Options.m_pLabel = pLabel;
 		Options.m_pSuffix = "%";
 		Options.m_pScale = &CUi::ms_LogarithmicScrollbarScale;
-		Options.m_FontSize = std::min(BodySize, Rect.h * CUi::ms_FontmodHeight * 0.8f);
+		Options.m_FontSize = BodySize;
 		Options.m_LabelAlign = TEXTALIGN_ML;
 		if(PrepareSettingsNumericFieldLabel(SETTINGS_SOUND, -1, -1, pTextId, Rect, pLabel, 0u, Options))
 			return false;
@@ -5538,6 +5536,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		MainView.Margin(std::clamp(MainView.w * 0.02f, 12.0f, 20.0f), &MainView);
 		m_SettingsContentMetrics = ResolveSettingsContentMetrics(MainView.w);
 	}
+	const float PreviousDropDownFontSize = Ui()->DropDownFontSize();
+	Ui()->SetDropDownFontSize(m_SettingsContentMetrics.m_BodySize);
 
 	if(!UseNewSettingsUi && NeedRestart)
 	{
@@ -5640,16 +5640,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 			LogPerfStage(Client(), "settings_tabbar", StageTimer.ElapsedMs(), false, aTabBarExtra);
 		}
 	}
-	uint64_t DisplayKey = (uint64_t)(unsigned)g_Config.m_UiSettingsPage;
-	if(g_Config.m_UiSettingsPage == SETTINGS_QMCLIENT)
-		DisplayKey = (DisplayKey << 32) | (uint64_t)(unsigned)(m_QmClientSettingsTab + 1);
-	else if(g_Config.m_UiSettingsPage == SETTINGS_TCLIENT)
-		DisplayKey = (DisplayKey << 32) | (uint64_t)(unsigned)(m_TClientSettingsTab + 1);
-	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage != SETTINGS_TEE &&
-		(!m_HasSettingsCardDeckDisplayKey || m_SettingsCardDeckDisplayKey != DisplayKey))
+	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage != SETTINGS_TEE && m_SettingsCardDeckDisplayState.EnterPage(g_Config.m_UiSettingsPage))
 	{
-		m_HasSettingsCardDeckDisplayKey = true;
-		m_SettingsCardDeckDisplayKey = DisplayKey;
 		m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);
 	}
 
@@ -5929,6 +5921,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 			SettingsPerfContextName(), SettingsPageName(g_Config.m_UiSettingsPage), pSettingsPerfTab, SettingsPerfActiveOperation());
 		LogPerfStage(Client(), "settings_render_total", PerfDebugElapsedMs(SettingsRenderStartTime), false, aRenderTotalExtra);
 	}
+	Ui()->SetDropDownFontSize(PreviousDropDownFontSize);
 	m_SettingsShellLayoutValid = false;
 }
 
@@ -6254,7 +6247,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		Options.m_pScale = pScale;
 		Options.m_Flags = Flags;
 		Options.m_pMaxText = pMaxText;
-		Options.m_FontSize = std::min(AppearanceBodySize, Rect.h * CUi::ms_FontmodHeight * 0.8f);
+		Options.m_FontSize = AppearanceBodySize;
 		Options.m_LabelAlign = TEXTALIGN_ML;
 		Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 		if(PrepareSettingsNumericFieldLabel(SETTINGS_APPEARANCE, Tab, -1, pTextId, Rect, pLabel, Flags, Options))
@@ -7563,7 +7556,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		Options.m_pScale = pScale;
 		Options.m_Flags = Flags;
 		Options.m_pMaxText = pMaxText;
-		Options.m_FontSize = std::min(BodySize, Rect.h * CUi::ms_FontmodHeight * 0.8f);
+		Options.m_FontSize = BodySize;
 		Options.m_LabelAlign = TEXTALIGN_ML;
 		Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 		if(PrepareSettingsNumericFieldLabel(SETTINGS_DDNET, -1, -1, pTextId, Rect, pLabel, Flags, Options))

@@ -62,6 +62,7 @@ class CQmDropdownState
 {
 public:
 	void Reset();
+	bool Disable(bool PopupOpen);
 	SQmDropdownUpdateResult Update(const SQmDropdownInput &Input, int ItemCount);
 
 	bool IsOpen() const { return m_Open; }

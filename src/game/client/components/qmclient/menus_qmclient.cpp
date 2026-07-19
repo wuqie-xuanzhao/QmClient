@@ -753,7 +753,7 @@ void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect
 	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
 	ui_widget::SNumericFieldOptions Options;
 	Options.m_pSuffix = pSuffix;
-	Options.m_FontSize = ControlColumn.h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_FontSize = CurrentSettingsContentMetrics().m_BodySize;
 
 	const float UiScale = std::clamp(ControlColumn.h / ui_token::settings::ROW_HEIGHT, 0.78f, 1.0f);
 	IUiContext InputCtx = SettingsUiContext("qmclient_slider_input", UiScale);
@@ -3441,7 +3441,7 @@ void CMenus::RenderQmHudCoordsContent(CUIRect &Content, const SSettingsContentMe
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	static CButtonContainer s_CoordXAlignHintColorId;
-	DoLine_ColorPicker(&s_CoordXAlignHintColorId, Metrics, &Content, Localize("X alignment color"), &g_Config.m_QmNameplateCoordXAlignHintColor, ColorRGBA(1.0f, 0.82f, 0.2f, 1.0f), false);
+	DoLine_ColorPicker(&s_CoordXAlignHintColorId, Metrics, &Content, Localize("X alignment color"), &g_Config.m_QmNameplateCoordXAlignHintColor, ColorRGBA(1.0f, 0.82f, 0.2f, 1.0f), false, nullptr, false, false);
 }
 
 void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)

@@ -149,7 +149,7 @@ private:
 	int DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float RowHeight, float RowSpacing, float BodySize);
 
 	CUi::SColorPickerPopupContext m_ColorPickerPopupContext;
-	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false);
+	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false, bool TrailingSpacing = true);
 	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, float LineSize, float LabelSize, float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false);
 	ColorHSLA DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHslaColor, bool Alpha);
 	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, float LineHeight = ui_token::settings::ROW_HEIGHT, float LineSpacing = ui_token::settings::ROW_GAP, float BodySize = ui_token::font::BODY);
@@ -2715,9 +2715,8 @@ private:
 	std::string m_SettingsCardRenderOnlyOrderSource;
 	bool m_SettingsCardRenderOnlyOrderInitialized = false;
 	CSettingsCardDeck m_SettingsCardRenderOnlyDeck;
-	uint64_t m_SettingsCardDeckDisplayKey = 0;
 	uint64_t m_SettingsCardDeckDisplayCycle = 0;
-	bool m_HasSettingsCardDeckDisplayKey = false;
+	SSettingsCardDeckDisplayCycleState m_SettingsCardDeckDisplayState;
 	SSettingsShellLayoutFrame m_SettingsShellLayout;
 	SSettingsContentMetrics m_SettingsContentMetrics;
 	bool m_SettingsShellLayoutValid = false;

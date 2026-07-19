@@ -44,6 +44,7 @@ struct SSettingsCardDeckInput
 	bool m_AllowHeaderDrag = true;
 	float m_FrameDt = 1.0f / 60.0f;
 	const CScrollRegionParams *m_pScrollParams = nullptr;
+	SSettingsCardDeckFrameDiagnostics *m_pDiagnostics = nullptr;
 };
 
 struct SSettingsCardDeckResult
@@ -83,6 +84,8 @@ private:
 		int m_StateIndex = -1;
 		int m_Column = 0;
 		SSettingsCardFrame m_Frame;
+		float m_TargetContentHeight = 0.0f;
+		bool m_FirstLayout = false;
 		bool m_ContentHeightAnimationActive = false;
 	};
 
@@ -122,10 +125,7 @@ private:
 	void PrepareDefinitions(const std::vector<SSettingsCardDefinition> &vCards, const qm_card_order::CModel &Model);
 	SSettingsCardDeckResult RenderInternal(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions, bool PersistentDefinitions);
 
-	uint64_t m_DisplayCycle = 0;
-	uint64_t m_EntryDisplayCycle = UINT64_MAX;
-	bool m_AnimateEntry = false;
-	bool m_EntryWasActive = false;
+	CSettingsCardDeckFrameRuntime m_FrameRuntime;
 	bool m_SuppressHoverFeedbackOnce = false;
 	bool m_HasPointerPosition = false;
 	bool m_HasScrollOffset = false;

@@ -1,5 +1,11 @@
+#include <engine/shared/config.h>
+
+#include <game/client/QmUi/QmAnim.h>
+#include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmDropdown.h>
 #include <game/client/QmUi/SettingsCard.h>
+#include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/SettingsCardDeckLogic.h>
 
 #include <gtest/gtest.h>
@@ -135,6 +141,23 @@ TEST(SettingsCardDeck, RestingCardsDoNotDrawASecondRoundedBorder)
 	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
 }
 
+TEST(SettingsCardDeck, RenderOnlyAndVisiblePassPlanChromeExactlyOnce)
+{
+	EXPECT_FALSE(SettingsCardShouldDrawChrome(true));
+	EXPECT_TRUE(SettingsCardShouldDrawChrome(false));
+	EXPECT_EQ((int)SettingsCardShouldDrawChrome(true) + (int)SettingsCardShouldDrawChrome(false), 1);
+}
+
+TEST(SettingsCardDeck, InteractionBorderStaysInsideSurfaceEdge)
+{
+	const CUIRect Surface{10.0f, 20.0f, 200.0f, 100.0f};
+	const CUIRect Border = ResolveSettingsCardInteractionBorderRect(Surface, 2.0f);
+	EXPECT_GT(Border.x, Surface.x);
+	EXPECT_GT(Border.y, Surface.y);
+	EXPECT_LT(Border.x + Border.w, Surface.x + Surface.w);
+	EXPECT_LT(Border.y + Border.h, Surface.y + Surface.h);
+}
+
 TEST(SettingsCardDeck, CardSurfaceColorIgnoresBorderInteractionState)
 {
 	const ColorRGBA BaseSurface(0.12f, 0.24f, 0.36f, 0.48f);
@@ -183,6 +206,37 @@ TEST(SettingsCardDeck, ActiveCardMotionBlocksHeaderDragStart)
 	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(false, true, false, false));
 	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(false, false, true, false));
 	EXPECT_FALSE(SettingsCardDeckAllowsDragStart(false, false, false, true));
+}
+
+TEST(SettingsCardDeck, SameDisplayCycleTabChangeDoesNotRestartEntry)
+{
+	CSettingsCardDeckFrameRuntime Runtime;
+	Runtime.BeginDisplayCycle(7, true);
+	EXPECT_TRUE(Runtime.ConsumeEntryCycle());
+	EXPECT_FALSE(Runtime.ConsumeEntryCycle());
+	Runtime.SetEntryActive(true);
+
+	Runtime.OnTabChanged();
+	EXPECT_FALSE(Runtime.ConsumeEntryCycle());
+	EXPECT_FALSE(Runtime.EntryWasActive());
+
+	Runtime.BeginDisplayCycle(8, true);
+	EXPECT_TRUE(Runtime.ConsumeEntryCycle());
+}
+
+TEST(SettingsDropDown, DisablingOpenStateRequestsPopupCloseAndReleasesSelectionState)
+{
+	CQmDropdownState State;
+	SQmDropdownInput Open;
+	Open.m_TogglePressed = true;
+	Open.m_InitialIndex = 2;
+	ASSERT_TRUE(State.Update(Open, 4).m_Opened);
+	ASSERT_TRUE(State.IsOpen());
+
+	EXPECT_TRUE(State.Disable(true));
+	EXPECT_FALSE(State.IsOpen());
+	EXPECT_EQ(State.ActiveIndex(), -1);
+	EXPECT_FALSE(State.Disable(false));
 }
 
 TEST(SettingsCardDeck, StableAnimationFramesSkipRuntimeWork)
@@ -263,6 +317,77 @@ TEST(SettingsCardDeck, AnimatedColumnFramesNeverOverlapFollowingCards)
 	const SSettingsCardColumnFrame Clamped = ClampedPlan.Append(-20.0f);
 	EXPECT_FLOAT_EQ(Clamped.m_Height, 0.0f);
 	EXPECT_FLOAT_EQ(Clamped.m_NextY, 50.0f);
+}
+
+TEST(SettingsCardDeck, RuntimeHeightAnimationKeepsFollowingGeometryDisjoint)
+{
+	g_Config.m_QmUiMotionLevel = 2;
+	CUiV2AnimationRuntime Runtime;
+	CSettingsCardDeckFrameRuntime FrameRuntime;
+	SSettingsCardDeckFrameDiagnostics Diagnostics;
+	const SSettingsCardSpec Spec{"animated-card", "Animated", nullptr};
+	constexpr uint64_t HeightKey = 0x51f5a7ULL;
+	constexpr float InitialHeight = 60.0f;
+	constexpr float TargetHeight = 220.0f;
+	constexpr float FollowingHeight = 90.0f;
+	constexpr float CardGap = 10.0f;
+	Runtime.SetValue(HeightKey, EUiAnimProperty::HEIGHT, InitialHeight);
+
+	float AnimatedHeight = ResolveUiAnimValue(Runtime, HeightKey, EUiAnimProperty::HEIGHT, TargetHeight, 0.18f, EEasing::EASE_OUT);
+	EXPECT_FLOAT_EQ(AnimatedHeight, InitialHeight);
+	for(int FrameIndex = 0; FrameIndex < 16; ++FrameIndex)
+	{
+		FrameRuntime.BeginFrame(&Diagnostics);
+		CSettingsCardColumnFramePlan ColumnPlan(100.0f, CardGap);
+		const SSettingsCardFrame FirstCard = BuildSettingsCardFrame({10.0f, ColumnPlan.CursorY(), 200.0f, 0.0f}, Spec, AnimatedHeight, 1.0f);
+		const SSettingsCardColumnFrame First = ColumnPlan.Append(FirstCard.m_Rect.h);
+		FrameRuntime.RecordGeometry({Spec.m_pStableId, 1, FirstCard.m_Rect, TargetHeight, FirstCard.m_ContentRect.h, FrameIndex == 0, Runtime.HasActiveAnimation(HeightKey, EUiAnimProperty::HEIGHT)});
+		const SSettingsCardFrame FollowingCard = BuildSettingsCardFrame({10.0f, ColumnPlan.CursorY(), 200.0f, 0.0f}, Spec, FollowingHeight, 1.0f);
+		const SSettingsCardColumnFrame Following = ColumnPlan.Append(FollowingCard.m_Rect.h);
+		EXPECT_GE(Following.m_Y, First.m_Y + First.m_Height + CardGap);
+		EXPECT_FLOAT_EQ(Following.m_Y, First.m_NextY);
+		ASSERT_EQ(Diagnostics.m_GeometryCount, 1u);
+		EXPECT_FLOAT_EQ(Diagnostics.m_aGeometry[0].m_AnimatedContentHeight, AnimatedHeight);
+		EXPECT_FLOAT_EQ(Diagnostics.m_aGeometry[0].m_Rect.h, First.m_Height);
+
+		Runtime.Advance(1.0f / 60.0f);
+		if(Runtime.HasActiveAnimation(HeightKey, EUiAnimProperty::HEIGHT))
+			AnimatedHeight = ResolveUiAnimValue(Runtime, HeightKey, EUiAnimProperty::HEIGHT, TargetHeight, 0.18f, EEasing::EASE_OUT);
+		else
+			AnimatedHeight = Runtime.GetValue(HeightKey, EUiAnimProperty::HEIGHT, TargetHeight);
+	}
+	EXPECT_NEAR(AnimatedHeight, TargetHeight, 0.001f);
+}
+
+TEST(SettingsCardDeck, OptionalFrameDiagnosticsRecordAnimatedGeometryWithoutAllocation)
+{
+	SSettingsCardDeckFrameDiagnostics Diagnostics;
+	CSettingsCardDeckFrameRuntime Runtime;
+	Runtime.BeginFrame(&Diagnostics);
+	for(size_t Index = 0; Index < SSettingsCardDeckFrameDiagnostics::MAX_GEOMETRY + 2; ++Index)
+	{
+		Runtime.RecordGeometry({
+			"card",
+			1,
+			{10.0f, 20.0f + (float)Index * 50.0f, 200.0f, 40.0f},
+			120.0f,
+			Index == 0 ? 120.0f : 80.0f,
+			Index == 0,
+			Index != 0,
+		});
+	}
+
+	EXPECT_EQ(Diagnostics.m_TotalGeometryCount, SSettingsCardDeckFrameDiagnostics::MAX_GEOMETRY + 2);
+	EXPECT_EQ(Diagnostics.m_GeometryCount, SSettingsCardDeckFrameDiagnostics::MAX_GEOMETRY);
+	EXPECT_STREQ(Diagnostics.m_aGeometry[0].m_pStableId, "card");
+	EXPECT_FLOAT_EQ(Diagnostics.m_aGeometry[0].m_TargetContentHeight, 120.0f);
+	EXPECT_FLOAT_EQ(Diagnostics.m_aGeometry[0].m_AnimatedContentHeight, 120.0f);
+	EXPECT_TRUE(Diagnostics.m_aGeometry[0].m_FirstLayout);
+	EXPECT_FALSE(Diagnostics.m_aGeometry[0].m_HeightAnimationActive);
+
+	Runtime.BeginFrame(nullptr);
+	Runtime.RecordGeometry({"ignored", 0, {}, 1.0f, 1.0f, false, false});
+	EXPECT_EQ(Diagnostics.m_TotalGeometryCount, SSettingsCardDeckFrameDiagnostics::MAX_GEOMETRY + 2);
 }
 
 TEST(SettingsCardDeck, HeightAnimationClipsOnlyTheAnimatedCard)
