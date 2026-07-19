@@ -253,7 +253,6 @@ void CEmoticon::OnRender()
 
 		Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[Emote]);
 		Graphics()->QuadsSetSubset(0, 0, 1, 1);
-		Graphics()->QuadsBegin();
 		const float Reveal = EmoticonStaggerReveal(Emote, NUM_EMOTICONS, PresentationAlpha);
 		const float ItemAlpha = PresentationAlpha * Reveal;
 		const float ItemScale = PresentationScale * (0.70f + 0.30f * Reveal);
@@ -270,8 +269,8 @@ void CEmoticon::OnRender()
 			Graphics()->QuadsEnd();
 			Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[Emote]);
 			Graphics()->QuadsSetSubset(0, 0, 1, 1);
-			Graphics()->QuadsBegin();
 		}
+		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, ItemAlpha);
 		IGraphics::CQuadItem QuadItem(ScreenCenter.x + Nudge.x, ScreenCenter.y + Nudge.y, Size, Size);
 		Graphics()->QuadsDraw(&QuadItem, 1);
