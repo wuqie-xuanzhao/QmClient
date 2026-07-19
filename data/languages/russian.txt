@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == Показывает использование памяти процессом DDNet
 
-Displays estimated total UDP receive rate
-== Показывать расчётную общую скорость приёма UDP
+Displays estimated process UDP receive rate
+== Показывать расчётную скорость приёма UDP процессом
 
-Displays estimated total UDP send rate
-== Показывать расчётную общую скорость отправки UDP
+Displays estimated process UDP send rate
+== Показывать расчётную скорость отправки UDP процессом
 
 Displays prediction timing jitter
 == Показывать джиттер времени предсказания
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == Показывать упреждение предсказания клиента
 
-Displays the interval between complete snapshots
-== Показывать интервал между полными снапшотами
+Displays the game connection round-trip time
+== Показывать время кругового обхода игрового соединения
 
 Displays the number of unacknowledged vital chunks
 == Показывать число неподтверждённых важных чанков
 
-Displays the server ping round-trip time
-== Показывать время кругового обхода Ping до сервера
+Displays the time since the last complete snapshot
+== Показывать время с момента последнего полного снапшота
 
 Displays X and Y velocity
 == Показывает скорость по X и Y
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == Джиттер предсказания заметен, время предсказания меняется
 
-Prediction Latency
-== Задержка предсказания
+Prediction Lead
+== Упреждение предсказания
 
 Prediction lead
 == Упреждение предсказания
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == Вероятность отправки сообщения о заморозке в чат (0-100%)
+
+Process UDP RX (est.)
+== Приём UDP процессом (оценка)
+
+Process UDP TX (est.)
+== Отправка UDP процессом (оценка)
 
 Profile Options
 == Параметры профиля
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == Спасение: автоматический режим телепортирует из заморозки; ручной режим записывает точку спасения при приземлении и телепортирует при заморозке
 
-Resend Loss
-== Потери по повторам
-
 Reset
 == Сбросить
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == Раунд %d/%d
+
+Round-trip time
+== Время кругового обхода
 
 Rounded caps
 == Скруглённые концы
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == Порог привязки
 
-Snapshot Gap
-== Интервал снапшотов
+Snapshot Age
+== Возраст снапшота
 
-Snapshot gap
-== Интервал снапшотов
-
-Snapshot Latency
-== Задержка снимков
+Snapshot age
+== Возраст снапшота
 
 Snapshot payload
 == Полезная нагрузка снапшотов
 
 Snapshot rate
 == Частота снапшотов
+
+Snapshot rate / parts
+== Частота снапшотов / частей
+
+Snapshot tick gap
+== Разрыв тиков снапшотов
 
 Social
 == Социальное
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == Всего друзей
 
-Total UDP RX (est.)
-== Общий приём UDP (оценка)
-
-Total UDP TX (est.)
-== Общая отправка UDP (оценка)
-
 Total: %d save(s)
 == Всего: %d сохранений
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == Визуал
+
+Vital Resend Queue
+== Очередь повторной отправки важных чанков
 
 Vital resend queue
 == Очередь повторной отправки важных чанков

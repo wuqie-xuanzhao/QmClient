@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == DDNet işlem bellek kullanımını gösterir
 
-Displays estimated total UDP receive rate
-== Tahmini toplam UDP alma hızını göster
+Displays estimated process UDP receive rate
+== Tahmini işlem UDP alma hızını göster
 
-Displays estimated total UDP send rate
-== Tahmini toplam UDP gönderme hızını göster
+Displays estimated process UDP send rate
+== Tahmini işlem UDP gönderme hızını göster
 
 Displays prediction timing jitter
 == Tahmin zamanlama titreşimini göster
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == İstemcinin tahmin öndeliğini göster
 
-Displays the interval between complete snapshots
-== Tam anlık görüntüler arasındaki aralığı göster
+Displays the game connection round-trip time
+== Oyun bağlantısının gidiş-dönüş süresini göster
 
 Displays the number of unacknowledged vital chunks
 == Onaylanmamış önemli parça sayısını göster
 
-Displays the server ping round-trip time
-== Sunucu ping gidiş-dönüş süresini göster
+Displays the time since the last complete snapshot
+== Son tam anlık görüntüden bu yana geçen süreyi göster
 
 Displays X and Y velocity
 == X ve Y hızını gösterir
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == Tahmin titreşimi belirgin, tahmin zamanlaması değişiyor
 
-Prediction Latency
-== Tahmin gecikmesi
+Prediction Lead
+== Tahmin öndeliği
 
 Prediction lead
 == Tahmin öndeliği
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == Donma sohbet mesajı gönderme olasılığı (0-100%)
+
+Process UDP RX (est.)
+== İşlem UDP RX (tahmini)
+
+Process UDP TX (est.)
+== İşlem UDP TX (tahmini)
 
 Profile Options
 == Profil Seçenekleri
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == Kurtarma: otomatik mod donmadan çıkarır; manuel mod inişte bir kurtarma noktası kaydeder ve donduğunda ışınlar
 
-Resend Loss
-== Yeniden gönderim kaybı
-
 Reset
 == Sıfırla
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == Tur %d/%d
+
+Round-trip time
+== Gidiş-dönüş süresi
 
 Rounded caps
 == Yuvarlak uçlar
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == Yakalama eşiği
 
-Snapshot Gap
-== Anlık görüntü aralığı
+Snapshot Age
+== Anlık görüntü yaşı
 
-Snapshot gap
-== Anlık görüntü aralığı
-
-Snapshot Latency
-== Snapshot gecikmesi
+Snapshot age
+== Anlık görüntü yaşı
 
 Snapshot payload
 == Anlık görüntü yükü
 
 Snapshot rate
 == Anlık görüntü hızı
+
+Snapshot rate / parts
+== Anlık görüntü hızı / parçalar
+
+Snapshot tick gap
+== Anlık görüntü tick aralığı
 
 Social
 == Sosyal
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == Toplam arkadaş
 
-Total UDP RX (est.)
-== Toplam UDP RX (tahmini)
-
-Total UDP TX (est.)
-== Toplam UDP TX (tahmini)
-
 Total: %d save(s)
 == Toplam: %d save
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == Görseller
+
+Vital Resend Queue
+== Önemli parçaların yeniden gönderim kuyruğu
 
 Vital resend queue
 == Önemli parçaların yeniden gönderim kuyruğu

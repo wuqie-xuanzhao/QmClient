@@ -62,8 +62,8 @@ namespace
 
 	static float BytesPerSecondDelta(int64_t CurrentBytes, int64_t PrevBytes, float DeltaSeconds)
 	{
-		if(DeltaSeconds <= 0.0f || CurrentBytes < PrevBytes)
-			return 0.0f;
+		if(!std::isfinite(DeltaSeconds) || DeltaSeconds <= 0.0f || CurrentBytes < PrevBytes)
+			return -1.0f;
 		return (float)(CurrentBytes - PrevBytes) / DeltaSeconds;
 	}
 
@@ -227,7 +227,7 @@ namespace
 
 	static void FormatPercentValue(char *pBuf, int BufSize, float Value)
 	{
-		if(Value < 0.0f)
+		if(!std::isfinite(Value) || Value < 0.0f)
 		{
 			str_copy(pBuf, "--", BufSize);
 			return;
@@ -246,7 +246,7 @@ namespace
 		if(Stats.m_RateKibPerSec >= 0.0f)
 			str_format(aRateBuf, sizeof(aRateBuf), "%.1fKiB/s", Stats.m_RateKibPerSec);
 		else
-			str_copy(aRateBuf, "--");
+			str_copy(aRateBuf, "--", sizeof(aRateBuf));
 
 		str_format(
 			pBuf,
@@ -590,12 +590,12 @@ void CQmMonitoring::ResetHistory()
 	m_Snapshot = {};
 	const float InvalidMetric = std::numeric_limits<float>::quiet_NaN();
 	m_aRttHistory.fill(InvalidMetric);
-	m_aPredHistory.fill(0.0f);
+	m_aPredHistory.fill(InvalidMetric);
 	m_aSnapshotGapHistory.fill(InvalidMetric);
 	m_aPredictionJitterHistory.fill(InvalidMetric);
-	m_aGameTimeMarginHistory.fill(0.0f);
-	m_aFpsHistory.fill(0.0f);
-	m_aFrameTimeHistory.fill(0.0f);
+	m_aGameTimeMarginHistory.fill(InvalidMetric);
+	m_aFpsHistory.fill(InvalidMetric);
+	m_aFrameTimeHistory.fill(InvalidMetric);
 	m_HistoryHead = 0;
 	m_HistoryCount = 0;
 	m_LastSampleTick = 0;
@@ -650,31 +650,53 @@ void CQmMonitoring::UpdateNetworkMetrics(SQmNetworkMetrics &Net)
 {
 	IClient *pClient = Client();
 	Net.m_Connected = pClient->IsGameConnectionAlive();
+	const int SnapshotConnection = g_Config.m_ClDummy;
+	if(m_SnapshotRateConnection != -1 && m_SnapshotRateConnection != SnapshotConnection)
+	{
+		const float InvalidMetric = std::numeric_limits<float>::quiet_NaN();
+		m_aRttHistory.fill(InvalidMetric);
+		m_aPredHistory.fill(InvalidMetric);
+		m_aSnapshotGapHistory.fill(InvalidMetric);
+		m_aPredictionJitterHistory.fill(InvalidMetric);
+		m_aGameTimeMarginHistory.fill(InvalidMetric);
+		m_LastPredictionLeadMs = 0.0f;
+		m_PredictionJitterMs = -1.0f;
+		m_HasPredictionLeadSample = false;
+	}
 	Net.m_ConnectionProblems = pClient->ConnectionProblems();
 	Net.m_PingMs = pClient->PingMs();
 	Net.m_PredictionLeadMs = pClient->PredictionLeadMs();
 	Net.m_PredictionMarginMs = pClient->PredictionMarginMs();
-	if(m_HasPredictionLeadSample)
+	if(Net.m_PredictionLeadMs >= 0.0f)
 	{
-		const float LeadDelta = std::abs(Net.m_PredictionLeadMs - m_LastPredictionLeadMs);
-		m_PredictionJitterMs = m_PredictionJitterMs < 0.0f ? LeadDelta : m_PredictionJitterMs + (LeadDelta - m_PredictionJitterMs) * 0.15f;
+		if(m_HasPredictionLeadSample)
+		{
+			const float LeadDelta = std::abs(Net.m_PredictionLeadMs - m_LastPredictionLeadMs);
+			m_PredictionJitterMs = m_PredictionJitterMs < 0.0f ? LeadDelta : m_PredictionJitterMs + (LeadDelta - m_PredictionJitterMs) * 0.15f;
+		}
+		m_LastPredictionLeadMs = Net.m_PredictionLeadMs;
+		m_HasPredictionLeadSample = true;
 	}
-	m_LastPredictionLeadMs = Net.m_PredictionLeadMs;
-	m_HasPredictionLeadSample = true;
+	else
+	{
+		m_LastPredictionLeadMs = 0.0f;
+		m_HasPredictionLeadSample = false;
+		m_PredictionJitterMs = -1.0f;
+	}
 	Net.m_PredictionJitterMs = m_PredictionJitterMs;
-	Net.m_GameTimeMarginMs = pClient->GameTimeMarginMs();
-	Net.m_GameTimeCorrectionMs = QmComputeRollbackMs(Net.m_GameTimeMarginMs);
-	Net.m_VitalResendCount = std::max(pClient->PendingResendCount(), 0);
+	Net.m_VitalResendCount = Net.m_Connected ? std::max(pClient->PendingResendCount(), 0) : -1;
 
 	SClientSnapshotStats SnapshotStats;
 	pClient->SnapshotStats(SnapshotStats);
+	const bool HasGameTimeMargin = Net.m_Connected && SnapshotStats.m_SnapshotCount > 2;
+	Net.m_GameTimeMarginMs = HasGameTimeMargin ? pClient->GameTimeMarginMs() : std::numeric_limits<float>::quiet_NaN();
+	Net.m_GameTimeCorrectionMs = QmComputeRollbackMs(Net.m_GameTimeMarginMs);
 	Net.m_SnapshotGapMs = SnapshotStats.m_CurrentGapMs;
 	Net.m_SnapshotTickGap = SnapshotStats.m_LastTickGap;
 	Net.m_SnapshotRatePerSec = m_SnapshotRatePerSec;
 	Net.m_SnapshotPartRatePerSec = m_SnapshotPartRatePerSec;
 	Net.m_SnapshotPayloadBytesPerSec = m_SnapshotPayloadBytesPerSec;
 	const int64_t Now = time_get();
-	const int SnapshotConnection = g_Config.m_ClDummy;
 	if(m_LastSnapshotRateSampleTime == 0 || m_SnapshotRateConnection != SnapshotConnection)
 	{
 		m_SnapshotRateConnection = SnapshotConnection;
@@ -686,12 +708,24 @@ void CQmMonitoring::UpdateNetworkMetrics(SQmNetworkMetrics &Net)
 		m_SnapshotPartRatePerSec = -1.0f;
 		m_SnapshotPayloadBytesPerSec = -1.0f;
 	}
+	else if(SnapshotStats.m_SnapshotCount < m_LastSnapshotCount ||
+		SnapshotStats.m_PartCount < m_LastSnapshotPartCount ||
+		SnapshotStats.m_PayloadBytes < m_LastSnapshotPayloadBytes)
+	{
+		m_LastSnapshotRateSampleTime = Now;
+		m_LastSnapshotCount = SnapshotStats.m_SnapshotCount;
+		m_LastSnapshotPartCount = SnapshotStats.m_PartCount;
+		m_LastSnapshotPayloadBytes = SnapshotStats.m_PayloadBytes;
+		m_SnapshotRatePerSec = -1.0f;
+		m_SnapshotPartRatePerSec = -1.0f;
+		m_SnapshotPayloadBytesPerSec = -1.0f;
+	}
 	else if(Now - m_LastSnapshotRateSampleTime >= time_freq())
 	{
 		const float SampleSeconds = (float)(Now - m_LastSnapshotRateSampleTime) / (float)time_freq();
-		m_SnapshotRatePerSec = SnapshotStats.m_SnapshotCount >= m_LastSnapshotCount ? (float)(SnapshotStats.m_SnapshotCount - m_LastSnapshotCount) / SampleSeconds : 0.0f;
-		m_SnapshotPartRatePerSec = SnapshotStats.m_PartCount >= m_LastSnapshotPartCount ? (float)(SnapshotStats.m_PartCount - m_LastSnapshotPartCount) / SampleSeconds : 0.0f;
-		m_SnapshotPayloadBytesPerSec = SnapshotStats.m_PayloadBytes >= m_LastSnapshotPayloadBytes ? (float)(SnapshotStats.m_PayloadBytes - m_LastSnapshotPayloadBytes) / SampleSeconds : 0.0f;
+		m_SnapshotRatePerSec = QmComputeCounterRate(m_LastSnapshotCount, SnapshotStats.m_SnapshotCount, SampleSeconds);
+		m_SnapshotPartRatePerSec = QmComputeCounterRate(m_LastSnapshotPartCount, SnapshotStats.m_PartCount, SampleSeconds);
+		m_SnapshotPayloadBytesPerSec = QmComputeCounterRate(m_LastSnapshotPayloadBytes, SnapshotStats.m_PayloadBytes, SampleSeconds);
 		m_LastSnapshotRateSampleTime = Now;
 		m_LastSnapshotCount = SnapshotStats.m_SnapshotCount;
 		m_LastSnapshotPartCount = SnapshotStats.m_PartCount;
@@ -714,14 +748,18 @@ void CQmMonitoring::UpdateNetworkMetrics(SQmNetworkMetrics &Net)
 	Net.m_Recv = QmComputeTrafficStats(Prev.recv_packets, Prev.recv_bytes, Current.recv_packets, Current.recv_bytes, DeltaSeconds);
 
 	int NegativeSamples = 0;
+	int ValidSamples = 0;
 	const int Start = (m_HistoryHead - m_HistoryCount + (int)m_aGameTimeMarginHistory.size()) % (int)m_aGameTimeMarginHistory.size();
 	for(int i = 0; i < m_HistoryCount; ++i)
 	{
-		if(m_aGameTimeMarginHistory[(Start + i) % (int)m_aGameTimeMarginHistory.size()] < 0.0f)
+		const float Margin = m_aGameTimeMarginHistory[(Start + i) % (int)m_aGameTimeMarginHistory.size()];
+		if(!std::isfinite(Margin))
+			continue;
+		++ValidSamples;
+		if(Margin < 0.0f)
 			++NegativeSamples;
 	}
-	if(m_HistoryCount > 0)
-		Net.m_GameTimeAheadRatePct = (float)NegativeSamples * 100.0f / (float)m_HistoryCount;
+	Net.m_GameTimeAheadRatePct = ValidSamples > 0 ? (float)NegativeSamples * 100.0f / (float)ValidSamples : -1.0f;
 }
 
 void CQmMonitoring::UpdatePerformanceMetrics(SQmPerformanceMetrics &Perf)
@@ -798,18 +836,18 @@ void CQmMonitoring::UpdateDiagnosticVerdict(SQmDiagnosticVerdict &Verdict, const
 
 void CQmMonitoring::PushFrameTimeSample(float FrameTimeMs)
 {
-	m_aFrameTimeHistory[m_HistoryHead] = FrameTimeMs;
+	m_aFrameTimeHistory[m_HistoryHead] = std::isfinite(FrameTimeMs) && FrameTimeMs >= 0.0f ? FrameTimeMs : std::numeric_limits<float>::quiet_NaN();
 }
 
 void CQmMonitoring::PushHistorySample(float RttMs, float PredMs, float SnapshotGapMs, float PredictionJitterMs, float GameTimeMarginMs, float Fps)
 {
 	const float InvalidMetric = std::numeric_limits<float>::quiet_NaN();
 	m_aRttHistory[m_HistoryHead] = RttMs >= 0.0f ? RttMs : InvalidMetric;
-	m_aPredHistory[m_HistoryHead] = PredMs;
+	m_aPredHistory[m_HistoryHead] = PredMs >= 0.0f ? PredMs : InvalidMetric;
 	m_aSnapshotGapHistory[m_HistoryHead] = SnapshotGapMs >= 0.0f ? SnapshotGapMs : InvalidMetric;
 	m_aPredictionJitterHistory[m_HistoryHead] = PredictionJitterMs >= 0.0f ? PredictionJitterMs : InvalidMetric;
-	m_aGameTimeMarginHistory[m_HistoryHead] = GameTimeMarginMs;
-	m_aFpsHistory[m_HistoryHead] = Fps;
+	m_aGameTimeMarginHistory[m_HistoryHead] = std::isfinite(GameTimeMarginMs) ? GameTimeMarginMs : InvalidMetric;
+	m_aFpsHistory[m_HistoryHead] = std::isfinite(Fps) && Fps >= 0.0f ? Fps : InvalidMetric;
 	m_HistoryHead = (m_HistoryHead + 1) % (int)m_aRttHistory.size();
 	m_HistoryCount = std::min(m_HistoryCount + 1, (int)m_aRttHistory.size());
 }
@@ -944,7 +982,7 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 	} aLegend[] = {
 		{Localize("RTT"), m_Snapshot.m_Network.m_PingMs, PING_COLOR, QmComputeHistoryStats(m_aRttHistory, m_HistoryHead, m_HistoryCount)},
 		{Localize("Prediction"), m_Snapshot.m_Network.m_PredictionLeadMs, PRED_COLOR, QmComputeHistoryStats(m_aPredHistory, m_HistoryHead, m_HistoryCount)},
-		{Localize("Snapshot gap"), m_Snapshot.m_Network.m_SnapshotGapMs, SNAPSHOT_GAP_COLOR, QmComputeHistoryStats(m_aSnapshotGapHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Snapshot age"), m_Snapshot.m_Network.m_SnapshotGapMs, SNAPSHOT_GAP_COLOR, QmComputeHistoryStats(m_aSnapshotGapHistory, m_HistoryHead, m_HistoryCount)},
 		{Localize("Jitter"), m_Snapshot.m_Network.m_PredictionJitterMs, JITTER_COLOR, QmComputeHistoryStats(m_aPredictionJitterHistory, m_HistoryHead, m_HistoryCount)},
 	};
 
@@ -1014,11 +1052,19 @@ void CQmMonitoring::RenderFpsGraph(CUIRect Rect) const
 
 	float MaxFpsValue = 30.0f;
 	for(int i = 0; i < m_HistoryCount; ++i)
-		MaxFpsValue = std::max(MaxFpsValue, SampleAt(m_aFpsHistory, i));
+	{
+		const float FpsValue = SampleAt(m_aFpsHistory, i);
+		if(std::isfinite(FpsValue))
+			MaxFpsValue = std::max(MaxFpsValue, FpsValue);
+	}
 
 	float MaxGameMarginAbs = 25.0f;
 	for(int i = 0; i < m_HistoryCount; ++i)
-		MaxGameMarginAbs = std::max(MaxGameMarginAbs, std::abs(SampleAt(m_aGameTimeMarginHistory, i)));
+	{
+		const float GameMarginValue = SampleAt(m_aGameTimeMarginHistory, i);
+		if(std::isfinite(GameMarginValue))
+			MaxGameMarginAbs = std::max(MaxGameMarginAbs, std::abs(GameMarginValue));
+	}
 
 	std::array<IGraphics::CLineItem, QM_MONITORING_HISTORY_CAPACITY - 1> aFpsLines = {};
 	int NumFpsLines = 0;
@@ -1026,6 +1072,8 @@ void CQmMonitoring::RenderFpsGraph(CUIRect Rect) const
 	{
 		const float PrevValue = SampleAt(m_aFpsHistory, i - 1);
 		const float CurrValue = SampleAt(m_aFpsHistory, i);
+		if(!std::isfinite(PrevValue) || !std::isfinite(CurrValue))
+			continue;
 		const float X0 = FpsRect.x + FpsRect.w * (float)(i - 1) / (float)(m_HistoryCount - 1);
 		const float X1 = FpsRect.x + FpsRect.w * (float)i / (float)(m_HistoryCount - 1);
 		const float Y0 = FpsRect.y + FpsRect.h - (FpsRect.h * std::clamp(PrevValue / MaxFpsValue, 0.0f, 1.0f));
@@ -1039,7 +1087,7 @@ void CQmMonitoring::RenderFpsGraph(CUIRect Rect) const
 	if(NumFpsLines > 0)
 		Graphics()->LinesDraw(aFpsLines.data(), NumFpsLines);
 	Graphics()->LinesEnd();
-	if(m_HistoryCount >= 2)
+	if(m_HistoryCount >= 2 && std::isfinite(SampleAt(m_aFpsHistory, m_HistoryCount - 1)))
 	{
 		const float LastY = FpsRect.y + FpsRect.h - (FpsRect.h * std::clamp(SampleAt(m_aFpsHistory, m_HistoryCount - 1) / MaxFpsValue, 0.0f, 1.0f));
 		const float DotR = 3.5f;
@@ -1056,6 +1104,8 @@ void CQmMonitoring::RenderFpsGraph(CUIRect Rect) const
 	{
 		const float PrevValue = SampleAt(m_aGameTimeMarginHistory, i - 1);
 		const float CurrValue = SampleAt(m_aGameTimeMarginHistory, i);
+		if(!std::isfinite(PrevValue) || !std::isfinite(CurrValue))
+			continue;
 		const float X0 = GameMarginRect.x + GameMarginRect.w * (float)(i - 1) / (float)(m_HistoryCount - 1);
 		const float X1 = GameMarginRect.x + GameMarginRect.w * (float)i / (float)(m_HistoryCount - 1);
 		const float Y0 = GameMarginRect.y + GameMarginRect.h * 0.5f - (GameMarginRect.h * 0.5f * std::clamp(PrevValue / MaxGameMarginAbs, -1.0f, 1.0f));
@@ -1069,7 +1119,7 @@ void CQmMonitoring::RenderFpsGraph(CUIRect Rect) const
 	if(NumGameMarginLines > 0)
 		Graphics()->LinesDraw(aGameMarginLines.data(), NumGameMarginLines);
 	Graphics()->LinesEnd();
-	if(m_HistoryCount >= 2)
+	if(m_HistoryCount >= 2 && std::isfinite(SampleAt(m_aGameTimeMarginHistory, m_HistoryCount - 1)))
 	{
 		const float LastY = GameMarginRect.y + GameMarginRect.h * 0.5f - (GameMarginRect.h * 0.5f * std::clamp(SampleAt(m_aGameTimeMarginHistory, m_HistoryCount - 1) / MaxGameMarginAbs, -1.0f, 1.0f));
 		const float DotR = 3.5f;
@@ -1219,15 +1269,15 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 		str_copy(aSnapshotRateBuf, "--", sizeof(aSnapshotRateBuf));
 	else
 		str_format(aSnapshotRateBuf, sizeof(aSnapshotRateBuf), "%.1f snap/s %.1f part/s", m_Snapshot.m_Network.m_SnapshotRatePerSec, m_Snapshot.m_Network.m_SnapshotPartRatePerSec);
-	FormatMetricValue(aSnapshotTickGapBuf, sizeof(aSnapshotTickGapBuf), " ticks", (float)m_Snapshot.m_Network.m_SnapshotTickGap, 0);
+	FormatMetricValue(aSnapshotTickGapBuf, sizeof(aSnapshotTickGapBuf), "", (float)m_Snapshot.m_Network.m_SnapshotTickGap, 0);
 	FormatRateValue(aSnapshotPayloadBuf, sizeof(aSnapshotPayloadBuf), m_Snapshot.m_Network.m_SnapshotPayloadBytesPerSec);
 	FormatMetricValue(aFrameP95Buf, sizeof(aFrameP95Buf), "ms", m_Snapshot.m_Performance.m_FrameTimeP95Ms, 1);
-	str_format(aVitalResendBuf, sizeof(aVitalResendBuf), "%d", m_Snapshot.m_Network.m_VitalResendCount);
+	FormatMetricValue(aVitalResendBuf, sizeof(aVitalResendBuf), "", (float)m_Snapshot.m_Network.m_VitalResendCount, 0);
 
 	const SDetailRow aLeftRows[] = {
 		{Localize("Game/predicted tick"), aTickBuf},
 		{Localize("RTT"), aPingBuf},
-		{Localize("Snapshot gap"), aSnapshotGapBuf},
+		{Localize("Snapshot age"), aSnapshotGapBuf},
 		{Localize("Snapshot rate / parts"), aSnapshotRateBuf},
 		{Localize("Snapshot payload"), aSnapshotPayloadBuf},
 	};

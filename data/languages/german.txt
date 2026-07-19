@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == Zeigt die Speichernutzung des DDNet-Prozesses an
 
-Displays estimated total UDP receive rate
-== Geschätzte gesamte UDP-Empfangsrate anzeigen
+Displays estimated process UDP receive rate
+== Geschätzte UDP-Empfangsrate des Prozesses anzeigen
 
-Displays estimated total UDP send rate
-== Geschätzte gesamte UDP-Senderate anzeigen
+Displays estimated process UDP send rate
+== Geschätzte UDP-Senderate des Prozesses anzeigen
 
 Displays prediction timing jitter
 == Jitter der Vorhersagezeit anzeigen
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == Den Vorlauf der Client-Vorhersage anzeigen
 
-Displays the interval between complete snapshots
-== Das Intervall zwischen vollständigen Snapshots anzeigen
+Displays the game connection round-trip time
+== Die Roundtrip-Zeit der Spielverbindung anzeigen
 
 Displays the number of unacknowledged vital chunks
 == Anzahl der nicht bestätigten wichtigen Chunks anzeigen
 
-Displays the server ping round-trip time
-== Die Ping-Roundtrip-Zeit zum Server anzeigen
+Displays the time since the last complete snapshot
+== Die Zeit seit dem letzten vollständigen Snapshot anzeigen
 
 Displays X and Y velocity
 == Zeigt X- und Y-Geschwindigkeit an
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == Der Vorhersage-Jitter ist deutlich, das Vorhersage-Timing ändert sich
 
-Prediction Latency
-== Vorhersagelatenz
+Prediction Lead
+== Vorhersagevorlauf
 
 Prediction lead
 == Vorhersagevorlauf
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == Wahrscheinlichkeit des Sendens einer Freeze-Chat-Nachricht (0-100%)
+
+Process UDP RX (est.)
+== UDP-Empfang des Prozesses (geschätzt)
+
+Process UDP TX (est.)
+== UDP-Versand des Prozesses (geschätzt)
 
 Profile Options
 == Profiloptionen
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == Rettung: Automodus teleportiert aus Freeze; manueller Modus speichert einen Rettungspunkt bei Landung und teleportiert bei Freeze
 
-Resend Loss
-== Resend-Verlust
-
 Reset
 == Zurücksetzen
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == Runde %d/%d
+
+Round-trip time
+== Roundtrip-Zeit
 
 Rounded caps
 == Abgerundete Enden
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == Einrastschwellwert
 
-Snapshot Gap
-== Snapshot-Abstand
+Snapshot Age
+== Snapshot-Alter
 
-Snapshot gap
-== Snapshot-Abstand
-
-Snapshot Latency
-== Snapshot-Latenz
+Snapshot age
+== Snapshot-Alter
 
 Snapshot payload
 == Snapshot-Nutzdaten
 
 Snapshot rate
 == Snapshot-Rate
+
+Snapshot rate / parts
+== Snapshot-Rate / Teile
+
+Snapshot tick gap
+== Snapshot-Tick-Abstand
 
 Social
 == Soziales
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == Freunde insgesamt
 
-Total UDP RX (est.)
-== Gesamter UDP-Empfang (geschätzt)
-
-Total UDP TX (est.)
-== Gesamter UDP-Versand (geschätzt)
-
 Total: %d save(s)
 == Gesamt: %d Save(s)
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == Visuelles
+
+Vital Resend Queue
+== Warteschlange für erneute wichtige Chunks
 
 Vital resend queue
 == Warteschlange für erneute wichtige Chunks

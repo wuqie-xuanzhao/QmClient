@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == 显示 DDNet 进程内存使用量
 
-Displays estimated total UDP receive rate
-== 显示估算的总 UDP 接收速率
+Displays estimated process UDP receive rate
+== 显示估算的进程 UDP 接收速率
 
-Displays estimated total UDP send rate
-== 显示估算的总 UDP 发送速率
+Displays estimated process UDP send rate
+== 显示估算的进程 UDP 发送速率
 
 Displays prediction timing jitter
 == 显示预测时序抖动
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == 显示客户端的预测提前量
 
-Displays the interval between complete snapshots
-== 显示完整快照之间的间隔
+Displays the game connection round-trip time
+== 显示游戏连接的往返时间
 
 Displays the number of unacknowledged vital chunks
 == 显示未确认的重要数据块数量
 
-Displays the server ping round-trip time
-== 显示服务器 Ping 往返时间
+Displays the time since the last complete snapshot
+== 显示距上次完整快照的时间
 
 Displays X and Y velocity
 == 显示 X 和 Y 速度
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == 预测抖动明显，预测时序正在变化
 
-Prediction Latency
-== 预测延迟
+Prediction Lead
+== 预测提前量
 
 Prediction lead
 == 预测提前量
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == 发送冻结聊天消息的概率（0-100%）
+
+Process UDP RX (est.)
+== 进程 UDP 接收（估算）
+
+Process UDP TX (est.)
+== 进程 UDP 发送（估算）
 
 Profile Options
 == 预设选项
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == 救援：自动模式下传送出冻结；手动模式下落地记录救援点，冻结时传送出去
 
-Resend Loss
-== 重发丢包
-
 Reset
 == 重置
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == 轮次 %d/%d
+
+Round-trip time
+== 往返时间
 
 Rounded caps
 == 圆角端点
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == 吸附阈值
 
-Snapshot Gap
-== 快照间隔
+Snapshot Age
+== 快照年龄
 
-Snapshot gap
-== 快照间隔
-
-Snapshot Latency
-== 快照延迟
+Snapshot age
+== 快照年龄
 
 Snapshot payload
 == 快照负载
 
 Snapshot rate
 == 快照速率
+
+Snapshot rate / parts
+== 快照速率/分片
+
+Snapshot tick gap
+== 快照 tick 间隔
 
 Social
 == 社交功能
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == 好友总数
 
-Total UDP RX (est.)
-== 总 UDP 接收（估算）
-
-Total UDP TX (est.)
-== 总 UDP 发送（估算）
-
 Total: %d save(s)
 == 总计：%d 个存档
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == 视觉
+
+Vital Resend Queue
+== 重要数据重发队列
 
 Vital resend queue
 == 重要数据重发队列

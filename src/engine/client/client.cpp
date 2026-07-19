@@ -719,25 +719,33 @@ void CClient::UpdateNetStatsSnapshot() const
 
 float CClient::PingMs() const
 {
-	if(State() != IClient::STATE_ONLINE)
+	const int Conn = g_Config.m_ClDummy;
+	if(!IsGameConnectionAlive())
 		return -1.0f;
-	const SNetTransportStats Stats = m_aNetClient[g_Config.m_ClDummy].TransportStats();
-	return (float)Stats.m_RttMs;
+	if(m_aNetClient[Conn].IsKcpActive())
+		return (float)m_aNetClient[Conn].TransportStats().m_RttMs;
+	return (float)m_aGamePingRttMs[Conn];
 }
 
 float CClient::PredictionLeadMs() const
 {
+	if(!IsGameConnectionAlive())
+		return -1.0f;
 	const int64_t Now = time_get();
 	return (float)((m_PredictedTime.Get(Now) - m_aGameTime[g_Config.m_ClDummy].Get(Now)) * 1000 / (float)time_freq());
 }
 
 float CClient::PredictionMarginMs() const
 {
+	if(!IsGameConnectionAlive())
+		return -1.0f;
 	return (float)PredictionMargin();
 }
 
 float CClient::PredictionJitterMs() const
 {
+	if(!IsGameConnectionAlive())
+		return -1.0f;
 	return std::max(0.0f, m_AutoMarginLatencyJitterMs);
 }
 
@@ -748,7 +756,11 @@ float CClient::GameTimeMarginMs() const
 
 bool CClient::IsGameConnectionAlive() const
 {
-	return State() == IClient::STATE_ONLINE;
+	if(State() != IClient::STATE_ONLINE)
+		return false;
+	if(g_Config.m_ClDummy == 0)
+		return true;
+	return m_DummyConnected && m_aNetClient[CONN_DUMMY].State() == NETSTATE_ONLINE;
 }
 
 void CClient::NetStatsSnapshot(NETSTATS &Prev, NETSTATS &Current, std::chrono::nanoseconds &LastUpdate) const
@@ -757,6 +769,43 @@ void CClient::NetStatsSnapshot(NETSTATS &Prev, NETSTATS &Current, std::chrono::n
 	Prev = m_NetstatsPrev;
 	Current = m_NetstatsCurrent;
 	LastUpdate = m_NetstatsSampleInterval;
+}
+
+void CClient::UpdateGamePing()
+{
+	const int64_t Now = time_get();
+	const int64_t Frequency = time_freq();
+	for(int Conn = 0; Conn < NUM_DUMMIES; ++Conn)
+	{
+		if(m_aNetClient[Conn].State() != NETSTATE_ONLINE || m_aNetClient[Conn].IsKcpActive())
+		{
+			m_aGamePingStartTime[Conn] = -1;
+			m_aGamePingNextTime[Conn] = -1;
+			m_aGamePingRttMs[Conn] = -1;
+			m_aGamePingIgnoreNextReply[Conn] = false;
+			continue;
+		}
+
+		if(m_aGamePingStartTime[Conn] >= 0)
+		{
+			if(Now - m_aGamePingStartTime[Conn] < 2 * Frequency)
+				continue;
+			if(Conn == CONN_MAIN && m_PingStartTime == m_aGamePingStartTime[Conn])
+				m_PingStartTime = -1;
+			m_aGamePingStartTime[Conn] = -1;
+			m_aGamePingRttMs[Conn] = -1;
+			m_aGamePingIgnoreNextReply[Conn] = true;
+			m_aGamePingNextTime[Conn] = Now + Frequency;
+		}
+
+		if(m_aGamePingNextTime[Conn] >= 0 && Now < m_aGamePingNextTime[Conn])
+			continue;
+
+		CMsgPacker Msg(NETMSG_PING, true);
+		SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
+		m_aGamePingStartTime[Conn] = Now;
+		m_aGamePingNextTime[Conn] = Now + Frequency;
+	}
 }
 
 void CClient::SnapshotStats(SClientSnapshotStats &Stats) const
@@ -1010,6 +1059,10 @@ void CClient::EnterGame(int Conn)
 		return;
 
 	m_aDidPostConnect[Conn] = false;
+	m_aGamePingStartTime[Conn] = -1;
+	m_aGamePingNextTime[Conn] = time_get() + time_freq() / 2;
+	m_aGamePingRttMs[Conn] = -1;
+	m_aGamePingIgnoreNextReply[Conn] = false;
 
 	// TClient
 	m_aExecuteOnJoinDone[Conn] = false;
@@ -1298,6 +1351,14 @@ void CClient::DisconnectWithReason(const char *pReason)
 	mem_zero(&m_CurrentServerPingUuid, sizeof(m_CurrentServerPingUuid));
 	m_CurrentServerCurrentPingTime = -1;
 	m_CurrentServerNextPingTime = -1;
+	m_PingStartTime = -1;
+	for(int Conn = 0; Conn < NUM_DUMMIES; ++Conn)
+	{
+		m_aGamePingStartTime[Conn] = -1;
+		m_aGamePingNextTime[Conn] = -1;
+		m_aGamePingRttMs[Conn] = -1;
+		m_aGamePingIgnoreNextReply[Conn] = false;
+	}
 	m_AutoMarginLastSampleTime = 0;
 	m_AutoMarginLatencyAverageMs = 0.0f;
 	m_AutoMarginLatencyJitterMs = 0.0f;
@@ -1424,6 +1485,10 @@ void CClient::DummyDisconnect(const char *pReason)
 	m_aapSnapshots[1][SNAP_CURRENT] = nullptr;
 	m_aapSnapshots[1][SNAP_PREV] = nullptr;
 	m_aReceivedSnapshots[1] = 0;
+	m_aGamePingStartTime[CONN_DUMMY] = -1;
+	m_aGamePingNextTime[CONN_DUMMY] = -1;
+	m_aGamePingRttMs[CONN_DUMMY] = -1;
+	m_aGamePingIgnoreNextReply[CONN_DUMMY] = false;
 	m_aSnapshotStats[1] = {};
 	m_aLastSnapshotTime[1] = 0;
 	m_aLastSnapshotTick[1] = -1;
@@ -1548,18 +1613,31 @@ void CClient::RenderDebug()
 		const auto RateKibitPerSec = [SampleSeconds](uint64_t Bytes) {
 			return SampleSeconds > 0.0 ? (uint64_t)((double)Bytes * 8.0 / 1024.0 / SampleSeconds) : 0;
 		};
+		const bool HasSample = SampleSeconds > 0.0;
+		const bool SendCountersValid = m_NetstatsCurrent.sent_packets >= m_NetstatsPrev.sent_packets && m_NetstatsCurrent.sent_bytes >= m_NetstatsPrev.sent_bytes;
+		const bool RecvCountersValid = m_NetstatsCurrent.recv_packets >= m_NetstatsPrev.recv_packets && m_NetstatsCurrent.recv_bytes >= m_NetstatsPrev.recv_bytes;
 		const uint64_t SendPackets = CounterDelta(m_NetstatsCurrent.sent_packets, m_NetstatsPrev.sent_packets);
 		const uint64_t SendBytes = CounterDelta(m_NetstatsCurrent.sent_bytes, m_NetstatsPrev.sent_bytes);
 		const uint64_t SendTotal = SendBytes + SendPackets * OverheadSize;
 		const uint64_t RecvPackets = CounterDelta(m_NetstatsCurrent.recv_packets, m_NetstatsPrev.recv_packets);
 		const uint64_t RecvBytes = CounterDelta(m_NetstatsCurrent.recv_bytes, m_NetstatsPrev.recv_bytes);
 		const uint64_t RecvTotal = RecvBytes + RecvPackets * OverheadSize;
+		char aSendRateBuf[32];
+		char aRecvRateBuf[32];
+		if(HasSample && SendCountersValid)
+			str_format(aSendRateBuf, sizeof(aSendRateBuf), "%" PRIu64, RateKibitPerSec(SendTotal));
+		else
+			str_copy(aSendRateBuf, "--", sizeof(aSendRateBuf));
+		if(HasSample && RecvCountersValid)
+			str_format(aRecvRateBuf, sizeof(aRecvRateBuf), "%" PRIu64, RateKibitPerSec(RecvTotal));
+		else
+			str_copy(aRecvRateBuf, "--", sizeof(aRecvRateBuf));
 
-		str_format(aBuffer, sizeof(aBuffer), "Process UDP TX (estimated): %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%3" PRIu64 " Kibit/s) avg payload: %5" PRIu64,
-			SendPackets, SendBytes, SendPackets * OverheadSize, SendTotal, RateKibitPerSec(SendTotal), SendPackets == 0 ? 0 : SendBytes / SendPackets);
+		str_format(aBuffer, sizeof(aBuffer), "Process UDP TX (estimated): %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%s Kibit/s) avg payload: %5" PRIu64,
+			SendPackets, SendBytes, SendPackets * OverheadSize, SendTotal, aSendRateBuf, SendPackets == 0 ? 0 : SendBytes / SendPackets);
 		Graphics()->QuadsText(2, 2 + 3 * FontSize, FontSize, aBuffer);
-		str_format(aBuffer, sizeof(aBuffer), "Process UDP RX (estimated): %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%3" PRIu64 " Kibit/s) avg payload: %5" PRIu64,
-			RecvPackets, RecvBytes, RecvPackets * OverheadSize, RecvTotal, RateKibitPerSec(RecvTotal), RecvPackets == 0 ? 0 : RecvBytes / RecvPackets);
+		str_format(aBuffer, sizeof(aBuffer), "Process UDP RX (estimated): %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%s Kibit/s) avg payload: %5" PRIu64,
+			RecvPackets, RecvBytes, RecvPackets * OverheadSize, RecvTotal, aRecvRateBuf, RecvPackets == 0 ? 0 : RecvBytes / RecvPackets);
 		Graphics()->QuadsText(2, 2 + 4 * FontSize, FontSize, aBuffer);
 	}
 
@@ -1572,7 +1650,9 @@ void CClient::RenderDebug()
 		Row++;
 		for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		{
-			if(SnapshotDelta()->GetDataRate(i))
+			const uint64_t DataRate = SnapshotDelta()->GetDataRate(i);
+			const uint64_t DataUpdates = SnapshotDelta()->GetDataUpdates(i);
+			if(DataRate && DataUpdates)
 			{
 				str_format(
 					aBuffer,
@@ -1580,15 +1660,17 @@ void CClient::RenderDebug()
 					"%5d %20s: %8" PRIu64 " %8" PRIu64 " %8" PRIu64,
 					i,
 					GameClient()->GetItemName(i),
-					SnapshotDelta()->GetDataRate(i) / 8, SnapshotDelta()->GetDataUpdates(i),
-					(SnapshotDelta()->GetDataRate(i) / SnapshotDelta()->GetDataUpdates(i)) / 8);
+					DataRate / 8, DataUpdates,
+					(DataRate / DataUpdates) / 8);
 				Graphics()->QuadsText(2, OffsetY + Row * 12, FontSize, aBuffer);
 				Row++;
 			}
 		}
 		for(int i = CSnapshot::MAX_TYPE; i > (CSnapshot::MAX_TYPE - 64); i--)
 		{
-			if(SnapshotDelta()->GetDataRate(i) && m_aapSnapshots[g_Config.m_ClDummy][IClient::SNAP_CURRENT])
+			const uint64_t DataRate = SnapshotDelta()->GetDataRate(i);
+			const uint64_t DataUpdates = SnapshotDelta()->GetDataUpdates(i);
+			if(DataRate && DataUpdates && m_aapSnapshots[g_Config.m_ClDummy][IClient::SNAP_CURRENT])
 			{
 				const int Type = m_aapSnapshots[g_Config.m_ClDummy][IClient::SNAP_CURRENT]->m_pAltSnap->GetExternalItemType(i);
 				if(Type == UUID_INVALID)
@@ -1599,9 +1681,9 @@ void CClient::RenderDebug()
 						"%5d %20s: %8" PRIu64 " %8" PRIu64 " %8" PRIu64,
 						i,
 						"Unknown UUID",
-						SnapshotDelta()->GetDataRate(i) / 8,
-						SnapshotDelta()->GetDataUpdates(i),
-						(SnapshotDelta()->GetDataRate(i) / SnapshotDelta()->GetDataUpdates(i)) / 8);
+						DataRate / 8,
+						DataUpdates,
+						(DataRate / DataUpdates) / 8);
 					Graphics()->QuadsText(2, OffsetY + Row * 12, FontSize, aBuffer);
 					Row++;
 				}
@@ -1613,9 +1695,9 @@ void CClient::RenderDebug()
 						"%5d %20s: %8" PRIu64 " %8" PRIu64 " %8" PRIu64,
 						Type,
 						GameClient()->GetItemName(Type),
-						SnapshotDelta()->GetDataRate(i) / 8,
-						SnapshotDelta()->GetDataUpdates(i),
-						(SnapshotDelta()->GetDataRate(i) / SnapshotDelta()->GetDataUpdates(i)) / 8);
+						DataRate / 8,
+						DataUpdates,
+						(DataRate / DataUpdates) / 8);
 					Graphics()->QuadsText(2, OffsetY + Row * 12, FontSize, aBuffer);
 					Row++;
 				}
@@ -2728,11 +2810,33 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				GameClient()->OnRconLine(pLine);
 			}
 		}
-		else if(Conn == CONN_MAIN && Msg == NETMSG_PING_REPLY)
+		else if(Msg == NETMSG_PING_REPLY)
 		{
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "latency %.2f", (time_get() - m_PingStartTime) * 1000 / (float)time_freq());
-			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/network", aBuf);
+			bool GamePingReplyIgnored = false;
+			if(Conn < NUM_DUMMIES && m_aGamePingIgnoreNextReply[Conn])
+			{
+				const int64_t Now = time_get();
+				GamePingReplyIgnored = true;
+				m_aGamePingIgnoreNextReply[Conn] = false;
+				m_aGamePingStartTime[Conn] = -1;
+				m_aGamePingNextTime[Conn] = Now + time_freq();
+				if(Conn == CONN_MAIN)
+					m_PingStartTime = -1;
+			}
+			else if(Conn < NUM_DUMMIES && m_aGamePingStartTime[Conn] >= 0)
+			{
+				const int64_t Now = time_get();
+				m_aGamePingRttMs[Conn] = (int)std::max<int64_t>(0, (Now - m_aGamePingStartTime[Conn]) * 1000 / time_freq());
+				m_aGamePingStartTime[Conn] = -1;
+				m_aGamePingNextTime[Conn] = Now + time_freq();
+			}
+			if(Conn == CONN_MAIN && !GamePingReplyIgnored && m_PingStartTime >= 0)
+			{
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "latency %.2f", (time_get() - m_PingStartTime) * 1000 / (float)time_freq());
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/network", aBuf);
+				m_PingStartTime = -1;
+			}
 		}
 		else if(Msg == NETMSG_INPUTTIMING)
 		{
@@ -3722,6 +3826,8 @@ void CClient::Update()
 				m_CurrentServerCurrentPingTime = NowPing;
 				m_CurrentServerNextPingTime = NowPing + 600 * Freq; // ping every 10 minutes
 			}
+
+			UpdateGamePing();
 		}
 
 		if(m_DummyDeactivateOnReconnect && g_Config.m_ClDummy == 1)
@@ -4541,10 +4647,28 @@ void CClient::Con_Minimize(IConsole::IResult *pResult, void *pUserData)
 void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
+	const int64_t Now = time_get();
+	if(pSelf->m_aNetClient[CONN_MAIN].State() != NETSTATE_ONLINE)
+	{
+		pSelf->m_PingStartTime = -1;
+		return;
+	}
+	if(pSelf->m_aNetClient[CONN_MAIN].State() == NETSTATE_ONLINE &&
+		!pSelf->m_aNetClient[CONN_MAIN].IsKcpActive() &&
+		pSelf->m_aGamePingStartTime[CONN_MAIN] >= 0)
+	{
+		pSelf->m_PingStartTime = pSelf->m_aGamePingStartTime[CONN_MAIN];
+		return;
+	}
 
 	CMsgPacker Msg(NETMSG_PING, true);
 	pSelf->SendMsg(CONN_MAIN, &Msg, MSGFLAG_FLUSH);
-	pSelf->m_PingStartTime = time_get();
+	pSelf->m_PingStartTime = Now;
+	if(pSelf->m_aNetClient[CONN_MAIN].State() == NETSTATE_ONLINE && !pSelf->m_aNetClient[CONN_MAIN].IsKcpActive())
+	{
+		pSelf->m_aGamePingStartTime[CONN_MAIN] = Now;
+		pSelf->m_aGamePingNextTime[CONN_MAIN] = Now + time_freq();
+	}
 }
 
 void CClient::ConNetReset(IConsole::IResult *pResult, void *pUserData)

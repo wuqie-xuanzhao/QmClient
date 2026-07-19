@@ -52,15 +52,15 @@ public:
 	CStatusItem m_Zoom = CStatusItem([this] { ZoomRender(); }, [this] { return ZoomWidth(); },
 		"z", "Zoom", "", "Displays current zoom value");
 	CStatusItem m_Downstream = CStatusItem([this] { DownstreamRender(); }, [this] { return DownstreamWidth(); },
-		"u", "Snapshot Latency", "RTT", "Displays the server ping round-trip time");
+		"u", "Round-trip time", "RTT", "Displays the game connection round-trip time");
 	CStatusItem m_Upstream = CStatusItem([this] { UpstreamRender(); }, [this] { return UpstreamWidth(); },
-		"n", "Prediction Latency", "Prediction lead", "Displays the client's prediction lead");
+		"n", "Prediction Lead", "Prediction lead", "Displays the client's prediction lead");
 	CStatusItem m_Jitter = CStatusItem([this] { JitterRender(); }, [this] { return JitterWidth(); },
 		"j", "Latency Jitter", "Prediction jitter", "Displays prediction timing jitter");
 	CStatusItem m_SnapshotGap = CStatusItem([this] { SnapshotGapRender(); }, [this] { return SnapshotGapWidth(); },
-		"g", "Snapshot Gap", "Snapshot gap", "Displays the interval between complete snapshots");
+		"g", "Snapshot Age", "Snapshot age", "Displays the time since the last complete snapshot");
 	CStatusItem m_PacketLoss = CStatusItem([this] { PacketLossRender(); }, [this] { return PacketLossWidth(); },
-		"k", "Resend Loss", "Vital resend queue", "Displays the number of unacknowledged vital chunks");
+		"k", "Vital Resend Queue", "Vital resend queue", "Displays the number of unacknowledged vital chunks");
 	CStatusItem m_DownRate = CStatusItem([this] { DownRateRender(); }, [this] { return DownRateWidth(); },
 		"i", "Receive Rate", "Process UDP RX (est.)", "Displays estimated process UDP receive rate");
 	CStatusItem m_UpRate = CStatusItem([this] { UpRateRender(); }, [this] { return UpRateWidth(); },

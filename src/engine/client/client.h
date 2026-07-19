@@ -158,7 +158,11 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	char m_aVersionStr[10] = "0";
 
 	// pinging
-	int64_t m_PingStartTime = 0;
+	int64_t m_PingStartTime = -1;
+	int64_t m_aGamePingStartTime[NUM_DUMMIES] = {-1, -1};
+	int64_t m_aGamePingNextTime[NUM_DUMMIES] = {-1, -1};
+	int m_aGamePingRttMs[NUM_DUMMIES] = {-1, -1};
+	bool m_aGamePingIgnoreNextReply[NUM_DUMMIES] = {false, false};
 
 	char m_aCurrentMap[IO_MAX_PATH_LENGTH] = "";
 	char m_aCurrentMapPath[IO_MAX_PATH_LENGTH] = "";
@@ -347,6 +351,7 @@ private:
 	std::shared_ptr<ILogger> m_pPerfFileLogger = nullptr;
 
 	void UpdateNetStatsSnapshot() const;
+	void UpdateGamePing();
 
 	// Shared by RenderDebug and Qm monitoring.
 	mutable NETSTATS m_NetstatsPrev = {};

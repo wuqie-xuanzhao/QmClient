@@ -446,6 +446,7 @@ TEST(QmMonitoringHelpers, RollbackAmountUsesNegativeGameTimeMargin)
 {
 	EXPECT_FLOAT_EQ(QmComputeRollbackMs(-18.0f), 18.0f);
 	EXPECT_FLOAT_EQ(QmComputeRollbackMs(6.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmComputeRollbackMs(std::numeric_limits<float>::quiet_NaN()), -1.0f);
 }
 
 TEST(QmMonitoringHelpers, PeakSelectionPrefersLatestMatchingPeak)
@@ -516,11 +517,31 @@ TEST(QmMonitoringHelpers, TrafficStatsMatchOfficialDebugMath)
 	EXPECT_FLOAT_EQ(Stats.m_RateKibPerSec, 0.4765625f);
 }
 
+TEST(QmMonitoringHelpers, CounterRateRejectsResetAndMissingWindow)
+{
+	EXPECT_FLOAT_EQ(QmComputeCounterRate(100, 160, 2.0f), 30.0f);
+	EXPECT_FLOAT_EQ(QmComputeCounterRate(160, 100, 2.0f), -1.0f);
+	EXPECT_FLOAT_EQ(QmComputeCounterRate(100, 160, 0.0f), -1.0f);
+}
+
+TEST(QmMonitoringHelpers, FormattersRejectNonFiniteMetrics)
+{
+	const float InvalidMetric = std::numeric_limits<float>::quiet_NaN();
+	char aBuf[32];
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", InvalidMetric);
+	EXPECT_STREQ(aBuf, "--");
+	FormatRateValue(aBuf, sizeof(aBuf), InvalidMetric);
+	EXPECT_STREQ(aBuf, "--");
+	FormatCpuRatioValue(aBuf, sizeof(aBuf), InvalidMetric, 20.0f);
+	EXPECT_STREQ(aBuf, "--");
+}
+
 TEST(QmMonitoringHelpers, HistoryPercentileUsesRecentSamples)
 {
 	const std::array<float, 4> aHistory = {10.0f, 20.0f, 30.0f, 40.0f};
 	EXPECT_FLOAT_EQ(QmComputeHistoryPercentile(aHistory, 0, 4, 50.0f), 30.0f);
 	EXPECT_FLOAT_EQ(QmComputeHistoryPercentile(aHistory, 0, 4, 95.0f), 40.0f);
+	EXPECT_FLOAT_EQ(QmComputeHistoryPercentile(aHistory, 0, 0, 95.0f), -1.0f);
 }
 
 TEST(QmMonitoringHelpers, HistoryStatsIgnoreUnavailableSamples)

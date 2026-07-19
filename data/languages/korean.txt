@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == DDNet 프로세스 메모리 사용량 표시
 
-Displays estimated total UDP receive rate
-== 추정된 총 UDP 수신 속도 표시
+Displays estimated process UDP receive rate
+== 추정된 프로세스 UDP 수신 속도 표시
 
-Displays estimated total UDP send rate
-== 추정된 총 UDP 전송 속도 표시
+Displays estimated process UDP send rate
+== 추정된 프로세스 UDP 전송 속도 표시
 
 Displays prediction timing jitter
 == 예측 타이밍 지터 표시
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == 클라이언트의 예측 선행 시간 표시
 
-Displays the interval between complete snapshots
-== 완전한 스냅샷 사이의 간격 표시
+Displays the game connection round-trip time
+== 게임 연결 왕복 시간 표시
 
 Displays the number of unacknowledged vital chunks
 == 확인되지 않은 vital 청크 수 표시
 
-Displays the server ping round-trip time
-== 서버 Ping 왕복 시간 표시
+Displays the time since the last complete snapshot
+== 마지막 완전한 스냅샷 이후 경과 시간 표시
 
 Displays X and Y velocity
 == X 및 Y 속도 표시
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == 예측 지터가 뚜렷하고 예측 타이밍이 변하고 있습니다
 
-Prediction Latency
-== 예측 지연 시간
+Prediction Lead
+== 예측 선행 시간
 
 Prediction lead
 == 예측 선행 시간
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == 얼음 채팅 메시지 전송 확률 (0-100%)
+
+Process UDP RX (est.)
+== 프로세스 UDP 수신(추정)
+
+Process UDP TX (est.)
+== 프로세스 UDP 전송(추정)
 
 Profile Options
 == 프로필 옵션
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == 구조: 자동 모드는 프리즈에서 텔레포트; 수동 모드는 착지 시 구조 지점을 기록하고 프리즈 시 텔레포트
 
-Resend Loss
-== 손실 재전송
-
 Reset
 == 초기화
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == 라운드 %d/%d
+
+Round-trip time
+== 왕복 시간
 
 Rounded caps
 == 둥근 끝
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == 스냅 임계값
 
-Snapshot Gap
-== 스냅샷 간격
+Snapshot Age
+== 스냅샷 경과 시간
 
-Snapshot gap
-== 스냅샷 간격
-
-Snapshot Latency
-== 스냅샷 지연 시간
+Snapshot age
+== 스냅샷 경과 시간
 
 Snapshot payload
 == 스냅샷 페이로드
 
 Snapshot rate
 == 스냅샷 속도
+
+Snapshot rate / parts
+== 스냅샷 속도 / 조각
+
+Snapshot tick gap
+== 스냅샷 tick 간격
 
 Social
 == 소셜
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == 전체 친구 수
 
-Total UDP RX (est.)
-== 총 UDP 수신(추정)
-
-Total UDP TX (est.)
-== 총 UDP 전송(추정)
-
 Total: %d save(s)
 == 총계：%d 개 저장됨
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == 시각 효과
+
+Vital Resend Queue
+== vital 재전송 대기열
 
 Vital resend queue
 == vital 재전송 대기열

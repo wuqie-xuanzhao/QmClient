@@ -1237,7 +1237,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5684
+      "line": 5809
     },
     {
       "key": "Add a skin as a favorite",
@@ -1356,7 +1356,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5681
+      "line": 5806
     },
     {
       "key": "Add Entry",
@@ -2735,14 +2735,14 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5676
+      "line": 5801
     },
     {
       "key": "Authenticate to rcon with a username",
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5677
+      "line": 5802
     },
     {
       "key": "Authorized player forced vote '%s'",
@@ -3953,7 +3953,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5692
+      "line": 5817
     },
     {
       "key": "Best",
@@ -6144,7 +6144,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 1193
+      "line": 1247
     },
     {
       "key": "Connect dummy",
@@ -6158,7 +6158,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5654
+      "line": 5779
     },
     {
       "key": "Connect dummy to enable",
@@ -6186,7 +6186,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5662
+      "line": 5787
     },
     {
       "key": "Connected",
@@ -6578,7 +6578,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 3401
+      "line": 3506
     },
     {
       "key": "Could not create report scan request",
@@ -6690,14 +6690,14 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 1192
+      "line": 1246
     },
     {
       "key": "Could not save downloaded map. Try manually deleting this file: %s",
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 3218
+      "line": 3323
     },
     {
       "key": "Could not save touch controls to file. See local console for details.",
@@ -7362,7 +7362,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1086
+      "line": 1176
     },
     {
       "key": "DDRace HUD",
@@ -8517,14 +8517,14 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5655
+      "line": 5780
     },
     {
       "key": "Disconnect from the server",
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5663
+      "line": 5788
     },
     {
       "key": "Disconnected",
@@ -8667,14 +8667,14 @@
       "line": 73
     },
     {
-      "key": "Displays estimated total UDP receive rate",
+      "key": "Displays estimated process UDP receive rate",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
       "context": "",
       "line": 65
     },
     {
-      "key": "Displays estimated total UDP send rate",
+      "key": "Displays estimated process UDP send rate",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
       "context": "",
@@ -8695,11 +8695,11 @@
       "line": 57
     },
     {
-      "key": "Displays the interval between complete snapshots",
+      "key": "Displays the game connection round-trip time",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
       "context": "",
-      "line": 61
+      "line": 55
     },
     {
       "key": "Displays the number of unacknowledged vital chunks",
@@ -8709,11 +8709,11 @@
       "line": 63
     },
     {
-      "key": "Displays the server ping round-trip time",
+      "key": "Displays the time since the last complete snapshot",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
       "context": "",
-      "line": 55
+      "line": 61
     },
     {
       "key": "Displays X and Y velocity",
@@ -11107,14 +11107,14 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 3575
+      "line": 3680
     },
     {
       "key": "Error saving settings",
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 4361
+      "line": 4468
     },
     {
       "key": "Error saving touch controls",
@@ -11478,7 +11478,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 3822
+      "line": 3929
     },
     {
       "key": "Failed to check for updates",
@@ -12290,28 +12290,28 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1048
+      "line": 1138
     },
     {
       "key": "Frame rate",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1084
+      "line": 1174
     },
     {
       "key": "Frame time",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1085
+      "line": 1175
     },
     {
       "key": "Frame time p95",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1194
+      "line": 1288
     },
     {
       "key": "Framebuffer color bits (only fullscreen)",
@@ -12794,7 +12794,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1058
+      "line": 1148
     },
     {
       "key": "Game type",
@@ -12843,7 +12843,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1185
+      "line": 1278
     },
     {
       "key": "Gamemode. When enabled, players join as spectators",
@@ -15594,7 +15594,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 908
+      "line": 986
     },
     {
       "key": "Join a team to enable practice mode, which means you can use /r, but can't earn a rank.",
@@ -17855,7 +17855,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5686
+      "line": 5811
     },
     {
       "key": "Mark the end of a cut (right click to reset)",
@@ -17869,7 +17869,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5687
+      "line": 5812
     },
     {
       "key": "Markers",
@@ -18226,7 +18226,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1087
+      "line": 1177
     },
     {
       "key": "Mention",
@@ -18457,7 +18457,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5661
+      "line": 5786
     },
     {
       "key": "minimum",
@@ -20046,7 +20046,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 4939
+      "line": 5064
     },
     {
       "key": "No director players available",
@@ -22531,7 +22531,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5666
+      "line": 5791
     },
     {
       "key": "Pistol",
@@ -22580,7 +22580,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5678
+      "line": 5803
     },
     {
       "key": "Play background music",
@@ -22629,7 +22629,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5688
+      "line": 5813
     },
     {
       "key": "Playback volume",
@@ -23392,7 +23392,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 906
+      "line": 984
     },
     {
       "key": "Prediction boundary (ms, increases latency but reduces ping jitter)",
@@ -23420,7 +23420,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1193
+      "line": 1286
     },
     {
       "key": "Prediction jitter is obvious, prediction timing is changing",
@@ -23430,7 +23430,7 @@
       "line": 101
     },
     {
-      "key": "Prediction Latency",
+      "key": "Prediction Lead",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
       "context": "",
@@ -23448,7 +23448,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1192
+      "line": 1285
     },
     {
       "key": "Prediction lead is high, check prediction settings and server timing",
@@ -23757,6 +23757,34 @@
       "source": "src/engine/shared/config_variables_tclient.h",
       "context": "",
       "line": 86
+    },
+    {
+      "key": "Process UDP RX (est.)",
+      "category": "indirect",
+      "source": "src/game/client/components/tclient/statusbar.h",
+      "context": "",
+      "line": 65
+    },
+    {
+      "key": "Process UDP RX (est.)",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
+      "context": "",
+      "line": 1178
+    },
+    {
+      "key": "Process UDP TX (est.)",
+      "category": "indirect",
+      "source": "src/game/client/components/tclient/statusbar.h",
+      "context": "",
+      "line": 67
+    },
+    {
+      "key": "Process UDP TX (est.)",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
+      "context": "",
+      "line": 1179
     },
     {
       "key": "Profile Options",
@@ -24435,14 +24463,14 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5658
+      "line": 5783
     },
     {
       "key": "Quit the client",
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5659
+      "line": 5784
     },
     {
       "key": "Quitting. Please wait…",
@@ -24750,7 +24778,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5668
+      "line": 5793
     },
     {
       "key": "Receive Rate",
@@ -25261,7 +25289,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5685
+      "line": 5810
     },
     {
       "key": "Remove a skin from the favorites",
@@ -25933,7 +25961,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 4862
+      "line": 4987
     },
     {
       "key": "Reply",
@@ -26139,13 +26167,6 @@
       "line": 579
     },
     {
-      "key": "Resend Loss",
-      "category": "indirect",
-      "source": "src/game/client/components/tclient/statusbar.h",
-      "context": "",
-      "line": 63
-    },
-    {
       "key": "Reset",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/hud_editor.cpp",
@@ -26269,7 +26290,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5656
+      "line": 5781
     },
     {
       "key": "Reset filter",
@@ -26437,7 +26458,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5660
+      "line": 5785
     },
     {
       "key": "Restarting. Please wait…",
@@ -26643,6 +26664,13 @@
       "line": 501
     },
     {
+      "key": "Round-trip time",
+      "category": "indirect",
+      "source": "src/game/client/components/tclient/statusbar.h",
+      "context": "",
+      "line": 55
+    },
+    {
       "key": "Rounded caps",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/menus_settings.cpp",
@@ -26668,14 +26696,14 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 905
+      "line": 983
     },
     {
       "key": "RTT",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1186
+      "line": 1279
     },
     {
       "key": "Rule line 1.",
@@ -26906,7 +26934,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5691
+      "line": 5816
     },
     {
       "key": "Save all changes before switching selected button?",
@@ -27837,7 +27865,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5675
+      "line": 5800
     },
     {
       "key": "Send target language",
@@ -28173,7 +28201,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5689
+      "line": 5814
     },
     {
       "key": "Set ddrace team for a player",
@@ -29895,7 +29923,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5665
+      "line": 5790
     },
     {
       "key": "Show outlines only on entity layer",
@@ -30791,7 +30819,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5664
+      "line": 5789
     },
     {
       "key": "Simple",
@@ -31242,67 +31270,67 @@
       "line": 4322
     },
     {
-      "key": "Snapshot Gap",
+      "key": "Snapshot Age",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
       "context": "",
       "line": 61
     },
     {
-      "key": "Snapshot gap",
+      "key": "Snapshot age",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
       "context": "",
       "line": 61
     },
     {
-      "key": "Snapshot gap",
+      "key": "Snapshot age",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 907
+      "line": 985
     },
     {
-      "key": "Snapshot gap",
+      "key": "Snapshot age",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1187
-    },
-    {
-      "key": "Snapshot Latency",
-      "category": "indirect",
-      "source": "src/game/client/components/tclient/statusbar.h",
-      "context": "",
-      "line": 55
+      "line": 1280
     },
     {
       "key": "Snapshot payload",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1090
+      "line": 1180
     },
     {
       "key": "Snapshot payload",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1189
+      "line": 1282
     },
     {
       "key": "Snapshot rate",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1091
+      "line": 1181
     },
     {
-      "key": "Snapshot rate",
+      "key": "Snapshot rate / parts",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1188
+      "line": 1281
+    },
+    {
+      "key": "Snapshot tick gap",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
+      "context": "",
+      "line": 1287
     },
     {
       "key": "Social",
@@ -31477,7 +31505,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 4058
+      "line": 4165
     },
     {
       "key": "Sound volume",
@@ -31918,14 +31946,14 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5679
+      "line": 5804
     },
     {
       "key": "Start recording a video",
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5671
+      "line": 5796
     },
     {
       "key": "Statboard",
@@ -32170,14 +32198,14 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5680
+      "line": 5805
     },
     {
       "key": "Stop recording a video",
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5672
+      "line": 5797
     },
     {
       "key": "Stop rendering text overlays in editor or with entities: higher = less detail = faster",
@@ -32324,7 +32352,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 3815
+      "line": 3922
     },
     {
       "key": "Sudden Death",
@@ -32695,7 +32723,7 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5667
+      "line": 5792
     },
     {
       "key": "Taper trail ends",
@@ -33563,7 +33591,7 @@
       "category": "localize_or_localizable",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 4058
+      "line": 4165
     },
     {
       "key": "The extra menu button which toggles visibility of buttons with \"Extra Menu\" visibilities. Also opens the ingame menu on long press.",
@@ -34544,41 +34572,6 @@
       "source": "src/game/client/components/menus.cpp",
       "context": "",
       "line": 2683
-    },
-    {
-      "key": "Total UDP RX (est.)",
-      "category": "indirect",
-      "source": "src/game/client/components/tclient/statusbar.h",
-      "context": "",
-      "line": 65
-    },
-    {
-      "key": "Total UDP RX (est.)",
-      "category": "localize_or_localizable",
-      "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
-      "context": "",
-      "line": 1088
-    },
-    {
-      "key": "Total UDP RX (est.)",
-      "category": "localize_or_localizable",
-      "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
-      "context": "",
-      "line": 1196
-    },
-    {
-      "key": "Total UDP TX (est.)",
-      "category": "indirect",
-      "source": "src/game/client/components/tclient/statusbar.h",
-      "context": "",
-      "line": 67
-    },
-    {
-      "key": "Total UDP TX (est.)",
-      "category": "localize_or_localizable",
-      "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
-      "context": "",
-      "line": 1089
     },
     {
       "key": "Total: %d save(s)",
@@ -36139,14 +36132,14 @@
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5683
+      "line": 5808
     },
     {
       "key": "Use this before `add_favorite` to group favorites. End with `end_favorite_group`",
       "category": "register_help",
       "source": "src/engine/client/client.cpp",
       "context": "",
-      "line": 5682
+      "line": 5807
     },
     {
       "key": "Use warlist colors instead of regular colors",
@@ -36534,6 +36527,13 @@
       "line": 5593
     },
     {
+      "key": "Vital Resend Queue",
+      "category": "indirect",
+      "source": "src/game/client/components/tclient/statusbar.h",
+      "context": "",
+      "line": 63
+    },
+    {
       "key": "Vital resend queue",
       "category": "indirect",
       "source": "src/game/client/components/tclient/statusbar.h",
@@ -36545,7 +36545,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "context": "",
-      "line": 1195
+      "line": 1289
     },
     {
       "key": "Voice",

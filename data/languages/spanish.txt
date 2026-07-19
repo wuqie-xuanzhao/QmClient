@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == Muestra el uso de memoria del proceso DDNet
 
-Displays estimated total UDP receive rate
-== Mostrar la tasa total estimada de recepción UDP
+Displays estimated process UDP receive rate
+== Mostrar la tasa estimada de recepción UDP del proceso
 
-Displays estimated total UDP send rate
-== Mostrar la tasa total estimada de envío UDP
+Displays estimated process UDP send rate
+== Mostrar la tasa estimada de envío UDP del proceso
 
 Displays prediction timing jitter
 == Mostrar la fluctuación temporal de la predicción
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == Mostrar el adelanto de predicción del cliente
 
-Displays the interval between complete snapshots
-== Mostrar el intervalo entre instantáneas completas
+Displays the game connection round-trip time
+== Mostrar el tiempo de ida y vuelta de la conexión del juego
 
 Displays the number of unacknowledged vital chunks
 == Mostrar el número de fragmentos vitales no confirmados
 
-Displays the server ping round-trip time
-== Mostrar el tiempo de ida y vuelta del ping al servidor
+Displays the time since the last complete snapshot
+== Mostrar el tiempo desde la última instantánea completa
 
 Displays X and Y velocity
 == Muestra la velocidad X e Y
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == La fluctuación de predicción es evidente y el tiempo de predicción cambia
 
-Prediction Latency
-== Latencia de predicción
+Prediction Lead
+== Adelanto de predicción
 
 Prediction lead
 == Adelanto de predicción
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == Probabilidad de enviar mensaje de chat al congelarse (0-100%)
+
+Process UDP RX (est.)
+== Recepción UDP del proceso (estimada)
+
+Process UDP TX (est.)
+== Envío UDP del proceso (estimado)
 
 Profile Options
 == Opciones de Perfil
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == Rescue: el modo automático teletransporta fuera de congelación; el modo manual registra un punto de rescate al aterrizar y teletransporta al congelarse
 
-Resend Loss
-== Pérdida por reenvío
-
 Reset
 == Reiniciar
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == Ronda %d/%d
+
+Round-trip time
+== Tiempo de ida y vuelta
 
 Rounded caps
 == Extremos redondeados
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == Umbral de ajuste
 
-Snapshot Gap
-== Intervalo de instantáneas
+Snapshot Age
+== Antigüedad de la instantánea
 
-Snapshot gap
-== Intervalo de instantáneas
-
-Snapshot Latency
-== Latencia de snapshots
+Snapshot age
+== Antigüedad de la instantánea
 
 Snapshot payload
 == Carga útil de instantáneas
 
 Snapshot rate
 == Tasa de instantáneas
+
+Snapshot rate / parts
+== Tasa de instantáneas / partes
+
+Snapshot tick gap
+== Intervalo de ticks de instantáneas
 
 Social
 == Social
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == Amigos totales
 
-Total UDP RX (est.)
-== Recepción UDP total (estimada)
-
-Total UDP TX (est.)
-== Envío UDP total (estimado)
-
 Total: %d save(s)
 == Total: %d guardado(s)
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == Visuales
+
+Vital Resend Queue
+== Cola de reenvío de fragmentos vitales
 
 Vital resend queue
 == Cola de reenvío de fragmentos vitales

@@ -48,20 +48,20 @@ struct SQmNetworkMetrics
 	};
 
 	float m_PingMs = -1.0f;
-	float m_PredictionLeadMs = 0.0f;
-	float m_PredictionMarginMs = 0.0f;
+	float m_PredictionLeadMs = -1.0f;
+	float m_PredictionMarginMs = -1.0f;
 	float m_PredictionJitterMs = -1.0f;
 	float m_SnapshotGapMs = -1.0f;
 	int m_SnapshotTickGap = -1;
 	float m_SnapshotRatePerSec = -1.0f;
 	float m_SnapshotPayloadBytesPerSec = -1.0f;
 	float m_SnapshotPartRatePerSec = -1.0f;
-	float m_GameTimeMarginMs = 0.0f;
-	float m_GameTimeCorrectionMs = 0.0f;
-	float m_GameTimeAheadRatePct = 0.0f;
-	float m_DownPayloadBytesPerSec = 0.0f;
-	float m_UpPayloadBytesPerSec = 0.0f;
-	int m_VitalResendCount = 0;
+	float m_GameTimeMarginMs = std::numeric_limits<float>::quiet_NaN();
+	float m_GameTimeCorrectionMs = -1.0f;
+	float m_GameTimeAheadRatePct = -1.0f;
+	float m_DownPayloadBytesPerSec = -1.0f;
+	float m_UpPayloadBytesPerSec = -1.0f;
+	int m_VitalResendCount = -1;
 	STrafficStats m_Send;
 	STrafficStats m_Recv;
 	bool m_ConnectionProblems = false;
@@ -80,7 +80,7 @@ struct SQmPerformanceMetrics
 
 	float m_Fps = 0.0f;
 	float m_FrameTimeMs = 0.0f;
-	float m_FrameTimeP95Ms = 0.0f;
+	float m_FrameTimeP95Ms = -1.0f;
 	float m_FrameTimeUs = 0.0f;
 	float m_CpuUsagePct = -1.0f;
 	float m_TotalCpuUsagePct = -1.0f;
@@ -212,7 +212,7 @@ inline float QmComputeMonitoringUiScale(float ScreenWidth, float ScreenHeight)
 
 inline float QmComputeRateKibPerSec(float BytesPerSec)
 {
-	return BytesPerSec <= 0.0f ? 0.0f : BytesPerSec / 1024.0f;
+	return !std::isfinite(BytesPerSec) || BytesPerSec <= 0.0f ? 0.0f : BytesPerSec / 1024.0f;
 }
 
 inline float QmComputeMonitoringPanelOpacity(int OpacityPercent)
@@ -222,7 +222,7 @@ inline float QmComputeMonitoringPanelOpacity(int OpacityPercent)
 
 inline float QmNormalizeProcessCpuUsagePct(float RawCpuUsagePct, unsigned CpuCount)
 {
-	if(RawCpuUsagePct < 0.0f)
+	if(!std::isfinite(RawCpuUsagePct) || RawCpuUsagePct < 0.0f)
 		return -1.0f;
 	if(CpuCount == 0)
 		return std::clamp(RawCpuUsagePct, 0.0f, 100.0f);
@@ -243,6 +243,8 @@ inline float QmComputeTotalCpuUsagePct(uint64_t PrevIdle, uint64_t PrevTotal, ui
 
 inline float QmComputeRollbackMs(float GameTimeMarginMs)
 {
+	if(!std::isfinite(GameTimeMarginMs))
+		return -1.0f;
 	return GameTimeMarginMs < 0.0f ? -GameTimeMarginMs : 0.0f;
 }
 
@@ -273,9 +275,16 @@ inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(const NETSTATS &Pr
 	Stats.m_OverheadBytes = Stats.m_Packets * OverheadSize;
 	Stats.m_TotalBytes = Stats.m_PayloadBytes + Stats.m_OverheadBytes;
 	Stats.m_AveragePayloadBytes = Stats.m_Packets == 0 ? 0 : Stats.m_PayloadBytes / Stats.m_Packets;
-	if(SampleIntervalSec > 0.0f)
+	if(std::isfinite(SampleIntervalSec) && SampleIntervalSec > 0.0f)
 		Stats.m_RateKibPerSec = (float)Stats.m_TotalBytes / 1024.0f / SampleIntervalSec;
 	return Stats;
+}
+
+inline float QmComputeCounterRate(uint64_t Previous, uint64_t Current, float SampleIntervalSec)
+{
+	if(Current < Previous || !std::isfinite(SampleIntervalSec) || SampleIntervalSec <= 0.0f)
+		return -1.0f;
+	return (float)(Current - Previous) / SampleIntervalSec;
 }
 
 inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(uint64_t PrevPackets, uint64_t PrevBytes, uint64_t CurrentPackets, uint64_t CurrentBytes, float SampleIntervalSec)
@@ -291,7 +300,7 @@ inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(uint64_t PrevPacke
 
 inline void FormatMetricValue(char *pBuf, int BufSize, const char *pUnit, float Value, int Precision = 0)
 {
-	if(Value < 0.0f)
+	if(!std::isfinite(Value) || Value < 0.0f)
 	{
 		str_copy(pBuf, "--", BufSize);
 		return;
@@ -304,7 +313,7 @@ inline void FormatMetricValue(char *pBuf, int BufSize, const char *pUnit, float 
 
 inline void FormatRateValue(char *pBuf, int BufSize, float BytesPerSec)
 {
-	if(BytesPerSec < 0.0f)
+	if(!std::isfinite(BytesPerSec) || BytesPerSec < 0.0f)
 	{
 		str_copy(pBuf, "--", BufSize);
 		return;
@@ -319,12 +328,12 @@ inline void FormatRateValue(char *pBuf, int BufSize, float BytesPerSec)
 
 inline void FormatCpuRatioValue(char *pBuf, int BufSize, float ProcessCpuPct, float TotalCpuPct)
 {
-	if(ProcessCpuPct < 0.0f)
+	if(!std::isfinite(ProcessCpuPct) || ProcessCpuPct < 0.0f)
 	{
 		str_copy(pBuf, "--", BufSize);
 		return;
 	}
-	if(TotalCpuPct < 0.0f)
+	if(!std::isfinite(TotalCpuPct) || TotalCpuPct < 0.0f)
 	{
 		str_format(pBuf, BufSize, "%.0f%%", ProcessCpuPct);
 		return;
@@ -370,7 +379,7 @@ template<size_t N>
 inline float QmComputeHistoryPercentile(const std::array<float, N> &aHistory, int HistoryHead, int HistoryCount, float Percentile)
 {
 	if(HistoryCount <= 0)
-		return 0.0f;
+		return -1.0f;
 
 	const int Count = std::min(HistoryCount, (int)aHistory.size());
 	const int Start = (HistoryHead - Count + (int)aHistory.size()) % (int)aHistory.size();
@@ -383,7 +392,7 @@ inline float QmComputeHistoryPercentile(const std::array<float, N> &aHistory, in
 			aValues[ValidCount++] = Value;
 	}
 	if(ValidCount == 0)
-		return 0.0f;
+		return -1.0f;
 	std::sort(aValues.begin(), aValues.begin() + ValidCount);
 
 	const float NormalizedPercentile = std::clamp(Percentile, 0.0f, 100.0f) / 100.0f;

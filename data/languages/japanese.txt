@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == DDNet プロセスメモリ使用量を表示
 
-Displays estimated total UDP receive rate
-== 推定された UDP 受信合計レートを表示
+Displays estimated process UDP receive rate
+== 推定されたプロセス UDP 受信レートを表示
 
-Displays estimated total UDP send rate
-== 推定された UDP 送信合計レートを表示
+Displays estimated process UDP send rate
+== 推定されたプロセス UDP 送信レートを表示
 
 Displays prediction timing jitter
 == 予測タイミングのジッターを表示
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == クライアントの予測先行時間を表示
 
-Displays the interval between complete snapshots
-== 完全なスナップショット間の間隔を表示
+Displays the game connection round-trip time
+== ゲーム接続の往復時間を表示
 
 Displays the number of unacknowledged vital chunks
 == 未確認の重要チャンク数を表示
 
-Displays the server ping round-trip time
-== サーバーへの Ping 往復時間を表示
+Displays the time since the last complete snapshot
+== 最後の完全なスナップショットからの経過時間を表示
 
 Displays X and Y velocity
 == X と Y の速度を表示
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == 予測ジッターが目立ち、予測タイミングが変化しています
 
-Prediction Latency
-== 予測レイテンシ
+Prediction Lead
+== 予測先行時間
 
 Prediction lead
 == 予測先行時間
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == フリーズチャットメッセージを送信する確率 (0-100%)
+
+Process UDP RX (est.)
+== プロセス UDP 受信（推定）
+
+Process UDP TX (est.)
+== プロセス UDP 送信（推定）
 
 Profile Options
 == プロファイルオプション
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == レスキュー：自動モードはフリーズからテレポート；手動モードは着地時にレスキューポイントを記録し、フリーズ時にテレポート
 
-Resend Loss
-== ロス再送
-
 Reset
 == リセット
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == ラウンド %d/%d
+
+Round-trip time
+== 往復時間
 
 Rounded caps
 == 丸キャップ
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == スナップしきい値
 
-Snapshot Gap
-== スナップショット間隔
+Snapshot Age
+== スナップショット経過時間
 
-Snapshot gap
-== スナップショット間隔
-
-Snapshot Latency
-== スナップショットレイテンシ
+Snapshot age
+== スナップショット経過時間
 
 Snapshot payload
 == スナップショットのペイロード
 
 Snapshot rate
 == スナップショットレート
+
+Snapshot rate / parts
+== スナップショットレート / パーツ
+
+Snapshot tick gap
+== スナップショット tick 間隔
 
 Social
 == ソーシャル
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == フレンド総数
 
-Total UDP RX (est.)
-== 合計 UDP 受信（推定）
-
-Total UDP TX (est.)
-== 合計 UDP 送信（推定）
-
 Total: %d save(s)
 == 合計: %d 個のセーブ
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == ビジュアル
+
+Vital Resend Queue
+== 重要チャンクの再送キュー
 
 Vital resend queue
 == 重要チャンクの再送キュー

@@ -2849,11 +2849,11 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == Wyświetla użycie pamięci procesu DDNet
 
-Displays estimated total UDP receive rate
-== Pokaż szacowaną całkowitą szybkość odbioru UDP
+Displays estimated process UDP receive rate
+== Pokaż szacowaną szybkość odbierania UDP przez proces
 
-Displays estimated total UDP send rate
-== Pokaż szacowaną całkowitą szybkość wysyłania UDP
+Displays estimated process UDP send rate
+== Pokaż szacowaną szybkość wysyłania UDP przez proces
 
 Displays prediction timing jitter
 == Pokaż jitter czasowy predykcji
@@ -2861,14 +2861,14 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == Pokaż wyprzedzenie predykcji klienta
 
-Displays the interval between complete snapshots
-== Pokaż odstęp między pełnymi snapshotami
+Displays the game connection round-trip time
+== Pokaż czas pełnego obiegu połączenia z grą
 
 Displays the number of unacknowledged vital chunks
 == Pokaż liczbę niepotwierdzonych ważnych fragmentów
 
-Displays the server ping round-trip time
-== Pokaż czas pełnego obiegu Pingu do serwera
+Displays the time since the last complete snapshot
+== Pokaż czas od ostatniego pełnego snapshota
 
 Displays X and Y velocity
 == Wyświetla prędkość X i Y
@@ -7544,8 +7544,8 @@ Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
 == Jitter predykcji jest wyraźny, a czas predykcji się zmienia
 
-Prediction Latency
-== Opóźnienie predykcji
+Prediction Lead
+== Wyprzedzenie predykcji
 
 Prediction lead
 == Wyprzedzenie predykcji
@@ -7654,6 +7654,12 @@ Privately shows you your current time in this current running race in the broadc
 
 Probability of sending freeze chat message (0-100%)
 == Prawdopodobieństwo wysłania wiadomości o zamrożeniu (0-100%)
+
+Process UDP RX (est.)
+== Odbiór UDP przez proces (szac.)
+
+Process UDP TX (est.)
+== Wysyłanie UDP przez proces (szac.)
 
 Profile Options
 == Opcje profilu
@@ -8399,9 +8405,6 @@ Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 == Ratunek: tryb automatyczny teleportuje z zamrożenia; tryb ręczny zapisuje punkt ratunkowy przy lądowaniu i teleportuje po zamrożeniu
 
-Resend Loss
-== Straty retransmisji
-
 Reset
 == Resetuj
 
@@ -8548,6 +8551,9 @@ Round
 
 Round %d/%d
 == Runda %d/%d
+
+Round-trip time
+== Czas pełnego obiegu
 
 Rounded caps
 == Zaokrąglone końcówki
@@ -10196,20 +10202,23 @@ SMTC
 Snap threshold
 == Próg przyciągania
 
-Snapshot Gap
-== Odstęp snapshotów
+Snapshot Age
+== Wiek snapshota
 
-Snapshot gap
-== Odstęp snapshotów
-
-Snapshot Latency
-== Opóźnienie snapshotów
+Snapshot age
+== Wiek snapshota
 
 Snapshot payload
 == Ładunek snapshotów
 
 Snapshot rate
 == Częstotliwość snapshotów
+
+Snapshot rate / parts
+== Częstotliwość snapshotów / części
+
+Snapshot tick gap
+== Odstęp ticków snapshotów
 
 Social
 == Społecznościowe
@@ -11291,12 +11300,6 @@ Total
 Total friends
 == Łącznie znajomych
 
-Total UDP RX (est.)
-== Całkowity odbiór UDP (szac.)
-
-Total UDP TX (est.)
-== Całkowite wysyłanie UDP (szac.)
-
 Total: %d save(s)
 == Razem: %d save'ów
 
@@ -11917,6 +11920,9 @@ Visual: Nameplates
 
 Visuals
 == Wizualne
+
+Vital Resend Queue
+== Kolejka ponownych wysyłek ważnych fragmentów
 
 Vital resend queue
 == Kolejka ponownych wysyłek ważnych fragmentów

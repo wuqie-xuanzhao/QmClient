@@ -307,7 +307,7 @@ float CStatusBar::PacketLossWidth()
 void CStatusBar::PacketLossRender()
 {
 	char aBuf[32];
-	str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_VitalResendCount);
+	FormatMetricValue(aBuf, sizeof(aBuf), "", (float)GameClient()->m_QmMonitoring.Snapshot().m_Network.m_VitalResendCount);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 

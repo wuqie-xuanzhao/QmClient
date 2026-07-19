@@ -948,13 +948,13 @@ Displays current prediction value
 Displays current zoom value
 Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
-Displays estimated total UDP receive rate
-Displays estimated total UDP send rate
+Displays estimated process UDP receive rate
+Displays estimated process UDP send rate
 Displays prediction timing jitter
 Displays the client's prediction lead
-Displays the interval between complete snapshots
+Displays the game connection round-trip time
 Displays the number of unacknowledged vital chunks
-Displays the server ping round-trip time
+Displays the time since the last complete snapshot
 Displays X and Y velocity
 Displays your current angle in degrees
 Displays your frames per second
@@ -2513,7 +2513,7 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 Prediction jitter
 Prediction jitter is obvious, prediction timing is changing
-Prediction Latency
+Prediction Lead
 Prediction lead
 Prediction lead is high, check prediction settings and server timing
 Prediction Margin
@@ -2550,6 +2550,8 @@ Prioritize outgoing game traffic on Windows (best effort)
 Privately messages someone's current time in this current running race (your time by default)
 Privately shows you your current time in this current running race in the broadcast message
 Probability of sending freeze chat message (0-100%)
+Process UDP RX (est.)
+Process UDP TX (est.)
 Profile Options
 Profiles
 Profiles file
@@ -2798,7 +2800,6 @@ Rescue mode switched to %s
 Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
-Resend Loss
 Reset
 Reset a config to its default value
 Reset All
@@ -2848,6 +2849,7 @@ Rotate all server player skins
 Rotate hammer with cursor like other weapons
 Round
 Round %d/%d
+Round-trip time
 Rounded caps
 Route Echo messages to notifications
 RTT
@@ -3397,11 +3399,12 @@ Smooth zoom animation time in editor (in ms, 0=off)
 Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 Snap threshold
-Snapshot Gap
-Snapshot gap
-Snapshot Latency
+Snapshot Age
+Snapshot age
 Snapshot payload
 Snapshot rate
+Snapshot rate / parts
+Snapshot tick gap
 Social
 Solid
 Solid tile outline opacity
@@ -3762,8 +3765,6 @@ Too many translation tasks
 Toolbox page
 Total
 Total friends
-Total UDP RX (est.)
-Total UDP TX (est.)
 Total: %d save(s)
 Traditional
 Trail alpha
@@ -3971,6 +3972,7 @@ Visual: Effects
 Visual: Font & Cursor
 Visual: Nameplates
 Visuals
+Vital Resend Queue
 Vital resend queue
 Voice
 Voice activation release delay
