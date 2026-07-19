@@ -85,6 +85,8 @@
 
 namespace
 {
+	constexpr int DUMMY_HAMMER_RESENDS = 2;
+
 	void NormalizeSixupSkinName(char *pSkinName, int SkinNameSize)
 	{
 		if(!CSkin::IsValidName(pSkinName))
@@ -1125,6 +1127,7 @@ int CGameClient::OnSnapInput(int *pData, bool Dummy, bool Force)
 
 	if(!g_Config.m_ClDummyHammer)
 	{
+		m_DummyHammerResends = 0;
 		if(m_DummyFire != 0)
 		{
 			m_DummyInput.m_Fire = (m_HammerInput.m_Fire + 1) & ~1;
@@ -1143,11 +1146,19 @@ int CGameClient::OnSnapInput(int *pData, bool Dummy, bool Force)
 	if(m_DummyFire % 25 != 0)
 	{
 		m_DummyFire++;
+		// 重复发送最新的 Fire counter，避免单个非 Vital 输入包丢失导致吞锤。
+		if(m_DummyHammerResends > 0)
+		{
+			m_DummyHammerResends--;
+			mem_copy(pData, &m_HammerInput, sizeof(m_HammerInput));
+			return sizeof(m_HammerInput);
+		}
 		return 0;
 	}
 	m_DummyFire++;
 
 	m_HammerInput.m_Fire = (m_HammerInput.m_Fire + 1) | 1;
+	m_DummyHammerResends = DUMMY_HAMMER_RESENDS;
 	m_HammerInput.m_WantedWeapon = WEAPON_HAMMER + 1;
 	if(!g_Config.m_ClDummyRestoreWeapon)
 		m_DummyInput.m_WantedWeapon = WEAPON_HAMMER + 1;
@@ -1319,6 +1330,7 @@ void CGameClient::OnReset()
 	m_DummyInput = {};
 	m_HammerInput = {};
 	m_DummyFire = 0;
+	m_DummyHammerResends = 0;
 	m_ReceivedDDNetPlayer = false;
 	m_ReceivedDDNetPlayerFinishTimes = false;
 	m_ReceivedDDNetPlayerFinishTimesMillis = false;
