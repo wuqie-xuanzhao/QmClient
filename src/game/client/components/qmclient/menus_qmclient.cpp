@@ -1730,6 +1730,7 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 		RenderCheckbox(&g_Config.m_QmGoresFastInput, "qmclient-gores-fast-input", "Auto-toggle fast input", &g_Config.m_QmGoresFastInput);
 		RenderCheckbox(&g_Config.m_QmGoresFastInputOthers, "qmclient-gores-fast-input-others", "Auto-toggle fast input others", &g_Config.m_QmGoresFastInputOthers);
 		RenderCheckbox(&g_Config.m_QmGoresDisableIfWeapons, "qmclient-gores-disable-if-weapons", "Disable after picking up other weapons", &g_Config.m_QmGoresDisableIfWeapons);
+		RenderCheckbox(&g_Config.m_QmGoresDisableDummyHammer, "qmclient-gores-disable-dummy-hammer", "Temporarily disable dummy hammering", &g_Config.m_QmGoresDisableDummyHammer);
 		RenderCheckbox(&g_Config.m_QmGoresHideGuides, "qmclient-gores-hide-guides", "Hide guide lines", &g_Config.m_QmGoresHideGuides, 0.35f);
 	}
 
@@ -4946,7 +4947,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		case EQmModuleId::Gores:
 			return Row() + LineHeight +
 			       (g_Config.m_QmAxiomAutoLogin ? Row(0.35f) * 2.0f : 0.0f) + Row(0.35f) +
-			       ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? Row() * 5.0f : 0.0f) + LineHeight;
+			       ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? Row() * 6.0f : 0.0f) + LineHeight;
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
 		case EQmModuleId::MiniFeatures: return Rows(16.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;

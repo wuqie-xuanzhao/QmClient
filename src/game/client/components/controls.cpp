@@ -61,6 +61,8 @@ void CControls::OnReset()
 		AmmoCount = 0;
 	for(bool &HadLocalCharacter : s_aQmHadLocalCharacter)
 		HadLocalCharacter = false;
+	std::fill(std::begin(m_aQmRespawnWantedWeapon), std::end(m_aQmRespawnWantedWeapon), 0);
+	std::fill(std::begin(m_aQmRespawnWeaponPending), std::end(m_aQmRespawnWeaponPending), false);
 
 	m_LastSendTime = 0;
 }
@@ -83,7 +85,10 @@ void CControls::OnPlayerDeath()
 {
 	for(int &AmmoCount : m_aAmmoCount)
 		AmmoCount = 0;
-	s_aQmHadLocalCharacter[g_Config.m_ClDummy] = false;
+	const int Dummy = std::clamp(g_Config.m_ClDummy, 0, NUM_DUMMIES - 1);
+	s_aQmHadLocalCharacter[Dummy] = false;
+	m_aQmRespawnWantedWeapon[Dummy] = 0;
+	m_aQmRespawnWeaponPending[Dummy] = false;
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -404,11 +409,28 @@ void CControls::OnRender()
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
 		const bool HasActiveCharacter = QmDummyHasActiveCharacter(GameClient(), Dummy);
-		if(Dummy == g_Config.m_ClDummy && HasActiveCharacter && !s_aQmHadLocalCharacter[Dummy])
+		if(HasActiveCharacter && !s_aQmHadLocalCharacter[Dummy])
 		{
-			const int WantedWeapon = QmRespawnDefaultWantedWeapon();
-			if(WantedWeapon > 0)
+			m_aQmRespawnWantedWeapon[Dummy] = QmRespawnDefaultWantedWeapon();
+			m_aQmRespawnWeaponPending[Dummy] = m_aQmRespawnWantedWeapon[Dummy] > 0;
+		}
+		if(HasActiveCharacter && m_aQmRespawnWeaponPending[Dummy])
+		{
+			const int WantedWeapon = m_aQmRespawnWantedWeapon[Dummy];
+			const int Weapon = WantedWeapon - 1;
+			const int LocalId = GameClient()->m_aLocalIds[Dummy];
+			const bool HasWeapon = Weapon <= WEAPON_GUN ||
+					       (LocalId >= 0 && LocalId < MAX_CLIENTS && Weapon >= 0 && Weapon < NUM_WEAPONS && GameClient()->m_aClients[LocalId].m_Predicted.m_aWeapons[Weapon].m_Got);
+			if(HasWeapon)
+			{
 				m_aInputData[Dummy].m_WantedWeapon = WantedWeapon;
+				m_aQmRespawnWeaponPending[Dummy] = false;
+			}
+		}
+		else if(!HasActiveCharacter)
+		{
+			m_aQmRespawnWantedWeapon[Dummy] = 0;
+			m_aQmRespawnWeaponPending[Dummy] = false;
 		}
 		s_aQmHadLocalCharacter[Dummy] = HasActiveCharacter;
 	}

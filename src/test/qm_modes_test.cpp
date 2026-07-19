@@ -166,6 +166,25 @@ TEST(QmGoresMode, ActiveGoresClearsDummyHammerState)
 	EXPECT_FALSE(Changed);
 }
 
+TEST(QmGoresMode, DummyHammerOverrideRestoresOnlyAutomaticChanges)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 0, Changed), 0);
+	EXPECT_FALSE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, false, true, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
+
+	State = {};
+	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 1, Changed), 0);
+	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, false, true, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+}
+
 TEST(QmGoresMode, HammerWakeupRequiresHeldHammerAndExternalWakeup)
 {
 	EXPECT_TRUE(ShouldTriggerQmGoresHammerWakeup(true, true, true));

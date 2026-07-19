@@ -8462,8 +8462,8 @@ Resource preview VRAM budget override (MB, 0=auto)
 Resource preview VRAM budget percentage (based on device local VRAM budget)
 == 資源預覽顯存預算百分比（基於設備本地顯存預算）
 
-Respawn default weapon
-== 重生默認武器
+Respawn default weapon (when owned)
+== 重生預設武器（僅限已擁有）
 
 Restart
 == 重新開始
@@ -10897,6 +10897,12 @@ Teleports you to teleporter i
 
 Teletile overlay alpha (0-100)
 == Teletile 的覆蓋實體 alpha (0-100)
+
+Temporarily disable dummy hammering
+== 暫時停用分身錘
+
+Temporarily disable dummy hammering in Gores mode
+== 在 Gores 模式中暫時停用分身錘
 
 Temporarily set a config value while pressed
 == 按下時臨時設置配置值

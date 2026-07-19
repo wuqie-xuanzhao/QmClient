@@ -66,6 +66,11 @@ int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Chan
 	return 0;
 }
 
+int ApplyQmGoresDummyHammerOverride(SQmFocusConfigOverrideState &State, bool GoresActive, bool Disable, int CurrentValue, bool &Changed)
+{
+	return ApplyQmFocusConfigOverride(State, GoresActive && Disable, CurrentValue, 0, Changed);
+}
+
 bool ShouldKeepQmGoresHammerInFreeze(bool GoresCycleActive, bool InFreeze, bool HammerRequested)
 {
 	return GoresCycleActive && InFreeze && HammerRequested;

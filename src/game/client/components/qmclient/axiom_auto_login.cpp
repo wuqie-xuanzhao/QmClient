@@ -101,6 +101,7 @@ void CQmAxiomAutoLogin::ResetState()
 	m_AutoLoginHardFailed = false;
 	m_AutoLoginAttempts = 0;
 	m_AutoLoginNextTryTick = 0;
+	m_AutoLoginEnabledLastFrame = false;
 	m_aAutoLoginServer[0] = '\0';
 	m_DummyAutoLoginSent = false;
 	m_DummyWasConnected = false;
@@ -231,10 +232,21 @@ void CQmAxiomAutoLogin::OnMessage(int MsgType, void *pRawMsg)
 
 void CQmAxiomAutoLogin::OnUpdate()
 {
-	if(Client()->State() != IClient::STATE_ONLINE || g_Config.m_QmAxiomAutoLogin == 0)
+	if(Client()->State() != IClient::STATE_ONLINE)
+	{
+		return;
+	}
+	if(g_Config.m_QmAxiomAutoLogin == 0)
+	{
+		if(m_AutoLoginEnabledLastFrame)
+			ResetState();
+		m_AutoLoginEnabledLastFrame = false;
+		return;
+	}
+	if(!m_AutoLoginEnabledLastFrame)
 	{
 		ResetState();
-		return;
+		m_AutoLoginEnabledLastFrame = true;
 	}
 	if(!IsAxiomCommunity())
 	{
@@ -304,6 +316,7 @@ void CQmAxiomAutoLogin::OnUpdate()
 void CQmAxiomAutoLogin::OnStateChange(int NewState, int OldState)
 {
 	CComponent::OnStateChange(NewState, OldState);
-	if(NewState != IClient::STATE_ONLINE || OldState != IClient::STATE_ONLINE)
+	// 地图切换通常是 ONLINE -> LOADING -> ONLINE，同一连接的认证状态应保留。
+	if(NewState == IClient::STATE_OFFLINE || NewState == IClient::STATE_DEMOPLAYBACK || OldState == IClient::STATE_DEMOPLAYBACK)
 		ResetState();
 }

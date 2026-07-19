@@ -12,6 +12,7 @@ class CQmAxiomAutoLogin : public CComponent
 	bool m_AutoLoginHardFailed = false;
 	int m_AutoLoginAttempts = 0;
 	int64_t m_AutoLoginNextTryTick = 0;
+	bool m_AutoLoginEnabledLastFrame = false;
 	char m_aAutoLoginServer[NETADDR_MAXSTRSIZE] = "";
 	bool m_DummyAutoLoginSent = false;
 	bool m_DummyWasConnected = false;

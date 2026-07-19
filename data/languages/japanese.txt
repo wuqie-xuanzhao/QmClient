@@ -8462,8 +8462,8 @@ Resource preview VRAM budget override (MB, 0=auto)
 Resource preview VRAM budget percentage (based on device local VRAM budget)
 == リソースプレビューのVRAM予算パーセント（デバイスのローカルVRAM予算に基づく）
 
-Respawn default weapon
-== リスポーン時のデフォルト武器
+Respawn default weapon (when owned)
+== リスポーン時のデフォルト武器（所持時のみ）
 
 Restart
 == 再起動
@@ -10897,6 +10897,12 @@ Teleports you to teleporter i
 
 Teletile overlay alpha (0-100)
 == テレポートタイルのエンティティアルファ (0-100)
+
+Temporarily disable dummy hammering
+== ダミーハンマーを一時的に無効化
+
+Temporarily disable dummy hammering in Gores mode
+== Goresモードでダミーハンマーを一時的に無効化
 
 Temporarily set a config value while pressed
 == 押している間、設定値を一時的に変更

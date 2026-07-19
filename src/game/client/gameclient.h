@@ -739,12 +739,16 @@ public:
 
 		std::shared_ptr<CManagedTeeRenderInfo> m_pSkinInfo = nullptr; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
+		CSkinDescriptor m_RenderInfoSkinDescriptor;
+		uint64_t m_RenderInfoSkinGeneration = 0;
+		bool m_RenderInfoFallbackResidencyRequested = false;
 		CTeeRenderInfo m_SkinTransitionPreviousRenderInfo;
 
 		class CSkinTransitionKey
 		{
 		public:
 			CSkinDescriptor m_SkinDescriptor;
+			uint64_t m_SkinGeneration = 0;
 			int m_UseCustomColor = 0;
 			int m_ColorBody = 0;
 			int m_ColorFeet = 0;
@@ -753,27 +757,8 @@ public:
 
 			bool operator==(const CSkinTransitionKey &Other) const
 			{
-				if(!(m_SkinDescriptor == Other.m_SkinDescriptor) ||
-					m_UseCustomColor != Other.m_UseCustomColor ||
-					m_ColorBody != Other.m_ColorBody ||
-					m_ColorFeet != Other.m_ColorFeet)
-				{
-					return false;
-				}
-
-				for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
-				{
-					for(int Part = 0; Part < protocol7::NUM_SKINPARTS; ++Part)
-					{
-						if(m_aaSixupUseCustomColors[Dummy][Part] != Other.m_aaSixupUseCustomColors[Dummy][Part] ||
-							m_aaSixupSkinPartColors[Dummy][Part] != Other.m_aaSixupSkinPartColors[Dummy][Part])
-						{
-							return false;
-						}
-					}
-				}
-
-				return true;
+				// 颜色变化只更新渲染颜色，不应触发皮肤切换动画。
+				return m_SkinDescriptor == Other.m_SkinDescriptor && m_SkinGeneration == Other.m_SkinGeneration;
 			}
 		} m_LastSkinTransitionKey;
 		bool m_HasSkinTransitionKey = false;
@@ -1213,6 +1198,8 @@ public:
 
 	SClientParticlesSkin m_ParticlesSkin;
 	bool m_ParticlesSkinLoaded = false;
+	int m_SpawnEventsProcessed = 0;
+	int m_SpawnEffectsDispatched = 0;
 
 	struct SClientEmoticonsSkin
 	{

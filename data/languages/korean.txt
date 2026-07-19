@@ -8462,8 +8462,8 @@ Resource preview VRAM budget override (MB, 0=auto)
 Resource preview VRAM budget percentage (based on device local VRAM budget)
 == 리소스 미리보기 VRAM 예산 백분율 (장치 로컬 VRAM 예산 기준)
 
-Respawn default weapon
-== 부활 기본 무기
+Respawn default weapon (when owned)
+== 리스폰 기본 무기 (보유한 경우)
 
 Restart
 == 다시 시작
@@ -10897,6 +10897,12 @@ Teleports you to teleporter i
 
 Teletile overlay alpha (0-100)
 == 텔레타일 오버레이 엔티티 알파 (0-100)
+
+Temporarily disable dummy hammering
+== 더미 해머링을 일시적으로 비활성화
+
+Temporarily disable dummy hammering in Gores mode
+== Gores 모드에서 더미 해머링을 일시적으로 비활성화
 
 Temporarily set a config value while pressed
 == 누르고 있는 동안 일시적으로 설정 값을 변경합니다.

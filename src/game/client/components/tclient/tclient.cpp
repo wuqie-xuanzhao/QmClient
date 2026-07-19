@@ -1709,13 +1709,30 @@ void CTClient::RandomFlag(void *pUserData)
 	g_Config.m_PlayerCountry = Flag.m_CountryCode;
 }
 
+void CTClient::ResetFinishRenameState(int Dummy)
+{
+	const int First = Dummy < 0 ? 0 : Dummy;
+	const int Last = Dummy < 0 ? NUM_DUMMIES : Dummy + 1;
+	for(int i = First; i < Last; ++i)
+	{
+		m_aFinishRenamePending[i] = false;
+		m_aFinishRenameAttempts[i] = 0;
+		m_aFinishRenamePendingSince[i] = 0;
+		m_aaFinishRenameTarget[i][0] = '\0';
+	}
+}
+
 void CTClient::DoFinishCheck()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		ResetFinishRenameState();
 		return;
+	}
 	if(g_Config.m_TcChangeNameNearFinish <= 0)
 	{
 		m_FinishTextTimeout = 0.0f;
+		ResetFinishRenameState();
 		return;
 	}
 	m_FinishTextTimeout -= Client()->RenderFrameTime();
@@ -1775,21 +1792,55 @@ void CTClient::DoFinishCheck()
 	const int Dummy = std::clamp(g_Config.m_ClDummy, 0, NUM_DUMMIES - 1);
 	const int LocalId = GameClient()->m_aLocalIds[Dummy];
 	if(LocalId < 0 || LocalId >= MAX_CLIENTS)
+	{
+		ResetFinishRenameState(Dummy);
 		return;
+	}
 	const auto &Player = GameClient()->m_aClients[LocalId];
 	if(!Player.m_Active)
+	{
+		ResetFinishRenameState(Dummy);
 		return;
+	}
 	const char *pNewName = g_Config.m_TcFinishName;
 	if(!pNewName || pNewName[0] == '\0')
+	{
+		ResetFinishRenameState(Dummy);
 		return;
+	}
+	if(str_comp(m_aaFinishRenameTarget[Dummy], pNewName) != 0)
+	{
+		str_copy(m_aaFinishRenameTarget[Dummy], pNewName, sizeof(m_aaFinishRenameTarget[Dummy]));
+		m_aFinishRenamePending[Dummy] = false;
+		m_aFinishRenameAttempts[Dummy] = 0;
+	}
 	if(str_comp(Player.m_aName, pNewName) == 0)
+	{
+		m_aFinishRenamePending[Dummy] = false;
+		m_aFinishRenameAttempts[Dummy] = 0;
 		return;
+	}
 	if(!NearFinishTile(Player.m_RenderPos, TILE_FINISH))
+	{
+		m_aFinishRenamePending[Dummy] = false;
+		m_aFinishRenameAttempts[Dummy] = 0;
+		return;
+	}
+	if(m_aFinishRenamePending[Dummy])
+	{
+		if(time_get() - m_aFinishRenamePendingSince[Dummy] < 8 * time_freq())
+			return;
+		m_aFinishRenamePending[Dummy] = false;
+	}
+	if(m_aFinishRenameAttempts[Dummy] >= 3)
 		return;
 	char aBuf[64];
 	str_format(aBuf, sizeof(aBuf), Localize("Changing name to %s near finish"), pNewName);
 	GameClient()->Echo(aBuf);
 	SendUrgentRename(Dummy, pNewName);
+	m_aFinishRenamePending[Dummy] = true;
+	m_aFinishRenamePendingSince[Dummy] = time_get();
+	m_aFinishRenameAttempts[Dummy]++;
 }
 
 bool CTClient::ServerCommandExists(const char *pCommand)
@@ -3060,6 +3111,8 @@ void CTClient::OnStateChange(int NewState, int OldState)
 	SetForcedAspect();
 	if(NewState != IClient::STATE_ONLINE)
 	{
+		ResetGoresDummyHammerOverride();
+		ResetFinishRenameState();
 		EndMapHistorySession(true);
 		m_MapHistorySuppressedMapId.clear();
 	}
@@ -4271,7 +4324,7 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 	if(TcFastInputOthersChanged)
 		g_Config.m_TcFastInputOthers = TcFastInputOthers ? 1 : 0;
 	bool DummyHammerChanged = false;
-	const int DummyHammer = ApplyQmGoresDummyHammerConfig(GoresActive, g_Config.m_ClDummyHammer, DummyHammerChanged);
+	const int DummyHammer = ApplyQmGoresDummyHammerOverride(m_GoresDummyHammerOverride, GoresActive, g_Config.m_QmGoresDisableDummyHammer != 0, g_Config.m_ClDummyHammer, DummyHammerChanged);
 	if(DummyHammerChanged)
 		g_Config.m_ClDummyHammer = DummyHammer;
 	if(!StateWasKnown)
@@ -4294,6 +4347,13 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 	{
 		GameClient()->RequestPredictionRefresh();
 	}
+}
+
+void CTClient::ResetGoresDummyHammerOverride()
+{
+	if(m_GoresDummyHammerOverride.m_WasActive && m_GoresDummyHammerOverride.m_AutoChangedValue && g_Config.m_ClDummyHammer == 0)
+		g_Config.m_ClDummyHammer = m_GoresDummyHammerOverride.m_SavedValue;
+	m_GoresDummyHammerOverride = {};
 }
 
 bool CTClient::BuildGoresDebugRoute(std::vector<vec2> &vRoutePoints, int Dummy) const

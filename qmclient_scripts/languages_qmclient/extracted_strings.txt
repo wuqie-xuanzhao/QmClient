@@ -2819,7 +2819,7 @@ Reset weapons when passing start tile
 Reset zone tuning in zone x or in all zones
 Resource preview VRAM budget override (MB, 0=auto)
 Resource preview VRAM budget percentage (based on device local VRAM budget)
-Respawn default weapon
+Respawn default weapon (when owned)
 Restart
 Restart in x seconds (0 = abort)
 Restart the client
@@ -3631,6 +3631,8 @@ Teleports player i (or you) to player i (or you to where you look at)
 Teleports you to checkpoint teleporter i
 Teleports you to teleporter i
 Teletile overlay alpha (0-100)
+Temporarily disable dummy hammering
+Temporarily disable dummy hammering in Gores mode
 Temporarily set a config value while pressed
 Temporary free camera
 Tencent Cloud

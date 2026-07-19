@@ -8462,8 +8462,8 @@ Resource preview VRAM budget override (MB, 0=auto)
 Resource preview VRAM budget percentage (based on device local VRAM budget)
 == Budżet pamięci VRAM podglądu zasobów (procent, oparty na lokalnym budżecie VRAM urządzenia)
 
-Respawn default weapon
-== Domyślna broń po odrodzeniu
+Respawn default weapon (when owned)
+== Domyślna broń po odrodzeniu (jeśli posiadana)
 
 Restart
 == Restart
@@ -10897,6 +10897,12 @@ Teleports you to teleporter i
 
 Teletile overlay alpha (0-100)
 == Alfa nakładki jednostki Teletile (0-100)
+
+Temporarily disable dummy hammering
+== Tymczasowo wyłącz młotkowanie dummy
+
+Temporarily disable dummy hammering in Gores mode
+== Tymczasowo wyłącz młotkowanie dummy w trybie Gores
 
 Temporarily set a config value while pressed
 == Tymczasowo ustaw wartość konfiguracji podczas przytrzymania

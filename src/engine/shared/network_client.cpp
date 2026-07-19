@@ -10,6 +10,9 @@
 
 #include <algorithm>
 
+static constexpr int CNET_QOS_MAX_ATTEMPTS = 3;
+static constexpr int CNET_QOS_RETRY_DELAY_SECONDS = 2;
+
 bool CNetClient::Open(NETADDR BindAddr, bool LowLatency)
 {
 	// open socket
@@ -71,6 +74,8 @@ void CNetClient::ResetQos()
 	net_qos_remove_socket(m_Qos);
 	m_Qos = nullptr;
 	m_QosAttempted = false;
+	m_QosAttemptCount = 0;
+	m_QosNextAttempt = 0;
 	m_QosStatus = m_LowLatency ? ENetQosStatus::PENDING : ENetQosStatus::DISABLED;
 }
 
@@ -99,7 +104,11 @@ void CNetClient::SetLowLatency(bool LowLatency)
 
 void CNetClient::TryConfigureQos()
 {
-	if(!m_LowLatency || m_QosAttempted || !m_QosPeerValidated || !m_Socket)
+	if(!m_LowLatency || !m_QosPeerValidated || !m_Socket)
+		return;
+	if(m_QosAttempted && (m_QosNextAttempt == 0 || time_get() < m_QosNextAttempt))
+		return;
+	if(m_QosAttemptCount >= CNET_QOS_MAX_ATTEMPTS)
 		return;
 	const NETADDR *pPeerAddr = m_Connection.PeerAddress();
 	if((pPeerAddr->type & (NETTYPE_IPV4 | NETTYPE_IPV6)) == 0)
@@ -107,7 +116,11 @@ void CNetClient::TryConfigureQos()
 
 	// qWAVE 由系统策略决定实际标记；Windows IPv4 仍保留原有低延迟 TOS，IPv6 回退为 Best Effort。
 	m_QosAttempted = true;
+	m_QosAttemptCount++;
+	m_QosNextAttempt = 0;
 	m_Qos = net_qos_add_socket(m_Socket, pPeerAddr, &m_QosStatus);
+	if(!m_Qos && m_QosStatus == ENetQosStatus::FAILED && m_QosAttemptCount < CNET_QOS_MAX_ATTEMPTS)
+		m_QosNextAttempt = time_get() + (int64_t)CNET_QOS_RETRY_DELAY_SECONDS * time_freq();
 }
 
 void CNetClient::Update()
@@ -127,6 +140,7 @@ void CNetClient::Update()
 	}
 
 	m_Connection.Update();
+	TryConfigureQos();
 	if(m_Connection.State() == CNetConnection::EState::ERROR)
 		Disconnect(m_Connection.ErrorString());
 	if(m_pStun)

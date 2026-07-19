@@ -777,6 +777,8 @@ void CGameClient::OnInit()
 
 	m_GameSkinLoaded = false;
 	m_ParticlesSkinLoaded = false;
+	m_SpawnEventsProcessed = 0;
+	m_SpawnEffectsDispatched = 0;
 	m_EmoticonsSkinLoaded = false;
 	m_HudSkinLoaded = false;
 
@@ -1293,6 +1295,8 @@ void CGameClient::OnReset()
 	m_GamePaused = false;
 
 	m_SuppressEvents = false;
+	m_SpawnEventsProcessed = 0;
+	m_SpawnEffectsDispatched = 0;
 	m_NewTick = false;
 	m_NewPredictedTick = false;
 	std::fill(std::begin(m_aPredictedHammerHitEvent), std::end(m_aPredictedHammerHitEvent), false);
@@ -4299,12 +4303,13 @@ void CGameClient::ProcessEvents()
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SPAWN)
 		{
+			m_SpawnEventsProcessed++;
 #if defined(CONF_QM_LIVE_CLIENT)
 			if(LiveRejectUnknownVisualEvent)
 				continue;
 #endif
 			const CNetEvent_Spawn *pEvent = (const CNetEvent_Spawn *)Item.m_pData;
-			m_Effects.PlayerSpawn(vec2(pEvent->m_X, pEvent->m_Y), Alpha, Volume);
+			m_SpawnEffectsDispatched += m_Effects.PlayerSpawn(vec2(pEvent->m_X, pEvent->m_Y), Alpha, Volume);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
@@ -6643,8 +6648,15 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	CSkinDescriptor RenderSkinDescriptor = SkinDescriptor;
 	CTeeRenderInfo NewRenderInfo = m_pSkinInfo->TeeRenderInfo();
 	const bool DescriptorRenderInfoReady = m_pSkinInfo->DescriptorRenderInfoReady();
+	if(m_RenderInfoSkinDescriptor != SkinDescriptor)
+		m_RenderInfoFallbackResidencyRequested = false;
 	if(!DescriptorRenderInfoReady && m_RenderInfo.Valid())
 	{
+		if(!m_RenderInfoFallbackResidencyRequested && m_RenderInfoSkinDescriptor.m_aSkinName[0] != '\0')
+		{
+			m_pGameClient->m_Skins.FindContainerOrNullptr(m_RenderInfoSkinDescriptor.m_aSkinName);
+			m_RenderInfoFallbackResidencyRequested = true;
+		}
 		const CTeeRenderInfo SkinProperties = NewRenderInfo;
 		NewRenderInfo = m_RenderInfo;
 		CopySkinColorsOnly(NewRenderInfo, SkinProperties);
@@ -6731,14 +6743,31 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		}
 	}
 
+	// 异步资源尚未提交时，继续使用上一份资源身份；否则会在空白窗口期间提前播放切换动画。
+	if(!DescriptorRenderInfoReady)
+		RenderSkinDescriptor = m_RenderInfoSkinDescriptor;
+	const auto SameTexture = [](const IGraphics::CTextureHandle &Left, const IGraphics::CTextureHandle &Right) {
+		return Left.Id() == Right.Id() && Left.Generation() == Right.Generation();
+	};
+	bool ResourceChanged = !SameTexture(m_RenderInfo.m_OriginalRenderSkin.m_Body, NewRenderInfo.m_OriginalRenderSkin.m_Body) ||
+			       !SameTexture(m_RenderInfo.m_ColorableRenderSkin.m_Body, NewRenderInfo.m_ColorableRenderSkin.m_Body);
+	for(int Dummy = 0; Dummy < NUM_DUMMIES && !ResourceChanged; ++Dummy)
+	{
+		ResourceChanged = !SameTexture(m_RenderInfo.m_aSixup[Dummy].m_aOriginalTextures[protocol7::SKINPART_BODY], NewRenderInfo.m_aSixup[Dummy].m_aOriginalTextures[protocol7::SKINPART_BODY]) ||
+				  !SameTexture(m_RenderInfo.m_aSixup[Dummy].m_aColorableTextures[protocol7::SKINPART_BODY], NewRenderInfo.m_aSixup[Dummy].m_aColorableTextures[protocol7::SKINPART_BODY]);
+	}
+	if(DescriptorRenderInfoReady && (m_RenderInfoSkinDescriptor != SkinDescriptor || ResourceChanged))
+		++m_RenderInfoSkinGeneration;
 	UpdateSkinChangeTransition(NewRenderInfo, RenderSkinDescriptor);
 	m_RenderInfo = NewRenderInfo;
+	m_RenderInfoSkinDescriptor = DescriptorRenderInfoReady ? SkinDescriptor : m_RenderInfoSkinDescriptor;
 }
 
 void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &NewRenderInfo, const CSkinDescriptor &SkinDescriptor)
 {
 	CSkinTransitionKey Key;
 	Key.m_SkinDescriptor = SkinDescriptor;
+	Key.m_SkinGeneration = m_RenderInfoSkinGeneration;
 	const int LocalDummy = LocalDummyIndex();
 	Key.m_UseCustomColor = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor) : m_UseCustomColor;
 	Key.m_ColorBody = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) : m_ColorBody;
@@ -6820,6 +6849,9 @@ const CTeeRenderInfo *CGameClient::CClientData::SkinChangePreviousRenderInfo(std
 
 void CGameClient::CClientData::Reset()
 {
+	m_RenderInfoSkinDescriptor = {};
+	m_RenderInfoSkinGeneration = 0;
+	m_RenderInfoFallbackResidencyRequested = false;
 	m_UseCustomColor = 0;
 	m_ColorBody = 0;
 	m_ColorFeet = 0;
@@ -8537,24 +8569,6 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 
 void CGameClient::LoadParticlesSkin(const char *pPath, bool AsDir)
 {
-	if(m_ParticlesSkinLoaded)
-	{
-		Graphics()->UnloadTexture(&m_ParticlesSkin.m_SpriteParticleSlice);
-		Graphics()->UnloadTexture(&m_ParticlesSkin.m_SpriteParticleBall);
-		for(auto &SpriteParticleSplat : m_ParticlesSkin.m_aSpriteParticleSplat)
-			Graphics()->UnloadTexture(&SpriteParticleSplat);
-		Graphics()->UnloadTexture(&m_ParticlesSkin.m_SpriteParticleSmoke);
-		Graphics()->UnloadTexture(&m_ParticlesSkin.m_SpriteParticleShell);
-		Graphics()->UnloadTexture(&m_ParticlesSkin.m_SpriteParticleExpl);
-		Graphics()->UnloadTexture(&m_ParticlesSkin.m_SpriteParticleAirJump);
-		Graphics()->UnloadTexture(&m_ParticlesSkin.m_SpriteParticleHit);
-
-		for(auto &SpriteParticle : m_ParticlesSkin.m_aSpriteParticles)
-			SpriteParticle = IGraphics::CTextureHandle();
-
-		m_ParticlesSkinLoaded = false;
-	}
-
 	char aPath[IO_MAX_PATH_LENGTH];
 	bool IsDefault = false;
 	if(str_comp(pPath, "default") == 0)
@@ -8572,36 +8586,65 @@ void CGameClient::LoadParticlesSkin(const char *pPath, bool AsDir)
 
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
-	if(!PngLoaded && !IsDefault)
+	const bool ValidImage = PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_PART_SLICE].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_PART_SLICE].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo);
+	if(!ValidImage && !IsDefault)
 	{
+		ImgInfo.Free();
 		if(AsDir)
 			LoadParticlesSkin("default");
 		else
 			LoadParticlesSkin(pPath, true);
 	}
-	else if(PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_PART_SLICE].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_PART_SLICE].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo))
+	else if(ValidImage)
 	{
-		m_ParticlesSkin.m_SpriteParticleSlice = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SLICE]);
-		m_ParticlesSkin.m_SpriteParticleBall = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_BALL]);
+		auto UnloadParticleSkin = [this](SClientParticlesSkin &Skin) {
+			Graphics()->UnloadTexture(&Skin.m_SpriteParticleSlice);
+			Graphics()->UnloadTexture(&Skin.m_SpriteParticleBall);
+			for(auto &Texture : Skin.m_aSpriteParticleSplat)
+				Graphics()->UnloadTexture(&Texture);
+			Graphics()->UnloadTexture(&Skin.m_SpriteParticleSmoke);
+			Graphics()->UnloadTexture(&Skin.m_SpriteParticleShell);
+			Graphics()->UnloadTexture(&Skin.m_SpriteParticleExpl);
+			Graphics()->UnloadTexture(&Skin.m_SpriteParticleAirJump);
+			Graphics()->UnloadTexture(&Skin.m_SpriteParticleHit);
+		};
+		SClientParticlesSkin Candidate;
+		Candidate.m_SpriteParticleSlice = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SLICE]);
+		Candidate.m_SpriteParticleBall = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_BALL]);
 		for(int i = 0; i < 3; ++i)
-			m_ParticlesSkin.m_aSpriteParticleSplat[i] = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SPLAT01 + i]);
-		m_ParticlesSkin.m_SpriteParticleSmoke = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SMOKE]);
-		m_ParticlesSkin.m_SpriteParticleShell = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SHELL]);
-		m_ParticlesSkin.m_SpriteParticleExpl = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_EXPL01]);
-		m_ParticlesSkin.m_SpriteParticleAirJump = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_AIRJUMP]);
-		m_ParticlesSkin.m_SpriteParticleHit = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_HIT01]);
+			Candidate.m_aSpriteParticleSplat[i] = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SPLAT01 + i]);
+		Candidate.m_SpriteParticleSmoke = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SMOKE]);
+		Candidate.m_SpriteParticleShell = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SHELL]);
+		Candidate.m_SpriteParticleExpl = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_EXPL01]);
+		Candidate.m_SpriteParticleAirJump = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_AIRJUMP]);
+		Candidate.m_SpriteParticleHit = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_HIT01]);
 
-		m_ParticlesSkin.m_aSpriteParticles[0] = m_ParticlesSkin.m_SpriteParticleSlice;
-		m_ParticlesSkin.m_aSpriteParticles[1] = m_ParticlesSkin.m_SpriteParticleBall;
+		Candidate.m_aSpriteParticles[0] = Candidate.m_SpriteParticleSlice;
+		Candidate.m_aSpriteParticles[1] = Candidate.m_SpriteParticleBall;
 		for(int i = 0; i < 3; ++i)
-			m_ParticlesSkin.m_aSpriteParticles[2 + i] = m_ParticlesSkin.m_aSpriteParticleSplat[i];
-		m_ParticlesSkin.m_aSpriteParticles[5] = m_ParticlesSkin.m_SpriteParticleSmoke;
-		m_ParticlesSkin.m_aSpriteParticles[6] = m_ParticlesSkin.m_SpriteParticleShell;
-		m_ParticlesSkin.m_aSpriteParticles[7] = m_ParticlesSkin.m_SpriteParticleExpl;
-		m_ParticlesSkin.m_aSpriteParticles[8] = m_ParticlesSkin.m_SpriteParticleAirJump;
-		m_ParticlesSkin.m_aSpriteParticles[9] = m_ParticlesSkin.m_SpriteParticleHit;
+			Candidate.m_aSpriteParticles[2 + i] = Candidate.m_aSpriteParticleSplat[i];
+		Candidate.m_aSpriteParticles[5] = Candidate.m_SpriteParticleSmoke;
+		Candidate.m_aSpriteParticles[6] = Candidate.m_SpriteParticleShell;
+		Candidate.m_aSpriteParticles[7] = Candidate.m_SpriteParticleExpl;
+		Candidate.m_aSpriteParticles[8] = Candidate.m_SpriteParticleAirJump;
+		Candidate.m_aSpriteParticles[9] = Candidate.m_SpriteParticleHit;
 
-		m_ParticlesSkinLoaded = true;
+		bool CandidateValid = true;
+		for(const auto &Texture : Candidate.m_aSpriteParticles)
+			CandidateValid &= Texture.IsValid();
+		if(CandidateValid)
+		{
+			if(m_ParticlesSkinLoaded)
+				UnloadParticleSkin(m_ParticlesSkin);
+			m_ParticlesSkin = Candidate;
+			m_ParticlesSkinLoaded = true;
+		}
+		else
+		{
+			UnloadParticleSkin(Candidate);
+			if(!IsDefault)
+				LoadParticlesSkin("default");
+		}
 	}
 	ImgInfo.Free();
 }
@@ -8947,6 +8990,11 @@ void CGameClient::CollectManagedTeeRenderInfos(const std::function<void(const ch
 		{
 			ActiveSkinAcceptor(pManagedTeeRenderInfo->m_SkinDescriptor.m_aSkinName);
 		}
+	}
+	for(const CClientData &ClientData : m_aClients)
+	{
+		if(CSkin::IsValidName(ClientData.m_RenderInfoSkinDescriptor.m_aSkinName))
+			ActiveSkinAcceptor(ClientData.m_RenderInfoSkinDescriptor.m_aSkinName);
 	}
 }
 

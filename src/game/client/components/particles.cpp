@@ -23,6 +23,7 @@ CParticles::CParticles()
 
 void CParticles::OnReset()
 {
+	m_LastRenderTime = time_get();
 	// reset particles
 	for(int i = 0; i < MAX_PARTICLES; i++)
 	{
@@ -38,22 +39,22 @@ void CParticles::OnReset()
 		FirstPart = -1;
 }
 
-void CParticles::Add(int Group, CParticle *pPart, float TimePassed)
+bool CParticles::Add(int Group, CParticle *pPart, float TimePassed)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 		if(pInfo->m_Paused)
-			return;
+			return false;
 	}
 	else
 	{
 		if(GameClient()->m_Snap.m_pGameInfoObj && GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED)
-			return;
+			return false;
 	}
 
 	if(m_FirstFree == -1)
-		return;
+		return false;
 
 	// remove from the free list
 	int Id = m_FirstFree;
@@ -73,6 +74,7 @@ void CParticles::Add(int Group, CParticle *pPart, float TimePassed)
 
 	// set some parameters
 	m_aParticles[Id].m_Life = TimePassed;
+	return true;
 }
 
 void CParticles::Update(float TimePassed)
@@ -196,6 +198,8 @@ bool CParticles::ParticleIsVisibleOnScreen(const vec2 &CurPos, float CurSize)
 
 void CParticles::RenderGroup(int Group)
 {
+	if(Group != GROUP_EXTRA && Group != GROUP_TRAIL_EXTRA && !GameClient()->m_ParticlesSkinLoaded)
+		return;
 	IGraphics::CTextureHandle *aParticles = GameClient()->m_ParticlesSkin.m_aSpriteParticles;
 	int FirstParticleOffset = SPRITE_PART_SLICE;
 	int ParticleQuadContainerIndex = m_ParticleQuadContainerIndex;

@@ -739,6 +739,8 @@ class CNetClient
 	NETQOS m_Qos = nullptr;
 	bool m_LowLatency = false;
 	bool m_QosAttempted = false;
+	int m_QosAttemptCount = 0;
+	int64_t m_QosNextAttempt = 0;
 	bool m_QosPeerValidated = false;
 	ENetQosStatus m_QosStatus = ENetQosStatus::DISABLED;
 

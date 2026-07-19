@@ -37,7 +37,7 @@ public:
 	void HammerHit(vec2 Pos, float Alpha, float Volume);
 	void AirJump(vec2 Pos, float Alpha, float Volume);
 	void DamageIndicator(vec2 Pos, vec2 Dir, float Alpha);
-	void PlayerSpawn(vec2 Pos, float Alpha, float Volume);
+	int PlayerSpawn(vec2 Pos, float Alpha, float Volume);
 	void PlayerDeath(vec2 Pos, int ClientId, float Alpha);
 	void PowerupShine(vec2 Pos, vec2 Size, float Alpha);
 	void FreezingFlakes(vec2 Pos, vec2 Size, float Alpha);

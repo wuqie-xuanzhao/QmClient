@@ -9,6 +9,7 @@
 class CDebugHud : public CComponent
 {
 	void RenderNetCorrections();
+	void RenderParticleDiagnostics();
 	void RenderTuning();
 	void RenderHint();
 	void RenderSwitchTileInfo();

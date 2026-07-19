@@ -203,16 +203,17 @@ void CEffects::BulletTrail(vec2 Pos, float Alpha, float TimePassed)
 	GameClient()->m_Particles.Add(CParticles::GROUP_PROJECTILE_TRAIL, &p, TimePassed);
 }
 
-void CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
+int CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 {
 	const bool PlaySound = ShouldPlayFocusDeathOrSpawnSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteDeathSounds != 0, g_Config.m_SndGame);
 	if(ShouldHideFocusKillEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideKillEffects != 0))
 	{
 		if(PlaySound)
 			GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, Volume, Pos);
-		return;
+		return 0;
 	}
 
+	int CreatedParticles = 0;
 	for(int i = 0; i < 32; i++)
 	{
 		CParticle p;
@@ -229,10 +230,11 @@ void CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 		p.m_Friction = 0.7f;
 		p.m_Color = ColorRGBA(0xb5 / 255.0f, 0x50 / 255.0f, 0xcb / 255.0f, Alpha);
 		p.m_StartAlpha = Alpha;
-		GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
+		CreatedParticles += GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p) ? 1 : 0;
 	}
 	if(PlaySound)
 		GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, Volume, Pos);
+	return CreatedParticles;
 }
 
 void CEffects::PlayerDeath(vec2 Pos, int ClientId, float Alpha)

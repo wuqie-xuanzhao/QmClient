@@ -129,6 +129,11 @@ class CTClient : public CComponent
 	void TryAppendKeywordReplyRenameSuffix(bool UseDummy);
 
 	float m_FinishTextTimeout = 0.0f;
+	bool m_aFinishRenamePending[NUM_DUMMIES] = {false, false};
+	int m_aFinishRenameAttempts[NUM_DUMMIES] = {0, 0};
+	int64_t m_aFinishRenamePendingSince[NUM_DUMMIES] = {0, 0};
+	char m_aaFinishRenameTarget[NUM_DUMMIES][MAX_NAME_LENGTH] = {};
+	void ResetFinishRenameState(int Dummy = -1);
 	void DoFinishCheck();
 	const char *CurrentCommunityIdForFinishCheck() const;
 	void StartUpdateDownload();
@@ -482,6 +487,8 @@ public:
 	// Gores FastInput Link
 	bool m_GoresModeStateKnown = false;
 	bool m_PrevGoresModeActive = false;
+	SQmFocusConfigOverrideState m_GoresDummyHammerOverride;
+	void ResetGoresDummyHammerOverride();
 	bool m_GoresAutoMapKnown = false;
 	unsigned m_GoresAutoMapToken = 0;
 	bool IsFastInputActive() const;

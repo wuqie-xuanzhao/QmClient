@@ -80,6 +80,31 @@ void CDebugHud::RenderNetCorrections()
 	RenderRow(" on:", GameClient()->NetobjCorrectedOn());
 }
 
+void CDebugHud::RenderParticleDiagnostics()
+{
+	if(!g_Config.m_Debug || g_Config.m_DbgGraphs)
+		return;
+
+	const float Height = 300.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
+
+	const float FontSize = 5.0f;
+	float y = 80.0f;
+	char aBuf[128];
+	const auto &&RenderRow = [&](const char *pLabel, const char *pValue) {
+		TextRender()->Text(Width - 100.0f, y, FontSize, pLabel);
+		TextRender()->Text(Width - 10.0f - TextRender()->TextWidth(FontSize, pValue), y, FontSize, pValue);
+		y += FontSize + 1.0f;
+	};
+
+	str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_SpawnEventsProcessed);
+	RenderRow("Spawn received:", aBuf);
+	str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_SpawnEffectsDispatched);
+	RenderRow("Spawn particles:", aBuf);
+	RenderRow("Particles skin:", GameClient()->m_ParticlesSkinLoaded ? "valid" : "invalid");
+}
+
 void CDebugHud::RenderTuning()
 {
 	enum
@@ -305,6 +330,7 @@ void CDebugHud::OnRender()
 
 	RenderTuning();
 	RenderNetCorrections();
+	RenderParticleDiagnostics();
 	RenderHint();
 	RenderSwitchTileInfo();
 }

@@ -23743,6 +23743,54 @@ turkish = "Önemli parçaların yeniden gönderim kuyruğu"
 polish = "Kolejka ponownych wysyłek ważnych fragmentów"
 
 [[message]]
+key = "Temporarily disable dummy hammering"
+[message.translations]
+simplified_chinese = "临时禁用分身锤"
+traditional_chinese = "暫時停用分身錘"
+japanese = "ダミーハンマーを一時的に無効化"
+korean = "더미 해머링을 일시적으로 비활성화"
+russian = "Временно отключать удары манекена"
+german = "Dummy-Hämmern vorübergehend deaktivieren"
+spanish = "Desactivar temporalmente el martillo del dummy"
+french = "Désactiver temporairement le marteau du dummy"
+brazilian_portuguese = "Desativar temporariamente o martelo do dummy"
+portuguese = "Desativar temporariamente o martelo do dummy"
+turkish = "Dummy çekiçlemeyi geçici olarak devre dışı bırak"
+polish = "Tymczasowo wyłącz młotkowanie dummy"
+
+[[message]]
+key = "Temporarily disable dummy hammering in Gores mode"
+[message.translations]
+simplified_chinese = "在 Gores 模式中临时禁用分身锤"
+traditional_chinese = "在 Gores 模式中暫時停用分身錘"
+japanese = "Goresモードでダミーハンマーを一時的に無効化"
+korean = "Gores 모드에서 더미 해머링을 일시적으로 비활성화"
+russian = "Временно отключать удары манекена в режиме Gores"
+german = "Dummy-Hämmern im Gores-Modus vorübergehend deaktivieren"
+spanish = "Desactivar temporalmente el martillo del dummy en modo Gores"
+french = "Désactiver temporairement le marteau du dummy en mode Gores"
+brazilian_portuguese = "Desativar temporariamente o martelo do dummy no modo Gores"
+portuguese = "Desativar temporariamente o martelo do dummy no modo Gores"
+turkish = "Gores modunda dummy çekiçlemeyi geçici olarak devre dışı bırak"
+polish = "Tymczasowo wyłącz młotkowanie dummy w trybie Gores"
+
+[[message]]
+key = "Respawn default weapon (when owned)"
+[message.translations]
+simplified_chinese = "重生默认武器（仅限已拥有）"
+traditional_chinese = "重生預設武器（僅限已擁有）"
+japanese = "リスポーン時のデフォルト武器（所持時のみ）"
+korean = "리스폰 기본 무기 (보유한 경우)"
+russian = "Оружие по умолчанию после возрождения (если есть)"
+german = "Standardwaffe nach dem Respawn (wenn vorhanden)"
+spanish = "Arma predeterminada al reaparecer (si se posee)"
+french = "Arme par défaut à la réapparition (si possédée)"
+brazilian_portuguese = "Arma padrão ao renascer (quando possuída)"
+portuguese = "Arma predefinida ao renascer (quando possuída)"
+turkish = "Yeniden doğma varsayılan silahı (sahipse)"
+polish = "Domyślna broń po odrodzeniu (jeśli posiadana)"
+
+[[message]]
 key = "Displays estimated process UDP receive rate"
 [message.translations]
 simplified_chinese = "显示估算的进程 UDP 接收速率"
