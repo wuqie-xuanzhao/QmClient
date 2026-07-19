@@ -1105,6 +1105,7 @@ public:
 		float m_FontSize = -1.0f;
 		bool m_Enabled = true;
 		bool m_ClosePopupWhenDisabled = true;
+		SQmDropdownVisualStyle m_VisualStyle;
 	};
 	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
 	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled);

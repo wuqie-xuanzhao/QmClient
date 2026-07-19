@@ -1063,11 +1063,6 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		}
 	}
 
-	static bool s_CustomTabTransitionInitialized = false;
-	static int s_PrevCustomTab = 0;
-	static float s_CustomTabTransitionDirection = 0.0f;
-	const uint64_t TClientTabSwitchNode = UiAnimNodeKey("settings_tclient_tab_switch");
-
 	CUIRect TabBar, Button;
 	int ActiveTab = m_TClientSettingsTab;
 	int TabCount = NUMBER_OF_TCLIENT_TABS;
@@ -1138,29 +1133,9 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		++VisibleTabIndex;
 	}
 
-	if(!ReadOnly && !s_CustomTabTransitionInitialized)
-	{
-		s_PrevCustomTab = ActiveTab;
-		s_CustomTabTransitionInitialized = true;
-	}
-	else if(!ReadOnly && ActiveTab != s_PrevCustomTab)
-	{
-		s_CustomTabTransitionDirection = ActiveTab > s_PrevCustomTab ? 1.0f : -1.0f;
-		TriggerUiSwitchAnimation(TClientTabSwitchNode, 0.0f);
-		s_PrevCustomTab = ActiveTab;
-	}
-
 	CUIRect ContentView = MainView;
-	const float TransitionStrength = ReadOnly ? 0.0f : ReadUiSwitchAnimation(TClientTabSwitchNode);
-	const bool TransitionActive = TransitionStrength > 0.0f && s_CustomTabTransitionDirection != 0.0f;
-	if(!ReadOnly)
-		m_SettingsPageSwitchActive = m_SettingsPageSwitchActive || TransitionActive;
-	const CUIRect ContentClip = MainView;
-	if(TransitionActive)
-	{
-		Ui()->ClipEnable(&ContentClip);
-		ApplyUiSwitchOffset(ContentView, TransitionStrength, s_CustomTabTransitionDirection, false, 0.08f, 24.0f, 120.0f);
-	}
+	// 子 Tab 的入场由设置 Card Deck 统一处理，避免和页面级位移动效叠加。
+	const bool TransitionActive = false;
 
 	{
 		CPerfTimer StageTimer;
@@ -1194,10 +1169,6 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		LogTClientPerfStage("tclient_tab_content", StageTimer.ElapsedMs(), TransitionActive, aExtra);
 	}
 
-	if(TransitionActive)
-	{
-		Ui()->ClipDisable();
-	}
 	char aExtra[96];
 	str_format(aExtra, sizeof(aExtra), "tab=%d transition=%d", ActiveTab, TransitionActive ? 1 : 0);
 	LogTClientPerfStage("tclient_page_total", RenderTimer.ElapsedMs(), false, aExtra);
@@ -3601,6 +3572,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 	ApplyTClientContentMetrics(MainView.w);
 	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
 	const float UiScale = SettingsPageUiScale(MainView.w);
+	const float SmallSize = ResolveSettingsContentMetrics(MainView.w).m_SmallSize;
 	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
 	IUiContext TClientBindWheelTextInputCtx = SettingsUiContext("settings_tclient_bindwheel_text_inputs", UiScale);
 	if(ReadOnly)
@@ -3616,7 +3588,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 	const float EditorContentHeight = maximum(LineSize * 7.8f + MarginSmall * 4.0f, 320.0f - CardChromeHeight);
 	const float PreviewContentHeight = 280.0f;
 	const auto MeasureEditor = [EditorContentHeight](float) { return EditorContentHeight; };
-	const auto RenderEditor = [this, &TClientBindWheelTextInputCtx, ReadOnly](CUIRect &Content) {
+	const auto RenderEditor = [this, &TClientBindWheelTextInputCtx, ReadOnly, SmallSize](CUIRect &Content) {
 		CPerfTimer EditorTimer;
 		CUIRect LeftView = Content, Label, Button;
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
@@ -3679,8 +3651,8 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 		LeftView.HSplitTop(LineSize, &Label, &LeftView);
 		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-console", &Label, Localize("Commands run in the console"), FontSize, TEXTALIGN_ML);
-		LeftView.HSplitTop(LineSize * 0.8f, &Label, &LeftView);
-		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-mouse", &Label, Localize("L select  R swap  M select only"), FontSize * 0.8f, TEXTALIGN_ML);
+		LeftView.HSplitTop(SmallSize, &Label, &LeftView);
+		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-mouse", &Label, Localize("L select  R swap  M select only"), SmallSize, TEXTALIGN_ML);
 
 		LeftView.HSplitBottom(LineSize, &LeftView, &Label);
 		static CButtonContainer s_ReaderButtonWheel, s_ClearButtonWheel;
@@ -3699,6 +3671,8 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 	};
 	const auto MeasurePreview = [PreviewContentHeight](float) { return PreviewContentHeight; };
 	const auto RenderPreview = [this, ReadOnly](CUIRect RightView) {
+		if(ReadOnly)
+			return;
 		CPerfTimer WheelTimer;
 		const float Radius = minimum(RightView.w, RightView.h) / 2.0f;
 		const vec2 Center = RightView.Center();
@@ -3932,6 +3906,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
 	const SSettingsContentMetrics WarListMetrics = ResolveSettingsContentMetrics(MainView.w);
 	const float ListRowHeight = WarListMetrics.m_ListRowHeight;
+	constexpr int WarListViewportRows = 8;
 	std::unique_ptr<CUiRenderOnlyGuard> pRenderOnlyGuard;
 	if(ReadOnly && !Ui()->RenderOnly())
 		pRenderOnlyGuard = std::make_unique<CUiRenderOnlyGuard>(Ui());
@@ -4071,15 +4046,19 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 				str_copy(aBuf, pEntry->m_aName);
 			}
 			EntryRect.VSplitLeft(35.0f, &EntryTypeRect, &EntryRect);
-			if(IsClan)
-				RenderFontIcon(EntryTypeRect, FONT_ICON_USERS, 18.0f, TEXTALIGN_MC);
-			else
-				RenderDevSkin(EntryTypeRect.Center(), ListRowHeight, "default", "default", false, 0, 0, 0, false, false);
+			if(!ReadOnly)
+			{
+				if(IsClan)
+					RenderFontIcon(EntryTypeRect, FONT_ICON_USERS, 18.0f, TEXTALIGN_MC);
+				else
+					RenderDevSkin(EntryTypeRect.Center(), ListRowHeight, "default", "default", false, 0, 0, 0, false, false);
+			}
 
 			if(str_comp(pEntry->m_aReason, "") != 0)
 			{
 				EntryRect.VSplitRight(20.0f, &EntryRect, &ToolTip);
-				RenderFontIcon(ToolTip, FONT_ICON_COMMENT, 18.0f, TEXTALIGN_MC);
+				if(!ReadOnly)
+					RenderFontIcon(ToolTip, FONT_ICON_COMMENT, 18.0f, TEXTALIGN_MC);
 				GameClient()->m_Tooltips.DoToolTip(&s_vItemIds[i], &ToolTip, pEntry->m_aReason);
 				GameClient()->m_Tooltips.SetFadeTime(&s_vItemIds[i], 0.0f);
 			}
@@ -4205,7 +4184,8 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		if(pSelectedType)
 		{
 			float Shade = 0.0f;
-			Button.Draw(ColorRGBA(Shade, Shade, Shade, 0.25f), 15, 3.0f);
+			if(!ReadOnly)
+				Button.Draw(ColorRGBA(Shade, Shade, Shade, 0.25f), 15, 3.0f);
 			TextRender()->TextColor(pSelectedType->m_Color);
 			Ui()->DoLabel(&Button, pSelectedType->m_aWarName, HeadlineFontSize, TEXTALIGN_MC);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -4244,8 +4224,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 	auto RenderGroups = [&](CUIRect &Column) {
 		CPerfTimer ActionsTimer;
 		CUIRect WarTypeList, Button, ButtonL, ButtonR;
-		const int VisibleGroupRows = std::clamp((int)GameClient()->m_WarList.m_WarTypes.size(), 2, 6);
-		Column.HSplitTop(VisibleGroupRows * ListRowHeight, &WarTypeList, &Column);
+		Column.HSplitTop(WarListViewportRows * ListRowHeight, &WarTypeList, &Column);
 		m_pRemoveWarType = nullptr;
 		int SelectedOldType = -1;
 		static CListBox s_WarTypeListBox;
@@ -4409,7 +4388,8 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			TextRender()->TextColor(GameClient()->m_WarList.GetWarData(ClientId).m_NameColor);
 			ColorRGBA NameButtonColor = Ui()->CheckActiveItem(&s_vNameButtons[ClientId]) ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.75f) :
 												       (Ui()->HotItem() == &s_vNameButtons[ClientId] ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
-			PlayerRect.Draw(NameButtonColor, IGraphics::CORNER_L, 5.0f);
+			if(!ReadOnly)
+				PlayerRect.Draw(NameButtonColor, IGraphics::CORNER_L, 5.0f);
 			Ui()->DoLabel(&NameRect, Client.m_aName, StandardFontSize, TEXTALIGN_ML);
 			if(!ReadOnly && Ui()->DoButtonLogic(&s_vNameButtons[ClientId], false, &PlayerRect, BUTTONFLAG_LEFT))
 			{
@@ -4421,7 +4401,8 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			TextRender()->TextColor(GameClient()->m_WarList.GetWarData(ClientId).m_ClanColor);
 			ColorRGBA ClanButtonColor = Ui()->CheckActiveItem(&s_vClanButtons[ClientId]) ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.75f) :
 												       (Ui()->HotItem() == &s_vClanButtons[ClientId] ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
-			ClanRect.Draw(ClanButtonColor, IGraphics::CORNER_R, 5.0f);
+			if(!ReadOnly)
+				ClanRect.Draw(ClanButtonColor, IGraphics::CORNER_R, 5.0f);
 			Ui()->DoLabel(&ClanRect, Client.m_aClan, StandardFontSize, TEXTALIGN_ML);
 			if(!ReadOnly && Ui()->DoButtonLogic(&s_vClanButtons[ClientId], false, &ClanRect, BUTTONFLAG_LEFT))
 			{
@@ -4433,7 +4414,8 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 
 			CTeeRenderInfo TeeInfo = Client.m_RenderInfo;
 			TeeInfo.m_Size = ListRowHeight;
-			RenderTeeCute(CAnimState::GetIdle(), &TeeInfo, 0, vec2(1.0f, 0.0f), TeeRect.Center() + vec2(-1.0f, 2.5f), true);
+			if(!ReadOnly)
+				RenderTeeCute(CAnimState::GetIdle(), &TeeInfo, 0, vec2(1.0f, 0.0f), TeeRect.Center() + vec2(-1.0f, 2.5f), true);
 		}
 		PlayerListBox.DoEnd();
 
@@ -4442,14 +4424,12 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 		LogTClientPerfStageEx("tclient_warlist", "players", ETClientSettingsPerfStage::STATIC_LAYER, PlayersTimer.ElapsedMs(), false, aExtra);
 	};
 
-	constexpr int WarListMaxVisibleRows = 6;
-	constexpr float FourColumnMinWidth = 840.0f;
-	constexpr float TwoColumnMinWidth = 520.0f;
-	const int EntryRows = std::clamp((int)GameClient()->m_WarList.m_vWarEntries.size(), 2, WarListMaxVisibleRows);
-	const int GroupRows = std::clamp((int)GameClient()->m_WarList.m_WarTypes.size(), 2, WarListMaxVisibleRows);
-	const float EntriesHeight = LineSize * 2.0f + MarginSmall + EntryRows * ListRowHeight;
-	const float GroupsHeight = GroupRows * ListRowHeight + MarginSmall * 2.0f + LineSize * 3.0f + ColorPickerLineSize + ColorPickerLineSpacing;
-	const float PlayersHeight = LineSize + MarginSmall + WarListMaxVisibleRows * ListRowHeight;
+	const float WarListColumnMinimum = ResolveSettingsInlineRowMinimumWidth(WarListMetrics.m_LabelWidth + 2.0f * WarListMetrics.m_ButtonHeight, WarListMetrics.m_SectionGap, 1);
+	const float FourColumnMinWidth = 4.0f * WarListColumnMinimum + 3.0f * WarListMetrics.m_SectionGap;
+	const float TwoColumnMinWidth = 2.0f * WarListColumnMinimum + WarListMetrics.m_SectionGap;
+	const float EntriesHeight = LineSize * 2.0f + MarginSmall + WarListViewportRows * ListRowHeight;
+	const float GroupsHeight = WarListViewportRows * ListRowHeight + MarginSmall * 2.0f + LineSize * 3.0f + ColorPickerLineSize + ColorPickerLineSpacing;
+	const float PlayersHeight = LineSize + MarginSmall + WarListViewportRows * ListRowHeight;
 	const float EditorHeight = LineSize * 5.0f + MarginSmall * 5.0f + HeadlineFontSize;
 	const float SettingsHeight = LineSize * 6.0f + MarginSmall * 5.0f;
 	const float SectionHeaderHeight = LineSize + MarginSmall;
@@ -5218,6 +5198,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	CPerfTimer RenderTimer;
 	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
 	const float UiScale = SettingsPageUiScale(MainView.w);
+	const SSettingsContentMetrics ProfileMetrics = ResolveSettingsContentMetrics(MainView.w);
 	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
 	std::unique_ptr<CUiRenderOnlyGuard> pRenderOnlyGuard;
 	if(ReadOnly && !Ui()->RenderOnly())
@@ -5431,12 +5412,12 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	};
 
 	auto RenderActionButtons = [&](CUIRect Actions) {
-		Actions.HSplitTop(LineSize, &Button, &Actions);
+		Actions.HSplitTop(ProfileMetrics.m_ButtonHeight, &Button, &Actions);
 		static CButtonContainer s_LoadButton;
 		if(!ReadOnly && DoTClientSettingsButton_Menu(&s_LoadButton, "tclient-profile-load", Localize("Load"), 0, &Button))
 			ApplySelectedProfile();
 		Actions.HSplitTop(MarginSmall, nullptr, &Actions);
-		Actions.HSplitTop(LineSize, &Button, &Actions);
+		Actions.HSplitTop(ProfileMetrics.m_ButtonHeight, &Button, &Actions);
 		static CButtonContainer s_SaveButton;
 		if(!ReadOnly && DoTClientSettingsButton_Menu(&s_SaveButton, "tclient-profile-save", Localize("Save"), 0, &Button))
 		{
@@ -5449,12 +5430,12 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		if(s_AllowDelete)
 		{
 			Actions.HSplitTop(MarginSmall, nullptr, &Actions);
-			Actions.HSplitTop(LineSize, &Button, &Actions);
+			Actions.HSplitTop(ProfileMetrics.m_ButtonHeight, &Button, &Actions);
 			static CButtonContainer s_DeleteButton;
 			if(!ReadOnly && DoTClientSettingsButton_Menu(&s_DeleteButton, "tclient-profile-delete", Localize("Delete"), 0, &Button))
 				DeleteSelectedProfile();
 			Actions.HSplitTop(MarginSmall, nullptr, &Actions);
-			Actions.HSplitTop(LineSize, &Button, &Actions);
+			Actions.HSplitTop(ProfileMetrics.m_ButtonHeight, &Button, &Actions);
 			static CButtonContainer s_OverrideButton;
 			if(!ReadOnly && DoTClientSettingsButton_Menu(&s_OverrideButton, "tclient-profile-override", Localize("Override"), 0, &Button))
 			{
@@ -5469,9 +5450,11 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		const float PreviewHeight = pConstSelectedProfile() ? LineSize * 8.0f + MarginSmall * 3.0f : LineSize * 4.0f + MarginSmall;
 		CUIRect Preview, Actions;
 		MainView.HSplitTop(PreviewHeight, &Preview, &MainView);
-		if(MainView.w >= 520.0f)
+		const float ActionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
+		if(MainView.w >= ActionsInlineMinWidth)
 		{
-			Preview.VSplitLeft(std::min(300.0f, Preview.w * 0.55f), &Preview, &Actions);
+			const float PreviewWidth = std::min(ProfileMetrics.m_LabelWidth * 2.5f, Preview.w * 0.55f);
+			Preview.VSplitLeft(PreviewWidth, &Preview, &Actions);
 			RenderProfilePreview(Preview);
 			Actions.VMargin(MarginSmall, &Actions);
 			RenderActionButtons(Actions);
@@ -5487,7 +5470,8 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 
 	auto RenderOptions = [&](CUIRect MainView) {
 		CUIRect Left, Right;
-		if(MainView.w >= 440.0f)
+		const float OptionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
+		if(MainView.w >= OptionsInlineMinWidth)
 			MainView.VSplitMid(&Left, &Right, MarginSmall);
 		else
 			Left = MainView, Right = {};
@@ -5530,7 +5514,8 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		MainView.HSplitTop(LineSize, &SelectorRect, &MainView);
 
 		static CButtonContainer s_ProfilesFile;
-		SelectorRect.VSplitLeft(130.0f, &Button, &SelectorRect);
+		const float ProfilesButtonWidth = std::clamp(ProfileMetrics.m_LabelWidth, ProfileMetrics.m_ButtonHeight * 4.0f, ProfileMetrics.m_LabelWidth * 1.25f);
+		SelectorRect.VSplitLeft(ProfilesButtonWidth, &Button, &SelectorRect);
 		if(!ReadOnly && DoTClientSettingsButton_Menu(&s_ProfilesFile, "tclient-profiles-file", Localize("Profiles file"), 0, &Button))
 		{
 			char aBuf[IO_MAX_PATH_LENGTH];
@@ -5545,8 +5530,10 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		ProfilesListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
 		ProfilesListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 		CPerfTimer ListTimer;
-		const int ProfilesPerRow = maximum(1, (int)(MainView.w / 200.0f));
-		ProfilesListBox.DoStart(LineSize * 3.0f, vProfiles.size(), ProfilesPerRow, 3, SelectedProfile, &MainView, true, IGraphics::CORNER_ALL);
+		const float ProfileItemWidth = std::max(ProfileMetrics.m_ListRowHeight * 6.0f, ProfileMetrics.m_LabelWidth + ProfileMetrics.m_ButtonHeight * 2.0f);
+		const int ProfilesPerRow = maximum(1, (int)(MainView.w / ProfileItemWidth));
+		const float ProfileListRowHeight = std::max(ProfileMetrics.m_ListRowHeight * 3.0f, ProfileMetrics.m_ButtonHeight * 3.0f + ProfileMetrics.m_LineSpacing * 2.0f);
+		ProfilesListBox.DoStart(ProfileListRowHeight, vProfiles.size(), ProfilesPerRow, 3, SelectedProfile, &MainView, true, IGraphics::CORNER_ALL);
 
 		static std::vector<int> s_vProfileItemIds;
 		if(s_vProfileItemIds.size() != vProfiles.size())
@@ -5577,13 +5564,15 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 
 	const bool HasSelectedProfile = pConstSelectedProfile() != nullptr;
 	const float ProfilePreviewHeight = HasSelectedProfile ? LineSize * 8.0f + MarginSmall * 3.0f : LineSize * 4.0f + MarginSmall;
-	const float ProfileActionsHeight = s_AllowDelete ? LineSize * 5.0f + MarginSmall * 4.0f : LineSize * 3.0f + MarginSmall * 2.0f;
-	const auto MeasureActions = [ProfilePreviewHeight, ProfileActionsHeight](float ContentWidth) { return ContentWidth >= 520.0f ? std::max(ProfilePreviewHeight, ProfileActionsHeight) : ProfilePreviewHeight + MarginSmall + ProfileActionsHeight; };
-	const auto MeasureOptions = [](float ContentWidth) {
-		const float Rows = ContentWidth >= 440.0f ? 6.0f : 9.0f;
-		return Rows * LineSize + (Rows - 1.0f) * MarginSmall;
+	const float ProfileActionsHeight = s_AllowDelete ? ProfileMetrics.m_ButtonHeight * 5.0f + ProfileMetrics.m_LineSpacing * 4.0f : ProfileMetrics.m_ButtonHeight * 3.0f + ProfileMetrics.m_LineSpacing * 2.0f;
+	const float ActionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
+	const float OptionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
+	const auto MeasureActions = [ProfilePreviewHeight, ProfileActionsHeight, ActionsInlineMinWidth](float ContentWidth) { return ContentWidth >= ActionsInlineMinWidth ? std::max(ProfilePreviewHeight, ProfileActionsHeight) : ProfilePreviewHeight + MarginSmall + ProfileActionsHeight; };
+	const auto MeasureOptions = [ProfileMetrics, OptionsInlineMinWidth](float ContentWidth) {
+		const float Rows = ContentWidth >= OptionsInlineMinWidth ? 6.0f : 9.0f;
+		return Rows * ProfileMetrics.m_ButtonHeight + (Rows - 1.0f) * ProfileMetrics.m_LineSpacing;
 	};
-	const auto MeasureSavedProfiles = [](float ContentWidth) { return std::max(LineSize * 6.0f, std::min(360.0f, ContentWidth * 0.75f)); };
+	const auto MeasureSavedProfiles = [ProfileMetrics](float ContentWidth) { return std::max(ProfileMetrics.m_ListRowHeight * 2.0f, ContentWidth * 0.55f); };
 	static std::array<CTClientSettingsCardFrameBinding, 3> s_aCardBindings;
 	s_aCardBindings[0].Bind(MeasureActions, RenderActions);
 	s_aCardBindings[1].Bind(MeasureOptions, RenderOptions);
@@ -5653,6 +5642,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 	CPerfTimer RenderTimer;
 	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
 	const float UiScale = SettingsPageUiScale(MainView.w);
+	const SSettingsContentMetrics ConfigMetrics = ResolveSettingsContentMetrics(MainView.w);
 	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
 	std::unique_ptr<CUiRenderOnlyGuard> pRenderOnlyGuard;
 	if(ReadOnly && !Ui()->RenderOnly())
@@ -6236,9 +6226,10 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 		vec2 ScrollOffset(0.0f, 0.0f);
 		SQmScrollRequest ConfigListScrollRequest;
 		ConfigListScrollRequest.m_Profile = EQmScrollProfile::SETTINGS_INNER;
-		const bool StackedConfigRows = ListArea.w < 380.0f;
+		const float ConfigInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ConfigMetrics.m_LabelWidth + 2.0f * ConfigMetrics.m_ButtonHeight, ConfigMetrics.m_SectionGap, 1);
+		const bool StackedConfigRows = ListArea.w < ConfigInlineMinWidth;
 		const float ConfigHelpHeight = std::max(MarginSmall, FontSize - 2.0f);
-		const SSettingsConfigRowMetrics ConfigRowMetrics = ResolveSettingsConfigRowMetrics(g_Config.m_TcUiCompactList != 0, StackedConfigRows, LineSize, MarginSmall, ConfigHelpHeight, ColorPickerLineSize, 5.0f);
+		const SSettingsConfigRowMetrics ConfigRowMetrics = ResolveSettingsConfigRowMetrics(g_Config.m_TcUiCompactList != 0, StackedConfigRows, LineSize, MarginSmall, ConfigHelpHeight, ColorPickerLineSize, ConfigMetrics.m_LineSpacing);
 		const float ConfigRowHeight = ConfigRowMetrics.m_RowHeight;
 		ConfigListScrollRequest.m_RowExtent = ConfigRowHeight;
 		CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(QmResolveScrollPolicy(ConfigListScrollRequest, UiScale, 0.0f));
@@ -6502,12 +6493,12 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView, bool PrewarmOnly)
 
 	const float SectionHeadingHeight = HeadlineHeight + MarginSmall;
 	const float SectionGap = MarginSmall * 2.0f;
-	const auto ConfigListViewportHeightForWidth = [](float ContentWidth) {
-		constexpr int VisibleRows = 6;
-		const bool StackedRows = ContentWidth < 380.0f;
+	const auto ConfigListViewportHeightForWidth = [ConfigMetrics](float ContentWidth) {
+		const float ConfigInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ConfigMetrics.m_LabelWidth + 2.0f * ConfigMetrics.m_ButtonHeight, ConfigMetrics.m_SectionGap, 1);
+		const bool StackedRows = ContentWidth < ConfigInlineMinWidth;
 		const float HelpHeight = std::max(MarginSmall, FontSize - 2.0f);
-		const SSettingsConfigRowMetrics RowMetrics = ResolveSettingsConfigRowMetrics(g_Config.m_TcUiCompactList != 0, StackedRows, LineSize, MarginSmall, HelpHeight, ColorPickerLineSize, 5.0f);
-		return VisibleRows * (RowMetrics.m_RowHeight + MarginExtraSmall);
+		const SSettingsConfigRowMetrics RowMetrics = ResolveSettingsConfigRowMetrics(g_Config.m_TcUiCompactList != 0, StackedRows, ConfigMetrics.m_LineHeight, ConfigMetrics.m_LineSpacing, HelpHeight, ConfigMetrics.m_ButtonHeight, ConfigMetrics.m_LineSpacing);
+		return std::max(RowMetrics.m_RowHeight * 2.0f, ContentWidth * 0.52f);
 	};
 	const auto ConfigsContentHeightForWidth = [ConfigListViewportHeightForWidth, SectionHeadingHeight, SectionGap, FiltersHeightForWidth](float ContentWidth) {
 		return LineSize + FiltersHeightForWidth(ContentWidth) + ConfigListViewportHeightForWidth(ContentWidth) + SectionHeadingHeight * 2.0f + SectionGap * 2.0f;

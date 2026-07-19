@@ -1046,10 +1046,11 @@ void CMenus::RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight,
 
 void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
+	const float SmallSize = CurrentSettingsContentMetrics().m_SmallSize;
 	CUIRect Row, LabelColumn, ControlColumn;
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.9f));
-	RenderQmVisualLabel("qmclient-tee-appearance-title", &Row, Localize("Tee appearance"), BodySize * 0.9f);
+	RenderQmVisualLabel("qmclient-tee-appearance-title", &Row, Localize("Tee appearance"), SmallSize);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
@@ -1072,15 +1073,15 @@ void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHei
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
-	Content.HSplitTop(BodySize, &Row, &Content);
+	Content.HSplitTop(SmallSize, &Row, &Content);
 	TextRender()->TextColor(ColorRGBA(0.85f, 0.85f, 0.85f, 0.72f));
-	RenderQmVisualLabel("qmclient-cycle-tee-hue-custom-note", &Row, Localize("Only affects custom Tee colors."), BodySize * 0.82f);
+	RenderQmVisualLabel("qmclient-cycle-tee-hue-custom-note", &Row, Localize("Only affects custom Tee colors."), SmallSize);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
-	Content.HSplitTop(BodySize, &Row, &Content);
+	Content.HSplitTop(SmallSize, &Row, &Content);
 	TextRender()->TextColor(g_Config.m_TcRainbowTees ? ColorRGBA(1.0f, 0.78f, 0.45f, 0.9f) : ColorRGBA(0.85f, 0.85f, 0.85f, 0.72f));
-	RenderQmVisualLabel("qmclient-cycle-tee-hue-tclient-note", &Row, Localize("When TClient rainbow Tee is enabled, this feature has no effect."), BodySize * 0.82f);
+	RenderQmVisualLabel("qmclient-cycle-tee-hue-tclient-note", &Row, Localize("When TClient rainbow Tee is enabled, this feature has no effect."), SmallSize);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
@@ -1152,16 +1153,17 @@ void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHei
 
 void CMenus::RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float ColumnGap, float LabelWidth)
 {
+	const float SmallSize = CurrentSettingsContentMetrics().m_SmallSize;
 	static CButtonContainer s_ReaderButtonFocusToggle, s_ClearButtonFocusToggle;
 	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmFocusMode, "qmclient-focus-mode-enable", Localize("Enable Zen mode"), &g_Config.m_QmFocusMode);
 	CUIRect LeftColumn, RightColumn, Row;
 	Content.VSplitMid(&LeftColumn, &RightColumn, ColumnGap);
 	auto RenderSection = [&](CUIRect &Target, const char *pTextId, const char *pLabel) {
-		Target.HSplitTop(LineHeight * 0.72f, &Row, &Target);
+		Target.HSplitTop(SmallSize, &Row, &Target);
 		TextRender()->TextColor(ColorRGBA(0.72f, 0.72f, 0.78f, 0.86f));
-		RenderQmVisualLabel(pTextId, &Row, Localize(pLabel), BodySize * 0.82f);
+		RenderQmVisualLabel(pTextId, &Row, Localize(pLabel), SmallSize);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
-		Target.HSplitTop(LineSpacing * 0.45f, nullptr, &Target);
+		Target.HSplitTop(LineSpacing, nullptr, &Target);
 	};
 	auto RenderCheckbox = [&](CUIRect &Target, int *pConfig, const char *pTextId, const char *pLabel) {
 		Target.HSplitTop(LineHeight, &Row, &Target);
@@ -1196,7 +1198,7 @@ void CMenus::RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, 
 	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemMessages, "qmclient-focus-hide-system-messages", "Hide server prompt notifications");
 	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeHideEcho, "qmclient-focus-hide-echo", "Hide Echo messages");
 	Content.y = std::max(LeftColumn.y, RightColumn.y);
-	Content.HSplitTop(LineSpacing * 0.7f, nullptr, &Content);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	CUIRect BindLabel, BindKey;
 	Row.VSplitLeft(LabelWidth, &BindLabel, &BindKey);
@@ -1347,8 +1349,8 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 	const float UiScale = Metrics.m_UiScale;
 	const float BodySize = Metrics.m_BodySize;
 	const float LineHeight = Metrics.m_LineHeight;
-	const float CardGap = Metrics.m_CardGap;
-	const float TipSize = std::clamp(BodySize * 0.82f, 9.0f, BodySize);
+	const float LineSpacing = Metrics.m_LineSpacing;
+	const float TipSize = Metrics.m_SmallSize;
 	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
 	IUiContext CardCtx = SettingsUiContext("settings_qmclient_contributors", UiScale);
 	if(ReadOnly)
@@ -1365,13 +1367,13 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (s_ShowSponsorQrCode ? 1u : 0u);
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (SponsorImageVisible ? 1u : 0u);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
-	const auto BuildDefinitions = [this, BodySize, LineHeight, CardGap, TipSize, UiScale, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, BodySize, LineHeight, LineSpacing, TipSize, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(2);
 
 		SSettingsCardDefinition Community;
 		Community.m_Spec = {"deck:qmclient-contributors-community", Localize("QmClient Community"), Localize("Official community links")};
-		Community.m_Measure = [LineHeight](float) { return LineHeight * 3.5f; };
-		Community.m_Render = [this, LineHeight, TipSize, ReadOnly](CUIRect Content) {
+		Community.m_Measure = [LineHeight, LineSpacing](float) { return ResolveSettingsRowsHeight(3, LineHeight, LineSpacing); };
+		Community.m_Render = [this, LineHeight, LineSpacing, TipSize, ReadOnly](CUIRect Content) {
 			CUIRect Row;
 			static int s_QQGroupButtonId;
 			static bool s_QQCopied = false;
@@ -1394,12 +1396,12 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 			if(!ReadOnly && s_QQCopied && Client()->LocalTime() - s_QQCopiedTime > 1.5f)
 				s_QQCopied = false;
 			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-qq-group-copy", &Row, s_QQCopied ? Localize("Copied") : Localize("QQ group: 1076765929 (click to copy)"), TipSize, TEXTALIGN_ML, {}, (int)Row.w);
-			Content.HSplitTop(LineHeight * 0.25f, nullptr, &Content);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 			Content.HSplitTop(LineHeight, &Row, &Content);
 			if(!ReadOnly && DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, &s_JoinQqGroupButton, "qmclient-community-join-qq-group", Localize("Join QQ group"), 0, &Row))
 				Client()->ViewLink(pQmClientQqGroupLink);
-			Content.HSplitTop(LineHeight * 0.25f, nullptr, &Content);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 			Content.HSplitTop(LineHeight, &Row, &Content);
 			if(!ReadOnly && DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, &s_RecentUpdateButton, "qmclient-community-view-latest-updates", Localize("View latest updates"), 0, &Row))
@@ -1417,7 +1419,13 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 			"杀意没爱意", "DYL", "小信", "哆啦梦", "菜菜羊", "吃了吗chilem", "你就是我的", "xiaopang", "星星🌙", "軽い猫",
 			"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡"};
 		const auto BuildSponsorLines = [this, TipSize](float MaxLineWidth) {
-			std::vector<std::string> Lines;
+			static std::vector<std::string> Lines;
+			static float s_CachedMaxLineWidth = -1.0f;
+			static uint64_t s_CachedTextGeneration = UINT64_MAX;
+			if(std::abs(s_CachedMaxLineWidth - MaxLineWidth) <= 0.01f && s_CachedTextGeneration == m_MenuTextPoolGeneration)
+				return std::cref(Lines);
+
+			Lines.clear();
 			Lines.emplace_back();
 			const char *pSeparator = ", ";
 			const float SeparatorWidth = TextRender()->TextWidth(TipSize, pSeparator);
@@ -1442,29 +1450,33 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 					LineWidth += SeparatorWidth + NameWidth;
 				}
 			}
-			return Lines;
+			s_CachedMaxLineWidth = MaxLineWidth;
+			s_CachedTextGeneration = m_MenuTextPoolGeneration;
+			return std::cref(Lines);
 		};
-		Sponsors.m_Measure = [this, LineHeight, CardGap, UiScale, BuildSponsorLines](float ContentWidth) {
+		Sponsors.m_Measure = [this, LineHeight, LineSpacing, BuildSponsorLines](float ContentWidth) {
 			const float ImageHeight = FindMenuImage("sponsor") != nullptr ? std::clamp(ContentWidth * 0.18f, LineHeight * 2.0f, LineHeight * 4.0f) : 0.0f;
 			const float QrHeight = s_ShowSponsorQrCode ? LineHeight * 0.5f + std::clamp(ContentWidth, LineHeight * 8.0f, LineHeight * 12.0f) : 0.0f;
-			const float SponsorLinesHeight = (float)BuildSponsorLines(ContentWidth).size() * LineHeight * 0.96f;
-			const float FixedHeight = ImageHeight + LineHeight * 3.0f + LineHeight * 0.5f + LineHeight * 0.55f + LineHeight * 0.9f;
-			return FixedHeight + SponsorLinesHeight + QrHeight + CardGap * 2.0f + 30.0f * UiScale;
+			const float SponsorLinesHeight = ResolveSettingsRowsHeight((int)BuildSponsorLines(ContentWidth).get().size(), LineHeight, LineSpacing);
+			return ImageHeight + LineHeight + QrHeight + 2.0f * (LineHeight + LineSpacing) + SponsorLinesHeight + LineSpacing + LineHeight;
 		};
 		Sponsors.m_MeasureRevision = (FindMenuImage("sponsor") != nullptr ? 1u : 0u) | (s_ShowSponsorQrCode ? 2u : 0u);
-		Sponsors.m_Render = [this, BodySize, LineHeight, TipSize, ReadOnly, BuildSponsorLines](CUIRect Content) {
+		Sponsors.m_Render = [this, BodySize, LineHeight, LineSpacing, TipSize, ReadOnly, BuildSponsorLines](CUIRect Content) {
 			CUIRect Row;
 			static CButtonContainer s_SponsorButton;
 
 			if(const CMenuImage *pSponsorImage = FindMenuImage("sponsor"))
 			{
 				Content.HSplitTop(std::clamp(Content.w * 0.18f, LineHeight * 2.0f, LineHeight * 4.0f), &Row, &Content);
-				Graphics()->TextureSet(pSponsorImage->m_OrgTexture);
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-				IGraphics::CQuadItem Image(Row.x, Row.y, Row.w, Row.h);
-				Graphics()->QuadsDrawTL(&Image, 1);
-				Graphics()->QuadsEnd();
+				if(!ReadOnly)
+				{
+					Graphics()->TextureSet(pSponsorImage->m_OrgTexture);
+					Graphics()->QuadsBegin();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					IGraphics::CQuadItem Image(Row.x, Row.y, Row.w, Row.h);
+					Graphics()->QuadsDrawTL(&Image, 1);
+					Graphics()->QuadsEnd();
+				}
 			}
 
 			Content.HSplitTop(LineHeight, &Row, &Content);
@@ -1473,10 +1485,10 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 			if(s_ShowSponsorQrCode)
 			{
 				Content.HSplitTop(LineHeight * 0.5f, nullptr, &Content);
+				const float QrSide = std::clamp(Content.w, LineHeight * 8.0f, LineHeight * 12.0f);
+				Content.HSplitTop(QrSide, &Row, &Content);
 				if(!ReadOnly && g_QmClientEnsureSponsorQrTexture && g_QmClientEnsureSponsorQrTexture() && g_QmClientRenderTexture)
 				{
-					const float QrSide = std::clamp(Content.w, LineHeight * 8.0f, LineHeight * 12.0f);
-					Content.HSplitTop(QrSide, &Row, &Content);
 					CUIRect QrRect = Row;
 					QrRect.Margin(LineHeight * 0.35f, &QrRect);
 					QrRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 5.0f);
@@ -1497,27 +1509,28 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 				}
 				else if(!ReadOnly)
 				{
-					Content.HSplitTop(LineHeight * 1.4f, &Row, &Content);
-					DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-sponsor-qr-decode-failed", &Row, Localize("Could not load sponsor QR code. Check the Base64 data"), TipSize * 0.92f, TEXTALIGN_ML, {}, (int)Row.w);
+					DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-sponsor-qr-decode-failed", &Row, Localize("Could not load sponsor QR code. Check the Base64 data"), TipSize, TEXTALIGN_ML, {}, (int)Row.w);
 				}
 			}
 
 			Content.HSplitTop(LineHeight, &Row, &Content);
-			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-developers-names", &Row, "栖梦(璇梦),夏日,DYL", BodySize + 1.0f, TEXTALIGN_ML, {}, (int)Row.w);
-			Content.HSplitTop(LineHeight * 0.5f, nullptr, &Content);
-			Content.HSplitTop(LineHeight * 0.9f, &Row, &Content);
-			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-sponsors-label", &Row, Localize("Sponsors:"), TipSize, TEXTALIGN_ML, {}, (int)Row.w);
-			Content.HSplitTop(LineHeight * 0.35f, nullptr, &Content);
+			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-developers-names", &Row, "栖梦(璇梦),夏日,DYL", BodySize, TEXTALIGN_ML, {}, (int)Row.w);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 			Content.HSplitTop(LineHeight, &Row, &Content);
+			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-sponsors-label", &Row, Localize("Sponsors:"), TipSize, TEXTALIGN_ML, {}, (int)Row.w);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 			TextRender()->TextColor(ColorRGBA(0.95f, 0.8f, 0.2f, 1.0f));
-			for(const std::string &Line : BuildSponsorLines(Row.w))
+			const std::vector<std::string> &SponsorLines = BuildSponsorLines(Content.w).get();
+			for(size_t Index = 0; Index < SponsorLines.size(); ++Index)
 			{
-				Ui()->DoLabel(&Row, Line.c_str(), TipSize, TEXTALIGN_ML);
-				Content.HSplitTop(LineHeight * 0.96f, &Row, &Content);
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				Ui()->DoLabel(&Row, SponsorLines[Index].c_str(), TipSize, TEXTALIGN_ML);
+				if(Index + 1 < SponsorLines.size())
+					Content.HSplitTop(LineSpacing, nullptr, &Content);
 			}
-			Content.HSplitTop(LineHeight * 0.55f, nullptr, &Content);
-			Content.HSplitTop(LineHeight * 0.9f, &Row, &Content);
-			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-thanks", &Row, Localize("Thank you for your company and trust. This is what gives me the courage to keep going."), BodySize * 0.93f, TEXTALIGN_ML, {}, (int)Row.w);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, "qmclient-community-thanks", &Row, Localize("Thank you for your company and trust. This is what gives me the courage to keep going."), BodySize, TEXTALIGN_ML, {}, (int)Row.w);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		};
 		vCards.push_back(std::move(Sponsors));
@@ -1558,6 +1571,19 @@ bool CMenus::RenderQmHudCheckbox(CUIRect &Content, float LineHeight, float LineS
 	CUIRect Row;
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, &Row) != 0;
+	if(Changed)
+		*pValue ^= 1;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	return Changed;
+}
+
+bool CMenus::HandleQmHudCheckboxInput(CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, int *pValue)
+{
+	const CUIRect VisibleContent = Content;
+	CUIRect Row;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	const CUIRect HitRect = Row.Intersection(VisibleContent);
+	const bool Changed = HitRect.w > 0.0f && HitRect.h > 0.0f && Ui()->DoButtonLogic(pId, *pValue, &HitRect, BUTTONFLAG_LEFT) != 0;
 	if(Changed)
 		*pValue ^= 1;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -1979,6 +2005,7 @@ void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, 
 
 void CMenus::RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
+	const float SmallSize = CurrentSettingsContentMetrics().m_SmallSize;
 	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_keyword_reply_text_inputs", UiScale);
 	CUIRect Row, LabelColumn, ControlColumn;
 	Content.HSplitTop(LineHeight, &Row, &Content);
@@ -2096,9 +2123,9 @@ void CMenus::RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale
 	}
 	if(!s_KeywordRulesLayoutHalfFilled)
 		return;
-	Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
+	Content.HSplitTop(LineHeight, &Row, &Content);
 	TextRender()->TextColor(1.0f, 0.2f, 0.2f, 1.0f);
-	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-keyword-reply-rule-validation", &Row, Localize("Both sides of keyword rules must be filled"), BodySize * 0.7f, TEXTALIGN_ML, {}, (int)Row.w);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-keyword-reply-rule-validation", &Row, Localize("Both sides of keyword rules must be filled"), SmallSize, TEXTALIGN_ML, {}, (int)Row.w);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
@@ -2107,6 +2134,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 {
 	// 标签宽度必须按当前卡片内容计算；沿用整页宽度会把端点和模型输入框压缩到不可读。
 	const float LabelWidth = std::min(CardLabelWidth, std::clamp(Content.w * 0.30f, 150.0f, 260.0f));
+	const float SmallSize = CurrentSettingsContentMetrics().m_SmallSize;
 	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_translate_text_inputs", BodySize / ui_token::font::BODY);
 	auto RenderCheckbox = [this, PrewarmOnly](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin) {
 		CUIRect CheckBoxRect;
@@ -2528,7 +2556,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 			}
 			Content.HSplitTop(LineHeight, &Row, &Content);
 			Row.VSplitLeft(LabelWidth, nullptr, &ControlCol);
-			Ui()->DoLabel(&ControlCol, aBuf, BodySize * 0.85f, TEXTALIGN_ML);
+			Ui()->DoLabel(&ControlCol, aBuf, SmallSize, TEXTALIGN_ML);
 		}
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 
@@ -2552,9 +2580,9 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 
 			if(pHint)
 			{
-				Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
+				Content.HSplitTop(SmallSize, &Row, &Content);
 				Row.VMargin(LabelWidth, &Row);
-				Ui()->DoLabel(&Row, pHint, BodySize * 0.8f, TEXTALIGN_ML);
+				Ui()->DoLabel(&Row, pHint, SmallSize, TEXTALIGN_ML);
 				Content.HSplitTop(LineSpacing, nullptr, &Content);
 			}
 		}
@@ -2717,99 +2745,103 @@ void CMenus::RenderQmFunctionPieMenuContent(CUIRect &Content, float UiScale, flo
 	PreviewInfoRect.VSplitLeft(maximum(CardPadding * 0.8f, LineSpacing * 2.0f), nullptr, &PreviewInfoRect);
 	PreviewRect.Margin(LineSpacing * 0.5f, &PreviewRect);
 	CUIRect PreviewFrame = PreviewRect;
-	PreviewFrame.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, CornerRadius * 0.8f);
-	PreviewRect.Margin(maximum(4.0f, LineSpacing * 0.6f), &PreviewRect);
-	const vec2 PreviewCenter = PreviewRect.Center();
-	const float BaseOuterRadius = maximum(1.0f, minimum(PreviewRect.w, PreviewRect.h) * 0.5f - LineSpacing * 0.8f);
-	const float InnerRadius = BaseOuterRadius * PreviewInnerRatio;
-	const float CenterRadius = maximum(1.0f, InnerRadius - maximum(4.0f, BaseOuterRadius * 0.03f));
-	const float AnglePerSector = 360.0f / (float)std::size(aColorEntries);
-	const float PreviewAlpha = std::clamp(g_Config.m_QmPieMenuOpacity / 100.0f, 0.2f, 1.0f);
-	int PopupSectorIndex = -1;
-	if(Ui()->IsPopupOpen(&m_ColorPickerPopupContext))
+	const char *pHintText = Localize("Click to set color");
+	if(!PrewarmOnly)
 	{
-		for(size_t i = 0; i < aColorEntries.size(); ++i)
-			if(m_ColorPickerPopupContext.m_pHslaColor == aColorEntries[i].m_pColorValue)
-				PopupSectorIndex = (int)i;
-	}
-	int HoveredSector = -1;
-	if(Ui()->MouseInside(&PreviewFrame))
-	{
-		const vec2 MouseDir = Ui()->MousePos() - PreviewCenter;
-		const float MouseDist = length(MouseDir);
-		if(MouseDist >= InnerRadius && MouseDist <= BaseOuterRadius * PreviewHighlightScale)
+		PreviewFrame.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, CornerRadius * 0.8f);
+		PreviewRect.Margin(maximum(4.0f, LineSpacing * 0.6f), &PreviewRect);
+		const vec2 PreviewCenter = PreviewRect.Center();
+		const float BaseOuterRadius = maximum(1.0f, minimum(PreviewRect.w, PreviewRect.h) * 0.5f - LineSpacing * 0.8f);
+		const float InnerRadius = BaseOuterRadius * PreviewInnerRatio;
+		const float CenterRadius = maximum(1.0f, InnerRadius - maximum(4.0f, BaseOuterRadius * 0.03f));
+		const float AnglePerSector = 360.0f / (float)std::size(aColorEntries);
+		const float PreviewAlpha = std::clamp(g_Config.m_QmPieMenuOpacity / 100.0f, 0.2f, 1.0f);
+		int PopupSectorIndex = -1;
+		if(Ui()->IsPopupOpen(&m_ColorPickerPopupContext))
 		{
-			float MouseAngle = atan2(MouseDir.y, MouseDir.x) * 180.0f / pi;
-			while(MouseAngle < 0.0f)
-				MouseAngle += 360.0f;
-			const float AdjustedAngle = fmodf(MouseAngle - PreviewStartAngle + 360.0f, 360.0f);
-			const int SectorIndex = (int)(AdjustedAngle / AnglePerSector);
-			const float AngleInSector = AdjustedAngle - SectorIndex * AnglePerSector;
-			if(SectorIndex >= 0 && SectorIndex < (int)aColorEntries.size() && AngleInSector >= PreviewSectorGap * 0.5f && AngleInSector <= AnglePerSector - PreviewSectorGap * 0.5f)
-				HoveredSector = SectorIndex;
+			for(size_t i = 0; i < aColorEntries.size(); ++i)
+				if(m_ColorPickerPopupContext.m_pHslaColor == aColorEntries[i].m_pColorValue)
+					PopupSectorIndex = (int)i;
 		}
-	}
-	static CButtonContainer s_ColorPreviewButton;
-	if(!PrewarmOnly && Ui()->DoButtonLogic(&s_ColorPreviewButton, 0, &PreviewFrame, BUTTONFLAG_LEFT) && HoveredSector >= 0)
-		OpenColorPopup(aColorEntries[HoveredSector].m_pColorValue);
-	for(size_t i = 0; i < aColorEntries.size(); ++i)
-	{
-		const bool Highlighted = (int)i == HoveredSector || (int)i == PopupSectorIndex;
-		const float OuterRadius = BaseOuterRadius * (Highlighted ? PreviewHighlightScale : 1.0f);
-		const float StartAngle = PreviewStartAngle + AnglePerSector * i + PreviewSectorGap * 0.5f;
-		const float EndAngle = StartAngle + AnglePerSector - PreviewSectorGap;
-		ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(*aColorEntries[i].m_pColorValue));
-		if(Highlighted)
+		int HoveredSector = -1;
+		if(Ui()->MouseInside(&PreviewFrame))
 		{
-			Color.r = minimum(Color.r * 1.3f, 1.0f);
-			Color.g = minimum(Color.g * 1.3f, 1.0f);
-			Color.b = minimum(Color.b * 1.3f, 1.0f);
-			Color.a = minimum(Color.a * 1.2f, 1.0f);
+			const vec2 MouseDir = Ui()->MousePos() - PreviewCenter;
+			const float MouseDist = length(MouseDir);
+			if(MouseDist >= InnerRadius && MouseDist <= BaseOuterRadius * PreviewHighlightScale)
+			{
+				float MouseAngle = atan2(MouseDir.y, MouseDir.x) * 180.0f / pi;
+				while(MouseAngle < 0.0f)
+					MouseAngle += 360.0f;
+				const float AdjustedAngle = fmodf(MouseAngle - PreviewStartAngle + 360.0f, 360.0f);
+				const int SectorIndex = (int)(AdjustedAngle / AnglePerSector);
+				const float AngleInSector = AdjustedAngle - SectorIndex * AnglePerSector;
+				if(SectorIndex >= 0 && SectorIndex < (int)aColorEntries.size() && AngleInSector >= PreviewSectorGap * 0.5f && AngleInSector <= AnglePerSector - PreviewSectorGap * 0.5f)
+					HoveredSector = SectorIndex;
+			}
+		}
+		static CButtonContainer s_ColorPreviewButton;
+		if(Ui()->DoButtonLogic(&s_ColorPreviewButton, 0, &PreviewFrame, BUTTONFLAG_LEFT) && HoveredSector >= 0)
+			OpenColorPopup(aColorEntries[HoveredSector].m_pColorValue);
+		for(size_t i = 0; i < aColorEntries.size(); ++i)
+		{
+			const bool Highlighted = (int)i == HoveredSector || (int)i == PopupSectorIndex;
+			const float OuterRadius = BaseOuterRadius * (Highlighted ? PreviewHighlightScale : 1.0f);
+			const float StartAngle = PreviewStartAngle + AnglePerSector * i + PreviewSectorGap * 0.5f;
+			const float EndAngle = StartAngle + AnglePerSector - PreviewSectorGap;
+			ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(*aColorEntries[i].m_pColorValue));
+			if(Highlighted)
+			{
+				Color.r = minimum(Color.r * 1.3f, 1.0f);
+				Color.g = minimum(Color.g * 1.3f, 1.0f);
+				Color.b = minimum(Color.b * 1.3f, 1.0f);
+				Color.a = minimum(Color.a * 1.2f, 1.0f);
+			}
+			Graphics()->TextureClear();
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * PreviewAlpha);
+			for(int Segment = 0; Segment < 24; ++Segment)
+			{
+				const float Rad1 = (StartAngle + (EndAngle - StartAngle) * (Segment / 24.0f)) * pi / 180.0f;
+				const float Rad2 = (StartAngle + (EndAngle - StartAngle) * ((Segment + 1) / 24.0f)) * pi / 180.0f;
+				const vec2 Inner1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * InnerRadius;
+				const vec2 Outer1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * OuterRadius;
+				const vec2 Inner2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * InnerRadius;
+				const vec2 Outer2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * OuterRadius;
+				const IGraphics::CFreeformItem Freeform(Inner1.x, Inner1.y, Outer1.x, Outer1.y, Inner2.x, Inner2.y, Outer2.x, Outer2.y);
+				Graphics()->QuadsDrawFreeform(&Freeform, 1);
+			}
+			Graphics()->QuadsEnd();
+			const float MidAngle = (StartAngle + EndAngle) * 0.5f * pi / 180.0f;
+			const vec2 ItemPos = PreviewCenter + vec2(cos(MidAngle), sin(MidAngle)) * ((InnerRadius + OuterRadius) * 0.5f);
+			const float IconSize = maximum(BodySize * 1.45f, BaseOuterRadius * (Highlighted ? 0.20f : 0.163f));
+			const float TextSize = maximum(BodySize * 0.95f, BaseOuterRadius * (Highlighted ? 0.10f : 0.08f));
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, PreviewAlpha);
+			const float IconWidth = TextRender()->TextWidth(IconSize, aColorEntries[i].m_pIcon);
+			const float IconYOffset = BaseOuterRadius * 0.0625f;
+			TextRender()->Text(ItemPos.x - IconWidth * 0.5f, ItemPos.y - IconSize * 0.5f - IconYOffset, IconSize, aColorEntries[i].m_pIcon);
+			const float NameWidth = TextRender()->TextWidth(TextSize, aColorEntries[i].m_pName);
+			TextRender()->Text(ItemPos.x - NameWidth * 0.5f, ItemPos.y + BaseOuterRadius * 0.0486f, TextSize, aColorEntries[i].m_pName);
 		}
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * PreviewAlpha);
-		for(int Segment = 0; Segment < 24; ++Segment)
-		{
-			const float Rad1 = (StartAngle + (EndAngle - StartAngle) * (Segment / 24.0f)) * pi / 180.0f;
-			const float Rad2 = (StartAngle + (EndAngle - StartAngle) * ((Segment + 1) / 24.0f)) * pi / 180.0f;
-			const vec2 Inner1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * InnerRadius;
-			const vec2 Outer1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * OuterRadius;
-			const vec2 Inner2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * InnerRadius;
-			const vec2 Outer2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * OuterRadius;
-			const IGraphics::CFreeformItem Freeform(Inner1.x, Inner1.y, Outer1.x, Outer1.y, Inner2.x, Inner2.y, Outer2.x, Outer2.y);
-			Graphics()->QuadsDrawFreeform(&Freeform, 1);
-		}
+		Graphics()->SetColor(0.15f, 0.15f, 0.2f, 0.9f * PreviewAlpha);
+		Graphics()->DrawCircle(PreviewCenter.x, PreviewCenter.y, CenterRadius, 48);
 		Graphics()->QuadsEnd();
-		const float MidAngle = (StartAngle + EndAngle) * 0.5f * pi / 180.0f;
-		const vec2 ItemPos = PreviewCenter + vec2(cos(MidAngle), sin(MidAngle)) * ((InnerRadius + OuterRadius) * 0.5f);
-		const float IconSize = maximum(BodySize * 1.45f, BaseOuterRadius * (Highlighted ? 0.20f : 0.163f));
-		const float TextSize = maximum(BodySize * 0.95f, BaseOuterRadius * (Highlighted ? 0.10f : 0.08f));
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, PreviewAlpha);
-		const float IconWidth = TextRender()->TextWidth(IconSize, aColorEntries[i].m_pIcon);
-		const float IconYOffset = BaseOuterRadius * 0.0625f;
-		TextRender()->Text(ItemPos.x - IconWidth * 0.5f, ItemPos.y - IconSize * 0.5f - IconYOffset, IconSize, aColorEntries[i].m_pIcon);
-		const float NameWidth = TextRender()->TextWidth(TextSize, aColorEntries[i].m_pName);
-		TextRender()->Text(ItemPos.x - NameWidth * 0.5f, ItemPos.y + BaseOuterRadius * 0.0486f, TextSize, aColorEntries[i].m_pName);
+		const int FocusedSector = HoveredSector >= 0 ? HoveredSector : PopupSectorIndex;
+		const char *pCenterTitle = FocusedSector >= 0 ? aColorEntries[FocusedSector].m_pName : Localize("Click to set color");
+		const char *pCenterSubtitle = FocusedSector >= 0 ? Localize("Open color picker") : Localize("Set color");
+		pHintText = FocusedSector >= 0 ? aColorEntries[FocusedSector].m_pName : Localize("Click to set color");
+		const float CenterTitleSize = maximum(BodySize * 1.05f, BaseOuterRadius * 0.095f);
+		const float CenterSubtitleSize = maximum(BodySize * 0.75f, BaseOuterRadius * 0.055f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.98f);
+		const float CenterTitleWidth = TextRender()->TextWidth(CenterTitleSize, pCenterTitle);
+		TextRender()->Text(PreviewCenter.x - CenterTitleWidth * 0.5f, PreviewCenter.y - CenterTitleSize * 0.9f, CenterTitleSize, pCenterTitle);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.68f);
+		const float CenterSubtitleWidth = TextRender()->TextWidth(CenterSubtitleSize, pCenterSubtitle);
+		TextRender()->Text(PreviewCenter.x - CenterSubtitleWidth * 0.5f, PreviewCenter.y + CenterSubtitleSize * 0.1f, CenterSubtitleSize, pCenterSubtitle);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.15f, 0.15f, 0.2f, 0.9f * PreviewAlpha);
-	Graphics()->DrawCircle(PreviewCenter.x, PreviewCenter.y, CenterRadius, 48);
-	Graphics()->QuadsEnd();
-	const int FocusedSector = HoveredSector >= 0 ? HoveredSector : PopupSectorIndex;
-	const char *pCenterTitle = FocusedSector >= 0 ? aColorEntries[FocusedSector].m_pName : Localize("Click to set color");
-	const char *pCenterSubtitle = FocusedSector >= 0 ? Localize("Open color picker") : Localize("Set color");
-	const char *pHintText = FocusedSector >= 0 ? aColorEntries[FocusedSector].m_pName : Localize("Click to set color");
-	const float CenterTitleSize = maximum(BodySize * 1.05f, BaseOuterRadius * 0.095f);
-	const float CenterSubtitleSize = maximum(BodySize * 0.75f, BaseOuterRadius * 0.055f);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.98f);
-	const float CenterTitleWidth = TextRender()->TextWidth(CenterTitleSize, pCenterTitle);
-	TextRender()->Text(PreviewCenter.x - CenterTitleWidth * 0.5f, PreviewCenter.y - CenterTitleSize * 0.9f, CenterTitleSize, pCenterTitle);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.68f);
-	const float CenterSubtitleWidth = TextRender()->TextWidth(CenterSubtitleSize, pCenterSubtitle);
-	TextRender()->Text(PreviewCenter.x - CenterSubtitleWidth * 0.5f, PreviewCenter.y + CenterSubtitleSize * 0.1f, CenterSubtitleSize, pCenterSubtitle);
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CUIRect PreviewInfoContent = PreviewInfoRect;
 	const float InfoSpacing = LineSpacing * 0.75f;
 	const float InfoHeight = LineHeight * 2.0f + InfoSpacing;
@@ -3190,7 +3222,6 @@ void CMenus::RenderQmHudInputOverlayContent(CUIRect &Content, const SSettingsCon
 	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
 	RenderQmHudLabel("qmclient-input-overlay-auto-hot-reload", &Row, Localize("Auto hot-reload after external saves"), Metrics.m_SmallSize);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
 void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool Expanded, bool PrewarmOnly)
@@ -3450,6 +3481,9 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 	const float BodySize = Metrics.m_BodySize;
 	const float LineSpacing = Metrics.m_LineSpacing;
 	const float UiScale = Metrics.m_UiScale;
+	// 下拉框在正式绘制阶段才提交配置。当前帧继续使用测量阶段的模式，
+	// 避免先绘制新增行、下一帧才扩展卡片高度。
+	const int NoiseSuppressModeForLayout = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);
 	CUIRect Row, LabelCol, ControlCol;
 	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
 		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
@@ -3475,7 +3509,8 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceEnable, "Enable voice", Localize("Enable voice"), &g_Config.m_QmVoiceEnable, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(g_Config.m_QmVoiceEnable)
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	if(g_Config.m_QmVoiceEnable)
 	{
@@ -3723,7 +3758,8 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceShowAdvanced, "Advanced options", Localize("Advanced options"), &g_Config.m_QmVoiceShowAdvanced, &Row, LineHeight);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
+		if(g_Config.m_QmVoiceShowAdvanced)
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 		if(g_Config.m_QmVoiceShowAdvanced)
 		{
@@ -3954,10 +3990,10 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 			}
 			Content.HSplitTop(LineSpacing, nullptr, &Content);
 
-			if(g_Config.m_QmVoiceNoiseSuppressEnable != 0)
+			if(NoiseSuppressModeForLayout != 0)
 			{
 #if !defined(CONF_RNNOISE)
-				if(g_Config.m_QmVoiceNoiseSuppressEnable == 2)
+				if(NoiseSuppressModeForLayout == 2)
 				{
 					Content.HSplitTop(LineHeight * 0.78f, &Row, &Content);
 					DoQmSettingsLabel("qmclient-voice-rnnoise-fallback-warning", &Row, Localize("RNNoise not integrated in current build, will fallback to simple noise reduction"), Metrics.m_SmallSize);
@@ -3969,9 +4005,9 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
 #if !defined(CONF_RNNOISE)
-					const bool RnnoiseFallbackActive = g_Config.m_QmVoiceNoiseSuppressEnable == 2;
+					const bool RnnoiseFallbackActive = NoiseSuppressModeForLayout == 2;
 #endif
-					const char *pNoiseSuppressStrengthLabel = g_Config.m_QmVoiceNoiseSuppressEnable == 2 ?
+					const char *pNoiseSuppressStrengthLabel = NoiseSuppressModeForLayout == 2 ?
 #if !defined(CONF_RNNOISE)
 											  (RnnoiseFallbackActive ? Localize("Fallback simple noise reduction strength") : Localize("RNNoise noise reduction strength")) :
 #else
@@ -4053,7 +4089,6 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 
 			Content.HSplitTop(LineHeight, &Row, &Content);
 			DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceGroupGlobal, "Full map listen in same room", Localize("Full map listen in same room"), &g_Config.m_QmVoiceGroupGlobal, &Row, LineHeight);
-			Content.HSplitTop(LineSpacing, nullptr, &Content);
 		}
 	}
 }
@@ -4063,6 +4098,8 @@ void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsCon
 	const float LineHeight = Metrics.m_LineHeight;
 	const float BodySize = Metrics.m_BodySize;
 	const float LineSpacing = Metrics.m_LineSpacing;
+	// 单选项在正式绘制阶段提交，分支仍按本帧测量时的模式绘制。
+	const int ColorModeForLayout = g_Config.m_Qm3DParticlesColorMode;
 	CUIRect Row, LabelCol, ControlCol;
 	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
 		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
@@ -4077,17 +4114,19 @@ void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsCon
 		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
 	};
 
-	auto RenderIntOption = [&](const void *pId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+	auto RenderIntOption = [&](const void *pId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "", bool TrailingSpacing = true) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
 		Ui()->DoLabel(&LabelCol, pLabel, BodySize, TEXTALIGN_ML);
 		RenderSliderWithValueInput(pId, ControlCol, pValue, MinValue, MaxValue, pSuffix);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
+		if(TrailingSpacing)
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticles, "Enable 3D background particles", Localize("Enable 3D background particles"), &g_Config.m_Qm3DParticles, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(g_Config.m_Qm3DParticles)
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	if(g_Config.m_Qm3DParticles)
 	{
@@ -4159,7 +4198,7 @@ void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsCon
 			g_Config.m_Qm3DParticlesColorMode = ColorMode;
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 
-		if(g_Config.m_Qm3DParticlesColorMode == 1)
+		if(ColorModeForLayout == 1)
 		{
 			static CButtonContainer s_Qm3DParticleColorId;
 			DoLine_ColorPicker(&s_Qm3DParticleColorId, Metrics, &Content, Localize("Particle color"), &g_Config.m_Qm3DParticlesColor, ColorRGBA(0.56f, 0.72f, 0.62f, 1.0f), false, nullptr, true);
@@ -4203,12 +4242,12 @@ void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsCon
 
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesTwinkle, "Particle twinkle", Localize("Particle twinkle"), &g_Config.m_Qm3DParticlesTwinkle, &Row, LineHeight);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 		if(g_Config.m_Qm3DParticlesTwinkle)
 		{
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 			static int s_Qm3DParticleTwinkleStrengthInputId;
-			RenderIntOption(&s_Qm3DParticleTwinkleStrengthInputId, Localize("Twinkle strength"), &g_Config.m_Qm3DParticlesTwinkleStrength, 0, 100, "%");
+			RenderIntOption(&s_Qm3DParticleTwinkleStrengthInputId, Localize("Twinkle strength"), &g_Config.m_Qm3DParticlesTwinkleStrength, 0, 100, "%", false);
 		}
 	}
 }
@@ -4218,6 +4257,10 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMe
 	const float LineHeight = Metrics.m_LineHeight;
 	const float BodySize = Metrics.m_BodySize;
 	const float LineSpacing = Metrics.m_LineSpacing;
+	// 预览尺寸必须与本帧 Deck 测量使用同一份快照。滑条的新值在下一帧
+	// 进入 revision，并由高度动画统一推动后续卡片。
+	const int PreviewFontSizeForLayout = g_Config.m_QmSmtcLyricsFontSize;
+	const int PreviewLineCountForLayout = std::clamp(g_Config.m_QmSmtcLyricsLines, 1, 2);
 	CUIRect Row, LabelCol, ControlCol;
 	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
 		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
@@ -4438,95 +4481,97 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMe
 	static CButtonContainer s_LyricsColorTranslationId;
 	DoLine_ColorPicker(&s_LyricsColorTranslationId, CurrentSettingsContentMetrics(), &Content, Localize("Translation color"), &g_Config.m_QmLyricsColorTranslation, ColorRGBA(0.55f, 0.55f, 0.55f, 1.0f), false, nullptr, true);
 	CUIRect Preview;
-	const float PreviewFont = (float)g_Config.m_QmSmtcLyricsFontSize;
+	const float PreviewFont = (float)PreviewFontSizeForLayout;
 	const float PreviewPaddingX = 10.0f;
 	const float PreviewPaddingY = 7.0f;
 	const float PreviewLineGap = 5.0f;
 	const float PreviewLineStep = PreviewFont + PreviewLineGap;
-	const int PreviewLineCount = std::clamp(g_Config.m_QmSmtcLyricsLines, 1, 2);
-	const float PreviewHeight = ResolveQmHudLyricsPreviewHeight(g_Config.m_QmSmtcLyricsFontSize, PreviewLineCount);
+	const int PreviewLineCount = PreviewLineCountForLayout;
+	const float PreviewHeight = ResolveQmHudLyricsPreviewHeight(PreviewFontSizeForLayout, PreviewLineCount);
 	Content.HSplitTop(PreviewHeight, &Preview, &Content);
-	ColorRGBA PreviewBg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsBgColor, true));
-	PreviewBg.a = std::clamp(g_Config.m_QmLyricsBgOpacity / 100.0f, 0.0f, 1.0f);
-	Preview.Draw(PreviewBg, IGraphics::CORNER_ALL, 5.0f);
-	const unsigned int PrevFlags = TextRender()->GetRenderFlags();
-	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
-	const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();
-	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
-	ColorRGBA PreviewOutline = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsOutlineColor, true));
-	PreviewOutline.a = std::clamp(g_Config.m_QmLyricsOutlineOpacity / 100.0f, 0.0f, 1.0f);
-	TextRender()->TextOutlineColor(PreviewOutline);
-
-	static constexpr std::array<const char *, 3> s_apLyricsPreviewLines = {
-		"Stop and stare",
-		"I think I'm moving but I go nowhere",
-		"Yeah I know that everyone gets scared"};
-	static constexpr int64_t s_LyricsPreviewLineDurationMs = 2400;
-	static constexpr int64_t s_LyricsPreviewDurationMs = s_LyricsPreviewLineDurationMs * (int64_t)s_apLyricsPreviewLines.size();
-	const int64_t NowTick = time_get();
-	const int64_t NowMs = (NowTick / time_freq()) * 1000 + (NowTick % time_freq()) * 1000 / time_freq();
-	int64_t PreviewPositionMs = (NowMs + g_Config.m_QmSmtcLyricsOffsetMs) % s_LyricsPreviewDurationMs;
-	if(PreviewPositionMs < 0)
-		PreviewPositionMs += s_LyricsPreviewDurationMs;
-	const int PreviewCurrentLine = (int)(PreviewPositionMs / s_LyricsPreviewLineDurationMs);
-	const int64_t PreviewLineElapsedMs = PreviewPositionMs % s_LyricsPreviewLineDurationMs;
-	const int64_t PreviewTransitionMs = std::clamp<int64_t>(g_Config.m_QmLyricsFadeDurationMs, 0, s_LyricsPreviewLineDurationMs - 1);
-	float PreviewScroll = 0.0f;
-	if(PreviewTransitionMs > 0 && PreviewLineElapsedMs >= s_LyricsPreviewLineDurationMs - PreviewTransitionMs)
+	if(!PrewarmOnly && !Ui()->RenderOnly())
 	{
-		const float Progress = (float)(PreviewLineElapsedMs - (s_LyricsPreviewLineDurationMs - PreviewTransitionMs)) / (float)PreviewTransitionMs;
-		const float SmoothProgress = Progress * Progress * (3.0f - 2.0f * Progress);
-		PreviewScroll = PreviewLineStep * SmoothProgress;
-	}
+		ColorRGBA PreviewBg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsBgColor, true));
+		PreviewBg.a = std::clamp(g_Config.m_QmLyricsBgOpacity / 100.0f, 0.0f, 1.0f);
+		Preview.Draw(PreviewBg, IGraphics::CORNER_ALL, 5.0f);
+		const unsigned int PrevFlags = TextRender()->GetRenderFlags();
+		const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
+		const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
+		ColorRGBA PreviewOutline = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsOutlineColor, true));
+		PreviewOutline.a = std::clamp(g_Config.m_QmLyricsOutlineOpacity / 100.0f, 0.0f, 1.0f);
+		TextRender()->TextOutlineColor(PreviewOutline);
 
-	CUIRect PreviewClip = Preview;
-	PreviewClip.Margin(1.0f, &PreviewClip);
-	Ui()->ClipEnable(&PreviewClip);
-
-	const float PreviewX = Preview.x + PreviewPaddingX;
-	const float PreviewY = Preview.y + PreviewPaddingY - PreviewScroll;
-	const float PreviewTextWidth = std::max(1.0f, Preview.w - PreviewPaddingX * 2.0f);
-	const int RenderLineCount = std::min<int>(PreviewLineCount + 1, (int)s_apLyricsPreviewLines.size());
-	const int PreviewScrollSeed = g_Config.m_QmLyricsMarqueeSpeed > 0 ? (int)(PreviewPositionMs / maximum(1, 1000 / g_Config.m_QmLyricsMarqueeSpeed)) : 0;
-	auto RenderPreviewLine = [&](const char *pText, float Y, const ColorRGBA &Color) {
-		const char *pRenderText = pText;
-		char aMarqueeText[256];
-		if(g_Config.m_QmLyricsMarquee && pText[0] != '\0' && TextRender()->TextWidth(PreviewFont, pText) > PreviewTextWidth)
+		static constexpr std::array<const char *, 3> s_apLyricsPreviewLines = {
+			"Stop and stare",
+			"I think I'm moving but I go nowhere",
+			"Yeah I know that everyone gets scared"};
+		static constexpr int64_t s_LyricsPreviewLineDurationMs = 2400;
+		static constexpr int64_t s_LyricsPreviewDurationMs = s_LyricsPreviewLineDurationMs * (int64_t)s_apLyricsPreviewLines.size();
+		const int64_t NowTick = time_get();
+		const int64_t NowMs = (NowTick / time_freq()) * 1000 + (NowTick % time_freq()) * 1000 / time_freq();
+		int64_t PreviewPositionMs = (NowMs + g_Config.m_QmSmtcLyricsOffsetMs) % s_LyricsPreviewDurationMs;
+		if(PreviewPositionMs < 0)
+			PreviewPositionMs += s_LyricsPreviewDurationMs;
+		const int PreviewCurrentLine = (int)(PreviewPositionMs / s_LyricsPreviewLineDurationMs);
+		const int64_t PreviewLineElapsedMs = PreviewPositionMs % s_LyricsPreviewLineDurationMs;
+		const int64_t PreviewTransitionMs = std::clamp<int64_t>(g_Config.m_QmLyricsFadeDurationMs, 0, s_LyricsPreviewLineDurationMs - 1);
+		float PreviewScroll = 0.0f;
+		if(PreviewTransitionMs > 0 && PreviewLineElapsedMs >= s_LyricsPreviewLineDurationMs - PreviewTransitionMs)
 		{
-			const int TextLen = str_length(pText);
-			size_t TextBytes = 0;
-			size_t TextCount = 0;
-			str_utf8_stats(pText, (size_t)TextLen + 1, (size_t)TextLen + 1, &TextBytes, &TextCount);
-			(void)TextBytes;
-			const int OffsetChars = TextCount > 0 ? PreviewScrollSeed % (int)TextCount : 0;
-			int Offset = 0;
-			for(int i = 0; i < OffsetChars; ++i)
-				Offset = str_utf8_forward(pText, Offset);
-			str_format(aMarqueeText, sizeof(aMarqueeText), "%s   %s", pText + Offset, pText);
-			pRenderText = aMarqueeText;
+			const float Progress = (float)(PreviewLineElapsedMs - (s_LyricsPreviewLineDurationMs - PreviewTransitionMs)) / (float)PreviewTransitionMs;
+			const float SmoothProgress = Progress * Progress * (3.0f - 2.0f * Progress);
+			PreviewScroll = PreviewLineStep * SmoothProgress;
 		}
-		TextRender()->TextColor(Color);
-		CTextCursor Cursor;
-		Cursor.m_FontSize = PreviewFont;
-		Cursor.m_LineWidth = PreviewTextWidth;
-		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
-		Cursor.SetPosition(vec2(PreviewX, Y));
-		TextRender()->TextEx(&Cursor, pRenderText);
-	};
 
-	ColorRGBA PreviewCurrentColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColor, true));
-	ColorRGBA PreviewNextColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsNextColor, true));
-	for(int i = 0; i < RenderLineCount; ++i)
-	{
-		const int LineIndex = (PreviewCurrentLine + i) % (int)s_apLyricsPreviewLines.size();
-		RenderPreviewLine(s_apLyricsPreviewLines[LineIndex], PreviewY + PreviewLineStep * i, i == 0 ? PreviewCurrentColor : PreviewNextColor);
+		CUIRect PreviewClip = Preview;
+		PreviewClip.Margin(1.0f, &PreviewClip);
+		Ui()->ClipEnable(&PreviewClip);
+
+		const float PreviewX = Preview.x + PreviewPaddingX;
+		const float PreviewY = Preview.y + PreviewPaddingY - PreviewScroll;
+		const float PreviewTextWidth = std::max(1.0f, Preview.w - PreviewPaddingX * 2.0f);
+		const int RenderLineCount = std::min<int>(PreviewLineCount + 1, (int)s_apLyricsPreviewLines.size());
+		const int PreviewScrollSeed = g_Config.m_QmLyricsMarqueeSpeed > 0 ? (int)(PreviewPositionMs / maximum(1, 1000 / g_Config.m_QmLyricsMarqueeSpeed)) : 0;
+		auto RenderPreviewLine = [&](const char *pText, float Y, const ColorRGBA &Color) {
+			const char *pRenderText = pText;
+			char aMarqueeText[256];
+			if(g_Config.m_QmLyricsMarquee && pText[0] != '\0' && TextRender()->TextWidth(PreviewFont, pText) > PreviewTextWidth)
+			{
+				const int TextLen = str_length(pText);
+				size_t TextBytes = 0;
+				size_t TextCount = 0;
+				str_utf8_stats(pText, (size_t)TextLen + 1, (size_t)TextLen + 1, &TextBytes, &TextCount);
+				(void)TextBytes;
+				const int OffsetChars = TextCount > 0 ? PreviewScrollSeed % (int)TextCount : 0;
+				int Offset = 0;
+				for(int i = 0; i < OffsetChars; ++i)
+					Offset = str_utf8_forward(pText, Offset);
+				str_format(aMarqueeText, sizeof(aMarqueeText), "%s   %s", pText + Offset, pText);
+				pRenderText = aMarqueeText;
+			}
+			TextRender()->TextColor(Color);
+			CTextCursor Cursor;
+			Cursor.m_FontSize = PreviewFont;
+			Cursor.m_LineWidth = PreviewTextWidth;
+			Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+			Cursor.SetPosition(vec2(PreviewX, Y));
+			TextRender()->TextEx(&Cursor, pRenderText);
+		};
+
+		ColorRGBA PreviewCurrentColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColor, true));
+		ColorRGBA PreviewNextColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsNextColor, true));
+		for(int i = 0; i < RenderLineCount; ++i)
+		{
+			const int LineIndex = (PreviewCurrentLine + i) % (int)s_apLyricsPreviewLines.size();
+			RenderPreviewLine(s_apLyricsPreviewLines[LineIndex], PreviewY + PreviewLineStep * i, i == 0 ? PreviewCurrentColor : PreviewNextColor);
+		}
+
+		Ui()->ClipDisable();
+		TextRender()->TextColor(PrevTextColor);
+		TextRender()->TextOutlineColor(PrevOutlineColor);
+		TextRender()->SetRenderFlags(PrevFlags);
 	}
-
-	Ui()->ClipDisable();
-	TextRender()->TextColor(PrevTextColor);
-	TextRender()->TextOutlineColor(PrevOutlineColor);
-	TextRender()->SetRenderFlags(PrevFlags);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
 void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
@@ -4548,6 +4593,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
@@ -4612,6 +4658,143 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		}
 	};
 
+	const auto ConsumeQmHudRow = [LineHeight, LineSpacing](CUIRect &Content) {
+		Content.HSplitTop(LineHeight, nullptr, &Content);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	const auto ConsumeQmHudHeight = [](CUIRect &Content, const float Height) {
+		Content.HSplitTop(std::max(0.0f, Height), nullptr, &Content);
+	};
+	const auto BuildHudPreLayoutInput = [this, Metrics, LineHeight, LineSpacing, ReadOnly, ConsumeQmHudRow, ConsumeQmHudHeight](EQmModuleId Id) -> FSettingsCardPreLayoutInput {
+		if(ReadOnly)
+			return {};
+		switch(Id)
+		{
+		case EQmModuleId::InputOverlay:
+			return [this, Metrics](CUIRect Content) {
+				return HandleQmHudCheckboxInput(Content, Metrics.m_LineHeight, Metrics.m_LineSpacing, &g_Config.m_QmInputOverlay, &g_Config.m_QmInputOverlay);
+			};
+		case EQmModuleId::PlayerStats:
+			return [this, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsHud, &g_Config.m_QmPlayerStatsHud);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsMapProgress, &g_Config.m_QmPlayerStatsMapProgress) || Changed;
+				if(g_Config.m_QmPlayerStatsMapProgress)
+				{
+					Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsMapProgressStyle, &g_Config.m_QmPlayerStatsMapProgressStyle) || Changed;
+					if(!g_Config.m_QmPlayerStatsMapProgressStyle)
+					{
+						ConsumeQmHudRow(Content);
+						for(int Index = 0; Index < 4; ++Index)
+							ConsumeQmHudRow(Content);
+					}
+					Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsMapProgressDbgRoute, &g_Config.m_QmPlayerStatsMapProgressDbgRoute) || Changed;
+				}
+				HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsResetOnJoin, &g_Config.m_QmPlayerStatsResetOnJoin);
+				return Changed;
+			};
+		case EQmModuleId::SpeedrunTimer:
+			return [this, LineHeight, LineSpacing](CUIRect Content) {
+				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSpeedrunTimer, &g_Config.m_QmSpeedrunTimer);
+			};
+		case EQmModuleId::HudNotifications:
+			return [this, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudNotificationsSystem, &g_Config.m_QmHudNotificationsSystem);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudNotificationsEcho, &g_Config.m_QmHudNotificationsEcho) || Changed;
+				ConsumeQmHudRow(Content);
+				ConsumeQmHudRow(Content);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudNotificationsShowAdvanced, &g_Config.m_QmHudNotificationsShowAdvanced) || Changed;
+				if(g_Config.m_QmHudNotificationsShowAdvanced)
+					Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudNotificationsUseCategoryFilters, &g_Config.m_QmHudNotificationsUseCategoryFilters) || Changed;
+				return Changed;
+			};
+		case EQmModuleId::Voice:
+			return [this, Metrics, LineHeight, LineSpacing, ConsumeQmHudRow, ConsumeQmHudHeight](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmVoiceEnable, &g_Config.m_QmVoiceEnable);
+				if(!g_Config.m_QmVoiceEnable)
+					return Changed;
+				ConsumeQmHudRow(Content); // room password
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmVoiceMicMute, &g_Config.m_QmVoiceMicMute) || Changed;
+				ConsumeQmHudRow(Content); // microphone volume
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmVoiceVadEnable, &g_Config.m_QmVoiceVadEnable) || Changed;
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmVoiceShowAdvanced, &g_Config.m_QmVoiceShowAdvanced) || Changed;
+				if(!g_Config.m_QmVoiceShowAdvanced)
+					return Changed;
+
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmVoiceShowConnectionStatus, &g_Config.m_QmVoiceShowConnectionStatus) || Changed;
+				if(g_Config.m_QmVoiceShowConnectionStatus)
+				{
+					ConsumeQmHudHeight(Content, LineHeight * 1.46f + LineSpacing * 0.75f);
+					ConsumeQmHudHeight(Content, 10.0f * (LineHeight + LineSpacing * 0.75f) + LineSpacing * 0.5f);
+				}
+
+				for(int Index = 0; Index < 5; ++Index)
+					ConsumeQmHudRow(Content); // server, input/output device, bitrate and noise mode
+				if(g_Config.m_QmVoiceNoiseSuppressEnable != 0)
+				{
+#if !defined(CONF_RNNOISE)
+					if(g_Config.m_QmVoiceNoiseSuppressEnable == 2)
+						ConsumeQmHudHeight(Content, LineHeight * 0.78f + LineSpacing * 0.75f);
+#endif
+					ConsumeQmHudRow(Content); // noise reduction strength
+				}
+				ConsumeQmHudRow(Content); // AGC
+				if(g_Config.m_QmVoiceVadEnable)
+				{
+					ConsumeQmHudRow(Content);
+					ConsumeQmHudRow(Content);
+				}
+				ConsumeQmHudHeight(Content, LineSpacing * 1.15f);
+				ConsumeQmHudRow(Content); // playback volume
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmVoiceStereo, &g_Config.m_QmVoiceStereo) || Changed;
+				if(g_Config.m_QmVoiceStereo)
+					ConsumeQmHudRow(Content);
+				return Changed;
+			};
+		case EQmModuleId::SystemMediaControls:
+			return [this, LineHeight, LineSpacing](CUIRect Content) {
+				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, &g_Config.m_QmSmtcEnable);
+			};
+		case EQmModuleId::Background3D:
+			return [this, Metrics, LineHeight, LineSpacing, ConsumeQmHudRow, ConsumeQmHudHeight](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_Qm3DParticles, &g_Config.m_Qm3DParticles);
+				if(!g_Config.m_Qm3DParticles)
+					return Changed;
+				ConsumeQmHudRow(Content); // particle type
+				for(int Index = 0; Index < 9; ++Index)
+					ConsumeQmHudRow(Content); // numeric particle options
+				ConsumeQmHudRow(Content); // collision
+				ConsumeQmHudRow(Content); // push radius
+				ConsumeQmHudRow(Content); // push strength
+				const SSettingsRadioRowLayout RadioLayout = ResolveSettingsRadioRowLayout(Content, 2, Metrics);
+				ConsumeQmHudHeight(Content, RadioLayout.m_Height + LineSpacing);
+				if(g_Config.m_Qm3DParticlesColorMode == 1)
+					ConsumeQmHudRow(Content); // custom color
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_Qm3DParticlesGlow, &g_Config.m_Qm3DParticlesGlow) || Changed;
+				if(g_Config.m_Qm3DParticlesGlow)
+				{
+					ConsumeQmHudRow(Content);
+					ConsumeQmHudRow(Content);
+				}
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_Qm3DParticlesTrail, &g_Config.m_Qm3DParticlesTrail) || Changed;
+				if(g_Config.m_Qm3DParticlesTrail)
+				{
+					ConsumeQmHudRow(Content);
+					ConsumeQmHudRow(Content);
+				}
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_Qm3DParticlesPulse, &g_Config.m_Qm3DParticlesPulse) || Changed;
+				if(g_Config.m_Qm3DParticlesPulse)
+				{
+					ConsumeQmHudRow(Content);
+					ConsumeQmHudRow(Content); // pulse strength/speed are two rows
+				}
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_Qm3DParticlesTwinkle, &g_Config.m_Qm3DParticlesTwinkle) || Changed;
+				return Changed;
+			};
+		default:
+			return {};
+		}
+	};
+
 	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(12);
 		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
@@ -4620,13 +4803,20 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 			Definition.m_Measure = [Id, EstimateContentHeight](float ContentWidth) { return EstimateContentHeight(Id, ContentWidth); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
 			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
-			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex](const SSettingsCardFrame &Frame, bool Collapsed) {
-				static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
+			Definition.m_PreLayoutHeaderInput = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool IsCollapsed) {
 				const int Index = ModuleStateIndex(Id);
-				if(!ReadOnly && DoButton_Menu(&s_aCollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
+				if(ReadOnly || !Ui()->DoButtonLogic(&CollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
+					return false;
+				ToggleCollapsed(Id);
+				return true;
+			};
+			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool Collapsed) {
+				const int Index = ModuleStateIndex(Id);
+				if(!ReadOnly && DoButton_Menu(&CollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
 					ToggleCollapsed(Id);
 			};
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
+			Definition.m_PreLayoutInput = BuildHudPreLayoutInput(Id);
 			vCards.push_back(std::move(Definition));
 		};
 
@@ -4699,6 +4889,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
@@ -4755,7 +4946,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
 		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 	};
-	auto MeasureContentHeight = [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth](EQmModuleId Id, float ContentWidth) {
+	auto MeasureContentHeight = [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, Metrics](EQmModuleId Id, float ContentWidth) {
 		const auto Rows = [LineHeight, LineSpacing](float Count) { return Count * (LineHeight + LineSpacing); };
 		const auto Row = [LineHeight, LineSpacing](float Spacing = 1.0f) { return LineHeight + LineSpacing * Spacing; };
 		switch(Id)
@@ -4790,13 +4981,13 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 			{
 				Height += Row() * 7.0f + LineHeight + LineSpacing * 0.5f;
 				if(g_Config.m_QmTranslateLlmEnableThinking && (g_Config.m_QmTranslateLlmProvider == 2 || g_Config.m_QmTranslateLlmProvider == 3))
-					Height += LineHeight * 0.8f + LineSpacing;
+					Height += Metrics.m_SmallSize + Metrics.m_LineSpacing;
 			}
 			return Height;
 		}
 		case EQmModuleId::TranslateUi: return Rows(5.0f);
 		case EQmModuleId::QiaFen:
-			return Row() * (4.0f + (float)s_KeywordRulesLayoutCount) + (s_KeywordRulesLayoutHalfFilled ? LineHeight * 0.8f + LineSpacing : 0.0f);
+			return Row() * (4.0f + (float)s_KeywordRulesLayoutCount) + (s_KeywordRulesLayoutHalfFilled ? Row() : 0.0f);
 		case EQmModuleId::PieMenu:
 			if(!g_Config.m_QmPieMenuEnabled)
 				return Row();
@@ -4841,7 +5032,6 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		default: return 0u;
 		}
 	};
-
 	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(14);
 		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
@@ -4850,10 +5040,16 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 			Definition.m_Measure = [Id, MeasureContentHeight](float ContentWidth) { return MeasureContentHeight(Id, ContentWidth); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
 			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
-			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex](const SSettingsCardFrame &Frame, bool Collapsed) {
-				static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
+			Definition.m_PreLayoutHeaderInput = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool IsCollapsed) {
 				const int Index = ModuleStateIndex(Id);
-				if(!ReadOnly && DoButton_Menu(&s_aCollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
+				if(ReadOnly || !Ui()->DoButtonLogic(&CollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
+					return false;
+				ToggleCollapsed(Id);
+				return true;
+			};
+			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool Collapsed) {
+				const int Index = ModuleStateIndex(Id);
+				if(!ReadOnly && DoButton_Menu(&CollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
 					ToggleCollapsed(Id);
 			};
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
@@ -4926,6 +5122,7 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	const bool CollapsedConfigChanged = !s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0;
@@ -4947,24 +5144,24 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
 		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 	};
-	auto EstimateContentHeight = [LineHeight, BodySize, LineSpacing](EQmModuleId Id) {
-		const auto Rows = [LineHeight, LineSpacing](float Count) { return Count * (LineHeight + LineSpacing); };
+	auto EstimateContentHeight = [Metrics](EQmModuleId Id) {
+		const auto Rows = [&Metrics](float Count) { return Count * Metrics.m_RowStep; };
 		switch(Id)
 		{
 		case EQmModuleId::ChatBubble:
-			return g_Config.m_QmChatBubble ? Rows(5.0f) + 2.0f * LineHeight + LineSpacing * 2.0f : Rows(1.0f);
+			return g_Config.m_QmChatBubble ? Rows(5.0f) + 2.0f * Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing : Rows(1.0f);
 		case EQmModuleId::CameraView:
-			return Rows(3.0f + (g_Config.m_QmCameraDrift ? 3.0f : 0.0f) + (g_Config.m_QmDynamicFov ? 2.0f : 0.0f) + (g_Config.m_QmAspectPreset == 6 ? 1.0f : 0.0f)) + BodySize;
+			return Rows(3.0f + (g_Config.m_QmCameraDrift ? 3.0f : 0.0f) + (g_Config.m_QmDynamicFov ? 2.0f : 0.0f) + (g_Config.m_QmAspectPreset == 6 ? 1.0f : 0.0f)) + Metrics.m_BodySize;
 		case EQmModuleId::SkinTransition:
-			return Rows(g_Config.m_QmSkinChangeTransition ? 12.0f : 8.0f) + BodySize * 3.0f;
+			return ResolveQmVisualSkinTransitionHeight(Metrics, g_Config.m_QmSkinChangeTransition != 0);
 		case EQmModuleId::FocusMode:
-			return Rows(20.0f);
+			return ResolveQmVisualFocusModeHeight(Metrics);
 		case EQmModuleId::WeaponAnimation:
-			return g_Config.m_QmWeaponSwitchAnim ? Rows(6.0f) + LineSpacing : Rows(1.0f) + LineSpacing;
+			return g_Config.m_QmWeaponSwitchAnim ? Rows(6.0f) + Metrics.m_LineSpacing : Rows(1.0f) + Metrics.m_LineSpacing;
 		case EQmModuleId::Streamer: return Rows(3.0f);
 		case EQmModuleId::EntityOverlay: return Rows(9.0f);
 		case EQmModuleId::CollisionHitbox:
-			return g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox ? Rows(7.0f) + 3.0f * LineHeight + LineSpacing * 3.0f : Rows(1.0f);
+			return ResolveQmVisualCollisionHitboxHeight(Metrics, g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox);
 		case EQmModuleId::TranslateUi: return Rows(6.0f);
 		case EQmModuleId::CardAppearance: return Rows(2.0f);
 		default: return Rows(1.0f);
@@ -4984,6 +5181,68 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		default: return 0u;
 		}
 	};
+	const auto ConsumeVisualRow = [LineHeight, LineSpacing](CUIRect &Content) {
+		Content.HSplitTop(LineHeight + LineSpacing, nullptr, &Content);
+	};
+	const auto ConsumeVisualHeight = [](CUIRect &Content, const float Height) {
+		Content.HSplitTop(std::max(0.0f, Height), nullptr, &Content);
+	};
+	const auto BuildVisualPreLayoutInput = [this, Metrics, LineHeight, LineSpacing, ReadOnly, ConsumeVisualRow, ConsumeVisualHeight](EQmModuleId Id) -> FSettingsCardPreLayoutInput {
+		if(ReadOnly)
+			return {};
+		switch(Id)
+		{
+		case EQmModuleId::ChatBubble:
+			return [this, LineHeight, LineSpacing](CUIRect Content) {
+				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmChatBubble, &g_Config.m_QmChatBubble);
+			};
+		case EQmModuleId::CameraView:
+			return [this, LineHeight, LineSpacing, ConsumeVisualRow](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmCameraDrift, &g_Config.m_QmCameraDrift);
+				if(g_Config.m_QmCameraDrift)
+				{
+					ConsumeVisualRow(Content);
+					ConsumeVisualRow(Content);
+					ConsumeVisualRow(Content);
+				}
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmDynamicFov, &g_Config.m_QmDynamicFov) || Changed;
+				return Changed;
+			};
+		case EQmModuleId::SkinTransition:
+			return [this, Metrics, LineHeight, LineSpacing, ConsumeVisualRow, ConsumeVisualHeight](CUIRect Content) {
+				ConsumeVisualRow(Content); // Tee appearance heading
+				for(int Index = 0; Index < 3; ++Index)
+					ConsumeVisualRow(Content); // hue toggles and speed
+				ConsumeVisualHeight(Content, Metrics.m_SmallSize + LineSpacing);
+				ConsumeVisualHeight(Content, Metrics.m_SmallSize + LineSpacing);
+				ConsumeVisualRow(Content); // hammer skin steal
+				ConsumeVisualRow(Content); // emoticon shadow
+				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSkinChangeTransition, &g_Config.m_QmSkinChangeTransition);
+			};
+		case EQmModuleId::WeaponAnimation:
+			return [this, LineHeight, LineSpacing](CUIRect Content) {
+				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, &g_Config.m_QmWeaponSwitchAnim);
+			};
+		case EQmModuleId::CollisionHitbox:
+			return [this, LineHeight](CUIRect Content) {
+				const CUIRect VisibleContent = Content;
+				CUIRect Row;
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				const CUIRect HitRect = Row.Intersection(VisibleContent);
+				int HitboxModeEnabled = g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox;
+				const bool Changed = HitRect.w > 0.0f && HitRect.h > 0.0f && Ui()->DoButtonLogic(&g_Config.m_QmHitboxMode, HitboxModeEnabled, &HitRect, BUTTONFLAG_LEFT) != 0;
+				if(Changed)
+				{
+					HitboxModeEnabled ^= 1;
+					g_Config.m_QmHitboxMode = HitboxModeEnabled;
+					g_Config.m_QmShowCollisionHitbox = 0;
+				}
+				return Changed;
+			};
+		default:
+			return {};
+		}
+	};
 
 	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(10);
@@ -4993,13 +5252,20 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 			Definition.m_Measure = [Id, EstimateContentHeight](float) { return EstimateContentHeight(Id); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
 			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
-			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex](const SSettingsCardFrame &Frame, bool Collapsed) {
-				static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
+			Definition.m_PreLayoutHeaderInput = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool IsCollapsed) {
 				const int Index = ModuleStateIndex(Id);
-				if(!ReadOnly && DoButton_Menu(&s_aCollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
+				if(ReadOnly || !Ui()->DoButtonLogic(&CollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
+					return false;
+				ToggleCollapsed(Id);
+				return true;
+			};
+			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool Collapsed) {
+				const int Index = ModuleStateIndex(Id);
+				if(!ReadOnly && DoButton_Menu(&CollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
 					ToggleCollapsed(Id);
 			};
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
+			Definition.m_PreLayoutInput = BuildVisualPreLayoutInput(Id);
 			vCards.push_back(std::move(Definition));
 		};
 
@@ -5063,6 +5329,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(MainView.w);
 	const float UiScale = Metrics.m_UiScale;
 	const float BodySize = Metrics.m_BodySize;
+	const float SmallSize = Metrics.m_SmallSize;
 	const float LineHeight = Metrics.m_LineHeight;
 	const float LineSpacing = Metrics.m_LineSpacing;
 	const float CardGap = Metrics.m_CardGap;
@@ -5121,12 +5388,12 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (ReadOnly ? 1u : 0u);
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)SearchMatchedGlobalCardCount;
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
-	const auto BuildDefinitions = [this, UiScale, BodySize, LineHeight, LineSpacing, ResultHeight, CardGap, SearchMatchedGlobalCardCount, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, UiScale, BodySize, SmallSize, LineHeight, LineSpacing, ResultHeight, CardGap, SearchMatchedGlobalCardCount, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(2);
 		SSettingsCardDefinition InputCard;
 		InputCard.m_Spec = {"deck:global-search-input", Localize("Feature Search"), qm_card_registry::ResolveLocalizedDescription("deck:global-search-input")};
-		InputCard.m_Measure = [LineHeight, LineSpacing](float) { return LineHeight * 1.85f + LineSpacing * 0.65f; };
-		InputCard.m_Render = [this, UiScale, BodySize, LineHeight, LineSpacing, SearchMatchedGlobalCardCount, ReadOnly](CUIRect Content) {
+		InputCard.m_Measure = [LineHeight, LineSpacing](float) { return 2.0f * LineHeight + LineSpacing; };
+		InputCard.m_Render = [this, UiScale, BodySize, SmallSize, LineHeight, LineSpacing, SearchMatchedGlobalCardCount, ReadOnly](CUIRect Content) {
 			CUIRect Row;
 			Content.HSplitTop(LineHeight, &Row, &Content);
 			IUiContext InputCtx = SettingsUiContext("settings_global_search", UiScale);
@@ -5137,11 +5404,11 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 			}
 			ui_widget::InputField(InputCtx, &m_GlobalCardSearchInput, Row, BodySize, !ReadOnly && !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 			Content.HSplitTop(LineSpacing * 0.65f, nullptr, &Content);
-			Content.HSplitTop(LineHeight * 0.85f, &Row, &Content);
+			Content.HSplitTop(LineHeight, &Row, &Content);
 			char aSearchHint[64];
 			str_format(aSearchHint, sizeof(aSearchHint), Localize("Found %d global cards"), SearchMatchedGlobalCardCount);
 			TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.82f));
-			Ui()->DoLabel(&Row, aSearchHint, BodySize * 0.92f, TEXTALIGN_ML);
+			Ui()->DoLabel(&Row, aSearchHint, SmallSize, TEXTALIGN_ML);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		};
 		vCards.push_back(std::move(InputCard));
@@ -5151,11 +5418,11 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		ResultsCard.m_Measure = [SearchMatchedGlobalCardCount, ResultHeight, CardGap, LineHeight](float) {
 			return SearchMatchedGlobalCardCount == 0 ? LineHeight : SearchMatchedGlobalCardCount * ResultHeight + std::max(0, SearchMatchedGlobalCardCount - 1) * CardGap;
 		};
-		ResultsCard.m_Render = [this, BodySize, LineHeight, LineSpacing, ResultHeight, CardGap, ReadOnly](CUIRect Content) {
+		ResultsCard.m_Render = [this, BodySize, SmallSize, LineHeight, LineSpacing, ResultHeight, CardGap, ReadOnly](CUIRect Content) {
 			const std::vector<SQmGlobalSearchCard> &VisibleCards = s_GlobalSearchCache.m_Results.m_vAllVisibleCards;
 			if(VisibleCards.empty())
 			{
-				DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-no-matching-features", &Content, Localize("No matching features found. Try other keywords"), BodySize * 0.92f, TEXTALIGN_ML, {}, (int)Content.w);
+				DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-no-matching-features", &Content, Localize("No matching features found. Try other keywords"), SmallSize, TEXTALIGN_ML, {}, (int)Content.w);
 				return;
 			}
 			for(size_t Index = 0; Index < VisibleCards.size(); ++Index)
@@ -5233,6 +5500,8 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	CPerfTimer RenderTimer;
 	const float QmClientUiScale = ResolveSettingsContentMetrics(MainView.w).m_UiScale;
 	bool TabTransitionActive = false;
+	static bool s_QmTabTelemetryInitialized = false;
+	static int s_PrevQmTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 	CUIRect TabContentClip = MainView;
 	if(ContributorsPage && !PrewarmOnly)
 		m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_CONTRIBUTORS;
@@ -5303,11 +5572,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	{
 		if(m_QmClientSettingsTab < 0 || m_QmClientSettingsTab >= NUMBER_OF_QMCLIENT_SETTINGS_TABS)
 			m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
-
-		static bool s_QmTabTransitionInitialized = false;
-		static int s_PrevQmTab = QMCLIENT_SETTINGS_TAB_VISUAL;
-		static float s_QmTabTransitionDirection = 0.0f;
-		const uint64_t QmClientTabSwitchNode = UiAnimNodeKey("settings_qmclient_tab_switch");
 
 		CUIRect TabBar, Button;
 		const SSettingsSubTabLayoutFrame QmClientSubTabs = ResolveSettingsSubTabLayout(MainView, QmClientUiScale);
@@ -5381,29 +5645,28 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			LogQmPerfStage(Client(), "tabbar", StageTimer.ElapsedMs(), false, aTabExtra);
 		}
 
-		if(!s_QmTabTransitionInitialized && !PrewarmOnly)
+		if(!PrewarmOnly)
 		{
-			s_PrevQmTab = m_QmClientSettingsTab;
-			s_QmTabTransitionInitialized = true;
-		}
-		else if(!PrewarmOnly && m_QmClientSettingsTab != s_PrevQmTab)
-		{
-			if(PerfDebugEnabled())
+			if(!s_QmTabTelemetryInitialized)
 			{
-				char aPayload[128];
-				str_format(aPayload, sizeof(aPayload), "event=tab_switch from=%s to=%s", QmSettingsTabName(s_PrevQmTab), QmSettingsTabName(m_QmClientSettingsTab));
-				QmPerfLogPayload("perf/qmclient", aPayload, Client(), CurrentQmUiPerfPage());
+				s_PrevQmTab = m_QmClientSettingsTab;
+				s_QmTabTelemetryInitialized = true;
 			}
-			s_QmTabTransitionDirection = m_QmClientSettingsTab > s_PrevQmTab ? 1.0f : -1.0f;
-			TriggerUiSwitchAnimation(QmClientTabSwitchNode, 0.0f);
-			s_PrevQmTab = m_QmClientSettingsTab;
+			else if(m_QmClientSettingsTab != s_PrevQmTab)
+			{
+				if(PerfDebugEnabled())
+				{
+					char aPayload[128];
+					str_format(aPayload, sizeof(aPayload), "event=tab_switch from=%s to=%s", QmSettingsTabName(s_PrevQmTab), QmSettingsTabName(m_QmClientSettingsTab));
+					QmPerfLogPayload("perf/qmclient", aPayload, Client(), CurrentQmUiPerfPage());
+				}
+				s_PrevQmTab = m_QmClientSettingsTab;
+			}
 		}
 
 		CUIRect ContentView = MainView;
-		const float TransitionStrength = PrewarmOnly ? 0.0f : ReadUiSwitchAnimation(QmClientTabSwitchNode);
-		TabTransitionActive = TransitionStrength > 0.0f && s_QmTabTransitionDirection != 0.0f;
-		if(!PrewarmOnly)
-			m_SettingsPageSwitchActive = m_SettingsPageSwitchActive || TabTransitionActive;
+		// 子 Tab 的入场由设置 Card Deck 统一处理，避免和页面局部状态叠加。
+		TabTransitionActive = false;
 		TabContentClip = MainView;
 		if(TabTransitionActive)
 		{

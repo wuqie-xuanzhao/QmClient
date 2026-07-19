@@ -1061,21 +1061,21 @@ void CMenus::UpdateSettingsTabLabels()
 	}
 }
 
-void CMenus::PrepareSettingsTabLabelCache(float MainViewWidth)
+void CMenus::PrepareSettingsTabLabelCache(float MainViewWidth, float TabBarWidthOverride)
 {
 	InitSettingsTabLabelCache();
 	UpdateSettingsTabLabels();
 
-	const float TabBarWidth = std::clamp(MainViewWidth * 0.14f, 108.0f, 120.0f);
+	const float TabBarWidth = TabBarWidthOverride > 0.0f ? TabBarWidthOverride : std::clamp(MainViewWidth * 0.14f, 108.0f, 120.0f);
 	CUIRect Button;
 	Button.x = 0.0f;
 	Button.y = 0.0f;
 	Button.w = TabBarWidth;
-	Button.h = 26.0f;
+	Button.h = ui_token::settings::TAB_HEIGHT;
 
 	CUIRect Label;
 	Button.HMargin(2.0f, &Label);
-	const float FontSize = Label.h * CUi::ms_FontmodHeight;
+	const float FontSize = ui_token::settings::TAB_FONT_SIZE;
 
 	for(int i = 0; i < SETTINGS_LENGTH; i++)
 	{
@@ -1680,7 +1680,7 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 	{
 		CUIRect Label;
 		pRect->HMargin(2.0f, &Label);
-		const float LabelFontSize = UseNewUi ? minimum(Label.h * CUi::ms_FontmodHeight, 13.0f) : Label.h * CUi::ms_FontmodHeight;
+		const float LabelFontSize = UseNewUi ? ui_token::settings::TAB_FONT_SIZE : Label.h * CUi::ms_FontmodHeight;
 		if(pTextUiElement != nullptr)
 		{
 			CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);

@@ -37,6 +37,7 @@ struct SSettingsCardDeckFrameDiagnostics
 	uint32_t m_EntryAnimationResolveCount = 0;
 	uint32_t m_HeightAnimationResolveCount = 0;
 	uint32_t m_ReflowAnimationResolveCount = 0;
+	uint32_t m_PreLayoutInputCount = 0;
 	uint32_t m_RenderedCardCount = 0;
 	uint32_t m_ChromePlanCount = 0;
 	uint32_t m_TotalGeometryCount = 0;
@@ -63,6 +64,7 @@ public:
 	void CountEntryAnimationResolve();
 	void CountHeightAnimationResolve();
 	void CountReflowAnimationResolve();
+	void CountPreLayoutInput();
 	void CountRenderedCard(bool ChromePlanned);
 	void MarkFirstLayout();
 	void RecordGeometry(const SSettingsCardDeckDiagnosticGeometry &Geometry);
@@ -74,6 +76,11 @@ private:
 	bool m_EntryWasActive = false;
 	SSettingsCardDeckFrameDiagnostics *m_pDiagnostics = nullptr;
 };
+
+inline bool SettingsCardDeckShouldRunPreLayoutInput(const bool HasPointerInput, const bool ControllerVisible, const bool Collapsed, const float VisibleContentHeight)
+{
+	return HasPointerInput && ControllerVisible && !Collapsed && VisibleContentHeight > 0.0f;
+}
 
 struct SSettingsCardAnimationWork
 {
@@ -184,7 +191,7 @@ SSettingsCardAnimationWork ResolveSettingsCardAnimationWork(float EntryDuration,
 // 首帧直接采用稳定目标；之后仅在高度目标变化或轨道仍活动时访问动画 runtime。
 SSettingsCardHeightAnimationWork ResolveSettingsCardHeightAnimationWork(bool InitializedThisFrame, bool TargetChanged, bool AnimationWasActive, float Duration, bool Snap);
 // 只裁剪正在改变高度的卡片；同 Deck 的其他卡片不得跟随闪烁或截断 focus ring。
-bool SettingsCardDeckShouldClipContent(bool CardHeightAnimationActive);
+bool SettingsCardDeckShouldClipContent(bool HasRenderableContent);
 // 每一帧都从前一张卡当前动画底边继续，保证动态高度全过程同列卡片不重叠。
 SSettingsCardColumnFrame ResolveSettingsCardColumnFrame(float CursorY, float CardHeight, float CardGap);
 #endif // GAME_CLIENT_QMUI_SETTINGSCARDDECKLOGIC_H

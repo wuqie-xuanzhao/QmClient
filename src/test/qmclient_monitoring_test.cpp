@@ -1778,7 +1778,7 @@ TEST(QmMonitoringHelpers, QmClientFocusModeSectionLabelsUseDisplayTextNotTransla
 
 	EXPECT_NE(FocusModeBody.find("auto RenderSection = [&](CUIRect &Target, const char *pTextId, const char *pLabel)"), std::string::npos);
 	EXPECT_EQ(FocusModeBody.find("Localize(pTextId)"), std::string::npos);
-	EXPECT_NE(FocusModeBody.find("RenderQmVisualLabel(pTextId, &Row, Localize(pLabel), BodySize * 0.82f);"), std::string::npos);
+	EXPECT_NE(FocusModeBody.find("RenderQmVisualLabel(pTextId, &Row, Localize(pLabel), SmallSize);"), std::string::npos);
 	EXPECT_NE(FocusModeBody.find("RenderSection(LeftColumn, \"qmclient-focus-section-interface\", \"Interface\");"), std::string::npos);
 	EXPECT_NE(FocusModeBody.find("RenderSection(LeftColumn, \"qmclient-focus-section-players\", \"Players\");"), std::string::npos);
 	EXPECT_NE(FocusModeBody.find("RenderSection(LeftColumn, \"qmclient-focus-section-visuals\", \"Visuals\");"), std::string::npos);
@@ -4952,8 +4952,8 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("const float QmClientSettingsScrollbarWidth"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float QmClientSettingsScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float NamePlateContentPaddingY = std::clamp(14.0f * UiScale, 10.0f, 14.0f);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateRadioLineHeight = 22.0f;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("AddCard(5, NamePlateSettingsMinCardHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("AddMeasuredCard(5,"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("ResolveSettingsRadioRowLayout"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("AddCard(6, NamePlatePreviewMinCardHeight"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float NamePlateCardHeight"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsCard.h = NamePlateSettingsCardHeight;"), std::string::npos);
@@ -4969,10 +4969,10 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitTop(NamePlateContentPaddingY, nullptr, &RightView);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitBottom(NamePlateContentPaddingY, &RightView, nullptr);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateGeneralContentHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("GeneralContentHeight"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateTextContentHeight"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateHookContentHeight"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateKeysContentHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("HookContentHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("KeysContentHeight"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateSettingsView"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewAreaHeight = 60.0f"), std::string::npos);
@@ -6523,8 +6523,8 @@ TEST(QmMonitoringHelpers, SettingsRenderOnlyTraversalDoesNotConsumeDeckAnimation
 	ASSERT_FALSE(Tee.empty());
 	ASSERT_FALSE(Tee7.empty());
 	ASSERT_FALSE(Tee7Custom.empty());
-	EXPECT_NE(Player.find("if(!Ui()->RenderOnly())"), std::string::npos);
-	EXPECT_NE(Tee.find("if(!Ui()->RenderOnly())"), std::string::npos);
+	EXPECT_EQ(Player.find("TriggerUiSwitchAnimation"), std::string::npos);
+	EXPECT_EQ(Tee.find("TriggerUiSwitchAnimation"), std::string::npos);
 	EXPECT_NE(Tee.find("if(!Ui()->RenderOnly() && (DoButton_Menu(&s_SkinRefreshButton"), std::string::npos);
 	EXPECT_NE(Tee.find("if(!RenderOnly && ShouldRefresh)"), std::string::npos);
 	EXPECT_NE(Tee7.find("if(!Ui()->RenderOnly())"), std::string::npos);
@@ -6810,13 +6810,12 @@ TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
 	EXPECT_NE(MenusHeader.find("CSettingsCardDeck m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(MenusHeader.find("m_SettingsCardDeckDisplayCycle"), std::string::npos);
 	EXPECT_EQ(MenusHeader.find("m_GraphicsSettingsCardDeck"), std::string::npos);
-	const size_t CycleGuard = SettingsBody.find("m_SettingsCardDeckDisplayState.EnterPage(g_Config.m_UiSettingsPage)");
+	const size_t CycleGuard = SettingsBody.find("m_SettingsCardDeckDisplayState.EnterView(SettingsDisplayViewKey)");
 	const size_t BeginDisplayCycle = SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle", CycleGuard);
 	ASSERT_NE(CycleGuard, std::string::npos);
 	ASSERT_NE(BeginDisplayCycle, std::string::npos);
 	EXPECT_LT(CycleGuard, BeginDisplayCycle);
-	EXPECT_EQ(SettingsBody.find("m_QmClientSettingsTab + 1"), std::string::npos);
-	EXPECT_EQ(SettingsBody.find("m_TClientSettingsTab + 1"), std::string::npos);
+	EXPECT_NE(SettingsBody.find("ResolveSettingsCardDisplayViewKey"), std::string::npos);
 	EXPECT_NE(MenusSource.find("m_SettingsCardDeckDisplayState.LeaveSettings();"), std::string::npos);
 	EXPECT_NE(SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);"), std::string::npos);
 	EXPECT_EQ(SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, false);"), std::string::npos);
@@ -7212,7 +7211,7 @@ TEST(QmMonitoringHelpers, SettingsCardDeckSkipsAnimationRuntimeOnStableFrames)
 	EXPECT_NE(Source.find("if(m_FrameRuntime.EntryWasActive() && Motion.m_EntryDuration > 0.0f)"), std::string::npos);
 	EXPECT_NE(Source.find("State.m_DrawOffsetY = DeckEntryOffsetY;"), std::string::npos);
 	EXPECT_NE(Source.find("else if(AnimationWork.m_ResolveReflow)"), std::string::npos);
-	EXPECT_NE(Source.find("State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_ContentHeightAnimationActive);"), std::string::npos);
+	EXPECT_NE(Source.find("State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_Frame.m_ContentRect.w > 0.0f && Card.m_Frame.m_ContentRect.h > 0.0f);"), std::string::npos);
 	EXPECT_EQ(Source.find("State.m_ClipContent = ContentHeightAnimationActive;"), std::string::npos);
 	EXPECT_NE(CardSource.find("Ctx.m_pUi->ClipEnable(&DrawFrame.m_ContentRect);"), std::string::npos);
 }

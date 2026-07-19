@@ -26,15 +26,6 @@ namespace
 		return Ctx.m_pTheme != nullptr ? *Ctx.m_pTheme : Fallback;
 	}
 
-	void OffsetSettingsCardFrame(SSettingsCardFrame &Frame, const float OffsetX, const float OffsetY)
-	{
-		for(CUIRect *pRect : {&Frame.m_Rect, &Frame.m_HeaderRect, &Frame.m_TitleRect, &Frame.m_SubtitleRect, &Frame.m_HandleRect, &Frame.m_ContentRect})
-		{
-			pRect->x += OffsetX;
-			pRect->y += OffsetY;
-		}
-	}
-
 	void DrawSettingsCardBorderRing(IGraphics *pGraphics, const CUIRect &Rect, const ColorRGBA &Color, const float Width, const float Radius)
 	{
 		if(pGraphics == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
@@ -104,8 +95,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	SSettingsCardVisualState DrawState = State;
-	SSettingsCardFrame DrawFrame = Frame;
-	OffsetSettingsCardFrame(DrawFrame, State.m_DrawOffsetX, State.m_DrawOffsetY);
+	const SSettingsCardFrame DrawFrame = ResolveSettingsCardDrawFrame(Frame, State.m_DrawOffsetX, State.m_DrawOffsetY);
 	DrawState.m_PointerInside = Ctx.m_pUi != nullptr && Ctx.m_pUi->MouseHovered(&DrawFrame.m_Rect);
 	if(pPointerInside != nullptr)
 		*pPointerInside = DrawState.m_PointerInside;

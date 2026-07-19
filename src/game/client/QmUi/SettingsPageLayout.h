@@ -86,6 +86,23 @@ private:
 	bool m_Visible = false;
 };
 
+// 页面和当前子 Tab 共同定义一次 card deck 的可见视图。
+// 子 Tab 改变时必须重新播放入场动画，但不能影响卡片在 model 中的持久化顺序。
+inline uint64_t ResolveSettingsCardDisplayViewKey(const int Page, const int PlayerTab, const int AppearanceTab, const int TClientTab, const int QmClientTab)
+{
+	uint64_t Key = 1469598103934665603ULL;
+	const auto Mix = [&Key](const int Value) {
+		Key ^= (uint32_t)(Value + 1);
+		Key *= 1099511628211ULL;
+	};
+	Mix(Page);
+	Mix(PlayerTab);
+	Mix(AppearanceTab);
+	Mix(TClientTab);
+	Mix(QmClientTab);
+	return Key;
+}
+
 inline uint64_t ResolveSettingsCardDefinitionsRevision(uint64_t DisplayCycle, uint64_t TextGeneration, float ContentWidth, uint64_t LayoutRevision = 0)
 {
 	const uint64_t QuantizedWidth = (uint64_t)std::max(0, (int)(ContentWidth * 100.0f + 0.5f));
@@ -187,6 +204,25 @@ inline float ResolveSettingsRowsHeight(const int RowCount, const float RowHeight
 	if(RowCount <= 0)
 		return 0.0f;
 	return RowCount * std::max(0.0f, RowHeight) + std::max(0, RowCount - 1) * std::max(0.0f, RowSpacing);
+}
+
+inline float ResolveQmVisualSkinTransitionHeight(const SSettingsContentMetrics &Metrics, const bool Enabled)
+{
+	// 标题、开关、控件和说明均按 renderer 的实际顺序计数；每个可见行消费一次尾部间距。
+	const float StandardRow = Metrics.m_RowStep;
+	const float Notes = 2.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing);
+	return 7.0f * StandardRow + Notes + (Enabled ? 5.0f * StandardRow : 0.0f);
+}
+
+inline float ResolveQmVisualCollisionHitboxHeight(const SSettingsContentMetrics &Metrics, const bool Enabled)
+{
+	return (Enabled ? 10.0f : 1.0f) * Metrics.m_RowStep;
+}
+
+inline float ResolveQmVisualFocusModeHeight(const SSettingsContentMetrics &Metrics)
+{
+	const float Section = Metrics.m_SmallSize + Metrics.m_LineSpacing;
+	return 16.0f * Metrics.m_RowStep + 3.0f * Section + Metrics.m_LineSpacing;
 }
 
 inline float ResolveSettingsHslaRowsHeight(const SSettingsContentMetrics &Metrics, const bool Alpha)

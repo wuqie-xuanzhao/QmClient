@@ -21,6 +21,7 @@ struct SSettingsCardDefinition
 	FSettingsCardRender m_Render;
 	FSettingsCardRenderMeasured m_RenderMeasured;
 	FSettingsCardPreLayoutInput m_PreLayoutInput;
+	FSettingsCardPreLayoutHeaderInput m_PreLayoutHeaderInput;
 	FSettingsCardHeaderAction m_HeaderAction;
 	std::function<bool()> m_IsCollapsed;
 	std::function<bool()> m_IsVisible;
@@ -95,6 +96,8 @@ private:
 		float m_LastReflowTargetY = 0.0f;
 		float m_AnimatedContentHeight = 0.0f;
 		float m_LastContentHeightTarget = 0.0f;
+		float m_LastDrawOffsetX = 0.0f;
+		float m_LastDrawOffsetY = 0.0f;
 		bool m_ReflowInitialized = false;
 		bool m_ReflowWasActive = false;
 		bool m_ContentHeightInitialized = false;
@@ -123,6 +126,7 @@ private:
 	};
 
 	void PrepareDefinitions(const std::vector<SSettingsCardDefinition> &vCards, const qm_card_order::CModel &Model);
+	void ResetDefinitionViewState();
 	SSettingsCardDeckResult RenderInternal(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, const std::vector<SSettingsCardDefinition> &vCards, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions, bool PersistentDefinitions);
 
 	CSettingsCardDeckFrameRuntime m_FrameRuntime;
@@ -145,6 +149,7 @@ private:
 	bool m_CachedDefinitionsInitialized = false;
 	bool m_CachedDefinitionsDirty = false;
 	int m_PreparedDefinitionModelCount = -1;
+	uint64_t m_PreparedDefinitionStateIndexRevision = UINT64_MAX;
 	const SSettingsCardDefinition *m_pPreparedDefinitionData = nullptr;
 	size_t m_PreparedDefinitionCount = 0;
 	std::string m_PreparedDefinitionTab;

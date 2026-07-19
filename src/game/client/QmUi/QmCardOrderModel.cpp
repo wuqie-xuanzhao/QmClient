@@ -330,6 +330,7 @@ namespace qm_card_order
 			// 首次出现的 stableId 入表（重复 id 取首次，与 Parse 容错语义一致）
 			m_StableIdToState.try_emplace(m_vEntries[i].m_pStableId, (int)i);
 		}
+		++m_StateIndexRevision;
 	}
 
 	int CModel::StateIndexForStableId(const char *pStableId) const

@@ -71,8 +71,11 @@ namespace ui_token::settings
 	inline constexpr float MAX_CONTENT_WIDTH = 1000.0f;
 	inline constexpr float OUTER_SCROLLBAR_SLOT = 20.0f;
 	inline constexpr float PAGE_INSET = 16.0f;
-	inline constexpr float SUB_TAB_HEIGHT = 20.0f;
-	inline constexpr float SUB_TAB_GAP = 10.0f;
+	inline constexpr float TAB_HEIGHT = 26.0f;
+	inline constexpr float TAB_GAP = 10.0f;
+	inline constexpr float TAB_FONT_SIZE = 13.0f;
+	inline constexpr float SUB_TAB_HEIGHT = TAB_HEIGHT;
+	inline constexpr float SUB_TAB_GAP = TAB_GAP;
 	inline constexpr float CARD_GAP = 16.0f;
 	inline constexpr float ROW_HEIGHT = 20.0f;
 	inline constexpr float ROW_GAP = 5.0f;

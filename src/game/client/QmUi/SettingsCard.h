@@ -37,12 +37,12 @@ inline bool SettingsCardSubtitleVisible(const bool PointerInside, const bool Sub
 	return PointerInside || SubtitleVisibleDuringMotion || Focused;
 }
 
-inline bool ResolveSettingsCardSubtitleMotionLatch(const bool PointerInsideLastFrame, const bool MotionActive, const bool MotionWasActive, const bool VisibleDuringMotion)
+inline bool ResolveSettingsCardSubtitleMotionLatch(const bool PointerInsideCurrentFrame, const bool MotionActive, const bool MotionWasActive, const bool VisibleDuringMotion)
 {
 	if(!MotionActive)
 		return false;
 	if(!MotionWasActive)
-		return PointerInsideLastFrame;
+		return PointerInsideCurrentFrame;
 	return VisibleDuringMotion;
 }
 
@@ -68,6 +68,16 @@ inline CUIRect ResolveSettingsCardInteractionBorderRect(const CUIRect &SurfaceRe
 	return {SurfaceRect.x + Inset, SurfaceRect.y + Inset, std::max(0.0f, SurfaceRect.w - 2.0f * Inset), std::max(0.0f, SurfaceRect.h - 2.0f * Inset)};
 }
 
+inline SSettingsCardFrame ResolveSettingsCardDrawFrame(SSettingsCardFrame Frame, const float OffsetX, const float OffsetY)
+{
+	for(CUIRect *pRect : {&Frame.m_Rect, &Frame.m_HeaderRect, &Frame.m_TitleRect, &Frame.m_SubtitleRect, &Frame.m_HandleRect, &Frame.m_ContentRect})
+	{
+		pRect->x += OffsetX;
+		pRect->y += OffsetY;
+	}
+	return Frame;
+}
+
 inline ColorRGBA ResolveSettingsCardSurfaceColor(ColorRGBA Surface, const SSettingsCardVisualState &State)
 {
 	// Hover、焦点与拖放反馈只属于边框；卡片内部仅跟随整个 Deck 的绘制透明度。
@@ -79,6 +89,7 @@ using FSettingsCardMeasure = std::function<float(float ContentWidth)>;
 using FSettingsCardRender = std::function<void(CUIRect ContentRect)>;
 using FSettingsCardRenderMeasured = std::function<void(CUIRect &ContentRect)>;
 using FSettingsCardPreLayoutInput = std::function<bool(CUIRect ContentRect)>;
+using FSettingsCardPreLayoutHeaderInput = std::function<bool(const SSettingsCardFrame &Frame, bool Collapsed)>;
 using FSettingsCardHeaderAction = std::function<void(const SSettingsCardFrame &Frame, bool Collapsed)>;
 
 SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {}, const FSettingsCardRenderMeasured &RenderMeasured = {}, bool *pPointerInside = nullptr);

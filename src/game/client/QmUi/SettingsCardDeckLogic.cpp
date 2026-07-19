@@ -103,6 +103,12 @@ void CSettingsCardDeckFrameRuntime::CountReflowAnimationResolve()
 		++m_pDiagnostics->m_ReflowAnimationResolveCount;
 }
 
+void CSettingsCardDeckFrameRuntime::CountPreLayoutInput()
+{
+	if(m_pDiagnostics != nullptr)
+		++m_pDiagnostics->m_PreLayoutInputCount;
+}
+
 void CSettingsCardDeckFrameRuntime::CountRenderedCard(const bool ChromePlanned)
 {
 	if(m_pDiagnostics == nullptr)
@@ -266,9 +272,9 @@ SSettingsCardHeightAnimationWork ResolveSettingsCardHeightAnimationWork(const bo
 	return Work;
 }
 
-bool SettingsCardDeckShouldClipContent(const bool CardHeightAnimationActive)
+bool SettingsCardDeckShouldClipContent(const bool HasRenderableContent)
 {
-	return CardHeightAnimationActive;
+	return HasRenderableContent;
 }
 
 SSettingsCardColumnFrame ResolveSettingsCardColumnFrame(const float CursorY, const float CardHeight, const float CardGap)

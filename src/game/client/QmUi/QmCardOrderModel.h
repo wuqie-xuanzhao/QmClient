@@ -33,6 +33,9 @@ namespace qm_card_order
 		const SEntry &Entry(int Index) const { return m_vEntries[Index]; }
 		// 单调布局版本：仅在 tab/column/order 或 entry 集合改变时递增，供渲染投影缓存失效。
 		uint64_t LayoutRevision() const { return m_LayoutRevision; }
+		// stableId 到 state index 的注册表版本。SetEntries/Parse 重新建表时递增，
+		// 但 Move 只改变布局，不改变 state index，避免打断拖拽和布局动画。
+		uint64_t StateIndexRevision() const { return m_StateIndexRevision; }
 
 		int FindByStableId(const char *pStableId) const;
 
@@ -74,6 +77,7 @@ namespace qm_card_order
 		std::deque<std::string> m_vOwnedTabs;
 		std::unordered_map<std::string, int> m_StableIdToState; // stableId→连续 index 注册表（让位 lerp O(1) 查找）
 		uint64_t m_LayoutRevision = 0;
+		uint64_t m_StateIndexRevision = 0;
 		bool m_Dirty = false;
 	};
 } // namespace qm_card_order

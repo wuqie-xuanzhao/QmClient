@@ -106,14 +106,14 @@ namespace
 	TEST(SettingsPageLayout, SharedSubTabsUseOneScaledHeightAndGapContract)
 	{
 		const SSettingsSubTabLayoutFrame Standard = ResolveSettingsSubTabLayout({10.0f, 20.0f, 800.0f, 600.0f}, 1.0f);
-		EXPECT_FLOAT_EQ(Standard.m_TabBarRect.h, 20.0f);
-		EXPECT_FLOAT_EQ(Standard.m_ContentRect.y, 50.0f);
-		EXPECT_FLOAT_EQ(Standard.m_ContentRect.h, 570.0f);
+		EXPECT_FLOAT_EQ(Standard.m_TabBarRect.h, 26.0f);
+		EXPECT_FLOAT_EQ(Standard.m_ContentRect.y, 56.0f);
+		EXPECT_FLOAT_EQ(Standard.m_ContentRect.h, 564.0f);
 
 		const SSettingsSubTabLayoutFrame Compact = ResolveSettingsSubTabLayout({10.0f, 20.0f, 800.0f, 600.0f}, 0.8f);
-		EXPECT_FLOAT_EQ(Compact.m_TabBarRect.h, 16.0f);
-		EXPECT_FLOAT_EQ(Compact.m_ContentRect.y, 44.0f);
-		EXPECT_FLOAT_EQ(Compact.m_ContentRect.h, 576.0f);
+		EXPECT_FLOAT_EQ(Compact.m_TabBarRect.h, 20.8f);
+		EXPECT_FLOAT_EQ(Compact.m_ContentRect.y, 48.8f);
+		EXPECT_FLOAT_EQ(Compact.m_ContentRect.h, 571.2f);
 	}
 
 	TEST(SettingsPageLayout, NarrowViewportUsesOneColumnWithoutPhantomRightColumn)
@@ -168,6 +168,21 @@ namespace
 		EXPECT_FLOAT_EQ(Standard.m_LineHeight, ui_token::settings::ROW_HEIGHT);
 		EXPECT_FLOAT_EQ(Standard.m_LineSpacing, ui_token::settings::ROW_GAP);
 		EXPECT_FLOAT_EQ(Standard.m_CardGap, ui_token::settings::CARD_GAP);
+		EXPECT_FLOAT_EQ(Narrow.m_SmallSize, ResolveSettingsSmallFontSize(Narrow.m_UiScale));
+		EXPECT_FLOAT_EQ(Standard.m_SmallSize, ResolveSettingsSmallFontSize(Standard.m_UiScale));
+	}
+
+	TEST(SettingsPageLayout, DisplayCycleStateStartsOncePerVisiblePage)
+	{
+		SSettingsCardDeckDisplayCycleState State;
+		EXPECT_TRUE(State.EnterPage(9));
+		EXPECT_FALSE(State.EnterPage(9));
+		EXPECT_TRUE(State.EnterView((uint64_t)9 << 32 | 1));
+		EXPECT_FALSE(State.EnterView((uint64_t)9 << 32 | 1));
+		EXPECT_TRUE(State.EnterPage(10));
+		EXPECT_FALSE(State.EnterPage(10));
+		State.LeaveSettings();
+		EXPECT_TRUE(State.EnterPage(10));
 	}
 
 	TEST(SettingsPageLayout, CardDefinitionRevisionChangesOnlyForStructuralInputs)
@@ -253,6 +268,9 @@ namespace
 		EXPECT_FLOAT_EQ(NoBottomSpacingLayout.m_ConsumedHeight, Metrics.m_ButtonHeight);
 		EXPECT_LT(NoBottomSpacingLayout.m_LabelRect.x + NoBottomSpacingLayout.m_LabelRect.w, NoBottomSpacingLayout.m_ColorButtonRect.x);
 		EXPECT_LT(NoBottomSpacingLayout.m_ColorButtonRect.x + NoBottomSpacingLayout.m_ColorButtonRect.w, NoBottomSpacingLayout.m_ResetButtonRect.x);
+
+		const SSettingsColorRowLayout LastRow = ResolveSettingsColorRowLayout(View, Metrics, false, false);
+		EXPECT_FLOAT_EQ(LastRow.m_ConsumedHeight, Metrics.m_ButtonHeight);
 	}
 
 	TEST(SettingsPageLayout, RadioRowsUseMetricsAndStackOnlyWhenRequired)
@@ -277,11 +295,11 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveSettingsInlineRowMinimumWidth(-1.0f, 5.0f, -1), 0.0f);
 	}
 
-	TEST(SettingsPageLayout, ExplicitCheckboxBodySizeUsesRowHeightLimit)
+	TEST(SettingsPageLayout, CheckboxBodySizeUsesRowHeightLimit)
 	{
 		EXPECT_FLOAT_EQ(ResolveSettingsCheckboxFontSize(10.0f, 10.0f, 16.0f, 12.0f, 0.8f), 10.0f);
 		EXPECT_FLOAT_EQ(ResolveSettingsCheckboxFontSize(12.0f, 12.0f, 20.0f, 16.0f, 0.8f), 12.0f);
-		EXPECT_FLOAT_EQ(ResolveSettingsCheckboxFontSize(10.0f, -1.0f, 16.0f, 12.0f, 0.8f), 9.6f);
+		EXPECT_FLOAT_EQ(ResolveSettingsCheckboxFontSize(10.0f, -1.0f, 16.0f, 12.0f, 0.8f), 10.0f);
 	}
 
 	TEST(SettingsPageLayout, AppearanceDynamicCardsMatchConsumedPrimitivesAtBothScales)
@@ -289,10 +307,10 @@ namespace
 		const SSettingsContentMetrics Compact = ResolveSettingsContentMetrics(640.0f);
 		EXPECT_FLOAT_EQ(Compact.m_UiScale, 0.78f);
 		EXPECT_NEAR(ResolveAppearanceChatMessagesHeight(Compact), 258.7f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudCoordsHeight(Compact), 159.2f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, false, false), 99.5f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 311.4f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 391.0f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudCoordsHeight(Compact), 155.3f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, false, false), 95.6f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 307.5f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 387.1f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserColorsHeight(Compact), 319.8f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, false), 95.6f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, true), 135.4f, 0.001f);
@@ -300,10 +318,10 @@ namespace
 		const SSettingsContentMetrics Standard = ResolveSettingsContentMetrics(1000.0f);
 		EXPECT_FLOAT_EQ(Standard.m_UiScale, 1.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceChatMessagesHeight(Standard), 325.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudCoordsHeight(Standard), 200.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, false, false), 125.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 390.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 490.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudCoordsHeight(Standard), 195.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, false, false), 120.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 385.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 485.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserColorsHeight(Standard), 400.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, false), 120.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, true), 170.0f);
@@ -320,25 +338,25 @@ namespace
 	TEST(SettingsPageLayout, QmHudDynamicCardsMatchEveryVisibleState)
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, false, false), 75.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, true), 125.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, false), 250.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, false), 25.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 155.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 390.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 490.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, false, false), 70.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, true), 120.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, false), 245.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, false), 20.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 150.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 385.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 485.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 46.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, true), 121.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, false, false, false, 0, false, false), 25.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, false, false, 0, false, false), 150.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, true, false, 0, false, false), 430.75f);
-		EXPECT_NEAR(ResolveQmHudVoiceHeight(Metrics, true, true, true, 1, true, true), 803.7f, 0.001f);
+		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, false, false, false, 0, false, false), 20.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, false, false, 0, false, false), 145.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, true, false, 0, false, false), 425.75f);
+		EXPECT_NEAR(ResolveQmHudVoiceHeight(Metrics, true, true, true, 1, true, true), 798.7f, 0.001f);
 		EXPECT_FLOAT_EQ(ResolveQmHudLyricsPreviewHeight(4, 1), 42.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudLyricsPreviewHeight(12, 2), 43.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudLyricsHeight(Metrics, 12, 2), 1248.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, false, false, false, false, false, false), 25.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, false, false, false, false, false), 475.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, true, true, true, true, true), 675.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudLyricsHeight(Metrics, 12, 2), 1243.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, false, false, false, false, false, false), 20.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, false, false, false, false, false), 470.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, true, true, true, true, true), 670.0f);
 	}
 
 	TEST(SettingsPageLayout, QmHudRevisionsCoverEveryHeightBranch)
@@ -3234,6 +3252,17 @@ TEST(UiV2DropdownGeometry, PositionsPopupRelativeToScrolledAnchor)
 	EXPECT_NEAR(Result.m_Rect.y, Anchor.y + Anchor.h + Config.m_Gap, 0.001f);
 	EXPECT_NEAR(Result.m_Rect.w, Anchor.w, 0.001f);
 	EXPECT_NEAR(Result.m_Rect.h, Config.m_Height, 0.001f);
+}
+
+TEST(UiV2DropdownVisuals, SettingsStyleSharesTriggerAndPopupSurface)
+{
+	const SQmDropdownVisualStyle Style = QmSettingsDropdownVisualStyle();
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.r, Style.m_PopupBackgroundColor.r);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.g, Style.m_PopupBackgroundColor.g);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.b, Style.m_PopupBackgroundColor.b);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.a, Style.m_PopupBackgroundColor.a);
+	EXPECT_TRUE(Style.m_TransparentEntries);
+	EXPECT_GT(Style.m_PopupBorderColor.a, 0.0f);
 }
 
 TEST(UiV2DropdownGeometry, FlipsAboveWhenBelowWouldOverflow)

@@ -7,10 +7,33 @@
 #include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/SettingsCardDeckLogic.h>
+#include <game/client/QmUi/SettingsPageLayout.h>
 
 #include <gtest/gtest.h>
 
 #include <array>
+
+TEST(SettingsCardDeck, StateIndexRevisionChangesWhenSameSizedModelIsRebuilt)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"card-a", "settings", 1, 0},
+		{"card-b", "settings", 2, 0},
+	});
+	const uint64_t InitialRevision = Model.StateIndexRevision();
+	EXPECT_EQ(Model.StateIndexForStableId("card-a"), 0);
+	EXPECT_EQ(Model.StateIndexForStableId("card-b"), 1);
+
+	Model.SetEntries({
+		{"card-b", "settings", 2, 0},
+		{"card-a", "settings", 1, 0},
+	});
+
+	EXPECT_GT(Model.StateIndexRevision(), InitialRevision);
+	EXPECT_EQ(Model.Count(), 2);
+	EXPECT_EQ(Model.StateIndexForStableId("card-b"), 0);
+	EXPECT_EQ(Model.StateIndexForStableId("card-a"), 1);
+}
 
 TEST(SettingsCardDeck, CrossColumnDropMovesOnlyTheGlobalModel)
 {
@@ -93,6 +116,30 @@ TEST(SettingsCardDeck, CollapsedCardsSkipContentWorkAndExpandedDynamicCardsRemea
 	EXPECT_TRUE(SettingsCardDeckRendersContent(false));
 }
 
+TEST(SettingsCardDeck, PreLayoutContentInputRequiresPointerVisibleExpandedContent)
+{
+	EXPECT_TRUE(SettingsCardDeckShouldRunPreLayoutInput(true, true, false, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(false, true, false, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, false, false, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, true, true, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, true, false, 0.0f));
+}
+
+TEST(SettingsCardDeck, PreLayoutReleaseUsesTheLastVisibleAnimatedFrame)
+{
+	const SSettingsCardSpec Spec{"card", "Card", "Subtitle"};
+	const SSettingsCardFrame TargetFrame = BuildSettingsCardFrame({40.0f, 100.0f, 320.0f, 0.0f}, Spec, 120.0f, 1.0f);
+	const SSettingsCardFrame VisibleFrame = ResolveSettingsCardDrawFrame(TargetFrame, 0.0f, 18.0f);
+	const float ReleaseX = VisibleFrame.m_HandleRect.x + VisibleFrame.m_HandleRect.w * 0.5f;
+	const float ReleaseY = VisibleFrame.m_HandleRect.y + VisibleFrame.m_HandleRect.h - 1.0f;
+
+	EXPECT_FALSE(TargetFrame.m_HandleRect.Inside(vec2(ReleaseX, ReleaseY)));
+	EXPECT_TRUE(VisibleFrame.m_HandleRect.Inside(vec2(ReleaseX, ReleaseY)));
+	EXPECT_FLOAT_EQ(VisibleFrame.m_Rect.y, TargetFrame.m_Rect.y + 18.0f);
+	EXPECT_FLOAT_EQ(VisibleFrame.m_HeaderRect.y, TargetFrame.m_HeaderRect.y + 18.0f);
+	EXPECT_FLOAT_EQ(VisibleFrame.m_ContentRect.y, TargetFrame.m_ContentRect.y + 18.0f);
+}
+
 TEST(SettingsCardDeck, CollapseAndVisibilityChangesSnapWithoutDisablingDragReflow)
 {
 	EXPECT_FALSE(SettingsCardDeckContentHeightChanged(-1.0f, 96.0f));
@@ -113,10 +160,33 @@ TEST(SettingsCardDeck, SubtitleVisibilityUsesCurrentPointerMotionLatchAndFocus)
 
 TEST(SettingsCardDeck, SubtitleVisibilityLatchesOnlyWhileCardIsMoving)
 {
+	// 动效开始帧使用当前绘制位置的命中，不能依赖上一帧的旧几何。
 	EXPECT_TRUE(ResolveSettingsCardSubtitleMotionLatch(true, true, false, false));
+	EXPECT_FALSE(ResolveSettingsCardSubtitleMotionLatch(false, true, false, false));
 	EXPECT_TRUE(ResolveSettingsCardSubtitleMotionLatch(false, true, true, true));
 	EXPECT_FALSE(ResolveSettingsCardSubtitleMotionLatch(false, true, true, false));
 	EXPECT_FALSE(ResolveSettingsCardSubtitleMotionLatch(false, false, true, true));
+}
+
+TEST(SettingsCardDeck, DisplayViewKeyChangesWhenAnySettingsSubTabChanges)
+{
+	const uint64_t Base = ResolveSettingsCardDisplayViewKey(0, 0, 0, 0, 0);
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(1, 0, 0, 0, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 1, 0, 0, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 0, 1, 0, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 0, 0, 1, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 0, 0, 0, 1));
+	EXPECT_EQ(Base, ResolveSettingsCardDisplayViewKey(0, 0, 0, 0, 0));
+}
+
+TEST(SettingsPageLayout, DynamicVisualCardHeightsUseSharedMetrics)
+{
+	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+	EXPECT_FLOAT_EQ(ResolveQmVisualCollisionHitboxHeight(Metrics, false), Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(ResolveQmVisualCollisionHitboxHeight(Metrics, true), 10.0f * Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(ResolveQmVisualFocusModeHeight(Metrics), 16.0f * Metrics.m_RowStep + 3.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing) + Metrics.m_LineSpacing);
+	EXPECT_FLOAT_EQ(ResolveQmVisualSkinTransitionHeight(Metrics, true) - ResolveQmVisualSkinTransitionHeight(Metrics, false), 5.0f * Metrics.m_RowStep);
+	EXPECT_GT(ResolveQmVisualSkinTransitionHeight(Metrics, false), 0.0f);
 }
 
 TEST(SettingsCardDeck, GeometryMotionIncludesCardsPushedByAnEarlierHeightAnimation)
@@ -390,7 +460,7 @@ TEST(SettingsCardDeck, OptionalFrameDiagnosticsRecordAnimatedGeometryWithoutAllo
 	EXPECT_EQ(Diagnostics.m_TotalGeometryCount, SSettingsCardDeckFrameDiagnostics::MAX_GEOMETRY + 2);
 }
 
-TEST(SettingsCardDeck, HeightAnimationClipsOnlyTheAnimatedCard)
+TEST(SettingsCardDeck, EveryRenderableCardClipsContentToItsCurrentFrame)
 {
 	EXPECT_TRUE(SettingsCardDeckShouldClipContent(true));
 	EXPECT_FALSE(SettingsCardDeckShouldClipContent(false));

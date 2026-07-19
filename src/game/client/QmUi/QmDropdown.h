@@ -7,6 +7,24 @@
 
 #include <game/client/ui_rect.h>
 
+struct SQmDropdownVisualStyle
+{
+	ColorRGBA m_TriggerColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
+	ColorRGBA m_PopupBackgroundColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f);
+	ColorRGBA m_PopupBorderColor = ColorRGBA(0.7f, 0.7f, 0.7f, 0.9f);
+	bool m_TransparentEntries = true;
+};
+
+inline SQmDropdownVisualStyle QmSettingsDropdownVisualStyle()
+{
+	SQmDropdownVisualStyle Style;
+	// 设置卡片中的触发器与弹出层使用同一层级的 surface，悬浮反馈只由条目自身叠加。
+	Style.m_TriggerColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f);
+	Style.m_PopupBackgroundColor = Style.m_TriggerColor;
+	Style.m_PopupBorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f);
+	return Style;
+}
+
 struct SQmDropdownGeometryConfig
 {
 	float m_Width = 0.0f;

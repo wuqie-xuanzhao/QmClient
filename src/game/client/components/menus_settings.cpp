@@ -1112,10 +1112,6 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		return;
 
 	CUIRect TabBar, PlayerTab, DummyTab, ChangeInfo;
-	static bool s_PlayerTabTransitionInitialized = false;
-	static bool s_PrevDummy = false;
-	static float s_PlayerTabTransitionDirection = 0.0f;
-	const uint64_t PlayerTabSwitchNode = UiAnimNodeKey("settings_player_tab_switch");
 	const SSettingsSubTabLayoutFrame PlayerSubTabs = ResolveSettingsSubTabLayout(MainView, UiScale);
 	TabBar = PlayerSubTabs.m_TabBarRect;
 	MainView = PlayerSubTabs.m_ContentRect;
@@ -1127,35 +1123,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	static CButtonContainer s_DummyTabButton;
 	if(DoButton_MenuTab(&s_DummyTabButton, Localize("Dummy"), m_Dummy, &DummyTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
 		m_Dummy = true;
-	if(!Ui()->RenderOnly())
-	{
-		if(!s_PlayerTabTransitionInitialized)
-		{
-			s_PrevDummy = m_Dummy;
-			s_PlayerTabTransitionInitialized = true;
-		}
-		else if(m_Dummy != s_PrevDummy)
-		{
-			s_PlayerTabTransitionDirection = m_Dummy ? 1.0f : -1.0f;
-			TriggerUiSwitchAnimation(PlayerTabSwitchNode, 0.18f);
-			s_PrevDummy = m_Dummy;
-		}
-	}
-	const float TransitionStrength = ReadUiSwitchAnimation(PlayerTabSwitchNode);
-	const bool TransitionActive = TransitionStrength > 0.0f && s_PlayerTabTransitionDirection != 0.0f;
-	const float TransitionOffset = TransitionActive ? TransitionStrength * std::clamp(MainView.w * 0.08f, 24.0f, 120.0f) * s_PlayerTabTransitionDirection : 0.0f;
-	const auto DrawAnimatedContent = [this, TransitionActive, TransitionOffset](CUIRect Content, auto &&DrawContent) {
-		if(!TransitionActive)
-		{
-			DrawContent(Content);
-			return;
-		}
-		CUIRect ClipRect = Content;
-		Ui()->ClipEnable(&ClipRect);
-		Content.x += TransitionOffset;
-		DrawContent(Content);
-		Ui()->ClipDisable();
-	};
+	// 子 Tab 已由设置壳层的 Card Deck 统一处理入场；页面内部不再叠加横向位移动效。
+	const auto DrawAnimatedContent = [](CUIRect Content, auto &&DrawContent) { DrawContent(Content); };
 
 	int *pCountry = m_Dummy ? &g_Config.m_ClDummyCountry : &g_Config.m_PlayerCountry;
 	static CLineInput s_NameInput;
@@ -1187,7 +1156,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	const IUiContext PlayerFlagSearchCtx = SettingsUiContext("settings_player_flag_search", UiScale);
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pIdentityDefault, pCountryDefault, DrawAnimatedContent, PlayerIdentityTextInputCtx, PlayerFlagSearchCtx, pCountry, UiScale, BodySize](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pIdentityDefault, pCountryDefault, DrawAnimatedContent, PlayerIdentityTextInputCtx, PlayerFlagSearchCtx, pCountry, UiScale, BodySize, PlayerMetrics](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(2);
 		const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pIdentityDefault)};
 		const SSettingsCardSpec CountrySpec{pCountryDefault->m_pStableId, Localize(pCountryDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pCountryDefault)};
@@ -1198,10 +1167,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			Definition.m_Render = Render;
 			vCards.push_back(Definition);
 		};
-		AddCard(IdentitySpec, 45.0f * UiScale, [this, DrawAnimatedContent, PlayerIdentityTextInputCtx, UiScale, BodySize](CUIRect Content) {
+		AddCard(IdentitySpec, ResolveSettingsRowsHeight(2, PlayerMetrics.m_LineHeight, PlayerMetrics.m_LineSpacing), [this, DrawAnimatedContent, PlayerIdentityTextInputCtx, UiScale, BodySize, PlayerMetrics](CUIRect Content) {
 			CUIRect Label, NameRow, ClanRow;
 			char aBuf[128];
-			Content.HSplitTop(20.0f * UiScale, &NameRow, &Content);
+			Content.HSplitTop(PlayerMetrics.m_LineHeight, &NameRow, &Content);
 			DrawAnimatedContent(NameRow, [this, &Label, &PlayerIdentityTextInputCtx, &aBuf, UiScale, BodySize](CUIRect Row) {
 				Row.VSplitLeft(80.0f * UiScale, &Label, &Row);
 				Row.VSplitLeft(150.0f * UiScale, &Row, nullptr);
@@ -1210,8 +1179,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 				if(ui_widget::InputField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), BodySize))
 					SetNeedSendInfo(m_Dummy);
 			});
-			Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
-			Content.HSplitTop(20.0f * UiScale, &ClanRow, &Content);
+			Content.HSplitTop(PlayerMetrics.m_LineSpacing, nullptr, &Content);
+			Content.HSplitTop(PlayerMetrics.m_LineHeight, &ClanRow, &Content);
 			DrawAnimatedContent(ClanRow, [this, &Label, &PlayerIdentityTextInputCtx, &aBuf, UiScale, BodySize](CUIRect Row) {
 				Row.VSplitLeft(80.0f * UiScale, &Label, &Row);
 				Row.VSplitLeft(150.0f * UiScale, &Row, nullptr);
@@ -1284,9 +1253,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	};
 	const uint64_t PlayerLayoutRevision =
 		((uint64_t)(RenderOnly ? 1 : 0) << 63) |
-		((uint64_t)(m_Dummy ? 1 : 0) << 62) |
-		((uint64_t)(TransitionActive ? 1 : 0) << 61) |
-		(uint64_t)maximum(0, (int)(absolute(TransitionOffset) * 100.0f + 0.5f));
+		((uint64_t)(m_Dummy ? 1 : 0) << 62);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, PlayerLayoutRevision);
 
 	const SSettingsPageLayoutFrame PlayerPage = SettingsPageLayout(MainView, UiScale);
@@ -1337,10 +1304,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		return;
 	static int s_TeeSubTab = 0; // 0=Player, 1=Dummy, 2=Profiles
 	CUIRect TabBar, PlayerTab, DummyTab, ProfilesTab, ChangeInfo;
-	static bool s_TeeTabTransitionInitialized = false;
-	static bool s_PrevTeeDummy = false;
-	static float s_TeeTabTransitionDirection = 0.0f;
-	const uint64_t TeeTabSwitchNode = UiAnimNodeKey("settings_tee_tab_switch");
 	const SSettingsSubTabLayoutFrame TeeSubTabs = ResolveSettingsSubTabLayout(MainView, UiScale);
 	TabBar = TeeSubTabs.m_TabBarRect;
 	MainView = TeeSubTabs.m_ContentRect;
@@ -1394,25 +1357,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);
 		}
 	}
-
-	if(!Ui()->RenderOnly())
-	{
-		if(!s_TeeTabTransitionInitialized)
-		{
-			s_PrevTeeDummy = m_Dummy;
-			s_TeeTabTransitionInitialized = true;
-		}
-		else if(m_Dummy != s_PrevTeeDummy)
-		{
-			s_TeeTabTransitionDirection = m_Dummy ? 1.0f : -1.0f;
-			TriggerUiSwitchAnimation(TeeTabSwitchNode, 0.18f);
-			s_PrevTeeDummy = m_Dummy;
-		}
-	}
-
-	const float TransitionStrength = ReadUiSwitchAnimation(TeeTabSwitchNode);
-	float TransitionOffset = 0.0f;
-	bool TransitionActive = TransitionStrength > 0.0f && s_TeeTabTransitionDirection != 0.0f;
 
 	if(g_Config.m_Debug)
 	{
@@ -1580,7 +1524,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			SortModeControl.VSplitLeft(42.0f, &SortLabel, &SortDropDown);
 			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_skin_sort_label", &SortLabel, Localize("Skin sort"), BodySize, TEXTALIGN_ML);
 			const int SkinSortMode = std::clamp(g_Config.m_QmSkinSortMode, 0, 1);
-			const int SkinSortModeNew = Ui()->DoDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState);
+			CUi::SDropDownProperties SkinSortDropDownProps;
+			SkinSortDropDownProps.m_FontSize = BodySize;
+			SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle();
+			const int SkinSortModeNew = Ui()->DoDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState, SkinSortDropDownProps);
 			if(g_Config.m_QmSkinSortMode != SkinSortModeNew)
 			{
 				g_Config.m_QmSkinSortMode = SkinSortModeNew;
@@ -1642,7 +1589,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 		}
 	};
-	const auto RenderIdentity = [this, TransitionActive, TransitionStrength, UiScale, BodySize, ControlSpacing, ControlLineHeight, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
+	const auto RenderIdentity = [this, UiScale, BodySize, ControlSpacing, ControlLineHeight, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
 		CUIRect MainView = Content;
 		CUIRect YourSkin = Content;
 		CUIRect Button, Label;
@@ -1679,14 +1626,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		const bool PreviewHueCycleApplied = ApplyHueCycleToPreview && QmApplyTeeHueCycle(PreviewSkinInfo, HueCycleConfig);
 		SSettingsPreviewSkinTransitionState &PreviewTransitionState = s_aPreviewTransitionStates[m_Dummy];
 		PreviewTransitionState.Update(PreviewKey, OwnSkinInfo, PreviewNow);
-
-		CUIRect YourSkinClip = YourSkin;
-		if(TransitionActive)
-		{
-			const float TransitionOffset = TransitionStrength * std::clamp(YourSkin.w * 0.08f, 24.0f, 120.0f) * s_TeeTabTransitionDirection;
-			Ui()->ClipEnable(&YourSkinClip);
-			YourSkin.x += TransitionOffset;
-		}
 
 		// Player skin area
 		CUIRect CustomColorsButton, RandomSkinButton;
@@ -1842,11 +1781,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		{
 			*pUseCustomColor = *pUseCustomColor ? 0 : 1;
 			SetNeedSendInfo();
-		}
-
-		if(TransitionActive)
-		{
-			Ui()->ClipDisable();
 		}
 	};
 	const auto RenderList = [this, TeeMetrics, UiScale, BodySize, SecondaryBodySize, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
@@ -3477,9 +3411,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	const uint64_t TeeLayoutRevision =
 		((uint64_t)(RenderOnly ? 1 : 0) << 63) |
 		((uint64_t)(m_Dummy ? 1 : 0) << 62) |
-		((uint64_t)(TransitionActive ? 1 : 0) << 61) |
-		((uint64_t)(*pUseCustomColor != 0) << 60) |
-		(uint64_t)maximum(0, (int)(TransitionStrength * 10000.0f + 0.5f));
+		((uint64_t)(*pUseCustomColor != 0) << 61);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TeeLayoutRevision);
 
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
@@ -5576,7 +5508,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		LogPerfStage(Client(), "settings_shell_layout", PerfDebugElapsedMs(ShellLayoutStartTime), false, aShellExtra);
 	}
 
-	PrepareSettingsTabLabelCache(MainView.w);
+	const float SettingsTabBarButtonWidth = UseNewSettingsUi ? std::max(0.0f, TabBar.w - 20.0f) : -1.0f;
+	PrepareSettingsTabLabelCache(MainView.w, SettingsTabBarButtonWidth);
 
 	{
 		CPerfTimer StageTimer;
@@ -5600,8 +5533,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 			const bool Active = g_Config.m_UiSettingsPage == i;
 			if(UseNewSettingsUi)
 			{
-				TabBar.HSplitTop(10.0f, nullptr, &TabBar);
-				TabBar.HSplitTop(26.0f, &Button, &TabBar);
+				TabBar.HSplitTop(ui_token::settings::TAB_GAP, nullptr, &TabBar);
+				TabBar.HSplitTop(ui_token::settings::TAB_HEIGHT, &Button, &TabBar);
 				if(DoButton_MenuTab(&m_aSettingsTabButtons[i], m_apSettingsTabs[i], Active, &Button, IGraphics::CORNER_ALL, &m_aAnimatorsSettingsTab[i], nullptr, nullptr, nullptr, 10.0f, nullptr, &m_aSettingsTabLabelElements[i]))
 					g_Config.m_UiSettingsPage = i;
 				if(Active)
@@ -5614,8 +5547,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 			}
 			else
 			{
-				TabBar.HSplitTop(10.0f, nullptr, &TabBar);
-				TabBar.HSplitTop(26.0f, &Button, &TabBar);
+				TabBar.HSplitTop(ui_token::settings::TAB_GAP, nullptr, &TabBar);
+				TabBar.HSplitTop(ui_token::settings::TAB_HEIGHT, &Button, &TabBar);
 				if(DoButton_MenuTab(&m_aSettingsTabButtons[i], m_apSettingsTabs[i], Active, &Button, IGraphics::CORNER_R, &m_aAnimatorsSettingsTab[i], nullptr, nullptr, nullptr, 10.0f, nullptr, &m_aSettingsTabLabelElements[i]))
 					g_Config.m_UiSettingsPage = i;
 			}
@@ -5640,7 +5573,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 			LogPerfStage(Client(), "settings_tabbar", StageTimer.ElapsedMs(), false, aTabBarExtra);
 		}
 	}
-	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage != SETTINGS_TEE && m_SettingsCardDeckDisplayState.EnterPage(g_Config.m_UiSettingsPage))
+	const uint64_t SettingsDisplayViewKey = ResolveSettingsCardDisplayViewKey(g_Config.m_UiSettingsPage, m_Dummy ? 1 : 0, m_AppearanceSettingsTab, m_TClientSettingsTab, m_QmClientSettingsTab);
+	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage != SETTINGS_TEE && m_SettingsCardDeckDisplayState.EnterView(SettingsDisplayViewKey))
 	{
 		m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle, true);
 	}
@@ -6822,17 +6756,19 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)
 		{
 			const bool NamePlateStrongLayout = g_Config.m_ClNamePlatesStrong != 0;
-			const float NamePlateRadioLineHeight = 22.0f;
 			const float NamePlateSectionHeaderHeight = MarginBetweenViews + HeadlineHeight + MarginSmall;
 			const float NamePlateColorPickerHeight = ColorPickerRowHeight;
-			const float NamePlateGeneralContentHeight = NamePlateRadioLineHeight + MarginSmall + ResolveSettingsRowsHeight(10, LineSize, MarginSmall);
 			const float NamePlateTextContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(10, LineSize, MarginSmall) + MarginSmall + NamePlateColorPickerHeight * 3.0f;
-			const float NamePlateHookScopeHeight = NamePlateStrongLayout ? NamePlateRadioLineHeight : LineSize;
 			const float NamePlateHookColorHeight = NamePlateStrongLayout ? NamePlateColorPickerHeight * 2.0f : 0.0f;
-			const float NamePlateHookContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(3, LineSize, MarginSmall) + MarginSmall + NamePlateHookScopeHeight + MarginSmall + NamePlateHookColorHeight;
-			const float NamePlateKeysContentHeight = NamePlateSectionHeaderHeight + NamePlateRadioLineHeight + MarginSmall + LineSize;
-			const float NamePlateSettingsMinCardHeight = NamePlateGeneralContentHeight + NamePlateTextContentHeight + NamePlateHookContentHeight + NamePlateKeysContentHeight;
-			AddCard(5, NamePlateSettingsMinCardHeight, [=, this](CUIRect ContentRect) mutable {
+			AddMeasuredCard(5, [=](float ContentWidth) {
+					const auto RadioHeight = [&](const int OptionCount) {
+						return ResolveSettingsRadioRowLayout({0.0f, 0.0f, ContentWidth, LineSize * 2.0f + MarginSmall}, OptionCount, AppearanceMetrics).m_Height;
+					};
+					const float GeneralContentHeight = RadioHeight(4) + MarginSmall + ResolveSettingsRowsHeight(10, LineSize, MarginSmall);
+					const float HookScopeHeight = NamePlateStrongLayout ? RadioHeight(5) : LineSize;
+					const float HookContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(3, LineSize, MarginSmall) + MarginSmall + HookScopeHeight + MarginSmall + NamePlateHookColorHeight;
+					const float KeysContentHeight = NamePlateSectionHeaderHeight + RadioHeight(4) + MarginSmall + LineSize;
+					return GeneralContentHeight + NamePlateTextContentHeight + HookContentHeight + KeysContentHeight; }, [=, this](CUIRect ContentRect) mutable {
 				CUIRect LeftView = ContentRect;
 				const auto NextNamePlateRow = [&](CUIRect &Row) {
 					LeftView.HSplitTop(LineSize, &Row, &LeftView);
@@ -6926,7 +6862,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 						const int SelectedNew = Ui()->DoDropDown(&ControlCol, Current - Min, vNames.data(), (int)vNames.size(), State) + Min;
 						if(*pValue != SelectedNew)
 							*pValue = SelectedNew;
-					});
+						});
 				};
 
 				static std::vector<const char *> s_NameplateTextPlayingDropDownNames;
@@ -7032,8 +6968,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 						g_Config.m_QmNameplateHookStrongWeakScope,
 						AppearanceMetrics);
 				}
-				else
-					LeftView.HSplitTop(NamePlateHookScopeHeight, nullptr, &LeftView);
+					else
+						LeftView.HSplitTop(LineSize, nullptr, &LeftView);
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 
 				if(NamePlateStrongLayout)
@@ -7066,8 +7002,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 				LeftView.HSplitTop(LineSize, &Button, &LeftView);
 				if(g_Config.m_ClShowDirection > 0)
-					DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-key-press-icons-size", &g_Config.m_ClDirectionSize, &g_Config.m_ClDirectionSize, Button, Localize("Size of key press icons"), -50, 100);
-			});
+					DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-key-press-icons-size", &g_Config.m_ClDirectionSize, &g_Config.m_ClDirectionSize, Button, Localize("Size of key press icons"), -50, 100); }, NamePlateStrongLayout ? 1 : 0);
 			const float NamePlatePreviewAreaHeight = std::clamp(190.0f * AppearanceUiScale, 160.0f, 210.0f);
 			const float NamePlatePreviewControlsHeight = ResolveSettingsRowsHeight(3, LineSize, MarginSmall);
 			const float NamePlatePreviewMinCardHeight = NamePlatePreviewAreaHeight + MarginSmall + NamePlatePreviewControlsHeight;

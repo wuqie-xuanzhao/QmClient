@@ -42,6 +42,40 @@ namespace
 	}
 }
 
+void CSettingsCardDeck::ResetDefinitionViewState()
+{
+	// Definition state is indexed by the current card-order model. A different
+	// tab or stable-id set may reuse the same indices, so retaining these
+	// values would make the new view inherit heights, animation tracks and
+	// active-column state from the previous view.
+	m_vRuntimeStates.clear();
+	m_vContentHeights.clear();
+	m_vContentWidths.clear();
+	m_vMeasureRevisions.clear();
+	m_vDefinitionsByState.clear();
+	m_vBoundDefinitionStateIndices.clear();
+	m_vActiveStateIndices.clear();
+	m_vPreviousActiveStateIndices.clear();
+	m_vLastRenderedActiveStateIndices.clear();
+	m_vPreparedStableIds.clear();
+	m_vPreparedCards.clear();
+	m_vDragGeometry.clear();
+	for(std::vector<int> &vColumn : m_aDragColumns)
+		vColumn.clear();
+	m_ProjectionCache = {};
+	m_Drag.Reset();
+	m_HasScrollOffset = false;
+	m_LastScrollOffsetY = 0.0f;
+	m_LastViewportHeight = -1.0f;
+	m_PreparedDefinitionModelCount = -1;
+	m_PreparedDefinitionStateIndexRevision = UINT64_MAX;
+	m_pPreparedDefinitionData = nullptr;
+	m_PreparedDefinitionCount = 0;
+	m_PreparedDefinitionTab.clear();
+	m_FrameRuntime.OnTabChanged();
+	m_SuppressHoverFeedbackOnce = true;
+}
+
 void CSettingsCardDeck::PrepareDefinitions(const std::vector<SSettingsCardDefinition> &vCards, const qm_card_order::CModel &Model)
 {
 	if(m_vDefinitionsByState.size() != (size_t)Model.Count())
@@ -98,6 +132,8 @@ void CSettingsCardDeck::BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEnt
 			Runtime.m_SubtitleMotionWasActive = false;
 			Runtime.m_SubtitleVisibleDuringMotion = false;
 			Runtime.m_MotionGeometryInitialized = false;
+			Runtime.m_LastDrawOffsetX = 0.0f;
+			Runtime.m_LastDrawOffsetY = 0.0f;
 		}
 	}
 }
@@ -113,24 +149,12 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	m_FrameRuntime.BeginFrame(Input.m_pDiagnostics);
 	if(pTab == nullptr)
 		return Result;
-	if(m_LastRenderedTab != pTab)
+	const bool TabChanged = m_LastRenderedTab != pTab;
+	if(TabChanged)
 	{
 		m_LastRenderedTab = pTab;
 		m_FrameRuntime.OnTabChanged();
 		m_SuppressHoverFeedbackOnce = true;
-		m_vLastRenderedActiveStateIndices.clear();
-		for(SRuntimeState &Runtime : m_vRuntimeStates)
-		{
-			Runtime.m_ReflowInitialized = false;
-			Runtime.m_ReflowWasActive = false;
-			Runtime.m_ContentHeightInitialized = false;
-			Runtime.m_ContentHeightWasActive = false;
-			Runtime.m_CollapsedInitialized = false;
-			Runtime.m_PointerInsideLastFrame = false;
-			Runtime.m_SubtitleMotionWasActive = false;
-			Runtime.m_SubtitleVisibleDuringMotion = false;
-			Runtime.m_MotionGeometryInitialized = false;
-		}
 	}
 
 	bool StableIdsChanged = m_vPreparedStableIds.size() != vCards.size();
@@ -138,20 +162,27 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	{
 		for(size_t i = 0; i < vCards.size(); ++i)
 		{
-			if(m_vPreparedStableIds[i] != vCards[i].m_Spec.m_pStableId)
+			const char *pPreparedStableId = m_vPreparedStableIds[i] != nullptr ? m_vPreparedStableIds[i] : "";
+			const char *pCurrentStableId = vCards[i].m_Spec.m_pStableId != nullptr ? vCards[i].m_Spec.m_pStableId : "";
+			if(str_comp(pPreparedStableId, pCurrentStableId) != 0)
 			{
 				StableIdsChanged = true;
 				break;
 			}
 		}
 	}
-	if(!PersistentDefinitions || m_CachedDefinitionsDirty || m_PreparedDefinitionModelCount != Model.Count() || m_pPreparedDefinitionData != vCards.data() || m_PreparedDefinitionCount != vCards.size() || m_PreparedDefinitionTab != pTab || StableIdsChanged)
+	const bool ModelCountChanged = m_PreparedDefinitionModelCount != Model.Count();
+	const bool StateIndexChanged = m_PreparedDefinitionStateIndexRevision != Model.StateIndexRevision();
+	if(TabChanged || StableIdsChanged || ModelCountChanged || StateIndexChanged)
+		ResetDefinitionViewState();
+	if(!PersistentDefinitions || m_CachedDefinitionsDirty || m_PreparedDefinitionModelCount != Model.Count() || m_PreparedDefinitionStateIndexRevision != Model.StateIndexRevision() || m_pPreparedDefinitionData != vCards.data() || m_PreparedDefinitionCount != vCards.size() || m_PreparedDefinitionTab != pTab || StableIdsChanged)
 	{
 		if(Input.m_pDiagnostics != nullptr)
 			m_FrameRuntime.CountDefinitionsPrepare();
 		PrepareDefinitions(vCards, Model);
 		m_CachedDefinitionsDirty = false;
 		m_PreparedDefinitionModelCount = Model.Count();
+		m_PreparedDefinitionStateIndexRevision = Model.StateIndexRevision();
 		m_pPreparedDefinitionData = vCards.data();
 		m_PreparedDefinitionCount = vCards.size();
 		m_PreparedDefinitionTab = pTab;
@@ -318,13 +349,35 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	// 先用当前 active snapshot 的几何处理控制器输入，再为最终 active snapshot 重新计算布局。
 	m_vPreviousActiveStateIndices = m_vActiveStateIndices;
 	bool PreLayoutGeometryChanged = false;
-	for(const SPreparedCard &Card : m_vPreparedCards)
+	const bool HasPointerInput = Input.m_MousePressed || Input.m_MouseDown || Input.m_MouseReleased;
+	if(HasPointerInput)
 	{
-		const bool ControllerVisible = pScrollRegion == nullptr || !pScrollRegion->RectClipped(Card.m_Frame.m_Rect) || Card.m_pDefinition->m_RenderWhenClipped;
-		if(ControllerVisible && Card.m_pDefinition->m_VisibilityController && Card.m_pDefinition->m_PreLayoutInput && Card.m_pDefinition->m_PreLayoutInput(Card.m_Frame.m_ContentRect))
+		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
-			m_vContentHeights[Card.m_StateIndex] = -1.0f;
-			PreLayoutGeometryChanged = true;
+			const SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
+			// 鼠标按下与释放跨帧完成。预布局必须沿用上一帧实际绘制位置，
+			// 否则动画中的目标矩形会先清除 active item，正式绘制阶段便无法提交点击。
+			const SSettingsCardFrame PreLayoutFrame = ResolveSettingsCardDrawFrame(Card.m_Frame, Runtime.m_LastDrawOffsetX, Runtime.m_LastDrawOffsetY);
+			const bool ControllerVisible = pScrollRegion == nullptr || !pScrollRegion->RectClipped(PreLayoutFrame.m_Rect) || Card.m_pDefinition->m_RenderWhenClipped;
+			bool CardGeometryChanged = false;
+			const bool CollapsedBeforeHeader = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
+			if(ControllerVisible && Card.m_pDefinition->m_PreLayoutHeaderInput)
+			{
+				m_FrameRuntime.CountPreLayoutInput();
+				CardGeometryChanged = Card.m_pDefinition->m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader);
+			}
+
+			const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
+			if(SettingsCardDeckShouldRunPreLayoutInput(true, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)
+			{
+				m_FrameRuntime.CountPreLayoutInput();
+				CardGeometryChanged = Card.m_pDefinition->m_PreLayoutInput(PreLayoutFrame.m_ContentRect) || CardGeometryChanged;
+			}
+			if(CardGeometryChanged)
+			{
+				m_vContentHeights[Card.m_StateIndex] = -1.0f;
+				PreLayoutGeometryChanged = true;
+			}
 		}
 	}
 	RebuildActiveStateIndices();
@@ -488,7 +541,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		const char *pStableId = Card.m_pDefinition->m_Spec.m_pStableId;
 		SSettingsCardVisualState State;
 		State.m_DrawOffsetY = DeckEntryOffsetY;
-		State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_ContentHeightAnimationActive);
+		State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_Frame.m_ContentRect.w > 0.0f && Card.m_Frame.m_ContentRect.h > 0.0f);
 		if(Ctx.m_pAnim != nullptr)
 		{
 			const bool ReflowInitializedThisFrame = !Runtime.m_ReflowInitialized;
@@ -544,7 +597,9 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			}
 			Runtime.m_LastReflowTargetY = ReflowTargetY;
 		}
-		const float MotionY = Card.m_Frame.m_Rect.y + State.m_DrawOffsetY;
+		// 用未滚动的布局坐标检测真实几何动效。屏幕滚动只改变绘制位置，
+		// 不能让所有卡片的副标题在滚轮事件中短暂出现。
+		const float MotionY = Card.m_Frame.m_Rect.y - ScrollOffset.y + State.m_DrawOffsetY;
 		const float MotionHeight = Card.m_Frame.m_Rect.h;
 		const bool GeometryMotionActive = SettingsCardDeckGeometryMoved(Runtime.m_MotionGeometryInitialized, Runtime.m_LastMotionY, Runtime.m_LastMotionHeight, MotionY, MotionHeight);
 		Runtime.m_MotionGeometryInitialized = true;
@@ -558,13 +613,19 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		}
 		State.m_DropFeedback = Runtime.m_DropFeedbackRemaining > 0.0f;
 		State.m_ReflowCompleteFeedback = false;
-		const bool SubtitleMotionActive = EntryPositionActive || Runtime.m_ReflowWasActive || Card.m_ContentHeightAnimationActive || GeometryMotionActive;
-		Runtime.m_SubtitleVisibleDuringMotion = ResolveSettingsCardSubtitleMotionLatch(Runtime.m_PointerInsideLastFrame, SubtitleMotionActive, Runtime.m_SubtitleMotionWasActive, Runtime.m_SubtitleVisibleDuringMotion);
-		Runtime.m_SubtitleMotionWasActive = SubtitleMotionActive;
-		State.m_SubtitleVisibleDuringMotion = Runtime.m_SubtitleVisibleDuringMotion;
 		Result.m_DropFeedbackConsumed = Result.m_DropFeedbackConsumed || State.m_DropFeedback;
 		const bool Reveal = !m_PendingRevealStableId.empty() && str_comp(pStableId, m_PendingRevealStableId.c_str()) == 0;
 		const bool Visible = pScrollRegion == nullptr || pScrollRegion->AddRect(Card.m_Frame.m_Rect, Reveal);
+		CUIRect CurrentDrawRect = Card.m_Frame.m_Rect;
+		CurrentDrawRect.x += State.m_DrawOffsetX;
+		CurrentDrawRect.y += State.m_DrawOffsetY;
+		const bool PointerInsideCurrentFrame = Visible && Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly() && Ctx.m_pUi->MouseHovered(&CurrentDrawRect);
+		// 入场是整个 Deck 的统一动效；高度/重排只影响当前卡片或被其推动的同列卡片。
+		// 副标题从动效开始的当前绘制帧锁存，避免首次入场时依赖上一帧旧几何而漏显。
+		const bool SubtitleMotionActive = EntryPositionActive || Runtime.m_ReflowWasActive || Card.m_ContentHeightAnimationActive || GeometryMotionActive;
+		Runtime.m_SubtitleVisibleDuringMotion = ResolveSettingsCardSubtitleMotionLatch(PointerInsideCurrentFrame, SubtitleMotionActive, Runtime.m_SubtitleMotionWasActive, Runtime.m_SubtitleVisibleDuringMotion);
+		Runtime.m_SubtitleMotionWasActive = SubtitleMotionActive;
+		State.m_SubtitleVisibleDuringMotion = Runtime.m_SubtitleVisibleDuringMotion;
 		if(Reveal)
 		{
 			Result.m_pRevealedStableId = Model.Entry(Card.m_StateIndex).m_pStableId;
@@ -583,6 +644,11 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_Render : FSettingsCardRender{}, Card.m_pDefinition->m_HeaderAction,
 				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_RenderMeasured : FSettingsCardRenderMeasured{}, &PointerInsideCurrentFrame);
 			Runtime.m_PointerInsideLastFrame = PointerInsideCurrentFrame;
+			if(Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly())
+			{
+				Runtime.m_LastDrawOffsetX = State.m_DrawOffsetX;
+				Runtime.m_LastDrawOffsetY = State.m_DrawOffsetY;
+			}
 		}
 		else
 			Runtime.m_PointerInsideLastFrame = false;
