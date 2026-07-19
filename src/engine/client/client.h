@@ -236,6 +236,9 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	CSnapshotStorage::CHolder *m_aapSnapshots[NUM_DUMMIES][NUM_SNAPSHOT_TYPES];
 
 	int m_aReceivedSnapshots[NUM_DUMMIES] = {0, 0};
+	SClientSnapshotStats m_aSnapshotStats[NUM_DUMMIES];
+	int64_t m_aLastSnapshotTime[NUM_DUMMIES] = {0, 0};
+	int m_aLastSnapshotTick[NUM_DUMMIES] = {-1, -1};
 	char m_aaSnapshotIncomingData[NUM_DUMMIES][CSnapshot::MAX_SIZE];
 	int m_aSnapshotIncomingDataSize[NUM_DUMMIES] = {0, 0};
 
@@ -445,13 +448,14 @@ public:
 	CSnapItem SnapGetItem(int SnapId, int Index) const override;
 	int GetPredictionTick() override;
 	EPredictionMarginState PredictionMarginState() const override;
-	float SnapshotLatencyMs() const override;
-	float PredictionLatencyMs() const override;
+	float PingMs() const override;
+	float PredictionLeadMs() const override;
 	float PredictionMarginMs() const override;
 	float PredictionJitterMs() const override;
 	float GameTimeMarginMs() const override;
 	bool IsGameConnectionAlive() const override;
 	void NetStatsSnapshot(NETSTATS &Prev, NETSTATS &Current, std::chrono::nanoseconds &LastUpdate) const override;
+	void SnapshotStats(SClientSnapshotStats &Stats) const override;
 	int PendingResendCount() const override;
 	const void *SnapFindItem(int SnapId, int Type, int Id) const override;
 	int SnapNumItems(int SnapId) const override;
@@ -518,6 +522,7 @@ public:
 	static void Con_Connect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Disconnect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_QmTimeoutDisconnect(IConsole::IResult *pResult, void *pUserData);
+	static void Con_QmNetQosStatus(IConsole::IResult *pResult, void *pUserData);
 
 	static void Con_DummyConnect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_DummyDisconnect(IConsole::IResult *pResult, void *pUserData);

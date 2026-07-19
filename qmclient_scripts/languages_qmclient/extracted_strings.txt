@@ -485,7 +485,6 @@ Broadcast shown to players without DDNet client
 Browser
 Brutal
 Bubble opacity
-Buffer memory
 Built-in
 Button - Disabled
 Button - Enabled
@@ -662,6 +661,7 @@ Communities
 Community
 Compact
 Compatible with single-player area hints from other servers
+Complete snapshots are arriving late or not arriving
 Compressor attack time (ms)
 Compressor makeup gain (percent)
 Compressor ratio (x10)
@@ -709,14 +709,12 @@ Connected, waiting for first ping
 Connecting dummy
 Connecting to
 Connection disconnected
-Connection downstream
 Connection elevated
 Connection normal
 Connection Problems…
 Connection Quality
 Connection quality
 Connection severely abnormal
-Connection upstream
 Connlimit: number of connections allowed per IP in a time period
 Connlimit: time window for IP connection count
 Console
@@ -944,18 +942,19 @@ Display index
 Display mode
 Display modes
 Display your race time
-Displays client prediction latency
-Displays client receive rate
-Displays client send rate
 Displays connection quality grade
 Displays current position
 Displays current prediction value
 Displays current zoom value
 Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
-Displays latency jitter
-Displays resend-based packet loss estimate
-Displays server snapshot latency
+Displays estimated total UDP receive rate
+Displays estimated total UDP send rate
+Displays prediction timing jitter
+Displays the client's prediction lead
+Displays the interval between complete snapshots
+Displays the number of unacknowledged vital chunks
+Displays the server ping round-trip time
 Displays X and Y velocity
 Displays your current angle in degrees
 Displays your frames per second
@@ -1354,6 +1353,7 @@ Fraction of players needed to pass a vote
 Frags
 Frame rate
 Frame time
+Frame time p95
 Framebuffer color bits (only fullscreen)
 Frankenstein (drop parts on right)
 Free move
@@ -1785,10 +1785,8 @@ Laser size
 Laser Size/Thickness (percentage, 100=default)
 Last entered
 Last page in console
-Latency
 Latency compensation
 Latency Jitter
-Latency jitter
 Layout
 Leak IP
 Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
@@ -2513,15 +2511,15 @@ Predicted ghost opacity
 Prediction
 Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
-Prediction jitter is obvious, latency changes are large
+Prediction jitter
+Prediction jitter is obvious, prediction timing is changing
 Prediction Latency
-Prediction latency
-Prediction latency is elevated, prediction path pressure is high
+Prediction lead
+Prediction lead is high, check prediction settings and server timing
 Prediction Margin
 Prediction margin
 Prediction margin when frozen
 Prediction offset
-Prediction time
 Preparing demo playback
 Preset %d
 Preset bar
@@ -2649,9 +2647,7 @@ Read new feature indicators
 Reason
 Reason:
 Rebinds the client's listening address and port
-Receive
 Receive Rate
-Receive rate
 Receive VAD speakers
 Receive voice from spectators/inactive players
 Receiving
@@ -2803,8 +2799,6 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 Resend Loss
-Resend loss
-Resend signs detected, connection quality is suspicious
 Reset
 Reset a config to its default value
 Reset All
@@ -2848,7 +2842,6 @@ RNNoise noise reduction
 RNNoise noise reduction (unavailable in this build)
 RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
-Rollback rate
 Room
 Room password
 Rotate all server player skins
@@ -2857,6 +2850,7 @@ Round
 Round %d/%d
 Rounded caps
 Route Echo messages to notifications
+RTT
 Rule line 1.
 Rule line 10.
 Rule line 2.
@@ -2977,7 +2971,6 @@ Send emote when entering freeze
 Send emoticon in water
 Send probability
 Send Rate
-Send rate
 Send source language
 Send specified command to rcon
 Send target language
@@ -3014,8 +3007,6 @@ Server password
 Server port (only 8303-8310 work in LAN browser, 0=auto find free in 8303-8310). If behind NAT, see sv_register_port for external port
 Server preset
 Server region. Used for region bans
-Server rollback
-Server RTT is elevated, response path is unstable
 Server stress (debug builds only).
 Server type (novice, moderate, etc.)
 Set a voice server to enable QmClient distribution
@@ -3269,7 +3260,6 @@ Show Qm badge: identify via central server and mark QmClient users on nameplate/
 Show QmClient config variables
 Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
-Show release date and author when sorted by date
 Show score
 Show scoreboard
 Show scoreboard after death
@@ -3281,6 +3271,7 @@ Show short server names in browser
 Show skin date and author
 Show skin name on name plate to find missing skins
 Show skin names in nameplate
+Show skin release date and author
 Show song info in top-left corner
 Show spectator cursor
 Show speedometer when changing
@@ -3406,7 +3397,11 @@ Smooth zoom animation time in editor (in ms, 0=off)
 Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 Snap threshold
+Snapshot Gap
+Snapshot gap
 Snapshot Latency
+Snapshot payload
+Snapshot rate
 Social
 Solid
 Solid tile outline opacity
@@ -3467,7 +3462,6 @@ Spree
 SQL Server name for record table
 Squishy Tee deformation duration
 Squishy Tee deformation intensity
-Staging memory
 Star
 Start and connect to local server
 Start here to quickly diagnose if the issue is with device, server, or room
@@ -3505,7 +3499,6 @@ Stop recording a video
 Stop rendering text overlays in editor or with entities: higher = less detail = faster
 Stop server
 Stop the current demo
-Streamed memory
 Streamer Mode
 Streamer mode
 Strength icons assets
@@ -3648,10 +3641,8 @@ Tencent Cloud Translation endpoint
 Tencent Cloud Translation region
 Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
-Text
 Text alpha
 Text color
-Texture memory
 Thank you for your company and trust. This is what gives me the courage to keep going.
 Thanks for supporting QmClient
 The audio device couldn't be initialised.
@@ -3771,6 +3762,8 @@ Too many translation tasks
 Toolbox page
 Total
 Total friends
+Total UDP RX (est.)
+Total UDP TX (est.)
 Total: %d save(s)
 Traditional
 Trail alpha
@@ -3978,6 +3971,7 @@ Visual: Effects
 Visual: Font & Cursor
 Visual: Nameplates
 Visuals
+Vital resend queue
 Voice
 Voice activation release delay
 Voice audio backend (SDL driver name, empty=auto)

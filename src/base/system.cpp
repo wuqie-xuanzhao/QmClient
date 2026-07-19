@@ -65,6 +65,7 @@
 #include <io.h>
 #include <objbase.h>
 #include <process.h>
+#include <qos2.h>
 #include <shellapi.h>
 #include <ws2tcpip.h>
 
@@ -111,6 +112,53 @@ struct NETSOCKET_INTERNAL
 	NETSOCKET_BUFFER buffer;
 };
 static NETSOCKET_INTERNAL invalid_socket = {NETTYPE_INVALID, -1, -1, -1, -1};
+
+struct NETQOS_INTERNAL
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	HANDLE m_Handle;
+	QOS_FLOWID m_FlowId;
+	SOCKET m_Socket;
+#endif
+};
+
+#if defined(CONF_FAMILY_WINDOWS)
+struct SQwaveApi
+{
+	HMODULE m_pModule = nullptr;
+	decltype(&QOSCreateHandle) m_pCreateHandle = nullptr;
+	decltype(&QOSCloseHandle) m_pCloseHandle = nullptr;
+	decltype(&QOSAddSocketToFlow) m_pAddSocketToFlow = nullptr;
+	decltype(&QOSRemoveSocketFromFlow) m_pRemoveSocketFromFlow = nullptr;
+
+	bool Available() const
+	{
+		return m_pModule != nullptr && m_pCreateHandle != nullptr && m_pCloseHandle != nullptr && m_pAddSocketToFlow != nullptr && m_pRemoveSocketFromFlow != nullptr;
+	}
+};
+
+static const SQwaveApi &qwave_api()
+{
+	static const SQwaveApi Api = []() {
+		SQwaveApi Result;
+		Result.m_pModule = LoadLibraryExW(L"qwave.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+		if(Result.m_pModule == nullptr)
+			return Result;
+
+		Result.m_pCreateHandle = reinterpret_cast<decltype(Result.m_pCreateHandle)>(GetProcAddress(Result.m_pModule, "QOSCreateHandle"));
+		Result.m_pCloseHandle = reinterpret_cast<decltype(Result.m_pCloseHandle)>(GetProcAddress(Result.m_pModule, "QOSCloseHandle"));
+		Result.m_pAddSocketToFlow = reinterpret_cast<decltype(Result.m_pAddSocketToFlow)>(GetProcAddress(Result.m_pModule, "QOSAddSocketToFlow"));
+		Result.m_pRemoveSocketFromFlow = reinterpret_cast<decltype(Result.m_pRemoveSocketFromFlow)>(GetProcAddress(Result.m_pModule, "QOSRemoveSocketFromFlow"));
+		if(!Result.Available())
+		{
+			FreeLibrary(Result.m_pModule);
+			Result = {};
+		}
+		return Result;
+	}();
+	return Api;
+}
+#endif
 
 IOHANDLE io_open(const char *filename, int flags)
 {
@@ -1427,9 +1475,98 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 	return sock;
 }
 
+NETQOS net_qos_add_socket(NETSOCKET sock, const NETADDR *addr, ENetQosStatus *pStatus)
+{
+	if(pStatus != nullptr)
+		*pStatus = ENetQosStatus::FAILED;
+#if defined(CONF_FAMILY_WINDOWS)
+	if(sock == nullptr || addr == nullptr)
+		return nullptr;
+
+	SOCKET Socket;
+	sockaddr_storage DestAddr;
+	mem_zero(&DestAddr, sizeof(DestAddr));
+	if((addr->type & NETTYPE_IPV4) != 0 && sock->ipv4sock >= 0)
+	{
+		Socket = (SOCKET)sock->ipv4sock;
+		netaddr_to_sockaddr_in(addr, (sockaddr_in *)&DestAddr);
+	}
+	else if((addr->type & NETTYPE_IPV6) != 0 && sock->ipv6sock >= 0)
+	{
+		Socket = (SOCKET)sock->ipv6sock;
+		netaddr_to_sockaddr_in6(addr, (sockaddr_in6 *)&DestAddr);
+	}
+	else
+	{
+		return nullptr;
+	}
+
+	const SQwaveApi &Api = qwave_api();
+	if(!Api.Available())
+	{
+		if(pStatus != nullptr)
+			*pStatus = ENetQosStatus::UNAVAILABLE;
+		return nullptr;
+	}
+
+	QOS_VERSION Version{1, 0};
+	HANDLE Handle;
+	if(!Api.m_pCreateHandle(&Version, &Handle))
+	{
+		log_debug("net", "qWave handle unavailable (%s)", windows_format_system_message(GetLastError()).c_str());
+		return nullptr;
+	}
+
+	QOS_FLOWID FlowId = 0;
+	if(!Api.m_pAddSocketToFlow(Handle, Socket, (sockaddr *)&DestAddr, QOSTrafficTypeAudioVideo, QOS_NON_ADAPTIVE_FLOW, &FlowId))
+	{
+		log_debug("net", "qWave flow unavailable (%s)", windows_format_system_message(GetLastError()).c_str());
+		Api.m_pCloseHandle(Handle);
+		return nullptr;
+	}
+
+	NETQOS Qos = (NETQOS_INTERNAL *)malloc(sizeof(*Qos));
+	if(Qos == nullptr)
+	{
+		Api.m_pRemoveSocketFromFlow(Handle, Socket, FlowId, 0);
+		Api.m_pCloseHandle(Handle);
+		return nullptr;
+	}
+	Qos->m_Handle = Handle;
+	Qos->m_FlowId = FlowId;
+	Qos->m_Socket = Socket;
+	if(pStatus != nullptr)
+		*pStatus = ENetQosStatus::ACTIVE;
+	return Qos;
+#else
+	(void)sock;
+	(void)addr;
+	if(pStatus != nullptr)
+		*pStatus = ENetQosStatus::UNAVAILABLE;
+	return nullptr;
+#endif
+}
+
+void net_qos_remove_socket(NETQOS qos)
+{
+	if(qos == nullptr)
+		return;
+#if defined(CONF_FAMILY_WINDOWS)
+	const SQwaveApi &Api = qwave_api();
+	if(Api.Available())
+	{
+		Api.m_pRemoveSocketFromFlow(qos->m_Handle, qos->m_Socket, qos->m_FlowId, 0);
+		Api.m_pCloseHandle(qos->m_Handle);
+	}
+#endif
+	free(qos);
+}
+
 int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size)
 {
 	int d = -1;
+	bool AnySuccess = false;
+	int SuccessfulResult = -1;
 
 	if(addr->type & NETTYPE_IPV4)
 	{
@@ -1449,6 +1586,9 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			}
 
 			d = sendto(sock->ipv4sock, (const char *)data, size, 0, (sockaddr *)&sa, sizeof(sa));
+			AnySuccess |= d >= 0;
+			if(d >= 0)
+				SuccessfulResult = d;
 		}
 		else
 		{
@@ -1468,6 +1608,9 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			else
 			{
 				d = websocket_send(sock->web_ipv4sock, (const unsigned char *)data, size, addr);
+				AnySuccess |= d >= 0;
+				if(d >= 0)
+					SuccessfulResult = d;
 			}
 		}
 		else
@@ -1497,6 +1640,9 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			}
 
 			d = sendto(sock->ipv6sock, (const char *)data, size, 0, (sockaddr *)&sa, sizeof(sa));
+			AnySuccess |= d >= 0;
+			if(d >= 0)
+				SuccessfulResult = d;
 		}
 		else
 		{
@@ -1516,6 +1662,9 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			else
 			{
 				d = websocket_send(sock->web_ipv6sock, (const unsigned char *)data, size, addr);
+				AnySuccess |= d >= 0;
+				if(d >= 0)
+					SuccessfulResult = d;
 			}
 		}
 		else
@@ -1525,9 +1674,16 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 	}
 #endif
 
-	network_stats.sent_bytes += size;
-	network_stats.sent_packets++;
-	return d;
+	if(AnySuccess)
+	{
+		network_stats.sent_bytes += size;
+		network_stats.sent_packets++;
+	}
+	else
+	{
+		network_stats.send_errors++;
+	}
+	return AnySuccess ? SuccessfulResult : -1;
 }
 
 void net_buffer_init(NETSOCKET_BUFFER *buffer)

@@ -14,6 +14,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <mutex>
 #include <thread>
 
@@ -28,10 +29,9 @@ enum class EQmConnectionGrade
 enum class EQmDiagnosticCause
 {
 	NONE,
-	DOWNSTREAM,
-	UPSTREAM,
-	JITTER,
-	PACKET_LOSS,
+	SNAPSHOT_GAP,
+	PREDICTION,
+	PREDICTION_JITTER,
 	CLIENT_PERFORMANCE,
 };
 
@@ -44,19 +44,24 @@ struct SQmNetworkMetrics
 		uint64_t m_OverheadBytes = 0;
 		uint64_t m_TotalBytes = 0;
 		uint64_t m_AveragePayloadBytes = 0;
-		float m_RateKibPerSec = 0.0f;
+		float m_RateKibPerSec = -1.0f;
 	};
 
-	float m_SnapshotLatencyMs = 0.0f;
-	float m_PredictionLatencyMs = 0.0f;
+	float m_PingMs = -1.0f;
+	float m_PredictionLeadMs = 0.0f;
 	float m_PredictionMarginMs = 0.0f;
-	float m_JitterMs = 0.0f;
+	float m_PredictionJitterMs = -1.0f;
+	float m_SnapshotGapMs = -1.0f;
+	int m_SnapshotTickGap = -1;
+	float m_SnapshotRatePerSec = -1.0f;
+	float m_SnapshotPayloadBytesPerSec = -1.0f;
+	float m_SnapshotPartRatePerSec = -1.0f;
 	float m_GameTimeMarginMs = 0.0f;
-	float m_ServerRollbackMs = 0.0f;
-	float m_PacketLossPct = 0.0f;
-	float m_ServerRollbackRatePct = 0.0f;
-	float m_DownBytesPerSec = 0.0f;
-	float m_UpBytesPerSec = 0.0f;
+	float m_GameTimeCorrectionMs = 0.0f;
+	float m_GameTimeAheadRatePct = 0.0f;
+	float m_DownPayloadBytesPerSec = 0.0f;
+	float m_UpPayloadBytesPerSec = 0.0f;
+	int m_VitalResendCount = 0;
 	STrafficStats m_Send;
 	STrafficStats m_Recv;
 	bool m_ConnectionProblems = false;
@@ -75,7 +80,7 @@ struct SQmPerformanceMetrics
 
 	float m_Fps = 0.0f;
 	float m_FrameTimeMs = 0.0f;
-	float m_FrameTimeSpikeMs = 0.0f;
+	float m_FrameTimeP95Ms = 0.0f;
 	float m_FrameTimeUs = 0.0f;
 	float m_CpuUsagePct = -1.0f;
 	float m_TotalCpuUsagePct = -1.0f;
@@ -255,7 +260,7 @@ inline float QmComputeDiskReadMbPerSec(uint64_t PrevReadBytes, uint64_t PrevTick
 	return DeltaSeconds > 0.0 ? (float)(DeltaBytes / (1024.0 * 1024.0) / DeltaSeconds) : -1.0f;
 }
 
-inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(const NETSTATS &Prev, const NETSTATS &Current)
+inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(const NETSTATS &Prev, const NETSTATS &Current, float SampleIntervalSec)
 {
 	SQmNetworkMetrics::STrafficStats Stats;
 	constexpr uint64_t OverheadSize = 14 + 20 + 8;
@@ -268,11 +273,12 @@ inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(const NETSTATS &Pr
 	Stats.m_OverheadBytes = Stats.m_Packets * OverheadSize;
 	Stats.m_TotalBytes = Stats.m_PayloadBytes + Stats.m_OverheadBytes;
 	Stats.m_AveragePayloadBytes = Stats.m_Packets == 0 ? 0 : Stats.m_PayloadBytes / Stats.m_Packets;
-	Stats.m_RateKibPerSec = (float)Stats.m_TotalBytes * 8.0f / 1024.0f;
+	if(SampleIntervalSec > 0.0f)
+		Stats.m_RateKibPerSec = (float)Stats.m_TotalBytes / 1024.0f / SampleIntervalSec;
 	return Stats;
 }
 
-inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(uint64_t PrevPackets, uint64_t PrevBytes, uint64_t CurrentPackets, uint64_t CurrentBytes)
+inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(uint64_t PrevPackets, uint64_t PrevBytes, uint64_t CurrentPackets, uint64_t CurrentBytes, float SampleIntervalSec)
 {
 	NETSTATS Prev = {};
 	Prev.sent_packets = PrevPackets;
@@ -280,7 +286,7 @@ inline SQmNetworkMetrics::STrafficStats QmComputeTrafficStats(uint64_t PrevPacke
 	NETSTATS Current = {};
 	Current.sent_packets = CurrentPackets;
 	Current.sent_bytes = CurrentBytes;
-	return QmComputeTrafficStats(Prev, Current);
+	return QmComputeTrafficStats(Prev, Current, SampleIntervalSec);
 }
 
 inline void FormatMetricValue(char *pBuf, int BufSize, const char *pUnit, float Value, int Precision = 0)
@@ -334,20 +340,55 @@ inline SQmHistoryStats QmComputeHistoryStats(const std::array<float, N> &aHistor
 		return Stats;
 
 	const int Start = (HistoryHead - HistoryCount + (int)aHistory.size()) % (int)aHistory.size();
-	Stats.m_Current = aHistory[(Start + HistoryCount - 1) % (int)aHistory.size()];
-	Stats.m_Min = Stats.m_Current;
-	Stats.m_Max = Stats.m_Current;
 	float Sum = 0.0f;
+	int ValidCount = 0;
 	for(int i = 0; i < HistoryCount; ++i)
 	{
 		const float Value = aHistory[(Start + i) % (int)aHistory.size()];
+		if(!std::isfinite(Value))
+			continue;
+		Stats.m_Current = Value;
+		if(ValidCount == 0)
+		{
+			Stats.m_Min = Value;
+			Stats.m_Max = Value;
+		}
 		Stats.m_Min = std::min(Stats.m_Min, Value);
 		Stats.m_Max = std::max(Stats.m_Max, Value);
 		Sum += Value;
+		++ValidCount;
 	}
-	Stats.m_Average = Sum / (float)HistoryCount;
-	Stats.m_HasData = true;
+	if(ValidCount > 0)
+	{
+		Stats.m_Average = Sum / (float)ValidCount;
+		Stats.m_HasData = true;
+	}
 	return Stats;
+}
+
+template<size_t N>
+inline float QmComputeHistoryPercentile(const std::array<float, N> &aHistory, int HistoryHead, int HistoryCount, float Percentile)
+{
+	if(HistoryCount <= 0)
+		return 0.0f;
+
+	const int Count = std::min(HistoryCount, (int)aHistory.size());
+	const int Start = (HistoryHead - Count + (int)aHistory.size()) % (int)aHistory.size();
+	std::array<float, N> aValues = {};
+	int ValidCount = 0;
+	for(int i = 0; i < Count; ++i)
+	{
+		const float Value = aHistory[(Start + i) % (int)aHistory.size()];
+		if(std::isfinite(Value))
+			aValues[ValidCount++] = Value;
+	}
+	if(ValidCount == 0)
+		return 0.0f;
+	std::sort(aValues.begin(), aValues.begin() + ValidCount);
+
+	const float NormalizedPercentile = std::clamp(Percentile, 0.0f, 100.0f) / 100.0f;
+	const int Index = std::clamp((int)std::ceil(NormalizedPercentile * (ValidCount - 1)), 0, ValidCount - 1);
+	return aValues[Index];
 }
 
 template<size_t N>
@@ -357,15 +398,21 @@ inline int QmFindLatestPeakIndex(const std::array<float, N> &aHistory, int Histo
 		return 0;
 
 	const int Start = (HistoryHead - HistoryCount + (int)aHistory.size()) % (int)aHistory.size();
-	float PeakValue = aHistory[Start];
-	for(int i = 1; i < HistoryCount; ++i)
-		PeakValue = std::max(PeakValue, aHistory[(Start + i) % (int)aHistory.size()]);
+	float PeakValue = -std::numeric_limits<float>::infinity();
+	for(int i = 0; i < HistoryCount; ++i)
+	{
+		const float Value = aHistory[(Start + i) % (int)aHistory.size()];
+		if(std::isfinite(Value))
+			PeakValue = std::max(PeakValue, Value);
+	}
+	if(!std::isfinite(PeakValue))
+		return -1;
 
 	const float Tolerance = std::max(0.05f, std::abs(PeakValue) * 0.005f);
 	for(int i = HistoryCount - 1; i >= 0; --i)
 	{
 		const float Value = aHistory[(Start + i) % (int)aHistory.size()];
-		if(Value >= PeakValue - Tolerance)
+		if(std::isfinite(Value) && Value >= PeakValue - Tolerance)
 			return i;
 	}
 	return 0;
@@ -378,40 +425,33 @@ inline int QmFindLatestAbsolutePeakIndex(const std::array<float, N> &aHistory, i
 		return 0;
 
 	const int Start = (HistoryHead - HistoryCount + (int)aHistory.size()) % (int)aHistory.size();
-	float PeakValue = std::abs(aHistory[Start]);
-	for(int i = 1; i < HistoryCount; ++i)
-		PeakValue = std::max(PeakValue, std::abs(aHistory[(Start + i) % (int)aHistory.size()]));
+	float PeakValue = -std::numeric_limits<float>::infinity();
+	for(int i = 0; i < HistoryCount; ++i)
+	{
+		const float Value = aHistory[(Start + i) % (int)aHistory.size()];
+		if(std::isfinite(Value))
+			PeakValue = std::max(PeakValue, std::abs(Value));
+	}
+	if(!std::isfinite(PeakValue))
+		return -1;
 
 	const float Tolerance = std::max(0.05f, PeakValue * 0.005f);
 	for(int i = HistoryCount - 1; i >= 0; --i)
 	{
 		const float Value = std::abs(aHistory[(Start + i) % (int)aHistory.size()]);
-		if(Value >= PeakValue - Tolerance)
+		if(std::isfinite(Value) && Value >= PeakValue - Tolerance)
 			return i;
 	}
 	return 0;
-}
-
-inline float QmComputeDiagnosticPacketLossPct(uint64_t SendPacketsDelta, int PendingResendCount)
-{
-	if(SendPacketsDelta == 0)
-		return PendingResendCount > 0 ? 100.0f : 0.0f;
-	return std::clamp(((float)std::max(PendingResendCount, 0) / std::max((float)SendPacketsDelta, 1.0f)) * 100.0f, 0.0f, 100.0f);
-}
-
-inline float QmComputeDiagnosticPacketLossPct(const NETSTATS &Prev, const NETSTATS &Current, int PendingResendCount)
-{
-	const uint64_t SendPacketsDelta = Current.sent_packets >= Prev.sent_packets ? Current.sent_packets - Prev.sent_packets : 0;
-	return QmComputeDiagnosticPacketLossPct(SendPacketsDelta, PendingResendCount);
 }
 
 inline EQmConnectionGrade QmDetermineConnectionGrade(const SQmNetworkMetrics &Net)
 {
 	if(!Net.m_Connected)
 		return EQmConnectionGrade::DISCONNECTED;
-	if(Net.m_JitterMs >= 25.0f || Net.m_SnapshotLatencyMs >= 180.0f || Net.m_PredictionLatencyMs >= 180.0f || Net.m_ConnectionProblems)
+	if(Net.m_PredictionJitterMs >= 25.0f || Net.m_SnapshotGapMs >= 180.0f || Net.m_PingMs >= 180.0f || Net.m_PredictionLeadMs >= 180.0f || Net.m_ConnectionProblems)
 		return EQmConnectionGrade::SEVERE;
-	if((Net.m_PacketLossPct >= 5.0f && Net.m_ConnectionProblems) || Net.m_JitterMs >= 10.0f || Net.m_SnapshotLatencyMs >= 90.0f || Net.m_PredictionLatencyMs >= 90.0f)
+	if(Net.m_PredictionJitterMs >= 10.0f || Net.m_SnapshotGapMs >= 90.0f || Net.m_PingMs >= 90.0f || Net.m_PredictionLeadMs >= 90.0f)
 		return EQmConnectionGrade::ELEVATED;
 	return EQmConnectionGrade::NORMAL;
 }
@@ -420,23 +460,15 @@ inline EQmDiagnosticCause QmDeterminePrimaryCause(const SQmNetworkMetrics &Net, 
 {
 	if(Grade == EQmConnectionGrade::DISCONNECTED)
 		return EQmDiagnosticCause::NONE;
-	if(Net.m_PacketLossPct >= 5.0f)
-		return EQmDiagnosticCause::PACKET_LOSS;
-	if(Net.m_JitterMs >= 25.0f)
-		return EQmDiagnosticCause::JITTER;
-	if(Net.m_PacketLossPct >= 1.0f)
-		return EQmDiagnosticCause::PACKET_LOSS;
-	if(Net.m_JitterMs >= 10.0f)
-		return EQmDiagnosticCause::JITTER;
-	if(Net.m_SnapshotLatencyMs >= Net.m_PredictionLatencyMs + 20.0f)
-		return EQmDiagnosticCause::DOWNSTREAM;
-	if(Net.m_PredictionLatencyMs >= Net.m_SnapshotLatencyMs + 20.0f)
-		return EQmDiagnosticCause::UPSTREAM;
 	if(Grade == EQmConnectionGrade::NORMAL &&
-		(Perf.m_FrameTimeMs > 16.7f || Perf.m_CpuUsagePct >= 75.0f || Perf.m_PredictionStress >= 12.0f))
+		(Perf.m_FrameTimeP95Ms > 16.7f || Perf.m_CpuUsagePct >= 75.0f || Perf.m_PredictionStress >= 12.0f))
 		return EQmDiagnosticCause::CLIENT_PERFORMANCE;
-	if(Net.m_ConnectionProblems)
-		return EQmDiagnosticCause::DOWNSTREAM;
+	if(Net.m_SnapshotGapMs >= 90.0f || Net.m_ConnectionProblems)
+		return EQmDiagnosticCause::SNAPSHOT_GAP;
+	if(Net.m_PredictionJitterMs >= 10.0f)
+		return EQmDiagnosticCause::PREDICTION_JITTER;
+	if(Net.m_PredictionLeadMs >= 90.0f)
+		return EQmDiagnosticCause::PREDICTION;
 	return EQmDiagnosticCause::NONE;
 }
 
@@ -527,21 +559,34 @@ inline SQmMonitoringBodyLayout QmComputeMonitoringBodyLayout(float ContentHeight
 class CQmMonitoring : public CComponent
 {
 	SQmMonitoringSnapshot m_Snapshot;
-	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aPingHistory = {};
+	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aRttHistory = {};
 	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aPredHistory = {};
-	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aPredictionMarginHistory = {};
-	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aJitterHistory = {};
+	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aSnapshotGapHistory = {};
+	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aPredictionJitterHistory = {};
 	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aGameTimeMarginHistory = {};
 	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aFpsHistory = {};
+	std::array<float, QM_MONITORING_HISTORY_CAPACITY> m_aFrameTimeHistory = {};
 	int m_HistoryHead = 0;
 	int m_HistoryCount = 0;
 	int64_t m_LastSampleTick = 0;
+	int64_t m_LastSnapshotRateSampleTime = 0;
+	uint64_t m_LastSnapshotCount = 0;
+	uint64_t m_LastSnapshotPartCount = 0;
+	uint64_t m_LastSnapshotPayloadBytes = 0;
+	float m_SnapshotRatePerSec = -1.0f;
+	float m_SnapshotPartRatePerSec = -1.0f;
+	float m_SnapshotPayloadBytesPerSec = -1.0f;
+	int m_SnapshotRateConnection = -1;
+	float m_LastPredictionLeadMs = 0.0f;
+	float m_PredictionJitterMs = -1.0f;
+	bool m_HasPredictionLeadSample = false;
 
 	void ResetHistory();
 	void UpdateNetworkMetrics(SQmNetworkMetrics &Net);
 	void UpdatePerformanceMetrics(SQmPerformanceMetrics &Perf);
 	void UpdateDiagnosticVerdict(SQmDiagnosticVerdict &Verdict, const SQmNetworkMetrics &Net, const SQmPerformanceMetrics &Perf);
-	void PushHistorySample(float PingMs, float PredMs, float PredictionMarginMs, float JitterMs, float GameTimeMarginMs, float Fps);
+	void PushFrameTimeSample(float FrameTimeMs);
+	void PushHistorySample(float RttMs, float PredMs, float SnapshotGapMs, float PredictionJitterMs, float GameTimeMarginMs, float Fps);
 	void RenderHeader(CUIRect Rect) const;
 	void RenderMainGraph(CUIRect Rect) const;
 	void RenderFpsGraph(CUIRect Rect) const;

@@ -4748,7 +4748,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		if(s_SelectedItem >= (int)GameClient()->m_StatusBar.m_StatusBarItems.size())
 			s_SelectedItem = -1;
 		CUIRect StatusScheme, StatusButtons, ItemLabel, Label, Button;
-		StatusBar.HSplitBottom(LineSize + MarginSmall, &StatusBar, &StatusScheme);
+		StatusBar.HSplitBottom(ColorPickerLineSize + MarginSmall, &StatusBar, &StatusScheme);
 		StatusBar.HSplitTop(LineSize + MarginSmall, &ItemLabel, &StatusBar);
 		StatusScheme.HSplitTop(MarginSmall, nullptr, &StatusScheme);
 		if(s_TypeSelectedOld >= 0)
@@ -5238,6 +5238,9 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	CUIRect Label, Button;
 
 	auto RenderProfile = [&](CUIRect Rect, const CProfile &Profile, bool Main) {
+		const float PreviewTeeSize = ProfileMetrics.m_ButtonHeight * 2.0f;
+		const float PreviewFlagHeight = ProfileMetrics.m_ButtonHeight;
+		const float PreviewColorSize = ProfileMetrics.m_LineSpacing * 2.0f;
 		auto RenderCross = [&](CUIRect Cross, float MaxSize = 0.0f) {
 			// 未覆盖字段使用中性短横线，避免与删除操作的 destructive 图标混淆。
 			const float Extent = std::min(MaxSize > 0.0f ? MaxSize : Cross.h * 0.4f, Cross.w * 0.5f);
@@ -5246,7 +5249,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		};
 		{
 			CUIRect Skin;
-			Rect.VSplitLeft(50.0f, &Skin, &Rect);
+			Rect.VSplitLeft(PreviewTeeSize, &Skin, &Rect);
 			if(!Main && Profile.m_SkinName[0] == '\0')
 			{
 				RenderCross(Skin, 20.0f);
@@ -5256,7 +5259,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 				CTeeRenderInfo TeeRenderInfo;
 				TeeRenderInfo.Apply(GameClient()->m_Skins.Find(Profile.m_SkinName));
 				TeeRenderInfo.ApplyColors(Profile.m_BodyColor >= 0 && Profile.m_FeetColor >= 0, Profile.m_BodyColor, Profile.m_FeetColor);
-				TeeRenderInfo.m_Size = 50.0f;
+				TeeRenderInfo.m_Size = PreviewTeeSize;
 				const vec2 Pos = Skin.Center() + vec2(0.0f, TeeRenderInfo.m_Size / 10.0f); // Prevent overflow from hats
 				vec2 Dir = vec2(1.0f, 0.0f);
 				if(Main)
@@ -5265,12 +5268,12 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 					RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, std::max(0, Profile.m_Emote), Dir, Pos);
 			}
 		}
-		Rect.VSplitLeft(5.0f, nullptr, &Rect);
+		Rect.VSplitLeft(ProfileMetrics.m_LineSpacing, nullptr, &Rect);
 		{
 			CUIRect Colors;
-			Rect.VSplitLeft(10.0f, &Colors, &Rect);
-			CUIRect BodyColor{Colors.Center().x - 5.0f, Colors.Center().y - 11.0f, 10.0f, 10.0f};
-			CUIRect FeetColor{Colors.Center().x - 5.0f, Colors.Center().y + 1.0f, 10.0f, 10.0f};
+			Rect.VSplitLeft(PreviewColorSize, &Colors, &Rect);
+			CUIRect BodyColor{Colors.Center().x - PreviewColorSize * 0.5f, Colors.Center().y - PreviewColorSize * 0.5f - ProfileMetrics.m_LineSpacing, PreviewColorSize, PreviewColorSize};
+			CUIRect FeetColor{Colors.Center().x - PreviewColorSize * 0.5f, Colors.Center().y + ProfileMetrics.m_LineSpacing, PreviewColorSize, PreviewColorSize};
 			if(Profile.m_BodyColor >= 0 && Profile.m_FeetColor >= 0)
 			{
 				// Body Color
@@ -5288,17 +5291,17 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 				RenderCross(FeetColor);
 			}
 		}
-		Rect.VSplitLeft(5.0f, nullptr, &Rect);
+		Rect.VSplitLeft(ProfileMetrics.m_LineSpacing, nullptr, &Rect);
 		{
 			CUIRect Flag;
-			Rect.VSplitRight(50.0f, &Rect, &Flag);
-			Flag = {Flag.x, Flag.y + (Flag.h - 25.0f) / 2.0f, Flag.w, 25.0f};
+			Rect.VSplitRight(PreviewFlagHeight * 2.0f, &Rect, &Flag);
+			Flag = {Flag.x, Flag.y + (Flag.h - PreviewFlagHeight) / 2.0f, Flag.w, PreviewFlagHeight};
 			if(Profile.m_CountryFlag == -2)
 				RenderCross(Flag, 20.0f);
 			else
 				GameClient()->m_CountryFlags.Render(Profile.m_CountryFlag, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), Flag.x, Flag.y, Flag.w, Flag.h);
 		}
-		Rect.VSplitRight(5.0f, &Rect, nullptr);
+		Rect.VSplitRight(ProfileMetrics.m_LineSpacing, &Rect, nullptr);
 		{
 			const float Height = Rect.h / 3.0f;
 			if(Main)
@@ -5399,6 +5402,10 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Your profile"), FontSize, TEXTALIGN_ML);
 		Profiles.HSplitTop(MarginSmall, nullptr, &Profiles);
 		Profiles.HSplitTop(LineSize * 3.0f, &Skin, &Profiles);
+		Skin.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 4.0f);
+		Skin.Margin(ProfileMetrics.m_LineSpacing, &Skin);
+		const float PreviewRowWidth = std::min(Skin.w, ProfileMetrics.m_LabelWidth * 2.5f);
+		Skin.VMargin(std::max(0.0f, (Skin.w - PreviewRowWidth) * 0.5f), &Skin);
 		RenderProfile(Skin, CurrentProfile, true);
 		if(pConstSelectedProfile())
 		{
@@ -5407,6 +5414,10 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 			DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("After Load"), FontSize, TEXTALIGN_ML);
 			Profiles.HSplitTop(MarginSmall, nullptr, &Profiles);
 			Profiles.HSplitTop(LineSize * 3.0f, &Skin, &Profiles);
+			Skin.Draw(ColorRGBA(0.25f, 0.55f, 0.85f, 0.08f), IGraphics::CORNER_ALL, 4.0f);
+			Skin.Margin(ProfileMetrics.m_LineSpacing, &Skin);
+			const float PreviewRowWidth = std::min(Skin.w, ProfileMetrics.m_LabelWidth * 2.5f);
+			Skin.VMargin(std::max(0.0f, (Skin.w - PreviewRowWidth) * 0.5f), &Skin);
 			RenderProfile(Skin, BuildPreviewProfile(), true);
 		}
 	};
@@ -5512,6 +5523,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	auto RenderSavedProfiles = [&](CUIRect MainView) {
 		CUIRect SelectorRect;
 		MainView.HSplitTop(LineSize, &SelectorRect, &MainView);
+		MainView.HSplitTop(ProfileMetrics.m_LineSpacing, nullptr, &MainView);
 
 		static CButtonContainer s_ProfilesFile;
 		const float ProfilesButtonWidth = std::clamp(ProfileMetrics.m_LabelWidth, ProfileMetrics.m_ButtonHeight * 4.0f, ProfileMetrics.m_LabelWidth * 1.25f);
@@ -5563,7 +5575,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 	};
 
 	const bool HasSelectedProfile = pConstSelectedProfile() != nullptr;
-	const float ProfilePreviewHeight = HasSelectedProfile ? LineSize * 8.0f + MarginSmall * 3.0f : LineSize * 4.0f + MarginSmall;
+	const float ProfilePreviewHeight = HasSelectedProfile ? ProfileMetrics.m_ButtonHeight * 8.0f + MarginSmall * 3.0f : ProfileMetrics.m_ButtonHeight * 4.0f + MarginSmall;
 	const float ProfileActionsHeight = s_AllowDelete ? ProfileMetrics.m_ButtonHeight * 5.0f + ProfileMetrics.m_LineSpacing * 4.0f : ProfileMetrics.m_ButtonHeight * 3.0f + ProfileMetrics.m_LineSpacing * 2.0f;
 	const float ActionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
 	const float OptionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
@@ -5572,7 +5584,8 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 		const float Rows = ContentWidth >= OptionsInlineMinWidth ? 6.0f : 9.0f;
 		return Rows * ProfileMetrics.m_ButtonHeight + (Rows - 1.0f) * ProfileMetrics.m_LineSpacing;
 	};
-	const auto MeasureSavedProfiles = [ProfileMetrics](float ContentWidth) { return std::max(ProfileMetrics.m_ListRowHeight * 2.0f, ContentWidth * 0.55f); };
+	const int ProfileCount = (int)vProfiles.size();
+	const auto MeasureSavedProfiles = [ProfileMetrics, ProfileCount](float ContentWidth) { return ResolveSettingsProfilesListHeight(ProfileMetrics, ContentWidth, ProfileCount); };
 	static std::array<CTClientSettingsCardFrameBinding, 3> s_aCardBindings;
 	s_aCardBindings[0].Bind(MeasureActions, RenderActions);
 	s_aCardBindings[1].Bind(MeasureOptions, RenderOptions);
@@ -5592,7 +5605,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 			Definition.m_Spec = {aSpecs[Index].first, Localize(aSpecs[Index].second), qm_card_registry::ResolveLocalizedDescription(aSpecs[Index].first)};
 			Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 			Definition.m_Render = [pBinding](CUIRect Content) { pBinding->Render(Content); };
-			Definition.m_MeasureRevision = Index == 0 ? ProfilesLayoutRevision : 0;
+			Definition.m_MeasureRevision = Index == 0 || Index == 2 ? ProfilesLayoutRevision : 0;
 			vCards.push_back(std::move(Definition));
 		}
 	};

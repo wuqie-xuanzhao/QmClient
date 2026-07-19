@@ -83,7 +83,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 
 void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentMetrics &Metrics)
 {
-	CUIRect SkinPreview, NormalSkinPreview, RedTeamSkinPreview, BlueTeamSkinPreview, Buttons, QuickSearch, DirectoryButton, RefreshButton, SaveDeleteButton, EditTextureButton, TabBars, TabBar, LeftTab, RightTab, InfoRow;
+	CUIRect SkinPreview, NormalSkinPreview, RedTeamSkinPreview, BlueTeamSkinPreview, Buttons, QuickSearch, DirectoryButton, RefreshButton, SaveDeleteButton, EditTextureButton, TabColumn, TabBar, LeftTab, RightTab, InfoRow;
 	const float LineHeight = Metrics.m_LineHeight;
 	const float LineSpacing = Metrics.m_LineSpacing;
 	const float BodySize = Metrics.m_BodySize;
@@ -114,13 +114,19 @@ void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentM
 		Buttons.VSplitRight(10.0f, &Buttons, nullptr);
 		Buttons.VSplitRight(120.0f, &QuickSearch, &SaveDeleteButton);
 	}
-	MainView.HSplitTop(LineHeight * 2.0f + LineSpacing * 2.0f, &TabBars, &MainView);
-	MainView.HSplitTop(LineSpacing * 2.0f, nullptr, &MainView);
-	TabBars.VSplitMid(&TabBars, &SkinPreview, 20.0f);
-
-	TabBars.HSplitTop(LineHeight, &TabBar, &TabBars);
+	const CUIRect HeaderSource = MainView;
+	HeaderSource.VSplitMid(&TabColumn, &SkinPreview, 20.0f * Metrics.m_UiScale);
+	const SSettingsSubTabLayoutFrame PlayerDummyTabs = ResolveSettingsSubTabLayout(TabColumn, Metrics.m_UiScale);
+	TabBar = PlayerDummyTabs.m_TabBarRect;
 	TabBar.VSplitMid(&LeftTab, &RightTab);
-	TabBars.HSplitTop(LineSpacing * 2.0f, nullptr, &TabBars);
+	const SSettingsSubTabLayoutFrame ModeTabs = ResolveSettingsSubTabLayout(PlayerDummyTabs.m_ContentRect, Metrics.m_UiScale);
+	CUIRect HeaderRemainder = ModeTabs.m_ContentRect;
+	HeaderRemainder.HSplitTop(Metrics.m_InputHeight, &InfoRow, &HeaderRemainder);
+	HeaderRemainder.HSplitTop(LineSpacing, nullptr, &HeaderRemainder);
+	const float HeaderBottom = HeaderRemainder.y;
+	SkinPreview.h = maximum(0.0f, HeaderBottom - SkinPreview.y);
+	MainView.y = HeaderBottom;
+	MainView.h = maximum(0.0f, HeaderSource.y + HeaderSource.h - HeaderBottom);
 
 	SkinPreview.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 5.0f);
 	SkinPreview.VMargin(10.0f, &SkinPreview);
@@ -145,7 +151,7 @@ void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentM
 	const CSkins7::CSkin *pSelectedSkin = GameClient()->m_Skins7.FindSkin(CSkins7::ms_apSkinNameVariables[m_Dummy], false);
 	m_SelectedSkin7Name = pSelectedSkin != nullptr ? pSelectedSkin->m_aName : "";
 
-	TabBars.HSplitTop(LineHeight, &TabBar, &TabBars);
+	TabBar = ModeTabs.m_TabBarRect;
 	TabBar.VSplitMid(&LeftTab, &RightTab);
 
 	static CButtonContainer s_BasicTabButton;
@@ -172,8 +178,6 @@ void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentM
 		}
 	}
 
-	TabBars.HSplitTop(8.0f, nullptr, &TabBars);
-	TabBars.HSplitTop(28.0f, &InfoRow, &TabBars);
 	RenderSettingsTeeIdentity(InfoRow, nullptr);
 
 	if(!Ui()->RenderOnly())
@@ -386,7 +390,9 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView, const SSettingsContentMe
 	static float s_SkinPartTransitionDirection = 0.0f;
 	const uint64_t SkinPartSwitchNode = UiAnimNodeKey("settings_tee7_skinpart_switch");
 
-	MainView.HSplitTop(20.0f, &ButtonBar, &MainView);
+	const SSettingsSubTabLayoutFrame SkinPartTabs = ResolveSettingsSubTabLayout(MainView, Metrics.m_UiScale);
+	ButtonBar = SkinPartTabs.m_TabBarRect;
+	MainView = SkinPartTabs.m_ContentRect;
 
 	const float ButtonWidth = ButtonBar.w / (float)protocol7::NUM_SKINPARTS;
 

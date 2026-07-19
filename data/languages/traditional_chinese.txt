@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == 氣泡不透明度
 
-Buffer memory
-== 緩衝區內存
-
 Built-in
 == 內置
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == 兼容其他伺服器的類似單人區域提示
 
+Complete snapshots are arriving late or not arriving
+== 完整快照到達延遲或未到達
+
 Compressor attack time (ms)
 == 壓縮器攻擊時間（毫秒）
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == 連接已斷開
 
-Connection downstream
-== 連接下行
-
 Connection elevated
 == 連接略有異常
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == 連接嚴重異常
-
-Connection upstream
-== 連接上行
 
 Connlimit: number of connections allowed per IP in a time period
 == Connlimit：一個 IP 在一段時間內允許的連接數
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == 顯示你的比賽時間
 
-Displays client prediction latency
-== 顯示客戶端預測延遲
-
-Displays client receive rate
-== 顯示客戶端接收速率
-
-Displays client send rate
-== 顯示客戶端發送速率
-
 Displays connection quality grade
 == 顯示連接質量等級
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == 顯示 DDNet 進程內存使用量
 
-Displays latency jitter
-== 顯示延遲抖動
+Displays estimated total UDP receive rate
+== 顯示估算的總 UDP 接收速率
 
-Displays resend-based packet loss estimate
-== 顯示基於重發的丟包估計
+Displays estimated total UDP send rate
+== 顯示估算的總 UDP 傳送速率
 
-Displays server snapshot latency
-== 顯示伺服器快照延遲
+Displays prediction timing jitter
+== 顯示預測時序抖動
+
+Displays the client's prediction lead
+== 顯示用戶端的預測提前量
+
+Displays the interval between complete snapshots
+== 顯示完整快照之間的間隔
+
+Displays the number of unacknowledged vital chunks
+== 顯示未確認的重要資料區塊數量
+
+Displays the server ping round-trip time
+== 顯示伺服器 Ping 往返時間
 
 Displays X and Y velocity
 == 顯示 X 和 Y 速度
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == 幀耗時
+
+Frame time p95
+== 影格時間 P95
 
 Framebuffer color bits (only fullscreen)
 == 幀緩衝區的顏色位（僅限全屏）
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == 控制台最後一頁
 
-Latency
-== 延遲
-
 Latency compensation
 == 延遲補償
 
 Latency Jitter
-== 延遲抖動
-
-Latency jitter
 == 延遲抖動
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == 預測幽靈透明度（0-100）
 
-Prediction jitter is obvious, latency changes are large
-== 預測抖動明顯，延遲變化較大
+Prediction jitter
+== 預測抖動
+
+Prediction jitter is obvious, prediction timing is changing
+== 預測抖動明顯，預測時序正在變化
 
 Prediction Latency
 == 預測延遲
 
-Prediction latency
-== 預測延遲
+Prediction lead
+== 預測提前量
 
-Prediction latency is elevated, prediction path pressure is high
-== 預測延遲偏高，預測鏈路壓力較高
+Prediction lead is high, check prediction settings and server timing
+== 預測提前量過高，請檢查預測設定與伺服器時序
 
 Prediction Margin
 == 預測量
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == 預測偏移
-
-Prediction time
-== 預測耗時
 
 Preparing demo playback
 == 正在準備回放
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == 將每日消息打印到控制台
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== 在 Windows 上優先處理傳出遊戲流量（盡力而為）
 
 Privately messages someone's current time in this current running race (your time by default)
 == 私聊發送某人在當前競速中的時間（默認發送你的時間）
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == 重新綁定客戶端的監聽地址和端口
 
-Receive
-== 接收
-
 Receive Rate
-== 接收速率
-
-Receive rate
 == 接收速率
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == 重發丟包
 
-Resend loss
-== 重發丟包
-
-Resend signs detected, connection quality is suspicious
-== 檢測到重發跡象，連接質量可疑
-
 Reset
 == 重置
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == 當前建置未整合 RNNoise，自動回退簡單降噪
 
-Rollback rate
-== 回滾率
-
 Room
 == 房間
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo 消息改走通知欄
+
+RTT
+== RTT
 
 Rule line 1.
 == 規則第 1 行
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == 發送速率
 
-Send rate
-== 發送速率
-
 Send source language
 == 發送源語言
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == 伺服器區域。用於地區禁令
-
-Server rollback
-== 伺服器回滾
-
-Server RTT is elevated, response path is unstable
-== 伺服器 RTT 偏高，響應鏈路不穩定
 
 Server stress (debug builds only).
 == 伺服器壓力（僅限調試版本）
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == 顯示版本過舊提示
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== 顯示傳出遊戲流量的 QoS 狀態
 
 Show outlines only on entity layer
 == 僅在實體層顯示輪廓
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == 在 /rank、/top5 和 /top5team 中顯示區域排名
 
-Show release date and author when sorted by date
-== 按發佈時間排序時顯示皮膚髮布日期和作者
-
 Show score
 == 顯示分數
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == 在玩家暱稱旁顯示皮膚名
+
+Show skin release date and author
+== 顯示造型發布日期與作者
 
 Show song info in top-left corner
 == 在左上角顯示歌曲信息
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == 吸附閾值
 
+Snapshot Gap
+== 快照間隔
+
+Snapshot gap
+== 快照間隔
+
 Snapshot Latency
 == 快照延遲
+
+Snapshot payload
+== 快照負載
+
+Snapshot rate
+== 快照速率
 
 Social
 == 社交功能
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Q 彈 Tee 形變強度
 
-Staging memory
-== 暫存內存
-
 Star
 == 星形
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == 結束回放
-
-Streamed memory
-== 流式內存
 
 Streamer Mode
 == 主播模式
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == 騰訊雲翻譯 SecretKey
 
-Text
-== 文字
-
 Text alpha
 == 文字透明度
 
 Text color
 == 文本顏色
-
-Texture memory
-== 紋理內存
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == 感謝您的陪伴與信任。正是如此，才給了我繼續前行的勇氣
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == 好友總數
+
+Total UDP RX (est.)
+== 總 UDP 接收（估算）
+
+Total UDP TX (est.)
+== 總 UDP 傳送（估算）
 
 Total: %d save(s)
 == 總計：%d 個存檔
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == 視覺
+
+Vital resend queue
+== 重要資料重傳佇列
 
 Voice
 == 語音

@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-bool CNetClient::Open(NETADDR BindAddr)
+bool CNetClient::Open(NETADDR BindAddr, bool LowLatency)
 {
 	// open socket
 	NETSOCKET Socket;
@@ -23,6 +23,8 @@ bool CNetClient::Open(NETADDR BindAddr)
 
 	// init
 	m_Socket = Socket;
+	m_LowLatency = LowLatency;
+	m_QosStatus = LowLatency ? ENetQosStatus::PENDING : ENetQosStatus::DISABLED;
 	m_pStun = new CStun(m_Socket);
 	m_Connection.Init(m_Socket, false);
 	m_TokenCache.Init(m_Socket);
@@ -37,6 +39,8 @@ void CNetClient::Close()
 		return;
 	}
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	if(m_pStun)
 	{
 		delete m_pStun;
@@ -49,13 +53,61 @@ void CNetClient::Close()
 void CNetClient::Disconnect(const char *pReason)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Disconnect(pReason);
 }
 
 void CNetClient::Drop(const char *pReason)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Drop(pReason);
+}
+
+void CNetClient::ResetQos()
+{
+	net_qos_remove_socket(m_Qos);
+	m_Qos = nullptr;
+	m_QosAttempted = false;
+	m_QosStatus = m_LowLatency ? ENetQosStatus::PENDING : ENetQosStatus::DISABLED;
+}
+
+const char *CNetClient::QosStatusName() const
+{
+	switch(m_QosStatus)
+	{
+	case ENetQosStatus::DISABLED: return "disabled";
+	case ENetQosStatus::PENDING: return "pending";
+	case ENetQosStatus::ACTIVE: return "active";
+	case ENetQosStatus::UNAVAILABLE: return "unavailable";
+	case ENetQosStatus::FAILED: return "failed";
+	}
+	dbg_assert_failed("invalid QoS status");
+}
+
+void CNetClient::SetLowLatency(bool LowLatency)
+{
+	if(m_LowLatency == LowLatency)
+		return;
+	m_LowLatency = LowLatency;
+	ResetQos();
+	if(m_LowLatency)
+		TryConfigureQos();
+}
+
+void CNetClient::TryConfigureQos()
+{
+	if(!m_LowLatency || m_QosAttempted || !m_QosPeerValidated || !m_Socket)
+		return;
+	const NETADDR *pPeerAddr = m_Connection.PeerAddress();
+	if((pPeerAddr->type & (NETTYPE_IPV4 | NETTYPE_IPV6)) == 0)
+		return;
+
+	// qWAVE 由系统策略决定实际标记；Windows IPv4 仍保留原有低延迟 TOS，IPv6 回退为 Best Effort。
+	m_QosAttempted = true;
+	m_Qos = net_qos_add_socket(m_Socket, pPeerAddr, &m_QosStatus);
 }
 
 void CNetClient::Update()
@@ -85,12 +137,16 @@ void CNetClient::Update()
 void CNetClient::Connect(const NETADDR *pAddr, int NumAddrs)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Connect(pAddr, NumAddrs);
 }
 
 void CNetClient::Connect7(const NETADDR *pAddr, int NumAddrs)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Connect7(pAddr, NumAddrs);
 }
 
@@ -128,10 +184,19 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 
 		if(CNetKcpSession::IsKcpPacket(pData, Bytes))
 		{
-			if(m_Transport == ENetTransport::KCP && m_Kcp.Input(Addr, pData, Bytes, true))
+			if(m_Transport == ENetTransport::KCP &&
+				m_Connection.State() != CNetConnection::EState::OFFLINE &&
+				m_Connection.State() != CNetConnection::EState::ERROR &&
+				m_Kcp.Input(Addr, pData, Bytes, true))
 			{
-				m_Connection.UpdatePeerAddressForRebind(Addr);
+				const NETADDR PreviousPeerAddr = *m_Connection.PeerAddress();
+				const bool PeerAddressUpdated = m_Connection.UpdatePeerAddressForRebind(Addr) && PreviousPeerAddr != *m_Connection.PeerAddress();
 				m_Kcp.SetPeerAddress(Addr);
+				if(PeerAddressUpdated)
+				{
+					ResetQos();
+					TryConfigureQos();
+				}
 				m_TransportStats = m_Kcp.Stats();
 			}
 			continue;
@@ -173,6 +238,9 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 					m_Connection.State() != CNetConnection::EState::ERROR &&
 					m_Connection.Feed(&m_RecvBuffer, &Addr, Token, *pResponseToken))
 				{
+					m_QosPeerValidated = true;
+					// 首个有效响应确定服务器地址后再创建仅针对该目标的 QoS flow。
+					TryConfigureQos();
 					if(!Control &&
 						m_RecvBuffer.m_DataSize > 0 &&
 						m_RecvBuffer.m_NumChunks > 0)
@@ -357,6 +425,7 @@ SNetTransportStats CNetClient::TransportStats() const
 	if(m_Transport == ENetTransport::KCP)
 		return m_Kcp.Stats();
 	SNetTransportStats Stats = m_TransportStats;
+	Stats.m_RttMs = m_Connection.LastRttMs();
 	Stats.m_LossPermille = (int)std::clamp(m_Connection.PacketLoss() * 10.0f, 0.0f, 1000.0f);
 	Stats.m_ResendCount = m_Connection.PendingResendCount();
 	Stats.m_SendQueueDepth = Stats.m_ResendCount;

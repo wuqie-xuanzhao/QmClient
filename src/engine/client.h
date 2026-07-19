@@ -29,6 +29,16 @@ class CSnapshotBuffer;
 class IMap;
 struct SWarning;
 
+struct SClientSnapshotStats
+{
+	uint64_t m_SnapshotCount = 0;
+	uint64_t m_PartCount = 0;
+	uint64_t m_PayloadBytes = 0;
+	// Current wall-clock gap since the last complete, validated snapshot.
+	float m_CurrentGapMs = -1.0f;
+	int m_LastTickGap = -1;
+};
+
 enum
 {
 	RECORDER_MANUAL = 0,
@@ -274,13 +284,14 @@ public:
 	virtual int GetPredictionTime() = 0;
 	virtual int GetPredictionTick() = 0;
 	virtual EPredictionMarginState PredictionMarginState() const = 0;
-	virtual float SnapshotLatencyMs() const = 0;
-	virtual float PredictionLatencyMs() const = 0;
+	virtual float PingMs() const = 0;
+	virtual float PredictionLeadMs() const = 0;
 	virtual float PredictionMarginMs() const = 0;
 	virtual float PredictionJitterMs() const = 0;
 	virtual float GameTimeMarginMs() const = 0;
 	virtual bool IsGameConnectionAlive() const = 0;
 	virtual void NetStatsSnapshot(NETSTATS &Prev, NETSTATS &Current, std::chrono::nanoseconds &LastUpdate) const = 0;
+	virtual void SnapshotStats(SClientSnapshotStats &Stats) const = 0;
 	virtual int PendingResendCount() const = 0;
 
 	// snapshot interface

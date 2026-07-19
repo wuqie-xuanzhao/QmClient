@@ -126,6 +126,81 @@ TEST(Net, Ipv4AndIpv6Work)
 	net_udp_close(Socket2);
 }
 
+TEST(Net, FailedUdpSendDoesNotCountAsSentTraffic)
+{
+	NETSOCKET Socket = BindUdpSocket(0);
+	ASSERT_NE(Socket, nullptr);
+
+	NETADDR IncompatibleTarget = {};
+	ASSERT_FALSE(net_addr_from_str(&IncompatibleTarget, "[::1]:1"));
+
+	NETSTATS Before = {};
+	NETSTATS After = {};
+	net_stats(&Before);
+	EXPECT_EQ(net_udp_send(Socket, &IncompatibleTarget, "x", 1), -1);
+	net_stats(&After);
+
+	EXPECT_EQ(After.sent_packets, Before.sent_packets);
+	EXPECT_EQ(After.sent_bytes, Before.sent_bytes);
+	EXPECT_EQ(After.send_errors, Before.send_errors + 1);
+	net_udp_close(Socket);
+}
+
+TEST(Net, SuccessfulUdpSendCountsAsSentTraffic)
+{
+	NETSOCKET Socket = BindUdpSocket(0);
+	ASSERT_NE(Socket, nullptr);
+
+	NETADDR Target = {};
+	ASSERT_FALSE(net_addr_from_str(&Target, "127.0.0.1:1"));
+	NETSTATS Before = {};
+	NETSTATS After = {};
+	net_stats(&Before);
+	EXPECT_EQ(net_udp_send(Socket, &Target, "abc", 3), 3);
+	net_stats(&After);
+
+	EXPECT_EQ(After.sent_packets, Before.sent_packets + 1);
+	EXPECT_EQ(After.sent_bytes, Before.sent_bytes + 3);
+	EXPECT_EQ(After.send_errors, Before.send_errors);
+	net_udp_close(Socket);
+}
+
+TEST(NetClient, QosCanBeDisabledAndReenabledWithoutAConnection)
+{
+	CNetClient Client;
+	NETADDR BindAddr = {};
+	BindAddr.type = NETTYPE_IPV4;
+	ASSERT_TRUE(Client.Open(BindAddr, true));
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+
+	Client.SetLowLatency(false);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::DISABLED);
+
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+	EXPECT_STREQ(Client.QosStatusName(), "pending");
+
+	NETADDR UnvalidatedPeer = {};
+	ASSERT_FALSE(net_addr_from_str(&UnvalidatedPeer, "127.0.0.1:8303"));
+	Client.Connect(&UnvalidatedPeer, 1);
+	Client.SetLowLatency(false);
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+
+	Client.Disconnect("test");
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+
+	Client.Connect7(&UnvalidatedPeer, 1);
+	Client.SetLowLatency(false);
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+	Client.Disconnect("test");
+	Client.SetLowLatency(false);
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+	Client.Close();
+}
+
 TEST(Net, PackPacketKeepsLegacyRoundtrip)
 {
 	InitNetBase();
@@ -296,4 +371,28 @@ TEST(Net, KcpSessionSendsOverUdpAndRoundtripsPacket)
 
 	net_udp_close(Socket1);
 	net_udp_close(Socket2);
+}
+
+TEST(Net, KcpSessionRejectsInvalidRebindWithoutChangingPeer)
+{
+	NETSOCKET Socket = BindUdpSocket(0);
+	ASSERT_NE(Socket, nullptr);
+
+	NETADDR OriginalPeer = {};
+	NETADDR RebindPeer = {};
+	ASSERT_FALSE(net_addr_from_str(&OriginalPeer, "127.0.0.1:8303"));
+	ASSERT_FALSE(net_addr_from_str(&RebindPeer, "127.0.0.1:8304"));
+	const uint32_t Conv = 0x1234567u;
+	CNetKcpSession Session;
+	ASSERT_TRUE(Session.Init(Socket, OriginalPeer, Conv));
+
+	unsigned char aInvalidPacket[NET_KCP_HEADER_SIZE + 1] = {'Q', 'K', 'C', 'P', 1};
+	aInvalidPacket[5] = (Conv >> 24) & 0xff;
+	aInvalidPacket[6] = (Conv >> 16) & 0xff;
+	aInvalidPacket[7] = (Conv >> 8) & 0xff;
+	aInvalidPacket[8] = Conv & 0xff;
+	EXPECT_FALSE(Session.Input(RebindPeer, aInvalidPacket, sizeof(aInvalidPacket), true));
+	EXPECT_EQ(*Session.PeerAddress(), OriginalPeer);
+
+	net_udp_close(Socket);
 }

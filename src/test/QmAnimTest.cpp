@@ -217,6 +217,36 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveSettingsRowsHeight(0, 20.0f, 5.0f), 0.0f);
 	}
 
+	TEST(SettingsPageLayout, SavedProfilesHeightTracksRowsAndCapsTheViewport)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+		const float EmptyHeight = ResolveSettingsProfilesListHeight(Metrics, 500.0f, 0);
+		const float OneProfileHeight = ResolveSettingsProfilesListHeight(Metrics, 500.0f, 1);
+		const float ThreeRowsHeight = ResolveSettingsProfilesListHeight(Metrics, 500.0f, 5);
+		const float CappedHeight = ResolveSettingsProfilesListHeight(Metrics, 500.0f, 50);
+
+		EXPECT_FLOAT_EQ(EmptyHeight, Metrics.m_ButtonHeight + Metrics.m_LineSpacing + Metrics.m_ListRowHeight * 2.0f);
+		EXPECT_GT(OneProfileHeight, EmptyHeight);
+		EXPECT_GT(ThreeRowsHeight, OneProfileHeight);
+		EXPECT_FLOAT_EQ(CappedHeight, ThreeRowsHeight);
+		EXPECT_GT(ResolveSettingsProfilesListHeight(Metrics, 300.0f, 4), ResolveSettingsProfilesListHeight(Metrics, 900.0f, 4));
+	}
+
+	TEST(SettingsPageLayout, TeeQueuePresetsReserveEightStandardRows)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+		const float FixedChromeHeight = Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight;
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics), FixedChromeHeight + Metrics.m_ListRowHeight * 8.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 6), FixedChromeHeight + Metrics.m_ListRowHeight * 6.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePanelHeight(Metrics), 440.0f);
+	}
+
+	TEST(SettingsPageLayout, TeeIdentityPreviewReservesSemanticHeight)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeIdentityHeight(Metrics), Metrics.m_InputHeight + Metrics.m_LineSpacing + Metrics.m_LineHeight * 2.0f + Metrics.m_ButtonHeight * 4.0f);
+	}
+
 	TEST(SettingsPageLayout, TeeCustomColorsUseTwoStackedFullWidthGroups)
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(500.0f);
@@ -309,8 +339,8 @@ namespace
 		EXPECT_NEAR(ResolveAppearanceChatMessagesHeight(Compact), 258.7f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudCoordsHeight(Compact), 155.3f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, false, false), 95.6f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 307.5f, 0.001f);
-		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 387.1f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 311.4f, 0.001f);
+		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, true), 391.0f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserColorsHeight(Compact), 319.8f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, false), 95.6f, 0.001f);
 		EXPECT_NEAR(ResolveAppearanceLaserEnhancedHeight(Compact, true), 135.4f, 0.001f);
@@ -320,8 +350,8 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveAppearanceChatMessagesHeight(Standard), 325.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudCoordsHeight(Standard), 195.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, false, false), 120.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 385.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 485.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 390.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, true), 490.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserColorsHeight(Standard), 400.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, false), 120.0f);
 		EXPECT_FLOAT_EQ(ResolveAppearanceLaserEnhancedHeight(Standard, true), 170.0f);
@@ -343,8 +373,8 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, false), 245.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, false), 20.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 150.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 385.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 485.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 390.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 490.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 46.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, true), 121.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, false, false, false, 0, false, false), 20.0f);

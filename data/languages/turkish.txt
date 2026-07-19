@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == Balon opaklığı
 
-Buffer memory
-== Arabellek belleği
-
 Built-in
 == Dahili
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == Diğer sunucuların benzer tek kişilik alan ipuçlarıyla uyumlu
 
+Complete snapshots are arriving late or not arriving
+== Tam anlık görüntüler geç geliyor veya hiç gelmiyor
+
 Compressor attack time (ms)
 == Kompresör Saldırı Süresi (ms)
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == Bağlantı kesildi
 
-Connection downstream
-== Bağlantı indirme
-
 Connection elevated
 == Bağlantı biraz dengesiz
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == Bağlantı ciddi şekilde anormal
-
-Connection upstream
-== Bağlantı yükleme
 
 Connlimit: number of connections allowed per IP in a time period
 == Bağlantı sınırı: bir IP'nin bir zaman diliminde izin verilen bağlantı sayısı
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == Yarış sürenizi gösterir
 
-Displays client prediction latency
-== İstemci tahmin gecikmesini gösterir
-
-Displays client receive rate
-== İstemci alma hızını gösterir
-
-Displays client send rate
-== İstemci gönderme hızını gösterir
-
 Displays connection quality grade
 == Bağlantı kalitesi derecesini gösterir
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == DDNet işlem bellek kullanımını gösterir
 
-Displays latency jitter
-== Gecikme dalgalanmasını gösterir
+Displays estimated total UDP receive rate
+== Tahmini toplam UDP alma hızını göster
 
-Displays resend-based packet loss estimate
-== Yeniden gönderime dayalı paket kaybı tahminini gösterir
+Displays estimated total UDP send rate
+== Tahmini toplam UDP gönderme hızını göster
 
-Displays server snapshot latency
-== Sunucu snapshot gecikmesini gösterir
+Displays prediction timing jitter
+== Tahmin zamanlama titreşimini göster
+
+Displays the client's prediction lead
+== İstemcinin tahmin öndeliğini göster
+
+Displays the interval between complete snapshots
+== Tam anlık görüntüler arasındaki aralığı göster
+
+Displays the number of unacknowledged vital chunks
+== Onaylanmamış önemli parça sayısını göster
+
+Displays the server ping round-trip time
+== Sunucu ping gidiş-dönüş süresini göster
 
 Displays X and Y velocity
 == X ve Y hızını gösterir
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == Kare süresi
+
+Frame time p95
+== Kare süresi P95
 
 Framebuffer color bits (only fullscreen)
 == Çerçeve arabelleği renk bitleri (yalnızca tam ekran)
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == Konsolda son sayfa
 
-Latency
-== Gecikme
-
 Latency compensation
 == Gecikme telafisi
 
 Latency Jitter
-== Gecikme dalgalanması
-
-Latency jitter
 == Gecikme dalgalanması
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == Tahmin hayaleti opaklığı (0-100)
 
-Prediction jitter is obvious, latency changes are large
-== Tahmin titreşimi belirgin, gecikme değişimleri büyük
+Prediction jitter
+== Tahmin titreşimi
+
+Prediction jitter is obvious, prediction timing is changing
+== Tahmin titreşimi belirgin, tahmin zamanlaması değişiyor
 
 Prediction Latency
 == Tahmin gecikmesi
 
-Prediction latency
-== Tahmin gecikmesi
+Prediction lead
+== Tahmin öndeliği
 
-Prediction latency is elevated, prediction path pressure is high
-== Tahmin gecikmesi yüksek, tahmin yolu baskısı fazla
+Prediction lead is high, check prediction settings and server timing
+== Tahmin öndeliği yüksek, tahmin ayarlarını ve sunucu zamanlamasını kontrol edin
 
 Prediction Margin
 == Tahmin Marjı
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == Tahmin kayması
-
-Prediction time
-== Tahmin süresi
 
 Preparing demo playback
 == Demo oynatımı hazırlanıyor
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == Günlük mesajları konsola yazdır
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== Windows'ta giden oyun trafiğine öncelik ver (en iyi çaba)
 
 Privately messages someone's current time in this current running race (your time by default)
 == Birinin bu devam eden yarıştaki geçerli süresini özel olarak mesajla (varsayılan olarak senin süren)
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == İstemcinin dinleme adresini ve portunu yeniden bağlar
 
-Receive
-== Alma
-
 Receive Rate
-== Alma hızı
-
-Receive rate
 == Alma hızı
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == Yeniden gönderim kaybı
 
-Resend loss
-== Yeniden gönderim kaybı
-
-Resend signs detected, connection quality is suspicious
-== Yeniden gönderme belirtileri algılandı, bağlantı kalitesi şüpheli
-
 Reset
 == Sıfırla
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == RNNoise mevcut yapıya entegre edilmemiş, basit gürültü azaltmaya geri dönülecek
 
-Rollback rate
-== Geri alma oranı
-
 Room
 == Oda
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo mesajlarını bildirimlere yönlendir
+
+RTT
+== RTT
 
 Rule line 1.
 == Kural satırı 1.
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == Gönderme hızı
 
-Send rate
-== Gönderme hızı
-
 Send source language
 == Kaynak dili gönder
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == Sunucu bölgesi. Bölge yasaklamaları için kullanılır
-
-Server rollback
-== Sunucu geri alma
-
-Server RTT is elevated, response path is unstable
-== Sunucu RTT değeri yüksek, yanıt yolu kararsız
 
 Server stress (debug builds only).
 == Sunucu stresi (yalnızca hata ayıklama sürümleri).
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == Eski sürüm uyarısını göster
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== Giden oyun trafiğinin QoS durumunu göster
 
 Show outlines only on entity layer
 == Anahatları yalnızca varlık katmanında göster
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == /rank, /top5 ve /top5team'de bölge sıralamalarını göster.
 
-Show release date and author when sorted by date
-== Yayın zamanına göre sıralarken skin yayın tarihini ve yazarını göster
-
 Show score
 == Skoru göster
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == İsim levhasında görünüm adlarını göster
+
+Show skin release date and author
+== Skin yayın tarihini ve yapımcısını göster
 
 Show song info in top-left corner
 == Sol üst köşede şarkı bilgisini göster
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == Yakalama eşiği
 
+Snapshot Gap
+== Anlık görüntü aralığı
+
+Snapshot gap
+== Anlık görüntü aralığı
+
 Snapshot Latency
 == Snapshot gecikmesi
+
+Snapshot payload
+== Anlık görüntü yükü
+
+Snapshot rate
+== Anlık görüntü hızı
 
 Social
 == Sosyal
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Zıpzıp Tee deformasyon şiddeti
 
-Staging memory
-== Hazırlama belleği
-
 Star
 == Yıldız
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == Geçerli demoyu durdur
-
-Streamed memory
-== Akış belleği
 
 Streamer Mode
 == Yayıncı Modu
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == Tencent Cloud Çeviri SecretKey
 
-Text
-== Metin
-
 Text alpha
 == Metin alfası
 
 Text color
 == Metin rengi
-
-Texture memory
-== Doku belleği
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Arkadaşlığınız ve güveniniz için teşekkür ederim. Devam etme cesaretini bana veren şey budur.
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == Toplam arkadaş
+
+Total UDP RX (est.)
+== Toplam UDP RX (tahmini)
+
+Total UDP TX (est.)
+== Toplam UDP TX (tahmini)
 
 Total: %d save(s)
 == Toplam: %d save
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == Görseller
+
+Vital resend queue
+== Önemli parçaların yeniden gönderim kuyruğu
 
 Voice
 == Ses

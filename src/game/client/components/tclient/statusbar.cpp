@@ -259,7 +259,7 @@ float CStatusBar::DownstreamWidth()
 void CStatusBar::DownstreamRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_SnapshotLatencyMs);
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PingMs);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -271,7 +271,7 @@ float CStatusBar::UpstreamWidth()
 void CStatusBar::UpstreamRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PredictionLatencyMs);
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PredictionLeadMs);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -283,19 +283,31 @@ float CStatusBar::JitterWidth()
 void CStatusBar::JitterRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_JitterMs);
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PredictionJitterMs);
+	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
+}
+
+float CStatusBar::SnapshotGapWidth()
+{
+	return TextRender()->TextWidth(m_FontSize, "000ms");
+}
+
+void CStatusBar::SnapshotGapRender()
+{
+	char aBuf[32];
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_SnapshotGapMs);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
 float CStatusBar::PacketLossWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000.0%");
+	return TextRender()->TextWidth(m_FontSize, "000");
 }
 
 void CStatusBar::PacketLossRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "%", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PacketLossPct, 1);
+	str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_VitalResendCount);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -307,7 +319,8 @@ float CStatusBar::DownRateWidth()
 void CStatusBar::DownRateRender()
 {
 	char aBuf[32];
-	FormatRateValue(aBuf, sizeof(aBuf), GameClient()->m_QmMonitoring.Snapshot().m_Network.m_DownBytesPerSec);
+	const float EstimatedBytesPerSec = GameClient()->m_QmMonitoring.Snapshot().m_Network.m_Recv.m_RateKibPerSec * 1024.0f;
+	FormatRateValue(aBuf, sizeof(aBuf), EstimatedBytesPerSec);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -319,7 +332,8 @@ float CStatusBar::UpRateWidth()
 void CStatusBar::UpRateRender()
 {
 	char aBuf[32];
-	FormatRateValue(aBuf, sizeof(aBuf), GameClient()->m_QmMonitoring.Snapshot().m_Network.m_UpBytesPerSec);
+	const float EstimatedBytesPerSec = GameClient()->m_QmMonitoring.Snapshot().m_Network.m_Send.m_RateKibPerSec * 1024.0f;
+	FormatRateValue(aBuf, sizeof(aBuf), EstimatedBytesPerSec);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 

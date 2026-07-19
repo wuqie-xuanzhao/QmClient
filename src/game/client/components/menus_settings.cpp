@@ -455,17 +455,18 @@ namespace
 
 }
 
-bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing, int *pCheckBoxValue, float LineHeight, float LineSpacing, float BodySize)
+bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing, int *pCheckBoxValue, float LineHeight, float LineSpacing, float BodySize, float ButtonHeight)
 {
-	const float ColorLineHeight = LineHeight;
+	const float ResolvedButtonHeight = ButtonHeight > 0.0f ? ButtonHeight : LineHeight;
+	const float ColorLineHeight = std::max(LineHeight, ResolvedButtonHeight);
 	const float BottomMargin = LineSpacing;
-	const float ColorButtonSize = LineHeight;
+	const float ColorButtonSize = ResolvedButtonHeight;
 	const float ColorButtonSpacing = LineSpacing;
-	const float ChangeButtonSize = LineHeight;
+	const float ChangeButtonSize = ResolvedButtonHeight;
 	SSettingsContentMetrics Metrics;
 	Metrics.m_UiScale = std::clamp(LineHeight / ui_token::settings::ROW_HEIGHT, 0.5f, 1.5f);
 	Metrics.m_LineHeight = LineHeight;
-	Metrics.m_ButtonHeight = LineHeight;
+	Metrics.m_ButtonHeight = ResolvedButtonHeight;
 	Metrics.m_BodySize = BodySize;
 	Metrics.m_LineSpacing = LineSpacing;
 
@@ -538,7 +539,7 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 	AddButton.HMargin((AddButton.h - ChangeButtonSize) / 2.0f, &AddButton);
 	const bool CanRemoveColor = NumColors > CMessageGradient::MIN_COLORS;
 	const bool CanAddColor = NumColors < CMessageGradient::MAX_COLORS;
-	if(DoButton_Menu(pRemoveButton, "-", CanRemoveColor ? 0 : -1, &RemoveButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f) && CanRemoveColor)
+	if(DoButton_Menu(pRemoveButton, "-", CanRemoveColor ? 0 : -1, &RemoveButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), nullptr, BodySize) && CanRemoveColor)
 	{
 		--NumColors;
 		*pBaseColor = pColorValues[0];
@@ -548,7 +549,7 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 			CMessageGradient::Pack(pColorValues, NumColors, pGradient, GradientSize);
 		Changed = true;
 	}
-	if(DoButton_Menu(pAddButton, "+", CanAddColor ? 0 : -1, &AddButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f) && CanAddColor)
+	if(DoButton_Menu(pAddButton, "+", CanAddColor ? 0 : -1, &AddButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), nullptr, BodySize) && CanAddColor)
 	{
 		pColorValues[NumColors] = pColorValues[NumColors - 1];
 		++NumColors;
@@ -1589,7 +1590,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 		}
 	};
-	const auto RenderIdentity = [this, UiScale, BodySize, ControlSpacing, ControlLineHeight, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
+	const auto RenderIdentity = [this, UiScale, BodySize, ControlSpacing, ControlLineHeight, TeeMetrics, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
 		CUIRect MainView = Content;
 		CUIRect YourSkin = Content;
 		CUIRect Button, Label;
@@ -1630,7 +1631,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		// Player skin area
 		CUIRect CustomColorsButton, RandomSkinButton;
 		CUIRect IdentityRow;
-		YourSkin.HSplitTop(28.0f * UiScale, &IdentityRow, &YourSkin);
+		YourSkin.HSplitTop(TeeMetrics.m_InputHeight, &IdentityRow, &YourSkin);
 		CUIRect FlagButton;
 		RenderSettingsTeeIdentity(IdentityRow, &FlagButton, BodySize);
 		YourSkin.HSplitTop(ControlSpacing, nullptr, &YourSkin);
@@ -1939,7 +1940,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			Ui()->DoLabel(&IntervalUnit, "ms", TeeMetrics.m_SmallSize, TEXTALIGN_MC);
 
 			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
-			QueueSection.HSplitTop(QueueSection.h * 0.62f, &QueueList, &QueuePresets);
+			const float QueuePresetHeight = minimum(QueueSection.h, ResolveSettingsTeeQueuePresetHeight(TeeMetrics));
+			QueueSection.HSplitBottom(QueuePresetHeight, &QueueList, &QueuePresets);
 			QueueList.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 4.0f);
 			QueueList.Margin(TeeMetrics.m_LineSpacing, &QueueList);
 			QueuePresets.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueuePresets);
@@ -2220,7 +2222,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				PresetList = QueuePresets;
 				if(vQueuePresets.empty())
 				{
-					DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_presets_label", &PresetList, Localize("No presets yet"), SecondaryBodySize, TEXTALIGN_MC);
+					DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_presets_label", &PresetList, Localize("No presets yet"), BodySize, TEXTALIGN_MC);
 				}
 				else
 				{
@@ -2265,7 +2267,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 						PresetNameProps.m_DisallowNewline = true;
 						PresetNameProps.m_StopAtEnd = true;
 						PresetNameProps.m_MinimumFontSize = 6.0f;
-						Ui()->DoLabel(&NameRect, aEntryLabel, SecondaryBodySize, TEXTALIGN_ML, PresetNameProps);
+						Ui()->DoLabel(&NameRect, aEntryLabel, BodySize, TEXTALIGN_ML, PresetNameProps);
 
 						const char *pPresetTooltip = nullptr;
 						if(i == CSkins::SKIN_QUEUE_SERVER_PRESET)
@@ -2391,7 +2393,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		str_copy(TeeBudgetInput.m_aTab, "none", sizeof(TeeBudgetInput.m_aTab));
 		str_copy(TeeBudgetInput.m_aContext, SettingsPerfContextName(), sizeof(TeeBudgetInput.m_aContext));
 		TeeBudgetInput.m_FrameMsAverage = PerfSnapshot.m_FrameTimeMs;
-		TeeBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeSpikeMs > 0.0f ? PerfSnapshot.m_FrameTimeSpikeMs : PerfSnapshot.m_FrameTimeMs;
+		TeeBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeP95Ms > 0.0f ? PerfSnapshot.m_FrameTimeP95Ms : PerfSnapshot.m_FrameTimeMs;
 		TeeBudgetInput.m_TargetFrameMs = 8.333f;
 		TeeBudgetInput.m_ScrollActive = m_SettingsScrollActive || s_SkinListScrollCooldownFrames > 0;
 		TeeBudgetInput.m_JumpScrollActive = false;
@@ -3221,7 +3223,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		str_copy(BudgetInput.m_aTab, "none", sizeof(BudgetInput.m_aTab));
 		str_copy(BudgetInput.m_aContext, SettingsPerfContextName(), sizeof(BudgetInput.m_aContext));
 		BudgetInput.m_FrameMsAverage = PerfSnapshot.m_FrameTimeMs;
-		BudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeSpikeMs > 0.0f ? PerfSnapshot.m_FrameTimeSpikeMs : PerfSnapshot.m_FrameTimeMs;
+		BudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeP95Ms > 0.0f ? PerfSnapshot.m_FrameTimeP95Ms : PerfSnapshot.m_FrameTimeMs;
 		BudgetInput.m_TargetFrameMs = 8.333f;
 		BudgetInput.m_PostScrollRecoveryFrames = PostScrollRecoveryFrames;
 		BudgetInput.m_BackgroundBacklog = (int)vSkinList.size();
@@ -3377,13 +3379,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		return Section.x + Section.w >= TeePage.m_ScrollViewport.x && Section.x <= TeePage.m_ScrollViewport.x + TeePage.m_ScrollViewport.w &&
 		       Section.y + Section.h >= TeePage.m_ScrollViewport.y && Section.y <= TeePage.m_ScrollViewport.y + TeePage.m_ScrollViewport.h;
 	};
-	const float IdentityContentHeight = 28.0f * UiScale + ControlSpacing + ControlLineHeight * 2.0f + 90.0f * UiScale;
+	const float IdentityContentHeight = ResolveSettingsTeeIdentityHeight(TeeMetrics);
 	const float OptionsContentHeight = OptionsTopHeight + EyesHeight + CustomColorsHeight;
 	const float TopContentHeight = maximum(IdentityContentHeight, OptionsContentHeight);
 	constexpr float TeeSkinGridRowHeight = 50.0f;
 	constexpr int TeeSkinGridVisibleRows = 6;
 	const float TeeSkinToolbarHeight = TeeMetrics.m_InputHeight * 2.0f + TeeMetrics.m_LineSpacing;
-	const float TeeQueuePanelMinHeight = 440.0f * UiScale;
+	const float TeeQueuePanelMinHeight = ResolveSettingsTeeQueuePanelHeight(TeeMetrics);
 	const float ListContentHeight = maximum(TeeQueuePanelMinHeight, TeeSkinGridVisibleRows * TeeSkinGridRowHeight + TeeSkinToolbarHeight);
 	const bool RenderOnly = Ui()->RenderOnly();
 	const auto BuildDefinitions = [pIdentityDefault, pOptionsDefault, pListDefault, TopContentHeight, ListContentHeight, RenderIdentity, RenderOptions, RenderList, AdvanceListOffscreen, TeeSectionVisible, pUseCustomColor](std::vector<SSettingsCardDefinition> &vCards) {
@@ -3581,7 +3583,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsBackendMinCardHeight = BackendChromeHeight + GraphicsBackendContentHeight;
 	constexpr int GraphicsModesMaxVisibleRows = 8;
 	const int GraphicsModesVisibleRows = std::clamp(s_NumNodes, 1, GraphicsModesMaxVisibleRows);
-	const float GraphicsModesTargetContentHeight = GraphicsMetrics.m_RowStep * 2.0f + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
+	const float GraphicsModesTargetContentHeight = GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
 	float GraphicsModesContentHeight = GraphicsModesTargetContentHeight;
 	const SCardMotionSpec GraphicsCardMotion = SettingsCardMotionSpec();
 	static bool s_GraphicsModesHeightInitialized = false;
@@ -3612,16 +3614,17 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	}
 	const uint64_t GraphicsModesMeasureRevision = (static_cast<uint64_t>(std::max(0, s_NumNodes)) << 32) ^ static_cast<uint64_t>(std::llround(GraphicsModesContentHeight * 1000.0f));
 	const float GraphicsModesMinCardHeight = ModesChromeHeight + GraphicsModesContentHeight;
-	const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);
+	const int GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
+	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
 	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
-	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(4, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, pBackendDefault, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsBackendMinCardHeight, BackendChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, pBackendDefault, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsBackendMinCardHeight, BackendChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(5);
 		const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pModesDefault)};
 		const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDisplayDefault)};
@@ -3639,30 +3642,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			vCards.push_back(std::move(Definition));
 		};
 
-		AddCard(ModesSpec, GraphicsModesMinCardHeight, ModesChromeHeight, [this, GraphicsMetrics, OldWindowMode](CUIRect ContentRect) {
+		AddCard(ModesSpec, GraphicsModesMinCardHeight, ModesChromeHeight, [this, GraphicsMetrics](CUIRect ContentRect) {
 		char aBuf[128];
-		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
 		CUIRect ModeList = ContentRect;
-		CUIRect WindowModeDropDown;
-		ModeList.HSplitTop(GraphicsMetrics.m_LineHeight, &WindowModeDropDown, &ModeList);
-		ModeList.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ModeList);
-		static CUi::SDropDownState s_WindowModeDropDownState;
-		static CScrollRegion s_WindowModeDropDownScrollRegion;
-		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
-		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
-		if(OldWindowMode != NewWindowMode)
-		{
-			if(NewWindowMode == 0)
-				Graphics()->SetWindowParams(0, false);
-			else if(NewWindowMode == 1)
-				Graphics()->SetWindowParams(0, true);
-			else if(NewWindowMode == 2)
-				Graphics()->SetWindowParams(3, false);
-			else if(NewWindowMode == 3)
-				Graphics()->SetWindowParams(2, false);
-			else if(NewWindowMode == 4)
-				Graphics()->SetWindowParams(1, false);
-		}
 		CUIRect ModeLabel;
 		ModeList.HSplitTop(GraphicsMetrics.m_RowStep, &ModeLabel, &ModeList); // display mode list
 		static CListBox s_ListBox;
@@ -3717,7 +3699,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Graphics()->ResizeToScreen();
 			}
 		} }, GraphicsModesMeasureRevision);
-		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsDisplayRowCount, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
+		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsDisplayRowCount, OldWindowMode, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
 		CUIRect Button;
 		char aBuf[128];
 		CUIRect CardView = ContentRect; // switches
@@ -3729,6 +3711,25 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
 			return Row;
 		};
+		CUIRect WindowModeDropDown = NextRow();
+		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
+		static CUi::SDropDownState s_WindowModeDropDownState;
+		static CScrollRegion s_WindowModeDropDownScrollRegion;
+		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
+		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
+		if(OldWindowMode != NewWindowMode)
+		{
+			if(NewWindowMode == 0)
+				Graphics()->SetWindowParams(0, false);
+			else if(NewWindowMode == 1)
+				Graphics()->SetWindowParams(0, true);
+			else if(NewWindowMode == 2)
+				Graphics()->SetWindowParams(3, false);
+			else if(NewWindowMode == 3)
+				Graphics()->SetWindowParams(2, false);
+			else if(NewWindowMode == 4)
+				Graphics()->SetWindowParams(1, false);
+		}
 		if(Graphics()->GetNumScreens() > 1)
 		{
 			CUIRect ScreenDropDown = NextRow();
@@ -3822,7 +3823,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Button = NextRow();
 		str_copy(aBuf, " ");
 		str_append(aBuf, Localize("Hz", "Hertz"));
-		DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000); }, static_cast<uint64_t>(GraphicsDisplayRowCount));
+		DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000); }, GraphicsDisplayMeasureRevision);
 		AddCard(VisualSpec, GraphicsVisualMinCardHeight, VisualChromeHeight, [this, GraphicsMetrics, DoGraphicsNumericField](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
@@ -3867,7 +3868,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
-			int RowsRemaining = 4;
+			int RowsRemaining = 3;
 			const auto NextRow = [&]() {
 				CUIRect Row;
 				CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
@@ -3876,7 +3877,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				return Row;
 			};
 			CUIRect MotionRow = NextRow();
-			CUIRect Label, Segments;
+			CUIRect Label, Segments, ExtraAnimations;
+			const float ExtraAnimationsWidth = std::clamp(MotionRow.w * 0.30f, 120.0f * GraphicsMetrics.m_UiScale, 170.0f * GraphicsMetrics.m_UiScale);
+			MotionRow.VSplitRight(ExtraAnimationsWidth, &MotionRow, &ExtraAnimations);
+			MotionRow.VSplitRight(GraphicsMetrics.m_LineSpacing, &MotionRow, nullptr);
 			MotionRow.VSplitLeft(std::clamp(MotionRow.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
 			Segments.VSplitLeft(GraphicsMetrics.m_LineSpacing, nullptr, &Segments);
 			DoSettingsLabel(SETTINGS_GRAPHICS, -1, "graphics-ui-motion-level-label", &Label, Localize("UI motion level"), BodySize, TEXTALIGN_ML);
@@ -3891,8 +3895,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					g_Config.m_QmUiMotionLevel = i;
 			}
 
-			Button = NextRow();
-			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &Button))
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &ExtraAnimations))
 				g_Config.m_QmExtraAnimations ^= 1;
 			Button = NextRow();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
@@ -6363,29 +6366,29 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				// Message Colors and extra settings
 				static CButtonContainer s_SystemMessageReset, s_SystemMessageAdd, s_SystemMessageRemove;
 				static unsigned s_aSystemMessageColorValues[CMessageGradient::MAX_COLORS];
-				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-system-message", Localize("System message"), &g_Config.m_ClMessageSystemColor, g_Config.m_ClMessageSystemGradient, sizeof(g_Config.m_ClMessageSystemGradient), ColorRGBA(1.0f, 1.0f, 0.5f), &s_SystemMessageReset, &s_SystemMessageAdd, &s_SystemMessageRemove, s_aSystemMessageColorValues, true, &g_Config.m_ClShowChatSystem, LineSize, MarginSmall, AppearanceBodySize);
+				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-system-message", Localize("System message"), &g_Config.m_ClMessageSystemColor, g_Config.m_ClMessageSystemGradient, sizeof(g_Config.m_ClMessageSystemGradient), ColorRGBA(1.0f, 1.0f, 0.5f), &s_SystemMessageReset, &s_SystemMessageAdd, &s_SystemMessageRemove, s_aSystemMessageColorValues, true, &g_Config.m_ClShowChatSystem, LineSize, MarginSmall, AppearanceBodySize, AppearanceMetrics.m_ButtonHeight);
 
 				static CButtonContainer s_HighlightedMessageReset, s_HighlightedMessageAdd, s_HighlightedMessageRemove;
 				static unsigned s_aHighlightedMessageColorValues[CMessageGradient::MAX_COLORS];
-				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-highlighted-message", Localize("Highlighted message"), &g_Config.m_ClMessageHighlightColor, g_Config.m_ClMessageHighlightGradient, sizeof(g_Config.m_ClMessageHighlightGradient), ColorRGBA(1.0f, 0.5f, 0.5f), &s_HighlightedMessageReset, &s_HighlightedMessageAdd, &s_HighlightedMessageRemove, s_aHighlightedMessageColorValues, true, nullptr, LineSize, MarginSmall, AppearanceBodySize);
+				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-highlighted-message", Localize("Highlighted message"), &g_Config.m_ClMessageHighlightColor, g_Config.m_ClMessageHighlightGradient, sizeof(g_Config.m_ClMessageHighlightGradient), ColorRGBA(1.0f, 0.5f, 0.5f), &s_HighlightedMessageReset, &s_HighlightedMessageAdd, &s_HighlightedMessageRemove, s_aHighlightedMessageColorValues, true, nullptr, LineSize, MarginSmall, AppearanceBodySize, AppearanceMetrics.m_ButtonHeight);
 
 				static CButtonContainer s_TeamMessageReset, s_TeamMessageAdd, s_TeamMessageRemove;
 				static unsigned s_aTeamMessageColorValues[CMessageGradient::MAX_COLORS];
-				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-team-message", Localize("Team message"), &g_Config.m_ClMessageTeamColor, g_Config.m_ClMessageTeamGradient, sizeof(g_Config.m_ClMessageTeamGradient), ColorRGBA(0.65f, 1.0f, 0.65f), &s_TeamMessageReset, &s_TeamMessageAdd, &s_TeamMessageRemove, s_aTeamMessageColorValues, true, nullptr, LineSize, MarginSmall, AppearanceBodySize);
+				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-team-message", Localize("Team message"), &g_Config.m_ClMessageTeamColor, g_Config.m_ClMessageTeamGradient, sizeof(g_Config.m_ClMessageTeamGradient), ColorRGBA(0.65f, 1.0f, 0.65f), &s_TeamMessageReset, &s_TeamMessageAdd, &s_TeamMessageRemove, s_aTeamMessageColorValues, true, nullptr, LineSize, MarginSmall, AppearanceBodySize, AppearanceMetrics.m_ButtonHeight);
 
 				static CButtonContainer s_FriendMessageReset, s_FriendMessageAdd, s_FriendMessageRemove;
 				static unsigned s_aFriendMessageColorValues[CMessageGradient::MAX_COLORS];
-				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-friend-message", Localize("Friend message"), &g_Config.m_ClMessageFriendColor, g_Config.m_ClMessageFriendGradient, sizeof(g_Config.m_ClMessageFriendGradient), ColorRGBA(1.0f, 0.137f, 0.137f), &s_FriendMessageReset, &s_FriendMessageAdd, &s_FriendMessageRemove, s_aFriendMessageColorValues, true, &g_Config.m_ClMessageFriend, LineSize, MarginSmall, AppearanceBodySize);
+				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-friend-message", Localize("Friend message"), &g_Config.m_ClMessageFriendColor, g_Config.m_ClMessageFriendGradient, sizeof(g_Config.m_ClMessageFriendGradient), ColorRGBA(1.0f, 0.137f, 0.137f), &s_FriendMessageReset, &s_FriendMessageAdd, &s_FriendMessageRemove, s_aFriendMessageColorValues, true, &g_Config.m_ClMessageFriend, LineSize, MarginSmall, AppearanceBodySize, AppearanceMetrics.m_ButtonHeight);
 
 				static CButtonContainer s_NormalMessageReset, s_NormalMessageAdd, s_NormalMessageRemove;
 				static unsigned s_aNormalMessageColorValues[CMessageGradient::MAX_COLORS];
-				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-normal-message", Localize("Normal message"), &g_Config.m_ClMessageColor, g_Config.m_ClMessageGradient, sizeof(g_Config.m_ClMessageGradient), ColorRGBA(1.0f, 1.0f, 1.0f), &s_NormalMessageReset, &s_NormalMessageAdd, &s_NormalMessageRemove, s_aNormalMessageColorValues, true, nullptr, LineSize, MarginSmall, AppearanceBodySize);
+				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-normal-message", Localize("Normal message"), &g_Config.m_ClMessageColor, g_Config.m_ClMessageGradient, sizeof(g_Config.m_ClMessageGradient), ColorRGBA(1.0f, 1.0f, 1.0f), &s_NormalMessageReset, &s_NormalMessageAdd, &s_NormalMessageRemove, s_aNormalMessageColorValues, true, nullptr, LineSize, MarginSmall, AppearanceBodySize, AppearanceMetrics.m_ButtonHeight);
 
 				str_format(aBuf, sizeof(aBuf), "%s (echo)", Localize("Client message"));
 				static CButtonContainer s_ClientMessageReset, s_ClientMessageAdd, s_ClientMessageRemove;
 				static unsigned s_aClientMessageColorValues[CMessageGradient::MAX_COLORS];
 				// TClient
-				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-client-message", aBuf, &g_Config.m_ClMessageClientColor, g_Config.m_ClMessageClientGradient, sizeof(g_Config.m_ClMessageClientGradient), ColorRGBA(0.5f, 0.78f, 1.0f), &s_ClientMessageReset, &s_ClientMessageAdd, &s_ClientMessageRemove, s_aClientMessageColorValues, true, &g_Config.m_TcShowChatClient, LineSize, MarginSmall, AppearanceBodySize);
+				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-client-message", aBuf, &g_Config.m_ClMessageClientColor, g_Config.m_ClMessageClientGradient, sizeof(g_Config.m_ClMessageClientGradient), ColorRGBA(0.5f, 0.78f, 1.0f), &s_ClientMessageReset, &s_ClientMessageAdd, &s_ClientMessageRemove, s_aClientMessageColorValues, true, &g_Config.m_TcShowChatClient, LineSize, MarginSmall, AppearanceBodySize, AppearanceMetrics.m_ButtonHeight);
 
 				static CButtonContainer s_FriendMessageHeartReset;
 				const unsigned OldFriendMessageHeartColor = g_Config.m_ClMessageFriendHeartColor;
@@ -6679,7 +6682,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 				auto &&RenderMessageBackground = [&](int LineIndex) {
 					auto Size = RenderPreview(LineIndex, 0, 0, false);
-					Graphics()->DrawRectExt(X - RealMsgPaddingX / 2.0f, TempY - RealMsgPaddingY / 2.0f, Size.x + RealMsgPaddingX * 1.5f, Size.y, RealBackgroundRounding, IGraphics::CORNER_ALL);
+					Graphics()->DrawRectExt(PreviewView.x, TempY - RealMsgPaddingY / 2.0f, PreviewView.w, Size.y, RealBackgroundRounding, IGraphics::CORNER_ALL);
 					return Size.y;
 				};
 
@@ -7004,7 +7007,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				if(g_Config.m_ClShowDirection > 0)
 					DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-key-press-icons-size", &g_Config.m_ClDirectionSize, &g_Config.m_ClDirectionSize, Button, Localize("Size of key press icons"), -50, 100); }, NamePlateStrongLayout ? 1 : 0);
 			const float NamePlatePreviewAreaHeight = std::clamp(190.0f * AppearanceUiScale, 160.0f, 210.0f);
-			const float NamePlatePreviewControlsHeight = ResolveSettingsRowsHeight(3, LineSize, MarginSmall);
+			const float NamePlatePreviewControlsHeight = ResolveSettingsRowsHeight(2, LineSize, MarginSmall) + MarginSmall + AppearanceMetrics.m_ButtonHeight;
 			const float NamePlatePreviewMinCardHeight = NamePlatePreviewAreaHeight + MarginSmall + NamePlatePreviewControlsHeight;
 			AddCard(6, NamePlatePreviewMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect RightView = ContentRect;
@@ -7032,7 +7035,9 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					g_Config.m_QmNameplateFreeMoveY = 0;
 				}
 
-				NextPreviewControl(Button);
+				Controls.HSplitTop(AppearanceMetrics.m_ButtonHeight, &Button, &Controls);
+				if(Controls.h > 0.0f)
+					Controls.HSplitTop(MarginSmall, nullptr, &Controls);
 				static CButtonContainer s_NameplateResetLayoutButton;
 				if(DoSettingsButton_Menu(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, APPEARANCE_TAB_NAME_PLATE, &s_NameplateResetLayoutButton, "appearance-nameplate-reset-layout", Localize("Reset layout"), 0, &Button))
 				{
@@ -7357,7 +7362,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				static CButtonContainer s_AllToRifleResetId, s_AllToDefaultResetId;
 
 				ColorCardContent.HSplitTop(4 * MarginSmall, nullptr, &ColorCardContent);
-				ColorCardContent.HSplitTop(LineSize, &Button, &ColorCardContent);
+				ColorCardContent.HSplitTop(AppearanceMetrics.m_ButtonHeight, &Button, &ColorCardContent);
 				if(DoSettingsButton_Menu(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, APPEARANCE_TAB_LASER, &s_AllToRifleResetId, "appearance-laser-set-all-to-rifle", Localize("Set all to Rifle"), 0, &Button))
 				{
 					g_Config.m_ClLaserShotgunOutlineColor = g_Config.m_ClLaserRifleOutlineColor;
@@ -7372,7 +7377,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 				// values taken from the CL commands
 				ColorCardContent.HSplitTop(2 * MarginSmall, nullptr, &ColorCardContent);
-				ColorCardContent.HSplitTop(LineSize, &Button, &ColorCardContent);
+				ColorCardContent.HSplitTop(AppearanceMetrics.m_ButtonHeight, &Button, &ColorCardContent);
 				if(DoSettingsButton_Menu(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, APPEARANCE_TAB_LASER, &s_AllToDefaultResetId, "appearance-laser-reset-defaults", Localize("Reset to defaults"), 0, &Button))
 				{
 					g_Config.m_ClLaserRifleOutlineColor = 11176233;

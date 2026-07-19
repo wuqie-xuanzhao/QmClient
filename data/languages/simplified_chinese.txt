@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == 气泡不透明度
 
-Buffer memory
-== 缓冲区内存
-
 Built-in
 == 内置
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == 兼容其他服务器的类似单人区域提示
 
+Complete snapshots are arriving late or not arriving
+== 完整快照到达延迟或未到达
+
 Compressor attack time (ms)
 == 压缩器攻击时间（毫秒）
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == 连接已断开
 
-Connection downstream
-== 连接下行
-
 Connection elevated
 == 连接略有异常
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == 连接严重异常
-
-Connection upstream
-== 连接上行
 
 Connlimit: number of connections allowed per IP in a time period
 == Connlimit：一个 IP 在一段时间内允许的连接数
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == 显示你的比赛时间
 
-Displays client prediction latency
-== 显示客户端预测延迟
-
-Displays client receive rate
-== 显示客户端接收速率
-
-Displays client send rate
-== 显示客户端发送速率
-
 Displays connection quality grade
 == 显示连接质量等级
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == 显示 DDNet 进程内存使用量
 
-Displays latency jitter
-== 显示延迟抖动
+Displays estimated total UDP receive rate
+== 显示估算的总 UDP 接收速率
 
-Displays resend-based packet loss estimate
-== 显示基于重发的丢包估计
+Displays estimated total UDP send rate
+== 显示估算的总 UDP 发送速率
 
-Displays server snapshot latency
-== 显示服务器快照延迟
+Displays prediction timing jitter
+== 显示预测时序抖动
+
+Displays the client's prediction lead
+== 显示客户端的预测提前量
+
+Displays the interval between complete snapshots
+== 显示完整快照之间的间隔
+
+Displays the number of unacknowledged vital chunks
+== 显示未确认的重要数据块数量
+
+Displays the server ping round-trip time
+== 显示服务器 Ping 往返时间
 
 Displays X and Y velocity
 == 显示 X 和 Y 速度
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == 帧耗时
+
+Frame time p95
+== 帧时间 P95
 
 Framebuffer color bits (only fullscreen)
 == 帧缓冲区的颜色位（仅限全屏）
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == 控制台最后一页
 
-Latency
-== 延迟
-
 Latency compensation
 == 延迟补偿
 
 Latency Jitter
-== 延迟抖动
-
-Latency jitter
 == 延迟抖动
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == 预测幽灵透明度（0-100）
 
-Prediction jitter is obvious, latency changes are large
-== 预测抖动明显，延迟变化较大
+Prediction jitter
+== 预测抖动
+
+Prediction jitter is obvious, prediction timing is changing
+== 预测抖动明显，预测时序正在变化
 
 Prediction Latency
 == 预测延迟
 
-Prediction latency
-== 预测延迟
+Prediction lead
+== 预测提前量
 
-Prediction latency is elevated, prediction path pressure is high
-== 预测延迟偏高，预测链路压力较高
+Prediction lead is high, check prediction settings and server timing
+== 预测提前量过高，请检查预测设置和服务器时序
 
 Prediction Margin
 == 预测量
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == 预测偏移
-
-Prediction time
-== 预测耗时
 
 Preparing demo playback
 == 正在准备回放
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == 将每日消息打印到控制台
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== 在 Windows 上优先处理出站游戏流量（尽力而为）
 
 Privately messages someone's current time in this current running race (your time by default)
 == 私聊发送某人在当前竞速中的时间（默认发送你的时间）
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == 重新绑定客户端的监听地址和端口
 
-Receive
-== 接收
-
 Receive Rate
-== 接收速率
-
-Receive rate
 == 接收速率
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == 重发丢包
 
-Resend loss
-== 重发丢包
-
-Resend signs detected, connection quality is suspicious
-== 检测到重发迹象，连接质量可疑
-
 Reset
 == 重置
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == 当前构建未集成 RNNoise，自动回退简单降噪
 
-Rollback rate
-== 回滚率
-
 Room
 == 房间
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo 消息改走通知栏
+
+RTT
+== RTT
 
 Rule line 1.
 == 规则第 1 行
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == 发送速率
 
-Send rate
-== 发送速率
-
 Send source language
 == 发送源语言
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == 服务器区域。用于地区禁令
-
-Server rollback
-== 服务器回滚
-
-Server RTT is elevated, response path is unstable
-== 服务器 RTT 偏高，响应链路不稳定
 
 Server stress (debug builds only).
 == 服务器压力（仅限调试版本）
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == 显示版本过旧提示
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== 显示出站游戏流量的 QoS 状态
 
 Show outlines only on entity layer
 == 仅在实体层显示轮廓
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == 在 /rank、/top5 和 /top5team 中显示区域排名
 
-Show release date and author when sorted by date
-== 按发布时间排序时显示皮肤发布日期和作者
-
 Show score
 == 显示分数
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == 在玩家昵称旁显示皮肤名
+
+Show skin release date and author
+== 显示皮肤发布日期和作者
 
 Show song info in top-left corner
 == 在左上角显示歌曲信息
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == 吸附阈值
 
+Snapshot Gap
+== 快照间隔
+
+Snapshot gap
+== 快照间隔
+
 Snapshot Latency
 == 快照延迟
+
+Snapshot payload
+== 快照负载
+
+Snapshot rate
+== 快照速率
 
 Social
 == 社交功能
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Q 弹 Tee 形变强度
 
-Staging memory
-== 暂存内存
-
 Star
 == 星形
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == 结束回放
-
-Streamed memory
-== 流式内存
 
 Streamer Mode
 == 主播模式
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == 腾讯云翻译 SecretKey
 
-Text
-== 文字
-
 Text alpha
 == 文字透明度
 
 Text color
 == 文本颜色
-
-Texture memory
-== 纹理内存
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == 感谢您的陪伴与信任。正是如此，才给了我继续前行的勇气
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == 好友总数
+
+Total UDP RX (est.)
+== 总 UDP 接收（估算）
+
+Total UDP TX (est.)
+== 总 UDP 发送（估算）
 
 Total: %d save(s)
 == 总计：%d 个存档
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == 视觉
+
+Vital resend queue
+== 重要数据重发队列
 
 Voice
 == 语音

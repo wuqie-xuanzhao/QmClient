@@ -52,17 +52,19 @@ public:
 	CStatusItem m_Zoom = CStatusItem([this] { ZoomRender(); }, [this] { return ZoomWidth(); },
 		"z", "Zoom", "", "Displays current zoom value");
 	CStatusItem m_Downstream = CStatusItem([this] { DownstreamRender(); }, [this] { return DownstreamWidth(); },
-		"u", "Snapshot Latency", "Latency", "Displays server snapshot latency");
+		"u", "Snapshot Latency", "RTT", "Displays the server ping round-trip time");
 	CStatusItem m_Upstream = CStatusItem([this] { UpstreamRender(); }, [this] { return UpstreamWidth(); },
-		"n", "Prediction Latency", "Prediction latency", "Displays client prediction latency");
+		"n", "Prediction Latency", "Prediction lead", "Displays the client's prediction lead");
 	CStatusItem m_Jitter = CStatusItem([this] { JitterRender(); }, [this] { return JitterWidth(); },
-		"j", "Latency Jitter", "Latency jitter", "Displays latency jitter");
+		"j", "Latency Jitter", "Prediction jitter", "Displays prediction timing jitter");
+	CStatusItem m_SnapshotGap = CStatusItem([this] { SnapshotGapRender(); }, [this] { return SnapshotGapWidth(); },
+		"g", "Snapshot Gap", "Snapshot gap", "Displays the interval between complete snapshots");
 	CStatusItem m_PacketLoss = CStatusItem([this] { PacketLossRender(); }, [this] { return PacketLossWidth(); },
-		"k", "Resend Loss", "Resend loss", "Displays resend-based packet loss estimate");
+		"k", "Resend Loss", "Vital resend queue", "Displays the number of unacknowledged vital chunks");
 	CStatusItem m_DownRate = CStatusItem([this] { DownRateRender(); }, [this] { return DownRateWidth(); },
-		"i", "Receive Rate", "Receive rate", "Displays client receive rate");
+		"i", "Receive Rate", "Process UDP RX (est.)", "Displays estimated process UDP receive rate");
 	CStatusItem m_UpRate = CStatusItem([this] { UpRateRender(); }, [this] { return UpRateWidth(); },
-		"o", "Send Rate", "Send rate", "Displays client send rate");
+		"o", "Send Rate", "Process UDP TX (est.)", "Displays estimated process UDP send rate");
 	CStatusItem m_ConnectionGrade = CStatusItem([this] { ConnectionGradeRender(); }, [this] { return ConnectionGradeWidth(); },
 		"q", "Connection Quality", "Connection quality", "Displays connection quality grade");
 	CStatusItem m_Cpu = CStatusItem([this] { CpuRender(); }, [this] { return CpuWidth(); },
@@ -72,7 +74,7 @@ public:
 	CStatusItem m_Space = CStatusItem([this] { SpaceRender(); }, [this] { return SpaceWidth(); },
 		" _", "Space", " ", "Gap between statusbar items", false);
 
-	std::vector<CStatusItem> m_StatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Downstream, m_Upstream, m_Jitter, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
+	std::vector<CStatusItem> m_StatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Downstream, m_Upstream, m_Jitter, m_SnapshotGap, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
 	std::vector<CStatusItem *> m_StatusBarItems = {&m_LocalTime, &m_FPS, &m_Space, &m_Angle, &m_Space, &m_Ping};
 
 	void UpdateStatusBarSize();
@@ -127,6 +129,9 @@ private:
 
 	float JitterWidth();
 	void JitterRender();
+
+	float SnapshotGapWidth();
+	void SnapshotGapRender();
 
 	float PacketLossWidth();
 	void PacketLossRender();

@@ -347,6 +347,7 @@ private:
 	int64_t m_LastUpdateTime;
 	int64_t m_LastRecvTime;
 	int64_t m_LastSendTime;
+	int m_LastRttMs = -1;
 
 	char m_aErrorString[256];
 
@@ -425,6 +426,7 @@ public:
 	// Needed for GotProblems in NetClient
 	int64_t LastRecvTime() const { return m_LastRecvTime; }
 	int64_t ConnectTime() const { return m_LastUpdateTime; }
+	int LastRttMs() const { return m_LastRttMs; }
 
 	int AckSequence() const { return m_Ack; }
 	int SeqSequence() const { return m_Sequence; }
@@ -734,15 +736,25 @@ class CNetClient
 	SNetTransportStats m_TransportStats;
 
 	CStun *m_pStun = nullptr;
+	NETQOS m_Qos = nullptr;
+	bool m_LowLatency = false;
+	bool m_QosAttempted = false;
+	bool m_QosPeerValidated = false;
+	ENetQosStatus m_QosStatus = ENetQosStatus::DISABLED;
 
 	bool FetchKcpChunk(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Sixup);
 	int SendLegacyBypass(CNetChunk *pChunk);
+	void ResetQos();
+	void TryConfigureQos();
 
 public:
 	NETSOCKET m_Socket = nullptr;
 	// openness
-	bool Open(NETADDR BindAddr);
+	bool Open(NETADDR BindAddr, bool LowLatency = false);
 	void Close();
+	void SetLowLatency(bool LowLatency);
+	ENetQosStatus QosStatus() const { return m_QosStatus; }
+	const char *QosStatusName() const;
 
 	// connection state
 	void Disconnect(const char *pReason);

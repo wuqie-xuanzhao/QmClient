@@ -206,6 +206,37 @@ inline float ResolveSettingsRowsHeight(const int RowCount, const float RowHeight
 	return RowCount * std::max(0.0f, RowHeight) + std::max(0, RowCount - 1) * std::max(0.0f, RowSpacing);
 }
 
+inline float ResolveSettingsProfilesListHeight(const SSettingsContentMetrics &Metrics, const float ContentWidth, const int ProfileCount)
+{
+	const float ItemWidth = std::max(Metrics.m_ListRowHeight * 6.0f, Metrics.m_LabelWidth + Metrics.m_ButtonHeight * 2.0f);
+	const int ItemsPerRow = std::max(1, (int)(std::max(0.0f, ContentWidth) / ItemWidth));
+	const int RequiredRows = ProfileCount > 0 ? (ProfileCount + ItemsPerRow - 1) / ItemsPerRow : 0;
+	const int VisibleRows = std::clamp(RequiredRows, 1, 3);
+	const float ItemHeight = std::max(Metrics.m_ListRowHeight * 3.0f, Metrics.m_ButtonHeight * 3.0f + Metrics.m_LineSpacing * 2.0f);
+	const float ListHeight = ProfileCount > 0 ? VisibleRows * ItemHeight : Metrics.m_ListRowHeight * 2.0f;
+	return Metrics.m_ButtonHeight + Metrics.m_LineSpacing + ListHeight;
+}
+
+inline float ResolveSettingsTeeQueuePresetHeight(const SSettingsContentMetrics &Metrics, const int VisiblePresetRows = 8)
+{
+	// 分割高度包含预设区域前的间距、Surface 的上下内边距、标题、操作按钮和可见列表行。
+	return Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight + std::max(1, VisiblePresetRows) * Metrics.m_ListRowHeight;
+}
+
+inline float ResolveSettingsTeeQueuePanelHeight(const SSettingsContentMetrics &Metrics, const int VisibleQueueRows = 2, const int VisiblePresetRows = 8)
+{
+	const float OuterPadding = Metrics.m_LineSpacing * 2.0f;
+	const float HeaderAndInterval = Metrics.m_LineHeight * 2.0f + Metrics.m_InputHeight + Metrics.m_LineSpacing * 3.0f;
+	const float QueueList = Metrics.m_LineSpacing * 2.0f + Metrics.m_LineHeight + std::max(1, VisibleQueueRows) * Metrics.m_ListRowHeight;
+	return std::max(Metrics.m_UiScale * 440.0f, OuterPadding + HeaderAndInterval + QueueList + ResolveSettingsTeeQueuePresetHeight(Metrics, VisiblePresetRows));
+}
+
+inline float ResolveSettingsTeeIdentityHeight(const SSettingsContentMetrics &Metrics)
+{
+	// 名称/国旗、Tee 预览、标签和底部颜色按钮均需要自己的安全间距。
+	return Metrics.m_InputHeight + Metrics.m_LineSpacing + Metrics.m_LineHeight * 2.0f + Metrics.m_ButtonHeight * 4.0f;
+}
+
 inline float ResolveQmVisualSkinTransitionHeight(const SSettingsContentMetrics &Metrics, const bool Enabled)
 {
 	// 标题、开关、控件和说明均按 renderer 的实际顺序计数；每个可见行消费一次尾部间距。
@@ -344,8 +375,9 @@ inline float ResolveSettingsCheckboxFontSize(const float BodySize, const float R
 inline float ResolveAppearanceChatMessagesHeight(const SSettingsContentMetrics &Metrics)
 {
 	constexpr int MessageGradientCount = 6;
-	const float MessageGradientHeight = 2.0f * Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing;
-	const float ColorPickerHeight = Metrics.m_LineHeight + Metrics.m_LineSpacing;
+	const float ControlHeight = std::max(Metrics.m_LineHeight, Metrics.m_ButtonHeight);
+	const float MessageGradientHeight = 2.0f * ControlHeight + 2.0f * Metrics.m_LineSpacing;
+	const float ColorPickerHeight = ControlHeight + Metrics.m_LineSpacing;
 	return MessageGradientCount * MessageGradientHeight + ColorPickerHeight;
 }
 
@@ -365,7 +397,7 @@ inline float ResolveQmHudNotificationsHeight(const SSettingsContentMetrics &Metr
 	// 高级区域固定消费十行；分类过滤启用后再显示四个分类开关。
 	Height += (10.0f + (CategoryFilters ? 4.0f : 0.0f)) * Metrics.m_RowStep;
 	// 说明文字使用 Small 语义，并保留与其他行相同的安全间距。
-	return Height + Metrics.m_SmallSize;
+	return Height + Metrics.m_SmallSize + Metrics.m_LineSpacing;
 }
 
 inline float ResolveQmHudPlayerStatsHeight(const SSettingsContentMetrics &Metrics, const bool MapProgress, const bool EmbeddedProgress)
@@ -472,7 +504,7 @@ inline float ResolveAppearanceLaserColorsHeight(const SSettingsContentMetrics &M
 	constexpr int ColorPickerCount = 10;
 	constexpr float EntitySectionGap = 10.0f;
 	const float HeadingHeight = Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing;
-	const float ColorPickerHeight = Metrics.m_ButtonHeight + Metrics.m_LineSpacing;
+	const float ColorPickerHeight = std::max(Metrics.m_LineHeight, Metrics.m_ButtonHeight) + Metrics.m_LineSpacing;
 	return 2.0f * HeadingHeight + 8.0f * Metrics.m_LineSpacing + ColorPickerCount * ColorPickerHeight + EntitySectionGap + 2.0f * Metrics.m_LineHeight;
 }
 

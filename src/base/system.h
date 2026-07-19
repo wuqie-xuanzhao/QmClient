@@ -660,6 +660,10 @@ int net_socket_type(NETSOCKET sock);
  */
 NETSOCKET net_udp_create(NETADDR bindaddr);
 
+// 尽力为指定 UDP 目标创建客户端 QoS flow，失败时返回 nullptr。
+NETQOS net_qos_add_socket(NETSOCKET sock, const NETADDR *addr, ENetQosStatus *pStatus);
+void net_qos_remove_socket(NETQOS qos);
+
 /**
  * Sends a packet over an UDP socket.
  *

@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == バブルの不透明度
 
-Buffer memory
-== バッファメモリ
-
 Built-in
 == 内蔵
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == 他のサーバーの類似シングルエリア通知と互換性を持たせる
 
+Complete snapshots are arriving late or not arriving
+== 完全なスナップショットの到着が遅れているか、届いていません
+
 Compressor attack time (ms)
 == コンプレッサーのアタックタイム（ミリ秒）
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == 接続が切断されました
 
-Connection downstream
-== 接続ダウンストリーム
-
 Connection elevated
 == 接続に軽度の異常があります
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == 接続に深刻な異常があります
-
-Connection upstream
-== 接続アップストリーム
 
 Connlimit: number of connections allowed per IP in a time period
 == Connlimit：一定期間に IP あたり許可する接続数
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == レースタイムを表示
 
-Displays client prediction latency
-== クライアント予測レイテンシを表示
-
-Displays client receive rate
-== クライアント受信レートを表示
-
-Displays client send rate
-== クライアント送信レートを表示
-
 Displays connection quality grade
 == 接続品質グレードを表示
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == DDNet プロセスメモリ使用量を表示
 
-Displays latency jitter
-== レイテンシジッターを表示
+Displays estimated total UDP receive rate
+== 推定された UDP 受信合計レートを表示
 
-Displays resend-based packet loss estimate
-== 再送ベースのパケットロス推定値を表示
+Displays estimated total UDP send rate
+== 推定された UDP 送信合計レートを表示
 
-Displays server snapshot latency
-== サーバースナップショットレイテンシを表示
+Displays prediction timing jitter
+== 予測タイミングのジッターを表示
+
+Displays the client's prediction lead
+== クライアントの予測先行時間を表示
+
+Displays the interval between complete snapshots
+== 完全なスナップショット間の間隔を表示
+
+Displays the number of unacknowledged vital chunks
+== 未確認の重要チャンク数を表示
+
+Displays the server ping round-trip time
+== サーバーへの Ping 往復時間を表示
 
 Displays X and Y velocity
 == X と Y の速度を表示
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == フレーム時間
+
+Frame time p95
+== フレーム時間 P95
 
 Framebuffer color bits (only fullscreen)
 == フレームバッファのカラービット（フルスクリーンのみ）
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == コンソールの最終ページ
 
-Latency
-== レイテンシ
-
 Latency compensation
 == レイテンシ補正
 
 Latency Jitter
-== レイテンシジッター
-
-Latency jitter
 == レイテンシジッター
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == 予測ゴーストの不透明度 (0-100)
 
-Prediction jitter is obvious, latency changes are large
-== 予測ジッターが顕著で、レイテンシ変動が大きいです
+Prediction jitter
+== 予測ジッター
+
+Prediction jitter is obvious, prediction timing is changing
+== 予測ジッターが目立ち、予測タイミングが変化しています
 
 Prediction Latency
 == 予測レイテンシ
 
-Prediction latency
-== 予測レイテンシ
+Prediction lead
+== 予測先行時間
 
-Prediction latency is elevated, prediction path pressure is high
-== 予測レイテンシが高く、予測リンクの負荷が高いです
+Prediction lead is high, check prediction settings and server timing
+== 予測先行時間が長すぎます。予測設定とサーバーのタイミングを確認してください
 
 Prediction Margin
 == 予測マージン
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == 予測オフセット
-
-Prediction time
-== 予測時間
 
 Preparing demo playback
 == デモ再生を準備中
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == デイリーメッセージをコンソールに表示
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== Windows で送信ゲーム通信を優先する（ベストエフォート）
 
 Privately messages someone's current time in this current running race (your time by default)
 == 現在のレース中の誰かのタイムをプライベートメッセージで送信（デフォルトは自分のタイム）
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == クライアントのリスニングアドレスとポートを再バインド
 
-Receive
-== 受信
-
 Receive Rate
-== 受信レート
-
-Receive rate
 == 受信レート
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == ロス再送
 
-Resend loss
-== ロス再送
-
-Resend signs detected, connection quality is suspicious
-== 再送信の兆候を検出しました。接続品質に問題がある可能性があります
-
 Reset
 == リセット
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == 現在のビルドに RNNoise が統合されていません。簡易ノイズリダクションにフォールバックします
 
-Rollback rate
-== ロールバック率
-
 Room
 == ルーム
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo メッセージを通知にルーティング
+
+RTT
+== RTT
 
 Rule line 1.
 == ルール 1 行目
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == 送信レート
 
-Send rate
-== 送信レート
-
 Send source language
 == 送信元言語
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == サーバーリージョン。リージョンバンに使用されます
-
-Server rollback
-== サーバーロールバック
-
-Server RTT is elevated, response path is unstable
-== サーバー RTT が高く、応答経路が不安定です
 
 Server stress (debug builds only).
 == サーバーストレス（デバッグビルドのみ）
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == バージョンが古い警告を表示
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== 送信ゲーム通信の QoS 状態を表示
 
 Show outlines only on entity layer
 == エンティティレイヤーのみにアウトラインを表示
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == /rank、/top5、/top5team で地域ランキングを表示
 
-Show release date and author when sorted by date
-== 公開日順に並べ替え時にスキンの公開日と作者を表示
-
 Show score
 == スコアを表示
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == ネームプレートにスキン名を表示
+
+Show skin release date and author
+== スキンの公開日と作者を表示
 
 Show song info in top-left corner
 == 左上に曲情報を表示
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == スナップしきい値
 
+Snapshot Gap
+== スナップショット間隔
+
+Snapshot gap
+== スナップショット間隔
+
 Snapshot Latency
 == スナップショットレイテンシ
+
+Snapshot payload
+== スナップショットのペイロード
+
+Snapshot rate
+== スナップショットレート
 
 Social
 == ソーシャル
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Q 弾 Tee 変形強度
 
-Staging memory
-== ステージングメモリ
-
 Star
 == 星形
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == 現在のデモを停止
-
-Streamed memory
-== ストリームメモリ
 
 Streamer Mode
 == ストリーマーモード
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == テンセントクラウド翻訳 SecretKey
 
-Text
-== テキスト
-
 Text alpha
 == テキストの透明度
 
 Text color
 == テキスト色
-
-Texture memory
-== テクスチャメモリ
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == ご支援と信頼に感謝します。それが私に前進し続ける勇気を与えてくれます。
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == フレンド総数
+
+Total UDP RX (est.)
+== 合計 UDP 受信（推定）
+
+Total UDP TX (est.)
+== 合計 UDP 送信（推定）
 
 Total: %d save(s)
 == 合計: %d 個のセーブ
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == ビジュアル
+
+Vital resend queue
+== 重要チャンクの再送キュー
 
 Voice
 == 音声

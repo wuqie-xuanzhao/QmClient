@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == Непрозрачность пузырька
 
-Buffer memory
-== Память буферов
-
 Built-in
 == Встроенный
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == Совместимость с подсказками одиночной зоны на других серверах
 
+Complete snapshots are arriving late or not arriving
+== Полные снапшоты приходят с задержкой или не приходят
+
 Compressor attack time (ms)
 == Время атаки компрессора (мс)
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == Соединение разорвано
 
-Connection downstream
-== Входящий трафик
-
 Connection elevated
 == Соединение слегка нестабильно
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == Соединение серьёзно нестабильно
-
-Connection upstream
-== Исходящий трафик
 
 Connlimit: number of connections allowed per IP in a time period
 == Connlimit: количество разрешённых подключений с одного IP за период времени
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == Показывает ваше время гонки
 
-Displays client prediction latency
-== Показывает задержку предсказания клиента
-
-Displays client receive rate
-== Показывает скорость приёма клиента
-
-Displays client send rate
-== Показывает скорость отправки клиента
-
 Displays connection quality grade
 == Показывает оценку качества соединения
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == Показывает использование памяти процессом DDNet
 
-Displays latency jitter
-== Показывает джиттер задержки
+Displays estimated total UDP receive rate
+== Показывать расчётную общую скорость приёма UDP
 
-Displays resend-based packet loss estimate
-== Показывает оценку потерь пакетов по повторам
+Displays estimated total UDP send rate
+== Показывать расчётную общую скорость отправки UDP
 
-Displays server snapshot latency
-== Показывает задержку снимков сервера
+Displays prediction timing jitter
+== Показывать джиттер времени предсказания
+
+Displays the client's prediction lead
+== Показывать упреждение предсказания клиента
+
+Displays the interval between complete snapshots
+== Показывать интервал между полными снапшотами
+
+Displays the number of unacknowledged vital chunks
+== Показывать число неподтверждённых важных чанков
+
+Displays the server ping round-trip time
+== Показывать время кругового обхода Ping до сервера
 
 Displays X and Y velocity
 == Показывает скорость по X и Y
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == Время кадра
+
+Frame time p95
+== Время кадра P95
 
 Framebuffer color bits (only fullscreen)
 == Биты цвета фреймбуфера (только полноэкранный режим)
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == Последняя страница в консоли
 
-Latency
-== Задержка
-
 Latency compensation
 == Компенсация задержки
 
 Latency Jitter
-== Джиттер задержки
-
-Latency jitter
 == Джиттер задержки
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == Непрозрачность призрака предсказания (0-100)
 
-Prediction jitter is obvious, latency changes are large
-== Дрожание предсказания заметно, задержка сильно меняется
+Prediction jitter
+== Джиттер предсказания
+
+Prediction jitter is obvious, prediction timing is changing
+== Джиттер предсказания заметен, время предсказания меняется
 
 Prediction Latency
 == Задержка предсказания
 
-Prediction latency
-== Задержка предсказания
+Prediction lead
+== Упреждение предсказания
 
-Prediction latency is elevated, prediction path pressure is high
-== Задержка предсказания повышена, нагрузка на путь предсказания высокая
+Prediction lead is high, check prediction settings and server timing
+== Упреждение предсказания велико, проверьте настройки предсказания и время сервера
 
 Prediction Margin
 == Запас предсказания
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == Смещение предсказания
-
-Prediction time
-== Время предсказания
 
 Preparing demo playback
 == Подготовка воспроизведения демо
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == Выводить ежедневные сообщения в консоль
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== Приоритизировать исходящий игровой трафик в Windows (по возможности)
 
 Privately messages someone's current time in this current running race (your time by default)
 == Приватно сообщить чьё-то текущее время в этом забеге (по умолчанию ваше время)
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == Переназначает адрес и порт прослушивания клиента
 
-Receive
-== Получение
-
 Receive Rate
-== Скорость приёма
-
-Receive rate
 == Скорость приёма
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == Потери по повторам
 
-Resend loss
-== Потери по повторам
-
-Resend signs detected, connection quality is suspicious
-== Обнаружены признаки повторной отправки, качество соединения сомнительно
-
 Reset
 == Сбросить
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == RNNoise не интегрирован в текущую сборку, будет использовано простое шумоподавление
 
-Rollback rate
-== Частота откатов
-
 Room
 == Пароль комнаты
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Направлять сообщения Echo в уведомления
+
+RTT
+== RTT
 
 Rule line 1.
 == Строка правил 1.
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == Скорость отправки
 
-Send rate
-== Скорость отправки
-
 Send source language
 == Отправить целевой язык
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == Регион сервера. Используется для региональных банов
-
-Server rollback
-== Откат сервера
-
-Server RTT is elevated, response path is unstable
-== RTT сервера повышен, путь ответа нестабилен
 
 Server stress (debug builds only).
 == Нагрузка сервера (только для отладочных сборок).
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == Показывать предупреждение об устаревшей версии
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== Показать состояние QoS исходящего игрового трафика
 
 Show outlines only on entity layer
 == Показывать контуры только на слое объектов
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == Показывать региональные рейтинги в /rank, /top5 и /top5team.
 
-Show release date and author when sorted by date
-== Показывать дату публикации и автора скина при сортировке по дате
-
 Show score
 == Показать счет
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == Показывать названия скинов в табличке с именем
+
+Show skin release date and author
+== Показать дату выпуска и автора скина
 
 Show song info in top-left corner
 == Показывать информацию о песне в левом верхнем углу
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == Порог привязки
 
+Snapshot Gap
+== Интервал снапшотов
+
+Snapshot gap
+== Интервал снапшотов
+
 Snapshot Latency
 == Задержка снимков
+
+Snapshot payload
+== Полезная нагрузка снапшотов
+
+Snapshot rate
+== Частота снапшотов
 
 Social
 == Социальное
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Интенсивность деформации упругого Tee
 
-Staging memory
-== Промежуточная память
-
 Star
 == Звезда
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == Остановить текущее демо
-
-Streamed memory
-== Потоковая память
 
 Streamer Mode
 == Режим стримера
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == SecretKey перевода Tencent Cloud
 
-Text
-== Текст
-
 Text alpha
 == Альфа текста
 
 Text color
 == Цвет текста
-
-Texture memory
-== Память текстур
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Спасибо за вашу компанию и доверие. Именно это даёт мне смелость продолжать.
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == Всего друзей
+
+Total UDP RX (est.)
+== Общий приём UDP (оценка)
+
+Total UDP TX (est.)
+== Общая отправка UDP (оценка)
 
 Total: %d save(s)
 == Всего: %d сохранений
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == Визуал
+
+Vital resend queue
+== Очередь повторной отправки важных чанков
 
 Voice
 == Голос

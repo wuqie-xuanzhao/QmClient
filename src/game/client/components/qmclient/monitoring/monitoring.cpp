@@ -55,7 +55,7 @@ namespace
 	constexpr ColorRGBA DIVIDER_COLOR(1.0f, 1.0f, 1.0f, 0.18f);
 	constexpr ColorRGBA PING_COLOR(0.40f, 0.66f, 1.0f, 0.95f);
 	constexpr ColorRGBA PRED_COLOR(1.0f, 0.70f, 0.30f, 0.95f);
-	constexpr ColorRGBA PRED_MARGIN_COLOR(0.82f, 0.60f, 1.0f, 0.95f);
+	constexpr ColorRGBA SNAPSHOT_GAP_COLOR(0.35f, 0.90f, 0.90f, 0.95f);
 	constexpr ColorRGBA JITTER_COLOR(1.0f, 0.86f, 0.40f, 0.95f);
 	constexpr ColorRGBA FPS_COLOR(0.50f, 0.90f, 0.70f, 0.95f);
 	constexpr ColorRGBA GAME_MARGIN_COLOR(0.34f, 0.85f, 0.55f, 0.95f);
@@ -96,16 +96,15 @@ namespace
 
 		switch(Cause)
 		{
-		case EQmDiagnosticCause::DOWNSTREAM: return Localize("Server RTT is elevated, response path is unstable");
-		case EQmDiagnosticCause::UPSTREAM: return Localize("Prediction latency is elevated, prediction path pressure is high");
-		case EQmDiagnosticCause::JITTER: return Localize("Prediction jitter is obvious, latency changes are large");
-		case EQmDiagnosticCause::PACKET_LOSS: return Localize("Resend signs detected, connection quality is suspicious");
+		case EQmDiagnosticCause::SNAPSHOT_GAP: return Localize("Complete snapshots are arriving late or not arriving");
+		case EQmDiagnosticCause::PREDICTION: return Localize("Prediction lead is high, check prediction settings and server timing");
+		case EQmDiagnosticCause::PREDICTION_JITTER: return Localize("Prediction jitter is obvious, prediction timing is changing");
 		case EQmDiagnosticCause::CLIENT_PERFORMANCE:
-			if(Perf.m_FrameTimeMs > 16.7f)
+			if(Perf.m_FrameTimeP95Ms > 16.7f)
 				return Localize("Client frame time is abnormal");
 			if(Perf.m_CpuUsagePct >= 75.0f)
 				return Localize("Client CPU usage is high");
-			if(Perf.m_PredictionTimeMs >= Net.m_SnapshotLatencyMs + 12.0f || Perf.m_PredictionStress >= 12.0f)
+			if((Net.m_PingMs >= 0.0f && Perf.m_PredictionTimeMs >= Net.m_PingMs + 12.0f) || Perf.m_PredictionStress >= 12.0f)
 				return Localize("Client prediction time is high");
 			return Localize("Client performance pressure is high");
 		case EQmDiagnosticCause::NONE: return Localize("No obvious anomaly");
@@ -241,22 +240,23 @@ namespace
 		str_format(pBuf, BufSize, "%d/%d", GameTick, PredictedTick);
 	}
 
-	static void FormatMemoryKiBValue(char *pBuf, int BufSize, uint64_t ValueKiB)
-	{
-		str_format(pBuf, BufSize, "%" PRIu64 " KiB", ValueKiB);
-	}
-
 	static void FormatTrafficStatsValue(char *pBuf, int BufSize, const SQmNetworkMetrics::STrafficStats &Stats)
 	{
+		char aRateBuf[32];
+		if(Stats.m_RateKibPerSec >= 0.0f)
+			str_format(aRateBuf, sizeof(aRateBuf), "%.1fKiB/s", Stats.m_RateKibPerSec);
+		else
+			str_copy(aRateBuf, "--");
+
 		str_format(
 			pBuf,
 			BufSize,
-			"%" PRIu64 "p %" PRIu64 "+%" PRIu64 "=%" PRIu64 " %.0fKib/s avg %" PRIu64 "B",
+			"%" PRIu64 "p %" PRIu64 "+%" PRIu64 "=%" PRIu64 " %s avg %" PRIu64 "B",
 			Stats.m_Packets,
 			Stats.m_PayloadBytes,
 			Stats.m_OverheadBytes,
 			Stats.m_TotalBytes,
-			Stats.m_RateKibPerSec,
+			aRateBuf,
 			Stats.m_AveragePayloadBytes);
 	}
 
@@ -323,6 +323,8 @@ namespace
 
 		const int Start = (HistoryHead - HistoryCount + (int)aHistory.size()) % (int)aHistory.size();
 		const int PeakIndex = QmFindLatestPeakIndex(aHistory, HistoryHead, HistoryCount);
+		if(PeakIndex < 0)
+			return;
 		const float PeakValue = aHistory[(Start + PeakIndex) % (int)aHistory.size()];
 
 		const float PeakX = PlotRect.x + PlotRect.w * (float)PeakIndex / (float)std::max(HistoryCount - 1, 1);
@@ -361,6 +363,8 @@ namespace
 
 		const int Start = (HistoryHead - HistoryCount + (int)aHistory.size()) % (int)aHistory.size();
 		const int PeakIndex = QmFindLatestAbsolutePeakIndex(aHistory, HistoryHead, HistoryCount);
+		if(PeakIndex < 0)
+			return;
 		const float PeakValue = aHistory[(Start + PeakIndex) % (int)aHistory.size()];
 
 		const float PeakX = PlotRect.x + PlotRect.w * (float)PeakIndex / (float)std::max(HistoryCount - 1, 1);
@@ -584,15 +588,28 @@ namespace
 void CQmMonitoring::ResetHistory()
 {
 	m_Snapshot = {};
-	m_aPingHistory.fill(0.0f);
+	const float InvalidMetric = std::numeric_limits<float>::quiet_NaN();
+	m_aRttHistory.fill(InvalidMetric);
 	m_aPredHistory.fill(0.0f);
-	m_aPredictionMarginHistory.fill(0.0f);
-	m_aJitterHistory.fill(0.0f);
+	m_aSnapshotGapHistory.fill(InvalidMetric);
+	m_aPredictionJitterHistory.fill(InvalidMetric);
 	m_aGameTimeMarginHistory.fill(0.0f);
 	m_aFpsHistory.fill(0.0f);
+	m_aFrameTimeHistory.fill(0.0f);
 	m_HistoryHead = 0;
 	m_HistoryCount = 0;
 	m_LastSampleTick = 0;
+	m_LastSnapshotRateSampleTime = 0;
+	m_LastSnapshotCount = 0;
+	m_LastSnapshotPartCount = 0;
+	m_LastSnapshotPayloadBytes = 0;
+	m_SnapshotRatePerSec = -1.0f;
+	m_SnapshotPartRatePerSec = -1.0f;
+	m_SnapshotPayloadBytesPerSec = -1.0f;
+	m_SnapshotRateConnection = -1;
+	m_LastPredictionLeadMs = 0.0f;
+	m_PredictionJitterMs = -1.0f;
+	m_HasPredictionLeadSample = false;
 }
 
 void CQmMonitoring::OnInit()
@@ -617,12 +634,13 @@ void CQmMonitoring::OnRender()
 	if(m_LastSampleTick != 0 && Now - m_LastSampleTick < time_freq() / 20)
 		return;
 
+	PushFrameTimeSample(Client()->RenderFrameTime() * 1000.0f);
 	UpdateSnapshot();
 	PushHistorySample(
-		m_Snapshot.m_Network.m_SnapshotLatencyMs,
-		m_Snapshot.m_Network.m_PredictionLatencyMs,
-		m_Snapshot.m_Network.m_PredictionMarginMs,
-		m_Snapshot.m_Network.m_JitterMs,
+		m_Snapshot.m_Network.m_PingMs,
+		m_Snapshot.m_Network.m_PredictionLeadMs,
+		m_Snapshot.m_Network.m_SnapshotGapMs,
+		m_Snapshot.m_Network.m_PredictionJitterMs,
 		m_Snapshot.m_Network.m_GameTimeMarginMs,
 		m_Snapshot.m_Performance.m_Fps);
 	m_LastSampleTick = Now;
@@ -633,13 +651,55 @@ void CQmMonitoring::UpdateNetworkMetrics(SQmNetworkMetrics &Net)
 	IClient *pClient = Client();
 	Net.m_Connected = pClient->IsGameConnectionAlive();
 	Net.m_ConnectionProblems = pClient->ConnectionProblems();
-	Net.m_SnapshotLatencyMs = pClient->SnapshotLatencyMs();
-	Net.m_PredictionLatencyMs = pClient->PredictionLatencyMs();
+	Net.m_PingMs = pClient->PingMs();
+	Net.m_PredictionLeadMs = pClient->PredictionLeadMs();
 	Net.m_PredictionMarginMs = pClient->PredictionMarginMs();
-	Net.m_JitterMs = pClient->PredictionJitterMs();
+	if(m_HasPredictionLeadSample)
+	{
+		const float LeadDelta = std::abs(Net.m_PredictionLeadMs - m_LastPredictionLeadMs);
+		m_PredictionJitterMs = m_PredictionJitterMs < 0.0f ? LeadDelta : m_PredictionJitterMs + (LeadDelta - m_PredictionJitterMs) * 0.15f;
+	}
+	m_LastPredictionLeadMs = Net.m_PredictionLeadMs;
+	m_HasPredictionLeadSample = true;
+	Net.m_PredictionJitterMs = m_PredictionJitterMs;
 	Net.m_GameTimeMarginMs = pClient->GameTimeMarginMs();
-	Net.m_ServerRollbackMs = QmComputeRollbackMs(Net.m_GameTimeMarginMs);
-	const int PendingResendCount = pClient->PendingResendCount();
+	Net.m_GameTimeCorrectionMs = QmComputeRollbackMs(Net.m_GameTimeMarginMs);
+	Net.m_VitalResendCount = std::max(pClient->PendingResendCount(), 0);
+
+	SClientSnapshotStats SnapshotStats;
+	pClient->SnapshotStats(SnapshotStats);
+	Net.m_SnapshotGapMs = SnapshotStats.m_CurrentGapMs;
+	Net.m_SnapshotTickGap = SnapshotStats.m_LastTickGap;
+	Net.m_SnapshotRatePerSec = m_SnapshotRatePerSec;
+	Net.m_SnapshotPartRatePerSec = m_SnapshotPartRatePerSec;
+	Net.m_SnapshotPayloadBytesPerSec = m_SnapshotPayloadBytesPerSec;
+	const int64_t Now = time_get();
+	const int SnapshotConnection = g_Config.m_ClDummy;
+	if(m_LastSnapshotRateSampleTime == 0 || m_SnapshotRateConnection != SnapshotConnection)
+	{
+		m_SnapshotRateConnection = SnapshotConnection;
+		m_LastSnapshotRateSampleTime = Now;
+		m_LastSnapshotCount = SnapshotStats.m_SnapshotCount;
+		m_LastSnapshotPartCount = SnapshotStats.m_PartCount;
+		m_LastSnapshotPayloadBytes = SnapshotStats.m_PayloadBytes;
+		m_SnapshotRatePerSec = -1.0f;
+		m_SnapshotPartRatePerSec = -1.0f;
+		m_SnapshotPayloadBytesPerSec = -1.0f;
+	}
+	else if(Now - m_LastSnapshotRateSampleTime >= time_freq())
+	{
+		const float SampleSeconds = (float)(Now - m_LastSnapshotRateSampleTime) / (float)time_freq();
+		m_SnapshotRatePerSec = SnapshotStats.m_SnapshotCount >= m_LastSnapshotCount ? (float)(SnapshotStats.m_SnapshotCount - m_LastSnapshotCount) / SampleSeconds : 0.0f;
+		m_SnapshotPartRatePerSec = SnapshotStats.m_PartCount >= m_LastSnapshotPartCount ? (float)(SnapshotStats.m_PartCount - m_LastSnapshotPartCount) / SampleSeconds : 0.0f;
+		m_SnapshotPayloadBytesPerSec = SnapshotStats.m_PayloadBytes >= m_LastSnapshotPayloadBytes ? (float)(SnapshotStats.m_PayloadBytes - m_LastSnapshotPayloadBytes) / SampleSeconds : 0.0f;
+		m_LastSnapshotRateSampleTime = Now;
+		m_LastSnapshotCount = SnapshotStats.m_SnapshotCount;
+		m_LastSnapshotPartCount = SnapshotStats.m_PartCount;
+		m_LastSnapshotPayloadBytes = SnapshotStats.m_PayloadBytes;
+	}
+	Net.m_SnapshotRatePerSec = m_SnapshotRatePerSec;
+	Net.m_SnapshotPartRatePerSec = m_SnapshotPartRatePerSec;
+	Net.m_SnapshotPayloadBytesPerSec = m_SnapshotPayloadBytesPerSec;
 
 	NETSTATS Prev = {};
 	NETSTATS Current = {};
@@ -648,11 +708,10 @@ void CQmMonitoring::UpdateNetworkMetrics(SQmNetworkMetrics &Net)
 
 	const float DeltaSeconds = SampleInterval.count() > 0 ? (float)SampleInterval.count() / 1000000000.0f : 0.0f;
 
-	Net.m_DownBytesPerSec = BytesPerSecondDelta((int64_t)Current.recv_bytes, (int64_t)Prev.recv_bytes, DeltaSeconds);
-	Net.m_UpBytesPerSec = BytesPerSecondDelta((int64_t)Current.sent_bytes, (int64_t)Prev.sent_bytes, DeltaSeconds);
-	Net.m_Send = QmComputeTrafficStats(Prev.sent_packets, Prev.sent_bytes, Current.sent_packets, Current.sent_bytes);
-	Net.m_Recv = QmComputeTrafficStats(Prev.recv_packets, Prev.recv_bytes, Current.recv_packets, Current.recv_bytes);
-	Net.m_PacketLossPct = QmComputeDiagnosticPacketLossPct(Prev, Current, PendingResendCount);
+	Net.m_DownPayloadBytesPerSec = BytesPerSecondDelta((int64_t)Current.recv_bytes, (int64_t)Prev.recv_bytes, DeltaSeconds);
+	Net.m_UpPayloadBytesPerSec = BytesPerSecondDelta((int64_t)Current.sent_bytes, (int64_t)Prev.sent_bytes, DeltaSeconds);
+	Net.m_Send = QmComputeTrafficStats(Prev.sent_packets, Prev.sent_bytes, Current.sent_packets, Current.sent_bytes, DeltaSeconds);
+	Net.m_Recv = QmComputeTrafficStats(Prev.recv_packets, Prev.recv_bytes, Current.recv_packets, Current.recv_bytes, DeltaSeconds);
 
 	int NegativeSamples = 0;
 	const int Start = (m_HistoryHead - m_HistoryCount + (int)m_aGameTimeMarginHistory.size()) % (int)m_aGameTimeMarginHistory.size();
@@ -662,13 +721,15 @@ void CQmMonitoring::UpdateNetworkMetrics(SQmNetworkMetrics &Net)
 			++NegativeSamples;
 	}
 	if(m_HistoryCount > 0)
-		Net.m_ServerRollbackRatePct = (float)NegativeSamples * 100.0f / (float)m_HistoryCount;
+		Net.m_GameTimeAheadRatePct = (float)NegativeSamples * 100.0f / (float)m_HistoryCount;
 }
 
 void CQmMonitoring::UpdatePerformanceMetrics(SQmPerformanceMetrics &Perf)
 {
 	Perf.m_FrameTimeMs = Client()->FrameTimeAverage() * 1000.0f;
-	Perf.m_FrameTimeSpikeMs = Perf.m_FrameTimeMs;
+	const int FrameHistoryHead = (m_HistoryHead + 1) % (int)m_aFrameTimeHistory.size();
+	const int FrameHistoryCount = std::min(m_HistoryCount + 1, (int)m_aFrameTimeHistory.size());
+	Perf.m_FrameTimeP95Ms = QmComputeHistoryPercentile(m_aFrameTimeHistory, FrameHistoryHead, FrameHistoryCount, 95.0f);
 	Perf.m_FrameTimeUs = Client()->FrameTimeAverage() * 1000000.0f;
 	Perf.m_Fps = Perf.m_FrameTimeMs > 0.0f ? 1000.0f / Perf.m_FrameTimeMs : 0.0f;
 	Perf.m_PredictionTimeMs = (float)Client()->GetPredictionTime();
@@ -720,9 +781,10 @@ void CQmMonitoring::UpdatePerformanceMetrics(SQmPerformanceMetrics &Perf)
 		Perf.m_DiskReadMbPerSec = -1.0f;
 		Perf.m_DeviceSampleAvailable = false;
 	}
-	const float SnapshotLatencyMs = Client()->SnapshotLatencyMs();
+	const float PingMs = Client()->PingMs();
+	const float ReferencePingMs = PingMs >= 0.0f ? PingMs : 0.0f;
 	Perf.m_PredictionStress =
-		std::max(Perf.m_PredictionTimeMs - SnapshotLatencyMs, 0.0f) +
+		std::max(Perf.m_PredictionTimeMs - ReferencePingMs, 0.0f) +
 		std::max(Perf.m_FrameTimeMs - 16.7f, 0.0f);
 }
 
@@ -734,16 +796,22 @@ void CQmMonitoring::UpdateDiagnosticVerdict(SQmDiagnosticVerdict &Verdict, const
 	Verdict.m_pDetail = LocalizeCauseDetail(Verdict.m_PrimaryCause, Verdict.m_Grade, Net, Perf);
 }
 
-void CQmMonitoring::PushHistorySample(float PingMs, float PredMs, float PredictionMarginMs, float JitterMs, float GameTimeMarginMs, float Fps)
+void CQmMonitoring::PushFrameTimeSample(float FrameTimeMs)
 {
-	m_aPingHistory[m_HistoryHead] = PingMs;
+	m_aFrameTimeHistory[m_HistoryHead] = FrameTimeMs;
+}
+
+void CQmMonitoring::PushHistorySample(float RttMs, float PredMs, float SnapshotGapMs, float PredictionJitterMs, float GameTimeMarginMs, float Fps)
+{
+	const float InvalidMetric = std::numeric_limits<float>::quiet_NaN();
+	m_aRttHistory[m_HistoryHead] = RttMs >= 0.0f ? RttMs : InvalidMetric;
 	m_aPredHistory[m_HistoryHead] = PredMs;
-	m_aPredictionMarginHistory[m_HistoryHead] = PredictionMarginMs;
-	m_aJitterHistory[m_HistoryHead] = JitterMs;
+	m_aSnapshotGapHistory[m_HistoryHead] = SnapshotGapMs >= 0.0f ? SnapshotGapMs : InvalidMetric;
+	m_aPredictionJitterHistory[m_HistoryHead] = PredictionJitterMs >= 0.0f ? PredictionJitterMs : InvalidMetric;
 	m_aGameTimeMarginHistory[m_HistoryHead] = GameTimeMarginMs;
 	m_aFpsHistory[m_HistoryHead] = Fps;
-	m_HistoryHead = (m_HistoryHead + 1) % (int)m_aPingHistory.size();
-	m_HistoryCount = std::min(m_HistoryCount + 1, (int)m_aPingHistory.size());
+	m_HistoryHead = (m_HistoryHead + 1) % (int)m_aRttHistory.size();
+	m_HistoryCount = std::min(m_HistoryCount + 1, (int)m_aRttHistory.size());
 }
 
 void CQmMonitoring::UpdateSnapshot()
@@ -808,10 +876,18 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 	float MaxValue = 30.0f;
 	for(int i = 0; i < m_HistoryCount; ++i)
 	{
-		MaxValue = std::max(MaxValue, SampleAt(m_aPingHistory, i));
-		MaxValue = std::max(MaxValue, SampleAt(m_aPredHistory, i));
-		MaxValue = std::max(MaxValue, SampleAt(m_aPredictionMarginHistory, i));
-		MaxValue = std::max(MaxValue, SampleAt(m_aJitterHistory, i));
+		const float RttValue = SampleAt(m_aRttHistory, i);
+		const float PredictionValue = SampleAt(m_aPredHistory, i);
+		const float SnapshotGapValue = SampleAt(m_aSnapshotGapHistory, i);
+		const float JitterValue = SampleAt(m_aPredictionJitterHistory, i);
+		if(std::isfinite(RttValue))
+			MaxValue = std::max(MaxValue, RttValue);
+		if(std::isfinite(PredictionValue))
+			MaxValue = std::max(MaxValue, PredictionValue);
+		if(std::isfinite(SnapshotGapValue))
+			MaxValue = std::max(MaxValue, SnapshotGapValue);
+		if(std::isfinite(JitterValue))
+			MaxValue = std::max(MaxValue, JitterValue);
 	}
 
 	const auto DrawSeries = [&](const std::array<float, QM_MONITORING_HISTORY_CAPACITY> &aHistory, const ColorRGBA &Color) {
@@ -821,6 +897,8 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 		{
 			const float PrevValue = SampleAt(aHistory, i - 1);
 			const float CurrValue = SampleAt(aHistory, i);
+			if(!std::isfinite(PrevValue) || !std::isfinite(CurrValue))
+				continue;
 			const float X0 = PlotRect.x + PlotRect.w * (float)(i - 1) / (float)(m_HistoryCount - 1);
 			const float X1 = PlotRect.x + PlotRect.w * (float)i / (float)(m_HistoryCount - 1);
 			const float Y0 = PlotRect.y + PlotRect.h - (PlotRect.h * std::clamp(PrevValue / MaxValue, 0.0f, 1.0f));
@@ -835,26 +913,27 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 			Graphics()->LinesDraw(aLines.data(), NumLines);
 		Graphics()->LinesEnd();
 
-		if(m_HistoryCount >= 2)
+		const float LastValue = SampleAt(aHistory, m_HistoryCount - 1);
+		if(m_HistoryCount >= 2 && std::isfinite(LastValue))
 		{
 			const float LastX = PlotRect.x + PlotRect.w;
-			const float LastY = PlotRect.y + PlotRect.h - (PlotRect.h * std::clamp(SampleAt(aHistory, m_HistoryCount - 1) / MaxValue, 0.0f, 1.0f));
+			const float LastY = PlotRect.y + PlotRect.h - (PlotRect.h * std::clamp(LastValue / MaxValue, 0.0f, 1.0f));
 			const float DotR = 3.5f;
 			CUIRect Dot(LastX - DotR, LastY - DotR, DotR * 2.0f, DotR * 2.0f);
 			Dot.Draw(Color, IGraphics::CORNER_ALL, DotR);
 		}
 	};
 
-	DrawSeries(m_aPingHistory, PING_COLOR);
+	DrawSeries(m_aRttHistory, PING_COLOR);
 	DrawSeries(m_aPredHistory, PRED_COLOR);
-	DrawSeries(m_aPredictionMarginHistory, PRED_MARGIN_COLOR);
-	DrawSeries(m_aJitterHistory, JITTER_COLOR);
+	DrawSeries(m_aSnapshotGapHistory, SNAPSHOT_GAP_COLOR);
+	DrawSeries(m_aPredictionJitterHistory, JITTER_COLOR);
 	std::array<CUIRect, 8> aPeakRects = {};
 	int PeakRectCount = 0;
-	DrawPeakLabel(Graphics(), TextRender(), m_aPingHistory, m_HistoryHead, m_HistoryCount, PlotRect, MaxValue, PING_COLOR, PeakFontSize, "ms", 0.0f, aPeakRects, PeakRectCount);
+	DrawPeakLabel(Graphics(), TextRender(), m_aRttHistory, m_HistoryHead, m_HistoryCount, PlotRect, MaxValue, PING_COLOR, PeakFontSize, "ms", 0.0f, aPeakRects, PeakRectCount);
 	DrawPeakLabel(Graphics(), TextRender(), m_aPredHistory, m_HistoryHead, m_HistoryCount, PlotRect, MaxValue, PRED_COLOR, PeakFontSize, "ms", 0.0f, aPeakRects, PeakRectCount);
-	DrawPeakLabel(Graphics(), TextRender(), m_aPredictionMarginHistory, m_HistoryHead, m_HistoryCount, PlotRect, MaxValue, PRED_MARGIN_COLOR, PeakFontSize, "ms", 0.0f, aPeakRects, PeakRectCount);
-	DrawPeakLabel(Graphics(), TextRender(), m_aJitterHistory, m_HistoryHead, m_HistoryCount, PlotRect, MaxValue, JITTER_COLOR, PeakFontSize, "ms", 0.0f, aPeakRects, PeakRectCount);
+	DrawPeakLabel(Graphics(), TextRender(), m_aSnapshotGapHistory, m_HistoryHead, m_HistoryCount, PlotRect, MaxValue, SNAPSHOT_GAP_COLOR, PeakFontSize, "ms", 0.0f, aPeakRects, PeakRectCount);
+	DrawPeakLabel(Graphics(), TextRender(), m_aPredictionJitterHistory, m_HistoryHead, m_HistoryCount, PlotRect, MaxValue, JITTER_COLOR, PeakFontSize, "ms", 0.0f, aPeakRects, PeakRectCount);
 
 	const struct SLegendItem
 	{
@@ -863,10 +942,10 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 		ColorRGBA m_Color;
 		SQmHistoryStats m_Stats;
 	} aLegend[] = {
-		{Localize("Latency"), m_Snapshot.m_Network.m_SnapshotLatencyMs, PING_COLOR, QmComputeHistoryStats(m_aPingHistory, m_HistoryHead, m_HistoryCount)},
-		{Localize("Prediction"), m_Snapshot.m_Network.m_PredictionLatencyMs, PRED_COLOR, QmComputeHistoryStats(m_aPredHistory, m_HistoryHead, m_HistoryCount)},
-		{Localize("Prediction margin"), m_Snapshot.m_Network.m_PredictionMarginMs, PRED_MARGIN_COLOR, QmComputeHistoryStats(m_aPredictionMarginHistory, m_HistoryHead, m_HistoryCount)},
-		{Localize("Jitter"), m_Snapshot.m_Network.m_JitterMs, JITTER_COLOR, QmComputeHistoryStats(m_aJitterHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("RTT"), m_Snapshot.m_Network.m_PingMs, PING_COLOR, QmComputeHistoryStats(m_aRttHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Prediction"), m_Snapshot.m_Network.m_PredictionLeadMs, PRED_COLOR, QmComputeHistoryStats(m_aPredHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Snapshot gap"), m_Snapshot.m_Network.m_SnapshotGapMs, SNAPSHOT_GAP_COLOR, QmComputeHistoryStats(m_aSnapshotGapHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Jitter"), m_Snapshot.m_Network.m_PredictionJitterMs, JITTER_COLOR, QmComputeHistoryStats(m_aPredictionJitterHistory, m_HistoryHead, m_HistoryCount)},
 	};
 
 	CUIRect TopRow, BottomRow;
@@ -1046,10 +1125,10 @@ void CQmMonitoring::RenderPrimaryCards(CUIRect Rect) const
 		{Localize("Frame time"), m_Snapshot.m_Performance.m_FrameTimeUs, "us", 0, FPS_COLOR},
 		{Localize("DDNet/total CPU"), m_Snapshot.m_Performance.m_CpuUsagePct, "", 0, GAME_MARGIN_COLOR, false, false, true},
 		{Localize("Memory"), m_Snapshot.m_Performance.m_MemoryUsageMb, "MB", 0, GAME_MARGIN_COLOR},
-		{Localize("Connection downstream"), m_Snapshot.m_Network.m_DownBytesPerSec, "", 0, PING_COLOR, true},
-		{Localize("Connection upstream"), m_Snapshot.m_Network.m_UpBytesPerSec, "", 0, PRED_COLOR, true},
-		{Localize("Server rollback"), m_Snapshot.m_Network.m_ServerRollbackMs, "ms", 0, GAME_MARGIN_COLOR},
-		{Localize("Rollback rate"), m_Snapshot.m_Network.m_ServerRollbackRatePct, "", 0, JITTER_COLOR, false, true},
+		{Localize("Process UDP RX (est.)"), m_Snapshot.m_Network.m_Recv.m_RateKibPerSec * 1024.0f, "", 0, PING_COLOR, true},
+		{Localize("Process UDP TX (est.)"), m_Snapshot.m_Network.m_Send.m_RateKibPerSec * 1024.0f, "", 0, PRED_COLOR, true},
+		{Localize("Snapshot payload"), m_Snapshot.m_Network.m_SnapshotPayloadBytesPerSec, "", 0, SNAPSHOT_GAP_COLOR, true},
+		{Localize("Snapshot rate"), m_Snapshot.m_Network.m_SnapshotRatePerSec, "snap/s", 1, SNAPSHOT_GAP_COLOR},
 	};
 
 	const int CardCount = std::size(aCards);
@@ -1102,11 +1181,11 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 	const float UiScale = QmComputeMonitoringUiScale(Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
 	const float Margin = 10.0f * UiScale;
 	const float Gap = 14.0f * UiScale;
-	const float RowGap = 6.0f * UiScale;
+	const float RowGap = 4.0f * UiScale;
 	const float LabelFontSize = 13.0f * UiScale;
 	const float ValueFontSize = 13.0f * UiScale;
 	const float CornerRadius = 8.0f * UiScale;
-	const float RowHeight = 18.0f * UiScale;
+	const float RowHeight = 16.0f * UiScale;
 
 	DrawSurface(Rect, SURFACE_BG, CornerRadius);
 
@@ -1121,34 +1200,43 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 	};
 
 	char aTickBuf[32];
-	char aPredictionBuf[32];
-	char aSendBuf[96];
-	char aRecvBuf[96];
-	char aTextureBuf[32];
-	char aBufferBuf[32];
-	char aStreamedBuf[32];
-	char aStagingBuf[32];
+	char aPingBuf[32];
+	char aPredictionLeadBuf[32];
+	char aPredictionJitterBuf[32];
+	char aSnapshotGapBuf[32];
+	char aSnapshotRateBuf[64];
+	char aSnapshotTickGapBuf[32];
+	char aSnapshotPayloadBuf[32];
+	char aFrameP95Buf[32];
+	char aVitalResendBuf[32];
 
 	FormatTickPairValue(aTickBuf, sizeof(aTickBuf), m_Snapshot.m_Performance.m_GameTick, m_Snapshot.m_Performance.m_PredictedTick);
-	FormatMetricValue(aPredictionBuf, sizeof(aPredictionBuf), "ms", m_Snapshot.m_Performance.m_PredictionTimeMs, 0);
-	FormatTrafficStatsValue(aSendBuf, sizeof(aSendBuf), m_Snapshot.m_Network.m_Send);
-	FormatTrafficStatsValue(aRecvBuf, sizeof(aRecvBuf), m_Snapshot.m_Network.m_Recv);
-	FormatMemoryKiBValue(aTextureBuf, sizeof(aTextureBuf), m_Snapshot.m_Performance.m_GraphicsMemory.m_TextureKiB);
-	FormatMemoryKiBValue(aBufferBuf, sizeof(aBufferBuf), m_Snapshot.m_Performance.m_GraphicsMemory.m_BufferKiB);
-	FormatMemoryKiBValue(aStreamedBuf, sizeof(aStreamedBuf), m_Snapshot.m_Performance.m_GraphicsMemory.m_StreamedKiB);
-	FormatMemoryKiBValue(aStagingBuf, sizeof(aStagingBuf), m_Snapshot.m_Performance.m_GraphicsMemory.m_StagingKiB);
+	FormatMetricValue(aPingBuf, sizeof(aPingBuf), "ms", m_Snapshot.m_Network.m_PingMs, 0);
+	FormatMetricValue(aPredictionLeadBuf, sizeof(aPredictionLeadBuf), "ms", m_Snapshot.m_Network.m_PredictionLeadMs, 0);
+	FormatMetricValue(aPredictionJitterBuf, sizeof(aPredictionJitterBuf), "ms", m_Snapshot.m_Network.m_PredictionJitterMs, 0);
+	FormatMetricValue(aSnapshotGapBuf, sizeof(aSnapshotGapBuf), "ms", m_Snapshot.m_Network.m_SnapshotGapMs, 0);
+	if(m_Snapshot.m_Network.m_SnapshotRatePerSec < 0.0f || m_Snapshot.m_Network.m_SnapshotPartRatePerSec < 0.0f)
+		str_copy(aSnapshotRateBuf, "--", sizeof(aSnapshotRateBuf));
+	else
+		str_format(aSnapshotRateBuf, sizeof(aSnapshotRateBuf), "%.1f snap/s %.1f part/s", m_Snapshot.m_Network.m_SnapshotRatePerSec, m_Snapshot.m_Network.m_SnapshotPartRatePerSec);
+	FormatMetricValue(aSnapshotTickGapBuf, sizeof(aSnapshotTickGapBuf), " ticks", (float)m_Snapshot.m_Network.m_SnapshotTickGap, 0);
+	FormatRateValue(aSnapshotPayloadBuf, sizeof(aSnapshotPayloadBuf), m_Snapshot.m_Network.m_SnapshotPayloadBytesPerSec);
+	FormatMetricValue(aFrameP95Buf, sizeof(aFrameP95Buf), "ms", m_Snapshot.m_Performance.m_FrameTimeP95Ms, 1);
+	str_format(aVitalResendBuf, sizeof(aVitalResendBuf), "%d", m_Snapshot.m_Network.m_VitalResendCount);
 
 	const SDetailRow aLeftRows[] = {
 		{Localize("Game/predicted tick"), aTickBuf},
-		{Localize("Prediction time"), aPredictionBuf},
-		{Localize("Send"), aSendBuf},
-		{Localize("Receive"), aRecvBuf},
+		{Localize("RTT"), aPingBuf},
+		{Localize("Snapshot gap"), aSnapshotGapBuf},
+		{Localize("Snapshot rate / parts"), aSnapshotRateBuf},
+		{Localize("Snapshot payload"), aSnapshotPayloadBuf},
 	};
 	const SDetailRow aRightRows[] = {
-		{Localize("Texture memory"), aTextureBuf},
-		{Localize("Buffer memory"), aBufferBuf},
-		{Localize("Streamed memory"), aStreamedBuf},
-		{Localize("Staging memory"), aStagingBuf},
+		{Localize("Prediction lead"), aPredictionLeadBuf},
+		{Localize("Prediction jitter"), aPredictionJitterBuf},
+		{Localize("Snapshot tick gap"), aSnapshotTickGapBuf},
+		{Localize("Frame time p95"), aFrameP95Buf},
+		{Localize("Vital resend queue"), aVitalResendBuf},
 	};
 
 	const auto RenderColumn = [&](CUIRect ColumnRect, const SDetailRow *pRows, int RowCount) {

@@ -582,7 +582,8 @@ bool CRClientVoice::EnsureAudio()
 		}
 		else
 		{
-			log_info("voice", "attempting to open output device '%s'", pOutputName ? pOutputName : "<default>");
+			if(!m_OutputUnavailable.load())
+				log_info("voice", "attempting to open output device '%s'", pOutputName ? pOutputName : "<default>");
 			m_OutputDevice = SDL_OpenAudioDevice(pOutputName, 0, &WantOutput, &m_OutputSpec, 0);
 			if(!m_OutputDevice)
 			{
@@ -657,7 +658,8 @@ bool CRClientVoice::EnsureAudio()
 			}
 			else
 			{
-				log_info("voice", "attempting to open capture device '%s'", pInputName ? pInputName : "<default>");
+				if(!m_CaptureUnavailable.load())
+					log_info("voice", "attempting to open capture device '%s'", pInputName ? pInputName : "<default>");
 				m_CaptureDevice = SDL_OpenAudioDevice(pInputName, 1, &WantCapture, &m_CaptureSpec, 0);
 				if(!m_CaptureDevice)
 				{

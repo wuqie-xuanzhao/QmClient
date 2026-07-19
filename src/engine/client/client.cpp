@@ -717,14 +717,15 @@ void CClient::UpdateNetStatsSnapshot() const
 	net_stats(&m_NetstatsCurrent);
 }
 
-float CClient::SnapshotLatencyMs() const
+float CClient::PingMs() const
 {
-	if(State() != IClient::STATE_ONLINE || m_CurrentServerInfo.m_Latency < 0)
-		return 0.0f;
-	return (float)m_CurrentServerInfo.m_Latency;
+	if(State() != IClient::STATE_ONLINE)
+		return -1.0f;
+	const SNetTransportStats Stats = m_aNetClient[g_Config.m_ClDummy].TransportStats();
+	return (float)Stats.m_RttMs;
 }
 
-float CClient::PredictionLatencyMs() const
+float CClient::PredictionLeadMs() const
 {
 	const int64_t Now = time_get();
 	return (float)((m_PredictedTime.Get(Now) - m_aGameTime[g_Config.m_ClDummy].Get(Now)) * 1000 / (float)time_freq());
@@ -756,6 +757,19 @@ void CClient::NetStatsSnapshot(NETSTATS &Prev, NETSTATS &Current, std::chrono::n
 	Prev = m_NetstatsPrev;
 	Current = m_NetstatsCurrent;
 	LastUpdate = m_NetstatsSampleInterval;
+}
+
+void CClient::SnapshotStats(SClientSnapshotStats &Stats) const
+{
+	Stats = m_aSnapshotStats[g_Config.m_ClDummy];
+	if(Stats.m_SnapshotCount == 0 || m_aLastSnapshotTime[g_Config.m_ClDummy] <= 0)
+	{
+		Stats.m_CurrentGapMs = -1.0f;
+		return;
+	}
+
+	const int64_t Now = time_get();
+	Stats.m_CurrentGapMs = std::max(0.0f, (float)(Now - m_aLastSnapshotTime[g_Config.m_ClDummy]) * 1000.0f / (float)time_freq());
 }
 
 int CClient::PendingResendCount() const
@@ -954,6 +968,9 @@ void CClient::OnEnterGame(bool Dummy)
 	m_aapSnapshots[Dummy][SNAP_PREV] = nullptr;
 	m_aSnapshotStorage[Dummy].PurgeAll();
 	m_aReceivedSnapshots[Dummy] = 0;
+	m_aSnapshotStats[Dummy] = {};
+	m_aLastSnapshotTime[Dummy] = 0;
+	m_aLastSnapshotTick[Dummy] = -1;
 	m_aSnapshotParts[Dummy] = 0;
 	m_aSnapshotIncomingDataSize[Dummy] = 0;
 	m_SnapCrcErrors = 0;
@@ -1294,6 +1311,9 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_aapSnapshots[0][SNAP_CURRENT] = nullptr;
 	m_aapSnapshots[0][SNAP_PREV] = nullptr;
 	m_aReceivedSnapshots[0] = 0;
+	m_aSnapshotStats[0] = {};
+	m_aLastSnapshotTime[0] = 0;
+	m_aLastSnapshotTick[0] = -1;
 	m_LastDummy = false;
 
 	// 0.7
@@ -1404,6 +1424,9 @@ void CClient::DummyDisconnect(const char *pReason)
 	m_aapSnapshots[1][SNAP_CURRENT] = nullptr;
 	m_aapSnapshots[1][SNAP_PREV] = nullptr;
 	m_aReceivedSnapshots[1] = 0;
+	m_aSnapshotStats[1] = {};
+	m_aLastSnapshotTime[1] = 0;
+	m_aLastSnapshotTick[1] = -1;
 	m_DummyConnected = false;
 	m_DummyConnecting = false;
 	m_DummyReconnectOnReload = false;
@@ -1518,18 +1541,25 @@ void CClient::RenderDebug()
 	// Network
 	{
 		const uint64_t OverheadSize = 14 + 20 + 8; // ETH + IP + UDP
-		const uint64_t SendPackets = m_NetstatsCurrent.sent_packets - m_NetstatsPrev.sent_packets;
-		const uint64_t SendBytes = m_NetstatsCurrent.sent_bytes - m_NetstatsPrev.sent_bytes;
+		const auto CounterDelta = [](uint64_t Current, uint64_t Previous) {
+			return Current >= Previous ? Current - Previous : 0;
+		};
+		const double SampleSeconds = m_NetstatsSampleInterval.count() > 0 ? (double)m_NetstatsSampleInterval.count() / 1000000000.0 : 0.0;
+		const auto RateKibitPerSec = [SampleSeconds](uint64_t Bytes) {
+			return SampleSeconds > 0.0 ? (uint64_t)((double)Bytes * 8.0 / 1024.0 / SampleSeconds) : 0;
+		};
+		const uint64_t SendPackets = CounterDelta(m_NetstatsCurrent.sent_packets, m_NetstatsPrev.sent_packets);
+		const uint64_t SendBytes = CounterDelta(m_NetstatsCurrent.sent_bytes, m_NetstatsPrev.sent_bytes);
 		const uint64_t SendTotal = SendBytes + SendPackets * OverheadSize;
-		const uint64_t RecvPackets = m_NetstatsCurrent.recv_packets - m_NetstatsPrev.recv_packets;
-		const uint64_t RecvBytes = m_NetstatsCurrent.recv_bytes - m_NetstatsPrev.recv_bytes;
+		const uint64_t RecvPackets = CounterDelta(m_NetstatsCurrent.recv_packets, m_NetstatsPrev.recv_packets);
+		const uint64_t RecvBytes = CounterDelta(m_NetstatsCurrent.recv_bytes, m_NetstatsPrev.recv_bytes);
 		const uint64_t RecvTotal = RecvBytes + RecvPackets * OverheadSize;
 
-		str_format(aBuffer, sizeof(aBuffer), "Send: %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%3" PRIu64 " Kibit/s) average: %5" PRIu64,
-			SendPackets, SendBytes, SendPackets * OverheadSize, SendTotal, (SendTotal * 8) / 1024, SendPackets == 0 ? 0 : SendBytes / SendPackets);
+		str_format(aBuffer, sizeof(aBuffer), "Process UDP TX (estimated): %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%3" PRIu64 " Kibit/s) avg payload: %5" PRIu64,
+			SendPackets, SendBytes, SendPackets * OverheadSize, SendTotal, RateKibitPerSec(SendTotal), SendPackets == 0 ? 0 : SendBytes / SendPackets);
 		Graphics()->QuadsText(2, 2 + 3 * FontSize, FontSize, aBuffer);
-		str_format(aBuffer, sizeof(aBuffer), "Recv: %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%3" PRIu64 " Kibit/s) average: %5" PRIu64,
-			RecvPackets, RecvBytes, RecvPackets * OverheadSize, RecvTotal, (RecvTotal * 8) / 1024, RecvPackets == 0 ? 0 : RecvBytes / RecvPackets);
+		str_format(aBuffer, sizeof(aBuffer), "Process UDP RX (estimated): %3" PRIu64 " %5" PRIu64 "+%4" PRIu64 "=%5" PRIu64 " (%3" PRIu64 " Kibit/s) avg payload: %5" PRIu64,
+			RecvPackets, RecvBytes, RecvPackets * OverheadSize, RecvTotal, RateKibitPerSec(RecvTotal), RecvPackets == 0 ? 0 : RecvBytes / RecvPackets);
 		Graphics()->QuadsText(2, 2 + 4 * FontSize, FontSize, aBuffer);
 	}
 
@@ -1735,6 +1765,9 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const std
 		m_aapSnapshots[Dummy][SNAP_PREV] = nullptr;
 		m_aSnapshotStorage[Dummy].PurgeAll();
 		m_aReceivedSnapshots[Dummy] = 0;
+		m_aSnapshotStats[Dummy] = {};
+		m_aLastSnapshotTime[Dummy] = 0;
+		m_aLastSnapshotTick[Dummy] = -1;
 		m_aSnapshotParts[Dummy] = 0;
 		m_aSnapshotIncomingDataSize[Dummy] = 0;
 	}
@@ -2778,6 +2811,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				return;
 			}
 
+			// Count protocol-valid snapshot part payload before assembly filtering. This is
+			// the compressed snapshot traffic accepted by the client, including duplicates
+			// or incomplete snapshots, rather than only successfully stored snapshots.
+			m_aSnapshotStats[Conn].m_PartCount++;
+			m_aSnapshotStats[Conn].m_PayloadBytes += (uint64_t)PartSize;
+
 			// Check m_aAckGameTick to see if we already got a snapshot for that tick
 			if(GameTick >= m_aCurrentRecvTick[Conn] && GameTick > m_aAckGameTick[Conn])
 			{
@@ -2788,8 +2827,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					m_aSnapshotIncomingDataSize[Conn] = 0;
 				}
 
+				const uint64_t PartMask = uint64_t{1} << Part;
 				mem_copy((char *)m_aaSnapshotIncomingData[Conn] + Part * MAX_SNAPSHOT_PACKSIZE, pData, std::clamp(PartSize, 0, (int)sizeof(m_aaSnapshotIncomingData[Conn]) - Part * MAX_SNAPSHOT_PACKSIZE));
-				m_aSnapshotParts[Conn] |= (uint64_t)(1) << Part;
+				m_aSnapshotParts[Conn] |= PartMask;
 
 				if(Part == NumParts - 1)
 				{
@@ -2911,7 +2951,17 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					}
 
 					// add new
-					m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, TmpBuffer3.AsSnapshot(), AltSnapSize, AltSnapBuffer.AsSnapshot());
+					const int64_t SnapshotTime = time_get();
+					m_aSnapshotStorage[Conn].Add(GameTick, SnapshotTime, SnapSize, TmpBuffer3.AsSnapshot(), AltSnapSize, AltSnapBuffer.AsSnapshot());
+
+					SClientSnapshotStats &SnapshotStats = m_aSnapshotStats[Conn];
+					if(SnapshotStats.m_SnapshotCount > 0)
+					{
+						SnapshotStats.m_LastTickGap = GameTick - m_aLastSnapshotTick[Conn];
+					}
+					SnapshotStats.m_SnapshotCount++;
+					m_aLastSnapshotTime[Conn] = SnapshotTime;
+					m_aLastSnapshotTick[Conn] = GameTick;
 
 					if(!Dummy)
 					{
@@ -3321,9 +3371,10 @@ int CClient::ConnectNetTypes() const
 
 void CClient::PumpNetwork()
 {
-	for(auto &NetClient : m_aNetClient)
+	for(int Conn = 0; Conn < NUM_CONNS; ++Conn)
 	{
-		NetClient.Update();
+		m_aNetClient[Conn].SetLowLatency(g_Config.m_QmNetQos && (Conn == CONN_MAIN || Conn == CONN_DUMMY));
+		m_aNetClient[Conn].Update();
 	}
 
 	if(State() != IClient::STATE_DEMOPLAYBACK)
@@ -4386,7 +4437,7 @@ bool CClient::InitNetworkClientImpl(NETADDR BindAddr, int Conn, char *pError, si
 	BindAddr.port = *pPort;
 
 	unsigned RemainingAttempts = 25;
-	while(!m_aNetClient[Conn].Open(BindAddr))
+	while(!m_aNetClient[Conn].Open(BindAddr, g_Config.m_QmNetQos && (Conn == CONN_MAIN || Conn == CONN_DUMMY)))
 	{
 		--RemainingAttempts;
 		if(RemainingAttempts == 0)
@@ -4434,6 +4485,20 @@ void CClient::Con_QmTimeoutDisconnect(IConsole::IResult *pResult, void *pUserDat
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->DropCurrentServerConnection();
+}
+
+void CClient::Con_QmNetQosStatus(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	NETSTATS Stats = {};
+	net_stats(&Stats);
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "enabled=%d main=%s dummy=%s send_errors=%llu",
+		g_Config.m_QmNetQos,
+		pSelf->m_aNetClient[CONN_MAIN].QosStatusName(),
+		pSelf->m_aNetClient[CONN_DUMMY].QosStatusName(),
+		(unsigned long long)Stats.send_errors);
+	pSelf->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net/qos", aBuf);
 }
 
 void CClient::Con_DummyConnect(IConsole::IResult *pResult, void *pUserData)
@@ -5598,6 +5663,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("connect", "r[host|ip]", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip");
 	m_pConsole->Register("disconnect", "", CFGFLAG_CLIENT, Con_Disconnect, this, "Disconnect from the server");
 	m_pConsole->Register("qm_timeout_disconnect", "", CFGFLAG_CLIENT, Con_QmTimeoutDisconnect, this, "Silently disconnect from the current server while keeping Tee timeout protection");
+	m_pConsole->Register("qm_net_qos_status", "", CFGFLAG_CLIENT, Con_QmNetQosStatus, this, "Show outgoing game traffic QoS status");
 	m_pConsole->Register("ping", "", CFGFLAG_CLIENT, Con_Ping, this, "Ping the current server");
 	m_pConsole->Register("screenshot", "", CFGFLAG_CLIENT | CFGFLAG_STORE, Con_Screenshot, this, "Take a screenshot");
 	m_pConsole->Register("net_reset", "", CFGFLAG_CLIENT, ConNetReset, this, "Rebinds the client's listening address and port");

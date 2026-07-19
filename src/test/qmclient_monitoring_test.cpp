@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <fstream>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <set>
 #include <sstream>
@@ -400,16 +401,15 @@ TEST(QmMonitoringHelpers, ConnectionGradeUsesThresholdTable)
 {
 	SQmNetworkMetrics Net;
 	Net.m_Connected = true;
-	Net.m_SnapshotLatencyMs = 40.0f;
-	Net.m_PredictionLatencyMs = 50.0f;
-	Net.m_JitterMs = 5.0f;
-	Net.m_PacketLossPct = 0.0f;
+	Net.m_PingMs = 40.0f;
+	Net.m_PredictionLeadMs = 50.0f;
+	Net.m_PredictionJitterMs = 5.0f;
 	EXPECT_EQ(QmDetermineConnectionGrade(Net), EQmConnectionGrade::NORMAL);
 
-	Net.m_PredictionLatencyMs = 110.0f;
+	Net.m_PredictionLeadMs = 110.0f;
 	EXPECT_EQ(QmDetermineConnectionGrade(Net), EQmConnectionGrade::ELEVATED);
 
-	Net.m_PredictionLatencyMs = 210.0f;
+	Net.m_PredictionLeadMs = 210.0f;
 	EXPECT_EQ(QmDetermineConnectionGrade(Net), EQmConnectionGrade::SEVERE);
 }
 
@@ -422,39 +422,24 @@ TEST(QmMonitoringHelpers, PrimaryCausePrefersDominantMetric)
 	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::DISCONNECTED), EQmDiagnosticCause::NONE);
 
 	Net.m_Connected = true;
-	Net.m_SnapshotLatencyMs = 120.0f;
-	Net.m_PredictionLatencyMs = 40.0f;
-	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::ELEVATED), EQmDiagnosticCause::DOWNSTREAM);
+	Net.m_SnapshotGapMs = 120.0f;
+	Net.m_PredictionLeadMs = 40.0f;
+	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::ELEVATED), EQmDiagnosticCause::SNAPSHOT_GAP);
 
-	Net.m_SnapshotLatencyMs = 20.0f;
-	Net.m_PredictionLatencyMs = 95.0f;
-	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::ELEVATED), EQmDiagnosticCause::UPSTREAM);
+	Net.m_SnapshotGapMs = 20.0f;
+	Net.m_PredictionLeadMs = 95.0f;
+	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::ELEVATED), EQmDiagnosticCause::PREDICTION);
 
-	Net.m_PredictionLatencyMs = 30.0f;
-	Net.m_JitterMs = 28.0f;
-	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::SEVERE), EQmDiagnosticCause::JITTER);
+	Net.m_PredictionLeadMs = 30.0f;
+	Net.m_PredictionJitterMs = 28.0f;
+	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::SEVERE), EQmDiagnosticCause::PREDICTION_JITTER);
 
-	Net.m_JitterMs = 6.0f;
-	Net.m_PacketLossPct = 8.0f;
-	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::SEVERE), EQmDiagnosticCause::PACKET_LOSS);
+	Net.m_PredictionJitterMs = 6.0f;
+	Net.m_VitalResendCount = 8;
+	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::SEVERE), EQmDiagnosticCause::NONE);
 
-	Net.m_PacketLossPct = 0.0f;
 	Net.m_ConnectionProblems = true;
-	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::SEVERE), EQmDiagnosticCause::DOWNSTREAM);
-
-	Net.m_PacketLossPct = 2.0f;
-	Net.m_ConnectionProblems = true;
-	Net.m_SnapshotLatencyMs = 130.0f;
-	Net.m_PredictionLatencyMs = 20.0f;
-	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::ELEVATED), EQmDiagnosticCause::PACKET_LOSS);
-}
-
-TEST(QmMonitoringHelpers, DiagnosticLossRateUsesSendDeltaAndResends)
-{
-	EXPECT_NEAR(QmComputeDiagnosticPacketLossPct(60, 20), 33.3333f, 0.001f);
-	EXPECT_FLOAT_EQ(QmComputeDiagnosticPacketLossPct(60, 20), 33.333332f);
-	EXPECT_FLOAT_EQ(QmComputeDiagnosticPacketLossPct(0, 0), 0.0f);
-	EXPECT_FLOAT_EQ(QmComputeDiagnosticPacketLossPct(0, 3), 100.0f);
+	EXPECT_EQ(QmDeterminePrimaryCause(Net, Perf, EQmConnectionGrade::SEVERE), EQmDiagnosticCause::SNAPSHOT_GAP);
 }
 
 TEST(QmMonitoringHelpers, RollbackAmountUsesNegativeGameTimeMargin)
@@ -522,13 +507,56 @@ TEST(QmMonitoringHelpers, CpuRatioValueShowsProcessAndTotalCpu)
 
 TEST(QmMonitoringHelpers, TrafficStatsMatchOfficialDebugMath)
 {
-	const auto Stats = QmComputeTrafficStats(10, 1000, 14, 1320);
+	const auto Stats = QmComputeTrafficStats(10, 1000, 14, 1320, 1.0f);
 	EXPECT_EQ(Stats.m_Packets, 4u);
 	EXPECT_EQ(Stats.m_PayloadBytes, 320u);
 	EXPECT_EQ(Stats.m_OverheadBytes, 168u);
 	EXPECT_EQ(Stats.m_TotalBytes, 488u);
 	EXPECT_EQ(Stats.m_AveragePayloadBytes, 80u);
-	EXPECT_FLOAT_EQ(Stats.m_RateKibPerSec, 3.8125f);
+	EXPECT_FLOAT_EQ(Stats.m_RateKibPerSec, 0.4765625f);
+}
+
+TEST(QmMonitoringHelpers, HistoryPercentileUsesRecentSamples)
+{
+	const std::array<float, 4> aHistory = {10.0f, 20.0f, 30.0f, 40.0f};
+	EXPECT_FLOAT_EQ(QmComputeHistoryPercentile(aHistory, 0, 4, 50.0f), 30.0f);
+	EXPECT_FLOAT_EQ(QmComputeHistoryPercentile(aHistory, 0, 4, 95.0f), 40.0f);
+}
+
+TEST(QmMonitoringHelpers, HistoryStatsIgnoreUnavailableSamples)
+{
+	const float InvalidMetric = std::numeric_limits<float>::quiet_NaN();
+	const std::array<float, 4> aHistory = {InvalidMetric, 10.0f, InvalidMetric, 20.0f};
+	const SQmHistoryStats Stats = QmComputeHistoryStats(aHistory, 0, 4);
+	EXPECT_TRUE(Stats.m_HasData);
+	EXPECT_FLOAT_EQ(Stats.m_Current, 20.0f);
+	EXPECT_FLOAT_EQ(Stats.m_Min, 10.0f);
+	EXPECT_FLOAT_EQ(Stats.m_Max, 20.0f);
+	EXPECT_FLOAT_EQ(Stats.m_Average, 15.0f);
+}
+
+TEST(QmMonitoringHelpers, SnapshotCountRequiresValidatedSnapshotStorageInsert)
+{
+	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Client, "void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CrcValidation = Body.find("TmpBuffer3.AsSnapshot()->Crc() != Crc");
+	const size_t AltSnapshotValidation = Body.find("if(AltSnapSize < 0)");
+	const size_t PartCount = Body.find("m_aSnapshotStats[Conn].m_PartCount++");
+	const size_t StorageInsert = Body.find("m_aSnapshotStorage[Conn].Add(");
+	const size_t SnapshotCount = Body.find("SnapshotStats.m_SnapshotCount++");
+	ASSERT_NE(CrcValidation, std::string::npos);
+	ASSERT_NE(AltSnapshotValidation, std::string::npos);
+	ASSERT_NE(PartCount, std::string::npos);
+	ASSERT_NE(StorageInsert, std::string::npos);
+	ASSERT_NE(SnapshotCount, std::string::npos);
+
+	EXPECT_LT(Body.find("if(Unpacker.Error() || NumParts < 1"), PartCount);
+	EXPECT_LT(PartCount, Body.find("// Check m_aAckGameTick"));
+	EXPECT_LT(CrcValidation, StorageInsert);
+	EXPECT_LT(AltSnapshotValidation, StorageInsert);
+	EXPECT_LT(StorageInsert, SnapshotCount);
 }
 
 TEST(QmMonitoringHelpers, HudLayoutPlacesPanelLeftOfGraphColumn)

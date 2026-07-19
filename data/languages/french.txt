@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == Opacité de la bulle
 
-Buffer memory
-== Mémoire des buffers
-
 Built-in
 == Intégré
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == Compatible avec les indications de zone solo similaires d'autres serveurs
 
+Complete snapshots are arriving late or not arriving
+== Les snapshots complets arrivent en retard ou n’arrivent pas
+
 Compressor attack time (ms)
 == Temps d'attaque du compresseur (ms)
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == Connexion interrompue
 
-Connection downstream
-== Connexion descendante
-
 Connection elevated
 == Connexion légèrement anormale
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == Connexion fortement anormale
-
-Connection upstream
-== Connexion montante
 
 Connlimit: number of connections allowed per IP in a time period
 == Connlimit : nombre de connexions autorisées par IP dans une période donnée
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == Affiche votre temps de course
 
-Displays client prediction latency
-== Affiche la latence de prédiction du client
-
-Displays client receive rate
-== Affiche le débit de réception du client
-
-Displays client send rate
-== Affiche le débit d'envoi du client
-
 Displays connection quality grade
 == Affiche le niveau de qualité de connexion
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == Affiche l'utilisation mémoire du processus DDNet
 
-Displays latency jitter
-== Affiche la gigue de latence
+Displays estimated total UDP receive rate
+== Afficher le débit total estimé de réception UDP
 
-Displays resend-based packet loss estimate
-== Affiche l'estimation de perte de paquets par renvois
+Displays estimated total UDP send rate
+== Afficher le débit total estimé d’envoi UDP
 
-Displays server snapshot latency
-== Affiche la latence des snapshots serveur
+Displays prediction timing jitter
+== Afficher la gigue temporelle de la prédiction
+
+Displays the client's prediction lead
+== Afficher l’avance de prédiction du client
+
+Displays the interval between complete snapshots
+== Afficher l’intervalle entre les snapshots complets
+
+Displays the number of unacknowledged vital chunks
+== Afficher le nombre de blocs vitaux non confirmés
+
+Displays the server ping round-trip time
+== Afficher le temps aller-retour du ping vers le serveur
 
 Displays X and Y velocity
 == Affiche la vitesse X et Y
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == Temps de frame
+
+Frame time p95
+== Temps d’image P95
 
 Framebuffer color bits (only fullscreen)
 == Bits de couleur du framebuffer (plein écran uniquement)
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == Dernière page dans la console
 
-Latency
-== Latence
-
 Latency compensation
 == Compensation de latence
 
 Latency Jitter
-== Gigue de latence
-
-Latency jitter
 == Gigue de latence
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == Opacité du fantôme de prédiction (0-100)
 
-Prediction jitter is obvious, latency changes are large
-== Le jitter de prédiction est visible, la latence varie fortement
+Prediction jitter
+== Gigue de prédiction
+
+Prediction jitter is obvious, prediction timing is changing
+== La gigue de prédiction est évidente, le timing de prédiction change
 
 Prediction Latency
 == Latence de prédiction
 
-Prediction latency
-== Latence de prédiction
+Prediction lead
+== Avance de prédiction
 
-Prediction latency is elevated, prediction path pressure is high
-== La latence de prédiction est élevée, le chemin de prédiction est sous forte pression
+Prediction lead is high, check prediction settings and server timing
+== L’avance de prédiction est élevée ; vérifiez les réglages de prédiction et le timing du serveur
 
 Prediction Margin
 == Marge de prédiction
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == Décalage de prédiction
-
-Prediction time
-== Temps de prédiction
 
 Preparing demo playback
 == Préparation de la lecture de la démo
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == Afficher les messages quotidiens dans la console
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== Prioriser le trafic de jeu sortant sous Windows (au mieux)
 
 Privately messages someone's current time in this current running race (your time by default)
 == Envoie en privé le temps actuel de quelqu'un dans cette course en cours (votre temps par défaut)
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == Relie l'adresse et le port d'écoute du client
 
-Receive
-== Réception
-
 Receive Rate
-== Débit de réception
-
-Receive rate
 == Débit de réception
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == Perte par renvoi
 
-Resend loss
-== Perte par renvoi
-
-Resend signs detected, connection quality is suspicious
-== Des signes de renvoi sont détectés, la qualité de connexion est suspecte
-
 Reset
 == Réinitialiser
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == RNNoise n'est pas intégré dans la version actuelle, un repli sur la réduction de bruit simple sera effectué
 
-Rollback rate
-== Taux de rollback
-
 Room
 == Salle
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Acheminer les messages Echo vers les notifications
+
+RTT
+== RTT
 
 Rule line 1.
 == Ligne de règle 1.
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == Débit d'envoi
 
-Send rate
-== Débit d'envoi
-
 Send source language
 == Envoyer la langue source
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == Région du serveur. Utilisée pour les bannissements par région
-
-Server rollback
-== Rollback serveur
-
-Server RTT is elevated, response path is unstable
-== Le RTT serveur est élevé, le chemin de réponse est instable
 
 Server stress (debug builds only).
 == Stress du serveur (uniquement pour les versions de débogage).
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == Afficher l'avertissement de version obsolète
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== Afficher l’état QoS du trafic de jeu sortant
 
 Show outlines only on entity layer
 == Afficher les contours uniquement sur la couche d'entités
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == Afficher les classements régionaux dans /rank, /top5 et /top5team.
 
-Show release date and author when sorted by date
-== Afficher la date de publication et l'auteur du skin lors du tri par date
-
 Show score
 == Afficher le score
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == Afficher les noms de skin dans la plaque nominative
+
+Show skin release date and author
+== Afficher la date de publication et l’auteur du skin
 
 Show song info in top-left corner
 == Afficher les informations sur la chanson dans le coin supérieur gauche
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == Seuil d'aimantation
 
+Snapshot Gap
+== Intervalle des snapshots
+
+Snapshot gap
+== Intervalle des snapshots
+
 Snapshot Latency
 == Latence des snapshots
+
+Snapshot payload
+== Charge utile des snapshots
+
+Snapshot rate
+== Débit des snapshots
 
 Social
 == Social
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Intensité de déformation du Tee rebondissant
 
-Staging memory
-== Mémoire de staging
-
 Star
 == Étoile
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == Arrêter la démo actuelle
-
-Streamed memory
-== Mémoire streamée
 
 Streamer Mode
 == Mode streamer
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == Tencent Cloud SecretKey de traduction
 
-Text
-== Texte
-
 Text alpha
 == Alpha du texte
 
 Text color
 == Couleur du texte
-
-Texture memory
-== Mémoire des textures
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Merci pour votre compagnie et votre confiance. C'est ce qui me donne le courage de continuer.
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == Total des amis
+
+Total UDP RX (est.)
+== Réception UDP totale (estimée)
+
+Total UDP TX (est.)
+== Envoi UDP total (estimé)
 
 Total: %d save(s)
 == Total : %d save(s)
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == Visuels
+
+Vital resend queue
+== File de retransmission des blocs vitaux
 
 Voice
 == Voix

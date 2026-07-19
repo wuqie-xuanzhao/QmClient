@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == Blasendeckkraft
 
-Buffer memory
-== Pufferspeicher
-
 Built-in
 == Integriert
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == Kompatibilität mit ähnlichen Einzelspielerbereichs-Hinweisen anderer Server
 
+Complete snapshots are arriving late or not arriving
+== Vollständige Snapshots kommen verspätet oder gar nicht an
+
 Compressor attack time (ms)
 == Kompressor-Angriffszeit (ms)
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == Verbindung getrennt
 
-Connection downstream
-== Verbindung Downstream
-
 Connection elevated
 == Verbindung leicht auffällig
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == Verbindung stark auffällig
-
-Connection upstream
-== Verbindung Upstream
 
 Connlimit: number of connections allowed per IP in a time period
 == Connlimit: Anzahl der Verbindungen pro IP in einem Zeitraum
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == Zeigt deine Rennzeit an
 
-Displays client prediction latency
-== Zeigt die Client-Vorhersagelatenz an
-
-Displays client receive rate
-== Zeigt die Empfangsrate des Clients an
-
-Displays client send rate
-== Zeigt die Senderate des Clients an
-
 Displays connection quality grade
 == Zeigt die Verbindungsqualitätsstufe an
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == Zeigt die Speichernutzung des DDNet-Prozesses an
 
-Displays latency jitter
-== Zeigt Latenz-Jitter an
+Displays estimated total UDP receive rate
+== Geschätzte gesamte UDP-Empfangsrate anzeigen
 
-Displays resend-based packet loss estimate
-== Zeigt die Paketverlustschätzung anhand erneuter Sendungen an
+Displays estimated total UDP send rate
+== Geschätzte gesamte UDP-Senderate anzeigen
 
-Displays server snapshot latency
-== Zeigt die Server-Snapshot-Latenz an
+Displays prediction timing jitter
+== Jitter der Vorhersagezeit anzeigen
+
+Displays the client's prediction lead
+== Den Vorlauf der Client-Vorhersage anzeigen
+
+Displays the interval between complete snapshots
+== Das Intervall zwischen vollständigen Snapshots anzeigen
+
+Displays the number of unacknowledged vital chunks
+== Anzahl der nicht bestätigten wichtigen Chunks anzeigen
+
+Displays the server ping round-trip time
+== Die Ping-Roundtrip-Zeit zum Server anzeigen
 
 Displays X and Y velocity
 == Zeigt X- und Y-Geschwindigkeit an
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == Framezeit
+
+Frame time p95
+== Frame-Zeit P95
 
 Framebuffer color bits (only fullscreen)
 == Framebuffer-Farbbits (nur Vollbild)
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == Letzte Seite in der Konsole
 
-Latency
-== Latenz
-
 Latency compensation
 == Latenzkompensation
 
 Latency Jitter
-== Latenz-Jitter
-
-Latency jitter
 == Latenz-Jitter
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == Deckkraft des Vorhersage-Geists (0-100)
 
-Prediction jitter is obvious, latency changes are large
-== Vorhersage-Jitter ist deutlich, Latenz schwankt stark
+Prediction jitter
+== Vorhersage-Jitter
+
+Prediction jitter is obvious, prediction timing is changing
+== Der Vorhersage-Jitter ist deutlich, das Vorhersage-Timing ändert sich
 
 Prediction Latency
 == Vorhersagelatenz
 
-Prediction latency
-== Vorhersagelatenz
+Prediction lead
+== Vorhersagevorlauf
 
-Prediction latency is elevated, prediction path pressure is high
-== Vorhersagelatenz ist erhöht, Vorhersagepfad ist stark belastet
+Prediction lead is high, check prediction settings and server timing
+== Der Vorhersagevorlauf ist hoch; prüfen Sie die Vorhersageeinstellungen und das Server-Timing
 
 Prediction Margin
 == Vorhersage-Spanne
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == Vorhersage-Offset
-
-Prediction time
-== Vorhersagezeit
 
 Preparing demo playback
 == Bereite Demowiedergabe vor
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == Tägliche Nachrichten in der Konsole ausgeben
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== Ausgehenden Spielverkehr unter Windows priorisieren (Best Effort)
 
 Privately messages someone's current time in this current running race (your time by default)
 == Sendet privat die aktuelle Zeit einer Person in diesem laufenden Rennen (standardmäßig deine Zeit)
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == Bindet die Abhör-Adresse und den Port des Clients neu
 
-Receive
-== Empfangen
-
 Receive Rate
-== Empfangsrate
-
-Receive rate
 == Empfangsrate
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == Resend-Verlust
 
-Resend loss
-== Resend-Verlust
-
-Resend signs detected, connection quality is suspicious
-== Anzeichen für erneutes Senden erkannt, Verbindungsqualität ist fraglich
-
 Reset
 == Zurücksetzen
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == RNNoise im aktuellen Build nicht integriert, fällt auf einfache Rauschunterdrückung zurück
 
-Rollback rate
-== Rollback-Rate
-
 Room
 == Raum
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo-Nachrichten als Benachrichtigungen umleiten
+
+RTT
+== RTT
 
 Rule line 1.
 == Regelzeile 1.
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == Senderate
 
-Send rate
-== Senderate
-
 Send source language
 == Quellsprache senden
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == Server-Region. Wird für Regionssperren verwendet
-
-Server rollback
-== Server-Rollback
-
-Server RTT is elevated, response path is unstable
-== Server-RTT ist erhöht, Antwortpfad ist instabil
 
 Server stress (debug builds only).
 == Server-Auslastung (nur Debug-Builds).
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == Warnung bei veralteter Version anzeigen
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== QoS-Status des ausgehenden Spielverkehrs anzeigen
 
 Show outlines only on entity layer
 == Umrisse nur auf der Entity-Ebene anzeigen
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == Zeige regionale Ranglisten in /rank, /top5 und /top5team
 
-Show release date and author when sorted by date
-== Skin-Veröffentlichungsdatum und Autor beim Sortieren nach Veröffentlichungszeit anzeigen
-
 Show score
 == Punktzahl anzeigen
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == Skin-Namen im Namensschild anzeigen
+
+Show skin release date and author
+== Veröffentlichungsdatum und Autor des Skins anzeigen
 
 Show song info in top-left corner
 == Songinfo in der oberen linken Ecke anzeigen
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == Einrastschwellwert
 
+Snapshot Gap
+== Snapshot-Abstand
+
+Snapshot gap
+== Snapshot-Abstand
+
 Snapshot Latency
 == Snapshot-Latenz
+
+Snapshot payload
+== Snapshot-Nutzdaten
+
+Snapshot rate
+== Snapshot-Rate
 
 Social
 == Soziales
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Federndes Tee-Verformungsstärke
 
-Staging memory
-== Staging-Speicher
-
 Star
 == Stern
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == Aktuelle Demo stoppen
-
-Streamed memory
-== Streaming-Speicher
 
 Streamer Mode
 == Streamer-Modus
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == Tencent Cloud Übersetzung SecretKey
 
-Text
-== Text
-
 Text alpha
 == Text-Transparenz
 
 Text color
 == Textfarbe
-
-Texture memory
-== Texturspeicher
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Danke für deine Begleitung und dein Vertrauen. Das gibt mir den Mut, weiterzumachen.
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == Freunde insgesamt
+
+Total UDP RX (est.)
+== Gesamter UDP-Empfang (geschätzt)
+
+Total UDP TX (est.)
+== Gesamter UDP-Versand (geschätzt)
 
 Total: %d save(s)
 == Gesamt: %d Save(s)
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == Visuelles
+
+Vital resend queue
+== Warteschlange für erneute wichtige Chunks
 
 Voice
 == Sprache

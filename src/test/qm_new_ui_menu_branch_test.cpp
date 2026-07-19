@@ -1862,7 +1862,9 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 	EXPECT_NE(SettingsSource.find("DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, Tab, Tab, pCheckBoxValue, pLabelTextId, pLabel, *pCheckBoxValue, &Label, LabelProps, true, BodySize)"), std::string::npos);
 	EXPECT_EQ(SettingsSource.find("Label.Margin(2.0f, &Label);"), std::string::npos);
 	EXPECT_EQ(SettingsSource.find("Section.VSplitRight(55.0f, &Section, &TextLabel);"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("const float ChangeButtonSize = LineHeight;"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("const float ResolvedButtonHeight = ButtonHeight > 0.0f ? ButtonHeight : LineHeight;"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("const float ChangeButtonSize = ResolvedButtonHeight;"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Metrics.m_ButtonHeight = ResolvedButtonHeight;"), std::string::npos);
 	EXPECT_EQ(SettingsSource.find("ResetButton.HMargin(2.0f, &ResetButton);"), std::string::npos);
 	EXPECT_EQ(ChatBranch.find("ContentView.HSplitBottom(220.0f"), std::string::npos);
 	EXPECT_EQ(ChatBranch.find("PreviewView.w *= 0.5f;"), std::string::npos);
@@ -2171,7 +2173,9 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("constexpr int GraphicsModesMaxVisibleRows = 8;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(4"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsDisplayMeasureRevision ="), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("GraphicsDisplayMeasureRevision"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesTargetContentHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("settings-graphics-modes-height"), std::string::npos);
@@ -2182,8 +2186,8 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	ASSERT_NE(ModesCard, std::string::npos);
 	ASSERT_NE(WindowMode, std::string::npos);
 	ASSERT_NE(DisplayCard, std::string::npos);
-	EXPECT_LT(ModesCard, WindowMode);
-	EXPECT_LT(WindowMode, DisplayCard);
+	EXPECT_LT(ModesCard, DisplayCard);
+	EXPECT_LT(DisplayCard, WindowMode);
 	EXPECT_EQ(RenderSettingsGraphics.find("UpdateMeasuredCardHeight"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("s_GraphicsInteractionCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
@@ -2357,6 +2361,9 @@ TEST(QmNewUiMenuBranches, TClientProfilesUsesPublicCardDeck)
 	EXPECT_NE(Body.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ProfilesPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.RenderCached("), std::string::npos);
 	EXPECT_NE(Body.find("const float ProfileActionsHeight = s_AllowDelete ? ProfileMetrics.m_ButtonHeight * 5.0f"), std::string::npos);
+	EXPECT_NE(Body.find("Rect.VSplitLeft(ProfileMetrics.m_LineSpacing, nullptr, &Rect);"), std::string::npos);
+	EXPECT_NE(Body.find("Skin.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f)"), std::string::npos);
+	EXPECT_NE(Body.find("Skin.VMargin(std::max(0.0f, (Skin.w - PreviewRowWidth) * 0.5f), &Skin);"), std::string::npos);
 	EXPECT_NE(Body.find("ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth"), std::string::npos);
 	EXPECT_NE(Body.find("ProfileMetrics.m_ListRowHeight"), std::string::npos);
 	EXPECT_NE(Body.find("static_cast<uint64_t>(s_AllowDelete != 0) << 1"), std::string::npos);
@@ -2879,7 +2886,8 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(Tee.find("OptionsContentHeight"), std::string::npos);
 	EXPECT_NE(Tee.find("ListContentHeight"), std::string::npos);
 	EXPECT_NE(Tee.find("constexpr int TeeSkinGridVisibleRows = 6;"), std::string::npos);
-	EXPECT_NE(Tee.find("const float TeeQueuePanelMinHeight = 440.0f * UiScale;"), std::string::npos);
+	EXPECT_NE(Tee.find("const float TeeQueuePanelMinHeight = ResolveSettingsTeeQueuePanelHeight(TeeMetrics);"), std::string::npos);
+	EXPECT_NE(Tee.find("ResolveSettingsTeeQueuePresetHeight(TeeMetrics)"), std::string::npos);
 	EXPECT_NE(Tee.find("QuickSearch.VSplitRight(SkinControlGap, &QuickSearch, nullptr);"), std::string::npos);
 	EXPECT_NE(Tee.find("QueueSection.Draw(ui_token::color::SURFACE_OVERLAY"), std::string::npos);
 	EXPECT_NE(Tee.find("const float MinimumSearchWidth = 140.0f * UiScale;"), std::string::npos);

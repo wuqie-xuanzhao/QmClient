@@ -2665,7 +2665,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 	// Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
-void CMenus::RenderQmFunctionPieMenuContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float CardPadding, float CornerRadius, bool PrewarmOnly)
+void CMenus::RenderQmFunctionPieMenuContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ButtonHeight, float CardPadding, float CornerRadius, bool PrewarmOnly)
 {
 	CPerfTimer LayoutTimer;
 	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_pie_menu_text_inputs", UiScale);
@@ -2844,17 +2844,18 @@ void CMenus::RenderQmFunctionPieMenuContent(CUIRect &Content, float UiScale, flo
 	}
 	CUIRect PreviewInfoContent = PreviewInfoRect;
 	const float InfoSpacing = LineSpacing * 0.75f;
-	const float InfoHeight = LineHeight * 2.0f + InfoSpacing;
+	const float InfoHeight = LineHeight + InfoSpacing + ButtonHeight;
 	if(PreviewInfoContent.h > InfoHeight)
 		PreviewInfoContent.HSplitTop((PreviewInfoContent.h - InfoHeight) * 0.5f, nullptr, &PreviewInfoContent);
 	CUIRect HintRow, ResetRow;
 	PreviewInfoContent.HSplitTop(LineHeight, &HintRow, &PreviewInfoContent);
 	PreviewInfoContent.HSplitTop(InfoSpacing, nullptr, &PreviewInfoContent);
-	PreviewInfoContent.HSplitTop(LineHeight, &ResetRow, &PreviewInfoContent);
+	PreviewInfoContent.HSplitTop(ButtonHeight, &ResetRow, &PreviewInfoContent);
 	Ui()->DoLabel(&HintRow, pHintText, BodySize * 0.9f, TEXTALIGN_MR);
 	static CButtonContainer s_ResetAllColorsButton;
 	CUIRect ResetButton;
-	ResetRow.VSplitRight(maximum(88.0f, 88.0f * UiScale), nullptr, &ResetButton);
+	const float ResetWidth = maximum(ButtonHeight * 4.0f, TextRender()->TextWidth(BodySize, Localize("Reset")) + ButtonHeight * 2.0f);
+	ResetRow.VSplitRight(ResetWidth, nullptr, &ResetButton);
 	if(!PrewarmOnly && DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, &s_ResetAllColorsButton, "qmclient-pie-menu-reset-colors", Localize("Reset"), 0, &ResetButton))
 		for(const auto &Entry : aColorEntries)
 			*Entry.m_pColorValue = color_cast<ColorHSLA>(Entry.m_DefaultColor).Pack(false);
@@ -3525,8 +3526,10 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 			Content.HSplitTop(LineSpacing * 0.75f, nullptr, &Content);
 		};
 
-		VoiceUtils::SVoiceUiStatus VoiceUiStatus;
-		GameClient()->m_Voice.Voice().ExportUiStatus(VoiceUiStatus);
+		const bool NeedVoiceDiagnostics = g_Config.m_QmVoiceShowAdvanced && g_Config.m_QmVoiceShowConnectionStatus;
+		VoiceUtils::SVoiceUiStatus VoiceUiStatus{};
+		if(NeedVoiceDiagnostics)
+			GameClient()->m_Voice.Voice().ExportUiStatus(VoiceUiStatus);
 		auto LocalizeVoiceUiMicStatus = [&](const VoiceUtils::SVoiceUiStatus &Status) {
 			const char *pState = VoiceUtils::VoiceUiMicStatus(Status);
 			if(str_comp(pState, "muted") == 0)
@@ -3702,28 +3705,31 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 			return Localize("Status normal, check details below if still experiencing issues");
 		};
 
-		char aVoiceServerStatus[128];
-		char aVoiceRoomStatus[128];
-		char aVoiceTransportStatus[128];
-		char aVoiceTransportDetail[160];
-		char aVoiceInputRouteStatus[160];
-		char aVoiceOutputRouteStatus[160];
-		LocalizeVoiceUiServerStatus(VoiceUiStatus, aVoiceServerStatus, sizeof(aVoiceServerStatus));
-		LocalizeVoiceUiRoomStatus(VoiceUiStatus, aVoiceRoomStatus, sizeof(aVoiceRoomStatus));
-		LocalizeVoiceUiInputRouteStatus(VoiceUiStatus, aVoiceInputRouteStatus, sizeof(aVoiceInputRouteStatus));
-		LocalizeVoiceUiOutputRouteStatus(VoiceUiStatus, aVoiceOutputRouteStatus, sizeof(aVoiceOutputRouteStatus));
-		str_copy(aVoiceTransportStatus, LocalizeVoiceUiTransportStatus(VoiceUiStatus), sizeof(aVoiceTransportStatus));
-		if(VoiceUiStatus.m_TxAgeMs >= 0 || VoiceUiStatus.m_RxAgeMs >= 0)
+		char aVoiceServerStatus[128]{};
+		char aVoiceRoomStatus[128]{};
+		char aVoiceTransportStatus[128]{};
+		char aVoiceTransportDetail[160]{};
+		char aVoiceInputRouteStatus[160]{};
+		char aVoiceOutputRouteStatus[160]{};
+		if(NeedVoiceDiagnostics)
 		{
-			str_format(aVoiceTransportDetail, sizeof(aVoiceTransportDetail), "%s: tx=%dms rx=%dms mic=%.0f%%",
-				aVoiceTransportStatus,
-				VoiceUiStatus.m_TxAgeMs,
-				VoiceUiStatus.m_RxAgeMs,
-				(double)std::clamp(VoiceUiStatus.m_MicLevel * 100.0f, 0.0f, 100.0f));
-		}
-		else
-		{
-			str_copy(aVoiceTransportDetail, aVoiceTransportStatus, sizeof(aVoiceTransportDetail));
+			LocalizeVoiceUiServerStatus(VoiceUiStatus, aVoiceServerStatus, sizeof(aVoiceServerStatus));
+			LocalizeVoiceUiRoomStatus(VoiceUiStatus, aVoiceRoomStatus, sizeof(aVoiceRoomStatus));
+			LocalizeVoiceUiInputRouteStatus(VoiceUiStatus, aVoiceInputRouteStatus, sizeof(aVoiceInputRouteStatus));
+			LocalizeVoiceUiOutputRouteStatus(VoiceUiStatus, aVoiceOutputRouteStatus, sizeof(aVoiceOutputRouteStatus));
+			str_copy(aVoiceTransportStatus, LocalizeVoiceUiTransportStatus(VoiceUiStatus), sizeof(aVoiceTransportStatus));
+			if(VoiceUiStatus.m_TxAgeMs >= 0 || VoiceUiStatus.m_RxAgeMs >= 0)
+			{
+				str_format(aVoiceTransportDetail, sizeof(aVoiceTransportDetail), "%s: tx=%dms rx=%dms mic=%.0f%%",
+					aVoiceTransportStatus,
+					VoiceUiStatus.m_TxAgeMs,
+					VoiceUiStatus.m_RxAgeMs,
+					(double)std::clamp(VoiceUiStatus.m_MicLevel * 100.0f, 0.0f, 100.0f));
+			}
+			else
+			{
+				str_copy(aVoiceTransportDetail, aVoiceTransportStatus, sizeof(aVoiceTransportDetail));
+			}
 		}
 
 		Content.HSplitTop(LineHeight, &Row, &Content);
@@ -5067,7 +5073,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		AddCard(EQmModuleId::Translate, "qm:translate", "Translate", "Chat translation settings", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionTranslateContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::TranslateUi, "qm:translate_ui", "Translate button", "Customize translate button and menu colors", [this, LineHeight, BodySize, LineSpacing](CUIRect &Content) { RenderQmVisualTranslateUiContent(Content, LineHeight, BodySize, LineSpacing); });
 		AddCard(EQmModuleId::QiaFen, "qm:qiafen", "Keyword Reply", "I am a robot", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionKeywordReplyContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
-		AddCard(EQmModuleId::PieMenu, "qm:pie_menu", "Pie Menu", "Quick action menu for players", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, CardStyle, ReadOnly](CUIRect &Content) { RenderQmFunctionPieMenuContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, CardStyle.m_Padding, CardStyle.m_CornerRadius, ReadOnly); });
+		AddCard(EQmModuleId::PieMenu, "qm:pie_menu", "Pie Menu", "Quick action menu for players", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ButtonHeight = Metrics.m_ButtonHeight, CardStyle, ReadOnly](CUIRect &Content) { RenderQmFunctionPieMenuContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ButtonHeight, CardStyle.m_Padding, CardStyle.m_CornerRadius, ReadOnly); });
 		AddCard(EQmModuleId::FavoriteMaps, "qm:favorite_maps", "Favorite maps", "Your favorite map manager", [this, UiScale, LineHeight, BodySize, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmFunctionFavoriteMapsContent(Content, UiScale, LineHeight, BodySize, LineSpacing, ReadOnly); });
 		AddCard(EQmModuleId::HJAssist, "qm:hj_assist", "HJ Assist", "What's done is done, no use saying more", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionHJAssistContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 	};

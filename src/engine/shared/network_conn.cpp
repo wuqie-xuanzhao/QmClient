@@ -50,6 +50,7 @@ void CNetConnection::Reset(bool Rejoin)
 
 	m_LastSendTime = 0;
 	m_LastRecvTime = 0;
+	m_LastRttMs = -1;
 
 	mem_zero(&m_aConnectAddrs, sizeof(m_aConnectAddrs));
 	m_NumConnectAddrs = 0;
@@ -84,6 +85,8 @@ void CNetConnection::Init(NETSOCKET Socket, bool BlockCloseMsg)
 
 void CNetConnection::AckChunks(int Ack)
 {
+	const int64_t Now = time_get();
+	bool SampledRtt = false;
 	while(true)
 	{
 		CNetChunkResend *pResend = m_Buffer.First();
@@ -91,7 +94,14 @@ void CNetConnection::AckChunks(int Ack)
 			break;
 
 		if(CNetBase::IsSeqInBackroom(pResend->m_Sequence, Ack))
+		{
+			if(!SampledRtt)
+			{
+				m_LastRttMs = (int)std::max<int64_t>(0, (Now - pResend->m_LastSendTime) * 1000 / time_freq());
+				SampledRtt = true;
+			}
 			m_Buffer.PopFirst();
+		}
 		else
 			break;
 	}

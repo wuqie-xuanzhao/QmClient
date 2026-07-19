@@ -1460,9 +1460,6 @@ Brutal
 Bubble opacity
 == 말풍선 불투명도
 
-Buffer memory
-== 버퍼 메모리
-
 Built-in
 == 내장
 
@@ -1991,6 +1988,9 @@ Compact
 Compatible with single-player area hints from other servers
 == 다른 서버의 유사한 싱글 플레이어 영역 알림과 호환
 
+Complete snapshots are arriving late or not arriving
+== 완전한 스냅샷이 늦게 도착하거나 도착하지 않음
+
 Compressor attack time (ms)
 == 컴프레서 어택 타임 (ms)
 
@@ -2132,9 +2132,6 @@ Connecting to
 Connection disconnected
 == 연결이 끊어졌습니다
 
-Connection downstream
-== 연결 다운스트림
-
 Connection elevated
 == 연결 약간 비정상
 
@@ -2152,9 +2149,6 @@ Connection quality
 
 Connection severely abnormal
 == 연결 심각한 비정상
-
-Connection upstream
-== 연결 업스트림
 
 Connlimit: number of connections allowed per IP in a time period
 == Connlimit: 일정 시간 동안 IP당 허용되는 연결 수
@@ -2837,15 +2831,6 @@ Display modes
 Display your race time
 == 레이스 시간 표시
 
-Displays client prediction latency
-== 클라이언트 예측 지연 시간 표시
-
-Displays client receive rate
-== 클라이언트 수신 속도 표시
-
-Displays client send rate
-== 클라이언트 전송 속도 표시
-
 Displays connection quality grade
 == 연결 품질 등급 표시
 
@@ -2864,14 +2849,26 @@ Displays DDNet process CPU usage / total system CPU usage
 Displays DDNet process memory usage
 == DDNet 프로세스 메모리 사용량 표시
 
-Displays latency jitter
-== 지연 시간 지터 표시
+Displays estimated total UDP receive rate
+== 추정된 총 UDP 수신 속도 표시
 
-Displays resend-based packet loss estimate
-== 재전송 기반 패킷 손실 추정치 표시
+Displays estimated total UDP send rate
+== 추정된 총 UDP 전송 속도 표시
 
-Displays server snapshot latency
-== 서버 스냅샷 지연 시간 표시
+Displays prediction timing jitter
+== 예측 타이밍 지터 표시
+
+Displays the client's prediction lead
+== 클라이언트의 예측 선행 시간 표시
+
+Displays the interval between complete snapshots
+== 완전한 스냅샷 사이의 간격 표시
+
+Displays the number of unacknowledged vital chunks
+== 확인되지 않은 vital 청크 수 표시
+
+Displays the server ping round-trip time
+== 서버 Ping 왕복 시간 표시
 
 Displays X and Y velocity
 == X 및 Y 속도 표시
@@ -4066,6 +4063,9 @@ Frame rate
 
 Frame time
 == 프레임 시간
+
+Frame time p95
+== 프레임 시간 P95
 
 Framebuffer color bits (only fullscreen)
 == 프레임버퍼 색상 비트 (전체 화면만)
@@ -5360,16 +5360,10 @@ Last entered
 Last page in console
 == 콘솔의 마지막 페이지
 
-Latency
-== 지연 시간
-
 Latency compensation
 == 지연 보상
 
 Latency Jitter
-== 지연 시간 지터
-
-Latency jitter
 == 지연 시간 지터
 
 Layout
@@ -7544,17 +7538,20 @@ Prediction boundary (ms, increases latency but reduces ping jitter)
 Prediction ghost opacity (0-100)
 == 예측 유령 투명도 (0-100)
 
-Prediction jitter is obvious, latency changes are large
-== 예측 지터가 뚜렷하며, 지연 시간 변화가 큽니다
+Prediction jitter
+== 예측 지터
+
+Prediction jitter is obvious, prediction timing is changing
+== 예측 지터가 뚜렷하고 예측 타이밍이 변하고 있습니다
 
 Prediction Latency
 == 예측 지연 시간
 
-Prediction latency
-== 예측 지연 시간
+Prediction lead
+== 예측 선행 시간
 
-Prediction latency is elevated, prediction path pressure is high
-== 예측 지연 시간이 높으며, 예측 경로 부하가 높습니다
+Prediction lead is high, check prediction settings and server timing
+== 예측 선행 시간이 높습니다. 예측 설정과 서버 타이밍을 확인하세요
 
 Prediction Margin
 == 예측 여유
@@ -7567,9 +7564,6 @@ Prediction margin when frozen
 
 Prediction offset
 == 예측 오프셋
-
-Prediction time
-== 예측 시간
 
 Preparing demo playback
 == 데모 재생 준비 중
@@ -7650,7 +7644,7 @@ Print daily messages to console
 == 일일 메시지를 콘솔에 출력
 
 Prioritize outgoing game traffic on Windows (best effort)
-== Prioritize outgoing game traffic on Windows (best effort)
+== Windows에서 송신 게임 트래픽 우선 처리(최선형)
 
 Privately messages someone's current time in this current running race (your time by default)
 == 현재 진행 중인 레이스에서 특정 플레이어의 현재 시간을 귓속말로 보냅니다 (기본값은 당신의 시간)
@@ -7952,13 +7946,7 @@ Reason:
 Rebinds the client's listening address and port
 == 클라이언트의 수신 주소와 포트를 다시 바인딩합니다
 
-Receive
-== 받기
-
 Receive Rate
-== 수신 속도
-
-Receive rate
 == 수신 속도
 
 Receive VAD speakers
@@ -8414,12 +8402,6 @@ Rescue: auto mode teleports out of freeze; manual mode records a rescue point on
 Resend Loss
 == 손실 재전송
 
-Resend loss
-== 손실 재전송
-
-Resend signs detected, connection quality is suspicious
-== 재전송 신호가 감지되었습니다. 연결 품질이 의심스럽습니다
-
 Reset
 == 초기화
 
@@ -8549,9 +8531,6 @@ RNNoise noise reduction strength
 RNNoise not integrated in current build, will fallback to simple noise reduction
 == 현재 빌드에 RNNoise 가 통합되지 않아 기본 노이즈 감소로 대체됩니다
 
-Rollback rate
-== 롤백률
-
 Room
 == 방
 
@@ -8575,6 +8554,9 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo 메시지를 알림으로 전달
+
+RTT
+== RTT
 
 Rule line 1.
 == 규칙 1번째 줄
@@ -8936,9 +8918,6 @@ Send probability
 Send Rate
 == 전송 속도
 
-Send rate
-== 전송 속도
-
 Send source language
 == 소스 언어 보내기
 
@@ -9046,12 +9025,6 @@ Server preset
 
 Server region. Used for region bans
 == 서버 지역. 지역 차단에 사용됨
-
-Server rollback
-== 서버 롤백
-
-Server RTT is elevated, response path is unstable
-== 서버 RTT가 높아 응답 경로가 불안정합니다
 
 Server stress (debug builds only).
 == 서버 스트레스 (디버그 빌드 전용)
@@ -9723,7 +9696,7 @@ Show outdated version warning
 == 버전이 오래되었다는 경고 표시
 
 Show outgoing game traffic QoS status
-== Show outgoing game traffic QoS status
+== 송신 게임 트래픽 QoS 상태 표시
 
 Show outlines only on entity layer
 == 엔티티 레이어에서만 윤곽선 표시
@@ -9812,9 +9785,6 @@ Show radial indicators of other Tees
 Show region rankings in /rank, /top5, and /top5team.
 == /rank, /top5, /top5team 에서 지역 순위 표시
 
-Show release date and author when sorted by date
-== 게시 시간순 정렬 시 스킨 게시일과 제작자 표시
-
 Show score
 == 점수 표시
 
@@ -9847,6 +9817,9 @@ Show skin name on name plate to find missing skins
 
 Show skin names in nameplate
 == 이름표에 스킨 이름 표시
+
+Show skin release date and author
+== 스킨 출시일과 제작자 표시
 
 Show song info in top-left corner
 == 왼쪽 상단에 노래 정보 표시
@@ -10223,8 +10196,20 @@ SMTC
 Snap threshold
 == 스냅 임계값
 
+Snapshot Gap
+== 스냅샷 간격
+
+Snapshot gap
+== 스냅샷 간격
+
 Snapshot Latency
 == 스냅샷 지연 시간
+
+Snapshot payload
+== 스냅샷 페이로드
+
+Snapshot rate
+== 스냅샷 속도
 
 Social
 == 소셜
@@ -10406,9 +10391,6 @@ Squishy Tee deformation duration
 Squishy Tee deformation intensity
 == Q 탄 Tee 변형 강도
 
-Staging memory
-== 스테이징 메모리
-
 Star
 == 별
 
@@ -10519,9 +10501,6 @@ Stop server
 
 Stop the current demo
 == 현재 데모 중지
-
-Streamed memory
-== 스트리밍 메모리
 
 Streamer Mode
 == 스트리머 모드
@@ -10949,17 +10928,11 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 == 텐센트 클라우드 번역 SecretKey
 
-Text
-== 텍스트
-
 Text alpha
 == 텍스트 투명도
 
 Text color
 == 텍스트 색상
-
-Texture memory
-== 텍스처 메모리
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == 당신의 동행과 신뢰에 감사드립니다. 그것이 제가 계속 나아갈 용기를 주는 것입니다.
@@ -11317,6 +11290,12 @@ Total
 
 Total friends
 == 전체 친구 수
+
+Total UDP RX (est.)
+== 총 UDP 수신(추정)
+
+Total UDP TX (est.)
+== 총 UDP 전송(추정)
 
 Total: %d save(s)
 == 총계：%d 개 저장됨
@@ -11938,6 +11917,9 @@ Visual: Nameplates
 
 Visuals
 == 시각 효과
+
+Vital resend queue
+== vital 재전송 대기열
 
 Voice
 == 음성

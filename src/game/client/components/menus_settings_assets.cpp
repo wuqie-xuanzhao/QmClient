@@ -4762,7 +4762,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	str_copy(AdaptiveBudgetInput.m_aTab, AssetsSettingsTabName(s_CurCustomTab), sizeof(AdaptiveBudgetInput.m_aTab));
 	str_copy(AdaptiveBudgetInput.m_aContext, SettingsPerfContextName(), sizeof(AdaptiveBudgetInput.m_aContext));
 	AdaptiveBudgetInput.m_FrameMsAverage = PerfSnapshot.m_FrameTimeMs;
-	AdaptiveBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeSpikeMs > 0.0f ? PerfSnapshot.m_FrameTimeSpikeMs : PerfSnapshot.m_FrameTimeMs;
+	AdaptiveBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeP95Ms > 0.0f ? PerfSnapshot.m_FrameTimeP95Ms : PerfSnapshot.m_FrameTimeMs;
 	AdaptiveBudgetInput.m_TargetFrameMs = 8.333f;
 	AdaptiveBudgetInput.m_ScrollActive = ResourceFrameContext.m_ScrollActive;
 	AdaptiveBudgetInput.m_JumpScrollActive = ResourceFrameContext.m_JumpScrollActive;

@@ -2428,7 +2428,8 @@ TEST(SettingsWarmup, RemainingSettingsPagesUseResponsiveContentMetrics)
 	EXPECT_NE(Assets.find("const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(MainView.w);"), std::string::npos);
 	EXPECT_NE(Assets.find("Localize(\"Loading assets...\"), ContentMetrics.m_BodySize"), std::string::npos);
 	EXPECT_NE(Assets.find("Localize(\"No assets\"), ContentMetrics.m_BodySize"), std::string::npos);
-	EXPECT_NE(Settings.find("pCheckBoxValue, float LineHeight, float LineSpacing, float BodySize)"), std::string::npos);
+	EXPECT_NE(Settings.find("pCheckBoxValue, float LineHeight, float LineSpacing, float BodySize, float ButtonHeight)"), std::string::npos);
+	EXPECT_NE(Settings.find("const float ResolvedButtonHeight = ButtonHeight > 0.0f ? ButtonHeight : LineHeight;"), std::string::npos);
 	EXPECT_EQ(Settings.find("Localize(\"Text\"), BodySize"), std::string::npos);
 	EXPECT_NE(Settings.find("DoSettingsMenuLabel(SETTINGS_APPEARANCE, Tab, Tab, pLabelTextId, &Label, pLabel, BodySize"), std::string::npos);
 	EXPECT_NE(Settings.find("const float LineHeight = SoundMetrics.m_LineHeight;"), std::string::npos);
