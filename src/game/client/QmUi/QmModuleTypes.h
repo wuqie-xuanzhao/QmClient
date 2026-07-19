@@ -47,7 +47,6 @@ namespace qm_module
 		Background3D,
 		WeaponTrajectory,
 		WeaponAnimation,
-		CardAppearance,
 	};
 
 	enum class EQmModuleColumn
@@ -65,7 +64,7 @@ namespace qm_module
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 37;
+	constexpr size_t QmModuleCount = 36;
 } // namespace qm_module
 
 #endif // GAME_CLIENT_QMUI_QMMODULETYPES_H

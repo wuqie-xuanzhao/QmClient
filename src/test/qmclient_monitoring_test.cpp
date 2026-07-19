@@ -6771,6 +6771,7 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
+	EXPECT_NE(Source.find("VisualOptions.m_AlwaysShowBorders || SettingsCardInteractionBorderVisible(DrawState)"), std::string::npos);
 	EXPECT_NE(Source.find("ResolveSettingsSmallFontSize(UiScale)"), std::string::npos);
 	EXPECT_EQ(Source.find("ui_token::font::SMALL * UiScale"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
@@ -6782,6 +6783,7 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);
 	EXPECT_NE(DeckHeader.find("bool m_AllowHeaderDrag = true;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
 	EXPECT_NE(QmClientSource.find("Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);
@@ -6802,6 +6804,7 @@ TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
 {
 	const std::string SearchSource = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string RegistrySource = ReadRepoFile("src/game/client/QmUi/QmCardRegistry.cpp");
 	const std::string SearchCardBody = ExtractSourceFunctionBody(SearchSource, "void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly)");
 	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(SearchCardBody.empty());
@@ -6810,6 +6813,7 @@ TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
 	EXPECT_NE(SearchCardBody.find("NavigateToSettingsCard(Card.m_Target);"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
+	EXPECT_NE(RegistrySource.find("graphics visual rendering card appearance settings card border corner segments rainbow title"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, RegistryNavigationBridgeOwnsSettingsTarget)
 {
@@ -6920,7 +6924,6 @@ TEST(QmMonitoringHelpers, P6VisualContentOwnersRemainShellFree)
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string StreamerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing)");
 	const std::string TranslateUiBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualTranslateUiContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing)");
-	const std::string CardAppearanceBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualCardAppearanceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	const std::string EntityOverlayBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualEntityOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	const std::string CollisionHitboxBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	const std::string WeaponAnimationBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ContentGap, bool PrewarmOnly)");
@@ -6930,7 +6933,6 @@ TEST(QmMonitoringHelpers, P6VisualContentOwnersRemainShellFree)
 	const std::string CameraViewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	ASSERT_FALSE(StreamerBody.empty());
 	ASSERT_FALSE(TranslateUiBody.empty());
-	ASSERT_FALSE(CardAppearanceBody.empty());
 	ASSERT_FALSE(EntityOverlayBody.empty());
 	ASSERT_FALSE(CollisionHitboxBody.empty());
 	ASSERT_FALSE(WeaponAnimationBody.empty());
@@ -6941,7 +6943,6 @@ TEST(QmMonitoringHelpers, P6VisualContentOwnersRemainShellFree)
 
 	EXPECT_NE(Header.find("RenderQmVisualStreamerContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualTranslateUiContent"), std::string::npos);
-	EXPECT_NE(Header.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualEntityOverlayContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualCollisionHitboxContent"), std::string::npos);
 	EXPECT_NE(Header.find("RenderQmVisualWeaponAnimationContent"), std::string::npos);
@@ -6952,7 +6953,6 @@ TEST(QmMonitoringHelpers, P6VisualContentOwnersRemainShellFree)
 	EXPECT_NE(Header.find("IsQmNewFeatureRead"), std::string::npos);
 	EXPECT_NE(StreamerBody.find("RenderQmVisualCheckbox"), std::string::npos);
 	EXPECT_NE(TranslateUiBody.find("NTranslateUiSettings::RenderTranslateUiModule"), std::string::npos);
-	EXPECT_NE(CardAppearanceBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
 	EXPECT_NE(EntityOverlayBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
 	EXPECT_NE(CollisionHitboxBody.find("DoLine_ColorPicker"), std::string::npos);
 	EXPECT_NE(WeaponAnimationBody.find("MarkQmNewFeatureHovered"), std::string::npos);
@@ -6965,7 +6965,8 @@ TEST(QmMonitoringHelpers, P6VisualContentOwnersRemainShellFree)
 	EXPECT_NE(CameraViewBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
 	EXPECT_EQ(StreamerBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(TranslateUiBody.find("RegisterModuleCard"), std::string::npos);
-	EXPECT_EQ(CardAppearanceBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(QmClient.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
+	EXPECT_EQ(Header.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
 	EXPECT_EQ(EntityOverlayBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(CollisionHitboxBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(WeaponAnimationBody.find("RegisterModuleCard"), std::string::npos);

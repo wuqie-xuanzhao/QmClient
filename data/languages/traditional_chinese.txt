@@ -668,6 +668,9 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == 始終顯示自己的鉤子輔助線
 
+Always show settings card borders
+== 永遠顯示設定卡片邊框
+
 Always translate
 == 始終翻譯
 
@@ -1564,21 +1567,6 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == 無法交換：對方不在你的隊伍中
-
-Card Appearance
-== 卡片外觀
-
-Card appearance
-== 卡片外觀
-
-Card background blur (high performance only)
-== 卡片背景模糊（僅高效能模式）
-
-Card background blur and corner rounding
-== 卡片背景模糊與圓角
-
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
-== 卡片毛玻璃背景模糊（0=關 1=開；僅高性能電腦建議開啟）
 
 Category
 == 分類

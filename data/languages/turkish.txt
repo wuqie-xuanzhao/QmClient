@@ -668,6 +668,9 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Kendi oyuncunun kanca çarpışma çizgisini her zaman göster
 
+Always show settings card borders
+== Ayar kartı kenarlıklarını her zaman göster
+
 Always translate
 == Her zaman çevir
 
@@ -1564,21 +1567,6 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Takas yapılamıyor: diğer oyuncu takımında değil
-
-Card Appearance
-== Kart Görünümü
-
-Card appearance
-== Kart görünümü
-
-Card background blur (high performance only)
-== Kart arka plan bulanıklığı (yalnızca yüksek performans)
-
-Card background blur and corner rounding
-== Kart arka plan bulanıklığı ve köşe yuvarlama
-
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
-== Kart buzlu cam arka plan bulanıklığı (0=kapalı 1=açık; yalnızca yüksek performanslı bilgisayarlar için önerilir)
 
 Category
 == Kategori

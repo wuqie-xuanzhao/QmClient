@@ -2593,7 +2593,7 @@ private:
 		float m_CornerRadius = 10.0f; // 12 → 10（macOS 更克制）
 		float m_ScrollbarWidth = 20.0f;
 		float m_ScrollbarMargin = 5.0f;
-		ColorRGBA m_GlassColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f); // 现代移动端深色 surface：更亮清透（配合 qm_card_backdrop_blur 毛玻璃）
+		ColorRGBA m_GlassColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f); // 现代移动端深色 surface：更亮清透
 		ColorRGBA m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f); // 0.05 → 0.06（hairline 旁维持可读）
 		ColorRGBA m_HairlineColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f); // 新增：hairline 边框色
 		ColorRGBA m_ShadowColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f); // 保留字段，置透明（不再绘制，为以后内嵌阴影留口子）
@@ -2787,7 +2787,6 @@ private:
 	void RenderQmVisualLabel(const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign = TEXTALIGN_ML, const SLabelProperties &LabelProps = {});
 	void RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing);
 	void RenderQmVisualTranslateUiContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing);
-	void RenderQmVisualCardAppearanceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmVisualEntityOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ContentGap, bool PrewarmOnly);

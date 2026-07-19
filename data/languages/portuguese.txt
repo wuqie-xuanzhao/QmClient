@@ -668,6 +668,9 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Mostrar sempre a linha de colisão do gancho do próprio jogador
 
+Always show settings card borders
+== Mostrar sempre as bordas dos cartões de definições
+
 Always translate
 == Traduzir sempre
 
@@ -1564,21 +1567,6 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Não é possível trocar: o outro jogador não está na tua equipa
-
-Card Appearance
-== Aparência do Cartão
-
-Card appearance
-== Aparência do cartão
-
-Card background blur (high performance only)
-== Desfoque do fundo do cartão (apenas alto desempenho)
-
-Card background blur and corner rounding
-== Desfoque do fundo do cartão e arredondamento de cantos
-
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
-== Desfoque de fundo de vidro fosco do cartão (0=desligado 1=ligado; recomendado apenas para PCs de alto desempenho)
 
 Category
 == Categoria

@@ -122,7 +122,6 @@ namespace qm_module
 		case EQmModuleId::Background3D: return "qm:background_3d";
 		case EQmModuleId::WeaponTrajectory: return "qm:weapon_trajectory";
 		case EQmModuleId::WeaponAnimation: return "qm:weapon_animation";
-		case EQmModuleId::CardAppearance: return "qm:card_appearance";
 		}
 		return nullptr;
 	}

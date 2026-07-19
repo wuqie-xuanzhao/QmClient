@@ -51,9 +51,9 @@ static std::vector<SQmModuleEntry> MakeTestDefaults()
 	};
 }
 
-// 真实栖梦 s_aQmModuleDefaults 全 37 卡（key/column/order 与 menus_qmclient.cpp 一致）。
+// 真实栖梦 s_aQmModuleDefaults 全部卡片（key/column/order 与 menus_qmclient.cpp 一致）。
 // 用于全量往返自洽测试——这是"行为等价"承诺的可信凭证。
-static std::vector<SQmModuleEntry> MakeAll37Defaults()
+static std::vector<SQmModuleEntry> MakeAllDefaults()
 {
 	return {
 		{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -92,7 +92,6 @@ static std::vector<SQmModuleEntry> MakeAll37Defaults()
 		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 15, "system_media_controls"},
 		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 16, "lyrics"},
 		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"},
-		{EQmModuleId::CardAppearance, EQmModuleColumn::Left, 17, "card_appearance"},
 	};
 }
 
@@ -309,10 +308,10 @@ TEST(QmModuleLayoutAdapter, NormalizeFillsOrderGaps)
 	EXPECT_EQ(Out[1].m_OrderInColumn, 0); // Left 列仅 chat_bubble，Normalize 后 0
 }
 
-// 意图：真实 37 卡 serialize→parse 等价（行为等价回归基线的核心凭证）。
+// 意图：全部卡片 serialize→parse 等价（行为等价回归基线的核心凭证）。
 TEST(QmModuleLayoutAdapter, AllLegacyKeysRoundtripPreservesColumns)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	ASSERT_EQ(Defaults.size(), QmModuleCount);
 	char aConfig[2048];
 	SerializeLegacyQmLayout(Defaults, aConfig, sizeof(aConfig));
@@ -331,7 +330,7 @@ TEST(QmModuleLayoutAdapter, AllLegacyKeysRoundtripPreservesColumns)
 // 意图：CModel 路径（Load+Serialize）必须等价 Step 1b 旧基线（Parse+Serialize），否则 CModel 接入破坏等价性。
 TEST(QmModuleLayoutAdapter, LoadSerializeMatchesLegacyBaseline)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	const char *pConfig = "chat_bubble:left:0;camera_view:right:0;coords:left:3";
 	std::vector<SQmModuleEntry> Legacy;
 	ParseLegacyQmLayout(pConfig, Defaults, Legacy);
@@ -346,7 +345,7 @@ TEST(QmModuleLayoutAdapter, LoadSerializeMatchesLegacyBaseline)
 // 意图：Move 改 CModel 布局，Serialize 反映新位置；Move 后 dirty（触发序列化）。
 TEST(QmModuleLayoutAdapter, MoveUpdatesModelAndSetsDirty)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	LoadQmLayoutIntoModel("chat_bubble:left:0;camera_view:right:0", Defaults);
 	EXPECT_FALSE(IsQmLayoutModelDirty()); // Load 后清 dirty
 	EXPECT_TRUE(MoveQmModuleInModel(EQmModuleId::ChatBubble, EQmModuleColumn::Right, 0));
@@ -360,7 +359,7 @@ TEST(QmModuleLayoutAdapter, MoveUpdatesModelAndSetsDirty)
 
 TEST(QmModuleLayoutAdapter, MoveToTabUpdatesGlobalPlacementAndSetsDirty)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	LoadQmLayoutIntoModel("chat_bubble:left:0;camera_view:right:0", Defaults);
 	EXPECT_FALSE(IsQmLayoutModelDirty());
 
@@ -377,7 +376,7 @@ TEST(QmModuleLayoutAdapter, MoveToTabUpdatesGlobalPlacementAndSetsDirty)
 // 意图：Full 保护——非 Full 卡不可拖成 Full（目标 Full 拒绝）。
 TEST(QmModuleLayoutAdapter, MoveRejectsFullTarget)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	LoadQmLayoutIntoModel("chat_bubble:left:0", Defaults);
 	EXPECT_FALSE(MoveQmModuleInModel(EQmModuleId::ChatBubble, EQmModuleColumn::Full, 0));
 }
@@ -385,10 +384,10 @@ TEST(QmModuleLayoutAdapter, MoveRejectsFullTarget)
 // 意图：SyncModelToLegacyLayout 把 CModel 转 SQmModuleEntry[]（全卡 + 列保持），供 Step 4 Refresh + Serialize 复用。
 TEST(QmModuleLayoutAdapter, SyncModelToLegacyLayoutPreservesColumns)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	LoadQmLayoutIntoModel("chat_bubble:left:0;camera_view:right:0", Defaults);
 	std::vector<SQmModuleEntry> vEntries = SyncModelToLegacyLayout();
-	ASSERT_EQ(vEntries.size(), Defaults.size()); // 全 37 卡
+	ASSERT_EQ(vEntries.size(), Defaults.size()); // 全部卡片
 	bool FoundChatBubble = false;
 	bool FoundCameraView = false;
 	for(const SQmModuleEntry &E : vEntries)
@@ -412,7 +411,7 @@ TEST(QmModuleLayoutAdapter, SyncModelToLegacyLayoutPreservesColumns)
 // 意图：全局排序成为权威时，Qm 只读取 qm:* 卡片，忽略其他域卡片，并补齐缺失 Qm defaults。
 TEST(QmModuleLayoutAdapter, LoadGlobalOrderIntoModelKeepsOnlyQmCardsAndFillsDefaults)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	EXPECT_TRUE(LoadQmLayoutModelFromGlobalOrder(
 		"tc:auto_reply|tclient|1|0;qm:chat_bubble|visual|2|0;qm:camera_view|visual|1|0;",
 		Defaults));
@@ -453,7 +452,7 @@ TEST(QmModuleLayoutAdapter, LoadGlobalOrderIntoModelKeepsOnlyQmCardsAndFillsDefa
 // 且 tab 指针不能引用解析临时模型的 owned string；后续序列化仍应稳定。
 TEST(QmModuleLayoutAdapter, LoadGlobalOrderKeepsMovableTabsWithStableLifetime)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	ASSERT_TRUE(LoadQmLayoutModelFromGlobalOrder("qm:chat_bubble|search|2|0;qm:camera_view|search|1|0;", Defaults));
 
 	char aBuf[4096];
@@ -467,7 +466,7 @@ TEST(QmModuleLayoutAdapter, LoadGlobalOrderKeepsMovableTabsWithStableLifetime)
 // 否则 Qm 页面一次拖拽会把全局卡片配置退化成 Qm 子集，破坏全局唯一权威。
 TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderPreservesNonQmCards)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	LoadQmLayoutIntoModel("chat_bubble:right:0;camera_view:left:0", Defaults);
 	char aMerged[4096];
 	SerializeMergedGlobalCardOrderFromQmModel(
@@ -487,7 +486,7 @@ TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderPreservesNonQmCards)
 // 删除/未知卡片残留继续写回会让全局配置越来越脏，并可能让搜索/组件编辑器看到幽灵卡。
 TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderDropsUnknownQmCards)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	LoadQmLayoutIntoModel("chat_bubble:right:0", Defaults);
 	char aMerged[4096];
 	SerializeMergedGlobalCardOrderFromQmModel(
@@ -505,7 +504,7 @@ TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderDropsUnknownQmCards)
 // 不能静默写回截断配置，否则下一次启动会把丢尾部卡片当成用户布局。
 TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderReportsTruncation)
 {
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	LoadQmLayoutIntoModel("chat_bubble:right:0;camera_view:left:0", Defaults);
 
 	char aSmall[32];
@@ -527,7 +526,7 @@ TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderReportsTruncation)
 TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderWritesPipeFormatAndMarksMigrated)
 {
 	SConfigBackup Backup;
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0;camera_view:left:0", sizeof(g_Config.m_QmSidebarCardOrder));
 	g_Config.m_QmGlobalCardOrder[0] = '\0';
 	g_Config.m_QmCardOrderMigrated = 0;
@@ -550,7 +549,7 @@ TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderWritesPipeFormatAndMarksMigrat
 TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderPreservesRegistryOnlyQmCards)
 {
 	SConfigBackup Backup;
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0", sizeof(g_Config.m_QmSidebarCardOrder));
 	g_Config.m_QmGlobalCardOrder[0] = '\0';
 	g_Config.m_QmCardOrderMigrated = 0;
@@ -567,7 +566,7 @@ TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderPreservesRegistryOnlyQmCards)
 TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderPreservesLegacyTClientOrder)
 {
 	SConfigBackup Backup;
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0", sizeof(g_Config.m_QmSidebarCardOrder));
 	str_copy(g_Config.m_QmSettingsCardOrder, "tclient:input:1:0;tclient:visual-nameplates:0:0", sizeof(g_Config.m_QmSettingsCardOrder));
 	g_Config.m_QmGlobalCardOrder[0] = '\0';
@@ -603,7 +602,7 @@ TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderDoesNotMarkOrMutateOnSerialize
 TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderIsIdempotent)
 {
 	SConfigBackup Backup;
-	auto Defaults = MakeAll37Defaults();
+	auto Defaults = MakeAllDefaults();
 	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0", sizeof(g_Config.m_QmSidebarCardOrder));
 	str_copy(g_Config.m_QmGlobalCardOrder, "qm:chat_bubble|search|1|0;", sizeof(g_Config.m_QmGlobalCardOrder));
 	g_Config.m_QmCardOrderMigrated = 1;

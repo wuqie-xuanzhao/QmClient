@@ -109,7 +109,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
 	// 否则半透明卡片在展开、折叠或首次布局时会表现为一次亮闪。
 	const bool InteractionComplete = DrawState.m_DropFeedback;
-	const bool DrawInteractionBorder = SettingsCardInteractionBorderVisible(DrawState);
+	const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders || SettingsCardInteractionBorderVisible(DrawState);
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      Theme.m_Border;
 	Border.a *= DrawState.m_DrawAlpha;
@@ -121,8 +121,8 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	if(DrawCardChrome)
 	{
 		DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
-		// 静止态只绘制一次带抗锯齿的圆角 Surface。若再叠加默认圆角描边，
-		// Surface 的外沿抗锯齿会与描边混合成双层阴影。描边仅用于明确交互状态。
+		// 静止态只绘制一次带抗锯齿的圆角 Surface；边框由 Graphics 的显式开关控制。
+		// 悬浮、焦点和拖放仍会强制保留交互边框，避免无边框模式失去状态反馈。
 		if(DrawInteractionBorder)
 			DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, BorderRadius);
 	}

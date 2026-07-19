@@ -668,6 +668,9 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Zawsze pokazuj własną linię asysty haka
 
+Always show settings card borders
+== Zawsze pokazuj obramowania kart ustawień
+
 Always translate
 == Zawsze tłumacz
 
@@ -1564,21 +1567,6 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Nie można zamienić: drugi gracz nie jest w twojej drużynie
-
-Card Appearance
-== Wygląd karty
-
-Card appearance
-== Wygląd karty
-
-Card background blur (high performance only)
-== Rozmycie tła karty (tylko wysoka wydajność)
-
-Card background blur and corner rounding
-== Rozmycie tła karty i zaokrąglanie rogów
-
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
-== Rozmycie tła szkła karty (0=wył 1=wł; zalecane tylko dla wydajnych komputerów)
 
 Category
 == Kategoria

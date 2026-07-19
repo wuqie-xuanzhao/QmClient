@@ -809,7 +809,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
 			CUIRect Label, DropDown;
 			Button.VSplitLeft(minimum(150.0f * GeneralMetrics.m_UiScale, Button.w * 0.55f), &Label, &DropDown);
-			DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "general-respawn-default-weapon-label", &Label, Localize("Respawn default weapon"), BodySize, TEXTALIGN_ML);
+			DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "general-respawn-default-weapon-label", &Label, Localize("Respawn default weapon (when owned)"), BodySize, TEXTALIGN_ML);
 			const char *apRespawnDefaultWeapons[] = {Localize("Off"), Localize("Hammer"), Localize("Gun"), Localize("Shotgun"), Localize("Grenade"), Localize("Laser")};
 			static CUi::SDropDownState s_RespawnDefaultWeaponDropDownState;
 			const int RespawnDefaultWeapon = Ui()->DoDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
@@ -3618,9 +3618,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
-	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(9, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
-	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(2, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 
 	const bool RenderOnly = Ui()->RenderOnly();
@@ -3864,11 +3864,25 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			DoGraphicsNumericField("graphics-scoreboard-opacity", &g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("Scoreboard opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 			if(OldQmScoreboardOpacity != g_Config.m_QmScoreboardOpacity)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
+			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
+				g_Config.m_QmUiCardRainbowTitles ^= 1;
+
+			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
+			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Always show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
+				g_Config.m_QmUiCardBorders ^= 1;
+
+			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
+			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
+			DoGraphicsNumericField("graphics-card-corner-segments", &g_Config.m_QmRectCornerSegments, &g_Config.m_QmRectCornerSegments, Button, Localize("Corner segments"), 8, 48, &CUi::ms_LinearScrollbarScale, "");
 		});
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
-			int RowsRemaining = 3;
+			int RowsRemaining = 2;
 			const auto NextRow = [&]() {
 				CUIRect Row;
 				CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
@@ -3897,10 +3911,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &ExtraAnimations))
 				g_Config.m_QmExtraAnimations ^= 1;
-			Button = NextRow();
-			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
-				g_Config.m_QmUiCardRainbowTitles ^= 1;
-
 			static CButtonContainer s_FocusColorResetId;
 			const unsigned OldFocusColor = g_Config.m_QmUiFocusColor;
 			CUIRect FocusColorRow = NextRow();

@@ -553,6 +553,7 @@ SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
 {
 	SSettingsCardDeckVisualOptions Options;
 	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;
+	Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;
 	return Options;
 }
 

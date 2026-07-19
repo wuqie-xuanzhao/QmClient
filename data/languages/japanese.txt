@@ -668,6 +668,9 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == 常に自分のフック補助線を表示
 
+Always show settings card borders
+== 常に設定カードの枠線を表示
+
 Always translate
 == 常に翻訳
 
@@ -1564,21 +1567,6 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == 交換できません：相手があなたのチームにいません
-
-Card Appearance
-== カード外観
-
-Card appearance
-== カード外観
-
-Card background blur (high performance only)
-== カード背景ぼかし（高パフォーマンスのみ）
-
-Card background blur and corner rounding
-== カード背景ぼかしと角丸
-
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
-== カードのすりガラス背景ぼかし（0=オフ 1=オン；高性能PCのみ推奨）
 
 Category
 == カテゴリ

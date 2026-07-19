@@ -668,6 +668,9 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Всегда показывать свою линию захвата
 
+Always show settings card borders
+== Всегда показывать границы карточек настроек
+
 Always translate
 == Всегда переводить
 
@@ -1564,21 +1567,6 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Невозможно обменяться: другой игрок не в вашей команде
-
-Card Appearance
-== Внешний вид карточки
-
-Card appearance
-== Внешний вид карт
-
-Card background blur (high performance only)
-== Размытие фона карточки (только для высокой производительности)
-
-Card background blur and corner rounding
-== Размытие и скругление углов фона карточки
-
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
-== Размытие матового фона карточек (0=выкл 1=вкл; рекомендуется только для мощных ПК)
 
 Category
 == Категория

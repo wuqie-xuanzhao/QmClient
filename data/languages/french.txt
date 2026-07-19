@@ -668,6 +668,9 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Toujours afficher la ligne de collision du grappin de son propre joueur
 
+Always show settings card borders
+== Toujours afficher les bordures des cartes de paramètres
+
 Always translate
 == Toujours traduire
 
@@ -1564,21 +1567,6 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Impossible d'échanger : l'autre joueur n'est pas dans votre équipe
-
-Card Appearance
-== Apparence des cartes
-
-Card appearance
-== Apparence des cartes
-
-Card background blur (high performance only)
-== Flou d'arrière-plan des cartes (haute performance uniquement)
-
-Card background blur and corner rounding
-== Flou d'arrière-plan et arrondi des coins des cartes
-
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
-== Flou de fond en verre dépoli des cartes (0=désactivé 1=activé ; recommandé uniquement pour les PC hautes performances)
 
 Category
 == Catégorie

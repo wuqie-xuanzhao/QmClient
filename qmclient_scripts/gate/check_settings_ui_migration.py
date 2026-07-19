@@ -81,7 +81,6 @@ PAGE_STABLE_IDS = {
 		"qm:entity_overlay",
 		"qm:collision_hitbox",
 		"qm:streamer",
-		"qm:card_appearance",
 	),
 	"contributors": ("deck:qmclient-contributors-community", "deck:qmclient-contributors-sponsors"),
 	"global_search": ("deck:global-search-input", "deck:global-search-results"),

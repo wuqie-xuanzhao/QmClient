@@ -129,8 +129,7 @@ namespace
 		{qm_module::EQmModuleId::DynamicIsland, qm_module::EQmModuleColumn::Right, 14, "dynamic_island"},
 		{qm_module::EQmModuleId::SystemMediaControls, qm_module::EQmModuleColumn::Right, 15, "system_media_controls"},
 		{qm_module::EQmModuleId::Lyrics, qm_module::EQmModuleColumn::Right, 16, "lyrics"},
-		{qm_module::EQmModuleId::Background3D, qm_module::EQmModuleColumn::Right, 17, "background_3d"},
-		{qm_module::EQmModuleId::CardAppearance, qm_module::EQmModuleColumn::Left, 17, "card_appearance"}}};
+		{qm_module::EQmModuleId::Background3D, qm_module::EQmModuleColumn::Right, 17, "background_3d"}}};
 }
 
 using SQmGlobalSearchCard = qm_card_registry::SCardSearchResult;
@@ -830,21 +829,6 @@ void CMenus::RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, f
 void CMenus::RenderQmVisualTranslateUiContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing)
 {
 	NTranslateUiSettings::RenderTranslateUiModule(this, Content, LineHeight, BodySize, LineSpacing);
-}
-
-void CMenus::RenderQmVisualCardAppearanceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
-{
-	CUIRect Row, LabelColumn, ControlColumn;
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	const int CheckboxResult = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmCardBackdropBlur, "qmclient-card-backdrop-blur", Localize("Card background blur (high performance only)"), g_Config.m_QmCardBackdropBlur, &Row);
-	if(CheckboxResult)
-		g_Config.m_QmCardBackdropBlur ^= 1;
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, "qmclient-card-corner-segments"), &LabelColumn, Localize("Corner segments"), BodySize, TEXTALIGN_ML);
-	static int s_QmCardCornerSegmentsInputId;
-	RenderQmSettingsSliderWithValueInput(&s_QmCardCornerSegmentsInputId, ControlColumn, &g_Config.m_QmRectCornerSegments, 8, 48, "", PrewarmOnly);
 }
 
 void CMenus::RenderQmVisualEntityOverlayContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
@@ -5169,7 +5153,6 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		case EQmModuleId::CollisionHitbox:
 			return ResolveQmVisualCollisionHitboxHeight(Metrics, g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox);
 		case EQmModuleId::TranslateUi: return Rows(6.0f);
-		case EQmModuleId::CardAppearance: return Rows(2.0f);
 		default: return Rows(1.0f);
 		}
 	};
@@ -5251,7 +5234,7 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	};
 
 	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
-		vCards.reserve(10);
+		vCards.reserve(9);
 		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = {pStableId, Localize(pTitle), Localize(pSubtitle)};
@@ -5283,7 +5266,6 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		AddCard(EQmModuleId::Streamer, "qm:streamer", "Streamer Mode", "Protect names and skins while streaming", [this, LineHeight, LineSpacing](CUIRect &Content) { RenderQmVisualStreamerContent(Content, LineHeight, LineSpacing); });
 		AddCard(EQmModuleId::EntityOverlay, "qm:entity_overlay", "Entity Layer Colors", "Adjust opacity of entity layers", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmVisualEntityOverlayContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::CollisionHitbox, "qm:collision_hitbox", "Hitbox mode", "Show collision and weapon interaction", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmVisualCollisionHitboxContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
-		AddCard(EQmModuleId::CardAppearance, "qm:card_appearance", "Card Appearance", "Card background blur and corner rounding", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmVisualCardAppearanceContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 	};
 	uint64_t CardLayoutRevision = 0;
 	for(int ModuleIndex = 0; ModuleIndex < (int)QmModuleCount; ++ModuleIndex)

@@ -13,6 +13,7 @@ struct IUiContext;
 struct SSettingsCardDeckVisualOptions
 {
 	bool m_RainbowTitles = false;
+	bool m_AlwaysShowBorders = true;
 };
 
 struct SSettingsCardVisualState

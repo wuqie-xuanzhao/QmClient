@@ -15247,6 +15247,22 @@ turkish = "Gökkuşağı kart başlıkları"
 polish = "Tęczowe tytuły kart"
 
 [[message]]
+key = "Always show settings card borders"
+[message.translations]
+simplified_chinese = "始终显示设置卡片边框"
+traditional_chinese = "永遠顯示設定卡片邊框"
+japanese = "常に設定カードの枠線を表示"
+korean = "설정 카드 테두리 항상 표시"
+russian = "Всегда показывать границы карточек настроек"
+german = "Einstellungs-Kartenränder immer anzeigen"
+spanish = "Mostrar siempre los bordes de las tarjetas de configuración"
+french = "Toujours afficher les bordures des cartes de paramètres"
+brazilian_portuguese = "Sempre mostrar as bordas dos cartões de configurações"
+portuguese = "Mostrar sempre as bordas dos cartões de definições"
+turkish = "Ayar kartı kenarlıklarını her zaman göster"
+polish = "Zawsze pokazuj obramowania kart ustawień"
+
+[[message]]
 key = "Rainbow name"
 [message.translations]
 simplified_chinese = "彩虹名字"

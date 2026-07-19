@@ -221,6 +221,7 @@ Always show local time
 Always show nameplates regardless of distance
 Always show other players' hook collision lines
 Always show own player's hook collision line
+Always show settings card borders
 Always translate
 AMLL TTML DB API base URL (mirror)
 Amount
@@ -520,11 +521,6 @@ Cancel
 Cancel your swap request
 Candidate files
 Cannot swap: the other player is not in your team
-Card Appearance
-Card appearance
-Card background blur (high performance only)
-Card background blur and corner rounding
-Card frosted glass background blur (0=Off, 1=On; recommended for high-performance PCs only)
 Category
 Category name
 Censor replacement character
