@@ -515,6 +515,12 @@ Adds a specific war entry
 Adds default chat binds
 == 기본 채팅 바인드 추가
 
+Adjust DDNet gameplay indicators and assists
+== Adjust DDNet gameplay indicators and assists
+
+Adjust DDRace-specific HUD indicators
+== Adjust DDRace-specific HUD indicators
+
 Adjust game camera and FOV settings
 == 게임 카메라 및 FOV 설정 조정
 
@@ -524,14 +530,29 @@ Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=In
 Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == 로그 파일 상세도 조정 (-3=없음, -2=오류만, -1=경고, 0=정보, 1=디버그, 2=추적)
 
+Adjust mouse sensitivity and cursor limits
+== Adjust mouse sensitivity and cursor limits
+
 Adjust opacity of entity layers
 == 엔티티 레이어 불투명도 조정
+
+Adjust player nameplate details and visibility
+== Adjust player nameplate details and visibility
+
+Adjust status bar position and text style
+== Adjust status bar position and text style
 
 Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == 시스템 콘솔 상세도 조정 (-3=없음, -2=오류만, -1=경고, 0=정보, 1=디버그, 2=추적)
 
+Adjust TClient heads-up display elements
+== Adjust TClient heads-up display elements
+
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 == 다른 팀의 엔티티(티, 이름표 등)의 불투명도를 조절합니다.
+
+Adjust trails rendered behind Tees
+== Adjust trails rendered behind Tees
 
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 외부 콘솔 상세도 조정 (-3 = 없음, -2 = 오류만, -1 = 경고, 0 = 정보, 1 = 디버그, 2 = 추적).
@@ -878,6 +899,9 @@ Assets directory
 Assets editor
 == 에셋 편집기
 
+Assign commands and labels to wheel slots
+== Assign commands and labels to wheel slots
+
 Attempt to change your name when near finish
 == 결승점 근처에서 이름 변경 시도
 
@@ -1139,6 +1163,9 @@ Auto-translation mode (0=Trigger on common source languages only, 1=Always trans
 Auto-unspec when unfrozen
 == 해동 시 자동으로 관전 해제
 
+Automate demos, screenshots, and match exports
+== Automate demos, screenshots, and match exports
+
 Automatic gain control (0=off 1=on)
 == 자동 이득 제어 (0=끄기, 1=켜기)
 
@@ -1307,6 +1334,9 @@ Background stroke color
 Background stroke width
 == 배경 스트로크 두께
 
+Balance master, music, and game volume
+== Balance master, music, and game volume
+
 Ban a certain nickname
 == 특정 닉네임을 차단합니다
 
@@ -1376,11 +1406,29 @@ Best match
 Bind address for client/server
 == 클라이언트/서버 바인딩 주소
 
+Bind chat, team chat, and history actions
+== Bind chat, team chat, and history actions
+
+Bind dummy control and copy actions
+== Bind dummy control and copy actions
+
 Bind key to execute a command or view keybindings
 == 키를 바인딩하여 명령을 실행하거나 키바인딩을 확인합니다
 
+Bind movement, jump, hook, and fire actions
+== Bind movement, jump, hook, and fire actions
+
 Bind only to IPv4, otherwise bind to all interfaces
 == IPv4에만 바인딩, 그렇지 않으면 모든 인터페이스에 바인딩
+
+Bind scoreboard, emote, and console actions
+== Bind scoreboard, emote, and console actions
+
+Bind voting and server browser actions
+== Bind voting and server browser actions
+
+Bind weapon selection and switching actions
+== Bind weapon selection and switching actions
 
 Bind Wheel
 == 바인드 휠
@@ -1451,6 +1499,12 @@ Broadcast shown to players with known bot client
 Broadcast shown to players without DDNet client
 == DDNet 클라이언트가 없는 플레이어에게 표시되는 방송
 
+Browse and activate custom audio packs
+== Browse and activate custom audio packs
+
+Browse profiles saved on this device
+== Browse profiles saved on this device
+
 Browser
 == 찾아보기
 
@@ -1459,6 +1513,9 @@ Brutal
 
 Bubble opacity
 == 말풍선 불투명도
+
+Build the status text shown above Tees
+== Build the status text shown above Tees
 
 Built-in
 == 내장
@@ -1700,6 +1757,12 @@ Checking for existing player with your name
 CHN
 == 중국
 
+Choose and arrange status bar data fields
+== Choose and arrange status bar data fields
+
+Choose colors for weapons and entity lasers
+== Choose colors for weapons and entity lasers
+
 Choose country flag
 == 국가 국기 선택
 
@@ -1709,8 +1772,20 @@ Choose default eyes when joining a server
 Choose export name first.
 == 내보내기 이름을 먼저 입력하세요.
 
+Choose the language used by the client
+== Choose the language used by the client
+
+Choose the menu font and cursor appearance
+== Choose the menu font and cursor appearance
+
+Choose the menu map and background colors
+== Choose the menu map and background colors
+
 Choose whether to browse replays or screenshots
 == 리플레이 또는 스크린샷 중에서 탐색할 항목 선택
+
+Choose which TClient settings tabs are visible
+== Choose which TClient settings tabs are visible
 
 Clamp mouse to screen
 == 마우스를 화면에 고정
@@ -2027,8 +2102,17 @@ Configuration
 Configure background 3D particle effects
 == 배경 3D 입자 효과 구성
 
+Configure camera, weapon, and gameplay defaults
+== Configure camera, weapon, and gameplay defaults
+
+Configure chat position, size, and visibility
+== Configure chat position, size, and visibility
+
 Configure controls and key bindings
 == 컨트롤 및 키 바인딩 구성
+
+Configure DDNet demo recording behavior
+== Configure DDNet demo recording behavior
 
 Configure DDNet gameplay preferences
 == DDNet 게임 환경 설정 구성
@@ -2039,8 +2123,26 @@ Configure display and rendering
 Configure game and client preferences
 == 게임 및 클라이언트 환경 설정 구성
 
+Configure ghost recording and playback tools
+== Configure ghost recording and playback tools
+
 Configure hammer skin steal and skin transition animations
 == 해머 스킨 도용 및 스킨 전환 애니메이션 구성
+
+Configure health, ammo, timer, and race HUD
+== Configure health, ammo, timer, and race HUD
+
+Configure hook range and collision guide lines
+== Configure hook range and collision guide lines
+
+Configure input helpers and cursor behavior
+== Configure input helpers and cursor behavior
+
+Configure laser shape, glow, and animation
+== Configure laser shape, glow, and animation
+
+Configure nameplate text, badges, and visibility
+== Configure nameplate text, badges, and visibility
 
 Configure player identity and country
 == 플레이어 정보 및 국기 구성
@@ -2054,6 +2156,12 @@ Configure QmClient gameplay helpers
 Configure QmClient HUD elements
 == QmClient HUD 요소 구성
 
+Configure remaining DDNet client preferences
+== Configure remaining DDNet client preferences
+
+Configure skin colors, eyes, and filters
+== Configure skin colors, eyes, and filters
+
 Configure sound and audio packs
 == 사운드 및 오디오 팩 구성
 
@@ -2062,6 +2170,9 @@ Configure TClient tools and profiles
 
 Configure Tee appearance and skins
 == Tee 외형 및 스킨 구성
+
+Configure the companion appearance and movement
+== Configure the companion appearance and movement
 
 Configure these settings
 == 이 설정 구성
@@ -2158,6 +2269,12 @@ Continue anyway?
 
 Contributors
 == 기여자
+
+Control custom background drawing
+== Control custom background drawing
+
+Control latency compensation tools
+== Control latency compensation tools
 
 Control player (0) or dummy (1)
 == 플레이어(0) 또는 더미(1) 제어
@@ -2393,6 +2510,9 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == 사용자 정의 번역 프롬프트 (내장 프롬프트 덮어쓰기)
 
+Customize animated rainbow colors
+== Customize animated rainbow colors
+
 Customize interface appearance and previews
 == 인터페이스 모양 및 미리 보기 사용자 지정
 
@@ -2401,6 +2521,9 @@ Customize QmClient visuals and effects
 
 Customize translate button and menu colors
 == 번역 버튼 및 메뉴 색상 사용자 정의
+
+Customize vote display and interaction
+== Customize vote display and interaction
 
 Cut interval
 == 잘라낸 구간
@@ -2608,6 +2731,9 @@ Default zoom
 
 Default zoom level
 == 기본 확대/축소 수준
+
+Define automatic chat reply rules
+== Define automatic chat reply rules
 
 Delay
 == 지연
@@ -3215,8 +3341,14 @@ Edit Entry
 Edit HUD
 == HUD 편집
 
+Edit individual Tee 7 skin parts
+== Edit individual Tee 7 skin parts
+
 Edit note
 == 메모 편집
+
+Edit player and dummy identity information
+== Edit player and dummy identity information
 
 Edit skin texture
 == 스킨 텍스처 편집
@@ -3275,8 +3407,14 @@ Enable 3D background particles
 Enable absolute controller aiming in game
 == 게임에서 절대 컨트롤러 조준 활성화
 
+Enable and calibrate controller input
+== Enable and calibrate controller input
+
 Enable antiping (more aggressive prediction)
 == 안티핑 활성화 (더 공격적인 예측)
+
+Enable audio output and choose a device
+== Enable audio output and choose a device
 
 Enable background 3D particle flicker
 == 배경 3D 파티클 깜빡임 활성화
@@ -3959,6 +4097,12 @@ Filtered word console color
 Find all ban records for the specified IP address
 == 지정된 IP 주소의 모든 차단 기록 찾기
 
+Find QmClient communities and project links
+== Find QmClient communities and project links
+
+Fine-tune improved anti-ping prediction
+== Fine-tune improved anti-ping prediction
+
 Finish data source
 == 완료 데이터 소스
 
@@ -4024,6 +4168,9 @@ Force i to pause for i seconds
 
 Force vote
 == 강제 투표
+
+Format player names after a finish
+== Format player names after a finish
 
 Forms
 == 양식
@@ -4663,6 +4810,9 @@ Highlight message text gradient color
 
 Highlight ping value
 == 핑 값 강조
+
+Highlight selected players in the game world
+== Highlight selected players in the game world
 
 Highlighted message
 == 강조된 메시지
@@ -5531,6 +5681,9 @@ Load sound files in thread
 Load with code r. /load to check your existing saves
 == 코드 r로 불러오기; /load를 사용하여 기존 저장 데이터를 확인할 수 있습니다
 
+Load, save, overwrite, or delete profiles
+== Load, save, overwrite, or delete profiles
+
 Loaded %d items
 == %d개 항목 불러옴
 
@@ -5783,8 +5936,23 @@ Makes you move 1 tile up
 Makes you super
 == 당신을 슈퍼 상태로 만듭니다
 
+Manage additional custom chat shortcuts
+== Manage additional custom chat shortcuts
+
 Manage categories
 == 카테고리 관리
+
+Manage client theme and menu preferences
+== Manage client theme and menu preferences
+
+Manage hostile players, groups, and display rules
+== Manage hostile players, groups, and display rules
+
+Manage hostile-list chat shortcuts
+== Manage hostile-list chat shortcuts
+
+Manage kaomoji chat shortcuts
+== Manage kaomoji chat shortcuts
 
 Manual
 == 수동
@@ -6890,6 +7058,9 @@ Opacity
 Opacity of freeze bars inside freeze
 == 얼음 안에서의 해동 게이지 불투명도
 
+Open a matching settings card directly
+== Open a matching settings card directly
+
 Open bindwheel selector
 == 바인드 휠 선택기 열기
 
@@ -6916,6 +7087,12 @@ Open rename dialog
 
 Open spectator mode selector
 == 관전자 모드 선택기 열기
+
+Open TClient community and source links
+== Open TClient community and source links
+
+Open TClient configuration file locations
+== Open TClient configuration file locations
 
 Open the directory that contains the configuration and user files
 == 설정 및 사용자 파일이 있는 폴더 열기
@@ -7586,14 +7763,35 @@ Preview button visibility while the editor is active.
 Preview dummy nameplate
 == 더미 이름표 미리보기
 
+Preview hook collision colors and line styles
+== Preview hook collision colors and line styles
+
 Preview import file
 == 가져온 파일 미리 듣기
+
+Preview laser bodies, outlines, and impacts
+== Preview laser bodies, outlines, and impacts
+
+Preview player and dummy appearance
+== Preview player and dummy appearance
+
+Preview player and dummy nameplates
+== Preview player and dummy nameplates
 
 Preview player nameplate
 == 플레이어 이름표 미리보기
 
 Preview selected file
 == 선택한 파일 미리 듣기
+
+Preview the bind wheel layout and selection
+== Preview the bind wheel layout and selection
+
+Preview the composed status bar output
+== Preview the composed status bar output
+
+Preview the current chat appearance
+== Preview the current chat appearance
 
 Preview visibilities
 == 미리보기 가시성
@@ -8474,6 +8672,12 @@ Restore old single-segment hook collision line behavior
 Retrying…
 == 재시도 중…
 
+Review and edit custom key bindings
+== Review and edit custom key bindings
+
+Review and reset changed configuration values
+== Review and reset changed configuration values
+
 Rifle Laser Inner Color
 == 라이플 레이저 내부 색상
 
@@ -8584,6 +8788,9 @@ Run on join
 
 Run profiler to check 3D/2D array texture sampling works correctly
 == 프로파일러를 실행하여 3D/2D 배열 텍스처 샘플링이 올바르게 작동하는지 확인
+
+Run selected commands after joining a server
+== Run selected commands after joining a server
 
 Run server
 == 서버 실행
@@ -8810,6 +9017,12 @@ Search donor asset
 Search main asset
 == 메인 에셋 검색
 
+Search settings by title, feature, or keyword
+== Search settings by title, feature, or keyword
+
+Search skins and manage the skin queue
+== Search skins and manage the skin queue
+
 Searching
 == 검색 중
 
@@ -8839,6 +9052,12 @@ Select button by touch
 
 Select export
 == 내보내기 선택
+
+Select the country flag for each player
+== Select the country flag for each player
+
+Select which player fields a profile stores
+== Select which player fields a profile stores
 
 Selected %d
 == %d개 선택됨
@@ -9238,6 +9457,9 @@ Show combo hint when hooking or hammering player within 2 seconds
 
 Show compact vote HUD
 == 소형 투표 HUD 표시
+
+Show configurable outlines around map tiles
+== Show configurable outlines around map tiles
 
 Show Coordinates
 == 좌표 표시
@@ -10529,6 +10751,12 @@ Strong hook color
 Strong Weak Hook
 == 강약 갈고리
 
+Style chat names, text, and message colors
+== Style chat names, text, and message colors
+
+Style kill, finish, and system messages
+== Style kill, finish, and system messages
+
 Sub-Tick aiming
 == Sub-Tick 조준
 
@@ -11408,6 +11636,9 @@ Trying Axiom dummy auto login
 Trying to determine UDP connectivity…
 == UDP 연결 확인 중…
 
+Tune additional world and player effects
+== Tune additional world and player effects
+
 Tune in zone a variable to value
 == 영역 a의 변수를 값으로 조정
 
@@ -11869,6 +12100,12 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == 주어진 번호로 찾은 텔레포트 보기 (오프셋 위치)
+
+View the developers and contributors
+== View the developers and contributors
+
+View the people supporting QmClient development
+== View the people supporting QmClient development
 
 Virtual joystick which always uses fire.
 == 항상 발사를 사용하는 가상 조이스틱입니다.

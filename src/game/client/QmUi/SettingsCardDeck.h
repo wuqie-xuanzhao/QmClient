@@ -104,6 +104,8 @@ private:
 		bool m_ContentHeightWasActive = false;
 		bool m_CollapsedInitialized = false;
 		bool m_LastCollapsed = false;
+		bool m_DefaultCollapsed = false;
+		char m_DefaultCollapseButtonId = 0;
 		bool m_PointerInsideLastFrame = false;
 		bool m_SubtitleMotionWasActive = false;
 		bool m_SubtitleVisibleDuringMotion = false;

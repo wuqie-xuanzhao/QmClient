@@ -859,6 +859,7 @@ public:
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
 	const CUIRect *ClipArea() const;
+	const CUIRect *OutermostClipArea() const;
 	bool IsClipped() const { return !m_vClips.empty(); }
 	void BeginQuadBatch() const;
 	void FlushQuadBatch() const;

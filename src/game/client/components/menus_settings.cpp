@@ -733,6 +733,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	const SSettingsListCardGeometry GeneralThemeGeometry = ResolveSettingsGeneralThemeListGeometry((int)GameClient()->m_MenuBackground.GetThemes().size(), GeneralMetrics);
 	const float GeneralLanguageListHeight = GeneralLanguageGeometry.m_ContentHeight;
 	const float GeneralThemeListHeight = GeneralThemeGeometry.m_ContentHeight;
+	const float GeneralGameContentHeight = ResolveSettingsGeneralGameContentHeight(GeneralMetrics, g_Config.m_ClDyncam != 0);
 	const SSettingsPageLayoutFrame GeneralPage = SettingsPageLayout(MainView, UiScale);
 	const IUiContext GeneralCardCtx = SettingsUiContext("settings_general", UiScale);
 	const SSettingsCardDeckVisualOptions GeneralVisualOptions = SettingsCardDeckVisualOptions();
@@ -761,7 +762,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	};
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pGameDefault, pLanguageDefault, pClientDefault, pRecordingDefault, GeneralMetrics, GeneralPage, UiScale, BodySize, GeneralLanguageListHeight, GeneralThemeListHeight, DoNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pGameDefault, pLanguageDefault, pClientDefault, pRecordingDefault, GeneralMetrics, GeneralPage, UiScale, BodySize, GeneralGameContentHeight, GeneralLanguageListHeight, GeneralThemeListHeight, DoNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(4);
 		const SSettingsCardSpec GameSpec{pGameDefault->m_pStableId, Localize(pGameDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pGameDefault)};
 		const SSettingsCardSpec LanguageSpec{pLanguageDefault->m_pStableId, Localize(pLanguageDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pLanguageDefault)};
@@ -775,7 +776,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			vCards.push_back(Definition);
 		};
 
-		AddCard(GameSpec, ResolveSettingsRowsHeight(5, GeneralMetrics.m_LineHeight, GeneralMetrics.m_LineSpacing), [this, GeneralMetrics, BodySize](CUIRect Content) {
+		AddCard(GameSpec, GeneralGameContentHeight, [this, GeneralMetrics, BodySize](CUIRect Content) {
 			CUIRect Button;
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
 			const bool IsDyncam = g_Config.m_ClDyncam || g_Config.m_ClMouseFollowfactor > 0;
@@ -789,16 +790,19 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				else
 					g_Config.m_ClDyncam = 1;
 			}
-			Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
-			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
-			if(g_Config.m_ClDyncam && DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClDyncamSmoothness, "general-smooth-dynamic-camera", Localize("Smooth Dynamic Camera"), g_Config.m_ClDyncamSmoothness, &Button))
+			if(g_Config.m_ClDyncam)
 			{
-				if(g_Config.m_ClDyncamSmoothness)
-					g_Config.m_ClDyncamSmoothness = 0;
-				else
+				Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
+				Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
+				if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClDyncamSmoothness, "general-smooth-dynamic-camera", Localize("Smooth Dynamic Camera"), g_Config.m_ClDyncamSmoothness, &Button))
 				{
-					g_Config.m_ClDyncamSmoothness = 50;
-					g_Config.m_ClDyncamStabilizing = 50;
+					if(g_Config.m_ClDyncamSmoothness)
+						g_Config.m_ClDyncamSmoothness = 0;
+					else
+					{
+						g_Config.m_ClDyncamSmoothness = 50;
+						g_Config.m_ClDyncamStabilizing = 50;
+					}
 				}
 			}
 			Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
@@ -945,7 +949,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		((uint64_t)(g_Config.m_ClAutoDemoRecord != 0) << 0) |
 		((uint64_t)(g_Config.m_ClAutoScreenshot != 0) << 1) |
 		((uint64_t)(g_Config.m_ClAutoStatboardScreenshot != 0) << 2) |
-		((uint64_t)(g_Config.m_ClAutoCSV != 0) << 3);
+		((uint64_t)(g_Config.m_ClAutoCSV != 0) << 3) |
+		((uint64_t)(g_Config.m_ClDyncam != 0) << 4);
 	const uint64_t GeneralLayoutRevision = ResolveSettingsGeneralLayoutRevision(RenderOnly, GeneralToggleMask, MainView.h, (int)g_Localization.Languages().size(), (int)GameClient()->m_MenuBackground.GetThemes().size());
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, GeneralLayoutRevision);
 
@@ -3906,27 +3911,16 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		AddCard(VisualSpec, GraphicsVisualMinCardHeight, VisualChromeHeight, [this, GraphicsMetrics, DoGraphicsNumericField](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
-			const auto DoAlphaColorPicker = [this, GraphicsMetrics, &CardView](CButtonContainer *pResetId, const char *pLabel, unsigned *pColor, int *pOpacity, unsigned DefaultColor, int DefaultOpacity) {
-				unsigned PackedColor = ColorHSLA(*pColor).WithAlpha(std::clamp(*pOpacity / 100.0f, 0.0f, 1.0f)).Pack(true);
-				const unsigned OldPackedColor = PackedColor;
-				DoLine_ColorPicker(pResetId, GraphicsMetrics, &CardView, pLabel, &PackedColor, color_cast<ColorRGBA>(ColorHSLA(DefaultColor).WithAlpha(DefaultOpacity / 100.0f)), false, nullptr, true);
-				if(PackedColor == OldPackedColor)
-					return false;
-				const ColorHSLA Updated(PackedColor, true);
-				*pColor = Updated.Pack(false);
-				*pOpacity = std::clamp(round_to_int(Updated.a * 100.0f), 0, 100);
-				return true;
-			};
 			static CButtonContainer s_UiColorResetId;
-			if(DoAlphaColorPicker(&s_UiColorResetId, Localize("UI color"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
+			if(DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize("UI color"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_MapBrowserColorResetId;
-			if(DoAlphaColorPicker(&s_MapBrowserColorResetId, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity, DefaultConfig::QmMapBrowserColor, DefaultConfig::QmMapBrowserOpacity))
+			if(DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity, DefaultConfig::QmMapBrowserColor, DefaultConfig::QmMapBrowserOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_ScoreboardColorResetId;
-			if(DoAlphaColorPicker(&s_ScoreboardColorResetId, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity, DefaultConfig::QmScoreboardColor, DefaultConfig::QmScoreboardOpacity))
+			if(DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity, DefaultConfig::QmScoreboardColor, DefaultConfig::QmScoreboardOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_CardBorderColorResetId;

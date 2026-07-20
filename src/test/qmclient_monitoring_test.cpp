@@ -6941,7 +6941,8 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
 	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_NE(Source.find("ExecuteSettingsCardChromeDraw("), std::string::npos);
-	EXPECT_NE(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
+	EXPECT_NE(Source.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
+	EXPECT_EQ(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
 	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);

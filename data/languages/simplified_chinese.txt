@@ -515,6 +515,12 @@ Adds a specific war entry
 Adds default chat binds
 == 添加默认聊天绑定
 
+Adjust DDNet gameplay indicators and assists
+== Adjust DDNet gameplay indicators and assists
+
+Adjust DDRace-specific HUD indicators
+== Adjust DDRace-specific HUD indicators
+
 Adjust game camera and FOV settings
 == 调整游戏镜头和视野设置
 
@@ -524,14 +530,29 @@ Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=In
 Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == 调整日志文件中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）
 
+Adjust mouse sensitivity and cursor limits
+== Adjust mouse sensitivity and cursor limits
+
 Adjust opacity of entity layers
 == 调整各个实体层的透明度
+
+Adjust player nameplate details and visibility
+== Adjust player nameplate details and visibility
+
+Adjust status bar position and text style
+== Adjust status bar position and text style
 
 Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == 调整系统控制台中的信息量（-3 = 无，-2 = 仅错误，-1 = 警告，0 = 信息，1 = 调试，2 = 跟踪）
 
+Adjust TClient heads-up display elements
+== Adjust TClient heads-up display elements
+
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 == 调整其他队伍实体（如 Tee 和名牌）的不透明度
+
+Adjust trails rendered behind Tees
+== Adjust trails rendered behind Tees
 
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 调整外部控制台中的信息量（-3 = 无、-2 = 仅错误、-1 = 警告、0 = 信息、1 = 调试、2 = 跟踪）
@@ -878,6 +899,9 @@ Assets directory
 Assets editor
 == 材质编辑器
 
+Assign commands and labels to wheel slots
+== Assign commands and labels to wheel slots
+
 Attempt to change your name when near finish
 == 过终点前尝试改名
 
@@ -1139,6 +1163,9 @@ Auto-translation mode (0=Trigger on common source languages only, 1=Always trans
 Auto-unspec when unfrozen
 == 被解冻时自动取消旁观
 
+Automate demos, screenshots, and match exports
+== Automate demos, screenshots, and match exports
+
 Automatic gain control (0=off 1=on)
 == 自动增益控制（0=关闭 1=开启）
 
@@ -1307,6 +1334,9 @@ Background stroke color
 Background stroke width
 == 背景描边宽度
 
+Balance master, music, and game volume
+== Balance master, music, and game volume
+
 Ban a certain nickname
 == 禁止某个昵称
 
@@ -1376,11 +1406,29 @@ Best match
 Bind address for client/server
 == 绑定客户端/服务器的地址
 
+Bind chat, team chat, and history actions
+== Bind chat, team chat, and history actions
+
+Bind dummy control and copy actions
+== Bind dummy control and copy actions
+
 Bind key to execute a command or view keybindings
 == 绑定按键以执行命令或查看按键绑定
 
+Bind movement, jump, hook, and fire actions
+== Bind movement, jump, hook, and fire actions
+
 Bind only to IPv4, otherwise bind to all interfaces
 == 是否仅绑定到 ipv4，否则绑定到所有可用接口
+
+Bind scoreboard, emote, and console actions
+== Bind scoreboard, emote, and console actions
+
+Bind voting and server browser actions
+== Bind voting and server browser actions
+
+Bind weapon selection and switching actions
+== Bind weapon selection and switching actions
 
 Bind Wheel
 == 绑定轮盘
@@ -1451,6 +1499,12 @@ Broadcast shown to players with known bot client
 Broadcast shown to players without DDNet client
 == 向没有 DDNet 客户端的玩家显示
 
+Browse and activate custom audio packs
+== Browse and activate custom audio packs
+
+Browse profiles saved on this device
+== Browse profiles saved on this device
+
 Browser
 == 浏览
 
@@ -1459,6 +1513,9 @@ Brutal
 
 Bubble opacity
 == 气泡不透明度
+
+Build the status text shown above Tees
+== Build the status text shown above Tees
 
 Built-in
 == 内置
@@ -1700,6 +1757,12 @@ Checking for existing player with your name
 CHN
 == 中国
 
+Choose and arrange status bar data fields
+== Choose and arrange status bar data fields
+
+Choose colors for weapons and entity lasers
+== Choose colors for weapons and entity lasers
+
 Choose country flag
 == 选择国家旗帜
 
@@ -1709,8 +1772,20 @@ Choose default eyes when joining a server
 Choose export name first.
 == 请先填写导出名称。
 
+Choose the language used by the client
+== Choose the language used by the client
+
+Choose the menu font and cursor appearance
+== Choose the menu font and cursor appearance
+
+Choose the menu map and background colors
+== Choose the menu map and background colors
+
 Choose whether to browse replays or screenshots
 == 选择浏览录像还是截图
+
+Choose which TClient settings tabs are visible
+== Choose which TClient settings tabs are visible
 
 Clamp mouse to screen
 == 将鼠标限制在屏幕范围内
@@ -2027,8 +2102,17 @@ Configuration
 Configure background 3D particle effects
 == 配置背景 3D 粒子效果
 
+Configure camera, weapon, and gameplay defaults
+== Configure camera, weapon, and gameplay defaults
+
+Configure chat position, size, and visibility
+== Configure chat position, size, and visibility
+
 Configure controls and key bindings
 == 配置控制与按键绑定
+
+Configure DDNet demo recording behavior
+== Configure DDNet demo recording behavior
 
 Configure DDNet gameplay preferences
 == 配置 DDNet 游戏偏好
@@ -2039,8 +2123,26 @@ Configure display and rendering
 Configure game and client preferences
 == 配置游戏与客户端偏好
 
+Configure ghost recording and playback tools
+== Configure ghost recording and playback tools
+
 Configure hammer skin steal and skin transition animations
 == 调整锤中偷皮和换皮动画
+
+Configure health, ammo, timer, and race HUD
+== Configure health, ammo, timer, and race HUD
+
+Configure hook range and collision guide lines
+== Configure hook range and collision guide lines
+
+Configure input helpers and cursor behavior
+== Configure input helpers and cursor behavior
+
+Configure laser shape, glow, and animation
+== Configure laser shape, glow, and animation
+
+Configure nameplate text, badges, and visibility
+== Configure nameplate text, badges, and visibility
 
 Configure player identity and country
 == 配置玩家身份与国旗
@@ -2054,6 +2156,12 @@ Configure QmClient gameplay helpers
 Configure QmClient HUD elements
 == 配置栖梦客户端的 HUD 元素
 
+Configure remaining DDNet client preferences
+== Configure remaining DDNet client preferences
+
+Configure skin colors, eyes, and filters
+== Configure skin colors, eyes, and filters
+
 Configure sound and audio packs
 == 配置声音与音频包
 
@@ -2062,6 +2170,9 @@ Configure TClient tools and profiles
 
 Configure Tee appearance and skins
 == 配置 Tee 外观与皮肤
+
+Configure the companion appearance and movement
+== Configure the companion appearance and movement
 
 Configure these settings
 == 配置此卡片中的设置
@@ -2158,6 +2269,12 @@ Continue anyway?
 
 Contributors
 == 贡献者
+
+Control custom background drawing
+== Control custom background drawing
+
+Control latency compensation tools
+== Control latency compensation tools
 
 Control player (0) or dummy (1)
 == 控制玩家（0）还是分身（1）
@@ -2393,6 +2510,9 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == 自定义翻译提示词（覆盖内置提示词）
 
+Customize animated rainbow colors
+== Customize animated rainbow colors
+
 Customize interface appearance and previews
 == 自定义界面外观与预览
 
@@ -2401,6 +2521,9 @@ Customize QmClient visuals and effects
 
 Customize translate button and menu colors
 == 自定义翻译按钮和菜单颜色
+
+Customize vote display and interaction
+== Customize vote display and interaction
 
 Cut interval
 == 裁剪区间
@@ -2608,6 +2731,9 @@ Default zoom
 
 Default zoom level
 == 默认缩放级别
+
+Define automatic chat reply rules
+== Define automatic chat reply rules
 
 Delay
 == 延迟
@@ -3215,8 +3341,14 @@ Edit Entry
 Edit HUD
 == 编辑 HUD
 
+Edit individual Tee 7 skin parts
+== Edit individual Tee 7 skin parts
+
 Edit note
 == 编辑备注
+
+Edit player and dummy identity information
+== Edit player and dummy identity information
 
 Edit skin texture
 == 编辑皮肤贴图
@@ -3275,8 +3407,14 @@ Enable 3D background particles
 Enable absolute controller aiming in game
 == 在游戏中启用绝对控制器瞄准
 
+Enable and calibrate controller input
+== Enable and calibrate controller input
+
 Enable antiping (more aggressive prediction)
 == 启用抗延迟，即更激进的预测
+
+Enable audio output and choose a device
+== Enable audio output and choose a device
 
 Enable background 3D particle flicker
 == 启用背景 3D 粒子闪烁
@@ -3959,6 +4097,12 @@ Filtered word console color
 Find all ban records for the specified IP address
 == 查询指定 IP 的全部封禁记录
 
+Find QmClient communities and project links
+== Find QmClient communities and project links
+
+Fine-tune improved anti-ping prediction
+== Fine-tune improved anti-ping prediction
+
 Finish data source
 == 完成图来源
 
@@ -4024,6 +4168,9 @@ Force i to pause for i seconds
 
 Force vote
 == 强制投票
+
+Format player names after a finish
+== Format player names after a finish
 
 Forms
 == 表单
@@ -4663,6 +4810,9 @@ Highlight message text gradient color
 
 Highlight ping value
 == 高亮显示 ping 值
+
+Highlight selected players in the game world
+== Highlight selected players in the game world
 
 Highlighted message
 == 被提及消息
@@ -5531,6 +5681,9 @@ Load sound files in thread
 Load with code r. /load to check your existing saves
 == 使用代码 r 载入；可用 /load 查看已有存档
 
+Load, save, overwrite, or delete profiles
+== Load, save, overwrite, or delete profiles
+
 Loaded %d items
 == 已加载 %d 项
 
@@ -5783,8 +5936,23 @@ Makes you move 1 tile up
 Makes you super
 == 让你超级
 
+Manage additional custom chat shortcuts
+== Manage additional custom chat shortcuts
+
 Manage categories
 == 管理分类
+
+Manage client theme and menu preferences
+== Manage client theme and menu preferences
+
+Manage hostile players, groups, and display rules
+== Manage hostile players, groups, and display rules
+
+Manage hostile-list chat shortcuts
+== Manage hostile-list chat shortcuts
+
+Manage kaomoji chat shortcuts
+== Manage kaomoji chat shortcuts
 
 Manual
 == 手动
@@ -6890,6 +7058,9 @@ Opacity
 Opacity of freeze bars inside freeze
 == 解冻进度条不透明度
 
+Open a matching settings card directly
+== Open a matching settings card directly
+
 Open bindwheel selector
 == 打开绑定轮盘选择器
 
@@ -6916,6 +7087,12 @@ Open rename dialog
 
 Open spectator mode selector
 == 打开旁观者模式选择器
+
+Open TClient community and source links
+== Open TClient community and source links
+
+Open TClient configuration file locations
+== Open TClient configuration file locations
 
 Open the directory that contains the configuration and user files
 == 打开存有配置文件与用户文件的文件夹路径
@@ -7586,14 +7763,35 @@ Preview button visibility while the editor is active.
 Preview dummy nameplate
 == 预览分身名牌
 
+Preview hook collision colors and line styles
+== Preview hook collision colors and line styles
+
 Preview import file
 == 试听导入文件
+
+Preview laser bodies, outlines, and impacts
+== Preview laser bodies, outlines, and impacts
+
+Preview player and dummy appearance
+== Preview player and dummy appearance
+
+Preview player and dummy nameplates
+== Preview player and dummy nameplates
 
 Preview player nameplate
 == 预览玩家名牌
 
 Preview selected file
 == 试听已选文件
+
+Preview the bind wheel layout and selection
+== Preview the bind wheel layout and selection
+
+Preview the composed status bar output
+== Preview the composed status bar output
+
+Preview the current chat appearance
+== Preview the current chat appearance
 
 Preview visibilities
 == 预览可见度
@@ -8474,6 +8672,12 @@ Restore old single-segment hook collision line behavior
 Retrying…
 == 正在重试…
 
+Review and edit custom key bindings
+== Review and edit custom key bindings
+
+Review and reset changed configuration values
+== Review and reset changed configuration values
+
 Rifle Laser Inner Color
 == 激光枪弹道实心颜色
 
@@ -8584,6 +8788,9 @@ Run on join
 
 Run profiler to check 3D/2D array texture sampling works correctly
 == 运行分析器来检查 3D/2D 阵列纹理采样是否正常工作
+
+Run selected commands after joining a server
+== Run selected commands after joining a server
 
 Run server
 == 运行服务器
@@ -8810,6 +9017,12 @@ Search donor asset
 Search main asset
 == 搜索主材质
 
+Search settings by title, feature, or keyword
+== Search settings by title, feature, or keyword
+
+Search skins and manage the skin queue
+== Search skins and manage the skin queue
+
 Searching
 == 正在搜索
 
@@ -8839,6 +9052,12 @@ Select button by touch
 
 Select export
 == 选择导出内容
+
+Select the country flag for each player
+== Select the country flag for each player
+
+Select which player fields a profile stores
+== Select which player fields a profile stores
 
 Selected %d
 == 已选择 %d 项
@@ -9238,6 +9457,9 @@ Show combo hint when hooking or hammering player within 2 seconds
 
 Show compact vote HUD
 == 显示小型投票 HUD
+
+Show configurable outlines around map tiles
+== Show configurable outlines around map tiles
 
 Show Coordinates
 == 显示坐标
@@ -10529,6 +10751,12 @@ Strong hook color
 Strong Weak Hook
 == 强弱钩
 
+Style chat names, text, and message colors
+== Style chat names, text, and message colors
+
+Style kill, finish, and system messages
+== Style kill, finish, and system messages
+
 Sub-Tick aiming
 == Sub-Tick 瞄准
 
@@ -11408,6 +11636,9 @@ Trying Axiom dummy auto login
 Trying to determine UDP connectivity…
 == 正在尝试检测 UDP 连接…
 
+Tune additional world and player effects
+== Tune additional world and player effects
+
 Tune in zone a variable to value
 == 将区域 a 的变量调到指定值
 
@@ -11869,6 +12100,12 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == 查看给定编号找到的传送点（在偏移处）
+
+View the developers and contributors
+== View the developers and contributors
+
+View the people supporting QmClient development
+== View the people supporting QmClient development
 
 Virtual joystick which always uses fire.
 == 始终用于开火的虚拟摇杆。

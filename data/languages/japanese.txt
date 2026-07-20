@@ -515,6 +515,12 @@ Adds a specific war entry
 Adds default chat binds
 == デフォルトのチャットバインドを追加
 
+Adjust DDNet gameplay indicators and assists
+== Adjust DDNet gameplay indicators and assists
+
+Adjust DDRace-specific HUD indicators
+== Adjust DDRace-specific HUD indicators
+
 Adjust game camera and FOV settings
 == ゲームカメラと FOV 設定を調整
 
@@ -524,14 +530,29 @@ Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=In
 Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == ログファイルの詳細度を調整（-3=なし、-2=エラーのみ、-1=警告、0=情報、1=デバッグ、2=トレース）
 
+Adjust mouse sensitivity and cursor limits
+== Adjust mouse sensitivity and cursor limits
+
 Adjust opacity of entity layers
 == エンティティレイヤーの透明度を調整
+
+Adjust player nameplate details and visibility
+== Adjust player nameplate details and visibility
+
+Adjust status bar position and text style
+== Adjust status bar position and text style
 
 Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == システムコンソールの詳細度を調整（-3=なし、-2=エラーのみ、-1=警告、0=情報、1=デバッグ、2=トレース）
 
+Adjust TClient heads-up display elements
+== Adjust TClient heads-up display elements
+
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 == 他のチームのエンティティ（Tee やネームプレートなど）の不透明度を調整
+
+Adjust trails rendered behind Tees
+== Adjust trails rendered behind Tees
 
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 外部コンソールの詳細度を調整（-3=なし、-2=エラーのみ、-1=警告、0=情報、1=デバッグ、2=トレース）
@@ -878,6 +899,9 @@ Assets directory
 Assets editor
 == アセットエディタ
 
+Assign commands and labels to wheel slots
+== Assign commands and labels to wheel slots
+
 Attempt to change your name when near finish
 == フィニッシュ付近で名前変更を試行
 
@@ -1139,6 +1163,9 @@ Auto-translation mode (0=Trigger on common source languages only, 1=Always trans
 Auto-unspec when unfrozen
 == フリーズ解除時に自動で観戦解除
 
+Automate demos, screenshots, and match exports
+== Automate demos, screenshots, and match exports
+
 Automatic gain control (0=off 1=on)
 == 自動ゲインコントロール（0=オフ 1=オン）
 
@@ -1307,6 +1334,9 @@ Background stroke color
 Background stroke width
 == 背景ストロークの幅
 
+Balance master, music, and game volume
+== Balance master, music, and game volume
+
 Ban a certain nickname
 == 特定のニックネームを禁止
 
@@ -1376,11 +1406,29 @@ Best match
 Bind address for client/server
 == クライアント/サーバーのバインドアドレス
 
+Bind chat, team chat, and history actions
+== Bind chat, team chat, and history actions
+
+Bind dummy control and copy actions
+== Bind dummy control and copy actions
+
 Bind key to execute a command or view keybindings
 == キーにコマンドをバインド、またはキーバインドを表示
 
+Bind movement, jump, hook, and fire actions
+== Bind movement, jump, hook, and fire actions
+
 Bind only to IPv4, otherwise bind to all interfaces
 == IPv4 のみにバインドする。それ以外の場合はすべてのインターフェースにバインドする
+
+Bind scoreboard, emote, and console actions
+== Bind scoreboard, emote, and console actions
+
+Bind voting and server browser actions
+== Bind voting and server browser actions
+
+Bind weapon selection and switching actions
+== Bind weapon selection and switching actions
 
 Bind Wheel
 == バインドホイール
@@ -1451,6 +1499,12 @@ Broadcast shown to players with known bot client
 Broadcast shown to players without DDNet client
 == DDNet クライアントを使用していないプレイヤーに表示されるブロードキャスト
 
+Browse and activate custom audio packs
+== Browse and activate custom audio packs
+
+Browse profiles saved on this device
+== Browse profiles saved on this device
+
 Browser
 == ブラウザ
 
@@ -1459,6 +1513,9 @@ Brutal
 
 Bubble opacity
 == バブルの不透明度
+
+Build the status text shown above Tees
+== Build the status text shown above Tees
 
 Built-in
 == 内蔵
@@ -1700,6 +1757,12 @@ Checking for existing player with your name
 CHN
 == 中国
 
+Choose and arrange status bar data fields
+== Choose and arrange status bar data fields
+
+Choose colors for weapons and entity lasers
+== Choose colors for weapons and entity lasers
+
 Choose country flag
 == 国旗を選択
 
@@ -1709,8 +1772,20 @@ Choose default eyes when joining a server
 Choose export name first.
 == 最初にエクスポート名を入力してください。
 
+Choose the language used by the client
+== Choose the language used by the client
+
+Choose the menu font and cursor appearance
+== Choose the menu font and cursor appearance
+
+Choose the menu map and background colors
+== Choose the menu map and background colors
+
 Choose whether to browse replays or screenshots
 == デモまたはスクリーンショットを閲覧するかを選択
+
+Choose which TClient settings tabs are visible
+== Choose which TClient settings tabs are visible
 
 Clamp mouse to screen
 == マウスを画面内に固定
@@ -2027,8 +2102,17 @@ Configuration
 Configure background 3D particle effects
 == 背景の 3D パーティクルエフェクトを設定
 
+Configure camera, weapon, and gameplay defaults
+== Configure camera, weapon, and gameplay defaults
+
+Configure chat position, size, and visibility
+== Configure chat position, size, and visibility
+
 Configure controls and key bindings
 == 操作とキーバインドを設定
+
+Configure DDNet demo recording behavior
+== Configure DDNet demo recording behavior
 
 Configure DDNet gameplay preferences
 == DDNet のゲーム設定を構成
@@ -2039,8 +2123,26 @@ Configure display and rendering
 Configure game and client preferences
 == ゲームとクライアントの設定を構成
 
+Configure ghost recording and playback tools
+== Configure ghost recording and playback tools
+
 Configure hammer skin steal and skin transition animations
 == ハンマースキン盗用とスキン切り替えアニメーションを設定
+
+Configure health, ammo, timer, and race HUD
+== Configure health, ammo, timer, and race HUD
+
+Configure hook range and collision guide lines
+== Configure hook range and collision guide lines
+
+Configure input helpers and cursor behavior
+== Configure input helpers and cursor behavior
+
+Configure laser shape, glow, and animation
+== Configure laser shape, glow, and animation
+
+Configure nameplate text, badges, and visibility
+== Configure nameplate text, badges, and visibility
 
 Configure player identity and country
 == プレイヤー情報と国旗を設定
@@ -2054,6 +2156,12 @@ Configure QmClient gameplay helpers
 Configure QmClient HUD elements
 == QmClient の HUD 要素を設定
 
+Configure remaining DDNet client preferences
+== Configure remaining DDNet client preferences
+
+Configure skin colors, eyes, and filters
+== Configure skin colors, eyes, and filters
+
 Configure sound and audio packs
 == サウンドとオーディオパックを設定
 
@@ -2062,6 +2170,9 @@ Configure TClient tools and profiles
 
 Configure Tee appearance and skins
 == Tee の外観とスキンを設定
+
+Configure the companion appearance and movement
+== Configure the companion appearance and movement
 
 Configure these settings
 == これらの設定を構成
@@ -2158,6 +2269,12 @@ Continue anyway?
 
 Contributors
 == コントリビューター
+
+Control custom background drawing
+== Control custom background drawing
+
+Control latency compensation tools
+== Control latency compensation tools
 
 Control player (0) or dummy (1)
 == プレイヤー (0) またはダミー (1) を操作
@@ -2393,6 +2510,9 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == カスタム翻訳プロンプト（内蔵プロンプトを上書き）
 
+Customize animated rainbow colors
+== Customize animated rainbow colors
+
 Customize interface appearance and previews
 == インターフェースの外観とプレビューをカスタマイズ
 
@@ -2401,6 +2521,9 @@ Customize QmClient visuals and effects
 
 Customize translate button and menu colors
 == 翻訳ボタンとメニューの色をカスタマイズ
+
+Customize vote display and interaction
+== Customize vote display and interaction
 
 Cut interval
 == カット間隔
@@ -2608,6 +2731,9 @@ Default zoom
 
 Default zoom level
 == デフォルトズームレベル
+
+Define automatic chat reply rules
+== Define automatic chat reply rules
 
 Delay
 == 遅延
@@ -3215,8 +3341,14 @@ Edit Entry
 Edit HUD
 == HUD を編集
 
+Edit individual Tee 7 skin parts
+== Edit individual Tee 7 skin parts
+
 Edit note
 == メモを編集
+
+Edit player and dummy identity information
+== Edit player and dummy identity information
 
 Edit skin texture
 == スキンテクスチャを編集
@@ -3275,8 +3407,14 @@ Enable 3D background particles
 Enable absolute controller aiming in game
 == ゲーム内で絶対コントローラー照準を有効にする
 
+Enable and calibrate controller input
+== Enable and calibrate controller input
+
 Enable antiping (more aggressive prediction)
 == アンチピング（より積極的な予測）を有効にする
+
+Enable audio output and choose a device
+== Enable audio output and choose a device
 
 Enable background 3D particle flicker
 == 背景 3D パーティクルの点滅を有効化
@@ -3959,6 +4097,12 @@ Filtered word console color
 Find all ban records for the specified IP address
 == 指定された IP アドレスのすべての禁止記録を検索
 
+Find QmClient communities and project links
+== Find QmClient communities and project links
+
+Fine-tune improved anti-ping prediction
+== Fine-tune improved anti-ping prediction
+
 Finish data source
 == フィニッシュデータソース
 
@@ -4024,6 +4168,9 @@ Force i to pause for i seconds
 
 Force vote
 == 強制投票
+
+Format player names after a finish
+== Format player names after a finish
 
 Forms
 == フォーム
@@ -4663,6 +4810,9 @@ Highlight message text gradient color
 
 Highlight ping value
 == Ping 値をハイライト
+
+Highlight selected players in the game world
+== Highlight selected players in the game world
 
 Highlighted message
 == ハイライトメッセージ
@@ -5531,6 +5681,9 @@ Load sound files in thread
 Load with code r. /load to check your existing saves
 == コード r でロード。/load で既存のセーブを確認できます
 
+Load, save, overwrite, or delete profiles
+== Load, save, overwrite, or delete profiles
+
 Loaded %d items
 == %d 個のアイテムを読み込みました
 
@@ -5783,8 +5936,23 @@ Makes you move 1 tile up
 Makes you super
 == スーパーになる
 
+Manage additional custom chat shortcuts
+== Manage additional custom chat shortcuts
+
 Manage categories
 == カテゴリを管理
+
+Manage client theme and menu preferences
+== Manage client theme and menu preferences
+
+Manage hostile players, groups, and display rules
+== Manage hostile players, groups, and display rules
+
+Manage hostile-list chat shortcuts
+== Manage hostile-list chat shortcuts
+
+Manage kaomoji chat shortcuts
+== Manage kaomoji chat shortcuts
 
 Manual
 == 手動
@@ -6890,6 +7058,9 @@ Opacity
 Opacity of freeze bars inside freeze
 == フリーズ内のフリーズバーの不透明度
 
+Open a matching settings card directly
+== Open a matching settings card directly
+
 Open bindwheel selector
 == バインドホイールセレクターを開く
 
@@ -6916,6 +7087,12 @@ Open rename dialog
 
 Open spectator mode selector
 == 観戦モードセレクターを開く
+
+Open TClient community and source links
+== Open TClient community and source links
+
+Open TClient configuration file locations
+== Open TClient configuration file locations
 
 Open the directory that contains the configuration and user files
 == 設定ファイルとユーザーファイルを含むディレクトリを開く
@@ -7586,14 +7763,35 @@ Preview button visibility while the editor is active.
 Preview dummy nameplate
 == ダミーのネームプレートをプレビュー
 
+Preview hook collision colors and line styles
+== Preview hook collision colors and line styles
+
 Preview import file
 == プレビューインポートファイル
+
+Preview laser bodies, outlines, and impacts
+== Preview laser bodies, outlines, and impacts
+
+Preview player and dummy appearance
+== Preview player and dummy appearance
+
+Preview player and dummy nameplates
+== Preview player and dummy nameplates
 
 Preview player nameplate
 == プレイヤーネームプレートをプレビュー
 
 Preview selected file
 == 選択したファイルをプレビュー
+
+Preview the bind wheel layout and selection
+== Preview the bind wheel layout and selection
+
+Preview the composed status bar output
+== Preview the composed status bar output
+
+Preview the current chat appearance
+== Preview the current chat appearance
 
 Preview visibilities
 == 表示状態をプレビュー
@@ -8474,6 +8672,12 @@ Restore old single-segment hook collision line behavior
 Retrying…
 == 再試行中…
 
+Review and edit custom key bindings
+== Review and edit custom key bindings
+
+Review and reset changed configuration values
+== Review and reset changed configuration values
+
 Rifle Laser Inner Color
 == ライフルレーザー内部色
 
@@ -8584,6 +8788,9 @@ Run on join
 
 Run profiler to check 3D/2D array texture sampling works correctly
 == プロファイラーを実行して 3D/2D 配列テクスチャサンプリングが正しく動作するか確認
+
+Run selected commands after joining a server
+== Run selected commands after joining a server
 
 Run server
 == サーバーを実行
@@ -8810,6 +9017,12 @@ Search donor asset
 Search main asset
 == メインアセットを検索
 
+Search settings by title, feature, or keyword
+== Search settings by title, feature, or keyword
+
+Search skins and manage the skin queue
+== Search skins and manage the skin queue
+
 Searching
 == 検索中
 
@@ -8839,6 +9052,12 @@ Select button by touch
 
 Select export
 == エクスポート内容を選択
+
+Select the country flag for each player
+== Select the country flag for each player
+
+Select which player fields a profile stores
+== Select which player fields a profile stores
 
 Selected %d
 == %d 個選択済み
@@ -9238,6 +9457,9 @@ Show combo hint when hooking or hammering player within 2 seconds
 
 Show compact vote HUD
 == コンパクトな投票 HUD を表示
+
+Show configurable outlines around map tiles
+== Show configurable outlines around map tiles
 
 Show Coordinates
 == 座標を表示
@@ -10529,6 +10751,12 @@ Strong hook color
 Strong Weak Hook
 == 強弱フック
 
+Style chat names, text, and message colors
+== Style chat names, text, and message colors
+
+Style kill, finish, and system messages
+== Style kill, finish, and system messages
+
 Sub-Tick aiming
 == Sub-Tick エイミング
 
@@ -11408,6 +11636,9 @@ Trying Axiom dummy auto login
 Trying to determine UDP connectivity…
 == UDP 接続を確認中…
 
+Tune additional world and player effects
+== Tune additional world and player effects
+
 Tune in zone a variable to value
 == ゾーン a の変数を値にチューニング
 
@@ -11869,6 +12100,12 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == 指定された番号のテレポート（オフセット位置）を表示
+
+View the developers and contributors
+== View the developers and contributors
+
+View the people supporting QmClient development
+== View the people supporting QmClient development
 
 Virtual joystick which always uses fire.
 == 常に発射を使用するバーチャルジョイスティック。

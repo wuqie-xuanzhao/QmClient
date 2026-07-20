@@ -12,6 +12,9 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 TEST(SettingsCardDeck, StateIndexRevisionChangesWhenSameSizedModelIsRebuilt)
 {
@@ -125,6 +128,30 @@ TEST(SettingsCardDeck, PreLayoutContentInputRequiresPointerVisibleExpandedConten
 	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, true, false, 0.0f));
 }
 
+TEST(SettingsCardDeck, OrdinaryCardsUseDefaultCollapseWhileCustomCardsRemainAuthoritative)
+{
+	EXPECT_TRUE(SettingsCardDeckUsesDefaultCollapseControl(false, false));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, false));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(false, true));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, true));
+
+	EXPECT_FALSE(SettingsCardDeckResolveCollapsed(false, true, false));
+	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(false, false, true));
+	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(true, true, false));
+	EXPECT_FALSE(SettingsCardDeckResolveCollapsed(true, false, true));
+}
+
+TEST(SettingsCardDeck, OrdinaryCollapseStateTogglesOnlyFromVisibleHeaderInput)
+{
+	// 这条契约模拟真实 header 点击的状态转移：RenderOnly、用户自定义 header
+	// 和未点击都不能偷改卡片折叠状态。
+	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, false, true, false));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, true, false));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, false, true, true));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(true, false, true, false));
+	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, false, false));
+}
+
 TEST(SettingsCardDeck, PreLayoutReleaseUsesTheLastVisibleAnimatedFrame)
 {
 	const SSettingsCardSpec Spec{"card", "Card", "Subtitle"};
@@ -195,6 +222,16 @@ TEST(SettingsCardDeck, GeometryMotionIncludesCardsPushedByAnEarlierHeightAnimati
 	EXPECT_FALSE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 100.0f, 80.0f));
 	EXPECT_TRUE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 120.0f, 80.0f));
 	EXPECT_TRUE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 100.0f, 90.0f));
+}
+
+TEST(SettingsCardDeck, AnimatedColumnFramesNeverOverlap)
+{
+	const float Gap = 12.0f;
+	const SSettingsCardColumnFrame First = ResolveSettingsCardColumnFrame(100.0f, 80.0f, Gap);
+	const SSettingsCardColumnFrame Second = ResolveSettingsCardColumnFrame(First.m_NextY, 140.0f, Gap);
+	EXPECT_FLOAT_EQ(First.m_NextY, Second.m_Y);
+	EXPECT_GE(Second.m_Y, First.m_Y + First.m_Height + Gap);
+	EXPECT_FLOAT_EQ(Second.m_Height, 140.0f);
 }
 
 TEST(SettingsCardDeck, RestingCardsDoNotDrawASecondRoundedBorder)
@@ -268,6 +305,52 @@ TEST(SettingsCardDeck, BorderWidthDoesNotDependOnFocus)
 	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(2.0f), 4.0f);
 }
 
+TEST(SettingsCardDeck, BorderRingClipsCoverOnlyTheCardEdge)
+{
+	const CUIRect Surface{10.0f, 20.0f, 200.0f, 100.0f};
+	const auto aClips = ResolveSettingsCardBorderRingClipRects(Surface, 3.0f);
+	const auto Overlaps = [](const CUIRect &A, const CUIRect &B) {
+		return A.x < B.x + B.w && A.x + A.w > B.x && A.y < B.y + B.h && A.y + A.h > B.y;
+	};
+	for(size_t i = 0; i < aClips.size(); ++i)
+	{
+		EXPECT_TRUE(Surface.Inside(vec2(aClips[i].x, aClips[i].y)));
+		for(size_t j = i + 1; j < aClips.size(); ++j)
+			EXPECT_FALSE(Overlaps(aClips[i], aClips[j]));
+	}
+	const vec2 Center{Surface.x + Surface.w * 0.5f, Surface.y + Surface.h * 0.5f};
+	for(const CUIRect &Clip : aClips)
+		EXPECT_FALSE(Clip.Inside(Center));
+	EXPECT_TRUE(aClips[0].Inside(vec2(Surface.x + Surface.w * 0.5f, Surface.y + 1.0f)));
+	EXPECT_TRUE(aClips[1].Inside(vec2(Surface.x + Surface.w * 0.5f, Surface.y + Surface.h - 1.0f)));
+}
+
+TEST(SettingsPageLayout, GeneralDynamicCameraConsumesNoHiddenRowWhenCollapsed)
+{
+	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+	const float Collapsed = ResolveSettingsGeneralGameContentHeight(Metrics, false);
+	const float Expanded = ResolveSettingsGeneralGameContentHeight(Metrics, true);
+	EXPECT_FLOAT_EQ(Collapsed, ResolveSettingsRowsHeight(4, Metrics.m_LineHeight, Metrics.m_LineSpacing));
+	EXPECT_FLOAT_EQ(Expanded, ResolveSettingsRowsHeight(5, Metrics.m_LineHeight, Metrics.m_LineSpacing));
+	EXPECT_FLOAT_EQ(Expanded - Collapsed, Metrics.m_RowStep);
+}
+
+TEST(SettingsPageLayout, AlphaColorRoundTripUpdatesColorAndOpacityTogether)
+{
+	const unsigned int SourceColor = ColorHSLA(0.31f, 0.72f, 0.44f, 1.0f).Pack(false);
+	const unsigned int Packed = PackSettingsAlphaColor(SourceColor, 37);
+	unsigned int UpdatedColor = 0;
+	int UpdatedOpacity = 0;
+	UnpackSettingsAlphaColor(Packed, UpdatedColor, UpdatedOpacity);
+
+	const ColorHSLA Expected(SourceColor);
+	const ColorHSLA Actual(UpdatedColor);
+	EXPECT_NEAR(Actual.h, Expected.h, 1.0f / 255.0f);
+	EXPECT_NEAR(Actual.s, Expected.s, 1.0f / 255.0f);
+	EXPECT_NEAR(Actual.l, Expected.l, 1.0f / 255.0f);
+	EXPECT_NEAR(UpdatedOpacity, 37, 1);
+}
+
 TEST(SettingsCardDeck, EveryRegisteredCardResolvesANonEmptyDescriptionKey)
 {
 	ASSERT_FALSE(qm_card_registry::Defaults().empty());
@@ -281,6 +364,23 @@ TEST(SettingsCardDeck, EveryRegisteredCardResolvesANonEmptyDescriptionKey)
 		EXPECT_NE(pDescription[0], '\0');
 	}
 	EXPECT_EQ(qm_card_registry::ResolveLocalizedDescription(static_cast<const char *>(nullptr)), nullptr);
+}
+
+TEST(SettingsCardDeck, NonQmCardsDeclareDistinctDescriptionsWithinEachPage)
+{
+	std::unordered_map<std::string, std::unordered_set<std::string>> DescriptionsByTab;
+	for(const qm_card_registry::SCardDefault &Default : qm_card_registry::Defaults())
+	{
+		const std::string StableId = Default.m_pStableId != nullptr ? Default.m_pStableId : "";
+		const bool IsNonQmCard = StableId.starts_with("tclient:") || StableId.starts_with("deck:");
+		if(!IsNonQmCard)
+			continue;
+		SCOPED_TRACE(Default.m_pStableId);
+		ASSERT_NE(Default.m_pDescription, nullptr);
+		ASSERT_NE(Default.m_pDescription[0], '\0');
+		const std::string Tab = Default.m_pDefaultTab != nullptr ? Default.m_pDefaultTab : "";
+		EXPECT_TRUE(DescriptionsByTab[Tab].insert(Default.m_pDescription).second);
+	}
 }
 
 TEST(SettingsCardDeck, ScrollMovementOnlySuppressesHoverAfterAnInitializedOffset)
@@ -328,6 +428,33 @@ TEST(SettingsDropDown, DisablingOpenStateRequestsPopupCloseAndReleasesSelectionS
 	EXPECT_FALSE(State.IsOpen());
 	EXPECT_EQ(State.ActiveIndex(), -1);
 	EXPECT_FALSE(State.Disable(false));
+}
+
+TEST(SettingsDropDown, OpenSelectAndCloseTransitionsReleaseThePopup)
+{
+	CQmDropdownState State;
+	SQmDropdownInput Open;
+	Open.m_TogglePressed = true;
+	Open.m_InitialIndex = 0;
+	EXPECT_TRUE(State.Update(Open, 9).m_Opened);
+	EXPECT_TRUE(State.IsOpen());
+
+	SQmDropdownInput Select;
+	Select.m_HoveredIndex = 4;
+	Select.m_MouseSelectPressed = true;
+	const SQmDropdownUpdateResult Selected = State.Update(Select, 9);
+	EXPECT_TRUE(Selected.m_Selected);
+	EXPECT_EQ(Selected.m_SelectedIndex, 4);
+	EXPECT_FALSE(State.IsOpen());
+
+	SQmDropdownInput Reopen;
+	Reopen.m_TogglePressed = true;
+	Reopen.m_InitialIndex = 4;
+	EXPECT_TRUE(State.Update(Reopen, 9).m_Opened);
+	SQmDropdownInput Escape;
+	Escape.m_KeyEscape = true;
+	EXPECT_TRUE(State.Update(Escape, 9).m_Closed);
+	EXPECT_FALSE(State.IsOpen());
 }
 
 TEST(SettingsCardDeck, StableAnimationFramesSkipRuntimeWork)

@@ -67,12 +67,17 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		DrawInteractionBorder,
 		[&] { DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius); },
 		[&] {
-			// 先绘制完整边框，再绘制内缩的 Surface，避免 Surface 抗锯齿边缘与
-			// 自定义描边重叠，产生截图中可见的双层边框。
-			DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
-			CUIRect InnerSurface = DrawFrame.m_Rect;
-			InnerSurface.Margin(BorderWidth, &InnerSurface);
-			InnerSurface.Draw(Surface, IGraphics::CORNER_ALL, std::max(0.0f, CardRadius - BorderWidth));
+			// Surface 先完整绘制，边框只通过四个互不重叠的裁剪条绘制外环。
+			// 不能把半透明边框铺满底层，否则边框颜色会透过 Surface 污染整张卡。
+			DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
+			for(const CUIRect &Clip : ResolveSettingsCardBorderRingClipRects(DrawFrame.m_Rect, BorderWidth))
+			{
+				if(Clip.w <= 0.0f || Clip.h <= 0.0f)
+					continue;
+				Ctx.m_pUi->ClipEnable(&Clip);
+				DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
+				Ctx.m_pUi->ClipDisable();
+			}
 		});
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
@@ -103,6 +108,13 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, pSubtitle, SubtitleSize, TEXTALIGN_ML, SubtitleProps);
 		}
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+		if(DrawCardChrome && DrawState.m_ShowDefaultCollapseButton)
+		{
+			const bool Hovered = Ctx.m_pUi->MouseHovered(&DrawFrame.m_HandleRect);
+			DrawFrame.m_HandleRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, Hovered ? 0.28f : 0.18f), IGraphics::CORNER_ALL, 4.0f * UiScale);
+			const float IconSize = std::clamp(ui_token::font::BODY * UiScale, 10.0f, ui_token::font::BODY);
+			Ctx.m_pUi->DoLabel(&DrawFrame.m_HandleRect, DrawState.m_Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
+		}
 	}
 
 	if(HeaderAction && DrawCardChrome)

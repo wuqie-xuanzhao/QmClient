@@ -5,6 +5,9 @@
 
 #include "UiTokens.h"
 
+#include <base/color.h>
+#include <base/math.h>
+
 #include <game/client/ui_rect.h>
 
 #include <algorithm>
@@ -269,6 +272,23 @@ inline float ResolveSettingsGeneralClientContentHeight(const SSettingsContentMet
 	       ResolveSettingsRowsHeight(2, Metrics.m_LineHeight, Metrics.m_LineSpacing) + Metrics.m_SectionGap +
 	       ResolveSettingsRowsHeight(2, Metrics.m_ButtonHeight, Metrics.m_LineSpacing) + Metrics.m_SectionGap +
 	       ThemeContentHeight;
+}
+
+inline float ResolveSettingsGeneralGameContentHeight(const SSettingsContentMetrics &Metrics, const bool DynamicCameraExpanded)
+{
+	return ResolveSettingsRowsHeight(4 + (DynamicCameraExpanded ? 1 : 0), Metrics.m_LineHeight, Metrics.m_LineSpacing);
+}
+
+inline unsigned int PackSettingsAlphaColor(const unsigned int ColorValue, const int Opacity)
+{
+	return ColorHSLA(ColorValue).WithAlpha(std::clamp(Opacity / 100.0f, 0.0f, 1.0f)).Pack(true);
+}
+
+inline void UnpackSettingsAlphaColor(const unsigned int PackedColor, unsigned int &ColorValue, int &Opacity)
+{
+	const ColorHSLA Color(PackedColor, true);
+	ColorValue = Color.Pack(false);
+	Opacity = std::clamp(round_to_int(Color.a * 100.0f), 0, 100);
 }
 
 inline uint64_t ResolveSettingsGeneralLayoutRevision(const bool RenderOnly, const uint64_t ToggleMask, const float ContentHeight, const int LanguageCount, const int ThemeCount)

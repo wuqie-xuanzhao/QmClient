@@ -75,6 +75,7 @@ struct SQmDropdownUpdateResult
 SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRect, const CUIRect &ViewportRect, const SQmDropdownGeometryConfig &Config);
 SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight, int MinimumVisibleItems = 0);
 bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupHeight);
+bool QmDropdownAnchorFullyVisible(const CUIRect &AnchorRect, const CUIRect &ViewportRect);
 
 class CQmDropdownState
 {

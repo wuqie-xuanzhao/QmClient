@@ -5,6 +5,7 @@
 
 #include "SettingsCardGeometry.h"
 
+#include <array>
 #include <cmath>
 #include <functional>
 
@@ -29,6 +30,7 @@ struct SSettingsCardVisualState
 	bool m_DropFeedback = false;
 	bool m_ReflowCompleteFeedback = false;
 	bool m_ClipContent = false;
+	bool m_ShowDefaultCollapseButton = false;
 	float m_DrawOffsetX = 0.0f;
 	float m_DrawOffsetY = 0.0f;
 	float m_DrawAlpha = 1.0f;
@@ -77,6 +79,15 @@ inline void ExecuteSettingsCardChromeDraw(const bool DrawChrome, const bool Draw
 inline float ResolveSettingsCardBorderWidth(const float UiScale)
 {
 	return std::max(2.0f, 2.0f * std::max(0.0f, UiScale));
+}
+
+inline std::array<CUIRect, 4> ResolveSettingsCardBorderRingClipRects(const CUIRect &Rect, const float BorderWidth)
+{
+	const float Width = std::clamp(std::max(0.0f, BorderWidth), 0.0f, std::min(Rect.w, Rect.h) * 0.5f);
+	return {{{Rect.x, Rect.y, Rect.w, Width},
+		{Rect.x, Rect.y + Rect.h - Width, Rect.w, Width},
+		{Rect.x, Rect.y + Width, Width, std::max(0.0f, Rect.h - 2.0f * Width)},
+		{Rect.x + Rect.w - Width, Rect.y + Width, Width, std::max(0.0f, Rect.h - 2.0f * Width)}}};
 }
 
 inline CUIRect ResolveSettingsCardInteractionBorderRect(const CUIRect &SurfaceRect, const float BorderWidth)

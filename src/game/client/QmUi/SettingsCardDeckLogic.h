@@ -82,6 +82,22 @@ inline bool SettingsCardDeckShouldRunPreLayoutInput(const bool HasPointerInput, 
 	return HasPointerInput && ControllerVisible && !Collapsed && VisibleContentHeight > 0.0f;
 }
 
+inline bool SettingsCardDeckUsesDefaultCollapseControl(const bool HasCustomCollapsedState, const bool HasCustomHeaderInput)
+{
+	return !HasCustomCollapsedState && !HasCustomHeaderInput;
+}
+
+inline bool SettingsCardDeckResolveCollapsed(const bool HasCustomCollapsedState, const bool CustomCollapsed, const bool DefaultCollapsed)
+{
+	return HasCustomCollapsedState ? CustomCollapsed : DefaultCollapsed;
+}
+
+// 默认折叠按钮的唯一状态转移；自定义卡片和 RenderOnly 不能被公共按钮改写。
+inline bool SettingsCardDeckApplyDefaultCollapseToggle(const bool HasCustomCollapsedState, const bool Collapsed, const bool TogglePressed, const bool RenderOnly)
+{
+	return !HasCustomCollapsedState && !RenderOnly && TogglePressed ? !Collapsed : Collapsed;
+}
+
 struct SSettingsCardAnimationWork
 {
 	bool m_ResolveEntry = false;

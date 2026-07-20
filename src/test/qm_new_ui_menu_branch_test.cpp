@@ -555,9 +555,9 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 	EXPECT_EQ(Source.find("s_MenuPanelColorResetId"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_ClMenuPanelColor"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_UiColor"), std::string::npos);
-	EXPECT_NE(Source.find("DoAlphaColorPicker(&s_UiColorResetId, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
-	EXPECT_NE(Source.find("DoAlphaColorPicker(&s_MapBrowserColorResetId, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
-	EXPECT_NE(Source.find("DoAlphaColorPicker(&s_ScoreboardColorResetId, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmUiColor"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmMapBrowserColor"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmScoreboardColor"), std::string::npos);
@@ -584,9 +584,9 @@ TEST(QmNewUiMenuBranches, SettingsGraphicsColorPickersExposeIndependentAlphaDoma
 	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Graphics.empty());
 
-	EXPECT_NE(Graphics.find("DoAlphaColorPicker(&s_UiColorResetId, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
-	EXPECT_NE(Graphics.find("DoAlphaColorPicker(&s_MapBrowserColorResetId, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
-	EXPECT_NE(Graphics.find("DoAlphaColorPicker(&s_ScoreboardColorResetId, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
 	EXPECT_EQ(Graphics.find("graphics-ui-opacity"), std::string::npos);
 	EXPECT_EQ(Graphics.find("graphics-map-browser-opacity"), std::string::npos);
 	EXPECT_EQ(Graphics.find("graphics-scoreboard-opacity"), std::string::npos);
@@ -1817,7 +1817,8 @@ TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
 	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
 	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
-	EXPECT_NE(Body.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
+	EXPECT_NE(Body.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
+	EXPECT_EQ(Body.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
 	EXPECT_EQ(Body.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
 	EXPECT_EQ(Body.find("DrawOutline(Border)"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("RenderQmSettingsGlassCard"), std::string::npos);
@@ -2754,10 +2755,9 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 	EXPECT_NE(DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("if(State.m_DropDownState.IsOpen() && !PopupOpen)"), std::string::npos);
-	// Popup 的定位 viewport 必须是屏幕，而不是卡片/外层滚动区的 clip rect。
-	// 否则弹窗会被裁成一行，并且上下翻转的锚点会落在控件中间。
-	EXPECT_NE(DoDropDown.find("const CUIRect Viewport = *Screen();"), std::string::npos);
-	EXPECT_EQ(DoDropDown.find("IsClipped() ? *ClipArea() : *Screen()"), std::string::npos);
+	// Popup 以设置页最外层 viewport 定位，并在锚点离开所属容器时关闭。
+	EXPECT_NE(DoDropDown.find("const CUIRect Viewport = IsClipped() ? *OutermostClipArea() : *Screen();"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("QmDropdownAnchorFullyVisible(*pRect, AnchorViewport)"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("SQmDropdownInput DropDownInput;"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("State.m_DropDownState.Update(DropDownInput, Num);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);"), std::string::npos);
@@ -2834,7 +2834,7 @@ TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(NumericLabelBridge.find("if(m_MenuTextPlanCollecting)"), std::string::npos);
 	EXPECT_NE(NumericLabelBridge.find("CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
 	EXPECT_NE(General.find("ui_widget::NumericField("), std::string::npos);
-	EXPECT_NE(General.find("AddCard(GameSpec, ResolveSettingsRowsHeight(5, GeneralMetrics.m_LineHeight, GeneralMetrics.m_LineSpacing)"), std::string::npos);
+	EXPECT_NE(General.find("ResolveSettingsGeneralGameContentHeight(GeneralMetrics, g_Config.m_ClDyncam != 0)"), std::string::npos);
 	EXPECT_NE(General.find("ResolveSettingsGeneralLanguageListGeometry("), std::string::npos);
 	EXPECT_NE(General.find("ResolveSettingsGeneralThemeListGeometry("), std::string::npos);
 	EXPECT_NE(General.find("RenderLanguageSelection(Content, &GeneralMetrics);"), std::string::npos);

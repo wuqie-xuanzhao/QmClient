@@ -170,12 +170,19 @@ Address
 Address to bind the external console. Anything other than "localhost" is dangerous.
 Adds a specific war entry
 Adds default chat binds
+Adjust DDNet gameplay indicators and assists
+Adjust DDRace-specific HUD indicators
 Adjust game camera and FOV settings
 Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
+Adjust mouse sensitivity and cursor limits
 Adjust opacity of entity layers
+Adjust player nameplate details and visibility
+Adjust status bar position and text style
 Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
+Adjust TClient heads-up display elements
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
+Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 Adjust your prediction margin while frozen
 Advanced
@@ -291,6 +298,7 @@ Asset with this name already exists.
 Assets
 Assets directory
 Assets editor
+Assign commands and labels to wheel slots
 Attempt to change your name when near finish
 Audio
 Audio backend init failed
@@ -378,6 +386,7 @@ Auto-translate incoming messages
 Auto-translate outgoing messages
 Auto-translation mode (0=Trigger on common source languages only, 1=Always translate)
 Auto-unspec when unfrozen
+Automate demos, screenshots, and match exports
 Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 Automatic updates are only supported on Windows
@@ -434,6 +443,7 @@ Background music volume
 Background opacity
 Background stroke color
 Background stroke width
+Balance master, music, and game volume
 Ban a certain nickname
 Ban ip for x minutes for any reason
 Ban ip range for x minutes for any reason
@@ -457,8 +467,14 @@ Best input prediction offset (0.01 tick)
 Best input smooth percentage
 Best match
 Bind address for client/server
+Bind chat, team chat, and history actions
+Bind dummy control and copy actions
 Bind key to execute a command or view keybindings
+Bind movement, jump, hook, and fire actions
 Bind only to IPv4, otherwise bind to all interfaces
+Bind scoreboard, emote, and console actions
+Bind voting and server browser actions
+Bind weapon selection and switching actions
 Bind Wheel
 Bind Wheel Key
 Bit flags for disabling settings tabs
@@ -482,9 +498,12 @@ Broadcast message
 Broadcast shown to players using old DDNet client
 Broadcast shown to players with known bot client
 Broadcast shown to players without DDNet client
+Browse and activate custom audio packs
+Browse profiles saved on this device
 Browser
 Brutal
 Bubble opacity
+Build the status text shown above Tees
 Built-in
 Button - Disabled
 Button - Enabled
@@ -565,10 +584,16 @@ Check input device, system default mic, and mic permission first
 Check output device, confirm headphones/speakers are still online
 Checking for existing player with your name
 CHN
+Choose and arrange status bar data fields
+Choose colors for weapons and entity lasers
 Choose country flag
 Choose default eyes when joining a server
 Choose export name first.
+Choose the language used by the client
+Choose the menu font and cursor appearance
+Choose the menu map and background colors
 Choose whether to browse replays or screenshots
+Choose which TClient settings tabs are visible
 Clamp mouse to screen
 Clan
 Clan color in friends list
@@ -674,18 +699,30 @@ Config version. Helps new client fix old config errors.
 Configs
 Configuration
 Configure background 3D particle effects
+Configure camera, weapon, and gameplay defaults
+Configure chat position, size, and visibility
 Configure controls and key bindings
+Configure DDNet demo recording behavior
 Configure DDNet gameplay preferences
 Configure display and rendering
 Configure game and client preferences
+Configure ghost recording and playback tools
 Configure hammer skin steal and skin transition animations
+Configure health, ammo, timer, and race HUD
+Configure hook range and collision guide lines
+Configure input helpers and cursor behavior
+Configure laser shape, glow, and animation
+Configure nameplate text, badges, and visibility
 Configure player identity and country
 Configure qm_report_app_id and qm_report_secret first
 Configure QmClient gameplay helpers
 Configure QmClient HUD elements
+Configure remaining DDNet client preferences
+Configure skin colors, eyes, and filters
 Configure sound and audio packs
 Configure TClient tools and profiles
 Configure Tee appearance and skins
+Configure the companion appearance and movement
 Configure these settings
 Confirm both are on same server, same room, and support voice
 Confirm clear all
@@ -718,6 +755,8 @@ Console command executed after joining server
 Console command executed before connecting to server
 Continue anyway?
 Contributors
+Control custom background drawing
+Control latency compensation tools
 Control player (0) or dummy (1)
 Controller
 Controller axis for cursor X
@@ -796,9 +835,11 @@ Custom Provider API Key
 Custom Provider endpoint
 Custom Provider model name
 Custom translation prompt (overrides built-in)
+Customize animated rainbow colors
 Customize interface appearance and previews
 Customize QmClient visuals and effects
 Customize translate button and menu colors
+Customize vote display and interaction
 Cut interval
 Cut length
 Cut segments
@@ -868,6 +909,7 @@ Default preset
 Default weapon on respawn (0=Off, 1=Hammer, 2=Pistol, 3=Shotgun, 4=Grenade, 5=Laser)
 Default zoom
 Default zoom level
+Define automatic chat reply rules
 Delay
 Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
@@ -1070,7 +1112,9 @@ Edit
 Edit audio pack
 Edit Entry
 Edit HUD
+Edit individual Tee 7 skin parts
 Edit note
+Edit player and dummy identity information
 Edit skin texture
 Edit touch controls
 Editor
@@ -1090,7 +1134,9 @@ Enable /swap
 Enable /team0 mode
 Enable 3D background particles
 Enable absolute controller aiming in game
+Enable and calibrate controller input
 Enable antiping (more aggressive prediction)
+Enable audio output and choose a device
 Enable background 3D particle flicker
 Enable background 3D particle glow
 Enable background 3D particle pulse scaling
@@ -1318,6 +1364,8 @@ Filter Team %d
 Filter: Team %d
 Filtered word console color
 Find all ban records for the specified IP address
+Find QmClient communities and project links
+Fine-tune improved anti-ping prediction
 Finish data source
 Finish Name
 Finish name
@@ -1340,6 +1388,7 @@ Force a voting option
 Force high bandwidth mode when spectating (1 = on, 0 = off)
 Force i to pause for i seconds
 Force vote
+Format player names after a finish
 Forms
 Found %d global cards
 FPM
@@ -1553,6 +1602,7 @@ Highlight Color
 Highlight game type
 Highlight message text gradient color
 Highlight ping value
+Highlight selected players in the game world
 Highlighted message
 Highlighted message color
 Hitbox mode
@@ -1842,6 +1892,7 @@ Load drawings from a given csv file (defaults to map name)
 Load save %s
 Load sound files in thread
 Load with code r. /load to check your existing saves
+Load, save, overwrite, or delete profiles
 Loaded %d items
 Loaded %d items (discarded %d items)
 Loading
@@ -1926,7 +1977,12 @@ Makes you move 1 tile left
 Makes you move 1 tile right
 Makes you move 1 tile up
 Makes you super
+Manage additional custom chat shortcuts
 Manage categories
+Manage client theme and menu preferences
+Manage hostile players, groups, and display rules
+Manage hostile-list chat shortcuts
+Manage kaomoji chat shortcuts
 Manual
 Manual concurrency: %d
 Manual lyric timeline offset (ms, step 500ms)
@@ -2295,6 +2351,7 @@ Only show when the other Tee is not on screen
 Only what you can't imagine, nothing Dream can't do
 Opacity
 Opacity of freeze bars inside freeze
+Open a matching settings card directly
 Open bindwheel selector
 Open color picker
 Open DDNet Wiki
@@ -2304,6 +2361,8 @@ Open modal
 Open pie menu
 Open rename dialog
 Open spectator mode selector
+Open TClient community and source links
+Open TClient configuration file locations
 Open the directory that contains the configuration and user files
 Open the directory to add custom assets
 Open the directory to add custom skins
@@ -2527,9 +2586,16 @@ Preview 'Hook collisions' being pressed
 Preview built with %d skipped slot(s).
 Preview button visibility while the editor is active.
 Preview dummy nameplate
+Preview hook collision colors and line styles
 Preview import file
+Preview laser bodies, outlines, and impacts
+Preview player and dummy appearance
+Preview player and dummy nameplates
 Preview player nameplate
 Preview selected file
+Preview the bind wheel layout and selection
+Preview the composed status bar output
+Preview the current chat appearance
 Preview visibilities
 Preview/render only one DDRace team from a full match demo
 Preview/render only this team
@@ -2823,6 +2889,8 @@ Restart the client
 Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 Retrying…
+Review and edit custom key bindings
+Review and reset changed configuration values
 Rifle Laser Inner Color
 Rifle laser inner color
 Rifle Laser Outline Color
@@ -2860,6 +2928,7 @@ Run "hot_reload" on local server with rcon auth on map save
 Run chai script
 Run on join
 Run profiler to check 3D/2D array texture sampling works correctly
+Run selected commands after joining a server
 Run server
 SA
 Saiko+ input amount (0.01 tick)
@@ -2935,6 +3004,8 @@ Search
 Search and navigate settings
 Search donor asset
 Search main asset
+Search settings by title, feature, or keyword
+Search skins and manage the skin queue
 Searching
 Secondary
 Seconds
@@ -2945,6 +3016,8 @@ SecretKey
 Select all chat
 Select button by touch
 Select export
+Select the country flag for each player
+Select which player fields a profile stores
 Selected %d
 Selected button not visible
 Selected candidate
@@ -3078,6 +3151,7 @@ Show Collision Borders
 Show colors in spectator selection
 Show combo hint when hooking or hammering player within 2 seconds
 Show compact vote HUD
+Show configurable outlines around map tiles
 Show Coordinates
 Show coordinates above players
 Show country flags in nameplates
@@ -3508,6 +3582,8 @@ Stroke retention time (0=Never disappear)
 Strong hook
 Strong hook color
 Strong Weak Hook
+Style chat names, text, and message colors
+Style kill, finish, and system messages
 Sub-Tick aiming
 Successfully saved the replay!
 Sudden Death
@@ -3801,6 +3877,7 @@ Try toggling voice or reconnecting to server
 Trying Axiom auto login
 Trying Axiom dummy auto login
 Trying to determine UDP connectivity…
+Tune additional world and player effects
 Tune in zone a variable to value
 Tune layer opacity
 Tune variable to value
@@ -3955,6 +4032,8 @@ View latest updates
 View margin
 View switch found (at offset) with given number
 View tele found (at offset) with given number
+View the developers and contributors
+View the people supporting QmClient development
 Virtual joystick which always uses fire.
 Virtual joystick which always uses hook.
 Virtual joystick which only aims without using an action.

@@ -616,6 +616,12 @@ const CUIRect *CUi::ClipArea() const
 	return &m_vClips.back();
 }
 
+const CUIRect *CUi::OutermostClipArea() const
+{
+	dbg_assert(IsClipped(), "no clip region");
+	return &m_vClips.front();
+}
+
 void CUi::UpdateClipping()
 {
 	if(IsClipped())
@@ -2514,6 +2520,8 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	ScrollParams.m_ScrollbarNoOuterMargin = true;
 	ScrollParams.m_pWheelOwnerId = pSelectionPopup;
 	ScrollParams.m_WheelOwnerPreRegistered = true;
+	const float PopupOuterHeight = (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2.0f;
+	pScrollRegion->SetContentHeightForNextFrame(std::max(0.0f, pSelectionPopup->m_PopupPolicy.m_ContentHeight - PopupOuterHeight));
 	pScrollRegion->Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
@@ -2650,9 +2658,17 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	}
 
 	bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
-	// Popup 不能被卡片内容裁剪区限制。触发控件可能位于被裁剪的卡片内，
-	// 但弹窗应以屏幕为定位 viewport，才能按最多 8 项正常展开并在屏幕边缘翻转。
-	const CUIRect Viewport = *Screen();
+	// 弹窗使用设置页最外层裁剪区，不能越过 Tab 或页面容器；卡片内容裁剪区
+	// 只判断锚点是否仍完整可见，锚点滚出卡片后应关闭弹窗。
+	const CUIRect Viewport = IsClipped() ? *OutermostClipArea() : *Screen();
+	const CUIRect AnchorViewport = IsClipped() ? *ClipArea() : Viewport;
+	if(PopupOpen && !QmDropdownAnchorFullyVisible(*pRect, AnchorViewport))
+	{
+		ClosePopupMenu(&State.m_SelectionPopupContext);
+		State.m_DropDownState.Reset();
+		State.m_SelectionPopupContext.Reset();
+		PopupOpen = false;
+	}
 	if(State.m_DropDownState.IsOpen() && !PopupOpen)
 		State.m_DropDownState.Reset();
 

@@ -3538,6 +3538,16 @@ TEST(UiV2DropdownGeometry, MarksPopupInvisibleWhenViewportHasNoUsableArea)
 	EXPECT_NEAR(Result.m_Rect.h, 0.0f, 0.001f);
 }
 
+TEST(UiV2DropdownGeometry, AnchorMustRemainFullyInsideItsOwningContainer)
+{
+	const CUIRect Viewport{10.0f, 20.0f, 200.0f, 100.0f};
+	EXPECT_TRUE(QmDropdownAnchorFullyVisible({20.0f, 30.0f, 80.0f, 20.0f}, Viewport));
+	EXPECT_TRUE(QmDropdownAnchorFullyVisible(Viewport, Viewport));
+	EXPECT_FALSE(QmDropdownAnchorFullyVisible({9.0f, 30.0f, 80.0f, 20.0f}, Viewport));
+	EXPECT_FALSE(QmDropdownAnchorFullyVisible({20.0f, 105.0f, 80.0f, 20.0f}, Viewport));
+	EXPECT_FALSE(QmDropdownAnchorFullyVisible({20.0f, 30.0f, 0.0f, 20.0f}, Viewport));
+}
+
 TEST(UiV2DropdownPolicy, OwnsWheelWheneverViewportClipsContent)
 {
 	const SQmDropdownPopupPolicy ShortPolicy = QmResolveDropdownPopupPolicy(QM_POPUP_LIST_MAX_VISIBLE_ITEMS, 20.0f, 5.0f, false, 0.0f, 10.0f);
@@ -3576,6 +3586,15 @@ TEST(UiV2DropdownPolicy, MapPickerIncludesPopupChromeBeforeTestingEightRowOverfl
 	EXPECT_NEAR(NineRows.m_PreferredHeight, EightRows.m_PreferredHeight, 0.001f);
 	EXPECT_GT(NineRows.m_ContentHeight, NineRows.m_PreferredHeight);
 	EXPECT_TRUE(QmDropdownPopupOwnsWheel(NineRows, NineRows.m_PreferredHeight));
+}
+
+TEST(UiV2DropdownPolicy, FirstFrameContentHintMatchesScrollableInnerContent)
+{
+	const float OuterHeight = CUi::PopupMenuContentInset();
+	const SQmDropdownPopupPolicy EightRows = QmResolveDropdownPopupPolicy(8, 20.0f, 5.0f, false, 0.0f, OuterHeight);
+	const SQmDropdownPopupPolicy NineRows = QmResolveDropdownPopupPolicy(9, 20.0f, 5.0f, false, 0.0f, OuterHeight);
+	EXPECT_FLOAT_EQ(EightRows.m_ContentHeight - OuterHeight, EightRows.m_PreferredHeight - OuterHeight);
+	EXPECT_GT(NineRows.m_ContentHeight - OuterHeight, NineRows.m_PreferredHeight - OuterHeight);
 }
 
 TEST(UiV2DropdownIntegration, LongPopupConsumesWheelBeforeParent)

@@ -241,7 +241,9 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			float &CachedContentWidth = m_vContentWidths[StateIndex];
 			uint64_t &CachedMeasureRevision = m_vMeasureRevisions[StateIndex];
 			const float PreviousContentHeight = CachedContentHeight;
-			const bool Collapsed = pDefinition->m_IsCollapsed && pDefinition->m_IsCollapsed();
+			SRuntimeState &Runtime = m_vRuntimeStates[StateIndex];
+			const bool HasCustomCollapsedState = static_cast<bool>(pDefinition->m_IsCollapsed);
+			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
 			if(std::abs(CachedContentWidth - ContentWidth) > 0.01f)
 			{
@@ -262,7 +264,6 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				MeasuredGeometryChanged = MeasuredGeometryChanged || SettingsCardDeckContentHeightChanged(PreviousContentHeight, CachedContentHeight);
 			}
 			const float TargetContentHeight = Collapsed ? 0.0f : std::max(0.0f, CachedContentHeight);
-			SRuntimeState &Runtime = m_vRuntimeStates[StateIndex];
 			const bool HeightInitializedThisFrame = !Runtime.m_ContentHeightInitialized;
 			const bool HeightTargetChanged = Runtime.m_ContentHeightInitialized && std::abs(Runtime.m_LastContentHeightTarget - TargetContentHeight) > 0.01f;
 			const SSettingsCardHeightAnimationWork HeightWork = ResolveSettingsCardHeightAnimationWork(HeightInitializedThisFrame, HeightTargetChanged, Runtime.m_ContentHeightWasActive, Motion.m_ReflowDuration, m_Drag.Active() || Ctx.m_pAnim == nullptr);
@@ -354,20 +355,27 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	{
 		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
-			const SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
+			SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
 			// 鼠标按下与释放跨帧完成。预布局必须沿用上一帧实际绘制位置，
 			// 否则动画中的目标矩形会先清除 active item，正式绘制阶段便无法提交点击。
 			const SSettingsCardFrame PreLayoutFrame = ResolveSettingsCardDrawFrame(Card.m_Frame, Runtime.m_LastDrawOffsetX, Runtime.m_LastDrawOffsetY);
 			const bool ControllerVisible = pScrollRegion == nullptr || !pScrollRegion->RectClipped(PreLayoutFrame.m_Rect) || Card.m_pDefinition->m_RenderWhenClipped;
 			bool CardGeometryChanged = false;
-			const bool CollapsedBeforeHeader = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
+			const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
+			const bool CollapsedBeforeHeader = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			if(ControllerVisible && Card.m_pDefinition->m_PreLayoutHeaderInput)
 			{
 				m_FrameRuntime.CountPreLayoutInput();
 				CardGeometryChanged = Card.m_pDefinition->m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader);
 			}
+			else if(ControllerVisible && Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly() && SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput)) &&
+				Ctx.m_pUi->DoButtonLogic(&Runtime.m_DefaultCollapseButtonId, CollapsedBeforeHeader, &PreLayoutFrame.m_HandleRect, BUTTONFLAG_LEFT))
+			{
+				Runtime.m_DefaultCollapsed = SettingsCardDeckApplyDefaultCollapseToggle(HasCustomCollapsedState, Runtime.m_DefaultCollapsed, true, false);
+				CardGeometryChanged = true;
+			}
 
-			const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
+			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			if(SettingsCardDeckShouldRunPreLayoutInput(true, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)
 			{
 				m_FrameRuntime.CountPreLayoutInput();
@@ -391,7 +399,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	for(const SPreparedCard &Card : m_vPreparedCards)
 	{
 		SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
-		const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
+		const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
+		const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 		if(Runtime.m_CollapsedInitialized && Runtime.m_LastCollapsed != Collapsed)
 			GeometryStateChanged = true;
 		Runtime.m_CollapsedInitialized = true;
@@ -461,7 +470,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
 			const bool InHeader = PointInRect(Card.m_Frame.m_HeaderRect, Input.m_MouseX, Input.m_MouseY);
-			const bool InHeaderAction = Card.m_pDefinition->m_HeaderAction && PointInRect(Card.m_Frame.m_HandleRect, Input.m_MouseX, Input.m_MouseY);
+			const bool InHeaderAction = PointInRect(Card.m_Frame.m_HandleRect, Input.m_MouseX, Input.m_MouseY);
 			if(InHeader && !InHeaderAction)
 			{
 				m_Drag.m_StateIndex = Card.m_StateIndex;
@@ -635,8 +644,10 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		{
 			if(Input.m_pDiagnostics != nullptr)
 				m_FrameRuntime.CountRenderedCard(SettingsCardShouldDrawChrome(Ctx.m_pUi != nullptr && Ctx.m_pUi->RenderOnly()));
-			const bool Collapsed = Card.m_pDefinition->m_IsCollapsed && Card.m_pDefinition->m_IsCollapsed();
+			const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
+			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			State.m_Collapsed = Collapsed;
+			State.m_ShowDefaultCollapseButton = SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput));
 			State.m_HoverFeedbackEnabled = !m_SuppressHoverFeedbackOnce && !ScrollMovedThisFrame && !EntryPositionActive &&
 						       !ContentHeightAnimationActive && !ReflowTargetChanged && !ReflowPositionActive;
 			bool PointerInsideCurrentFrame = false;

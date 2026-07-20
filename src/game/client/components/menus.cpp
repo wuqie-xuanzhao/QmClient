@@ -1578,6 +1578,25 @@ ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const SSettings
 	return PickedColor;
 }
 
+bool CMenus::DoLine_AlphaColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, int *pOpacity, const unsigned int DefaultColor, const int DefaultOpacity)
+{
+	SSettingsAlphaColorPickerState &State = m_SettingsAlphaColorPickerStates[pColorValue];
+	const unsigned int ConfigPackedColor = PackSettingsAlphaColor(*pColorValue, *pOpacity);
+	const bool Editing = Ui()->IsPopupOpen(&m_ColorPickerPopupContext) && m_ColorPickerPopupContext.m_pHslaColor == &State.m_PackedColor;
+	if(!State.m_Initialized || !Editing)
+	{
+		State.m_PackedColor = ConfigPackedColor;
+		State.m_Initialized = true;
+	}
+
+	DoLine_ColorPicker(pResetId, Metrics, pMainRect, pText, &State.m_PackedColor, color_cast<ColorRGBA>(ColorHSLA(DefaultColor).WithAlpha(DefaultOpacity / 100.0f)), false, nullptr, true);
+	if(State.m_PackedColor == ConfigPackedColor)
+		return false;
+
+	UnpackSettingsAlphaColor(State.m_PackedColor, *pColorValue, *pOpacity);
+	return true;
+}
+
 ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float LineSize, const float LabelSize, const float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha)
 {
 	SSettingsContentMetrics Metrics;

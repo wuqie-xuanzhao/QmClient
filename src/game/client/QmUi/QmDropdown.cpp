@@ -72,6 +72,14 @@ bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupH
 	return std::max(0.0f, PopupHeight) + 0.001f < Policy.m_ContentHeight;
 }
 
+bool QmDropdownAnchorFullyVisible(const CUIRect &AnchorRect, const CUIRect &ViewportRect)
+{
+	return AnchorRect.w > 0.0f && AnchorRect.h > 0.0f &&
+	       AnchorRect.x >= ViewportRect.x && AnchorRect.y >= ViewportRect.y &&
+	       AnchorRect.x + AnchorRect.w <= ViewportRect.x + ViewportRect.w &&
+	       AnchorRect.y + AnchorRect.h <= ViewportRect.y + ViewportRect.h;
+}
+
 void CQmDropdownState::Reset()
 {
 	m_Open = false;

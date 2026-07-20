@@ -515,6 +515,12 @@ Adds a specific war entry
 Adds default chat binds
 == Ajoute les touches de discussion par défaut
 
+Adjust DDNet gameplay indicators and assists
+== Adjust DDNet gameplay indicators and assists
+
+Adjust DDRace-specific HUD indicators
+== Adjust DDRace-specific HUD indicators
+
 Adjust game camera and FOV settings
 == Ajuster les paramètres de la caméra et du champ de vision du jeu
 
@@ -524,14 +530,29 @@ Adjust local/remote console verbosity (-3=None, -2=Errors only, -1=Warning, 0=In
 Adjust log file verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == Ajuster la verbosité du fichier journal (-3=Aucun, -2=Erreurs uniquement, -1=Avertissement, 0=Info, 1=Débogage, 2=Trace)
 
+Adjust mouse sensitivity and cursor limits
+== Adjust mouse sensitivity and cursor limits
+
 Adjust opacity of entity layers
 == Ajuster l'opacité des couches d'entités
+
+Adjust player nameplate details and visibility
+== Adjust player nameplate details and visibility
+
+Adjust status bar position and text style
+== Adjust status bar position and text style
 
 Adjust system console verbosity (-3=None, -2=Errors only, -1=Warning, 0=Info, 1=Debug, 2=Trace)
 == Ajuster la verbosité de la console système (-3=Aucun, -2=Erreurs uniquement, -1=Avertissement, 0=Info, 1=Débogage, 2=Trace)
 
+Adjust TClient heads-up display elements
+== Adjust TClient heads-up display elements
+
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 == Ajuster l'opacité des entités des autres équipes, comme les tees et les plaques de nom
+
+Adjust trails rendered behind Tees
+== Adjust trails rendered behind Tees
 
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == Ajuster la verbosité dans la console externe (-3 = aucun, -2 = erreurs uniquement, -1 = avertissements, 0 = infos, 1 = débogage, 2 = trace).
@@ -878,6 +899,9 @@ Assets directory
 Assets editor
 == Éditeur d'éléments
 
+Assign commands and labels to wheel slots
+== Assign commands and labels to wheel slots
+
 Attempt to change your name when near finish
 == Tenter de changer votre nom près de l'arrivée
 
@@ -1139,6 +1163,9 @@ Auto-translation mode (0=Trigger on common source languages only, 1=Always trans
 Auto-unspec when unfrozen
 == Quitter automatiquement le mode spectateur lors du dégel
 
+Automate demos, screenshots, and match exports
+== Automate demos, screenshots, and match exports
+
 Automatic gain control (0=off 1=on)
 == Contrôle automatique du gain (0=désactivé 1=activé)
 
@@ -1307,6 +1334,9 @@ Background stroke color
 Background stroke width
 == Largeur du trait d'arrière-plan
 
+Balance master, music, and game volume
+== Balance master, music, and game volume
+
 Ban a certain nickname
 == Bannir un certain pseudonyme
 
@@ -1376,11 +1406,29 @@ Best match
 Bind address for client/server
 == Adresse de liaison pour le client/serveur
 
+Bind chat, team chat, and history actions
+== Bind chat, team chat, and history actions
+
+Bind dummy control and copy actions
+== Bind dummy control and copy actions
+
 Bind key to execute a command or view keybindings
 == Lier une touche pour exécuter une commande ou afficher les touches liées
 
+Bind movement, jump, hook, and fire actions
+== Bind movement, jump, hook, and fire actions
+
 Bind only to IPv4, otherwise bind to all interfaces
 == Lier uniquement à IPv4, sinon lier à toutes les interfaces
+
+Bind scoreboard, emote, and console actions
+== Bind scoreboard, emote, and console actions
+
+Bind voting and server browser actions
+== Bind voting and server browser actions
+
+Bind weapon selection and switching actions
+== Bind weapon selection and switching actions
 
 Bind Wheel
 == Roue de touches
@@ -1451,6 +1499,12 @@ Broadcast shown to players with known bot client
 Broadcast shown to players without DDNet client
 == Diffusion affichée aux joueurs sans client DDNet
 
+Browse and activate custom audio packs
+== Browse and activate custom audio packs
+
+Browse profiles saved on this device
+== Browse profiles saved on this device
+
 Browser
 == Navigateur
 
@@ -1459,6 +1513,9 @@ Brutal
 
 Bubble opacity
 == Opacité de la bulle
+
+Build the status text shown above Tees
+== Build the status text shown above Tees
 
 Built-in
 == Intégré
@@ -1700,6 +1757,12 @@ Checking for existing player with your name
 CHN
 == CHN
 
+Choose and arrange status bar data fields
+== Choose and arrange status bar data fields
+
+Choose colors for weapons and entity lasers
+== Choose colors for weapons and entity lasers
+
 Choose country flag
 == Choisir le drapeau du pays
 
@@ -1709,8 +1772,20 @@ Choose default eyes when joining a server
 Choose export name first.
 == Choisissez d'abord un nom d'exportation.
 
+Choose the language used by the client
+== Choose the language used by the client
+
+Choose the menu font and cursor appearance
+== Choose the menu font and cursor appearance
+
+Choose the menu map and background colors
+== Choose the menu map and background colors
+
 Choose whether to browse replays or screenshots
 == Choisir de parcourir les démos ou les captures d'écran
+
+Choose which TClient settings tabs are visible
+== Choose which TClient settings tabs are visible
 
 Clamp mouse to screen
 == Limiter la souris à l'écran
@@ -2027,8 +2102,17 @@ Configuration
 Configure background 3D particle effects
 == Configurer les effets de particules 3D d'arrière-plan
 
+Configure camera, weapon, and gameplay defaults
+== Configure camera, weapon, and gameplay defaults
+
+Configure chat position, size, and visibility
+== Configure chat position, size, and visibility
+
 Configure controls and key bindings
 == Configurer les commandes et les raccourcis
+
+Configure DDNet demo recording behavior
+== Configure DDNet demo recording behavior
 
 Configure DDNet gameplay preferences
 == Configurer les préférences de jeu DDNet
@@ -2039,8 +2123,26 @@ Configure display and rendering
 Configure game and client preferences
 == Configurer les préférences du jeu et du client
 
+Configure ghost recording and playback tools
+== Configure ghost recording and playback tools
+
 Configure hammer skin steal and skin transition animations
 == Configurer le vol de skin au marteau et les animations de transition de skin
+
+Configure health, ammo, timer, and race HUD
+== Configure health, ammo, timer, and race HUD
+
+Configure hook range and collision guide lines
+== Configure hook range and collision guide lines
+
+Configure input helpers and cursor behavior
+== Configure input helpers and cursor behavior
+
+Configure laser shape, glow, and animation
+== Configure laser shape, glow, and animation
+
+Configure nameplate text, badges, and visibility
+== Configure nameplate text, badges, and visibility
 
 Configure player identity and country
 == Configurer l'identité et le pays du joueur
@@ -2054,6 +2156,12 @@ Configure QmClient gameplay helpers
 Configure QmClient HUD elements
 == Configurer les éléments du HUD de QmClient
 
+Configure remaining DDNet client preferences
+== Configure remaining DDNet client preferences
+
+Configure skin colors, eyes, and filters
+== Configure skin colors, eyes, and filters
+
 Configure sound and audio packs
 == Configurer le son et les packs audio
 
@@ -2062,6 +2170,9 @@ Configure TClient tools and profiles
 
 Configure Tee appearance and skins
 == Configurer l'apparence et les skins du Tee
+
+Configure the companion appearance and movement
+== Configure the companion appearance and movement
 
 Configure these settings
 == Configurer ces paramètres
@@ -2158,6 +2269,12 @@ Continue anyway?
 
 Contributors
 == Contributeurs
+
+Control custom background drawing
+== Control custom background drawing
+
+Control latency compensation tools
+== Control latency compensation tools
 
 Control player (0) or dummy (1)
 == Contrôler le joueur (0) ou le dummy (1)
@@ -2393,6 +2510,9 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == Invite de traduction personnalisée (remplace l’invite intégrée)
 
+Customize animated rainbow colors
+== Customize animated rainbow colors
+
 Customize interface appearance and previews
 == Personnaliser l'interface et les aperçus
 
@@ -2401,6 +2521,9 @@ Customize QmClient visuals and effects
 
 Customize translate button and menu colors
 == Personnaliser les couleurs du bouton de traduction et du menu
+
+Customize vote display and interaction
+== Customize vote display and interaction
 
 Cut interval
 == Intervalle de coupe
@@ -2608,6 +2731,9 @@ Default zoom
 
 Default zoom level
 == Niveau de zoom par défaut
+
+Define automatic chat reply rules
+== Define automatic chat reply rules
 
 Delay
 == Délai
@@ -3215,8 +3341,14 @@ Edit Entry
 Edit HUD
 == Modifier le HUD
 
+Edit individual Tee 7 skin parts
+== Edit individual Tee 7 skin parts
+
 Edit note
 == Modifier la note
+
+Edit player and dummy identity information
+== Edit player and dummy identity information
 
 Edit skin texture
 == Modifier la texture du skin
@@ -3275,8 +3407,14 @@ Enable 3D background particles
 Enable absolute controller aiming in game
 == Activer le visée absolue du contrôleur en jeu
 
+Enable and calibrate controller input
+== Enable and calibrate controller input
+
 Enable antiping (more aggressive prediction)
 == Activer l'antiping (prédiction plus agressive)
+
+Enable audio output and choose a device
+== Enable audio output and choose a device
 
 Enable background 3D particle flicker
 == Activer le scintillement des particules 3D d'arrière-plan
@@ -3959,6 +4097,12 @@ Filtered word console color
 Find all ban records for the specified IP address
 == Trouver tous les enregistrements de bannissement pour l'adresse IP spécifiée
 
+Find QmClient communities and project links
+== Find QmClient communities and project links
+
+Fine-tune improved anti-ping prediction
+== Fine-tune improved anti-ping prediction
+
 Finish data source
 == Source des données de finish
 
@@ -4024,6 +4168,9 @@ Force i to pause for i seconds
 
 Force vote
 == Forcer le vote
+
+Format player names after a finish
+== Format player names after a finish
 
 Forms
 == Formulaires
@@ -4663,6 +4810,9 @@ Highlight message text gradient color
 
 Highlight ping value
 == Mettre en surbrillance la valeur du ping
+
+Highlight selected players in the game world
+== Highlight selected players in the game world
 
 Highlighted message
 == Message surligné
@@ -5531,6 +5681,9 @@ Load sound files in thread
 Load with code r. /load to check your existing saves
 == Charger avec le code r. /load pour vérifier vos sauvegardes existantes
 
+Load, save, overwrite, or delete profiles
+== Load, save, overwrite, or delete profiles
+
 Loaded %d items
 == %d éléments chargés
 
@@ -5783,8 +5936,23 @@ Makes you move 1 tile up
 Makes you super
 == Vous rend super
 
+Manage additional custom chat shortcuts
+== Manage additional custom chat shortcuts
+
 Manage categories
 == Gérer les catégories
+
+Manage client theme and menu preferences
+== Manage client theme and menu preferences
+
+Manage hostile players, groups, and display rules
+== Manage hostile players, groups, and display rules
+
+Manage hostile-list chat shortcuts
+== Manage hostile-list chat shortcuts
+
+Manage kaomoji chat shortcuts
+== Manage kaomoji chat shortcuts
 
 Manual
 == Manuel
@@ -6890,6 +7058,9 @@ Opacity
 Opacity of freeze bars inside freeze
 == Opacité des barres de dégel dans le freeze
 
+Open a matching settings card directly
+== Open a matching settings card directly
+
 Open bindwheel selector
 == Ouvrir le sélecteur de roue de touches
 
@@ -6916,6 +7087,12 @@ Open rename dialog
 
 Open spectator mode selector
 == Ouvrir le sélecteur de mode spectateur
+
+Open TClient community and source links
+== Open TClient community and source links
+
+Open TClient configuration file locations
+== Open TClient configuration file locations
 
 Open the directory that contains the configuration and user files
 == Ouvrir le répertoire contenant les fichiers de configuration et utilisateur
@@ -7586,14 +7763,35 @@ Preview button visibility while the editor is active.
 Preview dummy nameplate
 == Aperçu de la plaque de nom du dummy
 
+Preview hook collision colors and line styles
+== Preview hook collision colors and line styles
+
 Preview import file
 == Prévisualiser le fichier d'importation
+
+Preview laser bodies, outlines, and impacts
+== Preview laser bodies, outlines, and impacts
+
+Preview player and dummy appearance
+== Preview player and dummy appearance
+
+Preview player and dummy nameplates
+== Preview player and dummy nameplates
 
 Preview player nameplate
 == Aperçu de la plaque de nom du joueur
 
 Preview selected file
 == Prévisualiser le fichier sélectionné
+
+Preview the bind wheel layout and selection
+== Preview the bind wheel layout and selection
+
+Preview the composed status bar output
+== Preview the composed status bar output
+
+Preview the current chat appearance
+== Preview the current chat appearance
 
 Preview visibilities
 == Aperçu des visibilités
@@ -8474,6 +8672,12 @@ Restore old single-segment hook collision line behavior
 Retrying…
 == Nouvelle tentative…
 
+Review and edit custom key bindings
+== Review and edit custom key bindings
+
+Review and reset changed configuration values
+== Review and reset changed configuration values
+
 Rifle Laser Inner Color
 == Couleur intérieure du laser du fusil
 
@@ -8584,6 +8788,9 @@ Run on join
 
 Run profiler to check 3D/2D array texture sampling works correctly
 == Exécuter le profileur pour vérifier que l'échantillonnage des textures de tableaux 3D/2D fonctionne correctement
+
+Run selected commands after joining a server
+== Run selected commands after joining a server
 
 Run server
 == Lancer le serveur
@@ -8810,6 +9017,12 @@ Search donor asset
 Search main asset
 == Rechercher un élément principal
 
+Search settings by title, feature, or keyword
+== Search settings by title, feature, or keyword
+
+Search skins and manage the skin queue
+== Search skins and manage the skin queue
+
 Searching
 == Recherche
 
@@ -8839,6 +9052,12 @@ Select button by touch
 
 Select export
 == Sélectionner l'exportation
+
+Select the country flag for each player
+== Select the country flag for each player
+
+Select which player fields a profile stores
+== Select which player fields a profile stores
 
 Selected %d
 == %d sélectionné(s)
@@ -9238,6 +9457,9 @@ Show combo hint when hooking or hammering player within 2 seconds
 
 Show compact vote HUD
 == Afficher le HUD de vote compact
+
+Show configurable outlines around map tiles
+== Show configurable outlines around map tiles
 
 Show Coordinates
 == Afficher les coordonnées
@@ -10529,6 +10751,12 @@ Strong hook color
 Strong Weak Hook
 == Crochet fort/faible
 
+Style chat names, text, and message colors
+== Style chat names, text, and message colors
+
+Style kill, finish, and system messages
+== Style kill, finish, and system messages
+
 Sub-Tick aiming
 == Visée Sub-Tick
 
@@ -11408,6 +11636,9 @@ Trying Axiom dummy auto login
 Trying to determine UDP connectivity…
 == Tentative de détermination de la connectivité UDP…
 
+Tune additional world and player effects
+== Tune additional world and player effects
+
 Tune in zone a variable to value
 == Régler la variable de la zone a à la valeur
 
@@ -11869,6 +12100,12 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == Afficher le téléporteur trouvé (avec décalage) avec le numéro donné
+
+View the developers and contributors
+== View the developers and contributors
+
+View the people supporting QmClient development
+== View the people supporting QmClient development
 
 Virtual joystick which always uses fire.
 == Joystick virtuel qui utilise toujours le tir.
