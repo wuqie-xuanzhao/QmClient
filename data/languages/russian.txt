@@ -5810,9 +5810,6 @@ Map
 Map browser color
 == Цвет браузера карт
 
-Map browser opacity
-== Прозрачность браузера карт
-
 Map browser transparency
 == Прозрачность браузера карт
 
@@ -8270,9 +8267,6 @@ Render tiny tees instead of circles
 Renderer performing the analysis
 == Рендерер, выполняющий анализ
 
-Renderer selection
-== Выбор рендерера
-
 Rendering options
 == Параметры рендеринга
 
@@ -8753,9 +8747,6 @@ Scoreboard color
 Scoreboard cursor
 == Курсор таблицы лидеров
 
-Scoreboard opacity
-== Прозрачность таблицы лидеров
-
 Scoreboard point check
 == Проверка очков на табло
 
@@ -9091,6 +9082,9 @@ Sets your tee's eye emote
 
 Settings
 == Настройки
+
+Settings card border color
+== Цвет границ карточек настроек
 
 Settings card default layout migration version
 == Версия миграции макета карточек настроек по умолчанию
@@ -9798,7 +9792,7 @@ Show server settings
 == Показать настройки сервера
 
 Show settings card borders
-== Всегда показывать границы карточек настроек
+== Показывать границы карточек настроек
 
 Show short server names in browser
 == Показывать короткие названия серверов в списке серверов
@@ -11467,9 +11461,6 @@ UI motion level
 
 UI mouse sens.
 == Чувств. мыши UI
-
-UI opacity
-== Прозрачность интерфейса
 
 UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
 == Количество сегментов скругления UI (рекомендуется чётное 8/16/32/48; нечётное автоматически округляется до чётного из-за требования отрисовки i+=2)

@@ -3,6 +3,7 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
+#include "game_ping.h"
 #include "graph.h"
 #include "smooth_time.h"
 
@@ -158,11 +159,8 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	char m_aVersionStr[10] = "0";
 
 	// pinging
-	int64_t m_PingStartTime = -1;
-	int64_t m_aGamePingStartTime[NUM_DUMMIES] = {-1, -1};
-	int64_t m_aGamePingNextTime[NUM_DUMMIES] = {-1, -1};
-	int m_aGamePingRttMs[NUM_DUMMIES] = {-1, -1};
-	bool m_aGamePingIgnoreNextReply[NUM_DUMMIES] = {false, false};
+	SManualPingProbe m_ManualPingProbe;
+	SGamePingProbe m_aGamePingProbes[NUM_DUMMIES];
 
 	char m_aCurrentMap[IO_MAX_PATH_LENGTH] = "";
 	char m_aCurrentMapPath[IO_MAX_PATH_LENGTH] = "";

@@ -1,4 +1,5 @@
 #define CONF_TEST 1
+#include <engine/client/game_ping.h>
 #include <engine/client/gpu_upload_limiter.h>
 
 #include <game/client/QmUi/QmCardRegistry.h>
@@ -522,6 +523,169 @@ TEST(QmMonitoringHelpers, CounterRateRejectsResetAndMissingWindow)
 	EXPECT_FLOAT_EQ(QmComputeCounterRate(100, 160, 2.0f), 30.0f);
 	EXPECT_FLOAT_EQ(QmComputeCounterRate(160, 100, 2.0f), -1.0f);
 	EXPECT_FLOAT_EQ(QmComputeCounterRate(100, 160, 0.0f), -1.0f);
+}
+
+TEST(QmMonitoringHelpers, GamePingProbeOnlyAcceptsCurrentUuid)
+{
+	const int64_t Frequency = 1000;
+	const CUuid ProbeUuid = CalculateUuid("game-ping-current@test");
+	const CUuid WrongUuid = CalculateUuid("game-ping-wrong@test");
+	SGamePingProbe Probe;
+
+	Probe.Begin(ProbeUuid, 10000, Frequency);
+	EXPECT_FALSE(Probe.HandlePong(WrongUuid, 10025, Frequency));
+	EXPECT_EQ(Probe.m_StartTime, 10000);
+	EXPECT_EQ(Probe.m_RttMs, -1);
+	EXPECT_EQ(Probe.m_Uuid, ProbeUuid);
+
+	EXPECT_TRUE(Probe.HandlePong(ProbeUuid, 10025, Frequency));
+	EXPECT_EQ(Probe.m_StartTime, -1);
+	EXPECT_EQ(Probe.m_NextTime, 11025);
+	EXPECT_EQ(Probe.m_RttMs, 25);
+	EXPECT_EQ(Probe.m_Uuid, UUID_ZEROED);
+}
+
+TEST(QmMonitoringHelpers, GamePingProbeRejectsLatePongAfterTimeoutAndReplacement)
+{
+	const int64_t Frequency = 1000;
+	const CUuid ProbeA = CalculateUuid("game-ping-a@test");
+	const CUuid ProbeB = CalculateUuid("game-ping-b@test");
+	SGamePingProbe Probe;
+
+	Probe.Begin(ProbeA, 10000, Frequency);
+	EXPECT_FALSE(Probe.HandleTimeout(11999, Frequency));
+	EXPECT_TRUE(Probe.HandleTimeout(12000, Frequency));
+	EXPECT_EQ(Probe.m_RttMs, -1);
+	EXPECT_EQ(Probe.m_NextTime, 13000);
+
+	Probe.Begin(ProbeB, 13000, Frequency);
+	EXPECT_FALSE(Probe.HandlePong(ProbeA, 13040, Frequency));
+	EXPECT_EQ(Probe.m_StartTime, 13000);
+	EXPECT_EQ(Probe.m_Uuid, ProbeB);
+	EXPECT_TRUE(Probe.HandlePong(ProbeB, 13050, Frequency));
+	EXPECT_EQ(Probe.m_RttMs, 50);
+
+	Probe.Reset();
+	EXPECT_EQ(Probe.m_StartTime, -1);
+	EXPECT_EQ(Probe.m_NextTime, -1);
+	EXPECT_EQ(Probe.m_RttMs, -1);
+	EXPECT_EQ(Probe.m_Uuid, UUID_ZEROED);
+}
+
+TEST(QmMonitoringHelpers, ManualPingProbeRejectsOverlappingRequests)
+{
+	SManualPingProbe Probe;
+	EXPECT_TRUE(Probe.Begin(10000));
+	EXPECT_FALSE(Probe.Begin(10010));
+	EXPECT_EQ(Probe.m_StartTime, 10000);
+
+	float RttMs = -1.0f;
+	EXPECT_TRUE(Probe.HandlePong(10025, 1000, RttMs));
+	EXPECT_FLOAT_EQ(RttMs, 25.0f);
+	EXPECT_EQ(Probe.m_StartTime, -1);
+	EXPECT_FALSE(Probe.HandlePong(10030, 1000, RttMs));
+}
+
+TEST(QmMonitoringHelpers, ManualPingProbeRecoversAfterTimeout)
+{
+	SManualPingProbe Probe;
+	EXPECT_TRUE(Probe.Begin(10000));
+	EXPECT_FALSE(Probe.HandleTimeout(11999, 1000));
+	EXPECT_TRUE(Probe.HandleTimeout(12000, 1000));
+	EXPECT_EQ(Probe.m_StartTime, -1);
+	EXPECT_TRUE(Probe.Begin(13000));
+}
+
+TEST(QmMonitoringHelpers, LegacyGamePingProbeAcceptsLegacyReply)
+{
+	SGamePingProbe Probe;
+	Probe.BeginLegacy(10000, 1000);
+	EXPECT_TRUE(Probe.m_Legacy);
+	EXPECT_TRUE(Probe.HandleLegacyPong(10025, 1000));
+	EXPECT_EQ(Probe.m_RttMs, 25);
+	EXPECT_FALSE(Probe.m_Legacy);
+}
+
+TEST(QmMonitoringHelpers, LegacyManualPingSharesAutomaticProbeAndReply)
+{
+	constexpr int64_t Start = 10000;
+	constexpr int64_t Frequency = 1000;
+	SGamePingProbe Automatic;
+	SManualPingProbe Manual;
+
+	// Legacy 回复没有请求 ID，因此两个路径必须表示同一个线上请求。
+	EXPECT_TRUE(Manual.Begin(Start));
+	Automatic.BeginLegacy(Start, Frequency);
+	EXPECT_TRUE(Automatic.HandleLegacyPong(Start + 25, Frequency));
+	float RttMs = -1.0f;
+	EXPECT_TRUE(Manual.HandlePong(Start + 25, Frequency, RttMs));
+	EXPECT_FLOAT_EQ(RttMs, 25.0f);
+	EXPECT_EQ(Automatic.m_StartTime, -1);
+	EXPECT_EQ(Manual.m_StartTime, -1);
+}
+
+TEST(QmMonitoringHelpers, AutomaticAndManualPingPathsCoordinateWithExplicitLegacySharing)
+{
+	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string AutomaticPing = ExtractSourceFunctionBody(Client, "void CClient::UpdateGamePing()");
+	const std::string PingMs = ExtractSourceFunctionBody(Client, "float CClient::PingMs() const");
+	const std::string ManualPing = ExtractSourceFunctionBody(Client, "void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)");
+	const std::string ProcessPacket = ExtractSourceFunctionBody(Client, "void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)");
+	const std::string PingReply = ExtractSourceBlock(ProcessPacket, "else if(Msg == NETMSG_PING_REPLY)", "else if(Msg == NETMSG_INPUTTIMING)");
+
+	ASSERT_FALSE(AutomaticPing.empty());
+	ASSERT_FALSE(PingMs.empty());
+	ASSERT_FALSE(ManualPing.empty());
+	ASSERT_FALSE(PingReply.empty());
+	EXPECT_NE(AutomaticPing.find("NETMSG_PINGEX"), std::string::npos);
+	EXPECT_NE(AutomaticPing.find("NETMSG_PING, true"), std::string::npos);
+	EXPECT_EQ(PingMs.find("!m_ServerCapabilities.m_PingEx"), std::string::npos);
+	EXPECT_NE(ManualPing.find("NETMSG_PING, true"), std::string::npos);
+	EXPECT_NE(ManualPing.find("m_aGamePingProbes"), std::string::npos);
+	EXPECT_NE(ManualPing.find("m_ManualPingProbe.Begin"), std::string::npos);
+	EXPECT_NE(PingReply.find("m_ManualPingProbe.HandlePong"), std::string::npos);
+	EXPECT_NE(PingReply.find("m_aGamePingProbes"), std::string::npos);
+	EXPECT_EQ(Client.find("m_aGamePingIgnoreNextReply"), std::string::npos);
+	EXPECT_EQ(Client.find("m_PingStartTime"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, LegacyPingAndRespawnCancelPathsRemainPresent)
+{
+	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string Controls = ReadRepoFile("src/game/client/components/controls.cpp");
+	const std::string AutomaticPing = ExtractSourceFunctionBody(Client, "void CClient::UpdateGamePing()");
+	const std::string Respawn = ExtractSourceFunctionBody(Controls, "void CControls::OnRender()");
+	ASSERT_FALSE(AutomaticPing.empty());
+	ASSERT_FALSE(Respawn.empty());
+	EXPECT_NE(AutomaticPing.find("BeginLegacy"), std::string::npos);
+	EXPECT_NE(AutomaticPing.find("NETMSG_PING, true"), std::string::npos);
+	EXPECT_NE(Respawn.find("用户主动选择了其他武器"), std::string::npos);
+	EXPECT_NE(Respawn.find("else"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ManualPingTimeoutIsCheckedBeforeKcpEarlyContinue)
+{
+	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string AutomaticPing = ExtractSourceFunctionBody(Client, "void CClient::UpdateGamePing()");
+	ASSERT_FALSE(AutomaticPing.empty());
+	const size_t Timeout = AutomaticPing.find("m_ManualPingProbe.HandleTimeout");
+	const size_t KcpBranch = AutomaticPing.find("m_aNetClient[Conn].IsKcpActive()");
+	ASSERT_NE(Timeout, std::string::npos);
+	ASSERT_NE(KcpBranch, std::string::npos);
+	EXPECT_LT(Timeout, KcpBranch);
+}
+
+TEST(QmMonitoringHelpers, DefaultExtrasFailureClearsPublishedState)
+{
+	const std::string GameClient = ReadRepoFile("src/game/client/gameclient.cpp");
+	const std::string LoadExtras = ExtractSourceFunctionBody(GameClient, "void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)");
+	ASSERT_FALSE(LoadExtras.empty());
+	const size_t CandidateFailure = LoadExtras.find("UnloadExtrasSkin(Candidate);");
+	const size_t DefaultFailure = LoadExtras.find("if(IsDefault)", CandidateFailure);
+	ASSERT_NE(CandidateFailure, std::string::npos);
+	ASSERT_NE(DefaultFailure, std::string::npos);
+	EXPECT_NE(LoadExtras.find("m_ExtrasSkin = {};", DefaultFailure), std::string::npos);
+	EXPECT_NE(LoadExtras.find("m_ExtrasSkinLoaded = false;", DefaultFailure), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, FormattersRejectNonFiniteMetrics)
@@ -6776,7 +6940,7 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_EQ(Source.find("ui_token::font::SMALL * UiScale"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
 	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
-	EXPECT_NE(Source.find("if(DrawInteractionBorder)"), std::string::npos);
+	EXPECT_NE(Source.find("ExecuteSettingsCardChromeDraw("), std::string::npos);
 	EXPECT_NE(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
 	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
@@ -6845,10 +7009,14 @@ TEST(QmMonitoringHelpers, RegistryNavigationBridgeOwnsSettingsTarget)
 TEST(QmMonitoringHelpers, RegistrySearchTitlesRemainLocalizationSourceKeys)
 {
 	const std::string Registry = ReadRepoFile("src/game/client/QmUi/QmCardRegistry.cpp");
+	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(GraphicsBody.empty());
 	EXPECT_NE(Registry.find("Localizable(\"Graphics display\")"), std::string::npos);
 	EXPECT_NE(Registry.find("Localizable(\"Visual\")"), std::string::npos);
-	EXPECT_NE(Registry.find("Localizable(\"Graphics backend\")"), std::string::npos);
 	EXPECT_NE(Registry.find("Localizable(\"Display modes\")"), std::string::npos);
+	EXPECT_EQ(Registry.find("Localizable(\"Graphics backend\")"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("Localize(\"Graphics backend\")"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
 {
@@ -6908,7 +7076,6 @@ TEST(QmMonitoringHelpers, P6TClientBindWheelMigrationUsesThePublicDeckOnly)
 	EXPECT_NE(BindWheelBody.find("deck:tclient-bind-wheel-preview"), std::string::npos);
 	EXPECT_NE(BindWheelBody.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
 	EXPECT_NE(BindWheelBody.find("s_BindWheelPrewarmOrderModel.LoadMerged(\"\", qm_card_registry::BuildDefaultEntries())"), std::string::npos);
-	EXPECT_NE(BindWheelBody.find("const float EditorContentHeight = maximum("), std::string::npos);
 	EXPECT_NE(BindWheelBody.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
 	EXPECT_EQ(BindWheelBody.find("BeginSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(BindWheelBody.find("BeginSettingsCardDeckCard("), std::string::npos);

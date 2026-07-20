@@ -724,7 +724,7 @@ float CClient::PingMs() const
 		return -1.0f;
 	if(m_aNetClient[Conn].IsKcpActive())
 		return (float)m_aNetClient[Conn].TransportStats().m_RttMs;
-	return (float)m_aGamePingRttMs[Conn];
+	return (float)m_aGamePingProbes[Conn].m_RttMs;
 }
 
 float CClient::PredictionLeadMs() const
@@ -777,34 +777,38 @@ void CClient::UpdateGamePing()
 	const int64_t Frequency = time_freq();
 	for(int Conn = 0; Conn < NUM_DUMMIES; ++Conn)
 	{
+		SGamePingProbe &Probe = m_aGamePingProbes[Conn];
+		if(Conn == CONN_MAIN && m_ManualPingProbe.HandleTimeout(Now, Frequency))
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/network", "ping timeout");
 		if(m_aNetClient[Conn].State() != NETSTATE_ONLINE || m_aNetClient[Conn].IsKcpActive())
 		{
-			m_aGamePingStartTime[Conn] = -1;
-			m_aGamePingNextTime[Conn] = -1;
-			m_aGamePingRttMs[Conn] = -1;
-			m_aGamePingIgnoreNextReply[Conn] = false;
+			Probe.Reset();
 			continue;
 		}
 
-		if(m_aGamePingStartTime[Conn] >= 0)
+		if(Probe.m_StartTime >= 0)
 		{
-			if(Now - m_aGamePingStartTime[Conn] < 2 * Frequency)
+			if(!Probe.HandleTimeout(Now, Frequency))
 				continue;
-			if(Conn == CONN_MAIN && m_PingStartTime == m_aGamePingStartTime[Conn])
-				m_PingStartTime = -1;
-			m_aGamePingStartTime[Conn] = -1;
-			m_aGamePingRttMs[Conn] = -1;
-			m_aGamePingIgnoreNextReply[Conn] = true;
-			m_aGamePingNextTime[Conn] = Now + Frequency;
 		}
 
-		if(m_aGamePingNextTime[Conn] >= 0 && Now < m_aGamePingNextTime[Conn])
+		if(Probe.m_NextTime >= 0 && Now < Probe.m_NextTime)
 			continue;
 
-		CMsgPacker Msg(NETMSG_PING, true);
-		SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
-		m_aGamePingStartTime[Conn] = Now;
-		m_aGamePingNextTime[Conn] = Now + Frequency;
+		if(m_ServerCapabilities.m_PingEx)
+		{
+			const CUuid Uuid = RandomUuid();
+			CMsgPacker Msg(NETMSG_PINGEX, true);
+			Msg.AddRaw(&Uuid, sizeof(Uuid));
+			SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
+			Probe.Begin(Uuid, Now, Frequency);
+		}
+		else
+		{
+			CMsgPacker Msg(NETMSG_PING, true);
+			SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
+			Probe.BeginLegacy(Now, Frequency);
+		}
 	}
 }
 
@@ -1059,10 +1063,8 @@ void CClient::EnterGame(int Conn)
 		return;
 
 	m_aDidPostConnect[Conn] = false;
-	m_aGamePingStartTime[Conn] = -1;
-	m_aGamePingNextTime[Conn] = time_get() + time_freq() / 2;
-	m_aGamePingRttMs[Conn] = -1;
-	m_aGamePingIgnoreNextReply[Conn] = false;
+	m_aGamePingProbes[Conn].Reset();
+	m_aGamePingProbes[Conn].m_NextTime = time_get() + time_freq() / 2;
 
 	// TClient
 	m_aExecuteOnJoinDone[Conn] = false;
@@ -1351,14 +1353,9 @@ void CClient::DisconnectWithReason(const char *pReason)
 	mem_zero(&m_CurrentServerPingUuid, sizeof(m_CurrentServerPingUuid));
 	m_CurrentServerCurrentPingTime = -1;
 	m_CurrentServerNextPingTime = -1;
-	m_PingStartTime = -1;
+	m_ManualPingProbe.Reset();
 	for(int Conn = 0; Conn < NUM_DUMMIES; ++Conn)
-	{
-		m_aGamePingStartTime[Conn] = -1;
-		m_aGamePingNextTime[Conn] = -1;
-		m_aGamePingRttMs[Conn] = -1;
-		m_aGamePingIgnoreNextReply[Conn] = false;
-	}
+		m_aGamePingProbes[Conn].Reset();
 	m_AutoMarginLastSampleTime = 0;
 	m_AutoMarginLatencyAverageMs = 0.0f;
 	m_AutoMarginLatencyJitterMs = 0.0f;
@@ -1485,10 +1482,7 @@ void CClient::DummyDisconnect(const char *pReason)
 	m_aapSnapshots[1][SNAP_CURRENT] = nullptr;
 	m_aapSnapshots[1][SNAP_PREV] = nullptr;
 	m_aReceivedSnapshots[1] = 0;
-	m_aGamePingStartTime[CONN_DUMMY] = -1;
-	m_aGamePingNextTime[CONN_DUMMY] = -1;
-	m_aGamePingRttMs[CONN_DUMMY] = -1;
-	m_aGamePingIgnoreNextReply[CONN_DUMMY] = false;
+	m_aGamePingProbes[CONN_DUMMY].Reset();
 	m_aSnapshotStats[1] = {};
 	m_aLastSnapshotTime[1] = 0;
 	m_aLastSnapshotTick[1] = -1;
@@ -2639,16 +2633,18 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 			int Vital = (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 ? MSGFLAG_VITAL : 0;
 			SendMsg(Conn, &MsgP, MSGFLAG_FLUSH | Vital);
 		}
-		else if(Conn == CONN_MAIN && Msg == NETMSG_PONGEX)
+		else if(Conn < NUM_DUMMIES && Msg == NETMSG_PONGEX)
 		{
 			CUuid *pId = (CUuid *)Unpacker.GetRaw(sizeof(*pId));
 			if(Unpacker.Error())
 			{
 				return;
 			}
-			if(m_ServerCapabilities.m_PingEx && m_CurrentServerCurrentPingTime >= 0 && *pId == m_CurrentServerPingUuid)
+			const int64_t Now = time_get();
+			m_aGamePingProbes[Conn].HandlePong(*pId, Now, time_freq());
+			if(Conn == CONN_MAIN && m_ServerCapabilities.m_PingEx && m_CurrentServerCurrentPingTime >= 0 && *pId == m_CurrentServerPingUuid)
 			{
-				int LatencyMs = (time_get() - m_CurrentServerCurrentPingTime) * 1000 / time_freq();
+				int LatencyMs = (Now - m_CurrentServerCurrentPingTime) * 1000 / time_freq();
 				const NETADDR *pServerAddr = ServerAddress();
 				if(pServerAddr)
 					m_ServerBrowser.SetCurrentServerPing(*pServerAddr, LatencyMs);
@@ -2812,30 +2808,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		}
 		else if(Msg == NETMSG_PING_REPLY)
 		{
-			bool GamePingReplyIgnored = false;
-			if(Conn < NUM_DUMMIES && m_aGamePingIgnoreNextReply[Conn])
-			{
-				const int64_t Now = time_get();
-				GamePingReplyIgnored = true;
-				m_aGamePingIgnoreNextReply[Conn] = false;
-				m_aGamePingStartTime[Conn] = -1;
-				m_aGamePingNextTime[Conn] = Now + time_freq();
-				if(Conn == CONN_MAIN)
-					m_PingStartTime = -1;
-			}
-			else if(Conn < NUM_DUMMIES && m_aGamePingStartTime[Conn] >= 0)
-			{
-				const int64_t Now = time_get();
-				m_aGamePingRttMs[Conn] = (int)std::max<int64_t>(0, (Now - m_aGamePingStartTime[Conn]) * 1000 / time_freq());
-				m_aGamePingStartTime[Conn] = -1;
-				m_aGamePingNextTime[Conn] = Now + time_freq();
-			}
-			if(Conn == CONN_MAIN && !GamePingReplyIgnored && m_PingStartTime >= 0)
+			if(Conn < NUM_DUMMIES)
+				m_aGamePingProbes[Conn].HandleLegacyPong(time_get(), time_freq());
+			float RttMs;
+			if(Conn == CONN_MAIN && m_ManualPingProbe.HandlePong(time_get(), time_freq(), RttMs))
 			{
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "latency %.2f", (time_get() - m_PingStartTime) * 1000 / (float)time_freq());
+				str_format(aBuf, sizeof(aBuf), "latency %.2f", RttMs);
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/network", aBuf);
-				m_PingStartTime = -1;
 			}
 		}
 		else if(Msg == NETMSG_INPUTTIMING)
@@ -4647,28 +4627,33 @@ void CClient::Con_Minimize(IConsole::IResult *pResult, void *pUserData)
 void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	const int64_t Now = time_get();
 	if(pSelf->m_aNetClient[CONN_MAIN].State() != NETSTATE_ONLINE)
 	{
-		pSelf->m_PingStartTime = -1;
+		pSelf->m_ManualPingProbe.Reset();
 		return;
 	}
-	if(pSelf->m_aNetClient[CONN_MAIN].State() == NETSTATE_ONLINE &&
-		!pSelf->m_aNetClient[CONN_MAIN].IsKcpActive() &&
-		pSelf->m_aGamePingStartTime[CONN_MAIN] >= 0)
+	const int64_t Now = time_get();
+	if(!pSelf->m_ServerCapabilities.m_PingEx)
 	{
-		pSelf->m_PingStartTime = pSelf->m_aGamePingStartTime[CONN_MAIN];
+		SGamePingProbe &Probe = pSelf->m_aGamePingProbes[CONN_MAIN];
+		if(!pSelf->m_ManualPingProbe.Begin(Now))
+			return;
+		if(Probe.m_Legacy)
+		{
+			pSelf->m_ManualPingProbe.m_StartTime = Probe.m_StartTime;
+			return;
+		}
+
+		CMsgPacker Msg(NETMSG_PING, true);
+		pSelf->SendMsg(CONN_MAIN, &Msg, MSGFLAG_FLUSH);
+		Probe.BeginLegacy(Now, time_freq());
 		return;
 	}
+	if(!pSelf->m_ManualPingProbe.Begin(Now))
+		return;
 
 	CMsgPacker Msg(NETMSG_PING, true);
 	pSelf->SendMsg(CONN_MAIN, &Msg, MSGFLAG_FLUSH);
-	pSelf->m_PingStartTime = Now;
-	if(pSelf->m_aNetClient[CONN_MAIN].State() == NETSTATE_ONLINE && !pSelf->m_aNetClient[CONN_MAIN].IsKcpActive())
-	{
-		pSelf->m_aGamePingStartTime[CONN_MAIN] = Now;
-		pSelf->m_aGamePingNextTime[CONN_MAIN] = Now + time_freq();
-	}
 }
 
 void CClient::ConNetReset(IConsole::IResult *pResult, void *pUserData)

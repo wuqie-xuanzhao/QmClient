@@ -423,18 +423,22 @@ void CControls::OnRender()
 			{
 				// 用户主动选择了其他武器，取消这次自动选择。
 				m_aQmRespawnWeaponPending[Dummy] = false;
-			}
-			const int Weapon = WantedWeapon - 1;
-			const int LocalId = GameClient()->m_aLocalIds[Dummy];
-			const bool HasWeapon = Weapon <= WEAPON_GUN ||
-					       (LocalId >= 0 && LocalId < MAX_CLIENTS && Weapon >= 0 && Weapon < NUM_WEAPONS && GameClient()->m_aClients[LocalId].m_Predicted.m_aWeapons[Weapon].m_Got);
-			if(HasWeapon)
-			{
-				m_aInputData[Dummy].m_WantedWeapon = WantedWeapon;
-				m_aQmRespawnWeaponPending[Dummy] = false;
+				m_aQmRespawnWantedWeapon[Dummy] = 0;
 			}
 			else
-				m_aInputData[Dummy].m_WantedWeapon = 0;
+			{
+				const int Weapon = WantedWeapon - 1;
+				const int LocalId = GameClient()->m_aLocalIds[Dummy];
+				const bool HasWeapon = Weapon <= WEAPON_GUN ||
+						       (LocalId >= 0 && LocalId < MAX_CLIENTS && Weapon >= 0 && Weapon < NUM_WEAPONS && GameClient()->m_aClients[LocalId].m_Predicted.m_aWeapons[Weapon].m_Got);
+				if(HasWeapon)
+				{
+					m_aInputData[Dummy].m_WantedWeapon = WantedWeapon;
+					m_aQmRespawnWeaponPending[Dummy] = false;
+				}
+				else
+					m_aInputData[Dummy].m_WantedWeapon = 0;
+			}
 		}
 		else if(!HasActiveCharacter)
 		{

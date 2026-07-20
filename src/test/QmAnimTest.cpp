@@ -217,6 +217,62 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveSettingsRowsHeight(0, 20.0f, 5.0f), 0.0f);
 	}
 
+	TEST(SettingsPageLayout, ListViewportShowsOnlyWholeRowsAndCapsAtEight)
+	{
+		EXPECT_FLOAT_EQ(ResolveSettingsListViewportHeight(8, 20.0f, 0.0f), 160.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsListViewportHeight(9, 20.0f, 0.0f), 160.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsListViewportHeight(8, 20.0f, 3.0f), 181.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsListViewportHeight(1, 20.0f, 3.0f), 20.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsListViewportHeight(0, 20.0f, 3.0f), 0.0f);
+	}
+
+	TEST(SettingsPageLayout, CustomSelectionNeverFallsBackToTheFirstSupportedItem)
+	{
+		EXPECT_EQ(ResolveSettingsSelectionWithCustomFallback(1, 3), 1);
+		EXPECT_EQ(ResolveSettingsSelectionWithCustomFallback(-1, 3), 3);
+		EXPECT_EQ(ResolveSettingsSelectionWithCustomFallback(9, 3), 3);
+		EXPECT_EQ(ResolveSettingsSelectionWithCustomFallback(-1, 0), 0);
+	}
+
+	TEST(SettingsPageLayout, ControllerRadioRowAddsASecondLineOnlyWhenWidthRequiresIt)
+	{
+		const SSettingsContentMetrics WideMetrics = ResolveSettingsContentMetrics(700.0f);
+		const SSettingsRadioRowLayout Wide = ResolveSettingsRadioRowLayout({0.0f, 0.0f, 700.0f, 100.0f}, 2, WideMetrics);
+		EXPECT_FALSE(Wide.m_Stacked);
+		EXPECT_FLOAT_EQ(Wide.m_Height, WideMetrics.m_LineHeight);
+
+		const SSettingsContentMetrics NarrowMetrics = ResolveSettingsContentMetrics(240.0f);
+		const SSettingsRadioRowLayout Narrow = ResolveSettingsRadioRowLayout({0.0f, 0.0f, 240.0f, 100.0f}, 2, NarrowMetrics);
+		EXPECT_TRUE(Narrow.m_Stacked);
+		EXPECT_FLOAT_EQ(Narrow.m_Height, NarrowMetrics.m_LineHeight + NarrowMetrics.m_LineSpacing + NarrowMetrics.m_ButtonHeight);
+	}
+
+	TEST(SettingsPageLayout, ControllerHeightTracksStateWidthAndAxisLimit)
+	{
+		constexpr float RowHeight = 20.0f;
+		constexpr float RowSpacing = 5.0f;
+		const float Disabled = ResolveSettingsControllerContentHeight(700.0f, false, false, false, 0, 8, RowHeight, RowSpacing);
+		const float MissingDevice = ResolveSettingsControllerContentHeight(700.0f, true, false, false, 0, 8, RowHeight, RowSpacing);
+		const float Relative = ResolveSettingsControllerContentHeight(700.0f, true, true, false, 4, 8, RowHeight, RowSpacing);
+		const float Absolute = ResolveSettingsControllerContentHeight(700.0f, true, true, true, 4, 8, RowHeight, RowSpacing);
+		const float Narrow = ResolveSettingsControllerContentHeight(240.0f, true, true, false, 4, 8, RowHeight, RowSpacing);
+		const float ClampedAxes = ResolveSettingsControllerContentHeight(700.0f, true, true, false, 99, 8, RowHeight, RowSpacing);
+
+		EXPECT_LT(Disabled, MissingDevice);
+		EXPECT_LT(MissingDevice, Absolute);
+		EXPECT_FLOAT_EQ(Relative - Absolute, RowHeight + RowSpacing);
+		EXPECT_GT(Narrow, Relative);
+		EXPECT_FLOAT_EQ(ClampedAxes - Relative, 4.0f * (RowHeight + RowSpacing));
+	}
+
+	TEST(SettingsPageLayout, StatusCodeHelpUsesTwoColumnsOnlyWhenWide)
+	{
+		EXPECT_EQ(ResolveSettingsStatusCodeRows(20, 700.0f), 10);
+		EXPECT_EQ(ResolveSettingsStatusCodeRows(20, 360.0f), 20);
+		EXPECT_EQ(ResolveSettingsStatusCodeRows(19, 700.0f), 10);
+		EXPECT_EQ(ResolveSettingsStatusCodeRows(0, 700.0f), 0);
+	}
+
 	TEST(SettingsPageLayout, SavedProfilesHeightTracksRowsAndCapsTheViewport)
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
@@ -410,7 +466,7 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(RaceGhostEnabled, false), 8.0f);
 		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(RaceGhostEnabled, true), 9.0f);
 		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(false, false), 9.0f);
-		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(true, true), 13.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(true, true), 12.0f);
 	}
 
 	TEST(SettingsPageLayout, SettingsPagesShareTheQmScaleBaseline)

@@ -6761,12 +6761,12 @@ void CGameClient::CClientData::UpdateRenderInfo()
 			       !SameTexture(m_RenderInfo.m_ColorableRenderSkin.m_Body, NewRenderInfo.m_ColorableRenderSkin.m_Body);
 	const auto SameSkinTextures = [&SameTexture](const CSkin::CSkinTextures &Left, const CSkin::CSkinTextures &Right) {
 		return SameTexture(Left.m_Body, Right.m_Body) && SameTexture(Left.m_BodyOutline, Right.m_BodyOutline) &&
-			SameTexture(Left.m_Feet, Right.m_Feet) && SameTexture(Left.m_FeetOutline, Right.m_FeetOutline) &&
-			SameTexture(Left.m_Hands, Right.m_Hands) && SameTexture(Left.m_HandsOutline, Right.m_HandsOutline) &&
-			std::equal(std::begin(Left.m_aEyes), std::end(Left.m_aEyes), std::begin(Right.m_aEyes), [&SameTexture](const auto &A, const auto &B) { return SameTexture(A, B); });
+		       SameTexture(Left.m_Feet, Right.m_Feet) && SameTexture(Left.m_FeetOutline, Right.m_FeetOutline) &&
+		       SameTexture(Left.m_Hands, Right.m_Hands) && SameTexture(Left.m_HandsOutline, Right.m_HandsOutline) &&
+		       std::equal(std::begin(Left.m_aEyes), std::end(Left.m_aEyes), std::begin(Right.m_aEyes), [&SameTexture](const auto &A, const auto &B) { return SameTexture(A, B); });
 	};
 	ResourceChanged = !SameSkinTextures(m_RenderInfo.m_OriginalRenderSkin, NewRenderInfo.m_OriginalRenderSkin) ||
-			       !SameSkinTextures(m_RenderInfo.m_ColorableRenderSkin, NewRenderInfo.m_ColorableRenderSkin);
+			  !SameSkinTextures(m_RenderInfo.m_ColorableRenderSkin, NewRenderInfo.m_ColorableRenderSkin);
 	for(int Dummy = 0; Dummy < NUM_DUMMIES && !ResourceChanged; ++Dummy)
 	{
 		for(int Part = 0; Part < protocol7::NUM_SKINPARTS && !ResourceChanged; ++Part)
@@ -8805,14 +8805,17 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
-	if(!PngLoaded && !IsDefault)
+	const bool ValidImage = PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo);
+	if(!ValidImage && !IsDefault)
 	{
+		ImgInfo.Free();
 		if(AsDir)
 			LoadExtrasSkin("default");
 		else
 			LoadExtrasSkin(pPath, true);
+		return;
 	}
-	else if(PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo))
+	else if(ValidImage)
 	{
 		SClientExtrasSkin Candidate;
 		Candidate.m_SpriteParticleSnowflake = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE]);
@@ -8836,7 +8839,14 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 		else
 		{
 			UnloadExtrasSkin(Candidate);
-			if(!IsDefault)
+			if(IsDefault)
+			{
+				if(m_ExtrasSkinLoaded)
+					UnloadExtrasSkin(m_ExtrasSkin);
+				m_ExtrasSkin = {};
+				m_ExtrasSkinLoaded = false;
+			}
+			else
 			{
 				ImgInfo.Free();
 				if(AsDir)
@@ -8855,6 +8865,13 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 		else
 			LoadExtrasSkin(pPath, true);
 		return;
+	}
+	else if(IsDefault)
+	{
+		if(m_ExtrasSkinLoaded)
+			UnloadExtrasSkin(m_ExtrasSkin);
+		m_ExtrasSkin = {};
+		m_ExtrasSkinLoaded = false;
 	}
 	ImgInfo.Free();
 }

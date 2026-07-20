@@ -5810,9 +5810,6 @@ Map
 Map browser color
 == 맵 브라우저 색상
 
-Map browser opacity
-== 맵 브라우저 불투명도
-
 Map browser transparency
 == 맵 브라우저 투명도
 
@@ -8270,9 +8267,6 @@ Render tiny tees instead of circles
 Renderer performing the analysis
 == 분석을 수행하는 렌더러
 
-Renderer selection
-== 렌더러 선택
-
 Rendering options
 == 렌더링 옵션
 
@@ -8753,9 +8747,6 @@ Scoreboard color
 Scoreboard cursor
 == 점수판 커서
 
-Scoreboard opacity
-== 점수판 불투명도
-
 Scoreboard point check
 == 점수판 포인트 확인
 
@@ -9091,6 +9082,9 @@ Sets your tee's eye emote
 
 Settings
 == 설정
+
+Settings card border color
+== 설정 카드 테두리 색상
 
 Settings card default layout migration version
 == 설정 카드 기본 레이아웃 마이그레이션 버전
@@ -9798,7 +9792,7 @@ Show server settings
 == 서버 설정 보기
 
 Show settings card borders
-== 설정 카드 테두리 항상 표시
+== 설정 카드 테두리 표시
 
 Show short server names in browser
 == 서버 브라우저에 짧은 서버 이름 표시
@@ -11467,9 +11461,6 @@ UI motion level
 
 UI mouse sens.
 == UI 마우스 감도
-
-UI opacity
-== UI 불투명도
 
 UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
 == UI 둥근 모서리 세그먼트 수（짝수 8/16/32/48 권장；홀수는 자동으로 짝수로 정리, i+=2 그리기 요구사항）

@@ -284,7 +284,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	const bool HasCustomBinds = std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; });
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (HasCustomBinds ? 1u : 0u);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(GameClient()->m_Menus.m_SettingsCardDeckDisplayCycle, GameClient()->m_Menus.m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
-	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly, CardLayoutRevision](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(9);
 		const auto AddCard = [this](std::vector<SSettingsCardDefinition> &Cards, const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
 			const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(pId);
@@ -307,7 +307,8 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			return Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f;
 		};
 		AddCard(vCards, "deck:controls-mouse", 0.0f, [this](float) { return MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
-		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float) { return MeasureSettingsJoystickHeight(); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); });
+		const uint64_t ControllerLayoutRevision = CardLayoutRevision;
+		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float Width) { return MeasureSettingsJoystickHeight(Width); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); }, {}, false, {}, {}, false, ControllerLayoutRevision);
 		const std::pair<EBindOptionGroup, const char *> aBindCards[] = {
 			{EBindOptionGroup::MOVEMENT, "deck:controls-movement"}, {EBindOptionGroup::WEAPON, "deck:controls-weapon"},
 			{EBindOptionGroup::VOTING, "deck:controls-voting"}, {EBindOptionGroup::CHAT, "deck:controls-chat"},
@@ -656,21 +657,11 @@ void CMenusSettingsControls::RenderSettingsMouse(CUIRect View)
 	DoSettingsControlsNumericField("controls-ui-mouse-sens-label", &g_Config.m_UiMousesens, &g_Config.m_UiMousesens, Button, Localize("UI mouse sens."), 1, 500, &CUi::ms_LogarithmicScrollbarScale);
 }
 
-float CMenusSettingsControls::MeasureSettingsJoystickHeight() const
+float CMenusSettingsControls::MeasureSettingsJoystickHeight(const float ContentWidth) const
 {
-	int NumOptions = 1; // expandable header
-	if(g_Config.m_InpControllerEnable)
-	{
-		NumOptions++; // message or joystick name/selection
-		if(Input()->NumJoysticks() > 0)
-		{
-			NumOptions += 3; // mode, ui sens, tolerance
-			if(!g_Config.m_InpControllerAbsolute)
-				NumOptions++; // ingame sens
-			NumOptions += Input()->GetActiveJoystick()->GetNumAxes() + 1; // axis selection + header
-		}
-	}
-	return NumOptions * (BUTTON_HEIGHT + BUTTON_SPACING) + (NumOptions == 1 ? 0.0f : BUTTON_SPACING);
+	const bool HasJoystick = Input()->NumJoysticks() > 0 && Input()->GetActiveJoystick() != nullptr;
+	const int AxisCount = HasJoystick ? Input()->GetActiveJoystick()->GetNumAxes() : 0;
+	return ResolveSettingsControllerContentHeight(ContentWidth, g_Config.m_InpControllerEnable != 0, HasJoystick, g_Config.m_InpControllerAbsolute != 0, AxisCount, NUM_JOYSTICK_AXES, BUTTON_HEIGHT, BUTTON_SPACING);
 }
 
 void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View, bool ReadOnly)

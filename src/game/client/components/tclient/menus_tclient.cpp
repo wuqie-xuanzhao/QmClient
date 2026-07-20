@@ -3584,8 +3584,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)
 	static char s_aBindName[BINDWHEEL_MAX_NAME];
 	static char s_aBindCommand[BINDWHEEL_MAX_CMD];
 	static int s_SelectedBindIndex = -1;
-	const float CardChromeHeight = ui_token::settings::CARD_PADDING * 2.0f + ui_token::settings::CARD_HEADER_TITLE_HEIGHT + ui_token::settings::CARD_HEADER_GAP;
-	const float EditorContentHeight = maximum(LineSize * 7.8f + MarginSmall * 4.0f, 320.0f - CardChromeHeight);
+	const float EditorContentHeight = LineSize * 7.0f + SmallSize + MarginSmall * 4.0f;
 	const float PreviewContentHeight = 280.0f;
 	const auto MeasureEditor = [EditorContentHeight](float) { return EditorContentHeight; };
 	const auto RenderEditor = [this, &TClientBindWheelTextInputCtx, ReadOnly, SmallSize](CUIRect &Content) {
@@ -4590,8 +4589,8 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 	static int s_SelectedItem = -1;
 	static int s_TypeSelectedOld = -1;
 	static CLineInput s_StatusScheme(g_Config.m_TcStatusBarScheme, sizeof(g_Config.m_TcStatusBarScheme));
+	const int StatusBarCodeCount = (int)GameClient()->m_StatusBar.m_StatusItemTypes.size();
 	const float SettingsContentHeight = LineSize * 7.0f + HeadlineHeight * 2.0f + ColorPickerLineSize * 2.0f + MarginSmall * 10.0f;
-	constexpr int StatusBarCodeCount = 19;
 	const float PreviewContentHeight = LineSize * 7.0f + MarginSmall * 4.0f;
 
 	auto GetStatusBarEditorLabel = [](const CStatusItem *pItem) {
@@ -4621,49 +4620,49 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		}
 	};
 	auto RenderStatusBarCodes = [&](CUIRect View) {
-		const char *apCodes[] = {
-			Localize("a = View angle"),
-			Localize("p = Ping latency"),
-			Localize("d = Prediction latency"),
-			Localize("c = Player position"),
-			Localize("l = Local time"),
-			Localize("r = Race time"),
-			Localize("f = Frame rate"),
-			Localize("v = Velocity"),
-			Localize("z = Zoom"),
-			Localize("u = Snapshot latency"),
-			Localize("n = Prediction latency"),
-			Localize("j = Latency jitter"),
-			Localize("k = Resend loss"),
-			Localize("i = Receive rate"),
-			Localize("o = Send rate"),
-			Localize("q = Connection quality"),
-			Localize("x = DDNet CPU% / total CPU%"),
-			Localize("y = DDNet memory usage"),
-			Localize("_ or ' ' = blank spacer"),
-		};
+		static std::vector<std::string> s_vCodeStorage;
+		static std::vector<const char *> s_vCodes;
+		static char s_aCodeLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
+		if(s_vCodeStorage.size() != GameClient()->m_StatusBar.m_StatusItemTypes.size() || str_comp(s_aCodeLanguage, g_Config.m_ClLanguagefile) != 0)
+		{
+			s_vCodeStorage.clear();
+			s_vCodes.clear();
+			s_vCodeStorage.reserve(GameClient()->m_StatusBar.m_StatusItemTypes.size());
+			s_vCodes.reserve(GameClient()->m_StatusBar.m_StatusItemTypes.size());
+			for(const CStatusItem &Item : GameClient()->m_StatusBar.m_StatusItemTypes)
+			{
+				char aCode[256];
+				const char *pLetters = str_comp(Item.m_aName, "Space") == 0 ? "_ or ' '" : Item.m_aLetters;
+				str_format(aCode, sizeof(aCode), "%s = %s", pLetters, Localize(GetStatusBarEditorLabel(&Item)));
+				s_vCodeStorage.emplace_back(aCode);
+			}
+			for(const std::string &Code : s_vCodeStorage)
+				s_vCodes.push_back(Code.c_str());
+			str_copy(s_aCodeLanguage, g_Config.m_ClLanguagefile);
+		}
+		const char *const *apCodes = s_vCodes.data();
 		CUIRect Label;
 		if(View.w > 360.0f)
 		{
 			CUIRect LeftCodes, RightCodes;
 			View.VSplitMid(&LeftCodes, &RightCodes, MarginSmall);
-			const int LeftCount = ((int)std::size(apCodes) + 1) / 2;
-			for(int i = 0; i < (int)std::size(apCodes); ++i)
+			const int LeftCount = (StatusBarCodeCount + 1) / 2;
+			for(int i = 0; i < StatusBarCodeCount; ++i)
 			{
 				CUIRect &Column = i < LeftCount ? LeftCodes : RightCodes;
 				Column.HSplitTop(LineSize, &Label, &Column);
 				Ui()->DoLabel(&Label, apCodes[i], FontSize, TEXTALIGN_ML);
-				if(i + 1 < (i < LeftCount ? LeftCount : (int)std::size(apCodes)))
+				if(i + 1 < (i < LeftCount ? LeftCount : StatusBarCodeCount))
 					Column.HSplitTop(MarginSmall, nullptr, &Column);
 			}
 		}
 		else
 		{
-			for(int i = 0; i < (int)std::size(apCodes); ++i)
+			for(int i = 0; i < StatusBarCodeCount; ++i)
 			{
 				View.HSplitTop(LineSize, &Label, &View);
 				Ui()->DoLabel(&Label, apCodes[i], FontSize, TEXTALIGN_ML);
-				if(i + 1 < (int)std::size(apCodes))
+				if(i + 1 < StatusBarCodeCount)
 					View.HSplitTop(MarginSmall, nullptr, &View);
 			}
 		}
@@ -4730,8 +4729,8 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-text-alpha", &Button, Localize("Text alpha"), FontSize, TEXTALIGN_ML);
 		LogTClientPerfStageEx("tclient_statusbar", "sections", ETClientSettingsPerfStage::INTERACTIVE_LAYER, SectionsTimer.ElapsedMs());
 	};
-	const auto MeasureItems = [](const float ContentWidth) {
-		const int Rows = ContentWidth > 360.0f ? (StatusBarCodeCount + 1) / 2 : StatusBarCodeCount;
+	const auto MeasureItems = [StatusBarCodeCount](const float ContentWidth) {
+		const int Rows = ResolveSettingsStatusCodeRows(StatusBarCodeCount, ContentWidth);
 		return Rows * LineSize + maximum(0, Rows - 1) * MarginSmall;
 	};
 	const auto RenderItems = [RenderStatusBarCodes](CUIRect View) {
@@ -4774,7 +4773,8 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 
 		static std::vector<std::string> s_DropDownNameStorage;
 		static std::vector<const char *> s_DropDownNames;
-		if(s_DropDownNameStorage.size() != GameClient()->m_StatusBar.m_StatusItemTypes.size())
+		static char s_aDropDownLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
+		if(s_DropDownNameStorage.size() != GameClient()->m_StatusBar.m_StatusItemTypes.size() || str_comp(s_aDropDownLanguage, g_Config.m_ClLanguagefile) != 0)
 		{
 			s_DropDownNameStorage.clear();
 			s_DropDownNames.clear();
@@ -4783,8 +4783,10 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 			for(const CStatusItem &StatusItemType : GameClient()->m_StatusBar.m_StatusItemTypes)
 			{
 				s_DropDownNameStorage.emplace_back(Localize(GetStatusBarEditorLabel(&StatusItemType)));
-				s_DropDownNames.push_back(s_DropDownNameStorage.back().c_str());
 			}
+			for(const std::string &Name : s_DropDownNameStorage)
+				s_DropDownNames.push_back(Name.c_str());
+			str_copy(s_aDropDownLanguage, g_Config.m_ClLanguagefile);
 		}
 		CUIRect DropDownRect;
 		StatusButtons.VSplitMid(&DropDownRect, &StatusButtons, MarginSmall);
@@ -5081,12 +5083,13 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly)
 			Content.HSplitTop(TeeSize + MarginSmall, &Row, &Content);
 			Row.VSplitLeft(TeeSize + MarginSmall, &TeeRect, &Label);
 			TeeRect.w = TeeSize;
-			Label.VSplitLeft(TextRender()->TextWidth(LineSize, s_aDevelopers[Index].m_pName), &Label, &Button);
+			const float DeveloperFontSize = CurrentSettingsContentMetrics().m_BodySize;
+			Label.VSplitLeft(TextRender()->TextWidth(DeveloperFontSize, s_aDevelopers[Index].m_pName), &Label, &Button);
 			Button.VSplitLeft(MarginSmall, nullptr, &Button);
 			Button.w = LineSize;
 			Button.h = LineSize;
 			Button.y = Label.y + (Label.h - Button.h) * 0.5f;
-			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_INFO, s_aDevelopers[Index].m_pName, &Label, s_aDevelopers[Index].m_pName, LineSize, TEXTALIGN_ML);
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_INFO, s_aDevelopers[Index].m_pName, &Label, s_aDevelopers[Index].m_pName, DeveloperFontSize, TEXTALIGN_ML);
 			if(!ReadOnly && Ui()->DoButton_FontIcon(&s_aLinkButtons[Index], FONT_ICON_ARROW_UP_RIGHT_FROM_SQUARE, 0, &Button, IGraphics::CORNER_ALL))
 				Client()->ViewLink(s_aDevelopers[Index].m_pUrl);
 			RenderDevSkin(TeeRect.Center(), TeeSize, s_aDevelopers[Index].m_pSkin, s_aDevelopers[Index].m_pUseCustomColors, s_aDevelopers[Index].m_CustomColors, 0, 0, 0, false, true, s_aDevelopers[Index].m_BodyColor, s_aDevelopers[Index].m_FeetColor);
@@ -5309,20 +5312,20 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 				char aBuf[256];
 				Rect.HSplitTop(Height, &Label, &Rect);
 				str_format(aBuf, sizeof(aBuf), Localize("Name: %s"), Profile.m_Name);
-				Ui()->DoLabel(&Label, aBuf, Height / LineSize * FontSize, TEXTALIGN_ML);
+				Ui()->DoLabel(&Label, aBuf, ProfileMetrics.m_BodySize, TEXTALIGN_ML);
 				Rect.HSplitTop(Height, &Label, &Rect);
 				str_format(aBuf, sizeof(aBuf), Localize("Clan: %s"), Profile.m_Clan);
-				Ui()->DoLabel(&Label, aBuf, Height / LineSize * FontSize, TEXTALIGN_ML);
+				Ui()->DoLabel(&Label, aBuf, ProfileMetrics.m_BodySize, TEXTALIGN_ML);
 				Rect.HSplitTop(Height, &Label, &Rect);
 				str_format(aBuf, sizeof(aBuf), Localize("Skin: %s"), Profile.m_SkinName);
-				Ui()->DoLabel(&Label, aBuf, Height / LineSize * FontSize, TEXTALIGN_ML);
+				Ui()->DoLabel(&Label, aBuf, ProfileMetrics.m_BodySize, TEXTALIGN_ML);
 			}
 			else
 			{
 				Rect.HSplitTop(Height, &Label, &Rect);
-				Ui()->DoLabel(&Label, Profile.m_Name, Height / LineSize * FontSize, TEXTALIGN_ML);
+				Ui()->DoLabel(&Label, Profile.m_Name, ProfileMetrics.m_BodySize, TEXTALIGN_ML);
 				Rect.HSplitTop(Height, &Label, &Rect);
-				Ui()->DoLabel(&Label, Profile.m_Clan, Height / LineSize * FontSize, TEXTALIGN_ML);
+				Ui()->DoLabel(&Label, Profile.m_Clan, ProfileMetrics.m_BodySize, TEXTALIGN_ML);
 			}
 		}
 	};
@@ -5576,7 +5579,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView, bool PrewarmOnly)
 
 	const bool HasSelectedProfile = pConstSelectedProfile() != nullptr;
 	const float ProfilePreviewHeight = HasSelectedProfile ? ProfileMetrics.m_ButtonHeight * 8.0f + MarginSmall * 3.0f : ProfileMetrics.m_ButtonHeight * 4.0f + MarginSmall;
-	const float ProfileActionsHeight = s_AllowDelete ? ProfileMetrics.m_ButtonHeight * 5.0f + ProfileMetrics.m_LineSpacing * 4.0f : ProfileMetrics.m_ButtonHeight * 3.0f + ProfileMetrics.m_LineSpacing * 2.0f;
+	const float ProfileActionsHeight = s_AllowDelete ? ProfileMetrics.m_ButtonHeight * 5.0f + ProfileMetrics.m_LineSpacing * 6.0f : ProfileMetrics.m_ButtonHeight * 3.0f + ProfileMetrics.m_LineSpacing * 3.0f;
 	const float ActionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
 	const float OptionsInlineMinWidth = ResolveSettingsInlineRowMinimumWidth(ProfileMetrics.m_LabelWidth + 2.0f * ProfileMetrics.m_ButtonHeight, ProfileMetrics.m_SectionGap, 1);
 	const auto MeasureActions = [ProfilePreviewHeight, ProfileActionsHeight, ActionsInlineMinWidth](float ContentWidth) { return ContentWidth >= ActionsInlineMinWidth ? std::max(ProfilePreviewHeight, ProfileActionsHeight) : ProfilePreviewHeight + MarginSmall + ProfileActionsHeight; };

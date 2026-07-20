@@ -5810,9 +5810,6 @@ Map
 Map browser color
 == Harita tarayıcı rengi
 
-Map browser opacity
-== Harita tarayıcı opaklığı
-
 Map browser transparency
 == Harita tarayıcısı şeffaflığı
 
@@ -8270,9 +8267,6 @@ Render tiny tees instead of circles
 Renderer performing the analysis
 == Analizi gerçekleştiren işleyici
 
-Renderer selection
-== İşleyici seçimi
-
 Rendering options
 == İşleme seçenekleri
 
@@ -8753,9 +8747,6 @@ Scoreboard color
 Scoreboard cursor
 == Skor tablosu imleci
 
-Scoreboard opacity
-== Skor tablosu opaklığı
-
 Scoreboard point check
 == Skor tablosu puan kontrolü
 
@@ -9091,6 +9082,9 @@ Sets your tee's eye emote
 
 Settings
 == Ayarlar
+
+Settings card border color
+== Ayar kartı kenarlık rengi
 
 Settings card default layout migration version
 == Kart varsayılan düzen geçiş sürümü
@@ -9798,7 +9792,7 @@ Show server settings
 == Sunucu ayarlarını göster
 
 Show settings card borders
-== Ayar kartı kenarlıklarını her zaman göster
+== Ayar kartı kenarlıklarını göster
 
 Show short server names in browser
 == Sunucu tarayıcısında kısa sunucu adını göster
@@ -11467,9 +11461,6 @@ UI motion level
 
 UI mouse sens.
 == Arayüz fare hassasiyeti
-
-UI opacity
-== Arayüz opaklığı
 
 UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
 == UI yuvarlak köşe segment sayısı (önerilen çift sayı 8/16/32/48; tek sayılar otomatik olarak çifte yuvarlanır, çünkü i+=2 çizim gereksinimi)

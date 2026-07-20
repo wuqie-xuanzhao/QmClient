@@ -5810,9 +5810,6 @@ Map
 Map browser color
 == 地圖瀏覽器顏色
 
-Map browser opacity
-== 地圖瀏覽器不透明度
-
 Map browser transparency
 == 地圖瀏覽器透明度
 
@@ -8270,9 +8267,6 @@ Render tiny tees instead of circles
 Renderer performing the analysis
 == 執行分析的渲染器
 
-Renderer selection
-== 渲染器選擇
-
 Rendering options
 == 渲染選項
 
@@ -8753,9 +8747,6 @@ Scoreboard color
 Scoreboard cursor
 == 計分板光標
 
-Scoreboard opacity
-== 計分板不透明度
-
 Scoreboard point check
 == 計分板積分檢查
 
@@ -9091,6 +9082,9 @@ Sets your tee's eye emote
 
 Settings
 == 設置
+
+Settings card border color
+== 設定卡片邊框顏色
 
 Settings card default layout migration version
 == 設定卡片預設佈局遷移版本
@@ -11467,9 +11461,6 @@ UI motion level
 
 UI mouse sens.
 == 鼠標靈敏度（界面）
-
-UI opacity
-== 界面不透明度
 
 UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
 == UI 圓角段數（建議偶數 8/16/32/48；奇數自動規整為偶數，因 i+=2 繪製要求）

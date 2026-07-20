@@ -13,7 +13,7 @@ PAGE_STABLE_IDS = {
 	"player": ("deck:player-identity", "deck:player-country"),
 	"tee": ("deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list"),
 	"tee7": ("deck:tee7-editor",),
-	"graphics": ("deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend", "deck:graphics-modes", "deck:graphics-interaction"),
+	"graphics": ("deck:graphics-display", "deck:graphics-visual", "deck:graphics-modes", "deck:graphics-interaction"),
 	"sound": ("deck:sound-toggle", "deck:sound-volume", "deck:sound-audio-pack"),
 	"ddnet": ("deck:ddnet-demo", "deck:ddnet-gameplay", "deck:ddnet-background", "deck:ddnet-miscellaneous"),
 	"appearance": (
@@ -110,7 +110,7 @@ PAGE_STABLE_IDS = {
 	"tclient_warlist": ("deck:tclient-warlist",),
 	"tclient_status_bar": ("deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"),
 	"tclient_info": ("deck:tclient-info-links", "deck:tclient-info-files", "deck:tclient-info-developers", "deck:tclient-info-tabs"),
-	"tclient_profiles": ("deck:tclient-profiles-actions",),
+	"tclient_profiles": ("deck:tclient-profiles-actions", "deck:tclient-profiles-options", "deck:tclient-profiles-list"),
 	"tclient_configs": ("deck:tclient-configs-actions",),
 	"assets": (),
 }

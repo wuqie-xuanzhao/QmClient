@@ -56,26 +56,24 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	const bool InteractionComplete = DrawState.m_DropFeedback;
 	const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders;
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
-														      Theme.m_Border;
+														      VisualOptions.m_BorderColor;
 	Border.a *= DrawState.m_DrawAlpha;
 	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
-	const float BorderBaseWidth = DrawState.m_Focused ? 3.0f : 2.0f;
-	const float BorderWidth = std::max(BorderBaseWidth, BorderBaseWidth * UiScale);
-	if(DrawCardChrome)
-	{
-		// 边框开关是唯一决定因素：关闭后不因悬浮、焦点或拖放重新显示。
-		if(DrawInteractionBorder)
-		{
+	// Focus/hover 只改变颜色，不能改变 Surface 的几何，否则边框获得焦点时
+	// 会产生一次内缩跳变并重新触发用户看到的卡片闪动。
+	const float BorderWidth = ResolveSettingsCardBorderWidth(UiScale);
+	ExecuteSettingsCardChromeDraw(
+		DrawCardChrome,
+		DrawInteractionBorder,
+		[&] { DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius); },
+		[&] {
 			// 先绘制完整边框，再绘制内缩的 Surface，避免 Surface 抗锯齿边缘与
 			// 自定义描边重叠，产生截图中可见的双层边框。
 			DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
 			CUIRect InnerSurface = DrawFrame.m_Rect;
 			InnerSurface.Margin(BorderWidth, &InnerSurface);
 			InnerSurface.Draw(Surface, IGraphics::CORNER_ALL, std::max(0.0f, CardRadius - BorderWidth));
-		}
-		else
-			DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
-	}
+		});
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
 	{

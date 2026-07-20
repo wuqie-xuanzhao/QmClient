@@ -213,9 +213,22 @@ TEST(SettingsCardDeck, RestingCardsDoNotDrawASecondRoundedBorder)
 
 TEST(SettingsCardDeck, RenderOnlyAndVisiblePassPlanChromeExactlyOnce)
 {
-	EXPECT_FALSE(SettingsCardShouldDrawChrome(true));
-	EXPECT_TRUE(SettingsCardShouldDrawChrome(false));
-	EXPECT_EQ((int)SettingsCardShouldDrawChrome(true) + (int)SettingsCardShouldDrawChrome(false), 1);
+	int SurfaceDrawCount = 0;
+	int BorderedSurfaceDrawCount = 0;
+	const auto DrawSurface = [&] { ++SurfaceDrawCount; };
+	const auto DrawBorderedSurface = [&] { ++BorderedSurfaceDrawCount; };
+
+	ExecuteSettingsCardChromeDraw(SettingsCardShouldDrawChrome(true), false, DrawSurface, DrawBorderedSurface);
+	EXPECT_EQ(SurfaceDrawCount, 0);
+	EXPECT_EQ(BorderedSurfaceDrawCount, 0);
+
+	ExecuteSettingsCardChromeDraw(SettingsCardShouldDrawChrome(false), false, DrawSurface, DrawBorderedSurface);
+	EXPECT_EQ(SurfaceDrawCount, 1);
+	EXPECT_EQ(BorderedSurfaceDrawCount, 0);
+
+	ExecuteSettingsCardChromeDraw(SettingsCardShouldDrawChrome(false), true, DrawSurface, DrawBorderedSurface);
+	EXPECT_EQ(SurfaceDrawCount, 1);
+	EXPECT_EQ(BorderedSurfaceDrawCount, 1);
 }
 
 TEST(SettingsCardDeck, InteractionBorderStaysInsideSurfaceEdge)
@@ -245,6 +258,14 @@ TEST(SettingsCardDeck, CardSurfaceColorIgnoresBorderInteractionState)
 	EXPECT_FLOAT_EQ(RestingSurface.b, InteractiveSurface.b);
 	EXPECT_FLOAT_EQ(RestingSurface.a, InteractiveSurface.a);
 	EXPECT_FLOAT_EQ(RestingSurface.a, BaseSurface.a * Resting.m_DrawAlpha);
+}
+
+TEST(SettingsCardDeck, BorderWidthDoesNotDependOnFocus)
+{
+	// Focus 状态不参与宽度解析，交互反馈只能改变边框颜色。
+	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(1.0f), 2.0f);
+	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(0.5f), 2.0f);
+	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(2.0f), 4.0f);
 }
 
 TEST(SettingsCardDeck, EveryRegisteredCardResolvesANonEmptyDescriptionKey)

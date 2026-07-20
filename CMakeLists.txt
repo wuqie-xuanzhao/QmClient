@@ -2584,6 +2584,7 @@ if(CLIENT)
     friends.h
     ghost.cpp
     ghost.h
+    game_ping.h
     gpu_upload_limiter.h
     graph.cpp
     graph.h

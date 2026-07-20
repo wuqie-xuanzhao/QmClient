@@ -88,7 +88,7 @@ private:
 	char m_aaJoystickAxisCheckboxIds[NUM_JOYSTICK_AXES][2]; // 2 for X and Y buttons
 	CScrollRegion m_JoystickDropDownScrollRegion;
 	CUi::SDropDownState m_JoystickDropDownState;
-	float MeasureSettingsJoystickHeight() const;
+	float MeasureSettingsJoystickHeight(float ContentWidth) const;
 	void RenderSettingsJoystick(CUIRect View, bool ReadOnly);
 	void RenderJoystickAxisPicker(CUIRect View, bool ReadOnly);
 	void RenderJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);

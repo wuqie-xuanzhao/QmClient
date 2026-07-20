@@ -5810,9 +5810,6 @@ Map
 Map browser color
 == Couleur du navigateur de cartes
 
-Map browser opacity
-== Opacité du navigateur de cartes
-
 Map browser transparency
 == Transparence du navigateur de cartes
 
@@ -8270,9 +8267,6 @@ Render tiny tees instead of circles
 Renderer performing the analysis
 == Rendu effectuant l'analyse
 
-Renderer selection
-== Sélection du moteur de rendu
-
 Rendering options
 == Options de rendu
 
@@ -8753,9 +8747,6 @@ Scoreboard color
 Scoreboard cursor
 == Curseur du tableau des scores
 
-Scoreboard opacity
-== Opacité du tableau des scores
-
 Scoreboard point check
 == Vérification des points du tableau des scores
 
@@ -9091,6 +9082,9 @@ Sets your tee's eye emote
 
 Settings
 == Paramètres
+
+Settings card border color
+== Couleur des bordures des cartes de paramètres
 
 Settings card default layout migration version
 == Version de migration de la disposition par défaut des cartes de paramètres
@@ -9798,7 +9792,7 @@ Show server settings
 == Afficher les paramètres du serveur
 
 Show settings card borders
-== Toujours afficher les bordures des cartes de paramètres
+== Afficher les bordures des cartes de paramètres
 
 Show short server names in browser
 == Afficher le nom court du serveur dans le navigateur de serveurs
@@ -11467,9 +11461,6 @@ UI motion level
 
 UI mouse sens.
 == Sens. souris UI
-
-UI opacity
-== Opacité de l'interface utilisateur
 
 UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
 == Nombre de segments d'angle arrondi de l'UI (pair recommandé 8/16/32/48 ; impair automatiquement arrondi au pair, requis par le dessin i+=2)

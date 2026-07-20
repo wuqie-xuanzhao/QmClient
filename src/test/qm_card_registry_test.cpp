@@ -115,7 +115,6 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:player-identity",
 		"deck:player-country",
 		"deck:graphics-visual",
-		"deck:graphics-backend",
 		"deck:graphics-modes",
 		"deck:graphics-interaction",
 		"deck:sound-toggle",
@@ -245,7 +244,7 @@ TEST(QmCardRegistry, GraphicsPilotPlacementSurvivesSerialization)
 {
 	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
 	EXPECT_EQ(Model.StableIdOrder("deck:", "graphics", 1),
-		(std::vector<std::string>{"deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend"}));
+		(std::vector<std::string>{"deck:graphics-display", "deck:graphics-visual"}));
 	EXPECT_EQ(Model.StableIdOrder("deck:", "graphics", 2),
 		(std::vector<std::string>{"deck:graphics-modes", "deck:graphics-interaction"}));
 }

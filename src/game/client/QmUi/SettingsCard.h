@@ -14,6 +14,7 @@ struct SSettingsCardDeckVisualOptions
 {
 	bool m_RainbowTitles = false;
 	bool m_AlwaysShowBorders = true;
+	ColorRGBA m_BorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f);
 };
 
 struct SSettingsCardVisualState
@@ -60,6 +61,22 @@ inline bool SettingsCardInteractionBorderVisible(const SSettingsCardVisualState 
 inline bool SettingsCardShouldDrawChrome(const bool RenderOnly)
 {
 	return !RenderOnly;
+}
+
+template<typename TDrawSurface, typename TDrawBorderedSurface>
+inline void ExecuteSettingsCardChromeDraw(const bool DrawChrome, const bool DrawBorder, TDrawSurface &&DrawSurface, TDrawBorderedSurface &&DrawBorderedSurface)
+{
+	if(!DrawChrome)
+		return;
+	if(DrawBorder)
+		DrawBorderedSurface();
+	else
+		DrawSurface();
+}
+
+inline float ResolveSettingsCardBorderWidth(const float UiScale)
+{
+	return std::max(2.0f, 2.0f * std::max(0.0f, UiScale));
 }
 
 inline CUIRect ResolveSettingsCardInteractionBorderRect(const CUIRect &SurfaceRect, const float BorderWidth)

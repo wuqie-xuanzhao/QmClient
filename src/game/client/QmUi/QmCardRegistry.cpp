@@ -91,7 +91,6 @@ namespace qm_card_registry
 			{"deck:tee7-editor", "tee7", ECardColumn::Full, 0, "Skin", "tee sixup skin editor"},
 			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, Localizable("Graphics display"), "graphics display monitor window", Localizable("Window and monitor")},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, Localizable("Visual"), "graphics visual rendering card appearance settings card border corner segments rainbow title", Localizable("Rendering options")},
-			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, Localizable("Graphics backend"), "graphics backend renderer selection", Localizable("Renderer selection")},
 			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, Localizable("Display modes"), "display modes graphics resolutions", Localizable("Available resolutions")},
 			{"deck:graphics-interaction", "graphics", ECardColumn::Right, 1, Localizable("Interface animations"), "interface ui motion animations focus rainbow", Localizable("Motion and focus feedback")},
 			{"deck:sound-toggle", "sound", ECardColumn::Left, 0, "Sound", "sound toggle audio"},

@@ -732,8 +732,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	constexpr int GeneralListMaxVisibleRows = 8;
 	const int GeneralLanguageVisibleRows = std::clamp((int)g_Localization.Languages().size(), 1, GeneralListMaxVisibleRows);
 	const int GeneralThemeVisibleRows = std::clamp((int)GameClient()->m_MenuBackground.GetThemes().size(), 1, GeneralListMaxVisibleRows);
-	const float GeneralLanguageListHeight = GeneralLanguageVisibleRows * GeneralMetrics.m_ListRowHeight;
-	const float GeneralThemeListHeight = GeneralMetrics.m_LineHeight + GeneralMetrics.m_LineSpacing + GeneralThemeVisibleRows * GeneralMetrics.m_ListRowHeight;
+	const float GeneralLanguageListHeight = ResolveSettingsListViewportHeight(GeneralLanguageVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f);
+	const float GeneralThemeListHeight = GeneralMetrics.m_LineHeight + GeneralMetrics.m_LineSpacing + ResolveSettingsListViewportHeight(GeneralThemeVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f);
 	const SSettingsPageLayoutFrame GeneralPage = SettingsPageLayout(MainView, UiScale);
 	const IUiContext GeneralCardCtx = SettingsUiContext("settings_general", UiScale);
 	const SSettingsCardDeckVisualOptions GeneralVisualOptions = SettingsCardDeckVisualOptions();
@@ -822,7 +822,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
 		});
 
-		AddCard(LanguageSpec, GeneralLanguageListHeight, [this](CUIRect Content) {
+		AddCard(LanguageSpec, GeneralLanguageListHeight, [this, GeneralLanguageListHeight](CUIRect Content) {
+			Content.h = std::min(Content.h, GeneralLanguageListHeight);
 			PrepareLanguagePageCache(Content.w, false);
 			RenderLanguageSelection(Content);
 		});
@@ -831,7 +832,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			ResolveSettingsRowsHeight(3, GeneralMetrics.m_LineHeight, GeneralMetrics.m_LineSpacing) +
 			GeneralMetrics.m_SectionGap + ResolveSettingsRowsHeight(2, GeneralMetrics.m_ButtonHeight, GeneralMetrics.m_LineSpacing) +
 			GeneralMetrics.m_SectionGap + GeneralThemeListHeight;
-		AddCard(ClientSpec, ClientContentHeight, [this, DoNumericField, GeneralMetrics](CUIRect Content) {
+		AddCard(ClientSpec, ClientContentHeight, [this, DoNumericField, GeneralMetrics, GeneralThemeListHeight](CUIRect Content) {
 			CUIRect Button;
 			char aBuf[128 + IO_MAX_PATH_LENGTH];
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
@@ -879,6 +880,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 					Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
 			}
 			Content.HSplitTop(GeneralMetrics.m_SectionGap, nullptr, &Content);
+			Content.h = std::min(Content.h, GeneralThemeListHeight);
 			RenderThemeSelection(Content);
 		});
 
@@ -3583,76 +3585,45 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
 	static const int s_NumWindowMode = std::size(apWindowModes);
 	const int OldWindowMode = g_Config.m_GfxFullscreen ? (g_Config.m_GfxFullscreen == 1 ? 4 : (g_Config.m_GfxFullscreen == 2 ? 3 : 2)) : (g_Config.m_GfxBorderless ? 1 : 0);
-	const int GraphicsBackendRowCount = (FoundBackendCount > 1 ? 1 : 0) + (GpuList.m_vGpus.size() > 1 ? 2 : 0);
+	const int GraphicsBackendRowCount = (FoundBackendCount > 1 ? 1 : 0) + (GpuList.m_vGpus.size() > 1 ? 1 : 0);
 	const qm_card_registry::SCardDefault *pDisplayDefault = qm_card_registry::FindByStableId("deck:graphics-display");
 	const qm_card_registry::SCardDefault *pVisualDefault = qm_card_registry::FindByStableId("deck:graphics-visual");
-	const qm_card_registry::SCardDefault *pBackendDefault = qm_card_registry::FindByStableId("deck:graphics-backend");
 	const qm_card_registry::SCardDefault *pModesDefault = qm_card_registry::FindByStableId("deck:graphics-modes");
 	const qm_card_registry::SCardDefault *pInteractionDefault = qm_card_registry::FindByStableId("deck:graphics-interaction");
-	dbg_assert(pDisplayDefault != nullptr && pVisualDefault != nullptr && pBackendDefault != nullptr && pModesDefault != nullptr && pInteractionDefault != nullptr, "graphics settings cards must be registered");
-	if(pDisplayDefault == nullptr || pVisualDefault == nullptr || pBackendDefault == nullptr || pModesDefault == nullptr || pInteractionDefault == nullptr)
+	dbg_assert(pDisplayDefault != nullptr && pVisualDefault != nullptr && pModesDefault != nullptr && pInteractionDefault != nullptr, "graphics settings cards must be registered");
+	if(pDisplayDefault == nullptr || pVisualDefault == nullptr || pModesDefault == nullptr || pInteractionDefault == nullptr)
 		return;
 
 	const float CardChromeHeight = BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, {nullptr, nullptr, "subtitle"}, 0.0f, UiScale).m_Rect.h;
 	const float DisplayChromeHeight = CardChromeHeight;
 	const float VisualChromeHeight = CardChromeHeight;
-	const float BackendChromeHeight = CardChromeHeight;
 	const float ModesChromeHeight = CardChromeHeight;
 	const float InteractionChromeHeight = CardChromeHeight;
-	const float GraphicsBackendContentHeight = ResolveSettingsRowsHeight(GraphicsBackendRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
-	const float GraphicsBackendMinCardHeight = BackendChromeHeight + GraphicsBackendContentHeight;
 	constexpr int GraphicsModesMaxVisibleRows = 8;
 	const int GraphicsModesVisibleRows = std::clamp(s_NumNodes, 1, GraphicsModesMaxVisibleRows);
 	// 显示模式卡片包含窗口模式、当前模式和实际模式列表，测量时必须为两个设置行
 	// 都保留 viewport，否则卡片 deck 会把列表挤压成只有一行。
 	const float GraphicsModesTargetContentHeight = 2.0f * GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
-	float GraphicsModesContentHeight = GraphicsModesTargetContentHeight;
-	const SCardMotionSpec GraphicsCardMotion = SettingsCardMotionSpec();
-	static bool s_GraphicsModesHeightInitialized = false;
-	static bool s_GraphicsModesHeightAnimationActive = false;
-	static float s_GraphicsModesLastTargetContentHeight = 0.0f;
-	if(!Ui()->RenderOnly() && GraphicsCardCtx.m_pAnim != nullptr)
-	{
-		const uint64_t GraphicsModesHeightNode = UiAnimNodeKey("settings-graphics-modes-height");
-		const bool TargetChanged = !s_GraphicsModesHeightInitialized || std::abs(s_GraphicsModesLastTargetContentHeight - GraphicsModesTargetContentHeight) > 0.01f;
-		if(!s_GraphicsModesHeightInitialized || GraphicsCardMotion.m_ReflowDuration <= 0.0f)
-		{
-			if(TargetChanged || s_GraphicsModesHeightAnimationActive)
-				GraphicsCardCtx.m_pAnim->SetValue(GraphicsModesHeightNode, EUiAnimProperty::HEIGHT, GraphicsModesTargetContentHeight);
-			s_GraphicsModesHeightAnimationActive = false;
-		}
-		else
-		{
-			if(TargetChanged)
-				s_GraphicsModesHeightAnimationActive = true;
-			if(s_GraphicsModesHeightAnimationActive)
-			{
-				GraphicsModesContentHeight = ResolveUiAnimValue(*GraphicsCardCtx.m_pAnim, GraphicsModesHeightNode, EUiAnimProperty::HEIGHT, GraphicsModesTargetContentHeight, GraphicsCardMotion.m_ReflowDuration, EEasing::EASE_OUT);
-				s_GraphicsModesHeightAnimationActive = GraphicsCardCtx.m_pAnim->HasActiveAnimation(GraphicsModesHeightNode, EUiAnimProperty::HEIGHT);
-			}
-		}
-		s_GraphicsModesHeightInitialized = true;
-		s_GraphicsModesLastTargetContentHeight = GraphicsModesTargetContentHeight;
-	}
-	const uint64_t GraphicsModesMeasureRevision = (static_cast<uint64_t>(std::max(0, s_NumNodes)) << 32) ^ static_cast<uint64_t>(std::llround(GraphicsModesContentHeight * 1000.0f));
-	const float GraphicsModesMinCardHeight = ModesChromeHeight + GraphicsModesContentHeight;
-	const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);
+	// 动态高度只交给 Card Deck 处理。页面私有动画会让 measure revision 每帧变化，
+	// 与 Deck 的高度轨道叠加后产生双重缓动和背景闪动。
+	const uint64_t GraphicsModesMeasureRevision = static_cast<uint64_t>(std::max(0, s_NumNodes));
+	const float GraphicsModesMinCardHeight = ModesChromeHeight + GraphicsModesTargetContentHeight;
+	const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
-	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(9, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(7, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
-	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(2, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, pBackendDefault, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsBackendMinCardHeight, BackendChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
-		vCards.reserve(5);
+	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+		vCards.reserve(4);
 		const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pModesDefault)};
 		const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDisplayDefault)};
 		const SSettingsCardSpec VisualSpec{pVisualDefault->m_pStableId, Localize(pVisualDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pVisualDefault)};
 		const SSettingsCardSpec InteractionSpec{pInteractionDefault->m_pStableId, Localize(pInteractionDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pInteractionDefault)};
-		const SSettingsCardSpec BackendSpec{pBackendDefault->m_pStableId, Localize(pBackendDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pBackendDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float MinHeight, float ChromeHeight, FSettingsCardRender Render, uint64_t MeasureRevision = 0) {
 			SSettingsCardDefinition Definition;
 			Definition.m_Spec = Spec;
@@ -3744,7 +3715,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Graphics()->ResizeToScreen();
 			}
 		} }, GraphicsModesMeasureRevision);
-		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsDisplayRowCount, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
+		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsDisplayRowCount, FoundBackendCount, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
 		CUIRect Button;
 		char aBuf[128];
 		CUIRect CardView = ContentRect; // switches
@@ -3849,46 +3820,125 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Button = NextRow();
 		str_copy(aBuf, " ");
 		str_append(aBuf, Localize("Hz", "Hertz"));
-		DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000); }, GraphicsDisplayMeasureRevision);
+			DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000);
+
+			const auto DoGraphicsChoiceRow = [this, GraphicsMetrics](CUIRect Row, const char *pLabel, const char *pId, const char **ppNames, size_t Count, int Current, CUi::SDropDownState &State, CScrollRegion &ScrollRegion, auto &&OnChanged) {
+				CUIRect Label, DropDown;
+				Row.VSplitLeft(std::clamp(Row.w * 0.38f, 120.0f * GraphicsMetrics.m_UiScale, 220.0f * GraphicsMetrics.m_UiScale), &Label, &DropDown);
+				DropDown.VSplitLeft(GraphicsMetrics.m_LineSpacing, nullptr, &DropDown);
+				DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, pId, &Label, pLabel, GraphicsMetrics.m_BodySize, TEXTALIGN_ML);
+				State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
+				const int NewValue = Ui()->DoDropDown(&DropDown, Current, ppNames, Count, State);
+				if(NewValue != Current)
+					OnChanged(NewValue);
+			};
+			if(FoundBackendCount > 1)
+			{
+				CUIRect Row = NextRow();
+				static CUi::SDropDownState s_BackendDropDownState;
+				static CScrollRegion s_BackendDropDownScrollRegion;
+				static std::vector<const char *> s_vpGraphicsBackendNames;
+				static std::vector<SMenuBackendInfo> s_vGraphicsBackendInfos;
+				static std::string s_CustomBackendId;
+				static std::string s_CustomBackendDisplayName;
+				s_vpGraphicsBackendNames.clear();
+				s_vGraphicsBackendInfos.clear();
+				for(size_t i = 0; i < s_vSupportedBackendNames.size(); ++i)
+				{
+					s_vpGraphicsBackendNames.push_back(s_vSupportedBackendNames[i].c_str());
+					s_vGraphicsBackendInfos.push_back(s_vSupportedBackendInfos[i]);
+				}
+				int Selected = -1;
+				for(size_t i = 0; i < s_vSupportedBackendInfos.size(); ++i)
+					if(str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == s_vSupportedBackendInfos[i].m_Major && g_Config.m_GfxGLMinor == s_vSupportedBackendInfos[i].m_Minor && g_Config.m_GfxGLPatch == s_vSupportedBackendInfos[i].m_Patch)
+						Selected = (int)i;
+				if(Selected < 0)
+				{
+					Selected = ResolveSettingsSelectionWithCustomFallback(Selected, (int)s_vGraphicsBackendInfos.size());
+					char aBackendDisplayName[128];
+					char aCustomDisplayName[192];
+					FormatQmGraphicsBackendDisplayName(aBackendDisplayName, sizeof(aBackendDisplayName), g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, false);
+					str_format(aCustomDisplayName, sizeof(aCustomDisplayName), "%s (%s)", Localize("custom"), aBackendDisplayName);
+					s_CustomBackendId = g_Config.m_GfxBackend;
+					s_CustomBackendDisplayName = aCustomDisplayName;
+					SMenuBackendInfo CustomInfo;
+					CustomInfo.m_pBackendName = s_CustomBackendId.c_str();
+					CustomInfo.m_Major = g_Config.m_GfxGLMajor;
+					CustomInfo.m_Minor = g_Config.m_GfxGLMinor;
+					CustomInfo.m_Patch = g_Config.m_GfxGLPatch;
+					s_vGraphicsBackendInfos.push_back(CustomInfo);
+					s_vpGraphicsBackendNames.push_back(s_CustomBackendDisplayName.c_str());
+				}
+				DoGraphicsChoiceRow(Row, Localize("Graphics backend"), "graphics-backend", s_vpGraphicsBackendNames.data(), s_vpGraphicsBackendNames.size(), Selected, s_BackendDropDownState, s_BackendDropDownScrollRegion, [this](int NewValue) {
+					if(NewValue < 0 || NewValue >= (int)s_vGraphicsBackendInfos.size())
+						return;
+					str_copy(g_Config.m_GfxBackend, s_vGraphicsBackendInfos[NewValue].m_pBackendName);
+					g_Config.m_GfxGLMajor = s_vGraphicsBackendInfos[NewValue].m_Major;
+					g_Config.m_GfxGLMinor = s_vGraphicsBackendInfos[NewValue].m_Minor;
+					g_Config.m_GfxGLPatch = s_vGraphicsBackendInfos[NewValue].m_Patch;
+					CheckSettings = true;
+					InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::BACKEND_CHANGED);
+				});
+			}
+			if(Graphics()->GetGpus().m_vGpus.size() > 1)
+			{
+				CUIRect Row = NextRow();
+				const auto &GpuList = Graphics()->GetGpus();
+				static CUi::SDropDownState s_GpuDropDownState;
+				static CScrollRegion s_GpuDropDownScrollRegion;
+				static std::vector<std::string> s_vGpuNames;
+				static std::vector<const char *> s_vpGpuNames;
+				s_vGpuNames.clear();
+				char aAutoGpuName[256];
+				str_format(aAutoGpuName, sizeof(aAutoGpuName), "%s (%s)", Localize("auto"), GpuList.m_AutoGpu.m_aName);
+				s_vGpuNames.emplace_back(aAutoGpuName);
+				for(const auto &Gpu : GpuList.m_vGpus)
+					s_vGpuNames.emplace_back(Gpu.m_aName);
+				s_vpGpuNames.clear();
+				for(const auto &Name : s_vGpuNames)
+					s_vpGpuNames.push_back(Name.c_str());
+				int Selected = 0;
+				for(size_t i = 1; i < s_vGpuNames.size(); ++i)
+					if(str_comp(g_Config.m_GfxGpuName, GpuList.m_vGpus[i - 1].m_aName) == 0)
+						Selected = (int)i;
+				DoGraphicsChoiceRow(Row, Localize("Graphics card"), "graphics-card-title", s_vpGpuNames.data(), s_vpGpuNames.size(), Selected, s_GpuDropDownState, s_GpuDropDownScrollRegion, [this, &GpuList](int NewValue) {
+					if(NewValue == 0)
+						str_copy(g_Config.m_GfxGpuName, "auto");
+					else
+						str_copy(g_Config.m_GfxGpuName, GpuList.m_vGpus[NewValue - 1].m_aName);
+					CheckSettings = true;
+				});
+			} }, GraphicsDisplayMeasureRevision);
 		AddCard(VisualSpec, GraphicsVisualMinCardHeight, VisualChromeHeight, [this, GraphicsMetrics, DoGraphicsNumericField](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
+			const auto DoAlphaColorPicker = [this, GraphicsMetrics, &CardView](CButtonContainer *pResetId, const char *pLabel, unsigned *pColor, int *pOpacity, unsigned DefaultColor, int DefaultOpacity) {
+				unsigned PackedColor = ColorHSLA(*pColor).WithAlpha(std::clamp(*pOpacity / 100.0f, 0.0f, 1.0f)).Pack(true);
+				const unsigned OldPackedColor = PackedColor;
+				DoLine_ColorPicker(pResetId, GraphicsMetrics, &CardView, pLabel, &PackedColor, color_cast<ColorRGBA>(ColorHSLA(DefaultColor).WithAlpha(DefaultOpacity / 100.0f)), false, nullptr, true);
+				if(PackedColor == OldPackedColor)
+					return false;
+				const ColorHSLA Updated(PackedColor, true);
+				*pColor = Updated.Pack(false);
+				*pOpacity = std::clamp(round_to_int(Updated.a * 100.0f), 0, 100);
+				return true;
+			};
 			static CButtonContainer s_UiColorResetId;
-			const unsigned OldQmUiColor = g_Config.m_QmUiColor;
-			DoLine_ColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor)), false, nullptr, false);
-			if(OldQmUiColor != g_Config.m_QmUiColor)
+			if(DoAlphaColorPicker(&s_UiColorResetId, Localize("UI color"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_MapBrowserColorResetId;
-			const unsigned OldQmMapBrowserColor = g_Config.m_QmMapBrowserColor;
-			DoLine_ColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmMapBrowserColor)), false, nullptr, false);
-			if(OldQmMapBrowserColor != g_Config.m_QmMapBrowserColor)
+			if(DoAlphaColorPicker(&s_MapBrowserColorResetId, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity, DefaultConfig::QmMapBrowserColor, DefaultConfig::QmMapBrowserOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_ScoreboardColorResetId;
-			const unsigned OldQmScoreboardColor = g_Config.m_QmScoreboardColor;
-			DoLine_ColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmScoreboardColor)), false, nullptr, false);
-			if(OldQmScoreboardColor != g_Config.m_QmScoreboardColor)
+			if(DoAlphaColorPicker(&s_ScoreboardColorResetId, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity, DefaultConfig::QmScoreboardColor, DefaultConfig::QmScoreboardOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
-			const int OldQmUiOpacity = g_Config.m_QmUiOpacity;
-			DoGraphicsNumericField("graphics-ui-opacity", &g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize("UI opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
-			if(OldQmUiOpacity != g_Config.m_QmUiOpacity)
-				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-
-			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
-			const int OldQmMapBrowserOpacity = g_Config.m_QmMapBrowserOpacity;
-			DoGraphicsNumericField("graphics-map-browser-opacity", &g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("Map browser opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
-			if(OldQmMapBrowserOpacity != g_Config.m_QmMapBrowserOpacity)
-				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-
-			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
-			const int OldQmScoreboardOpacity = g_Config.m_QmScoreboardOpacity;
-			DoGraphicsNumericField("graphics-scoreboard-opacity", &g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("Scoreboard opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
-			if(OldQmScoreboardOpacity != g_Config.m_QmScoreboardOpacity)
+			static CButtonContainer s_CardBorderColorResetId;
+			const unsigned OldCardBorderColor = g_Config.m_QmUiCardBorderColor;
+			DoLine_ColorPicker(&s_CardBorderColorResetId, GraphicsMetrics, &CardView, Localize("Settings card border color"), &g_Config.m_QmUiCardBorderColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f), false, nullptr, true, false);
+			if(OldCardBorderColor != g_Config.m_QmUiCardBorderColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
@@ -3908,7 +3958,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
-			int RowsRemaining = 2;
+			int RowsRemaining = 3;
 			const auto NextRow = [&]() {
 				CUIRect Row;
 				CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
@@ -3917,10 +3967,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				return Row;
 			};
 			CUIRect MotionRow = NextRow();
-			CUIRect Label, Segments, ExtraAnimations;
-			const float ExtraAnimationsWidth = std::clamp(MotionRow.w * 0.30f, 120.0f * GraphicsMetrics.m_UiScale, 170.0f * GraphicsMetrics.m_UiScale);
-			MotionRow.VSplitRight(ExtraAnimationsWidth, &MotionRow, &ExtraAnimations);
-			MotionRow.VSplitRight(GraphicsMetrics.m_LineSpacing, &MotionRow, nullptr);
+			CUIRect Label, Segments;
 			MotionRow.VSplitLeft(std::clamp(MotionRow.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
 			Segments.VSplitLeft(GraphicsMetrics.m_LineSpacing, nullptr, &Segments);
 			DoSettingsLabel(SETTINGS_GRAPHICS, -1, "graphics-ui-motion-level-label", &Label, Localize("UI motion level"), BodySize, TEXTALIGN_ML);
@@ -3935,6 +3982,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					g_Config.m_QmUiMotionLevel = i;
 			}
 
+			CUIRect ExtraAnimations = NextRow();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &ExtraAnimations))
 				g_Config.m_QmExtraAnimations ^= 1;
 			static CButtonContainer s_FocusColorResetId;
@@ -3946,154 +3994,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			if(OldFocusColor != g_Config.m_QmUiFocusColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 		});
-		AddCard(BackendSpec, GraphicsBackendMinCardHeight, BackendChromeHeight, [this, GraphicsMetrics, GraphicsBackendRowCount, FoundBackendCount](CUIRect ContentRect) {
-		CUIRect CardView = ContentRect; // Backend list
-		const auto &GpuList = Graphics()->GetGpus();
-		int BackendRowsRemaining = GraphicsBackendRowCount;
-		const auto NextBackendRow = [&]() {
-			CUIRect Row;
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
-			if(--BackendRowsRemaining > 0)
-				CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-			return Row;
-		};
-
-		if(FoundBackendCount > 1)
-		{
-			CUIRect BackendDropDown = NextBackendRow();
-
-			static std::vector<const char *> s_vpBackendIdNamesCStr;
-			static std::vector<SMenuBackendInfo> s_vBackendInfos;
-			static std::string s_CustomBackendName;
-
-			size_t BackendCount = FoundBackendCount;
-			s_vpBackendIdNamesCStr.resize(BackendCount);
-			s_vBackendInfos.resize(BackendCount);
-
-			int SelectedOldBackend = -1;
-			for(size_t i = 0; i < BackendCount; ++i)
-			{
-				const SMenuBackendInfo &Info = s_vSupportedBackendInfos[i];
-				s_vpBackendIdNamesCStr[i] = s_vSupportedBackendNames[i].c_str();
-				s_vBackendInfos[i] = Info;
-				if(str_comp_nocase(Info.m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == Info.m_Major && g_Config.m_GfxGLMinor == Info.m_Minor && g_Config.m_GfxGLPatch == Info.m_Patch)
-				{
-					SelectedOldBackend = (int)i;
-				}
-			}
-
-			if(SelectedOldBackend == -1)
-			{
-				// custom selected one
-				char aCustomBackendName[128];
-				char aTmpBackendName[256];
-				FormatQmGraphicsBackendDisplayName(aCustomBackendName, sizeof(aCustomBackendName), g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, false);
-				str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s (%s)", Localize("custom"), aCustomBackendName);
-				s_CustomBackendName = aTmpBackendName;
-				s_vpBackendIdNamesCStr.push_back(s_CustomBackendName.c_str());
-
-				SMenuBackendInfo CustomInfo;
-				CustomInfo.m_pBackendName = "custom";
-				CustomInfo.m_Major = g_Config.m_GfxGLMajor;
-				CustomInfo.m_Minor = g_Config.m_GfxGLMinor;
-				CustomInfo.m_Patch = g_Config.m_GfxGLPatch;
-				s_vBackendInfos.push_back(CustomInfo);
-
-				SelectedOldBackend = (int)BackendCount;
-				++BackendCount;
-			}
-
-			static int s_SelectedOldBackend = -1;
-			if(s_SelectedOldBackend == -1)
-				s_SelectedOldBackend = SelectedOldBackend;
-
-			static CUi::SDropDownState s_BackendDropDownState;
-			static CScrollRegion s_BackendDropDownScrollRegion;
-			s_BackendDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_BackendDropDownScrollRegion;
-			const int NewBackend = Ui()->DoDropDown(&BackendDropDown, SelectedOldBackend, s_vpBackendIdNamesCStr.data(), BackendCount, s_BackendDropDownState);
-			if(SelectedOldBackend != NewBackend)
-			{
-				str_copy(g_Config.m_GfxBackend, s_vBackendInfos[NewBackend].m_pBackendName);
-				g_Config.m_GfxGLMajor = s_vBackendInfos[NewBackend].m_Major;
-				g_Config.m_GfxGLMinor = s_vBackendInfos[NewBackend].m_Minor;
-				g_Config.m_GfxGLPatch = s_vBackendInfos[NewBackend].m_Patch;
-
-				CheckSettings = true;
-				s_GfxBackendChanged = s_SelectedOldBackend != NewBackend;
-				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::BACKEND_CHANGED);
-			}
-		}
-
-		// GPU list
-		if(GpuList.m_vGpus.size() > 1)
-		{
-			CUIRect Text = NextBackendRow();
-			CUIRect GpuDropDown = NextBackendRow();
-			DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, "graphics-card-title", &Text, Localize("Graphics card"), GraphicsMetrics.m_BodySize, TEXTALIGN_ML);
-
-			static std::vector<std::string> s_vGpuIdNames;
-			static std::vector<const char *> s_vpGpuIdNames;
-			static char s_aGpuListCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
-
-			size_t GpuCount = GpuList.m_vGpus.size() + 1;
-			char aCurDeviceName[256 + 4];
-			str_format(aCurDeviceName, sizeof(aCurDeviceName), "%s (%s)", Localize("auto"), GpuList.m_AutoGpu.m_aName);
-			bool GpuNameCacheDirty = s_vGpuIdNames.size() != GpuCount || str_comp(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile) != 0;
-			if(!GpuNameCacheDirty)
-			{
-				GpuNameCacheDirty = s_vGpuIdNames[0] != aCurDeviceName;
-				for(size_t i = 1; !GpuNameCacheDirty && i < GpuCount; ++i)
-					GpuNameCacheDirty = s_vGpuIdNames[i] != GpuList.m_vGpus[i - 1].m_aName;
-			}
-			if(GpuNameCacheDirty)
-			{
-				s_vGpuIdNames.resize(GpuCount);
-				s_vGpuIdNames[0] = aCurDeviceName;
-				for(size_t i = 1; i < GpuCount; ++i)
-					s_vGpuIdNames[i] = GpuList.m_vGpus[i - 1].m_aName;
-				str_copy(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile);
-			}
-			s_vpGpuIdNames.resize(GpuCount);
-			for(size_t i = 0; i < GpuCount; ++i)
-				s_vpGpuIdNames[i] = s_vGpuIdNames[i].c_str();
-
-			int OldSelectedGpu = -1;
-			for(size_t i = 0; i < GpuCount; ++i)
-			{
-				if(i == 0)
-				{
-					if(str_comp("auto", g_Config.m_GfxGpuName) == 0)
-					{
-						OldSelectedGpu = 0;
-					}
-				}
-				else
-				{
-					if(str_comp(GpuList.m_vGpus[i - 1].m_aName, g_Config.m_GfxGpuName) == 0)
-					{
-						OldSelectedGpu = i;
-					}
-				}
-			}
-
-			static int s_OldSelectedGpu = -1;
-			if(s_OldSelectedGpu == -1)
-				s_OldSelectedGpu = OldSelectedGpu;
-
-			static CUi::SDropDownState s_GpuDropDownState;
-			static CScrollRegion s_GpuDropDownScrollRegion;
-			s_GpuDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_GpuDropDownScrollRegion;
-			const int NewGpu = Ui()->DoDropDown(&GpuDropDown, OldSelectedGpu, s_vpGpuIdNames.data(), GpuCount, s_GpuDropDownState);
-			if(OldSelectedGpu != NewGpu)
-			{
-				if(NewGpu == 0)
-					str_copy(g_Config.m_GfxGpuName, "auto");
-				else
-					str_copy(g_Config.m_GfxGpuName, GpuList.m_vGpus[NewGpu - 1].m_aName);
-				CheckSettings = true;
-				s_GfxGpuChanged = NewGpu != s_OldSelectedGpu;
-			}
-		} }, static_cast<uint64_t>(GraphicsBackendRowCount));
 	};
 	uint64_t GraphicsLayoutRevision = GraphicsModesMeasureRevision;
 	GraphicsLayoutRevision = GraphicsLayoutRevision * 1099511628211ULL ^ static_cast<uint64_t>(GraphicsDisplayRowCount);
@@ -7649,20 +7549,21 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 			DoDDNetNumericField("ddnet-overlay-entities", &g_Config.m_ClOverlayEntities, &g_Config.m_ClOverlayEntities, Button, Localize("Overlay entities"), 0, 100);
 
 			SplitDDNetRow(Gameplay, &GameplayRow);
-			GameplayRow.VSplitMid(&LeftLeft, &Button);
+			GameplayRow.VSplitLeft(std::clamp(GameplayRow.w * 0.38f, 140.0f * UiScale, 240.0f * UiScale), &LeftLeft, &Button);
+			Button.VSplitLeft(DDNetMetrics.m_LineSpacing, nullptr, &Button);
 
 			if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClTextEntities, "Show text entities", Localize("Show text entities"), g_Config.m_ClTextEntities, &LeftLeft))
 				g_Config.m_ClTextEntities ^= 1;
 
 			if(TextEntitiesLayout)
 			{
-				SplitDDNetRow(Gameplay, &Button);
 				if(DoDDNetNumericField("ddnet-text-entities-size", &g_Config.m_ClTextEntitiesSize, &g_Config.m_ClTextEntitiesSize, Button, Localize("Size"), 20, 100, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE))
 					GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 			}
 
 			SplitDDNetRow(Gameplay, &GameplayRow);
-			GameplayRow.VSplitMid(&LeftLeft, &Button);
+			GameplayRow.VSplitLeft(std::clamp(GameplayRow.w * 0.38f, 140.0f * UiScale, 240.0f * UiScale), &LeftLeft, &Button);
+			Button.VSplitLeft(DDNetMetrics.m_LineSpacing, nullptr, &Button);
 
 			if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClShowOthers, "Show others", Localize("Show others"), g_Config.m_ClShowOthers == SHOW_OTHERS_ON, &LeftLeft))
 				g_Config.m_ClShowOthers = g_Config.m_ClShowOthers != SHOW_OTHERS_ON ? SHOW_OTHERS_ON : SHOW_OTHERS_OFF;

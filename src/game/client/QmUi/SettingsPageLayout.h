@@ -206,6 +206,18 @@ inline float ResolveSettingsRowsHeight(const int RowCount, const float RowHeight
 	return RowCount * std::max(0.0f, RowHeight) + std::max(0, RowCount - 1) * std::max(0.0f, RowSpacing);
 }
 
+inline int ResolveSettingsSelectionWithCustomFallback(const int MatchedIndex, const int SupportedCount)
+{
+	return MatchedIndex >= 0 && MatchedIndex < SupportedCount ? MatchedIndex : std::max(0, SupportedCount);
+}
+
+// 列表 viewport 只允许显示完整行。列表控件的行距由调用方显式消费，
+// 不能把卡片剩余高度直接传进去，否则最后会露出半行内容。
+inline float ResolveSettingsListViewportHeight(const int VisibleRows, const float RowHeight, const float RowSpacing)
+{
+	return ResolveSettingsRowsHeight(std::clamp(VisibleRows, 0, 8), RowHeight, RowSpacing);
+}
+
 inline float ResolveSettingsProfilesListHeight(const SSettingsContentMetrics &Metrics, const float ContentWidth, const int ProfileCount)
 {
 	const float ItemWidth = std::max(Metrics.m_ListRowHeight * 6.0f, Metrics.m_LabelWidth + Metrics.m_ButtonHeight * 2.0f);
@@ -340,8 +352,10 @@ inline SSettingsRadioRowLayout ResolveSettingsRadioRowLayout(const CUIRect &View
 		return Layout;
 
 	const float Gap = Metrics.m_LineSpacing;
-	const float LabelWidth = ResolveSettingsCardLabelWidth(View.w, Metrics);
-	const float MinimumOptionWidth = std::max(48.0f * Metrics.m_UiScale, Metrics.m_ButtonHeight * 2.4f);
+	// 字号存在下限，因此窄屏控件宽度不能继续按 UiScale 同比例缩小。
+	// 为标签和每个选项保留可读宽度，空间不足时统一换到下一行。
+	const float LabelWidth = std::max(96.0f, ResolveSettingsCardLabelWidth(View.w, Metrics));
+	const float MinimumOptionWidth = std::max(72.0f, Metrics.m_ButtonHeight * 3.0f);
 	const float RequiredInlineWidth = LabelWidth + Gap + MinimumOptionWidth * OptionCount;
 	Layout.m_Stacked = View.w < RequiredInlineWidth;
 	if(Layout.m_Stacked)
@@ -357,6 +371,33 @@ inline SSettingsRadioRowLayout ResolveSettingsRadioRowLayout(const CUIRect &View
 		Layout.m_Height = std::max(Metrics.m_LineHeight, Metrics.m_ButtonHeight);
 	}
 	return Layout;
+}
+
+inline float ResolveSettingsControllerContentHeight(const float ContentWidth, const bool Enabled, const bool HasJoystick, const bool AbsoluteMode, const int AxisCount, const int MaxAxisCount, const float RowHeight, const float RowSpacing)
+{
+	float Height = std::max(0.0f, RowHeight) + std::max(0.0f, RowSpacing);
+	if(!Enabled)
+		return Height;
+
+	Height += std::max(0.0f, RowHeight) + std::max(0.0f, RowSpacing);
+	if(!HasJoystick)
+		return Height + std::max(0.0f, RowSpacing);
+
+	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(ContentWidth);
+	const SSettingsRadioRowLayout Radio = ResolveSettingsRadioRowLayout({0.0f, 0.0f, std::max(0.0f, ContentWidth), RowHeight * 2.0f + RowSpacing}, 2, Metrics);
+	Height += Radio.m_Height + RowSpacing;
+	if(!AbsoluteMode)
+		Height += RowHeight + RowSpacing;
+	Height += 2.0f * (RowHeight + RowSpacing);
+	Height += (std::clamp(AxisCount, 0, std::max(0, MaxAxisCount)) + 1) * (RowHeight + RowSpacing);
+	return Height + RowSpacing;
+}
+
+inline int ResolveSettingsStatusCodeRows(const int ItemCount, const float ContentWidth)
+{
+	if(ItemCount <= 0)
+		return 0;
+	return ContentWidth > 360.0f ? (ItemCount + 1) / 2 : ItemCount;
 }
 
 inline float ResolveSettingsInlineRowMinimumWidth(const float FixedControlsWidth, const float Gap, const int GapCount)
@@ -522,7 +563,8 @@ inline float ResolveDDNetDemoRows(const bool RaceGhostEnabled, const bool SaveGh
 
 inline float ResolveDDNetGameplayRows(const bool TextEntitiesEnabled, const bool AntiPingEnabled)
 {
-	return 9.0f + (TextEntitiesEnabled ? 1.0f : 0.0f) + (AntiPingEnabled ? 3.0f : 0.0f);
+	(void)TextEntitiesEnabled;
+	return 9.0f + (AntiPingEnabled ? 3.0f : 0.0f);
 }
 
 inline SSettingsSubTabLayoutFrame ResolveSettingsSubTabLayout(const CUIRect &MainView, const float UiScale = 1.0f)

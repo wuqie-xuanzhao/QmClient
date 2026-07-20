@@ -555,9 +555,9 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 	EXPECT_EQ(Source.find("s_MenuPanelColorResetId"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_ClMenuPanelColor"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_UiColor"), std::string::npos);
-	EXPECT_NE(Source.find("DoLine_ColorPicker(&s_UiColorResetId"), std::string::npos);
-	EXPECT_NE(Source.find("DoLine_ColorPicker(&s_MapBrowserColorResetId"), std::string::npos);
-	EXPECT_NE(Source.find("DoLine_ColorPicker(&s_ScoreboardColorResetId"), std::string::npos);
+	EXPECT_NE(Source.find("DoAlphaColorPicker(&s_UiColorResetId, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoAlphaColorPicker(&s_MapBrowserColorResetId, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoAlphaColorPicker(&s_ScoreboardColorResetId, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmUiColor"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmMapBrowserColor"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmScoreboardColor"), std::string::npos);
@@ -567,9 +567,9 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 	EXPECT_NE(Source.find("Localize(\"UI color\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Map browser color\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Scoreboard color\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"UI opacity\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Map browser opacity\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Scoreboard opacity\")"), std::string::npos);
+	EXPECT_EQ(Source.find("Localize(\"UI opacity\")"), std::string::npos);
+	EXPECT_EQ(Source.find("Localize(\"Map browser opacity\")"), std::string::npos);
+	EXPECT_EQ(Source.find("Localize(\"Scoreboard opacity\")"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"UI opacity\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"界面不透明度\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Map browser opacity\""), std::string::npos);
@@ -578,15 +578,18 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"计分板不透明度\""), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SettingsGraphicsOpacitySlidersExposeIndependentUiDomains)
+TEST(QmNewUiMenuBranches, SettingsGraphicsColorPickersExposeIndependentAlphaDomains)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Graphics.empty());
 
-	EXPECT_NE(Graphics.find("DoGraphicsNumericField(\"graphics-ui-opacity\", &g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize(\"UI opacity\"), 0, 100, &CUi::ms_LinearScrollbarScale, \"%\")"), std::string::npos);
-	EXPECT_NE(Graphics.find("DoGraphicsNumericField(\"graphics-map-browser-opacity\", &g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize(\"Map browser opacity\"), 0, 100, &CUi::ms_LinearScrollbarScale, \"%\")"), std::string::npos);
-	EXPECT_NE(Graphics.find("DoGraphicsNumericField(\"graphics-scoreboard-opacity\", &g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"Scoreboard opacity\"), 0, 100, &CUi::ms_LinearScrollbarScale, \"%\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoAlphaColorPicker(&s_UiColorResetId, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoAlphaColorPicker(&s_MapBrowserColorResetId, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoAlphaColorPicker(&s_ScoreboardColorResetId, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
+	EXPECT_EQ(Graphics.find("graphics-ui-opacity"), std::string::npos);
+	EXPECT_EQ(Graphics.find("graphics-map-browser-opacity"), std::string::npos);
+	EXPECT_EQ(Graphics.find("graphics-scoreboard-opacity"), std::string::npos);
 	EXPECT_EQ(Graphics.find("DoSliderWithValueInput("), std::string::npos);
 }
 
@@ -2097,6 +2100,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientChatBinds = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)");
+	const std::string StatusBarHeader = ReadTextFile("src/game/client/components/tclient/statusbar.h");
 	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
 	ASSERT_FALSE(RenderSettingsTClientBindWheel.empty());
 	ASSERT_FALSE(RenderSettingsTClientChatBinds.empty());
@@ -2123,7 +2127,10 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_StatusBarPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("CardDeck.RenderCached("), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("const int Rows = ContentWidth > 360.0f ? (StatusBarCodeCount + 1) / 2 : StatusBarCodeCount;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("const int Rows = ResolveSettingsStatusCodeRows(StatusBarCodeCount, ContentWidth);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("static char s_aCodeLanguage[sizeof(g_Config.m_ClLanguagefile)]"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("static char s_aDropDownLanguage[sizeof(g_Config.m_ClLanguagefile)]"), std::string::npos);
+	EXPECT_NE(StatusBarHeader.find("\"g\", \"Snapshot Age\""), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(View.w > 360.0f)"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("CTClientSettingsRowAllocator Rows(View);"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("MarginSmall * 10.0f"), std::string::npos);
@@ -2139,7 +2146,8 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsTClientStatusBar.find("tclient-statusbar-seconds\", Localize(\"Show seconds on clock\"), g_Config.m_TcStatusBarLocalTimeSeconds, &CheckBoxRect))\n\t\t\tg_Config.m_TcStatusBarLocalTimeSeconds ^= 1;\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\t{\n\t\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientStatusBar.find("s_StatusBarSettingsCardHeight"), std::string::npos);
 	EXPECT_EQ(RenderSettingsTClientStatusBar.find("s_StatusBarSettingsScrollY"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("const float EditorContentHeight = maximum("), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("const float EditorContentHeight = LineSize * 7.0f + SmallSize + MarginSmall * 4.0f;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientBindWheel.find("320.0f - CardChromeHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("const auto RenderPreview = [this, ReadOnly](CUIRect RightView) {\n\t\tif(ReadOnly)\n\t\t\treturn;"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
@@ -2167,36 +2175,43 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("const SSettingsPageLayoutFrame GraphicsPage = SettingsPageLayout(MainView, UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-display\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-visual\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-backend\")"), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-backend\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-modes\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-interaction\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("Localize(pBackendDefault->m_pTitle)"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Graphics backend\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmExtraAnimations, \"extra-animations\", Localize(\"Extra animations\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardRainbowTitles, \"rainbow-card-titles\", Localize(\"Rainbow card titles\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardBorders, \"show-settings-card-borders\", Localize(\"Show settings card borders\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Settings card border color\"), &g_Config.m_QmUiCardBorderColor"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("false, nullptr, true, false);"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("DoGraphicsNumericField(\"graphics-card-corner-segments\""), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("int RowsRemaining = 2;"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("int RowsRemaining = 3;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("DoSettingsLabel(SETTINGS_GRAPHICS, -1, \"graphics-ui-motion-level-label\""), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const char *apMotionLabels[] = {Localize(\"Off\"), Localize(\"Reduced\"), Localize(\"Full\")}"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(DisplaySpec, GraphicsDisplayMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(VisualSpec, GraphicsVisualMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(InteractionSpec, GraphicsInteractionMinCardHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("AddCard(BackendSpec, GraphicsBackendMinCardHeight"), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("AddCard(BackendSpec"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(ModesSpec, GraphicsModesMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("constexpr int GraphicsModesMaxVisibleRows = 8;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("2.0f * GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(9"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(2"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(7"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsDisplayMeasureRevision ="), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsDisplayMeasureRevision"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesTargetContentHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("settings-graphics-modes-height"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsModesMeasureRevision = static_cast<uint64_t>(std::max(0, s_NumNodes));"), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("settings-graphics-modes-height"), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsModesHeightAnimationActive"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("MotionRow.VSplitLeft"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("static CUi::SDropDownState s_BackendDropDownState;"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("static CUi::SDropDownState s_GpuDropDownState;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("static CUi::SDropDownState s_State;"), std::string::npos);
 	const size_t ModesCard = RenderSettingsGraphics.find("AddCard(ModesSpec");
 	const size_t WindowMode = RenderSettingsGraphics.find("s_WindowModeDropDownState", ModesCard);
 	const size_t DisplayCard = RenderSettingsGraphics.find("AddCard(DisplaySpec");
@@ -2709,15 +2724,18 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesQmClientDisplayNames)
 	EXPECT_NE(Formatter.find("\"Vulkan QmClient\""), std::string::npos);
 	EXPECT_EQ(Formatter.find("\"OpenGL_QmClient_%d_%d\""), std::string::npos);
 	EXPECT_EQ(Formatter.find("\"Vulkan_QmClient\""), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("Localize(pBackendDefault->m_pTitle)"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("FormatQmGraphicsBackendDisplayName(aTmpBackendName"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Graphics backend\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("FormatQmGraphicsBackendDisplayName(aBackendDisplayName"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("ResolveSettingsSelectionWithCustomFallback"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("s_CustomBackendDisplayName"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("s_vGraphicsBackendInfos"), std::string::npos);
 	EXPECT_NE(Source.find("static std::vector<const CCountryFlags::CCountryFlag *> s_vpFilteredFlags"), std::string::npos);
 	EXPECT_NE(Source.find("s_vpFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_aScreenNamesCacheLanguage"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const bool RefreshScreenNames"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_vSupportedBackendNames"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_BackendListCacheDriverBlocked"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vGpuIdNames"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("s_vGpuNames"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("s_vpGpuIdNames[i] = aCurDeviceName"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("Localize(\"Renderer\")"), std::string::npos);
 }
@@ -2786,10 +2804,9 @@ TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
 	EXPECT_NE(SelectionReset.find("m_ActiveIndex = -1;"), std::string::npos);
 	EXPECT_NE(PopupButton.find("ButtonColor.has_value() || !TransparentInactive"), std::string::npos);
 	EXPECT_NE(PopupSelection.find("const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);"), std::string::npos);
-	EXPECT_EQ(PopupSelection.find("ActiveEntry ? std::optional<ColorRGBA>"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("if(ActiveEntry)"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("Accent.VSplitLeft(2.0f"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("pSelectionPopup->m_TransparentButtons, true)"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("ActiveEntry ? std::optional<ColorRGBA>"), std::string::npos);
+	EXPECT_EQ(PopupSelection.find("Accent.VSplitLeft(2.0f"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("pSelectionPopup->m_TransparentButtons, true, ActiveColor"), std::string::npos);
 	const size_t UpdateResult = DoDropDown.find("const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);");
 	const size_t ActiveIndexSync = DoDropDown.find("State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();");
 	const size_t PopupRender = DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);");
@@ -2823,6 +2840,10 @@ TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(General.find("constexpr int GeneralListMaxVisibleRows = 8;"), std::string::npos);
 	EXPECT_NE(General.find("std::clamp((int)g_Localization.Languages().size(), 1, GeneralListMaxVisibleRows)"), std::string::npos);
 	EXPECT_NE(General.find("std::clamp((int)GameClient()->m_MenuBackground.GetThemes().size(), 1, GeneralListMaxVisibleRows)"), std::string::npos);
+	EXPECT_NE(General.find("ResolveSettingsListViewportHeight(GeneralLanguageVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f)"), std::string::npos);
+	EXPECT_NE(General.find("ResolveSettingsListViewportHeight(GeneralThemeVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f)"), std::string::npos);
+	EXPECT_NE(General.find("Content.h = std::min(Content.h, GeneralLanguageListHeight);"), std::string::npos);
+	EXPECT_NE(General.find("Content.h = std::min(Content.h, GeneralThemeListHeight);"), std::string::npos);
 	EXPECT_NE(General.find("Row.VSplitMid(&LeftButton, &RightButton, GeneralMetrics.m_LineSpacing);"), std::string::npos);
 	EXPECT_EQ(General.find("maximum(300.0f * UiScale, GeneralPage.m_ScrollViewport.h - 100.0f * UiScale)"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-game"), std::string::npos);
@@ -3097,8 +3118,8 @@ TEST(QmNewUiMenuBranches, GraphicsAndSoundNestedListsOwnWheel)
 	EXPECT_NE(Sound.find("s_AudioPackListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);"), std::string::npos);
 	EXPECT_NE(Sound.find("constexpr int SoundAudioPackVisibleRows = 8;"), std::string::npos);
 	EXPECT_NE(Graphics.find("const int GraphicsBackendRowCount"), std::string::npos);
-	EXPECT_NE(Graphics.find("ResolveSettingsRowsHeight(GraphicsBackendRowCount"), std::string::npos);
-	EXPECT_NE(Graphics.find("const auto NextBackendRow"), std::string::npos);
+	EXPECT_NE(Graphics.find("GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount"), std::string::npos);
+	EXPECT_EQ(Graphics.find("const auto NextBackendRow"), std::string::npos);
 	EXPECT_NE(Graphics.find("GraphicsModesMeasureRevision"), std::string::npos);
 	EXPECT_EQ(Graphics.find("GraphicsBackendMinCardHeight = 104.0f"), std::string::npos);
 	EXPECT_EQ(Graphics.find("Localize(\"Graphics card\"), 16.0f"), std::string::npos);
@@ -3117,7 +3138,7 @@ TEST(QmNewUiMenuBranches, GraphicsPilotHasNoRemainingLegacyInputOrScrollPath)
 	EXPECT_NE(Graphics.find("CQmScrollState"), std::string::npos);
 	EXPECT_NE(Graphics.find("deck:graphics-display"), std::string::npos);
 	EXPECT_NE(Graphics.find("deck:graphics-visual"), std::string::npos);
-	EXPECT_NE(Graphics.find("deck:graphics-backend"), std::string::npos);
+	EXPECT_EQ(Graphics.find("deck:graphics-backend"), std::string::npos);
 	EXPECT_NE(Graphics.find("deck:graphics-modes"), std::string::npos);
 	EXPECT_EQ(Graphics.find("BeginSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(Graphics.find("DoSliderWithValueInput("), std::string::npos);

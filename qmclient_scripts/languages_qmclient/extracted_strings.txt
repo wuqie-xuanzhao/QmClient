@@ -1935,7 +1935,6 @@ Manual source file
 Manual target
 Map
 Map browser color
-Map browser opacity
 Map browser transparency
 Map danger border
 Map download send window
@@ -2755,7 +2754,6 @@ Render quads as triangles (fixes quad shading on some GPUs)
 Render refresh rate (Hz, limited by cl_refresh_rate)
 Render tiny tees instead of circles
 Renderer performing the analysis
-Renderer selection
 Rendering options
 Renders your frame rate in the top right
 Repeat message
@@ -2916,7 +2914,6 @@ Score limit
 Scoreboard
 Scoreboard color
 Scoreboard cursor
-Scoreboard opacity
 Scoreboard point check
 Scoreboard score lookup
 Scoreboard sort mode (0=Score, 1=Points)
@@ -3029,6 +3026,7 @@ Set your checkpoints based on another player
 Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided
 Sets your tee's eye emote
 Settings
+Settings card border color
 Settings card default layout migration version
 Settings card titles use rainbow colors
 Settings file
@@ -3821,7 +3819,6 @@ UI color
 UI controller sens.
 UI motion level
 UI mouse sens.
-UI opacity
 UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
 UI scale
 UI server address

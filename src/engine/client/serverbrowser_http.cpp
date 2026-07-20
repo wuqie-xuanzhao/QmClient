@@ -402,6 +402,7 @@ namespace
 			{
 				log_error("serverbrowser_http", "failed getting serverlist, trying to find best URL");
 				m_pChooseMaster->Reset();
+				m_State = STATE_WANTREFRESH;
 				m_pChooseMaster->Refresh();
 			}
 			else
@@ -425,7 +426,13 @@ namespace
 			{
 				m_State = STATE_WANTREFRESH;
 			}
-			m_pChooseMaster->Refresh();
+
+			const char *pBestUrl;
+			// 有可用缓存地址时直接使用，只有没有地址时才启动 master 探测。
+			if(m_pChooseMaster->GetBestUrl(&pBestUrl))
+			{
+				m_pChooseMaster->Refresh();
+			}
 		}
 		if(m_State == STATE_DONE)
 		{
