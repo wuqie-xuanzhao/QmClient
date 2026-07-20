@@ -218,6 +218,74 @@ inline float ResolveSettingsListViewportHeight(const int VisibleRows, const floa
 	return ResolveSettingsRowsHeight(std::clamp(VisibleRows, 0, 8), RowHeight, RowSpacing);
 }
 
+struct SSettingsListCardGeometry
+{
+	int m_VisibleRows = 0;
+	float m_ListViewportHeight = 0.0f;
+	float m_ContentHeight = 0.0f;
+};
+
+inline SSettingsListCardGeometry ResolveSettingsGeneralLanguageListGeometry(const int ItemCount, const SSettingsContentMetrics &Metrics)
+{
+	SSettingsListCardGeometry Geometry;
+	Geometry.m_VisibleRows = std::clamp(ItemCount, 1, 8);
+	Geometry.m_ListViewportHeight = ResolveSettingsListViewportHeight(Geometry.m_VisibleRows, Metrics.m_ListRowHeight, 0.0f);
+	Geometry.m_ContentHeight = Geometry.m_ListViewportHeight;
+	return Geometry;
+}
+
+inline SSettingsListCardGeometry ResolveSettingsGeneralThemeListGeometry(const int ItemCount, const SSettingsContentMetrics &Metrics)
+{
+	SSettingsListCardGeometry Geometry = ResolveSettingsGeneralLanguageListGeometry(ItemCount, Metrics);
+	Geometry.m_ContentHeight += Metrics.m_LineHeight + Metrics.m_LineSpacing;
+	return Geometry;
+}
+
+inline SSettingsListCardGeometry ResolveSettingsGraphicsModesGeometry(const int ModeCount, const SSettingsContentMetrics &Metrics)
+{
+	SSettingsListCardGeometry Geometry = ResolveSettingsGeneralLanguageListGeometry(ModeCount, Metrics);
+	// 窗口模式和当前显示模式各消费一行，列表从下一完整行开始。
+	Geometry.m_ContentHeight += 2.0f * Metrics.m_RowStep;
+	return Geometry;
+}
+
+inline SSettingsListCardGeometry ResolveSettingsSoundAudioPackGeometry(const SSettingsContentMetrics &Metrics)
+{
+	SSettingsListCardGeometry Geometry;
+	Geometry.m_VisibleRows = 8;
+	Geometry.m_ListViewportHeight = ResolveSettingsListViewportHeight(Geometry.m_VisibleRows, Metrics.m_ListRowHeight, 0.0f);
+	// 外层 Margin(2) 与列表 Margin(6) 各作用于上下两侧。
+	constexpr float OuterPadding = 2.0f;
+	constexpr float ListPadding = 6.0f;
+	Geometry.m_ContentHeight = Metrics.m_LineHeight + Metrics.m_LineSpacing + Geometry.m_ListViewportHeight + 2.0f * (OuterPadding + ListPadding);
+	return Geometry;
+}
+
+inline float ResolveSettingsGeneralClientContentHeight(const SSettingsContentMetrics &Metrics, const float ThemeContentHeight)
+{
+	// 跳过主菜单单独成段；更新率和节能开关共享一段；文件按钮共享一段。
+	// 三段之间以及主题列表前各消费 SectionGap，各段内部只消费一次普通行距。
+	return Metrics.m_LineHeight + Metrics.m_SectionGap +
+	       ResolveSettingsRowsHeight(2, Metrics.m_LineHeight, Metrics.m_LineSpacing) + Metrics.m_SectionGap +
+	       ResolveSettingsRowsHeight(2, Metrics.m_ButtonHeight, Metrics.m_LineSpacing) + Metrics.m_SectionGap +
+	       ThemeContentHeight;
+}
+
+inline uint64_t ResolveSettingsGeneralLayoutRevision(const bool RenderOnly, const uint64_t ToggleMask, const float ContentHeight, const int LanguageCount, const int ThemeCount)
+{
+	uint64_t Revision = 1469598103934665603ULL;
+	const auto Mix = [&Revision](const uint64_t Value) {
+		Revision ^= Value;
+		Revision *= 1099511628211ULL;
+	};
+	Mix(RenderOnly ? 1u : 0u);
+	Mix(ToggleMask);
+	Mix((uint64_t)std::max(0, (int)(ContentHeight * 100.0f + 0.5f)));
+	Mix((uint64_t)std::max(0, LanguageCount));
+	Mix((uint64_t)std::max(0, ThemeCount));
+	return Revision;
+}
+
 inline float ResolveSettingsProfilesListHeight(const SSettingsContentMetrics &Metrics, const float ContentWidth, const int ProfileCount)
 {
 	const float ItemWidth = std::max(Metrics.m_ListRowHeight * 6.0f, Metrics.m_LabelWidth + Metrics.m_ButtonHeight * 2.0f);
@@ -373,6 +441,11 @@ inline SSettingsRadioRowLayout ResolveSettingsRadioRowLayout(const CUIRect &View
 	return Layout;
 }
 
+inline float ResolveSettingsControllerAxisPickerHeight(const int AxisCount, const int MaxAxisCount, const float RowHeight, const float RowSpacing)
+{
+	return (std::clamp(AxisCount, 0, std::max(0, MaxAxisCount)) + 1) * (std::max(0.0f, RowHeight) + std::max(0.0f, RowSpacing));
+}
+
 inline float ResolveSettingsControllerContentHeight(const float ContentWidth, const bool Enabled, const bool HasJoystick, const bool AbsoluteMode, const int AxisCount, const int MaxAxisCount, const float RowHeight, const float RowSpacing)
 {
 	float Height = std::max(0.0f, RowHeight) + std::max(0.0f, RowSpacing);
@@ -385,12 +458,12 @@ inline float ResolveSettingsControllerContentHeight(const float ContentWidth, co
 
 	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(ContentWidth);
 	const SSettingsRadioRowLayout Radio = ResolveSettingsRadioRowLayout({0.0f, 0.0f, std::max(0.0f, ContentWidth), RowHeight * 2.0f + RowSpacing}, 2, Metrics);
-	Height += Radio.m_Height + RowSpacing;
+	Height += Radio.m_Height;
 	if(!AbsoluteMode)
 		Height += RowHeight + RowSpacing;
 	Height += 2.0f * (RowHeight + RowSpacing);
-	Height += (std::clamp(AxisCount, 0, std::max(0, MaxAxisCount)) + 1) * (RowHeight + RowSpacing);
-	return Height + RowSpacing;
+	Height += RowSpacing + ResolveSettingsControllerAxisPickerHeight(AxisCount, MaxAxisCount, RowHeight, RowSpacing);
+	return Height;
 }
 
 inline int ResolveSettingsStatusCodeRows(const int ItemCount, const float ContentWidth)

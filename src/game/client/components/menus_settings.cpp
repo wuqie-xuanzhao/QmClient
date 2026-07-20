@@ -729,11 +729,10 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	const SSettingsContentMetrics GeneralMetrics = ResolveSettingsContentMetrics(MainView.w);
 	const float UiScale = GeneralMetrics.m_UiScale;
 	const float BodySize = GeneralMetrics.m_BodySize;
-	constexpr int GeneralListMaxVisibleRows = 8;
-	const int GeneralLanguageVisibleRows = std::clamp((int)g_Localization.Languages().size(), 1, GeneralListMaxVisibleRows);
-	const int GeneralThemeVisibleRows = std::clamp((int)GameClient()->m_MenuBackground.GetThemes().size(), 1, GeneralListMaxVisibleRows);
-	const float GeneralLanguageListHeight = ResolveSettingsListViewportHeight(GeneralLanguageVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f);
-	const float GeneralThemeListHeight = GeneralMetrics.m_LineHeight + GeneralMetrics.m_LineSpacing + ResolveSettingsListViewportHeight(GeneralThemeVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f);
+	const SSettingsListCardGeometry GeneralLanguageGeometry = ResolveSettingsGeneralLanguageListGeometry((int)g_Localization.Languages().size(), GeneralMetrics);
+	const SSettingsListCardGeometry GeneralThemeGeometry = ResolveSettingsGeneralThemeListGeometry((int)GameClient()->m_MenuBackground.GetThemes().size(), GeneralMetrics);
+	const float GeneralLanguageListHeight = GeneralLanguageGeometry.m_ContentHeight;
+	const float GeneralThemeListHeight = GeneralThemeGeometry.m_ContentHeight;
 	const SSettingsPageLayoutFrame GeneralPage = SettingsPageLayout(MainView, UiScale);
 	const IUiContext GeneralCardCtx = SettingsUiContext("settings_general", UiScale);
 	const SSettingsCardDeckVisualOptions GeneralVisualOptions = SettingsCardDeckVisualOptions();
@@ -822,16 +821,13 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
 		});
 
-		AddCard(LanguageSpec, GeneralLanguageListHeight, [this, GeneralLanguageListHeight](CUIRect Content) {
+		AddCard(LanguageSpec, GeneralLanguageListHeight, [this, GeneralMetrics, GeneralLanguageListHeight](CUIRect Content) {
 			Content.h = std::min(Content.h, GeneralLanguageListHeight);
 			PrepareLanguagePageCache(Content.w, false);
-			RenderLanguageSelection(Content);
+			RenderLanguageSelection(Content, &GeneralMetrics);
 		});
 
-		const float ClientContentHeight =
-			ResolveSettingsRowsHeight(3, GeneralMetrics.m_LineHeight, GeneralMetrics.m_LineSpacing) +
-			GeneralMetrics.m_SectionGap + ResolveSettingsRowsHeight(2, GeneralMetrics.m_ButtonHeight, GeneralMetrics.m_LineSpacing) +
-			GeneralMetrics.m_SectionGap + GeneralThemeListHeight;
+		const float ClientContentHeight = ResolveSettingsGeneralClientContentHeight(GeneralMetrics, GeneralThemeListHeight);
 		AddCard(ClientSpec, ClientContentHeight, [this, DoNumericField, GeneralMetrics, GeneralThemeListHeight](CUIRect Content) {
 			CUIRect Button;
 			char aBuf[128 + IO_MAX_PATH_LENGTH];
@@ -881,7 +877,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			}
 			Content.HSplitTop(GeneralMetrics.m_SectionGap, nullptr, &Content);
 			Content.h = std::min(Content.h, GeneralThemeListHeight);
-			RenderThemeSelection(Content);
+			RenderThemeSelection(Content, &GeneralMetrics);
 		});
 
 		SSettingsCardDefinition RecordingDefinition;
@@ -945,13 +941,12 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		};
 		vCards.push_back(std::move(RecordingDefinition));
 	};
-	const uint64_t GeneralLayoutRevision =
-		((uint64_t)(RenderOnly ? 1 : 0) << 63) |
+	const uint64_t GeneralToggleMask =
 		((uint64_t)(g_Config.m_ClAutoDemoRecord != 0) << 0) |
 		((uint64_t)(g_Config.m_ClAutoScreenshot != 0) << 1) |
 		((uint64_t)(g_Config.m_ClAutoStatboardScreenshot != 0) << 2) |
-		((uint64_t)(g_Config.m_ClAutoCSV != 0) << 3) |
-		((uint64_t)maximum(0, (int)(MainView.h * 100.0f + 0.5f)) << 8);
+		((uint64_t)(g_Config.m_ClAutoCSV != 0) << 3);
+	const uint64_t GeneralLayoutRevision = ResolveSettingsGeneralLayoutRevision(RenderOnly, GeneralToggleMask, MainView.h, (int)g_Localization.Languages().size(), (int)GameClient()->m_MenuBackground.GetThemes().size());
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, GeneralLayoutRevision);
 
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
@@ -3599,11 +3594,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float VisualChromeHeight = CardChromeHeight;
 	const float ModesChromeHeight = CardChromeHeight;
 	const float InteractionChromeHeight = CardChromeHeight;
-	constexpr int GraphicsModesMaxVisibleRows = 8;
-	const int GraphicsModesVisibleRows = std::clamp(s_NumNodes, 1, GraphicsModesMaxVisibleRows);
+	const SSettingsListCardGeometry GraphicsModesGeometry = ResolveSettingsGraphicsModesGeometry(s_NumNodes, GraphicsMetrics);
 	// 显示模式卡片包含窗口模式、当前模式和实际模式列表，测量时必须为两个设置行
 	// 都保留 viewport，否则卡片 deck 会把列表挤压成只有一行。
-	const float GraphicsModesTargetContentHeight = 2.0f * GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
+	const float GraphicsModesTargetContentHeight = GraphicsModesGeometry.m_ContentHeight;
 	// 动态高度只交给 Card Deck 处理。页面私有动画会让 measure revision 每帧变化，
 	// 与 Deck 的高度轨道叠加后产生双重缓动和背景闪动。
 	const uint64_t GraphicsModesMeasureRevision = static_cast<uint64_t>(std::max(0, s_NumNodes));
@@ -4844,8 +4838,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	const int ToggleRowCount = g_Config.m_SndEnable ? 10 : 1;
 	const float SoundToggleCardHeight = ToggleChromeHeight + LineHeight * ToggleRowCount + LineSpacing * maximum(0, ToggleRowCount - 1);
 	const float SoundVolumeCardHeight = VolumeChromeHeight + LineHeight * 5.0f + LineSpacing * 4.0f;
-	constexpr int SoundAudioPackVisibleRows = 8;
-	const float SoundAudioPackContentHeight = LineHeight + LineSpacing + SoundAudioPackVisibleRows * SoundMetrics.m_ListRowHeight + 16.0f;
+	const SSettingsListCardGeometry SoundAudioPackGeometry = ResolveSettingsSoundAudioPackGeometry(SoundMetrics);
+	const float SoundAudioPackContentHeight = SoundAudioPackGeometry.m_ContentHeight;
 	const float SoundAudioPackCardHeight = AudioPackChromeHeight + SoundAudioPackContentHeight;
 	const bool RenderOnly = Ui()->RenderOnly();
 	const auto BuildDefinitions = [this, pToggleDefault, pVolumeDefault, pAudioPackDefault, SoundToggleCardHeight, ToggleChromeHeight, SoundVolumeCardHeight, VolumeChromeHeight, SoundAudioPackCardHeight, AudioPackChromeHeight, SoundMetrics, LineHeight, LineSpacing, BodySize, DoSoundNumericField](std::vector<SSettingsCardDefinition> &vCards) {
@@ -5221,14 +5215,14 @@ void CMenus::RenderLanguageSettings(CUIRect MainView)
 	LogPerfStage(Client(), "language_page_total", RenderTimer.ElapsedMs(), false, "page=language");
 }
 
-bool CMenus::RenderLanguageSelection(CUIRect MainView)
+bool CMenus::RenderLanguageSelection(CUIRect MainView, const SSettingsContentMetrics *pMetrics)
 {
 	const bool MenuUiPerfEnabled = QmPerfEnabled();
 	const auto MenuUiStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	static int s_SelectedLanguage = -2; // -2 = unloaded, -1 = unset
 	EnsureLanguagePageCacheInit(Ui());
 	const bool UseCache = UseLanguagePageCache();
-	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(MainView.w);
+	const SSettingsContentMetrics Metrics = pMetrics != nullptr ? *pMetrics : ResolveSettingsContentMetrics(MainView.w);
 
 	if(s_SelectedLanguage == -2)
 	{

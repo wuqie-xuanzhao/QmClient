@@ -8061,7 +8061,7 @@ TEST(QmMonitoringHelpers, SkinFlagLanguageBusinessItemsStayNonCardAndUseSharedRu
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string PlayerBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
 	const std::string TeeBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
-	const std::string LanguageBody = ExtractSourceFunctionBody(Source, "bool CMenus::RenderLanguageSelection(CUIRect MainView)");
+	const std::string LanguageBody = ExtractSourceFunctionBody(Source, "bool CMenus::RenderLanguageSelection(CUIRect MainView, const SSettingsContentMetrics *pMetrics)");
 	ASSERT_FALSE(PlayerBody.empty());
 	ASSERT_FALSE(TeeBody.empty());
 	ASSERT_FALSE(LanguageBody.empty());
@@ -10049,7 +10049,7 @@ TEST(QmMonitoringHelpers, SettingsUiMigrationFinalStructureContract)
 		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItemActivated)"},
 		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserFilters(CUIRect View)"},
 		{"src/game/client/components/menus_browser.cpp", "void CMenus::RenderServerbrowserFriends(CUIRect View)"},
-		{"src/game/client/components/menus_settings.cpp", "bool CMenus::RenderLanguageSelection(CUIRect MainView)"},
+		{"src/game/client/components/menus_settings.cpp", "bool CMenus::RenderLanguageSelection(CUIRect MainView, const SSettingsContentMetrics *pMetrics)"},
 	}};
 	for(const auto &[pPath, pSignature] : aNonCardScopes)
 	{

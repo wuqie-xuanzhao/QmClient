@@ -226,6 +226,60 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveSettingsListViewportHeight(0, 20.0f, 3.0f), 0.0f);
 	}
 
+	TEST(SettingsPageLayout, PageListCardsUseExactProductionViewports)
+	{
+		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+		const SSettingsListCardGeometry OneLanguage = ResolveSettingsGeneralLanguageListGeometry(1, Metrics);
+		const SSettingsListCardGeometry EightLanguages = ResolveSettingsGeneralLanguageListGeometry(8, Metrics);
+		const SSettingsListCardGeometry NineLanguages = ResolveSettingsGeneralLanguageListGeometry(9, Metrics);
+		EXPECT_EQ(OneLanguage.m_VisibleRows, 1);
+		EXPECT_FLOAT_EQ(OneLanguage.m_ContentHeight, Metrics.m_ListRowHeight);
+		EXPECT_EQ(EightLanguages.m_VisibleRows, 8);
+		EXPECT_FLOAT_EQ(EightLanguages.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(NineLanguages.m_ListViewportHeight, EightLanguages.m_ListViewportHeight);
+
+		const SSettingsListCardGeometry Theme = ResolveSettingsGeneralThemeListGeometry(12, Metrics);
+		EXPECT_FLOAT_EQ(Theme.m_ContentHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing + 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(ResolveSettingsGeneralClientContentHeight(Metrics, Theme.m_ContentHeight),
+			Metrics.m_LineHeight + Metrics.m_SectionGap +
+				ResolveSettingsRowsHeight(2, Metrics.m_LineHeight, Metrics.m_LineSpacing) + Metrics.m_SectionGap +
+				ResolveSettingsRowsHeight(2, Metrics.m_ButtonHeight, Metrics.m_LineSpacing) + Metrics.m_SectionGap + Theme.m_ContentHeight);
+
+		SSettingsContentMetrics IndependentSpacingMetrics = Metrics;
+		IndependentSpacingMetrics.m_LineSpacing = 3.0f;
+		IndependentSpacingMetrics.m_SectionGap = 11.0f;
+		EXPECT_FLOAT_EQ(ResolveSettingsGeneralClientContentHeight(IndependentSpacingMetrics, 80.0f),
+			3.0f * IndependentSpacingMetrics.m_LineHeight + 2.0f * IndependentSpacingMetrics.m_ButtonHeight +
+				2.0f * IndependentSpacingMetrics.m_LineSpacing + 3.0f * IndependentSpacingMetrics.m_SectionGap + 80.0f);
+
+		const SSettingsContentMetrics CardMetrics = ResolveSettingsContentMetrics(480.0f);
+		const SSettingsListCardGeometry CompactLanguages = ResolveSettingsGeneralLanguageListGeometry(9, CardMetrics);
+		EXPECT_NE(CardMetrics.m_ListRowHeight, Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(CompactLanguages.m_ContentHeight, 8.0f * CardMetrics.m_ListRowHeight);
+
+		const SSettingsListCardGeometry OneMode = ResolveSettingsGraphicsModesGeometry(1, Metrics);
+		const SSettingsListCardGeometry ManyModes = ResolveSettingsGraphicsModesGeometry(20, Metrics);
+		EXPECT_FLOAT_EQ(OneMode.m_ContentHeight, 2.0f * Metrics.m_RowStep + Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, 2.0f * Metrics.m_RowStep + 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(ManyModes.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
+
+		const SSettingsListCardGeometry AudioPacks = ResolveSettingsSoundAudioPackGeometry(Metrics);
+		EXPECT_EQ(AudioPacks.m_VisibleRows, 8);
+		EXPECT_FLOAT_EQ(AudioPacks.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(AudioPacks.m_ContentHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing + AudioPacks.m_ListViewportHeight + 16.0f);
+	}
+
+	TEST(SettingsPageLayout, GeneralDefinitionsRevisionTracksDynamicListCounts)
+	{
+		const uint64_t Stable = ResolveSettingsGeneralLayoutRevision(false, 3, 640.0f, 8, 8);
+		EXPECT_EQ(ResolveSettingsGeneralLayoutRevision(false, 3, 640.0f, 8, 8), Stable);
+		EXPECT_NE(ResolveSettingsGeneralLayoutRevision(false, 3, 640.0f, 9, 8), Stable);
+		EXPECT_NE(ResolveSettingsGeneralLayoutRevision(false, 3, 640.0f, 8, 9), Stable);
+		EXPECT_NE(ResolveSettingsGeneralLayoutRevision(true, 3, 640.0f, 8, 8), Stable);
+		EXPECT_NE(ResolveSettingsGeneralLayoutRevision(false, 4, 640.0f, 8, 8), Stable);
+		EXPECT_NE(ResolveSettingsGeneralLayoutRevision(false, 3, 641.0f, 8, 8), Stable);
+	}
+
 	TEST(SettingsPageLayout, CustomSelectionNeverFallsBackToTheFirstSupportedItem)
 	{
 		EXPECT_EQ(ResolveSettingsSelectionWithCustomFallback(1, 3), 1);
@@ -263,6 +317,35 @@ namespace
 		EXPECT_FLOAT_EQ(Relative - Absolute, RowHeight + RowSpacing);
 		EXPECT_GT(Narrow, Relative);
 		EXPECT_FLOAT_EQ(ClampedAxes - Relative, 4.0f * (RowHeight + RowSpacing));
+	}
+
+	TEST(SettingsPageLayout, ControllerHeightMatchesEveryRenderedRowWithoutTrailingSpacing)
+	{
+		constexpr float RowHeight = 20.0f;
+		constexpr float RowSpacing = 5.0f;
+		constexpr float RowStep = RowHeight + RowSpacing;
+		const SSettingsContentMetrics WideMetrics = ResolveSettingsContentMetrics(700.0f);
+		const SSettingsRadioRowLayout WideRadio = ResolveSettingsRadioRowLayout({0.0f, 0.0f, 700.0f, 100.0f}, 2, WideMetrics);
+		const float ExpectedRelative =
+			2.0f * RowStep + WideRadio.m_Height + RowStep + 2.0f * RowStep + RowSpacing + 5.0f * RowStep;
+		EXPECT_FLOAT_EQ(ResolveSettingsControllerContentHeight(700.0f, true, true, false, 4, 8, RowHeight, RowSpacing), ExpectedRelative);
+		EXPECT_FLOAT_EQ(ResolveSettingsControllerContentHeight(700.0f, true, true, true, 4, 8, RowHeight, RowSpacing), ExpectedRelative - RowStep);
+		EXPECT_FLOAT_EQ(ResolveSettingsControllerContentHeight(700.0f, false, false, false, 0, 8, RowHeight, RowSpacing), RowStep);
+		EXPECT_FLOAT_EQ(ResolveSettingsControllerContentHeight(700.0f, true, false, false, 0, 8, RowHeight, RowSpacing), 2.0f * RowStep + RowSpacing);
+
+		const SSettingsContentMetrics NarrowMetrics = ResolveSettingsContentMetrics(240.0f);
+		const SSettingsRadioRowLayout NarrowRadio = ResolveSettingsRadioRowLayout({0.0f, 0.0f, 240.0f, 100.0f}, 2, NarrowMetrics);
+		const float ExpectedNarrow =
+			2.0f * RowStep + NarrowRadio.m_Height + RowStep + 2.0f * RowStep + RowSpacing + 5.0f * RowStep;
+		EXPECT_FLOAT_EQ(ResolveSettingsControllerContentHeight(240.0f, true, true, false, 4, 8, RowHeight, RowSpacing), ExpectedNarrow);
+
+		for(int AxisCount = 0; AxisCount <= 12; ++AxisCount)
+		{
+			const int VisibleAxes = std::clamp(AxisCount, 0, 8);
+			EXPECT_FLOAT_EQ(ResolveSettingsControllerAxisPickerHeight(AxisCount, 8, RowHeight, RowSpacing), (VisibleAxes + 1) * RowStep);
+			const float Expected = 2.0f * RowStep + WideRadio.m_Height + RowStep + 2.0f * RowStep + RowSpacing + (VisibleAxes + 1) * RowStep;
+			EXPECT_FLOAT_EQ(ResolveSettingsControllerContentHeight(700.0f, true, true, false, AxisCount, 8, RowHeight, RowSpacing), Expected);
+		}
 	}
 
 	TEST(SettingsPageLayout, StatusCodeHelpUsesTwoColumnsOnlyWhenWide)

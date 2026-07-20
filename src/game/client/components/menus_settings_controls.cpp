@@ -744,6 +744,7 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View, bool ReadOnly)
 		DoSettingsControlsNumericField("controls-controller-jitter-tolerance-label", &g_Config.m_InpControllerTolerance, &g_Config.m_InpControllerTolerance, Button, Localize("Controller jitter tolerance"), 0, 50);
 
 		View.HSplitTop(BUTTON_SPACING, nullptr, &View);
+		View.h = minimum(View.h, ResolveSettingsControllerAxisPickerHeight(Input()->GetActiveJoystick()->GetNumAxes(), NUM_JOYSTICK_AXES, BUTTON_HEIGHT, BUTTON_SPACING));
 		if(ReadOnly || m_SettingsScrollRegion.AddRect(View))
 		{
 			View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);

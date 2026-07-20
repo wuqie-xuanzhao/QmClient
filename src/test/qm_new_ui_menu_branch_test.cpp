@@ -2194,9 +2194,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(InteractionSpec, GraphicsInteractionMinCardHeight"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("AddCard(BackendSpec"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(ModesSpec, GraphicsModesMinCardHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("constexpr int GraphicsModesMaxVisibleRows = 8;"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("2.0f * GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("ResolveSettingsGraphicsModesGeometry("), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(7"), std::string::npos);
@@ -2837,11 +2835,11 @@ TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(NumericLabelBridge.find("CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
 	EXPECT_NE(General.find("ui_widget::NumericField("), std::string::npos);
 	EXPECT_NE(General.find("AddCard(GameSpec, ResolveSettingsRowsHeight(5, GeneralMetrics.m_LineHeight, GeneralMetrics.m_LineSpacing)"), std::string::npos);
-	EXPECT_NE(General.find("constexpr int GeneralListMaxVisibleRows = 8;"), std::string::npos);
-	EXPECT_NE(General.find("std::clamp((int)g_Localization.Languages().size(), 1, GeneralListMaxVisibleRows)"), std::string::npos);
-	EXPECT_NE(General.find("std::clamp((int)GameClient()->m_MenuBackground.GetThemes().size(), 1, GeneralListMaxVisibleRows)"), std::string::npos);
-	EXPECT_NE(General.find("ResolveSettingsListViewportHeight(GeneralLanguageVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f)"), std::string::npos);
-	EXPECT_NE(General.find("ResolveSettingsListViewportHeight(GeneralThemeVisibleRows, GeneralMetrics.m_ListRowHeight, 0.0f)"), std::string::npos);
+	EXPECT_NE(General.find("ResolveSettingsGeneralLanguageListGeometry("), std::string::npos);
+	EXPECT_NE(General.find("ResolveSettingsGeneralThemeListGeometry("), std::string::npos);
+	EXPECT_NE(General.find("RenderLanguageSelection(Content, &GeneralMetrics);"), std::string::npos);
+	EXPECT_NE(General.find("RenderThemeSelection(Content, &GeneralMetrics);"), std::string::npos);
+	EXPECT_NE(General.find("ResolveSettingsGeneralLayoutRevision("), std::string::npos);
 	EXPECT_NE(General.find("Content.h = std::min(Content.h, GeneralLanguageListHeight);"), std::string::npos);
 	EXPECT_NE(General.find("Content.h = std::min(Content.h, GeneralThemeListHeight);"), std::string::npos);
 	EXPECT_NE(General.find("Row.VSplitMid(&LeftButton, &RightButton, GeneralMetrics.m_LineSpacing);"), std::string::npos);
@@ -3116,7 +3114,8 @@ TEST(QmNewUiMenuBranches, GraphicsAndSoundNestedListsOwnWheel)
 	EXPECT_LT(SoundPriority, SoundStart);
 	EXPECT_NE(Graphics.find("s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);"), std::string::npos);
 	EXPECT_NE(Sound.find("s_AudioPackListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);"), std::string::npos);
-	EXPECT_NE(Sound.find("constexpr int SoundAudioPackVisibleRows = 8;"), std::string::npos);
+	EXPECT_NE(Graphics.find("ResolveSettingsGraphicsModesGeometry("), std::string::npos);
+	EXPECT_NE(Sound.find("ResolveSettingsSoundAudioPackGeometry("), std::string::npos);
 	EXPECT_NE(Graphics.find("const int GraphicsBackendRowCount"), std::string::npos);
 	EXPECT_NE(Graphics.find("GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount"), std::string::npos);
 	EXPECT_EQ(Graphics.find("const auto NextBackendRow"), std::string::npos);
@@ -3165,7 +3164,7 @@ TEST(QmNewUiMenuBranches, NestedLanguageListWheelOwnerOutranksGeneralPage)
 	EXPECT_EQ(WheelDelta, 1.0f);
 
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string LanguageSelection = FunctionBody(Source, "bool CMenus::RenderLanguageSelection(CUIRect MainView)");
+	const std::string LanguageSelection = FunctionBody(Source, "bool CMenus::RenderLanguageSelection(CUIRect MainView, const SSettingsContentMetrics *pMetrics)");
 	ASSERT_FALSE(LanguageSelection.empty());
 	EXPECT_NE(LanguageSelection.find("ScrollParams.m_WheelOwnerPriority = EUiWheelOwnerPriority::COMPOSITE_CONTROL;"), std::string::npos);
 }
@@ -3181,6 +3180,7 @@ TEST(QmNewUiMenuBranches, ControlsStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(Source.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);
 	EXPECT_NE(Source.find("ui_widget::InputField("), std::string::npos);
 	EXPECT_NE(Source.find("ui_widget::NumericField("), std::string::npos);
+	EXPECT_NE(Source.find("ResolveSettingsControllerAxisPickerHeight("), std::string::npos);
 	EXPECT_NE(Source.find("m_SettingsScrollRegion.State()"), std::string::npos);
 	EXPECT_NE(Source.find("m_RenderWhenClipped = RenderWhenClipped"), std::string::npos);
 	EXPECT_NE(Source.find("QmResolveScrollPolicy("), std::string::npos);

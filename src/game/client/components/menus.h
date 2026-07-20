@@ -2023,8 +2023,8 @@ protected:
 
 	// found in menus_settings.cpp
 	void RenderLanguageSettings(CUIRect MainView);
-	bool RenderLanguageSelection(CUIRect MainView);
-	void RenderThemeSelection(CUIRect MainView);
+	bool RenderLanguageSelection(CUIRect MainView, const SSettingsContentMetrics *pMetrics = nullptr);
+	void RenderThemeSelection(CUIRect MainView, const SSettingsContentMetrics *pMetrics = nullptr);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton, float BodySize = ui_token::font::BODY);

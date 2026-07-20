@@ -4473,12 +4473,12 @@ void CMenus::PopupConfirmDemoReplaceVideo()
 }
 #endif
 
-void CMenus::RenderThemeSelection(CUIRect MainView)
+void CMenus::RenderThemeSelection(CUIRect MainView, const SSettingsContentMetrics *pMetrics)
 {
 	CPerfTimer RenderTimer;
 	static CListBox s_ListBox;
 	auto &MenuBackground = GameClient()->m_MenuBackground;
-	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(MainView.w);
+	const SSettingsContentMetrics Metrics = pMetrics != nullptr ? *pMetrics : ResolveSettingsContentMetrics(MainView.w);
 	s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
 
 	const float HeaderHeight = Metrics.m_LineHeight;

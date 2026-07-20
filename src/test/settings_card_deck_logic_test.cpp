@@ -630,6 +630,52 @@ TEST(SettingsCardDeck, ColumnProjectionExcludesInactiveDefinitions)
 	EXPECT_EQ(aColumns[2], (std::vector<int>{Model.StateIndexForStableId("deck:graphics-modes")}));
 }
 
+TEST(SettingsCardDeck, ProductionPagePlacementsPreserveWideColumnsAndNarrowReadingOrder)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+
+	const auto VerifyPage = [&Model](const char *pTab, const std::vector<const char *> &vStableIds, const std::array<std::vector<const char *>, 3> &aExpectedColumns, const std::vector<const char *> &vExpectedVisualOrder) {
+		std::vector<int> vActiveStateIndices;
+		vActiveStateIndices.reserve(vStableIds.size());
+		for(const char *pStableId : vStableIds)
+		{
+			const int StateIndex = Model.StateIndexForStableId(pStableId);
+			ASSERT_GE(StateIndex, 0) << pStableId;
+			vActiveStateIndices.push_back(StateIndex);
+		}
+
+		const std::array<std::vector<int>, 3> aColumns = BuildSettingsCardDeckColumnOrder(Model, pTab, vActiveStateIndices);
+		for(int Column = 0; Column < 3; ++Column)
+		{
+			ASSERT_EQ(aColumns[Column].size(), aExpectedColumns[Column].size());
+			for(size_t Index = 0; Index < aColumns[Column].size(); ++Index)
+				EXPECT_STREQ(Model.Entry(aColumns[Column][Index]).m_pStableId, aExpectedColumns[Column][Index]);
+		}
+
+		std::vector<const char *> vVisualOrder;
+		ForEachSettingsCardDeckVisualOrder(aColumns, [&](const int StateIndex, int) {
+			vVisualOrder.push_back(Model.Entry(StateIndex).m_pStableId);
+		});
+		ASSERT_EQ(vVisualOrder.size(), vExpectedVisualOrder.size());
+		for(size_t Index = 0; Index < vVisualOrder.size(); ++Index)
+			EXPECT_STREQ(vVisualOrder[Index], vExpectedVisualOrder[Index]);
+	};
+
+	VerifyPage("tee",
+		{"deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list"},
+		{{{"deck:tee-skin-list"}, {"deck:tee-identity"}, {"deck:tee-skin-options"}}},
+		{"deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list"});
+	VerifyPage("appearance-chat",
+		{"deck:appearance-chat-settings", "deck:appearance-chat-messages", "deck:appearance-chat-preview"},
+		{{{}, {"deck:appearance-chat-settings", "deck:appearance-chat-preview"}, {"deck:appearance-chat-messages"}}},
+		{"deck:appearance-chat-settings", "deck:appearance-chat-messages", "deck:appearance-chat-preview"});
+	VerifyPage("tclient-status-bar",
+		{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"},
+		{{{}, {"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"}, {"deck:tclient-status-bar-items"}}},
+		{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"});
+}
+
 TEST(SettingsCardDeck, ColumnProjectionCacheRebuildsOnlyForLayoutOrActiveDefinitionChanges)
 {
 	qm_card_order::CModel Model;
