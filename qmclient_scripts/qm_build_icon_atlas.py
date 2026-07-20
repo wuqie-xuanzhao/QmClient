@@ -1,7 +1,7 @@
 # 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """
-Build QmClient Tabler icon PNG atlases.
+Build QmClient SVG icon PNG atlases.
 
 This script is intentionally build-time only: runtime code loads the generated
 PNG atlas and JSON manifest, never SVG. It expects source SVG files in
@@ -60,7 +60,7 @@ def _parse_points(points: str) -> list[tuple[float, float]]:
     return list(zip(values[0::2], values[1::2]))
 
 
-_PATH_TOKEN_RE = re.compile(r"[AaHhLlMmVvZz]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
+_PATH_TOKEN_RE = re.compile(r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?|[A-Za-z]")
 
 
 def _vector_angle(ux: float, uy: float, vx: float, vy: float) -> float:
@@ -145,12 +145,45 @@ def _sample_svg_arc(
     return points
 
 
+def _sample_cubic_bezier(
+    start: tuple[float, float],
+    control1: tuple[float, float],
+    control2: tuple[float, float],
+    end: tuple[float, float],
+) -> list[tuple[float, float]]:
+    control_length = (
+        math.dist(start, control1)
+        + math.dist(control1, control2)
+        + math.dist(control2, end)
+    )
+    segments = max(4, math.ceil(control_length / 8.0))
+    points: list[tuple[float, float]] = []
+    for index in range(1, segments + 1):
+        t = index / segments
+        inverse = 1.0 - t
+        points.append(
+            (
+                inverse**3 * start[0]
+                + 3.0 * inverse * inverse * t * control1[0]
+                + 3.0 * inverse * t * t * control2[0]
+                + t**3 * end[0],
+                inverse**3 * start[1]
+                + 3.0 * inverse * inverse * t * control1[1]
+                + 3.0 * inverse * t * t * control2[1]
+                + t**3 * end[1],
+            )
+        )
+    points[-1] = end
+    return points
+
+
 def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
     tokens = _PATH_TOKEN_RE.findall(path_data.replace(",", " "))
     polylines: list[list[tuple[float, float]]] = []
     current_polyline: list[tuple[float, float]] = []
     current = (0.0, 0.0)
     subpath_start = (0.0, 0.0)
+    last_cubic_control: tuple[float, float] | None = None
     command = ""
     index = 0
 
@@ -193,6 +226,7 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             current = (x, y)
             subpath_start = current
             current_polyline = [current]
+            last_cubic_control = None
             command = "l" if relative else "L"
         elif upper == "L":
             x = number()
@@ -201,16 +235,56 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
                 x += current[0]
                 y += current[1]
             append((x, y))
+            last_cubic_control = None
         elif upper == "H":
             x = number()
             if relative:
                 x += current[0]
             append((x, current[1]))
+            last_cubic_control = None
         elif upper == "V":
             y = number()
             if relative:
                 y += current[1]
             append((current[0], y))
+            last_cubic_control = None
+        elif upper == "C":
+            control1 = (number(), number())
+            control2 = (number(), number())
+            end = (number(), number())
+            if relative:
+                control1 = (
+                    control1[0] + current[0],
+                    control1[1] + current[1],
+                )
+                control2 = (
+                    control2[0] + current[0],
+                    control2[1] + current[1],
+                )
+                end = (end[0] + current[0], end[1] + current[1])
+            for point in _sample_cubic_bezier(current, control1, control2, end):
+                append(point)
+            last_cubic_control = control2
+        elif upper == "S":
+            control1 = (
+                current
+                if last_cubic_control is None
+                else (
+                    current[0] * 2.0 - last_cubic_control[0],
+                    current[1] * 2.0 - last_cubic_control[1],
+                )
+            )
+            control2 = (number(), number())
+            end = (number(), number())
+            if relative:
+                control2 = (
+                    control2[0] + current[0],
+                    control2[1] + current[1],
+                )
+                end = (end[0] + current[0], end[1] + current[1])
+            for point in _sample_cubic_bezier(current, control1, control2, end):
+                append(point)
+            last_cubic_control = control2
         elif upper == "A":
             rx = number()
             ry = number()
@@ -227,11 +301,13 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
                 current, rx, ry, rotation, large_arc, sweep, end
             ):
                 append(point)
+            last_cubic_control = None
         elif upper == "Z":
             append(subpath_start)
             flush()
             current = subpath_start
             command = ""
+            last_cubic_control = None
         else:
             raise ValueError(f"Unsupported SVG path command {command!r}")
 
@@ -254,6 +330,45 @@ def _draw_round_line(
         draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=fill)
 
 
+def _signed_polygon_area(points: list[tuple[float, float]]) -> float:
+    return (
+        sum(
+            x1 * y2 - x2 * y1
+            for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1])
+        )
+        * 0.5
+    )
+
+
+def _draw_filled_polylines(
+    image,
+    polylines: list[list[tuple[float, float]]],
+    fill_rule: str,
+    fill: tuple[int, int, int, int],
+) -> None:
+    """Fill the simple, non-self-intersecting contours used by bundled icons."""
+    from PIL import Image, ImageDraw
+
+    width, height = image.size
+    coverage = [0] * (width * height)
+    even_odd = fill_rule.lower() == "evenodd"
+    for points in polylines:
+        if len(points) < 3:
+            continue
+        polygon_mask = Image.new("L", image.size, 0)
+        ImageDraw.Draw(polygon_mask).polygon(points, fill=255)
+        direction = 1 if _signed_polygon_area(points) >= 0.0 else -1
+        for index, value in enumerate(polygon_mask.tobytes()):
+            if value:
+                coverage[index] = (
+                    1 - coverage[index] if even_odd else coverage[index] + direction
+                )
+
+    mask = Image.new("L", image.size, 0)
+    mask.putdata([255 if value else 0 for value in coverage])
+    image.paste(fill, (0, 0), mask)
+
+
 def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
     try:
         from PIL import Image, ImageDraw
@@ -269,11 +384,14 @@ def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
     oversample = 4
     canvas_size = size * oversample
     scale = canvas_size / max(view_w, view_h)
-    stroke_width = max(1, round(float(root.attrib.get("stroke-width", "2")) * scale))
     fill = (255, 255, 255, 255)
 
     image = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
+
+    def has_paint(node: ET.Element, name: str, default: str) -> bool:
+        value = node.attrib.get(name, root.attrib.get(name, default))
+        return value.strip().lower() != "none"
 
     def sx(value: float) -> float:
         return (value - min_x) * scale
@@ -285,31 +403,51 @@ def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
         tag = _local_name(node.tag)
         if tag in {"svg", "title", "desc"}:
             continue
+        node_has_fill = has_paint(node, "fill", "black")
+        node_has_stroke = has_paint(node, "stroke", "none")
+        node_stroke_width = max(
+            1,
+            round(
+                float(
+                    node.attrib.get(
+                        "stroke-width", root.attrib.get("stroke-width", "2")
+                    )
+                )
+                * scale
+            ),
+        )
         if tag == "line":
             points = [
                 (sx(_float_attr(node, "x1")), sy(_float_attr(node, "y1"))),
                 (sx(_float_attr(node, "x2")), sy(_float_attr(node, "y2"))),
             ]
-            _draw_round_line(draw, points, stroke_width, fill)
+            if node_has_stroke:
+                _draw_round_line(draw, points, node_stroke_width, fill)
         elif tag == "polyline":
             points = [
                 (sx(x), sy(y)) for x, y in _parse_points(node.attrib.get("points", ""))
             ]
-            _draw_round_line(draw, points, stroke_width, fill)
+            if node_has_stroke:
+                _draw_round_line(draw, points, node_stroke_width, fill)
         elif tag == "polygon":
             points = [
                 (sx(x), sy(y)) for x, y in _parse_points(node.attrib.get("points", ""))
             ]
-            if len(points) >= 2:
-                _draw_round_line(draw, points + [points[0]], stroke_width, fill)
+            if node_has_fill:
+                _draw_filled_polylines(
+                    image, [points], node.attrib.get("fill-rule", "nonzero"), fill
+                )
+            if node_has_stroke and len(points) >= 2:
+                _draw_round_line(draw, points + [points[0]], node_stroke_width, fill)
         elif tag == "circle":
             cx = sx(_float_attr(node, "cx"))
             cy = sy(_float_attr(node, "cy"))
             radius = _float_attr(node, "r") * scale
             draw.ellipse(
                 (cx - radius, cy - radius, cx + radius, cy + radius),
-                outline=fill,
-                width=stroke_width,
+                fill=fill if node_has_fill else None,
+                outline=fill if node_has_stroke else None,
+                width=node_stroke_width,
             )
         elif tag == "rect":
             x = sx(_float_attr(node, "x"))
@@ -318,7 +456,11 @@ def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
             h = _float_attr(node, "height") * scale
             radius = _float_attr(node, "rx") * scale
             draw.rounded_rectangle(
-                (x, y, x + w, y + h), radius=radius, outline=fill, width=stroke_width
+                (x, y, x + w, y + h),
+                radius=radius,
+                fill=fill if node_has_fill else None,
+                outline=fill if node_has_stroke else None,
+                width=node_stroke_width,
             )
         elif tag == "path":
             path_data = node.attrib.get("d", "")
@@ -330,13 +472,19 @@ def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
                 raise SystemExit(
                     f"Unsupported SVG path data in {source}: {exc}"
                 ) from exc
-            for points in polylines:
-                _draw_round_line(
-                    draw,
-                    [(sx(x), sy(y)) for x, y in points],
-                    stroke_width,
+            scaled_polylines = [
+                [(sx(x), sy(y)) for x, y in points] for points in polylines
+            ]
+            if node_has_fill:
+                _draw_filled_polylines(
+                    image,
+                    scaled_polylines,
+                    node.attrib.get("fill-rule", "nonzero"),
                     fill,
                 )
+            if node_has_stroke:
+                for points in scaled_polylines:
+                    _draw_round_line(draw, points, node_stroke_width, fill)
         else:
             raise SystemExit(
                 f"Fallback SVG renderer does not support <{tag}> in {source}"

@@ -134,21 +134,21 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 				const size_t Length = str_length(Setting.m_aCommand) + 1;
 				if(Size > std::numeric_limits<size_t>::max() - Length)
 				{
-					ErrorHandler("错误：无法保存，因为地图设置数据过大。");
+					ErrorHandler(Localize("Error: could not save because the map settings data is too large.", "Editor"));
 					return false;
 				}
 				Size += Length;
 			}
 			if(Size == 0 || !CheckedDatafileSize(Size))
 			{
-				ErrorHandler("错误：无法保存，因为地图设置数据过大。");
+				ErrorHandler(Localize("Error: could not save because the map settings data is too large.", "Editor"));
 				return false;
 			}
 
 			char *pSettings = (char *)malloc(Size);
 			if(pSettings == nullptr)
 			{
-				ErrorHandler("错误：无法为地图设置分配内存。");
+				ErrorHandler(Localize("Error: could not allocate memory for map settings.", "Editor"));
 				return false;
 			}
 			char *pNext = pSettings;
@@ -192,7 +192,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 			if(pImg->m_pData == nullptr || !pImg->DataSize(ImageDataSize) || ImageDataSize == 0 || !CheckedDatafileSize(ImageDataSize))
 			{
 				char aError[IO_MAX_PATH_LENGTH + 128];
-				str_format(aError, sizeof(aError), "错误：无法保存，因为图像“%s”的数据无效或过大。", pImg->m_aName);
+				str_format(aError, sizeof(aError), Localize("Error: could not save because the data for image \"%s\" is invalid or too large.", "Editor"), pImg->m_aName);
 				ErrorHandler(aError);
 				return false;
 			}
@@ -214,7 +214,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 		if(pSound->m_pData == nullptr || pSound->m_DataSize == 0 || !CheckedDatafileSize(pSound->m_DataSize))
 		{
 			char aError[IO_MAX_PATH_LENGTH + 128];
-			str_format(aError, sizeof(aError), "错误：无法保存，因为声音“%s”的数据无效或过大。", pSound->m_aName);
+			str_format(aError, sizeof(aError), Localize("Error: could not save because the data for sound \"%s\" is invalid or too large.", "Editor"), pSound->m_aName);
 			ErrorHandler(aError);
 			return false;
 		}
@@ -299,7 +299,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 				size_t TileDataSize = 0;
 				if(!CheckedTileLayerCount(pLayerTiles->m_Width, pLayerTiles->m_Height, TileCount) || !CheckedDatafileArraySize(TileCount, sizeof(CTile), TileDataSize))
 				{
-					ErrorHandler("错误：无法保存，因为图块层尺寸无效或过大。");
+					ErrorHandler(Localize("Error: could not save because the tile layer dimensions are invalid or too large.", "Editor"));
 					return false;
 				}
 				if(Item.m_Flags && !(pLayerTiles->m_HasGame))
@@ -307,7 +307,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 					CTile *pEmptyTiles = (CTile *)calloc(TileCount, sizeof(CTile));
 					if(pEmptyTiles == nullptr)
 					{
-						ErrorHandler("错误：无法为图块层分配临时内存。");
+						ErrorHandler(Localize("Error: could not allocate temporary memory for the tile layer.", "Editor"));
 						return false;
 					}
 					Item.m_Data = Writer.AddData(TileDataSize, pEmptyTiles);
@@ -318,7 +318,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 						size_t DataSize = 0;
 						if(!CheckedDatafileArraySize(TileCount, sizeof(CTeleTile), DataSize))
 						{
-							ErrorHandler("错误：无法保存，因为传送层数据过大。");
+							ErrorHandler(Localize("Error: could not save because the tele layer data is too large.", "Editor"));
 							return false;
 						}
 						Item.m_Tele = Writer.AddData(DataSize, std::static_pointer_cast<CLayerTele>(pLayerTiles)->m_pTeleTile);
@@ -328,7 +328,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 						size_t DataSize = 0;
 						if(!CheckedDatafileArraySize(TileCount, sizeof(CSpeedupTile), DataSize))
 						{
-							ErrorHandler("错误：无法保存，因为加速层数据过大。");
+							ErrorHandler(Localize("Error: could not save because the speedup layer data is too large.", "Editor"));
 							return false;
 						}
 						Item.m_Speedup = Writer.AddData(DataSize, std::static_pointer_cast<CLayerSpeedup>(pLayerTiles)->m_pSpeedupTile);
@@ -340,7 +340,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 						size_t DataSize = 0;
 						if(!CheckedDatafileArraySize(TileCount, sizeof(CSwitchTile), DataSize))
 						{
-							ErrorHandler("错误：无法保存，因为开关层数据过大。");
+							ErrorHandler(Localize("Error: could not save because the switch layer data is too large.", "Editor"));
 							return false;
 						}
 						Item.m_Switch = Writer.AddData(DataSize, std::static_pointer_cast<CLayerSwitch>(pLayerTiles)->m_pSwitchTile);
@@ -350,7 +350,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 						size_t DataSize = 0;
 						if(!CheckedDatafileArraySize(TileCount, sizeof(CTuneTile), DataSize))
 						{
-							ErrorHandler("错误：无法保存，因为调校层数据过大。");
+							ErrorHandler(Localize("Error: could not save because the tune layer data is too large.", "Editor"));
 							return false;
 						}
 						Item.m_Tune = Writer.AddData(DataSize, std::static_pointer_cast<CLayerTune>(pLayerTiles)->m_pTuneTile);
@@ -403,7 +403,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 					size_t DataSize = 0;
 					if(!CheckedDatafileArraySize(pLayerQuads->m_vQuads.size(), sizeof(CQuad), DataSize) || pLayerQuads->m_vQuads.size() > (size_t)std::numeric_limits<int>::max())
 					{
-						ErrorHandler("错误：无法保存，因为四边形层数据过大。");
+						ErrorHandler(Localize("Error: could not save because the quad layer data is too large.", "Editor"));
 						return false;
 					}
 					Item.m_NumQuads = pLayerQuads->m_vQuads.size();
@@ -441,7 +441,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 					size_t DataSize = 0;
 					if(!CheckedDatafileArraySize(pLayerSounds->m_vSources.size(), sizeof(CSoundSource), DataSize) || pLayerSounds->m_vSources.size() > (size_t)std::numeric_limits<int>::max())
 					{
-						ErrorHandler("错误：无法保存，因为声音层数据过大。");
+						ErrorHandler(Localize("Error: could not save because the sound layer data is too large.", "Editor"));
 						return false;
 					}
 					Item.m_NumSources = pLayerSounds->m_vSources.size();
@@ -623,7 +623,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 	CDataFileReader DataFile;
 	if(!DataFile.Open(m_pEditor->Storage(), pFilename, StorageType))
 	{
-		ErrorHandler("错误：无法打开地图文件。详情请查看本地控制台。");
+		ErrorHandler(Localize("Error: Failed to open map file. See local console for details.", "Editor"));
 		return false;
 	}
 
@@ -631,7 +631,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 	const CMapItemVersion *pItemVersion = static_cast<CMapItemVersion *>(DataFile.FindItem(MAPITEMTYPE_VERSION, 0));
 	if(pItemVersion == nullptr || pItemVersion->m_Version != 1)
 	{
-		ErrorHandler("错误：该地图版本不受支持。");
+		ErrorHandler(Localize("Error: The map has an unsupported version.", "Editor"));
 		return false;
 	}
 
@@ -731,7 +731,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					pImg->m_pData = ImgInfo.m_pData;
 					if(!ConvertToRgba(*pImg) && (pImg->m_pData == nullptr || pImg->m_Format != CImageInfo::FORMAT_RGBA))
 					{
-						str_format(aBuf, sizeof(aBuf), "错误：无法转换外部图像“%s”。", pImg->m_aName);
+						str_format(aBuf, sizeof(aBuf), Localize("Error: could not convert external image \"%s\".", "Editor"), pImg->m_aName);
 						ErrorHandler(aBuf);
 						continue;
 					}
@@ -761,7 +761,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 				if(pData == nullptr || FileDataSize <= 0 || !pImg->DataSize(DataSize) || (size_t)FileDataSize < DataSize)
 				{
 					char aBuf[IO_MAX_PATH_LENGTH];
-					str_format(aBuf, sizeof(aBuf), "错误：无法读取嵌入图像“%s”。", pImg->m_aName);
+					str_format(aBuf, sizeof(aBuf), Localize("Error: could not read embedded image \"%s\".", "Editor"), pImg->m_aName);
 					ErrorHandler(aBuf);
 					pImg->m_External = 1;
 					pImg->m_Width = 0;
@@ -774,7 +774,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					if(pImg->m_pData == nullptr)
 					{
 						char aBuf[IO_MAX_PATH_LENGTH];
-						str_format(aBuf, sizeof(aBuf), "错误：无法为嵌入图像“%s”分配内存。", pImg->m_aName);
+						str_format(aBuf, sizeof(aBuf), Localize("Error: could not allocate memory for embedded image \"%s\".", "Editor"), pImg->m_aName);
 						ErrorHandler(aBuf);
 						pImg->m_External = 1;
 						pImg->m_Width = 0;
@@ -847,7 +847,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 				if(pData == nullptr || SoundDataSize <= 0)
 				{
 					char aBuf[IO_MAX_PATH_LENGTH];
-					str_format(aBuf, sizeof(aBuf), "错误：无法读取嵌入声音“%s”。", pSound->m_aName);
+					str_format(aBuf, sizeof(aBuf), Localize("Error: could not read embedded sound \"%s\".", "Editor"), pSound->m_aName);
 					ErrorHandler(aBuf);
 				}
 				else
@@ -857,7 +857,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					if(pSound->m_pData == nullptr)
 					{
 						char aBuf[IO_MAX_PATH_LENGTH];
-						str_format(aBuf, sizeof(aBuf), "错误：无法为嵌入声音“%s”分配内存。", pSound->m_aName);
+						str_format(aBuf, sizeof(aBuf), Localize("Error: could not allocate memory for embedded sound \"%s\".", "Editor"), pSound->m_aName);
 						ErrorHandler(aBuf);
 						pSound->m_DataSize = 0;
 					}

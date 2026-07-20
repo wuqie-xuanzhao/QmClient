@@ -34,6 +34,7 @@ import {
   budgetCorrelationSummary,
   settingsTextAnalysis,
   settingsUiBudgetSummary,
+  stutterDiagnosticsSummary,
   textRuntimeBudgetSummary,
   snapshot,
 } from './lib/stats.ts';

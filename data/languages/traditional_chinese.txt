@@ -4967,9 +4967,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls/zh
 
@@ -6409,9 +6406,6 @@ Move right
 
 Move to category
 == 移動到分類
-
-Moved ingame
-== 在遊戲內已移動
 
 Movement
 == 移動
@@ -12428,9 +12422,6 @@ What's done is done, no use saying more
 Wheel animate
 == 滾輪動畫
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== 已啟用 TClient 彩虹 Tee 時，本功能不會生效。
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 越過起跑線時，顯示復現最佳成績的影子 Tee
 
@@ -13231,10 +13222,6 @@ AUTO
 [Start menu]
 Play
 == 開始遊戲
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

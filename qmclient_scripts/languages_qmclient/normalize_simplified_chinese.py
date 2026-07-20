@@ -16,6 +16,8 @@ def main() -> int:
     changed_modules = 0
 
     for module_name, entries in sorted(store.items()):
+        if module_name in i18n_store.VERBATIM_TRANSLATION_MODULES:
+            continue
         module_patch: dict[tuple[str, str], dict[str, str]] = {}
         for identity, translations in sorted(entries.items()):
             translation = translations.get("simplified_chinese", "")

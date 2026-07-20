@@ -123,11 +123,13 @@ static constexpr ColorRGBA gs_ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0
 static constexpr int64_t gs_HangTimeoutSeconds = 10;
 static constexpr const char *gs_pQmCrashDumpDir = "dumps/QmClient_Crash";
 static constexpr const char *gs_pQmLifecycleMarkerFile = "qmclient/lifecycle_pending.marker";
+static constexpr const char *gs_pQmGraphicsRecoveryStateFile = "qmclient/graphics_recovery.marker";
 
 struct SQmLatestCrashReport
 {
 	char m_aPath[IO_MAX_PATH_LENGTH] = "";
 	time_t m_TimeModified = 0;
+	time_t m_MinTimeModified = 0;
 	int m_Rank = 0;
 };
 
@@ -148,7 +150,7 @@ static int FindLatestQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, 
 
 	SQmLatestCrashReport *pLatest = static_cast<SQmLatestCrashReport *>(pUser);
 	const int Rank = QmCrashReportRank(pInfo->m_pName);
-	if(Rank == 0)
+	if(Rank == 0 || pInfo->m_TimeModified < pLatest->m_MinTimeModified)
 		return 0;
 	if(pLatest->m_aPath[0] != '\0' &&
 		(pInfo->m_TimeModified < pLatest->m_TimeModified ||
@@ -161,6 +163,59 @@ static int FindLatestQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, 
 	pLatest->m_TimeModified = pInfo->m_TimeModified;
 	pLatest->m_Rank = Rank;
 	return 0;
+}
+
+static bool ReadQmLifecycleMarkerStartedAt(IStorage *pStorage, int64_t &StartedAt)
+{
+	StartedAt = 0;
+	char *pMarker = pStorage->ReadFileStr(gs_pQmLifecycleMarkerFile, IStorage::TYPE_SAVE);
+	if(pMarker == nullptr)
+		return false;
+
+	char aLine[256];
+	const char *pStr = pMarker;
+	while((pStr = str_next_token(pStr, "\n", aLine, sizeof(aLine))))
+	{
+		if(const char *pValue = str_startswith(aLine, "started_at="))
+		{
+			StartedAt = str_toint64_base(pValue);
+			break;
+		}
+	}
+	free(pMarker);
+	return StartedAt > 0;
+}
+
+static void FormatQmGraphicsCrashReportFingerprint(const SQmLatestCrashReport &Report, char *pBuf, size_t BufSize)
+{
+	str_format(pBuf, BufSize, "%lld\n%s", (long long)Report.m_TimeModified, Report.m_aPath);
+}
+
+static bool WasQmGraphicsCrashReportRecovered(IStorage *pStorage, const SQmLatestCrashReport &Report)
+{
+	char *pState = pStorage->ReadFileStr(gs_pQmGraphicsRecoveryStateFile, IStorage::TYPE_SAVE);
+	if(pState == nullptr)
+		return false;
+
+	char aFingerprint[IO_MAX_PATH_LENGTH + 64];
+	FormatQmGraphicsCrashReportFingerprint(Report, aFingerprint, sizeof(aFingerprint));
+	const bool Recovered = str_comp(pState, aFingerprint) == 0;
+	free(pState);
+	return Recovered;
+}
+
+static bool MarkQmGraphicsCrashReportRecovered(IStorage *pStorage, const SQmLatestCrashReport &Report)
+{
+	pStorage->CreateFolder("qmclient", IStorage::TYPE_SAVE);
+	IOHANDLE File = pStorage->OpenFile(gs_pQmGraphicsRecoveryStateFile, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return false;
+
+	char aFingerprint[IO_MAX_PATH_LENGTH + 64];
+	FormatQmGraphicsCrashReportFingerprint(Report, aFingerprint, sizeof(aFingerprint));
+	const bool Success = io_write(File, aFingerprint, str_length(aFingerprint)) == str_length(aFingerprint);
+	io_close(File);
+	return Success;
 }
 
 static bool QmCrashTextHasGraphicsDriverFault(const char *pText)
@@ -250,9 +305,14 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	if(pStorage == nullptr || !pStorage->FileExists(gs_pQmLifecycleMarkerFile, IStorage::TYPE_SAVE))
 		return;
 
+	int64_t SessionStartedAt = 0;
+	if(!ReadQmLifecycleMarkerStartedAt(pStorage, SessionStartedAt))
+		return;
+
 	SQmLatestCrashReport Latest;
+	Latest.m_MinTimeModified = (time_t)SessionStartedAt;
 	pStorage->ListDirectoryInfo(IStorage::TYPE_SAVE, gs_pQmCrashDumpDir, FindLatestQmCrashReportCallback, &Latest);
-	if(Latest.m_aPath[0] == '\0')
+	if(Latest.m_aPath[0] == '\0' || WasQmGraphicsCrashReportRecovered(pStorage, Latest))
 		return;
 
 	char *pCrashReport = pStorage->ReadFileStr(Latest.m_aPath, IStorage::TYPE_SAVE);
@@ -264,7 +324,8 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	if(!HasGraphicsDriverFault)
 		return;
 
-	if(ApplyQmSafeGraphicsRecovery())
+	const bool Changed = ApplyQmSafeGraphicsRecovery();
+	if(Changed)
 	{
 		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to OpenGL 3.0 windowed mode without FSAA", Latest.m_aPath);
 	}
@@ -272,6 +333,8 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	{
 		log_info("client", "previous crash report '%s' points to the graphics driver; safe graphics settings are already active", Latest.m_aPath);
 	}
+	if(!MarkQmGraphicsCrashReportRecovered(pStorage, Latest))
+		log_warn("client", "failed to remember recovered graphics crash report '%s'", Latest.m_aPath);
 }
 
 static const char *ClientStateToString(int State)
@@ -6398,7 +6461,7 @@ int main(int argc, const char **argv)
 		pFutureFileLogger->Set(log_logger_noop());
 	}
 
-	if(g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug)
+	if(g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug || g_Config.m_QmPerfStutterDiagnostics)
 	{
 		pStorage->CreateFolder("dumps", IStorage::TYPE_SAVE);
 		pStorage->CreateFolder("dumps/QmClient_Perf", IStorage::TYPE_SAVE);

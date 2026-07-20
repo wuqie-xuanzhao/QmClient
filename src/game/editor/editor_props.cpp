@@ -48,13 +48,13 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				}
 				State = NewValueRes.m_State;
 			}
-			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "减小值.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, Localize("Decrease value.", "Editor"), IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = std::clamp(pProps[i].m_Value - 1, pProps[i].m_Min, pProps[i].m_Max);
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "增加值.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, Localize("Increase value.", "Editor"), IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = std::clamp(pProps[i].m_Value + 1, pProps[i].m_Min, pProps[i].m_Max);
 				Change = i;
@@ -65,13 +65,13 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			CUIRect No, Yes;
 			Shifter.VSplitMid(&No, &Yes);
-			if(DoButton_Ex(&pIds[i], "否", !pProps[i].m_Value, &No, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+			if(DoButton_Ex(&pIds[i], Localize("No", "Editor"), !pProps[i].m_Value, &No, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
 			{
 				*pNewVal = 0;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_Ex(((char *)&pIds[i]) + 1, "是", pProps[i].m_Value, &Yes, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
+			if(DoButton_Ex(((char *)&pIds[i]) + 1, Localize("Yes", "Editor"), pProps[i].m_Value, &Yes, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 			{
 				*pNewVal = 1;
 				Change = i;
@@ -88,14 +88,14 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 
 			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0);
 			int NewValue = NewValueRes.m_Value;
-			if(DoButton_FontIcon(&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "减小值.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon(&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, Localize("Decrease value.", "Editor"), IGraphics::CORNER_L, 7.0f))
 			{
 				NewValue = (std::ceil((pProps[i].m_Value / (float)Step)) - 1) * Step;
 				if(NewValue < 0)
 					NewValue += 360;
 				NewValueRes.m_State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(&pIds[i] + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "增加值.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(&pIds[i] + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, Localize("Increase value.", "Editor"), IGraphics::CORNER_R, 7.0f))
 			{
 				NewValue = (pProps[i].m_Value + Step) / Step * Step;
 				NewValueRes.m_State = EEditState::ONE_GO;
@@ -132,7 +132,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0)
-				pName = "无";
+				pName = Localize("None", "Editor");
 			else
 				pName = Map()->m_vpImages[pProps[i].m_Value]->m_aName;
 
@@ -159,25 +159,25 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			Shifter.VSplitRight(10.0f, &Shifter, &Down);
 			Shifter.Draw(ColorRGBA(1, 1, 1, 0.5f), IGraphics::CORNER_NONE, 0.0f);
 			Ui()->DoLabel(&Shifter, "Y", 10.0f, TEXTALIGN_MC);
-			if(DoButton_FontIcon(&pIds[i], FONT_ICON_MINUS, 0, &Left, BUTTONFLAG_LEFT, "左移.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon(&pIds[i], FONT_ICON_MINUS, 0, &Left, BUTTONFLAG_LEFT, Localize("Shift left.", "Editor"), IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::LEFT;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 3, FONT_ICON_PLUS, 0, &Right, BUTTONFLAG_LEFT, "右移.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 3, FONT_ICON_PLUS, 0, &Right, BUTTONFLAG_LEFT, Localize("Shift right.", "Editor"), IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::RIGHT;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 1, FONT_ICON_MINUS, 0, &Up, BUTTONFLAG_LEFT, "上移.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 1, FONT_ICON_MINUS, 0, &Up, BUTTONFLAG_LEFT, Localize("Shift up.", "Editor"), IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::UP;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Down, BUTTONFLAG_LEFT, "下移.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Down, BUTTONFLAG_LEFT, Localize("Shift down.", "Editor"), IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::DOWN;
 				Change = i;
@@ -188,7 +188,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0)
-				pName = "无";
+				pName = Localize("None", "Editor");
 			else
 				pName = Map()->m_vpSounds[pProps[i].m_Value]->m_aName;
 
@@ -226,9 +226,9 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0)
-				pName = "无";
+				pName = Localize("None", "Editor");
 			else
-				pName = AUTOMAP_REFERENCE_NAMES[pProps[i].m_Value];
+				pName = Localize(AUTOMAP_REFERENCE_NAMES[pProps[i].m_Value], "Editor");
 
 			if(DoButton_Ex(&pIds[i], pName, 0, &Shifter, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL))
 				PopupSelectAutoMapReferenceInvoke(pProps[i].m_Value, Ui()->MouseX(), Ui()->MouseY());
@@ -252,7 +252,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 
 			if(CurValue <= 0 || CurValue > (int)Map()->m_vpEnvelopes.size())
 			{
-				str_copy(aBuf, "无:");
+				str_copy(aBuf, Localize("None:", "Editor"));
 			}
 			else if(Map()->m_vpEnvelopes[CurValue - 1]->m_aName[0])
 			{

@@ -139,6 +139,8 @@ public:
 		CMD_RENDER_TARGET_BEGIN,
 		CMD_RENDER_TARGET_END,
 		CMD_RENDER_TARGET_DRAW,
+		CMD_RENDER_TARGET_CAPTURE_BACKBUFFER,
+		CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS,
 		CMD_RENDER_TARGET_READBACK,
 
 		// opengl 2.0+ commands (some are just emulated and only exist in opengl 3.3+)
@@ -176,6 +178,8 @@ public:
 		// in Android a window that minimizes gets destroyed
 		CMD_WINDOW_CREATE_NTF,
 		CMD_WINDOW_DESTROY_NTF,
+
+		CMD_RENDER_MEDIA_ISLAND_SDF,
 
 		CMD_COUNT,
 	};
@@ -238,6 +242,17 @@ public:
 		SVertex *m_pVertices; // you should use the command buffer data to allocate vertices for this command
 	};
 
+	struct SCommand_RenderMediaIslandSdf : public SCommand
+	{
+		SCommand_RenderMediaIslandSdf() :
+			SCommand(CMD_RENDER_MEDIA_ISLAND_SDF) {}
+		SState m_State;
+		IGraphics::SMediaIslandSdfParams m_Params;
+		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
+		unsigned m_PrimCount = 1;
+		SVertex *m_pVertices = nullptr;
+	};
+
 	struct SCommand_RenderTex3D : public SCommand
 	{
 		SCommand_RenderTex3D() :
@@ -289,7 +304,25 @@ public:
 		float m_Y = 0.0f;
 		float m_W = 0.0f;
 		float m_H = 0.0f;
+		float m_Alpha = 1.0f;
 		SState m_State;
+	};
+
+	struct SCommand_RenderTarget_CaptureBackbuffer : public SCommand
+	{
+		SCommand_RenderTarget_CaptureBackbuffer() :
+			SCommand(CMD_RENDER_TARGET_CAPTURE_BACKBUFFER) {}
+		int m_TargetId = -1;
+	};
+
+	struct SCommand_RenderTarget_GaussianBlurPass : public SCommand
+	{
+		SCommand_RenderTarget_GaussianBlurPass() :
+			SCommand(CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS) {}
+		int m_SourceTargetId = -1;
+		int m_Radius = 0;
+		bool m_Horizontal = false;
+		std::array<float, IGraphics::GAUSSIAN_BLUR_MAX_RADIUS + 1> m_aWeights{};
 	};
 
 	struct SCommand_RenderTarget_Readback : public SCommand
@@ -790,12 +823,16 @@ public:
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
 	// checks if the current values of the config are a graphics modern API
 	virtual bool IsConfigModernAPI() { return false; }
+	virtual bool HasMediaIslandSdf() { return false; }
 	virtual bool UseTrianglesAsQuad() { return false; }
 	virtual bool HasTileBuffering() { return false; }
 	virtual bool HasQuadBuffering() { return false; }
 	virtual bool HasTextBuffering() { return false; }
 	virtual bool HasQuadContainerBuffering() { return false; }
 	virtual bool HasRenderTargets() { return false; }
+	virtual bool HasRenderTargetGaussianBlur() { return false; }
+	virtual bool HasBackbufferCapture() { return false; }
+	virtual bool RenderTargetExternalPassRequiresSingleSample() { return false; }
 	virtual const char *RenderTargetSupportReason() { return HasRenderTargets() ? "supported" : "unsupported_by_backend"; }
 	virtual bool Uses2DTextureArrays() { return false; }
 	virtual bool HasTextureArraysSupport() { return false; }
@@ -837,6 +874,12 @@ class CGraphics_Threaded : public IEngineGraphics
 	bool m_GLHasTextureArraysSupport;
 	bool m_GLUseTrianglesAsQuad;
 	bool m_GLRenderTargetsSupported;
+	bool m_GLRenderTargetGaussianBlurSupported;
+	bool m_GLBackbufferCaptureSupported;
+	bool m_GLRenderTargetExternalPassRequiresSingleSample;
+	uint32_t m_MultiSamplingCount;
+	int m_PendingMultiSamplingCount;
+	bool m_RenderTargetActive;
 
 	CCommandBuffer *m_apCommandBuffers[2];
 	CCommandBuffer *m_pCommandBuffer;
@@ -872,6 +915,7 @@ class CGraphics_Threaded : public IEngineGraphics
 	int m_TextureMemoryUsage;
 
 	std::vector<int> m_vRenderTargetIndices;
+	std::vector<ivec2> m_vRenderTargetSizes;
 	size_t m_FirstFreeRenderTarget;
 
 	enum class ERenderTargetReadbackRequestState
@@ -1047,12 +1091,16 @@ public:
 	IGraphics::CTextureHandle LoadTextureRawMove(CImageInfo &Image, int Flags, const char *pTexName = nullptr) override;
 
 	bool IsRenderTargetSupported() const override;
+	bool IsRenderTargetGaussianBlurSupported() const override;
+	bool IsBackbufferCaptureSupported() const override;
 	const char *RenderTargetSupportReason() const override;
 	CRenderTargetHandle CreateRenderTarget(int Width, int Height) override;
 	void DestroyRenderTarget(CRenderTargetHandle *pTarget) override;
 	bool BeginRenderTarget(CRenderTargetHandle Target, ColorRGBA ClearColor) override;
 	void EndRenderTarget() override;
-	void DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H) override;
+	void DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H, float Alpha = 1.0f) override;
+	bool CaptureBackbufferToRenderTarget(CRenderTargetHandle Target) override;
+	bool GaussianBlurRenderTarget(CRenderTargetHandle Source, CRenderTargetHandle Temporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params) override;
 	CRenderTargetReadbackHandle BeginRenderTargetReadback(CRenderTargetHandle Target) override;
 	ERenderTargetReadbackState PollRenderTargetReadback(CRenderTargetReadbackHandle Handle) override;
 	bool ResolveRenderTargetReadback(CRenderTargetReadbackHandle *pHandle, CImageInfo &Image) override;
@@ -1324,6 +1372,7 @@ public:
 	void RenderBorderTiles(int BufferContainerIndex, const ColorRGBA &Color, char *pIndexBufferOffset, const vec2 &Offset, const vec2 &Scale, uint32_t DrawNum) override;
 	void RenderQuadLayer(int BufferContainerIndex, SQuadRenderInfo *pQuadInfo, size_t QuadNum, int QuadOffset, bool Grouped = false) override;
 	void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override;
+	void RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params) override;
 
 	// modern GL functions
 	int CreateBufferObject(size_t UploadDataSize, void *pUploadData, int CreateFlags, bool IsMovedPointer = false) override;
@@ -1394,6 +1443,7 @@ public:
 
 	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override { return m_pBackend->GetDriverVersion(DriverAgeType, Major, Minor, Patch, pName, BackendType); }
 	bool IsConfigModernAPI() override { return m_pBackend->IsConfigModernAPI(); }
+	bool HasMediaIslandSdf() override { return m_pBackend->HasMediaIslandSdf(); }
 	bool IsTileBufferingEnabled() override { return m_GLTileBufferingEnabled; }
 	bool IsQuadBufferingEnabled() override { return m_GLQuadBufferingEnabled; }
 	bool IsTextBufferingEnabled() override { return m_GLTextBufferingEnabled; }

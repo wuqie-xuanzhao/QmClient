@@ -31,9 +31,6 @@
 %d more cut segments
 == Mais %d segmentos de corte
 
-%d new mentions
-== %d novas menções
-
 %d of %d server
 == %d de %d servidor
 
@@ -246,9 +243,6 @@
 
 5 stars
 == 5 estrelas
-
-9+ new mentions
-== 9+ novas menções
 
 === All Local Saves ===
 == === Todos os saves locais ===
@@ -1411,6 +1405,9 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
+
+Better scoreboard
+== Placar melhorado
 
 Bind key to execute a command or view keybindings
 == Vincular tecla para executar um comando ou ver atalhos de teclado
@@ -4967,9 +4964,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -6257,9 +6251,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == Mensagens
 
-Messages that already look like the target language will skip auto-translate
-== Mensagens que já se parecem com o idioma de destino ignorarão a tradução automática
-
 Microphone
 == Microfone
 
@@ -6409,9 +6400,6 @@ Move right
 
 Move to category
 == Mover para categoria
-
-Moved ingame
-== Movido no jogo
 
 Movement
 == Movimento
@@ -7010,9 +6998,6 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 == Número de opções de voto enviadas por tick
 
-Numeric-only messages will be skipped
-== Mensagens apenas numéricas serão ignoradas
-
 o = Send rate
 == o = Taxa de envio
 
@@ -7387,6 +7372,9 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == Limiar de registo de depuração de desempenho (ms)
+
+Performance mode (placeholder)
+== Modo de desempenho (espaço reservado)
 
 Personal best:
 == Melhor pessoal:
@@ -12428,9 +12416,6 @@ What's done is done, no use saying more
 Wheel animate
 == Animação da roda
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== Quando o Tee arco-íris do TClient está ativado, esta funcionalidade não tem efeito.
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Quando cruzares a linha de partida, mostra um fantasma a replicar os movimentos do teu melhor tempo
 
@@ -13231,10 +13216,6 @@ AUTO
 [Start menu]
 Play
 == Jogar
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

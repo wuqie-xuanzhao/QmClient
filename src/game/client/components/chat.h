@@ -39,6 +39,12 @@ constexpr auto SAVES_FILE = "ddnet-saves.txt";
 class CChat : public CComponent
 {
 public:
+	enum class EBlockWordsAction
+	{
+		REPLACE = 0,
+		HIDE_MESSAGE = 1,
+	};
+
 	enum class EPresentationState
 	{
 		ENTERING,
@@ -270,6 +276,7 @@ private:
 	bool EnsureChatLogFolder() const;
 	void CleanupOldChatLogs(const char *pToday);
 	void SaveChatLogLine(int ClientId, int Team, const char *pLine);
+	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
 	const CCommand *FindServerCommand(const char *pName) const;
 	const char *LocalizeCommandPreviewText(const char *pText) const;
 	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;

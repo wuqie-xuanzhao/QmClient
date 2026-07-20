@@ -161,4 +161,30 @@ public:
 	int m_LocJumpIndex;
 };
 
+class CGLSLMediaIslandSdfProgram : public CGLSLTWProgram
+{
+public:
+	CGLSLMediaIslandSdfProgram() :
+		m_LocData(-1)
+	{
+	}
+
+	int m_LocData;
+};
+
+class CGLSLGaussianBlurProgram : public CGLSLTWProgram
+{
+public:
+	CGLSLGaussianBlurProgram() :
+		m_LocTexelOffset(-1),
+		m_LocRadius(-1),
+		m_LocWeights(-1)
+	{
+	}
+
+	int m_LocTexelOffset;
+	int m_LocRadius;
+	int m_LocWeights;
+};
+
 #endif

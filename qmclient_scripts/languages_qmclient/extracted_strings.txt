@@ -10,7 +10,6 @@
 %d dummy
 %d items selected
 %d more cut segments
-%d new mentions
 %d of %d server
 %d of %d servers
 %d player
@@ -82,7 +81,6 @@
 4 stars
 45° Aim
 5 stars
-9+ new mentions
 === All Local Saves ===
 === Saves for '%s' ===
 [%s] %s (Map: %s, Time: %s)
@@ -1655,7 +1653,6 @@ HTTP map download: low speed limit (in bytes/s, 0=disabled)
 HTTP map download: low speed limit period (0=disabled)
 https://ddnet.org/discord
 https://wiki.ddnet.org/
-https://wiki.ddnet.org/wiki/Mapping
 https://wiki.ddnet.org/wiki/Touch_controls
 HUD
 HUD animation speed (percent)
@@ -2085,7 +2082,6 @@ Message to reply when game minimized
 Message to send in chat:
 Message to send on auto vote, leave empty to not send
 Messages
-Messages that already look like the target language will skip auto-translate
 Microphone
 Microphone permission denied by system
 Microphone volume
@@ -2136,7 +2132,6 @@ Move left
 Move player to spectators
 Move right
 Move to category
-Moved ingame
 Movement
 Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
@@ -4142,7 +4137,6 @@ Welcome to DDNet
 What level DDRace binding is set to (automatic, you don't need to use it).
 What's done is done, no use saying more
 Wheel animate
-When TClient rainbow Tee is enabled, this feature has no effect.
 When you cross the start line, show a ghost tee replicating the movements of your best time
 Whether a switch is deactivated by default (otherwise activated)
 Whether dummy copies your movement
@@ -4386,7 +4380,6 @@ Zoom to current mouse target
 [Spectating Camera Mode Icon]	AUTO
 [Spectators]	%d others…
 [Start menu]	Play
-[Team and size]	%d\n(%d/%d)
 [Team size]	maximum
 [Team size]	minimum
 [Team status]	allowed

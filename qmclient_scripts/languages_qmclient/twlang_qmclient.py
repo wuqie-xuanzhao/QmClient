@@ -19,9 +19,7 @@ def decode(fileobj, elements_per_key):
             current_context = ""
             continue
 
-        if line.startswith("[") and not line.startswith("[%"):
-            if line[-1] != "]":
-                raise LanguageDecodeError("Invalid context string", fileobj.name, index)
+        if line.startswith("[") and line.endswith("]") and not line.startswith("[%"):
             current_context = line[1:-1]
         elif line[:3] == "== ":
             if len(data[current_key]) >= 1 + elements_per_key:

@@ -31,9 +31,6 @@
 %d more cut segments
 == さらに %d 個のカットセグメント
 
-%d new mentions
-== %d 件の新しいメンション
-
 %d of %d server
 == %d/%d サーバー
 
@@ -220,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - 無効、1-9999 分
 
-1 new mention
-== 1 件の新しいメンション
-
 1 star
 == 1 つ星
 
@@ -246,9 +240,6 @@
 
 5 stars
 == 5 つ星
-
-9+ new mentions
-== 9+ 件の新しいメンション
 
 === All Local Saves ===
 == === すべてのローカルセーブ ===
@@ -1411,6 +1402,9 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
+
+Better scoreboard
+== より良いスコアボード
 
 Bind key to execute a command or view keybindings
 == キーにコマンドをバインド、またはキーバインドを表示
@@ -4967,9 +4961,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -7010,9 +7001,6 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 == 1 ティックあたりに送る投票オプション数
 
-Numeric-only messages will be skipped
-== 数字のみのメッセージはスキップされます
-
 o = Send rate
 == o = 送信レート
 
@@ -7387,6 +7375,9 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == パフォーマンスデバッグログのしきい値（ms）
+
+Performance mode (placeholder)
+== パフォーマンスモード（プレースホルダー）
 
 Personal best:
 == 自己ベスト：
@@ -9526,9 +9517,6 @@ Show default flag in scoreboard
 
 Show default mod rules.
 == デフォルトの MOD ルールを表示
-
-Show Directory
-== ディレクトリを表示
 
 Show dotted map route debug
 == マップの点線ルートデバッグを表示
@@ -13231,10 +13219,6 @@ AUTO
 [Start menu]
 Play
 == プレイ
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

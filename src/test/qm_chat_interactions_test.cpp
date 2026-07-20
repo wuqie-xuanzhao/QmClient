@@ -5,6 +5,7 @@
 #include <game/client/components/motd.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/tclient/fast_practice.h>
+#include <game/client/components/tclient/warlist.h>
 
 #include <gtest/gtest.h>
 #include <test/test.h>
@@ -60,6 +61,70 @@ TEST(QmChatPresentation, NewLineEntersThenBecomesVisible)
 	EXPECT_NEAR(Presentation.m_RenderOffsetX, 0.0f, 0.001f);
 	EXPECT_NEAR(Presentation.m_RenderOffsetY, 0.0f, 0.001f);
 	EXPECT_NEAR(Presentation.m_RenderAlpha, 1.0f, 0.001f);
+}
+
+TEST(QmWarListEnemyChat, OnlyBuiltInEnemyGroupMatches)
+{
+	CWarDataCache WarData;
+	ASSERT_GE(WarData.m_WarGroupMatches.size(), 3u);
+
+	WarData.m_WarGroupMatches[2] = true;
+	EXPECT_FALSE(CWarList::MatchesEnemyGroup(WarData));
+
+	WarData.m_WarGroupMatches[2] = false;
+	WarData.m_WarGroupMatches[1] = true;
+	EXPECT_TRUE(CWarList::MatchesEnemyGroup(WarData));
+}
+
+TEST(QmWarListEnemyChat, ShortGroupDataDoesNotMatchEnemy)
+{
+	CWarDataCache WarData;
+	WarData.m_WarGroupMatches.resize(1);
+	EXPECT_FALSE(CWarList::MatchesEnemyGroup(WarData));
+}
+
+TEST(QmDummySyncChatCommand, MatchesOnlySupportedCommands)
+{
+	EXPECT_FALSE(CChat::ShouldSyncDummyCommand(nullptr));
+	EXPECT_TRUE(CChat::ShouldSyncDummyCommand("/team 2"));
+	EXPECT_TRUE(CChat::ShouldSyncDummyCommand("/TEAM 2"));
+	EXPECT_TRUE(CChat::ShouldSyncDummyCommand("/TeAm 63"));
+	EXPECT_TRUE(CChat::ShouldSyncDummyCommand("/vote particle"));
+	EXPECT_TRUE(CChat::ShouldSyncDummyCommand("/VOTE PARTICLE"));
+	EXPECT_TRUE(CChat::ShouldSyncDummyCommand("/VoTe PaRtIcLe"));
+
+	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/team"));
+	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/team "));
+	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/teamwork 2"));
+	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/vote particles"));
+	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/vote particle on"));
+	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("particle"));
+}
+
+TEST(QmWarListEnemyChat, FilteringKeepsChatLogPersistenceIndependent)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
+	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
+	const std::string WarListSettings = SourceFunctionBody(Menus, "void CMenus::RenderSettingsTClientWarList(");
+
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmWarListBlockEnemyChat, qm_warlist_block_enemy_chat, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(AddLine.find("g_Config.m_QmWarListBlockEnemyChat"), std::string::npos);
+	EXPECT_NE(AddLine.find("GameClient()->m_WarList.IsEnemy(ClientId)"), std::string::npos);
+	EXPECT_NE(AddLine.find("GameClient()->m_Snap.m_LocalClientId != ClientId && g_Config.m_QmWarListBlockEnemyChat"), std::string::npos);
+	EXPECT_EQ(AddLine.find("m_TcWarList && g_Config.m_QmWarListBlockEnemyChat"), std::string::npos);
+	EXPECT_EQ(OnMessage.find("m_QmWarListBlockEnemyChat"), std::string::npos);
+	EXPECT_NE(WarListSettings.find("&g_Config.m_QmWarListBlockEnemyChat"), std::string::npos);
+	EXPECT_NE(WarListSettings.find("\"tclient-warlist-block-enemy-chat\""), std::string::npos);
+	EXPECT_NE(WarListSettings.find("\"Block enemy chat\""), std::string::npos);
+
+	const size_t AddLineCall = OnMessage.find("AddLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage)");
+	const size_t SaveLogCall = OnMessage.find("SaveChatLogLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage)");
+	ASSERT_NE(AddLineCall, std::string::npos);
+	ASSERT_NE(SaveLogCall, std::string::npos);
+	EXPECT_LT(AddLineCall, SaveLogCall);
 }
 
 TEST(QmChatPresentation, InactiveOldLineKeepsFullOpacity)
@@ -260,7 +325,7 @@ TEST(QmChatPresentation, SmoothYApproachesTargetWithoutOvershoot)
 	}
 }
 
-TEST(QmWindowModes, WindowedFullscreenRemainsARegularBorderedWindow)
+TEST(QmWindowModes, WindowedFullscreenRemainsABorderlessNonResizableWindow)
 {
 	const std::string Backend = ReadTestSourceFile("src/engine/client/backend_sdl.cpp");
 	const std::string SetWindowParams = SourceFunctionBody(Backend, "void CGraphicsBackend_SDL_GL::SetWindowParams(");
@@ -271,20 +336,26 @@ TEST(QmWindowModes, WindowedFullscreenRemainsARegularBorderedWindow)
 	const std::string WindowedFullscreen = SetWindowParams.substr(WindowedFullscreenStart, WindowedStart - WindowedFullscreenStart);
 
 	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowFullscreen(m_pWindow, 0);"), std::string::npos);
-	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowBordered(m_pWindow, SDL_TRUE);"), std::string::npos);
+	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowBordered(m_pWindow, SDL_FALSE);"), std::string::npos);
 	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowResizable(m_pWindow, SDL_FALSE);"), std::string::npos);
 }
 
-TEST(QmWindowModes, StartupDoesNotMarkWindowedFullscreenAsBorderless)
+TEST(QmWindowModes, StartupMarksWindowedFullscreenAsBorderless)
 {
 	const std::string Backend = ReadTestSourceFile("src/engine/client/backend_sdl.cpp");
 	const std::string Graphics = ReadTestSourceFile("src/engine/client/graphics_threaded.cpp");
 	const std::string IssueInit = SourceFunctionBody(Graphics, "int CGraphics_Threaded::IssueInit()");
 
-	EXPECT_EQ(IssueInit.find("else // Windowed fullscreen"), std::string::npos);
+	const size_t WindowedFullscreenStart = IssueInit.find("else // Windowed fullscreen");
+	const size_t VSyncStart = IssueInit.find("if(g_Config.m_GfxVsync)", WindowedFullscreenStart + 1);
+	ASSERT_NE(WindowedFullscreenStart, std::string::npos);
+	ASSERT_NE(VSyncStart, std::string::npos);
+	const std::string WindowedFullscreen = IssueInit.substr(WindowedFullscreenStart, VSyncStart - WindowedFullscreenStart);
+
 	EXPECT_NE(IssueInit.find("if(IsExclusiveFullscreen)"), std::string::npos);
 	EXPECT_NE(IssueInit.find("else if(IsDesktopFullscreen)"), std::string::npos);
 	EXPECT_NE(IssueInit.find("else if(IsPurelyWindowed)"), std::string::npos);
+	EXPECT_NE(WindowedFullscreen.find("Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;"), std::string::npos);
 	EXPECT_NE(Backend.find("const bool IsWindowedFullscreen = g_Config.m_GfxFullscreen == 3;"), std::string::npos);
 	EXPECT_NE(Backend.find("if(IsWindowedFullscreen || (IsFullscreen && !SupportedResolution)"), std::string::npos);
 }
@@ -686,6 +757,50 @@ TEST(QmChatInteractions, DoesNotAppendEmptyOrFullBlockWords)
 
 	EXPECT_FALSE(CChat::AppendBlockWordToList(aList, sizeof(aList), "x"));
 	EXPECT_STREQ(aList, "filled");
+}
+
+TEST(QmChatBlockWords, HideActionOnlySuppressesMatchedRemotePlayerMessages)
+{
+	EXPECT_FALSE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::REPLACE, true, 5, false, 0));
+	EXPECT_FALSE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, false, 5, false, 0));
+
+	EXPECT_TRUE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, true, 5, false, 0));
+	EXPECT_TRUE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, true, 5, false, 1));
+	EXPECT_TRUE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, true, 5, false, TEAM_WHISPER_RECV));
+}
+
+TEST(QmChatBlockWords, HideActionKeepsLocalAndNonPlayerMessagesVisible)
+{
+	EXPECT_FALSE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, true, 5, true, 0));
+	EXPECT_FALSE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, true, -1, false, 0));
+	EXPECT_FALSE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, true, -2, false, 0));
+	EXPECT_FALSE(CChat::ShouldHideBlockWordsMessage(CChat::EBlockWordsAction::HIDE_MESSAGE, true, 5, false, TEAM_WHISPER_SEND));
+}
+
+TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
+	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
+
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmBlockWordsAction, qm_block_words_action, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(Menus.find("&g_Config.m_QmBlockWordsAction"), std::string::npos);
+	EXPECT_NE(Menus.find("qmclient-word-filter-match-mode\", &LabelCol, Localize(\"Mode\")"), std::string::npos);
+	const size_t RawConsoleCall = AddLine.find("PrintBlockedMessageToConsole(ClientId, Team, pLine);");
+	const size_t HideBranch = AddLine.find("if(CanHideBlockWordsMessage)");
+	ASSERT_NE(RawConsoleCall, std::string::npos);
+	ASSERT_NE(HideBranch, std::string::npos);
+	EXPECT_LT(RawConsoleCall, HideBranch);
+	EXPECT_NE(AddLine.find("BlockWordsConsolePrinted = true;"), std::string::npos);
+	EXPECT_NE(AddLine.find("if(BlockWordsConsolePrinted)"), std::string::npos);
+	EXPECT_NE(AddLine.find("ShouldHideBlockWordsMessage("), std::string::npos);
+	EXPECT_NE(AddLine.find("BlockWordsAction == EBlockWordsAction::REPLACE || CanHideBlockWordsMessage"), std::string::npos);
+	EXPECT_NE(AddLine.find("Client()->State() == IClient::STATE_DEMOPLAYBACK"), std::string::npos);
+	EXPECT_NE(AddLine.find("ClientId == GameClient()->m_Snap.m_LocalClientId"), std::string::npos);
+	EXPECT_NE(AddLine.find("GameClient()->IsLocalClientId(ClientId)"), std::string::npos);
+	EXPECT_NE(OnMessage.find("SaveChatLogLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage)"), std::string::npos);
 }
 
 TEST(QmChatInteractions, BuildsEscapedWhisperCommand)

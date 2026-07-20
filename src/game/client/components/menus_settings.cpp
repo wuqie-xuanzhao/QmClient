@@ -35,6 +35,7 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/tee_color_code.h>
 #include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
@@ -160,6 +161,11 @@ namespace
 			       m_ColorBody == Other.m_ColorBody &&
 			       m_ColorFeet == Other.m_ColorFeet;
 		}
+
+		bool SameSkin(const SSettingsPreviewSkinKey &Other) const
+		{
+			return str_comp(m_aSkinName, Other.m_aSkinName) == 0;
+		}
 	};
 
 	struct SSettingsPreviewSkinTransitionState
@@ -182,10 +188,16 @@ namespace
 				return;
 			}
 
-			if(m_HasKey && !(m_Key == Key) && m_LastInfo.Valid() && Info.Valid())
+			const ESkinChangeTransitionAction Action = ResolveSkinChangeTransitionAction(m_HasKey, !m_Key.SameSkin(Key), !(m_Key == Key));
+			if(Action == ESkinChangeTransitionAction::START && m_LastInfo.Valid() && Info.Valid())
 			{
 				m_PreviousInfo = m_LastInfo;
 				m_StartTime = Now;
+			}
+			else if(Action != ESkinChangeTransitionAction::KEEP)
+			{
+				m_PreviousInfo.Reset();
+				m_StartTime.reset();
 			}
 
 			m_Key = Key;
@@ -987,15 +999,6 @@ void CMenus::SetNeedSendInfo(bool Dummy)
 {
 	bool &NeedSendInfo = Dummy ? m_NeedSendDummyinfo : m_NeedSendinfo;
 	NeedSendInfo = true;
-
-	if(Client()->State() != IClient::STATE_ONLINE)
-		return;
-
-	if(Dummy)
-		GameClient()->SendDummyInfo(false);
-	else
-		GameClient()->SendInfo(false);
-	NeedSendInfo = false;
 }
 
 CUi::EPopupMenuFunctionResult CMenus::PopupSettingsCountrySelection(void *pContext, CUIRect View, bool Active)

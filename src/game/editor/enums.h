@@ -1,20 +1,22 @@
 #ifndef GAME_EDITOR_ENUMS_H
 #define GAME_EDITOR_ENUMS_H
 
+#include <engine/shared/localization.h>
+
 constexpr const char *GAME_TILE_OP_NAMES[] = {
-	"空气",
-	"可钩",
-	"死亡",
-	"不可钩",
-	"穿钩",
-	"冻结",
-	"解冻",
-	"深度冻结",
-	"深度解冻",
-	"蓝色检查点传送",
-	"红色检查点传送",
-	"实时冻结",
-	"实时解冻",
+	Localizable("Air", "Editor"),
+	Localizable("Hookable", "Editor"),
+	Localizable("Death", "Editor"),
+	Localizable("Unhookable", "Editor"),
+	Localizable("Hookthrough", "Editor"),
+	Localizable("Freeze", "Editor"),
+	Localizable("Unfreeze", "Editor"),
+	Localizable("Deep Freeze", "Editor"),
+	Localizable("Deep Unfreeze", "Editor"),
+	Localizable("Blue Check-Tele", "Editor"),
+	Localizable("Red Check-Tele", "Editor"),
+	Localizable("Live Freeze", "Editor"),
+	Localizable("Live Unfreeze", "Editor"),
 };
 enum class EGameTileOp
 {
@@ -34,16 +36,16 @@ enum class EGameTileOp
 };
 
 constexpr const char *AUTOMAP_REFERENCE_NAMES[] = {
-	"游戏层",
-	"可钩",
-	"死亡",
-	"不可钩",
-	"冻结",
-	"解冻",
-	"深度冻结",
-	"深度解冻",
-	"实时冻结",
-	"实时解冻",
+	Localizable("Game Layer", "Editor"),
+	Localizable("Hookable", "Editor"),
+	Localizable("Death", "Editor"),
+	Localizable("Unhookable", "Editor"),
+	Localizable("Freeze", "Editor"),
+	Localizable("Unfreeze", "Editor"),
+	Localizable("Deep Freeze", "Editor"),
+	Localizable("Deep Unfreeze", "Editor"),
+	Localizable("Live Freeze", "Editor"),
+	Localizable("Live Unfreeze", "Editor"),
 };
 
 #endif

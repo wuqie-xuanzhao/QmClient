@@ -9,6 +9,7 @@
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/stutter_diagnostics.h>
 #include <game/client/components/settings_resource_jobs.h>
 #include <game/client/frame_scheduler.h>
 #include <game/client/ui.h>
@@ -1404,13 +1405,30 @@ TEST(QmMonitoringHelpers, PerfConfigDefaultsUseLowThresholdWithoutJsonToggle)
 TEST(QmMonitoringHelpers, PerfDurationGateUsesConfiguredThreshold)
 {
 	const int OldThreshold = g_Config.m_QmPerfDebugThresholdMs;
+	const int OldStutterDiagnostics = g_Config.m_QmPerfStutterDiagnostics;
 	g_Config.m_QmPerfDebugThresholdMs = 4;
+	g_Config.m_QmPerfStutterDiagnostics = 0;
 
 	EXPECT_FALSE(QmPerfShouldLogDuration(3.999));
 	EXPECT_TRUE(QmPerfShouldLogDuration(4.0));
 	EXPECT_TRUE(QmPerfShouldLogDuration(0.0, true));
 
 	g_Config.m_QmPerfDebugThresholdMs = OldThreshold;
+	g_Config.m_QmPerfStutterDiagnostics = OldStutterDiagnostics;
+}
+
+TEST(QmStutterDiagnostics, PerfDurationGateUsesThreeHundredFpsBudgetWhileEnabled)
+{
+	const int OldThreshold = g_Config.m_QmPerfDebugThresholdMs;
+	const int OldStutterDiagnostics = g_Config.m_QmPerfStutterDiagnostics;
+	g_Config.m_QmPerfDebugThresholdMs = 4;
+	g_Config.m_QmPerfStutterDiagnostics = 1;
+
+	EXPECT_FALSE(QmPerfShouldLogDuration(QmStutterFrameBudgetMs() - 0.001));
+	EXPECT_TRUE(QmPerfShouldLogDuration(QmStutterFrameBudgetMs()));
+
+	g_Config.m_QmPerfDebugThresholdMs = OldThreshold;
+	g_Config.m_QmPerfStutterDiagnostics = OldStutterDiagnostics;
 }
 
 TEST(QmMonitoringHelpers, ProcessHighPriorityConfigExistsAndDefaultsOff)

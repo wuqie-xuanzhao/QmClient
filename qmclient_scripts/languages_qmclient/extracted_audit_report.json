@@ -68922,7 +68922,7 @@
       "line": 1644,
       "text": "settings_qmclient_gores_actor_text_inputs",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -68950,7 +68950,7 @@
       "line": 1664,
       "text": "qmclient-gores-actor-chat-message",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -68964,7 +68964,7 @@
       "line": 1671,
       "text": "qmclient-gores-actor-send-probability",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -68978,7 +68978,7 @@
       "line": 1740,
       "text": "qmclient-gores-mode-key",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69055,7 +69055,7 @@
       "line": 1823,
       "text": "settings_qmclient_friend_enter_text_inputs",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "log or telemetry key/value payload"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69083,7 +69083,7 @@
       "line": 1928,
       "text": "*",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69139,7 +69139,7 @@
       "line": 1994,
       "text": "settings_qmclient_keyword_reply_text_inputs",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69216,7 +69216,7 @@
       "line": 2123,
       "text": "settings_qmclient_translate_text_inputs",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69482,21 +69482,21 @@
       "line": 2398,
       "text": "DEEPSEEK_API_KEY",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
       "line": 2404,
       "text": "OPENAI_API_KEY",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
       "line": 2411,
       "text": "API_KEY",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69545,7 +69545,7 @@
       "line": 2472,
       "text": "glm-4.5-flash",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69657,7 +69657,7 @@
       "line": 2671,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -69706,7 +69706,7 @@
       "line": 2707,
       "text": "➤",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -70168,7 +70168,7 @@
       "line": 3452,
       "text": "qmclient_coord_x_align_hint_window",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "log or telemetry key/value payload"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -70364,7 +70364,7 @@
       "line": 3589,
       "text": "%s: %s",
       "category": "business_data",
-      "reason": "display formatting template"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -70756,14 +70756,14 @@
       "line": 3848,
       "text": "qmclient-voice-input-default",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "assets workshop or preview diagnostic text"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
       "line": 3849,
       "text": "qmclient-voice-input-refresh",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "assets workshop or preview diagnostic text"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -71841,7 +71841,7 @@
       "line": 5425,
       "text": "qmclient-search-global-card-title",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -71869,14 +71869,14 @@
       "line": 5542,
       "text": "qm_2_70_0_chat_context_spectate",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
       "line": 5543,
       "text": "qm_2_70_0_chat_context_spectate",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -72177,14 +72177,14 @@
       "line": 373,
       "text": "%.0f%s",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
       "line": 478,
       "text": " %",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
@@ -72296,7 +72296,7 @@
       "line": 1271,
       "text": "%.1f snap/s %.1f part/s",
       "category": "business_data",
-      "reason": "display formatting template"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/qmclient/monitoring/monitoring.cpp",
@@ -72478,14 +72478,14 @@
       "line": 1,
       "text": "qm_lyrics.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "line": 3,
       "text": "qm_lyrics_cache.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
@@ -72499,14 +72499,14 @@
       "line": 5,
       "text": "qm_lyrics_parser_lrc.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "line": 6,
       "text": "qm_lyrics_parser_ttml.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
@@ -72520,14 +72520,14 @@
       "line": 8,
       "text": "qm_lyrics_song_search_map.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "line": 9,
       "text": "qm_lyrics_source_amll_ttml_db.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
@@ -72541,7 +72541,7 @@
       "line": 11,
       "text": "qm_lyrics_source_kugou.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
@@ -72569,28 +72569,28 @@
       "line": 551,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "line": 567,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "line": 635,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "line": 803,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
@@ -72604,35 +72604,35 @@
       "line": 4,
       "text": "qm_lyrics_clock.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.h",
       "line": 5,
       "text": "qm_lyrics_model.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.h",
       "line": 6,
       "text": "qm_lyrics_source.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.cpp",
       "line": 1,
       "text": "qm_lyrics_cache.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.cpp",
       "line": 3,
       "text": "qm_lyrics_match.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.cpp",
@@ -72779,35 +72779,35 @@
       "line": 4,
       "text": "qm_lyrics_match.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.h",
       "line": 5,
       "text": "qm_lyrics_model.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_clock.cpp",
       "line": 1,
       "text": "qm_lyrics_clock.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_match.cpp",
       "line": 1,
       "text": "qm_lyrics_match.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_match.cpp",
       "line": 64,
       "text": " - ",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_match.cpp",
@@ -72849,7 +72849,7 @@
       "line": 4,
       "text": "qm_lyrics_model.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.cpp",
@@ -72870,7 +72870,7 @@
       "line": 4,
       "text": "qm_lyrics_model.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_render.cpp",
@@ -72905,7 +72905,7 @@
       "line": 1,
       "text": "qm_lyrics_song_search_map.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp",
@@ -72989,28 +72989,28 @@
       "line": 4,
       "text": "qm_lyrics_match.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.h",
       "line": 5,
       "text": "qm_lyrics_source.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source.h",
       "line": 4,
       "text": "qm_lyrics_match.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source.h",
       "line": 5,
       "text": "qm_lyrics_model.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp",
@@ -73136,7 +73136,7 @@
       "line": 264,
       "text": "duration",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp",
@@ -73521,7 +73521,7 @@
       "line": 296,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_kugou.cpp",
@@ -73605,7 +73605,7 @@
       "line": 1,
       "text": "qm_lyrics_source_local_files.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_local_files.cpp",
@@ -73738,7 +73738,7 @@
       "line": 49,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp",
@@ -73857,7 +73857,7 @@
       "line": 4,
       "text": "qm_lyrics_source.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification message matcher or compatibility fragment"
     },
     {
       "file": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.h",
@@ -74284,14 +74284,14 @@
       "line": 4,
       "text": "qm_lyrics_source.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification compatibility alias"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
       "line": 1,
       "text": "qmclient.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "notification compatibility alias"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
@@ -74340,21 +74340,21 @@
       "line": 70,
       "text": "qmclient",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "notification static matcher data"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
       "line": 70,
       "text": "recognition %s: %s",
       "category": "business_data",
-      "reason": "display formatting template"
+      "reason": "notification static matcher data"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
       "line": 75,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "notification static matcher data"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
@@ -74410,7 +74410,7 @@
       "line": 90,
       "text": "qmclient",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "diagnostic or assertion message"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
@@ -74529,7 +74529,7 @@
       "line": 188,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "diagnostic or assertion message"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
@@ -74690,7 +74690,7 @@
       "line": 971,
       "text": "qmclient",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
@@ -74732,7 +74732,7 @@
       "line": 1126,
       "text": "recover_crash",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.cpp",
@@ -75012,7 +75012,7 @@
       "line": 4,
       "text": "qmclient_utils.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient.h",
@@ -75061,7 +75061,7 @@
       "line": 38,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient_utils.cpp",
@@ -75075,7 +75075,7 @@
       "line": 43,
       "text": "client_type",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/qmclient_utils.cpp",
@@ -75152,7 +75152,7 @@
       "line": 141,
       "text": "voice_supported",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/scripting.cpp",
@@ -75194,7 +75194,7 @@
       "line": 48,
       "text": "eye_wheel_allowed",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/scripting.cpp",
@@ -75236,7 +75236,7 @@
       "line": 85,
       "text": "server_ip",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/qmclient/scripting.cpp",
@@ -75299,7 +75299,7 @@
       "line": 1,
       "text": "impl.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/scripting/impl.cpp",
@@ -75348,7 +75348,7 @@
       "line": 72,
       "text": "println_string",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/scripting/impl.cpp",
@@ -75390,7 +75390,7 @@
       "line": 159,
       "text": "args",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/scripting/impl.cpp",
@@ -75411,7 +75411,7 @@
       "line": 173,
       "text": "Exception in '%s': %s",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/scripting/impl.cpp",
@@ -75467,7 +75467,7 @@
       "line": 15,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/settings_perf_windows.h",
@@ -75502,7 +75502,7 @@
       "line": 55,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/settings_perf_windows.h",
@@ -75593,14 +75593,14 @@
       "line": 32,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
       "line": 33,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -75838,7 +75838,7 @@
       "line": 130,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -75852,7 +75852,7 @@
       "line": 136,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -75887,7 +75887,7 @@
       "line": 227,
       "text": "%Y-%m-%d",
       "category": "business_data",
-      "reason": "display formatting template"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -76006,7 +76006,7 @@
       "line": 300,
       "text": "zh-tw",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -76118,14 +76118,14 @@
       "line": 957,
       "text": "/",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
       "line": 957,
       "text": "/tc3_request",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -76272,7 +76272,7 @@
       "line": 1120,
       "text": ")",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -76517,14 +76517,14 @@
       "line": 1466,
       "text": "application/json",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
       "line": 1475,
       "text": "libretranslate",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/translate/translate.cpp",
@@ -77119,7 +77119,7 @@
       "line": 602,
       "text": "output device opened '%s' %dch@%d",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/voice/voice_core.cpp",
@@ -77161,7 +77161,7 @@
       "line": 662,
       "text": "attempting to open capture device '%s'",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/voice/voice_core.cpp",
@@ -77385,7 +77385,7 @@
       "line": 4,
       "text": "voice_utils.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/voice/voice_utils.cpp",
@@ -78148,7 +78148,7 @@
       "line": 1,
       "text": "weapon_trajectory.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/race_demo.cpp",
@@ -78162,14 +78162,14 @@
       "line": 19,
       "text": "demos/auto/race",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/race_demo.cpp",
       "line": 51,
       "text": "%s/%s_tmp_%d.demo",
       "category": "business_data",
-      "reason": "display formatting template"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/race_demo.cpp",
@@ -78372,7 +78372,7 @@
       "line": 269,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
@@ -78519,7 +78519,7 @@
       "line": 1191,
       "text": "%d",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
@@ -78673,14 +78673,14 @@
       "line": 524,
       "text": "viewport_width",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/section_loader.cpp",
       "line": 526,
       "text": "viewport_height",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/section_loader.cpp",
@@ -78722,7 +78722,7 @@
       "line": 538,
       "text": "window_hash",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/section_loader.cpp",
@@ -78848,7 +78848,7 @@
       "line": 795,
       "text": "none",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_resource_jobs.cpp",
@@ -78869,7 +78869,7 @@
       "line": 1063,
       "text": "visible_reserve",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_resource_jobs.cpp",
@@ -78883,21 +78883,21 @@
       "line": 1074,
       "text": "drain_inactive",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/settings_resource_jobs.cpp",
       "line": 1075,
       "text": "visible_reserve",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/settings_resource_jobs.cpp",
       "line": 1076,
       "text": "loading_window",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/settings_resource_jobs.cpp",
@@ -78981,7 +78981,7 @@
       "line": 1127,
       "text": "frame_pressure",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_resource_jobs.cpp",
@@ -78995,7 +78995,7 @@
       "line": 1139,
       "text": "frame_pressure",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_resource_jobs.cpp",
@@ -79100,7 +79100,7 @@
       "line": 1,
       "text": "settings_runtime_cache.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79121,56 +79121,56 @@
       "line": 128,
       "text": "dependency_not_ready",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 129,
       "text": "resource_plan_pending",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 130,
       "text": "job_result_pending",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 131,
       "text": "gpu_upload_budget",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 132,
       "text": "shared_heavy_budget",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 133,
       "text": "upload_bytes_budget",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 134,
       "text": "oversized_upload_deferred",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 135,
       "text": "text_budget",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79184,7 +79184,7 @@
       "line": 137,
       "text": "invalid_runtime_key",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79198,21 +79198,21 @@
       "line": 147,
       "text": "tclient_section_layout",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 148,
       "text": "tclient_text_cache",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 149,
       "text": "tclient_resource_pretrigger",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79233,7 +79233,7 @@
       "line": 153,
       "text": "tclient_unknown",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79247,14 +79247,14 @@
       "line": 161,
       "text": "font_changed",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 162,
       "text": "backend_changed",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79268,7 +79268,7 @@
       "line": 164,
       "text": "dpi_changed",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79282,7 +79282,7 @@
       "line": 166,
       "text": "config_hash_changed",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79296,7 +79296,7 @@
       "line": 168,
       "text": "resource_directory_changed",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79310,7 +79310,7 @@
       "line": 181,
       "text": "ui_scale",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79324,21 +79324,21 @@
       "line": 184,
       "text": "graphics_reset",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 202,
       "text": "job=%s count=%d budget=%d remaining=%d reason=%s cost_ms=%.3f",
       "category": "business_data",
-      "reason": "log or telemetry key/value payload"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
       "line": 204,
       "text": "perf/settings-resource",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/settings_runtime_cache.cpp",
@@ -79366,7 +79366,7 @@
       "line": 4,
       "text": "skins.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79401,7 +79401,7 @@
       "line": 80,
       "text": "perf/settings-skin-source",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79415,7 +79415,7 @@
       "line": 92,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79443,7 +79443,7 @@
       "line": 128,
       "text": "background_requested",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79471,7 +79471,7 @@
       "line": 147,
       "text": "perf/settings-skin-source",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79506,7 +79506,7 @@
       "line": 176,
       "text": "perf/settings-skin-source",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79597,7 +79597,7 @@
       "line": 832,
       "text": "x_",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79646,7 +79646,7 @@
       "line": 922,
       "text": ", format=%s): %s",
       "category": "business_data",
-      "reason": "log or telemetry key/value payload"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79695,7 +79695,7 @@
       "line": 1060,
       "text": "upload_done",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79709,7 +79709,7 @@
       "line": 1212,
       "text": "upload_done",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79737,7 +79737,7 @@
       "line": 1255,
       "text": "add_favorite_skin",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79751,7 +79751,7 @@
       "line": 1256,
       "text": "remove_favorite_skin",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79793,7 +79793,7 @@
       "line": 1259,
       "text": "add_skin_queue_ex",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79807,7 +79807,7 @@
       "line": 1260,
       "text": "add_dummy_skin_queue_ex",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79821,14 +79821,14 @@
       "line": 1261,
       "text": "add_skin_queue_preset",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 1261,
       "text": "s[preset_name]",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79842,7 +79842,7 @@
       "line": 1262,
       "text": "s[preset_name]",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79884,7 +79884,7 @@
       "line": 1265,
       "text": "i[preset_index] s[skin_name] i[use_custom_color] i[color_body] i[color_feet]",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79975,14 +79975,14 @@
       "line": 2054,
       "text": "disabled_explicit_queues",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2054,
       "text": "fallback_sweep",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -79996,35 +79996,35 @@
       "line": 2146,
       "text": "gpu_upload_budget",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2156,
       "text": "max_per_frame",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2167,
       "text": "preview_uploads",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2170,
       "text": "preview_uploads",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2211,
       "text": "max_per_frame",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -80066,42 +80066,42 @@
       "line": 2515,
       "text": "warmup_request",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2527,
       "text": "warmup_miss",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2535,
       "text": "warmup_miss",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2547,
       "text": "selected_source_loading",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2547,
       "text": "visible_source_loading",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
       "line": 2564,
       "text": "visible_source_loading",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -80115,7 +80115,7 @@
       "line": 2571,
       "text": "warmup_gate",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -80241,7 +80241,7 @@
       "line": 3476,
       "text": "decode_done",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -80311,7 +80311,7 @@
       "line": 3716,
       "text": "add_dummy_skin_queue_ex",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -80339,7 +80339,7 @@
       "line": 3725,
       "text": "add_skin_queue",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -80367,7 +80367,7 @@
       "line": 3742,
       "text": "add_skin_queue_preset_item",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins.cpp",
@@ -80430,7 +80430,7 @@
       "line": 28,
       "text": "skins",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins7.cpp",
@@ -80465,7 +80465,7 @@
       "line": 111,
       "text": "Skin part '%s' must be RGBA format",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins7.cpp",
@@ -80682,7 +80682,7 @@
       "line": 395,
       "text": "skins7",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/skins7.cpp",
@@ -80731,7 +80731,7 @@
       "line": 438,
       "text": "custom_colors",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins7.cpp",
@@ -80850,7 +80850,7 @@
       "line": 723,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins7.cpp",
@@ -80864,7 +80864,7 @@
       "line": 833,
       "text": "negative",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins7.cpp",
@@ -80920,7 +80920,7 @@
       "line": 907,
       "text": "filename",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/skins7.cpp",
@@ -81025,7 +81025,7 @@
       "line": 187,
       "text": "spectate_next",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/spectator.cpp",
@@ -81046,14 +81046,14 @@
       "line": 189,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/spectator.cpp",
       "line": 189,
       "text": "spectate_closest",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/spectator.cpp",
@@ -81074,7 +81074,7 @@
       "line": 44,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/statboard.cpp",
@@ -81221,7 +81221,7 @@
       "line": 1,
       "text": "system_media_controls.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/system_media_controls.cpp",
@@ -81235,7 +81235,7 @@
       "line": 158,
       "text": "AppleInc.AppleMusicWin_",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/system_media_controls.cpp",
@@ -81263,21 +81263,21 @@
       "line": 409,
       "text": "smtc_album_art",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/tclient/background_particles.cpp",
       "line": 1,
       "text": "background_particles.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/tclient/bg_draw.cpp",
       "line": 1,
       "text": "bg_draw.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/tclient/bg_draw.cpp",
@@ -81382,7 +81382,7 @@
       "line": 491,
       "text": "?r[filename]",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "settings matcher, command, or serialized config token"
     },
     {
       "file": "src/game/client/components/tclient/bg_draw.cpp",
@@ -82614,7 +82614,7 @@
       "line": 341,
       "text": "tclient:tee-trails",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "platform performance counter path"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -82642,14 +82642,14 @@
       "line": 660,
       "text": "[rename]",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "platform performance counter path"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
       "line": 662,
       "text": "[r]",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "platform performance counter path"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -82663,7 +82663,7 @@
       "line": 673,
       "text": "[re]",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "log or telemetry key/value payload"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -82817,7 +82817,7 @@
       "line": 1292,
       "text": "%",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -83797,7 +83797,7 @@
       "line": 2411,
       "text": "tclient_settings_left_auto_reply_muted",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -83818,7 +83818,7 @@
       "line": 2455,
       "text": "settings_tclient_auto_reply_text_inputs",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "log or telemetry key/value payload"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -83888,7 +83888,7 @@
       "line": 2507,
       "text": "tclient_settings_left_player_indicator_base",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -83965,21 +83965,21 @@
       "line": 2554,
       "text": "tclient_settings_left_player_indicator_warlist",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "command, diagnostic, or payload format template"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
       "line": 2572,
       "text": "tclient_settings_left_player_indicator_colors",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "numeric display format template"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
       "line": 2753,
       "text": "tclient_settings_left_prewarm_budgeted",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "numeric display format template"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -83993,14 +83993,14 @@
       "line": 2762,
       "text": "tclient_settings_left_column",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "source expression string fragment"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
       "line": 2788,
       "text": "settings_tclient_hud_text_inputs",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "command, diagnostic, or payload format template"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84084,7 +84084,7 @@
       "line": 2845,
       "text": "tclient_settings_right_hud_notify_when_last",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84112,7 +84112,7 @@
       "line": 2895,
       "text": "settings_tclient_hud_text_inputs",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84301,7 +84301,7 @@
       "line": 3016,
       "text": "tclient_settings_right_tile_outlines_base",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "HTML or CSS template fragment"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84343,7 +84343,7 @@
       "line": 3047,
       "text": "tclient_settings_right_tile_outlines_unfreeze",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "source expression string fragment"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84357,7 +84357,7 @@
       "line": 3058,
       "text": "tclient_settings_right_tile_outlines_kill",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84511,7 +84511,7 @@
       "line": 3179,
       "text": "tclient_settings_right_tee_trails_dropdown",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84595,7 +84595,7 @@
       "line": 3418,
       "text": "tclient_settings_right_prewarm_budgeted",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -84609,21 +84609,21 @@
       "line": 3453,
       "text": "missing TClient settings card binding",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
       "line": 3483,
       "text": "tclient:",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
       "line": 3488,
       "text": "settings_tclient_main",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
@@ -91714,35 +91714,35 @@
       "line": 96,
       "text": "components/tclient/bindwheel.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
       "line": 97,
       "text": "components/tclient/custom_communities.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
       "line": 98,
       "text": "components/tclient/fast_practice.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
       "line": 99,
       "text": "components/tclient/mod.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
       "line": 100,
       "text": "components/tclient/moving_tiles.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
@@ -91861,7 +91861,7 @@
       "line": 118,
       "text": "live/live_replay_buffer.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
@@ -91875,21 +91875,21 @@
       "line": 736,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
       "line": 946,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/gameclient.h",
       "line": 1301,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/laser_data.cpp",
@@ -91917,7 +91917,7 @@
       "line": 27,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
@@ -91938,21 +91938,21 @@
       "line": 241,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 251,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 262,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
@@ -91973,49 +91973,49 @@
       "line": 698,
       "text": "%d",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 701,
       "text": "%0*X",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 704,
       "text": "Base %d unsupported",
       "category": "business_data",
-      "reason": "display formatting template"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 727,
       "text": "%",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 730,
       "text": "%0*",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 733,
       "text": "Base %d unsupported",
       "category": "business_data",
-      "reason": "display formatting template"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/lineinput.cpp",
       "line": 753,
       "text": "%.3f",
       "category": "business_data",
-      "reason": "numeric display format template"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/live/live_director.cpp",
@@ -92029,14 +92029,14 @@
       "line": 1,
       "text": "live_finish_ranking.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/live/live_finish_ranking.cpp",
       "line": 30,
       "text": "finish_events",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/live/live_finish_ranking.cpp",
@@ -92050,14 +92050,14 @@
       "line": 336,
       "text": "client_id",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/live/live_finish_ranking.cpp",
       "line": 342,
       "text": "time_ms",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "bindchat command preset data"
     },
     {
       "file": "src/game/client/live/live_finish_ranking.cpp",
@@ -92379,14 +92379,14 @@
       "line": 148,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 149,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
@@ -92414,28 +92414,28 @@
       "line": 206,
       "text": "name",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 208,
       "text": "sha256",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 210,
       "text": "crc",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 213,
       "text": "recording",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
@@ -92470,7 +92470,7 @@
       "line": 230,
       "text": "extensions",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
@@ -92484,14 +92484,14 @@
       "line": 268,
       "text": ".demo",
       "category": "business_data",
-      "reason": "HTML or CSS template fragment"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 269,
       "text": ".qmlive.json",
       "category": "business_data",
-      "reason": "HTML or CSS template fragment"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
@@ -92540,21 +92540,21 @@
       "line": 307,
       "text": "demo_filename",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 309,
       "text": "missing demo filename",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 316,
       "text": "missing map object",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
@@ -92568,21 +92568,21 @@
       "line": 326,
       "text": "invalid map object",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 333,
       "text": "start_tick",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "fast practice local command response text"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
       "line": 334,
       "text": "end_tick",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/live/live_replay_sidecar.cpp",
@@ -92883,14 +92883,14 @@
       "line": 20,
       "text": "star",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/qm_icon_manager.cpp",
       "line": 22,
       "text": "search",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "display formatting template"
     },
     {
       "file": "src/game/client/qm_icon_manager.cpp",
@@ -92904,7 +92904,7 @@
       "line": 26,
       "text": "eye",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "log or telemetry key/value payload"
     },
     {
       "file": "src/game/client/qm_icon_manager.cpp",
@@ -92953,7 +92953,7 @@
       "line": 152,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/qm_icon_manager.cpp",
@@ -92967,7 +92967,7 @@
       "line": 109,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/qm_ime_candidate_popup.cpp",
@@ -93128,14 +93128,14 @@
       "line": 3,
       "text": "render.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/render.cpp",
       "line": 5,
       "text": "animstate.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/sixup_translate_connless.cpp",
@@ -93149,7 +93149,7 @@
       "line": 76,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/sixup_translate_connless.cpp",
@@ -93219,7 +93219,7 @@
       "line": 69,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/sixup_translate_game.cpp",
@@ -93268,7 +93268,7 @@
       "line": 131,
       "text": "standard",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/sixup_translate_game.cpp",
@@ -93422,7 +93422,7 @@
       "line": 539,
       "text": "sixup",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/sixup_translate_game.cpp",
@@ -93443,7 +93443,7 @@
       "line": 687,
       "text": "",
       "category": "business_data",
-      "reason": "empty or whitespace literal"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/sixup_translate_game.cpp",
@@ -93555,7 +93555,7 @@
       "line": 48,
       "text": "sixup",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/sixup_translate_snapshot.cpp",
@@ -93667,7 +93667,7 @@
       "line": 585,
       "text": "render-only UI scope underflow",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui.cpp",
@@ -93681,28 +93681,28 @@
       "line": 615,
       "text": "no clip region",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui.cpp",
       "line": 621,
       "text": "no clip region",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/ui.cpp",
       "line": 745,
       "text": "m_ActiveButtonLogicButton invalid",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui.cpp",
       "line": 797,
       "text": "m_ActiveDraggableButtonLogicButton invalid",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui.cpp",
@@ -93744,7 +93744,7 @@
       "line": 1718,
       "text": "m_ActiveValueSelectorState.m_Button invalid",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui.cpp",
@@ -93786,14 +93786,14 @@
       "line": 2510,
       "text": "Selection popup opened without a scroll region",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui.cpp",
       "line": 2510,
       "text": "ui",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui.cpp",
@@ -93863,14 +93863,14 @@
       "line": 3,
       "text": "ui_rect.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui_scrollregion.cpp",
       "line": 3,
       "text": "ui_scrollregion.h",
       "category": "business_data",
-      "reason": "command, config, or machine token"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/ui_scrollregion.h",

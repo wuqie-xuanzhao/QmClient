@@ -1,0 +1,6 @@
+<!-- QmClient hand-drawn spectator eye. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <path d="M28 128C53 88 88 68 128 68s75 20 100 60c-25 40-60 60-100 60S53 168 28 128Z" stroke="currentColor" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="128" cy="128" r="32" stroke="currentColor" stroke-width="20"/>
+  <circle cx="128" cy="128" r="9" fill="currentColor"/>
+</svg>

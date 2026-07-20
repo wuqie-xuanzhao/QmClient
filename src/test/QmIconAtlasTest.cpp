@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <string>
 
 namespace
@@ -48,6 +49,71 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SWITCH), "satellite-switch");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_MUTE), "satellite-mute");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_CHECK), "satellite-check");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE), "satellite-spectator-eye");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED), "satellite-spectator-eye-closed");
+}
+
+TEST(QmIconAtlas, SelectedPhosphorFillSourcesKeepTheirApprovedGeometry)
+{
+	struct SSelectedIcon
+	{
+		const char *m_pPath;
+		const char *m_pIconName;
+		const char *m_pGeometryFingerprint;
+	};
+	const std::array<SSelectedIcon, 4> aSelectedIcons = {{
+		{"datasrc/qm_icons/tabler/icon-eye.svg", "eyes-fill", "M176,32c-20.61"},
+		{"datasrc/qm_icons/tabler/icon-satellite-swap-incoming.svg", "arrow-circle-left-fill", "H107.31l18.35,18.34"},
+		{"datasrc/qm_icons/tabler/icon-satellite-swap-outgoing.svg", "arrow-circle-right-fill", "L148.69,136H88"},
+		{"datasrc/qm_icons/tabler/icon-satellite-switch.svg", "clock-countdown-fill", "M208,96a12,12,0,1,1,12,12"},
+	}};
+
+	for(const SSelectedIcon &Icon : aSelectedIcons)
+	{
+		const std::string Source = ReadTextFile(Icon.m_pPath);
+		EXPECT_NE(Source.find(Icon.m_pIconName), std::string::npos) << Icon.m_pPath;
+		EXPECT_NE(Source.find(Icon.m_pGeometryFingerprint), std::string::npos) << Icon.m_pPath;
+		EXPECT_NE(Source.find("fill=\"currentColor\""), std::string::npos) << Icon.m_pPath;
+		EXPECT_NE(Source.find("LICENSE_PHOSPHOR.txt"), std::string::npos) << Icon.m_pPath;
+		EXPECT_EQ(Source.find("stroke="), std::string::npos) << Icon.m_pPath;
+	}
+
+	const std::string License = ReadTextFile("datasrc/qm_icons/LICENSE_PHOSPHOR.txt");
+	EXPECT_NE(License.find("MIT License"), std::string::npos);
+	EXPECT_NE(License.find("Copyright (c) 2020 Phosphor Icons"), std::string::npos);
+}
+
+TEST(QmIconAtlas, DynamicIslandMuteAndCompletionIconsRemainLucideOutlineIcons)
+{
+	const std::array<const char *, 2> apUnchangedIcons = {
+		"datasrc/qm_icons/tabler/icon-satellite-mute.svg",
+		"datasrc/qm_icons/tabler/icon-satellite-check.svg",
+	};
+	for(const char *pPath : apUnchangedIcons)
+	{
+		const std::string Source = ReadTextFile(pPath);
+		EXPECT_NE(Source.find("LICENSE_LUCIDE.txt"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("fill=\"none\""), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("stroke=\"currentColor\""), std::string::npos) << pPath;
+	}
+}
+
+TEST(QmIconAtlas, DynamicIslandSpectatorEyesUseTheApprovedHandDrawnPair)
+{
+	const std::string OpenEye = ReadTextFile("datasrc/qm_icons/tabler/icon-satellite-spectator-eye.svg");
+	const std::string ClosedEye = ReadTextFile("datasrc/qm_icons/tabler/icon-satellite-spectator-eye-closed.svg");
+
+	EXPECT_NE(OpenEye.find("M28 128C53 88 88 68 128 68"), std::string::npos);
+	EXPECT_NE(OpenEye.find("<circle cx=\"128\" cy=\"128\" r=\"32\""), std::string::npos);
+	EXPECT_NE(ClosedEye.find("M28 104C53 144 88 164 128 164"), std::string::npos);
+	EXPECT_NE(ClosedEye.find("M57 137L41 165M94 158L87 190"), std::string::npos);
+	for(const std::string *pSource : {&OpenEye, &ClosedEye})
+	{
+		EXPECT_NE(pSource->find("viewBox=\"0 0 256 256\""), std::string::npos);
+		EXPECT_NE(pSource->find("stroke=\"currentColor\""), std::string::npos);
+		EXPECT_NE(pSource->find("stroke-width=\"20\""), std::string::npos);
+		EXPECT_EQ(pSource->find("LICENSE_PHOSPHOR.txt"), std::string::npos);
+	}
 }
 
 TEST(QmIconAtlas, GeneratedManifestsContainEveryRuntimeIcon)

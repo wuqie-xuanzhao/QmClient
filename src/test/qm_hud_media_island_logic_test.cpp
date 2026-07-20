@@ -1,11 +1,16 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "test.h"
 
+#include <engine/graphics.h>
+
 #include <game/client/components/hud_media_island_logic.h>
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
+#include <string>
 
 namespace
 {
@@ -251,6 +256,45 @@ TEST(QmHudMediaIslandEntrance, ReducedMotionUsesProjectShortenedDuration)
 	EXPECT_LT(ReducedMotionProgress, 1.0f);
 }
 
+TEST(QmHudMediaIslandEntrance, DropStartsFullyAboveScreenAndEndsAtExpansionOrigin)
+{
+	const CUIRect Target = {100.0f, 1.0f, 80.0f, 32.0f};
+	const ColorRGBA TargetColor(0.25f, 0.50f, 0.75f, 0.60f);
+	constexpr float ScreenTop = -20.0f;
+
+	const SHudMediaIslandEntrancePose Hidden = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.0f, 0.0f, ScreenTop);
+	const SHudMediaIslandEntrancePose Arrived = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.0f, 1.0f, ScreenTop);
+
+	EXPECT_LT(Hidden.m_Rect.y + Hidden.m_Rect.h, ScreenTop);
+	EXPECT_FLOAT_EQ(Hidden.m_Rect.x + Hidden.m_Rect.w * 0.5f, Target.x + Target.w * 0.5f);
+	EXPECT_FLOAT_EQ(Arrived.m_Rect.y, Target.y + Target.h * 0.5f - 8.0f);
+	EXPECT_FLOAT_EQ(Arrived.m_Rect.w, 16.0f);
+	EXPECT_FLOAT_EQ(Arrived.m_Rect.h, 16.0f);
+	EXPECT_FLOAT_EQ(Arrived.m_ContentAlpha, 0.0f);
+}
+
+TEST(QmHudMediaIslandEntrance, DropUsesDedicatedDurationAndReducedMotionRule)
+{
+	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandEntranceDropProgress(0.0f, 0.18f, 2), 1.0f);
+	EXPECT_GT(QmHudAdvanceMediaIslandEntranceDropProgress(0.0f, 0.04f, 1), QmHudAdvanceMediaIslandEntranceDropProgress(0.0f, 0.04f, 2));
+	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandEntranceDropProgress(0.4f, 0.0f, 0), 1.0f);
+}
+
+TEST(QmHudMediaIslandEntrance, TimelineWaitsOnePhaseBoundaryBeforeExpanding)
+{
+	SHudMediaIslandEntranceTimeline Timeline;
+	Timeline = QmHudAdvanceMediaIslandEntranceTimeline(Timeline, 0.18f, 2);
+	EXPECT_FLOAT_EQ(Timeline.m_DropProgress, 1.0f);
+	EXPECT_FLOAT_EQ(Timeline.m_ExpandProgress, 0.0f);
+
+	Timeline = QmHudAdvanceMediaIslandEntranceTimeline(Timeline, 0.01f, 2);
+	EXPECT_GT(Timeline.m_ExpandProgress, 0.0f);
+
+	const SHudMediaIslandEntranceTimeline MotionDisabled = QmHudAdvanceMediaIslandEntranceTimeline({}, 0.0f, 0);
+	EXPECT_FLOAT_EQ(MotionDisabled.m_DropProgress, 1.0f);
+	EXPECT_FLOAT_EQ(MotionDisabled.m_ExpandProgress, 1.0f);
+}
+
 TEST(QmHudMediaIslandEntrance, KeepsContentHiddenUntilShapeNearlySettlesThenFadesItIn)
 {
 	const CUIRect Target = {100.0f, 1.0f, 80.0f, 32.0f};
@@ -355,75 +399,66 @@ TEST(QmHudMediaIslandSatellite, KeepsLatestVisibleSwitchesAndSeparatesTeamIdenti
 	EXPECT_EQ(QmHudMediaIslandSwitchInstanceId(2, 7) & 0xff, 7);
 }
 
-TEST(QmHudMediaIslandSatellite, LiquidPoseTraversesFiveOrderedPhases)
+TEST(QmHudMediaIslandBlob, CriticallyDampedTravelIsContinuousAndSettlesWithinTheTimeline)
 {
-	EXPECT_EQ(QmHudMediaIslandLiquidPose(0.08f).m_Phase, EHudMediaIslandLiquidPhase::BULGE);
-	EXPECT_EQ(QmHudMediaIslandLiquidPose(0.25f).m_Phase, EHudMediaIslandLiquidPhase::FORM);
-	EXPECT_EQ(QmHudMediaIslandLiquidPose(0.50f).m_Phase, EHudMediaIslandLiquidPhase::STRETCH);
-	EXPECT_EQ(QmHudMediaIslandLiquidPose(0.72f).m_Phase, EHudMediaIslandLiquidPhase::BREAK);
-	EXPECT_EQ(QmHudMediaIslandLiquidPose(0.90f).m_Phase, EHudMediaIslandLiquidPhase::REBOUND);
-}
+	const SHudMediaIslandBlobPose Hidden = QmHudMediaIslandBlobPose(0.0f);
+	const SHudMediaIslandBlobPose Quarter = QmHudMediaIslandBlobPose(0.25f);
+	const SHudMediaIslandBlobPose Half = QmHudMediaIslandBlobPose(0.50f);
+	const SHudMediaIslandBlobPose Late = QmHudMediaIslandBlobPose(0.75f);
+	const SHudMediaIslandBlobPose Settled = QmHudMediaIslandBlobPose(1.0f);
 
-TEST(QmHudMediaIslandSatellite, LiquidPoseBulgesFormsStretchesBreaksAndSettles)
-{
-	const SHudMediaIslandLiquidPose Hidden = QmHudMediaIslandLiquidPose(0.0f);
-	EXPECT_FLOAT_EQ(Hidden.m_RadiusScale, 0.0f);
-	EXPECT_FLOAT_EQ(Hidden.m_SmoothUnionScale, 0.0f);
-	EXPECT_FLOAT_EQ(Hidden.m_ContentAlpha, 0.0f);
-
-	const SHudMediaIslandLiquidPose Bulge = QmHudMediaIslandLiquidPose(0.16f);
-	EXPECT_NEAR(Bulge.m_CenterProgress, 0.0f, 0.05f);
-	EXPECT_GT(Bulge.m_RadiusScale, 0.2f);
-	EXPECT_GT(Bulge.m_SmoothUnionScale, 0.75f);
-	EXPECT_FLOAT_EQ(Bulge.m_ContentAlpha, 0.0f);
-
-	const SHudMediaIslandLiquidPose Form = QmHudMediaIslandLiquidPose(0.37f);
-	EXPECT_GT(Form.m_RadiusScale, 0.9f);
-	EXPECT_GT(Form.m_SmoothUnionScale, 0.75f);
-	EXPECT_LT(Form.m_CenterProgress, 0.35f);
-
-	const SHudMediaIslandLiquidPose Stretch = QmHudMediaIslandLiquidPose(0.65f);
-	EXPECT_GT(Stretch.m_StretchX, 1.15f);
-	EXPECT_LT(Stretch.m_StretchY, 0.95f);
-	EXPECT_GT(Stretch.m_SmoothUnionScale, 0.0f);
-	EXPECT_GT(Stretch.m_CenterProgress, 0.7f);
-
-	const SHudMediaIslandLiquidPose Broken = QmHudMediaIslandLiquidPose(0.79f);
-	EXPECT_FLOAT_EQ(Broken.m_SmoothUnionScale, 0.0f);
-	EXPECT_GT(Broken.m_CenterProgress, 1.0f);
-
-	const SHudMediaIslandLiquidPose Settled = QmHudMediaIslandLiquidPose(1.0f);
-	EXPECT_FLOAT_EQ(Settled.m_CenterProgress, 1.0f);
+	EXPECT_FLOAT_EQ(Hidden.m_Travel, 0.0f);
+	EXPECT_GT(Quarter.m_Travel, Hidden.m_Travel);
+	EXPECT_GT(Half.m_Travel, Quarter.m_Travel);
+	EXPECT_GT(Late.m_Travel, Half.m_Travel);
+	EXPECT_LT(Late.m_Travel, 1.0f);
+	EXPECT_FLOAT_EQ(Settled.m_Travel, 1.0f);
 	EXPECT_FLOAT_EQ(Settled.m_RadiusScale, 1.0f);
 	EXPECT_FLOAT_EQ(Settled.m_StretchX, 1.0f);
 	EXPECT_FLOAT_EQ(Settled.m_StretchY, 1.0f);
-	EXPECT_FLOAT_EQ(Settled.m_SmoothUnionScale, 0.0f);
 	EXPECT_FLOAT_EQ(Settled.m_ContentAlpha, 1.0f);
 }
 
-TEST(QmHudMediaIslandSatellite, LiquidProgressReversesWithoutResettingPose)
+TEST(QmHudMediaIslandBlob, VelocityStretchIsSubtleAndReturnsToACircleAtRest)
 {
-	float Progress = QmHudAdvanceMediaIslandLiquidProgress(0.0f, true, 0.28f, true);
-	EXPECT_NEAR(Progress, 0.5f, 0.0001f);
-	const SHudMediaIslandLiquidPose BeforeReverse = QmHudMediaIslandLiquidPose(Progress);
+	const SHudMediaIslandBlobPose Moving = QmHudMediaIslandBlobPose(0.20f);
+	const SHudMediaIslandBlobPose Settled = QmHudMediaIslandBlobPose(1.0f);
+	EXPECT_GT(Moving.m_StretchX, 1.0f);
+	EXPECT_LT(Moving.m_StretchY, 1.0f);
+	EXPECT_LE(Moving.m_StretchX, 1.065f);
+	EXPECT_GE(Moving.m_StretchY, 0.965f);
+	EXPECT_FLOAT_EQ(Settled.m_StretchX, 1.0f);
+	EXPECT_FLOAT_EQ(Settled.m_StretchY, 1.0f);
+}
 
-	Progress = QmHudAdvanceMediaIslandLiquidProgress(Progress, false, 0.14f, true);
-	EXPECT_NEAR(Progress, 0.25f, 0.0001f);
-	Progress = QmHudAdvanceMediaIslandLiquidProgress(Progress, true, 0.14f, true);
-	EXPECT_NEAR(Progress, 0.5f, 0.0001f);
-
-	const SHudMediaIslandLiquidPose AfterReverse = QmHudMediaIslandLiquidPose(Progress);
-	EXPECT_EQ(AfterReverse.m_Phase, BeforeReverse.m_Phase);
-	EXPECT_NEAR(AfterReverse.m_CenterProgress, BeforeReverse.m_CenterProgress, 0.0001f);
+TEST(QmHudMediaIslandBlob, ProgressCanReverseWithoutPoseDiscontinuity)
+{
+	float Progress = QmHudAdvanceMediaIslandLiquidProgress(0.0f, true, 0.220f, true);
+	const SHudMediaIslandBlobPose BeforeReverse = QmHudMediaIslandBlobPose(Progress);
+	Progress = QmHudAdvanceMediaIslandLiquidProgress(Progress, false, 0.110f, true);
+	Progress = QmHudAdvanceMediaIslandLiquidProgress(Progress, true, 0.110f, true);
+	const SHudMediaIslandBlobPose AfterReverse = QmHudMediaIslandBlobPose(Progress);
+	EXPECT_NEAR(AfterReverse.m_Travel, BeforeReverse.m_Travel, 0.0001f);
 	EXPECT_NEAR(AfterReverse.m_RadiusScale, BeforeReverse.m_RadiusScale, 0.0001f);
 	EXPECT_NEAR(AfterReverse.m_StretchX, BeforeReverse.m_StretchX, 0.0001f);
 	EXPECT_NEAR(AfterReverse.m_StretchY, BeforeReverse.m_StretchY, 0.0001f);
-	EXPECT_NEAR(AfterReverse.m_SmoothUnionScale, BeforeReverse.m_SmoothUnionScale, 0.0001f);
-	EXPECT_NEAR(AfterReverse.m_ContentAlpha, BeforeReverse.m_ContentAlpha, 0.0001f);
+}
+
+TEST(QmHudMediaIslandBlob, SmoothMergeDependsOnSurfaceDistanceInsteadOfAnimationPhase)
+{
+	const float Blend = QmHudMediaIslandBlobBlend(8.0f, 1.0f);
+	EXPECT_GT(Blend, 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandBlobBlend(8.0f, 0.0f), 0.0f);
+	const float NearBridge = QmHudMediaIslandSdfSmoothUnion(1.0f, 1.0f, Blend);
+	const float FarBridge = QmHudMediaIslandSdfSmoothUnion(4.0f, 4.0f, Blend);
+	EXPECT_LT(NearBridge, 0.0f);
+	EXPECT_GT(FarBridge, 0.0f);
 }
 
 TEST(QmHudMediaIslandSatellite, LiquidProgressClampsAndReducedMotionSnaps)
 {
+	EXPECT_LT(QmHudAdvanceMediaIslandLiquidProgress(0.0f, true, 0.439f, true), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandLiquidProgress(0.0f, true, 0.440f, true), 1.0f);
 	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandLiquidProgress(0.95f, true, 1.0f, true), 1.0f);
 	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandLiquidProgress(0.05f, false, 1.0f, true), 0.0f);
 	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandLiquidProgress(0.4f, true, -1.0f, true), 0.4f);
@@ -431,23 +466,87 @@ TEST(QmHudMediaIslandSatellite, LiquidProgressClampsAndReducedMotionSnaps)
 	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandLiquidProgress(0.4f, false, 0.01f, false), 0.0f);
 }
 
-TEST(QmHudMediaIslandSatellite, RightLiquidCapsuleSettlesOutsideMainIsland)
+TEST(QmHudMediaIslandSpectatorEye, OpeningTransitionHonorsMotionLevel)
 {
-	const SHudMediaIslandLiquidCapsule Capsule = QmHudMediaIslandRightLiquidCapsule(100.0f, 20.0f, 8.0f, 24.0f, 4.0f, QmHudMediaIslandLiquidPose(1.0f));
+	EXPECT_LT(QmHudAdvanceMediaIslandSpectatorIconProgress(0.0f, 0.179f, 2), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandSpectatorIconProgress(0.0f, 0.180f, 2), 1.0f);
+	EXPECT_LT(QmHudAdvanceMediaIslandSpectatorIconProgress(0.0f, 0.080f, 1), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandSpectatorIconProgress(0.0f, 0.081f, 1), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandSpectatorIconProgress(0.3f, 0.001f, 0), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudAdvanceMediaIslandSpectatorIconProgress(0.3f, -1.0f, 2), 0.3f);
+}
+
+TEST(QmHudMediaIslandSpectatorEye, ApprovedOpeningPoseCrossfadesAndOpensVertically)
+{
+	const SHudMediaIslandSpectatorIconPose Closed = QmHudMediaIslandSpectatorIconPose(0.0f);
+	EXPECT_FLOAT_EQ(Closed.m_ClosedAlpha, 1.0f);
+	EXPECT_FLOAT_EQ(Closed.m_OpenAlpha, 0.0f);
+	EXPECT_FLOAT_EQ(Closed.m_OpenScaleX, 0.88f);
+	EXPECT_FLOAT_EQ(Closed.m_OpenScaleY, 0.44f);
+	EXPECT_FLOAT_EQ(Closed.m_CountAlpha, 0.0f);
+	EXPECT_FLOAT_EQ(Closed.m_CountOffsetX, -3.0f);
+
+	const SHudMediaIslandSpectatorIconPose Mid = QmHudMediaIslandSpectatorIconPose(0.5f);
+	EXPECT_FLOAT_EQ(Mid.m_ClosedAlpha, 0.5f);
+	EXPECT_FLOAT_EQ(Mid.m_OpenAlpha, 0.5f);
+
+	const SHudMediaIslandSpectatorIconPose Open = QmHudMediaIslandSpectatorIconPose(1.0f);
+	EXPECT_FLOAT_EQ(Open.m_ClosedAlpha, 0.0f);
+	EXPECT_FLOAT_EQ(Open.m_OpenAlpha, 1.0f);
+	EXPECT_FLOAT_EQ(Open.m_OpenScaleX, 1.0f);
+	EXPECT_FLOAT_EQ(Open.m_OpenScaleY, 1.0f);
+	EXPECT_FLOAT_EQ(Open.m_CountAlpha, 1.0f);
+	EXPECT_FLOAT_EQ(Open.m_CountOffsetX, 0.0f);
+}
+
+TEST(QmHudMediaIslandSpectatorEye, ClosingProgressFollowsTheRightCapsuleRetraction)
+{
+	const float LiquidProgress = QmHudAdvanceMediaIslandLiquidProgress(1.0f, false, 0.220f, true);
+	const float IconProgress = QmHudMediaIslandSpectatorIconProgressDuringExit(1.0f, 1.0f, LiquidProgress);
+	EXPECT_NEAR(IconProgress, 0.5f, 0.0001f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorIconProgressDuringExit(1.0f, 0.25f, 0.25f), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorIconProgressDuringExit(1.0f, 0.25f, 0.125f), 0.5f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorIconProgressDuringExit(1.0f, 0.25f, 0.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorIconProgressDuringExit(1.0f, 0.0f, 0.0f), 0.0f);
+
+	const SHudMediaIslandSpectatorIconPose HalfClosed = QmHudMediaIslandSpectatorIconPose(IconProgress);
+	EXPECT_FLOAT_EQ(HalfClosed.m_OpenAlpha, 0.5f);
+	EXPECT_FLOAT_EQ(HalfClosed.m_ClosedAlpha, 0.5f);
+}
+
+TEST(QmHudMediaIslandSpectatorEye, ReopeningContinuesFromTheCurrentClosingPose)
+{
+	const float HalfClosed = QmHudMediaIslandSpectatorIconProgressDuringExit(1.0f, 1.0f, 0.5f);
+	const float Reopened = QmHudAdvanceMediaIslandSpectatorIconProgress(HalfClosed, 0.045f, 2);
+	EXPECT_NEAR(Reopened, 0.75f, 0.0001f);
+}
+
+TEST(QmHudMediaIslandSpectatorEye, ReopensOnlyWhileTheRightCapsuleIsBeingReclaimed)
+{
+	EXPECT_TRUE(QmHudMediaIslandShouldAnimateSpectatorEyeOpen(true, false, 0.4f));
+	EXPECT_FALSE(QmHudMediaIslandShouldAnimateSpectatorEyeOpen(true, false, 0.0f));
+	EXPECT_FALSE(QmHudMediaIslandShouldAnimateSpectatorEyeOpen(true, true, 0.4f));
+	EXPECT_FALSE(QmHudMediaIslandShouldAnimateSpectatorEyeOpen(false, false, 0.4f));
+	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorCountAlpha(false, QmHudMediaIslandSpectatorIconPose(1.0f)), 0.0f);
+}
+
+TEST(QmHudMediaIslandBlob, RightCapsuleSettlesOutsideMainIsland)
+{
+	const SHudMediaIslandLiquidCapsule Capsule = QmHudMediaIslandRightBlobCapsule(100.0f, 20.0f, 8.0f, 24.0f, 4.0f, QmHudMediaIslandBlobPose(1.0f));
 
 	EXPECT_FLOAT_EQ(Capsule.m_Rect.x, 104.0f);
 	EXPECT_FLOAT_EQ(Capsule.m_Rect.y, 12.0f);
 	EXPECT_FLOAT_EQ(Capsule.m_Rect.w, 24.0f);
 	EXPECT_FLOAT_EQ(Capsule.m_Rect.h, 16.0f);
 	EXPECT_FLOAT_EQ(Capsule.m_Radius, 8.0f);
-	EXPECT_FLOAT_EQ(Capsule.m_SmoothUnion, 0.0f);
+	EXPECT_FLOAT_EQ(Capsule.m_SmoothUnion, QmHudMediaIslandBlobBlend(8.0f, 1.0f));
 	EXPECT_FLOAT_EQ(Capsule.m_ContentAlpha, 1.0f);
 }
 
-TEST(QmHudMediaIslandSatellite, RightLiquidCapsuleStretchesWhileStillConnected)
+TEST(QmHudMediaIslandBlob, RightCapsuleUsesTheSameBoundedVelocityStretch)
 {
-	const SHudMediaIslandLiquidCapsule Capsule = QmHudMediaIslandRightLiquidCapsule(100.0f, 20.0f, 8.0f, 24.0f, 4.0f, QmHudMediaIslandLiquidPose(0.65f));
-
+	const SHudMediaIslandBlobPose MovingPose = QmHudMediaIslandBlobPose(0.20f);
+	const SHudMediaIslandLiquidCapsule Capsule = QmHudMediaIslandRightBlobCapsule(100.0f, 20.0f, 8.0f, 24.0f, 4.0f, MovingPose);
 	EXPECT_GT(Capsule.m_Rect.w, Capsule.m_Rect.h);
 	EXPECT_GT(Capsule.m_SmoothUnion, 0.0f);
 	EXPECT_GT(Capsule.m_ContentAlpha, 0.0f);
@@ -524,6 +623,91 @@ TEST(QmHudMediaIslandSatellite, SdfRoundedRectKeepsMainIslandCornersRounded)
 	EXPECT_GT(QmHudMediaIslandSdfRoundedRect(vec2(0.0f, 0.0f), MainIsland, 8.0f, IGraphics::CORNER_NONE, 8.0f), 0.0f);
 }
 
+TEST(QmHudMediaIslandSdfBounds, PaddingContainsSmoothUnionAndFeatherOverflow)
+{
+	constexpr float ScreenPixelSize = 0.5f;
+	const float StrongSmoothUnion = QmHudMediaIslandBlobBlend(8.0f, 1.0f);
+	const float RequiredOverflow = StrongSmoothUnion * 0.25f + ScreenPixelSize * 0.9f;
+
+	SHudMediaIslandSdfRenderState LeftSatelliteState;
+	LeftSatelliteState.m_ItemCount = 1;
+	LeftSatelliteState.m_Items[0].m_SmoothUnion = StrongSmoothUnion;
+	LeftSatelliteState.m_ScreenPixelSize = ScreenPixelSize;
+	EXPECT_GE(QmHudMediaIslandSdfPadding(LeftSatelliteState), RequiredOverflow);
+
+	SHudMediaIslandSdfRenderState RightSatelliteState;
+	RightSatelliteState.m_HasRightCapsule = true;
+	RightSatelliteState.m_RightCapsule.m_SmoothUnion = StrongSmoothUnion;
+	RightSatelliteState.m_ScreenPixelSize = ScreenPixelSize;
+	EXPECT_GE(QmHudMediaIslandSdfPadding(RightSatelliteState), RequiredOverflow);
+
+	SHudMediaIslandSdfRenderState RestingState;
+	RestingState.m_ScreenPixelSize = ScreenPixelSize;
+	EXPECT_FLOAT_EQ(QmHudMediaIslandSdfPadding(RestingState), 1.5f);
+}
+
+TEST(QmHudMediaIslandSdfBounds, OuterRectKeepsEveryLiquidEdgeInsideTheQuad)
+{
+	SHudMediaIslandSdfRenderState State;
+	State.m_MainRect = {10.0f, 10.0f, 20.0f, 10.0f};
+	State.m_ItemCount = 1;
+	State.m_Items[0].m_Center = vec2(4.0f, 15.0f);
+	State.m_Items[0].m_Radii = vec2(4.0f, 5.0f);
+	State.m_Items[0].m_SmoothUnion = 8.0f;
+	State.m_HasRightCapsule = true;
+	State.m_RightCapsule.m_Rect = {32.0f, 10.0f, 8.0f, 10.0f};
+	State.m_RightCapsule.m_SmoothUnion = 8.0f;
+	State.m_ScreenPixelSize = 0.5f;
+
+	const float Padding = QmHudMediaIslandSdfPadding(State);
+	const CUIRect OuterRect = QmHudMediaIslandSdfOuterRect(State);
+	EXPECT_FLOAT_EQ(OuterRect.x, -Padding);
+	EXPECT_FLOAT_EQ(OuterRect.y, 10.0f - Padding);
+	EXPECT_FLOAT_EQ(OuterRect.x + OuterRect.w, 40.0f + Padding);
+	EXPECT_FLOAT_EQ(OuterRect.y + OuterRect.h, 20.0f + Padding);
+}
+
+TEST(QmHudMediaIslandSdfGpuPacking, CopiesAllShapeAndAnimationInputs)
+{
+	SHudMediaIslandSdfRenderState State;
+	State.m_Rect = {1.0f, 2.0f, 80.0f, 24.0f};
+	State.m_MainRect = {10.0f, 2.0f, 50.0f, 20.0f};
+	State.m_MainRadius = 10.0f;
+	State.m_MainCorners = IGraphics::CORNER_T | IGraphics::CORNER_BR;
+	State.m_MainDisabledCornerRadius = 2.0f;
+	State.m_ItemCount = 1;
+	State.m_Items[0].m_Center = vec2(5.0f, 12.0f);
+	State.m_Items[0].m_Radii = vec2(8.0f, 9.0f);
+	State.m_Items[0].m_SmoothUnion = 3.0f;
+	State.m_Items[0].m_ContentAlpha = 0.8f;
+	State.m_Items[0].m_ContentScale = 0.7f;
+	State.m_Items[0].m_CountdownProgress = 0.6f;
+	State.m_Items[0].m_RingColor = ColorRGBA(0.1f, 0.9f, 1.0f, 0.7f);
+	State.m_HasRightCapsule = true;
+	State.m_RightCapsule.m_Rect = {62.0f, 2.0f, 20.0f, 20.0f};
+	State.m_RightCapsule.m_Radius = 10.0f;
+	State.m_RightCapsule.m_SmoothUnion = 4.0f;
+	State.m_RingRadius = 6.0f;
+	State.m_RingThickness = 1.5f;
+	State.m_BackgroundColor = ColorRGBA(0.02f, 0.03f, 0.05f, 0.9f);
+	State.m_ScreenPixelSize = 0.5f;
+
+	IGraphics::SMediaIslandSdfParams Params;
+	ASSERT_TRUE(QmHudMediaIslandBuildGpuSdfParams(State, Params));
+	EXPECT_EQ(Params.ItemCount(), 1);
+	EXPECT_TRUE(Params.HasRightCapsule());
+	EXPECT_EQ(Params.MainCorners(), State.m_MainCorners);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RECT].z, 80.0f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].x, 0.0f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].y, 0.0f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].z, 0.0f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].w, 0.0f);
+	EXPECT_FLOAT_EQ(Params.Item(0, 0).z, 8.0f);
+	EXPECT_FLOAT_EQ(Params.Item(0, 1).w, 0.6f);
+	EXPECT_FLOAT_EQ(Params.Item(0, 2).g, 0.9f);
+	EXPECT_FLOAT_EQ(Params.Item(0, 2).a, 0.7f);
+}
+
 TEST(QmHudMediaIslandSatellite, ParsesOwnSpamProtectionMuteOnly)
 {
 	int Seconds = 0;
@@ -543,7 +727,7 @@ TEST(QmHudMediaIslandSatellite, ParsesActiveMuteRemainingMessageSeparately)
 	EXPECT_EQ(QmHudParseSpamProtectionMute("This server has an initial chat delay, you will be able to talk in 17 seconds.", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
 }
 
-TEST(QmHudMediaIslandSatellite, RenderPathUsesLiquidSatelliteInsteadOfCountdownText)
+TEST(QmHudMediaIslandSatellite, RenderPathUsesBlobSatellitesInsteadOfCountdownText)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
@@ -554,15 +738,26 @@ TEST(QmHudMediaIslandSatellite, RenderPathUsesLiquidSatelliteInsteadOfCountdownT
 	ASSERT_NE(RenderEnd, std::string::npos);
 	const std::string RenderBody = Source.substr(RenderBegin, RenderEnd - RenderBegin);
 
-	EXPECT_NE(RenderBody.find("DrawMediaIslandSdf"), std::string::npos);
+	EXPECT_NE(RenderBody.find("RenderMediaIslandSdf"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudAdvanceMediaIslandLiquidProgress"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandLiquidPose"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobPose"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobBlend"), std::string::npos);
+	EXPECT_NE(RenderBody.find("mix(SpawnCenterX, FinalCenterX, BlobPose.m_Travel)"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandSdfOuterRect(CurrentSdfState)"), std::string::npos);
+	EXPECT_NE(RenderBody.find("TransformedScreenX1 - TransformedScreenX0"), std::string::npos);
+	EXPECT_NE(RenderBody.find("TransformedScreenY1 - TransformedScreenY0"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("DrawMediaIslandRipple"), std::string::npos);
+	EXPECT_EQ(Source.find("m_MediaIslandRippleTexture"), std::string::npos);
 	EXPECT_NE(RenderBody.find("const float SatelliteRadius = Radius;"), std::string::npos);
 	EXPECT_NE(RenderBody.find("constexpr float SatelliteItemGap = 3.0f;"), std::string::npos);
 	EXPECT_NE(RenderBody.find("SatelliteItemPitch = SatelliteDiameter + SatelliteItemGap"), std::string::npos);
-	EXPECT_NE(RenderBody.find("const CUIRect MainIslandSdfRect"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandRightLiquidCapsule"), std::string::npos);
-	EXPECT_NE(RenderBody.find("EQmIcon::EYE"), std::string::npos);
+	EXPECT_NE(RenderBody.find("const CUIRect MainIslandSdfRect = EntrancePose.m_Rect;"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("QmHudMediaIslandMainCapRect"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandRightBlobCapsule"), std::string::npos);
+	EXPECT_NE(RenderBody.find("EQmIcon::SATELLITE_SPECTATOR_EYE"), std::string::npos);
+	EXPECT_NE(RenderBody.find("EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandSpectatorCountAlpha(ShowSpectator, SpectatorIconPose)"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandSpectatorIconProgressDuringExit(AnimState.m_SpectatorExitIconStart, AnimState.m_SpectatorExitLiquidStart, AnimState.m_SpectatorLiquidProgress)"), std::string::npos);
 	EXPECT_NE(Source.find("EQmIcon::SATELLITE_CHECK"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("FontIcons::FONT_ICON_EYE"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("if(SatelliteRenderItemCount > 0)"), std::string::npos);
@@ -619,7 +814,8 @@ TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
 	EXPECT_NE(RenderBody.find("StartCapsuleMorph(Now)"), std::string::npos);
 	EXPECT_NE(RenderBody.find("m_CapsuleMorphNeedsCapture"), std::string::npos);
 	EXPECT_NE(RenderBody.find("MorphCompressSec"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudAdvanceMediaIslandEntranceProgress"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudAdvanceMediaIslandEntranceTimeline"), std::string::npos);
+	EXPECT_NE(RenderBody.find("AnimState.m_EntranceDropProgress = EntranceTimeline.m_DropProgress"), std::string::npos);
 	EXPECT_NE(RenderBody.find("EntranceDeltaSeconds, MotionLevel"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandEntrancePose"), std::string::npos);
 	EXPECT_NE(RenderBody.find("EntrancePose.m_BackgroundColor"), std::string::npos);
@@ -655,6 +851,146 @@ TEST(QmHudMediaIslandSource, IslandRendersBeforeCheckpointAndFinishEffects)
 	ASSERT_NE(IslandRender, std::string::npos);
 	ASSERT_NE(EffectsRender, std::string::npos);
 	EXPECT_LT(IslandRender, EffectsRender);
+}
+
+TEST(QmMediaIslandGpuSdfContract, UsesFixedStd140FriendlyParameterBlock)
+{
+	static_assert(IGraphics::MEDIA_ISLAND_SDF_MAX_ITEMS == 12);
+	static_assert(IGraphics::SMediaIslandSdfParams::DATA_RESERVED == 7);
+	static_assert(IGraphics::SMediaIslandSdfParams::DATA_ITEM_STRIDE == 3);
+	static_assert(IGraphics::SMediaIslandSdfParams::DATA_COUNT == 44);
+	static_assert(sizeof(vec4) == sizeof(float) * 4);
+	static_assert(sizeof(IGraphics::SMediaIslandSdfParams) == IGraphics::SMediaIslandSdfParams::DATA_COUNT * sizeof(vec4));
+
+	IGraphics::SMediaIslandSdfParams Params;
+	Params.Clear();
+	Params.SetItemCount(12);
+	Params.SetHasRightCapsule(true);
+	Params.SetMainCorners(IGraphics::CORNER_ALL);
+	EXPECT_EQ(Params.ItemCount(), 12);
+	EXPECT_TRUE(Params.HasRightCapsule());
+	EXPECT_EQ(Params.MainCorners(), IGraphics::CORNER_ALL);
+
+	Params.SetItemCount(13);
+	EXPECT_EQ(Params.ItemCount(), IGraphics::MEDIA_ISLAND_SDF_MAX_ITEMS);
+}
+
+TEST(QmMediaIslandGpuSdfContract, BackendsPublishActualShaderCapability)
+{
+	const std::string OpenGlSource = ReadTestSourceFile("src/engine/client/backend/opengl/backend_opengl3.cpp");
+	const std::string VulkanSource = ReadTestSourceFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	EXPECT_NE(OpenGlSource.find("m_MediaIslandSdf = m_MediaIslandSdfProgramValid"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("m_MediaIslandSdf = true"), std::string::npos);
+}
+
+TEST(QmMediaIslandGpuSdfContract, ShapePassAvoidsPerFragmentDistanceArrayAndInactiveItemIterations)
+{
+	const std::array<const char *, 2> apShaderPaths = {
+		"data/shader/media_island_sdf.frag",
+		"data/shader/vulkan/media_island_sdf.frag",
+	};
+	for(const char *pShaderPath : apShaderPaths)
+	{
+		const std::string ShaderSource = ReadTestSourceFile(pShaderPath);
+		EXPECT_NE(ShaderSource.find("gMediaIslandSdfData[44]"), std::string::npos) << pShaderPath;
+		EXPECT_NE(ShaderSource.find("ITEM_STRIDE = 3"), std::string::npos) << pShaderPath;
+		EXPECT_NE(ShaderSource.find("BlobSdf"), std::string::npos) << pShaderPath;
+		EXPECT_NE(ShaderSource.find("BlobExponent"), std::string::npos) << pShaderPath;
+		EXPECT_EQ(ShaderSource.find("RadialRipple"), std::string::npos) << pShaderPath;
+		EXPECT_EQ(ShaderSource.find("StrongestRipple"), std::string::npos) << pShaderPath;
+		EXPECT_EQ(ShaderSource.find("EllipseSdf"), std::string::npos) << pShaderPath;
+		EXPECT_NE(ShaderSource.find("float ItemDistance = BlobSdf(Point, ItemShape.xy, ItemShape.zw);"), std::string::npos) << pShaderPath;
+		EXPECT_EQ(ShaderSource.find("float ItemDistances[MAX_ITEMS]"), std::string::npos) << pShaderPath;
+		EXPECT_EQ(ShaderSource.find("i < MAX_ITEMS"), std::string::npos) << pShaderPath;
+		EXPECT_NE(ShaderSource.find("float ShapeDistance = MainDistance;"), std::string::npos) << pShaderPath;
+		EXPECT_NE(ShaderSource.find("vec4 ItemShape = Data(ITEM_BASE + i * ITEM_STRIDE);"), std::string::npos) << pShaderPath;
+
+		const std::string ItemLoop = "for(int i = 0; i < ItemCount; ++i)";
+		const size_t ShapeLoop = ShaderSource.find(ItemLoop);
+		ASSERT_NE(ShapeLoop, std::string::npos) << pShaderPath;
+		const size_t RingLoop = ShaderSource.find(ItemLoop, ShapeLoop + ItemLoop.size());
+		ASSERT_NE(RingLoop, std::string::npos) << pShaderPath;
+		EXPECT_EQ(ShaderSource.find(ItemLoop, RingLoop + ItemLoop.size()), std::string::npos) << pShaderPath;
+	}
+}
+
+TEST(QmMediaIslandGpuSdfContract, SinglePassShapeReductionMatchesPreviousTwoPassResult)
+{
+	constexpr float FarDistance = 1000000.0f;
+	constexpr float MainDistance = 1.75f;
+	constexpr float MainRadius = 8.0f;
+	const std::array<float, 12> aItemDistances = {4.0f, 1.2f, -0.5f, 8.0f, 0.0f, 3.0f, -1.0f, 2.5f, 7.0f, 0.5f, 9.0f, -0.2f};
+	const std::array<float, 12> aSmoothUnions = {0.0f, 2.0f, 3.5f, 0.0f, 1.0f, 4.0f, 0.0f, 0.5f, 2.5f, 0.0f, 1.5f, 3.0f};
+	const std::array<int, 3> aItemCounts = {0, 1, 12};
+
+	for(const int ItemCount : aItemCounts)
+	{
+		float PreviousSatelliteDistance = FarDistance;
+		for(int i = 0; i < ItemCount; ++i)
+		{
+			PreviousSatelliteDistance = i == 0 ? aItemDistances[i] : QmHudMediaIslandSdfSmoothUnion(PreviousSatelliteDistance, aItemDistances[i], MainRadius * 0.28f);
+		}
+		float PreviousShapeDistance = std::min(MainDistance, PreviousSatelliteDistance);
+		for(int i = 0; i < ItemCount; ++i)
+		{
+			if(aSmoothUnions[i] > 0.0f)
+				PreviousShapeDistance = std::min(PreviousShapeDistance, QmHudMediaIslandSdfSmoothUnion(MainDistance, aItemDistances[i], aSmoothUnions[i]));
+		}
+
+		float SinglePassSatelliteDistance = FarDistance;
+		float SinglePassShapeDistance = MainDistance;
+		for(int i = 0; i < ItemCount; ++i)
+		{
+			SinglePassSatelliteDistance = i == 0 ? aItemDistances[i] : QmHudMediaIslandSdfSmoothUnion(SinglePassSatelliteDistance, aItemDistances[i], MainRadius * 0.28f);
+			if(aSmoothUnions[i] > 0.0f)
+				SinglePassShapeDistance = std::min(SinglePassShapeDistance, QmHudMediaIslandSdfSmoothUnion(MainDistance, aItemDistances[i], aSmoothUnions[i]));
+		}
+		SinglePassShapeDistance = std::min(SinglePassShapeDistance, SinglePassSatelliteDistance);
+
+		EXPECT_FLOAT_EQ(SinglePassShapeDistance, PreviousShapeDistance) << "item count " << ItemCount;
+	}
+}
+
+TEST(QmMediaIslandGpuSdfContract, OpenGlAndVulkanUseTheSameFragmentMainPath)
+{
+	const std::string OpenGlSource = ReadTestSourceFile("data/shader/media_island_sdf.frag");
+	const std::string VulkanSource = ReadTestSourceFile("data/shader/vulkan/media_island_sdf.frag");
+	const size_t OpenGlMain = OpenGlSource.find("void main()");
+	const size_t VulkanMain = VulkanSource.find("void main()");
+	ASSERT_NE(OpenGlMain, std::string::npos);
+	ASSERT_NE(VulkanMain, std::string::npos);
+
+	const auto CompactWhitespace = [](std::string Source) {
+		Source.erase(std::remove_if(Source.begin(), Source.end(), [](char Character) {
+			return Character == ' ' || Character == '\t' || Character == '\r' || Character == '\n';
+		}),
+			Source.end());
+		return Source;
+	};
+	EXPECT_EQ(CompactWhitespace(OpenGlSource.substr(OpenGlMain)), CompactWhitespace(VulkanSource.substr(VulkanMain)));
+}
+
+TEST(QmHudMediaIslandSource, MediaIslandUsesGpuSdfCommandWithoutCpuRasterization)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const size_t IslandBegin = Source.find("void CHud::RenderMediaIsland()");
+	ASSERT_NE(IslandBegin, std::string::npos);
+	const size_t IslandEnd = Source.find("float CHud::RenderLegacyMediaInfoAt", IslandBegin);
+	ASSERT_NE(IslandEnd, std::string::npos);
+	const std::string IslandBody = Source.substr(IslandBegin, IslandEnd - IslandBegin);
+
+	const size_t SdfDraw = IslandBody.find("Graphics()->RenderMediaIslandSdf");
+	ASSERT_NE(SdfDraw, std::string::npos);
+	EXPECT_EQ(IslandBody.find("Graphics()->RenderMediaIslandSdf", SdfDraw + 1), std::string::npos);
+	EXPECT_NE(IslandBody.find("HasMediaIslandSdf"), std::string::npos);
+	EXPECT_NE(Source.find("DrawMediaIslandArcGeometry"), std::string::npos);
+	EXPECT_EQ(IslandBody.find("UpdateTexture"), std::string::npos);
+	EXPECT_EQ(IslandBody.find("PixelX"), std::string::npos);
+	EXPECT_EQ(IslandBody.find("PixelY"), std::string::npos);
+	EXPECT_EQ(Source.find("m_vMediaIslandSdfPixels"), std::string::npos);
+	EXPECT_EQ(Source.find("m_MediaIslandSdfTexture"), std::string::npos);
+	EXPECT_EQ(IslandBody.find("BeginRenderTarget"), std::string::npos);
+	EXPECT_EQ(IslandBody.find("DrawRenderTarget"), std::string::npos);
 }
 
 TEST(QmHudPresentationSource, MediaIslandAndWeaponHudUseContinuousPresentationState)

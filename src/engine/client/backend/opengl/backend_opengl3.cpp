@@ -110,6 +110,10 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 	m_pPrimitiveExProgramRotationless = new CGLSLPrimitiveExProgram;
 	m_pPrimitiveExProgramTexturedRotationless = new CGLSLPrimitiveExProgram;
 	m_pSpriteProgramMultiple = new CGLSLSpriteMultipleProgram;
+	m_pMediaIslandSdfProgram = new CGLSLMediaIslandSdfProgram;
+	m_MediaIslandSdfProgramValid = false;
+	m_pGaussianBlurProgram = new CGLSLGaussianBlurProgram;
+	m_GaussianBlurProgramValid = false;
 	m_LastProgramId = 0;
 
 	CGLSLCompiler ShaderCompiler(g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, m_IsOpenGLES, m_OpenGLTextureLodBIAS / 1000.0f);
@@ -401,6 +405,62 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 		float aCenter[2] = {0.f, 0.f};
 		m_pSpriteProgramMultiple->SetUniformVec2(m_pSpriteProgramMultiple->m_LocCenter, 1, aCenter);
 	}
+	{
+		CGLSL VertexShader;
+		CGLSL FragmentShader;
+		ShaderCompiler.AddDefine("TW_MODERN_GL", "");
+		VertexShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/media_island_sdf.vert", GL_VERTEX_SHADER);
+		FragmentShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/media_island_sdf.frag", GL_FRAGMENT_SHADER);
+		ShaderCompiler.ClearDefines();
+
+		m_pMediaIslandSdfProgram->CreateProgram();
+		const bool VertexAdded = m_pMediaIslandSdfProgram->AddShader(&VertexShader);
+		const bool FragmentAdded = m_pMediaIslandSdfProgram->AddShader(&FragmentShader);
+		const bool Linked = VertexAdded && FragmentAdded && m_pMediaIslandSdfProgram->LinkProgram();
+		if(Linked)
+		{
+			UseProgram(m_pMediaIslandSdfProgram);
+			m_pMediaIslandSdfProgram->m_LocPos = m_pMediaIslandSdfProgram->GetUniformLoc("gPos");
+			m_pMediaIslandSdfProgram->m_LocData = m_pMediaIslandSdfProgram->GetUniformLoc("gMediaIslandSdfData[0]");
+			m_MediaIslandSdfProgramValid = m_pMediaIslandSdfProgram->m_LocPos >= 0 && m_pMediaIslandSdfProgram->m_LocData >= 0;
+		}
+		pCommand->m_pCapabilities->m_MediaIslandSdf = m_MediaIslandSdfProgramValid;
+	}
+	{
+		CGLSL VertexShader;
+		CGLSL FragmentShader;
+		VertexShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/gaussian_blur.vert", GL_VERTEX_SHADER);
+		FragmentShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/gaussian_blur.frag", GL_FRAGMENT_SHADER);
+
+		m_pGaussianBlurProgram->CreateProgram();
+		const bool VertexAdded = m_pGaussianBlurProgram->AddShader(&VertexShader);
+		const bool FragmentAdded = m_pGaussianBlurProgram->AddShader(&FragmentShader);
+		const bool Linked = VertexAdded && FragmentAdded && m_pGaussianBlurProgram->LinkProgram();
+		if(Linked)
+		{
+			UseProgram(m_pGaussianBlurProgram);
+			m_pGaussianBlurProgram->m_LocTextureSampler = m_pGaussianBlurProgram->GetUniformLoc("gTextureSampler");
+			m_pGaussianBlurProgram->m_LocTexelOffset = m_pGaussianBlurProgram->GetUniformLoc("gTexelOffset");
+			m_pGaussianBlurProgram->m_LocRadius = m_pGaussianBlurProgram->GetUniformLoc("gRadius");
+			m_pGaussianBlurProgram->m_LocWeights = m_pGaussianBlurProgram->GetUniformLoc("gWeights[0]");
+			m_GaussianBlurProgramValid = m_pGaussianBlurProgram->m_LocTextureSampler >= 0 && m_pGaussianBlurProgram->m_LocTexelOffset >= 0 && m_pGaussianBlurProgram->m_LocRadius >= 0 && m_pGaussianBlurProgram->m_LocWeights >= 0;
+			if(m_GaussianBlurProgramValid)
+				m_pGaussianBlurProgram->SetUniform(m_pGaussianBlurProgram->m_LocTextureSampler, 0);
+		}
+		pCommand->m_pCapabilities->m_RenderTargetGaussianBlur = pCommand->m_pCapabilities->m_RenderTargets && m_GaussianBlurProgramValid;
+	}
+	GLint BackbufferSamples = 0;
+	GLint RedBits = 0;
+	GLint GreenBits = 0;
+	GLint BlueBits = 0;
+	GLint AlphaBits = 0;
+	glGetIntegerv(GL_SAMPLES, &BackbufferSamples);
+	glGetIntegerv(GL_RED_BITS, &RedBits);
+	glGetIntegerv(GL_GREEN_BITS, &GreenBits);
+	glGetIntegerv(GL_BLUE_BITS, &BlueBits);
+	glGetIntegerv(GL_ALPHA_BITS, &AlphaBits);
+	m_BackbufferCaptureMultisampleResolveSupported = RedBits == 8 && GreenBits == 8 && BlueBits == 8 && AlphaBits == 8;
+	pCommand->m_pCapabilities->m_BackbufferCapture = pCommand->m_pCapabilities->m_RenderTargets && (BackbufferSamples == 0 || m_BackbufferCaptureMultisampleResolveSupported);
 
 	m_LastStreamBuffer = 0;
 
@@ -470,6 +530,7 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 void CCommandProcessorFragment_OpenGL3_3::Cmd_Shutdown(const SCommand_Shutdown *pCommand)
 {
 	glUseProgram(0);
+	DestroyBackbufferCaptureResolveTarget();
 
 	m_pPrimitiveProgram->DeleteProgram();
 	m_pPrimitiveProgramTextured->DeleteProgram();
@@ -489,6 +550,8 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_Shutdown(const SCommand_Shutdown *
 	m_pPrimitiveExProgramRotationless->DeleteProgram();
 	m_pPrimitiveExProgramTexturedRotationless->DeleteProgram();
 	m_pSpriteProgramMultiple->DeleteProgram();
+	m_pMediaIslandSdfProgram->DeleteProgram();
+	m_pGaussianBlurProgram->DeleteProgram();
 
 	// clean up everything
 	delete m_pPrimitiveProgram;
@@ -509,6 +572,12 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_Shutdown(const SCommand_Shutdown *
 	delete m_pPrimitiveExProgramRotationless;
 	delete m_pPrimitiveExProgramTexturedRotationless;
 	delete m_pSpriteProgramMultiple;
+	delete m_pMediaIslandSdfProgram;
+	m_pMediaIslandSdfProgram = nullptr;
+	m_MediaIslandSdfProgramValid = false;
+	delete m_pGaussianBlurProgram;
+	m_pGaussianBlurProgram = nullptr;
+	m_GaussianBlurProgramValid = false;
 
 	glBindVertexArray(0);
 	glDeleteBuffers(MAX_STREAM_BUFFER_COUNT, m_aPrimitiveDrawBufferId);
@@ -831,6 +900,41 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_Render(const CCommandBuffer::SComm
 	m_LastStreamBuffer = (m_LastStreamBuffer + 1 >= MAX_STREAM_BUFFER_COUNT ? 0 : m_LastStreamBuffer + 1);
 }
 
+void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderMediaIslandSdf(const CCommandBuffer::SCommand_RenderMediaIslandSdf *pCommand)
+{
+	if(!m_MediaIslandSdfProgramValid || pCommand->m_pVertices == nullptr || pCommand->m_PrimCount == 0 || m_pMediaIslandSdfProgram == nullptr)
+		return;
+
+	UseProgram(m_pMediaIslandSdfProgram);
+	SetState(pCommand->m_State, m_pMediaIslandSdfProgram);
+	m_pMediaIslandSdfProgram->SetUniformVec4(m_pMediaIslandSdfProgram->m_LocData, IGraphics::SMediaIslandSdfParams::DATA_COUNT, (const float *)pCommand->m_Params.m_aData.data());
+
+	UploadStreamBufferData(pCommand->m_PrimType, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount);
+	glBindVertexArray(m_aPrimitiveDrawVertexId[m_LastStreamBuffer]);
+
+	switch(pCommand->m_PrimType)
+	{
+	case EPrimitiveType::LINES:
+		glDrawArrays(GL_LINES, 0, pCommand->m_PrimCount * 2);
+		break;
+	case EPrimitiveType::TRIANGLES:
+		glDrawArrays(GL_TRIANGLES, 0, pCommand->m_PrimCount * 3);
+		break;
+	case EPrimitiveType::QUADS:
+		if(m_aLastIndexBufferBound[m_LastStreamBuffer] != m_QuadDrawIndexBufferId)
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadDrawIndexBufferId);
+			m_aLastIndexBufferBound[m_LastStreamBuffer] = m_QuadDrawIndexBufferId;
+		}
+		glDrawElements(GL_TRIANGLES, pCommand->m_PrimCount * 6, GL_UNSIGNED_INT, 0);
+		break;
+	default:
+		dbg_assert_failed("Invalid media island SDF primitive type: %d", (int)pCommand->m_PrimType);
+		break;
+	}
+	m_LastStreamBuffer = (m_LastStreamBuffer + 1 >= MAX_STREAM_BUFFER_COUNT ? 0 : m_LastStreamBuffer + 1);
+}
+
 void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTex3D(const CCommandBuffer::SCommand_RenderTex3D *pCommand)
 {
 	CGLSLPrimitiveProgram *pProg = m_pPrimitive3DProgram;
@@ -883,9 +987,166 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_Draw(const CCommandBu
 	aVertices[2].m_Tex = vec2(1.0f, 0.0f);
 	aVertices[3].m_Pos = vec2(X0, Y1);
 	aVertices[3].m_Tex = vec2(0.0f, 0.0f);
+	const uint8_t Alpha = (uint8_t)(pCommand->m_Alpha * 255.0f + 0.5f);
 	for(auto &Vertex : aVertices)
-		Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, 255};
+		Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, Alpha};
 
+	UploadStreamBufferData(EPrimitiveType::QUADS, aVertices, sizeof(CCommandBuffer::SVertex), 1);
+	glBindVertexArray(m_aPrimitiveDrawVertexId[m_LastStreamBuffer]);
+	if(m_aLastIndexBufferBound[m_LastStreamBuffer] != m_QuadDrawIndexBufferId)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadDrawIndexBufferId);
+		m_aLastIndexBufferBound[m_LastStreamBuffer] = m_QuadDrawIndexBufferId;
+	}
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	m_LastStreamBuffer = (m_LastStreamBuffer + 1 >= MAX_STREAM_BUFFER_COUNT ? 0 : m_LastStreamBuffer + 1);
+}
+
+void CCommandProcessorFragment_OpenGL3_3::DestroyBackbufferCaptureResolveTarget()
+{
+	if(m_BackbufferCaptureResolveFramebuffer != 0)
+		glDeleteFramebuffers(1, &m_BackbufferCaptureResolveFramebuffer);
+	if(m_BackbufferCaptureResolveTexture != 0)
+		glDeleteTextures(1, &m_BackbufferCaptureResolveTexture);
+	m_BackbufferCaptureResolveFramebuffer = 0;
+	m_BackbufferCaptureResolveTexture = 0;
+	m_BackbufferCaptureResolveWidth = 0;
+	m_BackbufferCaptureResolveHeight = 0;
+}
+
+bool CCommandProcessorFragment_OpenGL3_3::EnsureBackbufferCaptureResolveTarget(int Width, int Height)
+{
+	if(m_BackbufferCaptureResolveFramebuffer != 0 && m_BackbufferCaptureResolveTexture != 0 &&
+		m_BackbufferCaptureResolveWidth == Width && m_BackbufferCaptureResolveHeight == Height)
+		return true;
+
+	DestroyBackbufferCaptureResolveTarget();
+	glGenTextures(1, &m_BackbufferCaptureResolveTexture);
+	glBindTexture(GL_TEXTURE_2D, m_BackbufferCaptureResolveTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glGenFramebuffers(1, &m_BackbufferCaptureResolveFramebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BackbufferCaptureResolveFramebuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_BackbufferCaptureResolveTexture, 0);
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		dbg_msg("opengl", "backbuffer capture resolve framebuffer incomplete");
+		DestroyBackbufferCaptureResolveTarget();
+		return false;
+	}
+
+	m_BackbufferCaptureResolveWidth = Width;
+	m_BackbufferCaptureResolveHeight = Height;
+	return true;
+}
+
+void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer(const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *pCommand)
+{
+	if(m_RenderTargetActive || pCommand->m_TargetId < 0 || (size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || m_CanvasWidth == 0 || m_CanvasHeight == 0)
+		return;
+	const SOpenGLRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
+	if(Target.m_Framebuffer == 0 || Target.m_Width <= 0 || Target.m_Height <= 0)
+		return;
+
+	GLint PreviousReadFramebuffer = 0;
+	GLint PreviousDrawFramebuffer = 0;
+	GLint PreviousTexture = 0;
+	GLint aSourceViewport[4] = {0, 0, 0, 0};
+	glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &PreviousReadFramebuffer);
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &PreviousDrawFramebuffer);
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &PreviousTexture);
+	glGetIntegerv(GL_VIEWPORT, aSourceViewport);
+	if(PreviousDrawFramebuffer == (GLint)Target.m_Framebuffer)
+		return;
+	const int SourceX = aSourceViewport[0];
+	const int SourceY = aSourceViewport[1];
+	const int SourceWidth = aSourceViewport[2];
+	const int SourceHeight = aSourceViewport[3];
+	if(SourceWidth <= 0 || SourceHeight <= 0)
+		return;
+
+	const GLboolean ScissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+	if(ScissorEnabled)
+		glDisable(GL_SCISSOR_TEST);
+
+	auto RestoreState = [&] {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousReadFramebuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, PreviousDrawFramebuffer);
+		glBindTexture(GL_TEXTURE_2D, PreviousTexture);
+		if(ScissorEnabled)
+			glEnable(GL_SCISSOR_TEST);
+	};
+
+	glBindFramebuffer(GL_FRAMEBUFFER, PreviousDrawFramebuffer);
+	GLint Samples = 0;
+	glGetIntegerv(GL_SAMPLES, &Samples);
+	if(Samples > 0 && !m_BackbufferCaptureMultisampleResolveSupported)
+	{
+		RestoreState();
+		return;
+	}
+	const bool RequiresSeparateResolve = Samples > 0 && (SourceWidth != Target.m_Width || SourceHeight != Target.m_Height);
+	if(RequiresSeparateResolve)
+	{
+		if(!EnsureBackbufferCaptureResolveTarget(SourceWidth, SourceHeight))
+		{
+			RestoreState();
+			return;
+		}
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousDrawFramebuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_BackbufferCaptureResolveFramebuffer);
+		glBlitFramebuffer(SourceX, SourceY, SourceX + SourceWidth, SourceY + SourceHeight, 0, 0, SourceWidth, SourceHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_BackbufferCaptureResolveFramebuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Target.m_Framebuffer);
+		glBlitFramebuffer(0, 0, SourceWidth, SourceHeight, 0, 0, Target.m_Width, Target.m_Height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	}
+	else
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousDrawFramebuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Target.m_Framebuffer);
+		glBlitFramebuffer(SourceX, SourceY, SourceX + SourceWidth, SourceY + SourceHeight, 0, 0, Target.m_Width, Target.m_Height, GL_COLOR_BUFFER_BIT, Samples > 0 ? GL_NEAREST : GL_LINEAR);
+	}
+
+	RestoreState();
+}
+
+void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_GaussianBlurPass(const CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass *pCommand)
+{
+	if(!m_GaussianBlurProgramValid || !m_RenderTargetActive || m_ActiveRenderTargetId < 0 || pCommand->m_SourceTargetId < 0 ||
+		(size_t)m_ActiveRenderTargetId >= m_vRenderTargets.size() || (size_t)pCommand->m_SourceTargetId >= m_vRenderTargets.size() ||
+		pCommand->m_SourceTargetId == m_ActiveRenderTargetId || pCommand->m_Radius < 1 || pCommand->m_Radius > IGraphics::GAUSSIAN_BLUR_MAX_RADIUS)
+		return;
+	const SOpenGLRenderTarget &Source = m_vRenderTargets[pCommand->m_SourceTargetId];
+	const SOpenGLRenderTarget &Destination = m_vRenderTargets[m_ActiveRenderTargetId];
+	if(Source.m_Texture == 0 || Source.m_Width != Destination.m_Width || Source.m_Height != Destination.m_Height)
+		return;
+
+	UseProgram(m_pGaussianBlurProgram);
+	glDisable(GL_BLEND);
+	m_LastBlendMode = EBlendMode::NONE;
+	glBindSampler(0, 0);
+	glBindTexture(GL_TEXTURE_2D, Source.m_Texture);
+	const float aTexelOffset[2] = {
+		pCommand->m_Horizontal ? 1.0f / Source.m_Width : 0.0f,
+		pCommand->m_Horizontal ? 0.0f : 1.0f / Source.m_Height,
+	};
+	m_pGaussianBlurProgram->SetUniformVec2(m_pGaussianBlurProgram->m_LocTexelOffset, 1, aTexelOffset);
+	m_pGaussianBlurProgram->SetUniform(m_pGaussianBlurProgram->m_LocRadius, pCommand->m_Radius);
+	m_pGaussianBlurProgram->SetUniform(m_pGaussianBlurProgram->m_LocWeights, (int)pCommand->m_aWeights.size(), pCommand->m_aWeights.data());
+
+	CCommandBuffer::SVertex aVertices[4]{};
+	aVertices[0].m_Pos = vec2(-1.0f, -1.0f);
+	aVertices[0].m_Tex = vec2(0.0f, 0.0f);
+	aVertices[1].m_Pos = vec2(1.0f, -1.0f);
+	aVertices[1].m_Tex = vec2(1.0f, 0.0f);
+	aVertices[2].m_Pos = vec2(1.0f, 1.0f);
+	aVertices[2].m_Tex = vec2(1.0f, 1.0f);
+	aVertices[3].m_Pos = vec2(-1.0f, 1.0f);
+	aVertices[3].m_Tex = vec2(0.0f, 1.0f);
 	UploadStreamBufferData(EPrimitiveType::QUADS, aVertices, sizeof(CCommandBuffer::SVertex), 1);
 	glBindVertexArray(m_aPrimitiveDrawVertexId[m_LastStreamBuffer]);
 	if(m_aLastIndexBufferBound[m_LastStreamBuffer] != m_QuadDrawIndexBufferId)

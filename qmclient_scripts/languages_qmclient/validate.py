@@ -111,17 +111,19 @@ for language in generate_all.GENERATED_LANGUAGES:
         print(f"  FAIL: {language}.txt: {e}")
         continue
     parsed_language_files += 1
-    missing_base_keys = sorted(set(active_source_keys) - set(parsed.keys()))
+    required_source_keys = set(active_source_keys)
+    if language != "simplified_chinese":
+        required_source_keys -= english_fallback_identities
+    missing_base_keys = sorted(required_source_keys - set(parsed.keys()))
     if missing_base_keys:
         errors.append(f"{language}.txt: missing_base_keys={missing_base_keys[:10]}")
         print(f"  FAIL: {language}.txt: missing_base_keys={missing_base_keys[:10]}")
     else:
-        print(f"  OK: {language}.txt covers {len(active_source_keys)} source keys")
+        print(f"  OK: {language}.txt covers {len(required_source_keys)} source keys")
 
 if parsed_language_files == len(generate_all.GENERATED_LANGUAGES):
     count += 1
 
-loaded_i18n_store = i18n_store.load_language_store()
 i18n_store_map = i18n_store.language_map_for(loaded_i18n_store, "simplified_chinese")
 if not loaded_i18n_store:
     errors.append(
@@ -157,6 +159,12 @@ for language in generate_all.GENERATED_LANGUAGES:
     missing_toml = i18n_store.missing_translations_for(
         loaded_i18n_store, active_source_keys, language
     )
+    if language != "simplified_chinese":
+        missing_toml = [
+            identity
+            for identity in missing_toml
+            if identity not in english_fallback_identities
+        ]
     if missing_toml:
         errors.append(f"TOML missing {language} translations: {len(missing_toml)}")
         print(f"  FAIL: TOML missing {language} translations: {len(missing_toml)}")

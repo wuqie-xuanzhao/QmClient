@@ -838,7 +838,7 @@ void CLayerTiles::FillGameTiles(EGameTileOp Fill)
 
 			vpActions.push_back(std::make_shared<CEditorBrushDrawAction>(Map(), GameGroupIndex));
 			char aDisplay[256];
-			str_format(aDisplay, sizeof(aDisplay), "构建“%s”游戏图块（x%d）", GAME_TILE_OP_NAMES[(int)Fill], Changes);
+			str_format(aDisplay, sizeof(aDisplay), Localize("Construct '%s' game tiles (x%d)", "Editor"), Localize(GAME_TILE_OP_NAMES[(int)Fill], "Editor"), Changes);
 			Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(Map(), vpActions, aDisplay, true));
 		}
 		else
@@ -934,7 +934,7 @@ void CLayerTiles::FillGameTiles(EGameTileOp Fill)
 
 			vpActions.push_back(std::make_shared<CEditorBrushDrawAction>(Map(), GameGroupIndex));
 			char aDisplay[256];
-			str_format(aDisplay, sizeof(aDisplay), "构建“传送”游戏图块（x%d）", Changes);
+			str_format(aDisplay, sizeof(aDisplay), Localize("Construct 'tele' game tiles (x%d)", "Editor"), Changes);
 			Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(Map(), vpActions, aDisplay, true));
 		}
 	}
@@ -983,14 +983,15 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			}
 		};
 
-		char aBuf[128] = "游戏图块";
+		char aBuf[128];
+		str_copy(aBuf, Localize("Game tiles", "Editor"));
 		if(m_LiveGameTiles)
 		{
 			auto TileOp = GameTileToOp(m_FillGameTile);
 			if(TileOp != EGameTileOp::AIR)
-				str_format(aBuf, sizeof(aBuf), "游戏图块：%s", GAME_TILE_OP_NAMES[(size_t)TileOp]);
+				str_format(aBuf, sizeof(aBuf), Localize("Game tiles: %s", "Editor"), Localize(GAME_TILE_OP_NAMES[(size_t)TileOp], "Editor"));
 		}
-		if(Editor()->DoButton_Editor(&s_GameTilesButton, aBuf, 0, &Button, BUTTONFLAG_LEFT, "根据该图层构建游戏图块。"))
+		if(Editor()->DoButton_Editor(&s_GameTilesButton, aBuf, 0, &Button, BUTTONFLAG_LEFT, Localize("Construct game tiles from this layer.", "Editor tile action")))
 			Editor()->PopupSelectGametileOpInvoke(Editor()->Ui()->MouseX(), Editor()->Ui()->MouseY());
 		const int Selected = Editor()->PopupSelectGameTileOpResult();
 		FillGameTiles((EGameTileOp)Selected);
@@ -1008,7 +1009,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 				Button.VSplitRight(16.0f, &Button, &ButtonAuto);
 				Button.VSplitRight(2.0f, &Button, nullptr);
 				static int s_AutoMapperButtonAuto = 0;
-				if(Editor()->DoButton_Editor(&s_AutoMapperButtonAuto, "自", m_AutoAutoMap, &ButtonAuto, BUTTONFLAG_LEFT, "修改后自动执行自动映射。"))
+				if(Editor()->DoButton_Editor(&s_AutoMapperButtonAuto, Localize("A", "Editor automapper"), m_AutoAutoMap, &ButtonAuto, BUTTONFLAG_LEFT, Localize("Automatically run the automapper after modifications.", "Editor")))
 				{
 					m_AutoAutoMap = !m_AutoAutoMap;
 					FlagModified(0, 0, m_Width, m_Height);
@@ -1022,7 +1023,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			}
 
 			static int s_AutoMapperButton = 0;
-			if(Editor()->DoButton_Editor(&s_AutoMapperButton, "自动映射", 0, &Button, BUTTONFLAG_LEFT, "执行自动映射。"))
+			if(Editor()->DoButton_Editor(&s_AutoMapperButton, Localize("Automap", "Editor"), 0, &Button, BUTTONFLAG_LEFT, Localize("Run the automapper.", "Editor")))
 			{
 				Map()->m_vpImages[m_Image]->m_AutoMapper.Proceed(this, Map()->m_pGameLayer.get(), m_AutoMapperReference, m_AutoMapperConfig, m_Seed);
 				// record undo
@@ -1193,7 +1194,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 		CUIRect Commit;
 		pToolbox->HSplitBottom(20.0f, pToolbox, &Commit);
 		static int s_CommitButton = 0;
-		if(pEditor->DoButton_Editor(&s_CommitButton, "应用", 0, &Commit, BUTTONFLAG_LEFT, "应用修改。"))
+		if(pEditor->DoButton_Editor(&s_CommitButton, Localize("Commit", "Editor"), 0, &Commit, BUTTONFLAG_LEFT, Localize("Apply the changes.", "Editor")))
 		{
 			bool HasModifiedSize = (State.m_Modified & SCommonPropState::MODIFIED_SIZE) != 0;
 			bool HasModifiedColor = (State.m_Modified & SCommonPropState::MODIFIED_COLOR) != 0;
@@ -1255,7 +1256,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 			State.m_Modified = 0;
 
 			char aDisplay[256];
-			str_format(aDisplay, sizeof(aDisplay), "编辑 %d 个图层的公共属性：%s", (int)vpLayers.size(), HasModifiedColor && HasModifiedSize ? "颜色、尺寸" : (HasModifiedColor ? "颜色" : "尺寸"));
+			str_format(aDisplay, sizeof(aDisplay), Localize("Edit %d layers common property: %s", "Editor"), (int)vpLayers.size(), HasModifiedColor && HasModifiedSize ? Localize("color, size", "Editor") : (HasModifiedColor ? Localize("Color", "Editor") : Localize("size", "Editor")));
 			pEditorMap->m_EditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(pEditorMap, vpActions, aDisplay));
 		}
 	}
@@ -1280,7 +1281,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 		pEditor->TextRender()->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
 		SLabelProperties Props;
 		Props.m_MaxWidth = Warning.w;
-		pEditor->Ui()->DoLabel(&Warning, "正在编辑多个图层", 9.0f, TEXTALIGN_ML, Props);
+		pEditor->Ui()->DoLabel(&Warning, Localize("Editing multiple layers", "Editor"), 9.0f, TEXTALIGN_ML, Props);
 		pEditor->TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 		pToolbox->HSplitTop(2.0f, nullptr, pToolbox);
 	}

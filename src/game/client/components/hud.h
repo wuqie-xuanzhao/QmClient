@@ -169,6 +169,7 @@ class CHud : public CComponent
 		float m_TargetTrackMetaOutAlpha = 0.0f;
 		float m_TargetTrackMetaInOffset = 0.0f;
 		float m_TargetTrackMetaOutOffset = 0.0f;
+		float m_EntranceDropProgress = 0.0f;
 		float m_EntranceProgress = 0.0f;
 		int64_t m_EntranceLastTick = 0;
 		bool m_LayoutInitialized = false;
@@ -216,6 +217,11 @@ class CHud : public CComponent
 		float m_SpectatorLiquidProgress = 0.0f;
 		int64_t m_SpectatorLiquidLastTick = 0;
 		int m_SpectatorDisplayCount = 0;
+		float m_SpectatorIconProgress = 1.0f;
+		int64_t m_SpectatorIconLastTick = 0;
+		bool m_SpectatorHadWatchers = false;
+		float m_SpectatorExitLiquidStart = 0.0f;
+		float m_SpectatorExitIconStart = 1.0f;
 
 		void StartCapsuleMorph(int64_t Now)
 		{
@@ -259,6 +265,7 @@ class CHud : public CComponent
 			m_TargetTrackMetaOutAlpha = 0.0f;
 			m_TargetTrackMetaInOffset = 0.0f;
 			m_TargetTrackMetaOutOffset = 0.0f;
+			m_EntranceDropProgress = 0.0f;
 			m_EntranceProgress = 0.0f;
 			m_EntranceLastTick = 0;
 			m_LayoutInitialized = false;
@@ -285,6 +292,11 @@ class CHud : public CComponent
 			m_SpectatorLiquidProgress = 0.0f;
 			m_SpectatorLiquidLastTick = 0;
 			m_SpectatorDisplayCount = 0;
+			m_SpectatorIconProgress = 1.0f;
+			m_SpectatorIconLastTick = 0;
+			m_SpectatorHadWatchers = false;
+			m_SpectatorExitLiquidStart = 0.0f;
+			m_SpectatorExitIconStart = 1.0f;
 		}
 	};
 	SHudMediaIslandAnimState m_MediaIslandAnimState;
@@ -388,8 +400,6 @@ class CHud : public CComponent
 		}
 	};
 	SHudMediaIslandMuteState m_MediaIslandMuteState;
-	IGraphics::CTextureHandle m_MediaIslandSdfTexture;
-	std::vector<uint8_t> m_vMediaIslandSdfPixels;
 	std::vector<SUiLayoutChild> m_vTextInfoLayoutChildrenScratch;
 	std::vector<SUiLayoutChild> m_vLocalTimeLayoutChildrenScratch;
 
@@ -461,7 +471,6 @@ public:
 	void OnReset() override;
 	void OnRender() override;
 	void OnInit() override;
-	void OnShutdown() override;
 	void OnNewSnapshot() override;
 
 	// DDRace

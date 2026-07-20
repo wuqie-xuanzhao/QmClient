@@ -1758,6 +1758,14 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 		Alpha *= (float)g_Config.m_ClShowOthersAlpha / 100.0f;
 	if(GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(pPlayerInfo->m_ClientId))
 		Alpha = std::min(Alpha, 0.5f);
+	const bool Afk = IsQmAfkForPresentation(
+		ClientData.m_Afk,
+		Client()->State() == IClient::STATE_ONLINE,
+		GameClient()->m_Menus.IsActive(),
+		ClientId,
+		GameClient()->m_Snap.m_LocalClientId);
+	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
+	Data.m_CoordXAlignColor.a *= Alpha;
 
 	Data.m_Color = ColorRGBA(1.0f, 1.0f, 1.0f);
 	if(g_Config.m_ClNamePlatesTeamcolors)

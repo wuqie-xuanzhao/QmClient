@@ -1697,6 +1697,10 @@ set(EXPECTED_DATA
   qmclient/fonts/minecraft_font.ttf
   qmclient/gui_logo.png
   race_flag.png
+  shader/gaussian_blur.frag
+  shader/gaussian_blur.vert
+  shader/media_island_sdf.frag
+  shader/media_island_sdf.vert
   shader/pipeline.frag
   shader/pipeline.vert
   shader/prim.frag
@@ -1713,6 +1717,10 @@ set(EXPECTED_DATA
   shader/tile.vert
   shader/tile_border.frag
   shader/tile_border.vert
+  shader/vulkan/gaussian_blur.frag
+  shader/vulkan/gaussian_blur.vert
+  shader/vulkan/media_island_sdf.frag
+  shader/vulkan/media_island_sdf.vert
   shader/vulkan/prim.frag
   shader/vulkan/prim.vert
   shader/vulkan/prim3d.frag
@@ -2830,6 +2838,7 @@ if(CLIENT)
     components/qmclient/settings_resource_preview.h
     components/qmclient/scripting.cpp
     components/qmclient/scripting.h
+    components/qmclient/stutter_diagnostics.h
     components/qmclient/tee_hue_cycle.cpp
     components/qmclient/tee_hue_cycle.h
     components/qmclient/scripting/impl.cpp

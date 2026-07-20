@@ -108,13 +108,13 @@ const char *CEditorDrawingTools::ToolName(ETool Tool) const
 {
 	switch(Tool)
 	{
-	case ETool::FILL: return "填充";
-	case ETool::SHAPE: return "形状";
-	case ETool::LINE: return "线条";
-	case ETool::FADE: return "渐变";
+	case ETool::FILL: return Localize("Fill", "Editor");
+	case ETool::SHAPE: return Localize("Shape", "Editor");
+	case ETool::LINE: return Localize("Line", "Editor");
+	case ETool::FADE: return Localize("Fade", "Editor");
 	case ETool::NONE: break;
 	}
-	return "绘图工具";
+	return Localize("Drawing tools", "Editor");
 }
 
 const char *CEditorDrawingTools::ActionName() const
@@ -122,21 +122,21 @@ const char *CEditorDrawingTools::ActionName() const
 	const ETool Tool = m_Drawing ? m_Drag.m_Tool : m_Tool;
 	switch(Tool)
 	{
-	case ETool::FILL: return "绘图工具：填充";
+	case ETool::FILL: return Localize("Drawing tool: Fill", "Editor");
 	case ETool::SHAPE:
 		switch(m_Shape)
 		{
-		case EShape::RECT: return "绘图工具：矩形";
-		case EShape::ELLIPSE: return "绘图工具：椭圆";
-		case EShape::TRIANGLE: return "绘图工具：三角形";
-		case EShape::NGON: return "绘图工具：N 边形";
+		case EShape::RECT: return Localize("Drawing tool: Rectangle", "Editor");
+		case EShape::ELLIPSE: return Localize("Drawing tool: Ellipse", "Editor");
+		case EShape::TRIANGLE: return Localize("Drawing tool: Triangle", "Editor");
+		case EShape::NGON: return Localize("Drawing tool: N-gon", "Editor");
 		}
 		break;
-	case ETool::LINE: return "绘图工具：线条";
-	case ETool::FADE: return "绘图工具：Fade";
+	case ETool::LINE: return Localize("Drawing tool: Line", "Editor");
+	case ETool::FADE: return Localize("Drawing tool: Fade", "Editor");
 	case ETool::NONE: break;
 	}
-	return "绘图工具";
+	return Localize("Drawing tools", "Editor");
 }
 
 bool CEditorDrawingTools::HandleWheelInput(CEditor *pEditor, CUIRect View)
@@ -155,14 +155,14 @@ bool CEditorDrawingTools::HandleWheelInput(CEditor *pEditor, CUIRect View)
 	if(m_Tool == ETool::SHAPE)
 	{
 		m_ShapeThickness = std::clamp(m_ShapeThickness + Delta, 1, 16);
-		str_format(pEditor->m_aTooltip, sizeof(pEditor->m_aTooltip), "形状粗细：%d", m_ShapeThickness);
+		str_format(pEditor->m_aTooltip, sizeof(pEditor->m_aTooltip), Localize("Shape thickness: %d", "Editor"), m_ShapeThickness);
 		CancelDrawing();
 		return true;
 	}
 	if(m_Tool == ETool::LINE)
 	{
 		m_LineThickness = std::clamp(m_LineThickness + Delta, 1, 16);
-		str_format(pEditor->m_aTooltip, sizeof(pEditor->m_aTooltip), "线条粗细：%d", m_LineThickness);
+		str_format(pEditor->m_aTooltip, sizeof(pEditor->m_aTooltip), Localize("Line thickness: %d", "Editor"), m_LineThickness);
 		CancelDrawing();
 		return true;
 	}
@@ -215,47 +215,47 @@ void CEditorDrawingTools::RenderToolbar(CEditor *pEditor, CUIRect *pToolbar)
 	static int s_LineSmoothButton;
 	static int s_LineSharpButton;
 
-	DoToolButton(pEditor, pToolbar, ETool::FILL, "填充", "绘图工具：拖拽矩形区域，用当前图块填充。空画笔会擦除为空气。");
-	DoToolButton(pEditor, pToolbar, ETool::SHAPE, "形状", "绘图工具：拖拽生成矩形、椭圆、三角形或 N 边形。");
-	DoToolButton(pEditor, pToolbar, ETool::LINE, "线条", "绘图工具：沿鼠标路径绘制连续线条。");
-	DoToolButton(pEditor, pToolbar, ETool::FADE, "渐变", "绘图工具：在拖拽矩形内按概率渐变散布图块。");
+	DoToolButton(pEditor, pToolbar, ETool::FILL, Localize("Fill", "Editor"), Localize("Drawing tool: Drag a rectangle to fill it with the current tile. An empty brush erases to air.", "Editor"));
+	DoToolButton(pEditor, pToolbar, ETool::SHAPE, Localize("Shape", "Editor"), Localize("Drawing tool: Drag to create a rectangle, ellipse, triangle or N-gon.", "Editor"));
+	DoToolButton(pEditor, pToolbar, ETool::LINE, Localize("Line", "Editor"), Localize("Drawing tool: Draw a continuous line along the mouse path.", "Editor"));
+	DoToolButton(pEditor, pToolbar, ETool::FADE, Localize("Fade", "Editor"), Localize("Drawing tool: Probabilistically scatter tiles with a fade inside the dragged rectangle.", "Editor"));
 
-	const char *pSym = "对称:关";
+	const char *pSym = Localize("Symmetry: Off", "Editor");
 	if(m_Symmetry == ESymmetry::X)
-		pSym = "对称:X";
+		pSym = Localize("Symmetry: X", "Editor");
 	else if(m_Symmetry == ESymmetry::Y)
-		pSym = "对称:Y";
+		pSym = Localize("Symmetry: Y", "Editor");
 	else if(m_Symmetry == ESymmetry::XY)
-		pSym = "对称:XY";
-	DoSmallButton(pEditor, pToolbar, &m_Symmetry, pSym, m_Symmetry != ESymmetry::OFF, "对称绘制：Off -> X -> Y -> XY。中心为本次按下的图块坐标。", [&]() {
+		pSym = Localize("Symmetry: XY", "Editor");
+	DoSmallButton(pEditor, pToolbar, &m_Symmetry, pSym, m_Symmetry != ESymmetry::OFF, Localize("Symmetry drawing: Off -> X -> Y -> XY. The center is the tile coordinate where the mouse was pressed.", "Editor"), [&]() {
 		m_Symmetry = static_cast<ESymmetry>((static_cast<int>(m_Symmetry) + 1) % 4);
 	});
 
 	if(m_Tool == ETool::SHAPE)
 	{
-		DoSmallButton(pEditor, pToolbar, &s_ShapeRectButton, "矩形", m_Shape == EShape::RECT, "矩形形状。", [&]() { m_Shape = EShape::RECT; });
-		DoSmallButton(pEditor, pToolbar, &s_ShapeEllipseButton, "椭圆", m_Shape == EShape::ELLIPSE, "椭圆形状。", [&]() { m_Shape = EShape::ELLIPSE; });
-		DoSmallButton(pEditor, pToolbar, &s_ShapeTriangleButton, "三角", m_Shape == EShape::TRIANGLE, "三角形形状。", [&]() { m_Shape = EShape::TRIANGLE; });
-		DoSmallButton(pEditor, pToolbar, &s_ShapeNgonButton, "N边", m_Shape == EShape::NGON, "N 边形形状。", [&]() { m_Shape = EShape::NGON; });
-		DoSmallButton(pEditor, pToolbar, &m_ShapeOutline, "轮廓", m_ShapeOutline, "切换实心/轮廓绘制。", [&]() { m_ShapeOutline = !m_ShapeOutline; });
-		m_ShapeThickness = DoValue(pEditor, pToolbar, &m_ShapeThickness, "粗细 ", m_ShapeThickness, 1, 16, 1, 2.0f, "轮廓粗细。");
+		DoSmallButton(pEditor, pToolbar, &s_ShapeRectButton, Localize("Rectangle", "Editor"), m_Shape == EShape::RECT, Localize("Rectangle shape.", "Editor"), [&]() { m_Shape = EShape::RECT; });
+		DoSmallButton(pEditor, pToolbar, &s_ShapeEllipseButton, Localize("Ellipse", "Editor"), m_Shape == EShape::ELLIPSE, Localize("Ellipse shape.", "Editor"), [&]() { m_Shape = EShape::ELLIPSE; });
+		DoSmallButton(pEditor, pToolbar, &s_ShapeTriangleButton, Localize("Triangle", "Editor"), m_Shape == EShape::TRIANGLE, Localize("Triangle shape.", "Editor"), [&]() { m_Shape = EShape::TRIANGLE; });
+		DoSmallButton(pEditor, pToolbar, &s_ShapeNgonButton, Localize("N-gon", "Editor"), m_Shape == EShape::NGON, Localize("N-gon shape.", "Editor"), [&]() { m_Shape = EShape::NGON; });
+		DoSmallButton(pEditor, pToolbar, &m_ShapeOutline, Localize("Outline", "Editor"), m_ShapeOutline, Localize("Toggle solid/outline drawing.", "Editor"), [&]() { m_ShapeOutline = !m_ShapeOutline; });
+		m_ShapeThickness = DoValue(pEditor, pToolbar, &m_ShapeThickness, Localize("Thickness ", "Editor"), m_ShapeThickness, 1, 16, 1, 2.0f, Localize("Outline thickness.", "Editor"));
 		if(m_Shape == EShape::NGON)
-			m_ShapeNgonSides = DoValue(pEditor, pToolbar, &m_ShapeNgonSides, "N ", m_ShapeNgonSides, 3, 16, 1, 2.0f, "N 边形边数。");
+			m_ShapeNgonSides = DoValue(pEditor, pToolbar, &m_ShapeNgonSides, "N ", m_ShapeNgonSides, 3, 16, 1, 2.0f, Localize("Number of sides for the N-gon.", "Editor"));
 	}
 	else if(m_Tool == ETool::LINE)
 	{
-		m_LineThickness = DoValue(pEditor, pToolbar, &m_LineThickness, "粗细 ", m_LineThickness, 1, 16, 1, 2.0f, "线条粗细。");
-		DoSmallButton(pEditor, pToolbar, &s_LineSmoothButton, "平滑", m_LineMode == ELineMode::SMOOTH, "轻量平滑鼠标路径后绘制。", [&]() { m_LineMode = ELineMode::SMOOTH; });
-		DoSmallButton(pEditor, pToolbar, &s_LineSharpButton, "折线", m_LineMode == ELineMode::SHARP, "保留鼠标路径折线。", [&]() { m_LineMode = ELineMode::SHARP; });
+		m_LineThickness = DoValue(pEditor, pToolbar, &m_LineThickness, Localize("Thickness ", "Editor"), m_LineThickness, 1, 16, 1, 2.0f, Localize("Line thickness.", "Editor"));
+		DoSmallButton(pEditor, pToolbar, &s_LineSmoothButton, Localize("Smooth", "Editor"), m_LineMode == ELineMode::SMOOTH, Localize("Draw after lightly smoothing the mouse path.", "Editor"), [&]() { m_LineMode = ELineMode::SMOOTH; });
+		DoSmallButton(pEditor, pToolbar, &s_LineSharpButton, Localize("Polyline", "Editor"), m_LineMode == ELineMode::SHARP, Localize("Keep the mouse path as a polyline.", "Editor"), [&]() { m_LineMode = ELineMode::SHARP; });
 	}
 	else if(m_Tool == ETool::FADE)
 	{
-		m_FadeAngle = DoValue(pEditor, pToolbar, &m_FadeAngle, "角度 ", m_FadeAngle, 0, 359, 1, 2.0f, "渐变角度。", true);
-		m_FadeStart = DoValue(pEditor, pToolbar, &m_FadeStart, "起% ", m_FadeStart, 0, 100, 1, 2.0f, "起点概率强度。");
-		m_FadeEnd = DoValue(pEditor, pToolbar, &m_FadeEnd, "止% ", m_FadeEnd, 0, 100, 1, 2.0f, "终点概率强度。");
-		m_FadeSoftness = DoValue(pEditor, pToolbar, &m_FadeSoftness, "柔化 ", m_FadeSoftness, 0, 100, 1, 2.0f, "边缘柔化强度。");
-		m_FadeRandomness = DoValue(pEditor, pToolbar, &m_FadeRandomness, "随机 ", m_FadeRandomness, 0, 100, 1, 2.0f, "随机扰动强度。");
-		DoSmallButton(pEditor, pToolbar, &m_FadeAir, "空气", m_FadeAir, "允许渐变随机擦除为空气。", [&]() { m_FadeAir = !m_FadeAir; });
+		m_FadeAngle = DoValue(pEditor, pToolbar, &m_FadeAngle, Localize("Angle ", "Editor"), m_FadeAngle, 0, 359, 1, 2.0f, Localize("Fade angle.", "Editor"), true);
+		m_FadeStart = DoValue(pEditor, pToolbar, &m_FadeStart, Localize("Start% ", "Editor"), m_FadeStart, 0, 100, 1, 2.0f, Localize("Start probability strength.", "Editor"));
+		m_FadeEnd = DoValue(pEditor, pToolbar, &m_FadeEnd, Localize("End% ", "Editor"), m_FadeEnd, 0, 100, 1, 2.0f, Localize("End probability strength.", "Editor"));
+		m_FadeSoftness = DoValue(pEditor, pToolbar, &m_FadeSoftness, Localize("Softness ", "Editor"), m_FadeSoftness, 0, 100, 1, 2.0f, Localize("Edge softness strength.", "Editor"));
+		m_FadeRandomness = DoValue(pEditor, pToolbar, &m_FadeRandomness, Localize("Randomness ", "Editor"), m_FadeRandomness, 0, 100, 1, 2.0f, Localize("Random perturbation strength.", "Editor"));
+		DoSmallButton(pEditor, pToolbar, &m_FadeAir, Localize("Air", "Editor"), m_FadeAir, Localize("Allow the fade tool to randomly erase to air.", "Editor"), [&]() { m_FadeAir = !m_FadeAir; });
 	}
 }
 
@@ -350,7 +350,7 @@ bool CEditorDrawingTools::HandleMapEditorInput(CEditor *pEditor, const std::pair
 	if(Inside)
 	{
 		char aTooltip[128];
-		str_format(aTooltip, sizeof(aTooltip), "%s：按住鼠标左键拖拽绘制。Alt+左键可临时填充，Ctrl+滚轮调粗细。", ToolName(ActiveTool));
+		str_format(aTooltip, sizeof(aTooltip), Localize("%s: Hold the left mouse button to draw. Alt+left click temporarily fills. Ctrl+mouse wheel changes thickness.", "Editor"), ToolName(ActiveTool));
 		str_copy(pEditor->m_aTooltip, aTooltip);
 	}
 

@@ -31,9 +31,6 @@
 %d more cut segments
 == %d weitere Schnittsegmente
 
-%d new mentions
-== %d neue Erwähnungen
-
 %d of %d server
 == %d von %d Server
 
@@ -246,9 +243,6 @@
 
 5 stars
 == 5 Sterne
-
-9+ new mentions
-== 9+ neue Erwähnungen
 
 === All Local Saves ===
 == === Alle lokalen Saves ===
@@ -1411,6 +1405,9 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
+
+Better scoreboard
+== Verbesserte Bestenliste
 
 Bind key to execute a command or view keybindings
 == Taste binden, um einen Befehl auszuführen oder Tastenbelegungen anzuzeigen
@@ -4967,9 +4964,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -6257,9 +6251,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == Nachrichten
 
-Messages that already look like the target language will skip auto-translate
-== Nachrichten, die bereits wie die Zielsprache aussehen, überspringen die automatische Übersetzung
-
 Microphone
 == Mikrofon
 
@@ -6409,9 +6400,6 @@ Move right
 
 Move to category
 == In Kategorie verschieben
-
-Moved ingame
-== Im Spiel verschoben
 
 Movement
 == Bewegung
@@ -7387,6 +7375,9 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == Schwellwert für Performance-Debug-Logs (ms)
+
+Performance mode (placeholder)
+== Leistungsmodus (Platzhalter)
 
 Personal best:
 == Persönliche Bestzeit:
@@ -12428,9 +12419,6 @@ What's done is done, no use saying more
 Wheel animate
 == Rad-Animation
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== Wenn TClient-Regenbogen-Tee aktiviert ist, hat diese Funktion keine Wirkung.
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Wenn du die Startlinie überquerst, wird ein Geist-Tee angezeigt, der die Bewegungen deiner Bestzeit wiederholt
 
@@ -13231,10 +13219,6 @@ AUTO
 [Start menu]
 Play
 == Spielen
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

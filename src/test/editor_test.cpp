@@ -1,5 +1,9 @@
 #include <base/str.h>
 
+#include <engine/shared/localization.h>
+
+#include <game/localization.h>
+
 #include <gtest/gtest.h>
 
 bool is_letter(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
@@ -94,4 +98,15 @@ TEST(Editor, QuickActionNames)
 #define REGISTER_QUICK_ACTION(name, text, callback, disabled, active, button_color, description) AssertTooltip(description);
 #include <game/editor/quick_actions.h>
 #undef REGISTER_QUICK_ACTION
+}
+
+TEST(Editor, LocalizationContextDoesNotFallBackToAnotherLanguage)
+{
+	CLocalizationDatabase Localization;
+	Localization.AddString("Save", "Translated save", "");
+
+	const unsigned SaveHash = str_quickhash("Save");
+	EXPECT_STREQ(Localization.FindString(SaveHash, str_quickhash("Other context")), "Translated save");
+	EXPECT_EQ(Localization.FindString(SaveHash, str_quickhash("Editor"), false), nullptr);
+	EXPECT_EQ(Localization.FindString(SaveHash, str_quickhash("Editor tile action"), false), nullptr);
 }

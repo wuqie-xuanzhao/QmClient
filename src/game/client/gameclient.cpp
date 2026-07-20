@@ -207,6 +207,24 @@ namespace
 		QmPerfLogStage("perf/gameclient", pStage, DurationMs, Force, pGameClient != nullptr ? pGameClient->Client() : nullptr, nullptr, nullptr, pExtra);
 	}
 
+	bool IsQmStutterFeatureConfigName(const char *pName)
+	{
+		return str_startswith(pName, "qm_") != nullptr ||
+		       str_startswith(pName, "tc_") != nullptr ||
+		       str_startswith(pName, "cl_") != nullptr;
+	}
+
+	void CollectQmStutterFeatureConfig(const SConfigVariable *pVariable, void *pUserData)
+	{
+		if(pVariable == nullptr || pVariable->m_Type != SConfigVariable::VAR_INT || !IsQmStutterFeatureConfigName(pVariable->m_pScriptName))
+			return;
+		const SIntConfigVariable *pIntVariable = static_cast<const SIntConfigVariable *>(pVariable);
+		if(pIntVariable->m_Max <= 0 || pIntVariable->m_Min != 0 || *pIntVariable->m_pVariable == 0)
+			return;
+		auto *pSnapshot = static_cast<std::vector<std::pair<std::string, int>> *>(pUserData);
+		pSnapshot->emplace_back(pVariable->m_pScriptName, *pIntVariable->m_pVariable);
+	}
+
 	int QmLocalReferenceClientId(const CGameClient *pGameClient)
 	{
 		const int LocalId = pGameClient->m_aLocalIds[g_Config.m_ClDummy];
@@ -578,87 +596,95 @@ void CGameClient::OnConsoleInit()
 	m_pHttp = Kernel()->RequestInterface<IHttp>();
 	m_QmImeManager.Init(this);
 
-	// make a list of all the systems, make sure to add them in the correct render order
-	m_vpAll.insert(m_vpAll.end(), {&m_Skins,
-					      &m_Skins7,
-					      &m_CountryFlags,
-					      &m_MapImages,
-					      &m_Effects, // doesn't render anything, just updates effects
-					      &m_SkinProfiles,
-					      &m_Binds,
-					      &m_Binds.m_SpecialBinds,
-					      &m_Controls,
-					      &m_Camera,
-					      &m_Sounds,
-					      &m_Voting,
-					      &m_Particles, // doesn't render anything, just updates all the particles
-					      &m_RaceDemo,
-					      &m_Rainbow,
-					      &m_MapSounds,
-					      &m_Censor,
-					      &m_Background, // render instead of m_MapLayersBackground when g_Config.m_ClOverlayEntities == 100
-					      &m_BackgroundParticles,
-					      &m_MapLayersBackground, // first to render
-					      &m_BgDraw,
-					      &m_Particles.m_RenderTrail,
-					      &m_Particles.m_RenderTrailExtra,
-					      &m_Items,
-					      &m_Trails,
-					      &m_Translate,
-					      &m_Ghost,
-					      &m_QmClient,
-					      &m_QmAxiomAutoLogin,
-					      &m_QmMonitoring,
-					      &m_QmWeaponTrajectory,
-					      &m_TClient, // Must be before chat and players
-					      &m_FastPractice,
-					      &m_Voice,
-					      &m_SystemMediaControls,
-					      &m_Players,
-					      &m_MovingTilesBackground,
-					      &m_MapLayersForeground,
-					      &m_MovingTilesForeground,
-					      &m_Outlines,
-					      &m_CollisionHitbox,
-					      &m_Pet,
-					      &m_Particles.m_RenderExplosions,
-					      &m_NamePlates,
-					      &m_Particles.m_RenderExtra,
-					      &m_Particles.m_RenderGeneral,
-					      &m_FreezeBars,
-					      &m_DamageInd,
-					      &m_PlayerIndicator,
-					      &m_Mod,
-					      &m_CustomCommunities,
-					      &m_PlayerPoints,
-					      &m_Hud,
-					      &m_Spectator,
-					      &m_Emoticon,
-					      &m_BindChat,
-					      &m_BindWheel,
-					      &m_WarList,
-					      &m_StatusBar,
-					      &m_InfoMessages,
-					      &m_Chat,
-					      &m_QmHudNotifications,
-					      &m_QmLyrics,
-					      &m_Broadcast,
-					      &m_ImportantAlert,
-					      &m_DebugHud,
-					      &m_TouchControls,
-					      &m_Scoreboard,
-					      &m_Statboard,
-					      &m_Motd,
-					      &m_Menus,
-					      &m_PieMenu,
-					      &m_InputOverlay,
-					      &m_HudEditor,
-					      &m_Tooltips,
-					      &m_Scripting,
-					      &m_KeyBinder,
-					      &m_GameConsole,
-					      &m_MenuBackground,
-					      &m_UiEffects});
+	// Keep the stable profiler ID next to its component pointer so attribution cannot drift.
+	const auto AddComponent = [&](CComponent *pComponent, const char *pPerfName) {
+		m_vpAll.push_back(pComponent);
+		m_vpAllPerfNames.push_back(pPerfName);
+	};
+	AddComponent(&m_Skins, "skins");
+	AddComponent(&m_Skins7, "skins7");
+	AddComponent(&m_CountryFlags, "country_flags");
+	AddComponent(&m_MapImages, "map_images");
+	AddComponent(&m_Effects, "effects");
+	AddComponent(&m_SkinProfiles, "skin_profiles");
+	AddComponent(&m_Binds, "binds");
+	AddComponent(&m_Binds.m_SpecialBinds, "special_binds");
+	AddComponent(&m_Controls, "controls");
+	AddComponent(&m_Camera, "camera");
+	AddComponent(&m_Sounds, "sounds");
+	AddComponent(&m_Voting, "voting");
+	AddComponent(&m_Particles, "particles");
+	AddComponent(&m_RaceDemo, "race_demo");
+	AddComponent(&m_Rainbow, "rainbow");
+	AddComponent(&m_MapSounds, "map_sounds");
+	AddComponent(&m_Censor, "censor");
+	AddComponent(&m_Background, "background");
+	AddComponent(&m_BackgroundParticles, "background_particles");
+	AddComponent(&m_MapLayersBackground, "map_layers_background");
+	AddComponent(&m_BgDraw, "background_draw");
+	AddComponent(&m_Particles.m_RenderTrail, "particles_trail");
+	AddComponent(&m_Particles.m_RenderTrailExtra, "particles_trail_extra");
+	AddComponent(&m_Items, "items");
+	AddComponent(&m_Trails, "trails");
+	AddComponent(&m_Translate, "translate");
+	AddComponent(&m_Ghost, "ghost");
+	AddComponent(&m_QmClient, "qmclient");
+	AddComponent(&m_QmAxiomAutoLogin, "axiom_auto_login");
+	AddComponent(&m_QmMonitoring, "monitoring");
+	AddComponent(&m_QmWeaponTrajectory, "weapon_trajectory");
+	AddComponent(&m_TClient, "tclient");
+	AddComponent(&m_FastPractice, "fast_practice");
+	AddComponent(&m_Voice, "voice");
+	AddComponent(&m_SystemMediaControls, "system_media_controls");
+	AddComponent(&m_Players, "players");
+	AddComponent(&m_MovingTilesBackground, "moving_tiles_background");
+	AddComponent(&m_MapLayersForeground, "map_layers_foreground");
+	AddComponent(&m_MovingTilesForeground, "moving_tiles_foreground");
+	AddComponent(&m_Outlines, "outlines");
+	AddComponent(&m_CollisionHitbox, "collision_hitbox");
+	AddComponent(&m_Pet, "pet");
+	AddComponent(&m_Particles.m_RenderExplosions, "particles_explosions");
+	AddComponent(&m_NamePlates, "nameplates");
+	AddComponent(&m_Particles.m_RenderExtra, "particles_extra");
+	AddComponent(&m_Particles.m_RenderGeneral, "particles_general");
+	AddComponent(&m_FreezeBars, "freeze_bars");
+	AddComponent(&m_DamageInd, "damage_indicators");
+	AddComponent(&m_PlayerIndicator, "player_indicator");
+	AddComponent(&m_Mod, "mod");
+	AddComponent(&m_CustomCommunities, "custom_communities");
+	AddComponent(&m_PlayerPoints, "player_points");
+	AddComponent(&m_Hud, "hud");
+	AddComponent(&m_Spectator, "spectator");
+	AddComponent(&m_Emoticon, "emoticon");
+	AddComponent(&m_BindChat, "bind_chat");
+	AddComponent(&m_BindWheel, "bind_wheel");
+	AddComponent(&m_WarList, "war_list");
+	AddComponent(&m_StatusBar, "status_bar");
+	AddComponent(&m_InfoMessages, "info_messages");
+	AddComponent(&m_Chat, "chat");
+	AddComponent(&m_QmHudNotifications, "hud_notifications");
+	AddComponent(&m_QmLyrics, "lyrics");
+	AddComponent(&m_Broadcast, "broadcast");
+	AddComponent(&m_ImportantAlert, "important_alert");
+	AddComponent(&m_DebugHud, "debug_hud");
+	AddComponent(&m_TouchControls, "touch_controls");
+	AddComponent(&m_Scoreboard, "scoreboard");
+	AddComponent(&m_Statboard, "statboard");
+	AddComponent(&m_Motd, "motd");
+	AddComponent(&m_Menus, "menus");
+	AddComponent(&m_PieMenu, "pie_menu");
+	AddComponent(&m_InputOverlay, "input_overlay");
+	AddComponent(&m_HudEditor, "hud_editor");
+	AddComponent(&m_Tooltips, "tooltips");
+	AddComponent(&m_Scripting, "scripting");
+	AddComponent(&m_KeyBinder, "key_binder");
+	AddComponent(&m_GameConsole, "game_console");
+	AddComponent(&m_MenuBackground, "menu_background");
+	AddComponent(&m_UiEffects, "ui_effects");
+	dbg_assert(m_vpAll.size() == m_vpAllPerfNames.size(), "component profiler IDs must stay aligned");
+	m_vQmStutterPendingUpdateMs.resize(m_vpAll.size());
+	m_vQmStutterPendingRenderMs.resize(m_vpAll.size());
+	m_vQmStutterComponentSamples.resize(m_vpAll.size());
 
 	// build the input stack
 	m_vpInput.insert(m_vpInput.end(), {&m_KeyBinder, // this will take over all input when we want to bind a key
@@ -1119,9 +1145,19 @@ void CGameClient::OnUpdate()
 		m_Binds.m_MouseOnAction = false;
 	}
 
-	for(auto &pComponent : m_vpAll)
+	if(g_Config.m_QmPerfStutterDiagnostics)
 	{
-		pComponent->OnUpdate();
+		for(size_t i = 0; i < m_vpAll.size(); ++i)
+		{
+			CPerfTimer ComponentTimer;
+			m_vpAll[i]->OnUpdate();
+			RecordComponentUpdate(i, ComponentTimer.ElapsedMs());
+		}
+	}
+	else
+	{
+		for(auto &pComponent : m_vpAll)
+			pComponent->OnUpdate();
 	}
 
 	RefreshPredictionAfterConfigChange();
@@ -3366,6 +3402,20 @@ void CGameClient::OnRender()
 		{
 			pComponent->OnRender();
 		}
+	};
+	if(g_Config.m_QmPerfStutterDiagnostics)
+	{
+		for(size_t i = 0; i < m_vpAll.size(); ++i)
+		{
+			CPerfTimer ComponentTimer;
+			RenderComponent(m_vpAll[i]);
+			RecordComponentRender(i, ComponentTimer.ElapsedMs());
+		}
+	}
+	else
+	{
+		for(auto &pComponent : m_vpAll)
+			RenderComponent(pComponent);
 	}
 	LogPerfStage(this, "components_total", ComponentsTimer.ElapsedMs());
 
@@ -3464,6 +3514,217 @@ void CGameClient::OnRender()
 	}
 
 	UpdateManagedTeeRenderInfos();
+}
+
+void CGameClient::RecordComponentUpdate(size_t ComponentIndex, double DurationMs)
+{
+	if(ComponentIndex < m_vQmStutterPendingUpdateMs.size())
+		m_vQmStutterPendingUpdateMs[ComponentIndex] += DurationMs;
+}
+
+void CGameClient::RecordComponentRender(size_t ComponentIndex, double DurationMs)
+{
+	if(ComponentIndex < m_vQmStutterPendingRenderMs.size())
+		m_vQmStutterPendingRenderMs[ComponentIndex] += DurationMs;
+}
+
+void CGameClient::CaptureQmStutterFeatureSnapshot()
+{
+	m_vQmStutterFeatureSnapshot.clear();
+	ConfigManager()->PossibleConfigVariables("", CFGFLAG_CLIENT, CollectQmStutterFeatureConfig, &m_vQmStutterFeatureSnapshot);
+	std::sort(m_vQmStutterFeatureSnapshot.begin(), m_vQmStutterFeatureSnapshot.end());
+
+	const char *pPage = m_Menus.CurrentQmUiPerfPage();
+	const char *pOperation = m_Menus.CurrentQmUiPerfOperation();
+	m_QmStutterPage = pPage != nullptr && pPage[0] != '\0' ? pPage : "game";
+	m_QmStutterOperation = pOperation != nullptr && pOperation[0] != '\0' ? pOperation : "none";
+
+	int ConfiguredLimit = 0;
+	if(g_Config.m_GfxRefreshRate > 0)
+		ConfiguredLimit = g_Config.m_GfxRefreshRate;
+	if(g_Config.m_ClRefreshRate > 0 && (ConfiguredLimit == 0 || g_Config.m_ClRefreshRate < ConfiguredLimit))
+		ConfiguredLimit = g_Config.m_ClRefreshRate;
+	const int IdleLimit = m_Menus.IdleRenderFrameRate();
+	IEngineGraphics *pEngineGraphics = Kernel()->RequestInterface<IEngineGraphics>();
+	const bool WindowActive = pEngineGraphics == nullptr || pEngineGraphics->WindowActive() != 0;
+	m_QmStutterLimitCause = QmDetermineStutterLimitCause(
+		g_Config.m_GfxVsync != 0,
+		ConfiguredLimit,
+		g_Config.m_ClRefreshRateInactive,
+		WindowActive,
+		IdleLimit);
+}
+
+void CGameClient::ResetQmStutterWindowSamples()
+{
+	m_QmStutterFrameSamples.Reset();
+	for(SQmStutterComponentWindowSamples &Samples : m_vQmStutterComponentSamples)
+	{
+		Samples.m_Update.Reset();
+		Samples.m_Render.Reset();
+	}
+	m_vQmStutterFeatureSnapshot.clear();
+	m_QmStutterWindowStartFrame = 0;
+	m_QmStutterWorstFrame = 0;
+	m_QmStutterWorstFrameMs = 0.0;
+	m_QmStutterLimitCause = EQmStutterLimitCause::NONE;
+	m_QmStutterPage.clear();
+	m_QmStutterOperation.clear();
+}
+
+void CGameClient::FlushQmStutterWindow(const SQmStutterFrameDecision &Decision, bool ForceLog)
+{
+	if(!Decision.m_FlushWindow || m_QmStutterFrameSamples.Empty())
+		return;
+
+	const double SampleSeconds = m_QmStutterFrameSamples.Total() / 1000.0;
+	const double FrameMsP95 = m_QmStutterFrameSamples.Percentile(95.0);
+	const double FrameMsP99 = m_QmStutterFrameSamples.Percentile(99.0);
+	const double FpsAverage = SampleSeconds > 0.0 ? m_QmStutterFrameSamples.Count() / SampleSeconds : 0.0;
+	const double FpsMinimum = m_QmStutterFrameSamples.Max() > 0.0 ? 1000.0 / m_QmStutterFrameSamples.Max() : 0.0;
+	const double FpsOnePctLow = FrameMsP99 > 0.0 ? 1000.0 / FrameMsP99 : 0.0;
+	const bool CapLimited = m_QmStutterLimitCause != EQmStutterLimitCause::NONE;
+	const char *pClassification = SampleSeconds >= 1.0 || Decision.m_Reason == EQmStutterFlushReason::PERIODIC ? "sustained_low" : "frame_drop";
+
+	char aPayload[1024];
+	str_format(aPayload, sizeof(aPayload),
+		"schema=1 event=stutter_event stutter_id=%" PRIu64 " segment=%" PRIu64 " classification=%s end_reason=%s window_start_frame=%" PRIu64 " window_end_frame=%" PRIu64 " worst_frame=%" PRIu64 " target_fps=300 target_ms=%.6f sample_frames=%d sample_seconds=%.3f below_target_frames=%d fps_avg=%.3f fps_min=%.3f fps_1pct_low=%.3f frame_ms_avg=%.3f frame_ms_p95=%.3f frame_ms_p99=%.3f frame_ms_max=%.3f cap_limited=%d cap_reason=%s context=%s page=%s tab=%s",
+		Decision.m_StutterId,
+		Decision.m_Segment,
+		pClassification,
+		QmStutterFlushReasonName(Decision.m_Reason),
+		m_QmStutterWindowStartFrame,
+		m_QmStutterEpisodeTracker.LastBelowTargetFrame(),
+		m_QmStutterWorstFrame,
+		QmStutterFrameBudgetMs(),
+		(int)m_QmStutterFrameSamples.Count(),
+		SampleSeconds,
+		(int)m_QmStutterFrameSamples.Count(),
+		FpsAverage,
+		FpsMinimum,
+		FpsOnePctLow,
+		m_QmStutterFrameSamples.Average(),
+		FrameMsP95,
+		FrameMsP99,
+		m_QmStutterFrameSamples.Max(),
+		CapLimited ? 1 : 0,
+		QmStutterLimitCauseName(m_QmStutterLimitCause),
+		Client()->State() == IClient::STATE_ONLINE ? "online" : "offline",
+		m_QmStutterPage.empty() ? "game" : m_QmStutterPage.c_str(),
+		m_QmStutterOperation.empty() ? "none" : m_QmStutterOperation.c_str());
+	if(ForceLog)
+		QmPerfLogPayloadForce("perf/stutter", aPayload, Client());
+	else
+		QmPerfLogPayload("perf/stutter", aPayload, Client());
+
+	for(size_t i = 0; i < m_vQmStutterComponentSamples.size(); ++i)
+	{
+		const auto LogSamples = [&](const char *pCallback, const CQmStutterSampleSeries &Samples) {
+			if(Samples.Empty())
+				return;
+			char aComponentPayload[512];
+			str_format(aComponentPayload, sizeof(aComponentPayload),
+				"schema=1 event=component_sample stutter_id=%" PRIu64 " segment=%" PRIu64 " scope=component owner=client module=%s callback=%s sample_count=%d total_ms=%.3f avg_ms=%.3f p95_ms=%.3f max_ms=%.3f max_frame=%" PRIu64,
+				Decision.m_StutterId,
+				Decision.m_Segment,
+				m_vpAllPerfNames[i],
+				pCallback,
+				(int)Samples.Count(),
+				Samples.Total(),
+				Samples.Average(),
+				Samples.Percentile(95.0),
+				Samples.Max(),
+				Samples.MaxFrame());
+			if(ForceLog)
+				QmPerfLogPayloadForce("perf/stutter", aComponentPayload, Client());
+			else
+				QmPerfLogPayload("perf/stutter", aComponentPayload, Client());
+		};
+		LogSamples("on_update", m_vQmStutterComponentSamples[i].m_Update);
+		LogSamples("on_render", m_vQmStutterComponentSamples[i].m_Render);
+	}
+
+	for(const auto &[Name, Value] : m_vQmStutterFeatureSnapshot)
+	{
+		const char *pOwner = str_startswith(Name.c_str(), "qm_") != nullptr ? "qmclient" :
+				     str_startswith(Name.c_str(), "tc_") != nullptr ? "tclient" :
+										      "ddnet";
+		char aFeaturePayload[512];
+		str_format(aFeaturePayload, sizeof(aFeaturePayload),
+			"schema=1 event=feature_snapshot stutter_id=%" PRIu64 " segment=%" PRIu64 " frame=%" PRIu64 " owner=%s feature=%s module=unmapped config_enabled=1 config_value=%d hud_visible=-1 settings_visible=-1 executed_in_frame=-1 executed_in_window=-1 current_page=%s current_tab=%s",
+			Decision.m_StutterId,
+			Decision.m_Segment,
+			m_QmStutterWorstFrame,
+			pOwner,
+			Name.c_str(),
+			Value,
+			m_QmStutterPage.empty() ? "game" : m_QmStutterPage.c_str(),
+			m_QmStutterOperation.empty() ? "none" : m_QmStutterOperation.c_str());
+		if(ForceLog)
+			QmPerfLogPayloadForce("perf/stutter", aFeaturePayload, Client());
+		else
+			QmPerfLogPayload("perf/stutter", aFeaturePayload, Client());
+	}
+}
+
+void CGameClient::ProcessQmStutterFrame()
+{
+	const bool Enabled = g_Config.m_QmPerfStutterDiagnostics != 0;
+	if(!Enabled)
+	{
+		if(m_QmStutterDiagnosticsWasEnabled)
+		{
+			const SQmStutterFrameDecision Decision = m_QmStutterEpisodeTracker.Flush(EQmStutterFlushReason::DISABLED);
+			FlushQmStutterWindow(Decision, true);
+			ResetQmStutterWindowSamples();
+		}
+		m_QmStutterDiagnosticsWasEnabled = false;
+		std::fill(m_vQmStutterPendingUpdateMs.begin(), m_vQmStutterPendingUpdateMs.end(), 0.0);
+		std::fill(m_vQmStutterPendingRenderMs.begin(), m_vQmStutterPendingRenderMs.end(), 0.0);
+		return;
+	}
+
+	if(!m_QmStutterDiagnosticsWasEnabled)
+	{
+		m_QmStutterEpisodeTracker = CQmStutterEpisodeTracker();
+		ResetQmStutterWindowSamples();
+		m_QmStutterDiagnosticsWasEnabled = true;
+	}
+
+	const uint64_t FrameId = Client()->PerfFrame();
+	const double FrameMs = Client()->RenderFrameTime() * 1000.0;
+	const SQmStutterFrameDecision Decision = m_QmStutterEpisodeTracker.RecordFrame(FrameId, FrameMs);
+	if(Decision.m_Started)
+	{
+		ResetQmStutterWindowSamples();
+		m_QmStutterWindowStartFrame = FrameId;
+	}
+
+	if(Decision.m_BelowTarget)
+	{
+		if(m_QmStutterFrameSamples.Empty())
+			m_QmStutterWindowStartFrame = FrameId;
+		m_QmStutterFrameSamples.Record(FrameMs, FrameId);
+		for(size_t i = 0; i < m_vQmStutterComponentSamples.size(); ++i)
+		{
+			m_vQmStutterComponentSamples[i].m_Update.Record(m_vQmStutterPendingUpdateMs[i], FrameId);
+			m_vQmStutterComponentSamples[i].m_Render.Record(m_vQmStutterPendingRenderMs[i], FrameId);
+		}
+		if(FrameMs > m_QmStutterWorstFrameMs)
+		{
+			m_QmStutterWorstFrameMs = FrameMs;
+			m_QmStutterWorstFrame = FrameId;
+			CaptureQmStutterFeatureSnapshot();
+		}
+	}
+
+	std::fill(m_vQmStutterPendingUpdateMs.begin(), m_vQmStutterPendingUpdateMs.end(), 0.0);
+	std::fill(m_vQmStutterPendingRenderMs.begin(), m_vQmStutterPendingRenderMs.end(), 0.0);
+	if(Decision.m_FlushWindow)
+	{
+		FlushQmStutterWindow(Decision, false);
+		ResetQmStutterWindowSamples();
+	}
 }
 
 void CGameClient::OnDummyDisconnect()
@@ -4330,6 +4591,8 @@ void CGameClient::OnLanguageChange()
 void CGameClient::HandleLanguageChanged()
 {
 	if(!m_LanguageChanged)
+		return;
+	if(g_Config.m_ClEditor)
 		return;
 	m_LanguageChanged = false;
 
@@ -6626,6 +6889,40 @@ CGameClient::CClientStats::CClientStats()
 	Reset();
 }
 
+bool CGameClient::ShouldUseServerControlledLocalSkin() const
+{
+	CServerInfo ServerInfo = {};
+	Client()->GetServerInfo(&ServerInfo);
+
+	const char *pServerInfoGameType = ServerInfo.m_aGameType;
+	const char *pCommunityId = ServerInfo.m_aCommunityId;
+	IServerBrowser *pServerBrowser = ServerBrowser();
+	const NETADDR *pServerAddress = Client()->ServerAddress();
+	const IServerBrowser::CServerEntry *pEntry = pServerBrowser != nullptr && pServerAddress != nullptr ? pServerBrowser->Find(*pServerAddress) : nullptr;
+	if(pEntry != nullptr)
+	{
+		if(pServerInfoGameType[0] == '\0')
+			pServerInfoGameType = pEntry->m_Info.m_aGameType;
+		if(pEntry->m_Info.m_aCommunityId[0] != '\0')
+			pCommunityId = pEntry->m_Info.m_aCommunityId;
+	}
+	if(m_ConnectServerInfo.has_value())
+	{
+		if(pServerInfoGameType[0] == '\0')
+			pServerInfoGameType = m_ConnectServerInfo->m_aGameType;
+		if(m_ConnectServerInfo->m_aCommunityId[0] != '\0' &&
+			(pCommunityId[0] == '\0' || str_comp(pCommunityId, IServerBrowser::COMMUNITY_NONE) == 0))
+			pCommunityId = m_ConnectServerInfo->m_aCommunityId;
+	}
+
+	const CCommunity *pCommunity = pServerBrowser != nullptr && pCommunityId[0] != '\0' ? pServerBrowser->Community(pCommunityId) : nullptr;
+	return ::ShouldUseServerControlledLocalSkin(
+		m_GameInfo.m_aGameType,
+		pServerInfoGameType,
+		pCommunityId,
+		pCommunity != nullptr ? pCommunity->Name() : nullptr);
+}
+
 void CGameClient::CClientStats::Reset()
 {
 	m_JoinTick = 0;
@@ -6644,20 +6941,17 @@ void CGameClient::CClientStats::Reset()
 	m_FlagCaptures = 0;
 }
 
-int CGameClient::CClientData::LocalDummyIndex() const
+int CGameClient::CClientData::LocalSkinConfigIndex() const
 {
 	if(m_pGameClient == nullptr)
 	{
 		return -1;
 	}
-	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
-	{
-		if(m_pGameClient->m_aLocalIds[Dummy] == m_ClientId)
-		{
-			return Dummy;
-		}
-	}
-	return -1;
+	return ResolveLocalSkinConfigIndex(
+		m_pGameClient->m_pClient->State() == IClient::STATE_DEMOPLAYBACK,
+		m_ClientId,
+		m_pGameClient->m_aLocalIds[0],
+		m_pGameClient->m_aLocalIds[1]);
 }
 
 void CGameClient::CClientData::BuildLocalSkinDescriptor(CSkinDescriptor &SkinDescriptor, int Dummy) const
@@ -7002,7 +7296,11 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 		return;
 	}
 
-	if(m_HasSkinTransitionKey && !(m_LastSkinTransitionKey == Key) && m_RenderInfo.Valid() && NewRenderInfo.Valid())
+	const ESkinChangeTransitionAction Action = ResolveSkinChangeTransitionAction(
+		m_HasSkinTransitionKey,
+		!(m_LastSkinTransitionKey.m_SkinDescriptor == Key.m_SkinDescriptor),
+		!(m_LastSkinTransitionKey == Key));
+	if(Action == ESkinChangeTransitionAction::START && m_RenderInfo.Valid() && NewRenderInfo.Valid())
 	{
 		const std::chrono::nanoseconds Now = time_get_nanoseconds();
 		const bool TransitionActive = m_SkinTransitionStart.has_value() &&
@@ -7010,6 +7308,11 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 					      SkinChangeTransitionProgress(Now) < 1.0f;
 		m_SkinTransitionPreviousRenderInfo = TransitionActive ? m_SkinTransitionPreviousRenderInfo : m_RenderInfo;
 		m_SkinTransitionStart = Now;
+	}
+	else if(Action != ESkinChangeTransitionAction::KEEP)
+	{
+		m_SkinTransitionPreviousRenderInfo.Reset();
+		m_SkinTransitionStart.reset();
 	}
 
 	m_LastSkinTransitionKey = Key;
@@ -7151,7 +7454,7 @@ CSkinDescriptor CGameClient::CClientData::ToSkinDescriptor() const
 		return SkinDescriptor;
 
 	CTranslationContext::CClientData &TranslatedClient = m_pGameClient->m_pClient->m_TranslationContext.m_aClients[ClientId];
-	const int LocalDummy = LocalDummyIndex();
+	const int LocalDummy = LocalSkinConfigIndex();
 	if(LocalDummy >= 0)
 	{
 		BuildLocalSkinDescriptor(SkinDescriptor, LocalDummy);

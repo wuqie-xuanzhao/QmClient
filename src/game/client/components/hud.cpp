@@ -644,172 +644,37 @@ namespace
 		pGraphics->QuadsEnd();
 	}
 
-	constexpr int MediaIslandSdfTextureWidth = 1024;
-	constexpr int MediaIslandSdfTextureHeight = 256;
-	constexpr int MediaIslandSdfMaxItems = 12;
-
-	struct SMediaIslandSdfItem
+	void DrawMediaIslandArcGeometry(IGraphics *pGraphics, vec2 Center, float Radius, float Thickness, float Progress, ColorRGBA Color)
 	{
-		vec2 m_Center{};
-		vec2 m_Radii{};
-		float m_SmoothUnion = 0.0f;
-		float m_ContentAlpha = 0.0f;
-		float m_ContentScale = 1.0f;
-		float m_CountdownProgress = 0.0f;
-		ColorRGBA m_RingColor{};
-	};
-
-	struct SMediaIslandSdfCapsule
-	{
-		CUIRect m_Rect{};
-		float m_Radius = 0.0f;
-		float m_SmoothUnion = 0.0f;
-	};
-
-	float MediaIslandSdfEllipse(vec2 Point, vec2 Center, vec2 Radii)
-	{
-		if(Radii.x <= 0.0f || Radii.y <= 0.0f)
-			return 1000000.0f;
-		const vec2 Normalized((Point.x - Center.x) / Radii.x, (Point.y - Center.y) / Radii.y);
-		return (length(Normalized) - 1.0f) * std::min(Radii.x, Radii.y);
-	}
-
-	float MediaIslandSdfCoverage(float Distance, float Feather)
-	{
-		Feather = std::max(Feather, 0.0001f);
-		return 1.0f - QmHudMediaIslandLiquidSmoothStep((Distance + Feather) / (Feather * 2.0f));
-	}
-
-	float MediaIslandSdfArc(vec2 Point, vec2 Center, float Radius, float HalfThickness, float Progress)
-	{
-		constexpr float Pi = 3.14159265359f;
-		constexpr float Tau = Pi * 2.0f;
-		const vec2 Relative = Point - Center;
 		Progress = std::clamp(Progress, 0.0f, 1.0f);
-		if(Progress <= 0.0f)
-			return 1000000.0f;
-		if(Progress >= 0.9999f)
-			return std::abs(length(Relative) - Radius) - HalfThickness;
-
-		float Angle = std::atan2(Relative.y, Relative.x) + Pi * 0.5f;
-		if(Angle < 0.0f)
-			Angle += Tau;
-		const float EndAngle = Progress * Tau;
-		if(Angle <= EndAngle)
-			return std::abs(length(Relative) - Radius) - HalfThickness;
-
-		const vec2 StartPoint = Center + vec2(0.0f, -Radius);
-		const vec2 EndPoint = Center + vec2(std::sin(EndAngle) * Radius, -std::cos(EndAngle) * Radius);
-		return std::min(distance(Point, StartPoint), distance(Point, EndPoint)) - HalfThickness;
-	}
-
-	void MediaIslandSdfComposite(float &PremulR, float &PremulG, float &PremulB, float &Alpha, ColorRGBA Color, float Coverage)
-	{
-		const float SourceAlpha = std::clamp(Color.a * Coverage, 0.0f, 1.0f);
-		PremulR = Color.r * SourceAlpha + PremulR * (1.0f - SourceAlpha);
-		PremulG = Color.g * SourceAlpha + PremulG * (1.0f - SourceAlpha);
-		PremulB = Color.b * SourceAlpha + PremulB * (1.0f - SourceAlpha);
-		Alpha = SourceAlpha + Alpha * (1.0f - SourceAlpha);
-	}
-
-	void DrawMediaIslandSdf(IGraphics *pGraphics, IGraphics::CTextureHandle Texture, std::vector<uint8_t> &vPixels, const CUIRect &Rect, const CUIRect &MainRect, float MainRadius, int MainCorners, float MainDisabledCornerRadius, const SMediaIslandSdfItem *pItems, int ItemCount, const SMediaIslandSdfCapsule *pRightCapsule, float RingRadius, float RingThickness, ColorRGBA BackgroundColor, float ScreenPixelSize)
-	{
-		if(pGraphics == nullptr || !Texture.IsValid() || Rect.w <= 0.0f || Rect.h <= 0.0f || MainRect.w <= 0.0f || MainRect.h <= 0.0f || ItemCount < 0 || ItemCount > MediaIslandSdfMaxItems || (ItemCount > 0 && pItems == nullptr))
+		if(pGraphics == nullptr || Radius <= 0.0f || Thickness <= 0.0f || Progress <= 0.0f)
 			return;
-		ScreenPixelSize = std::max(ScreenPixelSize, 0.0001f);
-		const int RasterWidth = std::clamp((int)std::ceil(Rect.w / ScreenPixelSize * 1.35f), 64, MediaIslandSdfTextureWidth);
-		const int RasterHeight = std::clamp((int)std::ceil(Rect.h / ScreenPixelSize * 1.35f), 32, MediaIslandSdfTextureHeight);
-		const size_t RequiredSize = (size_t)RasterWidth * RasterHeight * 4;
-		if(vPixels.size() != RequiredSize)
-			vPixels.resize(RequiredSize);
 
-		const float TexelSize = std::max(Rect.w / RasterWidth, Rect.h / RasterHeight);
-		const float Feather = std::max(ScreenPixelSize * 0.8f, TexelSize * 0.9f);
-		for(int PixelY = 0; PixelY < RasterHeight; ++PixelY)
+		constexpr int MaxSegments = 64;
+		constexpr float Pi = 3.14159265359f;
+		const int NumSegments = std::max(1, (int)std::ceil(MaxSegments * Progress));
+		const float OuterRadius = Radius + Thickness * 0.5f;
+		const float InnerRadius = std::max(0.0f, Radius - Thickness * 0.5f);
+		const float Sweep = 2.0f * Pi * Progress;
+		std::array<IGraphics::CFreeformItem, MaxSegments> aSegments;
+		for(int i = 0; i < NumSegments; ++i)
 		{
-			const float Y = Rect.y + (PixelY + 0.5f) * Rect.h / RasterHeight;
-			for(int PixelX = 0; PixelX < RasterWidth; ++PixelX)
-			{
-				const float X = Rect.x + (PixelX + 0.5f) * Rect.w / RasterWidth;
-				const vec2 Point(X, Y);
-				float SatelliteDistance = 1000000.0f;
-				std::array<float, MediaIslandSdfMaxItems> aItemDistances;
-				for(int i = 0; i < ItemCount; ++i)
-				{
-					const float ItemDistance = aItemDistances[i] = MediaIslandSdfEllipse(Point, pItems[i].m_Center, pItems[i].m_Radii);
-					SatelliteDistance = i == 0 ? ItemDistance : QmHudMediaIslandSdfSmoothUnion(SatelliteDistance, ItemDistance, MainRadius * 0.28f);
-				}
-				const float MainDistance = QmHudMediaIslandSdfRoundedRect(Point, MainRect, MainRadius, MainCorners, MainDisabledCornerRadius);
-				float ShapeDistance = std::min(MainDistance, SatelliteDistance);
-				for(int i = 0; i < ItemCount; ++i)
-				{
-					if(pItems[i].m_SmoothUnion <= 0.0f)
-						continue;
-					const float BridgeDistance = QmHudMediaIslandSdfSmoothUnion(MainDistance, aItemDistances[i], pItems[i].m_SmoothUnion);
-					ShapeDistance = std::min(ShapeDistance, BridgeDistance);
-				}
-				if(pRightCapsule != nullptr && pRightCapsule->m_Rect.w > 0.0f && pRightCapsule->m_Rect.h > 0.0f)
-				{
-					const float CapsuleDistance = QmHudMediaIslandSdfRoundedRect(Point, pRightCapsule->m_Rect, pRightCapsule->m_Radius, IGraphics::CORNER_ALL);
-					ShapeDistance = std::min(ShapeDistance, CapsuleDistance);
-					if(pRightCapsule->m_SmoothUnion > 0.0f)
-					{
-						const float BridgeDistance = QmHudMediaIslandSdfSmoothUnion(MainDistance, CapsuleDistance, pRightCapsule->m_SmoothUnion);
-						ShapeDistance = std::min(ShapeDistance, BridgeDistance);
-					}
-				}
-
-				float PremulR = 0.0f;
-				float PremulG = 0.0f;
-				float PremulB = 0.0f;
-				float Alpha = 0.0f;
-				MediaIslandSdfComposite(PremulR, PremulG, PremulB, Alpha, BackgroundColor, MediaIslandSdfCoverage(ShapeDistance, Feather));
-
-				for(int i = 0; i < ItemCount; ++i)
-				{
-					if(pItems[i].m_ContentAlpha <= 0.001f)
-						continue;
-					const float ItemRingRadius = RingRadius * pItems[i].m_ContentScale;
-					const float ItemRingThickness = RingThickness * pItems[i].m_ContentScale;
-					const vec2 Relative = Point - pItems[i].m_Center;
-					if(std::abs(Relative.x) > ItemRingRadius + ItemRingThickness + Feather || std::abs(Relative.y) > ItemRingRadius + ItemRingThickness + Feather)
-						continue;
-					const float TrackDistance = std::abs(length(Relative) - ItemRingRadius) - ItemRingThickness * 0.5f;
-					ColorRGBA TrackColor = pItems[i].m_RingColor;
-					TrackColor.a *= 0.18f * pItems[i].m_ContentAlpha;
-					MediaIslandSdfComposite(PremulR, PremulG, PremulB, Alpha, TrackColor, MediaIslandSdfCoverage(TrackDistance, Feather));
-
-					ColorRGBA ProgressColor = pItems[i].m_RingColor;
-					ProgressColor.a *= pItems[i].m_ContentAlpha;
-					const float ProgressDistance = MediaIslandSdfArc(Point, pItems[i].m_Center, ItemRingRadius, ItemRingThickness * 0.5f, pItems[i].m_CountdownProgress);
-					MediaIslandSdfComposite(PremulR, PremulG, PremulB, Alpha, ProgressColor, MediaIslandSdfCoverage(ProgressDistance, Feather));
-				}
-
-				const size_t Offset = ((size_t)PixelY * RasterWidth + PixelX) * 4;
-				const float InvAlpha = Alpha > 0.0001f ? 1.0f / Alpha : 0.0f;
-				vPixels[Offset] = (uint8_t)std::round(std::clamp(PremulR * InvAlpha, 0.0f, 1.0f) * 255.0f);
-				vPixels[Offset + 1] = (uint8_t)std::round(std::clamp(PremulG * InvAlpha, 0.0f, 1.0f) * 255.0f);
-				vPixels[Offset + 2] = (uint8_t)std::round(std::clamp(PremulB * InvAlpha, 0.0f, 1.0f) * 255.0f);
-				vPixels[Offset + 3] = (uint8_t)std::round(std::clamp(Alpha, 0.0f, 1.0f) * 255.0f);
-			}
+			const float Angle0 = Sweep * i / NumSegments;
+			const float Angle1 = Sweep * (i + 1) / NumSegments;
+			const vec2 Direction0(std::sin(Angle0), -std::cos(Angle0));
+			const vec2 Direction1(std::sin(Angle1), -std::cos(Angle1));
+			aSegments[i] = IGraphics::CFreeformItem(
+				Center + Direction0 * OuterRadius,
+				Center + Direction1 * OuterRadius,
+				Center + Direction1 * InnerRadius,
+				Center + Direction0 * InnerRadius);
 		}
 
-		if(!pGraphics->UpdateTexture(Texture, 0, 0, RasterWidth, RasterHeight, vPixels.data(), false))
-			return;
-		pGraphics->WrapClamp();
-		pGraphics->TextureSet(Texture);
-		pGraphics->QuadsBegin();
-		pGraphics->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		pGraphics->QuadsSetSubset(
-			0.5f / MediaIslandSdfTextureWidth,
-			0.5f / MediaIslandSdfTextureHeight,
-			(RasterWidth - 0.5f) / MediaIslandSdfTextureWidth,
-			(RasterHeight - 0.5f) / MediaIslandSdfTextureHeight);
-		IGraphics::CQuadItem Quad(Rect.x, Rect.y, Rect.w, Rect.h);
-		pGraphics->QuadsDrawTL(&Quad, 1);
-		pGraphics->QuadsEnd();
 		pGraphics->TextureClear();
-		pGraphics->WrapNormal();
+		pGraphics->QuadsBegin();
+		pGraphics->SetColor(Color);
+		pGraphics->QuadsDrawFreeform(aSegments.data(), NumSegments);
+		pGraphics->QuadsEnd();
 	}
 
 	ColorRGBA MediaIslandCountdownColor(EHudMediaIslandCountdownType Type)
@@ -821,6 +686,38 @@ namespace
 		case EHudMediaIslandCountdownType::MUTE: return ColorRGBA(1.0f, 0.20f, 0.24f, 1.0f);
 		}
 		return ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+
+	void DrawMediaIslandGeometryFallback(IGraphics *pGraphics, const SHudMediaIslandSdfRenderState &State)
+	{
+		if(pGraphics == nullptr)
+			return;
+		DrawSmoothRoundedRect(pGraphics, State.m_MainRect.x, State.m_MainRect.y, State.m_MainRect.w, State.m_MainRect.h, State.m_MainRadius, State.m_BackgroundColor, State.m_MainCorners);
+		for(int i = 0; i < State.m_ItemCount; ++i)
+		{
+			const SHudMediaIslandSdfItem &Item = State.m_Items[i];
+			const float Radius = std::max(0.0f, std::min(Item.m_Radii.x, Item.m_Radii.y));
+			DrawSmoothRoundedRect(
+				pGraphics,
+				Item.m_Center.x - Item.m_Radii.x,
+				Item.m_Center.y - Item.m_Radii.y,
+				Item.m_Radii.x * 2.0f,
+				Item.m_Radii.y * 2.0f,
+				Radius,
+				State.m_BackgroundColor);
+			if(Item.m_ContentAlpha > 0.001f)
+			{
+				const float RingRadius = State.m_RingRadius * Item.m_ContentScale;
+				const float RingThickness = State.m_RingThickness * Item.m_ContentScale;
+				DrawMediaIslandArcGeometry(pGraphics, Item.m_Center, RingRadius, RingThickness, 1.0f, Item.m_RingColor.WithAlpha(Item.m_RingColor.a * 0.18f * Item.m_ContentAlpha));
+				DrawMediaIslandArcGeometry(pGraphics, Item.m_Center, RingRadius, RingThickness, Item.m_CountdownProgress, Item.m_RingColor.WithAlpha(Item.m_RingColor.a * Item.m_ContentAlpha));
+			}
+		}
+		if(State.m_HasRightCapsule && State.m_RightCapsule.m_Rect.w > 0.0f && State.m_RightCapsule.m_Rect.h > 0.0f)
+		{
+			const CUIRect &Rect = State.m_RightCapsule.m_Rect;
+			DrawSmoothRoundedRect(pGraphics, Rect.x, Rect.y, Rect.w, Rect.h, State.m_RightCapsule.m_Radius, State.m_BackgroundColor, IGraphics::CORNER_ALL);
+		}
 	}
 
 	EQmIcon MediaIslandCountdownIcon(EHudMediaIslandCountdownType Type, bool Completed = false, bool SwapOutgoing = false)
@@ -1121,13 +1018,6 @@ void CHud::OnInit()
 	OnReset();
 
 	Graphics()->SetColor(1.0, 1.0, 1.0, 1.0);
-	m_vMediaIslandSdfPixels.assign((size_t)MediaIslandSdfTextureWidth * MediaIslandSdfTextureHeight * 4, 0);
-	CImageInfo SdfImage;
-	SdfImage.m_Width = MediaIslandSdfTextureWidth;
-	SdfImage.m_Height = MediaIslandSdfTextureHeight;
-	SdfImage.m_Format = CImageInfo::FORMAT_RGBA;
-	SdfImage.m_pData = m_vMediaIslandSdfPixels.data();
-	m_MediaIslandSdfTexture = Graphics()->LoadTextureRaw(SdfImage, IGraphics::TEXLOAD_NO_MIPMAPS, "media-island-sdf");
 
 	m_HudQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
@@ -1147,13 +1037,6 @@ void CHud::OnInit()
 	PreparePlayerStateQuads();
 
 	Graphics()->QuadContainerUpload(m_HudQuadContainerIndex);
-}
-
-void CHud::OnShutdown()
-{
-	if(m_MediaIslandSdfTexture.IsValid())
-		Graphics()->UnloadTexture(&m_MediaIslandSdfTexture);
-	m_vMediaIslandSdfPixels.clear();
 }
 
 void CHud::RenderSpeedrunTimer()
@@ -3686,8 +3569,15 @@ void CHud::RenderMediaIsland()
 	const bool ShowFrozenSummaryInBottomRow = ShouldShowHudFrozenSummaryInBottomRow(ShowFrozenSummary, TimerCapsule.m_Visible);
 	const int SpectatorCount = GetMediaIslandSpectatorCount(*GameClient(), *Client());
 	const bool ShowSpectator = SpectatorCount > 0;
+	const float SpectatorLiquidProgressBeforeUpdate = AnimState.m_SpectatorLiquidProgress;
+	const bool AnimateSpectatorEyeOpen = QmHudMediaIslandShouldAnimateSpectatorEyeOpen(ShowSpectator, AnimState.m_SpectatorHadWatchers, SpectatorLiquidProgressBeforeUpdate);
 	if(ShowSpectator)
 		AnimState.m_SpectatorDisplayCount = SpectatorCount;
+	if(!ShowSpectator && AnimState.m_SpectatorHadWatchers)
+	{
+		AnimState.m_SpectatorExitLiquidStart = SpectatorLiquidProgressBeforeUpdate;
+		AnimState.m_SpectatorExitIconStart = AnimState.m_SpectatorIconProgress;
+	}
 	float SpectatorLiquidDeltaSeconds = 0.0f;
 	if(AnimState.m_SpectatorLiquidLastTick > 0 && Now >= AnimState.m_SpectatorLiquidLastTick)
 		SpectatorLiquidDeltaSeconds = std::min((Now - AnimState.m_SpectatorLiquidLastTick) / (float)time_freq(), 0.10f);
@@ -3695,6 +3585,31 @@ void CHud::RenderMediaIsland()
 	AnimState.m_SpectatorLiquidProgress = QmHudAdvanceMediaIslandLiquidProgress(AnimState.m_SpectatorLiquidProgress, ShowSpectator, SpectatorLiquidDeltaSeconds, g_Config.m_QmUiMotionLevel > 0);
 	if(!ShowSpectator && AnimState.m_SpectatorLiquidProgress <= 0.0f)
 		AnimState.m_SpectatorLiquidLastTick = 0;
+	if(!ShowSpectator)
+	{
+		AnimState.m_SpectatorIconProgress = QmHudMediaIslandSpectatorIconProgressDuringExit(AnimState.m_SpectatorExitIconStart, AnimState.m_SpectatorExitLiquidStart, AnimState.m_SpectatorLiquidProgress);
+		AnimState.m_SpectatorIconLastTick = 0;
+	}
+	else if(AnimateSpectatorEyeOpen)
+	{
+		AnimState.m_SpectatorIconLastTick = Now;
+	}
+	else if(!AnimState.m_SpectatorHadWatchers)
+	{
+		AnimState.m_SpectatorIconProgress = 1.0f;
+		AnimState.m_SpectatorIconLastTick = 0;
+	}
+	if(ShowSpectator && AnimState.m_SpectatorIconProgress < 1.0f)
+	{
+		float SpectatorIconDeltaSeconds = 0.0f;
+		if(AnimState.m_SpectatorIconLastTick > 0 && Now >= AnimState.m_SpectatorIconLastTick)
+			SpectatorIconDeltaSeconds = std::min((Now - AnimState.m_SpectatorIconLastTick) / (float)time_freq(), 0.10f);
+		AnimState.m_SpectatorIconLastTick = Now;
+		AnimState.m_SpectatorIconProgress = QmHudAdvanceMediaIslandSpectatorIconProgress(AnimState.m_SpectatorIconProgress, SpectatorIconDeltaSeconds, g_Config.m_QmUiMotionLevel);
+		if(AnimState.m_SpectatorIconProgress >= 1.0f)
+			AnimState.m_SpectatorIconLastTick = 0;
+	}
+	AnimState.m_SpectatorHadWatchers = ShowSpectator;
 	const bool HasSpectatorSatellitePresentation = ShowSpectator || AnimState.m_SpectatorLiquidProgress > 0.0f;
 	const bool HasSatellitePresentation = HadSatellitePresentation || HasSpectatorSatellitePresentation;
 	char aTeamBuf[32];
@@ -3934,7 +3849,10 @@ void CHud::RenderMediaIsland()
 	if(AnimState.m_EntranceLastTick > 0 && Now >= AnimState.m_EntranceLastTick)
 		EntranceDeltaSeconds = std::min((Now - AnimState.m_EntranceLastTick) / (float)time_freq(), 0.10f);
 	AnimState.m_EntranceLastTick = Now;
-	AnimState.m_EntranceProgress = QmHudAdvanceMediaIslandEntranceProgress(AnimState.m_EntranceProgress, EntranceDeltaSeconds, MotionLevel);
+	const SHudMediaIslandEntranceTimeline EntranceTimeline = QmHudAdvanceMediaIslandEntranceTimeline(
+		{AnimState.m_EntranceDropProgress, AnimState.m_EntranceProgress}, EntranceDeltaSeconds, MotionLevel);
+	AnimState.m_EntranceDropProgress = EntranceTimeline.m_DropProgress;
+	AnimState.m_EntranceProgress = EntranceTimeline.m_ExpandProgress;
 	const bool FullTrackMotion = MotionLevel >= 2;
 	const float TrackTextOffset = FullTrackMotion ? 5.0f : 0.0f;
 	const float CoverEnterScale = FullTrackMotion ? 0.95f : 1.0f;
@@ -4205,7 +4123,7 @@ void CHud::RenderMediaIsland()
 		bool m_Completed = false;
 		bool m_SwapOutgoing = false;
 	};
-	static_assert(SHudMediaIslandAnimState::SATELLITE_MAX_ITEMS == MediaIslandSdfMaxItems);
+	static_assert(SHudMediaIslandAnimState::SATELLITE_MAX_ITEMS == QmHudMediaIslandSdfMaxItems);
 	std::array<SSatelliteRenderItem, SHudMediaIslandAnimState::SATELLITE_MAX_ITEMS> aSatelliteRenderItems{};
 	int SatelliteRenderItemCount = 0;
 	for(auto &Item : AnimState.m_aSatelliteItems)
@@ -4252,19 +4170,19 @@ void CHud::RenderMediaIsland()
 		if(FinalCenterX == 0.0f)
 			FinalCenterX = IslandX - SatelliteRestGap - SatelliteRadius;
 
-		const SHudMediaIslandLiquidPose LiquidPose = QmHudMediaIslandLiquidPose(Item.m_LiquidProgress);
+		const SHudMediaIslandBlobPose BlobPose = QmHudMediaIslandBlobPose(Item.m_LiquidProgress);
 		const float SpawnCenterX = IslandX + SatelliteRadius * 0.15f;
-		const float ItemCenterX = mix(SpawnCenterX, FinalCenterX, LiquidPose.m_CenterProgress);
+		const float ItemCenterX = mix(SpawnCenterX, FinalCenterX, BlobPose.m_Travel);
 
 		SSatelliteRenderItem &RenderItem = aSatelliteRenderItems[SatelliteRenderItemCount++];
 		RenderItem.m_Type = Item.m_Type;
 		RenderItem.m_Center = vec2(ItemCenterX, SatelliteCenterY);
 		RenderItem.m_Radii = vec2(
-			SatelliteRadius * LiquidPose.m_RadiusScale * LiquidPose.m_StretchX,
-			SatelliteRadius * LiquidPose.m_RadiusScale * LiquidPose.m_StretchY);
-		RenderItem.m_SmoothUnion = SatelliteRadius * LiquidPose.m_SmoothUnionScale * 1.55f;
-		RenderItem.m_ContentAlpha = LiquidPose.m_ContentAlpha;
-		RenderItem.m_ContentScale = std::clamp(LiquidPose.m_RadiusScale, 0.0f, 1.0f);
+			SatelliteRadius * BlobPose.m_RadiusScale * BlobPose.m_StretchX,
+			SatelliteRadius * BlobPose.m_RadiusScale * BlobPose.m_StretchY);
+		RenderItem.m_SmoothUnion = QmHudMediaIslandBlobBlend(SatelliteRadius, BlobPose.m_RadiusScale);
+		RenderItem.m_ContentAlpha = BlobPose.m_ContentAlpha;
+		RenderItem.m_ContentScale = std::clamp(BlobPose.m_RadiusScale, 0.0f, 1.0f);
 		RenderItem.m_Progress = Item.m_Progress;
 		RenderItem.m_Completed = Item.m_Completed;
 		RenderItem.m_SwapOutgoing = Item.m_SwapOutgoing;
@@ -4312,14 +4230,15 @@ void CHud::RenderMediaIsland()
 					   (TimerBoxRight + (RenderStatusSection ? (TimerToStatusGap + StatusWidth) : 0.0f)) :
 					   (IslandX + IslandWidth);
 	const float UnifiedWidth = std::max(IslandWidth, UnifiedRight - IslandX);
-	const SHudMediaIslandLiquidPose SpectatorLiquidPose = QmHudMediaIslandLiquidPose(AnimState.m_SpectatorLiquidProgress);
-	const SHudMediaIslandLiquidCapsule SpectatorLiquidCapsule = QmHudMediaIslandRightLiquidCapsule(
+	const SHudMediaIslandBlobPose SpectatorBlobPose = QmHudMediaIslandBlobPose(AnimState.m_SpectatorLiquidProgress);
+	const SHudMediaIslandSpectatorIconPose SpectatorIconPose = QmHudMediaIslandSpectatorIconPose(AnimState.m_SpectatorIconProgress);
+	const SHudMediaIslandLiquidCapsule SpectatorLiquidCapsule = QmHudMediaIslandRightBlobCapsule(
 		UnifiedRight,
 		SatelliteCenterY,
 		Radius,
 		SpectatorSatelliteWidth,
 		SpectatorSatelliteRestGap,
-		SpectatorLiquidPose);
+		SpectatorBlobPose);
 	const float SpectatorVisibleRight = SpectatorLiquidCapsule.m_Rect.x + SpectatorLiquidCapsule.m_Rect.w + 1.0f;
 	const float EditorX = TimerCapsule.m_Visible ? TimerBoxX : IslandX;
 	const float EditorRight = TimerCapsule.m_Visible ? UnifiedRight : (IslandX + UnifiedWidth);
@@ -4336,25 +4255,27 @@ void CHud::RenderMediaIsland()
 	m_MediaIslandLastVisibleRect = HudEditorScope.m_VisibleRect;
 	m_MediaIslandLastVisibleRectValid = true;
 
+	float TransformedScreenX0, TransformedScreenY0, TransformedScreenX1, TransformedScreenY1;
+	Graphics()->GetScreen(&TransformedScreenX0, &TransformedScreenY0, &TransformedScreenX1, &TransformedScreenY1);
 	const CUIRect TargetMainIslandSdfRect = {IslandX, IslandY, UnifiedWidth, AnimatedIslandHeight};
-	const SHudMediaIslandEntrancePose EntrancePose = QmHudMediaIslandEntrancePose(TargetMainIslandSdfRect, Radius, IslandBackgroundColor, AnimState.m_EntranceProgress);
-	const CUIRect MainIslandSdfRect = EntrancePose.m_Rect;
+	const SHudMediaIslandEntrancePose EntrancePose = QmHudMediaIslandEntrancePose(TargetMainIslandSdfRect, Radius, IslandBackgroundColor, AnimState.m_EntranceProgress, AnimState.m_EntranceDropProgress, TransformedScreenY0);
 	const float EntranceContentAlpha = EntrancePose.m_ContentAlpha;
+	const CUIRect MainIslandSdfRect = EntrancePose.m_Rect;
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.42f * EntranceContentAlpha);
 	const float SpectatorCenterX = SpectatorLiquidCapsule.m_Rect.x + SpectatorLiquidCapsule.m_Rect.w * 0.5f;
 	const float SpectatorCenterY = SpectatorLiquidCapsule.m_Rect.y + SpectatorLiquidCapsule.m_Rect.h * 0.5f;
-	const SMediaIslandSdfCapsule SpectatorSdfCapsule = {
+	const SHudMediaIslandSdfCapsule SpectatorSdfCapsule = {
 		{SpectatorCenterX - SpectatorLiquidCapsule.m_Rect.w * EntranceContentAlpha * 0.5f,
 			SpectatorCenterY - SpectatorLiquidCapsule.m_Rect.h * EntranceContentAlpha * 0.5f,
 			SpectatorLiquidCapsule.m_Rect.w * EntranceContentAlpha,
 			SpectatorLiquidCapsule.m_Rect.h * EntranceContentAlpha},
 		SpectatorLiquidCapsule.m_Radius * EntranceContentAlpha,
 		SpectatorLiquidCapsule.m_SmoothUnion * EntranceContentAlpha};
-	std::array<SMediaIslandSdfItem, SHudMediaIslandAnimState::SATELLITE_MAX_ITEMS> aSdfItems{};
+	SHudMediaIslandSdfRenderState CurrentSdfState;
 	for(int i = 0; i < SatelliteRenderItemCount; ++i)
 	{
 		const SSatelliteRenderItem &Item = aSatelliteRenderItems[i];
-		SMediaIslandSdfItem &SdfItem = aSdfItems[i];
+		SHudMediaIslandSdfItem &SdfItem = CurrentSdfState.m_Items[i];
 		SdfItem.m_Center = Item.m_Center;
 		SdfItem.m_Radii = Item.m_Radii * EntranceContentAlpha;
 		SdfItem.m_SmoothUnion = Item.m_SmoothUnion * EntranceContentAlpha;
@@ -4364,34 +4285,33 @@ void CHud::RenderMediaIsland()
 		SdfItem.m_RingColor = MediaIslandCountdownColor(Item.m_Type);
 	}
 
-	const float SdfLeft = std::min(SatelliteVisibleLeft - 1.0f, MainIslandSdfRect.x - 1.5f);
-	const float SdfTop = std::min(SatelliteCenterY - SatelliteRadius - 1.5f, MainIslandSdfRect.y - 1.5f);
-	const float SdfRight = std::max(MainIslandSdfRect.x + MainIslandSdfRect.w + 1.5f, SpectatorVisibleRight);
-	const float SdfBottom = std::max(SatelliteCenterY + SatelliteRadius + 1.5f, MainIslandSdfRect.y + MainIslandSdfRect.h + 1.5f);
-	const CUIRect SdfRect = {SdfLeft, SdfTop, SdfRight - SdfLeft, SdfBottom - SdfTop};
 	const float ScreenPixelSize = std::max(
-		m_Width / std::max(1, Graphics()->ScreenWidth()),
-		m_Height / std::max(1, Graphics()->ScreenHeight()));
-	DrawMediaIslandSdf(
-		Graphics(),
-		m_MediaIslandSdfTexture,
-		m_vMediaIslandSdfPixels,
-		SdfRect,
-		MainIslandSdfRect,
-		EntrancePose.m_Radius,
-		HudEditorScope.m_Corners,
-		EntrancePose.m_DisabledCornerRadius,
-		aSdfItems.data(),
-		SatelliteRenderItemCount,
-		&SpectatorSdfCapsule,
-		SatelliteRingRadius,
-		SatelliteRingThickness,
-		EntrancePose.m_BackgroundColor,
-		ScreenPixelSize);
+		(TransformedScreenX1 - TransformedScreenX0) / std::max(1, Graphics()->ScreenWidth()),
+		(TransformedScreenY1 - TransformedScreenY0) / std::max(1, Graphics()->ScreenHeight()));
+	CurrentSdfState.m_MainRect = MainIslandSdfRect;
+	CurrentSdfState.m_MainRadius = EntrancePose.m_Radius;
+	CurrentSdfState.m_MainCorners = HudEditorScope.m_Corners;
+	CurrentSdfState.m_MainDisabledCornerRadius = EntrancePose.m_DisabledCornerRadius;
+	CurrentSdfState.m_ItemCount = SatelliteRenderItemCount;
+	CurrentSdfState.m_HasRightCapsule = SpectatorSdfCapsule.m_Rect.w > 0.0f && SpectatorSdfCapsule.m_Rect.h > 0.0f;
+	CurrentSdfState.m_RightCapsule = SpectatorSdfCapsule;
+	CurrentSdfState.m_RingRadius = SatelliteRingRadius;
+	CurrentSdfState.m_RingThickness = SatelliteRingThickness;
+	CurrentSdfState.m_BackgroundColor = EntrancePose.m_BackgroundColor;
+	CurrentSdfState.m_ScreenPixelSize = ScreenPixelSize;
+	CurrentSdfState.m_Rect = QmHudMediaIslandSdfOuterRect(CurrentSdfState);
+	IGraphics::SMediaIslandSdfParams GpuSdfParams;
+	if(QmHudMediaIslandBuildGpuSdfParams(CurrentSdfState, GpuSdfParams))
+	{
+		if(Graphics()->HasMediaIslandSdf())
+			Graphics()->RenderMediaIslandSdf(GpuSdfParams);
+		else
+			DrawMediaIslandGeometryFallback(Graphics(), CurrentSdfState);
+	}
 
 	if(SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha > 0.001f && SpectatorLiquidCapsule.m_Rect.w > 0.01f)
 	{
-		const float ContentScale = std::clamp(SpectatorLiquidPose.m_RadiusScale, 0.0f, 1.0f) * EntranceContentAlpha;
+		const float ContentScale = std::clamp(SpectatorBlobPose.m_RadiusScale, 0.0f, 1.0f) * EntranceContentAlpha;
 		const float IconSize = SpectatorSatelliteIconSize * ContentScale;
 		const float FontSize = MetaFontSize * ContentScale;
 		const float TextWidth = SpectatorTextWidth * ContentScale;
@@ -4399,11 +4319,23 @@ void CHud::RenderMediaIsland()
 		const float ContentWidth = IconSize + ContentGap + TextWidth;
 		const float CenterX = SpectatorLiquidCapsule.m_Rect.x + SpectatorLiquidCapsule.m_Rect.w * 0.5f;
 		const float ContentX = CenterX - ContentWidth * 0.5f;
-		const CUIRect IconRect = {ContentX, SatelliteCenterY - IconSize * 0.5f, IconSize, IconSize};
+		const auto IconRect = [&](float ScaleX, float ScaleY) {
+			const float Width = IconSize * ScaleX;
+			const float Height = IconSize * ScaleY;
+			return CUIRect{ContentX + (IconSize - Width) * 0.5f, SatelliteCenterY - Height * 0.5f, Width, Height};
+		};
 		if(CQmIconManager *pIconManager = GameClient()->QmIconManager())
-			pIconManager->RenderIcon(EQmIcon::EYE, IconRect, ColorRGBA(0.98f, 0.99f, 1.0f, 0.88f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha));
-		TextRender()->TextColor(0.98f, 0.99f, 1.0f, 0.86f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha);
-		TextRender()->Text(ContentX + IconSize + ContentGap, SatelliteCenterY - FontSize * 0.5f - 0.5f, FontSize, aSpectatorBuf, -1.0f);
+		{
+			const float IconAlpha = 0.88f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha;
+			pIconManager->RenderIcon(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED, IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_ClosedAlpha));
+			pIconManager->RenderIcon(EQmIcon::SATELLITE_SPECTATOR_EYE, IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_OpenAlpha));
+		}
+		const float CountAlpha = QmHudMediaIslandSpectatorCountAlpha(ShowSpectator, SpectatorIconPose);
+		if(CountAlpha > 0.001f)
+		{
+			TextRender()->TextColor(0.98f, 0.99f, 1.0f, 0.86f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha * CountAlpha);
+			TextRender()->Text(ContentX + IconSize + ContentGap + SpectatorIconPose.m_CountOffsetX * ContentScale, SatelliteCenterY - FontSize * 0.5f - 0.5f, FontSize, aSpectatorBuf, -1.0f);
+		}
 	}
 
 	for(int i = 0; i < SatelliteRenderItemCount; ++i)

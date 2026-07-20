@@ -14,12 +14,14 @@
 
 inline bool QmPerfEnabled()
 {
-	return g_Config.m_QmPerfDebug != 0 || g_Config.m_QmPerfLogfile != 0;
+	return g_Config.m_QmPerfDebug != 0 || g_Config.m_QmPerfLogfile != 0 || g_Config.m_QmPerfStutterDiagnostics != 0;
 }
 
 inline double QmPerfThresholdMs()
 {
-	return g_Config.m_QmPerfDebugThresholdMs > 0 ? g_Config.m_QmPerfDebugThresholdMs : 1.0;
+	const double Configured = g_Config.m_QmPerfDebugThresholdMs > 0 ? g_Config.m_QmPerfDebugThresholdMs : 1.0;
+	const double StutterBudget = 1000.0 / 300.0;
+	return g_Config.m_QmPerfStutterDiagnostics != 0 && Configured > StutterBudget ? StutterBudget : Configured;
 }
 
 inline bool QmPerfShouldLogDuration(double DurationMs, bool Force = false)
@@ -190,11 +192,8 @@ inline void QmPerfAppendPayloadJsonFields(char *pBuf, int BufSize, bool &First, 
 	}
 }
 
-inline void QmPerfLogPayload(const char *pSystem, const char *pPayload, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr)
+inline void QmPerfLogPayloadUnchecked(const char *pSystem, const char *pPayload, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr)
 {
-	if(!QmPerfEnabled())
-		return;
-
 	char aJson[2048];
 	bool First = true;
 	str_copy(aJson, "{", sizeof(aJson));
@@ -212,6 +211,18 @@ inline void QmPerfLogPayload(const char *pSystem, const char *pPayload, const IC
 	QmPerfAppendPayloadJsonFields(aJson, sizeof(aJson), First, pPayload);
 	str_append(aJson, "}", sizeof(aJson));
 	dbg_msg(pSystem, "%s", aJson);
+}
+
+inline void QmPerfLogPayload(const char *pSystem, const char *pPayload, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr)
+{
+	if(!QmPerfEnabled())
+		return;
+	QmPerfLogPayloadUnchecked(pSystem, pPayload, pClient, pPage, pTab);
+}
+
+inline void QmPerfLogPayloadForce(const char *pSystem, const char *pPayload, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr)
+{
+	QmPerfLogPayloadUnchecked(pSystem, pPayload, pClient, pPage, pTab);
 }
 
 inline void QmPerfLogStage(const char *pSystem, const char *pStage, double DurationMs, bool Force = false, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr, const char *pExtra = nullptr)

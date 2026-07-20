@@ -31,9 +31,6 @@
 %d more cut segments
 == %d segmentos de corte más
 
-%d new mentions
-== %d nuevas menciones
-
 %d of %d server
 == %d de %d servidor
 
@@ -246,9 +243,6 @@
 
 5 stars
 == 5 estrellas
-
-9+ new mentions
-== 9+ nuevas menciones
 
 === All Local Saves ===
 == === Todos los saves locales ===
@@ -1411,6 +1405,9 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
+
+Better scoreboard
+== Tabla de puntuaciones mejorada
 
 Bind key to execute a command or view keybindings
 == Vincular tecla para ejecutar un comando o ver vinculaciones de teclas
@@ -4967,9 +4964,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -6257,9 +6251,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == Mensajes
 
-Messages that already look like the target language will skip auto-translate
-== Los mensajes que ya parecen estar en el idioma de destino omitirán la traducción automática
-
 Microphone
 == Micrófono
 
@@ -6409,9 +6400,6 @@ Move right
 
 Move to category
 == Mover a categoría
-
-Moved ingame
-== Movido en el juego
 
 Movement
 == Movimiento
@@ -7387,6 +7375,9 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == Umbral de registro de depuración de rendimiento (ms)
+
+Performance mode (placeholder)
+== Modo de rendimiento (marcador de posición)
 
 Personal best:
 == Mejor personal:
@@ -12428,9 +12419,6 @@ What's done is done, no use saying more
 Wheel animate
 == Animación de la rueda
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== Cuando el Tee arcoíris de TClient está activado, esta función no tiene efecto.
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Al cruzar la línea de salida, muestra un fantasma que replica los movimientos de tu mejor tiempo
 
@@ -13231,10 +13219,6 @@ AUTO
 [Start menu]
 Play
 == Jugar
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

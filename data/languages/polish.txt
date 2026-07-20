@@ -31,9 +31,6 @@
 %d more cut segments
 == Jeszcze %d przyciętych segmentów
 
-%d new mentions
-== %d nowych wzmianek
-
 %d of %d server
 == %d z %d serwer
 
@@ -246,9 +243,6 @@
 
 5 stars
 == 5 gwiazdek
-
-9+ new mentions
-== 9+ nowych wzmianek
 
 === All Local Saves ===
 == === Wszystkie lokalne save'y ===
@@ -1411,6 +1405,9 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
+
+Better scoreboard
+== Ulepszona tablica wyników
 
 Bind key to execute a command or view keybindings
 == Przypisz klawisz do wykonania polecenia lub wyświetl przypisania klawiszy
@@ -4967,9 +4964,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -6257,9 +6251,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == Wiadomości
 
-Messages that already look like the target language will skip auto-translate
-== Wiadomości, które już wyglądają jak język docelowy, pominą automatyczne tłumaczenie
-
 Microphone
 == Mikrofon
 
@@ -6409,9 +6400,6 @@ Move right
 
 Move to category
 == Przenieś do kategorii
-
-Moved ingame
-== Przeniesiony w grze
 
 Movement
 == Ruch
@@ -7387,6 +7375,9 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == Próg logowania wydajności (ms)
+
+Performance mode (placeholder)
+== Tryb wydajności (symbol zastępczy)
 
 Personal best:
 == Rekord osobisty:
@@ -12428,9 +12419,6 @@ What's done is done, no use saying more
 Wheel animate
 == Animacja koła
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== Gdy tęczowy Tee TClienta jest włączony, ta funkcja nie działa.
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Gdy przekroczysz linię startu, pokaż ducha odtwarzającego ruchy twojego najlepszego czasu
 
@@ -13231,10 +13219,6 @@ AUTO
 [Start menu]
 Play
 == Graj
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

@@ -89,6 +89,7 @@ private:
 
 	// Input helpers
 	bool IsMouseInCenter() const;
+	bool HasTargetPlayer() const;
 	int GetHoveredOption() const;
 	int GetHoveredRenameOption() const;
 

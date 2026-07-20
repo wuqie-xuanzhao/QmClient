@@ -291,6 +291,12 @@ static bool ApplyBlockWords(std::string &Text, std::vector<std::string> *pMatche
 	return Replaced;
 }
 
+bool CChat::ShouldHideBlockWordsMessage(EBlockWordsAction Action, bool Matched, int ClientId, bool IsLocalClient, int Team)
+{
+	return Action == EBlockWordsAction::HIDE_MESSAGE && Matched &&
+	       ClientId >= 0 && ClientId < MAX_CLIENTS && !IsLocalClient && Team != TEAM_WHISPER_SEND;
+}
+
 static constexpr int COMMAND_PREVIEW_TOKEN_LENGTH = 128;
 
 static bool CommandPreviewNameIs(const char *pName, const char *pCommand)
@@ -2051,6 +2057,74 @@ void CChat::SaveChatLogLine(int ClientId, int Team, const char *pLine)
 	io_close(File);
 }
 
+void CChat::PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine)
+{
+	char aName[64] = "";
+	bool Highlighted = false;
+	const char *pFrom = "chat/all";
+	ColorRGBA ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
+
+	if(ClientId == SERVER_MSG)
+	{
+		str_copy(aName, "*** ");
+		pFrom = "chat/server";
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
+	}
+	else if(ClientId == CLIENT_MSG)
+	{
+		str_copy(aName, "— ");
+		pFrom = "chat/client";
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
+	}
+	else
+	{
+		const CGameClient::CClientData &LineAuthor = GameClient()->m_aClients[ClientId];
+		char aDisplayName[MAX_NAME_LENGTH];
+		GameClient()->FormatStreamerName(ClientId, aDisplayName, sizeof(aDisplayName));
+
+		if(Client()->State() != IClient::STATE_DEMOPLAYBACK && !GameClient()->IsLocalClientId(ClientId))
+		{
+			for(int LocalId : GameClient()->m_aLocalIds)
+				Highlighted |= LocalId >= 0 && LineShouldHighlight(pLine, GameClient()->m_aClients[LocalId].m_aName);
+		}
+		else if(Client()->State() == IClient::STATE_DEMOPLAYBACK && ClientId != GameClient()->m_Snap.m_LocalClientId)
+		{
+			const int LocalId = GameClient()->m_Snap.m_LocalClientId;
+			Highlighted = LocalId >= 0 && LineShouldHighlight(pLine, GameClient()->m_aClients[LocalId].m_aName);
+		}
+
+		if(Team == TEAM_WHISPER_SEND || Team == TEAM_WHISPER_RECV)
+		{
+			str_copy(aName, Team == TEAM_WHISPER_SEND ? "→" : "←");
+			if(LineAuthor.m_Active)
+			{
+				str_append(aName, " ");
+				str_append(aName, aDisplayName);
+			}
+			Highlighted = Team == TEAM_WHISPER_RECV;
+			pFrom = "chat/whisper";
+		}
+		else
+		{
+			str_copy(aName, aDisplayName);
+			if(Team == 1)
+				pFrom = "chat/team";
+		}
+
+		const bool Friend = LineAuthor.m_Active && LineAuthor.m_Friend;
+		if(Highlighted)
+			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
+		else if(Friend && g_Config.m_ClMessageFriend)
+			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor));
+		else if(Team == 1)
+			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
+	}
+
+	char aBuf[1024];
+	str_format(aBuf, sizeof(aBuf), "%s%s%s", aName, ClientId >= 0 ? ": " : "", pLine);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor);
+}
+
 void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible)
 {
 	AddLine(ClientId, Team, pLine, ForceVisible, std::nullopt);
@@ -2065,6 +2139,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		(ClientId == SERVER_MSG && !g_Config.m_ClShowChatSystem) ||
 		(ClientId >= 0 && (GameClient()->m_aClients[ClientId].m_aName[0] == '\0' || // unknown client
 					  GameClient()->m_aClients[ClientId].m_ChatIgnore ||
+					  (GameClient()->m_Snap.m_LocalClientId != ClientId && g_Config.m_QmWarListBlockEnemyChat && GameClient()->m_WarList.IsEnemy(ClientId)) ||
 					  (GameClient()->m_Snap.m_LocalClientId != ClientId && g_Config.m_ClShowChatFriends && !GameClient()->m_aClients[ClientId].m_Friend) ||
 					  (GameClient()->m_Snap.m_LocalClientId != ClientId && g_Config.m_ClShowChatTeamMembersOnly && GameClient()->IsOtherTeam(ClientId) && GameClient()->m_Teams.Team(GameClient()->m_Snap.m_LocalClientId) != TEAM_FLOCK) ||
 					  (GameClient()->m_Snap.m_LocalClientId != ClientId && GameClient()->m_aClients[ClientId].m_Foe))))
@@ -2077,14 +2152,19 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 	char aFilteredLine[MAX_LINE_LENGTH];
 	const char *pFilteredLine = pLine;
 	std::vector<std::string> BlockedWords;
-	if(g_Config.m_QmBlockWordsEnabled && g_Config.m_QmBlockWordsList[0] != '\0')
+	bool BlockWordsConsolePrinted = false;
+	const EBlockWordsAction BlockWordsAction = static_cast<EBlockWordsAction>(g_Config.m_QmBlockWordsAction);
+	bool IsLocalBlockWordsClient = GameClient()->IsLocalClientId(ClientId);
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		IsLocalBlockWordsClient = ClientId == GameClient()->m_Snap.m_LocalClientId;
+	const bool CanHideBlockWordsMessage = ShouldHideBlockWordsMessage(BlockWordsAction, true, ClientId, IsLocalBlockWordsClient, Team);
+	if(g_Config.m_QmBlockWordsEnabled && g_Config.m_QmBlockWordsList[0] != '\0' &&
+		(BlockWordsAction == EBlockWordsAction::REPLACE || CanHideBlockWordsMessage))
 	{
 		std::string Text = pLine;
 		std::vector<std::string> *pMatched = g_Config.m_QmBlockWordsShowConsole ? &BlockedWords : nullptr;
 		if(ApplyBlockWords(Text, pMatched))
 		{
-			str_copy(aFilteredLine, Text.c_str(), sizeof(aFilteredLine));
-			pFilteredLine = aFilteredLine;
 			if(g_Config.m_QmBlockWordsShowConsole && !BlockedWords.empty())
 			{
 				std::string Joined;
@@ -2099,6 +2179,14 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 				const ColorRGBA LogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmBlockWordsConsoleColor));
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat/blocklist", aBuf, LogColor);
 			}
+			PrintBlockedMessageToConsole(ClientId, Team, pLine);
+			BlockWordsConsolePrinted = true;
+			if(CanHideBlockWordsMessage)
+			{
+				return;
+			}
+			str_copy(aFilteredLine, Text.c_str(), sizeof(aFilteredLine));
+			pFilteredLine = aFilteredLine;
 		}
 	}
 	pLine = pFilteredLine;
@@ -2136,7 +2224,10 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 	bool Highlighted = false;
 
-	auto &&FChatMsgCheckAndPrint = [this](const CLine &Line) {
+	auto &&FChatMsgCheckAndPrint = [this, BlockWordsConsolePrinted](const CLine &Line) {
+		if(BlockWordsConsolePrinted)
+			return;
+
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "%s%s%s", Line.m_aName, Line.m_ClientId >= 0 ? ": " : "", Line.m_aText);
 
@@ -3364,10 +3455,21 @@ void CChat::EnsureCoherentWidth() const
 
 // ----- send functions -----
 
-static bool ShouldSyncTeamCommandToOther(const char *pLine)
+bool CChat::ShouldSyncDummyCommand(const char *pLine)
 {
-	return g_Config.m_ClDummyCopyMoves &&
-	       str_startswith(pLine, "/team ") != nullptr;
+	if(pLine == nullptr)
+		return false;
+
+	const char *pTeamArgument = str_startswith_nocase(pLine, "/team ");
+	if(pTeamArgument != nullptr)
+		return *str_utf8_skip_whitespaces(pTeamArgument) != '\0';
+
+	return str_comp_nocase(pLine, "/vote particle") == 0;
+}
+
+static bool ShouldSyncDummyCommandToOther(const char *pLine)
+{
+	return g_Config.m_ClDummyCopyMoves && CChat::ShouldSyncDummyCommand(pLine);
 }
 
 void CChat::SendChat(int Team, const char *pLine)
@@ -3394,7 +3496,7 @@ void CChat::SendChat(int Team, const char *pLine)
 		Client()->SendPackMsgActive(&Msg7, MSGFLAG_VITAL, true);
 		GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
 
-		if(Client()->DummyConnected() && ShouldSyncTeamCommandToOther(pLine))
+		if(Client()->DummyConnected() && ShouldSyncDummyCommandToOther(pLine))
 			SendChatOnConn(!g_Config.m_ClDummy, Team, pLine);
 
 		return;
@@ -3407,7 +3509,7 @@ void CChat::SendChat(int Team, const char *pLine)
 	Client()->SendPackMsgActive(&Msg, MSGFLAG_VITAL);
 	GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
 
-	if(Client()->DummyConnected() && ShouldSyncTeamCommandToOther(pLine))
+	if(Client()->DummyConnected() && ShouldSyncDummyCommandToOther(pLine))
 		SendChatOnConn(!g_Config.m_ClDummy, Team, pLine);
 }
 

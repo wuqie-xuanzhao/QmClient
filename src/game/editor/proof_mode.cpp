@@ -26,32 +26,32 @@ void CProofMode::OnMapLoad()
 void CProofMode::SetMenuBackgroundPositionNames()
 {
 	m_vpMenuBackgroundPositionNames.resize(CMenuBackground::NUM_POS);
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_START] = "起始";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_INTERNET] = "浏览器(互联网)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_LAN] = "浏览器(局域网)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_DEMOS] = "录像";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_NEWS] = "新闻";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_FAVORITES] = "收藏";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_LANGUAGE] = "设置(语言)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_GENERAL] = "设置(通用)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_PLAYER] = "设置(玩家)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_TEE] = "设置(角色)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_APPEARANCE] = "设置(外观)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_CONTROLS] = "设置(控制)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_GRAPHICS] = "设置(图形)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_SOUND] = "设置(声音)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_DDNET] = "设置(官方扩展)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_ASSETS] = "设置(资源)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM0] = "自定义(1)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM1] = "自定义(2)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM2] = "自定义(3)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM3] = "自定义(4)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM4] = "自定义(5)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_RESERVED0] = "保留设置(1)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_RESERVED1] = "保留设置(2)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_RESERVED0] = "保留(1)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_RESERVED1] = "保留(2)";
-	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_RESERVED2] = "保留(3)";
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_START] = Localizable("start", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_INTERNET] = Localizable("browser(internet)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_LAN] = Localizable("browser(lan)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_DEMOS] = Localizable("demos", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_NEWS] = Localizable("news", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_FAVORITES] = Localizable("favorites", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_LANGUAGE] = Localizable("settings(language)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_GENERAL] = Localizable("settings(general)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_PLAYER] = Localizable("settings(player)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_TEE] = Localizable("settings(tee)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_APPEARANCE] = Localizable("settings(appearance)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_CONTROLS] = Localizable("settings(controls)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_GRAPHICS] = Localizable("settings(graphics)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_SOUND] = Localizable("settings(sound)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_DDNET] = Localizable("settings(ddnet)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_ASSETS] = Localizable("settings(assets)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM0] = Localizable("custom(1)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM1] = Localizable("custom(2)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM2] = Localizable("custom(3)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM3] = Localizable("custom(4)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_BROWSER_CUSTOM4] = Localizable("custom(5)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_RESERVED0] = Localizable("reserved settings(1)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_SETTINGS_RESERVED1] = Localizable("reserved settings(2)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_RESERVED0] = Localizable("reserved(1)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_RESERVED1] = Localizable("reserved(2)", "Editor");
+	m_vpMenuBackgroundPositionNames[CMenuBackground::POS_RESERVED2] = Localizable("reserved(3)", "Editor");
 }
 
 void CProofMode::ResetMenuBackgroundPositions()

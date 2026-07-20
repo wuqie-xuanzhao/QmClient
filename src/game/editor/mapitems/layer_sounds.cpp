@@ -159,7 +159,7 @@ void CLayerSounds::BrushPlace(CLayer *pBrush, vec2 WorldPos)
 CUi::EPopupMenuFunctionResult CLayerSounds::RenderProperties(CUIRect *pToolBox)
 {
 	CProperty aProps[] = {
-		{"声音", m_Sound, PROPTYPE_SOUND, -1, 0},
+		{Localize("Sound", "Editor"), m_Sound, PROPTYPE_SOUND, -1, 0},
 		{nullptr},
 	};
 

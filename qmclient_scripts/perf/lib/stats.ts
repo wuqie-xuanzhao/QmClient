@@ -101,6 +101,8 @@ export const PERF_SYSTEM = {
   SKIN_UX: 'perf/skin-ux',
   SECTION: 'perf/section',
   UI_RUNTIME: 'perf/ui_runtime',
+  STUTTER: 'perf/stutter',
+  MAIN_THREAD: 'perf/main_thread',
 } as const;
 
 export const PERF_EVENT = {
@@ -179,6 +181,78 @@ export interface FpsSummary {
   capLimited: boolean;
 }
 
+export interface StutterWindowSummary {
+  stutterId: number;
+  segment: number;
+  classification: string;
+  endReason: string;
+  targetFps: number;
+  targetMs: number;
+  sampleFrames: number;
+  sampleSeconds: number;
+  fpsAvg: number;
+  fpsMin: number;
+  fpsOnePctLow: number;
+  frameMsAvg: number;
+  frameMsP95: number;
+  frameMsP99: number;
+  frameMsMax: number;
+  windowStartFrame: number;
+  windowEndFrame: number;
+  worstFrame: number;
+  capLimited: boolean;
+  capReason: string;
+  page: string;
+  tab: string;
+}
+
+export interface StutterComponentSummary {
+  stutterId: number;
+  segment: number;
+  component: string;
+  phase: string;
+  samples: number;
+  totalMs: number;
+  avgMs: number;
+  p95Ms: number;
+  maxMs: number;
+  maxFrame: number;
+}
+
+export interface StutterFeatureState {
+  stutterId: number;
+  segment: number;
+  frame: number;
+  owner: string;
+  name: string;
+  value: number;
+  hudVisible: number;
+  settingsVisible: number;
+  executedInFrame: number;
+  executedInWindow: number;
+}
+
+export interface StutterStageSummary {
+  stutterId: number;
+  segment: number;
+  stage: string;
+  samples: number;
+  totalMs: number;
+  avgMs: number;
+  p95Ms: number;
+  maxMs: number;
+}
+
+export interface StutterDiagnosticsSummary {
+  available: boolean;
+  status: 'unavailable' | 'low_fps' | 'cap_limited';
+  targetFps: number;
+  windows: StutterWindowSummary[];
+  components: StutterComponentSummary[];
+  stages: StutterStageSummary[];
+  featureStates: StutterFeatureState[];
+}
+
 export interface PreviewBudgetSummary {
   available: boolean;
   eventCount: number;
@@ -232,6 +306,111 @@ export function fpsSummaries(entries: PerfEntry[]): FpsSummary[] {
         capLimited: numberField(e, 'cap_limited') !== 0,
       };
     });
+}
+
+export function stutterDiagnosticsSummary(entries: PerfEntry[]): StutterDiagnosticsSummary {
+  const stutterEntries = entries.filter(e => e.system === PERF_SYSTEM.STUTTER);
+  const windows = stutterEntries
+    .filter(e => field(e, 'event') === 'stutter_event')
+    .map(e => ({
+      stutterId: numberField(e, 'stutter_id'),
+      segment: numberField(e, 'segment'),
+      classification: field(e, 'classification'),
+      endReason: field(e, 'end_reason'),
+      targetFps: numberField(e, 'target_fps', 300),
+      targetMs: numberField(e, 'target_ms', 1000 / 300),
+      sampleFrames: numberField(e, 'sample_frames'),
+      sampleSeconds: numberField(e, 'sample_seconds'),
+      fpsAvg: numberField(e, 'fps_avg'),
+      fpsMin: numberField(e, 'fps_min'),
+      fpsOnePctLow: numberField(e, 'fps_1pct_low'),
+      frameMsAvg: numberField(e, 'frame_ms_avg'),
+      frameMsP95: numberField(e, 'frame_ms_p95'),
+      frameMsP99: numberField(e, 'frame_ms_p99'),
+      frameMsMax: numberField(e, 'frame_ms_max'),
+      windowStartFrame: numberField(e, 'window_start_frame'),
+      windowEndFrame: numberField(e, 'window_end_frame'),
+      worstFrame: numberField(e, 'worst_frame'),
+      capLimited: numberField(e, 'cap_limited') !== 0,
+      capReason: field(e, 'cap_reason', 'none'),
+      page: field(e, 'page', 'unknown'),
+      tab: field(e, 'tab', 'none'),
+    }))
+    .filter(window => window.sampleFrames > 0 && Number.isFinite(window.frameMsMax) && window.frameMsMax >= 0)
+    .sort((a, b) => b.frameMsMax - a.frameMsMax);
+
+  const components = stutterEntries
+    .filter(e => field(e, 'event') === 'component_sample')
+    .map(e => ({
+      stutterId: numberField(e, 'stutter_id'),
+      segment: numberField(e, 'segment'),
+      component: field(e, 'module', 'unknown'),
+      phase: field(e, 'callback', 'unknown').replace(/^on_/, ''),
+      samples: numberField(e, 'sample_count'),
+      totalMs: numberField(e, 'total_ms'),
+      avgMs: numberField(e, 'avg_ms'),
+      p95Ms: numberField(e, 'p95_ms'),
+      maxMs: numberField(e, 'max_ms'),
+      maxFrame: numberField(e, 'max_frame'),
+    }))
+    .filter(component => component.samples > 0 && [component.totalMs, component.avgMs, component.p95Ms, component.maxMs].every(value => Number.isFinite(value) && value >= 0))
+    .sort((a, b) => b.totalMs - a.totalMs || b.p95Ms - a.p95Ms || b.maxMs - a.maxMs);
+
+  const featureStates = stutterEntries
+    .filter(e => field(e, 'event') === 'feature_snapshot')
+    .map(e => ({
+      stutterId: numberField(e, 'stutter_id'),
+      segment: numberField(e, 'segment'),
+      frame: numberField(e, 'frame'),
+      owner: field(e, 'owner', 'unknown'),
+      name: field(e, 'feature', 'unknown'),
+      value: numberField(e, 'config_value', numberField(e, 'config_enabled')),
+      hudVisible: numberField(e, 'hud_visible', -1),
+      settingsVisible: numberField(e, 'settings_visible', -1),
+      executedInFrame: numberField(e, 'executed_in_frame', -1),
+      executedInWindow: numberField(e, 'executed_in_window', -1),
+    }))
+    .sort((a, b) => a.owner.localeCompare(b.owner) || a.name.localeCompare(b.name));
+
+  const stageGroups = new Map<string, { stutterId: number; segment: number; stage: string; values: number[] }>();
+  for (const window of windows) {
+    for (const entry of entries) {
+      if (entry.system !== PERF_SYSTEM.MAIN_THREAD) continue;
+      const frame = numberField(entry, 'frame', -1);
+      if (frame < window.windowStartFrame || frame > window.windowEndFrame) continue;
+      const duration = entryDurationMs(entry);
+      if (duration === null || !Number.isFinite(duration) || duration < 0) continue;
+      const stage = field(entry, 'stage', entry.stage || 'unknown');
+      const key = `${window.stutterId}:${window.segment}:${stage}`;
+      const group = stageGroups.get(key) ?? { stutterId: window.stutterId, segment: window.segment, stage, values: [] };
+      group.values.push(duration);
+      stageGroups.set(key, group);
+    }
+  }
+  const stages = [...stageGroups.values()].map(group => {
+    const stats = calcPercentiles(group.values);
+    return {
+      stutterId: group.stutterId,
+      segment: group.segment,
+      stage: group.stage,
+      samples: stats.count,
+      totalMs: stats.avg * stats.count,
+      avgMs: stats.avg,
+      p95Ms: stats.p95,
+      maxMs: stats.max,
+    };
+  }).sort((a, b) => b.totalMs - a.totalMs || b.maxMs - a.maxMs);
+
+  const available = windows.length > 0;
+  return {
+    available,
+    status: !available ? 'unavailable' : windows.every(window => window.capLimited) ? 'cap_limited' : 'low_fps',
+    targetFps: windows[0]?.targetFps ?? 300,
+    windows,
+    components,
+    stages,
+    featureStates,
+  };
 }
 
 const TARGET_SETTINGS_FPS_OPERATIONS: ReadonlySet<string> = new Set([

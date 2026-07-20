@@ -43,6 +43,9 @@ PENDING_TRANSLATION_RE = re.compile(
     r"^Pending ([a-z_]+) translation(?:\s+.+)?$"
 )
 
+BILINGUAL_FALLBACK_MODULES = frozenset({"editor"})
+VERBATIM_TRANSLATION_MODULES = frozenset({"editor"})
+
 
 @dataclass(frozen=True)
 class Message:
@@ -126,7 +129,11 @@ def sorted_translation_languages(translations: dict[str, str]) -> list[str]:
     return known + extra
 
 
-def normalize_translation(language: str, translation: str) -> str:
+def normalize_translation(
+    language: str, translation: str, *, preserve_verbatim: bool = False
+) -> str:
+    if preserve_verbatim:
+        return translation
     if language == "simplified_chinese":
         return chinese_text_style.normalize_simplified_chinese_text(translation)
     return translation
@@ -596,7 +603,11 @@ def dump_message_block(message: Message, translations: dict[str, str]) -> str:
         lines.append(f"context = {toml_quote(message.context)}")
     lines.append("[message.translations]")
     for language in sorted_translation_languages(translations):
-        translation = normalize_translation(language, translations.get(language, ""))
+        translation = normalize_translation(
+            language,
+            translations.get(language, ""),
+            preserve_verbatim=preserve_verbatim,
+        )
         if translation:
             lines.append(f"{language} = {toml_quote(translation)}")
     return "\n".join(lines)
@@ -676,10 +687,17 @@ def missing_translations_for(
     ]
 
 
-def dump_module(messages: list[tuple[Message, dict[str, str]]]) -> str:
+def dump_module(
+    messages: list[tuple[Message, dict[str, str]]], module_name: str | None = None
+) -> str:
+    preserve_verbatim = module_name in VERBATIM_TRANSLATION_MODULES
     return (
         "\n\n".join(
-            dump_message_block(message, translations)
+            dump_message_block(
+                message,
+                translations,
+                preserve_verbatim=preserve_verbatim,
+            )
             for message, translations in sorted_records(messages)
         ).rstrip()
         + "\n"
@@ -805,7 +823,11 @@ def patch_module_store(
             output.extend(block)
             continue
 
-        patched_block = _patch_message_block(block, entries[identity])
+        patched_block = _patch_message_block(
+            block,
+            entries[identity],
+            preserve_verbatim=module_name in VERBATIM_TRANSLATION_MODULES,
+        )
         patched_identities.add(identity)
         if output and output[-1] != "" and output[-1].strip() != "":
             output.append("")
@@ -819,7 +841,9 @@ def patch_module_store(
     if missing:
         if output and output[-1] != "":
             output.append("")
-        output.extend(dump_module(missing).rstrip("\n").splitlines())
+        output.extend(
+            dump_module(missing, module_name=module_name).rstrip("\n").splitlines()
+        )
 
     text = "\n".join(output)
     if has_trailing_newline or missing:

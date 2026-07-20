@@ -15,7 +15,7 @@
     "close": {
       "h": 96,
       "w": 96,
-      "x": 144,
+      "x": 400,
       "y": 400
     },
     "eye": {
@@ -48,46 +48,58 @@
       "x": 144,
       "y": 144
     },
+    "satellite-spectator-eye": {
+      "h": 96,
+      "w": 96,
+      "x": 400,
+      "y": 144
+    },
+    "satellite-spectator-eye-closed": {
+      "h": 96,
+      "w": 96,
+      "x": 272,
+      "y": 144
+    },
     "satellite-swap": {
       "h": 96,
       "w": 96,
-      "x": 16,
+      "x": 272,
       "y": 272
     },
     "satellite-swap-incoming": {
       "h": 96,
       "w": 96,
-      "x": 272,
-      "y": 144
+      "x": 16,
+      "y": 272
     },
     "satellite-swap-outgoing": {
-      "h": 96,
-      "w": 96,
-      "x": 400,
-      "y": 144
-    },
-    "satellite-switch": {
       "h": 96,
       "w": 96,
       "x": 144,
       "y": 272
     },
-    "search": {
-      "h": 96,
-      "w": 96,
-      "x": 272,
-      "y": 272
-    },
-    "star": {
+    "satellite-switch": {
       "h": 96,
       "w": 96,
       "x": 400,
       "y": 272
     },
-    "trash": {
+    "search": {
       "h": 96,
       "w": 96,
       "x": 16,
+      "y": 400
+    },
+    "star": {
+      "h": 96,
+      "w": 96,
+      "x": 144,
+      "y": 400
+    },
+    "trash": {
+      "h": 96,
+      "w": 96,
+      "x": 272,
       "y": 400
     }
   },

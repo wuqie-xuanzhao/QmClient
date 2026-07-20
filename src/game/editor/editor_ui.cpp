@@ -213,7 +213,7 @@ SEditResult<int> CEditor::UiDoValueSelector(const void *pId, CUIRect *pRect, con
 
 	if(s_pLastTextId == pId)
 	{
-		str_copy(m_aTooltip, "输入数值后按 Enter 确认。");
+		str_copy(m_aTooltip, Localize("Type your number. Press enter to confirm.", "Editor"));
 		Ui()->SetActiveItem(&s_NumberInput);
 		DoEditBox(&s_NumberInput, pRect, 10.0f, Corners);
 

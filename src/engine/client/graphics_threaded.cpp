@@ -215,6 +215,12 @@ CGraphics_Threaded::CGraphics_Threaded()
 
 	m_TextureMemoryUsage = 0;
 	m_GLRenderTargetsSupported = false;
+	m_GLRenderTargetGaussianBlurSupported = false;
+	m_GLBackbufferCaptureSupported = false;
+	m_GLRenderTargetExternalPassRequiresSingleSample = false;
+	m_MultiSamplingCount = 0;
+	m_PendingMultiSamplingCount = -1;
+	m_RenderTargetActive = false;
 
 	m_RenderEnable = true;
 	m_DoScreenshot = false;
@@ -744,6 +750,16 @@ bool CGraphics_Threaded::IsRenderTargetSupported() const
 	return m_GLRenderTargetsSupported;
 }
 
+bool CGraphics_Threaded::IsRenderTargetGaussianBlurSupported() const
+{
+	return m_GLRenderTargetGaussianBlurSupported && (!m_GLRenderTargetExternalPassRequiresSingleSample || m_MultiSamplingCount == 0);
+}
+
+bool CGraphics_Threaded::IsBackbufferCaptureSupported() const
+{
+	return m_GLBackbufferCaptureSupported && (!m_GLRenderTargetExternalPassRequiresSingleSample || m_MultiSamplingCount == 0);
+}
+
 const char *CGraphics_Threaded::RenderTargetSupportReason() const
 {
 	if(m_GLRenderTargetsSupported)
@@ -763,6 +779,7 @@ IGraphics::CRenderTargetHandle CGraphics_Threaded::CreateRenderTarget(int Width,
 	{
 		const size_t NewSize = CurSize == 0 ? 16 : CurSize * 2;
 		m_vRenderTargetIndices.resize(NewSize);
+		m_vRenderTargetSizes.resize(NewSize);
 		for(size_t Index = CurSize; Index < NewSize; ++Index)
 			m_vRenderTargetIndices[Index] = Index + 1;
 	}
@@ -770,6 +787,7 @@ IGraphics::CRenderTargetHandle CGraphics_Threaded::CreateRenderTarget(int Width,
 	const size_t TargetId = m_FirstFreeRenderTarget;
 	m_FirstFreeRenderTarget = m_vRenderTargetIndices[TargetId];
 	m_vRenderTargetIndices[TargetId] = -1;
+	m_vRenderTargetSizes[TargetId] = ivec2(Width, Height);
 
 	CCommandBuffer::SCommand_RenderTarget_Create Cmd;
 	Cmd.m_TargetId = TargetId;
@@ -796,6 +814,7 @@ void CGraphics_Threaded::DestroyRenderTarget(CRenderTargetHandle *pTarget)
 	AddCmd(Cmd);
 
 	m_vRenderTargetIndices[TargetId] = m_FirstFreeRenderTarget;
+	m_vRenderTargetSizes[TargetId] = ivec2(0, 0);
 	m_FirstFreeRenderTarget = TargetId;
 	pTarget->Invalidate();
 }
@@ -910,7 +929,7 @@ void CGraphics_Threaded::CleanupCanceledRenderTargetReadbacks()
 
 bool CGraphics_Threaded::BeginRenderTarget(CRenderTargetHandle Target, ColorRGBA ClearColor)
 {
-	if(!IsRenderTargetSupported() || !Target.IsValid())
+	if(!IsRenderTargetSupported() || m_RenderTargetActive || !Target.IsValid())
 		return false;
 	const size_t TargetId = Target.Id();
 	if(TargetId >= m_vRenderTargetIndices.size() || m_vRenderTargetIndices[TargetId] != -1)
@@ -926,20 +945,22 @@ bool CGraphics_Threaded::BeginRenderTarget(CRenderTargetHandle Target, ColorRGBA
 	Cmd.m_State = m_State;
 	Cmd.m_State.m_ClipEnable = false;
 	AddCmd(Cmd);
+	m_RenderTargetActive = true;
 	return true;
 }
 
 void CGraphics_Threaded::EndRenderTarget()
 {
-	if(!IsRenderTargetSupported())
+	if(!IsRenderTargetSupported() || !m_RenderTargetActive)
 		return;
 	FlushVertices();
 	CCommandBuffer::SCommand_RenderTarget_End Cmd;
 	Cmd.m_State = m_State;
 	AddCmd(Cmd);
+	m_RenderTargetActive = false;
 }
 
-void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H)
+void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H, float Alpha)
 {
 	if(!IsRenderTargetSupported() || !Target.IsValid() || W <= 0.0f || H <= 0.0f)
 		return;
@@ -954,8 +975,65 @@ void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, float X, f
 	Cmd.m_Y = Y;
 	Cmd.m_W = W;
 	Cmd.m_H = H;
+	Cmd.m_Alpha = std::clamp(Alpha, 0.0f, 1.0f);
 	Cmd.m_State = m_State;
 	AddCmd(Cmd);
+}
+
+bool CGraphics_Threaded::CaptureBackbufferToRenderTarget(CRenderTargetHandle Target)
+{
+	if(!IsBackbufferCaptureSupported() || m_RenderTargetActive || !Target.IsValid())
+		return false;
+	const size_t TargetId = Target.Id();
+	if(TargetId >= m_vRenderTargetIndices.size() || m_vRenderTargetIndices[TargetId] != -1)
+		return false;
+
+	FlushVertices();
+	CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer Cmd;
+	Cmd.m_TargetId = (int)TargetId;
+	AddCmd(Cmd);
+	return true;
+}
+
+bool CGraphics_Threaded::GaussianBlurRenderTarget(CRenderTargetHandle Source, CRenderTargetHandle Temporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params)
+{
+	if(!IsRenderTargetGaussianBlurSupported() || !Source.IsValid() || !Temporary.IsValid() || !Destination.IsValid())
+		return false;
+	if(Source.Id() == Temporary.Id() || Source.Id() == Destination.Id() || Temporary.Id() == Destination.Id())
+		return false;
+	const size_t MaxTargetId = (size_t)std::max({Source.Id(), Temporary.Id(), Destination.Id()});
+	if(MaxTargetId >= m_vRenderTargetIndices.size() || MaxTargetId >= m_vRenderTargetSizes.size())
+		return false;
+	if(m_vRenderTargetIndices[Source.Id()] != -1 || m_vRenderTargetIndices[Temporary.Id()] != -1 || m_vRenderTargetIndices[Destination.Id()] != -1)
+		return false;
+	const ivec2 Size = m_vRenderTargetSizes[Source.Id()];
+	if(Size.x <= 0 || Size.y <= 0 || m_vRenderTargetSizes[Temporary.Id()] != Size || m_vRenderTargetSizes[Destination.Id()] != Size)
+		return false;
+
+	std::array<float, GAUSSIAN_BLUR_MAX_RADIUS + 1> aWeights{};
+	if(!CalculateGaussianBlurKernel(Params, aWeights))
+		return false;
+
+	if(!BeginRenderTarget(Temporary, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)))
+		return false;
+	CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass Horizontal;
+	Horizontal.m_SourceTargetId = Source.Id();
+	Horizontal.m_Radius = Params.m_Radius;
+	Horizontal.m_Horizontal = true;
+	Horizontal.m_aWeights = aWeights;
+	AddCmd(Horizontal);
+	EndRenderTarget();
+
+	if(!BeginRenderTarget(Destination, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)))
+		return false;
+	CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass Vertical;
+	Vertical.m_SourceTargetId = Temporary.Id();
+	Vertical.m_Radius = Params.m_Radius;
+	Vertical.m_Horizontal = false;
+	Vertical.m_aWeights = aWeights;
+	AddCmd(Vertical);
+	EndRenderTarget();
+	return true;
 }
 
 IGraphics::CRenderTargetReadbackHandle CGraphics_Threaded::BeginRenderTargetReadback(CRenderTargetHandle Target)
@@ -2437,6 +2515,44 @@ void CGraphics_Threaded::RenderText(int BufferContainerIndex, int TextQuadNum, i
 	m_pCommandBuffer->AddRenderCalls(1);
 }
 
+void CGraphics_Threaded::RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params)
+{
+	const vec4 Rect = Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RECT];
+	if(Rect.z <= 0.0f || Rect.w <= 0.0f)
+		return;
+
+	// Finish any pending regular vertices before inserting the dedicated SDF
+	// draw, so command order remains identical to the immediate-mode API.
+	if(m_NumVertices > 0)
+		FlushVertices();
+
+	CCommandBuffer::SCommand_RenderMediaIslandSdf Cmd;
+	Cmd.m_State = m_State;
+	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
+	Cmd.m_State.m_Texture = -1;
+	Cmd.m_Params = Params;
+
+	CCommandBuffer::SVertex aVertices[4]{};
+	aVertices[0].m_Pos = vec2(Rect.x, Rect.y);
+	aVertices[1].m_Pos = vec2(Rect.x + Rect.z, Rect.y);
+	aVertices[2].m_Pos = vec2(Rect.x + Rect.z, Rect.y + Rect.w);
+	aVertices[3].m_Pos = vec2(Rect.x, Rect.y + Rect.w);
+	aVertices[0].m_Tex = vec2(0.0f, 0.0f);
+	aVertices[1].m_Tex = vec2(1.0f, 0.0f);
+	aVertices[2].m_Tex = vec2(1.0f, 1.0f);
+	aVertices[3].m_Tex = vec2(0.0f, 1.0f);
+	for(auto &Vertex : aVertices)
+		Vertex.m_Color = CCommandBuffer::SColor(255, 255, 255, 255);
+
+	Cmd.m_pVertices = (CCommandBuffer::SVertex *)AllocCommandBufferData(sizeof(aVertices));
+	AddCmd(Cmd, [&] {
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(aVertices));
+		return Cmd.m_pVertices != nullptr;
+	});
+	mem_copy(Cmd.m_pVertices, aVertices, sizeof(aVertices));
+	m_pCommandBuffer->AddRenderCalls(1);
+}
+
 int CGraphics_Threaded::CreateQuadContainer(bool AutomaticUpload)
 {
 	int Index = -1;
@@ -3178,6 +3294,10 @@ int CGraphics_Threaded::IssueInit()
 			Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;
 		}
 	}
+	else // Windowed fullscreen
+	{
+		Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;
+	}
 	if(g_Config.m_GfxVsync)
 	{
 		Flags |= IGraphicsBackend::INITFLAG_VSYNC;
@@ -3195,6 +3315,11 @@ int CGraphics_Threaded::IssueInit()
 		m_GLUses2DTextureArrays = m_pBackend->Uses2DTextureArrays();
 		m_GLHasTextureArraysSupport = m_pBackend->HasTextureArraysSupport();
 		m_GLRenderTargetsSupported = m_pBackend->HasRenderTargets();
+		m_GLRenderTargetGaussianBlurSupported = m_pBackend->HasRenderTargetGaussianBlur();
+		m_GLBackbufferCaptureSupported = m_pBackend->HasBackbufferCapture();
+		m_GLRenderTargetExternalPassRequiresSingleSample = m_pBackend->RenderTargetExternalPassRequiresSingleSample();
+		m_MultiSamplingCount = (uint32_t)std::max(g_Config.m_GfxFsaaSamples, 0);
+		m_PendingMultiSamplingCount = -1;
 		m_ScreenHiDPIScale = m_ScreenWidth / (float)g_Config.m_GfxScreenWidth;
 		m_ScreenRefreshRate = g_Config.m_GfxScreenRefreshRate;
 	}
@@ -3422,6 +3547,8 @@ int CGraphics_Threaded::Init()
 		m_vTextureIndices[i] = i + 1;
 	m_FirstFreeRenderTarget = 0;
 	m_vRenderTargetIndices.clear();
+	m_vRenderTargetSizes.clear();
+	m_RenderTargetActive = false;
 	m_vRenderTargetReadbackRequests.clear();
 	m_FirstFreeRenderTargetReadback = -1;
 
@@ -3848,6 +3975,11 @@ void CGraphics_Threaded::Swap()
 	}
 
 	KickCommandBuffer();
+	if(m_PendingMultiSamplingCount >= 0)
+	{
+		m_MultiSamplingCount = (uint32_t)m_PendingMultiSamplingCount;
+		m_PendingMultiSamplingCount = -1;
+	}
 	// TODO: Remove when https://github.com/libsdl-org/SDL/issues/5203 is fixed
 #ifdef CONF_PLATFORM_MACOS
 	if(str_find(GetVersionString(), "Metal"))
@@ -3894,6 +4026,20 @@ bool CGraphics_Threaded::SetMultiSampling(uint32_t ReqMultiSamplingCount, uint32
 	// kick the command buffer
 	KickCommandBuffer();
 	WaitForIdle();
+	if(RetOk)
+	{
+		if(MultiSamplingCountBackend > 0 || m_MultiSamplingCount == 0)
+		{
+			m_MultiSamplingCount = MultiSamplingCountBackend;
+			m_PendingMultiSamplingCount = -1;
+		}
+		else
+		{
+			// Vulkan applies a change to zero samples when the next frame recreates
+			// the swapchain. Keep capture disabled until that Swap command is queued.
+			m_PendingMultiSamplingCount = 0;
+		}
+	}
 	return RetOk;
 }
 

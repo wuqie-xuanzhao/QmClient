@@ -31,6 +31,8 @@ enum class EQmIcon
 	SATELLITE_SWITCH,
 	SATELLITE_MUTE,
 	SATELLITE_CHECK,
+	SATELLITE_SPECTATOR_EYE,
+	SATELLITE_SPECTATOR_EYE_CLOSED,
 	COUNT,
 };
 
@@ -115,6 +117,8 @@ public:
 		case EQmIcon::SATELLITE_SWITCH: return "satellite-switch";
 		case EQmIcon::SATELLITE_MUTE: return "satellite-mute";
 		case EQmIcon::SATELLITE_CHECK: return "satellite-check";
+		case EQmIcon::SATELLITE_SPECTATOR_EYE: return "satellite-spectator-eye";
+		case EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED: return "satellite-spectator-eye-closed";
 		case EQmIcon::COUNT: break;
 		}
 		return "";

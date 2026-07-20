@@ -11,6 +11,7 @@
 #include <game/client/ui_rect.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -147,23 +148,12 @@ inline bool QmHudMediaIslandShouldShowTeam(bool ShowTeam, bool EntitiesDDRace, i
 	return ShowTeam && EntitiesDDRace && Team > 0;
 }
 
-enum class EHudMediaIslandLiquidPhase
+struct SHudMediaIslandBlobPose
 {
-	BULGE,
-	FORM,
-	STRETCH,
-	BREAK,
-	REBOUND,
-};
-
-struct SHudMediaIslandLiquidPose
-{
-	EHudMediaIslandLiquidPhase m_Phase = EHudMediaIslandLiquidPhase::BULGE;
-	float m_CenterProgress = 0.0f;
+	float m_Travel = 0.0f;
 	float m_RadiusScale = 0.0f;
 	float m_StretchX = 1.0f;
 	float m_StretchY = 1.0f;
-	float m_SmoothUnionScale = 0.0f;
 	float m_ContentAlpha = 0.0f;
 };
 
@@ -182,6 +172,12 @@ struct SHudMediaIslandEntrancePose
 	float m_Radius = 0.0f;
 	float m_DisabledCornerRadius = 0.0f;
 	float m_ContentAlpha = 0.0f;
+};
+
+struct SHudMediaIslandEntranceTimeline
+{
+	float m_DropProgress = 0.0f;
+	float m_ExpandProgress = 0.0f;
 };
 
 inline float QmHudMediaIslandLiquidSmoothStep(float Value)
@@ -209,10 +205,34 @@ inline float QmHudAdvanceMediaIslandEntranceProgress(float Current, float DeltaS
 	return std::clamp(Current + DeltaSeconds / DurationSeconds, 0.0f, 1.0f);
 }
 
-inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &TargetRect, float TargetRadius, const ColorRGBA &TargetColor, float Progress)
+inline float QmHudAdvanceMediaIslandEntranceDropProgress(float Current, float DeltaSeconds, int MotionLevel)
+{
+	Current = std::clamp(Current, 0.0f, 1.0f);
+	MotionLevel = std::clamp(MotionLevel, 0, 2);
+	if(MotionLevel == 0)
+		return 1.0f;
+	if(DeltaSeconds <= 0.0f)
+		return Current;
+	const float DurationSeconds = 0.18f * (MotionLevel == 1 ? 0.45f : 1.0f);
+	return std::clamp(Current + DeltaSeconds / DurationSeconds, 0.0f, 1.0f);
+}
+
+inline SHudMediaIslandEntranceTimeline QmHudAdvanceMediaIslandEntranceTimeline(SHudMediaIslandEntranceTimeline Timeline, float DeltaSeconds, int MotionLevel)
+{
+	if(MotionLevel <= 0)
+		return {1.0f, 1.0f};
+	if(Timeline.m_DropProgress < 1.0f)
+		Timeline.m_DropProgress = QmHudAdvanceMediaIslandEntranceDropProgress(Timeline.m_DropProgress, DeltaSeconds, MotionLevel);
+	else
+		Timeline.m_ExpandProgress = QmHudAdvanceMediaIslandEntranceProgress(Timeline.m_ExpandProgress, DeltaSeconds, MotionLevel);
+	return Timeline;
+}
+
+inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &TargetRect, float TargetRadius, const ColorRGBA &TargetColor, float Progress, float DropProgress = 1.0f, float ScreenTop = 0.0f)
 {
 	constexpr float InitialDiameter = 16.0f;
 	constexpr float InitialRadius = InitialDiameter * 0.5f;
+	constexpr float InitialHiddenGap = 2.0f;
 	Progress = std::clamp(Progress, 0.0f, 1.0f);
 	const float ShapeProgress = QmHudMediaIslandLiquidSmoothStep(Progress);
 	const auto Lerp = [](float From, float To, float Amount) {
@@ -223,9 +243,15 @@ inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &T
 	const float TargetCenterY = TargetRect.y + TargetRect.h * 0.5f;
 	const float Width = Lerp(InitialDiameter, TargetRect.w, ShapeProgress);
 	const float Height = Lerp(InitialDiameter, TargetRect.h, ShapeProgress);
+	DropProgress = std::clamp(DropProgress, 0.0f, 1.0f);
+	const float DropEase = 1.0f - (1.0f - DropProgress) * (1.0f - DropProgress) * (1.0f - DropProgress);
+	const float DropStartY = ScreenTop - InitialDiameter - InitialHiddenGap;
+	const float DropEndY = TargetCenterY - InitialRadius;
+	const float DropY = Lerp(DropStartY, DropEndY, DropEase);
 
 	SHudMediaIslandEntrancePose Pose;
 	Pose.m_Rect = {TargetCenterX - Width * 0.5f, TargetCenterY - Height * 0.5f, Width, Height};
+	Pose.m_Rect.y += (DropY - DropEndY) * (1.0f - ShapeProgress);
 	Pose.m_Radius = Lerp(InitialRadius, TargetRadius, ShapeProgress);
 	Pose.m_DisabledCornerRadius = Lerp(InitialRadius, 0.0f, ShapeProgress);
 	Pose.m_BackgroundColor = ColorRGBA(
@@ -237,77 +263,44 @@ inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &T
 	return Pose;
 }
 
-inline SHudMediaIslandLiquidPose QmHudMediaIslandLiquidPose(float Progress)
+inline float QmHudMediaIslandBlobSpringTravel(float Progress)
 {
-	constexpr float BulgeEnd = 90.0f / 560.0f;
-	constexpr float FormEnd = 210.0f / 560.0f;
-	constexpr float StretchEnd = 370.0f / 560.0f;
-	constexpr float BreakEnd = 440.0f / 560.0f;
-	constexpr float Pi = 3.14159265359f;
 	Progress = std::clamp(Progress, 0.0f, 1.0f);
+	if(Progress <= 0.0f || Progress >= 1.0f)
+		return Progress;
+	constexpr float Response = 7.0f;
+	const float EndValue = 1.0f - (1.0f + Response) * std::exp(-Response);
+	return (1.0f - (1.0f + Response * Progress) * std::exp(-Response * Progress)) / EndValue;
+}
 
-	SHudMediaIslandLiquidPose Pose;
-	if(Progress <= 0.0f)
-		return Pose;
+inline float QmHudMediaIslandBlobSpringVelocity(float Progress)
+{
+	Progress = std::clamp(Progress, 0.0f, 1.0f);
+	if(Progress <= 0.0f || Progress >= 1.0f)
+		return 0.0f;
+	constexpr float Response = 7.0f;
+	const float EndValue = 1.0f - (1.0f + Response) * std::exp(-Response);
+	return Response * Response * Progress * std::exp(-Response * Progress) / EndValue;
+}
 
-	const auto Lerp = [](float From, float To, float Amount) {
-		return From + (To - From) * Amount;
-	};
-	if(Progress < BulgeEnd)
-	{
-		const float T = QmHudMediaIslandLiquidSegment(Progress, 0.0f, BulgeEnd);
-		Pose.m_RadiusScale = Lerp(0.0f, 0.30f, T);
-		Pose.m_SmoothUnionScale = Lerp(0.0f, 0.90f, T);
-		return Pose;
-	}
-	if(Progress < FormEnd)
-	{
-		Pose.m_Phase = EHudMediaIslandLiquidPhase::FORM;
-		const float T = QmHudMediaIslandLiquidSegment(Progress, BulgeEnd, FormEnd);
-		Pose.m_CenterProgress = Lerp(0.0f, 0.25f, T);
-		Pose.m_RadiusScale = Lerp(0.30f, 1.0f, T);
-		Pose.m_StretchX = Lerp(1.0f, 1.02f, T);
-		Pose.m_StretchY = Lerp(1.0f, 0.98f, T);
-		Pose.m_SmoothUnionScale = 0.90f;
-		Pose.m_ContentAlpha = Lerp(0.0f, 0.25f, T);
-		return Pose;
-	}
-	if(Progress < StretchEnd)
-	{
-		Pose.m_Phase = EHudMediaIslandLiquidPhase::STRETCH;
-		const float T = QmHudMediaIslandLiquidSegment(Progress, FormEnd, StretchEnd);
-		Pose.m_CenterProgress = Lerp(0.25f, 0.82f, T);
-		Pose.m_RadiusScale = 1.0f;
-		Pose.m_StretchX = Lerp(1.02f, 1.28f, T);
-		Pose.m_StretchY = Lerp(0.98f, 0.84f, T);
-		Pose.m_SmoothUnionScale = Lerp(0.90f, 0.35f, T);
-		Pose.m_ContentAlpha = Lerp(0.25f, 0.80f, T);
-		return Pose;
-	}
-	if(Progress < BreakEnd)
-	{
-		Pose.m_Phase = EHudMediaIslandLiquidPhase::BREAK;
-		const float T = QmHudMediaIslandLiquidSegment(Progress, StretchEnd, BreakEnd);
-		Pose.m_CenterProgress = Lerp(0.82f, 1.06f, T);
-		Pose.m_RadiusScale = 1.0f;
-		Pose.m_StretchX = Lerp(1.28f, 0.96f, T);
-		Pose.m_StretchY = Lerp(0.84f, 1.0f, T);
-		Pose.m_SmoothUnionScale = Lerp(0.35f, 0.0f, T);
-		Pose.m_ContentAlpha = Lerp(0.80f, 1.0f, T);
-		return Pose;
-	}
-
-	Pose.m_Phase = EHudMediaIslandLiquidPhase::REBOUND;
-	const float T = QmHudMediaIslandLiquidSegment(Progress, BreakEnd, 1.0f);
-	Pose.m_CenterProgress = 1.0f + 0.06f * (1.0f - T) * (1.0f - T) * std::cos(2.0f * Pi * T);
-	Pose.m_RadiusScale = 1.0f;
-	Pose.m_StretchX = Lerp(0.96f, 1.0f, T);
-	Pose.m_StretchY = 1.0f;
-	Pose.m_ContentAlpha = 1.0f;
+inline SHudMediaIslandBlobPose QmHudMediaIslandBlobPose(float Progress)
+{
+	SHudMediaIslandBlobPose Pose;
+	Pose.m_Travel = QmHudMediaIslandBlobSpringTravel(Progress);
+	Pose.m_RadiusScale = QmHudMediaIslandLiquidSmoothStep(std::clamp(Pose.m_Travel * 1.55f, 0.0f, 1.0f));
+	const float Motion = std::clamp(std::abs(QmHudMediaIslandBlobSpringVelocity(Progress)) * 0.32f, 0.0f, 1.0f);
+	Pose.m_StretchX = 1.0f + Motion * 0.065f;
+	Pose.m_StretchY = 1.0f - Motion * 0.035f;
+	Pose.m_ContentAlpha = QmHudMediaIslandLiquidSmoothStep(std::clamp((Pose.m_RadiusScale - 0.25f) / 0.75f, 0.0f, 1.0f));
 	return Pose;
 }
 
-inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightLiquidCapsule(float MainRight, float CenterY, float Radius, float ContentWidth, float RestGap, const SHudMediaIslandLiquidPose &Pose)
+inline float QmHudMediaIslandBlobBlend(float Radius, float RadiusScale)
+{
+	return std::max(0.0f, Radius) * 0.72f * std::clamp(RadiusScale, 0.0f, 1.0f);
+}
+
+inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightBlobCapsule(float MainRight, float CenterY, float Radius, float ContentWidth, float RestGap, const SHudMediaIslandBlobPose &Pose)
 {
 	Radius = std::max(0.0f, Radius);
 	const float Diameter = Radius * 2.0f;
@@ -317,7 +310,7 @@ inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightLiquidCapsule(float Mai
 	const auto Lerp = [](float From, float To, float Amount) {
 		return From + (To - From) * std::clamp(Amount, 0.0f, 1.1f);
 	};
-	const float CenterX = Lerp(SpawnCenterX, FinalCenterX, Pose.m_CenterProgress);
+	const float CenterX = Lerp(SpawnCenterX, FinalCenterX, Pose.m_Travel);
 	const float BaseWidth = Lerp(Diameter, FinalWidth, Pose.m_ContentAlpha);
 	const float Width = std::max(0.0f, BaseWidth * Pose.m_RadiusScale * Pose.m_StretchX);
 	const float Height = std::max(0.0f, Diameter * Pose.m_RadiusScale * Pose.m_StretchY);
@@ -325,7 +318,7 @@ inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightLiquidCapsule(float Mai
 	SHudMediaIslandLiquidCapsule Capsule;
 	Capsule.m_Rect = {CenterX - Width * 0.5f, CenterY - Height * 0.5f, Width, Height};
 	Capsule.m_Radius = std::min(Width, Height) * 0.5f;
-	Capsule.m_SmoothUnion = Radius * Pose.m_SmoothUnionScale * 1.55f;
+	Capsule.m_SmoothUnion = QmHudMediaIslandBlobBlend(Radius, Pose.m_RadiusScale);
 	Capsule.m_ContentAlpha = Pose.m_ContentAlpha;
 	return Capsule;
 }
@@ -337,9 +330,185 @@ inline float QmHudAdvanceMediaIslandLiquidProgress(float Current, bool TargetVis
 		return TargetVisible ? 1.0f : 0.0f;
 	if(DeltaSeconds <= 0.0f)
 		return Current;
-	constexpr float DurationSeconds = 0.56f;
+	constexpr float DurationSeconds = 0.440f;
 	const float Delta = DeltaSeconds / DurationSeconds;
 	return std::clamp(Current + (TargetVisible ? Delta : -Delta), 0.0f, 1.0f);
+}
+
+struct SHudMediaIslandSpectatorIconPose
+{
+	float m_OpenAlpha = 0.0f;
+	float m_ClosedAlpha = 1.0f;
+	float m_OpenScaleX = 0.88f;
+	float m_OpenScaleY = 0.44f;
+	float m_ClosedScale = 1.0f;
+	float m_CountAlpha = 0.0f;
+	float m_CountOffsetX = -3.0f;
+};
+
+inline float QmHudAdvanceMediaIslandSpectatorIconProgress(float Current, float DeltaSeconds, int MotionLevel)
+{
+	Current = std::clamp(Current, 0.0f, 1.0f);
+	MotionLevel = std::clamp(MotionLevel, 0, 2);
+	if(MotionLevel == 0)
+		return 1.0f;
+	if(DeltaSeconds <= 0.0f)
+		return Current;
+	const float DurationSeconds = 0.180f * (MotionLevel == 1 ? 0.45f : 1.0f);
+	return std::clamp(Current + DeltaSeconds / DurationSeconds, 0.0f, 1.0f);
+}
+
+inline float QmHudMediaIslandSpectatorIconProgressDuringExit(float IconProgressAtStart, float LiquidProgressAtStart, float LiquidProgress)
+{
+	IconProgressAtStart = std::clamp(IconProgressAtStart, 0.0f, 1.0f);
+	LiquidProgressAtStart = std::clamp(LiquidProgressAtStart, 0.0f, 1.0f);
+	LiquidProgress = std::clamp(LiquidProgress, 0.0f, 1.0f);
+	if(LiquidProgressAtStart <= 0.0f)
+		return 0.0f;
+	return IconProgressAtStart * std::clamp(LiquidProgress / LiquidProgressAtStart, 0.0f, 1.0f);
+}
+
+inline SHudMediaIslandSpectatorIconPose QmHudMediaIslandSpectatorIconPose(float Progress)
+{
+	const float Eased = QmHudMediaIslandLiquidSmoothStep(Progress);
+	SHudMediaIslandSpectatorIconPose Pose;
+	Pose.m_OpenAlpha = Eased;
+	Pose.m_ClosedAlpha = 1.0f - Eased;
+	Pose.m_OpenScaleX = 0.88f + 0.12f * Eased;
+	Pose.m_OpenScaleY = 0.44f + 0.56f * Eased;
+	Pose.m_ClosedScale = 1.0f - 0.12f * Eased;
+	Pose.m_CountAlpha = Eased;
+	Pose.m_CountOffsetX = -3.0f * (1.0f - Eased);
+	return Pose;
+}
+
+inline bool QmHudMediaIslandShouldAnimateSpectatorEyeOpen(bool HasSpectators, bool HadSpectators, float LiquidProgress)
+{
+	return HasSpectators && !HadSpectators && LiquidProgress > 0.0f;
+}
+
+inline float QmHudMediaIslandSpectatorCountAlpha(bool HasSpectators, const SHudMediaIslandSpectatorIconPose &Pose)
+{
+	return HasSpectators ? Pose.m_CountAlpha : 0.0f;
+}
+
+// Value-only inputs for the GPU media-island SDF command. The renderer owns
+// the fixed ABI packing; HUD animation state stays independent of backend
+// handles and command-buffer lifetime.
+constexpr int QmHudMediaIslandSdfMaxItems = IGraphics::MEDIA_ISLAND_SDF_MAX_ITEMS;
+
+struct SHudMediaIslandSdfItem
+{
+	vec2 m_Center{};
+	vec2 m_Radii{};
+	float m_SmoothUnion = 0.0f;
+	float m_ContentAlpha = 0.0f;
+	float m_ContentScale = 1.0f;
+	float m_CountdownProgress = 0.0f;
+	ColorRGBA m_RingColor{};
+};
+
+struct SHudMediaIslandSdfCapsule
+{
+	CUIRect m_Rect{};
+	float m_Radius = 0.0f;
+	float m_SmoothUnion = 0.0f;
+};
+
+struct SHudMediaIslandSdfRenderState
+{
+	CUIRect m_Rect{};
+	CUIRect m_MainRect{};
+	float m_MainRadius = 0.0f;
+	int m_MainCorners = IGraphics::CORNER_NONE;
+	float m_MainDisabledCornerRadius = 0.0f;
+	std::array<SHudMediaIslandSdfItem, QmHudMediaIslandSdfMaxItems> m_Items{};
+	int m_ItemCount = 0;
+	bool m_HasRightCapsule = false;
+	SHudMediaIslandSdfCapsule m_RightCapsule{};
+	float m_RingRadius = 0.0f;
+	float m_RingThickness = 0.0f;
+	ColorRGBA m_BackgroundColor{};
+	float m_ScreenPixelSize = 1.0f;
+};
+
+inline float QmHudMediaIslandSdfPadding(const SHudMediaIslandSdfRenderState &State)
+{
+	float MaxSmoothUnion = 0.0f;
+	const int ItemCount = std::clamp(State.m_ItemCount, 0, QmHudMediaIslandSdfMaxItems);
+	for(int i = 0; i < ItemCount; ++i)
+		MaxSmoothUnion = std::max(MaxSmoothUnion, State.m_Items[i].m_SmoothUnion);
+	if(ItemCount > 1)
+		MaxSmoothUnion = std::max(MaxSmoothUnion, std::max(0.0f, State.m_MainRadius) * 0.28f);
+	if(State.m_HasRightCapsule)
+		MaxSmoothUnion = std::max(MaxSmoothUnion, State.m_RightCapsule.m_SmoothUnion);
+
+	// SmoothUnion can move the zero contour outwards by Blend / 4. Keep the
+	// shader feather inside the quad as well, otherwise the liquid edge clips.
+	const float Feather = std::max(State.m_ScreenPixelSize, 0.0001f) * 0.9f;
+	return std::max(1.5f, std::max(0.0f, MaxSmoothUnion) * 0.25f + Feather);
+}
+
+inline CUIRect QmHudMediaIslandSdfOuterRect(const SHudMediaIslandSdfRenderState &State)
+{
+	float Left = State.m_MainRect.x;
+	float Top = State.m_MainRect.y;
+	float Right = State.m_MainRect.x + State.m_MainRect.w;
+	float Bottom = State.m_MainRect.y + State.m_MainRect.h;
+	const int ItemCount = std::clamp(State.m_ItemCount, 0, QmHudMediaIslandSdfMaxItems);
+	for(int i = 0; i < ItemCount; ++i)
+	{
+		const SHudMediaIslandSdfItem &Item = State.m_Items[i];
+		const float RadiusX = std::max(0.0f, Item.m_Radii.x);
+		const float RadiusY = std::max(0.0f, Item.m_Radii.y);
+		Left = std::min(Left, Item.m_Center.x - RadiusX);
+		Top = std::min(Top, Item.m_Center.y - RadiusY);
+		Right = std::max(Right, Item.m_Center.x + RadiusX);
+		Bottom = std::max(Bottom, Item.m_Center.y + RadiusY);
+	}
+	if(State.m_HasRightCapsule && State.m_RightCapsule.m_Rect.w > 0.0f && State.m_RightCapsule.m_Rect.h > 0.0f)
+	{
+		const CUIRect &Rect = State.m_RightCapsule.m_Rect;
+		Left = std::min(Left, Rect.x);
+		Top = std::min(Top, Rect.y);
+		Right = std::max(Right, Rect.x + Rect.w);
+		Bottom = std::max(Bottom, Rect.y + Rect.h);
+	}
+
+	const float Padding = QmHudMediaIslandSdfPadding(State);
+	return {Left - Padding, Top - Padding, Right - Left + Padding * 2.0f, Bottom - Top + Padding * 2.0f};
+}
+
+inline vec4 QmHudMediaIslandSdfRectVec4(const CUIRect &Rect)
+{
+	return vec4(Rect.x, Rect.y, Rect.w, Rect.h);
+}
+
+inline bool QmHudMediaIslandBuildGpuSdfParams(const SHudMediaIslandSdfRenderState &State, IGraphics::SMediaIslandSdfParams &Params)
+{
+	if(State.m_Rect.w <= 0.0f || State.m_Rect.h <= 0.0f || State.m_MainRect.w <= 0.0f || State.m_MainRect.h <= 0.0f || State.m_ItemCount < 0 || State.m_ItemCount > QmHudMediaIslandSdfMaxItems)
+		return false;
+
+	Params.Clear();
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RECT] = QmHudMediaIslandSdfRectVec4(State.m_Rect);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_MAIN_RECT] = QmHudMediaIslandSdfRectVec4(State.m_MainRect);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_CAPSULE_RECT] = QmHudMediaIslandSdfRectVec4(State.m_RightCapsule.m_Rect);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_BACKGROUND] = vec4(State.m_BackgroundColor.r, State.m_BackgroundColor.g, State.m_BackgroundColor.b, State.m_BackgroundColor.a);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_MAIN_PARAMS] = vec4(State.m_MainRadius, State.m_MainDisabledCornerRadius, State.m_RingRadius, State.m_RingThickness);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_METADATA] = vec4((float)State.m_ItemCount, (float)State.m_MainCorners, State.m_HasRightCapsule ? 1.0f : 0.0f, std::max(State.m_ScreenPixelSize, 0.0001f));
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_CAPSULE_PARAMS] = vec4(State.m_RightCapsule.m_Radius, State.m_RightCapsule.m_SmoothUnion, 0.0f, 0.0f);
+
+	for(int i = 0; i < State.m_ItemCount; ++i)
+	{
+		const SHudMediaIslandSdfItem &Item = State.m_Items[i];
+		Params.Item(i, 0) = vec4(Item.m_Center.x, Item.m_Center.y, Item.m_Radii.x, Item.m_Radii.y);
+		Params.Item(i, 1) = vec4(Item.m_SmoothUnion, Item.m_ContentAlpha, Item.m_ContentScale, std::clamp(Item.m_CountdownProgress, 0.0f, 1.0f));
+		Params.Item(i, 2) = vec4(Item.m_RingColor.r, Item.m_RingColor.g, Item.m_RingColor.b, Item.m_RingColor.a);
+	}
+	Params.SetItemCount(State.m_ItemCount);
+	Params.SetMainCorners(State.m_MainCorners);
+	Params.SetHasRightCapsule(State.m_HasRightCapsule);
+	return true;
 }
 
 inline float QmHudMediaIslandSdfCircle(vec2 Point, vec2 Center, float Radius)

@@ -64,7 +64,7 @@ public:
 	bool Load(const char *pFilename, class IStorage *pStorage, class IConsole *pConsole, bool Clear = true);
 
 	void AddString(const char *pOrgStr, const char *pNewStr, const char *pContext);
-	const char *FindString(unsigned Hash, unsigned ContextHash) const;
+	const char *FindString(unsigned Hash, unsigned ContextHash, bool AllowDefaultContextFallback = true) const;
 };
 
 extern CLocalizationDatabase g_Localization;

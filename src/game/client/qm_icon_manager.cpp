@@ -16,36 +16,40 @@ namespace
 {
 	constexpr const char *QM_ICON_MANIFEST_PATTERN = "qmclient/icons/qm_icons_%dx.json";
 
-EQmIcon IconFromName(const char *pName)
-{
-	if(str_comp(pName, "star") == 0)
-		return EQmIcon::STAR;
-	if(str_comp(pName, "search") == 0)
-		return EQmIcon::SEARCH;
-	if(str_comp(pName, "close") == 0)
-		return EQmIcon::CLOSE;
-	if(str_comp(pName, "eye") == 0)
-		return EQmIcon::EYE;
-	if(str_comp(pName, "eye-off") == 0)
-		return EQmIcon::EYE_OFF;
-	if(str_comp(pName, "chevron-down") == 0)
-		return EQmIcon::CHEVRON_DOWN;
-	if(str_comp(pName, "plus") == 0)
-		return EQmIcon::PLUS;
-	if(str_comp(pName, "trash") == 0)
-		return EQmIcon::TRASH;
-	if(str_comp(pName, "satellite-swap-incoming") == 0)
-		return EQmIcon::SATELLITE_SWAP_INCOMING;
-	if(str_comp(pName, "satellite-swap-outgoing") == 0)
-		return EQmIcon::SATELLITE_SWAP_OUTGOING;
-	if(str_comp(pName, "satellite-switch") == 0)
-		return EQmIcon::SATELLITE_SWITCH;
-	if(str_comp(pName, "satellite-mute") == 0)
-		return EQmIcon::SATELLITE_MUTE;
-	if(str_comp(pName, "satellite-check") == 0)
-		return EQmIcon::SATELLITE_CHECK;
-	return EQmIcon::COUNT;
-}
+	EQmIcon IconFromName(const char *pName)
+	{
+		if(str_comp(pName, "star") == 0)
+			return EQmIcon::STAR;
+		if(str_comp(pName, "search") == 0)
+			return EQmIcon::SEARCH;
+		if(str_comp(pName, "close") == 0)
+			return EQmIcon::CLOSE;
+		if(str_comp(pName, "eye") == 0)
+			return EQmIcon::EYE;
+		if(str_comp(pName, "eye-off") == 0)
+			return EQmIcon::EYE_OFF;
+		if(str_comp(pName, "chevron-down") == 0)
+			return EQmIcon::CHEVRON_DOWN;
+		if(str_comp(pName, "plus") == 0)
+			return EQmIcon::PLUS;
+		if(str_comp(pName, "trash") == 0)
+			return EQmIcon::TRASH;
+		if(str_comp(pName, "satellite-swap-incoming") == 0)
+			return EQmIcon::SATELLITE_SWAP_INCOMING;
+		if(str_comp(pName, "satellite-swap-outgoing") == 0)
+			return EQmIcon::SATELLITE_SWAP_OUTGOING;
+		if(str_comp(pName, "satellite-switch") == 0)
+			return EQmIcon::SATELLITE_SWITCH;
+		if(str_comp(pName, "satellite-mute") == 0)
+			return EQmIcon::SATELLITE_MUTE;
+		if(str_comp(pName, "satellite-check") == 0)
+			return EQmIcon::SATELLITE_CHECK;
+		if(str_comp(pName, "satellite-spectator-eye") == 0)
+			return EQmIcon::SATELLITE_SPECTATOR_EYE;
+		if(str_comp(pName, "satellite-spectator-eye-closed") == 0)
+			return EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED;
+		return EQmIcon::COUNT;
+	}
 
 	bool JsonIntField(const json_value *pObject, const char *pName, int &Out)
 	{

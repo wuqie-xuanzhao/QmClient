@@ -385,7 +385,7 @@ void CEnvelopeEditorOperationTracker::HandlePointDragEnd(bool Switch)
 
 	if(!vpActions.empty())
 	{
-		Map()->m_EnvelopeEditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(Map(), vpActions, "拖动动画点"));
+		Map()->m_EnvelopeEditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(Map(), vpActions, Localize("Envelope point drag", "Editor")));
 	}
 
 	m_SavedValues.clear();
@@ -563,15 +563,15 @@ void CLayerTilesCommonPropTracker::OnEnd(ETilesCommonProp Prop, int Value)
 	}
 
 	char aDisplay[256];
-	static const char *s_apNames[] = {
-		"宽度",
-		"高度",
-		"平移",
-		"平移量",
-		"颜色",
+	const char *s_apNames[] = {
+		Localize("Width", "Editor"),
+		Localize("Height", "Editor"),
+		Localize("shift", "Editor tile shift"),
+		Localize("Shift by", "Editor tile shift amount"),
+		Localize("Color", "Editor"),
 	};
 
-	str_format(aDisplay, sizeof(aDisplay), "编辑 %d 个图层的公共属性：%s", (int)m_vpLayers.size(), s_apNames[(int)Prop]);
+	str_format(aDisplay, sizeof(aDisplay), Localize("Edit %d layers common property: %s", "Editor"), (int)m_vpLayers.size(), s_apNames[(int)Prop]);
 	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(Map(), vpActions, aDisplay));
 }
 
