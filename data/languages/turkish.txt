@@ -668,9 +668,6 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Kendi oyuncunun kanca çarpışma çizgisini her zaman göster
 
-Always show settings card borders
-== Ayar kartı kenarlıklarını her zaman göster
-
 Always translate
 == Her zaman çevir
 
@@ -9799,6 +9796,9 @@ Show server help and usage messages
 
 Show server settings
 == Sunucu ayarlarını göster
+
+Show settings card borders
+== Ayar kartı kenarlıklarını her zaman göster
 
 Show short server names in browser
 == Sunucu tarayıcısında kısa sunucu adını göster

@@ -2656,7 +2656,9 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	}
 
 	bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
-	const CUIRect Viewport = IsClipped() ? *ClipArea() : *Screen();
+	// Popup 不能被卡片内容裁剪区限制。触发控件可能位于被裁剪的卡片内，
+	// 但弹窗应以屏幕为定位 viewport，才能按最多 8 项正常展开并在屏幕边缘翻转。
+	const CUIRect Viewport = *Screen();
 	if(State.m_DropDownState.IsOpen() && !PopupOpen)
 		State.m_DropDownState.Reset();
 

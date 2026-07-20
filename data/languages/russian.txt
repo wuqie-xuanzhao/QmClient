@@ -668,9 +668,6 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Всегда показывать свою линию захвата
 
-Always show settings card borders
-== Всегда показывать границы карточек настроек
-
 Always translate
 == Всегда переводить
 
@@ -9799,6 +9796,9 @@ Show server help and usage messages
 
 Show server settings
 == Показать настройки сервера
+
+Show settings card borders
+== Всегда показывать границы карточек настроек
 
 Show short server names in browser
 == Показывать короткие названия серверов в списке серверов

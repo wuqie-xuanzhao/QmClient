@@ -1813,8 +1813,8 @@ TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 	ASSERT_FALSE(Body.empty());
 	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
 	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
-	EXPECT_NE(Body.find("DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, BorderRadius)"), std::string::npos);
-	EXPECT_NE(Body.find("IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd)"), std::string::npos);
+	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
+	EXPECT_NE(Body.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
 	EXPECT_EQ(Body.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
 	EXPECT_EQ(Body.find("DrawOutline(Border)"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("RenderQmSettingsGlassCard"), std::string::npos);
@@ -2173,7 +2173,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("Localize(pBackendDefault->m_pTitle)"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmExtraAnimations, \"extra-animations\", Localize(\"Extra animations\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardRainbowTitles, \"rainbow-card-titles\", Localize(\"Rainbow card titles\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardBorders, \"show-settings-card-borders\", Localize(\"Always show settings card borders\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardBorders, \"show-settings-card-borders\", Localize(\"Show settings card borders\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("DoGraphicsNumericField(\"graphics-card-corner-segments\""), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("int RowsRemaining = 2;"), std::string::npos);
@@ -2186,6 +2186,8 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(ModesSpec, GraphicsModesMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("constexpr int GraphicsModesMaxVisibleRows = 8;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("2.0f * GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(9"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(2"), std::string::npos);
@@ -2198,11 +2200,15 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	const size_t ModesCard = RenderSettingsGraphics.find("AddCard(ModesSpec");
 	const size_t WindowMode = RenderSettingsGraphics.find("s_WindowModeDropDownState", ModesCard);
 	const size_t DisplayCard = RenderSettingsGraphics.find("AddCard(DisplaySpec");
+	const size_t DisplayEnd = RenderSettingsGraphics.find("AddCard(VisualSpec", DisplayCard);
 	ASSERT_NE(ModesCard, std::string::npos);
 	ASSERT_NE(WindowMode, std::string::npos);
 	ASSERT_NE(DisplayCard, std::string::npos);
+	ASSERT_NE(DisplayEnd, std::string::npos);
 	EXPECT_LT(ModesCard, DisplayCard);
-	EXPECT_LT(DisplayCard, WindowMode);
+	EXPECT_LT(WindowMode, DisplayCard);
+	EXPECT_GE(WindowMode, ModesCard);
+	EXPECT_FALSE(WindowMode >= DisplayCard && WindowMode < DisplayEnd);
 	EXPECT_EQ(RenderSettingsGraphics.find("UpdateMeasuredCardHeight"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("s_GraphicsInteractionCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
@@ -2732,6 +2738,10 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 	EXPECT_NE(DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("if(State.m_DropDownState.IsOpen() && !PopupOpen)"), std::string::npos);
+	// Popup 的定位 viewport 必须是屏幕，而不是卡片/外层滚动区的 clip rect。
+	// 否则弹窗会被裁成一行，并且上下翻转的锚点会落在控件中间。
+	EXPECT_NE(DoDropDown.find("const CUIRect Viewport = *Screen();"), std::string::npos);
+	EXPECT_EQ(DoDropDown.find("IsClipped() ? *ClipArea() : *Screen()"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("SQmDropdownInput DropDownInput;"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("State.m_DropDownState.Update(DropDownInput, Num);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);"), std::string::npos);
@@ -2810,6 +2820,11 @@ TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(NumericLabelBridge.find("CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
 	EXPECT_NE(General.find("ui_widget::NumericField("), std::string::npos);
 	EXPECT_NE(General.find("AddCard(GameSpec, ResolveSettingsRowsHeight(5, GeneralMetrics.m_LineHeight, GeneralMetrics.m_LineSpacing)"), std::string::npos);
+	EXPECT_NE(General.find("constexpr int GeneralListMaxVisibleRows = 8;"), std::string::npos);
+	EXPECT_NE(General.find("std::clamp((int)g_Localization.Languages().size(), 1, GeneralListMaxVisibleRows)"), std::string::npos);
+	EXPECT_NE(General.find("std::clamp((int)GameClient()->m_MenuBackground.GetThemes().size(), 1, GeneralListMaxVisibleRows)"), std::string::npos);
+	EXPECT_NE(General.find("Row.VSplitMid(&LeftButton, &RightButton, GeneralMetrics.m_LineSpacing);"), std::string::npos);
+	EXPECT_EQ(General.find("maximum(300.0f * UiScale, GeneralPage.m_ScrollViewport.h - 100.0f * UiScale)"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-game"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-language"), std::string::npos);
 	EXPECT_NE(General.find("deck:general-client"), std::string::npos);

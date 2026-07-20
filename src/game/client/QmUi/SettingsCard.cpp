@@ -15,7 +15,6 @@
 #include <game/client/ui.h>
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 
 namespace
@@ -24,60 +23,6 @@ namespace
 	{
 		Fallback = ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f);
 		return Ctx.m_pTheme != nullptr ? *Ctx.m_pTheme : Fallback;
-	}
-
-	void DrawSettingsCardBorderRing(IGraphics *pGraphics, const CUIRect &Rect, const ColorRGBA &Color, const float Width, const float Radius)
-	{
-		if(pGraphics == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
-			return;
-		const float BorderWidth = std::clamp(Width, 0.0f, std::min(Rect.w, Rect.h) * 0.5f);
-		if(BorderWidth <= 0.0f)
-			return;
-
-		const float OuterRadius = std::clamp(Radius, 0.0f, std::min(Rect.w, Rect.h) * 0.5f);
-		const float InnerRadius = std::max(0.0f, OuterRadius - BorderWidth);
-		std::array<IGraphics::CQuadItem, 4> aEdges;
-		int NumEdges = 0;
-		if(Rect.w > 2.0f * OuterRadius)
-		{
-			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x + OuterRadius, Rect.y, Rect.w - 2.0f * OuterRadius, BorderWidth);
-			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x + OuterRadius, Rect.y + Rect.h - BorderWidth, Rect.w - 2.0f * OuterRadius, BorderWidth);
-		}
-		if(Rect.h > 2.0f * OuterRadius)
-		{
-			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x, Rect.y + OuterRadius, BorderWidth, Rect.h - 2.0f * OuterRadius);
-			aEdges[NumEdges++] = IGraphics::CQuadItem(Rect.x + Rect.w - BorderWidth, Rect.y + OuterRadius, BorderWidth, Rect.h - 2.0f * OuterRadius);
-		}
-
-		constexpr int CornerSegments = 3;
-		constexpr float Pi = 3.14159265358979323846f;
-		std::array<IGraphics::CFreeformItem, CornerSegments * 4> aCorners;
-		int NumCorners = 0;
-		const auto AddCornerSegment = [&](const float CenterX, const float CenterY, const float XDirection, const float YDirection, const float AngleStart, const float AngleEnd) {
-			const vec2 InnerStart(CenterX + XDirection * std::cos(AngleStart) * InnerRadius, CenterY + YDirection * std::sin(AngleStart) * InnerRadius);
-			const vec2 OuterStart(CenterX + XDirection * std::cos(AngleStart) * OuterRadius, CenterY + YDirection * std::sin(AngleStart) * OuterRadius);
-			const vec2 OuterEnd(CenterX + XDirection * std::cos(AngleEnd) * OuterRadius, CenterY + YDirection * std::sin(AngleEnd) * OuterRadius);
-			const vec2 InnerEnd(CenterX + XDirection * std::cos(AngleEnd) * InnerRadius, CenterY + YDirection * std::sin(AngleEnd) * InnerRadius);
-			aCorners[NumCorners++] = IGraphics::CFreeformItem(InnerStart, OuterStart, OuterEnd, InnerEnd);
-		};
-		for(int Segment = 0; Segment < CornerSegments; ++Segment)
-		{
-			const float AngleStart = Segment * Pi * 0.5f / CornerSegments;
-			const float AngleEnd = (Segment + 1) * Pi * 0.5f / CornerSegments;
-			AddCornerSegment(Rect.x + OuterRadius, Rect.y + OuterRadius, -1.0f, -1.0f, AngleStart, AngleEnd);
-			AddCornerSegment(Rect.x + Rect.w - OuterRadius, Rect.y + OuterRadius, 1.0f, -1.0f, AngleStart, AngleEnd);
-			AddCornerSegment(Rect.x + OuterRadius, Rect.y + Rect.h - OuterRadius, -1.0f, 1.0f, AngleStart, AngleEnd);
-			AddCornerSegment(Rect.x + Rect.w - OuterRadius, Rect.y + Rect.h - OuterRadius, 1.0f, 1.0f, AngleStart, AngleEnd);
-		}
-
-		pGraphics->TextureClear();
-		pGraphics->QuadsBegin();
-		pGraphics->SetColor(Color);
-		if(NumEdges > 0)
-			pGraphics->QuadsDrawTL(aEdges.data(), NumEdges);
-		if(NumCorners > 0)
-			pGraphics->QuadsDrawFreeform(aCorners.data(), NumCorners);
-		pGraphics->QuadsEnd();
 	}
 
 }
@@ -109,22 +54,27 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
 	// 否则半透明卡片在展开、折叠或首次布局时会表现为一次亮闪。
 	const bool InteractionComplete = DrawState.m_DropFeedback;
-	const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders || SettingsCardInteractionBorderVisible(DrawState);
+	const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders;
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      Theme.m_Border;
 	Border.a *= DrawState.m_DrawAlpha;
 	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
 	const float BorderBaseWidth = DrawState.m_Focused ? 3.0f : 2.0f;
 	const float BorderWidth = std::max(BorderBaseWidth, BorderBaseWidth * UiScale);
-	const CUIRect BorderRect = ResolveSettingsCardInteractionBorderRect(DrawFrame.m_Rect, BorderWidth);
-	const float BorderRadius = std::max(0.0f, CardRadius - BorderWidth * 0.5f);
 	if(DrawCardChrome)
 	{
-		DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
-		// 静止态只绘制一次带抗锯齿的圆角 Surface；边框由 Graphics 的显式开关控制。
-		// 悬浮、焦点和拖放仍会强制保留交互边框，避免无边框模式失去状态反馈。
+		// 边框开关是唯一决定因素：关闭后不因悬浮、焦点或拖放重新显示。
 		if(DrawInteractionBorder)
-			DrawSettingsCardBorderRing(Ctx.m_pUi != nullptr ? Ctx.m_pUi->Graphics() : nullptr, BorderRect, Border, BorderWidth, BorderRadius);
+		{
+			// 先绘制完整边框，再绘制内缩的 Surface，避免 Surface 抗锯齿边缘与
+			// 自定义描边重叠，产生截图中可见的双层边框。
+			DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
+			CUIRect InnerSurface = DrawFrame.m_Rect;
+			InnerSurface.Margin(BorderWidth, &InnerSurface);
+			InnerSurface.Draw(Surface, IGraphics::CORNER_ALL, std::max(0.0f, CardRadius - BorderWidth));
+		}
+		else
+			DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
 	}
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)

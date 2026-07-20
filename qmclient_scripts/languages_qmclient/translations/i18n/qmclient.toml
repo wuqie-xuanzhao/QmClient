@@ -15247,10 +15247,10 @@ turkish = "Gökkuşağı kart başlıkları"
 polish = "Tęczowe tytuły kart"
 
 [[message]]
-key = "Always show settings card borders"
+key = "Show settings card borders"
 [message.translations]
-simplified_chinese = "始终显示设置卡片边框"
-traditional_chinese = "永遠顯示設定卡片邊框"
+simplified_chinese = "显示设置卡片边框"
+traditional_chinese = "顯示設定卡片邊框"
 japanese = "常に設定カードの枠線を表示"
 korean = "설정 카드 테두리 항상 표시"
 russian = "Всегда показывать границы карточек настроек"

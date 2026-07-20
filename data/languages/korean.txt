@@ -668,9 +668,6 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == 자신의 갈고리 보조선 항상 표시
 
-Always show settings card borders
-== 설정 카드 테두리 항상 표시
-
 Always translate
 == 항상 번역
 
@@ -9799,6 +9796,9 @@ Show server help and usage messages
 
 Show server settings
 == 서버 설정 보기
+
+Show settings card borders
+== 설정 카드 테두리 항상 표시
 
 Show short server names in browser
 == 서버 브라우저에 짧은 서버 이름 표시

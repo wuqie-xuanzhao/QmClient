@@ -668,9 +668,6 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == 始終顯示自己的鉤子輔助線
 
-Always show settings card borders
-== 永遠顯示設定卡片邊框
-
 Always translate
 == 始終翻譯
 
@@ -9799,6 +9796,9 @@ Show server help and usage messages
 
 Show server settings
 == 查看伺服器設置列表
+
+Show settings card borders
+== 顯示設定卡片邊框
 
 Show short server names in browser
 == 在伺服器瀏覽器中顯示簡短伺服器名

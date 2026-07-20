@@ -668,9 +668,6 @@ Always show other players' hook collision lines
 Always show own player's hook collision line
 == Sempre mostrar a própria linha de colisão de gancho
 
-Always show settings card borders
-== Sempre mostrar as bordas dos cartões de configurações
-
 Always translate
 == Traduzir sempre
 
@@ -9799,6 +9796,9 @@ Show server help and usage messages
 
 Show server settings
 == Mostrar configurações do servidor
+
+Show settings card borders
+== Sempre mostrar as bordas dos cartões de configurações
 
 Show short server names in browser
 == Exibir nome curto do servidor no navegador de servidores

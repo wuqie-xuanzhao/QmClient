@@ -729,6 +729,11 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	const SSettingsContentMetrics GeneralMetrics = ResolveSettingsContentMetrics(MainView.w);
 	const float UiScale = GeneralMetrics.m_UiScale;
 	const float BodySize = GeneralMetrics.m_BodySize;
+	constexpr int GeneralListMaxVisibleRows = 8;
+	const int GeneralLanguageVisibleRows = std::clamp((int)g_Localization.Languages().size(), 1, GeneralListMaxVisibleRows);
+	const int GeneralThemeVisibleRows = std::clamp((int)GameClient()->m_MenuBackground.GetThemes().size(), 1, GeneralListMaxVisibleRows);
+	const float GeneralLanguageListHeight = GeneralLanguageVisibleRows * GeneralMetrics.m_ListRowHeight;
+	const float GeneralThemeListHeight = GeneralMetrics.m_LineHeight + GeneralMetrics.m_LineSpacing + GeneralThemeVisibleRows * GeneralMetrics.m_ListRowHeight;
 	const SSettingsPageLayoutFrame GeneralPage = SettingsPageLayout(MainView, UiScale);
 	const IUiContext GeneralCardCtx = SettingsUiContext("settings_general", UiScale);
 	const SSettingsCardDeckVisualOptions GeneralVisualOptions = SettingsCardDeckVisualOptions();
@@ -757,7 +762,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	};
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pGameDefault, pLanguageDefault, pClientDefault, pRecordingDefault, GeneralMetrics, GeneralPage, UiScale, BodySize, DoNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pGameDefault, pLanguageDefault, pClientDefault, pRecordingDefault, GeneralMetrics, GeneralPage, UiScale, BodySize, GeneralLanguageListHeight, GeneralThemeListHeight, DoNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(4);
 		const SSettingsCardSpec GameSpec{pGameDefault->m_pStableId, Localize(pGameDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pGameDefault)};
 		const SSettingsCardSpec LanguageSpec{pLanguageDefault->m_pStableId, Localize(pLanguageDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pLanguageDefault)};
@@ -817,12 +822,16 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
 		});
 
-		AddCard(LanguageSpec, maximum(300.0f * UiScale, GeneralPage.m_ScrollViewport.h - 100.0f * UiScale), [this](CUIRect Content) {
+		AddCard(LanguageSpec, GeneralLanguageListHeight, [this](CUIRect Content) {
 			PrepareLanguagePageCache(Content.w, false);
 			RenderLanguageSelection(Content);
 		});
 
-		AddCard(ClientSpec, 340.0f * UiScale, [this, DoNumericField, GeneralMetrics](CUIRect Content) {
+		const float ClientContentHeight =
+			ResolveSettingsRowsHeight(3, GeneralMetrics.m_LineHeight, GeneralMetrics.m_LineSpacing) +
+			GeneralMetrics.m_SectionGap + ResolveSettingsRowsHeight(2, GeneralMetrics.m_ButtonHeight, GeneralMetrics.m_LineSpacing) +
+			GeneralMetrics.m_SectionGap + GeneralThemeListHeight;
+		AddCard(ClientSpec, ClientContentHeight, [this, DoNumericField, GeneralMetrics](CUIRect Content) {
 			CUIRect Button;
 			char aBuf[128 + IO_MAX_PATH_LENGTH];
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
@@ -840,9 +849,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				g_Config.m_ClRefreshRate = g_Config.m_ClRefreshRate > 480 || g_Config.m_ClRefreshRate == 0 ? 480 : 0;
 			Content.HSplitTop(GeneralMetrics.m_SectionGap, nullptr, &Content);
 			static CButtonContainer s_SettingsButtonId, s_SavesButtonId, s_ConfigButtonId, s_ThemesButtonId;
-			const auto DoOpenButton = [this, &Content, GeneralMetrics](CButtonContainer &Id, const char *pTextId, const char *pText, const char *pPath, bool CreateDirectory, const char *pTooltip) {
-				CUIRect Button;
-				Content.HSplitTop(GeneralMetrics.m_ButtonHeight, &Button, &Content);
+			const auto DoOpenButton = [this, GeneralMetrics](CButtonContainer &Id, const char *pTextId, const char *pText, const char *pPath, bool CreateDirectory, const char *pTooltip, const CUIRect &Button) {
 				if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &Id, pTextId, pText, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), 0.0f, GeneralMetrics.m_BodySize))
 				{
 					char aPath[IO_MAX_PATH_LENGTH];
@@ -852,12 +859,25 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 					Client()->ViewFile(aPath);
 				}
 				GameClient()->m_Tooltips.DoToolTip(&Id, &Button, pTooltip);
-				Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
 			};
-			DoOpenButton(s_SettingsButtonId, "general-settings-file", Localize("Settings file"), s_aConfigDomains[ConfigDomain::DDNET].m_aConfigPath, false, Localize("Open the settings file"));
-			DoOpenButton(s_SavesButtonId, "general-saves-file", Localize("Saves file"), SAVES_FILE, false, Localize("Open the saves file"));
-			DoOpenButton(s_ConfigButtonId, "general-config-directory", Localize("Config directory"), "", false, Localize("Open the directory that contains the configuration and user files"));
-			DoOpenButton(s_ThemesButtonId, "general-themes-directory", Localize("Themes directory"), "themes", true, Localize("Open the directory to add custom themes"));
+			for(int RowIndex = 0; RowIndex < 2; ++RowIndex)
+			{
+				CUIRect Row, LeftButton, RightButton;
+				Content.HSplitTop(GeneralMetrics.m_ButtonHeight, &Row, &Content);
+				Row.VSplitMid(&LeftButton, &RightButton, GeneralMetrics.m_LineSpacing);
+				if(RowIndex == 0)
+				{
+					DoOpenButton(s_SettingsButtonId, "general-settings-file", Localize("Settings file"), s_aConfigDomains[ConfigDomain::DDNET].m_aConfigPath, false, Localize("Open the settings file"), LeftButton);
+					DoOpenButton(s_SavesButtonId, "general-saves-file", Localize("Saves file"), SAVES_FILE, false, Localize("Open the saves file"), RightButton);
+				}
+				else
+				{
+					DoOpenButton(s_ConfigButtonId, "general-config-directory", Localize("Config directory"), "", false, Localize("Open the directory that contains the configuration and user files"), LeftButton);
+					DoOpenButton(s_ThemesButtonId, "general-themes-directory", Localize("Themes directory"), "themes", true, Localize("Open the directory to add custom themes"), RightButton);
+				}
+				if(RowIndex == 0)
+					Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
+			}
 			Content.HSplitTop(GeneralMetrics.m_SectionGap, nullptr, &Content);
 			RenderThemeSelection(Content);
 		});
@@ -3583,7 +3603,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsBackendMinCardHeight = BackendChromeHeight + GraphicsBackendContentHeight;
 	constexpr int GraphicsModesMaxVisibleRows = 8;
 	const int GraphicsModesVisibleRows = std::clamp(s_NumNodes, 1, GraphicsModesMaxVisibleRows);
-	const float GraphicsModesTargetContentHeight = GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
+	// 显示模式卡片包含窗口模式、当前模式和实际模式列表，测量时必须为两个设置行
+	// 都保留 viewport，否则卡片 deck 会把列表挤压成只有一行。
+	const float GraphicsModesTargetContentHeight = 2.0f * GraphicsMetrics.m_RowStep + GraphicsModesVisibleRows * GraphicsMetrics.m_ListRowHeight;
 	float GraphicsModesContentHeight = GraphicsModesTargetContentHeight;
 	const SCardMotionSpec GraphicsCardMotion = SettingsCardMotionSpec();
 	static bool s_GraphicsModesHeightInitialized = false;
@@ -3614,7 +3636,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	}
 	const uint64_t GraphicsModesMeasureRevision = (static_cast<uint64_t>(std::max(0, s_NumNodes)) << 32) ^ static_cast<uint64_t>(std::llround(GraphicsModesContentHeight * 1000.0f));
 	const float GraphicsModesMinCardHeight = ModesChromeHeight + GraphicsModesContentHeight;
-	const int GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);
+	const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0);
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
@@ -3642,11 +3664,34 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			vCards.push_back(std::move(Definition));
 		};
 
-		AddCard(ModesSpec, GraphicsModesMinCardHeight, ModesChromeHeight, [this, GraphicsMetrics](CUIRect ContentRect) {
+		AddCard(ModesSpec, GraphicsModesMinCardHeight, ModesChromeHeight, [this, GraphicsMetrics, OldWindowMode](CUIRect ContentRect) {
 		char aBuf[128];
 		CUIRect ModeList = ContentRect;
+		CUIRect WindowModeDropDown;
+		ModeList.HSplitTop(GraphicsMetrics.m_LineHeight, &WindowModeDropDown, &ModeList);
+		ModeList.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ModeList);
+		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
+		static CUi::SDropDownState s_WindowModeDropDownState;
+		static CScrollRegion s_WindowModeDropDownScrollRegion;
+		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
+		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
+		if(OldWindowMode != NewWindowMode)
+		{
+			if(NewWindowMode == 0)
+				Graphics()->SetWindowParams(0, false);
+			else if(NewWindowMode == 1)
+				Graphics()->SetWindowParams(0, true);
+			else if(NewWindowMode == 2)
+				Graphics()->SetWindowParams(3, false);
+			else if(NewWindowMode == 3)
+				Graphics()->SetWindowParams(2, false);
+			else if(NewWindowMode == 4)
+				Graphics()->SetWindowParams(1, false);
+		}
+
 		CUIRect ModeLabel;
-		ModeList.HSplitTop(GraphicsMetrics.m_RowStep, &ModeLabel, &ModeList); // display mode list
+		ModeList.HSplitTop(GraphicsMetrics.m_LineHeight, &ModeLabel, &ModeList); // current display mode
+		ModeList.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ModeList);
 		static CListBox s_ListBox;
 		const float RowHeightResList = GraphicsMetrics.m_ListRowHeight;
 		const float FontSizeResListHeader = GraphicsMetrics.m_BodySize;
@@ -3699,7 +3744,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Graphics()->ResizeToScreen();
 			}
 		} }, GraphicsModesMeasureRevision);
-		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsDisplayRowCount, OldWindowMode, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
+		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsDisplayRowCount, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
 		CUIRect Button;
 		char aBuf[128];
 		CUIRect CardView = ContentRect; // switches
@@ -3711,25 +3756,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
 			return Row;
 		};
-		CUIRect WindowModeDropDown = NextRow();
-		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
-		static CUi::SDropDownState s_WindowModeDropDownState;
-		static CScrollRegion s_WindowModeDropDownScrollRegion;
-		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
-		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
-		if(OldWindowMode != NewWindowMode)
-		{
-			if(NewWindowMode == 0)
-				Graphics()->SetWindowParams(0, false);
-			else if(NewWindowMode == 1)
-				Graphics()->SetWindowParams(0, true);
-			else if(NewWindowMode == 2)
-				Graphics()->SetWindowParams(3, false);
-			else if(NewWindowMode == 3)
-				Graphics()->SetWindowParams(2, false);
-			else if(NewWindowMode == 4)
-				Graphics()->SetWindowParams(1, false);
-		}
 		if(Graphics()->GetNumScreens() > 1)
 		{
 			CUIRect ScreenDropDown = NextRow();
@@ -3872,7 +3898,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
 			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
-			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Always show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
 				g_Config.m_QmUiCardBorders ^= 1;
 
 			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);

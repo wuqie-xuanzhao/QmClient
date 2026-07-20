@@ -221,7 +221,6 @@ Always show local time
 Always show nameplates regardless of distance
 Always show other players' hook collision lines
 Always show own player's hook collision line
-Always show settings card borders
 Always translate
 AMLL TTML DB API base URL (mirror)
 Amount
@@ -3265,6 +3264,7 @@ Show seconds on clock
 Show server chat messages
 Show server help and usage messages
 Show server settings
+Show settings card borders
 Show short server names in browser
 Show skin date and author
 Show skin name on name plate to find missing skins
