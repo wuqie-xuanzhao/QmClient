@@ -399,6 +399,7 @@ public:
 	void OnRender() override;
 	bool OnInput(const IInput::CEvent &Event) override;
 	bool ShouldAppendGoresPrevWeapon() const;
+	bool IsFinishRenamePending(int Dummy) const { return Dummy >= 0 && Dummy < NUM_DUMMIES && m_aFinishRenamePending[Dummy]; }
 
 	void OnStateChange(int NewState, int OldState) override;
 	void OnNewSnapshot() override;

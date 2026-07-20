@@ -208,6 +208,7 @@ int CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 	const bool PlaySound = ShouldPlayFocusDeathOrSpawnSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteDeathSounds != 0, g_Config.m_SndGame);
 	if(ShouldHideFocusKillEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideKillEffects != 0))
 	{
+		++GameClient()->m_SpawnEffectsFiltered;
 		if(PlaySound)
 			GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, Volume, Pos);
 		return 0;
@@ -230,7 +231,10 @@ int CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 		p.m_Friction = 0.7f;
 		p.m_Color = ColorRGBA(0xb5 / 255.0f, 0x50 / 255.0f, 0xcb / 255.0f, Alpha);
 		p.m_StartAlpha = Alpha;
-		CreatedParticles += GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p) ? 1 : 0;
+		if(GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p))
+			++CreatedParticles;
+		else
+			++GameClient()->m_SpawnParticleAddFailures;
 	}
 	if(PlaySound)
 		GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, Volume, Pos);

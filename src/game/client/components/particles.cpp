@@ -198,7 +198,8 @@ bool CParticles::ParticleIsVisibleOnScreen(const vec2 &CurPos, float CurSize)
 
 void CParticles::RenderGroup(int Group)
 {
-	if(Group != GROUP_EXTRA && Group != GROUP_TRAIL_EXTRA && !GameClient()->m_ParticlesSkinLoaded)
+	const bool IsExtraGroup = Group == GROUP_EXTRA || Group == GROUP_TRAIL_EXTRA;
+	if((IsExtraGroup && !GameClient()->m_ExtrasSkinLoaded) || (!IsExtraGroup && !GameClient()->m_ParticlesSkinLoaded))
 		return;
 	IGraphics::CTextureHandle *aParticles = GameClient()->m_ParticlesSkin.m_aSpriteParticles;
 	int FirstParticleOffset = SPRITE_PART_SLICE;

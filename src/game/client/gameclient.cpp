@@ -779,6 +779,8 @@ void CGameClient::OnInit()
 	m_ParticlesSkinLoaded = false;
 	m_SpawnEventsProcessed = 0;
 	m_SpawnEffectsDispatched = 0;
+	m_SpawnEffectsFiltered = 0;
+	m_SpawnParticleAddFailures = 0;
 	m_EmoticonsSkinLoaded = false;
 	m_HudSkinLoaded = false;
 
@@ -1297,6 +1299,8 @@ void CGameClient::OnReset()
 	m_SuppressEvents = false;
 	m_SpawnEventsProcessed = 0;
 	m_SpawnEffectsDispatched = 0;
+	m_SpawnEffectsFiltered = 0;
+	m_SpawnParticleAddFailures = 0;
 	m_NewTick = false;
 	m_NewPredictedTick = false;
 	std::fill(std::begin(m_aPredictedHammerHitEvent), std::end(m_aPredictedHammerHitEvent), false);
@@ -3214,7 +3218,7 @@ void CGameClient::OnRender()
 	// resend player and dummy info if it was filtered by server
 	if(m_aLocalIds[0] >= 0 && Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive() && WasNewTick)
 	{
-		if(m_aCheckInfo[0] == 0)
+		if(m_aCheckInfo[0] == 0 && !m_TClient.IsFinishRenamePending(0))
 		{
 			if(m_pClient->IsSixup())
 			{
@@ -3246,7 +3250,7 @@ void CGameClient::OnRender()
 
 		if(m_aLocalIds[1] >= 0)
 		{
-			if(m_aCheckInfo[1] == 0)
+			if(m_aCheckInfo[1] == 0 && !m_TClient.IsFinishRenamePending(1))
 			{
 				if(m_pClient->IsSixup())
 				{
@@ -4306,7 +4310,10 @@ void CGameClient::ProcessEvents()
 			m_SpawnEventsProcessed++;
 #if defined(CONF_QM_LIVE_CLIENT)
 			if(LiveRejectUnknownVisualEvent)
+			{
+				++m_SpawnEffectsFiltered;
 				continue;
+			}
 #endif
 			const CNetEvent_Spawn *pEvent = (const CNetEvent_Spawn *)Item.m_pData;
 			m_SpawnEffectsDispatched += m_Effects.PlayerSpawn(vec2(pEvent->m_X, pEvent->m_Y), Alpha, Volume);
@@ -6648,7 +6655,7 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	CSkinDescriptor RenderSkinDescriptor = SkinDescriptor;
 	CTeeRenderInfo NewRenderInfo = m_pSkinInfo->TeeRenderInfo();
 	const bool DescriptorRenderInfoReady = m_pSkinInfo->DescriptorRenderInfoReady();
-	if(m_RenderInfoSkinDescriptor != SkinDescriptor)
+	if(m_RenderInfoSkinDescriptor != SkinDescriptor && m_RenderInfoFallbackResidencyDescriptor != SkinDescriptor)
 		m_RenderInfoFallbackResidencyRequested = false;
 	if(!DescriptorRenderInfoReady && m_RenderInfo.Valid())
 	{
@@ -6656,6 +6663,7 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		{
 			m_pGameClient->m_Skins.FindContainerOrNullptr(m_RenderInfoSkinDescriptor.m_aSkinName);
 			m_RenderInfoFallbackResidencyRequested = true;
+			m_RenderInfoFallbackResidencyDescriptor = SkinDescriptor;
 		}
 		const CTeeRenderInfo SkinProperties = NewRenderInfo;
 		NewRenderInfo = m_RenderInfo;
@@ -6751,16 +6759,32 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	};
 	bool ResourceChanged = !SameTexture(m_RenderInfo.m_OriginalRenderSkin.m_Body, NewRenderInfo.m_OriginalRenderSkin.m_Body) ||
 			       !SameTexture(m_RenderInfo.m_ColorableRenderSkin.m_Body, NewRenderInfo.m_ColorableRenderSkin.m_Body);
+	const auto SameSkinTextures = [&SameTexture](const CSkin::CSkinTextures &Left, const CSkin::CSkinTextures &Right) {
+		return SameTexture(Left.m_Body, Right.m_Body) && SameTexture(Left.m_BodyOutline, Right.m_BodyOutline) &&
+			SameTexture(Left.m_Feet, Right.m_Feet) && SameTexture(Left.m_FeetOutline, Right.m_FeetOutline) &&
+			SameTexture(Left.m_Hands, Right.m_Hands) && SameTexture(Left.m_HandsOutline, Right.m_HandsOutline) &&
+			std::equal(std::begin(Left.m_aEyes), std::end(Left.m_aEyes), std::begin(Right.m_aEyes), [&SameTexture](const auto &A, const auto &B) { return SameTexture(A, B); });
+	};
+	ResourceChanged = !SameSkinTextures(m_RenderInfo.m_OriginalRenderSkin, NewRenderInfo.m_OriginalRenderSkin) ||
+			       !SameSkinTextures(m_RenderInfo.m_ColorableRenderSkin, NewRenderInfo.m_ColorableRenderSkin);
 	for(int Dummy = 0; Dummy < NUM_DUMMIES && !ResourceChanged; ++Dummy)
 	{
-		ResourceChanged = !SameTexture(m_RenderInfo.m_aSixup[Dummy].m_aOriginalTextures[protocol7::SKINPART_BODY], NewRenderInfo.m_aSixup[Dummy].m_aOriginalTextures[protocol7::SKINPART_BODY]) ||
-				  !SameTexture(m_RenderInfo.m_aSixup[Dummy].m_aColorableTextures[protocol7::SKINPART_BODY], NewRenderInfo.m_aSixup[Dummy].m_aColorableTextures[protocol7::SKINPART_BODY]);
+		for(int Part = 0; Part < protocol7::NUM_SKINPARTS && !ResourceChanged; ++Part)
+		{
+			ResourceChanged = !SameTexture(m_RenderInfo.m_aSixup[Dummy].m_aOriginalTextures[Part], NewRenderInfo.m_aSixup[Dummy].m_aOriginalTextures[Part]) ||
+					  !SameTexture(m_RenderInfo.m_aSixup[Dummy].m_aColorableTextures[Part], NewRenderInfo.m_aSixup[Dummy].m_aColorableTextures[Part]);
+		}
 	}
 	if(DescriptorRenderInfoReady && (m_RenderInfoSkinDescriptor != SkinDescriptor || ResourceChanged))
 		++m_RenderInfoSkinGeneration;
 	UpdateSkinChangeTransition(NewRenderInfo, RenderSkinDescriptor);
 	m_RenderInfo = NewRenderInfo;
 	m_RenderInfoSkinDescriptor = DescriptorRenderInfoReady ? SkinDescriptor : m_RenderInfoSkinDescriptor;
+	if(DescriptorRenderInfoReady)
+	{
+		m_RenderInfoFallbackResidencyRequested = false;
+		m_RenderInfoFallbackResidencyDescriptor = {};
+	}
 }
 
 void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &NewRenderInfo, const CSkinDescriptor &SkinDescriptor)
@@ -6850,6 +6874,7 @@ const CTeeRenderInfo *CGameClient::CClientData::SkinChangePreviousRenderInfo(std
 void CGameClient::CClientData::Reset()
 {
 	m_RenderInfoSkinDescriptor = {};
+	m_RenderInfoFallbackResidencyDescriptor = {};
 	m_RenderInfoSkinGeneration = 0;
 	m_RenderInfoFallbackResidencyRequested = false;
 	m_UseCustomColor = 0;
@@ -7120,6 +7145,8 @@ bool CGameClient::GotWantedSkin7(bool Dummy)
 
 void CGameClient::SendInfo(bool Start)
 {
+	if(!Start && m_TClient.IsFinishRenamePending(0))
+		return;
 #if defined(CONF_QM_LIVE_CLIENT)
 	if(Client()->QmLiveObserverActive())
 		return;
@@ -7169,6 +7196,8 @@ void CGameClient::SendInfo(bool Start)
 
 void CGameClient::SendDummyInfo(bool Start)
 {
+	if(!Start && m_TClient.IsFinishRenamePending(1))
+		return;
 	UpdateLocalSkinInfo(1);
 
 	if(m_pClient->IsSixup())
@@ -8752,18 +8781,12 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 
 void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 {
-	if(m_ExtrasSkinLoaded)
-	{
-		Graphics()->UnloadTexture(&m_ExtrasSkin.m_SpriteParticleSnowflake);
-		Graphics()->UnloadTexture(&m_ExtrasSkin.m_SpriteParticleSparkle);
-		Graphics()->UnloadTexture(&m_ExtrasSkin.m_SpritePulley);
-		Graphics()->UnloadTexture(&m_ExtrasSkin.m_SpriteHectagon);
-
-		for(auto &SpriteParticle : m_ExtrasSkin.m_aSpriteParticles)
-			SpriteParticle = IGraphics::CTextureHandle();
-
-		m_ExtrasSkinLoaded = false;
-	}
+	auto UnloadExtrasSkin = [this](SClientExtrasSkin &Skin) {
+		Graphics()->UnloadTexture(&Skin.m_SpriteParticleSnowflake);
+		Graphics()->UnloadTexture(&Skin.m_SpriteParticleSparkle);
+		Graphics()->UnloadTexture(&Skin.m_SpritePulley);
+		Graphics()->UnloadTexture(&Skin.m_SpriteHectagon);
+	};
 
 	char aPath[IO_MAX_PATH_LENGTH];
 	bool IsDefault = false;
@@ -8791,17 +8814,47 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 	}
 	else if(PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo))
 	{
-		m_ExtrasSkin.m_SpriteParticleSnowflake = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE]);
-		m_ExtrasSkin.m_SpriteParticleSparkle = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SPARKLE]);
-		m_ExtrasSkin.m_SpritePulley = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_PULLEY]);
-		m_ExtrasSkin.m_SpriteHectagon = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_HECTAGON]);
-
-		m_ExtrasSkin.m_aSpriteParticles[0] = m_ExtrasSkin.m_SpriteParticleSnowflake;
-		m_ExtrasSkin.m_aSpriteParticles[1] = m_ExtrasSkin.m_SpriteParticleSparkle;
-		m_ExtrasSkin.m_aSpriteParticles[2] = m_ExtrasSkin.m_SpritePulley;
-		m_ExtrasSkin.m_aSpriteParticles[3] = m_ExtrasSkin.m_SpriteHectagon;
-
-		m_ExtrasSkinLoaded = true;
+		SClientExtrasSkin Candidate;
+		Candidate.m_SpriteParticleSnowflake = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE]);
+		Candidate.m_SpriteParticleSparkle = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_SPARKLE]);
+		Candidate.m_SpritePulley = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_PULLEY]);
+		Candidate.m_SpriteHectagon = Graphics()->LoadSpriteTexture(ImgInfo, &g_pData->m_aSprites[SPRITE_PART_HECTAGON]);
+		Candidate.m_aSpriteParticles[0] = Candidate.m_SpriteParticleSnowflake;
+		Candidate.m_aSpriteParticles[1] = Candidate.m_SpriteParticleSparkle;
+		Candidate.m_aSpriteParticles[2] = Candidate.m_SpritePulley;
+		Candidate.m_aSpriteParticles[3] = Candidate.m_SpriteHectagon;
+		bool CandidateValid = true;
+		for(const auto &Texture : Candidate.m_aSpriteParticles)
+			CandidateValid &= Texture.IsValid();
+		if(CandidateValid)
+		{
+			if(m_ExtrasSkinLoaded)
+				UnloadExtrasSkin(m_ExtrasSkin);
+			m_ExtrasSkin = Candidate;
+			m_ExtrasSkinLoaded = true;
+		}
+		else
+		{
+			UnloadExtrasSkin(Candidate);
+			if(!IsDefault)
+			{
+				ImgInfo.Free();
+				if(AsDir)
+					LoadExtrasSkin("default");
+				else
+					LoadExtrasSkin(pPath, true);
+				return;
+			}
+		}
+	}
+	else if(!IsDefault)
+	{
+		ImgInfo.Free();
+		if(AsDir)
+			LoadExtrasSkin("default");
+		else
+			LoadExtrasSkin(pPath, true);
+		return;
 	}
 	ImgInfo.Free();
 }

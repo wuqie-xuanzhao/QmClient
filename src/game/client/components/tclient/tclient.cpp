@@ -1786,7 +1786,9 @@ void CTClient::DoFinishCheck()
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
 		Client()->SendMsg(Conn, &Packer, MSGFLAG_VITAL);
-		GameClient()->m_aCheckInfo[Conn] = Client()->GameTickSpeed(); // 1 second
+		// 终点临时改名由本组件自己的 pending/超时状态管理，不能进入通用
+		// SendInfo 重发路径，否则会被配置名字覆盖并重复弹通知。
+		GameClient()->m_aCheckInfo[Conn] = -1;
 	};
 
 	const int Dummy = std::clamp(g_Config.m_ClDummy, 0, NUM_DUMMIES - 1);

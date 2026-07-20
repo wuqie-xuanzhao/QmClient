@@ -740,6 +740,7 @@ public:
 		std::shared_ptr<CManagedTeeRenderInfo> m_pSkinInfo = nullptr; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
 		CSkinDescriptor m_RenderInfoSkinDescriptor;
+		CSkinDescriptor m_RenderInfoFallbackResidencyDescriptor;
 		uint64_t m_RenderInfoSkinGeneration = 0;
 		bool m_RenderInfoFallbackResidencyRequested = false;
 		CTeeRenderInfo m_SkinTransitionPreviousRenderInfo;
@@ -1200,6 +1201,8 @@ public:
 	bool m_ParticlesSkinLoaded = false;
 	int m_SpawnEventsProcessed = 0;
 	int m_SpawnEffectsDispatched = 0;
+	int m_SpawnEffectsFiltered = 0;
+	int m_SpawnParticleAddFailures = 0;
 
 	struct SClientEmoticonsSkin
 	{

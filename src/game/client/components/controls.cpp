@@ -89,6 +89,8 @@ void CControls::OnPlayerDeath()
 	s_aQmHadLocalCharacter[Dummy] = false;
 	m_aQmRespawnWantedWeapon[Dummy] = 0;
 	m_aQmRespawnWeaponPending[Dummy] = false;
+	// 不让死亡前残留的选择在下一次重生等待期间继续发送。
+	m_aInputData[Dummy].m_WantedWeapon = 0;
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -417,6 +419,11 @@ void CControls::OnRender()
 		if(HasActiveCharacter && m_aQmRespawnWeaponPending[Dummy])
 		{
 			const int WantedWeapon = m_aQmRespawnWantedWeapon[Dummy];
+			if(m_aInputData[Dummy].m_WantedWeapon != 0 && m_aInputData[Dummy].m_WantedWeapon != WantedWeapon)
+			{
+				// 用户主动选择了其他武器，取消这次自动选择。
+				m_aQmRespawnWeaponPending[Dummy] = false;
+			}
 			const int Weapon = WantedWeapon - 1;
 			const int LocalId = GameClient()->m_aLocalIds[Dummy];
 			const bool HasWeapon = Weapon <= WEAPON_GUN ||
@@ -426,11 +433,14 @@ void CControls::OnRender()
 				m_aInputData[Dummy].m_WantedWeapon = WantedWeapon;
 				m_aQmRespawnWeaponPending[Dummy] = false;
 			}
+			else
+				m_aInputData[Dummy].m_WantedWeapon = 0;
 		}
 		else if(!HasActiveCharacter)
 		{
 			m_aQmRespawnWantedWeapon[Dummy] = 0;
 			m_aQmRespawnWeaponPending[Dummy] = false;
+			m_aInputData[Dummy].m_WantedWeapon = 0;
 		}
 		s_aQmHadLocalCharacter[Dummy] = HasActiveCharacter;
 	}
