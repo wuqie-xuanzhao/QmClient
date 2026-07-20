@@ -2491,6 +2491,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_AnchorVisible = true;
 	m_PopupVisible = true;
 	m_BlockUnderlyingScroll = false;
+	m_ScrollToActiveItem = false;
 	m_MenuUiFirstWheelLogged = false;
 	m_Viewport = {};
 	m_PopupPolicy = {};
@@ -2550,7 +2551,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 			View.HSplitTop(pSelectionPopup->m_EntrySpacing, nullptr, &View);
 		View.HSplitTop(pSelectionPopup->m_EntryHeight, &Slot, &View);
 		const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);
-		if(pScrollRegion->AddRect(Slot, ActiveEntry))
+		if(pScrollRegion->AddRect(Slot, QmDropdownActiveItemShouldScrollIntoView(pSelectionPopup->m_ScrollToActiveItem, ActiveEntry)))
 		{
 			++VisibleEntries;
 			// 活动项与悬浮项使用同一种整行背景，避免左侧竖条与条目背景重叠。
@@ -2568,6 +2569,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		pUI->TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 
 	pScrollRegion->End();
+	pSelectionPopup->m_ScrollToActiveItem = false;
 	if(!pSelectionPopup->m_MenuUiFirstWheelLogged && pScrollRegion->WheelConsumedThisFrame())
 	{
 		pUI->m_MenuUiFirstWheelPerf = MenuUiPerfEnabled;
@@ -2660,8 +2662,10 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
 	// 弹窗使用设置页最外层裁剪区，不能越过 Tab 或页面容器；卡片内容裁剪区
 	// 只判断锚点是否仍完整可见，锚点滚出卡片后应关闭弹窗。
-	const CUIRect Viewport = IsClipped() ? *OutermostClipArea() : *Screen();
-	const CUIRect AnchorViewport = IsClipped() ? *ClipArea() : Viewport;
+	const CUIRect Viewport = DropDownProps.m_pPopupViewport != nullptr ? *DropDownProps.m_pPopupViewport : IsClipped() ? *OutermostClipArea() :
+															     *Screen();
+	const CUIRect AnchorViewport = DropDownProps.m_pAnchorViewport != nullptr ? *DropDownProps.m_pAnchorViewport : IsClipped() ? *ClipArea() :
+																     Viewport;
 	if(PopupOpen && !QmDropdownAnchorFullyVisible(*pRect, AnchorViewport))
 	{
 		ClosePopupMenu(&State.m_SelectionPopupContext);
@@ -2717,8 +2721,11 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		DropDownInput.m_KeyEnter = ConsumeHotkey(HOTKEY_ENTER);
 		DropDownInput.m_KeyEscape = ConsumeHotkey(HOTKEY_ESCAPE);
 	}
+	const int PreviousActiveIndex = State.m_DropDownState.ActiveIndex();
 	const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);
 	State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
+	if(QmDropdownShouldRequestActiveScroll(PopupOpen, PreviousActiveIndex, State.m_DropDownState.ActiveIndex()))
+		State.m_SelectionPopupContext.m_ScrollToActiveItem = true;
 	if(PopupOpen)
 	{
 		State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;
@@ -2753,6 +2760,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
 		State.m_SelectionPopupContext.m_TransparentButtons = DropDownProps.m_VisualStyle.m_TransparentEntries;
 		State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
+		State.m_SelectionPopupContext.m_ScrollToActiveItem = true;
 		State.m_SelectionPopupContext.m_Viewport = Viewport;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 	}

@@ -1802,7 +1802,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 		EXPECT_NE(pDeck->find("ResolveSettingsCardDefinitionsRevision("), std::string::npos);
 		EXPECT_NE(pDeck->find("static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;"), std::string::npos);
 		EXPECT_NE(pDeck->find("Ui()->DoButtonLogic(&CollapseButtons[Index]"), std::string::npos);
-		EXPECT_NE(pDeck->find("DoButton_Menu(&CollapseButtons[Index]"), std::string::npos);
+		EXPECT_NE(pDeck->find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
 		EXPECT_EQ(pDeck->find("Ui()->DoButtonLogic(&Collapsed[Index]"), std::string::npos);
 		EXPECT_EQ(pDeck->find("BeginSettingsQmScrollContainer("), std::string::npos);
 		EXPECT_EQ(pDeck->find("s_GlassCards"), std::string::npos);
@@ -1817,8 +1817,8 @@ TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
 	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
 	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
-	EXPECT_NE(Body.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
-	EXPECT_EQ(Body.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
+	EXPECT_EQ(Body.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
+	EXPECT_NE(Body.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
 	EXPECT_EQ(Body.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
 	EXPECT_EQ(Body.find("DrawOutline(Border)"), std::string::npos);
 	EXPECT_EQ(MenuSource.find("RenderQmSettingsGlassCard"), std::string::npos);
@@ -2185,7 +2185,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardBorders, \"show-settings-card-borders\", Localize(\"Show settings card borders\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Settings card border color\"), &g_Config.m_QmUiCardBorderColor"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("false, nullptr, true, false);"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("DoGraphicsNumericField(\"graphics-card-corner-segments\""), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("DoGraphicsNumericField(\"graphics-card-corner-segments\""), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("int RowsRemaining = 3;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("DoSettingsLabel(SETTINGS_GRAPHICS, -1, \"graphics-ui-motion-level-label\""), std::string::npos);
@@ -2196,15 +2196,17 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsGraphics.find("AddCard(BackendSpec"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(ModesSpec, GraphicsModesMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("ResolveSettingsGraphicsModesGeometry("), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(7"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsDisplayMeasureRevision ="), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsDisplayMeasureRevision"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesTargetContentHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsModesMeasureRevision = static_cast<uint64_t>(std::max(0, s_NumNodes));"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("ScreenDropDownProps.m_pPopupViewport = &GraphicsPage.m_ScrollViewport;"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("WindowModeDropDownProps.m_pPopupViewport = &GraphicsPage.m_ScrollViewport;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("settings-graphics-modes-height"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsModesHeightAnimationActive"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("MotionRow.VSplitLeft"), std::string::npos);
@@ -2212,17 +2214,15 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("static CUi::SDropDownState s_GpuDropDownState;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("static CUi::SDropDownState s_State;"), std::string::npos);
 	const size_t ModesCard = RenderSettingsGraphics.find("AddCard(ModesSpec");
-	const size_t WindowMode = RenderSettingsGraphics.find("s_WindowModeDropDownState", ModesCard);
 	const size_t DisplayCard = RenderSettingsGraphics.find("AddCard(DisplaySpec");
 	const size_t DisplayEnd = RenderSettingsGraphics.find("AddCard(VisualSpec", DisplayCard);
 	ASSERT_NE(ModesCard, std::string::npos);
-	ASSERT_NE(WindowMode, std::string::npos);
 	ASSERT_NE(DisplayCard, std::string::npos);
 	ASSERT_NE(DisplayEnd, std::string::npos);
 	EXPECT_LT(ModesCard, DisplayCard);
-	EXPECT_LT(WindowMode, DisplayCard);
-	EXPECT_GE(WindowMode, ModesCard);
-	EXPECT_FALSE(WindowMode >= DisplayCard && WindowMode < DisplayEnd);
+	const size_t WindowMode = RenderSettingsGraphics.find("s_WindowModeDropDownState", DisplayCard);
+	ASSERT_NE(WindowMode, std::string::npos);
+	EXPECT_LT(WindowMode, DisplayEnd);
 	EXPECT_EQ(RenderSettingsGraphics.find("UpdateMeasuredCardHeight"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("s_GraphicsInteractionCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
@@ -2756,7 +2756,7 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 	EXPECT_NE(DoDropDown.find("PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("if(State.m_DropDownState.IsOpen() && !PopupOpen)"), std::string::npos);
 	// Popup 以设置页最外层 viewport 定位，并在锚点离开所属容器时关闭。
-	EXPECT_NE(DoDropDown.find("const CUIRect Viewport = IsClipped() ? *OutermostClipArea() : *Screen();"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("DropDownProps.m_pPopupViewport != nullptr"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("QmDropdownAnchorFullyVisible(*pRect, AnchorViewport)"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("SQmDropdownInput DropDownInput;"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("State.m_DropDownState.Update(DropDownInput, Num);"), std::string::npos);
@@ -3117,7 +3117,7 @@ TEST(QmNewUiMenuBranches, GraphicsAndSoundNestedListsOwnWheel)
 	EXPECT_NE(Graphics.find("ResolveSettingsGraphicsModesGeometry("), std::string::npos);
 	EXPECT_NE(Sound.find("ResolveSettingsSoundAudioPackGeometry("), std::string::npos);
 	EXPECT_NE(Graphics.find("const int GraphicsBackendRowCount"), std::string::npos);
-	EXPECT_NE(Graphics.find("GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount"), std::string::npos);
+	EXPECT_NE(Graphics.find("GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount"), std::string::npos);
 	EXPECT_EQ(Graphics.find("const auto NextBackendRow"), std::string::npos);
 	EXPECT_NE(Graphics.find("GraphicsModesMeasureRevision"), std::string::npos);
 	EXPECT_EQ(Graphics.find("GraphicsBackendMinCardHeight = 104.0f"), std::string::npos);

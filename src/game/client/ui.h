@@ -1055,6 +1055,7 @@ public:
 		bool m_AnchorVisible = true;
 		bool m_PopupVisible = true;
 		bool m_BlockUnderlyingScroll = false;
+		bool m_ScrollToActiveItem = false;
 		bool m_MenuUiFirstWheelLogged = false;
 		CUIRect m_Viewport{};
 		SQmDropdownPopupPolicy m_PopupPolicy;
@@ -1106,6 +1107,11 @@ public:
 		float m_FontSize = -1.0f;
 		bool m_Enabled = true;
 		bool m_ClosePopupWhenDisabled = true;
+		// 下拉框的锚点和弹层有不同的裁剪语义：锚点必须仍在所属控件内，
+		// 弹层则允许离开卡片，但不能越过设置页滚动 viewport。未指定时沿用
+		// 当前 clip stack，旧调用方因此保持兼容。
+		const CUIRect *m_pAnchorViewport = nullptr;
+		const CUIRect *m_pPopupViewport = nullptr;
 		SQmDropdownVisualStyle m_VisualStyle;
 	};
 	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});

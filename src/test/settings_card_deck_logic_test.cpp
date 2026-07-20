@@ -305,26 +305,6 @@ TEST(SettingsCardDeck, BorderWidthDoesNotDependOnFocus)
 	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(2.0f), 4.0f);
 }
 
-TEST(SettingsCardDeck, BorderRingClipsCoverOnlyTheCardEdge)
-{
-	const CUIRect Surface{10.0f, 20.0f, 200.0f, 100.0f};
-	const auto aClips = ResolveSettingsCardBorderRingClipRects(Surface, 3.0f);
-	const auto Overlaps = [](const CUIRect &A, const CUIRect &B) {
-		return A.x < B.x + B.w && A.x + A.w > B.x && A.y < B.y + B.h && A.y + A.h > B.y;
-	};
-	for(size_t i = 0; i < aClips.size(); ++i)
-	{
-		EXPECT_TRUE(Surface.Inside(vec2(aClips[i].x, aClips[i].y)));
-		for(size_t j = i + 1; j < aClips.size(); ++j)
-			EXPECT_FALSE(Overlaps(aClips[i], aClips[j]));
-	}
-	const vec2 Center{Surface.x + Surface.w * 0.5f, Surface.y + Surface.h * 0.5f};
-	for(const CUIRect &Clip : aClips)
-		EXPECT_FALSE(Clip.Inside(Center));
-	EXPECT_TRUE(aClips[0].Inside(vec2(Surface.x + Surface.w * 0.5f, Surface.y + 1.0f)));
-	EXPECT_TRUE(aClips[1].Inside(vec2(Surface.x + Surface.w * 0.5f, Surface.y + Surface.h - 1.0f)));
-}
-
 TEST(SettingsPageLayout, GeneralDynamicCameraConsumesNoHiddenRowWhenCollapsed)
 {
 	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
@@ -366,15 +346,11 @@ TEST(SettingsCardDeck, EveryRegisteredCardResolvesANonEmptyDescriptionKey)
 	EXPECT_EQ(qm_card_registry::ResolveLocalizedDescription(static_cast<const char *>(nullptr)), nullptr);
 }
 
-TEST(SettingsCardDeck, NonQmCardsDeclareDistinctDescriptionsWithinEachPage)
+TEST(SettingsCardDeck, EveryCardDeclaresADistinctDescriptionWithinItsPage)
 {
 	std::unordered_map<std::string, std::unordered_set<std::string>> DescriptionsByTab;
 	for(const qm_card_registry::SCardDefault &Default : qm_card_registry::Defaults())
 	{
-		const std::string StableId = Default.m_pStableId != nullptr ? Default.m_pStableId : "";
-		const bool IsNonQmCard = StableId.starts_with("tclient:") || StableId.starts_with("deck:");
-		if(!IsNonQmCard)
-			continue;
 		SCOPED_TRACE(Default.m_pStableId);
 		ASSERT_NE(Default.m_pDescription, nullptr);
 		ASSERT_NE(Default.m_pDescription[0], '\0');
@@ -487,6 +463,44 @@ TEST(SettingsCardDeck, DisabledOrSnappedAnimationsOnlyResetTargets)
 
 	const SSettingsCardAnimationWork FirstFrame = ResolveSettingsCardAnimationWork(0.16f, false, true, false, 0.18f, false, false);
 	EXPECT_FALSE(FirstFrame.m_SetReflowTarget);
+}
+
+TEST(SettingsCardDeck, DefinitionsRevisionInvalidatesMeasurements)
+{
+	EXPECT_TRUE(SettingsCardDeckDefinitionsRevisionChanged(false, 0, 0));
+	EXPECT_FALSE(SettingsCardDeckDefinitionsRevisionChanged(true, 17, 17));
+	EXPECT_TRUE(SettingsCardDeckDefinitionsRevisionChanged(true, 17, 18));
+}
+
+TEST(SettingsCardDeck, InnerSurfaceCompensatesBorderWithoutTintingCardBackground)
+{
+	const ColorRGBA Surface(0.24f, 0.28f, 0.32f, 0.70f);
+	ColorRGBA Border(0.90f, 0.15f, 0.10f, 0.20f);
+	const ColorRGBA Inner = ResolveSettingsCardInnerSurfaceColor(Surface, Border);
+	Border.a = std::min(Border.a, Surface.a - 0.001f);
+	const float CombinedAlpha = Inner.a + Border.a * (1.0f - Inner.a);
+	const auto CombinedChannel = [&](const float InnerChannel, const float BorderChannel) {
+		return InnerChannel * Inner.a + BorderChannel * Border.a * (1.0f - Inner.a);
+	};
+	EXPECT_NEAR(CombinedAlpha, Surface.a, 0.001f);
+	EXPECT_NEAR(CombinedChannel(Inner.r, Border.r), Surface.r * Surface.a, 0.001f);
+	EXPECT_NEAR(CombinedChannel(Inner.g, Border.g), Surface.g * Surface.a, 0.001f);
+	EXPECT_NEAR(CombinedChannel(Inner.b, Border.b), Surface.b * Surface.a, 0.001f);
+}
+
+TEST(SettingsCardDeck, ConfiguredBorderColorProvidesSubtleSurfaceTint)
+{
+	const ColorRGBA Surface(0.24f, 0.28f, 0.32f, 0.70f);
+	const ColorRGBA Border(0.90f, 0.15f, 0.10f, 1.0f);
+	const ColorRGBA Linked = ResolveSettingsCardLinkedSurfaceColor(Surface, Border, true);
+	const ColorRGBA Unlinked = ResolveSettingsCardLinkedSurfaceColor(Surface, Border, false);
+	EXPECT_FLOAT_EQ(Unlinked.r, Surface.r);
+	EXPECT_FLOAT_EQ(Unlinked.g, Surface.g);
+	EXPECT_FLOAT_EQ(Unlinked.b, Surface.b);
+	EXPECT_GT(Linked.r, Surface.r);
+	EXPECT_LT(Linked.g, Surface.g);
+	EXPECT_LT(Linked.b, Surface.b);
+	EXPECT_FLOAT_EQ(Linked.a, Surface.a);
 }
 
 TEST(SettingsCardDeck, ContentHeightAnimationSkipsStableFramesAndSnapsFirstLayout)

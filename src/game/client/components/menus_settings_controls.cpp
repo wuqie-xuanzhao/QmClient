@@ -284,9 +284,9 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	const bool HasCustomBinds = std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; });
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (HasCustomBinds ? 1u : 0u);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(GameClient()->m_Menus.m_SettingsCardDeckDisplayCycle, GameClient()->m_Menus.m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
-	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly, CardLayoutRevision](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly, CardLayoutRevision, CardCtx](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(9);
-		const auto AddCard = [this](std::vector<SSettingsCardDefinition> &Cards, const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
+		const auto AddCard = [this](std::vector<SSettingsCardDefinition> &Cards, const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardPreLayoutHeaderInput PreLayoutHeaderInput = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
 			const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(pId);
 			if(pDefault == nullptr)
 				return;
@@ -296,6 +296,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			Definition.m_Render = std::move(Render);
 			Definition.m_IsVisible = std::move(IsVisible);
 			Definition.m_IsCollapsed = std::move(IsCollapsed);
+			Definition.m_PreLayoutHeaderInput = std::move(PreLayoutHeaderInput);
 			Definition.m_HeaderAction = std::move(HeaderAction);
 			Definition.m_MeasureEachFrame = MeasureEachFrame;
 			Definition.m_MeasureRevision = MeasureRevision;
@@ -308,7 +309,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 		};
 		AddCard(vCards, "deck:controls-mouse", 0.0f, [this](float) { return MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
 		const uint64_t ControllerLayoutRevision = CardLayoutRevision;
-		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float Width) { return MeasureSettingsJoystickHeight(Width); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); }, {}, false, {}, {}, false, ControllerLayoutRevision);
+		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float Width) { return MeasureSettingsJoystickHeight(Width); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); }, {}, false, {}, {}, {}, false, ControllerLayoutRevision);
 		const std::pair<EBindOptionGroup, const char *> aBindCards[] = {
 			{EBindOptionGroup::MOVEMENT, "deck:controls-movement"}, {EBindOptionGroup::WEAPON, "deck:controls-weapon"},
 			{EBindOptionGroup::VOTING, "deck:controls-voting"}, {EBindOptionGroup::CHAT, "deck:controls-chat"},
@@ -317,13 +318,15 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 		{
 			const bool IsCustom = Group == EBindOptionGroup::CUSTOM;
 			const auto IsCollapsed = [this, Group] { return !m_aBindGroupExpanded[(int)Group]; };
-			const auto HeaderAction = [this, Group](const SSettingsCardFrame &Frame, bool Collapsed) {
+			const auto PreLayoutHeaderInput = [this, Group](const SSettingsCardFrame &Frame, bool Collapsed) {
 				const int GroupIndex = (int)Group;
-				if(Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
-					m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
-				DoSettingsControlsLabel(Collapsed ? "controls-expand-collapse-icon-closed" : "controls-expand-collapse-icon-open", &Frame.m_HandleRect, Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, HEADER_FONT_SIZE, TEXTALIGN_MC);
+				if(!Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], Collapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
+					return false;
+				m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
+				return true;
 			};
-			AddCard(vCards, pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group, ReadOnly](CUIRect Rect) { RenderSettingsBindCard(Group, Rect, ReadOnly); }, IsCustom ? std::function<bool()>([HasCustomBinds] { return HasCustomBinds; }) : std::function<bool()>(), true, IsCollapsed, HeaderAction, false, m_BindLayoutRevision);
+			const auto HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
+			AddCard(vCards, pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group, ReadOnly](CUIRect Rect) { RenderSettingsBindCard(Group, Rect, ReadOnly); }, IsCustom ? std::function<bool()>([HasCustomBinds] { return HasCustomBinds; }) : std::function<bool()>(), true, IsCollapsed, PreLayoutHeaderInput, HeaderAction, false, m_BindLayoutRevision);
 		}
 	};
 	if(!ReadOnly && m_SearchMatchReveal && !m_vSearchMatches.empty() && m_CurrentSearchMatch >= 0 && m_CurrentSearchMatch < (int)m_vSearchMatches.size())
@@ -703,7 +706,9 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View, bool ReadOnly)
 				}
 
 				const int CurrentJoystick = Input()->GetActiveJoystick()->GetIndex();
-				const int NewJoystick = Ui()->DoDropDown(&JoystickDropDown, CurrentJoystick, vpJoystickNames.data(), vpJoystickNames.size(), m_JoystickDropDownState);
+				CUi::SDropDownProperties JoystickDropDownProps;
+				JoystickDropDownProps.m_pPopupViewport = Ui()->OutermostClipArea();
+				const int NewJoystick = Ui()->DoDropDown(&JoystickDropDown, CurrentJoystick, vpJoystickNames.data(), vpJoystickNames.size(), m_JoystickDropDownState, JoystickDropDownProps);
 				if(NewJoystick != CurrentJoystick)
 				{
 					Input()->SetActiveJoystick(NewJoystick);

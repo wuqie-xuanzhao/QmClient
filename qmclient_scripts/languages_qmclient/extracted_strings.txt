@@ -705,12 +705,16 @@ Configure controls and key bindings
 Configure DDNet demo recording behavior
 Configure DDNet gameplay preferences
 Configure display and rendering
+Configure Dream-only convenience features
 Configure game and client preferences
 Configure ghost recording and playback tools
 Configure hammer skin steal and skin transition animations
 Configure health, ammo, timer, and race HUD
+Configure HJ unfreeze assistance
 Configure hook range and collision guide lines
+Configure HUD island appearance
 Configure input helpers and cursor behavior
+Configure keyword-based automatic replies
 Configure laser shape, glow, and animation
 Configure nameplate text, badges, and visibility
 Configure player identity and country
@@ -723,6 +727,7 @@ Configure sound and audio packs
 Configure TClient tools and profiles
 Configure Tee appearance and skins
 Configure the companion appearance and movement
+Configure the input overlay display
 Configure these settings
 Confirm both are on same server, same room, and support voice
 Confirm clear all
@@ -776,7 +781,6 @@ Copy info
 Copy name
 Copy skin
 Copy skin option color
-Corner segments
 Could not check for existing player with your name. Check your internet connection.
 Could not connect dummy
 Could not create report scan request
@@ -835,9 +839,12 @@ Custom Provider API Key
 Custom Provider endpoint
 Custom Provider model name
 Custom translation prompt (overrides built-in)
+Customize additional nameplate text
 Customize animated rainbow colors
 Customize interface appearance and previews
+Customize laser shape and effects
 Customize QmClient visuals and effects
+Customize the position jump hint
 Customize translate button and menu colors
 Customize vote display and interaction
 Cut interval
@@ -1299,6 +1306,7 @@ Export selected file
 Export to clipboard
 Exported %d chat messages
 Exported to %s
+Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 Extra animations
 Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
@@ -2649,6 +2657,7 @@ QmClient / Visual
 QmClient chat log
 QmClient Community
 QmClient community and project information
+QmClient information and project links
 QmClient online distribution
 QmClient Settings
 QmClient sidebar module collapse state
@@ -3335,6 +3344,7 @@ Show scoreboard after death
 Show seconds on clock
 Show server chat messages
 Show server help and usage messages
+Show server prompts and Echo messages as popups
 Show server settings
 Show settings card borders
 Show short server names in browser
@@ -3896,7 +3906,6 @@ UI color
 UI controller sens.
 UI motion level
 UI mouse sens.
-UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
 UI scale
 UI server address
 UI size percentage
@@ -3964,6 +3973,7 @@ Update or add a specific war group
 Update Rate
 Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
+Upper limit for automatically selected UI rounded corner segments
 URL for downloading community skins
 URL for downloading maps (must start with https://)
 URL for downloading skins

@@ -902,7 +902,7 @@ void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHe
 	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
 	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, "qmclient-hitbox-player-range", &LabelColumn, Localize("Player range"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
 	const int HitboxScope = std::clamp(g_Config.m_QmHitboxPlayerScope, 0, 2);
-	const int HitboxScopeNew = Ui()->DoDropDown(&ControlColumn, HitboxScope, s_HitboxScopeDropDownNames.data(), s_HitboxScopeDropDownNames.size(), s_HitboxScopeDropDownState);
+	const int HitboxScopeNew = DoSettingsDropDown(&ControlColumn, HitboxScope, s_HitboxScopeDropDownNames.data(), s_HitboxScopeDropDownNames.size(), s_HitboxScopeDropDownState);
 	if(g_Config.m_QmHitboxPlayerScope != HitboxScopeNew)
 		g_Config.m_QmHitboxPlayerScope = HitboxScopeNew;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -953,7 +953,7 @@ void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHe
 	}
 	MarkQmNewFeatureHovered(pScopeNewFeatureId, Row, PrewarmOnly);
 	const int Scope = std::clamp(g_Config.m_QmWeaponSwitchAnimScope, 0, 2);
-	const int NewScope = Ui()->DoDropDown(&ControlColumn, Scope, s_WeaponSwitchAnimScopeDropDownNames.data(), s_WeaponSwitchAnimScopeDropDownNames.size(), s_WeaponSwitchAnimScopeDropDownState);
+	const int NewScope = DoSettingsDropDown(&ControlColumn, Scope, s_WeaponSwitchAnimScopeDropDownNames.data(), s_WeaponSwitchAnimScopeDropDownNames.size(), s_WeaponSwitchAnimScopeDropDownState);
 	if(g_Config.m_QmWeaponSwitchAnimScope != NewScope)
 		g_Config.m_QmWeaponSwitchAnimScope = NewScope;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -981,7 +981,7 @@ void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHe
 	static CScrollRegion s_WeaponSwitchAnimEasingDropDownScrollRegion;
 	s_WeaponSwitchAnimEasingDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponSwitchAnimEasingDropDownScrollRegion;
 	const int Easing = std::clamp(g_Config.m_QmWeaponSwitchAnimEasing, 0, 3);
-	const int NewEasing = Ui()->DoDropDown(&ControlColumn, Easing, s_WeaponSwitchAnimEasingDropDownNames.data(), s_WeaponSwitchAnimEasingDropDownNames.size(), s_WeaponSwitchAnimEasingDropDownState);
+	const int NewEasing = DoSettingsDropDown(&ControlColumn, Easing, s_WeaponSwitchAnimEasingDropDownNames.data(), s_WeaponSwitchAnimEasingDropDownNames.size(), s_WeaponSwitchAnimEasingDropDownState);
 	if(g_Config.m_QmWeaponSwitchAnimEasing != NewEasing)
 		g_Config.m_QmWeaponSwitchAnimEasing = NewEasing;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -1017,7 +1017,7 @@ void CMenus::RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight,
 	static CUi::SDropDownState s_ChatBubbleAnimDropDownState;
 	static CScrollRegion s_ChatBubbleAnimDropDownScrollRegion;
 	s_ChatBubbleAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_ChatBubbleAnimDropDownScrollRegion;
-	const int Animation = Ui()->DoDropDown(&ControlColumn, g_Config.m_QmChatBubbleAnimation, s_ChatBubbleAnimDropDownNames.data(), s_ChatBubbleAnimDropDownNames.size(), s_ChatBubbleAnimDropDownState);
+	const int Animation = DoSettingsDropDown(&ControlColumn, g_Config.m_QmChatBubbleAnimation, s_ChatBubbleAnimDropDownNames.data(), s_ChatBubbleAnimDropDownNames.size(), s_ChatBubbleAnimDropDownState);
 	if(g_Config.m_QmChatBubbleAnimation != Animation)
 		g_Config.m_QmChatBubbleAnimation = Animation;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -1096,7 +1096,7 @@ void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHei
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
 		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
 		State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
-		const int NewValue = Ui()->DoDropDown(&ControlColumn, std::clamp(*pValue, 0, MaxValue), ppNames, NumNames, State);
+		const int NewValue = DoSettingsDropDown(&ControlColumn, std::clamp(*pValue, 0, MaxValue), ppNames, NumNames, State);
 		if(*pValue != NewValue)
 			*pValue = NewValue;
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -1241,7 +1241,7 @@ void CMenus::RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight,
 	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
 	RenderQmVisualLabel("qmclient-camera-aspect-ratio-preset", &LabelColumn, Localize("Aspect ratio preset"), BodySize);
 	const int CurrentPreset = std::clamp(g_Config.m_QmAspectPreset, 0, 6);
-	const int NewPreset = Ui()->DoDropDown(&ControlColumn, CurrentPreset, apAspectPresetNames, (int)std::size(apAspectPresetNames), s_AspectPresetDropDownState);
+	const int NewPreset = DoSettingsDropDown(&ControlColumn, CurrentPreset, apAspectPresetNames, (int)std::size(apAspectPresetNames), s_AspectPresetDropDownState);
 	bool AspectChanged = NewPreset != CurrentPreset;
 	if(AspectChanged)
 	{
@@ -1796,7 +1796,7 @@ void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float Lin
 	static CUi::SDropDownState s_WeaponTrajectoryModeDropDownState;
 	static CScrollRegion s_WeaponTrajectoryModeDropDownScrollRegion;
 	s_WeaponTrajectoryModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponTrajectoryModeDropDownScrollRegion;
-	const int WeaponTrajectoryModeNew = Ui()->DoDropDown(&ControlColumn, std::clamp(g_Config.m_QmWeaponTrajectory, 0, 2), s_WeaponTrajectoryModeNames.data(), s_WeaponTrajectoryModeNames.size(), s_WeaponTrajectoryModeDropDownState);
+	const int WeaponTrajectoryModeNew = DoSettingsDropDown(&ControlColumn, std::clamp(g_Config.m_QmWeaponTrajectory, 0, 2), s_WeaponTrajectoryModeNames.data(), s_WeaponTrajectoryModeNames.size(), s_WeaponTrajectoryModeDropDownState);
 	if(g_Config.m_QmWeaponTrajectory != WeaponTrajectoryModeNew)
 		g_Config.m_QmWeaponTrajectory = WeaponTrajectoryModeNew;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -2159,7 +2159,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
 	CUIElement &TranslationServiceLabel = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-translation-service");
 	DoSettingsLabelStreamed(TranslationServiceLabel, &LabelCol, Localize("Translation service"), BodySize, TEXTALIGN_ML);
-	const int BackendSelectedNew = Ui()->DoDropDown(&ControlCol, BackendSelectedOld, s_TranslateBackendDropDownNames.data(), s_TranslateBackendDropDownNames.size(), s_TranslateBackendDropDownState);
+	const int BackendSelectedNew = DoSettingsDropDown(&ControlCol, BackendSelectedOld, s_TranslateBackendDropDownNames.data(), s_TranslateBackendDropDownNames.size(), s_TranslateBackendDropDownState);
 	if(BackendSelectedNew != BackendSelectedOld)
 	{
 		if(BackendSelectedNew == 1)
@@ -2222,7 +2222,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 
 		const int OldSel = FindIndex(pConfigValue, apCodes, Count);
 		const int SelectedIndex = maximum(OldSel, 0);
-		const int NewSel = Ui()->DoDropDown(&DropRect, SelectedIndex, apNames, Count, DropDownState);
+		const int NewSel = DoSettingsDropDown(&DropRect, SelectedIndex, apNames, Count, DropDownState);
 		if(NewSel >= 0 && NewSel != OldSel)
 			str_copy(pConfigValue, apCodes[NewSel], ConfigValueSize);
 
@@ -2366,7 +2366,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
 		CUIElement &LlmProviderLabel = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-llm-provider");
 		DoSettingsLabelStreamed(LlmProviderLabel, &LabelCol, Localize("LLM provider"), BodySize, TEXTALIGN_ML);
-		const int NewProvider = Ui()->DoDropDown(&ControlCol, g_Config.m_QmTranslateLlmProvider, s_LlmProviderDropDownNames.data(), s_LlmProviderDropDownNames.size(), s_LlmProviderDropDownState);
+		const int NewProvider = DoSettingsDropDown(&ControlCol, g_Config.m_QmTranslateLlmProvider, s_LlmProviderDropDownNames.data(), s_LlmProviderDropDownNames.size(), s_LlmProviderDropDownState);
 		if(NewProvider != g_Config.m_QmTranslateLlmProvider)
 		{
 			g_Config.m_QmTranslateLlmProvider = NewProvider;
@@ -2635,7 +2635,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 		};
 		static CUi::SDropDownState s_OutgoingModeDropDown;
 		const int OldMode = std::clamp(g_Config.m_QmTranslateAutoOutgoingMode, 0, 1);
-		const int NewMode = Ui()->DoDropDown(&ControlCol, OldMode, s_apOutgoingModeNames, std::size(s_apOutgoingModeNames), s_OutgoingModeDropDown);
+		const int NewMode = DoSettingsDropDown(&ControlCol, OldMode, s_apOutgoingModeNames, std::size(s_apOutgoingModeNames), s_OutgoingModeDropDown);
 		if(NewMode != OldMode)
 			g_Config.m_QmTranslateAutoOutgoingMode = NewMode;
 	}
@@ -3343,7 +3343,7 @@ void CMenus::RenderQmHudNotificationsAdvancedContent(CUIRect &Content, const SSe
 	static CUi::SDropDownState s_HudNotificationAnimDropDownState;
 	static CScrollRegion s_HudNotificationAnimDropDownScrollRegion;
 	s_HudNotificationAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HudNotificationAnimDropDownScrollRegion;
-	const int AnimSelectedNew = Ui()->DoDropDown(&ControlColumn, g_Config.m_QmHudNotificationsAnimType, apHudNotificationAnimDropDownNames, std::size(apHudNotificationAnimDropDownNames), s_HudNotificationAnimDropDownState);
+	const int AnimSelectedNew = DoSettingsDropDown(&ControlColumn, g_Config.m_QmHudNotificationsAnimType, apHudNotificationAnimDropDownNames, std::size(apHudNotificationAnimDropDownNames), s_HudNotificationAnimDropDownState);
 	if(g_Config.m_QmHudNotificationsAnimType != AnimSelectedNew)
 		g_Config.m_QmHudNotificationsAnimType = AnimSelectedNew;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -3851,7 +3851,7 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 			else
 			{
 				const int VoiceInputSelectedOld = VoiceUtils::VoiceFindSelectedDeviceIndex(s_VoiceInputDeviceEntries, g_Config.m_QmVoiceInputDevice);
-				const int VoiceInputSelectedNew = Ui()->DoDropDown(&VoiceInputDropDownRect, VoiceInputSelectedOld, s_VoiceInputDeviceDropDownNames.data(), s_VoiceInputDeviceDropDownNames.size(), s_VoiceInputDeviceDropDownState);
+				const int VoiceInputSelectedNew = DoSettingsDropDown(&VoiceInputDropDownRect, VoiceInputSelectedOld, s_VoiceInputDeviceDropDownNames.data(), s_VoiceInputDeviceDropDownNames.size(), s_VoiceInputDeviceDropDownState);
 				if(VoiceInputSelectedNew >= 0 && VoiceInputSelectedNew != VoiceInputSelectedOld && (size_t)VoiceInputSelectedNew < s_VoiceInputDeviceConfigValues.size())
 					str_copy(g_Config.m_QmVoiceInputDevice, s_VoiceInputDeviceConfigValues[VoiceInputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceInputDevice));
 				if(DoQmSettingsMenuButton(&s_VoiceInputRefreshButton, "qmclient-voice-input-refresh", Localize("Refresh"), &VoiceInputRefreshButton))
@@ -3925,7 +3925,7 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 			else
 			{
 				const int VoiceOutputSelectedOld = VoiceUtils::VoiceFindSelectedDeviceIndex(s_VoiceOutputDeviceEntries, g_Config.m_QmVoiceOutputDevice);
-				const int VoiceOutputSelectedNew = Ui()->DoDropDown(&VoiceOutputDropDownRect, VoiceOutputSelectedOld, s_VoiceOutputDeviceDropDownNames.data(), s_VoiceOutputDeviceDropDownNames.size(), s_VoiceOutputDeviceDropDownState);
+				const int VoiceOutputSelectedNew = DoSettingsDropDown(&VoiceOutputDropDownRect, VoiceOutputSelectedOld, s_VoiceOutputDeviceDropDownNames.data(), s_VoiceOutputDeviceDropDownNames.size(), s_VoiceOutputDeviceDropDownState);
 				if(VoiceOutputSelectedNew >= 0 && VoiceOutputSelectedNew != VoiceOutputSelectedOld && (size_t)VoiceOutputSelectedNew < s_VoiceOutputDeviceConfigValues.size())
 					str_copy(g_Config.m_QmVoiceOutputDevice, s_VoiceOutputDeviceConfigValues[VoiceOutputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceOutputDevice));
 				if(DoQmSettingsMenuButton(&s_VoiceOutputRefreshButton, "qmclient-voice-output-refresh", Localize("Refresh"), &VoiceOutputRefreshButton))
@@ -3950,7 +3950,7 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 				Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
 				DoQmSettingsLabel("qmclient-voice-bitrate", &LabelCol, Localize("Voice bitrate"), BodySize);
 				const int CurrentBitrateProfile = std::clamp(g_Config.m_QmVoiceBitrateProfile, 0, 4);
-				const int NewBitrateProfile = Ui()->DoDropDown(&ControlCol, CurrentBitrateProfile, s_VoiceBitrateProfileDropDownNames.data(), s_VoiceBitrateProfileDropDownNames.size(), s_VoiceBitrateProfileDropDownState);
+				const int NewBitrateProfile = DoSettingsDropDown(&ControlCol, CurrentBitrateProfile, s_VoiceBitrateProfileDropDownNames.data(), s_VoiceBitrateProfileDropDownNames.size(), s_VoiceBitrateProfileDropDownState);
 				if(CurrentBitrateProfile != NewBitrateProfile)
 					g_Config.m_QmVoiceBitrateProfile = NewBitrateProfile;
 			}
@@ -3975,7 +3975,7 @@ void CMenus::RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMet
 				Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
 				DoQmSettingsLabel("qmclient-voice-noise-reduction-mode", &LabelCol, Localize("Noise reduction mode"), BodySize);
 				const int CurrentNoiseSuppressMode = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);
-				const int NewNoiseSuppressMode = Ui()->DoDropDown(&ControlCol, CurrentNoiseSuppressMode, s_VoiceNoiseSuppressModeDropDownNames.data(), s_VoiceNoiseSuppressModeDropDownNames.size(), s_VoiceNoiseSuppressModeDropDownState);
+				const int NewNoiseSuppressMode = DoSettingsDropDown(&ControlCol, CurrentNoiseSuppressMode, s_VoiceNoiseSuppressModeDropDownNames.data(), s_VoiceNoiseSuppressModeDropDownNames.size(), s_VoiceNoiseSuppressModeDropDownState);
 				if(CurrentNoiseSuppressMode != NewNoiseSuppressMode)
 					g_Config.m_QmVoiceNoiseSuppressEnable = NewNoiseSuppressMode;
 			}
@@ -4148,7 +4148,7 @@ void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsCon
 		static CUi::SDropDownState s_Qm3DParticleTypeDropDownState;
 		static CScrollRegion s_Qm3DParticleTypeDropDownScrollRegion;
 		s_Qm3DParticleTypeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_Qm3DParticleTypeDropDownScrollRegion;
-		const int NewTypeIndex = Ui()->DoDropDown(&ControlCol, TypeIndex, apQm3DParticleTypeNames.data(), static_cast<int>(apQm3DParticleTypeNames.size()), s_Qm3DParticleTypeDropDownState);
+		const int NewTypeIndex = DoSettingsDropDown(&ControlCol, TypeIndex, apQm3DParticleTypeNames.data(), static_cast<int>(apQm3DParticleTypeNames.size()), s_Qm3DParticleTypeDropDownState);
 		if(NewTypeIndex >= 0 && NewTypeIndex < static_cast<int>(aQm3DParticleTypeValues.size()) && NewTypeIndex != TypeIndex)
 			g_Config.m_Qm3DParticlesType = aQm3DParticleTypeValues[NewTypeIndex];
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -4356,7 +4356,7 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMe
 		static CUi::SDropDownState s_QmLyricsSourceDropDownState;
 		static CScrollRegion s_QmLyricsSourceDropDownScrollRegion;
 		s_QmLyricsSourceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_QmLyricsSourceDropDownScrollRegion;
-		const int SourceSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSource, 0, 10), apLyricsSourceNames, std::size(apLyricsSourceNames), s_QmLyricsSourceDropDownState);
+		const int SourceSelectedNew = DoSettingsDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSource, 0, 10), apLyricsSourceNames, std::size(apLyricsSourceNames), s_QmLyricsSourceDropDownState);
 		if(SourceSelectedNew != g_Config.m_QmLyricsSource)
 			g_Config.m_QmLyricsSource = SourceSelectedNew;
 	}
@@ -4372,7 +4372,7 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMe
 			Localize("Best match"),
 		};
 		static CUi::SDropDownState s_QmLyricsSearchTypeDropDownState;
-		const int SearchTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSearchType, 0, 1), apLyricsSearchTypeNames, std::size(apLyricsSearchTypeNames), s_QmLyricsSearchTypeDropDownState);
+		const int SearchTypeSelectedNew = DoSettingsDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSearchType, 0, 1), apLyricsSearchTypeNames, std::size(apLyricsSearchTypeNames), s_QmLyricsSearchTypeDropDownState);
 		if(SearchTypeSelectedNew != g_Config.m_QmLyricsSearchType)
 			g_Config.m_QmLyricsSearchType = SearchTypeSelectedNew;
 	}
@@ -4790,7 +4790,8 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		vCards.reserve(12);
 		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {pStableId, Localize(pTitle), Localize(pSubtitle)};
+			const char *pRegisteredSubtitle = qm_card_registry::ResolveLocalizedDescription(pStableId);
+			Definition.m_Spec = {pStableId, Localize(pTitle), pRegisteredSubtitle != nullptr ? pRegisteredSubtitle : Localize(pSubtitle)};
 			Definition.m_Measure = [Id, EstimateContentHeight](float ContentWidth) { return EstimateContentHeight(Id, ContentWidth); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
 			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
@@ -4801,11 +4802,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 				ToggleCollapsed(Id);
 				return true;
 			};
-			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool Collapsed) {
-				const int Index = ModuleStateIndex(Id);
-				if(!ReadOnly && DoButton_Menu(&CollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
-					ToggleCollapsed(Id);
-			};
+			Definition.m_HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
 			Definition.m_PreLayoutInput = BuildHudPreLayoutInput(Id);
 			vCards.push_back(std::move(Definition));
@@ -5027,7 +5024,8 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		vCards.reserve(14);
 		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {pStableId, Localize(pTitle), Localize(pSubtitle)};
+			const char *pRegisteredSubtitle = qm_card_registry::ResolveLocalizedDescription(pStableId);
+			Definition.m_Spec = {pStableId, Localize(pTitle), pRegisteredSubtitle != nullptr ? pRegisteredSubtitle : Localize(pSubtitle)};
 			Definition.m_Measure = [Id, MeasureContentHeight](float ContentWidth) { return MeasureContentHeight(Id, ContentWidth); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
 			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
@@ -5038,11 +5036,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 				ToggleCollapsed(Id);
 				return true;
 			};
-			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool Collapsed) {
-				const int Index = ModuleStateIndex(Id);
-				if(!ReadOnly && DoButton_Menu(&CollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
-					ToggleCollapsed(Id);
-			};
+			Definition.m_HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
 			vCards.push_back(std::move(Definition));
 		};
@@ -5238,7 +5232,8 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		vCards.reserve(9);
 		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
 			SSettingsCardDefinition Definition;
-			Definition.m_Spec = {pStableId, Localize(pTitle), Localize(pSubtitle)};
+			const char *pRegisteredSubtitle = qm_card_registry::ResolveLocalizedDescription(pStableId);
+			Definition.m_Spec = {pStableId, Localize(pTitle), pRegisteredSubtitle != nullptr ? pRegisteredSubtitle : Localize(pSubtitle)};
 			Definition.m_Measure = [Id, EstimateContentHeight](float) { return EstimateContentHeight(Id); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
 			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
@@ -5249,11 +5244,7 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 				ToggleCollapsed(Id);
 				return true;
 			};
-			Definition.m_HeaderAction = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool Collapsed) {
-				const int Index = ModuleStateIndex(Id);
-				if(!ReadOnly && DoButton_Menu(&CollapseButtons[Index], Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP, 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
-					ToggleCollapsed(Id);
-			};
+			Definition.m_HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
 			Definition.m_PreLayoutInput = BuildVisualPreLayoutInput(Id);
 			vCards.push_back(std::move(Definition));

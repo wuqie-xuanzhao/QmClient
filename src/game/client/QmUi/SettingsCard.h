@@ -81,15 +81,6 @@ inline float ResolveSettingsCardBorderWidth(const float UiScale)
 	return std::max(2.0f, 2.0f * std::max(0.0f, UiScale));
 }
 
-inline std::array<CUIRect, 4> ResolveSettingsCardBorderRingClipRects(const CUIRect &Rect, const float BorderWidth)
-{
-	const float Width = std::clamp(std::max(0.0f, BorderWidth), 0.0f, std::min(Rect.w, Rect.h) * 0.5f);
-	return {{{Rect.x, Rect.y, Rect.w, Width},
-		{Rect.x, Rect.y + Rect.h - Width, Rect.w, Width},
-		{Rect.x, Rect.y + Width, Width, std::max(0.0f, Rect.h - 2.0f * Width)},
-		{Rect.x + Rect.w - Width, Rect.y + Width, Width, std::max(0.0f, Rect.h - 2.0f * Width)}}};
-}
-
 inline CUIRect ResolveSettingsCardInteractionBorderRect(const CUIRect &SurfaceRect, const float BorderWidth)
 {
 	const float MaxInset = std::max(0.0f, std::min(SurfaceRect.w, SurfaceRect.h) * 0.5f);
@@ -114,12 +105,44 @@ inline ColorRGBA ResolveSettingsCardSurfaceColor(ColorRGBA Surface, const SSetti
 	return Surface;
 }
 
+inline ColorRGBA ResolveSettingsCardLinkedSurfaceColor(ColorRGBA Surface, const ColorRGBA Border, const bool LinkBorderColor)
+{
+	if(!LinkBorderColor)
+		return Surface;
+	// 边框颜色只做轻微的卡片色调联动，避免用户选择颜色后边框与 Surface
+	// 完全割裂；alpha 仍由边框配置控制，默认值只产生很弱的色调变化。
+	const float LinkAmount = std::clamp(Border.a, 0.0f, 1.0f) * 0.18f;
+	Surface.r += (Border.r - Surface.r) * LinkAmount;
+	Surface.g += (Border.g - Surface.g) * LinkAmount;
+	Surface.b += (Border.b - Surface.b) * LinkAmount;
+	return Surface;
+}
+
+inline ColorRGBA ResolveSettingsCardInnerSurfaceColor(const ColorRGBA Surface, ColorRGBA Border)
+{
+	const float SurfaceAlpha = std::clamp(Surface.a, 0.0f, 1.0f);
+	Border.a = std::clamp(Border.a, 0.0f, std::max(0.0f, SurfaceAlpha - 0.001f));
+	if(Border.a <= 0.0f || SurfaceAlpha >= 0.999f)
+		return Surface;
+	const float InnerAlpha = (SurfaceAlpha - Border.a) / (1.0f - Border.a);
+	if(InnerAlpha <= 0.001f)
+		return Surface;
+	const float BorderContribution = Border.a * (1.0f - InnerAlpha);
+	return ColorRGBA(
+		std::clamp((Surface.r * SurfaceAlpha - Border.r * BorderContribution) / InnerAlpha, 0.0f, 1.0f),
+		std::clamp((Surface.g * SurfaceAlpha - Border.g * BorderContribution) / InnerAlpha, 0.0f, 1.0f),
+		std::clamp((Surface.b * SurfaceAlpha - Border.b * BorderContribution) / InnerAlpha, 0.0f, 1.0f),
+		InnerAlpha);
+}
+
 using FSettingsCardMeasure = std::function<float(float ContentWidth)>;
 using FSettingsCardRender = std::function<void(CUIRect ContentRect)>;
 using FSettingsCardRenderMeasured = std::function<void(CUIRect &ContentRect)>;
 using FSettingsCardPreLayoutInput = std::function<bool(CUIRect ContentRect)>;
 using FSettingsCardPreLayoutHeaderInput = std::function<bool(const SSettingsCardFrame &Frame, bool Collapsed)>;
 using FSettingsCardHeaderAction = std::function<void(const SSettingsCardFrame &Frame, bool Collapsed)>;
+
+void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect, bool Collapsed, float DrawAlpha = 1.0f);
 
 SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {}, const FSettingsCardRenderMeasured &RenderMeasured = {}, bool *pPointerInside = nullptr);
 SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction = {}, const FSettingsCardRenderMeasured &RenderMeasured = {}, bool *pPointerInside = nullptr);

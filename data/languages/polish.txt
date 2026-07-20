@@ -2120,6 +2120,9 @@ Configure DDNet gameplay preferences
 Configure display and rendering
 == Skonfiguruj wyświetlanie i renderowanie
 
+Configure Dream-only convenience features
+== Configure Dream-only convenience features
+
 Configure game and client preferences
 == Skonfiguruj preferencje gry i klienta
 
@@ -2132,11 +2135,20 @@ Configure hammer skin steal and skin transition animations
 Configure health, ammo, timer, and race HUD
 == Configure health, ammo, timer, and race HUD
 
+Configure HJ unfreeze assistance
+== Configure HJ unfreeze assistance
+
 Configure hook range and collision guide lines
 == Configure hook range and collision guide lines
 
+Configure HUD island appearance
+== Configure HUD island appearance
+
 Configure input helpers and cursor behavior
 == Configure input helpers and cursor behavior
+
+Configure keyword-based automatic replies
+== Configure keyword-based automatic replies
 
 Configure laser shape, glow, and animation
 == Configure laser shape, glow, and animation
@@ -2173,6 +2185,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the input overlay display
+== Configure the input overlay display
 
 Configure these settings
 == Skonfiguruj te ustawienia
@@ -2332,9 +2347,6 @@ Copy skin
 
 Copy skin option color
 == Kolor opcji kopiowania skórki
-
-Corner segments
-== Segmenty narożników
 
 Could not check for existing player with your name. Check your internet connection.
 == Nie można sprawdzić, czy istnieje gracz o Twojej nazwie. Sprawdź połączenie internetowe.
@@ -2510,14 +2522,23 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == Niestandardowy prompt tłumaczenia (zastępuje domyślny prompt)
 
+Customize additional nameplate text
+== Customize additional nameplate text
+
 Customize animated rainbow colors
 == Customize animated rainbow colors
 
 Customize interface appearance and previews
 == Dostosuj wygląd interfejsu i podglądy
 
+Customize laser shape and effects
+== Customize laser shape and effects
+
 Customize QmClient visuals and effects
 == Dostosuj wygląd i efekty QmClient
+
+Customize the position jump hint
+== Customize the position jump hint
 
 Customize translate button and menu colors
 == Dostosuj kolory przycisku tłumaczenia i menu
@@ -3901,6 +3922,9 @@ Exported %d chat messages
 
 Exported to %s
 == Wyeksportowano do %s
+
+Expose playback controls to the operating system
+== Expose playback controls to the operating system
 
 External console password. Must be set to enable economy.
 == Hasło zewnętrznej konsoli. Musi być ustawione, aby włączyć ekonomię.
@@ -7952,6 +7976,9 @@ QmClient Community
 QmClient community and project information
 == Społeczność i informacje o projekcie QmClient
 
+QmClient information and project links
+== QmClient information and project links
+
 QmClient online distribution
 == Dystrybucja online QmClient
 
@@ -10010,6 +10037,9 @@ Show server chat messages
 Show server help and usage messages
 == Pokazuj pomoc serwera i komunikaty użycia
 
+Show server prompts and Echo messages as popups
+== Show server prompts and Echo messages as popups
+
 Show server settings
 == Pokaż ustawienia serwera
 
@@ -11693,9 +11723,6 @@ UI motion level
 UI mouse sens.
 == Czułość myszy (interfejs)
 
-UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
-== Liczba segmentów zaokrąglenia UI (zalecane parzyste 8/16/32/48; nieparzyste automatycznie zaokrąglane do parzystych ze względu na wymóg rysowania i+=2)
-
 UI scale
 == Skala UI
 
@@ -11896,6 +11923,9 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == Przesyłanie danych mapy do GPU
+
+Upper limit for automatically selected UI rounded corner segments
+== Upper limit for automatically selected UI rounded corner segments
 
 URL for downloading community skins
 == URL do pobierania skórek społeczności

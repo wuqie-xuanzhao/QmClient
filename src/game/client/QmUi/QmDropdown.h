@@ -76,6 +76,8 @@ SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRe
 SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight, int MinimumVisibleItems = 0);
 bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupHeight);
 bool QmDropdownAnchorFullyVisible(const CUIRect &AnchorRect, const CUIRect &ViewportRect);
+bool QmDropdownActiveItemShouldScrollIntoView(bool ScrollRequested, bool ActiveEntry);
+bool QmDropdownShouldRequestActiveScroll(bool PopupOpen, int PreviousActiveIndex, int ActiveIndex);
 
 class CQmDropdownState
 {

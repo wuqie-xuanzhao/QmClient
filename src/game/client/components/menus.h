@@ -126,6 +126,7 @@ public:
 
 private:
 	IUiContext SettingsUiContext(const char *pScope, float UiScale = 1.0f);
+	int DoSettingsDropDown(CUIRect *pRect, int CurSelection, const char **ppStrs, int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties = {});
 	SCardMotionSpec SettingsCardMotionSpec() const;
 	SSettingsCardDeckVisualOptions SettingsCardDeckVisualOptions() const;
 	qm_card_order::CModel &SettingsCardOrderModel();

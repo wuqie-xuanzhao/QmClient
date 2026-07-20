@@ -820,7 +820,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "general-respawn-default-weapon-label", &Label, Localize("Respawn default weapon (when owned)"), BodySize, TEXTALIGN_ML);
 			const char *apRespawnDefaultWeapons[] = {Localize("Off"), Localize("Hammer"), Localize("Gun"), Localize("Shotgun"), Localize("Grenade"), Localize("Laser")};
 			static CUi::SDropDownState s_RespawnDefaultWeaponDropDownState;
-			const int RespawnDefaultWeapon = Ui()->DoDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
+			const int RespawnDefaultWeapon = DoSettingsDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
 			if(RespawnDefaultWeapon != g_Config.m_QmRespawnDefaultWeapon)
 				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
 		});
@@ -1550,7 +1550,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CUi::SDropDownProperties SkinSortDropDownProps;
 			SkinSortDropDownProps.m_FontSize = BodySize;
 			SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle();
-			const int SkinSortModeNew = Ui()->DoDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState, SkinSortDropDownProps);
+			const int SkinSortModeNew = DoSettingsDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState, SkinSortDropDownProps);
 			if(g_Config.m_QmSkinSortMode != SkinSortModeNew)
 			{
 				g_Config.m_QmSkinSortMode = SkinSortModeNew;
@@ -3607,17 +3607,17 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// 与 Deck 的高度轨道叠加后产生双重缓动和背景闪动。
 	const uint64_t GraphicsModesMeasureRevision = static_cast<uint64_t>(std::max(0, s_NumNodes));
 	const float GraphicsModesMinCardHeight = ModesChromeHeight + GraphicsModesTargetContentHeight;
-	const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;
+	const int GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
-	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(7, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
 	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, GraphicsPage, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(4);
 		const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pModesDefault)};
 		const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDisplayDefault)};
@@ -3634,31 +3634,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			vCards.push_back(std::move(Definition));
 		};
 
-		AddCard(ModesSpec, GraphicsModesMinCardHeight, ModesChromeHeight, [this, GraphicsMetrics, OldWindowMode](CUIRect ContentRect) {
+		AddCard(ModesSpec, GraphicsModesMinCardHeight, ModesChromeHeight, [this, GraphicsMetrics](CUIRect ContentRect) {
 		char aBuf[128];
 		CUIRect ModeList = ContentRect;
-		CUIRect WindowModeDropDown;
-		ModeList.HSplitTop(GraphicsMetrics.m_LineHeight, &WindowModeDropDown, &ModeList);
-		ModeList.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ModeList);
-		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
-		static CUi::SDropDownState s_WindowModeDropDownState;
-		static CScrollRegion s_WindowModeDropDownScrollRegion;
-		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
-		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
-		if(OldWindowMode != NewWindowMode)
-		{
-			if(NewWindowMode == 0)
-				Graphics()->SetWindowParams(0, false);
-			else if(NewWindowMode == 1)
-				Graphics()->SetWindowParams(0, true);
-			else if(NewWindowMode == 2)
-				Graphics()->SetWindowParams(3, false);
-			else if(NewWindowMode == 3)
-				Graphics()->SetWindowParams(2, false);
-			else if(NewWindowMode == 4)
-				Graphics()->SetWindowParams(1, false);
-		}
-
 		CUIRect ModeLabel;
 		ModeList.HSplitTop(GraphicsMetrics.m_LineHeight, &ModeLabel, &ModeList); // current display mode
 		ModeList.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ModeList);
@@ -3714,7 +3692,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Graphics()->ResizeToScreen();
 			}
 		} }, GraphicsModesMeasureRevision);
-		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsDisplayRowCount, FoundBackendCount, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
+		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsPage, GraphicsDisplayRowCount, FoundBackendCount, BodySize, DoGraphicsNumericField, OldWindowMode](CUIRect ContentRect) {
 		CUIRect Button;
 		char aBuf[128];
 		CUIRect CardView = ContentRect; // switches
@@ -3726,6 +3704,27 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
 			return Row;
 		};
+		CUIRect WindowModeDropDown = NextRow();
+		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
+		static CUi::SDropDownState s_WindowModeDropDownState;
+		static CScrollRegion s_WindowModeDropDownScrollRegion;
+		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
+		CUi::SDropDownProperties WindowModeDropDownProps;
+		WindowModeDropDownProps.m_pPopupViewport = &GraphicsPage.m_ScrollViewport;
+		const int NewWindowMode = DoSettingsDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState, WindowModeDropDownProps);
+		if(OldWindowMode != NewWindowMode)
+		{
+			if(NewWindowMode == 0)
+				Graphics()->SetWindowParams(0, false);
+			else if(NewWindowMode == 1)
+				Graphics()->SetWindowParams(0, true);
+			else if(NewWindowMode == 2)
+				Graphics()->SetWindowParams(3, false);
+			else if(NewWindowMode == 3)
+				Graphics()->SetWindowParams(2, false);
+			else if(NewWindowMode == 4)
+				Graphics()->SetWindowParams(1, false);
+		}
 		if(Graphics()->GetNumScreens() > 1)
 		{
 			CUIRect ScreenDropDown = NextRow();
@@ -3752,7 +3751,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			static CUi::SDropDownState s_ScreenDropDownState;
 			static CScrollRegion s_ScreenDropDownScrollRegion;
 			s_ScreenDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_ScreenDropDownScrollRegion;
-			const int NewScreen = Ui()->DoDropDown(&ScreenDropDown, g_Config.m_GfxScreen, s_vpScreenNames.data(), s_vpScreenNames.size(), s_ScreenDropDownState);
+			CUi::SDropDownProperties ScreenDropDownProps;
+			ScreenDropDownProps.m_pPopupViewport = &GraphicsPage.m_ScrollViewport;
+			const int NewScreen = DoSettingsDropDown(&ScreenDropDown, g_Config.m_GfxScreen, s_vpScreenNames.data(), s_vpScreenNames.size(), s_ScreenDropDownState, ScreenDropDownProps);
 			if(NewScreen != g_Config.m_GfxScreen)
 				Graphics()->SwitchWindowScreen(NewScreen, true);
 		}
@@ -3821,13 +3822,15 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		str_append(aBuf, Localize("Hz", "Hertz"));
 			DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000);
 
-			const auto DoGraphicsChoiceRow = [this, GraphicsMetrics](CUIRect Row, const char *pLabel, const char *pId, const char **ppNames, size_t Count, int Current, CUi::SDropDownState &State, CScrollRegion &ScrollRegion, auto &&OnChanged) {
+		const auto DoGraphicsChoiceRow = [this, GraphicsMetrics, GraphicsPage](CUIRect Row, const char *pLabel, const char *pId, const char **ppNames, size_t Count, int Current, CUi::SDropDownState &State, CScrollRegion &ScrollRegion, auto &&OnChanged) {
 				CUIRect Label, DropDown;
 				Row.VSplitLeft(std::clamp(Row.w * 0.38f, 120.0f * GraphicsMetrics.m_UiScale, 220.0f * GraphicsMetrics.m_UiScale), &Label, &DropDown);
 				DropDown.VSplitLeft(GraphicsMetrics.m_LineSpacing, nullptr, &DropDown);
 				DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, pId, &Label, pLabel, GraphicsMetrics.m_BodySize, TEXTALIGN_ML);
 				State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
-				const int NewValue = Ui()->DoDropDown(&DropDown, Current, ppNames, Count, State);
+			CUi::SDropDownProperties DropDownProps;
+			DropDownProps.m_pPopupViewport = &GraphicsPage.m_ScrollViewport;
+			const int NewValue = DoSettingsDropDown(&DropDown, Current, ppNames, Count, State, DropDownProps);
 				if(NewValue != Current)
 					OnChanged(NewValue);
 			};
@@ -3938,10 +3941,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
 				g_Config.m_QmUiCardBorders ^= 1;
-
-			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
-			DoGraphicsNumericField("graphics-card-corner-segments", &g_Config.m_QmRectCornerSegments, &g_Config.m_QmRectCornerSegments, Button, Localize("Corner segments"), 8, 48, &CUi::ms_LinearScrollbarScale, "");
 		});
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
@@ -6786,7 +6785,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					RenderNameplateTextControlRow(pTextId, pLabel, [&](CUIRect &ControlCol) {
 						State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
 						const int Current = std::clamp(*pValue, Min, Max);
-						const int SelectedNew = Ui()->DoDropDown(&ControlCol, Current - Min, vNames.data(), (int)vNames.size(), State) + Min;
+						const int SelectedNew = DoSettingsDropDown(&ControlCol, Current - Min, vNames.data(), (int)vNames.size(), State) + Min;
 						if(*pValue != SelectedNew)
 							*pValue = SelectedNew;
 						});
@@ -6848,7 +6847,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					}
 				}
 				RenderNameplateTextControlRow("appearance-nameplate-text-demo-target", Localize("Demo target"), [&](CUIRect &ControlCol) {
-					const int DemoTargetNew = Ui()->DoDropDown(&ControlCol, DemoTargetSelection, s_NameplateTextDemoTargetDropDownNames.data(), (int)s_NameplateTextDemoTargetDropDownNames.size(), s_NameplateTextDemoTargetDropDownState);
+					const int DemoTargetNew = DoSettingsDropDown(&ControlCol, DemoTargetSelection, s_NameplateTextDemoTargetDropDownNames.data(), (int)s_NameplateTextDemoTargetDropDownNames.size(), s_NameplateTextDemoTargetDropDownState);
 					if(DemoTargetNew == 0)
 						g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;
 					else

@@ -24,7 +24,7 @@ MACRO_CONFIG_INT(QmUiCardRainbowTitles, qm_ui_card_rainbow_titles, 0, 0, 1, CFGF
 MACRO_CONFIG_INT(QmUiCardBorders, qm_ui_card_borders, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show settings card borders")
 MACRO_CONFIG_COL(QmUiCardBorderColor, qm_ui_card_border_color, 0x1AFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Settings card border color")
 MACRO_CONFIG_INT(QmUiColorInterpolation, qm_ui_color_interpolation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform")
-MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 32, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)")
+MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 16, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI rounded corner segments (even numbers recommended)")
 MACRO_CONFIG_STR(QmGlobalCardOrder, qm_global_card_order, 8000, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Global card ordering (format: stableId|tab|col|order; semicolon-separated)")
 MACRO_CONFIG_INT(QmCardOrderMigrated, qm_card_order_migrated, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Global card ordering old config migration completed flag")
 MACRO_CONFIG_INT(QmCardLayoutVersion, qm_card_layout_version, 0, 0, 5, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings card default layout migration version")

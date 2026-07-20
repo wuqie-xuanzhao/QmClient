@@ -259,8 +259,8 @@ namespace
 
 		const SSettingsListCardGeometry OneMode = ResolveSettingsGraphicsModesGeometry(1, Metrics);
 		const SSettingsListCardGeometry ManyModes = ResolveSettingsGraphicsModesGeometry(20, Metrics);
-		EXPECT_FLOAT_EQ(OneMode.m_ContentHeight, 2.0f * Metrics.m_RowStep + Metrics.m_ListRowHeight);
-		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, 2.0f * Metrics.m_RowStep + 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(OneMode.m_ContentHeight, Metrics.m_RowStep + Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, Metrics.m_RowStep + 8.0f * Metrics.m_ListRowHeight);
 		EXPECT_FLOAT_EQ(ManyModes.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
 
 		const SSettingsListCardGeometry AudioPacks = ResolveSettingsSoundAudioPackGeometry(Metrics);
@@ -3543,9 +3543,39 @@ TEST(UiV2DropdownGeometry, AnchorMustRemainFullyInsideItsOwningContainer)
 	const CUIRect Viewport{10.0f, 20.0f, 200.0f, 100.0f};
 	EXPECT_TRUE(QmDropdownAnchorFullyVisible({20.0f, 30.0f, 80.0f, 20.0f}, Viewport));
 	EXPECT_TRUE(QmDropdownAnchorFullyVisible(Viewport, Viewport));
+	// 布局浮点误差不能让贴着卡片底边的下拉框在下一帧立即关闭。
+	EXPECT_TRUE(QmDropdownAnchorFullyVisible({20.0f, 99.999f, 80.0f, 20.01f}, Viewport));
 	EXPECT_FALSE(QmDropdownAnchorFullyVisible({9.0f, 30.0f, 80.0f, 20.0f}, Viewport));
 	EXPECT_FALSE(QmDropdownAnchorFullyVisible({20.0f, 105.0f, 80.0f, 20.0f}, Viewport));
 	EXPECT_FALSE(QmDropdownAnchorFullyVisible({20.0f, 30.0f, 0.0f, 20.0f}, Viewport));
+}
+
+TEST(UiV2DropdownScroll, ActiveItemOnlyRequestsAutoScrollOnOpenOrKeyboardNavigation)
+{
+	EXPECT_TRUE(QmDropdownActiveItemShouldScrollIntoView(true, true));
+	EXPECT_FALSE(QmDropdownActiveItemShouldScrollIntoView(false, true));
+	EXPECT_FALSE(QmDropdownActiveItemShouldScrollIntoView(true, false));
+	EXPECT_FALSE(QmDropdownShouldRequestActiveScroll(true, 4, 4));
+	EXPECT_FALSE(QmDropdownShouldRequestActiveScroll(false, 4, 5));
+	EXPECT_TRUE(QmDropdownShouldRequestActiveScroll(true, 4, 5));
+}
+
+TEST(UiV2DropdownScroll, DraggedPopupOffsetSurvivesFollowingFrameWithoutNewTarget)
+{
+	const SQmScrollMetrics Metrics{160.0f, 320.0f};
+	SQmScrollConfig Config;
+	Config.m_WheelScale = 20.0f;
+	Config.m_NativeWheelAnimationTime = 0.0f;
+	CQmScrollState State;
+
+	// 模拟打开后滚轮向下，再模拟用户把滚动条拖到末尾。
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	State.SetOffset(Metrics.MaxOffset(), Metrics, Config);
+	ASSERT_FLOAT_EQ(State.Offset(), Metrics.MaxOffset());
+
+	// 下一个绘制帧没有 active-index 变化时不应自动定位回顶部。
+	State.Advance(1.0f / 60.0f, Metrics, Config);
+	EXPECT_FLOAT_EQ(State.Offset(), Metrics.MaxOffset());
 }
 
 TEST(UiV2DropdownPolicy, OwnsWheelWheneverViewportClipsContent)

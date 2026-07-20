@@ -247,8 +247,8 @@ inline SSettingsListCardGeometry ResolveSettingsGeneralThemeListGeometry(const i
 inline SSettingsListCardGeometry ResolveSettingsGraphicsModesGeometry(const int ModeCount, const SSettingsContentMetrics &Metrics)
 {
 	SSettingsListCardGeometry Geometry = ResolveSettingsGeneralLanguageListGeometry(ModeCount, Metrics);
-	// 窗口模式和当前显示模式各消费一行，列表从下一完整行开始。
-	Geometry.m_ContentHeight += 2.0f * Metrics.m_RowStep;
+	// 当前显示模式消费一行；窗口模式属于右侧“显示”卡片，不在这里重复预留。
+	Geometry.m_ContentHeight += Metrics.m_RowStep;
 	return Geometry;
 }
 

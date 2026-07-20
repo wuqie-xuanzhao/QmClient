@@ -27,6 +27,17 @@ namespace
 
 }
 
+void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect, const bool Collapsed, const float DrawAlpha)
+{
+	if(Ctx.m_pUi == nullptr)
+		return;
+	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
+	const bool Hovered = Ctx.m_pUi->MouseHovered(&Rect);
+	Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, (Hovered ? 0.28f : 0.18f) * std::clamp(DrawAlpha, 0.0f, 1.0f)), IGraphics::CORNER_ALL, 4.0f * UiScale);
+	const float IconSize = std::clamp(ui_token::font::BODY * UiScale, 10.0f, ui_token::font::BODY);
+	Ctx.m_pUi->DoLabel(&Rect, Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
+}
+
 SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction, const FSettingsCardRenderMeasured &RenderMeasured, bool *pPointerInside)
 {
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
@@ -49,7 +60,6 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	SUiTheme Fallback;
 	const SUiTheme &Theme = SettingsCardTheme(Ctx, Fallback);
 	const bool DrawCardChrome = SettingsCardShouldDrawChrome(Ctx.m_pUi != nullptr && Ctx.m_pUi->RenderOnly());
-	const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);
 	// 重排与拖放反馈只改变边框，卡片背景透明度保持稳定，避免滚动或切页时闪烁。
 	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
 	// 否则半透明卡片在展开、折叠或首次布局时会表现为一次亮闪。
@@ -58,6 +68,8 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      VisualOptions.m_BorderColor;
 	Border.a *= DrawState.m_DrawAlpha;
+	ColorRGBA Surface = ResolveSettingsCardLinkedSurfaceColor(Theme.m_Surface, VisualOptions.m_BorderColor, DrawInteractionBorder);
+	Surface = ResolveSettingsCardSurfaceColor(Surface, DrawState);
 	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
 	// Focus/hover 只改变颜色，不能改变 Surface 的几何，否则边框获得焦点时
 	// 会产生一次内缩跳变并重新触发用户看到的卡片闪动。
@@ -67,17 +79,13 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		DrawInteractionBorder,
 		[&] { DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius); },
 		[&] {
-			// Surface 先完整绘制，边框只通过四个互不重叠的裁剪条绘制外环。
-			// 不能把半透明边框铺满底层，否则边框颜色会透过 Surface 污染整张卡。
-			DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);
-			for(const CUIRect &Clip : ResolveSettingsCardBorderRingClipRects(DrawFrame.m_Rect, BorderWidth))
-			{
-				if(Clip.w <= 0.0f || Clip.h <= 0.0f)
-					continue;
-				Ctx.m_pUi->ClipEnable(&Clip);
-				DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
-				Ctx.m_pUi->ClipDisable();
-			}
+			// 完整外层圆角保证四角连续；内层颜色先抵消边框的 alpha 合成，
+			// 因此边框色不会透过半透明 Surface 污染卡片背景。两次绘制也替代
+			// 旧实现的四次圆角裁剪绘制。
+			DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
+			CUIRect InnerSurface = DrawFrame.m_Rect;
+			InnerSurface.Margin(BorderWidth, &InnerSurface);
+			InnerSurface.Draw(ResolveSettingsCardInnerSurfaceColor(Surface, Border), IGraphics::CORNER_ALL, std::max(0.0f, CardRadius - BorderWidth));
 		});
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
@@ -109,12 +117,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		}
 		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 		if(DrawCardChrome && DrawState.m_ShowDefaultCollapseButton)
-		{
-			const bool Hovered = Ctx.m_pUi->MouseHovered(&DrawFrame.m_HandleRect);
-			DrawFrame.m_HandleRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, Hovered ? 0.28f : 0.18f), IGraphics::CORNER_ALL, 4.0f * UiScale);
-			const float IconSize = std::clamp(ui_token::font::BODY * UiScale, 10.0f, ui_token::font::BODY);
-			Ctx.m_pUi->DoLabel(&DrawFrame.m_HandleRect, DrawState.m_Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
-		}
+			RenderSettingsCardCollapseButton(Ctx, DrawFrame.m_HandleRect, DrawState.m_Collapsed, DrawState.m_DrawAlpha);
 	}
 
 	if(HeaderAction && DrawCardChrome)

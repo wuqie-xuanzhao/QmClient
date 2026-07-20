@@ -2120,6 +2120,9 @@ Configure DDNet gameplay preferences
 Configure display and rendering
 == Configurer l'affichage et le rendu
 
+Configure Dream-only convenience features
+== Configure Dream-only convenience features
+
 Configure game and client preferences
 == Configurer les préférences du jeu et du client
 
@@ -2132,11 +2135,20 @@ Configure hammer skin steal and skin transition animations
 Configure health, ammo, timer, and race HUD
 == Configure health, ammo, timer, and race HUD
 
+Configure HJ unfreeze assistance
+== Configure HJ unfreeze assistance
+
 Configure hook range and collision guide lines
 == Configure hook range and collision guide lines
 
+Configure HUD island appearance
+== Configure HUD island appearance
+
 Configure input helpers and cursor behavior
 == Configure input helpers and cursor behavior
+
+Configure keyword-based automatic replies
+== Configure keyword-based automatic replies
 
 Configure laser shape, glow, and animation
 == Configure laser shape, glow, and animation
@@ -2173,6 +2185,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the input overlay display
+== Configure the input overlay display
 
 Configure these settings
 == Configurer ces paramètres
@@ -2332,9 +2347,6 @@ Copy skin
 
 Copy skin option color
 == Couleur des options de copie de skin
-
-Corner segments
-== Segments de coin
 
 Could not check for existing player with your name. Check your internet connection.
 == Impossible de vérifier l'existence d'un joueur avec votre nom. Vérifiez votre connexion Internet.
@@ -2510,14 +2522,23 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == Invite de traduction personnalisée (remplace l’invite intégrée)
 
+Customize additional nameplate text
+== Customize additional nameplate text
+
 Customize animated rainbow colors
 == Customize animated rainbow colors
 
 Customize interface appearance and previews
 == Personnaliser l'interface et les aperçus
 
+Customize laser shape and effects
+== Customize laser shape and effects
+
 Customize QmClient visuals and effects
 == Personnaliser les visuels et effets de QmClient
+
+Customize the position jump hint
+== Customize the position jump hint
 
 Customize translate button and menu colors
 == Personnaliser les couleurs du bouton de traduction et du menu
@@ -3901,6 +3922,9 @@ Exported %d chat messages
 
 Exported to %s
 == Exporté vers %s
+
+Expose playback controls to the operating system
+== Expose playback controls to the operating system
 
 External console password. Must be set to enable economy.
 == Mot de passe de la console externe. Doit être défini pour activer l'économie.
@@ -7952,6 +7976,9 @@ QmClient Community
 QmClient community and project information
 == Communauté et informations du projet QmClient
 
+QmClient information and project links
+== QmClient information and project links
+
 QmClient online distribution
 == Distribution en ligne de QmClient
 
@@ -10010,6 +10037,9 @@ Show server chat messages
 Show server help and usage messages
 == Afficher l'aide et les messages d'utilisation du serveur
 
+Show server prompts and Echo messages as popups
+== Show server prompts and Echo messages as popups
+
 Show server settings
 == Afficher les paramètres du serveur
 
@@ -11693,9 +11723,6 @@ UI motion level
 UI mouse sens.
 == Sens. souris UI
 
-UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
-== Nombre de segments d'angle arrondi de l'UI (pair recommandé 8/16/32/48 ; impair automatiquement arrondi au pair, requis par le dessin i+=2)
-
 UI scale
 == Échelle de l'interface utilisateur
 
@@ -11896,6 +11923,9 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == Téléchargement des données de la carte vers le GPU
+
+Upper limit for automatically selected UI rounded corner segments
+== Upper limit for automatically selected UI rounded corner segments
 
 URL for downloading community skins
 == URL pour télécharger les skins communautaires

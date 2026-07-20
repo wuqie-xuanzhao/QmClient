@@ -65,13 +65,14 @@ public:
 	template<typename FBuildDefinitions>
 	SSettingsCardDeckResult RenderCached(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, uint64_t DefinitionsRevision, FBuildDefinitions &&BuildDefinitions, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions)
 	{
-		if(!m_CachedDefinitionsInitialized || m_CachedDefinitionsRevision != DefinitionsRevision)
+		if(SettingsCardDeckDefinitionsRevisionChanged(m_CachedDefinitionsInitialized, m_CachedDefinitionsRevision, DefinitionsRevision))
 		{
 			m_vCachedDefinitions.clear();
 			BuildDefinitions(m_vCachedDefinitions);
 			m_CachedDefinitionsRevision = DefinitionsRevision;
 			m_CachedDefinitionsInitialized = true;
 			m_CachedDefinitionsDirty = true;
+			m_InvalidateMeasurementsOnDefinitionsPrepare = true;
 		}
 		return RenderInternal(Ctx, Layout, pTab, m_vCachedDefinitions, Model, pScrollRegion, Input, Motion, VisualOptions, true);
 	}
@@ -150,6 +151,7 @@ private:
 	uint64_t m_CachedDefinitionsRevision = 0;
 	bool m_CachedDefinitionsInitialized = false;
 	bool m_CachedDefinitionsDirty = false;
+	bool m_InvalidateMeasurementsOnDefinitionsPrepare = false;
 	int m_PreparedDefinitionModelCount = -1;
 	uint64_t m_PreparedDefinitionStateIndexRevision = UINT64_MAX;
 	const SSettingsCardDefinition *m_pPreparedDefinitionData = nullptr;

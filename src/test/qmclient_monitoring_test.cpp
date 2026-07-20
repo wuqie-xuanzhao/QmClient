@@ -6932,7 +6932,7 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("const bool InteractionComplete = DrawState.m_DropFeedback;"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused)"), std::string::npos);
 	EXPECT_EQ(Source.find("PointInRect(DrawRect"), std::string::npos);
-	EXPECT_NE(Source.find("const ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
+	EXPECT_NE(Source.find("ColorRGBA Surface = ResolveSettingsCardLinkedSurfaceColor(Theme.m_Surface, VisualOptions.m_BorderColor, DrawInteractionBorder);"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
 	EXPECT_NE(Source.find("const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders;"), std::string::npos);
@@ -6941,8 +6941,8 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
 	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_NE(Source.find("ExecuteSettingsCardChromeDraw("), std::string::npos);
-	EXPECT_NE(Source.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
-	EXPECT_EQ(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
+	EXPECT_EQ(Source.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
+	EXPECT_NE(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
 	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);
@@ -6950,7 +6950,7 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
-	EXPECT_NE(QmClientSource.find("Collapsed ? FONT_ICON_CHEVRON_DOWN : FONT_ICON_CHEVRON_UP"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);
 }
 
@@ -9233,7 +9233,7 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(Body.find("pContext->m_BlockUnderlyingScroll = OwnsWheel;"), std::string::npos);
 	EXPECT_NE(PopupSelectionBody.find("QmResolveScrollPolicy(ScrollRequest)"), std::string::npos);
 	EXPECT_NE(PopupSelectionBody.find("ScrollParams.m_HideScrollbar = !pSelectionPopup->m_BlockUnderlyingScroll;"), std::string::npos);
-	EXPECT_NE(PopupSelectionBody.find("pScrollRegion->AddRect(Slot, ActiveEntry)"), std::string::npos);
+	EXPECT_NE(PopupSelectionBody.find("pScrollRegion->AddRect(Slot, QmDropdownActiveItemShouldScrollIntoView"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollbarThickness = 10.0f"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollUnit = 3 *"), std::string::npos);
 	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_BlockUnderlyingScroll"), std::string::npos);

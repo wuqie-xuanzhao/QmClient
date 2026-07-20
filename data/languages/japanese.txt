@@ -2120,6 +2120,9 @@ Configure DDNet gameplay preferences
 Configure display and rendering
 == 表示とレンダリングを設定
 
+Configure Dream-only convenience features
+== Configure Dream-only convenience features
+
 Configure game and client preferences
 == ゲームとクライアントの設定を構成
 
@@ -2132,11 +2135,20 @@ Configure hammer skin steal and skin transition animations
 Configure health, ammo, timer, and race HUD
 == Configure health, ammo, timer, and race HUD
 
+Configure HJ unfreeze assistance
+== Configure HJ unfreeze assistance
+
 Configure hook range and collision guide lines
 == Configure hook range and collision guide lines
 
+Configure HUD island appearance
+== Configure HUD island appearance
+
 Configure input helpers and cursor behavior
 == Configure input helpers and cursor behavior
+
+Configure keyword-based automatic replies
+== Configure keyword-based automatic replies
 
 Configure laser shape, glow, and animation
 == Configure laser shape, glow, and animation
@@ -2173,6 +2185,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the input overlay display
+== Configure the input overlay display
 
 Configure these settings
 == これらの設定を構成
@@ -2332,9 +2347,6 @@ Copy skin
 
 Copy skin option color
 == スキンオプションの色をコピー
-
-Corner segments
-== コーナーセグメント
 
 Could not check for existing player with your name. Check your internet connection.
 == 同じ名前のプレイヤーがいるか確認できませんでした。インターネット接続を確認してください。
@@ -2510,14 +2522,23 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == カスタム翻訳プロンプト（内蔵プロンプトを上書き）
 
+Customize additional nameplate text
+== Customize additional nameplate text
+
 Customize animated rainbow colors
 == Customize animated rainbow colors
 
 Customize interface appearance and previews
 == インターフェースの外観とプレビューをカスタマイズ
 
+Customize laser shape and effects
+== Customize laser shape and effects
+
 Customize QmClient visuals and effects
 == QmClient の表示とエフェクトをカスタマイズ
+
+Customize the position jump hint
+== Customize the position jump hint
 
 Customize translate button and menu colors
 == 翻訳ボタンとメニューの色をカスタマイズ
@@ -3901,6 +3922,9 @@ Exported %d chat messages
 
 Exported to %s
 == %s にエクスポートしました
+
+Expose playback controls to the operating system
+== Expose playback controls to the operating system
 
 External console password. Must be set to enable economy.
 == 外部コンソールパスワード。エコノミーを有効にするには設定が必要
@@ -7952,6 +7976,9 @@ QmClient Community
 QmClient community and project information
 == QmClient のコミュニティとプロジェクト情報
 
+QmClient information and project links
+== QmClient information and project links
+
 QmClient online distribution
 == QmClient オンライン分布
 
@@ -10010,6 +10037,9 @@ Show server chat messages
 Show server help and usage messages
 == サーバーのヘルプと使用方法を表示
 
+Show server prompts and Echo messages as popups
+== Show server prompts and Echo messages as popups
+
 Show server settings
 == サーバー設定を表示
 
@@ -11693,9 +11723,6 @@ UI motion level
 UI mouse sens.
 == UI マウス感度
 
-UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
-== UI 角丸の分割数（推奨偶数 8/16/32/48；奇数は自動的に偶数に調整されます。i+=2 描画要件のため）
-
 UI scale
 == UI スケール
 
@@ -11896,6 +11923,9 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == マップデータを GPU にアップロード中
+
+Upper limit for automatically selected UI rounded corner segments
+== Upper limit for automatically selected UI rounded corner segments
 
 URL for downloading community skins
 == コミュニティスキン用ダウンロード URL

@@ -74,10 +74,23 @@ bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupH
 
 bool QmDropdownAnchorFullyVisible(const CUIRect &AnchorRect, const CUIRect &ViewportRect)
 {
+	constexpr float EdgeTolerance = 0.01f;
 	return AnchorRect.w > 0.0f && AnchorRect.h > 0.0f &&
-	       AnchorRect.x >= ViewportRect.x && AnchorRect.y >= ViewportRect.y &&
-	       AnchorRect.x + AnchorRect.w <= ViewportRect.x + ViewportRect.w &&
-	       AnchorRect.y + AnchorRect.h <= ViewportRect.y + ViewportRect.h;
+	       AnchorRect.x + EdgeTolerance >= ViewportRect.x && AnchorRect.y + EdgeTolerance >= ViewportRect.y &&
+	       AnchorRect.x + AnchorRect.w <= ViewportRect.x + ViewportRect.w + EdgeTolerance &&
+	       AnchorRect.y + AnchorRect.h <= ViewportRect.y + ViewportRect.h + EdgeTolerance;
+}
+
+bool QmDropdownActiveItemShouldScrollIntoView(const bool ScrollRequested, const bool ActiveEntry)
+{
+	return ScrollRequested && ActiveEntry;
+}
+
+bool QmDropdownShouldRequestActiveScroll(const bool PopupOpen, const int PreviousActiveIndex, const int ActiveIndex)
+{
+	// 已打开弹层只有键盘等方式真正改变 active item 时才重新定位；普通重绘、
+	// 滚轮和滚动条拖动都必须保留用户当前 offset。
+	return PopupOpen && PreviousActiveIndex != ActiveIndex;
 }
 
 void CQmDropdownState::Reset()

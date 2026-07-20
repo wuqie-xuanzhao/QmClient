@@ -1250,7 +1250,7 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 		CUIRect FontDirectory;
 		Button.VSplitRight(20.0f, &Button, &FontDirectory);
 		Button.VSplitRight(MarginSmall, &Button, nullptr);
-		const int FontSelectedNew = Ui()->DoDropDown(&Button, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
+		const int FontSelectedNew = DoSettingsDropDown(&Button, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 		if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 		{
 			str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
@@ -1285,7 +1285,7 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 		static CUi::SDropDownState s_DropDownState;
 		static CScrollRegion s_DropDownScrollRegion;
 		s_DropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_DropDownScrollRegion;
-		g_Config.m_TcHammerRotatesWithCursor = Ui()->DoDropDown(&Button, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
+		g_Config.m_TcHammerRotatesWithCursor = DoSettingsDropDown(&Button, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
 	}
 	Button = Rows.Next();
 	if(Render)
@@ -1760,7 +1760,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					FontDropDownRect.VSplitRight(20.0f, &FontDropDownRect, &FontDirectory);
 					FontDropDownRect.VSplitRight(MarginSmall, &FontDropDownRect, nullptr);
 
-					const int FontSelectedNew = Ui()->DoDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
+					const int FontSelectedNew = DoSettingsDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 					if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 					{
 						str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
@@ -1806,7 +1806,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				static CUi::SDropDownState s_DropDownState;
 				static CScrollRegion s_DropDownScrollRegion;
 				s_DropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_DropDownScrollRegion;
-				g_Config.m_TcHammerRotatesWithCursor = Ui()->DoDropDown(&DropDownRect, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
+				g_Config.m_TcHammerRotatesWithCursor = DoSettingsDropDown(&DropDownRect, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
 				LogSettingsStage("tclient_settings_left_visual_hammer_mode", HammerModeTimer);
 				CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 			}
@@ -1871,7 +1871,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				CUIRect FontDirectory;
 				FontDropDownRect.VSplitRight(20.0f, &FontDropDownRect, &FontDirectory);
 				FontDropDownRect.VSplitRight(MarginSmall, &FontDropDownRect, nullptr);
-				const int FontSelectedNew = Ui()->DoDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
+				const int FontSelectedNew = DoSettingsDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 				if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 				{
 					str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
@@ -1914,7 +1914,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				static CUi::SDropDownState s_DropDownState;
 				static CScrollRegion s_DropDownScrollRegion;
 				s_DropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_DropDownScrollRegion;
-				g_Config.m_TcHammerRotatesWithCursor = Ui()->DoDropDown(&DropDownRect, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
+				g_Config.m_TcHammerRotatesWithCursor = DoSettingsDropDown(&DropDownRect, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
 				CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 			}
 			else
@@ -3129,7 +3129,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			RainbowDropDownRect = Rows.Next();
 			if(Render)
 			{
-				const int RainbowSelectedNew = Ui()->DoDropDown(&RainbowDropDownRect, RainbowSelectedOld, s_RainbowDropDownNames.data(), s_RainbowDropDownNames.size(), s_RainbowDropDownState);
+				const int RainbowSelectedNew = DoSettingsDropDown(&RainbowDropDownRect, RainbowSelectedOld, s_RainbowDropDownNames.data(), s_RainbowDropDownNames.size(), s_RainbowDropDownState);
 				if(RainbowSelectedOld != RainbowSelectedNew)
 					g_Config.m_TcRainbowMode = RainbowSelectedNew + 1;
 			}
@@ -3173,7 +3173,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			if(Render)
 			{
 				CPerfTimer DropDownTimer;
-				const int TrailSelectedNew = Ui()->DoDropDown(&TrailDropDownRect, TrailSelectedOld, s_TrailDropDownNames.data(), s_TrailDropDownNames.size(), s_TrailDropDownState);
+				const int TrailSelectedNew = DoSettingsDropDown(&TrailDropDownRect, TrailSelectedOld, s_TrailDropDownNames.data(), s_TrailDropDownNames.size(), s_TrailDropDownState);
 				if(TrailSelectedOld != TrailSelectedNew)
 					g_Config.m_TcTeeTrailColorMode = TrailSelectedNew + 1;
 				LogSettingsStage("tclient_settings_right_tee_trails_dropdown", DropDownTimer);
@@ -4739,7 +4739,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		LogTClientPerfStageEx("tclient_statusbar", "codes", ETClientSettingsPerfStage::TEXT_CACHE, CodesTimer.ElapsedMs());
 	};
 	const auto MeasurePreview = [PreviewContentHeight](float) { return PreviewContentHeight; };
-	const auto RenderPreview = [this, &TClientStatusSchemeTextInputCtx, &GetStatusBarEditorLabel, &RenderStatusBarPreview, ReadOnly](CUIRect &StatusBar) {
+	const auto RenderPreview = [this, &TClientStatusSchemeTextInputCtx, &GetStatusBarEditorLabel, &RenderStatusBarPreview, Page, ReadOnly](CUIRect &StatusBar) {
 		CPerfTimer EditorTimer;
 		const int StatusItemTypeCount = (int)GameClient()->m_StatusBar.m_StatusItemTypes.size();
 		if(s_TypeSelectedOld >= StatusItemTypeCount)
@@ -4795,7 +4795,9 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 			static CUi::SDropDownState s_DropDownState;
 			static CScrollRegion s_DropDownScrollRegion;
 			s_DropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_DropDownScrollRegion;
-			const int TypeSelectedNew = Ui()->DoDropDown(&DropDownRect, s_TypeSelectedOld, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
+			CUi::SDropDownProperties DropDownProps;
+			DropDownProps.m_pPopupViewport = &Page.m_ScrollViewport;
+			const int TypeSelectedNew = DoSettingsDropDown(&DropDownRect, s_TypeSelectedOld, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState, DropDownProps);
 			if(s_TypeSelectedOld != TypeSelectedNew)
 			{
 				s_TypeSelectedOld = TypeSelectedNew;

@@ -180,6 +180,14 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		if(Input.m_pDiagnostics != nullptr)
 			m_FrameRuntime.CountDefinitionsPrepare();
 		PrepareDefinitions(vCards, Model);
+		if(m_InvalidateMeasurementsOnDefinitionsPrepare)
+		{
+			// Definitions revision 表示测量闭包或其依赖状态已经改变。同 stable ID
+			// 不能继续复用旧高度，否则动态行会被旧卡片矩形裁掉。
+			std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);
+			std::fill(m_vMeasureRevisions.begin(), m_vMeasureRevisions.end(), UINT64_MAX);
+			m_InvalidateMeasurementsOnDefinitionsPrepare = false;
+		}
 		m_CachedDefinitionsDirty = false;
 		m_PreparedDefinitionModelCount = Model.Count();
 		m_PreparedDefinitionStateIndexRevision = Model.StateIndexRevision();
@@ -363,17 +371,22 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			bool CardGeometryChanged = false;
 			const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
 			const bool CollapsedBeforeHeader = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
+			bool HeaderGeometryChanged = false;
 			if(ControllerVisible && Card.m_pDefinition->m_PreLayoutHeaderInput)
 			{
 				m_FrameRuntime.CountPreLayoutInput();
-				CardGeometryChanged = Card.m_pDefinition->m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader);
+				HeaderGeometryChanged = Card.m_pDefinition->m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader);
+				CardGeometryChanged = HeaderGeometryChanged;
 			}
 			else if(ControllerVisible && Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly() && SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput)) &&
 				Ctx.m_pUi->DoButtonLogic(&Runtime.m_DefaultCollapseButtonId, CollapsedBeforeHeader, &PreLayoutFrame.m_HandleRect, BUTTONFLAG_LEFT))
 			{
 				Runtime.m_DefaultCollapsed = SettingsCardDeckApplyDefaultCollapseToggle(HasCustomCollapsedState, Runtime.m_DefaultCollapsed, true, false);
 				CardGeometryChanged = true;
+				HeaderGeometryChanged = true;
 			}
+			if(HeaderGeometryChanged)
+				Ctx.m_pUi->ClosePopupMenus();
 
 			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			if(SettingsCardDeckShouldRunPreLayoutInput(true, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)

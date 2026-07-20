@@ -32,8 +32,11 @@ class CSemaphore;
 
 static std::thread::id gs_MainThreadId;
 static bool gs_MainThreadIdInitialized = false;
-static constexpr int RECT_CORNER_SEGMENTS = 48; // 圆角段数上限（栈数组大小）；实际段数由 qm_rect_corner_segments 配置（默认 32）
-static inline int RoundedRectSegmentCount() { return std::clamp(g_Config.m_QmRectCornerSegments & ~1, 8, RECT_CORNER_SEGMENTS); } // & ~1 规整偶数：i+=2 循环每轮画两段角度，奇数末段会越过 90° 圆弧终点
+static constexpr int RECT_CORNER_SEGMENTS = 48; // 圆角段数上限（栈数组大小）
+static inline int RoundedRectSegmentCount()
+{
+	return std::clamp(g_Config.m_QmRectCornerSegments & ~1, 8, RECT_CORNER_SEGMENTS);
+}
 static constexpr float RECT_ANTIALIAS_PIXEL_SIZE = 1.25f;
 
 static ColorRGBA CommandColorToColorRGBA(const CCommandBuffer::SColor &Color)

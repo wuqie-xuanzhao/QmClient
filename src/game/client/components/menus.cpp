@@ -544,6 +544,15 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 	return Context;
 }
 
+int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char **ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)
+{
+	// 所有新设置页共享页面最外层 popup viewport；锚点仍由 DoDropDown
+	// 根据当前卡片 clip 解析，避免弹层离开页面时不同页面行为分叉。
+	if(Properties.m_pPopupViewport == nullptr)
+		Properties.m_pPopupViewport = Ui()->OutermostClipArea();
+	return Ui()->DoDropDown(pRect, CurSelection, ppStrs, Num, State, Properties);
+}
+
 SCardMotionSpec CMenus::SettingsCardMotionSpec() const
 {
 	return ResolveCardMotionSpec(g_Config.m_QmUiMotionLevel, g_Config.m_QmExtraAnimations != 0);

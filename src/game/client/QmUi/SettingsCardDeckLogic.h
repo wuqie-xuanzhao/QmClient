@@ -98,6 +98,11 @@ inline bool SettingsCardDeckApplyDefaultCollapseToggle(const bool HasCustomColla
 	return !HasCustomCollapsedState && !RenderOnly && TogglePressed ? !Collapsed : Collapsed;
 }
 
+inline bool SettingsCardDeckDefinitionsRevisionChanged(const bool Initialized, const uint64_t CurrentRevision, const uint64_t NextRevision)
+{
+	return !Initialized || CurrentRevision != NextRevision;
+}
+
 struct SSettingsCardAnimationWork
 {
 	bool m_ResolveEntry = false;

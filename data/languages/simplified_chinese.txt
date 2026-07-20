@@ -2120,6 +2120,9 @@ Configure DDNet gameplay preferences
 Configure display and rendering
 == 配置显示与渲染选项
 
+Configure Dream-only convenience features
+== 配置栖梦专属便利功能
+
 Configure game and client preferences
 == 配置游戏与客户端偏好
 
@@ -2132,11 +2135,20 @@ Configure hammer skin steal and skin transition animations
 Configure health, ammo, timer, and race HUD
 == Configure health, ammo, timer, and race HUD
 
+Configure HJ unfreeze assistance
+== 配置 HJ 解冻辅助
+
 Configure hook range and collision guide lines
 == Configure hook range and collision guide lines
 
+Configure HUD island appearance
+== 配置 HUD 灵动岛外观
+
 Configure input helpers and cursor behavior
 == Configure input helpers and cursor behavior
+
+Configure keyword-based automatic replies
+== 配置基于关键词的自动回复
 
 Configure laser shape, glow, and animation
 == Configure laser shape, glow, and animation
@@ -2173,6 +2185,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the input overlay display
+== 配置输入叠加层显示
 
 Configure these settings
 == 配置此卡片中的设置
@@ -2332,9 +2347,6 @@ Copy skin
 
 Copy skin option color
 == 复制皮肤选项颜色
-
-Corner segments
-== 圆角分段数
 
 Could not check for existing player with your name. Check your internet connection.
 == 无法验证是否已存在相同名称的玩家。请检查你的网络连接。
@@ -2510,14 +2522,23 @@ Custom Provider model name
 Custom translation prompt (overrides built-in)
 == 自定义翻译提示词（覆盖内置提示词）
 
+Customize additional nameplate text
+== 自定义额外名牌文本
+
 Customize animated rainbow colors
 == Customize animated rainbow colors
 
 Customize interface appearance and previews
 == 自定义界面外观与预览
 
+Customize laser shape and effects
+== 自定义激光形状和效果
+
 Customize QmClient visuals and effects
 == 自定义栖梦客户端的视觉与特效
+
+Customize the position jump hint
+== 自定义位置跳跃提示
 
 Customize translate button and menu colors
 == 自定义翻译按钮和菜单颜色
@@ -3901,6 +3922,9 @@ Exported %d chat messages
 
 Exported to %s
 == 已导出到 %s
+
+Expose playback controls to the operating system
+== 向操作系统提供播放控制
 
 External console password. Must be set to enable economy.
 == 外部控制台密码。需要设置此选项才能启用经济。
@@ -7952,6 +7976,9 @@ QmClient Community
 QmClient community and project information
 == 查看栖梦客户端社区与项目信息
 
+QmClient information and project links
+== QmClient 信息和项目链接
+
 QmClient online distribution
 == 栖梦客户端在线分布
 
@@ -10010,6 +10037,9 @@ Show server chat messages
 Show server help and usage messages
 == 显示服务器帮助和用法说明
 
+Show server prompts and Echo messages as popups
+== 将服务器提示和 Echo 消息显示为弹窗
+
 Show server settings
 == 查看服务器设置列表
 
@@ -11693,9 +11723,6 @@ UI motion level
 UI mouse sens.
 == 鼠标灵敏度（界面）
 
-UI rounded corner segments (even numbers recommended: 8/16/32/48; odd numbers auto-adjusted to even due to i+=2 draw constraint)
-== UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
-
 UI scale
 == UI 大小
 
@@ -11896,6 +11923,9 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == 正在将地图数据传输至显卡
+
+Upper limit for automatically selected UI rounded corner segments
+== 自动选择的 UI 圆角分段数上限
 
 URL for downloading community skins
 == 用于下载社区皮肤的 URL
