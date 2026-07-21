@@ -199,12 +199,15 @@ TEST(QmLyricsSourceLrclibProxy, RuntimeOptionsCancelGenerationBeforeSourceCallba
 	const size_t StateMachine = Source.find("void CQmLyrics::TickStateMachine()");
 	ASSERT_NE(StateMachine, std::string::npos);
 	const size_t OptionsChanged = Source.find("const bool HttpOptionsChanged", StateMachine);
-	const size_t CancelForOptions = Source.find("if(RestartSearchForHttpOptions)\n\t\tCancelAllSources", StateMachine);
+	const size_t RestartForOptions = Source.find("if(RestartSearchForHttpOptions)", StateMachine);
+	const size_t CancelForOptions = Source.find("CancelAllSources(m_pImpl.get());", RestartForOptions);
 	const size_t SourceCallbacks = Source.find("for(std::unique_ptr<QmLyrics::IQmLyricsSource> &pSource", StateMachine);
 	ASSERT_NE(OptionsChanged, std::string::npos);
+	ASSERT_NE(RestartForOptions, std::string::npos);
 	ASSERT_NE(CancelForOptions, std::string::npos);
 	ASSERT_NE(SourceCallbacks, std::string::npos);
 	EXPECT_LT(OptionsChanged, SourceCallbacks);
+	EXPECT_LT(RestartForOptions, CancelForOptions);
 	EXPECT_LT(CancelForOptions, SourceCallbacks);
 }
 

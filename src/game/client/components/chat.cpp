@@ -291,12 +291,6 @@ static bool ApplyBlockWords(std::string &Text, std::vector<std::string> *pMatche
 	return Replaced;
 }
 
-bool CChat::ShouldHideBlockWordsMessage(EBlockWordsAction Action, bool Matched, int ClientId, bool IsLocalClient, int Team)
-{
-	return Action == EBlockWordsAction::HIDE_MESSAGE && Matched &&
-	       ClientId >= 0 && ClientId < MAX_CLIENTS && !IsLocalClient && Team != TEAM_WHISPER_SEND;
-}
-
 static constexpr int COMMAND_PREVIEW_TOKEN_LENGTH = 128;
 
 static bool CommandPreviewNameIs(const char *pName, const char *pCommand)
@@ -3454,18 +3448,6 @@ void CChat::EnsureCoherentWidth() const
 }
 
 // ----- send functions -----
-
-bool CChat::ShouldSyncDummyCommand(const char *pLine)
-{
-	if(pLine == nullptr)
-		return false;
-
-	const char *pTeamArgument = str_startswith_nocase(pLine, "/team ");
-	if(pTeamArgument != nullptr)
-		return *str_utf8_skip_whitespaces(pTeamArgument) != '\0';
-
-	return str_comp_nocase(pLine, "/vote particle") == 0;
-}
 
 static bool ShouldSyncDummyCommandToOther(const char *pLine)
 {

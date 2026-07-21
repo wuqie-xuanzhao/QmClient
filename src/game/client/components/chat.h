@@ -508,6 +508,22 @@ public:
 		str_append(pBuf, " ", BufSize);
 		return true;
 	}
+	static bool ShouldHideBlockWordsMessage(EBlockWordsAction Action, bool Matched, int ClientId, bool IsLocalClient, int Team)
+	{
+		return Action == EBlockWordsAction::HIDE_MESSAGE && Matched &&
+		       ClientId >= 0 && ClientId < MAX_CLIENTS && !IsLocalClient && Team != TEAM_WHISPER_SEND;
+	}
+	static bool ShouldSyncDummyCommand(const char *pLine)
+	{
+		if(pLine == nullptr)
+			return false;
+
+		const char *pTeamArgument = str_startswith_nocase(pLine, "/team ");
+		if(pTeamArgument != nullptr)
+			return *str_utf8_skip_whitespaces(pTeamArgument) != '\0';
+
+		return str_comp_nocase(pLine, "/vote particle") == 0;
+	}
 	static QmHudNotifications::EServerMessageClass ResolveLineServerMessageClass(int ClientId, const char *pLine, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass = std::nullopt)
 	{
 		if(ClientId != SERVER_MSG)
