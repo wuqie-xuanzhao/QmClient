@@ -153,6 +153,24 @@ TEST(QmFastInputMode, MarginUsesLargestFastInputContribution)
 	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 35);
 }
 
+TEST(QmFastInputMode, AutoPredictionMarginKeepsStableBase)
+{
+	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 0.0f, 10.0f, 10.0f, 0.0f, false), 10);
+}
+
+TEST(QmFastInputMode, AutoPredictionMarginAddsLatencyJitterAndConnectionProtection)
+{
+	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 70.0f, 10.0f, 10.0f, 0.0f, false), 20);
+	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 0.0f, 10.0f, 10.0f, 14.0f, false), 19);
+	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 0.0f, 10.0f, 10.0f, 0.0f, true), 20);
+}
+
+TEST(QmFastInputMode, AutoPredictionMarginClampsToSupportedRange)
+{
+	EXPECT_EQ(QmComputeAutoPredictionMargin(0, 0.0f, 0.0f, 0.0f, 0.0f, false), 1);
+	EXPECT_EQ(QmComputeAutoPredictionMargin(500, 0.0f, 0.0f, 0.0f, 0.0f, false), 300);
+}
+
 TEST(QmGoresMode, ActiveGoresClearsDummyHammerState)
 {
 	bool Changed = false;

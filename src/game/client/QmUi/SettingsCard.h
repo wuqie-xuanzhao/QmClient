@@ -105,19 +105,6 @@ inline ColorRGBA ResolveSettingsCardSurfaceColor(ColorRGBA Surface, const SSetti
 	return Surface;
 }
 
-inline ColorRGBA ResolveSettingsCardLinkedSurfaceColor(ColorRGBA Surface, const ColorRGBA Border, const bool LinkBorderColor)
-{
-	if(!LinkBorderColor)
-		return Surface;
-	// 边框颜色只做轻微的卡片色调联动，避免用户选择颜色后边框与 Surface
-	// 完全割裂；alpha 仍由边框配置控制，默认值只产生很弱的色调变化。
-	const float LinkAmount = std::clamp(Border.a, 0.0f, 1.0f) * 0.18f;
-	Surface.r += (Border.r - Surface.r) * LinkAmount;
-	Surface.g += (Border.g - Surface.g) * LinkAmount;
-	Surface.b += (Border.b - Surface.b) * LinkAmount;
-	return Surface;
-}
-
 inline ColorRGBA ResolveSettingsCardInnerSurfaceColor(const ColorRGBA Surface, ColorRGBA Border)
 {
 	const float SurfaceAlpha = std::clamp(Surface.a, 0.0f, 1.0f);

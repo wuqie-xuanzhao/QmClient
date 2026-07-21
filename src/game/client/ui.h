@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -382,6 +383,8 @@ struct SPopupMenuProperties
 	bool m_AutoReposition = true;
 	bool m_ClipToViewport = false;
 	bool m_BlockUnderlyingScroll = false;
+	bool m_RequireSourceRefresh = false;
+	uint64_t m_SourceFrame = 0;
 	CUIRect m_Viewport{};
 };
 
@@ -1055,6 +1058,7 @@ public:
 		bool m_AnchorVisible = true;
 		bool m_PopupVisible = true;
 		bool m_BlockUnderlyingScroll = false;
+		bool m_Scrollable = false;
 		bool m_ScrollToActiveItem = false;
 		bool m_MenuUiFirstWheelLogged = false;
 		CUIRect m_Viewport{};
@@ -1096,8 +1100,14 @@ public:
 	// dropdown menu
 	struct SDropDownState
 	{
+		SDropDownState() = default;
+		SDropDownState(const SDropDownState &) = delete;
+		SDropDownState &operator=(const SDropDownState &) = delete;
+
 		SSelectionPopupContext m_SelectionPopupContext;
 		CQmDropdownState m_DropDownState;
+		std::shared_ptr<CScrollRegion> m_pOwnedScrollRegion;
+		CScrollRegion *m_pScrollRegion = nullptr;
 		CUIElement m_UiElement;
 		CButtonContainer m_ButtonContainer;
 		bool m_Init = false;

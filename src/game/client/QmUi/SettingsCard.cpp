@@ -68,8 +68,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
 														      VisualOptions.m_BorderColor;
 	Border.a *= DrawState.m_DrawAlpha;
-	ColorRGBA Surface = ResolveSettingsCardLinkedSurfaceColor(Theme.m_Surface, VisualOptions.m_BorderColor, DrawInteractionBorder);
-	Surface = ResolveSettingsCardSurfaceColor(Surface, DrawState);
+	ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);
 	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
 	// Focus/hover 只改变颜色，不能改变 Surface 的几何，否则边框获得焦点时
 	// 会产生一次内缩跳变并重新触发用户看到的卡片闪动。

@@ -105,6 +105,12 @@ void CSettingsCardDeck::PrepareDefinitions(const std::vector<SSettingsCardDefini
 	m_vContentHeights.resize(Model.Count(), -1.0f);
 	m_vContentWidths.resize(Model.Count(), -1.0f);
 	m_vMeasureRevisions.resize(Model.Count(), UINT64_MAX);
+	for(const int StateIndex : m_vBoundDefinitionStateIndices)
+	{
+		const SSettingsCardDefinition *pDefinition = m_vDefinitionsByState[StateIndex];
+		if(pDefinition != nullptr)
+			m_vRuntimeStates[StateIndex].m_DefaultCollapsed = SettingsCardDeckLoadCollapsed(m_DefaultCollapsedByStableId, pDefinition->m_Spec.m_pStableId, m_vRuntimeStates[StateIndex].m_DefaultCollapsed);
+	}
 }
 
 void CSettingsCardDeck::RequestReveal(const char *pStableId)
@@ -382,6 +388,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				Ctx.m_pUi->DoButtonLogic(&Runtime.m_DefaultCollapseButtonId, CollapsedBeforeHeader, &PreLayoutFrame.m_HandleRect, BUTTONFLAG_LEFT))
 			{
 				Runtime.m_DefaultCollapsed = SettingsCardDeckApplyDefaultCollapseToggle(HasCustomCollapsedState, Runtime.m_DefaultCollapsed, true, false);
+				SettingsCardDeckStoreCollapsed(m_DefaultCollapsedByStableId, Card.m_pDefinition->m_Spec.m_pStableId, Runtime.m_DefaultCollapsed);
 				CardGeometryChanged = true;
 				HeaderGeometryChanged = true;
 			}
@@ -563,7 +570,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		const char *pStableId = Card.m_pDefinition->m_Spec.m_pStableId;
 		SSettingsCardVisualState State;
 		State.m_DrawOffsetY = DeckEntryOffsetY;
-		State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_Frame.m_ContentRect.w > 0.0f && Card.m_Frame.m_ContentRect.h > 0.0f);
+		State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_Frame.m_ContentRect.w > 0.0f && Card.m_Frame.m_ContentRect.h > 0.0f, Card.m_ContentHeightAnimationActive);
 		if(Ctx.m_pAnim != nullptr)
 		{
 			const bool ReflowInitializedThisFrame = !Runtime.m_ReflowInitialized;

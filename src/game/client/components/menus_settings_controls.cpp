@@ -708,7 +708,7 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View, bool ReadOnly)
 				const int CurrentJoystick = Input()->GetActiveJoystick()->GetIndex();
 				CUi::SDropDownProperties JoystickDropDownProps;
 				JoystickDropDownProps.m_pPopupViewport = Ui()->OutermostClipArea();
-				const int NewJoystick = Ui()->DoDropDown(&JoystickDropDown, CurrentJoystick, vpJoystickNames.data(), vpJoystickNames.size(), m_JoystickDropDownState, JoystickDropDownProps);
+				const int NewJoystick = GameClient()->m_Menus.DoSettingsDropDown(&JoystickDropDown, CurrentJoystick, vpJoystickNames.data(), vpJoystickNames.size(), m_JoystickDropDownState, JoystickDropDownProps);
 				if(NewJoystick != CurrentJoystick)
 				{
 					Input()->SetActiveJoystick(NewJoystick);

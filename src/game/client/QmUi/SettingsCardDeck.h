@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class CScrollRegion;
@@ -65,11 +66,12 @@ public:
 	template<typename FBuildDefinitions>
 	SSettingsCardDeckResult RenderCached(const IUiContext &Ctx, const SSettingsPageLayoutFrame &Layout, const char *pTab, uint64_t DefinitionsRevision, FBuildDefinitions &&BuildDefinitions, qm_card_order::CModel &Model, CScrollRegion *pScrollRegion, const SSettingsCardDeckInput &Input, const SCardMotionSpec &Motion, const SSettingsCardDeckVisualOptions &VisualOptions)
 	{
-		if(SettingsCardDeckDefinitionsRevisionChanged(m_CachedDefinitionsInitialized, m_CachedDefinitionsRevision, DefinitionsRevision))
+		if(SettingsCardDeckDefinitionsCacheKeyChanged(m_CachedDefinitionsInitialized, m_CachedDefinitionsRevision, DefinitionsRevision, m_CachedDefinitionsTab.c_str(), pTab))
 		{
 			m_vCachedDefinitions.clear();
 			BuildDefinitions(m_vCachedDefinitions);
 			m_CachedDefinitionsRevision = DefinitionsRevision;
+			m_CachedDefinitionsTab = pTab != nullptr ? pTab : "";
 			m_CachedDefinitionsInitialized = true;
 			m_CachedDefinitionsDirty = true;
 			m_InvalidateMeasurementsOnDefinitionsPrepare = true;
@@ -147,7 +149,9 @@ private:
 	std::vector<float> m_vContentHeights;
 	std::vector<float> m_vContentWidths;
 	std::vector<uint64_t> m_vMeasureRevisions;
+	std::unordered_map<std::string, bool> m_DefaultCollapsedByStableId;
 	std::vector<SSettingsCardDefinition> m_vCachedDefinitions;
+	std::string m_CachedDefinitionsTab;
 	uint64_t m_CachedDefinitionsRevision = 0;
 	bool m_CachedDefinitionsInitialized = false;
 	bool m_CachedDefinitionsDirty = false;

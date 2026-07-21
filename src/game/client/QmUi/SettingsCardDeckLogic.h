@@ -8,6 +8,8 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 #include <vector>
 
 struct SSettingsCardDeckItemGeometry
@@ -101,6 +103,24 @@ inline bool SettingsCardDeckApplyDefaultCollapseToggle(const bool HasCustomColla
 inline bool SettingsCardDeckDefinitionsRevisionChanged(const bool Initialized, const uint64_t CurrentRevision, const uint64_t NextRevision)
 {
 	return !Initialized || CurrentRevision != NextRevision;
+}
+
+inline bool SettingsCardDeckDefinitionsCacheKeyChanged(const bool Initialized, const uint64_t CurrentRevision, const uint64_t NextRevision, const char *pCurrentTab, const char *pNextTab)
+{
+	return SettingsCardDeckDefinitionsRevisionChanged(Initialized, CurrentRevision, NextRevision) ||
+	       std::string_view(pCurrentTab != nullptr ? pCurrentTab : "") != std::string_view(pNextTab != nullptr ? pNextTab : "");
+}
+
+inline bool SettingsCardDeckLoadCollapsed(const std::unordered_map<std::string, bool> &States, const char *pStableId, const bool DefaultValue)
+{
+	const auto It = States.find(pStableId != nullptr ? pStableId : "");
+	return It != States.end() ? It->second : DefaultValue;
+}
+
+inline void SettingsCardDeckStoreCollapsed(std::unordered_map<std::string, bool> &States, const char *pStableId, const bool Collapsed)
+{
+	if(pStableId != nullptr && pStableId[0] != '\0')
+		States[pStableId] = Collapsed;
 }
 
 struct SSettingsCardAnimationWork
@@ -212,7 +232,7 @@ SSettingsCardAnimationWork ResolveSettingsCardAnimationWork(float EntryDuration,
 // 首帧直接采用稳定目标；之后仅在高度目标变化或轨道仍活动时访问动画 runtime。
 SSettingsCardHeightAnimationWork ResolveSettingsCardHeightAnimationWork(bool InitializedThisFrame, bool TargetChanged, bool AnimationWasActive, float Duration, bool Snap);
 // 只裁剪正在改变高度的卡片；同 Deck 的其他卡片不得跟随闪烁或截断 focus ring。
-bool SettingsCardDeckShouldClipContent(bool HasRenderableContent);
+bool SettingsCardDeckShouldClipContent(bool HasRenderableContent, bool ContentHeightAnimationActive);
 // 每一帧都从前一张卡当前动画底边继续，保证动态高度全过程同列卡片不重叠。
 SSettingsCardColumnFrame ResolveSettingsCardColumnFrame(float CursorY, float CardHeight, float CardGap);
 #endif // GAME_CLIENT_QMUI_SETTINGSCARDDECKLOGIC_H

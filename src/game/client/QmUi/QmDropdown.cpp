@@ -15,7 +15,7 @@ namespace
 SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRect, const CUIRect &ViewportRect, const SQmDropdownGeometryConfig &Config)
 {
 	SQmDropdownGeometryResult Result;
-	Result.m_AnchorVisible = RectsOverlap(AnchorRect, ViewportRect);
+	Result.m_AnchorVisible = QmDropdownAnchorFullyVisible(AnchorRect, ViewportRect);
 
 	const float Margin = std::max(0.0f, Config.m_Margin);
 	const float Gap = std::max(0.0f, Config.m_Gap);
@@ -67,9 +67,19 @@ SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHe
 	return Policy;
 }
 
-bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupHeight)
+bool QmDropdownPopupScrollable(const SQmDropdownPopupPolicy &Policy, float PopupHeight)
 {
 	return std::max(0.0f, PopupHeight) + 0.001f < Policy.m_ContentHeight;
+}
+
+bool QmDropdownPopupBlocksUnderlying(const bool PopupVisible)
+{
+	return PopupVisible;
+}
+
+bool QmDropdownSourceAlive(const uint64_t CurrentFrame, const uint64_t LastSourceFrame, const bool AnchorFullyVisible)
+{
+	return AnchorFullyVisible && CurrentFrame == LastSourceFrame;
 }
 
 bool QmDropdownAnchorFullyVisible(const CUIRect &AnchorRect, const CUIRect &ViewportRect)

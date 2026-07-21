@@ -4,11 +4,13 @@
 #define ENGINE_SHARED_CONFIG_H
 
 #include <base/detect.h>
+#include <base/math.h>
 
 #include <engine/config.h>
 #include <engine/console.h>
 #include <engine/shared/memheap.h>
 
+#include <algorithm>
 #include <vector>
 
 // include protocol for MAX_CLIENT used in config_variables
@@ -191,6 +193,15 @@ constexpr int QmFastInputBasePredictionMarginMs(const SQmFastInputSettings &Sett
 			FastInputMargin = Settings.m_BestOffset > 0 ? (Settings.m_BestOffset + 2) / 5 : 0;
 	}
 	return Settings.m_BasePredictionMarginMs > FastInputMargin ? Settings.m_BasePredictionMarginMs : FastInputMargin;
+}
+
+constexpr int QmComputeAutoPredictionMargin(int BaseMargin, float MeasuredPingMargin, float AverageLatencyMs, float LivePredictionMs, float JitterMs, bool ConnectionProblems)
+{
+	const float LiveConnectionMargin = std::max({MeasuredPingMargin, AverageLatencyMs, LivePredictionMs});
+	const float ExcessLatencyMargin = std::max(0.0f, LiveConnectionMargin - BaseMargin) / 6.0f;
+	const float JitterMargin = std::max(0.0f, JitterMs - 2.0f) * 0.75f;
+	const float ConnectionMargin = BaseMargin + ExcessLatencyMargin + JitterMargin + (ConnectionProblems ? 10.0f : 0.0f);
+	return std::clamp(round_to_int(ConnectionMargin), 1, 300);
 }
 
 enum

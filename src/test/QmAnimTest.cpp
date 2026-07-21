@@ -3404,7 +3404,7 @@ TEST(UiV2DropdownGeometry, PositionsPopupRelativeToScrolledAnchor)
 	Viewport.h = 240.0f;
 	CUIRect Anchor;
 	Anchor.x = 48.0f;
-	Anchor.y = -18.0f;
+	Anchor.y = 18.0f;
 	Anchor.w = 120.0f;
 	Anchor.h = 24.0f;
 	SQmDropdownGeometryConfig Config;
@@ -3421,6 +3421,21 @@ TEST(UiV2DropdownGeometry, PositionsPopupRelativeToScrolledAnchor)
 	EXPECT_NEAR(Result.m_Rect.y, Anchor.y + Anchor.h + Config.m_Gap, 0.001f);
 	EXPECT_NEAR(Result.m_Rect.w, Anchor.w, 0.001f);
 	EXPECT_NEAR(Result.m_Rect.h, Config.m_Height, 0.001f);
+}
+
+TEST(UiV2DropdownGeometry, RejectsPartiallyVisibleAnchorBeforeOpening)
+{
+	const CUIRect Viewport{0.0f, 0.0f, 320.0f, 240.0f};
+	const CUIRect Anchor{48.0f, -18.0f, 120.0f, 24.0f};
+	SQmDropdownGeometryConfig Config;
+	Config.m_Width = Anchor.w;
+	Config.m_Height = 80.0f;
+	Config.m_Gap = 4.0f;
+	Config.m_Margin = 8.0f;
+
+	const SQmDropdownGeometryResult Result = QmComputeDropdownPopupGeometry(Anchor, Viewport, Config);
+
+	EXPECT_FALSE(Result.m_AnchorVisible);
 }
 
 TEST(UiV2DropdownVisuals, SettingsStyleSharesTriggerAndPopupSurface)
@@ -3583,14 +3598,33 @@ TEST(UiV2DropdownPolicy, OwnsWheelWheneverViewportClipsContent)
 	const SQmDropdownPopupPolicy ShortPolicy = QmResolveDropdownPopupPolicy(QM_POPUP_LIST_MAX_VISIBLE_ITEMS, 20.0f, 5.0f, false, 0.0f, 10.0f);
 	EXPECT_EQ(ShortPolicy.m_MaxVisibleItems, QM_POPUP_LIST_MAX_VISIBLE_ITEMS);
 	EXPECT_NEAR(ShortPolicy.m_ContentHeight, ShortPolicy.m_PreferredHeight, 0.001f);
-	EXPECT_FALSE(QmDropdownPopupOwnsWheel(ShortPolicy, ShortPolicy.m_PreferredHeight));
+	EXPECT_FALSE(QmDropdownPopupScrollable(ShortPolicy, ShortPolicy.m_PreferredHeight));
 
 	const SQmDropdownPopupPolicy LongPolicy = QmResolveDropdownPopupPolicy(QM_POPUP_LIST_MAX_VISIBLE_ITEMS + 1, 20.0f, 5.0f, false, 0.0f, 10.0f);
 	EXPECT_EQ(LongPolicy.m_MaxVisibleItems, QM_POPUP_LIST_MAX_VISIBLE_ITEMS);
 	EXPECT_GT(LongPolicy.m_ContentHeight, LongPolicy.m_PreferredHeight);
-	EXPECT_TRUE(QmDropdownPopupOwnsWheel(LongPolicy, LongPolicy.m_PreferredHeight));
+	EXPECT_TRUE(QmDropdownPopupScrollable(LongPolicy, LongPolicy.m_PreferredHeight));
 
-	EXPECT_TRUE(QmDropdownPopupOwnsWheel(ShortPolicy, ShortPolicy.m_PreferredHeight - 1.0f));
+	EXPECT_TRUE(QmDropdownPopupScrollable(ShortPolicy, ShortPolicy.m_PreferredHeight - 1.0f));
+}
+
+TEST(UiV2DropdownPolicy, PopupAlwaysBlocksUnderlyingWheelButOnlyShowsRailOnOverflow)
+{
+	const SQmDropdownPopupPolicy EightRows = QmResolveDropdownPopupPolicy(QM_POPUP_LIST_MAX_VISIBLE_ITEMS, 20.0f, 5.0f, false, 0.0f, 10.0f);
+	EXPECT_FALSE(QmDropdownPopupScrollable(EightRows, EightRows.m_PreferredHeight));
+	EXPECT_TRUE(QmDropdownPopupBlocksUnderlying(true));
+
+	const SQmDropdownPopupPolicy NineRows = QmResolveDropdownPopupPolicy(QM_POPUP_LIST_MAX_VISIBLE_ITEMS + 1, 20.0f, 5.0f, false, 0.0f, 10.0f);
+	EXPECT_TRUE(QmDropdownPopupScrollable(NineRows, NineRows.m_PreferredHeight));
+	EXPECT_TRUE(QmDropdownPopupBlocksUnderlying(true));
+	EXPECT_FALSE(QmDropdownPopupBlocksUnderlying(false));
+}
+
+TEST(UiV2DropdownLifecycle, SourceMustRefreshInTheCurrentFrame)
+{
+	EXPECT_TRUE(QmDropdownSourceAlive(42, 42, true));
+	EXPECT_FALSE(QmDropdownSourceAlive(42, 41, true));
+	EXPECT_FALSE(QmDropdownSourceAlive(42, 42, false));
 }
 
 TEST(UiV2DropdownPolicy, MapPickerIncludesPopupChromeBeforeTestingEightRowOverflow)
@@ -3599,23 +3633,23 @@ TEST(UiV2DropdownPolicy, MapPickerIncludesPopupChromeBeforeTestingEightRowOverfl
 	const SQmDropdownPopupPolicy NoRows = QmResolveDropdownPopupPolicy(0, 20.0f, 0.0f, false, 0.0f, OuterHeight, 1);
 	EXPECT_EQ(NoRows.m_ItemCount, 0);
 	EXPECT_NEAR(NoRows.m_PreferredHeight - OuterHeight, 20.0f, 0.001f);
-	EXPECT_FALSE(QmDropdownPopupOwnsWheel(NoRows, NoRows.m_PreferredHeight));
+	EXPECT_FALSE(QmDropdownPopupScrollable(NoRows, NoRows.m_PreferredHeight));
 
 	const SQmDropdownPopupPolicy OneRow = QmResolveDropdownPopupPolicy(1, 20.0f, 0.0f, false, 0.0f, OuterHeight, 1);
 	EXPECT_EQ(OneRow.m_ItemCount, 1);
 	EXPECT_NEAR(OneRow.m_PreferredHeight - OuterHeight, 20.0f, 0.001f);
 	EXPECT_NEAR(OneRow.m_ContentHeight, OneRow.m_PreferredHeight, 0.001f);
-	EXPECT_FALSE(QmDropdownPopupOwnsWheel(OneRow, OneRow.m_PreferredHeight));
+	EXPECT_FALSE(QmDropdownPopupScrollable(OneRow, OneRow.m_PreferredHeight));
 
 	const SQmDropdownPopupPolicy EightRows = QmResolveDropdownPopupPolicy(8, 20.0f, 0.0f, false, 0.0f, OuterHeight);
 	EXPECT_NEAR(EightRows.m_PreferredHeight, 8.0f * 20.0f + OuterHeight, 0.001f);
 	EXPECT_NEAR(EightRows.m_ContentHeight, EightRows.m_PreferredHeight, 0.001f);
-	EXPECT_FALSE(QmDropdownPopupOwnsWheel(EightRows, EightRows.m_PreferredHeight));
+	EXPECT_FALSE(QmDropdownPopupScrollable(EightRows, EightRows.m_PreferredHeight));
 
 	const SQmDropdownPopupPolicy NineRows = QmResolveDropdownPopupPolicy(9, 20.0f, 0.0f, false, 0.0f, OuterHeight);
 	EXPECT_NEAR(NineRows.m_PreferredHeight, EightRows.m_PreferredHeight, 0.001f);
 	EXPECT_GT(NineRows.m_ContentHeight, NineRows.m_PreferredHeight);
-	EXPECT_TRUE(QmDropdownPopupOwnsWheel(NineRows, NineRows.m_PreferredHeight));
+	EXPECT_TRUE(QmDropdownPopupScrollable(NineRows, NineRows.m_PreferredHeight));
 }
 
 TEST(UiV2DropdownPolicy, FirstFrameContentHintMatchesScrollableInnerContent)
@@ -3653,10 +3687,10 @@ TEST(UiV2DropdownIntegration, LongPopupConsumesWheelBeforeParent)
 	EXPECT_GT(PopupState.Offset(), 0.0f);
 }
 
-TEST(UiV2DropdownIntegration, ShortPopupKeepsOpenAndLetsParentConsumeWheel)
+TEST(UiV2DropdownIntegration, ShortPopupHidesRailAndBlocksParentWheel)
 {
 	const SQmDropdownPopupPolicy Policy = QmResolveDropdownPopupPolicy(4, 20.0f, 5.0f, false, 0.0f, 10.0f);
-	EXPECT_FALSE(QmDropdownPopupOwnsWheel(Policy, Policy.m_PreferredHeight));
+	EXPECT_FALSE(QmDropdownPopupScrollable(Policy, Policy.m_PreferredHeight));
 	CScrollWheelOwnership Ownership;
 	int ParentRegion = 0;
 	int SelectionPopupContext = 0;
@@ -3664,10 +3698,11 @@ TEST(UiV2DropdownIntegration, ShortPopupKeepsOpenAndLetsParentConsumeWheel)
 	const CUIRect PopupRect{20.0f, 40.0f, 160.0f, Policy.m_PreferredHeight};
 	const vec2 Pointer{50.0f, 80.0f};
 	ASSERT_TRUE(Ownership.BeginFrame(41, -120.0f, false));
-	QmRegisterWheelOwnerCandidate(Ownership, {&SelectionPopupContext, EUiWheelOwnerPriority::POPUP, PopupRect, false}, Pointer, true);
+	QmRegisterWheelOwnerCandidate(Ownership, {&SelectionPopupContext, EUiWheelOwnerPriority::POPUP, PopupRect, QmDropdownPopupBlocksUnderlying(true)}, Pointer, true);
 	QmRegisterWheelOwnerCandidate(Ownership, {&ParentRegion, EUiWheelOwnerPriority::PAGE, ParentRect, true}, Pointer, true);
 	float Delta = 0.0f;
-	EXPECT_TRUE(QmTryConsumeWheel(Ownership, &ParentRegion, &Delta));
+	EXPECT_FALSE(QmTryConsumeWheel(Ownership, &ParentRegion, &Delta));
+	EXPECT_TRUE(QmTryConsumeWheel(Ownership, &SelectionPopupContext, &Delta));
 	EXPECT_FLOAT_EQ(Delta, -120.0f);
 }
 TEST(UiV2DropdownState, OpensWithCurrentItemAndClosesOnEscape)

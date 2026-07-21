@@ -1044,9 +1044,7 @@ void CClient::OnEnterGame(bool Dummy)
 	m_PredictedTime.Init(0);
 	if(!Dummy)
 	{
-		m_AutoMarginLastSampleTime = 0;
-		m_AutoMarginLatencyAverageMs = 0.0f;
-		m_AutoMarginLatencyJitterMs = 0.0f;
+		ResetAutoPredictionMargin();
 	}
 
 	if(!Dummy)
@@ -1356,9 +1354,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_ManualPingProbe.Reset();
 	for(int Conn = 0; Conn < NUM_DUMMIES; ++Conn)
 		m_aGamePingProbes[Conn].Reset();
-	m_AutoMarginLastSampleTime = 0;
-	m_AutoMarginLatencyAverageMs = 0.0f;
-	m_AutoMarginLatencyJitterMs = 0.0f;
+	ResetAutoPredictionMargin();
 
 	ResetMapDownload(true);
 
@@ -3090,14 +3086,15 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					// we got two snapshots until we see us self as connected
 					if(m_aReceivedSnapshots[Conn] == 2)
 					{
+						m_aGameTime[Conn].Init((GameTick - 1) * time_freq() / GameTickSpeed());
 						// start at 200ms and work from there
 						if(!Dummy)
 						{
 							m_PredictedTime.Init(GameTick * time_freq() / GameTickSpeed());
 							m_PredictedTime.SetAdjustSpeed(CSmoothTime::ADJUSTDIRECTION_UP, 1000.0f);
+							UpdatePredictionMargin();
 							m_PredictedTime.UpdateMargin(PredictionMargin() * time_freq() / 1000);
 						}
-						m_aGameTime[Conn].Init((GameTick - 1) * time_freq() / GameTickSpeed());
 						m_aapSnapshots[Conn][SNAP_PREV] = m_aSnapshotStorage[Conn].m_pFirst;
 						m_aapSnapshots[Conn][SNAP_CURRENT] = m_aSnapshotStorage[Conn].m_pLast;
 						m_aPrevGameTick[Conn] = m_aapSnapshots[Conn][SNAP_PREV]->m_Tick;
@@ -3620,6 +3617,12 @@ void CClient::Update()
 {
 	PumpNetwork();
 
+	if(State() == IClient::STATE_ONLINE)
+	{
+		UpdatePredictionMargin();
+		m_PredictedTime.UpdateMargin(PredictionMargin() * time_freq() / 1000);
+	}
+
 #if defined(CONF_QM_LIVE_CLIENT)
 	if(m_LiveObserverSession.RequestPending() && m_LiveObserverRequestTime != 0 && time_get() > m_LiveObserverRequestTime + time_freq() * 5)
 	{
@@ -3936,8 +3939,6 @@ void CClient::Update()
 			Connect(m_aConnectAddressStr);
 		m_ReconnectTime = 0;
 	}
-
-	m_PredictedTime.UpdateMargin(PredictionMargin() * time_freq() / 1000);
 }
 
 void CClient::RegisterInterfaces()
@@ -6694,10 +6695,21 @@ int CClient::MaxLatencyTicks() const
 	return GameTickSpeed() + (PredictionMargin() * GameTickSpeed()) / 1000;
 }
 
-int CClient::PredictionMargin() const
+void CClient::ResetAutoPredictionMargin()
+{
+	m_PredictionMarginMs = 10;
+	m_AutoMarginLastSampleTime = 0;
+	m_AutoMarginLatencyAverageMs = 0.0f;
+	m_AutoMarginLatencyJitterMs = 0.0f;
+}
+
+void CClient::UpdatePredictionMargin()
 {
 	if(!m_ServerCapabilities.m_SyncWeaponInput)
-		return 10;
+	{
+		m_PredictionMarginMs = 10;
+		return;
+	}
 
 	SQmFastInputSettings Settings;
 	Settings.m_Enabled = g_Config.m_TcFastInput != 0;
@@ -6710,9 +6722,13 @@ int CClient::PredictionMargin() const
 	Settings.m_BasePredictionMarginMs = g_Config.m_ClPredictionMargin;
 	const int BaseMargin = QmFastInputBasePredictionMarginMs(Settings);
 	if(!g_Config.m_QmAutoMargin)
-		return std::clamp(BaseMargin, 1, 300);
+	{
+		m_PredictionMarginMs = std::clamp(BaseMargin, 1, 300);
+		return;
+	}
 	const int64_t Now = time_get();
-	const int LivePredictionMs = std::max(0, (int)((m_PredictedTime.Get(Now) - m_aGameTime[g_Config.m_ClDummy].Get(Now)) * 1000 / (float)time_freq()));
+	// 自适应采样不能把已经应用的预测边距再次计入延迟。
+	const int LivePredictionMs = std::max(0, (int)((m_PredictedTime.GetWithoutMargin(Now) - m_aGameTime[g_Config.m_ClDummy].Get(Now)) * 1000 / (float)time_freq()));
 
 	if(m_AutoMarginLastSampleTime == 0)
 	{
@@ -6735,12 +6751,12 @@ int CClient::PredictionMargin() const
 	const CServerBrowser::CServerEntry *pCurrentServerEntry = pServerAddr ? const_cast<CServerBrowser &>(m_ServerBrowser).Find(*pServerAddr) : nullptr;
 	const bool HasMeasuredPing = pCurrentServerEntry != nullptr && !pCurrentServerEntry->m_Info.m_LatencyIsEstimated && pCurrentServerEntry->m_Info.m_Latency >= 0;
 	const float MeasuredPingMargin = HasMeasuredPing ? pCurrentServerEntry->m_Info.m_Latency * 0.5f : 0.0f;
-	const float LiveConnectionMargin = std::max({MeasuredPingMargin, m_AutoMarginLatencyAverageMs, (float)LivePredictionMs});
-	const float ExcessLatencyMargin = std::max(0.0f, LiveConnectionMargin - BaseMargin) / 6.0f;
-	const float JitterMargin = std::max(0.0f, m_AutoMarginLatencyJitterMs - 2.0f) * 0.75f;
-	const float ConnectionMargin = BaseMargin + ExcessLatencyMargin + JitterMargin + (ConnectionProblems ? 10.0f : 0.0f);
+	m_PredictionMarginMs = QmComputeAutoPredictionMargin(BaseMargin, MeasuredPingMargin, m_AutoMarginLatencyAverageMs, (float)LivePredictionMs, m_AutoMarginLatencyJitterMs, ConnectionProblems);
+}
 
-	return std::clamp(round_to_int(ConnectionMargin), 1, 300);
+int CClient::PredictionMargin() const
+{
+	return m_PredictionMarginMs;
 }
 
 int CClient::UdpConnectivity(int NetType)

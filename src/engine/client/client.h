@@ -249,9 +249,10 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	std::deque<std::shared_ptr<CDemoEdit>> m_EditJobs;
 
-	mutable int64_t m_AutoMarginLastSampleTime = 0;
-	mutable float m_AutoMarginLatencyAverageMs = 0.0f;
-	mutable float m_AutoMarginLatencyJitterMs = 0.0f;
+	int m_PredictionMarginMs = 10;
+	int64_t m_AutoMarginLastSampleTime = 0;
+	float m_AutoMarginLatencyAverageMs = 0.0f;
+	float m_AutoMarginLatencyJitterMs = 0.0f;
 
 	//
 	bool m_CanReceiveServerCapabilities = false;
@@ -338,6 +339,8 @@ private:
 
 	void UpdateDemoIntraTimers();
 	int MaxLatencyTicks() const;
+	void ResetAutoPredictionMargin();
+	void UpdatePredictionMargin();
 	int PredictionMargin() const;
 	void StartHangWatchdog();
 	void StopHangWatchdog();

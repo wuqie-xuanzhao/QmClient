@@ -546,8 +546,9 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 
 int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char **ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)
 {
-	// 所有新设置页共享页面最外层 popup viewport；锚点仍由 DoDropDown
-	// 根据当前卡片 clip 解析，避免弹层离开页面时不同页面行为分叉。
+	// 锚点必须留在当前卡片内，弹层可以越过卡片但不能越过设置页 viewport。
+	if(Properties.m_pAnchorViewport == nullptr)
+		Properties.m_pAnchorViewport = Ui()->IsClipped() ? Ui()->ClipArea() : Ui()->Screen();
 	if(Properties.m_pPopupViewport == nullptr)
 		Properties.m_pPopupViewport = Ui()->OutermostClipArea();
 	return Ui()->DoDropDown(pRect, CurSelection, ppStrs, Num, State, Properties);

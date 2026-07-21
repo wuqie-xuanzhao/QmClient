@@ -7,6 +7,8 @@
 
 #include <game/client/ui_rect.h>
 
+#include <cstdint>
+
 struct SQmDropdownVisualStyle
 {
 	ColorRGBA m_TriggerColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
@@ -74,7 +76,9 @@ struct SQmDropdownUpdateResult
 
 SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRect, const CUIRect &ViewportRect, const SQmDropdownGeometryConfig &Config);
 SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight, int MinimumVisibleItems = 0);
-bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupHeight);
+bool QmDropdownPopupScrollable(const SQmDropdownPopupPolicy &Policy, float PopupHeight);
+bool QmDropdownPopupBlocksUnderlying(bool PopupVisible);
+bool QmDropdownSourceAlive(uint64_t CurrentFrame, uint64_t LastSourceFrame, bool AnchorFullyVisible);
 bool QmDropdownAnchorFullyVisible(const CUIRect &AnchorRect, const CUIRect &ViewportRect);
 bool QmDropdownActiveItemShouldScrollIntoView(bool ScrollRequested, bool ActiveEntry);
 bool QmDropdownShouldRequestActiveScroll(bool PopupOpen, int PreviousActiveIndex, int ActiveIndex);

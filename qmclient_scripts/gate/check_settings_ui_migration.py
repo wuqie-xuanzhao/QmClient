@@ -647,6 +647,9 @@ def audit_shared_contracts(repo_root: Path) -> list[str]:
 		errors.append("shared: settings shell does not provide the BodySize dropdown context")
 	if "Props.m_FontSize = ResolvedFontSize;" not in ui_source or "State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;" not in ui_source:
 		errors.append("shared: dropdown trigger and popup do not inherit one resolved font size")
+	for relative in _TYPOGRAPHY_SOURCES:
+		if "Ui()->DoDropDown(" in _read(repo_root, relative):
+			errors.append(f"{relative}: settings dropdown bypasses CMenus::DoSettingsDropDown")
 
 	for relative in _TYPOGRAPHY_SOURCES:
 		source = _read(repo_root, relative)

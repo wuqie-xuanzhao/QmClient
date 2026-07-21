@@ -272,9 +272,9 @@ SSettingsCardHeightAnimationWork ResolveSettingsCardHeightAnimationWork(const bo
 	return Work;
 }
 
-bool SettingsCardDeckShouldClipContent(const bool HasRenderableContent)
+bool SettingsCardDeckShouldClipContent(const bool HasRenderableContent, const bool ContentHeightAnimationActive)
 {
-	return HasRenderableContent;
+	return HasRenderableContent && ContentHeightAnimationActive;
 }
 
 SSettingsCardColumnFrame ResolveSettingsCardColumnFrame(const float CursorY, const float CardHeight, const float CardGap)

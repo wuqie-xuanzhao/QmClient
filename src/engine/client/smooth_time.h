@@ -42,6 +42,7 @@ public:
 	void SetAdjustSpeed(EAdjustDirection Direction, float Value);
 
 	int64_t Get(int64_t Now) const;
+	int64_t GetWithoutMargin(int64_t Now) const;
 
 	void UpdateInt(int64_t Target);
 	EUpdateStatus Update(CGraph *pGraph, int64_t Target, int TimeLeft, EAdjustDirection AdjustDirection);

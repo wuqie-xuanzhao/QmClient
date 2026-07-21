@@ -2277,6 +2277,12 @@ void CUi::RenderPopupMenus()
 	{
 		const SPopupMenu &PopupMenu = m_vPopupMenus[i];
 		const SPopupMenuId *pId = PopupMenu.m_pId;
+		if(PopupMenu.m_Props.m_RequireSourceRefresh && !QmDropdownSourceAlive(Client()->PerfFrame(), PopupMenu.m_Props.m_SourceFrame, true))
+		{
+			ClosePopupMenu(pId);
+			--i;
+			continue;
+		}
 		const bool Inside = MouseInside(&PopupMenu.m_Rect) && (!PopupMenu.m_Props.m_ClipToViewport || MouseInside(&PopupMenu.m_Props.m_Viewport));
 		const bool Active = i == m_vPopupMenus.size() - 1;
 		const bool ClipToViewport = PopupMenu.m_Props.m_ClipToViewport;
@@ -2491,6 +2497,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_AnchorVisible = true;
 	m_PopupVisible = true;
 	m_BlockUnderlyingScroll = false;
+	m_Scrollable = false;
 	m_ScrollToActiveItem = false;
 	m_MenuUiFirstWheelLogged = false;
 	m_Viewport = {};
@@ -2517,7 +2524,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	ScrollRequest.m_RowExtent = pSelectionPopup->m_EntryHeight + pSelectionPopup->m_EntrySpacing;
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
-	ScrollParams.m_HideScrollbar = !pSelectionPopup->m_BlockUnderlyingScroll;
+	ScrollParams.m_HideScrollbar = !pSelectionPopup->m_Scrollable;
 	ScrollParams.m_ScrollbarNoOuterMargin = true;
 	ScrollParams.m_pWheelOwnerId = pSelectionPopup;
 	ScrollParams.m_WheelOwnerPreRegistered = true;
@@ -2632,18 +2639,19 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 		pContext->m_Props.m_Corners = Geometry.m_PlacedBelow ? IGraphics::CORNER_B : IGraphics::CORNER_T;
 	}
 	const CUIRect PopupRect{X, Y, PopupWidth, PopupHeightResolved};
-	const bool OwnsWheel = pContext->m_PopupVisible && QmDropdownPopupOwnsWheel(pContext->m_PopupPolicy, PopupHeightResolved);
-	RegisterWheelOwner(pContext, EUiWheelOwnerPriority::POPUP, PopupRect, OwnsWheel);
-	pContext->m_BlockUnderlyingScroll = OwnsWheel;
+	const bool Scrollable = pContext->m_PopupVisible && QmDropdownPopupScrollable(pContext->m_PopupPolicy, PopupHeightResolved);
+	const bool BlockUnderlying = QmDropdownPopupBlocksUnderlying(pContext->m_PopupVisible);
+	RegisterWheelOwner(pContext, EUiWheelOwnerPriority::POPUP, PopupRect, BlockUnderlying);
+	pContext->m_Scrollable = Scrollable;
+	pContext->m_BlockUnderlyingScroll = BlockUnderlying;
 	pContext->m_Props.m_ClipToViewport = true;
-	pContext->m_Props.m_BlockUnderlyingScroll = OwnsWheel;
+	pContext->m_Props.m_BlockUnderlyingScroll = BlockUnderlying;
 	pContext->m_Props.m_Viewport = Viewport;
 	DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);
 }
 
 int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)
 {
-	static CScrollRegion s_DefaultDropDownScrollRegion;
 	const float ResolvedFontSize = DropDownProps.m_FontSize > 0.0f ? DropDownProps.m_FontSize : m_DropDownFontSize > 0.0f ? m_DropDownFontSize :
 																pRect->h * ms_FontmodHeight * 0.8f;
 	if(RenderOnly())
@@ -2656,8 +2664,13 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	if(!State.m_Init)
 	{
 		State.m_UiElement.Init(this, -1);
+		State.m_pOwnedScrollRegion = std::make_shared<CScrollRegion>();
+		State.m_pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion != nullptr ? State.m_SelectionPopupContext.m_pScrollRegion : State.m_pOwnedScrollRegion.get();
+		State.m_SelectionPopupContext.m_pScrollRegion = State.m_pScrollRegion;
 		State.m_Init = true;
 	}
+	else if(State.m_SelectionPopupContext.m_pScrollRegion != nullptr && State.m_SelectionPopupContext.m_pScrollRegion != State.m_pScrollRegion)
+		State.m_pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion;
 
 	bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
 	// 弹窗使用设置页最外层裁剪区，不能越过 Tab 或页面容器；卡片内容裁剪区
@@ -2666,6 +2679,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 															     *Screen();
 	const CUIRect AnchorViewport = DropDownProps.m_pAnchorViewport != nullptr ? *DropDownProps.m_pAnchorViewport : IsClipped() ? *ClipArea() :
 																     Viewport;
+	const uint64_t SourceFrame = Client()->PerfFrame();
 	if(PopupOpen && !QmDropdownAnchorFullyVisible(*pRect, AnchorViewport))
 	{
 		ClosePopupMenu(&State.m_SelectionPopupContext);
@@ -2707,6 +2721,8 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	Props.m_Color = DropDownProps.m_VisualStyle.m_TriggerColor;
 	if(PopupOpen)
 	{
+		State.m_SelectionPopupContext.m_Props.m_RequireSourceRefresh = true;
+		State.m_SelectionPopupContext.m_Props.m_SourceFrame = SourceFrame;
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
 	}
 	const bool TogglePressed = DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props);
@@ -2747,7 +2763,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		CScrollRegion *pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion;
 		const bool SpecialFontRenderMode = State.m_SelectionPopupContext.m_SpecialFontRenderMode;
 		State.m_SelectionPopupContext.Reset();
-		State.m_SelectionPopupContext.m_pScrollRegion = pScrollRegion != nullptr ? pScrollRegion : &s_DefaultDropDownScrollRegion;
+		State.m_SelectionPopupContext.m_pScrollRegion = pScrollRegion != nullptr ? pScrollRegion : State.m_pScrollRegion;
 		State.m_SelectionPopupContext.m_SpecialFontRenderMode = SpecialFontRenderMode;
 		State.m_SelectionPopupContext.m_Props.m_BorderColor = DropDownProps.m_VisualStyle.m_PopupBorderColor;
 		State.m_SelectionPopupContext.m_Props.m_BackgroundColor = DropDownProps.m_VisualStyle.m_PopupBackgroundColor;
@@ -2760,6 +2776,8 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
 		State.m_SelectionPopupContext.m_TransparentButtons = DropDownProps.m_VisualStyle.m_TransparentEntries;
 		State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
+		State.m_SelectionPopupContext.m_Props.m_RequireSourceRefresh = true;
+		State.m_SelectionPopupContext.m_Props.m_SourceFrame = SourceFrame;
 		State.m_SelectionPopupContext.m_ScrollToActiveItem = true;
 		State.m_SelectionPopupContext.m_Viewport = Viewport;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);

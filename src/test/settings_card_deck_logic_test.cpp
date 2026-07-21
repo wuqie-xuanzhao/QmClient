@@ -470,6 +470,8 @@ TEST(SettingsCardDeck, DefinitionsRevisionInvalidatesMeasurements)
 	EXPECT_TRUE(SettingsCardDeckDefinitionsRevisionChanged(false, 0, 0));
 	EXPECT_FALSE(SettingsCardDeckDefinitionsRevisionChanged(true, 17, 17));
 	EXPECT_TRUE(SettingsCardDeckDefinitionsRevisionChanged(true, 17, 18));
+	EXPECT_TRUE(SettingsCardDeckDefinitionsCacheKeyChanged(true, 17, 17, "graphics", "controls"));
+	EXPECT_FALSE(SettingsCardDeckDefinitionsCacheKeyChanged(true, 17, 17, "graphics", "graphics"));
 }
 
 TEST(SettingsCardDeck, InnerSurfaceCompensatesBorderWithoutTintingCardBackground)
@@ -488,19 +490,15 @@ TEST(SettingsCardDeck, InnerSurfaceCompensatesBorderWithoutTintingCardBackground
 	EXPECT_NEAR(CombinedChannel(Inner.b, Border.b), Surface.b * Surface.a, 0.001f);
 }
 
-TEST(SettingsCardDeck, ConfiguredBorderColorProvidesSubtleSurfaceTint)
+TEST(SettingsCardDeck, ConfiguredBorderColorDoesNotTintSurface)
 {
 	const ColorRGBA Surface(0.24f, 0.28f, 0.32f, 0.70f);
-	const ColorRGBA Border(0.90f, 0.15f, 0.10f, 1.0f);
-	const ColorRGBA Linked = ResolveSettingsCardLinkedSurfaceColor(Surface, Border, true);
-	const ColorRGBA Unlinked = ResolveSettingsCardLinkedSurfaceColor(Surface, Border, false);
-	EXPECT_FLOAT_EQ(Unlinked.r, Surface.r);
-	EXPECT_FLOAT_EQ(Unlinked.g, Surface.g);
-	EXPECT_FLOAT_EQ(Unlinked.b, Surface.b);
-	EXPECT_GT(Linked.r, Surface.r);
-	EXPECT_LT(Linked.g, Surface.g);
-	EXPECT_LT(Linked.b, Surface.b);
-	EXPECT_FLOAT_EQ(Linked.a, Surface.a);
+	SSettingsCardVisualState State;
+	const ColorRGBA Resolved = ResolveSettingsCardSurfaceColor(Surface, State);
+	EXPECT_FLOAT_EQ(Resolved.r, Surface.r);
+	EXPECT_FLOAT_EQ(Resolved.g, Surface.g);
+	EXPECT_FLOAT_EQ(Resolved.b, Surface.b);
+	EXPECT_FLOAT_EQ(Resolved.a, Surface.a);
 }
 
 TEST(SettingsCardDeck, ContentHeightAnimationSkipsStableFramesAndSnapsFirstLayout)
@@ -622,10 +620,22 @@ TEST(SettingsCardDeck, OptionalFrameDiagnosticsRecordAnimatedGeometryWithoutAllo
 	EXPECT_EQ(Diagnostics.m_TotalGeometryCount, SSettingsCardDeckFrameDiagnostics::MAX_GEOMETRY + 2);
 }
 
-TEST(SettingsCardDeck, EveryRenderableCardClipsContentToItsCurrentFrame)
+TEST(SettingsCardDeck, ClipsOnlyWhileContentHeightIsAnimating)
 {
-	EXPECT_TRUE(SettingsCardDeckShouldClipContent(true));
-	EXPECT_FALSE(SettingsCardDeckShouldClipContent(false));
+	EXPECT_FALSE(SettingsCardDeckShouldClipContent(true, false));
+	EXPECT_TRUE(SettingsCardDeckShouldClipContent(true, true));
+	EXPECT_FALSE(SettingsCardDeckShouldClipContent(false, true));
+}
+
+TEST(SettingsCardDeck, DefaultCollapseStateUsesStableIdAcrossTabs)
+{
+	std::unordered_map<std::string, bool> States;
+	SettingsCardDeckStoreCollapsed(States, "graphics-display", true);
+	SettingsCardDeckStoreCollapsed(States, "controls-gamepad", false);
+
+	EXPECT_TRUE(SettingsCardDeckLoadCollapsed(States, "graphics-display", false));
+	EXPECT_FALSE(SettingsCardDeckLoadCollapsed(States, "controls-gamepad", true));
+	EXPECT_TRUE(SettingsCardDeckLoadCollapsed(States, "missing", true));
 }
 
 TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)

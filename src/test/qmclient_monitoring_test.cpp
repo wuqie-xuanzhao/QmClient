@@ -6932,7 +6932,8 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("const bool InteractionComplete = DrawState.m_DropFeedback;"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused)"), std::string::npos);
 	EXPECT_EQ(Source.find("PointInRect(DrawRect"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA Surface = ResolveSettingsCardLinkedSurfaceColor(Theme.m_Surface, VisualOptions.m_BorderColor, DrawInteractionBorder);"), std::string::npos);
+	EXPECT_NE(Source.find("ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
+	EXPECT_EQ(Source.find("ResolveSettingsCardLinkedSurfaceColor"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
 	EXPECT_NE(Source.find("const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders;"), std::string::npos);
@@ -7429,7 +7430,7 @@ TEST(QmMonitoringHelpers, SettingsCardDeckSkipsAnimationRuntimeOnStableFrames)
 	EXPECT_NE(Source.find("if(m_FrameRuntime.EntryWasActive() && Motion.m_EntryDuration > 0.0f)"), std::string::npos);
 	EXPECT_NE(Source.find("State.m_DrawOffsetY = DeckEntryOffsetY;"), std::string::npos);
 	EXPECT_NE(Source.find("else if(AnimationWork.m_ResolveReflow)"), std::string::npos);
-	EXPECT_NE(Source.find("State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_Frame.m_ContentRect.w > 0.0f && Card.m_Frame.m_ContentRect.h > 0.0f);"), std::string::npos);
+	EXPECT_NE(Source.find("State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_Frame.m_ContentRect.w > 0.0f && Card.m_Frame.m_ContentRect.h > 0.0f, Card.m_ContentHeightAnimationActive);"), std::string::npos);
 	EXPECT_EQ(Source.find("State.m_ClipContent = ContentHeightAnimationActive;"), std::string::npos);
 	EXPECT_NE(CardSource.find("Ctx.m_pUi->ClipEnable(&DrawFrame.m_ContentRect);"), std::string::npos);
 }
@@ -9228,11 +9229,12 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(Body.find("QmResolveDropdownPopupPolicy("), std::string::npos);
 	EXPECT_NE(Body.find("const CUIRect &Viewport = pContext->m_Viewport;"), std::string::npos);
 	EXPECT_NE(Body.find("QmComputeDropdownPopupGeometry(AnchorRect, Viewport, GeometryConfig);"), std::string::npos);
-	EXPECT_NE(Body.find("const bool OwnsWheel = pContext->m_PopupVisible && QmDropdownPopupOwnsWheel("), std::string::npos);
-	EXPECT_NE(Body.find("RegisterWheelOwner(pContext, EUiWheelOwnerPriority::POPUP, PopupRect, OwnsWheel);"), std::string::npos);
-	EXPECT_NE(Body.find("pContext->m_BlockUnderlyingScroll = OwnsWheel;"), std::string::npos);
+	EXPECT_NE(Body.find("const bool Scrollable = pContext->m_PopupVisible && QmDropdownPopupScrollable("), std::string::npos);
+	EXPECT_NE(Body.find("const bool BlockUnderlying = QmDropdownPopupBlocksUnderlying(pContext->m_PopupVisible);"), std::string::npos);
+	EXPECT_NE(Body.find("RegisterWheelOwner(pContext, EUiWheelOwnerPriority::POPUP, PopupRect, BlockUnderlying);"), std::string::npos);
+	EXPECT_NE(Body.find("pContext->m_BlockUnderlyingScroll = BlockUnderlying;"), std::string::npos);
 	EXPECT_NE(PopupSelectionBody.find("QmResolveScrollPolicy(ScrollRequest)"), std::string::npos);
-	EXPECT_NE(PopupSelectionBody.find("ScrollParams.m_HideScrollbar = !pSelectionPopup->m_BlockUnderlyingScroll;"), std::string::npos);
+	EXPECT_NE(PopupSelectionBody.find("ScrollParams.m_HideScrollbar = !pSelectionPopup->m_Scrollable;"), std::string::npos);
 	EXPECT_NE(PopupSelectionBody.find("pScrollRegion->AddRect(Slot, QmDropdownActiveItemShouldScrollIntoView"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollbarThickness = 10.0f"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollUnit = 3 *"), std::string::npos);
