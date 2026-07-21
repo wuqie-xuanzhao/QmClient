@@ -1,6 +1,7 @@
 ---
 type: design-review-and-specification
 date: 2026-07-21
+updated: 2026-07-22
 status: active
 scope:
   - 新设置页壳层、全部设置卡片页面及其子 Tab
@@ -14,6 +15,34 @@ relationship:
 ---
 
 # QmClient 设置页 UI/UX 现状审查与防回归设计
+
+## 0. 2026-07-22 实现收口状态
+
+本节记录当前代码状态，优先于正文中仍用于解释历史根因的旧现状描述。
+
+| 收口项 | 当前实现 | 自动验证 |
+|---|---|---|
+| Dropdown 完整行 | popup 被 viewport 限高时按 `row height + spacing` 向下取整，只显示完整行 | `UiV2DropdownGeometry.ClipsToCompleteRowsInsteadOfShowingAHalfRow` |
+| Dropdown 上下翻转 | 优先完整容纳；两侧都不足时选择完整行更多的一侧；一行也放不下时不显示 | `UiV2DropdownGeometry.ChoosesTheSideWithMoreCompleteRowsWhenBothSidesAreShort` |
+| Dropdown viewport | 上下候选高度同时限制在所属 viewport 总可用高度内，trigger 滚出时不会把 popup 撑出容器 | `UiV2DropdownGeometry.ClampsOversizedPopupInsideViewportMargins` |
+| Popup 行高接线 | `CUi::ShowPopupSelection` 显式传入 entry height、spacing、固定 chrome/message 高度 | game-client 构建、全量 C++ tests |
+| Popup 无消息高度 | 无提示文本时固定区只包含 popup chrome，不再为零长度文本预留一行 | `UiV2DropdownGeometry.EmptyMessageDoesNotReservePhantomTextHeight` |
+| 卡片边框/背景 | border alpha 先限制到可补偿范围；外层 border 与内层 Surface 使用同一 effective border，背景目标色不跟随边框色 | `SettingsCardDeck.EffectiveBorderAlphaCannotPolluteATranslucentSurface` 及 Surface 合成测试 |
+| 折叠唯一入口 | `SSettingsCardDefinition` 只声明 `m_DefaultCollapsed` 与 `m_OnCollapseChanged`；按钮命中、绘制、stable-ID session 状态和高度动画全部由 Deck 管理 | `SettingsCardDeck.EveryCardUsesTheSharedCollapseControl`、源码接线契约、全量 C++ tests |
+| Controls 兼容 | bind group 的 expanded 状态通过 Deck callback 写回；搜索 reveal 先按 stable ID 强制展开目标卡片 | `SettingsCardDeck.ExplicitCollapseStateOverridesCachedStableIdState`、生产接线契约 |
+| QmClient 兼容 | HUD/Function/Visual 通过 Deck callback 写回旧 `qm_sidebar_card_collapsed` 字符串；外部配置变化进入 definitions revision，并作为权威快照覆盖 session cache | game-client 构建、迁移 gate、源码接线契约 |
+
+2026-07-22 本地证据：
+
+- `game-client` Release 编译和链接成功。
+- `testrunner.exe` 全量运行：`2326/2326` 通过。
+- `check_settings_ui_migration.py --all`：23 个设置页面/子页面全部 `clean`。
+- Dropdown/Card Deck 针对性行为测试：`58/58` 通过。
+- 相关生产接线与 RenderOnly 契约测试：`5/5` 通过。
+- 未制作截图；最终视觉和手感仍由用户在客户端验收。
+- 独立 Sol 复审发现的无消息 popup 空白、高 alpha 边框合成、Controls 搜索展开和 QmClient 外部折叠配置同步问题均已按代码修复并补测试；最终提交前仍需基于最终 diff 再执行只读复审。
+
+Mac 交接说明：`mac-origin` 指向 `https://github.com/wuqie-xuanzhao/QmClient.git`。开始收尾时远端 `master` 和 `dyl_dev` 都停在 `b35b19b8a7`；最终提交与远端同步结果记录在本文末尾的“Mac 交接验收”中。
 
 ## 1. 文档目的
 
@@ -217,7 +246,7 @@ focus ring 不改变布局尺寸，但相邻输入行必须保留标准 `LineSpa
 
 ### 6.1 当前实现已经具备的能力
 
-`SSettingsCardDefinition` 当前支持可见性、测量、绘制、基于测量 rect 绘制、动态 revision、自定义折叠状态、header 预输入和 header action。Deck 已具备：
+`SSettingsCardDefinition` 当前支持可见性、测量、绘制、基于测量 rect 绘制、动态 revision、默认折叠状态和折叠变更回调。Deck 已具备：
 
 - stable ID 与全局 order model；
 - 双列/单列投影；
@@ -234,9 +263,9 @@ focus ring 不改变布局尺寸，但相邻输入行必须保留标准 `LineSpa
 
 ### 6.2 当前设计割裂
 
-#### A. 折叠有两套接线
+#### A. 折叠双接线（已于 2026-07-22 收口）
 
-普通卡片由 Deck 设置 `m_ShowDefaultCollapseButton`；Controls/QmClient 的部分卡片仍设置自定义 `m_HeaderAction`，其中 QmClient 至少有三处直接调用同一个 `RenderSettingsCardCollapseButton`。这造成“外观相同，但状态来源和点击路径不同”。历史上出现“其他页面有按钮但没有作用”“控制页出现两种按钮”，正是这种双路径容易产生的结果。
+Controls/QmClient 已删除 definition 级 `m_IsCollapsed`、`m_PreLayoutHeaderInput` 和 `m_HeaderAction` 接线。所有卡片由 Deck 统一绘制和处理按钮；需要兼容旧业务状态的页面只通过 `m_DefaultCollapsed` 初始化，并通过 `m_OnCollapseChanged(bool)` 写回，不再拥有第二套 hit-test 或视觉实现。
 
 #### B. 动态高度仍可绕过 revision
 
@@ -661,10 +690,9 @@ CLOSE
 ### P1
 
 1. **动态卡片 measure/render 不是同一 geometry snapshot。** 手写 float 高度和独立 rect 切分仍能造成内容越界、留白和展开不增高。
-2. **卡片折叠仍有 Deck 默认与页面自定义两套接线。** 这是“按钮样式/行为不一致”和“按钮无作用”的直接回归入口。
-3. **真实组件级回归测试仍未覆盖最终像素和完整客户端事件循环。** 当前新增行为测试覆盖 Dropdown policy、anchor liveness、wheel owner、拖动 offset、Card clip/cache/collapse；客户端实际 clip stack、popup 输入顺序和最终视觉仍由人工验收确认。
+2. **真实组件级回归测试仍未覆盖最终像素和完整客户端事件循环。** 当前行为测试覆盖 Dropdown policy/geometry、anchor liveness、wheel owner、拖动 offset、Card clip/cache/collapse；客户端实际 clip stack、popup 输入顺序和最终视觉仍由人工验收确认。
 
-本轮已经关闭的原 P1：设置页 Dropdown 直连、打开帧 anchor 判定、source liveness、短 popup wheel 泄漏、静态默认 CScrollRegion、稳定卡片永久 clip、Deck 缓存缺 Tab、边框颜色污染 Surface。
+本轮已经关闭的原 P1：设置页 Dropdown 直连、打开帧 anchor 判定、source liveness、短 popup wheel 泄漏、静态默认 CScrollRegion、完整行限高、上下空间选择、stable viewport clamp、稳定卡片永久 clip、Deck 缓存缺 Tab、边框颜色污染 Surface、Controls/QmClient 自定义折叠接线。
 
 ### P2
 
@@ -673,7 +701,7 @@ CLOSE
 3. `SETTINGS_PAGE/SETTINGS_OUTER`、多组 InputField/ColorPicker/Checkbox overload 和 Card header action 仍保留同义路径。
 4. 卡片 style 仍携带 scrollbar width/margin，卡片视觉和页面滚动职责未完全解耦。
 5. 副标题没有唯一性/语义 gate，重复 fallback 不会失败。
-6. 普通卡片折叠状态已按 stable ID 保存在 Deck session map；QmClient/Controls 自定义 header action 的生命周期仍与默认路径不一致。
+6. 普通卡片折叠状态按 stable ID 保存在 Deck session map；QmClient/Controls 仅保留旧业务状态写回 callback，不再拥有自定义 header action。
 7. 网格/list/popup 的 helper 测试较多，但缺少 renderer/adapter 实际 viewport 与 hit rect 一致性测试。
 8. 旧 active spec 与后续反馈冲突，特别是 grid hidden rail 和 anchor 关闭规则；若不由本文覆盖，后续代理会继续按旧文档改回去。
 
@@ -723,7 +751,7 @@ CLOSE
 - 已完成：`RenderCached` 缓存键纳入 Tab stable key。
 - 先迁所有动态卡片，再迁固定行卡片。
 - 删除设置页 `m_MeasureEachFrame` 用法；字段改为 debug assert/迁移期内部开关。
-- 折叠输入、状态、按钮完全进入 Deck；删除页面自绘相同按钮。
+- 已完成：折叠输入、状态、按钮完全进入 Deck；页面只提供默认值和状态写回 callback，不再自绘相同按钮。
 - 已完成：Surface/Border token 分离，删除 linked surface color。
 - 已完成：稳定展开卡片关闭 content clip；只在高度动画期间裁剪。
 - 已完成：默认 collapse session state 以 stable ID 保存，页面/Tab 切换后保持一致。
@@ -884,3 +912,15 @@ CLOSE
 当前代码已经具备一套相当完整的统一设置 UI 基础设施，页面最大宽度、外层滚动条、metrics、Card Deck、scroll profile 和 Dropdown policy 都不是从零开始。真正未收口的是“唯一入口、唯一状态 owner、唯一 geometry snapshot 和真实行为测试”。
 
 后续最优先的工作不是继续调某张卡片的 `+5/-10` 高度，而是先把 Dropdown 的 viewport/state 生命周期和 Card 的 measure/render/collapse 双路径收成单一组件契约。只要这些逃生口仍存在，历史上已经满意的 Dropdown、折叠、行距和动态高度仍可能被下一轮页面修改重新带回最初的 bug。
+
+## 21. Mac 交接验收
+
+本节是 Windows 收尾后的可执行交接清单。最终提交和推送完成后必须补齐 commit hash 与远端一致性结果，未填写时不得声称 Mac 已可直接接手。
+
+- 分支：`dyl_dev`
+- 目标远端：`mac-origin` -> `https://github.com/wuqie-xuanzhao/QmClient.git`
+- 最终提交：以包含本文的 `dyl_dev` 提交为准；在交接机器上使用 `git rev-parse mac-origin/dyl_dev` 取得不可歧义的 hash。
+- 远端一致性：推送后执行 `git rev-list --left-right --count HEAD...mac-origin/dyl_dev`，必须得到 `0 0`；`mac-origin/master` 同步指向同一提交，保证默认克隆可直接取得本轮代码。
+- Mac 拉取：`git fetch mac-origin && git switch dyl_dev && git reset --keep mac-origin/dyl_dev`
+- 首次构建：使用独立的 macOS build 目录，按 `.agents/skills/qmclient-verification-gate/SKILL.md` 的 Linux/macOS 命令配置 Ninja Release，不复用 Windows `cmake-build-release`。
+- 人工验收：Dropdown 8/9 项、popup 上下翻转与滚轮归属；Controls 搜索展开；QmClient 折叠持久化；卡片边框颜色与背景解耦；展开/折叠和入场无背景亮闪。

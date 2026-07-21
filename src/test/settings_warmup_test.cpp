@@ -2351,7 +2351,7 @@ TEST(SettingsWarmup, MenuTextPrebuildDoesNotRenderPages)
 	EXPECT_NE(SettingsCard.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(SettingsCard.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
 	EXPECT_NE(SettingsCard.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
-	EXPECT_NE(SettingsCard.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(SettingsCard.find("DrawFrame.m_Rect.Draw(EffectiveBorder, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(SettingsCard.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_NE(Menus.find("SettingsCardDeckForRenderPass()"), std::string::npos);
 	EXPECT_NE(Menus.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);

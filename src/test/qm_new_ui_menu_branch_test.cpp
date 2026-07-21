@@ -1800,9 +1800,8 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 		EXPECT_NE(pDeck->find("ResolveSettingsContentMetrics(MainView.w)"), std::string::npos);
 		EXPECT_NE(pDeck->find("CardDeck.RenderCached("), std::string::npos);
 		EXPECT_NE(pDeck->find("ResolveSettingsCardDefinitionsRevision("), std::string::npos);
-		EXPECT_NE(pDeck->find("static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;"), std::string::npos);
-		EXPECT_NE(pDeck->find("Ui()->DoButtonLogic(&CollapseButtons[Index]"), std::string::npos);
-		EXPECT_NE(pDeck->find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
+		EXPECT_NE(pDeck->find("Definition.m_DefaultCollapsed = s_aCollapsed[ModuleStateIndex(Id)];"), std::string::npos);
+		EXPECT_NE(pDeck->find("Definition.m_OnCollapseChanged"), std::string::npos);
 		EXPECT_EQ(pDeck->find("Ui()->DoButtonLogic(&Collapsed[Index]"), std::string::npos);
 		EXPECT_EQ(pDeck->find("BeginSettingsQmScrollContainer("), std::string::npos);
 		EXPECT_EQ(pDeck->find("s_GlassCards"), std::string::npos);
@@ -1816,7 +1815,7 @@ TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 	ASSERT_FALSE(Body.empty());
 	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
 	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
-	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
+	EXPECT_NE(Body.find("DrawFrame.m_Rect.Draw(EffectiveBorder, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
 	EXPECT_EQ(Body.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
 	EXPECT_NE(Body.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
 	EXPECT_EQ(Body.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius)"), std::string::npos);
@@ -1937,7 +1936,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckPreLayoutUsesTheLastVisibleAnimatedFra
 	const std::string SettingsDeck = ReadTextFile("src/game/client/QmUi/SettingsCardDeck.cpp");
 	ASSERT_FALSE(SettingsDeck.empty());
 	EXPECT_NE(SettingsDeck.find("const SSettingsCardFrame PreLayoutFrame = ResolveSettingsCardDrawFrame(Card.m_Frame, Runtime.m_LastDrawOffsetX, Runtime.m_LastDrawOffsetY);"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader)"), std::string::npos);
+	EXPECT_NE(SettingsDeck.find("m_OnCollapseChanged(Runtime.m_DefaultCollapsed)"), std::string::npos);
 	EXPECT_NE(SettingsDeck.find("m_PreLayoutInput(PreLayoutFrame.m_ContentRect)"), std::string::npos);
 	EXPECT_NE(SettingsDeck.find("Runtime.m_LastDrawOffsetY = State.m_DrawOffsetY;"), std::string::npos);
 }

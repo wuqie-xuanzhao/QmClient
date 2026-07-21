@@ -2623,6 +2623,10 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 		GeometryConfig.m_Width = pContext->m_Width;
 		GeometryConfig.m_Height = PopupHeight;
 		GeometryConfig.m_Margin = Margin;
+		GeometryConfig.m_RowHeight = pContext->m_EntryHeight;
+		GeometryConfig.m_RowSpacing = pContext->m_EntrySpacing;
+		GeometryConfig.m_FixedHeight = QmDropdownFixedHeight(HasMessage, TextBoundingBox.m_H, OuterHeight);
+		GeometryConfig.m_LeadingRowSpacing = HasMessage ? pContext->m_EntrySpacing : 0.0f;
 		const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, Viewport, GeometryConfig);
 		pContext->m_AnchorVisible = Geometry.m_AnchorVisible;
 		pContext->m_PopupVisible = Geometry.m_PopupVisible;

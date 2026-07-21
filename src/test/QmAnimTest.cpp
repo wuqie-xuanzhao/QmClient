@@ -3474,6 +3474,66 @@ TEST(UiV2DropdownGeometry, FlipsAboveWhenBelowWouldOverflow)
 	EXPECT_NEAR(Result.m_Rect.y, Anchor.y - Config.m_Gap - Config.m_Height, 0.001f);
 }
 
+TEST(UiV2DropdownGeometry, ClipsToCompleteRowsInsteadOfShowingAHalfRow)
+{
+	const CUIRect Viewport{0.0f, 0.0f, 320.0f, 240.0f};
+	const CUIRect Anchor{48.0f, 168.0f, 120.0f, 24.0f};
+	SQmDropdownGeometryConfig Config;
+	Config.m_Width = Anchor.w;
+	Config.m_Height = 160.0f;
+	Config.m_Gap = 4.0f;
+	Config.m_Margin = 8.0f;
+	Config.m_RowHeight = 20.0f;
+	Config.m_RowSpacing = 4.0f;
+
+	const SQmDropdownGeometryResult Result = QmComputeDropdownPopupGeometry(Anchor, Viewport, Config);
+
+	EXPECT_TRUE(Result.m_PopupVisible);
+	EXPECT_FALSE(Result.m_PlacedBelow);
+	EXPECT_NEAR(Result.m_Rect.h, 140.0f, 0.001f);
+	EXPECT_NEAR(std::fmod(Result.m_Rect.h, Config.m_RowHeight + Config.m_RowSpacing), 20.0f, 0.001f);
+}
+
+TEST(UiV2DropdownGeometry, EmptyMessageDoesNotReservePhantomTextHeight)
+{
+	EXPECT_FLOAT_EQ(QmDropdownFixedHeight(false, 18.0f, 16.0f), 16.0f);
+	EXPECT_FLOAT_EQ(QmDropdownFixedHeight(true, 18.0f, 16.0f), 34.0f);
+
+	const CUIRect Viewport{0.0f, 0.0f, 320.0f, 260.0f};
+	const CUIRect Anchor{48.0f, 8.0f, 120.0f, 24.0f};
+	SQmDropdownGeometryConfig Config;
+	Config.m_Width = Anchor.w;
+	Config.m_RowHeight = 20.0f;
+	Config.m_RowSpacing = 4.0f;
+	Config.m_FixedHeight = QmDropdownFixedHeight(false, 18.0f, 16.0f);
+	Config.m_Height = Config.m_FixedHeight + 8.0f * Config.m_RowHeight + 7.0f * Config.m_RowSpacing;
+
+	const SQmDropdownGeometryResult Result = QmComputeDropdownPopupGeometry(Anchor, Viewport, Config);
+
+	EXPECT_TRUE(Result.m_PlacedBelow);
+	EXPECT_NEAR(Result.m_Rect.h, Config.m_Height, 0.001f);
+}
+
+TEST(UiV2DropdownGeometry, ChoosesTheSideWithMoreCompleteRowsWhenBothSidesAreShort)
+{
+	const CUIRect Viewport{0.0f, 0.0f, 320.0f, 180.0f};
+	const CUIRect Anchor{48.0f, 90.0f, 120.0f, 24.0f};
+	SQmDropdownGeometryConfig Config;
+	Config.m_Width = Anchor.w;
+	Config.m_Height = 160.0f;
+	Config.m_Gap = 4.0f;
+	Config.m_Margin = 8.0f;
+	Config.m_RowHeight = 20.0f;
+	Config.m_RowSpacing = 4.0f;
+
+	const SQmDropdownGeometryResult Result = QmComputeDropdownPopupGeometry(Anchor, Viewport, Config);
+
+	EXPECT_TRUE(Result.m_PopupVisible);
+	EXPECT_GT(Result.m_Rect.h, 0.0f);
+	EXPECT_LE(Result.m_Rect.y + Result.m_Rect.h, Anchor.y - Config.m_Gap + 0.001f);
+	EXPECT_NEAR(std::fmod(Result.m_Rect.h, Config.m_RowHeight + Config.m_RowSpacing), 20.0f, 0.001f);
+}
+
 TEST(UiV2DropdownGeometry, ClampsOversizedPopupInsideViewportMargins)
 {
 	CUIRect Viewport;

@@ -6752,6 +6752,7 @@ TEST(QmMonitoringHelpers, SettingsRenderOnlyTraversalDoesNotConsumeDeckAnimation
 	EXPECT_NE(Controls.find("if(!ReadOnly && ui_widget::InputField("), std::string::npos);
 	EXPECT_NE(Controls.find("else if(!ReadOnly && !m_vSearchMatches.empty()"), std::string::npos);
 	EXPECT_NE(Controls.find("if(!ReadOnly && m_SearchMatchReveal"), std::string::npos);
+	EXPECT_NE(Controls.find("m_SettingsCardDeck.SetCollapsed(apCardIds[(int)Group], false);"), std::string::npos);
 	EXPECT_NE(Controls.find("if(!ReadOnly && DeckResult.m_OrderChanged)"), std::string::npos);
 	EXPECT_NE(Controls.find("if(!ReadOnly && (m_BindOptionsDirty || GameClient()->m_KeyBinder.IsActive()))"), std::string::npos);
 	const std::string BindRows = ExtractSourceFunctionBody(ControlsSource, "void CMenusSettingsControls::RenderSettingsBinds(");
@@ -6944,14 +6945,14 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("ExecuteSettingsCardChromeDraw("), std::string::npos);
 	EXPECT_EQ(Source.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
 	EXPECT_NE(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
-	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(EffectiveBorder, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);
 	EXPECT_NE(DeckHeader.find("bool m_AllowHeaderDrag = true;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
-	EXPECT_NE(QmClientSource.find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("Definition.m_OnCollapseChanged"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);
 }
 
@@ -7336,6 +7337,7 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Header.find("class CSettingsCardDeck"), std::string::npos);
 	EXPECT_NE(Header.find("SSettingsCardDeckResult Render("), std::string::npos);
 	EXPECT_NE(Header.find("void RequestReveal("), std::string::npos);
+	EXPECT_NE(Header.find("void SetCollapsed("), std::string::npos);
 	EXPECT_NE(Header.find("void BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry)"), std::string::npos);
 	EXPECT_NE(Header.find("CProjectionCache m_ProjectionCache"), std::string::npos);
 	EXPECT_NE(Source.find("m_ProjectionCache.Resolve("), std::string::npos);

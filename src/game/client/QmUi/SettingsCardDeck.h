@@ -22,10 +22,10 @@ struct SSettingsCardDefinition
 	FSettingsCardRender m_Render;
 	FSettingsCardRenderMeasured m_RenderMeasured;
 	FSettingsCardPreLayoutInput m_PreLayoutInput;
-	FSettingsCardPreLayoutHeaderInput m_PreLayoutHeaderInput;
-	FSettingsCardHeaderAction m_HeaderAction;
-	std::function<bool()> m_IsCollapsed;
+	// 存在回调时，m_DefaultCollapsed 是当前 definitions revision 的权威外部快照。
+	FSettingsCardCollapseChanged m_OnCollapseChanged;
 	std::function<bool()> m_IsVisible;
+	bool m_DefaultCollapsed = false;
 	// 控制其他卡片可见性的输入在最终布局前处理。
 	bool m_VisibilityController = false;
 	// 内容高度依赖配置或运行时状态时，每帧重新测量。
@@ -79,6 +79,7 @@ public:
 		return RenderInternal(Ctx, Layout, pTab, m_vCachedDefinitions, Model, pScrollRegion, Input, Motion, VisualOptions, true);
 	}
 	void RequestReveal(const char *pStableId);
+	void SetCollapsed(const char *pStableId, bool Collapsed);
 	void BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry);
 
 private:

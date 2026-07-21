@@ -69,6 +69,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 														      VisualOptions.m_BorderColor;
 	Border.a *= DrawState.m_DrawAlpha;
 	ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);
+	const ColorRGBA EffectiveBorder = ResolveSettingsCardEffectiveBorderColor(Border, Surface);
 	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
 	// Focus/hover 只改变颜色，不能改变 Surface 的几何，否则边框获得焦点时
 	// 会产生一次内缩跳变并重新触发用户看到的卡片闪动。
@@ -81,10 +82,10 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 			// 完整外层圆角保证四角连续；内层颜色先抵消边框的 alpha 合成，
 			// 因此边框色不会透过半透明 Surface 污染卡片背景。两次绘制也替代
 			// 旧实现的四次圆角裁剪绘制。
-			DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
+			DrawFrame.m_Rect.Draw(EffectiveBorder, IGraphics::CORNER_ALL, CardRadius);
 			CUIRect InnerSurface = DrawFrame.m_Rect;
 			InnerSurface.Margin(BorderWidth, &InnerSurface);
-			InnerSurface.Draw(ResolveSettingsCardInnerSurfaceColor(Surface, Border), IGraphics::CORNER_ALL, std::max(0.0f, CardRadius - BorderWidth));
+			InnerSurface.Draw(ResolveSettingsCardInnerSurfaceColor(Surface, EffectiveBorder), IGraphics::CORNER_ALL, std::max(0.0f, CardRadius - BorderWidth));
 		});
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)

@@ -4584,7 +4584,6 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
-	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
@@ -4599,9 +4598,9 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 
 	auto ModuleStateIndex = [](EQmModuleId Id) { return std::clamp((int)Id, 0, (int)QmModuleCount - 1); };
-	auto ToggleCollapsed = [](EQmModuleId Id) {
+	auto ToggleCollapsed = [](EQmModuleId Id, bool Collapsed) {
 		const int Index = std::clamp((int)Id, 0, (int)QmModuleCount - 1);
-		s_aCollapsed[Index] = !s_aCollapsed[Index];
+		s_aCollapsed[Index] = Collapsed;
 		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
 		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 	};
@@ -4794,15 +4793,8 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 			Definition.m_Spec = {pStableId, Localize(pTitle), pRegisteredSubtitle != nullptr ? pRegisteredSubtitle : Localize(pSubtitle)};
 			Definition.m_Measure = [Id, EstimateContentHeight](float ContentWidth) { return EstimateContentHeight(Id, ContentWidth); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
-			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
-			Definition.m_PreLayoutHeaderInput = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool IsCollapsed) {
-				const int Index = ModuleStateIndex(Id);
-				if(ReadOnly || !Ui()->DoButtonLogic(&CollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
-					return false;
-				ToggleCollapsed(Id);
-				return true;
-			};
-			Definition.m_HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
+			Definition.m_DefaultCollapsed = s_aCollapsed[ModuleStateIndex(Id)];
+			Definition.m_OnCollapseChanged = [this, Id, ToggleCollapsed](bool Collapsed) { ToggleCollapsed(Id, Collapsed); };
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
 			Definition.m_PreLayoutInput = BuildHudPreLayoutInput(Id);
 			vCards.push_back(std::move(Definition));
@@ -4827,7 +4819,10 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	};
 	uint64_t CardLayoutRevision = 0;
 	for(int ModuleIndex = 0; ModuleIndex < (int)QmModuleCount; ++ModuleIndex)
+	{
 		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ MeasureContentRevision((EQmModuleId)ModuleIndex);
+		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (s_aCollapsed[ModuleIndex] ? 1u : 0u);
+	}
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
@@ -4877,7 +4872,6 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
-	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
@@ -4911,18 +4905,18 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		s_FavoriteMapsLayoutCount = FavoriteMapCount;
 		++s_FavoriteMapsLayoutRevision;
 	}
-	auto ToggleCollapsed = [this](EQmModuleId Id) {
+	auto ToggleCollapsed = [this](EQmModuleId Id, bool Collapsed) {
 		const int Index = std::clamp((int)Id, 0, (int)QmModuleCount - 1);
 		const bool WasCollapsed = s_aCollapsed[Index];
-		s_aCollapsed[Index] = !s_aCollapsed[Index];
-		if(Id == EQmModuleId::BlockWords && WasCollapsed)
+		s_aCollapsed[Index] = Collapsed;
+		if(Id == EQmModuleId::BlockWords && WasCollapsed != Collapsed && !Collapsed)
 			++s_BlockWordsLayoutRevision;
-		else if(Id == EQmModuleId::QiaFen && WasCollapsed)
+		else if(Id == EQmModuleId::QiaFen && WasCollapsed != Collapsed && !Collapsed)
 		{
 			s_KeywordRuleRowsInited = false;
 			++s_KeywordRulesLayoutRevision;
 		}
-		else if(Id == EQmModuleId::FavoriteMaps && WasCollapsed)
+		else if(Id == EQmModuleId::FavoriteMaps && WasCollapsed != Collapsed && !Collapsed)
 		{
 			const size_t FavoriteMapCount = GameClient()->TClientComponent().GetFavoriteMaps().size();
 			if(s_FavoriteMapsLayoutCount != FavoriteMapCount)
@@ -5028,15 +5022,8 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 			Definition.m_Spec = {pStableId, Localize(pTitle), pRegisteredSubtitle != nullptr ? pRegisteredSubtitle : Localize(pSubtitle)};
 			Definition.m_Measure = [Id, MeasureContentHeight](float ContentWidth) { return MeasureContentHeight(Id, ContentWidth); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
-			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
-			Definition.m_PreLayoutHeaderInput = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool IsCollapsed) {
-				const int Index = ModuleStateIndex(Id);
-				if(ReadOnly || !Ui()->DoButtonLogic(&CollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
-					return false;
-				ToggleCollapsed(Id);
-				return true;
-			};
-			Definition.m_HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
+			Definition.m_DefaultCollapsed = s_aCollapsed[ModuleStateIndex(Id)];
+			Definition.m_OnCollapseChanged = [this, Id, ToggleCollapsed](bool Collapsed) { ToggleCollapsed(Id, Collapsed); };
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
 			vCards.push_back(std::move(Definition));
 		};
@@ -5058,7 +5045,10 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 	};
 	uint64_t CardLayoutRevision = 0;
 	for(int ModuleIndex = 0; ModuleIndex < (int)QmModuleCount; ++ModuleIndex)
+	{
 		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ MeasureContentRevision((EQmModuleId)ModuleIndex);
+		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (s_aCollapsed[ModuleIndex] ? 1u : 0u);
+	}
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
@@ -5107,7 +5097,6 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
-	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	const bool CollapsedConfigChanged = !s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0;
@@ -5123,9 +5112,9 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 
 	auto ModuleStateIndex = [](EQmModuleId Id) { return std::clamp((int)Id, 0, (int)QmModuleCount - 1); };
-	auto ToggleCollapsed = [](EQmModuleId Id) {
+	auto ToggleCollapsed = [](EQmModuleId Id, bool Collapsed) {
 		const int Index = std::clamp((int)Id, 0, (int)QmModuleCount - 1);
-		s_aCollapsed[Index] = !s_aCollapsed[Index];
+		s_aCollapsed[Index] = Collapsed;
 		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
 		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 	};
@@ -5236,15 +5225,8 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 			Definition.m_Spec = {pStableId, Localize(pTitle), pRegisteredSubtitle != nullptr ? pRegisteredSubtitle : Localize(pSubtitle)};
 			Definition.m_Measure = [Id, EstimateContentHeight](float) { return EstimateContentHeight(Id); };
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
-			Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
-			Definition.m_PreLayoutHeaderInput = [this, Id, ToggleCollapsed, ReadOnly, ModuleStateIndex, &CollapseButtons = s_aCollapseButtons](const SSettingsCardFrame &Frame, bool IsCollapsed) {
-				const int Index = ModuleStateIndex(Id);
-				if(ReadOnly || !Ui()->DoButtonLogic(&CollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
-					return false;
-				ToggleCollapsed(Id);
-				return true;
-			};
-			Definition.m_HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
+			Definition.m_DefaultCollapsed = s_aCollapsed[ModuleStateIndex(Id)];
+			Definition.m_OnCollapseChanged = [this, Id, ToggleCollapsed](bool Collapsed) { ToggleCollapsed(Id, Collapsed); };
 			Definition.m_MeasureRevision = MeasureContentRevision(Id);
 			Definition.m_PreLayoutInput = BuildVisualPreLayoutInput(Id);
 			vCards.push_back(std::move(Definition));
@@ -5261,7 +5243,10 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	};
 	uint64_t CardLayoutRevision = 0;
 	for(int ModuleIndex = 0; ModuleIndex < (int)QmModuleCount; ++ModuleIndex)
+	{
 		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ MeasureContentRevision((EQmModuleId)ModuleIndex);
+		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (s_aCollapsed[ModuleIndex] ? 1u : 0u);
+	}
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
