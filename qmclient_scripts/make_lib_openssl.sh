@@ -1,5 +1,5 @@
-# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/bin/bash
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 
 ANDROID_HOME=~/Android/Sdk
 ANDROID_NDK="$(find "$ANDROID_HOME/ndk" -maxdepth 1 | sort -n | tail -1)"

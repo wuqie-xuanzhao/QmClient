@@ -2,8 +2,10 @@
 """
 Batch-add signature line to all QmClient original source files.
 """
-import os
+
+import codecs
 import fnmatch
+import os
 
 SIGNATURE = "请抬头享受阳光｜日子很好 我很我---------致咩子"
 
@@ -28,21 +30,47 @@ def add_signature(filepath):
     prefix = LINE_PREFIX.get(ext)
     if prefix is None:
         return False
-    if prefix == ":: " and ext == ".cmd":
-        line = f"{prefix}{SIGNATURE}\n"
-    else:
-        line = f"{prefix}{SIGNATURE}\n"
 
-    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-        content = f.read()
+    with open(filepath, "rb") as f:
+        raw_content = f.read()
 
-    if SIGNATURE in content:
+    has_bom = raw_content.startswith(codecs.BOM_UTF8)
+    content = raw_content[len(codecs.BOM_UTF8) :] if has_bom else raw_content
+    signature = SIGNATURE.encode("utf-8")
+    if signature in content:
         return False
     if not content.strip():
         return False
 
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(line + content)
+    if b"\r\n" in content:
+        line_ending = b"\r\n"
+    elif b"\n" in content:
+        line_ending = b"\n"
+    elif b"\r" in content:
+        line_ending = b"\r"
+    else:
+        line_ending = b"\n"
+    signature_line = prefix.encode("utf-8") + signature + line_ending
+
+    if content.startswith(b"#!"):
+        line_end = content.find(b"\n")
+        if line_end >= 0:
+            insert_at = line_end + 1
+            content = content[:insert_at] + signature_line + content[insert_at:]
+        else:
+            line_end = content.find(b"\r")
+            if line_end >= 0:
+                insert_at = line_end + 1
+                content = content[:insert_at] + signature_line + content[insert_at:]
+            else:
+                content = content + line_ending + signature_line
+    else:
+        content = signature_line + content
+
+    with open(filepath, "wb") as f:
+        if has_bom:
+            f.write(codecs.BOM_UTF8)
+        f.write(content)
     return True
 
 def main():
