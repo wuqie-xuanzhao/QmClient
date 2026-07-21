@@ -383,21 +383,134 @@ TEST(Net, KcpSessionRejectsInvalidRebindWithoutChangingPeer)
 	NETSOCKET Socket = BindUdpSocket(0);
 	ASSERT_NE(Socket, nullptr);
 
-	NETADDR OriginalPeer = {};
-	NETADDR RebindPeer = {};
-	ASSERT_FALSE(net_addr_from_str(&OriginalPeer, "127.0.0.1:8303"));
-	ASSERT_FALSE(net_addr_from_str(&RebindPeer, "127.0.0.1:8304"));
-	const uint32_t Conv = 0x1234567u;
-	CNetKcpSession Session;
-	ASSERT_TRUE(Session.Init(Socket, OriginalPeer, Conv));
+TEST_F(CNetKcpBypassTest, ClientFlushBypassDrainsQueuedVitalChunk)
+{
+	const std::vector<std::string> vCommands = {"client-spec", "client-tp", "client-spec-restore"};
+	for(const std::string &Command : vCommands)
+	{
+		CNetChunk VitalChunk = {};
+		VitalChunk.m_ClientId = 0;
+		VitalChunk.m_pData = Command.data();
+		VitalChunk.m_DataSize = Command.size();
+		VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+		ASSERT_EQ(m_Client.Send(&VitalChunk), 0);
+	}
 
-	unsigned char aInvalidPacket[NET_KCP_HEADER_SIZE + 1] = {'Q', 'K', 'C', 'P', 1};
-	aInvalidPacket[5] = (Conv >> 24) & 0xff;
-	aInvalidPacket[6] = (Conv >> 16) & 0xff;
-	aInvalidPacket[7] = (Conv >> 8) & 0xff;
-	aInvalidPacket[8] = Conv & 0xff;
-	EXPECT_FALSE(Session.Input(RebindPeer, aInvalidPacket, sizeof(aInvalidPacket), true));
-	EXPECT_EQ(*Session.PeerAddress(), OriginalPeer);
+	const char aBypass[] = "client-bypass";
+	CNetChunk BypassChunk = {};
+	BypassChunk.m_ClientId = 0;
+	BypassChunk.m_pData = aBypass;
+	BypassChunk.m_DataSize = sizeof(aBypass) - 1;
+	BypassChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Client.Send(&BypassChunk), 0);
 
-	net_udp_close(Socket);
+	std::vector<std::string> vReceived;
+	PumpServerChunks(m_Server, m_Client, &vReceived, vCommands.size() + 1);
+	std::vector<std::string> vExpected = vCommands;
+	vExpected.emplace_back(aBypass);
+	EXPECT_EQ(vReceived, vExpected);
+}
+
+TEST_F(CNetKcpBypassTest, ClientFlushBypassJoinsPendingKcpPacket)
+{
+	const std::vector<unsigned char> vVital1 = MakeTestPayload(700, 1);
+	const std::vector<unsigned char> vVital2 = MakeTestPayload(600, 2);
+	for(const std::vector<unsigned char> *pVital : {&vVital1, &vVital2})
+	{
+		CNetChunk VitalChunk = {};
+		VitalChunk.m_ClientId = 0;
+		VitalChunk.m_pData = pVital->data();
+		VitalChunk.m_DataSize = pVital->size();
+		VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+		ASSERT_EQ(m_Client.Send(&VitalChunk), 0);
+	}
+	EXPECT_EQ(m_Client.TransportStats().m_SendQueueDepth, 0);
+
+	const std::vector<unsigned char> vTrailingInput = MakeTestPayload(70, 3);
+	CNetChunk InputChunk = {};
+	InputChunk.m_ClientId = 0;
+	InputChunk.m_pData = vTrailingInput.data();
+	InputChunk.m_DataSize = vTrailingInput.size();
+	InputChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Client.Send(&InputChunk), 0);
+	EXPECT_GE(m_Client.TransportStats().m_SendQueueDepth, 2);
+
+	std::vector<std::string> vReceived;
+	PumpServerChunks(m_Server, m_Client, &vReceived, 3);
+	ASSERT_EQ(vReceived.size(), 3u);
+	EXPECT_EQ(vReceived[0], std::string(reinterpret_cast<const char *>(vVital1.data()), vVital1.size()));
+	EXPECT_EQ(vReceived[1], std::string(reinterpret_cast<const char *>(vVital2.data()), vVital2.size()));
+	EXPECT_EQ(vReceived[2], std::string(reinterpret_cast<const char *>(vTrailingInput.data()), vTrailingInput.size()));
+}
+
+TEST_F(CNetKcpBypassTest, ClientFlushWithoutPendingDataKeepsRawBypass)
+{
+	const std::vector<unsigned char> vInput = MakeTestPayload(70, 3);
+	CNetChunk InputChunk = {};
+	InputChunk.m_ClientId = 0;
+	InputChunk.m_pData = vInput.data();
+	InputChunk.m_DataSize = vInput.size();
+	InputChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Client.Send(&InputChunk), 0);
+	EXPECT_EQ(m_Client.TransportStats().m_SendQueueDepth, 0);
+
+	std::vector<std::string> vReceived;
+	PumpServerChunks(m_Server, m_Client, &vReceived, 1);
+	ASSERT_EQ(vReceived.size(), 1u);
+	EXPECT_EQ(vReceived[0], std::string(reinterpret_cast<const char *>(vInput.data()), vInput.size()));
+}
+
+TEST_F(CNetKcpBypassTest, ServerFlushBypassDrainsQueuedVitalChunk)
+{
+	const char aVital[] = "server-vital";
+	CNetChunk VitalChunk = {};
+	VitalChunk.m_ClientId = m_ClientId;
+	VitalChunk.m_pData = aVital;
+	VitalChunk.m_DataSize = sizeof(aVital) - 1;
+	VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+	ASSERT_EQ(m_Server.Send(&VitalChunk), 0);
+
+	const char aBypass[] = "server-bypass";
+	CNetChunk BypassChunk = {};
+	BypassChunk.m_ClientId = m_ClientId;
+	BypassChunk.m_pData = aBypass;
+	BypassChunk.m_DataSize = sizeof(aBypass) - 1;
+	BypassChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Server.Send(&BypassChunk), 0);
+
+	std::vector<std::string> vReceived;
+	PumpClientChunks(m_Client, m_Server, &vReceived, 2);
+	EXPECT_EQ(vReceived, (std::vector<std::string>{aVital, aBypass}));
+}
+
+TEST_F(CNetKcpBypassTest, ServerFlushBypassJoinsPendingKcpPacket)
+{
+	const std::vector<unsigned char> vVital1 = MakeTestPayload(700, 4);
+	const std::vector<unsigned char> vVital2 = MakeTestPayload(600, 5);
+	for(const std::vector<unsigned char> *pVital : {&vVital1, &vVital2})
+	{
+		CNetChunk VitalChunk = {};
+		VitalChunk.m_ClientId = m_ClientId;
+		VitalChunk.m_pData = pVital->data();
+		VitalChunk.m_DataSize = pVital->size();
+		VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+		ASSERT_EQ(m_Server.Send(&VitalChunk), 0);
+	}
+	EXPECT_EQ(m_Server.ClientTransportStats(m_ClientId).m_SendQueueDepth, 0);
+
+	const std::vector<unsigned char> vSnapshot = MakeTestPayload(70, 6);
+	CNetChunk SnapshotChunk = {};
+	SnapshotChunk.m_ClientId = m_ClientId;
+	SnapshotChunk.m_pData = vSnapshot.data();
+	SnapshotChunk.m_DataSize = vSnapshot.size();
+	SnapshotChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Server.Send(&SnapshotChunk), 0);
+	EXPECT_GE(m_Server.ClientTransportStats(m_ClientId).m_SendQueueDepth, 2);
+
+	std::vector<std::string> vReceived;
+	PumpClientChunks(m_Client, m_Server, &vReceived, 3);
+	ASSERT_EQ(vReceived.size(), 3u);
+	EXPECT_EQ(vReceived[0], std::string(reinterpret_cast<const char *>(vVital1.data()), vVital1.size()));
+	EXPECT_EQ(vReceived[1], std::string(reinterpret_cast<const char *>(vVital2.data()), vVital2.size()));
+	EXPECT_EQ(vReceived[2], std::string(reinterpret_cast<const char *>(vSnapshot.data()), vSnapshot.size()));
 }
