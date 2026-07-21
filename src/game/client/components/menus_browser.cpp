@@ -1931,11 +1931,13 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 	static CListBox s_ListBox;
 	View.VSplitLeft(5.0f, nullptr, &View);
 	s_ListBox.DoAutoSpacing(2.0f);
-	s_ListBox.DoStart(25.0f, pSelectedServer->m_NumReceivedClients, 1, 3, -1, &View, false, IGraphics::CORNER_NONE);
+	s_ListBox.SetScrollbarWidth(16.0f);
+	s_ListBox.SetScrollbarMargin(5.0f);
+	s_ListBox.DoStart(25.0f, (int)pSelectedServer->m_vClients.size(), 1, 3, -1, &View, false, IGraphics::CORNER_NONE);
 
-	for(int i = 0; i < pSelectedServer->m_NumReceivedClients; i++)
+	for(size_t i = 0; i < pSelectedServer->m_vClients.size(); i++)
 	{
-		const CServerInfo::CClient &CurrentClient = pSelectedServer->m_aClients[i];
+		const CServerInfo::CClient &CurrentClient = pSelectedServer->m_vClients[i];
 		const CListboxItem Item = s_ListBox.DoNextItem(&CurrentClient);
 		if(!Item.m_Visible)
 			continue;
@@ -2059,7 +2061,7 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 	const int NewSelected = s_ListBox.DoEnd();
 	if(s_ListBox.WasItemSelected())
 	{
-		const CServerInfo::CClient &SelectedClient = pSelectedServer->m_aClients[NewSelected];
+		const CServerInfo::CClient &SelectedClient = pSelectedServer->m_vClients[NewSelected];
 		if(SelectedClient.m_FriendState == IFriends::FRIEND_PLAYER)
 		{
 			GameClient()->Friends()->RemoveFriend(SelectedClient.m_aName, SelectedClient.m_aClan);
@@ -2113,9 +2115,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		if(pEntry->m_FriendState == IFriends::FRIEND_NO)
 			continue;
 
-		for(int ClientIndex = 0; ClientIndex < pEntry->m_NumClients; ++ClientIndex)
+		for(const CServerInfo::CClient &CurrentClient : pEntry->m_vClients)
 		{
-			const CServerInfo::CClient &CurrentClient = pEntry->m_aClients[ClientIndex];
 			if(CurrentClient.m_FriendState == IFriends::FRIEND_NO)
 				continue;
 

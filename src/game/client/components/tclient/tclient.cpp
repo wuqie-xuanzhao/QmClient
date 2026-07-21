@@ -2667,12 +2667,11 @@ void CTClient::CheckFriendOnline()
 			const CServerInfo *pEntry = pServerBrowser->HttpGet(m_FriendNotifyScanIndex);
 			++m_FriendNotifyScanIndex;
 			++ProcessedServers;
-			if(!pEntry || pEntry->m_NumReceivedClients <= 0)
+			if(!pEntry || pEntry->m_vClients.empty())
 				continue;
 
-			for(int ClientIndex = 0; ClientIndex < pEntry->m_NumReceivedClients; ++ClientIndex)
+			for(const CServerInfo::CClient &Client : pEntry->m_vClients)
 			{
-				const CServerInfo::CClient &Client = pEntry->m_aClients[ClientIndex];
 				if(Client.m_aName[0] == '\0')
 					continue;
 				if(!GameClient()->Friends()->IsFriend(Client.m_aName, Client.m_aClan, true))

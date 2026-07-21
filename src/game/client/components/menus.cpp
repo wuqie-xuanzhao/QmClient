@@ -2831,9 +2831,8 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		if(pServerInfo == nullptr)
 			continue;
 
-		for(int ClientIndex = 0; ClientIndex < pServerInfo->m_NumClients; ++ClientIndex)
+		for(const CServerInfo::CClient &ClientInfo : pServerInfo->m_vClients)
 		{
-			const CServerInfo::CClient &ClientInfo = pServerInfo->m_aClients[ClientIndex];
 			if(ClientInfo.m_FriendState != IFriends::FRIEND_PLAYER)
 				continue;
 

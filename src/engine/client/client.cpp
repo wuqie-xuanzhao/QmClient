@@ -2063,10 +2063,10 @@ void CClient::ProcessServerInfo(int RawType, NETADDR *pFrom, const void *pData, 
 	}
 
 	bool IgnoreError = false;
-	for(int i = 0; i < MAX_CLIENTS && Info.m_NumReceivedClients < MAX_CLIENTS && !Up.Error(); i++)
+	for(int i = 0; i < MAX_CLIENTS && (int)Info.m_vClients.size() < MAX_CLIENTS && !Up.Error(); i++)
 	{
-		CServerInfo::CClient *pClient = &Info.m_aClients[Info.m_NumReceivedClients];
-		GET_STRING(pClient->m_aName);
+		CServerInfo::CClient Client = {};
+		GET_STRING(Client.m_aName);
 		if(Up.Error())
 		{
 			// Packet end, no problem unless it happens during one
@@ -2074,10 +2074,14 @@ void CClient::ProcessServerInfo(int RawType, NETADDR *pFrom, const void *pData, 
 			IgnoreError = true;
 			break;
 		}
-		GET_STRING(pClient->m_aClan);
-		GET_INT(pClient->m_Country);
-		GET_INT(pClient->m_Score);
-		GET_INT(pClient->m_Player);
+		GET_STRING(Client.m_aClan);
+		GET_INT(Client.m_Country);
+		if(!in_range(Client.m_Country, CountryCode::MINIMUM, CountryCode::MAXIMUM))
+		{
+			Client.m_Country = CountryCode::DEFAULT;
+		}
+		GET_INT(Client.m_Score);
+		GET_INT(Client.m_Player);
 		if(SavedType == SERVERINFO_EXTENDED)
 		{
 			Up.GetString(); // extra info, reserved
@@ -2090,12 +2094,12 @@ void CClient::ProcessServerInfo(int RawType, NETADDR *pFrom, const void *pData, 
 				if(!(Info.m_ReceivedPackets & Flag))
 				{
 					Info.m_ReceivedPackets |= Flag;
-					Info.m_NumReceivedClients++;
+					Info.m_vClients.push_back(Client);
 				}
 			}
 			else
 			{
-				Info.m_NumReceivedClients++;
+				Info.m_vClients.push_back(Client);
 			}
 		}
 	}
