@@ -1172,7 +1172,7 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 		{
 			m_HasPendingDemoRenderSource = true;
 			str_copy(m_aPendingDemoRenderFolder, m_aCurrentDemoFolder, sizeof(m_aPendingDemoRenderFolder));
-			str_copy(m_aPendingDemoRenderSelectionName, m_aCurrentDemoSelectionName, sizeof(m_aPendingDemoRenderSelectionName));
+			str_format(m_aPendingDemoRenderSelectionName, sizeof(m_aPendingDemoRenderSelectionName), "%s.demo", m_DemoSliceInput.GetString());
 			m_PendingDemoRenderStorageType = IStorage::TYPE_SAVE;
 			m_Popup = POPUP_RENDER_DEMO;
 			m_StartPaused = false;

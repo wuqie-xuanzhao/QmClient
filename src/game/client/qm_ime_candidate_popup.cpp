@@ -54,13 +54,25 @@ namespace
 
 	struct SImePresentationTarget
 	{
-		float m_TypingAlpha = 0.0f;
+		CUIRect m_Rect = {};
+		float m_Radius = 0.0f;
+		float m_Alpha = 0.0f;
 		float m_CandidateAlpha = 0.0f;
+		float m_CandidateScale = 1.0f;
+	};
+
+	struct SImeResolvedPresentation
+	{
+		CUIRect m_Rect = {};
+		float m_Radius = 0.0f;
+		float m_Alpha = 0.0f;
+		float m_CandidateAlpha = 0.0f;
+		float m_CandidateScale = 1.0f;
 	};
 
 	bool HasPopupContent(const SQmImePopupState &State)
 	{
-		return State.m_Visible && !State.m_Disabled && !State.m_Composition.empty() && !State.m_vCandidates.empty();
+		return QmImeHasPopupContent(State);
 	}
 
 	ColorRGBA WithAlpha(ColorRGBA Color, float Alpha)
@@ -267,14 +279,12 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 		}
 	}
 
-	const float CandidateNaturalWidth = HasCandidates ? CandidateNaturalWidthForWindow(CandidateStart, CandidateDisplayCount) + TrailingWidth : 0.0f;
-	const float ContentWidth = HasCandidates ? CandidateNaturalWidth : 0.0f;
+	const float CandidateNaturalWidth = CandidateWindowNaturalWidth + TrailingWidth;
+	const float ContentWidth = CandidateNaturalWidth;
 	const float NeededPanelWidth = ContentWidth + 2.0f * Ime.m_PaddingX;
-	const bool CandidateOverflowSingle = HasCandidates && CandidateDisplayCount <= 1 && NeededPanelWidth > PreferredMaxPanelWidth;
-	const float PanelMaxWidth = CandidateOverflowSingle ? ScreenMaxPanelWidth : PreferredMaxPanelWidth;
-	const float PanelWidth = std::clamp(NeededPanelWidth, Ime.m_MinWidth, PanelMaxWidth);
-	const float RowHeight = maximum(Ime.m_RowHeight, CandidateTextHeight + 2.0f * Ime.m_TextSafePaddingY);
-	const float PanelHeight = 2.0f * Ime.m_PaddingY + RowHeight;
+	const float PanelWidth = maximum(NeededPanelWidth, Ime.m_MinWidth);
+	const float CandidateRowHeight = maximum(Ime.m_RowHeight, CandidateTextHeight + 2.0f * Ime.m_TextSafePaddingY);
+	const float PanelHeight = 2.0f * Ime.m_PaddingY + CandidateRowHeight;
 
 	vec2 Anchor = DrawState.m_AnchorScreen / vec2((float)ScreenWidth, (float)ScreenHeight) * vec2(Width, Height);
 	const float PopupGap = 2.2f;
@@ -295,20 +305,75 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	Position.y = PixelAlign(Position.y, ScreenHeight / Height);
 
 	CUiV2AnimationRuntime &AnimRuntime = pGameClient->UiRuntimeV2()->AnimRuntime();
-	CUiV2Tree &Tree = pGameClient->UiRuntimeV2()->Tree();
-	const uint64_t PopupKey = BuildUiAnimNodeKey(str_quickhash("qm_ime_popup"), m_PresenceGeneration);
-	if(TargetVisible && !m_WasVisible && g_Config.m_QmUiMotionLevel != 0)
+	const uint64_t CapsuleNode = ImePresentationNodeKey("capsule");
+	const uint64_t CandidatesNode = ImePresentationNodeKey("candidates");
+	const uint64_t SelectedNode = ImePresentationNodeKey("selected");
+
+	SImePresentationTarget TargetPresentation;
+	TargetPresentation.m_Rect = {Position.x, Position.y, PanelWidth, PanelHeight};
+	TargetPresentation.m_Radius = std::min(PanelHeight * 0.36f, Ime.m_Radius);
+	TargetPresentation.m_Alpha = TargetVisible ? 1.0f : 0.0f;
+	TargetPresentation.m_CandidateAlpha = TargetVisible ? 1.0f : 0.0f;
+	TargetPresentation.m_CandidateScale = TargetVisible ? 1.0f : 0.84f;
+	if(!TargetVisible)
 	{
 		AnimRuntime.SetValue(PopupKey, EUiAnimProperty::POS_Y, 1.4f);
 	}
 
-	const float AlphaDuration = TargetVisible ? POPUP_IN_DURATION : POPUP_OUT_DURATION;
-	SUiAnimTransition PresenceTransition;
-	PresenceTransition.m_DurationSec = AlphaDuration;
-	PresenceTransition.m_Easing = EEasing::EASE_OUT;
-	PresenceTransition = qm_motion::ApplyMotionLevel(PresenceTransition, g_Config.m_QmUiMotionLevel);
-	const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, PopupKey, TargetVisible, PresenceTransition);
-	if(!Presence.m_Render)
+	SUiSpringConfig CapsuleSpring;
+	CapsuleSpring.m_Stiffness = 430.0f;
+	CapsuleSpring.m_Damping = 38.0f;
+	CapsuleSpring.m_RestEpsilon = 0.02f;
+	CapsuleSpring.m_RestVelocity = 0.14f;
+	SUiSpringConfig ContentSpring;
+	ContentSpring.m_Stiffness = 520.0f / (IME_CONTENT_TIME_SCALE * IME_CONTENT_TIME_SCALE);
+	ContentSpring.m_Damping = 44.0f / IME_CONTENT_TIME_SCALE;
+	ContentSpring.m_RestEpsilon = 0.012f;
+	ContentSpring.m_RestVelocity = 0.20f;
+	SUiSpringConfig SelectedSpring;
+	SelectedSpring.m_Stiffness = 620.0f;
+	SelectedSpring.m_Damping = 52.0f;
+	SelectedSpring.m_RestEpsilon = 0.006f;
+	SelectedSpring.m_RestVelocity = 0.08f;
+
+	if(!m_Presentation.m_Initialized)
+	{
+		CUIRect InitialRect = TargetPresentation.m_Rect;
+		InitialRect.w = std::clamp(Ime.m_MinWidth * 0.72f, 1.0f, TargetPresentation.m_Rect.w);
+		InitialRect.h = std::max(1.0f, TargetPresentation.m_Rect.h * 0.82f);
+		InitialRect.x = TargetPresentation.m_Rect.x + (TargetPresentation.m_Rect.w - InitialRect.w) * 0.5f;
+		InitialRect.y = TargetPresentation.m_Rect.y + (TargetPresentation.m_Rect.h - InitialRect.h) * 0.5f;
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_X, InitialRect.x);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_Y, InitialRect.y);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::WIDTH, InitialRect.w);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::HEIGHT, InitialRect.h);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::SCALE, InitialRect.h * 0.5f);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, CandidatesNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, CandidatesNode, EUiAnimProperty::SCALE, 0.84f);
+		m_Presentation.m_Initialized = true;
+	}
+
+	m_Presentation.m_TargetX = TargetPresentation.m_Rect.x;
+	m_Presentation.m_TargetY = TargetPresentation.m_Rect.y;
+	m_Presentation.m_TargetWidth = TargetPresentation.m_Rect.w;
+	m_Presentation.m_TargetHeight = TargetPresentation.m_Rect.h;
+	m_Presentation.m_TargetRadius = TargetPresentation.m_Radius;
+	m_Presentation.m_TargetAlpha = TargetPresentation.m_Alpha;
+	m_Presentation.m_TargetCandidateAlpha = TargetPresentation.m_CandidateAlpha;
+	m_Presentation.m_TargetCandidateScale = TargetPresentation.m_CandidateScale;
+
+	SImeResolvedPresentation Presentation;
+	Presentation.m_Rect.x = ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_X, m_Presentation.m_TargetX, CapsuleSpring, 3, 0.01f);
+	Presentation.m_Rect.y = ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_Y, m_Presentation.m_TargetY, CapsuleSpring, 3, 0.01f);
+	Presentation.m_Rect.w = std::max(0.0f, ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::WIDTH, m_Presentation.m_TargetWidth, CapsuleSpring, 3, 0.01f));
+	Presentation.m_Rect.h = std::max(0.0f, ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::HEIGHT, m_Presentation.m_TargetHeight, CapsuleSpring, 3, 0.01f));
+	Presentation.m_Radius = ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::SCALE, m_Presentation.m_TargetRadius, CapsuleSpring, 3, 0.01f);
+	Presentation.m_Alpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::ALPHA, m_Presentation.m_TargetAlpha, ContentSpring, 3, 0.004f), 0.0f, 1.0f);
+	Presentation.m_CandidateAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, CandidatesNode, EUiAnimProperty::ALPHA, m_Presentation.m_TargetCandidateAlpha, ContentSpring, 2, 0.004f), 0.0f, 1.0f);
+	Presentation.m_CandidateScale = ResolveUiPresentationStateValue(AnimRuntime, CandidatesNode, EUiAnimProperty::SCALE, m_Presentation.m_TargetCandidateScale, ContentSpring, 2, 0.004f);
+
+	if(!TargetVisible && Presentation.m_Alpha <= 0.01f && !AnimRuntime.HasActiveAnimation(CapsuleNode, EUiAnimProperty::ALPHA))
 	{
 		m_WasVisible = false;
 		pTextRender->SetRenderFlags(OldRenderFlags);
@@ -365,8 +430,10 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 
 	if(HasCandidates)
 	{
+		const float LayerAlpha = Presentation.m_Alpha * Presentation.m_CandidateAlpha;
+		CUIRect CandidateLayer = ScaleRectAroundCenter(Content, Presentation.m_CandidateScale);
 		CUIRect CandidateRow;
-		Content.HSplitTop(RowHeight, &CandidateRow, &Content);
+		CandidateLayer.HSplitTop(CandidateRowHeight, &CandidateRow, &CandidateLayer);
 		CUIRect Candidates = CandidateRow;
 		CUIRect More = {};
 		if(TrailingWidth > 0.0f)
@@ -442,7 +509,6 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 				CandidateDrawAlpha);
 		}
 	}
-
 	pTextRender->TextColor(OldTextColor);
 	pTextRender->TextOutlineColor(OldOutlineColor);
 	pTextRender->SetRenderFlags(OldRenderFlags);

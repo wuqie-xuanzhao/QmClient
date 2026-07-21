@@ -112,7 +112,7 @@ SQmImePopupState CQmImeManager::BuildPopupState() const
 
 	const bool HasComposition = pInput->HasComposition();
 	const int CandidateCount = pInput->GetCandidateCount();
-	State.m_Visible = HasComposition;
+	State.m_Visible = HasComposition && CandidateCount > 0;
 	if(!State.m_Visible)
 		return State;
 

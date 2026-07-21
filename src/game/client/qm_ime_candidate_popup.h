@@ -25,6 +25,11 @@ struct SQmImePopupState
 	float m_LineHeightScreen = 0.0f;
 };
 
+inline bool QmImeHasPopupContent(const SQmImePopupState &State)
+{
+	return State.m_Visible && !State.m_Disabled && !State.m_vCandidates.empty();
+}
+
 class CQmImeCandidatePopup
 {
 public:
@@ -41,8 +46,6 @@ private:
 		float m_TargetHeight = 0.0f;
 		float m_TargetRadius = 0.0f;
 		float m_TargetAlpha = 0.0f;
-		float m_TargetTypingAlpha = 0.0f;
-		float m_TargetTypingScale = 1.0f;
 		float m_TargetCandidateAlpha = 0.0f;
 		float m_TargetCandidateScale = 1.0f;
 		float m_TargetSelectedX = 0.0f;
