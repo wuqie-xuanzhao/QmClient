@@ -86,9 +86,6 @@ cmake --build cmake-build-release --target run_tests
 This project is based on DDNet and TaterClient. Upstream code remains under the zlib/libpng licence.\
 Modified versions must be clearly attributed and must not misrepresent the identity of the original authors.
 
-The original code, features, and assets added in QmClient may not be reused, redistributed,
-or incorporated into other projects without explicit written permission from the author.
-
 ## 📮 Notes
 
 This project is a personalised customisation and does not represent the official stance of DDNet or TaterClient.

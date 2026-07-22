@@ -243,7 +243,7 @@ TEST(QmScoreboardRender, BlurTargetUsesQuarterResolutionAndRoundsUp)
 	EXPECT_EQ(ScoreboardBlurTargetDimension(0), 0);
 }
 
-TEST(QmScoreboardRender, DenseRowsUseReducedDetailOnlyForBetterScoreboard)
+TEST(QmScoreboardRender, DenseRowsKeepClientBrandWhileReducingSecondaryDetail)
 {
 	const SScoreboardRowRenderDetail Disabled = ResolveScoreboardRowRenderDetail(false, 5.0f);
 	EXPECT_TRUE(Disabled.m_FullTee);
@@ -259,7 +259,7 @@ TEST(QmScoreboardRender, DenseRowsUseReducedDetailOnlyForBetterScoreboard)
 
 	const SScoreboardRowRenderDetail Dense = ResolveScoreboardRowRenderDetail(true, 10.0f);
 	EXPECT_FALSE(Dense.m_FullTee);
-	EXPECT_FALSE(Dense.m_ShowClientBrand);
+	EXPECT_TRUE(Dense.m_ShowClientBrand);
 	EXPECT_FALSE(Dense.m_ShowClan);
 	EXPECT_FALSE(Dense.m_ShowCountry);
 }
