@@ -2016,7 +2016,7 @@ TEST(QmMonitoringHelpers, GeneralPerformanceModePlaceholderReplacesRefreshRateSl
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmPerformanceMode, qm_performance_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("key = \"Performance mode (placeholder)\""), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("simplified_chinese = \"性能模式（占位符）\""), std::string::npos);
-	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.76.21\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.76.22\""), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)

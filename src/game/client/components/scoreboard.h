@@ -43,7 +43,7 @@ constexpr int ScoreboardBlurTargetDimension(int ScreenDimension)
 constexpr SScoreboardRowRenderDetail ResolveScoreboardRowRenderDetail(bool BetterScoreboard, float LineHeight)
 {
 	if(BetterScoreboard && LineHeight <= 10.0f)
-		return {false, false, false, false};
+		return {false, true, false, false};
 	return {};
 }
 
