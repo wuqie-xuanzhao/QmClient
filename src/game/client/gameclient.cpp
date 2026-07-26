@@ -3734,7 +3734,7 @@ void CGameClient::OnNewSnapshot()
 				const CNetObj_SwitchState *pSwitchStateData = (const CNetObj_SwitchState *)Item.m_pData;
 				int Team = std::clamp(Item.m_Id, (int)TEAM_FLOCK, NUM_DDRACE_TEAMS - 1);
 
-				int HighestSwitchNumber = std::clamp(pSwitchStateData->m_HighestSwitchNumber, 0, 255);
+				int HighestSwitchNumber = std::clamp(std::max(pSwitchStateData->m_HighestSwitchNumber, Collision()->m_HighestSwitchNumber), 0, 255);
 				if(HighestSwitchNumber != maximum(0, (int)Switchers().size() - 1))
 				{
 					m_GameWorld.m_Core.InitSwitchers(HighestSwitchNumber);

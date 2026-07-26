@@ -855,7 +855,7 @@ int CCollision::GetSwitchNumber(int Index) const
 	if(!m_pSwitch || !IsValidTileIndex(Index, m_Width, m_Height))
 		return 0;
 
-	if(m_pSwitch[Index].m_Type > 0 && m_pSwitch[Index].m_Number > 0)
+	if(m_pSwitch[Index].m_Type > 0 && m_pSwitch[Index].m_Number > 0 && m_pSwitch[Index].m_Number <= m_HighestSwitchNumber)
 		return m_pSwitch[Index].m_Number;
 
 	return 0;
