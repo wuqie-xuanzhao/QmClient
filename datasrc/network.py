@@ -21,6 +21,7 @@ from datatypes import (
 	NetStringHalfStrict,
 	NetStringStrict,
 	NetTick,
+	NetTickStrict,
 )
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
@@ -896,7 +897,7 @@ Messages = [
 	NetMessageEx(
 		"Sv_ChangeInfoCooldown",
 		"change-info-cooldown@netmsg.ddnet.org",
-		[NetTick("m_WaitUntil")],
+		[NetTickStrict("m_WaitUntil")],
 	),
 	NetMessageEx(
 		"Sv_MapSoundGlobal",
@@ -919,7 +920,7 @@ Messages = [
 			NetIntAny("m_NextWeapon"),
 			NetIntAny("m_PrevWeapon"),
 			NetIntRange("m_Owner", 0, "MAX_CLIENTS-1"),
-			NetTick("m_IntendedTick"),
+			NetTickStrict("m_IntendedTick"),
 		],
 	),
 	NetMessageEx(
