@@ -175,7 +175,7 @@ void CEditor::DoMapEditor(CUIRect View)
 			m_pTilesetPicker->m_HasSwitch = pTileLayer->m_HasSwitch;
 			m_pTilesetPicker->m_HasTune = pTileLayer->m_HasTune;
 
-			m_pTilesetPicker->Render(true);
+			m_pTilesetPicker->Render();
 
 			if(m_ShowTileInfo != SHOW_TILE_OFF)
 				m_pTilesetPicker->ShowInfo();
