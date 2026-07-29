@@ -4,7 +4,9 @@
 #include <base/log.h>
 #include <base/system.h>
 
+#ifndef BACKEND_NO_SDL
 #include <engine/client/backend_sdl.h>
+#endif
 #include <engine/graphics.h>
 
 #if defined(BACKEND_AS_OPENGL_ES) || !defined(CONF_BACKEND_OPENGL_ES)

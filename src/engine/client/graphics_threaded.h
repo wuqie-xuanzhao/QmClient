@@ -1490,6 +1490,8 @@ public:
 	void TakeScreenshot(const char *pFilename) override;
 	void TakeScreenshot(const char *pFilename, FScreenshotCallback pfnCallback) override;
 	void TakeCustomScreenshot(const char *pFilename) override;
+	void ReadFramebuffer(CImageInfo &Image);
+	void SetScreenSize(int Width, int Height);
 	void Swap() override;
 	bool SetVSync(bool State) override;
 	bool SetMultiSampling(uint32_t ReqMultiSamplingCount, uint32_t &MultiSamplingCountBackend) override;
