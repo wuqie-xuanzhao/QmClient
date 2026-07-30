@@ -83,10 +83,10 @@
 推荐 i18n 工作流：
 
 1. 修改源码中的英文 key 或新增 `Localize` / `Localizable` / `Register` help 调用
-2. 运行 `python qmclient_scripts/languages_qmclient/extract_strings.py`（默认增量；需要重建缓存时加 `--full`）
+2. 运行 `python3 qmclient_scripts/languages_qmclient/extract_strings.py`（默认增量；需要重建缓存时加 `--full`）
 3. 按需更新 `qmclient_scripts/languages_qmclient/translations/i18n/*.toml`
-4. 运行 `python qmclient_scripts/languages_qmclient/generate_all.py`
-5. 运行 `python qmclient_scripts/languages_qmclient/validate.py` 与 `python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
+4. 运行 `python3 qmclient_scripts/languages_qmclient/generate_all.py`
+5. 运行 `python3 qmclient_scripts/languages_qmclient/validate.py` 与 `python3 qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
 
 说明：
 
@@ -100,19 +100,21 @@
 
 ## 推荐入口
 
+macOS/Linux 使用 `python3`；Windows 使用 `py -3` 或已配置的 `python`。
+
 ### 仓库级门禁
 
 ```bash
-python qmclient_scripts/gate/check_gate.py --mode quick
-python qmclient_scripts/gate/check_gate.py --mode default
-python qmclient_scripts/gate/check_gate.py --mode full
+python3 qmclient_scripts/gate/check_gate.py --mode quick
+python3 qmclient_scripts/gate/check_gate.py --mode default
+python3 qmclient_scripts/gate/check_gate.py --mode full
 ```
 
 ### P5 设置页迁移结构清单
 
 ```bash
-python qmclient_scripts/gate/check_settings_ui_migration.py --page general
-python qmclient_scripts/gate/check_settings_ui_migration.py --all
+python3 qmclient_scripts/gate/check_settings_ui_migration.py --page general
+python3 qmclient_scripts/gate/check_settings_ui_migration.py --all
 ```
 
 该清单只核对 P5 的页面结构契约：统一 layout/card/deck/scroll/input 路径、旧路径删除，以及 card registry 和搜索导航目标。页面尚未迁移时 `--all` 预期失败；每个页面切片完成后先跑对应 `--page`，P5 收口时再跑 `--all`。
@@ -120,21 +122,21 @@ python qmclient_scripts/gate/check_settings_ui_migration.py --all
 ### GitHub Release 说明
 
 ```bash
-python qmclient_scripts/generate_release_notes.py --version vX.Y.Z --current-tag vX.Y.Z --output tmp/release-notes.md
+python3 qmclient_scripts/generate_release_notes.py --version vX.Y.Z --current-tag vX.Y.Z --output tmp/release-notes.md
 ```
 
 ### 版本号收口
 
 ```bash
-python qmclient_scripts/bump_version.py --version X.Y.Z
-python qmclient_scripts/bump_version.py --tag vX.Y.Z
+python3 qmclient_scripts/bump_version.py --version X.Y.Z
+python3 qmclient_scripts/bump_version.py --tag vX.Y.Z
 ```
 
 ### baseline allowlist
 
 ```bash
-python qmclient_scripts/gate/check_gate.py --mode quick --report-json-path tmp/check-gate-report.json
-python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-report.json --output qmclient_scripts/gate/baseline_debt_allowlist.json
+python3 qmclient_scripts/gate/check_gate.py --mode quick --report-json-path tmp/check-gate-report.json
+python3 qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-report.json --output qmclient_scripts/gate/baseline_debt_allowlist.json
 ```
 
 说明：
@@ -218,7 +220,7 @@ scope 同时保留全部改动路径和首方 C/C++ 子集：前者用于按路�
 ### 常用命令
 
 ```bash
-python qmclient_scripts/gate/check_gate.py --mode default --explain-scope --report-json-path tmp/check-gate-report.json
+python3 qmclient_scripts/gate/check_gate.py --mode default --explain-scope --report-json-path tmp/check-gate-report.json
 ```
 
 ## 不要这样用

@@ -2781,7 +2781,7 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 	ASSERT_NE(CloseDisabledPopup, std::string::npos);
 	EXPECT_LT(CloseWhenDisabled, CloseDisabledPopup);
 	EXPECT_LT(DisabledBranch, CloseDisabledPopup);
-	EXPECT_NE(UiHeader.find("bool m_ClosePopupWhenDisabled = true;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("m_ClosePopupWhenDisabled(true),"), std::string::npos);
 	EXPECT_NE(DoDropDownActive.find("DropDownProps.m_ClosePopupWhenDisabled = false;"), std::string::npos);
 }
 

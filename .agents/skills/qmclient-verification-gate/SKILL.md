@@ -19,10 +19,10 @@ description: >
 当改动 `qmclient_scripts/languages_qmclient/`、`data/languages/*.txt`、`translations/i18n/*.toml`，或任何会新增/删除 `Localize`、`Localizable`、`Register` help 文本的源码时，默认按这条顺序验证：
 
 ```bash
-python qmclient_scripts/languages_qmclient/extract_strings.py
-python qmclient_scripts/languages_qmclient/generate_all.py
-python qmclient_scripts/languages_qmclient/validate.py
-python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
+python3 qmclient_scripts/languages_qmclient/extract_strings.py
+python3 qmclient_scripts/languages_qmclient/generate_all.py
+python3 qmclient_scripts/languages_qmclient/validate.py
+python3 qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
 ```
 
 说明：
@@ -42,7 +42,7 @@ python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-gr
 当需要核对当前 `translations/i18n/*.toml` 是否偏离项目既有简中口径时，补跑历史译法审计：
 
 ```bash
-python qmclient_scripts/languages_qmclient/audit_translation_drift.py --git-ref HEAD
+python3 qmclient_scripts/languages_qmclient/audit_translation_drift.py --git-ref HEAD
 ```
 
 说明：
@@ -118,23 +118,25 @@ wsl env HOME=/home/<user> bash -lc 'set -e; . "$HOME/.cargo/env"; cd /mnt/<drive
 
 ## Gate 模式
 
+macOS/Linux 使用 `python3`；Windows 使用 `py -3` 或已配置的 `python`。
+
 ```bash
-python qmclient_scripts/gate/check_gate.py --mode quick
-python qmclient_scripts/gate/check_gate.py --mode default
-python qmclient_scripts/gate/check_gate.py --mode full
+python3 qmclient_scripts/gate/check_gate.py --mode quick
+python3 qmclient_scripts/gate/check_gate.py --mode default
+python3 qmclient_scripts/gate/check_gate.py --mode full
 ```
 
 说明：除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate。代码改动至少选择一条与本轮范围匹配的 gate 作为验收证据：
 
-- 常规代码改动：至少 `python qmclient_scripts/gate/check_gate.py --mode quick`
-- 提交前日常严格门：优先 `python qmclient_scripts/gate/check_gate.py --mode default`，该模式必须覆盖 C++ 全量测试和 Rust 全量测试。
-- 集中收口 / 准发布：`python qmclient_scripts/gate/check_gate.py --mode full`，该模式是在 default 基础上增加高噪音或更重的附加检查，不作为“全量测试”的默认入口。
+- 常规代码改动：至少 `python3 qmclient_scripts/gate/check_gate.py --mode quick`
+- 提交前日常严格门：优先 `python3 qmclient_scripts/gate/check_gate.py --mode default`，该模式必须覆盖 C++ 全量测试和 Rust 全量测试。
+- 集中收口 / 准发布：`python3 qmclient_scripts/gate/check_gate.py --mode full`，该模式是在 default 基础上增加高噪音或更重的附加检查，不作为“全量测试”的默认入口。
 
 版本 / release 相关修改后，至少额外验证：
 
 ```bash
-python qmclient_scripts/bump_version.py --version 2.58.0 --dry-run
-python qmclient_scripts/generate_release_notes.py --version "$(git describe --tags --abbrev=0)" --current-tag "$(git describe --tags --abbrev=0)"
+python3 qmclient_scripts/bump_version.py --version 2.58.0 --dry-run
+python3 qmclient_scripts/generate_release_notes.py --version "$(git describe --tags --abbrev=0)" --current-tag "$(git describe --tags --abbrev=0)"
 ```
 
 ## 视觉改动

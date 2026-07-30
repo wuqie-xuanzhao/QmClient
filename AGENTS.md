@@ -43,7 +43,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 ### 完成任务后
 
 - 验证：按 **`qmclient-verification-gate`**（mode、串行、全量 vs 过滤、证据、gap 写法）。
-- 代码改动默认至少 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前优先 `--mode default`；准发布再用 `--mode full`。纯文档人工核对，不跑代码 gate。
+- 代码改动默认至少 `python3 qmclient_scripts/gate/check_gate.py --mode quick`；提交前优先 `--mode default`；准发布再用 `--mode full`。Windows 使用 `py -3` 或环境中的 `python`。纯文档人工核对，不跑代码 gate。
 - 核心逻辑改完：只读子代理按 **`qmclient-code-review`** 出 findings，再结论。
 - 汇报：写清改动、验证命令与结果、gaps。没跑的不说通过。
 
@@ -59,7 +59,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 ### 发版（用户要求发新版本时）
 
-1. `python qmclient_scripts/bump_version.py --tag vX.Y.Z`
+1. `python3 qmclient_scripts/bump_version.py --tag vX.Y.Z`（Windows 使用 `py -3` 或 `python`）
 2. 提交：`chore: bump version to X.Y.Z`
 3. `git tag vX.Y.Z && git push origin vX.Y.Z`
 4. CI 构建并调用 `generate_release_notes.py`（**自动汇总并润色**，不调外部 AI）发布 GitHub Release

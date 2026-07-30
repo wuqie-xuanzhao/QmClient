@@ -882,7 +882,12 @@ public:
 
 	struct SEditBoxRenderOptions
 	{
-		bool m_DrawBackground = true;
+		SEditBoxRenderOptions() :
+			m_DrawBackground(true)
+		{
+		}
+
+		bool m_DrawBackground;
 	};
 
 	void DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr) const;
@@ -1114,14 +1119,23 @@ public:
 	};
 	struct SDropDownProperties
 	{
-		float m_FontSize = -1.0f;
-		bool m_Enabled = true;
-		bool m_ClosePopupWhenDisabled = true;
+		SDropDownProperties() :
+			m_FontSize(-1.0f),
+			m_Enabled(true),
+			m_ClosePopupWhenDisabled(true),
+			m_pAnchorViewport(nullptr),
+			m_pPopupViewport(nullptr)
+		{
+		}
+
+		float m_FontSize;
+		bool m_Enabled;
+		bool m_ClosePopupWhenDisabled;
 		// 下拉框的锚点和弹层有不同的裁剪语义：锚点必须仍在所属控件内，
 		// 弹层则允许离开卡片，但不能越过设置页滚动 viewport。未指定时沿用
 		// 当前 clip stack，旧调用方因此保持兼容。
-		const CUIRect *m_pAnchorViewport = nullptr;
-		const CUIRect *m_pPopupViewport = nullptr;
+		const CUIRect *m_pAnchorViewport;
+		const CUIRect *m_pPopupViewport;
 		SQmDropdownVisualStyle m_VisualStyle;
 	};
 	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
