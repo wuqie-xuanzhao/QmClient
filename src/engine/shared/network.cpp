@@ -307,6 +307,11 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	if(pDecompressed != nullptr)
 		*pDecompressed = false;
 
+	if(pResponseToken != nullptr)
+	{
+		*pResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
+	}
+
 	std::optional<int> Flags = UnpackPacketFlags(pBuffer, Size);
 	if(!Flags)
 	{
