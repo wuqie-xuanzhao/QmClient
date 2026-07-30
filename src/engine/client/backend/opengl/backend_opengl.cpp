@@ -348,6 +348,9 @@ bool CCommandProcessorFragment_OpenGL::InitOpenGL(const SCommand_Init *pCommand)
 	ParseVersionString(pCommand->m_RequestedBackend, pVersionString, pCommand->m_pCapabilities->m_ContextMajor, pCommand->m_pCapabilities->m_ContextMinor, pCommand->m_pCapabilities->m_ContextPatch);
 
 	*pCommand->m_pInitError = 0;
+	pCommand->m_pCapabilities->m_MediaIslandSdf = false;
+	pCommand->m_pCapabilities->m_RenderTargetGaussianBlur = false;
+	pCommand->m_pCapabilities->m_BackbufferCapture = false;
 
 	int BlocklistMajor = -1, BlocklistMinor = -1, BlocklistPatch = -1;
 	bool RequiresWarning = false;
@@ -1104,6 +1107,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_Begin(const CCommandBuff
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_RenderTargetPreviousFramebuffer);
 	glGetIntegerv(GL_VIEWPORT, m_aRenderTargetPreviousViewport);
 	m_RenderTargetActive = true;
+	m_ActiveRenderTargetId = pCommand->m_TargetId;
 	glBindFramebuffer(GL_FRAMEBUFFER, Target.m_Framebuffer);
 	glViewport(0, 0, Target.m_Width, Target.m_Height);
 	SetState(pCommand->m_State);
@@ -1119,6 +1123,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_End(const CCommandBuffer
 	glViewport(m_aRenderTargetPreviousViewport[0], m_aRenderTargetPreviousViewport[1], m_aRenderTargetPreviousViewport[2], m_aRenderTargetPreviousViewport[3]);
 	SetState(pCommand->m_State);
 	m_RenderTargetActive = false;
+	m_ActiveRenderTargetId = -1;
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_Draw(const CCommandBuffer::SCommand_RenderTarget_Draw *pCommand)
@@ -1146,8 +1151,9 @@ void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_Draw(const CCommandBuffe
 	aVertices[2].m_Tex = vec2(1.0f, 0.0f);
 	aVertices[3].m_Pos = vec2(X0, Y1);
 	aVertices[3].m_Tex = vec2(0.0f, 0.0f);
+	const uint8_t Alpha = (uint8_t)(pCommand->m_Alpha * 255.0f + 0.5f);
 	for(auto &Vertex : aVertices)
-		Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, 255};
+		Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, Alpha};
 
 #ifndef BACKEND_GL_MODERN_API
 	glVertexPointer(2, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char *)aVertices);
@@ -1299,6 +1305,9 @@ ERunCommandReturnTypes CCommandProcessorFragment_OpenGL::RunCommand(const CComma
 	case CCommandBuffer::CMD_RENDER:
 		Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand));
 		break;
+	case CCommandBuffer::CMD_RENDER_MEDIA_ISLAND_SDF:
+		Cmd_RenderMediaIslandSdf(static_cast<const CCommandBuffer::SCommand_RenderMediaIslandSdf *>(pBaseCommand));
+		break;
 	case CCommandBuffer::CMD_RENDER_TEX3D:
 		Cmd_RenderTex3D(static_cast<const CCommandBuffer::SCommand_RenderTex3D *>(pBaseCommand));
 		break;
@@ -1316,6 +1325,12 @@ ERunCommandReturnTypes CCommandProcessorFragment_OpenGL::RunCommand(const CComma
 		break;
 	case CCommandBuffer::CMD_RENDER_TARGET_DRAW:
 		Cmd_RenderTarget_Draw(static_cast<const CCommandBuffer::SCommand_RenderTarget_Draw *>(pBaseCommand));
+		break;
+	case CCommandBuffer::CMD_RENDER_TARGET_CAPTURE_BACKBUFFER:
+		Cmd_RenderTarget_CaptureBackbuffer(static_cast<const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *>(pBaseCommand));
+		break;
+	case CCommandBuffer::CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS:
+		Cmd_RenderTarget_GaussianBlurPass(static_cast<const CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass *>(pBaseCommand));
 		break;
 	case CCommandBuffer::CMD_RENDER_TARGET_READBACK:
 		Cmd_RenderTarget_Readback(static_cast<const CCommandBuffer::SCommand_RenderTarget_Readback *>(pBaseCommand));

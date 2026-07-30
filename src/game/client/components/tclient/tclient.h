@@ -156,10 +156,6 @@ class CTClient : public CComponent
 	int64_t m_aLastFreezeMessageTime[NUM_DUMMIES] = {0, 0};
 	void CheckFreeze();
 
-	// Auto Unspec on Unfreeze
-	bool m_aWasInFreezeForUnspec[NUM_DUMMIES] = {false, false};
-	void CheckAutoUnspecOnUnfreeze();
-
 	struct SFreezeWakeupPopup
 	{
 		bool m_Active = false;
@@ -178,11 +174,10 @@ class CTClient : public CComponent
 		STextContainerIndex m_TextContainerIndex;
 		vec2 m_TextSize = vec2(0.0f, 0.0f);
 	};
-	bool m_aWasInFreezeForWakeupPopup[NUM_DUMMIES] = {false, false};
 	SFreezeWakeupPopup m_aFreezeWakeupPopups[FREEZE_WAKEUP_POPUP_MAX];
 	STextPopupCache m_aTextPopupCaches[TEXT_POPUP_TEXTURE_MAX];
 	char m_aTextPopupFont[256] = "";
-	void CheckFreezeWakeupPopup();
+	void CheckHammerWakeupActions();
 	void CheckComboPopup();
 	void AddFreezeWakeupPopup(int WokenDummy);
 	bool EnsureTextPopupCache(int TextType);
@@ -192,6 +187,7 @@ class CTClient : public CComponent
 	void ResetComboState(int Dummy = -1);
 	int m_aComboPopupCount[NUM_DUMMIES] = {0, 0};
 	int m_aComboLastEventTick[NUM_DUMMIES] = {-1, -1};
+	int m_aaComboLastHammerHitSnapshotTick[NUM_DUMMIES][MAX_CLIENTS] = {};
 	int m_aComboLastHookedPlayer[NUM_DUMMIES] = {-1, -1};
 
 	// Auto Switch on Unfreeze (HJ大佬辅助)
@@ -350,9 +346,10 @@ class CTClient : public CComponent
 
 	// Swap倒计时提示
 	bool m_aSwapCountdownActive[NUM_DUMMIES] = {false, false};
+	bool m_aSwapCountdownOutgoing[NUM_DUMMIES] = {false, false};
 	int m_aSwapCountdownStartTick[NUM_DUMMIES] = {0, 0};
-	char m_aaSwapCountdownRequester[NUM_DUMMIES][MAX_NAME_LENGTH] = {{0}, {0}};
-	void StartSwapCountdown(int Dummy, const char *pRequester);
+	char m_aaSwapCountdownCounterpart[NUM_DUMMIES][MAX_NAME_LENGTH] = {{0}, {0}};
+	void StartSwapCountdown(int Dummy, const char *pCounterpart, bool Outgoing);
 	void ClearSwapCountdown(int Dummy = -1);
 
 	// 好友上线提醒
@@ -439,7 +436,8 @@ public:
 	void HandleSwapCountdownMessage(const char *pText, int Dummy);
 	bool HasSwapCountdown(int Dummy = -1) const;
 	int GetSwapCountdownStartTick(int Dummy = -1) const;
-	const char *GetSwapCountdownRequester(int Dummy) const;
+	const char *GetSwapCountdownCounterpart(int Dummy) const;
+	bool IsSwapCountdownOutgoing(int Dummy) const;
 
 	// 收藏地图公开接口
 	bool IsFavoriteMap(const char *pMapName) const;

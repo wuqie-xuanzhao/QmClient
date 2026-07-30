@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 import { basename } from 'node:path';
 
 import type { PerfEntry, ParseDiagnostics } from './parse.ts';
@@ -19,11 +20,13 @@ import {
   previewBudgetSummary,
   selectFrameTimeEntries,
   settingsUiBudgetSummary,
+  stutterDiagnosticsSummary,
   textRuntimeBudgetSummary,
   targetSettingsSnapshot,
   type AttributionEntry,
   type FpsSummary,
   type Percentiles,
+  type StutterDiagnosticsSummary,
   type TargetSettingsSnapshot,
   type Verdict,
   computeVerdict,
@@ -205,6 +208,7 @@ export interface PerfBundleSummary {
   };
   nonCardMenu: NonCardMenuBudgetSummary;
   targetSettings: TargetSettingsSnapshot;
+  stutterDiagnostics: StutterDiagnosticsSummary;
   assetsPreviewAdmission: {
     available: boolean;
     visibleFirstAvailable: boolean;
@@ -488,6 +492,7 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
   const settingsUiBudget = settingsUiBudgetSummary(entries);
   const textRuntimeBudget = textRuntimeBudgetSummary(entries);
   const budgetCorrelation = budgetCorrelationSummary(entries);
+  const stutterDiagnostics = stutterDiagnosticsSummary(entries);
   const quality = reportQuality(entries, diagnostics);
   return {
     generatedAt: new Date().toISOString(),
@@ -506,6 +511,7 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
     },
     nonCardMenu,
     targetSettings,
+    stutterDiagnostics,
     assetsPreviewAdmission,
     assetsVisibleReady,
     previewBudget,

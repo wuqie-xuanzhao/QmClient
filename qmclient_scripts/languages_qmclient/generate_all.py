@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """Generate DDNet language files from the module-scoped i18n store."""
 
@@ -129,13 +130,19 @@ def generate_language_entries(
 ) -> list[tuple[tuple[str, str], str]]:
     store = i18n_store.load_language_store()
     translations = i18n_store.language_map_for(store, language)
+    english_fallback_identities = i18n_store.english_fallback_identities(store)
+    verbatim_translation_identities = i18n_store.verbatim_translation_identities(store)
     entries: list[tuple[tuple[str, str], str]] = []
     missing: list[tuple[str, str]] = []
 
     for source in strings:
         identity = source.identity()
+        if language != "simplified_chinese" and identity in english_fallback_identities:
+            continue
         translation = i18n_store.normalize_translation(
-            language, translations.get(identity, source.key)
+            language,
+            translations.get(identity, source.key),
+            preserve_verbatim=identity in verbatim_translation_identities,
         )
         entries.append((identity, translation))
         if language == "simplified_chinese" and translation == source.key:

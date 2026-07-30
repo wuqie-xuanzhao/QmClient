@@ -23,6 +23,27 @@ class IGraphics;
 class IKernel;
 class CUiScopedQuadBatch;
 
+inline float QmUiVirtualScreenHeight(int ScalePercent)
+{
+	const float Scale = std::clamp(ScalePercent, 50, 200) / 100.0f;
+	return 600.0f / Scale;
+}
+
+inline float QmUiCenteredMargin(const CUIRect &Rect, float PreferredMargin, float MinimumWidth, float MinimumHeight)
+{
+	const float WidthMargin = (Rect.w - MinimumWidth) * 0.5f;
+	const float HeightMargin = (Rect.h - MinimumHeight) * 0.5f;
+	return std::clamp(std::min(WidthMargin, HeightMargin), 0.0f, PreferredMargin);
+}
+
+inline int QmUiVisibleRows(float AvailableHeight, float ReservedHeight, float RowHeight, int ItemCount, int MaxRows)
+{
+	if(RowHeight <= 0.0f || ItemCount <= 0 || MaxRows <= 0)
+		return 0;
+	const int RowsByHeight = std::max(0, (int)((AvailableHeight - ReservedHeight) / RowHeight));
+	return std::min({RowsByHeight, ItemCount, MaxRows});
+}
+
 enum class EEditState
 {
 	NONE,
@@ -641,6 +662,7 @@ private:
 	std::function<void()> m_OnBackButtonPressedFunction;
 
 	CUIRect m_Screen;
+	int m_LastUiScale = -1;
 
 	std::vector<CUIRect> m_vClips;
 	void UpdateClipping();

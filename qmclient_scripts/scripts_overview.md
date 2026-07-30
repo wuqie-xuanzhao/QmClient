@@ -1,3 +1,4 @@
+> 请抬头享受阳光｜日子很好 我很我---------致咩子
 # scripts_overview
 
 这个文档统一说明 `qmclient_scripts/` 的脚本分层、推荐入口，以及 `check_gate.py` 相关工作流语义。
@@ -58,6 +59,7 @@
 - `qmclient_scripts/fix_style.py`
 - `qmclient_scripts/export_settings_commands_table.py`
 - `qmclient_scripts/generate_release_notes.py`
+- `qmclient_scripts/update_ddnet_map_categories.py`：从 `ddnet/ddnet-maps` 的 `types/*/maps/*.map` 生成聊天地图补全使用的官方分类表
 
 ### 4. 其他专用脚本
 
@@ -76,7 +78,7 @@
 - `translations/i18n/*.toml`：按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全量语言留空
 - `generate_all.py`：从当前源码 key 和模块化 TOML 维护源生成 `generate_all.GENERATED_LANGUAGES` 中登记的 `data/languages/*.txt`，缺失时回退英文 key
 - `review_duplicate_entries.py`：只读审查重复、相似、空译文和疑似未使用项；unused 直接按最终 active source key 集合判断，避免 context 漂移误报
-- `audit_translation_drift.py`：只读对比当前 `translations/i18n/*.toml` 与 Git 历史里的 `data/languages/simplified_chinese.txt`，用于审查历史译法是否被新维护源改偏；默认基线为 `HEAD`
+- `audit_translation_drift.py`：只读对比当前 `translations/i18n/*.toml` 与 Git 历史里的 `data/languages/simplified_chinese.txt`，用于审查历史译法是否被新维护源改偏；默认基线为 `HEAD`，报告写到被忽略的 `tmp/translation_drift_report.txt`
 - `translate_with_local_http.py`：通过 OpenAI-compatible HTTP 接口生成翻译 draft；所有语言默认只写 `translations_draft/<language>/*.toml`，审核通过后才允许显式 `--write-back` 回填主 TOML 维护源；回填必须按审核通过的条目做 patch，不重写整份模块 TOML
 - `validate.py`：默认重扫源码校验提取文件与审计报告新鲜度、生成产物覆盖、模块化 i18n store 可读性和 legacy overlay 删除状态；传 `--incremental` 时使用增量缓存做本地快速校验；`violation` 会返回失败，`needs_review` 只作为人工清理 backlog 提示
 

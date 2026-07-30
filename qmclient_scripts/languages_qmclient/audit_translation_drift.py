@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """Compare current TOML translations against a historical simplified_chinese baseline."""
 
@@ -36,7 +37,7 @@ def main() -> None:
     parser.add_argument("--git-ref", default="HEAD")
     parser.add_argument(
         "--output",
-        default="qmclient_scripts/languages_qmclient/translation_drift_report.txt",
+        default="tmp/translation_drift_report.txt",
     )
     args = parser.parse_args()
 

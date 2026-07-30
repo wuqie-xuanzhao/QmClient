@@ -6,7 +6,16 @@
 #include <engine/shared/memheap.h>
 
 #include <string>
+#include <string_view>
 #include <vector>
+
+inline bool LocalizationIsContextLine(const char *pLine)
+{
+	if(pLine == nullptr)
+		return false;
+	const std::string_view Line(pLine);
+	return Line.size() >= 2 && Line.front() == '[' && Line.back() == ']';
+}
 
 class CLanguage
 {
@@ -55,7 +64,7 @@ public:
 	bool Load(const char *pFilename, class IStorage *pStorage, class IConsole *pConsole, bool Clear = true);
 
 	void AddString(const char *pOrgStr, const char *pNewStr, const char *pContext);
-	const char *FindString(unsigned Hash, unsigned ContextHash) const;
+	const char *FindString(unsigned Hash, unsigned ContextHash, bool AllowDefaultContextFallback = true) const;
 };
 
 extern CLocalizationDatabase g_Localization;

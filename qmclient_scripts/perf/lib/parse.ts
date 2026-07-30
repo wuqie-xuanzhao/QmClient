@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 // parse.ts — 解析 QmClient 性能日志（支持旧 key=value 格式 + JSON Lines）
 
 export interface PerfEntry {

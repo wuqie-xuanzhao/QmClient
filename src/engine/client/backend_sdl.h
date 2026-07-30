@@ -121,7 +121,11 @@ struct SBackendCapabilities
 	bool m_2DArrayTextures;
 	bool m_2DArrayTexturesAsExtension;
 	bool m_ShaderSupport;
+	bool m_MediaIslandSdf = false;
 	bool m_RenderTargets;
+	bool m_RenderTargetGaussianBlur = false;
+	bool m_BackbufferCapture = false;
+	bool m_RenderTargetExternalPassRequiresSingleSample = false;
 	const char *m_pRenderTargetSupportReason = "not_initialized";
 
 	// use quads as much as possible, even if the user config says otherwise
@@ -268,12 +272,16 @@ public:
 
 	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override;
 	bool IsConfigModernAPI() override { return IsModernAPI(m_BackendType); }
+	bool HasMediaIslandSdf() override { return m_Capabilities.m_MediaIslandSdf; }
 	bool UseTrianglesAsQuad() override { return m_Capabilities.m_TrianglesAsQuads; }
 	bool HasTileBuffering() override { return m_Capabilities.m_TileBuffering; }
 	bool HasQuadBuffering() override { return m_Capabilities.m_QuadBuffering; }
 	bool HasTextBuffering() override { return m_Capabilities.m_TextBuffering; }
 	bool HasQuadContainerBuffering() override { return m_Capabilities.m_QuadContainerBuffering; }
 	bool HasRenderTargets() override { return m_Capabilities.m_RenderTargets; }
+	bool HasRenderTargetGaussianBlur() override { return m_Capabilities.m_RenderTargetGaussianBlur; }
+	bool HasBackbufferCapture() override { return m_Capabilities.m_BackbufferCapture; }
+	bool RenderTargetExternalPassRequiresSingleSample() override { return m_Capabilities.m_RenderTargetExternalPassRequiresSingleSample; }
 	const char *RenderTargetSupportReason() override { return m_Capabilities.m_RenderTargets ? "supported" : m_Capabilities.m_pRenderTargetSupportReason; }
 	bool Uses2DTextureArrays() override { return m_Capabilities.m_2DArrayTextures; }
 	bool HasTextureArraysSupport() override { return m_Capabilities.m_2DArrayTextures || m_Capabilities.m_3DTextures; }

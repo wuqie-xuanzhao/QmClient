@@ -550,7 +550,7 @@ float CUi::ButtonColorMul(const void *pId)
 
 const CUIRect *CUi::Screen()
 {
-	m_Screen.h = 600.0f;
+	m_Screen.h = QmUiVirtualScreenHeight(g_Config.m_QmUiScale);
 	m_Screen.w = Graphics()->ScreenAspect() * m_Screen.h;
 	return &m_Screen;
 }

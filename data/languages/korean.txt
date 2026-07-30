@@ -31,9 +31,6 @@
 %d more cut segments
 == 추가로 %d개의 잘라낸 구간
 
-%d new mentions
-== %d 개의 새로운 언급
-
 %d of %d server
 == %d/%d 서버
 
@@ -1412,6 +1409,9 @@ Bind chat, team chat, and history actions
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
 
+Better scoreboard
+== 더 나은 점수판
+
 Bind key to execute a command or view keybindings
 == 키를 바인딩하여 명령을 실행하거나 키바인딩을 확인합니다
 
@@ -1789,6 +1789,9 @@ Choose which TClient settings tabs are visible
 
 Clamp mouse to screen
 == 마우스를 화면에 고정
+
+Cinematic camera
+== 시네마틱 카메라
 
 Clan
 == 클랜
@@ -4967,9 +4970,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -6257,9 +6257,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == 메시지
 
-Messages that already look like the target language will skip auto-translate
-== 이미 대상 언어처럼 보이는 메시지는 자동 번역을 건너뜁니다
-
 Microphone
 == 마이크
 
@@ -6409,9 +6406,6 @@ Move right
 
 Move to category
 == 카테고리로 이동
-
-Moved ingame
-== 게임 내에서 이동됨
 
 Movement
 == 이동
@@ -7387,6 +7381,9 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == 성능 디버그 로그 임계값 (ms)
+
+Performance mode (placeholder)
+== 성능 모드 (자리 표시자)
 
 Personal best:
 == 개인 최고 기록:
@@ -12428,9 +12425,6 @@ What's done is done, no use saying more
 Wheel animate
 == 휠 애니메이션
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== TClient 무지개 Tee가 켜져 있으면 이 기능은 적용되지 않습니다.
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 출발선을 넘으면 최고 기록의 움직임을 재현하는 고스트 티를 표시합니다
 
@@ -13231,10 +13225,6 @@ AUTO
 [Start menu]
 Play
 == 플레이
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

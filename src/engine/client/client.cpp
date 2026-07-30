@@ -123,11 +123,13 @@ static constexpr ColorRGBA gs_ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0
 static constexpr int64_t gs_HangTimeoutSeconds = 10;
 static constexpr const char *gs_pQmCrashDumpDir = "dumps/QmClient_Crash";
 static constexpr const char *gs_pQmLifecycleMarkerFile = "qmclient/lifecycle_pending.marker";
+static constexpr const char *gs_pQmGraphicsRecoveryStateFile = "qmclient/graphics_recovery.marker";
 
 struct SQmLatestCrashReport
 {
 	char m_aPath[IO_MAX_PATH_LENGTH] = "";
 	time_t m_TimeModified = 0;
+	time_t m_MinTimeModified = 0;
 	int m_Rank = 0;
 };
 
@@ -148,7 +150,7 @@ static int FindLatestQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, 
 
 	SQmLatestCrashReport *pLatest = static_cast<SQmLatestCrashReport *>(pUser);
 	const int Rank = QmCrashReportRank(pInfo->m_pName);
-	if(Rank == 0)
+	if(Rank == 0 || pInfo->m_TimeModified < pLatest->m_MinTimeModified)
 		return 0;
 	if(pLatest->m_aPath[0] != '\0' &&
 		(pInfo->m_TimeModified < pLatest->m_TimeModified ||
@@ -161,6 +163,59 @@ static int FindLatestQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, 
 	pLatest->m_TimeModified = pInfo->m_TimeModified;
 	pLatest->m_Rank = Rank;
 	return 0;
+}
+
+static bool ReadQmLifecycleMarkerStartedAt(IStorage *pStorage, int64_t &StartedAt)
+{
+	StartedAt = 0;
+	char *pMarker = pStorage->ReadFileStr(gs_pQmLifecycleMarkerFile, IStorage::TYPE_SAVE);
+	if(pMarker == nullptr)
+		return false;
+
+	char aLine[256];
+	const char *pStr = pMarker;
+	while((pStr = str_next_token(pStr, "\n", aLine, sizeof(aLine))))
+	{
+		if(const char *pValue = str_startswith(aLine, "started_at="))
+		{
+			StartedAt = str_toint64_base(pValue);
+			break;
+		}
+	}
+	free(pMarker);
+	return StartedAt > 0;
+}
+
+static void FormatQmGraphicsCrashReportFingerprint(const SQmLatestCrashReport &Report, char *pBuf, size_t BufSize)
+{
+	str_format(pBuf, BufSize, "%lld\n%s", (long long)Report.m_TimeModified, Report.m_aPath);
+}
+
+static bool WasQmGraphicsCrashReportRecovered(IStorage *pStorage, const SQmLatestCrashReport &Report)
+{
+	char *pState = pStorage->ReadFileStr(gs_pQmGraphicsRecoveryStateFile, IStorage::TYPE_SAVE);
+	if(pState == nullptr)
+		return false;
+
+	char aFingerprint[IO_MAX_PATH_LENGTH + 64];
+	FormatQmGraphicsCrashReportFingerprint(Report, aFingerprint, sizeof(aFingerprint));
+	const bool Recovered = str_comp(pState, aFingerprint) == 0;
+	free(pState);
+	return Recovered;
+}
+
+static bool MarkQmGraphicsCrashReportRecovered(IStorage *pStorage, const SQmLatestCrashReport &Report)
+{
+	pStorage->CreateFolder("qmclient", IStorage::TYPE_SAVE);
+	IOHANDLE File = pStorage->OpenFile(gs_pQmGraphicsRecoveryStateFile, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return false;
+
+	char aFingerprint[IO_MAX_PATH_LENGTH + 64];
+	FormatQmGraphicsCrashReportFingerprint(Report, aFingerprint, sizeof(aFingerprint));
+	const bool Success = io_write(File, aFingerprint, str_length(aFingerprint)) == str_length(aFingerprint);
+	io_close(File);
+	return Success;
 }
 
 static bool QmCrashTextHasGraphicsDriverFault(const char *pText)
@@ -250,9 +305,14 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	if(pStorage == nullptr || !pStorage->FileExists(gs_pQmLifecycleMarkerFile, IStorage::TYPE_SAVE))
 		return;
 
+	int64_t SessionStartedAt = 0;
+	if(!ReadQmLifecycleMarkerStartedAt(pStorage, SessionStartedAt))
+		return;
+
 	SQmLatestCrashReport Latest;
+	Latest.m_MinTimeModified = (time_t)SessionStartedAt;
 	pStorage->ListDirectoryInfo(IStorage::TYPE_SAVE, gs_pQmCrashDumpDir, FindLatestQmCrashReportCallback, &Latest);
-	if(Latest.m_aPath[0] == '\0')
+	if(Latest.m_aPath[0] == '\0' || WasQmGraphicsCrashReportRecovered(pStorage, Latest))
 		return;
 
 	char *pCrashReport = pStorage->ReadFileStr(Latest.m_aPath, IStorage::TYPE_SAVE);
@@ -264,7 +324,8 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	if(!HasGraphicsDriverFault)
 		return;
 
-	if(ApplyQmSafeGraphicsRecovery())
+	const bool Changed = ApplyQmSafeGraphicsRecovery();
+	if(Changed)
 	{
 		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to OpenGL 3.0 windowed mode without FSAA", Latest.m_aPath);
 	}
@@ -272,6 +333,8 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	{
 		log_info("client", "previous crash report '%s' points to the graphics driver; safe graphics settings are already active", Latest.m_aPath);
 	}
+	if(!MarkQmGraphicsCrashReportRecovered(pStorage, Latest))
+		log_warn("client", "failed to remember recovered graphics crash report '%s'", Latest.m_aPath);
 }
 
 static const char *ClientStateToString(int State)
@@ -502,10 +565,6 @@ void CClient::SendInfo(int Conn)
 	MsgVer.AddString(GameClient()->DDNetVersionStr());
 	SendMsg(Conn, &MsgVer, MSGFLAG_VITAL);
 
-#if defined(CONF_QM_LIVE_CLIENT)
-	SendQmLiveObserverRequest(Conn);
-#endif
-
 	if(IsSixup())
 	{
 		CMsgPacker Msg(NETMSG_INFO, true);
@@ -554,68 +613,14 @@ void CClient::SendKcpProbe(int Conn)
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
 
-void CClient::SendQmLiveObserverRequest(int Conn)
-{
-#if defined(CONF_QM_LIVE_CLIENT)
-	if(Conn != CONN_MAIN)
-		return;
-
-	CMsgPacker Msg(NETMSG_QM_LIVE_OBSERVER_REQUEST, true);
-	Msg.AddInt(QM_LIVE_OBSERVER_PROTOCOL_VERSION);
-	Msg.AddInt(SERVERCAP_LIVE_OBSERVER | SERVERCAP_LIVE_DIRECTOR);
-	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
-	m_LiveObserverSession.StartRequest();
-	m_LiveObserverRequestTime = time_get();
-#else
-	(void)Conn;
-#endif
-}
-
-void CClient::EnableQmLiveCompatDirector(EQmLiveDenyReason Reason, const char *pReasonText)
-{
-#if defined(CONF_QM_LIVE_CLIENT)
-	if(m_LiveObserverSession.CompatDirectorActive() || m_LiveObserverSession.Accepted())
-		return;
-
-	m_LiveObserverSession.StartCompatDirector(Reason, pReasonText);
-	m_LiveObserverRequestTime = 0;
-
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "live observer fallback: %s", m_LiveObserverSession.DenyReasonText());
-	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf, gs_ClientNetworkPrintColor);
-
-	if(m_LiveObserverSession.ReadyPending())
-	{
-		m_LiveObserverSession.SetReadyPending(false);
-		SendReady(CONN_MAIN);
-	}
-#else
-	(void)Reason;
-	(void)pReasonText;
-#endif
-}
-
 void CClient::SendEnterGame(int Conn)
 {
-#if defined(CONF_QM_LIVE_CLIENT)
-	if(Conn == CONN_MAIN && m_LiveObserverSession.Accepted())
-		return;
-#endif
-
 	CMsgPacker Msg(NETMSG_ENTERGAME, true);
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
 
 void CClient::SendReady(int Conn)
 {
-#if defined(CONF_QM_LIVE_CLIENT)
-	if(Conn == CONN_MAIN && m_LiveObserverSession.RequestPending())
-	{
-		m_LiveObserverSession.SetReadyPending(true);
-		return;
-	}
-#endif
-
 	CMsgPacker Msg(NETMSG_READY, true);
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
@@ -830,48 +835,8 @@ int CClient::PendingResendCount() const
 	return m_aNetClient[g_Config.m_ClDummy].PendingResendCount();
 }
 
-#if defined(CONF_QM_LIVE_CLIENT)
-void CClient::SendQmLiveObserverInputAck()
-{
-	constexpr int Conn = CONN_MAIN;
-	const int PredTick = m_aPredTick[Conn];
-	if(PredTick <= 0)
-		return;
-
-	const int64_t Now = time_get();
-
-	CMsgPacker Msg(NETMSG_INPUT, true);
-	Msg.AddInt(m_aAckGameTick[Conn]);
-	Msg.AddInt(PredTick);
-	// Keep the normal snapshot ack and input-timing loop alive without sending gameplay input.
-	Msg.AddInt(0);
-
-	m_aInputs[Conn][m_aCurrentInput[Conn]].m_Tick = PredTick;
-	m_aInputs[Conn][m_aCurrentInput[Conn]].m_PredictedTime = m_PredictedTime.Get(Now);
-	m_aInputs[Conn][m_aCurrentInput[Conn]].m_PredictionMargin = PredictionMargin() * time_freq() / 1000;
-	if(g_Config.m_TcSmoothPredictionMargin)
-		m_aInputs[Conn][m_aCurrentInput[Conn]].m_PredictionMargin = m_PredictedTime.GetMargin(Now);
-	m_aInputs[Conn][m_aCurrentInput[Conn]].m_Time = Now;
-
-	m_aCurrentInput[Conn]++;
-	m_aCurrentInput[Conn] %= 200;
-
-	SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
-	if(m_aNetClient[Conn].IsKcpActive())
-		SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
-}
-#endif
-
 void CClient::SendInput()
 {
-#if defined(CONF_QM_LIVE_CLIENT)
-	if(m_LiveObserverSession.Accepted())
-	{
-		SendQmLiveObserverInputAck();
-		return;
-	}
-#endif
-
 	int64_t Now = time_get();
 
 	if(m_aPredTick[g_Config.m_ClDummy] <= 0)
@@ -1277,10 +1242,6 @@ void CClient::Connect(const char *pAddress, const char *pPassword)
 	}
 
 	m_CanReceiveServerCapabilities = true;
-#if defined(CONF_QM_LIVE_CLIENT)
-	m_LiveObserverSession.Reset();
-	m_LiveObserverRequestTime = 0;
-#endif
 
 	m_Sixup = OnlySixup;
 	if(m_Sixup)
@@ -1331,10 +1292,6 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_KcpNegotiated = false;
 	m_KcpNegotiationStartTime = 0;
 	m_KcpNegotiationConv = 0;
-#if defined(CONF_QM_LIVE_CLIENT)
-	m_LiveObserverSession.Reset();
-	m_LiveObserverRequestTime = 0;
-#endif
 	m_UseTempRconCommands = 0;
 	m_ExpectedRconCommands = -1;
 	m_GotRconCommands = 0;
@@ -1414,12 +1371,6 @@ bool CClient::DummyConnectingDelayed() const
 
 void CClient::DummyConnect()
 {
-	if(QmLiveDirectorActive())
-	{
-		log_info("client", "Dummy connection is disabled for QmLive director.");
-		return;
-	}
-
 	if(m_aNetClient[CONN_MAIN].State() != NETSTATE_ONLINE)
 	{
 		log_info("client", "Not online.");
@@ -1491,8 +1442,6 @@ void CClient::DummyDisconnect(const char *pReason)
 
 bool CClient::DummyAllowed() const
 {
-	if(QmLiveDirectorActive())
-		return false;
 	return m_ServerCapabilities.m_AllowDummy;
 }
 
@@ -2229,12 +2178,6 @@ static CServerCapabilities GetServerCapabilities(int Version, int Flags, bool Si
 	{
 		Result.m_Kcp = Flags & SERVERCAPFLAG_KCP;
 	}
-	if(Version >= 7)
-	{
-		Result.m_LiveObserver = Flags & SERVERCAP_LIVE_OBSERVER;
-		Result.m_LiveDirector = Flags & SERVERCAP_LIVE_DIRECTOR;
-		Result.m_LiveReplay = Flags & SERVERCAP_LIVE_REPLAY;
-	}
 	return Result;
 }
 
@@ -2372,33 +2315,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf, gs_ClientNetworkPrintColor);
 			}
 		}
-#if defined(CONF_QM_LIVE_CLIENT)
-		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_QM_LIVE_OBSERVER_ACCEPT)
-		{
-			const int Capabilities = Unpacker.GetInt();
-			if(Unpacker.Error())
-			{
-				return;
-			}
-			m_LiveObserverSession.Accept(Capabilities);
-			m_LiveObserverRequestTime = 0;
-			if(m_LiveObserverSession.ReadyPending())
-			{
-				m_LiveObserverSession.SetReadyPending(false);
-				SendReady(CONN_MAIN);
-			}
-		}
-		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_QM_LIVE_OBSERVER_DENY)
-		{
-			const EQmLiveDenyReason Reason = QmLiveDenyReasonFromInt(Unpacker.GetInt());
-			const char *pReasonText = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-			if(Unpacker.Error())
-			{
-				return;
-			}
-			EnableQmLiveCompatDirector(Reason, pReasonText);
-		}
-#endif
 		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_CLIENT_BRANDS)
 		{
 			GameClient()->OnClientBrandsMessage(&Unpacker);
@@ -2589,13 +2505,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				return;
 			}
 			GameClient()->OnConnected();
-#if defined(CONF_QM_LIVE_CLIENT)
-			if(m_LiveObserverSession.Accepted())
-			{
-				// Live observers do not get a game-layer ReadyToEnter because the server never creates a CPlayer.
-				EnterGame(CONN_MAIN);
-			}
-#endif
 			if(m_DummyReconnectOnReload)
 			{
 				m_DummySendConnInfo = true;
@@ -6398,7 +6307,7 @@ int main(int argc, const char **argv)
 		pFutureFileLogger->Set(log_logger_noop());
 	}
 
-	if(g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug)
+	if(g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug || g_Config.m_QmPerfStutterDiagnostics)
 	{
 		pStorage->CreateFolder("dumps", IStorage::TYPE_SAVE);
 		pStorage->CreateFolder("dumps/QmClient_Perf", IStorage::TYPE_SAVE);

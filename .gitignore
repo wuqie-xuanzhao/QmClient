@@ -19,7 +19,6 @@ qmclient_scripts/languages_qmclient/translations_draft/
 
 # 本地资源
 .codex-*.png
-.superpowers
 .trae
 .claude
 /skills/

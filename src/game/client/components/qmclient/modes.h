@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_MODES_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_MODES_H
 
@@ -124,7 +125,8 @@ bool ShouldUseQmNameplateTextEffects(int PlayingScope, int SpectateScope, int De
 bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool ManualGuideVisible);
 bool ShouldRenderGoresDebugRoute(bool Online, bool DebugRouteEnabled, bool GoresMapProgressEnabled);
 bool ShouldEnableQmMovingWaterTiles(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName);
-bool ShouldUseServerControlledLocalSkin(const char *pGameType);
+bool ShouldUseServerControlledLocalSkin(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName);
+int ResolveLocalSkinConfigIndex(bool DemoPlayback, int ClientId, int MainClientId, int DummyClientId);
 bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget);
 
 bool ShouldHideFocusHud(bool FocusActive, bool HideHud);

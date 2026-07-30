@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 /* Q1menG Client - Pie Menu Component */
 
 #include "pie_menu.h"
@@ -8,6 +9,7 @@
 #include <base/str.h>
 #include <base/system.h>
 
+#include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
@@ -104,8 +106,6 @@ int CPieMenu::FindNearestPlayer()
 	float NearestDistanceSq = Spectating ? std::numeric_limits<float>::max() :
 					       (float)g_Config.m_QmPieMenuMaxDistance * g_Config.m_QmPieMenuMaxDistance;
 
-	const int LocalClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
-
 	// Iterate through all players
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -113,8 +113,8 @@ int CPieMenu::FindNearestPlayer()
 		if(!GameClient()->m_Snap.m_aCharacters[i].m_Active)
 			continue;
 
-		// Skip local player
-		if(i == LocalClientId)
+		// Both local connections belong to the user and are not interaction targets.
+		if(GameClient()->IsLocalClientId(i))
 			continue;
 
 		// Skip spectators
@@ -147,6 +147,13 @@ void CPieMenu::OpenMenu()
 {
 	if(m_Active)
 		return;
+	if(!g_Config.m_QmPieMenuEnabled || Client()->State() != IClient::STATE_ONLINE)
+		return;
+
+	const bool UseDummy = g_Config.m_ClDummy && Client()->DummyConnected();
+	const int LocalClientId = GameClient()->m_aLocalIds[UseDummy ? 1 : 0];
+	if(LocalClientId < 0 || LocalClientId >= MAX_CLIENTS)
+		return;
 
 	// Don't open if chat is active
 	if(GameClient()->m_Chat.IsActive())
@@ -158,9 +165,10 @@ void CPieMenu::OpenMenu()
 
 	// Find nearest player
 	int TargetId = FindNearestPlayer();
-	if(TargetId < 0)
+	RefreshRenameQueue();
+	if(TargetId < 0 && m_vRenameQueue.empty())
 	{
-		// Show "No player nearby" message
+		// Neither the other-player ring nor the self-rename ring can be used.
 		GameClient()->Echo(Localize("No player nearby"));
 		return;
 	}
@@ -174,7 +182,6 @@ void CPieMenu::OpenMenu()
 	m_OpenTime = time_get();
 	m_WasPressed = true;
 	m_SelectorMouse = vec2(0, 0); // Reset selector mouse position
-	RefreshRenameQueue();
 
 	// Set menu center to screen center
 	m_MenuCenter = vec2(Graphics()->ScreenWidth() / 2.0f, Graphics()->ScreenHeight() / 2.0f);
@@ -215,6 +222,9 @@ bool CPieMenu::OnInput(const IInput::CEvent &Event)
 	{
 		if(Event.m_Key >= KEY_1 && Event.m_Key <= KEY_6)
 		{
+			if(!HasTargetPlayer())
+				return true;
+
 			int OptionIndex = Event.m_Key - KEY_1;
 			if(OptionIndex < (int)EMenuOption::NUM_OPTIONS)
 			{
@@ -263,7 +273,7 @@ void CPieMenu::UpdateSelection()
 	}
 
 	// Primary ring.
-	if(MouseDistance <= OuterRadius)
+	if(HasTargetPlayer() && MouseDistance <= OuterRadius)
 	{
 		m_SelectedOption = GetHoveredOption();
 	}
@@ -320,11 +330,14 @@ void CPieMenu::OnRender()
 
 	Graphics()->MapScreen(0, 0, Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
 
-	// Render each sector (pie slice)
-	for(int i = 0; i < (int)EMenuOption::NUM_OPTIONS; i++)
+	// The primary ring only applies to another player.
+	if(HasTargetPlayer())
 	{
-		bool Highlighted = (i == m_SelectedOption);
-		RenderSector(i, InnerRadius, OuterRadius, Highlighted, Alpha);
+		for(int i = 0; i < (int)EMenuOption::NUM_OPTIONS; i++)
+		{
+			bool Highlighted = (i == m_SelectedOption);
+			RenderSector(i, InnerRadius, OuterRadius, Highlighted, Alpha);
+		}
 	}
 
 	// Render secondary ring for rename queue.
@@ -484,12 +497,15 @@ void CPieMenu::RenderRenameSector(int Index, int SectorCount, float InnerRadius,
 
 void CPieMenu::RenderCenterInfo()
 {
-	if(m_TargetClientId < 0 || m_TargetClientId >= MAX_CLIENTS)
+	const bool UseDummy = g_Config.m_ClDummy && Client()->DummyConnected();
+	const int LocalClientId = GameClient()->m_aLocalIds[UseDummy ? 1 : 0];
+	const int DisplayClientId = HasTargetPlayer() ? m_TargetClientId : LocalClientId;
+	if(DisplayClientId < 0 || DisplayClientId >= MAX_CLIENTS)
 		return;
 
-	// Draw player name in center - scaled 1.8x
+	// Draw the interaction target, or self when only the rename ring is available.
 	char aNameBuf[MAX_NAME_LENGTH];
-	GameClient()->FormatStreamerName(m_TargetClientId, aNameBuf, sizeof(aNameBuf));
+	GameClient()->FormatStreamerName(DisplayClientId, aNameBuf, sizeof(aNameBuf));
 	const char *pName = aNameBuf;
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -499,8 +515,10 @@ void CPieMenu::RenderCenterInfo()
 
 	if(m_SelectedRenameIndex >= 0 && m_SelectedRenameIndex < (int)m_vRenameQueue.size())
 	{
+		char aRenamePreview[128];
+		str_format(aRenamePreview, sizeof(aRenamePreview), Localize("Rename: %s"), m_vRenameQueue[m_SelectedRenameIndex].c_str());
 		char aPreview[128];
-		str_format(aPreview, sizeof(aPreview), Localize("Rename: %s"), m_vRenameQueue[m_SelectedRenameIndex].c_str());
+		str_format(aPreview, sizeof(aPreview), "%s · %s", Localize("Self"), aRenamePreview);
 		const float PreviewFontSize = 18.0f;
 		const float PreviewWidth = TextRender()->TextWidth(PreviewFontSize, aPreview);
 		TextRender()->Text(m_MenuCenter.x - PreviewWidth / 2.0f, m_MenuCenter.y + FontSize * 0.40f, PreviewFontSize, aPreview);
@@ -602,6 +620,11 @@ bool CPieMenu::IsMouseInCenter() const
 	return length(m_SelectorMouse) < InnerRadius;
 }
 
+bool CPieMenu::HasTargetPlayer() const
+{
+	return m_TargetClientId >= 0 && m_TargetClientId < MAX_CLIENTS;
+}
+
 int CPieMenu::GetHoveredOption() const
 {
 	float MouseAngle = atan2(m_SelectorMouse.y, m_SelectorMouse.x) * 180.0f / pi;
@@ -687,7 +710,7 @@ void CPieMenu::ExecuteRenameOption(int RenameIndex)
 
 void CPieMenu::ExecuteOption(EMenuOption Option)
 {
-	if(m_TargetClientId < 0 || m_TargetClientId >= MAX_CLIENTS)
+	if(!HasTargetPlayer())
 		return;
 
 	const char *pPlayerName = GameClient()->m_aClients[m_TargetClientId].m_aName;

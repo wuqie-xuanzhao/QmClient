@@ -16,7 +16,10 @@ enum
 {
 	MAX_WARLIST_TYPE_LENGTH = 16,
 	MAX_WARLIST_IMPORT_ID_LENGTH = 16,
-	MAX_WARLIST_REASON_LENGTH = 256
+	MAX_WARLIST_REASON_LENGTH = 256,
+	WARLIST_BUILTIN_GROUP_NONE = 0,
+	WARLIST_BUILTIN_GROUP_ENEMY = 1,
+	WARLIST_BUILTIN_GROUP_TEAM = 2
 };
 
 class CWarType
@@ -197,6 +200,11 @@ public:
 	bool GetAnyWar(int ClientId);
 	bool GetNameWar(int ClientId);
 	bool GetClanWar(int ClientId);
+	bool IsEnemy(int ClientId) const;
+	static bool MatchesEnemyGroup(const CWarDataCache &WarData)
+	{
+		return static_cast<int>(WarData.m_WarGroupMatches.size()) > WARLIST_BUILTIN_GROUP_ENEMY && WarData.m_WarGroupMatches[WARLIST_BUILTIN_GROUP_ENEMY];
+	}
 
 	void GetReason(char *pReason, int ClientId);
 	CWarDataCache &GetWarData(int ClientId);

@@ -18,24 +18,24 @@ static const char *LayerTypeDisplayName(const std::shared_ptr<CLayer> &pLayer)
 	{
 		auto pTiles = std::static_pointer_cast<CLayerTiles>(pLayer);
 		if(pTiles->m_HasGame)
-			return "游戏";
+			return Localize("Game", "Editor");
 		if(pTiles->m_HasFront)
-			return "前景";
+			return Localize("Front", "Editor");
 		if(pTiles->m_HasTele)
-			return "传送";
+			return Localize("Tele", "Editor layer type");
 		if(pTiles->m_HasSpeedup)
-			return "加速";
+			return Localize("Speedup", "Editor");
 		if(pTiles->m_HasSwitch)
-			return "开关";
+			return Localize("Switch", "Editor layer type");
 		if(pTiles->m_HasTune)
 			return "调整";
 		return "图块";
 	}
 	if(pLayer->m_Type == LAYERTYPE_QUADS)
-		return "四边形";
+		return Localize("Quads", "Editor");
 	if(pLayer->m_Type == LAYERTYPE_SOUNDS)
-		return "声音";
-	return "未知";
+		return Localize("Sound", "Editor");
+	return Localize("Unknown", "Editor");
 }
 
 CEditorBrushDrawAction::CEditorBrushDrawAction(CEditorMap *pMap, int Group) :
@@ -91,7 +91,7 @@ CEditorBrushDrawAction::CEditorBrushDrawAction(CEditorMap *pMap, int Group) :
 	}
 
 	SetInfos();
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "画笔绘制（x%d）于 %d 个图层", m_TotalTilesDrawn, m_TotalLayers);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Brush draw (x%d) on %d layers", "Editor"), m_TotalTilesDrawn, m_TotalLayers);
 }
 
 void CEditorBrushDrawAction::SetInfos()
@@ -270,7 +270,7 @@ void CEditorBrushDrawAction::Apply(bool Undo)
 CEditorActionQuadPlace::CEditorActionQuadPlace(CEditorMap *pMap, int GroupIndex, int LayerIndex, std::vector<CQuad> &vBrush) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_vBrush(vBrush)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "放置四边形（x%d）", (int)m_vBrush.size());
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Quad place (x%d)", "Editor"), (int)m_vBrush.size());
 }
 
 void CEditorActionQuadPlace::Undo()
@@ -293,7 +293,7 @@ void CEditorActionQuadPlace::Redo()
 CEditorActionSoundPlace::CEditorActionSoundPlace(CEditorMap *pMap, int GroupIndex, int LayerIndex, std::vector<CSoundSource> &vBrush) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_vBrush(vBrush)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "放置声音源（x%d）", (int)m_vBrush.size());
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Sound place (x%d)", "Editor"), (int)m_vBrush.size());
 }
 
 void CEditorActionSoundPlace::Undo()
@@ -319,7 +319,7 @@ void CEditorActionSoundPlace::Redo()
 CEditorActionDeleteQuad::CEditorActionDeleteQuad(CEditorMap *pMap, int GroupIndex, int LayerIndex, std::vector<int> const &vQuadsIndices, std::vector<CQuad> const &vDeletedQuads) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_vQuadsIndices(vQuadsIndices), m_vDeletedQuads(vDeletedQuads)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除四边形（x%d）", (int)m_vDeletedQuads.size());
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Delete quad (x%d)", "Editor"), (int)m_vDeletedQuads.size());
 }
 
 void CEditorActionDeleteQuad::Undo()
@@ -354,7 +354,7 @@ void CEditorActionDeleteQuad::Redo()
 CEditorActionEditQuadPoint::CEditorActionEditQuadPoint(CEditorMap *pMap, int GroupIndex, int LayerIndex, int QuadIndex, std::vector<CPoint> const &vPreviousPoints, std::vector<CPoint> const &vCurrentPoints) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_QuadIndex(QuadIndex), m_vPreviousPoints(vPreviousPoints), m_vCurrentPoints(vCurrentPoints)
 {
-	str_copy(m_aDisplayText, "编辑四边形顶点");
+	str_copy(m_aDisplayText, Localize("Edit quad points", "Editor"));
 }
 
 void CEditorActionEditQuadPoint::Undo()
@@ -443,14 +443,14 @@ void CEditorActionEditQuadProp::Apply(int Value)
 CEditorActionEditQuadPointProp::CEditorActionEditQuadPointProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, int QuadIndex, int PointIndex, EQuadPointProp Prop, int Previous, int Current) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_QuadIndex(QuadIndex), m_PointIndex(PointIndex), m_Prop(Prop), m_Previous(Previous), m_Current(Current)
 {
-	static const char *s_apNames[] = {
-		"位置横",
-		"位置纵",
-		"颜色",
-		"纹理横",
-		"纹理纵"};
+	const char *s_apNames[] = {
+		Localize("Pos X", "Editor"),
+		Localize("Pos Y", "Editor"),
+		Localize("Color", "Editor"),
+		Localize("Tex U", "Editor"),
+		Localize("Tex V", "Editor")};
 	static_assert(std::size(s_apNames) == (size_t)EQuadPointProp::NUM_PROPS);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑四边形点 %s 属性（图层 %d，组 %d）", s_apNames[(int)m_Prop], m_LayerIndex, m_GroupIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit quad point %s property in layer %d of group %d", "Editor"), s_apNames[(int)m_Prop], m_LayerIndex, m_GroupIndex);
 }
 
 void CEditorActionEditQuadPointProp::Undo()
@@ -596,7 +596,7 @@ CEditorActionLayerBase::CEditorActionLayerBase(CEditorMap *pMap, int GroupIndex,
 CEditorActionAddLayer::CEditorActionAddLayer(CEditorMap *pMap, int GroupIndex, int LayerIndex, bool Duplicate) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_Duplicate(Duplicate)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "在组 %d 中%s%s图层", m_GroupIndex, m_Duplicate ? "复制" : "新建", LayerTypeDisplayName(m_pLayer));
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("In group %d, %s %s layer", "Editor"), m_GroupIndex, m_Duplicate ? Localize("Duplicate", "Editor") : Localize("New", "Editor"), LayerTypeDisplayName(m_pLayer));
 }
 
 void CEditorActionAddLayer::Undo()
@@ -658,7 +658,7 @@ void CEditorActionAddLayer::Redo()
 CEditorActionDeleteLayer::CEditorActionDeleteLayer(CEditorMap *pMap, int GroupIndex, int LayerIndex) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除组 %d 的%s图层", m_GroupIndex, LayerTypeDisplayName(m_pLayer));
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("In group %d, delete the %s layer", "Editor"), m_GroupIndex, LayerTypeDisplayName(m_pLayer));
 }
 
 void CEditorActionDeleteLayer::Redo()
@@ -722,9 +722,9 @@ CEditorActionGroup::CEditorActionGroup(CEditorMap *pMap, int GroupIndex, bool De
 {
 	m_pGroup = Map()->m_vpGroups[GroupIndex];
 	if(m_Delete)
-		str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除组 %d", m_GroupIndex);
+		str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Delete group %d", "Editor"), m_GroupIndex);
 	else
-		str_copy(m_aDisplayText, "新建组", sizeof(m_aDisplayText));
+		str_copy(m_aDisplayText, Localize("New group", "Editor"), sizeof(m_aDisplayText));
 }
 
 void CEditorActionGroup::Undo()
@@ -767,20 +767,20 @@ void CEditorActionGroup::Redo()
 CEditorActionEditGroupProp::CEditorActionEditGroupProp(CEditorMap *pMap, int GroupIndex, EGroupProp Prop, int Previous, int Current) :
 	IEditorAction(pMap), m_GroupIndex(GroupIndex), m_Prop(Prop), m_Previous(Previous), m_Current(Current)
 {
-	static const char *s_apNames[] = {
-		"顺序",
-		"位置横",
-		"位置纵",
-		"视差横",
-		"视差纵",
-		"使用裁剪",
-		"裁剪横",
-		"裁剪纵",
-		"裁剪宽",
-		"裁剪高"};
+	const char *s_apNames[] = {
+		Localize("Order", "Editor"),
+		Localize("Pos X", "Editor"),
+		Localize("Pos Y", "Editor"),
+		Localize("Para X", "Editor"),
+		Localize("Para Y", "Editor"),
+		Localize("Use Clipping", "Editor"),
+		Localize("Clip X", "Editor"),
+		Localize("Clip Y", "Editor"),
+		Localize("Clip W", "Editor"),
+		Localize("Clip H", "Editor")};
 	static_assert(std::size(s_apNames) == (size_t)EGroupProp::NUM_PROPS);
 
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑组 %d 的%s属性", m_GroupIndex, s_apNames[(int)Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit group %d %s property", "Editor"), m_GroupIndex, s_apNames[(int)Prop]);
 }
 
 void CEditorActionEditGroupProp::Undo()
@@ -846,13 +846,13 @@ CEditorActionEditLayerPropBase<E>::CEditorActionEditLayerPropBase(CEditorMap *pM
 CEditorActionEditLayerProp::CEditorActionEditLayerProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, ELayerProp Prop, int Previous, int Current) :
 	CEditorActionEditLayerPropBase(pMap, GroupIndex, LayerIndex, Prop, Previous, Current)
 {
-	static const char *s_apNames[] = {
-		"组",
-		"顺序",
-		"高清"};
+	const char *s_apNames[] = {
+		Localize("Group", "Editor"),
+		Localize("Order", "Editor"),
+		Localize("HD", "Editor")};
 	static_assert(std::size(s_apNames) == (size_t)ELayerProp::NUM_PROPS);
 
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑图层 %d（组 %d）的%s属性", m_LayerIndex, m_GroupIndex, s_apNames[(int)m_Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit layer %d in group %d %s property", "Editor"), m_LayerIndex, m_GroupIndex, s_apNames[(int)m_Prop]);
 }
 
 void CEditorActionEditLayerProp::Undo()
@@ -923,7 +923,7 @@ CEditorActionEditLayerTilesProp::CEditorActionEditLayerTilesProp(CEditorMap *pMa
 		"种子"};
 	static_assert(std::size(s_apNames) == (size_t)ETilesProp::NUM_PROPS);
 
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑图块图层 %d（组 %d）的%s属性", m_LayerIndex, m_GroupIndex, s_apNames[(int)Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit tiles layer %d in group %d %s property", "Editor"), m_LayerIndex, m_GroupIndex, s_apNames[(int)Prop]);
 }
 
 void CEditorActionEditLayerTilesProp::SetSavedLayers(const std::map<int, std::shared_ptr<CLayer>> &SavedLayers)
@@ -1138,10 +1138,10 @@ void CEditorActionEditLayerTilesProp::RestoreLayer(int Layer, const std::shared_
 CEditorActionEditLayerQuadsProp::CEditorActionEditLayerQuadsProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, ELayerQuadsProp Prop, int Previous, int Current) :
 	CEditorActionEditLayerPropBase(pMap, GroupIndex, LayerIndex, Prop, Previous, Current)
 {
-	static const char *s_apNames[] = {
-		"图像"};
+	const char *s_apNames[] = {
+		Localize("Image", "Editor")};
 	static_assert(std::size(s_apNames) == (size_t)ELayerQuadsProp::NUM_PROPS);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑四边形图层 %d（组 %d）的%s属性", m_LayerIndex, m_GroupIndex, s_apNames[(int)m_Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit quads layer %d in group %d %s property", "Editor"), m_LayerIndex, m_GroupIndex, s_apNames[(int)m_Prop]);
 }
 
 void CEditorActionEditLayerQuadsProp::Undo()
@@ -1176,7 +1176,7 @@ CEditorActionEditLayersGroupAndOrder::CEditorActionEditLayersGroupAndOrder(CEdit
 	std::sort(m_LayerIndices.begin(), m_LayerIndices.end());
 	std::sort(m_NewLayerIndices.begin(), m_NewLayerIndices.end());
 
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑图层分组与顺序（x%d）", (int)m_LayerIndices.size());
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit layers group and order (x%d)", "Editor"), (int)m_LayerIndices.size());
 }
 
 void CEditorActionEditLayersGroupAndOrder::Undo()
@@ -1364,7 +1364,7 @@ void CEditorActionTileArt::Redo()
 CEditorActionQuadArt::CEditorActionQuadArt(CEditorMap *pMap, const std::shared_ptr<CLayerGroup> &pGroup) :
 	IEditorAction(pMap), m_pGroup(pGroup)
 {
-	str_copy(m_aDisplayText, "创建四边形画");
+	str_copy(m_aDisplayText, Localize("Create Quadart", "Editor"));
 }
 
 void CEditorActionQuadArt::Undo()
@@ -1396,22 +1396,22 @@ CEditorCommandAction::CEditorCommandAction(CEditorMap *pMap, EType Type, int *pS
 	switch(m_Type)
 	{
 	case EType::ADD:
-		str_copy(m_aDisplayText, "添加命令");
+		str_copy(m_aDisplayText, Localize("Add command", "Editor"));
 		break;
 	case EType::EDIT:
-		str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑命令 %d", m_CommandIndex);
+		str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit command %d", "Editor"), m_CommandIndex);
 		break;
 	case EType::DELETE:
-		str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除命令 %d", m_CommandIndex);
+		str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Delete command %d", "Editor"), m_CommandIndex);
 		break;
 	case EType::MOVE_UP:
-		str_format(m_aDisplayText, sizeof(m_aDisplayText), "上移命令 %d", m_CommandIndex);
+		str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Move command %d up", "Editor"), m_CommandIndex);
 		break;
 	case EType::MOVE_DOWN:
-		str_format(m_aDisplayText, sizeof(m_aDisplayText), "下移命令 %d", m_CommandIndex);
+		str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Move command %d down", "Editor"), m_CommandIndex);
 		break;
 	default:
-		str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑命令 %d", m_CommandIndex);
+		str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit command %d", "Editor"), m_CommandIndex);
 		break;
 	}
 }
@@ -1777,10 +1777,10 @@ void CEditorActionDeleteEnvelopePoint::Redo()
 CEditorActionEditLayerSoundsProp::CEditorActionEditLayerSoundsProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, ELayerSoundsProp Prop, int Previous, int Current) :
 	CEditorActionEditLayerPropBase(pMap, GroupIndex, LayerIndex, Prop, Previous, Current)
 {
-	static const char *s_apNames[] = {
-		"声音"};
+	const char *s_apNames[] = {
+		Localize("Sound", "Editor")};
 	static_assert(std::size(s_apNames) == (size_t)ELayerSoundsProp::NUM_PROPS);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑声音图层 %d（组 %d）的%s属性", m_LayerIndex, m_GroupIndex, s_apNames[(int)m_Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit sounds layer %d in group %d %s property", "Editor"), m_LayerIndex, m_GroupIndex, s_apNames[(int)m_Prop]);
 }
 
 void CEditorActionEditLayerSoundsProp::Undo()
@@ -1815,7 +1815,7 @@ CEditorActionDeleteSoundSource::CEditorActionDeleteSoundSource(CEditorMap *pMap,
 	std::shared_ptr<CLayerSounds> pLayerSounds = std::static_pointer_cast<CLayerSounds>(m_pLayer);
 	m_Source = pLayerSounds->m_vSources[SourceIndex];
 
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除声音源 %d（图层 %d，组 %d）", SourceIndex, LayerIndex, GroupIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Delete sound source %d in layer %d of group %d", "Editor"), SourceIndex, LayerIndex, GroupIndex);
 }
 
 void CEditorActionDeleteSoundSource::Undo()
@@ -1841,13 +1841,13 @@ CEditorActionEditSoundSourceShape::CEditorActionEditSoundSourceShape(CEditorMap 
 {
 	Save();
 
-	static const char *const SHAPE_NAMES[] = {
-		"矩形",
-		"圆形",
+	const char *const SHAPE_NAMES[] = {
+		Localize("Rectangle", "Editor"),
+		Localize("Circle", "Editor"),
 	};
 	static_assert(std::size(SHAPE_NAMES) == (size_t)CSoundShape::NUM_SHAPES);
 	str_format(m_aDisplayText, sizeof(m_aDisplayText),
-		"将声音源 %d（图层 %d，组 %d）形状改为%s",
+		Localize("Edit shape of sound source %d in layer %d of group %d to %s", "Editor"),
 		SourceIndex, LayerIndex, GroupIndex, SHAPE_NAMES[Value]);
 }
 
@@ -1910,7 +1910,7 @@ CEditorActionEditSoundSourceProp::CEditorActionEditSoundSourceProp(CEditorMap *p
 		"声音包络线",
 		"声音包络线偏移"};
 	static_assert(std::size(s_apNames) == (size_t)ESoundProp::NUM_PROPS);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑声音源 %d（图层 %d，组 %d）的%s属性", SourceIndex, LayerIndex, GroupIndex, s_apNames[(int)Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit sound source %d in layer %d of group %d %s property", "Editor"), SourceIndex, LayerIndex, GroupIndex, s_apNames[(int)Prop]);
 }
 
 void CEditorActionEditSoundSourceProp::Undo()
@@ -1975,11 +1975,11 @@ void CEditorActionEditSoundSourceProp::Apply(int Value)
 CEditorActionEditRectSoundSourceShapeProp::CEditorActionEditRectSoundSourceShapeProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, int SourceIndex, ERectangleShapeProp Prop, int Previous, int Current) :
 	CEditorActionEditLayerPropBase(pMap, GroupIndex, LayerIndex, Prop, Previous, Current), m_SourceIndex(SourceIndex)
 {
-	static const char *s_apNames[] = {
-		"宽度",
-		"高度"};
+	const char *s_apNames[] = {
+		Localize("Width", "Editor"),
+		Localize("Height", "Editor")};
 	static_assert(std::size(s_apNames) == (size_t)ERectangleShapeProp::NUM_PROPS);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑声音源 %d（图层 %d，组 %d）形状%s属性", m_SourceIndex, m_LayerIndex, m_GroupIndex, s_apNames[(int)Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit sound source %d in layer %d of group %d sound shape %s property", "Editor"), m_SourceIndex, m_LayerIndex, m_GroupIndex, s_apNames[(int)Prop]);
 }
 
 void CEditorActionEditRectSoundSourceShapeProp::Undo()
@@ -2012,10 +2012,10 @@ void CEditorActionEditRectSoundSourceShapeProp::Apply(int Value)
 CEditorActionEditCircleSoundSourceShapeProp::CEditorActionEditCircleSoundSourceShapeProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, int SourceIndex, ECircleShapeProp Prop, int Previous, int Current) :
 	CEditorActionEditLayerPropBase(pMap, GroupIndex, LayerIndex, Prop, Previous, Current), m_SourceIndex(SourceIndex)
 {
-	static const char *s_apNames[] = {
-		"半径"};
+	const char *s_apNames[] = {
+		Localize("Radius", "Editor")};
 	static_assert(std::size(s_apNames) == (size_t)ECircleShapeProp::NUM_PROPS);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑声音源 %d（图层 %d，组 %d）形状%s属性", m_SourceIndex, m_LayerIndex, m_GroupIndex, s_apNames[(int)Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit sound source %d in layer %d of group %d sound shape %s property", "Editor"), m_SourceIndex, m_LayerIndex, m_GroupIndex, s_apNames[(int)Prop]);
 }
 
 void CEditorActionEditCircleSoundSourceShapeProp::Undo()
@@ -2046,7 +2046,7 @@ void CEditorActionEditCircleSoundSourceShapeProp::Apply(int Value)
 CEditorActionNewEmptySound::CEditorActionNewEmptySound(CEditorMap *pMap, int GroupIndex, int LayerIndex, int x, int y) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_X(x), m_Y(y)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "在图层 %d（组 %d）新建声音源", LayerIndex, GroupIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("New sound in layer %d of group %d", "Editor"), LayerIndex, GroupIndex);
 }
 
 void CEditorActionNewEmptySound::Undo()
@@ -2069,7 +2069,7 @@ void CEditorActionNewEmptySound::Redo()
 CEditorActionNewEmptyQuad::CEditorActionNewEmptyQuad(CEditorMap *pMap, int GroupIndex, int LayerIndex, int x, int y) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_X(x), m_Y(y)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "在图层 %d（组 %d）新建四边形", LayerIndex, GroupIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("New quad in layer %d of group %d", "Editor"), LayerIndex, GroupIndex);
 }
 
 void CEditorActionNewEmptyQuad::Undo()
@@ -2106,7 +2106,7 @@ CEditorActionNewQuad::CEditorActionNewQuad(CEditorMap *pMap, int GroupIndex, int
 	std::shared_ptr<CLayerQuads> pLayerQuads = std::static_pointer_cast<CLayerQuads>(m_pLayer);
 	m_Quad = pLayerQuads->m_vQuads[pLayerQuads->m_vQuads.size() - 1];
 
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "在图层 %d（组 %d）新建四边形", LayerIndex, GroupIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("New quad in layer %d of group %d", "Editor"), LayerIndex, GroupIndex);
 }
 
 void CEditorActionNewQuad::Undo()
@@ -2126,17 +2126,17 @@ void CEditorActionNewQuad::Redo()
 CEditorActionMoveSoundSource::CEditorActionMoveSoundSource(CEditorMap *pMap, int GroupIndex, int LayerIndex, int SourceIndex, CPoint OriginalPosition, CPoint CurrentPosition) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_SourceIndex(SourceIndex), m_OriginalPosition(OriginalPosition), m_CurrentPosition(CurrentPosition)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "移动声音源 %d（图层 %d，组 %d）", SourceIndex, LayerIndex, GroupIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Move sound source %d of layer %d in group %d", "Editor"), SourceIndex, LayerIndex, GroupIndex);
 }
 
 void CEditorActionMoveSoundSource::Undo()
 {
-	dbg_assert(m_pLayer->m_Type == LAYERTYPE_SOUNDS, "图层类型与声音图层不匹配");
+	dbg_assert(m_pLayer->m_Type == LAYERTYPE_SOUNDS, Localize("Layer type does not match a sound layer", "Editor"));
 	std::static_pointer_cast<CLayerSounds>(m_pLayer)->m_vSources[m_SourceIndex].m_Position = m_OriginalPosition;
 }
 
 void CEditorActionMoveSoundSource::Redo()
 {
-	dbg_assert(m_pLayer->m_Type == LAYERTYPE_SOUNDS, "图层类型与声音图层不匹配");
+	dbg_assert(m_pLayer->m_Type == LAYERTYPE_SOUNDS, Localize("Layer type does not match a sound layer", "Editor"));
 	std::static_pointer_cast<CLayerSounds>(m_pLayer)->m_vSources[m_SourceIndex].m_Position = m_CurrentPosition;
 }

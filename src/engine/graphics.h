@@ -11,6 +11,8 @@
 #include <base/system.h>
 #include <base/vmath.h>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -197,6 +199,66 @@ protected:
 	ivec2 m_DesktopSize;
 
 public:
+	static constexpr int MEDIA_ISLAND_SDF_MAX_ITEMS = 12;
+	static constexpr int GAUSSIAN_BLUR_MAX_RADIUS = 10;
+
+	struct SGaussianBlurParams
+	{
+		// The one-dimensional kernel size is m_Radius * 2 + 1 (3 through 21).
+		int m_Radius = 4;
+		float m_Sigma = 2.0f;
+	};
+
+	static bool CalculateGaussianBlurKernel(const SGaussianBlurParams &Params, std::array<float, GAUSSIAN_BLUR_MAX_RADIUS + 1> &aWeights);
+
+	// Fixed vec4-only layout shared by the threaded command buffer, GLSL and
+	// Vulkan std140 UBO. The shader treats this as 44 consecutive vec4 values:
+	// [0..7] are common fields and every item occupies three vec4 values.
+	struct SMediaIslandSdfParams
+	{
+		static constexpr int DATA_RECT = 0;
+		static constexpr int DATA_MAIN_RECT = 1;
+		static constexpr int DATA_CAPSULE_RECT = 2;
+		static constexpr int DATA_BACKGROUND = 3;
+		static constexpr int DATA_MAIN_PARAMS = 4; // radius, disabled radius, ring radius, ring thickness
+		static constexpr int DATA_METADATA = 5; // item count, corners, has capsule, screen pixel size
+		static constexpr int DATA_CAPSULE_PARAMS = 6; // radius, smooth union, unused, unused
+		static constexpr int DATA_RESERVED = 7;
+		static constexpr int DATA_ITEM_BASE = 8;
+		static constexpr int DATA_ITEM_STRIDE = 3;
+		static constexpr int DATA_COUNT = DATA_ITEM_BASE + MEDIA_ISLAND_SDF_MAX_ITEMS * DATA_ITEM_STRIDE;
+
+		std::array<vec4, DATA_COUNT> m_aData{};
+
+		void Clear()
+		{
+			m_aData.fill(vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		}
+
+		void SetItemCount(int Count)
+		{
+			m_aData[DATA_METADATA].x = (float)std::clamp(Count, 0, MEDIA_ISLAND_SDF_MAX_ITEMS);
+		}
+		int ItemCount() const { return std::clamp((int)m_aData[DATA_METADATA].x, 0, MEDIA_ISLAND_SDF_MAX_ITEMS); }
+
+		void SetMainCorners(int Corners) { m_aData[DATA_METADATA].y = (float)Corners; }
+		int MainCorners() const { return (int)m_aData[DATA_METADATA].y; }
+
+		void SetHasRightCapsule(bool HasCapsule) { m_aData[DATA_METADATA].z = HasCapsule ? 1.0f : 0.0f; }
+		bool HasRightCapsule() const { return m_aData[DATA_METADATA].z > 0.5f; }
+
+		vec4 &Item(int Index, int Field)
+		{
+			return m_aData[DATA_ITEM_BASE + std::clamp(Index, 0, MEDIA_ISLAND_SDF_MAX_ITEMS - 1) * DATA_ITEM_STRIDE + std::clamp(Field, 0, DATA_ITEM_STRIDE - 1)];
+		}
+		const vec4 &Item(int Index, int Field) const
+		{
+			return m_aData[DATA_ITEM_BASE + std::clamp(Index, 0, MEDIA_ISLAND_SDF_MAX_ITEMS - 1) * DATA_ITEM_STRIDE + std::clamp(Field, 0, DATA_ITEM_STRIDE - 1)];
+		}
+	};
+	static_assert(sizeof(vec4) == sizeof(float) * 4);
+	static_assert(sizeof(SMediaIslandSdfParams) == SMediaIslandSdfParams::DATA_COUNT * sizeof(vec4));
+
 	enum
 	{
 		TEXLOAD_TO_3D_TEXTURE = 1 << 0,
@@ -278,7 +340,8 @@ public:
 
 	int ScreenWidth() const { return m_ScreenWidth; }
 	int ScreenHeight() const { return m_ScreenHeight; }
-	float ScreenAspect() const { return m_ScreenAspectOverride > 0.0f ? m_ScreenAspectOverride : (float)ScreenWidth() / (float)ScreenHeight(); }
+	float ScreenAspect() const { return (float)ScreenWidth() / (float)ScreenHeight(); }
+	float GameScreenAspect() const { return m_GameScreenAspectOverride > 0.0f ? m_GameScreenAspectOverride : ScreenAspect(); }
 	float ScreenHiDPIScale() const { return m_ScreenHiDPIScale; }
 	int WindowWidth() const { return m_ScreenWidth / m_ScreenHiDPIScale; }
 	int WindowHeight() const { return m_ScreenHeight / m_ScreenHiDPIScale; }
@@ -323,6 +386,7 @@ public:
 	void MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
 		float ParallaxZoom, float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints) const;
 	void MapScreenToInterface(float CenterX, float CenterY, float Zoom = 1.0f);
+	void MapScreenToGameInterface(float CenterX, float CenterY, float Zoom = 1.0f);
 
 	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) const = 0;
 
@@ -354,12 +418,20 @@ public:
 	void TextureClear() { TextureSet(CTextureHandle()); }
 
 	virtual bool IsRenderTargetSupported() const = 0;
+	virtual bool IsRenderTargetGaussianBlurSupported() const = 0;
+	virtual bool IsBackbufferCaptureSupported() const = 0;
 	virtual const char *RenderTargetSupportReason() const = 0;
 	virtual CRenderTargetHandle CreateRenderTarget(int Width, int Height) = 0;
 	virtual void DestroyRenderTarget(CRenderTargetHandle *pTarget) = 0;
 	virtual bool BeginRenderTarget(CRenderTargetHandle Target, ColorRGBA ClearColor) = 0;
 	virtual void EndRenderTarget() = 0;
-	virtual void DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H) = 0;
+	virtual void DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H, float Alpha = 1.0f) = 0;
+	// Captures all drawing submitted before this call and scales the current backbuffer
+	// into Target without a CPU readback. Must be called outside an active render target.
+	virtual bool CaptureBackbufferToRenderTarget(CRenderTargetHandle Target) = 0;
+	// Must be called outside an active render target. Source, Temporary and Destination
+	// must be distinct render targets with identical dimensions.
+	virtual bool GaussianBlurRenderTarget(CRenderTargetHandle Source, CRenderTargetHandle Temporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params) = 0;
 	virtual CRenderTargetReadbackHandle BeginRenderTargetReadback(CRenderTargetHandle Target) = 0;
 	virtual ERenderTargetReadbackState PollRenderTargetReadback(CRenderTargetReadbackHandle Handle) = 0;
 	virtual bool ResolveRenderTargetReadback(CRenderTargetReadbackHandle *pHandle, CImageInfo &Image) = 0;
@@ -385,6 +457,9 @@ public:
 	virtual void RenderBorderTiles(int BufferContainerIndex, const ColorRGBA &Color, char *pIndexBufferOffset, const vec2 &Offset, const vec2 &Scale, uint32_t DrawNum) = 0;
 	virtual void RenderQuadLayer(int BufferContainerIndex, SQuadRenderInfo *pQuadInfo, size_t QuadNum, int QuadOffset, bool Grouped = false) = 0;
 	virtual void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
+	// Render a media-island SDF quad in a supported programmable backend.
+	// Callers use a geometry approximation when HasMediaIslandSdf() is false.
+	virtual void RenderMediaIslandSdf(const SMediaIslandSdfParams &Params) = 0;
 
 	// opengl 3.3 functions
 
@@ -407,6 +482,7 @@ public:
 	// returns true if the driver age type is supported, passing BACKEND_TYPE_AUTO for BackendType will query the values for the currently used backend
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
 	virtual bool IsConfigModernAPI() = 0;
+	virtual bool HasMediaIslandSdf() = 0;
 	virtual bool IsTileBufferingEnabled() = 0;
 	virtual bool IsQuadBufferingEnabled() = 0;
 	virtual bool IsTextBufferingEnabled() = 0;
@@ -705,7 +781,7 @@ protected:
 public:
 	// TClient
 	virtual void SetForcedAspect(bool Force) = 0;
-	virtual void SetScreenAspectOverride(float Aspect) = 0;
+	virtual void SetGameScreenAspectOverride(float Aspect) = 0;
 };
 
 class IEngineGraphics : public IGraphics

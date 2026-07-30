@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "settings_resource_preview.h"
 
 #include <base/math.h>

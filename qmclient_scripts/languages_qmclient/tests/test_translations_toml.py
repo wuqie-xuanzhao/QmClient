@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 
 import tomllib
@@ -6,10 +7,30 @@ from pathlib import Path
 from unittest import mock
 import tempfile
 
-from qmclient_scripts.languages_qmclient import i18n_store
+from qmclient_scripts.languages_qmclient import i18n_store, normalize_simplified_chinese
 
 
 class I18nTomlTest(unittest.TestCase):
+    def test_typography_normalizer_does_not_rewrite_editor_blueprint(self):
+        store = {
+            "editor": {
+                ("%dms", "Editor"): {"simplified_chinese": "%d毫秒"},
+            }
+        }
+        with (
+            mock.patch.object(
+                normalize_simplified_chinese.i18n_store,
+                "load_language_store",
+                return_value=store,
+            ),
+            mock.patch.object(
+                normalize_simplified_chinese.i18n_store, "patch_module_store"
+            ) as patch_module_store,
+        ):
+            normalize_simplified_chinese.main()
+
+        patch_module_store.assert_not_called()
+
     def test_dump_module_writes_context_and_multilang(self):
         text = i18n_store.dump_module(
             [
@@ -27,6 +48,23 @@ class I18nTomlTest(unittest.TestCase):
         self.assertEqual(parsed["message"][0]["context"], "Start menu")
         self.assertEqual(
             parsed["message"][0]["translations"]["simplified_chinese"], "开始游戏"
+        )
+
+    def test_dump_editor_module_preserves_authoritative_translation_verbatim(self):
+        text = i18n_store.dump_module(
+            [
+                (
+                    i18n_store.Message("%dms", "Editor"),
+                    {"simplified_chinese": "%d毫秒"},
+                )
+            ],
+            module_name="editor",
+        )
+
+        parsed = tomllib.loads(text)
+        self.assertEqual(
+            parsed["message"][0]["translations"]["simplified_chinese"],
+            "%d毫秒",
         )
 
     def test_dump_module_keeps_translation_lines_contiguous(self):

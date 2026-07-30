@@ -169,7 +169,7 @@ void CMapRenderer::Render(const CRenderLayerParams &Params)
 	else
 	{
 		// reset the screen to the default interface
-		Graphics()->MapScreenToInterface(Params.m_Center.x, Params.m_Center.y, Params.m_Zoom);
+		Graphics()->MapScreenToGameInterface(Params.m_Center.x, Params.m_Center.y, Params.m_Zoom);
 	}
 }
 

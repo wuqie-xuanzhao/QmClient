@@ -1814,12 +1814,6 @@ void CGameContext::OnClientEnter(int ClientId)
 	LogEvent("Connect", ClientId);
 }
 
-void CGameContext::OnLiveObserverEnter(int ClientId)
-{
-	m_pController->Teams().SendTeamsState(ClientId);
-	m_VoteUpdate = true;
-}
-
 bool CGameContext::OnClientDataPersist(int ClientId, void *pData)
 {
 	CPersistentClientData *pPersistent = (CPersistentClientData *)pData;

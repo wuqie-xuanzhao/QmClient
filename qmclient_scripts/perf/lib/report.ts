@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 // report.ts — 生成自包含 ECharts HTML 报表（R-style 论文式排版，纸面图表主题）
 
 import { basename } from 'node:path';
@@ -11,6 +12,7 @@ import {
   inferSamplingThreshold, sectionPerformanceTop, fpsSummaries, targetSettingsSnapshot, PERF_SYSTEM,
   settingsTextAnalysis, assetsPreviewAdmissionSummary, assetsVisibleReadySummary, demoBrowserPhaseSummary, adaptiveBudgetSummary, settingsUiBudgetSummary,
   previewBudgetSummary, textRuntimeBudgetSummary, budgetCorrelationSummary, coldTabSwitchFpsSummaries, warmTabSwitchFpsSummaries,
+  stutterDiagnosticsSummary,
   type BudgetCorrelationWindow, type Percentiles, type SpikeInfo, type PageStats, type ComparisonResult,
 } from './stats.ts';
 
@@ -160,6 +162,7 @@ export function generateReport(
   const settingsUiBudget = settingsUiBudgetSummary(entries);
   const textRuntimeBudget = textRuntimeBudgetSummary(entries);
   const budgetCorrelation = budgetCorrelationSummary(entries);
+  const stutterDiagnostics = stutterDiagnosticsSummary(entries);
   const textAnalysisForData = {
     ...textAnalysis,
     prebuildSeries: sampleArrayEvenly(textAnalysis.prebuildSeries, 240),
@@ -538,6 +541,56 @@ export function generateReport(
     <p class="small-note">窗口归因按 window_start_frame/window_end_frame 关联 fps、resource preview、adaptive budget 和 text runtime。正文只展示统计结论和 top culprit；原始行保留在 summary JSON/日志中。</p>
   </div>`;
 
+  const worstStutterWindow = stutterDiagnostics.windows[0];
+  const worstStutterComponents = worstStutterWindow
+    ? stutterDiagnostics.components.filter(component => component.stutterId === worstStutterWindow.stutterId && component.segment === worstStutterWindow.segment).slice(0, 20)
+    : [];
+  const worstStutterStages = worstStutterWindow
+    ? stutterDiagnostics.stages.filter(stage => stage.stutterId === worstStutterWindow.stutterId && stage.segment === worstStutterWindow.segment).slice(0, 12)
+    : [];
+  const worstStutterFeatures = worstStutterWindow
+    ? stutterDiagnostics.featureStates.filter(feature => feature.stutterId === worstStutterWindow.stutterId && feature.segment === worstStutterWindow.segment).slice(0, 80)
+    : [];
+  const stutterDiagnosticsHtml = !stutterDiagnostics.available
+    ? '<p class="body-text" style="color:rgba(var(--ink-rgb),0.4);font-style:italic">本次日志未包含卡顿诊断数据。请在启动客户端前设置 <code>qm_perf_stutter_diagnostics 1</code>。</p>'
+    : `<div class="coverage-panel">
+      <div class="coverage-title">
+        <span>300 FPS / 3.333ms Diagnosis</span>
+        <span class="badge ${stutterDiagnostics.status === 'cap_limited' ? 'warn' : 'bad'}">${stutterDiagnostics.status === 'cap_limited' ? 'CAP LIMITED' : 'LOW FPS'}</span>
+      </div>
+      <div class="stat-grid dense">
+        ${statCell('Windows', String(stutterDiagnostics.windows.length))}
+        ${statCell('Worst FPS Avg', worstStutterWindow ? formatFps(worstStutterWindow.fpsAvg) : 'N/A', worstStutterWindow && worstStutterWindow.fpsAvg >= 300 ? 'ok' : 'bad')}
+        ${statCell('Worst 1% Low', worstStutterWindow ? formatFps(worstStutterWindow.fpsOnePctLow) : 'N/A', 'bad')}
+        ${statCell('Worst Frame', worstStutterWindow ? formatMs(worstStutterWindow.frameMsMax) : 'N/A', 'bad')}
+        ${statCell('Cap Reason', worstStutterWindow?.capReason ?? 'none', worstStutterWindow?.capLimited ? 'warn' : '')}
+        ${statCell('Frame Range', worstStutterWindow ? `${worstStutterWindow.windowStartFrame}-${worstStutterWindow.windowEndFrame}` : 'N/A')}
+      </div>
+      ${worstStutterWindow?.capLimited
+        ? '<p class="body-text">检测到人为限帧、VSync、后台限帧或菜单 idle throttle。下面的 CPU 数据仅作为优化候选，不判定任何模块为卡顿原因。</p>'
+        : '<p class="body-text">以下排名来自低于 300 FPS 帧对应的组件 CPU 回调实测耗时；total 反映持续负担，P95/Max 反映尾部尖峰。</p>'}
+      <h3 class="mini-heading">主线程与 Graphics Swap</h3>
+      ${worstStutterStages.length === 0 ? '<p class="small-note">该窗口没有超过采样阈值的 main_thread 阶段。</p>' : `<div class="table-scroll"><table class="data-table compact">
+        <thead><tr><th>Stage</th><th>Samples</th><th>Total</th><th>Average</th><th>P95</th><th>Max</th></tr></thead>
+        <tbody>${worstStutterStages.map(stage => `<tr><td class="mono">${escapeHtml(stage.stage)}</td><td class="num">${stage.samples}</td><td class="num">${formatMs(stage.totalMs)}</td><td class="num">${formatMs(stage.avgMs)}</td><td class="num">${formatMs(stage.p95Ms)}</td><td class="num">${formatMs(stage.maxMs)}</td></tr>`).join('')}</tbody>
+      </table></div>`}
+      <h3 class="mini-heading">CPU 模块耗时排名</h3>
+      ${worstStutterComponents.length === 0 ? '<p class="small-note">该窗口缺少 component_sample，无法进行模块归因。</p>' : `<div class="table-scroll"><table class="data-table compact">
+        <thead><tr><th>#</th><th>Module</th><th>Phase</th><th>Samples</th><th>Total</th><th>Average</th><th>P95</th><th>Max</th><th>Max Frame</th></tr></thead>
+        <tbody>${worstStutterComponents.map((component, index) => `<tr>
+          <td class="num">${index + 1}</td><td class="mono">${escapeHtml(component.component)}</td><td>${escapeHtml(component.phase)}</td>
+          <td class="num">${component.samples}</td><td class="num">${formatMs(component.totalMs)}</td><td class="num">${formatMs(component.avgMs)}</td>
+          <td class="num">${formatMs(component.p95Ms)}</td><td class="num">${formatMs(component.maxMs)}</td><td class="num">${component.maxFrame}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`}
+      <h3 class="mini-heading">最慢帧功能状态</h3>
+      ${worstStutterFeatures.length === 0 ? '<p class="small-note">该窗口没有启用的 qm_/tc_/cl_ 整数功能开关。</p>' : `<div class="table-scroll"><table class="data-table compact">
+        <thead><tr><th>Owner</th><th>Feature</th><th>Value</th><th>HUD</th><th>Settings</th><th>Executed</th></tr></thead>
+        <tbody>${worstStutterFeatures.map(feature => `<tr><td>${escapeHtml(feature.owner)}</td><td class="mono">${escapeHtml(feature.name)}</td><td class="num">${feature.value}</td><td>${feature.hudVisible < 0 ? 'unknown' : feature.hudVisible}</td><td>${feature.settingsVisible < 0 ? 'unknown' : feature.settingsVisible}</td><td>${feature.executedInFrame < 0 ? 'unknown' : feature.executedInFrame}</td></tr>`).join('')}</tbody>
+      </table></div>`}
+      <p class="small-note">组件墙钟时间衡量 CPU 提交成本，不是逐模块 GPU 时间。graphics_swap 偏高只能指向 GPU、驱动或 VSync 压力；未覆盖的输入、消息、snapshot 和后台线程成本属于未归因部分。功能配置、当前页面和组件耗时来自同一最慢帧窗口；通用组件没有可靠可见性接口时，HUD/Settings/Executed 显示 unknown，不根据耗时猜测。</p>
+    </div>`;
+
   const dataJson = JSON.stringify({
     percentiles: percentilesToChartData(p),
     timeline: ts,
@@ -560,6 +613,13 @@ export function generateReport(
     settingsUiBudget,
     textRuntimeBudget,
     budgetCorrelation,
+    stutterDiagnostics: {
+      ...stutterDiagnostics,
+      windows: stutterDiagnostics.windows.slice(0, 50),
+      components: stutterDiagnostics.components.slice(0, 1000),
+      stages: stutterDiagnostics.stages.slice(0, 500),
+      featureStates: stutterDiagnostics.featureStates.slice(0, 1000),
+    },
     attribution,
     sectionTop,
     skinUx: skinUxEntries.map(e => ({ timestamp: e.timestamp, event: e.fields.event ?? '', durMs: e.fields.dur_ms ?? e.fields.duration_ms ?? '', total: e.fields.total ?? '', visibleRows: e.fields.visible_rows ?? '' })),
@@ -872,6 +932,14 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
   <p class="body-text">目标设置页判定只使用 settings / ingame Esc 操作窗口相关样本；internet/offline、demo browser、server browser 和 work_drain 高耗时只作为背景热点，不参与清除 stable-text blocker。当前目标判定：<span class="badge ${targetSettingsVerdictClass}">${targetSettingsVerdictLabel}</span>，spikes=${targetSettings.spikeCount}，p99=${targetSettings.verdictAvailable ? targetSettings.percentiles.p99.toFixed(1) + 'ms' : 'N/A'}。</p>
   <p class="body-text diagnostic-note">${escapeHtml(stableTextNarrative)}</p>
   ${stableTextSamplesHtml}
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <span class="section-num">stutter</span>
+    <h2>客户端卡顿诊断</h2>
+  </div>
+  ${stutterDiagnosticsHtml}
 </section>
 
 <section class="section">

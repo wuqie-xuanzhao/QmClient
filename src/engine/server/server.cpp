@@ -236,9 +236,6 @@ void CServer::CClient::Reset()
 	m_KcpNegotiatedTime = 0;
 	m_CapabilitiesSent = false;
 	m_ClientBrand = EClientBrand::NONE;
-	m_QmLiveObserver = false;
-	m_IsLiveObserver = false;
-	m_QmLiveCapabilities = 0;
 }
 
 CServer::CServer() :
@@ -557,7 +554,7 @@ void CServer::ReconnectClient(int ClientId)
 	CMsgPacker Msg(NETMSG_RECONNECT, true);
 	SendMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH, ClientId);
 
-	if(m_aClients[ClientId].m_State >= CClient::STATE_READY && !m_aClients[ClientId].m_IsLiveObserver)
+	if(m_aClients[ClientId].m_State >= CClient::STATE_READY)
 	{
 		GameServer()->OnClientDrop(ClientId, "reconnect");
 	}
@@ -588,7 +585,7 @@ void CServer::RedirectClient(int ClientId, int Port)
 	Msg.AddInt(Port);
 	SendMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH, ClientId);
 
-	if(m_aClients[ClientId].m_State >= CClient::STATE_READY && !m_aClients[ClientId].m_IsLiveObserver)
+	if(m_aClients[ClientId].m_State >= CClient::STATE_READY)
 	{
 		GameServer()->OnClientDrop(ClientId, "redirect");
 	}
@@ -807,11 +804,6 @@ bool CServer::ClientIngame(int ClientId) const
 	return ClientId >= 0 && ClientId < MAX_CLIENTS && m_aClients[ClientId].m_State == CServer::CClient::STATE_INGAME;
 }
 
-bool CServer::ClientIsQmLiveObserver(int ClientId) const
-{
-	return ClientId >= 0 && ClientId < MAX_CLIENTS && m_aClients[ClientId].m_State != CServer::CClient::STATE_EMPTY && m_aClients[ClientId].m_IsLiveObserver;
-}
-
 int CServer::Port() const
 {
 	return m_NetServer.Address().port;
@@ -827,7 +819,7 @@ int CServer::ClientCount() const
 	int ClientCount = 0;
 	for(const auto &Client : m_aClients)
 	{
-		if(Client.m_State != CClient::STATE_EMPTY && !Client.m_IsLiveObserver)
+		if(Client.m_State != CClient::STATE_EMPTY)
 		{
 			ClientCount++;
 		}
@@ -988,7 +980,7 @@ int CServer::SendMsg(CMsgPacker *pMsg, int Flags, int ClientId)
 		}
 
 		// write message to demo recorders
-		if(!(Flags & MSGFLAG_NORECORD) && !m_aClients[ClientId].m_IsLiveObserver)
+		if(!(Flags & MSGFLAG_NORECORD))
 		{
 			if(m_aDemoRecorder[ClientId].IsRecording())
 				m_aDemoRecorder[ClientId].RecordMessage(Pack.Data(), Pack.Size());
@@ -1049,8 +1041,7 @@ void CServer::DoSnapshot()
 	for(int i = 0; i < MaxClients(); i++)
 	{
 		// client must be ingame to receive snapshots
-		const bool LiveObserver = m_aClients[i].m_State == CClient::STATE_LIVE_OBSERVER && m_aClients[i].m_IsLiveObserver;
-		if(m_aClients[i].m_State != CClient::STATE_INGAME && !LiveObserver)
+		if(m_aClients[i].m_State != CClient::STATE_INGAME)
 			continue;
 
 		// this client is trying to recover, don't spam snapshots
@@ -1075,7 +1066,7 @@ void CServer::DoSnapshot()
 			CSnapshotBuffer Data;
 			int SnapshotSize = m_pSnapshotBuilder->Finish(Data);
 
-			if(!LiveObserver && m_aDemoRecorder[i].IsRecording())
+			if(m_aDemoRecorder[i].IsRecording())
 			{
 				// write snapshot
 				m_aDemoRecorder[i].RecordSnapshot(Tick(), Data.AsSnapshot(), SnapshotSize);
@@ -1328,7 +1319,7 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 #endif
 
 	// notify the mod about the drop
-	if(pThis->m_aClients[ClientId].m_State >= CClient::STATE_READY && !pThis->m_aClients[ClientId].m_IsLiveObserver)
+	if(pThis->m_aClients[ClientId].m_State >= CClient::STATE_READY)
 		pThis->GameServer()->OnClientDrop(ClientId, pReason);
 
 	pThis->m_aClients[ClientId].m_State = CClient::STATE_EMPTY;
@@ -1344,9 +1335,6 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientId].m_TrafficSince = 0;
 	pThis->m_aClients[ClientId].m_ShowIps = false;
 	pThis->m_aClients[ClientId].m_DebugDummy = false;
-	pThis->m_aClients[ClientId].m_QmLiveObserver = false;
-	pThis->m_aClients[ClientId].m_IsLiveObserver = false;
-	pThis->m_aClients[ClientId].m_QmLiveCapabilities = 0;
 	pThis->m_aClients[ClientId].m_ForceHighBandwidthOnSpectate = false;
 	pThis->m_aClients[ClientId].m_ClientBrand = EClientBrand::NONE;
 	pThis->m_aPrevStates[ClientId] = CClient::STATE_EMPTY;
@@ -1391,13 +1379,6 @@ void CServer::SendCapabilities(int ClientId)
 	{
 		Flags |= SERVERCAPFLAG_KCP;
 	}
-#if defined(CONF_QM_LIVE_SERVER)
-	if(Config()->m_SvQmLiveObserver)
-	{
-		Flags |= QmLiveCapabilities();
-		Version = SERVERCAP_LIVEVERSION;
-	}
-#endif
 	Msg.AddInt(Version); // version
 	Msg.AddInt(Flags); // flags
 	SendMsg(&Msg, MSGFLAG_VITAL, ClientId);
@@ -1408,8 +1389,7 @@ bool CServer::CanReceiveClientBrands(int ClientId) const
 {
 	return ClientId >= 0 && ClientId < MAX_CLIENTS &&
 	       m_aClients[ClientId].m_State >= CClient::STATE_READY &&
-	       m_aClients[ClientId].m_ClientBrand != EClientBrand::NONE &&
-	       !m_aClients[ClientId].m_IsLiveObserver;
+	       m_aClients[ClientId].m_ClientBrand != EClientBrand::NONE;
 }
 
 void CServer::SendClientBrands(int ClientId)
@@ -1420,7 +1400,7 @@ void CServer::SendClientBrands(int ClientId)
 	int NumEntries = 0;
 	for(int OtherId = 0; OtherId < MAX_CLIENTS; ++OtherId)
 	{
-		if(m_aClients[OtherId].m_State == CClient::STATE_INGAME && m_aClients[OtherId].m_ClientBrand != EClientBrand::NONE && !m_aClients[OtherId].m_IsLiveObserver)
+		if(m_aClients[OtherId].m_State == CClient::STATE_INGAME && m_aClients[OtherId].m_ClientBrand != EClientBrand::NONE)
 			++NumEntries;
 	}
 
@@ -1429,7 +1409,7 @@ void CServer::SendClientBrands(int ClientId)
 	Msg.AddInt(NumEntries);
 	for(int OtherId = 0; OtherId < MAX_CLIENTS; ++OtherId)
 	{
-		if(m_aClients[OtherId].m_State != CClient::STATE_INGAME || m_aClients[OtherId].m_ClientBrand == EClientBrand::NONE || m_aClients[OtherId].m_IsLiveObserver)
+		if(m_aClients[OtherId].m_State != CClient::STATE_INGAME || m_aClients[OtherId].m_ClientBrand == EClientBrand::NONE)
 			continue;
 
 		Msg.AddString(m_aClients[OtherId].m_aName, MAX_NAME_LENGTH);
@@ -1455,41 +1435,6 @@ void CServer::UpdateClientBrand(int ClientId, const char *pVersionString)
 
 	m_aClients[ClientId].m_ClientBrand = ClientBrand;
 	SendClientBrandsToKnownClients();
-}
-
-int CServer::QmLiveCapabilities() const
-{
-#if defined(CONF_QM_LIVE_SERVER)
-	return SERVERCAP_LIVE_OBSERVER | SERVERCAP_LIVE_DIRECTOR;
-#else
-	return 0;
-#endif
-}
-
-int CServer::NumQmLiveObservers() const
-{
-	int NumObservers = 0;
-	for(int ClientId = 0; ClientId < MaxClients(); ++ClientId)
-	{
-		if(m_aClients[ClientId].m_IsLiveObserver)
-			NumObservers++;
-	}
-	return NumObservers;
-}
-
-void CServer::SendQmLiveObserverAccept(int ClientId)
-{
-	CMsgPacker Msg(NETMSG_QM_LIVE_OBSERVER_ACCEPT, true);
-	Msg.AddInt(QmLiveCapabilities());
-	SendMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH | MSGFLAG_NORECORD, ClientId);
-}
-
-void CServer::SendQmLiveObserverDeny(int ClientId, EQmLiveDenyReason Reason)
-{
-	CMsgPacker Msg(NETMSG_QM_LIVE_OBSERVER_DENY, true);
-	Msg.AddInt(static_cast<int>(Reason));
-	Msg.AddString(QmLiveDenyReasonString(Reason), 0);
-	SendMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH | MSGFLAG_NORECORD, ClientId);
 }
 
 void CServer::SendKcpFallback(int ClientId, const char *pReason)
@@ -1967,54 +1912,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 			}
 		}
-		else if(Msg == NETMSG_QM_LIVE_OBSERVER_REQUEST)
-		{
-			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) == 0 ||
-				(m_aClients[ClientId].m_State != CClient::STATE_PREAUTH && m_aClients[ClientId].m_State != CClient::STATE_AUTH))
-			{
-				return;
-			}
-
-			const int Version = Unpacker.GetInt();
-			const int Capabilities = Unpacker.GetInt();
-			if(Unpacker.Error())
-			{
-				return;
-			}
-
-#if defined(CONF_QM_LIVE_SERVER)
-			if(Version != QM_LIVE_OBSERVER_PROTOCOL_VERSION)
-			{
-				SendQmLiveObserverDeny(ClientId, EQmLiveDenyReason::VERSION_MISMATCH);
-				return;
-			}
-			if(m_aClients[ClientId].m_Sixup)
-			{
-				SendQmLiveObserverDeny(ClientId, EQmLiveDenyReason::UNSUPPORTED);
-				return;
-			}
-			if(!Config()->m_SvQmLiveObserver)
-			{
-				SendQmLiveObserverDeny(ClientId, EQmLiveDenyReason::DISABLED);
-				return;
-			}
-			if(NumQmLiveObservers() >= Config()->m_SvQmLiveMaxObservers)
-			{
-				SendQmLiveObserverDeny(ClientId, EQmLiveDenyReason::FULL);
-				return;
-			}
-
-			m_aClients[ClientId].m_QmLiveObserver = true;
-			m_aClients[ClientId].m_IsLiveObserver = true;
-			m_aClients[ClientId].m_QmLiveCapabilities = Capabilities;
-			SendQmLiveObserverAccept(ClientId);
-#else
-			(void)Version;
-			(void)Capabilities;
-			SendQmLiveObserverDeny(ClientId, EQmLiveDenyReason::UNSUPPORTED);
-			m_NetServer.Drop(ClientId, QmLiveDenyReasonString(EQmLiveDenyReason::UNSUPPORTED));
-#endif
-		}
 		else if(Msg == NETMSG_CLIENTVER)
 		{
 			if(m_aClients[ClientId].m_State == CClient::STATE_PREAUTH)
@@ -2069,7 +1966,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				int NumConnectedClients = 0;
 				for(int i = 0; i < MaxClients(); ++i)
 				{
-					if(m_aClients[i].m_State != CClient::STATE_EMPTY && !m_aClients[i].m_IsLiveObserver)
+					if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 					{
 						NumConnectedClients++;
 					}
@@ -2127,17 +2024,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		{
 			if(m_aClients[ClientId].m_State == CClient::STATE_CONNECTING)
 			{
-				if(m_aClients[ClientId].m_IsLiveObserver)
-				{
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "live observer is ready. ClientId=%d addr=<{%s}>", ClientId, ClientAddrString(ClientId, true));
-					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
-					m_aClients[ClientId].m_State = CClient::STATE_LIVE_OBSERVER;
-					SendConnectionReady(ClientId);
-					GameServer()->OnLiveObserverEnter(ClientId);
-					return;
-				}
-
 				char aBuf[256];
 				str_format(aBuf, sizeof(aBuf), "player is ready. ClientId=%d addr=<{%s}> secure=%s", ClientId, ClientAddrString(ClientId, true), m_NetServer.HasSecurityToken(ClientId) ? "yes" : "no");
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
@@ -2229,9 +2115,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				return;
 			}
-			if(m_aClients[ClientId].m_IsLiveObserver && Size != 0)
-				return;
-
 			const int OriginalIntendedTick = IntendedTick;
 
 			m_aClients[ClientId].m_LastAckedSnapshot = LastAckedSnapshot;
@@ -2358,7 +2241,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 			else if(IsRconAuthed(ClientId))
 			{
-				if(GameServer()->PlayerExists(ClientId) || m_aClients[ClientId].m_IsLiveObserver)
+				if(GameServer()->PlayerExists(ClientId))
 				{
 					log_info("server", "ClientId=%d key='%s' rcon='%s'", ClientId, GetAuthName(ClientId), pCmd);
 					m_RconClientId = ClientId;
@@ -2956,7 +2839,7 @@ void CServer::FillAntibot(CAntibotRoundData *pData)
 	for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
 	{
 		CAntibotPlayerData *pPlayer = &pData->m_aPlayers[ClientId];
-		if(m_aClients[ClientId].m_State == CServer::CClient::STATE_EMPTY || m_aClients[ClientId].m_IsLiveObserver)
+		if(m_aClients[ClientId].m_State == CServer::CClient::STATE_EMPTY)
 		{
 			pPlayer->m_aAddress[0] = '\0';
 		}
@@ -3058,14 +2941,6 @@ void CServer::UpdateRegisterServerInfo()
 
 	JsonWriter.WriteAttribute("requires_login");
 	JsonWriter.WriteBoolValue(false);
-
-#if defined(CONF_QM_LIVE_SERVER)
-	JsonWriter.WriteAttribute("qm_live_server");
-	JsonWriter.WriteBoolValue(Config()->m_SvQmLiveObserver != 0);
-
-	JsonWriter.WriteAttribute("qm_live_caps");
-	JsonWriter.WriteIntValue(Config()->m_SvQmLiveObserver ? QmLiveCapabilities() : 0);
-#endif
 
 	{
 		bool FoundFlags = false;
@@ -3672,14 +3547,8 @@ int CServer::Run()
 
 						SendMap(ClientId);
 						bool HasPersistentData = m_aClients[ClientId].m_HasPersistentData;
-						bool QmLiveObserver = m_aClients[ClientId].m_QmLiveObserver;
-						bool IsLiveObserver = m_aClients[ClientId].m_IsLiveObserver;
-						int QmLiveCapabilities = m_aClients[ClientId].m_QmLiveCapabilities;
 						m_aClients[ClientId].Reset();
 						m_aClients[ClientId].m_HasPersistentData = HasPersistentData;
-						m_aClients[ClientId].m_QmLiveObserver = QmLiveObserver;
-						m_aClients[ClientId].m_IsLiveObserver = IsLiveObserver;
-						m_aClients[ClientId].m_QmLiveCapabilities = QmLiveCapabilities;
 						m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
 					}
 
@@ -3696,9 +3565,6 @@ int CServer::Run()
 						CClient &Client = m_aClients[ClientId];
 						if(Client.m_State < CClient::STATE_PREAUTH)
 							continue;
-						if(Client.m_IsLiveObserver)
-							continue;
-
 						// When doing a map change, a new Teehistorian file is created. For players that are already
 						// on the server, no PlayerJoin event is produced in Teehistorian from the network engine.
 						// Record PlayerJoin events here to record the Sixup version and player join event.

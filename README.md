@@ -28,7 +28,7 @@ The aim is to provide a more modern UI experience, a wider range of configurable
 
 We would like to thank all contributors who have submitted code, reported issues and suggested improvements for this project.
 
-[![Contributors](https://contrib.rocks/image?repo=wxj881027/Q1menG_Client)](https://github.com/wxj881027/Q1menG_Client/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=wxj881027/QmClient)](https://github.com/wxj881027/QmClient/graphs/contributors)
 
 ## 🚀 Build
 
@@ -83,7 +83,7 @@ cmake --build cmake-build-release --target run_tests
 
 ## 📜 License
 
-This project is licensed under the zlib/libpng licence, in line with the upstream DDNet / TaterClient projects.\
+This project is based on DDNet and TaterClient. Upstream code remains under the zlib/libpng licence.\
 Modified versions must be clearly attributed and must not misrepresent the identity of the original authors.
 
 ## 📮 Notes

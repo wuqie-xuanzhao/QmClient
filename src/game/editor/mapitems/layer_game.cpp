@@ -8,7 +8,7 @@
 CLayerGame::CLayerGame(CEditorMap *pMap, int w, int h) :
 	CLayerTiles(pMap, w, h)
 {
-	str_copy(m_aName, "游戏");
+	str_copy(m_aName, "Game");
 	m_HasGame = true;
 }
 

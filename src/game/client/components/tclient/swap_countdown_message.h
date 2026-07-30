@@ -11,6 +11,12 @@ enum class ESwapCountdownMessageAction
 	Complete,
 };
 
-bool ParseSwapCountdownMessage(const char *pText, ESwapCountdownMessageAction &Action, char *pRequester, int RequesterSize);
+enum class ESwapCountdownMessageDirection
+{
+	Incoming,
+	Outgoing,
+};
+
+bool ParseSwapCountdownMessage(const char *pText, ESwapCountdownMessageAction &Action, ESwapCountdownMessageDirection &Direction, char *pCounterpart, int CounterpartSize);
 
 #endif

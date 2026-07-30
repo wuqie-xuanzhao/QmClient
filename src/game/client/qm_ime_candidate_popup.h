@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_QM_IME_CANDIDATE_POPUP_H
@@ -24,6 +25,11 @@ struct SQmImePopupState
 	float m_LineHeightScreen = 0.0f;
 };
 
+inline bool QmImeHasPopupContent(const SQmImePopupState &State)
+{
+	return State.m_Visible && !State.m_Disabled && !State.m_vCandidates.empty();
+}
+
 class CQmImeCandidatePopup
 {
 public:
@@ -40,8 +46,6 @@ private:
 		float m_TargetHeight = 0.0f;
 		float m_TargetRadius = 0.0f;
 		float m_TargetAlpha = 0.0f;
-		float m_TargetTypingAlpha = 0.0f;
-		float m_TargetTypingScale = 1.0f;
 		float m_TargetCandidateAlpha = 0.0f;
 		float m_TargetCandidateScale = 1.0f;
 		float m_TargetSelectedX = 0.0f;

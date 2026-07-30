@@ -211,7 +211,7 @@ void CMovingTiles::OnRender()
 
 		if(!g_Config.m_GfxNoclip && pGroup->m_Version >= 2 && pGroup->m_UseClipping)
 		{
-			Graphics()->MapScreenToInterface(Center.x, Center.y, Zoom);
+			Graphics()->MapScreenToGameInterface(Center.x, Center.y, Zoom);
 
 			float ScreenX0;
 			float ScreenY0;
@@ -244,7 +244,7 @@ void CMovingTiles::OnRender()
 			Center.x, Center.y,
 			pGroup->m_ParallaxX, pGroup->m_ParallaxY, (float)ParallaxZoom,
 			pGroup->m_OffsetX, pGroup->m_OffsetY,
-			Graphics()->ScreenAspect(), Zoom, aPoints);
+			Graphics()->GameScreenAspect(), Zoom, aPoints);
 		Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 		return true;
 	};

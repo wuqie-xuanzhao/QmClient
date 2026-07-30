@@ -20,6 +20,7 @@
 #include <game/client/components/controls.h>
 #include <game/client/components/effects.h>
 #include <game/client/components/flow.h>
+#include <game/client/components/qmclient/afk_presentation.h>
 #include <game/client/components/qmclient/jelly_tee.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/tee_hue_cycle.h>
@@ -78,7 +79,7 @@ constexpr int QM_WEAPON_SWITCH_ANIM_SCOPE_ALL = 2;
 static bool HasQmJellyHammerImpact(const CGameClient *pGameClient, int ClientId)
 {
 	const int LocalDummy = LocalDummyIndexForClient(pGameClient, ClientId);
-	return LocalDummy >= 0 && pGameClient->m_aPredictedHammerHitEvent[LocalDummy];
+	return LocalDummy >= 0 && pGameClient->m_aConfirmedHammerHitEvent[LocalDummy];
 }
 
 static bool IsSolidAt(const CCollision *pCollision, vec2 Pos)
@@ -519,8 +520,8 @@ void CPlayers::RenderHookCollLine(
 	// Render hook coll line
 	const int HookCollSize = Local ? g_Config.m_ClHookCollSize : g_Config.m_ClHookCollSizeOther;
 
-	float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-	if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
+	float Alpha = 1.0f;
+	if(GameClient()->IsOtherTeam(ClientId))
 		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 	Alpha *= (float)g_Config.m_ClHookCollAlpha / 100;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
@@ -617,13 +618,18 @@ void CPlayers::RenderHook(
 		Intra = GameClient()->m_aClients[ClientId].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy);
 
 	bool OtherTeam = GameClient()->IsOtherTeam(ClientId);
-	float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-	if(Alpha >= 1.0f)
-		Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
+	float Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
 	if(ClientId == -2) // ghost
 		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
+	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
+		GameClient()->m_aClients[ClientId].m_Afk,
+		Client()->State() == IClient::STATE_ONLINE,
+		GameClient()->m_Menus.IsActive(),
+		ClientId,
+		GameClient()->m_Snap.m_LocalClientId);
+	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	RenderInfo.m_Size = 64.0f;
 
@@ -634,7 +640,7 @@ void CPlayers::RenderHook(
 		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Intra);
 
 	// draw hook
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Afk ? Alpha : 1.0f);
 	if(ClientId < 0)
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 
@@ -717,14 +723,10 @@ void CPlayers::RenderPlayer(
 	RenderTools()->m_LocalTeeRender = Local; // TClient
 
 	float Alpha = 1.0f;
-	Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-	if(Alpha >= 1.0f)
-	{
-		if(OtherTeam || ClientId < 0)
-			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-		else if(g_Config.m_TcShowOthersGhosts && !Local && !Spec)
-			Alpha = g_Config.m_TcPredGhostsAlpha / 100.0f;
-	}
+	if(OtherTeam || ClientId < 0)
+		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+	else if(g_Config.m_TcShowOthersGhosts && !Local && !Spec)
+		Alpha = g_Config.m_TcPredGhostsAlpha / 100.0f;
 
 	if(!OtherTeam && g_Config.m_TcShowOthersGhosts && !Local && g_Config.m_TcUnpredOthersInFreeze && Client()->m_IsLocalFrozen && !Spec)
 		Alpha = 1.0f;
@@ -733,6 +735,13 @@ void CPlayers::RenderPlayer(
 		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
+	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
+		GameClient()->m_aClients[ClientId].m_Afk,
+		Client()->State() == IClient::STATE_ONLINE,
+		GameClient()->m_Menus.IsActive(),
+		ClientId,
+		GameClient()->m_Snap.m_LocalClientId);
+	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 	// TODO: snd_game_volume_others
 	const float Volume = 1.0f;
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
@@ -830,7 +839,7 @@ void CPlayers::RenderPlayer(
 		InAir = !Collision()->CheckPoint(Position.x, Position.y + 16);
 	bool Running = Player.m_VelX >= 5000 || Player.m_VelX <= -5000;
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
-	bool Inactive = ClientId >= 0 && (GameClient()->m_aClients[ClientId].m_Afk || GameClient()->m_aClients[ClientId].m_Paused);
+	bool Inactive = ClientId >= 0 && (Afk || GameClient()->m_aClients[ClientId].m_Paused);
 	SQmJellyDeform JellyDeform;
 	if(g_Config.m_QmJellyTee && ClientId >= 0)
 	{
@@ -1253,7 +1262,7 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsSetRotation(0);
 	}
 
-	if(g_Config.m_ClAfkEmote && GameClient()->m_aClients[ClientId].m_Afk && ClientId != GameClient()->m_aLocalIds[!g_Config.m_ClDummy])
+	if(g_Config.m_ClAfkEmote && Afk && ClientId != GameClient()->m_aLocalIds[!g_Config.m_ClDummy])
 	{
 		int CurEmoticon = (SPRITE_ZZZ - SPRITE_OOP);
 		Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[CurEmoticon]);
@@ -1333,17 +1342,20 @@ void CPlayers::RenderPlayerGhost(
 
 	bool FrozenSwappingHide = (GameClient()->m_aClients[ClientId].m_FreezeEnd > 0) && g_Config.m_TcHideFrozenGhosts && g_Config.m_TcSwapGhosts;
 
-	Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-	if(Alpha >= 1.0f)
-	{
-		if(OtherTeam || ClientId < 0)
-			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-		else
-			Alpha = g_Config.m_TcUnpredGhostsAlpha / 100.0f;
-	}
+	if(OtherTeam || ClientId < 0)
+		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+	else
+		Alpha = g_Config.m_TcUnpredGhostsAlpha / 100.0f;
 
 	if(!OtherTeam && FrozenSwappingHide)
 		Alpha = 1.0f;
+	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
+		GameClient()->m_aClients[ClientId].m_Afk,
+		Client()->State() == IClient::STATE_ONLINE,
+		GameClient()->m_Menus.IsActive(),
+		ClientId,
+		GameClient()->m_Snap.m_LocalClientId);
+	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
@@ -1435,7 +1447,7 @@ void CPlayers::RenderPlayerGhost(
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y + 16);
 	bool Running = Player.m_VelX >= 5000 || Player.m_VelX <= -5000;
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
-	bool Inactive = GameClient()->m_aClients[ClientId].m_Afk || GameClient()->m_aClients[ClientId].m_Paused;
+	bool Inactive = Afk || GameClient()->m_aClients[ClientId].m_Paused;
 	SQmJellyDeform JellyDeform;
 	if(g_Config.m_QmJellyTee && ClientId >= 0)
 	{
@@ -1499,7 +1511,7 @@ void CPlayers::RenderPlayerGhost(
 	{
 		if(!(RenderInfo.m_TeeRenderFlags & TEE_NO_WEAPON))
 		{
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, Afk ? Alpha : 1.0f);
 			Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle * pi * 2 + Angle);
 
 			if(ClientId < 0)
@@ -1761,8 +1773,7 @@ void CPlayers::RenderPlayerGhost(
 
 inline bool CPlayers::IsPlayerInfoAvailable(int ClientId) const
 {
-	return GameClient()->LiveTeamFilterAllowsClient(ClientId) &&
-	       GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
+	return GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
 	       GameClient()->m_Snap.m_apPrevPlayerInfos[ClientId] != nullptr &&
 	       GameClient()->m_Snap.m_apPlayerInfos[ClientId] != nullptr;
 }
@@ -1911,15 +1922,10 @@ void CPlayers::OnRender()
 		if(FollowingPlayer && ClientId == RenderLastId && IsPlayerInfoAvailable(ClientId))
 			continue;
 
-		float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-		if(Alpha <= 0.0f)
-			continue;
-		if(Alpha >= 1.0f)
-		{
-			const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
-			const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
-			Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
-		}
+		float Alpha = 1.0f;
+		const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
+		const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
+		Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
 		if(ClientId == -2) // ghost
 		{
 			Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;

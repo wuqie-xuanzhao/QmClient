@@ -12,7 +12,8 @@
 
 const char *Localize(const char *pStr, const char *pContext)
 {
-	const char *pNewStr = g_Localization.FindString(str_quickhash(pStr), str_quickhash(pContext));
+	const bool AllowDefaultContextFallback = !std::string_view(pContext).starts_with("Editor");
+	const char *pNewStr = g_Localization.FindString(str_quickhash(pStr), str_quickhash(pContext), AllowDefaultContextFallback);
 	return pNewStr ? pNewStr : pStr;
 }
 
@@ -176,7 +177,10 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 
 	CLineReader LineReader;
 	if(!LineReader.OpenFile(pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL)))
+	{
+		log_error("localization", "Couldn't open language file '%s'", pFilename);
 		return false;
+	}
 
 	log_info("localization", "loaded '%s'", pFilename);
 	if(Clear)
@@ -196,14 +200,9 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		if(pLine[0] == '#') // skip comments
 			continue;
 
-		if(pLine[0] == '[') // context
+		if(LocalizationIsContextLine(pLine)) // context
 		{
 			size_t Len = str_length(pLine);
-			if(Len < 1 || pLine[Len - 1] != ']')
-			{
-				log_error("localization", "malformed context '%s' on line %d", pLine, Line);
-				continue;
-			}
 			str_truncate(aContext, sizeof(aContext), pLine + 1, Len - 2);
 			pLine = LineReader.Get();
 			if(!pLine)
@@ -256,7 +255,7 @@ void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr, 
 		It->m_pReplacement = m_StringsHeap.StoreString(*pNewStr ? pNewStr : pOrgStr);
 }
 
-const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHash) const
+const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHash, bool AllowDefaultContextFallback) const
 {
 	CString String;
 	String.m_Hash = Hash;
@@ -267,7 +266,7 @@ const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHas
 		return Range1.first->m_pReplacement;
 
 	const unsigned DefaultHash = str_quickhash("");
-	if(ContextHash != DefaultHash)
+	if(AllowDefaultContextFallback && ContextHash != DefaultHash)
 	{
 		// Do another lookup with the default context hash
 		String.m_ContextHash = DefaultHash;

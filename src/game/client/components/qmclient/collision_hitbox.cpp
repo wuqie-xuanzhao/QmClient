@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "collision_hitbox.h"
 
 #include <base/log.h>
@@ -484,8 +485,8 @@ void CCollisionHitbox::RenderTeeHitboxes()
 			   Player.m_RenderPos.y >= ScreenY0 && Player.m_RenderPos.y <= ScreenY1))
 			continue;
 
-		float PlayerAlpha = Alpha * GameClient()->LiveObserverClientAlpha(ClientId);
-		if(PlayerAlpha >= Alpha && GameClient()->IsOtherTeam(ClientId))
+		float PlayerAlpha = Alpha;
+		if(GameClient()->IsOtherTeam(ClientId))
 			PlayerAlpha *= (float)g_Config.m_ClShowOthersAlpha / 100.0f;
 
 		if(PlayerAlpha <= 0.0f)
@@ -588,25 +589,25 @@ void CCollisionHitbox::RenderHammerHitboxes()
 		const vec2 RenderDelta = Player.m_RenderPos - pChar->GetPos();
 		vec2 HitPosition;
 		float HitRadius = 0.0f;
-		if(!GameClient()->GetPredictedHammerHitbox(pChar, HitPosition, HitRadius))
+		if(!GameClient()->GetPotentialHammerHitArea(pChar, HitPosition, HitRadius))
 			continue;
-		HitPosition += RenderDelta;
+		const vec2 RenderHitPosition = HitPosition + RenderDelta;
 
-		float PlayerAlpha = Alpha * GameClient()->LiveObserverClientAlpha(ClientId);
-		if(PlayerAlpha >= Alpha && GameClient()->IsOtherTeam(ClientId))
+		float PlayerAlpha = Alpha;
+		if(GameClient()->IsOtherTeam(ClientId))
 			PlayerAlpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
 		if(PlayerAlpha <= 0.0f)
 			continue;
 
 		const ColorRGBA HammerColor = WeaponColor(PlayerAlpha);
-		const IGraphics::CLineItem AimLine(Player.m_RenderPos, HitPosition);
+		const IGraphics::CLineItem AimLine(Player.m_RenderPos, RenderHitPosition);
 		Graphics()->SetColor(HammerColor.WithMultipliedAlpha(0.6f));
 		Graphics()->LinesDraw(&AimLine, 1);
-		DrawCircleOutline(HitPosition, HitRadius, HammerColor, 28);
-		DrawCross(HitPosition, 4.0f, HammerColor);
+		DrawCircleOutline(RenderHitPosition, HitRadius, HammerColor, 28);
+		DrawCross(RenderHitPosition, 4.0f, HammerColor);
 
 		int aTargetIds[MAX_CLIENTS];
-		const int NumTargets = GameClient()->FindPredictedHammerHitTargets(pChar, HitPosition, HitRadius, aTargetIds, MAX_CLIENTS);
+		const int NumTargets = GameClient()->FindPotentialHammerHitTargets(pChar, HitPosition, HitRadius, aTargetIds, MAX_CLIENTS);
 		for(int TargetIndex = 0; TargetIndex < NumTargets; ++TargetIndex)
 		{
 			const int TargetId = aTargetIds[TargetIndex];
@@ -644,8 +645,7 @@ void CCollisionHitbox::RenderProjectileHitboxes()
 		float ProjectileAlpha = Alpha;
 		if(Data.m_ExtraInfo && Data.m_Owner >= 0)
 		{
-			ProjectileAlpha *= GameClient()->LiveObserverClientAlpha(Data.m_Owner);
-			if(ProjectileAlpha >= Alpha && GameClient()->IsOtherTeam(Data.m_Owner))
+			if(GameClient()->IsOtherTeam(Data.m_Owner))
 				ProjectileAlpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
 		}
 		if(ProjectileAlpha <= 0.0f)
@@ -683,8 +683,7 @@ void CCollisionHitbox::RenderLaserHitboxes()
 		float LaserAlpha = Alpha;
 		if(Data.m_ExtraInfo && Data.m_Owner >= 0)
 		{
-			LaserAlpha *= GameClient()->LiveObserverClientAlpha(Data.m_Owner);
-			if(LaserAlpha >= Alpha && GameClient()->IsOtherTeam(Data.m_Owner))
+			if(GameClient()->IsOtherTeam(Data.m_Owner))
 				LaserAlpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
 		}
 		if(LaserAlpha <= 0.0f)
@@ -725,8 +724,8 @@ void CCollisionHitbox::RenderHookHitboxes()
 		if(!IsLineOnScreen(StartPosition, HookPosition, CCharacterCore::PhysicalSize()))
 			continue;
 
-		float HookAlpha = Alpha * GameClient()->LiveObserverClientAlpha(ClientId);
-		if(HookAlpha >= Alpha && GameClient()->IsOtherTeam(ClientId))
+		float HookAlpha = Alpha;
+		if(GameClient()->IsOtherTeam(ClientId))
 			HookAlpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
 		if(HookAlpha <= 0.0f)
 			continue;
@@ -780,7 +779,7 @@ void CCollisionHitbox::OnRender()
 		GameClient()->m_Camera.m_Center.y,
 		100.0f, 100.0f, 100.0f,
 		0.0f, 0.0f,
-		Graphics()->ScreenAspect(), GameClient()->m_Camera.m_Zoom, aPoints);
+		Graphics()->GameScreenAspect(), GameClient()->m_Camera.m_Zoom, aPoints);
 	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 
 	if(LegacyMode || g_Config.m_QmHitboxShowMap)

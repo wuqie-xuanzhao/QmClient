@@ -1790,6 +1790,9 @@ Choose which TClient settings tabs are visible
 Clamp mouse to screen
 == 將鼠標限制在屏幕範圍內
 
+Cinematic camera
+== 電影鏡頭
+
 Clan
 == 戰隊
 
@@ -1906,9 +1909,6 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == 單擊從你的好友列表移除此玩家
-
-Click to restore full match
-== 點擊恢復完整比賽
 
 Click to select server. Double click to join your friend.
 == 點擊選擇伺服器。雙擊加入好友所在伺服器。
@@ -4346,9 +4346,6 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 == 全螢幕
 
-Full demo + sidecar
-== 完整 demo + sidecar
-
 Full map listen in same room
 == 同房間全圖收聽
 
@@ -4966,9 +4963,6 @@ https://ddnet.org/discord
 
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
-
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
 
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls/zh
@@ -6410,9 +6404,6 @@ Move right
 Move to category
 == 移動到分類
 
-Moved ingame
-== 在遊戲內已移動
-
 Movement
 == 移動
 
@@ -7820,12 +7811,6 @@ Preview the current chat appearance
 Preview visibilities
 == 預覽可見性
 
-Preview/render only one DDRace team from a full match demo
-== 從完整比賽 demo 中只預覽/渲染一個 DDRace 隊伍
-
-Preview/render only this team
-== 僅預覽/渲染此隊伍
-
 Previous
 == 上一個
 
@@ -8182,9 +8167,6 @@ Record chat replays.
 
 Record demo
 == 錄製回放
-
-Record match
-== 錄製比賽
 
 Record to a file
 == 記錄到文件
@@ -10652,9 +10634,6 @@ Start marker of replay slice
 Start playback of ghosts
 == 開始播放鬼影
 
-Start QmLive full match demo recording
-== 開始 QmLive 完整比賽 demo 錄製
-
 Start recording a demo
 == 開始錄製回放
 
@@ -10720,9 +10699,6 @@ Stop match record
 
 Stop practice
 == 停止練習
-
-Stop QmLive full match demo recording
-== 停止 QmLive 完整比賽 demo 錄製
 
 Stop record
 == 停止錄製
@@ -12428,9 +12404,6 @@ What's done is done, no use saying more
 Wheel animate
 == 滾輪動畫
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== 已啟用 TClient 彩虹 Tee 時，本功能不會生效。
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 越過起跑線時，顯示復現最佳成績的影子 Tee
 
@@ -13231,10 +13204,6 @@ AUTO
 [Start menu]
 Play
 == 開始遊戲
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

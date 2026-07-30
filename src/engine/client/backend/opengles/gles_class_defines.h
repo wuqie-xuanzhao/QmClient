@@ -18,6 +18,8 @@
 #define CGLSLSpriteMultipleProgram CGLSL_ESSpriteMultipleProgram
 #define CGLSLQuadProgram CGLSL_ESQuadProgram
 #define CGLSLTileProgram CGLSL_ESTileProgram
+#define CGLSLMediaIslandSdfProgram CGLSL_ESMediaIslandSdfProgram
+#define CGLSLGaussianBlurProgram CGLSL_ESGaussianBlurProgram
 #else
 #undef CCommandProcessorFragment_OpenGL3_3
 #undef CCommandProcessorFragment_OpenGL3
@@ -33,4 +35,6 @@
 #undef CGLSLSpriteMultipleProgram
 #undef CGLSLQuadProgram
 #undef CGLSLTileProgram
+#undef CGLSLMediaIslandSdfProgram
+#undef CGLSLGaussianBlurProgram
 #endif

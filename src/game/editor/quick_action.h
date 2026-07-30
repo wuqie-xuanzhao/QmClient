@@ -1,6 +1,8 @@
 #ifndef GAME_EDITOR_QUICK_ACTION_H
 #define GAME_EDITOR_QUICK_ACTION_H
 
+#include <game/localization.h>
+
 #include <functional>
 #include <utility>
 
@@ -53,19 +55,20 @@ public:
 	// used as Checked argument for DoButton_Editor()
 	int Color() { return m_pfnColorCallback(); }
 
-	const char *Label() const { return m_pLabel; }
+	const char *Label() const { return Localize(m_pLabel, "Editor"); }
 
 	// skips to the part of the label after the first colon
 	// useful for buttons that only show the state
 	const char *LabelShort() const
 	{
-		const char *pShort = str_find(m_pLabel, ": ");
+		const char *pLabel = Label();
+		const char *pShort = str_find(pLabel, ": ");
 		if(!pShort)
-			return m_pLabel;
+			return pLabel;
 		return pShort + 2;
 	}
 
-	const char *Description() const { return m_pDescription; }
+	const char *Description() const { return Localize(m_pDescription, "Editor"); }
 
 	const void *ActionButtonId() const { return &m_ActionButtonId; }
 };

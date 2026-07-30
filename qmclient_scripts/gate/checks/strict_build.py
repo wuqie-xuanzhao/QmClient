@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """严格构建与静态分析：Debug CRT 严格编译 + MSVC /analyze + clang-tidy。"""
 

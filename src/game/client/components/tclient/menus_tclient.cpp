@@ -354,7 +354,7 @@ namespace
 		RuntimeKey.m_BackendHash = str_quickhash(g_Config.m_GfxBackend);
 		if(pGraphics)
 		{
-			RuntimeKey.m_UiScale = SettingsRuntimeCachePositiveRoundedKey(pGraphics->ScreenHiDPIScale() * 100.0f);
+			RuntimeKey.m_UiScale = SettingsRuntimeCachePositiveRoundedKey(pGraphics->ScreenHiDPIScale() * std::clamp(g_Config.m_QmUiScale, 50, 200));
 			RuntimeKey.m_WindowHash = HashValueFnv1a64(1469598103934665603ull, pGraphics->WindowWidth());
 			RuntimeKey.m_WindowHash = HashValueFnv1a64(RuntimeKey.m_WindowHash, pGraphics->WindowHeight());
 		}

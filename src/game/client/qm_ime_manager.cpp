@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "qm_ime_manager.h"
@@ -111,7 +112,7 @@ SQmImePopupState CQmImeManager::BuildPopupState() const
 
 	const bool HasComposition = pInput->HasComposition();
 	const int CandidateCount = pInput->GetCandidateCount();
-	State.m_Visible = HasComposition;
+	State.m_Visible = HasComposition && CandidateCount > 0;
 	if(!State.m_Visible)
 		return State;
 

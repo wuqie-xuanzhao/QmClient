@@ -43,16 +43,41 @@ TEST(QmGoresMode, MovingWaterTilesRequireAxiomOrGoresContext)
 	EXPECT_FALSE(ShouldEnableQmMovingWaterTiles(nullptr, nullptr, nullptr, nullptr));
 }
 
-TEST(QmInfectionMode, UsesServerControlledLocalSkinForKnownGameTypes)
+TEST(QmLocalSkinSource, DdnetAndAxiomKeepTeeMenuOverride)
 {
-	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("InfClass"));
-	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("infc"));
-	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("Infection"));
-	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("Infected"));
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("DDRaceNetwork", "", "", ""));
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("ddnet", "", "", ""));
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("", "DDNet", "", ""));
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("Gores", "Gores", "axiom-cn", ""));
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("Gores", "Gores", "", "Axiom"));
+}
 
-	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("DDRaceNetwork"));
-	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("Gores"));
-	EXPECT_FALSE(ShouldUseServerControlledLocalSkin(nullptr));
+TEST(QmLocalSkinSource, OtherServersUseServerControlledSkin)
+{
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("InfClass", "InfClass", "", ""));
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("MMO", "MMO", "", ""));
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("Gores", "Gores", "kog", "KoG"));
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin(nullptr, nullptr, nullptr, nullptr));
+}
+
+TEST(LocalSkinSource, DemoPlaybackUsesRecordedSnapshotForEitherLocalConnection)
+{
+	constexpr int MainClientId = 7;
+	constexpr int DummyClientId = 19;
+
+	EXPECT_EQ(ResolveLocalSkinConfigIndex(true, MainClientId, MainClientId, DummyClientId), -1);
+	EXPECT_EQ(ResolveLocalSkinConfigIndex(true, DummyClientId, MainClientId, DummyClientId), -1);
+}
+
+TEST(LocalSkinSource, OnlinePlayUsesMatchingLocalConfiguration)
+{
+	constexpr int MainClientId = 7;
+	constexpr int DummyClientId = 19;
+
+	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, MainClientId, MainClientId, DummyClientId), 0);
+	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, DummyClientId, MainClientId, DummyClientId), 1);
+	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, 23, MainClientId, DummyClientId), -1);
+	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, -1, -1, -1), -1);
 }
 
 TEST(QmGoresMode, LinkedFastInputDirectlyFollowsGoresMode)

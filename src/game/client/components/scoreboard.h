@@ -5,23 +5,100 @@
 
 #include <engine/console.h>
 #include <engine/graphics.h>
+#include <engine/shared/protocol.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/scoreboard_team_modes.h>
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
+#include <game/teamscore.h>
 
 #include <array>
+
+struct CNetObj_PlayerInfo;
+
+struct SScoreboardRowRenderDetail
+{
+	bool m_FullTee = true;
+	bool m_ShowClientBrand = true;
+	bool m_ShowClan = true;
+	bool m_ShowCountry = true;
+};
+
+struct SScoreboardTeamLabelLayout
+{
+	float m_X;
+	float m_Y;
+	float m_IconY;
+	float m_RowSpacing;
+};
+
+constexpr float SCOREBOARD_TEAM_MODE_ICON_SIZE = 12.0f;
+
+constexpr int ScoreboardBlurTargetDimension(int ScreenDimension)
+{
+	return ScreenDimension > 0 ? (ScreenDimension + 3) / 4 : 0;
+}
+
+constexpr SScoreboardRowRenderDetail ResolveScoreboardRowRenderDetail(bool BetterScoreboard, float LineHeight)
+{
+	if(BetterScoreboard && LineHeight <= 10.0f)
+		return {false, true, false, false};
+	return {};
+}
+
+constexpr SScoreboardTeamLabelLayout ResolveScoreboardTeamLabelLayout(float RowX, float RowY, float RowHeight, float Spacing, float TeamFontSize, float TeamIconSize, bool EndsDDTeam)
+{
+	const float ContentHeight = TeamIconSize > TeamFontSize ? TeamIconSize : TeamFontSize;
+	const float RowSpacing = EndsDDTeam && ContentHeight > Spacing ? ContentHeight : Spacing;
+	const float ContentY = RowY + RowHeight;
+	return {
+		RowX + 5.0f,
+		ContentY + (RowSpacing - TeamFontSize) / 2.0f,
+		ContentY + (RowSpacing - TeamIconSize) / 2.0f,
+		RowSpacing,
+	};
+}
+
+constexpr float ScoreboardRowsVerticalScale(float AvailableHeight, int NumRows, int NumTeamLabels, int NumTeamModeLabels, float LineHeight, float Spacing, float TeamFontSize, float TeamModeIconSize)
+{
+	if(AvailableHeight <= 0.0f || NumRows <= 0)
+		return 1.0f;
+	const int ClampedTeamLabels = NumTeamLabels < 0 ? 0 : (NumTeamLabels > NumRows ? NumRows : NumTeamLabels);
+	const int ClampedTeamModeLabels = NumTeamModeLabels < 0 ? 0 : (NumTeamModeLabels > ClampedTeamLabels ? ClampedTeamLabels : NumTeamModeLabels);
+	const int TextOnlyTeamLabels = ClampedTeamLabels - ClampedTeamModeLabels;
+	const int RowsWithoutTeamLabels = NumRows - ClampedTeamLabels;
+	const float TeamTextSpacing = TeamFontSize > Spacing ? TeamFontSize : Spacing;
+	const float ScalableHeight = NumRows * LineHeight + RowsWithoutTeamLabels * Spacing + TextOnlyTeamLabels * TeamTextSpacing;
+	const float FixedHeight = ClampedTeamModeLabels * TeamModeIconSize;
+	const float RequiredHeight = ScalableHeight + FixedHeight;
+	if(RequiredHeight <= AvailableHeight || ScalableHeight <= 0.0f)
+		return 1.0f;
+	return AvailableHeight > FixedHeight ? (AvailableHeight - FixedHeight) / ScalableHeight : 0.0f;
+}
 
 class CScoreboard : public CComponent
 {
 	struct CScoreboardRenderState
 	{
-		float m_TeamStartX;
-		float m_TeamStartY;
 		int m_CurrentDDTeamSize;
 
 		CScoreboardRenderState() :
-			m_TeamStartX(0), m_TeamStartY(0), m_CurrentDDTeamSize(0) {}
+			m_CurrentDDTeamSize(0) {}
+	};
+	struct CScoreboardPlayerRow
+	{
+		const CNetObj_PlayerInfo *m_pInfo = nullptr;
+		int m_DDTeam = 0;
+		int m_PreviousSourceDDTeam = -1;
+		int m_NextSourceDDTeam = 0;
+		bool m_Dead = false;
+	};
+	struct CScoreboardPlayerRowPlan
+	{
+		std::array<CScoreboardPlayerRow, MAX_CLIENTS> m_aRows{};
+		std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> m_aTeamModes{};
+		int m_Count = 0;
 	};
 
 	void RenderTitleScore(CUIRect ScoreLabel, int Team, float TitleFontSize);
@@ -31,7 +108,12 @@ class CScoreboard : public CComponent
 	void RenderSpectators(CUIRect Spectators);
 	void RenderMediaControls(CUIRect Controls);
 	void RenderSoundMuteBar(CUIRect ScoreboardRect);
-	void RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart, int CountEnd, CScoreboardRenderState &State);
+	void RenderTeamModeIcons(float x, float y, float IconSize, const SQmScoreboardTeamModeState &State, float Alpha);
+	void DestroyBetterScoreboardBlurTargets();
+	bool PrepareBetterScoreboardBlur();
+	void RenderBetterScoreboardBlur(const CUIRect &Rect);
+	void BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan) const;
+	void RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart, int CountEnd, const CScoreboardPlayerRowPlan &Plan, CScoreboardRenderState &State);
 	void RenderRecordingNotification(float x);
 	static CUi::EPopupMenuFunctionResult PopupScoreboard(void *pContext, CUIRect View, bool Active);
 
@@ -49,6 +131,12 @@ class CScoreboard : public CComponent
 	static constexpr int SOUND_MUTE_BUTTON_COUNT = 9;
 
 	IGraphics::CTextureHandle m_DeadTeeTexture;
+	IGraphics::CRenderTargetHandle m_BetterScoreboardBlurSource;
+	IGraphics::CRenderTargetHandle m_BetterScoreboardBlurTemporary;
+	IGraphics::CRenderTargetHandle m_BetterScoreboardBlurTarget;
+	int m_BetterScoreboardBlurWidth = 0;
+	int m_BetterScoreboardBlurHeight = 0;
+	bool m_BetterScoreboardBlurReady = false;
 
 	std::optional<vec2> m_LastMousePos;
 	bool m_MouseUnlocked = false;

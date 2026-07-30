@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "modes.h"
 
 #include <base/str.h>
@@ -9,6 +10,11 @@
 static bool QmTextContainsNoCase(const char *pText, const char *pNeedle)
 {
 	return pText && pText[0] != '\0' && pNeedle && pNeedle[0] != '\0' && str_find_nocase(pText, pNeedle) != nullptr;
+}
+
+static bool QmTextEqualsNoCase(const char *pText, const char *pExpected)
+{
+	return pText && pExpected && str_comp_nocase(pText, pExpected) == 0;
 }
 
 int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActive, int CurrentValue, int HiddenValue, bool &Changed)
@@ -213,11 +219,28 @@ bool ShouldEnableQmMovingWaterTiles(const char *pGameInfoGameType, const char *p
 	       QmTextContainsNoCase(pCommunityName, "axiom");
 }
 
-bool ShouldUseServerControlledLocalSkin(const char *pGameType)
+bool ShouldUseServerControlledLocalSkin(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName)
 {
-	return QmTextContainsNoCase(pGameType, "infclass") ||
-	       QmTextContainsNoCase(pGameType, "infc") ||
-	       QmTextContainsNoCase(pGameType, "infect");
+	const bool UseTeeMenuSkin =
+		QmTextEqualsNoCase(pGameInfoGameType, "DDRaceNetwork") ||
+		QmTextEqualsNoCase(pGameInfoGameType, "DDNet") ||
+		QmTextEqualsNoCase(pServerInfoGameType, "DDRaceNetwork") ||
+		QmTextEqualsNoCase(pServerInfoGameType, "DDNet") ||
+		QmTextContainsNoCase(pCommunityId, "axiom") ||
+		QmTextContainsNoCase(pCommunityName, "axiom");
+	return !UseTeeMenuSkin;
+}
+
+int ResolveLocalSkinConfigIndex(bool DemoPlayback, int ClientId, int MainClientId, int DummyClientId)
+{
+	// Demo snapshots already contain the recorded appearance and must not use current local skin settings.
+	if(DemoPlayback || ClientId < 0)
+		return -1;
+	if(ClientId == MainClientId)
+		return 0;
+	if(ClientId == DummyClientId)
+		return 1;
+	return -1;
 }
 
 bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget)

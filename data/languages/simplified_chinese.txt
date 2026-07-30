@@ -31,9 +31,6 @@
 %d more cut segments
 == 还有 %d 个裁剪片段
 
-%d new mentions
-== %d 条新被提及消息
-
 %d of %d server
 == %d/%d 个服务器
 
@@ -246,9 +243,6 @@
 
 5 stars
 == 5 星
-
-9+ new mentions
-== 9+ 条新被提及消息
 
 === All Local Saves ===
 == === 所有本地存档 ===
@@ -1906,9 +1900,6 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == 单击从你的好友列表移除此玩家
-
-Click to restore full match
-== 点击恢复完整比赛
 
 Click to select server. Double click to join your friend.
 == 单击选择服务器；双击加入好友所在服
@@ -6257,9 +6248,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == 消息
 
-Messages that already look like the target language will skip auto-translate
-== 看起来已经是目标语言的消息会跳过自动翻译
-
 Microphone
 == 麦克风
 
@@ -6409,9 +6397,6 @@ Move right
 
 Move to category
 == 移动到分类
-
-Moved ingame
-== 在游戏内已移动
 
 Movement
 == 移动
@@ -8182,9 +8167,6 @@ Record chat replays.
 
 Record demo
 == 录制回放
-
-Record match
-== 录制比赛
 
 Record to a file
 == 记录到文件
@@ -10652,9 +10634,6 @@ Start marker of replay slice
 Start playback of ghosts
 == 开始播放鬼影
 
-Start QmLive full match demo recording
-== 开始 QmLive 完整比赛 demo 录制
-
 Start recording a demo
 == 开始录制回放
 
@@ -10720,9 +10699,6 @@ Stop match record
 
 Stop practice
 == 停止练习
-
-Stop QmLive full match demo recording
-== 停止 QmLive 完整比赛 demo 录制
 
 Stop record
 == 停止录制
@@ -12428,9 +12404,6 @@ What's done is done, no use saying more
 Wheel animate
 == 滚轮动画
 
-When TClient rainbow Tee is enabled, this feature has no effect.
-== 已启用 TClient 彩虹 Tee 时，本功能不会生效。
-
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 越过起跑线时，显示复现最佳成绩的影子 Tee
 
@@ -12495,7 +12468,7 @@ Whether to show players from other teams when spectating (on by default), option
 == 旁观时是否显示其他队伍玩家（默认打开），可选 i = 0 关闭，否则为打开
 
 Whether to use ninja jetpack or not. Makes jetpack look more awesome
-== 是否使用忍者喷气背包。让喷气背包看起来更酷
+== 是否使用如同忍者一般的喷气背包。XD
 
 Whether unnamed tees have a score
 == 无名 Tee 是否有分数
@@ -13231,10 +13204,6 @@ AUTO
 [Start menu]
 Play
 == 开始游戏
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

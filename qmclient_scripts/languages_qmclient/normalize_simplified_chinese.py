@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """Normalize simplified Chinese typography in i18n TOML maintenance sources."""
 
@@ -15,6 +16,8 @@ def main() -> int:
     changed_modules = 0
 
     for module_name, entries in sorted(store.items()):
+        if module_name in i18n_store.VERBATIM_TRANSLATION_MODULES:
+            continue
         module_patch: dict[tuple[str, str], dict[str, str]] = {}
         for identity, translations in sorted(entries.items()):
             translation = translations.get("simplified_chinese", "")

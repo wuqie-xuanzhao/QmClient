@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -33,6 +34,7 @@ import {
   budgetCorrelationSummary,
   settingsTextAnalysis,
   settingsUiBudgetSummary,
+  stutterDiagnosticsSummary,
   textRuntimeBudgetSummary,
   snapshot,
 } from './lib/stats.ts';

@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_H
 
@@ -23,10 +24,11 @@ class CUIRect;
 // 歌词 HUD 主组件。
 //
 // 数据流：
-//   每帧 OnRender → 读 CSystemMediaControls.GetStateSnapshot()
+//   每帧 OnUpdate → 读 CSystemMediaControls.GetStateSnapshot()
 //       → 检测曲目变化 → 触发数据源 QueryAsync（异步，下一帧拿结果）
 //       → 用 CClockInterpolator 算当前 PositionMs
-//       → 二分查找活动行 → 透视渲染
+//       → 二分查找活动行
+//   OnRender → 只绘制已经同步的歌词状态
 //
 // 状态机：
 //   IDLE → FETCHING → READY → IDLE (新曲)
@@ -43,6 +45,7 @@ public:
 	void OnInit() override;
 	void OnShutdown() override;
 	void OnReset() override;
+	void OnUpdate() override;
 	void OnRender() override;
 
 	bool GetMediaIslandText(char *pBuf, size_t BufSize, ColorRGBA *pColor) const;

@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #define CONF_TEST 1
 #include <engine/client/game_ping.h>
 #include <engine/client/gpu_upload_limiter.h>
@@ -8,6 +9,7 @@
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/stutter_diagnostics.h>
 #include <game/client/components/settings_resource_jobs.h>
 #include <game/client/frame_scheduler.h>
 #include <game/client/ui.h>
@@ -197,6 +199,7 @@ namespace
 			    "dynamic-value",
 			    "user-generated",
 			    "localized-list-data",
+			    "localized-setting-label",
 			    "stateful-new-label",
 			    "animated-style",
 			    "icon-only",
@@ -1402,13 +1405,30 @@ TEST(QmMonitoringHelpers, PerfConfigDefaultsUseLowThresholdWithoutJsonToggle)
 TEST(QmMonitoringHelpers, PerfDurationGateUsesConfiguredThreshold)
 {
 	const int OldThreshold = g_Config.m_QmPerfDebugThresholdMs;
+	const int OldStutterDiagnostics = g_Config.m_QmPerfStutterDiagnostics;
 	g_Config.m_QmPerfDebugThresholdMs = 4;
+	g_Config.m_QmPerfStutterDiagnostics = 0;
 
 	EXPECT_FALSE(QmPerfShouldLogDuration(3.999));
 	EXPECT_TRUE(QmPerfShouldLogDuration(4.0));
 	EXPECT_TRUE(QmPerfShouldLogDuration(0.0, true));
 
 	g_Config.m_QmPerfDebugThresholdMs = OldThreshold;
+	g_Config.m_QmPerfStutterDiagnostics = OldStutterDiagnostics;
+}
+
+TEST(QmStutterDiagnostics, PerfDurationGateUsesThreeHundredFpsBudgetWhileEnabled)
+{
+	const int OldThreshold = g_Config.m_QmPerfDebugThresholdMs;
+	const int OldStutterDiagnostics = g_Config.m_QmPerfStutterDiagnostics;
+	g_Config.m_QmPerfDebugThresholdMs = 4;
+	g_Config.m_QmPerfStutterDiagnostics = 1;
+
+	EXPECT_FALSE(QmPerfShouldLogDuration(QmStutterFrameBudgetMs() - 0.001));
+	EXPECT_TRUE(QmPerfShouldLogDuration(QmStutterFrameBudgetMs()));
+
+	g_Config.m_QmPerfDebugThresholdMs = OldThreshold;
+	g_Config.m_QmPerfStutterDiagnostics = OldStutterDiagnostics;
 }
 
 TEST(QmMonitoringHelpers, ProcessHighPriorityConfigExistsAndDefaultsOff)
@@ -4516,14 +4536,6 @@ TEST(QmMonitoringHelpers, IngameImmediateTextFallbackIsCountedForSchedulerCovera
 	EXPECT_NE(TitleBody.find("if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, TextRenderingStabilizationHasVisualChecklist)
-{
-	const std::string Checklist = ReadRepoFile("docs/superpowers/plans/2026-06-18-text-rendering-stabilization-observability-visual-checklist.md");
-	EXPECT_NE(Checklist.find("Button text is centered"), std::string::npos);
-	EXPECT_NE(Checklist.find("render-ready hit coverage"), std::string::npos);
-	EXPECT_NE(Checklist.find("Small-card right tags/buttons keep fixed priority"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, IngameFixedChromeUsesBudgetedTextPipeline)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
@@ -6076,8 +6088,6 @@ TEST(QmMonitoringHelpers, DefaultGateRunsFullAutomatedTests)
 	EXPECT_NE(DefaultSpec.find("C++ 全量测试和 Rust 全量测试"), std::string::npos);
 	EXPECT_NE(Gate.substr(FullMode).find("\"strict_build\""), std::string::npos);
 	EXPECT_NE(Gate.substr(FullMode).find("\"dilate\""), std::string::npos);
-	EXPECT_NE(Verification.find("C++ 全量测试和 Rust 全量测试"), std::string::npos);
-	EXPECT_NE(Verification.find("严格构建与静态分析只属于 full gate"), std::string::npos);
 	EXPECT_NE(ScriptsOverview.find("C++ 全量测试和 Rust 全量测试"), std::string::npos);
 	EXPECT_NE(ScriptsOverview.find("严格构建与静态分析只属于 full gate"), std::string::npos);
 	EXPECT_NE(ScriptsOverview.find("不作为“全量测试”的默认入口"), std::string::npos);

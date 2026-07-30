@@ -27,8 +27,8 @@ void CFreezeBars::RenderFreezeBar(const int ClientId)
 	Position.x -= FreezeBarHalfWidth;
 	Position.y += 32;
 
-	float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-	if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
+	float Alpha = 1.0f;
+	if(GameClient()->IsOtherTeam(ClientId))
 		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 	if(pCharacter->m_IsInFreeze)
 	{
@@ -191,8 +191,7 @@ void CFreezeBars::RenderFreezeBarPos(float x, const float y, const float Width, 
 
 inline bool CFreezeBars::IsPlayerInfoAvailable(int ClientId) const
 {
-	return GameClient()->LiveTeamFilterAllowsClient(ClientId) &&
-	       GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
+	return GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
 	       GameClient()->m_Snap.m_apPrevPlayerInfos[ClientId] != nullptr &&
 	       GameClient()->m_Snap.m_apPlayerInfos[ClientId] != nullptr;
 }

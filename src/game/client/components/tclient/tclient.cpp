@@ -196,33 +196,30 @@ namespace
 		}
 	}
 
-	EFreezeWakeupType DetectFreezeWakeupType(CGameClient *pGameClient, int ClientId)
+	EFreezeWakeupType DetectFreezeWakeupType(CGameClient *pGameClient, int ClientId, int SnapshotTick)
 	{
-		const CCharacter *pPredictedChar = pGameClient->m_PredictedWorld.GetCharacterById(ClientId);
-		if(pPredictedChar == nullptr)
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS)
 			return EFreezeWakeupType::NONE;
-
-		const int LastDamageTick = pPredictedChar->GetLastDamageTick();
-		const int DamageTickDelta = pGameClient->m_PredictedWorld.GameTick() - LastDamageTick;
-		const int DamageTickWindow = maximum(2, pGameClient->m_PredictedWorld.GameTickSpeed() / 6);
-		const int DamageFrom = pPredictedChar->GetLastDamageFrom();
-		if(LastDamageTick <= 0 ||
-			DamageTickDelta < 0 ||
-			DamageTickDelta > DamageTickWindow ||
-			pPredictedChar->GetLastDamageWeapon() != WEAPON_HAMMER ||
-			DamageFrom < 0)
+		SQmHammerHitRecord aHits[MAX_CLIENTS];
+		const int NumHits = pGameClient->HammerHitTracker().FindTargetHitsAtTick(
+			ClientId,
+			SnapshotTick,
+			aHits,
+			std::size(aHits),
+			pGameClient->HammerHitConnectionFilter());
+		bool LocalHammer = false;
+		for(int HitIndex = 0; HitIndex < NumHits; ++HitIndex)
 		{
-			return EFreezeWakeupType::NONE;
+			const SQmHammerHitRecord &Hit = aHits[HitIndex];
+			if(!Hit.m_TargetWoke)
+				continue;
+			const EQmHammerHitRelation Relation = QmClassifyHammerHitRelation(&Hit, ClientId, pGameClient->m_aLocalIds[0], pGameClient->m_aLocalIds[1]);
+			if(Relation == EQmHammerHitRelation::EXTERNAL)
+				return EFreezeWakeupType::EXTERNAL_HAMMER;
+			if(Relation == EQmHammerHitRelation::SELF || Relation == EQmHammerHitRelation::COUNTERPART)
+				LocalHammer = true;
 		}
-
-		if(DamageFrom == ClientId ||
-			DamageFrom == pGameClient->m_aLocalIds[0] ||
-			DamageFrom == pGameClient->m_aLocalIds[1])
-		{
-			return EFreezeWakeupType::LOCAL_HAMMER;
-		}
-
-		return EFreezeWakeupType::EXTERNAL_HAMMER;
+		return LocalHammer ? EFreezeWakeupType::LOCAL_HAMMER : EFreezeWakeupType::NONE;
 	}
 }
 
@@ -1419,15 +1416,17 @@ void CTClient::HandleSwapCountdownMessage(const char *pText, int Dummy)
 		return;
 
 	ESwapCountdownMessageAction Action = ESwapCountdownMessageAction::None;
-	char aRequester[MAX_NAME_LENGTH] = "";
-	if(!ParseSwapCountdownMessage(pText, Action, aRequester, sizeof(aRequester)))
+	ESwapCountdownMessageDirection Direction = ESwapCountdownMessageDirection::Incoming;
+	char aCounterpart[MAX_NAME_LENGTH] = "";
+	if(!ParseSwapCountdownMessage(pText, Action, Direction, aCounterpart, sizeof(aCounterpart)))
 		return;
 
 	if(Action == ESwapCountdownMessageAction::Start)
-		StartSwapCountdown(Dummy, aRequester);
+		StartSwapCountdown(Dummy, aCounterpart, Direction == ESwapCountdownMessageDirection::Outgoing);
 	else if(Action == ESwapCountdownMessageAction::Cancel)
 	{
-		if(str_comp_nocase(aRequester, m_aaSwapCountdownRequester[Dummy]) == 0)
+		const bool Outgoing = Direction == ESwapCountdownMessageDirection::Outgoing;
+		if(Outgoing == m_aSwapCountdownOutgoing[Dummy] && str_comp_nocase(aCounterpart, m_aaSwapCountdownCounterpart[Dummy]) == 0)
 		{
 			ClearSwapCountdown(Dummy);
 		}
@@ -1440,14 +1439,15 @@ void CTClient::HandleSwapCountdownMessage(const char *pText, int Dummy)
 	}
 }
 
-void CTClient::StartSwapCountdown(int Dummy, const char *pRequester)
+void CTClient::StartSwapCountdown(int Dummy, const char *pCounterpart, bool Outgoing)
 {
 	if(Dummy < 0 || Dummy >= NUM_DUMMIES)
 		return;
 
 	m_aSwapCountdownActive[Dummy] = true;
+	m_aSwapCountdownOutgoing[Dummy] = Outgoing;
 	m_aSwapCountdownStartTick[Dummy] = Client()->GameTick(Dummy);
-	str_copy(m_aaSwapCountdownRequester[Dummy], pRequester != nullptr ? pRequester : "", sizeof(m_aaSwapCountdownRequester[Dummy]));
+	str_copy(m_aaSwapCountdownCounterpart[Dummy], pCounterpart != nullptr ? pCounterpart : "", sizeof(m_aaSwapCountdownCounterpart[Dummy]));
 }
 
 void CTClient::ClearSwapCountdown(int Dummy)
@@ -1462,8 +1462,9 @@ void CTClient::ClearSwapCountdown(int Dummy)
 		return;
 
 	m_aSwapCountdownActive[Dummy] = false;
+	m_aSwapCountdownOutgoing[Dummy] = false;
 	m_aSwapCountdownStartTick[Dummy] = 0;
-	m_aaSwapCountdownRequester[Dummy][0] = '\0';
+	m_aaSwapCountdownCounterpart[Dummy][0] = '\0';
 }
 
 bool CTClient::HasSwapCountdown(int Dummy) const
@@ -1486,11 +1487,16 @@ int CTClient::GetSwapCountdownStartTick(int Dummy) const
 	return 0;
 }
 
-const char *CTClient::GetSwapCountdownRequester(int Dummy) const
+const char *CTClient::GetSwapCountdownCounterpart(int Dummy) const
 {
 	if(Dummy < 0 || Dummy >= NUM_DUMMIES)
 		return "";
-	return m_aaSwapCountdownRequester[Dummy];
+	return m_aaSwapCountdownCounterpart[Dummy];
+}
+
+bool CTClient::IsSwapCountdownOutgoing(int Dummy) const
+{
+	return Dummy >= 0 && Dummy < NUM_DUMMIES && m_aSwapCountdownOutgoing[Dummy];
 }
 
 void CTClient::ConSpecId(IConsole::IResult *pResult, void *pUserData)
@@ -1954,12 +1960,8 @@ void CTClient::OnUpdate()
 	if(RunGameplayTickChecks)
 	{
 		CheckFreeze();
-		CheckFreezeWakeupPopup();
 		CheckComboPopup();
 		CheckWaterFall();
-		CheckAutoUnspecOnUnfreeze(); // 检测解冻自动取消旁观
-		CheckAutoSwitchOnUnfreeze(); // HJ大佬辅助 - 检测自动切换
-		CheckAutoCloseChatOnUnfreeze(); // HJ大佬辅助 - 检测解冻后关闭聊天
 		UpdatePlayerStats(); // 更新玩家统计
 		UpdateGoresWeaponCycle(); // Gores 锤枪自动切换
 		UpdateGoresMapProgress(); // 更新 Gores 地图路径进度
@@ -2155,7 +2157,7 @@ void CTClient::AddFreezeWakeupPopup(int WokenDummy)
 	AddTextPopup(AnchorClientId, (int)ETextPopupType::FREEZE_WAKEUP, true, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 }
 
-void CTClient::CheckFreezeWakeupPopup()
+void CTClient::CheckHammerWakeupActions()
 {
 	if(Client()->State() != IClient::STATE_ONLINE)
 		return;
@@ -2167,41 +2169,72 @@ void CTClient::CheckFreezeWakeupPopup()
 			if(Popup.m_Active && Popup.m_TextType == (int)ETextPopupType::FREEZE_WAKEUP)
 				Popup.m_Active = false;
 		}
-		for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
-			m_aWasInFreezeForWakeupPopup[Dummy] = false;
-		return;
 	}
+
+	SQmHammerWakeupDecisionInput Input;
+	Input.m_ActiveConnection = g_Config.m_ClDummy;
+	Input.m_ActiveSpectating = GameClient()->m_Snap.m_SpecInfo.m_Active;
+	Input.m_ChatActive = GameClient()->m_Chat.IsActive();
+	Input.m_ShowPopup = g_Config.m_QmFreezeWakeupPopup != 0;
+	Input.m_AutoUnspec = g_Config.m_QmAutoUnspecOnUnfreeze != 0;
+	Input.m_AutoSwitch = g_Config.m_QmAutoSwitchOnUnfreeze != 0 && Client()->DummyConnected();
+	Input.m_AutoCloseChat = g_Config.m_QmAutoCloseChatOnUnfreeze != 0;
+	const int SnapshotTick = Client()->GameTick(Input.m_ActiveConnection);
 
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
 		if(Dummy == 1 && !Client()->DummyConnected())
-		{
-			m_aWasInFreezeForWakeupPopup[Dummy] = false;
 			continue;
-		}
 
 		const int ClientId = GameClient()->m_aLocalIds[Dummy];
-		if(ClientId < 0)
-		{
-			m_aWasInFreezeForWakeupPopup[Dummy] = false;
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS)
 			continue;
-		}
-
-		const auto &ClientData = GameClient()->m_aClients[ClientId];
-		if(!ClientData.m_Active)
-		{
-			m_aWasInFreezeForWakeupPopup[Dummy] = false;
+		const auto &Character = GameClient()->m_Snap.m_aCharacters[ClientId];
+		if(!Character.m_HasExtendedData || Character.m_pPrevExtendedData == nullptr)
 			continue;
-		}
+		Input.m_aWasInFreeze[Dummy] = Character.m_pPrevExtendedData->m_FreezeEnd != 0;
+		Input.m_aInFreeze[Dummy] = Character.m_ExtendedData.m_FreezeEnd != 0;
+		Input.m_aExternalHammerWakeup[Dummy] = Input.m_aWasInFreeze[Dummy] && !Input.m_aInFreeze[Dummy] &&
+						       DetectFreezeWakeupType(GameClient(), ClientId, SnapshotTick) == EFreezeWakeupType::EXTERNAL_HAMMER;
+	}
 
-		const bool IsInFreeze = ClientData.m_FreezeEnd != 0;
-		if(m_aWasInFreezeForWakeupPopup[Dummy] && !IsInFreeze)
+	const SQmHammerWakeupDecision Decision = QmDecideHammerWakeupActions(Input);
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		if(Decision.m_aShowPopup[Dummy])
+			AddFreezeWakeupPopup(Dummy);
+	}
+
+	if(Decision.m_UnspecActiveConnection)
+	{
+		if(Client()->IsSixup())
 		{
-			if(DetectFreezeWakeupType(GameClient(), ClientId) == EFreezeWakeupType::EXTERNAL_HAMMER)
-				AddFreezeWakeupPopup(Dummy);
+			protocol7::CNetMsg_Cl_Say Msg;
+			Msg.m_Mode = protocol7::CHAT_ALL;
+			Msg.m_Target = -1;
+			Msg.m_pMessage = "/spec";
+			Client()->SendPackMsg(Input.m_ActiveConnection, &Msg, MSGFLAG_VITAL, true);
 		}
+		else
+		{
+			CNetMsg_Cl_Say Msg;
+			Msg.m_Team = 0;
+			Msg.m_pMessage = "/spec";
+			Client()->SendPackMsg(Input.m_ActiveConnection, &Msg, MSGFLAG_VITAL);
+		}
+	}
 
-		m_aWasInFreezeForWakeupPopup[Dummy] = IsInFreeze;
+	if(Decision.m_CloseChat)
+	{
+		GameClient()->m_Chat.SaveDraft();
+		GameClient()->m_Chat.DisableMode();
+	}
+
+	if(Decision.m_SwitchToConnection >= 0)
+	{
+		char aCommand[16];
+		str_format(aCommand, sizeof(aCommand), "cl_dummy %d", Decision.m_SwitchToConnection);
+		Console()->ExecuteLine(aCommand);
 	}
 }
 
@@ -2210,6 +2243,7 @@ void CTClient::ResetComboState(int Dummy)
 	auto ResetOne = [&](int Index) {
 		m_aComboPopupCount[Index] = 0;
 		m_aComboLastEventTick[Index] = -1;
+		std::fill(std::begin(m_aaComboLastHammerHitSnapshotTick[Index]), std::end(m_aaComboLastHammerHitSnapshotTick[Index]), -1);
 		m_aComboLastHookedPlayer[Index] = -1;
 	};
 
@@ -2235,10 +2269,8 @@ void CTClient::CheckComboPopup()
 	}
 
 	const int ComboWindowTicks = maximum(1, Client()->GameTickSpeed() * QMCLIENT_COMBO_POPUP_WINDOW_SECONDS);
-	auto RegisterComboEvent = [&](int Dummy, int AnchorClientId, const CCharacter *pAnchorChar, int TargetPlayer, const CCharacter *pTargetChar) {
+	auto RegisterComboEvent = [&](int Dummy, vec2 AnchorPos, int TargetPlayer, const CCharacter *pTargetChar) {
 		if(TargetPlayer < 0 || TargetPlayer >= MAX_CLIENTS)
-			return;
-		if(pAnchorChar == nullptr)
 			return;
 
 		const int CurrentTick = Client()->GameTick(Dummy);
@@ -2257,13 +2289,13 @@ void CTClient::CheckComboPopup()
 		const int ComboCount = m_aComboPopupCount[Dummy];
 		if(ComboCount >= 11)
 		{
-			AddComboFreezeParticleRing(GameClient(), pAnchorChar->GetPos(), 1.0f);
+			AddComboFreezeParticleRing(GameClient(), AnchorPos, 1.0f);
 			if(pTargetChar != nullptr)
 				AddComboFreezeParticleRing(GameClient(), pTargetChar->GetPos(), 1.0f);
 		}
 		else if(ComboCount >= 7)
 		{
-			AddComboFreezeParticleRing(GameClient(), pAnchorChar->GetPos(), 0.7f);
+			AddComboFreezeParticleRing(GameClient(), AnchorPos, 0.7f);
 		}
 		else if(ComboCount >= 3)
 		{
@@ -2290,33 +2322,30 @@ void CTClient::CheckComboPopup()
 		}
 
 		const CCharacter *pLocalChar = GameClient()->m_PredictedWorld.GetCharacterById(ClientId);
-		if(pLocalChar == nullptr)
-		{
-			ResetComboState(Dummy);
-			continue;
-		}
-
-		const int HookedPlayer = pLocalChar->Core()->HookedPlayer();
+		const vec2 AnchorPos = pLocalChar != nullptr ? pLocalChar->GetPos() : GameClient()->m_aClients[ClientId].m_RenderPos;
+		const int HookedPlayer = pLocalChar != nullptr ? pLocalChar->Core()->HookedPlayer() : -1;
 		if(HookedPlayer >= 0 && HookedPlayer != ClientId && HookedPlayer != m_aComboLastHookedPlayer[Dummy])
-			RegisterComboEvent(Dummy, ClientId, pLocalChar, HookedPlayer, GameClient()->m_PredictedWorld.GetCharacterById(HookedPlayer));
+			RegisterComboEvent(Dummy, AnchorPos, HookedPlayer, GameClient()->m_PredictedWorld.GetCharacterById(HookedPlayer));
 		m_aComboLastHookedPlayer[Dummy] = HookedPlayer >= 0 ? HookedPlayer : -1;
 
-		const int CurrentTick = Client()->GameTick(Dummy);
-		for(int TargetId = 0; TargetId < MAX_CLIENTS; ++TargetId)
+		SQmHammerHitRecord aHits[MAX_CLIENTS];
+		const int MinSnapshotTick = Client()->GameTick(g_Config.m_ClDummy) - 1;
+		const int NumHits = GameClient()->HammerHitTracker().FindLatestTargets(
+			ClientId,
+			MinSnapshotTick,
+			aHits,
+			std::size(aHits),
+			GameClient()->HammerHitConnectionFilter());
+		for(int HitIndex = 0; HitIndex < NumHits; ++HitIndex)
 		{
+			const SQmHammerHitRecord &Hit = aHits[HitIndex];
+			const int TargetId = Hit.m_TargetId;
 			if(TargetId == ClientId)
 				continue;
-
-			const CCharacter *pTargetChar = GameClient()->m_PredictedWorld.GetCharacterById(TargetId);
-			if(pTargetChar == nullptr)
+			if(Hit.m_SnapshotTick <= m_aaComboLastHammerHitSnapshotTick[Dummy][TargetId])
 				continue;
-
-			if(pTargetChar->GetLastDamageTick() == CurrentTick &&
-				pTargetChar->GetLastDamageFrom() == ClientId &&
-				pTargetChar->GetLastDamageWeapon() == WEAPON_HAMMER)
-			{
-				RegisterComboEvent(Dummy, ClientId, pLocalChar, TargetId, pTargetChar);
-			}
+			m_aaComboLastHammerHitSnapshotTick[Dummy][TargetId] = Hit.m_SnapshotTick;
+			RegisterComboEvent(Dummy, AnchorPos, TargetId, GameClient()->m_PredictedWorld.GetCharacterById(TargetId));
 		}
 	}
 }
@@ -2801,164 +2830,6 @@ void CTClient::CheckFriendEnterGreet()
 		m_FriendEnterPendingSendAt = Now + FriendEnterGreetDelaySeconds;
 }
 
-void CTClient::CheckAutoUnspecOnUnfreeze()
-{
-	if(Client()->State() != IClient::STATE_ONLINE)
-		return;
-	if(!g_Config.m_QmAutoUnspecOnUnfreeze)
-		return;
-
-	// 分别检查主玩家和dummy（每个Tee的旁观状态是独立的）
-	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
-	{
-		const int ClientId = GameClient()->m_aLocalIds[Dummy];
-		if(ClientId < 0)
-			continue;
-
-		const auto &ClientData = GameClient()->m_aClients[ClientId];
-		if(!ClientData.m_Active)
-			continue;
-
-		// 检查是否处于旁观状态
-		bool IsSpectating = GameClient()->m_Snap.m_SpecInfo.m_Active;
-
-		// 检查当前是否被 freeze
-		bool IsInFreeze = ClientData.m_FreezeEnd != 0;
-
-		// 检测从 freeze 到 unfreeze 的转换
-		if(m_aWasInFreezeForUnspec[Dummy] && !IsInFreeze && IsSpectating)
-		{
-			if(DetectFreezeWakeupType(GameClient(), ClientId) != EFreezeWakeupType::EXTERNAL_HAMMER)
-			{
-				m_aWasInFreezeForUnspec[Dummy] = IsInFreeze;
-				continue;
-			}
-
-			// 被解冻了，且当前处于旁观状态，直接发送网络包（最快方式）
-			if(Client()->IsSixup())
-			{
-				// 0.7协议
-				protocol7::CNetMsg_Cl_Say Msg7;
-				Msg7.m_Mode = protocol7::CHAT_ALL;
-				Msg7.m_Target = -1;
-				Msg7.m_pMessage = "/spec";
-				Client()->SendPackMsgActive(&Msg7, MSGFLAG_VITAL, true);
-			}
-			else
-			{
-				// 0.6协议
-				CNetMsg_Cl_Say Msg;
-				Msg.m_Team = 0; // 全体聊天
-				Msg.m_pMessage = "/spec";
-				Client()->SendPackMsgActive(&Msg, MSGFLAG_VITAL);
-			}
-		}
-
-		m_aWasInFreezeForUnspec[Dummy] = IsInFreeze;
-	}
-}
-
-void CTClient::CheckAutoSwitchOnUnfreeze()
-{
-	if(Client()->State() != IClient::STATE_ONLINE)
-		return;
-	if(!g_Config.m_QmAutoSwitchOnUnfreeze)
-		return;
-
-	// 必须有dummy连接
-	if(!Client()->DummyConnected())
-		return;
-
-	// 获取本体和dummy的ClientId
-	const int MainClientId = GameClient()->m_aLocalIds[0];
-	const int DummyClientId = GameClient()->m_aLocalIds[1];
-
-	if(MainClientId < 0 || DummyClientId < 0)
-		return;
-
-	const auto &MainClient = GameClient()->m_aClients[MainClientId];
-	const auto &DummyClient = GameClient()->m_aClients[DummyClientId];
-
-	if(!MainClient.m_Active || !DummyClient.m_Active)
-		return;
-
-	// 获取当前freeze状态
-	bool MainInFreeze = MainClient.m_FreezeEnd != 0;
-	bool DummyInFreeze = DummyClient.m_FreezeEnd != 0;
-
-	// 获取之前的freeze状态
-	bool MainWasInFreeze = m_aWasInFreezeForSwitch[0];
-	bool DummyWasInFreeze = m_aWasInFreezeForSwitch[1];
-
-	// 当前操控的是哪个 (0=本体, 1=dummy)
-	int CurrentDummy = g_Config.m_ClDummy;
-	const bool MainJustUnfrozen = MainWasInFreeze && !MainInFreeze;
-	const bool DummyJustUnfrozen = DummyWasInFreeze && !DummyInFreeze;
-	const bool MainExternalHammerWakeup = MainJustUnfrozen && DetectFreezeWakeupType(GameClient(), MainClientId) == EFreezeWakeupType::EXTERNAL_HAMMER;
-	const bool DummyExternalHammerWakeup = DummyJustUnfrozen && DetectFreezeWakeupType(GameClient(), DummyClientId) == EFreezeWakeupType::EXTERNAL_HAMMER;
-
-	// 核心逻辑：两个都曾被freeze，现在有一个解冻了
-	// 如果解冻的不是当前操控的，就切换
-	if(MainWasInFreeze && DummyWasInFreeze)
-	{
-		// 本体刚解冻，而当前操控的是dummy
-		if(!MainInFreeze && DummyInFreeze && CurrentDummy == 1 && MainExternalHammerWakeup)
-		{
-			// 切换到本体
-			Console()->ExecuteLine("cl_dummy 0");
-		}
-		// dummy刚解冻，而当前操控的是本体
-		else if(MainInFreeze && !DummyInFreeze && CurrentDummy == 0 && DummyExternalHammerWakeup)
-		{
-			// 切换到dummy
-			Console()->ExecuteLine("cl_dummy 1");
-		}
-	}
-
-	// 更新状态
-	m_aWasInFreezeForSwitch[0] = MainInFreeze;
-	m_aWasInFreezeForSwitch[1] = DummyInFreeze;
-}
-
-void CTClient::CheckAutoCloseChatOnUnfreeze()
-{
-	if(Client()->State() != IClient::STATE_ONLINE)
-		return;
-
-	bool CanCloseChat = g_Config.m_QmAutoCloseChatOnUnfreeze && GameClient()->m_Chat.IsActive();
-
-	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
-	{
-		if(Dummy == 1 && !Client()->DummyConnected())
-			continue;
-
-		const int ClientId = GameClient()->m_aLocalIds[Dummy];
-		if(ClientId < 0)
-			continue;
-
-		const auto &ClientData = GameClient()->m_aClients[ClientId];
-		if(!ClientData.m_Active)
-			continue;
-
-		const bool IsInFreeze = ClientData.m_FreezeEnd != 0;
-
-		if(m_aWasInFreezeForChatClose[Dummy] && !IsInFreeze && CanCloseChat)
-		{
-			if(DetectFreezeWakeupType(GameClient(), ClientId) != EFreezeWakeupType::EXTERNAL_HAMMER)
-			{
-				m_aWasInFreezeForChatClose[Dummy] = IsInFreeze;
-				continue;
-			}
-
-			GameClient()->m_Chat.SaveDraft();
-			GameClient()->m_Chat.DisableMode();
-			CanCloseChat = false;
-		}
-
-		m_aWasInFreezeForChatClose[Dummy] = IsInFreeze;
-	}
-}
-
 bool CTClient::NeedQmClientUpdate()
 {
 	return str_comp(m_aQmClientLatestVersionStr, "0") != 0;
@@ -3078,7 +2949,7 @@ void CTClient::SetForcedAspect()
 	// TODO: Fix flashing on windows
 	int State = Client()->State();
 	bool Force = true;
-	float ScreenAspectOverride = 0.0f;
+	float GameScreenAspectOverride = 0.0f;
 	if(g_Config.m_TcAllowAnyRes == 0)
 		;
 	else if(State == CClient::EClientState::STATE_DEMOPLAYBACK)
@@ -3101,10 +2972,10 @@ void CTClient::SetForcedAspect()
 		}
 
 		if(AspectRatio > 0)
-			ScreenAspectOverride = AspectRatio / 100.0f;
+			GameScreenAspectOverride = AspectRatio / 100.0f;
 	}
 
-	Graphics()->SetScreenAspectOverride(ScreenAspectOverride);
+	Graphics()->SetGameScreenAspectOverride(GameScreenAspectOverride);
 	Graphics()->SetForcedAspect(Force);
 }
 
@@ -3177,6 +3048,7 @@ void CTClient::OnStateChange(int NewState, int OldState)
 
 void CTClient::OnNewSnapshot()
 {
+	CheckHammerWakeupActions();
 	SetForcedAspect();
 	ApplyGoresFastInputLink(true);
 	MaybeShowLocalSaveJoinHint();
@@ -5501,7 +5373,7 @@ void CTClient::MaybeShowLocalSaveJoinHint()
 
 	char aMessage[1024];
 	str_format(aMessage, sizeof(aMessage), Localize("- You have %d saves on this map!"), (int)vMatchedEntries.size());
-	GameClient()->Echo(aMessage, true);
+	GameClient()->Echo(aMessage);
 
 	std::string PlayersLine = Localize("- Save owners in order:");
 	std::string CodesLine = Localize("- Save codes in order:");
@@ -5522,8 +5394,8 @@ void CTClient::MaybeShowLocalSaveJoinHint()
 		PlayersLine += ",...";
 		CodesLine += ",...";
 	}
-	GameClient()->Echo(PlayersLine.c_str(), true);
-	GameClient()->Echo(CodesLine.c_str(), true);
+	GameClient()->Echo(PlayersLine.c_str());
+	GameClient()->Echo(CodesLine.c_str());
 
 	str_copy(m_aLastLocalSaveHintMap, pCurrentMap, sizeof(m_aLastLocalSaveHintMap));
 }

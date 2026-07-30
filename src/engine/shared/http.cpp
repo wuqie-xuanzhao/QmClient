@@ -289,6 +289,10 @@ bool CHttpRequest::ConfigureHandle(void *pHandle)
 		curl_easy_setopt(pH, CURLOPT_FAILONERROR, 1L);
 	}
 	curl_easy_setopt(pH, CURLOPT_URL, m_aUrl);
+	if(m_aProxy[0] != '\0')
+	{
+		curl_easy_setopt(pH, CURLOPT_PROXY, m_aProxy);
+	}
 	curl_easy_setopt(pH, CURLOPT_NOSIGNAL, 1L);
 	curl_easy_setopt(pH, CURLOPT_USERAGENT, GAME_NAME " " GAME_RELEASE_VERSION " (" CONF_PLATFORM_STRING "; " CONF_ARCH_STRING ")");
 	curl_easy_setopt(pH, CURLOPT_ACCEPT_ENCODING, ""); // Use any compression algorithm supported by libcurl.
@@ -486,7 +490,10 @@ int CHttpRequest::ProgressCallback(void *pUser, double DlTotal, double DlCurr, d
 	pTask->m_Size.store(DlTotal, std::memory_order_relaxed);
 	pTask->m_Progress.store(DlTotal == 0.0 ? 0 : (100 * DlCurr) / DlTotal, std::memory_order_relaxed);
 	pTask->OnProgress();
-	return pTask->m_Abort ? -1 : 0;
+	const bool AbortRequested = pTask->m_Abort.load();
+	if(AbortRequested)
+		pTask->m_AbortTriggeredByProgressCallback.store(true);
+	return AbortRequested ? -1 : 0;
 }
 
 void CHttpRequest::OnCompletionInternal(void *pHandle, unsigned int Result)
@@ -503,11 +510,11 @@ void CHttpRequest::OnCompletionInternal(void *pHandle, unsigned int Result)
 	const CURLcode Code = static_cast<CURLcode>(Result);
 	if(Code != CURLE_OK)
 	{
-		if(g_Config.m_DbgCurl || m_LogProgress >= HTTPLOG::FAILURE)
+		State = (Code == CURLE_ABORTED_BY_CALLBACK) ? EHttpState::ABORTED : EHttpState::ERROR;
+		if(HttpShouldLogFailure(State, m_AbortTriggeredByProgressCallback.load()) && (g_Config.m_DbgCurl || m_LogProgress >= HTTPLOG::FAILURE))
 		{
 			log_error("http", "%s failed. libcurl error (%u): %s", m_aUrl, Code, m_aErr[0] != '\0' ? m_aErr : curl_easy_strerror(Code));
 		}
-		State = (Code == CURLE_ABORTED_BY_CALLBACK) ? EHttpState::ABORTED : EHttpState::ERROR;
 	}
 	else
 	{

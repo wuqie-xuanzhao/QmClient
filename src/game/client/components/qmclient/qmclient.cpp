@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "qmclient.h"
 
 #include <base/hash.h>
@@ -29,7 +30,6 @@
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/gameclient.h>
-#include <game/client/prediction/entities/character.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
 #include <game/layers.h>
@@ -111,8 +111,6 @@ static constexpr const char *DDNET_PLAYER_STATS_URL = "https://ddnet.org/players
 static constexpr int QMCLIENT_DDNET_PLAYER_SYNC_INTERVAL_SECONDS = 120;
 static constexpr int QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS = 10;
 static constexpr const char *QMCLIENT_FREEZE_WAKEUP_TEXT = "快醒醒!";
-[[maybe_unused]] static constexpr int QMCLIENT_AXIOM_AUTO_LOGIN_MAX_ATTEMPTS = 3;
-[[maybe_unused]] static constexpr int QMCLIENT_AXIOM_AUTO_LOGIN_RETRY_DELAY_SECONDS = 2;
 
 [[maybe_unused]] static bool TextContainsAny(const char *pText, const std::initializer_list<const char *> &Tokens)
 {
@@ -126,7 +124,6 @@ static constexpr const char *QMCLIENT_FREEZE_WAKEUP_TEXT = "快醒醒!";
 	}
 	return false;
 }
-static constexpr float QMCLIENT_FREEZE_WAKEUP_POPUP_DURATION = 2.0f;
 [[maybe_unused]] static constexpr float QMCLIENT_TEXT_POPUP_FONT_SIZE = 30.0f;
 [[maybe_unused]] static constexpr vec2 QMCLIENT_FREEZE_WAKEUP_POPUP_OFFSET = vec2(34.0f, -78.0f);
 [[maybe_unused]] static constexpr vec2 QMCLIENT_FREEZE_WAKEUP_POPUP_DRIFT = vec2(18.0f, -16.0f);
@@ -394,47 +391,6 @@ namespace
 		}
 	};
 
-	enum class EFreezeWakeupType
-	{
-		NONE,
-		LOCAL_HAMMER,
-		EXTERNAL_HAMMER,
-	};
-
-	[[maybe_unused]] float TextPopupDuration(int TextType)
-	{
-		(void)TextType;
-		return QMCLIENT_FREEZE_WAKEUP_POPUP_DURATION;
-	}
-
-	[[maybe_unused]] EFreezeWakeupType DetectFreezeWakeupType(CGameClient *pGameClient, int ClientId)
-	{
-		const CCharacter *pPredictedChar = pGameClient->m_PredictedWorld.GetCharacterById(ClientId);
-		if(pPredictedChar == nullptr)
-			return EFreezeWakeupType::NONE;
-
-		const int LastDamageTick = pPredictedChar->GetLastDamageTick();
-		const int DamageTickDelta = pGameClient->m_PredictedWorld.GameTick() - LastDamageTick;
-		const int DamageTickWindow = maximum(2, pGameClient->m_PredictedWorld.GameTickSpeed() / 6);
-		const int DamageFrom = pPredictedChar->GetLastDamageFrom();
-		if(LastDamageTick <= 0 ||
-			DamageTickDelta < 0 ||
-			DamageTickDelta > DamageTickWindow ||
-			pPredictedChar->GetLastDamageWeapon() != WEAPON_HAMMER ||
-			DamageFrom < 0)
-		{
-			return EFreezeWakeupType::NONE;
-		}
-
-		if(DamageFrom == ClientId ||
-			DamageFrom == pGameClient->m_aLocalIds[0] ||
-			DamageFrom == pGameClient->m_aLocalIds[1])
-		{
-			return EFreezeWakeupType::LOCAL_HAMMER;
-		}
-
-		return EFreezeWakeupType::EXTERNAL_HAMMER;
-	}
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)

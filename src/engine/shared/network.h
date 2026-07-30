@@ -401,6 +401,7 @@ public:
 
 	int Update();
 	int Flush();
+	bool HasPendingPacketData() const { return m_Construct.m_NumChunks > 0 || (m_Construct.m_Flags & NET_PACKETFLAG_RESEND) != 0; }
 
 	int Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr, SECURITY_TOKEN SecurityToken = NET_SECURITY_TOKEN_UNSUPPORTED, SECURITY_TOKEN ResponseToken = NET_SECURITY_TOKEN_UNSUPPORTED);
 	int QueueChunk(int Flags, int DataSize, const void *pData);

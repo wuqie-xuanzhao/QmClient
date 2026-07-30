@@ -8,6 +8,7 @@
 
 #include <game/client/animstate.h>
 #include <game/client/components/effects.h>
+#include <game/client/components/qmclient/afk_presentation.h>
 #include <game/client/gameclient.h>
 #include <game/client/render.h>
 
@@ -61,6 +62,15 @@ void CTrails::OnRender()
 		return Pos.x >= ScreenX0 - Margin && Pos.x <= ScreenX1 + Margin &&
 		       Pos.y >= ScreenY0 - Margin && Pos.y <= ScreenY1 + Margin;
 	};
+	const auto ApplyAfkAlpha = [&](int ClientId, float Alpha) {
+		const bool Afk = IsQmAfkForPresentation(
+			GameClient()->m_aClients[ClientId].m_Afk,
+			Client()->State() == IClient::STATE_ONLINE,
+			GameClient()->m_Menus.IsActive(),
+			ClientId,
+			GameClient()->m_Snap.m_LocalClientId);
+		return ApplyQmAfkPresentationAlpha(Alpha, Afk);
+	};
 
 	// TClient: Foot particles - render falling particles behind tee
 	if(g_Config.m_QmFootParticles)
@@ -71,9 +81,6 @@ void CTrails::OnRender()
 
 			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
 				continue;
-			if(!GameClient()->LiveTeamFilterAllowsClient(ClientId))
-				continue;
-
 			// Render for both local players (main + dummy when connected).
 			if(!IsLocalClient)
 				continue;
@@ -86,9 +93,9 @@ void CTrails::OnRender()
 			vec2 Direction = direction(Angle);
 
 			float Alpha = 1.0f;
-			Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-			if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
+			if(GameClient()->IsOtherTeam(ClientId))
 				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+			Alpha = ApplyAfkAlpha(ClientId, Alpha);
 
 			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
 		}
@@ -103,9 +110,6 @@ void CTrails::OnRender()
 
 			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
 				continue;
-			if(!GameClient()->LiveTeamFilterAllowsClient(ClientId))
-				continue;
-
 			if(IsLocalClient)
 				continue; // Remote rendering is only for other players.
 
@@ -123,9 +127,9 @@ void CTrails::OnRender()
 			vec2 Direction = direction(Angle);
 
 			float Alpha = 1.0f;
-			Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
-			if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
+			if(GameClient()->IsOtherTeam(ClientId))
 				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+			Alpha = ApplyAfkAlpha(ClientId, Alpha);
 
 			// Render foot trail for recognized Q1menG client
 			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
@@ -155,16 +159,7 @@ void CTrails::OnRender()
 				ClearHistory(ClientId);
 			continue;
 		}
-		if(!GameClient()->LiveTeamFilterAllowsClient(ClientId))
-		{
-			if(m_HistoryValid[ClientId])
-				ClearHistory(ClientId);
-			continue;
-		}
-		else
-		{
-			m_HistoryValid[ClientId] = true;
-		}
+		m_HistoryValid[ClientId] = true;
 
 		CTeeRenderInfo TeeInfo = GameClient()->m_aClients[ClientId].m_RenderInfo;
 
@@ -216,14 +211,12 @@ void CTrails::OnRender()
 			Alpha *= g_Config.m_ClRaceGhostAlpha / 100.0f;
 		else if(ClientId >= 0)
 		{
-			const float LiveObserverAlpha = GameClient()->LiveObserverClientAlpha(ClientId);
-			if(LiveObserverAlpha < 1.0f)
-				Alpha *= LiveObserverAlpha;
-			else if(GameClient()->IsOtherTeam(ClientId))
+			if(GameClient()->IsOtherTeam(ClientId))
 				Alpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
 		}
 		else
 			Alpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
+		Alpha = ApplyAfkAlpha(ClientId, Alpha);
 
 		int TrailLength = g_Config.m_TcTeeTrailLength;
 		float Width = g_Config.m_TcTeeTrailWidth;

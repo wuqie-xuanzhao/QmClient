@@ -83,5 +83,6 @@ public:
 extern IStorage *CreateStorage(IStorage::EInitializationType InitializationType, int NumArgs, const char **ppArguments);
 extern std::unique_ptr<IStorage> CreateLocalStorage();
 extern std::unique_ptr<IStorage> CreateTempStorage(const char *pDirectory, int NumArgs, const char **ppArguments);
+extern bool StoragePathFromExecutable(const char *pExecutablePath, const char *pRelativePath, char *pBuffer, unsigned BufferSize);
 
 #endif

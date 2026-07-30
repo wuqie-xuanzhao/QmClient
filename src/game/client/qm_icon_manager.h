@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_QM_ICON_MANAGER_H
@@ -25,6 +26,13 @@ enum class EQmIcon
 	CHEVRON_DOWN,
 	PLUS,
 	TRASH,
+	SATELLITE_SWAP_INCOMING,
+	SATELLITE_SWAP_OUTGOING,
+	SATELLITE_SWITCH,
+	SATELLITE_MUTE,
+	SATELLITE_CHECK,
+	SATELLITE_SPECTATOR_EYE,
+	SATELLITE_SPECTATOR_EYE_CLOSED,
 	COUNT,
 };
 
@@ -104,6 +112,13 @@ public:
 		case EQmIcon::CHEVRON_DOWN: return "chevron-down";
 		case EQmIcon::PLUS: return "plus";
 		case EQmIcon::TRASH: return "trash";
+		case EQmIcon::SATELLITE_SWAP_INCOMING: return "satellite-swap-incoming";
+		case EQmIcon::SATELLITE_SWAP_OUTGOING: return "satellite-swap-outgoing";
+		case EQmIcon::SATELLITE_SWITCH: return "satellite-switch";
+		case EQmIcon::SATELLITE_MUTE: return "satellite-mute";
+		case EQmIcon::SATELLITE_CHECK: return "satellite-check";
+		case EQmIcon::SATELLITE_SPECTATOR_EYE: return "satellite-spectator-eye";
+		case EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED: return "satellite-spectator-eye-closed";
 		case EQmIcon::COUNT: break;
 		}
 		return "";

@@ -1,10 +1,57 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "test.h"
 
 #include <game/client/QmUi/QmLayout.h>
+#include <game/client/components/qmclient/afk_presentation.h>
+#include <game/client/components/qmclient/scoreboard_team_modes.h>
+#include <game/client/components/scoreboard.h>
 
 #include <gtest/gtest.h>
 
 #include <vector>
+
+TEST(QmAfkPresentation, ServerAndEscMenuStatesShareOneVisualDecision)
+{
+	EXPECT_TRUE(IsQmAfkForPresentation(true, false, false, 7, 3));
+	EXPECT_TRUE(IsQmAfkForPresentation(false, true, true, 3, 3));
+
+	EXPECT_FALSE(IsQmAfkForPresentation(false, true, false, 3, 3));
+	EXPECT_FALSE(IsQmAfkForPresentation(false, true, true, 4, 3));
+	EXPECT_FALSE(IsQmAfkForPresentation(false, false, true, 3, 3));
+	EXPECT_FALSE(IsQmAfkForPresentation(false, true, true, -1, -1));
+}
+
+TEST(QmAfkPresentation, AfkCapsExistingOpacityWithoutMakingPlayersBrighter)
+{
+	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(1.0f, true), 0.4f);
+	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(0.6f, true), 0.4f);
+	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(0.25f, true), 0.25f);
+	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(0.75f, false), 0.75f);
+}
+
+TEST(QmScoreboardTeamModes, AggregationRequiresDisplayInfoAndCombinesKnownMembers)
+{
+	SQmScoreboardTeamModeState State;
+	AccumulateQmScoreboardTeamModeState(State, false, CHARACTERFLAG_PRACTICE_MODE | CHARACTERFLAG_LOCK_MODE);
+	EXPECT_FALSE(State.m_Known);
+	EXPECT_EQ(State.m_Flags, 0);
+	SQmScoreboardTeamModeState KnownEmptyState;
+	AccumulateQmScoreboardTeamModeState(KnownEmptyState, true, 0);
+	EXPECT_TRUE(KnownEmptyState.m_Known);
+	EXPECT_EQ(KnownEmptyState.m_Flags, 0);
+
+	AccumulateQmScoreboardTeamModeState(State, true, CHARACTERFLAG_PRACTICE_MODE | CHARACTERFLAG_SOLO);
+	EXPECT_TRUE(State.m_Known);
+	EXPECT_TRUE(State.Practice());
+	EXPECT_FALSE(State.Team0Mode());
+	EXPECT_FALSE(State.Locked());
+	EXPECT_EQ(State.m_Flags & CHARACTERFLAG_SOLO, 0);
+
+	AccumulateQmScoreboardTeamModeState(State, true, CHARACTERFLAG_TEAM0_MODE | CHARACTERFLAG_LOCK_MODE);
+	EXPECT_TRUE(State.Practice());
+	EXPECT_TRUE(State.Team0Mode());
+	EXPECT_TRUE(State.Locked());
+}
 
 TEST(UiV2Layout, RowPaddingGapAndPosition)
 {
@@ -185,4 +232,92 @@ TEST(UiV2Layout, ScoreboardSoundMuteVerticalButtons)
 	EXPECT_FLOAT_EQ(vChildren[0].m_Box.m_W, 22.0f);
 	EXPECT_FLOAT_EQ(vChildren[0].m_Box.m_Y, 0.0f);
 	EXPECT_FLOAT_EQ(vChildren[8].m_Box.m_Y, 208.0f);
+}
+
+TEST(QmScoreboardRender, BlurTargetUsesQuarterResolutionAndRoundsUp)
+{
+	EXPECT_EQ(ScoreboardBlurTargetDimension(1920), 480);
+	EXPECT_EQ(ScoreboardBlurTargetDimension(1080), 270);
+	EXPECT_EQ(ScoreboardBlurTargetDimension(1081), 271);
+	EXPECT_EQ(ScoreboardBlurTargetDimension(1), 1);
+	EXPECT_EQ(ScoreboardBlurTargetDimension(0), 0);
+}
+
+TEST(QmScoreboardRender, DenseRowsKeepClientBrandWhileReducingSecondaryDetail)
+{
+	const SScoreboardRowRenderDetail Disabled = ResolveScoreboardRowRenderDetail(false, 5.0f);
+	EXPECT_TRUE(Disabled.m_FullTee);
+	EXPECT_TRUE(Disabled.m_ShowClientBrand);
+	EXPECT_TRUE(Disabled.m_ShowClan);
+	EXPECT_TRUE(Disabled.m_ShowCountry);
+
+	const SScoreboardRowRenderDetail Regular = ResolveScoreboardRowRenderDetail(true, 13.5f);
+	EXPECT_TRUE(Regular.m_FullTee);
+	EXPECT_TRUE(Regular.m_ShowClientBrand);
+	EXPECT_TRUE(Regular.m_ShowClan);
+	EXPECT_TRUE(Regular.m_ShowCountry);
+
+	const SScoreboardRowRenderDetail Dense = ResolveScoreboardRowRenderDetail(true, 10.0f);
+	EXPECT_FALSE(Dense.m_FullTee);
+	EXPECT_TRUE(Dense.m_ShowClientBrand);
+	EXPECT_FALSE(Dense.m_ShowClan);
+	EXPECT_FALSE(Dense.m_ShowCountry);
+}
+
+TEST(QmScoreboardRender, DdTeamLabelUsesBelowRowLayoutRegardlessOfColumnCount)
+{
+	const SScoreboardTeamLabelLayout SingleColumn = ResolveScoreboardTeamLabelLayout(20.0f, 40.0f, 30.0f, 8.0f, 8.0f, 0.0f, true);
+	const SScoreboardTeamLabelLayout MultiColumn = ResolveScoreboardTeamLabelLayout(220.0f, 40.0f, 30.0f, 2.5f, 8.0f, 0.0f, true);
+
+	EXPECT_FLOAT_EQ(SingleColumn.m_X, 25.0f);
+	EXPECT_FLOAT_EQ(SingleColumn.m_Y, 70.0f);
+	EXPECT_FLOAT_EQ(MultiColumn.m_X, 225.0f);
+	EXPECT_FLOAT_EQ(MultiColumn.m_Y, 70.0f);
+	EXPECT_FLOAT_EQ(SingleColumn.m_RowSpacing, 8.0f);
+	EXPECT_FLOAT_EQ(MultiColumn.m_RowSpacing, 8.0f);
+
+	// A DDTeam that continues in the next column must not reserve or render a duplicate label.
+	const SScoreboardTeamLabelLayout ContinuedTeam = ResolveScoreboardTeamLabelLayout(20.0f, 40.0f, 30.0f, 2.5f, 8.0f, SCOREBOARD_TEAM_MODE_ICON_SIZE, false);
+	EXPECT_FLOAT_EQ(ContinuedTeam.m_RowSpacing, 2.5f);
+}
+
+TEST(QmScoreboardRender, DdTeamModeIconsUseNativeHudSizeAndCenteredLabelLayout)
+{
+	const SScoreboardTeamLabelLayout Layout = ResolveScoreboardTeamLabelLayout(
+		220.0f,
+		40.0f,
+		25.0f,
+		2.5f,
+		8.0f,
+		SCOREBOARD_TEAM_MODE_ICON_SIZE,
+		true);
+
+	EXPECT_FLOAT_EQ(SCOREBOARD_TEAM_MODE_ICON_SIZE, 12.0f);
+	EXPECT_FLOAT_EQ(Layout.m_RowSpacing, 12.0f);
+	EXPECT_FLOAT_EQ(Layout.m_Y, 67.0f);
+	EXPECT_FLOAT_EQ(Layout.m_IconY, 65.0f);
+}
+
+TEST(QmScoreboardRender, DdTeamLabelSpacingFitsDenseColumnsWithoutOverlap)
+{
+	constexpr float AvailableRowsHeight = 333.0f;
+	constexpr int RowsPerColumn = 12;
+	constexpr float PreferredLineHeight = 25.0f;
+	constexpr float PreferredSpacing = 2.5f;
+	constexpr float PreferredTeamFontSize = 8.0f;
+	const float ScaleWithoutTeams = ScoreboardRowsVerticalScale(AvailableRowsHeight, RowsPerColumn, 0, 0, PreferredLineHeight, PreferredSpacing, PreferredTeamFontSize, SCOREBOARD_TEAM_MODE_ICON_SIZE);
+	const float Scale = ScoreboardRowsVerticalScale(AvailableRowsHeight, RowsPerColumn, RowsPerColumn, RowsPerColumn, PreferredLineHeight, PreferredSpacing, PreferredTeamFontSize, SCOREBOARD_TEAM_MODE_ICON_SIZE);
+	const SScoreboardTeamLabelLayout TeamEnd = ResolveScoreboardTeamLabelLayout(
+		0.0f,
+		0.0f,
+		PreferredLineHeight * Scale,
+		PreferredSpacing * Scale,
+		PreferredTeamFontSize * Scale,
+		SCOREBOARD_TEAM_MODE_ICON_SIZE,
+		true);
+
+	EXPECT_FLOAT_EQ(ScaleWithoutTeams, 1.0f);
+	EXPECT_LT(Scale, 1.0f);
+	EXPECT_FLOAT_EQ(TeamEnd.m_RowSpacing, SCOREBOARD_TEAM_MODE_ICON_SIZE);
+	EXPECT_LE(RowsPerColumn * (PreferredLineHeight * Scale + TeamEnd.m_RowSpacing), AvailableRowsHeight + 0.001f);
 }

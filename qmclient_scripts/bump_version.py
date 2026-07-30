@@ -1,10 +1,10 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """统一更新 QmClient 仓库内的版本定义。"""
 
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import subprocess
 import sys
@@ -13,10 +13,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VERSION_H_PATH = REPO_ROOT / "src/game/version.h"
-DOCS_INFO_PATH = REPO_ROOT / "docs/info.json"
 VERSION_RE = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
 VERSION_DEFINE_RE = re.compile(
-    r'^(#define\s+QMCLIENT_VERSION\s+)"[^"]+"$', re.MULTILINE
+    r'^(#define\s+QMCLIENT_VERSION\s+)"[^"]+"(?=\r?$)', re.MULTILINE
 )
 
 def configure_stdio() -> None:
@@ -42,19 +41,13 @@ def normalize_version(version: str | None, tag: str | None) -> str:
 
 
 def update_version_h(version: str) -> None:
-    content = VERSION_H_PATH.read_text(encoding="utf-8")
+    with VERSION_H_PATH.open("r", encoding="utf-8", newline="") as version_file:
+        content = version_file.read()
     updated, count = VERSION_DEFINE_RE.subn(rf'\1"{version}"', content, count=1)
     if count != 1:
         raise RuntimeError("未找到 QMCLIENT_VERSION 宏，无法更新 src/game/version.h。")
-    VERSION_H_PATH.write_text(updated, encoding="utf-8")
-
-
-def update_docs_info(version: str) -> None:
-    data = json.loads(DOCS_INFO_PATH.read_text(encoding="utf-8-sig"))
-    data["version"] = version
-    DOCS_INFO_PATH.write_text(
-        json.dumps(data, ensure_ascii=False, indent=4) + "\n", encoding="utf-8"
-    )
+    with VERSION_H_PATH.open("w", encoding="utf-8", newline="") as version_file:
+        version_file.write(updated)
 
 
 def latest_tag_version() -> str | None:
@@ -128,9 +121,7 @@ def main() -> int:
         return 0
 
     update_version_h(normalized)
-    update_docs_info(normalized)
     print(f"已更新：{VERSION_H_PATH}")
-    print(f"已更新：{DOCS_INFO_PATH}")
     return 0
 
 

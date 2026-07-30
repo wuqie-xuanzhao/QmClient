@@ -14,6 +14,7 @@
 #include <game/client/ui_rect.h>
 #include <game/teamscore.h>
 
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -138,6 +139,9 @@ class CHud : public CComponent
 	SHudLocalTimeV2AnimState m_LocalTimeV2AnimState;
 	struct SHudMediaIslandAnimState
 	{
+		static constexpr int SATELLITE_LIVE_MAX_ITEMS = NUM_DUMMIES + SWITCH_COUNTDOWN_MAX_LINES + 1;
+		static constexpr int SATELLITE_MAX_ITEMS = SATELLITE_LIVE_MAX_ITEMS * 2;
+
 		enum class EVisualState
 		{
 			MINIMIZED,
@@ -165,6 +169,9 @@ class CHud : public CComponent
 		float m_TargetTrackMetaOutAlpha = 0.0f;
 		float m_TargetTrackMetaInOffset = 0.0f;
 		float m_TargetTrackMetaOutOffset = 0.0f;
+		float m_EntranceDropProgress = 0.0f;
+		float m_EntranceProgress = 0.0f;
+		int64_t m_EntranceLastTick = 0;
 		bool m_LayoutInitialized = false;
 		bool m_HasTrackIdentity = false;
 		SHudMediaIslandTrackSnapshot m_CurrentTrack;
@@ -180,12 +187,59 @@ class CHud : public CComponent
 		float m_CapsuleMorphFromX = 0.0f;
 		float m_CapsuleMorphFromWidth = 0.0f;
 		float m_CapsuleMorphFromHeight = 0.0f;
+		struct SSatelliteItem
+		{
+			bool m_Used = false;
+			bool m_Active = false;
+			bool m_Seen = false;
+			bool m_NodeInitialized = false;
+			bool m_Completed = false;
+			bool m_SwapOutgoing = false;
+			EHudMediaIslandCountdownType m_Type = EHudMediaIslandCountdownType::SWAP;
+			int m_Id = 0;
+			int64_t m_TriggerTick = 0;
+			int64_t m_ExitStartTick = 0;
+			int64_t m_LiquidLastTick = 0;
+			float m_Progress = 0.0f;
+			float m_LiquidProgress = 0.0f;
+			float m_LiquidOriginCenterX = 0.0f;
+
+			void Reset()
+			{
+				*this = {};
+			}
+		};
+		std::array<SSatelliteItem, SATELLITE_MAX_ITEMS> m_aSatelliteItems{};
+		bool m_SatelliteGroupInitialized = false;
+		float m_TargetSatelliteX = 0.0f;
+		float m_TargetSatelliteWidth = 0.0f;
+		float m_TargetSatelliteAlpha = 0.0f;
+		float m_SpectatorLiquidProgress = 0.0f;
+		int64_t m_SpectatorLiquidLastTick = 0;
+		int m_SpectatorDisplayCount = 0;
+		float m_SpectatorIconProgress = 1.0f;
+		int64_t m_SpectatorIconLastTick = 0;
+		bool m_SpectatorHadWatchers = false;
+		float m_SpectatorExitLiquidStart = 0.0f;
+		float m_SpectatorExitIconStart = 1.0f;
 
 		void StartCapsuleMorph(int64_t Now)
 		{
 			m_CapsuleMorphActive = true;
 			m_CapsuleMorphNeedsCapture = true;
 			m_CapsuleMorphStartTick = Now;
+		}
+
+		bool HasVisibleSatellite() const
+		{
+			if(m_SpectatorLiquidProgress > 0.0f)
+				return true;
+			for(const SSatelliteItem &Item : m_aSatelliteItems)
+			{
+				if(Item.m_Used)
+					return true;
+			}
+			return false;
 		}
 
 		void Reset()
@@ -211,6 +265,9 @@ class CHud : public CComponent
 			m_TargetTrackMetaOutAlpha = 0.0f;
 			m_TargetTrackMetaInOffset = 0.0f;
 			m_TargetTrackMetaOutOffset = 0.0f;
+			m_EntranceDropProgress = 0.0f;
+			m_EntranceProgress = 0.0f;
+			m_EntranceLastTick = 0;
 			m_LayoutInitialized = false;
 			m_HasTrackIdentity = false;
 			m_CurrentTrack.Reset();
@@ -226,6 +283,20 @@ class CHud : public CComponent
 			m_CapsuleMorphFromX = 0.0f;
 			m_CapsuleMorphFromWidth = 0.0f;
 			m_CapsuleMorphFromHeight = 0.0f;
+			for(SSatelliteItem &Item : m_aSatelliteItems)
+				Item.Reset();
+			m_SatelliteGroupInitialized = false;
+			m_TargetSatelliteX = 0.0f;
+			m_TargetSatelliteWidth = 0.0f;
+			m_TargetSatelliteAlpha = 0.0f;
+			m_SpectatorLiquidProgress = 0.0f;
+			m_SpectatorLiquidLastTick = 0;
+			m_SpectatorDisplayCount = 0;
+			m_SpectatorIconProgress = 1.0f;
+			m_SpectatorIconLastTick = 0;
+			m_SpectatorHadWatchers = false;
+			m_SpectatorExitLiquidStart = 0.0f;
+			m_SpectatorExitIconStart = 1.0f;
 		}
 	};
 	SHudMediaIslandAnimState m_MediaIslandAnimState;
@@ -316,6 +387,19 @@ class CHud : public CComponent
 		}
 	};
 	SHudSwitchCountdownTracker m_SwitchCountdownTracker;
+	struct SHudMediaIslandMuteState
+	{
+		bool m_Confirmed = false;
+		int64_t m_TriggerTick = 0;
+		int64_t m_EndTick = 0;
+		int64_t m_DurationTicks = 0;
+
+		void Reset()
+		{
+			*this = {};
+		}
+	};
+	SHudMediaIslandMuteState m_MediaIslandMuteState;
 	std::vector<SUiLayoutChild> m_vTextInfoLayoutChildrenScratch;
 	std::vector<SUiLayoutChild> m_vLocalTimeLayoutChildrenScratch;
 
@@ -392,6 +476,7 @@ public:
 	// DDRace
 
 	void OnMessage(int MsgType, void *pRawMsg) override;
+	void HandleSpamProtectionMessage(const char *pMessage);
 	void RenderNinjaBarPos(float x, float y, float Width, float Height, float Progress, float Alpha = 1.0f);
 
 private:

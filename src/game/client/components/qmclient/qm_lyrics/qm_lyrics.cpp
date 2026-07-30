@@ -1,7 +1,9 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "qm_lyrics.h"
 
 #include "qm_lyrics_cache.h"
 #include "qm_lyrics_match.h"
+#include "qm_lyrics_media_identity.h"
 #include "qm_lyrics_parser_lrc.h"
 #include "qm_lyrics_parser_ttml.h"
 #include "qm_lyrics_render.h"
@@ -26,6 +28,7 @@
 #include <engine/textrender.h>
 
 #include <game/client/components/hud_editor.h>
+#include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/system_media_controls.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui_rect.h>
@@ -49,6 +52,7 @@ namespace
 	constexpr float HUD_PADDING_X = 8.0f;
 	constexpr float HUD_PADDING_Y = 6.0f;
 	constexpr int CACHE_MAX_ENTRIES = 1000;
+	constexpr int CONCURRENT_SEARCH_GRACE_MS = 200;
 
 	enum class ELyricsSourceIndex
 	{
@@ -76,25 +80,6 @@ namespace
 		Q.m_LinkedFileName = State.m_aLinkedFileName;
 		Q.m_DurationSec = State.m_DurationMs > 0 ? (int)(State.m_DurationMs / 1000) : 0;
 		return Q;
-	}
-
-	std::string BuildIdentityKey(const CSystemMediaControls::SState &State)
-	{
-		std::string Key;
-		Key.append(QmLyrics::NormalizeForMatch(State.m_aTitle));
-		Key.push_back('|');
-		Key.append(QmLyrics::NormalizeForMatch(State.m_aArtist));
-		Key.push_back('|');
-		Key.append(QmLyrics::NormalizeForMatch(State.m_aAlbum));
-		Key.push_back('|');
-		Key.append(State.m_aSourceAppId);
-		Key.push_back('|');
-		Key.append(State.m_aNeteaseSongId);
-		Key.push_back('|');
-		Key.append(State.m_aQqMusicSongId);
-		Key.push_back('|');
-		Key.append(State.m_aLinkedFileName);
-		return Key;
 	}
 
 	bool HasUsefulQuery(const QmLyrics::SMatchQuery &Query)
@@ -320,10 +305,10 @@ namespace
 
 	void AppendDefaultSourceOrder(std::vector<int> *pvOrder)
 	{
+		pvOrder->push_back((int)ELyricsSourceIndex::LRCLIB);
 		pvOrder->push_back((int)ELyricsSourceIndex::QQ);
 		pvOrder->push_back((int)ELyricsSourceIndex::KUGOU);
 		pvOrder->push_back((int)ELyricsSourceIndex::NETEASE);
-		pvOrder->push_back((int)ELyricsSourceIndex::LRCLIB);
 		pvOrder->push_back((int)ELyricsSourceIndex::AMLL_TTML_DB);
 		pvOrder->push_back((int)ELyricsSourceIndex::LOCAL_MUSIC_FILE);
 		pvOrder->push_back((int)ELyricsSourceIndex::LOCAL_LRC);
@@ -443,9 +428,12 @@ struct CQmLyrics::SImpl
 	};
 
 	EState m_State = EState::IDLE;
-	std::string m_LastIdentityKey;
+	QmLyrics::SMediaIdentity m_LastMediaIdentity;
+	QmLyrics::SMediaIdentity m_ClockMediaIdentity;
 	std::string m_LastTrackKey;
+	std::string m_LastLyricsHttpProxy;
 	QmLyrics::SMatchQuery m_PendingQuery;
+	QmLyrics::CLyricsSourceLrclib *m_pLrclibSource = nullptr;
 	std::vector<std::unique_ptr<QmLyrics::IQmLyricsSource>> m_vSources;
 	std::vector<int> m_vSourceOrder;
 	std::vector<QmLyrics::SSourceCandidate> m_vPendingCandidates;
@@ -456,12 +444,13 @@ struct CQmLyrics::SImpl
 	int m_LastAnimatedLineIndex = -1;
 	int m_PreviousAnimatedLineIndex = -1;
 	int64_t m_ActiveLineChangedTick = 0;
-	int64_t m_LastSmtcPositionMs = -1;
-	double m_LastSmtcPlaybackRate = 1.0;
+	int64_t m_FirstCandidateTick = 0;
 	int m_SearchGeneration = 0;
 	int m_PendingSources = 0;
 	int m_NextSourceOrderIndex = 0;
+	int m_LastLyricsHttpTimeoutMs = 0;
 	bool m_CacheLoaded = false;
+	bool m_CacheDirty = false;
 	bool m_LastMediaPlaying = false;
 	bool m_SequentialSearch = true;
 	float m_LastMatchScore = 0.0f;
@@ -482,17 +471,24 @@ void CQmLyrics::OnInit()
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceQqMusic>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceKugou>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceNetease>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs));
-	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceLrclib>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsLrclibBase));
-	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceAmllTtmlDb>(pHttp, Storage(), g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsAmllTtmlDbBase));
+	auto pLrclibSource = std::make_unique<QmLyrics::CLyricsSourceLrclib>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsLrclibBase, g_Config.m_QmLyricsHttpProxy);
+	m_pImpl->m_pLrclibSource = pLrclibSource.get();
+	m_pImpl->m_vSources.emplace_back(std::move(pLrclibSource));
+	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceAmllTtmlDb>(pHttp, Storage(), Kernel()->RequestInterface<IEngine>(), g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsAmllTtmlDbBase));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceAppleMusic>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsAppleMusicMediaUserToken));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceLocalMusicFile>(Storage(), Kernel()->RequestInterface<IEngine>(), g_Config.m_QmLyricsLocalMediaFolders));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceLocalLyricsFile>(Storage(), QmLyrics::ELocalLyricsFileKind::LRC));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceLocalLyricsFile>(Storage(), QmLyrics::ELocalLyricsFileKind::ESLRC));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceLocalLyricsFile>(Storage(), QmLyrics::ELocalLyricsFileKind::TTML));
-	(void)g_Config.m_QmLyricsCacheEnable;
+	m_pImpl->m_LastLyricsHttpTimeoutMs = g_Config.m_QmLyricsHttpTimeoutMs;
+	m_pImpl->m_LastLyricsHttpProxy = g_Config.m_QmLyricsHttpProxy;
+	if(g_Config.m_QmLyricsCacheEnable)
+	{
+		QmLyrics::LoadCacheIndex(Storage(), &m_pImpl->m_Cache);
+		m_pImpl->m_CacheLoaded = true;
+	}
 	(void)g_Config.m_QmLyricsShowTransliteration;
 	(void)g_Config.m_QmLyricsHideNoLyrics;
-	(void)g_Config.m_QmLyricsHttpProxy;
 }
 
 void CQmLyrics::OnShutdown()
@@ -503,8 +499,9 @@ void CQmLyrics::OnShutdown()
 			pSource->Cancel();
 	}
 	m_pImpl->m_vSources.clear();
-	if(g_Config.m_QmLyricsCacheEnable)
-		QmLyrics::SaveCacheIndex(Storage(), m_pImpl->m_Cache);
+	m_pImpl->m_pLrclibSource = nullptr;
+	if(m_pImpl->m_CacheLoaded && m_pImpl->m_CacheDirty && QmLyrics::SaveCacheIndex(Storage(), m_pImpl->m_Cache))
+		m_pImpl->m_CacheDirty = false;
 }
 
 void CQmLyrics::OnReset()
@@ -530,20 +527,42 @@ namespace
 		pImpl->m_vSourceOrder.clear();
 		pImpl->m_NextSourceOrderIndex = 0;
 		pImpl->m_vPendingCandidates.clear();
+		pImpl->m_FirstCandidateTick = 0;
+	}
+
+	void ResetPlaybackClock(CQmLyrics::SImpl *pImpl)
+	{
+		pImpl->m_ClockMediaIdentity.m_Valid = false;
+		pImpl->m_LastMediaPlaying = false;
+		pImpl->m_Clock.Reset();
 	}
 
 	void ResetPlaybackState(CQmLyrics::SImpl *pImpl)
 	{
-		pImpl->m_LastIdentityKey.clear();
+		pImpl->m_LastMediaIdentity.m_Valid = false;
 		pImpl->m_LastTrackKey.clear();
 		pImpl->m_Track.m_vLines.clear();
 		pImpl->m_ActiveLineIndex = -1;
 		pImpl->m_LastAnimatedLineIndex = -1;
 		pImpl->m_PreviousAnimatedLineIndex = -1;
-		pImpl->m_LastSmtcPositionMs = -1;
-		pImpl->m_LastSmtcPlaybackRate = 1.0;
-		pImpl->m_LastMediaPlaying = false;
-		pImpl->m_Clock.Reset();
+		pImpl->m_FirstCandidateTick = 0;
+		ResetPlaybackClock(pImpl);
+	}
+
+	void UpdatePlaybackClock(CQmLyrics::SImpl *pImpl, const CSystemMediaControls::SState &MediaState)
+	{
+		QmLyrics::SPlaybackSnapshot PlaybackSnapshot;
+		PlaybackSnapshot.m_PositionMs = MediaState.m_PositionMs;
+		PlaybackSnapshot.m_PositionUpdatedTick = MediaState.m_PositionUpdatedTick;
+		PlaybackSnapshot.m_TimelineGeneration = MediaState.m_TimelineGeneration;
+		PlaybackSnapshot.m_PlaybackRate = std::max(0.0, MediaState.m_PlaybackRate);
+		PlaybackSnapshot.m_Playing = MediaState.m_Playing;
+		PlaybackSnapshot.m_IdentityChanged = !QmLyrics::MediaIdentityEquals(pImpl->m_ClockMediaIdentity, MediaState);
+		pImpl->m_Clock.SetDriftCorrectMs(g_Config.m_QmLyricsDriftCorrectMs);
+		pImpl->m_Clock.SetOffsetMs(QmLyrics::EffectivePlaybackOffsetMs(g_Config.m_QmLyricsOffsetMs, pImpl->m_Track.m_OffsetMs));
+		pImpl->m_Clock.Update(PlaybackSnapshot, time_get(), time_freq());
+		QmLyrics::SetMediaIdentity(&pImpl->m_ClockMediaIdentity, MediaState);
+		pImpl->m_LastMediaPlaying = MediaState.m_Playing;
 	}
 
 	void SetStateStatus(CQmLyrics::SImpl *pImpl, const char *pStatus)
@@ -573,20 +592,26 @@ namespace
 		if(!g_Config.m_QmLyricsCacheEnable || TrackKey.empty() || IsLocalLyricsSourceId(Candidate.m_SourceId))
 			return;
 		const std::string SourceId = Candidate.m_SourceId.empty() ? "unknown" : Candidate.m_SourceId;
-		const std::string EntryKey = CacheKeyForSource(TrackKey, SourceId);
+		const std::string EntryKey = TrackKey;
 		const int64_t NowSec = time_timestamp();
 		QmLyrics::SCacheEntry Entry;
 		Entry.m_Key = EntryKey;
-		Entry.m_FileName = QmLyrics::FileNameForKey(EntryKey);
+		const std::string &Title = pImpl->m_PendingQuery.m_Title.empty() ? Candidate.m_Metadata.m_Title : pImpl->m_PendingQuery.m_Title;
+		const std::string &Artist = pImpl->m_PendingQuery.m_Artist.empty() ? Candidate.m_Metadata.m_Artist : pImpl->m_PendingQuery.m_Artist;
+		Entry.m_FileName = QmLyrics::ChooseCachePayloadFileName(pImpl->m_Cache, Title, Artist, EntryKey, EntryKey);
 		Entry.m_Source = SourceId;
 		Entry.m_Score = Score;
 		Entry.m_StoredAt = NowSec;
 		Entry.m_LastUsedAt = NowSec;
-		const std::vector<std::string> vEvicted = pImpl->m_Cache.Upsert(Entry, CACHE_MAX_ENTRIES);
-		for(const std::string &FileName : vEvicted)
-			QmLyrics::RemoveCachePayload(pStorage, FileName.c_str());
-		QmLyrics::SaveCachePayload(pStorage, Entry.m_FileName.c_str(), PayloadFromCandidate(Candidate, Entry.m_Source.c_str()));
-		QmLyrics::SaveCacheIndex(pStorage, pImpl->m_Cache);
+		if(!QmLyrics::CommitCacheEntry(
+			pStorage,
+			&pImpl->m_Cache,
+			Entry,
+			PayloadFromCandidate(Candidate, Entry.m_Source.c_str()),
+			CACHE_MAX_ENTRIES))
+			return;
+		pImpl->m_CacheLoaded = true;
+		pImpl->m_CacheDirty = false;
 	}
 
 	bool TryApplyBestCandidate(CQmLyrics::SImpl *pImpl, IStorage *pStorage, const std::string &TrackKey)
@@ -602,7 +627,18 @@ namespace
 			const float Threshold = (float)MatchThresholdForSource(Candidate.m_SourceId);
 			if(Score < Threshold)
 				continue;
-			vRanked.push_back({i, Score, Candidate.m_SourceScore});
+			int SourceOrder = std::numeric_limits<int>::max();
+			for(size_t Order = 0; Order < pImpl->m_vSourceOrder.size(); ++Order)
+			{
+				const int SourceIndex = pImpl->m_vSourceOrder[Order];
+				if(SourceIndex >= 0 && SourceIndex < (int)pImpl->m_vSources.size() && pImpl->m_vSources[SourceIndex] &&
+					std::string_view(pImpl->m_vSources[SourceIndex]->Id()) == Candidate.m_SourceId)
+				{
+					SourceOrder = (int)Order;
+					break;
+				}
+			}
+			vRanked.push_back({i, Score, Candidate.m_SourceScore, SourceOrder});
 		}
 
 		QmLyrics::SortCandidateApplyRanks(&vRanked);
@@ -616,6 +652,17 @@ namespace
 				pImpl->m_vPendingCandidates.clear();
 				return true;
 			}
+		}
+		return false;
+	}
+
+	bool HasPotentialCandidate(const CQmLyrics::SImpl *pImpl)
+	{
+		for(const QmLyrics::SSourceCandidate &Candidate : pImpl->m_vPendingCandidates)
+		{
+			if(!Candidate.m_RawText.empty() &&
+				QmLyrics::Score(pImpl->m_PendingQuery, Candidate.m_Metadata) >= (float)MatchThresholdForSource(Candidate.m_SourceId))
+				return true;
 		}
 		return false;
 	}
@@ -636,11 +683,12 @@ namespace
 		return pImpl->m_vSources[SourceIndex]->Id();
 	}
 
-	bool TryLoadCacheEntry(CQmLyrics::SImpl *pImpl, IStorage *pStorage, const std::string &EntryKey, std::string_view RequiredSourceId)
+	bool TryLoadCacheEntry(CQmLyrics::SImpl *pImpl, IStorage *pStorage, const std::string &EntryKey, const std::string &TrackKey, std::string_view RequiredSourceId)
 	{
 		const QmLyrics::SCacheEntry *pEntry = pImpl->m_Cache.Lookup(EntryKey, time_timestamp());
 		if(pEntry == nullptr)
 			return false;
+		pImpl->m_CacheDirty = true;
 		if(!RequiredSourceId.empty() && std::string_view(pEntry->m_Source) != RequiredSourceId)
 			return false;
 		if(IgnoreCacheForSource(pEntry->m_Source))
@@ -651,15 +699,31 @@ namespace
 		{
 			std::string FileName = pEntry->m_FileName;
 			pImpl->m_Cache.Remove(EntryKey, &FileName);
+			pImpl->m_CacheDirty = true;
 			QmLyrics::RemoveCachePayload(pStorage, FileName.c_str());
-			QmLyrics::SaveCacheIndex(pStorage, pImpl->m_Cache);
+			if(QmLyrics::SaveCacheIndex(pStorage, pImpl->m_Cache))
+				pImpl->m_CacheDirty = false;
 			return false;
 		}
 		const QmLyrics::SSourceCandidate Candidate = CandidateFromPayload(Payload);
 		const float Score = QmLyrics::Score(pImpl->m_PendingQuery, Candidate.m_Metadata);
 		if(Score < (float)MatchThresholdForSource(Candidate.m_SourceId.empty() ? pEntry->m_Source : Candidate.m_SourceId))
 			return false;
-		return ApplyCandidate(pImpl, Candidate, Score);
+		if(!ApplyCandidate(pImpl, Candidate, Score))
+			return false;
+		if((EntryKey != TrackKey || std::string_view(pEntry->m_FileName).ends_with(".json")) &&
+			QmLyrics::MigrateLegacyCacheEntry(
+				pStorage,
+				&pImpl->m_Cache,
+				EntryKey,
+				TrackKey,
+				pImpl->m_PendingQuery.m_Title,
+				pImpl->m_PendingQuery.m_Artist,
+				CACHE_MAX_ENTRIES))
+		{
+			pImpl->m_CacheDirty = false;
+		}
+		return true;
 	}
 
 	bool TryLoadCache(CQmLyrics::SImpl *pImpl, IStorage *pStorage, const std::string &TrackKey, std::string_view RequiredSourceId, const std::vector<int> &vSourceOrder)
@@ -676,11 +740,19 @@ namespace
 		for(const std::string &FileName : vExpired)
 			QmLyrics::RemoveCachePayload(pStorage, FileName.c_str());
 		if(!vExpired.empty())
-			QmLyrics::SaveCacheIndex(pStorage, pImpl->m_Cache);
+		{
+			pImpl->m_CacheDirty = true;
+			if(QmLyrics::SaveCacheIndex(pStorage, pImpl->m_Cache))
+				pImpl->m_CacheDirty = false;
+		}
+
+		// New cache layout keeps one selected winner per track, independent of provider.
+		if(TryLoadCacheEntry(pImpl, pStorage, TrackKey, TrackKey, RequiredSourceId))
+			return true;
 
 		if(!RequiredSourceId.empty())
 		{
-			return !IgnoreCacheForSource(RequiredSourceId) && TryLoadCacheEntry(pImpl, pStorage, CacheKeyForSource(TrackKey, RequiredSourceId), RequiredSourceId);
+			return !IgnoreCacheForSource(RequiredSourceId) && TryLoadCacheEntry(pImpl, pStorage, CacheKeyForSource(TrackKey, RequiredSourceId), TrackKey, RequiredSourceId);
 		}
 
 		for(int SourceIndex : vSourceOrder)
@@ -688,7 +760,7 @@ namespace
 			const char *pSourceId = SourceIdForOrderIndex(pImpl, SourceIndex);
 			if(pSourceId[0] == '\0' || IgnoreCacheForSource(pSourceId))
 				continue;
-			if(TryLoadCacheEntry(pImpl, pStorage, CacheKeyForSource(TrackKey, pSourceId), pSourceId))
+			if(TryLoadCacheEntry(pImpl, pStorage, CacheKeyForSource(TrackKey, pSourceId), TrackKey, pSourceId))
 				return true;
 		}
 		return false;
@@ -698,14 +770,20 @@ namespace
 
 void CQmLyrics::TickStateMachine()
 {
+	const int64_t PerfStartNs = QmPerfEnabled() ? time_get_nanoseconds().count() : 0;
 	if(!g_Config.m_QmLyrics)
 	{
 		if(m_pImpl->m_State == SImpl::EState::FETCHING)
 		{
 			CancelAllSources(m_pImpl.get());
-			m_pImpl->m_LastIdentityKey.clear();
+			m_pImpl->m_LastMediaIdentity.m_Valid = false;
 			m_pImpl->m_State = SImpl::EState::IDLE;
 		}
+		CSystemMediaControls::SState MediaState{};
+		if(g_Config.m_QmSmtcEnable && GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState))
+			UpdatePlaybackClock(m_pImpl.get(), MediaState);
+		else
+			ResetPlaybackClock(m_pImpl.get());
 		return;
 	}
 
@@ -717,6 +795,17 @@ void CQmLyrics::TickStateMachine()
 		m_pImpl->m_State = SImpl::EState::IDLE;
 		return;
 	}
+
+	const bool HttpOptionsChanged = QmLyrics::LrclibHttpOptionsChanged(
+		m_pImpl->m_LastLyricsHttpTimeoutMs,
+		m_pImpl->m_LastLyricsHttpProxy.c_str(),
+		g_Config.m_QmLyricsHttpTimeoutMs,
+		g_Config.m_QmLyricsHttpProxy);
+	m_pImpl->m_LastLyricsHttpTimeoutMs = g_Config.m_QmLyricsHttpTimeoutMs;
+	m_pImpl->m_LastLyricsHttpProxy = g_Config.m_QmLyricsHttpProxy;
+	const bool RestartSearchForHttpOptions = m_pImpl->m_State == SImpl::EState::FETCHING && HttpOptionsChanged;
+	if(RestartSearchForHttpOptions)
+		CancelAllSources(m_pImpl.get());
 
 	for(std::unique_ptr<QmLyrics::IQmLyricsSource> &pSource : m_pImpl->m_vSources)
 	{
@@ -735,26 +824,15 @@ void CQmLyrics::TickStateMachine()
 		SetStateStatus(m_pImpl.get(), Localize("Lyrics: no media playing"));
 		return;
 	}
-	m_pImpl->m_LastMediaPlaying = MediaState.m_Playing;
-
-	const std::string IdentityKey = BuildIdentityKey(MediaState);
-	const bool IdentityChanged = IdentityKey != m_pImpl->m_LastIdentityKey;
-	const int64_t PositionUpdatedTick = MediaState.m_PositionUpdatedTick != 0 ? MediaState.m_PositionUpdatedTick : time_get();
-	const double PlaybackRate = MediaState.m_PlaybackRate > 0.0 ? MediaState.m_PlaybackRate : 1.0;
-	if(QmLyrics::ShouldUpdateTimelineAnchor(m_pImpl->m_LastSmtcPositionMs, m_pImpl->m_LastSmtcPlaybackRate, MediaState.m_PositionMs, PlaybackRate, IdentityChanged))
-	{
-		m_pImpl->m_Clock.Anchor(MediaState.m_PositionMs, PositionUpdatedTick, PlaybackRate);
-		m_pImpl->m_LastSmtcPositionMs = MediaState.m_PositionMs;
-		m_pImpl->m_LastSmtcPlaybackRate = PlaybackRate;
-	}
-	m_pImpl->m_Clock.SetPlaying(MediaState.m_Playing, time_get());
-	m_pImpl->m_Clock.SetOffsetMs(QmLyrics::EffectivePlaybackOffsetMs(g_Config.m_QmLyricsOffsetMs, m_pImpl->m_Track.m_OffsetMs));
-	m_pImpl->m_Clock.SetDriftCorrectMs(g_Config.m_QmLyricsDriftCorrectMs);
+	const bool MediaIdentityChanged = !QmLyrics::MediaIdentityEquals(m_pImpl->m_LastMediaIdentity, MediaState);
+	UpdatePlaybackClock(m_pImpl.get(), MediaState);
 
 	auto DispatchSource = [this](int SourceIndex, int Generation) {
 		if(SourceIndex < 0 || SourceIndex >= (int)m_pImpl->m_vSources.size() || !m_pImpl->m_vSources[SourceIndex])
 			return false;
 		QmLyrics::IQmLyricsSource *pSource = m_pImpl->m_vSources[SourceIndex].get();
+		if(pSource == m_pImpl->m_pLrclibSource)
+			m_pImpl->m_pLrclibSource->UpdateHttpOptions(g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsHttpProxy);
 		const std::string SourceId = pSource->Id();
 		m_pImpl->m_PendingSources++;
 		pSource->QueryAsync(
@@ -776,9 +854,9 @@ void CQmLyrics::TickStateMachine()
 					if(!TryApplyBestCandidate(m_pImpl.get(), Storage(), m_pImpl->m_LastTrackKey))
 						m_pImpl->m_vPendingCandidates.clear();
 				}
-				else if(m_pImpl->m_PendingSources == 0)
+				else if(m_pImpl->m_FirstCandidateTick == 0 && HasPotentialCandidate(m_pImpl.get()))
 				{
-					SelectBestCandidate(m_pImpl.get(), Storage(), m_pImpl->m_LastTrackKey);
+					m_pImpl->m_FirstCandidateTick = time_get();
 				}
 			},
 			[this, Generation](const char *) {
@@ -787,15 +865,14 @@ void CQmLyrics::TickStateMachine()
 				m_pImpl->m_PendingSources = std::max(0, m_pImpl->m_PendingSources - 1);
 				if(m_pImpl->m_State != SImpl::EState::FETCHING)
 					return;
-				if(!m_pImpl->m_SequentialSearch && m_pImpl->m_PendingSources == 0)
-					SelectBestCandidate(m_pImpl.get(), Storage(), m_pImpl->m_LastTrackKey);
 			});
 		return true;
 	};
-	if(IdentityChanged)
+	if(MediaIdentityChanged || RestartSearchForHttpOptions)
 	{
-		CancelAllSources(m_pImpl.get());
-		m_pImpl->m_LastIdentityKey = IdentityKey;
+		if(!RestartSearchForHttpOptions)
+			CancelAllSources(m_pImpl.get());
+		QmLyrics::SetMediaIdentity(&m_pImpl->m_LastMediaIdentity, MediaState);
 		m_pImpl->m_Track.m_vLines.clear();
 		m_pImpl->m_ActiveLineIndex = -1;
 		m_pImpl->m_PendingQuery = BuildQueryFromMedia(MediaState);
@@ -853,6 +930,7 @@ void CQmLyrics::TickStateMachine()
 			m_pImpl->m_SearchGeneration++;
 			m_pImpl->m_PendingSources = 0;
 			m_pImpl->m_NextSourceOrderIndex = 0;
+			m_pImpl->m_FirstCandidateTick = 0;
 			m_pImpl->m_vPendingCandidates.clear();
 			const int Generation = m_pImpl->m_SearchGeneration;
 			if(!m_pImpl->m_SequentialSearch)
@@ -867,8 +945,14 @@ void CQmLyrics::TickStateMachine()
 			}
 		}
 	}
+	if(MediaIdentityChanged && PerfStartNs != 0)
+	{
+		char aExtra[128];
+		str_format(aExtra, sizeof(aExtra), "pending_sources=%d source_count=%d state=%d", m_pImpl->m_PendingSources, (int)m_pImpl->m_vSourceOrder.size(), (int)m_pImpl->m_State);
+		const double DurationMs = (time_get_nanoseconds().count() - PerfStartNs) / 1000000.0;
+		QmPerfLogStage("perf/lyrics", "media_identity_change", DurationMs, true, Client(), nullptr, nullptr, aExtra);
+	}
 
-	m_pImpl->m_Clock.SetOffsetMs(QmLyrics::EffectivePlaybackOffsetMs(g_Config.m_QmLyricsOffsetMs, m_pImpl->m_Track.m_OffsetMs));
 	if(m_pImpl->m_State == SImpl::EState::FETCHING && m_pImpl->m_SequentialSearch && m_pImpl->m_PendingSources == 0)
 	{
 		const int Generation = m_pImpl->m_SearchGeneration;
@@ -889,7 +973,30 @@ void CQmLyrics::TickStateMachine()
 			m_pImpl->m_vPendingCandidates.clear();
 		}
 	}
+	else if(m_pImpl->m_State == SImpl::EState::FETCHING && !m_pImpl->m_SequentialSearch &&
+		QmLyrics::ShouldPublishConcurrentSearch(
+			m_pImpl->m_PendingSources,
+			m_pImpl->m_FirstCandidateTick,
+			time_get(),
+			time_freq(),
+			CONCURRENT_SEARCH_GRACE_MS))
+	{
+		if(m_pImpl->m_PendingSources == 0)
+		{
+			SelectBestCandidate(m_pImpl.get(), Storage(), m_pImpl->m_LastTrackKey);
+		}
+		else if(TryApplyBestCandidate(m_pImpl.get(), Storage(), m_pImpl->m_LastTrackKey))
+		{
+			CancelAllSources(m_pImpl.get());
+		}
+		else
+		{
+			m_pImpl->m_vPendingCandidates.clear();
+			m_pImpl->m_FirstCandidateTick = 0;
+		}
+	}
 
+	m_pImpl->m_Clock.SetOffsetMs(QmLyrics::EffectivePlaybackOffsetMs(g_Config.m_QmLyricsOffsetMs, m_pImpl->m_Track.m_OffsetMs));
 	if(m_pImpl->m_State == SImpl::EState::READY && !m_pImpl->m_Track.m_vLines.empty())
 	{
 		const int64_t Now = m_pImpl->m_Clock.Now(time_get(), time_freq());
@@ -1448,8 +1555,12 @@ end_render:
 	Graphics()->MapScreen(SavedX0, SavedY0, SavedX1, SavedY1);
 }
 
-void CQmLyrics::OnRender()
+void CQmLyrics::OnUpdate()
 {
 	TickStateMachine();
+}
+
+void CQmLyrics::OnRender()
+{
 	RenderHud();
 }

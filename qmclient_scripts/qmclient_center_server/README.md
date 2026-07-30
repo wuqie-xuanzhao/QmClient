@@ -1,13 +1,9 @@
-# Q1menG 客户端中心识别服务器
+> 请抬头享受阳光｜日子很好 我很我---------致咩子
+# QmClient 中心 HTTP 服务
 
-这个服务端与当前客户端代码对齐，提供 4 个接口：
+此目录包含一个独立的 Node.js/Express 服务，负责版本查询、健康检查、游玩时长、编辑器协作，以及可选的在线识别兼容接口。实际契约以 `server.js` 中注册的路由为准。
 
-- `GET /client/version`
-- `GET /token`
-- `POST /report`
-- `GET /users.json`
-
-## 1. 启动
+## 启动
 
 ```bash
 cd qmclient_scripts/qmclient_center_server
@@ -15,152 +11,99 @@ npm install
 AUTH_SECRET="replace-with-random-long-secret" PORT=8080 npm start
 ```
 
-## 2. 客户端配置
+生产环境必须显式设置并持久化 `AUTH_SECRET`。未设置时每次启动都会生成随机值，已有 token 会立即失效。
 
-当前客户端已写死中心服务器地址为：
+## 客户端与部署边界
 
-- `http://42.194.185.210:8080/client/version`
-- `http://42.194.185.210:8080/token`
-- `http://42.194.185.210:8080/report`
-- `http://42.194.185.210:8080/users.json`
+当前客户端把服务拆成两组：
 
-客户端只需要一个开关：
+- 中心 HTTP 服务默认位于 `42.194.185.210:8080`。当前客户端直接访问 `/healthz` 和 `/playtime/*`；服务端另提供 `/client/version`，客户端保留对应的 `TCLIENT_INFO_URL` 常量。这些路径都不带 `/qm` 前缀。
+- 在线识别、远程粒子和语音在线状态使用 `qm_voice_server` 指定的语音服务，默认位于 `42.194.185.210:9987`。客户端访问 `/qm/token`、`/qm/report` 和 `/qm/users.json`。
 
-```cfg
-qm_client_mark_trail 1
-```
+本目录的 Express 服务原生注册识别兼容路由 `/token`、`/report` 和 `/users.json`，不原生注册 `/qm/*`。如果部署时让本服务承接客户端的识别请求，反向代理必须进行以下映射，或由上游语音服务实现相同契约：
 
-如果后续要改 IP 或端口，修改 `src/game/client/components/qmclient/qmclient.cpp` 里的常量：
+| 客户端路径 | Express 上游路径 |
+|---|---|
+| `/qm/token` | `/token` |
+| `/qm/report` | `/report` |
+| `/qm/users.json` | `/users.json` |
 
-- `QMCLIENT_TOKEN_URL`
-- `QMCLIENT_REPORT_URL`
-- `QMCLIENT_USERS_URL`
+不要在没有路径映射的情况下把 `qm_voice_server` 直接指向本服务端口。修改固定中心 HTTP 地址时，检查 `src/game/client/components/qmclient/qmclient.cpp` 中的 `TCLIENT_INFO_URL`、`QMCLIENT_HEALTH_URL` 和 `QMCLIENT_PLAYTIME_*_URL`；修改识别服务地址时使用配置项 `qm_voice_server`。
 
-## 3. 接口契约
+## 路由
 
-### `GET /client/version`
+| 方法 | 路径 | 用途 |
+|---|---|---|
+| `GET` | `/healthz` | 健康检查与客户端时间同步 |
+| `GET` | `/client/version?current=<version>` | 查询 GitHub 最新 release，并比较客户端版本 |
+| `GET` | `/token` | 获取短期识别 token |
+| `POST` | `/report` | 上报当前服务器上的本地玩家状态 |
+| `GET` | `/users.json` | 获取仍在有效期内的在线识别记录 |
+| `POST` | `/playtime/start` | 开始或恢复游玩时长会话 |
+| `POST` | `/playtime/stop` | 停止会话并结算时长 |
+| `POST` | `/playtime/query` | 查询累计与当前会话时长 |
+| `POST` | `/editor/collab/create` | 创建编辑器协作房间 |
+| `POST` | `/editor/collab/join` | 加入编辑器协作房间 |
+| `POST` | `/editor/collab/leave` | 离开编辑器协作房间 |
+| `POST` | `/editor/collab/push` | 上传新的地图修订 |
+| `GET` | `/editor/collab/pull` | 拉取房间状态和新修订 |
 
-请求示例：
-
-```text
-GET /client/version?current=2.36.0
-```
-
-返回：
-
-```json
-{
-  "ok": true,
-  "version": "2.36.0",
-  "latest_version": "2.36.0",
-  "latest_tag": "v2.36.0",
-  "release_url": "https://github.com/wxj881027/QmClient/releases/tag/v2.36.0",
-  "current_version": "2.36.0",
-  "up_to_date": true,
-  "cache_source": "github",
-  "cache_expires_at": 1777321482,
-  "last_error": "",
-  "update_message": "当前版本不是最新版，请前往 QQ 群更新最新版"
-}
-```
-
-服务端会请求 GitHub Releases API：
-
-```text
-https://api.github.com/repos/wxj881027/QmClient/releases/latest
-```
-
-默认缓存 5 分钟；GitHub 请求失败时会使用上一次成功结果，若服务刚启动且尚未成功拉取，则回退到 `CLIENT_LATEST_VERSION`。
-
-### `GET /token`
-
-返回：
-
-```json
-{
-  "auth_token": "....",
-  "expires_in": 300
-}
-```
-
-### `POST /report`
-
-请求体（客户端已按这个格式发送）：
+识别上报的主体结构为：
 
 ```json
 {
   "server_address": "1.2.3.4:8303",
-  "auth_token": "....",
+  "auth_token": "token-from-get-token",
   "client_type": "qm",
-  "client_id": "qm314a5af9fb19ffc659077aa05e4a2689",
+  "machine_hash": "qm314a5af9fb19ffc659077aa05e4a2689",
   "timestamp": 1739436900,
   "players": [
-    { "player_name": "Q1menG", "dummy": false },
-    { "player_name": "Q1menG dummy", "dummy": true, "client_type": "arg" }
-  ]
-}
-```
-
-- `client_type` 支持 `qm` / `arg`，兼容别名 `qmclient` / `arghena`。
-- 老客户端不发送 `client_type` 时默认按 `qm` 处理。
-- 在线识别不再使用 DDNet 槽位 `player_id`，避免玩家退出后槽位复用导致误识别。
-
-返回：
-
-```json
-{
-  "ok": true,
-  "accepted": 2
-}
-```
-
-### `GET /users.json`
-
-返回：
-
-```json
-{
-  "users": [
     {
-      "server_address": "1.2.3.4:8303",
       "player_name": "Q1menG",
       "dummy": false,
-      "client_type": "qm",
-      "type": "qm",
-      "client_id": "qm314a5af9fb19ffc659077aa05e4a2689",
       "foot_particles_enabled": true,
       "remote_particles_enabled": true,
-      "voice_supported": true,
-      "updated_at": 1739436900
+      "voice_supported": true
     }
   ]
 }
 ```
 
-## 4. 运行参数（环境变量）
+`client_type` 支持 `qm` / `arg`，并兼容 `qmclient` / `arghena` 别名。服务端以玩家名为优先身份键，并继续接受合法的 `player_id` 兼容输入。
 
-- `PORT` 默认 `8080`
-- `AUTH_SECRET` 默认随机（建议固定设置）
-- `TOKEN_TTL_SEC` 默认 `300`
-- `REPORT_TTL_SEC` 默认 `90`
-- `TIME_SKEW_SEC` 默认 `600`
-- `RATE_LIMIT_PER_MIN` 默认 `120`
-- `REQUIRE_IP_BIND` 默认 `1`（token 绑定请求 IP）
-- `TRUST_PROXY` 默认 `0`（反代场景可设为 `1`）
-- `MAX_CLIENT_ID_LEN` 默认 `64`
-- `MAX_PLAYER_NAME_LEN` 默认 `32`
-- `CLIENT_LATEST_VERSION` 默认 `2.36.0`
-- `CLIENT_RELEASE_OWNER` 默认 `wxj881027`
-- `CLIENT_RELEASE_REPO` 默认 `QmClient`
-- `CLIENT_RELEASES_API_URL` 默认 GitHub latest release API 地址
-- `CLIENT_VERSION_CACHE_TTL_SEC` 默认 `300`
-- `CLIENT_VERSION_RETRY_DELAY_SEC` 默认 `60`
-- `CLIENT_VERSION_FETCH_TIMEOUT_MS` 默认 `5000`
-- `CLIENT_LATEST_TAG` 默认 `v${CLIENT_LATEST_VERSION}`，仅作为 GitHub 拉取失败时的回退
-- `CLIENT_RELEASE_URL` 默认 GitHub release tag 地址，仅作为 GitHub 拉取失败时的回退
+## 环境变量
 
-## 5. 生产建议
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `PORT` | `8080` | HTTP 监听端口 |
+| `AUTH_SECRET` | 随机值 | token 签名密钥；生产环境必须固定 |
+| `TOKEN_TTL_SEC` | `300` | token 有效期 |
+| `REPORT_TTL_SEC` | `90` | 在线记录有效期 |
+| `TIME_SKEW_SEC` | `600` | 上报时间允许偏差 |
+| `RATE_LIMIT_PER_MIN` | `120` | 单 IP 每分钟请求上限 |
+| `REQUIRE_IP_BIND` | `1` | 是否把 token 绑定到请求 IP |
+| `TRUST_PROXY` | `0` | 是否信任 Express 反向代理地址 |
+| `MAX_PLAYERS_PER_REPORT` | `8` | 单次上报玩家数上限 |
+| `MAX_SERVER_ADDRESS_LEN` | `128` | 服务端地址长度上限 |
+| `MAX_CLIENT_ID_LEN` | `64` | 客户端标识长度上限 |
+| `MAX_PLAYER_NAME_LEN` | `32` | 玩家名长度上限 |
+| `PLAYTIME_DB_FILE` | `playtime_db.json` | 游玩时长持久化文件 |
+| `CLIENT_RELEASE_OWNER` | `wxj881027` | GitHub release 仓库所有者 |
+| `CLIENT_RELEASE_REPO` | `QmClient` | GitHub release 仓库名 |
+| `CLIENT_LATEST_VERSION` | `2.36.0` | GitHub 不可用时的回退版本 |
+| `CLIENT_RELEASES_API_URL` | GitHub latest release API | 自定义 release 查询地址 |
+| `CLIENT_VERSION_CACHE_TTL_SEC` | `300` | 成功查询缓存时间 |
+| `CLIENT_VERSION_RETRY_DELAY_SEC` | `60` | 查询失败后的重试间隔 |
+| `CLIENT_VERSION_FETCH_TIMEOUT_MS` | `5000` | GitHub 请求超时 |
+| `CLIENT_LATEST_TAG` | `v${CLIENT_LATEST_VERSION}` | 回退 tag |
+| `CLIENT_RELEASE_URL` | 对应回退 tag 的 GitHub URL | 回退下载页 |
+| `EDITOR_COLLAB_MEMBER_TTL_SEC` | `45` | 协作成员有效期 |
+| `EDITOR_COLLAB_ROOM_TTL_SEC` | `300` | 空闲房间有效期 |
+| `EDITOR_COLLAB_MAX_MAP_BASE64_LEN` | `25165824` | 地图 Base64 最大长度 |
 
-- 建议放到 HTTPS 反向代理后面（Nginx/Caddy）。
-- `AUTH_SECRET` 用高强度随机串并持久化。
-- 多实例部署时把内存存储改成 Redis（token 与在线用户都放 Redis）。
+## 生产部署
+
+- 放在 HTTPS 反向代理后，并根据代理拓扑正确配置 `TRUST_PROXY`。
+- 持久化 `AUTH_SECRET` 和 `PLAYTIME_DB_FILE`，限制数据库文件访问权限。
+- 当前 token、在线用户和协作房间保存在单进程内存中；多实例部署前必须改用共享存储或保证会话粘滞。
+- 为 `/editor/collab/*` 设置与 32 MiB 请求体相匹配的代理限制，并限制公网访问频率。

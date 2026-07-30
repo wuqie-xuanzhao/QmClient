@@ -102,6 +102,8 @@ CCamera::CCamera()
 	m_DynamicFovTarget = 1.0f;
 	m_DynamicFovCurrent = 1.0f;
 	m_DynamicFovAppliedFactor = 1.0f;
+	m_CinematicCameraSmoothing = false;
+	m_CinematicCameraPosition = vec2(0.0f, 0.0f);
 
 	m_AutoSpecCamera = true;
 	m_AutoSpecCameraZooming = false;
@@ -124,6 +126,7 @@ float CCamera::ZoomProgress(float CurrentTime) const
 
 void CCamera::ScaleZoom(float Factor)
 {
+	RemoveDynamicFovZoom();
 	float CurrentTarget = m_Zooming ? m_ZoomSmoothingTarget : m_Zoom;
 	ChangeZoom(CurrentTarget * Factor, GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_MultiViewActivated ? g_Config.m_ClMultiViewZoomSmoothness : g_Config.m_ClSmoothZoomTime, true);
 
@@ -142,6 +145,7 @@ float CCamera::MinZoomLevel()
 
 void CCamera::ChangeZoom(float Target, int Smoothness, bool IsUser)
 {
+	RemoveDynamicFovZoom();
 	if(Target > MaxZoomLevel() || Target < MinZoomLevel())
 	{
 		return;
@@ -168,6 +172,15 @@ void CCamera::ChangeZoom(float Target, int Smoothness, bool IsUser)
 	m_Zooming = true;
 }
 
+void CCamera::RemoveDynamicFovZoom()
+{
+	if(m_DynamicFovAppliedFactor == 1.0f)
+		return;
+
+	m_Zoom = QmCameraEffects::ZoomWithoutDynamicFov(m_Zoom, m_DynamicFovAppliedFactor);
+	m_DynamicFovAppliedFactor = 1.0f;
+}
+
 void CCamera::ResetAutoSpecCamera()
 {
 	m_AutoSpecCamera = true;
@@ -175,11 +188,7 @@ void CCamera::ResetAutoSpecCamera()
 
 void CCamera::UpdateCamera()
 {
-	if(m_DynamicFovAppliedFactor != 1.0f)
-	{
-		m_Zoom /= m_DynamicFovAppliedFactor;
-		m_DynamicFovAppliedFactor = 1.0f;
-	}
+	RemoveDynamicFovZoom();
 
 	// use hardcoded smooth camera for spectating unless player explicitly turn it off
 	bool CanUseCameraInfo = !GameClient()->m_MultiViewActivated;
@@ -385,9 +394,6 @@ void CCamera::UpdateCamera()
 		m_DriftCurrentOffset = m_DriftTargetOffset;
 	}
 
-	if(CanApplyLocalCameraEffects || length(m_DriftCurrentOffset) > 0.01f)
-		m_aDyncamCurrentCameraOffset[g_Config.m_ClDummy] += m_DriftCurrentOffset;
-
 	m_DynamicFovTarget = 1.0f;
 	if(CanApplyLocalCameraEffects && g_Config.m_QmDynamicFov)
 	{
@@ -452,10 +458,26 @@ void CCamera::OnRender()
 			GameClient()->m_Controls.ClampMousePos();
 			m_CamType = CAMTYPE_SPEC;
 		}
-		m_Center = GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy];
+		const vec2 TargetCenter = GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy];
+		if(g_Config.m_QmCinematicCamera)
+		{
+			if(!m_CinematicCameraSmoothing)
+			{
+				m_CinematicCameraPosition = m_Center;
+				m_CinematicCameraSmoothing = true;
+			}
+			m_CinematicCameraPosition = QmCameraEffects::SmoothCinematicPosition(m_CinematicCameraPosition, TargetCenter, Client()->RenderFrameTime());
+			m_Center = m_CinematicCameraPosition;
+		}
+		else
+		{
+			m_Center = TargetCenter;
+			m_CinematicCameraSmoothing = false;
+		}
 	}
 	else
 	{
+		m_CinematicCameraSmoothing = false;
 		if(m_CamType != CAMTYPE_PLAYER)
 		{
 			GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy] = m_aLastPos[g_Config.m_ClDummy];
@@ -467,13 +489,14 @@ void CCamera::OnRender()
 		if(GameClient()->m_Snap.m_SpecInfo.m_Active)
 			m_Center = GameClient()->m_Snap.m_SpecInfo.m_Position + m_aDyncamCurrentCameraOffset[g_Config.m_ClDummy];
 		else
-			m_Center = GameClient()->m_LocalCharacterPos + m_aDyncamCurrentCameraOffset[g_Config.m_ClDummy];
+			m_Center = GameClient()->m_LocalCharacterPos + m_aDyncamCurrentCameraOffset[g_Config.m_ClDummy] + m_DriftCurrentOffset;
 	}
 
 	if(m_ForceFreeview && m_CamType == CAMTYPE_SPEC)
 	{
 		GameClient()->m_Controls.m_aMouseInputType[g_Config.m_ClDummy] = CControls::EMouseInputType::AUTOMATED;
 		m_Center = GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy] = m_ForceFreeviewPos;
+		m_CinematicCameraSmoothing = false;
 		m_ForceFreeview = false;
 	}
 	else
@@ -547,6 +570,7 @@ void CCamera::OnConsoleInit()
 void CCamera::OnReset()
 {
 	m_CameraSmoothing = false;
+	m_CinematicCameraSmoothing = false;
 	m_DriftTargetOffset = vec2(0.0f, 0.0f);
 	m_DriftCurrentOffset = vec2(0.0f, 0.0f);
 	m_DynamicFovTarget = 1.0f;
