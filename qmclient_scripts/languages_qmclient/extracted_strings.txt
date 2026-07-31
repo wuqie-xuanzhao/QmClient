@@ -1111,6 +1111,7 @@ Key Sticking: ?
 Key Sticking: Off
 Key Sticking: On
 Key Sticking: Reset Self
+Keyboard size
 Keyword Reply
 Keyword rules
 Kick player
@@ -1306,6 +1307,7 @@ Modified
 Modules snap to screen edges, center lines and other HUD modules while dragging
 MOTD
 Mouse
+Mouse size
 Move left
 Move player to spectators
 Move right

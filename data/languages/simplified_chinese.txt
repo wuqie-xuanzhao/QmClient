@@ -3337,6 +3337,9 @@ Key Sticking: On
 Key Sticking: Reset Self
 == 卡键：重置本体
 
+Keyboard size
+== 键盘大小
+
 Keyword Reply
 == 关键词回复
 
@@ -3921,6 +3924,9 @@ MOTD
 
 Mouse
 == 鼠标
+
+Mouse size
+== 鼠标大小
 
 Move left
 == 向左移动

@@ -3337,6 +3337,9 @@ Key Sticking: On
 Key Sticking: Reset Self
 == Touche bloquée : Réinitialiser soi-même
 
+Keyboard size
+== Taille du clavier
+
 Keyword Reply
 == Réponse par mot-clé
 
@@ -3921,6 +3924,9 @@ MOTD
 
 Mouse
 == Souris
+
+Mouse size
+== Taille de la souris
 
 Move left
 == Déplacer à gauche

@@ -3337,6 +3337,9 @@ Key Sticking: On
 Key Sticking: Reset Self
 == キースティッキング: 自分をリセット
 
+Keyboard size
+== キーボードサイズ
+
 Keyword Reply
 == キーワード返信
 
@@ -3921,6 +3924,9 @@ MOTD
 
 Mouse
 == マウス
+
+Mouse size
+== マウスサイズ
 
 Move left
 == 左に移動

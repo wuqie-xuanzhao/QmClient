@@ -6807,9 +6807,18 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-input-overlay-size", &LabelColValue, Localize("Size"), LgBodySize);
+						DoQmSettingsLabel("qmclient-input-overlay-keyboard-size", &LabelColValue, Localize("Keyboard size"), LgBodySize);
 						static int s_QmInputOverlayScaleInputId;
 						RenderSliderWithValueInput(&s_QmInputOverlayScaleInputId, ControlColValue, &g_Config.m_QmInputOverlayScale, 1, 200, "%");
+					}
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					{
+						CUIRect LabelColValue, ControlColValue;
+						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+						DoQmSettingsLabel("qmclient-input-overlay-mouse-size", &LabelColValue, Localize("Mouse size"), LgBodySize);
+						static int s_QmInputOverlayMouseScaleInputId;
+						RenderSliderWithValueInput(&s_QmInputOverlayMouseScaleInputId, ControlColValue, &g_Config.m_QmInputOverlayMouseScale, 1, 200, "%");
 					}
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);

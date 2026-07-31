@@ -3,6 +3,7 @@
 
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/components/qmclient/afk_presentation.h>
+#include <game/client/components/qmclient/input_overlay.h>
 #include <game/client/components/qmclient/scoreboard_team_modes.h>
 #include <game/client/components/scoreboard.h>
 
@@ -10,7 +11,48 @@
 
 #include <vector>
 
-TEST(QmAfkPresentation, ServerAndEscMenuStatesShareOneVisualDecision)
+TEST(QmInputOverlayLayout, MouseClassificationRequiresMouseOnlyInputs)
+{
+	EXPECT_TRUE(QmInputOverlay::IsMouseOnlyLayout(false, true));
+	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(true, false));
+	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(true, true));
+	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(false, false));
+}
+
+TEST(QmInputOverlayLayout, MouseSizeDoesNotMoveKeyboardOrMouseAnchor)
+{
+	constexpr float KeyboardScale = 0.5f;
+	const auto Keyboard = QmInputOverlay::ScaledLayoutBounds(0.0f, 0.0f, 432.0f, 300.0f, KeyboardScale, KeyboardScale);
+	const auto SmallMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.1f);
+	const auto LargeMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.5f);
+
+	EXPECT_FLOAT_EQ(Keyboard.m_MinX, 0.0f);
+	EXPECT_FLOAT_EQ(Keyboard.m_MaxX, 216.0f);
+	EXPECT_FLOAT_EQ(SmallMouse.m_MinX, LargeMouse.m_MinX);
+	EXPECT_FLOAT_EQ(SmallMouse.m_MinX - Keyboard.m_MaxX, 17.5f);
+	EXPECT_FLOAT_EQ(SmallMouse.m_MaxX - SmallMouse.m_MinX, 28.5f);
+	EXPECT_FLOAT_EQ(LargeMouse.m_MaxX - LargeMouse.m_MinX, 142.5f);
+}
+
+TEST(QmInputOverlayLayout, VisibleBoundsUseIndependentContentScales)
+{
+	constexpr float KeyboardScale = 0.5f;
+	const auto Keyboard = QmInputOverlay::ScaledLayoutBounds(0.0f, 0.0f, 432.0f, 300.0f, KeyboardScale, KeyboardScale);
+	const auto SmallMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.25f);
+	const auto LargeMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.5f);
+
+	const auto SmallBounds = QmInputOverlay::UnionBounds(Keyboard, SmallMouse);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MinX, 0.0f);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MinY, 0.0f);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MaxX, 304.75f);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MaxY, 150.0f);
+
+	const auto LargeBounds = QmInputOverlay::UnionBounds(Keyboard, LargeMouse);
+	EXPECT_FLOAT_EQ(LargeBounds.m_MaxX, 376.0f);
+	EXPECT_FLOAT_EQ(LargeBounds.m_MaxY, 210.5f);
+}
+
+TEST(QmAfkPresentation, ServerAndEscMenuStatesRemainAvailableForNonOpacityIndicators)
 {
 	EXPECT_TRUE(IsQmAfkForPresentation(true, false, false, 7, 3));
 	EXPECT_TRUE(IsQmAfkForPresentation(false, true, true, 3, 3));
@@ -19,14 +61,6 @@ TEST(QmAfkPresentation, ServerAndEscMenuStatesShareOneVisualDecision)
 	EXPECT_FALSE(IsQmAfkForPresentation(false, true, true, 4, 3));
 	EXPECT_FALSE(IsQmAfkForPresentation(false, false, true, 3, 3));
 	EXPECT_FALSE(IsQmAfkForPresentation(false, true, true, -1, -1));
-}
-
-TEST(QmAfkPresentation, AfkCapsExistingOpacityWithoutMakingPlayersBrighter)
-{
-	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(1.0f, true), 0.4f);
-	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(0.6f, true), 0.4f);
-	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(0.25f, true), 0.25f);
-	EXPECT_FLOAT_EQ(ApplyQmAfkPresentationAlpha(0.75f, false), 0.75f);
 }
 
 TEST(QmScoreboardTeamModes, AggregationRequiresDisplayInfoAndCombinesKnownMembers)

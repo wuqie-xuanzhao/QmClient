@@ -3337,6 +3337,9 @@ Key Sticking: On
 Key Sticking: Reset Self
 == Tecla Pressionada: Reiniciar Próprio
 
+Keyboard size
+== Tamanho do teclado
+
 Keyword Reply
 == Resposta por Palavra-chave
 
@@ -3921,6 +3924,9 @@ MOTD
 
 Mouse
 == Rato
+
+Mouse size
+== Tamanho do rato
 
 Move left
 == Mover para a esquerda

@@ -3337,6 +3337,9 @@ Key Sticking: On
 Key Sticking: Reset Self
 == Tuş Kilitleme: Kendini Sıfırla
 
+Keyboard size
+== Klavye boyutu
+
 Keyword Reply
 == Anahtar Kelime Yanıtı
 
@@ -3921,6 +3924,9 @@ MOTD
 
 Mouse
 == Fare
+
+Mouse size
+== Fare boyutu
 
 Move left
 == Sola hareket et

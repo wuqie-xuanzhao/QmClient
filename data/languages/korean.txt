@@ -3337,6 +3337,9 @@ Key Sticking: On
 Key Sticking: Reset Self
 == 키 고정: 본체 초기화
 
+Keyboard size
+== 키보드 크기
+
 Keyword Reply
 == 키워드 응답
 
@@ -3921,6 +3924,9 @@ MOTD
 
 Mouse
 == 마우스
+
+Mouse size
+== 마우스 크기
 
 Move left
 == 왼쪽으로 이동

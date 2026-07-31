@@ -615,14 +615,6 @@ void CPlayers::RenderHook(
 		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
-	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
-	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
-
 	RenderInfo.m_Size = 64.0f;
 
 	vec2 Position;
@@ -632,7 +624,7 @@ void CPlayers::RenderHook(
 		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Intra);
 
 	// draw hook
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Afk ? Alpha : 1.0f);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 	if(ClientId < 0)
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 
@@ -733,7 +725,6 @@ void CPlayers::RenderPlayer(
 		GameClient()->m_Menus.IsActive(),
 		ClientId,
 		GameClient()->m_Snap.m_LocalClientId);
-	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 	// TODO: snd_game_volume_others
 	const float Volume = 1.0f;
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
@@ -1158,8 +1149,7 @@ void CPlayers::RenderPlayer(
 				vec2(GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y),
 				Client()->IntraGameTick(g_Config.m_ClDummy));
 
-		const float ShadowAlpha = ApplyQmAfkPresentationAlpha(0.5f, Afk);
-		RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, ShadowPosition, ShadowAlpha, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle); // render ghost
+		RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, ShadowPosition, 0.5f, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle); // render ghost
 	}
 
 	const std::chrono::nanoseconds Now = time_get_nanoseconds();
@@ -1327,7 +1317,6 @@ void CPlayers::RenderPlayerGhost(
 		GameClient()->m_Menus.IsActive(),
 		ClientId,
 		GameClient()->m_Snap.m_LocalClientId);
-	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
@@ -1483,7 +1472,7 @@ void CPlayers::RenderPlayerGhost(
 	{
 		if(!(RenderInfo.m_TeeRenderFlags & TEE_NO_WEAPON))
 		{
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, Afk ? Alpha : 1.0f);
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle * pi * 2 + Angle);
 
 			if(ClientId < 0)
