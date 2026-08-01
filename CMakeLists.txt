@@ -204,6 +204,11 @@ if(NOT(CMAKE_BUILD_TYPE MATCHES "^(Release|Debug|RelWithDebInfo|MinSizeRel)$"))
   message(WARNING "Unknown CMAKE_BUILD_TYPE, should be one of Release, Debug, RelWithDebInfo or MinSizeRel")
 endif()
 
+if(TARGET_OS STREQUAL "windows" AND CLIENT AND NOT HEADLESS_CLIENT AND CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT VULKAN)
+  message(STATUS "Windows Release graphics client requires the Vulkan backend; overriding VULKAN=OFF")
+  set(VULKAN ON CACHE BOOL "Enable the vulkan backend" FORCE)
+endif()
+
 set(DBG $<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>)
 
 if(IPO)
