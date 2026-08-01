@@ -150,7 +150,7 @@ void CLayerTiles::ExtractTiles(int TilemapItemVersion, const CTile *pSavedTiles,
 		for(size_t TileIndex = 0; TileIndex < DestSize; ++TileIndex)
 		{
 			m_pTiles[TileIndex].m_Skip = 0;
-			m_pTiles[TileIndex].m_Reserved = 0;
+			m_pTiles[TileIndex].m_MustBe0 = 0;
 		}
 	}
 }
