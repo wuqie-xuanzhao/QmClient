@@ -3799,7 +3799,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			s_vMapHistoryItemIds.resize(vRecords.size());
 			s_vMapHistoryRemoveButtons.resize(vRecords.size());
 			const int HistoryGridColumns = QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH);
-			s_MapHistoryListBox.DoStart(QmMapHistoryUi::CARD_ROW_HEIGHT, (int)vRecords.size(), HistoryGridColumns, 1, -1, &HistoryPanel, false, IGraphics::CORNER_NONE, true);
+			s_MapHistoryListBox.DoStart(QmMapHistoryUi::CARD_ROW_HEIGHT, (int)vRecords.size(), HistoryGridColumns, 1, -1, &HistoryPanel, false, IGraphics::CORNER_NONE);
 
 			auto DoHistoryCardLabel = [this](CUIRect Rect, const char *pText, float FontSize, int Align) {
 				SLabelProperties Props;

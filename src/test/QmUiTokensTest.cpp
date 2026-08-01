@@ -163,7 +163,10 @@ TEST(QmImePresentationSource, PopupUsesContinuousRedirectablePresentationState)
 	EXPECT_NE(PopupSource.find("ResolveUiPresentationStateValue"), std::string::npos);
 	EXPECT_NE(PopupSource.find("SetUiPresentationStateValue"), std::string::npos);
 	EXPECT_NE(PopupSource.find("TargetPresentation.m_CandidateAlpha"), std::string::npos);
-	EXPECT_NE(PopupSource.find("Presence.m_FreshEnter"), std::string::npos);
+	// 首次状态只初始化一次；后续显示、重定向和淡出都沿用同一组可动画状态。
+	EXPECT_NE(PopupSource.find("if(!m_Presentation.m_Initialized)"), std::string::npos);
+	EXPECT_NE(PopupSource.find("m_Presentation.m_Initialized = true;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("Presence.m_FreshEnter"), std::string::npos);
 	EXPECT_NE(PopupSource.find("const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);"), std::string::npos);
 	EXPECT_NE(PopupSource.find("const float CandidateDrawAlpha = Alpha * CandidateAlpha;"), std::string::npos);
 	EXPECT_NE(PopupSource.find("WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha)"), std::string::npos);

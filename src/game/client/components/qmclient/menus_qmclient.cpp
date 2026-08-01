@@ -25,6 +25,7 @@
 #include <game/client/QmUi/QmModuleTypes.h>
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/UiContext.h>
+#include <game/client/QmUi/UiButtons.h>
 #include <game/client/QmUi/UiDogfood.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
@@ -747,13 +748,15 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollS
 	return Frame;
 }
 
-void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly)
+void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly, unsigned Flags)
 {
 	const int OriginalValue = *pValue;
 	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
 	ui_widget::SNumericFieldOptions Options;
+	Options.m_Flags = Flags;
 	Options.m_pSuffix = pSuffix;
 	Options.m_FontSize = CurrentSettingsContentMetrics().m_BodySize;
+	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 
 	const float UiScale = std::clamp(ControlColumn.h / ui_token::settings::ROW_HEIGHT, 0.78f, 1.0f);
 	IUiContext InputCtx = SettingsUiContext("qmclient_slider_input", UiScale);
@@ -1208,12 +1211,12 @@ void CMenus::RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, 
 
 void CMenus::RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
-	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "", unsigned Flags = 0u) {
 		CUIRect Row, LabelColumn, ControlColumn;
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
 		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
-		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly, Flags);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCameraDrift, "Enable camera drift", Localize("Enable camera drift"), &g_Config.m_QmCameraDrift);
@@ -1235,7 +1238,7 @@ void CMenus::RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight,
 	}
 	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCinematicCamera, "Cinematic camera", Localize("Cinematic camera"), &g_Config.m_QmCinematicCamera);
 	static int s_QmUiScaleInputId;
-	RenderValue("qmclient-ui-scale", "UI scale", &s_QmUiScaleInputId, &g_Config.m_QmUiScale, 50, 200, "%");
+	RenderValue("qmclient-ui-scale", "UI scale", &s_QmUiScaleInputId, &g_Config.m_QmUiScale, 50, 200, "%", CUi::SCROLLBAR_OPTION_DELAYUPDATE);
 	const char *apAspectPresetNames[] = {Localize("Off"), "5:4", "4:3", "3:2", "16:9", "21:9", Localize("Custom")};
 	static CUi::SDropDownState s_AspectPresetDropDownState;
 	static CScrollRegion s_AspectPresetDropDownScrollRegion;
@@ -1694,20 +1697,10 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 	if(g_Config.m_QmAxiomAutoLogin)
 	{
 		IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_gores_text_inputs", BodySize / ui_token::font::BODY);
-		auto DoPasswordToggleButton = [this](CButtonContainer *pButton, bool Visible, const CUIRect &ButtonRect) {
+		auto DoPasswordToggleButton = [&TextInputCtx](CButtonContainer *pButton, bool Visible, const CUIRect &ButtonRect) {
 			const EQmIcon Icon = Visible ? EQmIcon::EYE_OFF : EQmIcon::EYE;
 			const char *pFallbackIcon = Visible ? FONT_ICON_EYE_SLASH : FONT_ICON_EYE;
-			CQmIconManager *pIconManager = GameClient()->QmIconManager();
-			if(pIconManager == nullptr || !pIconManager->IsReady())
-				return Ui()->DoButton_FontIcon(pButton, pFallbackIcon, 0, &ButtonRect, BUTTONFLAG_LEFT) != 0;
-			ButtonRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * Ui()->ButtonColorMul(pButton)), IGraphics::CORNER_ALL, 5.0f);
-			CUIRect IconRect;
-			ButtonRect.HMargin(2.0f, &IconRect);
-			IconRect.Margin(IconRect.h * 0.20f, &IconRect);
-			const EQmIconState IconState = Ui()->HotItem() == pButton ? EQmIconState::HOVER : EQmIconState::NORMAL;
-			if(!pIconManager->RenderIcon(Icon, IconRect, IconState))
-				return Ui()->DoButton_FontIcon(pButton, pFallbackIcon, 0, &ButtonRect, BUTTONFLAG_LEFT) != 0;
-			return Ui()->DoButtonLogic(pButton, 0, &ButtonRect, BUTTONFLAG_LEFT) != 0;
+			return ui_widget::IconButton(TextInputCtx, pButton, Icon, pFallbackIcon, ButtonRect);
 		};
 		auto RenderPassword = [&](const char *pTextId, const char *pText, CLineInput &Input, CButtonContainer &ToggleButton, bool &Visible) {
 			Content.HSplitTop(LineHeight, &Row, &Content);
@@ -1880,6 +1873,7 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmClientMarkTrail, "Remote particle effects", &g_Config.m_QmClientMarkTrail);
 	RenderCheckbox(&g_Config.m_QmClientShowBadge, "Show Qm badge", &g_Config.m_QmClientShowBadge);
 	RenderCheckbox(&g_Config.m_QmShowOutdatedVersionWarning, "Show outdated version warning", &g_Config.m_QmShowOutdatedVersionWarning);
+	RenderCheckbox(&g_Config.m_QmBetterScoreboard, "Better scoreboard", &g_Config.m_QmBetterScoreboard);
 	RenderCheckbox(&g_Config.m_QmScoreboardPoints, "Scoreboard point check", &g_Config.m_QmScoreboardPoints);
 	RenderCheckbox(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", &g_Config.m_QmScoreboardOnDeath);
 	RenderCheckbox(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", &g_Config.m_QmHideJoinServerInfo);
@@ -1916,50 +1910,69 @@ void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, 
 	static CButtonContainer s_BlockWordsConsoleColorId;
 	DoLine_ColorPicker(&s_BlockWordsConsoleColorId, CurrentSettingsContentMetrics(), &Content, Localize("Console color"), &g_Config.m_QmBlockWordsConsoleColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 	RenderCheckbox(&g_Config.m_QmBlockWordsEnabled, "Enable word filter list", &g_Config.m_QmBlockWordsEnabled);
-	RenderCheckbox(&g_Config.m_QmBlockWordsMultiReplace, "Use multi-char replacement based on word length", &g_Config.m_QmBlockWordsMultiReplace);
 
-	static CLineInputBuffered<8> s_BlockWordsReplaceInput;
-	static bool s_BlockWordsReplaceInited = false;
-	if(!s_BlockWordsReplaceInited)
-	{
-		s_BlockWordsReplaceInput.Set(g_Config.m_QmBlockWordsReplacementChar);
-		s_BlockWordsReplaceInited = true;
-	}
-	else if(!s_BlockWordsReplaceInput.IsActive() && str_comp(s_BlockWordsReplaceInput.GetString(), g_Config.m_QmBlockWordsReplacementChar) != 0)
-	{
-		s_BlockWordsReplaceInput.Set(g_Config.m_QmBlockWordsReplacementChar);
-	}
-	s_BlockWordsReplaceInput.SetEmptyText("*");
-	IUiContext ReplacementInputCtx = SettingsUiContext("settings_qmclient_block_words_text_inputs", UiScale);
+	const int BlockWordsAction = g_Config.m_QmBlockWordsAction;
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-replacement-chars", &LabelColumn, Localize("Replacement chars"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
-	if(ui_widget::InputField(ReplacementInputCtx, &s_BlockWordsReplaceInput, ControlColumn, "*", BodySize))
-	{
-		char aReplacement[8];
-		str_utf8_truncate(aReplacement, sizeof(aReplacement), s_BlockWordsReplaceInput.GetString(), 1);
-		if(aReplacement[0] == '\0')
-			str_copy(aReplacement, "*", sizeof(aReplacement));
-		str_copy(g_Config.m_QmBlockWordsReplacementChar, aReplacement, sizeof(g_Config.m_QmBlockWordsReplacementChar));
-	}
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-action", &LabelColumn, Localize("Behavior"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	CUIRect ActionRow = ControlColumn;
+	CUIRect ActionButton;
+	static CButtonContainer s_BlockWordsActionReplace, s_BlockWordsActionHide;
+	const float ActionWidth = ActionRow.w / 2.0f;
+	ActionRow.VSplitLeft(ActionWidth, &ActionButton, &ActionRow);
+	if(DoButtonLineSize_Menu(&s_BlockWordsActionReplace, Localize("Replace mode"), BlockWordsAction == 0, &ActionButton, LineHeight, false, 0, IGraphics::CORNER_L, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmBlockWordsAction = 0;
+	if(DoButtonLineSize_Menu(&s_BlockWordsActionHide, Localize("Hide player messages"), BlockWordsAction == 1, &ActionRow, LineHeight, false, 0, IGraphics::CORNER_R, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmBlockWordsAction = 1;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-replace-mode", &LabelColumn, Localize("Replace mode"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
-	CUIRect ModeRow = ControlColumn;
-	CUIRect ModeButton;
-	static CButtonContainer s_BlockWordsModeRegex, s_BlockWordsModeFull, s_BlockWordsModeBoth;
-	const float ModeWidth = ModeRow.w / 3.0f;
-	ModeRow.VSplitLeft(ModeWidth, &ModeButton, &ModeRow);
-	if(DoButtonLineSize_Menu(&s_BlockWordsModeRegex, Localize("Regular expression"), g_Config.m_QmBlockWordsMode == 0, &ModeButton, LineHeight, false, 0, IGraphics::CORNER_L, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		g_Config.m_QmBlockWordsMode = 0;
-	ModeRow.VSplitLeft(ModeWidth, &ModeButton, &ModeRow);
-	if(DoButtonLineSize_Menu(&s_BlockWordsModeFull, Localize("Literal"), g_Config.m_QmBlockWordsMode == 1, &ModeButton, LineHeight, false, 0, IGraphics::CORNER_NONE, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		g_Config.m_QmBlockWordsMode = 1;
-	if(DoButtonLineSize_Menu(&s_BlockWordsModeBoth, Localize("Both"), g_Config.m_QmBlockWordsMode == 2, &ModeRow, LineHeight, false, 0, IGraphics::CORNER_R, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		g_Config.m_QmBlockWordsMode = 2;
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(BlockWordsAction == 0)
+	{
+		RenderCheckbox(&g_Config.m_QmBlockWordsMultiReplace, "Use multi-char replacement based on word length", &g_Config.m_QmBlockWordsMultiReplace);
+
+		static CLineInputBuffered<8> s_BlockWordsReplaceInput;
+		static bool s_BlockWordsReplaceInited = false;
+		if(!s_BlockWordsReplaceInited)
+		{
+			s_BlockWordsReplaceInput.Set(g_Config.m_QmBlockWordsReplacementChar);
+			s_BlockWordsReplaceInited = true;
+		}
+		else if(!s_BlockWordsReplaceInput.IsActive() && str_comp(s_BlockWordsReplaceInput.GetString(), g_Config.m_QmBlockWordsReplacementChar) != 0)
+		{
+			s_BlockWordsReplaceInput.Set(g_Config.m_QmBlockWordsReplacementChar);
+		}
+		s_BlockWordsReplaceInput.SetEmptyText("*");
+		IUiContext ReplacementInputCtx = SettingsUiContext("settings_qmclient_block_words_text_inputs", UiScale);
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-replacement-chars", &LabelColumn, Localize("Replacement chars"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+		if(ui_widget::InputField(ReplacementInputCtx, &s_BlockWordsReplaceInput, ControlColumn, "*", BodySize))
+		{
+			char aReplacement[8];
+			str_utf8_truncate(aReplacement, sizeof(aReplacement), s_BlockWordsReplaceInput.GetString(), 1);
+			if(aReplacement[0] == '\0')
+				str_copy(aReplacement, "*", sizeof(aReplacement));
+			str_copy(g_Config.m_QmBlockWordsReplacementChar, aReplacement, sizeof(g_Config.m_QmBlockWordsReplacementChar));
+		}
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-match-mode", &LabelColumn, Localize("Mode"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+		CUIRect ModeRow = ControlColumn;
+		CUIRect ModeButton;
+		static CButtonContainer s_BlockWordsModeRegex, s_BlockWordsModeFull, s_BlockWordsModeBoth;
+		const float ModeWidth = ModeRow.w / 3.0f;
+		ModeRow.VSplitLeft(ModeWidth, &ModeButton, &ModeRow);
+		if(DoButtonLineSize_Menu(&s_BlockWordsModeRegex, Localize("Regular expression"), g_Config.m_QmBlockWordsMode == 0, &ModeButton, LineHeight, false, 0, IGraphics::CORNER_L, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+			g_Config.m_QmBlockWordsMode = 0;
+		ModeRow.VSplitLeft(ModeWidth, &ModeButton, &ModeRow);
+		if(DoButtonLineSize_Menu(&s_BlockWordsModeFull, Localize("Literal"), g_Config.m_QmBlockWordsMode == 1, &ModeButton, LineHeight, false, 0, IGraphics::CORNER_NONE, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+			g_Config.m_QmBlockWordsMode = 1;
+		if(DoButtonLineSize_Menu(&s_BlockWordsModeBoth, Localize("Both"), g_Config.m_QmBlockWordsMode == 2, &ModeRow, LineHeight, false, 0, IGraphics::CORNER_R, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+			g_Config.m_QmBlockWordsMode = 2;
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
 
 	static CLineInputBuffered<1024> s_BlockWordsInput;
 	static bool s_BlockWordsInited = false;
@@ -2209,13 +2222,13 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	}
 
-	auto RenderLanguageDropDownWithCustomInput = [this, BodySize, PrewarmOnly, &TextInputCtx](const CUIRect &ControlColumn, const char **apNames, const char **apCodes, int Count, CUi::SDropDownState &DropDownState, char *pConfigValue, size_t ConfigValueSize, CLineInput &LineInput, const char *pEmptyText) {
+	auto RenderLanguageDropDownWithCustomInput = [this, BodySize, PrewarmOnly, &TextInputCtx](const CUIRect &ControlColumn, const char *const *apNames, const char *const *apCodes, int Count, CUi::SDropDownState &DropDownState, char *pConfigValue, size_t ConfigValueSize, CLineInput &LineInput, const char *pEmptyText) {
 		CUIRect DropRect, EditRect;
 		ControlColumn.VSplitMid(&DropRect, &EditRect);
 		DropRect.VMargin(1.0f, &DropRect);
 		EditRect.VMargin(1.0f, &EditRect);
 
-		auto FindIndex = [](const char *pValue, const char **apConfigCodes, int ConfigCodeCount) -> int {
+		auto FindIndex = [](const char *pValue, const char *const *apConfigCodes, int ConfigCodeCount) -> int {
 			for(int i = 0; i < ConfigCodeCount; ++i)
 			{
 				if(str_comp(pValue, apConfigCodes[i]) == 0)
@@ -2285,13 +2298,6 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 	}
 	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
 
-	Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
-	Row.VMargin(LabelWidth, &Row);
-	RenderLabel("qmclient-translate-skip-target-language-note", &Row, Localize("Messages that already look like the target language will skip auto-translate"), BodySize * 0.8f);
-	Content.HSplitTop(LineSpacing * 0.35f, nullptr, &Content);
-	Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
-	Row.VMargin(LabelWidth, &Row);
-	RenderLabel("qmclient-translate-skip-numeric-note", &Row, Localize("Numeric-only messages will be skipped"), BodySize * 0.8f);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	// Endpoint 配置 - 根据后端类型显示不同的端点输入
 	if(IsTencentCloudBackend)
@@ -2357,7 +2363,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 	if(IsLlmBackend)
 	{
 		// LLM Provider 选择
-		static std::vector<const char *> s_LlmProviderDropDownNames = {
+		const std::array<const char *, 4> LlmProviderDropDownNames = {
 			Localize("Zhipu AI"),
 			Localize("DeepSeek"),
 			Localize("OpenAI"),
@@ -2370,7 +2376,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
 		CUIElement &LlmProviderLabel = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-llm-provider");
 		DoSettingsLabelStreamed(LlmProviderLabel, &LabelCol, Localize("LLM provider"), BodySize, TEXTALIGN_ML);
-		const int NewProvider = DoSettingsDropDown(&ControlCol, g_Config.m_QmTranslateLlmProvider, s_LlmProviderDropDownNames.data(), s_LlmProviderDropDownNames.size(), s_LlmProviderDropDownState);
+		const int NewProvider = DoSettingsDropDown(&ControlCol, g_Config.m_QmTranslateLlmProvider, LlmProviderDropDownNames.data(), LlmProviderDropDownNames.size(), s_LlmProviderDropDownState);
 		if(NewProvider != g_Config.m_QmTranslateLlmProvider)
 		{
 			g_Config.m_QmTranslateLlmProvider = NewProvider;
@@ -2593,7 +2599,7 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 
 	// 下拉框 + 输入框组合
 	{
-		static const char *s_apSourceNames[] = {
+		const std::array<const char *, 11> apSourceNames = {
 			Localize("Auto"),
 			"中文",
 			"English",
@@ -2606,11 +2612,11 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 			"Español",
 			"Português",
 		};
-		static const char *s_apSourceCodes[] = {"auto", "zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
+		const std::array<const char *, 11> apSourceCodes = {"auto", "zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
 		static CUi::SDropDownState s_SourceLangDropDown;
 
 		static CLineInput s_SourceLang(g_Config.m_QmTranslateSource, sizeof(g_Config.m_QmTranslateSource));
-		RenderLanguageDropDownWithCustomInput(ControlCol, s_apSourceNames, s_apSourceCodes, std::size(s_apSourceCodes), s_SourceLangDropDown, g_Config.m_QmTranslateSource, sizeof(g_Config.m_QmTranslateSource), s_SourceLang, "auto");
+		RenderLanguageDropDownWithCustomInput(ControlCol, apSourceNames.data(), apSourceCodes.data(), apSourceCodes.size(), s_SourceLangDropDown, g_Config.m_QmTranslateSource, sizeof(g_Config.m_QmTranslateSource), s_SourceLang, "auto");
 	}
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
@@ -2620,12 +2626,12 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 
 	// 下拉框 + 输入框组合
 	{
-		static const char *s_apOutTargetNames[] = {"中文", "English", "日本語", "한국어", "繁體中文", "Русский", "Deutsch", "Français", "Español", "Português"};
-		static const char *s_apOutTargetCodes[] = {"zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
+		const std::array<const char *, 10> apOutTargetNames = {"中文", "English", "日本語", "한국어", "繁體中文", "Русский", "Deutsch", "Français", "Español", "Português"};
+		const std::array<const char *, 10> apOutTargetCodes = {"zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
 		static CUi::SDropDownState s_OutTargetLangDropDown;
 
 		static CLineInput s_TargetLang(g_Config.m_QmTranslateOutgoingTarget, sizeof(g_Config.m_QmTranslateOutgoingTarget));
-		RenderLanguageDropDownWithCustomInput(ControlCol, s_apOutTargetNames, s_apOutTargetCodes, std::size(s_apOutTargetCodes), s_OutTargetLangDropDown, g_Config.m_QmTranslateOutgoingTarget, sizeof(g_Config.m_QmTranslateOutgoingTarget), s_TargetLang, "en");
+		RenderLanguageDropDownWithCustomInput(ControlCol, apOutTargetNames.data(), apOutTargetCodes.data(), apOutTargetCodes.size(), s_OutTargetLangDropDown, g_Config.m_QmTranslateOutgoingTarget, sizeof(g_Config.m_QmTranslateOutgoingTarget), s_TargetLang, "en");
 	}
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
@@ -2633,13 +2639,13 @@ void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight
 	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
 	RenderLabel("qmclient-translate-send-method", &LabelCol, Localize("Send translation method"), BodySize);
 	{
-		static const char *s_apOutgoingModeNames[] = {
+		const std::array<const char *, 2> apOutgoingModeNames = {
 			Localize("Translate only when needed"),
 			Localize("Always translate"),
 		};
 		static CUi::SDropDownState s_OutgoingModeDropDown;
 		const int OldMode = std::clamp(g_Config.m_QmTranslateAutoOutgoingMode, 0, 1);
-		const int NewMode = DoSettingsDropDown(&ControlCol, OldMode, s_apOutgoingModeNames, std::size(s_apOutgoingModeNames), s_OutgoingModeDropDown);
+		const int NewMode = DoSettingsDropDown(&ControlCol, OldMode, apOutgoingModeNames.data(), apOutgoingModeNames.size(), s_OutgoingModeDropDown);
 		if(NewMode != OldMode)
 			g_Config.m_QmTranslateAutoOutgoingMode = NewMode;
 	}
@@ -3050,6 +3056,7 @@ void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale
 
 	static int s_aMapButtonIds[64];
 	static CButtonContainer s_aMapRemoveButtons[64];
+	IUiContext IconButtonCtx = SettingsUiContext("settings_qmclient_favorite_maps_icons", UiScale);
 	std::string RemoveMapName;
 	size_t MapIndex = 0;
 	for(const std::string &MapName : FavMaps)
@@ -3060,7 +3067,7 @@ void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale
 		CUIRect RowLabel, RowRemove;
 		Row.VSplitRight(LineHeight, &RowLabel, &RowRemove);
 		RowRemove.HMargin(std::clamp(2.0f * UiScale, 1.0f, 2.0f), &RowRemove);
-		if(Ui()->DoButton_FontIcon(&s_aMapRemoveButtons[MapIndex], FONT_ICON_XMARK, 0, &RowRemove, IGraphics::CORNER_ALL))
+			if(ui_widget::IconButton(IconButtonCtx, &s_aMapRemoveButtons[MapIndex], FONT_ICON_XMARK, RowRemove))
 		{
 			if(RemoveMapName.empty())
 				RemoveMapName = MapName;
@@ -4950,12 +4957,12 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 			       (g_Config.m_QmAxiomAutoLogin ? Row(0.35f) * 2.0f : 0.0f) + Row(0.35f) +
 			       ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? Row() * 6.0f : 0.0f) + LineHeight;
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
-		case EQmModuleId::MiniFeatures: return Rows(16.0f);
+		case EQmModuleId::MiniFeatures: return Rows(17.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;
 		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 4.0f;
 		case EQmModuleId::FriendNotify:
 			return Row() * (5.0f + (g_Config.m_QmFriendOnlineAutoRefresh ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterBroadcast ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterAutoGreet ? 1.0f : 0.0f));
-		case EQmModuleId::BlockWords: return Row() * 6.0f + CalcQiaFenInputHeight(TextRender(), g_Config.m_QmBlockWordsList, std::max(1.0f, ContentWidth - LabelWidth), BodySize, std::clamp(2.0f * UiScale, 1.0f, 2.0f), LineHeight);
+		case EQmModuleId::BlockWords: return Row() * (g_Config.m_QmBlockWordsAction == 0 ? 7.0f : 4.0f) + CalcQiaFenInputHeight(TextRender(), g_Config.m_QmBlockWordsList, std::max(1.0f, ContentWidth - LabelWidth), BodySize, std::clamp(2.0f * UiScale, 1.0f, 2.0f), LineHeight);
 		case EQmModuleId::Translate:
 		{
 			const bool IsTencentCloudBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "tencentcloud") == 0;
@@ -5006,7 +5013,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 			return (g_Config.m_QmFriendOnlineAutoRefresh ? 1u : 0u) |
 			       (g_Config.m_QmFriendEnterBroadcast ? 2u : 0u) |
 			       (g_Config.m_QmFriendEnterAutoGreet ? 4u : 0u);
-		case EQmModuleId::BlockWords: return s_BlockWordsLayoutRevision;
+		case EQmModuleId::BlockWords: return s_BlockWordsLayoutRevision * 2u + (g_Config.m_QmBlockWordsAction == 0 ? 0u : 1u);
 		case EQmModuleId::Translate:
 			if(str_comp_nocase(g_Config.m_QmTranslateBackend, "ftapi") == 0)
 				return 1u;
@@ -5564,22 +5571,17 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 
 		CUIRect TabBar, Button;
-		const SSettingsSubTabLayoutFrame QmClientSubTabs = ResolveSettingsSubTabLayout(MainView, QmClientUiScale);
-		TabBar = QmClientSubTabs.m_TabBarRect;
-		MainView = QmClientSubTabs.m_ContentRect;
-		const float TabWidth = TabBar.w / NUMBER_OF_QMCLIENT_SETTINGS_TABS;
-		static CButtonContainer s_aPageTabs[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
-		static const char *s_apQmTabNames[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
-		static char s_aQmLanguageFile[IO_MAX_PATH_LENGTH] = {};
-		if(s_apQmTabNames[0] == nullptr || str_comp(s_aQmLanguageFile, g_Config.m_ClLanguagefile) != 0)
-		{
-			str_copy(s_aQmLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aQmLanguageFile));
-			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_VISUAL] = Localize("Visuals");
-			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_FUNCTION] = Localize("Functions");
-			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_HUD] = Localize("HUD");
-			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_CONTRIBUTORS] = Localize("Contributors");
-			s_apQmTabNames[QMCLIENT_SETTINGS_TAB_CONFIG] = Localize("Config");
-		}
+			const SSettingsSubTabLayoutFrame QmClientSubTabs = ResolveSettingsSubTabLayout(MainView, QmClientUiScale);
+			TabBar = QmClientSubTabs.m_TabBarRect;
+			MainView = QmClientSubTabs.m_ContentRect;
+			const float TabWidth = TabBar.w / NUMBER_OF_QMCLIENT_SETTINGS_TABS;
+			static CButtonContainer s_aPageTabs[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
+			const char *apQmTabNames[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
+			apQmTabNames[QMCLIENT_SETTINGS_TAB_VISUAL] = Localize("Visuals");
+			apQmTabNames[QMCLIENT_SETTINGS_TAB_FUNCTION] = Localize("Functions");
+			apQmTabNames[QMCLIENT_SETTINGS_TAB_HUD] = Localize("HUD");
+			apQmTabNames[QMCLIENT_SETTINGS_TAB_CONTRIBUTORS] = Localize("Contributors");
+			apQmTabNames[QMCLIENT_SETTINGS_TAB_CONFIG] = Localize("Config");
 
 		{
 			CPerfTimer StageTimer;
@@ -5589,7 +5591,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				const int Corners = Tab == 0                                    ? IGraphics::CORNER_L :
 						    Tab == NUMBER_OF_QMCLIENT_SETTINGS_TABS - 1 ? IGraphics::CORNER_R :
 												  IGraphics::CORNER_NONE;
-				const char *pTabName = s_apQmTabNames[Tab];
+				const char *pTabName = apQmTabNames[Tab];
 				char aVisualTabName[64];
 				if(Tab == QMCLIENT_SETTINGS_TAB_VISUAL)
 				{

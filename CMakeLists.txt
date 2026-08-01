@@ -158,7 +158,7 @@ option(QM_DISABLE_PARALLEL_COMPILE "Disable /MP for compiler warnings-sensitive 
 option(QM_MSVC_USE_EMBEDDED_DEBUG_INFO "Use embedded MSVC debug information instead of per-target PDB files" OFF)
 option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF)
 option(QM_STRICT_WARNINGS "Treat compiler warnings as errors" OFF)
-option(QM_BUILD_ICON_ATLAS "Build QmClient Tabler PNG icon atlas from SVG sources" ON)
+option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor PNG icon atlases from SVG sources" ON)
 
 if(TARGET_OS STREQUAL "android")
   set(DISCORD OFF)
@@ -1531,7 +1531,8 @@ set(EXPECTED_DATA
   emoticons.png
   extras.png
   fonts/DejaVuSans.ttf
-  fonts/Font_Awesome_6_Free-Solid-900.otf
+  fonts/Phosphor-Regular.ttf
+  fonts/Phosphor-Bold.ttf
   fonts/GlowSansJ-Compressed-Book.otf
   fonts/NotoEmoji-Regular.ttf
   fonts/SourceHanSans.ttc
@@ -1589,12 +1590,22 @@ set(EXPECTED_DATA
   languages/traditional_chinese.txt
   languages/turkish.txt
   languages/ukrainian.txt
-  qmclient/icons/qm_icons_1x.json
-  qmclient/icons/qm_icons_1x.png
-  qmclient/icons/qm_icons_2x.json
-  qmclient/icons/qm_icons_2x.png
-  qmclient/icons/qm_icons_4x.json
-  qmclient/icons/qm_icons_4x.png
+  qmclient/icons/qm_icons_bold_1x.json
+  qmclient/icons/qm_icons_bold_1x.png
+  qmclient/icons/qm_icons_bold_2x.json
+  qmclient/icons/qm_icons_bold_2x.png
+  qmclient/icons/qm_icons_bold_4x.json
+  qmclient/icons/qm_icons_bold_4x.png
+  qmclient/icons/qm_icons_regular_1x.json
+  qmclient/icons/qm_icons_regular_1x.png
+  qmclient/icons/qm_icons_regular_2x.json
+  qmclient/icons/qm_icons_regular_2x.png
+  qmclient/icons/qm_icons_regular_4x.json
+  qmclient/icons/qm_icons_regular_4x.png
+  qmclient/icons/qm_icons_bold_msdf.json
+  qmclient/icons/qm_icons_bold_msdf.png
+  qmclient/icons/qm_icons_regular_msdf.json
+  qmclient/icons/qm_icons_regular_msdf.png
   qmclient/icons/README.md
   mapres/basic_freeze.png
   mapres/bg_cloud1.png
@@ -1701,6 +1712,10 @@ set(EXPECTED_DATA
   shader/gaussian_blur.vert
   shader/media_island_sdf.frag
   shader/media_island_sdf.vert
+  shader/rounded_rect_sdf.frag
+  shader/rounded_rect_sdf.vert
+  shader/textured_msdf.frag
+  shader/textured_msdf.vert
   shader/pipeline.frag
   shader/pipeline.vert
   shader/prim.frag
@@ -1721,6 +1736,10 @@ set(EXPECTED_DATA
   shader/vulkan/gaussian_blur.vert
   shader/vulkan/media_island_sdf.frag
   shader/vulkan/media_island_sdf.vert
+  shader/vulkan/rounded_rect_sdf.frag
+  shader/vulkan/rounded_rect_sdf.vert
+  shader/vulkan/textured_msdf.frag
+  shader/vulkan/textured_msdf.vert
   shader/vulkan/prim.frag
   shader/vulkan/prim.vert
   shader/vulkan/prim3d.frag
@@ -2146,13 +2165,23 @@ add_custom_command(OUTPUT "src/generated/wordlist.h"
 )
 
 file(GLOB QM_ICON_ATLAS_SVG_SOURCES
-  datasrc/qm_icons/tabler/*.svg
+  datasrc/qm_icons/phosphor_bold/*.svg
+  datasrc/qm_icons/phosphor_regular/*.svg
 )
 add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
-    --source datasrc/qm_icons/tabler
+    --source datasrc/qm_icons/phosphor_bold
     --output data/qmclient/icons
+    --atlas-name qm_icons_bold
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_regular
+    --output data/qmclient/icons
+    --atlas-name qm_icons_regular
     --sizes 1 2 4
     --base-size 24
     --padding 4
@@ -2160,7 +2189,26 @@ add_custom_target(qm-icon-atlas
   DEPENDS
     qmclient_scripts/qm_build_icon_atlas.py
     ${QM_ICON_ATLAS_SVG_SOURCES}
-  COMMENT "Building QmClient Tabler icon PNG atlases"
+  COMMENT "Building QmClient Phosphor icon PNG atlases"
+)
+
+# msdfgen 只用于资源制作。生成产物已提交，普通构建不依赖本机安装。
+add_custom_target(qm-icon-msdf-atlas
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_bold
+    --output data/qmclient/icons
+    --atlas-name qm_icons_bold
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_regular
+    --output data/qmclient/icons
+    --atlas-name qm_icons_regular
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  DEPENDS
+    qmclient_scripts/qm_build_icon_msdf.py
+    ${QM_ICON_ATLAS_SVG_SOURCES}
+  COMMENT "Building QmClient Phosphor MSDF icon atlases"
 )
 
 if(QM_BUILD_ICON_ATLAS)
@@ -2660,6 +2708,8 @@ if(CLIENT)
     QmUi/UiNavigation.cpp
     QmUi/UiNavigation.h
     QmUi/UiOverlays.h
+    QmUi/UiSurface.cpp
+    QmUi/UiSurface.h
     QmUi/UiTokens.h
     QmUi/QmCardOrderModel.cpp
     QmUi/QmCardOrderModel.h
@@ -3333,6 +3383,9 @@ if(CLIENT)
       $<TARGET_OBJECTS:game-shared>
       $<TARGET_OBJECTS:rust-bridge-shared>
     )
+    if(VULKAN)
+      add_dependencies(game-live-client build_vulkan_shaders)
+    endif()
     set_property(TARGET game-live-client
         PROPERTY OUTPUT_NAME QmLiveClient
     )

@@ -39,6 +39,7 @@
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTheme.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
@@ -544,7 +545,7 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 	return Context;
 }
 
-int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char **ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)
+int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char *const *ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)
 {
 	// 锚点必须留在当前卡片内，弹层可以越过卡片但不能越过设置页 viewport。
 	if(Properties.m_pAnchorViewport == nullptr)
@@ -600,114 +601,211 @@ void CMenus::LoadSettingsCardOrderModel()
 
 	const std::vector<qm_card_order::SEntry> Defaults = qm_card_registry::BuildDefaultEntries();
 	m_SettingsCardOrderModel.LoadMerged(g_Config.m_QmGlobalCardOrder, Defaults);
+	const auto CopyModelEntries = [](const qm_card_order::CModel &Source) {
+		std::vector<qm_card_order::SEntry> vEntries;
+		vEntries.reserve(Source.Count());
+		for(int EntryIndex = 0; EntryIndex < Source.Count(); ++EntryIndex)
+			vEntries.push_back(Source.Entry(EntryIndex));
+		return vEntries;
+	};
+	const auto MakeCandidate = [&](qm_card_order::CModel &Candidate) {
+		Candidate.SetEntries(CopyModelEntries(m_SettingsCardOrderModel));
+		if(!m_SettingsCardOrderModel.IsDirty())
+			Candidate.ClearDirty();
+	};
+	const auto PersistCandidate = [&](const qm_card_order::CModel &Candidate, const bool CandidateChanged, const bool ForcePersist = false) {
+		if(!ForcePersist && !CandidateChanged && !m_SettingsCardOrderModel.IsDirty())
+			return true;
+		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(!Candidate.Serialize(aSerialized, sizeof(aSerialized)))
+			return false;
+		str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+		if(CandidateChanged)
+			m_SettingsCardOrderModel.SetEntries(CopyModelEntries(Candidate));
+		m_SettingsCardOrderModel.ClearDirty();
+		return true;
+	};
+	const auto PersistCurrentLayout = [&]() {
+		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(!m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+			return false;
+		str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+		m_SettingsCardOrderModel.ClearDirty();
+		return true;
+	};
+	const auto PersistAndAdvanceLayoutVersion = [&](const int Version, const bool ForcePersist = false) {
+		if((ForcePersist || m_SettingsCardOrderModel.IsDirty()) && !PersistCurrentLayout())
+			return false;
+		g_Config.m_QmCardLayoutVersion = Version;
+		return true;
+	};
 	if(g_Config.m_QmGlobalCardOrder[0] == '\0' && g_Config.m_QmCardOrderMigrated == 0)
 	{
-		qm_module::LoadLegacyQmLayoutIntoModel(m_SettingsCardOrderModel, g_Config.m_QmSidebarCardOrder);
-		qm_module::LoadLegacyTClientLayoutIntoModel(m_SettingsCardOrderModel, g_Config.m_QmSettingsCardOrder);
-		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-		if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
+		const bool CandidateChanged =
+			qm_module::LoadLegacyQmLayoutIntoModel(Candidate, g_Config.m_QmSidebarCardOrder) |
+			qm_module::LoadLegacyTClientLayoutIntoModel(Candidate, g_Config.m_QmSettingsCardOrder);
+		if(!PersistCandidate(Candidate, CandidateChanged, true))
 		{
-			str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-			m_SettingsCardOrderModel.ClearDirty();
-			g_Config.m_QmCardOrderMigrated = 1;
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
+		g_Config.m_QmCardOrderMigrated = 1;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 1)
 	{
-		bool LayoutChanged = false;
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
 		const auto IsAtOldDefault = [&](const char *pStableId, const char *pTab, int OldColumn, int OldOrder) {
-			const int Index = m_SettingsCardOrderModel.FindByStableId(pStableId);
+			const int Index = Candidate.FindByStableId(pStableId);
 			if(Index < 0)
 				return false;
-			const qm_card_order::SEntry &Entry = m_SettingsCardOrderModel.Entry(Index);
+			const qm_card_order::SEntry &Entry = Candidate.Entry(Index);
 			return str_comp(Entry.m_pDefaultTab, pTab) == 0 && Entry.m_Column == OldColumn && Entry.m_OrderInColumn == OldOrder;
+		};
+		bool CandidateChanged = false;
+		const std::vector<const char *> vContributorIds = {
+			"deck:qmclient-contributors-community", "deck:qmclient-contributors-sponsors",
 		};
 		const bool ContributorsStillOldDefault =
 			IsAtOldDefault("deck:qmclient-contributors-community", "qmclient-contributors", 0, 0) &&
-			IsAtOldDefault("deck:qmclient-contributors-sponsors", "qmclient-contributors", 0, 1);
+			IsAtOldDefault("deck:qmclient-contributors-sponsors", "qmclient-contributors", 0, 1) &&
+			qm_card_order::TabContainsOnlyStableIds(Candidate, "qmclient-contributors", vContributorIds);
 		if(ContributorsStillOldDefault)
 		{
-			m_SettingsCardOrderModel.MoveToTab("deck:qmclient-contributors-sponsors", "qmclient-contributors", 2, 0);
-			m_SettingsCardOrderModel.MoveToTab("deck:qmclient-contributors-community", "qmclient-contributors", 1, 0);
-			LayoutChanged = true;
+			Candidate.MoveToTab("deck:qmclient-contributors-sponsors", "qmclient-contributors", 2, 0);
+			Candidate.MoveToTab("deck:qmclient-contributors-community", "qmclient-contributors", 1, 0);
+			CandidateChanged = true;
 		}
+		const std::vector<const char *> vBindWheelIds = {
+			"deck:tclient-bind-wheel-editor", "deck:tclient-bind-wheel-preview",
+		};
 		const bool BindWheelStillOldDefault =
 			IsAtOldDefault("deck:tclient-bind-wheel-editor", "tclient-bind-wheel", 1, 0) &&
-			IsAtOldDefault("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 1, 1);
+			IsAtOldDefault("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 1, 1) &&
+			qm_card_order::TabContainsOnlyStableIds(Candidate, "tclient-bind-wheel", vBindWheelIds);
 		if(BindWheelStillOldDefault)
 		{
-			m_SettingsCardOrderModel.MoveToTab("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 2, 0);
-			LayoutChanged = true;
+			Candidate.MoveToTab("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 2, 0);
+			CandidateChanged = true;
 		}
-		if(LayoutChanged)
+		if(!PersistCandidate(Candidate, CandidateChanged))
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 1;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 2)
 	{
-		const std::vector<qm_card_order::SEntry> vLegacyProfileDefaults = {
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
+		const std::vector<qm_card_order::SEntry> vLegacyProfileLayout = {
 			{"deck:tclient-profiles-actions", "tclient-profiles", 0, 0},
+			{"deck:tclient-profiles-options", "tclient-profiles", 2, 0},
+			{"deck:tclient-profiles-list", "tclient-profiles", 1, 0},
 		};
-		const bool LayoutChanged =
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyProfileDefaults, "deck:tclient-profiles-actions", "tclient-profiles", 1, 0);
-		if(LayoutChanged)
+		const std::vector<qm_card_order::SEntry> vTargetProfileLayout = {
+			{"deck:tclient-profiles-actions", "tclient-profiles", 1, 0},
+			{"deck:tclient-profiles-options", "tclient-profiles", 2, 0},
+			{"deck:tclient-profiles-list", "tclient-profiles", 1, 1},
+		};
+		const std::vector<const char *> vProfileIds = {
+			"deck:tclient-profiles-actions", "deck:tclient-profiles-options", "deck:tclient-profiles-list",
+		};
+		const std::vector<const char *> vRequiredProfileIds = {"deck:tclient-profiles-actions"};
+		const qm_card_order::EExplicitLayoutStatus ExplicitStatus = qm_card_order::ClassifyExplicitLayout(g_Config.m_QmGlobalCardOrder, vLegacyProfileLayout, vRequiredProfileIds);
+		if(ExplicitStatus == qm_card_order::EExplicitLayoutStatus::INVALID)
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		const bool ShouldMigrate = ExplicitStatus == qm_card_order::EExplicitLayoutStatus::MATCH;
+		const bool CandidateChanged = ShouldMigrate && qm_card_order::MigrateExactLayout(Candidate, "tclient-profiles", vLegacyProfileLayout, vTargetProfileLayout, vProfileIds);
+		if(ShouldMigrate && !CandidateChanged)
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		if(!PersistCandidate(Candidate, CandidateChanged))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 2;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 3)
 	{
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
 		const std::vector<qm_card_order::SEntry> vLegacyStatusBarDefaults = {
 			{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
 			{"deck:tclient-status-bar-items", "tclient-status-bar", 1, 1},
 			{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 2},
 		};
-		const bool LayoutChanged =
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, "deck:tclient-status-bar-items", "tclient-status-bar", 2, 0) |
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, "deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1);
-		if(LayoutChanged)
+		const std::vector<const char *> vStatusBarIds = {
+			"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview",
+		};
+		const std::vector<qm_card_order::SEntry> vTargetStatusBarLayout = {
+			{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
+			{"deck:tclient-status-bar-items", "tclient-status-bar", 2, 0},
+			{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1},
+		};
+		const qm_card_order::EExplicitLayoutStatus ExplicitStatus = qm_card_order::ClassifyExplicitLayout(g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, vStatusBarIds);
+		if(ExplicitStatus == qm_card_order::EExplicitLayoutStatus::INVALID)
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		const bool ShouldMigrate = ExplicitStatus == qm_card_order::EExplicitLayoutStatus::MATCH;
+		const bool CandidateChanged = ShouldMigrate && qm_card_order::MigrateExactLayout(Candidate, "tclient-status-bar", vLegacyStatusBarDefaults, vTargetStatusBarLayout, vStatusBarIds);
+		if(ShouldMigrate && !CandidateChanged)
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		if(!PersistCandidate(Candidate, CandidateChanged))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 3;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 4)
 	{
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
 		const std::vector<qm_card_order::SEntry> vLegacyTeeDefaults = {
 			{"deck:tee-identity", "tee", 0, 0},
 			{"deck:tee-skin-options", "tee", 1, 0},
 			{"deck:tee-skin-list", "tee", 2, 0},
 		};
-		const bool LayoutChanged =
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-identity", "tee", 1, 0) |
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-skin-options", "tee", 2, 0) |
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-skin-list", "tee", 0, 0);
-		if(LayoutChanged)
+		const std::vector<const char *> vTeeIds = {
+			"deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list",
+		};
+		const std::vector<qm_card_order::SEntry> vTargetTeeLayout = {
+			{"deck:tee-identity", "tee", 1, 0},
+			{"deck:tee-skin-options", "tee", 2, 0},
+			{"deck:tee-skin-list", "tee", 0, 0},
+		};
+		const qm_card_order::EExplicitLayoutStatus ExplicitStatus = qm_card_order::ClassifyExplicitLayout(g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, vTeeIds);
+		if(ExplicitStatus == qm_card_order::EExplicitLayoutStatus::INVALID)
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		const bool ShouldMigrate = ExplicitStatus == qm_card_order::EExplicitLayoutStatus::MATCH;
+		const bool CandidateChanged = ShouldMigrate && qm_card_order::MigrateExactLayout(Candidate, "tee", vLegacyTeeDefaults, vTargetTeeLayout, vTeeIds);
+		if(ShouldMigrate && !CandidateChanged)
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		if(!PersistCandidate(Candidate, CandidateChanged))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 4;
 	}
@@ -715,13 +813,24 @@ void CMenus::LoadSettingsCardOrderModel()
 	{
 		// 敌对列表从五张独立卡收敛为一个完整编辑器；LoadMerged 已按新 registry
 		// 清理旧 stable ID，这里把规范化后的结果写回，避免每次启动重复迁移。
+		if(!PersistAndAdvanceLayoutVersion(5, true))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+	}
+	if(g_Config.m_QmCardLayoutVersion < 6)
+	{
 		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-		if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+		const qm_card_registry::ETClientMainCardsMigrationResult MigrationResult = qm_card_registry::MigrateTClientMainCardsToAlternatingColumns(m_SettingsCardOrderModel, aSerialized, sizeof(aSerialized));
+		const qm_card_registry::STClientMainCardsMigrationCommitPlan CommitPlan = qm_card_registry::TClientMainCardsMigrationCommitPlan(MigrationResult);
+		if(CommitPlan.m_PersistSerialized)
 		{
 			str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
 			m_SettingsCardOrderModel.ClearDirty();
 		}
-		g_Config.m_QmCardLayoutVersion = 5;
+		if(CommitPlan.m_AdvanceVersion)
+			g_Config.m_QmCardLayoutVersion = 6;
 	}
 	m_SettingsCardOrderLoaded = true;
 }
@@ -887,11 +996,11 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 	else // TClient, why was this not here? ig they never use "checked" anywhere important
 		Color.a *= Ui()->ButtonColorMul(pButtonContainer);
 
-	pRect->Draw(Color, Corners, Rounding);
+	DrawRoundedSurface(Ui(), *pRect, Color, ColorRGBA(), Rounding, 0.0f, Corners);
 	if(HoverStrength > MENU_TAB_ANIM_EPSILON)
 	{
 		const float OverlayAlpha = (Checked ? 0.05f : 0.08f) * HoverStrength;
-		pRect->Draw(ColorRGBA(1.0f, 1.0f, 1.0f, OverlayAlpha), Corners, Rounding);
+		DrawRoundedSurface(Ui(), *pRect, ColorRGBA(1.0f, 1.0f, 1.0f, OverlayAlpha), ColorRGBA(), Rounding, 0.0f, Corners);
 	}
 
 	if(pImageName)
@@ -961,7 +1070,7 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 		if(pActiveColor)
 			ColorMenuTab = *pActiveColor;
 
-		pRect->Draw(ColorMenuTab, Corners, EdgeRounding);
+		DrawRoundedSurface(Ui(), *pRect, ColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 	}
 	else
 	{
@@ -971,7 +1080,7 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 			if(pHoverColor)
 				HoverColorMenuTab = *pHoverColor;
 
-			pRect->Draw(HoverColorMenuTab, Corners, EdgeRounding);
+			DrawRoundedSurface(Ui(), *pRect, HoverColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 		}
 		else
 		{
@@ -979,7 +1088,7 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 			if(pDefaultColor)
 				ColorMenuTab = *pDefaultColor;
 
-			pRect->Draw(ColorMenuTab, Corners, EdgeRounding);
+			DrawRoundedSurface(Ui(), *pRect, ColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 		}
 	}
 
@@ -1124,9 +1233,9 @@ void CMenus::PrepareSettingsTabLabelCache(float MainViewWidth, float TabBarWidth
 int CMenus::DoButton_GridHeader(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Align)
 {
 	if(Checked == 2)
-		pRect->Draw(ColorRGBA(1, 0.98f, 0.5f, 0.55f), IGraphics::CORNER_T, 5.0f);
+		DrawRoundedSurface(Ui(), *pRect, ColorRGBA(1, 0.98f, 0.5f, 0.55f), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_T);
 	else if(Checked)
-		pRect->Draw(ColorRGBA(1, 1, 1, 0.5f), IGraphics::CORNER_T, 5.0f);
+		DrawRoundedSurface(Ui(), *pRect, ColorRGBA(1, 1, 1, 0.5f), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_T);
 
 	CUIRect Temp;
 	pRect->VMargin(5.0f, &Temp);
@@ -1625,11 +1734,7 @@ ColorHSLA CMenus::DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHsla
 	ColorRGBA Outline = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f);
 	Outline.a *= Ui()->ButtonColorMul(pHslaColor);
 
-	CUIRect Rect;
-	pRect->Margin(3.0f, &Rect);
-
-	pRect->Draw(Outline, IGraphics::CORNER_ALL, 4.0f);
-	Rect.Draw(color_cast<ColorRGBA>(HslaColor), IGraphics::CORNER_ALL, 4.0f);
+	DrawRoundedSurface(Ui(), *pRect, color_cast<ColorRGBA>(HslaColor), Outline, 4.0f, 3.0f);
 
 	if(Ui()->DoButtonLogic(pHslaColor, 0, pRect, BUTTONFLAG_LEFT))
 	{
@@ -1699,7 +1804,7 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 		CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
 		Resolved = ResolveUiAnimValueColor(AnimRt, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
 	}
-	pRect->Draw(Resolved, Corners, UseNewUi ? 7.0f : 10.0f);
+	DrawRoundedSurface(Ui(), *pRect, Resolved, ColorRGBA(), UseNewUi ? 7.0f : 10.0f, 0.0f, Corners);
 
 	if(pCommunityIcon != nullptr)
 	{
@@ -3452,7 +3557,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 	Box = Screen;
 	if(m_Popup != POPUP_FIRST_LAUNCH)
 	{
-		Box.Margin(150.0f, &Box);
+		Box.Margin(QmUiCenteredMargin(Box, 150.0f, 300.0f, 300.0f), &Box);
 	}
 
 	// Background

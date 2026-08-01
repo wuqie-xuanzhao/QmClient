@@ -6,10 +6,102 @@
 
 #include <game/localization.h>
 
+#include <iterator>
 #include <utility>
 
 namespace qm_card_registry
 {
+	static constexpr const char *s_apTClientMainCards[] = {
+		"tclient:visual-font-cursor",
+		"tclient:visual-nameplates",
+		"tclient:visual-effects",
+		"tclient:input",
+		"tclient:anti-latency-tools",
+		"tclient:improved-anti-ping",
+		"tclient:execute-on-join",
+		"tclient:voting",
+		"tclient:auto-reply",
+		"tclient:player-indicator",
+		"tclient:pet",
+		"tclient:hud",
+		"tclient:tee-status-bar",
+		"tclient:tile-outlines",
+		"tclient:ghost-tools",
+		"tclient:rainbow",
+		"tclient:tee-trails",
+		"tclient:background-draw",
+		"tclient:finish-name",
+	};
+
+	bool IsTClientMainCard(const char *pStableId)
+	{
+		if(pStableId == nullptr)
+			return false;
+		for(const char *pMainCard : s_apTClientMainCards)
+			if(str_comp(pStableId, pMainCard) == 0)
+				return true;
+		return false;
+	}
+
+	bool IsTClientMainCardsLegacyLeft(const qm_card_order::CModel &Model)
+	{
+		int TClientCardCount = 0;
+		for(int EntryIndex = 0; EntryIndex < Model.Count(); ++EntryIndex)
+		{
+			const qm_card_order::SEntry &Entry = Model.Entry(EntryIndex);
+			if(Entry.m_pDefaultTab != nullptr && str_comp(Entry.m_pDefaultTab, "tclient") == 0)
+			{
+				if(!IsTClientMainCard(Entry.m_pStableId))
+					return false;
+				++TClientCardCount;
+			}
+		}
+		if(TClientCardCount != static_cast<int>(std::size(s_apTClientMainCards)))
+			return false;
+
+		for(size_t Index = 0; Index < std::size(s_apTClientMainCards); ++Index)
+		{
+			const int EntryIndex = Model.FindByStableId(s_apTClientMainCards[Index]);
+			if(EntryIndex < 0)
+				return false;
+			const qm_card_order::SEntry &Entry = Model.Entry(EntryIndex);
+			if(Entry.m_pDefaultTab == nullptr || str_comp(Entry.m_pDefaultTab, "tclient") != 0 || Entry.m_Column != 1 || Entry.m_OrderInColumn != static_cast<int>(Index))
+				return false;
+		}
+		return true;
+	}
+
+	bool MoveTClientMainCardsToAlternatingColumns(qm_card_order::CModel &Model)
+	{
+		if(!IsTClientMainCardsLegacyLeft(Model))
+			return false;
+		for(size_t Index = 0; Index < std::size(s_apTClientMainCards); ++Index)
+			Model.MoveToTab(s_apTClientMainCards[Index], "tclient", Index % 2 == 0 ? 1 : 2, static_cast<int>(Index / 2));
+		return true;
+	}
+
+	ETClientMainCardsMigrationResult MigrateTClientMainCardsToAlternatingColumns(qm_card_order::CModel &Model, char *pSerialized, const int SerializedSize)
+	{
+		if(!IsTClientMainCardsLegacyLeft(Model))
+		{
+			if(!Model.IsDirty())
+				return ETClientMainCardsMigrationResult::NOT_LEGACY;
+			return Model.Serialize(pSerialized, SerializedSize) ? ETClientMainCardsMigrationResult::PERSISTED_DIRTY : ETClientMainCardsMigrationResult::PERSIST_FAILED;
+		}
+
+		std::vector<qm_card_order::SEntry> vCandidateEntries;
+		vCandidateEntries.reserve(Model.Count());
+		for(int EntryIndex = 0; EntryIndex < Model.Count(); ++EntryIndex)
+			vCandidateEntries.push_back(Model.Entry(EntryIndex));
+		qm_card_order::CModel Candidate;
+		Candidate.SetEntries(std::move(vCandidateEntries));
+		MoveTClientMainCardsToAlternatingColumns(Candidate);
+		if(!Candidate.Serialize(pSerialized, SerializedSize))
+			return ETClientMainCardsMigrationResult::PERSIST_FAILED;
+
+		MoveTClientMainCardsToAlternatingColumns(Model);
+		return ETClientMainCardsMigrationResult::MIGRATED;
+	}
 	static const std::vector<SCardDefault> &DefaultsTable()
 	{
 		// clang-format off
@@ -55,24 +147,24 @@ namespace qm_card_registry
 
 			// === Tclient section（19）· tclient:<name>（id 不变；column/order 按当前 section 顺序显式化）===
 			{"tclient:visual-font-cursor", "tclient", ECardColumn::Left, 0, "Font cursor", "font cursor tclient visual", "Choose the menu font and cursor appearance"},
-			{"tclient:visual-nameplates", "tclient", ECardColumn::Left, 1, "Nameplates", "nameplates tclient visual", "Adjust player nameplate details and visibility"},
-			{"tclient:visual-effects", "tclient", ECardColumn::Left, 2, "Visual effects", "visual effects tclient", "Tune additional world and player effects"},
-			{"tclient:input", "tclient", ECardColumn::Left, 3, "Input", "input tclient", "Configure input helpers and cursor behavior"},
-			{"tclient:anti-latency-tools", "tclient", ECardColumn::Left, 4, "Anti latency tools", "anti latency tools tclient", "Control latency compensation tools"},
-			{"tclient:improved-anti-ping", "tclient", ECardColumn::Left, 5, "Improved anti ping", "improved anti ping tclient", "Fine-tune improved anti-ping prediction"},
-			{"tclient:execute-on-join", "tclient", ECardColumn::Left, 6, "Execute on join", "execute on join tclient", "Run selected commands after joining a server"},
-			{"tclient:voting", "tclient", ECardColumn::Left, 7, "Voting", "voting tclient", "Customize vote display and interaction"},
-			{"tclient:auto-reply", "tclient", ECardColumn::Left, 8, "Auto reply", "auto reply tclient", "Define automatic chat reply rules"},
-			{"tclient:player-indicator", "tclient", ECardColumn::Left, 9, "Player indicator", "player indicator tclient", "Highlight selected players in the game world"},
-			{"tclient:pet", "tclient", ECardColumn::Left, 10, "Pet", "pet tclient", "Configure the companion appearance and movement"},
-			{"tclient:hud", "tclient", ECardColumn::Left, 11, "HUD", "hud tclient", "Adjust TClient heads-up display elements"},
-			{"tclient:tee-status-bar", "tclient", ECardColumn::Left, 12, "Tee status bar", "tee status bar tclient", "Build the status text shown above Tees"},
-			{"tclient:tile-outlines", "tclient", ECardColumn::Left, 13, "Tile outlines", "tile outlines tclient", "Show configurable outlines around map tiles"},
-			{"tclient:ghost-tools", "tclient", ECardColumn::Left, 14, "Ghost tools", "ghost tools tclient", "Configure ghost recording and playback tools"},
-			{"tclient:rainbow", "tclient", ECardColumn::Left, 15, "Rainbow", "rainbow tclient", "Customize animated rainbow colors"},
-			{"tclient:tee-trails", "tclient", ECardColumn::Left, 16, "Tee trails", "tee trails tclient", "Adjust trails rendered behind Tees"},
-			{"tclient:background-draw", "tclient", ECardColumn::Left, 17, "Background draw", "background draw tclient", "Control custom background drawing"},
-			{"tclient:finish-name", "tclient", ECardColumn::Left, 18, "Finish name", "finish name tclient", "Format player names after a finish"},
+			{"tclient:visual-nameplates", "tclient", ECardColumn::Right, 0, "Nameplates", "nameplates tclient visual", "Adjust player nameplate details and visibility"},
+			{"tclient:visual-effects", "tclient", ECardColumn::Left, 1, "Visual effects", "visual effects tclient", "Tune additional world and player effects"},
+			{"tclient:input", "tclient", ECardColumn::Right, 1, "Input", "input tclient", "Configure input helpers and cursor behavior"},
+			{"tclient:anti-latency-tools", "tclient", ECardColumn::Left, 2, "Anti latency tools", "anti latency tools tclient", "Control latency compensation tools"},
+			{"tclient:improved-anti-ping", "tclient", ECardColumn::Right, 2, "Improved anti ping", "improved anti ping tclient", "Fine-tune improved anti-ping prediction"},
+			{"tclient:execute-on-join", "tclient", ECardColumn::Left, 3, "Execute on join", "execute on join tclient", "Run selected commands after joining a server"},
+			{"tclient:voting", "tclient", ECardColumn::Right, 3, "Voting", "voting tclient", "Customize vote display and interaction"},
+			{"tclient:auto-reply", "tclient", ECardColumn::Left, 4, "Auto reply", "auto reply tclient", "Define automatic chat reply rules"},
+			{"tclient:player-indicator", "tclient", ECardColumn::Right, 4, "Player indicator", "player indicator tclient", "Highlight selected players in the game world"},
+			{"tclient:pet", "tclient", ECardColumn::Left, 5, "Pet", "pet tclient", "Configure the companion appearance and movement"},
+			{"tclient:hud", "tclient", ECardColumn::Right, 5, "HUD", "hud tclient", "Adjust TClient heads-up display elements"},
+			{"tclient:tee-status-bar", "tclient", ECardColumn::Left, 6, "Tee status bar", "tee status bar tclient", "Build the status text shown above Tees"},
+			{"tclient:tile-outlines", "tclient", ECardColumn::Right, 6, "Tile outlines", "tile outlines tclient", "Show configurable outlines around map tiles"},
+			{"tclient:ghost-tools", "tclient", ECardColumn::Left, 7, "Ghost tools", "ghost tools tclient", "Configure ghost recording and playback tools"},
+			{"tclient:rainbow", "tclient", ECardColumn::Right, 7, "Rainbow", "rainbow tclient", "Customize animated rainbow colors"},
+			{"tclient:tee-trails", "tclient", ECardColumn::Left, 8, "Tee trails", "tee trails tclient", "Adjust trails rendered behind Tees"},
+			{"tclient:background-draw", "tclient", ECardColumn::Right, 8, "Background draw", "background draw tclient", "Control custom background drawing"},
+			{"tclient:finish-name", "tclient", ECardColumn::Left, 9, "Finish name", "finish name tclient", "Format player names after a finish"},
 
 			// === 设置 deck · deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
 			{"deck:qmclient-contributors-community", "qmclient-contributors", ECardColumn::Left, 0, "QmClient Community", "community links qmclient", "Find QmClient communities and project links"},
@@ -91,6 +183,7 @@ namespace qm_card_registry
 			{"deck:tee7-editor", "tee7", ECardColumn::Full, 0, "Skin", "tee sixup skin editor", "Edit individual Tee 7 skin parts"},
 			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, Localizable("Graphics display"), "graphics display monitor window", "Window and monitor"},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, Localizable("Visual"), "graphics visual rendering card appearance settings card border corner segments rainbow title", "Rendering options"},
+			{"deck:graphics-icons", "graphics", ECardColumn::Left, 2, Localizable("Icons"), "graphics UI icon color white black weight regular bold phosphor", "Configure UI icon appearance"},
 			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, Localizable("Display modes"), "display modes graphics resolutions", "Available resolutions"},
 			{"deck:graphics-interaction", "graphics", ECardColumn::Right, 1, Localizable("Interface animations"), "interface ui motion animations focus rainbow", "Motion and focus feedback"},
 			{"deck:sound-toggle", "sound", ECardColumn::Left, 0, "Sound", "sound toggle audio", "Enable audio output and choose a device"},

@@ -21,9 +21,18 @@ namespace qm_card_order
 		int m_OrderInColumn = 0; // 列内排序
 	};
 
+	enum class EExplicitLayoutStatus
+	{
+		MATCH,
+		NOT_MATCH,
+		INVALID,
+	};
+
 	// 保留既有全局配置中不匹配 pStableIdPrefix 的 token，并用 vReplacementEntries 替换该命名空间。
 	bool SerializeMergedReplacingPrefix(const char *pExistingGlobalOrder, const char *pStableIdPrefix, const std::vector<SEntry> &vReplacementEntries, char *pOut, int OutSize);
-	bool MigrateLegacyDefaultGroup(CModel &Model, const char *pSerialized, const std::vector<SEntry> &vLegacyDefaults, const char *pSurvivingStableId, const char *pTargetTab, int TargetColumn, int TargetOrder);
+	bool TabContainsOnlyStableIds(const CModel &Model, const char *pTab, const std::vector<const char *> &vAllowedStableIds);
+	EExplicitLayoutStatus ClassifyExplicitLayout(const char *pSerialized, const std::vector<SEntry> &vExpectedLayout, const std::vector<const char *> &vRequiredStableIds);
+	bool MigrateExactLayout(CModel &Model, const char *pTab, const std::vector<SEntry> &vExpectedLayout, const std::vector<SEntry> &vTargetLayout, const std::vector<const char *> &vAllowedStableIds);
 
 	class CModel
 	{
@@ -63,7 +72,7 @@ namespace qm_card_order
 		// 持久化：格式 "stableId|tab|column|order;"；兼容旧 "id:col:order" 解析。
 		bool Serialize(char *pBuf, int BufSize) const;
 		// 容错解析：未知/重复/非法 key 跳过（照搬 ParseQmModuleLayout）
-		bool Parse(const char *pStr, const std::vector<const char *> &vValidIds);
+		bool Parse(const char *pStr, const std::vector<const char *> &vValidIds, bool RejectDuplicateValidIds = false);
 		// 仅加载用户显式配置：vDefaults 只提供合法 stableId 集合，不补齐缺失卡。
 		bool LoadExplicit(const char *pStr, const std::vector<SEntry> &vDefaults);
 		// 默认全集 + 用户配置覆盖：缺失卡保留默认，未知/非法残留跳过；返回是否至少解析到一条有效用户配置。

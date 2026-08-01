@@ -82,6 +82,175 @@ namespace
 		return net_udp_create(BindAddr);
 	}
 
+	int OnTestClientConnected(int ClientId, void *pUser, bool Sixup)
+	{
+		(void)Sixup;
+		*static_cast<int *>(pUser) = ClientId;
+		return 0;
+	}
+
+	int OnTestClientDisconnected(int ClientId, const char *pReason, void *pUser)
+	{
+		(void)ClientId;
+		(void)pReason;
+		(void)pUser;
+		return 0;
+	}
+
+	bool OpenLoopbackServer(CNetServer &Server, NETADDR &ServerAddr)
+	{
+		if(net_addr_from_str(&ServerAddr, "127.0.0.1"))
+			return false;
+		for(int Attempt = 0; Attempt < 100; ++Attempt)
+		{
+			ServerAddr.port = secure_rand_below(64511) + 1024;
+			if(Server.Open(ServerAddr, nullptr, 1, 1))
+				return true;
+		}
+		return false;
+	}
+
+	void DrainServerChunks(CNetServer &Server, std::vector<std::string> *pChunks)
+	{
+		CNetChunk Chunk;
+		SECURITY_TOKEN ResponseToken;
+		while(Server.Recv(&Chunk, &ResponseToken))
+		{
+			if(pChunks != nullptr)
+				pChunks->emplace_back(static_cast<const char *>(Chunk.m_pData), Chunk.m_DataSize);
+		}
+	}
+
+	void DrainClientChunks(CNetClient &Client, std::vector<std::string> *pChunks)
+	{
+		CNetChunk Chunk;
+		SECURITY_TOKEN ResponseToken;
+		while(Client.Recv(&Chunk, &ResponseToken, false))
+		{
+			if(pChunks != nullptr)
+				pChunks->emplace_back(static_cast<const char *>(Chunk.m_pData), Chunk.m_DataSize);
+		}
+	}
+
+	void PumpServerChunks(CNetServer &Server, CNetClient &Client, std::vector<std::string> *pChunks, size_t ExpectedChunks)
+	{
+		for(int Attempt = 0; Attempt < 200 && pChunks->size() < ExpectedChunks; ++Attempt)
+		{
+			DrainServerChunks(Server, pChunks);
+			DrainClientChunks(Client, nullptr);
+			Server.Update();
+			Client.Update();
+			if(pChunks->size() < ExpectedChunks)
+				std::this_thread::sleep_for(1ms);
+		}
+	}
+
+	void PumpClientChunks(CNetClient &Client, CNetServer &Server, std::vector<std::string> *pChunks, size_t ExpectedChunks)
+	{
+		for(int Attempt = 0; Attempt < 200 && pChunks->size() < ExpectedChunks; ++Attempt)
+		{
+			DrainClientChunks(Client, pChunks);
+			DrainServerChunks(Server, nullptr);
+			Client.Update();
+			Server.Update();
+			if(pChunks->size() < ExpectedChunks)
+				std::this_thread::sleep_for(1ms);
+		}
+	}
+
+	struct SPacketOutputCapture
+	{
+		int m_Result = -1;
+		std::vector<CNetPacketConstruct> m_vPackets;
+		std::vector<int> m_vPackedSizes;
+	};
+
+	int CapturePacketOutput(void *pUser, CNetPacketConstruct *pPacket, SECURITY_TOKEN SecurityToken, bool Sixup)
+	{
+		auto *pCapture = static_cast<SPacketOutputCapture *>(pUser);
+		pCapture->m_vPackets.push_back(*pPacket);
+		unsigned char aBuffer[NET_MAX_PACKETSIZE];
+		pCapture->m_vPackedSizes.push_back(CNetBase::PackPacket(aBuffer, sizeof(aBuffer), pPacket, SecurityToken, Sixup));
+		return pCapture->m_Result;
+	}
+
+	std::vector<unsigned char> MakeTestPayload(int Size, uint32_t Seed)
+	{
+		std::vector<unsigned char> vPayload(Size);
+		uint32_t State = Seed;
+		for(unsigned char &Byte : vPayload)
+		{
+			State = State * 1664525u + 1013904223u;
+			Byte = State >> 24;
+		}
+		return vPayload;
+	}
+
+	void InitDirectConnection(CNetConnection &Connection)
+	{
+		Connection.Init(nullptr, false);
+		NETADDR PeerAddr = {};
+		PeerAddr.type = NETTYPE_IPV4;
+		Connection.DirectInit(PeerAddr, 0x12345678, NET_SECURITY_TOKEN_UNSUPPORTED, false);
+	}
+
+	class CNetKcpBypassTest : public ::testing::Test
+	{
+	protected:
+		CNetServer m_Server;
+		CNetClient m_Client;
+		int m_ClientId = -1;
+		int m_OldConnTimeout = 0;
+		int m_OldSvKcp = 0;
+		int m_OldSvVanillaAntiSpoof = 0;
+
+		void SetUp() override
+		{
+			InitNetBase();
+			m_OldConnTimeout = g_Config.m_ConnTimeout;
+			m_OldSvKcp = g_Config.m_SvKcp;
+			m_OldSvVanillaAntiSpoof = g_Config.m_SvVanillaAntiSpoof;
+			g_Config.m_ConnTimeout = 10;
+			g_Config.m_SvKcp = 1;
+			g_Config.m_SvVanillaAntiSpoof = 0;
+
+			NETADDR ServerAddr;
+			ASSERT_TRUE(OpenLoopbackServer(m_Server, ServerAddr));
+			m_Server.SetCallbacks(OnTestClientConnected, OnTestClientDisconnected, &m_ClientId);
+
+			NETADDR ClientBindAddr = {};
+			ClientBindAddr.type = NETTYPE_IPV4;
+			ASSERT_TRUE(m_Client.Open(ClientBindAddr));
+			m_Client.Connect(&ServerAddr, 1);
+
+			for(int Attempt = 0; Attempt < 100 && (m_Client.State() != NETSTATE_ONLINE || m_ClientId < 0); ++Attempt)
+			{
+				DrainServerChunks(m_Server, nullptr);
+				DrainClientChunks(m_Client, nullptr);
+				m_Server.Update();
+				m_Client.Update();
+				std::this_thread::sleep_for(1ms);
+			}
+			ASSERT_EQ(m_Client.State(), NETSTATE_ONLINE) << m_Client.ErrorString();
+			ASSERT_EQ(m_ClientId, 0);
+
+			DrainServerChunks(m_Server, nullptr);
+			DrainClientChunks(m_Client, nullptr);
+			constexpr uint32_t KcpConv = 0x1357247u;
+			ASSERT_TRUE(m_Server.ActivateKcp(m_ClientId, KcpConv));
+			ASSERT_TRUE(m_Client.ActivateKcp(KcpConv));
+		}
+
+		void TearDown() override
+		{
+			m_Client.Close();
+			m_Server.Close();
+			g_Config.m_ConnTimeout = m_OldConnTimeout;
+			g_Config.m_SvKcp = m_OldSvKcp;
+			g_Config.m_SvVanillaAntiSpoof = m_OldSvVanillaAntiSpoof;
+		}
+	};
+
 } // namespace
 
 TEST(Net, Ipv4AndIpv6Work)
@@ -382,6 +551,25 @@ TEST(Net, KcpSessionRejectsInvalidRebindWithoutChangingPeer)
 {
 	NETSOCKET Socket = BindUdpSocket(0);
 	ASSERT_NE(Socket, nullptr);
+
+	NETADDR OriginalPeer = {};
+	NETADDR RebindPeer = {};
+	ASSERT_FALSE(net_addr_from_str(&OriginalPeer, "127.0.0.1:8303"));
+	ASSERT_FALSE(net_addr_from_str(&RebindPeer, "127.0.0.1:8304"));
+	const uint32_t Conv = 0x1234567u;
+	CNetKcpSession Session;
+	ASSERT_TRUE(Session.Init(Socket, OriginalPeer, Conv));
+
+	unsigned char aInvalidPacket[NET_KCP_HEADER_SIZE + 1] = {'Q', 'K', 'C', 'P', 1};
+	aInvalidPacket[5] = (Conv >> 24) & 0xff;
+	aInvalidPacket[6] = (Conv >> 16) & 0xff;
+	aInvalidPacket[7] = (Conv >> 8) & 0xff;
+	aInvalidPacket[8] = Conv & 0xff;
+	EXPECT_FALSE(Session.Input(RebindPeer, aInvalidPacket, sizeof(aInvalidPacket), true));
+	EXPECT_EQ(*Session.PeerAddress(), OriginalPeer);
+
+	net_udp_close(Socket);
+}
 
 TEST_F(CNetKcpBypassTest, ClientFlushBypassDrainsQueuedVitalChunk)
 {

@@ -2,6 +2,7 @@
 #include <base/math.h>
 
 #include <game/client/ui.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/editor/editor.h>
 #include <game/editor/editor_ui.h>
 
@@ -82,7 +83,7 @@ int CEditor::DoButtonLogic(const void *pId, int Checked, const CUIRect *pRect, i
 
 int CEditor::DoButton_Editor(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	pRect->Draw(GetButtonColor(pId, Checked), IGraphics::CORNER_ALL, 3.0f);
+	DrawRoundedSurface(Ui(), *pRect, GetButtonColor(pId, Checked), ColorRGBA(), 3.0f);
 	CUIRect NewRect = *pRect;
 	Ui()->DoLabel(&NewRect, pText, 10.0f, TEXTALIGN_MC);
 	Checked %= 2;
@@ -95,7 +96,7 @@ int CEditor::DoButton_Env(const void *pId, const char *pText, int Checked, const
 	float Alpha = Ui()->HotItem() == pId ? 1.0f : 0.75f;
 	ColorRGBA Color = ColorRGBA(BaseColor.r * Bright, BaseColor.g * Bright, BaseColor.b * Bright, Alpha);
 
-	pRect->Draw(Color, Corners, 3.0f);
+	DrawRoundedSurface(Ui(), *pRect, Color, ColorRGBA(), 3.0f, 0.0f, Corners);
 	Ui()->DoLabel(pRect, pText, 10.0f, TEXTALIGN_MC);
 	Checked %= 2;
 	return DoButtonLogic(pId, Checked, pRect, BUTTONFLAG_LEFT, pToolTip);
@@ -103,7 +104,7 @@ int CEditor::DoButton_Env(const void *pId, const char *pText, int Checked, const
 
 int CEditor::DoButton_Ex(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners, float FontSize, int Align)
 {
-	pRect->Draw(GetButtonColor(pId, Checked), Corners, 3.0f);
+	DrawRoundedSurface(Ui(), *pRect, GetButtonColor(pId, Checked), ColorRGBA(), 3.0f, 0.0f, Corners);
 
 	CUIRect Rect;
 	pRect->VMargin(((Align & TEXTALIGN_MASK_HORIZONTAL) == TEXTALIGN_CENTER) ? 1.0f : 5.0f, &Rect);
@@ -118,7 +119,7 @@ int CEditor::DoButton_Ex(const void *pId, const char *pText, int Checked, const 
 
 int CEditor::DoButton_FontIcon(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners, float FontSize)
 {
-	pRect->Draw(GetButtonColor(pId, Checked), Corners, 3.0f);
+	DrawRoundedSurface(Ui(), *pRect, GetButtonColor(pId, Checked), ColorRGBA(), 3.0f, 0.0f, Corners);
 
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
@@ -132,7 +133,7 @@ int CEditor::DoButton_FontIcon(const void *pId, const char *pText, int Checked, 
 int CEditor::DoButton_MenuItem(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	if((Ui()->HotItem() == pId && Checked == 0) || Checked > 0)
-		pRect->Draw(GetButtonColor(pId, Checked), IGraphics::CORNER_ALL, 3.0f);
+		DrawRoundedSurface(Ui(), *pRect, GetButtonColor(pId, Checked), ColorRGBA(), 3.0f);
 
 	CUIRect Rect;
 	pRect->VMargin(5.0f, &Rect);
@@ -151,7 +152,7 @@ int CEditor::DoButton_MenuItem(const void *pId, const char *pText, int Checked, 
 
 int CEditor::DoButton_DraggableEx(const void *pId, const char *pText, int Checked, const CUIRect *pRect, bool *pClicked, bool *pAbrupted, int Flags, const char *pToolTip, int Corners, float FontSize)
 {
-	pRect->Draw(GetButtonColor(pId, Checked), Corners, 3.0f);
+	DrawRoundedSurface(Ui(), *pRect, GetButtonColor(pId, Checked), ColorRGBA(), 3.0f, 0.0f, Corners);
 
 	CUIRect Rect;
 	pRect->VMargin(pRect->w > 20.0f ? 5.0f : 0.0f, &Rect);
@@ -300,8 +301,10 @@ SEditResult<int> CEditor::UiDoValueSelector(const void *pId, CUIRect *pRect, con
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", Current);
 		}
-		pRect->Draw(pColor ? *pColor : GetButtonColor(pId, 0), Corners, 3.0f);
-		Ui()->DoLabel(pRect, aBuf, 10, TEXTALIGN_MC);
+		DrawRoundedSurface(Ui(), *pRect, pColor ? *pColor : GetButtonColor(pId, 0), ColorRGBA(), 3.0f, 0.0f, Corners);
+		CUIRect Textbox;
+		pRect->VMargin(2.0f, &Textbox);
+		Ui()->DoLabel(&Textbox, aBuf, 10, TEXTALIGN_MC);
 	}
 
 	if(Inside && !Ui()->MouseButton(0) && !Ui()->MouseButton(1))

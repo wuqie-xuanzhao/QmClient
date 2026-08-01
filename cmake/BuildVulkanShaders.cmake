@@ -128,6 +128,22 @@ generate_shader_file("" "" "tile_border.vert" "tile_border.vert.spv")
 generate_shader_file("" "-DTW_TILE_TEXTURED" "tile_border.frag" "tile_border_textured.frag.spv")
 generate_shader_file("" "-DTW_TILE_TEXTURED" "tile_border.vert" "tile_border_textured.vert.spv")
 
+# Gaussian blur
+generate_shader_file("" "" "gaussian_blur.frag" "gaussian_blur.frag.spv")
+generate_shader_file("" "" "gaussian_blur.vert" "gaussian_blur.vert.spv")
+
+# Media island SDF
+generate_shader_file("" "" "media_island_sdf.frag" "media_island_sdf.frag.spv")
+generate_shader_file("" "" "media_island_sdf.vert" "media_island_sdf.vert.spv")
+
+# Rounded rectangle SDF
+generate_shader_file("" "" "rounded_rect_sdf.frag" "rounded_rect_sdf.frag.spv")
+generate_shader_file("" "" "rounded_rect_sdf.vert" "rounded_rect_sdf.vert.spv")
+
+# Textured MSDF icons
+generate_shader_file("" "" "textured_msdf.frag" "textured_msdf.frag.spv")
+generate_shader_file("" "" "textured_msdf.vert" "textured_msdf.vert.spv")
+
 # Quad layer
 generate_shader_file("" "" "quad.frag" "quad.frag.spv")
 generate_shader_file("" "" "quad.vert" "quad.vert.spv")

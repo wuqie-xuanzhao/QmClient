@@ -1403,6 +1403,9 @@ Best input smooth percentage
 Best match
 == 最佳匹配
 
+Better scoreboard
+== 更好的計分板
+
 Bind address for client/server
 == 綁定客戶端/伺服器的地址
 
@@ -1445,6 +1448,9 @@ Black
 Blend mode
 == 疊加模式
 
+Block enemy chat
+== 封鎖敵對玩家聊天
+
 Block votes from blacklisted addresses
 == 阻擋來自黑名單位址的投票
 
@@ -1462,6 +1468,9 @@ Blue team wins!
 
 Body
 == 身體
+
+Bold
+== 粗體
 
 Border
 == 邊框
@@ -1786,6 +1795,9 @@ Choose whether to browse replays or screenshots
 
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
+
+Cinematic camera
+== 電影鏡頭
 
 Clamp mouse to screen
 == 將鼠標限制在屏幕範圍內
@@ -2191,6 +2203,9 @@ Configure the input overlay display
 
 Configure these settings
 == 配置這些設定
+
+Configure UI icon appearance
+== 設定介面圖示外觀
 
 Confirm both are on same server, same room, and support voice
 == 建議確認雙方在同服、同房間，並且對方也支持語音
@@ -3470,6 +3485,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == 為你當前隊伍啟用作弊，但將無法獲得排名
 
+Enable client stutter diagnostics at startup
+== Enable client stutter diagnostics at startup
+
 Enable colored console output
 == 啟用控制台彩色輸出
 
@@ -3511,6 +3529,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == 啟用增強激光特效（輝光+脈衝動畫）
+
+Enable enhanced scoreboard presentation
+== Enable enhanced scoreboard presentation
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == 啟用事件觸發（伺服器在某些節日的眼睜表情，客戶端的聖誕皮膚）
@@ -3667,6 +3688,9 @@ Enable skin queue rotation
 
 Enable skin switch animation
 == 啟用皮膚切換動畫
+
+Enable smooth cinematic camera while free spectating
+== Enable smooth cinematic camera while free spectating
 
 Enable sound
 == 聲音啟用
@@ -4496,6 +4520,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == 全局開關鍵
 
+Global UI size percentage
+== Global UI size percentage
+
 Glow
 == 輝光
 
@@ -4651,6 +4678,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == 隱藏聊天框
+
+Hide chat messages from players marked as enemies
+== Hide chat messages from players marked as enemies
 
 Hide death/respawn effects
 == 隱藏死亡/重生特效
@@ -4967,6 +4997,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls/zh
 
@@ -5011,6 +5044,9 @@ I am away from the game window
 
 I muted you
 == 我屏蔽你了
+
+Icons
+== 圖示
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == 若為 1，僅在連接時自動開始錄製一次 demo；若為 0，遊戲結束後也會重新自動開始錄製
@@ -6406,6 +6442,9 @@ Move right
 
 Move to category
 == 移動到分類
+
+Moved ingame
+== 在遊戲內已移動
 
 Movement
 == 移動
@@ -7946,6 +7985,12 @@ q = Connection quality
 Qm
 == 棲夢
 
+Qm UI icon color: 1=White, 2=Black
+== Qm 介面圖示顏色：1=白色，2=黑色
+
+Qm UI icon weight: 0=Regular, 1=Bold
+== Qm 介面圖示粗細：0=標準，1=粗體
+
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：序號必須在 1 到 %d 之間
 
@@ -8218,6 +8263,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == 向主伺服器註冊伺服器以進行公開列表，還可以接受要註冊的以逗號分隔的協議列表，例如“ipv4，ipv6”
+
+Regular
+== 標準
 
 Regular background color
 == 原圖層背景顏色
@@ -11711,11 +11759,20 @@ UI color
 UI controller sens.
 == 搖桿靈敏度（界面）
 
+UI icon color
+== 介面圖示顏色
+
+UI icon weight
+== 介面圖示粗細
+
 UI motion level
 == 介面動效強度
 
 UI mouse sens.
 == 鼠標靈敏度（界面）
+
+UI rounded corner segments (even numbers recommended)
+== UI rounded corner segments (even numbers recommended)
 
 UI scale
 == UI 大小
@@ -11917,9 +11974,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == 正在將地圖數據傳輸至顯卡
-
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
 
 URL for downloading community skins
 == 用於下載社區皮膚的 URL
@@ -12422,6 +12476,9 @@ What's done is done, no use saying more
 Wheel animate
 == 滾輪動畫
 
+When TClient rainbow Tee is enabled, this feature has no effect.
+== 已啟用 TClient 彩虹 Tee 時，本功能不會生效。
+
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 越過起跑線時，顯示復現最佳成績的影子 Tee
 
@@ -12515,6 +12572,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == 發送私聊：/w 玩家名 內容
 
+White
+== 白色
+
 Why are you slowmo replaying to read this?
 == 所以你為什麼要慢速回放來看這個？
 
@@ -12559,6 +12619,9 @@ Windowed fullscreen
 
 Word Filter
 == 屏蔽詞
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== Word filter action: 0=replace matching words, 1=hide entire message
 
 Word highlight soft edge width (px)
 == 逐字邊緣軟過渡寬度 px
@@ -13222,6 +13285,10 @@ AUTO
 [Start menu]
 Play
 == 開始遊戲
+
+[Team and size]
+%d\n(%d/%d)
+== %d\n(%d/%d)
 
 [Team size]
 maximum

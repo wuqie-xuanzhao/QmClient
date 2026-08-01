@@ -6,6 +6,7 @@
 #include <base/system.h>
 
 #include <engine/console.h>
+#include <engine/shared/config.h>
 #include <engine/shared/json.h>
 #include <engine/storage.h>
 
@@ -14,7 +15,19 @@
 
 namespace
 {
-	constexpr const char *QM_ICON_MANIFEST_PATTERN = "qmclient/icons/qm_icons_%dx.json";
+	constexpr const char *QM_ICON_MANIFEST_PATTERN = "qmclient/icons/qm_icons_%s_%dx.json";
+	constexpr const char *QM_ICON_MSDF_MANIFEST_PATTERN = "qmclient/icons/qm_icons_%s_msdf.json";
+	constexpr int QM_ICON_RELOAD_RETRY_DELAY_SECONDS = 2;
+
+	bool IconDiagnosticsEnabled()
+	{
+		return g_Config.m_QmPerfDebug != 0 || g_Config.m_QmPerfLogfile != 0 || g_Config.m_QmPerfStutterDiagnostics != 0;
+	}
+
+	const char *IconAtlasWeightName(const int Weight)
+	{
+		return Weight == 0 ? "regular" : "bold";
+	}
 
 	EQmIcon IconFromName(const char *pName)
 	{
@@ -99,69 +112,196 @@ void CQmIconAtlas::Clear(IGraphics *pGraphics)
 	m_Width = 0;
 	m_Height = 0;
 	m_Padding = 0;
+	m_PxRange = 0.0f;
+	m_Type = EType::ALPHA;
 }
 
 void CQmIconManager::Init(IGraphics *pGraphics, IStorage *pStorage, IConsole *pConsole)
 {
+	if(m_pGraphics != nullptr)
+		Shutdown();
 	m_pGraphics = pGraphics;
 	m_pStorage = pStorage;
 	m_pConsole = pConsole;
+	m_DiagnosticsEnabled = IconDiagnosticsEnabled();
 	Reload();
 }
 
-void CQmIconManager::Clear()
+void CQmIconManager::Shutdown()
 {
-	m_Atlas.Clear(m_pGraphics);
+	if(m_pGraphics != nullptr)
+		ClearAtlas(m_Atlas);
+	m_pGraphics = nullptr;
+	m_pStorage = nullptr;
+	m_pConsole = nullptr;
+	m_PreferredScale = 0;
+	m_AtlasWeight = -1;
+	m_MsdfManifestAvailable = false;
+	m_NextReloadAttemptTime = 0;
+	m_NextMsdfProbeTime = 0;
+	m_FailedReloadWeight = -1;
+	m_FailedReloadScale = 0;
+	m_FailedReloadMsdfSupported = false;
+	m_HasFailedReloadTarget = false;
+	m_Diagnostics = {};
+	m_DiagnosticsEnabled = false;
+	m_CurrentMsdfManagerCallRun = 0;
+}
+
+void CQmIconManager::ClearAtlas(CQmIconAtlas &Atlas)
+{
+	if(m_DiagnosticsEnabled)
+		FinishMsdfManagerCallRun();
+	if(m_DiagnosticsEnabled && Atlas.m_Texture.IsValid() && !Atlas.m_Texture.IsNullTexture())
+		m_Diagnostics.m_TextureUnloads++;
+	Atlas.Clear(m_pGraphics);
+}
+
+void CQmIconManager::FinishMsdfManagerCallRun() const
+{
+	if(m_CurrentMsdfManagerCallRun == 0)
+		return;
+	m_Diagnostics.m_MsdfManagerCallRunBuckets[QmIconMsdfRunBucket(m_CurrentMsdfManagerCallRun)]++;
+	m_CurrentMsdfManagerCallRun = 0;
+}
+
+SQmIconDiagnostics CQmIconManager::TakeDiagnostics() const
+{
+	if(!m_DiagnosticsEnabled)
+	{
+		m_Diagnostics = {};
+		m_CurrentMsdfManagerCallRun = 0;
+		return {};
+	}
+	FinishMsdfManagerCallRun();
+	const SQmIconDiagnostics Diagnostics = m_Diagnostics;
+	m_Diagnostics = {};
+	return Diagnostics;
 }
 
 bool CQmIconManager::Reload()
 {
-	Clear();
 	if(m_pGraphics == nullptr || m_pStorage == nullptr)
-		return false;
-
-	const int PreferredScale = PreferredAtlasScale();
-	m_PreferredScale = PreferredScale;
-	const int aScales[3] = {
-		PreferredScale,
-		PreferredScale == 4 ? 2 : (PreferredScale == 2 ? 4 : 2),
-		PreferredScale == 1 ? 4 : 1,
-	};
-
-	for(const int Scale : aScales)
 	{
-		if(LoadManifestForScale(Scale))
-			return true;
+		return false;
 	}
-	return false;
-}
+	if(m_DiagnosticsEnabled)
+		m_Diagnostics.m_ReloadAttempts++;
 
-void CQmIconManager::RefreshForCurrentDpi()
-{
 	const int PreferredScale = PreferredAtlasScale();
-	if(!IsReady() || PreferredScale != m_PreferredScale)
-		Reload();
+	const bool MsdfSupported = m_pGraphics->HasTexturedMsdf();
+	const int Weight = g_Config.m_QmUiIconWeight;
+	CQmIconAtlas Candidate;
+	bool Success = false;
+	bool LoadedMsdf = false;
+	if(MsdfSupported)
+	{
+		if(m_DiagnosticsEnabled)
+			m_Diagnostics.m_MsdfProbes++;
+		if(LoadMsdfManifest(Candidate))
+		{
+			Success = true;
+			LoadedMsdf = true;
+			if(m_DiagnosticsEnabled)
+				m_Diagnostics.m_MsdfProbeSuccesses++;
+		}
+	}
+	if(!Success)
+	{
+		for(const int Scale : QmIconAtlasScaleFallbackOrder(PreferredScale))
+		{
+			if(LoadManifestForScale(Candidate, Scale))
+			{
+				Success = true;
+				break;
+			}
+		}
+	}
+
+	const bool MsdfProbeFailed = MsdfSupported && !LoadedMsdf;
+	if(!Success)
+	{
+		m_NextReloadAttemptTime = time_get() + time_freq() * QM_ICON_RELOAD_RETRY_DELAY_SECONDS;
+		m_FailedReloadWeight = Weight;
+		m_FailedReloadScale = PreferredScale;
+		m_FailedReloadMsdfSupported = MsdfSupported;
+		m_HasFailedReloadTarget = true;
+		const bool RetainedResidentAtlas = QmIconAtlasCanRetainOnReloadFailure(IsReady(), m_Atlas.Type(), MsdfSupported);
+		if(!RetainedResidentAtlas)
+		{
+			ClearAtlas(m_Atlas);
+			m_MsdfManifestAvailable = false;
+			m_PreferredScale = PreferredScale;
+			m_AtlasWeight = Weight;
+		}
+		return false;
+	}
+
+	m_Atlas.Swap(Candidate);
+	ClearAtlas(Candidate);
+	if(m_DiagnosticsEnabled)
+	{
+		m_Diagnostics.m_ReloadSuccesses++;
+		m_Diagnostics.m_AtlasSwaps++;
+	}
+	m_MsdfManifestAvailable = LoadedMsdf;
+	m_PreferredScale = LoadedMsdf ? 0 : PreferredScale;
+	m_AtlasWeight = Weight;
+	m_NextReloadAttemptTime = 0;
+	m_HasFailedReloadTarget = false;
+	m_NextMsdfProbeTime = MsdfProbeFailed ? time_get() + time_freq() * QM_ICON_RELOAD_RETRY_DELAY_SECONDS : 0;
+	return true;
 }
 
-int CQmIconManager::PreferredAtlasScale() const
+bool CQmIconManager::RetryMsdfAtlas()
 {
-	if(m_pGraphics == nullptr)
-		return 1;
+	if(m_DiagnosticsEnabled)
+		m_Diagnostics.m_MsdfProbes++;
+	CQmIconAtlas Candidate;
+	if(!LoadMsdfManifest(Candidate))
+	{
+		m_MsdfManifestAvailable = false;
+		m_NextMsdfProbeTime = time_get() + time_freq() * QM_ICON_RELOAD_RETRY_DELAY_SECONDS;
+		return false;
+	}
 
-	const float HiDpi = std::max(1.0f, m_pGraphics->ScreenHiDPIScale());
-	return HiDpi >= 3.0f ? 4 : (HiDpi >= 1.5f ? 2 : 1);
+	m_Atlas.Swap(Candidate);
+	ClearAtlas(Candidate);
+	if(m_DiagnosticsEnabled)
+	{
+		m_Diagnostics.m_MsdfProbeSuccesses++;
+		m_Diagnostics.m_AtlasSwaps++;
+	}
+	m_MsdfManifestAvailable = true;
+	m_PreferredScale = 0;
+	m_AtlasWeight = g_Config.m_QmUiIconWeight;
+	m_NextMsdfProbeTime = 0;
+	return true;
 }
 
-bool CQmIconManager::LoadManifestForScale(int Scale)
+bool CQmIconManager::LoadManifestForScale(CQmIconAtlas &Atlas, const int Scale)
 {
 	char aManifestPath[IO_MAX_PATH_LENGTH];
-	str_format(aManifestPath, sizeof(aManifestPath), QM_ICON_MANIFEST_PATTERN, Scale);
-	if(!m_pStorage->FileExists(aManifestPath, IStorage::TYPE_ALL))
+	str_format(aManifestPath, sizeof(aManifestPath), QM_ICON_MANIFEST_PATTERN, IconAtlasWeightName(g_Config.m_QmUiIconWeight), Scale);
+	return LoadManifest(Atlas, aManifestPath, Scale, false);
+}
+
+bool CQmIconManager::LoadMsdfManifest(CQmIconAtlas &Atlas)
+{
+	char aManifestPath[IO_MAX_PATH_LENGTH];
+	str_format(aManifestPath, sizeof(aManifestPath), QM_ICON_MSDF_MANIFEST_PATTERN, IconAtlasWeightName(g_Config.m_QmUiIconWeight));
+	return LoadManifest(Atlas, aManifestPath, 0, true);
+}
+
+bool CQmIconManager::LoadManifest(CQmIconAtlas &Atlas, const char *pManifestPath, const int Scale, const bool Msdf)
+{
+	ClearAtlas(Atlas);
+	if(!m_pStorage->FileExists(pManifestPath, IStorage::TYPE_ALL))
 		return false;
 
 	void *pFileData = nullptr;
 	unsigned FileSize = 0;
-	if(!m_pStorage->ReadFile(aManifestPath, IStorage::TYPE_ALL, &pFileData, &FileSize))
+	if(!m_pStorage->ReadFile(pManifestPath, IStorage::TYPE_ALL, &pFileData, &FileSize))
 		return false;
 
 	char aError[256] = "";
@@ -171,7 +311,7 @@ bool CQmIconManager::LoadManifestForScale(int Scale)
 	if(pRoot == nullptr)
 	{
 		char aBuf[320];
-		str_format(aBuf, sizeof(aBuf), "Failed to parse %s: %s", aManifestPath, aError);
+		str_format(aBuf, sizeof(aBuf), "Failed to parse %s: %s", pManifestPath, aError);
 		LogIconAtlas(m_pConsole, aBuf);
 		return false;
 	}
@@ -179,6 +319,14 @@ bool CQmIconManager::LoadManifestForScale(int Scale)
 	bool Success = false;
 	do
 	{
+		int PxRange = 0;
+		if(Msdf)
+		{
+			const char *pKind = JsonStringField(pRoot, "kind");
+			if(str_comp(pKind, "msdf") != 0 || !JsonIntField(pRoot, "px_range", PxRange) || PxRange <= 0)
+				break;
+		}
+
 		const json_value *pAtlas = json_object_get(pRoot, "atlas");
 		const json_value *pIcons = json_object_get(pRoot, "icons");
 		if(pAtlas == &json_value_none || pAtlas->type != json_object || pIcons == &json_value_none || pIcons->type != json_object)
@@ -197,12 +345,17 @@ bool CQmIconManager::LoadManifestForScale(int Scale)
 
 		std::array<CQmIconAtlas::SEntry, static_cast<size_t>(EQmIcon::COUNT)> aEntries{};
 		int LoadedIconCount = 0;
+		bool InvalidKnownEntry = false;
 		for(unsigned int IconIndex = 0; IconIndex < pIcons->u.object.length; ++IconIndex)
 		{
 			const auto &JsonIcon = pIcons->u.object.values[IconIndex];
 			const EQmIcon Icon = IconFromName(JsonIcon.name);
 			if(Icon == EQmIcon::COUNT || JsonIcon.value == nullptr || JsonIcon.value->type != json_object)
+			{
+				if(Icon != EQmIcon::COUNT)
+					InvalidKnownEntry = true;
 				continue;
+			}
 
 			int X = 0;
 			int Y = 0;
@@ -211,9 +364,17 @@ bool CQmIconManager::LoadManifestForScale(int Scale)
 			if(!JsonIntField(JsonIcon.value, "x", X) || !JsonIntField(JsonIcon.value, "y", Y) ||
 				!JsonIntField(JsonIcon.value, "w", W) || !JsonIntField(JsonIcon.value, "h", H) ||
 				X < 0 || Y < 0 || W <= 1 || H <= 1 || X + W > AtlasWidth || Y + H > AtlasHeight)
+			{
+				InvalidKnownEntry = true;
 				continue;
+			}
 
 			CQmIconAtlas::SEntry &Entry = aEntries[static_cast<size_t>(Icon)];
+			if(Entry.m_Valid)
+			{
+				InvalidKnownEntry = true;
+				continue;
+			}
 			Entry.m_Valid = true;
 			Entry.m_U0 = (X + 0.5f) / static_cast<float>(AtlasWidth);
 			Entry.m_V0 = (Y + 0.5f) / static_cast<float>(AtlasHeight);
@@ -222,25 +383,87 @@ bool CQmIconManager::LoadManifestForScale(int Scale)
 			++LoadedIconCount;
 		}
 
-		if(LoadedIconCount == 0)
+		if(InvalidKnownEntry || LoadedIconCount != static_cast<int>(EQmIcon::COUNT))
 			break;
 
 		IGraphics::CTextureHandle Texture = m_pGraphics->LoadTexture(pImagePath, IStorage::TYPE_ALL, IGraphics::TEXLOAD_NO_MIPMAPS);
-		if(!Texture.IsValid())
+		if(!QmIconTextureCanCommit(Texture.IsValid(), Texture.IsNullTexture()))
+		{
+			if(m_DiagnosticsEnabled)
+				m_Diagnostics.m_TextureLoadFailures++;
+			if(Texture.IsValid())
+			{
+				if(m_DiagnosticsEnabled && !Texture.IsNullTexture())
+					m_Diagnostics.m_TextureUnloads++;
+				m_pGraphics->UnloadTexture(&Texture);
+			}
 			break;
+		}
 
-		m_Atlas.m_Texture = Texture;
-		m_Atlas.m_aEntries = aEntries;
-		m_Atlas.m_LoadedIconCount = LoadedIconCount;
-		m_Atlas.m_AtlasScale = Scale;
-		m_Atlas.m_Width = AtlasWidth;
-		m_Atlas.m_Height = AtlasHeight;
-		m_Atlas.m_Padding = AtlasPadding;
+		Atlas.m_Texture = Texture;
+		Atlas.m_aEntries = aEntries;
+		Atlas.m_LoadedIconCount = LoadedIconCount;
+		Atlas.m_AtlasScale = Scale;
+		Atlas.m_Width = AtlasWidth;
+		Atlas.m_Height = AtlasHeight;
+		Atlas.m_Padding = AtlasPadding;
+		Atlas.m_PxRange = static_cast<float>(PxRange);
+		Atlas.m_Type = Msdf ? CQmIconAtlas::EType::MSDF : CQmIconAtlas::EType::ALPHA;
+		if(m_DiagnosticsEnabled)
+			m_Diagnostics.m_TextureLoads++;
 		Success = true;
 	} while(false);
 
 	json_value_free(pRoot);
+	if(!Success)
+		ClearAtlas(Atlas);
 	return Success;
+}
+
+void CQmIconManager::RefreshForCurrentDpi()
+{
+	if(m_pGraphics == nullptr || m_pStorage == nullptr)
+		return;
+	const bool DiagnosticsEnabled = IconDiagnosticsEnabled();
+	if(DiagnosticsEnabled != m_DiagnosticsEnabled)
+	{
+		m_Diagnostics = {};
+		m_CurrentMsdfManagerCallRun = 0;
+		m_DiagnosticsEnabled = DiagnosticsEnabled;
+	}
+
+	const int PreferredScale = PreferredAtlasScale();
+	const bool MsdfSupported = m_pGraphics->HasTexturedMsdf();
+	const int Weight = g_Config.m_QmUiIconWeight;
+	if(QmIconAtlasMustDropMsdf(MsdfSupported, m_Atlas.Type()))
+	{
+		ClearAtlas(m_Atlas);
+		m_MsdfManifestAvailable = false;
+		m_PreferredScale = PreferredScale;
+		m_AtlasWeight = Weight;
+		m_NextReloadAttemptTime = 0;
+		m_HasFailedReloadTarget = false;
+	}
+	const EQmIconAtlasType DesiredType = SelectQmIconAtlasType(MsdfSupported, m_MsdfManifestAvailable);
+	const bool MsdfProbeNeedsRetry = QmIconAtlasNeedsMsdfProbe(MsdfSupported, m_MsdfManifestAvailable);
+	const bool NeedsReload = QmIconAtlasNeedsReload(IsReady(), m_Atlas.Type(), DesiredType, m_AtlasWeight, Weight, m_PreferredScale, PreferredScale);
+	const int64_t Now = time_get();
+	const bool ReloadCooldownActive = QmIconReloadCooldownActive(Now, m_NextReloadAttemptTime, m_HasFailedReloadTarget, m_FailedReloadWeight, m_FailedReloadScale, m_FailedReloadMsdfSupported, Weight, PreferredScale, MsdfSupported);
+	const bool MsdfProbeCooldownActive = QmIconAtlasRetryCooldownActive(Now, m_NextMsdfProbeTime);
+	const SQmIconRefreshState RefreshState{NeedsReload, ReloadCooldownActive, MsdfProbeNeedsRetry, MsdfProbeCooldownActive};
+	const EQmIconRefreshAction RefreshAction = QmIconRefreshAction(RefreshState);
+	if(RefreshAction == EQmIconRefreshAction::RELOAD)
+		Reload();
+	else if(RefreshAction == EQmIconRefreshAction::RETRY_MSDF)
+		RetryMsdfAtlas();
+}
+
+int CQmIconManager::PreferredAtlasScale() const
+{
+	if(m_pGraphics == nullptr)
+		return 1;
+
+	return QmIconPreferredAtlasScale(m_pGraphics->ScreenHiDPIScale());
 }
 
 CUIRect CQmIconManager::PixelAlignedRect(const CUIRect &Rect) const
@@ -253,8 +476,10 @@ CUIRect CQmIconManager::PixelAlignedRect(const CUIRect &Rect) const
 	float ScreenX1 = 0.0f;
 	float ScreenY1 = 0.0f;
 	m_pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-	const float ScaleX = m_pGraphics->ScreenWidth() / std::max(1.0f, ScreenX1 - ScreenX0);
-	const float ScaleY = m_pGraphics->ScreenHeight() / std::max(1.0f, ScreenY1 - ScreenY0);
+	const float ScaleX = QmIconPixelScale(m_pGraphics->ScreenWidth(), ScreenX1 - ScreenX0);
+	const float ScaleY = QmIconPixelScale(m_pGraphics->ScreenHeight(), ScreenY1 - ScreenY0);
+	if(ScaleX <= 0.0f || ScaleY <= 0.0f)
+		return Rect;
 
 	CUIRect Out = Rect;
 	const float X0 = std::round(Rect.x * ScaleX) / ScaleX;
@@ -276,7 +501,31 @@ bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRG
 
 	const CQmIconAtlas::SEntry &Entry = m_Atlas.m_aEntries[IconIndex];
 	const CUIRect Aligned = PixelAlignedRect(Rect);
+	if(m_Atlas.IsMsdf())
+	{
+		if(m_DiagnosticsEnabled)
+		{
+			m_Diagnostics.m_MsdfIconDraws++;
+			m_CurrentMsdfManagerCallRun++;
+			m_Diagnostics.m_MaxMsdfManagerCallRun = maximum(m_Diagnostics.m_MaxMsdfManagerCallRun, m_CurrentMsdfManagerCallRun);
+		}
+		IGraphics::STexturedMsdfParams Params;
+		Params.m_Texture = m_Atlas.m_Texture;
+		Params.m_Rect = vec4(Aligned.x, Aligned.y, Aligned.w, Aligned.h);
+		Params.m_UvRect = vec4(Entry.m_U0, Entry.m_V0, Entry.m_U1, Entry.m_V1);
+		Params.m_Color = Color;
+		Params.m_PxRange = m_Atlas.m_PxRange;
+		Params.m_AtlasWidth = static_cast<float>(m_Atlas.m_Width);
+		Params.m_AtlasHeight = static_cast<float>(m_Atlas.m_Height);
+		m_pGraphics->RenderTexturedMsdf(Params);
+		return true;
+	}
 
+	if(m_DiagnosticsEnabled)
+	{
+		m_Diagnostics.m_AlphaIconDraws++;
+		FinishMsdfManagerCallRun();
+	}
 	m_pGraphics->WrapClamp();
 	m_pGraphics->TextureSet(m_Atlas.m_Texture);
 	m_pGraphics->QuadsBegin();
@@ -298,7 +547,32 @@ bool CQmIconManager::RenderIconRotated(EQmIcon Icon, const CUIRect &Rect, const 
 
 	const CQmIconAtlas::SEntry &Entry = m_Atlas.m_aEntries[IconIndex];
 	const CUIRect Aligned = PixelAlignedRect(Rect);
+	if(m_Atlas.IsMsdf())
+	{
+		if(m_DiagnosticsEnabled)
+		{
+			m_Diagnostics.m_MsdfIconDraws++;
+			m_CurrentMsdfManagerCallRun++;
+			m_Diagnostics.m_MaxMsdfManagerCallRun = maximum(m_Diagnostics.m_MaxMsdfManagerCallRun, m_CurrentMsdfManagerCallRun);
+		}
+		IGraphics::STexturedMsdfParams Params;
+		Params.m_Texture = m_Atlas.m_Texture;
+		Params.m_Rect = vec4(Aligned.x, Aligned.y, Aligned.w, Aligned.h);
+		Params.m_UvRect = vec4(Entry.m_U0, Entry.m_V0, Entry.m_U1, Entry.m_V1);
+		Params.m_Color = Color;
+		Params.m_PxRange = m_Atlas.m_PxRange;
+		Params.m_AtlasWidth = static_cast<float>(m_Atlas.m_Width);
+		Params.m_AtlasHeight = static_cast<float>(m_Atlas.m_Height);
+		Params.m_Rotation = Rotation;
+		m_pGraphics->RenderTexturedMsdf(Params);
+		return true;
+	}
 
+	if(m_DiagnosticsEnabled)
+	{
+		m_Diagnostics.m_AlphaIconDraws++;
+		FinishMsdfManagerCallRun();
+	}
 	m_pGraphics->WrapClamp();
 	m_pGraphics->TextureSet(m_Atlas.m_Texture);
 	m_pGraphics->QuadsBegin();

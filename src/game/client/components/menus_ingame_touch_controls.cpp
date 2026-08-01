@@ -692,7 +692,6 @@ void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)
 	BrowserSearchOptions.m_Clearable = true;
 	BrowserSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
 	BrowserSearchOptions.m_FontSize = FONTSIZE;
-	MainView.h = 600.0f - 40.0f - MainView.y;
 	MainView.Draw(CMenus::ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
 	MainView.Margin(MAINMARGIN, &MainView);
 
@@ -1027,7 +1026,6 @@ void CMenusIngameTouchControls::RenderConfigSettings(CUIRect MainView)
 void CMenusIngameTouchControls::RenderPreviewSettings(CUIRect MainView)
 {
 	CUIRect EditBox, Button;
-	MainView.h = 600.0f - 40.0f - MainView.y;
 	MainView.Draw(CMenus::ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
 	MainView.Margin(MAINMARGIN, &MainView);
 	MainView.HSplitTop(ROWSIZE, &EditBox, &MainView);

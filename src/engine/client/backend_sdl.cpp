@@ -110,12 +110,13 @@ void CGraphicsBackend_Threaded::StartProcessor(ICommandProcessor *pProcessor)
 void CGraphicsBackend_Threaded::StopProcessor()
 {
 	dbg_assert(!m_Shutdown, "Processor was already shut down.");
-	m_Shutdown = true;
 #if defined(CONF_PLATFORM_EMSCRIPTEN)
+	m_Shutdown = true;
 	m_Warning = m_pProcessor->GetWarning();
 #else
 	{
 		std::unique_lock<std::mutex> Lock(m_BufferSwapMutex);
+		m_Shutdown = true;
 		m_Warning = m_pProcessor->GetWarning();
 		m_BufferSwapCond.notify_all();
 	}
@@ -783,6 +784,21 @@ EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
 	return RetBackendType;
 }
 
+static void ResetOpenGLFallbackConfig()
+{
+	str_copy(g_Config.m_GfxBackend, "OpenGL");
+#if defined(CONF_PLATFORM_MACOS)
+	// macOS 的 Apple GPU 通过 OpenGL 4.1 提供现代 core profile，从这里开始
+	// 可以保留圆角和 MSDF shader；InitWindow 仍会为旧驱动保留逐级降级链。
+	g_Config.m_GfxGLMajor = 4;
+	g_Config.m_GfxGLMinor = 1;
+#else
+	g_Config.m_GfxGLMajor = 3;
+	g_Config.m_GfxGLMinor = 0;
+#endif
+	g_Config.m_GfxGLPatch = 0;
+}
+
 void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 {
 	if(BackendType == BACKEND_TYPE_OPENGL)
@@ -1170,16 +1186,17 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	}
 
 	EBackendType OldBackendType = m_BackendType;
+	bool ConfiguredVulkanUnavailable = false;
+#if !defined(CONF_BACKEND_VULKAN)
+	ConfiguredVulkanUnavailable = SDL_getenv("DDNET_DRIVER") == nullptr && str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0;
+#endif
 	m_BackendType = DetectBackend();
 	// little fallback for Vulkan
-	if(OldBackendType != BACKEND_TYPE_AUTO &&
-		m_BackendType == BACKEND_TYPE_VULKAN)
+	if(ConfiguredVulkanUnavailable ||
+		(OldBackendType != BACKEND_TYPE_AUTO && m_BackendType == BACKEND_TYPE_VULKAN))
 	{
-		// try default opengl settings
-		str_copy(g_Config.m_GfxBackend, "OpenGL");
-		g_Config.m_GfxGLMajor = 3;
-		g_Config.m_GfxGLMinor = 0;
-		g_Config.m_GfxGLPatch = 0;
+		// 使用现代 OpenGL 回退，同时修复未编译 Vulkan 时遗留的 Vulkan 配置。
+		ResetOpenGLFallbackConfig();
 		// do another analysis round too, just in case
 		g_Config.m_Gfx3DTextureAnalysisRan = 0;
 		g_Config.m_GfxDriverIsBlocked = 0;

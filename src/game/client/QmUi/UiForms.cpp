@@ -5,6 +5,7 @@
 
 #include "UiFormLogic.h"
 #include "UiMotion.h"
+#include "UiSurface.h"
 #include "UiTheme.h"
 
 #include <engine/graphics.h>
@@ -12,6 +13,7 @@
 #include <engine/shared/config.h>
 
 #include <game/client/lineinput.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
 #include <game/localization.h>
@@ -46,10 +48,7 @@ namespace ui_widget
 			const SUiTheme Theme = ThemeFor(Ctx);
 			ColorRGBA Border = Theme.m_Border;
 			Border.a = std::max(Border.a, 0.24f);
-			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(Border), Corners, Radius);
-			CUIRect Inner = Rect;
-			Inner.Margin(1.0f, &Inner);
-			Inner.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(Fill), Corners, std::max(0.0f, Radius - 1.0f));
+			DrawRoundedSurface(Ctx, Rect, Ctx.m_pUi->ScaleBackgroundAlpha(Fill), Ctx.m_pUi->ScaleBackgroundAlpha(Border), Radius, 1.0f, Corners);
 		}
 
 		bool NumericFieldTextIsInfinite(const char *pText)
@@ -84,10 +83,7 @@ namespace ui_widget
 			const SUiTheme &Theme = ThemeFor(Ctx);
 			ColorRGBA RingColor = Theme.m_FocusRing;
 			RingColor.a *= Alpha;
-			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(RingColor), IGraphics::CORNER_ALL, ui_token::radius::BASE + Theme.m_FocusRingWidth);
-			CUIRect Inner = Rect;
-			Inner.Margin(Theme.m_FocusRingWidth, &Inner);
-			Inner.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(Theme.m_InputSurface), IGraphics::CORNER_ALL, ui_token::radius::BASE);
+			DrawRoundedSurface(Ctx, Rect, Ctx.m_pUi->ScaleBackgroundAlpha(Theme.m_InputSurface), Ctx.m_pUi->ScaleBackgroundAlpha(RingColor), ui_token::radius::BASE + Theme.m_FocusRingWidth, Theme.m_FocusRingWidth);
 		}
 
 		void DrawTextFieldFocusBorder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect)
@@ -120,15 +116,21 @@ namespace ui_widget
 			return Active;
 		}
 
-		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon)
+		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon, const ColorRGBA &Color)
 		{
 			if(pIcon == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
 				return;
-			Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-			Ctx.m_pUi->TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+			ITextRender *pTextRender = Ctx.m_pUi->TextRender();
+			const ColorRGBA PreviousColor = pTextRender->GetTextColor();
+			const unsigned PreviousFlags = pTextRender->GetRenderFlags();
+			const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
+			pTextRender->TextColor(Color);
+			pTextRender->SetFontPreset(g_Config.m_QmUiIconWeight == 0 ? EFontPreset::ICON_FONT : EFontPreset::ICON_FONT_BOLD);
+			pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);
-			Ctx.m_pUi->TextRender()->SetRenderFlags(0);
-			Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+			pTextRender->SetRenderFlags(PreviousFlags);
+			pTextRender->SetFontPreset(PreviousPreset);
+			pTextRender->TextColor(PreviousColor);
 		}
 
 	} // namespace
@@ -169,7 +171,8 @@ namespace ui_widget
 		}
 		DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect, Options.m_Mode == EInputFieldMode::MULTILINE);
 
-		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr));
+		const ColorRGBA InputIconColor = QmUiIconColor(SQmIconStyle().Color(EQmIconState::NORMAL), g_Config.m_QmUiIconColor);
+		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr), InputIconColor);
 		CUi::SEditBoxRenderOptions RenderOptions;
 		RenderOptions.m_DrawBackground = false;
 		bool Changed = false;
@@ -183,8 +186,8 @@ namespace ui_widget
 			const CUIRect &ClearRect = Layout.m_ClearRect;
 			const float ClearState = Ctx.m_pUi->ButtonColorMul(pInput->GetClearButtonId());
 			if(ClearState > 1.0f)
-				ClearRect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * (ClearState - 1.0f))), IGraphics::CORNER_R, ui_token::radius::BASE);
-			DrawInputFieldIcon(Ctx, ClearRect, FontIcons::FONT_ICON_XMARK);
+				DrawRoundedSurface(Ctx, ClearRect, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * (ClearState - 1.0f))), ColorRGBA(), ui_token::radius::BASE, 0.0f, IGraphics::CORNER_R);
+			DrawInputFieldIcon(Ctx, ClearRect, FontIcons::FONT_ICON_XMARK, InputIconColor);
 			if(Ctx.m_pUi->DoButtonLogic(pInput->GetClearButtonId(), 0, &ClearRect, BUTTONFLAG_LEFT))
 			{
 				pInput->Clear();
@@ -478,8 +481,8 @@ namespace ui_widget
 			CUIRect Handle;
 			Rail.VSplitLeft(std::clamp(33.0f, Rail.h, Rail.w / 3.0f), &Handle, nullptr);
 			Handle.x += (Rail.w - Handle.w) * Normalized;
-			Rail.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_ALL, Rail.h / 2.0f);
-			Handle.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_ScrollBarColorFunction.GetColor(false, false)), IGraphics::CORNER_ALL, Rail.h / 2.0f);
+			DrawRoundedSurface(Ctx, Rail, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), ColorRGBA(), Rail.h / 2.0f);
+			DrawRoundedSurface(Ctx, Handle, Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_ScrollBarColorFunction.GetColor(false, false)), ColorRGBA(), Handle.h / 2.0f);
 		}
 
 		// 输入框：特殊值（♾️ 或 pMaxText）在非编辑状态下显示为文本
@@ -555,7 +558,7 @@ namespace ui_widget
 			const uint64_t TrackKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash ^ 0xA5A5ull, reinterpret_cast<uint64_t>(pId));
 			Track = ResolveUiAnimValueColor(*Ctx.m_pAnim, TrackKey, Track, ui_curve::DECELERATE.m_DurationSec, ui_curve::DECELERATE.m_Easing);
 		}
-		Rect.Draw(Track, IGraphics::CORNER_ALL, Rect.h * 0.5f);
+		DrawRoundedSurface(Ctx, Rect, Track, Track, Rect.h * 0.5f);
 
 		// Knob — slides between left and right ends. Uses a SPRING request so the
 		// motion has the expected snappy bounce on the v2 runtime.
@@ -588,7 +591,7 @@ namespace ui_widget
 		Knob.y = Rect.y + Padding;
 		Knob.w = KnobSize;
 		Knob.h = KnobSize;
-		Knob.Draw(ui_token::color::TEXT_PRIMARY, IGraphics::CORNER_ALL, KnobSize * 0.5f);
+		DrawRoundedSurface(Ctx, Knob, ui_token::color::TEXT_PRIMARY, ui_token::color::TEXT_PRIMARY, KnobSize * 0.5f);
 
 		return Clicked;
 	}

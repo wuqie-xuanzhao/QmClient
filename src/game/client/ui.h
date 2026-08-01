@@ -382,6 +382,13 @@ struct SValueSelectorProperties
 	FValueSelectorParseCallback m_pfnParseValue = nullptr;
 };
 
+inline float QmFitSingleLineFontSize(float PreferredSize, float MinimumSize, float TextWidth, float AvailableWidth)
+{
+	if(PreferredSize <= 0.0f || MinimumSize <= 0.0f || TextWidth <= 0.0f || AvailableWidth <= 0.0f || TextWidth <= AvailableWidth)
+		return PreferredSize;
+	return std::clamp(PreferredSize * AvailableWidth / TextWidth, MinimumSize, PreferredSize);
+}
+
 struct SProgressSpinnerProperties
 {
 	float m_Progress = -1.0f; // between 0.0f and 1.0f, or negative for indeterminate progress
@@ -753,6 +760,7 @@ public:
 
 	void AddUIElement(CUIElement *pElement);
 	void RemoveUIElement(CUIElement *pElement);
+	void OnShutdown();
 	void OnElementsReset();
 	void OnWindowResize();
 	void OnCursorMove(float X, float Y);
@@ -1160,8 +1168,8 @@ public:
 		const CUIRect *m_pPopupViewport;
 		SQmDropdownVisualStyle m_VisualStyle;
 	};
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled);
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, bool Enabled);
 };
 
 #endif

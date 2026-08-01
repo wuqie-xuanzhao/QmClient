@@ -111,6 +111,34 @@ namespace
 		QmPerfLogPayload("perf/settings-warmup", aPayload, pClient, "settings:tee");
 	}
 
+	void LogQmIconDiagnostics(const SQmIconDiagnostics &Diagnostics, const IClient *pClient)
+	{
+		if(!QmPerfEnabled())
+			return;
+		char aPayload[1024];
+		str_format(aPayload, sizeof(aPayload), "event=icon_frame alpha_draws=%" PRIu64 " msdf_draws=%" PRIu64 " msdf_manager_call_run_max=%" PRIu64 " msdf_manager_call_run_1=%" PRIu64 " msdf_manager_call_run_2=%" PRIu64 " msdf_manager_call_run_3_4=%" PRIu64 " msdf_manager_call_run_5_8=%" PRIu64 " msdf_manager_call_run_9_16=%" PRIu64 " msdf_manager_call_run_17_32=%" PRIu64 " msdf_manager_call_run_33_64=%" PRIu64 " msdf_manager_call_run_65_plus=%" PRIu64 " reload_attempts=%" PRIu64 " reload_successes=%" PRIu64 " msdf_probe_attempts=%" PRIu64 " msdf_probe_successes=%" PRIu64 " atlas_swaps=%" PRIu64 " texture_load_successes=%" PRIu64 " texture_load_failures=%" PRIu64 " texture_unloads=%" PRIu64,
+			Diagnostics.m_AlphaIconDraws,
+			Diagnostics.m_MsdfIconDraws,
+			Diagnostics.m_MaxMsdfManagerCallRun,
+			Diagnostics.m_MsdfManagerCallRunBuckets[0],
+			Diagnostics.m_MsdfManagerCallRunBuckets[1],
+			Diagnostics.m_MsdfManagerCallRunBuckets[2],
+			Diagnostics.m_MsdfManagerCallRunBuckets[3],
+			Diagnostics.m_MsdfManagerCallRunBuckets[4],
+			Diagnostics.m_MsdfManagerCallRunBuckets[5],
+			Diagnostics.m_MsdfManagerCallRunBuckets[6],
+			Diagnostics.m_MsdfManagerCallRunBuckets[7],
+			Diagnostics.m_ReloadAttempts,
+			Diagnostics.m_ReloadSuccesses,
+			Diagnostics.m_MsdfProbes,
+			Diagnostics.m_MsdfProbeSuccesses,
+			Diagnostics.m_AtlasSwaps,
+			Diagnostics.m_TextureLoads,
+			Diagnostics.m_TextureLoadFailures,
+			Diagnostics.m_TextureUnloads);
+		QmPerfLogPayload("perf/icons", aPayload, pClient);
+	}
+
 } // namespace
 #include <generated/protocol.h>
 #include <generated/protocol7.h>
@@ -127,35 +155,6 @@ namespace
 namespace
 {
 	constexpr int DEMO_INPUT_KEY_STATE_SIZE = KEY_LAST / 8;
-
-	float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)
-	{
-		if(pGameClient == nullptr || Owner < 0 || Owner >= MAX_CLIENTS)
-			return 1.0f;
-		return pGameClient->LiveObserverClientAlpha(Owner);
-	}
-
-	int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)
-	{
-		if(pGameClient == nullptr)
-			return -1;
-		constexpr float OwnerRadius = 96.0f;
-		int BestClient = -1;
-		float BestDistance = OwnerRadius;
-		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
-		{
-			if(pGameClient->m_Snap.m_aCharacters[ClientId].m_Active == 0)
-				continue;
-			const vec2 ClientPos = vec2(pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
-			const float Dist = distance(ClientPos, Pos);
-			if(Dist < BestDistance)
-			{
-				BestDistance = Dist;
-				BestClient = ClientId;
-			}
-		}
-		return BestClient;
-	}
 
 #if defined(CONF_QM_LIVE_CLIENT)
 	constexpr float LIVE_OBSERVER_UI_HEIGHT = 1200.0f;
@@ -922,6 +921,7 @@ void CGameClient::OnInit()
 	m_RenderTools.Init(Graphics(), TextRender(), this); // TClient
 	m_RenderMap.Init(Graphics(), TextRender());
 	m_QmIconManager.Init(Graphics(), Storage(), Console());
+	m_AppliedQmUiIconWeight = g_Config.m_QmUiIconWeight;
 
 	if(GIT_SHORTREV_HASH)
 	{
@@ -1089,6 +1089,11 @@ void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoading
 
 void CGameClient::OnUpdate()
 {
+	// Vulkan swapchain 重建在渲染线程执行，能力状态可能晚于窗口 resize 回调变化。
+	// 这里仅在 DPI、图标配置或 MSDF capability 变化时重载 atlas。
+	SyncQmUiIconWeight();
+	m_QmIconManager.RefreshForCurrentDpi();
+
 	const bool TeeSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_TEE;
 	const bool AssetsSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_ASSETS;
 	m_Skins.PrepareSettingsThroughputForFrame();
@@ -1098,6 +1103,7 @@ void CGameClient::OnUpdate()
 	m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, AssetsSettingsActive, FrameSkinUploadBudget);
 
 	HandleLanguageChanged();
+	RefreshStreamerSkinPrivacyAfterStateChange();
 
 	CUIElementBase::Init(Ui()); // update static pointer because game and editor use separate UI
 
@@ -1165,6 +1171,40 @@ void CGameClient::OnUpdate()
 	RecordDemoHudState(false);
 	RecordDemoInputState(false);
 	RecordDemoInputWheelEvent();
+}
+
+void CGameClient::SyncQmUiIconWeight()
+{
+	if(m_AppliedQmUiIconWeight == g_Config.m_QmUiIconWeight)
+		return;
+
+	m_AppliedQmUiIconWeight = g_Config.m_QmUiIconWeight;
+	TextRender()->SetIconFontWeight(g_Config.m_QmUiIconWeight != 0);
+	m_QmIconManager.RefreshForCurrentDpi();
+	OnWindowResize();
+}
+
+void CGameClient::RefreshStreamerSkinPrivacyAfterStateChange()
+{
+	const uint64_t FriendsRevision = Friends() != nullptr ? Friends()->Revision() : 0;
+	if(m_LastStreamerHideSkins == g_Config.m_QmStreamerHideSkins &&
+		m_LastStreamerFriendsIgnoreClan == g_Config.m_ClFriendsIgnoreClan &&
+		m_aLastStreamerLocalIds[0] == m_aLocalIds[0] &&
+		m_aLastStreamerLocalIds[1] == m_aLocalIds[1] &&
+		m_LastStreamerFriendsRevision == FriendsRevision)
+		return;
+	m_LastStreamerHideSkins = g_Config.m_QmStreamerHideSkins;
+	m_LastStreamerFriendsIgnoreClan = g_Config.m_ClFriendsIgnoreClan;
+	std::copy(std::begin(m_aLocalIds), std::end(m_aLocalIds), std::begin(m_aLastStreamerLocalIds));
+	m_LastStreamerFriendsRevision = FriendsRevision;
+	for(CClientData &ClientData : m_aClients)
+	{
+		if(!ClientData.m_Active)
+			continue;
+		ClientData.m_Friend = !IsLocalClientId(ClientData.m_ClientId) && Friends() != nullptr && Friends()->IsFriend(ClientData.m_aName, ClientData.m_aClan, true);
+		if(ClientData.m_pSkinInfo != nullptr)
+			ClientData.UpdateRenderInfo();
+	}
 }
 
 int CGameClient::RenderThrottleRefreshRate() const
@@ -3384,11 +3424,10 @@ void CGameClient::OnRender()
 
 	// render all systems
 	CPerfTimer ComponentsTimer;
-	for(auto &pComponent : m_vpAll)
-	{
+	const auto RenderComponent = [&](CComponent *pComponent) {
 #if defined(CONF_QM_LIVE_CLIENT)
 		if(ShouldSuppressComponentForQmLiveDemo(pComponent))
-			continue;
+			return;
 		if(pComponent == &m_HudEditor)
 			RenderLiveFinishRankHud();
 #endif
@@ -3445,6 +3484,8 @@ void CGameClient::OnRender()
 	LogPerfStage(this, "gameclient_onrender_total", FrameTimer.ElapsedMs());
 
 	m_pFrameScheduler->EndFrame();
+	if(QmPerfEnabled())
+		LogQmIconDiagnostics(m_QmIconManager.TakeDiagnostics(), Client());
 
 	// resend player and dummy info if it was filtered by server
 	if(m_aLocalIds[0] >= 0 && Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive() && WasNewTick)
@@ -4529,6 +4570,8 @@ void CGameClient::OnShutdown()
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnShutdown();
 
+	m_UI.OnShutdown();
+	m_QmIconManager.Shutdown();
 	m_LocalServer.KillServer();
 }
 
@@ -4712,11 +4755,12 @@ void CGameClient::ProcessEvents()
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
 			const CNetEvent_HammerHit *pEvent = (const CNetEvent_HammerHit *)Item.m_pData;
+			const vec2 HammerHitPos(pEvent->m_X, pEvent->m_Y);
 			bool RenderEffect = true;
 #if defined(CONF_QM_LIVE_CLIENT)
-			RenderEffect = !LiveRejectUnknownVisualEvent;
+			RenderEffect = RenderEffect && !LiveRejectUnknownVisualEvent;
 #endif
-			m_vPendingHammerHitEvents.push_back({vec2(pEvent->m_X, pEvent->m_Y),
+			m_vPendingHammerHitEvents.push_back({HammerHitPos,
 				Client()->GameTick(g_Config.m_ClDummy),
 				g_Config.m_ClDummy,
 				Index,
@@ -4828,7 +4872,9 @@ void CGameClient::FinalizeHammerHitEvents()
 		if((IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId)) && m_HammerHitTracker.Record(Hit))
 			HandleConfirmedHammerHit(Hit);
 
-		if(Event.m_RenderEffect)
+		const bool PredictedHandled = Match.m_AttackerId >= 0 && Match.m_TargetId >= 0 && m_PredictedWorld.CheckPredictedHammerHitHandled(
+			CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId));
+		if(Event.m_RenderEffect && !PredictedHandled)
 		{
 			const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);
 			m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);
@@ -5449,11 +5495,6 @@ void CGameClient::OnNewSnapshot()
 		m_GameInfo = GetGameInfo(nullptr, 0, &ServerInfo);
 	}
 
-	for(CClientData &Client : m_aClients)
-	{
-		Client.UpdateSkinInfo();
-	}
-
 	// setup local pointers
 	if(m_Snap.m_LocalClientId >= 0)
 	{
@@ -5475,6 +5516,17 @@ void CGameClient::OnNewSnapshot()
 			m_Controls.OnPlayerDeath();
 		}
 	}
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		// Streamer skin privacy depends on local/friend classification, so publish it before skin render info.
+		m_aClients[i].m_Friend = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Friends()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
+		m_aClients[i].m_Foe = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Foes()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
+	}
+
+	for(CClientData &Client : m_aClients)
+		Client.UpdateSkinInfo();
+
 	if(m_FastPractice.Enabled())
 		m_PredictedDummyId = m_FastPractice.CurrentPracticeDummyId();
 	else if(Client()->DummyConnected() && m_aLocalIds[!g_Config.m_ClDummy] >= 0)
@@ -5512,15 +5564,6 @@ void CGameClient::OnNewSnapshot()
 	if(Client()->State() == IClient::STATE_ONLINE)
 	{
 		m_pDiscord->UpdatePlayerCount(m_Snap.m_NumPlayers);
-	}
-
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-	{
-		// update friend state
-		m_aClients[i].m_Friend = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Friends()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
-
-		// update foe state
-		m_aClients[i].m_Foe = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Foes()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
 	}
 
 	// check if we received all finish times
@@ -6991,14 +7034,19 @@ void CGameClient::CClientData::UpdateSkinInfo()
 		return;
 	}
 
-	const auto &&ApplySkinProperties = [&]() {
-		const int LocalDummy = LocalDummyIndex();
-		if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SIX)
-		{
-			if(LocalDummy >= 0)
+		const auto &&ApplySkinProperties = [&]() {
+			const int LocalDummy = LocalSkinConfigIndex();
+			const bool UseServerControlledSkin = LocalDummy >= 0 && m_pGameClient->ShouldUseServerControlledLocalSkin();
+			if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SIX)
 			{
-				m_pSkinInfo->TeeRenderInfo().ApplyColors(
-					LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor,
+				if(UseServerControlledSkin)
+				{
+					m_pSkinInfo->TeeRenderInfo().ApplyColors(m_UseCustomColor, m_ColorBody, m_ColorFeet);
+				}
+				else if(LocalDummy >= 0)
+				{
+					m_pSkinInfo->TeeRenderInfo().ApplyColors(
+						LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor,
 					LocalDummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody,
 					LocalDummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet);
 			}
@@ -7012,13 +7060,17 @@ void CGameClient::CClientData::UpdateSkinInfo()
 			for(int Dummy = 0; Dummy < NUM_DUMMIES; Dummy++)
 			{
 				const CClientData::CSixup &SixupData = m_aSixup[Dummy];
-				CTeeRenderInfo::CSixup &SixupSkinInfo = m_pSkinInfo->TeeRenderInfo().m_aSixup[Dummy];
-				for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
-				{
-					if(LocalDummy >= 0)
+					CTeeRenderInfo::CSixup &SixupSkinInfo = m_pSkinInfo->TeeRenderInfo().m_aSixup[Dummy];
+					for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
 					{
-						m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, *CSkins7::ms_apUCCVariables[LocalDummy][Part], *CSkins7::ms_apColorVariables[LocalDummy][Part], Part);
-					}
+						if(UseServerControlledSkin)
+						{
+							m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, m_aSixup[LocalDummy].m_aUseCustomColors[Part], m_aSixup[LocalDummy].m_aSkinPartColors[Part], Part);
+						}
+						else if(LocalDummy >= 0)
+						{
+							m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, *CSkins7::ms_apUCCVariables[LocalDummy][Part], *CSkins7::ms_apColorVariables[LocalDummy][Part], Part);
+						}
 					else
 					{
 						m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, SixupData.m_aUseCustomColors[Part], SixupData.m_aSkinPartColors[Part], Part);
@@ -7072,13 +7124,13 @@ namespace
 		}
 	}
 
-	void ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info)
+	bool ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info)
 	{
 		if(!pGameClient)
-			return;
+			return false;
 
 		Info.Reset();
-		if(const CSkin *pSkin = pGameClient->m_Skins.Find("default"))
+		if(const CSkin *pSkin = pGameClient->m_Skins.FindOrNullptr("default"))
 		{
 			Info.Apply(pSkin);
 		}
@@ -7095,6 +7147,7 @@ namespace
 			Info.m_aSixup[Dummy].m_HatTexture.Invalidate();
 			Info.m_aSixup[Dummy].m_BotTexture.Invalidate();
 		}
+		return Info.SixDescriptorReady() || Info.SevenDescriptorReady();
 	}
 
 	void CopySkinColorsOnly(CTeeRenderInfo &Target, const CTeeRenderInfo &Source)
@@ -7137,7 +7190,8 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	{
 		const float OriginalSize = NewRenderInfo.m_Size;
 		BuildDefaultSkinDescriptor(RenderSkinDescriptor);
-		ApplyDefaultSkin(m_pGameClient, NewRenderInfo);
+		if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo))
+			NewRenderInfo.Reset();
 		NewRenderInfo.m_Size = OriginalSize;
 	}
 
@@ -7190,13 +7244,14 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		}
 	}
 
-	if(m_pGameClient->ShouldHideStreamerSkin(m_ClientId))
+	if(m_pGameClient != nullptr && m_pGameClient->ShouldHideStreamerSkin(m_ClientId))
 	{
 		CTeeRenderInfo OriginalInfo = NewRenderInfo;
 		const float OriginalSize = NewRenderInfo.m_Size;
 		const bool KeepTeamColors = m_pGameClient->IsTeamPlay();
 
-		ApplyDefaultSkin(m_pGameClient, NewRenderInfo);
+		if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo))
+			NewRenderInfo.Reset();
 		NewRenderInfo.m_Size = OriginalSize;
 
 		if(KeepTeamColors)
@@ -7256,15 +7311,21 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 	CSkinTransitionKey Key;
 	Key.m_SkinDescriptor = SkinDescriptor;
 	Key.m_SkinGeneration = m_RenderInfoSkinGeneration;
-	const int LocalDummy = LocalDummyIndex();
-	Key.m_UseCustomColor = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor) : m_UseCustomColor;
-	Key.m_ColorBody = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) : m_ColorBody;
-	Key.m_ColorFeet = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet) : m_ColorFeet;
+	const int LocalDummy = LocalSkinConfigIndex();
+	const bool UseServerControlledSkin = LocalDummy >= 0 && m_pGameClient->ShouldUseServerControlledLocalSkin();
+	Key.m_UseCustomColor = UseServerControlledSkin ? m_UseCustomColor : (LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor) : m_UseCustomColor);
+	Key.m_ColorBody = UseServerControlledSkin ? m_ColorBody : (LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) : m_ColorBody);
+	Key.m_ColorFeet = UseServerControlledSkin ? m_ColorFeet : (LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet) : m_ColorFeet);
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
 		for(int Part = 0; Part < protocol7::NUM_SKINPARTS; ++Part)
 		{
-			if(LocalDummy >= 0)
+			if(UseServerControlledSkin)
+			{
+				Key.m_aaSixupUseCustomColors[Dummy][Part] = m_aSixup[LocalDummy].m_aUseCustomColors[Part];
+				Key.m_aaSixupSkinPartColors[Dummy][Part] = m_aSixup[LocalDummy].m_aSkinPartColors[Part];
+			}
+			else if(LocalDummy >= 0)
 			{
 				Key.m_aaSixupUseCustomColors[Dummy][Part] = *CSkins7::ms_apUCCVariables[LocalDummy][Part];
 				Key.m_aaSixupSkinPartColors[Dummy][Part] = *CSkins7::ms_apColorVariables[LocalDummy][Part];
@@ -7275,6 +7336,14 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 				Key.m_aaSixupSkinPartColors[Dummy][Part] = m_aSixup[Dummy].m_aSkinPartColors[Part];
 			}
 		}
+	}
+	if(m_pGameClient != nullptr && m_pGameClient->ShouldHideStreamerSkin(m_ClientId))
+	{
+		m_LastSkinTransitionKey = Key;
+		m_HasSkinTransitionKey = true;
+		m_SkinTransitionPreviousRenderInfo.Reset();
+		m_SkinTransitionStart.reset();
+		return;
 	}
 
 	const bool IsTransitionClient = m_pGameClient != nullptr && m_pGameClient->ShouldRunSkinChangeTransition(m_ClientId);
@@ -9354,6 +9423,7 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 	CTeeRenderInfo &TeeInfo = pManagedTeeRenderInfo->TeeRenderInfo();
 	const CSkinDescriptor &SkinDescriptor = pManagedTeeRenderInfo->SkinDescriptor();
 	pManagedTeeRenderInfo->SetDescriptorRenderInfoReady(false);
+	TeeInfo.ResetMissingDescriptorBranches(SkinDescriptor.m_Flags);
 	bool SixReady = false;
 	bool SevenReady = false;
 
@@ -9363,7 +9433,7 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 		if(pSkin != nullptr)
 		{
 			TeeInfo.Apply(pSkin);
-			SixReady = true;
+			SixReady = TeeInfo.SixDescriptorReady();
 		}
 	}
 
@@ -9394,15 +9464,7 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 				}
 			}
 		}
-		SevenReady = false;
-		for(const auto &Sixup : TeeInfo.m_aSixup)
-		{
-			if(Sixup.PartTexture(protocol7::SKINPART_BODY).IsValid())
-			{
-				SevenReady = true;
-				break;
-			}
-		}
+		SevenReady = TeeInfo.SevenDescriptorReady();
 	}
 	bool DescriptorRenderInfoReady = SixReady || SevenReady;
 	pManagedTeeRenderInfo->SetDescriptorRenderInfoReady(DescriptorRenderInfoReady);
@@ -9418,7 +9480,7 @@ void CGameClient::RefreshSkins(int SkinDescriptorFlags)
 	dbg_assert(SkinDescriptorFlags != 0, "SkinDescriptorFlags invalid");
 
 	const auto SkinStartLoadTime = time_get_nanoseconds();
-	const auto &&ProgressCallback = [&]() {
+	const auto ProgressCallback = [this, SkinStartLoadTime]() {
 		// if skin refreshing takes to long, swap to a loading screen
 		if(time_get_nanoseconds() - SkinStartLoadTime > 500ms)
 		{
@@ -9431,7 +9493,14 @@ void CGameClient::RefreshSkins(int SkinDescriptorFlags)
 	}
 	if(SkinDescriptorFlags & CSkinDescriptor::FLAG_SEVEN)
 	{
-		m_Skins7.Refresh(ProgressCallback);
+		m_Skins7.Refresh([this, ProgressCallback]() {
+			ProgressCallback();
+			for(const std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo : m_vpManagedTeeRenderInfos)
+			{
+				if(pManagedTeeRenderInfo->SkinDescriptor().m_Flags & CSkinDescriptor::FLAG_SEVEN)
+					RefreshSkin(pManagedTeeRenderInfo);
+			}
+		});
 	}
 
 	for(std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo : m_vpManagedTeeRenderInfos)

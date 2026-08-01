@@ -76,9 +76,25 @@ inline void ExecuteSettingsCardChromeDraw(const bool DrawChrome, const bool Draw
 		DrawSurface();
 }
 
-inline float ResolveSettingsCardBorderWidth(const float UiScale)
+inline float AlignSettingsCardValueToPixels(const float Value, const float PixelSize)
 {
-	return std::max(2.0f, 2.0f * std::max(0.0f, UiScale));
+	return PixelSize > 0.0f ? std::round(Value / PixelSize) * PixelSize : Value;
+}
+
+inline float ResolveSettingsCardBorderWidth(const float UiScale, const float PixelSize = 0.0f)
+{
+	return AlignSettingsCardValueToPixels(std::max(2.0f, 2.0f * std::max(0.0f, UiScale)), PixelSize);
+}
+
+inline CUIRect ResolveSettingsCardChromeRect(const CUIRect &Rect, const float PixelSize)
+{
+	if(PixelSize <= 0.0f)
+		return Rect;
+	const float Left = AlignSettingsCardValueToPixels(Rect.x, PixelSize);
+	const float Top = AlignSettingsCardValueToPixels(Rect.y, PixelSize);
+	const float Right = AlignSettingsCardValueToPixels(Rect.x + Rect.w, PixelSize);
+	const float Bottom = AlignSettingsCardValueToPixels(Rect.y + Rect.h, PixelSize);
+	return {Left, Top, std::max(0.0f, Right - Left), std::max(0.0f, Bottom - Top)};
 }
 
 inline CUIRect ResolveSettingsCardInteractionBorderRect(const CUIRect &SurfaceRect, const float BorderWidth)

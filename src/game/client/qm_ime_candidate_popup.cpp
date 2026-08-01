@@ -26,9 +26,6 @@
 namespace
 {
 	constexpr int MAX_VISIBLE_CANDIDATES = 16;
-	constexpr float POPUP_IN_DURATION = 0.12f;
-	constexpr float POPUP_OUT_DURATION = 0.08f;
-	constexpr float SELECTED_DURATION = 0.08f;
 	constexpr float IME_CONTENT_TIME_SCALE = 0.40f;
 
 	struct SImeCandidateCell
@@ -81,24 +78,20 @@ namespace
 		return Color;
 	}
 
-	float ResolveImePopupPresentationValue(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, EUiAnimProperty Property, float Target, float DurationSec)
+	uint64_t ImePresentationNodeKey(const char *pScope)
 	{
-		SUiAnimTransition Transition;
-		Transition.m_DurationSec = DurationSec;
-		Transition.m_Easing = EEasing::EASE_OUT;
-		Transition = qm_motion::ApplyMotionLevel(Transition, g_Config.m_QmUiMotionLevel);
-		SUiSpringConfig Spring = Transition.m_Spring;
-		Spring.m_RestEpsilon = maximum(Spring.m_RestEpsilon, 0.004f);
-		return ResolveUiPresentationStateValue(AnimRuntime, NodeKey, Property, Target, Spring, 2, 0.004f);
+		static const uint64_t s_BaseKey = static_cast<uint64_t>(str_quickhash("qm_ime_presentation_state"));
+		return BuildUiAnimNodeKey(s_BaseKey, static_cast<uint64_t>(str_quickhash(pScope)));
 	}
 
-	CUIRect ResolveImePopupRect(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, const CUIRect &Target, float DurationSec)
+	CUIRect ScaleRectAroundCenter(const CUIRect &Rect, float Scale)
 	{
-		SUiAnimTransition Transition;
-		Transition.m_DurationSec = DurationSec;
-		Transition.m_Easing = EEasing::EASE_OUT;
-		Transition = qm_motion::ApplyMotionLevel(Transition, g_Config.m_QmUiMotionLevel);
-		return ResolveUiAnimValueRect(AnimRuntime, NodeKey, Target, Transition.m_DurationSec, Transition.m_Easing);
+		Scale = std::max(0.01f, Scale);
+		const float CenterX = Rect.x + Rect.w * 0.5f;
+		const float CenterY = Rect.y + Rect.h * 0.5f;
+		const float Width = Rect.w * Scale;
+		const float Height = Rect.h * Scale;
+		return {CenterX - Width * 0.5f, CenterY - Height * 0.5f, Width, Height};
 	}
 
 	SImeTextMetrics MeasureImeText(ITextRender *pTextRender, float FontSize, const char *pText, const qm_theme::SImeTheme &Ime)
@@ -162,6 +155,8 @@ namespace
 void CQmImeCandidatePopup::Reset()
 {
 	m_LastState = {};
+	m_Presentation = {};
+	m_CandidateStart = 0;
 	m_WasVisible = false;
 	++m_PresenceGeneration;
 	if(m_PresenceGeneration == 0)
@@ -279,6 +274,7 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 		}
 	}
 
+	const float CandidateWindowNaturalWidth = HasCandidates ? CandidateNaturalWidthForWindow(CandidateStart, CandidateDisplayCount) : 0.0f;
 	const float CandidateNaturalWidth = CandidateWindowNaturalWidth + TrailingWidth;
 	const float ContentWidth = CandidateNaturalWidth;
 	const float NeededPanelWidth = ContentWidth + 2.0f * Ime.m_PaddingX;
@@ -305,6 +301,13 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	Position.y = PixelAlign(Position.y, ScreenHeight / Height);
 
 	CUiV2AnimationRuntime &AnimRuntime = pGameClient->UiRuntimeV2()->AnimRuntime();
+	CUiV2Tree &Tree = pGameClient->UiRuntimeV2()->Tree();
+	SUiAnimTransition PresenceTransition;
+	PresenceTransition.m_DurationSec = 0.16f;
+	PresenceTransition.m_Easing = EEasing::EASE_OUT;
+	PresenceTransition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
+	const uint64_t PopupKey = BuildUiAnimNodeKey(str_quickhash("qm_ime_popup"), m_PresenceGeneration);
+	const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, PopupKey, TargetVisible, PresenceTransition);
 	const uint64_t CapsuleNode = ImePresentationNodeKey("capsule");
 	const uint64_t CandidatesNode = ImePresentationNodeKey("candidates");
 	const uint64_t SelectedNode = ImePresentationNodeKey("selected");
@@ -316,9 +319,7 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	TargetPresentation.m_CandidateAlpha = TargetVisible ? 1.0f : 0.0f;
 	TargetPresentation.m_CandidateScale = TargetVisible ? 1.0f : 0.84f;
 	if(!TargetVisible)
-	{
-		AnimRuntime.SetValue(PopupKey, EUiAnimProperty::POS_Y, 1.4f);
-	}
+		TargetPresentation.m_Rect.y -= 0.8f;
 
 	SUiSpringConfig CapsuleSpring;
 	CapsuleSpring.m_Stiffness = 430.0f;
@@ -373,35 +374,20 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	Presentation.m_CandidateAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, CandidatesNode, EUiAnimProperty::ALPHA, m_Presentation.m_TargetCandidateAlpha, ContentSpring, 2, 0.004f), 0.0f, 1.0f);
 	Presentation.m_CandidateScale = ResolveUiPresentationStateValue(AnimRuntime, CandidatesNode, EUiAnimProperty::SCALE, m_Presentation.m_TargetCandidateScale, ContentSpring, 2, 0.004f);
 
-	if(!TargetVisible && Presentation.m_Alpha <= 0.01f && !AnimRuntime.HasActiveAnimation(CapsuleNode, EUiAnimProperty::ALPHA))
+	if(!Presence.m_Render)
 	{
 		m_WasVisible = false;
 		pTextRender->SetRenderFlags(OldRenderFlags);
 		pGraphics->MapScreen(OldScreenX0, OldScreenY0, OldScreenX1, OldScreenY1);
 		return;
 	}
-	const SImePresentationTarget TargetPresentation{TargetVisible ? 1.0f : 0.0f, TargetVisible && HasCandidates ? 1.0f : 0.0f};
-	const bool AnimatePresentation = g_Config.m_QmUiMotionLevel != 0;
-	float PresentationAlpha = TargetPresentation.m_TypingAlpha;
-	float CandidateAlpha = TargetPresentation.m_CandidateAlpha;
-	if(AnimatePresentation)
-	{
-		SUiSpringConfig ContentSpring = PresenceTransition.m_Spring;
-		ContentSpring.m_RestEpsilon = maximum(ContentSpring.m_RestEpsilon, 0.004f);
-		if(Presence.m_FreshEnter)
-		{
-			SetUiPresentationStateValue(AnimRuntime, PopupKey, EUiAnimProperty::ALPHA, 0.0f);
-			SetUiPresentationStateValue(AnimRuntime, PopupKey, EUiAnimProperty::SCALE, 0.0f);
-		}
-		PresentationAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, PopupKey, EUiAnimProperty::ALPHA, TargetPresentation.m_TypingAlpha, ContentSpring, 2, 0.004f), 0.0f, 1.0f);
-		CandidateAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, PopupKey, EUiAnimProperty::SCALE, TargetPresentation.m_CandidateAlpha, ContentSpring, 2, 0.004f), 0.0f, 1.0f);
-	}
+	m_WasVisible = TargetVisible || Presence.m_Render;
+	const float PresentationAlpha = Presentation.m_Alpha;
+	const float CandidateAlpha = Presentation.m_CandidateAlpha;
 	const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);
 	const float CandidateDrawAlpha = Alpha * CandidateAlpha;
-	const float OffsetY = ResolveImePopupPresentationValue(AnimRuntime, PopupKey, EUiAnimProperty::POS_Y, TargetVisible ? 0.0f : -0.8f, AlphaDuration * IME_CONTENT_TIME_SCALE);
-	m_WasVisible = true;
 
-	CUIRect Panel = {Position.x, Position.y + OffsetY, PanelWidth, PanelHeight};
+	CUIRect Panel = Presentation.m_Rect;
 	CUIRect PanelDropA = Panel;
 	PanelDropA.x += Ime.m_ShadowX;
 	PanelDropA.y += Ime.m_ShadowY * 0.65f;
@@ -430,7 +416,6 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 
 	if(HasCandidates)
 	{
-		const float LayerAlpha = Presentation.m_Alpha * Presentation.m_CandidateAlpha;
 		CUIRect CandidateLayer = ScaleRectAroundCenter(Content, Presentation.m_CandidateScale);
 		CUIRect CandidateRow;
 		CandidateLayer.HSplitTop(CandidateRowHeight, &CandidateRow, &CandidateLayer);
@@ -469,8 +454,22 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 			CUIRect SelectedRect = aCells[CellIndex].m_Rect;
 			SelectedRect.y += 0.75f;
 			SelectedRect.h -= 1.5f;
-			const uint64_t SelectedKey = BuildUiAnimNodeKey(str_quickhash("qm_ime_popup_selected"), 1);
-			const CUIRect DrawRect = ResolveImePopupRect(AnimRuntime, SelectedKey, SelectedRect, SELECTED_DURATION);
+			if(m_Presentation.m_TargetSelectedWidth <= 0.0f)
+			{
+				SetUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::POS_X, SelectedRect.x);
+				SetUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::POS_Y, SelectedRect.y);
+				SetUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::WIDTH, SelectedRect.w);
+				SetUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::HEIGHT, SelectedRect.h);
+			}
+			m_Presentation.m_TargetSelectedX = SelectedRect.x;
+			m_Presentation.m_TargetSelectedY = SelectedRect.y;
+			m_Presentation.m_TargetSelectedWidth = SelectedRect.w;
+			m_Presentation.m_TargetSelectedHeight = SelectedRect.h;
+			CUIRect DrawRect;
+			DrawRect.x = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::POS_X, m_Presentation.m_TargetSelectedX, SelectedSpring, 2, 0.01f);
+			DrawRect.y = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::POS_Y, m_Presentation.m_TargetSelectedY, SelectedSpring, 2, 0.01f);
+			DrawRect.w = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::WIDTH, m_Presentation.m_TargetSelectedWidth, SelectedSpring, 2, 0.01f);
+			DrawRect.h = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::HEIGHT, m_Presentation.m_TargetSelectedHeight, SelectedSpring, 2, 0.01f);
 			DrawRect.Draw(WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha), IGraphics::CORNER_ALL, maximum(1.0f, DrawRect.h * 0.5f));
 			break;
 		}

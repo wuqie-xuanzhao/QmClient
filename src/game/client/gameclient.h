@@ -124,6 +124,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -382,6 +383,7 @@ private:
 	CUi m_UI;
 	CUiRuntimeV2 m_UiRuntimeV2;
 	CQmIconManager m_QmIconManager;
+	int m_AppliedQmUiIconWeight = -1;
 	CQmImeManager m_QmImeManager;
 	CRaceHelper m_RaceHelper;
 	CQmHammerHitTracker m_HammerHitTracker;
@@ -533,6 +535,7 @@ public:
 	const class CUiRuntimeV2 *UiRuntimeV2() const { return &m_UiRuntimeV2; }
 	class CQmIconManager *QmIconManager() { return &m_QmIconManager; }
 	const class CQmIconManager *QmIconManager() const { return &m_QmIconManager; }
+	void SyncQmUiIconWeight();
 	class ISound *Sound() const { return m_pSound; }
 	class IInput *Input() const { return m_pInput; }
 	class IStorage *Storage() const { return m_pStorage; }
@@ -1396,6 +1399,7 @@ private:
 	void UpdatePrediction();
 	void UpdateSpectatorCursor();
 	void UpdateRenderedCharacters();
+	void RefreshStreamerSkinPrivacyAfterStateChange();
 	void RefreshPredictionAfterConfigChange();
 	void RequestPredictionRefreshAfterConfigChange();
 	void HandlePredictedEvents(int Tick);
@@ -1409,6 +1413,10 @@ private:
 
 	int m_IsDummySwapping;
 	bool m_RequestPredictionRefreshAfterConfigChange = false;
+	int m_LastStreamerHideSkins = -1;
+	int m_LastStreamerFriendsIgnoreClan = -1;
+	int m_aLastStreamerLocalIds[NUM_DUMMIES] = {-2, -2};
+	uint64_t m_LastStreamerFriendsRevision = std::numeric_limits<uint64_t>::max();
 	CCharOrder m_CharOrder;
 	int m_aSwitchStateTeam[NUM_DUMMIES];
 	int m_aAutoTeamLockLastTeam[NUM_DUMMIES] = {TEAM_FLOCK, TEAM_FLOCK};

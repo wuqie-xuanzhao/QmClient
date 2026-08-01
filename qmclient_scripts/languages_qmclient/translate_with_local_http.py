@@ -1255,7 +1255,9 @@ def write_draft_module(
         for (key, context), translation_map in merged.items()
     ]
     out_path.write_text(
-        i18n_store.dump_module(messages), encoding="utf-8", newline="\n"
+        i18n_store.dump_module(messages, module_name=module),
+        encoding="utf-8",
+        newline="\n",
     )
     return out_path
 
@@ -1307,7 +1309,9 @@ def prune_written_draft_module(
         for (key, context), translations in remaining.items()
     ]
     draft_path.write_text(
-        i18n_store.dump_module(messages), encoding="utf-8", newline="\n"
+        i18n_store.dump_module(messages, module_name=module),
+        encoding="utf-8",
+        newline="\n",
     )
 
 

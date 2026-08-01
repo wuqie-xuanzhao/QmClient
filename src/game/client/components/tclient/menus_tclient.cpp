@@ -4204,6 +4204,10 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			g_Config.m_TcWarList ^= 1;
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
+		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_QmWarListBlockEnemyChat, "tclient-warlist-block-enemy-chat", Localize("Block enemy chat"), g_Config.m_QmWarListBlockEnemyChat, &CheckBoxRect))
+			g_Config.m_QmWarListBlockEnemyChat ^= 1;
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		Column.HSplitTop(LineSize, &CheckBoxRect, &Column);
 		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_WARLIST, TCLIENT_TAB_WARLIST, &g_Config.m_TcWarListChat, "tclient-warlist-colors-chat", Localize("Colors in chat"), g_Config.m_TcWarListChat, &CheckBoxRect))
 			g_Config.m_TcWarListChat ^= 1;
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
@@ -4430,7 +4434,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 	const float GroupsHeight = WarListViewportRows * ListRowHeight + MarginSmall * 2.0f + LineSize * 3.0f + ColorPickerLineSize + ColorPickerLineSpacing;
 	const float PlayersHeight = LineSize + MarginSmall + WarListViewportRows * ListRowHeight;
 	const float EditorHeight = LineSize * 5.0f + MarginSmall * 5.0f + HeadlineFontSize;
-	const float SettingsHeight = LineSize * 6.0f + MarginSmall * 5.0f;
+	const float SettingsHeight = LineSize * 7.0f + MarginSmall * 6.0f;
 	const float SectionHeaderHeight = LineSize + MarginSmall;
 	const float SectionGap = WarListMetrics.m_SectionGap;
 	const char *pWarEntriesTitle = Localizable("War Entries");

@@ -265,10 +265,16 @@ static bool ApplyQmSafeGraphicsRecovery()
 		str_copy(g_Config.m_GfxBackend, "OpenGL");
 		Changed = true;
 	}
-	if(g_Config.m_GfxGLMajor != 3 || g_Config.m_GfxGLMinor != 0 || g_Config.m_GfxGLPatch != 0)
+	int FallbackGLMajor = 3;
+	int FallbackGLMinor = 0;
+#if defined(CONF_PLATFORM_MACOS)
+	FallbackGLMajor = 4;
+	FallbackGLMinor = 1;
+#endif
+	if(g_Config.m_GfxGLMajor != FallbackGLMajor || g_Config.m_GfxGLMinor != FallbackGLMinor || g_Config.m_GfxGLPatch != 0)
 	{
-		g_Config.m_GfxGLMajor = 3;
-		g_Config.m_GfxGLMinor = 0;
+		g_Config.m_GfxGLMajor = FallbackGLMajor;
+		g_Config.m_GfxGLMinor = FallbackGLMinor;
 		g_Config.m_GfxGLPatch = 0;
 		Changed = true;
 	}

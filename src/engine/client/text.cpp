@@ -6,6 +6,7 @@
 
 #include <engine/console.h>
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
 #include <engine/shared/json.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -346,6 +347,8 @@ private:
 	// Font faces
 	FT_Face m_DefaultFace = nullptr;
 	FT_Face m_IconFace = nullptr;
+	FT_Face m_IconRegularFace = nullptr;
+	FT_Face m_IconBoldFace = nullptr;
 	FT_Face m_VariantFace = nullptr;
 	FT_Face m_SelectedFace = nullptr;
 	std::vector<FT_Face> m_vFallbackFaces;
@@ -695,11 +698,25 @@ public:
 
 	bool SetIconFaceByName(const char *pFamilyName)
 	{
-		m_IconFace = GetFaceByName(pFamilyName);
-		if(!m_IconFace)
+		m_IconRegularFace = GetFaceByName(pFamilyName);
+		if(!m_IconRegularFace)
 		{
 			log_error("textrender", "The icon font face '%s' could not be found", pFamilyName);
 			return false;
+		}
+		m_IconFace = m_IconRegularFace;
+		return true;
+	}
+
+	bool SetIconBoldFaceByName(const char *pFamilyName)
+	{
+		m_IconBoldFace = GetFaceByName(pFamilyName);
+		if(!m_IconBoldFace)
+		{
+			// Bold is a preference, not a reason to leave ICON_FONT_BOLD without a face.
+			m_IconBoldFace = m_IconRegularFace;
+			log_warn("textrender", "The bold icon font face '%s' could not be found, falling back to regular", pFamilyName);
+			return m_IconBoldFace != nullptr;
 		}
 		return true;
 	}
@@ -747,7 +764,20 @@ public:
 		case EFontPreset::ICON_FONT:
 			m_SelectedFace = m_IconFace;
 			break;
+		case EFontPreset::ICON_FONT_BOLD:
+			m_SelectedFace = m_IconBoldFace;
+			break;
 		}
+	}
+
+	void SetIconFontWeight(const bool Bold)
+	{
+		m_IconFace = Bold && m_IconBoldFace != nullptr ? m_IconBoldFace : m_IconRegularFace;
+	}
+
+	bool IsIconFaceSelected() const
+	{
+		return m_SelectedFace == m_IconFace || m_SelectedFace == m_IconBoldFace;
 	}
 
 	void Clear()
@@ -1035,8 +1065,17 @@ class CTextRender : public IEngineTextRender
 	unsigned m_RenderFlags;
 
 	ColorRGBA m_Color;
+	ColorRGBA m_UnmodifiedColor;
 	ColorRGBA m_OutlineColor;
 	ColorRGBA m_SelectionColor;
+	EFontPreset m_FontPreset = EFontPreset::DEFAULT_FONT;
+
+	ColorRGBA ResolveFontPresetColor(ColorRGBA Color) const
+	{
+		// Font selection must not overwrite semantic colors. Qm UI controls that
+		// opt into the White/Black preference pass that color explicitly.
+		return Color;
+	}
 
 	FT_Library m_FTLibrary;
 
@@ -1250,6 +1289,7 @@ public:
 		m_pGlyphMap = nullptr;
 
 		m_Color = DefaultTextColor();
+		m_UnmodifiedColor = m_Color;
 		m_OutlineColor = DefaultTextOutlineColor();
 		m_SelectionColor = DefaultTextSelectionColor();
 
@@ -1548,7 +1588,7 @@ public:
 			Success = false;
 		}
 
-		// extract icon font family name
+		// ICON_FONT 跟随保存的图标粗细，ICON_FONT_BOLD 供必须使用粗体字形的控件使用。
 		const json_value &IconFace = (*pJsonData)["icon"];
 		if(IconFace.type == json_string)
 		{
@@ -1563,6 +1603,22 @@ public:
 			Success = false;
 		}
 
+		const json_value &IconBoldFace = (*pJsonData)["icon bold"];
+		if(IconBoldFace.type == json_string)
+		{
+			if(!m_pGlyphMap->SetIconBoldFaceByName(IconBoldFace.u.string.ptr))
+			{
+				Success = false;
+			}
+		}
+		else
+		{
+			log_error("textrender", "Font index malformed: 'icon bold' must be a string");
+			Success = false;
+		}
+
+		m_pGlyphMap->SetIconFontWeight(g_Config.m_QmUiIconWeight != 0);
+
 		json_value_free(pJsonData);
 		return Success;
 	}
@@ -1570,6 +1626,20 @@ public:
 	void SetFontPreset(EFontPreset FontPreset) override
 	{
 		m_pGlyphMap->SetFontPreset(FontPreset);
+		m_FontPreset = FontPreset;
+		m_Color = ResolveFontPresetColor(m_UnmodifiedColor);
+	}
+
+	EFontPreset GetFontPreset() const override
+	{
+		return m_FontPreset;
+	}
+
+	void SetIconFontWeight(bool Bold) override
+	{
+		m_pGlyphMap->SetIconFontWeight(Bold);
+		if(m_FontPreset == EFontPreset::ICON_FONT)
+			m_pGlyphMap->SetFontPreset(EFontPreset::ICON_FONT);
 	}
 
 	void SetFontLanguageVariant(const char *pLanguageFile) override
@@ -1630,15 +1700,14 @@ public:
 
 	void TextColor(float r, float g, float b, float a) override
 	{
-		m_Color.r = r;
-		m_Color.g = g;
-		m_Color.b = b;
-		m_Color.a = a;
+		m_UnmodifiedColor = ColorRGBA(r, g, b, a);
+		m_Color = ResolveFontPresetColor(m_UnmodifiedColor);
 	}
 
 	void TextColor(ColorRGBA Color) override
 	{
-		m_Color = Color;
+		m_UnmodifiedColor = Color;
+		m_Color = ResolveFontPresetColor(m_UnmodifiedColor);
 	}
 
 	void TextOutlineColor(float r, float g, float b, float a) override

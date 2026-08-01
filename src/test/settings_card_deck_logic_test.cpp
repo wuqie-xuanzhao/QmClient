@@ -303,6 +303,19 @@ TEST(SettingsCardDeck, BorderWidthDoesNotDependOnFocus)
 	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(1.0f), 2.0f);
 	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(0.5f), 2.0f);
 	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(2.0f), 4.0f);
+	EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(1.3f, 0.5f), 2.5f);
+}
+
+TEST(SettingsCardDeck, ChromeGeometryAlignsToThePhysicalPixelGrid)
+{
+	const CUIRect Rect{10.2f, 20.3f, 99.6f, 49.4f};
+	const CUIRect Aligned = ResolveSettingsCardChromeRect(Rect, 0.5f);
+	EXPECT_FLOAT_EQ(Aligned.x, 10.0f);
+	EXPECT_FLOAT_EQ(Aligned.y, 20.5f);
+	EXPECT_FLOAT_EQ(Aligned.w, 100.0f);
+	EXPECT_FLOAT_EQ(Aligned.h, 49.0f);
+	EXPECT_FLOAT_EQ(AlignSettingsCardValueToPixels(12.2f, 0.5f), 12.0f);
+	EXPECT_FLOAT_EQ(AlignSettingsCardValueToPixels(12.2f, 0.0f), 12.2f);
 }
 
 TEST(SettingsPageLayout, GeneralDynamicCameraConsumesNoHiddenRowWhenCollapsed)

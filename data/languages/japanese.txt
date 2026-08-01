@@ -31,6 +31,9 @@
 %d more cut segments
 == さらに %d 個のカットセグメント
 
+%d new mentions
+== %d 件の新しいメンション
+
 %d of %d server
 == %d/%d サーバー
 
@@ -217,6 +220,9 @@
 0 - Disabled, 1-9999 minutes
 == 0 - 無効、1-9999 分
 
+1 new mention
+== 1 件の新しいメンション
+
 1 star
 == 1 つ星
 
@@ -240,6 +246,9 @@
 
 5 stars
 == 5 つ星
+
+9+ new mentions
+== 9+ 件の新しいメンション
 
 === All Local Saves ===
 == === すべてのローカルセーブ ===
@@ -1394,6 +1403,9 @@ Best input smooth percentage
 Best match
 == 最適一致
 
+Better scoreboard
+== より良いスコアボード
+
 Bind address for client/server
 == クライアント/サーバーのバインドアドレス
 
@@ -1402,9 +1414,6 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
-
-Better scoreboard
-== より良いスコアボード
 
 Bind key to execute a command or view keybindings
 == キーにコマンドをバインド、またはキーバインドを表示
@@ -1439,6 +1448,9 @@ Black
 Blend mode
 == ブレンドモード
 
+Block enemy chat
+== 敵対プレイヤーのチャットをブロック
+
 Block votes from blacklisted addresses
 == ブラックリストのアドレスからの投票をブロック
 
@@ -1456,6 +1468,9 @@ Blue team wins!
 
 Body
 == ボディ
+
+Bold
+== 太字
 
 Border
 == 境界線
@@ -1780,6 +1795,9 @@ Choose whether to browse replays or screenshots
 
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
+
+Cinematic camera
+== シネマティックカメラ
 
 Clamp mouse to screen
 == マウスを画面内に固定
@@ -2185,6 +2203,9 @@ Configure the input overlay display
 
 Configure these settings
 == これらの設定を構成
+
+Configure UI icon appearance
+== UI アイコンの外観を設定
 
 Confirm both are on same server, same room, and support voice
 == 両方が同じサーバー、同じルームにいて、音声をサポートしていることを確認する
@@ -3464,6 +3485,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == 現在のチームのランでチートを有効にしますが、ランクは獲得できません
 
+Enable client stutter diagnostics at startup
+== Enable client stutter diagnostics at startup
+
 Enable colored console output
 == コンソールのカラー出力を有効にする
 
@@ -3505,6 +3529,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == 強化レーザーエフェクトを有効化（グロー＋パルスアニメーション）
+
+Enable enhanced scoreboard presentation
+== Enable enhanced scoreboard presentation
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == イベントトリガー（休日のサーバーアイエモート、クライアントのクリスマススキン）を有効にする
@@ -3661,6 +3688,9 @@ Enable skin queue rotation
 
 Enable skin switch animation
 == スキン切り替えアニメーションを有効化
+
+Enable smooth cinematic camera while free spectating
+== Enable smooth cinematic camera while free spectating
 
 Enable sound
 == サウンドを有効にする
@@ -4490,6 +4520,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == グローバルトグルキー
 
+Global UI size percentage
+== Global UI size percentage
+
 Glow
 == グロー
 
@@ -4645,6 +4678,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == チャットを非表示
+
+Hide chat messages from players marked as enemies
+== Hide chat messages from players marked as enemies
 
 Hide death/respawn effects
 == 死亡/復活エフェクトを非表示
@@ -4961,6 +4997,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5005,6 +5044,9 @@ I am away from the game window
 
 I muted you
 == ミュートしました
+
+Icons
+== アイコン
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == 1 の場合、接続時に一度だけ自動録画を開始します。0 の場合、ゲーム終了後に自動録画が再開されます。
@@ -7001,6 +7043,9 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 == 1 ティックあたりに送る投票オプション数
 
+Numeric-only messages will be skipped
+== 数字のみのメッセージはスキップされます
+
 o = Send rate
 == o = 送信レート
 
@@ -7375,9 +7420,6 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == パフォーマンスデバッグログのしきい値（ms）
-
-Performance mode (placeholder)
-== パフォーマンスモード（プレースホルダー）
 
 Personal best:
 == 自己ベスト：
@@ -7943,6 +7985,12 @@ q = Connection quality
 Qm
 == Qm
 
+Qm UI icon color: 1=White, 2=Black
+== Qm UI アイコンの色: 1=白、2=黒
+
+Qm UI icon weight: 0=Regular, 1=Bold
+== Qm UI アイコンの太さ: 0=標準、1=太字
+
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：インデックスは 1 から %d の間でなければなりません
 
@@ -8215,6 +8263,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == 公開リスト用にマスターサーバーにサーバーを登録、カンマ区切りのプロトコルを受け入れます。例: 'ipv4,ipv6'
+
+Regular
+== 標準
 
 Regular background color
 == 通常の背景色
@@ -9517,6 +9568,9 @@ Show default flag in scoreboard
 
 Show default mod rules.
 == デフォルトの MOD ルールを表示
+
+Show Directory
+== ディレクトリを表示
 
 Show dotted map route debug
 == マップの点線ルートデバッグを表示
@@ -11705,11 +11759,20 @@ UI color
 UI controller sens.
 == UI コントローラー感度
 
+UI icon color
+== UI アイコンの色
+
+UI icon weight
+== UI アイコンの太さ
+
 UI motion level
 == UIアニメーションの強度
 
 UI mouse sens.
 == UI マウス感度
+
+UI rounded corner segments (even numbers recommended)
+== UI rounded corner segments (even numbers recommended)
 
 UI scale
 == UI スケール
@@ -11911,9 +11974,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == マップデータを GPU にアップロード中
-
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
 
 URL for downloading community skins
 == コミュニティスキン用ダウンロード URL
@@ -12512,6 +12572,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == ウィスパー：/w プレイヤー名 メッセージ
 
+White
+== 白
+
 Why are you slowmo replaying to read this?
 == なぜスローモーションリプレイでこれを読んでいるのですか？
 
@@ -12556,6 +12619,9 @@ Windowed fullscreen
 
 Word Filter
 == ワードフィルター
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== Word filter action: 0=replace matching words, 1=hide entire message
 
 Word highlight soft edge width (px)
 == 文字単位のエッジソフトトランジション幅 px
@@ -13219,6 +13285,10 @@ AUTO
 [Start menu]
 Play
 == プレイ
+
+[Team and size]
+%d\n(%d/%d)
+== %d\n(%d/%d)
 
 [Team size]
 maximum

@@ -150,6 +150,7 @@ class CQmAxiomAutoLogin : public CComponent
 	bool m_DummyAutoLoginSent = false;
 	bool m_DummyWasConnected = false;
 	bool m_DummyLoginAllowedThisServer = false;
+	bool m_AutoLoginEnabledLastFrame = false;
 	char m_aDummyAutoLoginServer[NETADDR_MAXSTRSIZE] = "";
 
 	const char *CurrentCommunityId() const;

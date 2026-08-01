@@ -122,6 +122,8 @@ struct SBackendCapabilities
 	bool m_2DArrayTexturesAsExtension;
 	bool m_ShaderSupport;
 	bool m_MediaIslandSdf = false;
+	bool m_RoundedRectSdf = false;
+	std::atomic<bool> m_TexturedMsdf{false};
 	bool m_RenderTargets;
 	bool m_RenderTargetGaussianBlur = false;
 	bool m_BackbufferCapture = false;
@@ -273,6 +275,8 @@ public:
 	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override;
 	bool IsConfigModernAPI() override { return IsModernAPI(m_BackendType); }
 	bool HasMediaIslandSdf() override { return m_Capabilities.m_MediaIslandSdf; }
+	bool HasRoundedRectSdf() override { return m_Capabilities.m_RoundedRectSdf; }
+	bool HasTexturedMsdf() override { return m_Capabilities.m_TexturedMsdf.load(std::memory_order_acquire); }
 	bool UseTrianglesAsQuad() override { return m_Capabilities.m_TrianglesAsQuads; }
 	bool HasTileBuffering() override { return m_Capabilities.m_TileBuffering; }
 	bool HasQuadBuffering() override { return m_Capabilities.m_QuadBuffering; }

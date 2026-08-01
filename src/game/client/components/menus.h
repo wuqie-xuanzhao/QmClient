@@ -126,7 +126,7 @@ public:
 
 private:
 	IUiContext SettingsUiContext(const char *pScope, float UiScale = 1.0f);
-	int DoSettingsDropDown(CUIRect *pRect, int CurSelection, const char **ppStrs, int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties = {});
+	int DoSettingsDropDown(CUIRect *pRect, int CurSelection, const char *const *ppStrs, int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties = {});
 	SCardMotionSpec SettingsCardMotionSpec() const;
 	SSettingsCardDeckVisualOptions SettingsCardDeckVisualOptions() const;
 	qm_card_order::CModel &SettingsCardOrderModel();
@@ -2786,7 +2786,7 @@ private:
 	void RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly);
-	void RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly);
+	void RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly, unsigned Flags = 0u);
 	bool RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly);
 	bool IsQmNewFeatureRead(const char *pId) const;
 	void MarkQmNewFeatureRead(const char *pId);

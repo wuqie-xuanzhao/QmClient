@@ -3015,8 +3015,6 @@ void CTClient::OnStateChange(int NewState, int OldState)
 			m_aWasInFreeze[i] = false;
 			m_aLastFreezeEmoteTime[i] = 0;
 			m_aLastFreezeMessageTime[i] = 0;
-			m_aWasInFreezeForWakeupPopup[i] = false;
-			m_aWasInFreezeForUnspec[i] = false;
 			m_aWasInFreezeForSwitch[i] = false;
 			m_aWasInFreezeForGoresHammer[i] = false;
 			m_aGoresHammerWakeupFirePendingRelease[i] = false;
@@ -3488,7 +3486,7 @@ void CTClient::UpdateGoresWeaponCycle()
 	{
 		InFreeze = GameClient()->m_aClients[ClientId].m_FreezeEnd != 0;
 		const bool JustUnfrozen = m_aWasInFreezeForGoresHammer[Dummy] && !InFreeze;
-		ExternalHammerWakeup = JustUnfrozen && DetectFreezeWakeupType(GameClient(), ClientId) == EFreezeWakeupType::EXTERNAL_HAMMER;
+		ExternalHammerWakeup = JustUnfrozen && DetectFreezeWakeupType(GameClient(), ClientId, Client()->GameTick(Dummy)) == EFreezeWakeupType::EXTERNAL_HAMMER;
 	}
 
 	const bool CurrentWeaponIsHammer = GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER;

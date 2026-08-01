@@ -2349,10 +2349,11 @@ TEST(SettingsWarmup, MenuTextPrebuildDoesNotRenderPages)
 	EXPECT_NE(UiSource.find("if(--m_RenderOnlyDepth == 0)"), std::string::npos);
 	EXPECT_NE(UiSource.find("ClipDisable();"), std::string::npos);
 	EXPECT_NE(SettingsCard.find("SettingsCardShouldDrawChrome(Ctx.m_pUi != nullptr && Ctx.m_pUi->RenderOnly())"), std::string::npos);
-	EXPECT_NE(SettingsCard.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(SettingsCard.find("DrawRoundedSurface(Ctx, ChromeRect, Surface, Border, CardRadius"), std::string::npos);
+	EXPECT_EQ(SettingsCard.find("ChromeRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(SettingsCard.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
-	EXPECT_NE(SettingsCard.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
-	EXPECT_NE(SettingsCard.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_EQ(SettingsCard.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
+	EXPECT_EQ(SettingsCard.find("ChromeRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(SettingsCard.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_NE(Menus.find("SettingsCardDeckForRenderPass()"), std::string::npos);
 	EXPECT_NE(Menus.find("SettingsCardOrderModelForRenderPass()"), std::string::npos);

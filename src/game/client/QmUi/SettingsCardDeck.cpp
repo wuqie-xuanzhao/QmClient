@@ -365,7 +365,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	m_vPreviousActiveStateIndices = m_vActiveStateIndices;
 	bool PreLayoutGeometryChanged = false;
 	const bool HasPointerInput = Input.m_MousePressed || Input.m_MouseDown || Input.m_MouseReleased;
-	if(HasPointerInput)
+	// Header buttons必须每帧运行以先建立 HotItem；否则鼠标首次按下时
+	// DoButtonLogic 无法进入 active，释放时也就不会提交点击。
 	{
 		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
@@ -396,7 +397,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				Ctx.m_pUi->ClosePopupMenus();
 
 			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
-			if(SettingsCardDeckShouldRunPreLayoutInput(true, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)
+			if(SettingsCardDeckShouldRunPreLayoutInput(HasPointerInput, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)
 			{
 				m_FrameRuntime.CountPreLayoutInput();
 				CardGeometryChanged = Card.m_pDefinition->m_PreLayoutInput(PreLayoutFrame.m_ContentRect) || CardGeometryChanged;

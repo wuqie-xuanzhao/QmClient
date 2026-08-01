@@ -19,8 +19,14 @@
 
 #include <game/localization.h>
 
+#include <cinttypes>
 #include <limits>
 #include <thread>
+
+#if defined(CONF_PLATFORM_MACOS)
+#include <os/log.h>
+#include <os/signpost.h>
+#endif
 
 #if defined(CONF_VIDEORECORDER)
 #include <engine/shared/video.h>
@@ -38,6 +44,19 @@ static inline int RoundedRectSegmentCount()
 	return std::clamp(g_Config.m_QmRectCornerSegments & ~1, 8, RECT_CORNER_SEGMENTS);
 }
 static constexpr float RECT_ANTIALIAS_PIXEL_SIZE = 1.25f;
+
+#if defined(CONF_PLATFORM_MACOS)
+static bool MacosGraphicsDiagnosticsEnabled()
+{
+	return g_Config.m_QmMacosGraphicsDiagnostics != 0;
+}
+
+static os_log_t MacosGraphicsSignpostLog()
+{
+	static os_log_t s_Log = os_log_create("org.ddnet.qmclient", "graphics");
+	return s_Log;
+}
+#endif
 
 static ColorRGBA CommandColorToColorRGBA(const CCommandBuffer::SColor &Color)
 {
@@ -2553,6 +2572,119 @@ void CGraphics_Threaded::RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfPa
 	m_pCommandBuffer->AddRenderCalls(1);
 }
 
+void CGraphics_Threaded::RenderRoundedRectSdf(const IGraphics::SRoundedRectSdfParams &Params)
+{
+	const vec4 Rect = Params.m_Rect;
+	if(Rect.z <= 0.0f || Rect.w <= 0.0f)
+		return;
+
+	if(m_NumVertices > 0)
+	{
+#if defined(CONF_PLATFORM_MACOS)
+		if(m_MacosGraphicsDiagnosticsEnabled)
+			m_RoundedRectSdfFlushCount++;
+#endif
+		FlushVertices();
+	}
+
+	CCommandBuffer::SCommand_RenderRoundedRectSdf Cmd;
+	Cmd.m_State = m_State;
+	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
+	Cmd.m_State.m_Texture = -1;
+	Cmd.m_Params = Params;
+
+	const float Padding = maximum(0.0f, Params.m_Params.z);
+	CCommandBuffer::SVertex aVertices[4]{};
+	aVertices[0].m_Pos = vec2(Rect.x - Padding, Rect.y - Padding);
+	aVertices[1].m_Pos = vec2(Rect.x + Rect.z + Padding, Rect.y - Padding);
+	aVertices[2].m_Pos = vec2(Rect.x + Rect.z + Padding, Rect.y + Rect.w + Padding);
+	aVertices[3].m_Pos = vec2(Rect.x - Padding, Rect.y + Rect.w + Padding);
+	aVertices[0].m_Tex = vec2(0.0f, 0.0f);
+	aVertices[1].m_Tex = vec2(1.0f, 0.0f);
+	aVertices[2].m_Tex = vec2(1.0f, 1.0f);
+	aVertices[3].m_Tex = vec2(0.0f, 1.0f);
+	for(auto &Vertex : aVertices)
+		Vertex.m_Color = CCommandBuffer::SColor(255, 255, 255, 255);
+
+	Cmd.m_pVertices = (CCommandBuffer::SVertex *)AllocCommandBufferData(sizeof(aVertices));
+	AddCmd(Cmd, [&] {
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(aVertices));
+		return Cmd.m_pVertices != nullptr;
+	});
+	mem_copy(Cmd.m_pVertices, aVertices, sizeof(aVertices));
+	m_pCommandBuffer->AddRenderCalls(1);
+#if defined(CONF_PLATFORM_MACOS)
+	if(m_MacosGraphicsDiagnosticsEnabled)
+		m_RoundedRectSdfCommandCount++;
+#endif
+}
+
+void CGraphics_Threaded::DrawRoundedRectAntialias(const float x, const float y, const float w, const float h, const float Radius, const int Corners, const ColorRGBA &Color)
+{
+	TextureClear();
+	QuadsBegin();
+	SetColor(Color);
+	DrawRectExtAntialias(x, y, w, h, Radius, Corners, Color);
+	QuadsEnd();
+}
+
+void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams &Params)
+{
+	if(!Params.m_Texture.IsValid() || !IsTextureHandleAllocated(Params.m_Texture) || Params.m_Rect.z <= 0.0f || Params.m_Rect.w <= 0.0f || Params.m_PxRange <= 0.0f || Params.m_AtlasWidth <= 0.0f || Params.m_AtlasHeight <= 0.0f || Params.m_Color.a <= 0.0f)
+		return;
+
+	if(m_NumVertices > 0)
+	{
+#if defined(CONF_PLATFORM_MACOS)
+		if(m_MacosGraphicsDiagnosticsEnabled)
+			m_MsdfFlushCount++;
+#endif
+		FlushVertices();
+	}
+
+	CCommandBuffer::SCommand_RenderTexturedMsdf Cmd;
+	Cmd.m_State = m_State;
+	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
+	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
+	Cmd.m_State.m_Texture = Params.m_Texture.Id();
+	Cmd.m_MsdfParams = vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, 0.0f);
+
+	const float CenterX = Params.m_Rect.x + Params.m_Rect.z * 0.5f;
+	const float CenterY = Params.m_Rect.y + Params.m_Rect.w * 0.5f;
+	const float CosRotation = std::cos(Params.m_Rotation);
+	const float SinRotation = std::sin(Params.m_Rotation);
+	auto Rotate = [&](float X, float Y) {
+		const float OffsetX = X - CenterX;
+		const float OffsetY = Y - CenterY;
+		return vec2(OffsetX * CosRotation - OffsetY * SinRotation + CenterX, OffsetX * SinRotation + OffsetY * CosRotation + CenterY);
+	};
+
+	CCommandBuffer::SVertex aVertices[4]{};
+	aVertices[0].m_Pos = Rotate(Params.m_Rect.x, Params.m_Rect.y);
+	aVertices[1].m_Pos = Rotate(Params.m_Rect.x + Params.m_Rect.z, Params.m_Rect.y);
+	aVertices[2].m_Pos = Rotate(Params.m_Rect.x + Params.m_Rect.z, Params.m_Rect.y + Params.m_Rect.w);
+	aVertices[3].m_Pos = Rotate(Params.m_Rect.x, Params.m_Rect.y + Params.m_Rect.w);
+	aVertices[0].m_Tex = vec2(Params.m_UvRect.x, Params.m_UvRect.y);
+	aVertices[1].m_Tex = vec2(Params.m_UvRect.z, Params.m_UvRect.y);
+	aVertices[2].m_Tex = vec2(Params.m_UvRect.z, Params.m_UvRect.w);
+	aVertices[3].m_Tex = vec2(Params.m_UvRect.x, Params.m_UvRect.w);
+	const CCommandBuffer::SColor Color = ColorRGBAToCommandColor(Params.m_Color);
+	for(auto &Vertex : aVertices)
+		Vertex.m_Color = Color;
+
+	Cmd.m_pVertices = (CCommandBuffer::SVertex *)AllocCommandBufferData(sizeof(aVertices));
+	AddCmd(Cmd, [&] {
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(aVertices));
+		return Cmd.m_pVertices != nullptr;
+	});
+	mem_copy(Cmd.m_pVertices, aVertices, sizeof(aVertices));
+	m_pCommandBuffer->AddRenderCalls(1);
+#if defined(CONF_PLATFORM_MACOS)
+	if(m_MacosGraphicsDiagnosticsEnabled)
+		m_MsdfCommandCount++;
+#endif
+}
+
 int CGraphics_Threaded::CreateQuadContainer(bool AutomaticUpload)
 {
 	int Index = -1;
@@ -3620,6 +3752,18 @@ int CGraphics_Threaded::Init()
 
 void CGraphics_Threaded::Shutdown()
 {
+	// 关闭流程可能由错误恢复和正常退出分别触发。backend 已释放后必须成为无操作。
+	if(m_pBackend == nullptr)
+		return;
+
+	// 游戏与文本模块在关闭时会追加资源销毁命令。先提交并等候，保证命令在 backend
+	// 仍然存活时执行，不能直接丢弃当前 command buffer。
+	if(m_pCommandBuffer != nullptr && m_pCommandBuffer->m_CommandCount > 0)
+	{
+		KickCommandBuffer();
+		m_pBackend->WaitForIdle();
+	}
+
 	// shutdown the backend
 	m_pBackend->Shutdown();
 
@@ -3635,10 +3779,14 @@ void CGraphics_Threaded::Shutdown()
 	}
 	delete m_pBackend;
 	m_pBackend = nullptr;
+	m_pCommandBuffer = nullptr;
 
 	// delete the command buffers
 	for(auto &pCommandBuffer : m_apCommandBuffers)
+	{
 		delete pCommandBuffer;
+		pCommandBuffer = nullptr;
+	}
 }
 
 int CGraphics_Threaded::GetNumScreens() const
@@ -3964,6 +4112,15 @@ void CGraphics_Threaded::TakeCustomScreenshot(const char *pFilename)
 
 void CGraphics_Threaded::Swap()
 {
+#if defined(CONF_PLATFORM_MACOS)
+	const bool PreviousMacosDiagnostics = m_MacosGraphicsDiagnosticsEnabled;
+	const bool MacosDiagnostics = MacosGraphicsDiagnosticsEnabled();
+	m_MacosGraphicsDiagnosticsEnabled = MacosDiagnostics;
+	const auto SubmitStart = MacosDiagnostics ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+	double SubmitMs = 0.0;
+	double MetalWaitForIdleMs = 0.0;
+	bool MetalWaitForIdle = false;
+#endif
 	bool Swapped = false;
 	ScreenshotDirect(&Swapped);
 	ReadPixelDirect(&Swapped);
@@ -3975,16 +4132,71 @@ void CGraphics_Threaded::Swap()
 	}
 
 	KickCommandBuffer();
+#if defined(CONF_PLATFORM_MACOS)
+	if(MacosDiagnostics)
+		SubmitMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - SubmitStart).count();
+
+	// TODO: Remove when https://github.com/libsdl-org/SDL/issues/5203 is fixed
+	if(str_find(GetVersionString(), "Metal"))
+	{
+		MetalWaitForIdle = true;
+		const auto WaitForIdleStart = MacosDiagnostics ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+		WaitForIdle();
+		if(MacosDiagnostics)
+			MetalWaitForIdleMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - WaitForIdleStart).count();
+	}
+
+	if(!MacosDiagnostics)
+	{
+		if(PreviousMacosDiagnostics)
+		{
+			m_MacosGraphicsDiagnosticFrameCount = 0;
+			m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
+			m_MacosMetalWaitForIdleMsSum = 0.0;
+			m_MacosMetalWaitForIdleCount = 0;
+			m_MsdfCommandCount = 0;
+			m_MsdfFlushCount = 0;
+			m_RoundedRectSdfCommandCount = 0;
+			m_RoundedRectSdfFlushCount = 0;
+		}
+	}
+	else
+	{
+		const char *pBackend = GetVersionString();
+		os_signpost_event_emit(MacosGraphicsSignpostLog(), OS_SIGNPOST_ID_EXCLUSIVE, "frame_submit", "submit_duration_ms=%{public}.3f metal_wait_for_idle_ms=%{public}.3f backend=%{public}s drawable=%dx%d hidpi=%.3f", SubmitMs, MetalWaitForIdleMs, pBackend, m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale);
+
+		if(PreviousMacosDiagnostics)
+		{
+			++m_MacosGraphicsDiagnosticFrameCount;
+			m_MacosGraphicsDiagnosticSubmitMsSum += SubmitMs;
+			if(MetalWaitForIdle)
+			{
+				m_MacosMetalWaitForIdleMsSum += MetalWaitForIdleMs;
+				m_MacosMetalWaitForIdleCount++;
+			}
+			if(m_MacosGraphicsDiagnosticFrameCount == 120)
+			{
+				const double MetalWaitForIdleMsAvg = m_MacosMetalWaitForIdleCount > 0 ? m_MacosMetalWaitForIdleMsSum / (double)m_MacosMetalWaitForIdleCount : 0.0;
+				const int UnlimitedConfig = g_Config.m_GfxVsync == 0 && g_Config.m_GfxRefreshRate == 0 && g_Config.m_ClRefreshRate == 0;
+				dbg_msg("perf/macos_graphics", "event=frame_submit sample_frames=120 submit_duration_ms_sum=%.3f submit_duration_ms_avg=%.3f metal_wait_for_idle_count=%" PRIu64 " metal_wait_for_idle_ms_sum=%.3f metal_wait_for_idle_ms_avg=%.3f unlimited_config=%d vsync=%d gfx_refresh_rate=%d cl_refresh_rate=%d cl_refresh_rate_inactive=%d debug=%d dbg_graphs=%d async_render_old=%d backend=%s renderer=%s vendor=%s drawable_width=%d drawable_height=%d hidpi_scale=%.3f fullscreen=%d fsaa=%u refresh_hz=%d msdf_commands_sum=%" PRIu64 " msdf_flushes_sum=%" PRIu64 " rounded_sdf_commands_sum=%" PRIu64 " rounded_sdf_flushes_sum=%" PRIu64,
+					m_MacosGraphicsDiagnosticSubmitMsSum, m_MacosGraphicsDiagnosticSubmitMsSum / 120.0, m_MacosMetalWaitForIdleCount, m_MacosMetalWaitForIdleMsSum, MetalWaitForIdleMsAvg, UnlimitedConfig, g_Config.m_GfxVsync, g_Config.m_GfxRefreshRate, g_Config.m_ClRefreshRate, g_Config.m_ClRefreshRateInactive, g_Config.m_Debug, g_Config.m_DbgGraphs, g_Config.m_GfxAsyncRenderOld, pBackend, GetRendererString(), GetVendorString(), m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale, g_Config.m_GfxFullscreen, m_MultiSamplingCount, m_ScreenRefreshRate, m_MsdfCommandCount, m_MsdfFlushCount, m_RoundedRectSdfCommandCount, m_RoundedRectSdfFlushCount);
+				m_MacosGraphicsDiagnosticFrameCount = 0;
+				m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
+				m_MacosMetalWaitForIdleMsSum = 0.0;
+				m_MacosMetalWaitForIdleCount = 0;
+				m_MsdfCommandCount = 0;
+				m_MsdfFlushCount = 0;
+				m_RoundedRectSdfCommandCount = 0;
+				m_RoundedRectSdfFlushCount = 0;
+			}
+		}
+	}
+#endif
 	if(m_PendingMultiSamplingCount >= 0)
 	{
 		m_MultiSamplingCount = (uint32_t)m_PendingMultiSamplingCount;
 		m_PendingMultiSamplingCount = -1;
 	}
-	// TODO: Remove when https://github.com/libsdl-org/SDL/issues/5203 is fixed
-#ifdef CONF_PLATFORM_MACOS
-	if(str_find(GetVersionString(), "Metal"))
-		WaitForIdle();
-#endif
 }
 
 bool CGraphics_Threaded::SetVSync(bool State)

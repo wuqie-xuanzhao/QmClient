@@ -67,6 +67,26 @@ public:
 class CTeeRenderInfo
 {
 public:
+	static bool IsDrawableTextureState(const bool IsValid, const bool IsNullTexture)
+	{
+		return IsValid && !IsNullTexture;
+	}
+
+	static bool IsDrawableTexture(const IGraphics::CTextureHandle &Texture)
+	{
+		return IsDrawableTextureState(Texture.IsValid(), Texture.IsNullTexture());
+	}
+
+	static bool AreTextureVariantsDrawableState(const bool OriginalValid, const bool OriginalNullTexture, const bool ColorableValid, const bool ColorableNullTexture)
+	{
+		return IsDrawableTextureState(OriginalValid, OriginalNullTexture) && IsDrawableTextureState(ColorableValid, ColorableNullTexture);
+	}
+
+	static bool AreTextureVariantsDrawable(const IGraphics::CTextureHandle &Original, const IGraphics::CTextureHandle &Colorable)
+	{
+		return AreTextureVariantsDrawableState(Original.IsValid(), Original.IsNullTexture(), Colorable.IsValid(), Colorable.IsNullTexture());
+	}
+
 	CTeeRenderInfo()
 	{
 		Reset();
@@ -107,6 +127,21 @@ public:
 		m_SkinMetrics = TeeRenderInfo.m_SkinMetrics;
 	}
 
+	void ResetMissingDescriptorBranches(const unsigned Flags)
+	{
+		if(!(Flags & CSkinDescriptor::FLAG_SIX))
+		{
+			m_OriginalRenderSkin.Reset();
+			m_ColorableRenderSkin.Reset();
+			m_SkinMetrics.Reset();
+		}
+		if(!(Flags & CSkinDescriptor::FLAG_SEVEN))
+		{
+			for(auto &Sixup : m_aSixup)
+				Sixup.Reset();
+		}
+	}
+
 	void ApplyColors(bool CustomColoredSkin, int ColorBody, int ColorFeet)
 	{
 		m_CustomColoredSkin = CustomColoredSkin;
@@ -124,13 +159,13 @@ public:
 
 	bool Valid() const
 	{
-		if((m_CustomColoredSkin ? m_ColorableRenderSkin.m_Body : m_OriginalRenderSkin.m_Body).IsValid())
+		if(IsDrawableTexture(m_CustomColoredSkin ? m_ColorableRenderSkin.m_Body : m_OriginalRenderSkin.m_Body))
 		{
 			return true;
 		}
 		for(const auto &Sixup : m_aSixup)
 		{
-			if(Sixup.PartTexture(protocol7::SKINPART_BODY).IsValid())
+			if(IsDrawableTexture(Sixup.PartTexture(protocol7::SKINPART_BODY)))
 			{
 				return true;
 			}
@@ -190,9 +225,32 @@ public:
 		{
 			return (m_aUseCustomColors[Part] ? m_aColorableTextures : m_aOriginalTextures)[Part];
 		}
+
+		bool RequiredPartTextureVariantsDrawable() const
+		{
+			constexpr int s_aRequiredParts[] = {
+				protocol7::SKINPART_BODY,
+				protocol7::SKINPART_HANDS,
+				protocol7::SKINPART_FEET,
+				protocol7::SKINPART_EYES,
+			};
+			return std::all_of(std::begin(s_aRequiredParts), std::end(s_aRequiredParts), [&](int Part) {
+				return CTeeRenderInfo::AreTextureVariantsDrawable(m_aOriginalTextures[Part], m_aColorableTextures[Part]);
+			});
+		}
 	};
 
 	CSixup m_aSixup[NUM_DUMMIES];
+
+	bool SixDescriptorReady() const
+	{
+		return AreTextureVariantsDrawable(m_OriginalRenderSkin.m_Body, m_ColorableRenderSkin.m_Body);
+	}
+
+	bool SevenDescriptorReady() const
+	{
+		return std::all_of(std::begin(m_aSixup), std::end(m_aSixup), [](const CSixup &Sixup) { return Sixup.RequiredPartTextureVariantsDrawable(); });
+	}
 };
 
 constexpr int DEFAULT_SKIN_CHANGE_TRANSITION_DURATION_MS = 500;
@@ -292,6 +350,20 @@ inline float ResolveSkinChangeTransitionProgress(float ElapsedSeconds, int Durat
 	}
 
 	return ClampSkinChangeTransitionProgress(ElapsedSeconds / DurationSeconds);
+}
+
+enum class ESkinChangeTransitionAction
+{
+	KEEP,
+	START,
+	CANCEL,
+};
+
+inline ESkinChangeTransitionAction ResolveSkinChangeTransitionAction(bool HasPreviousAppearance, bool SkinChanged, bool AppearanceChanged)
+{
+	if(!HasPreviousAppearance || !AppearanceChanged)
+		return ESkinChangeTransitionAction::KEEP;
+	return SkinChanged ? ESkinChangeTransitionAction::START : ESkinChangeTransitionAction::CANCEL;
 }
 
 inline bool ShouldRunLiveSkinChangeTransition(bool DemoPlayback)

@@ -7,6 +7,8 @@
 
 #include <engine/shared/protocol.h>
 
+#include <cstdint>
+
 struct CFriendInfo
 {
 	char m_aName[MAX_NAME_LENGTH];
@@ -38,6 +40,7 @@ public:
 	virtual void Init(bool Foes = false) = 0;
 
 	virtual int NumFriends() const = 0;
+	virtual uint64_t Revision() const = 0;
 	virtual const CFriendInfo *GetFriend(int Index) const = 0;
 	virtual int GetFriendState(const char *pName, const char *pClan) const = 0;
 	virtual bool IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const = 0;

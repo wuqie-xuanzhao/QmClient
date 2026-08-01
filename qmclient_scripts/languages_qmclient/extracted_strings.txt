@@ -1,4 +1,3 @@
-# 请抬头享受阳光｜日子很好 我很我---------致咩子
  min
  seconds
  seconds (never)
@@ -10,6 +9,7 @@
 %d dummy
 %d items selected
 %d more cut segments
+%d new mentions
 %d of %d server
 %d of %d servers
 %d player
@@ -81,6 +81,7 @@
 4 stars
 45° Aim
 5 stars
+9+ new mentions
 === All Local Saves ===
 === Saves for '%s' ===
 [%s] %s (Map: %s, Time: %s)
@@ -465,6 +466,7 @@ Best input others
 Best input prediction offset (0.01 tick)
 Best input smooth percentage
 Best match
+Better scoreboard
 Bind address for client/server
 Bind chat, team chat, and history actions
 Bind dummy control and copy actions
@@ -479,12 +481,14 @@ Bind Wheel Key
 Bit flags for disabling settings tabs
 Black
 Blend mode
+Block enemy chat
 Block votes from blacklisted addresses
 Block words
 Blue
 Blue team
 Blue team wins!
 Body
+Bold
 Border
 Border color
 Border range
@@ -593,6 +597,7 @@ Choose the menu font and cursor appearance
 Choose the menu map and background colors
 Choose whether to browse replays or screenshots
 Choose which TClient settings tabs are visible
+Cinematic camera
 Clamp mouse to screen
 Clan
 Clan color in friends list
@@ -728,6 +733,7 @@ Configure Tee appearance and skins
 Configure the companion appearance and movement
 Configure the input overlay display
 Configure these settings
+Configure UI icon appearance
 Confirm both are on same server, same room, and support voice
 Confirm clear all
 Confirm clear finished
@@ -1154,6 +1160,7 @@ Enable chat mention sound
 Enable chat message sound
 Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
+Enable client stutter diagnostics at startup
 Enable colored console output
 Enable coloring and hearts for friends
 Enable controller
@@ -1168,6 +1175,7 @@ Enable dynamic FOV
 Enable dynamic FOV, wider view at higher speed
 Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 Enable enhanced laser effect (glow + pulse animation)
+Enable enhanced scoreboard presentation
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 Enable fast input for other players in Gores mode
 Enable fast input in Gores mode
@@ -1220,6 +1228,7 @@ Enable shout when holding fire while in water
 Enable Sixup connection.
 Enable skin queue rotation
 Enable skin switch animation
+Enable smooth cinematic camera while free spectating
 Enable sound
 Enable sound when rendering video
 Enable spectator cursor (if available)
@@ -1496,6 +1505,7 @@ Global card
 Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 Global toggle key
+Global UI size percentage
 Glow
 Glow alpha
 Glow color
@@ -1548,6 +1558,7 @@ Helpful for Gores: allow negative internal certainty for more conservative predi
 Hi!
 Hide basic system info (join, version, rules) in Zen mode
 Hide Chat
+Hide chat messages from players marked as enemies
 Hide death/respawn effects
 Hide death/respawn effects in Zen Mode
 Hide direction in Zen mode
@@ -1653,6 +1664,7 @@ HTTP map download: low speed limit (in bytes/s, 0=disabled)
 HTTP map download: low speed limit period (0=disabled)
 https://ddnet.org/discord
 https://wiki.ddnet.org/
+https://wiki.ddnet.org/wiki/Mapping
 https://wiki.ddnet.org/wiki/Touch_controls
 HUD
 HUD animation speed (percent)
@@ -1668,6 +1680,7 @@ i = Receive rate
 I am a robot
 I am away from the game window
 I muted you
+Icons
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 If 1, current driver is in blocking error state.
 If chat score exceeds this value, the player is muted for sv_spam_mute_duration seconds
@@ -2082,6 +2095,7 @@ Message to reply when game minimized
 Message to send in chat:
 Message to send on auto vote, leave empty to not send
 Messages
+Messages that already look like the target language will skip auto-translate
 Microphone
 Microphone permission denied by system
 Microphone volume
@@ -2132,6 +2146,7 @@ Move left
 Move player to spectators
 Move right
 Move to category
+Moved ingame
 Movement
 Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
@@ -2645,6 +2660,8 @@ Puts you out of solo part
 Pyramid
 q = Connection quality
 Qm
+Qm UI icon color: 1=White, 2=Black
+Qm UI icon weight: 0=Regular, 1=Bold
 qm_profile_queue: index must be between 1 and %d
 QmClient
 QmClient / Function
@@ -2736,6 +2753,7 @@ Refresh the demo list
 Regex
 Region
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
+Regular
 Regular background color
 Regular expression
 Relative path
@@ -3900,8 +3918,11 @@ UDP seems to be filtered.
 UDP socket not open
 UI color
 UI controller sens.
+UI icon color
+UI icon weight
 UI motion level
 UI mouse sens.
+UI rounded corner segments (even numbers recommended)
 UI scale
 UI server address
 UI size percentage
@@ -3969,7 +3990,6 @@ Update or add a specific war group
 Update Rate
 Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
-Upper limit for automatically selected UI rounded corner segments
 URL for downloading community skins
 URL for downloading maps (must start with https://)
 URL for downloading skins
@@ -4137,6 +4157,7 @@ Welcome to DDNet
 What level DDRace binding is set to (automatic, you don't need to use it).
 What's done is done, no use saying more
 Wheel animate
+When TClient rainbow Tee is enabled, this feature has no effect.
 When you cross the start line, show a ghost tee replicating the movements of your best time
 Whether a switch is deactivated by default (otherwise activated)
 Whether dummy copies your movement
@@ -4168,6 +4189,7 @@ Whisper something to someone (private message)
 Whisper to %s
 Whisper to %s: %s
 Whisper: /w player message
+White
 Why are you slowmo replaying to read this?
 Width
 Width and height are required to be within the range from %d to %d.
@@ -4183,6 +4205,7 @@ Windowed
 Windowed borderless
 Windowed fullscreen
 Word Filter
+Word filter action: 0=replace matching words, 1=hide entire message
 Word highlight soft edge width (px)
 Write local console contents to a text file
 Write performance debug logs to dedicated file
@@ -4329,6 +4352,7 @@ Zoom to current mouse target
 [Direct touch input]	Disabled
 [Direct touch input]	Fire
 [Direct touch input]	Hook
+[Editor]	Failed to load image from file '%s'.
 [Friend auto follow]	Follow this friend across servers
 [Friend auto follow]	Following %s
 [Friend auto follow]	Following %s: switching in %.0fs
@@ -4380,6 +4404,7 @@ Zoom to current mouse target
 [Spectating Camera Mode Icon]	AUTO
 [Spectators]	%d others…
 [Start menu]	Play
+[Team and size]	%d\n(%d/%d)
 [Team size]	maximum
 [Team size]	minimum
 [Team status]	allowed

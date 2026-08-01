@@ -104,7 +104,7 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 					L.VSplitRight(Gap * 0.5f, &L, nullptr);
 					R.VSplitLeft(Gap * 0.5f, nullptr, &R);
 					ui_widget::PrimaryButton(Ctx, &s_aDisabledBtn[Column], Localize("Disabled"), L, true);
-					ui_widget::IconButton(Ctx, &s_aIconBtn[Column], EQmIcon::STAR, "\xEF\x80\x85", R); // FONT_ICON_STAR fallback
+					ui_widget::IconButton(Ctx, &s_aIconBtn[Column], EQmIcon::STAR, FontIcons::FONT_ICON_STAR, R);
 				}
 				Content.HSplitTop(Gap, nullptr, &Content);
 

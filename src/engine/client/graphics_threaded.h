@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -180,6 +181,8 @@ public:
 		CMD_WINDOW_DESTROY_NTF,
 
 		CMD_RENDER_MEDIA_ISLAND_SDF,
+		CMD_RENDER_ROUNDED_RECT_SDF,
+		CMD_RENDER_TEXTURED_MSDF,
 
 		CMD_COUNT,
 	};
@@ -248,6 +251,28 @@ public:
 			SCommand(CMD_RENDER_MEDIA_ISLAND_SDF) {}
 		SState m_State;
 		IGraphics::SMediaIslandSdfParams m_Params;
+		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
+		unsigned m_PrimCount = 1;
+		SVertex *m_pVertices = nullptr;
+	};
+
+	struct SCommand_RenderRoundedRectSdf : public SCommand
+	{
+		SCommand_RenderRoundedRectSdf() :
+			SCommand(CMD_RENDER_ROUNDED_RECT_SDF) {}
+		SState m_State;
+		IGraphics::SRoundedRectSdfParams m_Params;
+		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
+		unsigned m_PrimCount = 1;
+		SVertex *m_pVertices = nullptr;
+	};
+
+	struct SCommand_RenderTexturedMsdf : public SCommand
+	{
+		SCommand_RenderTexturedMsdf() :
+			SCommand(CMD_RENDER_TEXTURED_MSDF) {}
+		SState m_State;
+		vec4 m_MsdfParams{};
 		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
 		unsigned m_PrimCount = 1;
 		SVertex *m_pVertices = nullptr;
@@ -824,6 +849,8 @@ public:
 	// checks if the current values of the config are a graphics modern API
 	virtual bool IsConfigModernAPI() { return false; }
 	virtual bool HasMediaIslandSdf() { return false; }
+	virtual bool HasRoundedRectSdf() { return false; }
+	virtual bool HasTexturedMsdf() { return false; }
 	virtual bool UseTrianglesAsQuad() { return false; }
 	virtual bool HasTileBuffering() { return false; }
 	virtual bool HasQuadBuffering() { return false; }
@@ -899,12 +926,24 @@ class CGraphics_Threaded : public IEngineGraphics
 	CCommandBuffer::STexCoord m_aTexture[4];
 
 	bool m_RenderEnable;
+	ivec2 m_DesktopSize = ivec2(0, 0);
 
 	float m_Rotation;
 	EDrawing m_Drawing;
 	bool m_DoScreenshot;
 	char m_aScreenshotName[IO_MAX_PATH_LENGTH];
 	FScreenshotCallback m_pfnScreenshotCallback;
+#if defined(CONF_PLATFORM_MACOS)
+	bool m_MacosGraphicsDiagnosticsEnabled = false;
+	uint32_t m_MacosGraphicsDiagnosticFrameCount = 0;
+	double m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
+	double m_MacosMetalWaitForIdleMsSum = 0.0;
+	uint64_t m_MacosMetalWaitForIdleCount = 0;
+	uint64_t m_MsdfCommandCount = 0;
+	uint64_t m_MsdfFlushCount = 0;
+	uint64_t m_RoundedRectSdfCommandCount = 0;
+	uint64_t m_RoundedRectSdfFlushCount = 0;
+#endif
 
 	CTextureHandle m_NullTexture;
 
@@ -1373,6 +1412,9 @@ public:
 	void RenderQuadLayer(int BufferContainerIndex, SQuadRenderInfo *pQuadInfo, size_t QuadNum, int QuadOffset, bool Grouped = false) override;
 	void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override;
 	void RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params) override;
+	void RenderRoundedRectSdf(const IGraphics::SRoundedRectSdfParams &Params) override;
+	void DrawRoundedRectAntialias(float x, float y, float w, float h, float Radius, int Corners, const ColorRGBA &Color) override;
+	void RenderTexturedMsdf(const IGraphics::STexturedMsdfParams &Params) override;
 
 	// modern GL functions
 	int CreateBufferObject(size_t UploadDataSize, void *pUploadData, int CreateFlags, bool IsMovedPointer = false) override;
@@ -1444,6 +1486,8 @@ public:
 	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override { return m_pBackend->GetDriverVersion(DriverAgeType, Major, Minor, Patch, pName, BackendType); }
 	bool IsConfigModernAPI() override { return m_pBackend->IsConfigModernAPI(); }
 	bool HasMediaIslandSdf() override { return m_pBackend->HasMediaIslandSdf(); }
+	bool HasRoundedRectSdf() override { return m_pBackend->HasRoundedRectSdf(); }
+	bool HasTexturedMsdf() override { return m_pBackend->HasTexturedMsdf(); }
 	bool IsTileBufferingEnabled() override { return m_GLTileBufferingEnabled; }
 	bool IsQuadBufferingEnabled() override { return m_GLQuadBufferingEnabled; }
 	bool IsTextBufferingEnabled() override { return m_GLTextBufferingEnabled; }

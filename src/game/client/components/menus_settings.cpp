@@ -1602,10 +1602,35 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		const SSettingsTeeCustomColorsLayout CustomColors = ResolveSettingsTeeCustomColorsLayout(MainView, *pUseCustomColor != 0, TeeMetrics);
 		if(*pUseCustomColor)
 		{
+			static CLineInputBuffered<QM_TEE_COLOR_CODE_INPUT_SIZE> s_aaTeeColorCodeInputs[NUM_DUMMIES][2];
+			const std::array<unsigned *, 2> apColors = {pColorBody, pColorFeet};
+			const std::array<const char *, 2> apParts = {Localize("Body"), Localize("Feet")};
+			const auto RenderColorCodeInput = [&](CUIRect Title, int Part) {
+				CUIRect PartLabel, ColorCodeEditBox;
+				Title.VSplitLeft(Title.w * 0.42f, &PartLabel, &ColorCodeEditBox);
+				DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, Part == 0 ? "tee_custom_color_body_label" : "tee_custom_color_feet_label", &PartLabel, apParts[Part], BodySize, TEXTALIGN_ML);
+				ColorCodeEditBox.VMargin(2.0f * UiScale, &ColorCodeEditBox);
+				CLineInput &ColorCodeInput = s_aaTeeColorCodeInputs[m_Dummy][Part];
+				if(!ColorCodeInput.IsActive())
+				{
+					const std::array<char, 8> aColorCode = QmFormatTeeColorCode(*apColors[Part]);
+					if(str_comp(ColorCodeInput.GetString(), aColorCode.data()) != 0)
+						ColorCodeInput.Set(aColorCode.data());
+				}
+				if(Ui()->DoEditBox(&ColorCodeInput, &ColorCodeEditBox, std::max(10.0f, BodySize * 0.85f), IGraphics::CORNER_ALL, {}, TEXTALIGN_MC))
+				{
+					const std::optional<unsigned> Color = QmParseTeeColorCode(ColorCodeInput.GetString());
+					if(Color.has_value() && *Color != *apColors[Part])
+					{
+						*apColors[Part] = *Color;
+						SetNeedSendInfo();
+					}
+				}
+			};
 			CustomColors.m_BodyGroup.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 5.0f * UiScale);
 			CustomColors.m_FeetGroup.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 5.0f * UiScale);
-			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_custom_color_body_label", &CustomColors.m_BodyTitle, Localize("Body"), BodySize, TEXTALIGN_ML);
-			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_custom_color_feet_label", &CustomColors.m_FeetTitle, Localize("Feet"), BodySize, TEXTALIGN_ML);
+			RenderColorCodeInput(CustomColors.m_BodyTitle, 0);
+			RenderColorCodeInput(CustomColors.m_FeetTitle, 1);
 			CUIRect BodyControls = CustomColors.m_BodyControls;
 			CUIRect FeetControls = CustomColors.m_FeetControls;
 			if(RenderHslaScrollbars(&BodyControls, pColorBody, false, ColorHSLA::DARKEST_LGT, TeeMetrics) ||
@@ -3591,15 +3616,17 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const int GraphicsBackendRowCount = (FoundBackendCount > 1 ? 1 : 0) + (GpuList.m_vGpus.size() > 1 ? 1 : 0);
 	const qm_card_registry::SCardDefault *pDisplayDefault = qm_card_registry::FindByStableId("deck:graphics-display");
 	const qm_card_registry::SCardDefault *pVisualDefault = qm_card_registry::FindByStableId("deck:graphics-visual");
+	const qm_card_registry::SCardDefault *pIconsDefault = qm_card_registry::FindByStableId("deck:graphics-icons");
 	const qm_card_registry::SCardDefault *pModesDefault = qm_card_registry::FindByStableId("deck:graphics-modes");
 	const qm_card_registry::SCardDefault *pInteractionDefault = qm_card_registry::FindByStableId("deck:graphics-interaction");
-	dbg_assert(pDisplayDefault != nullptr && pVisualDefault != nullptr && pModesDefault != nullptr && pInteractionDefault != nullptr, "graphics settings cards must be registered");
-	if(pDisplayDefault == nullptr || pVisualDefault == nullptr || pModesDefault == nullptr || pInteractionDefault == nullptr)
+	dbg_assert(pDisplayDefault != nullptr && pVisualDefault != nullptr && pIconsDefault != nullptr && pModesDefault != nullptr && pInteractionDefault != nullptr, "graphics settings cards must be registered");
+	if(pDisplayDefault == nullptr || pVisualDefault == nullptr || pIconsDefault == nullptr || pModesDefault == nullptr || pInteractionDefault == nullptr)
 		return;
 
 	const float CardChromeHeight = BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, {nullptr, nullptr, "subtitle"}, 0.0f, UiScale).m_Rect.h;
 	const float DisplayChromeHeight = CardChromeHeight;
 	const float VisualChromeHeight = CardChromeHeight;
+	const float IconsChromeHeight = CardChromeHeight;
 	const float ModesChromeHeight = CardChromeHeight;
 	const float InteractionChromeHeight = CardChromeHeight;
 	const SSettingsListCardGeometry GraphicsModesGeometry = ResolveSettingsGraphicsModesGeometry(s_NumNodes, GraphicsMetrics);
@@ -3616,15 +3643,18 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
 	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
+	const float GraphicsIconsContentHeight = ResolveSettingsRowsHeight(2, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsIconsMinCardHeight = IconsChromeHeight + GraphicsIconsContentHeight;
 	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pInteractionDefault, GraphicsPage, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
-		vCards.reserve(4);
+	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pIconsDefault, pInteractionDefault, GraphicsPage, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsIconsMinCardHeight, IconsChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+		vCards.reserve(5);
 		const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pModesDefault)};
 		const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDisplayDefault)};
 		const SSettingsCardSpec VisualSpec{pVisualDefault->m_pStableId, Localize(pVisualDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pVisualDefault)};
+		const SSettingsCardSpec IconsSpec{pIconsDefault->m_pStableId, Localize(pIconsDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pIconsDefault)};
 		const SSettingsCardSpec InteractionSpec{pInteractionDefault->m_pStableId, Localize(pInteractionDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pInteractionDefault)};
 		const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float MinHeight, float ChromeHeight, FSettingsCardRender Render, uint64_t MeasureRevision = 0) {
 			SSettingsCardDefinition Definition;
@@ -3944,6 +3974,45 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
 				g_Config.m_QmUiCardBorders ^= 1;
+		});
+		AddCard(IconsSpec, GraphicsIconsMinCardHeight, IconsChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
+			CUIRect CardView = ContentRect;
+			int RowsRemaining = 2;
+			const auto NextRow = [&]() {
+				CUIRect Row;
+				CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
+				if(--RowsRemaining > 0)
+					CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
+				return Row;
+			};
+			const auto DoIconChoiceRow = [this, BodySize](CUIRect Row, const char *pLabel, const char *const *ppLabels, int Count, int Current, CButtonContainer *pButtons, auto &&OnChanged) {
+				CUIRect Label, Segments;
+				Row.VSplitLeft(std::clamp(Row.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
+				Segments.VSplitLeft(8.0f, nullptr, &Segments);
+				Ui()->DoLabel(&Label, pLabel, BodySize, TEXTALIGN_ML);
+				for(int i = 0; i < Count; ++i)
+				{
+					CUIRect Segment;
+					Segments.VSplitLeft(Segments.w / (Count - i), &Segment, &Segments);
+					const int Corners = i == 0 ? IGraphics::CORNER_L : (i == Count - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
+					if(DoButton_MenuTab(&pButtons[i], ppLabels[i], Current == i, &Segment, Corners, nullptr, nullptr, nullptr, nullptr, 5.0f))
+						OnChanged(i);
+				}
+			};
+			static CButtonContainer s_aIconColorButtons[2];
+			static CButtonContainer s_aIconWeightButtons[2];
+			const char *apIconColorLabels[] = {Localize("White"), Localize("Black")};
+			const char *apIconWeightLabels[] = {Localize("Regular"), Localize("Bold")};
+			DoIconChoiceRow(NextRow(), Localize("UI icon color"), apIconColorLabels, std::size(apIconColorLabels), std::clamp(g_Config.m_QmUiIconColor, 1, 2) - 1, s_aIconColorButtons, [this](int NewValue) {
+				g_Config.m_QmUiIconColor = NewValue + 1;
+				Client()->OnWindowResize();
+			});
+			DoIconChoiceRow(NextRow(), Localize("UI icon weight"), apIconWeightLabels, std::size(apIconWeightLabels), std::clamp(g_Config.m_QmUiIconWeight, 0, 1), s_aIconWeightButtons, [this](int NewValue) {
+				if(NewValue == g_Config.m_QmUiIconWeight)
+					return;
+				g_Config.m_QmUiIconWeight = NewValue;
+				GameClient()->SyncQmUiIconWeight();
+			});
 		});
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
@@ -5004,7 +5073,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			CUIRect RefreshButton;
 			HeaderRow.VSplitRight(RefreshButtonW, &HeaderRow, &RefreshButton);
 			RefreshButton.VMargin(2.0f, &RefreshButton);
-			if(DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton))
+			if(Ui()->DoButton_FontIcon(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton, BUTTONFLAG_LEFT))
 			{
 				RefreshAudioPackState();
 				SelectedPack = FindSelectedPackIndex();
@@ -6761,7 +6830,11 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					if(DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, APPEARANCE_TAB_NAME_PLATE, pId, pTextId, pText, Enabled, &CheckBox))
 					{
 						if(Enabled == 0)
+						{
 							g_Config.m_QmNameplateTextEffects |= Effect;
+							if(Effect == QM_TEXT_EFFECT_GLOW && g_Config.m_QmNameplateTextGlowRange == 0)
+								g_Config.m_QmNameplateTextGlowRange = 4;
+						}
 						else
 							g_Config.m_QmNameplateTextEffects &= ~Effect;
 					}
@@ -6860,7 +6933,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				NextNamePlateRow(Button);
 				DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-nameplate-text-border-range", &g_Config.m_QmNameplateTextBorderRange, &g_Config.m_QmNameplateTextBorderRange, Button, Localize("Border range"), 1, 4);
 				NextNamePlateRow(Button);
-				DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-nameplate-text-glow-range", &g_Config.m_QmNameplateTextGlowRange, &g_Config.m_QmNameplateTextGlowRange, Button, Localize("Glow range"), 0, 12);
+				DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-nameplate-text-glow-range", &g_Config.m_QmNameplateTextGlowRange, &g_Config.m_QmNameplateTextGlowRange, Button, Localize("Glow range"), 1, 12);
 
 				static CButtonContainer s_NameplateTextBorderColorId;
 				DoLine_ColorPicker(&s_NameplateTextBorderColorId, AppearanceMetrics, &LeftView, Localize("Border color"), &g_Config.m_QmNameplateTextBorderColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), false, nullptr, true);

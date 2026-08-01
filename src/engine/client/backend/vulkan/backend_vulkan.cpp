@@ -63,6 +63,15 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 		return g_Config.m_DbgGfx == DEBUG_GFX_MODE_VERBOSE || g_Config.m_DbgGfx == DEBUG_GFX_MODE_ALL;
 	}
 
+	[[nodiscard]] bool FrameProfilingEnabled()
+	{
+#if defined(CONF_PLATFORM_MACOS)
+		return IsVerbose() || g_Config.m_QmMacosGraphicsDiagnostics != 0;
+#else
+		return IsVerbose();
+#endif
+	}
+
 	void VerboseAllocatedMemory(VkDeviceSize Size, size_t FrameImageIndex, EMemoryBlockUsage MemUsage) const
 	{
 		const char *pUsage = "unknown";
@@ -925,6 +934,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	bool m_RenderingPaused = false;
 	bool m_HasDynamicViewport = false;
 	bool m_ForceSingleThreadedRender = false;
+	SBackendCapabilities *m_pBackendCapabilities = nullptr;
 	VkOffset2D m_DynamicViewportOffset;
 	VkExtent2D m_DynamicViewportSize;
 
@@ -1199,8 +1209,18 @@ private:
 	SPipelineContainer m_QuadPipeline;
 	SPipelineContainer m_QuadGroupedPipeline;
 	SPipelineContainer m_MediaIslandSdfPipeline;
+	SPipelineContainer m_RoundedRectSdfPipeline;
+	SPipelineContainer m_TexturedMsdfPipeline;
+	bool m_TexturedMsdfPipelineValid = false;
+	bool m_TexturedMsdfPipelineRequired = false;
 	SPipelineContainer m_GaussianBlurPipeline;
 	bool m_GaussianBlurPipelineValid = false;
+
+	void SyncTexturedMsdfCapability()
+	{
+		if(m_pBackendCapabilities != nullptr)
+			m_pBackendCapabilities->m_TexturedMsdf.store(m_TexturedMsdfPipelineValid, std::memory_order_release);
+	}
 
 	std::vector<VkPipeline> m_vLastPipeline;
 
@@ -1442,6 +1462,8 @@ protected:
 		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_CLEAR)] = {true, [this](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) { Cmd_Clear_FillExecuteBuffer(ExecBuffer, static_cast<const CCommandBuffer::SCommand_Clear *>(pBaseCommand)); }, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_Clear(ExecBuffer, static_cast<const CCommandBuffer::SCommand_Clear *>(pBaseCommand)); }};
 		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_RENDER)] = {true, [this](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) { Cmd_Render_FillExecuteBuffer(ExecBuffer, static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand)); }, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand), ExecBuffer); }};
 		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_RENDER_MEDIA_ISLAND_SDF)] = {true, [this](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) { Cmd_RenderMediaIslandSdf_FillExecuteBuffer(ExecBuffer, static_cast<const CCommandBuffer::SCommand_RenderMediaIslandSdf *>(pBaseCommand)); }, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_RenderMediaIslandSdf(static_cast<const CCommandBuffer::SCommand_RenderMediaIslandSdf *>(pBaseCommand), ExecBuffer); }};
+		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_RENDER_ROUNDED_RECT_SDF)] = {true, [this](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) { Cmd_RenderRoundedRectSdf_FillExecuteBuffer(ExecBuffer, static_cast<const CCommandBuffer::SCommand_RenderRoundedRectSdf *>(pBaseCommand)); }, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_RenderRoundedRectSdf(static_cast<const CCommandBuffer::SCommand_RenderRoundedRectSdf *>(pBaseCommand), ExecBuffer); }};
+		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_RENDER_TEXTURED_MSDF)] = {true, [this](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) { Cmd_RenderTexturedMsdf_FillExecuteBuffer(ExecBuffer, static_cast<const CCommandBuffer::SCommand_RenderTexturedMsdf *>(pBaseCommand)); }, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_RenderTexturedMsdf(static_cast<const CCommandBuffer::SCommand_RenderTexturedMsdf *>(pBaseCommand), ExecBuffer); }};
 		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_RENDER_TEX3D)] = {true, [this](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) { Cmd_RenderTex3D_FillExecuteBuffer(ExecBuffer, static_cast<const CCommandBuffer::SCommand_RenderTex3D *>(pBaseCommand)); }, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_RenderTex3D(static_cast<const CCommandBuffer::SCommand_RenderTex3D *>(pBaseCommand), ExecBuffer); }};
 		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_RENDER_TARGET_CREATE)] = {false, [](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) {}, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_RenderTarget_Create(static_cast<const CCommandBuffer::SCommand_RenderTarget_Create *>(pBaseCommand)); }};
 		m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::CMD_RENDER_TARGET_DESTROY)] = {false, [](SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand *pBaseCommand) {}, [this](const CCommandBuffer::SCommand *pBaseCommand, SRenderCommandExecuteBuffer &ExecBuffer) { return Cmd_RenderTarget_Destroy(static_cast<const CCommandBuffer::SCommand_RenderTarget_Destroy *>(pBaseCommand)); }};
@@ -2822,7 +2844,8 @@ protected:
 			{
 				dbg_msg("vulkan", "recreating swap chain requested by user (prepare frame).");
 			}
-			RecreateSwapChain();
+			if(RecreateSwapChain() != 0)
+				return false;
 		}
 
 		auto AcqResult = m_pfnAcquireNextImageKHR(m_VKDevice, m_VKSwapChain, std::numeric_limits<uint64_t>::max(), m_AcquireImageSemaphore, VK_NULL_HANDLE, &m_CurImageIndex);
@@ -2835,7 +2858,8 @@ protected:
 				{
 					dbg_msg("vulkan", "recreating swap chain requested by acquire next image (prepare frame).");
 				}
-				RecreateSwapChain();
+				if(RecreateSwapChain() != 0)
+					return false;
 				return PrepareFrame();
 			}
 			else
@@ -5241,7 +5265,7 @@ public:
 		m_vFramebufferList.clear();
 	}
 
-	[[nodiscard]] bool CreateShaderModule(const std::vector<uint8_t> &vCode, VkShaderModule &ShaderModule)
+	[[nodiscard]] bool CreateShaderModule(const std::vector<uint8_t> &vCode, VkShaderModule &ShaderModule, bool ReportError = true)
 	{
 		VkShaderModuleCreateInfo CreateInfo{};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -5250,7 +5274,8 @@ public:
 
 		if(vkCreateShaderModule(m_VKDevice, &CreateInfo, nullptr, &ShaderModule) != VK_SUCCESS)
 		{
-			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Shader module was not created.");
+			if(ReportError)
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Shader module was not created.");
 			return false;
 		}
 
@@ -5315,7 +5340,7 @@ public:
 		return true;
 	}
 
-	[[nodiscard]] bool CreateShaders(const char *pVertName, const char *pFragName, VkPipelineShaderStageCreateInfo (&aShaderStages)[2], SShaderModule &ShaderModule)
+	[[nodiscard]] bool CreateShaders(const char *pVertName, const char *pFragName, VkPipelineShaderStageCreateInfo (&aShaderStages)[2], SShaderModule &ShaderModule, bool ReportError = true)
 	{
 		bool ShaderLoaded = true;
 
@@ -5328,14 +5353,15 @@ public:
 
 		if(!ShaderLoaded)
 		{
-			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "A shader file could not load correctly.");
+			if(ReportError)
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "A shader file could not load correctly.");
 			return false;
 		}
 
-		if(!CreateShaderModule(*pvVertBuff, ShaderModule.m_VertShaderModule))
+		if(!CreateShaderModule(*pvVertBuff, ShaderModule.m_VertShaderModule, ReportError))
 			return false;
 
-		if(!CreateShaderModule(*pvFragBuff, ShaderModule.m_FragShaderModule))
+		if(!CreateShaderModule(*pvFragBuff, ShaderModule.m_FragShaderModule, ReportError))
 			return false;
 
 		VkPipelineShaderStageCreateInfo &VertShaderStageInfo = aShaderStages[0];
@@ -5423,11 +5449,11 @@ public:
 	[[nodiscard]] bool CreateGraphicsPipeline(const char *pVertName, const char *pFragName, SPipelineContainer &PipeContainer, uint32_t Stride, std::array<VkVertexInputAttributeDescription, ArraySize> &aInputAttr,
 		std::array<VkDescriptorSetLayout, DescrArraySize> &aSetLayouts, std::array<VkPushConstantRange, PushArraySize> &aPushConstants, EVulkanBackendTextureModes TexMode,
 		EVulkanBackendBlendModes BlendMode, EVulkanBackendClipModes DynamicMode, bool IsLinePrim = false, VkRenderPass RenderPass = VK_NULL_HANDLE,
-		VkSampleCountFlagBits SampleCount = VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM, bool EnableBlending = true)
+		VkSampleCountFlagBits SampleCount = VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM, bool EnableBlending = true, bool ReportError = true)
 	{
 		VkPipelineShaderStageCreateInfo aShaderStages[2];
 		SShaderModule Module;
-		if(!CreateShaders(pVertName, pFragName, aShaderStages, Module))
+		if(!CreateShaders(pVertName, pFragName, aShaderStages, Module, ReportError))
 			return false;
 
 		bool HasSampler = TexMode == VULKAN_BACKEND_TEXTURE_MODE_TEXTURED;
@@ -5473,7 +5499,8 @@ public:
 
 		if(vkCreatePipelineLayout(m_VKDevice, &PipelineLayoutInfo, nullptr, &PipeLayout) != VK_SUCCESS)
 		{
-			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Creating pipeline layout failed.");
+			if(ReportError)
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Creating pipeline layout failed.");
 			return false;
 		}
 
@@ -5509,7 +5536,8 @@ public:
 
 		if(vkCreateGraphicsPipelines(m_VKDevice, VK_NULL_HANDLE, 1, &PipelineInfo, nullptr, &Pipeline) != VK_SUCCESS)
 		{
-			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Creating the graphic pipeline failed.");
+			if(ReportError)
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Creating the graphic pipeline failed.");
 			return false;
 		}
 
@@ -5958,6 +5986,50 @@ public:
 		return Ret;
 	}
 
+	[[nodiscard]] bool CreateRoundedRectSdfGraphicsPipeline(const char *pVertName, const char *pFragName)
+	{
+		std::array<VkVertexInputAttributeDescription, 3> aAttributeDescriptions = {};
+		aAttributeDescriptions[0] = {0, 0, VK_FORMAT_R32G32_SFLOAT, 0};
+		aAttributeDescriptions[1] = {1, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 2};
+		aAttributeDescriptions[2] = {2, 0, VK_FORMAT_R8G8B8A8_UNORM, sizeof(float) * (2 + 2)};
+
+		std::array<VkDescriptorSetLayout, 1> aSetLayouts = {m_QuadUniformDescriptorSetLayout};
+		std::array<VkPushConstantRange, 1> aPushConstants{};
+		aPushConstants[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos)};
+
+		bool Ret = true;
+		for(size_t i = 0; i < VULKAN_BACKEND_BLEND_MODE_COUNT; ++i)
+		{
+			for(size_t j = 0; j < VULKAN_BACKEND_CLIP_MODE_COUNT; ++j)
+			{
+				Ret &= CreateGraphicsPipeline<true>(pVertName, pFragName, m_RoundedRectSdfPipeline, sizeof(CCommandBuffer::SVertex), aAttributeDescriptions, aSetLayouts, aPushConstants, VULKAN_BACKEND_TEXTURE_MODE_NOT_TEXTURED, EVulkanBackendBlendModes(i), EVulkanBackendClipModes(j));
+			}
+		}
+		return Ret;
+	}
+
+	[[nodiscard]] bool CreateTexturedMsdfGraphicsPipeline(const char *pVertName, const char *pFragName)
+	{
+		std::array<VkVertexInputAttributeDescription, 3> aAttributeDescriptions = {};
+		aAttributeDescriptions[0] = {0, 0, VK_FORMAT_R32G32_SFLOAT, 0};
+		aAttributeDescriptions[1] = {1, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 2};
+		aAttributeDescriptions[2] = {2, 0, VK_FORMAT_R8G8B8A8_UNORM, sizeof(float) * (2 + 2)};
+
+		std::array<VkDescriptorSetLayout, 2> aSetLayouts = {m_StandardTexturedDescriptorSetLayout, m_QuadUniformDescriptorSetLayout};
+		std::array<VkPushConstantRange, 1> aPushConstants{};
+		aPushConstants[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos)};
+
+		bool Ret = true;
+		for(size_t i = 0; i < VULKAN_BACKEND_BLEND_MODE_COUNT; ++i)
+		{
+			for(size_t j = 0; j < VULKAN_BACKEND_CLIP_MODE_COUNT; ++j)
+			{
+				Ret &= CreateGraphicsPipeline<true>(pVertName, pFragName, m_TexturedMsdfPipeline, sizeof(CCommandBuffer::SVertex), aAttributeDescriptions, aSetLayouts, aPushConstants, VULKAN_BACKEND_TEXTURE_MODE_TEXTURED, EVulkanBackendBlendModes(i), EVulkanBackendClipModes(j), false, VK_NULL_HANDLE, VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM, true, false);
+			}
+		}
+		return Ret;
+	}
+
 	[[nodiscard]] bool CreateGaussianBlurGraphicsPipeline(const char *pVertName, const char *pFragName)
 	{
 		std::array<VkVertexInputAttributeDescription, 2> aAttributeDescriptions{};
@@ -6251,6 +6323,10 @@ public:
 		m_QuadPipeline.Destroy(m_VKDevice);
 		m_QuadGroupedPipeline.Destroy(m_VKDevice);
 		m_MediaIslandSdfPipeline.Destroy(m_VKDevice);
+		m_RoundedRectSdfPipeline.Destroy(m_VKDevice);
+		m_TexturedMsdfPipeline.Destroy(m_VKDevice);
+		m_TexturedMsdfPipelineValid = false;
+		SyncTexturedMsdfCapability();
 		m_GaussianBlurPipeline.Destroy(m_VKDevice);
 		m_GaussianBlurPipelineValid = false;
 
@@ -7070,6 +7146,24 @@ public:
 
 		if(!CreateMediaIslandSdfGraphicsPipeline("shader/vulkan/media_island_sdf.vert.spv", "shader/vulkan/media_island_sdf.frag.spv"))
 			return -1;
+		if(!CreateRoundedRectSdfGraphicsPipeline("shader/vulkan/rounded_rect_sdf.vert.spv", "shader/vulkan/rounded_rect_sdf.frag.spv"))
+			return -1;
+		m_TexturedMsdfPipelineValid = CreateTexturedMsdfGraphicsPipeline("shader/vulkan/textured_msdf.vert.spv", "shader/vulkan/textured_msdf.frag.spv");
+		SyncTexturedMsdfCapability();
+		if(!m_TexturedMsdfPipelineValid)
+		{
+			m_TexturedMsdfPipeline.Destroy(m_VKDevice);
+			if(m_TexturedMsdfPipelineRequired)
+			{
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Recreating the textured MSDF pipeline failed.");
+				return -1;
+			}
+			SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED, "Textured MSDF pipeline unavailable, falling back to alpha icon atlas.");
+		}
+		else
+		{
+			m_TexturedMsdfPipelineRequired = true;
+		}
 		m_GaussianBlurPipelineValid = CreateGaussianBlurGraphicsPipeline("shader/vulkan/gaussian_blur.vert.spv", "shader/vulkan/gaussian_blur.frag.spv");
 		if(!m_GaussianBlurPipelineValid)
 			return -1;
@@ -7478,7 +7572,7 @@ public:
 
 	void LogFrameProfileStats()
 	{
-		if(!IsVerbose() || m_CurFrame - m_LastFrameProfileLogFrame < 120)
+		if(!FrameProfilingEnabled() || m_CurFrame - m_LastFrameProfileLogFrame < 120)
 			return;
 
 		m_LastFrameProfileLogFrame = m_CurFrame;
@@ -7562,7 +7656,7 @@ public:
 
 	void BeginFrameTimestampQuery(VkCommandBuffer CommandBuffer)
 	{
-		if(!IsVerbose() || !m_FrameTimestampQueriesSupported || m_FrameTimestampQueryPool == VK_NULL_HANDLE)
+		if(!FrameProfilingEnabled() || !m_FrameTimestampQueriesSupported || m_FrameTimestampQueryPool == VK_NULL_HANDLE)
 			return;
 
 		const uint32_t QueryOffset = FrameTimestampQueryOffset(m_CurImageIndex);
@@ -7914,7 +8008,10 @@ public:
 
 	[[nodiscard]] bool Cmd_Init(const SCommand_Init *pCommand)
 	{
+		m_pBackendCapabilities = pCommand->m_pCapabilities;
 		pCommand->m_pCapabilities->m_MediaIslandSdf = false;
+		pCommand->m_pCapabilities->m_RoundedRectSdf = false;
+		pCommand->m_pCapabilities->m_TexturedMsdf.store(false, std::memory_order_release);
 		pCommand->m_pCapabilities->m_RenderTargetGaussianBlur = false;
 		pCommand->m_pCapabilities->m_BackbufferCapture = false;
 		pCommand->m_pCapabilities->m_RenderTargetExternalPassRequiresSingleSample = true;
@@ -7964,6 +8061,8 @@ public:
 			return false;
 		}
 		pCommand->m_pCapabilities->m_MediaIslandSdf = true;
+		pCommand->m_pCapabilities->m_RoundedRectSdf = true;
+		SyncTexturedMsdfCapability();
 		pCommand->m_pCapabilities->m_RenderTargets = SupportsRenderTargetReadback();
 		pCommand->m_pCapabilities->m_RenderTargetGaussianBlur = SupportsRenderTargetGaussianBlur();
 		pCommand->m_pCapabilities->m_BackbufferCapture = SupportsBackbufferCapture();
@@ -8024,6 +8123,8 @@ public:
 		DestroyIndexBuffer(m_RenderIndexBuffer, m_RenderIndexBufferMemory);
 
 		CleanupVulkan<true>(m_SwapChainImageCount);
+		SyncTexturedMsdfCapability();
+		m_pBackendCapabilities = nullptr;
 
 		return true;
 	}
@@ -8615,6 +8716,22 @@ public:
 		ExecBufferFillDynamicStates(pCommand->m_State, ExecBuffer);
 	}
 
+	void Cmd_RenderRoundedRectSdf_FillExecuteBuffer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand_RenderRoundedRectSdf *pCommand)
+	{
+		ExecBuffer.m_IndexBuffer = m_IndexBuffer;
+		ExecBuffer.m_EstimatedRenderCallCount = 1;
+		ExecBufferFillDynamicStates(pCommand->m_State, ExecBuffer);
+	}
+
+	void Cmd_RenderTexturedMsdf_FillExecuteBuffer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand_RenderTexturedMsdf *pCommand)
+	{
+		const size_t AddressModeIndex = GetAddressModeIndex(pCommand->m_State);
+		ExecBuffer.m_aDescriptors[0] = m_vTextures[pCommand->m_State.m_Texture].m_aVKStandardTexturedDescrSets[AddressModeIndex];
+		ExecBuffer.m_IndexBuffer = m_IndexBuffer;
+		ExecBuffer.m_EstimatedRenderCallCount = 1;
+		ExecBufferFillDynamicStates(pCommand->m_State, ExecBuffer);
+	}
+
 	[[nodiscard]] bool Cmd_RenderMediaIslandSdf(const CCommandBuffer::SCommand_RenderMediaIslandSdf *pCommand, SRenderCommandExecuteBuffer &ExecBuffer)
 	{
 		static_assert(sizeof(IGraphics::SMediaIslandSdfParams) <= 512 * sizeof(IGraphics::SRenderSpriteInfo));
@@ -8650,6 +8767,86 @@ public:
 		if(!GetUniformBufferObject(ExecBuffer.m_ThreadIndex, true, UniDescrSet, 1, &pCommand->m_Params, sizeof(pCommand->m_Params)))
 			return false;
 		BindDescriptorSet(ExecBuffer.m_ThreadIndex, CommandBuffer, PipeLayout, 0, UniDescrSet);
+		vkCmdPushConstants(CommandBuffer, PipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos), m.data());
+		DrawIndexed(ExecBuffer.m_ThreadIndex, CommandBuffer, 6, 1, 0, 0, 0);
+		return true;
+	}
+
+	[[nodiscard]] bool Cmd_RenderRoundedRectSdf(const CCommandBuffer::SCommand_RenderRoundedRectSdf *pCommand, SRenderCommandExecuteBuffer &ExecBuffer)
+	{
+		std::array<float, (size_t)4 * 2> m;
+		GetStateMatrix(pCommand->m_State, m);
+
+		bool IsTextured;
+		size_t BlendModeIndex;
+		size_t DynamicIndex;
+		size_t AddressModeIndex;
+		GetStateIndices(ExecBuffer, pCommand->m_State, IsTextured, BlendModeIndex, DynamicIndex, AddressModeIndex);
+		(void)IsTextured;
+		(void)AddressModeIndex;
+		auto &PipeLayout = GetPipeLayout(m_RoundedRectSdfPipeline, false, BlendModeIndex, DynamicIndex);
+		auto &PipeLine = GetPipeline(m_RoundedRectSdfPipeline, false, BlendModeIndex, DynamicIndex);
+
+		VkCommandBuffer *pCommandBuffer;
+		if(!GetGraphicCommandBuffer(pCommandBuffer, ExecBuffer.m_ThreadIndex))
+			return false;
+		auto &CommandBuffer = *pCommandBuffer;
+		BindPipeline(ExecBuffer.m_ThreadIndex, CommandBuffer, ExecBuffer, PipeLine, pCommand->m_State);
+
+		VkBuffer VKBuffer;
+		SDeviceMemoryBlock VKBufferMem;
+		size_t BufferOff = 0;
+		if(!CreateStreamVertexBuffer(ExecBuffer.m_ThreadIndex, VKBuffer, VKBufferMem, BufferOff, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex) * pCommand->m_PrimCount * 4))
+			return false;
+		BindVertexBuffer(ExecBuffer.m_ThreadIndex, CommandBuffer, VKBuffer, (VkDeviceSize)BufferOff);
+		BindIndexBuffer(ExecBuffer.m_ThreadIndex, CommandBuffer, ExecBuffer.m_IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+		SDeviceDescriptorSet UniDescrSet;
+		if(!GetUniformBufferObject(ExecBuffer.m_ThreadIndex, true, UniDescrSet, 1, &pCommand->m_Params, sizeof(pCommand->m_Params)))
+			return false;
+		BindDescriptorSet(ExecBuffer.m_ThreadIndex, CommandBuffer, PipeLayout, 0, UniDescrSet);
+		vkCmdPushConstants(CommandBuffer, PipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos), m.data());
+		DrawIndexed(ExecBuffer.m_ThreadIndex, CommandBuffer, 6, 1, 0, 0, 0);
+		return true;
+	}
+
+	[[nodiscard]] bool Cmd_RenderTexturedMsdf(const CCommandBuffer::SCommand_RenderTexturedMsdf *pCommand, SRenderCommandExecuteBuffer &ExecBuffer)
+	{
+		if(!m_TexturedMsdfPipelineValid)
+			return true;
+
+		std::array<float, (size_t)4 * 2> m;
+		GetStateMatrix(pCommand->m_State, m);
+
+		bool IsTextured;
+		size_t BlendModeIndex;
+		size_t DynamicIndex;
+		size_t AddressModeIndex;
+		GetStateIndices(ExecBuffer, pCommand->m_State, IsTextured, BlendModeIndex, DynamicIndex, AddressModeIndex);
+		(void)IsTextured;
+		(void)AddressModeIndex;
+		auto &PipeLayout = GetPipeLayout(m_TexturedMsdfPipeline, true, BlendModeIndex, DynamicIndex);
+		auto &PipeLine = GetPipeline(m_TexturedMsdfPipeline, true, BlendModeIndex, DynamicIndex);
+
+		VkCommandBuffer *pCommandBuffer;
+		if(!GetGraphicCommandBuffer(pCommandBuffer, ExecBuffer.m_ThreadIndex))
+			return false;
+		auto &CommandBuffer = *pCommandBuffer;
+		BindPipeline(ExecBuffer.m_ThreadIndex, CommandBuffer, ExecBuffer, PipeLine, pCommand->m_State);
+
+		VkBuffer VKBuffer;
+		SDeviceMemoryBlock VKBufferMem;
+		size_t BufferOff = 0;
+		if(!CreateStreamVertexBuffer(ExecBuffer.m_ThreadIndex, VKBuffer, VKBufferMem, BufferOff, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex) * pCommand->m_PrimCount * 4))
+			return false;
+		BindVertexBuffer(ExecBuffer.m_ThreadIndex, CommandBuffer, VKBuffer, (VkDeviceSize)BufferOff);
+		BindIndexBuffer(ExecBuffer.m_ThreadIndex, CommandBuffer, ExecBuffer.m_IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		BindDescriptorSet(ExecBuffer.m_ThreadIndex, CommandBuffer, PipeLayout, 0, ExecBuffer.m_aDescriptors[0]);
+
+		SDeviceDescriptorSet UniDescrSet;
+		if(!GetUniformBufferObject(ExecBuffer.m_ThreadIndex, true, UniDescrSet, 1, &pCommand->m_MsdfParams, sizeof(pCommand->m_MsdfParams)))
+			return false;
+		BindDescriptorSet(ExecBuffer.m_ThreadIndex, CommandBuffer, PipeLayout, 1, UniDescrSet);
 		vkCmdPushConstants(CommandBuffer, PipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos), m.data());
 		DrawIndexed(ExecBuffer.m_ThreadIndex, CommandBuffer, 6, 1, 0, 0, 0);
 		return true;

@@ -877,6 +877,11 @@ bool CGameWorld::CheckPredictedEventHandled(const CPredictedEvent &CheckEvent)
 	return true;
 }
 
+bool CGameWorld::CheckPredictedHammerHitHandled(const CPredictedEvent &CheckEvent)
+{
+	return QmCheckPredictedHammerHitHandled(m_PredictedEvents, CheckEvent);
+}
+
 void CGameWorld::CreatePredictedSound(vec2 Pos, int SoundId, int Id)
 {
 	if(!g_Config.m_SndEnable)
@@ -892,9 +897,9 @@ void CGameWorld::CreatePredictedExplosionEvent(vec2 Pos, int Id)
 	CreatePredictedEvent(Event);
 }
 
-void CGameWorld::CreatePredictedHammerHitEvent(vec2 Pos, int Id)
+void CGameWorld::CreatePredictedHammerHitEvent(vec2 Pos, int Id, int TargetId)
 {
-	CPredictedEvent Event(NETEVENTTYPE_HAMMERHIT, Pos, Id, GameTick());
+	CPredictedEvent Event(NETEVENTTYPE_HAMMERHIT, Pos, Id, GameTick(), TargetId);
 	CreatePredictedEvent(Event);
 }
 

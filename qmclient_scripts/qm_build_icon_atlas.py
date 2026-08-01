@@ -4,8 +4,8 @@
 Build QmClient SVG icon PNG atlases.
 
 This script is intentionally build-time only: runtime code loads the generated
-PNG atlas and JSON manifest, never SVG. It expects source SVG files in
-datasrc/qm_icons/tabler and writes data/qmclient/icons/qm_icons_{scale}x.*
+PNG atlas and JSON manifest, never SVG. It accepts an explicit SVG source
+directory and writes a named atlas family under data/qmclient/icons/.
 """
 
 from __future__ import annotations
@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sizes", type=int, nargs="+", default=[1, 2, 4])
     parser.add_argument("--base-size", type=int, default=24)
     parser.add_argument("--padding", type=int, default=4)
+    parser.add_argument("--atlas-name", default="qm_icons")
     return parser.parse_args()
 
 
@@ -495,7 +496,12 @@ def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
 
 
 def render_svg(renderer, source: Path, output: Path, size: int) -> None:
-    if renderer is None:
+    # ImageMagick does not resolve SVG currentColor consistently. The bundled
+    # Phosphor sources use it for monochrome paths, so keep this path visible.
+    if renderer is None or (
+        Path(renderer).name.lower() == "magick"
+        and "currentColor" in source.read_text(encoding="utf-8")
+    ):
         _render_svg_fallback(source, output, size)
         return
 
@@ -578,7 +584,12 @@ def icon_id(path: Path) -> str:
 
 
 def build_scale(
-    source_dir: Path, output_dir: Path, scale: int, base_size: int, padding: int
+    source_dir: Path,
+    output_dir: Path,
+    atlas_name: str,
+    scale: int,
+    base_size: int,
+    padding: int,
 ) -> None:
     try:
         from PIL import Image
@@ -611,6 +622,12 @@ def build_scale(
             if image.size != (icon_size, icon_size):
                 image = image.resize((icon_size, icon_size), Image.Resampling.LANCZOS)
 
+            # Atlas rendering is tinted at runtime. Normalize every visible
+            # pixel to white and keep only the source alpha coverage.
+            normalized = Image.new("RGBA", image.size, (255, 255, 255, 0))
+            normalized.putalpha(image.getchannel("A"))
+            image = normalized
+
             col = index % columns
             row = index // columns
             x = col * tile + pad
@@ -619,8 +636,8 @@ def build_scale(
             icons[icon_id(svg)] = {"x": x, "y": y, "w": icon_size, "h": icon_size}
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    image_name = f"qm_icons_{scale}x.png"
-    manifest_name = f"qm_icons_{scale}x.json"
+    image_name = f"{atlas_name}_{scale}x.png"
+    manifest_name = f"{atlas_name}_{scale}x.json"
     atlas = dilate_image(atlas)
     atlas.save(output_dir / image_name)
     manifest = {
@@ -646,7 +663,14 @@ def main() -> int:
     for scale in args.sizes:
         if scale <= 0:
             raise SystemExit("sizes must be positive")
-        build_scale(args.source, args.output, scale, args.base_size, args.padding)
+        build_scale(
+            args.source,
+            args.output,
+            args.atlas_name,
+            scale,
+            args.base_size,
+            args.padding,
+        )
     return 0
 
 

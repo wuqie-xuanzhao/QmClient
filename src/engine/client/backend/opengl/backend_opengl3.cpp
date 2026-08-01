@@ -112,6 +112,10 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 	m_pSpriteProgramMultiple = new CGLSLSpriteMultipleProgram;
 	m_pMediaIslandSdfProgram = new CGLSLMediaIslandSdfProgram;
 	m_MediaIslandSdfProgramValid = false;
+	m_pRoundedRectSdfProgram = new CGLSLRoundedRectSdfProgram;
+	m_RoundedRectSdfProgramValid = false;
+	m_pTexturedMsdfProgram = new CGLSLTexturedMsdfProgram;
+	m_TexturedMsdfProgramValid = false;
 	m_pGaussianBlurProgram = new CGLSLGaussianBlurProgram;
 	m_GaussianBlurProgramValid = false;
 	m_LastProgramId = 0;
@@ -429,6 +433,49 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 	{
 		CGLSL VertexShader;
 		CGLSL FragmentShader;
+		ShaderCompiler.AddDefine("TW_MODERN_GL", "");
+		VertexShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/rounded_rect_sdf.vert", GL_VERTEX_SHADER);
+		FragmentShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/rounded_rect_sdf.frag", GL_FRAGMENT_SHADER);
+		ShaderCompiler.ClearDefines();
+
+		m_pRoundedRectSdfProgram->CreateProgram();
+		const bool VertexAdded = m_pRoundedRectSdfProgram->AddShader(&VertexShader);
+		const bool FragmentAdded = m_pRoundedRectSdfProgram->AddShader(&FragmentShader);
+		const bool Linked = VertexAdded && FragmentAdded && m_pRoundedRectSdfProgram->LinkProgram();
+		if(Linked)
+		{
+			UseProgram(m_pRoundedRectSdfProgram);
+			m_pRoundedRectSdfProgram->m_LocPos = m_pRoundedRectSdfProgram->GetUniformLoc("gPos");
+			m_pRoundedRectSdfProgram->m_LocData = m_pRoundedRectSdfProgram->GetUniformLoc("gRoundedRectSdfData[0]");
+			m_RoundedRectSdfProgramValid = m_pRoundedRectSdfProgram->m_LocPos >= 0 && m_pRoundedRectSdfProgram->m_LocData >= 0;
+		}
+		pCommand->m_pCapabilities->m_RoundedRectSdf = m_RoundedRectSdfProgramValid;
+	}
+	{
+		CGLSL VertexShader;
+		CGLSL FragmentShader;
+		VertexShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/textured_msdf.vert", GL_VERTEX_SHADER);
+		FragmentShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/textured_msdf.frag", GL_FRAGMENT_SHADER);
+
+		m_pTexturedMsdfProgram->CreateProgram();
+		const bool VertexAdded = m_pTexturedMsdfProgram->AddShader(&VertexShader);
+		const bool FragmentAdded = m_pTexturedMsdfProgram->AddShader(&FragmentShader);
+		const bool Linked = VertexAdded && FragmentAdded && m_pTexturedMsdfProgram->LinkProgram();
+		if(Linked)
+		{
+			UseProgram(m_pTexturedMsdfProgram);
+			m_pTexturedMsdfProgram->m_LocPos = m_pTexturedMsdfProgram->GetUniformLoc("gPos");
+			m_pTexturedMsdfProgram->m_LocTextureSampler = m_pTexturedMsdfProgram->GetUniformLoc("gTextureSampler");
+			m_pTexturedMsdfProgram->m_LocParams = m_pTexturedMsdfProgram->GetUniformLoc("gMsdfParams");
+			m_TexturedMsdfProgramValid = m_pTexturedMsdfProgram->m_LocPos >= 0 && m_pTexturedMsdfProgram->m_LocTextureSampler >= 0 && m_pTexturedMsdfProgram->m_LocParams >= 0;
+			if(m_TexturedMsdfProgramValid)
+				m_pTexturedMsdfProgram->SetUniform(m_pTexturedMsdfProgram->m_LocTextureSampler, 0);
+		}
+		pCommand->m_pCapabilities->m_TexturedMsdf.store(m_TexturedMsdfProgramValid, std::memory_order_release);
+	}
+	{
+		CGLSL VertexShader;
+		CGLSL FragmentShader;
 		VertexShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/gaussian_blur.vert", GL_VERTEX_SHADER);
 		FragmentShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/gaussian_blur.frag", GL_FRAGMENT_SHADER);
 
@@ -529,6 +576,12 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 
 void CCommandProcessorFragment_OpenGL3_3::Cmd_Shutdown(const SCommand_Shutdown *pCommand)
 {
+	if(m_pBackendCapabilities != nullptr)
+	{
+		m_pBackendCapabilities->m_TexturedMsdf.store(false, std::memory_order_release);
+		m_pBackendCapabilities = nullptr;
+	}
+
 	glUseProgram(0);
 	DestroyBackbufferCaptureResolveTarget();
 
@@ -551,6 +604,8 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_Shutdown(const SCommand_Shutdown *
 	m_pPrimitiveExProgramTexturedRotationless->DeleteProgram();
 	m_pSpriteProgramMultiple->DeleteProgram();
 	m_pMediaIslandSdfProgram->DeleteProgram();
+	m_pRoundedRectSdfProgram->DeleteProgram();
+	m_pTexturedMsdfProgram->DeleteProgram();
 	m_pGaussianBlurProgram->DeleteProgram();
 
 	// clean up everything
@@ -575,6 +630,12 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_Shutdown(const SCommand_Shutdown *
 	delete m_pMediaIslandSdfProgram;
 	m_pMediaIslandSdfProgram = nullptr;
 	m_MediaIslandSdfProgramValid = false;
+	delete m_pRoundedRectSdfProgram;
+	m_pRoundedRectSdfProgram = nullptr;
+	m_RoundedRectSdfProgramValid = false;
+	delete m_pTexturedMsdfProgram;
+	m_pTexturedMsdfProgram = nullptr;
+	m_TexturedMsdfProgramValid = false;
 	delete m_pGaussianBlurProgram;
 	m_pGaussianBlurProgram = nullptr;
 	m_GaussianBlurProgramValid = false;
@@ -932,6 +993,44 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderMediaIslandSdf(const CComman
 		dbg_assert_failed("Invalid media island SDF primitive type: %d", (int)pCommand->m_PrimType);
 		break;
 	}
+	m_LastStreamBuffer = (m_LastStreamBuffer + 1 >= MAX_STREAM_BUFFER_COUNT ? 0 : m_LastStreamBuffer + 1);
+}
+
+void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderRoundedRectSdf(const CCommandBuffer::SCommand_RenderRoundedRectSdf *pCommand)
+{
+	if(!m_RoundedRectSdfProgramValid || pCommand->m_pVertices == nullptr || pCommand->m_PrimCount == 0 || m_pRoundedRectSdfProgram == nullptr)
+		return;
+
+	UseProgram(m_pRoundedRectSdfProgram);
+	SetState(pCommand->m_State, m_pRoundedRectSdfProgram);
+	m_pRoundedRectSdfProgram->SetUniformVec4(m_pRoundedRectSdfProgram->m_LocData, 5, (const float *)&pCommand->m_Params);
+	UploadStreamBufferData(pCommand->m_PrimType, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount);
+	glBindVertexArray(m_aPrimitiveDrawVertexId[m_LastStreamBuffer]);
+	if(m_aLastIndexBufferBound[m_LastStreamBuffer] != m_QuadDrawIndexBufferId)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadDrawIndexBufferId);
+		m_aLastIndexBufferBound[m_LastStreamBuffer] = m_QuadDrawIndexBufferId;
+	}
+	glDrawElements(GL_TRIANGLES, pCommand->m_PrimCount * 6, GL_UNSIGNED_INT, 0);
+	m_LastStreamBuffer = (m_LastStreamBuffer + 1 >= MAX_STREAM_BUFFER_COUNT ? 0 : m_LastStreamBuffer + 1);
+}
+
+void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTexturedMsdf(const CCommandBuffer::SCommand_RenderTexturedMsdf *pCommand)
+{
+	if(!m_TexturedMsdfProgramValid || pCommand->m_pVertices == nullptr || pCommand->m_PrimCount == 0 || m_pTexturedMsdfProgram == nullptr)
+		return;
+
+	UseProgram(m_pTexturedMsdfProgram);
+	SetState(pCommand->m_State, m_pTexturedMsdfProgram);
+	m_pTexturedMsdfProgram->SetUniformVec4(m_pTexturedMsdfProgram->m_LocParams, 1, (const float *)&pCommand->m_MsdfParams);
+	UploadStreamBufferData(pCommand->m_PrimType, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount);
+	glBindVertexArray(m_aPrimitiveDrawVertexId[m_LastStreamBuffer]);
+	if(m_aLastIndexBufferBound[m_LastStreamBuffer] != m_QuadDrawIndexBufferId)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadDrawIndexBufferId);
+		m_aLastIndexBufferBound[m_LastStreamBuffer] = m_QuadDrawIndexBufferId;
+	}
+	glDrawElements(GL_TRIANGLES, pCommand->m_PrimCount * 6, GL_UNSIGNED_INT, 0);
 	m_LastStreamBuffer = (m_LastStreamBuffer + 1 >= MAX_STREAM_BUFFER_COUNT ? 0 : m_LastStreamBuffer + 1);
 }
 

@@ -786,11 +786,12 @@ TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
 	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
 
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmBlockWordsAction, qm_block_words_action, 0, 0, 1"), std::string::npos);
-	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction == 0"), std::string::npos);
+	EXPECT_NE(Menus.find("const int BlockWordsAction = g_Config.m_QmBlockWordsAction;"), std::string::npos);
+	EXPECT_NE(Menus.find("BlockWordsAction == 0"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 0;"), std::string::npos);
-	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction == 1"), std::string::npos);
+	EXPECT_NE(Menus.find("BlockWordsAction == 1"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 1;"), std::string::npos);
-	EXPECT_NE(Menus.find("qmclient-word-filter-match-mode\", &LabelCol, Localize(\"Mode\")"), std::string::npos);
+	EXPECT_NE(Menus.find("qmclient-word-filter-match-mode\", &LabelColumn, Localize(\"Mode\")"), std::string::npos);
 	const size_t RawConsoleCall = AddLine.find("PrintBlockedMessageToConsole(ClientId, Team, pLine);");
 	const size_t HideBranch = AddLine.find("if(CanHideBlockWordsMessage)");
 	ASSERT_NE(RawConsoleCall, std::string::npos);

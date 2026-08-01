@@ -11,6 +11,8 @@
 
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/animstate.h>
+#include <game/client/components/qmclient/afk_presentation.h>
+#include <game/client/components/nameplate_text_effects.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
@@ -157,12 +159,13 @@ static SQmTextEffectRenderStyle BuildQmNameplateTextStyle(CGameClient &This, Col
 	SQmTextEffectRenderStyle Style;
 	Style.m_Effects = UseEffects ? (g_Config.m_QmNameplateTextEffects & ~QM_TEXT_EFFECT_GRADIENT) : 0;
 	Style.m_TextColor = TextColor;
-	Style.m_OutlineColor = s_OutlineColor.WithMultipliedAlpha(TextColor.a);
-	Style.m_BorderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextBorderColor, true)).WithMultipliedAlpha(TextColor.a);
+	// RenderTextContainerWithEffects applies the nameplate alpha once to every pass.
+	Style.m_OutlineColor = s_OutlineColor;
+	Style.m_BorderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextBorderColor, true));
 	Style.m_BorderRange = (float)std::clamp(g_Config.m_QmNameplateTextBorderRange, 1, 4);
-	Style.m_GradientColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGradientColor, true)).WithAlpha(TextColor.a);
-	Style.m_GlowColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGlowColor, true)).WithMultipliedAlpha(TextColor.a);
-	Style.m_GlowRange = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 0, 12);
+	Style.m_GradientColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGradientColor, true));
+	Style.m_GlowColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGlowColor, true));
+	Style.m_GlowRange = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 1, 12);
 	Style.m_Time = This.Client()->GlobalTime();
 	return Style;
 }
@@ -197,7 +200,8 @@ static void AddNameplateGradientSplits(CTextCursor &Cursor, const char *pText, c
 	if(NumChars <= 1)
 		return;
 
-	const ColorRGBA TargetColor = color_cast<ColorRGBA>(ColorHSLA(GradientColor, true)).WithAlpha(BaseColor.a);
+	const ColorRGBA GradientBaseColor = BaseColor.WithAlpha(1.0f);
+	const ColorRGBA TargetColor = color_cast<ColorRGBA>(ColorHSLA(GradientColor, true)).WithAlpha(1.0f);
 	const int StartChar = Cursor.m_CharCount;
 	const float Denominator = (float)(NumChars - 1);
 	Cursor.m_vColorSplits.reserve(Cursor.m_vColorSplits.size() + NumChars);
@@ -211,7 +215,7 @@ static void AddNameplateGradientSplits(CTextCursor &Cursor, const char *pText, c
 			break;
 
 		const float Amount = (float)CharIndex / Denominator;
-		Cursor.m_vColorSplits.emplace_back(StartChar + CharIndex, 1, LerpColor(BaseColor, TargetColor, Amount));
+		Cursor.m_vColorSplits.emplace_back(StartChar + CharIndex, 1, LerpColor(GradientBaseColor, TargetColor, Amount));
 		pCurrent = pNext;
 		++CharIndex;
 	}
@@ -384,6 +388,7 @@ class CNamePlatePartText : public CNamePlatePart
 {
 protected:
 	STextContainerIndex m_TextContainerIndex;
+	vec2 m_RenderSize = vec2(0.0f, 0.0f);
 	virtual bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) = 0;
 	virtual void UpdateText(CGameClient &This, const CNamePlateData &Data) = 0;
 	ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -398,15 +403,23 @@ protected:
 public:
 	void Update(CGameClient &This, const CNamePlateData &Data) override
 	{
-		if(!UpdateNeeded(This, Data) && m_TextContainerIndex.Valid())
+		const bool NeedsTextUpdate = UpdateNeeded(This, Data);
+		if(!NeedsTextUpdate && m_TextContainerIndex.Valid())
+		{
+			const float EffectPadding = m_UseTextEffects ? QmNameplateTextEffectPadding(g_Config.m_QmNameplateTextEffects, g_Config.m_QmNameplateTextBorderRange, g_Config.m_QmNameplateTextGlowRange) : 0.0f;
+			m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
 			return;
+		}
 
 		// Set flags
 		unsigned int Flags = ETextRenderFlags::TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE;
-		if(Data.m_InGame)
+		bool UsePhysicalPixelAlignment = false;
+#if defined(CONF_PLATFORM_MACOS)
+		UsePhysicalPixelAlignment = QmNameplateUsesPhysicalPixelAlignment(This.Graphics()->ScreenHiDPIScale(), true);
+#endif
+		if(Data.m_InGame && !UsePhysicalPixelAlignment)
 			Flags |= ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT; // Prevent jittering from rounding
 		This.TextRender()->SetRenderFlags(Flags);
-		This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
 
 		float ScreenX0 = 0.0f, ScreenY0 = 0.0f, ScreenX1 = 0.0f, ScreenY1 = 0.0f;
 		if(Data.m_InGame)
@@ -414,14 +427,8 @@ public:
 			// Create text at standard zoom
 			This.Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 			This.Graphics()->MapScreenToGameInterface(This.m_Camera.m_Center.x, This.m_Camera.m_Center.y);
-			This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
-			UpdateText(This, Data);
-			This.Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 		}
-		else
-		{
-			UpdateText(This, Data);
-		}
+		This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
 		UpdateText(This, Data);
 		if(Data.m_InGame)
 			This.Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
@@ -435,7 +442,9 @@ public:
 		}
 
 		const STextBoundingBox Container = This.TextRender()->GetBoundingBoxTextContainer(m_TextContainerIndex);
-		m_Size = vec2(Container.m_W, Container.m_H);
+		m_RenderSize = vec2(Container.m_W, Container.m_H);
+		const float EffectPadding = m_UseTextEffects ? QmNameplateTextEffectPadding(g_Config.m_QmNameplateTextEffects, g_Config.m_QmNameplateTextBorderRange, g_Config.m_QmNameplateTextGlowRange) : 0.0f;
+		m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
 	}
 	void Reset(CGameClient &This) override
 	{
@@ -446,7 +455,7 @@ public:
 		if(!m_TextContainerIndex.Valid())
 			return;
 
-		This.RenderTools()->RenderTextContainerWithEffects(m_TextContainerIndex, BuildQmNameplateTextStyle(This, GetRenderTextColor(), m_UseTextEffects), Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
+		This.RenderTools()->RenderTextContainerWithEffects(m_TextContainerIndex, BuildQmNameplateTextStyle(This, GetRenderTextColor(), m_UseTextEffects), Pos.x - m_RenderSize.x / 2.0f, Pos.y - m_RenderSize.y / 2.0f);
 	}
 };
 
@@ -1918,17 +1927,8 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		const bool CoordModuleAllowsPreview = IsOwnPreview ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
 
 		Data.m_ShowName = NameplateScopeAllowsPreview;
-		Data.m_UseTextEffects = ShouldUseQmNameplateTextEffects(
-			g_Config.m_QmNameplateTextPlayingScope,
-			g_Config.m_QmNameplateTextSpectateScope,
-			g_Config.m_QmNameplateTextDemoMode,
-			g_Config.m_QmNameplateTextDemoTarget,
-			false,
-			false,
-			DummyIdx == g_Config.m_ClDummy,
-			false,
-			false,
-			DummyIdx);
+		// 设置页预览必须展示当前选择的效果，不能受游戏中 Playing/Spectate/Demo scope 限制。
+		Data.m_UseTextEffects = g_Config.m_QmNameplateTextEffects != 0;
 		const char *pName = DummyIdx == 0 ? Client()->PlayerName() : Client()->DummyName();
 		str_copy(Data.m_aName, str_utf8_skip_whitespaces(pName));
 		str_utf8_trim_right(Data.m_aName);
@@ -2670,11 +2670,17 @@ void CNamePlates::OnWindowResize()
 		ResetChatBubbleAnimState(i);
 }
 
+void CNamePlates::OnShutdown()
+{
+	ResetNamePlates();
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		ResetChatBubbleAnimState(i, true);
+}
+
 CNamePlates::CNamePlates() :
 	m_pData(new CNamePlates::CNamePlatesData()) {}
 
 CNamePlates::~CNamePlates()
 {
-	ResetNamePlates();
 	delete m_pData;
 }

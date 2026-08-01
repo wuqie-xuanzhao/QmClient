@@ -31,6 +31,9 @@
 %d more cut segments
 == Ещё %d отрезков обрезки
 
+%d new mentions
+== %d новых упоминаний
+
 %d of %d server
 == %d из %d сервера
 
@@ -243,6 +246,9 @@
 
 5 stars
 == 5 звезд
+
+9+ new mentions
+== 9+ новых упоминаний
 
 === All Local Saves ===
 == === Все локальные сохранения ===
@@ -1397,6 +1403,9 @@ Best input smooth percentage
 Best match
 == Лучшее совпадение
 
+Better scoreboard
+== Улучшенная таблица лидеров
+
 Bind address for client/server
 == Адрес привязки для клиента/сервера
 
@@ -1405,9 +1414,6 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
-
-Better scoreboard
-== Улучшенная таблица лидеров
 
 Bind key to execute a command or view keybindings
 == Привязать клавишу для выполнения команды или просмотреть привязки клавиш
@@ -1442,6 +1448,9 @@ Black
 Blend mode
 == Режим смешивания
 
+Block enemy chat
+== Блокировать чат врагов
+
 Block votes from blacklisted addresses
 == Блокировать голоса с адресов из чёрного списка
 
@@ -1459,6 +1468,9 @@ Blue team wins!
 
 Body
 == Тело
+
+Bold
+== Жирный
 
 Border
 == Граница
@@ -1783,6 +1795,9 @@ Choose whether to browse replays or screenshots
 
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
+
+Cinematic camera
+== Кинематографическая камера
 
 Clamp mouse to screen
 == Зафиксировать мышь в пределах экрана
@@ -2188,6 +2203,9 @@ Configure the input overlay display
 
 Configure these settings
 == Настроить эти параметры
+
+Configure UI icon appearance
+== Настроить внешний вид значков интерфейса
 
 Confirm both are on same server, same room, and support voice
 == Убедитесь, что оба находятся на одном сервере, в одной комнате и поддерживают голос.
@@ -3467,6 +3485,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == Включить читы для текущего забега вашей команды, но вы не сможете получить ранг
 
+Enable client stutter diagnostics at startup
+== Enable client stutter diagnostics at startup
+
 Enable colored console output
 == Включить цветной вывод консоли
 
@@ -3508,6 +3529,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == Включить улучшенные эффекты лазера (свечение + пульсация)
+
+Enable enhanced scoreboard presentation
+== Enable enhanced scoreboard presentation
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == Включить триггеры событий (серверные глаза-эмоции на праздники, клиентский рождественский скин)
@@ -3664,6 +3688,9 @@ Enable skin queue rotation
 
 Enable skin switch animation
 == Включить анимацию смены скина
+
+Enable smooth cinematic camera while free spectating
+== Enable smooth cinematic camera while free spectating
 
 Enable sound
 == Включить звук
@@ -4493,6 +4520,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == Глобальная клавиша переключения
 
+Global UI size percentage
+== Global UI size percentage
+
 Glow
 == Свечение
 
@@ -4648,6 +4678,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == Скрыть чат
+
+Hide chat messages from players marked as enemies
+== Hide chat messages from players marked as enemies
 
 Hide death/respawn effects
 == Скрыть эффекты смерти/возрождения
@@ -4964,6 +4997,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5008,6 +5044,9 @@ I am away from the game window
 
 I muted you
 == Я тебя замьютил
+
+Icons
+== Значки
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == Если 1, автоматическая запись только один раз при подключении; если 0, автоматическая запись перезапускается после окончания игры
@@ -6251,6 +6290,9 @@ Message to send on auto vote, leave empty to not send
 Messages
 == Сообщения
 
+Messages that already look like the target language will skip auto-translate
+== Сообщения, которые уже выглядят как целевой язык, пропустят автоперевод.
+
 Microphone
 == Микрофон
 
@@ -6400,6 +6442,9 @@ Move right
 
 Move to category
 == Переместить в категорию
+
+Moved ingame
+== Перемещено в игре
 
 Movement
 == Движение
@@ -7376,9 +7421,6 @@ Per-word highlight (karaoke)
 Performance debug log threshold (ms)
 == Порог журнала отладки производительности (мс)
 
-Performance mode (placeholder)
-== Режим производительности (заполнитель)
-
 Personal best:
 == Личный рекорд:
 
@@ -7943,6 +7985,12 @@ q = Connection quality
 Qm
 == Qm
 
+Qm UI icon color: 1=White, 2=Black
+== Цвет значков Qm UI: 1=белый, 2=черный
+
+Qm UI icon weight: 0=Regular, 1=Bold
+== Толщина значков Qm UI: 0=обычная, 1=жирная
+
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: индекс должен быть от 1 до %d
 
@@ -8215,6 +8263,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == Зарегистрировать сервер на мастер-сервере для публичного списка, принимает разделённые запятыми протоколы, например 'ipv4,ipv6'
+
+Regular
+== Обычный
 
 Regular background color
 == Обычный цвет фона
@@ -11708,11 +11759,20 @@ UI color
 UI controller sens.
 == Чувствительность контроллера (интерфейс)
 
+UI icon color
+== Цвет значков интерфейса
+
+UI icon weight
+== Толщина значков интерфейса
+
 UI motion level
 == Анимация UI
 
 UI mouse sens.
 == Чувств. мыши UI
+
+UI rounded corner segments (even numbers recommended)
+== UI rounded corner segments (even numbers recommended)
 
 UI scale
 == Масштаб UI
@@ -11914,9 +11974,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == Загрузка данных карты на GPU
-
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
 
 URL for downloading community skins
 == URL для загрузки скинов сообщества
@@ -12419,6 +12476,9 @@ What's done is done, no use saying more
 Wheel animate
 == Анимация колёсика
 
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Если включен радужный Tee TClient, эта функция не действует.
+
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Когда пересекаешь стартовую линию, показывать призрачного ти, повторяющего движения твоего лучшего времени
 
@@ -12512,6 +12572,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == Шёпот: /w игрок сообщение
 
+White
+== Белый
+
 Why are you slowmo replaying to read this?
 == Зачем вы читаете это в замедленном повторе?
 
@@ -12556,6 +12619,9 @@ Windowed fullscreen
 
 Word Filter
 == Фильтр слов
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== Word filter action: 0=replace matching words, 1=hide entire message
 
 Word highlight soft edge width (px)
 == Ширина мягкого перехода по краям символов, px
@@ -13219,6 +13285,10 @@ AUTO
 [Start menu]
 Play
 == Играть
+
+[Team and size]
+%d\n(%d/%d)
+== %d\n(%d/%d)
 
 [Team size]
 maximum

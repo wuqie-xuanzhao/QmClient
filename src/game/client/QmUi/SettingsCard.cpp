@@ -4,14 +4,17 @@
 
 #include "SettingsPageLayout.h"
 #include "UiContext.h"
+#include "UiSurface.h"
 #include "UiTheme.h"
 #include "UiTokens.h"
 
 #include <base/system.h>
 
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
 #include <engine/textrender.h>
 
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 
 #include <algorithm>
@@ -33,9 +36,25 @@ void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect
 		return;
 	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	const bool Hovered = Ctx.m_pUi->MouseHovered(&Rect);
-	Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, (Hovered ? 0.28f : 0.18f) * std::clamp(DrawAlpha, 0.0f, 1.0f)), IGraphics::CORNER_ALL, 4.0f * UiScale);
+	const float Alpha = std::clamp(DrawAlpha, 0.0f, 1.0f);
+	const float PixelSize = Ctx.m_pUi->PixelSize();
+	const CUIRect ChromeRect = ResolveSettingsCardChromeRect(Rect, PixelSize);
+	const float Radius = AlignSettingsCardValueToPixels(std::min(4.0f * UiScale, std::min(ChromeRect.w, ChromeRect.h) * 0.25f), PixelSize);
+	const ColorRGBA ChromeColor(1.0f, 1.0f, 1.0f, (Hovered ? 0.28f : 0.18f) * Alpha);
+	DrawRoundedSurface(Ctx, ChromeRect, ChromeColor, ChromeColor, Radius);
 	const float IconSize = std::clamp(ui_token::font::BODY * UiScale, 10.0f, ui_token::font::BODY);
-	Ctx.m_pUi->DoLabel(&Rect, Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
+	const ColorRGBA IconColor = QmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, Alpha), g_Config.m_QmUiIconColor);
+	ITextRender *pTextRender = Ctx.m_pUi->TextRender();
+	const ColorRGBA PreviousColor = pTextRender->GetTextColor();
+	const unsigned PreviousFlags = pTextRender->GetRenderFlags();
+	const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
+	pTextRender->TextColor(IconColor);
+	pTextRender->SetFontPreset(EFontPreset::ICON_FONT_BOLD);
+	pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+	Ctx.m_pUi->DoLabel(&ChromeRect, Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
+	pTextRender->SetRenderFlags(PreviousFlags);
+	pTextRender->SetFontPreset(PreviousPreset);
+	pTextRender->TextColor(PreviousColor);
 }
 
 SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardMeasure &Measure, const FSettingsCardRender &Render, const FSettingsCardHeaderAction &HeaderAction, const FSettingsCardRenderMeasured &RenderMeasured, bool *pPointerInside)
@@ -69,23 +88,14 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 														      VisualOptions.m_BorderColor;
 	Border.a *= DrawState.m_DrawAlpha;
 	ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);
-	const float CardRadius = ui_token::settings::CARD_RADIUS * UiScale;
+	const float PixelSize = Ctx.m_pUi != nullptr ? Ctx.m_pUi->PixelSize() : 0.0f;
+	const CUIRect ChromeRect = ResolveSettingsCardChromeRect(DrawFrame.m_Rect, PixelSize);
+	const float CardRadius = AlignSettingsCardValueToPixels(std::min(ui_token::settings::CARD_RADIUS * UiScale, std::min(ChromeRect.w, ChromeRect.h) * 0.5f), PixelSize);
 	// Focus/hover 只改变颜色，不能改变 Surface 的几何，否则边框获得焦点时
 	// 会产生一次内缩跳变并重新触发用户看到的卡片闪动。
-	const float BorderWidth = ResolveSettingsCardBorderWidth(UiScale);
-	ExecuteSettingsCardChromeDraw(
-		DrawCardChrome,
-		DrawInteractionBorder,
-		[&] { DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius); },
-		[&] {
-			// 完整外层圆角保证四角连续；内层颜色先抵消边框的 alpha 合成，
-			// 因此边框色不会透过半透明 Surface 污染卡片背景。两次绘制也替代
-			// 旧实现的四次圆角裁剪绘制。
-			DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);
-			CUIRect InnerSurface = DrawFrame.m_Rect;
-			InnerSurface.Margin(BorderWidth, &InnerSurface);
-			InnerSurface.Draw(ResolveSettingsCardInnerSurfaceColor(Surface, Border), IGraphics::CORNER_ALL, std::max(0.0f, CardRadius - BorderWidth));
-		});
+	const float BorderWidth = ResolveSettingsCardBorderWidth(UiScale, PixelSize);
+	if(DrawCardChrome)
+		DrawRoundedSurface(Ctx, ChromeRect, Surface, Border, CardRadius, DrawInteractionBorder ? BorderWidth : 0.0f);
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
 	{

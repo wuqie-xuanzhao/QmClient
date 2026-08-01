@@ -31,6 +31,9 @@
 %d more cut segments
 == 추가로 %d개의 잘라낸 구간
 
+%d new mentions
+== %d 개의 새로운 언급
+
 %d of %d server
 == %d/%d 서버
 
@@ -1400,6 +1403,9 @@ Best input smooth percentage
 Best match
 == 최적 일치
 
+Better scoreboard
+== 더 나은 점수판
+
 Bind address for client/server
 == 클라이언트/서버 바인딩 주소
 
@@ -1408,9 +1414,6 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
-
-Better scoreboard
-== 더 나은 점수판
 
 Bind key to execute a command or view keybindings
 == 키를 바인딩하여 명령을 실행하거나 키바인딩을 확인합니다
@@ -1445,6 +1448,9 @@ Black
 Blend mode
 == 혼합 모드
 
+Block enemy chat
+== 적대 플레이어 채팅 차단
+
 Block votes from blacklisted addresses
 == 블랙리스트 주소의 투표 차단
 
@@ -1462,6 +1468,9 @@ Blue team wins!
 
 Body
 == 몸통
+
+Bold
+== 굵게
 
 Border
 == 테두리
@@ -1786,6 +1795,9 @@ Choose whether to browse replays or screenshots
 
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
+
+Cinematic camera
+== 시네마틱 카메라
 
 Clamp mouse to screen
 == 마우스를 화면에 고정
@@ -2191,6 +2203,9 @@ Configure the input overlay display
 
 Configure these settings
 == 이 설정 구성
+
+Configure UI icon appearance
+== UI 아이콘 모양 구성
 
 Confirm both are on same server, same room, and support voice
 == 둘 다 같은 서버, 같은 방에 있으며 음성을 지원하는지 확인
@@ -3470,6 +3485,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == 현재 팀의 실행에 치트를 활성화하지만, 순위를 획득할 수 없습니다
 
+Enable client stutter diagnostics at startup
+== Enable client stutter diagnostics at startup
+
 Enable colored console output
 == 콘솔 컬러 출력 활성화
 
@@ -3511,6 +3529,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == 강화 레이저 효과 활성화 (광선 + 펄스 애니메이션)
+
+Enable enhanced scoreboard presentation
+== Enable enhanced scoreboard presentation
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == 이벤트 트리거 활성화 (서버의 휴일 눈 이모트, 클라이언트 크리스마스 스킨)
@@ -3667,6 +3688,9 @@ Enable skin queue rotation
 
 Enable skin switch animation
 == 스킨 전환 애니메이션 활성화
+
+Enable smooth cinematic camera while free spectating
+== Enable smooth cinematic camera while free spectating
 
 Enable sound
 == 소리 활성화
@@ -4496,6 +4520,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == 전역 토글 키
 
+Global UI size percentage
+== Global UI size percentage
+
 Glow
 == 글로우
 
@@ -4651,6 +4678,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == 채팅 숨기기
+
+Hide chat messages from players marked as enemies
+== Hide chat messages from players marked as enemies
 
 Hide death/respawn effects
 == 사망/부활 효과 숨기기
@@ -4967,6 +4997,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5011,6 +5044,9 @@ I am away from the game window
 
 I muted you
 == 내가 당신을 음소거했습니다
+
+Icons
+== 아이콘
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == 1이면 연결 시 한 번만 자동 녹화하고, 0이면 게임 종료 후 자동 녹화가 다시 시작됩니다.
@@ -6254,6 +6290,9 @@ Message to send on auto vote, leave empty to not send
 Messages
 == 메시지
 
+Messages that already look like the target language will skip auto-translate
+== 이미 대상 언어처럼 보이는 메시지는 자동 번역을 건너뜁니다
+
 Microphone
 == 마이크
 
@@ -6403,6 +6442,9 @@ Move right
 
 Move to category
 == 카테고리로 이동
+
+Moved ingame
+== 게임 내에서 이동됨
 
 Movement
 == 이동
@@ -7379,9 +7421,6 @@ Per-word highlight (karaoke)
 Performance debug log threshold (ms)
 == 성능 디버그 로그 임계값 (ms)
 
-Performance mode (placeholder)
-== 성능 모드 (자리 표시자)
-
 Personal best:
 == 개인 최고 기록:
 
@@ -7946,6 +7985,12 @@ q = Connection quality
 Qm
 == Qm
 
+Qm UI icon color: 1=White, 2=Black
+== Qm UI 아이콘 색상: 1=흰색, 2=검정
+
+Qm UI icon weight: 0=Regular, 1=Bold
+== Qm UI 아이콘 굵기: 0=보통, 1=굵게
+
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다.
 
@@ -8218,6 +8263,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == 공개 목록을 위해 마스터 서버에 서버 등록, 쉼표로 구분된 프로토콜 허용 (예: 'ipv4,ipv6')
+
+Regular
+== 보통
 
 Regular background color
 == 일반 배경 색상
@@ -11711,11 +11759,20 @@ UI color
 UI controller sens.
 == UI 컨트롤러 감도
 
+UI icon color
+== UI 아이콘 색상
+
+UI icon weight
+== UI 아이콘 굵기
+
 UI motion level
 == UI 애니메이션 강도
 
 UI mouse sens.
 == UI 마우스 감도
+
+UI rounded corner segments (even numbers recommended)
+== UI rounded corner segments (even numbers recommended)
 
 UI scale
 == UI 크기
@@ -11917,9 +11974,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 
 Uploading map data to GPU
 == 맵 데이터를 GPU 에 업로드 중
-
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
 
 URL for downloading community skins
 == 커뮤니티 스킨 다운로드 URL
@@ -12422,6 +12476,9 @@ What's done is done, no use saying more
 Wheel animate
 == 휠 애니메이션
 
+When TClient rainbow Tee is enabled, this feature has no effect.
+== TClient 무지개 Tee가 켜져 있으면 이 기능은 적용되지 않습니다.
+
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 출발선을 넘으면 최고 기록의 움직임을 재현하는 고스트 티를 표시합니다
 
@@ -12515,6 +12572,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == 귓속말: /w 플레이어 메시지
 
+White
+== 흰색
+
 Why are you slowmo replaying to read this?
 == 이걸 읽으려고 느린 재생을 하고 계신가요?
 
@@ -12559,6 +12619,9 @@ Windowed fullscreen
 
 Word Filter
 == 단어 필터
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== Word filter action: 0=replace matching words, 1=hide entire message
 
 Word highlight soft edge width (px)
 == 글자별 가장자리 부드러운 전환 폭 px
@@ -13222,6 +13285,10 @@ AUTO
 [Start menu]
 Play
 == 플레이
+
+[Team and size]
+%d\n(%d/%d)
+== %d\n(%d/%d)
 
 [Team size]
 maximum

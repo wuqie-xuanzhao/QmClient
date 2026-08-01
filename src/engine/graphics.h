@@ -258,6 +258,21 @@ public:
 	static_assert(sizeof(vec4) == sizeof(float) * 4);
 	static_assert(sizeof(SMediaIslandSdfParams) == SMediaIslandSdfParams::DATA_COUNT * sizeof(vec4));
 
+	// A compact rounded-rectangle primitive shared by UI chrome. It intentionally
+	// remains separate from the Media Island data layout so UI controls do not
+	// inherit HUD-specific shape semantics.
+	struct SRoundedRectSdfParams
+	{
+		vec4 m_Rect{};
+		vec4 m_FillColor{};
+		vec4 m_BorderColor{};
+		// 左上、右上、右下、左下圆角半径
+		vec4 m_CornerRadii{};
+		// 边框宽度、逻辑像素大小、外部 quad padding、保留字段
+		vec4 m_Params{};
+	};
+	static_assert(sizeof(SRoundedRectSdfParams) == sizeof(vec4) * 5);
+
 	enum
 	{
 		TEXLOAD_TO_3D_TEXTURE = 1 << 0,
@@ -288,6 +303,18 @@ public:
 			m_Id = -1;
 			m_Generation = 0;
 		}
+	};
+
+	struct STexturedMsdfParams
+	{
+		CTextureHandle m_Texture;
+		vec4 m_Rect{};
+		vec4 m_UvRect{};
+		ColorRGBA m_Color{};
+		float m_PxRange = 0.0f;
+		float m_AtlasWidth = 0.0f;
+		float m_AtlasHeight = 0.0f;
+		float m_Rotation = 0.0f;
 	};
 
 	class CRenderTargetHandle
@@ -459,6 +486,13 @@ public:
 	// Render a media-island SDF quad in a supported programmable backend.
 	// Callers use a geometry approximation when HasMediaIslandSdf() is false.
 	virtual void RenderMediaIslandSdf(const SMediaIslandSdfParams &Params) = 0;
+	// Render a fill and optional border in one anti-aliased rounded-rectangle pass.
+	virtual void RenderRoundedRectSdf(const SRoundedRectSdfParams &Params) = 0;
+	// Draw only the outward anti-alias fringe of a rounded rectangle.
+	virtual void DrawRoundedRectAntialias(float x, float y, float w, float h, float Radius, int Corners, const ColorRGBA &Color) = 0;
+	// Render a textured multi-channel signed-distance field with runtime tint.
+	// This is intentionally separate from normal alpha-texture quads and text glyphs.
+	virtual void RenderTexturedMsdf(const STexturedMsdfParams &Params) = 0;
 
 	// opengl 3.3 functions
 
@@ -482,6 +516,8 @@ public:
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
 	virtual bool IsConfigModernAPI() = 0;
 	virtual bool HasMediaIslandSdf() = 0;
+	virtual bool HasRoundedRectSdf() = 0;
+	virtual bool HasTexturedMsdf() = 0;
 	virtual bool IsTileBufferingEnabled() = 0;
 	virtual bool IsQuadBufferingEnabled() = 0;
 	virtual bool IsTextBufferingEnabled() = 0;
