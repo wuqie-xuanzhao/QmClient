@@ -46,6 +46,8 @@ void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect
 	const ColorRGBA IconColor = QmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, Alpha), g_Config.m_QmUiIconColor);
 	ITextRender *pTextRender = Ctx.m_pUi->TextRender();
 	const ColorRGBA PreviousColor = pTextRender->GetTextColor();
+	const ColorRGBA PreviousOutlineColor = pTextRender->GetTextOutlineColor();
+	const ColorRGBA PreviousSelectionColor = pTextRender->GetTextSelectionColor();
 	const unsigned PreviousFlags = pTextRender->GetRenderFlags();
 	const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
 	pTextRender->TextColor(IconColor);
@@ -54,6 +56,8 @@ void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect
 	Ctx.m_pUi->DoLabel(&ChromeRect, Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
 	pTextRender->SetRenderFlags(PreviousFlags);
 	pTextRender->SetFontPreset(PreviousPreset);
+	pTextRender->TextOutlineColor(PreviousOutlineColor);
+	pTextRender->TextSelectionColor(PreviousSelectionColor);
 	pTextRender->TextColor(PreviousColor);
 }
 
@@ -79,26 +83,33 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	SUiTheme Fallback;
 	const SUiTheme &Theme = SettingsCardTheme(Ctx, Fallback);
 	const bool DrawCardChrome = SettingsCardShouldDrawChrome(Ctx.m_pUi != nullptr && Ctx.m_pUi->RenderOnly());
-	// 重排与拖放反馈只改变边框，卡片背景透明度保持稳定，避免滚动或切页时闪烁。
+	// 普通 hover 只暴露副标题；重排与拖放反馈只改变边框，卡片背景透明度保持稳定，避免滚动或切页时闪烁。
 	// 完成反馈只属于显式拖放。普通高度/布局变化不得改变卡片 chrome，
 	// 否则半透明卡片在展开、折叠或首次布局时会表现为一次亮闪。
 	const bool InteractionComplete = DrawState.m_DropFeedback;
-	const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders;
-	ColorRGBA Border = DrawState.m_Focused || InteractionComplete ? Theme.m_BorderFocused : DrawState.m_Hovered ? Theme.m_BorderHovered :
-														      VisualOptions.m_BorderColor;
+	// 普通卡片只是内容容器，指针进入只显示副标题。焦点和拖放才需要轮廓反馈，
+	// 且不能被“常驻边框”关闭选项一并隐藏。
+	const bool DrawNormalBorder = VisualOptions.m_AlwaysShowBorders;
+	const bool DrawAttentionBorder = DrawState.m_Focused || DrawState.m_Dragged || InteractionComplete;
+	ColorRGBA Border = DrawAttentionBorder ? Theme.m_BorderFocused : VisualOptions.m_BorderColor;
 	Border.a *= DrawState.m_DrawAlpha;
 	ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);
 	const float PixelSize = Ctx.m_pUi != nullptr ? Ctx.m_pUi->PixelSize() : 0.0f;
 	const CUIRect ChromeRect = ResolveSettingsCardChromeRect(DrawFrame.m_Rect, PixelSize);
 	const float CardRadius = AlignSettingsCardValueToPixels(std::min(ui_token::settings::CARD_RADIUS * UiScale, std::min(ChromeRect.w, ChromeRect.h) * 0.5f), PixelSize);
-	// Focus/hover 只改变颜色，不能改变 Surface 的几何，否则边框获得焦点时
-	// 会产生一次内缩跳变并重新触发用户看到的卡片闪动。
+	// 焦点与拖放只能改变边框颜色，普通 hover 不参与 chrome；任何状态都不能改变
+	// Surface 的几何，否则边框获得焦点时会产生一次内缩跳变并重新触发卡片闪动。
 	const float BorderWidth = ResolveSettingsCardBorderWidth(UiScale, PixelSize);
 	if(DrawCardChrome)
-		DrawRoundedSurface(Ctx, ChromeRect, Surface, Border, CardRadius, DrawInteractionBorder ? BorderWidth : 0.0f);
+		DrawRoundedSurface(Ctx, ChromeRect, Surface, Border, CardRadius, DrawNormalBorder || DrawAttentionBorder ? BorderWidth : 0.0f);
 
 	if(Ctx.m_pUi != nullptr && Ctx.m_pTextRender != nullptr)
 	{
+		const ColorRGBA PreviousTextColor = Ctx.m_pTextRender->GetTextColor();
+		const ColorRGBA PreviousTextOutlineColor = Ctx.m_pTextRender->GetTextOutlineColor();
+		const ColorRGBA PreviousTextSelectionColor = Ctx.m_pTextRender->GetTextSelectionColor();
+		const unsigned PreviousRenderFlags = Ctx.m_pTextRender->GetRenderFlags();
+		const EFontPreset PreviousFontPreset = Ctx.m_pTextRender->GetFontPreset();
 		ColorRGBA TitleColor = Theme.m_TextTitle;
 		if(VisualOptions.m_RainbowTitles)
 		{
@@ -113,7 +124,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		TitleProps.m_EllipsisAtEnd = true;
 		Ctx.m_pUi->DoLabel(&DrawFrame.m_TitleRect, Spec.m_pTitle != nullptr ? Spec.m_pTitle : "", ui_token::font::TITLE * UiScale, TEXTALIGN_ML, TitleProps);
 		const char *pSubtitle = Spec.m_pSubtitle;
-		if(pSubtitle != nullptr && SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused))
+		if(pSubtitle != nullptr && SettingsCardSubtitleVisible(DrawState.m_Hovered, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused))
 		{
 			ColorRGBA SubtitleColor = Theme.m_TextSmall;
 			SubtitleColor.a *= DrawState.m_DrawAlpha;
@@ -124,7 +135,12 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 			const float SubtitleSize = ResolveSettingsSmallFontSize(UiScale);
 			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, pSubtitle, SubtitleSize, TEXTALIGN_ML, SubtitleProps);
 		}
-		Ctx.m_pTextRender->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+		// 标题和副标题只影响本卡片，不能把调用方的文本状态写死为默认白色。
+		Ctx.m_pTextRender->SetRenderFlags(PreviousRenderFlags);
+		Ctx.m_pTextRender->SetFontPreset(PreviousFontPreset);
+		Ctx.m_pTextRender->TextOutlineColor(PreviousTextOutlineColor);
+		Ctx.m_pTextRender->TextSelectionColor(PreviousTextSelectionColor);
+		Ctx.m_pTextRender->TextColor(PreviousTextColor);
 		if(DrawCardChrome && DrawState.m_ShowDefaultCollapseButton)
 			RenderSettingsCardCollapseButton(Ctx, DrawFrame.m_HandleRect, DrawState.m_Collapsed, DrawState.m_DrawAlpha);
 	}
@@ -133,7 +149,10 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		HeaderAction(DrawFrame, DrawState.m_Collapsed);
 	const bool ClipContent = DrawState.m_ClipContent && Ctx.m_pUi != nullptr && DrawFrame.m_ContentRect.w > 0.0f && DrawFrame.m_ContentRect.h > 0.0f;
 	if(ClipContent)
-		Ctx.m_pUi->ClipEnable(&DrawFrame.m_ContentRect);
+	{
+		const CUIRect ClipRect = ResolveSettingsCardContentClipRect(DrawFrame.m_ContentRect, DrawFrame.m_Rect, UiScale);
+		Ctx.m_pUi->ClipEnable(&ClipRect);
+	}
 	if(RenderMeasured)
 	{
 		CUIRect ContentRect = DrawFrame.m_ContentRect;

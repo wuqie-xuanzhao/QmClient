@@ -122,6 +122,8 @@ namespace ui_widget
 				return;
 			ITextRender *pTextRender = Ctx.m_pUi->TextRender();
 			const ColorRGBA PreviousColor = pTextRender->GetTextColor();
+			const ColorRGBA PreviousOutlineColor = pTextRender->GetTextOutlineColor();
+			const ColorRGBA PreviousSelectionColor = pTextRender->GetTextSelectionColor();
 			const unsigned PreviousFlags = pTextRender->GetRenderFlags();
 			const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
 			pTextRender->TextColor(Color);
@@ -130,6 +132,8 @@ namespace ui_widget
 			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);
 			pTextRender->SetRenderFlags(PreviousFlags);
 			pTextRender->SetFontPreset(PreviousPreset);
+			pTextRender->TextOutlineColor(PreviousOutlineColor);
+			pTextRender->TextSelectionColor(PreviousSelectionColor);
 			pTextRender->TextColor(PreviousColor);
 		}
 
@@ -175,6 +179,7 @@ namespace ui_widget
 		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr), InputIconColor);
 		CUi::SEditBoxRenderOptions RenderOptions;
 		RenderOptions.m_DrawBackground = false;
+		RenderOptions.m_pHitRect = &Layout.m_ShellRect;
 		bool Changed = false;
 		if(Options.m_Mode == EInputFieldMode::MULTILINE)
 			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &Layout.m_ContentRect, FontSize, Options.m_LineSpacing, ResolveInputFieldTextAlign(Options), RenderOptions);
@@ -348,7 +353,7 @@ namespace ui_widget
 		}
 
 		const bool HasSuffix = Options.m_pSuffix != nullptr && Options.m_pSuffix[0] != '\0';
-		const float SuffixWidth = HasSuffix ? 34.0f : 0.0f;
+		const float SuffixWidth = HasSuffix ? std::max(18.0f, Options.m_TrailingWidth) : 0.0f;
 		const float MinimumValueWidth = 52.0f + SuffixWidth + 22.0f;
 		const float ValueWidth = std::clamp((MultiLine ? ValueRect.w : Controls.w) * 0.26f, MinimumValueWidth, 128.0f);
 		const bool HasSlider = MultiLine || Controls.w > ValueWidth + 42.0f;

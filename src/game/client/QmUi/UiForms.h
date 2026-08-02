@@ -239,6 +239,7 @@ namespace ui_widget
 		const char *m_pMaxText = nullptr; // 当值为 Max 且非 Infinite 时显示
 		float m_FontSize = ui_token::font::BODY;
 		float m_LineSpacing = 1.0f;
+		float m_TrailingWidth = 34.0f;
 		int m_LabelAlign = TEXTALIGN_ML;
 		int m_ValueMultiplier = 1; // 滑动条以 Min/Multiplier..Max/Multiplier 为单位，显示/编辑真实值
 		int m_ValueStep = 1; // 滑动条、滚轮和提交值按该 stored-value 步进量化

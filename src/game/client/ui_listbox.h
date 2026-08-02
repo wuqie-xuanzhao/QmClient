@@ -45,6 +45,9 @@ private:
 	bool m_ScrollbarMarginOverridden;
 	bool m_HasHeader;
 	bool m_Active;
+	ColorRGBA m_SelectedItemActiveColor;
+	ColorRGBA m_SelectedItemInactiveColor;
+	ColorRGBA m_HoveredItemColor;
 
 protected:
 	CListboxItem DoNextRow();
@@ -75,6 +78,12 @@ public:
 	void SetWheelOwnerPriority(EUiWheelOwnerPriority Priority) { m_WheelOwnerPriority = Priority; }
 	void SetActive(bool Active) { m_Active = Active; }
 	void SetScrollProfile(EQmScrollProfile Profile) { m_ScrollProfile = Profile; }
+	void SetItemColors(ColorRGBA SelectedActive, ColorRGBA SelectedInactive, ColorRGBA Hovered)
+	{
+		m_SelectedItemActiveColor = SelectedActive;
+		m_SelectedItemInactiveColor = SelectedInactive;
+		m_HoveredItemColor = Hovered;
+	}
 
 	bool WasItemSelected() const { return m_ListBoxItemSelected; }
 	bool WasItemActivated() const { return m_ListBoxItemActivated; }

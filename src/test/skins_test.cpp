@@ -1066,7 +1066,8 @@ TEST(Skins, SkinQueueRotationUsesExplicitEnableSwitchAndBoundedInterval)
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueLength, qm_skin_queue_length, 20, 0, 1024"), std::string::npos);
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueLength, qm_dummy_skin_queue_length, 20, 0, 1024"), std::string::npos);
 	EXPECT_NE(Menus.find("Localize(\"Enable skin queue rotation\")"), std::string::npos);
-	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInput, QueueIntervalOptions);"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
+	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInputGroup, QueueIntervalOptions);"), std::string::npos);
 	EXPECT_EQ(Menus.find("QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("!SkinQueueEnabledVar(Dummy)"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("m_aSkinQueueLastUpdate[Dummy].reset();"), std::string::npos);
@@ -1967,7 +1968,8 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("IUiContext TeeSkinQueueIntervalCtx;"), std::string::npos);
 	EXPECT_NE(Menus.find("TeeSkinQueueIntervalCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_queue_interval_text_input\");"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueIntervalOptions.m_CommitPolicy = ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT;"), std::string::npos);
-	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInput, QueueIntervalOptions);"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
+	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInputGroup, QueueIntervalOptions);"), std::string::npos);
 	EXPECT_EQ(Menus.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput"), std::string::npos);
 	EXPECT_NE(Source.find("m_vSkinQueuePresets.push_back({\"Server preset\", {}, CSkinQueuePreset::EKind::SERVER});"), std::string::npos);
 	// Removed UI: Apply/Save-current buttons, the select/cancel-select calls, and the

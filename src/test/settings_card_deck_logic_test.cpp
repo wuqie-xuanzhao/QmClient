@@ -8,13 +8,31 @@
 #include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/SettingsCardDeckLogic.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
+#include <game/client/QmUi/UiForms.h>
 
 #include <gtest/gtest.h>
+#include <test/test.h>
 
 #include <array>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+
+namespace
+{
+
+	std::string FindRuntimeTranslation(const std::string &LanguageData, const char *pKey)
+	{
+		const std::string Prefix = std::string(pKey) + "\n== ";
+		const size_t TranslationStart = LanguageData.find(Prefix);
+		if(TranslationStart == std::string::npos)
+			return {};
+		const size_t ValueStart = TranslationStart + Prefix.size();
+		const size_t ValueEnd = LanguageData.find('\n', ValueStart);
+		return LanguageData.substr(ValueStart, ValueEnd - ValueStart);
+	}
+
+}
 
 TEST(SettingsCardDeck, StateIndexRevisionChangesWhenSameSizedModelIsRebuilt)
 {
@@ -119,13 +137,23 @@ TEST(SettingsCardDeck, CollapsedCardsSkipContentWorkAndExpandedDynamicCardsRemea
 	EXPECT_TRUE(SettingsCardDeckRendersContent(false));
 }
 
-TEST(SettingsCardDeck, PreLayoutContentInputRequiresPointerVisibleExpandedContent)
+TEST(SettingsCardDeck, PreLayoutContentInputRequiresPointerOrPendingInputOrActivePointerContinuation)
 {
-	EXPECT_TRUE(SettingsCardDeckShouldRunPreLayoutInput(true, true, false, 1.0f));
-	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(false, true, false, 1.0f));
-	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, false, false, 1.0f));
-	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, true, true, 1.0f));
-	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, true, false, 0.0f));
+	EXPECT_TRUE(SettingsCardDeckShouldRunPreLayoutInput(true, false, false, true, false, 1.0f));
+	EXPECT_TRUE(SettingsCardDeckShouldRunPreLayoutInput(false, true, false, true, false, 1.0f));
+	EXPECT_TRUE(SettingsCardDeckShouldRunPreLayoutInput(false, false, true, false, false, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(false, false, false, true, false, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, false, false, false, false, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, false, false, true, true, 1.0f));
+	EXPECT_FALSE(SettingsCardDeckShouldRunPreLayoutInput(true, false, false, true, false, 0.0f));
+}
+
+TEST(SettingsCardDeck, ActiveItemContinuationRequiresPointerInput)
+{
+	EXPECT_TRUE(SettingsCardDeckHasActiveItemContinuation(true, true));
+	EXPECT_FALSE(SettingsCardDeckHasActiveItemContinuation(true, false));
+	EXPECT_FALSE(SettingsCardDeckHasActiveItemContinuation(false, true));
+	EXPECT_FALSE(SettingsCardDeckHasActiveItemContinuation(false, false));
 }
 
 TEST(SettingsCardDeck, OrdinaryCardsUseDefaultCollapseWhileCustomCardsRemainAuthoritative)
@@ -185,6 +213,24 @@ TEST(SettingsCardDeck, SubtitleVisibilityUsesCurrentPointerMotionLatchAndFocus)
 	EXPECT_FALSE(SettingsCardSubtitleVisible(false, false, false));
 }
 
+TEST(SettingsCardDeck, HoverOnlyRevealsSubtitleWithoutChangingCardChrome)
+{
+	const ColorRGBA BaseSurface(0.12f, 0.24f, 0.36f, 0.48f);
+	SSettingsCardVisualState Resting;
+	SSettingsCardVisualState Hovered = Resting;
+	Hovered.m_Hovered = true;
+
+	EXPECT_TRUE(SettingsCardSubtitleVisible(Hovered.m_Hovered, false, false));
+	EXPECT_FALSE(SettingsCardInteractionBorderVisible(Hovered));
+
+	const ColorRGBA RestingSurface = ResolveSettingsCardSurfaceColor(BaseSurface, Resting);
+	const ColorRGBA HoveredSurface = ResolveSettingsCardSurfaceColor(BaseSurface, Hovered);
+	EXPECT_FLOAT_EQ(RestingSurface.r, HoveredSurface.r);
+	EXPECT_FLOAT_EQ(RestingSurface.g, HoveredSurface.g);
+	EXPECT_FLOAT_EQ(RestingSurface.b, HoveredSurface.b);
+	EXPECT_FLOAT_EQ(RestingSurface.a, HoveredSurface.a);
+}
+
 TEST(SettingsCardDeck, SubtitleVisibilityLatchesOnlyWhileCardIsMoving)
 {
 	// 动效开始帧使用当前绘制位置的命中，不能依赖上一帧的旧几何。
@@ -216,6 +262,44 @@ TEST(SettingsPageLayout, DynamicVisualCardHeightsUseSharedMetrics)
 	EXPECT_GT(ResolveQmVisualSkinTransitionHeight(Metrics, false), 0.0f);
 }
 
+TEST(SettingsPageLayout, DynamicIslandHeightIncludesTheActualColorRow)
+{
+	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+	const float OriginalHeight = ResolveQmHudDynamicIslandHeight(Metrics, true, 700.0f);
+	const float ExpandedHeight = ResolveQmHudDynamicIslandHeight(Metrics, false, 700.0f);
+	const CUIRect ColorRowView{0.0f, 0.0f, 700.0f, 0.0f};
+
+	EXPECT_FLOAT_EQ(OriginalHeight, 3.0f * Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(ExpandedHeight - OriginalHeight, ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight);
+}
+
+TEST(SettingsCard, ContentClipAllowsFocusRingButNeverEscapesTheCard)
+{
+	const CUIRect Card{10.0f, 20.0f, 200.0f, 100.0f};
+	const CUIRect Content{20.0f, 45.0f, 180.0f, 65.0f};
+	const CUIRect Clip = ResolveSettingsCardContentClipRect(Content, Card, 1.0f);
+
+	EXPECT_GE(Clip.x, Card.x);
+	EXPECT_GE(Clip.y, Card.y);
+	EXPECT_LE(Clip.x + Clip.w, Card.x + Card.w);
+	EXPECT_LE(Clip.y + Clip.h, Card.y + Card.h);
+	EXPECT_LT(Clip.y, Content.y);
+	EXPECT_GT(Clip.y + Clip.h, Content.y + Content.h - 0.001f);
+}
+
+TEST(SettingsInputField, LayoutKeepsTrailingUnitInsideTheShell)
+{
+	const CUIRect Shell{10.0f, 20.0f, 120.0f, 24.0f};
+	const ui_widget::SInputFieldLayout Layout = ui_widget::ResolveInputFieldLayout(Shell, false, false, 1.0f, 24.0f);
+
+	EXPECT_FLOAT_EQ(Layout.m_ShellRect.x, Shell.x);
+	EXPECT_FLOAT_EQ(Layout.m_ShellRect.w, Shell.w);
+	EXPECT_GT(Layout.m_TrailingRect.w, 0.0f);
+	EXPECT_GE(Layout.m_TrailingRect.x, Shell.x);
+	EXPECT_LE(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Shell.x + Shell.w);
+	EXPECT_LE(Layout.m_ContentRect.x + Layout.m_ContentRect.w, Layout.m_TrailingRect.x);
+}
+
 TEST(SettingsCardDeck, GeometryMotionIncludesCardsPushedByAnEarlierHeightAnimation)
 {
 	EXPECT_FALSE(SettingsCardDeckGeometryMoved(false, 100.0f, 80.0f, 120.0f, 80.0f));
@@ -239,11 +323,14 @@ TEST(SettingsCardDeck, RestingCardsDoNotDrawASecondRoundedBorder)
 	SSettingsCardVisualState State;
 	EXPECT_FALSE(SettingsCardInteractionBorderVisible(State));
 	State.m_Hovered = true;
-	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
+	EXPECT_FALSE(SettingsCardInteractionBorderVisible(State));
 	State.m_Hovered = false;
 	State.m_Focused = true;
 	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
 	State.m_Focused = false;
+	State.m_Dragged = true;
+	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
+	State.m_Dragged = false;
 	State.m_DropFeedback = true;
 	EXPECT_TRUE(SettingsCardInteractionBorderVisible(State));
 }
@@ -369,6 +456,47 @@ TEST(SettingsCardDeck, EveryCardDeclaresADistinctDescriptionWithinItsPage)
 		ASSERT_NE(Default.m_pDescription[0], '\0');
 		const std::string Tab = Default.m_pDefaultTab != nullptr ? Default.m_pDefaultTab : "";
 		EXPECT_TRUE(DescriptionsByTab[Tab].insert(Default.m_pDescription).second);
+	}
+}
+
+TEST(SettingsCardDeck, EveryCardDescriptionHasASimplifiedChineseRuntimeTranslation)
+{
+	const std::string SimplifiedChinese = ReadTestSourceFile("data/languages/simplified_chinese.txt");
+	for(const qm_card_registry::SCardDefault &Default : qm_card_registry::Defaults())
+	{
+		SCOPED_TRACE(Default.m_pStableId);
+		const char *pDescription = qm_card_registry::ResolveDescriptionKey(Default);
+		const std::string Translation = FindRuntimeTranslation(SimplifiedChinese, pDescription);
+		ASSERT_FALSE(Translation.empty()) << pDescription;
+		EXPECT_NE(Translation, pDescription);
+	}
+}
+
+TEST(SettingsCardDeck, AuditedUiLabelsHaveSimplifiedChineseRuntimeTranslations)
+{
+	const std::string SimplifiedChinese = ReadTestSourceFile("data/languages/simplified_chinese.txt");
+	static const char *const s_apKeys[] = {
+		"Enable client stutter diagnostics at startup",
+		"Enable enhanced scoreboard presentation",
+		"Enable macOS graphics diagnostics and Instruments signposts",
+		"Enable smooth cinematic camera while free spectating",
+		"Global UI size percentage",
+		"Gores",
+		"Hide chat messages from players marked as enemies",
+		"Ping",
+		"Relative X position of the draggable back button",
+		"Relative Y position of the draggable back button",
+		"RTT",
+		"Show draggable virtual back button",
+		"UI rounded corner segments (even numbers recommended)",
+		"Word filter action: 0=replace matching words, 1=hide entire message",
+	};
+	for(const char *pKey : s_apKeys)
+	{
+		SCOPED_TRACE(pKey);
+		const std::string Translation = FindRuntimeTranslation(SimplifiedChinese, pKey);
+		ASSERT_FALSE(Translation.empty());
+		EXPECT_NE(Translation, pKey);
 	}
 }
 

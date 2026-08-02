@@ -2463,8 +2463,9 @@ TEST(SettingsWarmup, TClientSettingsRowsSeparateControlHeightFromSpacing)
 	EXPECT_EQ(Hud.find("LineSize * 3.0f"), std::string::npos);
 
 	const std::string Nameplates = Section("auto LayoutVisualNameplateSection", "auto LayoutVisualEffectsSection");
-	EXPECT_NE(Nameplates.find("TClientSettingsRowsHeight(8)"), std::string::npos);
-	EXPECT_NE(Nameplates.find("CUIRect FeetBox = Rows.Next();"), std::string::npos);
+	EXPECT_NE(Nameplates.find("const int NameplateRowCount = 7 + (g_Config.m_TcWhiteFeet ? 1 : 0);"), std::string::npos);
+	EXPECT_NE(Nameplates.find("TClientSettingsRowsHeight(NameplateRowCount)"), std::string::npos);
+	EXPECT_NE(Nameplates.find("CUIRect FeetBox;\n\t\t\tif(g_Config.m_TcWhiteFeet)\n\t\t\t\tFeetBox = Rows.Next();"), std::string::npos);
 	EXPECT_EQ(Nameplates.find("LineSize * 7.0f"), std::string::npos);
 	EXPECT_EQ(Nameplates.find("&CurrentColumn, LineSize"), std::string::npos);
 

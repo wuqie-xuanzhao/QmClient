@@ -593,6 +593,7 @@ private:
 
 	bool m_Enabled;
 	int m_RenderOnlyDepth = 0;
+	int m_PreLayoutInputDepth = 0;
 	float m_DropDownFontSize = -1.0f;
 	mutable int m_QuadBatchDepth = 0;
 	mutable int m_QuadBatchContainerIndex = -1;
@@ -770,6 +771,13 @@ public:
 	void BeginRenderOnly();
 	void EndRenderOnly();
 	bool RenderOnly() const { return m_RenderOnlyDepth > 0; }
+	void BeginPreLayoutInput() { ++m_PreLayoutInputDepth; }
+	void EndPreLayoutInput()
+	{
+		if(m_PreLayoutInputDepth > 0)
+			--m_PreLayoutInputDepth;
+	}
+	bool PreLayoutInput() const { return m_PreLayoutInputDepth > 0; }
 	void SetDropDownFontSize(float FontSize) { m_DropDownFontSize = FontSize; }
 	float DropDownFontSize() const { return m_DropDownFontSize; }
 	void Update();
@@ -913,11 +921,13 @@ public:
 	struct SEditBoxRenderOptions
 	{
 		SEditBoxRenderOptions() :
-			m_DrawBackground(true)
+			m_DrawBackground(true),
+			m_pHitRect(nullptr)
 		{
 		}
 
 		bool m_DrawBackground;
+		const CUIRect *m_pHitRect;
 	};
 
 	void DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr) const;

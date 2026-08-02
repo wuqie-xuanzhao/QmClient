@@ -2557,20 +2557,22 @@ public:
 			if(TextContainer.m_HasCursor)
 			{
 				const auto CurTime = time_get_nanoseconds();
-
-				Graphics()->TextureClear();
-				if(TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms)
+				const bool RenderCursor = TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms;
+				if(RenderCursor)
 				{
+					// 光标是独立覆盖层；隐藏半周期不能改动后续文字共享的图形状态。
+					Graphics()->FlushVertices();
+					Graphics()->TextureClear();
 					Graphics()->SetColor(TextOutlineColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 0, 1, 0, 0);
 					Graphics()->SetColor(TextColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, 1, 0, 0);
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 				if(TextContainer.m_ForceCursorRendering)
 					m_CursorRenderTime = CurTime - 501ms;
 				else if((CurTime - m_CursorRenderTime) > 1s)
 					m_CursorRenderTime = time_get_nanoseconds();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
 	}

@@ -333,7 +333,12 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	const bool Changed = ApplyQmSafeGraphicsRecovery();
 	if(Changed)
 	{
-		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to OpenGL 3.0 windowed mode without FSAA", Latest.m_aPath);
+#if defined(CONF_PLATFORM_MACOS)
+		constexpr const char *pFallbackOpenGlVersion = "4.1";
+#else
+		constexpr const char *pFallbackOpenGlVersion = "3.0";
+#endif
+		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to OpenGL %s windowed mode without FSAA", Latest.m_aPath, pFallbackOpenGlVersion);
 	}
 	else
 	{

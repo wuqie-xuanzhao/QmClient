@@ -3224,10 +3224,10 @@ void CMenus::RenderQmHudInputOverlayContent(CUIRect &Content, const SSettingsCon
 void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool Expanded, bool PrewarmOnly)
 {
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmDummyMiniView, "Enable dummy window", Localize("Enable dummy window"), &g_Config.m_QmDummyMiniView);
-	Content.HSplitTop(LineHeight * 0.8f, nullptr, &Content);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	if(!Expanded)
 		return;
+	Content.HSplitTop(LineHeight * 0.8f, nullptr, &Content);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmDummyMiniViewAuto, "Only show when the other Tee is not on screen", Localize("Only show when the other Tee is not on screen"), &g_Config.m_QmDummyMiniViewAuto);
 	CUIRect Row, LabelColumn, ControlColumn;
@@ -3259,14 +3259,8 @@ void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight,
 	if(OriginalStyle)
 		return;
 
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	RenderQmHudLabel("qmclient-dynamic-island-opacity", &LabelColumn, Localize("Opacity"), BodySize);
-	static int s_QmHudIslandBgOpacityInputId;
-	RenderQmSettingsSliderWithValueInput(&s_QmHudIslandBgOpacityInputId, ControlColumn, &g_Config.m_QmHudIslandBgOpacity, 0, 100, "%", PrewarmOnly);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	static CButtonContainer s_DynamicIslandBgColorId;
-	DoLine_ColorPicker(&s_DynamicIslandBgColorId, CurrentSettingsContentMetrics(), &Content, Localize("Background color"), &g_Config.m_QmHudIslandBgColor, ColorRGBA(0.04f, 0.05f, 0.07f, 1.0f), false);
+	DoLine_AlphaColorPicker(&s_DynamicIslandBgColorId, CurrentSettingsContentMetrics(), &Content, Localize("Background color"), &g_Config.m_QmHudIslandBgColor, &g_Config.m_QmHudIslandBgOpacity, 0x9C460E, 80);
 }
 
 void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly)
@@ -4630,7 +4624,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::InputOverlay: return ResolveQmHudInputOverlayHeight(Metrics, g_Config.m_QmInputOverlay != 0);
 		case EQmModuleId::HudNotifications: return ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0);
 		case EQmModuleId::Voice: return ResolveQmHudVoiceHeight(Metrics, g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
-		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? Rows(3.0f) : Rows(5.0f);
+		case EQmModuleId::DynamicIsland: return ResolveQmHudDynamicIslandHeight(Metrics, DynamicIslandOriginalStyle, ContentWidth);
 		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(3.0f) : Rows(1.0f);
 		case EQmModuleId::Lyrics: return ResolveQmHudLyricsHeight(Metrics, g_Config.m_QmSmtcLyricsFontSize, g_Config.m_QmSmtcLyricsLines);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DHeight(Metrics, ContentWidth, g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
@@ -4675,6 +4669,18 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::InputOverlay:
 			return [this, Metrics](CUIRect Content) {
 				return HandleQmHudCheckboxInput(Content, Metrics.m_LineHeight, Metrics.m_LineSpacing, &g_Config.m_QmInputOverlay, &g_Config.m_QmInputOverlay);
+			};
+		case EQmModuleId::DynamicIsland:
+			return [this, Metrics, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandUseOriginalStyle, &g_Config.m_QmHudIslandUseOriginalStyle);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTeam, &g_Config.m_QmHudIslandShowTeam) || Changed;
+				ConsumeQmHudRow(Content); // edge margin
+				if(!g_Config.m_QmHudIslandUseOriginalStyle)
+				{
+					const SSettingsColorRowLayout ColorLayout = ResolveSettingsColorRowLayout(Content, Metrics, false);
+					Content.HSplitTop(ColorLayout.m_ConsumedHeight, nullptr, &Content);
+				}
+				return Changed;
 			};
 		case EQmModuleId::PlayerStats:
 			return [this, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {

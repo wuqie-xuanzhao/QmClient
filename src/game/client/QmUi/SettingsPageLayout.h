@@ -551,7 +551,18 @@ inline float ResolveQmHudInputOverlayHeight(const SSettingsContentMetrics &Metri
 inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metrics, const bool Expanded)
 {
 	const float PreviewGap = Metrics.m_LineHeight * 0.8f + Metrics.m_LineSpacing;
-	return (Expanded ? 4.0f : 1.0f) * Metrics.m_RowStep + PreviewGap;
+	return Expanded ? 4.0f * Metrics.m_RowStep + PreviewGap : Metrics.m_RowStep;
+}
+
+inline float ResolveQmHudDynamicIslandHeight(const SSettingsContentMetrics &Metrics, const bool OriginalStyle, const float ContentWidth)
+{
+	float Height = 3.0f * Metrics.m_RowStep;
+	if(!OriginalStyle)
+	{
+		const CUIRect ColorRowView{0.0f, 0.0f, std::max(0.0f, ContentWidth), 0.0f};
+		Height += ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight;
+	}
+	return Height;
 }
 
 inline float ResolveQmHudVoiceHeight(const SSettingsContentMetrics &Metrics, const bool Enabled, const bool Advanced, const bool ShowStatus, const int NoiseSuppressMode, const bool VadEnabled, const bool StereoEnabled)
@@ -649,9 +660,9 @@ inline float ResolveAppearanceLaserEnhancedHeight(const SSettingsContentMetrics 
 	return RowCount * Metrics.m_LineHeight + SpacingCount * Metrics.m_LineSpacing;
 }
 
-inline float ResolveDDNetDemoRows(const bool RaceGhostEnabled, const bool SaveGhostEnabled)
+inline float ResolveDDNetDemoRows(const bool ReplaysEnabled, const bool RaceGhostEnabled, const bool SaveGhostEnabled)
 {
-	return 5.0f + (RaceGhostEnabled ? 3.0f + (SaveGhostEnabled ? 1.0f : 0.0f) : 0.0f);
+	return 3.0f + (ReplaysEnabled ? 2.0f : 0.0f) + (RaceGhostEnabled ? 3.0f + (SaveGhostEnabled ? 1.0f : 0.0f) : 0.0f);
 }
 
 inline float ResolveDDNetGameplayRows(const bool TextEntitiesEnabled, const bool AntiPingEnabled)

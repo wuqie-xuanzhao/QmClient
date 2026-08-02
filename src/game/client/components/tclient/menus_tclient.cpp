@@ -19,6 +19,7 @@
 
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
@@ -309,16 +310,19 @@ namespace
 		if(str_comp(pStableCardId, "tclient:visual-font-cursor") == 0)
 			return HashValueFnv1a64(Hash, g_Config.m_TcAnimateWheelTime > 0);
 		if(str_comp(pStableCardId, "tclient:visual-nameplates") == 0)
-		{
-			Hash = HashValueFnv1a64(Hash, g_Config.m_TcWhiteFeet);
-			return HashValueFnv1a64(Hash, g_Config.m_TcTinyTees > 0);
-		}
+			return HashValueFnv1a64(Hash, g_Config.m_TcWhiteFeet);
 		if(str_comp(pStableCardId, "tclient:visual-effects") == 0)
+		{
+			Hash = HashValueFnv1a64(Hash, g_Config.m_TcTinyTees > 0);
 			return HashValueFnv1a64(Hash, g_Config.m_QmJellyTee);
+		}
 		if(str_comp(pStableCardId, "tclient:input") == 0)
 			return HashValueFnv1a64(Hash, QmFastInputNormalizedMode(g_Config.m_QmFastInputMode));
 		if(str_comp(pStableCardId, "tclient:anti-latency-tools") == 0)
-			return HashValueFnv1a64(Hash, g_Config.m_TcRemoveAnti);
+		{
+			Hash = HashValueFnv1a64(Hash, g_Config.m_TcRemoveAnti);
+			return HashValueFnv1a64(Hash, g_Config.m_TcPredMarginInFreeze);
+		}
 		if(str_comp(pStableCardId, "tclient:auto-reply") == 0)
 		{
 			Hash = HashValueFnv1a64(Hash, g_Config.m_TcAutoReplyMuted);
@@ -338,6 +342,8 @@ namespace
 		}
 		if(str_comp(pStableCardId, "tclient:tee-status-bar") == 0)
 			return HashValueFnv1a64(Hash, g_Config.m_TcShowFrozenText > 0);
+		if(str_comp(pStableCardId, "tclient:finish-name") == 0)
+			return HashValueFnv1a64(Hash, g_Config.m_TcChangeNameNearFinish != 0);
 		if(str_comp(pStableCardId, "tclient:tee-trails") == 0)
 			return HashValueFnv1a64(Hash, g_Config.m_TcTeeTrailColorMode == CTrails::COLORMODE_SOLID);
 		return Hash;
@@ -526,6 +532,13 @@ static float MarginBetweenSections = ui_token::settings::ROW_GAP * 2.0f;
 
 static float ColorPickerLabelSize = ui_token::font::BODY;
 static float ColorPickerLineSpacing = ui_token::settings::ROW_GAP;
+static std::vector<CButtonContainer> s_vTinyTeeModeButtons = {{}, {}, {}};
+static CButtonContainer s_FastInputModeFast;
+static CButtonContainer s_FastInputModeBest;
+static CButtonContainer s_FastInputModeSaikoPlus;
+static int s_CountFrozenText = 0;
+static CUi::SDropDownState s_TrailDropDownState;
+static CScrollRegion s_TrailDropDownScrollRegion;
 
 static float TClientSettingsRowsHeight(const int NumRows)
 {
@@ -1195,7 +1208,9 @@ void CMenus::ConfigureSettingsCardSection(SSettingsSection &Section, const char 
 		CUIRect LegacyContent = Col;
 		LegacyContent.y -= LegacyHeaderHeight;
 		LegacyContent.h += LegacyHeaderHeight;
-		Ui()->ClipEnable(&Col);
+		const float UiScale = CurrentSettingsContentMetrics().m_UiScale;
+		const CUIRect SectionClip = ResolveSettingsFocusSafeClipRect(Col, UiScale);
+		Ui()->ClipEnable(&SectionClip);
 		LayoutSection(LegacyContent, true);
 		Ui()->ClipDisable();
 		Col.y = LegacyContent.y;
@@ -1326,22 +1341,28 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 	CUIRect MutedToggle = Rows.Next();
 	if(Render)
 		DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAutoReplyMuted, "tclient-auto-reply-muted", Localize("Automatically reply to muted players"), &g_Config.m_TcAutoReplyMuted, &MutedToggle, LineSize);
-	ReplyRect = Rows.Next();
-	if(Render && g_Config.m_TcAutoReplyMuted)
+	if(g_Config.m_TcAutoReplyMuted)
 	{
-		static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
-		s_MutedReply.SetEmptyText(Localize("I muted you"));
-		ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
+		ReplyRect = Rows.Next();
+		if(Render)
+		{
+			static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
+			s_MutedReply.SetEmptyText(Localize("I muted you"));
+			ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
+		}
 	}
 	CUIRect MinimizedToggle = Rows.Next();
 	if(Render)
 		DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAutoReplyMinimized, "tclient-auto-reply-minimized", Localize("Automatically reply while the window is unfocused"), &g_Config.m_TcAutoReplyMinimized, &MinimizedToggle, LineSize);
-	ReplyRect = Rows.Next();
-	if(Render && g_Config.m_TcAutoReplyMinimized)
+	if(g_Config.m_TcAutoReplyMinimized)
 	{
-		static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
-		s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-		ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
+		ReplyRect = Rows.Next();
+		if(Render)
+		{
+			static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
+			s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
+			ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
+		}
 	}
 	return CurrentColumn.y - SavedY;
 }
@@ -1411,48 +1432,47 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 	Row = Rows.Next();
 	if(Render)
 		DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRenderCursorSpec, "tclient-render-cursor-spec", Localize("Show the cursor while free spectating"), &g_Config.m_TcRenderCursorSpec, &Row, LineSize);
-	Button = Rows.Next();
-	if(Render && g_Config.m_TcRenderCursorSpec)
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-freeview-cursor-opacity", &g_Config.m_TcRenderCursorSpecAlpha, &g_Config.m_TcRenderCursorSpecAlpha, &Button, Localize("Freeview cursor opacity"), 0, 100);
+	if(g_Config.m_TcRenderCursorSpec)
+	{
+		Button = Rows.Next();
+		if(Render)
+			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-freeview-cursor-opacity", &g_Config.m_TcRenderCursorSpecAlpha, &g_Config.m_TcRenderCursorSpecAlpha, &Button, Localize("Freeview cursor opacity"), 0, 100);
+	}
 	Row = Rows.Next();
 	if(Render)
 		DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcNotifyWhenLast, "tclient-notify-when-last", Localize("Notify when only one tee is still alive:"), &g_Config.m_TcNotifyWhenLast, &Row, LineSize);
-	NotificationConfig = Rows.Next();
-	if(Render && g_Config.m_TcNotifyWhenLast)
+	if(g_Config.m_TcNotifyWhenLast)
 	{
-		NotificationConfig.VSplitMid(&Button, &NotificationConfig);
-		static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
-		s_LastInput.SetEmptyText(Localize("You're the last one!"));
-		ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
-		static CButtonContainer s_ClientNotifyWhenLastColor;
-		DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, CurrentSettingsContentMetrics(), &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
-		Button = Rows.Next();
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-x", &g_Config.m_TcNotifyWhenLastX, &g_Config.m_TcNotifyWhenLastX, &Button, Localize("Horizontal position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
-		Button = Rows.Next();
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-y", &g_Config.m_TcNotifyWhenLastY, &g_Config.m_TcNotifyWhenLastY, &Button, Localize("Vertical position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
-		Button = Rows.Next();
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-size", &g_Config.m_TcNotifyWhenLastSize, &g_Config.m_TcNotifyWhenLastSize, &Button, Localize("Font size"), 1, 50);
-	}
-	else
-	{
-		Rows.Next();
-		Rows.Next();
-		Rows.Next();
+		NotificationConfig = Rows.Next();
+		const CUIRect NotificationX = Rows.Next();
+		const CUIRect NotificationY = Rows.Next();
+		const CUIRect NotificationSize = Rows.Next();
+		if(Render)
+		{
+			NotificationConfig.VSplitMid(&Button, &NotificationConfig);
+			static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
+			s_LastInput.SetEmptyText(Localize("You're the last one!"));
+			ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
+			static CButtonContainer s_ClientNotifyWhenLastColor;
+			DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, CurrentSettingsContentMetrics(), &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-x", &g_Config.m_TcNotifyWhenLastX, &g_Config.m_TcNotifyWhenLastX, &NotificationX, Localize("Horizontal position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-y", &g_Config.m_TcNotifyWhenLastY, &g_Config.m_TcNotifyWhenLastY, &NotificationY, Localize("Vertical position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-size", &g_Config.m_TcNotifyWhenLastSize, &g_Config.m_TcNotifyWhenLastSize, &NotificationSize, Localize("Font size"), 1, 50);
+		}
 	}
 	Row = Rows.Next();
 	if(Render)
 		DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcShowCenter, "tclient-show-center-line", Localize("Show the screen center line"), &g_Config.m_TcShowCenter, &Row, LineSize);
-	Button = Rows.Next();
-	if(Render && g_Config.m_TcShowCenter)
+	if(g_Config.m_TcShowCenter)
 	{
-		static CButtonContainer s_ShowCenterLineColor;
-		DoLine_ColorPicker(&s_ShowCenterLineColor, CurrentSettingsContentMetrics(), &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
-		Button = Rows.Next();
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-center-line-width", &g_Config.m_TcShowCenterWidth, &g_Config.m_TcShowCenterWidth, &Button, Localize("Screen center line width"), 0, 20);
-	}
-	else
-	{
-		Rows.Next();
+		CUIRect CenterColor = Rows.Next();
+		const CUIRect CenterWidth = Rows.Next();
+		if(Render)
+		{
+			static CButtonContainer s_ShowCenterLineColor;
+			DoLine_ColorPicker(&s_ShowCenterLineColor, CurrentSettingsContentMetrics(), &CenterColor, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, DefaultConfig::TcShowCenterColor, false, nullptr, true);
+			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-center-line-width", &g_Config.m_TcShowCenterWidth, &g_Config.m_TcShowCenterWidth, &CenterWidth, Localize("Screen center line width"), 0, 20);
+		}
 	}
 	return CurrentColumn.y - SavedY;
 }
@@ -1601,7 +1621,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		CUIRect LegacyContent = Col;
 		LegacyContent.y -= LegacyHeaderHeight;
 		LegacyContent.h += LegacyHeaderHeight;
-		Ui()->ClipEnable(&Col);
+		const CUIRect SectionClip = ResolveSettingsFocusSafeClipRect(Col, UiScale);
+		Ui()->ClipEnable(&SectionClip);
 		LayoutSection(LegacyContent, true);
 		Ui()->ClipDisable();
 		Col.y = LegacyContent.y;
@@ -1618,7 +1639,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			Col.y = LegacyContent.y - LegacyHeaderHeight;
 			return Col.y - SavedY;
 		};
-		Section.m_RenderCompactFn = [this, LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName](CUIRect &Col) -> float {
+		Section.m_RenderCompactFn = [this, LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName, UiScale](CUIRect &Col) -> float {
 			const float SavedY = Col.y;
 			CUIRect MeasuredContent = Col;
 			const CUIRect BoxRect = LayoutSection(MeasuredContent, false);
@@ -1627,7 +1648,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect LegacyContent = Col;
 			LegacyContent.y -= LegacyHeaderHeight;
 			LegacyContent.h += LegacyHeaderHeight;
-			Ui()->ClipEnable(&Col);
+			const CUIRect SectionClip = ResolveSettingsFocusSafeClipRect(Col, UiScale);
+			Ui()->ClipEnable(&SectionClip);
 			LayoutSection(LegacyContent, true);
 			Ui()->ClipDisable();
 			Col.y = LegacyContent.y;
@@ -1961,7 +1983,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Visual: Nameplates"), HeadlineFontSize, TEXTALIGN_ML);
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 
-			const bool RenderNameplateRows = ShouldRenderVisualBlock(TClientSettingsRowsHeight(8));
+			const int NameplateRowCount = 7 + (g_Config.m_TcWhiteFeet ? 1 : 0);
+			const bool RenderNameplateRows = ShouldRenderVisualBlock(TClientSettingsRowsHeight(NameplateRowCount));
 			CTClientSettingsRowAllocator Rows(CurrentColumn);
 			CUIRect PingCircleRow = Rows.Next();
 			CUIRect CountryRow = Rows.Next();
@@ -1970,7 +1993,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect ColorFreezeRow = Rows.Next();
 			CUIRect FreezeKatanaRow = Rows.Next();
 			CUIRect WhiteFeetRow = Rows.Next();
-			CUIRect FeetBox = Rows.Next();
+			CUIRect FeetBox;
+			if(g_Config.m_TcWhiteFeet)
+				FeetBox = Rows.Next();
 			if(RenderNameplateRows)
 			{
 				CPerfTimer NameplateTimer;
@@ -1983,8 +2008,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcWhiteFeet, "tclient-white-feet", Localize("Render all custom colored feet as white feet skin"), &g_Config.m_TcWhiteFeet, &WhiteFeetRow, LineSize);
 				LogSettingsStage("tclient_settings_left_visual_nameplates", NameplateTimer);
 			}
-			const bool RenderWhiteFeetInput = RenderNameplateRows;
-			if(RenderWhiteFeetInput && g_Config.m_TcWhiteFeet)
+			if(RenderNameplateRows && g_Config.m_TcWhiteFeet)
 			{
 				FeetBox.VSplitMid(&FeetBox, nullptr);
 				static CLineInput s_WhiteFeet(g_Config.m_TcWhiteFeetSkin, sizeof(g_Config.m_TcWhiteFeetSkin));
@@ -2009,29 +2033,31 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Visual: Effects"), HeadlineFontSize, TEXTALIGN_ML);
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 			CTClientSettingsRowAllocator Rows(CurrentColumn);
-			const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(MainView.w);
+			const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(CurrentColumn.w);
 			const float TinyTeeModeHeight = ResolveSettingsRadioRowLayout(CurrentColumn, 3, ContentMetrics).m_Height;
 			const bool RenderTinyTeeMode = ShouldRenderVisualBlock(TinyTeeModeHeight);
 			CUIRect Row = Rows.Next(TinyTeeModeHeight);
 			if(RenderTinyTeeMode)
 			{
-				static std::vector<CButtonContainer> s_vButtonContainers = {{}, {}, {}};
 				int Value = g_Config.m_TcTinyTees ? (g_Config.m_TcTinyTeesOthers ? 2 : 1) : 0;
 				CPerfTimer TinyTeeModeTimer;
-				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, Row, "tclient-smaller-tees-label", Localize("Smaller tees"), s_vButtonContainers, {"tclient-smaller-tees-none", "tclient-smaller-tees-self", "tclient-smaller-tees-all"}, {Localize("None"), Localize("Self"), Localize("All")}, {0, 1, 2}, Value, ContentMetrics))
+				if(DoSettingsLine_RadioMenu(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, Row, "tclient-smaller-tees-label", Localize("Smaller tees"), s_vTinyTeeModeButtons, {"tclient-smaller-tees-none", "tclient-smaller-tees-self", "tclient-smaller-tees-all"}, {Localize("None"), Localize("Self"), Localize("All")}, {0, 1, 2}, Value, ContentMetrics))
 				{
 					g_Config.m_TcTinyTees = Value > 0 ? 1 : 0;
 					g_Config.m_TcTinyTeesOthers = Value > 1 ? 1 : 0;
 				}
 				LogSettingsStage("tclient_settings_left_visual_tiny_tee_mode", TinyTeeModeTimer);
 			}
-			const bool RenderTinyTeeSize = ShouldRenderVisualBlock(LineSize);
-			TinyTeeConfig = Rows.Next();
-			if(RenderTinyTeeSize && g_Config.m_TcTinyTees > 0)
+			if(g_Config.m_TcTinyTees > 0)
 			{
-				CPerfTimer TinyTeeSizeTimer;
-				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-tiny-tee-size", &g_Config.m_TcTinyTeeSize, &g_Config.m_TcTinyTeeSize, &TinyTeeConfig, Localize("Tiny Tee Size"), 85, 115);
-				LogSettingsStage("tclient_settings_left_visual_tiny_tee_size", TinyTeeSizeTimer);
+				const bool RenderTinyTeeSize = ShouldRenderVisualBlock(LineSize);
+				TinyTeeConfig = Rows.Next();
+				if(RenderTinyTeeSize)
+				{
+					CPerfTimer TinyTeeSizeTimer;
+					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-tiny-tee-size", &g_Config.m_TcTinyTeeSize, &g_Config.m_TcTinyTeeSize, &TinyTeeConfig, Localize("Tiny Tee Size"), 85, 115);
+					LogSettingsStage("tclient_settings_left_visual_tiny_tee_size", TinyTeeSizeTimer);
+				}
 			}
 
 			const bool RenderJellyToggle = ShouldRenderVisualBlock(LineSize);
@@ -2093,9 +2119,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			Button = Rows.Next();
 			if(Render)
 			{
-				static CButtonContainer s_FastInputModeFast;
-				static CButtonContainer s_FastInputModeBest;
-				static CButtonContainer s_FastInputModeSaikoPlus;
 				CUIRect FastButton, BestButton, SaikoButton, ButtonsRest;
 				const float Spacing = MarginSmall;
 				const float ButtonWidth = (Button.w - Spacing * 2.0f) / 3.0f;
@@ -2179,25 +2202,30 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect Row = Rows.Next();
 			if(Render)
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRemoveAnti, "tclient-remove-anti-freeze", Localize("Remove prediction & antiping in freeze"), &g_Config.m_TcRemoveAnti, &Row, LineSize);
-			Button = Rows.Next();
-			if(Render && g_Config.m_TcRemoveAnti)
+			if(g_Config.m_TcRemoveAnti)
 			{
-				if(g_Config.m_TcUnfreezeLagDelayTicks < g_Config.m_TcUnfreezeLagTicks)
-					g_Config.m_TcUnfreezeLagDelayTicks = g_Config.m_TcUnfreezeLagTicks;
-				DoSliderWithScaledValue(&g_Config.m_TcUnfreezeLagTicks, &g_Config.m_TcUnfreezeLagTicks, &Button, Localize("Amount"), 100, 300, 20, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+				CUIRect AmountButton = Rows.Next();
+				CUIRect DelayButton = Rows.Next();
+				if(Render)
+				{
+					if(g_Config.m_TcUnfreezeLagDelayTicks < g_Config.m_TcUnfreezeLagTicks)
+						g_Config.m_TcUnfreezeLagDelayTicks = g_Config.m_TcUnfreezeLagTicks;
+					DoSliderWithScaledValue(&g_Config.m_TcUnfreezeLagTicks, &g_Config.m_TcUnfreezeLagTicks, &AmountButton, Localize("Amount"), 100, 300, 20, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+					DoSliderWithScaledValue(&g_Config.m_TcUnfreezeLagDelayTicks, &g_Config.m_TcUnfreezeLagDelayTicks, &DelayButton, Localize("Delay"), 100, 3000, 20, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+				}
 			}
-			Button = Rows.Next();
-			if(Render && g_Config.m_TcRemoveAnti)
-				DoSliderWithScaledValue(&g_Config.m_TcUnfreezeLagDelayTicks, &g_Config.m_TcUnfreezeLagDelayTicks, &Button, Localize("Delay"), 100, 3000, 20, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 			Row = Rows.Next();
 			if(Render)
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcUnpredOthersInFreeze, "tclient-unpred-others-in-freeze", Localize("Dont predict other players if you are frozen"), &g_Config.m_TcUnpredOthersInFreeze, &Row, LineSize);
 			Row = Rows.Next();
 			if(Render)
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcPredMarginInFreeze, "tclient-pred-margin-in-freeze", Localize("Adjust your prediction margin while frozen"), &g_Config.m_TcPredMarginInFreeze, &Row, LineSize);
-			Button = Rows.Next();
-			if(Render && g_Config.m_TcPredMarginInFreeze)
-				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-frozen-margin", &g_Config.m_TcPredMarginInFreezeAmount, &g_Config.m_TcPredMarginInFreezeAmount, &Button, Localize("Frozen Margin"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "ms");
+			if(g_Config.m_TcPredMarginInFreeze)
+			{
+				Button = Rows.Next();
+				if(Render)
+					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-frozen-margin", &g_Config.m_TcPredMarginInFreezeAmount, &g_Config.m_TcPredMarginInFreezeAmount, &Button, Localize("Frozen Margin"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "ms");
+			}
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
 		};
@@ -2507,13 +2535,19 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				LogSettingsStage("tclient_settings_left_player_indicator_base", BaseTimer);
 			}
 
-			const bool RenderDistanceRows = Render && ShouldRenderSection(CurrentColumn, 0.0f, TClientSettingsRowsHeight(6));
+			const int DistanceRowCount = 3 + (g_Config.m_TcIndicatorVariableDistance ? 3 : 1);
+			const bool RenderDistanceRows = Render && ShouldRenderSection(CurrentColumn, 0.0f, TClientSettingsRowsHeight(DistanceRowCount));
 			CUIRect RadiusRow = Rows.Next();
 			CUIRect OpacityRow = Rows.Next();
 			CUIRect VariableDistanceRow = Rows.Next();
 			CUIRect OffsetRow = Rows.Next();
-			CUIRect MaxOffsetRow = Rows.Next();
-			CUIRect MaxDistanceRow = Rows.Next();
+			CUIRect MaxOffsetRow;
+			CUIRect MaxDistanceRow;
+			if(g_Config.m_TcIndicatorVariableDistance)
+			{
+				MaxOffsetRow = Rows.Next();
+				MaxDistanceRow = Rows.Next();
+			}
 			if(RenderDistanceRows)
 			{
 				CPerfTimer DistanceTimer;
@@ -2973,14 +3007,16 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-frozen-hud-tee-size", &g_Config.m_TcFrozenHudTeeSize, &g_Config.m_TcFrozenHudTeeSize, &Button, Localize("Tee size"), 8, 27);
 			}
 			CUIRect CheckBoxRect = Rows.Next();
-			CUIRect CheckBoxRect2 = Rows.Next();
 			if(Render)
 			{
 				if(DoTClientSettingsButton_CheckBox(&g_Config.m_TcShowFrozenText, "tclient-show-frozen-text", Localize("Show the number of tees still alive"), g_Config.m_TcShowFrozenText >= 1, &CheckBoxRect))
 					g_Config.m_TcShowFrozenText = g_Config.m_TcShowFrozenText >= 1 ? 0 : 1;
-				if(g_Config.m_TcShowFrozenText)
+			}
+			if(g_Config.m_TcShowFrozenText)
+			{
+				CUIRect CheckBoxRect2 = Rows.Next();
+				if(Render)
 				{
-					static int s_CountFrozenText = 0;
 					if(DoTClientSettingsButton_CheckBox(&s_CountFrozenText, "tclient-show-frozen-count-text", Localize("Show the number of frozen tees"), g_Config.m_TcShowFrozenText == 2, &CheckBoxRect2))
 						g_Config.m_TcShowFrozenText = g_Config.m_TcShowFrozenText != 2 ? 2 : 1;
 				}
@@ -3165,8 +3201,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			}
 			static std::vector<const char *> s_TrailDropDownNames;
 			s_TrailDropDownNames = {Localize("Solid"), Localize("Tee"), Localize("Rainbow"), Localize("Speed")};
-			static CUi::SDropDownState s_TrailDropDownState;
-			static CScrollRegion s_TrailDropDownScrollRegion;
 			s_TrailDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_TrailDropDownScrollRegion;
 			int TrailSelectedOld = g_Config.m_TcTeeTrailColorMode - 1;
 			TrailDropDownRect = Rows.Next();
@@ -3178,13 +3212,16 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					g_Config.m_TcTeeTrailColorMode = TrailSelectedNew + 1;
 				LogSettingsStage("tclient_settings_right_tee_trails_dropdown", DropDownTimer);
 			}
-			CUIRect ColorRow = Rows.Next();
-			if(Render && g_Config.m_TcTeeTrailColorMode == CTrails::COLORMODE_SOLID)
+			if(g_Config.m_TcTeeTrailColorMode == CTrails::COLORMODE_SOLID)
 			{
-				CPerfTimer ColorTimer;
-				static CButtonContainer s_TeeTrailColor;
-				DoLine_ColorPicker(&s_TeeTrailColor, CurrentSettingsContentMetrics(), &ColorRow, Localize("Tee trail color"), &g_Config.m_TcTeeTrailColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
-				LogSettingsStage("tclient_settings_right_tee_trails_color", ColorTimer);
+				CUIRect ColorRow = Rows.Next();
+				if(Render)
+				{
+					CPerfTimer ColorTimer;
+					static CButtonContainer s_TeeTrailColor;
+					DoLine_ColorPicker(&s_TeeTrailColor, CurrentSettingsContentMetrics(), &ColorRow, Localize("Tee trail color"), &g_Config.m_TcTeeTrailColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+					LogSettingsStage("tclient_settings_right_tee_trails_color", ColorTimer);
+				}
 			}
 			CUIRect WidthRow = Rows.Next();
 			CUIRect LengthRow = Rows.Next();
@@ -3255,13 +3292,16 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect ToggleRow = Rows.Next();
 			if(Render)
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcChangeNameNearFinish, "tclient-change-name-near-finish", Localize("Attempt to change your name when near finish"), &g_Config.m_TcChangeNameNearFinish, &ToggleRow, LineSize);
-			FinishNameBox = Rows.Next();
-			if(Render)
+			if(g_Config.m_TcChangeNameNearFinish)
 			{
-				FinishNameBox.VSplitMid(&Label, &Button);
-				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Finish Name:"), FontSize, TEXTALIGN_ML);
-				static CLineInput s_FinishName(g_Config.m_TcFinishName, sizeof(g_Config.m_TcFinishName));
-				ui_widget::InputField(TClientFinishNameTextInputCtx, &s_FinishName, Button, nullptr, EditBoxFontSize);
+				FinishNameBox = Rows.Next();
+				if(Render)
+				{
+					FinishNameBox.VSplitMid(&Label, &Button);
+					DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Finish Name:"), FontSize, TEXTALIGN_ML);
+					static CLineInput s_FinishName(g_Config.m_TcFinishName, sizeof(g_Config.m_TcFinishName));
+					ui_widget::InputField(TClientFinishNameTextInputCtx, &s_FinishName, Button, nullptr, EditBoxFontSize);
+				}
 			}
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
@@ -3404,8 +3444,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			S.m_RenderFullFn = [&LayoutFinishNameSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
 				return RenderBoxedFullSection("Finish Name", LayoutFinishNameSection, Col);
 			};
-			FillCachedStaticLayer(S, LayoutFinishNameSection);
-			vRightSections.push_back(S);
+				FillCachedStaticLayer(S, LayoutFinishNameSection);
+				S.m_DependencyConfigInts = {&g_Config.m_TcChangeNameNearFinish};
+				vRightSections.push_back(S);
 			AppendDeckCards(vRightSections);
 			RightSectionLoader.Register(std::move(vRightSections));
 		}
@@ -3451,6 +3492,252 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			{"tclient:finish-name", "Finish Name"},
 		}};
 		dbg_assert(DeckCardBindingIndex == s_aDeckCardBindings.size(), "missing TClient settings card binding");
+		// 高度由开关控制的行必须先提交点击，再重新测量卡片，避免首帧溢出旧内容矩形。
+		const auto BuildTClientConditionalRowsPreLayoutInput = [this](const char *pStableCardId) -> FSettingsCardPreLayoutInput {
+			const auto ProcessToggle = [this](const CUIRect &Row, int *pValue) {
+				if(!Ui()->DoButtonLogic(pValue, 0, &Row, BUTTONFLAG_LEFT))
+					return false;
+				*pValue ^= 1;
+				return true;
+			};
+			if(str_comp(pStableCardId, "tclient:visual-nameplates") == 0)
+			{
+				return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					Rows.Next();
+					Rows.Next();
+					Rows.Next();
+					Rows.Next();
+					Rows.Next();
+					Rows.Next();
+					return ProcessToggle(Rows.Next(), &g_Config.m_TcWhiteFeet);
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:anti-latency-tools") == 0)
+			{
+				return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					Rows.Next();
+					bool Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcRemoveAnti);
+					if(g_Config.m_TcRemoveAnti)
+					{
+						Rows.Next();
+						Rows.Next();
+					}
+					Rows.Next();
+					Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcPredMarginInFreeze) || Changed;
+					return Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:auto-reply") == 0)
+			{
+				return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					bool Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcAutoReplyMuted);
+					if(g_Config.m_TcAutoReplyMuted)
+						Rows.Next();
+					Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcAutoReplyMinimized) || Changed;
+					return Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:player-indicator") == 0)
+			{
+					return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					for(int RowIndex = 0; RowIndex < 5; ++RowIndex)
+						Rows.Next();
+					bool Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcWarListIndicator);
+
+					Rows.Next();
+					Rows.Next();
+					Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcIndicatorVariableDistance) || Changed;
+					Rows.Next();
+					if(g_Config.m_TcIndicatorVariableDistance)
+					{
+						Rows.Next();
+						Rows.Next();
+					}
+
+					if(g_Config.m_TcWarListIndicator)
+					{
+						Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcWarListIndicatorColors) || Changed;
+						Rows.Next();
+						Rows.Next();
+						Rows.Next();
+					}
+					if(!g_Config.m_TcWarListIndicator || !g_Config.m_TcWarListIndicatorColors)
+					{
+						Rows.Next();
+						Rows.Next();
+						Rows.Next();
+					}
+					return Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:tee-status-bar") == 0)
+			{
+				return [this](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					for(int RowIndex = 0; RowIndex < 5; ++RowIndex)
+						Rows.Next();
+
+					CUIRect ShowFrozenTextRow = Rows.Next();
+					bool Changed = false;
+					if(Ui()->DoButtonLogic(&g_Config.m_TcShowFrozenText, g_Config.m_TcShowFrozenText >= 1, &ShowFrozenTextRow, BUTTONFLAG_LEFT))
+					{
+						g_Config.m_TcShowFrozenText = g_Config.m_TcShowFrozenText >= 1 ? 0 : 1;
+						Changed = true;
+					}
+					if(g_Config.m_TcShowFrozenText)
+					{
+						CUIRect CountFrozenTextRow = Rows.Next();
+						if(Ui()->DoButtonLogic(&s_CountFrozenText, g_Config.m_TcShowFrozenText == 2, &CountFrozenTextRow, BUTTONFLAG_LEFT))
+						{
+							g_Config.m_TcShowFrozenText = g_Config.m_TcShowFrozenText != 2 ? 2 : 1;
+							Changed = true;
+						}
+					}
+					return Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:finish-name") == 0)
+			{
+				return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					const CUIRect ToggleRow = Rows.Next();
+					const bool Changed = ProcessToggle(ToggleRow, &g_Config.m_TcChangeNameNearFinish);
+					if(g_Config.m_TcChangeNameNearFinish)
+						Rows.Next();
+					return Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:hud") == 0)
+			{
+				return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					Rows.Next();
+					Rows.Next();
+					bool Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcRenderCursorSpec);
+					if(g_Config.m_TcRenderCursorSpec)
+						Rows.Next();
+					Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcNotifyWhenLast) || Changed;
+					if(g_Config.m_TcNotifyWhenLast)
+					{
+						Rows.Next();
+						Rows.Next();
+						Rows.Next();
+						Rows.Next();
+					}
+					Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcShowCenter) || Changed;
+					return Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:visual-effects") == 0)
+			{
+				return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(Content.w);
+					const CUIRect TinyTeeModeRow = Rows.Next(ResolveSettingsRadioRowLayout(Content, 3, ContentMetrics).m_Height);
+					const SSettingsRadioRowLayout TinyTeeModeLayout = ResolveSettingsRadioRowLayout(TinyTeeModeRow, 3, ContentMetrics);
+					CUIRect TinyTeeModeButtons = TinyTeeModeLayout.m_ButtonsRect;
+					int TinyTeeMode = g_Config.m_TcTinyTees ? (g_Config.m_TcTinyTeesOthers ? 2 : 1) : 0;
+					bool Changed = false;
+					const float ButtonWidth = TinyTeeModeButtons.w / s_vTinyTeeModeButtons.size();
+					for(int Index = 0; Index < (int)s_vTinyTeeModeButtons.size(); ++Index)
+					{
+						CUIRect RadioButton;
+						TinyTeeModeButtons.VSplitLeft(ButtonWidth, &RadioButton, &TinyTeeModeButtons);
+						if(Ui()->DoButtonLogic(&s_vTinyTeeModeButtons[Index], Index == TinyTeeMode, &RadioButton, BUTTONFLAG_LEFT))
+						{
+							g_Config.m_TcTinyTees = Index > 0 ? 1 : 0;
+							g_Config.m_TcTinyTeesOthers = Index > 1 ? 1 : 0;
+							Changed = true;
+						}
+					}
+					if(g_Config.m_TcTinyTees > 0)
+						Rows.Next();
+					return ProcessToggle(Rows.Next(), &g_Config.m_QmJellyTee) || Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:input") == 0)
+			{
+				return [this, ProcessToggle](CUIRect Content) {
+					if(m_MenuTextPlanCollecting)
+						return false;
+					CTClientSettingsRowAllocator Rows(Content);
+					bool Changed = ProcessToggle(Rows.Next(), &g_Config.m_TcFastInput);
+					Changed = ProcessToggle(Rows.Next(), &g_Config.m_QmAutoMargin) || Changed;
+
+					CUIRect Button = Rows.Next();
+					CUIRect FastButton, BestButton, SaikoButton, ButtonsRest;
+					const float Spacing = MarginSmall;
+					const float ButtonWidth = (Button.w - Spacing * 2.0f) / 3.0f;
+					Button.VSplitLeft(ButtonWidth, &FastButton, &ButtonsRest);
+					ButtonsRest.VSplitLeft(Spacing, nullptr, &ButtonsRest);
+					ButtonsRest.VSplitLeft(ButtonWidth, &BestButton, &ButtonsRest);
+					ButtonsRest.VSplitLeft(Spacing, nullptr, &ButtonsRest);
+					SaikoButton = ButtonsRest;
+					FastButton.HMargin(2.0f, &FastButton);
+					BestButton.HMargin(2.0f, &BestButton);
+					SaikoButton.HMargin(2.0f, &SaikoButton);
+					const int UiMode = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode);
+					if(Ui()->DoButtonLogic(&s_FastInputModeFast, UiMode == 0, &FastButton, BUTTONFLAG_LEFT))
+					{
+						g_Config.m_QmFastInputMode = 0;
+						Changed = true;
+					}
+					if(Ui()->DoButtonLogic(&s_FastInputModeBest, UiMode == 3, &BestButton, BUTTONFLAG_LEFT))
+					{
+						g_Config.m_QmFastInputMode = 3;
+						Changed = true;
+					}
+					if(Ui()->DoButtonLogic(&s_FastInputModeSaikoPlus, UiMode == 4, &SaikoButton, BUTTONFLAG_LEFT))
+					{
+						g_Config.m_QmFastInputMode = 4;
+						Changed = true;
+					}
+
+					const int ActiveMode = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode);
+					for(int RowIndex = 0; RowIndex < (ActiveMode == 3 ? 4 : 1); ++RowIndex)
+						Rows.Next();
+					Changed = ProcessToggle(Rows.Next(), ActiveMode == 0 ? &g_Config.m_TcFastInputOthers : (ActiveMode == 3 ? &g_Config.m_QmBestInputOthers : &g_Config.m_QmSaikoPlusOthers)) || Changed;
+					Changed = ProcessToggle(Rows.Next(), &g_Config.m_ClSubTickAiming) || Changed;
+					return Changed;
+				};
+			}
+			if(str_comp(pStableCardId, "tclient:tee-trails") == 0)
+			{
+				return [](CUIRect) {
+					// 下拉弹层先于卡片内容绘制写入选择项；这里仅提前提交选择，
+					// 正式 DoSettingsDropDown 仍负责清理状态和绘制弹层。
+					const int Selected = s_TrailDropDownState.m_SelectionPopupContext.m_SelectionIndex;
+					if(Selected < 0 || Selected >= 4)
+						return false;
+					const int NewColorMode = Selected + 1;
+					if(g_Config.m_TcTeeTrailColorMode == NewColorMode)
+						return false;
+					g_Config.m_TcTeeTrailColorMode = NewColorMode;
+					return true;
+				};
+			}
+			return {};
+		};
 		auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
 			vCards.reserve(s_aDeckCardSpecs.size());
 			for(size_t Index = 0; Index < s_aDeckCardSpecs.size(); ++Index)
@@ -3461,6 +3748,14 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				Definition.m_Measure = [pBinding](float ContentWidth) { return pBinding->Measure(ContentWidth); };
 				Definition.m_RenderMeasured = [pBinding](CUIRect &Content) { pBinding->Render(Content); };
 				Definition.m_MeasureRevision = HashTClientSettingsCardLayout(s_aDeckCardSpecs[Index].first);
+				Definition.m_PreLayoutInput = BuildTClientConditionalRowsPreLayoutInput(s_aDeckCardSpecs[Index].first);
+				if(str_comp(s_aDeckCardSpecs[Index].first, "tclient:tee-trails") == 0)
+				{
+					Definition.m_HasPendingPreLayoutInput = [] {
+						const int Selected = s_TrailDropDownState.m_SelectionPopupContext.m_SelectionIndex;
+						return Selected >= 0 && Selected < 4;
+					};
+				}
 				vCards.push_back(std::move(Definition));
 			}
 		};

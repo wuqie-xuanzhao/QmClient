@@ -515,7 +515,7 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 150.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 390.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 490.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 46.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 25.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, true), 121.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, false, false, false, 0, false, false), 20.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, false, false, 0, false, false), 145.0f);
@@ -541,15 +541,22 @@ namespace
 
 	TEST(SettingsPageLayout, ConditionalRowsUseFrameSnapshotUntilNextLayout)
 	{
+		bool ReplaysEnabled = true;
 		bool RaceGhostEnabled = false;
+		const bool ReplaysFrameSnapshot = ReplaysEnabled;
 		const bool FrameSnapshot = RaceGhostEnabled;
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(FrameSnapshot, false), 5.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysFrameSnapshot, FrameSnapshot, false), 5.0f);
 
+		ReplaysEnabled = false;
 		RaceGhostEnabled = true;
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(FrameSnapshot, false), 5.0f);
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(RaceGhostEnabled, false), 8.0f);
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(RaceGhostEnabled, true), 9.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysFrameSnapshot, FrameSnapshot, false), 5.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysEnabled, RaceGhostEnabled, false), 6.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysEnabled, RaceGhostEnabled, true), 7.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(true, RaceGhostEnabled, false), 8.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(true, RaceGhostEnabled, true), 9.0f);
 		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(false, false), 9.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(true, false), 9.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(false, true), 12.0f);
 		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(true, true), 12.0f);
 	}
 

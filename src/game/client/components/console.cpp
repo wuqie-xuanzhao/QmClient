@@ -2161,6 +2161,12 @@ void CGameConsole::OnRender()
 		return;
 	}
 
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	if(m_ConsoleState == CONSOLE_OPEN)
 		Input()->MouseModeAbsolute();
 
@@ -2979,6 +2985,12 @@ void CGameConsole::OnRender()
 		Ui()->FinishCheck();
 		Ui()->SetEnabled(false);
 	}
+
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
 }
 
 void CGameConsole::OnMessage(int MsgType, void *pRawMsg)

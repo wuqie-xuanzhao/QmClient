@@ -1310,6 +1310,12 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 
 int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, const bool ProcessInput, const float LabelFontSize)
 {
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	CUIRect Box, Label;
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
 	Label.VSplitLeft(5.0f, nullptr, &Label);
@@ -1325,7 +1331,8 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 
 	Box.Margin(2.0f, &Box);
 	const float BoxAlpha = std::clamp(0.25f * Ui()->ButtonColorMul(pId) + 0.10f * HoverStrength + 0.08f * CheckStrength, 0.0f, 1.0f);
-	Box.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, BoxAlpha), IGraphics::CORNER_ALL, 3.0f);
+	const ColorRGBA BoxColor(1.0f, 1.0f, 1.0f, BoxAlpha);
+	DrawRoundedSurface(Ui(), Box, BoxColor, BoxColor, 3.0f);
 
 	const bool HasCustomGlyph = pBoxText[0] != '\0' && pBoxText[0] != 'X';
 	if(HasCustomGlyph)
@@ -1339,11 +1346,14 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 		const ColorRGBA DefaultColor = TextRender()->DefaultTextColor();
 		TextRender()->TextColor(ColorRGBA(DefaultColor.r, DefaultColor.g, DefaultColor.b, DefaultColor.a * CheckStrength));
 		Ui()->DoLabel(&Box, FONT_ICON_XMARK, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
-		TextRender()->TextColor(DefaultColor);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		TextRender()->SetRenderFlags(PreviousRenderFlags);
+		TextRender()->SetFontPreset(PreviousFontPreset);
+		TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+		TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+		TextRender()->TextColor(PreviousTextColor);
 	}
 
-	TextRender()->SetRenderFlags(0);
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
 	const float FontSize = LabelFontSize > 0.0f ? LabelFontSize : Box.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
@@ -1355,6 +1365,12 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 		else
 			Ui()->DoLabel(&Label, pText, FontSize, TEXTALIGN_ML, Props);
 	}
+
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
 
 	return ProcessInput ? Ui()->DoButtonLogic(pId, 0, pRect, Flags) : 0;
 }
@@ -4615,6 +4631,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, const SSettingsContentMetric
 	auto &MenuBackground = GameClient()->m_MenuBackground;
 	const SSettingsContentMetrics Metrics = pMetrics != nullptr ? *pMetrics : ResolveSettingsContentMetrics(MainView.w);
 	s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+	s_ListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 
 	const float HeaderHeight = Metrics.m_LineHeight;
 	const float HeaderSpacing = Metrics.m_LineSpacing;

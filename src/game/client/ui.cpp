@@ -750,6 +750,35 @@ int CUi::DoButtonLogic(const void *pId, int Checked, const CUIRect *pRect, const
 
 	int ReturnValue = 0;
 	const bool Inside = MouseHovered(pRect);
+	bool PreLayoutCurrentFramePress = false;
+	if(PreLayoutInput() && Inside && !IsPopupOpen())
+	{
+		for(int Button = 0; Button < 3; ++Button)
+		{
+			if((Flags & (BUTTONFLAG_LEFT << Button)) && MouseButtonClicked(Button))
+			{
+				PreLayoutCurrentFramePress = true;
+				break;
+			}
+		}
+	}
+	// Deck 的预布局发生在正式渲染之前，鼠标按下可能早于上一帧正式布局建立
+	// HotItem。只在该受控阶段按当前命中矩形补齐 HotItem，避免首次点击丢失；
+	// popup 打开时仍保持底层控件不可穿透。
+	if(PreLayoutCurrentFramePress)
+	{
+		// 新按下意味着旧控件不应继续占用 ActiveItem。被裁剪的卡片可能
+		// 没有机会在上一帧处理释放，这里只在 Deck 的预布局路径清理陈旧状态。
+		if(m_pActiveItem != nullptr || m_pLastActiveItem != nullptr)
+		{
+			if(CLineInput *pActiveInput = CLineInput::GetActiveInput())
+				pActiveInput->Deactivate();
+			m_pLastActiveItem = nullptr;
+			SetActiveItem(nullptr);
+		}
+		m_pHotItem = pId;
+		m_pBecomingHotItem = pId;
+	}
 
 	if(CheckActiveItem(pId))
 	{
@@ -769,7 +798,10 @@ int CUi::DoButtonLogic(const void *pId, int Checked, const CUIRect *pRect, const
 		if((Flags & (BUTTONFLAG_LEFT << Button)) && MouseButton(Button))
 		{
 			NoRelevantButtonsPressed = false;
-			if(HotItem() == pId)
+			// 预布局先于正式渲染，同帧新出现或正在重排的控件可能尚未
+			// 进入上一帧 HotItem。首次按下直接建立 ActiveItem，释放仍由
+			// 同一套按钮状态机处理，避免只在按住期间显示 pressed。
+			if(HotItem() == pId || (PreLayoutCurrentFramePress && MouseButtonClicked(Button)))
 			{
 				SetActiveItem(pId);
 				m_ActiveButtonLogicButton = Button;
@@ -1193,6 +1225,7 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 {
 	const float VSpacing = 2.0f;
 	const float EditBoxRounding = 5.0f;
+	const CUIRect *pHitRect = RenderOptions.m_pHitRect != nullptr ? RenderOptions.m_pHitRect : pRect;
 	CUIRect Textbox;
 	pRect->VMargin(VSpacing, &Textbox);
 	if(RenderOnly())
@@ -1207,7 +1240,7 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 		return false;
 	}
 
-	const bool Inside = MouseHovered(pRect);
+	const bool Inside = MouseHovered(pHitRect);
 	bool Active = m_pLastActiveItem == pLineInput;
 	const bool Changed = pLineInput->WasChanged();
 	const bool CursorChanged = pLineInput->WasCursorChanged();
@@ -1322,7 +1355,8 @@ bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float
 	if(pLineInput == nullptr || pRect == nullptr)
 		return false;
 
-	const bool Inside = MouseHovered(pRect);
+	const CUIRect *pHitRect = RenderOptions.m_pHitRect != nullptr ? RenderOptions.m_pHitRect : pRect;
+	const bool Inside = MouseHovered(pHitRect);
 	const bool Active = ActiveItem() == pLineInput || pLineInput->IsActive();
 	const bool Changed = pLineInput->WasChanged();
 	const bool CursorChanged = pLineInput->WasCursorChanged();
@@ -1406,6 +1440,12 @@ bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float
 
 bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)
 {
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	const float EditBoxRounding = 5.0f;
 	CUIRect EditBox, ClearButton;
 	pRect->VSplitRight(pRect->h, &EditBox, &ClearButton);
@@ -1415,7 +1455,11 @@ bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float
 	DrawRoundedSurface(this, ClearButton, ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f * ButtonColorMul(pLineInput->GetClearButtonId()))), ColorRGBA(), EditBoxRounding, 0.0f, Corners & ~IGraphics::CORNER_L);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 	DoLabel(&ClearButton, "×", ClearButton.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
-	TextRender()->SetRenderFlags(0);
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
 	if(DoButtonLogic(pLineInput->GetClearButtonId(), 0, &ClearButton, BUTTONFLAG_LEFT))
 	{
 		pLineInput->Clear();
@@ -1433,13 +1477,22 @@ bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float F
 
 bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions)
 {
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	CUIRect QuickSearch = *pRect;
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 	DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS, FontSize, TEXTALIGN_ML);
 	const float SearchWidth = TextRender()->TextWidth(FontSize, FONT_ICON_MAGNIFYING_GLASS);
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
 	QuickSearch.VSplitLeft(SearchWidth + 5.0f, nullptr, &QuickSearch);
 	if(HotkeyEnabled && Input()->ModifierIsPressed() && Input()->KeyPress(KEY_F))
 	{
@@ -1632,7 +1685,7 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 	// logic
 	const bool Inside = MouseInside(pRect);
 	const int Base = Props.m_IsHex ? 16 : 10;
-	auto RenderValueSelectorDisplay = [&]() {
+	auto RenderValueSelectorDisplay = [&](bool RenderText = true) {
 		CUIRect Textbox;
 		pRect->VMargin(2.0f, &Textbox);
 		char aBuf[128];
@@ -1663,10 +1716,13 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 		ValueLabelProps.m_MaxWidth = Textbox.w;
 		ValueLabelProps.m_DisallowNewline = true;
 		ValueLabelProps.m_StopAtEnd = true;
-		const char *pDisplayText = m_ActiveValueSelectorState.m_pLastTextId == pId ? m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString() : aBuf;
-		const float ValueFontSize = QmFitSingleLineFontSize(10.0f, 6.0f, TextRender()->TextWidth(10.0f, pDisplayText), Textbox.w);
-		ValueLabelProps.m_MinimumFontSize = ValueFontSize;
-		DoLabel(&Textbox, pDisplayText, ValueFontSize, Props.m_TextAlign, ValueLabelProps);
+		if(RenderText)
+		{
+			const char *pDisplayText = m_ActiveValueSelectorState.m_pLastTextId == pId ? m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString() : aBuf;
+			const float ValueFontSize = QmFitSingleLineFontSize(10.0f, 6.0f, TextRender()->TextWidth(10.0f, pDisplayText), Textbox.w);
+			ValueLabelProps.m_MinimumFontSize = ValueFontSize;
+			DoLabel(&Textbox, pDisplayText, ValueFontSize, Props.m_TextAlign, ValueLabelProps);
+		}
 	};
 
 	if(CheckActiveItem(pId))
@@ -1711,9 +1767,8 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 	{
 		SetActiveItem(&m_ActiveValueSelectorState.m_NumberInput);
 		m_ActiveValueSelectorState.m_NumberInput.Activate(EInputPriority::UI);
-		RenderValueSelectorDisplay();
+		RenderValueSelectorDisplay(false);
 		const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
-		TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
 		const char *pEditText = m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString();
 		CUIRect Textbox;
 		pRect->VMargin(2.0f, &Textbox);

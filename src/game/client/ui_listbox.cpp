@@ -32,6 +32,9 @@ void CListBox::Reset()
 	m_ScrollbarMarginOverridden = false;
 	m_HasHeader = false;
 	m_Active = true;
+	m_SelectedItemActiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
+	m_SelectedItemInactiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
+	m_HoveredItemColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
 }
 
 void CListBox::DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing)
@@ -183,11 +186,11 @@ CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRa
 			}
 		}
 
-		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, m_Active ? 0.5f : 0.33f)), IGraphics::CORNER_ALL, CornerRadius);
+		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(m_Active ? m_SelectedItemActiveColor : m_SelectedItemInactiveColor), IGraphics::CORNER_ALL, CornerRadius);
 	}
 	if(Ui()->HotItem() == pId && !m_ScrollRegion.Animating())
 	{
-		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f)), IGraphics::CORNER_ALL, CornerRadius);
+		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(m_HoveredItemColor), IGraphics::CORNER_ALL, CornerRadius);
 	}
 
 	return Item;

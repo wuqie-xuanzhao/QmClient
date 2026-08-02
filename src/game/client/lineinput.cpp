@@ -417,6 +417,12 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 
 STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Align, bool Changed, float LineWidth, float LineSpacing, const std::vector<STextColorSplit> &vColorSplits)
 {
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	// update derived attributes to handle external changes to the buffer
 	UpdateStrData();
 
@@ -429,7 +435,9 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 	{
 		pDisplayStr = m_pEmptyText;
 		m_MouseSelection.m_Selecting = false;
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.75f);
+		ColorRGBA PlaceholderColor = PreviousTextColor;
+		PlaceholderColor.a *= 0.75f;
+		TextRender()->TextColor(PlaceholderColor);
 	}
 
 	CTextCursor Cursor;
@@ -489,7 +497,7 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 			Cursor.m_SelectionEnd = str_utf8_offset_bytes_to_chars(pDisplayStr, DisplayCompositionEnd);
 			TextRender()->TextSelectionColor(qm_theme::IME.m_CompositionSelection);
 			TextRender()->TextEx(&Cursor, pDisplayStr);
-			TextRender()->TextSelectionColor(TextRender()->DefaultTextSelectionColor());
+			TextRender()->TextSelectionColor(PreviousTextSelectionColor);
 		}
 		else if(GetSelectionLength())
 		{
@@ -523,17 +531,10 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 		}
 
 		m_CaretPosition = Cursor.m_CursorRenderedPosition;
-
-		CTextCursor CaretCursor;
-		CaretCursor.SetPosition(CursorPos);
-		CaretCursor.m_FontSize = FontSize;
-		// Keep default TEXTFLAG_RENDER to ensure cursor is rendered
-		CaretCursor.m_LineWidth = LineWidth;
-		CaretCursor.m_LineSpacing = LineSpacing;
-		CaretCursor.m_CursorMode = TEXT_CURSOR_CURSOR_MODE_SET;
-		CaretCursor.m_CursorCharacter = str_utf8_offset_bytes_to_chars(pDisplayStr, CaretOffset);
-		TextRender()->TextEx(&CaretCursor, pDisplayStr);
-		SetCompositionWindowPosition(CaretCursor.m_CursorRenderedPosition + vec2(0.0f, CaretCursor.m_AlignedFontSize / 2.0f), CaretCursor.m_AlignedFontSize);
+		// 主 Cursor 已完成文本、选择区、光标和 IME 锚点位置计算，不能再创建一套
+		// 重复文字容器。第二次 TextEx 会为同一输入额外插入图形命令，并在 caret
+		// 闪烁边界与主容器交错。
+		SetCompositionWindowPosition(m_CaretPosition + vec2(0.0f, Cursor.m_AlignedFontSize / 2.0f), Cursor.m_AlignedFontSize);
 	}
 	else
 	{
@@ -546,7 +547,11 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 		TextRender()->TextEx(&Cursor, pDisplayStr);
 	}
 
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
 
 	return Cursor.BoundingBox();
 }

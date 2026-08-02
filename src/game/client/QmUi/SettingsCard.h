@@ -36,9 +36,9 @@ struct SSettingsCardVisualState
 	float m_DrawAlpha = 1.0f;
 };
 
-inline bool SettingsCardSubtitleVisible(const bool PointerInside, const bool SubtitleVisibleDuringMotion, const bool Focused)
+inline bool SettingsCardSubtitleVisible(const bool HoverActive, const bool SubtitleVisibleDuringMotion, const bool Focused)
 {
-	return PointerInside || SubtitleVisibleDuringMotion || Focused;
+	return HoverActive || SubtitleVisibleDuringMotion || Focused;
 }
 
 inline bool ResolveSettingsCardSubtitleMotionLatch(const bool PointerInsideCurrentFrame, const bool MotionActive, const bool MotionWasActive, const bool VisibleDuringMotion)
@@ -57,7 +57,7 @@ inline bool SettingsCardDeckGeometryMoved(const bool Initialized, const float La
 
 inline bool SettingsCardInteractionBorderVisible(const SSettingsCardVisualState &State)
 {
-	return State.m_Hovered || State.m_Focused || State.m_DropFeedback;
+	return State.m_Focused || State.m_Dragged || State.m_DropFeedback;
 }
 
 inline bool SettingsCardShouldDrawChrome(const bool RenderOnly)
@@ -95,6 +95,24 @@ inline CUIRect ResolveSettingsCardChromeRect(const CUIRect &Rect, const float Pi
 	const float Right = AlignSettingsCardValueToPixels(Rect.x + Rect.w, PixelSize);
 	const float Bottom = AlignSettingsCardValueToPixels(Rect.y + Rect.h, PixelSize);
 	return {Left, Top, std::max(0.0f, Right - Left), std::max(0.0f, Bottom - Top)};
+}
+
+inline CUIRect ResolveSettingsFocusSafeClipRect(const CUIRect &Rect, const float UiScale)
+{
+	const float Scale = std::max(0.1f, UiScale);
+	const float FocusOutset = std::max(1.0f, 2.0f * Scale);
+	CUIRect Expanded = Rect;
+	Expanded.x -= FocusOutset;
+	Expanded.y -= FocusOutset;
+	Expanded.w += FocusOutset * 2.0f;
+	Expanded.h += FocusOutset * 2.0f;
+	return Expanded;
+}
+
+inline CUIRect ResolveSettingsCardContentClipRect(const CUIRect &ContentRect, const CUIRect &CardRect, const float UiScale)
+{
+	const CUIRect Expanded = ResolveSettingsFocusSafeClipRect(ContentRect, UiScale);
+	return Expanded.Intersection(CardRect);
 }
 
 inline CUIRect ResolveSettingsCardInteractionBorderRect(const CUIRect &SurfaceRect, const float BorderWidth)
@@ -142,6 +160,7 @@ using FSettingsCardMeasure = std::function<float(float ContentWidth)>;
 using FSettingsCardRender = std::function<void(CUIRect ContentRect)>;
 using FSettingsCardRenderMeasured = std::function<void(CUIRect &ContentRect)>;
 using FSettingsCardPreLayoutInput = std::function<bool(CUIRect ContentRect)>;
+using FSettingsCardHasPendingPreLayoutInput = std::function<bool()>;
 using FSettingsCardPreLayoutHeaderInput = std::function<bool(const SSettingsCardFrame &Frame, bool Collapsed)>;
 using FSettingsCardHeaderAction = std::function<void(const SSettingsCardFrame &Frame, bool Collapsed)>;
 
