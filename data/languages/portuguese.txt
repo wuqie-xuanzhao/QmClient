@@ -3305,7 +3305,7 @@ Join, version, rules, and help messages stay in chat instead of popups
 == Mensagens de entrada, versão, regras e ajuda ficam no chat em vez de pop-ups
 
 Jump
-== Saltar
+== Salto
 
 Jump hint text
 == Texto de dica de salto
@@ -5888,7 +5888,7 @@ Shape
 == Forma
 
 Shotgun
-== Shotgun
+== Caçadeira
 
 Shotgun Laser Inner Color
 == Cor interior do laser de shotgun
@@ -6237,6 +6237,9 @@ Show toast
 
 Show translation
 == Show translation
+
+Show Tune Zone effects
+== Mostrar efeitos da Tune Zone
 
 Show unknown server messages
 == Mostrar mensagens desconhecidas do servidor
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Ajustar variável para valor ou mostrar valor atual
+
+Tune Zone effect icon legend
+== Ícones de efeitos da Tune Zone
 
 Tutorial
 == Tutorial

@@ -6238,6 +6238,9 @@ Show toast
 Show translation
 == Show translation
 
+Show Tune Zone effects
+== Показывать эффекты Tune Zone
+
 Show unknown server messages
 == Показывать неизвестные сообщения сервера
 
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Установить переменную тюнинга в значение или показать текущее значение
+
+Tune Zone effect icon legend
+== Значки эффектов Tune Zone
 
 Tutorial
 == Обучение

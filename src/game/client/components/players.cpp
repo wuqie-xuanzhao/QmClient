@@ -330,8 +330,9 @@ void CPlayers::RenderHookCollLine(
 	vec2 Position = GameClient()->m_aClients[ClientId].m_RenderPos;
 
 	static constexpr float HOOK_START_DISTANCE = CCharacterCore::PhysicalSize() * 1.5f;
-	float HookLength = (float)GameClient()->m_aClients[ClientId].m_Predicted.m_Tuning.m_HookLength;
-	float HookFireSpeed = (float)GameClient()->m_aClients[ClientId].m_Predicted.m_Tuning.m_HookFireSpeed;
+	const CCharacterCore &PlayerCore = GameClient()->m_aClients[ClientId].m_IsPredicted ? GameClient()->m_aClients[ClientId].m_Predicted : GameClient()->m_aClients[GameClient()->m_aLocalIds[g_Config.m_ClDummy]].m_Predicted;
+	float HookLength = PlayerCore.m_Tuning.m_HookLength;
+	float HookFireSpeed = PlayerCore.m_Tuning.m_HookFireSpeed;
 
 	// TClient: Hook collision line length follows cursor distance
 	// 有问题,暂定改回原版
@@ -589,7 +590,7 @@ void CPlayers::RenderHook(
 	int ClientId,
 	float Intra)
 {
-	if(pPrevChar->m_HookState <= 0 || pPlayerChar->m_HookState <= 0)
+	if(pPlayerChar->m_HookState <= 0)
 		return;
 
 	CNetObj_Character Prev;
@@ -720,11 +721,11 @@ void CPlayers::RenderPlayer(
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 	// TODO: snd_game_volume_others
 	const float Volume = 1.0f;
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
@@ -1312,11 +1313,11 @@ void CPlayers::RenderPlayerGhost(
 	if(!OtherTeam && FrozenSwappingHide)
 		Alpha = 1.0f;
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 
 	// set size
 	RenderInfo.m_Size = 64.0f;

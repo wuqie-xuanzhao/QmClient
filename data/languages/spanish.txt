@@ -3305,7 +3305,7 @@ Join, version, rules, and help messages stay in chat instead of popups
 == Los mensajes de entrada, versión, reglas y ayuda permanecen en el chat en vez de aparecer como popups
 
 Jump
-== Saltar
+== Salto
 
 Jump hint text
 == Texto de sugerencia de salto
@@ -6238,6 +6238,9 @@ Show toast
 Show translation
 == Show translation
 
+Show Tune Zone effects
+== Mostrar efectos de Tune Zone
+
 Show unknown server messages
 == Mostrar mensajes desconocidos del servidor
 
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Ajustar variable a valor o mostrar valor actual
+
+Tune Zone effect icon legend
+== Iconos de efectos de Tune Zone
 
 Tutorial
 == Tutorial

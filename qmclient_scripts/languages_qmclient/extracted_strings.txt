@@ -2078,6 +2078,7 @@ Show the server rules
 Show tiles layers from BG map
 Show toast
 Show translation
+Show Tune Zone effects
 Show unknown server messages
 Show unpredicted ghosts for other players
 Show voice connection status
@@ -2432,6 +2433,7 @@ Tune in zone a variable to value
 Tune layer opacity
 Tune variable to value
 Tune variable to value or show current value
+Tune Zone effect icon legend
 Tutorial
 Twinkle strength
 Type

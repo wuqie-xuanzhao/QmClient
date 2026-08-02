@@ -2895,6 +2895,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			DemolistOnUpdate(false);
 		}
 		SetIconMode(false);
+		GameClient()->m_Tooltips.DoToolTip(&s_RefreshButton, &RefreshButton, Localize("Refresh"));
 	}
 
 	// fetch info checkbox
@@ -2995,6 +2996,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			}
 		}
 		SetIconMode(false);
+		const char *pPlayTooltip = pSelectedItem->m_IsDir ? Localize("Open the selected folder.", "Editor") : (BrowsingScreenshots ? Localize("Open", "Editor") : Localize("Play", "Start menu"));
+		GameClient()->m_Tooltips.DoToolTip(&s_PlayButton, &PlayButton, pPlayTooltip);
 	}
 
 	if(m_aCurrentDemoFolder[0] != '\0')
@@ -3024,6 +3027,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				Ui()->SetActiveItem(&m_DemoRenameInput);
 				return;
 			}
+			const char *pRenameTooltip = pSelectedItem->m_IsDir ? Localize("Rename folder") : (BrowsingScreenshots ? Localize("Rename screenshot") : Localize("Rename demo"));
+			GameClient()->m_Tooltips.DoToolTip(&s_RenameButton, &RenameButton, pRenameTooltip);
 			SetIconMode(false);
 		}
 
@@ -3055,6 +3060,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				}
 				return;
 			}
+			const char *pDeleteTooltip = NumSelectedDeletable > 1 ? Localize("Delete selected items") : (pSelectedItem != nullptr && pSelectedItem->m_IsDir ? Localize("Delete folder") : (BrowsingScreenshots ? Localize("Delete screenshot") : Localize("Delete demo")));
+			GameClient()->m_Tooltips.DoToolTip(&s_DeleteButton, &DeleteButton, pDeleteTooltip);
 			SetIconMode(false);
 		}
 
@@ -3079,6 +3086,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				Ui()->SetActiveItem(&m_DemoRenderInput);
 				return;
 			}
+			GameClient()->m_Tooltips.DoToolTip(&s_RenderButton, &RenderButton, Localize("Render demo"));
 			SetIconMode(false);
 		}
 #endif

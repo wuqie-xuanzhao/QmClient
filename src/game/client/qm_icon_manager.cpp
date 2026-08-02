@@ -48,6 +48,32 @@ namespace
 			return EQmIcon::SATELLITE_SPECTATOR_EYE;
 		if(str_comp(pName, "satellite-spectator-eye-closed") == 0)
 			return EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED;
+		if(str_comp(pName, "tune-gravity") == 0)
+			return EQmIcon::TUNE_GRAVITY;
+		if(str_comp(pName, "tune-movement") == 0)
+			return EQmIcon::TUNE_MOVEMENT;
+		if(str_comp(pName, "tune-jump") == 0)
+			return EQmIcon::TUNE_JUMP;
+		if(str_comp(pName, "tune-hook") == 0)
+			return EQmIcon::TUNE_HOOK;
+		if(str_comp(pName, "tune-collision") == 0)
+			return EQmIcon::TUNE_COLLISION;
+		if(str_comp(pName, "tune-gun-jetpack") == 0)
+			return EQmIcon::TUNE_GUN_JETPACK;
+		if(str_comp(pName, "tune-shotgun") == 0)
+			return EQmIcon::TUNE_SHOTGUN;
+		if(str_comp(pName, "tune-grenade-explosion") == 0)
+			return EQmIcon::TUNE_GRENADE_EXPLOSION;
+		if(str_comp(pName, "tune-laser") == 0)
+			return EQmIcon::TUNE_LASER;
+		if(str_comp(pName, "tune-hammer") == 0)
+			return EQmIcon::TUNE_HAMMER;
+		if(str_comp(pName, "tune-weapon-fire-rate") == 0)
+			return EQmIcon::TUNE_WEAPON_FIRE_RATE;
+		if(str_comp(pName, "tune-velramp") == 0)
+			return EQmIcon::TUNE_VELRAMP;
+		if(str_comp(pName, "tune-elasticity") == 0)
+			return EQmIcon::TUNE_ELASTICITY;
 		return EQmIcon::COUNT;
 	}
 

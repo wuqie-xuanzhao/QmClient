@@ -7702,6 +7702,68 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudIslandShowTuneZoneEffects, "Show Tune Zone effects", Localize("Show Tune Zone effects"), &g_Config.m_QmHudIslandShowTuneZoneEffects, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight * 0.85f, &Row, &CardContent);
+				DoQmSettingsLabel("qmclient-dynamic-island-tune-zone-icon-legend", &Row, Localize("Tune Zone effect icon legend"), LgBodySize * 0.84f);
+				CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
+				{
+					struct STuneZoneIconLegendItem
+					{
+						EQmIcon m_Icon;
+						const char *m_pTextId;
+						const char *m_pLabel;
+						ColorRGBA m_Color;
+					};
+					static const std::array<STuneZoneIconLegendItem, 13> s_aTuneZoneIconLegend = {{
+						{EQmIcon::TUNE_GRAVITY, "qmclient-tune-effect-gravity", "Gravity", ColorRGBA(0.62f, 0.78f, 1.0f, 1.0f)},
+						{EQmIcon::TUNE_MOVEMENT, "qmclient-tune-effect-movement", "Movement", ColorRGBA(0.20f, 0.92f, 0.82f, 1.0f)},
+						{EQmIcon::TUNE_JUMP, "qmclient-tune-effect-jump", "Jump", ColorRGBA(0.45f, 1.0f, 0.45f, 1.0f)},
+						{EQmIcon::TUNE_HOOK, "qmclient-tune-effect-hook", "Hook", ColorRGBA(0.95f, 0.75f, 0.28f, 1.0f)},
+						{EQmIcon::TUNE_COLLISION, "qmclient-tune-effect-collision", "Collision", ColorRGBA(1.0f, 0.56f, 0.35f, 1.0f)},
+						{EQmIcon::TUNE_GUN_JETPACK, "qmclient-tune-effect-gun-jetpack", "Gun / Jetpack", ColorRGBA(0.28f, 0.85f, 1.0f, 1.0f)},
+						{EQmIcon::TUNE_SHOTGUN, "qmclient-tune-effect-shotgun", "Shotgun", ColorRGBA(1.0f, 0.72f, 0.22f, 1.0f)},
+						{EQmIcon::TUNE_GRENADE_EXPLOSION, "qmclient-tune-effect-grenade", "Grenade", ColorRGBA(1.0f, 0.38f, 0.22f, 1.0f)},
+						{EQmIcon::TUNE_LASER, "qmclient-tune-effect-laser", "Laser", ColorRGBA(1.0f, 0.28f, 0.48f, 1.0f)},
+						{EQmIcon::TUNE_HAMMER, "qmclient-tune-effect-hammer", "Hammer", ColorRGBA(0.82f, 0.86f, 0.94f, 1.0f)},
+						{EQmIcon::TUNE_WEAPON_FIRE_RATE, "qmclient-tune-effect-weapon-fire-rate", "Weapon fire rate", ColorRGBA(0.86f, 0.58f, 1.0f, 1.0f)},
+						{EQmIcon::TUNE_VELRAMP, "qmclient-tune-effect-velocity-ramp", "Velocity ramp", ColorRGBA(0.42f, 0.66f, 1.0f, 1.0f)},
+						{EQmIcon::TUNE_ELASTICITY, "qmclient-tune-effect-elasticity", "Elasticity", ColorRGBA(0.96f, 0.48f, 0.82f, 1.0f)},
+					}};
+					constexpr int LegendColumnCount = 2;
+					const int LegendRowCount = ((int)s_aTuneZoneIconLegend.size() + LegendColumnCount - 1) / LegendColumnCount;
+					const float LegendLineHeight = LgLineHeight * 0.82f;
+					for(int LegendRow = 0; LegendRow < LegendRowCount; ++LegendRow)
+					{
+						CUIRect LegendRowRect;
+						CardContent.HSplitTop(LegendLineHeight, &LegendRowRect, &CardContent);
+						for(int LegendColumn = 0; LegendColumn < LegendColumnCount; ++LegendColumn)
+						{
+							const int LegendIndex = LegendRow * LegendColumnCount + LegendColumn;
+							if(LegendIndex >= (int)s_aTuneZoneIconLegend.size())
+								break;
+							CUIRect LegendItemRect = LegendRowRect;
+							LegendItemRect.x += LegendItemRect.w * 0.5f * LegendColumn;
+							LegendItemRect.w *= 0.5f;
+							LegendItemRect.VMargin(2.0f, &LegendItemRect);
+							CUIRect IconRect, LabelRect;
+							LegendItemRect.VSplitLeft(LegendLineHeight, &IconRect, &LabelRect);
+							IconRect.Margin(2.0f, &IconRect);
+							LabelRect.VSplitLeft(2.0f, nullptr, &LabelRect);
+							const STuneZoneIconLegendItem &LegendItem = s_aTuneZoneIconLegend[LegendIndex];
+							DoQmSettingsLabel(LegendItem.m_pTextId, &LabelRect, Localize(LegendItem.m_pLabel), LgBodySize * 0.76f);
+							if(!PrewarmOnly && !Ui()->RenderOnly())
+							{
+								if(CQmIconManager *pIconManager = GameClient()->QmIconManager())
+									pIconManager->RenderIcon(LegendItem.m_Icon, IconRect, LegendItem.m_Color);
+							}
+						}
+					}
+				}
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				{
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);

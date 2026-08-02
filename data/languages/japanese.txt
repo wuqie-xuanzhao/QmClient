@@ -6238,6 +6238,9 @@ Show toast
 Show translation
 == Show translation
 
+Show Tune Zone effects
+== Tune Zone 効果を表示
+
 Show unknown server messages
 == 不明なサーバーメッセージを表示
 
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == 変数を指定値にチューニング、または現在値を表示
+
+Tune Zone effect icon legend
+== Tune Zone エフェクトアイコン一覧
 
 Tutorial
 == チュートリアル

@@ -12,8 +12,9 @@ The `eye`, `satellite-swap-incoming`, `satellite-swap-outgoing`, and
 `arrow-circle-left`, `arrow-circle-right`, and `clock-countdown`. Their license
 is stored in `datasrc/qm_icons/LICENSE_PHOSPHOR.txt`.
 
-The `satellite-spectator-eye` and `satellite-spectator-eye-closed` icons are
-QmClient hand-drawn sources used only by the Dynamic Island spectator capsule.
+The `satellite-spectator-eye`, `satellite-spectator-eye-closed`, and
+`tune-*` icons are QmClient hand-drawn sources used by Dynamic Island
+satellites.
 
 SVG files are build-time inputs only. Runtime code must load the generated
 `data/qmclient/icons/qm_icons_*x.png` atlas and matching JSON manifest through

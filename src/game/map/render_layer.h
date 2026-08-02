@@ -408,13 +408,16 @@ class CRenderLayerEntityTune final : public CRenderLayerEntityBase
 public:
 	CRenderLayerEntityTune(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
 	int GetDataIndex(unsigned int &TileSize) const override;
+	void Init() override;
 
 protected:
 	void InitTileData() override;
 	void RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params) override;
 	void GetTileData(unsigned char *pIndex, unsigned char *pFlags, int *pAngleRotate, unsigned int x, unsigned int y, int CurOverlay) const override;
+	IGraphics::CTextureHandle GetTexture() const override;
 
 private:
 	CTuneTile *m_pTuneTiles;
+	mutable CTuneColorMapper m_TuneColorMapper;
 };
 #endif

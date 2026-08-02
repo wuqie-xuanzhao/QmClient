@@ -658,7 +658,7 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(MiniFeatures.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", Localize(\"Better scoreboard\"), &g_Config.m_QmBetterScoreboard, &Row, LgLineHeight);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.76.21\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.0\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
@@ -733,13 +733,15 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 	while(std::getline(Lines, Line))
 	{
 		if(Line.find("MACRO_CONFIG_INT(QmLyricsSearchType,") != std::string::npos ||
-			Line.find("MACRO_CONFIG_INT(QmLyricsCacheEnable,") != std::string::npos)
+			Line.find("MACRO_CONFIG_INT(QmLyricsCacheEnable,") != std::string::npos ||
+			Line.find("MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects,") != std::string::npos)
 			continue;
 		EXPECT_FALSE(std::regex_search(Line, BinaryQmDefaultOn)) << Line;
 	}
 
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmLyricsSearchType, qm_lyrics_search_type, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmLyricsCacheEnable, qm_lyrics_cache_enable, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects, qm_hud_island_show_tune_zone_effects, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 0, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 0, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 0, 0, 2"), std::string::npos);

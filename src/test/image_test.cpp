@@ -113,3 +113,36 @@ TEST(Image, ResizeRejectsInvalidDimensions)
 	uint8_t *pResized = ResizeImage(aRgba, 1, 1, 0, 1, 4);
 	EXPECT_EQ(pResized, nullptr);
 }
+
+TEST(Image, ConvertToGrayscaleRectOnlyChangesSelectedPixels)
+{
+	uint8_t aRgba[] = {100, 150, 200, 17, 10, 20, 30, 40};
+
+	CImageInfo Image;
+	Image.m_Width = 2;
+	Image.m_Height = 1;
+	Image.m_Format = CImageInfo::FORMAT_RGBA;
+	Image.m_pData = aRgba;
+
+	ConvertToGrayscaleRect(Image, 1, 0, 1, 1);
+
+	const uint8_t aExpected[] = {100, 150, 200, 17, 18, 18, 18, 40};
+	EXPECT_EQ(mem_comp(aRgba, aExpected, sizeof(aExpected)), 0);
+}
+
+TEST(Image, ColorizeWithHueRectPreservesAlphaAndAppliesHue)
+{
+	uint8_t aRgba[] = {128, 128, 128, 77};
+
+	CImageInfo Image;
+	Image.m_Width = 1;
+	Image.m_Height = 1;
+	Image.m_Format = CImageInfo::FORMAT_RGBA;
+	Image.m_pData = aRgba;
+
+	ColorizeWithHueRect(Image, 0.0f, 0.75f, 0, 0, 1, 1);
+
+	EXPECT_GT(aRgba[0], aRgba[1]);
+	EXPECT_EQ(aRgba[1], aRgba[2]);
+	EXPECT_EQ(aRgba[3], 77);
+}

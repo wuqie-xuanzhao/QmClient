@@ -70,7 +70,8 @@ enum class EHudMediaIslandTrackUpdate
 
 enum class EHudMediaIslandCountdownType
 {
-	SWAP = 0,
+	TUNE_ZONE = 0,
+	SWAP,
 	SWITCH,
 	MUTE,
 };
@@ -300,6 +301,14 @@ inline float QmHudMediaIslandBlobBlend(float Radius, float RadiusScale)
 	return std::max(0.0f, Radius) * 0.72f * std::clamp(RadiusScale, 0.0f, 1.0f);
 }
 
+inline float QmHudMediaIslandBlobConnectionStrength(float Travel)
+{
+	constexpr float DetachStart = 0.86f;
+	constexpr float DetachEnd = 0.985f;
+	const float DetachProgress = std::clamp((Travel - DetachStart) / (DetachEnd - DetachStart), 0.0f, 1.0f);
+	return 1.0f - QmHudMediaIslandLiquidSmoothStep(DetachProgress);
+}
+
 inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightBlobCapsule(float MainRight, float CenterY, float Radius, float ContentWidth, float RestGap, const SHudMediaIslandBlobPose &Pose)
 {
 	Radius = std::max(0.0f, Radius);
@@ -318,7 +327,7 @@ inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightBlobCapsule(float MainR
 	SHudMediaIslandLiquidCapsule Capsule;
 	Capsule.m_Rect = {CenterX - Width * 0.5f, CenterY - Height * 0.5f, Width, Height};
 	Capsule.m_Radius = std::min(Width, Height) * 0.5f;
-	Capsule.m_SmoothUnion = QmHudMediaIslandBlobBlend(Radius, Pose.m_RadiusScale);
+	Capsule.m_SmoothUnion = QmHudMediaIslandBlobBlend(Radius, Pose.m_RadiusScale) * QmHudMediaIslandBlobConnectionStrength(Pose.m_Travel);
 	Capsule.m_ContentAlpha = Pose.m_ContentAlpha;
 	return Capsule;
 }

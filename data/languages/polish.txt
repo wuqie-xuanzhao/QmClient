@@ -2894,7 +2894,7 @@ Gun
 == Pistolet
 
 Hammer
-== Młotek
+== Młot
 
 Hammer Mode:
 == Tryb młotka:
@@ -6238,6 +6238,9 @@ Show toast
 Show translation
 == Show translation
 
+Show Tune Zone effects
+== Pokaż efekty Tune Zone
+
 Show unknown server messages
 == Pokazuj nieznane wiadomości serwera
 
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Dostrój zmienną do wartości lub pokaż bieżącą wartość
+
+Tune Zone effect icon legend
+== Ikony efektów Tune Zone
 
 Tutorial
 == Samouczek

@@ -2882,7 +2882,7 @@ Greeting text
 == 打招呼文字
 
 Grenade
-== 榴彈砲
+== 榴彈
 
 Group name
 == 分組名稱
@@ -3029,7 +3029,7 @@ Hold left click for free camera
 == 按住左鍵自由鏡頭
 
 Hook
-== 鉤索
+== 鉤爪
 
 Hook collision line
 == 鉤索碰撞線
@@ -6238,6 +6238,9 @@ Show toast
 Show translation
 == 顯示翻譯
 
+Show Tune Zone effects
+== 顯示 Tune Zone 效果
+
 Show unknown server messages
 == 顯示未知伺服器訊息
 
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == 將變數調整到指定值，或顯示目前值
+
+Tune Zone effect icon legend
+== Tune Zone 效果圖示說明
 
 Tutorial
 == 教學

@@ -328,6 +328,7 @@ MACRO_CONFIG_INT(QmPlayerStatsResetOnJoin, qm_player_stats_reset_on_join, 0, 0, 
 // HUD Dynamic Island - 灵动岛/HUD 编辑器
 MACRO_CONFIG_INT(QmHudIslandUseOriginalStyle, qm_hud_island_use_original_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛使用原版样式")
 MACRO_CONFIG_INT(QmHudIslandShowTeam, qm_hud_island_show_team, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "HUD 灵动岛显示队伍")
+MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects, qm_hud_island_show_tune_zone_effects, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "HUD 灵动岛显示 Tune Zone 效果")
 MACRO_CONFIG_COL(QmHudIslandBgColor, qm_hud_island_bg_color, 0x9C460E, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛背景颜色")
 MACRO_CONFIG_INT(QmHudIslandBgOpacity, qm_hud_island_bg_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛背景透明度")
 MACRO_CONFIG_INT(QmHudIslandEdgeMargin, qm_hud_island_edge_margin, 5, 0, 64, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛 HUD 编辑器贴边外边距 px")

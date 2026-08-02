@@ -2882,7 +2882,7 @@ Greeting text
 == Texte de salutation
 
 Grenade
-== Lance-grenade
+== Grenade
 
 Group name
 == Nom du groupe
@@ -3029,7 +3029,7 @@ Hold left click for free camera
 == Maintenez le clic gauche pour la caméra libre
 
 Hook
-== Crochet
+== Grappin
 
 Hook collision line
 == Ligne de collision de crochet
@@ -3305,7 +3305,7 @@ Join, version, rules, and help messages stay in chat instead of popups
 == Les messages d'arrivée, de version, de règles et d'aide restent dans le chat au lieu des popups
 
 Jump
-== Sauter
+== Saut
 
 Jump hint text
 == Texte d'indice de saut
@@ -3941,7 +3941,7 @@ Move to category
 == Déplacer vers la catégorie
 
 Movement
-== Mouvement
+== Déplacement
 
 Moves to the point with x/y-coordinates ii
 == Se déplace vers le point avec les coordonnées x/y ii
@@ -6238,6 +6238,9 @@ Show toast
 Show translation
 == Show translation
 
+Show Tune Zone effects
+== Afficher les effets de Tune Zone
+
 Show unknown server messages
 == Afficher les messages serveur inconnus
 
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Régler la variable de tuning à la valeur ou afficher la valeur actuelle
+
+Tune Zone effect icon legend
+== Icônes des effets de Tune Zone
 
 Tutorial
 == Tutoriel

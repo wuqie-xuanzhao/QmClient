@@ -1,0 +1,6 @@
+<!-- QmClient hand-drawn Tune Zone laser icon: emitter and a bouncing laser beam. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <path d="M28 170l54-38 42 58-54 38-42-58Z" fill="currentColor"/>
+  <path d="m102 154 58-92 54 36" stroke="currentColor" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="218" cy="100" r="18" fill="currentColor"/>
+</svg>

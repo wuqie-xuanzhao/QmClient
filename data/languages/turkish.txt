@@ -2882,7 +2882,7 @@ Greeting text
 == Selamlama metni
 
 Grenade
-== Bombaatar
+== Bomba
 
 Group name
 == Grup adı
@@ -3305,7 +3305,7 @@ Join, version, rules, and help messages stay in chat instead of popups
 == Katılma, sürüm, kurallar ve yardım mesajları açılır bildirim yerine sohbette kalır
 
 Jump
-== Zıpla
+== Zıplama
 
 Jump hint text
 == Zıplama ipucu metni
@@ -6238,6 +6238,9 @@ Show toast
 Show translation
 == Show translation
 
+Show Tune Zone effects
+== Tune Zone etkilerini göster
+
 Show unknown server messages
 == Bilinmeyen sunucu mesajlarını göster
 
@@ -7299,6 +7302,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Değişkeni değere ayarla veya geçerli değeri göster
+
+Tune Zone effect icon legend
+== Tune Zone efekt simgeleri
 
 Tutorial
 == Eğitim

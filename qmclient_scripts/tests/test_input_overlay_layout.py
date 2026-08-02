@@ -166,8 +166,7 @@ class InputOverlayLayoutTest(unittest.TestCase):
             config_variables,
         )
         self.assertIn(
-            "const float MouseScale = "
-            "g_Config.m_QmInputOverlayMouseScale / 100.0f;",
+            "const float MouseScale = g_Config.m_QmInputOverlayMouseScale / 100.0f;",
             render_source,
         )
         self.assertIn("Layout.m_IsMouseLayout", render_source)
