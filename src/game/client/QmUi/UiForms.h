@@ -82,6 +82,34 @@ namespace ui_widget
 		CUIRect m_TrailingRect;
 	};
 
+	// 用实际文本宽度将数值和单位作为一个整体居中；编辑矩形保留最小宽度，
+	// 但其右边界仍贴合数值末尾，避免固定单位槽制造视觉空白。
+	struct SInlineTrailingTextLayout
+	{
+		CUIRect m_TextRect;
+		CUIRect m_TrailingRect;
+		CUIRect m_VisualGroupRect;
+	};
+
+	inline SInlineTrailingTextLayout ResolveInlineTrailingTextLayout(const CUIRect &ContentRect, float TextWidth, float TrailingTextWidth, float UiScale = 1.0f)
+	{
+		SInlineTrailingTextLayout Layout{};
+		const float Scale = std::max(UiScale, 0.1f);
+		const float AvailableWidth = std::max(0.0f, ContentRect.w);
+		const float ResolvedTextWidth = std::min(std::max(0.0f, TextWidth), AvailableWidth);
+		const float ResolvedTrailingWidth = std::min(std::max(0.0f, TrailingTextWidth), std::max(0.0f, AvailableWidth - ResolvedTextWidth));
+		const float Gap = std::min(3.0f * Scale, std::max(0.0f, AvailableWidth - ResolvedTextWidth - ResolvedTrailingWidth));
+		const float GroupWidth = ResolvedTextWidth + Gap + ResolvedTrailingWidth;
+		Layout.m_VisualGroupRect = {ContentRect.x + (AvailableWidth - GroupWidth) * 0.5f, ContentRect.y, GroupWidth, ContentRect.h};
+
+		const float TextRight = Layout.m_VisualGroupRect.x + ResolvedTextWidth;
+		const float MinimumEditWidth = 52.0f * Scale;
+		const float EditWidth = std::min(AvailableWidth, std::max(MinimumEditWidth, ResolvedTextWidth));
+		Layout.m_TextRect = {std::max(ContentRect.x, TextRight - EditWidth), ContentRect.y, std::min(EditWidth, TextRight - ContentRect.x), ContentRect.h};
+		Layout.m_TrailingRect = {TextRight + Gap, ContentRect.y, ResolvedTrailingWidth, ContentRect.h};
+		return Layout;
+	}
+
 	inline SInputFieldLayout ResolveInputFieldLayout(const CUIRect &Rect, bool HasIcon, bool Clearable, float UiScale = 1.0f, float TrailingWidth = 0.0f)
 	{
 		SInputFieldLayout Layout{};
@@ -157,6 +185,7 @@ namespace ui_widget
 		EInputTextStyle m_TextStyle = EInputTextStyle::BODY;
 		bool m_Clearable = false;
 		bool m_SearchHotkeyEnabled = false;
+		bool m_InlineTrailingText = false;
 		int m_Corners = IGraphics::CORNER_ALL;
 		int m_TextAlign = -1;
 		float m_FontSize = ui_token::font::BODY;

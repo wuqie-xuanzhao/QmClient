@@ -4160,8 +4160,8 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesSharedIntervalNumericF
 	EXPECT_NE(Body.find("if(StackQueueInterval)"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Enabled\")"), std::string::npos);
 	EXPECT_EQ(Body.find("tee-skin-queue-enabled-heading"), std::string::npos);
-	EXPECT_NE(Body.find("IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalInputGroup);"), std::string::npos);
-	EXPECT_NE(Body.find("const float QueueValueInputWidth = 104.0f * UiScale"), std::string::npos);
+	EXPECT_NE(Body.find("IntervalRow.VSplitLeft(minimum(IntervalRow.w, QueueIntervalLabelWidth), &IntervalLabel, &IntervalControls);"), std::string::npos);
+	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f * UiScale"), std::string::npos);
 	EXPECT_NE(Body.find("TextRender()->TextWidth(TeeMetrics.m_SmallSize, \"ms\")"), std::string::npos);
 	EXPECT_NE(Body.find("SLabelProperties QueueControlLabelProps;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueControlLabelProps.m_DisallowNewline = true"), std::string::npos);
@@ -6952,7 +6952,9 @@ TEST(QmMonitoringHelpers, InputFieldsConsumeSharedLayoutHelper)
 	EXPECT_NE(Header.find("struct SInputFieldLayout"), std::string::npos);
 	EXPECT_NE(Header.find("ResolveInputFieldLayout("), std::string::npos);
 	EXPECT_NE(Header.find("struct SInputFieldOptions"), std::string::npos);
-	EXPECT_NE(InputBody.find("ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, Options.m_TrailingWidth)"), std::string::npos);
+	EXPECT_NE(InputBody.find("const bool InlineTrailingText = Options.m_InlineTrailingText"), std::string::npos);
+	EXPECT_NE(InputBody.find("ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : Options.m_TrailingWidth)"), std::string::npos);
+	EXPECT_NE(InputBody.find("ResolveInlineTrailingTextLayout(Layout.m_ContentRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ContentRect.h * CUi::ms_FontmodHeight * 0.8f"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ContentRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ClearRect"), std::string::npos);

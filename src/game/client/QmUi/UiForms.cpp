@@ -148,18 +148,31 @@ namespace ui_widget
 		const bool WasEmpty = pInput->IsEmpty();
 		const bool Search = Options.m_Mode == EInputFieldMode::SEARCH;
 		const bool HasIcon = Options.m_pLeadingIcon != nullptr || Search;
-		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, Options.m_TrailingWidth);
+		const bool InlineTrailingText = Options.m_InlineTrailingText && Options.m_pTrailingText != nullptr && Options.m_pTrailingText[0] != '\0';
+		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : Options.m_TrailingWidth);
 		const float FontSize = std::min(Options.m_FontSize, Layout.m_ContentRect.h * CUi::ms_FontmodHeight * 0.8f);
+		CUIRect TextRect = Layout.m_ContentRect;
+		CUIRect TrailingRect = Layout.m_TrailingRect;
+		if(InlineTrailingText)
+		{
+			const char *pDisplayText = pInput->GetDisplayedString();
+			const float TextWidth = Ctx.m_pUi->TextRender()->TextWidth(FontSize, pDisplayText);
+			const float TrailingTextWidth = Ctx.m_pUi->TextRender()->TextWidth(FontSize * 0.82f, Options.m_pTrailingText);
+			const SInlineTrailingTextLayout InlineLayout = ResolveInlineTrailingTextLayout(Layout.m_ContentRect, TextWidth, TrailingTextWidth, Ctx.m_UiScale);
+			TextRect = InlineLayout.m_TextRect;
+			TrailingRect = InlineLayout.m_TrailingRect;
+		}
+		const int TextAlign = InlineTrailingText ? TEXTALIGN_MR : ResolveInputFieldTextAlign(Options);
 		if(Ctx.m_pUi->RenderOnly())
 		{
 			// 文本计划只收集稳定文本，不绘制输入框 chrome，也不修改输入、焦点或动画状态。
 			const char *pPlaceholder = Options.m_pPlaceholder != nullptr ? Options.m_pPlaceholder : (Search ? Localize("Search") : nullptr);
 			if(WasEmpty && pPlaceholder != nullptr)
-				Ctx.m_pUi->DoLabel(&Layout.m_ContentRect, pPlaceholder, FontSize, ResolveInputFieldTextAlign(Options));
+				Ctx.m_pUi->DoLabel(&TextRect, pPlaceholder, FontSize, TextAlign);
 			else if(!WasEmpty && !pInput->IsHidden())
-				Ctx.m_pUi->DoLabel(&Layout.m_ContentRect, pInput->GetString(), FontSize, ResolveInputFieldTextAlign(Options));
-			if(Options.m_pTrailingText != nullptr && Layout.m_TrailingRect.w > 0.0f)
-				Ctx.m_pUi->DoLabel(&Layout.m_TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
+				Ctx.m_pUi->DoLabel(&TextRect, pInput->GetString(), FontSize, TextAlign);
+			if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
+				Ctx.m_pUi->DoLabel(&TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
 			return {};
 		}
 		const SUiTheme &Theme = ThemeFor(Ctx);
@@ -182,9 +195,9 @@ namespace ui_widget
 		RenderOptions.m_pHitRect = &Layout.m_ShellRect;
 		bool Changed = false;
 		if(Options.m_Mode == EInputFieldMode::MULTILINE)
-			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &Layout.m_ContentRect, FontSize, Options.m_LineSpacing, ResolveInputFieldTextAlign(Options), RenderOptions);
+			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &TextRect, FontSize, Options.m_LineSpacing, TextAlign, RenderOptions);
 		else
-			Changed = Ctx.m_pUi->DoEditBox(pInput, &Layout.m_ContentRect, FontSize, Options.m_Corners, {}, ResolveInputFieldTextAlign(Options), RenderOptions);
+			Changed = Ctx.m_pUi->DoEditBox(pInput, &TextRect, FontSize, Options.m_Corners, {}, TextAlign, RenderOptions);
 
 		if(Options.m_Clearable)
 		{
@@ -200,8 +213,8 @@ namespace ui_widget
 				Changed = true;
 			}
 		}
-		if(Options.m_pTrailingText != nullptr && Layout.m_TrailingRect.w > 0.0f)
-			Ctx.m_pUi->DoLabel(&Layout.m_TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
+		if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
+			Ctx.m_pUi->DoLabel(&TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
 
 		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Options.m_Clearable);
 	}
@@ -393,10 +406,15 @@ namespace ui_widget
 			else
 				str_format(aValue, sizeof(aValue), "%d", DisplayValue);
 			const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
-			const SInputFieldLayout FieldLayout = ResolveInputFieldLayout(InputField, false, false, Ctx.m_UiScale, SuffixWidth);
-			Ctx.m_pUi->DoLabel(&FieldLayout.m_ContentRect, aValue, FieldFontSize, TEXTALIGN_MR);
-			if(HasSuffix && FieldLayout.m_TrailingRect.w > 0.0f)
-				Ctx.m_pUi->DoLabel(&FieldLayout.m_TrailingRect, Options.m_pSuffix, FieldFontSize * 0.82f, TEXTALIGN_MC);
+			if(HasSuffix)
+			{
+				const SInputFieldLayout FieldLayout = ResolveInputFieldLayout(InputField, false, false, Ctx.m_UiScale);
+				const SInlineTrailingTextLayout InlineLayout = ResolveInlineTrailingTextLayout(FieldLayout.m_ContentRect, Ctx.m_pUi->TextRender()->TextWidth(FieldFontSize, aValue), Ctx.m_pUi->TextRender()->TextWidth(FieldFontSize * 0.82f, Options.m_pSuffix), Ctx.m_UiScale);
+				Ctx.m_pUi->DoLabel(&InlineLayout.m_TextRect, aValue, FieldFontSize, TEXTALIGN_MR);
+				Ctx.m_pUi->DoLabel(&InlineLayout.m_TrailingRect, Options.m_pSuffix, FieldFontSize * 0.82f, TEXTALIGN_MC);
+			}
+			else
+				Ctx.m_pUi->DoLabel(&InputField, aValue, FieldFontSize, TEXTALIGN_MC);
 			return false;
 		}
 
@@ -505,9 +523,9 @@ namespace ui_widget
 		SInputFieldOptions FieldOptions;
 		const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
 		FieldOptions.m_FontSize = FieldFontSize;
-		FieldOptions.m_TextAlign = TEXTALIGN_MR;
+		FieldOptions.m_TextAlign = TEXTALIGN_MC;
 		FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;
-		FieldOptions.m_TrailingWidth = SuffixWidth;
+		FieldOptions.m_InlineTrailingText = HasSuffix;
 		SInputFieldResult Result = ui_widget::InputField(Ctx, pInput, InputField, FieldOptions);
 
 		if(bShowMaxText)

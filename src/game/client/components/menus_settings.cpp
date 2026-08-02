@@ -1978,10 +1978,12 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
 			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
 
-			const float QueueValueInputWidth = 104.0f * UiScale;
+			const char *pQueueIntervalLabel = Localize("Switch interval");
+			const float QueueValueInputWidth = 58.0f * UiScale;
 			const float QueueValueUnitWidth = maximum(18.0f * UiScale, TextRender()->TextWidth(TeeMetrics.m_SmallSize, "ms") + TeeMetrics.m_LineSpacing);
 			const float QueueIntervalControlsWidth = QueueValueInputWidth + QueueValueUnitWidth;
-			const bool StackQueueInterval = QueueSection.w < 82.0f * UiScale + TeeMetrics.m_LineSpacing + QueueIntervalControlsWidth;
+			const float QueueIntervalLabelWidth = TextRender()->TextWidth(BodySize, pQueueIntervalLabel) + TeeMetrics.m_LineSpacing;
+			const bool StackQueueInterval = QueueSection.w < QueueIntervalLabelWidth + TeeMetrics.m_LineSpacing + QueueIntervalControlsWidth;
 			const float QueueIntervalRowHeight = StackQueueInterval ? TeeMetrics.m_LineHeight + TeeMetrics.m_LineSpacing + TeeMetrics.m_InputHeight : TeeMetrics.m_InputHeight;
 			CUIRect IntervalRow, IntervalLabel, IntervalControls;
 			QueueSection.HSplitTop(QueueIntervalRowHeight, &IntervalRow, &QueueSection);
@@ -1990,21 +1992,22 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			{
 				IntervalRow.HSplitTop(TeeMetrics.m_LineHeight, &IntervalLabel, &IntervalControls);
 				IntervalControls.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &IntervalControls);
-				IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalControls);
+				IntervalControls.VSplitLeft(minimum(IntervalControls.w, QueueIntervalControlsWidth), &IntervalControls, nullptr);
 			}
 			else
 			{
-				IntervalRow.VSplitRight(QueueIntervalControlsWidth, &IntervalLabel, &IntervalControls);
-				IntervalLabel.VSplitRight(TeeMetrics.m_LineSpacing, &IntervalLabel, nullptr);
+				IntervalRow.VSplitLeft(minimum(IntervalRow.w, QueueIntervalLabelWidth), &IntervalLabel, &IntervalControls);
+				IntervalControls.VSplitLeft(TeeMetrics.m_LineSpacing, nullptr, &IntervalControls);
+				IntervalControls.VSplitLeft(minimum(IntervalControls.w, QueueIntervalControlsWidth), &IntervalControls, nullptr);
 			}
-			IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalInputGroup);
+			IntervalInputGroup = IntervalControls;
 			IntervalInputGroup.VMargin(minimum(1.0f * UiScale, IntervalInputGroup.w * 0.5f), &IntervalInputGroup);
 			SLabelProperties QueueControlLabelProps;
 			QueueControlLabelProps.m_MaxWidth = IntervalLabel.w;
 			QueueControlLabelProps.m_DisallowNewline = true;
 			QueueControlLabelProps.m_StopAtEnd = true;
 			QueueControlLabelProps.m_MinimumFontSize = 6.0f;
-			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, Localize("Switch interval"), BodySize, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, pQueueIntervalLabel, BodySize, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
 			static ui_widget::SNumericFieldState s_aQueueIntervalStates[NUM_DUMMIES];
 			IUiContext TeeSkinQueueIntervalCtx;
 			TeeSkinQueueIntervalCtx.m_pUi = Ui();

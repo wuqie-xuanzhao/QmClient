@@ -1264,7 +1264,7 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 			SetActiveItem(nullptr);
 		}
 	}
-	else if(HotItem() == pLineInput)
+	else if(Inside)
 	{
 		if(MouseButton(0))
 		{

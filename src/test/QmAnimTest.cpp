@@ -670,6 +670,19 @@ namespace
 		EXPECT_GE(Layout.m_ContentRect.w, 52.0f);
 	}
 
+	TEST(InputField, InlineTrailingTextCentersItsVisualGroup)
+	{
+		const CUIRect Content{10.0f, 20.0f, 120.0f, 24.0f};
+		const ui_widget::SInlineTrailingTextLayout Layout = ui_widget::ResolveInlineTrailingTextLayout(Content, 24.0f, 12.0f, 1.0f);
+
+		EXPECT_FLOAT_EQ(Layout.m_VisualGroupRect.x + Layout.m_VisualGroupRect.w * 0.5f, Content.x + Content.w * 0.5f);
+		EXPECT_FLOAT_EQ(Layout.m_TrailingRect.x, Layout.m_VisualGroupRect.x + 27.0f);
+		EXPECT_FLOAT_EQ(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Layout.m_VisualGroupRect.x + Layout.m_VisualGroupRect.w);
+		EXPECT_FLOAT_EQ(Layout.m_TextRect.x + Layout.m_TextRect.w, Layout.m_VisualGroupRect.x + 24.0f);
+		EXPECT_GE(Layout.m_TextRect.x, Content.x);
+		EXPECT_LE(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Content.x + Content.w);
+	}
+
 	TEST(InputField, FocusRingExpandsShellAndMultilineDefaultsToTopLeft)
 	{
 		const CUIRect Rect{10.0f, 20.0f, 240.0f, 32.0f};

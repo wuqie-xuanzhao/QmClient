@@ -911,13 +911,13 @@ TEST(QmNewUiMenuBranches, HiddenTextCaretDoesNotMutateFollowingGraphicsState)
 
 	const size_t CursorBlock = Render.find("if(TextContainer.m_HasCursor)");
 	const size_t RenderCursor = Render.find("if(RenderCursor)", CursorBlock);
-	const size_t FlushVertices = Render.find("Graphics()->FlushVertices();", CursorBlock);
+	const size_t FlushVertices = Render.find("Graphics()->QuadsDrawCurrentVertices(false);", RenderCursor);
 	const size_t CursorTextureClear = Render.find("Graphics()->TextureClear();", RenderCursor);
 	const size_t CursorFill = Render.find("Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, 1, 0, 0);", RenderCursor);
 	const size_t RenderCursorBodyStart = Render.find("{", RenderCursor);
 	const size_t RenderCursorBodyEnd = MatchingBrace(Render, RenderCursorBodyStart);
-	const size_t CleanupTextureClear = Render.find("Graphics()->TextureClear();", RenderCursorBodyEnd);
-	const size_t ResetColor = Render.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);", CleanupTextureClear);
+	const size_t CleanupTextureClear = Render.rfind("Graphics()->TextureClear();", RenderCursorBodyEnd);
+	const size_t ResetColor = Render.rfind("Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);", RenderCursorBodyEnd);
 	ASSERT_NE(CursorBlock, std::string::npos);
 	ASSERT_NE(RenderCursor, std::string::npos);
 	ASSERT_NE(FlushVertices, std::string::npos);
@@ -927,13 +927,13 @@ TEST(QmNewUiMenuBranches, HiddenTextCaretDoesNotMutateFollowingGraphicsState)
 	ASSERT_NE(RenderCursorBodyEnd, std::string::npos);
 	ASSERT_NE(CleanupTextureClear, std::string::npos);
 	ASSERT_NE(ResetColor, std::string::npos);
-	EXPECT_LT(CursorBlock, FlushVertices);
-	EXPECT_LT(FlushVertices, RenderCursor);
+	EXPECT_LT(CursorBlock, RenderCursor);
+	EXPECT_LT(RenderCursor, FlushVertices);
 	EXPECT_LT(RenderCursor, CursorTextureClear);
 	EXPECT_LT(CursorTextureClear, CursorFill);
-	EXPECT_LT(CursorFill, RenderCursorBodyEnd);
-	EXPECT_LT(RenderCursorBodyEnd, CleanupTextureClear);
+	EXPECT_LT(CursorFill, CleanupTextureClear);
 	EXPECT_LT(CleanupTextureClear, ResetColor);
+	EXPECT_LT(ResetColor, RenderCursorBodyEnd);
 }
 
 TEST(QmNewUiMenuBranches, ConsoleRestoresCompleteTextRenderState)
@@ -2508,18 +2508,42 @@ TEST(QmNewUiMenuBranches, SettingsNumericFieldRectanglesInitializeBeforeLayoutBr
 	ASSERT_FALSE(Body.empty());
 	EXPECT_NE(Body.find("CUIRect Label{}, Controls{}, ValueRect{}, ScrollBar{}, InputField{};"), std::string::npos);
 	EXPECT_NE(Body.find("Controls.VSplitRight(ValueWidth, &ScrollBar, &InputField);"), std::string::npos);
-	EXPECT_NE(Body.find("FieldOptions.m_TextAlign = TEXTALIGN_MR;"), std::string::npos);
+	EXPECT_NE(Body.find("FieldOptions.m_TextAlign = TEXTALIGN_MC;"), std::string::npos);
 	EXPECT_NE(Body.find("FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;"), std::string::npos);
+	EXPECT_NE(Body.find("FieldOptions.m_InlineTrailingText = HasSuffix;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NumericInputKeepsValueAndUnitInOneGeometry)
 {
 	const std::string Forms = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
-	EXPECT_NE(Forms.find("const SInputFieldLayout FieldLayout = ResolveInputFieldLayout(InputField, false, false, Ctx.m_UiScale, SuffixWidth);"), std::string::npos);
-	EXPECT_NE(Forms.find("Ctx.m_pUi->DoLabel(&FieldLayout.m_ContentRect, aValue, FieldFontSize, TEXTALIGN_MR);"), std::string::npos);
-	EXPECT_NE(Forms.find("Ctx.m_pUi->DoLabel(&FieldLayout.m_TrailingRect, Options.m_pSuffix, FieldFontSize * 0.82f, TEXTALIGN_MC);"), std::string::npos);
-	EXPECT_NE(Forms.find("FieldOptions.m_TextAlign = TEXTALIGN_MR;"), std::string::npos);
+	const std::string Header = ReadTextFile("src/game/client/QmUi/UiForms.h");
+	EXPECT_NE(Header.find("struct SInlineTrailingTextLayout"), std::string::npos);
+	EXPECT_NE(Header.find("ResolveInlineTrailingTextLayout("), std::string::npos);
+	EXPECT_NE(Forms.find("const SInlineTrailingTextLayout InlineLayout = ResolveInlineTrailingTextLayout"), std::string::npos);
+	EXPECT_NE(Forms.find("FieldOptions.m_TextAlign = TEXTALIGN_MC;"), std::string::npos);
+	EXPECT_NE(Forms.find("FieldOptions.m_InlineTrailingText = HasSuffix;"), std::string::npos);
 	EXPECT_EQ(Forms.find("m_pInactiveDisplayText"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, EditBoxesActivateFromTheirConfiguredHitRect)
+{
+	const std::string Source = ReadTextFile("src/game/client/ui.cpp");
+	const std::string Body = FunctionBody(Source, "bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions)");
+	ASSERT_FALSE(Body.empty());
+	EXPECT_NE(Body.find("else if(Inside)"), std::string::npos);
+	EXPECT_EQ(Body.find("else if(HotItem() == pLineInput)"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, KeyReaderUsesOneOuterShellForValueAndDeleteAction)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/key_binder.cpp");
+	const std::string Body = FunctionBody(Source, "CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(");
+	ASSERT_FALSE(Body.empty());
+	EXPECT_NE(Body.find("pRect->Draw(ReaderBaseColor, IGraphics::CORNER_ALL, 5.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("const float ClearSurfaceAlpha = (ClearChecked != 0 ? 0.10f : 0.5f) * Ui()->ButtonColorMul(pClearButton);"), std::string::npos);
+	EXPECT_NE(Body.find("ClearButton.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, ClearSurfaceAlpha), IGraphics::CORNER_R, 5.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f)"), std::string::npos);
+	EXPECT_NE(Body.find("if(m_pKeyReaderId == pReaderButton && m_TakeKey)"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
@@ -3837,7 +3861,9 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(Tee.find("constexpr int TeeSkinGridVisibleRows = 6;"), std::string::npos);
 	EXPECT_NE(Tee.find("const float TeeQueuePanelMinHeight = ResolveSettingsTeeQueuePanelHeight(TeeMetrics);"), std::string::npos);
 	EXPECT_NE(Tee.find("ResolveSettingsTeeQueuePresetHeight(TeeMetrics)"), std::string::npos);
-	EXPECT_NE(Tee.find("const float QueueValueInputWidth = 104.0f * UiScale;"), std::string::npos);
+	EXPECT_NE(Tee.find("const float QueueValueInputWidth = 58.0f * UiScale;"), std::string::npos);
+	EXPECT_NE(Tee.find("const float QueueIntervalLabelWidth = TextRender()->TextWidth(BodySize, pQueueIntervalLabel) + TeeMetrics.m_LineSpacing;"), std::string::npos);
+	EXPECT_NE(Tee.find("IntervalRow.VSplitLeft(minimum(IntervalRow.w, QueueIntervalLabelWidth), &IntervalLabel, &IntervalControls);"), std::string::npos);
 	EXPECT_NE(Tee.find("QuickSearch.VSplitRight(SkinControlGap, &QuickSearch, nullptr);"), std::string::npos);
 	EXPECT_NE(Tee.find("QueueSection.Draw(ui_token::color::SURFACE_OVERLAY"), std::string::npos);
 	EXPECT_NE(Tee.find("const float MinimumSearchWidth = 140.0f * UiScale;"), std::string::npos);
