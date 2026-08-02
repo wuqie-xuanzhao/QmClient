@@ -39,6 +39,8 @@ AUTH_SECRET="replace-with-random-long-secret" PORT=8080 npm start
 | `GET` | `/token` | 获取短期识别 token |
 | `POST` | `/report` | 上报当前服务器上的本地玩家状态 |
 | `GET` | `/users.json` | 获取仍在有效期内的在线识别记录 |
+| `POST` | `/api/v1/developers/presence` | 使用设备 Bearer 凭据上报开发者主/副角色在线声明 |
+| `GET` | `/api/v1/developers/presences?server_address=<address>` | 获取指定游戏服务器上仍有效的开发者声明 |
 | `POST` | `/playtime/start` | 开始或恢复游玩时长会话 |
 | `POST` | `/playtime/stop` | 停止会话并结算时长 |
 | `POST` | `/playtime/query` | 查询累计与当前会话时长 |
@@ -71,12 +73,34 @@ AUTH_SECRET="replace-with-random-long-secret" PORT=8080 npm start
 
 `client_type` 支持 `qm` / `arg`，并兼容 `qmclient` / `arghena` 别名。服务端以玩家名为优先身份键，并继续接受合法的 `player_id` 兼容输入。
 
+## 开发者认证
+
+开发者认证与普通在线识别 token 相互独立。生产环境通过 `DEVELOPER_CREDENTIALS_FILE` 指向只允许服务进程读取的 JSON 文件；服务器仅保存每个设备随机 token 的 SHA-256，不保存原始 token：
+
+```json
+{
+  "credentials": [
+    {
+      "developer_id": "qimeng",
+      "key_id": "windows-desktop-1",
+      "token_sha256": "64位十六进制SHA-256",
+      "revoked": false
+    }
+  ]
+}
+```
+
+客户端把对应的 64 位十六进制原始 token 放在保存目录的 `qmclient/developer_token.txt` 中，并只向固定 HTTPS 接口发送 `Authorization: Bearer <token>`。一次上报包含当前 `server_address`、随机 `session_id` 以及主/副角色的精确 `player_id` 和 `player_name`。公开查询结果还包含 `server_time`，客户端用服务端时间换算 15 秒租约，避免查看者本机时钟偏差影响认证。
+
+徽标只在 `server_address + player_id + 当前精确昵称` 全部匹配且租约有效时显示；昵称改变、位置复用、网络失败或租约到期都会关闭。样式桶由设备身份和随机会话 ID 确定性派生，因此中心服重启也不会改变同一会话的样式；`0..19` 为彩虹、`20..99` 为黑色，新会话会重新取样。
+
 ## 环境变量
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
 | `PORT` | `8080` | HTTP 监听端口 |
 | `AUTH_SECRET` | 随机值 | token 签名密钥；生产环境必须固定 |
+| `DEVELOPER_CREDENTIALS_FILE` | 空 | 开发者设备凭据摘要 JSON；为空时不接受任何开发者上报 |
 | `TOKEN_TTL_SEC` | `300` | token 有效期 |
 | `REPORT_TTL_SEC` | `90` | 在线记录有效期 |
 | `TIME_SKEW_SEC` | `600` | 上报时间允许偏差 |

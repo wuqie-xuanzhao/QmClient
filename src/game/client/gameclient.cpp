@@ -35,6 +35,7 @@
 #include "components/qmclient/jelly_tee.h"
 #include "components/qmclient/modes.h"
 #include "components/qmclient/perf_logging.h"
+#include "components/qmclient/qmclient_utils.h"
 #include "components/race_demo.h"
 #include "components/scoreboard.h"
 #include "components/settings_resource_jobs.h"
@@ -1372,6 +1373,9 @@ void CGameClient::OnReset()
 	std::fill(std::begin(m_aQ1menGSyncFootParticlesEnabled), std::end(m_aQ1menGSyncFootParticlesEnabled), false);
 	std::fill(std::begin(m_aQ1menGSyncRemoteParticlesEnabled), std::end(m_aQ1menGSyncRemoteParticlesEnabled), false);
 	std::fill(std::begin(m_aQmVoiceSyncMarkUntil), std::end(m_aQmVoiceSyncMarkUntil), 0);
+	std::fill(std::begin(m_aQmDeveloperMarkUntil), std::end(m_aQmDeveloperMarkUntil), 0);
+	std::fill(std::begin(m_aQmDeveloperRainbow), std::end(m_aQmDeveloperRainbow), false);
+	mem_zero(m_aaQmDeveloperMarkName, sizeof(m_aaQmDeveloperMarkName));
 
 	m_PredictedDummyId = -1;
 	m_IsDummySwapping = false;
@@ -7906,6 +7910,38 @@ bool CGameClient::IsQmVoiceSupportedClient(int ClientId) const
 		return false;
 
 	return m_aQmVoiceSyncMarkUntil[ClientId] > time_get();
+}
+
+void CGameClient::ClearQmDeveloperMarks()
+{
+	std::fill(std::begin(m_aQmDeveloperMarkUntil), std::end(m_aQmDeveloperMarkUntil), 0);
+	std::fill(std::begin(m_aQmDeveloperRainbow), std::end(m_aQmDeveloperRainbow), false);
+	mem_zero(m_aaQmDeveloperMarkName, sizeof(m_aaQmDeveloperMarkName));
+}
+
+void CGameClient::MarkQmDeveloperClient(int ClientId, const char *pPlayerName, int64_t ExpireTick, bool Rainbow)
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !pPlayerName || pPlayerName[0] == '\0' || ExpireTick <= 0)
+		return;
+	m_aQmDeveloperMarkUntil[ClientId] = maximum(m_aQmDeveloperMarkUntil[ClientId], ExpireTick);
+	m_aQmDeveloperRainbow[ClientId] = Rainbow;
+	str_copy(m_aaQmDeveloperMarkName[ClientId], pPlayerName);
+}
+
+bool CGameClient::IsQmDeveloperAuthenticated(int ClientId) const
+{
+	return ClientId >= 0 && ClientId < MAX_CLIENTS &&
+		IsQmDeveloperMarkCurrent(
+			m_aClients[ClientId].m_Active,
+			m_aaQmDeveloperMarkName[ClientId],
+			m_aClients[ClientId].m_aName,
+			m_aQmDeveloperMarkUntil[ClientId],
+			time_get());
+}
+
+bool CGameClient::IsQmDeveloperRainbow(int ClientId) const
+{
+	return IsQmDeveloperAuthenticated(ClientId) && m_aQmDeveloperRainbow[ClientId];
 }
 
 void CGameClient::ClearClientBrands()

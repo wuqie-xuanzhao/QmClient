@@ -4,6 +4,7 @@
 #include <base/str.h>
 
 #include <engine/shared/json.h>
+#include <engine/shared/protocol.h>
 
 #include <algorithm>
 #include <unordered_map>
@@ -38,6 +39,22 @@ namespace
 			return true;
 		}
 		return false;
+	}
+	bool JsonReadInteger(const json_value *pValue, int64_t &OutValue)
+	{
+		if(!pValue || pValue->type != json_integer)
+			return false;
+		OutValue = pValue->u.integer;
+		return true;
+	}
+	bool IsDeveloperPresenceValidAt(const SQmDeveloperPresence &Presence, int64_t Now)
+	{
+		return !Presence.m_DeveloperId.empty() &&
+		       !Presence.m_ServerAddress.empty() &&
+		       Presence.m_PlayerId >= 0 && Presence.m_PlayerId < MAX_CLIENTS &&
+		       !Presence.m_PlayerName.empty() &&
+		       Presence.m_IssuedAt <= Now && Now < Presence.m_ExpiresAt &&
+		       Presence.m_StyleBucket >= 0 && Presence.m_StyleBucket < 100;
 	}
 	EClientBrand JsonReadClientBrand(const json_value *pEntry)
 	{
@@ -152,4 +169,113 @@ bool ParseQmClientUsersJson(const json_value *pRoot, const char *pServerAddress,
 		return str_comp(Left.m_ServerAddress.c_str(), Right.m_ServerAddress.c_str()) < 0;
 	});
 	return true;
+}
+
+bool ParseQmDeveloperPresencesJson(const json_value *pRoot, const char *pServerAddress, SQmDeveloperPresenceParseResult &OutResult)
+{
+	OutResult = SQmDeveloperPresenceParseResult();
+	if(!pRoot || pRoot->type != json_object)
+		return false;
+
+	int64_t ServerTime;
+	if(!JsonReadInteger(JsonObjectField(pRoot, "server_time"), ServerTime) || ServerTime <= 0)
+		return false;
+	const json_value *pPresences = JsonObjectField(pRoot, "presences");
+
+	if(pPresences->type != json_array)
+		return false;
+
+	OutResult.m_Parsed = true;
+	OutResult.m_ServerTime = ServerTime;
+	OutResult.m_vPresences.reserve(pPresences->u.array.length);
+	const char *pLocalServerAddress = pServerAddress ? pServerAddress : "";
+	if(pLocalServerAddress[0] == '\0')
+		return true;
+
+	for(unsigned Index = 0; Index < pPresences->u.array.length; ++Index)
+	{
+		const json_value *pEntry = pPresences->u.array.values[Index];
+		if(!pEntry || pEntry->type != json_object)
+			continue;
+
+		const json_value *pDeveloperId = JsonObjectField(pEntry, "developer_id");
+		const json_value *pEntryServerAddress = JsonObjectField(pEntry, "server_address");
+		const json_value *pPlayerName = JsonObjectField(pEntry, "player_name");
+		const json_value *pDummy = JsonObjectField(pEntry, "dummy");
+		if(pDeveloperId == &json_value_none || pDeveloperId->type != json_string || pDeveloperId->u.string.ptr[0] == '\0' ||
+			pEntryServerAddress == &json_value_none || pEntryServerAddress->type != json_string || pEntryServerAddress->u.string.ptr[0] == '\0' ||
+			pPlayerName == &json_value_none || pPlayerName->type != json_string || pPlayerName->u.string.ptr[0] == '\0' ||
+			pDummy == &json_value_none || pDummy->type != json_boolean)
+		{
+			continue;
+		}
+
+		if(str_comp(pEntryServerAddress->u.string.ptr, pLocalServerAddress) != 0)
+			continue;
+
+		int64_t PlayerId;
+		int64_t IssuedAt;
+		int64_t ExpiresAt;
+		int64_t StyleBucket;
+		if(!JsonReadInteger(JsonObjectField(pEntry, "player_id"), PlayerId) ||
+			!JsonReadInteger(JsonObjectField(pEntry, "issued_at"), IssuedAt) ||
+			!JsonReadInteger(JsonObjectField(pEntry, "expires_at"), ExpiresAt) ||
+			!JsonReadInteger(JsonObjectField(pEntry, "style_bucket"), StyleBucket) ||
+			PlayerId < 0 || PlayerId >= MAX_CLIENTS ||
+			StyleBucket < 0 || StyleBucket >= 100)
+		{
+			continue;
+		}
+
+		SQmDeveloperPresence Presence;
+		Presence.m_DeveloperId = pDeveloperId->u.string.ptr;
+		Presence.m_ServerAddress = pEntryServerAddress->u.string.ptr;
+		Presence.m_PlayerId = (int)PlayerId;
+		Presence.m_PlayerName = pPlayerName->u.string.ptr;
+		Presence.m_Dummy = json_boolean_get(pDummy) != 0;
+		Presence.m_IssuedAt = IssuedAt;
+		Presence.m_ExpiresAt = ExpiresAt;
+		Presence.m_StyleBucket = (int)StyleBucket;
+		if(IsDeveloperPresenceValidAt(Presence, ServerTime))
+			OutResult.m_vPresences.push_back(Presence);
+	}
+
+	return true;
+}
+
+const SQmDeveloperPresence *FindQmDeveloperPresence(const std::vector<SQmDeveloperPresence> &vPresences, const char *pServerAddress, int PlayerId, const char *pPlayerName, int64_t Now)
+{
+	const char *pExpectedServerAddress = pServerAddress ? pServerAddress : "";
+	const char *pExpectedPlayerName = pPlayerName ? pPlayerName : "";
+	for(const SQmDeveloperPresence &Presence : vPresences)
+	{
+		if(IsDeveloperPresenceValidAt(Presence, Now) &&
+			Presence.m_PlayerId == PlayerId &&
+			str_comp(Presence.m_ServerAddress.c_str(), pExpectedServerAddress) == 0 &&
+			str_comp(Presence.m_PlayerName.c_str(), pExpectedPlayerName) == 0)
+		{
+			return &Presence;
+		}
+	}
+	return nullptr;
+}
+
+EQmDeveloperBadgeStyle QmDeveloperBadgeStyleFromBucket(int StyleBucket)
+{
+	if(StyleBucket >= 0 && StyleBucket < 20)
+		return EQmDeveloperBadgeStyle::RAINBOW;
+	return EQmDeveloperBadgeStyle::BLACK;
+}
+
+bool ShouldShowQmDeveloperBadge(bool Authenticated, bool ShowName, bool HideIdentity)
+{
+	return Authenticated && ShowName && !HideIdentity;
+}
+
+bool IsQmDeveloperMarkCurrent(bool Active, const char *pMarkedName, const char *pCurrentName, int64_t ExpireTick, int64_t NowTick)
+{
+	return Active &&
+		pMarkedName && pMarkedName[0] != '\0' &&
+		pCurrentName && str_comp(pMarkedName, pCurrentName) == 0 &&
+		ExpireTick > NowTick;
 }

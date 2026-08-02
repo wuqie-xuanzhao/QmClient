@@ -316,7 +316,8 @@ class CTClient : public CComponent
 	static void ConSaveList(IConsole::IResult *pResult, void *pUserData);
 
 	// 复读功能
-	char m_aLastChatMessage[2048] = ""; // 最新一条公屏消息
+	char m_aLastChatMessage[2048] = ""; // 最新一条公屏或队伍聊天消息
+	int m_LastChatTeam = 0;
 	int64_t m_LastRepeatTime = 0; // 上次发送复读时间
 	int64_t m_LastRepeatKeyPressTime = 0; // 上次按下复读按键时间
 	bool m_RepeatKeyDown = false; // 仅在按下沿计次，避免长按触发双击
