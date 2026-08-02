@@ -1978,7 +1978,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
 			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
 
-			const float QueueValueInputWidth = 58.0f * UiScale;
+			const float QueueValueInputWidth = 104.0f * UiScale;
 			const float QueueValueUnitWidth = maximum(18.0f * UiScale, TextRender()->TextWidth(TeeMetrics.m_SmallSize, "ms") + TeeMetrics.m_LineSpacing);
 			const float QueueIntervalControlsWidth = QueueValueInputWidth + QueueValueUnitWidth;
 			const bool StackQueueInterval = QueueSection.w < 82.0f * UiScale + TeeMetrics.m_LineSpacing + QueueIntervalControlsWidth;
@@ -3738,6 +3738,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			s_ListBox.SetActive(!Ui()->IsPopupOpen());
 			s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 			s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+			s_ListBox.SetHideScrollbar(true);
+			s_ListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 			s_ListBox.DoStart(RowHeightResList, s_NumNodes, 1, 3, SelectedOld, &ModeList);
 
 			for(int i = 0; i < s_NumNodes; ++i)

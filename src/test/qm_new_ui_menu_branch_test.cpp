@@ -911,14 +911,29 @@ TEST(QmNewUiMenuBranches, HiddenTextCaretDoesNotMutateFollowingGraphicsState)
 
 	const size_t CursorBlock = Render.find("if(TextContainer.m_HasCursor)");
 	const size_t RenderCursor = Render.find("if(RenderCursor)", CursorBlock);
-	const size_t TextureClear = Render.find("Graphics()->TextureClear();", RenderCursor);
-	const size_t ResetColor = Render.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);", RenderCursor);
+	const size_t FlushVertices = Render.find("Graphics()->FlushVertices();", CursorBlock);
+	const size_t CursorTextureClear = Render.find("Graphics()->TextureClear();", RenderCursor);
+	const size_t CursorFill = Render.find("Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, 1, 0, 0);", RenderCursor);
+	const size_t RenderCursorBodyStart = Render.find("{", RenderCursor);
+	const size_t RenderCursorBodyEnd = MatchingBrace(Render, RenderCursorBodyStart);
+	const size_t CleanupTextureClear = Render.find("Graphics()->TextureClear();", RenderCursorBodyEnd);
+	const size_t ResetColor = Render.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);", CleanupTextureClear);
 	ASSERT_NE(CursorBlock, std::string::npos);
 	ASSERT_NE(RenderCursor, std::string::npos);
-	ASSERT_NE(TextureClear, std::string::npos);
+	ASSERT_NE(FlushVertices, std::string::npos);
+	ASSERT_NE(CursorTextureClear, std::string::npos);
+	ASSERT_NE(CursorFill, std::string::npos);
+	ASSERT_NE(RenderCursorBodyStart, std::string::npos);
+	ASSERT_NE(RenderCursorBodyEnd, std::string::npos);
+	ASSERT_NE(CleanupTextureClear, std::string::npos);
 	ASSERT_NE(ResetColor, std::string::npos);
-	EXPECT_LT(RenderCursor, TextureClear);
-	EXPECT_LT(TextureClear, ResetColor);
+	EXPECT_LT(CursorBlock, FlushVertices);
+	EXPECT_LT(FlushVertices, RenderCursor);
+	EXPECT_LT(RenderCursor, CursorTextureClear);
+	EXPECT_LT(CursorTextureClear, CursorFill);
+	EXPECT_LT(CursorFill, RenderCursorBodyEnd);
+	EXPECT_LT(RenderCursorBodyEnd, CleanupTextureClear);
+	EXPECT_LT(CleanupTextureClear, ResetColor);
 }
 
 TEST(QmNewUiMenuBranches, ConsoleRestoresCompleteTextRenderState)
@@ -2493,7 +2508,18 @@ TEST(QmNewUiMenuBranches, SettingsNumericFieldRectanglesInitializeBeforeLayoutBr
 	ASSERT_FALSE(Body.empty());
 	EXPECT_NE(Body.find("CUIRect Label{}, Controls{}, ValueRect{}, ScrollBar{}, InputField{};"), std::string::npos);
 	EXPECT_NE(Body.find("Controls.VSplitRight(ValueWidth, &ScrollBar, &InputField);"), std::string::npos);
+	EXPECT_NE(Body.find("FieldOptions.m_TextAlign = TEXTALIGN_MR;"), std::string::npos);
 	EXPECT_NE(Body.find("FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, NumericInputKeepsValueAndUnitInOneGeometry)
+{
+	const std::string Forms = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
+	EXPECT_NE(Forms.find("const SInputFieldLayout FieldLayout = ResolveInputFieldLayout(InputField, false, false, Ctx.m_UiScale, SuffixWidth);"), std::string::npos);
+	EXPECT_NE(Forms.find("Ctx.m_pUi->DoLabel(&FieldLayout.m_ContentRect, aValue, FieldFontSize, TEXTALIGN_MR);"), std::string::npos);
+	EXPECT_NE(Forms.find("Ctx.m_pUi->DoLabel(&FieldLayout.m_TrailingRect, Options.m_pSuffix, FieldFontSize * 0.82f, TEXTALIGN_MC);"), std::string::npos);
+	EXPECT_NE(Forms.find("FieldOptions.m_TextAlign = TEXTALIGN_MR;"), std::string::npos);
+	EXPECT_EQ(Forms.find("m_pInactiveDisplayText"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
@@ -3425,10 +3451,11 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	EXPECT_NE(Recovery.find("int FallbackGLMinor = 0;"), std::string::npos);
 	EXPECT_NE(Recovery.find("FallbackGLMajor = 4;"), std::string::npos);
 	EXPECT_NE(Recovery.find("FallbackGLMinor = 1;"), std::string::npos);
-	EXPECT_NE(Recovery.find("constexpr const char *pFallbackOpenGlVersion = \"4.1\";"), std::string::npos);
-	EXPECT_NE(Recovery.find("resetting graphics to OpenGL %s windowed mode without FSAA"), std::string::npos);
 	EXPECT_NE(Recovery.find("g_Config.m_GfxFsaaSamples = 0;"), std::string::npos);
 	EXPECT_NE(Recovery.find("g_Config.m_GfxFullscreen = 0;"), std::string::npos);
+	EXPECT_NE(StartupHook.find("constexpr const char *pFallbackOpenGlVersion = \"4.1\";"), std::string::npos);
+	EXPECT_NE(StartupHook.find("constexpr const char *pFallbackOpenGlVersion = \"3.0\";"), std::string::npos);
+	EXPECT_NE(StartupHook.find("resetting graphics to OpenGL %s windowed mode without FSAA"), std::string::npos);
 
 	const size_t HookCall = Source.find("RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);");
 	const size_t CommandLineParse = Source.find("pConsole->ParseArguments(argc - 1, &argv[1]);");
@@ -3810,6 +3837,7 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(Tee.find("constexpr int TeeSkinGridVisibleRows = 6;"), std::string::npos);
 	EXPECT_NE(Tee.find("const float TeeQueuePanelMinHeight = ResolveSettingsTeeQueuePanelHeight(TeeMetrics);"), std::string::npos);
 	EXPECT_NE(Tee.find("ResolveSettingsTeeQueuePresetHeight(TeeMetrics)"), std::string::npos);
+	EXPECT_NE(Tee.find("const float QueueValueInputWidth = 104.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(Tee.find("QuickSearch.VSplitRight(SkinControlGap, &QuickSearch, nullptr);"), std::string::npos);
 	EXPECT_NE(Tee.find("QueueSection.Draw(ui_token::color::SURFACE_OVERLAY"), std::string::npos);
 	EXPECT_NE(Tee.find("const float MinimumSearchWidth = 140.0f * UiScale;"), std::string::npos);
@@ -3996,6 +4024,8 @@ TEST(QmNewUiMenuBranches, GraphicsAndSoundNestedListsOwnWheel)
 	EXPECT_NE(Graphics.find("GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount"), std::string::npos);
 	EXPECT_EQ(Graphics.find("const auto NextBackendRow"), std::string::npos);
 	EXPECT_NE(Graphics.find("GraphicsModesMeasureRevision"), std::string::npos);
+	EXPECT_NE(Graphics.find("s_ListBox.SetHideScrollbar(true);"), std::string::npos);
+	EXPECT_NE(Graphics.find("s_ListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);"), std::string::npos);
 	EXPECT_EQ(Graphics.find("GraphicsBackendMinCardHeight = 104.0f"), std::string::npos);
 	EXPECT_EQ(Graphics.find("Localize(\"Graphics card\"), 16.0f"), std::string::npos);
 }
@@ -4020,6 +4050,16 @@ TEST(QmNewUiMenuBranches, GraphicsPilotHasNoRemainingLegacyInputOrScrollPath)
 	EXPECT_EQ(Graphics.find("Ui()->DoScrollbarH("), std::string::npos);
 	EXPECT_EQ(Graphics.find("Ui()->DoValueSelectorWithState("), std::string::npos);
 	EXPECT_EQ(Graphics.find("s_GraphicsSettingsScrollRegion"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, DisplayModesHideOnlyTheirVisualScrollbar)
+{
+	const std::string ListBoxHeader = ReadTextFile("src/game/client/ui_listbox.h");
+	const std::string ListBoxSource = ReadTextFile("src/game/client/ui_listbox.cpp");
+	EXPECT_NE(ListBoxHeader.find("bool m_HideScrollbar;"), std::string::npos);
+	EXPECT_NE(ListBoxHeader.find("void SetHideScrollbar(bool HideScrollbar)"), std::string::npos);
+	EXPECT_NE(ListBoxSource.find("m_HideScrollbar = false;"), std::string::npos);
+	EXPECT_NE(ListBoxSource.find("ScrollParams.m_HideScrollbar = m_HideScrollbar;"), std::string::npos);
 }
 TEST(QmNewUiMenuBranches, NestedLanguageListWheelOwnerOutranksGeneralPage)
 {

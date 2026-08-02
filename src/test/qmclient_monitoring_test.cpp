@@ -4161,7 +4161,7 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesSharedIntervalNumericF
 	EXPECT_EQ(Body.find("Localize(\"Enabled\")"), std::string::npos);
 	EXPECT_EQ(Body.find("tee-skin-queue-enabled-heading"), std::string::npos);
 	EXPECT_NE(Body.find("IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalInputGroup);"), std::string::npos);
-	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f * UiScale"), std::string::npos);
+	EXPECT_NE(Body.find("const float QueueValueInputWidth = 104.0f * UiScale"), std::string::npos);
 	EXPECT_NE(Body.find("TextRender()->TextWidth(TeeMetrics.m_SmallSize, \"ms\")"), std::string::npos);
 	EXPECT_NE(Body.find("SLabelProperties QueueControlLabelProps;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueControlLabelProps.m_DisallowNewline = true"), std::string::npos);

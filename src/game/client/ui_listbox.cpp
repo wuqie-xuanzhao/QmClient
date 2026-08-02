@@ -32,6 +32,7 @@ void CListBox::Reset()
 	m_ScrollbarMarginOverridden = false;
 	m_HasHeader = false;
 	m_Active = true;
+	m_HideScrollbar = false;
 	m_SelectedItemActiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
 	m_SelectedItemInactiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
 	m_HoveredItemColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
@@ -120,6 +121,7 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 	ScrollParams.m_WheelOwnerPriority = m_WheelOwnerPriority;
+	ScrollParams.m_HideScrollbar = m_HideScrollbar;
 	m_ScrollbarWidth = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarThickness, m_ScrollbarWidth, m_ScrollbarWidthOverridden);
 	m_ScrollbarMargin = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarMargin, m_ScrollbarMargin, m_ScrollbarMarginOverridden);
 	ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;

@@ -391,9 +391,12 @@ namespace ui_widget
 			else if(Options.m_pMaxText != nullptr && DisplayValue == Max)
 				str_copy(aValue, Options.m_pMaxText);
 			else
-				str_format(aValue, sizeof(aValue), "%d%s", DisplayValue, HasSuffix ? Options.m_pSuffix : "");
+				str_format(aValue, sizeof(aValue), "%d", DisplayValue);
 			const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
-			Ctx.m_pUi->DoLabel(&InputField, aValue, FieldFontSize, TEXTALIGN_MC);
+			const SInputFieldLayout FieldLayout = ResolveInputFieldLayout(InputField, false, false, Ctx.m_UiScale, SuffixWidth);
+			Ctx.m_pUi->DoLabel(&FieldLayout.m_ContentRect, aValue, FieldFontSize, TEXTALIGN_MR);
+			if(HasSuffix && FieldLayout.m_TrailingRect.w > 0.0f)
+				Ctx.m_pUi->DoLabel(&FieldLayout.m_TrailingRect, Options.m_pSuffix, FieldFontSize * 0.82f, TEXTALIGN_MC);
 			return false;
 		}
 
@@ -502,7 +505,7 @@ namespace ui_widget
 		SInputFieldOptions FieldOptions;
 		const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
 		FieldOptions.m_FontSize = FieldFontSize;
-		FieldOptions.m_TextAlign = TEXTALIGN_MC;
+		FieldOptions.m_TextAlign = TEXTALIGN_MR;
 		FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;
 		FieldOptions.m_TrailingWidth = SuffixWidth;
 		SInputFieldResult Result = ui_widget::InputField(Ctx, pInput, InputField, FieldOptions);

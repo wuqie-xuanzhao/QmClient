@@ -2558,17 +2558,19 @@ public:
 			{
 				const auto CurTime = time_get_nanoseconds();
 				const bool RenderCursor = TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms;
+				// 光标覆盖层与文字容器使用不同的图形命令。两个闪烁半周期都要
+				// 归还纹理和颜色状态，避免后续标签继承到光标命令的状态。
+				Graphics()->FlushVertices();
 				if(RenderCursor)
 				{
-					// 光标是独立覆盖层；隐藏半周期不能改动后续文字共享的图形状态。
-					Graphics()->FlushVertices();
 					Graphics()->TextureClear();
 					Graphics()->SetColor(TextOutlineColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 0, 1, 0, 0);
 					Graphics()->SetColor(TextColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, 1, 0, 0);
-					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				}
+				Graphics()->TextureClear();
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				if(TextContainer.m_ForceCursorRendering)
 					m_CursorRenderTime = CurTime - 501ms;
 				else if((CurTime - m_CursorRenderTime) > 1s)
