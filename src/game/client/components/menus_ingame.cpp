@@ -30,6 +30,7 @@
 #include <generated/protocol.h>
 
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/animstate.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/qmclient/perf_logging.h>
@@ -2294,7 +2295,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	MainView.HSplitTop(20.0f, &Bottom, &MainView);
 	Bottom.Draw(ms_ColorTabbarActive, IGraphics::CORNER_NONE, 0.0f);
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	MainView.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
+	DrawRoundedSurface(Ui(), MainView, ms_ColorTabbarActive, ms_ColorTabbarActive, 10.0f, 0.0f, IGraphics::CORNER_B);
 	MainView.Margin(10.0f, &MainView);
 
 	if(Client()->RconAuthed())
