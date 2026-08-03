@@ -110,7 +110,7 @@ std::optional<CMute> CMutes::IsMuted(const NETADDR *pAddr, bool RespectInitialDe
 	{
 		return std::nullopt;
 	}
-	if(!RespectInitialDelay && !It->second.m_InitialDelay)
+	if(!RespectInitialDelay && It->second.m_InitialDelay)
 	{
 		return std::nullopt;
 	}
