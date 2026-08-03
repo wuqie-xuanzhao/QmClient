@@ -888,8 +888,12 @@ TEST(QmNewUiMenuBranches, TranslateUiColorsPreserveConfiguredAlpha)
 TEST(QmNewUiMenuBranches, LineInputRendersActiveTextOnlyOnce)
 {
 	const std::string Source = ReadTextFile("src/game/client/lineinput.cpp");
+	const std::string Header = ReadTextFile("src/engine/textrender.h");
+	const std::string TextSource = ReadTextFile("src/engine/client/text.cpp");
 	const std::string Render = FunctionBody(Source, "STextBoundingBox CLineInput::Render(");
+	const std::string RenderCaret = FunctionBody(Source, "void CLineInput::RenderCaret(");
 	ASSERT_FALSE(Render.empty());
+	ASSERT_FALSE(RenderCaret.empty());
 	const auto CountOccurrences = [](const std::string &Text, const char *pNeedle) {
 		size_t Count = 0;
 		for(size_t Position = Text.find(pNeedle); Position != std::string::npos; Position = Text.find(pNeedle, Position + 1))
@@ -899,46 +903,39 @@ TEST(QmNewUiMenuBranches, LineInputRendersActiveTextOnlyOnce)
 
 	EXPECT_NE(Render.find("m_CaretPosition = Cursor.m_CursorRenderedPosition;"), std::string::npos);
 	EXPECT_NE(Render.find("SetCompositionWindowPosition(m_CaretPosition + vec2"), std::string::npos);
+	EXPECT_NE(Render.find("Cursor.m_RenderCursor = false;"), std::string::npos);
+	EXPECT_NE(Render.find("if(Cursor.m_HasCursorRenderedPosition)"), std::string::npos);
+	EXPECT_NE(Render.find("RenderCaret(Cursor, Cursor.m_ForceCursorRendering"), std::string::npos);
 	EXPECT_EQ(Render.find("CTextCursor CaretCursor;"), std::string::npos);
 	EXPECT_EQ(Render.find("TextRender()->TextEx(&CaretCursor, pDisplayStr);"), std::string::npos);
 	EXPECT_EQ(CountOccurrences(Render, "TextRender()->TextEx(&Cursor, pDisplayStr);"), 4u);
+	EXPECT_NE(Header.find("bool m_RenderCursor = true;"), std::string::npos);
+	EXPECT_NE(Header.find("bool m_HasCursorRenderedPosition = false;"), std::string::npos);
+	EXPECT_NE(TextSource.find("const bool HasRenderedCursor = HasCursor && pCursor->m_RenderCursor;"), std::string::npos);
+	EXPECT_NE(TextSource.find("pCursor->m_HasCursorRenderedPosition = true;"), std::string::npos);
+	EXPECT_NE(RenderCaret.find("Graphics()->QuadsBegin();"), std::string::npos);
+	EXPECT_NE(RenderCaret.find("Graphics()->QuadsEnd();"), std::string::npos);
+	EXPECT_EQ(RenderCaret.find("RenderQuadContainerEx"), std::string::npos);
+	EXPECT_NE(RenderCaret.find("if(!Cursor.m_HasCursorRenderedPosition)"), std::string::npos);
+	EXPECT_EQ(RenderCaret.find("m_CursorRenderedPosition.x < 0.0f"), std::string::npos);
+	EXPECT_EQ(RenderCaret.find("m_CursorRenderedPosition.y < 0.0f"), std::string::npos);
+	const size_t TextureClear = RenderCaret.find("Graphics()->TextureClear();");
+	const size_t HiddenReturn = RenderCaret.find("if(!ForceVisible && !qm_lineinput::CaretVisibleForElapsed");
+	ASSERT_NE(TextureClear, std::string::npos);
+	ASSERT_NE(HiddenReturn, std::string::npos);
+	EXPECT_LT(TextureClear, HiddenReturn);
 }
 
-TEST(QmNewUiMenuBranches, HiddenTextCaretDoesNotMutateFollowingGraphicsState)
+TEST(QmNewUiMenuBranches, TextRendererKeepsInternalCaretStateSelfContained)
 {
 	const std::string Source = ReadTextFile("src/engine/client/text.cpp");
 	const std::string Render = FunctionBody(Source, "void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override");
-	const std::string GraphicsSource = ReadTextFile("src/engine/client/graphics_threaded.cpp");
 	ASSERT_FALSE(Render.empty());
 
 	const size_t CursorBlock = Render.find("if(TextContainer.m_HasCursor)");
-	const size_t RenderCursor = Render.find("if(RenderCursor)", CursorBlock);
-	const size_t CursorTextureClear = Render.find("Graphics()->TextureClear();", RenderCursor);
-	const size_t CursorFill = Render.find("Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, 1, 0, 0);", RenderCursor);
-	const size_t RenderCursorBodyStart = Render.find("{", RenderCursor);
-	const size_t RenderCursorBodyEnd = MatchingBrace(Render, RenderCursorBodyStart);
-	const size_t CleanupTextureClear = Render.find("Graphics()->TextureClear();", RenderCursorBodyEnd);
-	const size_t ResetColor = Render.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);", CleanupTextureClear);
-	const size_t BlinkUpdate = Render.find("if(TextContainer.m_ForceCursorRendering)", ResetColor);
 	ASSERT_NE(CursorBlock, std::string::npos);
-	ASSERT_NE(RenderCursor, std::string::npos);
-	ASSERT_NE(CursorTextureClear, std::string::npos);
-	ASSERT_NE(CursorFill, std::string::npos);
-	ASSERT_NE(RenderCursorBodyStart, std::string::npos);
-	ASSERT_NE(RenderCursorBodyEnd, std::string::npos);
-	ASSERT_NE(CleanupTextureClear, std::string::npos);
-	ASSERT_NE(ResetColor, std::string::npos);
-	ASSERT_NE(BlinkUpdate, std::string::npos);
-	EXPECT_LT(CursorBlock, RenderCursor);
-	EXPECT_LT(RenderCursorBodyStart, CursorTextureClear);
-	EXPECT_LT(CursorTextureClear, CursorFill);
-	EXPECT_LT(CursorFill, RenderCursorBodyEnd);
-	EXPECT_LT(RenderCursorBodyEnd, CleanupTextureClear);
-	EXPECT_LT(CleanupTextureClear, ResetColor);
-	EXPECT_LT(ResetColor, BlinkUpdate);
-	const std::string CursorBody = Render.substr(RenderCursorBodyStart, RenderCursorBodyEnd - RenderCursorBodyStart);
-	EXPECT_EQ(CursorBody.find("QuadsDrawCurrentVertices(false);"), std::string::npos);
-	EXPECT_EQ(GraphicsSource.find("FlushPendingVerticesForDrawCommand"), std::string::npos);
+	EXPECT_NE(Render.find("Graphics()->TextureClear();", CursorBlock), std::string::npos);
+	EXPECT_NE(Render.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);", CursorBlock), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ColorPickerUsesIndependentPointerCapture)

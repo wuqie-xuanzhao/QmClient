@@ -10,7 +10,10 @@
 #include <engine/shared/config.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+
+using namespace std::chrono_literals;
 
 IInput *CLineInput::ms_pInput = nullptr;
 ITextRender *CLineInput::ms_pTextRender = nullptr;
@@ -41,6 +44,7 @@ void CLineInput::SetBuffer(char *pStr, size_t MaxSize, size_t MaxChars)
 		m_CursorPos = m_SelectionStart = m_SelectionEnd = m_LastCompositionCursorPos = 0;
 		m_ScrollOffset = m_ScrollOffsetChange = 0.0f;
 		m_CaretPosition = vec2(0.0f, 0.0f);
+		m_CaretBlinkStartTime = std::chrono::nanoseconds::zero();
 		m_MouseSelection.m_Selecting = false;
 		m_Hidden = false;
 		m_pEmptyText = nullptr;
@@ -464,6 +468,7 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 		Cursor.m_FontSize = FontSize;
 		Cursor.m_LineWidth = LineWidth;
 		Cursor.m_ForceCursorRendering = Changed;
+		Cursor.m_RenderCursor = false;
 		Cursor.m_LineSpacing = LineSpacing;
 		Cursor.m_PressMouse.x = m_MouseSelection.m_PressMouse.x;
 		Cursor.m_ReleaseMouse.x = m_MouseSelection.m_ReleaseMouse.x;
@@ -530,11 +535,15 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 			SetSelection(OffsetFromDisplayToActual(NewSelectionStart), OffsetFromDisplayToActual(NewSelectionEnd));
 		}
 
-		m_CaretPosition = Cursor.m_CursorRenderedPosition;
-		// 主 Cursor 已完成文本、选择区、光标和 IME 锚点位置计算，不能再创建一套
-		// 重复文字容器。第二次 TextEx 会为同一输入额外插入图形命令，并在 caret
-		// 闪烁边界与主容器交错。
-		SetCompositionWindowPosition(m_CaretPosition + vec2(0.0f, Cursor.m_AlignedFontSize / 2.0f), Cursor.m_AlignedFontSize);
+		if(Cursor.m_HasCursorRenderedPosition)
+		{
+			m_CaretPosition = Cursor.m_CursorRenderedPosition;
+			RenderCaret(Cursor, Cursor.m_ForceCursorRendering, TextRender()->GetTextColor(), TextRender()->GetTextOutlineColor());
+			// 主 Cursor 已完成文本、选择区、光标和 IME 锚点位置计算，不能再创建一套
+			// 重复文字容器。第二次 TextEx 会为同一输入额外插入图形命令，并在 caret
+			// 闪烁边界与主容器交错。
+			SetCompositionWindowPosition(m_CaretPosition + vec2(0.0f, Cursor.m_AlignedFontSize / 2.0f), Cursor.m_AlignedFontSize);
+		}
 	}
 	else
 	{
@@ -554,6 +563,48 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 	TextRender()->TextColor(PreviousTextColor);
 
 	return Cursor.BoundingBox();
+}
+
+void CLineInput::RenderCaret(const CTextCursor &Cursor, bool ForceVisible, ColorRGBA TextColor, ColorRGBA TextOutlineColor)
+{
+	if(!Cursor.m_HasCursorRenderedPosition)
+		return;
+
+	const auto Now = time_get_nanoseconds();
+	if(ForceVisible || m_CaretBlinkStartTime == std::chrono::nanoseconds::zero())
+		m_CaretBlinkStartTime = Now;
+	Graphics()->TextureClear();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	if(!ForceVisible && !qm_lineinput::CaretVisibleForElapsed(Now - m_CaretBlinkStartTime))
+		return;
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float CursorInnerWidth = ((ScreenX1 - ScreenX0) / maximum(Graphics()->ScreenWidth(), 1)) * 2.0f;
+	const float CursorOuterWidth = CursorInnerWidth * 2.0f;
+	const float CursorOuterInnerDiff = (CursorOuterWidth - CursorInnerWidth) / 2.0f;
+	const float CursorHeight = maximum(0.0f, Cursor.m_AlignedFontSize);
+	if(CursorHeight <= 0.0f)
+		return;
+
+	const IGraphics::CQuadItem OuterCaret(
+		Cursor.m_CursorRenderedPosition.x - CursorOuterInnerDiff,
+		Cursor.m_CursorRenderedPosition.y,
+		CursorOuterWidth,
+		CursorHeight);
+	const IGraphics::CQuadItem InnerCaret(
+		Cursor.m_CursorRenderedPosition.x,
+		Cursor.m_CursorRenderedPosition.y + CursorOuterInnerDiff,
+		CursorInnerWidth,
+		maximum(0.0f, CursorHeight - CursorOuterInnerDiff * 2.0f));
+
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(TextOutlineColor);
+	Graphics()->QuadsDrawTL(&OuterCaret, 1);
+	Graphics()->SetColor(TextColor);
+	Graphics()->QuadsDrawTL(&InnerCaret, 1);
+	Graphics()->QuadsEnd();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 bool CLineInput::ValidateActiveInputRenderedThisFrame()
@@ -683,6 +734,7 @@ void CLineInput::Deactivate() const
 
 void CLineInput::OnActivate()
 {
+	m_CaretBlinkStartTime = time_get_nanoseconds();
 	if(!TextInputAutoManaged())
 		Input()->StartTextInput();
 }

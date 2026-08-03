@@ -133,6 +133,18 @@ TEST(QmImeOverlay, CandidateViewportKeepsStableStartWhileSelectionStaysVisible)
 	EXPECT_EQ(ShiftLeft.m_Count, 7);
 }
 
+TEST(QmLineInput, CaretBlinkUsesStableHalfSecondPhases)
+{
+	using namespace std::chrono_literals;
+
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(0ns));
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(499ms));
+	EXPECT_FALSE(qm_lineinput::CaretVisibleForElapsed(500ms));
+	EXPECT_FALSE(qm_lineinput::CaretVisibleForElapsed(999ms));
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(1000ms));
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(-1ns));
+}
+
 TEST(QmImeOverlay, CandidatePopupOnlyAppearsForCandidateText)
 {
 	SQmImePopupState State;

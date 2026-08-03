@@ -258,9 +258,12 @@ public:
 
 	ETextCursorCursorMode m_CursorMode = TEXT_CURSOR_CURSOR_MODE_NONE;
 	bool m_ForceCursorRendering = false;
+	// 输入框独立绘制光标，避免闪烁命令影响后续提交的文本命令。
+	bool m_RenderCursor = true;
 	// note this is the decoded character offset
 	int m_CursorCharacter = -1;
 	vec2 m_CursorRenderedPosition = vec2(-1.0f, -1.0f);
+	bool m_HasCursorRenderedPosition = false;
 
 	/**
 	 * Whether the text was truncated with @link TEXTFLAG_STOP_AT_END @endlink or @link TEXTFLAG_ELLIPSIS_AT_END @endlink being set.

@@ -1957,6 +1957,7 @@ public:
 			aCursorQuads[0] = IGraphics::CQuadItem(CursorPosX - CursorOuterInnerDiff, CursorPosY, CursorOuterWidth, pCursor->m_AlignedFontSize);
 			aCursorQuads[1] = IGraphics::CQuadItem(CursorPosX, CursorPosY + CursorOuterInnerDiff, CursorInnerWidth, pCursor->m_AlignedFontSize - CursorOuterInnerDiff * 2);
 			pCursor->m_CursorRenderedPosition = vec2(CursorPosX, CursorPosY);
+			pCursor->m_HasCursorRenderedPosition = true;
 		};
 		const auto &&CheckCursorAtCharacter = [&](float CursorPosX, float CursorPosY) {
 			if(pCursor->m_CursorMode != TEXT_CURSOR_CURSOR_MODE_NONE && pCursor->m_GlyphCount == pCursor->m_CursorCharacter)
@@ -2393,18 +2394,19 @@ public:
 		}
 
 		const bool HasSelection = !vSelectionQuads.empty() && SelectionUsedPress && SelectionUsedRelease;
-		if((HasSelection || HasCursor) && IsRendered)
+		const bool HasRenderedCursor = HasCursor && pCursor->m_RenderCursor;
+		if((HasSelection || HasRenderedCursor) && IsRendered)
 		{
 			Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 			if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex == -1)
 				TextContainer.m_StringInfo.m_SelectionQuadContainerIndex = Graphics()->CreateQuadContainer(false);
-			if(HasCursor)
+			if(HasRenderedCursor)
 				Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, aCursorQuads, std::size(aCursorQuads));
 			if(HasSelection)
 				Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, vSelectionQuads.data(), vSelectionQuads.size());
 			Graphics()->QuadContainerUpload(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex);
 
-			TextContainer.m_HasCursor = HasCursor;
+			TextContainer.m_HasCursor = HasRenderedCursor;
 			TextContainer.m_HasSelection = HasSelection;
 			TextContainer.m_ForceCursorRendering = pCursor->m_ForceCursorRendering;
 
@@ -2558,22 +2560,19 @@ public:
 			{
 				const auto CurTime = time_get_nanoseconds();
 				const bool RenderCursor = TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms;
+				Graphics()->TextureClear();
 				if(RenderCursor)
 				{
-					Graphics()->TextureClear();
 					Graphics()->SetColor(TextOutlineColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 0, 1, 0, 0);
 					Graphics()->SetColor(TextColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, 1, 0, 0);
 				}
-				// 非缓冲文本路径会将字体填充纹理保持为当前纹理。光标隐藏时也必须
-				// 恢复与显示时相同的图形状态，否则后续单位和标签会继承字体纹理。
-				Graphics()->TextureClear();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				if(TextContainer.m_ForceCursorRendering)
 					m_CursorRenderTime = CurTime - 501ms;
 				else if((CurTime - m_CursorRenderTime) > 1s)
 					m_CursorRenderTime = time_get_nanoseconds();
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
 	}
