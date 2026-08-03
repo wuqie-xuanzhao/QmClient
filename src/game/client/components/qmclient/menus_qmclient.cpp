@@ -24,8 +24,8 @@
 #include <game/client/QmUi/QmModuleLayoutAdapter.h>
 #include <game/client/QmUi/QmModuleTypes.h>
 #include <game/client/QmUi/QmScroll.h>
-#include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiButtons.h>
+#include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiDogfood.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
@@ -3067,7 +3067,7 @@ void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale
 		CUIRect RowLabel, RowRemove;
 		Row.VSplitRight(LineHeight, &RowLabel, &RowRemove);
 		RowRemove.HMargin(std::clamp(2.0f * UiScale, 1.0f, 2.0f), &RowRemove);
-			if(ui_widget::IconButton(IconButtonCtx, &s_aMapRemoveButtons[MapIndex], FONT_ICON_XMARK, RowRemove))
+		if(ui_widget::IconButton(IconButtonCtx, &s_aMapRemoveButtons[MapIndex], FONT_ICON_XMARK, RowRemove))
 		{
 			if(RemoveMapName.empty())
 				RemoveMapName = MapName;
@@ -5577,17 +5577,17 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 
 		CUIRect TabBar, Button;
-			const SSettingsSubTabLayoutFrame QmClientSubTabs = ResolveSettingsSubTabLayout(MainView, QmClientUiScale);
-			TabBar = QmClientSubTabs.m_TabBarRect;
-			MainView = QmClientSubTabs.m_ContentRect;
-			const float TabWidth = TabBar.w / NUMBER_OF_QMCLIENT_SETTINGS_TABS;
-			static CButtonContainer s_aPageTabs[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
-			const char *apQmTabNames[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
-			apQmTabNames[QMCLIENT_SETTINGS_TAB_VISUAL] = Localize("Visuals");
-			apQmTabNames[QMCLIENT_SETTINGS_TAB_FUNCTION] = Localize("Functions");
-			apQmTabNames[QMCLIENT_SETTINGS_TAB_HUD] = Localize("HUD");
-			apQmTabNames[QMCLIENT_SETTINGS_TAB_CONTRIBUTORS] = Localize("Contributors");
-			apQmTabNames[QMCLIENT_SETTINGS_TAB_CONFIG] = Localize("Config");
+		const SSettingsSubTabLayoutFrame QmClientSubTabs = ResolveSettingsSubTabLayout(MainView, QmClientUiScale);
+		TabBar = QmClientSubTabs.m_TabBarRect;
+		MainView = QmClientSubTabs.m_ContentRect;
+		const float TabWidth = TabBar.w / NUMBER_OF_QMCLIENT_SETTINGS_TABS;
+		static CButtonContainer s_aPageTabs[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
+		const char *apQmTabNames[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};
+		apQmTabNames[QMCLIENT_SETTINGS_TAB_VISUAL] = Localize("Visuals");
+		apQmTabNames[QMCLIENT_SETTINGS_TAB_FUNCTION] = Localize("Functions");
+		apQmTabNames[QMCLIENT_SETTINGS_TAB_HUD] = Localize("HUD");
+		apQmTabNames[QMCLIENT_SETTINGS_TAB_CONTRIBUTORS] = Localize("Contributors");
+		apQmTabNames[QMCLIENT_SETTINGS_TAB_CONFIG] = Localize("Config");
 
 		{
 			CPerfTimer StageTimer;

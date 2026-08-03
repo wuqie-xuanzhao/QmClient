@@ -52,7 +52,8 @@ def main() -> int:
     rows = math.ceil(len(svg_files) / columns)
     atlas_width = columns * CELL_SIZE
     atlas_height = rows * CELL_SIZE
-    atlas = Image.new("RGB", (atlas_width, atlas_height), (0, 0, 0))
+    # The graphics upload path uses RGBA while the MSDF distance field remains in RGB.
+    atlas = Image.new("RGBA", (atlas_width, atlas_height), (0, 0, 0, 255))
     icons: dict[str, dict[str, int]] = {}
 
     with tempfile.TemporaryDirectory(prefix="qm-icons-msdf-") as temp:
@@ -88,7 +89,7 @@ def main() -> int:
             row = index // columns
             x = column * CELL_SIZE + PADDING
             y = row * CELL_SIZE + PADDING
-            atlas.paste(field, (x, y))
+            atlas.paste(field.convert("RGBA"), (x, y))
             icons[icon_id(svg)] = {"x": x, "y": y, "w": FIELD_SIZE, "h": FIELD_SIZE}
 
     args.output.mkdir(parents=True, exist_ok=True)

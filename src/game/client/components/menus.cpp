@@ -666,7 +666,8 @@ void CMenus::LoadSettingsCardOrderModel()
 		};
 		bool CandidateChanged = false;
 		const std::vector<const char *> vContributorIds = {
-			"deck:qmclient-contributors-community", "deck:qmclient-contributors-sponsors",
+			"deck:qmclient-contributors-community",
+			"deck:qmclient-contributors-sponsors",
 		};
 		const bool ContributorsStillOldDefault =
 			IsAtOldDefault("deck:qmclient-contributors-community", "qmclient-contributors", 0, 0) &&
@@ -679,7 +680,8 @@ void CMenus::LoadSettingsCardOrderModel()
 			CandidateChanged = true;
 		}
 		const std::vector<const char *> vBindWheelIds = {
-			"deck:tclient-bind-wheel-editor", "deck:tclient-bind-wheel-preview",
+			"deck:tclient-bind-wheel-editor",
+			"deck:tclient-bind-wheel-preview",
 		};
 		const bool BindWheelStillOldDefault =
 			IsAtOldDefault("deck:tclient-bind-wheel-editor", "tclient-bind-wheel", 1, 0) &&
@@ -712,7 +714,9 @@ void CMenus::LoadSettingsCardOrderModel()
 			{"deck:tclient-profiles-list", "tclient-profiles", 1, 1},
 		};
 		const std::vector<const char *> vProfileIds = {
-			"deck:tclient-profiles-actions", "deck:tclient-profiles-options", "deck:tclient-profiles-list",
+			"deck:tclient-profiles-actions",
+			"deck:tclient-profiles-options",
+			"deck:tclient-profiles-list",
 		};
 		const std::vector<const char *> vRequiredProfileIds = {"deck:tclient-profiles-actions"};
 		const qm_card_order::EExplicitLayoutStatus ExplicitStatus = qm_card_order::ClassifyExplicitLayout(g_Config.m_QmGlobalCardOrder, vLegacyProfileLayout, vRequiredProfileIds);
@@ -745,7 +749,9 @@ void CMenus::LoadSettingsCardOrderModel()
 			{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 2},
 		};
 		const std::vector<const char *> vStatusBarIds = {
-			"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview",
+			"deck:tclient-status-bar-settings",
+			"deck:tclient-status-bar-items",
+			"deck:tclient-status-bar-preview",
 		};
 		const std::vector<qm_card_order::SEntry> vTargetStatusBarLayout = {
 			{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
@@ -782,7 +788,9 @@ void CMenus::LoadSettingsCardOrderModel()
 			{"deck:tee-skin-list", "tee", 2, 0},
 		};
 		const std::vector<const char *> vTeeIds = {
-			"deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list",
+			"deck:tee-identity",
+			"deck:tee-skin-options",
+			"deck:tee-skin-list",
 		};
 		const std::vector<qm_card_order::SEntry> vTargetTeeLayout = {
 			{"deck:tee-identity", "tee", 1, 0},

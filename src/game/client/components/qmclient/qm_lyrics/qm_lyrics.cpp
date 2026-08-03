@@ -604,11 +604,11 @@ namespace
 		Entry.m_StoredAt = NowSec;
 		Entry.m_LastUsedAt = NowSec;
 		if(!QmLyrics::CommitCacheEntry(
-			pStorage,
-			&pImpl->m_Cache,
-			Entry,
-			PayloadFromCandidate(Candidate, Entry.m_Source.c_str()),
-			CACHE_MAX_ENTRIES))
+			   pStorage,
+			   &pImpl->m_Cache,
+			   Entry,
+			   PayloadFromCandidate(Candidate, Entry.m_Source.c_str()),
+			   CACHE_MAX_ENTRIES))
 			return;
 		pImpl->m_CacheLoaded = true;
 		pImpl->m_CacheDirty = false;

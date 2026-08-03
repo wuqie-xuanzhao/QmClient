@@ -31,9 +31,6 @@
 %d more cut segments
 == %d segmentos de corte más
 
-%d new mentions
-== %d nuevas menciones
-
 %d of %d server
 == %d de %d servidor
 
@@ -220,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - Desactivado, 1-9999 minutos
 
-1 new mention
-== 1 nueva mención
-
 1 star
 == 1 estrella
 
@@ -246,9 +240,6 @@
 
 5 stars
 == 5 estrellas
-
-9+ new mentions
-== 9+ nuevas menciones
 
 === All Local Saves ===
 == === Todos los saves locales ===
@@ -3486,7 +3477,7 @@ Enable cheats for your current team's run, but you can't earn a rank
 == Habilitar trampas para la carrera de tu equipo actual, pero no podrás obtener un ranking
 
 Enable client stutter diagnostics at startup
-== Enable client stutter diagnostics at startup
+== Activar el diagnóstico de tirones del cliente al iniciar
 
 Enable colored console output
 == Habilitar salida de consola en color
@@ -3531,7 +3522,7 @@ Enable enhanced laser effect (glow + pulse animation)
 == Activar efecto láser mejorado (brillo + animación de pulso)
 
 Enable enhanced scoreboard presentation
-== Enable enhanced scoreboard presentation
+== Activar la presentación mejorada del marcador
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == Habilitar disparadores de eventos (ojos de emoticono del servidor en festivos, skin navideña del cliente)
@@ -3607,6 +3598,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == Habilitar letras
+
+Enable macOS graphics diagnostics and Instruments signposts
+== Activar el diagnóstico gráfico de macOS y las marcas de Instruments
 
 Enable main thread and render stage performance debug logging
 == Activar registro de depuración de rendimiento del hilo principal y fase de renderizado
@@ -3690,7 +3684,7 @@ Enable skin switch animation
 == Activar animación de cambio de skin
 
 Enable smooth cinematic camera while free spectating
-== Enable smooth cinematic camera while free spectating
+== Activar la cámara cinemática fluida al espectar libremente
 
 Enable sound
 == Habilitar sonido
@@ -4521,7 +4515,7 @@ Global toggle key
 == Tecla de activación global
 
 Global UI size percentage
-== Global UI size percentage
+== Porcentaje de tamaño global de la interfaz
 
 Glow
 == Resplandor
@@ -4680,7 +4674,7 @@ Hide Chat
 == Ocultar chat
 
 Hide chat messages from players marked as enemies
-== Hide chat messages from players marked as enemies
+== Ocultar los mensajes de chat de jugadores marcados como enemigos
 
 Hide death/respawn effects
 == Ocultar efectos de muerte/resurrección
@@ -6290,9 +6284,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == Mensajes
 
-Messages that already look like the target language will skip auto-translate
-== Los mensajes que ya parecen estar en el idioma de destino omitirán la traducción automática
-
 Microphone
 == Micrófono
 
@@ -6442,9 +6433,6 @@ Move right
 
 Move to category
 == Mover a categoría
-
-Moved ingame
-== Movido en el juego
 
 Movement
 == Movimiento
@@ -7042,9 +7030,6 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 
 Number of vote options sent per tick
 == Número de opciones de voto enviadas por tick
-
-Numeric-only messages will be skipped
-== Los mensajes solo numéricos se omitirán
 
 o = Send rate
 == o = Tasa de envío
@@ -9569,9 +9554,6 @@ Show default flag in scoreboard
 Show default mod rules.
 == Mostrar reglas del mod predeterminado.
 
-Show Directory
-== Mostrar directorio
-
 Show dotted map route debug
 == Mostrar depuración de ruta de mapa punteada
 
@@ -11657,6 +11639,9 @@ Translation button cancel color
 Translation color
 == Color de traducción
 
+Translation color alpha migration completed flag
+== Indicador de migración de alfa de colores de traducción completada
+
 Translation menu background color
 == Color de fondo del menú de traducción
 
@@ -11772,7 +11757,7 @@ UI mouse sens.
 == Sens. ratón UI
 
 UI rounded corner segments (even numbers recommended)
-== UI rounded corner segments (even numbers recommended)
+== Segmentos de esquina redondeada de la interfaz (se recomiendan números pares)
 
 UI scale
 == Escala de UI
@@ -12621,7 +12606,7 @@ Word Filter
 == Filtro de palabras
 
 Word filter action: 0=replace matching words, 1=hide entire message
-== Word filter action: 0=replace matching words, 1=hide entire message
+== Acción del filtro de palabras: 0=reemplazar palabras coincidentes, 1=ocultar el mensaje completo
 
 Word highlight soft edge width (px)
 == Karaoke highlight soft edge width px
@@ -13285,10 +13270,6 @@ AUTO
 [Start menu]
 Play
 == Jugar
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

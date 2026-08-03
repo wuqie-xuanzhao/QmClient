@@ -12,8 +12,8 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <list>
 #include <limits>
+#include <list>
 #include <sstream>
 
 extern CDataContainer *g_pData;

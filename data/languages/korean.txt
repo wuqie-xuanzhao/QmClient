@@ -31,9 +31,6 @@
 %d more cut segments
 == 추가로 %d개의 잘라낸 구간
 
-%d new mentions
-== %d 개의 새로운 언급
-
 %d of %d server
 == %d/%d 서버
 
@@ -220,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - 비활성화, 1-9999 분
 
-1 new mention
-== 1 개의 새로운 언급
-
 1 star
 == 1성
 
@@ -246,9 +240,6 @@
 
 5 stars
 == 5성
-
-9+ new mentions
-== 9+ 개의 새로운 언급
 
 === All Local Saves ===
 == === 모든 로컬 저장 ===
@@ -3486,7 +3477,7 @@ Enable cheats for your current team's run, but you can't earn a rank
 == 현재 팀의 실행에 치트를 활성화하지만, 순위를 획득할 수 없습니다
 
 Enable client stutter diagnostics at startup
-== Enable client stutter diagnostics at startup
+== 시작 시 클라이언트 끊김 진단 활성화
 
 Enable colored console output
 == 콘솔 컬러 출력 활성화
@@ -3531,7 +3522,7 @@ Enable enhanced laser effect (glow + pulse animation)
 == 강화 레이저 효과 활성화 (광선 + 펄스 애니메이션)
 
 Enable enhanced scoreboard presentation
-== Enable enhanced scoreboard presentation
+== 향상된 점수판 표시 활성화
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == 이벤트 트리거 활성화 (서버의 휴일 눈 이모트, 클라이언트 크리스마스 스킨)
@@ -3607,6 +3598,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == 가사 활성화
+
+Enable macOS graphics diagnostics and Instruments signposts
+== macOS 그래픽 진단 및 Instruments 표지 활성화
 
 Enable main thread and render stage performance debug logging
 == 메인 스레드 및 렌더링 단계 성능 디버그 로그 활성화
@@ -3690,7 +3684,7 @@ Enable skin switch animation
 == 스킨 전환 애니메이션 활성화
 
 Enable smooth cinematic camera while free spectating
-== Enable smooth cinematic camera while free spectating
+== 자유 관전 중 부드러운 시네마틱 카메라 활성화
 
 Enable sound
 == 소리 활성화
@@ -4521,7 +4515,7 @@ Global toggle key
 == 전역 토글 키
 
 Global UI size percentage
-== Global UI size percentage
+== 전체 UI 크기 백분율
 
 Glow
 == 글로우
@@ -4680,7 +4674,7 @@ Hide Chat
 == 채팅 숨기기
 
 Hide chat messages from players marked as enemies
-== Hide chat messages from players marked as enemies
+== 적으로 표시한 플레이어의 채팅 메시지 숨기기
 
 Hide death/respawn effects
 == 사망/부활 효과 숨기기
@@ -6290,9 +6284,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == 메시지
 
-Messages that already look like the target language will skip auto-translate
-== 이미 대상 언어처럼 보이는 메시지는 자동 번역을 건너뜁니다
-
 Microphone
 == 마이크
 
@@ -6442,9 +6433,6 @@ Move right
 
 Move to category
 == 카테고리로 이동
-
-Moved ingame
-== 게임 내에서 이동됨
 
 Movement
 == 이동
@@ -7042,9 +7030,6 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 
 Number of vote options sent per tick
 == 틱당 전송되는 투표 옵션 수
-
-Numeric-only messages will be skipped
-== 숫자만 있는 메시지는 건너뜁니다
 
 o = Send rate
 == o = 전송 속도
@@ -9569,9 +9554,6 @@ Show default flag in scoreboard
 Show default mod rules.
 == 기본 모드 규칙 표시
 
-Show Directory
-== 디렉토리 표시
-
 Show dotted map route debug
 == 맵 점선 경로 디버그 표시
 
@@ -11657,6 +11639,9 @@ Translation button cancel color
 Translation color
 == 번역 색상
 
+Translation color alpha migration completed flag
+== 번역 색상 알파 마이그레이션 완료 플래그
+
 Translation menu background color
 == 번역 메뉴 배경 색상
 
@@ -11772,7 +11757,7 @@ UI mouse sens.
 == UI 마우스 감도
 
 UI rounded corner segments (even numbers recommended)
-== UI rounded corner segments (even numbers recommended)
+== UI 둥근 모서리 세그먼트 수(짝수 권장)
 
 UI scale
 == UI 크기
@@ -12621,7 +12606,7 @@ Word Filter
 == 단어 필터
 
 Word filter action: 0=replace matching words, 1=hide entire message
-== Word filter action: 0=replace matching words, 1=hide entire message
+== 단어 필터 동작: 0=일치하는 단어 교체, 1=메시지 전체 숨기기
 
 Word highlight soft edge width (px)
 == 글자별 가장자리 부드러운 전환 폭 px
@@ -13285,10 +13270,6 @@ AUTO
 [Start menu]
 Play
 == 플레이
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

@@ -11,8 +11,8 @@
 
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/animstate.h>
-#include <game/client/components/qmclient/afk_presentation.h>
 #include <game/client/components/nameplate_text_effects.h>
+#include <game/client/components/qmclient/afk_presentation.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>

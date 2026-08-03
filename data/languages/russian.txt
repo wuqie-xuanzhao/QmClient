@@ -31,9 +31,6 @@
 %d more cut segments
 == Ещё %d отрезков обрезки
 
-%d new mentions
-== %d новых упоминаний
-
 %d of %d server
 == %d из %d сервера
 
@@ -220,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - Отключено, 1-9999 минут
 
-1 new mention
-== 1 новое упоминание
-
 1 star
 == 1 звезда
 
@@ -246,9 +240,6 @@
 
 5 stars
 == 5 звезд
-
-9+ new mentions
-== 9+ новых упоминаний
 
 === All Local Saves ===
 == === Все локальные сохранения ===
@@ -3486,7 +3477,7 @@ Enable cheats for your current team's run, but you can't earn a rank
 == Включить читы для текущего забега вашей команды, но вы не сможете получить ранг
 
 Enable client stutter diagnostics at startup
-== Enable client stutter diagnostics at startup
+== Включить диагностику рывков клиента при запуске
 
 Enable colored console output
 == Включить цветной вывод консоли
@@ -3531,7 +3522,7 @@ Enable enhanced laser effect (glow + pulse animation)
 == Включить улучшенные эффекты лазера (свечение + пульсация)
 
 Enable enhanced scoreboard presentation
-== Enable enhanced scoreboard presentation
+== Включить расширенное отображение таблицы счёта
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == Включить триггеры событий (серверные глаза-эмоции на праздники, клиентский рождественский скин)
@@ -3607,6 +3598,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == Включить текст песни
+
+Enable macOS graphics diagnostics and Instruments signposts
+== Включить графическую диагностику macOS и метки Instruments
 
 Enable main thread and render stage performance debug logging
 == Включить отладочный лог производительности главного потока и рендеринга
@@ -3690,7 +3684,7 @@ Enable skin switch animation
 == Включить анимацию смены скина
 
 Enable smooth cinematic camera while free spectating
-== Enable smooth cinematic camera while free spectating
+== Включить плавную кинематографическую камеру в свободном наблюдении
 
 Enable sound
 == Включить звук
@@ -4521,7 +4515,7 @@ Global toggle key
 == Глобальная клавиша переключения
 
 Global UI size percentage
-== Global UI size percentage
+== Общий масштаб интерфейса в процентах
 
 Glow
 == Свечение
@@ -4680,7 +4674,7 @@ Hide Chat
 == Скрыть чат
 
 Hide chat messages from players marked as enemies
-== Hide chat messages from players marked as enemies
+== Скрывать сообщения чата от игроков, отмеченных как враги
 
 Hide death/respawn effects
 == Скрыть эффекты смерти/возрождения
@@ -6290,9 +6284,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == Сообщения
 
-Messages that already look like the target language will skip auto-translate
-== Сообщения, которые уже выглядят как целевой язык, пропустят автоперевод.
-
 Microphone
 == Микрофон
 
@@ -6442,9 +6433,6 @@ Move right
 
 Move to category
 == Переместить в категорию
-
-Moved ingame
-== Перемещено в игре
 
 Movement
 == Движение
@@ -7042,9 +7030,6 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 
 Number of vote options sent per tick
 == Количество вариантов голосования, отправляемых за тик
-
-Numeric-only messages will be skipped
-== Сообщения, содержащие только цифры, будут пропущены.
 
 o = Send rate
 == o = Скорость отправки
@@ -9569,9 +9554,6 @@ Show default flag in scoreboard
 Show default mod rules.
 == Показывать правила мода по умолчанию.
 
-Show Directory
-== Показать каталог
-
 Show dotted map route debug
 == Показывать отладку точечного маршрута карты
 
@@ -11657,6 +11639,9 @@ Translation button cancel color
 Translation color
 == Цвет перевода
 
+Translation color alpha migration completed flag
+== Флаг завершения переноса альфа-канала цветов перевода
+
 Translation menu background color
 == Цвет фона меню перевода
 
@@ -11772,7 +11757,7 @@ UI mouse sens.
 == Чувств. мыши UI
 
 UI rounded corner segments (even numbers recommended)
-== UI rounded corner segments (even numbers recommended)
+== Количество сегментов скругления UI (рекомендуются чётные числа)
 
 UI scale
 == Масштаб UI
@@ -12621,7 +12606,7 @@ Word Filter
 == Фильтр слов
 
 Word filter action: 0=replace matching words, 1=hide entire message
-== Word filter action: 0=replace matching words, 1=hide entire message
+== Действие фильтра слов: 0=заменять совпадающие слова, 1=скрывать сообщение целиком
 
 Word highlight soft edge width (px)
 == Ширина мягкого перехода по краям символов, px
@@ -13285,10 +13270,6 @@ AUTO
 [Start menu]
 Play
 == Играть
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

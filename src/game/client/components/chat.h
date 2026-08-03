@@ -276,10 +276,10 @@ private:
 	bool EnsureChatLogFolder() const;
 	void CleanupOldChatLogs(const char *pToday);
 	void SaveChatLogLine(int ClientId, int Team, const char *pLine);
-		void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
-		const CCommand *FindServerCommand(const char *pName) const;
-		void RefreshSlashCommandSuggestions();
-		const char *LocalizeCommandPreviewText(const char *pText) const;
+	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
+	const CCommand *FindServerCommand(const char *pName) const;
+	void RefreshSlashCommandSuggestions();
+	const char *LocalizeCommandPreviewText(const char *pText) const;
 	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;
 	void RefreshArgumentCandidates();
 	void HideArgumentCandidates();

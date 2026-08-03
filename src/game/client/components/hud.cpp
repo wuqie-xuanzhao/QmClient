@@ -796,8 +796,8 @@ namespace
 			pCounterpart = "?";
 		const int TargetClientId = GameClient.m_aLocalIds[Dummy];
 		const char *pLocal = TargetClientId >= 0 && TargetClientId < MAX_CLIENTS && GameClient.m_aClients[TargetClientId].m_aName[0] != '\0' ?
-					      GameClient.m_aClients[TargetClientId].m_aName :
-					      (Dummy == 0 ? Client.PlayerName() : Client.DummyName());
+					     GameClient.m_aClients[TargetClientId].m_aName :
+					     (Dummy == 0 ? Client.PlayerName() : Client.DummyName());
 		const int SecondsLeft = Lifecycle.m_SecondsLeft;
 		Out.m_Dummy = Dummy;
 		Out.m_StartTick = StartTick;
@@ -6452,8 +6452,8 @@ void CHud::OnRender()
 		g_Config.m_QmFocusMode != 0,
 		g_Config.m_QmFocusModeHideHud != 0);
 	const bool LocalCharacterHudVisible = GameClient()->m_Snap.m_pLocalCharacter &&
-		!GameClient()->m_Snap.m_SpecInfo.m_Active &&
-		!(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER);
+					      !GameClient()->m_Snap.m_SpecInfo.m_Active &&
+					      !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER);
 	if(MainHudVisible)
 	{
 		if(LocalCharacterHudVisible)

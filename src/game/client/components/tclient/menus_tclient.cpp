@@ -3444,9 +3444,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			S.m_RenderFullFn = [&LayoutFinishNameSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
 				return RenderBoxedFullSection("Finish Name", LayoutFinishNameSection, Col);
 			};
-				FillCachedStaticLayer(S, LayoutFinishNameSection);
-				S.m_DependencyConfigInts = {&g_Config.m_TcChangeNameNearFinish};
-				vRightSections.push_back(S);
+			FillCachedStaticLayer(S, LayoutFinishNameSection);
+			S.m_DependencyConfigInts = {&g_Config.m_TcChangeNameNearFinish};
+			vRightSections.push_back(S);
 			AppendDeckCards(vRightSections);
 			RightSectionLoader.Register(std::move(vRightSections));
 		}
@@ -3548,7 +3548,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			}
 			if(str_comp(pStableCardId, "tclient:player-indicator") == 0)
 			{
-					return [this, ProcessToggle](CUIRect Content) {
+				return [this, ProcessToggle](CUIRect Content) {
 					if(m_MenuTextPlanCollecting)
 						return false;
 					CTClientSettingsRowAllocator Rows(Content);

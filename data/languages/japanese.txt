@@ -31,9 +31,6 @@
 %d more cut segments
 == さらに %d 個のカットセグメント
 
-%d new mentions
-== %d 件の新しいメンション
-
 %d of %d server
 == %d/%d サーバー
 
@@ -220,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - 無効、1-9999 分
 
-1 new mention
-== 1 件の新しいメンション
-
 1 star
 == 1 つ星
 
@@ -246,9 +240,6 @@
 
 5 stars
 == 5 つ星
-
-9+ new mentions
-== 9+ 件の新しいメンション
 
 === All Local Saves ===
 == === すべてのローカルセーブ ===
@@ -3486,7 +3477,7 @@ Enable cheats for your current team's run, but you can't earn a rank
 == 現在のチームのランでチートを有効にしますが、ランクは獲得できません
 
 Enable client stutter diagnostics at startup
-== Enable client stutter diagnostics at startup
+== 起動時にクライアントのスタッター診断を有効にする
 
 Enable colored console output
 == コンソールのカラー出力を有効にする
@@ -3531,7 +3522,7 @@ Enable enhanced laser effect (glow + pulse animation)
 == 強化レーザーエフェクトを有効化（グロー＋パルスアニメーション）
 
 Enable enhanced scoreboard presentation
-== Enable enhanced scoreboard presentation
+== 拡張スコアボード表示を有効にする
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == イベントトリガー（休日のサーバーアイエモート、クライアントのクリスマススキン）を有効にする
@@ -3607,6 +3598,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == 歌詞を有効化
+
+Enable macOS graphics diagnostics and Instruments signposts
+== macOS グラフィックス診断と Instruments サインポストを有効にする
 
 Enable main thread and render stage performance debug logging
 == メインスレッドとレンダリングフェーズのパフォーマンスデバッグログを有効化
@@ -3690,7 +3684,7 @@ Enable skin switch animation
 == スキン切り替えアニメーションを有効化
 
 Enable smooth cinematic camera while free spectating
-== Enable smooth cinematic camera while free spectating
+== フリー観戦中に滑らかなシネマティックカメラを有効にする
 
 Enable sound
 == サウンドを有効にする
@@ -4521,7 +4515,7 @@ Global toggle key
 == グローバルトグルキー
 
 Global UI size percentage
-== Global UI size percentage
+== 全体 UI サイズの割合
 
 Glow
 == グロー
@@ -4680,7 +4674,7 @@ Hide Chat
 == チャットを非表示
 
 Hide chat messages from players marked as enemies
-== Hide chat messages from players marked as enemies
+== 敵としてマークしたプレイヤーのチャットメッセージを隠す
 
 Hide death/respawn effects
 == 死亡/復活エフェクトを非表示
@@ -6290,9 +6284,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == メッセージ
 
-Messages that already look like the target language will skip auto-translate
-== 既にターゲット言語のように見えるメッセージは自動翻訳をスキップします
-
 Microphone
 == マイク
 
@@ -6442,9 +6433,6 @@ Move right
 
 Move to category
 == カテゴリに移動
-
-Moved ingame
-== ゲーム内で移動済み
 
 Movement
 == 移動
@@ -7042,9 +7030,6 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 
 Number of vote options sent per tick
 == 1 ティックあたりに送る投票オプション数
-
-Numeric-only messages will be skipped
-== 数字のみのメッセージはスキップされます
 
 o = Send rate
 == o = 送信レート
@@ -9569,9 +9554,6 @@ Show default flag in scoreboard
 Show default mod rules.
 == デフォルトの MOD ルールを表示
 
-Show Directory
-== ディレクトリを表示
-
 Show dotted map route debug
 == マップの点線ルートデバッグを表示
 
@@ -11657,6 +11639,9 @@ Translation button cancel color
 Translation color
 == 翻訳の色
 
+Translation color alpha migration completed flag
+== 翻訳カラーのアルファ移行完了フラグ
+
 Translation menu background color
 == 翻訳メニュー背景色
 
@@ -11772,7 +11757,7 @@ UI mouse sens.
 == UI マウス感度
 
 UI rounded corner segments (even numbers recommended)
-== UI rounded corner segments (even numbers recommended)
+== UI 角丸セグメント数（偶数を推奨）
 
 UI scale
 == UI スケール
@@ -12621,7 +12606,7 @@ Word Filter
 == ワードフィルター
 
 Word filter action: 0=replace matching words, 1=hide entire message
-== Word filter action: 0=replace matching words, 1=hide entire message
+== 単語フィルター操作: 0=一致する単語を置換、1=メッセージ全体を非表示
 
 Word highlight soft edge width (px)
 == 文字単位のエッジソフトトランジション幅 px
@@ -13285,10 +13270,6 @@ AUTO
 [Start menu]
 Play
 == プレイ
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

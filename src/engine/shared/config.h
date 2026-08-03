@@ -316,6 +316,7 @@ struct SColorConfigVariable : public SConfigVariable
 	unsigned m_Default;
 	float m_DarkestLighting;
 	bool m_Alpha;
+	EColorInputAlphaMode m_LastInputAlphaMode;
 	unsigned m_OldValue;
 
 	SColorConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey, unsigned *pVariable, unsigned Default) :
@@ -323,6 +324,7 @@ struct SColorConfigVariable : public SConfigVariable
 		m_pVariable(pVariable),
 		m_Default(Default),
 		m_Alpha(Flags & CFGFLAG_COLALPHA),
+		m_LastInputAlphaMode(EColorInputAlphaMode::PACKED),
 		m_OldValue(Default)
 	{
 		*m_pVariable = m_Default;
@@ -422,6 +424,7 @@ public:
 	void StoreUnknownCommand(const char *pCommand) override;
 
 	void PossibleConfigVariables(const char *pStr, int FlagMask, POSSIBLECFGFUNC pfnCallback, void *pUserData) override;
+	EColorInputAlphaMode ColorValueInputAlphaMode(const char *pScriptName) const override;
 };
 
 #endif

@@ -628,11 +628,11 @@ void CPlayers::RenderHook(
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	RenderInfo.m_Size = 64.0f;
@@ -744,11 +744,11 @@ void CPlayers::RenderPlayer(
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 	// TODO: snd_game_volume_others
 	const float Volume = 1.0f;
@@ -1362,11 +1362,11 @@ void CPlayers::RenderPlayerGhost(
 	if(!OtherTeam && FrozenSwappingHide)
 		Alpha = 1.0f;
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	// set size

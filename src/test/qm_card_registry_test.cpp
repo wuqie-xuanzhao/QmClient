@@ -102,11 +102,25 @@ TEST(QmCardRegistry, CoversCurrentTClientSectionIds)
 TEST(QmCardRegistry, TClientMainCardsAlternateColumnsByDefault)
 {
 	const char *apIds[] = {
-		"tclient:visual-font-cursor", "tclient:visual-nameplates", "tclient:visual-effects", "tclient:input",
-		"tclient:anti-latency-tools", "tclient:improved-anti-ping", "tclient:execute-on-join", "tclient:voting",
-		"tclient:auto-reply", "tclient:player-indicator", "tclient:pet", "tclient:hud", "tclient:tee-status-bar",
-		"tclient:tile-outlines", "tclient:ghost-tools", "tclient:rainbow", "tclient:tee-trails",
-		"tclient:background-draw", "tclient:finish-name",
+		"tclient:visual-font-cursor",
+		"tclient:visual-nameplates",
+		"tclient:visual-effects",
+		"tclient:input",
+		"tclient:anti-latency-tools",
+		"tclient:improved-anti-ping",
+		"tclient:execute-on-join",
+		"tclient:voting",
+		"tclient:auto-reply",
+		"tclient:player-indicator",
+		"tclient:pet",
+		"tclient:hud",
+		"tclient:tee-status-bar",
+		"tclient:tile-outlines",
+		"tclient:ghost-tools",
+		"tclient:rainbow",
+		"tclient:tee-trails",
+		"tclient:background-draw",
+		"tclient:finish-name",
 	};
 	for(size_t Index = 0; Index < std::size(apIds); ++Index)
 	{
@@ -140,15 +154,24 @@ TEST(QmCardRegistry, TClientLegacyMigrationSkipsCustomizedLayout)
 {
 	const auto LegacyEntries = [] {
 		return std::vector<qm_card_order::SEntry>{
-			{"tclient:visual-font-cursor", "tclient", 1, 0}, {"tclient:visual-nameplates", "tclient", 1, 1},
-			{"tclient:visual-effects", "tclient", 1, 2}, {"tclient:input", "tclient", 1, 3},
-			{"tclient:anti-latency-tools", "tclient", 1, 4}, {"tclient:improved-anti-ping", "tclient", 1, 5},
-			{"tclient:execute-on-join", "tclient", 1, 6}, {"tclient:voting", "tclient", 1, 7},
-			{"tclient:auto-reply", "tclient", 1, 8}, {"tclient:player-indicator", "tclient", 1, 9},
-			{"tclient:pet", "tclient", 1, 10}, {"tclient:hud", "tclient", 1, 11},
-			{"tclient:tee-status-bar", "tclient", 1, 12}, {"tclient:tile-outlines", "tclient", 1, 13},
-			{"tclient:ghost-tools", "tclient", 1, 14}, {"tclient:rainbow", "tclient", 1, 15},
-			{"tclient:tee-trails", "tclient", 1, 16}, {"tclient:background-draw", "tclient", 1, 17},
+			{"tclient:visual-font-cursor", "tclient", 1, 0},
+			{"tclient:visual-nameplates", "tclient", 1, 1},
+			{"tclient:visual-effects", "tclient", 1, 2},
+			{"tclient:input", "tclient", 1, 3},
+			{"tclient:anti-latency-tools", "tclient", 1, 4},
+			{"tclient:improved-anti-ping", "tclient", 1, 5},
+			{"tclient:execute-on-join", "tclient", 1, 6},
+			{"tclient:voting", "tclient", 1, 7},
+			{"tclient:auto-reply", "tclient", 1, 8},
+			{"tclient:player-indicator", "tclient", 1, 9},
+			{"tclient:pet", "tclient", 1, 10},
+			{"tclient:hud", "tclient", 1, 11},
+			{"tclient:tee-status-bar", "tclient", 1, 12},
+			{"tclient:tile-outlines", "tclient", 1, 13},
+			{"tclient:ghost-tools", "tclient", 1, 14},
+			{"tclient:rainbow", "tclient", 1, 15},
+			{"tclient:tee-trails", "tclient", 1, 16},
+			{"tclient:background-draw", "tclient", 1, 17},
 			{"tclient:finish-name", "tclient", 1, 18},
 		};
 	};
@@ -157,11 +180,25 @@ TEST(QmCardRegistry, TClientLegacyMigrationSkipsCustomizedLayout)
 	EXPECT_TRUE(qm_card_registry::IsTClientMainCardsLegacyLeft(Legacy));
 	EXPECT_TRUE(qm_card_registry::MoveTClientMainCardsToAlternatingColumns(Legacy));
 	const char *apIds[] = {
-		"tclient:visual-font-cursor", "tclient:visual-nameplates", "tclient:visual-effects", "tclient:input",
-		"tclient:anti-latency-tools", "tclient:improved-anti-ping", "tclient:execute-on-join", "tclient:voting",
-		"tclient:auto-reply", "tclient:player-indicator", "tclient:pet", "tclient:hud", "tclient:tee-status-bar",
-		"tclient:tile-outlines", "tclient:ghost-tools", "tclient:rainbow", "tclient:tee-trails",
-		"tclient:background-draw", "tclient:finish-name",
+		"tclient:visual-font-cursor",
+		"tclient:visual-nameplates",
+		"tclient:visual-effects",
+		"tclient:input",
+		"tclient:anti-latency-tools",
+		"tclient:improved-anti-ping",
+		"tclient:execute-on-join",
+		"tclient:voting",
+		"tclient:auto-reply",
+		"tclient:player-indicator",
+		"tclient:pet",
+		"tclient:hud",
+		"tclient:tee-status-bar",
+		"tclient:tile-outlines",
+		"tclient:ghost-tools",
+		"tclient:rainbow",
+		"tclient:tee-trails",
+		"tclient:background-draw",
+		"tclient:finish-name",
 	};
 	for(size_t Index = 0; Index < std::size(apIds); ++Index)
 	{
@@ -376,7 +413,9 @@ TEST(QmCardRegistry, LegacyMergedFunctionalCardMigratesOnlyOldDefaultGroup)
 		{"deck:tclient-profiles-list", "tclient-profiles", 1, 1},
 	};
 	const std::vector<const char *> vAllowedIds = {
-		"deck:tclient-profiles-actions", "deck:tclient-profiles-options", "deck:tclient-profiles-list",
+		"deck:tclient-profiles-actions",
+		"deck:tclient-profiles-options",
+		"deck:tclient-profiles-list",
 	};
 	const auto vDefaults = qm_card_registry::BuildDefaultEntries();
 	qm_card_order::CModel Model;
@@ -409,7 +448,9 @@ TEST(QmCardRegistry, LegacyGroupMigrationRejectsExtraCardInTargetTab)
 		{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 2},
 	};
 	const std::vector<const char *> vAllowedIds = {
-		"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview",
+		"deck:tclient-status-bar-settings",
+		"deck:tclient-status-bar-items",
+		"deck:tclient-status-bar-preview",
 	};
 	const std::vector<qm_card_order::SEntry> vTargetLayout = {
 		{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
@@ -445,7 +486,9 @@ TEST(QmCardRegistry, ExactProfileMigrationRejectsCustomizedCompanionCard)
 		{"deck:tclient-profiles-list", "tclient-profiles", 1, 1},
 	};
 	const std::vector<const char *> vAllowedIds = {
-		"deck:tclient-profiles-actions", "deck:tclient-profiles-options", "deck:tclient-profiles-list",
+		"deck:tclient-profiles-actions",
+		"deck:tclient-profiles-options",
+		"deck:tclient-profiles-list",
 	};
 	qm_card_order::CModel Customized;
 	Customized.SetEntries(vLegacyLayout);
@@ -634,7 +677,9 @@ TEST(QmCardRegistry, TClientStatusBarMigrationPreservesCustomizedLayouts)
 		{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1},
 	};
 	const std::vector<const char *> vAllowedIds = {
-		"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview",
+		"deck:tclient-status-bar-settings",
+		"deck:tclient-status-bar-items",
+		"deck:tclient-status-bar-preview",
 	};
 	qm_card_order::CModel LegacyModel;
 	LegacyModel.LoadMerged(pLegacySerialized, qm_card_registry::BuildDefaultEntries());
@@ -694,7 +739,9 @@ TEST(QmCardRegistry, TeeMigrationOnlyReflowsLegacyDefaultLayout)
 		{"deck:tee-skin-list", "tee", 0, 0},
 	};
 	const std::vector<const char *> vAllowedIds = {
-		"deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-list",
+		"deck:tee-identity",
+		"deck:tee-skin-options",
+		"deck:tee-skin-list",
 	};
 	qm_card_order::CModel LegacyModel;
 	LegacyModel.LoadMerged(pLegacySerialized, qm_card_registry::BuildDefaultEntries());

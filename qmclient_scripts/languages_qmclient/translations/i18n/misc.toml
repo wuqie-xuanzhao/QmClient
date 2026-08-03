@@ -2946,7 +2946,7 @@ polish = "Daje ci nieskończony skok"
 [[message]]
 key = "Gores"
 [message.translations]
-simplified_chinese = "Gores"
+simplified_chinese = "血腥模式"
 traditional_chinese = "血腥模式"
 japanese = "ゴア"
 korean = "고어스"

@@ -43,6 +43,28 @@ namespace
 			return true;
 		return pStorage->CreateFolder(aFolder, IStorage::TYPE_SAVE) || pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE);
 	}
+
+	EColorInputAlphaMode ColorInputAlphaMode(const char *pValue)
+	{
+		if(pValue == nullptr || pValue[0] == '\0')
+			return EColorInputAlphaMode::PACKED;
+		if(pValue[0] == '$')
+		{
+			const int HexLength = str_length(pValue + 1);
+			if(HexLength == 3 || HexLength == 6)
+				return EColorInputAlphaMode::OMITTED;
+			if(HexLength == 4 || HexLength == 8)
+				return EColorInputAlphaMode::EXPLICIT;
+			return EColorInputAlphaMode::PACKED;
+		}
+		// 颜色名没有 alpha 分量。负数 packed 与旧版本序列化兼容，必须保留其来源信息；
+		// 无符号与带正号 packed 则可用最高字节区分旧 RGB 和新的 ARGB。
+		if(pValue[0] == '-' && str_isallnum(pValue + 1))
+			return EColorInputAlphaMode::SIGNED_PACKED;
+		if(str_isallnum(pValue) || (pValue[0] == '+' && str_isallnum(pValue + 1)))
+			return EColorInputAlphaMode::PACKED;
+		return EColorInputAlphaMode::OMITTED;
+	}
 }
 
 static void EscapeParam(char *pDst, const char *pSrc, int Size)
@@ -153,6 +175,7 @@ void SColorConfigVariable::CommandCallback(IConsole::IResult *pResult, void *pUs
 		const unsigned Value = Color.Pack(pData->m_DarkestLighting, pData->m_Alpha);
 
 		*pData->m_pVariable = Value;
+		pData->m_LastInputAlphaMode = pData->m_Alpha ? ColorInputAlphaMode(pResult->GetString(0)) : EColorInputAlphaMode::PACKED;
 		if(pResult->m_ClientId != IConsole::CLIENT_ID_GAME)
 			pData->m_OldValue = Value;
 	}
@@ -542,6 +565,18 @@ void CConfigManager::PossibleConfigVariables(const char *pStr, int FlagMask, POS
 			}
 		}
 	}
+}
+
+EColorInputAlphaMode CConfigManager::ColorValueInputAlphaMode(const char *pScriptName) const
+{
+	if(pScriptName == nullptr)
+		return EColorInputAlphaMode::PACKED;
+	for(const SConfigVariable *pVariable : m_vpAllVariables)
+	{
+		if(pVariable->m_Type == SConfigVariable::VAR_COLOR && str_comp(pVariable->m_pScriptName, pScriptName) == 0)
+			return static_cast<const SColorConfigVariable *>(pVariable)->m_LastInputAlphaMode;
+	}
+	return EColorInputAlphaMode::PACKED;
 }
 
 void CConfigManager::Con_Reset(IConsole::IResult *pResult, void *pUserData)

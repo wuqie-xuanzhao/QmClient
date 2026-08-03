@@ -12290,7 +12290,7 @@ polish = "Ścieżka względna"
 [[message]]
 key = "Relative X position of the draggable back button"
 [message.translations]
-simplified_chinese = "Relative X position of the draggable back button"
+simplified_chinese = "可拖动虚拟返回按钮的相对 X 位置"
 traditional_chinese = "Relative X position of the draggable back button"
 japanese = "ドラッグ可能な戻るボタンの相対 X 位置"
 korean = "드래그 가능한 뒤로 가기 버튼의 상대적 X 위치"
@@ -12306,7 +12306,7 @@ polish = "Względna pozycja X przeciągalnego przycisku wstecz"
 [[message]]
 key = "Relative Y position of the draggable back button"
 [message.translations]
-simplified_chinese = "Relative Y position of the draggable back button"
+simplified_chinese = "可拖动虚拟返回按钮的相对 Y 位置"
 traditional_chinese = "Relative Y position of the draggable back button"
 japanese = "ドラッグ可能な戻るボタンの相対 Y 位置"
 korean = "드래그 가능한 뒤로 가기 버튼의 상대적 Y 위치"
@@ -14658,7 +14658,7 @@ polish = "Pokaż domyślne zasady modyfikacji."
 [[message]]
 key = "Show draggable virtual back button"
 [message.translations]
-simplified_chinese = "Show draggable virtual back button"
+simplified_chinese = "显示可拖动的虚拟返回按钮"
 traditional_chinese = "Show draggable virtual back button"
 japanese = "ドラッグ可能な仮想戻るボタンを表示"
 korean = "드래그 가능한 가상 뒤로가기 버튼 표시"

@@ -35,6 +35,7 @@
 #include "components/qmclient/jelly_tee.h"
 #include "components/qmclient/modes.h"
 #include "components/qmclient/perf_logging.h"
+#include "components/qmclient/translate/translate_ui_settings.h"
 #include "components/race_demo.h"
 #include "components/scoreboard.h"
 #include "components/settings_resource_jobs.h"
@@ -834,6 +835,33 @@ static void MigrateJumpHintConfig()
 	MigrateInt(g_Config.m_QmJumpHintSize, g_Config.m_TcJumpHintSizeLegacy, DefaultConfig::QmJumpHintSize, DefaultConfig::TcJumpHintSizeLegacy);
 }
 
+// CFGFLAG_COLALPHA 将这组设置从六位 RGB 改为八位 ARGB。
+// 对已保存的 RGB 值仅迁移一次，恢复各自声明的默认 alpha。
+static void MigrateTranslateUiColorAlphaConfig(const IConfigManager *pConfigManager)
+{
+	bool Migrated = g_Config.m_QmTranslateColorAlphaMigrated != 0;
+	const auto InputAlphaMode = [pConfigManager](const char *pScriptName) {
+		return pConfigManager != nullptr ? pConfigManager->ColorValueInputAlphaMode(pScriptName) : EColorInputAlphaMode::PACKED;
+	};
+	NTranslateUiSettings::MigrateLegacyColorAlphas(Migrated,
+		g_Config.m_QmTranslateBtnColorDisabled,
+		g_Config.m_QmTranslateBtnColorEnabled,
+		g_Config.m_QmTranslateMenuBgColor,
+		g_Config.m_QmTranslateMenuOptionSelected,
+		g_Config.m_QmTranslateMenuOptionNormal,
+		DefaultConfig::QmTranslateBtnColorDisabled,
+		DefaultConfig::QmTranslateBtnColorEnabled,
+		DefaultConfig::QmTranslateMenuBgColor,
+		DefaultConfig::QmTranslateMenuOptionSelected,
+		DefaultConfig::QmTranslateMenuOptionNormal,
+		InputAlphaMode("qm_translate_btn_color_disabled"),
+		InputAlphaMode("qm_translate_btn_color_enabled"),
+		InputAlphaMode("qm_translate_menu_bg_color"),
+		InputAlphaMode("qm_translate_menu_option_selected"),
+		InputAlphaMode("qm_translate_menu_option_normal"));
+	g_Config.m_QmTranslateColorAlphaMigrated = Migrated ? 1 : 0;
+}
+
 static void GenerateTimeoutCode(char *pTimeoutCode)
 {
 	if(pTimeoutCode[0] == '\0' || str_comp(pTimeoutCode, "hGuEYnfxicsXGwFq") == 0)
@@ -869,6 +897,7 @@ void CGameClient::OnInit()
 
 	// Migrate legacy tc_jump_hint_text into qm_jump_hint_text before any HUD use.
 	MigrateJumpHintConfig();
+	MigrateTranslateUiColorAlphaConfig(ConfigManager());
 
 	// Initialize config tags system
 	InitConfigTags();
@@ -4872,8 +4901,7 @@ void CGameClient::FinalizeHammerHitEvents()
 		if((IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId)) && m_HammerHitTracker.Record(Hit))
 			HandleConfirmedHammerHit(Hit);
 
-		const bool PredictedHandled = Match.m_AttackerId >= 0 && Match.m_TargetId >= 0 && m_PredictedWorld.CheckPredictedHammerHitHandled(
-			CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId));
+		const bool PredictedHandled = Match.m_AttackerId >= 0 && Match.m_TargetId >= 0 && m_PredictedWorld.CheckPredictedHammerHitHandled(CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId));
 		if(Event.m_RenderEffect && !PredictedHandled)
 		{
 			const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);
@@ -7034,19 +7062,19 @@ void CGameClient::CClientData::UpdateSkinInfo()
 		return;
 	}
 
-		const auto &&ApplySkinProperties = [&]() {
-			const int LocalDummy = LocalSkinConfigIndex();
-			const bool UseServerControlledSkin = LocalDummy >= 0 && m_pGameClient->ShouldUseServerControlledLocalSkin();
-			if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SIX)
+	const auto &&ApplySkinProperties = [&]() {
+		const int LocalDummy = LocalSkinConfigIndex();
+		const bool UseServerControlledSkin = LocalDummy >= 0 && m_pGameClient->ShouldUseServerControlledLocalSkin();
+		if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SIX)
+		{
+			if(UseServerControlledSkin)
 			{
-				if(UseServerControlledSkin)
-				{
-					m_pSkinInfo->TeeRenderInfo().ApplyColors(m_UseCustomColor, m_ColorBody, m_ColorFeet);
-				}
-				else if(LocalDummy >= 0)
-				{
-					m_pSkinInfo->TeeRenderInfo().ApplyColors(
-						LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor,
+				m_pSkinInfo->TeeRenderInfo().ApplyColors(m_UseCustomColor, m_ColorBody, m_ColorFeet);
+			}
+			else if(LocalDummy >= 0)
+			{
+				m_pSkinInfo->TeeRenderInfo().ApplyColors(
+					LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor,
 					LocalDummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody,
 					LocalDummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet);
 			}
@@ -7060,17 +7088,17 @@ void CGameClient::CClientData::UpdateSkinInfo()
 			for(int Dummy = 0; Dummy < NUM_DUMMIES; Dummy++)
 			{
 				const CClientData::CSixup &SixupData = m_aSixup[Dummy];
-					CTeeRenderInfo::CSixup &SixupSkinInfo = m_pSkinInfo->TeeRenderInfo().m_aSixup[Dummy];
-					for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+				CTeeRenderInfo::CSixup &SixupSkinInfo = m_pSkinInfo->TeeRenderInfo().m_aSixup[Dummy];
+				for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+				{
+					if(UseServerControlledSkin)
 					{
-						if(UseServerControlledSkin)
-						{
-							m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, m_aSixup[LocalDummy].m_aUseCustomColors[Part], m_aSixup[LocalDummy].m_aSkinPartColors[Part], Part);
-						}
-						else if(LocalDummy >= 0)
-						{
-							m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, *CSkins7::ms_apUCCVariables[LocalDummy][Part], *CSkins7::ms_apColorVariables[LocalDummy][Part], Part);
-						}
+						m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, m_aSixup[LocalDummy].m_aUseCustomColors[Part], m_aSixup[LocalDummy].m_aSkinPartColors[Part], Part);
+					}
+					else if(LocalDummy >= 0)
+					{
+						m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, *CSkins7::ms_apUCCVariables[LocalDummy][Part], *CSkins7::ms_apColorVariables[LocalDummy][Part], Part);
+					}
 					else
 					{
 						m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, SixupData.m_aUseCustomColors[Part], SixupData.m_aSkinPartColors[Part], Part);

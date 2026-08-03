@@ -31,9 +31,6 @@
 %d more cut segments
 == 還有 %d 個裁剪片段
 
-%d new mentions
-== %d 條新被提及消息
-
 %d of %d server
 == %d/%d 個伺服器
 
@@ -220,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - 禁用，1-9999 分鐘
 
-1 new mention
-== 1 條新被提及消息
-
 1 star
 == 1 星
 
@@ -246,9 +240,6 @@
 
 5 stars
 == 5 星
-
-9+ new mentions
-== 9+ 條新被提及消息
 
 === All Local Saves ===
 == === 所有本地存檔 ===
@@ -3486,7 +3477,7 @@ Enable cheats for your current team's run, but you can't earn a rank
 == 為你當前隊伍啟用作弊，但將無法獲得排名
 
 Enable client stutter diagnostics at startup
-== Enable client stutter diagnostics at startup
+== 啟動時啟用用戶端卡頓診斷
 
 Enable colored console output
 == 啟用控制台彩色輸出
@@ -3531,7 +3522,7 @@ Enable enhanced laser effect (glow + pulse animation)
 == 啟用增強激光特效（輝光+脈衝動畫）
 
 Enable enhanced scoreboard presentation
-== Enable enhanced scoreboard presentation
+== 啟用增強計分板顯示
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == 啟用事件觸發（伺服器在某些節日的眼睜表情，客戶端的聖誕皮膚）
@@ -3607,6 +3598,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == 啟用歌詞
+
+Enable macOS graphics diagnostics and Instruments signposts
+== 啟用 macOS 圖形診斷和 Instruments 標記
 
 Enable main thread and render stage performance debug logging
 == 啟用主線程與渲染階段性能調試日誌
@@ -3690,7 +3684,7 @@ Enable skin switch animation
 == 啟用皮膚切換動畫
 
 Enable smooth cinematic camera while free spectating
-== Enable smooth cinematic camera while free spectating
+== 自由觀戰時啟用平滑電影鏡頭
 
 Enable sound
 == 聲音啟用
@@ -4521,7 +4515,7 @@ Global toggle key
 == 全局開關鍵
 
 Global UI size percentage
-== Global UI size percentage
+== 全域 UI 大小百分比
 
 Glow
 == 輝光
@@ -4680,7 +4674,7 @@ Hide Chat
 == 隱藏聊天框
 
 Hide chat messages from players marked as enemies
-== Hide chat messages from players marked as enemies
+== 隱藏被標記為敵人的玩家聊天訊息
 
 Hide death/respawn effects
 == 隱藏死亡/重生特效
@@ -6290,9 +6284,6 @@ Message to send on auto vote, leave empty to not send
 Messages
 == 消息
 
-Messages that already look like the target language will skip auto-translate
-== 看起來已經是目標語言的消息會跳過自動翻譯
-
 Microphone
 == 麥克風
 
@@ -6442,9 +6433,6 @@ Move right
 
 Move to category
 == 移動到分類
-
-Moved ingame
-== 在遊戲內已移動
 
 Movement
 == 移動
@@ -7042,9 +7030,6 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 
 Number of vote options sent per tick
 == 每 tick 發送的投票選項數量
-
-Numeric-only messages will be skipped
-== 純數字消息會直接跳過
 
 o = Send rate
 == o = 發送速率
@@ -9569,9 +9554,6 @@ Show default flag in scoreboard
 Show default mod rules.
 == 顯示預設模組規則
 
-Show Directory
-== 顯示目錄
-
 Show dotted map route debug
 == 顯示地圖點狀路線調試
 
@@ -11657,6 +11639,9 @@ Translation button cancel color
 Translation color
 == 翻譯顏色
 
+Translation color alpha migration completed flag
+== 翻譯顏色透明度遷移已完成標記
+
 Translation menu background color
 == 翻譯菜單背景顏色
 
@@ -11772,7 +11757,7 @@ UI mouse sens.
 == 鼠標靈敏度（界面）
 
 UI rounded corner segments (even numbers recommended)
-== UI rounded corner segments (even numbers recommended)
+== UI 圓角分段數（建議使用偶數）
 
 UI scale
 == UI 大小
@@ -12621,7 +12606,7 @@ Word Filter
 == 屏蔽詞
 
 Word filter action: 0=replace matching words, 1=hide entire message
-== Word filter action: 0=replace matching words, 1=hide entire message
+== 屏蔽詞操作：0=替換匹配詞，1=隱藏整條訊息
 
 Word highlight soft edge width (px)
 == 逐字邊緣軟過渡寬度 px
@@ -13285,10 +13270,6 @@ AUTO
 [Start menu]
 Play
 == 開始遊戲
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
 
 [Team size]
 maximum

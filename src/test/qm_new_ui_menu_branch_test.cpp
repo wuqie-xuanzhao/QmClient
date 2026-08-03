@@ -943,17 +943,17 @@ TEST(QmNewUiMenuBranches, ConsoleRestoresCompleteTextRenderState)
 	ASSERT_FALSE(Render.empty());
 
 	for(const char *pState : {
-			"const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();",
-			"const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();",
-			"const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();",
-			"const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();",
-			"const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();",
-			"TextRender()->SetRenderFlags(PreviousRenderFlags);",
-			"TextRender()->SetFontPreset(PreviousFontPreset);",
-			"TextRender()->TextOutlineColor(PreviousTextOutlineColor);",
-			"TextRender()->TextSelectionColor(PreviousTextSelectionColor);",
-			"TextRender()->TextColor(PreviousTextColor);",
-		})
+		    "const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();",
+		    "const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();",
+		    "const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();",
+		    "const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();",
+		    "const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();",
+		    "TextRender()->SetRenderFlags(PreviousRenderFlags);",
+		    "TextRender()->SetFontPreset(PreviousFontPreset);",
+		    "TextRender()->TextOutlineColor(PreviousTextOutlineColor);",
+		    "TextRender()->TextSelectionColor(PreviousTextSelectionColor);",
+		    "TextRender()->TextColor(PreviousTextColor);",
+	    })
 		EXPECT_NE(Render.find(pState), std::string::npos) << pState;
 
 	EXPECT_LT(Render.find("Ui()->SetEnabled(false);"), Render.find("TextRender()->SetRenderFlags(PreviousRenderFlags);"));

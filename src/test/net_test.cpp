@@ -5,6 +5,7 @@
 #include <engine/shared/network.h>
 
 #include <gtest/gtest.h>
+#include <test/test.h>
 
 #include <chrono>
 #include <string>
@@ -15,6 +16,19 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+	TEST(Net, Ipv6SocketUsesIpv6TrafficClassOutsideWindows)
+	{
+		const std::string Source = ReadTestSourceFile("src/base/system.cpp");
+		const size_t Ipv6Start = Source.find("if(bindaddr.type & NETTYPE_IPV6)");
+		ASSERT_NE(Ipv6Start, std::string::npos);
+		const size_t Ipv6End = Source.find("#if defined(CONF_WEBSOCKETS)", Ipv6Start);
+		ASSERT_NE(Ipv6End, std::string::npos);
+		const std::string Ipv6SocketSetup = Source.substr(Ipv6Start, Ipv6End - Ipv6Start);
+
+		EXPECT_NE(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IPV6, IPV6_TCLASS"), std::string::npos);
+		EXPECT_EQ(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IP, IP_TOS"), std::string::npos);
+	}
 
 	void InitNetBase()
 	{

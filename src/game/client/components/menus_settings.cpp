@@ -788,10 +788,10 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			Definition.m_Spec = Spec;
 			Definition.m_Measure = [ContentHeight](float) { return ContentHeight; };
 			Definition.m_Render = Render;
-				vCards.push_back(Definition);
-			};
+			vCards.push_back(Definition);
+		};
 
-			AddCard(GameSpec, GeneralGameContentHeight, [this, GeneralMetrics, BodySize](CUIRect Content) {
+		AddCard(GameSpec, GeneralGameContentHeight, [this, GeneralMetrics, BodySize](CUIRect Content) {
 			CUIRect Button;
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
 			const bool IsDyncam = g_Config.m_ClDyncam || g_Config.m_ClMouseFollowfactor > 0;
@@ -826,8 +826,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				g_Config.m_ClAutoswitchWeapons ^= 1;
 			Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
-				if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeaponsOutOfAmmo, "general-switch-weapon-out-of-ammo", Localize("Switch weapon when out of ammo"), g_Config.m_ClAutoswitchWeaponsOutOfAmmo, &Button))
-					g_Config.m_ClAutoswitchWeaponsOutOfAmmo ^= 1;
+			if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeaponsOutOfAmmo, "general-switch-weapon-out-of-ammo", Localize("Switch weapon when out of ammo"), g_Config.m_ClAutoswitchWeaponsOutOfAmmo, &Button))
+				g_Config.m_ClAutoswitchWeaponsOutOfAmmo ^= 1;
 			Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
 			CUIRect Label, DropDown;
@@ -836,31 +836,31 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			const char *apRespawnDefaultWeapons[] = {Localize("Off"), Localize("Hammer"), Localize("Gun"), Localize("Shotgun"), Localize("Grenade"), Localize("Laser")};
 			static CUi::SDropDownState s_RespawnDefaultWeaponDropDownState;
 			const int RespawnDefaultWeapon = DoSettingsDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
-				if(RespawnDefaultWeapon != g_Config.m_QmRespawnDefaultWeapon)
-					g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
-			});
-			vCards.back().m_Measure = [GeneralMetrics, IsGeneralDynamicCameraEnabled](float) {
-				return ResolveSettingsGeneralGameContentHeight(GeneralMetrics, IsGeneralDynamicCameraEnabled());
-			};
-			vCards.back().m_MeasureRevision = IsGeneralDynamicCameraEnabled() ? 1 : 0;
-			vCards.back().m_PreLayoutInput = [this, GeneralMetrics, IsGeneralDynamicCameraEnabled](CUIRect Content) {
-				if(m_MenuTextPlanCollecting)
-					return false;
-				CUIRect Button;
-				Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
-				if(!Ui()->DoButtonLogic(&g_Config.m_ClDyncam, 0, &Button, BUTTONFLAG_LEFT))
-					return false;
-				if(IsGeneralDynamicCameraEnabled())
-				{
-					g_Config.m_ClDyncam = 0;
-					g_Config.m_ClMouseFollowfactor = 0;
-				}
-				else
-					g_Config.m_ClDyncam = 1;
-				return true;
-			};
+			if(RespawnDefaultWeapon != g_Config.m_QmRespawnDefaultWeapon)
+				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
+		});
+		vCards.back().m_Measure = [GeneralMetrics, IsGeneralDynamicCameraEnabled](float) {
+			return ResolveSettingsGeneralGameContentHeight(GeneralMetrics, IsGeneralDynamicCameraEnabled());
+		};
+		vCards.back().m_MeasureRevision = IsGeneralDynamicCameraEnabled() ? 1 : 0;
+		vCards.back().m_PreLayoutInput = [this, GeneralMetrics, IsGeneralDynamicCameraEnabled](CUIRect Content) {
+			if(m_MenuTextPlanCollecting)
+				return false;
+			CUIRect Button;
+			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
+			if(!Ui()->DoButtonLogic(&g_Config.m_ClDyncam, 0, &Button, BUTTONFLAG_LEFT))
+				return false;
+			if(IsGeneralDynamicCameraEnabled())
+			{
+				g_Config.m_ClDyncam = 0;
+				g_Config.m_ClMouseFollowfactor = 0;
+			}
+			else
+				g_Config.m_ClDyncam = 1;
+			return true;
+		};
 
-			AddCard(LanguageSpec, GeneralLanguageListHeight, [this, GeneralMetrics, GeneralLanguageListHeight](CUIRect Content) {
+		AddCard(LanguageSpec, GeneralLanguageListHeight, [this, GeneralMetrics, GeneralLanguageListHeight](CUIRect Content) {
 			Content.h = std::min(Content.h, GeneralLanguageListHeight);
 			PrepareLanguagePageCache(Content.w, false);
 			RenderLanguageSelection(Content, &GeneralMetrics);
@@ -6411,8 +6411,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				DoChatCheckBox(&g_Config.m_ClShowChatTeamMembersOnly, "appearance-chat-team-members-only", Localize("Show only chat messages from team members"), &g_Config.m_ClShowChatTeamMembersOnly);
 				DoChatCheckBox(&g_Config.m_QmChatSaveDraft, "appearance-chat-save-draft", Localize("Save unsent chat draft"), &g_Config.m_QmChatSaveDraft);
 				DoChatCheckBox(&g_Config.m_QmChatLogAutoSave, "appearance-chat-log-auto-save", Localize("Auto save chat log"), &g_Config.m_QmChatLogAutoSave);
-					if(g_Config.m_QmChatLogAutoSave)
-					{
+				if(g_Config.m_QmChatLogAutoSave)
+				{
 					NextChatRow(Button);
 					DoAppearanceNumericField(APPEARANCE_TAB_CHAT, "appearance-chat-log-keep-days", &g_Config.m_QmChatLogKeepDays, &g_Config.m_QmChatLogKeepDays, Button, Localize("Chat log retention days"), 0, 3650, &CUi::ms_LinearScrollbarScale, 0, "", Localize("Days"));
 				}
@@ -6837,50 +6837,50 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					PreviewView.y = maximum(PreviewView.y, Y + MarginSmall); }, ChatPreviewMeasureRevision);
-				vCards.back().m_Measure = [ResolveChatSettingsMinCardHeight](float) { return ResolveChatSettingsMinCardHeight(); };
-				vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_ClShowChat != 0) | (static_cast<uint64_t>(g_Config.m_QmChatLogAutoSave != 0) << 1);
-				vCards.back().m_PreLayoutInput = [this, LineSize, MarginSmall](CUIRect Content) {
-					if(m_MenuTextPlanCollecting)
+			vCards.back().m_Measure = [ResolveChatSettingsMinCardHeight](float) { return ResolveChatSettingsMinCardHeight(); };
+			vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_ClShowChat != 0) | (static_cast<uint64_t>(g_Config.m_QmChatLogAutoSave != 0) << 1);
+			vCards.back().m_PreLayoutInput = [this, LineSize, MarginSmall](CUIRect Content) {
+				if(m_MenuTextPlanCollecting)
+					return false;
+				CUIRect LeftView = Content;
+				CUIRect Row;
+				const auto NextRow = [&]() {
+					LeftView.HSplitTop(LineSize, &Row, &LeftView);
+					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
+					return Row;
+				};
+				const auto ProcessToggle = [this](CUIRect ToggleRow, int *pValue) {
+					if(!Ui()->DoButtonLogic(pValue, 0, &ToggleRow, BUTTONFLAG_LEFT))
 						return false;
-					CUIRect LeftView = Content;
-					CUIRect Row;
-					const auto NextRow = [&]() {
-						LeftView.HSplitTop(LineSize, &Row, &LeftView);
-						LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
-						return Row;
-					};
-					const auto ProcessToggle = [this](CUIRect ToggleRow, int *pValue) {
-						if(!Ui()->DoButtonLogic(pValue, 0, &ToggleRow, BUTTONFLAG_LEFT))
-							return false;
-						*pValue ^= 1;
-						return true;
-					};
-					CUIRect ShowChatRow = NextRow();
-					bool Changed = false;
-					if(Ui()->DoButtonLogic(&g_Config.m_ClShowChat, 0, &ShowChatRow, BUTTONFLAG_LEFT))
+					*pValue ^= 1;
+					return true;
+				};
+				CUIRect ShowChatRow = NextRow();
+				bool Changed = false;
+				if(Ui()->DoButtonLogic(&g_Config.m_ClShowChat, 0, &ShowChatRow, BUTTONFLAG_LEFT))
+				{
+					g_Config.m_ClShowChat = g_Config.m_ClShowChat ? 0 : 1;
+					Changed = true;
+				}
+				if(g_Config.m_ClShowChat)
+				{
+					CUIRect AlwaysShowRow = NextRow();
+					if(Ui()->DoButtonLogic(&s_AppearanceAlwaysShowChat, g_Config.m_ClShowChat == 2, &AlwaysShowRow, BUTTONFLAG_LEFT))
 					{
-						g_Config.m_ClShowChat = g_Config.m_ClShowChat ? 0 : 1;
+						g_Config.m_ClShowChat = g_Config.m_ClShowChat != 2 ? 2 : 1;
 						Changed = true;
 					}
-					if(g_Config.m_ClShowChat)
-					{
-						CUIRect AlwaysShowRow = NextRow();
-						if(Ui()->DoButtonLogic(&s_AppearanceAlwaysShowChat, g_Config.m_ClShowChat == 2, &AlwaysShowRow, BUTTONFLAG_LEFT))
-						{
-							g_Config.m_ClShowChat = g_Config.m_ClShowChat != 2 ? 2 : 1;
-							Changed = true;
-						}
-					}
-					for(int RowIndex = 0; RowIndex < 4; ++RowIndex)
-						NextRow();
-					Changed = ProcessToggle(NextRow(), &g_Config.m_QmChatLogAutoSave) || Changed;
-					if(g_Config.m_QmChatLogAutoSave)
-						NextRow();
+				}
+				for(int RowIndex = 0; RowIndex < 4; ++RowIndex)
 					NextRow();
+				Changed = ProcessToggle(NextRow(), &g_Config.m_QmChatLogAutoSave) || Changed;
+				if(g_Config.m_QmChatLogAutoSave)
 					NextRow();
-					return Changed;
-				};
-			}
+				NextRow();
+				NextRow();
+				return Changed;
+			};
+		}
 		else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)
 		{
 			const auto NamePlateStrongEnabled = [] { return g_Config.m_ClNamePlatesStrong != 0; };
@@ -6889,21 +6889,21 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			const float NamePlateTextContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(10, LineSize, MarginSmall) + MarginSmall + NamePlateColorPickerHeight * 3.0f;
 			static int s_NamePlatesStrong = 0;
 			const auto ResolveNamePlateContentHeight = [=](float ContentWidth) {
-					const auto RadioHeight = [&](const int OptionCount) {
-						return ResolveSettingsRadioRowLayout({0.0f, 0.0f, ContentWidth, LineSize * 2.0f + MarginSmall}, OptionCount, AppearanceMetrics).m_Height;
-					};
-					const bool ClanEnabled = g_Config.m_ClNamePlatesClan != 0;
-					const bool IdsEnabled = g_Config.m_ClNamePlatesIds != 0;
-					const bool SeparateIds = IdsEnabled && g_Config.m_ClNamePlatesIdsSeparateLine != 0;
-					const int GeneralRows = 7 + (ClanEnabled ? 1 : 0) + (IdsEnabled ? 1 : 0) + (SeparateIds ? 1 : 0);
-					const float GeneralContentHeight = RadioHeight(4) + MarginSmall + GeneralRows * (LineSize + MarginSmall);
-					float HookContentHeight = NamePlateSectionHeaderHeight + LineSize + MarginSmall;
-					if(NamePlateStrongEnabled())
-					{
-						HookContentHeight += LineSize + MarginSmall + RadioHeight(5) + MarginSmall + NamePlateColorPickerHeight * 2.0f + LineSize + MarginSmall;
-					}
-					const float KeysContentHeight = NamePlateSectionHeaderHeight + RadioHeight(4) + MarginSmall + (g_Config.m_ClShowDirection > 0 ? LineSize : 0.0f);
-					return GeneralContentHeight + NamePlateTextContentHeight + HookContentHeight + KeysContentHeight;
+				const auto RadioHeight = [&](const int OptionCount) {
+					return ResolveSettingsRadioRowLayout({0.0f, 0.0f, ContentWidth, LineSize * 2.0f + MarginSmall}, OptionCount, AppearanceMetrics).m_Height;
+				};
+				const bool ClanEnabled = g_Config.m_ClNamePlatesClan != 0;
+				const bool IdsEnabled = g_Config.m_ClNamePlatesIds != 0;
+				const bool SeparateIds = IdsEnabled && g_Config.m_ClNamePlatesIdsSeparateLine != 0;
+				const int GeneralRows = 7 + (ClanEnabled ? 1 : 0) + (IdsEnabled ? 1 : 0) + (SeparateIds ? 1 : 0);
+				const float GeneralContentHeight = RadioHeight(4) + MarginSmall + GeneralRows * (LineSize + MarginSmall);
+				float HookContentHeight = NamePlateSectionHeaderHeight + LineSize + MarginSmall;
+				if(NamePlateStrongEnabled())
+				{
+					HookContentHeight += LineSize + MarginSmall + RadioHeight(5) + MarginSmall + NamePlateColorPickerHeight * 2.0f + LineSize + MarginSmall;
+				}
+				const float KeysContentHeight = NamePlateSectionHeaderHeight + RadioHeight(4) + MarginSmall + (g_Config.m_ClShowDirection > 0 ? LineSize : 0.0f);
+				return GeneralContentHeight + NamePlateTextContentHeight + HookContentHeight + KeysContentHeight;
 			};
 			AddMeasuredCard(5, ResolveNamePlateContentHeight, [=, this](CUIRect ContentRect) mutable {
 				CUIRect LeftView = ContentRect;
@@ -7132,35 +7132,34 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					{
 						LeftView.HSplitTop(LineSize, &Button, &LeftView);
 						DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-key-press-icons-size", &g_Config.m_ClDirectionSize, &g_Config.m_ClDirectionSize, Button, Localize("Size of key press icons"), -50, 100);
-					}
-				}, 0);
-				vCards.back().m_Measure = [ResolveNamePlateContentHeight](float ContentWidth) { return ResolveNamePlateContentHeight(ContentWidth); };
-				vCards.back().m_MeasureRevision =
-					static_cast<uint64_t>(g_Config.m_ClNamePlatesClan != 0) |
-					(static_cast<uint64_t>(g_Config.m_ClNamePlatesIds != 0) << 1) |
-					(static_cast<uint64_t>(g_Config.m_ClNamePlatesIdsSeparateLine != 0) << 2) |
-					(static_cast<uint64_t>(g_Config.m_ClNamePlatesStrong != 0) << 3) |
-					(static_cast<uint64_t>(g_Config.m_ClShowDirection > 0) << 4);
-		vCards.back().m_PreLayoutInput = [this, LineSize, MarginSmall, AppearanceMetrics, NamePlateSectionHeaderHeight, NamePlateColorPickerHeight, NamePlateStrongEnabled](CUIRect Content) {
-					if(m_MenuTextPlanCollecting)
+					} }, 0);
+			vCards.back().m_Measure = [ResolveNamePlateContentHeight](float ContentWidth) { return ResolveNamePlateContentHeight(ContentWidth); };
+			vCards.back().m_MeasureRevision =
+				static_cast<uint64_t>(g_Config.m_ClNamePlatesClan != 0) |
+				(static_cast<uint64_t>(g_Config.m_ClNamePlatesIds != 0) << 1) |
+				(static_cast<uint64_t>(g_Config.m_ClNamePlatesIdsSeparateLine != 0) << 2) |
+				(static_cast<uint64_t>(g_Config.m_ClNamePlatesStrong != 0) << 3) |
+				(static_cast<uint64_t>(g_Config.m_ClShowDirection > 0) << 4);
+			vCards.back().m_PreLayoutInput = [this, LineSize, MarginSmall, AppearanceMetrics, NamePlateSectionHeaderHeight, NamePlateColorPickerHeight, NamePlateStrongEnabled](CUIRect Content) {
+				if(m_MenuTextPlanCollecting)
+					return false;
+				CUIRect LeftView = Content;
+				CUIRect Row;
+				const auto ConsumeRow = [&]() {
+					LeftView.HSplitTop(LineSize, &Row, &LeftView);
+					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
+					return Row;
+				};
+				const auto ConsumeRadio = [&](int OptionCount) {
+					const float Height = ResolveSettingsRadioRowLayout(LeftView, OptionCount, AppearanceMetrics).m_Height;
+					LeftView.HSplitTop(Height, nullptr, &LeftView);
+				};
+				const auto ProcessToggle = [this](CUIRect ToggleRow, int *pValue) {
+					if(!Ui()->DoButtonLogic(pValue, 0, &ToggleRow, BUTTONFLAG_LEFT))
 						return false;
-					CUIRect LeftView = Content;
-					CUIRect Row;
-					const auto ConsumeRow = [&]() {
-						LeftView.HSplitTop(LineSize, &Row, &LeftView);
-						LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
-						return Row;
-					};
-					const auto ConsumeRadio = [&](int OptionCount) {
-						const float Height = ResolveSettingsRadioRowLayout(LeftView, OptionCount, AppearanceMetrics).m_Height;
-						LeftView.HSplitTop(Height, nullptr, &LeftView);
-					};
-					const auto ProcessToggle = [this](CUIRect ToggleRow, int *pValue) {
-						if(!Ui()->DoButtonLogic(pValue, 0, &ToggleRow, BUTTONFLAG_LEFT))
-							return false;
-						*pValue ^= 1;
-						return true;
-					};
+					*pValue ^= 1;
+					return true;
+				};
 				ConsumeRadio(4);
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 				ConsumeRow();
@@ -7224,7 +7223,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				if(g_Config.m_ClShowDirection > 0)
 					LeftView.HSplitTop(LineSize, nullptr, &LeftView);
 				return Changed;
-				};
+			};
 			const float NamePlatePreviewAreaHeight = std::clamp(190.0f * AppearanceUiScale, 160.0f, 210.0f);
 			const float NamePlatePreviewControlsHeight = ResolveSettingsRowsHeight(2, LineSize, MarginSmall) + MarginSmall + AppearanceMetrics.m_ButtonHeight;
 			const float NamePlatePreviewMinCardHeight = NamePlatePreviewAreaHeight + MarginSmall + NamePlatePreviewControlsHeight;
@@ -7946,7 +7945,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 					g_Config.m_ClRaceSaveGhost ^= 1;
 				}
 
-					if(g_Config.m_ClRaceSaveGhost)
+				if(g_Config.m_ClRaceSaveGhost)
 				{
 					SplitDDNetRow(Right, &Button);
 					if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClRaceGhostSaveBest, "Only save improvements", Localize("Only save improvements"), g_Config.m_ClRaceGhostSaveBest, &Button))
@@ -7954,16 +7953,16 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 						g_Config.m_ClRaceGhostSaveBest ^= 1;
 					}
 				}
-				}
-				LogPerfStage(Client(), "ddnet_demo_section", DemoSectionTimer.ElapsedMs(), false, "page=ddnet section=demo");
-			});
+			}
+			LogPerfStage(Client(), "ddnet_demo_section", DemoSectionTimer.ElapsedMs(), false, "page=ddnet section=demo");
+		});
 		vCards.back().m_Measure = [DDNetRowPitch](float) {
-				return DDNetRowPitch * ResolveDDNetDemoRows(g_Config.m_ClReplays != 0, g_Config.m_ClRaceGhost != 0, g_Config.m_ClRaceSaveGhost != 0);
-			};
+			return DDNetRowPitch * ResolveDDNetDemoRows(g_Config.m_ClReplays != 0, g_Config.m_ClRaceGhost != 0, g_Config.m_ClRaceSaveGhost != 0);
+		};
 		vCards.back().m_MeasureRevision =
-				((uint64_t)(g_Config.m_ClReplays != 0) << 0) |
-				((uint64_t)(g_Config.m_ClRaceGhost != 0) << 1) |
-				((uint64_t)(g_Config.m_ClRaceSaveGhost != 0) << 2);
+			((uint64_t)(g_Config.m_ClReplays != 0) << 0) |
+			((uint64_t)(g_Config.m_ClRaceGhost != 0) << 1) |
+			((uint64_t)(g_Config.m_ClRaceSaveGhost != 0) << 2);
 		vCards.back().m_PreLayoutInput = ProcessDemoPreLayoutInput;
 
 		// gameplay
@@ -8056,11 +8055,11 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 					g_Config.m_ClAntiPingGrenade ^= 1;
 				}
 			}
-				LogPerfStage(Client(), "ddnet_gameplay_section", GameplaySectionTimer.ElapsedMs(), false, "page=ddnet section=gameplay");
-			});
+			LogPerfStage(Client(), "ddnet_gameplay_section", GameplaySectionTimer.ElapsedMs(), false, "page=ddnet section=gameplay");
+		});
 		vCards.back().m_Measure = [DDNetRowPitch](float) {
-				return DDNetRowPitch * ResolveDDNetGameplayRows(g_Config.m_ClTextEntities != 0, g_Config.m_ClAntiPing != 0);
-			};
+			return DDNetRowPitch * ResolveDDNetGameplayRows(g_Config.m_ClTextEntities != 0, g_Config.m_ClAntiPing != 0);
+		};
 		vCards.back().m_MeasureRevision =
 			((uint64_t)(g_Config.m_ClTextEntities != 0) << 0) |
 			((uint64_t)(g_Config.m_ClAntiPing != 0) << 1);

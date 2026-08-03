@@ -1,8 +1,8 @@
 #include <base/color.h>
 #include <base/math.h>
 
-#include <game/client/ui.h>
 #include <game/client/QmUi/UiSurface.h>
+#include <game/client/ui.h>
 #include <game/editor/editor.h>
 #include <game/editor/editor_ui.h>
 

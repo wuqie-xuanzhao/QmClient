@@ -5074,7 +5074,7 @@ polish = "Skórka zwierzaka:"
 [[message]]
 key = "Ping"
 [message.translations]
-simplified_chinese = "Ping"
+simplified_chinese = "延迟"
 traditional_chinese = "Ping"
 japanese = "Ping"
 korean = "Ping"

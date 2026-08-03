@@ -109,7 +109,8 @@ namespace ui_widget
 
 		DrawRoundedSurface(Ctx, Rect, BgColor, BgColor, ui_token::radius::BASE);
 		const SQmIconStyle IconStyle = ConfiguredIconStyle();
-		const EQmIconState IconState = Disabled ? EQmIconState::DISABLED : (Pressed ? EQmIconState::ACTIVE : HoverPrev ? EQmIconState::HOVER : EQmIconState::NORMAL);
+		const EQmIconState IconState = Disabled ? EQmIconState::DISABLED : (Pressed ? EQmIconState::ACTIVE : HoverPrev ? EQmIconState::HOVER :
+																 EQmIconState::NORMAL);
 		RenderQmGlyphIcon(Ctx, Rect, pIcon, IconStyle.Color(IconState));
 		const int Result = Disabled ? 0 : Ctx.m_pUi->DoButtonLogic(pBtn, 0, &Rect, BUTTONFLAG_LEFT);
 		return Result != 0;
@@ -140,7 +141,8 @@ namespace ui_widget
 		IconRect.h = IconSide;
 		IconRect.x = Rect.x + (Rect.w - IconSide) * 0.5f;
 		IconRect.y = Rect.y + (Rect.h - IconSide) * 0.5f;
-		const EQmIconState IconState = Disabled ? EQmIconState::DISABLED : (Pressed ? EQmIconState::ACTIVE : HoverPrev ? EQmIconState::HOVER : EQmIconState::NORMAL);
+		const EQmIconState IconState = Disabled ? EQmIconState::DISABLED : (Pressed ? EQmIconState::ACTIVE : HoverPrev ? EQmIconState::HOVER :
+																 EQmIconState::NORMAL);
 		const SQmIconStyle IconStyle = ConfiguredIconStyle();
 		if(Ctx.m_pIconManager == nullptr || !Ctx.m_pIconManager->RenderIcon(Icon, IconRect, IconState, IconStyle))
 		{
