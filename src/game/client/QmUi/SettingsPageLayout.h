@@ -323,6 +323,11 @@ inline float ResolveSettingsTeeQueuePresetHeight(const SSettingsContentMetrics &
 	return Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight + std::max(1, VisiblePresetRows) * Metrics.m_ListRowHeight;
 }
 
+inline int ResolveSettingsTeeVisiblePresetRows(const int PresetCount)
+{
+	return std::clamp(PresetCount, 2, 5);
+}
+
 inline float ResolveSettingsTeeQueuePanelHeight(const SSettingsContentMetrics &Metrics, const int VisibleQueueRows = 2, const int VisiblePresetRows = 8)
 {
 	const float OuterPadding = Metrics.m_LineSpacing * 2.0f;

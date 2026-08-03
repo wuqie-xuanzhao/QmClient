@@ -378,6 +378,9 @@ namespace
 		const float FixedChromeHeight = Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight;
 		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics), FixedChromeHeight + Metrics.m_ListRowHeight * 8.0f);
 		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 6), FixedChromeHeight + Metrics.m_ListRowHeight * 6.0f);
+		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(0), 2);
+		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(3), 3);
+		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(12), 5);
 		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePanelHeight(Metrics), 440.0f);
 	}
 
@@ -2508,6 +2511,19 @@ TEST(UiV2ScrollPolicy, ListBoxExplicitScrollbarMetricsOverridePolicyDefaults)
 	EXPECT_NEAR(QmListBoxScrollbarMetric(20.0f, 15.0f, true), 15.0f, 0.001f);
 }
 
+TEST(UiV2ScrollPolicy, ListBoxInitialSelectionRequestsOneAnimatedReveal)
+{
+	EXPECT_TRUE(QmListBoxShouldScrollToInitialSelection(true, 4));
+	EXPECT_FALSE(QmListBoxShouldScrollToInitialSelection(true, -1));
+	EXPECT_FALSE(QmListBoxShouldScrollToInitialSelection(false, 4));
+	EXPECT_TRUE(QmListBoxInitialScrollRemainsPending(true, -1));
+	EXPECT_FALSE(QmListBoxInitialScrollRemainsPending(true, 4));
+	EXPECT_FALSE(QmListBoxInitialScrollRemainsPending(false, -1));
+	EXPECT_FALSE(QmListBoxShouldRearmInitialScroll(0, 10));
+	EXPECT_FALSE(QmListBoxShouldRearmInitialScroll(10, 11));
+	EXPECT_TRUE(QmListBoxShouldRearmInitialScroll(10, 12));
+}
+
 TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
 {
 	SQmScrollRequest Settings;
@@ -3138,6 +3154,23 @@ TEST(UiV2ScrollState, DeferredProgrammaticTargetUsesFinalContentMetrics)
 	EXPECT_TRUE(State.Animating());
 	State.Advance(0.5f, FinalMetrics, Config);
 	EXPECT_NEAR(State.Offset(), FinalMetrics.MaxOffset(), 1e-6f);
+}
+
+TEST(UiV2ScrollState, UserWheelSupersedesDeferredProgrammaticTarget)
+{
+	SQmScrollMetrics Metrics;
+	Metrics.m_ViewportSize = 100.0f;
+	Metrics.m_ContentSize = 600.0f;
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+
+	CQmScrollState State;
+	State.SetOffset(100.0f, Metrics, Config);
+	State.RequestScrollTo(400.0f);
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	State.Advance(0.0f, Metrics, Config);
+
+	State.Advance(0.5f, Metrics, Config);
+	EXPECT_NEAR(State.Offset(), 100.0f + Config.m_WheelScale, 1e-6f);
 }
 
 TEST(UiV2ScrollState, NonScrollableResetPreservesActiveThumbGrabUntilRelease)

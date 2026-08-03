@@ -8,6 +8,7 @@
 #include <engine/config.h>
 #include <engine/shared/config.h>
 
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
 
@@ -33,19 +34,23 @@ void CListBox::Reset()
 	m_HasHeader = false;
 	m_Active = true;
 	m_HideScrollbar = false;
+	m_InitialScrollPending = true;
+	m_LastRenderFrame = 0;
+	m_BackgroundCorners = IGraphics::CORNER_ALL;
 	m_SelectedItemActiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
 	m_SelectedItemInactiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
 	m_HoveredItemColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
 }
 
-void CListBox::DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing)
+void CListBox::DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing, int BackgroundCorners)
 {
 	CUIRect View = *pRect;
 	CUIRect Header;
+	m_BackgroundCorners = BackgroundCorners;
 
 	// background
 	View.HSplitTop(HeaderHeight + Spacing, &Header, nullptr);
-	Header.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), m_BackgroundCorners & IGraphics::CORNER_T, 5.0f);
+	DrawRoundedSurface(Ui(), Header, Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), ColorRGBA(), 5.0f, 0.0f, m_BackgroundCorners & IGraphics::CORNER_T);
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
@@ -67,6 +72,11 @@ void CListBox::DoSpacing(float Spacing)
 
 void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect, bool Background, int BackgroundCorners)
 {
+	const uint64_t CurrentFrame = Ui()->Client()->PerfFrame();
+	if(QmListBoxShouldRearmInitialScroll(m_LastRenderFrame, CurrentFrame))
+		m_InitialScrollPending = true;
+	m_LastRenderFrame = CurrentFrame;
+
 	CUIRect View;
 	if(pRect)
 		View = *pRect;
@@ -76,7 +86,7 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	// background
 	m_BackgroundCorners = BackgroundCorners;
 	if(Background)
-		View.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), m_BackgroundCorners & (m_HasHeader ? IGraphics::CORNER_B : IGraphics::CORNER_ALL), 5.0f);
+		DrawRoundedSurface(Ui(), View, Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), ColorRGBA(), 5.0f, 0.0f, m_BackgroundCorners & (m_HasHeader ? IGraphics::CORNER_B : IGraphics::CORNER_ALL));
 
 	// setup the variables
 	m_ListBoxView = View;
@@ -90,6 +100,11 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	m_ListBoxItemsPerRow = ItemsPerRow;
 	m_ListBoxItemActivated = false;
 	m_ListBoxItemSelected = false;
+	if(QmListBoxShouldScrollToInitialSelection(m_InitialScrollPending, SelectedIndex))
+	{
+		m_ListBoxUpdateScroll = true;
+	}
+	m_InitialScrollPending = QmListBoxInitialScrollRemainsPending(m_InitialScrollPending, SelectedIndex);
 
 	// handle input
 	if(m_Active && !Input()->ModifierIsPressed() && !Input()->ShiftIsPressed() && !Input()->AltIsPressed())
@@ -162,6 +177,9 @@ CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRa
 	const int ThisItemIndex = m_ListBoxItemIndex;
 	if(Selected)
 	{
+		if(QmListBoxShouldScrollToInitialSelection(m_InitialScrollPending, ThisItemIndex))
+			m_ListBoxUpdateScroll = true;
+		m_InitialScrollPending = QmListBoxInitialScrollRemainsPending(m_InitialScrollPending, ThisItemIndex);
 		if(m_ListBoxSelectedIndex == m_ListBoxNewSelected)
 			m_ListBoxNewSelected = ThisItemIndex;
 		m_ListBoxSelectedIndex = ThisItemIndex;
@@ -188,11 +206,11 @@ CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRa
 			}
 		}
 
-		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(m_Active ? m_SelectedItemActiveColor : m_SelectedItemInactiveColor), IGraphics::CORNER_ALL, CornerRadius);
+		DrawRoundedSurface(Ui(), Item.m_Rect, Ui()->ScaleBackgroundAlpha(m_Active ? m_SelectedItemActiveColor : m_SelectedItemInactiveColor), ColorRGBA(), CornerRadius);
 	}
 	if(Ui()->HotItem() == pId && !m_ScrollRegion.Animating())
 	{
-		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(m_HoveredItemColor), IGraphics::CORNER_ALL, CornerRadius);
+		DrawRoundedSurface(Ui(), Item.m_Rect, Ui()->ScaleBackgroundAlpha(m_HoveredItemColor), ColorRGBA(), CornerRadius);
 	}
 
 	return Item;
@@ -241,7 +259,7 @@ CListboxItem CListBox::DoCustomRow(float Height, bool ScrollHere)
 CListboxItem CListBox::DoSubheader()
 {
 	CListboxItem Item = DoNextRow();
-	Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.2f)), IGraphics::CORNER_NONE, 0.0f);
+	DrawRoundedSurface(Ui(), Item.m_Rect, Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.2f)), ColorRGBA(), 0.0f, 0.0f, IGraphics::CORNER_NONE);
 	return Item;
 }
 
@@ -251,6 +269,8 @@ int CListBox::DoEnd()
 	m_Active |= m_ScrollRegion.Active();
 
 	m_ScrollbarShown = m_ScrollRegion.ScrollbarShown();
+	if(m_ListBoxItemSelected || m_ScrollRegion.WheelConsumedThisFrame() || m_ScrollRegion.Active())
+		m_InitialScrollPending = false;
 	if(m_ListBoxNewSelOffset != 0 && m_ListBoxNumItems > 0 && m_ListBoxSelectedIndex == m_ListBoxNewSelected)
 	{
 		if(m_ListBoxNewSelected == -1)

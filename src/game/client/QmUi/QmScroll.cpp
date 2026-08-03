@@ -232,6 +232,7 @@ void CQmScrollState::ResetForNonScrollableContent(bool PreserveThumbDrag)
 
 void CQmScrollState::ScrollTo(float TargetOffset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config)
 {
+	m_HasPendingScrollTarget = false;
 	const float MaxOffset = Metrics.MaxOffset();
 	if(MaxOffset <= 0.0f)
 	{
@@ -263,6 +264,7 @@ void CQmScrollState::RequestScrollTo(float TargetOffset)
 
 void CQmScrollState::SetOffset(float Offset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config, bool AllowOverscroll)
 {
+	m_HasPendingScrollTarget = false;
 	const float MaxOffset = Metrics.MaxOffset();
 	if(MaxOffset <= 0.0f)
 	{
@@ -283,6 +285,7 @@ void CQmScrollState::SetOffset(float Offset, const SQmScrollMetrics &Metrics, co
 
 void CQmScrollState::AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config)
 {
+	m_HasPendingScrollTarget = false;
 	const float MaxOffset = Metrics.MaxOffset();
 	if(MaxOffset <= 0.0f)
 	{

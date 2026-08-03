@@ -24,13 +24,13 @@ float CornerRadius(vec2 Point, vec4 CornerRadii)
 
 float SdfFeather(float DistanceValue, float PixelSize)
 {
-	return max(PixelSize, fwidth(DistanceValue));
+	return max(PixelSize, length(vec2(dFdx(DistanceValue), dFdy(DistanceValue))));
 }
 
 float Coverage(float DistanceValue, float PixelSize)
 {
 	float Feather = SdfFeather(DistanceValue, PixelSize);
-	return clamp(0.5 - DistanceValue / Feather, 0.0, 1.0);
+	return 1.0 - smoothstep(-Feather * 0.5, Feather * 0.5, DistanceValue);
 }
 
 void main()

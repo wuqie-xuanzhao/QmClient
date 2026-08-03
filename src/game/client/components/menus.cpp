@@ -2600,7 +2600,7 @@ void CMenus::RenderLoading(const char *pCaption, const char *pContent, int Incre
 		return;
 
 	// need up date this here to get correct
-	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiColor));
+	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColor, true));
 
 	Ui()->MapScreen();
 
@@ -4639,6 +4639,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, const SSettingsContentMetric
 	auto &MenuBackground = GameClient()->m_MenuBackground;
 	const SSettingsContentMetrics Metrics = pMetrics != nullptr ? *pMetrics : ResolveSettingsContentMetrics(MainView.w);
 	s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+	s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 	s_ListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 
 	const float HeaderHeight = Metrics.m_LineHeight;
@@ -4655,7 +4656,10 @@ void CMenus::RenderThemeSelection(CUIRect MainView, const SSettingsContentMetric
 	HeaderRow.VSplitRight(80.0f * Metrics.m_UiScale, nullptr, &RefreshButton);
 	RefreshButton.VMargin(Metrics.m_LineSpacing * 0.5f, &RefreshButton);
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), nullptr, Metrics.m_BodySize))
+	{
 		MenuBackground.RefreshThemes();
+		s_ListBox.ResetScroll();
+	}
 
 	const std::vector<CTheme> &vThemes = MenuBackground.GetThemes();
 
@@ -6852,7 +6856,7 @@ void CMenus::OnRender()
 
 void CMenus::UpdateColors()
 {
-	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiColor));
+	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColor, true));
 
 	ms_ColorTabbarInactiveOutgame = MenuUiColorSurface(0.45f, 0.16f);
 	ms_ColorTabbarActiveOutgame = MenuUiColorSurface(0.70f, 0.16f);

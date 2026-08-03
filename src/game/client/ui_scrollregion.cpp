@@ -10,6 +10,8 @@
 #include <engine/keys.h>
 #include <engine/shared/config.h>
 
+#include <game/client/QmUi/UiSurface.h>
+
 #include <cmath>
 
 CScrollRegion::CScrollRegion()
@@ -254,18 +256,18 @@ void CScrollRegion::DrawBackground(const CUIRect &ScrollbarBg)
 		if(m_Params.m_ScrollbarBgColor.a > 0.0f)
 		{
 			int Corners = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_B : IGraphics::CORNER_R;
-			ScrollbarBg.Draw(m_Params.m_ScrollbarBgColor, Corners, 4.0f);
+			DrawRoundedSurface(Ui(), ScrollbarBg, m_Params.m_ScrollbarBgColor, ColorRGBA(), 4.0f, 0.0f, Corners);
 		}
 		if(m_Params.m_RailBgColor.a > 0.0f)
 		{
 			float Rounding = m_Params.m_ScrollHorizontal ? m_RailRect.h / 2.0f : m_RailRect.w / 2.0f;
-			m_RailRect.Draw(m_Params.m_RailBgColor, IGraphics::CORNER_ALL, Rounding);
+			DrawRoundedSurface(Ui(), m_RailRect, m_Params.m_RailBgColor, ColorRGBA(), Rounding);
 		}
 	}
 	if(m_Params.m_ClipBgColor.a > 0.0f)
 	{
 		int CornersPartial = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_T : IGraphics::CORNER_L;
-		m_ClipRect.Draw(m_Params.m_ClipBgColor, ScrollbarShown() ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
+		DrawRoundedSurface(Ui(), m_ClipRect, m_Params.m_ClipBgColor, ColorRGBA(), 4.0f, 0.0f, ScrollbarShown() ? CornersPartial : IGraphics::CORNER_ALL);
 	}
 }
 
@@ -370,7 +372,7 @@ void CScrollRegion::DoSlider()
 		MaintainNoScrollSliderActive();
 		const bool Active = Ui()->IsActiveItem(pId);
 		const float Rounding = m_Params.m_ScrollHorizontal ? Slider.h / 2.0f : Slider.w / 2.0f;
-		Slider.Draw(m_Params.SliderColor(Active, Ui()->HotItem() == pId), IGraphics::CORNER_ALL, Rounding);
+		DrawRoundedSurface(Ui(), Slider, m_Params.SliderColor(Active, Ui()->HotItem() == pId), ColorRGBA(), Rounding);
 		return;
 	}
 
@@ -394,5 +396,5 @@ void CScrollRegion::DoSlider()
 	}
 
 	const float Rounding = m_Params.m_ScrollHorizontal ? Slider.h / 2.0f : Slider.w / 2.0f;
-	Slider.Draw(m_Params.SliderColor(Ui()->CheckActiveItem(pId), Ui()->HotItem() == pId), IGraphics::CORNER_ALL, Rounding);
+	DrawRoundedSurface(Ui(), Slider, m_Params.SliderColor(Ui()->CheckActiveItem(pId), Ui()->HotItem() == pId), ColorRGBA(), Rounding);
 }

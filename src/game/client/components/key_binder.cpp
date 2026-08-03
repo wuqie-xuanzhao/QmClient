@@ -4,6 +4,7 @@
 
 #include <base/color.h>
 
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/components/binds.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
@@ -39,11 +40,14 @@ CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderBu
 	CUIRect KeyReaderButton, ClearButton;
 	pRect->VSplitRight(pRect->h, &KeyReaderButton, &ClearButton);
 	const ColorRGBA ReaderBaseColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * Ui()->ButtonColorMul(pReaderButton));
-	pRect->Draw(ReaderBaseColor, IGraphics::CORNER_ALL, 5.0f);
+	DrawRoundedSurface(Ui(), *pRect, ReaderBaseColor, ColorRGBA(), 5.0f);
 
 	const int ClearChecked = Result.m_Bind == CBindSlot(KEY_UNKNOWN, KeyModifier::NONE) ? 1 : 0;
-	const float ClearSurfaceAlpha = (ClearChecked != 0 ? 0.10f : 0.5f) * Ui()->ButtonColorMul(pClearButton);
-	ClearButton.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, ClearSurfaceAlpha), IGraphics::CORNER_R, 5.0f);
+	if(ClearChecked == 0)
+	{
+		const float ClearSurfaceAlpha = 0.22f * Ui()->ButtonColorMul(pClearButton);
+		DrawRoundedSurface(Ui(), ClearButton, ColorRGBA(1.0f, 1.0f, 1.0f, ClearSurfaceAlpha), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_R);
+	}
 	const int ClearButtonResult = Ui()->DoButton_FontIcon(
 		pClearButton, FONT_ICON_TRASH,
 		ClearChecked, &ClearButton, BUTTONFLAG_LEFT, IGraphics::CORNER_R, true, ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
@@ -90,7 +94,7 @@ CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderBu
 	}
 
 	if(m_pKeyReaderId == pReaderButton && m_TakeKey)
-		KeyReaderButton.Draw(ColorRGBA(0.0f, 1.0f, 0.0f, 0.4f), IGraphics::CORNER_L, 5.0f);
+		DrawRoundedSurface(Ui(), KeyReaderButton, ColorRGBA(0.0f, 1.0f, 0.0f, 0.4f), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_L);
 	CUIRect Label;
 	KeyReaderButton.HMargin(1.0f, &Label);
 	Ui()->DoLabel(&Label, aBuf, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);

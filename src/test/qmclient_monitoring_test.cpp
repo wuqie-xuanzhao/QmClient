@@ -3356,7 +3356,7 @@ TEST(QmMonitoringHelpers, AssetsCardPreviewHeavyPathLeavesDrawLoop)
 	EXPECT_NE(Body.find("EnsureAssetsCardPreviewArtifact("), std::string::npos);
 	EXPECT_NE(Body.find("RenderAssetsCardPreview("), std::string::npos);
 	EXPECT_NE(Source.find("auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell)"), std::string::npos);
-	EXPECT_NE(Source.find("ShellRect.Draw(ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawRoundedSurface(Ui(), ShellRect, ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), ColorRGBA(), AssetCardRadius);"), std::string::npos);
 	const size_t ShellStart = Source.find("auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell)");
 	ASSERT_NE(ShellStart, std::string::npos);
 	const size_t ShellEnd = Source.find("};", ShellStart);
@@ -3600,7 +3600,8 @@ TEST(QmMonitoringHelpers, AssetsLocalEntityBgStartsPreviewPipelineAndKeepsFallba
 	EXPECT_NE(LocalBody.find("SettingsResourcePreviewDrawResult("), std::string::npos);
 	EXPECT_NE(LocalBody.find("StartAssetsEntityBgPreviewArtifactJob("), std::string::npos);
 	EXPECT_NE(LocalBody.find("RenderAssetsCardPreview(Shell, PreviewState"), std::string::npos);
-	EXPECT_NE(LocalBody.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !AssetsContentWarmupBlocked)"), std::string::npos);
+	EXPECT_NE(LocalBody.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady)"), std::string::npos);
+	EXPECT_EQ(LocalBody.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !AssetsContentWarmupBlocked)"), std::string::npos);
 	EXPECT_NE(LocalBody.find("RenderEntityBgFallback(Shell.m_TextureRect)"), std::string::npos);
 	EXPECT_NE(LocalBody.find("RenderEntityBgVideoFallback(Shell.m_TextureRect)"), std::string::npos);
 }
@@ -4212,10 +4213,10 @@ TEST(QmMonitoringHelpers, TeeSkinQueueDragShowsDropLineAndGhostRow)
 	EXPECT_NE(Body.find("static CUIRect s_QueueDraggedRect;"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect QueueDropLine;"), std::string::npos);
 	EXPECT_NE(Body.find("HasQueueDropLine = true;"), std::string::npos);
-	EXPECT_NE(Body.find("QueueDropLine.Draw(ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), IGraphics::CORNER_ALL, 1.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("DrawRoundedSurface(Ui(), QueueDropLine, ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), ColorRGBA(), 1.0f);"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect QueueDragGhost = s_QueueDraggedRect;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueDragGhost.x = Ui()->MouseX() - s_QueueDragGrabOffset.x;"), std::string::npos);
-	EXPECT_NE(Body.find("QueueDragGhost.Draw(ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), IGraphics::CORNER_ALL, 4.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("DrawRoundedSurface(Ui(), QueueDragGhost, ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), ColorRGBA(), 4.0f);"), std::string::npos);
 	EXPECT_NE(Body.find("QueueDragGhostLabel"), std::string::npos);
 	EXPECT_NE(Body.find("s_QueueDragGrabOffset = Ui()->MousePos() - vec2(Item.m_Rect.x, Item.m_Rect.y);"), std::string::npos);
 }
@@ -5414,8 +5415,8 @@ TEST(QmMonitoringHelpers, AssetsCardDrawLoopDoesNotRunHeavyPreview)
 	const size_t RenderLoop = Source.find("s_WorkshopAssetsListBox.SkipItems", VideoFallback);
 	ASSERT_NE(RenderLoop, std::string::npos);
 	const std::string FallbackBody = Source.substr(MapFallback, RenderLoop - MapFallback);
-	EXPECT_NE(FallbackBody.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
-	EXPECT_EQ(FallbackBody.find("Ui()->DoLabel(&LabelRect"), std::string::npos);
+	EXPECT_EQ(FallbackBody.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
+	EXPECT_NE(FallbackBody.find("Ui()->DoLabel(&LabelRect"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, AssetsCardDrawLoopDoesNotRunPreviewOrTextLayout)
@@ -5932,6 +5933,10 @@ TEST(QmMonitoringHelpers, AssetsEntityBgFallbackTextIsCenteredTodo)
 	EXPECT_NE(FallbackBody.find("Localize(\"Map Preview TODO\")"), std::string::npos);
 	EXPECT_NE(FallbackBody.find("TEXTALIGN_MC"), std::string::npos);
 	EXPECT_NE(FallbackBody.find("LabelRect = FallbackRect;"), std::string::npos);
+	EXPECT_NE(FallbackBody.find("Ui()->DoLabel(&LabelRect"), std::string::npos);
+	EXPECT_EQ(FallbackBody.find("DoMenuLabelStreamed"), std::string::npos);
+	EXPECT_NE(Source.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady)"), std::string::npos);
+	EXPECT_NE(Source.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !PreviewState.m_DrawFolderIcon)"), std::string::npos);
 	EXPECT_EQ(FallbackBody.find("Localize(\"Map Preview\")"), std::string::npos);
 }
 
@@ -9379,6 +9384,11 @@ TEST(QmMonitoringHelpers, ListBoxResolvesMenuScrollPolicyFromRowSemantics)
 	EXPECT_NE(DoStartBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);"), std::string::npos);
 	EXPECT_NE(DoStartBody.find("QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarThickness, m_ScrollbarWidth, m_ScrollbarWidthOverridden)"), std::string::npos);
 	EXPECT_NE(DoStartBody.find("ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;"), std::string::npos);
+	EXPECT_NE(Header.find("bool m_InitialScrollPending;"), std::string::npos);
+	EXPECT_NE(Header.find("QmListBoxShouldScrollToInitialSelection"), std::string::npos);
+	EXPECT_NE(Header.find("QmListBoxInitialScrollRemainsPending"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("if(QmListBoxShouldScrollToInitialSelection"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("m_InitialScrollPending = QmListBoxInitialScrollRemainsPending"), std::string::npos);
 	EXPECT_EQ(DoStartBody.find("m_ScrollbarThickness = ScrollbarWidthMax()"), std::string::npos);
 	EXPECT_EQ(DoStartBody.find("m_ScrollbarMargin = ScrollbarMargin()"), std::string::npos);
 	EXPECT_EQ(DoStartBody.find("m_ForceShowScrollbar = ForceShowScrollbar"), std::string::npos);

@@ -27,6 +27,7 @@
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
@@ -1948,7 +1949,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		{
 			CUIRect QueueSection = QueuePanel;
-			QueueSection.Draw(ui_token::color::SURFACE_OVERLAY, IGraphics::CORNER_ALL, ui_token::radius::CARD);
+			DrawRoundedSurface(Ui(), QueueSection, ui_token::color::SURFACE_OVERLAY, ColorRGBA(), ui_token::radius::CARD);
 			QueueSection.Margin(TeeMetrics.m_LineSpacing, &QueueSection);
 			CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
 			QueueSection.HSplitTop(TeeMetrics.m_LineHeight, &QueueHeader, &QueueSection);
@@ -2023,12 +2024,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInputGroup, QueueIntervalOptions);
 
 			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
-			const float QueuePresetHeight = minimum(QueueSection.h, ResolveSettingsTeeQueuePresetHeight(TeeMetrics));
+			const int VisiblePresetRows = ResolveSettingsTeeVisiblePresetRows((int)vQueuePresets.size());
+			const float QueuePresetHeight = minimum(QueueSection.h, ResolveSettingsTeeQueuePresetHeight(TeeMetrics, VisiblePresetRows));
 			QueueSection.HSplitBottom(QueuePresetHeight, &QueueList, &QueuePresets);
-			QueueList.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), IGraphics::CORNER_ALL, 4.0f);
+			DrawRoundedSurface(Ui(), QueueList, ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), ColorRGBA(), 4.0f);
 			QueueList.Margin(TeeMetrics.m_LineSpacing, &QueueList);
 			QueuePresets.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueuePresets);
-			QueuePresets.Draw(ColorRGBA(0.35f, 0.55f, 0.85f, 0.09f), IGraphics::CORNER_ALL, 4.0f);
+			DrawRoundedSurface(Ui(), QueuePresets, ColorRGBA(0.35f, 0.55f, 0.85f, 0.09f), ColorRGBA(), 4.0f);
 			QueuePresets.Margin(TeeMetrics.m_LineSpacing, &QueuePresets);
 
 			CUIRect QueueListHeader, QueueListBody;
@@ -2108,11 +2110,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 					if((int)i == QueueIndex)
 					{
-						Item.m_Rect.Draw(ColorRGBA(0.2f, 0.6f, 0.3f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+						DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(0.2f, 0.6f, 0.3f, 0.2f), ColorRGBA(), 3.0f);
 					}
 					else if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
 					{
-						Item.m_Rect.Draw(ColorRGBA(0.4f, 0.4f, 1.0f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+						DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(0.4f, 0.4f, 1.0f, 0.2f), ColorRGBA(), 3.0f);
 					}
 					if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
 					{
@@ -2190,7 +2192,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				}
 				if(s_QueueDragging && HasQueueDropLine)
 				{
-					QueueDropLine.Draw(ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), IGraphics::CORNER_ALL, 1.0f);
+					DrawRoundedSurface(Ui(), QueueDropLine, ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), ColorRGBA(), 1.0f);
 				}
 				if(s_QueueDragging && s_QueueDragIndex >= 0 && s_QueueDragIndex < (int)SkinQueue.size())
 				{
@@ -2200,8 +2202,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					CUIRect QueueDragGhostShadow = QueueDragGhost;
 					QueueDragGhostShadow.x += 1.5f;
 					QueueDragGhostShadow.y += 2.0f;
-					QueueDragGhostShadow.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.38f), IGraphics::CORNER_ALL, 4.0f);
-					QueueDragGhost.Draw(ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), IGraphics::CORNER_ALL, 4.0f);
+					DrawRoundedSurface(Ui(), QueueDragGhostShadow, ColorRGBA(0.0f, 0.0f, 0.0f, 0.38f), ColorRGBA(), 4.0f);
+					DrawRoundedSurface(Ui(), QueueDragGhost, ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), ColorRGBA(), 4.0f);
 					CUIRect QueueDragGhostLabel = QueueDragGhost;
 					QueueDragGhostLabel.VMargin(8.0f, &QueueDragGhostLabel);
 					char aGhostLabel[64];
@@ -2249,7 +2251,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 			if(QueuePresets.h > 0.0f)
 			{
-				QueuePresets.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f), IGraphics::CORNER_ALL, 4.0f);
+				DrawRoundedSurface(Ui(), QueuePresets, ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f), ColorRGBA(), 4.0f);
 				CUIRect PresetHeader, PresetControls, PresetList;
 				QueuePresets.HSplitTop(TeeMetrics.m_LineHeight, &PresetHeader, &QueuePresets);
 				char aPresetLabel[64];
@@ -2330,11 +2332,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 						if(ActivePresetIndex == (int)i)
 						{
-							Item.m_Rect.Draw(ColorRGBA(0.25f, 0.6f, 0.35f, 0.22f), IGraphics::CORNER_ALL, 3.0f);
+							DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(0.25f, 0.6f, 0.35f, 0.22f), ColorRGBA(), 3.0f);
 						}
 						else if(Ui()->HotItem() == &s_vPresetItemIds[i])
 						{
-							Item.m_Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 3.0f);
+							DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), ColorRGBA(), 3.0f);
 						}
 						char aEntryLabel[96];
 						if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
@@ -5143,7 +5145,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 				Client()->ViewFile(aBuf);
 			}
 
-			ListRow.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f), IGraphics::CORNER_ALL, 6.0f);
+			DrawRoundedSurface(Ui(), ListRow, ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f), ColorRGBA(), 6.0f);
 			ListRow.Margin(6.0f, &ListRow);
 
 			const int OldSelectedPack = SelectedPack;
@@ -5179,7 +5181,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 				char aBadge[32];
 				str_format(aBadge, sizeof(aBadge), "%d", Entry.m_FileCount);
-				BadgeRect.Draw(SelectedPack == (int)i ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 4.0f);
+				DrawRoundedSurface(Ui(), BadgeRect, SelectedPack == (int)i ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), ColorRGBA(), 4.0f);
 
 				Ui()->DoLabel(&NameRect, aLabel, BodySize, TEXTALIGN_ML);
 				Ui()->DoLabel(&BadgeRect, aBadge, BadgeFontSize, TEXTALIGN_MC);
@@ -5394,9 +5396,9 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView, const SSettingsContentMet
 		}
 
 		if(Selected)
-			ItemRect.Draw(Ui()->ScaleBackgroundAlpha(ui_token::color::LIST_ITEM_SELECTED), IGraphics::CORNER_ALL, 5.0f);
+			DrawRoundedSurface(Ui(), ItemRect, Ui()->ScaleBackgroundAlpha(ui_token::color::LIST_ITEM_SELECTED), ColorRGBA(), 5.0f);
 		if(Ui()->HotItem() == pRowId)
-			ItemRect.Draw(Ui()->ScaleBackgroundAlpha(ui_token::color::LIST_ITEM_HOVER), IGraphics::CORNER_ALL, 5.0f);
+			DrawRoundedSurface(Ui(), ItemRect, Ui()->ScaleBackgroundAlpha(ui_token::color::LIST_ITEM_HOVER), ColorRGBA(), 5.0f);
 
 		CUIRect FlagRect, Label;
 		ItemRect.VSplitLeft(ItemRect.h * 2.0f, &FlagRect, &Label);

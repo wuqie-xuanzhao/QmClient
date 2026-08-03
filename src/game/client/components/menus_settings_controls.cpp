@@ -16,6 +16,7 @@
 #include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/key_binder.h>
@@ -617,7 +618,7 @@ void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect
 		{
 			continue;
 		}
-		KeyReaders.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(Ui(), KeyReaders, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), ColorRGBA(), 5.0f);
 		KeyReaders.Margin(2.0f, &KeyReaders);
 
 		CUIRect Label, AddButton;
@@ -806,7 +807,7 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View, bool ReadOnly)
 		View.h = minimum(View.h, ResolveSettingsControllerAxisPickerHeight(Input()->GetActiveJoystick()->GetNumAxes(), NUM_JOYSTICK_AXES, BUTTON_HEIGHT, BUTTON_SPACING));
 		if(ReadOnly || m_SettingsScrollRegion.AddRect(View))
 		{
-			View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);
+			DrawRoundedSurface(Ui(), View, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), ColorRGBA(), 5.0f);
 			RenderJoystickAxisPicker(View, ReadOnly);
 		}
 	}
@@ -847,7 +848,7 @@ void CMenusSettingsControls::RenderJoystickAxisPicker(CUIRect View, bool ReadOnl
 		{
 			continue;
 		}
-		Row.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(Ui(), Row, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), ColorRGBA(), 5.0f);
 		Row.VSplitLeft(AxisWidth, &Axis, &Row);
 		Row.VSplitLeft(SpacingV, nullptr, &Row);
 		Row.VSplitLeft(StatusWidth, &Status, &Row);

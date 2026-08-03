@@ -5,9 +5,26 @@
 
 #include "ui_scrollregion.h"
 
+#include <cstdint>
+
 constexpr float QmListBoxScrollbarMetric(float PolicyValue, float CurrentValue, bool Overridden)
 {
 	return Overridden ? CurrentValue : PolicyValue;
+}
+
+constexpr bool QmListBoxShouldScrollToInitialSelection(bool InitialScrollPending, int SelectedIndex)
+{
+	return InitialScrollPending && SelectedIndex >= 0;
+}
+
+constexpr bool QmListBoxInitialScrollRemainsPending(bool InitialScrollPending, int SelectedIndex)
+{
+	return InitialScrollPending && SelectedIndex < 0;
+}
+
+constexpr bool QmListBoxShouldRearmInitialScroll(uint64_t LastRenderFrame, uint64_t CurrentFrame)
+{
+	return LastRenderFrame != 0 && CurrentFrame > LastRenderFrame && CurrentFrame - LastRenderFrame > 1;
 }
 
 struct CListboxItem
@@ -46,6 +63,8 @@ private:
 	bool m_HasHeader;
 	bool m_Active;
 	bool m_HideScrollbar;
+	bool m_InitialScrollPending;
+	uint64_t m_LastRenderFrame;
 	ColorRGBA m_SelectedItemActiveColor;
 	ColorRGBA m_SelectedItemInactiveColor;
 	ColorRGBA m_HoveredItemColor;
@@ -57,7 +76,7 @@ public:
 	CListBox();
 	void Reset();
 
-	void DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight = 20.0f, float Spacing = 2.0f);
+	void DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight = 20.0f, float Spacing = 2.0f, int BackgroundCorners = IGraphics::CORNER_ALL);
 	void DoAutoSpacing(float Spacing = 20.0f) { m_AutoSpacing = Spacing; }
 	void DoSpacing(float Spacing = 20.0f);
 	void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect = nullptr, bool Background = true, int BackgroundCorners = IGraphics::CORNER_ALL);
@@ -70,7 +89,11 @@ public:
 	void SkipItems(int Count);
 	CListboxItem DoNextItem(const void *pId, bool Selected = false, float CornerRadius = 5.0f);
 	CListboxItem DoCustomRow(float Height, bool ScrollHere = false);
-	void ResetScroll() { m_ScrollRegion.Reset(); }
+	void ResetScroll()
+	{
+		m_ScrollRegion.Reset();
+		m_InitialScrollPending = true;
+	}
 	CListboxItem DoSubheader();
 	int DoEnd();
 

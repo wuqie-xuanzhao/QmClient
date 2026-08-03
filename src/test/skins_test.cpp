@@ -1944,7 +1944,8 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", aQueueLabel"), std::string::npos);
 	EXPECT_EQ(Menus.find("Localize(\"Enable skin queue\"), QueueEnabled"), std::string::npos);
 	EXPECT_EQ(Menus.find("CUIRect QueueEnabledRect"), std::string::npos);
-	EXPECT_NE(Menus.find("const float QueuePresetHeight = minimum(QueueSection.h, ResolveSettingsTeeQueuePresetHeight(TeeMetrics));"), std::string::npos);
+	EXPECT_NE(Menus.find("const int VisiblePresetRows = ResolveSettingsTeeVisiblePresetRows((int)vQueuePresets.size());"), std::string::npos);
+	EXPECT_NE(Menus.find("const float QueuePresetHeight = minimum(QueueSection.h, ResolveSettingsTeeQueuePresetHeight(TeeMetrics, VisiblePresetRows));"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueSection.HSplitBottom(QueuePresetHeight, &QueueList, &QueuePresets);"), std::string::npos);
 	EXPECT_NE(Menus.find("s_PresetListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueList.HSplitTop(TeeMetrics.m_LineHeight, &QueueListHeader"), std::string::npos);
