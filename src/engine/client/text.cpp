@@ -2495,6 +2495,9 @@ public:
 		{
 			if(Graphics()->IsTextBufferingEnabled())
 			{
+				// 先在仍绑定前一批纹理时提交保留顶点。RenderText 自身
+				// 不能补救，因为调用方随后会清空纹理状态。
+				Graphics()->QuadsDrawCurrentVertices(false);
 				Graphics()->TextureClear();
 				// render buffered text
 				Graphics()->RenderText(TextContainer.m_StringInfo.m_QuadBufferContainerIndex, TextContainer.m_StringInfo.m_vCharacterQuads.size(), m_pGlyphMap->TextureDimension(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_FILL).Id(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_OUTLINE).Id(), TextColor, TextOutlineColor);
@@ -2548,6 +2551,7 @@ public:
 		{
 			if(TextContainer.m_HasSelection)
 			{
+				Graphics()->QuadsDrawCurrentVertices(false);
 				Graphics()->TextureClear();
 				Graphics()->SetColor(m_SelectionColor);
 				Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, TextContainer.m_HasCursor ? 2 : 0, -1, 0, 0);
@@ -2560,8 +2564,8 @@ public:
 				const bool RenderCursor = TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms;
 				if(RenderCursor)
 				{
-					// 光标覆盖层不能在未开始绘制 primitive 时直接 FlushVertices：
-					// 那会清空保留的四边形顶点。通过四边形路径提交，保持命令顺序。
+					// 光标 quad-container 会改写或插入独立绘制命令，
+					// 必须先提交此前保留的四边形批次。
 					Graphics()->QuadsDrawCurrentVertices(false);
 					Graphics()->TextureClear();
 					Graphics()->SetColor(TextOutlineColor);

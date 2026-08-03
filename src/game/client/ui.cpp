@@ -908,33 +908,30 @@ EEditState CUi::DoPickerLogic(const void *pId, const CUIRect *pRect, float *pX, 
 	if(RenderOnly())
 		return EEditState::NONE;
 
-	if(MouseHovered(pRect))
+	const bool Inside = MouseHovered(pRect);
+	if(Inside)
 		SetHotItem(pId);
 
-	EEditState Res = EEditState::EDITING;
-
-	if(HotItem() == pId && MouseButtonClicked(0))
+	if(!CheckActiveItem(pId))
 	{
-		SetActiveItem(pId);
-		if(!m_pLastEditingItem)
+		if(Inside && MouseButtonClicked(0))
 		{
-			m_pLastEditingItem = pId;
-			Res = EEditState::START;
+			SetActiveItem(pId);
+		}
+		else
+		{
+			return EEditState::NONE;
 		}
 	}
 
-	if(CheckActiveItem(pId) && !MouseButton(0))
+	EEditState Res = EEditState::EDITING;
+	if(!MouseButton(0))
 	{
 		SetActiveItem(nullptr);
-		if(m_pLastEditingItem == pId)
-		{
-			m_pLastEditingItem = nullptr;
-			Res = EEditState::END;
-		}
+		Res = EEditState::END;
 	}
-
-	if(!CheckActiveItem(pId) && Res == EEditState::EDITING)
-		return EEditState::NONE;
+	else if(MouseButtonClicked(0))
+		Res = EEditState::START;
 
 	if(Input()->ShiftIsPressed())
 		m_MouseSlow = true;

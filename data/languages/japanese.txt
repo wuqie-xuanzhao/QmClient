@@ -4814,6 +4814,12 @@ Hide Settings Tabs
 Hide sponsor QR code
 == スポンサーQRコードを非表示
 
+Hide system message prefix
+== システムメッセージの接頭辞を非表示
+
+Hide the *** prefix before server chat messages
+== サーバーチャットメッセージの前の *** 接頭辞を非表示
+
 Hide toast
 == トーストを隠す
 

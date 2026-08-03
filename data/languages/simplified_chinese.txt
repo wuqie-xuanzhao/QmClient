@@ -4814,6 +4814,12 @@ Hide Settings Tabs
 Hide sponsor QR code
 == 隐藏赞助码
 
+Hide system message prefix
+== 隐藏系统消息前缀
+
+Hide the *** prefix before server chat messages
+== 隐藏服务器聊天消息前的 *** 前缀
+
 Hide toast
 == 隐藏通知
 

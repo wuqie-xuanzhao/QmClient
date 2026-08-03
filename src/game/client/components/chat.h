@@ -464,13 +464,17 @@ public:
 		str_append(pBuf, "\"", BufSize);
 		return true;
 	}
-	static const char *MessageNamePrefixForClientId(int ClientId)
+	static const char *MessageNamePrefixForClientId(int ClientId, bool HideSystemPrefix = true)
 	{
 		if(ClientId == SERVER_MSG)
-			return "";
+			return HideSystemPrefix ? "" : "*** ";
 		if(ClientId == CLIENT_MSG)
 			return "— ";
 		return "";
+	}
+	static const char *SystemMessageNamePrefix(bool HideSystemPrefix = true)
+	{
+		return MessageNamePrefixForClientId(SERVER_MSG, HideSystemPrefix);
 	}
 	static std::vector<SSlashCommandSuggestion> BuildSlashCommandSuggestions(std::string_view Input, size_t MaxSuggestions)
 	{

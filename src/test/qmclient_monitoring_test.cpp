@@ -10101,7 +10101,10 @@ TEST(QmMonitoringHelpers, MenuUiPerfOperationsAreEmittedFromRealListOwners)
 
 TEST(QmMonitoringHelpers, P7AcceptanceDoesNotClaimUnsampledRuntimePercentiles)
 {
-	const std::string Report = ReadRepoFile("docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md");
+	static constexpr const char *pActiveReportPath = "docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md";
+	static constexpr const char *pArchivedReportPath = "docs/superpowers/reports/archive/2026-07-11-settings-ui-p7-acceptance.md";
+	const char *pReportPath = std::filesystem::exists(TestSourcePath(pActiveReportPath)) ? pActiveReportPath : pArchivedReportPath;
+	const std::string Report = ReadRepoFile(pReportPath);
 	EXPECT_NE(Report.find("**P7 automated evidence status:** complete"), std::string::npos);
 	const bool RuntimePending = Report.find("**P7 user runtime acceptance:** pending") != std::string::npos;
 	const bool RuntimeComplete = Report.find("**P7 user runtime acceptance:** complete") != std::string::npos;

@@ -4814,6 +4814,12 @@ Hide Settings Tabs
 Hide sponsor QR code
 == Ukryj kod QR sponsora
 
+Hide system message prefix
+== Ukryj prefiks wiadomości systemowych
+
+Hide the *** prefix before server chat messages
+== Ukryj prefiks *** przed wiadomościami czatu serwera
+
 Hide toast
 == Ukryj toast
 

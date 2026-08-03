@@ -4814,6 +4814,12 @@ Hide Settings Tabs
 Hide sponsor QR code
 == Sponsor QR kodunu gizle
 
+Hide system message prefix
+== Sistem mesajı önekini gizle
+
+Hide the *** prefix before server chat messages
+== Sunucu sohbet mesajlarından önceki *** önekini gizle
+
 Hide toast
 == Toast'ı gizle
 

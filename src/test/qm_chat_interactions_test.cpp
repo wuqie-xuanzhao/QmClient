@@ -825,7 +825,10 @@ TEST(QmChatInteractions, BuildsEscapedSpectateCommand)
 
 TEST(QmChatInteractions, ServerSystemMessagesDoNotUseVisibleStarPrefix)
 {
-	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-1), "");
+	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-1, true), "");
+	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-1, false), "*** ");
+	EXPECT_STREQ(CChat::SystemMessageNamePrefix(true), "");
+	EXPECT_STREQ(CChat::SystemMessageNamePrefix(false), "*** ");
 	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-2), "— ");
 }
 
@@ -836,8 +839,8 @@ TEST(QmChatInteractions, ServerSystemMessagePathsDoNotReintroduceStarPrefix)
 	const std::string AddLine = SourceFunctionBody(Source, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass)");
 
 	EXPECT_EQ(OnMessage.find("*** %s"), std::string::npos);
-	EXPECT_EQ(AddLine.find("\"*** \""), std::string::npos);
-	EXPECT_NE(AddLine.find("MessageNamePrefixForClientId(CurrentLine.m_ClientId)"), std::string::npos);
+	EXPECT_NE(AddLine.find("g_Config.m_QmChatHideSystemPrefix != 0"), std::string::npos);
+	EXPECT_NE(AddLine.find("MessageNamePrefixForClientId(CurrentLine.m_ClientId, g_Config.m_QmChatHideSystemPrefix != 0)"), std::string::npos);
 }
 
 TEST(QmChatInteractions, TranslateButtonSitsBeforeInputAndPopupCanCloseItself)

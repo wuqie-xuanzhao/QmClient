@@ -2343,7 +2343,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 	if(CurrentLine.m_ClientId == SERVER_MSG)
 	{
-		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId));
+		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId, g_Config.m_QmChatHideSystemPrefix != 0));
 	}
 	else if(CurrentLine.m_ClientId == CLIENT_MSG)
 	{

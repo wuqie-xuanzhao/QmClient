@@ -4814,6 +4814,12 @@ Hide Settings Tabs
 Hide sponsor QR code
 == 스폰서 QR 코드 숨기기
 
+Hide system message prefix
+== 시스템 메시지 접두사 숨기기
+
+Hide the *** prefix before server chat messages
+== 서버 채팅 메시지 앞의 *** 접두사 숨기기
+
 Hide toast
 == 알림 숨기기
 

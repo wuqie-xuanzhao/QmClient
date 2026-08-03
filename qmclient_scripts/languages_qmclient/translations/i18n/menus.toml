@@ -7280,6 +7280,38 @@ turkish = "/save şifresi gibi hassas bilgileri gizle"
 polish = "Ukryj poufne informacje, np. hasło /save"
 
 [[message]]
+key = "Hide system message prefix"
+[message.translations]
+simplified_chinese = "隐藏系统消息前缀"
+traditional_chinese = "隱藏系統訊息前綴"
+japanese = "システムメッセージの接頭辞を非表示"
+korean = "시스템 메시지 접두사 숨기기"
+russian = "Скрывать префикс системных сообщений"
+german = "Präfix von Systemnachrichten ausblenden"
+spanish = "Ocultar prefijo de mensajes del sistema"
+french = "Masquer le préfixe des messages système"
+brazilian_portuguese = "Ocultar prefixo de mensagens do sistema"
+portuguese = "Ocultar prefixo de mensagens do sistema"
+turkish = "Sistem mesajı önekini gizle"
+polish = "Ukryj prefiks wiadomości systemowych"
+
+[[message]]
+key = "Hide the *** prefix before server chat messages"
+[message.translations]
+simplified_chinese = "隐藏服务器聊天消息前的 *** 前缀"
+traditional_chinese = "隱藏伺服器聊天訊息前的 *** 前綴"
+japanese = "サーバーチャットメッセージの前の *** 接頭辞を非表示"
+korean = "서버 채팅 메시지 앞의 *** 접두사 숨기기"
+russian = "Скрывать префикс *** перед сообщениями серверного чата"
+german = "Das Präfix *** vor Server-Chatnachrichten ausblenden"
+spanish = "Ocultar el prefijo *** antes de los mensajes de chat del servidor"
+french = "Masquer le préfixe *** avant les messages de chat du serveur"
+brazilian_portuguese = "Ocultar o prefixo *** antes das mensagens de chat do servidor"
+portuguese = "Ocultar o prefixo *** antes das mensagens de chat do servidor"
+turkish = "Sunucu sohbet mesajlarından önceki *** önekini gizle"
+polish = "Ukryj prefiks *** przed wiadomościami czatu serwera"
+
+[[message]]
 key = "High Detail"
 [message.translations]
 simplified_chinese = "显示地图细节"

@@ -1603,6 +1603,8 @@ Hide server prompt notifications
 Hide server tip notifications (including notification bar) in Zen mode
 Hide Settings Tabs
 Hide sponsor QR code
+Hide system message prefix
+Hide the *** prefix before server chat messages
 Hide toast
 Hide typing emoji during input
 Hide UI for focused gameplay

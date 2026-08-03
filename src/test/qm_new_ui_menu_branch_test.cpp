@@ -908,7 +908,14 @@ TEST(QmNewUiMenuBranches, HiddenTextCaretDoesNotMutateFollowingGraphicsState)
 {
 	const std::string Source = ReadTextFile("src/engine/client/text.cpp");
 	const std::string Render = FunctionBody(Source, "void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override");
+	const std::string GraphicsSource = ReadTextFile("src/engine/client/graphics_threaded.cpp");
+	const std::string RenderText = FunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderText(");
+	const std::string RenderQuadContainer = FunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderQuadContainer(int ContainerIndex, int QuadOffset, int QuadDrawNum, bool ChangeWrapMode)");
+	const std::string RenderQuadContainerEx = FunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderQuadContainerEx(");
 	ASSERT_FALSE(Render.empty());
+	ASSERT_FALSE(RenderText.empty());
+	ASSERT_FALSE(RenderQuadContainer.empty());
+	ASSERT_FALSE(RenderQuadContainerEx.empty());
 
 	const size_t CursorBlock = Render.find("if(TextContainer.m_HasCursor)");
 	const size_t RenderCursor = Render.find("if(RenderCursor)", CursorBlock);
@@ -930,11 +937,39 @@ TEST(QmNewUiMenuBranches, HiddenTextCaretDoesNotMutateFollowingGraphicsState)
 	ASSERT_NE(ResetColor, std::string::npos);
 	EXPECT_LT(CursorBlock, RenderCursor);
 	EXPECT_LT(RenderCursor, FlushVertices);
+	EXPECT_LT(FlushVertices, CursorTextureClear);
 	EXPECT_LT(RenderCursor, CursorTextureClear);
 	EXPECT_LT(CursorTextureClear, CursorFill);
 	EXPECT_LT(CursorFill, CleanupTextureClear);
 	EXPECT_LT(CleanupTextureClear, ResetColor);
 	EXPECT_LT(ResetColor, RenderCursorBodyEnd);
+	const std::string CursorBody = Render.substr(RenderCursorBodyStart, RenderCursorBodyEnd - RenderCursorBodyStart);
+	EXPECT_NE(CursorBody.find("QuadsDrawCurrentVertices(false);"), std::string::npos);
+	EXPECT_NE(GraphicsSource.find("void CGraphics_Threaded::FlushPendingVerticesForDrawCommand()"), std::string::npos);
+	EXPECT_NE(GraphicsSource.find("if(PreviousDrawing == EDrawing::NONE)\n\t\tm_Drawing = EDrawing::QUADS;"), std::string::npos);
+	EXPECT_EQ(RenderText.find("FlushPendingVerticesForDrawCommand();"), std::string::npos);
+	EXPECT_NE(RenderQuadContainer.find("if(Container.m_QuadBufferContainerIndex == -1)\n\t\t\treturn;\n\n\t\tFlushPendingVerticesForDrawCommand();"), std::string::npos);
+	EXPECT_NE(RenderQuadContainerEx.find("if(Container.m_QuadBufferContainerIndex == -1)\n\t\t\treturn;\n\n\t\tFlushPendingVerticesForDrawCommand();"), std::string::npos);
+	const size_t BufferedText = Render.find("if(Graphics()->IsTextBufferingEnabled())");
+	const size_t BufferedFlush = Render.find("Graphics()->QuadsDrawCurrentVertices(false);", BufferedText);
+	const size_t BufferedTextureClear = Render.find("Graphics()->TextureClear();", BufferedText);
+	ASSERT_NE(BufferedText, std::string::npos);
+	ASSERT_NE(BufferedFlush, std::string::npos);
+	ASSERT_NE(BufferedTextureClear, std::string::npos);
+	EXPECT_LT(BufferedFlush, BufferedTextureClear);
+}
+
+TEST(QmNewUiMenuBranches, ColorPickerUsesIndependentPointerCapture)
+{
+	const std::string Source = ReadTextFile("src/game/client/ui.cpp");
+	const std::string Picker = FunctionBody(Source, "EEditState CUi::DoPickerLogic(");
+	ASSERT_FALSE(Picker.empty());
+
+	EXPECT_NE(Picker.find("const bool Inside = MouseHovered(pRect);"), std::string::npos);
+	EXPECT_NE(Picker.find("if(Inside && MouseButtonClicked(0))"), std::string::npos);
+	EXPECT_NE(Picker.find("if(!CheckActiveItem(pId))"), std::string::npos);
+	EXPECT_NE(Picker.find("if(!MouseButton(0))"), std::string::npos);
+	EXPECT_EQ(Picker.find("m_pLastEditingItem"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ConsoleRestoresCompleteTextRenderState)
@@ -1046,6 +1081,7 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 		"QmSkinQueueEnabled",
 		"QmDummySkinQueueEnabled",
 		"QmChatSaveDraft",
+		"QmChatHideSystemPrefix",
 		"QmSmtcEnable",
 		"QmSmtcShowHud",
 		"QmSmtcLyricsEnable",
@@ -2585,6 +2621,9 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 	EXPECT_NE(SettingsSource.find("vCards.back().m_Measure = [ResolveChatSettingsMinCardHeight]"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("ResolveAppearanceChatMessagesHeight(AppearanceMetrics)"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("DoMessageGradientLine(*pChat"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("appearance-chat-hide-system-prefix"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("ChatPreviewMeasureRevision"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("SystemMessageNamePrefix(g_Config.m_QmChatHideSystemPrefix != 0)"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, Tab, Tab, pCheckBoxValue, pLabelTextId, pLabel, *pCheckBoxValue, &Label, LabelProps, true, BodySize)"), std::string::npos);
 	EXPECT_EQ(SettingsSource.find("Label.Margin(2.0f, &Label);"), std::string::npos);
 	EXPECT_EQ(SettingsSource.find("Section.VSplitRight(55.0f, &Section, &TextLabel);"), std::string::npos);

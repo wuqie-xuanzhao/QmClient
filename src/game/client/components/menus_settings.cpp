@@ -6449,6 +6449,11 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				static CButtonContainer s_SystemMessageReset, s_SystemMessageAdd, s_SystemMessageRemove;
 				static unsigned s_aSystemMessageColorValues[CMessageGradient::MAX_COLORS];
 				DoMessageGradientLine(*pChat, &RightView, APPEARANCE_TAB_CHAT, "appearance-chat-system-message", Localize("System message"), &g_Config.m_ClMessageSystemColor, g_Config.m_ClMessageSystemGradient, sizeof(g_Config.m_ClMessageSystemGradient), ColorRGBA(1.0f, 1.0f, 0.5f), &s_SystemMessageReset, &s_SystemMessageAdd, &s_SystemMessageRemove, s_aSystemMessageColorValues, true, &g_Config.m_ClShowChatSystem, LineSize, MarginSmall, AppearanceBodySize, AppearanceMetrics.m_ButtonHeight);
+				if(DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_CHAT, &g_Config.m_QmChatHideSystemPrefix, "appearance-chat-hide-system-prefix", Localize("Hide system message prefix"), &g_Config.m_QmChatHideSystemPrefix, &RightView, LineSize, MarginSmall, AppearanceBodySize))
+				{
+					pChat->RebuildChat();
+					ConfigManager()->Save();
+				}
 
 				static CButtonContainer s_HighlightedMessageReset, s_HighlightedMessageAdd, s_HighlightedMessageRemove;
 				static unsigned s_aHighlightedMessageColorValues[CMessageGradient::MAX_COLORS];
@@ -6492,16 +6497,16 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				char aPlayerName[64];
 				str_copy(aPlayerName, Client()->PlayerName());
 				float Height = 2.0f * MarginSmall;
-				const auto AddPreviewLine = [&](const char *pName, const char *pText) {
+				const auto AddPreviewLine = [&](const char *pName, const char *pText, bool AppendNameSeparator = true) {
 					char aLine[384];
-					str_format(aLine, sizeof(aLine), "%s%s%s", pName, pName[0] != '\0' ? ": " : "", pText);
+					str_format(aLine, sizeof(aLine), "%s%s%s", pName, AppendNameSeparator && pName[0] != '\0' ? ": " : "", pText);
 					Height += maximum(RealFontSize, TextRender()->TextBoundingBox(RealFontSize, aLine, -1, LineWidth).m_H) + RealMsgPaddingY;
 				};
 				if(g_Config.m_ClShowChatSystem)
 				{
 					char aSystemText[128];
 					str_format(aSystemText, sizeof(aSystemText), "'%s' entered and joined the game", aPlayerName);
-					AddPreviewLine("***", aSystemText);
+					AddPreviewLine(CChat::SystemMessageNamePrefix(g_Config.m_QmChatHideSystemPrefix != 0), aSystemText, false);
 				}
 				if(!g_Config.m_ClShowChatFriends)
 				{
@@ -6527,6 +6532,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				(static_cast<uint64_t>(g_Config.m_ClShowChatFriends != 0) << 2) |
 				(static_cast<uint64_t>(g_Config.m_ClShowChatTeamMembersOnly != 0) << 3) |
 				(static_cast<uint64_t>(g_Config.m_TcShowChatClient != 0) << 4) |
+				(static_cast<uint64_t>(g_Config.m_QmChatHideSystemPrefix != 0) << 5) |
 				(static_cast<uint64_t>(std::clamp(g_Config.m_ClChatFontSize, 0, 255)) << 8) |
 				(static_cast<uint64_t>(std::clamp(g_Config.m_ClChatWidth, 0, 1023)) << 16);
 			AddMeasuredCard(4, MeasureChatPreview, [=, this](CUIRect ContentRect) mutable {
@@ -6736,7 +6742,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				char aLineBuilder[128];
 
 				str_format(aLineBuilder, sizeof(aLineBuilder), "'%s' entered and joined the game", aBuf);
-				SetPreviewLine(PREVIEW_SYS, -1, "*** ", aLineBuilder, 0, 0);
+				SetPreviewLine(PREVIEW_SYS, -1, CChat::SystemMessageNamePrefix(g_Config.m_QmChatHideSystemPrefix != 0), aLineBuilder, 0, 0);
 
 				str_format(aLineBuilder, sizeof(aLineBuilder), "Hey, how are you %s?", aBuf);
 				SetPreviewLine(PREVIEW_HIGHLIGHT, 7, "Random Tee", aLineBuilder, FLAG_HIGHLIGHT, 0);
