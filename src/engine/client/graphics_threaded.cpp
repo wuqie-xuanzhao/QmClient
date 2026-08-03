@@ -7,6 +7,7 @@
 #include <base/system.h>
 
 #include <engine/client/plausible_sizes.h>
+#include <engine/client/rounded_rect_geometry.h>
 #include <engine/engine.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
@@ -1853,8 +1854,17 @@ float CGraphics_Threaded::RoundedRectAntialiasSize() const
 	return maximum(ScreenWidth / (float)m_ScreenWidth, ScreenHeight / (float)m_ScreenHeight) * RECT_ANTIALIAS_PIXEL_SIZE;
 }
 
-void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color)
+void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color, bool ResolveGeometry)
 {
+	if(ResolveGeometry && Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r <= 0.0f || Color.a <= 0.0f)
 		return;
 
@@ -1934,6 +1944,15 @@ void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h
 
 void CGraphics_Threaded::DrawRectExt(float x, float y, float w, float h, float r, int Corners)
 {
+	if(Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	const int NumSegments = RoundedRectSegmentCount();
 	const float SegmentsAngle = pi / 2 / NumSegments;
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
@@ -1999,11 +2018,20 @@ void CGraphics_Threaded::DrawRectExt(float x, float y, float w, float h, float r
 		aQuads[NumItems++] = CQuadItem(x + w, y + h, -r, -r);
 
 	QuadsDrawTL(aQuads, NumItems);
-	DrawRectExtAntialias(x, y, w, h, r, Corners, CommandColorToColorRGBA(m_aColor[0]));
+	DrawRectExtAntialias(x, y, w, h, r, Corners, CommandColorToColorRGBA(m_aColor[0]), false);
 }
 
-void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight)
+void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, bool ResolveGeometry)
 {
+	if(ResolveGeometry && Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r <= 0.0f)
 		return;
 
@@ -2085,6 +2113,15 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 
 void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, float r, int Corners)
 {
+	if(Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r == 0.0f)
 	{
 		SetColor4(ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight);
@@ -2200,7 +2237,7 @@ void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorR
 		QuadsDrawTL(&ItemQ, 1);
 	}
 
-	DrawRectExt4Antialias(x, y, w, h, r, Corners, ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight);
+	DrawRectExt4Antialias(x, y, w, h, r, Corners, ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight, false);
 }
 
 void CGraphics_Threaded::AddRectExtAntialiasToContainer(int ContainerIndex, float x, float y, float w, float h, float r, int Corners, ColorRGBA Color)
@@ -2286,6 +2323,15 @@ int CGraphics_Threaded::CreateRectQuadContainer(float x, float y, float w, float
 {
 	int ContainerIndex = CreateQuadContainer(false);
 
+	if(Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r == 0.0f)
 	{
 		CQuadItem ItemQ = CQuadItem(x, y, w, h);

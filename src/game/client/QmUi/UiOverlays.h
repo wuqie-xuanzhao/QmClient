@@ -117,11 +117,11 @@ namespace ui_widget
 		CUIRect ShadowRect = ToastRect;
 		ShadowRect.x += ui_token::elevation::SHADOW_X_HIGH;
 		ShadowRect.y += ui_token::elevation::SHADOW_Y_HIGH;
-		ShadowRect.Draw(Shadow, IGraphics::CORNER_ALL, ui_token::radius::BASE);
+		DrawRoundedSurface(Ctx, ShadowRect, Shadow, ColorRGBA(), ui_token::radius::BASE);
 
 		ColorRGBA Bg = ui_token::color::SURFACE_ELEVATED;
 		Bg.a *= Alpha;
-		ToastRect.Draw(Bg, IGraphics::CORNER_ALL, ui_token::radius::BASE);
+		DrawRoundedSurface(Ctx, ToastRect, Bg, ColorRGBA(), ui_token::radius::BASE);
 
 		ColorRGBA Text = ui_token::color::TEXT_PRIMARY;
 		Text.a *= Alpha;

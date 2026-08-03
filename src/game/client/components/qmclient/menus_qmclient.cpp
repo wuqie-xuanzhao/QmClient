@@ -28,6 +28,7 @@
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiDogfood.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
@@ -1328,8 +1329,8 @@ void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScr
 	}
 	if(Frame.m_Frame.m_ScrollbarVisible)
 	{
-		Frame.m_Frame.m_ScrollbarTrackRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, Frame.m_Frame.m_ScrollbarTrackRect.w * 0.5f);
-		Frame.m_Frame.m_ScrollbarThumbRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.34f), IGraphics::CORNER_ALL, Frame.m_Frame.m_ScrollbarThumbRect.w * 0.5f);
+		DrawRoundedSurface(Ui(), Frame.m_Frame.m_ScrollbarTrackRect, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), ColorRGBA(), Frame.m_Frame.m_ScrollbarTrackRect.w * 0.5f);
+		DrawRoundedSurface(Ui(), Frame.m_Frame.m_ScrollbarThumbRect, ColorRGBA(1.0f, 1.0f, 1.0f, 0.34f), ColorRGBA(), Frame.m_Frame.m_ScrollbarThumbRect.w * 0.5f);
 	}
 }
 
@@ -1482,7 +1483,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 				{
 					CUIRect QrRect = Row;
 					QrRect.Margin(LineHeight * 0.35f, &QrRect);
-					QrRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 5.0f);
+					DrawRoundedSurface(Ui(), QrRect, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), ColorRGBA(), 5.0f);
 					QrRect.Margin(LineHeight * 0.5f, &QrRect);
 					if(QrRect.w > QrRect.h)
 					{
@@ -4489,7 +4490,7 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMe
 	{
 		ColorRGBA PreviewBg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsBgColor, true));
 		PreviewBg.a = std::clamp(g_Config.m_QmLyricsBgOpacity / 100.0f, 0.0f, 1.0f);
-		Preview.Draw(PreviewBg, IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(Ui(), Preview, PreviewBg, ColorRGBA(), 5.0f);
 		const unsigned int PrevFlags = TextRender()->GetRenderFlags();
 		const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
 		const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();

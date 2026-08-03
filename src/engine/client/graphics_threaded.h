@@ -1324,8 +1324,8 @@ public:
 	// sprites
 private:
 	float RoundedRectAntialiasSize() const;
-	void DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color);
-	void DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight);
+	void DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color, bool ResolveGeometry = true);
+	void DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, bool ResolveGeometry = true);
 	void AddRectExtAntialiasToContainer(int ContainerIndex, float x, float y, float w, float h, float r, int Corners, ColorRGBA Color);
 	void SetColor4Raw(ColorRGBA TopLeft, ColorRGBA TopRight, ColorRGBA BottomLeft, ColorRGBA BottomRight);
 

@@ -13,13 +13,13 @@
 
 namespace
 {
-	void DrawFallbackBorderRing(CUi *pUi, const CUIRect &Rect, const ColorRGBA &Border, const int Corners, const float Radius, const float BorderWidth, const float PixelSize)
+	void DrawFallbackBorderRing(IGraphics *pGraphics, const CUIRect &Rect, const ColorRGBA &Border, const int Corners, const float Radius, const float BorderWidth, const float PixelSize)
 	{
 		if(BorderWidth <= 0.0f)
 			return;
 		if(BorderWidth * 2.0f >= std::min(Rect.w, Rect.h))
 		{
-			Rect.Draw(Border, Corners, Radius);
+			pGraphics->DrawRect(Rect.x, Rect.y, Rect.w, Rect.h, Border, Corners, Radius);
 			return;
 		}
 
@@ -60,7 +60,6 @@ namespace
 		AddCorner({Rect.x + Rect.w - BrRadius, Rect.y + Rect.h - BrRadius}, {Rect.x + Rect.w - BorderWidth - BrInnerRadius, Rect.y + Rect.h - BorderWidth - BrInnerRadius}, BrRadius, BrInnerRadius, 0.0f);
 		AddCorner({Rect.x + BlRadius, Rect.y + Rect.h - BlRadius}, {Rect.x + BorderWidth + BlInnerRadius, Rect.y + Rect.h - BorderWidth - BlInnerRadius}, BlRadius, BlInnerRadius, pi / 2.0f);
 
-		IGraphics *pGraphics = pUi->Graphics();
 		pGraphics->TextureClear();
 		pGraphics->QuadsBegin();
 		pGraphics->SetColor(Border);
@@ -72,13 +71,12 @@ namespace
 	}
 }
 
-bool DrawRoundedSurface(CUi *pUi, const CUIRect &Rect, const ColorRGBA &Fill, const ColorRGBA &Border, const float Radius, const float BorderWidth, const int Corners)
+bool DrawRoundedSurface(IGraphics *pGraphics, const CUIRect &Rect, const ColorRGBA &Fill, const ColorRGBA &Border, const float Radius, const float BorderWidth, const float PixelSize, const int Corners)
 {
-	if(pUi == nullptr || pUi->Graphics() == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
+	if(pGraphics == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
 		return false;
 
-	IGraphics *pGraphics = pUi->Graphics();
-	const SRoundedSurfacePlan Plan = ResolveRoundedSurfacePlan(Rect, Radius, BorderWidth, pUi->PixelSize(), Corners, pGraphics->HasRoundedRectSdf());
+	const SRoundedSurfacePlan Plan = ResolveRoundedSurfacePlan(Rect, Radius, BorderWidth, PixelSize, Corners, pGraphics->HasRoundedRectSdf());
 	if(Plan.m_UseSdf)
 	{
 		IGraphics::SRoundedRectSdfParams Params;
@@ -94,16 +92,21 @@ bool DrawRoundedSurface(CUi *pUi, const CUIRect &Rect, const ColorRGBA &Fill, co
 
 	if(Plan.m_BorderWidth <= 0.0f)
 	{
-		Plan.m_Rect.Draw(Fill, Corners, Plan.m_Radius);
+		pGraphics->DrawRect(Plan.m_Rect.x, Plan.m_Rect.y, Plan.m_Rect.w, Plan.m_Rect.h, Fill, Corners, Plan.m_Radius);
 		return true;
 	}
 
-	DrawFallbackBorderRing(pUi, Plan.m_Rect, Border, Corners, Plan.m_Radius, Plan.m_BorderWidth, Plan.m_PixelSize);
+	DrawFallbackBorderRing(pGraphics, Plan.m_Rect, Border, Corners, Plan.m_Radius, Plan.m_BorderWidth, Plan.m_PixelSize);
 	CUIRect Inner = Plan.m_Rect;
 	Inner.Margin(Plan.m_BorderWidth, &Inner);
 	if(Inner.w > 0.0f && Inner.h > 0.0f)
-		Inner.Draw(Fill, Corners, std::max(0.0f, Plan.m_Radius - Plan.m_BorderWidth));
+		pGraphics->DrawRect(Inner.x, Inner.y, Inner.w, Inner.h, Fill, Corners, std::max(0.0f, Plan.m_Radius - Plan.m_BorderWidth));
 	return true;
+}
+
+bool DrawRoundedSurface(CUi *pUi, const CUIRect &Rect, const ColorRGBA &Fill, const ColorRGBA &Border, const float Radius, const float BorderWidth, const int Corners)
+{
+	return pUi != nullptr ? DrawRoundedSurface(pUi->Graphics(), Rect, Fill, Border, Radius, BorderWidth, pUi->PixelSize(), Corners) : false;
 }
 
 bool DrawRoundedSurface(const IUiContext &Ctx, const CUIRect &Rect, const ColorRGBA &Fill, const ColorRGBA &Border, const float Radius, const float BorderWidth, const int Corners)

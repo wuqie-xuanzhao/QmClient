@@ -7,6 +7,7 @@
 #include "QmUi/QmMotion.h"
 #include "QmUi/QmTheme.h"
 #include "QmUi/QmTree.h"
+#include "QmUi/UiSurface.h"
 #include "gameclient.h"
 #include "lineinput.h"
 
@@ -195,6 +196,7 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	const float Width = Height * pGraphics->ScreenAspect();
 	const int ScreenWidth = maximum(pGraphics->ScreenWidth(), 1);
 	const int ScreenHeight = maximum(pGraphics->ScreenHeight(), 1);
+	const float PixelSize = Height / (float)ScreenHeight;
 	const float Margin = Ime.m_ScreenMargin;
 	const float ScreenMaxPanelWidth = maximum(Ime.m_MinWidth, Width - 2.0f * Margin);
 	const float PreferredMaxPanelWidth = std::clamp(Ime.m_MaxWidth, Ime.m_MinWidth, ScreenMaxPanelWidth);
@@ -391,21 +393,21 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	CUIRect PanelDropA = Panel;
 	PanelDropA.x += Ime.m_ShadowX;
 	PanelDropA.y += Ime.m_ShadowY * 0.65f;
-	PanelDropA.Draw(WithAlpha(Ime.m_PanelShadow, Alpha * 0.46f), IGraphics::CORNER_ALL, Ime.m_Radius);
+	DrawRoundedSurface(pGraphics, PanelDropA, WithAlpha(Ime.m_PanelShadow, Alpha * 0.46f), ColorRGBA(), Presentation.m_Radius, 0.0f, PixelSize);
 	CUIRect PanelDropB = Panel;
 	PanelDropB.y += Ime.m_ShadowY * 1.7f;
-	PanelDropB.Draw(WithAlpha(Ime.m_PanelShadow, Alpha * 0.28f), IGraphics::CORNER_ALL, Ime.m_Radius);
+	DrawRoundedSurface(pGraphics, PanelDropB, WithAlpha(Ime.m_PanelShadow, Alpha * 0.28f), ColorRGBA(), Presentation.m_Radius, 0.0f, PixelSize);
 
-	Panel.Draw(WithAlpha(Ime.m_PanelBorder, Alpha), IGraphics::CORNER_ALL, Ime.m_Radius);
+	DrawRoundedSurface(pGraphics, Panel, WithAlpha(Ime.m_PanelBg, Alpha), WithAlpha(Ime.m_PanelBorder, Alpha), Presentation.m_Radius, Ime.m_BorderInset, PixelSize);
 	CUIRect PanelContent;
 	Panel.Margin(Ime.m_BorderInset, &PanelContent);
-	PanelContent.Draw(WithAlpha(Ime.m_PanelBg, Alpha), IGraphics::CORNER_ALL, maximum(0.0f, Ime.m_Radius - Ime.m_BorderInset));
 
 	CUIRect PanelTopLine = PanelContent;
 	PanelTopLine.h = 0.45f;
-	PanelTopLine.x += Ime.m_Radius * 0.35f;
-	PanelTopLine.w -= Ime.m_Radius * 0.70f;
-	PanelTopLine.Draw(WithAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.11f), Alpha), IGraphics::CORNER_T, 0.0f);
+	PanelTopLine.x += Presentation.m_Radius * 0.35f;
+	PanelTopLine.w = maximum(0.0f, PanelTopLine.w - Presentation.m_Radius * 0.70f);
+	if(PanelTopLine.w > 0.0f)
+		PanelTopLine.Draw(WithAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.11f), Alpha), IGraphics::CORNER_T, 0.0f);
 
 	const ColorRGBA OldTextColor = pTextRender->GetTextColor();
 	const ColorRGBA OldOutlineColor = pTextRender->GetTextOutlineColor();
@@ -470,7 +472,7 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 			DrawRect.y = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::POS_Y, m_Presentation.m_TargetSelectedY, SelectedSpring, 2, 0.01f);
 			DrawRect.w = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::WIDTH, m_Presentation.m_TargetSelectedWidth, SelectedSpring, 2, 0.01f);
 			DrawRect.h = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::HEIGHT, m_Presentation.m_TargetSelectedHeight, SelectedSpring, 2, 0.01f);
-			DrawRect.Draw(WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha), IGraphics::CORNER_ALL, maximum(1.0f, DrawRect.h * 0.5f));
+			DrawRoundedSurface(pGraphics, DrawRect, WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha), ColorRGBA(), maximum(1.0f, DrawRect.h * 0.5f), 0.0f, PixelSize);
 			break;
 		}
 
