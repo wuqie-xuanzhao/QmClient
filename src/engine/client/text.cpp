@@ -2495,9 +2495,6 @@ public:
 		{
 			if(Graphics()->IsTextBufferingEnabled())
 			{
-				// 先在仍绑定前一批纹理时提交保留顶点。RenderText 自身
-				// 不能补救，因为调用方随后会清空纹理状态。
-				Graphics()->QuadsDrawCurrentVertices(false);
 				Graphics()->TextureClear();
 				// render buffered text
 				Graphics()->RenderText(TextContainer.m_StringInfo.m_QuadBufferContainerIndex, TextContainer.m_StringInfo.m_vCharacterQuads.size(), m_pGlyphMap->TextureDimension(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_FILL).Id(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_OUTLINE).Id(), TextColor, TextOutlineColor);
@@ -2551,7 +2548,6 @@ public:
 		{
 			if(TextContainer.m_HasSelection)
 			{
-				Graphics()->QuadsDrawCurrentVertices(false);
 				Graphics()->TextureClear();
 				Graphics()->SetColor(m_SelectionColor);
 				Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, TextContainer.m_HasCursor ? 2 : 0, -1, 0, 0);
@@ -2564,17 +2560,16 @@ public:
 				const bool RenderCursor = TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms;
 				if(RenderCursor)
 				{
-					// 光标 quad-container 会改写或插入独立绘制命令，
-					// 必须先提交此前保留的四边形批次。
-					Graphics()->QuadsDrawCurrentVertices(false);
 					Graphics()->TextureClear();
 					Graphics()->SetColor(TextOutlineColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 0, 1, 0, 0);
 					Graphics()->SetColor(TextColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, 1, 0, 0);
-					Graphics()->TextureClear();
-					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				}
+				// 非缓冲文本路径会将字体填充纹理保持为当前纹理。光标隐藏时也必须
+				// 恢复与显示时相同的图形状态，否则后续单位和标签会继承字体纹理。
+				Graphics()->TextureClear();
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				if(TextContainer.m_ForceCursorRendering)
 					m_CursorRenderTime = CurTime - 501ms;
 				else if((CurTime - m_CursorRenderTime) > 1s)

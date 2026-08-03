@@ -183,21 +183,6 @@ void CGraphics_Threaded::FlushVerticesTex3D()
 	}
 }
 
-void CGraphics_Threaded::FlushPendingVerticesForDrawCommand()
-{
-	if(m_NumVertices == 0)
-		return;
-
-	// QuadsEndKeepVertices 会保留四边形批次并将 m_Drawing 恢复为 NONE。
-	// 插入独立绘制命令前必须先提交该批次，否则命令顺序会错乱，
-	// 非缓冲 quad-container 路径还会覆盖待提交顶点。
-	const EDrawing PreviousDrawing = m_Drawing;
-	if(PreviousDrawing == EDrawing::NONE)
-		m_Drawing = EDrawing::QUADS;
-	FlushVertices();
-	m_Drawing = PreviousDrawing;
-}
-
 void CGraphics_Threaded::AddVertices(int Count)
 {
 	m_NumVertices += Count;
@@ -2601,7 +2586,10 @@ void CGraphics_Threaded::RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfPa
 	if(Rect.z <= 0.0f || Rect.w <= 0.0f)
 		return;
 
-	FlushPendingVerticesForDrawCommand();
+	// Finish any pending regular vertices before inserting the dedicated SDF
+	// draw, so command order remains identical to the immediate-mode API.
+	if(m_NumVertices > 0)
+		FlushVertices();
 
 	CCommandBuffer::SCommand_RenderMediaIslandSdf Cmd;
 	Cmd.m_State = m_State;
@@ -2642,7 +2630,7 @@ void CGraphics_Threaded::RenderRoundedRectSdf(const IGraphics::SRoundedRectSdfPa
 		if(m_MacosGraphicsDiagnosticsEnabled)
 			m_RoundedRectSdfFlushCount++;
 #endif
-		FlushPendingVerticesForDrawCommand();
+		FlushVertices();
 	}
 
 	CCommandBuffer::SCommand_RenderRoundedRectSdf Cmd;
@@ -2697,7 +2685,7 @@ void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams
 		if(m_MacosGraphicsDiagnosticsEnabled)
 			m_MsdfFlushCount++;
 #endif
-		FlushPendingVerticesForDrawCommand();
+		FlushVertices();
 	}
 
 	CCommandBuffer::SCommand_RenderTexturedMsdf Cmd;
@@ -2955,8 +2943,6 @@ void CGraphics_Threaded::RenderQuadContainer(int ContainerIndex, int QuadOffset,
 		if(Container.m_QuadBufferContainerIndex == -1)
 			return;
 
-		FlushPendingVerticesForDrawCommand();
-
 		if(ChangeWrapMode)
 			WrapClamp();
 
@@ -2971,8 +2957,6 @@ void CGraphics_Threaded::RenderQuadContainer(int ContainerIndex, int QuadOffset,
 	}
 	else
 	{
-		FlushPendingVerticesForDrawCommand();
-
 		if(g_Config.m_GfxQuadAsTriangle)
 		{
 			for(int i = 0; i < QuadDrawNum; ++i)
@@ -3016,8 +3000,6 @@ void CGraphics_Threaded::RenderQuadContainerEx(int ContainerIndex, int QuadOffse
 		if(Container.m_QuadBufferContainerIndex == -1)
 			return;
 
-		FlushPendingVerticesForDrawCommand();
-
 		SQuadContainer::SQuad &Quad = Container.m_vQuads[QuadOffset];
 		CCommandBuffer::SCommand_RenderQuadContainerEx Cmd;
 
@@ -3049,8 +3031,6 @@ void CGraphics_Threaded::RenderQuadContainerEx(int ContainerIndex, int QuadOffse
 	}
 	else
 	{
-		FlushPendingVerticesForDrawCommand();
-
 		if(g_Config.m_GfxQuadAsTriangle)
 		{
 			for(int i = 0; i < QuadDrawNum; ++i)
