@@ -699,16 +699,16 @@ Angle:
 == 각도:
 
 Animate chat box, emote selector, scoreboard, and spectate selection
-== Animate chat box, emote selector, scoreboard, and spectate selection
+== 채팅창, 이모티콘 선택기, 점수판 및 관전 선택에 애니메이션 적용
 
 Animate settings card expand and collapse height changes
-== Animate settings card expand and collapse height changes
+== 설정 카드 확장 및 접기 높이 변경에 애니메이션 적용
 
 Animate settings card lists when entering a page
-== Animate settings card lists when entering a page
+== 페이지 진입 시 설정 카드 목록 애니메이션 적용
 
 Animate settings card reorder and layout reflow
-== Animate settings card reorder and layout reflow
+== 설정 카드 정렬 및 레이아웃 재배치에 애니메이션 적용
 
 Animation
 == 애니메이션
@@ -1635,13 +1635,13 @@ Cannot swap: the other player is not in your team
 == 스왑할 수 없음: 상대방이 당신의 팀에 없습니다
 
 Card height animation
-== Card height animation
+== 설정 카드 높이 애니메이션
 
 Card list entry animation
-== Card list entry animation
+== 설정 카드 목록 진입 애니메이션
 
 Card reflow animation
-== Card reflow animation
+== 설정 카드 재배치 애니메이션
 
 Category
 == 카테고리
@@ -4110,7 +4110,7 @@ File with announcements, one per line.
 == 공지사항이 포함된 파일, 한 줄에 하나씩
 
 Fill
-== Fill
+== 채우기
 
 Filter chat messages by regular expression
 == 정규 표현식으로 채팅 메시지 필터링
@@ -4194,7 +4194,7 @@ Focus mode
 == 집중 모드
 
 Focus ring color
-== Focus ring color
+== 포커스 링 색상
 
 Folder
 == 폴더
@@ -5271,10 +5271,10 @@ Interface settings page
 == 인터페이스 설정 페이지
 
 Interface surface
-== Interface surface
+== 인터페이스 표면
 
 Interface surface color
-== Interface surface color
+== 인터페이스 표면 색상
 
 Interface transparency
 == 일반 UI 투명도
@@ -5457,7 +5457,7 @@ Key Sticking: Reset Self
 == 키 고정: 본체 초기화
 
 Keyboard focus ring color
-== Keyboard focus ring color
+== 키보드 포커스 링 색상
 
 Keyword Reply
 == 키워드 답장
@@ -6054,10 +6054,10 @@ Map
 == 맵
 
 Map browser surface
-== Map browser surface
+== 맵 브라우저 표면
 
 Map browser surface color
-== Map browser surface color
+== 맵 브라우저 표면 색상
 
 Map browser transparency
 == 맵 브라우저 투명도
@@ -7800,7 +7800,7 @@ Preparing demo playback
 == 데모 재생 준비 중
 
 Presentation animations
-== Presentation animations
+== 표시 애니메이션
 
 Preset %d
 == 프리셋 %d
@@ -9051,10 +9051,10 @@ Scoreboard sort mode (0=Score, 1=Points)
 == 점수판 정렬 모드 (0=점수, 1=분)
 
 Scoreboard surface
-== Scoreboard surface
+== 점수판 표면
 
 Scoreboard surface color
-== Scoreboard surface color
+== 점수판 표면 색상
 
 Scoreboard transparency
 == 스코어보드 투명도
@@ -11334,7 +11334,7 @@ There's an unsaved map in the editor, you might want to save it.
 == 편집기에 저장되지 않은 맵이 있습니다. 저장하는 것이 좋습니다.
 
 Thin
-== Thin
+== 얇게
 
 Thinking mode requires a reasoning model
 == 사고 모드를 사용하려면 추론 모델이 필요합니다
@@ -11790,7 +11790,7 @@ UI icon color
 == UI 아이콘 색상
 
 UI icon custom color
-== UI icon custom color
+== UI 아이콘 사용자 지정 색상
 
 UI icon weight
 == UI 아이콘 굵기

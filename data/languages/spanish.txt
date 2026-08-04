@@ -699,16 +699,16 @@ Angle:
 == Ángulo:
 
 Animate chat box, emote selector, scoreboard, and spectate selection
-== Animate chat box, emote selector, scoreboard, and spectate selection
+== Animar el chat, el selector de emoticonos, el marcador y la selección de espectador
 
 Animate settings card expand and collapse height changes
-== Animate settings card expand and collapse height changes
+== Animar los cambios de altura al expandir y contraer tarjetas de ajustes
 
 Animate settings card lists when entering a page
-== Animate settings card lists when entering a page
+== Animar las listas de tarjetas de ajustes al entrar en una página
 
 Animate settings card reorder and layout reflow
-== Animate settings card reorder and layout reflow
+== Animar la reordenación y el reajuste de diseño de las tarjetas de ajustes
 
 Animation
 == Animación
@@ -1635,13 +1635,13 @@ Cannot swap: the other player is not in your team
 == No se puede intercambiar: el otro jugador no está en tu equipo
 
 Card height animation
-== Card height animation
+== Animación de altura de la tarjeta de ajustes
 
 Card list entry animation
-== Card list entry animation
+== Animación de entrada de la lista de tarjetas de ajustes
 
 Card reflow animation
-== Card reflow animation
+== Animación de reorganización de tarjetas de ajustes
 
 Category
 == Categoría
@@ -4110,7 +4110,7 @@ File with announcements, one per line.
 == Archivo con anuncios, uno por línea.
 
 Fill
-== Fill
+== Relleno
 
 Filter chat messages by regular expression
 == Filtrar mensajes de chat por expresión regular
@@ -4194,7 +4194,7 @@ Focus mode
 == Modo enfoque
 
 Focus ring color
-== Focus ring color
+== Color del anillo de enfoque
 
 Folder
 == Carpeta
@@ -5271,10 +5271,10 @@ Interface settings page
 == Página de configuración de interfaz
 
 Interface surface
-== Interface surface
+== Superficie de la interfaz
 
 Interface surface color
-== Interface surface color
+== Color de la superficie de la interfaz
 
 Interface transparency
 == Transparencia general de la interfaz
@@ -5457,7 +5457,7 @@ Key Sticking: Reset Self
 == Tecla Pegada: Reiniciar Propio
 
 Keyboard focus ring color
-== Keyboard focus ring color
+== Color del anillo de enfoque del teclado
 
 Keyword Reply
 == Respuesta por palabras clave
@@ -6054,10 +6054,10 @@ Map
 == Mapa
 
 Map browser surface
-== Map browser surface
+== Superficie del navegador de mapas
 
 Map browser surface color
-== Map browser surface color
+== Color de la superficie del navegador de mapas
 
 Map browser transparency
 == Transparencia del navegador de mapas
@@ -7800,7 +7800,7 @@ Preparing demo playback
 == Preparando reproducción de la demo
 
 Presentation animations
-== Presentation animations
+== Animaciones de presentación
 
 Preset %d
 == Preajuste %d
@@ -9051,10 +9051,10 @@ Scoreboard sort mode (0=Score, 1=Points)
 == Modo de ordenación de la tabla de clasificación (0=puntuación, 1=puntos)
 
 Scoreboard surface
-== Scoreboard surface
+== Superficie del marcador
 
 Scoreboard surface color
-== Scoreboard surface color
+== Color de la superficie del marcador
 
 Scoreboard transparency
 == Transparencia de la tabla de clasificación
@@ -11334,7 +11334,7 @@ There's an unsaved map in the editor, you might want to save it.
 == Hay un mapa sin guardar en el editor, quizás quieras guardarlo.
 
 Thin
-== Thin
+== Fino
 
 Thinking mode requires a reasoning model
 == El modo de pensamiento requiere un modelo de razonamiento
@@ -11790,7 +11790,7 @@ UI icon color
 == Color de los iconos de la interfaz
 
 UI icon custom color
-== UI icon custom color
+== Color personalizado de los iconos de la interfaz
 
 UI icon weight
 == Grosor de los iconos de la interfaz

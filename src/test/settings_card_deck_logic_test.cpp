@@ -273,6 +273,20 @@ TEST(SettingsPageLayout, DynamicIslandHeightIncludesTheActualColorRow)
 	EXPECT_FLOAT_EQ(ExpandedHeight - OriginalHeight, ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight);
 }
 
+TEST(SettingsPageLayout, ContentRowFlowKeepsConditionalRowsAndMeasuredHeightInSync)
+{
+	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+	CUIRect Content{0.0f, 0.0f, 700.0f, 1000.0f};
+	CSettingsContentRowFlow Rows(Content, Metrics);
+	const CUIRect ColorChoice = Rows.NextLine();
+	const CUIRect CustomColor = Rows.NextButton();
+	const CUIRect WeightChoice = Rows.NextLine();
+
+	EXPECT_FLOAT_EQ(CustomColor.y, ColorChoice.y + ColorChoice.h + Metrics.m_LineSpacing);
+	EXPECT_FLOAT_EQ(WeightChoice.y, CustomColor.y + CustomColor.h + Metrics.m_LineSpacing);
+	EXPECT_FLOAT_EQ(1000.0f - Content.h, ResolveSettingsContentFlowHeight(Metrics, {Metrics.m_LineHeight, Metrics.m_ButtonHeight, Metrics.m_LineHeight}));
+}
+
 TEST(SettingsCard, ContentClipAllowsFocusRingButNeverEscapesTheCard)
 {
 	const CUIRect Card{10.0f, 20.0f, 200.0f, 100.0f};
@@ -476,6 +490,9 @@ TEST(SettingsCardDeck, AuditedUiLabelsHaveSimplifiedChineseRuntimeTranslations)
 {
 	const std::string SimplifiedChinese = ReadTestSourceFile("data/languages/simplified_chinese.txt");
 	static const char *const s_apKeys[] = {
+		"Card height animation",
+		"Card list entry animation",
+		"Card reflow animation",
 		"Enable client stutter diagnostics at startup",
 		"Enable enhanced scoreboard presentation",
 		"Enable macOS graphics diagnostics and Instruments signposts",
@@ -483,12 +500,18 @@ TEST(SettingsCardDeck, AuditedUiLabelsHaveSimplifiedChineseRuntimeTranslations)
 		"Global UI size percentage",
 		"Gores",
 		"Hide chat messages from players marked as enemies",
+		"Interface surface",
+		"Map browser surface",
 		"Ping",
 		"Relative X position of the draggable back button",
 		"Relative Y position of the draggable back button",
 		"RTT",
+		"Scoreboard surface",
+		"Focus ring color",
+		"Presentation animations",
 		"Show draggable virtual back button",
 		"UI rounded corner segments (even numbers recommended)",
+		"UI icon custom color",
 		"Word filter action: 0=replace matching words, 1=hide entire message",
 	};
 	for(const char *pKey : s_apKeys)

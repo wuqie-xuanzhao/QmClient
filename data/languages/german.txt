@@ -699,16 +699,16 @@ Angle:
 == Winkel:
 
 Animate chat box, emote selector, scoreboard, and spectate selection
-== Animate chat box, emote selector, scoreboard, and spectate selection
+== Chatfenster, Emote-Auswahl, Anzeigetafel und Zuschauerwahl animieren
 
 Animate settings card expand and collapse height changes
-== Animate settings card expand and collapse height changes
+== Höhenänderungen beim Auf- und Zuklappen von Einstellungskarten animieren
 
 Animate settings card lists when entering a page
-== Animate settings card lists when entering a page
+== Einstellungskartenlisten beim Öffnen einer Seite animieren
 
 Animate settings card reorder and layout reflow
-== Animate settings card reorder and layout reflow
+== Neuanordnung und Layout-Umfluss von Einstellungskarten animieren
 
 Animation
 == Animation
@@ -1635,13 +1635,13 @@ Cannot swap: the other player is not in your team
 == Tausch nicht möglich: der andere Spieler ist nicht in deinem Team
 
 Card height animation
-== Card height animation
+== Höhenanimation der Einstellungskarte
 
 Card list entry animation
-== Card list entry animation
+== Einblendanimation der Einstellungskartenliste
 
 Card reflow animation
-== Card reflow animation
+== Neuanordnungsanimation der Einstellungskarten
 
 Category
 == Kategorie
@@ -4110,7 +4110,7 @@ File with announcements, one per line.
 == Datei mit Ankündigungen, eine pro Zeile.
 
 Fill
-== Fill
+== Füllung
 
 Filter chat messages by regular expression
 == Chat-Nachrichten mit regulärem Ausdruck filtern
@@ -4194,7 +4194,7 @@ Focus mode
 == Fokusmodus
 
 Focus ring color
-== Focus ring color
+== Farbe des Fokusrings
 
 Folder
 == Ordner
@@ -5271,10 +5271,10 @@ Interface settings page
 == Oberflächeneinstellungsseite
 
 Interface surface
-== Interface surface
+== Oberfläche der Benutzeroberfläche
 
 Interface surface color
-== Interface surface color
+== Farbe der Benutzeroberfläche
 
 Interface transparency
 == Allgemeine UI-Transparenz
@@ -5457,7 +5457,7 @@ Key Sticking: Reset Self
 == Tastenkleben: Selbst zurücksetzen
 
 Keyboard focus ring color
-== Keyboard focus ring color
+== Farbe des Tastaturfokusrings
 
 Keyword Reply
 == Schlüsselwort-Antwort
@@ -6054,10 +6054,10 @@ Map
 == Karte
 
 Map browser surface
-== Map browser surface
+== Oberfläche des Kartenbrowsers
 
 Map browser surface color
-== Map browser surface color
+== Farbe der Kartenbrowser-Oberfläche
 
 Map browser transparency
 == Karten-Browser-Transparenz
@@ -7800,7 +7800,7 @@ Preparing demo playback
 == Bereite Demowiedergabe vor
 
 Presentation animations
-== Presentation animations
+== Präsentationsanimationen
 
 Preset %d
 == Voreinstellung %d
@@ -9051,10 +9051,10 @@ Scoreboard sort mode (0=Score, 1=Points)
 == Scoreboard-Sortiermodus (0=Punkte, 1=Punkte)
 
 Scoreboard surface
-== Scoreboard surface
+== Oberfläche der Anzeigetafel
 
 Scoreboard surface color
-== Scoreboard surface color
+== Farbe der Anzeigetafeloberfläche
 
 Scoreboard transparency
 == Scoreboard-Transparenz
@@ -11334,7 +11334,7 @@ There's an unsaved map in the editor, you might want to save it.
 == Es gibt eine ungespeicherte Karte im Editor, du solltest sie speichern.
 
 Thin
-== Thin
+== Dünn
 
 Thinking mode requires a reasoning model
 == Der Denkmodus erfordert ein Reasoning-Modell
@@ -11790,7 +11790,7 @@ UI icon color
 == Farbe der UI-Symbole
 
 UI icon custom color
-== UI icon custom color
+== Benutzerdefinierte Farbe der UI-Symbole
 
 UI icon weight
 == Strichstärke der UI-Symbole

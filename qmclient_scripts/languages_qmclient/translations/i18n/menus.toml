@@ -20439,6 +20439,22 @@ turkish = "Arayüz simgesi rengi"
 polish = "Kolor ikon interfejsu"
 
 [[message]]
+key = "UI icon custom color"
+[message.translations]
+simplified_chinese = "界面图标自定义颜色"
+traditional_chinese = "介面圖示自訂顏色"
+japanese = "UI アイコンのカスタム色"
+korean = "UI 아이콘 사용자 지정 색상"
+russian = "Пользовательский цвет значков интерфейса"
+german = "Benutzerdefinierte Farbe der UI-Symbole"
+spanish = "Color personalizado de los iconos de la interfaz"
+french = "Couleur personnalisée des icônes de l'interface"
+brazilian_portuguese = "Cor personalizada dos ícones da interface"
+portuguese = "Cor personalizada dos ícones da interface"
+turkish = "Özel arayüz simgesi rengi"
+polish = "Niestandardowy kolor ikon interfejsu"
+
+[[message]]
 key = "UI icon weight"
 [message.translations]
 simplified_chinese = "界面图标粗细"
@@ -20453,6 +20469,190 @@ brazilian_portuguese = "Espessura dos ícones da interface"
 portuguese = "Espessura dos ícones da interface"
 turkish = "Arayüz simgesi kalınlığı"
 polish = "Grubość ikon interfejsu"
+
+[[message]]
+key = "Thin"
+[message.translations]
+simplified_chinese = "细体"
+traditional_chinese = "細體"
+japanese = "細字"
+korean = "얇게"
+russian = "Тонкий"
+german = "Dünn"
+spanish = "Fino"
+french = "Fin"
+brazilian_portuguese = "Fino"
+portuguese = "Fino"
+turkish = "İnce"
+polish = "Cienki"
+
+[[message]]
+key = "Fill"
+[message.translations]
+simplified_chinese = "填充"
+traditional_chinese = "填充"
+japanese = "塗りつぶし"
+korean = "채우기"
+russian = "Заливка"
+german = "Füllung"
+spanish = "Relleno"
+french = "Remplissage"
+brazilian_portuguese = "Preenchimento"
+portuguese = "Preenchimento"
+turkish = "Dolgu"
+polish = "Wypełnienie"
+
+[[message]]
+key = "Focus ring color"
+[message.translations]
+simplified_chinese = "焦点环颜色"
+traditional_chinese = "焦點環顏色"
+japanese = "フォーカスリングの色"
+korean = "포커스 링 색상"
+russian = "Цвет кольца фокуса"
+german = "Farbe des Fokusrings"
+spanish = "Color del anillo de enfoque"
+french = "Couleur de l'anneau de focus"
+brazilian_portuguese = "Cor do anel de foco"
+portuguese = "Cor do anel de foco"
+turkish = "Odak halkası rengi"
+polish = "Kolor pierścienia fokusu"
+
+[[message]]
+key = "Interface surface"
+[message.translations]
+simplified_chinese = "界面表面"
+traditional_chinese = "介面表面"
+japanese = "インターフェース表面"
+korean = "인터페이스 표면"
+russian = "Поверхность интерфейса"
+german = "Oberfläche der Benutzeroberfläche"
+spanish = "Superficie de la interfaz"
+french = "Surface de l'interface"
+brazilian_portuguese = "Superfície da interface"
+portuguese = "Superfície da interface"
+turkish = "Arayüz yüzeyi"
+polish = "Powierzchnia interfejsu"
+
+[[message]]
+key = "Map browser surface"
+[message.translations]
+simplified_chinese = "地图浏览器表面"
+traditional_chinese = "地圖瀏覽器表面"
+japanese = "マップブラウザー表面"
+korean = "맵 브라우저 표면"
+russian = "Поверхность браузера карт"
+german = "Oberfläche des Kartenbrowsers"
+spanish = "Superficie del navegador de mapas"
+french = "Surface du navigateur de cartes"
+brazilian_portuguese = "Superfície do navegador de mapas"
+portuguese = "Superfície do navegador de mapas"
+turkish = "Harita tarayıcısı yüzeyi"
+polish = "Powierzchnia przeglądarki map"
+
+[[message]]
+key = "Scoreboard surface"
+[message.translations]
+simplified_chinese = "计分板表面"
+traditional_chinese = "計分板表面"
+japanese = "スコアボード表面"
+korean = "점수판 표면"
+russian = "Поверхность табло"
+german = "Oberfläche der Anzeigetafel"
+spanish = "Superficie del marcador"
+french = "Surface du tableau des scores"
+brazilian_portuguese = "Superfície do placar"
+portuguese = "Superfície do placar"
+turkish = "Skor tablosu yüzeyi"
+polish = "Powierzchnia tablicy wyników"
+
+[[message]]
+key = "Card list entry animation"
+[message.translations]
+simplified_chinese = "设置卡片列表入场动画"
+traditional_chinese = "設定卡片列表進場動畫"
+japanese = "設定カード一覧の入場アニメーション"
+korean = "설정 카드 목록 진입 애니메이션"
+russian = "Анимация появления списка карточек настроек"
+german = "Einblendanimation der Einstellungskartenliste"
+spanish = "Animación de entrada de la lista de tarjetas de ajustes"
+french = "Animation d'apparition de la liste des cartes de paramètres"
+brazilian_portuguese = "Animação de entrada da lista de cartões de configurações"
+portuguese = "Animação de entrada da lista de cartões de definições"
+turkish = "Ayar kartı listesi giriş animasyonu"
+polish = "Animacja wejścia listy kart ustawień"
+
+[[message]]
+key = "Card height animation"
+[message.translations]
+simplified_chinese = "设置卡片高度过渡动画"
+traditional_chinese = "設定卡片高度過渡動畫"
+japanese = "設定カードの高さアニメーション"
+korean = "설정 카드 높이 애니메이션"
+russian = "Анимация высоты карточки настроек"
+german = "Höhenanimation der Einstellungskarte"
+spanish = "Animación de altura de la tarjeta de ajustes"
+french = "Animation de hauteur de la carte de paramètres"
+brazilian_portuguese = "Animação de altura do cartão de configurações"
+portuguese = "Animação de altura do cartão de definições"
+turkish = "Ayar kartı yüksekliği animasyonu"
+polish = "Animacja wysokości karty ustawień"
+
+[[message]]
+key = "Card reflow animation"
+[message.translations]
+simplified_chinese = "设置卡片重排动画"
+traditional_chinese = "設定卡片重排動畫"
+japanese = "設定カードの再配置アニメーション"
+korean = "설정 카드 재배치 애니메이션"
+russian = "Анимация перестроения карточек настроек"
+german = "Neuanordnungsanimation der Einstellungskarten"
+spanish = "Animación de reorganización de tarjetas de ajustes"
+french = "Animation de réorganisation des cartes de paramètres"
+brazilian_portuguese = "Animação de reorganização dos cartões de configurações"
+portuguese = "Animação de reorganização dos cartões de definições"
+turkish = "Ayar kartı yeniden düzenleme animasyonu"
+polish = "Animacja przeorganizowania kart ustawień"
+
+[[message]]
+key = "Presentation animations"
+[message.translations]
+simplified_chinese = "界面展示动画"
+traditional_chinese = "介面展示動畫"
+japanese = "表示アニメーション"
+korean = "표시 애니메이션"
+russian = "Анимации отображения"
+german = "Präsentationsanimationen"
+spanish = "Animaciones de presentación"
+french = "Animations de présentation"
+brazilian_portuguese = "Animações de apresentação"
+portuguese = "Animações de apresentação"
+turkish = "Sunum animasyonları"
+polish = "Animacje prezentacji"
+
+[[message]]
+key = "Animate settings card lists when entering a page"
+[message.translations]
+simplified_chinese = "进入设置页面时播放卡片列表入场动画"
+traditional_chinese = "進入設定頁面時播放卡片列表進場動畫"
+
+[[message]]
+key = "Animate settings card expand and collapse height changes"
+[message.translations]
+simplified_chinese = "展开或折叠设置卡片时播放高度过渡动画"
+traditional_chinese = "展開或折疊設定卡片時播放高度過渡動畫"
+
+[[message]]
+key = "Animate settings card reorder and layout reflow"
+[message.translations]
+simplified_chinese = "拖动排序或布局重排时播放卡片位置过渡动画"
+traditional_chinese = "拖動排序或版面重排時播放卡片位置過渡動畫"
+
+[[message]]
+key = "Animate chat box, emote selector, scoreboard, and spectate selection"
+[message.translations]
+simplified_chinese = "聊天框、表情选择、计分板和观战选择的展示动画"
+traditional_chinese = "聊天框、表情選擇、計分板和觀戰選擇的展示動畫"
 
 [[message]]
 key = "White"

@@ -3693,11 +3693,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
-	const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
-	const float GraphicsIconsContentHeight = ResolveSettingsRowsHeight(2, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsIconsContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsIconsMinCardHeight = IconsChromeHeight + GraphicsIconsContentHeight;
-	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsInteractionContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight});
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 	static CButtonContainer s_aGraphicsIconColorButtons[4];
 	static CButtonContainer s_aGraphicsIconWeightButtons[4];
@@ -3986,47 +3986,42 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				});
 			} }, GraphicsDisplayMeasureRevision);
 		AddCard(VisualSpec, GraphicsVisualMinCardHeight, VisualChromeHeight, [this, GraphicsMetrics, DoGraphicsNumericField](CUIRect ContentRect) {
-			CUIRect CardView = ContentRect;
-			CUIRect Button;
+			CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);
+			SSettingsContentMetrics ColorMetrics = GraphicsMetrics;
+			ColorMetrics.m_LineSpacing = 0.0f;
 			static CButtonContainer s_UiColorResetId;
-			if(DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize("Interface surface"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
+			CUIRect UiColorRow = Rows.NextButton();
+			if(DoLine_AlphaColorPicker(&s_UiColorResetId, ColorMetrics, &UiColorRow, Localize("Interface surface"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_MapBrowserColorResetId;
-			if(DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize("Map browser surface"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity, DefaultConfig::QmMapBrowserColor, DefaultConfig::QmMapBrowserOpacity))
+			CUIRect MapBrowserColorRow = Rows.NextButton();
+			if(DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, ColorMetrics, &MapBrowserColorRow, Localize("Map browser surface"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity, DefaultConfig::QmMapBrowserColor, DefaultConfig::QmMapBrowserOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_ScoreboardColorResetId;
-			if(DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize("Scoreboard surface"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity, DefaultConfig::QmScoreboardColor, DefaultConfig::QmScoreboardOpacity))
+			CUIRect ScoreboardColorRow = Rows.NextButton();
+			if(DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, ColorMetrics, &ScoreboardColorRow, Localize("Scoreboard surface"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity, DefaultConfig::QmScoreboardColor, DefaultConfig::QmScoreboardOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
-			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
+			CUIRect Button = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
 				g_Config.m_QmUiCardBorders ^= 1;
 
 			static CButtonContainer s_CardBorderColorResetId;
 			const unsigned OldCardBorderColor = g_Config.m_QmUiCardBorderColor;
-			DoLine_ColorPicker(&s_CardBorderColorResetId, GraphicsMetrics, &CardView, Localize("Settings card border color"), &g_Config.m_QmUiCardBorderColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f), false, nullptr, true, false);
+			CUIRect CardBorderColorRow = Rows.NextButton();
+			DoLine_ColorPicker(&s_CardBorderColorResetId, ColorMetrics, &CardBorderColorRow, Localize("Settings card border color"), &g_Config.m_QmUiCardBorderColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f), false, nullptr, true, false);
 			if(OldCardBorderColor != g_Config.m_QmUiCardBorderColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
-			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
+			Button = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
 				g_Config.m_QmUiCardRainbowTitles ^= 1;
 		});
 		AddCard(IconsSpec, GraphicsIconsMinCardHeight, IconsChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
-			CUIRect CardView = ContentRect;
+			CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);
 			const bool CustomColor = g_Config.m_QmUiIconColor == 3;
-			int RowsRemaining = 2;
-			const auto NextRow = [&]() {
-				CUIRect Row;
-				CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
-				if(--RowsRemaining > 0)
-					CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-				return Row;
-			};
 			const auto DoIconChoiceRow = [this, BodySize](CUIRect Row, const char *pLabel, const char *const *ppLabels, int Count, int Current, CButtonContainer *pButtons, auto &&OnChanged) {
 				CUIRect Label, Segments;
 				Row.VSplitLeft(std::clamp(Row.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
@@ -4048,13 +4043,18 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
 				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					IconWeightIndex = i;
-			DoIconChoiceRow(NextRow(), Localize("UI icon color"), apIconColorLabels, std::size(apIconColorLabels), std::clamp(g_Config.m_QmUiIconColor, 1, 4) - 1, s_aGraphicsIconColorButtons, [this](int NewValue) {
+			DoIconChoiceRow(Rows.NextLine(), Localize("UI icon color"), apIconColorLabels, std::size(apIconColorLabels), std::clamp(g_Config.m_QmUiIconColor, 1, 4) - 1, s_aGraphicsIconColorButtons, [this](int NewValue) {
 				g_Config.m_QmUiIconColor = NewValue + 1;
 				Client()->OnWindowResize();
 			});
 			if(CustomColor)
-				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, GraphicsMetrics, &CardView, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
-			DoIconChoiceRow(NextRow(), Localize("UI icon weight"), apIconWeightLabels, std::size(apIconWeightLabels), IconWeightIndex, s_aGraphicsIconWeightButtons, [this](int NewValue) {
+			{
+				SSettingsContentMetrics ColorMetrics = GraphicsMetrics;
+				ColorMetrics.m_LineSpacing = 0.0f;
+				CUIRect CustomColorRow = Rows.NextButton();
+				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, ColorMetrics, &CustomColorRow, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
+			}
+			DoIconChoiceRow(Rows.NextLine(), Localize("UI icon weight"), apIconWeightLabels, std::size(apIconWeightLabels), IconWeightIndex, s_aGraphicsIconWeightButtons, [this](int NewValue) {
 				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
 				const int NewWeight = s_aIconWeightValues[NewValue];
 				if(NewWeight == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
@@ -4064,10 +4064,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			});
 		});
 		vCards.back().m_Measure = [GraphicsMetrics](float) {
-			const float ChoiceRows = ResolveSettingsRowsHeight(2, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
-			const CUIRect MeasureRect{0.0f, 0.0f, 0.0f, 0.0f};
-			const float CustomColorRow = ResolveSettingsColorRowLayout(MeasureRect, GraphicsMetrics, false, false).m_ConsumedHeight;
-			return ChoiceRows + (g_Config.m_QmUiIconColor == 3 ? CustomColorRow : 0.0f);
+			return ResolveSettingsContentFlowHeight(GraphicsMetrics, g_Config.m_QmUiIconColor == 3 ? std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight} : std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 		};
 		vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3);
 		vCards.back().m_PreLayoutInput = [this, GraphicsMetrics](CUIRect ContentRect) {
@@ -4090,27 +4087,27 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					}
 				}
 			};
-			CUIRect Row;
-			ContentRect.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &ContentRect);
+			CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);
+			CUIRect Row = Rows.NextLine();
 			ProcessChoiceRow(Row, std::clamp(g_Config.m_QmUiIconColor, 1, 4) - 1, 4, s_aGraphicsIconColorButtons, [this](int NewValue) {
 				g_Config.m_QmUiIconColor = NewValue + 1;
 				Client()->OnWindowResize();
 			});
-			ContentRect.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ContentRect);
 			if(CustomColor)
 			{
 				const unsigned int OldCustomColor = g_Config.m_QmUiIconCustomColor;
-				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, GraphicsMetrics, &ContentRect, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
+				SSettingsContentMetrics ColorMetrics = GraphicsMetrics;
+				ColorMetrics.m_LineSpacing = 0.0f;
+				CUIRect CustomColorRow = Rows.NextButton();
+				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, ColorMetrics, &CustomColorRow, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
 				Changed = Changed || OldCustomColor != g_Config.m_QmUiIconCustomColor;
 			}
-			else
-				ContentRect.HSplitTop(GraphicsMetrics.m_LineHeight + GraphicsMetrics.m_LineSpacing, nullptr, &ContentRect);
 			int IconWeightIndex = 1;
 			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
 			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
 				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					IconWeightIndex = i;
-			ContentRect.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &ContentRect);
+			Row = Rows.NextLine();
 			ProcessChoiceRow(Row, IconWeightIndex, 4, s_aGraphicsIconWeightButtons, [this](int NewValue) {
 				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
 				const int NewWeight = s_aIconWeightValues[NewValue];
@@ -4122,17 +4119,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			return Changed;
 		};
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
-			CUIRect CardView = ContentRect;
-			CUIRect Button;
-			int RowsRemaining = 6;
-			const auto NextRow = [&]() {
-				CUIRect Row;
-				CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
-				if(--RowsRemaining > 0)
-					CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-				return Row;
-			};
-			CUIRect MotionRow = NextRow();
+			CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);
+			CUIRect MotionRow = Rows.NextLine();
 			CUIRect Label, Segments;
 			MotionRow.VSplitLeft(std::clamp(MotionRow.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
 			Segments.VSplitLeft(GraphicsMetrics.m_LineSpacing, nullptr, &Segments);
@@ -4148,28 +4136,28 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					g_Config.m_QmUiMotionLevel = i;
 			}
 
-			CUIRect ListEntryAnimations = NextRow();
+			CUIRect ListEntryAnimations = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiListEntryAnimations, "settings-card-list-entry-animations", Localize("Card list entry animation"), g_Config.m_QmUiListEntryAnimations, &ListEntryAnimations))
 				g_Config.m_QmUiListEntryAnimations ^= 1;
 			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiListEntryAnimations, &ListEntryAnimations, Localize("Animate settings card lists when entering a page"));
 
-			CUIRect CardHeightAnimations = NextRow();
+			CUIRect CardHeightAnimations = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardHeightAnimations, "settings-card-height-animations", Localize("Card height animation"), g_Config.m_QmUiCardHeightAnimations, &CardHeightAnimations))
 				g_Config.m_QmUiCardHeightAnimations ^= 1;
 			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiCardHeightAnimations, &CardHeightAnimations, Localize("Animate settings card expand and collapse height changes"));
 
-			CUIRect CardReflowAnimations = NextRow();
+			CUIRect CardReflowAnimations = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardReflowAnimations, "settings-card-reflow-animations", Localize("Card reflow animation"), g_Config.m_QmUiCardReflowAnimations, &CardReflowAnimations))
 				g_Config.m_QmUiCardReflowAnimations ^= 1;
 			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiCardReflowAnimations, &CardReflowAnimations, Localize("Animate settings card reorder and layout reflow"));
 
-			CUIRect PresentationAnimations = NextRow();
+			CUIRect PresentationAnimations = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "presentation-animations", Localize("Presentation animations"), g_Config.m_QmExtraAnimations, &PresentationAnimations))
 				g_Config.m_QmExtraAnimations ^= 1;
 			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmExtraAnimations, &PresentationAnimations, Localize("Animate chat box, emote selector, scoreboard, and spectate selection"));
 			static CButtonContainer s_FocusColorResetId;
 			const unsigned OldFocusColor = g_Config.m_QmUiFocusColor;
-			CUIRect FocusColorRow = NextRow();
+			CUIRect FocusColorRow = Rows.NextButton();
 			SSettingsContentMetrics FocusColorMetrics = GraphicsMetrics;
 			FocusColorMetrics.m_LineSpacing = 0.0f;
 			DoLine_ColorPicker(&s_FocusColorResetId, FocusColorMetrics, &FocusColorRow, Localize("Focus ring color"), &g_Config.m_QmUiFocusColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiFocusColor)), false, nullptr, false);

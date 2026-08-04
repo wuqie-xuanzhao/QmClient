@@ -699,16 +699,16 @@ Angle:
 == Угол:
 
 Animate chat box, emote selector, scoreboard, and spectate selection
-== Animate chat box, emote selector, scoreboard, and spectate selection
+== Анимировать чат, выбор эмоций, табло и выбор наблюдения
 
 Animate settings card expand and collapse height changes
-== Animate settings card expand and collapse height changes
+== Анимировать изменение высоты при разворачивании и сворачивании карточек настроек
 
 Animate settings card lists when entering a page
-== Animate settings card lists when entering a page
+== Анимировать список карточек настроек при входе на страницу
 
 Animate settings card reorder and layout reflow
-== Animate settings card reorder and layout reflow
+== Анимировать сортировку и перестроение раскладки карточек настроек
 
 Animation
 == Анимация
@@ -1635,13 +1635,13 @@ Cannot swap: the other player is not in your team
 == Невозможно обменяться: другой игрок не в вашей команде
 
 Card height animation
-== Card height animation
+== Анимация высоты карточки настроек
 
 Card list entry animation
-== Card list entry animation
+== Анимация появления списка карточек настроек
 
 Card reflow animation
-== Card reflow animation
+== Анимация перестроения карточек настроек
 
 Category
 == Категория
@@ -4110,7 +4110,7 @@ File with announcements, one per line.
 == Файл с объявлениями, по одному на строку.
 
 Fill
-== Fill
+== Заливка
 
 Filter chat messages by regular expression
 == Фильтровать сообщения чата по регулярному выражению
@@ -4194,7 +4194,7 @@ Focus mode
 == Режим фокуса
 
 Focus ring color
-== Focus ring color
+== Цвет кольца фокуса
 
 Folder
 == Папка
@@ -5271,10 +5271,10 @@ Interface settings page
 == Страница настроек интерфейса
 
 Interface surface
-== Interface surface
+== Поверхность интерфейса
 
 Interface surface color
-== Interface surface color
+== Цвет поверхности интерфейса
 
 Interface transparency
 == Общая прозрачность интерфейса
@@ -5457,7 +5457,7 @@ Key Sticking: Reset Self
 == Залипание клавиш: Сбросить себя
 
 Keyboard focus ring color
-== Keyboard focus ring color
+== Цвет кольца клавиатурного фокуса
 
 Keyword Reply
 == Ответ по ключевым словам
@@ -6054,10 +6054,10 @@ Map
 == Карта
 
 Map browser surface
-== Map browser surface
+== Поверхность браузера карт
 
 Map browser surface color
-== Map browser surface color
+== Цвет поверхности браузера карт
 
 Map browser transparency
 == Прозрачность браузера карт
@@ -7800,7 +7800,7 @@ Preparing demo playback
 == Подготовка воспроизведения демо
 
 Presentation animations
-== Presentation animations
+== Анимации отображения
 
 Preset %d
 == Пресет %d
@@ -9051,10 +9051,10 @@ Scoreboard sort mode (0=Score, 1=Points)
 == Режим сортировки таблицы лидеров (0=очки, 1=фрагменты)
 
 Scoreboard surface
-== Scoreboard surface
+== Поверхность табло
 
 Scoreboard surface color
-== Scoreboard surface color
+== Цвет поверхности табло
 
 Scoreboard transparency
 == Прозрачность таблицы лидеров
@@ -11334,7 +11334,7 @@ There's an unsaved map in the editor, you might want to save it.
 == В редакторе есть несохранённая карта, возможно, стоит её сохранить.
 
 Thin
-== Thin
+== Тонкий
 
 Thinking mode requires a reasoning model
 == Для режима размышления требуется модель рассуждения
@@ -11790,7 +11790,7 @@ UI icon color
 == Цвет значков интерфейса
 
 UI icon custom color
-== UI icon custom color
+== Пользовательский цвет значков интерфейса
 
 UI icon weight
 == Толщина значков интерфейса

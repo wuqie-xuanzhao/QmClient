@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <initializer_list>
 
 struct SSettingsPageLayoutFrame
 {
@@ -207,6 +208,49 @@ inline float ResolveSettingsRowsHeight(const int RowCount, const float RowHeight
 	if(RowCount <= 0)
 		return 0.0f;
 	return RowCount * std::max(0.0f, RowHeight) + std::max(0, RowCount - 1) * std::max(0.0f, RowSpacing);
+}
+
+// 卡片内容的行间距只由这个行流消费：首行无前间距，后续每一可见行恰好一个标准间距。
+// 条件行在测量、预布局和绘制阶段均省略 Next 调用即可，不再手算 RowsRemaining。
+class CSettingsContentRowFlow
+{
+	CUIRect &m_View;
+	const SSettingsContentMetrics &m_Metrics;
+	bool m_HasPreviousRow = false;
+
+public:
+	CSettingsContentRowFlow(CUIRect &View, const SSettingsContentMetrics &Metrics) :
+		m_View(View),
+		m_Metrics(Metrics)
+	{
+	}
+
+	CUIRect Next(const float Height)
+	{
+		if(m_HasPreviousRow)
+			m_View.HSplitTop(std::max(0.0f, m_Metrics.m_LineSpacing), nullptr, &m_View);
+		CUIRect Row;
+		m_View.HSplitTop(std::max(0.0f, Height), &Row, &m_View);
+		m_HasPreviousRow = true;
+		return Row;
+	}
+
+	CUIRect NextLine() { return Next(m_Metrics.m_LineHeight); }
+	CUIRect NextButton() { return Next(m_Metrics.m_ButtonHeight); }
+};
+
+inline float ResolveSettingsContentFlowHeight(const SSettingsContentMetrics &Metrics, const std::initializer_list<float> RowHeights)
+{
+	float Height = 0.0f;
+	bool HasPreviousRow = false;
+	for(const float RowHeight : RowHeights)
+	{
+		if(HasPreviousRow)
+			Height += std::max(0.0f, Metrics.m_LineSpacing);
+		Height += std::max(0.0f, RowHeight);
+		HasPreviousRow = true;
+	}
+	return Height;
 }
 
 inline int ResolveSettingsSelectionWithCustomFallback(const int MatchedIndex, const int SupportedCount)

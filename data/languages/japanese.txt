@@ -699,16 +699,16 @@ Angle:
 == 角度：
 
 Animate chat box, emote selector, scoreboard, and spectate selection
-== Animate chat box, emote selector, scoreboard, and spectate selection
+== チャットボックス、絵文字選択、スコアボード、観戦選択をアニメーション化
 
 Animate settings card expand and collapse height changes
-== Animate settings card expand and collapse height changes
+== 設定カードの展開・折りたたみ時の高さ変化をアニメーション化
 
 Animate settings card lists when entering a page
-== Animate settings card lists when entering a page
+== ページを開くときに設定カード一覧をアニメーション表示
 
 Animate settings card reorder and layout reflow
-== Animate settings card reorder and layout reflow
+== 設定カードの並べ替えとレイアウト再配置をアニメーション化
 
 Animation
 == アニメーション
@@ -1635,13 +1635,13 @@ Cannot swap: the other player is not in your team
 == 交換できません：相手があなたのチームにいません
 
 Card height animation
-== Card height animation
+== 設定カードの高さアニメーション
 
 Card list entry animation
-== Card list entry animation
+== 設定カード一覧の入場アニメーション
 
 Card reflow animation
-== Card reflow animation
+== 設定カードの再配置アニメーション
 
 Category
 == カテゴリ
@@ -4110,7 +4110,7 @@ File with announcements, one per line.
 == 告知ファイル（1 行に 1 件）
 
 Fill
-== Fill
+== 塗りつぶし
 
 Filter chat messages by regular expression
 == 正規表現でチャットメッセージをフィルタリング
@@ -4194,7 +4194,7 @@ Focus mode
 == フォーカスモード
 
 Focus ring color
-== Focus ring color
+== フォーカスリングの色
 
 Folder
 == フォルダ
@@ -5271,10 +5271,10 @@ Interface settings page
 == インターフェース設定ページ
 
 Interface surface
-== Interface surface
+== インターフェース表面
 
 Interface surface color
-== Interface surface color
+== インターフェース表面の色
 
 Interface transparency
 == 汎用インターフェース透明度
@@ -5457,7 +5457,7 @@ Key Sticking: Reset Self
 == キースティッキング：自分をリセット
 
 Keyboard focus ring color
-== Keyboard focus ring color
+== キーボードフォーカスリングの色
 
 Keyword Reply
 == キーワード返信
@@ -6054,10 +6054,10 @@ Map
 == マップ
 
 Map browser surface
-== Map browser surface
+== マップブラウザー表面
 
 Map browser surface color
-== Map browser surface color
+== マップブラウザー表面の色
 
 Map browser transparency
 == マップブラウザの透明度
@@ -7800,7 +7800,7 @@ Preparing demo playback
 == デモ再生を準備中
 
 Presentation animations
-== Presentation animations
+== 表示アニメーション
 
 Preset %d
 == プリセット %d
@@ -9051,10 +9051,10 @@ Scoreboard sort mode (0=Score, 1=Points)
 == スコアボードのソートモード（0=スコア、1=ポイント）
 
 Scoreboard surface
-== Scoreboard surface
+== スコアボード表面
 
 Scoreboard surface color
-== Scoreboard surface color
+== スコアボード表面の色
 
 Scoreboard transparency
 == スコアボード透明度
@@ -11334,7 +11334,7 @@ There's an unsaved map in the editor, you might want to save it.
 == エディターに未保存のマップがあります。保存することをお勧めします。
 
 Thin
-== Thin
+== 細字
 
 Thinking mode requires a reasoning model
 == 思考モードを使用するには推論モデルが必要です
@@ -11790,7 +11790,7 @@ UI icon color
 == UI アイコンの色
 
 UI icon custom color
-== UI icon custom color
+== UI アイコンのカスタム色
 
 UI icon weight
 == UI アイコンの太さ

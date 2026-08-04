@@ -699,16 +699,16 @@ Angle:
 == 角度：
 
 Animate chat box, emote selector, scoreboard, and spectate selection
-== Animate chat box, emote selector, scoreboard, and spectate selection
+== 聊天框、表情選擇、計分板和觀戰選擇的展示動畫
 
 Animate settings card expand and collapse height changes
-== Animate settings card expand and collapse height changes
+== 展開或折疊設定卡片時播放高度過渡動畫
 
 Animate settings card lists when entering a page
-== Animate settings card lists when entering a page
+== 進入設定頁面時播放卡片列表進場動畫
 
 Animate settings card reorder and layout reflow
-== Animate settings card reorder and layout reflow
+== 拖動排序或版面重排時播放卡片位置過渡動畫
 
 Animation
 == 動畫效果
@@ -1635,13 +1635,13 @@ Cannot swap: the other player is not in your team
 == 無法交換：對方不在你的隊伍中
 
 Card height animation
-== Card height animation
+== 設定卡片高度過渡動畫
 
 Card list entry animation
-== Card list entry animation
+== 設定卡片列表進場動畫
 
 Card reflow animation
-== Card reflow animation
+== 設定卡片重排動畫
 
 Category
 == 分類
@@ -4110,7 +4110,7 @@ File with announcements, one per line.
 == 包含公告的文件，每行一個
 
 Fill
-== Fill
+== 填充
 
 Filter chat messages by regular expression
 == 按正則表達式過濾聊天消息
@@ -4194,7 +4194,7 @@ Focus mode
 == 專注模式
 
 Focus ring color
-== Focus ring color
+== 焦點環顏色
 
 Folder
 == 文件夾
@@ -5271,10 +5271,10 @@ Interface settings page
 == 界面設置頁面
 
 Interface surface
-== Interface surface
+== 介面表面
 
 Interface surface color
-== Interface surface color
+== 介面表面顏色
 
 Interface transparency
 == 通用介面透明度
@@ -5457,7 +5457,7 @@ Key Sticking: Reset Self
 == 卡鍵：重置本體
 
 Keyboard focus ring color
-== Keyboard focus ring color
+== 鍵盤焦點環顏色
 
 Keyword Reply
 == 關鍵詞回覆
@@ -6054,10 +6054,10 @@ Map
 == 地圖
 
 Map browser surface
-== Map browser surface
+== 地圖瀏覽器表面
 
 Map browser surface color
-== Map browser surface color
+== 地圖瀏覽器表面顏色
 
 Map browser transparency
 == 地圖瀏覽器透明度
@@ -7800,7 +7800,7 @@ Preparing demo playback
 == 正在準備回放
 
 Presentation animations
-== Presentation animations
+== 介面展示動畫
 
 Preset %d
 == 預設 %d
@@ -9051,10 +9051,10 @@ Scoreboard sort mode (0=Score, 1=Points)
 == 記分牌排序模式（0=分數，1=分）
 
 Scoreboard surface
-== Scoreboard surface
+== 計分板表面
 
 Scoreboard surface color
-== Scoreboard surface color
+== 計分板表面顏色
 
 Scoreboard transparency
 == 計分板透明度
@@ -11334,7 +11334,7 @@ There's an unsaved map in the editor, you might want to save it.
 == 編輯器中有尚未保存的地圖，建議先保存。
 
 Thin
-== Thin
+== 細體
 
 Thinking mode requires a reasoning model
 == 啟用思考模式需要使用推理模型
@@ -11790,7 +11790,7 @@ UI icon color
 == 介面圖示顏色
 
 UI icon custom color
-== UI icon custom color
+== 介面圖示自訂顏色
 
 UI icon weight
 == 介面圖示粗細

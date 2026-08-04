@@ -699,16 +699,16 @@ Angle:
 == Açı:
 
 Animate chat box, emote selector, scoreboard, and spectate selection
-== Animate chat box, emote selector, scoreboard, and spectate selection
+== Sohbet kutusunu, ifade seçiciyi, skor tablosunu ve izleyici seçimini canlandır
 
 Animate settings card expand and collapse height changes
-== Animate settings card expand and collapse height changes
+== Ayar kartlarını genişletip daraltırken yükseklik değişimlerini canlandır
 
 Animate settings card lists when entering a page
-== Animate settings card lists when entering a page
+== Bir sayfaya girerken ayar kartı listelerini canlandır
 
 Animate settings card reorder and layout reflow
-== Animate settings card reorder and layout reflow
+== Ayar kartı sıralamasını ve düzen yeniden akışını canlandır
 
 Animation
 == Animasyon
@@ -1635,13 +1635,13 @@ Cannot swap: the other player is not in your team
 == Takas yapılamıyor: diğer oyuncu takımında değil
 
 Card height animation
-== Card height animation
+== Ayar kartı yüksekliği animasyonu
 
 Card list entry animation
-== Card list entry animation
+== Ayar kartı listesi giriş animasyonu
 
 Card reflow animation
-== Card reflow animation
+== Ayar kartı yeniden düzenleme animasyonu
 
 Category
 == Kategori
@@ -4110,7 +4110,7 @@ File with announcements, one per line.
 == Duyuruları içeren dosya, her satırda bir tane.
 
 Fill
-== Fill
+== Dolgu
 
 Filter chat messages by regular expression
 == Sohbet mesajlarını düzenli ifadeyle filtrele
@@ -4194,7 +4194,7 @@ Focus mode
 == Odak modu
 
 Focus ring color
-== Focus ring color
+== Odak halkası rengi
 
 Folder
 == Klasör
@@ -5271,10 +5271,10 @@ Interface settings page
 == Arayüz ayarları sayfası
 
 Interface surface
-== Interface surface
+== Arayüz yüzeyi
 
 Interface surface color
-== Interface surface color
+== Arayüz yüzey rengi
 
 Interface transparency
 == Genel arayüz şeffaflığı
@@ -5457,7 +5457,7 @@ Key Sticking: Reset Self
 == Tuş Kilitleme: Kendini Sıfırla
 
 Keyboard focus ring color
-== Keyboard focus ring color
+== Klavye odak halkası rengi
 
 Keyword Reply
 == Anahtar Kelime Yanıtı
@@ -6054,10 +6054,10 @@ Map
 == Harita
 
 Map browser surface
-== Map browser surface
+== Harita tarayıcısı yüzeyi
 
 Map browser surface color
-== Map browser surface color
+== Harita tarayıcısı yüzey rengi
 
 Map browser transparency
 == Harita tarayıcısı şeffaflığı
@@ -7800,7 +7800,7 @@ Preparing demo playback
 == Demo oynatımı hazırlanıyor
 
 Presentation animations
-== Presentation animations
+== Sunum animasyonları
 
 Preset %d
 == Ön ayar %d
@@ -9051,10 +9051,10 @@ Scoreboard sort mode (0=Score, 1=Points)
 == Skor Tablosu Sıralama Modu (0=Puan, 1=Skor)
 
 Scoreboard surface
-== Scoreboard surface
+== Skor tablosu yüzeyi
 
 Scoreboard surface color
-== Scoreboard surface color
+== Skor tablosu yüzey rengi
 
 Scoreboard transparency
 == Skor Tablosu Şeffaflığı
@@ -11334,7 +11334,7 @@ There's an unsaved map in the editor, you might want to save it.
 == Düzenleyicide kaydedilmemiş bir harita var, kaydetmek isteyebilirsiniz.
 
 Thin
-== Thin
+== İnce
 
 Thinking mode requires a reasoning model
 == Düşünme modu bir akıl yürütme modeli gerektirir
@@ -11790,7 +11790,7 @@ UI icon color
 == Arayüz simgesi rengi
 
 UI icon custom color
-== UI icon custom color
+== Özel arayüz simgesi rengi
 
 UI icon weight
 == Arayüz simgesi kalınlığı
