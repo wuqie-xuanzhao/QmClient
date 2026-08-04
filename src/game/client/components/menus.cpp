@@ -4852,7 +4852,7 @@ int CMenus::IdleRenderFrameRate() const
 	if(time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME)
 		return 0;
 
-	return MENU_IDLE_REFRESH_RATE;
+	return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);
 }
 
 CMenus::SSettingsScrollRegionFrame CMenus::BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY)

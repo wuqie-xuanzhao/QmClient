@@ -4955,9 +4955,8 @@ TEST(QmMonitoringHelpers, MenuIdleRenderThrottleOnlySkipsSettingsDuringPerfSampl
 	EXPECT_NE(Body.find("GameClient()->m_MenuBackground.IsLoading()"), std::string::npos);
 	EXPECT_NE(Body.find("UiRuntimeStats.m_ActiveAnimCount > 0"), std::string::npos);
 	EXPECT_NE(Body.find("time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME"), std::string::npos);
-	EXPECT_NE(Body.find("return MENU_IDLE_REFRESH_RATE;"), std::string::npos);
-	EXPECT_EQ(Body.find("g_Config.m_GfxScreenRefreshRate"), std::string::npos);
-	EXPECT_LT(SettingsReturn, Body.find("return MENU_IDLE_REFRESH_RATE;"));
+	EXPECT_NE(Body.find("return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);"), std::string::npos);
+	EXPECT_LT(SettingsReturn, Body.find("return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);"));
 }
 
 TEST(QmMonitoringHelpers, ClientRenderLoopUsesGameClientIdleThrottleWithOneFrameRatePath)
