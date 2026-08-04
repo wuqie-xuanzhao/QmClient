@@ -15,7 +15,7 @@
 - **调查与文档**
   - Create: `docs/superpowers/explore/2026-06-12-QmClient-i18n-调用点与分类清单.md`
     - 汇总 `Localize("中文")`、`Localizable("中文")`、中文 UI 硬编码、overlay/旁路加载链、待判定项。
-  - Create: `docs/superpowers/reports/2026-06-12-QmClient-i18n-人工迁移批次清单.md`
+  - Create: `docs/superpowers/reports/archive/2026-06-12-QmClient-i18n-人工迁移批次清单.md`
     - 记录每一批手工修改的模块、key 命名、待人工确认项。
 
 - **脚本层**
@@ -395,7 +395,7 @@ key 集一致；新增条目无格式错误。
 ## Task 6: 第一阶段收口与第二阶段切换清单
 
 **Files:**
-- Modify: `docs/superpowers/reports/2026-06-12-QmClient-i18n-人工迁移批次清单.md`
+- Modify: `docs/superpowers/reports/archive/2026-06-12-QmClient-i18n-人工迁移批次清单.md`
 - Test: `python qmclient_scripts/gate/check_gate.py --mode quick`
 
 - [ ] **Step 1: 汇总第一阶段剩余项**

@@ -91,8 +91,8 @@ TClient 主设置页的 runtime scroll metadata 不再在 `Begin()` 后立即写
 ## 相关文档
 
 - `2026-06-10-设置页文本缓存覆盖现状.md` — 说明 stable text cache 的覆盖边界。
-- `docs/superpowers/reports/2026-06-14-设置页性能优化最终收口报告.md` — 记录上一轮文本 coverage 验收目标。
-- `docs/superpowers/reports/2026-06-14-设置页性能优化二次根因收口报告.md` — 记录 visible guard 与资源 visible-ready 的上一轮收口。
+- `docs/superpowers/reports/archive/2026-06-14-设置页性能优化最终收口报告.md` — 记录上一轮文本 coverage 验收目标。
+- `docs/superpowers/reports/archive/2026-06-14-设置页性能优化二次根因收口报告.md` — 记录 visible guard 与资源 visible-ready 的上一轮收口。
 
 ## 下一步
 
