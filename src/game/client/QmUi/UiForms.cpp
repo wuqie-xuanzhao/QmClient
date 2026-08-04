@@ -116,9 +116,23 @@ namespace ui_widget
 			return Active;
 		}
 
-		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon, const ColorRGBA &Color)
+		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon, const ColorRGBA &Color, const int QmIcon = -1)
 		{
-			if(pIcon == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
+			const bool HasQmIcon = QmIcon >= 0 && QmIcon < static_cast<int>(EQmIcon::COUNT);
+			if((pIcon == nullptr && !HasQmIcon) || Rect.w <= 0.0f || Rect.h <= 0.0f)
+				return;
+			// Phosphor 的 eye-off 将眼睛拆分给对角线，主体比 eye 更窄。
+			// 仅补偿这对密码可见性图标，避免改变其他图标的既有比例。
+			const float EyeOffScale = g_Config.m_QmUiIconWeight == 0 ? 1.15f : 1.25f;
+			const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;
+			if(HasQmIcon && Ctx.m_pIconManager != nullptr)
+			{
+				const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;
+				const CUIRect IconRect{Rect.x + (Rect.w - IconSide) * 0.5f, Rect.y + (Rect.h - IconSide) * 0.5f, IconSide, IconSide};
+				if(Ctx.m_pIconManager->RenderIcon(static_cast<EQmIcon>(QmIcon), IconRect, Color))
+					return;
+			}
+			if(pIcon == nullptr)
 				return;
 			ITextRender *pTextRender = Ctx.m_pUi->TextRender();
 			const ColorRGBA PreviousColor = pTextRender->GetTextColor();
@@ -129,7 +143,7 @@ namespace ui_widget
 			pTextRender->TextColor(Color);
 			pTextRender->SetFontPreset(g_Config.m_QmUiIconWeight == 0 ? EFontPreset::ICON_FONT : EFontPreset::ICON_FONT_BOLD);
 			pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);
+			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);
 			pTextRender->SetRenderFlags(PreviousFlags);
 			pTextRender->SetFontPreset(PreviousPreset);
 			pTextRender->TextOutlineColor(PreviousOutlineColor);
@@ -226,7 +240,7 @@ namespace ui_widget
 			const float ActionState = Ctx.m_pUi->ButtonColorMul(Options.m_pTrailingActionId);
 			if(ActionState > 1.0f)
 				DrawRoundedSurface(Ctx, TrailingRect, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * (ActionState - 1.0f))), ColorRGBA(), ui_token::radius::BASE, 0.0f, Options.m_Clearable ? IGraphics::CORNER_NONE : IGraphics::CORNER_R);
-			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor);
+			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor, Options.m_TrailingActionQmIcon);
 			TrailingAction = Ctx.m_pUi->DoButtonLogic(Options.m_pTrailingActionId, 0, &TrailingRect, BUTTONFLAG_LEFT) != 0;
 		}
 		if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)

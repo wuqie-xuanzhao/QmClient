@@ -6881,10 +6881,16 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsDrawTL(&BackgroundQuadItem, 1);
 	Graphics()->QuadsEnd();
 
+	// 空菜单地图即显式的 "(none)" 主题。DDNet 默认棋盘格为黑色，
+	// 在黑色 UI 颜色上不可见；保留同一程序化图案但改用对比色。
+	const bool NoMenuTheme = g_Config.m_ClMenuMap[0] == '\0';
+	const float GuiLuminance = (ms_GuiColor.r + ms_GuiColor.g + ms_GuiColor.b) / 3.0f;
+	const ColorRGBA CheckerColor = NoMenuTheme ? (GuiLuminance < 0.5f ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.10f)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.045f);
+
 	// render the tiles
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.045f);
+	Graphics()->SetColor(CheckerColor);
 	const float Size = 15.0f;
 	const float OffsetTime = std::fmod(GameClient()->GlobalTimeOrZero() * 0.15f, 2.0f);
 	IGraphics::CQuadItem aCheckerItems[64];

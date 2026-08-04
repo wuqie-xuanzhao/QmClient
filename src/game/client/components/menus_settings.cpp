@@ -3856,9 +3856,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		char aFsaaSamples[16];
 		str_format(aFsaaSamples, sizeof(aFsaaSamples), "%d", g_Config.m_GfxFsaaSamples);
 		int GfxFsaaSamplesMouseButton = DoButton_CheckBox_Common_WithLabelElement(&g_Config.m_GfxFsaaSamples, aBuf, aFsaaSamples, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, nullptr, true, BodySize);
-		// 图形初始化失败时引擎只会从大于 4 的值回退到 4，再回退到关闭；
-		// 设置页仅提供这条实际可稳定初始化的值域。
-		static constexpr int s_aFsaaSamples[] = {0, 2, 4};
+		// 配置的有效值域是 0 到 64 的 2 次幂。设置页仅记录目标值，
+		// 在图形重启时协商后端支持的样本数，避免点击时重建交换链闪屏。
+		static constexpr int s_aFsaaSamples[] = {0, 2, 4, 8, 16, 32, 64};
 		int FsaaSampleIndex = 0;
 		for(int i = 1; i < (int)std::size(s_aFsaaSamples); ++i)
 		{

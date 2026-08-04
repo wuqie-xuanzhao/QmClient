@@ -2577,12 +2577,18 @@ TEST(QmNewUiMenuBranches, InputTrailingActionsDoNotStealTextEditingHitArea)
 
 	EXPECT_NE(Header.find("m_pTrailingActionId"), std::string::npos);
 	EXPECT_NE(Header.find("m_pTrailingActionIcon"), std::string::npos);
+	EXPECT_NE(Header.find("m_TrailingActionQmIcon"), std::string::npos);
 	EXPECT_NE(Body.find("const bool HasTrailingAction"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect InputHitRect = Layout.m_ShellRect;"), std::string::npos);
 	EXPECT_NE(Body.find("InputHitRect.VSplitRight(Layout.m_ClearRect.w, &InputHitRect, nullptr);"), std::string::npos);
 	EXPECT_NE(Body.find("InputHitRect.VSplitRight(TrailingRect.w, &InputHitRect, nullptr);"), std::string::npos);
 	EXPECT_NE(Body.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
 	EXPECT_NE(Body.find("DoButtonLogic(Options.m_pTrailingActionId"), std::string::npos);
+	EXPECT_NE(Source.find("Ctx.m_pIconManager->RenderIcon"), std::string::npos);
+	EXPECT_NE(Source.find("const float EyeOffScale = g_Config.m_QmUiIconWeight == 0 ? 1.15f : 1.25f;"), std::string::npos);
+	EXPECT_NE(Source.find("const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;"), std::string::npos);
+	EXPECT_NE(Source.find("Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
@@ -2591,7 +2597,7 @@ TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
 	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
-	EXPECT_NE(Body.find("static constexpr int s_aFsaaSamples[] = {0, 2, 4};"), std::string::npos);
+	EXPECT_NE(Body.find("static constexpr int s_aFsaaSamples[] = {0, 2, 4, 8, 16, 32, 64};"), std::string::npos);
 	EXPECT_NE(Body.find("g_Config.m_GfxFsaaSamples = s_aFsaaSamples[FsaaSampleIndex];"), std::string::npos);
 	EXPECT_NE(Body.find("CheckSettings = true;"), std::string::npos);
 	EXPECT_EQ(Body.find("Graphics()->SetMultiSampling"), std::string::npos);
@@ -2630,7 +2636,24 @@ TEST(QmNewUiMenuBranches, StatusBarOpacityUsesPercentAndAxiomUsesInputTrailingAc
 	EXPECT_NE(TClientSource.find("&CUi::ms_LinearScrollbarScale, 0, \"%\""), std::string::npos);
 	EXPECT_NE(QmClientSource.find("Options.m_pTrailingActionId = &ToggleButton;"), std::string::npos);
 	EXPECT_NE(QmClientSource.find("Options.m_pTrailingActionIcon = Visible ? FONT_ICON_EYE_SLASH : FONT_ICON_EYE;"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("Options.m_TrailingActionQmIcon = static_cast<int>(Visible ? EQmIcon::EYE_OFF : EQmIcon::EYE);"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("PasswordToggleRect"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, NoThemeBackgroundAndFriendRowsUseSharedSdfSurfaces)
+{
+	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string Browser = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string Background = FunctionBody(Menus, "void CMenus::RenderBackground()");
+	ASSERT_FALSE(Background.empty());
+
+	EXPECT_NE(Background.find("const bool NoMenuTheme = g_Config.m_ClMenuMap[0] == '\\0';"), std::string::npos);
+	EXPECT_NE(Background.find("const ColorRGBA CheckerColor = NoMenuTheme"), std::string::npos);
+	EXPECT_NE(Background.find("Graphics()->SetColor(CheckerColor);"), std::string::npos);
+	EXPECT_NE(Browser.find("#include <game/client/QmUi/UiSurface.h>"), std::string::npos);
+	EXPECT_NE(Browser.find("DrawRoundedSurface(Ui(), Header, HeaderColor, ColorRGBA(), 5.0f);"), std::string::npos);
+	EXPECT_NE(Browser.find("DrawRoundedSurface(Ui(), Rect, Color, ColorRGBA(), 5.0f);"), std::string::npos);
+	EXPECT_EQ(Browser.find("Rect.Draw(Color, IGraphics::CORNER_ALL, 5.0f);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, KeyReaderUsesOneOuterShellForValueAndDeleteAction)

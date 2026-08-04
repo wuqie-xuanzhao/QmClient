@@ -185,6 +185,8 @@ namespace ui_widget
 		const char *m_pTrailingText = nullptr;
 		const void *m_pTrailingActionId = nullptr;
 		const char *m_pTrailingActionIcon = nullptr;
+		// -1 使用字体字形回退；Qm 图集图标使用统一的方形视图框。
+		int m_TrailingActionQmIcon = -1;
 		float m_TrailingWidth = 0.0f;
 		EInputFieldMode m_Mode = EInputFieldMode::TEXT;
 		EInputTextStyle m_TextStyle = EInputTextStyle::BODY;

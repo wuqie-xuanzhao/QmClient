@@ -17,6 +17,7 @@
 #include <engine/textrender.h>
 
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
@@ -1950,7 +1951,7 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 		Name = Item.m_Rect;
 
 		const ColorRGBA Color = PlayerBackgroundColor(CurrentClient.m_FriendState == IFriends::FRIEND_PLAYER, CurrentClient.m_FriendState == IFriends::FRIEND_CLAN, CurrentClient.m_Afk, false, false);
-		Name.Draw(Color, IGraphics::CORNER_ALL, 4.0f);
+		DrawRoundedSurface(Ui(), Name, Color, ColorRGBA(), 4.0f);
 		Name.VSplitLeft(1.0f, nullptr, &Name);
 		Name.VSplitLeft(34.0f, &Score, &Name);
 		Name.VSplitLeft(18.0f, &Skin, &Name);
@@ -2346,7 +2347,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		else if(IsClanMembersCategory(pCategoryName))
 			HeaderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClFriendsListClanColor));
 		HeaderColor.a = HeaderHovered || PopupOpen ? 0.4f : 0.25f;
-		Header.Draw(HeaderColor, IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(Ui(), Header, HeaderColor, ColorRGBA(), 5.0f);
 		Header.VSplitLeft(Header.h, &GroupIcon, &GroupLabel);
 		GroupIcon.Margin(2.0f, &GroupIcon);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -2454,7 +2455,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				const bool IsOffline = Friend.ServerInfo() == nullptr;
 				const bool InSelectedServer = m_SelectedIndex >= 0 && Friend.ServerInfo() && Friend.ServerInfo()->m_ServerIndex == ServerBrowser()->SortedGet(m_SelectedIndex)->m_ServerIndex;
 				const ColorRGBA Color = PlayerBackgroundColor(Friend.FriendState() == IFriends::FRIEND_PLAYER, Friend.FriendState() == IFriends::FRIEND_CLAN, IsOffline ? true : Friend.IsAfk(), InSelectedServer, Inside);
-				Rect.Draw(Color, IGraphics::CORNER_ALL, 5.0f);
+				DrawRoundedSurface(Ui(), Rect, Color, ColorRGBA(), 5.0f);
 				Rect.Margin(2.0f, &Rect);
 
 				CUIRect ButtonsRow, FollowButton, CopyButton, RemoveButton, NameLabel, ClanLabel, InfoLabel;

@@ -1707,6 +1707,7 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 			Options.m_FontSize = BodySize;
 			Options.m_pTrailingActionId = &ToggleButton;
 			Options.m_pTrailingActionIcon = Visible ? FONT_ICON_EYE_SLASH : FONT_ICON_EYE;
+			Options.m_TrailingActionQmIcon = static_cast<int>(Visible ? EQmIcon::EYE_OFF : EQmIcon::EYE);
 			Options.m_TrailingWidth = ControlColumn.h;
 			if(ui_widget::InputField(TextInputCtx, &Input, ControlColumn, Options).m_TrailingAction)
 				Visible = !Visible;
