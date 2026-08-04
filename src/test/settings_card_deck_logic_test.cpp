@@ -986,9 +986,9 @@ TEST(SettingsCardDeck, ProductionPagePlacementsPreserveWideColumnsAndNarrowReadi
 		{{{}, {"deck:appearance-chat-settings", "deck:appearance-chat-preview"}, {"deck:appearance-chat-messages"}}},
 		{"deck:appearance-chat-settings", "deck:appearance-chat-messages", "deck:appearance-chat-preview"});
 	VerifyPage("tclient-status-bar",
-		{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"},
-		{{{}, {"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"}, {"deck:tclient-status-bar-items"}}},
-		{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"});
+		{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"},
+		{{{}, {"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"}, {}}},
+		{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"});
 }
 
 TEST(SettingsCardDeck, ColumnProjectionCacheRebuildsOnlyForLayoutOrActiveDefinitionChanges)

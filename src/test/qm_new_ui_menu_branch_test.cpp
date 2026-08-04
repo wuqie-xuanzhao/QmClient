@@ -369,9 +369,11 @@ TEST(QmNewUiMenuBranches, TClientPreLayoutUsesDeckContentCoordinates)
 TEST(QmNewUiMenuBranches, SettingsInputFieldsReserveTrailingActionsAndKeepQueueUnitsInline)
 {
 	const std::string FormsSource = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string ThemeSource = ReadTextFile("src/game/client/QmUi/UiTheme.h");
 	const std::string Forms = FunctionBody(FormsSource, "SInputFieldResult InputField(");
 	EXPECT_NE(Forms.find("CUIRect InputHitRect = Layout.m_ShellRect;"), std::string::npos);
 	EXPECT_NE(Forms.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
+	EXPECT_NE(ThemeSource.find("ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f"), std::string::npos);
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string SkinRenderList = FunctionBody(SettingsSource, "const auto RenderList =");
@@ -3147,12 +3149,19 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, \"tclient-bind-wheel\", SETTINGS_TCLIENT, nullptr)"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-settings"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-items"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-items"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-preview"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_StatusBarPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("CardDeck.RenderCached("), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("const int Rows = ResolveSettingsStatusCodeRows(StatusBarCodeCount, ContentWidth);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("const float StatusBarPreviewHeight = LineSize + MarginSmall * 2.0f;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("const auto MeasurePreview = [&MeasureItems, StatusBarCodeCount, StatusBarItemCount, StatusBarPreviewHeight]"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("s_TypeSelectedOld < StatusBarCodeCount"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(s_SelectedItem >= 0 && s_TypeSelectedOld >= 0)"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("RenderStatusBarCodes(Content);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("Definition.m_MeasureRevision = StatusLayoutRevision;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("PreviewContentHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("static char s_aCodeLanguage[sizeof(g_Config.m_ClLanguagefile)]"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("static char s_aDropDownLanguage[sizeof(g_Config.m_ClLanguagefile)]"), std::string::npos);
 	EXPECT_NE(StatusBarHeader.find("\"g\", \"Snapshot Age\""), std::string::npos);

@@ -5,6 +5,8 @@
 
 #include <base/color.h>
 
+#include <engine/shared/config.h>
+
 #include <algorithm>
 
 struct SUiTheme
@@ -57,7 +59,9 @@ inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const C
 
 inline SUiTheme ResolveInputFallbackTheme(const unsigned FocusColor)
 {
-	return ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f, ColorHSLA(FocusColor));
+	// 某些设置页的旧调用点只提供最小 IUiContext。回退主题仍必须与
+	// SettingsUiContext 使用相同的用户颜色和透明度，避免同一输入组件出现两套外壳。
+	return ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(FocusColor));
 }
 
 #endif

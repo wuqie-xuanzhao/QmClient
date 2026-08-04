@@ -845,6 +845,16 @@ void CMenus::LoadSettingsCardOrderModel()
 		if(CommitPlan.m_AdvanceVersion)
 			g_Config.m_QmCardLayoutVersion = 6;
 	}
+	if(g_Config.m_QmCardLayoutVersion < 7)
+	{
+		// 状态栏代码已并入预览卡。LoadMerged 会按当前 registry 移除旧 stable ID，
+		// 强制写回使旧布局不会在后续启动时反复参与合并。
+		if(!PersistAndAdvanceLayoutVersion(7, true))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+	}
 	m_SettingsCardOrderLoaded = true;
 }
 

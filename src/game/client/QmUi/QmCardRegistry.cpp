@@ -196,7 +196,6 @@ namespace qm_card_registry
 			{"deck:tclient-bind-wheel-editor", "tclient-bind-wheel", ECardColumn::Left, 0, "Bind Wheel", "bind wheel tclient", "Assign commands and labels to wheel slots"},
 			{"deck:tclient-bind-wheel-preview", "tclient-bind-wheel", ECardColumn::Right, 0, "Preview", "preview bind wheel tclient", "Preview the bind wheel layout and selection"},
 			{"deck:tclient-status-bar-settings", "tclient-status-bar", ECardColumn::Left, 0, "Status Bar", "status bar tclient", "Adjust status bar position and text style"},
-			{"deck:tclient-status-bar-items", "tclient-status-bar", ECardColumn::Right, 0, "Status Bar Codes", "status bar codes tclient", "Choose and arrange status bar data fields"},
 			{"deck:tclient-status-bar-preview", "tclient-status-bar", ECardColumn::Left, 1, "Preview", "preview status bar tclient", "Preview the composed status bar output"},
 			{"deck:tclient-chat-binds-kaomoji", "tclient-chat-binds", ECardColumn::Left, 0, "Kaomoji", "chat binds kaomoji tclient", "Manage kaomoji chat shortcuts"},
 			{"deck:tclient-chat-binds-warlist", "tclient-chat-binds", ECardColumn::Right, 0, "Warlist", "chat binds warlist tclient", "Manage hostile-list chat shortcuts"},

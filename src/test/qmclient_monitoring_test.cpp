@@ -6298,7 +6298,7 @@ TEST(QmMonitoringHelpers, SettingsCardLayoutVersionMigrationRequiresWholeLegacyG
 	EXPECT_NE(LoadBody.find("PersistAndAdvanceLayoutVersion(5, true)"), std::string::npos);
 	EXPECT_NE(LoadBody.find("if(CommitPlan.m_PersistSerialized)"), std::string::npos);
 	EXPECT_NE(LoadBody.find("if(CommitPlan.m_AdvanceVersion)"), std::string::npos);
-	EXPECT_NE(LoadBody.find("g_Config.m_QmCardLayoutVersion = 6;"), std::string::npos);
+	EXPECT_NE(LoadBody.find("PersistAndAdvanceLayoutVersion(7, true)"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 {
@@ -8054,10 +8054,10 @@ TEST(QmMonitoringHelpers, TClientStatusSchemeTextInputUsesSharedQmTextField)
 
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext TClientStatusSchemeTextInputCtx = SettingsUiContext(\"settings_tclient_status_scheme_text_inputs\", UiScale);"), std::string::npos);
-	const size_t LabelPos = Body.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, \"tclient-statusbar-scheme-label\", &Label, Localize(\"Status Scheme:\"), FontSize, TEXTALIGN_MR);");
+	const size_t LabelPos = Body.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, \"tclient-statusbar-scheme-label\", &SchemeLabel, Localize(\"Status Scheme:\"), FontSize, TEXTALIGN_MR);");
 	const size_t InputPos = Body.find("static CLineInput s_StatusScheme(g_Config.m_TcStatusBarScheme, sizeof(g_Config.m_TcStatusBarScheme));");
 	const size_t EmptyTextPos = Body.find("s_StatusScheme.SetEmptyText(\"\");", InputPos);
-	const size_t TextFieldPos = Body.find("ui_widget::InputField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, StatusScheme, nullptr, EditBoxFontSize);", EmptyTextPos);
+	const size_t TextFieldPos = Body.find("ui_widget::InputField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, SchemeInput, nullptr, EditBoxFontSize);", EmptyTextPos);
 	EXPECT_NE(LabelPos, std::string::npos);
 	EXPECT_NE(InputPos, std::string::npos);
 	EXPECT_NE(EmptyTextPos, std::string::npos);
