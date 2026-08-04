@@ -1996,6 +1996,7 @@ void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, 
 	InputOptions.m_pPlaceholder = Localize("Separate with commas");
 	InputOptions.m_FontSize = BodySize;
 	InputOptions.m_LineSpacing = InputLineSpacing;
+	InputOptions.m_TextAlign = TEXTALIGN_ML;
 	if(ui_widget::InputField(ListInputCtx, &s_BlockWordsInput, ControlColumn, InputOptions).m_Changed)
 	{
 		str_copy(g_Config.m_QmBlockWordsList, s_BlockWordsInput.GetString(), sizeof(g_Config.m_QmBlockWordsList));

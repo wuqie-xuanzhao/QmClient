@@ -548,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == Ajustar verbosidade na consola externa (-3 = nenhum, -2 = apenas erros, -1 = avisos, 0 = info, 1 = depuração, 2 = trace).
 
-Adjust your prediction margin while frozen
-== Ajustar a margem de predição enquanto congelado
-
 Advanced
 == Avançado
 
@@ -1366,6 +1363,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 
 Base path for HTTPS map download URLs to clients
 == Caminho base para URLs de download de mapas HTTPS para os clientes
+
+Base prediction margin
+== Margem de previsão base
 
 Basic
 == Básico
@@ -2792,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == Atraso antes de novos jogadores poderem iniciar votações ou participar em votações de kick/spectate (segundos)
 
+Delay before reduction
+== Atraso antes da redução
+
 Delay between rescues (seconds)
 == Atraso entre resgates (segundos)
 
@@ -4193,9 +4196,6 @@ Flip:
 Focus mode
 == Modo foco
 
-Focus ring color
-== Cor do anel de foco
-
 Folder
 == Pasta
 
@@ -4364,8 +4364,8 @@ Friends
 Friends only
 == Apenas amigos
 
-Frozen Margin
-== Margem de Congelamento
+Frozen prediction margin
+== Margem de previsão enquanto estiver congelado
 
 FSAA samples
 == Amostras FSAA
@@ -4387,6 +4387,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == Ouvir mapa inteiro na mesma sala
+
+Full: each enabled animation category uses its complete transition
+== Completo: cada categoria de animação ativada usa a sua transição completa
 
 Fullscreen
 == Ecrã completo
@@ -6242,6 +6245,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == Número máximo de jogadores a participar numa votação (0 = ilimitado)
 
+Maximum reduction
+== Redução máxima
+
 Maximum rows
 == Linhas máximas
 
@@ -7067,6 +7073,9 @@ o = Send rate
 Off
 == Desligado
 
+Off: disables all interface animations while preserving the options below
+== Desativado: desativa todas as animações da interface, mantendo as opções abaixo
+
 Official
 == Oficial
 
@@ -7784,9 +7793,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == O avanço da previsão está alto; verifique as definições de previsão e o tempo do servidor
 
-Prediction Margin
-== Margem de Predição
-
 Prediction margin
 == Margem de previsão
 
@@ -8261,8 +8267,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == Reduzir antiping e previsão do jogador quando congelado
 
+Reduce prediction while frozen
+== Reduzir a previsão enquanto estiver congelado
+
 Reduced
 == Reduzido
+
+Reduced: uses shorter transitions and disables presentation animations
+== Reduzido: usa transições mais curtas e desativa animações de apresentação
 
 Refresh
 == Atualizar
@@ -8425,9 +8437,6 @@ Remove from queue
 
 Remove Item
 == Remover Item
-
-Remove prediction & antiping in freeze
-== Remover predição e antiping em congelamento
 
 Remove right to vote from player with client ID
 == Remover direito de voto do jogador com ID de cliente
@@ -11252,6 +11261,9 @@ Text alpha
 Text color
 == Cor do texto
 
+Text input focus ring color
+== Cor do anel de foco da introdução de texto
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Obrigado pela sua companhia e confiança. É isto que me dá coragem para continuar.
 
@@ -11341,6 +11353,9 @@ Thinking mode requires a reasoning model
 
 This ID is not connected
 == Este ID não está conectado
+
+This is the master switch for all interface animation categories
+== Este é o interruptor principal para todas as categorias de animação da interface
 
 This name cannot be used for files and folders
 == Este nome não pode ser usado para ficheiros e pastas
@@ -12029,6 +12044,9 @@ Use 12 hour clock
 Use 12-hour clock for local time
 == Usar relógio de 12 horas para hora local
 
+Use a fixed prediction margin while frozen
+== Usar uma margem de previsão fixa enquanto estiver congelado
+
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == Usar suavização antiping alternativa, incompatível com cl_antiping_smooth
 
@@ -12145,6 +12163,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == Usar grupos da lista de guerra para o indicador
+
+Used by active shared text and numeric input fields
+== Usado por campos partilhados ativos de texto e números
 
 Uses the active action with the current aiming position.
 == Usa a ação ativa com a posição de mira atual.

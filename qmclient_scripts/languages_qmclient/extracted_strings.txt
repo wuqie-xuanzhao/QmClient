@@ -181,7 +181,6 @@ Adjust TClient heads-up display elements
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
-Adjust your prediction margin while frozen
 Advanced
 Advanced options
 AFR
@@ -454,6 +453,7 @@ Ban range in a region
 Ban reason for "sv_dnsbl_ban"
 Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 Base path for HTTPS map download URLs to clients
+Base prediction margin
 Basic
 Before I die
 Behavior
@@ -929,6 +929,7 @@ Define automatic chat reply rules
 Delay
 Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
+Delay before reduction
 Delay between rescues (seconds)
 Delay between SQL queries for a single player (in seconds)
 Delay in seconds before loading a saved game or swapping
@@ -1396,7 +1397,6 @@ Fire
 First page in console
 Flip:
 Focus mode
-Focus ring color
 Folder
 Folder Link
 Follow
@@ -1453,7 +1453,7 @@ Friend online notification
 Friend option color
 Friends
 Friends only
-Frozen Margin
+Frozen prediction margin
 FSAA samples
 FSAA samples (may cause lag)
 FTAPI
@@ -1461,6 +1461,7 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 Full demo + sidecar
 Full map listen in same room
+Full: each enabled animation category uses its complete transition
 Fullscreen
 Fun
 Functions
@@ -2079,6 +2080,7 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
+Maximum reduction
 Maximum rows
 Maximum team size.
 Maximum undo steps in editor history (editor, envelope editor, and server settings editor are independent)
@@ -2354,6 +2356,7 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 o = Send rate
 Off
+Off: disables all interface animations while preserving the options below
 Official
 Official community links
 Offline
@@ -2593,7 +2596,6 @@ Prediction jitter is obvious, prediction timing is changing
 Prediction Lead
 Prediction lead
 Prediction lead is high, check prediction settings and server timing
-Prediction Margin
 Prediction margin
 Prediction margin when frozen
 Prediction offset
@@ -2752,7 +2754,9 @@ Red
 Red team
 Red team wins!
 Reduce antiping and player prediction when frozen
+Reduce prediction while frozen
 Reduced
+Reduced: uses shorter transitions and disables presentation animations
 Refresh
 Refresh interval
 Refresh Rate
@@ -2807,7 +2811,6 @@ Remove from favorites
 Remove from history
 Remove from queue
 Remove Item
-Remove prediction & antiping in freeze
 Remove right to vote from player with client ID
 Remove right to vote from player with IP address
 Remove team clan:
@@ -3749,6 +3752,7 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 Text alpha
 Text color
+Text input focus ring color
 Thank you for your company and trust. This is what gives me the courage to keep going.
 Thanks for supporting QmClient
 The audio device couldn't be initialised.
@@ -3779,6 +3783,7 @@ There's an unsaved map in the editor, you might want to save it.
 Thin
 Thinking mode requires a reasoning model
 This ID is not connected
+This is the master switch for all interface animation categories
 This name cannot be used for files and folders
 This server has an initial chat delay, you will be able to talk in %s seconds.
 This skin name cannot be used.
@@ -4008,6 +4013,7 @@ Usage: %s %s
 Usage: /%s %s
 Use 12 hour clock
 Use 12-hour clock for local time
+Use a fixed prediction margin while frozen
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 Use alternative world tick calculation making hooks behave as if all players have Strong.
 Use colored skins for frozen tees
@@ -4047,6 +4053,7 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 Use warlist colors instead of regular colors
 Use warlist groups for indicator
+Used by active shared text and numeric input fields
 Uses the active action with the current aiming position.
 v = Velocity
 V-Sync

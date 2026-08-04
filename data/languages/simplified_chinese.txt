@@ -548,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 调整外部控制台中的信息量（-3 = 无、-2 = 仅错误、-1 = 警告、0 = 信息、1 = 调试、2 = 跟踪）
 
-Adjust your prediction margin while frozen
-== 调整冻结时的预测量
-
 Advanced
 == 高阶
 
@@ -1366,6 +1363,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 
 Base path for HTTPS map download URLs to clients
 == 用于向客户端提供 HTTPS 地图下载 URL 的基本路径
+
+Base prediction margin
+== 基础预测量
 
 Basic
 == 基本
@@ -2792,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == 新加入玩家发起投票或参与踢人/观战投票前的延迟（单位：秒）
 
+Delay before reduction
+== 降低前延迟
+
 Delay between rescues (seconds)
 == 两次营救之间的延迟（单位：秒）
 
@@ -4193,9 +4196,6 @@ Flip:
 Focus mode
 == 专注模式
 
-Focus ring color
-== 焦点环颜色
-
 Folder
 == 文件夹
 
@@ -4364,8 +4364,8 @@ Friends
 Friends only
 == 仅限好友
 
-Frozen Margin
-== 冻结预测值
+Frozen prediction margin
+== 冻结时预测量
 
 FSAA samples
 == 全屏抗锯齿（FSAA）采样倍数
@@ -4387,6 +4387,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == 同房间全图收听
+
+Full: each enabled animation category uses its complete transition
+== 完整：按下方各项开关播放完整过渡和展示动画
 
 Fullscreen
 == 独占全屏
@@ -6242,6 +6245,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == 最多可有多少玩家参与投票（0 = 无限制）
 
+Maximum reduction
+== 最大降低量
+
 Maximum rows
 == 最大行数
 
@@ -7067,6 +7073,9 @@ o = Send rate
 Off
 == 关
 
+Off: disables all interface animations while preserving the options below
+== 关闭：停用全部界面动画，但保留下面各项开关的设置
+
 Official
 == 官方
 
@@ -7784,9 +7793,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == 预测提前量过高，请检查预测设置和服务器时序
 
-Prediction Margin
-== 预测量
-
 Prediction margin
 == 预测余量
 
@@ -8261,8 +8267,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == 冻结时减少 antiping 和玩家预测
 
+Reduce prediction while frozen
+== 冻结时降低预测量
+
 Reduced
 == 精简
+
+Reduced: uses shorter transitions and disables presentation animations
+== 精简：保留更短的过渡效果，并停用展示动画
 
 Refresh
 == 刷新
@@ -8425,9 +8437,6 @@ Remove from queue
 
 Remove Item
 == 删除项
-
-Remove prediction & antiping in freeze
-== 在冻结时移除预测 & 延迟补偿
 
 Remove right to vote from player with client ID
 == 删除具有客户端 ID 的玩家的投票权
@@ -11252,6 +11261,9 @@ Text alpha
 Text color
 == 文本颜色
 
+Text input focus ring color
+== 文本输入焦点环颜色
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == 感谢您的陪伴与信任。正是如此，才给了我继续前行的勇气
 
@@ -11341,6 +11353,9 @@ Thinking mode requires a reasoning model
 
 This ID is not connected
 == 该 ID 未连接
+
+This is the master switch for all interface animation categories
+== 这是所有界面动画类别的总开关
 
 This name cannot be used for files and folders
 == 此名称不能用于文件和文件夹
@@ -12029,6 +12044,9 @@ Use 12 hour clock
 Use 12-hour clock for local time
 == 本地时间使用 12 小时制
 
+Use a fixed prediction margin while frozen
+== 冻结时使用固定预测量
+
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == 使用另一套 antiping 平滑算法，与 cl_antiping_smooth 不兼容
 
@@ -12145,6 +12163,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == 使用敌对列表作为指示器
+
+Used by active shared text and numeric input fields
+== 用于已激活的共享文本与数值输入框
 
 Uses the active action with the current aiming position.
 == 对瞄准位置执行当前动作。

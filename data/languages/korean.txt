@@ -548,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 외부 콘솔 상세도 조정 (-3 = 없음, -2 = 오류만, -1 = 경고, 0 = 정보, 1 = 디버그, 2 = 추적).
 
-Adjust your prediction margin while frozen
-== 얼어붙었을 때 예측 여백 조정
-
 Advanced
 == 고급
 
@@ -1366,6 +1363,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 
 Base path for HTTPS map download URLs to clients
 == 클라이언트에 HTTPS 맵 다운로드 URL을 제공하기 위한 기본 경로
+
+Base prediction margin
+== 기본 예측 여유
 
 Basic
 == 기본
@@ -2792,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == 새 플레이어가 투표를 시작하거나 추방/관전 투표에 참여하기 전 지연 시간 (초)
 
+Delay before reduction
+== 감소 전 지연
+
 Delay between rescues (seconds)
 == 구조 사이의 지연 시간 (초)
 
@@ -4193,9 +4196,6 @@ Flip:
 Focus mode
 == 집중 모드
 
-Focus ring color
-== 포커스 링 색상
-
 Folder
 == 폴더
 
@@ -4364,8 +4364,8 @@ Friends
 Friends only
 == 친구만
 
-Frozen Margin
-== 얼음 여유값
+Frozen prediction margin
+== 동결 중 예측 여유
 
 FSAA samples
 == FSAA 샘플
@@ -4387,6 +4387,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == 같은 방에서 전체 맵 듣기
+
+Full: each enabled animation category uses its complete transition
+== 전체: 활성화된 각 애니메이션 범주에 전체 전환을 사용합니다
 
 Fullscreen
 == 전체 화면
@@ -6242,6 +6245,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == 투표에 참여할 수 있는 최대 플레이어 수 (0 = 무제한)
 
+Maximum reduction
+== 최대 감소량
+
 Maximum rows
 == 최대 행 수
 
@@ -7067,6 +7073,9 @@ o = Send rate
 Off
 == 끄기
 
+Off: disables all interface animations while preserving the options below
+== 끄기: 아래 옵션 설정은 유지하면서 모든 인터페이스 애니메이션을 비활성화합니다
+
 Official
 == 공식
 
@@ -7784,9 +7793,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == 예측 선행 시간이 높습니다. 예측 설정과 서버 타이밍을 확인하세요
 
-Prediction Margin
-== 예측 여유
-
 Prediction margin
 == 예측 여유
 
@@ -8261,8 +8267,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == 얼었을 때 안티핑 및 플레이어 예측 감소
 
+Reduce prediction while frozen
+== 동결 중 예측량 줄이기
+
 Reduced
 == 감소
+
+Reduced: uses shorter transitions and disables presentation animations
+== 간소화: 더 짧은 전환을 사용하고 연출 애니메이션을 비활성화합니다
 
 Refresh
 == 새로고침
@@ -8425,9 +8437,6 @@ Remove from queue
 
 Remove Item
 == 항목 제거
-
-Remove prediction & antiping in freeze
-== 프리즈에서 예측 및 안티핑 제거
 
 Remove right to vote from player with client ID
 == 클라이언트 ID를 가진 플레이어의 투표권 제거
@@ -11252,6 +11261,9 @@ Text alpha
 Text color
 == 텍스트 색상
 
+Text input focus ring color
+== 텍스트 입력 포커스 링 색상
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == 당신의 동행과 신뢰에 감사드립니다. 그것이 제가 계속 나아갈 용기를 주는 것입니다.
 
@@ -11341,6 +11353,9 @@ Thinking mode requires a reasoning model
 
 This ID is not connected
 == 이 ID는 연결되지 않음
+
+This is the master switch for all interface animation categories
+== 이것은 모든 인터페이스 애니메이션 범주의 마스터 스위치입니다
 
 This name cannot be used for files and folders
 == 이 이름은 파일 및 폴더에 사용할 수 없습니다
@@ -12029,6 +12044,9 @@ Use 12 hour clock
 Use 12-hour clock for local time
 == 현지 시간에 12시간제 사용
 
+Use a fixed prediction margin while frozen
+== 동결 중 고정 예측 여유 사용
+
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == 대체 안티핑 평활화 사용, cl_antiping_smooth와 호환되지 않음
 
@@ -12145,6 +12163,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == 표시기에 전쟁 목록 그룹 사용
+
+Used by active shared text and numeric input fields
+== 활성화된 공용 텍스트 및 숫자 입력 필드에서 사용됩니다
 
 Uses the active action with the current aiming position.
 == 현재 조준 위치로 활성 작업을 사용합니다.

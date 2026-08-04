@@ -548,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == Harici konsoldaki ayrıntı düzeyini ayarla (-3 = yok, -2 = yalnızca hatalar, -1 = uyarılar, 0 = bilgi, 1 = hata ayıklama, 2 = izleme).
 
-Adjust your prediction margin while frozen
-== Donmuşken tahmin marjını ayarla
-
 Advanced
 == Gelişmiş
 
@@ -1366,6 +1363,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 
 Base path for HTTPS map download URLs to clients
 == İstemcilere HTTPS harita indirme URL'leri için temel yol
+
+Base prediction margin
+== Temel tahmin payı
 
 Basic
 == Temel
@@ -2792,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == Yeni oyuncuların oylama başlatması veya tekmeleme/izleme oylamalarına katılması için gecikme (saniye)
 
+Delay before reduction
+== Azaltmadan önce gecikme
+
 Delay between rescues (seconds)
 == Kurtarmalar arasındaki gecikme (saniye)
 
@@ -4193,9 +4196,6 @@ Flip:
 Focus mode
 == Odak modu
 
-Focus ring color
-== Odak halkası rengi
-
 Folder
 == Klasör
 
@@ -4364,8 +4364,8 @@ Friends
 Friends only
 == Yalnızca arkadaşlar
 
-Frozen Margin
-== Donma Marjı
+Frozen prediction margin
+== Donmuşken tahmin payı
 
 FSAA samples
 == FSAA örnekleri
@@ -4387,6 +4387,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == Aynı odada tam harita dinleme
+
+Full: each enabled animation category uses its complete transition
+== Tam: etkin her animasyon kategorisi tam geçişini kullanır
 
 Fullscreen
 == Tam ekran
@@ -6242,6 +6245,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == Bir oylamaya katılabilecek maksimum oyuncu sayısı (0 = sınırsız)
 
+Maximum reduction
+== Maksimum azaltma
+
 Maximum rows
 == Maksimum satır
 
@@ -7067,6 +7073,9 @@ o = Send rate
 Off
 == Kapalı
 
+Off: disables all interface animations while preserving the options below
+== Kapalı: aşağıdaki seçenekleri korurken tüm arayüz animasyonlarını devre dışı bırakır
+
 Official
 == Resmi
 
@@ -7784,9 +7793,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == Tahmin öndeliği yüksek, tahmin ayarlarını ve sunucu zamanlamasını kontrol edin
 
-Prediction Margin
-== Tahmin Marjı
-
 Prediction margin
 == Tahmin payı
 
@@ -8261,8 +8267,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == Donduğunda antiping ve oyuncu tahminini azalt
 
+Reduce prediction while frozen
+== Donmuşken tahmini azalt
+
 Reduced
 == Azaltılmış
+
+Reduced: uses shorter transitions and disables presentation animations
+== Azaltılmış: daha kısa geçişler kullanır ve sunum animasyonlarını devre dışı bırakır
 
 Refresh
 == Yenile
@@ -8425,9 +8437,6 @@ Remove from queue
 
 Remove Item
 == Öğeyi Kaldır
-
-Remove prediction & antiping in freeze
-== Donmada tahmin ve gecikme karşıtını kaldır
 
 Remove right to vote from player with client ID
 == İstemci kimliğine sahip oyuncunun oy kullanma hakkını kaldır
@@ -11252,6 +11261,9 @@ Text alpha
 Text color
 == Metin rengi
 
+Text input focus ring color
+== Metin girişi odak halkası rengi
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Arkadaşlığınız ve güveniniz için teşekkür ederim. Devam etme cesaretini bana veren şey budur.
 
@@ -11341,6 +11353,9 @@ Thinking mode requires a reasoning model
 
 This ID is not connected
 == Bu ID bağlı değil
+
+This is the master switch for all interface animation categories
+== Bu, tüm arayüz animasyonu kategorileri için ana anahtardır
 
 This name cannot be used for files and folders
 == Bu isim dosya ve klasörler için kullanılamaz
@@ -12029,6 +12044,9 @@ Use 12 hour clock
 Use 12-hour clock for local time
 == Yerel saat için 12 saatlik saat kullan
 
+Use a fixed prediction margin while frozen
+== Donmuşken sabit tahmin payı kullan
+
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == Alternatif antiping yumuşatma kullan, cl_antiping_smooth ile uyumsuz
 
@@ -12145,6 +12163,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == Gösterge için savaş listesi gruplarını kullan
+
+Used by active shared text and numeric input fields
+== Etkin ortak metin ve sayısal giriş alanları tarafından kullanılır
 
 Uses the active action with the current aiming position.
 == Mevcut nişan alma konumuyla etkin eylemi kullanır.

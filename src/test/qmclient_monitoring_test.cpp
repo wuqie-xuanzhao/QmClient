@@ -9339,6 +9339,7 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(DropdownSource.find("Result.m_PopupVisible = Result.m_Rect.w > 0.0f && Result.m_Rect.h > 0.0f && RectsOverlap(Result.m_Rect, ViewportRect);"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool m_ClipToViewport = false;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool m_BlockUnderlyingScroll = false;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool m_BlockUnderlyingPointerInput = false;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("CUIRect m_Viewport{};"), std::string::npos);
 	EXPECT_NE(UiHeader.find("SQmDropdownPopupPolicy m_PopupPolicy;"), std::string::npos);
 	EXPECT_NE(SelectionResetBody.find("m_BlockUnderlyingScroll = false;"), std::string::npos);
@@ -9356,6 +9357,7 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollbarThickness = 10.0f"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollUnit = 3 *"), std::string::npos);
 	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_BlockUnderlyingScroll"), std::string::npos);
+	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_BlockUnderlyingPointerInput"), std::string::npos);
 	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_ClipToViewport"), std::string::npos);
 	EXPECT_NE(Body.find("pContext->m_AnchorVisible = Geometry.m_AnchorVisible;"), std::string::npos);
 	EXPECT_NE(Body.find("pContext->m_PopupVisible = Geometry.m_PopupVisible;"), std::string::npos);
@@ -9368,6 +9370,35 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(Body.find("PopupHeightResolved = Geometry.m_Rect.h;"), std::string::npos);
 	EXPECT_NE(Body.find("DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);"), std::string::npos);
 	EXPECT_EQ(Body.find("DoPopupMenu(pContext, X, Y, pContext->m_Width, PopupHeight, pContext, PopupSelection, pContext->m_Props);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ColorPickerUsesModalPointerInputAndFullGradientHitAreas)
+{
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
+	const std::string ColorPickerBody = ExtractSourceFunctionBody(Ui, "CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View, bool Active)");
+	const std::string ShowColorPickerBody = ExtractSourceFunctionBody(Ui, "void CUi::ShowPopupColorPicker(float X, float Y, SColorPickerPopupContext *pContext)");
+	const std::string MouseHoveredBody = ExtractSourceFunctionBody(Ui, "bool CUi::MouseHovered(const CUIRect *pRect) const");
+	ASSERT_FALSE(ColorPickerBody.empty());
+	ASSERT_FALSE(ShowColorPickerBody.empty());
+	ASSERT_FALSE(MouseHoveredBody.empty());
+
+	EXPECT_NE(UiHeader.find("bool UnderlyingPointerInputBlocked() const;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("int m_PopupInputDepth = 0;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("if(UnderlyingPointerInputBlocked())"), std::string::npos);
+	EXPECT_NE(MouseHoveredBody.find("!UnderlyingPointerInputBlocked()"), std::string::npos);
+	EXPECT_NE(ShowColorPickerBody.find("PopupProps.m_BlockUnderlyingPointerInput = true;"), std::string::npos);
+	EXPECT_NE(ShowColorPickerBody.find("PopupProps.m_BlockUnderlyingScroll = true;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const CUIRect ColorsHitArea = ColorsArea;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const CUIRect HueHitArea = HueArea;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("DoPickerLogic(&pColorPicker->m_ColorPickerId, &ColorsHitArea"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const float ColorX = std::clamp(PickerX - (ColorsArea.x - ColorsHitArea.x), 0.0f, ColorsArea.w);"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const float ColorY = std::clamp(PickerY - (ColorsArea.y - ColorsHitArea.y), 0.0f, ColorsArea.h);"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("PickerColorHSV.y = ColorX / ColorsArea.w;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("PickerColorHSV.z = 1.0f - ColorY / ColorsArea.h;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("DoPickerLogic(&pColorPicker->m_HuePickerId, &HueHitArea"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const float HueY = std::clamp(PickerY - (HueArea.y - HueHitArea.y), 0.0f, HueArea.h);"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("PickerColorHSV.x = 1.0f - HueY / HueArea.h;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ListBoxResolvesMenuScrollPolicyFromRowSemantics)

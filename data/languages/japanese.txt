@@ -548,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 外部コンソールの詳細度を調整（-3=なし、-2=エラーのみ、-1=警告、0=情報、1=デバッグ、2=トレース）
 
-Adjust your prediction margin while frozen
-== 凍結時の予測マージンを調整
-
 Advanced
 == 詳細設定
 
@@ -1366,6 +1363,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 
 Base path for HTTPS map download URLs to clients
 == クライアント向け HTTPS マップダウンロード URL のベースパス
+
+Base prediction margin
+== 基本予測マージン
 
 Basic
 == 基本
@@ -2792,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == 新規プレイヤーが投票を開始したり、キック/観戦投票に参加できるようになるまでの遅延（秒）
 
+Delay before reduction
+== 削減前の遅延
+
 Delay between rescues (seconds)
 == レスキュー間の遅延（秒）
 
@@ -4193,9 +4196,6 @@ Flip:
 Focus mode
 == フォーカスモード
 
-Focus ring color
-== フォーカスリングの色
-
 Folder
 == フォルダ
 
@@ -4364,8 +4364,8 @@ Friends
 Friends only
 == フレンドのみ
 
-Frozen Margin
-== フリーズマージン
+Frozen prediction margin
+== 凍結中の予測マージン
 
 FSAA samples
 == FSAA サンプル数
@@ -4387,6 +4387,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == 同じ部屋でマップ全体を聴く
+
+Full: each enabled animation category uses its complete transition
+== 完全：有効な各アニメーションカテゴリで完全な遷移を使用します
 
 Fullscreen
 == フルスクリーン
@@ -6242,6 +6245,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == 投票に参加できる最大プレイヤー数（0 = 無制限）
 
+Maximum reduction
+== 最大削減量
+
 Maximum rows
 == 最大行数
 
@@ -7067,6 +7073,9 @@ o = Send rate
 Off
 == オフ
 
+Off: disables all interface animations while preserving the options below
+== オフ：下の設定を保持したまま、すべてのインターフェースアニメーションを無効にします
+
 Official
 == 公式
 
@@ -7784,9 +7793,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == 予測先行時間が長すぎます。予測設定とサーバーのタイミングを確認してください
 
-Prediction Margin
-== 予測マージン
-
 Prediction margin
 == 予測マージン
 
@@ -8261,8 +8267,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == フリーズ時にアンチピンとプレイヤー予測を軽減
 
+Reduce prediction while frozen
+== 凍結中に予測量を減らす
+
 Reduced
 == 縮小
+
+Reduced: uses shorter transitions and disables presentation animations
+== 軽減：短い遷移を使用し、演出アニメーションを無効にします
 
 Refresh
 == 更新
@@ -8425,9 +8437,6 @@ Remove from queue
 
 Remove Item
 == アイテムを削除
-
-Remove prediction & antiping in freeze
-== フリーズ中の予測＆アンチピングを削除
 
 Remove right to vote from player with client ID
 == クライアント ID を持つプレイヤーから投票権を削除
@@ -11252,6 +11261,9 @@ Text alpha
 Text color
 == テキスト色
 
+Text input focus ring color
+== テキスト入力フォーカスリングの色
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == ご支援と信頼に感謝します。それが私に前進し続ける勇気を与えてくれます。
 
@@ -11341,6 +11353,9 @@ Thinking mode requires a reasoning model
 
 This ID is not connected
 == この ID は接続されていません
+
+This is the master switch for all interface animation categories
+== これはすべてのインターフェースアニメーションカテゴリの主スイッチです
 
 This name cannot be used for files and folders
 == この名前はファイルやフォルダーに使用できません
@@ -12029,6 +12044,9 @@ Use 12 hour clock
 Use 12-hour clock for local time
 == ローカル時刻に 12 時間制を使用
 
+Use a fixed prediction margin while frozen
+== 凍結中は固定の予測マージンを使用する
+
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == 代替アンチピングスムージングを使用、cl_antiping_smooth とは互換性なし
 
@@ -12145,6 +12163,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == インジケーターに敵対リストグループを使用
+
+Used by active shared text and numeric input fields
+== 有効な共通テキスト・数値入力欄で使用されます
 
 Uses the active action with the current aiming position.
 == 現在の照準位置でアクティブアクションを使用します。

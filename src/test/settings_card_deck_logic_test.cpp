@@ -507,7 +507,7 @@ TEST(SettingsCardDeck, AuditedUiLabelsHaveSimplifiedChineseRuntimeTranslations)
 		"Relative Y position of the draggable back button",
 		"RTT",
 		"Scoreboard surface",
-		"Focus ring color",
+		"Text input focus ring color",
 		"Presentation animations",
 		"Show draggable virtual back button",
 		"UI rounded corner segments (even numbers recommended)",

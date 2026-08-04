@@ -411,6 +411,7 @@ struct SPopupMenuProperties
 	bool m_AutoReposition = true;
 	bool m_ClipToViewport = false;
 	bool m_BlockUnderlyingScroll = false;
+	bool m_BlockUnderlyingPointerInput = false;
 	bool m_RequireSourceRefresh = false;
 	uint64_t m_SourceFrame = 0;
 	CUIRect m_Viewport{};
@@ -688,6 +689,8 @@ private:
 	};
 	std::vector<SPopupMenu> m_vPopupMenus;
 	FPopupMenuClosedCallback m_pfnPopupMenuClosedCallback = nullptr;
+	int m_PopupInputDepth = 0;
+	bool UnderlyingPointerInputBlocked() const;
 
 	static CUi::EPopupMenuFunctionResult PopupMessage(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupConfirm(void *pContext, CUIRect View, bool Active);
@@ -833,6 +836,8 @@ public:
 	}
 	bool CheckActiveItem(const void *pId)
 	{
+		if(UnderlyingPointerInputBlocked())
+			return false;
 		if(m_pActiveItem == pId)
 		{
 			m_ActiveItemValid = true;
@@ -878,7 +883,7 @@ public:
 
 	bool MouseInside(const CUIRect *pRect) const;
 	bool MouseInsideClip() const { return !IsClipped() || MouseInside(ClipArea()); }
-	bool MouseHovered(const CUIRect *pRect) const { return !RenderOnly() && MouseInside(pRect) && MouseInsideClip(); }
+	bool MouseHovered(const CUIRect *pRect) const;
 	void RegisterPassiveHotItem(const void *pId, const CUIRect *pRect);
 	void ConvertMouseMove(float *pX, float *pY, IInput::ECursorType CursorType) const;
 	void UpdateTouchState(CTouchState &State) const;

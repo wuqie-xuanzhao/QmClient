@@ -388,6 +388,21 @@ bool CUi::MouseInside(const CUIRect *pRect) const
 	return pRect->Inside(MousePos());
 }
 
+bool CUi::UnderlyingPointerInputBlocked() const
+{
+	if(m_PopupInputDepth > 0)
+		return false;
+
+	return std::any_of(m_vPopupMenus.begin(), m_vPopupMenus.end(), [](const SPopupMenu &PopupMenu) {
+		return PopupMenu.m_Props.m_BlockUnderlyingPointerInput;
+	});
+}
+
+bool CUi::MouseHovered(const CUIRect *pRect) const
+{
+	return !RenderOnly() && !UnderlyingPointerInputBlocked() && MouseInside(pRect) && MouseInsideClip();
+}
+
 void CUi::ConvertMouseMove(float *pX, float *pY, IInput::ECursorType CursorType) const
 {
 	float Factor = 1.0f;
@@ -1354,9 +1369,10 @@ bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float
 
 	const CUIRect *pHitRect = RenderOptions.m_pHitRect != nullptr ? RenderOptions.m_pHitRect : pRect;
 	const bool Inside = MouseHovered(pHitRect);
-	const bool Active = ActiveItem() == pLineInput || pLineInput->IsActive();
+	bool Active = ActiveItem() == pLineInput || pLineInput->IsActive();
 	const bool Changed = pLineInput->WasChanged();
 	const bool CursorChanged = pLineInput->WasCursorChanged();
+	const bool ClickedOutside = (MouseButtonClicked(0) || MouseButtonClicked(1)) && !Inside;
 
 	constexpr float VSpacing = 2.0f;
 	CUIRect Textbox;
@@ -1391,6 +1407,11 @@ bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float
 
 	if(Inside && !MouseButton(0))
 		SetHotItem(pLineInput);
+	if(Active && ClickedOutside)
+	{
+		ReleaseActiveTextInput(pLineInput);
+		Active = false;
+	}
 
 	if(Enabled() && Active && !JustGotActive)
 		pLineInput->Activate(EInputPriority::UI);
@@ -2353,6 +2374,15 @@ void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, fl
 	pNewMenu->m_Rect.h = Height;
 	pNewMenu->m_pContext = pContext;
 	pNewMenu->m_pfnFunc = pfnFunc;
+	if(Props.m_BlockUnderlyingPointerInput)
+	{
+		if(CLineInput *pActiveInput = CLineInput::GetActiveInput())
+			pActiveInput->Deactivate();
+		m_pLastActiveItem = nullptr;
+		SetActiveItem(nullptr);
+		m_ActiveButtonLogicButton = -1;
+		SetHotItem(pId);
+	}
 }
 
 void CUi::RenderPopupMenus()
@@ -2371,6 +2401,9 @@ void CUi::RenderPopupMenus()
 		const bool Inside = MouseInside(&PopupMenu.m_Rect) && (!PopupMenu.m_Props.m_ClipToViewport || MouseInside(&PopupMenu.m_Props.m_Viewport));
 		const bool Active = i == m_vPopupMenus.size() - 1;
 		const bool ClipToViewport = PopupMenu.m_Props.m_ClipToViewport;
+		const bool AllowPopupPointerInput = Active && PopupMenu.m_Props.m_BlockUnderlyingPointerInput;
+		if(AllowPopupPointerInput)
+			++m_PopupInputDepth;
 
 		if(Active)
 		{
@@ -2415,6 +2448,8 @@ void CUi::RenderPopupMenus()
 		EPopupMenuFunctionResult Result = PopupMenu.m_pfnFunc(PopupMenu.m_pContext, PopupRect, Active);
 		if(ClipToViewport)
 			ClipDisable();
+		if(AllowPopupPointerInput)
+			--m_PopupInputDepth;
 		if(Result != POPUP_KEEP_OPEN || (Active && ConsumeHotkey(HOTKEY_ESCAPE)))
 			ClosePopupMenu(pId, Result == POPUP_CLOSE_CURRENT_AND_DESCENDANTS);
 	}
@@ -2906,9 +2941,11 @@ CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View
 
 	View.HSplitTop(140.0f, &ColorsArea, &BottomArea);
 	ColorsArea.VSplitRight(20.0f, &ColorsArea, &HueArea);
+	const CUIRect ColorsHitArea = ColorsArea;
 
 	BottomArea.HSplitTop(3.0f, nullptr, &BottomArea);
 	HueArea.VSplitLeft(3.0f, nullptr, &HueArea);
+	const CUIRect HueHitArea = HueArea;
 
 	BottomArea.HSplitTop(20.0f, &HueRect, &BottomArea);
 	BottomArea.HSplitTop(3.0f, nullptr, &BottomArea);
@@ -3103,20 +3140,23 @@ CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View
 
 	// Logic
 	float PickerX, PickerY;
-	EEditState ColorPickerRes = pUI->DoPickerLogic(&pColorPicker->m_ColorPickerId, &ColorsArea, &PickerX, &PickerY);
+	EEditState ColorPickerRes = pUI->DoPickerLogic(&pColorPicker->m_ColorPickerId, &ColorsHitArea, &PickerX, &PickerY);
 	if(ColorPickerRes != EEditState::NONE)
 	{
-		PickerColorHSV.y = PickerX / ColorsArea.w;
-		PickerColorHSV.z = 1.0f - PickerY / ColorsArea.h;
+		const float ColorX = std::clamp(PickerX - (ColorsArea.x - ColorsHitArea.x), 0.0f, ColorsArea.w);
+		const float ColorY = std::clamp(PickerY - (ColorsArea.y - ColorsHitArea.y), 0.0f, ColorsArea.h);
+		PickerColorHSV.y = ColorX / ColorsArea.w;
+		PickerColorHSV.z = 1.0f - ColorY / ColorsArea.h;
 		PickerColorHSL = color_cast<ColorHSLA>(PickerColorHSV);
 		PickerColorRGB = color_cast<ColorRGBA>(PickerColorHSL);
 		pColorPicker->m_State = ColorPickerRes;
 	}
 
-	EEditState HuePickerRes = pUI->DoPickerLogic(&pColorPicker->m_HuePickerId, &HueArea, &PickerX, &PickerY);
+	EEditState HuePickerRes = pUI->DoPickerLogic(&pColorPicker->m_HuePickerId, &HueHitArea, &PickerX, &PickerY);
 	if(HuePickerRes != EEditState::NONE)
 	{
-		PickerColorHSV.x = 1.0f - PickerY / HueArea.h;
+		const float HueY = std::clamp(PickerY - (HueArea.y - HueHitArea.y), 0.0f, HueArea.h);
+		PickerColorHSV.x = 1.0f - HueY / HueArea.h;
 		PickerColorHSL = color_cast<ColorHSLA>(PickerColorHSV);
 		PickerColorRGB = color_cast<ColorRGBA>(PickerColorHSL);
 		pColorPicker->m_State = HuePickerRes;
@@ -3172,5 +3212,8 @@ void CUi::ShowPopupColorPicker(float X, float Y, SColorPickerPopupContext *pCont
 	pContext->m_pUI = this;
 	if(pContext->m_ColorMode == SColorPickerPopupContext::MODE_UNSET)
 		pContext->m_ColorMode = SColorPickerPopupContext::MODE_HSVA;
-	DoPopupMenu(pContext, X, Y, 160.0f + 10.0f, 209.0f + 10.0f, pContext, PopupColorPicker);
+	SPopupMenuProperties PopupProps;
+	PopupProps.m_BlockUnderlyingPointerInput = true;
+	PopupProps.m_BlockUnderlyingScroll = true;
+	DoPopupMenu(pContext, X, Y, 160.0f + 10.0f, 209.0f + 10.0f, pContext, PopupColorPicker, PopupProps);
 }

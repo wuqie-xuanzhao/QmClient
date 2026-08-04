@@ -265,8 +265,8 @@ namespace
 
 		const SSettingsListCardGeometry OneMode = ResolveSettingsGraphicsModesGeometry(1, Metrics);
 		const SSettingsListCardGeometry ManyModes = ResolveSettingsGraphicsModesGeometry(20, Metrics);
-		EXPECT_FLOAT_EQ(OneMode.m_ContentHeight, Metrics.m_RowStep + Metrics.m_ListRowHeight);
-		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, Metrics.m_RowStep + 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(OneMode.m_ContentHeight, Metrics.m_RowStep * 2.0f + Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, Metrics.m_RowStep * 2.0f + 8.0f * Metrics.m_ListRowHeight);
 		EXPECT_FLOAT_EQ(ManyModes.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
 
 		const SSettingsListCardGeometry AudioPacks = ResolveSettingsSoundAudioPackGeometry(Metrics);
