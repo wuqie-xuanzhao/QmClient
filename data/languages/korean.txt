@@ -698,6 +698,18 @@ Angle
 Angle:
 == 각도:
 
+Animate chat box, emote selector, scoreboard, and spectate selection
+== Animate chat box, emote selector, scoreboard, and spectate selection
+
+Animate settings card expand and collapse height changes
+== Animate settings card expand and collapse height changes
+
+Animate settings card lists when entering a page
+== Animate settings card lists when entering a page
+
+Animate settings card reorder and layout reflow
+== Animate settings card reorder and layout reflow
+
 Animation
 == 애니메이션
 
@@ -1621,6 +1633,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == 스왑할 수 없음: 상대방이 당신의 팀에 없습니다
+
+Card height animation
+== Card height animation
+
+Card list entry animation
+== Card list entry animation
+
+Card reflow animation
+== Card reflow animation
 
 Category
 == 카테고리
@@ -3947,12 +3968,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == 외부 콘솔 비밀번호. 경제를 활성화하려면 설정해야 함
 
-Extra animations
-== 추가 애니메이션
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== 추가 애니메이션: 채팅창, 이모지 선택창, 점수판 및 관전 선택 페이지에서 Presentation State 애니메이션 사용
-
 Extras
 == 기타
 
@@ -4175,11 +4190,11 @@ First page in console
 Flip:
 == 뒤집기:
 
-Focus color
-== 포커스 색상
-
 Focus mode
 == 집중 모드
+
+Focus ring color
+== Focus ring color
 
 Folder
 == 폴더
@@ -5216,9 +5231,6 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == 입력 장치 열기 실패, 헤드셋/마이크를 다시 연결하거나 입력 장치를 다시 선택해 보세요
 
-Input focus color
-== 인터페이스 입력 포커스 색상
-
 Input overlay
 == 입력 오버레이
 
@@ -5252,14 +5264,17 @@ Interface
 Interface animations
 == 인터페이스 애니메이션
 
-Interface color
-== 인터페이스 색상
-
 Interface page
 == 인터페이스 페이지
 
 Interface settings page
 == 인터페이스 설정 페이지
+
+Interface surface
+== Interface surface
+
+Interface surface color
+== Interface surface color
 
 Interface transparency
 == 일반 UI 투명도
@@ -5440,6 +5455,9 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == 키 고정: 본체 초기화
+
+Keyboard focus ring color
+== Keyboard focus ring color
 
 Keyword Reply
 == 키워드 답장
@@ -6035,8 +6053,11 @@ Manual target
 Map
 == 맵
 
-Map browser color
-== 맵 브라우저 색상
+Map browser surface
+== Map browser surface
+
+Map browser surface color
+== Map browser surface color
 
 Map browser transparency
 == 맵 브라우저 투명도
@@ -7778,6 +7799,9 @@ Prediction offset
 Preparing demo playback
 == 데모 재생 준비 중
 
+Presentation animations
+== Presentation animations
+
 Preset %d
 == 프리셋 %d
 
@@ -9014,9 +9038,6 @@ Score limit
 Scoreboard
 == 점수판
 
-Scoreboard color
-== 점수판 색상
-
 Scoreboard cursor
 == 점수판 커서
 
@@ -9028,6 +9049,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == 점수판 정렬 모드 (0=점수, 1=분)
+
+Scoreboard surface
+== Scoreboard surface
+
+Scoreboard surface color
+== Scoreboard surface color
 
 Scoreboard transparency
 == 스코어보드 투명도

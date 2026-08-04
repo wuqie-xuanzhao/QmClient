@@ -1580,7 +1580,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			const int SkinSortMode = std::clamp(g_Config.m_QmSkinSortMode, 0, 1);
 			CUi::SDropDownProperties SkinSortDropDownProps;
 			SkinSortDropDownProps.m_FontSize = BodySize;
-			SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle();
+			const IUiContext DropDownCtx = SettingsUiContext("settings_tee_skin_sort_dropdown", UiScale);
+			SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle(*DropDownCtx.m_pTheme);
 			const int SkinSortModeNew = DoSettingsDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState, SkinSortDropDownProps);
 			if(g_Config.m_QmSkinSortMode != SkinSortModeNew)
 			{
@@ -3696,7 +3697,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
 	const float GraphicsIconsContentHeight = ResolveSettingsRowsHeight(2, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsIconsMinCardHeight = IconsChromeHeight + GraphicsIconsContentHeight;
-	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(6, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 	static CButtonContainer s_aGraphicsIconColorButtons[4];
 	static CButtonContainer s_aGraphicsIconWeightButtons[4];
@@ -3988,16 +3989,21 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
 			static CButtonContainer s_UiColorResetId;
-			if(DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize("UI color"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
+			if(DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize("Interface surface"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_MapBrowserColorResetId;
-			if(DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity, DefaultConfig::QmMapBrowserColor, DefaultConfig::QmMapBrowserOpacity))
+			if(DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize("Map browser surface"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity, DefaultConfig::QmMapBrowserColor, DefaultConfig::QmMapBrowserOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_ScoreboardColorResetId;
-			if(DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity, DefaultConfig::QmScoreboardColor, DefaultConfig::QmScoreboardOpacity))
+			if(DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize("Scoreboard surface"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity, DefaultConfig::QmScoreboardColor, DefaultConfig::QmScoreboardOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
+			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
+				g_Config.m_QmUiCardBorders ^= 1;
 
 			static CButtonContainer s_CardBorderColorResetId;
 			const unsigned OldCardBorderColor = g_Config.m_QmUiCardBorderColor;
@@ -4009,11 +4015,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
 				g_Config.m_QmUiCardRainbowTitles ^= 1;
-
-			CardView.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &CardView);
-			CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Button, &CardView);
-			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
-				g_Config.m_QmUiCardBorders ^= 1;
 		});
 		AddCard(IconsSpec, GraphicsIconsMinCardHeight, IconsChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
@@ -4123,7 +4124,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;
-			int RowsRemaining = 3;
+			int RowsRemaining = 6;
 			const auto NextRow = [&]() {
 				CUIRect Row;
 				CardView.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &CardView);
@@ -4147,16 +4148,31 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					g_Config.m_QmUiMotionLevel = i;
 			}
 
-			CUIRect ExtraAnimations = NextRow();
-			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &ExtraAnimations))
+			CUIRect ListEntryAnimations = NextRow();
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiListEntryAnimations, "settings-card-list-entry-animations", Localize("Card list entry animation"), g_Config.m_QmUiListEntryAnimations, &ListEntryAnimations))
+				g_Config.m_QmUiListEntryAnimations ^= 1;
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiListEntryAnimations, &ListEntryAnimations, Localize("Animate settings card lists when entering a page"));
+
+			CUIRect CardHeightAnimations = NextRow();
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardHeightAnimations, "settings-card-height-animations", Localize("Card height animation"), g_Config.m_QmUiCardHeightAnimations, &CardHeightAnimations))
+				g_Config.m_QmUiCardHeightAnimations ^= 1;
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiCardHeightAnimations, &CardHeightAnimations, Localize("Animate settings card expand and collapse height changes"));
+
+			CUIRect CardReflowAnimations = NextRow();
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardReflowAnimations, "settings-card-reflow-animations", Localize("Card reflow animation"), g_Config.m_QmUiCardReflowAnimations, &CardReflowAnimations))
+				g_Config.m_QmUiCardReflowAnimations ^= 1;
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiCardReflowAnimations, &CardReflowAnimations, Localize("Animate settings card reorder and layout reflow"));
+
+			CUIRect PresentationAnimations = NextRow();
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "presentation-animations", Localize("Presentation animations"), g_Config.m_QmExtraAnimations, &PresentationAnimations))
 				g_Config.m_QmExtraAnimations ^= 1;
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmExtraAnimations, &ExtraAnimations, Localize("Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations"));
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmExtraAnimations, &PresentationAnimations, Localize("Animate chat box, emote selector, scoreboard, and spectate selection"));
 			static CButtonContainer s_FocusColorResetId;
 			const unsigned OldFocusColor = g_Config.m_QmUiFocusColor;
 			CUIRect FocusColorRow = NextRow();
 			SSettingsContentMetrics FocusColorMetrics = GraphicsMetrics;
 			FocusColorMetrics.m_LineSpacing = 0.0f;
-			DoLine_ColorPicker(&s_FocusColorResetId, FocusColorMetrics, &FocusColorRow, Localize("Focus color"), &g_Config.m_QmUiFocusColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiFocusColor)), false, nullptr, false);
+			DoLine_ColorPicker(&s_FocusColorResetId, FocusColorMetrics, &FocusColorRow, Localize("Focus ring color"), &g_Config.m_QmUiFocusColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiFocusColor)), false, nullptr, false);
 			if(OldFocusColor != g_Config.m_QmUiFocusColor)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 		});

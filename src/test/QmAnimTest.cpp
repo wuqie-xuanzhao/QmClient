@@ -59,21 +59,26 @@ namespace
 
 	TEST(SettingsCard, MotionPolicyKeepsRequiredFeedbackAtLevelZero)
 	{
-		const SCardMotionSpec Full = ResolveCardMotionSpec(2, true);
-		const SCardMotionSpec Reduced = ResolveCardMotionSpec(1, true);
-		const SCardMotionSpec Off = ResolveCardMotionSpec(0, true);
+		const SCardMotionSpec Full = ResolveCardMotionSpec(2, true, true, true, true);
+		const SCardMotionSpec Reduced = ResolveCardMotionSpec(1, true, true, true, true);
+		const SCardMotionSpec Off = ResolveCardMotionSpec(0, true, true, true, true);
 		EXPECT_GT(Full.m_EntryDistance, Reduced.m_EntryDistance);
 		EXPECT_FLOAT_EQ(Full.m_EntryDuration, 0.16f);
+		EXPECT_FLOAT_EQ(Full.m_ContentHeightDuration, 0.18f);
 		EXPECT_FLOAT_EQ(Reduced.m_ReflowDuration, 0.12f);
 		EXPECT_TRUE(Full.m_DecorativeMotion);
-		EXPECT_FALSE(ResolveCardMotionSpec(2, false).m_DecorativeMotion);
+		EXPECT_FALSE(ResolveCardMotionSpec(2, true, true, true, false).m_DecorativeMotion);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(2, false, true, true, true).m_EntryDuration, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(2, true, false, true, true).m_ContentHeightDuration, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(2, true, true, false, true).m_ReflowDuration, 0.0f);
 		EXPECT_FLOAT_EQ(Off.m_EntryDistance, 0.0f);
 		EXPECT_FLOAT_EQ(Off.m_EntryDuration, 0.0f);
+		EXPECT_FLOAT_EQ(Off.m_ContentHeightDuration, 0.0f);
 		EXPECT_FLOAT_EQ(Off.m_ReflowDuration, 0.0f);
 		EXPECT_GT(Off.m_DropFeedbackDuration, 0.0f);
 		EXPECT_GT(Off.m_ReflowCompleteFeedbackDuration, 0.0f);
-		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(-1, true).m_EntryDistance, 0.0f);
-		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(99, true).m_EntryDistance, Full.m_EntryDistance);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(-1, true, true, true, true).m_EntryDistance, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(99, true, true, true, true).m_EntryDistance, Full.m_EntryDistance);
 		EXPECT_TRUE(Off.m_KeepDragProxy);
 		EXPECT_TRUE(Off.m_KeepDropFeedback);
 		EXPECT_TRUE(Off.m_KeepReflowCompleteFeedback);
@@ -630,6 +635,7 @@ namespace
 		EXPECT_NE(Blue.m_Accent.b, RedHalf.m_Accent.b);
 		EXPECT_LT(RedHalf.m_Surface.a, Blue.m_Surface.a);
 		EXPECT_FLOAT_EQ(RedHalf.m_InputSurface.a, RedHalf.m_Surface.a);
+		EXPECT_GE(RedHalf.m_FocusRing.a, 0.60f);
 	}
 
 	TEST(InputField, AffordanceSlotsOnlyExistWhenRequested)
@@ -3502,13 +3508,14 @@ TEST(UiV2DropdownGeometry, RejectsPartiallyVisibleAnchorBeforeOpening)
 
 TEST(UiV2DropdownVisuals, SettingsStyleSharesTriggerAndPopupSurface)
 {
-	const SQmDropdownVisualStyle Style = QmSettingsDropdownVisualStyle();
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.r, Style.m_PopupBackgroundColor.r);
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.g, Style.m_PopupBackgroundColor.g);
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.b, Style.m_PopupBackgroundColor.b);
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.a, Style.m_PopupBackgroundColor.a);
+	const SUiTheme Theme = ResolveUiTheme(ColorHSLA(0.20f, 0.50f, 0.40f, 1.0f), 0.75f);
+	const SQmDropdownVisualStyle Style = QmSettingsDropdownVisualStyle(Theme);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.r, Theme.m_InputSurface.r);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.g, Theme.m_InputSurface.g);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.b, Theme.m_InputSurface.b);
+	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.a, Theme.m_Surface.a);
 	EXPECT_TRUE(Style.m_TransparentEntries);
-	EXPECT_GT(Style.m_PopupBorderColor.a, 0.0f);
+	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.a, Theme.m_Border.a);
 }
 
 TEST(UiV2DropdownGeometry, FlipsAboveWhenBelowWouldOverflow)

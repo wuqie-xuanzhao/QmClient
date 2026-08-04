@@ -821,18 +821,18 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 	EXPECT_EQ(Source.find("s_MenuPanelColorResetId"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_ClMenuPanelColor"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_UiColor"), std::string::npos);
-	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
-	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
-	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize(\"Interface surface\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize(\"Map browser surface\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
+	EXPECT_NE(Source.find("DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize(\"Scoreboard surface\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmUiColor"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmMapBrowserColor"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmScoreboardColor"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmUiOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmMapBrowserOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmScoreboardOpacity"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"UI color\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Map browser color\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Scoreboard color\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Interface surface\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Map browser surface\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Scoreboard surface\")"), std::string::npos);
 	EXPECT_EQ(Source.find("Localize(\"UI opacity\")"), std::string::npos);
 	EXPECT_EQ(Source.find("Localize(\"Map browser opacity\")"), std::string::npos);
 	EXPECT_EQ(Source.find("Localize(\"Scoreboard opacity\")"), std::string::npos);
@@ -850,9 +850,9 @@ TEST(QmNewUiMenuBranches, SettingsGraphicsColorPickersExposeIndependentAlphaDoma
 	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Graphics.empty());
 
-	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize(\"UI color\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
-	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize(\"Map browser color\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
-	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize(\"Scoreboard color\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_UiColorResetId, GraphicsMetrics, &CardView, Localize(\"Interface surface\"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_MapBrowserColorResetId, GraphicsMetrics, &CardView, Localize(\"Map browser surface\"), &g_Config.m_QmMapBrowserColor, &g_Config.m_QmMapBrowserOpacity"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoLine_AlphaColorPicker(&s_ScoreboardColorResetId, GraphicsMetrics, &CardView, Localize(\"Scoreboard surface\"), &g_Config.m_QmScoreboardColor, &g_Config.m_QmScoreboardOpacity"), std::string::npos);
 	EXPECT_EQ(Graphics.find("graphics-ui-opacity"), std::string::npos);
 	EXPECT_EQ(Graphics.find("graphics-map-browser-opacity"), std::string::npos);
 	EXPECT_EQ(Graphics.find("graphics-scoreboard-opacity"), std::string::npos);
@@ -1064,6 +1064,9 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 	const char *apIntentionalDefaultOn[] = {
 		"QmImeAutoManage",
 		"QmNewIme",
+		"QmUiListEntryAnimations",
+		"QmUiCardHeightAnimations",
+		"QmUiCardReflowAnimations",
 		"QmUiCardBorders",
 		"QmUiIconWeight",
 		"QmNameplateCoordX",
@@ -2604,15 +2607,18 @@ TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
 	EXPECT_NE(Body.find("m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, ExtraAnimationsExplainTheirPresentationScope)
+TEST(QmNewUiMenuBranches, AnimationControlsExposeIndependentScopes)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Body.find("Localize(\"UI motion level\")"), std::string::npos);
-	EXPECT_NE(Body.find("Localize(\"Extra animations\")"), std::string::npos);
-	EXPECT_NE(Body.find("Localize(\"Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Card list entry animation\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Card height animation\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Card reflow animation\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Presentation animations\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Animate chat box, emote selector, scoreboard, and spectate selection\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SharedListInitialRevealDoesNotRearmAfterFrameGaps)
@@ -3158,14 +3164,17 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-modes\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-interaction\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Graphics backend\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmExtraAnimations, \"extra-animations\", Localize(\"Extra animations\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiListEntryAnimations, \"settings-card-list-entry-animations\", Localize(\"Card list entry animation\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardHeightAnimations, \"settings-card-height-animations\", Localize(\"Card height animation\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardReflowAnimations, \"settings-card-reflow-animations\", Localize(\"Card reflow animation\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmExtraAnimations, \"presentation-animations\", Localize(\"Presentation animations\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardRainbowTitles, \"rainbow-card-titles\", Localize(\"Rainbow card titles\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardBorders, \"show-settings-card-borders\", Localize(\"Show settings card borders\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Settings card border color\"), &g_Config.m_QmUiCardBorderColor"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("false, nullptr, true, false);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("DoGraphicsNumericField(\"graphics-card-corner-segments\""), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("int RowsRemaining = 3;"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("int RowsRemaining = 6;"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("DoSettingsLabel(SETTINGS_GRAPHICS, -1, \"graphics-ui-motion-level-label\""), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const char *apMotionLabels[] = {Localize(\"Off\"), Localize(\"Reduced\"), Localize(\"Full\")}"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(DisplaySpec, GraphicsDisplayMinCardHeight"), std::string::npos);
@@ -3177,7 +3186,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 6 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsRowsHeight(6"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(6"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsDisplayMeasureRevision ="), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("GraphicsDisplayMeasureRevision"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;"), std::string::npos);
@@ -4146,7 +4155,7 @@ TEST(QmNewUiMenuBranches, TeeOptionsMeasureAllRowsAndPlayerDummyChangeDisplayCyc
 	EXPECT_NE(Tee.find("g_Config.m_QmSkinShowMetadata != 0"), std::string::npos);
 	EXPECT_EQ(Tee.find("g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata"), std::string::npos);
 	EXPECT_NE(Tee.find("SkinSortDropDownProps.m_FontSize = BodySize;"), std::string::npos);
-	EXPECT_NE(Tee.find("SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle();"), std::string::npos);
+	EXPECT_NE(Tee.find("SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle(*DropDownCtx.m_pTheme);"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("\"Show skin release date and author\""), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("\"Show release date and author when sorted by date\""), std::string::npos);
 	EXPECT_NE(Tee.find("const auto NextCheckboxRow"), std::string::npos);

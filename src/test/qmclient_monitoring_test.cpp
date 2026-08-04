@@ -4955,8 +4955,9 @@ TEST(QmMonitoringHelpers, MenuIdleRenderThrottleOnlySkipsSettingsDuringPerfSampl
 	EXPECT_NE(Body.find("GameClient()->m_MenuBackground.IsLoading()"), std::string::npos);
 	EXPECT_NE(Body.find("UiRuntimeStats.m_ActiveAnimCount > 0"), std::string::npos);
 	EXPECT_NE(Body.find("time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME"), std::string::npos);
-	EXPECT_NE(Body.find("return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);"), std::string::npos);
-	EXPECT_LT(SettingsReturn, Body.find("return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);"));
+	EXPECT_NE(Body.find("return MENU_IDLE_REFRESH_RATE;"), std::string::npos);
+	EXPECT_EQ(Body.find("g_Config.m_GfxScreenRefreshRate"), std::string::npos);
+	EXPECT_LT(SettingsReturn, Body.find("return MENU_IDLE_REFRESH_RATE;"));
 }
 
 TEST(QmMonitoringHelpers, ClientRenderLoopUsesGameClientIdleThrottleWithOneFrameRatePath)
@@ -9479,20 +9480,23 @@ TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)
 	const std::string StyleBody = ExtractSourceFunctionBody(Menus, "CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const");
 	ASSERT_FALSE(StyleBody.empty());
 
-	EXPECT_NE(Containers.find("SCardProps QmClientCardProps(float UiScale = 1.0f)"), std::string::npos);
+	EXPECT_NE(Containers.find("SCardProps QmClientCardProps(float UiScale = 1.0f, const SUiTheme *pTheme = nullptr)"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_Padding = 14.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_Radius = 10.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_DrawBorder = true;"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_FillColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f);"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f);"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_BorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f);"), std::string::npos);
+	EXPECT_NE(Containers.find("Props.m_FillColor = pTheme->m_Surface;"), std::string::npos);
+	EXPECT_NE(Containers.find("Props.m_BorderColor = pTheme->m_Border;"), std::string::npos);
 	EXPECT_NE(Containers.find("DrawRoundedSurface(Ctx, Rect, Props.m_FillColor"), std::string::npos);
 	EXPECT_NE(Containers.find("Highlight.Draw(Props.m_HighlightColor"), std::string::npos);
 	EXPECT_NE(Containers.find("BorderBg.Margin(-1.0f, &BorderBg);"), std::string::npos);
 	EXPECT_NE(Containers.find("DrawRoundedSurface(Ctx, BorderBg, Props.m_BorderColor"), std::string::npos);
 	EXPECT_EQ(Containers.find("Border.Margin(0.5f, &Border);"), std::string::npos);
 	EXPECT_NE(Menus.find("#include <game/client/QmUi/UiContainers.h>"), std::string::npos);
-	EXPECT_NE(StyleBody.find("const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale);"), std::string::npos);
+	EXPECT_NE(StyleBody.find("const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));"), std::string::npos);
+	EXPECT_NE(StyleBody.find("const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale, &Theme);"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_Padding = CardProps.m_Padding;"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_CornerRadius = CardProps.m_Radius;"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_GlassColor = CardProps.m_FillColor;"), std::string::npos);

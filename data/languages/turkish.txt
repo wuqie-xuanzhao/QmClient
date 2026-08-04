@@ -698,6 +698,18 @@ Angle
 Angle:
 == Açı:
 
+Animate chat box, emote selector, scoreboard, and spectate selection
+== Animate chat box, emote selector, scoreboard, and spectate selection
+
+Animate settings card expand and collapse height changes
+== Animate settings card expand and collapse height changes
+
+Animate settings card lists when entering a page
+== Animate settings card lists when entering a page
+
+Animate settings card reorder and layout reflow
+== Animate settings card reorder and layout reflow
+
 Animation
 == Animasyon
 
@@ -1621,6 +1633,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Takas yapılamıyor: diğer oyuncu takımında değil
+
+Card height animation
+== Card height animation
+
+Card list entry animation
+== Card list entry animation
+
+Card reflow animation
+== Card reflow animation
 
 Category
 == Kategori
@@ -3947,12 +3968,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == Harici konsol şifresi. Ekonomiyi etkinleştirmek için ayarlanmalıdır.
 
-Extra animations
-== Ek animasyonlar
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== Ekstra animasyonlar: Sohbet kutusu, ifade seçme kutusu, skor tablosu ve izleyici seçme sayfası Presentation State animasyonu kullanır
-
 Extras
 == Ekstralar
 
@@ -4175,11 +4190,11 @@ First page in console
 Flip:
 == Çevir:
 
-Focus color
-== Odak rengi
-
 Focus mode
 == Odak modu
+
+Focus ring color
+== Focus ring color
 
 Folder
 == Klasör
@@ -5216,9 +5231,6 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == Giriş cihazı açılamadı, kulaklığı/mikrofonu yeniden takmayı veya giriş cihazını yeniden seçmeyi deneyin
 
-Input focus color
-== Arayüz giriş odak rengi
-
 Input overlay
 == Giriş kaplaması
 
@@ -5252,14 +5264,17 @@ Interface
 Interface animations
 == Arayüz animasyonları
 
-Interface color
-== Arayüz rengi
-
 Interface page
 == Arayüz sayfası
 
 Interface settings page
 == Arayüz ayarları sayfası
+
+Interface surface
+== Interface surface
+
+Interface surface color
+== Interface surface color
 
 Interface transparency
 == Genel arayüz şeffaflığı
@@ -5440,6 +5455,9 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == Tuş Kilitleme: Kendini Sıfırla
+
+Keyboard focus ring color
+== Keyboard focus ring color
 
 Keyword Reply
 == Anahtar Kelime Yanıtı
@@ -6035,8 +6053,11 @@ Manual target
 Map
 == Harita
 
-Map browser color
-== Harita tarayıcı rengi
+Map browser surface
+== Map browser surface
+
+Map browser surface color
+== Map browser surface color
 
 Map browser transparency
 == Harita tarayıcısı şeffaflığı
@@ -7778,6 +7799,9 @@ Prediction offset
 Preparing demo playback
 == Demo oynatımı hazırlanıyor
 
+Presentation animations
+== Presentation animations
+
 Preset %d
 == Ön ayar %d
 
@@ -9014,9 +9038,6 @@ Score limit
 Scoreboard
 == Skor tablosu
 
-Scoreboard color
-== Skor tablosu rengi
-
 Scoreboard cursor
 == Skor tablosu imleci
 
@@ -9028,6 +9049,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == Skor Tablosu Sıralama Modu (0=Puan, 1=Skor)
+
+Scoreboard surface
+== Scoreboard surface
+
+Scoreboard surface color
+== Scoreboard surface color
 
 Scoreboard transparency
 == Skor Tablosu Şeffaflığı

@@ -698,6 +698,18 @@ Angle
 Angle:
 == 角度：
 
+Animate chat box, emote selector, scoreboard, and spectate selection
+== Animate chat box, emote selector, scoreboard, and spectate selection
+
+Animate settings card expand and collapse height changes
+== Animate settings card expand and collapse height changes
+
+Animate settings card lists when entering a page
+== Animate settings card lists when entering a page
+
+Animate settings card reorder and layout reflow
+== Animate settings card reorder and layout reflow
+
 Animation
 == 動畫效果
 
@@ -1621,6 +1633,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == 無法交換：對方不在你的隊伍中
+
+Card height animation
+== Card height animation
+
+Card list entry animation
+== Card list entry animation
+
+Card reflow animation
+== Card reflow animation
 
 Category
 == 分類
@@ -3947,12 +3968,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == 外部控制台密碼。需要設置此選項才能啟用經濟。
 
-Extra animations
-== 額外動畫
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== 額外的動畫：聊天框、表情選擇框、計分板和觀戰選擇頁使用 Presentation State 動畫
-
 Extras
 == 其他
 
@@ -4175,11 +4190,11 @@ First page in console
 Flip:
 == 翻轉：
 
-Focus color
-== 焦點顏色
-
 Focus mode
 == 專注模式
+
+Focus ring color
+== Focus ring color
 
 Folder
 == 文件夾
@@ -5216,9 +5231,6 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == 輸入設備打開失敗，建議重插耳機/麥克風後刷新，或重新選擇輸入設備
 
-Input focus color
-== 介面輸入焦點顏色
-
 Input overlay
 == 按鍵顯示
 
@@ -5252,14 +5264,17 @@ Interface
 Interface animations
 == 介面動畫
 
-Interface color
-== 界面顏色
-
 Interface page
 == 界面頁面
 
 Interface settings page
 == 界面設置頁面
+
+Interface surface
+== Interface surface
+
+Interface surface color
+== Interface surface color
 
 Interface transparency
 == 通用介面透明度
@@ -5440,6 +5455,9 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == 卡鍵：重置本體
+
+Keyboard focus ring color
+== Keyboard focus ring color
 
 Keyword Reply
 == 關鍵詞回覆
@@ -6035,8 +6053,11 @@ Manual target
 Map
 == 地圖
 
-Map browser color
-== 地圖瀏覽器顏色
+Map browser surface
+== Map browser surface
+
+Map browser surface color
+== Map browser surface color
 
 Map browser transparency
 == 地圖瀏覽器透明度
@@ -7778,6 +7799,9 @@ Prediction offset
 Preparing demo playback
 == 正在準備回放
 
+Presentation animations
+== Presentation animations
+
 Preset %d
 == 預設 %d
 
@@ -9014,9 +9038,6 @@ Score limit
 Scoreboard
 == 計分板
 
-Scoreboard color
-== 計分板顏色
-
 Scoreboard cursor
 == 計分板光標
 
@@ -9028,6 +9049,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == 記分牌排序模式（0=分數，1=分）
+
+Scoreboard surface
+== Scoreboard surface
+
+Scoreboard surface color
+== Scoreboard surface color
 
 Scoreboard transparency
 == 計分板透明度

@@ -557,7 +557,12 @@ int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const cha
 
 SCardMotionSpec CMenus::SettingsCardMotionSpec() const
 {
-	return ResolveCardMotionSpec(g_Config.m_QmUiMotionLevel, g_Config.m_QmExtraAnimations != 0);
+	return ResolveCardMotionSpec(
+		g_Config.m_QmUiMotionLevel,
+		g_Config.m_QmUiListEntryAnimations != 0,
+		g_Config.m_QmUiCardHeightAnimations != 0,
+		g_Config.m_QmUiCardReflowAnimations != 0,
+		g_Config.m_QmExtraAnimations != 0);
 }
 
 SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
@@ -4847,7 +4852,7 @@ int CMenus::IdleRenderFrameRate() const
 	if(time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME)
 		return 0;
 
-	return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);
+	return MENU_IDLE_REFRESH_RATE;
 }
 
 CMenus::SSettingsScrollRegionFrame CMenus::BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY)
@@ -4880,7 +4885,8 @@ void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsSc
 CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 {
 	SQmSettingsCardStyle Style;
-	const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale);
+	const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));
+	const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale, &Theme);
 	const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);
 	Style.m_Padding = CardProps.m_Padding;
 	Style.m_Spacing = std::clamp(16.0f * UiScale, 10.0f, 16.0f);

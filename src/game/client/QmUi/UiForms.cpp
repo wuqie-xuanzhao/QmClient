@@ -192,6 +192,9 @@ namespace ui_widget
 			return {};
 		}
 		const SUiTheme &Theme = ThemeFor(Ctx);
+		const auto ActionHoverColor = [&Theme](float State) {
+			return Theme.m_BorderHovered.WithAlpha(std::clamp(Theme.m_BorderHovered.a * (State - 1.0f), 0.0f, 1.0f));
+		};
 		const bool Hovered = Ctx.m_pUi->HotItem() == pInput;
 		const ColorRGBA PlateColor = Hovered && !pInput->IsActive() ? Theme.m_SurfaceHovered : Theme.m_InputSurface;
 		DrawTextFieldShell(Ctx, Layout.m_ShellRect, PlateColor, Options.m_Corners, ui_token::radius::BASE);
@@ -225,7 +228,7 @@ namespace ui_widget
 			const CUIRect &ClearRect = Layout.m_ClearRect;
 			const float ClearState = Ctx.m_pUi->ButtonColorMul(pInput->GetClearButtonId());
 			if(ClearState > 1.0f)
-				DrawRoundedSurface(Ctx, ClearRect, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * (ClearState - 1.0f))), ColorRGBA(), ui_token::radius::BASE, 0.0f, IGraphics::CORNER_R);
+				DrawRoundedSurface(Ctx, ClearRect, Ctx.m_pUi->ScaleBackgroundAlpha(ActionHoverColor(ClearState)), ColorRGBA(), ui_token::radius::BASE, 0.0f, IGraphics::CORNER_R);
 			DrawInputFieldIcon(Ctx, ClearRect, FontIcons::FONT_ICON_XMARK, InputIconColor);
 			if(Ctx.m_pUi->DoButtonLogic(pInput->GetClearButtonId(), 0, &ClearRect, BUTTONFLAG_LEFT))
 			{
@@ -239,7 +242,7 @@ namespace ui_widget
 		{
 			const float ActionState = Ctx.m_pUi->ButtonColorMul(Options.m_pTrailingActionId);
 			if(ActionState > 1.0f)
-				DrawRoundedSurface(Ctx, TrailingRect, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * (ActionState - 1.0f))), ColorRGBA(), ui_token::radius::BASE, 0.0f, Options.m_Clearable ? IGraphics::CORNER_NONE : IGraphics::CORNER_R);
+				DrawRoundedSurface(Ctx, TrailingRect, Ctx.m_pUi->ScaleBackgroundAlpha(ActionHoverColor(ActionState)), ColorRGBA(), ui_token::radius::BASE, 0.0f, Options.m_Clearable ? IGraphics::CORNER_NONE : IGraphics::CORNER_R);
 			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor, Options.m_TrailingActionQmIcon);
 			TrailingAction = Ctx.m_pUi->DoButtonLogic(Options.m_pTrailingActionId, 0, &TrailingRect, BUTTONFLAG_LEFT) != 0;
 		}

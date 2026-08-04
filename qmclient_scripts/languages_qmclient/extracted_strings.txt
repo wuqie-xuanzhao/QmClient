@@ -231,6 +231,10 @@ Amount
 And pick one randomly
 Angle
 Angle:
+Animate chat box, emote selector, scoreboard, and spectate selection
+Animate settings card expand and collapse height changes
+Animate settings card lists when entering a page
+Animate settings card reorder and layout reflow
 Animation
 Animation duration
 Animation range
@@ -539,6 +543,9 @@ Cancel
 Cancel your swap request
 Candidate files
 Cannot swap: the other player is not in your team
+Card height animation
+Card list entry animation
+Card reflow animation
 Category
 Category name
 Censor replacement character
@@ -1314,8 +1321,6 @@ Exported %d chat messages
 Exported to %s
 Expose playback controls to the operating system
 External console password. Must be set to enable economy.
-Extra animations
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
 Extras
 f = Frame rate
 Fade and slide
@@ -1390,8 +1395,8 @@ Finished maps
 Fire
 First page in console
 Flip:
-Focus color
 Focus mode
+Focus ring color
 Folder
 Folder Link
 Follow
@@ -1737,7 +1742,6 @@ Input device
 Input device not found
 Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
-Input focus color
 Input overlay
 Input overlay display
 Input overlay opacity (percent)
@@ -1749,9 +1753,10 @@ Input switch
 Insane
 Interface
 Interface animations
-Interface color
 Interface page
 Interface settings page
+Interface surface
+Interface surface color
 Interface transparency
 Intermediate
 Internet
@@ -1812,6 +1817,7 @@ Key Sticking: ?
 Key Sticking: Off
 Key Sticking: On
 Key Sticking: Reset Self
+Keyboard focus ring color
 Keyword Reply
 Keyword reply
 Keyword reply rules (each line: [rename] [regex] keyword=>reply)
@@ -2010,7 +2016,8 @@ Manual scope
 Manual source file
 Manual target
 Map
-Map browser color
+Map browser surface
+Map browser surface color
 Map browser transparency
 Map danger border
 Map download send window
@@ -2591,6 +2598,7 @@ Prediction margin
 Prediction margin when frozen
 Prediction offset
 Preparing demo playback
+Presentation animations
 Preset %d
 Preset bar
 Preset when encoding video with libx264, default 5 (medium), 0 is ultrafast, 9 is placebo (slowest, not recommended)
@@ -3003,11 +3011,12 @@ Scanning current server...
 Score
 Score limit
 Scoreboard
-Scoreboard color
 Scoreboard cursor
 Scoreboard point check
 Scoreboard score lookup
 Scoreboard sort mode (0=Score, 1=Points)
+Scoreboard surface
+Scoreboard surface color
 Scoreboard transparency
 Scores are private on this server
 Scores are public on this server

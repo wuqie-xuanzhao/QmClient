@@ -698,6 +698,18 @@ Angle
 Angle:
 == Angle :
 
+Animate chat box, emote selector, scoreboard, and spectate selection
+== Animate chat box, emote selector, scoreboard, and spectate selection
+
+Animate settings card expand and collapse height changes
+== Animate settings card expand and collapse height changes
+
+Animate settings card lists when entering a page
+== Animate settings card lists when entering a page
+
+Animate settings card reorder and layout reflow
+== Animate settings card reorder and layout reflow
+
 Animation
 == Animation
 
@@ -1621,6 +1633,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Impossible d'échanger : l'autre joueur n'est pas dans votre équipe
+
+Card height animation
+== Card height animation
+
+Card list entry animation
+== Card list entry animation
+
+Card reflow animation
+== Card reflow animation
 
 Category
 == Catégorie
@@ -3947,12 +3968,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == Mot de passe de la console externe. Doit être défini pour activer l'économie.
 
-Extra animations
-== Animations supplémentaires
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== Animations supplémentaires : animations Presentation State pour la boîte de discussion, la sélection d'emotes, le tableau des scores et la page de sélection des spectateurs
-
 Extras
 == Suppléments
 
@@ -4175,11 +4190,11 @@ First page in console
 Flip:
 == Retourner :
 
-Focus color
-== Couleur de focus
-
 Focus mode
 == Mode focus
+
+Focus ring color
+== Focus ring color
 
 Folder
 == Dossier
@@ -5216,9 +5231,6 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == Échec de l'ouverture du périphérique d'entrée, essayez de rebrancher le casque/micro ou de resélectionner le périphérique d'entrée
 
-Input focus color
-== Couleur focus
-
 Input overlay
 == Superposition de saisie
 
@@ -5252,14 +5264,17 @@ Interface
 Interface animations
 == Animations d’interface
 
-Interface color
-== Couleur de l'interface
-
 Interface page
 == Page d'interface
 
 Interface settings page
 == Page des paramètres d'interface
+
+Interface surface
+== Interface surface
+
+Interface surface color
+== Interface surface color
 
 Interface transparency
 == Opacité générale de l'interface
@@ -5440,6 +5455,9 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == Touche bloquée : Réinitialiser soi-même
+
+Keyboard focus ring color
+== Keyboard focus ring color
 
 Keyword Reply
 == Réponse par mot-clé
@@ -6035,8 +6053,11 @@ Manual target
 Map
 == Carte
 
-Map browser color
-== Couleur du navigateur de cartes
+Map browser surface
+== Map browser surface
+
+Map browser surface color
+== Map browser surface color
 
 Map browser transparency
 == Transparence du navigateur de cartes
@@ -7778,6 +7799,9 @@ Prediction offset
 Preparing demo playback
 == Préparation de la lecture de la démo
 
+Presentation animations
+== Presentation animations
+
 Preset %d
 == Préréglage %d
 
@@ -9014,9 +9038,6 @@ Score limit
 Scoreboard
 == Tableau des scores
 
-Scoreboard color
-== Couleur du tableau des scores
-
 Scoreboard cursor
 == Curseur du tableau des scores
 
@@ -9028,6 +9049,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == Mode de tri du tableau des scores (0=score, 1=points)
+
+Scoreboard surface
+== Scoreboard surface
+
+Scoreboard surface color
+== Scoreboard surface color
 
 Scoreboard transparency
 == Transparence du tableau des scores

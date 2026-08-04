@@ -46,7 +46,8 @@ inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const C
 		std::clamp(Theme.m_Surface.g * 0.88f, 0.0f, 1.0f),
 		std::clamp(Theme.m_Surface.b * 0.88f, 0.0f, 1.0f), Theme.m_Surface.a);
 	Theme.m_InputSurfaceFocused = Theme.m_InputSurface;
-	Theme.m_FocusRing = color_cast<ColorRGBA>(FocusColor).WithAlpha(0.90f * Opacity);
+	// 焦点环是键盘与输入焦点的唯一稳定反馈，不随低表面透明度弱化到不可辨认。
+	Theme.m_FocusRing = color_cast<ColorRGBA>(FocusColor).WithAlpha(std::clamp(std::max(0.60f, 0.90f * Opacity), 0.0f, 1.0f));
 	Theme.m_Accent = AccentBase.WithAlpha(std::clamp(std::max(AccentBase.a, 0.85f) * Opacity, 0.0f, 1.0f));
 	Theme.m_TextTitle = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	Theme.m_TextBody = ColorRGBA(0.92f, 0.92f, 0.94f, 1.0f);

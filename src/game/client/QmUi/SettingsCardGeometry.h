@@ -31,6 +31,7 @@ struct SCardMotionSpec
 {
 	float m_EntryDistance = 0.0f;
 	float m_EntryDuration = 0.0f;
+	float m_ContentHeightDuration = 0.0f;
 	float m_ReflowDuration = 0.0f;
 	float m_DropFeedbackDuration = 0.08f;
 	float m_ReflowCompleteFeedbackDuration = 0.08f;
@@ -41,6 +42,6 @@ struct SCardMotionSpec
 };
 
 SSettingsCardFrame BuildSettingsCardFrame(const CUIRect &Slot, const SSettingsCardSpec &Spec, float ContentHeight, float UiScale);
-SCardMotionSpec ResolveCardMotionSpec(int MotionLevel, bool ExtraAnimations);
+SCardMotionSpec ResolveCardMotionSpec(int MotionLevel, bool ListEntryAnimations, bool CardHeightAnimations, bool CardReflowAnimations, bool PresentationAnimations);
 
 #endif
