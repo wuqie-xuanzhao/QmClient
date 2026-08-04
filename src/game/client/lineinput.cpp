@@ -445,6 +445,10 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 	}
 
 	CTextCursor Cursor;
+	// 输入框的光标和选区都不能进入文本容器。文本容器会在每次状态变更时重建
+	// 选择 quad，可能影响同一帧后续文本命令；由本控件在 TextEx 完成后单独绘制。
+	Cursor.m_RenderCursor = false;
+	Cursor.m_RenderSelection = false;
 	if(IsActive())
 	{
 		const size_t CursorOffset = GetCursorOffset();
@@ -468,7 +472,6 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 		Cursor.m_FontSize = FontSize;
 		Cursor.m_LineWidth = LineWidth;
 		Cursor.m_ForceCursorRendering = Changed;
-		Cursor.m_RenderCursor = false;
 		Cursor.m_LineSpacing = LineSpacing;
 		Cursor.m_PressMouse.x = m_MouseSelection.m_PressMouse.x;
 		Cursor.m_ReleaseMouse.x = m_MouseSelection.m_ReleaseMouse.x;
@@ -538,6 +541,7 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 		if(Cursor.m_HasCursorRenderedPosition)
 		{
 			m_CaretPosition = Cursor.m_CursorRenderedPosition;
+			RenderSelection(Cursor, PreviousTextSelectionColor);
 			RenderCaret(Cursor, Cursor.m_ForceCursorRendering, TextRender()->GetTextColor(), TextRender()->GetTextOutlineColor());
 			// 主 Cursor 已完成文本、选择区、光标和 IME 锚点位置计算，不能再创建一套
 			// 重复文字容器。第二次 TextEx 会为同一输入额外插入图形命令，并在 caret
@@ -563,6 +567,19 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 	TextRender()->TextColor(PreviousTextColor);
 
 	return Cursor.BoundingBox();
+}
+
+void CLineInput::RenderSelection(const CTextCursor &Cursor, ColorRGBA SelectionColor)
+{
+	if(Cursor.m_RenderSelection || Cursor.m_vSelectionQuads.empty())
+		return;
+
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(SelectionColor);
+	Graphics()->QuadsDrawTL(Cursor.m_vSelectionQuads.data(), Cursor.m_vSelectionQuads.size());
+	Graphics()->QuadsEnd();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void CLineInput::RenderCaret(const CTextCursor &Cursor, bool ForceVisible, ColorRGBA TextColor, ColorRGBA TextOutlineColor)

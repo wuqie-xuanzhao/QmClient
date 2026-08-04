@@ -5,8 +5,6 @@
 
 #include "ui_scrollregion.h"
 
-#include <cstdint>
-
 constexpr float QmListBoxScrollbarMetric(float PolicyValue, float CurrentValue, bool Overridden)
 {
 	return Overridden ? CurrentValue : PolicyValue;
@@ -20,11 +18,6 @@ constexpr bool QmListBoxShouldScrollToInitialSelection(bool InitialScrollPending
 constexpr bool QmListBoxInitialScrollRemainsPending(bool InitialScrollPending, int SelectedIndex)
 {
 	return InitialScrollPending && SelectedIndex < 0;
-}
-
-constexpr bool QmListBoxShouldRearmInitialScroll(uint64_t LastRenderFrame, uint64_t CurrentFrame)
-{
-	return LastRenderFrame != 0 && CurrentFrame > LastRenderFrame && CurrentFrame - LastRenderFrame > 1;
 }
 
 struct CListboxItem
@@ -64,7 +57,6 @@ private:
 	bool m_Active;
 	bool m_HideScrollbar;
 	bool m_InitialScrollPending;
-	uint64_t m_LastRenderFrame;
 	ColorRGBA m_SelectedItemActiveColor;
 	ColorRGBA m_SelectedItemInactiveColor;
 	ColorRGBA m_HoveredItemColor;

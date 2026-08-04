@@ -35,7 +35,6 @@ void CListBox::Reset()
 	m_Active = true;
 	m_HideScrollbar = false;
 	m_InitialScrollPending = true;
-	m_LastRenderFrame = 0;
 	m_BackgroundCorners = IGraphics::CORNER_ALL;
 	m_SelectedItemActiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
 	m_SelectedItemInactiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
@@ -72,11 +71,6 @@ void CListBox::DoSpacing(float Spacing)
 
 void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect, bool Background, int BackgroundCorners)
 {
-	const uint64_t CurrentFrame = Ui()->Client()->PerfFrame();
-	if(QmListBoxShouldRearmInitialScroll(m_LastRenderFrame, CurrentFrame))
-		m_InitialScrollPending = true;
-	m_LastRenderFrame = CurrentFrame;
-
 	CUIRect View;
 	if(pRect)
 		View = *pRect;

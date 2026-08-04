@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 enum
 {
@@ -260,6 +261,9 @@ public:
 	bool m_ForceCursorRendering = false;
 	// 输入框独立绘制光标，避免闪烁命令影响后续提交的文本命令。
 	bool m_RenderCursor = true;
+	// 输入框独立绘制选区，避免临时选择 quad 容器改变后续文本命令状态。
+	bool m_RenderSelection = true;
+	std::vector<IGraphics::CQuadItem> m_vSelectionQuads;
 	// note this is the decoded character offset
 	int m_CursorCharacter = -1;
 	vec2 m_CursorRenderedPosition = vec2(-1.0f, -1.0f);

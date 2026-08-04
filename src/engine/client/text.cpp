@@ -1889,6 +1889,7 @@ public:
 		const float CursorOuterInnerDiff = (CursorOuterWidth - CursorInnerWidth) / 2;
 
 		std::vector<IGraphics::CQuadItem> vSelectionQuads;
+		pCursor->m_vSelectionQuads.clear();
 		int SelectionQuadLine = -1;
 		bool SelectionStarted = false;
 		bool SelectionUsedPress = false;
@@ -2395,31 +2396,34 @@ public:
 
 		const bool HasSelection = !vSelectionQuads.empty() && SelectionUsedPress && SelectionUsedRelease;
 		const bool HasRenderedCursor = HasCursor && pCursor->m_RenderCursor;
-		if((HasSelection || HasRenderedCursor) && IsRendered)
+		const bool HasRenderedSelection = HasSelection && pCursor->m_RenderSelection;
+		if((HasRenderedSelection || HasRenderedCursor) && IsRendered)
 		{
 			Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 			if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex == -1)
 				TextContainer.m_StringInfo.m_SelectionQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 			if(HasRenderedCursor)
 				Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, aCursorQuads, std::size(aCursorQuads));
-			if(HasSelection)
+			if(HasRenderedSelection)
 				Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, vSelectionQuads.data(), vSelectionQuads.size());
 			Graphics()->QuadContainerUpload(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex);
 
 			TextContainer.m_HasCursor = HasRenderedCursor;
-			TextContainer.m_HasSelection = HasSelection;
+			TextContainer.m_HasSelection = HasRenderedSelection;
 			TextContainer.m_ForceCursorRendering = pCursor->m_ForceCursorRendering;
+		}
 
-			if(HasSelection)
-			{
-				pCursor->m_SelectionStart = SelectionStartChar;
-				pCursor->m_SelectionEnd = SelectionEndChar;
-			}
-			else
-			{
-				pCursor->m_SelectionStart = -1;
-				pCursor->m_SelectionEnd = -1;
-			}
+		if(HasSelection)
+		{
+			pCursor->m_SelectionStart = SelectionStartChar;
+			pCursor->m_SelectionEnd = SelectionEndChar;
+			if(!pCursor->m_RenderSelection)
+				pCursor->m_vSelectionQuads = std::move(vSelectionQuads);
+		}
+		else
+		{
+			pCursor->m_SelectionStart = -1;
+			pCursor->m_SelectionEnd = -1;
 		}
 
 		// even if no text is drawn the cursor position will be adjusted

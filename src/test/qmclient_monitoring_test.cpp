@@ -6958,12 +6958,14 @@ TEST(QmMonitoringHelpers, InputFieldsConsumeSharedLayoutHelper)
 	EXPECT_NE(Header.find("ResolveInputFieldLayout("), std::string::npos);
 	EXPECT_NE(Header.find("struct SInputFieldOptions"), std::string::npos);
 	EXPECT_NE(InputBody.find("const bool InlineTrailingText = Options.m_InlineTrailingText"), std::string::npos);
-	EXPECT_NE(InputBody.find("ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : Options.m_TrailingWidth)"), std::string::npos);
+	EXPECT_NE(InputBody.find("const float TrailingWidth = HasTrailingAction ? std::max(Options.m_TrailingWidth, Rect.h) : Options.m_TrailingWidth;"), std::string::npos);
+	EXPECT_NE(InputBody.find("ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : TrailingWidth)"), std::string::npos);
 	EXPECT_NE(InputBody.find("ResolveInlineTrailingTextLayout(Layout.m_ContentRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ContentRect.h * CUi::ms_FontmodHeight * 0.8f"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ContentRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ClearRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_TrailingRect"), std::string::npos);
+	EXPECT_NE(InputBody.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
 	EXPECT_NE(InputBody.find("Options.m_Mode == EInputFieldMode::MULTILINE"), std::string::npos);
 	EXPECT_NE(InputBody.find("DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect, Options.m_Mode == EInputFieldMode::MULTILINE);"), std::string::npos);
 	EXPECT_LT(InputBody.find("if(Options.m_SearchHotkeyEnabled"), InputBody.find("DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect, Options.m_Mode == EInputFieldMode::MULTILINE);"));

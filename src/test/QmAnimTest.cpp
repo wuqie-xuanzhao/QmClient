@@ -746,6 +746,17 @@ namespace
 	}
 }
 
+TEST(InputField, ClearAndTrailingSlotsDoNotOverlap)
+{
+	const CUIRect Rect{10.0f, 20.0f, 160.0f, 32.0f};
+	const ui_widget::SInputFieldLayout Layout = ui_widget::ResolveInputFieldLayout(Rect, false, true, 1.0f, Rect.h);
+
+	EXPECT_GT(Layout.m_ClearRect.w, 0.0f);
+	EXPECT_GT(Layout.m_TrailingRect.w, 0.0f);
+	EXPECT_LE(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Layout.m_ClearRect.x);
+	EXPECT_LT(Layout.m_ContentRect.x + Layout.m_ContentRect.w, Layout.m_TrailingRect.x);
+}
+
 TEST(SettingsPageLayout, ConfigRowsIncludePaddingAndResponsiveControlBlock)
 {
 	const SSettingsConfigRowMetrics Wide = ResolveSettingsConfigRowMetrics(false, false, 20.0f, 5.0f, 10.0f, 20.0f, 5.0f);
@@ -2519,9 +2530,6 @@ TEST(UiV2ScrollPolicy, ListBoxInitialSelectionRequestsOneAnimatedReveal)
 	EXPECT_TRUE(QmListBoxInitialScrollRemainsPending(true, -1));
 	EXPECT_FALSE(QmListBoxInitialScrollRemainsPending(true, 4));
 	EXPECT_FALSE(QmListBoxInitialScrollRemainsPending(false, -1));
-	EXPECT_FALSE(QmListBoxShouldRearmInitialScroll(0, 10));
-	EXPECT_FALSE(QmListBoxShouldRearmInitialScroll(10, 11));
-	EXPECT_TRUE(QmListBoxShouldRearmInitialScroll(10, 12));
 }
 
 TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)

@@ -148,8 +148,10 @@ namespace ui_widget
 		const bool WasEmpty = pInput->IsEmpty();
 		const bool Search = Options.m_Mode == EInputFieldMode::SEARCH;
 		const bool HasIcon = Options.m_pLeadingIcon != nullptr || Search;
+		const bool HasTrailingAction = Options.m_pTrailingActionId != nullptr && Options.m_pTrailingActionIcon != nullptr;
 		const bool InlineTrailingText = Options.m_InlineTrailingText && Options.m_pTrailingText != nullptr && Options.m_pTrailingText[0] != '\0';
-		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : Options.m_TrailingWidth);
+		const float TrailingWidth = HasTrailingAction ? std::max(Options.m_TrailingWidth, Rect.h) : Options.m_TrailingWidth;
+		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : TrailingWidth);
 		const float FontSize = std::min(Options.m_FontSize, Layout.m_ContentRect.h * CUi::ms_FontmodHeight * 0.8f);
 		CUIRect TextRect = Layout.m_ContentRect;
 		CUIRect TrailingRect = Layout.m_TrailingRect;
@@ -192,7 +194,12 @@ namespace ui_widget
 		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr), InputIconColor);
 		CUi::SEditBoxRenderOptions RenderOptions;
 		RenderOptions.m_DrawBackground = false;
-		RenderOptions.m_pHitRect = &Layout.m_ShellRect;
+		CUIRect InputHitRect = Layout.m_ShellRect;
+		if(Options.m_Clearable && Layout.m_ClearRect.w > 0.0f)
+			InputHitRect.VSplitRight(Layout.m_ClearRect.w, &InputHitRect, nullptr);
+		if(HasTrailingAction && TrailingRect.w > 0.0f)
+			InputHitRect.VSplitRight(TrailingRect.w, &InputHitRect, nullptr);
+		RenderOptions.m_pHitRect = &InputHitRect;
 		bool Changed = false;
 		if(Options.m_Mode == EInputFieldMode::MULTILINE)
 			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &TextRect, FontSize, Options.m_LineSpacing, TextAlign, RenderOptions);
@@ -213,10 +220,21 @@ namespace ui_widget
 				Changed = true;
 			}
 		}
+		bool TrailingAction = false;
+		if(HasTrailingAction && TrailingRect.w > 0.0f)
+		{
+			const float ActionState = Ctx.m_pUi->ButtonColorMul(Options.m_pTrailingActionId);
+			if(ActionState > 1.0f)
+				DrawRoundedSurface(Ctx, TrailingRect, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * (ActionState - 1.0f))), ColorRGBA(), ui_token::radius::BASE, 0.0f, Options.m_Clearable ? IGraphics::CORNER_NONE : IGraphics::CORNER_R);
+			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor);
+			TrailingAction = Ctx.m_pUi->DoButtonLogic(Options.m_pTrailingActionId, 0, &TrailingRect, BUTTONFLAG_LEFT) != 0;
+		}
 		if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
 			Ctx.m_pUi->DoLabel(&TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
 
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Options.m_Clearable);
+		SInputFieldResult Result = BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Options.m_Clearable);
+		Result.m_TrailingAction = TrailingAction;
+		return Result;
 	}
 	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{

@@ -143,6 +143,7 @@ private:
 	static void MoveCursor(EMoveDirection Direction, bool MoveWord, const char *pStr, size_t MaxSize, size_t *pCursorPos);
 	static void SetCompositionWindowPosition(vec2 Anchor, float LineHeight);
 	void RenderCaret(const CTextCursor &Cursor, bool ForceVisible, ColorRGBA TextColor, ColorRGBA TextOutlineColor);
+	void RenderSelection(const CTextCursor &Cursor, ColorRGBA SelectionColor);
 
 	void OnActivate();
 	void OnDeactivate();

@@ -1698,20 +1698,17 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 	if(g_Config.m_QmAxiomAutoLogin)
 	{
 		IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_gores_text_inputs", BodySize / ui_token::font::BODY);
-		auto DoPasswordToggleButton = [&TextInputCtx](CButtonContainer *pButton, bool Visible, const CUIRect &ButtonRect) {
-			const EQmIcon Icon = Visible ? EQmIcon::EYE_OFF : EQmIcon::EYE;
-			const char *pFallbackIcon = Visible ? FONT_ICON_EYE_SLASH : FONT_ICON_EYE;
-			return ui_widget::IconButton(TextInputCtx, pButton, Icon, pFallbackIcon, ButtonRect);
-		};
 		auto RenderPassword = [&](const char *pTextId, const char *pText, CLineInput &Input, CButtonContainer &ToggleButton, bool &Visible) {
 			Content.HSplitTop(LineHeight, &Row, &Content);
 			Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
 			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
-			CUIRect PasswordEditRect, PasswordToggleRect;
-			ControlColumn.VSplitRight(ControlColumn.h, &PasswordEditRect, &PasswordToggleRect);
 			Input.SetHidden(!Visible);
-			ui_widget::InputField(TextInputCtx, &Input, PasswordEditRect, nullptr, BodySize);
-			if(DoPasswordToggleButton(&ToggleButton, Visible, PasswordToggleRect))
+			ui_widget::SInputFieldOptions Options;
+			Options.m_FontSize = BodySize;
+			Options.m_pTrailingActionId = &ToggleButton;
+			Options.m_pTrailingActionIcon = Visible ? FONT_ICON_EYE_SLASH : FONT_ICON_EYE;
+			Options.m_TrailingWidth = ControlColumn.h;
+			if(ui_widget::InputField(TextInputCtx, &Input, ControlColumn, Options).m_TrailingAction)
 				Visible = !Visible;
 			Content.HSplitTop(LineSpacing * 0.35f, nullptr, &Content);
 		};

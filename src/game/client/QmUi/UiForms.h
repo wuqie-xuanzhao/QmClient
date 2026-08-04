@@ -59,6 +59,7 @@ namespace ui_widget
 		bool m_Submitted = false;
 		bool m_Deactivated = false;
 		bool m_Cleared = false;
+		bool m_TrailingAction = false;
 	};
 
 	inline SInputFieldResult BuildInputFieldResult(bool WasActive, bool IsActive, bool Changed, bool SubmitPressed, bool WasEmpty, bool IsEmpty, bool Clearable)
@@ -146,7 +147,9 @@ namespace ui_widget
 		{
 			Layout.m_TrailingRect = Rect;
 			Layout.m_TrailingRect.w = std::min(TrailingWidth, std::max(0.0f, Rect.w));
-			Layout.m_TrailingRect.x = Rect.x + std::max(0.0f, Rect.w - Layout.m_TrailingRect.w);
+			const float TrailingRight = Clearable ? Layout.m_ClearRect.x : Rect.x + Rect.w;
+			Layout.m_TrailingRect.x = std::max(Rect.x, TrailingRight - Layout.m_TrailingRect.w);
+			Layout.m_TrailingRect.w = std::max(0.0f, TrailingRight - Layout.m_TrailingRect.x);
 			const float Consumed = std::min(Layout.m_ContentRect.w, Layout.m_TrailingRect.w + Gap);
 			Layout.m_ContentRect.w = std::max(0.0f, Layout.m_ContentRect.w - Consumed);
 		}
@@ -180,6 +183,8 @@ namespace ui_widget
 		const char *m_pPlaceholder = nullptr;
 		const char *m_pLeadingIcon = nullptr;
 		const char *m_pTrailingText = nullptr;
+		const void *m_pTrailingActionId = nullptr;
+		const char *m_pTrailingActionIcon = nullptr;
 		float m_TrailingWidth = 0.0f;
 		EInputFieldMode m_Mode = EInputFieldMode::TEXT;
 		EInputTextStyle m_TextStyle = EInputTextStyle::BODY;

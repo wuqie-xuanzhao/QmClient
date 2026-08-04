@@ -3851,46 +3851,30 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			Graphics()->SetVSync(!g_Config.m_GfxVsync);
 		}
 
-		bool MultiSamplingChanged = false;
 		Button = NextRow();
 		str_format(aBuf, sizeof(aBuf), "%s (%s)", Localize("FSAA samples"), Localize("may cause delay"));
 		char aFsaaSamples[16];
 		str_format(aFsaaSamples, sizeof(aFsaaSamples), "%d", g_Config.m_GfxFsaaSamples);
 		int GfxFsaaSamplesMouseButton = DoButton_CheckBox_Common_WithLabelElement(&g_Config.m_GfxFsaaSamples, aBuf, aFsaaSamples, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, nullptr, true, BodySize);
-		int CurFSAA = g_Config.m_GfxFsaaSamples == 0 ? 1 : g_Config.m_GfxFsaaSamples;
-		if(GfxFsaaSamplesMouseButton == 1) // inc
+		// 图形初始化失败时引擎只会从大于 4 的值回退到 4，再回退到关闭；
+		// 设置页仅提供这条实际可稳定初始化的值域。
+		static constexpr int s_aFsaaSamples[] = {0, 2, 4};
+		int FsaaSampleIndex = 0;
+		for(int i = 1; i < (int)std::size(s_aFsaaSamples); ++i)
 		{
-			g_Config.m_GfxFsaaSamples = std::pow(2, (int)std::log2(CurFSAA) + 1);
-			if(g_Config.m_GfxFsaaSamples > 64)
-				g_Config.m_GfxFsaaSamples = 0;
-			MultiSamplingChanged = true;
-		}
-		else if(GfxFsaaSamplesMouseButton == 2) // dec
-		{
-			if(CurFSAA == 1)
-				g_Config.m_GfxFsaaSamples = 64;
-			else if(CurFSAA == 2)
-				g_Config.m_GfxFsaaSamples = 0;
-			else
-				g_Config.m_GfxFsaaSamples = std::pow(2, (int)std::log2(CurFSAA) - 1);
-			MultiSamplingChanged = true;
-		}
-
-		uint32_t MultiSamplingCountBackend = 0;
-		if(MultiSamplingChanged)
-		{
-			if(Graphics()->SetMultiSampling(g_Config.m_GfxFsaaSamples, MultiSamplingCountBackend))
+			if(g_Config.m_GfxFsaaSamples == s_aFsaaSamples[i])
 			{
-				// try again with 0 if mouse click was increasing multi sampling
-				// else just accept the current value as is
-				if((uint32_t)g_Config.m_GfxFsaaSamples > MultiSamplingCountBackend && GfxFsaaSamplesMouseButton == 1)
-					Graphics()->SetMultiSampling(0, MultiSamplingCountBackend);
-				g_Config.m_GfxFsaaSamples = (int)MultiSamplingCountBackend;
+				FsaaSampleIndex = i;
+				break;
 			}
-			else
-			{
-				CheckSettings = true;
-			}
+		}
+		if(GfxFsaaSamplesMouseButton != 0)
+		{
+			const int Direction = GfxFsaaSamplesMouseButton == 1 ? 1 : -1;
+			FsaaSampleIndex = (FsaaSampleIndex + Direction + (int)std::size(s_aFsaaSamples)) % (int)std::size(s_aFsaaSamples);
+			g_Config.m_GfxFsaaSamples = s_aFsaaSamples[FsaaSampleIndex];
+			// 多重采样会重建交换链；设置页只记录目标值，统一在重启图形后应用，避免点击时闪屏。
+			CheckSettings = true;
 		}
 
 		Button = NextRow();
@@ -4097,6 +4081,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CUIRect ExtraAnimations = NextRow();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &ExtraAnimations))
 				g_Config.m_QmExtraAnimations ^= 1;
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmExtraAnimations, &ExtraAnimations, Localize("Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations"));
 			static CButtonContainer s_FocusColorResetId;
 			const unsigned OldFocusColor = g_Config.m_QmUiFocusColor;
 			CUIRect FocusColorRow = NextRow();
@@ -6385,7 +6370,10 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				const int ChatSettingsRowCount = 9 + (g_Config.m_ClShowChat != 0 ? 1 : 0) + (g_Config.m_QmChatLogAutoSave != 0 ? 1 : 0);
 				return ResolveSettingsRowsHeight(ChatSettingsRowCount, LineSize, MarginSmall) + MarginSmall + ColorPickerRowHeight;
 			};
-			AddCard(2, ResolveChatSettingsMinCardHeight(), [=, this](CUIRect ContentRect) mutable {
+			SSettingsCardDefinition ChatSettingsDefinition;
+			ChatSettingsDefinition.m_Spec = CardSpec(2);
+			ChatSettingsDefinition.m_Measure = [ResolveChatSettingsMinCardHeight](float) { return ResolveChatSettingsMinCardHeight(); };
+			ChatSettingsDefinition.m_Render = [=, this](CUIRect ContentRect) mutable {
 				CUIRect LeftView = ContentRect;
 				const auto NextChatRow = [&](CUIRect &Row) {
 					LeftView.HSplitTop(LineSize, &Row, &LeftView);
@@ -6441,7 +6429,35 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 				static CButtonContainer s_BackgroundColor;
 				DoLine_ColorPicker(&s_BackgroundColor, AppearanceMetrics, &LeftView, Localize("Chat background color"), &g_Config.m_ClChatBackgroundColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ClChatBackgroundColor, true)), false, nullptr, true);
-			});
+			};
+			ChatSettingsDefinition.m_MeasureRevision =
+				(static_cast<uint64_t>(g_Config.m_ClShowChat != 0) << 0) |
+				(static_cast<uint64_t>(g_Config.m_QmChatLogAutoSave != 0) << 1);
+			ChatSettingsDefinition.m_PreLayoutInput = [this, LineSize, MarginSmall](CUIRect ContentRect) {
+				if(m_MenuTextPlanCollecting)
+					return false;
+				auto NextRow = [LineSize, MarginSmall](CUIRect &Content, CUIRect &Row) {
+					Content.HSplitTop(LineSize, &Row, &Content);
+					Content.HSplitTop(MarginSmall, nullptr, &Content);
+				};
+				CUIRect Row;
+				NextRow(ContentRect, Row);
+				if(Ui()->DoButtonLogic(&g_Config.m_ClShowChat, 0, &Row, BUTTONFLAG_LEFT))
+				{
+					g_Config.m_ClShowChat = g_Config.m_ClShowChat ? 0 : 1;
+					return true;
+				}
+				if(g_Config.m_ClShowChat)
+					NextRow(ContentRect, Row);
+				for(int i = 0; i < 4; ++i)
+					NextRow(ContentRect, Row);
+				NextRow(ContentRect, Row);
+				if(!Ui()->DoButtonLogic(&g_Config.m_QmChatLogAutoSave, 0, &Row, BUTTONFLAG_LEFT))
+					return false;
+				g_Config.m_QmChatLogAutoSave ^= 1;
+				return true;
+			};
+			vCards.push_back(std::move(ChatSettingsDefinition));
 			const float ChatMessagesMinCardHeight = ResolveAppearanceChatMessagesHeight(AppearanceMetrics);
 			AddCard(3, ChatMessagesMinCardHeight, [=, this](CUIRect ContentRect) mutable {
 				char aBuf[128];
@@ -6845,49 +6861,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					PreviewView.y = maximum(PreviewView.y, Y + MarginSmall); }, ChatPreviewMeasureRevision);
-			vCards.back().m_Measure = [ResolveChatSettingsMinCardHeight](float) { return ResolveChatSettingsMinCardHeight(); };
-			vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_ClShowChat != 0) | (static_cast<uint64_t>(g_Config.m_QmChatLogAutoSave != 0) << 1);
-			vCards.back().m_PreLayoutInput = [this, LineSize, MarginSmall](CUIRect Content) {
-				if(m_MenuTextPlanCollecting)
-					return false;
-				CUIRect LeftView = Content;
-				CUIRect Row;
-				const auto NextRow = [&]() {
-					LeftView.HSplitTop(LineSize, &Row, &LeftView);
-					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
-					return Row;
-				};
-				const auto ProcessToggle = [this](CUIRect ToggleRow, int *pValue) {
-					if(!Ui()->DoButtonLogic(pValue, 0, &ToggleRow, BUTTONFLAG_LEFT))
-						return false;
-					*pValue ^= 1;
-					return true;
-				};
-				CUIRect ShowChatRow = NextRow();
-				bool Changed = false;
-				if(Ui()->DoButtonLogic(&g_Config.m_ClShowChat, 0, &ShowChatRow, BUTTONFLAG_LEFT))
-				{
-					g_Config.m_ClShowChat = g_Config.m_ClShowChat ? 0 : 1;
-					Changed = true;
-				}
-				if(g_Config.m_ClShowChat)
-				{
-					CUIRect AlwaysShowRow = NextRow();
-					if(Ui()->DoButtonLogic(&s_AppearanceAlwaysShowChat, g_Config.m_ClShowChat == 2, &AlwaysShowRow, BUTTONFLAG_LEFT))
-					{
-						g_Config.m_ClShowChat = g_Config.m_ClShowChat != 2 ? 2 : 1;
-						Changed = true;
-					}
-				}
-				for(int RowIndex = 0; RowIndex < 4; ++RowIndex)
-					NextRow();
-				Changed = ProcessToggle(NextRow(), &g_Config.m_QmChatLogAutoSave) || Changed;
-				if(g_Config.m_QmChatLogAutoSave)
-					NextRow();
-				NextRow();
-				NextRow();
-				return Changed;
-			};
 		}
 		else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)
 		{

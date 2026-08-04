@@ -366,11 +366,12 @@ TEST(QmNewUiMenuBranches, TClientPreLayoutUsesDeckContentCoordinates)
 	EXPECT_NE(PreLayout.find("s_vTinyTeeModeButtons"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SettingsInputFieldsUseShellHitRectAndQueueUnit)
+TEST(QmNewUiMenuBranches, SettingsInputFieldsReserveTrailingActionsAndKeepQueueUnitsInline)
 {
 	const std::string FormsSource = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
 	const std::string Forms = FunctionBody(FormsSource, "SInputFieldResult InputField(");
-	EXPECT_NE(Forms.find("RenderOptions.m_pHitRect = &Layout.m_ShellRect;"), std::string::npos);
+	EXPECT_NE(Forms.find("CUIRect InputHitRect = Layout.m_ShellRect;"), std::string::npos);
+	EXPECT_NE(Forms.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string SkinRenderList = FunctionBody(SettingsSource, "const auto RenderList =");
@@ -891,8 +892,10 @@ TEST(QmNewUiMenuBranches, LineInputRendersActiveTextOnlyOnce)
 	const std::string Header = ReadTextFile("src/engine/textrender.h");
 	const std::string TextSource = ReadTextFile("src/engine/client/text.cpp");
 	const std::string Render = FunctionBody(Source, "STextBoundingBox CLineInput::Render(");
+	const std::string RenderSelection = FunctionBody(Source, "void CLineInput::RenderSelection(");
 	const std::string RenderCaret = FunctionBody(Source, "void CLineInput::RenderCaret(");
 	ASSERT_FALSE(Render.empty());
+	ASSERT_FALSE(RenderSelection.empty());
 	ASSERT_FALSE(RenderCaret.empty());
 	const auto CountOccurrences = [](const std::string &Text, const char *pNeedle) {
 		size_t Count = 0;
@@ -904,15 +907,26 @@ TEST(QmNewUiMenuBranches, LineInputRendersActiveTextOnlyOnce)
 	EXPECT_NE(Render.find("m_CaretPosition = Cursor.m_CursorRenderedPosition;"), std::string::npos);
 	EXPECT_NE(Render.find("SetCompositionWindowPosition(m_CaretPosition + vec2"), std::string::npos);
 	EXPECT_NE(Render.find("Cursor.m_RenderCursor = false;"), std::string::npos);
+	EXPECT_NE(Render.find("Cursor.m_RenderSelection = false;"), std::string::npos);
+	EXPECT_LT(Render.find("Cursor.m_RenderSelection = false;"), Render.find("if(IsActive())"));
 	EXPECT_NE(Render.find("if(Cursor.m_HasCursorRenderedPosition)"), std::string::npos);
+	EXPECT_NE(Render.find("RenderSelection(Cursor, PreviousTextSelectionColor);"), std::string::npos);
 	EXPECT_NE(Render.find("RenderCaret(Cursor, Cursor.m_ForceCursorRendering"), std::string::npos);
 	EXPECT_EQ(Render.find("CTextCursor CaretCursor;"), std::string::npos);
 	EXPECT_EQ(Render.find("TextRender()->TextEx(&CaretCursor, pDisplayStr);"), std::string::npos);
 	EXPECT_EQ(CountOccurrences(Render, "TextRender()->TextEx(&Cursor, pDisplayStr);"), 4u);
 	EXPECT_NE(Header.find("bool m_RenderCursor = true;"), std::string::npos);
+	EXPECT_NE(Header.find("bool m_RenderSelection = true;"), std::string::npos);
 	EXPECT_NE(Header.find("bool m_HasCursorRenderedPosition = false;"), std::string::npos);
 	EXPECT_NE(TextSource.find("const bool HasRenderedCursor = HasCursor && pCursor->m_RenderCursor;"), std::string::npos);
+	EXPECT_NE(TextSource.find("const bool HasRenderedSelection = HasSelection && pCursor->m_RenderSelection;"), std::string::npos);
+	EXPECT_NE(TextSource.find("pCursor->m_vSelectionQuads = std::move(vSelectionQuads);"), std::string::npos);
 	EXPECT_NE(TextSource.find("pCursor->m_HasCursorRenderedPosition = true;"), std::string::npos);
+	EXPECT_NE(RenderSelection.find("Graphics()->TextureClear();"), std::string::npos);
+	EXPECT_NE(RenderSelection.find("Graphics()->QuadsBegin();"), std::string::npos);
+	EXPECT_NE(RenderSelection.find("Graphics()->QuadsEnd();"), std::string::npos);
+	EXPECT_NE(RenderSelection.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);"), std::string::npos);
+	EXPECT_EQ(RenderSelection.find("RenderQuadContainerEx"), std::string::npos);
 	EXPECT_NE(RenderCaret.find("Graphics()->QuadsBegin();"), std::string::npos);
 	EXPECT_NE(RenderCaret.find("Graphics()->QuadsEnd();"), std::string::npos);
 	EXPECT_EQ(RenderCaret.find("RenderQuadContainerEx"), std::string::npos);
@@ -2554,6 +2568,71 @@ TEST(QmNewUiMenuBranches, EditBoxesActivateFromTheirConfiguredHitRect)
 	EXPECT_EQ(Body.find("else if(HotItem() == pLineInput)"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, InputTrailingActionsDoNotStealTextEditingHitArea)
+{
+	const std::string Source = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string Header = ReadTextFile("src/game/client/QmUi/UiForms.h");
+	const std::string Body = FunctionBody(Source, "SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Header.find("m_pTrailingActionId"), std::string::npos);
+	EXPECT_NE(Header.find("m_pTrailingActionIcon"), std::string::npos);
+	EXPECT_NE(Body.find("const bool HasTrailingAction"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect InputHitRect = Layout.m_ShellRect;"), std::string::npos);
+	EXPECT_NE(Body.find("InputHitRect.VSplitRight(Layout.m_ClearRect.w, &InputHitRect, nullptr);"), std::string::npos);
+	EXPECT_NE(Body.find("InputHitRect.VSplitRight(TrailingRect.w, &InputHitRect, nullptr);"), std::string::npos);
+	EXPECT_NE(Body.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
+	EXPECT_NE(Body.find("DoButtonLogic(Options.m_pTrailingActionId"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("static constexpr int s_aFsaaSamples[] = {0, 2, 4};"), std::string::npos);
+	EXPECT_NE(Body.find("g_Config.m_GfxFsaaSamples = s_aFsaaSamples[FsaaSampleIndex];"), std::string::npos);
+	EXPECT_NE(Body.find("CheckSettings = true;"), std::string::npos);
+	EXPECT_EQ(Body.find("Graphics()->SetMultiSampling"), std::string::npos);
+	EXPECT_NE(Body.find("m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ExtraAnimationsExplainTheirPresentationScope)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("Localize(\"UI motion level\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Extra animations\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SharedListInitialRevealDoesNotRearmAfterFrameGaps)
+{
+	const std::string ListBoxSource = ReadTextFile("src/game/client/ui_listbox.cpp");
+	const std::string ListBoxHeader = ReadTextFile("src/game/client/ui_listbox.h");
+
+	EXPECT_EQ(ListBoxSource.find("PerfFrame()"), std::string::npos);
+	EXPECT_EQ(ListBoxSource.find("QmListBoxShouldRearmInitialScroll"), std::string::npos);
+	EXPECT_EQ(ListBoxHeader.find("m_LastRenderFrame"), std::string::npos);
+	EXPECT_NE(ListBoxHeader.find("m_InitialScrollPending = true;"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, StatusBarOpacityUsesPercentAndAxiomUsesInputTrailingActions)
+{
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string QmClientSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_NE(TClientSource.find("\"tclient-statusbar-alpha\""), std::string::npos);
+	EXPECT_NE(TClientSource.find("\"tclient-statusbar-text-alpha\""), std::string::npos);
+	EXPECT_NE(TClientSource.find("&CUi::ms_LinearScrollbarScale, 0, \"%\""), std::string::npos);
+	EXPECT_NE(QmClientSource.find("Options.m_pTrailingActionId = &ToggleButton;"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("Options.m_pTrailingActionIcon = Visible ? FONT_ICON_EYE_SLASH : FONT_ICON_EYE;"), std::string::npos);
+	EXPECT_EQ(QmClientSource.find("PasswordToggleRect"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, KeyReaderUsesOneOuterShellForValueAndDeleteAction)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/key_binder.cpp");
@@ -2616,7 +2695,9 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 
 	const std::string ChatBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_CHAT)");
 	ASSERT_FALSE(ChatBranch.empty());
-	EXPECT_NE(SettingsSource.find("AddCard(2, ResolveChatSettingsMinCardHeight()"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("SSettingsCardDefinition ChatSettingsDefinition"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("ChatSettingsDefinition.m_Measure = [ResolveChatSettingsMinCardHeight]"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("ChatSettingsDefinition.m_PreLayoutInput"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("AddCard(3, ChatMessagesMinCardHeight"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("const auto MeasureChatPreview"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("AddMeasuredCard(4, MeasureChatPreview"), std::string::npos);
@@ -2625,7 +2706,8 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 	EXPECT_NE(ChatBranch.find("ResolveSettingsRowsHeight(ChatSettingsRowCount, LineSize, MarginSmall)"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("const auto NextChatRow"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("vCards.back().m_Measure = [ResolveChatSettingsMinCardHeight]"), std::string::npos);
+	EXPECT_EQ(ChatBranch.find("vCards.back().m_Measure = [ResolveChatSettingsMinCardHeight]"), std::string::npos);
+	EXPECT_EQ(ChatBranch.find("vCards.back().m_PreLayoutInput"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("ResolveAppearanceChatMessagesHeight(AppearanceMetrics)"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("DoMessageGradientLine(*pChat"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("appearance-chat-hide-system-prefix"), std::string::npos);
