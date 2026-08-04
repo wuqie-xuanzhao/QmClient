@@ -2585,7 +2585,7 @@ TEST(QmNewUiMenuBranches, InputTrailingActionsDoNotStealTextEditingHitArea)
 	EXPECT_NE(Body.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
 	EXPECT_NE(Body.find("DoButtonLogic(Options.m_pTrailingActionId"), std::string::npos);
 	EXPECT_NE(Source.find("Ctx.m_pIconManager->RenderIcon"), std::string::npos);
-	EXPECT_NE(Source.find("const float EyeOffScale = g_Config.m_QmUiIconWeight == 0 ? 1.15f : 1.25f;"), std::string::npos);
+	EXPECT_NE(Source.find("const float EyeOffScale = QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? 1.25f : 1.15f;"), std::string::npos);
 	EXPECT_NE(Source.find("const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;"), std::string::npos);
 	EXPECT_NE(Source.find("const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;"), std::string::npos);
 	EXPECT_NE(Source.find("Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);"), std::string::npos);
@@ -4403,13 +4403,36 @@ TEST(QmNewUiMenuBranches, AudioPackRefreshUsesPhosphorFontIconButton)
 	EXPECT_EQ(Sound.find("DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
 	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
 	const std::string FontIconButton = FunctionBody(UiSource, "int CUi::DoButton_FontIcon");
-	EXPECT_NE(FontIconButton.find("QmUiIconColor(TextRender()->DefaultTextColor(), g_Config.m_QmUiIconColor)"), std::string::npos);
-	EXPECT_NE(FontIconButton.find("SetFontPreset(g_Config.m_QmUiIconWeight == 0 ? EFontPreset::ICON_FONT : EFontPreset::ICON_FONT_BOLD)"), std::string::npos);
+	EXPECT_NE(FontIconButton.find("ConfiguredQmUiIconColor(TextRender()->DefaultTextColor())"), std::string::npos);
+	EXPECT_NE(FontIconButton.find("QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight)"), std::string::npos);
 	EXPECT_NE(FontIconButton.find("SetRenderFlags(PreviousFlags)"), std::string::npos);
 	EXPECT_NE(FontIconButton.find("TextColor(PreviousColor)"), std::string::npos);
 	const std::string TextSource = ReadTextFile("src/engine/client/text.cpp");
 	EXPECT_NE(TextSource.find("m_IconBoldFace = m_IconRegularFace;"), std::string::npos);
 	EXPECT_NE(TextSource.find("falling back to regular"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GraphicsIconCardSupportsDynamicCustomColorAndFourWeights)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(Graphics.empty());
+	EXPECT_NE(Graphics.find("s_aGraphicsIconColorButtons[4]"), std::string::npos);
+	EXPECT_NE(Graphics.find("s_aGraphicsIconWeightButtons[4]"), std::string::npos);
+	EXPECT_NE(Graphics.find("Localize(\"Custom\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("Localize(\"Rainbow\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("Localize(\"Thin\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("Localize(\"Fill\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId"), std::string::npos);
+	EXPECT_NE(Graphics.find("vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3);"), std::string::npos);
+	EXPECT_NE(Graphics.find("vCards.back().m_PreLayoutInput = [this, GraphicsMetrics]"), std::string::npos);
+	EXPECT_NE(Graphics.find("ResolveSettingsColorRowLayout(MeasureRect, GraphicsMetrics, false, false).m_ConsumedHeight"), std::string::npos);
+
+	const std::string Config = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	EXPECT_NE(Config.find("MACRO_CONFIG_COL(QmUiIconCustomColor, qm_ui_icon_custom_color"), std::string::npos);
+	EXPECT_NE(Config.find("Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow"), std::string::npos);
+	EXPECT_NE(Config.find("Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)

@@ -1634,10 +1634,10 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 	const ColorRGBA PreviousOutlineColor = TextRender()->GetTextOutlineColor();
 	const unsigned PreviousFlags = TextRender()->GetRenderFlags();
 	const EFontPreset PreviousPreset = TextRender()->GetFontPreset();
-	TextRender()->SetFontPreset(g_Config.m_QmUiIconWeight == 0 ? EFontPreset::ICON_FONT : EFontPreset::ICON_FONT_BOLD);
+	TextRender()->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
 	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
-	TextRender()->TextColor(QmUiIconColor(TextRender()->DefaultTextColor(), g_Config.m_QmUiIconColor));
+	TextRender()->TextColor(ConfiguredQmUiIconColor(TextRender()->DefaultTextColor()));
 
 	CUIRect Label;
 	pRect->HMargin(2.0f, &Label);

@@ -123,7 +123,7 @@ namespace ui_widget
 				return;
 			// Phosphor 的 eye-off 将眼睛拆分给对角线，主体比 eye 更窄。
 			// 仅补偿这对密码可见性图标，避免改变其他图标的既有比例。
-			const float EyeOffScale = g_Config.m_QmUiIconWeight == 0 ? 1.15f : 1.25f;
+			const float EyeOffScale = QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? 1.25f : 1.15f;
 			const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;
 			if(HasQmIcon && Ctx.m_pIconManager != nullptr)
 			{
@@ -141,7 +141,7 @@ namespace ui_widget
 			const unsigned PreviousFlags = pTextRender->GetRenderFlags();
 			const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
 			pTextRender->TextColor(Color);
-			pTextRender->SetFontPreset(g_Config.m_QmUiIconWeight == 0 ? EFontPreset::ICON_FONT : EFontPreset::ICON_FONT_BOLD);
+			pTextRender->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 			pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);
 			pTextRender->SetRenderFlags(PreviousFlags);
@@ -204,7 +204,7 @@ namespace ui_widget
 		}
 		DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect, Options.m_Mode == EInputFieldMode::MULTILINE);
 
-		const ColorRGBA InputIconColor = QmUiIconColor(SQmIconStyle().Color(EQmIconState::NORMAL), g_Config.m_QmUiIconColor);
+		const ColorRGBA InputIconColor = ConfiguredQmUiIconColor(SQmIconStyle().Color(EQmIconState::NORMAL));
 		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr), InputIconColor);
 		CUi::SEditBoxRenderOptions RenderOptions;
 		RenderOptions.m_DrawBackground = false;

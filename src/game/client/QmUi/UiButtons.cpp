@@ -23,10 +23,10 @@ namespace ui_widget
 		SQmIconStyle ConfiguredIconStyle()
 		{
 			SQmIconStyle IconStyle;
-			IconStyle.m_Normal = QmUiIconColor(IconStyle.m_Normal, g_Config.m_QmUiIconColor);
-			IconStyle.m_Hover = QmUiIconColor(IconStyle.m_Hover, g_Config.m_QmUiIconColor);
-			IconStyle.m_Active = QmUiIconColor(IconStyle.m_Active, g_Config.m_QmUiIconColor);
-			IconStyle.m_Disabled = QmUiIconColor(IconStyle.m_Disabled, g_Config.m_QmUiIconColor);
+			IconStyle.m_Normal = ConfiguredQmUiIconColor(IconStyle.m_Normal);
+			IconStyle.m_Hover = ConfiguredQmUiIconColor(IconStyle.m_Hover);
+			IconStyle.m_Active = ConfiguredQmUiIconColor(IconStyle.m_Active);
+			IconStyle.m_Disabled = ConfiguredQmUiIconColor(IconStyle.m_Disabled);
 			return IconStyle;
 		}
 
@@ -37,7 +37,7 @@ namespace ui_widget
 			const unsigned PreviousFlags = pTextRender->GetRenderFlags();
 			const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
 			pTextRender->TextColor(Color);
-			pTextRender->SetFontPreset(g_Config.m_QmUiIconWeight == 0 ? EFontPreset::ICON_FONT : EFontPreset::ICON_FONT_BOLD);
+			pTextRender->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 			pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
 			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 			pTextRender->SetRenderFlags(PreviousFlags);

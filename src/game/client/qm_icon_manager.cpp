@@ -26,7 +26,14 @@ namespace
 
 	const char *IconAtlasWeightName(const int Weight)
 	{
-		return Weight == 0 ? "regular" : "bold";
+		switch(NormalizeQmIconWeight(Weight))
+		{
+		case 0: return "regular";
+		case 1: return "bold";
+		case 2: return "thin";
+		case 3: return "fill";
+		}
+		return "bold";
 	}
 
 	EQmIcon IconFromName(const char *pName)
@@ -86,6 +93,15 @@ namespace
 		if(pConsole != nullptr)
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "qm_icons", pText);
 	}
+}
+
+ColorRGBA ConfiguredQmUiIconColor(const ColorRGBA &Color)
+{
+	if(g_Config.m_QmUiIconColor != 4)
+		return QmUiIconColor(Color, g_Config.m_QmUiIconColor, g_Config.m_QmUiIconCustomColor);
+
+	const float Time = static_cast<float>(time_get()) / static_cast<float>(time_freq());
+	return QmUiIconColor(Color, g_Config.m_QmUiIconColor, g_Config.m_QmUiIconCustomColor, Time);
 }
 
 ColorRGBA SQmIconStyle::Color(EQmIconState State) const
@@ -190,7 +206,7 @@ bool CQmIconManager::Reload()
 
 	const int PreferredScale = PreferredAtlasScale();
 	const bool MsdfSupported = m_pGraphics->HasTexturedMsdf();
-	const int Weight = g_Config.m_QmUiIconWeight;
+	const int Weight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
 	CQmIconAtlas Candidate;
 	bool Success = false;
 	bool LoadedMsdf = false;
@@ -274,7 +290,7 @@ bool CQmIconManager::RetryMsdfAtlas()
 	}
 	m_MsdfManifestAvailable = true;
 	m_PreferredScale = 0;
-	m_AtlasWeight = g_Config.m_QmUiIconWeight;
+	m_AtlasWeight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
 	m_NextMsdfProbeTime = 0;
 	return true;
 }
@@ -282,14 +298,14 @@ bool CQmIconManager::RetryMsdfAtlas()
 bool CQmIconManager::LoadManifestForScale(CQmIconAtlas &Atlas, const int Scale)
 {
 	char aManifestPath[IO_MAX_PATH_LENGTH];
-	str_format(aManifestPath, sizeof(aManifestPath), QM_ICON_MANIFEST_PATTERN, IconAtlasWeightName(g_Config.m_QmUiIconWeight), Scale);
+	str_format(aManifestPath, sizeof(aManifestPath), QM_ICON_MANIFEST_PATTERN, IconAtlasWeightName(NormalizeQmIconWeight(g_Config.m_QmUiIconWeight)), Scale);
 	return LoadManifest(Atlas, aManifestPath, Scale, false);
 }
 
 bool CQmIconManager::LoadMsdfManifest(CQmIconAtlas &Atlas)
 {
 	char aManifestPath[IO_MAX_PATH_LENGTH];
-	str_format(aManifestPath, sizeof(aManifestPath), QM_ICON_MSDF_MANIFEST_PATTERN, IconAtlasWeightName(g_Config.m_QmUiIconWeight));
+	str_format(aManifestPath, sizeof(aManifestPath), QM_ICON_MSDF_MANIFEST_PATTERN, IconAtlasWeightName(NormalizeQmIconWeight(g_Config.m_QmUiIconWeight)));
 	return LoadManifest(Atlas, aManifestPath, 0, true);
 }
 
@@ -434,7 +450,7 @@ void CQmIconManager::RefreshForCurrentDpi()
 
 	const int PreferredScale = PreferredAtlasScale();
 	const bool MsdfSupported = m_pGraphics->HasTexturedMsdf();
-	const int Weight = g_Config.m_QmUiIconWeight;
+	const int Weight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
 	if(QmIconAtlasMustDropMsdf(MsdfSupported, m_Atlas.Type()))
 	{
 		ClearAtlas(m_Atlas);

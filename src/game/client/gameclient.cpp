@@ -950,7 +950,7 @@ void CGameClient::OnInit()
 	m_RenderTools.Init(Graphics(), TextRender(), this); // TClient
 	m_RenderMap.Init(Graphics(), TextRender());
 	m_QmIconManager.Init(Graphics(), Storage(), Console());
-	m_AppliedQmUiIconWeight = g_Config.m_QmUiIconWeight;
+	m_AppliedQmUiIconWeight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
 
 	if(GIT_SHORTREV_HASH)
 	{
@@ -1204,11 +1204,12 @@ void CGameClient::OnUpdate()
 
 void CGameClient::SyncQmUiIconWeight()
 {
-	if(m_AppliedQmUiIconWeight == g_Config.m_QmUiIconWeight)
+	const int Weight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
+	if(m_AppliedQmUiIconWeight == Weight)
 		return;
 
-	m_AppliedQmUiIconWeight = g_Config.m_QmUiIconWeight;
-	TextRender()->SetIconFontWeight(g_Config.m_QmUiIconWeight != 0);
+	m_AppliedQmUiIconWeight = Weight;
+	TextRender()->SetIconFontWeight(QmIconWeightUsesBoldFontFallback(Weight));
 	m_QmIconManager.RefreshForCurrentDpi();
 	OnWindowResize();
 }

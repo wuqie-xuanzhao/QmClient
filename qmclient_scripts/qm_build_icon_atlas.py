@@ -178,6 +178,31 @@ def _sample_cubic_bezier(
     return points
 
 
+def _sample_quadratic_bezier(
+    start: tuple[float, float],
+    control: tuple[float, float],
+    end: tuple[float, float],
+) -> list[tuple[float, float]]:
+    control_length = math.dist(start, control) + math.dist(control, end)
+    segments = max(4, math.ceil(control_length / 8.0))
+    points: list[tuple[float, float]] = []
+    for index in range(1, segments + 1):
+        t = index / segments
+        inverse = 1.0 - t
+        points.append(
+            (
+                inverse * inverse * start[0]
+                + 2.0 * inverse * t * control[0]
+                + t * t * end[0],
+                inverse * inverse * start[1]
+                + 2.0 * inverse * t * control[1]
+                + t * t * end[1],
+            )
+        )
+    points[-1] = end
+    return points
+
+
 def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
     tokens = _PATH_TOKEN_RE.findall(path_data.replace(",", " "))
     polylines: list[list[tuple[float, float]]] = []
@@ -185,6 +210,7 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
     current = (0.0, 0.0)
     subpath_start = (0.0, 0.0)
     last_cubic_control: tuple[float, float] | None = None
+    last_quadratic_control: tuple[float, float] | None = None
     command = ""
     index = 0
 
@@ -228,6 +254,7 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             subpath_start = current
             current_polyline = [current]
             last_cubic_control = None
+            last_quadratic_control = None
             command = "l" if relative else "L"
         elif upper == "L":
             x = number()
@@ -237,18 +264,21 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
                 y += current[1]
             append((x, y))
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "H":
             x = number()
             if relative:
                 x += current[0]
             append((x, current[1]))
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "V":
             y = number()
             if relative:
                 y += current[1]
             append((current[0], y))
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "C":
             control1 = (number(), number())
             control2 = (number(), number())
@@ -266,6 +296,7 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             for point in _sample_cubic_bezier(current, control1, control2, end):
                 append(point)
             last_cubic_control = control2
+            last_quadratic_control = None
         elif upper == "S":
             control1 = (
                 current
@@ -286,6 +317,33 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             for point in _sample_cubic_bezier(current, control1, control2, end):
                 append(point)
             last_cubic_control = control2
+            last_quadratic_control = None
+        elif upper == "Q":
+            control = (number(), number())
+            end = (number(), number())
+            if relative:
+                control = (control[0] + current[0], control[1] + current[1])
+                end = (end[0] + current[0], end[1] + current[1])
+            for point in _sample_quadratic_bezier(current, control, end):
+                append(point)
+            last_cubic_control = None
+            last_quadratic_control = control
+        elif upper == "T":
+            control = (
+                current
+                if last_quadratic_control is None
+                else (
+                    current[0] * 2.0 - last_quadratic_control[0],
+                    current[1] * 2.0 - last_quadratic_control[1],
+                )
+            )
+            end = (number(), number())
+            if relative:
+                end = (end[0] + current[0], end[1] + current[1])
+            for point in _sample_quadratic_bezier(current, control, end):
+                append(point)
+            last_cubic_control = None
+            last_quadratic_control = control
         elif upper == "A":
             rx = number()
             ry = number()
@@ -303,12 +361,14 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             ):
                 append(point)
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "Z":
             append(subpath_start)
             flush()
             current = subpath_start
             command = ""
             last_cubic_control = None
+            last_quadratic_control = None
         else:
             raise ValueError(f"Unsupported SVG path command {command!r}")
 

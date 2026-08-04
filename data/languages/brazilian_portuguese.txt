@@ -4094,6 +4094,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == Arquivo com anúncios, um por linha.
 
+Fill
+== Fill
+
 Filter chat messages by regular expression
 == Filtrar mensagens do chat por expressão regular
 
@@ -7976,11 +7979,14 @@ q = Connection quality
 Qm
 == Qm
 
-Qm UI icon color: 1=White, 2=Black
-== Cor dos ícones da interface Qm: 1=branco, 2=preto
+Qm UI custom icon color
+== Cor personalizada dos ícones da interface Qm
 
-Qm UI icon weight: 0=Regular, 1=Bold
-== Espessura dos ícones da interface Qm: 0=regular, 1=negrito
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Cor dos ícones da interface Qm: 1=branco, 2=preto, 3=personalizado, 4=arco-íris
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Espessura dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: índice deve estar entre 1 e %d
@@ -11300,6 +11306,9 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == Há um mapa não salvo no editor, você pode querer salvá-lo.
 
+Thin
+== Thin
+
 Thinking mode requires a reasoning model
 == O modo de pensamento requer um modelo de raciocínio
 
@@ -11752,6 +11761,9 @@ UI controller sens.
 
 UI icon color
 == Cor dos ícones da interface
+
+UI icon custom color
+== UI icon custom color
 
 UI icon weight
 == Espessura dos ícones da interface

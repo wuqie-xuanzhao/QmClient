@@ -4094,6 +4094,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == Файл с объявлениями, по одному на строку.
 
+Fill
+== Fill
+
 Filter chat messages by regular expression
 == Фильтровать сообщения чата по регулярному выражению
 
@@ -7976,11 +7979,14 @@ q = Connection quality
 Qm
 == Qm
 
-Qm UI icon color: 1=White, 2=Black
-== Цвет значков Qm UI: 1=белый, 2=черный
+Qm UI custom icon color
+== Пользовательский цвет значков Qm UI
 
-Qm UI icon weight: 0=Regular, 1=Bold
-== Толщина значков Qm UI: 0=обычная, 1=жирная
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Цвет значков Qm UI: 1=белый, 2=черный, 3=пользовательский, 4=радуга
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Толщина значков Qm UI: 0=обычная, 1=жирная, 2=тонкая, 3=заливка
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: индекс должен быть от 1 до %d
@@ -11300,6 +11306,9 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == В редакторе есть несохранённая карта, возможно, стоит её сохранить.
 
+Thin
+== Thin
+
 Thinking mode requires a reasoning model
 == Для режима размышления требуется модель рассуждения
 
@@ -11752,6 +11761,9 @@ UI controller sens.
 
 UI icon color
 == Цвет значков интерфейса
+
+UI icon custom color
+== UI icon custom color
 
 UI icon weight
 == Толщина значков интерфейса

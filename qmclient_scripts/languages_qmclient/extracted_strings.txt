@@ -1363,6 +1363,7 @@ File already exists, do you want to overwrite it?
 File executed on map change/reload to set default server settings
 File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
+Fill
 Filter chat messages by regular expression
 Filter connecting players
 Filter empty servers in browser
@@ -2657,8 +2658,9 @@ Puts you out of solo part
 Pyramid
 q = Connection quality
 Qm
-Qm UI icon color: 1=White, 2=Black
-Qm UI icon weight: 0=Regular, 1=Bold
+Qm UI custom icon color
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
 qm_profile_queue: index must be between 1 and %d
 QmClient
 QmClient / Function
@@ -3765,6 +3767,7 @@ There's a %s second delay between map-votes, please wait %s seconds.
 There's a %s second wait time between kick votes for each player please wait %s second(s)
 There's an unsaved change in the touch controls editor, you might want to save it.
 There's an unsaved map in the editor, you might want to save it.
+Thin
 Thinking mode requires a reasoning model
 This ID is not connected
 This name cannot be used for files and folders
@@ -3916,6 +3919,7 @@ UDP socket not open
 UI color
 UI controller sens.
 UI icon color
+UI icon custom color
 UI icon weight
 UI motion level
 UI mouse sens.

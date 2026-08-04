@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <utility>
 
@@ -178,11 +179,40 @@ inline float QmIconPixelScale(const int DrawableExtent, const float LogicalExten
 	return DrawableExtent > 0 && LogicalExtent > 0.0f ? DrawableExtent / LogicalExtent : 0.0f;
 }
 
-inline ColorRGBA QmUiIconColor(const ColorRGBA &Color, const int ConfiguredColor)
+inline int NormalizeQmIconWeight(const int Weight)
 {
-	const float Channel = ConfiguredColor == 2 ? 0.0f : 1.0f;
-	return ColorRGBA(Channel, Channel, Channel, Color.a);
+	return Weight >= 0 && Weight <= 3 ? Weight : 1;
 }
+
+inline bool QmIconWeightUsesBoldFontFallback(const int Weight)
+{
+	return NormalizeQmIconWeight(Weight) == 1;
+}
+
+inline ColorRGBA QmUiIconColor(const ColorRGBA &Color, const int ConfiguredColor, const unsigned int CustomColor = 0xFFFFFFFF, const float RainbowTime = 0.0f)
+{
+	ColorRGBA Result;
+	switch(ConfiguredColor)
+	{
+	case 2:
+		Result = ColorRGBA(0.0f, 0.0f, 0.0f, Color.a);
+		break;
+	case 3:
+		Result = color_cast<ColorRGBA>(ColorHSLA(CustomColor));
+		Result.a = Color.a;
+		break;
+	case 4:
+		Result = color_cast<ColorRGBA>(ColorHSLA(std::fmod(RainbowTime * 0.2f, 1.0f), 0.75f, 0.6f, Color.a));
+		break;
+	case 1:
+	default:
+		Result = ColorRGBA(1.0f, 1.0f, 1.0f, Color.a);
+		break;
+	}
+	return Result;
+}
+
+ColorRGBA ConfiguredQmUiIconColor(const ColorRGBA &Color);
 
 struct SQmIconStyle
 {

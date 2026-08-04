@@ -4094,6 +4094,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == 공지사항이 포함된 파일, 한 줄에 하나씩
 
+Fill
+== Fill
+
 Filter chat messages by regular expression
 == 정규 표현식으로 채팅 메시지 필터링
 
@@ -7976,11 +7979,14 @@ q = Connection quality
 Qm
 == Qm
 
-Qm UI icon color: 1=White, 2=Black
-== Qm UI 아이콘 색상: 1=흰색, 2=검정
+Qm UI custom icon color
+== Qm UI 아이콘 사용자 지정 색상
 
-Qm UI icon weight: 0=Regular, 1=Bold
-== Qm UI 아이콘 굵기: 0=보통, 1=굵게
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm UI 아이콘 색상: 1=흰색, 2=검정, 3=사용자 지정, 4=무지개
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm UI 아이콘 굵기: 0=보통, 1=굵게, 2=얇게, 3=채우기
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다.
@@ -11300,6 +11306,9 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == 편집기에 저장되지 않은 맵이 있습니다. 저장하는 것이 좋습니다.
 
+Thin
+== Thin
+
 Thinking mode requires a reasoning model
 == 사고 모드를 사용하려면 추론 모델이 필요합니다
 
@@ -11752,6 +11761,9 @@ UI controller sens.
 
 UI icon color
 == UI 아이콘 색상
+
+UI icon custom color
+== UI icon custom color
 
 UI icon weight
 == UI 아이콘 굵기

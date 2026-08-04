@@ -1592,23 +1592,39 @@ set(EXPECTED_DATA
   languages/traditional_chinese.txt
   languages/turkish.txt
   languages/ukrainian.txt
+  qmclient/icons/README.md
   qmclient/icons/qm_icons_bold_1x.json
   qmclient/icons/qm_icons_bold_1x.png
   qmclient/icons/qm_icons_bold_2x.json
   qmclient/icons/qm_icons_bold_2x.png
   qmclient/icons/qm_icons_bold_4x.json
   qmclient/icons/qm_icons_bold_4x.png
+  qmclient/icons/qm_icons_bold_msdf.json
+  qmclient/icons/qm_icons_bold_msdf.png
+  qmclient/icons/qm_icons_fill_1x.json
+  qmclient/icons/qm_icons_fill_1x.png
+  qmclient/icons/qm_icons_fill_2x.json
+  qmclient/icons/qm_icons_fill_2x.png
+  qmclient/icons/qm_icons_fill_4x.json
+  qmclient/icons/qm_icons_fill_4x.png
+  qmclient/icons/qm_icons_fill_msdf.json
+  qmclient/icons/qm_icons_fill_msdf.png
   qmclient/icons/qm_icons_regular_1x.json
   qmclient/icons/qm_icons_regular_1x.png
   qmclient/icons/qm_icons_regular_2x.json
   qmclient/icons/qm_icons_regular_2x.png
   qmclient/icons/qm_icons_regular_4x.json
   qmclient/icons/qm_icons_regular_4x.png
-  qmclient/icons/qm_icons_bold_msdf.json
-  qmclient/icons/qm_icons_bold_msdf.png
   qmclient/icons/qm_icons_regular_msdf.json
   qmclient/icons/qm_icons_regular_msdf.png
-  qmclient/icons/README.md
+  qmclient/icons/qm_icons_thin_1x.json
+  qmclient/icons/qm_icons_thin_1x.png
+  qmclient/icons/qm_icons_thin_2x.json
+  qmclient/icons/qm_icons_thin_2x.png
+  qmclient/icons/qm_icons_thin_4x.json
+  qmclient/icons/qm_icons_thin_4x.png
+  qmclient/icons/qm_icons_thin_msdf.json
+  qmclient/icons/qm_icons_thin_msdf.png
   mapres/basic_freeze.png
   mapres/bg_cloud1.png
   mapres/bg_cloud2.png
@@ -2168,7 +2184,9 @@ add_custom_command(OUTPUT "src/generated/wordlist.h"
 
 file(GLOB QM_ICON_ATLAS_SVG_SOURCES
   datasrc/qm_icons/phosphor_bold/*.svg
+  datasrc/qm_icons/phosphor_fill/*.svg
   datasrc/qm_icons/phosphor_regular/*.svg
+  datasrc/qm_icons/phosphor_thin/*.svg
 )
 add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
@@ -2181,9 +2199,25 @@ add_custom_target(qm-icon-atlas
     --padding 4
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_fill
+    --output data/qmclient/icons
+    --atlas-name qm_icons_fill
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
     --source datasrc/qm_icons/phosphor_regular
     --output data/qmclient/icons
     --atlas-name qm_icons_regular
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_thin
+    --output data/qmclient/icons
+    --atlas-name qm_icons_thin
     --sizes 1 2 4
     --base-size 24
     --padding 4
@@ -2203,9 +2237,19 @@ add_custom_target(qm-icon-msdf-atlas
     --atlas-name qm_icons_bold
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_fill
+    --output data/qmclient/icons
+    --atlas-name qm_icons_fill
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
     --source datasrc/qm_icons/phosphor_regular
     --output data/qmclient/icons
     --atlas-name qm_icons_regular
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_thin
+    --output data/qmclient/icons
+    --atlas-name qm_icons_thin
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   DEPENDS
     qmclient_scripts/qm_build_icon_msdf.py

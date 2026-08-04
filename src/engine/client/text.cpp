@@ -1617,7 +1617,7 @@ public:
 			Success = false;
 		}
 
-		m_pGlyphMap->SetIconFontWeight(g_Config.m_QmUiIconWeight != 0);
+		m_pGlyphMap->SetIconFontWeight(g_Config.m_QmUiIconWeight == 1);
 
 		json_value_free(pJsonData);
 		return Success;

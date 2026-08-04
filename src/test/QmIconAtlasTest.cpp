@@ -63,6 +63,17 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 
 TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
 {
+	EXPECT_EQ(NormalizeQmIconWeight(-1), 1);
+	EXPECT_EQ(NormalizeQmIconWeight(0), 0);
+	EXPECT_EQ(NormalizeQmIconWeight(1), 1);
+	EXPECT_EQ(NormalizeQmIconWeight(2), 2);
+	EXPECT_EQ(NormalizeQmIconWeight(3), 3);
+	EXPECT_EQ(NormalizeQmIconWeight(4), 1);
+	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(0));
+	EXPECT_TRUE(QmIconWeightUsesBoldFontFallback(1));
+	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(2));
+	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(3));
+
 	EXPECT_EQ(SelectQmIconAtlasType(false, false), EQmIconAtlasType::ALPHA);
 	EXPECT_EQ(SelectQmIconAtlasType(false, true), EQmIconAtlasType::ALPHA);
 	EXPECT_EQ(SelectQmIconAtlasType(true, false), EQmIconAtlasType::ALPHA);
@@ -180,6 +191,11 @@ TEST(QmIconAtlas, UiTintKeepsAlphaAndDoesNotDefineSemanticDirectColor)
 	const ColorRGBA SemanticColor(0.20f, 0.60f, 0.80f, 0.35f);
 	const ColorRGBA White = QmUiIconColor(SemanticColor, 1);
 	const ColorRGBA Black = QmUiIconColor(SemanticColor, 2);
+	const unsigned int CustomColor = ColorHSLA(0.28f, 0.70f, 0.45f, 1.0f).Pack(false);
+	const ColorRGBA Custom = QmUiIconColor(SemanticColor, 3, CustomColor);
+	const ColorRGBA ExpectedCustom = color_cast<ColorRGBA>(ColorHSLA(CustomColor));
+	const ColorRGBA Rainbow = QmUiIconColor(SemanticColor, 4, 0, 2.5f);
+	const ColorRGBA ExpectedRainbow = color_cast<ColorRGBA>(ColorHSLA(0.5f, 0.75f, 0.6f, SemanticColor.a));
 	EXPECT_FLOAT_EQ(White.r, 1.0f);
 	EXPECT_FLOAT_EQ(White.g, 1.0f);
 	EXPECT_FLOAT_EQ(White.b, 1.0f);
@@ -188,6 +204,14 @@ TEST(QmIconAtlas, UiTintKeepsAlphaAndDoesNotDefineSemanticDirectColor)
 	EXPECT_FLOAT_EQ(Black.g, 0.0f);
 	EXPECT_FLOAT_EQ(Black.b, 0.0f);
 	EXPECT_FLOAT_EQ(Black.a, SemanticColor.a);
+	EXPECT_FLOAT_EQ(Custom.r, ExpectedCustom.r);
+	EXPECT_FLOAT_EQ(Custom.g, ExpectedCustom.g);
+	EXPECT_FLOAT_EQ(Custom.b, ExpectedCustom.b);
+	EXPECT_FLOAT_EQ(Custom.a, SemanticColor.a);
+	EXPECT_FLOAT_EQ(Rainbow.r, ExpectedRainbow.r);
+	EXPECT_FLOAT_EQ(Rainbow.g, ExpectedRainbow.g);
+	EXPECT_FLOAT_EQ(Rainbow.b, ExpectedRainbow.b);
+	EXPECT_FLOAT_EQ(Rainbow.a, SemanticColor.a);
 
 	const std::string Source = ReadTextFile("src/game/client/qm_icon_manager.cpp");
 	const size_t DirectRender = Source.find("bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color) const");
@@ -200,7 +224,7 @@ TEST(QmIconAtlas, UiTintKeepsAlphaAndDoesNotDefineSemanticDirectColor)
 	EXPECT_EQ(Source.substr(StateRender).find("QmUiIconColor"), std::string::npos);
 
 	const std::string Buttons = ReadTextFile("src/game/client/QmUi/UiButtons.cpp");
-	EXPECT_NE(Buttons.find("IconStyle.m_Normal = QmUiIconColor"), std::string::npos);
+	EXPECT_NE(Buttons.find("IconStyle.m_Normal = ConfiguredQmUiIconColor"), std::string::npos);
 	EXPECT_NE(Buttons.find("IconRect, IconState, IconStyle"), std::string::npos);
 }
 
@@ -211,11 +235,15 @@ TEST(QmIconAtlas, PhosphorWeightSourcesRemainSeparated)
 		const char *m_pPath;
 		const char *m_pVariant;
 	};
-	const std::array<SSelectedIcon, 4> aSelectedIcons = {{
+	const std::array<SSelectedIcon, 8> aSelectedIcons = {{
 		{"datasrc/qm_icons/phosphor_bold/icon-eye.svg", "bold"},
 		{"datasrc/qm_icons/phosphor_bold/icon-satellite-swap-incoming.svg", "bold"},
+		{"datasrc/qm_icons/phosphor_fill/icon-eye.svg", "fill"},
+		{"datasrc/qm_icons/phosphor_fill/icon-satellite-swap-incoming.svg", "fill"},
 		{"datasrc/qm_icons/phosphor_regular/icon-eye.svg", "regular"},
 		{"datasrc/qm_icons/phosphor_regular/icon-satellite-swap-incoming.svg", "regular"},
+		{"datasrc/qm_icons/phosphor_thin/icon-eye.svg", "thin"},
+		{"datasrc/qm_icons/phosphor_thin/icon-satellite-swap-incoming.svg", "thin"},
 	}};
 
 	for(const SSelectedIcon &Icon : aSelectedIcons)
@@ -234,7 +262,7 @@ TEST(QmIconAtlas, PhosphorWeightSourcesRemainSeparated)
 
 TEST(QmIconAtlas, GeneratedManifestsContainEveryRuntimeIcon)
 {
-	constexpr const char *apWeights[] = {"bold", "regular"};
+	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill"};
 	constexpr int aScales[] = {1, 2, 4};
 	for(const char *pWeight : apWeights)
 	{
@@ -282,7 +310,7 @@ TEST(QmIconAtlas, GeneratedManifestsContainEveryRuntimeIcon)
 
 TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 {
-	constexpr const char *apWeights[] = {"bold", "regular"};
+	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill"};
 	for(const char *pWeight : apWeights)
 	{
 		char aPath[IO_MAX_PATH_LENGTH];
@@ -473,6 +501,7 @@ TEST(QmIconAtlas, ConfiguredIconWeightUsesTheExistingContainerInvalidationPath)
 	ASSERT_NE(PrivacyRefresh, std::string::npos);
 	const std::string SyncBody = GameClient.substr(Sync, PrivacyRefresh - Sync);
 	EXPECT_NE(SyncBody.find("TextRender()->SetIconFontWeight"), std::string::npos);
+	EXPECT_NE(SyncBody.find("QmIconWeightUsesBoldFontFallback"), std::string::npos);
 	EXPECT_NE(SyncBody.find("m_QmIconManager.RefreshForCurrentDpi();"), std::string::npos);
 	EXPECT_NE(SyncBody.find("OnWindowResize();"), std::string::npos);
 	EXPECT_NE(Settings.find("GameClient()->SyncQmUiIconWeight();"), std::string::npos);

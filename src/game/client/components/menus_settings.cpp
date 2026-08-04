@@ -3698,6 +3698,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsIconsMinCardHeight = IconsChromeHeight + GraphicsIconsContentHeight;
 	const float GraphicsInteractionContentHeight = ResolveSettingsRowsHeight(3, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
+	static CButtonContainer s_aGraphicsIconColorButtons[4];
+	static CButtonContainer s_aGraphicsIconWeightButtons[4];
+	static CButtonContainer s_GraphicsIconCustomColorResetId;
 
 	const bool RenderOnly = Ui()->RenderOnly();
 	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pIconsDefault, pInteractionDefault, GraphicsPage, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsIconsMinCardHeight, IconsChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
@@ -4014,6 +4017,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		});
 		AddCard(IconsSpec, GraphicsIconsMinCardHeight, IconsChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
+			const bool CustomColor = g_Config.m_QmUiIconColor == 3;
 			int RowsRemaining = 2;
 			const auto NextRow = [&]() {
 				CUIRect Row;
@@ -4036,21 +4040,86 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 						OnChanged(i);
 				}
 			};
-			static CButtonContainer s_aIconColorButtons[2];
-			static CButtonContainer s_aIconWeightButtons[2];
-			const char *apIconColorLabels[] = {Localize("White"), Localize("Black")};
-			const char *apIconWeightLabels[] = {Localize("Regular"), Localize("Bold")};
-			DoIconChoiceRow(NextRow(), Localize("UI icon color"), apIconColorLabels, std::size(apIconColorLabels), std::clamp(g_Config.m_QmUiIconColor, 1, 2) - 1, s_aIconColorButtons, [this](int NewValue) {
+			const char *apIconColorLabels[] = {Localize("White"), Localize("Black"), Localize("Custom"), Localize("Rainbow")};
+			const char *apIconWeightLabels[] = {Localize("Thin"), Localize("Regular"), Localize("Bold"), Localize("Fill")};
+			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+			int IconWeightIndex = 1;
+			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
+				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
+					IconWeightIndex = i;
+			DoIconChoiceRow(NextRow(), Localize("UI icon color"), apIconColorLabels, std::size(apIconColorLabels), std::clamp(g_Config.m_QmUiIconColor, 1, 4) - 1, s_aGraphicsIconColorButtons, [this](int NewValue) {
 				g_Config.m_QmUiIconColor = NewValue + 1;
 				Client()->OnWindowResize();
 			});
-			DoIconChoiceRow(NextRow(), Localize("UI icon weight"), apIconWeightLabels, std::size(apIconWeightLabels), std::clamp(g_Config.m_QmUiIconWeight, 0, 1), s_aIconWeightButtons, [this](int NewValue) {
-				if(NewValue == g_Config.m_QmUiIconWeight)
+			if(CustomColor)
+				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, GraphicsMetrics, &CardView, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
+			DoIconChoiceRow(NextRow(), Localize("UI icon weight"), apIconWeightLabels, std::size(apIconWeightLabels), IconWeightIndex, s_aGraphicsIconWeightButtons, [this](int NewValue) {
+				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+				const int NewWeight = s_aIconWeightValues[NewValue];
+				if(NewWeight == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					return;
-				g_Config.m_QmUiIconWeight = NewValue;
+				g_Config.m_QmUiIconWeight = NewWeight;
 				GameClient()->SyncQmUiIconWeight();
 			});
 		});
+		vCards.back().m_Measure = [GraphicsMetrics](float) {
+			const float ChoiceRows = ResolveSettingsRowsHeight(2, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
+			const CUIRect MeasureRect{0.0f, 0.0f, 0.0f, 0.0f};
+			const float CustomColorRow = ResolveSettingsColorRowLayout(MeasureRect, GraphicsMetrics, false, false).m_ConsumedHeight;
+			return ChoiceRows + (g_Config.m_QmUiIconColor == 3 ? CustomColorRow : 0.0f);
+		};
+		vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3);
+		vCards.back().m_PreLayoutInput = [this, GraphicsMetrics](CUIRect ContentRect) {
+			if(m_MenuTextPlanCollecting)
+				return false;
+			bool Changed = false;
+			const bool CustomColor = g_Config.m_QmUiIconColor == 3;
+			const auto ProcessChoiceRow = [this, &Changed](CUIRect Row, int Current, int Count, CButtonContainer *pButtons, auto &&OnChanged) {
+				CUIRect Label, Segments;
+				Row.VSplitLeft(std::clamp(Row.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
+				Segments.VSplitLeft(8.0f, nullptr, &Segments);
+				for(int i = 0; i < Count; ++i)
+				{
+					CUIRect Segment;
+					Segments.VSplitLeft(Segments.w / (Count - i), &Segment, &Segments);
+					if(Ui()->DoButtonLogic(&pButtons[i], Current == i, &Segment, BUTTONFLAG_LEFT))
+					{
+						OnChanged(i);
+						Changed = true;
+					}
+				}
+			};
+			CUIRect Row;
+			ContentRect.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &ContentRect);
+			ProcessChoiceRow(Row, std::clamp(g_Config.m_QmUiIconColor, 1, 4) - 1, 4, s_aGraphicsIconColorButtons, [this](int NewValue) {
+				g_Config.m_QmUiIconColor = NewValue + 1;
+				Client()->OnWindowResize();
+			});
+			ContentRect.HSplitTop(GraphicsMetrics.m_LineSpacing, nullptr, &ContentRect);
+			if(CustomColor)
+			{
+				const unsigned int OldCustomColor = g_Config.m_QmUiIconCustomColor;
+				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, GraphicsMetrics, &ContentRect, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
+				Changed = Changed || OldCustomColor != g_Config.m_QmUiIconCustomColor;
+			}
+			else
+				ContentRect.HSplitTop(GraphicsMetrics.m_LineHeight + GraphicsMetrics.m_LineSpacing, nullptr, &ContentRect);
+			int IconWeightIndex = 1;
+			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
+				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
+					IconWeightIndex = i;
+			ContentRect.HSplitTop(GraphicsMetrics.m_LineHeight, &Row, &ContentRect);
+			ProcessChoiceRow(Row, IconWeightIndex, 4, s_aGraphicsIconWeightButtons, [this](int NewValue) {
+				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+				const int NewWeight = s_aIconWeightValues[NewValue];
+				if(NewWeight == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
+					return;
+				g_Config.m_QmUiIconWeight = NewWeight;
+				GameClient()->SyncQmUiIconWeight();
+			});
+			return Changed;
+		};
 		AddCard(InteractionSpec, GraphicsInteractionMinCardHeight, InteractionChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CUIRect CardView = ContentRect;
 			CUIRect Button;

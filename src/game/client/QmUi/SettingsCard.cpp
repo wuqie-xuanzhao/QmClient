@@ -43,7 +43,7 @@ void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect
 	const ColorRGBA ChromeColor(1.0f, 1.0f, 1.0f, (Hovered ? 0.28f : 0.18f) * Alpha);
 	DrawRoundedSurface(Ctx, ChromeRect, ChromeColor, ChromeColor, Radius);
 	const float IconSize = std::clamp(ui_token::font::BODY * UiScale, 10.0f, ui_token::font::BODY);
-	const ColorRGBA IconColor = QmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, Alpha), g_Config.m_QmUiIconColor);
+	const ColorRGBA IconColor = ConfiguredQmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, Alpha));
 	ITextRender *pTextRender = Ctx.m_pUi->TextRender();
 	const ColorRGBA PreviousColor = pTextRender->GetTextColor();
 	const ColorRGBA PreviousOutlineColor = pTextRender->GetTextOutlineColor();

@@ -4094,6 +4094,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == 包含公告的文件，每行一個
 
+Fill
+== Fill
+
 Filter chat messages by regular expression
 == 按正則表達式過濾聊天消息
 
@@ -7976,11 +7979,14 @@ q = Connection quality
 Qm
 == 棲夢
 
-Qm UI icon color: 1=White, 2=Black
-== Qm 介面圖示顏色：1=白色，2=黑色
+Qm UI custom icon color
+== Qm 介面圖示自訂顏色
 
-Qm UI icon weight: 0=Regular, 1=Bold
-== Qm 介面圖示粗細：0=標準，1=粗體
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm 介面圖示顏色：1=白色，2=黑色，3=自訂，4=彩虹
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm 介面圖示字重：0=標準，1=粗體，2=細體，3=填滿
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：序號必須在 1 到 %d 之間
@@ -11300,6 +11306,9 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == 編輯器中有尚未保存的地圖，建議先保存。
 
+Thin
+== Thin
+
 Thinking mode requires a reasoning model
 == 啟用思考模式需要使用推理模型
 
@@ -11752,6 +11761,9 @@ UI controller sens.
 
 UI icon color
 == 介面圖示顏色
+
+UI icon custom color
+== UI icon custom color
 
 UI icon weight
 == 介面圖示粗細

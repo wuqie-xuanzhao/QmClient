@@ -4094,6 +4094,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == 告知ファイル（1 行に 1 件）
 
+Fill
+== Fill
+
 Filter chat messages by regular expression
 == 正規表現でチャットメッセージをフィルタリング
 
@@ -7976,11 +7979,14 @@ q = Connection quality
 Qm
 == Qm
 
-Qm UI icon color: 1=White, 2=Black
-== Qm UI アイコンの色: 1=白、2=黒
+Qm UI custom icon color
+== Qm UI アイコンのカスタム色
 
-Qm UI icon weight: 0=Regular, 1=Bold
-== Qm UI アイコンの太さ: 0=標準、1=太字
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm UI アイコンの色: 1=白、2=黒、3=カスタム、4=虹色
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm UI アイコンの太さ: 0=標準、1=太字、2=細字、3=塗りつぶし
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：インデックスは 1 から %d の間でなければなりません
@@ -11300,6 +11306,9 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == エディターに未保存のマップがあります。保存することをお勧めします。
 
+Thin
+== Thin
+
 Thinking mode requires a reasoning model
 == 思考モードを使用するには推論モデルが必要です
 
@@ -11752,6 +11761,9 @@ UI controller sens.
 
 UI icon color
 == UI アイコンの色
+
+UI icon custom color
+== UI icon custom color
 
 UI icon weight
 == UI アイコンの太さ

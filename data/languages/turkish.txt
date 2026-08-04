@@ -4094,6 +4094,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == Duyuruları içeren dosya, her satırda bir tane.
 
+Fill
+== Fill
+
 Filter chat messages by regular expression
 == Sohbet mesajlarını düzenli ifadeyle filtrele
 
@@ -7976,11 +7979,14 @@ q = Connection quality
 Qm
 == Qm
 
-Qm UI icon color: 1=White, 2=Black
-== Qm arayüz simgesi rengi: 1=Beyaz, 2=Siyah
+Qm UI custom icon color
+== Qm arayüzü simgesi özel rengi
 
-Qm UI icon weight: 0=Regular, 1=Bold
-== Qm arayüz simgesi kalınlığı: 0=Normal, 1=Kalın
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm arayüz simgesi rengi: 1=Beyaz, 2=Siyah, 3=Özel, 4=Gökkuşağı
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm arayüz simgesi kalınlığı: 0=Normal, 1=Kalın, 2=İnce, 3=Dolgulu
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: indeks 1 ile %d arasında olmalıdır
@@ -11300,6 +11306,9 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == Düzenleyicide kaydedilmemiş bir harita var, kaydetmek isteyebilirsiniz.
 
+Thin
+== Thin
+
 Thinking mode requires a reasoning model
 == Düşünme modu bir akıl yürütme modeli gerektirir
 
@@ -11752,6 +11761,9 @@ UI controller sens.
 
 UI icon color
 == Arayüz simgesi rengi
+
+UI icon custom color
+== UI icon custom color
 
 UI icon weight
 == Arayüz simgesi kalınlığı
