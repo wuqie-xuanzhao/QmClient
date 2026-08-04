@@ -269,10 +269,17 @@ namespace
 		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, Metrics.m_RowStep * 2.0f + 8.0f * Metrics.m_ListRowHeight);
 		EXPECT_FLOAT_EQ(ManyModes.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
 
-		const SSettingsListCardGeometry AudioPacks = ResolveSettingsSoundAudioPackGeometry(Metrics);
-		EXPECT_EQ(AudioPacks.m_VisibleRows, 8);
-		EXPECT_FLOAT_EQ(AudioPacks.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
-		EXPECT_FLOAT_EQ(AudioPacks.m_ContentHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing + AudioPacks.m_ListViewportHeight + 16.0f);
+		const SSettingsListCardGeometry OneAudioPack = ResolveSettingsSoundAudioPackGeometry(1, Metrics);
+		const SSettingsListCardGeometry EightAudioPacks = ResolveSettingsSoundAudioPackGeometry(8, Metrics);
+		const SSettingsListCardGeometry NineAudioPacks = ResolveSettingsSoundAudioPackGeometry(9, Metrics);
+		EXPECT_EQ(OneAudioPack.m_VisibleRows, 1);
+		EXPECT_FLOAT_EQ(OneAudioPack.m_ListViewportHeight, Metrics.m_ListRowHeight);
+		EXPECT_EQ(EightAudioPacks.m_VisibleRows, 8);
+		EXPECT_FLOAT_EQ(EightAudioPacks.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(NineAudioPacks.m_ListViewportHeight, EightAudioPacks.m_ListViewportHeight);
+		EXPECT_FLOAT_EQ(OneAudioPack.m_ContentHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing + OneAudioPack.m_ListViewportHeight + 16.0f);
+		EXPECT_NE(ResolveSettingsSoundLayoutRevision(false, true, 7), ResolveSettingsSoundLayoutRevision(false, true, 8));
+		EXPECT_EQ(ResolveSettingsSoundLayoutRevision(false, true, 9), ResolveSettingsSoundLayoutRevision(false, true, 10));
 	}
 
 	TEST(SettingsPageLayout, GeneralDefinitionsRevisionTracksDynamicListCounts)
@@ -377,16 +384,31 @@ namespace
 		EXPECT_GT(ResolveSettingsProfilesListHeight(Metrics, 300.0f, 4), ResolveSettingsProfilesListHeight(Metrics, 900.0f, 4));
 	}
 
-	TEST(SettingsPageLayout, TeeQueuePresetsReserveEightStandardRows)
+	TEST(SettingsPageLayout, TeeQueueListViewportUsesCompleteRowsAndPrioritizesQueueSpace)
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
 		const float FixedChromeHeight = Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight;
-		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics), FixedChromeHeight + Metrics.m_ListRowHeight * 8.0f);
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 3), FixedChromeHeight + Metrics.m_ListRowHeight * 3.0f);
 		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 6), FixedChromeHeight + Metrics.m_ListRowHeight * 6.0f);
 		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(0), 2);
 		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(3), 3);
-		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(12), 5);
-		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePanelHeight(Metrics), 440.0f);
+		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(12), 3);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(1), 1);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(8), 8);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(9), 8);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(10), 8);
+		const SSettingsTeeQueuePanelGeometry OneQueueItem = ResolveSettingsTeeQueuePanelGeometry(Metrics, 1, 12);
+		const SSettingsTeeQueuePanelGeometry EightQueueItems = ResolveSettingsTeeQueuePanelGeometry(Metrics, 8, 12);
+		const SSettingsTeeQueuePanelGeometry NineQueueItems = ResolveSettingsTeeQueuePanelGeometry(Metrics, 9, 12);
+		EXPECT_FLOAT_EQ(OneQueueItem.m_QueueListViewportHeight, Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(EightQueueItems.m_QueueListViewportHeight, Metrics.m_ListRowHeight * 8.0f);
+		EXPECT_FLOAT_EQ(NineQueueItems.m_QueueListViewportHeight, EightQueueItems.m_QueueListViewportHeight);
+		EXPECT_FLOAT_EQ(EightQueueItems.m_QueueListSurfaceHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing * 3.0f + EightQueueItems.m_QueueListViewportHeight);
+		EXPECT_EQ(EightQueueItems.m_VisiblePresetRows, 3);
+		const float StackedIntervalHeight = Metrics.m_LineHeight + Metrics.m_LineSpacing + Metrics.m_InputHeight;
+		EXPECT_GE(EightQueueItems.m_ContentHeight, Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + StackedIntervalHeight + EightQueueItems.m_QueueListSurfaceHeight + EightQueueItems.m_QueuePresetHeight);
+		EXPECT_NE(ResolveSettingsTeeQueueLayoutRevision(false, false, false, 7, 3), ResolveSettingsTeeQueueLayoutRevision(false, false, false, 8, 3));
+		EXPECT_EQ(ResolveSettingsTeeQueueLayoutRevision(false, false, false, 9, 3), ResolveSettingsTeeQueueLayoutRevision(false, false, false, 10, 4));
 	}
 
 	TEST(SettingsPageLayout, TeeIdentityPreviewReservesSemanticHeight)

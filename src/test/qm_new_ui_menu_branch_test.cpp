@@ -4061,9 +4061,13 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(Tee.find("ResolveTeeTopContentHeight"), std::string::npos);
 	EXPECT_NE(Tee.find("ListContentHeight"), std::string::npos);
 	EXPECT_NE(Tee.find("constexpr int TeeSkinGridVisibleRows = 6;"), std::string::npos);
-	EXPECT_NE(Tee.find("const float TeeQueuePanelMinHeight = ResolveSettingsTeeQueuePanelHeight(TeeMetrics);"), std::string::npos);
-	EXPECT_NE(Tee.find("ResolveSettingsTeeVisiblePresetRows((int)vQueuePresets.size())"), std::string::npos);
-	EXPECT_NE(Tee.find("ResolveSettingsTeeQueuePresetHeight(TeeMetrics, VisiblePresetRows)"), std::string::npos);
+	EXPECT_NE(Tee.find("ResolveSettingsTeeQueuePanelHeight(TeeMetrics, QueueItemCount, QueuePresetCount)"), std::string::npos);
+	EXPECT_NE(Tee.find("ResolveSettingsTeeQueuePanelGeometry(TeeMetrics, (int)SkinQueue.size(), (int)vQueuePresets.size())"), std::string::npos);
+	EXPECT_NE(Tee.find("QueueListBody.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueListBody);"), std::string::npos);
+	EXPECT_NE(Tee.find("QueueGeometry.m_QueueListViewportHeight"), std::string::npos);
+	EXPECT_NE(Tee.find("TeeMetrics.m_ButtonHeight), &QueueListHeaderLabel, &ClearQueueRect"), std::string::npos);
+	EXPECT_NE(Tee.find("s_QueueListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED"), std::string::npos);
+	EXPECT_NE(Tee.find("s_PresetListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED"), std::string::npos);
 	EXPECT_NE(Tee.find("const float QueueValueInputWidth = 58.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(Tee.find("const float QueueIntervalLabelWidth = TextRender()->TextWidth(BodySize, pQueueIntervalLabel) + TeeMetrics.m_LineSpacing;"), std::string::npos);
 	EXPECT_NE(Tee.find("IntervalRow.VSplitLeft(minimum(IntervalRow.w, QueueIntervalLabelWidth), &IntervalLabel, &IntervalControls);"), std::string::npos);
@@ -4249,6 +4253,9 @@ TEST(QmNewUiMenuBranches, GraphicsAndSoundNestedListsOwnWheel)
 	EXPECT_NE(Sound.find("s_AudioPackListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);"), std::string::npos);
 	EXPECT_NE(Graphics.find("ResolveSettingsGraphicsModesGeometry("), std::string::npos);
 	EXPECT_NE(Sound.find("ResolveSettingsSoundAudioPackGeometry("), std::string::npos);
+	EXPECT_NE(Sound.find("ResolveSettingsSoundAudioPackGeometry(AudioPackCount, SoundMetrics)"), std::string::npos);
+	EXPECT_NE(Sound.find("s_AudioPackListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED"), std::string::npos);
+	EXPECT_NE(Sound.find("ResolveSettingsSoundLayoutRevision(RenderOnly, g_Config.m_SndEnable != 0, AudioPackCount)"), std::string::npos);
 	EXPECT_NE(Graphics.find("const int GraphicsBackendRowCount"), std::string::npos);
 	EXPECT_NE(Graphics.find("GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount"), std::string::npos);
 	EXPECT_EQ(Graphics.find("const auto NextBackendRow"), std::string::npos);

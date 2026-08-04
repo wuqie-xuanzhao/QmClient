@@ -1952,7 +1952,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CUIRect QueueSection = QueuePanel;
 			DrawRoundedSurface(Ui(), QueueSection, ui_token::color::SURFACE_OVERLAY, ColorRGBA(), ui_token::radius::CARD);
 			QueueSection.Margin(TeeMetrics.m_LineSpacing, &QueueSection);
-			CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
+			CUIRect QueueHeader, QueueList, QueuePresets;
 			QueueSection.HSplitTop(TeeMetrics.m_LineHeight, &QueueHeader, &QueueSection);
 			char aQueueLabel[64];
 			str_format(aQueueLabel, sizeof(aQueueLabel), "%s (%d)", Localize("Skin queue"), (int)SkinQueue.size());
@@ -2025,9 +2025,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInputGroup, QueueIntervalOptions);
 
 			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
-			const int VisiblePresetRows = ResolveSettingsTeeVisiblePresetRows((int)vQueuePresets.size());
-			const float QueuePresetHeight = minimum(QueueSection.h, ResolveSettingsTeeQueuePresetHeight(TeeMetrics, VisiblePresetRows));
-			QueueSection.HSplitBottom(QueuePresetHeight, &QueueList, &QueuePresets);
+			const SSettingsTeeQueuePanelGeometry QueueGeometry = ResolveSettingsTeeQueuePanelGeometry(TeeMetrics, (int)SkinQueue.size(), (int)vQueuePresets.size());
+			QueueSection.HSplitTop(minimum(QueueSection.h, QueueGeometry.m_QueueListSurfaceHeight), &QueueList, &QueueSection);
+			QueueSection.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueSection);
+			QueueSection.HSplitTop(minimum(QueueSection.h, QueueGeometry.m_QueuePresetHeight), &QueuePresets, &QueueSection);
 			DrawRoundedSurface(Ui(), QueueList, ColorRGBA(1.0f, 1.0f, 1.0f, 0.035f), ColorRGBA(), 4.0f);
 			QueueList.Margin(TeeMetrics.m_LineSpacing, &QueueList);
 			QueuePresets.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueuePresets);
@@ -2036,12 +2037,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 			CUIRect QueueListHeader, QueueListBody;
 			QueueList.HSplitTop(TeeMetrics.m_LineHeight, &QueueListHeader, &QueueListBody);
+			QueueListBody.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueListBody);
+			QueueListBody.HSplitTop(minimum(QueueListBody.h, QueueGeometry.m_QueueListViewportHeight), &QueueListBody, nullptr);
 			CUIRect QueueListHeaderLabel, ClearQueueRect;
-			QueueListHeader.VSplitRight(18.0f, &QueueListHeaderLabel, &ClearQueueRect);
+			QueueListHeader.VSplitRight(minimum(QueueListHeader.w, TeeMetrics.m_ButtonHeight), &QueueListHeaderLabel, &ClearQueueRect);
 			CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;
 			Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel, BodySize, TEXTALIGN_ML, CurrentQueueLabelProps);
 			static CButtonContainer s_TeeClearCurrentSkinQueueButton;
-			if(Ui()->DoButton_FontIcon(&s_TeeClearCurrentSkinQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, BUTTONFLAG_LEFT))
+			if(Ui()->DoButton_FontIcon(&s_TeeClearCurrentSkinQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
 			{
 				GameClient()->m_Skins.ClearSkinQueue(QueueDummy);
 			}
@@ -2093,10 +2096,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 				s_QueueListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 				s_QueueListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+				s_QueueListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 				s_QueueListBox.DoStart(TeeMetrics.m_ListRowHeight, (int)SkinQueue.size(), 1, 1, -1, &QueueListBody, true, IGraphics::CORNER_ALL);
 				for(size_t i = 0; i < SkinQueue.size(); ++i)
 				{
-					const CListboxItem Item = s_QueueListBox.DoNextItem(&s_QueueItemIds[i], false, 3.0f);
+					const CListboxItem Item = s_QueueListBox.DoNextItem(&s_QueueItemIds[i], (int)i == QueueIndex, 3.0f);
 					if(!Item.m_Visible)
 					{
 						continue;
@@ -2109,11 +2113,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 						DragTarget = (int)i;
 					}
 
-					if((int)i == QueueIndex)
-					{
-						DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(0.2f, 0.6f, 0.3f, 0.2f), ColorRGBA(), 3.0f);
-					}
-					else if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
+					if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
 					{
 						DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(0.4f, 0.4f, 1.0f, 0.2f), ColorRGBA(), 3.0f);
 					}
@@ -2320,6 +2320,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					const int PresetSelectedOld = ActivePresetIndex >= 0 ? ActivePresetIndex : -1;
 					s_PresetListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 					s_PresetListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+					s_PresetListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 					s_PresetListBox.DoStart(TeeMetrics.m_ListRowHeight, (int)vQueuePresets.size(), 1, 1, PresetSelectedOld, &PresetList, true, IGraphics::CORNER_ALL);
 					for(size_t i = 0; i < vQueuePresets.size(); ++i)
 					{
@@ -2331,14 +2332,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 						CUIRect NameRect = SelectRect;
 						NameRect.VSplitLeft(TeeMetrics.m_LineSpacing, nullptr, &NameRect);
 
-						if(ActivePresetIndex == (int)i)
-						{
-							DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(0.25f, 0.6f, 0.35f, 0.22f), ColorRGBA(), 3.0f);
-						}
-						else if(Ui()->HotItem() == &s_vPresetItemIds[i])
-						{
-							DrawRoundedSurface(Ui(), Item.m_Rect, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), ColorRGBA(), 3.0f);
-						}
 						char aEntryLabel[96];
 						if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
 						{
@@ -3468,7 +3461,9 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	constexpr float TeeSkinGridRowHeight = 50.0f;
 	constexpr int TeeSkinGridVisibleRows = 6;
 	const float TeeSkinToolbarHeight = TeeMetrics.m_InputHeight * 2.0f + TeeMetrics.m_LineSpacing;
-	const float TeeQueuePanelMinHeight = ResolveSettingsTeeQueuePanelHeight(TeeMetrics);
+	const int QueueItemCount = (int)GameClient()->m_Skins.SkinQueue(QueueDummy).size();
+	const int QueuePresetCount = (int)GameClient()->m_Skins.SkinQueuePresets(QueueDummy).size();
+	const float TeeQueuePanelMinHeight = ResolveSettingsTeeQueuePanelHeight(TeeMetrics, QueueItemCount, QueuePresetCount);
 	const float ListContentHeight = maximum(TeeQueuePanelMinHeight, TeeSkinGridVisibleRows * TeeSkinGridRowHeight + TeeSkinToolbarHeight);
 	const bool RenderOnly = Ui()->RenderOnly();
 	const auto BuildDefinitions = [this, pIdentityDefault, pOptionsDefault, pListDefault, ListContentHeight, RenderIdentity, RenderOptions, RenderList, AdvanceListOffscreen, TeeSectionVisible, pUseCustomColor, ResolveTeeTopContentHeight, TeeMetrics, ControlSpacing, ControlLineHeight](std::vector<SSettingsCardDefinition> &vCards) {
@@ -3512,10 +3507,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			else if(g_Config.m_QmSettingsPrewarm != 0)
 				AdvanceListOffscreen(); }, true);
 	};
-	const uint64_t TeeLayoutRevision =
-		((uint64_t)(RenderOnly ? 1 : 0) << 63) |
-		((uint64_t)(m_Dummy ? 1 : 0) << 62) |
-		((uint64_t)(*pUseCustomColor != 0) << 61);
+	const uint64_t TeeLayoutRevision = ResolveSettingsTeeQueueLayoutRevision(RenderOnly, m_Dummy != 0, *pUseCustomColor != 0, QueueItemCount, QueuePresetCount);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, TeeLayoutRevision);
 
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
@@ -5025,7 +5017,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	const int ToggleRowCount = g_Config.m_SndEnable ? 10 : 1;
 	const float SoundToggleCardHeight = ToggleChromeHeight + LineHeight * ToggleRowCount + LineSpacing * maximum(0, ToggleRowCount - 1);
 	const float SoundVolumeCardHeight = VolumeChromeHeight + LineHeight * 5.0f + LineSpacing * 4.0f;
-	const SSettingsListCardGeometry SoundAudioPackGeometry = ResolveSettingsSoundAudioPackGeometry(SoundMetrics);
+	const int AudioPackCount = (int)gs_vAudioPacks.size();
+	const SSettingsListCardGeometry SoundAudioPackGeometry = ResolveSettingsSoundAudioPackGeometry(AudioPackCount, SoundMetrics);
 	const float SoundAudioPackContentHeight = SoundAudioPackGeometry.m_ContentHeight;
 	const float SoundAudioPackCardHeight = AudioPackChromeHeight + SoundAudioPackContentHeight;
 	const bool RenderOnly = Ui()->RenderOnly();
@@ -5220,6 +5213,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			const int OldSelectedPack = SelectedPack;
 			s_AudioPackListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
 			s_AudioPackListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+			s_AudioPackListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 			s_AudioPackListBox.DoStart(LineHeight + LineSpacing, gs_vAudioPacks.size(), 1, 4, SelectedPack, &ListRow, false);
 
 			const float BadgeFontSize = SoundMetrics.m_SmallSize;
@@ -5269,9 +5263,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 					m_AudioPackEditorState.m_PackNameInput.Set(g_Config.m_SndPack);
 			} }, []() { return g_Config.m_SndEnable != 0; });
 	};
-	const uint64_t SoundLayoutRevision =
-		((uint64_t)(RenderOnly ? 1 : 0) << 63) |
-		(uint64_t)(g_Config.m_SndEnable != 0);
+	const uint64_t SoundLayoutRevision = ResolveSettingsSoundLayoutRevision(RenderOnly, g_Config.m_SndEnable != 0, AudioPackCount);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, SoundLayoutRevision);
 
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};
