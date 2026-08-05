@@ -85,6 +85,7 @@ private:
 	bool m_HasHeader;
 	bool m_Active;
 	bool m_HideScrollbar;
+	bool m_ScrollbarAlwaysReserved;
 	bool m_InitialScrollPending;
 	float m_EntryAnimationOffset;
 	int64_t m_LastRenderTime;
@@ -127,6 +128,7 @@ public:
 	void SetActive(bool Active) { m_Active = Active; }
 	void SetScrollProfile(EQmScrollProfile Profile) { m_ScrollProfile = Profile; }
 	void SetHideScrollbar(bool HideScrollbar) { m_HideScrollbar = HideScrollbar; }
+	void SetScrollbarAlwaysReserved(bool AlwaysReserved) { m_ScrollbarAlwaysReserved = AlwaysReserved; }
 	void SetItemColors(ColorRGBA SelectedActive, ColorRGBA SelectedInactive, ColorRGBA Hovered)
 	{
 		m_SelectedItemActiveColor = SelectedActive;

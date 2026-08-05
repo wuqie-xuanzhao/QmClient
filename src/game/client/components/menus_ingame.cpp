@@ -2132,6 +2132,8 @@ bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)
 	{
 		if(!m_FilterInput.IsEmpty() && !str_utf8_find_nocase(pOption->m_aDescription, m_FilterInput.GetString()))
 			continue;
+		if(!m_ExcludeInput.IsEmpty() && str_utf8_find_nocase(pOption->m_aDescription, m_ExcludeInput.GetString()))
+			continue;
 		const int Stars = ParseCallvoteMapStars(pOption->m_aDescription);
 		if(!IsVisibleBySortMode(Stars))
 			continue;
@@ -2233,7 +2235,9 @@ bool CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators, bo
 		if(Index == GameClient()->m_Snap.m_LocalClientId || (FilterSpectators && pInfoByName->m_Team == TEAM_SPECTATORS))
 			continue;
 
-		if(!str_utf8_find_nocase(GameClient()->m_aClients[Index].m_aName, m_FilterInput.GetString()))
+		if(!m_FilterInput.IsEmpty() && !str_utf8_find_nocase(GameClient()->m_aClients[Index].m_aName, m_FilterInput.GetString()))
+			continue;
+		if(!m_ExcludeInput.IsEmpty() && str_utf8_find_nocase(GameClient()->m_aClients[Index].m_aName, m_ExcludeInput.GetString()))
 			continue;
 
 		if(m_CallvoteSelectedPlayer == Index)
@@ -2337,9 +2341,15 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	Bottom.HSplitTop(5.0f, nullptr, &Bottom);
 
 	// render quick search
-	CUIRect QuickSearch;
+	CUIRect QuickSearch, QuickExclude;
 	Bottom.VSplitLeft(5.0f, nullptr, &Bottom);
-	Bottom.VSplitLeft(250.0f, &QuickSearch, &Bottom);
+	const bool HasMapSort = s_ControlPage == EServerControlTab::SETTINGS;
+	const float MapSortWidth = HasMapSort ? 140.0f : 0.0f;
+	const float MapSortGap = HasMapSort ? 10.0f : 0.0f;
+	const float FilterWidth = std::min(220.0f, std::max(1.0f, (Bottom.w - 5.0f - MapSortWidth - MapSortGap) * 0.5f));
+	Bottom.VSplitLeft(FilterWidth, &QuickSearch, &Bottom);
+	Bottom.VSplitLeft(5.0f, nullptr, &Bottom);
+	Bottom.VSplitLeft(FilterWidth, &QuickExclude, &Bottom);
 	if(m_ControlPageOpening)
 	{
 		m_ControlPageOpening = false;
@@ -2358,6 +2368,14 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	CallvoteSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
 	CallvoteSearchOptions.m_FontSize = 14.0f;
 	bool Searching = ui_widget::InputField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, CallvoteSearchOptions).m_Changed;
+	IUiContext CallvoteExcludeCtx = CallvoteSearchCtx;
+	CallvoteExcludeCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_exclude");
+	ui_widget::SInputFieldOptions CallvoteExcludeOptions;
+	CallvoteExcludeOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	CallvoteExcludeOptions.m_Clearable = true;
+	CallvoteExcludeOptions.m_pPlaceholder = Localize("Exclude");
+	CallvoteExcludeOptions.m_FontSize = 14.0f;
+	Searching = ui_widget::InputField(CallvoteExcludeCtx, &m_ExcludeInput, QuickExclude, CallvoteExcludeOptions).m_Changed || Searching;
 	IUiContext CallvoteTextInputCtx;
 	CallvoteTextInputCtx.m_pUi = Ui();
 	CallvoteTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
@@ -2365,7 +2383,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	CallvoteTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_text_inputs");
 	CallvoteTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
-	if(s_ControlPage == EServerControlTab::SETTINGS)
+	if(HasMapSort)
 	{
 		static CScrollRegion s_CallvoteMapSortScrollRegion;
 		m_CallvoteMapSortDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_CallvoteMapSortScrollRegion;
@@ -2382,7 +2400,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		static_assert(std::size(apSortLabels) == (int)ECallvoteMapSort::NUM_MODES);
 		const int OldSort = (int)m_CallvoteMapSort;
 		CUIRect SortDropDown;
-		Bottom.VSplitLeft(10.0f, nullptr, &Bottom);
+		Bottom.VSplitLeft(MapSortGap, nullptr, &Bottom);
 		Bottom.VSplitLeft(130.0f, &SortDropDown, &Bottom);
 		const int NewSort = Ui()->DoDropDown(&SortDropDown, OldSort, apSortLabels, std::size(apSortLabels), m_CallvoteMapSortDropDownState);
 		if(NewSort != OldSort && NewSort >= 0 && NewSort < (int)ECallvoteMapSort::NUM_MODES)

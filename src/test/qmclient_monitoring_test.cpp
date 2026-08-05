@@ -6973,6 +6973,7 @@ TEST(QmMonitoringHelpers, InputFieldsConsumeSharedLayoutHelper)
 TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 {
 	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");
+	const std::string CardHeader = ReadRepoFile("src/game/client/QmUi/SettingsCard.h");
 	const std::string DeckHeader = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
 	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string QmClientSource = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -6984,7 +6985,8 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("const bool InteractionComplete = DrawState.m_DropFeedback;"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_Hovered, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused)"), std::string::npos);
 	EXPECT_EQ(Source.find("PointInRect(DrawRect"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
+	EXPECT_NE(Source.find("ColorRGBA Surface = ResolveSettingsCardSurfaceColor(VisualOptions.m_UseSurfaceColor ? VisualOptions.m_SurfaceColor : Theme.m_Surface, DrawState);"), std::string::npos);
+	EXPECT_NE(CardHeader.find("bool m_UseSurfaceColor = false;"), std::string::npos);
 	EXPECT_EQ(Source.find("ResolveSettingsCardLinkedSurfaceColor"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
@@ -7006,6 +7008,7 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(DeckHeader.find("bool m_AllowHeaderDrag = true;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
 	EXPECT_NE(QmClientSource.find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);

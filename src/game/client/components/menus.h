@@ -1427,6 +1427,7 @@ protected:
 	CUi::SDropDownState m_CallvoteMapSortDropDownState;
 	CLineInputBuffered<VOTE_REASON_LENGTH> m_CallvoteReasonInput;
 	CLineInputBuffered<64> m_FilterInput;
+	CLineInputBuffered<64> m_ExcludeInput;
 	bool m_ControlPageOpening;
 
 	// demo

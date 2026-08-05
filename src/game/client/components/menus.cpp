@@ -32,6 +32,7 @@
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmDropdown.h>
 #include <game/client/QmUi/QmModuleLayoutAdapter.h>
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/QmUiPerf.h>
@@ -547,6 +548,8 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 
 int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char *const *ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)
 {
+	// 所有设置页下拉框统一使用当前设置主题，调用点不得回退到旧的默认配色。
+	Properties.m_VisualStyle = QmSettingsDropdownVisualStyle(m_SettingsUiTheme);
 	// 锚点必须留在当前卡片内，弹层可以越过卡片但不能越过设置页 viewport。
 	if(Properties.m_pAnchorViewport == nullptr)
 		Properties.m_pAnchorViewport = Ui()->IsClipped() ? Ui()->ClipArea() : Ui()->Screen();
@@ -571,6 +574,9 @@ SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
 	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;
 	Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;
 	Options.m_BorderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiCardBorderColor, true));
+	const ColorRGBA CardColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiCardColor).UnclampLighting(0.42f));
+	Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiOpacity / 100.0f, 0.0f, 1.0f));
+	Options.m_UseSurfaceColor = true;
 	return Options;
 }
 
