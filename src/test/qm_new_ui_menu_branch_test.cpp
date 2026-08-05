@@ -16,6 +16,7 @@
 #include <test/test.h>
 
 #include <algorithm>
+#include <cmath>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -108,6 +109,15 @@ namespace
 			}
 		}
 		return std::string::npos;
+	}
+
+	size_t CountRoundedRectDirectCalls(const std::string &Source)
+	{
+		const std::regex CallRegex("Graphics\\(\\)->DrawRect(Ext|Ext4|4)?\\([^;]{0,260}IGraphics::CORNER_(ALL|TL|TR|BL|BR|L|R|T|B)");
+		size_t Count = 0;
+		for(std::sregex_iterator It(Source.begin(), Source.end(), CallRegex), End; It != End; ++It)
+			++Count;
+		return Count;
 	}
 
 } // namespace
@@ -4802,9 +4812,14 @@ TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
 	EXPECT_NE(FunctionBody(Vulkan, "[[nodiscard]] bool Cmd_RenderRoundedRectSdf").find("&pCommand->m_Params, sizeof(pCommand->m_Params)"), std::string::npos);
 	const std::string RoundedCommand = FunctionBody(GraphicsThreaded, "void CGraphics_Threaded::RenderRoundedRectSdf");
 	EXPECT_NE(RoundedCommand.find("Params.m_Params.z"), std::string::npos);
+	EXPECT_NE(RoundedCommand.find("if(m_NumVertices > 0)"), std::string::npos);
+	EXPECT_NE(RoundedCommand.find("FlushVertices();"), std::string::npos);
 	EXPECT_NE(RoundedCommand.find("m_RoundedRectSdfFlushCount++"), std::string::npos);
 	EXPECT_NE(RoundedCommand.find("m_RoundedRectSdfCommandCount++"), std::string::npos);
 	EXPECT_NE(GraphicsThreaded.find("rounded_sdf_commands_sum"), std::string::npos);
+	EXPECT_NE(GraphicsThreaded.find("rounded_sdf_flushes_sum"), std::string::npos);
+	EXPECT_NE(GraphicsThreaded.find("m_RoundedRectSdfCommandCount = 0;"), std::string::npos);
+	EXPECT_NE(GraphicsThreaded.find("m_RoundedRectSdfFlushCount = 0;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
@@ -4831,6 +4846,108 @@ TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 	// 聊天滚动条和实时预览仍属于高频绘制，保留批量直绘路径。
 	EXPECT_NE(Chat.find("Graphics()->DrawRect(ScrollbarRect.x"), std::string::npos);
 	EXPECT_NE(Chat.find("Graphics()->DrawRect(x, PreviewY"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, LegacyRoundedRectDrawSitesRequireExplicitAllowlist)
+{
+	const char *const apAllowlistedFiles[] = {
+		"src/game/client/components/hud.cpp",
+		"src/game/client/components/chat.cpp",
+		"src/game/client/components/nameplates.cpp",
+		"src/game/client/components/spectator.cpp",
+		"src/game/client/components/statboard.cpp",
+	};
+	for(const char *pPath : apAllowlistedFiles)
+	{
+		const std::string Source = ReadTextFile(pPath);
+		EXPECT_GT(CountRoundedRectDirectCalls(Source), 0u) << pPath;
+	}
+
+	const char *const apOrdinaryUiFiles[] = {
+		"src/game/client/components/menus.cpp",
+		"src/game/client/components/menus_ingame.cpp",
+		"src/game/client/components/menus_start.cpp",
+		"src/game/client/components/menus_browser.cpp",
+		"src/game/client/components/menus_demo.cpp",
+		"src/game/client/components/menus_settings.cpp",
+		"src/game/client/components/menus_settings7.cpp",
+		"src/game/client/components/menus_settings_assets.cpp",
+		"src/game/client/components/menus_settings_controls.cpp",
+		"src/game/client/components/tclient/menus_tclient.cpp",
+		"src/game/client/components/qmclient/menus_qmclient.cpp",
+		"src/game/client/components/ui_effects.cpp",
+		"src/game/client/components/hud_editor.cpp",
+		"src/game/client/ui.cpp",
+		"src/game/client/QmUi/UiButtons.cpp",
+		"src/game/client/QmUi/UiForms.cpp",
+		"src/game/client/QmUi/SettingsCard.cpp",
+		"src/game/client/QmUi/SettingsCardDeck.cpp",
+		"src/game/client/QmUi/UiContainers.h",
+		"src/game/client/QmUi/UiOverlays.h",
+	};
+	for(const char *pPath : apOrdinaryUiFiles)
+	{
+		const std::string Source = ReadTextFile(pPath);
+		EXPECT_EQ(CountRoundedRectDirectCalls(Source), 0u) << pPath;
+	}
+}
+
+TEST(QmNewUiMenuBranches, RoundedSurfaceGeometryCoversUiScaleAndRetinaMatrix)
+{
+	constexpr float Aspect = 16.0f / 9.0f;
+	const int aScales[] = {100, 125, 150, 200};
+	const int aScreenWidths[] = {1920, 3840};
+	const CUIRect Rect{0.2f, 0.2f, 20.0f, 10.0f};
+	const int aCornerMasks[] = {
+		IGraphics::CORNER_ALL,
+		IGraphics::CORNER_L,
+		IGraphics::CORNER_R,
+		IGraphics::CORNER_T,
+		IGraphics::CORNER_B,
+		IGraphics::CORNER_TL,
+		IGraphics::CORNER_TR,
+		IGraphics::CORNER_BL,
+		IGraphics::CORNER_BR,
+		IGraphics::CORNER_NONE,
+	};
+	for(const int Scale : aScales)
+	{
+		const float VirtualHeight = QmUiVirtualScreenHeight(Scale);
+		const float VirtualWidth = VirtualHeight * Aspect;
+		for(const int ScreenWidth : aScreenWidths)
+		{
+			const float PixelSize = VirtualWidth / (float)ScreenWidth;
+			ASSERT_GT(PixelSize, 0.0f);
+			SRoundedSurfaceParams Params;
+			Params.m_Radius = 8.0f;
+			Params.m_PixelSize = PixelSize;
+			const SRoundedSurfacePlan Plan = ResolveRoundedSurfacePlan(Rect, Params, true);
+			EXPECT_TRUE(Plan.m_UseSdf);
+			const auto IsPixelAligned = [PixelSize](const float Value) {
+				return std::abs(Value - std::round(Value / PixelSize) * PixelSize) < 1e-3f;
+			};
+			EXPECT_TRUE(IsPixelAligned(Plan.m_Rect.x));
+			EXPECT_TRUE(IsPixelAligned(Plan.m_Rect.y));
+			EXPECT_TRUE(IsPixelAligned(Plan.m_Rect.w));
+			EXPECT_TRUE(IsPixelAligned(Plan.m_Rect.h));
+			EXPECT_FLOAT_EQ(Plan.m_Radius, std::min(Plan.m_Rect.w, Plan.m_Rect.h) * 0.5f);
+			for(const int Corners : aCornerMasks)
+			{
+				const vec4 Radii = ResolveRoundedSurfaceCornerRadii(Plan.m_Radius, Corners);
+				EXPECT_FLOAT_EQ(Radii.x, Corners & IGraphics::CORNER_TL ? Plan.m_Radius : 0.0f);
+				EXPECT_FLOAT_EQ(Radii.y, Corners & IGraphics::CORNER_TR ? Plan.m_Radius : 0.0f);
+				EXPECT_FLOAT_EQ(Radii.z, Corners & IGraphics::CORNER_BR ? Plan.m_Radius : 0.0f);
+				EXPECT_FLOAT_EQ(Radii.w, Corners & IGraphics::CORNER_BL ? Plan.m_Radius : 0.0f);
+			}
+			const SRoundedSurfacePlan Fallback = ResolveRoundedSurfacePlan(Rect, Params, false);
+			EXPECT_FALSE(Fallback.m_UseSdf);
+			EXPECT_FLOAT_EQ(Fallback.m_Rect.x, Plan.m_Rect.x);
+			EXPECT_FLOAT_EQ(Fallback.m_Rect.y, Plan.m_Rect.y);
+			EXPECT_FLOAT_EQ(Fallback.m_Rect.w, Plan.m_Rect.w);
+			EXPECT_FLOAT_EQ(Fallback.m_Rect.h, Plan.m_Rect.h);
+			EXPECT_FLOAT_EQ(Fallback.m_Radius, Plan.m_Radius);
+		}
+	}
 }
 
 TEST(QmNewUiMenuBranches, RetinaNameplatesPreferPhysicalPixelAlignment)

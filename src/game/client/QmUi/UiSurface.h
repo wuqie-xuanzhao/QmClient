@@ -17,6 +17,8 @@
 
 class CUi;
 
+// 普通 UI 圆角必须走 DrawRoundedSurface / CUIRect::Draw 公共路径。
+// 旧直绘路径仅允许用于高频 HUD/聊天/名牌/观战/统计板渲染。
 struct SRoundedSurfaceParams
 {
 	float m_Radius = 0.0f;
