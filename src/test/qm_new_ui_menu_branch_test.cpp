@@ -4807,6 +4807,32 @@ TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
 	EXPECT_NE(GraphicsThreaded.find("rounded_sdf_commands_sum"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
+{
+	const std::string Appearance = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Effects = ReadTextFile("src/game/client/components/ui_effects.cpp");
+	const std::string HudEditor = ReadTextFile("src/game/client/components/hud_editor.cpp");
+	const std::string TClientMenus = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string GameClient = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string Chat = ReadTextFile("src/game/client/components/chat.cpp");
+
+	EXPECT_NE(Appearance.find("DrawRoundedSurface(Ui(), MessageBackground"), std::string::npos);
+	EXPECT_EQ(Appearance.find("Graphics()->DrawRectExt(PreviewView"), std::string::npos);
+	EXPECT_NE(Effects.find("DrawRoundedSurface(Ui(), ShadowRect"), std::string::npos);
+	EXPECT_EQ(Effects.find("Graphics()->DrawRect(PreviewX + ShadowOffset"), std::string::npos);
+	EXPECT_NE(HudEditor.find("DrawRoundedSurface(Ui(), HelpRect"), std::string::npos);
+	EXPECT_EQ(HudEditor.find("Graphics()->DrawRect(HelpX, HelpY"), std::string::npos);
+	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), BodyColor"), std::string::npos);
+	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), FeetColor"), std::string::npos);
+	EXPECT_NE(GameClient.find("AccentRect.Draw(AccentColor"), std::string::npos);
+	EXPECT_NE(GameClient.find("TopBorderRect.Draw(BorderColor"), std::string::npos);
+	EXPECT_NE(GameClient.find("BottomBorderRect.Draw(BorderColor"), std::string::npos);
+
+	// 聊天滚动条和实时预览仍属于高频绘制，保留批量直绘路径。
+	EXPECT_NE(Chat.find("Graphics()->DrawRect(ScrollbarRect.x"), std::string::npos);
+	EXPECT_NE(Chat.find("Graphics()->DrawRect(x, PreviewY"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, RetinaNameplatesPreferPhysicalPixelAlignment)
 {
 	EXPECT_FALSE(QmNameplateUsesPhysicalPixelAlignment(1.0f, true));

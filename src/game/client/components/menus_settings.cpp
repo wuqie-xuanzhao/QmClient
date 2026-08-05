@@ -6850,16 +6850,15 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			// Backgrounds first
 			if(!g_Config.m_ClChatOld)
 			{
-				Graphics()->TextureClear();
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClChatBackgroundColor, true)));
+				const ColorRGBA BackgroundColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClChatBackgroundColor, true));
 
 				float TempY = Y;
 				const float RealBackgroundRounding = pChat->MessageRounding() * 2.0f;
 
 				auto &&RenderMessageBackground = [&](int LineIndex) {
-					auto Size = RenderPreview(LineIndex, 0, 0, false);
-					Graphics()->DrawRectExt(PreviewView.x, TempY - RealMsgPaddingY / 2.0f, PreviewView.w, Size.y, RealBackgroundRounding, IGraphics::CORNER_ALL);
+					const auto Size = RenderPreview(LineIndex, 0, 0, false);
+					const CUIRect MessageBackground{PreviewView.x, TempY - RealMsgPaddingY / 2.0f, PreviewView.w, Size.y};
+					DrawRoundedSurface(Ui(), MessageBackground, BackgroundColor, ColorRGBA(), RealBackgroundRounding);
 					return Size.y;
 				};
 
@@ -6888,7 +6887,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					TempY += RenderMessageBackground(PREVIEW_CLIENT);
 				}
 
-				Graphics()->QuadsEnd();
 			}
 
 			// System

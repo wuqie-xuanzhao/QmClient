@@ -4,6 +4,7 @@
 #include <engine/image.h>
 #include <engine/shared/config.h>
 
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/gameclient.h>
 
 #include <algorithm>
@@ -139,7 +140,8 @@ void CUiEffects::RenderScreenshotAnimation()
 	if(Ease > 0.08f)
 	{
 		const float ShadowOffset = 3.0f + 4.0f * Ease;
-		Graphics()->DrawRect(PreviewX + ShadowOffset, PreviewY + ShadowOffset, PreviewW, PreviewH, ColorRGBA(0.0f, 0.0f, 0.0f, 0.22f * Ease * PreviewAlpha), IGraphics::CORNER_ALL, 6.0f);
+		const CUIRect ShadowRect{PreviewX + ShadowOffset, PreviewY + ShadowOffset, PreviewW, PreviewH};
+		DrawRoundedSurface(Ui(), ShadowRect, ColorRGBA(0.0f, 0.0f, 0.0f, 0.22f * Ease * PreviewAlpha), ColorRGBA(), 6.0f);
 	}
 
 	Graphics()->TextureSet(m_ScreenshotAnimation.m_Texture);

@@ -2571,9 +2571,12 @@ void CGameClient::RenderLiveFinishRankHud()
 	const ColorRGBA BorderColor(1.0f, 1.0f, 1.0f, 0.16f * Alpha);
 	const ColorRGBA AccentColor = GetDDTeamColor(pCard->m_Event.m_Team, 0.62f).WithMultipliedAlpha(Alpha);
 	CardRect.Draw(BgColor, IGraphics::CORNER_ALL, 6.0f * ConfigScale);
-	Graphics()->DrawRect(CardRect.x, CardRect.y, 3.0f * ConfigScale, CardRect.h, AccentColor, IGraphics::CORNER_L, 6.0f * ConfigScale);
-	Graphics()->DrawRect(CardRect.x, CardRect.y, CardRect.w, 1.0f * ConfigScale, BorderColor, IGraphics::CORNER_T, 6.0f * ConfigScale);
-	Graphics()->DrawRect(CardRect.x, CardRect.y + CardRect.h - 1.0f * ConfigScale, CardRect.w, 1.0f * ConfigScale, BorderColor, IGraphics::CORNER_B, 6.0f * ConfigScale);
+	const CUIRect AccentRect{CardRect.x, CardRect.y, 3.0f * ConfigScale, CardRect.h};
+	AccentRect.Draw(AccentColor, IGraphics::CORNER_L, 6.0f * ConfigScale);
+	const CUIRect TopBorderRect{CardRect.x, CardRect.y, CardRect.w, 1.0f * ConfigScale};
+	TopBorderRect.Draw(BorderColor, IGraphics::CORNER_T, 6.0f * ConfigScale);
+	const CUIRect BottomBorderRect{CardRect.x, CardRect.y + CardRect.h - 1.0f * ConfigScale, CardRect.w, 1.0f * ConfigScale};
+	BottomBorderRect.Draw(BorderColor, IGraphics::CORNER_B, 6.0f * ConfigScale);
 
 	const float PaddingX = 12.0f * ConfigScale;
 	const float TextX = CardRect.x + PaddingX;
