@@ -37,6 +37,11 @@ inline float QmListBoxEntryOffset(float ElapsedSeconds, float DurationSeconds, f
 	return -Distance * (1.0f - EasedProgress);
 }
 
+constexpr bool QmListBoxEntryAnimationFinished(bool Enabled, bool RenderOnly, float ElapsedSeconds, float DurationSeconds)
+{
+	return !Enabled || (!RenderOnly && (DurationSeconds <= 0.0f || ElapsedSeconds >= DurationSeconds));
+}
+
 inline CUIRect QmListBoxEntryAnimatedRect(const CUIRect &Rect, float OffsetY)
 {
 	CUIRect AnimatedRect = Rect;

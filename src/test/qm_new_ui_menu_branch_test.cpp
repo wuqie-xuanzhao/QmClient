@@ -4622,6 +4622,7 @@ TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
 	const std::string Forms = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
 	const std::string Surface = ReadTextFile("src/game/client/QmUi/UiSurface.cpp");
 	const std::string SurfaceHeader = ReadTextFile("src/game/client/QmUi/UiSurface.h");
+	const std::string UiRect = ReadTextFile("src/game/client/ui_rect.cpp");
 	const std::string Containers = ReadTextFile("src/game/client/QmUi/UiContainers.h");
 	const std::string Overlays = ReadTextFile("src/game/client/QmUi/UiOverlays.h");
 	const std::string Ui = ReadTextFile("src/game/client/ui.cpp");
@@ -4640,6 +4641,8 @@ TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
 	EXPECT_NE(SurfaceHeader.find("Plan.m_UseSdf = HasSdf"), std::string::npos);
 	EXPECT_NE(Surface.find("Params.m_CornerRadii = Plan.m_CornerRadii;"), std::string::npos);
 	EXPECT_NE(Surface.find("Params.m_Params = vec4(Plan.m_BorderWidth, Plan.m_PixelSize, Plan.m_PixelSize * 2.0f, 0.0f);"), std::string::npos);
+	EXPECT_NE(UiRect.find("DrawRoundedSurface(ms_pGraphics, *this"), std::string::npos);
+	EXPECT_EQ(UiRect.find("ResolveRoundedRectGeometry(x, y, w, h, Rounding"), std::string::npos);
 	EXPECT_NE(Ui.find("DrawRoundedSurface(this, ClearButton"), std::string::npos);
 	EXPECT_NE(FunctionBody(Ui, "bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions)").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
 	EXPECT_NE(FunctionBody(Ui, "SEditResult<int64_t> CUi::DoValueSelectorWithState").find("DrawRoundedSurface(this, *pRect"), std::string::npos);

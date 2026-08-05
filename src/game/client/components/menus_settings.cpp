@@ -1004,7 +1004,6 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(GeneralCardCtx, GeneralPage, "general", DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_GeneralSettingsScrollRegion, InputState, SettingsCardMotionSpec(), GeneralVisualOptions);
 	if(!RenderOnly && DeckResult.m_OrderChanged)
@@ -1321,7 +1320,6 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(PlayerCardCtx, PlayerPage, "player", DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_PlayerSettingsScrollRegion, InputState, SettingsCardMotionSpec(), PlayerVisualOptions);
 	if(!RenderOnly && DeckResult.m_OrderChanged)
@@ -3524,7 +3522,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(TeeCardCtx, TeePage, "tee", DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_TeeSettingsScrollRegion, InputState, SettingsCardMotionSpec(), TeeVisualOptions);
 	if(!RenderOnly && ShouldRefresh)
@@ -4195,7 +4192,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(GraphicsCardCtx, GraphicsPage, pDeckTab, DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_GraphicsScrollRegion, InputState, SettingsCardMotionSpec(), GraphicsVisualOptions);
 	if(!RenderOnly && DeckResult.m_OrderChanged)
@@ -5280,7 +5276,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(SoundCardCtx, SoundPage, "sound", DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_SoundScrollRegion, InputState, SettingsCardMotionSpec(), SoundVisualOptions);
 	if(!RenderOnly && DeckResult.m_OrderChanged)
@@ -7811,7 +7806,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(AppearanceCardCtx, AppearancePage, pAppearanceDeckTab, DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_AppearanceSettingsCardScrollRegions[m_AppearanceSettingsTab], InputState, SettingsCardMotionSpec(), AppearanceVisualOptions);
 	if(!RenderOnly && DeckResult.m_OrderChanged)
@@ -8271,7 +8265,6 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
 	InputState.m_pScrollParams = RenderOnly ? nullptr : &ScrollParams;
 	const SSettingsCardDeckResult DeckResult = SettingsCardDeckForRenderPass().RenderCached(DDNetCardCtx, DDNetPage, "ddnet", DefinitionsRevision, BuildDefinitions, SettingsCardOrderModelForRenderPass(), RenderOnly ? nullptr : &s_DDNetSettingsCardScrollRegion, InputState, SettingsCardMotionSpec(), DDNetVisualOptions);
 	if(!RenderOnly && DeckResult.m_OrderChanged)

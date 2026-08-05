@@ -102,7 +102,9 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	const bool EntryAnimationEnabled = g_Config.m_QmUiListEntryAnimations != 0 && g_Config.m_QmUiMotionLevel > 0;
 	const int64_t InactiveGap = Frequency * 2 / 5;
 	const bool RenderOnly = Ui()->RenderOnly();
-	if(QmListBoxShouldStartEntryAnimation(EntryAnimationEnabled, RenderOnly, m_LastRenderTime, Now, InactiveGap))
+	if(!EntryAnimationEnabled && !RenderOnly)
+		m_EntryAnimationStartTime = 0;
+	else if(QmListBoxShouldStartEntryAnimation(EntryAnimationEnabled, RenderOnly, m_LastRenderTime, Now, InactiveGap))
 		m_EntryAnimationStartTime = Now;
 	m_EntryAnimationOffset = 0.0f;
 	if(!RenderOnly && EntryAnimationEnabled && m_EntryAnimationStartTime > 0)
@@ -111,6 +113,8 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 		const float EntryDistance = g_Config.m_QmUiMotionLevel == 1 ? 6.0f : 12.0f;
 		const float ElapsedSeconds = static_cast<float>(Now - m_EntryAnimationStartTime) / static_cast<float>(Frequency);
 		m_EntryAnimationOffset = QmListBoxEntryOffset(ElapsedSeconds, EntryDuration, EntryDistance);
+		if(QmListBoxEntryAnimationFinished(EntryAnimationEnabled, RenderOnly, ElapsedSeconds, EntryDuration))
+			m_EntryAnimationStartTime = 0;
 	}
 	if(!RenderOnly)
 		m_LastRenderTime = Now;
