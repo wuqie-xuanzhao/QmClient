@@ -265,17 +265,23 @@ function SendServiceResult(res, Result)
 
 function RegisterDeveloperPresenceRoutes(app, Service, Options = {})
 {
+	const CheckRateLimit = (req, res) => {
+		if(!Options.CheckRateLimit || Options.CheckRateLimit(req))
+			return true;
+		res.status(429).json({ ok: false, error: "rate_limited" });
+		return false;
+	};
+
 	app.post("/api/v1/developers/presence", (req, res) => {
-		if(Options.CheckRateLimit && !Options.CheckRateLimit(req))
-		{
-			res.status(429).json({ ok: false, error: "rate_limited" });
+		if(!CheckRateLimit(req, res))
 			return;
-		}
 		const Authorization = req.get ? req.get("authorization") : req.headers && req.headers.authorization;
 		SendServiceResult(res, Service.ReportPresence(Authorization, req.body));
 	});
 
 	app.get("/api/v1/developers/presences", (req, res) => {
+		if(!CheckRateLimit(req, res))
+			return;
 		SendServiceResult(res, Service.GetPresences(req.query && req.query.server_address));
 	});
 }

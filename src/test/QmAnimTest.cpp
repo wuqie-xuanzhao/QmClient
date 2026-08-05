@@ -2560,6 +2560,24 @@ TEST(UiV2ScrollPolicy, ListBoxInitialSelectionRequestsOneAnimatedReveal)
 	EXPECT_FALSE(QmListBoxInitialScrollRemainsPending(false, -1));
 }
 
+TEST(UiV2ScrollPolicy, ListBoxEntryAnimationStartsAfterAnInactiveGap)
+{
+	EXPECT_TRUE(QmListBoxShouldStartEntryAnimation(true, false, 0, 1000, 400));
+	EXPECT_TRUE(QmListBoxShouldStartEntryAnimation(true, false, 500, 1000, 400));
+	EXPECT_FALSE(QmListBoxShouldStartEntryAnimation(true, false, 600, 1000, 400));
+	EXPECT_FALSE(QmListBoxShouldStartEntryAnimation(false, false, 0, 1000, 400));
+	EXPECT_FALSE(QmListBoxShouldStartEntryAnimation(true, true, 0, 1000, 400));
+	EXPECT_NEAR(QmListBoxEntryOffset(0.0f, 0.16f, 12.0f), -12.0f, 0.001f);
+	EXPECT_LT(QmListBoxEntryOffset(0.08f, 0.16f, 12.0f), 0.0f);
+	EXPECT_NEAR(QmListBoxEntryOffset(0.16f, 0.16f, 12.0f), 0.0f, 0.001f);
+	const CUIRect BaseRect{10.0f, 20.0f, 100.0f, 18.0f};
+	const CUIRect AnimatedRect = QmListBoxEntryAnimatedRect(BaseRect, -12.0f);
+	EXPECT_FLOAT_EQ(AnimatedRect.x, BaseRect.x);
+	EXPECT_FLOAT_EQ(AnimatedRect.y, 8.0f);
+	EXPECT_FLOAT_EQ(AnimatedRect.w, BaseRect.w);
+	EXPECT_FLOAT_EQ(AnimatedRect.h, BaseRect.h);
+}
+
 TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
 {
 	SQmScrollRequest Settings;

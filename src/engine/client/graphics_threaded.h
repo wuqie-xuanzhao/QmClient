@@ -862,7 +862,7 @@ public:
 	virtual bool RenderTargetExternalPassRequiresSingleSample() { return false; }
 	virtual const char *RenderTargetSupportReason() { return HasRenderTargets() ? "supported" : "unsupported_by_backend"; }
 	virtual bool Uses2DTextureArrays() { return false; }
-	virtual bool HasTextureArraysSupport() { return false; }
+	virtual bool HasTextureArraysSupport() const { return false; }
 	virtual const char *GetErrorString() { return nullptr; }
 
 	virtual const char *GetVendorString() = 0;
@@ -1493,7 +1493,7 @@ public:
 	bool IsTextBufferingEnabled() override { return m_GLTextBufferingEnabled; }
 	bool IsQuadContainerBufferingEnabled() override { return m_GLQuadContainerBufferingEnabled; }
 	bool Uses2DTextureArrays() override { return m_GLUses2DTextureArrays; }
-	bool HasTextureArraysSupport() override { return m_GLHasTextureArraysSupport; }
+	bool HasTextureArraysSupport() const override { return m_GLHasTextureArraysSupport; }
 
 	const char *GetVendorString() override;
 	const char *GetVersionString() override;

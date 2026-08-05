@@ -2,11 +2,35 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "ui_rect.h"
 
+#include <base/vmath.h>
+
+#include <engine/client/rounded_rect_geometry.h>
 #include <engine/graphics.h>
 
 #include <algorithm>
+#include <cmath>
 
 IGraphics *CUIRect::ms_pGraphics = nullptr;
+
+namespace
+{
+	float CurrentPixelSize(IGraphics *pGraphics)
+	{
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		const int ScreenWidth = pGraphics->ScreenWidth();
+		return ScreenWidth > 0 ? std::max(std::abs(ScreenX1 - ScreenX0) / ScreenWidth, 0.0001f) : 0.0001f;
+	}
+
+	vec4 CornerRadii(const float Radius, const int Corners)
+	{
+		return vec4(
+			Corners & IGraphics::CORNER_TL ? Radius : 0.0f,
+			Corners & IGraphics::CORNER_TR ? Radius : 0.0f,
+			Corners & IGraphics::CORNER_BR ? Radius : 0.0f,
+			Corners & IGraphics::CORNER_BL ? Radius : 0.0f);
+	}
+}
 
 CUIRect CUIRect::Intersection(const CUIRect &Other) const
 {
@@ -180,6 +204,19 @@ bool CUIRect::Inside(vec2 Point) const
 
 void CUIRect::Draw(ColorRGBA Color, int Corners, float Rounding) const
 {
+	if(ms_pGraphics->HasRoundedRectSdf() && Rounding > 0.0f && Corners != IGraphics::CORNER_NONE)
+	{
+		const float PixelSize = CurrentPixelSize(ms_pGraphics);
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, Rounding, PixelSize);
+		IGraphics::SRoundedRectSdfParams Params;
+		Params.m_Rect = vec4(Geometry.m_X, Geometry.m_Y, Geometry.m_W, Geometry.m_H);
+		Params.m_FillColor = vec4(Color.r, Color.g, Color.b, Color.a);
+		Params.m_BorderColor = Params.m_FillColor;
+		Params.m_CornerRadii = CornerRadii(Geometry.m_Rounding, Corners);
+		Params.m_Params = vec4(0.0f, PixelSize, PixelSize * 2.0f, 0.0f);
+		ms_pGraphics->RenderRoundedRectSdf(Params);
+		return;
+	}
 	ms_pGraphics->DrawRect(x, y, w, h, Color, Corners, Rounding);
 }
 

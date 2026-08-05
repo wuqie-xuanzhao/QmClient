@@ -5,6 +5,9 @@
 
 #include "ui_scrollregion.h"
 
+#include <algorithm>
+#include <cstdint>
+
 constexpr float QmListBoxScrollbarMetric(float PolicyValue, float CurrentValue, bool Overridden)
 {
 	return Overridden ? CurrentValue : PolicyValue;
@@ -18,6 +21,27 @@ constexpr bool QmListBoxShouldScrollToInitialSelection(bool InitialScrollPending
 constexpr bool QmListBoxInitialScrollRemainsPending(bool InitialScrollPending, int SelectedIndex)
 {
 	return InitialScrollPending && SelectedIndex < 0;
+}
+
+constexpr bool QmListBoxShouldStartEntryAnimation(bool Enabled, bool RenderOnly, int64_t LastRenderTime, int64_t Now, int64_t InactiveGap)
+{
+	return Enabled && !RenderOnly && (LastRenderTime == 0 || Now - LastRenderTime > InactiveGap);
+}
+
+inline float QmListBoxEntryOffset(float ElapsedSeconds, float DurationSeconds, float Distance)
+{
+	if(DurationSeconds <= 0.0f || ElapsedSeconds >= DurationSeconds)
+		return 0.0f;
+	const float Progress = std::clamp(ElapsedSeconds / DurationSeconds, 0.0f, 1.0f);
+	const float EasedProgress = 1.0f - (1.0f - Progress) * (1.0f - Progress);
+	return -Distance * (1.0f - EasedProgress);
+}
+
+inline CUIRect QmListBoxEntryAnimatedRect(const CUIRect &Rect, float OffsetY)
+{
+	CUIRect AnimatedRect = Rect;
+	AnimatedRect.y += OffsetY;
+	return AnimatedRect;
 }
 
 struct CListboxItem
@@ -57,6 +81,9 @@ private:
 	bool m_Active;
 	bool m_HideScrollbar;
 	bool m_InitialScrollPending;
+	float m_EntryAnimationOffset;
+	int64_t m_LastRenderTime;
+	int64_t m_EntryAnimationStartTime;
 	ColorRGBA m_SelectedItemActiveColor;
 	ColorRGBA m_SelectedItemInactiveColor;
 	ColorRGBA m_HoveredItemColor;

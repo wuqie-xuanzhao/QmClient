@@ -35,6 +35,9 @@ void CListBox::Reset()
 	m_Active = true;
 	m_HideScrollbar = false;
 	m_InitialScrollPending = true;
+	m_EntryAnimationOffset = 0.0f;
+	m_LastRenderTime = 0;
+	m_EntryAnimationStartTime = 0;
 	m_BackgroundCorners = IGraphics::CORNER_ALL;
 	m_SelectedItemActiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
 	m_SelectedItemInactiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
@@ -94,6 +97,23 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	m_ListBoxItemsPerRow = ItemsPerRow;
 	m_ListBoxItemActivated = false;
 	m_ListBoxItemSelected = false;
+	const int64_t Now = time_get();
+	const int64_t Frequency = maximum<int64_t>(1, time_freq());
+	const bool EntryAnimationEnabled = g_Config.m_QmUiListEntryAnimations != 0 && g_Config.m_QmUiMotionLevel > 0;
+	const int64_t InactiveGap = Frequency * 2 / 5;
+	const bool RenderOnly = Ui()->RenderOnly();
+	if(QmListBoxShouldStartEntryAnimation(EntryAnimationEnabled, RenderOnly, m_LastRenderTime, Now, InactiveGap))
+		m_EntryAnimationStartTime = Now;
+	m_EntryAnimationOffset = 0.0f;
+	if(!RenderOnly && EntryAnimationEnabled && m_EntryAnimationStartTime > 0)
+	{
+		const float EntryDuration = g_Config.m_QmUiMotionLevel == 1 ? 0.10f : 0.16f;
+		const float EntryDistance = g_Config.m_QmUiMotionLevel == 1 ? 6.0f : 12.0f;
+		const float ElapsedSeconds = static_cast<float>(Now - m_EntryAnimationStartTime) / static_cast<float>(Frequency);
+		m_EntryAnimationOffset = QmListBoxEntryOffset(ElapsedSeconds, EntryDuration, EntryDistance);
+	}
+	if(!RenderOnly)
+		m_LastRenderTime = Now;
 	if(QmListBoxShouldScrollToInitialSelection(m_InitialScrollPending, SelectedIndex))
 	{
 		m_ListBoxUpdateScroll = true;
@@ -157,6 +177,7 @@ CListboxItem CListBox::DoNextRow()
 	m_RowView.VSplitLeft(m_RowView.w / (m_ListBoxItemsPerRow - m_ListBoxItemIndex % m_ListBoxItemsPerRow), &Item.m_Rect, &m_RowView);
 
 	Item.m_Selected = m_ListBoxSelectedIndex == m_ListBoxItemIndex;
+	Item.m_Rect = QmListBoxEntryAnimatedRect(Item.m_Rect, m_EntryAnimationOffset);
 	Item.m_Visible = !m_ScrollRegion.RectClipped(Item.m_Rect);
 
 	m_ListBoxItemIndex++;
@@ -246,7 +267,9 @@ CListboxItem CListBox::DoCustomRow(float Height, bool ScrollHere)
 {
 	CListboxItem Item = {};
 	m_ListBoxView.HSplitTop(Height, &Item.m_Rect, &m_ListBoxView);
-	Item.m_Visible = m_ScrollRegion.AddRect(Item.m_Rect, ScrollHere);
+	m_ScrollRegion.AddRect(Item.m_Rect, ScrollHere);
+	Item.m_Rect = QmListBoxEntryAnimatedRect(Item.m_Rect, m_EntryAnimationOffset);
+	Item.m_Visible = !m_ScrollRegion.RectClipped(Item.m_Rect);
 	return Item;
 }
 
