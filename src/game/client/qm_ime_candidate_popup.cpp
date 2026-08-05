@@ -393,12 +393,16 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	CUIRect PanelDropA = Panel;
 	PanelDropA.x += Ime.m_ShadowX;
 	PanelDropA.y += Ime.m_ShadowY * 0.65f;
-	DrawRoundedSurface(pGraphics, PanelDropA, WithAlpha(Ime.m_PanelShadow, Alpha * 0.46f), ColorRGBA(), Presentation.m_Radius, 0.0f, PixelSize);
+	SRoundedSurfaceParams SurfaceParams;
+	SurfaceParams.m_Radius = Presentation.m_Radius;
+	SurfaceParams.m_PixelSize = PixelSize;
+	DrawRoundedSurface(pGraphics, PanelDropA, WithAlpha(Ime.m_PanelShadow, Alpha * 0.46f), ColorRGBA(), SurfaceParams);
 	CUIRect PanelDropB = Panel;
 	PanelDropB.y += Ime.m_ShadowY * 1.7f;
-	DrawRoundedSurface(pGraphics, PanelDropB, WithAlpha(Ime.m_PanelShadow, Alpha * 0.28f), ColorRGBA(), Presentation.m_Radius, 0.0f, PixelSize);
+	DrawRoundedSurface(pGraphics, PanelDropB, WithAlpha(Ime.m_PanelShadow, Alpha * 0.28f), ColorRGBA(), SurfaceParams);
 
-	DrawRoundedSurface(pGraphics, Panel, WithAlpha(Ime.m_PanelBg, Alpha), WithAlpha(Ime.m_PanelBorder, Alpha), Presentation.m_Radius, Ime.m_BorderInset, PixelSize);
+	SurfaceParams.m_BorderWidth = Ime.m_BorderInset;
+	DrawRoundedSurface(pGraphics, Panel, WithAlpha(Ime.m_PanelBg, Alpha), WithAlpha(Ime.m_PanelBorder, Alpha), SurfaceParams);
 	CUIRect PanelContent;
 	Panel.Margin(Ime.m_BorderInset, &PanelContent);
 
@@ -472,7 +476,10 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 			DrawRect.y = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::POS_Y, m_Presentation.m_TargetSelectedY, SelectedSpring, 2, 0.01f);
 			DrawRect.w = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::WIDTH, m_Presentation.m_TargetSelectedWidth, SelectedSpring, 2, 0.01f);
 			DrawRect.h = ResolveUiPresentationStateValue(AnimRuntime, SelectedNode, EUiAnimProperty::HEIGHT, m_Presentation.m_TargetSelectedHeight, SelectedSpring, 2, 0.01f);
-			DrawRoundedSurface(pGraphics, DrawRect, WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha), ColorRGBA(), maximum(1.0f, DrawRect.h * 0.5f), 0.0f, PixelSize);
+			SRoundedSurfaceParams CandidateSurfaceParams;
+			CandidateSurfaceParams.m_Radius = maximum(1.0f, DrawRect.h * 0.5f);
+			CandidateSurfaceParams.m_PixelSize = PixelSize;
+			DrawRoundedSurface(pGraphics, DrawRect, WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha), ColorRGBA(), CandidateSurfaceParams);
 			break;
 		}
 
