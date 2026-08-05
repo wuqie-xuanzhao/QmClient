@@ -5240,11 +5240,14 @@ Input overlay
 Input overlay display
 == 入力オーバーレイ表示
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == 入力オーバーレイの不透明度（パーセント）
-
-Input overlay scale (percent)
-== 入力オーバーレイのスケール（パーセント）
 
 Input overlay X position (percent)
 == 入力オーバーレイ X 位置（パーセント）
@@ -5461,6 +5464,9 @@ Key Sticking: Reset Self
 
 Keyboard focus ring color
 == キーボードフォーカスリングの色
+
+Keyboard size
+== キーボードサイズ
 
 Keyword Reply
 == キーワード返信
@@ -6457,6 +6463,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == メニュー/エディターでのマウス感度
+
+Mouse size
+== マウスサイズ
 
 Move left
 == 左に移動
@@ -10217,6 +10226,12 @@ Show toast
 Show translation
 == 翻訳を表示
 
+Show Tune Zone effects
+== Tune Zone 効果を表示
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
+
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 自身のプレイヤーに影響するチューニングパラメーターを表示（0 = オフ、1 = 変更のみ表示、2 = すべて表示）
 
@@ -11764,6 +11779,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == チューン変数を値に設定するか、現在の値を表示
+
+Tune Zone effect icon legend
+== Tune Zone effect icon legend
 
 Tutorial
 == チュートリアル

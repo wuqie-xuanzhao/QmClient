@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import os
 import subprocess
 import sys
@@ -25,9 +26,15 @@ class QmBuildIconMsdfTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="qm-build-icon-msdf-test-") as temp_dir:
             temp_path = Path(temp_dir)
             source_dir = temp_path / "source"
+            shared_source_dir = temp_path / "shared-source"
             output_dir = temp_path / "output"
             source_dir.mkdir()
+            shared_source_dir.mkdir()
             (source_dir / "icon-test.svg").write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path d="M0 0h1v1H0z"/></svg>',
+                encoding="utf-8",
+            )
+            (shared_source_dir / "icon-shared.svg").write_text(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path d="M0 0h1v1H0z"/></svg>',
                 encoding="utf-8",
             )
@@ -66,7 +73,18 @@ class QmBuildIconMsdfTest(unittest.TestCase):
             env = os.environ.copy()
             env["PATH"] = f"{temp_path}{os.pathsep}{env['PATH']}"
             subprocess.run(
-                [sys.executable, str(BUILD_SCRIPT), "--source", str(source_dir), "--output", str(output_dir), "--atlas-name", "test_icons"],
+                [
+                    sys.executable,
+                    str(BUILD_SCRIPT),
+                    "--source",
+                    str(source_dir),
+                    "--source",
+                    str(shared_source_dir),
+                    "--output",
+                    str(output_dir),
+                    "--atlas-name",
+                    "test_icons",
+                ],
                 check=True,
                 cwd=REPO_ROOT,
                 env=env,
@@ -76,6 +94,9 @@ class QmBuildIconMsdfTest(unittest.TestCase):
                 self.assertEqual(atlas.mode, "RGBA")
                 self.assertEqual(atlas.getpixel((8, 8)), (17, 29, 71, 255))
                 self.assertEqual(atlas.getpixel((0, 0)), (0, 0, 0, 255))
+
+            manifest = json.loads((output_dir / "test_icons_msdf.json").read_text(encoding="utf-8"))
+            self.assertEqual(set(manifest["icons"]), {"test", "shared"})
 
     def test_committed_msdf_atlases_are_rgba_distance_fields_with_padding(self) -> None:
         manifests = {}
@@ -123,6 +144,29 @@ class QmBuildIconMsdfTest(unittest.TestCase):
                         self.assertIsNone(image.crop(region).convert("RGB").getbbox(), name)
 
         self.assertEqual(manifests["regular"]["icons"], manifests["bold"]["icons"])
+
+    def test_multishape_svg_uses_raster_sdf(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="qm-build-icon-msdf-test-") as temp_dir:
+            temp_path = Path(temp_dir)
+            source = temp_path / "icon-multishape.svg"
+            source.write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">'
+                '<circle cx="64" cy="128" r="40" fill="currentColor"/>'
+                '<path d="M128 96h96v64h-96z" fill="currentColor"/>'
+                '</svg>',
+                encoding="utf-8",
+            )
+            output = temp_path / "field.png"
+
+            msdf_module = importlib.util.spec_from_file_location("qm_build_icon_msdf", BUILD_SCRIPT)
+            assert msdf_module is not None and msdf_module.loader is not None
+            module = importlib.util.module_from_spec(msdf_module)
+            msdf_module.loader.exec_module(module)
+            module.render_raster_sdf(source, output)
+
+            image = Image.open(output).convert("RGBA")
+            self.assertGreater(len(set(pixels(image.convert("RGB")))), 1)
+            self.assertEqual(image.getpixel((0, 0))[3], 255)
 
 
 if __name__ == "__main__":

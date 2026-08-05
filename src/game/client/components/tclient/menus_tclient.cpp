@@ -5255,8 +5255,8 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		LogTClientPerfStageEx("tclient_statusbar", "editor", ETClientSettingsPerfStage::STATIC_LAYER, EditorTimer.ElapsedMs());
 	};
 	const uint64_t StatusLayoutRevision = ((uint64_t)GameClient()->m_StatusBar.m_StatusItemTypes.size() << 32) ^
-		(uint64_t)GameClient()->m_StatusBar.m_StatusBarItems.size() ^
-		((uint64_t)(s_SelectedItem + 2) << 16) ^ (uint64_t)(s_TypeSelectedOld + 2);
+					      (uint64_t)GameClient()->m_StatusBar.m_StatusBarItems.size() ^
+					      ((uint64_t)(s_SelectedItem + 2) << 16) ^ (uint64_t)(s_TypeSelectedOld + 2);
 	static std::array<CTClientSettingsCardFrameBinding, 2> s_aCardBindings;
 	s_aCardBindings[0].Bind(MeasureSettings, RenderSettings);
 	s_aCardBindings[1].Bind(MeasurePreview, RenderPreview);

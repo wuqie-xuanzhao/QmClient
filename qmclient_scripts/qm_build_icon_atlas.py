@@ -29,7 +29,7 @@ ICON_ALIASES = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", type=Path, required=True)
+    parser.add_argument("--source", type=Path, action="append", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--sizes", type=int, nargs="+", default=[1, 2, 4])
     parser.add_argument("--base-size", type=int, default=24)
@@ -44,6 +44,23 @@ def find_renderer() -> str | None:
         if path:
             return path
     return None
+
+
+def collect_svg_files(source_dirs: list[Path]) -> list[Path]:
+    svg_files = sorted(
+        (svg for source_dir in source_dirs for svg in source_dir.glob("*.svg")),
+        key=lambda svg: svg.name,
+    )
+    if not svg_files:
+        raise SystemExit(f"No SVG files found in {', '.join(str(source_dir) for source_dir in source_dirs)}")
+
+    icon_names: set[str] = set()
+    for svg in svg_files:
+        name = ICON_ALIASES.get(svg.stem.removeprefix("icon-"), svg.stem.removeprefix("icon-"))
+        if name in icon_names:
+            raise SystemExit(f"Duplicate icon name: {name}")
+        icon_names.add(name)
+    return svg_files
 
 
 def _float_attr(node: ET.Element, name: str, default: float = 0.0) -> float:
@@ -644,7 +661,7 @@ def icon_id(path: Path) -> str:
 
 
 def build_scale(
-    source_dir: Path,
+    source_dirs: list[Path],
     output_dir: Path,
     atlas_name: str,
     scale: int,
@@ -658,9 +675,7 @@ def build_scale(
 
     renderer = find_renderer()
 
-    svg_files = sorted(source_dir.glob("*.svg"))
-    if not svg_files:
-        raise SystemExit(f"No SVG files found in {source_dir}")
+    svg_files = collect_svg_files(source_dirs)
 
     icon_size = base_size * scale
     pad = padding * scale

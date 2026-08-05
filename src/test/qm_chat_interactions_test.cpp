@@ -823,6 +823,18 @@ TEST(QmChatInteractions, BuildsEscapedSpectateCommand)
 	EXPECT_STREQ(aCommand, "say /spec \"Name \\\"A\\\"\"");
 }
 
+TEST(QmChatRepeat, TeamMessagesKeepTheirSendChannel)
+{
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string OnMessage = SourceFunctionBody(TClient, "void CTClient::OnMessage(");
+	const std::string RepeatLastMessage = SourceFunctionBody(TClient, "void CTClient::RepeatLastMessage()");
+
+	EXPECT_NE(OnMessage.find("const bool IsRepeatChatChannel = pMsg->m_Team == 0 || pMsg->m_Team == 1;"), std::string::npos);
+	EXPECT_NE(OnMessage.find("IsRepeatChatChannel && pMsg->m_pMessage != nullptr"), std::string::npos);
+	EXPECT_NE(OnMessage.find("m_LastChatTeam = pMsg->m_Team;"), std::string::npos);
+	EXPECT_NE(RepeatLastMessage.find("GameClient()->m_Chat.SendChat(m_LastChatTeam, m_aLastChatMessage);"), std::string::npos);
+}
+
 TEST(QmChatInteractions, ServerSystemMessagesDoNotUseVisibleStarPrefix)
 {
 	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-1, true), "");

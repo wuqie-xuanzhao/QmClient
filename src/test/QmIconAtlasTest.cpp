@@ -59,6 +59,19 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_CHECK), "satellite-check");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE), "satellite-spectator-eye");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED), "satellite-spectator-eye-closed");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_GRAVITY), "tune-gravity");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_MOVEMENT), "tune-movement");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_JUMP), "tune-jump");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_HOOK), "tune-hook");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_COLLISION), "tune-collision");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_GUN_JETPACK), "tune-gun-jetpack");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_SHOTGUN), "tune-shotgun");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_GRENADE_EXPLOSION), "tune-grenade-explosion");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_LASER), "tune-laser");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_HAMMER), "tune-hammer");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_WEAPON_FIRE_RATE), "tune-weapon-fire-rate");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_VELRAMP), "tune-velramp");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_ELASTICITY), "tune-elasticity");
 }
 
 TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
@@ -325,12 +338,20 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 		const json_value *pIcons = JsonObject(pRoot, "icons");
 		const int AtlasWidth = JsonInt(pAtlas, "width");
 		const int AtlasHeight = JsonInt(pAtlas, "height");
+		constexpr int FieldSize = 48;
+		constexpr int Padding = 8;
+		constexpr int CellSize = FieldSize + Padding * 2;
+		constexpr int IconCount = static_cast<int>(EQmIcon::COUNT);
+		int Columns = 1;
+		while(Columns * Columns < IconCount)
+			++Columns;
+		const int Rows = (IconCount + Columns - 1) / Columns;
 		EXPECT_EQ(JsonInt(pRoot, "version"), 2);
 		EXPECT_STREQ(JsonString(pRoot, "kind"), "msdf");
 		EXPECT_EQ(JsonInt(pRoot, "px_range"), 6);
-		EXPECT_EQ(AtlasWidth, 256);
-		EXPECT_EQ(AtlasHeight, 256);
-		EXPECT_EQ(JsonInt(pAtlas, "padding"), 8);
+		EXPECT_EQ(AtlasWidth, Columns * CellSize);
+		EXPECT_EQ(AtlasHeight, Rows * CellSize);
+		EXPECT_EQ(JsonInt(pAtlas, "padding"), Padding);
 
 		for(int IconIndex = 0; IconIndex < static_cast<int>(EQmIcon::COUNT); ++IconIndex)
 		{
@@ -344,8 +365,8 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 			const int W = JsonInt(pEntry, "w");
 			const int H = JsonInt(pEntry, "h");
 
-			EXPECT_EQ(W, 48) << pIconName;
-			EXPECT_EQ(H, 48) << pIconName;
+			EXPECT_EQ(W, FieldSize) << pIconName;
+			EXPECT_EQ(H, FieldSize) << pIconName;
 			EXPECT_GE(X, 0) << pIconName;
 			EXPECT_GE(Y, 0) << pIconName;
 			EXPECT_LE(X + W, AtlasWidth) << pIconName;

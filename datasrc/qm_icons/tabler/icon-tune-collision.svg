@@ -1,0 +1,6 @@
+<!-- QmClient hand-drawn Tune Zone collision icon: two tee bodies colliding. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <circle cx="62" cy="128" r="42" fill="currentColor"/>
+  <circle cx="194" cy="128" r="42" fill="currentColor"/>
+  <path d="m128 64 12 38 34-18-18 34 38 10-38 10 18 34-34-18-12 38-12-38-34 18 18-34-38-10 38-10-18-34 34 18 12-38Z" fill="currentColor"/>
+</svg>

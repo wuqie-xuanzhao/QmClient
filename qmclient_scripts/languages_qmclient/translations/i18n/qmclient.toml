@@ -17680,6 +17680,28 @@ turkish = "Takımı göster"
 polish = "Pokaż drużynę"
 
 [[message]]
+key = "Show Tune Zone effects"
+[message.translations]
+japanese = "Tune Zone 効果を表示"
+korean = "Tune Zone 효과 표시"
+simplified_chinese = "显示 Tune Zone 效果"
+traditional_chinese = "顯示 Tune Zone 效果"
+
+[[message]]
+key = "Tune Zone effect icon legend"
+[message.translations]
+simplified_chinese = "Tune Zone 效果图标说明"
+traditional_chinese = "Tune Zone 效果圖示說明"
+russian = "Показывать эффекты Tune Zone"
+german = "Tune-Zone-Effekte anzeigen"
+spanish = "Mostrar efectos de Tune Zone"
+french = "Afficher les effets de Tune Zone"
+brazilian_portuguese = "Mostrar efeitos da Tune Zone"
+portuguese = "Mostrar efeitos da Tune Zone"
+turkish = "Tune Zone etkilerini göster"
+polish = "Pokaż efekty Tune Zone"
+
+[[message]]
 key = "Show team on HUD Dynamic Island"
 [message.translations]
 simplified_chinese = "HUD 灵动岛显示队伍"
@@ -25765,3 +25787,53 @@ brazilian_portuguese = "Cor da superfície do placar"
 portuguese = "Cor da superfície do placar"
 turkish = "Skor tablosu yüzey rengi"
 polish = "Kolor powierzchni tablicy wyników"
+
+[[message]]
+key = "Keyboard size"
+[message.translations]
+simplified_chinese = "键盘大小"
+traditional_chinese = "鍵盤大小"
+japanese = "キーボードサイズ"
+korean = "키보드 크기"
+russian = "Размер клавиатуры"
+german = "Tastaturgröße"
+spanish = "Tamaño del teclado"
+french = "Taille du clavier"
+brazilian_portuguese = "Tamanho do teclado"
+portuguese = "Tamanho do teclado"
+turkish = "Klavye boyutu"
+polish = "Rozmiar klawiatury"
+
+[[message]]
+key = "Mouse size"
+[message.translations]
+simplified_chinese = "鼠标大小"
+traditional_chinese = "滑鼠大小"
+japanese = "マウスサイズ"
+korean = "마우스 크기"
+russian = "Размер мыши"
+german = "Mausgröße"
+spanish = "Tamaño del ratón"
+french = "Taille de la souris"
+brazilian_portuguese = "Tamanho do mouse"
+portuguese = "Tamanho do rato"
+turkish = "Fare boyutu"
+polish = "Rozmiar myszy"
+
+[[message]]
+key = "Input overlay keyboard scale (percent)"
+[message.translations]
+simplified_chinese = "输入覆盖键盘比例（百分比）"
+traditional_chinese = "輸入覆蓋鍵盤比例（百分比）"
+
+[[message]]
+key = "Input overlay mouse scale (percent)"
+[message.translations]
+simplified_chinese = "输入覆盖鼠标比例（百分比）"
+traditional_chinese = "輸入覆蓋滑鼠比例（百分比）"
+
+[[message]]
+key = "Show Tune Zone effects on HUD Dynamic Island"
+[message.translations]
+simplified_chinese = "HUD 灵动岛显示 Tune Zone 效果"
+traditional_chinese = "HUD 靈動島顯示 Tune Zone 效果"

@@ -4,6 +4,7 @@
 #include <engine/graphics.h>
 
 #include <game/client/components/hud_media_island_logic.h>
+#include <game/client/components/qmclient/tune_zone_effects.h>
 
 #include <gtest/gtest.h>
 
@@ -35,6 +36,188 @@ namespace
 	{
 		return QmHudMediaIslandUpdateTrackSnapshots(Current, Outgoing, HasIdentity, TransitionActive, NeedsNodeReset, StartTick, Now, Input);
 	}
+}
+
+TEST(QmTuneZoneEffects, MapsEveryEffectiveTuningParameterToItsCategory)
+{
+	using ECategory = EQmTuneZoneEffectCategory;
+	static_assert(sizeof(CTuningParams) == sizeof(int) * 47);
+	constexpr std::array<ECategory, 47> aExpectedCategories = {
+		ECategory::MOVEMENT,
+		ECategory::MOVEMENT,
+		ECategory::MOVEMENT,
+		ECategory::JUMP,
+		ECategory::JUMP,
+		ECategory::MOVEMENT,
+		ECategory::MOVEMENT,
+		ECategory::MOVEMENT,
+		ECategory::HOOK,
+		ECategory::HOOK,
+		ECategory::HOOK,
+		ECategory::HOOK,
+		ECategory::GRAVITY,
+		ECategory::VELRAMP,
+		ECategory::VELRAMP,
+		ECategory::VELRAMP,
+		ECategory::GUN_JETPACK,
+		ECategory::GUN_JETPACK,
+		ECategory::GUN_JETPACK,
+		ECategory::SHOTGUN,
+		ECategory::SHOTGUN,
+		ECategory::UNUSED,
+		ECategory::UNUSED,
+		ECategory::GRENADE_EXPLOSION,
+		ECategory::GRENADE_EXPLOSION,
+		ECategory::GRENADE_EXPLOSION,
+		ECategory::LASER,
+		ECategory::LASER,
+		ECategory::LASER,
+		ECategory::LASER,
+		ECategory::UNUSED,
+		ECategory::COLLISION,
+		ECategory::COLLISION,
+		ECategory::GUN_JETPACK,
+		ECategory::SHOTGUN,
+		ECategory::GRENADE_EXPLOSION,
+		ECategory::HAMMER,
+		ECategory::HOOK,
+		ECategory::WEAPON_FIRE_RATE,
+		ECategory::WEAPON_FIRE_RATE,
+		ECategory::WEAPON_FIRE_RATE,
+		ECategory::WEAPON_FIRE_RATE,
+		ECategory::WEAPON_FIRE_RATE,
+		ECategory::WEAPON_FIRE_RATE,
+		ECategory::WEAPON_FIRE_RATE,
+		ECategory::ELASTICITY,
+		ECategory::ELASTICITY,
+	};
+
+	const CTuningParams ZoneZero;
+	for(int Parameter = 0; Parameter < CTuningParams::Num(); ++Parameter)
+	{
+		CTuningParams Zone = ZoneZero;
+		float Value = 0.0f;
+		ASSERT_TRUE(Zone.Get(Parameter, &Value));
+		ASSERT_TRUE(Zone.Set(Parameter, Value + 1.0f));
+
+		const SQmTuneZoneEffectSummary Summary = BuildQmTuneZoneEffectSummary(ZoneZero, Zone);
+		if(aExpectedCategories[Parameter] == ECategory::UNUSED)
+		{
+			EXPECT_EQ(Summary.m_Count, 0) << CTuningParams::Name(Parameter);
+		}
+		else
+		{
+			ASSERT_EQ(Summary.m_Count, 1) << CTuningParams::Name(Parameter);
+			EXPECT_EQ(Summary.m_aCategories[0], aExpectedCategories[Parameter]) << CTuningParams::Name(Parameter);
+		}
+	}
+}
+
+TEST(QmTuneZoneEffects, DeduplicatesCategoriesAndUsesFixedPriority)
+{
+	CTuningParams ZoneZero;
+	CTuningParams Zone = ZoneZero;
+	Zone.m_Gravity = 0.75f;
+	Zone.m_GroundControlSpeed = 12.0f;
+	Zone.m_AirFriction = 0.80f;
+	Zone.m_GroundJumpImpulse = 15.0f;
+	Zone.m_HookLength = 420.0f;
+	Zone.m_PlayerCollision = 0;
+	Zone.m_JetpackStrength = 500.0f;
+	Zone.m_ShotgunStrength = 12.0f;
+	Zone.m_ExplosionStrength = 8.0f;
+	Zone.m_LaserReach = 900.0f;
+	Zone.m_HammerStrength = 2.0f;
+	Zone.m_GunFireDelay = 100;
+	Zone.m_VelrampStart = 600.0f;
+	Zone.m_GroundElasticityX = 0.5f;
+
+	const SQmTuneZoneEffectSummary Summary = BuildQmTuneZoneEffectSummary(ZoneZero, Zone);
+	const std::array<EQmTuneZoneEffectCategory, 13> aExpected = {
+		EQmTuneZoneEffectCategory::GRAVITY,
+		EQmTuneZoneEffectCategory::MOVEMENT,
+		EQmTuneZoneEffectCategory::JUMP,
+		EQmTuneZoneEffectCategory::HOOK,
+		EQmTuneZoneEffectCategory::COLLISION,
+		EQmTuneZoneEffectCategory::GUN_JETPACK,
+		EQmTuneZoneEffectCategory::SHOTGUN,
+		EQmTuneZoneEffectCategory::GRENADE_EXPLOSION,
+		EQmTuneZoneEffectCategory::LASER,
+		EQmTuneZoneEffectCategory::HAMMER,
+		EQmTuneZoneEffectCategory::WEAPON_FIRE_RATE,
+		EQmTuneZoneEffectCategory::VELRAMP,
+		EQmTuneZoneEffectCategory::ELASTICITY,
+	};
+
+	ASSERT_EQ(Summary.m_Count, (int)aExpected.size());
+	EXPECT_EQ(Summary.m_aCategories, aExpected);
+	EXPECT_EQ(Summary.VisibleCategoryCount(), 7);
+	EXPECT_EQ(Summary.HiddenCategoryCount(), 6);
+	EXPECT_EQ(Summary.DisplaySlotCount(), 8);
+}
+
+TEST(QmTuneZoneEffects, IdenticalZoneHasNoSatelliteSlots)
+{
+	const CTuningParams ZoneZero;
+	const SQmTuneZoneEffectSummary Summary = BuildQmTuneZoneEffectSummary(ZoneZero, ZoneZero);
+
+	EXPECT_FALSE(Summary.HasEffects());
+	EXPECT_EQ(Summary.VisibleCategoryCount(), 0);
+	EXPECT_EQ(Summary.HiddenCategoryCount(), 0);
+	EXPECT_EQ(Summary.DisplaySlotCount(), 0);
+}
+
+TEST(QmTuneZoneEffects, SatelliteWidthGrowsWithVisibleSlotsAndOverflowSlot)
+{
+	SQmTuneZoneEffectSummary Summary;
+	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 0.0f);
+
+	Summary.m_Count = 1;
+	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 16.0f);
+
+	Summary.m_Count = 7;
+	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 60.0f);
+
+	Summary.m_Count = 13;
+	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 68.0f);
+}
+
+TEST(QmTuneZoneEffectsSource, HudUsesCurrentNonzeroZoneAndReusesExistingSatellite)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string Header = ReadTestSourceFile("src/game/client/components/hud.h");
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+
+	EXPECT_NE(Source.find("TuneZone <= 0 || TuneZone >= NUM_TUNEZONES"), std::string::npos);
+	EXPECT_NE(Source.find("BuildQmTuneZoneEffectSummary(*GameClient.GetTuning(0), *GameClient.GetTuning(TuneZone))"), std::string::npos);
+	EXPECT_NE(Source.find("EHudMediaIslandCountdownType::TUNE_ZONE"), std::string::npos);
+	EXPECT_NE(Source.find("Item.m_TuneZoneSummary"), std::string::npos);
+	EXPECT_NE(Source.find("SdfItem.m_Radii = Item.m_Radii * EntranceContentAlpha"), std::string::npos);
+	EXPECT_EQ(Source.find("QmHudMediaIslandLeftBlobCapsule"), std::string::npos);
+	EXPECT_EQ(Header.find("m_TuneZoneLiquidProgress"), std::string::npos);
+	EXPECT_NE(Source.find("str_format(aOverflowBuf, sizeof(aOverflowBuf), \"+%d\", HiddenCategoryCount)"), std::string::npos);
+	EXPECT_NE(Config.find("QmHudIslandShowTuneZoneEffects, qm_hud_island_show_tune_zone_effects, 1"), std::string::npos);
+}
+
+TEST(QmTuneZoneEffectsSource, DynamicIslandUsesCompactSharedSpacing)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+
+	EXPECT_NE(Source.find("constexpr float PaddingX = 4.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float GapToTimer = 3.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float TimerToStatusGap = 3.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float BottomRowPaddingX = 7.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float BottomRowItemGap = 5.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float SatelliteRestGap = 3.0f;"), std::string::npos);
+}
+
+TEST(QmTuneZoneEffectsSource, SettingsExposeIconLegend)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_NE(Source.find("Tune Zone effect icon legend"), std::string::npos);
+	EXPECT_NE(Source.find("EQmIcon::TUNE_GRAVITY"), std::string::npos);
+	EXPECT_NE(Source.find("EQmIcon::TUNE_ELASTICITY"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandLogic, FirstMediaStateDoesNotStartTrackTransition)
@@ -444,15 +627,19 @@ TEST(QmHudMediaIslandBlob, ProgressCanReverseWithoutPoseDiscontinuity)
 	EXPECT_NEAR(AfterReverse.m_StretchY, BeforeReverse.m_StretchY, 0.0001f);
 }
 
-TEST(QmHudMediaIslandBlob, SmoothMergeDependsOnSurfaceDistanceInsteadOfAnimationPhase)
+TEST(QmHudMediaIslandBlob, SmoothMergeDetachesAtRestAndRemainsDuringTravel)
 {
 	const float Blend = QmHudMediaIslandBlobBlend(8.0f, 1.0f);
 	EXPECT_GT(Blend, 0.0f);
 	EXPECT_FLOAT_EQ(QmHudMediaIslandBlobBlend(8.0f, 0.0f), 0.0f);
-	const float NearBridge = QmHudMediaIslandSdfSmoothUnion(1.0f, 1.0f, Blend);
-	const float FarBridge = QmHudMediaIslandSdfSmoothUnion(4.0f, 4.0f, Blend);
+	const float MovingConnection = QmHudMediaIslandBlobConnectionStrength(QmHudMediaIslandBlobPose(0.20f).m_Travel);
+	const float SettledConnection = QmHudMediaIslandBlobConnectionStrength(QmHudMediaIslandBlobPose(1.0f).m_Travel);
+	EXPECT_GT(MovingConnection, 0.0f);
+	EXPECT_FLOAT_EQ(SettledConnection, 0.0f);
+	const float NearBridge = QmHudMediaIslandSdfSmoothUnion(1.0f, 1.0f, Blend * MovingConnection);
+	const float SettledGap = QmHudMediaIslandSdfSmoothUnion(1.5f, 1.5f, Blend * SettledConnection);
 	EXPECT_LT(NearBridge, 0.0f);
-	EXPECT_GT(FarBridge, 0.0f);
+	EXPECT_FLOAT_EQ(SettledGap, 1.5f);
 }
 
 TEST(QmHudMediaIslandSatellite, LiquidProgressClampsAndReducedMotionSnaps)
@@ -539,7 +726,7 @@ TEST(QmHudMediaIslandBlob, RightCapsuleSettlesOutsideMainIsland)
 	EXPECT_FLOAT_EQ(Capsule.m_Rect.w, 24.0f);
 	EXPECT_FLOAT_EQ(Capsule.m_Rect.h, 16.0f);
 	EXPECT_FLOAT_EQ(Capsule.m_Radius, 8.0f);
-	EXPECT_FLOAT_EQ(Capsule.m_SmoothUnion, QmHudMediaIslandBlobBlend(8.0f, 1.0f));
+	EXPECT_FLOAT_EQ(Capsule.m_SmoothUnion, 0.0f);
 	EXPECT_FLOAT_EQ(Capsule.m_ContentAlpha, 1.0f);
 }
 
@@ -742,6 +929,7 @@ TEST(QmHudMediaIslandSatellite, RenderPathUsesBlobSatellitesInsteadOfCountdownTe
 	EXPECT_NE(RenderBody.find("QmHudAdvanceMediaIslandLiquidProgress"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobPose"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobBlend"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobConnectionStrength(BlobPose.m_Travel)"), std::string::npos);
 	EXPECT_NE(RenderBody.find("mix(SpawnCenterX, FinalCenterX, BlobPose.m_Travel)"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandSdfOuterRect(CurrentSdfState)"), std::string::npos);
 	EXPECT_NE(RenderBody.find("TransformedScreenX1 - TransformedScreenX0"), std::string::npos);
@@ -749,8 +937,8 @@ TEST(QmHudMediaIslandSatellite, RenderPathUsesBlobSatellitesInsteadOfCountdownTe
 	EXPECT_EQ(RenderBody.find("DrawMediaIslandRipple"), std::string::npos);
 	EXPECT_EQ(Source.find("m_MediaIslandRippleTexture"), std::string::npos);
 	EXPECT_NE(RenderBody.find("const float SatelliteRadius = Radius;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("constexpr float SatelliteItemGap = 3.0f;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("SatelliteItemPitch = SatelliteDiameter + SatelliteItemGap"), std::string::npos);
+	EXPECT_NE(RenderBody.find("constexpr float SatelliteItemGap = 2.0f;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("aActiveSatelliteTargetCenters[i] = SatelliteCursorX + aActiveSatelliteTargetWidths[i] * 0.5f"), std::string::npos);
 	EXPECT_NE(RenderBody.find("const CUIRect MainIslandSdfRect = EntrancePose.m_Rect;"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("QmHudMediaIslandMainCapRect"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandRightBlobCapsule"), std::string::npos);

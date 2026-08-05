@@ -868,11 +868,11 @@ public:
 	virtual const char *GetVendorString() = 0;
 	virtual const char *GetVersionString() = 0;
 	virtual const char *GetRendererString() = 0;
+	virtual const char *GetFatalError() const = 0;
 
 	// be aware that this function should only be called from the graphics thread, and even then you should really know what you are doing
 	virtual TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() = 0;
 
-	virtual const char *GetFatalError() const = 0;
 	virtual bool GetWarning(std::vector<std::string> &WarningStrings) = 0;
 
 	/**

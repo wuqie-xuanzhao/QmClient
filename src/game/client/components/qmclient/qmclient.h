@@ -21,6 +21,8 @@ class CQmClient : public CComponent
 	std::shared_ptr<CHttpRequest> m_pQmClientUsersTask = nullptr;
 	std::shared_ptr<CHttpRequest> m_pQmClientUsersSendTask = nullptr;
 	std::shared_ptr<IJob> m_pQmClientUsersParseJob = nullptr;
+	std::shared_ptr<CHttpRequest> m_pQmDeveloperPresenceTask = nullptr;
+	std::shared_ptr<CHttpRequest> m_pQmDeveloperPresencesTask = nullptr;
 	std::shared_ptr<CHttpRequest> m_pQmClientLifecycleStartTask = nullptr;
 	std::shared_ptr<CHttpRequest> m_pQmClientLifecycleCrashTask = nullptr;
 	std::shared_ptr<CHttpRequest> m_pQmClientLifecycleStopTask = nullptr;
@@ -37,8 +39,12 @@ class CQmClient : public CComponent
 	char m_aQmDdnetPlayerName[MAX_NAME_LENGTH] = "";
 	char m_aQmDdnetFavoritePartner[MAX_NAME_LENGTH] = "";
 	char m_aQmClientPendingVoicePresenceServerAddress[NETADDR_MAXSTRSIZE] = "";
+	char m_aQmDeveloperToken[65] = "";
+	char m_aQmDeveloperSessionId[33] = "";
+	char m_aQmDeveloperPendingServerAddress[NETADDR_MAXSTRSIZE] = "";
 
 	int64_t m_QmClientLastSync = 0;
+	int64_t m_QmDeveloperLastSync = 0;
 	int64_t m_QmClientServerNow = 0;
 	int64_t m_QmClientServerSessionStart = 0;
 	int64_t m_QmClientServerTimeLastSync = 0;
@@ -87,6 +93,12 @@ class CQmClient : public CComponent
 	bool EnsureQmClientMachineHash();
 	bool BuildQmClientRecognitionUrl(const char *pPath, char *pBuf, size_t BufSize, const char *pQuery = nullptr) const;
 	void ClearQmClientServerDistribution();
+	void InitQmDeveloperAuthentication();
+	void UpdateQmDeveloperPresence();
+	void SendQmDeveloperPresence(const char *pServerAddress);
+	void FetchQmDeveloperPresences(const char *pServerAddress);
+	void FinishQmDeveloperPresences(const char *pServerAddress);
+	void ResetQmDeveloperPresenceTasks();
 
 	void UpdateQmDdnetPlayerStats();
 	void FetchQmDdnetPlayerStats(const char *pPlayerName);

@@ -76,6 +76,7 @@ namespace MapPreview
 		int Num() const override;
 		IGraphics::CTextureHandle GetEntities(EMapImageEntityLayerType) override { return {}; }
 		IGraphics::CTextureHandle GetSpeedupArrow() override { return {}; }
+		IGraphics::CTextureHandle GetTuneColors() override { return {}; }
 		IGraphics::CTextureHandle GetOverlayBottom() override { return {}; }
 		IGraphics::CTextureHandle GetOverlayTop() override { return {}; }
 		IGraphics::CTextureHandle GetOverlayCenter() override { return {}; }

@@ -5240,11 +5240,14 @@ Input overlay
 Input overlay display
 == Отображение наложения ввода
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == Непрозрачность наложения ввода (в процентах)
-
-Input overlay scale (percent)
-== Масштаб наложения ввода (в процентах)
 
 Input overlay X position (percent)
 == Положение наложения ввода по X (в процентах)
@@ -5461,6 +5464,9 @@ Key Sticking: Reset Self
 
 Keyboard focus ring color
 == Цвет кольца клавиатурного фокуса
+
+Keyboard size
+== Размер клавиатуры
 
 Keyword Reply
 == Ответ по ключевым словам
@@ -6457,6 +6463,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == Чувствительность мыши в меню/редакторе
+
+Mouse size
+== Размер мыши
 
 Move left
 == Двигаться влево
@@ -10217,6 +10226,12 @@ Show toast
 Show translation
 == Показать перевод
 
+Show Tune Zone effects
+== Show Tune Zone effects
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
+
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Показывать параметры настройки, влияющие на своего игрока (0 = Выкл, 1 = Показывать изменённые, 2 = Показывать все)
 
@@ -11764,6 +11779,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Установить переменную тюнинга в значение или показать текущее значение
+
+Tune Zone effect icon legend
+== Показывать эффекты Tune Zone
 
 Tutorial
 == Обучение

@@ -5240,11 +5240,14 @@ Input overlay
 Input overlay display
 == Giriş kaplaması görüntüsü
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == Giriş Katmanı Opaklığı (Yüzde)
-
-Input overlay scale (percent)
-== Giriş Katmanı Ölçeği (Yüzde)
 
 Input overlay X position (percent)
 == Giriş Katmanı X Konumu (Yüzde)
@@ -5461,6 +5464,9 @@ Key Sticking: Reset Self
 
 Keyboard focus ring color
 == Klavye odak halkası rengi
+
+Keyboard size
+== Klavye boyutu
 
 Keyword Reply
 == Anahtar Kelime Yanıtı
@@ -6457,6 +6463,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == Menü/düzenleyicide fare hassasiyeti
+
+Mouse size
+== Fare boyutu
 
 Move left
 == Sola hareket et
@@ -10217,6 +10226,12 @@ Show toast
 Show translation
 == Çeviriyi göster
 
+Show Tune Zone effects
+== Show Tune Zone effects
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
+
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Kendi oyuncunu etkileyen ayar parametrelerini göster (0=Kapalı, 1=Değişenleri göster, 2=Tümünü göster)
 
@@ -11764,6 +11779,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Değişkeni değere ayarla veya geçerli değeri göster
+
+Tune Zone effect icon legend
+== Tune Zone etkilerini göster
 
 Tutorial
 == Eğitim

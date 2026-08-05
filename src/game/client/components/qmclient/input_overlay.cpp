@@ -113,7 +113,9 @@ void CInputOverlay::OnRender()
 	const CUIRect *pScreen = Ui()->Screen();
 	Graphics()->MapScreen(pScreen->x, pScreen->y, pScreen->w, pScreen->h);
 
-	const float Scale = g_Config.m_QmInputOverlayScale / 100.0f;
+	const float KeyboardScale = g_Config.m_QmInputOverlayScale / 100.0f;
+	const float MouseScale = g_Config.m_QmInputOverlayMouseScale / 100.0f;
+	const float Scale = KeyboardScale;
 	const float Opacity = g_Config.m_QmInputOverlayOpacity / 100.0f;
 	const float PosXPercent = g_Config.m_QmInputOverlayPosX;
 	const float PosYPercent = g_Config.m_QmInputOverlayPosY;
@@ -124,40 +126,33 @@ void CInputOverlay::OnRender()
 	if(m_ConfigMode == EConfigMode::OBS)
 	{
 		bool HasBounds = false;
-		float MinX = 0.0f;
-		float MinY = 0.0f;
-		float MaxX = 0.0f;
-		float MaxY = 0.0f;
+		QmInputOverlay::SScaledBounds Bounds{};
 		for(const SObsLayout &Layout : m_vObsLayouts)
 		{
 			if(Layout.m_vElements.empty() || !Layout.m_Texture.IsValid())
 				continue;
-			const float LMinX = Layout.m_OffsetX;
-			const float LMinY = Layout.m_OffsetY;
-			const float LMaxX = Layout.m_OffsetX + Layout.m_OverlayWidth;
-			const float LMaxY = Layout.m_OffsetY + Layout.m_OverlayHeight;
+			const float LayoutScale = QmInputOverlay::LayoutScale(Layout.m_IsMouseLayout, KeyboardScale, MouseScale);
+			const auto LayoutBounds = QmInputOverlay::ScaledLayoutBounds(
+				Layout.m_OffsetX,
+				Layout.m_OffsetY,
+				Layout.m_OverlayWidth,
+				Layout.m_OverlayHeight,
+				KeyboardScale,
+				LayoutScale);
 			if(!HasBounds)
 			{
-				MinX = LMinX;
-				MinY = LMinY;
-				MaxX = LMaxX;
-				MaxY = LMaxY;
+				Bounds = LayoutBounds;
 				HasBounds = true;
 			}
 			else
-			{
-				MinX = std::min(MinX, LMinX);
-				MinY = std::min(MinY, LMinY);
-				MaxX = std::max(MaxX, LMaxX);
-				MaxY = std::max(MaxY, LMaxY);
-			}
+				Bounds = QmInputOverlay::UnionBounds(Bounds, LayoutBounds);
 		}
 		if(HasBounds)
 		{
-			ObsMinX = MinX;
-			ObsMinY = MinY;
-			CanvasW = (MaxX - MinX) * Scale;
-			CanvasH = (MaxY - MinY) * Scale;
+			ObsMinX = Bounds.m_MinX;
+			ObsMinY = Bounds.m_MinY;
+			CanvasW = Bounds.m_MaxX - Bounds.m_MinX;
+			CanvasH = Bounds.m_MaxY - Bounds.m_MinY;
 		}
 	}
 	float OriginX = pScreen->w * PosXPercent / 100.0f;
@@ -267,8 +262,9 @@ void CInputOverlay::OnRender()
 			if(Layout.m_vElements.empty() || !Layout.m_Texture.IsValid())
 				continue;
 
-			const float LayoutOriginX = OriginX + (Layout.m_OffsetX - ObsMinX) * Scale;
-			const float LayoutOriginY = OriginY + (Layout.m_OffsetY - ObsMinY) * Scale;
+			const float LayoutScale = QmInputOverlay::LayoutScale(Layout.m_IsMouseLayout, KeyboardScale, MouseScale);
+			const float LayoutOriginX = OriginX + Layout.m_OffsetX * KeyboardScale - ObsMinX;
+			const float LayoutOriginY = OriginY + Layout.m_OffsetY * KeyboardScale - ObsMinY;
 
 			Graphics()->TextureSet(Layout.m_Texture);
 			Graphics()->QuadsBegin();
@@ -308,10 +304,10 @@ void CInputOverlay::OnRender()
 						UsePressedAtlas = false;
 				}
 
-				const float X = LayoutOriginX + Element.m_PosX * Scale;
-				const float Y = LayoutOriginY + Element.m_PosY * Scale;
-				const float W = MapW * Scale;
-				const float H = MapH * Scale;
+				const float X = LayoutOriginX + Element.m_PosX * LayoutScale;
+				const float Y = LayoutOriginY + Element.m_PosY * LayoutScale;
+				const float W = MapW * LayoutScale;
+				const float H = MapH * LayoutScale;
 
 				const float U0 = Layout.m_TextureWidth > 0 ? MapX / (float)Layout.m_TextureWidth : 0.0f;
 				const float V0 = Layout.m_TextureHeight > 0 ? MapY / (float)Layout.m_TextureHeight : 0.0f;
@@ -1130,6 +1126,8 @@ bool CInputOverlay::ParseObsConfiguration(const json_value &Root, const char *pL
 
 	std::vector<SObsElement> ParsedElements;
 	ParsedElements.reserve(Elements.u.array.length);
+	bool HasKeyboardInput = false;
+	bool HasMouseInput = false;
 	for(unsigned i = 0; i < Elements.u.array.length; ++i)
 	{
 		SObsElement Element;
@@ -1138,6 +1136,10 @@ bool CInputOverlay::ParseObsConfiguration(const json_value &Root, const char *pL
 			log_error("input_overlay", "Failed to parse OBS layout: invalid element at index '%u'", i);
 			return false;
 		}
+		HasKeyboardInput |= Element.m_InputKind == EObsInputKind::KEY;
+		HasMouseInput |= Element.m_InputKind == EObsInputKind::MOUSE ||
+				 Element.m_InputKind == EObsInputKind::WHEEL ||
+				 Element.m_InputKind == EObsInputKind::MOUSE_MOVE;
 		ParsedElements.push_back(std::move(Element));
 	}
 
@@ -1234,6 +1236,7 @@ bool CInputOverlay::ParseObsConfiguration(const json_value &Root, const char *pL
 	Out.m_OffsetY = OffsetY;
 	Out.m_PressedOffsetY = PressedOffsetY;
 	Out.m_HasPressedOffset = HasPressedOffset;
+	Out.m_IsMouseLayout = QmInputOverlay::IsMouseOnlyLayout(HasKeyboardInput, HasMouseInput);
 	Out.m_LayoutPath = pLayoutPath != nullptr ? pLayoutPath : CONFIGURATION_FILENAME;
 	Out.m_ImagePath = ImagePath;
 

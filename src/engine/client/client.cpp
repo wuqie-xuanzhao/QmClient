@@ -1067,10 +1067,7 @@ void CClient::SetState(EClientState State)
 		const NETADDR *pServerAddr = ServerAddress();
 		dbg_assert(pServerAddr != nullptr, "online state requires server address");
 		const bool Registered = m_ServerBrowser.IsRegistered(*pServerAddr);
-		CServerInfo CurrentServerInfo;
-		GetServerInfo(&CurrentServerInfo);
-
-		Discord()->SetGameInfo(CurrentServerInfo, m_aCurrentMap, Registered);
+		Discord()->SetGameInfo(m_CurrentServerInfo, Registered);
 		Steam()->SetGameInfo(*pServerAddr, m_aCurrentMap, Registered);
 	}
 	else if(OldState == IClient::STATE_ONLINE)
@@ -1572,7 +1569,16 @@ bool CClient::DummyAllowed() const
 
 void CClient::GetServerInfo(CServerInfo *pServerInfo) const
 {
-	mem_copy(pServerInfo, &m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
+	*pServerInfo = m_CurrentServerInfo;
+}
+
+void CClient::SetCurrentServerInfo(const CServerInfo &ServerInfo)
+{
+	m_CurrentServerInfo = ServerInfo;
+	m_CurrentServerInfoRequestTime = -1;
+	str_copy(m_CurrentServerInfo.m_aMap, GetCurrentMap());
+	m_CurrentServerInfo.m_MapCrc = m_pMap->Crc();
+	m_CurrentServerInfo.m_MapSize = m_pMap->Size();
 }
 
 void CClient::ServerInfoRequest()
@@ -2230,9 +2236,8 @@ void CClient::ProcessServerInfo(int RawType, NETADDR *pFrom, const void *pData, 
 			if(SavedType >= m_CurrentServerInfo.m_Type &&
 				m_pMap->IsLoaded())
 			{
-				m_CurrentServerInfo = Info;
-				m_CurrentServerInfoRequestTime = -1;
-				Discord()->UpdateServerInfo(Info, m_aCurrentMap);
+				SetCurrentServerInfo(Info);
+				Discord()->UpdateServerInfo(m_CurrentServerInfo);
 			}
 
 			bool ValidPong = false;

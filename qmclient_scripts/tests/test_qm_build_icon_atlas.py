@@ -63,6 +63,33 @@ class QmBuildIconAtlasTest(unittest.TestCase):
                         # 24px 的细体笔画可能完全由抗锯齿覆盖，不一定存在全不透明像素。
                         self.assertGreaterEqual(alpha.getextrema()[1], 192)
 
+    def test_collect_svg_files_combines_shared_icons(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="qm-icon-test-") as temp_dir:
+            root = Path(temp_dir)
+            primary = root / "primary"
+            shared = root / "shared"
+            primary.mkdir()
+            shared.mkdir()
+            (primary / "icon-search.svg").touch()
+            (shared / "icon-tune-gravity.svg").touch()
+
+            svg_files = ICON_ATLAS.collect_svg_files([primary, shared])
+
+            self.assertEqual([svg.name for svg in svg_files], ["icon-search.svg", "icon-tune-gravity.svg"])
+
+    def test_collect_svg_files_rejects_duplicate_icon_names(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="qm-icon-test-") as temp_dir:
+            root = Path(temp_dir)
+            primary = root / "primary"
+            shared = root / "shared"
+            primary.mkdir()
+            shared.mkdir()
+            (primary / "icon-search.svg").touch()
+            (shared / "icon-search.svg").touch()
+
+            with self.assertRaisesRegex(SystemExit, "Duplicate icon name: search"):
+                ICON_ATLAS.collect_svg_files([primary, shared])
+
 
 if __name__ == "__main__":
     unittest.main()

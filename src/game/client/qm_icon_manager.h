@@ -37,6 +37,19 @@ enum class EQmIcon
 	SATELLITE_CHECK,
 	SATELLITE_SPECTATOR_EYE,
 	SATELLITE_SPECTATOR_EYE_CLOSED,
+	TUNE_GRAVITY,
+	TUNE_MOVEMENT,
+	TUNE_JUMP,
+	TUNE_HOOK,
+	TUNE_COLLISION,
+	TUNE_GUN_JETPACK,
+	TUNE_SHOTGUN,
+	TUNE_GRENADE_EXPLOSION,
+	TUNE_LASER,
+	TUNE_HAMMER,
+	TUNE_WEAPON_FIRE_RATE,
+	TUNE_VELRAMP,
+	TUNE_ELASTICITY,
 	COUNT,
 };
 
@@ -313,6 +326,19 @@ public:
 		case EQmIcon::SATELLITE_CHECK: return "satellite-check";
 		case EQmIcon::SATELLITE_SPECTATOR_EYE: return "satellite-spectator-eye";
 		case EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED: return "satellite-spectator-eye-closed";
+		case EQmIcon::TUNE_GRAVITY: return "tune-gravity";
+		case EQmIcon::TUNE_MOVEMENT: return "tune-movement";
+		case EQmIcon::TUNE_JUMP: return "tune-jump";
+		case EQmIcon::TUNE_HOOK: return "tune-hook";
+		case EQmIcon::TUNE_COLLISION: return "tune-collision";
+		case EQmIcon::TUNE_GUN_JETPACK: return "tune-gun-jetpack";
+		case EQmIcon::TUNE_SHOTGUN: return "tune-shotgun";
+		case EQmIcon::TUNE_GRENADE_EXPLOSION: return "tune-grenade-explosion";
+		case EQmIcon::TUNE_LASER: return "tune-laser";
+		case EQmIcon::TUNE_HAMMER: return "tune-hammer";
+		case EQmIcon::TUNE_WEAPON_FIRE_RATE: return "tune-weapon-fire-rate";
+		case EQmIcon::TUNE_VELRAMP: return "tune-velramp";
+		case EQmIcon::TUNE_ELASTICITY: return "tune-elasticity";
 		case EQmIcon::COUNT: break;
 		}
 		return "";

@@ -195,6 +195,11 @@ if(NOT(CMAKE_BUILD_TYPE MATCHES "^(Release|Debug|RelWithDebInfo|MinSizeRel)$"))
   message(WARNING "Unknown CMAKE_BUILD_TYPE, should be one of Release, Debug, RelWithDebInfo or MinSizeRel")
 endif()
 
+if(TARGET_OS STREQUAL "windows" AND CLIENT AND NOT HEADLESS_CLIENT AND CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT VULKAN)
+  message(STATUS "Windows Release graphics client requires the Vulkan backend; overriding VULKAN=OFF")
+  set(VULKAN ON CACHE BOOL "Enable the vulkan backend" FORCE)
+endif()
+
 set(DBG $<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>)
 
 if(IPO)
@@ -2187,11 +2192,13 @@ file(GLOB QM_ICON_ATLAS_SVG_SOURCES
   datasrc/qm_icons/phosphor_fill/*.svg
   datasrc/qm_icons/phosphor_regular/*.svg
   datasrc/qm_icons/phosphor_thin/*.svg
+  datasrc/qm_icons/tabler/*.svg
 )
 add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
     --source datasrc/qm_icons/phosphor_bold
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_bold
     --sizes 1 2 4
@@ -2200,6 +2207,7 @@ add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
     --source datasrc/qm_icons/phosphor_fill
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_fill
     --sizes 1 2 4
@@ -2208,6 +2216,7 @@ add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
     --source datasrc/qm_icons/phosphor_regular
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_regular
     --sizes 1 2 4
@@ -2216,6 +2225,7 @@ add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
     --source datasrc/qm_icons/phosphor_thin
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_thin
     --sizes 1 2 4
@@ -2233,21 +2243,25 @@ add_custom_target(qm-icon-msdf-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_msdf.py
     --source datasrc/qm_icons/phosphor_bold
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_bold
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_msdf.py
     --source datasrc/qm_icons/phosphor_fill
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_fill
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_msdf.py
     --source datasrc/qm_icons/phosphor_regular
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_regular
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_msdf.py
     --source datasrc/qm_icons/phosphor_thin
+    --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
     --atlas-name qm_icons_thin
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -3866,6 +3880,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     csv_test.cpp
     datafile_test.cpp
     dbg_test.cpp
+    ddnet_19_9_sync_test.cpp
     editor_test.cpp
     fs_test.cpp
     gameworld_test.cpp

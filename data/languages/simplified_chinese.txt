@@ -5240,11 +5240,14 @@ Input overlay
 Input overlay display
 == 按键显示叠加
 
+Input overlay keyboard scale (percent)
+== 输入覆盖键盘比例（百分比）
+
+Input overlay mouse scale (percent)
+== 输入覆盖鼠标比例（百分比）
+
 Input overlay opacity (percent)
 == 输入叠加不透明度（百分比）
-
-Input overlay scale (percent)
-== 输入叠加比例（百分比）
 
 Input overlay X position (percent)
 == 输入叠加 X 位置（百分比）
@@ -5461,6 +5464,9 @@ Key Sticking: Reset Self
 
 Keyboard focus ring color
 == 键盘焦点环颜色
+
+Keyboard size
+== 键盘大小
 
 Keyword Reply
 == 关键词回复
@@ -6457,6 +6463,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == 菜单/编辑器中的鼠标灵敏度
+
+Mouse size
+== 鼠标大小
 
 Move left
 == 向左移动
@@ -10217,6 +10226,12 @@ Show toast
 Show translation
 == 显示翻译
 
+Show Tune Zone effects
+== 显示 Tune Zone 效果
+
+Show Tune Zone effects on HUD Dynamic Island
+== HUD 灵动岛显示 Tune Zone 效果
+
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 显示影响自身玩家的调整参数信息（0 = 关闭，1 = 显示已改变的，2 = 显示全部）
 
@@ -11764,6 +11779,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == 将变量调到指定值，或显示当前值
+
+Tune Zone effect icon legend
+== Tune Zone 效果图标说明
 
 Tutorial
 == 教学

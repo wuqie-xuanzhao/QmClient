@@ -1226,17 +1226,19 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 		if(ClientId == LocalId && pMsg->m_pMessage != nullptr)
 			str_copy(m_PreviousOwnMessage, pMsg->m_pMessage);
 
-		// === 复读功能: 保存最新的公屏消息 ===
-		if(ClientId >= 0 && ClientId < MAX_CLIENTS && pMsg->m_Team == 0 && pMsg->m_pMessage != nullptr)
+		// === 复读功能: 保存最新的公屏或队伍消息 ===
+		const bool IsRepeatChatChannel = pMsg->m_Team == 0 || pMsg->m_Team == 1;
+		if(ClientId >= 0 && ClientId < MAX_CLIENTS && IsRepeatChatChannel && pMsg->m_pMessage != nullptr)
 		{
 			const char *pMessage = pMsg->m_pMessage;
 			const bool IsValidCandidate = pMessage[0] != '\0' && pMessage[0] != '/';
 			const bool SenderIsActiveClient = GameClient()->m_aClients[ClientId].m_Active;
 			const bool IsRepeatCandidate = !IsOwnMessage && SenderIsActiveClient && IsValidCandidate;
-			// 保存最新的公屏消息（不是自己发的）
+			// 保存最新的公屏或队伍消息（不是自己发的）
 			if(IsRepeatCandidate)
 			{
 				str_copy(m_aLastChatMessage, pMessage, sizeof(m_aLastChatMessage));
+				m_LastChatTeam = pMsg->m_Team;
 			}
 		}
 
@@ -3001,6 +3003,7 @@ void CTClient::OnStateChange(int NewState, int OldState)
 		m_GoresAutoMapToken = 0;
 		ClearSwapCountdown();
 		m_aLastChatMessage[0] = '\0';
+		m_LastChatTeam = 0;
 		m_LastRepeatTime = 0;
 		m_LastRepeatKeyPressTime = 0;
 		m_RepeatKeyDown = false;
@@ -5506,5 +5509,5 @@ void CTClient::RepeatLastMessage()
 	m_LastRepeatTime = Now;
 
 	// 发送复读消息
-	GameClient()->m_Chat.SendChat(0, m_aLastChatMessage);
+	GameClient()->m_Chat.SendChat(m_LastChatTeam, m_aLastChatMessage);
 }

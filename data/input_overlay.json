@@ -2,11 +2,11 @@
     "layouts": [
       {
         "layout": "input overlay-Zac/wasd.json",
-        "pressed_offset_y": 130
+        "pressed_offset_y": 61
       },
       {
         "layout": "input overlay-Zac/mouse.json",
-        "offset": { "x": 740, "y": 0 },
+        "offset": { "x": 467, "y": 0 },
         "pressed_offset_y": 0
       }
     ]

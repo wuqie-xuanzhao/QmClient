@@ -1264,7 +1264,7 @@ void CRenderMap::RenderSwitchmap(CSwitchTile *pSwitchTile, int w, int h, float S
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
-void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, ColorRGBA Color, int RenderFlags)
+void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, ColorRGBA Color, int RenderFlags, CTuneColorMapper *pTuneColorMapper)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -1319,7 +1319,7 @@ void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, Colo
 
 			int c = mx + my * w;
 
-			unsigned char Index = pTune[c].m_Type;
+			const unsigned char Index = pTune[c].m_Type;
 			if(Index)
 			{
 				bool Render = false;
@@ -1328,6 +1328,15 @@ void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, Colo
 
 				if(Render)
 				{
+					const unsigned char Number = pTune[c].m_Number;
+					if(Number == 0 || pTuneColorMapper == nullptr)
+						Graphics()->SetColor(Color);
+					else
+					{
+						const uint8_t ColorIndex = pTuneColorMapper->TuneNumberToColorIndex(Number);
+						Graphics()->SetColor(pTuneColorMapper->TuneColorIndexToColor(ColorIndex).Multiply(Color));
+					}
+
 					int tx = Index % 16;
 					int ty = Index / 16;
 					int Px0 = tx * (1024 / 16);
@@ -1398,4 +1407,48 @@ void CRenderMap::RenderDebugClip(float ClipX, float ClipY, float ClipW, float Cl
 	// clamp zoom and set line width, because otherwise the text can be partially clipped out
 	TextRender()->Text(ClipX, ClipY, std::min(12.0f * Zoom, 20.0f), pLabel, ClipW);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
+}
+
+CTuneColorMapper::CTuneColorMapper()
+{
+	Reset();
+}
+
+uint8_t CTuneColorMapper::TuneNumberToColorIndex(uint8_t TuneNumber)
+{
+	if(TuneNumber == 0)
+		return 0;
+
+	uint8_t &TuneColorIndex = m_aTuneNumberToColorIndex[TuneNumber - 1];
+	if(TuneColorIndex == 0)
+	{
+		TuneColorIndex = m_NextTuneNumberIndex + 1;
+		++m_NextTuneNumberIndex;
+	}
+	return TuneColorIndex;
+}
+
+uint8_t CTuneColorMapper::TileTextureIndex(uint8_t TileType, uint8_t TuneNumber, bool HasTextureArrays)
+{
+	// Non-array backends sample the ordinary entities texture, which only has
+	// the original tune tile at TileType. The numbered color atlas exists only
+	// for texture-array backends.
+	if(!HasTextureArrays || TuneNumber == 0)
+		return TileType;
+	return TuneNumberToColorIndex(TuneNumber);
+}
+
+ColorRGBA CTuneColorMapper::TuneColorIndexToColor(uint8_t TuneColorIndex) const
+{
+	if(TuneColorIndex == 0)
+		return ColorRGBA(1.0f, 1.0f, 1.0f);
+
+	const float Hue = std::fmod((TuneColorIndex - 1) * normalized_golden_angle, 1.0f);
+	return color_cast<ColorRGBA>(ColorHSLA(Hue, 0.75f, 0.5f, 1.0f));
+}
+
+void CTuneColorMapper::Reset()
+{
+	m_aTuneNumberToColorIndex.fill(0);
+	m_NextTuneNumberIndex = 0;
 }

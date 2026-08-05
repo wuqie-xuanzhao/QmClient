@@ -808,7 +808,7 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(17.0f);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.76.23\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.1\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
@@ -1096,6 +1096,7 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 		"QmLyricsCacheEnable",
 		"QmLyricsAutoHideNoSmtc",
 		"QmLyricsHideWhenPaused",
+		"QmHudIslandShowTuneZoneEffects",
 	};
 	std::istringstream Lines(ConfigSource);
 	std::string Line;
@@ -1336,6 +1337,26 @@ TEST(QmNewUiMenuBranches, NameplateOthersModeSuppressesLocalIdentityRows)
 	EXPECT_EQ(RenderNamePlateGame.find("!IsAnyLocalClient &&\n\t\tGameClient()->m_Snap.m_LocalClientId >= 0"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("if(Data.m_ShowName && !HideIdentity && g_Config.m_TcWarList && g_Config.m_TcWarListShowClan"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_Local = pPlayerInfo->m_Local;"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, DeveloperBadgePrecedesInlineClientIdAndNameWithoutOverridingIdSettings)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/nameplates.cpp");
+	const std::string AddNameRow = FunctionBody(Source, "void AddNameRow(");
+	const std::string RenderNamePlateGame = FunctionBody(Source, "void CNamePlates::RenderNamePlateGame");
+
+	const size_t FriendMark = AddNameRow.find("AddPart<CNamePlatePartFriendMark>(This);");
+	const size_t Developer = AddNameRow.find("AddPart<CNamePlatePartDeveloper>(This);");
+	const size_t InlineClientId = AddNameRow.find("AddPart<CNamePlatePartClientId>(This, false);");
+	const size_t Name = AddNameRow.find("AddPart<CNamePlatePartName>(This);");
+	ASSERT_NE(FriendMark, std::string::npos);
+	ASSERT_NE(Developer, std::string::npos);
+	ASSERT_NE(InlineClientId, std::string::npos);
+	ASSERT_NE(Name, std::string::npos);
+	EXPECT_LT(FriendMark, Developer);
+	EXPECT_LT(Developer, InlineClientId);
+	EXPECT_LT(InlineClientId, Name);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NameplatePreviewShowsPlayerStrongHookMarker)

@@ -1,0 +1,7 @@
+<!-- QmClient hand-drawn Tune Zone velocity-ramp icon: speedometer accelerating into the redline. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <path d="M34 194a94 94 0 0 1 188 0" stroke="currentColor" stroke-width="22" stroke-linecap="round"/>
+  <path d="m124 170 62-82-38 96-24-14Z" fill="currentColor"/>
+  <circle cx="128" cy="184" r="22" fill="currentColor"/>
+  <path d="M48 214h160" stroke="currentColor" stroke-width="18" stroke-linecap="round"/>
+</svg>

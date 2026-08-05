@@ -5,7 +5,7 @@
 
 // ddnet
 #define GAME_NAME "DDNet"
-#define DDNET_VERSION_NUMBER 19900
+#define DDNET_VERSION_NUMBER 19090
 extern const char *GIT_SHORTREV_HASH;
 #ifndef GAME_RELEASE_VERSION_INTERNAL
 #define GAME_RELEASE_VERSION_INTERNAL 19.9
@@ -20,7 +20,7 @@ extern const char *GIT_SHORTREV_HASH;
 
 // QmClient
 #ifndef QMCLIENT_VERSION
-#define QMCLIENT_VERSION "2.76.23"
+#define QMCLIENT_VERSION "2.79.1"
 #endif
 
 // custom

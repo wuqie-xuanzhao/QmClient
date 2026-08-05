@@ -5240,11 +5240,14 @@ Input overlay
 Input overlay display
 == Wyświetlanie nakładki wejścia
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == Nieprzezroczystość nakładki wejściowej (procent)
-
-Input overlay scale (percent)
-== Skala nakładki wejściowej (procent)
 
 Input overlay X position (percent)
 == Pozycja X nakładki wejściowej (procent)
@@ -5461,6 +5464,9 @@ Key Sticking: Reset Self
 
 Keyboard focus ring color
 == Kolor pierścienia fokusu klawiatury
+
+Keyboard size
+== Rozmiar klawiatury
 
 Keyword Reply
 == Odpowiedź na słowa kluczowe
@@ -6457,6 +6463,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == Czułość myszy w menu/edytorze
+
+Mouse size
+== Rozmiar myszy
 
 Move left
 == Przesuń w lewo
@@ -10217,6 +10226,12 @@ Show toast
 Show translation
 == Pokaż tłumaczenie
 
+Show Tune Zone effects
+== Show Tune Zone effects
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
+
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Pokaż parametry strojenia wpływające na własnego gracza (0 = Wył., 1 = Pokaż zmienione, 2 = Pokaż wszystkie)
 
@@ -11764,6 +11779,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Dostrój zmienną do wartości lub pokaż bieżącą wartość
+
+Tune Zone effect icon legend
+== Pokaż efekty Tune Zone
 
 Tutorial
 == Samouczek

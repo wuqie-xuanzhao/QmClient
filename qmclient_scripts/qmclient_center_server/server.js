@@ -7,6 +7,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 const express = require("express");
 
+const {
+	CreateDeveloperPresenceService,
+	RegisterDeveloperPresenceRoutes
+} = require("./developer_auth");
+
 const app = express();
 const DefaultJsonParser = express.json({ limit: "32kb" });
 const EditorCollabJsonParser = express.json({ limit: "32mb" });
@@ -26,6 +31,7 @@ const REQUIRE_IP_BIND = process.env.REQUIRE_IP_BIND !== "0";
 const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 const RATE_LIMIT_PER_MIN = Number(process.env.RATE_LIMIT_PER_MIN || 120);
 const AUTH_SECRET = process.env.AUTH_SECRET || crypto.randomBytes(32).toString("hex");
+const DEVELOPER_CREDENTIALS_FILE = process.env.DEVELOPER_CREDENTIALS_FILE || "";
 const PLAYTIME_DB_FILE = process.env.PLAYTIME_DB_FILE || path.join(__dirname, "playtime_db.json");
 const CLIENT_RELEASE_OWNER = process.env.CLIENT_RELEASE_OWNER || "wxj881027";
 const CLIENT_RELEASE_REPO = process.env.CLIENT_RELEASE_REPO || "QmClient";
@@ -50,7 +56,7 @@ const SECONDS_PER_YEAR = 365 * SECONDS_PER_DAY;
 
 if(TRUST_PROXY)
 {
-	app.set("trust proxy", true);
+	app.set("trust proxy", "loopback");
 }
 
 const g_Tokens = new Map();
@@ -328,6 +334,13 @@ function CheckRateLimit(Ip)
 	Entry.count += 1;
 	return true;
 }
+
+const g_DeveloperPresenceService = CreateDeveloperPresenceService({
+	CredentialsFilePath: DEVELOPER_CREDENTIALS_FILE
+});
+RegisterDeveloperPresenceRoutes(app, g_DeveloperPresenceService, {
+	CheckRateLimit: (req) => CheckRateLimit(ClientIp(req))
+});
 
 function NewToken(Ip)
 {

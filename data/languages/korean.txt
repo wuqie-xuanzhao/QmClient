@@ -5240,11 +5240,14 @@ Input overlay
 Input overlay display
 == 입력 오버레이 표시
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == 입력 오버레이 불투명도 (백분율)
-
-Input overlay scale (percent)
-== 입력 오버레이 배율 (백분율)
 
 Input overlay X position (percent)
 == 입력 오버레이 X 위치 (백분율)
@@ -5461,6 +5464,9 @@ Key Sticking: Reset Self
 
 Keyboard focus ring color
 == 키보드 포커스 링 색상
+
+Keyboard size
+== 키보드 크기
 
 Keyword Reply
 == 키워드 답장
@@ -6457,6 +6463,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == 메뉴/에디터에서의 마우스 감도
+
+Mouse size
+== 마우스 크기
 
 Move left
 == 왼쪽으로 이동
@@ -10217,6 +10226,12 @@ Show toast
 Show translation
 == 번역 표시
 
+Show Tune Zone effects
+== Tune Zone 효과 표시
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
+
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 자신의 플레이어에 영향을 미치는 튜닝 파라미터 표시 (0 = 끄기, 1 = 변경된 것만 표시, 2 = 모두 표시)
 
@@ -11764,6 +11779,9 @@ Tune variable to value
 
 Tune variable to value or show current value
 == 변수를 값으로 조정하거나 현재 값을 표시합니다.
+
+Tune Zone effect icon legend
+== Tune Zone effect icon legend
 
 Tutorial
 == 튜토리얼

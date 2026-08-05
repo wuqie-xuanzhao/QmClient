@@ -445,6 +445,7 @@ public:
 
 	void GetServerInfo(CServerInfo *pServerInfo) const override;
 	void ServerInfoRequest();
+	void SetCurrentServerInfo(const CServerInfo &ServerInfo);
 
 	void LoadDebugFont();
 

@@ -108,7 +108,7 @@ PAGE_STABLE_IDS = {
 	"tclient_bind_wheel": ("deck:tclient-bind-wheel-editor", "deck:tclient-bind-wheel-preview"),
 	"tclient_chat_binds": ("deck:tclient-chat-binds-kaomoji", "deck:tclient-chat-binds-warlist", "deck:tclient-chat-binds-other"),
 	"tclient_warlist": ("deck:tclient-warlist",),
-	"tclient_status_bar": ("deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"),
+	"tclient_status_bar": ("deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"),
 	"tclient_info": ("deck:tclient-info-links", "deck:tclient-info-files", "deck:tclient-info-developers", "deck:tclient-info-tabs"),
 	"tclient_profiles": ("deck:tclient-profiles-actions", "deck:tclient-profiles-options", "deck:tclient-profiles-list"),
 	"tclient_configs": ("deck:tclient-configs-actions",),

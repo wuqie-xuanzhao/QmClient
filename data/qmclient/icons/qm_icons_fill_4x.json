@@ -1,9 +1,9 @@
 {
   "atlas": {
-    "height": 512,
+    "height": 640,
     "image": "qmclient/icons/qm_icons_fill_4x.png",
     "padding": 16,
-    "width": 512
+    "width": 768
   },
   "icons": {
     "chevron-down": {
@@ -15,8 +15,8 @@
     "close": {
       "h": 96,
       "w": 96,
-      "x": 400,
-      "y": 400
+      "x": 528,
+      "y": 528
     },
     "eye": {
       "h": 96,
@@ -39,68 +39,146 @@
     "satellite-check": {
       "h": 96,
       "w": 96,
-      "x": 16,
-      "y": 144
+      "x": 528,
+      "y": 16
     },
     "satellite-mute": {
       "h": 96,
       "w": 96,
-      "x": 144,
-      "y": 144
+      "x": 656,
+      "y": 16
     },
     "satellite-spectator-eye": {
       "h": 96,
       "w": 96,
-      "x": 400,
+      "x": 144,
       "y": 144
     },
     "satellite-spectator-eye-closed": {
       "h": 96,
       "w": 96,
-      "x": 272,
+      "x": 16,
       "y": 144
     },
     "satellite-swap": {
       "h": 96,
       "w": 96,
-      "x": 272,
-      "y": 272
+      "x": 528,
+      "y": 144
     },
     "satellite-swap-incoming": {
       "h": 96,
       "w": 96,
-      "x": 16,
-      "y": 272
+      "x": 272,
+      "y": 144
     },
     "satellite-swap-outgoing": {
       "h": 96,
       "w": 96,
-      "x": 144,
-      "y": 272
+      "x": 400,
+      "y": 144
     },
     "satellite-switch": {
       "h": 96,
       "w": 96,
-      "x": 400,
-      "y": 272
+      "x": 656,
+      "y": 144
     },
     "search": {
       "h": 96,
       "w": 96,
       "x": 16,
-      "y": 400
+      "y": 272
     },
     "star": {
       "h": 96,
       "w": 96,
       "x": 144,
-      "y": 400
+      "y": 272
     },
     "trash": {
       "h": 96,
       "w": 96,
       "x": 272,
+      "y": 272
+    },
+    "tune-collision": {
+      "h": 96,
+      "w": 96,
+      "x": 400,
+      "y": 272
+    },
+    "tune-elasticity": {
+      "h": 96,
+      "w": 96,
+      "x": 528,
+      "y": 272
+    },
+    "tune-gravity": {
+      "h": 96,
+      "w": 96,
+      "x": 656,
+      "y": 272
+    },
+    "tune-grenade-explosion": {
+      "h": 96,
+      "w": 96,
+      "x": 16,
       "y": 400
+    },
+    "tune-gun-jetpack": {
+      "h": 96,
+      "w": 96,
+      "x": 144,
+      "y": 400
+    },
+    "tune-hammer": {
+      "h": 96,
+      "w": 96,
+      "x": 272,
+      "y": 400
+    },
+    "tune-hook": {
+      "h": 96,
+      "w": 96,
+      "x": 400,
+      "y": 400
+    },
+    "tune-jump": {
+      "h": 96,
+      "w": 96,
+      "x": 528,
+      "y": 400
+    },
+    "tune-laser": {
+      "h": 96,
+      "w": 96,
+      "x": 656,
+      "y": 400
+    },
+    "tune-movement": {
+      "h": 96,
+      "w": 96,
+      "x": 16,
+      "y": 528
+    },
+    "tune-shotgun": {
+      "h": 96,
+      "w": 96,
+      "x": 144,
+      "y": 528
+    },
+    "tune-velramp": {
+      "h": 96,
+      "w": 96,
+      "x": 272,
+      "y": 528
+    },
+    "tune-weapon-fire-rate": {
+      "h": 96,
+      "w": 96,
+      "x": 400,
+      "y": 528
     }
   },
   "scale": 4,

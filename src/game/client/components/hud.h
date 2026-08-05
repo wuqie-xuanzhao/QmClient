@@ -11,6 +11,7 @@
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/component.h>
 #include <game/client/components/hud_media_island_logic.h>
+#include <game/client/components/qmclient/tune_zone_effects.h>
 #include <game/client/ui_rect.h>
 #include <game/teamscore.h>
 
@@ -139,8 +140,8 @@ class CHud : public CComponent
 	SHudLocalTimeV2AnimState m_LocalTimeV2AnimState;
 	struct SHudMediaIslandAnimState
 	{
-		static constexpr int SATELLITE_LIVE_MAX_ITEMS = NUM_DUMMIES + SWITCH_COUNTDOWN_MAX_LINES + 1;
-		static constexpr int SATELLITE_MAX_ITEMS = SATELLITE_LIVE_MAX_ITEMS * 2;
+		static constexpr int SATELLITE_LIVE_MAX_ITEMS = NUM_DUMMIES + SWITCH_COUNTDOWN_MAX_LINES + 2;
+		static constexpr int SATELLITE_MAX_ITEMS = IGraphics::MEDIA_ISLAND_SDF_MAX_ITEMS;
 
 		enum class EVisualState
 		{
@@ -203,6 +204,8 @@ class CHud : public CComponent
 			float m_Progress = 0.0f;
 			float m_LiquidProgress = 0.0f;
 			float m_LiquidOriginCenterX = 0.0f;
+			float m_LiquidOriginWidth = 0.0f;
+			SQmTuneZoneEffectSummary m_TuneZoneSummary;
 
 			void Reset()
 			{

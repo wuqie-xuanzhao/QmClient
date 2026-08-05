@@ -262,14 +262,14 @@ TEST(SettingsPageLayout, DynamicVisualCardHeightsUseSharedMetrics)
 	EXPECT_GT(ResolveQmVisualSkinTransitionHeight(Metrics, false), 0.0f);
 }
 
-TEST(SettingsPageLayout, DynamicIslandHeightIncludesTheActualColorRow)
+TEST(SettingsPageLayout, DynamicIslandHeightMatchesTheRenderedRowsAndColorRow)
 {
 	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
 	const float OriginalHeight = ResolveQmHudDynamicIslandHeight(Metrics, true, 700.0f);
 	const float ExpandedHeight = ResolveQmHudDynamicIslandHeight(Metrics, false, 700.0f);
 	const CUIRect ColorRowView{0.0f, 0.0f, 700.0f, 0.0f};
 
-	EXPECT_FLOAT_EQ(OriginalHeight, 3.0f * Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(OriginalHeight, 4.0f * Metrics.m_RowStep);
 	EXPECT_FLOAT_EQ(ExpandedHeight - OriginalHeight, ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight);
 }
 

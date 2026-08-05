@@ -1745,8 +1745,9 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 Input overlay
 Input overlay display
+Input overlay keyboard scale (percent)
+Input overlay mouse scale (percent)
 Input overlay opacity (percent)
-Input overlay scale (percent)
 Input overlay X position (percent)
 Input overlay Y position (percent)
 Input smoothing
@@ -1819,6 +1820,7 @@ Key Sticking: Off
 Key Sticking: On
 Key Sticking: Reset Self
 Keyboard focus ring color
+Keyboard size
 Keyword Reply
 Keyword reply
 Keyword reply rules (each line: [rename] [regex] keyword=>reply)
@@ -2151,6 +2153,7 @@ Motion and focus feedback
 Mouse
 Mouse sensitivity
 Mouse sensitivity in menu/editor
+Mouse size
 Move left
 Move player to spectators
 Move right
@@ -3404,6 +3407,8 @@ Show the server rules
 Show tiles layers from BG map
 Show toast
 Show translation
+Show Tune Zone effects
+Show Tune Zone effects on HUD Dynamic Island
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 Show unfreeze/deep unfreeze tile outlines
 Show unknown server messages
@@ -3920,6 +3925,7 @@ Tune in zone a variable to value
 Tune layer opacity
 Tune variable to value
 Tune variable to value or show current value
+Tune Zone effect icon legend
 Tutorial
 Twinkle strength
 Type

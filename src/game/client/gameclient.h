@@ -1338,6 +1338,10 @@ public:
 	void ClearQmVoiceSyncMarks();
 	void MarkQmVoiceSupportedClient(int ClientId, int64_t ExpireTick);
 	bool IsQmVoiceSupportedClient(int ClientId) const;
+	void ClearQmDeveloperMarks();
+	void MarkQmDeveloperClient(int ClientId, const char *pPlayerName, int64_t ExpireTick, bool Rainbow);
+	bool IsQmDeveloperAuthenticated(int ClientId) const;
+	bool IsQmDeveloperRainbow(int ClientId) const;
 	void ClearClientBrands();
 	EClientBrand ClientBrand(const char *pName) const;
 
@@ -1428,6 +1432,9 @@ private:
 	EClientBrand m_aQ1menGSyncClientBrands[MAX_CLIENTS] = {};
 	char m_aaQ1menGSyncQid[MAX_CLIENTS][33] = {{0}};
 	int64_t m_aQmVoiceSyncMarkUntil[MAX_CLIENTS] = {0};
+	int64_t m_aQmDeveloperMarkUntil[MAX_CLIENTS] = {0};
+	bool m_aQmDeveloperRainbow[MAX_CLIENTS] = {false};
+	char m_aaQmDeveloperMarkName[MAX_CLIENTS][MAX_NAME_LENGTH] = {{0}};
 	char m_aaClientBrandNames[MAX_CLIENTS][MAX_NAME_LENGTH] = {};
 	EClientBrand m_aClientBrands[MAX_CLIENTS] = {};
 
