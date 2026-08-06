@@ -222,7 +222,7 @@ bool CScrollRegion::Active() const
 CUIRect CScrollRegion::SplitContentArea()
 {
 	CUIRect ScrollbarBg;
-	const bool ReserveScrollbarSpace = m_Params.m_ScrollbarAlwaysReserved || ScrollbarShown();
+	const bool ReserveScrollbarSpace = QmScrollRegionShouldReserveScrollbarSpace(m_Params.m_ScrollbarAlwaysReserved, ScrollbarShown());
 	if(m_Params.m_ScrollHorizontal)
 		m_ClipRect.HSplitBottom(m_Params.m_ScrollbarThickness, ReserveScrollbarSpace ? &m_ClipRect : nullptr, &ScrollbarBg);
 	else

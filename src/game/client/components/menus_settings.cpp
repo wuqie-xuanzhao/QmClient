@@ -1575,13 +1575,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				Localize("Time"),
 			};
 			CUIRect SortLabel, SortDropDown;
-			SortModeControl.VSplitLeft(42.0f, &SortLabel, &SortDropDown);
+			const float SortLabelWidth = std::clamp(SortModeControl.w * 0.36f, 96.0f * UiScale, 150.0f * UiScale);
+			SortModeControl.VSplitLeft(SortLabelWidth, &SortLabel, &SortDropDown);
+			SortDropDown.VSplitLeft(ControlSpacing, nullptr, &SortDropDown);
 			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_skin_sort_label", &SortLabel, Localize("Skin sort"), BodySize, TEXTALIGN_ML);
 			const int SkinSortMode = std::clamp(g_Config.m_QmSkinSortMode, 0, 1);
 			CUi::SDropDownProperties SkinSortDropDownProps;
 			SkinSortDropDownProps.m_FontSize = BodySize;
-			const IUiContext DropDownCtx = SettingsUiContext("settings_tee_skin_sort_dropdown", UiScale);
-			SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle(*DropDownCtx.m_pTheme);
 			const int SkinSortModeNew = DoSettingsDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState, SkinSortDropDownProps);
 			if(g_Config.m_QmSkinSortMode != SkinSortModeNew)
 			{
@@ -3989,7 +3989,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 			static CButtonContainer s_UiCardColorResetId;
 			CUIRect UiCardColorRow = Rows.NextButton();
-			DoLine_ColorPicker(&s_UiCardColorResetId, ColorMetrics, &UiCardColorRow, Localize("Settings card background"), &g_Config.m_QmUiCardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor).UnclampLighting(0.42f)), false, nullptr, false, false);
+			if(DoLine_AlphaColorPicker(&s_UiCardColorResetId, ColorMetrics, &UiCardColorRow, Localize("Settings card background"), &g_Config.m_QmUiCardColor, &g_Config.m_QmUiCardOpacity, DefaultConfig::QmUiCardColor, DefaultConfig::QmUiCardOpacity))
+				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			static CButtonContainer s_MapBrowserColorResetId;
 			CUIRect MapBrowserColorRow = Rows.NextButton();

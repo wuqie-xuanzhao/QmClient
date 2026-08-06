@@ -1671,16 +1671,8 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 
 			if(m_IngameMotdParagraphCache.m_BuildByteOffset >= TextLength)
 			{
-				TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex);
-				if(m_IngameMotdParagraphCache.m_Valid && m_MotdTextContainerIndex.Valid())
-				{
-					m_IngameMotdParagraphCache.m_PreviousTextHash = m_IngameMotdParagraphCache.m_TextHash;
-					m_IngameMotdParagraphCache.m_PreviousUpdateTime = m_IngameMotdParagraphCache.m_UpdateTime;
-					m_IngameMotdParagraphCache.m_PreviousWidth = m_IngameMotdParagraphCache.m_Width;
-					m_IngameMotdParagraphCache.m_PreviousFontSize = m_IngameMotdParagraphCache.m_FontSize;
-					m_IngameMotdParagraphCache.m_PreviousHeight = m_IngameMotdParagraphCache.m_Height;
-					m_IngameMotdParagraphCache.m_PreviousTextContainerIndex = m_MotdTextContainerIndex;
-				}
+				// 文本容器不支持多 owner；构建期间继续显示旧容器，完成后再原子替换。
+				TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
 				m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex;
 				m_IngameMotdParagraphCache.m_BuildTextContainerIndex.Reset();
 				m_IngameMotdParagraphCache.m_BuildCursor = CTextCursor();
@@ -1693,7 +1685,6 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 				m_IngameMotdParagraphCache.m_LastStableHeight = m_IngameMotdParagraphCache.m_Height;
 				m_IngameMotdParagraphCache.m_Valid = true;
 				m_IngameMotdParagraphCache.m_Pending = false;
-				m_IngameMotdParagraphCache.m_PreviousText = pMotd;
 			}
 		}
 	}
@@ -1710,7 +1701,7 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 	}
 }
 
-bool CMenus::RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea)
+bool CMenus::RenderIngameMotdStableParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea)
 {
 	if(m_IngameMotdParagraphCache.m_Valid && m_MotdTextContainerIndex.Valid() &&
 		absolute(m_IngameMotdParagraphCache.m_Width - Motd.w) < 0.01f &&
@@ -1719,13 +1710,7 @@ bool CMenus::RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize
 		TextRender()->RenderTextContainer(m_MotdTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), MotdTextArea.x, MotdTextArea.y);
 		return true;
 	}
-	if(!m_IngameMotdParagraphCache.m_PreviousTextContainerIndex.Valid())
-		return false;
-	if(absolute(m_IngameMotdParagraphCache.m_PreviousWidth - Motd.w) >= 0.01f ||
-		absolute(m_IngameMotdParagraphCache.m_PreviousFontSize - FontSize) >= 0.01f)
-		return false;
-	TextRender()->RenderTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), MotdTextArea.x, MotdTextArea.y);
-	return true;
+	return false;
 }
 
 void CMenus::RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize)
@@ -2035,8 +2020,7 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	const bool CacheReady = IngameMotdParagraphCacheMatches(Motd, MotdFontSize);
 
 	CUIRect MotdTextArea;
-	const float PreviousHeight = m_IngameMotdParagraphCache.m_PreviousTextContainerIndex.Valid() ? m_IngameMotdParagraphCache.m_PreviousHeight : 0.0f;
-	const float MotdTextHeight = CacheReady ? m_IngameMotdParagraphCache.m_Height : maximum(maximum(m_IngameMotdParagraphCache.m_LastStableHeight, PreviousHeight), maximum(3.0f * MotdFontSize, Motd.h));
+	const float MotdTextHeight = CacheReady ? m_IngameMotdParagraphCache.m_Height : maximum(m_IngameMotdParagraphCache.m_LastStableHeight, maximum(3.0f * MotdFontSize, Motd.h));
 	Motd.HSplitTop(MotdTextHeight, &MotdTextArea, &Motd);
 	s_ScrollRegion.AddRect(MotdTextArea);
 
@@ -2046,7 +2030,7 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	}
 	else
 	{
-		const bool RenderedMotdParagraph = RenderIngameMotdPreviousParagraphCache(Motd, MotdFontSize, MotdTextArea);
+		const bool RenderedMotdParagraph = RenderIngameMotdStableParagraphCache(Motd, MotdFontSize, MotdTextArea);
 		if(!RenderedMotdParagraph)
 			RenderIngameMotdFallbackText(MotdTextArea, MotdFontSize);
 		if(!RenderedMotdParagraph && QmPerfEnabled())
@@ -2130,9 +2114,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)
 	int i = 0;
 	for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption; pOption = pOption->m_pNext, i++)
 	{
-		if(!m_FilterInput.IsEmpty() && !str_utf8_find_nocase(pOption->m_aDescription, m_FilterInput.GetString()))
-			continue;
-		if(!m_ExcludeInput.IsEmpty() && str_utf8_find_nocase(pOption->m_aDescription, m_ExcludeInput.GetString()))
+		if(!QmTextMatchesIncludeExcludeFilter(pOption->m_aDescription, m_FilterInput.GetString(), m_ExcludeInput.GetString()))
 			continue;
 		const int Stars = ParseCallvoteMapStars(pOption->m_aDescription);
 		if(!IsVisibleBySortMode(Stars))
@@ -2235,9 +2217,7 @@ bool CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators, bo
 		if(Index == GameClient()->m_Snap.m_LocalClientId || (FilterSpectators && pInfoByName->m_Team == TEAM_SPECTATORS))
 			continue;
 
-		if(!m_FilterInput.IsEmpty() && !str_utf8_find_nocase(GameClient()->m_aClients[Index].m_aName, m_FilterInput.GetString()))
-			continue;
-		if(!m_ExcludeInput.IsEmpty() && str_utf8_find_nocase(GameClient()->m_aClients[Index].m_aName, m_ExcludeInput.GetString()))
+		if(!QmTextMatchesIncludeExcludeFilter(GameClient()->m_aClients[Index].m_aName, m_FilterInput.GetString(), m_ExcludeInput.GetString()))
 			continue;
 
 		if(m_CallvoteSelectedPlayer == Index)

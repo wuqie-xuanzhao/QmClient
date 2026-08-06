@@ -61,6 +61,15 @@ namespace qm_card_registry
 	struct SCardNavigationTarget;
 }
 
+inline bool QmTextMatchesIncludeExcludeFilter(const char *pText, const char *pInclude, const char *pExclude)
+{
+	if(pText == nullptr)
+		return false;
+	const bool Includes = pInclude == nullptr || pInclude[0] == '\0' || str_utf8_find_nocase(pText, pInclude) != nullptr;
+	const bool Excludes = pExclude != nullptr && pExclude[0] != '\0' && str_utf8_find_nocase(pText, pExclude) != nullptr;
+	return Includes && !Excludes;
+}
+
 // IDs of the tabs in the Assets menu
 enum
 {
@@ -1849,13 +1858,6 @@ protected:
 		CTextCursor m_BuildCursor;
 		int m_BuildByteOffset = 0;
 		float m_BuildHeight = 0.0f;
-		unsigned m_PreviousTextHash = 0;
-		float m_PreviousWidth = 0.0f;
-		float m_PreviousFontSize = 0.0f;
-		float m_PreviousHeight = 0.0f;
-		int64_t m_PreviousUpdateTime = -1;
-		std::string m_PreviousText;
-		STextContainerIndex m_PreviousTextContainerIndex;
 	};
 	struct SMenuSnapshotTextKey
 	{
@@ -1955,7 +1957,7 @@ protected:
 	bool RequestIngameMotdParagraphCache(CUIRect Motd, float FontSize);
 	bool IngameMotdParagraphCacheMatches(CUIRect Motd, float FontSize) const;
 	void DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame = false);
-	bool RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
+	bool RenderIngameMotdStableParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
 	void RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize);
 	void DrainIngameUiSnapshotTextRuntime();
 	void DrainIngameUiTextRuntime(bool AllowCurrentFrame = false);

@@ -4,6 +4,7 @@
 
 #include <game/client/QmUi/UiSurface.h>
 #include <game/client/components/camera.h>
+#include <game/client/components/controls.h>
 #include <game/client/components/menus.h>
 #include <game/client/components/nameplate_text_effects.h>
 #include <game/client/components/nameplates.h>
@@ -36,6 +37,22 @@ TEST(PlausibleSizes, RefreshRateAndWindowGuardsMatchContract)
 	EXPECT_FALSE(IsPlausibleWindowSize(320, 239)); // under min height
 	EXPECT_FALSE(IsPlausibleWindowSize(16385, 1080)); // over max width
 	EXPECT_FALSE(IsPlausibleWindowSize(1920, 16385)); // over max height
+}
+
+TEST(QmNewUiMenuBranches, RespawnWeaponAndCallvoteFiltersUseSharedBoundedSemantics)
+{
+	EXPECT_EQ(QmRespawnDefaultWantedWeapon(-1), 0);
+	EXPECT_EQ(QmRespawnDefaultWantedWeapon(0), 0);
+	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_HAMMER + 1), WEAPON_HAMMER + 1);
+	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_GUN + 1), WEAPON_GUN + 1);
+	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_LASER + 1), WEAPON_LASER + 1);
+	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_LASER + 2), WEAPON_LASER + 1);
+
+	EXPECT_TRUE(QmTextMatchesIncludeExcludeFilter("Deep Freeze", "deep", ""));
+	EXPECT_TRUE(QmTextMatchesIncludeExcludeFilter("Deep Freeze", "", "race"));
+	EXPECT_FALSE(QmTextMatchesIncludeExcludeFilter("Deep Freeze", "race", ""));
+	EXPECT_FALSE(QmTextMatchesIncludeExcludeFilter("Deep Freeze", "deep", "FREEZE"));
+	EXPECT_FALSE(QmTextMatchesIncludeExcludeFilter(nullptr, "", ""));
 }
 
 namespace
@@ -1067,6 +1084,7 @@ TEST(QmNewUiMenuBranches, DefaultUiSurfacesUseBlackThirtyPercent)
 	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_COL(QmMapBrowserColor, qm_map_browser_color, 0x000000"), std::string::npos);
 	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_COL(QmScoreboardColor, qm_scoreboard_color, 0x000000"), std::string::npos);
 	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_INT(QmUiOpacity, qm_ui_opacity, 30"), std::string::npos);
+	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_INT(QmUiCardOpacity, qm_ui_card_opacity, 30"), std::string::npos);
 	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_INT(QmMapBrowserOpacity, qm_map_browser_opacity, 30"), std::string::npos);
 	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_INT(QmScoreboardOpacity, qm_scoreboard_opacity, 30"), std::string::npos);
 
@@ -3269,9 +3287,9 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardRainbowTitles, \"rainbow-card-titles\", Localize(\"Rainbow card titles\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardBorders, \"show-settings-card-borders\", Localize(\"Show settings card borders\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Settings card border color\"), &g_Config.m_QmUiCardBorderColor"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Settings card background\"), &g_Config.m_QmUiCardColor"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("DoLine_AlphaColorPicker(&s_UiCardColorResetId, ColorMetrics, &UiCardColorRow, Localize(\"Settings card background\"), &g_Config.m_QmUiCardColor, &g_Config.m_QmUiCardOpacity"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_COL(QmUiCardColor"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("false, nullptr, true, false);"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmUiCardOpacity, qm_ui_card_opacity, 30"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("DoGraphicsNumericField(\"graphics-card-corner-segments\""), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);"), std::string::npos);
@@ -3999,8 +4017,8 @@ TEST(QmNewUiMenuBranches, CallVoteSearchSupportsIndependentExclusion)
 	ASSERT_FALSE(PlayerList.empty());
 	ASSERT_FALSE(RenderControl.empty());
 	EXPECT_NE(MenusHeader.find("CLineInputBuffered<64> m_ExcludeInput;"), std::string::npos);
-	EXPECT_NE(ServerList.find("m_ExcludeInput.IsEmpty()"), std::string::npos);
-	EXPECT_NE(PlayerList.find("m_ExcludeInput.IsEmpty()"), std::string::npos);
+	EXPECT_NE(ServerList.find("QmTextMatchesIncludeExcludeFilter(pOption->m_aDescription, m_FilterInput.GetString(), m_ExcludeInput.GetString())"), std::string::npos);
+	EXPECT_NE(PlayerList.find("QmTextMatchesIncludeExcludeFilter(GameClient()->m_aClients[Index].m_aName, m_FilterInput.GetString(), m_ExcludeInput.GetString())"), std::string::npos);
 	EXPECT_NE(RenderControl.find("ingame_callvote_exclude"), std::string::npos);
 	EXPECT_NE(RenderControl.find("CallvoteExcludeOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;"), std::string::npos);
 	EXPECT_NE(RenderControl.find("CallvoteExcludeOptions.m_pPlaceholder = Localize(\"Exclude\");"), std::string::npos);
@@ -4309,7 +4327,10 @@ TEST(QmNewUiMenuBranches, TeeOptionsMeasureAllRowsAndPlayerDummyChangeDisplayCyc
 	EXPECT_NE(Tee.find("g_Config.m_QmSkinShowMetadata != 0"), std::string::npos);
 	EXPECT_EQ(Tee.find("g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata"), std::string::npos);
 	EXPECT_NE(Tee.find("SkinSortDropDownProps.m_FontSize = BodySize;"), std::string::npos);
-	EXPECT_NE(Tee.find("SkinSortDropDownProps.m_VisualStyle = QmSettingsDropdownVisualStyle(*DropDownCtx.m_pTheme);"), std::string::npos);
+	EXPECT_NE(Tee.find("const float SortLabelWidth = std::clamp(SortModeControl.w * 0.36f"), std::string::npos);
+	EXPECT_NE(Tee.find("SortDropDown.VSplitLeft(ControlSpacing, nullptr, &SortDropDown);"), std::string::npos);
+	EXPECT_EQ(Tee.find("settings_tee_skin_sort_dropdown"), std::string::npos);
+	EXPECT_EQ(Tee.find("SkinSortDropDownProps.m_VisualStyle"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("\"Show skin release date and author\""), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("\"Show release date and author when sorted by date\""), std::string::npos);
 	EXPECT_NE(Tee.find("const auto NextCheckboxRow"), std::string::npos);

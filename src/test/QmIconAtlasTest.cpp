@@ -45,7 +45,8 @@ namespace
 TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 {
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::STAR), "star");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SEARCH), "search");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::BOOKMARK), "bookmark");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SEARCH), "magnifying-glass");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::CLOSE), "close");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::EYE), "eye");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::EYE_OFF), "eye-off");
@@ -72,6 +73,14 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_WEAPON_FIRE_RATE), "tune-weapon-fire-rate");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_VELRAMP), "tune-velramp");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_ELASTICITY), "tune-elasticity");
+
+	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string IconManager = ReadTextFile("src/game/client/qm_icon_manager.cpp");
+	EXPECT_NE(Menus.find("RenderFavoriteMapsIcon"), std::string::npos);
+	EXPECT_NE(Menus.find("EQmIcon::BOOKMARK"), std::string::npos);
+	EXPECT_EQ(Menus.find("\xF0\x9F\x94\x96"), std::string::npos);
+	EXPECT_NE(IconManager.find("str_comp(pName, \"bookmark\") == 0"), std::string::npos);
+	EXPECT_NE(IconManager.find("return EQmIcon::BOOKMARK;"), std::string::npos);
 }
 
 TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)

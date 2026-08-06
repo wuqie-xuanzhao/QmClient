@@ -23,6 +23,7 @@ class IStorage;
 enum class EQmIcon
 {
 	STAR = 0,
+	BOOKMARK,
 	SEARCH,
 	CLOSE,
 	EYE,
@@ -312,7 +313,8 @@ public:
 		switch(Icon)
 		{
 		case EQmIcon::STAR: return "star";
-		case EQmIcon::SEARCH: return "search";
+		case EQmIcon::BOOKMARK: return "bookmark";
+		case EQmIcon::SEARCH: return "magnifying-glass";
 		case EQmIcon::CLOSE: return "close";
 		case EQmIcon::EYE: return "eye";
 		case EQmIcon::EYE_OFF: return "eye-off";

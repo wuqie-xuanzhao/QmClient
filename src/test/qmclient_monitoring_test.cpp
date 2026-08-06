@@ -4024,24 +4024,28 @@ TEST(QmMonitoringHelpers, MotdParagraphDrainBuildsInChunks)
 	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, MotdUsesReadyOrPreviousParagraphOnly)
+TEST(QmMonitoringHelpers, MotdUsesReadyOrStableParagraphOnly)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerInfoMotd(CUIRect Motd)");
+	const std::string ResizeBody = ExtractSourceFunctionBody(Menus, "void CMenus::OnWindowResize()");
 	ASSERT_FALSE(Body.empty());
+	ASSERT_FALSE(ResizeBody.empty());
 
 	// MOTD can be prepared asynchronously, but visible rendering must not show a
-	// loading placeholder or blank range. It should render the current ready
-	// paragraph, or a previous same-size paragraph while the new one hydrates.
-	EXPECT_NE(Header.find("m_PreviousTextHash"), std::string::npos);
-	EXPECT_NE(Header.find("m_PreviousTextContainerIndex"), std::string::npos);
-	EXPECT_NE(Source.find("RenderIngameMotdPreviousParagraphCache("), std::string::npos);
+	// loading placeholder or blank range. The current stable paragraph remains
+	// the sole owner until a completed build replaces it.
+	EXPECT_NE(Header.find("m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_EQ(Header.find("m_PreviousTextContainerIndex"), std::string::npos);
+	EXPECT_NE(Source.find("RenderIngameMotdStableParagraphCache("), std::string::npos);
 	EXPECT_NE(Body.find("const bool RenderedMotdParagraph ="), std::string::npos);
-	EXPECT_NE(Body.find("RenderIngameMotdPreviousParagraphCache("), std::string::npos);
+	EXPECT_NE(Body.find("RenderIngameMotdStableParagraphCache("), std::string::npos);
 	EXPECT_NE(Body.find("RenderIngameMotdFallbackText("), std::string::npos);
 	EXPECT_NE(Body.find("server_info_not_ready=1"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Loading"), std::string::npos);
+	EXPECT_NE(ResizeBody.find("TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ValueSelectorDisplayUsesSingleLineShrink)
@@ -7008,7 +7012,8 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(DeckHeader.find("bool m_AllowHeaderDrag = true;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;"), std::string::npos);
-	EXPECT_NE(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha"), std::string::npos);
+	EXPECT_NE(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiCardOpacity / 100.0f"), std::string::npos);
+	EXPECT_EQ(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiOpacity / 100.0f"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
 	EXPECT_NE(QmClientSource.find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);

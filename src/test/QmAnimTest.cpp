@@ -2550,6 +2550,14 @@ TEST(UiV2ScrollPolicy, ListBoxExplicitScrollbarMetricsOverridePolicyDefaults)
 	EXPECT_NEAR(QmListBoxScrollbarMetric(20.0f, 15.0f, true), 15.0f, 0.001f);
 }
 
+TEST(UiV2ScrollPolicy, ScrollbarReservationPreventsNestedListWidthJitter)
+{
+	EXPECT_FALSE(QmScrollRegionShouldReserveScrollbarSpace(false, false));
+	EXPECT_TRUE(QmScrollRegionShouldReserveScrollbarSpace(false, true));
+	EXPECT_TRUE(QmScrollRegionShouldReserveScrollbarSpace(true, false));
+	EXPECT_TRUE(QmScrollRegionShouldReserveScrollbarSpace(true, true));
+}
+
 TEST(UiV2ScrollPolicy, ListBoxInitialSelectionRequestsOneAnimatedReveal)
 {
 	EXPECT_TRUE(QmListBoxShouldScrollToInitialSelection(true, 4));

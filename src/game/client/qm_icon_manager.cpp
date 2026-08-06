@@ -40,7 +40,9 @@ namespace
 	{
 		if(str_comp(pName, "star") == 0)
 			return EQmIcon::STAR;
-		if(str_comp(pName, "search") == 0)
+		if(str_comp(pName, "bookmark") == 0)
+			return EQmIcon::BOOKMARK;
+		if(str_comp(pName, "magnifying-glass") == 0 || str_comp(pName, "search") == 0)
 			return EQmIcon::SEARCH;
 		if(str_comp(pName, "close") == 0)
 			return EQmIcon::CLOSE;

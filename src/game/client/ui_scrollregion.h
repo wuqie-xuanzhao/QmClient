@@ -13,6 +13,11 @@ constexpr bool QmScrollRegionCanConsumeWheel(bool HotFromPreviousFrame, bool Hot
 	return (HotFromPreviousFrame || HotThisFrame) && (!UnderlyingScrollBlocked || RenderingPopup);
 }
 
+constexpr bool QmScrollRegionShouldReserveScrollbarSpace(bool AlwaysReserved, bool ScrollbarShown)
+{
+	return AlwaysReserved || ScrollbarShown;
+}
+
 struct CScrollRegionParams
 {
 	float m_ScrollbarThickness;
