@@ -369,7 +369,8 @@ inline float ResolveSettingsProfilesListHeight(const SSettingsContentMetrics &Me
 inline float ResolveSettingsTeeQueuePresetHeight(const SSettingsContentMetrics &Metrics, const int VisiblePresetRows)
 {
 	// 分割高度包含预设区域前的间距、Surface 的上下内边距、标题、操作按钮和可见列表行。
-	return Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight + std::max(1, VisiblePresetRows) * Metrics.m_ListRowHeight;
+	const float PresetRowSpacing = Metrics.m_LineSpacing * 0.5f;
+	return Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight + ResolveSettingsListViewportHeight(VisiblePresetRows, Metrics.m_ListRowHeight, PresetRowSpacing);
 }
 
 inline int ResolveSettingsTeeVisiblePresetRows(const int PresetCount)

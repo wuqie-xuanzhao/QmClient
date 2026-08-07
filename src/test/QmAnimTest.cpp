@@ -388,8 +388,9 @@ namespace
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
 		const float FixedChromeHeight = Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight;
-		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 3), FixedChromeHeight + Metrics.m_ListRowHeight * 3.0f);
-		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 6), FixedChromeHeight + Metrics.m_ListRowHeight * 6.0f);
+		const float PresetRowSpacing = Metrics.m_LineSpacing * 0.5f;
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 3), FixedChromeHeight + ResolveSettingsListViewportHeight(3, Metrics.m_ListRowHeight, PresetRowSpacing));
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 6), FixedChromeHeight + ResolveSettingsListViewportHeight(6, Metrics.m_ListRowHeight, PresetRowSpacing));
 		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(0), 2);
 		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(3), 3);
 		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(12), 3);
@@ -2558,6 +2559,15 @@ TEST(UiV2ScrollPolicy, ScrollbarReservationPreventsNestedListWidthJitter)
 	EXPECT_TRUE(QmScrollRegionShouldReserveScrollbarSpace(true, true));
 }
 
+TEST(UiV2ScrollPolicy, ScrollbarOverflowIgnoresSubpixelLayoutRemainder)
+{
+	EXPECT_FALSE(QmScrollRegionContentOverflows(100.0f, 100.0f, 0.5f));
+	EXPECT_FALSE(QmScrollRegionContentOverflows(100.125f, 100.0f, 0.5f));
+	EXPECT_TRUE(QmScrollRegionContentOverflows(100.126f, 100.0f, 0.5f));
+	EXPECT_FALSE(QmScrollRegionContentOverflows(100.0625f, 100.0f, 0.25f));
+	EXPECT_TRUE(QmScrollRegionContentOverflows(100.0626f, 100.0f, 0.25f));
+}
+
 TEST(UiV2ScrollPolicy, ListBoxInitialSelectionRequestsOneAnimatedReveal)
 {
 	EXPECT_TRUE(QmListBoxShouldScrollToInitialSelection(true, 4));
@@ -3569,6 +3579,10 @@ TEST(UiV2DropdownVisuals, SettingsStyleSharesTriggerAndPopupSurface)
 	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.a, Theme.m_Surface.a);
 	EXPECT_TRUE(Style.m_TransparentEntries);
 	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.a, Theme.m_Border.a);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.r, Theme.m_SurfaceHovered.r);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.g, Theme.m_SurfaceHovered.g);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.b, Theme.m_SurfaceHovered.b);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.a, Theme.m_SurfaceHovered.a);
 }
 
 TEST(UiV2DropdownGeometry, FlipsAboveWhenBelowWouldOverflow)

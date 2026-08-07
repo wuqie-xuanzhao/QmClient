@@ -2612,6 +2612,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_FontSize = 10.0f;
 	m_Width = 300.0f + (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2;
 	m_AlignmentHeight = -1.0f;
+	m_ActiveEntryColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.22f);
 	m_TransparentButtons = false;
 	m_AnchorVisible = true;
 	m_PopupVisible = true;
@@ -2681,7 +2682,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		{
 			++VisibleEntries;
 			// 活动项与悬浮项使用同一种整行背景，避免左侧竖条与条目背景重叠。
-			const std::optional<ColorRGBA> ActiveColor = ActiveEntry ? std::optional<ColorRGBA>(ColorRGBA(1.0f, 1.0f, 1.0f, 0.22f)) : std::nullopt;
+			const std::optional<ColorRGBA> ActiveColor = ActiveEntry ? std::optional<ColorRGBA>(pSelectionPopup->m_ActiveEntryColor) : std::nullopt;
 			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons, true, ActiveColor))
 			{
 				pSelectionPopup->m_pSelection = &Entry;
@@ -2871,6 +2872,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, 
 		State.m_SelectionPopupContext.m_Viewport = Viewport;
 		State.m_SelectionPopupContext.m_Props.m_BorderColor = DropDownProps.m_VisualStyle.m_PopupBorderColor;
 		State.m_SelectionPopupContext.m_Props.m_BackgroundColor = DropDownProps.m_VisualStyle.m_PopupBackgroundColor;
+		State.m_SelectionPopupContext.m_ActiveEntryColor = DropDownProps.m_VisualStyle.m_ActiveEntryColor;
 		State.m_SelectionPopupContext.m_TransparentButtons = DropDownProps.m_VisualStyle.m_TransparentEntries;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 		PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
@@ -2886,6 +2888,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, 
 		State.m_SelectionPopupContext.m_SpecialFontRenderMode = SpecialFontRenderMode;
 		State.m_SelectionPopupContext.m_Props.m_BorderColor = DropDownProps.m_VisualStyle.m_PopupBorderColor;
 		State.m_SelectionPopupContext.m_Props.m_BackgroundColor = DropDownProps.m_VisualStyle.m_PopupBackgroundColor;
+		State.m_SelectionPopupContext.m_ActiveEntryColor = DropDownProps.m_VisualStyle.m_ActiveEntryColor;
 		for(int i = 0; i < Num; ++i)
 			State.m_SelectionPopupContext.m_vEntries.emplace_back(pStrs[i]);
 		State.m_SelectionPopupContext.m_EntryHeight = pRect->h;

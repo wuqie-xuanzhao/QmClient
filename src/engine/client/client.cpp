@@ -265,12 +265,8 @@ static bool ApplyQmSafeGraphicsRecovery()
 		str_copy(g_Config.m_GfxBackend, "OpenGL");
 		Changed = true;
 	}
-	int FallbackGLMajor = 3;
-	int FallbackGLMinor = 0;
-#if defined(CONF_PLATFORM_MACOS)
-	FallbackGLMajor = 4;
-	FallbackGLMinor = 1;
-#endif
+	const int FallbackGLMajor = 0;
+	const int FallbackGLMinor = 0;
 	if(g_Config.m_GfxGLMajor != FallbackGLMajor || g_Config.m_GfxGLMinor != FallbackGLMinor || g_Config.m_GfxGLPatch != 0)
 	{
 		g_Config.m_GfxGLMajor = FallbackGLMajor;
@@ -333,12 +329,7 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	const bool Changed = ApplyQmSafeGraphicsRecovery();
 	if(Changed)
 	{
-#if defined(CONF_PLATFORM_MACOS)
-		constexpr const char *pFallbackOpenGlVersion = "4.1";
-#else
-		constexpr const char *pFallbackOpenGlVersion = "3.0";
-#endif
-		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to OpenGL %s windowed mode without FSAA", Latest.m_aPath, pFallbackOpenGlVersion);
+		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to auto-detected OpenGL in windowed mode without FSAA", Latest.m_aPath);
 	}
 	else
 	{
@@ -1864,6 +1855,17 @@ const char *CClient::ErrorString() const
 
 void CClient::Render()
 {
+	if(!QmPerfEnabled())
+	{
+		if(m_EditorActive)
+			m_pEditor->OnRender();
+		else
+			GameClient()->OnRender();
+		RenderDebug();
+		RenderGraphs();
+		return;
+	}
+
 	CPerfTimer RenderTimer;
 
 	if(m_EditorActive)
@@ -4237,7 +4239,10 @@ void CClient::Run()
 
 	while(true)
 	{
-		CPerfTimer LoopTimer;
+		const bool PerfEnabled = QmPerfEnabled();
+		std::optional<CPerfTimer> LoopTimer;
+		if(PerfEnabled)
+			LoopTimer.emplace();
 		++m_PerfFrame;
 		set_new_tick();
 		UpdateHangHeartbeat();
@@ -4272,11 +4277,17 @@ void CClient::Run()
 
 		// update input
 		{
-			CPerfTimer StageTimer;
-			const bool QuitRequested = Input()->Update();
-			char aExtra[96];
-			str_format(aExtra, sizeof(aExtra), "state=%d quit=%d", State(), QuitRequested ? 1 : 0);
-			QmPerfLogStage("perf/main_thread", "input_update", StageTimer.ElapsedMs(), QuitRequested, this, nullptr, nullptr, aExtra);
+			bool QuitRequested;
+			if(PerfEnabled)
+			{
+				CPerfTimer StageTimer;
+				QuitRequested = Input()->Update();
+				char aExtra[96];
+				str_format(aExtra, sizeof(aExtra), "state=%d quit=%d", State(), QuitRequested ? 1 : 0);
+				QmPerfLogStage("perf/main_thread", "input_update", StageTimer.ElapsedMs(), QuitRequested, this, nullptr, nullptr, aExtra);
+			}
+			else
+				QuitRequested = Input()->Update();
 			if(QuitRequested)
 			{
 				if(State() == IClient::STATE_QUITTING)
@@ -4298,19 +4309,25 @@ void CClient::Run()
 		}
 
 #if defined(CONF_AUTOUPDATE)
+		if(PerfEnabled)
 		{
 			CPerfTimer StageTimer;
 			Updater()->Update();
 			QmPerfLogStage("perf/main_thread", "updater_update", StageTimer.ElapsedMs(), false, this);
 		}
+		else
+			Updater()->Update();
 #endif
 
 		// update sound
+		if(PerfEnabled)
 		{
 			CPerfTimer StageTimer;
 			Sound()->Update();
 			QmPerfLogStage("perf/main_thread", "sound_update", StageTimer.ElapsedMs(), false, this);
 		}
+		else
+			Sound()->Update();
 
 		if(CtrlShiftKey(KEY_D, LastD))
 			g_Config.m_Debug ^= 1;
@@ -4341,6 +4358,7 @@ void CClient::Run()
 				m_EditorActive = false;
 			}
 
+			if(PerfEnabled)
 			{
 				CPerfTimer StageTimer;
 				Update();
@@ -4348,6 +4366,8 @@ void CClient::Run()
 				str_format(aExtra, sizeof(aExtra), "state=%d editor=%d", State(), m_EditorActive ? 1 : 0);
 				QmPerfLogStage("perf/main_thread", "client_update", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 			}
+			else
+				Update();
 			int64_t Now = time_get();
 
 			bool IsRenderActive = (g_Config.m_GfxBackgroundRender || m_pGraphics->WindowOpen());
@@ -4418,6 +4438,7 @@ void CClient::Run()
 				LastRenderTime = Now - AdditionalTime;
 				m_LastRenderTime = Now;
 
+				if(PerfEnabled)
 				{
 					CPerfTimer StageTimer;
 					Render();
@@ -4425,6 +4446,9 @@ void CClient::Run()
 					str_format(aExtra, sizeof(aExtra), "state=%d render_rate=%d throttle=%d", State(), GfxRefreshRate, RequestedRenderThrottleRate);
 					QmPerfLogStage("perf/main_thread", "frame_render", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 				}
+				else
+					Render();
+				if(PerfEnabled)
 				{
 					CPerfTimer StageTimer;
 					m_pGraphics->Swap();
@@ -4432,6 +4456,8 @@ void CClient::Run()
 					str_format(aExtra, sizeof(aExtra), "state=%d render_rate=%d throttle=%d", State(), GfxRefreshRate, RequestedRenderThrottleRate);
 					QmPerfLogStage("perf/main_thread", "graphics_swap", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 				}
+				else
+					m_pGraphics->Swap();
 			}
 			else if(!IsRenderActive)
 			{
@@ -4445,7 +4471,8 @@ void CClient::Run()
 		AutoCSV_Cleanup();
 
 		m_Fifo.Update();
-		QmPerfLogStage("perf/main_thread", "loop_total", LoopTimer.ElapsedMs(), false, this);
+		if(PerfEnabled)
+			QmPerfLogStage("perf/main_thread", "loop_total", LoopTimer->ElapsedMs(), false, this);
 
 		if(State() == IClient::STATE_QUITTING || State() == IClient::STATE_RESTARTING)
 			break;

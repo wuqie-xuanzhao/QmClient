@@ -4,6 +4,7 @@ import subprocess
 import os
 import re
 import glob
+import shutil
 
 
 def get_install_name(otool, dylib_path):
@@ -24,7 +25,34 @@ def get_dependencies(otool, dylib_path):
     return deps
 
 
+def bundle_external_dependencies(otool, frameworks_dir, executable):
+    queue = [executable]
+    queue.extend(glob.glob(os.path.join(frameworks_dir, "*.dylib")))
+    visited = set()
+
+    while queue:
+        binary = queue.pop()
+        if not binary or binary in visited or not os.path.exists(binary):
+            continue
+        visited.add(binary)
+
+        for dep in get_dependencies(otool, binary):
+            if not os.path.isabs(dep) or dep.startswith(("/System/", "/usr/lib/")):
+                continue
+            if not os.path.exists(dep):
+                raise RuntimeError(f"Missing macOS runtime dependency: {dep}")
+
+            destination = os.path.join(frameworks_dir, os.path.basename(dep))
+            # The executable's resolved dependency is authoritative. Replace
+            # any pre-seeded file with the same basename so an older bundled
+            # copy cannot silently win after a dependency upgrade.
+            print(f"Bundling dependency: {dep} -> {destination}")
+            shutil.copy2(dep, destination)
+            queue.append(destination)
+
+
 def fix_dylib_install_names(otool, install_name_tool, frameworks_dir, executable):
+    bundle_external_dependencies(otool, frameworks_dir, executable)
     dylibs = glob.glob(os.path.join(frameworks_dir, "*.dylib"))
 
     dylib_basenames = {}

@@ -1751,8 +1751,36 @@ public:
 		return m_SelectionColor;
 	}
 
+	void InitTextContainer(STextContainer &TextContainer, CTextCursor *pCursor)
+	{
+		TextContainer.m_SingleTimeUse = (m_RenderFlags & TEXT_RENDER_FLAG_ONE_TIME_USE) != 0;
+
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		const vec2 FakeToScreen = vec2(Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0), Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
+		TextContainer.m_AlignedStartX = round_to_int(pCursor->m_X * FakeToScreen.x) / FakeToScreen.x;
+		TextContainer.m_AlignedStartY = round_to_int(pCursor->m_Y * FakeToScreen.y) / FakeToScreen.y;
+		TextContainer.m_X = pCursor->m_X;
+		TextContainer.m_Y = pCursor->m_Y;
+		TextContainer.m_Flags = pCursor->m_Flags;
+
+		if(pCursor->m_LineWidth <= 0.0f)
+			TextContainer.m_RenderFlags = m_RenderFlags | ETextRenderFlags::TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE;
+		else
+			TextContainer.m_RenderFlags = m_RenderFlags;
+	}
+
 	void TextEx(CTextCursor *pCursor, const char *pText, int Length = -1) override
 	{
+		if((pCursor->m_Flags & TEXTFLAG_RENDER) == 0)
+		{
+			// 仅布局的文本不占用文本容器索引，但字形查找仍可能更新图集。
+			STextContainer LayoutContainer;
+			InitTextContainer(LayoutContainer, pCursor);
+			AppendTextContainerImpl(LayoutContainer, pCursor, pText, Length);
+			return;
+		}
+
 		const unsigned OldRenderFlags = m_RenderFlags;
 		m_RenderFlags |= TEXT_RENDER_FLAG_ONE_TIME_USE;
 		STextContainerIndex TextCont;
@@ -1779,22 +1807,8 @@ public:
 		TextContainerIndex.Reset();
 		TextContainerIndex.m_Index = GetFreeTextContainerIndex();
 
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-
 		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
-		TextContainer.m_SingleTimeUse = (m_RenderFlags & TEXT_RENDER_FLAG_ONE_TIME_USE) != 0;
-		const vec2 FakeToScreen = vec2(Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0), Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
-		TextContainer.m_AlignedStartX = round_to_int(pCursor->m_X * FakeToScreen.x) / FakeToScreen.x;
-		TextContainer.m_AlignedStartY = round_to_int(pCursor->m_Y * FakeToScreen.y) / FakeToScreen.y;
-		TextContainer.m_X = pCursor->m_X;
-		TextContainer.m_Y = pCursor->m_Y;
-		TextContainer.m_Flags = pCursor->m_Flags;
-
-		if(pCursor->m_LineWidth <= 0.0f)
-			TextContainer.m_RenderFlags = m_RenderFlags | ETextRenderFlags::TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE;
-		else
-			TextContainer.m_RenderFlags = m_RenderFlags;
+		InitTextContainer(TextContainer, pCursor);
 
 		AppendTextContainer(TextContainerIndex, pCursor, pText, Length);
 
@@ -1828,7 +1842,11 @@ public:
 
 	void AppendTextContainer(STextContainerIndex TextContainerIndex, CTextCursor *pCursor, const char *pText, int Length = -1) override
 	{
-		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+		AppendTextContainerImpl(GetTextContainer(TextContainerIndex), pCursor, pText, Length);
+	}
+
+	void AppendTextContainerImpl(STextContainer &TextContainer, CTextCursor *pCursor, const char *pText, int Length = -1)
+	{
 		str_append(TextContainer.m_aDebugText, pText);
 
 		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
@@ -2314,7 +2332,7 @@ public:
 
 					pCursor->m_GlyphCount++;
 
-					if(SelectionStarted && IsRendered)
+					if(SelectionStarted)
 					{
 						if(!vSelectionQuads.empty() && SelectionQuadLine == LineCount)
 						{

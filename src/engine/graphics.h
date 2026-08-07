@@ -156,6 +156,61 @@ enum EBackendType
 	BACKEND_TYPE_COUNT,
 };
 
+struct SOpenGLVersion
+{
+	int m_Major;
+	int m_Minor;
+	int m_Patch;
+};
+
+constexpr SOpenGLVersion AutoOpenGLProbeVersion(EBackendType BackendType)
+{
+	// 这里只定义渲染后端和平台能够尝试的 API 上限，设置项显示仍以 context 探测结果为准。
+	if(BackendType == EBackendType::BACKEND_TYPE_OPENGL_ES)
+		return {3, 0, 0};
+#if defined(CONF_PLATFORM_MACOS)
+	return {4, 1, 0};
+#else
+	return {4, 6, 0};
+#endif
+}
+
+constexpr bool IsOpenGLVersionAtLeast(SOpenGLVersion Available, SOpenGLVersion Required)
+{
+	if(Available.m_Major != Required.m_Major)
+		return Available.m_Major > Required.m_Major;
+	if(Available.m_Minor != Required.m_Minor)
+		return Available.m_Minor > Required.m_Minor;
+	return Available.m_Patch >= Required.m_Patch;
+}
+
+constexpr bool NextAutoOpenGLProbeVersion(SOpenGLVersion &Version)
+{
+	if(Version.m_Major == 4 && Version.m_Minor > 0)
+	{
+		--Version.m_Minor;
+		return true;
+	}
+	if(Version.m_Major == 4)
+	{
+		Version = {3, 3, 0};
+		return true;
+	}
+	if(Version.m_Major == 3 && Version.m_Minor > 0)
+	{
+		--Version.m_Minor;
+		return true;
+	}
+	return false;
+}
+
+constexpr bool ShouldSyncActualOpenGLVersion(EBackendType BackendType, SOpenGLVersion Requested, SOpenGLVersion Actual)
+{
+	const bool RequestedModernOpenGL = BackendType == EBackendType::BACKEND_TYPE_OPENGL && ((Requested.m_Major == 3 && Requested.m_Minor == 3) || Requested.m_Major >= 4);
+	const bool RequestedModernOpenGLES = BackendType == EBackendType::BACKEND_TYPE_OPENGL_ES && Requested.m_Major >= 3;
+	return (RequestedModernOpenGL || RequestedModernOpenGLES) && Actual.m_Major > 0;
+}
+
 struct STWGraphicGpu
 {
 	enum ETWGraphicsGpuType
@@ -514,6 +569,15 @@ public:
 
 	// returns true if the driver age type is supported, passing BACKEND_TYPE_AUTO for BackendType will query the values for the currently used backend
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
+	// 返回当前 OpenGL/GLES context 从驱动字符串解析出的真实版本，不能用配置请求版本代替。
+	virtual bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName)
+	{
+		Major = 0;
+		Minor = 0;
+		Patch = 0;
+		pName = "";
+		return false;
+	}
 	virtual bool IsConfigModernAPI() = 0;
 	virtual bool HasMediaIslandSdf() = 0;
 	virtual bool HasRoundedRectSdf() = 0;

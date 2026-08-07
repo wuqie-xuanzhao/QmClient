@@ -37,6 +37,7 @@
 #include <game/client/components/touch_controls.h>
 #include <game/client/frame_scheduler.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/client/ui_scrollregion.h>
@@ -1673,7 +1674,7 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 			{
 				// 文本容器不支持多 owner；构建期间继续显示旧容器，完成后再原子替换。
 				TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
-				m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex;
+				std::swap(m_MotdTextContainerIndex, m_IngameMotdParagraphCache.m_BuildTextContainerIndex);
 				m_IngameMotdParagraphCache.m_BuildTextContainerIndex.Reset();
 				m_IngameMotdParagraphCache.m_BuildCursor = CTextCursor();
 				m_IngameMotdParagraphCache.m_BuildByteOffset = 0;
@@ -2831,9 +2832,25 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	TabBar.VSplitLeft(75.0f, &Button, &TabBar);
 	static CButtonContainer s_FavoriteMapsButton;
-	if(DoMenuTabV2(&s_FavoriteMapsButton, "🔖", g_Config.m_UiPage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_NONE))
+	if(DoMenuTabV2(&s_FavoriteMapsButton, "", g_Config.m_UiPage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_NONE))
 	{
 		NewPage = PAGE_FAVORITE_MAPS;
+	}
+	const float FavoriteMapsIconSide = minimum(Button.w, Button.h) * 0.56f;
+	const CUIRect FavoriteMapsIconRect{Button.x + (Button.w - FavoriteMapsIconSide) * 0.5f, Button.y + (Button.h - FavoriteMapsIconSide) * 0.5f, FavoriteMapsIconSide, FavoriteMapsIconSide};
+	const ColorRGBA FavoriteMapsIconColor = ConfiguredQmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+	if(!GameClient()->QmIconManager()->RenderIcon(EQmIcon::BOOKMARK, FavoriteMapsIconRect, FavoriteMapsIconColor))
+	{
+		const unsigned OldFlags = TextRender()->GetRenderFlags();
+		const EFontPreset OldPreset = TextRender()->GetFontPreset();
+		const ColorRGBA OldTextColor = TextRender()->GetTextColor();
+		TextRender()->TextColor(FavoriteMapsIconColor);
+		TextRender()->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+		Ui()->DoLabel(&FavoriteMapsIconRect, FONT_ICON_BOOKMARK, FavoriteMapsIconSide, TEXTALIGN_MC);
+		TextRender()->SetRenderFlags(OldFlags);
+		TextRender()->SetFontPreset(OldPreset);
+		TextRender()->TextColor(OldTextColor);
 	}
 	GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
 

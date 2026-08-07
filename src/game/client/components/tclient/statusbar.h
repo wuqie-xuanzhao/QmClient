@@ -1,7 +1,49 @@
 #ifndef GAME_CLIENT_COMPONENTS_TCLIENT_STATUSBAR_H
 #define GAME_CLIENT_COMPONENTS_TCLIENT_STATUSBAR_H
 
+#include <base/str.h>
+#include <base/time.h>
+
+#include <engine/shared/protocol.h>
+
 #include <game/client/component.h>
+
+#include <algorithm>
+
+namespace tclient_statusbar
+{
+	inline void FormatScore(char *pBuf, int BufSize, int Score, bool Race7, bool TimeScore, bool HasFinishTime, int FinishTimeSeconds, int FinishTimeMillis)
+	{
+		if(BufSize <= 0)
+			return;
+
+		const int64_t ScoreMagnitude = Score < 0 ? -(int64_t)Score : Score;
+		if(Race7)
+		{
+			if(Score == FinishTime::NOT_FINISHED_MILLIS)
+				pBuf[0] = '\0';
+			else
+				str_time(ScoreMagnitude / 10, TIME_MINS_CENTISECS, pBuf, BufSize);
+		}
+		else if(TimeScore)
+		{
+			if(HasFinishTime && FinishTimeSeconds != FinishTime::NOT_FINISHED_MILLIS)
+			{
+				const int64_t SecondsMagnitude = FinishTimeSeconds < 0 ? -(int64_t)FinishTimeSeconds : FinishTimeSeconds;
+				const int64_t MillisMagnitude = FinishTimeMillis < 0 ? -(int64_t)FinishTimeMillis : FinishTimeMillis;
+				str_time((SecondsMagnitude * 1000 + MillisMagnitude % 1000) / 10, TIME_HOURS, pBuf, BufSize);
+			}
+			else if(Score != FinishTime::NOT_FINISHED_TIMESCORE)
+				str_time(ScoreMagnitude * 100, TIME_HOURS, pBuf, BufSize);
+			else
+				pBuf[0] = '\0';
+		}
+		else
+		{
+			str_format(pBuf, BufSize, "%d", std::clamp(Score, -999, 99999));
+		}
+	}
+}
 
 enum
 {
@@ -51,6 +93,8 @@ public:
 		"v", "Velocity", "", "Displays X and Y velocity");
 	CStatusItem m_Zoom = CStatusItem([this] { ZoomRender(); }, [this] { return ZoomWidth(); },
 		"z", "Zoom", "", "Displays current zoom value");
+	CStatusItem m_Score = CStatusItem([this] { ScoreRender(); }, [this] { return ScoreWidth(); },
+		"s", "Score", "", "Displays your current score");
 	CStatusItem m_Downstream = CStatusItem([this] { DownstreamRender(); }, [this] { return DownstreamWidth(); },
 		"u", "Round-trip time", "RTT", "Displays the game connection round-trip time");
 	CStatusItem m_Upstream = CStatusItem([this] { UpstreamRender(); }, [this] { return UpstreamWidth(); },
@@ -74,7 +118,7 @@ public:
 	CStatusItem m_Space = CStatusItem([this] { SpaceRender(); }, [this] { return SpaceWidth(); },
 		" _", "Space", " ", "Gap between statusbar items", false);
 
-	std::vector<CStatusItem> m_StatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Downstream, m_Upstream, m_Jitter, m_SnapshotGap, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
+	std::vector<CStatusItem> m_StatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Score, m_Downstream, m_Upstream, m_Jitter, m_SnapshotGap, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
 	std::vector<CStatusItem *> m_StatusBarItems = {&m_LocalTime, &m_FPS, &m_Space, &m_Angle, &m_Space, &m_Ping};
 
 	void UpdateStatusBarSize();
@@ -120,6 +164,10 @@ private:
 
 	float ZoomWidth();
 	void ZoomRender();
+
+	float ScoreWidth();
+	void ScoreRender();
+	bool FormatScore(char *pBuf, int BufSize);
 
 	float DownstreamWidth();
 	void DownstreamRender();

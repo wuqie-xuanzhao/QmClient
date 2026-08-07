@@ -72,11 +72,21 @@ namespace
 		char aBackendDisplayName[128];
 		if(str_comp_nocase(pSafeBackendName, "OpenGL") == 0)
 		{
-			str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "OpenGL QmClient %d.%d", Major, Minor);
+			if(Major == 0)
+				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "OpenGL (%s)", Localize("auto"));
+			else
+				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "OpenGL %d.%d", Major, Minor);
 		}
 		else if(str_comp_nocase(pSafeBackendName, "Vulkan") == 0)
 		{
-			str_copy(aBackendDisplayName, "Vulkan QmClient", sizeof(aBackendDisplayName));
+			str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "Vulkan %d.%d", Major, Minor);
+		}
+		else if(str_comp_nocase(pSafeBackendName, "GLES") == 0)
+		{
+			if(Major == 0)
+				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "GLES (%s)", Localize("auto"));
+			else
+				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "GLES %d.%d", Major, Minor);
 		}
 		else
 		{
@@ -2316,17 +2326,19 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					static CListBox s_PresetListBox;
 					static std::vector<char> s_vPresetItemIds;
 					s_vPresetItemIds.resize(vQueuePresets.size());
+					const float PresetRowSpacing = TeeMetrics.m_LineSpacing * 0.5f;
 
 					int SelectPresetIndex = -1;
 					const int PresetSelectedOld = ActivePresetIndex >= 0 ? ActivePresetIndex : -1;
 					s_PresetListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 					s_PresetListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
 					s_PresetListBox.SetScrollbarAlwaysReserved(true);
+					s_PresetListBox.DoAutoSpacing(PresetRowSpacing);
 					s_PresetListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 					s_PresetListBox.DoStart(TeeMetrics.m_ListRowHeight, (int)vQueuePresets.size(), 1, 1, PresetSelectedOld, &PresetList, true, IGraphics::CORNER_ALL);
 					for(size_t i = 0; i < vQueuePresets.size(); ++i)
 					{
-						const CListboxItem Item = s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, TeeMetrics.m_LineSpacing * 0.5f);
+						const CListboxItem Item = s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, PresetRowSpacing);
 						if(!Item.m_Visible)
 							continue;
 
@@ -3631,6 +3643,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		{
 			if(EBackendType(i) == BACKEND_TYPE_AUTO)
 				continue;
+			const size_t BackendStartIndex = s_vSupportedBackendInfos.size();
 			for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
 			{
 				SMenuBackendInfo Info;
@@ -3646,6 +3659,45 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 						s_vSupportedBackendInfos.push_back(Info);
 						s_vSupportedBackendNames.emplace_back(aTmpBackendName);
 					}
+				}
+			}
+			const bool SupportsAutomaticVersion =
+				(EBackendType(i) == BACKEND_TYPE_OPENGL && g_Config.m_GfxDriverIsBlocked == 0) ||
+				EBackendType(i) == BACKEND_TYPE_OPENGL_ES;
+			if(SupportsAutomaticVersion && s_vSupportedBackendInfos.size() > BackendStartIndex)
+			{
+				SMenuBackendInfo AutoInfo;
+				AutoInfo.m_pBackendName = EBackendType(i) == BACKEND_TYPE_OPENGL ? "OpenGL" : "GLES";
+				AutoInfo.m_Found = true;
+				char aAutoBackendName[256];
+				const bool IsAutoDefault = str_comp_nocase(AutoInfo.m_pBackendName, DefaultConfig::GfxBackend) == 0 && DefaultConfig::GfxGLMajor == 0;
+				FormatQmGraphicsBackendDisplayName(aAutoBackendName, sizeof(aAutoBackendName), AutoInfo.m_pBackendName, 0, 0, 0, IsAutoDefault);
+				s_vSupportedBackendInfos.insert(s_vSupportedBackendInfos.begin() + BackendStartIndex, AutoInfo);
+				s_vSupportedBackendNames.insert(s_vSupportedBackendNames.begin() + BackendStartIndex, aAutoBackendName);
+
+				const SOpenGLVersion PreferredVersion = AutoOpenGLProbeVersion(EBackendType(i));
+				bool PreferredVersionExists = false;
+				for(size_t BackendIndex = BackendStartIndex + 1; BackendIndex < s_vSupportedBackendInfos.size(); ++BackendIndex)
+				{
+					const auto &Candidate = s_vSupportedBackendInfos[BackendIndex];
+					if(str_comp_nocase(Candidate.m_pBackendName, AutoInfo.m_pBackendName) == 0 && Candidate.m_Major == PreferredVersion.m_Major && Candidate.m_Minor == PreferredVersion.m_Minor && Candidate.m_Patch == PreferredVersion.m_Patch)
+					{
+						PreferredVersionExists = true;
+						break;
+					}
+				}
+				if(!PreferredVersionExists)
+				{
+					SMenuBackendInfo PreferredInfo;
+					PreferredInfo.m_pBackendName = AutoInfo.m_pBackendName;
+					PreferredInfo.m_Major = PreferredVersion.m_Major;
+					PreferredInfo.m_Minor = PreferredVersion.m_Minor;
+					PreferredInfo.m_Patch = PreferredVersion.m_Patch;
+					PreferredInfo.m_Found = true;
+					char aPreferredBackendName[256];
+					FormatQmGraphicsBackendDisplayName(aPreferredBackendName, sizeof(aPreferredBackendName), PreferredInfo.m_pBackendName, PreferredInfo.m_Major, PreferredInfo.m_Minor, PreferredInfo.m_Patch, false);
+					s_vSupportedBackendInfos.insert(s_vSupportedBackendInfos.begin() + BackendStartIndex + 1, PreferredInfo);
+					s_vSupportedBackendNames.insert(s_vSupportedBackendNames.begin() + BackendStartIndex + 1, aPreferredBackendName);
 				}
 			}
 		}
@@ -3910,6 +3962,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				static std::vector<SMenuBackendInfo> s_vGraphicsBackendInfos;
 				static std::string s_CustomBackendId;
 				static std::string s_CustomBackendDisplayName;
+				static std::string s_ActiveBackendDisplayName;
 				s_vpGraphicsBackendNames.clear();
 				s_vGraphicsBackendInfos.clear();
 				for(size_t i = 0; i < s_vSupportedBackendNames.size(); ++i)
@@ -3938,6 +3991,18 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					s_vGraphicsBackendInfos.push_back(CustomInfo);
 					s_vpGraphicsBackendNames.push_back(s_CustomBackendDisplayName.c_str());
 				}
+				int DetectedMajor = 0;
+				int DetectedMinor = 0;
+				int DetectedPatch = 0;
+				const char *pDetectedBackendName = "";
+				const bool HasDetectedContextVersion = Graphics()->GetDetectedContextVersion(DetectedMajor, DetectedMinor, DetectedPatch, pDetectedBackendName);
+				if(Selected >= 0 && s_vGraphicsBackendInfos[Selected].m_Major == 0 && HasDetectedContextVersion && str_comp_nocase(s_vGraphicsBackendInfos[Selected].m_pBackendName, pDetectedBackendName) == 0)
+				{
+					char aBackendDisplayName[128];
+					str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "%s (%s: %d.%d)", pDetectedBackendName, Localize("auto"), DetectedMajor, DetectedMinor);
+					s_ActiveBackendDisplayName = aBackendDisplayName;
+					s_vpGraphicsBackendNames[Selected] = s_ActiveBackendDisplayName.c_str();
+				}
 				DoGraphicsChoiceRow(Row, Localize("Graphics backend"), "graphics-backend", s_vpGraphicsBackendNames.data(), s_vpGraphicsBackendNames.size(), Selected, s_BackendDropDownState, s_BackendDropDownScrollRegion, [this](int NewValue) {
 					if(NewValue < 0 || NewValue >= (int)s_vGraphicsBackendInfos.size())
 						return;
@@ -3945,6 +4010,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					g_Config.m_GfxGLMajor = s_vGraphicsBackendInfos[NewValue].m_Major;
 					g_Config.m_GfxGLMinor = s_vGraphicsBackendInfos[NewValue].m_Minor;
 					g_Config.m_GfxGLPatch = s_vGraphicsBackendInfos[NewValue].m_Patch;
+					s_GfxBackendChanged = true;
 					CheckSettings = true;
 					InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::BACKEND_CHANGED);
 				});
@@ -3975,6 +4041,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 						str_copy(g_Config.m_GfxGpuName, "auto");
 					else
 						str_copy(g_Config.m_GfxGpuName, GpuList.m_vGpus[NewValue - 1].m_aName);
+					s_GfxGpuChanged = true;
 					CheckSettings = true;
 				});
 			} }, GraphicsDisplayMeasureRevision);

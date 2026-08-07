@@ -515,7 +515,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 
 	struct SBufferContainer
 	{
-		int m_BufferObjectIndex;
+		int m_BufferObjectIndex = -1;
 	};
 
 	struct SFrameBuffers
@@ -1127,6 +1127,8 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	uint32_t m_FrameTimestampValidBits = 0;
 	bool m_FrameTimestampQueriesSupported = false;
 	bool m_FrameTimestampQueryRecorded = false;
+	bool m_FrameProfilingActive = false;
+	uint32_t m_RequestedApiVersion = VK_API_VERSION_1_1;
 
 	size_t m_ThreadCount = 1;
 	static constexpr size_t MAIN_THREAD_INDEX = 0;
@@ -1276,12 +1278,11 @@ private:
 		size_t m_EstimatedRenderCallCount = 0;
 
 		// useful data
-		VkBuffer m_Buffer;
-		size_t m_BufferOff;
+		VkBuffer m_Buffer = VK_NULL_HANDLE;
+		size_t m_BufferOff = 0;
 		std::array<SDeviceDescriptorSet, 2> m_aDescriptors;
 
-		VkBuffer m_IndexBuffer;
-
+		VkBuffer m_IndexBuffer = VK_NULL_HANDLE;
 		bool m_ClearColorInRenderThread = false;
 
 		bool m_HasDynamicState = false;
@@ -2790,6 +2791,9 @@ protected:
 		VkResult QueueSubmitRes = QueueSubmit(m_VKGraphicsQueue, 1, &SubmitInfo, m_vQueueSubmitFences[m_CurImageIndex]);
 		if(QueueSubmitRes != VK_SUCCESS)
 		{
+			dbg_msg("vulkan", "frame submit failed: result=%d image=%u/%u command_buffers=%u wait_semaphores=%u signal_semaphores=%u render_commands=%" PRIu64 " render_calls=%" PRIu64 " command_count=%" PRIu64,
+				(int)QueueSubmitRes, m_CurImageIndex, m_SwapChainImageCount, SubmitInfo.commandBufferCount, SubmitInfo.waitSemaphoreCount, SubmitInfo.signalSemaphoreCount,
+				m_FrameProfileStats.m_RenderCommands, m_FrameProfileStats.m_EstimatedRenderCallCount, m_FrameProfileStats.m_CommandCount);
 			const char *pCritErrorMsg = CheckVulkanCriticalError(QueueSubmitRes);
 			if(pCritErrorMsg != nullptr)
 			{
@@ -2826,8 +2830,11 @@ protected:
 			}
 		}
 
-		m_FrameProfileStats.m_CPUFrameTime = time_get_nanoseconds() - m_FrameProfileStartTime;
-		LogFrameProfileStats();
+		if(m_FrameProfilingActive)
+		{
+			m_FrameProfileStats.m_CPUFrameTime = time_get_nanoseconds() - m_FrameProfileStartTime;
+			LogFrameProfileStats();
+		}
 
 		return true;
 	}
@@ -2835,6 +2842,7 @@ protected:
 	[[nodiscard]] bool PrepareFrame()
 	{
 		m_ForceSingleThreadedRender = false;
+		m_FrameProfilingActive = FrameProfilingEnabled();
 		ResetFrameProfileData();
 
 		if(m_RecreateSwapChain)
@@ -4229,6 +4237,45 @@ public:
 		return OurExt;
 	}
 
+	[[nodiscard]] bool ResolveRequestedVulkanApiVersion()
+	{
+		const SVulkanVersion RequestedVersion = NormalizeRequestedVulkanVersion({g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch});
+		m_RequestedApiVersion = VK_MAKE_API_VERSION(0, RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch);
+
+		uint32_t LoaderApiVersion = VK_API_VERSION_1_0;
+		auto pfnGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(SDL_Vulkan_GetVkGetInstanceProcAddr());
+		if(pfnGetInstanceProcAddr == nullptr)
+		{
+			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Could not resolve vkGetInstanceProcAddr from SDL.");
+			return false;
+		}
+		auto pfnEnumerateInstanceVersion = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(pfnGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+		if(pfnEnumerateInstanceVersion != nullptr)
+		{
+			const VkResult Res = pfnEnumerateInstanceVersion(&LoaderApiVersion);
+			if(Res != VK_SUCCESS)
+			{
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Could not query the Vulkan loader version.", CheckVulkanCriticalError(Res));
+				return false;
+			}
+		}
+
+		const SVulkanVersion LoaderVersion = {
+			(int)VK_API_VERSION_MAJOR(LoaderApiVersion),
+			(int)VK_API_VERSION_MINOR(LoaderApiVersion),
+			(int)VK_API_VERSION_PATCH(LoaderApiVersion)};
+		if(!IsVulkanVersionAtLeast(LoaderVersion, RequestedVersion))
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "Vulkan %d.%d was selected, but the installed Vulkan loader only supports %d.%d.%d.", RequestedVersion.m_Major, RequestedVersion.m_Minor, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
+			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, aBuf);
+			return false;
+		}
+
+		log_info("gfx/vulkan", "requested Vulkan API %d.%d.%d, loader supports %d.%d.%d", RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
+		return true;
+	}
+
 	std::vector<VkImageUsageFlags> OurImageUsages()
 	{
 		std::vector<VkImageUsageFlags> vImgUsages;
@@ -4313,7 +4360,7 @@ public:
 		VKAppInfo.applicationVersion = 1;
 		VKAppInfo.pEngineName = "DDNet-Vulkan";
 		VKAppInfo.engineVersion = 1;
-		VKAppInfo.apiVersion = VK_API_VERSION_1_1;
+		VKAppInfo.apiVersion = m_RequestedApiVersion;
 
 		void *pExt = nullptr;
 #if defined(VK_EXT_validation_features) && VK_EXT_VALIDATION_FEATURES_SPEC_VERSION >= 5
@@ -4445,7 +4492,9 @@ public:
 		std::vector<VkPhysicalDeviceProperties> vDevicePropList(vDeviceList.size());
 		m_pGpuList->m_vGpus.reserve(vDeviceList.size());
 
-		size_t FoundDeviceIndex = 0;
+		const size_t InvalidDeviceIndex = std::numeric_limits<size_t>::max();
+		size_t FoundDeviceIndex = InvalidDeviceIndex;
+		size_t FirstCompatibleDeviceIndex = InvalidDeviceIndex;
 
 		STWGraphicGpu::ETWGraphicsGpuType AutoGpuType = STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INVALID;
 
@@ -4465,8 +4514,16 @@ public:
 			int DevApiPatch = (int)VK_API_VERSION_PATCH(DeviceProp.apiVersion);
 
 			auto IsDenied = CCommandProcessorFragment_Vulkan::IsGpuDenied(DeviceProp.vendorID, DeviceProp.driverVersion, DevApiMajor, DevApiMinor, DevApiPatch);
-			if((DevApiMajor > gs_BackendVulkanMajor || (DevApiMajor == gs_BackendVulkanMajor && DevApiMinor >= gs_BackendVulkanMinor)) && !IsDenied)
+			const SVulkanVersion DeviceVersion = {DevApiMajor, DevApiMinor, DevApiPatch};
+			const SVulkanVersion RequestedVersion = {
+				(int)VK_API_VERSION_MAJOR(m_RequestedApiVersion),
+				(int)VK_API_VERSION_MINOR(m_RequestedApiVersion),
+				(int)VK_API_VERSION_PATCH(m_RequestedApiVersion)};
+			if(IsVulkanVersionAtLeast(DeviceVersion, RequestedVersion) && !IsDenied)
 			{
+				if(FirstCompatibleDeviceIndex == InvalidDeviceIndex)
+					FirstCompatibleDeviceIndex = Index;
+
 				STWGraphicGpu::STWGraphicGpuItem NewGpu;
 				str_copy(NewGpu.m_aName, DeviceProp.deviceName);
 				NewGpu.m_GpuType = GPUType;
@@ -4497,8 +4554,15 @@ public:
 
 		if(m_pGpuList->m_vGpus.empty())
 		{
-			SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED_NO_DEVICE_WITH_REQUIRED_VERSION, "No devices with required vulkan version found.");
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "No device supporting the selected Vulkan %u.%u API was found.", VK_API_VERSION_MAJOR(m_RequestedApiVersion), VK_API_VERSION_MINOR(m_RequestedApiVersion));
+			SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED_NO_DEVICE_WITH_REQUIRED_VERSION, aBuf);
 			return false;
+		}
+		if(FoundDeviceIndex == InvalidDeviceIndex)
+		{
+			dbg_msg("vulkan", "configured graphics card is unavailable for the selected Vulkan version, using the automatic GPU instead.");
+			FoundDeviceIndex = FirstCompatibleDeviceIndex;
 		}
 
 		{
@@ -4729,24 +4793,37 @@ public:
 			return false;
 		}
 
-		VKIOMode = g_Config.m_GfxVsync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
-		for(const auto &Mode : vPresentModeList)
+		std::array<VkPresentModeKHR, 2> aPreferredModes;
+		if(g_Config.m_GfxVsync)
+			aPreferredModes = {VK_PRESENT_MODE_FIFO_KHR, VK_PRESENT_MODE_FIFO_RELAXED_KHR};
+#if defined(CONF_PLATFORM_MACOS)
+		else
+			// MoltenVK 的 immediate 模式允许直接撕裂；mailbox 保持低延迟并在显示刷新边界提交最新帧。
+			aPreferredModes = {VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR};
+#else
+		else
+			aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};
+#endif
+		for(const VkPresentModeKHR PreferredMode : aPreferredModes)
 		{
-			if(Mode == VKIOMode)
-				return true;
+			for(const VkPresentModeKHR AvailableMode : vPresentModeList)
+			{
+				if(AvailableMode == PreferredMode)
+				{
+					VKIOMode = PreferredMode;
+					return true;
+				}
+			}
 		}
 
-		dbg_msg("vulkan", "warning: requested presentation mode was not available. falling back to mailbox / fifo relaxed.");
-		VKIOMode = g_Config.m_GfxVsync ? VK_PRESENT_MODE_FIFO_RELAXED_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
-		for(const auto &Mode : vPresentModeList)
+		if(PresentModeCount == 0)
 		{
-			if(Mode == VKIOMode)
-				return true;
+			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "The device surface reported no usable presentation mode.");
+			return false;
 		}
 
-		dbg_msg("vulkan", "warning: requested presentation mode was not available. using first available.");
-		if(PresentModeCount > 0)
-			VKIOMode = vPresentModeList[0];
+		log_warn("gfx/vulkan", "Requested presentation modes were not available. Using the surface default.");
+		VKIOMode = vPresentModeList[0];
 
 		return true;
 	}
@@ -4896,6 +4973,13 @@ public:
 			return false;
 
 		uint32_t SwapImgCount = GetNumberOfSwapImages(VKSurfCap);
+
+#if defined(CONF_PLATFORM_MACOS)
+		if(g_Config.m_QmMacosGraphicsDiagnostics != 0)
+		{
+			log_info("gfx/vulkan", "swapchain present: vsync=%d mode=%d images=%u refresh=%d screen_refresh=%d", g_Config.m_GfxVsync, (int)PresentMode, SwapImgCount, g_Config.m_GfxRefreshRate, g_Config.m_GfxScreenRefreshRate);
+		}
+#endif
 
 		m_VKSwapImgAndViewportExtent = GetSwapImageSize(VKSurfCap);
 
@@ -6519,6 +6603,9 @@ public:
 		m_CanvasWidth = CanvasWidth;
 		m_CanvasHeight = CanvasHeight;
 
+		if(!ResolveRequestedVulkanApiVersion())
+			return -1;
+
 		if(!GetVulkanExtensions(pWindow, vVKExtensions))
 			return -1;
 
@@ -7553,12 +7640,15 @@ public:
 
 	void ResetFrameProfileData()
 	{
-		m_FrameProfileStats = {};
-		for(auto &ThreadStats : m_vThreadFrameProfileStats)
-			ThreadStats = {};
+		if(m_FrameProfilingActive)
+		{
+			m_FrameProfileStats = {};
+			for(auto &ThreadStats : m_vThreadFrameProfileStats)
+				ThreadStats = {};
+			m_FrameProfileStartTime = time_get_nanoseconds();
+		}
 		for(size_t RenderThreadIndex = 0; RenderThreadIndex < m_vDrawCommandStates.size(); ++RenderThreadIndex)
 			ResetDrawCommandState(RenderThreadIndex);
-		m_FrameProfileStartTime = time_get_nanoseconds();
 		m_FrameTimestampQueryRecorded = false;
 	}
 
@@ -7776,9 +7866,10 @@ public:
 
 	VkResult InvalidateMappedMemoryRanges(uint32_t RangeCount, const VkMappedMemoryRange *pRanges)
 	{
-		auto StartTime = time_get_nanoseconds();
+		const auto StartTime = m_FrameProfilingActive ? time_get_nanoseconds() : 0ns;
 		VkResult Result = vkInvalidateMappedMemoryRanges(m_VKDevice, RangeCount, pRanges);
-		m_FrameProfileStats.m_CPUInvalidateTime += time_get_nanoseconds() - StartTime;
+		if(m_FrameProfilingActive)
+			m_FrameProfileStats.m_CPUInvalidateTime += time_get_nanoseconds() - StartTime;
 		m_FrameProfileStats.m_InvalidateCalls++;
 		m_FrameProfileStats.m_InvalidateRanges += RangeCount;
 		return Result;
@@ -7842,9 +7933,10 @@ public:
 
 	VkResult QueueSubmit(VkQueue Queue, uint32_t SubmitCount, const VkSubmitInfo *pSubmits, VkFence Fence)
 	{
-		auto StartTime = time_get_nanoseconds();
+		const auto StartTime = m_FrameProfilingActive ? time_get_nanoseconds() : 0ns;
 		VkResult Result = vkQueueSubmit(Queue, SubmitCount, pSubmits, Fence);
-		m_FrameProfileStats.m_CPUQueueSubmitTime += time_get_nanoseconds() - StartTime;
+		if(m_FrameProfilingActive)
+			m_FrameProfileStats.m_CPUQueueSubmitTime += time_get_nanoseconds() - StartTime;
 		m_FrameProfileStats.m_QueueSubmits += SubmitCount;
 		for(uint32_t SubmitIndex = 0; SubmitIndex < SubmitCount; ++SubmitIndex)
 			m_FrameProfileStats.m_QueueSubmitCommandBuffers += pSubmits[SubmitIndex].commandBufferCount;
@@ -7853,27 +7945,30 @@ public:
 
 	VkResult WaitForFences(uint32_t FenceCount, const VkFence *pFences, VkBool32 WaitAll, uint64_t Timeout)
 	{
-		auto StartTime = time_get_nanoseconds();
+		const auto StartTime = m_FrameProfilingActive ? time_get_nanoseconds() : 0ns;
 		VkResult Result = vkWaitForFences(m_VKDevice, FenceCount, pFences, WaitAll, Timeout);
-		m_FrameProfileStats.m_CPUFenceWaitTime += time_get_nanoseconds() - StartTime;
+		if(m_FrameProfilingActive)
+			m_FrameProfileStats.m_CPUFenceWaitTime += time_get_nanoseconds() - StartTime;
 		m_FrameProfileStats.m_FenceWaits += FenceCount;
 		return Result;
 	}
 
 	VkResult QueueWaitIdle(VkQueue Queue)
 	{
-		auto StartTime = time_get_nanoseconds();
+		const auto StartTime = m_FrameProfilingActive ? time_get_nanoseconds() : 0ns;
 		VkResult Result = vkQueueWaitIdle(Queue);
-		m_FrameProfileStats.m_CPUQueueWaitTime += time_get_nanoseconds() - StartTime;
+		if(m_FrameProfilingActive)
+			m_FrameProfileStats.m_CPUQueueWaitTime += time_get_nanoseconds() - StartTime;
 		m_FrameProfileStats.m_QueueWaits++;
 		return Result;
 	}
 
 	VkResult DeviceWaitIdle()
 	{
-		auto StartTime = time_get_nanoseconds();
+		const auto StartTime = m_FrameProfilingActive ? time_get_nanoseconds() : 0ns;
 		VkResult Result = vkDeviceWaitIdle(m_VKDevice);
-		m_FrameProfileStats.m_CPUDeviceWaitTime += time_get_nanoseconds() - StartTime;
+		if(m_FrameProfilingActive)
+			m_FrameProfileStats.m_CPUDeviceWaitTime += time_get_nanoseconds() - StartTime;
 		m_FrameProfileStats.m_DeviceWaits++;
 		return Result;
 	}
@@ -7928,9 +8023,14 @@ public:
 				{
 					Buffer.m_ThreadIndex = 0;
 				}
-				auto PrepareStartTime = time_get_nanoseconds();
-				CallbackObj.m_FillExecuteBuffer(Buffer, pBaseCommand);
-				m_FrameProfileStats.m_CPUCommandPrepareTime += time_get_nanoseconds() - PrepareStartTime;
+				if(m_FrameProfilingActive)
+				{
+					const auto PrepareStartTime = time_get_nanoseconds();
+					CallbackObj.m_FillExecuteBuffer(Buffer, pBaseCommand);
+					m_FrameProfileStats.m_CPUCommandPrepareTime += time_get_nanoseconds() - PrepareStartTime;
+				}
+				else
+					CallbackObj.m_FillExecuteBuffer(Buffer, pBaseCommand);
 				m_FrameProfileStats.m_CommandPrepares++;
 				m_CurRenderCallCountInPipe += Buffer.m_EstimatedRenderCallCount;
 			}
@@ -7938,15 +8038,17 @@ public:
 			if(!CallbackObj.m_IsRenderCommand || (Buffer.m_ThreadIndex == 0 && !m_RenderingPaused))
 			{
 				Ret = CallbackObj.m_CMDIsHandled;
-				auto RecordStartTime = time_get_nanoseconds();
+				const auto RecordStartTime = m_FrameProfilingActive ? time_get_nanoseconds() : 0ns;
 				if(!CallbackObj.m_CommandCB(pBaseCommand, Buffer))
 				{
-					m_FrameProfileStats.m_CPUMainCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
+					if(m_FrameProfilingActive)
+						m_FrameProfileStats.m_CPUMainCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
 					m_FrameProfileStats.m_MainCommandRecords++;
 					// an error occurred, stop this command and ignore all further commands
 					return ERunCommandReturnTypes::RUN_COMMAND_COMMAND_ERROR;
 				}
-				m_FrameProfileStats.m_CPUMainCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
+				if(m_FrameProfilingActive)
+					m_FrameProfileStats.m_CPUMainCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
 				m_FrameProfileStats.m_MainCommandRecords++;
 			}
 			else if(!m_RenderingPaused)
@@ -8028,9 +8130,12 @@ public:
 		pCommand->m_pCapabilities->m_2DArrayTextures = true;
 		pCommand->m_pCapabilities->m_NPOTTextures = true;
 
-		pCommand->m_pCapabilities->m_ContextMajor = 1;
-		pCommand->m_pCapabilities->m_ContextMinor = 1;
-		pCommand->m_pCapabilities->m_ContextPatch = 0;
+		pCommand->m_pCapabilities->m_ContextMajor = (int)VK_API_VERSION_MAJOR(m_RequestedApiVersion);
+		pCommand->m_pCapabilities->m_ContextMinor = (int)VK_API_VERSION_MINOR(m_RequestedApiVersion);
+		pCommand->m_pCapabilities->m_ContextPatch = (int)VK_API_VERSION_PATCH(m_RequestedApiVersion);
+		pCommand->m_pCapabilities->m_DetectedContextMajor = 0;
+		pCommand->m_pCapabilities->m_DetectedContextMinor = 0;
+		pCommand->m_pCapabilities->m_DetectedContextPatch = 0;
 
 		pCommand->m_pCapabilities->m_TrianglesAsQuads = true;
 
@@ -9709,16 +9814,18 @@ public:
 				bool HasErrorFromCmd = false;
 				for(auto &NextCmd : m_vvThreadCommandLists[ThreadIndex])
 				{
-					auto RecordStartTime = time_get_nanoseconds();
+					const auto RecordStartTime = m_FrameProfilingActive ? time_get_nanoseconds() : 0ns;
 					if(!m_aCommandCallbacks[CommandBufferCMDOff(NextCmd.m_Command)].m_CommandCB(NextCmd.m_pRawCommand, NextCmd))
 					{
-						m_vThreadFrameProfileStats[ThreadIndex + 1].m_CPUThreadCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
+						if(m_FrameProfilingActive)
+							m_vThreadFrameProfileStats[ThreadIndex + 1].m_CPUThreadCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
 						m_vThreadFrameProfileStats[ThreadIndex + 1].m_ThreadCommandRecords++;
 						// an error occurred, the thread will not continue execution
 						HasErrorFromCmd = true;
 						break;
 					}
-					m_vThreadFrameProfileStats[ThreadIndex + 1].m_CPUThreadCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
+					if(m_FrameProfilingActive)
+						m_vThreadFrameProfileStats[ThreadIndex + 1].m_CPUThreadCommandRecordTime += time_get_nanoseconds() - RecordStartTime;
 					m_vThreadFrameProfileStats[ThreadIndex + 1].m_ThreadCommandRecords++;
 				}
 				m_vvThreadCommandLists[ThreadIndex].clear();

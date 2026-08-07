@@ -797,18 +797,8 @@ MACRO_CONFIG_INT(ClDemoShowPause, cl_demo_show_pause, 1, 0, 1, CFGFLAG_SAVE | CF
 MACRO_CONFIG_INT(ClDemoKeyboardShortcuts, cl_demo_keyboard_shortcuts, 1, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Enable keyboard shortcuts in replay player")
 
 // graphic library
-#if !defined(CONF_ARCH_IA32) && !defined(CONF_PLATFORM_MACOS)
-MACRO_CONFIG_INT(GfxGLMajor, gfx_gl_major, 1, 1, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library major version")
-#elif !defined(CONF_ARCH_IA32)
-MACRO_CONFIG_INT(GfxGLMajor, gfx_gl_major, 3, 1, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library major version")
-#else
-MACRO_CONFIG_INT(GfxGLMajor, gfx_gl_major, 1, 1, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library major version")
-#endif
-#if !defined(CONF_PLATFORM_MACOS)
-MACRO_CONFIG_INT(GfxGLMinor, gfx_gl_minor, 1, 0, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library minor version")
-#else
-MACRO_CONFIG_INT(GfxGLMinor, gfx_gl_minor, 3, 0, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library minor version")
-#endif
+MACRO_CONFIG_INT(GfxGLMajor, gfx_gl_major, 0, 0, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library major version (0 = auto-detect)")
+MACRO_CONFIG_INT(GfxGLMinor, gfx_gl_minor, 0, 0, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library minor version (0 = auto-detect)")
 MACRO_CONFIG_INT(GfxGLPatch, gfx_gl_patch, 0, 0, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphics library patch version")
 
 // float multiplied with 1000

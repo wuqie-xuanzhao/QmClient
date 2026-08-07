@@ -15,6 +15,7 @@ struct SQmDropdownVisualStyle
 	ColorRGBA m_TriggerColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
 	ColorRGBA m_PopupBackgroundColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f);
 	ColorRGBA m_PopupBorderColor = ColorRGBA(0.7f, 0.7f, 0.7f, 0.9f);
+	ColorRGBA m_ActiveEntryColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.22f);
 	bool m_TransparentEntries = true;
 };
 
@@ -25,6 +26,7 @@ inline SQmDropdownVisualStyle QmSettingsDropdownVisualStyle(const SUiTheme &Them
 	Style.m_TriggerColor = Theme.m_InputSurface;
 	Style.m_PopupBackgroundColor = Theme.m_Surface;
 	Style.m_PopupBorderColor = Theme.m_Border;
+	Style.m_ActiveEntryColor = Theme.m_SurfaceHovered;
 	return Style;
 }
 

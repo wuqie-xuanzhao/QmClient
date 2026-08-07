@@ -1104,6 +1104,7 @@ public:
 		float m_FontSize;
 		float m_Width;
 		float m_AlignmentHeight;
+		ColorRGBA m_ActiveEntryColor;
 		bool m_TransparentButtons;
 		bool m_AnchorVisible = true;
 		bool m_PopupVisible = true;

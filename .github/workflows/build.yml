@@ -286,14 +286,6 @@ jobs:
           fi
           ls -lah dist
 
-      - name: Upload packaged artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: dist/*
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Verify build artifact
         shell: bash
         run: |
@@ -325,6 +317,19 @@ jobs:
             fi
             echo "Build artifact verified: $size bytes"
           fi
+
+      - name: Verify macOS DMG contents
+        if: runner.os == 'macOS'
+        shell: bash
+        run: qmclient_scripts/verify_macos_dmg.sh "dist/${{ matrix.output_name }}"
+
+      - name: Upload packaged artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Build summary
         if: always()

@@ -698,6 +698,9 @@ Angle:
 Animate chat box, emote selector, scoreboard, and spectate selection
 == 채팅창, 이모티콘 선택기, 점수판 및 관전 선택에 애니메이션 적용
 
+Animate lists when entering a page
+== Animate lists when entering a page
+
 Animate settings card expand and collapse height changes
 == 설정 카드 확장 및 접기 높이 변경에 애니메이션 적용
 
@@ -1777,9 +1780,6 @@ Checking for existing player with your name
 
 CHN
 == 중국
-
-Choose and arrange status bar data fields
-== Choose and arrange status bar data fields
 
 Choose colors for weapons and entity lasers
 == Choose colors for weapons and entity lasers
@@ -3037,6 +3037,9 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == 현재 각도(도) 표시
+
+Displays your current score
+== 현재 점수 표시
 
 Displays your frames per second
 == 초당 프레임 수를 표시합니다
@@ -4616,11 +4619,11 @@ Graphics card
 Graphics display
 == 그래픽 표시
 
-Graphics library major version
-== 그래픽 라이브러리 주 버전
+Graphics library major version (0 = auto-detect)
+== Graphics library major version (0 = auto-detect)
 
-Graphics library minor version
-== 그래픽 라이브러리 부 버전
+Graphics library minor version (0 = auto-detect)
+== Graphics library minor version (0 = auto-detect)
 
 Graphics library patch version
 == 그래픽 라이브러리 패치 버전
@@ -9412,6 +9415,15 @@ Sets your tee's eye emote
 
 Settings
 == 설정
+
+Settings card background
+== Settings card background
+
+Settings card background color
+== Settings card background color
+
+Settings card background transparency
+== Settings card background transparency
 
 Settings card border color
 == 설정 카드 테두리 색상

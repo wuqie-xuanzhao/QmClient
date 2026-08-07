@@ -2,6 +2,7 @@
 #define CONF_TEST 1
 #include <engine/client/game_ping.h>
 #include <engine/client/gpu_upload_limiter.h>
+#include <engine/textrender.h>
 
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmUiPerf.h>
@@ -4019,9 +4020,157 @@ TEST(QmMonitoringHelpers, MotdParagraphDrainBuildsInChunks)
 	EXPECT_NE(DrainBody.find("str_utf8_isstart"), std::string::npos);
 	EXPECT_NE(DrainBody.find("TextRender()->CreateOrAppendTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
 	EXPECT_NE(DrainBody.find("m_IngameMotdParagraphCache.m_BuildByteOffset += ChunkLength"), std::string::npos);
-	EXPECT_NE(DrainBody.find("m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_NE(DrainBody.find("std::swap(m_MotdTextContainerIndex, m_IngameMotdParagraphCache.m_BuildTextContainerIndex)"), std::string::npos);
+	EXPECT_EQ(DrainBody.find("m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
 	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex"), std::string::npos);
 	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, VulkanFrameSubmitFailureRecordsFrameContext)
+{
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const size_t QueueSubmitPos = VulkanSource.find("VkResult QueueSubmitRes = QueueSubmit(m_VKGraphicsQueue, 1, &SubmitInfo, m_vQueueSubmitFences[m_CurImageIndex]);");
+	const size_t DiagnosticPos = VulkanSource.find("frame submit failed: result=%d image=%u/%u command_buffers=%u", QueueSubmitPos);
+	const size_t ErrorPos = VulkanSource.find("SetError(EGfxErrorType::GFX_ERROR_TYPE_RENDER_SUBMIT_FAILED, \"Submitting to graphics queue failed.\"", QueueSubmitPos);
+	const size_t SubmitEnd = VulkanSource.find("MarkFrameTimestampQueryPending(m_CurImageIndex);", QueueSubmitPos);
+
+	EXPECT_NE(QueueSubmitPos, std::string::npos);
+	EXPECT_NE(DiagnosticPos, std::string::npos);
+	EXPECT_NE(ErrorPos, std::string::npos);
+	ASSERT_NE(SubmitEnd, std::string::npos);
+	const std::string SubmitBlock = VulkanSource.substr(QueueSubmitPos, SubmitEnd - QueueSubmitPos);
+	EXPECT_LT(QueueSubmitPos, DiagnosticPos);
+	EXPECT_LT(DiagnosticPos, ErrorPos);
+	EXPECT_NE(SubmitBlock.find("if(pCritErrorMsg != nullptr)"), std::string::npos);
+	EXPECT_NE(SubmitBlock.find("return false;"), std::string::npos);
+	EXPECT_EQ(SubmitBlock.find("else"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MacosVulkanNoVsyncPrefersMailboxAndKeepsNormalSwapchainDepth)
+{
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const size_t FunctionStart = VulkanSource.find("[[nodiscard]] bool GetPresentationMode(VkPresentModeKHR &VKIOMode)");
+	const size_t FunctionEnd = VulkanSource.find("\n\t[[nodiscard]] bool GetSurfaceProperties", FunctionStart);
+	ASSERT_NE(FunctionStart, std::string::npos);
+	ASSERT_NE(FunctionEnd, std::string::npos);
+	const std::string FunctionBody = VulkanSource.substr(FunctionStart, FunctionEnd - FunctionStart);
+
+	const size_t MacosGuard = FunctionBody.find("#if defined(CONF_PLATFORM_MACOS)");
+	const size_t PrimaryMode = FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR};", MacosGuard);
+	const size_t OtherPlatformMode = FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};", PrimaryMode);
+	EXPECT_NE(MacosGuard, std::string::npos);
+	EXPECT_NE(PrimaryMode, std::string::npos);
+	EXPECT_NE(OtherPlatformMode, std::string::npos);
+	EXPECT_LT(MacosGuard, PrimaryMode);
+	EXPECT_LT(PrimaryMode, OtherPlatformMode);
+
+	const std::string SwapImageBody = ExtractSourceFunctionBody(VulkanSource, "uint32_t GetNumberOfSwapImages(");
+	ASSERT_FALSE(SwapImageBody.empty());
+	EXPECT_NE(SwapImageBody.find("uint32_t ImgNumber = VKCapabilities.minImageCount + 1;"), std::string::npos);
+	EXPECT_EQ(SwapImageBody.find("if(!g_Config.m_GfxVsync)"), std::string::npos);
+	EXPECT_EQ(SwapImageBody.find("return VKCapabilities.minImageCount;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, RenderLoopKeepsConfiguredAsyncPolicyAndDisablesPerfHotPath)
+{
+	const std::string ClientSource = ReadRepoFile("src/engine/client/client.cpp");
+	const size_t RunStart = ClientSource.find("void CClient::Run()");
+	const size_t RunEnd = ClientSource.find("GameClient()->RenderShutdownMessage();", RunStart);
+	ASSERT_NE(RunStart, std::string::npos);
+	ASSERT_NE(RunEnd, std::string::npos);
+	const std::string RunBody = ClientSource.substr(RunStart, RunEnd - RunStart);
+
+	const size_t AsyncRenderPolicy = RunBody.find("bool AsyncRenderOld = g_Config.m_GfxAsyncRenderOld;");
+	const size_t GfxRefreshRate = RunBody.find("int GfxRefreshRate = g_Config.m_GfxRefreshRate;", AsyncRenderPolicy);
+	const size_t PerfPolicy = RunBody.find("const bool PerfEnabled = QmPerfEnabled();");
+	const size_t OptionalLoopTimer = RunBody.find("std::optional<CPerfTimer> LoopTimer;");
+	ASSERT_NE(AsyncRenderPolicy, std::string::npos);
+	ASSERT_NE(GfxRefreshRate, std::string::npos);
+	const std::string AsyncRenderPolicyBlock = RunBody.substr(AsyncRenderPolicy, GfxRefreshRate - AsyncRenderPolicy);
+	EXPECT_EQ(RunBody.find("MacosVulkanBackend"), std::string::npos);
+	EXPECT_EQ(AsyncRenderPolicyBlock.find("#if defined(CONF_PLATFORM_MACOS)"), std::string::npos);
+	EXPECT_EQ(AsyncRenderPolicyBlock.find("AsyncRenderOld = false;"), std::string::npos);
+	EXPECT_NE(PerfPolicy, std::string::npos);
+	EXPECT_NE(OptionalLoopTimer, std::string::npos);
+	EXPECT_LT(PerfPolicy, OptionalLoopTimer);
+	EXPECT_EQ(RunBody.find("CPerfTimer LoopTimer;"), std::string::npos);
+	EXPECT_NE(RunBody.find("int64_t AdditionalTime = GfxRefreshRate ? ((Now - LastRenderTime) - RenderFrameTicks) : 0;"), std::string::npos);
+	EXPECT_NE(RunBody.find("AdditionalTime > (time_freq() / 60)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, DedicatedDrawCommandsDoNotConsumeRetainedVertices)
+{
+	const std::string GraphicsSource = ReadRepoFile("src/engine/client/graphics_threaded.cpp");
+	const std::string Header = ReadRepoFile("src/engine/client/graphics_threaded.h");
+	const std::string TextBody = ExtractSourceFunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderText(int BufferContainerIndex");
+	const std::string QuadBody = ExtractSourceFunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderQuadContainer(int ContainerIndex, int QuadOffset");
+	const std::string QuadExBody = ExtractSourceFunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderQuadContainerEx(int ContainerIndex");
+
+	ASSERT_FALSE(TextBody.empty());
+	ASSERT_FALSE(QuadBody.empty());
+	ASSERT_FALSE(QuadExBody.empty());
+	EXPECT_EQ(Header.find("FlushPendingVerticesForDrawCommand"), std::string::npos);
+	EXPECT_EQ(GraphicsSource.find("void CGraphics_Threaded::FlushPendingVerticesForDrawCommand()"), std::string::npos);
+	EXPECT_EQ(TextBody.find("FlushVertices"), std::string::npos);
+	EXPECT_EQ(QuadBody.find("FlushPendingVerticesForDrawCommand"), std::string::npos);
+	EXPECT_EQ(QuadExBody.find("FlushPendingVerticesForDrawCommand"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, VulkanKeepsBufferedR8TextPath)
+{
+	const std::string GraphicsSource = ReadRepoFile("src/engine/client/graphics_threaded.cpp");
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const size_t InitStart = GraphicsSource.find("int CGraphics_Threaded::IssueInit()");
+	const size_t InitEnd = GraphicsSource.find("// TClient", InitStart);
+	ASSERT_NE(InitStart, std::string::npos);
+	ASSERT_NE(InitEnd, std::string::npos);
+	const std::string InitBody = GraphicsSource.substr(InitStart, InitEnd - InitStart);
+
+	EXPECT_NE(InitBody.find("m_GLTextBufferingEnabled = (m_GLQuadContainerBufferingEnabled && m_pBackend->HasTextBuffering());"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("pCommand->m_pCapabilities->m_TextBuffering = true;"), std::string::npos);
+	EXPECT_EQ(VulkanSource.find("pCommand->m_pCapabilities->m_TextBuffering = false;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VK_FORMAT_R8_UNORM, VK_FORMAT_R8_UNORM"), std::string::npos);
+
+	EXPECT_EQ(VulkanSource.find("Skipping text command with unavailable Vulkan resources"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, VulkanProfilingTimersStayOutOfDisabledHotPath)
+{
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const std::string PrepareFrame = ExtractSourceFunctionBody(VulkanSource, "[[nodiscard]] bool PrepareFrame()");
+	const std::string RunCommand = ExtractSourceFunctionBody(VulkanSource, "[[nodiscard]] ERunCommandReturnTypes RunCommand(");
+	const std::string QueueSubmit = ExtractSourceFunctionBody(VulkanSource, "VkResult QueueSubmit(");
+
+	ASSERT_FALSE(PrepareFrame.empty());
+	ASSERT_FALSE(RunCommand.empty());
+	ASSERT_FALSE(QueueSubmit.empty());
+	EXPECT_NE(PrepareFrame.find("m_FrameProfilingActive = FrameProfilingEnabled();"), std::string::npos);
+	EXPECT_NE(RunCommand.find("if(m_FrameProfilingActive)"), std::string::npos);
+	EXPECT_NE(RunCommand.find("m_FrameProfilingActive ? time_get_nanoseconds() : 0ns"), std::string::npos);
+	EXPECT_NE(QueueSubmit.find("m_FrameProfilingActive ? time_get_nanoseconds() : 0ns"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MacosVulkanGraphicsErrorDialogKeepsWindowAlive)
+{
+	const std::string BackendSource = ReadRepoFile("src/engine/client/backend_sdl.cpp");
+	const std::string Body = ExtractSourceFunctionBody(BackendSource, "std::optional<int> CGraphicsBackend_SDL_GL::ShowMessageBox(const IGraphics::CMessageBox &MessageBox)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t MacosGuard = Body.find("#if defined(CONF_PLATFORM_MACOS)");
+	const size_t VulkanBranch = Body.find("if(m_BackendType == EBackendType::BACKEND_TYPE_VULKAN)", MacosGuard);
+	const size_t ParentlessMessageBox = Body.find("return ShowMessageBoxImpl(MessageBox, nullptr);", VulkanBranch);
+	const size_t Cleanup = Body.find("m_pProcessor->ErroneousCleanup();");
+	const size_t DestroyWindow = Body.find("SDL_DestroyWindow(m_pWindow);");
+
+	ASSERT_NE(MacosGuard, std::string::npos);
+	ASSERT_NE(VulkanBranch, std::string::npos);
+	ASSERT_NE(ParentlessMessageBox, std::string::npos);
+	ASSERT_NE(Cleanup, std::string::npos);
+	ASSERT_NE(DestroyWindow, std::string::npos);
+	EXPECT_LT(MacosGuard, VulkanBranch);
+	EXPECT_LT(VulkanBranch, ParentlessMessageBox);
+	EXPECT_LT(ParentlessMessageBox, Cleanup);
+	EXPECT_LT(ParentlessMessageBox, DestroyWindow);
 }
 
 TEST(QmMonitoringHelpers, MotdUsesReadyOrStableParagraphOnly)
@@ -6176,10 +6325,11 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
 	ASSERT_FALSE(NoScrollBody.empty());
 	ASSERT_FALSE(ScrollRegionSlider.empty());
 	EXPECT_NE(ScrollRegion.find("bool CScrollRegion::ContentOverflows() const"), std::string::npos);
+	EXPECT_NE(ScrollRegionHeader.find("constexpr bool QmScrollRegionContentOverflows(float ContentSize, float ViewportSize, float PixelSize)"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("return !m_Params.m_HideScrollbar && ContentOverflows();"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("m_ContentSize 来自上一帧 End/AddRect 的测量结果"), std::string::npos);
 	EXPECT_NE(ScrollRegionSlider.find("const float ScrollMax = Metrics.MaxOffset();"), std::string::npos);
-	EXPECT_NE(ScrollRegionSlider.find("const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
+	EXPECT_NE(ScrollRegionSlider.find("const bool CanScroll = ContentOverflows() && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool IsActiveItem(const void *pId) const"), std::string::npos);
 	EXPECT_NE(ScrollRegionEnd.find("MaintainNoScrollSliderActive();"), std::string::npos);
 	EXPECT_NE(NoScrollBody.find("m_ScrollState.ResetForNonScrollableContent(Active);"), std::string::npos);
@@ -8654,6 +8804,7 @@ TEST(QmMonitoringHelpers, ServerBrowserStatusInputsUseSharedQmFields)
 	EXPECT_NE(SearchSelectAllPos, std::string::npos);
 	EXPECT_NE(SearchFieldPos, std::string::npos);
 	EXPECT_NE(SearchRefreshPos, std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS"), std::string::npos);
 	EXPECT_LT(SearchPopupGuardPos, SearchHotkeyPos);
 	EXPECT_LT(SearchHotkeyPos, SearchFieldPos);
 	EXPECT_LT(SearchHotkeyPos, SearchSetActivePos);

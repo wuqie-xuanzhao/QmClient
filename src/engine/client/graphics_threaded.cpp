@@ -3583,9 +3583,25 @@ void CGraphics_Threaded::AddBackEndWarningIfExists()
 
 int CGraphics_Threaded::InitWindow()
 {
+	const bool VulkanRequested = str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0;
+	bool RestoreAutomaticOpenGLConfig = g_Config.m_GfxGLMajor == 0 && (str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0 || str_comp_nocase(g_Config.m_GfxBackend, "GLES") == 0);
+	const auto RestoreAutomaticOpenGLConfigFn = [&RestoreAutomaticOpenGLConfig]() {
+		if(RestoreAutomaticOpenGLConfig)
+		{
+			g_Config.m_GfxGLMajor = 0;
+			g_Config.m_GfxGLMinor = 0;
+			g_Config.m_GfxGLPatch = 0;
+		}
+	};
+	const auto FinishSuccessfulInit = [VulkanRequested, &RestoreAutomaticOpenGLConfig, &RestoreAutomaticOpenGLConfigFn]() {
+		if(VulkanRequested && (str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0 || str_comp_nocase(g_Config.m_GfxBackend, "GLES") == 0))
+			RestoreAutomaticOpenGLConfig = true;
+		RestoreAutomaticOpenGLConfigFn();
+		return 0;
+	};
 	int ErrorCode = IssueInit();
 	if(ErrorCode == 0)
-		return 0;
+		return FinishSuccessfulInit();
 
 	// try disabling fsaa
 	while(g_Config.m_GfxFsaaSamples)
@@ -3604,7 +3620,32 @@ int CGraphics_Threaded::InitWindow()
 
 		ErrorCode = IssueInit();
 		if(ErrorCode == 0)
-			return 0;
+			return FinishSuccessfulInit();
+	}
+
+	const bool Vulkan14Requested = VulkanRequested && g_Config.m_GfxGLMajor == 1 && g_Config.m_GfxGLMinor >= 4;
+	if(Vulkan14Requested)
+	{
+		g_Config.m_GfxGLMajor = 1;
+		g_Config.m_GfxGLMinor = 1;
+		g_Config.m_GfxGLPatch = 0;
+		log_warn("gfx", "Failed to initialize Vulkan 1.4. Trying Vulkan 1.1 instead.");
+		ErrorCode = IssueInit();
+		if(ErrorCode == 0)
+			return FinishSuccessfulInit();
+	}
+
+	if(VulkanRequested)
+	{
+		str_copy(g_Config.m_GfxBackend, "OpenGL");
+		g_Config.m_GfxGLMajor = 0;
+		g_Config.m_GfxGLMinor = 0;
+		g_Config.m_GfxGLPatch = 0;
+		RestoreAutomaticOpenGLConfig = true;
+		log_warn("gfx", "Failed to initialize Vulkan. Falling back to automatically detected OpenGL.");
+		ErrorCode = IssueInit();
+		if(ErrorCode == 0)
+			return FinishSuccessfulInit();
 	}
 
 	size_t GLInitTryCount = 0;
@@ -3614,7 +3655,14 @@ int CGraphics_Threaded::InitWindow()
 		if(ErrorCode == EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED)
 		{
 			// try next smaller major/minor or patch version
-			if(g_Config.m_GfxGLMajor >= 4)
+			SOpenGLVersion AutoProbeVersion{g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch};
+			if(RestoreAutomaticOpenGLConfig && NextAutoOpenGLProbeVersion(AutoProbeVersion))
+			{
+				g_Config.m_GfxGLMajor = AutoProbeVersion.m_Major;
+				g_Config.m_GfxGLMinor = AutoProbeVersion.m_Minor;
+				g_Config.m_GfxGLPatch = AutoProbeVersion.m_Patch;
+			}
+			else if(g_Config.m_GfxGLMajor >= 4)
 			{
 				g_Config.m_GfxGLMajor = 3;
 				g_Config.m_GfxGLMinor = 3;
@@ -3675,10 +3723,10 @@ int CGraphics_Threaded::InitWindow()
 		ErrorCode = IssueInit();
 		if(ErrorCode == 0)
 		{
-			return 0;
+			return FinishSuccessfulInit();
 		}
 
-		if(++GLInitTryCount >= 9)
+		if(++GLInitTryCount >= 16)
 		{
 			// try something else
 			break;
@@ -3693,7 +3741,7 @@ int CGraphics_Threaded::InitWindow()
 		log_warn("gfx", "Failed to initialize graphics. Setting resolution to %dx%d and trying again.", g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
 
 		if(IssueInit() == 0)
-			return 0;
+			return FinishSuccessfulInit();
 	}
 
 	// at the very end, just try to set to gl 1.4
@@ -3704,7 +3752,7 @@ int CGraphics_Threaded::InitWindow()
 		log_warn("gfx", "Failed to initialize graphics. Setting GL version %d.%d.%d and trying again.", g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
 
 		if(IssueInit() == 0)
-			return 0;
+			return FinishSuccessfulInit();
 	}
 
 	log_error("gfx", "Failed to initialize graphics. Out of ideas.");

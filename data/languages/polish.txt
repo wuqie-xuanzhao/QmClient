@@ -698,6 +698,9 @@ Angle:
 Animate chat box, emote selector, scoreboard, and spectate selection
 == Animuj okno czatu, wybór emotikon, tablicę wyników i wybór obserwowania
 
+Animate lists when entering a page
+== Animate lists when entering a page
+
 Animate settings card expand and collapse height changes
 == Animuj zmiany wysokości podczas rozwijania i zwijania kart ustawień
 
@@ -1777,9 +1780,6 @@ Checking for existing player with your name
 
 CHN
 == CHN
-
-Choose and arrange status bar data fields
-== Choose and arrange status bar data fields
 
 Choose colors for weapons and entity lasers
 == Choose colors for weapons and entity lasers
@@ -3037,6 +3037,9 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == Wyświetla bieżący kąt w stopniach
+
+Displays your current score
+== Wyświetla Twój aktualny wynik
 
 Displays your frames per second
 == Wyświetla liczbę klatek na sekundę
@@ -4616,11 +4619,11 @@ Graphics card
 Graphics display
 == Wyświetlanie grafiki
 
-Graphics library major version
-== Główna wersja biblioteki graficznej
+Graphics library major version (0 = auto-detect)
+== Graphics library major version (0 = auto-detect)
 
-Graphics library minor version
-== Poboczna wersja biblioteki graficznej
+Graphics library minor version (0 = auto-detect)
+== Graphics library minor version (0 = auto-detect)
 
 Graphics library patch version
 == Wersja łatki biblioteki graficznej
@@ -9412,6 +9415,15 @@ Sets your tee's eye emote
 
 Settings
 == Ustawienia
+
+Settings card background
+== Settings card background
+
+Settings card background color
+== Settings card background color
+
+Settings card background transparency
+== Settings card background transparency
 
 Settings card border color
 == Kolor obramowania kart ustawień

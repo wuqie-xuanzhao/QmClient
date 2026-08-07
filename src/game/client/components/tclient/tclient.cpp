@@ -3050,7 +3050,8 @@ void CTClient::OnStateChange(int NewState, int OldState)
 void CTClient::OnNewSnapshot()
 {
 	CheckHammerWakeupActions();
-	SetForcedAspect();
+	// snapshot 处理期间不能同步触发全局 resize，延迟到下一次常规更新处理。
+	QueueAspectApply();
 	ApplyGoresFastInputLink(true);
 	MaybeShowLocalSaveJoinHint();
 	// Update volleyball

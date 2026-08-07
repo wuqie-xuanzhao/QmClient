@@ -11,7 +11,7 @@ scope:
 authority:
   - 当前 QmClient 生产源码与 CodeGraph 调用关系
   - Apple Metal、QuartzCore 与 Xcode 官方文档
-  - SDL2 官方 API 文档及仓库内 SDL 2.0.20 头文件
+  - SDL2 官方 API 文档及仓库内各 macOS 打包架构实际携带的 SDL 头文件
 relationship:
   - 本文定义 Metal 后端的目标行为、架构边界和分阶段实现路径
   - 本文不证明 Metal 已实现、可用或性能优于 OpenGL/Vulkan
@@ -93,7 +93,7 @@ relationship:
 | 能力协商 | `SBackendCapabilities` 控制 buffering、texture array、render target 和 SDF 路径。 | 可用能力必须在实现完成后逐项开启，禁止虚报。 |
 | 设置页 | Graphics 设置遍历 `BACKEND_TYPE_COUNT` 和 `GetDriverVersion()`。 | 新枚举会自然进入列表，但显示名和版本语义要显式处理。 |
 | 安全恢复 | 当前 graphics crash recovery 固定回退 OpenGL，macOS 使用 4.1、无 FSAA、窗口模式。 | Metal 初始化/提交错误必须接入相同安全回退。 |
-| SDL 版本 | 仓库内 macOS SDL framework 头文件为 SDL 2.0.20。 | 已满足 SDL Metal API 的最低版本要求。 |
+| SDL 版本 | 仓库内 macOS SDL framework 按打包架构并不一致：`libarm64`、`libfat` 为 SDL 2.0.20，`lib64` 为 SDL 2.32.10。 | 所有当前携带版本均提供本规格使用的 SDL Metal API；实现和 CI 不得假定所有架构使用同一 SDL patch 版本。 |
 | macOS 源码 | 仓库已有 `.mm` 文件，CMake 已编译 Objective-C++ 平台源。 | Metal fragment 使用 `.mm` 不需要引入新的语言体系。 |
 
 当前源码锚点：
@@ -110,7 +110,10 @@ relationship:
 - shutdown 与窗口销毁顺序：`src/engine/client/backend_sdl.cpp:1575-1610`。
 - drawable size 分支：`src/engine/client/backend_sdl.cpp:1805-1811`。
 - Graphics 设置的后端枚举：`src/game/client/components/menus_settings.cpp:3618-3663`。
+- Graphics 设置的 backend/version identity 与写回：`src/game/client/components/menus_settings.cpp:69-86,3920-3946`。
 - macOS crash recovery：`src/engine/client/client.cpp:260-349`。
+- macOS SDL/MoltenVK 每帧等待 workaround：`src/engine/client/graphics_threaded.cpp:4159-4193`。
+- screenshot/read-pixel 的共享 try-swap 合同：`src/engine/client/graphics_threaded.cpp:1495-1523,4111-4135,4159-4180` 与 `src/engine/client/graphics_threaded.h:573-588`。
 - macOS 默认 backend 配置：`src/engine/shared/config_variables.h:821-831`。
 - macOS Vulkan opt-in 与 client source 注册：`CMakeLists.txt:122-130,2643-2667`。
 - 当前 macOS deployment target：`CMakeLists.txt:1-10`。
@@ -203,6 +206,20 @@ data/shader/metal/qmclient.metal
 - `metal_types.h` 只允许包含 CPU/MSL 两端共享、布局明确的 POD 常量结构。
 - Metal 后端只能在 `CONF_PLATFORM_MACOS && CONF_BACKEND_METAL` 下编译。
 
+### 4.4 图形后端完整成员约束
+
+Metal 不是旁路 renderer，也不是只由设置页选择的实验模块。新增后端必须同时进入并保持以下公共合同一致：
+
+- `EBackendType` 枚举、编译开关、factory、字符串解析和环境变量覆盖。
+- SDL window flag、drawable size、fullscreen/resize、VSync 和 shutdown 生命周期。
+- `GetDriverVersion()`、设置页 identity、默认项判断、配置持久化和 safe fallback。
+- `SBackendCapabilities` 的完整初始化和上层命令路由。
+- `CCommandBuffer` 的 handled/forwarded/error 语义，以及 screenshot/read-pixel 的 try-swap 合同。
+- backend vendor/version/renderer 字符串、GPU 枚举、内存统计、warning/fatal error 和 diagnostics。
+- crash marker、启动重试、运行时 fatal recovery、打包资源和跨平台 compile guard。
+
+任何阶段如果尚未满足其中一项，必须显式报告为不支持或保持 Metal 不可选；禁止靠 `default` 分支、OpenGL 字段的偶然值、版本字符串启发式或未初始化 capability 维持运行。
+
 ## 5. 后端发现、设置与回退
 
 ### 5.1 枚举和编译开关
@@ -224,11 +241,19 @@ CONF_BACKEND_METAL
 - 首轮实现保持 macOS 默认 `gfx_backend OpenGL`。
 - `gfx_gl_major/minor/patch` 对 Metal 不具有 API 版本含义；Metal 后端不得根据这些字段改变 feature set。
 
-设置页中的 Metal 显示名必须为 `Metal`，不能伪装为 `Metal 1.0`。如果现有 `GetDriverVersion()` 接口强制提供数字，数字只作为兼容占位且不得显示；长期应把“后端选择”与“OpenGL 版本选择”拆开。
+设置页中的 Metal 显示名必须为 `Metal`，不能伪装为 `Metal 1.0`。P1 不得把正确性依赖于未定义的版本占位：
+
+- `GetDriverVersion()` 对 Metal 只返回一个可选项，名称为 `Metal`，兼容占位固定为 `0.0.0`。
+- 设置页格式化 Metal 时不显示占位数字。
+- Metal 的选中身份只比较 backend 名称，不比较 `gfx_gl_major/minor/patch`。
+- 选择 Metal 时不得为了建立 identity 改写用户保留的 OpenGL 版本；切回 OpenGL 时仍使用原有 OpenGL 配置或该 OpenGL 选项明确携带的版本。
+- 非 macOS 或未编译 Metal 的构建不得枚举 Metal；读取遗留的 `gfx_backend Metal` 时走当前平台安全默认值。
+
+长期可以把“后端选择”与“OpenGL 版本选择”拆成 API-neutral 接口，但上述行为必须在 P0/P1 已经成立，不能推迟到长期重构。
 
 ### 5.3 安全回退
 
-以下情况必须回退 macOS OpenGL 4.1、FSAA 0、窗口模式，并记录原因：
+以下情况必须进入 macOS OpenGL 4.1、FSAA 0、非 borderless 窗口模式的安全配置，并记录原因：
 
 - `MTLCreateSystemDefaultDevice()` 返回空。
 - SDL Metal view 或 layer 创建失败。
@@ -237,7 +262,24 @@ CONF_BACKEND_METAL
 - command buffer 进入 error 状态并被判定为不可恢复。
 - 上一会话 crash marker 指向 Metal/graphics driver 路径。
 
-回退必须落回配置，避免每次启动重复进入已知失败路径。一次偶发 drawable timeout 不得立即永久改写配置，应先记录并允许有限重试。
+初始化失败与运行时失败必须采用不同恢复协议：
+
+1. **启动初始化失败：** 停止并删除已启动的 processor，按 `CMD_SHUTDOWN -> SDL fragment shutdown -> CMD_POST_SHUTDOWN` 顺序清理部分 Metal 状态，销毁 Metal view/window，把安全配置落盘，然后在同一进程内重新执行一次完整 OpenGL 初始化。不得把 Metal 错误伪装成 GL context/version 错误进入降级 GL 版本循环。
+2. **运行时 fatal GPU 错误：** completion handler 只写入线程安全错误 latch；processor 边界停止接受新提交、drain 或终止可控的 in-flight 工作、写入 crash/safe-config 证据并通知主线程有序退出。P1 不要求也不得假装支持运行中热切换到 OpenGL，因为现有上层没有重建全部 texture、buffer、container 和 render target 的跨后端协议；恢复发生在下一次完整初始化。
+3. **可恢复 drawable 不可用：** 当前帧不 present，释放 frame slot，记录连续失败和等待数据；只有超过有明确定义的次数/时间阈值后才升级为初始化或运行时 fatal。一次偶发 timeout 不得永久改写配置。
+
+回退必须落回配置，避免每次启动重复进入已知失败路径。安全配置写入失败时仍要尝试有序退出，并在错误信息中明确持久化失败。
+
+### 5.4 现有 macOS Metal 字符串 workaround 的隔离
+
+当前 `CGraphics_Threaded::Swap()` 使用 `GetVersionString()` 是否包含 `Metal` 来识别 SDL/MoltenVK 路径，并在每帧提交后调用 `WaitForIdle()`。原生 Metal 若报告正常的 Metal identity 会误命中该逻辑，破坏第 8.2 节的 in-flight frame 模型。
+
+P0 必须先完成以下修正：
+
+- 用明确的 backend 类型或 capability 表示“需要旧 SDL/MoltenVK frame-serialization workaround”，禁止继续使用版本字符串判断。
+- 该标志只允许旧的受影响路径开启；原生 Metal 固定为 false。
+- diagnostics 中把 workaround wait 与 Metal drawable/GPU wait 分成不同字段，禁止沿用会混淆两种后端的 `metal_wait_for_idle` 语义。
+- 合同测试证明版本/renderer/vendor 字符串包含 `Metal` 不会改变同步策略。
 
 ## 6. 窗口、CAMetalLayer 与 HiDPI
 
@@ -366,6 +408,21 @@ Apple 明确指出 drawable 来自有限资源池，获取不到时调用线程�
 
 `CMD_VSYNC` 更新 `CAMetalLayer.displaySyncEnabled`。VSync 关闭后是否真正达到非同步呈现受系统 compositor 和设备影响，必须通过真机测量，不得只凭属性写入声称“已解除帧率限制”。
 
+### 8.5 帧终结与 try-swap 合同
+
+`CMD_SWAP`、`CMD_TRY_SWAP_AND_SCREENSHOT`、`CMD_TRY_SWAP_AND_READ_PIXEL` 共享同一个“本逻辑帧最多终结并呈现一次”合同。Metal 必须保持现有调用顺序：`ScreenshotDirect()` 先于 `ReadPixelDirect()`，两者共享由调用方初始化为 false 的 `m_pSwapped`。
+
+具体语义：
+
+1. 第一个观察到 `*m_pSwapped == false` 的 try-swap 命令负责结束 onscreen encoder、注册 present、commit 当前帧，并设置 `*m_pSwapped = true`。
+2. 后续观察到 `*m_pSwapped == true` 的 try-swap 命令不得获取下一 drawable、不得推进 frame slot、不得第二次 present；它必须读取刚才同一 presented frame 的保留结果。
+3. 如果两个 try-swap 命令都不存在，普通 `CMD_SWAP` 负责唯一一次 frame finalization。
+4. 如果第一个 try-swap 因 drawable 不可用而没有完成呈现，不得把 `m_pSwapped` 伪设为 true；命令返回明确失败，后续命令遵循同一失败状态，不生成空白成功结果。
+5. 用于同帧 screenshot/read-pixel 的 resolve texture、capture texture 或 readback buffer，至少保留到该逻辑帧的全部 try-swap 命令完成；最迟在下一帧成功 finalization 后释放或复用。
+6. 现有 `ScreenshotDirect()` 和 `ReadPixelDirect()` 会分别 kick 并同步等待。P1 可以为第二个读取创建额外 blit command buffer，但不能因此再次 present；P5 才允许基于 profile 合并 readback 工作。
+
+后端必须把 `FinalizeFrameForPresent()` 与 `ReadLastPresentedFrame()` 设计成两个可独立测试的内部操作，避免 screenshot/read-pixel handler 各自复制 swap 状态机。
+
 ## 9. 命令协议映射
 
 ### 9.1 完整性原则
@@ -391,7 +448,34 @@ P1 使用非 buffering 兼容路径，必须实现：
 - screenshot、read pixel。
 - signal 和必要的 init/shutdown 命令。
 
-P1 必须把以下能力报告为 false：tile buffering、quad buffering、text buffering、quad container buffering、2D texture array、render target、backbuffer capture、Gaussian blur、Media Island SDF、rounded-rect SDF、textured MSDF。
+P1 必须发布完整且确定的 capability，不只设置“高级能力”。`SBackendCapabilities` 的每个字段都必须具有默认值，并由统一的 `ResetToUnsupported()` 或等价初始化路径在每次 backend init 前重置；其中 atomic 字段必须显式 `store(false)`，禁止依赖对象复用前的旧状态。
+
+P1 capability 矩阵：
+
+| 字段 | P1 值 | 约束 |
+|---|---:|---|
+| `m_TileBuffering` | false | P2 开启。 |
+| `m_QuadBuffering` | false | P2 开启。 |
+| `m_TextBuffering` | false | 使用现有非 buffering 文本路径。 |
+| `m_QuadContainerBuffering` | false | P2 开启。 |
+| `m_MipMapping` | true | P1 texture flags 要求时必须生成 mip；未实现则 P1 不可宣告完成。 |
+| `m_NPOTTextures` | true | Metal 原生支持；纹理创建和更新测试必须覆盖 NPOT。 |
+| `m_3DTextures` | false | P1 上层走 2D fallback。 |
+| `m_2DArrayTextures` | false | P2 开启。 |
+| `m_2DArrayTexturesAsExtension` | false | Metal 不使用 GL extension 语义。 |
+| `m_ShaderSupport` | true | Metal 所有绘制依赖已加载的必需 pipeline。 |
+| `m_MediaIslandSdf` | false | P4 开启。 |
+| `m_RoundedRectSdf` | false | P4 开启。 |
+| `m_TexturedMsdf` | false | P4 开启；使用 atomic store 发布。 |
+| `m_RenderTargets` | false | P3 开启。 |
+| `m_RenderTargetGaussianBlur` | false | P3 开启。 |
+| `m_BackbufferCapture` | false | 通用 screenshot/read-pixel 不等同于供上层采样的 backbuffer capture。 |
+| `m_RenderTargetExternalPassRequiresSingleSample` | false | render target 未启用时不得影响上层。 |
+| `m_pRenderTargetSupportReason` | `metal_p1_disabled` | 必须是静态生命周期字符串。 |
+| `m_TrianglesAsQuads` | true | P1 immediate QUADS 必须以持久化索引或等价方式绘制为 triangles；禁止提交 Metal 不支持的 quad primitive。 |
+| `m_ContextMajor/Minor/Patch` | `0/0/0` | 只用于旧接口兼容，不表达 Metal feature set。 |
+
+如果 P1 无法满足表中任一 `true` 项，必须修改 P1 实现范围和上层 fallback 后再开放后端，不能发布与实际行为不一致的 capability。
 
 ### 9.3 P2 必需命令
 
@@ -602,6 +686,15 @@ Apple 官方 readback 示例以“texture copy 到 CPU 可访问 buffer”为基
 
 整帧常规呈现不得调用 `waitUntilCompleted`。同步等待只允许出现在 screenshot、read pixel、shutdown 或资源销毁需要的明确边界。
 
+readback 必须遵守第 8.5 节的 try-swap 状态机：
+
+- screenshot 和 read-pixel 同帧出现时必须来自同一 presented image，不能各自触发一次 swap。
+- screenshot 先完成后，read-pixel 可以读取同一 capture/readback 结果；不得依赖已经释放的 `CAMetalDrawable`。
+- 只请求单像素时允许复制最小合法区域，但坐标必须在 drawable 像素空间 clamp，并保持当前屏幕坐标语义。
+- readback buffer 的 offset、bytes-per-row 和总大小使用 checked arithmetic；满足 Metal 对 copy 布局的要求，不以紧密行排列作为无条件假设。
+- command buffer 或 blit 失败时，screenshot 返回无数据并记录错误，read-pixel 返回明确失败状态；如果现有上层接口暂时无法表达失败，P0 必须先定义兼容结果和 warning，禁止伪造白色像素或空白成功图片作为最终合同。
+- 视频路径如果通过 screenshot/read-presented-image 合同取帧，必须复用同一颜色、方向和同步规则；P1 验收前要确认真实调用链，未接入的视频能力必须明确禁用或列为阻断项。
+
 如果 `framebufferOnly=false` 的性能成本不可接受，P5 可以改为每帧最终颜色先写内部 present texture，再 blit/draw 到 framebuffer-only drawable；是否采用必须由 GPU capture 证明，不能凭直觉增加永久额外 pass。
 
 ## 17. 错误处理与可观测性
@@ -622,6 +715,15 @@ metal_frame_resources
 
 设置页/启动错误文本必须包含 Metal，并将现有“切换到 OpenGL 或 Vulkan”更新为准确后端列表。
 
+`EGraphicsBackendErrorCodes` 必须新增 API-neutral 或 Metal 专用错误分类，至少区分：
+
+- Metal window/view/layer 创建失败。
+- Metal device/queue 创建失败。
+- shader library/pipeline/frame resource 初始化失败。
+- 首帧连续 drawable 获取失败。
+
+这些错误码由 `InitWindow()` 明确路由到第 5.3 节的 OpenGL 4.1 安全初始化，只允许重试一次完整 backend fallback。Metal 错误不得返回 `GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED` 或 `GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED`，否则会进入错误的 GL 版本递减循环。
+
 ### 17.2 异步 GPU 错误
 
 每个 command buffer completion handler 检查 status/error，并把错误复制到线程安全 latch。下一次 processor 边界统一交给现有 graphics error 容器处理。
@@ -632,6 +734,8 @@ metal_frame_resources
 - pipeline/resource 创建失败：初始化失败或功能禁用。
 - command buffer error/device lost 类错误：fatal，停止提交并进入安全恢复。
 - screenshot/readback 失败：当前操作失败，不伪造成功图片。
+
+fatal latch 必须至少携带 backend、stage、command buffer status、Apple error domain/code、最近 frame/command id 和是否已写入 safe config。`ProcessError()` 在 Metal runtime fatal 路径不得只依赖 assertion 完成恢复；release 和禁用 assertion 的构建仍必须停止提交、向主线程传播失败并走有序退出。
 
 ### 17.3 标签与计数器
 
@@ -690,13 +794,18 @@ macOS Metal 构建必须：
 
 实施：
 
-- 建立 `EBackendType`、backend display、fallback、drawable size 的纯函数/源码合同测试。
+- 建立 `EBackendType`、backend display/identity、fallback、drawable size 的纯函数/源码合同测试。
+- 把 backend identity 从 GL 版本语义中隔离：Metal 只枚举一次、显示为 `Metal`、选中判断忽略 GL 版本、选择 Metal 不改写保留的 OpenGL 版本。
+- 把现有基于版本字符串包含 `Metal` 的每帧 `WaitForIdle()` workaround 改为明确 backend/capability 判断，并证明原生 Metal 永不进入该路径。
+- 为 `SBackendCapabilities` 增加全字段确定初始化/reset 合同测试，包括重复 init、失败后重试和 atomic 字段。
+- 定义 frame finalization/last-presented-frame 状态机，并以 fake backend 测试 screenshot、read-pixel、二者同帧和 drawable unavailable。
+- 新增 Metal 初始化错误码与 `InitWindow()` fallback 状态机测试，证明 Metal 错误不进入 GL 版本递减循环，且 runtime fatal 不宣称支持热切换。
 - 建立 blend、wrap、primitive、clip、sample-count、pipeline-key 映射测试。
 - 增加最小 MSL shader 和 CMake metallib 构建测试。
 - 验证 bundle 与裸 executable 两种资源查找。
 - 记录当前 OpenGL 固定场景基线和设备信息。
 
-完成条件：shader 可离线编译和加载；测试先失败后通过；不向普通设置页暴露 Metal。
+完成条件：上述公共合同测试先失败后通过；shader 可离线编译和加载；不向普通设置页暴露 Metal；现有 OpenGL/Vulkan/null backend 测试保持通过。
 
 ### P1：兼容渲染后端
 
@@ -708,10 +817,11 @@ macOS Metal 构建必须：
 - 三帧 shared stream arena。
 - texture/text texture、clear、immediate render、viewport/scissor/blend/sampler。
 - swap/vsync、screenshot/read pixel。
-- 所有高级 capability 保持 false。
-- 初始化失败和 crash recovery 回退 OpenGL 4.1。
+- 按第 9.2 节发布完整 capability，所有高级 capability 保持 false。
+- 初始化失败在同次启动清理后回退 OpenGL 4.1；运行时 fatal 持久化安全配置并有序退出，下次启动恢复。
+- backend/vendor/version/renderer、GPU 列表和 graphics diagnostics 使用 API-neutral identity，不触发现有 MoltenVK workaround。
 
-完成条件：菜单、进服、地图、普通文本和截图可用；无 Metal validation error；resize/HiDPI/fullscreen/vsync 通过真机矩阵。
+完成条件：菜单、进服、地图、普通文本、screenshot/read-pixel 和实际启用的视频取帧入口可用；设置页 identity 与配置往返稳定；初始化失败可在同次启动回退 OpenGL 4.1；runtime fatal 可停止提交并在下次启动恢复；无 Metal validation error；resize/HiDPI/fullscreen/vsync 通过真机矩阵。
 
 ### P2：现代 buffering 路径
 
@@ -769,15 +879,19 @@ Metal 默认后端晋级条件：
 
 ### 20.1 自动测试
 
-- backend string/enumeration/compile-guard。
-- Metal unavailable/factory failure/fallback。
+- backend string/enumeration/compile-guard；所有 `switch(EBackendType)` 的 Metal 穷举覆盖。
+- Metal 设置页显示、选中、写回、重启后恢复和非 macOS 遗留配置 fallback。
+- Metal unavailable/factory failure/partial-init cleanup/同进程 OpenGL fallback；Metal 错误不进入 GL 版本递减循环。
+- runtime fatal latch、停止提交、安全配置持久化和下一次启动恢复；不得以测试替代真实 crash recovery 演练。
+- 完整 capability matrix 默认值、重复初始化、失败重试和 capability false 时上层不生成对应高级命令。
+- 原生 Metal 不进入 SDL/MoltenVK 每帧 `WaitForIdle()` workaround。
 - blend、sampler、primitive、clip、viewport、sample count 映射。
 - CPU/MSL shared struct size/offset。
 - pipeline cache key equality/hash。
 - texture row pitch 和 BGRA/RGBA 转换。
-- screenshot 上下方向。
-- frame slot acquire/release 和 shutdown drain。
-- capability false 时上层不生成对应高级命令。
+- screenshot 上下方向、BGRA/RGBA、row pitch、checked size 和失败结果。
+- screenshot/read-pixel 各自单独出现、同帧同时出现、drawable unavailable；每个逻辑帧最多一次 present，二者读取同一 frame。
+- frame slot acquire/release、drawable 获取失败释放、completion error 和 shutdown drain。
 - render target 生命周期和非法 ID 防护。
 
 ### 20.2 构建验证
@@ -793,6 +907,18 @@ python3 qmclient_scripts/gate/check_gate.py --mode quick
 
 提交前优先 `--mode default`。Metal shader 自定义 target 和 bundle/package target 必须单独验证。
 
+构建矩阵至少包含：
+
+| 配置 | 必验结果 |
+|---|---|
+| macOS arm64，`METAL=ON` | Objective-C++、Metal/QuartzCore 链接、metallib 生成和 game-client 构建成功。 |
+| macOS arm64，`METAL=OFF` | OpenGL-only 构建不引用 Metal symbol、不要求 metallib。 |
+| 当前发布 universal/x86_64 配置（如仍发布） | 每个架构可加载对应 SDL framework 和同一 bundle 内 metallib。 |
+| 非 macOS 常用 CI 配置 | `BACKEND_TYPE_METAL` 的公共枚举相关代码可编译，但不枚举、不创建 Metal backend，且不包含 Objective-C/Apple framework 依赖。 |
+| app bundle、DMG/package、裸 executable | shader library 路径均按明确规则成功或给出可诊断失败，不依赖开发机工作目录。 |
+
+不得只验证默认构建目录后声称跨平台完成；`METAL=OFF` 和至少一个非 macOS compile guard 是后端合并阻断项。
+
 ### 20.3 真机功能矩阵
 
 | 场景 | 必验内容 |
@@ -807,7 +933,7 @@ python3 qmclient_scripts/gate/check_gate.py --mode quick
 | 资源 | 换图、换皮肤、语言/字体变化、长时间游戏。 |
 | 输出 | screenshot、read pixel、录制入口。 |
 | 特效 | render target、blur、SDF、MSDF、FSAA。 |
-| 恢复 | Metal 初始化失败、shader 缺失、模拟 command buffer error 后回退。 |
+| 恢复 | Metal 初始化失败/shader 缺失时同次启动回退；模拟 command buffer fatal 时停止提交、有序退出并验证下一次启动进入 OpenGL 安全配置。 |
 
 ### 20.4 视觉对比
 
@@ -836,7 +962,7 @@ python3 qmclient_scripts/gate/check_gate.py --mode quick
 | 编号 | 问题 | 当前处理 |
 |---|---|---|
 | R1 | 现有基类和类名带 GL，Metal 接入后命名失真。 | 首轮复用协议，后续机械重命名，不阻塞实现。 |
-| R2 | `gfx_gl_*` 同时承担后端版本选择，不能自然表达 Metal。 | Metal 忽略该字段；设置页后续拆分后端和 GL 版本。 |
+| R2 | `gfx_gl_*` 同时承担后端版本选择，不能自然表达 Metal。 | P0 先建立不比较、不写回 GL tuple 的 Metal identity；后续再机械拆分 API-neutral 接口。 |
 | R3 | `framebufferOnly=false` 可能影响呈现性能。 | 首轮保证 readback 正确；P5 用 capture 决定是否引入内部 present texture。 |
 | R4 | Intel/AMD 与 Apple GPU memory model 不同。 | 首轮 correctness-first；发布包含 x86_64 时必须真机验证并在 P5 调整 storage mode。 |
 | R5 | OpenGL/Vulkan shader 与显式 MSL 可能漂移。 | 共享参数布局、shader 清单和视觉金图；新增 shader 必须同时更新全部启用后端。 |
@@ -844,6 +970,11 @@ python3 qmclient_scripts/gate/check_gate.py --mode quick
 | R7 | 异步 command buffer error 到达现有 error container 有线程边界。 | completion handler 只写线程安全 latch，processor 边界消费。 |
 | R8 | 当前 Vulkan 支持多 render thread，Metal 首轮单线程。 | 不继承并发复杂度；只有 profile 证明 CPU encode 瓶颈才评估并行编码。 |
 | R9 | macOS 当前部署目标和发布架构可能继续变化。 | 使用仓库当前 CMake 值，不在 Metal 模块硬编码 OS/架构。 |
+| R10 | 原生 Metal identity 误命中现有 MoltenVK 字符串 workaround，导致每帧等待。 | P0 改为明确 backend/capability，并锁定原生 Metal 为 false。 |
+| R11 | screenshot 与 read-pixel 分批 kick，同帧可能二次 present 或读取已释放 drawable。 | 按第 8.5、16 节保留 last-presented-frame 数据并做组合合同测试。 |
+| R12 | `SBackendCapabilities` 非全字段初始化导致上层走入未实现命令。 | 全字段默认值、统一 reset、P1 明确矩阵和失败重试测试。 |
+| R13 | 运行时 GPU fatal 被误解为可以无损热切换后端。 | P1 只支持停止提交、有序退出、持久化安全配置和下次完整初始化。 |
+| R14 | 设置页继续用 GL version tuple 识别 Metal，造成 custom 项或污染 OpenGL 配置。 | P0 建立 API-neutral Metal identity；固定隐藏占位且不写回 GL 版本。 |
 
 ## 22. 文件影响面
 

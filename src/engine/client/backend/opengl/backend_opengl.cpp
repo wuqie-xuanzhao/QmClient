@@ -163,7 +163,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 #endif
 }
 
-static void ParseVersionString(EBackendType BackendType, const char *pStr, int &VersionMajor, int &VersionMinor, int &VersionPatch)
+static bool ParseVersionString(EBackendType BackendType, const char *pStr, int &VersionMajor, int &VersionMinor, int &VersionPatch)
 {
 	// If the backend is GLES, the version string starts with `OpenGL ES ` or `OpenGL ES-CM ` for older contexts, rest is the same.
 	if(BackendType == BACKEND_TYPE_OPENGL_ES)
@@ -221,12 +221,14 @@ static void ParseVersionString(EBackendType BackendType, const char *pStr, int &
 		VersionMajor = 3;
 		VersionMinor = BackendType == BACKEND_TYPE_OPENGL_ES ? 0 : 3;
 		VersionPatch = 0;
+		return false;
 	}
 	else
 	{
 		VersionMajor = aNumbers[0];
 		VersionMinor = aNumbers[1];
 		VersionPatch = aNumbers[2];
+		return true;
 	}
 }
 
@@ -346,8 +348,20 @@ bool CCommandProcessorFragment_OpenGL::InitOpenGL(const SCommand_Init *pCommand)
 	str_copy(pCommand->m_pVersionString, pVersionString, gs_GpuInfoStringSize);
 	str_copy(pCommand->m_pRendererString, pRendererString, gs_GpuInfoStringSize);
 
-	// parse version string
-	ParseVersionString(pCommand->m_RequestedBackend, pVersionString, pCommand->m_pCapabilities->m_ContextMajor, pCommand->m_pCapabilities->m_ContextMinor, pCommand->m_pCapabilities->m_ContextPatch);
+	// 解析版本字符串；能力检查可能降低 m_Context*，所以把真实探测值单独保存。
+	const bool ParsedContextVersion = ParseVersionString(pCommand->m_RequestedBackend, pVersionString, pCommand->m_pCapabilities->m_ContextMajor, pCommand->m_pCapabilities->m_ContextMinor, pCommand->m_pCapabilities->m_ContextPatch);
+	if(ParsedContextVersion)
+	{
+		pCommand->m_pCapabilities->m_DetectedContextMajor = pCommand->m_pCapabilities->m_ContextMajor;
+		pCommand->m_pCapabilities->m_DetectedContextMinor = pCommand->m_pCapabilities->m_ContextMinor;
+		pCommand->m_pCapabilities->m_DetectedContextPatch = pCommand->m_pCapabilities->m_ContextPatch;
+	}
+	else
+	{
+		pCommand->m_pCapabilities->m_DetectedContextMajor = 0;
+		pCommand->m_pCapabilities->m_DetectedContextMinor = 0;
+		pCommand->m_pCapabilities->m_DetectedContextPatch = 0;
+	}
 
 	*pCommand->m_pInitError = 0;
 	pCommand->m_pCapabilities->m_MediaIslandSdf = false;

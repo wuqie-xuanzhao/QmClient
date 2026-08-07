@@ -1083,12 +1083,10 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 		RefreshBar.Draw(BrowserOpacityColor(ColorRGBA(1.0f, 1.0f, 1.0f, RefreshBarAlpha)), IGraphics::CORNER_NONE, 0.0f);
 	}
 
+	const float SearchExcludeAddrStrMax = 130.0f;
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	const float SearchExcludeAddrStrMax = 130.0f;
-	const float SearchIconWidth = TextRender()->TextWidth(16.0f, FONT_ICON_MAGNIFYING_GLASS);
 	const float ExcludeIconWidth = TextRender()->TextWidth(16.0f, FONT_ICON_BAN);
-	const float ExcludeSearchIconMax = maximum(SearchIconWidth, ExcludeIconWidth);
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
@@ -1107,18 +1105,11 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 
 	// render quick search
 	{
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		Ui()->DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS, 16.0f, TEXTALIGN_ML);
-		TextRender()->SetRenderFlags(0);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-		QuickSearch.VSplitLeft(ExcludeSearchIconMax, nullptr, &QuickSearch);
-		QuickSearch.VSplitLeft(5.0f, nullptr, &QuickSearch);
-
 		char aBufSearch[64];
 		str_format(aBufSearch, sizeof(aBufSearch), "%s:", Localize("Search"));
-		Ui()->DoLabel(&QuickSearch, aBufSearch, 14.0f, TEXTALIGN_ML);
-		QuickSearch.VSplitLeft(SearchExcludeAddrStrMax, nullptr, &QuickSearch);
+		CUIRect SearchLabel;
+		QuickSearch.VSplitLeft(SearchExcludeAddrStrMax, &SearchLabel, &QuickSearch);
+		Ui()->DoLabel(&SearchLabel, aBufSearch, 14.0f, TEXTALIGN_ML);
 		QuickSearch.VSplitLeft(5.0f, nullptr, &QuickSearch);
 
 		static CLineInput s_FilterInput(g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString));
@@ -1146,7 +1137,7 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 		Ui()->DoLabel(&QuickExclude, FONT_ICON_BAN, 16.0f, TEXTALIGN_ML);
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-		QuickExclude.VSplitLeft(ExcludeSearchIconMax, nullptr, &QuickExclude);
+		QuickExclude.VSplitLeft(ExcludeIconWidth, nullptr, &QuickExclude);
 		QuickExclude.VSplitLeft(5.0f, nullptr, &QuickExclude);
 
 		char aBufExclude[64];
@@ -1219,7 +1210,7 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 	{
 		CUIRect ServerAddrLabel, ServerAddrEditBox;
 		ServerAddr.Margin(2.0f, &ServerAddr);
-		ServerAddr.VSplitLeft(SearchExcludeAddrStrMax + 5.0f + ExcludeSearchIconMax + 5.0f, &ServerAddrLabel, &ServerAddrEditBox);
+		ServerAddr.VSplitLeft(SearchExcludeAddrStrMax + 5.0f + ExcludeIconWidth + 5.0f, &ServerAddrLabel, &ServerAddrEditBox);
 
 		Ui()->DoLabel(&ServerAddrLabel, Localize("Server address:"), 14.0f, TEXTALIGN_ML);
 		static CLineInput s_ServerAddressInput(g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress));

@@ -846,6 +846,14 @@ public:
 	virtual void WaitForIdle() = 0;
 
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
+	virtual bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName)
+	{
+		Major = 0;
+		Minor = 0;
+		Patch = 0;
+		pName = "";
+		return false;
+	}
 	// checks if the current values of the config are a graphics modern API
 	virtual bool IsConfigModernAPI() { return false; }
 	virtual bool HasMediaIslandSdf() { return false; }
@@ -1484,6 +1492,7 @@ public:
 	bool IsBackendInitialized() override;
 
 	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override { return m_pBackend->GetDriverVersion(DriverAgeType, Major, Minor, Patch, pName, BackendType); }
+	bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName) override { return m_pBackend->GetDetectedContextVersion(Major, Minor, Patch, pName); }
 	bool IsConfigModernAPI() override { return m_pBackend->IsConfigModernAPI(); }
 	bool HasMediaIslandSdf() override { return m_pBackend->HasMediaIslandSdf(); }
 	bool HasRoundedRectSdf() override { return m_pBackend->HasRoundedRectSdf(); }

@@ -445,8 +445,8 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 	}
 
 	CTextCursor Cursor;
-	// 输入框的光标和选区都不能进入文本容器。文本容器会在每次状态变更时重建
-	// 选择 quad，可能影响同一帧后续文本命令；由本控件在 TextEx 完成后单独绘制。
+	// 光标和选区都不进入文本容器。选区先通过无渲染预遍历计算并绘制，
+	// 再绘制文字，避免全选覆盖文字或污染后续 UI 文本的容器命令。
 	Cursor.m_RenderCursor = false;
 	Cursor.m_RenderSelection = false;
 	if(IsActive())
@@ -490,6 +490,35 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 			Cursor.m_ReleaseMouse.y = m_MouseSelection.m_ReleaseMouse.y;
 		}
 
+		auto RenderTextWithSelectionUnderlay = [&]() {
+			if(Cursor.m_CalculateSelectionMode != TEXT_CURSOR_SELECTION_MODE_NONE)
+			{
+				CTextCursor SelectionCursor = Cursor;
+				SelectionCursor.m_Flags &= ~TEXTFLAG_RENDER;
+				SelectionCursor.m_RenderCursor = false;
+				SelectionCursor.m_RenderSelection = false;
+				TextRender()->TextEx(&SelectionCursor, pDisplayStr);
+
+				if(SelectionCursor.m_CursorMode == TEXT_CURSOR_CURSOR_MODE_CALCULATE && SelectionCursor.m_CursorCharacter >= 0)
+				{
+					const size_t NewCursorOffset = str_utf8_offset_chars_to_bytes(pDisplayStr, SelectionCursor.m_CursorCharacter);
+					SetCursorOffset(OffsetFromDisplayToActual(NewCursorOffset));
+				}
+				if(SelectionCursor.m_CalculateSelectionMode == TEXT_CURSOR_SELECTION_MODE_CALCULATE && SelectionCursor.m_SelectionStart >= 0 && SelectionCursor.m_SelectionEnd >= 0)
+				{
+					const size_t NewSelectionStart = str_utf8_offset_chars_to_bytes(pDisplayStr, SelectionCursor.m_SelectionStart);
+					const size_t NewSelectionEnd = str_utf8_offset_chars_to_bytes(pDisplayStr, SelectionCursor.m_SelectionEnd);
+					SetSelection(OffsetFromDisplayToActual(NewSelectionStart), OffsetFromDisplayToActual(NewSelectionEnd));
+				}
+
+				RenderSelection(SelectionCursor, TextRender()->GetTextSelectionColor());
+				Cursor.m_CursorMode = TEXT_CURSOR_CURSOR_MODE_SET;
+				Cursor.m_CursorCharacter = SelectionCursor.m_CursorCharacter;
+				Cursor.m_CalculateSelectionMode = TEXT_CURSOR_SELECTION_MODE_NONE;
+			}
+			TextRender()->TextEx(&Cursor, pDisplayStr);
+		};
+
 		if(HasComposition)
 		{
 			// We need to track the last composition cursor position separately, because the composition
@@ -504,7 +533,7 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 			Cursor.m_SelectionStart = str_utf8_offset_bytes_to_chars(pDisplayStr, DisplayCursorOffset);
 			Cursor.m_SelectionEnd = str_utf8_offset_bytes_to_chars(pDisplayStr, DisplayCompositionEnd);
 			TextRender()->TextSelectionColor(qm_theme::IME.m_CompositionSelection);
-			TextRender()->TextEx(&Cursor, pDisplayStr);
+			RenderTextWithSelectionUnderlay();
 			TextRender()->TextSelectionColor(PreviousTextSelectionColor);
 		}
 		else if(GetSelectionLength())
@@ -516,14 +545,14 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 			Cursor.m_CalculateSelectionMode = m_MouseSelection.m_Selecting ? TEXT_CURSOR_SELECTION_MODE_CALCULATE : TEXT_CURSOR_SELECTION_MODE_SET;
 			Cursor.m_SelectionStart = str_utf8_offset_bytes_to_chars(pDisplayStr, Start);
 			Cursor.m_SelectionEnd = str_utf8_offset_bytes_to_chars(pDisplayStr, End);
-			TextRender()->TextEx(&Cursor, pDisplayStr);
+			RenderTextWithSelectionUnderlay();
 		}
 		else
 		{
 			Cursor.m_CursorMode = m_MouseSelection.m_Selecting ? TEXT_CURSOR_CURSOR_MODE_CALCULATE : TEXT_CURSOR_CURSOR_MODE_SET;
 			Cursor.m_CursorCharacter = str_utf8_offset_bytes_to_chars(pDisplayStr, CaretOffset);
 			Cursor.m_CalculateSelectionMode = m_MouseSelection.m_Selecting ? TEXT_CURSOR_SELECTION_MODE_CALCULATE : TEXT_CURSOR_SELECTION_MODE_NONE;
-			TextRender()->TextEx(&Cursor, pDisplayStr);
+			RenderTextWithSelectionUnderlay();
 		}
 
 		if(Cursor.m_CursorMode == TEXT_CURSOR_CURSOR_MODE_CALCULATE && Cursor.m_CursorCharacter >= 0)
@@ -541,7 +570,6 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 		if(Cursor.m_HasCursorRenderedPosition)
 		{
 			m_CaretPosition = Cursor.m_CursorRenderedPosition;
-			RenderSelection(Cursor, PreviousTextSelectionColor);
 			RenderCaret(Cursor, Cursor.m_ForceCursorRendering, TextRender()->GetTextColor(), TextRender()->GetTextOutlineColor());
 			// 主 Cursor 已完成文本、选择区、光标和 IME 锚点位置计算，不能再创建一套
 			// 重复文字容器。第二次 TextEx 会为同一输入额外插入图形命令，并在 caret
@@ -571,7 +599,7 @@ STextBoundingBox CLineInput::Render(const CUIRect *pRect, float FontSize, int Al
 
 void CLineInput::RenderSelection(const CTextCursor &Cursor, ColorRGBA SelectionColor)
 {
-	if(Cursor.m_RenderSelection || Cursor.m_vSelectionQuads.empty())
+	if(Cursor.m_vSelectionQuads.empty())
 		return;
 
 	Graphics()->TextureClear();

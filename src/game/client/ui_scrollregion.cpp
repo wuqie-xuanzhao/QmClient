@@ -186,7 +186,7 @@ bool CScrollRegion::RectClipped(const CUIRect &Rect) const
 
 bool CScrollRegion::ContentOverflows() const
 {
-	return m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
+	return m_Params.m_ScrollHorizontal ? QmScrollRegionContentOverflows(m_ContentSize, m_ClipRect.w, Ui()->PixelSize()) : QmScrollRegionContentOverflows(m_ContentSize, m_ClipRect.h, Ui()->PixelSize());
 }
 
 bool CScrollRegion::ScrollbarShown() const
@@ -352,7 +352,7 @@ void CScrollRegion::DoSlider()
 
 	const float ClipSize = m_Params.m_ScrollHorizontal ? m_ClipRect.w : m_ClipRect.h;
 	const float RailSize = m_Params.m_ScrollHorizontal ? m_RailRect.w : m_RailRect.h;
-	const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;
+	const bool CanScroll = ContentOverflows() && ScrollMax > 0.0f && RailSize > 0.0f;
 	const float SliderMaxSize = maximum(0.0f, RailSize);
 	const float SliderMinSize = minimum(m_Params.m_SliderMinSize, SliderMaxSize);
 	const float SliderSize = CanScroll ? std::clamp(ClipSize / m_ContentSize * RailSize, SliderMinSize, SliderMaxSize) : SliderMaxSize;

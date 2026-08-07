@@ -2224,6 +2224,22 @@ turkish = "Geçerli yakınlaştırma değerini gösterir"
 polish = "Wyświetla bieżącą wartość przybliżenia"
 
 [[message]]
+key = "Displays your current score"
+[message.translations]
+simplified_chinese = "显示你当前的分数"
+traditional_chinese = "顯示你目前的分數"
+japanese = "現在のスコアを表示"
+korean = "현재 점수 표시"
+russian = "Показывает ваш текущий счет"
+german = "Zeigt deinen aktuellen Punktestand an"
+spanish = "Muestra tu puntuación actual"
+french = "Affiche votre score actuel"
+brazilian_portuguese = "Mostra sua pontuação atual"
+portuguese = "Mostra a sua pontuação atual"
+turkish = "Mevcut skorunuzu gösterir"
+polish = "Wyświetla Twój aktualny wynik"
+
+[[message]]
 key = "Displays DDNet process CPU usage / total system CPU usage"
 [message.translations]
 simplified_chinese = "显示 DDNet 进程 CPU 使用率/系统总 CPU 使用率"

@@ -231,6 +231,7 @@ And pick one randomly
 Angle
 Angle:
 Animate chat box, emote selector, scoreboard, and spectate selection
+Animate lists when entering a page
 Animate settings card expand and collapse height changes
 Animate settings card lists when entering a page
 Animate settings card reorder and layout reflow
@@ -591,7 +592,6 @@ Check input device, system default mic, and mic permission first
 Check output device, confirm headphones/speakers are still online
 Checking for existing player with your name
 CHN
-Choose and arrange status bar data fields
 Choose colors for weapons and entity lasers
 Choose country flag
 Choose default eyes when joining a server
@@ -1011,6 +1011,7 @@ Displays the number of unacknowledged vital chunks
 Displays the time since the last complete snapshot
 Displays X and Y velocity
 Displays your current angle in degrees
+Displays your current score
 Displays your frames per second
 Displays your local time
 Displays your ping to the current server
@@ -1537,8 +1538,8 @@ Graphics
 Graphics backend
 Graphics card
 Graphics display
-Graphics library major version
-Graphics library minor version
+Graphics library major version (0 = auto-detect)
+Graphics library minor version (0 = auto-detect)
 Graphics library patch version
 Graphics library texture sampling lod bias multiplied by 1000
 Greeting text
@@ -3136,6 +3137,9 @@ Set your checkpoints based on another player
 Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided
 Sets your tee's eye emote
 Settings
+Settings card background
+Settings card background color
+Settings card background transparency
 Settings card border color
 Settings card default layout migration version
 Settings card titles use rainbow colors
