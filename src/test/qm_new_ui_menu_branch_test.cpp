@@ -887,7 +887,7 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(17.0f);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.1\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.2\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)

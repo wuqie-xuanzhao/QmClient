@@ -4046,7 +4046,7 @@ TEST(QmMonitoringHelpers, VulkanFrameSubmitFailureRecordsFrameContext)
 	EXPECT_EQ(SubmitBlock.find("else"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, MacosVulkanNoVsyncPrefersMailboxAndKeepsNormalSwapchainDepth)
+TEST(QmMonitoringHelpers, VulkanNoVsyncPrefersImmediateAndKeepsNormalSwapchainDepth)
 {
 	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
 	const size_t FunctionStart = VulkanSource.find("[[nodiscard]] bool GetPresentationMode(VkPresentModeKHR &VKIOMode)");
@@ -4055,14 +4055,8 @@ TEST(QmMonitoringHelpers, MacosVulkanNoVsyncPrefersMailboxAndKeepsNormalSwapchai
 	ASSERT_NE(FunctionEnd, std::string::npos);
 	const std::string FunctionBody = VulkanSource.substr(FunctionStart, FunctionEnd - FunctionStart);
 
-	const size_t MacosGuard = FunctionBody.find("#if defined(CONF_PLATFORM_MACOS)");
-	const size_t PrimaryMode = FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR};", MacosGuard);
-	const size_t OtherPlatformMode = FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};", PrimaryMode);
-	EXPECT_NE(MacosGuard, std::string::npos);
-	EXPECT_NE(PrimaryMode, std::string::npos);
-	EXPECT_NE(OtherPlatformMode, std::string::npos);
-	EXPECT_LT(MacosGuard, PrimaryMode);
-	EXPECT_LT(PrimaryMode, OtherPlatformMode);
+	EXPECT_NE(FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};"), std::string::npos);
+	EXPECT_EQ(FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR};"), std::string::npos);
 
 	const std::string SwapImageBody = ExtractSourceFunctionBody(VulkanSource, "uint32_t GetNumberOfSwapImages(");
 	ASSERT_FALSE(SwapImageBody.empty());

@@ -1093,8 +1093,8 @@ public:
 			const char *pRegion = aRegion;
 			if(const char *pAfterPrefix = str_startswith_nocase(pRegion, "DDNet "))
 				pRegion = str_skip_whitespaces_const(pAfterPrefix);
-			else if(const char *pAfterPrefix = str_startswith_nocase(pRegion, "CHN DDR "))
-				pRegion = str_skip_whitespaces_const(pAfterPrefix);
+			else if(const char *pAfterChnPrefix = str_startswith_nocase(pRegion, "CHN DDR "))
+				pRegion = str_skip_whitespaces_const(pAfterChnPrefix);
 			const char *pDashText = str_find(aRegion, " - ");
 			if(char *pDash = const_cast<char *>(pDashText))
 				*pDash = '\0';

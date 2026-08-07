@@ -2426,7 +2426,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					}
 
 					m_aClients[ClientId].m_AuthKey = KeySlot;
-					int SendRconCmds = IsSixup(ClientId) ? true : Unpacker.GetInt();
 					if(!Unpacker.Error() && SendRconCmds)
 					{
 						m_aClients[ClientId].m_pRconCmdToSend = Console()->FirstCommandInfo(ClientId, CFGFLAG_SERVER);

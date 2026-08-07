@@ -4796,14 +4796,8 @@ public:
 		std::array<VkPresentModeKHR, 2> aPreferredModes;
 		if(g_Config.m_GfxVsync)
 			aPreferredModes = {VK_PRESENT_MODE_FIFO_KHR, VK_PRESENT_MODE_FIFO_RELAXED_KHR};
-#if defined(CONF_PLATFORM_MACOS)
-		else
-			// MoltenVK 的 immediate 模式允许直接撕裂；mailbox 保持低延迟并在显示刷新边界提交最新帧。
-			aPreferredModes = {VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR};
-#else
 		else
 			aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};
-#endif
 		for(const VkPresentModeKHR PreferredMode : aPreferredModes)
 		{
 			for(const VkPresentModeKHR AvailableMode : vPresentModeList)

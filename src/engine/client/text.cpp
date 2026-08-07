@@ -2498,13 +2498,22 @@ public:
 		{
 			const auto UploadStart = time_get_nanoseconds();
 			STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+			if(TextContainer.m_StringInfo.m_vCharacterQuads.empty())
+				return;
+
 			size_t DataSize = TextContainer.m_StringInfo.m_vCharacterQuads.size() * sizeof(STextCharQuad);
 			void *pUploadData = TextContainer.m_StringInfo.m_vCharacterQuads.data();
-			TextContainer.m_StringInfo.m_QuadBufferObjectIndex = Graphics()->CreateBufferObject(DataSize, pUploadData, TextContainer.m_SingleTimeUse ? IGraphics::EBufferObjectCreateFlags::BUFFER_OBJECT_CREATE_FLAGS_ONE_TIME_USE_BIT : 0);
+			const int CreateFlags = TextContainer.m_SingleTimeUse ? IGraphics::EBufferObjectCreateFlags::BUFFER_OBJECT_CREATE_FLAGS_ONE_TIME_USE_BIT : 0;
+			if(TextContainer.m_StringInfo.m_QuadBufferObjectIndex == -1)
+				TextContainer.m_StringInfo.m_QuadBufferObjectIndex = Graphics()->CreateBufferObject(DataSize, pUploadData, CreateFlags);
+			else
+				Graphics()->RecreateBufferObject(TextContainer.m_StringInfo.m_QuadBufferObjectIndex, DataSize, pUploadData, CreateFlags);
 
-			m_DefaultTextContainerInfo.m_VertBufferBindingIndex = TextContainer.m_StringInfo.m_QuadBufferObjectIndex;
-
-			TextContainer.m_StringInfo.m_QuadBufferContainerIndex = Graphics()->CreateBufferContainer(&m_DefaultTextContainerInfo);
+			if(TextContainer.m_StringInfo.m_QuadBufferContainerIndex == -1)
+			{
+				m_DefaultTextContainerInfo.m_VertBufferBindingIndex = TextContainer.m_StringInfo.m_QuadBufferObjectIndex;
+				TextContainer.m_StringInfo.m_QuadBufferContainerIndex = Graphics()->CreateBufferContainer(&m_DefaultTextContainerInfo);
+			}
 			Graphics()->IndicesNumRequiredNotify(TextContainer.m_StringInfo.m_vCharacterQuads.size() * 6);
 			++m_QmPerfTextContainerUploads;
 			m_QmPerfTextContainerUploadMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - UploadStart).count();
@@ -2513,12 +2522,14 @@ public:
 
 	void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override
 	{
-		const STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
 
 		if(!TextContainer.m_StringInfo.m_vCharacterQuads.empty())
 		{
 			if(Graphics()->IsTextBufferingEnabled())
 			{
+				if(TextContainer.m_StringInfo.m_QuadBufferContainerIndex == -1)
+					UploadTextContainer(TextContainerIndex);
 				Graphics()->TextureClear();
 				// render buffered text
 				Graphics()->RenderText(TextContainer.m_StringInfo.m_QuadBufferContainerIndex, TextContainer.m_StringInfo.m_vCharacterQuads.size(), m_pGlyphMap->TextureDimension(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_FILL).Id(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_OUTLINE).Id(), TextColor, TextOutlineColor);

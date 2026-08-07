@@ -47,6 +47,8 @@ def bundle_external_dependencies(otool, frameworks_dir, executable):
             # any pre-seeded file with the same basename so an older bundled
             # copy cannot silently win after a dependency upgrade.
             print(f"Bundling dependency: {dep} -> {destination}")
+            if os.path.lexists(destination):
+                os.unlink(destination)
             shutil.copy2(dep, destination)
             queue.append(destination)
 

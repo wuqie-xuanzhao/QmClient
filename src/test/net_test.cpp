@@ -172,22 +172,6 @@ namespace
 		}
 	}
 
-	struct SPacketOutputCapture
-	{
-		int m_Result = -1;
-		std::vector<CNetPacketConstruct> m_vPackets;
-		std::vector<int> m_vPackedSizes;
-	};
-
-	int CapturePacketOutput(void *pUser, CNetPacketConstruct *pPacket, SECURITY_TOKEN SecurityToken, bool Sixup)
-	{
-		auto *pCapture = static_cast<SPacketOutputCapture *>(pUser);
-		pCapture->m_vPackets.push_back(*pPacket);
-		unsigned char aBuffer[NET_MAX_PACKETSIZE];
-		pCapture->m_vPackedSizes.push_back(CNetBase::PackPacket(aBuffer, sizeof(aBuffer), pPacket, SecurityToken, Sixup));
-		return pCapture->m_Result;
-	}
-
 	std::vector<unsigned char> MakeTestPayload(int Size, uint32_t Seed)
 	{
 		std::vector<unsigned char> vPayload(Size);
@@ -198,14 +182,6 @@ namespace
 			Byte = State >> 24;
 		}
 		return vPayload;
-	}
-
-	void InitDirectConnection(CNetConnection &Connection)
-	{
-		Connection.Init(nullptr, false);
-		NETADDR PeerAddr = {};
-		PeerAddr.type = NETTYPE_IPV4;
-		Connection.DirectInit(PeerAddr, 0x12345678, NET_SECURITY_TOKEN_UNSUPPORTED, false);
 	}
 
 	class CNetKcpBypassTest : public ::testing::Test

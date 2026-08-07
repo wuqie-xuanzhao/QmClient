@@ -788,7 +788,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	};
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pGameDefault, pLanguageDefault, pClientDefault, pRecordingDefault, GeneralMetrics, GeneralPage, UiScale, BodySize, GeneralGameContentHeight, GeneralLanguageListHeight, GeneralThemeListHeight, DoNumericField, IsGeneralDynamicCameraEnabled](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pGameDefault, pLanguageDefault, pClientDefault, pRecordingDefault, GeneralMetrics, BodySize, GeneralGameContentHeight, GeneralLanguageListHeight, GeneralThemeListHeight, DoNumericField, IsGeneralDynamicCameraEnabled](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(4);
 		const SSettingsCardSpec GameSpec{pGameDefault->m_pStableId, Localize(pGameDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pGameDefault)};
 		const SSettingsCardSpec LanguageSpec{pLanguageDefault->m_pStableId, Localize(pLanguageDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pLanguageDefault)};
@@ -898,8 +898,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 				g_Config.m_ClRefreshRate = g_Config.m_ClRefreshRate > 480 || g_Config.m_ClRefreshRate == 0 ? 480 : 0;
 			Content.HSplitTop(GeneralMetrics.m_SectionGap, nullptr, &Content);
 			static CButtonContainer s_SettingsButtonId, s_SavesButtonId, s_ConfigButtonId, s_ThemesButtonId;
-			const auto DoOpenButton = [this, GeneralMetrics](CButtonContainer &Id, const char *pTextId, const char *pText, const char *pPath, bool CreateDirectory, const char *pTooltip, const CUIRect &Button) {
-				if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &Id, pTextId, pText, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), 0.0f, GeneralMetrics.m_BodySize))
+			const auto DoOpenButton = [this, GeneralMetrics](CButtonContainer &Id, const char *pTextId, const char *pText, const char *pPath, bool CreateDirectory, const char *pTooltip, const CUIRect &ButtonRect) {
+				if(DoSettingsButton_Menu(SETTINGS_GENERAL, -1, -1, &Id, pTextId, pText, 0, &ButtonRect, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), 0.0f, GeneralMetrics.m_BodySize))
 				{
 					char aPath[IO_MAX_PATH_LENGTH];
 					Storage()->GetCompletePath(IStorage::TYPE_SAVE, pPath, aPath, sizeof(aPath));
@@ -907,7 +907,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 						Storage()->CreateFolder(pPath, IStorage::TYPE_SAVE);
 					Client()->ViewFile(aPath);
 				}
-				GameClient()->m_Tooltips.DoToolTip(&Id, &Button, pTooltip);
+				GameClient()->m_Tooltips.DoToolTip(&Id, &ButtonRect, pTooltip);
 			};
 			for(int RowIndex = 0; RowIndex < 2; ++RowIndex)
 			{
@@ -1354,7 +1354,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	const SSettingsContentMetrics TeeMetrics = ResolveSettingsContentMetrics(MainView.w);
 	const float UiScale = TeeMetrics.m_UiScale;
 	const float BodySize = TeeMetrics.m_BodySize;
-	const float SecondaryBodySize = maximum(9.0f, BodySize - 1.0f);
 	const IUiContext TeeCardCtx = SettingsUiContext("settings_tee", UiScale);
 	const SSettingsCardDeckVisualOptions TeeVisualOptions = SettingsCardDeckVisualOptions();
 	static CScrollRegion s_TeeSettingsScrollRegion;
@@ -1683,7 +1682,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 		}
 	};
-	const auto RenderIdentity = [this, UiScale, BodySize, ControlSpacing, ControlLineHeight, TeeMetrics, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
+	const auto RenderIdentity = [this, BodySize, ControlSpacing, ControlLineHeight, TeeMetrics, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
 		CUIRect MainView = Content;
 		CUIRect YourSkin = Content;
 		CUIRect Button, Label;
@@ -1877,7 +1876,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			SetNeedSendInfo();
 		}
 	};
-	const auto RenderList = [this, TeeMetrics, UiScale, BodySize, SecondaryBodySize, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
+	const auto RenderList = [this, TeeMetrics, UiScale, BodySize, QueueDummy, pSkinName, SkinNameSize, pUseCustomColor, pColorBody, pColorFeet, pEmote](CUIRect Content) {
 		CUIRect MainView = Content;
 		CUIRect Button, Label;
 		char aBuf[128 + IO_MAX_PATH_LENGTH];
@@ -2923,8 +2922,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		const auto SkinStats = GameClient()->m_Skins.LoadingStats();
 		CSkins::SSettingsTeeVisibleSnapshot VisibleSnapshot;
 		VisibleSnapshot.m_VisibleTotal = (int)vVisibleSkinIndices.size();
-		VisibleSnapshot.m_VisibleReady = VisibleSourceSettledCount;
-		VisibleSnapshot.m_VisibleWaiting = maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount);
+		VisibleSnapshot.m_VisibleReady = VisibleVisualReadyCount;
+		VisibleSnapshot.m_VisibleWaiting = maximum(0, (int)vVisibleSkinIndices.size() - VisibleVisualReadyCount);
 		VisibleSnapshot.m_VisibleBackgroundRequested = VisibleBackgroundRequestedCount;
 		VisibleSnapshot.m_VisibleNonterminalWaiting = VisibleNonTerminalWaitingCount;
 		str_copy(VisibleSnapshot.m_aRequestBudgetBlockReason,

@@ -655,9 +655,9 @@ void CMenus::LoadSettingsCardOrderModel()
 	{
 		qm_card_order::CModel Candidate;
 		MakeCandidate(Candidate);
-		const bool CandidateChanged =
-			qm_module::LoadLegacyQmLayoutIntoModel(Candidate, g_Config.m_QmSidebarCardOrder) |
-			qm_module::LoadLegacyTClientLayoutIntoModel(Candidate, g_Config.m_QmSettingsCardOrder);
+		const bool QmLayoutChanged = qm_module::LoadLegacyQmLayoutIntoModel(Candidate, g_Config.m_QmSidebarCardOrder);
+		const bool TClientLayoutChanged = qm_module::LoadLegacyTClientLayoutIntoModel(Candidate, g_Config.m_QmSettingsCardOrder);
+		const bool CandidateChanged = QmLayoutChanged || TClientLayoutChanged;
 		if(!PersistCandidate(Candidate, CandidateChanged, true))
 		{
 			m_SettingsCardOrderLoaded = true;

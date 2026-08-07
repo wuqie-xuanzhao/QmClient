@@ -1860,7 +1860,8 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
 			const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
 			QmHudNotifications::SServerMessageAnalysis ServerMessageAnalysis;
-			if(GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis))
+			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis);
+			if(ServerMessageHandled && QmHudNotifications::ShouldSuppressServerMessageChat(ServerMessageAnalysis, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages))
 			{
 				PrintSuppressedServerMessage();
 				return;
