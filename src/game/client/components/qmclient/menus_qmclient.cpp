@@ -7918,7 +7918,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					static int s_QmLyricsShowAdvanced = 0;
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&s_QmLyricsShowAdvanced, "Advanced", Localize("Advanced"), &s_QmLyricsShowAdvanced, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&s_QmLyricsShowAdvanced, "Advanced", Localize("Advanced", "Lyrics HUD"), &s_QmLyricsShowAdvanced, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(s_QmLyricsShowAdvanced || PrewarmOnly || HasModuleSearch)

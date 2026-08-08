@@ -12245,6 +12245,10 @@ Absolute
 Relative
 == 相对
 
+[Lyrics HUD]
+Advanced
+== 高级
+
 [Outlines]
 Width
 == 宽度

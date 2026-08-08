@@ -14815,6 +14815,23 @@ turkish = "Lyrics HUD"
 polish = "Lyrics HUD"
 
 [[message]]
+key = "Advanced"
+context = "Lyrics HUD"
+[message.translations]
+simplified_chinese = "高级"
+traditional_chinese = "進階"
+japanese = "高度"
+korean = "고급"
+russian = "Расширенные"
+german = "Erweitert"
+spanish = "Avanzado"
+french = "Avancé"
+brazilian_portuguese = "Avançado"
+portuguese = "Avançado"
+turkish = "Gelişmiş"
+polish = "Zaawansowane"
+
+[[message]]
 key = "Match score threshold"
 [message.translations]
 simplified_chinese = "匹配评分阈值"

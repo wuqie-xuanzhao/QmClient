@@ -1758,3 +1758,18 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesQmClientDisplayNames)
 	EXPECT_EQ(RenderSettingsGraphics.find("s_vpGpuIdNames[i] = aCurDeviceName"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("Localize(\"Renderer\")"), std::string::npos);
 }
+
+TEST(QmNewUiMenuBranches, LyricsAdvancedToggleUsesLyricsSpecificChineseTranslation)
+{
+	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Translations = ReadTextFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
+	const size_t LyricsAdvancedContext = Translations.find("context = \"Lyrics HUD\"");
+	const size_t LyricsAdvancedTranslation = Translations.find("simplified_chinese = \"高级\"", LyricsAdvancedContext);
+	const size_t NextMessage = Translations.find("[[message]]", LyricsAdvancedContext + 1);
+
+	EXPECT_NE(MenusSource.find("Localize(\"Advanced\", \"Lyrics HUD\")"), std::string::npos);
+	ASSERT_NE(LyricsAdvancedContext, std::string::npos);
+	ASSERT_NE(LyricsAdvancedTranslation, std::string::npos);
+	ASSERT_NE(NextMessage, std::string::npos);
+	EXPECT_LT(LyricsAdvancedTranslation, NextMessage);
+}

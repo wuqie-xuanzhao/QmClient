@@ -8333,6 +8333,10 @@ Absolute
 Relative
 == Relatif
 
+[Lyrics HUD]
+Advanced
+== Avancé
+
 [Outlines]
 Width
 == Largeur

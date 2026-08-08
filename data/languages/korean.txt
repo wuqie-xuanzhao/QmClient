@@ -8333,6 +8333,10 @@ Absolute
 Relative
 == 상대적
 
+[Lyrics HUD]
+Advanced
+== 고급
+
 [Outlines]
 Width
 == 너비

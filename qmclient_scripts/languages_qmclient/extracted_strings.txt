@@ -3742,6 +3742,7 @@ Zoom out
 [Important alert message]	Press Esc or Tab to dismiss…
 [Ingame controller mode]	Absolute
 [Ingame controller mode]	Relative
+[Lyrics HUD]	Advanced
 [Outlines]	Width
 [Predefined touch button behaviors]	Emoticon
 [Predefined touch button behaviors]	Extra Menu
