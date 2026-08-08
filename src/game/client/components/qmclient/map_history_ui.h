@@ -2,26 +2,83 @@
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_MAP_HISTORY_UI_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_MAP_HISTORY_UI_H
 
+#include <algorithm>
+
 namespace QmMapHistoryUi
 {
 
-inline constexpr float CARD_GAP = 8.0f;
-inline constexpr float CARD_ROW_HEIGHT = 96.0f;
-inline constexpr float LIST_SCROLLBAR_WIDTH = 20.0f;
+	inline constexpr float LIST_SCROLLBAR_WIDTH = 20.0f;
+	inline constexpr float MIN_CARD_ROW_HEIGHT = 54.0f;
+	inline constexpr float MAX_CARD_ROW_HEIGHT = 72.0f;
 
-constexpr int GridColumns(float AvailableWidth)
-{
-	if(AvailableWidth >= 766.0f)
-		return 3;
-	if(AvailableWidth >= 508.0f)
-		return 2;
-	return 1;
-}
+	struct SWorkspaceMetrics
+	{
+		float m_OuterMargin;
+		float m_TabHeight;
+		float m_SectionGap;
+		float m_PanelMargin;
+		float m_HeaderHeight;
+		float m_ControlHeight;
+	};
 
-constexpr bool StackControls(float AvailableWidth)
-{
-	return AvailableWidth < 600.0f;
-}
+	constexpr SWorkspaceMetrics WorkspaceMetrics(float AvailableHeight)
+	{
+		const float Height = std::max(AvailableHeight, 0.0f);
+		return {
+			std::clamp(Height * 0.014f, 4.0f, 8.0f),
+			std::clamp(Height * 0.050f, 22.0f, 28.0f),
+			std::clamp(Height * 0.012f, 4.0f, 7.0f),
+			std::clamp(Height * 0.014f, 5.0f, 8.0f),
+			std::clamp(Height * 0.055f, 26.0f, 32.0f),
+			std::clamp(Height * 0.042f, 20.0f, 24.0f),
+		};
+	}
+
+	constexpr int CeilPositive(float Value)
+	{
+		const int Whole = (int)Value;
+		return (float)Whole < Value ? Whole + 1 : Whole;
+	}
+
+	constexpr int VisibleCardRows(float AvailableHeight)
+	{
+		const float Height = std::max(AvailableHeight, 0.0f);
+		if(Height <= 0.0f)
+			return 1;
+
+		const float PreferredHeight = std::clamp(Height * 0.155f, MIN_CARD_ROW_HEIGHT, MAX_CARD_ROW_HEIGHT);
+		const int PreferredRows = std::max(CeilPositive(Height / PreferredHeight), 1);
+		const int MaxReadableRows = std::max((int)(Height / MIN_CARD_ROW_HEIGHT), 1);
+		return std::min(PreferredRows, MaxReadableRows);
+	}
+
+	constexpr float CardRowHeight(float AvailableHeight)
+	{
+		const float Height = std::max(AvailableHeight, 0.0f);
+		return Height > 0.0f ? Height / VisibleCardRows(Height) : MIN_CARD_ROW_HEIGHT;
+	}
+
+	constexpr float CardGap(float RowHeight)
+	{
+		return std::clamp(RowHeight * 0.10f, 5.0f, 7.0f);
+	}
+
+	constexpr float CardPadding(float RowHeight)
+	{
+		return std::clamp(RowHeight * 0.09f, 4.5f, 6.0f);
+	}
+
+	constexpr int GridColumns(float AvailableWidth, float RowHeight)
+	{
+		const float CardWidth = std::max(RowHeight * 3.75f, 1.0f);
+		const int Columns = (int)(std::max(AvailableWidth, 0.0f) / CardWidth);
+		return std::max(Columns, 1);
+	}
+
+	constexpr bool StackControls(float AvailableWidth, float ControlHeight)
+	{
+		return AvailableWidth < std::max(ControlHeight, 1.0f) * 25.0f;
+	}
 
 } // namespace QmMapHistoryUi
 

@@ -12198,8 +12198,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 无法初始化当前配置的图形后端，请检查此电脑是否已安装集成显卡的驱动程序。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初始化失败。请尝试打开配置目录中的设置文件（settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 初始化失败。请尝试打开配置目录中的设置文件（qmclient/settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -12214,8 +12214,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 渲染指令提交失败。请尝试更新显卡驱动程序。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 未知错误。请尝试打开配置目录中的设置文件（settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 未知错误。请尝试打开配置目录中的设置文件（qmclient/settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
 
 [Hammer Mode]
 Normal

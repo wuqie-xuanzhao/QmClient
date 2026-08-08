@@ -17,6 +17,9 @@ CConfig g_Config;
 // ----------------------- Config Variables
 namespace
 {
+	constexpr const char *QM_CONFIG_MIGRATION_MARKER = "qmclient/config_migration_v1.done";
+	constexpr const char *QM_CONFIG_MIGRATION_BACKUP_DIR = "qmclient/migration_backup_v1";
+
 	std::unordered_map<const SIntConfigVariable *, int> *s_pToggleRestoreInts = nullptr;
 
 	std::unordered_map<const SIntConfigVariable *, int> &ToggleRestoreInts()
@@ -42,6 +45,105 @@ namespace
 			return true;
 		return pStorage->CreateFolder(aFolder, IStorage::TYPE_SAVE) || pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE);
 	}
+
+	bool WriteStorageFileAtomically(IStorage *pStorage, const char *pPath, const char *pContents)
+	{
+		if(!EnsureConfigPathFolder(pStorage, pPath))
+			return false;
+
+		char aTmpPath[IO_MAX_PATH_LENGTH];
+		IStorage::FormatTmpPath(aTmpPath, sizeof(aTmpPath), pPath);
+		IOHANDLE File = pStorage->OpenFile(aTmpPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(!File)
+			return false;
+
+		bool Success = io_write(File, pContents, str_length(pContents)) == static_cast<unsigned>(str_length(pContents));
+		if(Success && io_sync(File) != 0)
+			Success = false;
+		if(io_close(File) != 0)
+			Success = false;
+		if(Success)
+			Success = pStorage->RenameFile(aTmpPath, pPath, IStorage::TYPE_SAVE);
+		if(!Success)
+			pStorage->RemoveFile(aTmpPath, IStorage::TYPE_SAVE);
+		return Success;
+	}
+}
+
+bool QmConfigMigrationPending(IStorage *pStorage)
+{
+	return pStorage && !pStorage->FileExists(QM_CONFIG_MIGRATION_MARKER, IStorage::TYPE_SAVE);
+}
+
+bool QmFinalizeConfigMigration(IStorage *pStorage, const bool *pArchivePreviousPaths)
+{
+	if(!pStorage)
+		return false;
+	if(!QmConfigMigrationPending(pStorage))
+		return true;
+
+	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
+	{
+		if(!pStorage->FileExists(s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_SAVE))
+		{
+			log_error("config", "Cannot finish config migration because '%s' is missing", s_aConfigDomains[ConfigDomain].m_aConfigPath);
+			return false;
+		}
+	}
+
+	if(!pStorage->FolderExists(QM_CONFIG_MIGRATION_BACKUP_DIR, IStorage::TYPE_SAVE) &&
+		!pStorage->CreateFolder(QM_CONFIG_MIGRATION_BACKUP_DIR, IStorage::TYPE_SAVE) &&
+		!pStorage->FolderExists(QM_CONFIG_MIGRATION_BACKUP_DIR, IStorage::TYPE_SAVE))
+	{
+		log_error("config", "Cannot create config migration backup folder '%s'", QM_CONFIG_MIGRATION_BACKUP_DIR);
+		return false;
+	}
+
+	const auto ArchiveConfig = [pStorage](const char *pSourcePath, const char *pBackupName) {
+		if(!pSourcePath || !pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
+			return true;
+
+		char aBackupPath[IO_MAX_PATH_LENGTH];
+		str_format(aBackupPath, sizeof(aBackupPath), "%s/%s", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName);
+		if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
+		{
+			str_format(aBackupPath, sizeof(aBackupPath), "%s/%s.%d.bak", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName, pid());
+			if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
+			{
+				log_error("config", "Cannot archive legacy config '%s' because backup targets already exist", pSourcePath);
+				return false;
+			}
+		}
+
+		if(pStorage->RenameFile(pSourcePath, aBackupPath, IStorage::TYPE_SAVE))
+			return true;
+		if(!pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
+			return true;
+		log_error("config", "Cannot archive legacy config '%s' to '%s'", pSourcePath, aBackupPath);
+		return false;
+	};
+
+	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
+	{
+		const char *pLegacyPath = s_aConfigDomains[ConfigDomain].m_aLegacyConfigPath;
+		if(!ArchiveConfig(pLegacyPath, pLegacyPath))
+			return false;
+
+		if(pArchivePreviousPaths && pArchivePreviousPaths[ConfigDomain] && s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath)
+		{
+			char aBackupName[IO_MAX_PATH_LENGTH];
+			str_format(aBackupName, sizeof(aBackupName), "previous_%s", fs_filename(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath));
+			if(!ArchiveConfig(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath, aBackupName))
+				return false;
+		}
+	}
+
+	if(!WriteStorageFileAtomically(pStorage, QM_CONFIG_MIGRATION_MARKER, "1\n"))
+	{
+		log_error("config", "Cannot write config migration marker '%s'", QM_CONFIG_MIGRATION_MARKER);
+		return false;
+	}
+	return true;
 }
 
 static void EscapeParam(char *pDst, const char *pSrc, int Size)
@@ -106,6 +208,11 @@ void SIntConfigVariable::Register()
 bool SIntConfigVariable::IsDefault() const
 {
 	return *m_pVariable == m_Default;
+}
+
+size_t SIntConfigVariable::MaxSerializedSize() const
+{
+	return str_length(m_pScriptName) + 32;
 }
 
 void SIntConfigVariable::Serialize(char *pOut, size_t Size, int Value) const
@@ -186,6 +293,11 @@ bool SColorConfigVariable::IsDefault() const
 	return *m_pVariable == m_Default;
 }
 
+size_t SColorConfigVariable::MaxSerializedSize() const
+{
+	return str_length(m_pScriptName) + 32;
+}
+
 void SColorConfigVariable::Serialize(char *pOut, size_t Size, unsigned Value) const
 {
 	str_format(pOut, Size, "%s %u", m_pScriptName, Value);
@@ -261,6 +373,11 @@ bool SStringConfigVariable::IsDefault() const
 	return str_comp(m_pStr, m_pDefault) == 0;
 }
 
+size_t SStringConfigVariable::MaxSerializedSize() const
+{
+	return str_length(m_pScriptName) + 2 * m_MaxSize + 4;
+}
+
 void SStringConfigVariable::Serialize(char *pOut, size_t Size, const char *pValue) const
 {
 	str_copy(pOut, m_pScriptName, Size);
@@ -279,9 +396,9 @@ void SStringConfigVariable::SetValue(const char *pValue)
 {
 	if(CheckReadOnly())
 		return;
-	char aBuf[2048];
-	Serialize(aBuf, sizeof(aBuf), pValue);
-	ExecuteLine(aBuf);
+	std::vector<char> vBuf(MaxSerializedSize());
+	Serialize(vBuf.data(), vBuf.size(), pValue);
+	ExecuteLine(vBuf.data());
 }
 
 void SStringConfigVariable::ResetToDefault()
@@ -400,9 +517,11 @@ void CConfigManager::SetGameSettingsReadOnly(bool ReadOnly)
 	}
 }
 
-bool CConfigManager::Save()
+bool CConfigManager::Save(bool Force)
 {
-	if(!m_pStorage || !g_Config.m_ClSaveSettings)
+	if(!m_pStorage)
+		return false;
+	if(!Force && !g_Config.m_ClSaveSettings)
 		return true;
 
 	bool aFailedError[ConfigDomain::NUM] = {};
@@ -441,13 +560,13 @@ bool CConfigManager::Save()
 			continue;
 		if(!m_aConfigFile[ConfigDomain])
 			continue;
-		char aLineBuf[2048];
 		for(const SConfigVariable *pVariable : m_vpAllVariables)
 		{
 			if(pVariable->m_ConfigDomain == ConfigDomain && (pVariable->m_Flags & CFGFLAG_SAVE) != 0 && !pVariable->IsDefault())
 			{
-				pVariable->Serialize(aLineBuf, sizeof(aLineBuf));
-				WriteLine(aLineBuf, ConfigDomain);
+				std::vector<char> vLineBuf(pVariable->MaxSerializedSize());
+				pVariable->Serialize(vLineBuf.data(), vLineBuf.size());
+				WriteLine(vLineBuf.data(), ConfigDomain);
 			}
 		}
 	}
@@ -462,40 +581,41 @@ bool CConfigManager::Save()
 			Callback.m_pfnFunc(this, Callback.m_pUserData);
 	}
 
-	if(!m_aFailed[ConfigDomain::DDNET] && m_aConfigFile[ConfigDomain::DDNET])
-		for(const char *pCommand : m_vpUnknownCommands)
-			WriteLine(pCommand);
+	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
+	{
+		if(m_aFailed[ConfigDomain] || !m_aConfigFile[ConfigDomain])
+			continue;
+		for(const char *pCommand : m_avpUnknownCommands[ConfigDomain])
+			WriteLine(pCommand, ConfigDomain);
+	}
 
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
 		if(!m_aConfigFile[ConfigDomain])
 			continue;
+		if(m_aFailed[ConfigDomain] && !aFailedError[ConfigDomain])
+		{
+			log_error("config", "ERROR: writing to %s failed", aaConfigFileTmp[ConfigDomain]);
+			aFailedError[ConfigDomain] = true;
+		}
+		if(!m_aFailed[ConfigDomain] && io_sync(m_aConfigFile[ConfigDomain]) != 0)
+		{
+			log_error("config", "ERROR: synchronizing %s failed", aaConfigFileTmp[ConfigDomain]);
+			aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
+		}
+		if(io_close(m_aConfigFile[ConfigDomain]) != 0)
+		{
+			log_error("config", "ERROR: closing %s failed", aaConfigFileTmp[ConfigDomain]);
+			aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
+		}
+		m_aConfigFile[ConfigDomain] = nullptr;
+		if(!m_aFailed[ConfigDomain] && !m_pStorage->RenameFile(aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_SAVE))
+		{
+			log_error("config", "ERROR: renaming %s to %s failed", aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath);
+			aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
+		}
 		if(m_aFailed[ConfigDomain])
-		{
-			if(!aFailedError[ConfigDomain])
-			{
-				log_error("config", "ERROR: writing to %s failed", aaConfigFileTmp[ConfigDomain]);
-				aFailedError[ConfigDomain] = true;
-			}
-		}
-		else
-		{
-			if(io_sync(m_aConfigFile[ConfigDomain]) != 0)
-			{
-				log_error("config", "ERROR: synchronizing %s failed", aaConfigFileTmp[ConfigDomain]);
-				aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
-			}
-			else if(io_close(m_aConfigFile[ConfigDomain]) != 0)
-			{
-				log_error("config", "ERROR: closing %s failed", aaConfigFileTmp[ConfigDomain]);
-				aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
-			}
-			else if(!m_pStorage->RenameFile(aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_SAVE))
-			{
-				log_error("config", "ERROR: renaming %s to %s failed", aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath);
-				aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
-			}
-		}
+			m_pStorage->RemoveFile(aaConfigFileTmp[ConfigDomain], IStorage::TYPE_SAVE);
 	}
 
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
@@ -523,9 +643,9 @@ void CConfigManager::WriteLine(const char *pLine, ConfigDomain ConfigDomain)
 	}
 }
 
-void CConfigManager::StoreUnknownCommand(const char *pCommand)
+void CConfigManager::StoreUnknownCommand(const char *pCommand, ConfigDomain ConfigDomain)
 {
-	m_vpUnknownCommands.push_back(m_ConfigHeap.StoreString(pCommand));
+	m_avpUnknownCommands[ConfigDomain].push_back(m_ConfigHeap.StoreString(pCommand));
 }
 
 void CConfigManager::PossibleConfigVariables(const char *pStr, int FlagMask, POSSIBLECFGFUNC pfnCallback, void *pUserData)

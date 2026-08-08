@@ -452,7 +452,7 @@ TEST(QmNewUiMenuBranches, BrowserFavoriteMapsEarlyReturnAvoidsLegacyDoubleInset)
 	EXPECT_NE(RenderServerbrowser.find("View.Margin(6.0f, &View);\n\t\t\tRenderServerbrowserFavoriteMaps(View);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
+TEST(QmNewUiMenuBranches, MapHistoryUsesRelativeWorkspaceAndCardLayout)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
 	const std::string RenderFavoriteMaps = FunctionBody(Source, "void CMenus::RenderServerbrowserFavoriteMaps(");
@@ -460,10 +460,14 @@ TEST(QmNewUiMenuBranches, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
 	EXPECT_EQ(RenderFavoriteMaps.find("SplitHistoryPanel"), std::string::npos);
 	EXPECT_EQ(RenderFavoriteMaps.find("SplitHistoryColumns"), std::string::npos);
 	EXPECT_NE(RenderFavoriteMaps.find("s_aFavoriteMapsWorkspaceTabButtons"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH)"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::StackControls(HistoryPanel.w)"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("s_MapHistoryListBox.DoStart(QmMapHistoryUi::CARD_ROW_HEIGHT"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("CUIRect CardHeader, StatsRow, LastEnteredRow"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::WorkspaceMetrics(View.h)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::CardRowHeight(HistoryPanel.h)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH, CardRowHeight)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::StackControls(HistoryPanel.w, Layout.m_ControlHeight)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("const float ClearAreaWidth = ControlsRow.w * 0.40f;"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("s_MapHistoryListBox.DoStart(CardRowHeight"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("CUIRect CardHeader, MetricsRow"), std::string::npos);
+	EXPECT_EQ(RenderFavoriteMaps.find("QmMapHistoryUi::CARD_ROW_HEIGHT"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, QmLocalizationEnglishOverlayUsesExplicitEnglishFile)
@@ -658,7 +662,7 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(MiniFeatures.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", Localize(\"Better scoreboard\"), &g_Config.m_QmBetterScoreboard, &Row, LgLineHeight);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.0\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.3\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)

@@ -3460,13 +3460,13 @@ void CChat::SendChat(int Team, const char *pLine)
 		SendChatOnConn(!g_Config.m_ClDummy, Team, pLine);
 }
 
-void CChat::SendChatOnConn(int Conn, int Team, const char *pLine)
+void CChat::SendChatOnConn(int Conn, int Team, const char *pLine, bool AllowWhitespaceOnly, bool HandleLocalSaveForLoadCommand)
 {
-	if(pLine == nullptr)
+	if(pLine == nullptr || pLine[0] == '\0')
 		return;
 
 	// don't send empty messages
-	if(*str_utf8_skip_whitespaces(pLine) == '\0')
+	if(!AllowWhitespaceOnly && *str_utf8_skip_whitespaces(pLine) == '\0')
 		return;
 
 	if(Conn != IClient::CONN_DUMMY)
@@ -3481,16 +3481,18 @@ void CChat::SendChatOnConn(int Conn, int Team, const char *pLine)
 		Msg7.m_Target = -1;
 		Msg7.m_pMessage = pLine;
 		Client()->SendPackMsg(Conn, &Msg7, MSGFLAG_VITAL, true);
-		GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
-		return;
+	}
+	else
+	{
+		// send chat message
+		CNetMsg_Cl_Say Msg;
+		Msg.m_Team = Team;
+		Msg.m_pMessage = pLine;
+		Client()->SendPackMsg(Conn, &Msg, MSGFLAG_VITAL);
 	}
 
-	// send chat message
-	CNetMsg_Cl_Say Msg;
-	Msg.m_Team = Team;
-	Msg.m_pMessage = pLine;
-	Client()->SendPackMsg(Conn, &Msg, MSGFLAG_VITAL);
-	GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
+	if(HandleLocalSaveForLoadCommand)
+		GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
 }
 
 void CChat::SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation)

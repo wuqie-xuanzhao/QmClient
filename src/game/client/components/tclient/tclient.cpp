@@ -1155,6 +1155,29 @@ const char *CTClient::CurrentCommunityIdForFinishCheck() const
 	return pCommunityId;
 }
 
+bool CTClient::TryHandleRedPacketAutoClaim(const CNetMsg_Sv_Chat *pMsg)
+{
+	if(pMsg == nullptr || pMsg->m_ClientId != -1 || pMsg->m_pMessage == nullptr)
+		return false;
+
+	const int MainClientId = GameClient()->m_aLocalIds[0];
+	if(MainClientId < 0 || MainClientId >= MAX_CLIENTS || !GameClient()->m_aClients[MainClientId].m_Active)
+		return false;
+
+	const NETADDR *pServerAddress = Client()->ServerAddress();
+	if(pServerAddress == nullptr)
+		return false;
+	char aServerAddress[NETADDR_MAXSTRSIZE];
+	net_addr_str(pServerAddress, aServerAddress, sizeof(aServerAddress), true);
+
+	std::string Password;
+	if(!m_RedPacketAutoClaim.TryPrepare(aServerAddress, GameClient()->m_aClients[MainClientId].m_aName, pMsg->m_pMessage, Password))
+		return false;
+
+	GameClient()->m_Chat.SendChatOnConn(IClient::CONN_MAIN, 0, Password.c_str(), true, false);
+	return true;
+}
+
 void CTClient::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
@@ -1180,6 +1203,7 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		int ClientId = pMsg->m_ClientId;
+		TryHandleRedPacketAutoClaim(pMsg);
 
 		if(ClientId < 0)
 		{
@@ -2923,6 +2947,7 @@ void CTClient::OnStateChange(int NewState, int OldState)
 		m_LastRepeatKeyPressTime = 0;
 		m_RepeatKeyDown = false;
 		m_LastAutoReplyTime = 0;
+		m_RedPacketAutoClaim.Reset();
 		m_FinishTextTimeout = 0.0f;
 		for(int i = 0; i < NUM_DUMMIES; ++i)
 		{

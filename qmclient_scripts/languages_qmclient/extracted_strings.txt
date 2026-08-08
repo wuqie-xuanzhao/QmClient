@@ -3730,11 +3730,11 @@ Zoom out
 [Graphics error]	An error during command recording occurred. Try to update your GPU drivers.
 [Graphics error]	Could not initialize the given graphics backend, reverting to the default backend now.
 [Graphics error]	Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
-[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 [Graphics error]	Failed to swap framebuffers. Try to update your GPU drivers.
 [Graphics error]	Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
 [Graphics error]	Submitting the render commands failed. Try to update your GPU drivers.
-[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 [Hammer Mode]	Normal
 [Hammer Mode]	Rotate with cursor
 [Hammer Mode]	Rotate with cursor like gun

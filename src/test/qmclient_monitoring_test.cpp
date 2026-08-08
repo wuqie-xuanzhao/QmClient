@@ -1,6 +1,9 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #define CONF_TEST 1
 #include <engine/client/gpu_upload_limiter.h>
+#include <engine/config.h>
+#include <engine/shared/config.h>
+#include <engine/storage.h>
 
 #include <game/client/components/qmclient/monitoring/monitoring.h>
 #include <game/client/components/qmclient/perf_logging.h>
@@ -15,6 +18,7 @@
 #include <test/test.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <fstream>
@@ -30,6 +34,18 @@ namespace
 	std::string ReadRepoFile(const char *pPath)
 	{
 		return ReadTestSourceFile(pPath);
+	}
+
+	bool WriteStorageFile(IStorage *pStorage, const char *pPath, const char *pContents)
+	{
+		IOHANDLE File = pStorage->OpenFile(pPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(!File)
+			return false;
+		const unsigned Length = str_length(pContents);
+		bool Success = io_write(File, pContents, Length) == Length;
+		if(io_close(File) != 0)
+			Success = false;
+		return Success;
 	}
 
 	bool ContainsAll(const std::string &Source, std::initializer_list<const char *> Needles)
@@ -2016,7 +2032,7 @@ TEST(QmMonitoringHelpers, GeneralPerformanceModePlaceholderReplacesRefreshRateSl
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmPerformanceMode, qm_performance_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("key = \"Performance mode (placeholder)\""), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("simplified_chinese = \"性能模式（占位符）\""), std::string::npos);
-	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.0\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.3\""), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
@@ -3959,6 +3975,52 @@ TEST(QmMonitoringHelpers, RenderPathsDoNotCreateTextContainersSynchronously)
 	EXPECT_EQ(MotdBody.find("TextRender()->RecreateTextContainer("), std::string::npos);
 	EXPECT_EQ(AssetsBody.find("TextRender()->RecreateTextContainer("), std::string::npos);
 	EXPECT_NE(AssetsBody.find("RequestAssetsCardMetadataHydration"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, RuntimeMenuTextDrainAcquiresBudgetAfterUiContainerReset)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string ResetBody = ExtractSourceFunctionBody(Header, "void ResetSettingsFrameBudgetForFrame(bool TeeSettingsActive, bool AssetsSettingsActive, int TeeSkinGpuUploadsPerFrame = -1)");
+	const std::string SchedulerBody = ExtractSourceFunctionBody(Source, "SSettingsAdaptiveBudgetOutput CMenus::BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer Consumer, const char *pSource, SSettingsAdaptiveBudgetInput Input)");
+	const std::string DrainBody = ExtractSourceFunctionBody(Source, "void CMenus::DrainMenuTextContainerBuildRequests()");
+	ASSERT_FALSE(ResetBody.empty());
+	ASSERT_FALSE(SchedulerBody.empty());
+	ASSERT_FALSE(DrainBody.empty());
+
+	// A window/UI reset deletes the cached containers without reopening the
+	// completed prebuild plan. Ordinary settings pages must therefore acquire a
+	// runtime drain budget on demand or their queued labels remain blank forever.
+	EXPECT_NE(Header.find("bool m_SettingsUiFrameBudgetInitialized"), std::string::npos);
+	EXPECT_NE(ResetBody.find("m_SettingsUiFrameBudgetInitialized = false;"), std::string::npos);
+	EXPECT_NE(SchedulerBody.find("m_SettingsUiFrameBudgetInitialized = true;"), std::string::npos);
+	EXPECT_NE(DrainBody.find("if(!m_SettingsUiFrameBudgetInitialized)"), std::string::npos);
+	EXPECT_NE(DrainBody.find("BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, \"stable_text_runtime_drain\""), std::string::npos);
+	EXPECT_NE(DrainBody.find("Input.m_VisibleWaiting = (int)m_vMenuTextContainerBuildRequests.size();"), std::string::npos);
+	EXPECT_NE(DrainBody.find("maximum(1, m_CurrentSettingsUiFrameBudget.m_TextContainerTokens)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, LifecycleMarkerForcedWriteSerializesWithAsyncWrite)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/qmclient/qmclient.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/qmclient.cpp");
+	const size_t JobStart = Source.find("class CQmClientLifecycleMarkerWriteJob");
+	ASSERT_NE(JobStart, std::string::npos);
+	const size_t JobEnd = Source.find("\n\t};", JobStart);
+	ASSERT_NE(JobEnd, std::string::npos);
+	const std::string Job = Source.substr(JobStart, JobEnd - JobStart);
+	const std::string ForcedWrite = ExtractSourceFunctionBody(Source, "void CQmClient::WriteQmClientLifecycleMarker()");
+	ASSERT_FALSE(ForcedWrite.empty());
+
+	// IJob::Abort may mark a running job as aborted before Run has returned. Both
+	// paths must therefore share ownership of one lock and acquire it before IO.
+	EXPECT_NE(Header.find("std::shared_ptr<std::mutex> m_pQmClientLifecycleMarkerMutex"), std::string::npos);
+	const size_t JobLock = Job.find("std::lock_guard<std::mutex> Lock(*m_pMutex);");
+	const size_t AbortCheck = Job.find("State() == IJob::STATE_ABORTED");
+	ASSERT_NE(JobLock, std::string::npos);
+	ASSERT_NE(AbortCheck, std::string::npos);
+	EXPECT_LT(JobLock, AbortCheck);
+	EXPECT_NE(ForcedWrite.find("std::lock_guard<std::mutex> Lock(*m_pQmClientLifecycleMarkerMutex);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, IngameServerInfoCardTitlesHaveImmediateFallback)
@@ -6354,4 +6416,119 @@ TEST(QmStutterDiagnostics, WiresOptInRawFrameAndAllComponentPhases)
 	EXPECT_NE(GameClient.find("m_vpAllPerfNames"), std::string::npos);
 	EXPECT_NE(GameClient.find("Kernel()->RequestInterface<IEngineGraphics>()"), std::string::npos);
 	EXPECT_EQ(GameClient.find("Graphics()->WindowActive()"), std::string::npos);
+}
+
+TEST(QmConfigPersistence, UsesOneLowercaseDirectoryForAllManagedDomains)
+{
+	const std::string Domains = ReadRepoFile("src/engine/shared/config_domains.h");
+
+	EXPECT_NE(Domains.find("CONFIG_DOMAIN(DDNET, \"qmclient/settings_ddnet.cfg\", nullptr, \"settings_ddnet.cfg\", true)"), std::string::npos);
+	EXPECT_NE(Domains.find("CONFIG_DOMAIN(QMCLIENT, \"qmclient/settings_qmclient.cfg\", \"QmClient/settings_qmclient.cfg\", \"settings_qmclient.cfg\", true)"), std::string::npos);
+	EXPECT_NE(Domains.find("CONFIG_DOMAIN(TCLIENTPROFILES, \"qmclient/qmclient_profiles.cfg\", \"QmClient/qmclient_profiles.cfg\", \"qmclient_profiles.cfg\", false)"), std::string::npos);
+	EXPECT_NE(Domains.find("CONFIG_DOMAIN(TCLIENTCHATBINDS, \"qmclient/qmclient_chatbinds.cfg\", \"QmClient/qmclient_chatbinds.cfg\", \"qmclient_chatbinds.cfg\", false)"), std::string::npos);
+	EXPECT_NE(Domains.find("CONFIG_DOMAIN(TCLIENTWARLIST, \"qmclient/qmclient_warlist.cfg\", \"QmClient/qmclient_warlist.cfg\", \"qmclient_warlist.cfg\", false)"), std::string::npos);
+}
+
+TEST(QmConfigPersistence, ArchivesOnlyWhitelistedLegacyConfigsAfterCanonicalFilesExist)
+{
+	CTestInfo Info;
+	std::unique_ptr<IStorage> pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	ASSERT_TRUE(pStorage->CreateFolder("qmclient", IStorage::TYPE_SAVE));
+
+	for(ConfigDomain Domain = ConfigDomain::START; Domain < ConfigDomain::NUM; ++Domain)
+	{
+		ASSERT_TRUE(WriteStorageFile(pStorage.get(), s_aConfigDomains[Domain].m_aConfigPath, "canonical\n"));
+		ASSERT_NE(s_aConfigDomains[Domain].m_aLegacyConfigPath, nullptr);
+		ASSERT_TRUE(WriteStorageFile(pStorage.get(), s_aConfigDomains[Domain].m_aLegacyConfigPath, "legacy\n"));
+	}
+	ASSERT_TRUE(WriteStorageFile(pStorage.get(), "custom_user.cfg", "bind x say custom\n"));
+
+	EXPECT_TRUE(QmConfigMigrationPending(pStorage.get()));
+	ASSERT_TRUE(QmFinalizeConfigMigration(pStorage.get()));
+	EXPECT_FALSE(QmConfigMigrationPending(pStorage.get()));
+
+	for(ConfigDomain Domain = ConfigDomain::START; Domain < ConfigDomain::NUM; ++Domain)
+	{
+		char aBackupPath[IO_MAX_PATH_LENGTH];
+		str_format(aBackupPath, sizeof(aBackupPath), "qmclient/migration_backup_v1/%s", s_aConfigDomains[Domain].m_aLegacyConfigPath);
+		EXPECT_FALSE(pStorage->FileExists(s_aConfigDomains[Domain].m_aLegacyConfigPath, IStorage::TYPE_SAVE));
+		EXPECT_TRUE(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE));
+	}
+	EXPECT_TRUE(pStorage->FileExists("custom_user.cfg", IStorage::TYPE_SAVE));
+
+	for(ConfigDomain Domain = ConfigDomain::START; Domain < ConfigDomain::NUM; ++Domain)
+	{
+		char aBackupPath[IO_MAX_PATH_LENGTH];
+		str_format(aBackupPath, sizeof(aBackupPath), "qmclient/migration_backup_v1/%s", s_aConfigDomains[Domain].m_aLegacyConfigPath);
+		EXPECT_TRUE(pStorage->RemoveFile(s_aConfigDomains[Domain].m_aConfigPath, IStorage::TYPE_SAVE));
+		EXPECT_TRUE(pStorage->RemoveFile(aBackupPath, IStorage::TYPE_SAVE));
+	}
+	EXPECT_TRUE(pStorage->RemoveFile("qmclient/config_migration_v1.done", IStorage::TYPE_SAVE));
+	EXPECT_TRUE(pStorage->RemoveFile("custom_user.cfg", IStorage::TYPE_SAVE));
+	EXPECT_TRUE(pStorage->RemoveFolder("qmclient/migration_backup_v1", IStorage::TYPE_SAVE));
+	EXPECT_TRUE(pStorage->RemoveFolder("qmclient", IStorage::TYPE_SAVE));
+}
+
+TEST(QmConfigPersistence, KeepsLegacyConfigsWhenCanonicalSetIsIncomplete)
+{
+	CTestInfo Info;
+	std::unique_ptr<IStorage> pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	ASSERT_TRUE(pStorage->CreateFolder("qmclient", IStorage::TYPE_SAVE));
+	ASSERT_TRUE(WriteStorageFile(pStorage.get(), "settings_ddnet.cfg", "player_name \"legacy\"\n"));
+
+	EXPECT_FALSE(QmFinalizeConfigMigration(pStorage.get()));
+	EXPECT_TRUE(QmConfigMigrationPending(pStorage.get()));
+	EXPECT_TRUE(pStorage->FileExists("settings_ddnet.cfg", IStorage::TYPE_SAVE));
+}
+
+TEST(QmConfigPersistence, SerializesMaximumEscapedQmStringWithoutTruncation)
+{
+	std::array<char, 4096> aValue{};
+	std::array<char, 4096> aOldValue{};
+	SStringConfigVariable Variable(nullptr, "qm_keyword_reply_rules", SConfigVariable::VAR_STRING, CFGFLAG_CLIENT | CFGFLAG_SAVE, "", aValue.data(), "", aValue.size(), aOldValue.data());
+	for(size_t i = 0; i + 1 < aValue.size(); ++i)
+		aValue[i] = i % 2 == 0 ? '\\' : '"';
+
+	std::vector<char> vSerialized(Variable.MaxSerializedSize());
+	Variable.Serialize(vSerialized.data(), vSerialized.size());
+
+	const size_t ExpectedLength = str_length(Variable.m_pScriptName) + 2 + 2 * (aValue.size() - 1) + 1;
+	EXPECT_EQ(str_length(vSerialized.data()), ExpectedLength);
+	EXPECT_LT(ExpectedLength, vSerialized.size());
+	EXPECT_EQ(vSerialized[ExpectedLength - 1], '"');
+
+	const std::string ConsoleHeader = ReadRepoFile("src/engine/shared/console.h");
+	EXPECT_NE(ConsoleHeader.find("CONSOLE_MAX_STR_LENGTH = 16384"), std::string::npos);
+}
+
+TEST(QmConfigPersistence, ClosesEveryOpenedFileBeforeReplacingOrDiscardingIt)
+{
+	const std::string Config = ReadRepoFile("src/engine/shared/config.cpp");
+	const size_t SyncPos = Config.find("io_sync(m_aConfigFile[ConfigDomain])");
+	const size_t ClosePos = Config.find("io_close(m_aConfigFile[ConfigDomain])", SyncPos);
+	const size_t RenamePos = Config.find("RenameFile(aaConfigFileTmp[ConfigDomain]", SyncPos);
+
+	ASSERT_NE(SyncPos, std::string::npos);
+	ASSERT_NE(ClosePos, std::string::npos);
+	ASSERT_NE(RenamePos, std::string::npos);
+	EXPECT_LT(SyncPos, ClosePos);
+	EXPECT_LT(ClosePos, RenamePos);
+	EXPECT_EQ(Config.substr(SyncPos, ClosePos - SyncPos).find("else if"), std::string::npos);
+}
+
+TEST(QmConfigPersistence, CommitsMigrationAfterComponentConfigMigrations)
+{
+	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
+	const size_t GameClientInitPos = Client.find("GameClient()->OnInit();");
+	const size_t PendingCommandsPos = Client.find("m_pConsole->StoreCommands(false);", GameClientInitPos);
+	const size_t MigrationPos = Client.find("FinishQmConfigMigration();", GameClientInitPos);
+
+	ASSERT_NE(GameClientInitPos, std::string::npos);
+	ASSERT_NE(PendingCommandsPos, std::string::npos);
+	ASSERT_NE(MigrationPos, std::string::npos);
+	EXPECT_LT(GameClientInitPos, PendingCommandsPos);
+	EXPECT_LT(PendingCommandsPos, MigrationPos);
+	EXPECT_NE(Client.find("m_pConfigManager->Save(true)", MigrationPos), std::string::npos);
 }

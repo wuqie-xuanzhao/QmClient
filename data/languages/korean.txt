@@ -8286,8 +8286,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 지정된 그래픽 백엔드를 초기화할 수 없습니다. 내장 그래픽 드라이버가 설치되지 않았을 수 있습니다.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 초기화 중 실패했습니다. 설정 디렉토리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경한 후 다시 시도하세요.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 초기화 중 실패했습니다. 설정 디렉토리의 qmclient/settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경한 후 다시 시도하세요.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -8302,8 +8302,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 렌더 명령 제출에 실패했습니다. GPU 드라이버를 업데이트해 보세요.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 알 수 없는 오류입니다. 설정 디렉터리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 알 수 없는 오류입니다. 설정 디렉터리의 qmclient/settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
 
 [Hammer Mode]
 Normal

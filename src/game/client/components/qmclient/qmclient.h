@@ -12,6 +12,7 @@
 #include <game/client/component.h>
 
 #include <memory>
+#include <mutex>
 
 class IJob;
 
@@ -29,6 +30,7 @@ class CQmClient : public CComponent
 	std::shared_ptr<CHttpRequest> m_pQmClientServerTimeTask = nullptr;
 	std::shared_ptr<CHttpRequest> m_pQmClientPlaytimeQueryTask = nullptr;
 	std::shared_ptr<IJob> m_pQmClientLifecycleMarkerWriteJob = nullptr;
+	std::shared_ptr<std::mutex> m_pQmClientLifecycleMarkerMutex = std::make_shared<std::mutex>();
 	std::shared_ptr<CHttpRequest> m_pQmDdnetPlayerTask = nullptr;
 	std::shared_ptr<IJob> m_pQmDdnetPlayerParseJob = nullptr;
 

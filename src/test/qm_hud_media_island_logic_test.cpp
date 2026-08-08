@@ -15,6 +15,25 @@
 
 namespace
 {
+	std::string FunctionBody(const std::string &Source, const std::string &Signature)
+	{
+		const size_t FunctionStart = Source.find(Signature);
+		if(FunctionStart == std::string::npos)
+			return {};
+		const size_t BodyStart = Source.find('{', FunctionStart);
+		if(BodyStart == std::string::npos)
+			return {};
+		int Depth = 0;
+		for(size_t Index = BodyStart; Index < Source.size(); ++Index)
+		{
+			if(Source[Index] == '{')
+				++Depth;
+			else if(Source[Index] == '}' && --Depth == 0)
+				return Source.substr(BodyStart, Index - BodyStart);
+		}
+		return {};
+	}
+
 	SHudMediaIslandTrackInput Track(const char *pTitle, const char *pArtist = "", const char *pAlbum = "")
 	{
 		SHudMediaIslandTrackInput Input;
@@ -717,6 +736,20 @@ TEST(QmHudMediaIslandSpectatorEye, ReopensOnlyWhileTheRightCapsuleIsBeingReclaim
 	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorCountAlpha(false, QmHudMediaIslandSpectatorIconPose(1.0f)), 0.0f);
 }
 
+TEST(QmHudMediaIslandSpectatorEye, OpenGlUsesTextIconWithoutChangingTheAtlasPath)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string RenderBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
+	ASSERT_FALSE(RenderBody.empty());
+
+	EXPECT_NE(Source.find("bool IsOpenGlBackend()"), std::string::npos);
+	EXPECT_NE(Source.find("str_comp_nocase(g_Config.m_GfxBackend, \"OpenGL\") == 0"), std::string::npos);
+	EXPECT_NE(RenderBody.find("if(IsOpenGlBackend())"), std::string::npos);
+	EXPECT_NE(RenderBody.find("FontIcons::FONT_ICON_EYE_SLASH"), std::string::npos);
+	EXPECT_NE(RenderBody.find("FontIcons::FONT_ICON_EYE"), std::string::npos);
+	EXPECT_NE(RenderBody.find("else if(CQmIconManager *pIconManager = GameClient()->QmIconManager())"), std::string::npos);
+}
+
 TEST(QmHudMediaIslandBlob, RightCapsuleSettlesOutsideMainIsland)
 {
 	const SHudMediaIslandLiquidCapsule Capsule = QmHudMediaIslandRightBlobCapsule(100.0f, 20.0f, 8.0f, 24.0f, 4.0f, QmHudMediaIslandBlobPose(1.0f));
@@ -947,7 +980,8 @@ TEST(QmHudMediaIslandSatellite, RenderPathUsesBlobSatellitesInsteadOfCountdownTe
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandSpectatorCountAlpha(ShowSpectator, SpectatorIconPose)"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandSpectatorIconProgressDuringExit(AnimState.m_SpectatorExitIconStart, AnimState.m_SpectatorExitLiquidStart, AnimState.m_SpectatorLiquidProgress)"), std::string::npos);
 	EXPECT_NE(Source.find("EQmIcon::SATELLITE_CHECK"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("FontIcons::FONT_ICON_EYE"), std::string::npos);
+	EXPECT_NE(RenderBody.find("if(IsOpenGlBackend())"), std::string::npos);
+	EXPECT_NE(RenderBody.find("FontIcons::FONT_ICON_EYE"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("if(SatelliteRenderItemCount > 0)"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("DrawMediaIslandLiquidBridge"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("DrawMediaIslandProgressRing"), std::string::npos);

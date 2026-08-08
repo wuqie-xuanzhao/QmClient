@@ -8286,8 +8286,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 指定されたグラフィックスバックエンドを初期化できませんでした。おそらく、内蔵グラフィックスのドライバーがインストールされていないためです。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初期化に失敗しました。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 初期化に失敗しました。設定ディレクトリの qmclient/settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -8302,8 +8302,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == レンダリングコマンドの送信に失敗しました。GPUドライバーを更新してみてください。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 不明なエラー。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 不明なエラー。設定ディレクトリの qmclient/settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
 
 [Hammer Mode]
 Normal

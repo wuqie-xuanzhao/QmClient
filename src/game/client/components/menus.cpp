@@ -4802,6 +4802,30 @@ void CMenus::QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRe
 
 void CMenus::DrainMenuTextContainerBuildRequests()
 {
+	if(m_vMenuTextContainerBuildRequests.empty())
+		return;
+
+	if(!m_SettingsUiFrameBudgetInitialized)
+	{
+		SSettingsAdaptiveBudgetInput Input;
+		Input.m_FrameId = Client()->PerfFrame();
+		str_copy(Input.m_aOperation, SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
+		str_copy(Input.m_aPage, CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings", sizeof(Input.m_aPage));
+		str_copy(Input.m_aTab, "runtime_text", sizeof(Input.m_aTab));
+		str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
+		Input.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
+		Input.m_FrameMsP95 = Input.m_FrameMsAverage;
+		Input.m_TargetFrameMs = 8.333f;
+		Input.m_ScrollActive = m_SettingsScrollActive;
+		Input.m_TabSwitchFirstFrame = m_SettingsPageSwitchActive;
+		Input.m_PostScrollRecoveryFrames = m_SettingsPostScrollRecoveryFrames;
+		Input.m_BackgroundBacklog = (int)m_vMenuTextContainerBuildRequests.size();
+		Input.m_VisibleWaiting = (int)m_vMenuTextContainerBuildRequests.size();
+		Input.m_WindowActive = true;
+		BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, "stable_text_runtime_drain", Input);
+		m_CurrentSettingsUiFrameBudget.m_TextContainerTokens = maximum(1, m_CurrentSettingsUiFrameBudget.m_TextContainerTokens);
+	}
+
 	while(m_CurrentSettingsUiFrameBudget.m_TextContainerTokens > 0 && !m_vMenuTextContainerBuildRequests.empty())
 	{
 		SMenuTextContainerBuildRequest Request = std::move(m_vMenuTextContainerBuildRequests.front());
@@ -5607,6 +5631,7 @@ SSettingsAdaptiveBudgetOutput CMenus::BeginSettingsUiFrameScheduler(EFrameSchedu
 {
 	PrepareSettingsAdaptiveBudgetInput(Input);
 	m_CurrentSettingsUiFrameBudget = GameClient()->FrameScheduler()->ComputeBudget(Consumer, Input);
+	m_SettingsUiFrameBudgetInitialized = true;
 	LogSettingsAdaptiveBudget(pSource, Input, m_CurrentSettingsUiFrameBudget);
 	return m_CurrentSettingsUiFrameBudget;
 }

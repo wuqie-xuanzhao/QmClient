@@ -8286,8 +8286,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Nie można zainicjować podanego backendu graficznego, prawdopodobnie dlatego, że nie zainstalowałeś sterownika zintegrowanej karty graficznej.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Niepowodzenie podczas inicjalizacji. Spróbuj zmienić gfx_backend na OpenGL lub Vulkan w settings_ddnet.cfg w katalogu konfiguracyjnym i spróbuj ponownie.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Niepowodzenie podczas inicjalizacji. Spróbuj zmienić gfx_backend na OpenGL lub Vulkan w qmclient/settings_ddnet.cfg w katalogu konfiguracyjnym i spróbuj ponownie.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -8302,8 +8302,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == Przesyłanie poleceń renderowania nie powiodło się. Spróbuj zaktualizować sterowniki GPU.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Nieznany błąd. Spróbuj zmienić gfx_backend na OpenGL lub Vulkan w settings_ddnet.cfg w katalogu konfiguracyjnym i spróbuj ponownie.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Nieznany błąd. Spróbuj zmienić gfx_backend na OpenGL lub Vulkan w qmclient/settings_ddnet.cfg w katalogu konfiguracyjnym i spróbuj ponownie.
 
 [Hammer Mode]
 Normal

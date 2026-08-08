@@ -58,6 +58,11 @@ namespace
 		return IsAmdVendor || IsAmdRenderer;
 	}
 
+	bool IsOpenGlBackend()
+	{
+		return str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0;
+	}
+
 	struct SHudTextInfoLayout
 	{
 		float m_FpsX = 0.0f;
@@ -4422,9 +4427,25 @@ void CHud::RenderMediaIsland()
 			const float Height = IconSize * ScaleY;
 			return CUIRect{ContentX + (IconSize - Width) * 0.5f, SatelliteCenterY - Height * 0.5f, Width, Height};
 		};
-		if(CQmIconManager *pIconManager = GameClient()->QmIconManager())
+		const float IconAlpha = 0.88f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha;
+		// Keep the spectator eye on the text path when OpenGL loses this atlas draw.
+		if(IsOpenGlBackend())
 		{
-			const float IconAlpha = 0.88f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha;
+			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+			const auto RenderTextEye = [&](const char *pGlyph, const CUIRect &Rect, float Alpha) {
+				if(Alpha <= 0.001f)
+					return;
+				const float GlyphSize = Rect.h;
+				const float GlyphWidth = TextRender()->TextWidth(GlyphSize, pGlyph);
+				TextRender()->TextColor(0.98f, 0.99f, 1.0f, IconAlpha * Alpha);
+				TextRender()->Text(Rect.x + (Rect.w - GlyphWidth) * 0.5f, Rect.y, GlyphSize, pGlyph, -1.0f);
+			};
+			RenderTextEye(FontIcons::FONT_ICON_EYE_SLASH, IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale), SpectatorIconPose.m_ClosedAlpha);
+			RenderTextEye(FontIcons::FONT_ICON_EYE, IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY), SpectatorIconPose.m_OpenAlpha);
+			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		}
+		else if(CQmIconManager *pIconManager = GameClient()->QmIconManager())
+		{
 			pIconManager->RenderIcon(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED, IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_ClosedAlpha));
 			pIconManager->RenderIcon(EQmIcon::SATELLITE_SPECTATOR_EYE, IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_OpenAlpha));
 		}

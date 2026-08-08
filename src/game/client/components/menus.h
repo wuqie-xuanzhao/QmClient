@@ -2071,6 +2071,7 @@ public:
 		const SSettingsResourceFrameContext FrameContext = SettingsResourceFrameContext();
 		m_SettingsFrameBudget = SSettingsWarmupFrameBudget{};
 		m_CurrentSettingsUiFrameBudget = SSettingsAdaptiveBudgetOutput{};
+		m_SettingsUiFrameBudgetInitialized = false;
 		SettingsApplyActiveTeeSkinFrameBudget(m_SettingsFrameBudget, TeeSettingsActive);
 		if(TeeSettingsActive)
 			m_SettingsFrameBudget.m_MaxGpuUploads = TeeSkinGpuUploadsPerFrame >= 0 ? TeeSkinGpuUploadsPerFrame : SettingsSkinGpuUploadFrameUnits(FrameContext, TeeSettingsActive);
@@ -2200,6 +2201,7 @@ private:
 	SSettingsRuntimeMetadata m_SettingsRuntimeMetadata;
 	SSettingsWarmupFrameBudget m_SettingsFrameBudget;
 	SSettingsAdaptiveBudgetOutput m_CurrentSettingsUiFrameBudget;
+	bool m_SettingsUiFrameBudgetInitialized = false;
 	SSettingsAdaptiveBudgetOutput m_IngameTextFrameBudget;
 	float m_TextContainerCreateMsEwma = 0.0f;
 	float m_TextContainerUploadMsEwma = 0.0f;

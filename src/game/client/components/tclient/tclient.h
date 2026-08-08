@@ -15,6 +15,7 @@
 
 #include <game/client/component.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/red_packet_auto_claim.h>
 #include <game/client/components/tclient/map_history.h>
 
 #include <deque>
@@ -27,6 +28,7 @@
 #include <vector>
 
 class IJob;
+struct CNetMsg_Sv_Chat;
 
 // 玩家统计数据结构
 struct SPlayerStats
@@ -135,6 +137,8 @@ class CTClient : public CComponent
 
 	bool ServerCommandExists(const char *pCommand);
 	int64_t m_LastAutoReplyTime = 0;
+	CQmRedPacketAutoClaim m_RedPacketAutoClaim;
+	bool TryHandleRedPacketAutoClaim(const CNetMsg_Sv_Chat *pMsg);
 
 	// Water Fall Detection
 	bool m_aWasInDeath[NUM_DUMMIES] = {false, false};
