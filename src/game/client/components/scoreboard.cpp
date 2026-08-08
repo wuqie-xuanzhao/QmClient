@@ -1205,9 +1205,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	RoundRadius *= RowsVerticalScale;
 	FontSize *= RowsVerticalScale;
 
-	// At ten UI pixels or less the full Tee and secondary identity columns are no longer
-	// legible, but still account for most of the high-player-count render work.
-	const SScoreboardRowRenderDetail RowDetail = ResolveScoreboardRowRenderDetail(g_Config.m_QmBetterScoreboard != 0, LineHeight);
+	const SScoreboardRowRenderDetail RowDetail = ResolveScoreboardRowRenderDetail();
 	const bool ShowClientBrand = RowDetail.m_ShowClientBrand && g_Config.m_QmClientShowBadge;
 	const float ClientBrandLength = ShowClientBrand ? maximum(TextRender()->TextWidth(FontSize, "Qm"), TextRender()->TextWidth(FontSize, "Arg")) + CLIENT_BRAND_LABEL_GAP : 0.0f;
 	const float ClientBrandOffset = Scoreboard.x + 10.0f;

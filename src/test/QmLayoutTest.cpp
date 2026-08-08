@@ -277,25 +277,13 @@ TEST(QmScoreboardRender, BlurTargetUsesQuarterResolutionAndRoundsUp)
 	EXPECT_EQ(ScoreboardBlurTargetDimension(0), 0);
 }
 
-TEST(QmScoreboardRender, DenseRowsKeepClientBrandWhileReducingSecondaryDetail)
+TEST(QmScoreboardRender, PlayerRowsAlwaysUseFullDetail)
 {
-	const SScoreboardRowRenderDetail Disabled = ResolveScoreboardRowRenderDetail(false, 5.0f);
-	EXPECT_TRUE(Disabled.m_FullTee);
-	EXPECT_TRUE(Disabled.m_ShowClientBrand);
-	EXPECT_TRUE(Disabled.m_ShowClan);
-	EXPECT_TRUE(Disabled.m_ShowCountry);
-
-	const SScoreboardRowRenderDetail Regular = ResolveScoreboardRowRenderDetail(true, 13.5f);
-	EXPECT_TRUE(Regular.m_FullTee);
-	EXPECT_TRUE(Regular.m_ShowClientBrand);
-	EXPECT_TRUE(Regular.m_ShowClan);
-	EXPECT_TRUE(Regular.m_ShowCountry);
-
-	const SScoreboardRowRenderDetail Dense = ResolveScoreboardRowRenderDetail(true, 10.0f);
-	EXPECT_FALSE(Dense.m_FullTee);
-	EXPECT_TRUE(Dense.m_ShowClientBrand);
-	EXPECT_FALSE(Dense.m_ShowClan);
-	EXPECT_FALSE(Dense.m_ShowCountry);
+	const SScoreboardRowRenderDetail Detail = ResolveScoreboardRowRenderDetail();
+	EXPECT_TRUE(Detail.m_FullTee);
+	EXPECT_TRUE(Detail.m_ShowClientBrand);
+	EXPECT_TRUE(Detail.m_ShowClan);
+	EXPECT_TRUE(Detail.m_ShowCountry);
 }
 
 TEST(QmScoreboardRender, DdTeamLabelUsesBelowRowLayoutRegardlessOfColumnCount)
