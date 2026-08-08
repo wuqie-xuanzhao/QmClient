@@ -379,10 +379,35 @@ class CHud : public CComponent
 		}
 	};
 	SHudSwitchCountdownAnimState m_SwitchCountdownAnimState;
+	struct SHudSwitchCountdownRingState
+	{
+		int m_Team = -1;
+		int m_Number = 0;
+		int m_ClientId = -1;
+		int m_Connection = 0;
+		int m_TriggerTick = 0;
+		int m_EndTick = 0;
+		int m_LayoutSlot = 0;
+		vec2 m_Position{};
+		vec2 m_Velocity{};
+		float m_Alpha = 0.0f;
+		bool m_Seen = false;
+		bool m_Initialized = false;
+
+		void Reset()
+		{
+			*this = {};
+			m_Team = -1;
+			m_ClientId = -1;
+		}
+	};
+	std::array<SHudSwitchCountdownRingState, SWITCH_COUNTDOWN_MAX_LINES> m_aSwitchCountdownRings{};
 	struct SHudSwitchCountdownTracker
 	{
 		int m_aaEndTick[NUM_DDRACE_TEAMS][256] = {};
 		int m_aaTouchTick[NUM_DDRACE_TEAMS][256] = {};
+		int m_aaClientId[NUM_DDRACE_TEAMS][256] = {};
+		int m_aaConnection[NUM_DDRACE_TEAMS][256] = {};
 
 		void Reset()
 		{
@@ -392,6 +417,8 @@ class CHud : public CComponent
 				{
 					m_aaEndTick[t][i] = 0;
 					m_aaTouchTick[t][i] = 0;
+					m_aaClientId[t][i] = -1;
+					m_aaConnection[t][i] = -1;
 				}
 			}
 		}
@@ -421,6 +448,8 @@ class CHud : public CComponent
 	void UpdateSwitchCountdownTracker();
 	bool HasActiveSwitchCountdown() const;
 	bool BuildSwitchCountdownSummary(char *pBuf, size_t BufSize) const;
+	void ResetSwitchCountdownRings();
+	void RenderFollowSwitchCountdowns();
 	void RenderDummyMiniMap();
 	bool GetDummyMiniMapRect(float &X, float &Y, float &W, float &H) const;
 	void RenderConnectionWarning();

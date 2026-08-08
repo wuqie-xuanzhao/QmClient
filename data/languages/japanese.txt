@@ -1921,6 +1921,9 @@ Disconnected
 Discord
 == Discord
 
+Display location
+== 表示位置
+
 Display mode
 == 表示モード
 
@@ -2608,6 +2611,9 @@ Folder Link
 Follow
 == フォロー
 
+Follow Tee
+== Tee を追跡
+
 Following
 == フォロー中
 
@@ -3108,6 +3114,9 @@ Import from clipboard
 
 Improved Anti Ping
 == 改良版 Anti Ping
+
+In Dynamic Island
+== ダイナミックアイランド内
 
 In memory of me
 == このクライアントに、私の記憶を
@@ -6664,6 +6673,9 @@ Swap is not available on forced solo servers.
 Switch
 == 切り替え
 
+Switch countdown
+== スイッチのカウントダウン
+
 Switch failed
 == 切り替えに失敗しました
 
@@ -7206,6 +7218,9 @@ Total friends
 
 Total: %d save(s)
 == 合計: %d 個のセーブ
+
+Track timed switches
+== 時限スイッチを追跡
 
 Traditional
 == 繁体

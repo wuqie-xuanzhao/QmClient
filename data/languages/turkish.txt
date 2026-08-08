@@ -1921,6 +1921,9 @@ Disconnected
 Discord
 == Discord
 
+Display location
+== Görüntüleme konumu
+
 Display mode
 == Görüntüleme modu
 
@@ -2608,6 +2611,9 @@ Folder Link
 Follow
 == Takip et
 
+Follow Tee
+== Tee'yi takip et
+
 Following
 == Takip Ediliyor
 
@@ -3108,6 +3114,9 @@ Import from clipboard
 
 Improved Anti Ping
 == Geliştirilmiş Anti Ping
+
+In Dynamic Island
+== Dinamik Ada'da
 
 In memory of me
 == Bu istemci beni hatırlasın
@@ -6664,6 +6673,9 @@ Swap is not available on forced solo servers.
 Switch
 == Değiştir
 
+Switch countdown
+== Anahtar geri sayımı
+
 Switch failed
 == Değiştirme başarısız
 
@@ -7206,6 +7218,9 @@ Total friends
 
 Total: %d save(s)
 == Toplam: %d save
+
+Track timed switches
+== Zamanlı anahtarları takip et
 
 Traditional
 == Geleneksel

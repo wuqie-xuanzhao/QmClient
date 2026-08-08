@@ -1921,6 +1921,9 @@ Disconnected
 Discord
 == Discord
 
+Display location
+== Posição de exibição
+
 Display mode
 == Modo de exibição
 
@@ -2608,6 +2611,9 @@ Folder Link
 Follow
 == Seguir
 
+Follow Tee
+== Seguir Tee
+
 Following
 == Seguindo
 
@@ -3108,6 +3114,9 @@ Import from clipboard
 
 Improved Anti Ping
 == Anti Ping melhorado
+
+In Dynamic Island
+== Na Ilha Dinâmica
 
 In memory of me
 == Que este cliente se lembre de mim
@@ -6664,6 +6673,9 @@ Swap is not available on forced solo servers.
 Switch
 == Alternar
 
+Switch countdown
+== Contagem regressiva do interruptor
+
 Switch failed
 == Falha na alternância
 
@@ -7206,6 +7218,9 @@ Total friends
 
 Total: %d save(s)
 == Total: %d save(s)
+
+Track timed switches
+== Acompanhar interruptores temporizados
 
 Traditional
 == Tradicional

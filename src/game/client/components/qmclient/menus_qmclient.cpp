@@ -1645,6 +1645,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		InputOverlay,
 		HudNotifications,
 		Voice,
+		SwitchCountdown,
 		DynamicIsland,
 		SystemMediaControls,
 		Lyrics,
@@ -1693,6 +1694,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::InputOverlay: return "input_overlay";
 		case EQmModuleId::HudNotifications: return "hud_notifications";
 		case EQmModuleId::Voice: return "voice";
+		case EQmModuleId::SwitchCountdown: return "switch_countdown";
 		case EQmModuleId::DynamicIsland: return "dynamic_island";
 		case EQmModuleId::SystemMediaControls: return "system_media_controls";
 		case EQmModuleId::Lyrics: return "lyrics";
@@ -1723,7 +1725,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 36;
+	constexpr size_t QmModuleCount = 37;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -1758,10 +1760,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{EQmModuleId::HudNotifications, EQmModuleColumn::Right, 11, "hud_notifications"},
 		{EQmModuleId::Voice, EQmModuleColumn::Right, 12, "voice"},
 		{EQmModuleId::DummyMiniView, EQmModuleColumn::Right, 13, "dummy_miniview"},
-		{EQmModuleId::DynamicIsland, EQmModuleColumn::Right, 14, "dynamic_island"},
-		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 15, "system_media_controls"},
-		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 16, "lyrics"},
-		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"}}};
+		{EQmModuleId::SwitchCountdown, EQmModuleColumn::Right, 14, "switch_countdown"},
+		{EQmModuleId::DynamicIsland, EQmModuleColumn::Right, 15, "dynamic_island"},
+		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 16, "system_media_controls"},
+		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 17, "lyrics"},
+		{EQmModuleId::Background3D, EQmModuleColumn::Right, 18, "background_3d"}}};
 
 	static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {
 		EQmModuleId::ChatBubble, EQmModuleId::CameraView, EQmModuleId::SkinTransition,
@@ -1772,10 +1775,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		EQmModuleId::MiniFeatures, EQmModuleId::JumpHint, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
 		EQmModuleId::BlockWords, EQmModuleId::Translate, EQmModuleId::QiaFen,
 		EQmModuleId::PieMenu, EQmModuleId::FavoriteMaps, EQmModuleId::HJAssist};
-	static constexpr std::array<EQmModuleId, 12> s_aQmHudModules = {
+	static constexpr std::array<EQmModuleId, 13> s_aQmHudModules = {
 		EQmModuleId::DummyMiniView, EQmModuleId::Coords, EQmModuleId::PlayerStats,
 		EQmModuleId::SpeedrunTimer, EQmModuleId::DebugGraph, EQmModuleId::InputOverlay,
-		EQmModuleId::HudNotifications, EQmModuleId::Voice, EQmModuleId::DynamicIsland,
+		EQmModuleId::HudNotifications, EQmModuleId::Voice, EQmModuleId::SwitchCountdown, EQmModuleId::DynamicIsland,
 		EQmModuleId::SystemMediaControls, EQmModuleId::Lyrics, EQmModuleId::Background3D};
 
 	static std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleLayout = s_aQmModuleDefaults;
@@ -2863,6 +2866,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::InputOverlay: return "按键显示 anjian xianshi input overlay 按键叠加 anjian diejia 大小 daxiao 不透明度 butouming 水平位置 shuiping weizhi 垂直位置 chuizhi weizhi";
 		case EQmModuleId::HudNotifications: return "通知栏 tongzhi lan notification toast echo 系统提示 xitong tishi 黑名单 heimingdan 右侧 youce 动画 donghua 背景 beijing 文字 wenzi";
 		case EQmModuleId::Voice: return "语音 yuyin voice chat 麦克风 maikefeng mic 静音 jingyin 音量 yinliang 语音激活 vad 阈值 yuzhi 释放延迟 shifang yanchi 服务器 fuwuqi token 叠加层 diejiaceng 按住说话 ptt push to talk 全图收听 quantu 衰减 shuijian 距离 juli 半径 banjing 测试 ceshi 本地 bendi 回环 huihuan 设备 shebei 输入 shuru 左右声道定位 左右 zuoyou 声道 shengdao 立体声 stereo 高级 gaoji advanced";
+		case EQmModuleId::SwitchCountdown: return "开关倒计时 kaiguan daojishi switch countdown timed switch 跟随 tee gensui 圆环 yuanhuan 灵动岛 lingdongdao";
 		case EQmModuleId::DynamicIsland: return "灵动岛 lld lingdongdao dynamic island hud 顶部 dingbu 背景 beijing 颜色 yanse 透明度 touming 黑底 heidi 原版 yuanban 默认 moren classic old style";
 		case EQmModuleId::SystemMediaControls: return "系统媒体控制 xitong meiti kongzhi smtc media controls 启用系统媒体 qiyong 显示歌曲信息 gequ xinxi 上一个 shangyige 播放暂停 bofang zanting 下一个 xiayige";
 		case EQmModuleId::Lyrics: return "歌词 geci lyrics lyric lrc lrclib smtc hud 透视 toushi 逐字 zhuzi karaoke 字号 zihao 颜色 yanse 偏移 pianyi 阈值 yuzhi 缓存 huancun";
@@ -3311,6 +3315,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return {11, Localize("Notifications"), Localize("Show important server prompts and Echo messages as popups")};
 		case EQmModuleId::Voice:
 			return {12, Localize("Voice"), Localize("The best voice chat, of course!")};
+		case EQmModuleId::SwitchCountdown:
+			return {11, Localize("Switch countdown"), Localize("Track timed switches")};
 		case EQmModuleId::DynamicIsland:
 			return {14, Localize("Dynamic Island"), Localize("Only Apple Can Do")};
 		case EQmModuleId::SystemMediaControls:
@@ -7672,6 +7678,48 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						static int s_Qm3DParticleTwinkleStrengthInputId;
 						RenderIntOption(&s_Qm3DParticleTwinkleStrengthInputId, Localize("Twinkle strength"), &g_Config.m_Qm3DParticlesTwinkleStrength, 0, 100, "%");
 					}
+				}
+
+				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+				Column.y = CardContent.y;
+				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+				HandleModuleDragState(pModule, s_GlassCards.back());
+			}
+			break;
+			case EQmModuleId::SwitchCountdown:
+			{
+				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
+				CUIRect CardSwitchCountdownStart = Column;
+				s_GlassCards.push_back(CardSwitchCountdownStart);
+
+				Column.HSplitTop(LgCardPadding, nullptr, &Column);
+				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
+				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
+				RenderQmModuleHeadline(CardContent, 11, Localize("Switch countdown"), Localize("Track timed switches"));
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmSwitchCountdown, "Switch countdown", Localize("Switch countdown"), &g_Config.m_QmSwitchCountdown, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				if(g_Config.m_QmSwitchCountdown || PrewarmOnly)
+				{
+					static std::vector<CButtonContainer> s_vSwitchCountdownModeButtons = {{}, {}};
+					int Mode = std::clamp(g_Config.m_QmSwitchCountdownMode, 0, 1);
+					if(DoSettingsLine_RadioMenu(
+						   SETTINGS_QMCLIENT,
+						   m_QmClientSettingsTab,
+						   m_QmClientSettingsTab,
+						   CardContent,
+						   "qmclient-switch-countdown-location-label",
+						   Localize("Display location"),
+						   s_vSwitchCountdownModeButtons,
+						   {"qmclient-switch-countdown-follow-tee", "qmclient-switch-countdown-media-island"},
+						   {Localize("Follow Tee"), Localize("In Dynamic Island")},
+						   {0, 1},
+						   Mode))
+						g_Config.m_QmSwitchCountdownMode = Mode;
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);

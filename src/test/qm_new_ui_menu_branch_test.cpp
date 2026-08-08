@@ -662,7 +662,28 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(MiniFeatures.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", Localize(\"Better scoreboard\"), &g_Config.m_QmBetterScoreboard, &Row, LgLineHeight);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.4\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.10\""), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SwitchCountdownIsAnIndependentHudModuleWithCompatibleDefaults)
+{
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Translations = ReadTextFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
+	const std::string SwitchModule = BlockBodyAfter(MenusSource, "case EQmModuleId::SwitchCountdown:\n\t\t\t{");
+	const std::string DynamicIslandModule = BlockBodyAfter(MenusSource, "case EQmModuleId::DynamicIsland:\n\t\t\t{");
+
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdown, qm_switch_countdown, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(MenusSource.find("{EQmModuleId::SwitchCountdown, EQmModuleColumn::Right"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmSwitchCountdown"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("if(g_Config.m_QmSwitchCountdown || PrewarmOnly)"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("DoSettingsLine_RadioMenu"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("Localize(\"Follow Tee\")"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("Localize(\"In Dynamic Island\")"), std::string::npos);
+	EXPECT_EQ(DynamicIslandModule.find("m_QmSwitchCountdown"), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"Switch countdown\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"开关倒计时\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
@@ -738,7 +759,9 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 	{
 		if(Line.find("MACRO_CONFIG_INT(QmLyricsSearchType,") != std::string::npos ||
 			Line.find("MACRO_CONFIG_INT(QmLyricsCacheEnable,") != std::string::npos ||
-			Line.find("MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects,") != std::string::npos)
+			Line.find("MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects,") != std::string::npos ||
+			Line.find("MACRO_CONFIG_INT(QmSwitchCountdown,") != std::string::npos ||
+			Line.find("MACRO_CONFIG_INT(QmSwitchCountdownMode,") != std::string::npos)
 			continue;
 		EXPECT_FALSE(std::regex_search(Line, BinaryQmDefaultOn)) << Line;
 	}
@@ -746,6 +769,8 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmLyricsSearchType, qm_lyrics_search_type, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmLyricsCacheEnable, qm_lyrics_cache_enable, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects, qm_hud_island_show_tune_zone_effects, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdown, qm_switch_countdown, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 0, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 0, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 0, 0, 2"), std::string::npos);

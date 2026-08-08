@@ -639,6 +639,7 @@ Disconnect dummy
 Disconnect from the server
 Disconnected
 Discord
+Display location
 Display mode
 Display your race time
 Displays client prediction latency
@@ -868,6 +869,7 @@ Flip:
 Folder
 Folder Link
 Follow
+Follow Tee
 Following
 Font size
 Force a vote to yes/no
@@ -1035,6 +1037,7 @@ Idiot word filter
 Ignore cache providers
 Import from clipboard
 Improved Anti Ping
+In Dynamic Island
 In memory of me
 In-game lyrics overlay with smart matching
 Inactive color
@@ -2220,6 +2223,7 @@ Swap ghosts with regular players
 Swap is disabled on this server.
 Swap is not available on forced solo servers.
 Switch
+Switch countdown
 Switch failed
 Switch interval
 Switch opacity
@@ -2401,6 +2405,7 @@ Too many translation tasks
 Total
 Total friends
 Total: %d save(s)
+Track timed switches
 Traditional
 Trail alpha
 Trail length

@@ -5,6 +5,7 @@
 
 #include <game/client/components/hud_media_island_logic.h>
 #include <game/client/components/qmclient/tune_zone_effects.h>
+#include <game/client/components/tclient/pet.h>
 
 #include <gtest/gtest.h>
 
@@ -606,6 +607,80 @@ TEST(QmHudMediaIslandSatellite, KeepsLatestVisibleSwitchesAndSeparatesTeamIdenti
 	EXPECT_EQ(QmHudMediaIslandVisibleSuffixStart(2, 0), 2);
 	EXPECT_NE(QmHudMediaIslandSwitchInstanceId(1, 7), QmHudMediaIslandSwitchInstanceId(2, 7));
 	EXPECT_EQ(QmHudMediaIslandSwitchInstanceId(2, 7) & 0xff, 7);
+}
+
+TEST(QmHudSwitchCountdown, SelectsTheLatestThreeActiveTriggersAndKeepsTheirOwners)
+{
+	const std::array<SHudSwitchCountdownEntry, 5> aEntries = {{
+		{1, 4, 11, 0, 10, 90, 50},
+		{1, 7, 12, 1, 40, 100, 55},
+		{2, 3, 11, 0, 30, 110, 50},
+		{2, 9, 12, 1, 60, 45, 50},
+		{1, 8, 11, 0, 50, 120, 50},
+	}};
+	std::array<SHudSwitchCountdownEntry, 3> aSelected{};
+
+	const int Count = QmHudSelectLatestSwitchCountdowns(aEntries.data(), aEntries.size(), aSelected.data(), aSelected.size());
+
+	ASSERT_EQ(Count, 3);
+	EXPECT_EQ(aSelected[0].m_Number, 8);
+	EXPECT_EQ(aSelected[0].m_ClientId, 11);
+	EXPECT_EQ(aSelected[1].m_Number, 7);
+	EXPECT_EQ(aSelected[1].m_ClientId, 12);
+	EXPECT_EQ(aSelected[2].m_Number, 3);
+	EXPECT_EQ(aSelected[2].m_ClientId, 11);
+}
+
+TEST(QmHudSwitchCountdown, FollowTargetsDefaultLeftAndStayOppositeThePet)
+{
+	const vec2 TeePosition(100.0f, 200.0f);
+	EXPECT_EQ(QmHudSwitchCountdownFollowSide(TeePosition.x, false, 0.0f), -1);
+	EXPECT_EQ(QmHudSwitchCountdownFollowSide(TeePosition.x, true, 60.0f), 1);
+	EXPECT_EQ(QmHudSwitchCountdownFollowSide(TeePosition.x, true, 140.0f), -1);
+
+	const vec2 NearestLeft = QmHudSwitchCountdownFollowTarget(TeePosition, -1, 0, 0.0f);
+	const vec2 OlderLeft = QmHudSwitchCountdownFollowTarget(TeePosition, -1, 1, 0.0f);
+	const vec2 NearestRight = QmHudSwitchCountdownFollowTarget(TeePosition, 1, 0, 0.0f);
+	const vec2 OlderRight = QmHudSwitchCountdownFollowTarget(TeePosition, 1, 1, 0.0f);
+	EXPECT_GT(NearestLeft.x, OlderLeft.x);
+	EXPECT_LT(NearestRight.x, OlderRight.x);
+	EXPECT_LT(NearestLeft.y, TeePosition.y);
+	EXPECT_FLOAT_EQ(NearestLeft.y, OlderLeft.y);
+}
+
+TEST(QmHudSwitchCountdownSource, FollowRingsSharePetMotionAndDoNotRenderIconsOrText)
+{
+	const std::string HudSource = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string PetSource = ReadTestSourceFile("src/game/client/components/tclient/pet.cpp");
+	const std::string FollowBody = FunctionBody(HudSource, "void CHud::RenderFollowSwitchCountdowns()");
+
+	EXPECT_NE(PetSource.find("QmTClientPetAdvanceSpring"), std::string::npos);
+	EXPECT_NE(FollowBody.find("QmTClientPetAdvanceSpring"), std::string::npos);
+	EXPECT_NE(FollowBody.find("GameClient()->m_Pet.IsVisibleForClient"), std::string::npos);
+	EXPECT_NE(FollowBody.find("QmHudSwitchCountdownFollowSide"), std::string::npos);
+	EXPECT_NE(FollowBody.find("DrawMediaIslandArcGeometry"), std::string::npos);
+	EXPECT_EQ(FollowBody.find("MediaIslandCountdownIcon"), std::string::npos);
+	EXPECT_EQ(FollowBody.find("TextRender()"), std::string::npos);
+}
+
+TEST(QmHudSwitchCountdownSource, ModesShareTrackingButOnlyFeedTheirSelectedSurface)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string UpdateBody = FunctionBody(Source, "void CHud::UpdateSwitchCountdownTracker()");
+	const std::string HasIslandBody = FunctionBody(Source, "bool CHud::HasActiveSwitchCountdown() const");
+	const std::string OnRenderBody = FunctionBody(Source, "void CHud::OnRender()");
+	const size_t IslandBegin = Source.find("void CHud::RenderMediaIsland()");
+	ASSERT_NE(IslandBegin, std::string::npos);
+	const size_t IslandEnd = Source.find("void CHud::RenderPlayerState", IslandBegin);
+	ASSERT_NE(IslandEnd, std::string::npos);
+	const std::string IslandBody = Source.substr(IslandBegin, IslandEnd - IslandBegin);
+
+	EXPECT_NE(UpdateBody.find("m_aaClientId[Team][SwitchNumber] = ClientId"), std::string::npos);
+	EXPECT_NE(UpdateBody.find("m_aaConnection[Team][SwitchNumber] = Connection"), std::string::npos);
+	EXPECT_NE(HasIslandBody.find("EQmSwitchCountdownMode::MEDIA_ISLAND"), std::string::npos);
+	EXPECT_NE(IslandBody.find("g_Config.m_QmSwitchCountdown"), std::string::npos);
+	EXPECT_NE(IslandBody.find("EQmSwitchCountdownMode::MEDIA_ISLAND"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("RenderFollowSwitchCountdowns();"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandBlob, CriticallyDampedTravelIsContinuousAndSettlesWithinTheTimeline)

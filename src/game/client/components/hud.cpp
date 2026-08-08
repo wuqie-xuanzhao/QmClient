@@ -1002,6 +1002,7 @@ CHud::CHud()
 	m_WeaponPresentationState.Reset();
 	m_RecordingStatusAnimState.Reset();
 	m_SwitchCountdownAnimState.Reset();
+	ResetSwitchCountdownRings();
 	m_SwitchCountdownTracker.Reset();
 	m_MediaIslandMuteState.Reset();
 	m_vTextInfoLayoutChildrenScratch.reserve(2);
@@ -1089,6 +1090,7 @@ void CHud::ResetHudContainers()
 	m_WeaponPresentationState.Reset();
 	m_RecordingStatusAnimState.Reset();
 	m_SwitchCountdownAnimState.Reset();
+	ResetSwitchCountdownRings();
 	m_SwitchCountdownTracker.Reset();
 }
 
@@ -2801,28 +2803,34 @@ void CHud::RenderSwapCountdown()
 
 void CHud::UpdateSwitchCountdownTracker()
 {
+	if(!g_Config.m_QmSwitchCountdown)
+	{
+		m_SwitchCountdownTracker.Reset();
+		ResetSwitchCountdownRings();
+		return;
+	}
+	if(g_Config.m_QmSwitchCountdownMode != static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE))
+		ResetSwitchCountdownRings();
+
 	const int TickSpeed = Client()->GameTickSpeed();
 	if(TickSpeed <= 0 || Collision() == nullptr)
 		return;
 
-	const int CurTick = Client()->GameTick(g_Config.m_ClDummy);
-	const auto UpdateSwitchCountdownFromClient = [&](int ClientId, bool UsePredictedPos) {
-		if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+	const auto ClearTrackedSwitch = [&](int Team, int SwitchNumber) {
+		m_SwitchCountdownTracker.m_aaEndTick[Team][SwitchNumber] = 0;
+		m_SwitchCountdownTracker.m_aaTouchTick[Team][SwitchNumber] = 0;
+		m_SwitchCountdownTracker.m_aaClientId[Team][SwitchNumber] = -1;
+		m_SwitchCountdownTracker.m_aaConnection[Team][SwitchNumber] = -1;
+	};
+	const auto UpdateSwitchCountdownFromClient = [&](int ClientId, int Connection, bool UsePredictedPos) {
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS || Connection < 0 || Connection >= NUM_DUMMIES)
+			return;
+		if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
 			return;
 
-		vec2 Pos;
-		if(UsePredictedPos)
-		{
-			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
-				return;
-			Pos = GameClient()->m_aClients[ClientId].m_Predicted.m_Pos;
-		}
-		else
-		{
-			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
-				return;
-			Pos = vec2(GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
-		}
+		const vec2 Pos = UsePredictedPos ?
+					 GameClient()->m_aClients[ClientId].m_Predicted.m_Pos :
+					 vec2(GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
 
 		const int Team = GameClient()->m_Teams.Team(ClientId);
 		if(Team < 0 || Team >= NUM_DDRACE_TEAMS)
@@ -2840,34 +2848,37 @@ void CHud::UpdateSwitchCountdownTracker()
 		if(SwitchNumber <= 0 || SwitchNumber >= 256)
 			return;
 
+		const int CurTick = Client()->GameTick(Connection);
 		const int Delay = Collision()->GetSwitchDelay(MapIndex);
-		const int EndTick = CurTick + 1 + Delay * TickSpeed;
-		m_SwitchCountdownTracker.m_aaEndTick[Team][SwitchNumber] = EndTick;
+		m_SwitchCountdownTracker.m_aaEndTick[Team][SwitchNumber] = CurTick + 1 + Delay * TickSpeed;
 		m_SwitchCountdownTracker.m_aaTouchTick[Team][SwitchNumber] = CurTick;
+		m_SwitchCountdownTracker.m_aaClientId[Team][SwitchNumber] = ClientId;
+		m_SwitchCountdownTracker.m_aaConnection[Team][SwitchNumber] = Connection;
 	};
 
-	const int LocalId = GameClient()->m_aLocalIds[0];
-	const int DummyId = GameClient()->m_aLocalIds[1];
-	UpdateSwitchCountdownFromClient(LocalId, GameClient()->Predict());
+	UpdateSwitchCountdownFromClient(GameClient()->m_aLocalIds[0], 0, GameClient()->Predict());
 	if(Client()->DummyConnected())
-		UpdateSwitchCountdownFromClient(DummyId, GameClient()->PredictDummy());
+		UpdateSwitchCountdownFromClient(GameClient()->m_aLocalIds[1], 1, GameClient()->PredictDummy());
 
-	const int Team = GameClient()->SwitchStateTeam();
-	if(Team < 0 || Team >= NUM_DDRACE_TEAMS)
-		return;
-
-	for(int i = 1; i < 256; ++i)
+	for(int Team = 0; Team < NUM_DDRACE_TEAMS; ++Team)
 	{
-		if(m_SwitchCountdownTracker.m_aaEndTick[Team][i] > CurTick)
-			continue;
-
-		m_SwitchCountdownTracker.m_aaEndTick[Team][i] = 0;
-		m_SwitchCountdownTracker.m_aaTouchTick[Team][i] = 0;
+		for(int SwitchNumber = 1; SwitchNumber < 256; ++SwitchNumber)
+		{
+			if(m_SwitchCountdownTracker.m_aaEndTick[Team][SwitchNumber] <= 0)
+				continue;
+			const int Connection = m_SwitchCountdownTracker.m_aaConnection[Team][SwitchNumber];
+			const int ClientId = m_SwitchCountdownTracker.m_aaClientId[Team][SwitchNumber];
+			const bool ConnectionActive = Connection == 0 || (Connection == 1 && Client()->DummyConnected());
+			if(!ConnectionActive || ClientId < 0 || ClientId != GameClient()->m_aLocalIds[Connection] || m_SwitchCountdownTracker.m_aaEndTick[Team][SwitchNumber] <= Client()->GameTick(Connection))
+				ClearTrackedSwitch(Team, SwitchNumber);
+		}
 	}
 }
 
 bool CHud::HasActiveSwitchCountdown() const
 {
+	if(!g_Config.m_QmSwitchCountdown || g_Config.m_QmSwitchCountdownMode != static_cast<int>(EQmSwitchCountdownMode::MEDIA_ISLAND))
+		return false;
 	const int TickSpeed = Client()->GameTickSpeed();
 	if(TickSpeed <= 0)
 		return false;
@@ -3155,6 +3166,162 @@ void CHud::RenderSwitchCountdowns()
 
 		AnimState.m_aWasVisible[i] = ShouldShow;
 	}
+}
+
+void CHud::ResetSwitchCountdownRings()
+{
+	for(auto &Ring : m_aSwitchCountdownRings)
+		Ring.Reset();
+}
+
+void CHud::RenderFollowSwitchCountdowns()
+{
+	if(!g_Config.m_QmSwitchCountdown || g_Config.m_QmSwitchCountdownMode != static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE))
+	{
+		ResetSwitchCountdownRings();
+		return;
+	}
+	const int TickSpeed = Client()->GameTickSpeed();
+	if(TickSpeed <= 0)
+	{
+		ResetSwitchCountdownRings();
+		return;
+	}
+
+	std::array<SHudSwitchCountdownEntry, NUM_DUMMIES * 255> aCandidates{};
+	int CandidateCount = 0;
+	for(int Connection = 0; Connection < NUM_DUMMIES; ++Connection)
+	{
+		if(Connection == 1 && !Client()->DummyConnected())
+			continue;
+		const int ClientId = GameClient()->m_aLocalIds[Connection];
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+			continue;
+		const int Team = GameClient()->m_Teams.Team(ClientId);
+		if(Team < 0 || Team >= NUM_DDRACE_TEAMS)
+			continue;
+		const int CurTick = Client()->GameTick(Connection);
+		for(int Number = 1; Number < 256; ++Number)
+		{
+			const int EndTick = m_SwitchCountdownTracker.m_aaEndTick[Team][Number];
+			const int TriggerTick = m_SwitchCountdownTracker.m_aaTouchTick[Team][Number];
+			if(EndTick <= CurTick || TriggerTick <= 0 ||
+				m_SwitchCountdownTracker.m_aaClientId[Team][Number] != ClientId ||
+				m_SwitchCountdownTracker.m_aaConnection[Team][Number] != Connection)
+				continue;
+			aCandidates[CandidateCount++] = {Team, Number, ClientId, Connection, TriggerTick, EndTick, CurTick};
+		}
+	}
+
+	std::array<SHudSwitchCountdownEntry, SWITCH_COUNTDOWN_MAX_LINES> aSelected{};
+	const int SelectedCount = QmHudSelectLatestSwitchCountdowns(
+		aCandidates.data(),
+		CandidateCount,
+		aSelected.data(),
+		aSelected.size());
+	for(auto &Ring : m_aSwitchCountdownRings)
+		Ring.m_Seen = false;
+
+	std::array<int, SWITCH_COUNTDOWN_MAX_LINES> aStateIndices{};
+	aStateIndices.fill(-1);
+	for(int i = 0; i < SelectedCount; ++i)
+	{
+		for(int StateIndex = 0; StateIndex < SWITCH_COUNTDOWN_MAX_LINES; ++StateIndex)
+		{
+			const auto &Ring = m_aSwitchCountdownRings[StateIndex];
+			if(Ring.m_ClientId == aSelected[i].m_ClientId && Ring.m_Team == aSelected[i].m_Team && Ring.m_Number == aSelected[i].m_Number)
+			{
+				aStateIndices[i] = StateIndex;
+				m_aSwitchCountdownRings[StateIndex].m_Seen = true;
+				break;
+			}
+		}
+	}
+	for(int i = 0; i < SelectedCount; ++i)
+	{
+		if(aStateIndices[i] < 0)
+		{
+			for(int StateIndex = 0; StateIndex < SWITCH_COUNTDOWN_MAX_LINES; ++StateIndex)
+			{
+				if(m_aSwitchCountdownRings[StateIndex].m_Seen)
+					continue;
+				aStateIndices[i] = StateIndex;
+				m_aSwitchCountdownRings[StateIndex].Reset();
+				m_aSwitchCountdownRings[StateIndex].m_Seen = true;
+				break;
+			}
+		}
+		if(aStateIndices[i] < 0)
+			continue;
+
+		auto &Ring = m_aSwitchCountdownRings[aStateIndices[i]];
+		Ring.m_Team = aSelected[i].m_Team;
+		Ring.m_Number = aSelected[i].m_Number;
+		Ring.m_ClientId = aSelected[i].m_ClientId;
+		Ring.m_Connection = aSelected[i].m_Connection;
+		Ring.m_TriggerTick = aSelected[i].m_TriggerTick;
+		Ring.m_EndTick = aSelected[i].m_EndTick;
+		Ring.m_LayoutSlot = 0;
+		for(int Previous = 0; Previous < i; ++Previous)
+		{
+			if(aSelected[Previous].m_ClientId == aSelected[i].m_ClientId)
+				++Ring.m_LayoutSlot;
+		}
+	}
+
+	float SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1;
+	Graphics()->GetScreen(&SavedScreenX0, &SavedScreenY0, &SavedScreenX1, &SavedScreenY1);
+	Graphics()->MapScreenToGameInterface(GameClient()->m_Camera.m_Center.x, GameClient()->m_Camera.m_Center.y, GameClient()->m_Camera.m_Zoom);
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	const float Delta = Client()->RenderFrameTime();
+	constexpr float RingRadius = 9.0f;
+	constexpr float RingThickness = 2.5f;
+	const ColorRGBA RingColor = MediaIslandCountdownColor(EHudMediaIslandCountdownType::SWITCH);
+	for(auto &Ring : m_aSwitchCountdownRings)
+	{
+		if(Ring.m_Seen && (Ring.m_ClientId < 0 || Ring.m_ClientId >= MAX_CLIENTS || !GameClient()->m_Snap.m_aCharacters[Ring.m_ClientId].m_Active))
+			Ring.m_Seen = false;
+		if(Ring.m_Seen)
+		{
+			const vec2 TeePosition = GameClient()->m_aClients[Ring.m_ClientId].m_RenderPos;
+			const bool PetVisible = g_Config.m_TcPetShow > 0 && GameClient()->m_Pet.IsVisibleForClient(Ring.m_ClientId);
+			const vec2 PetPosition = PetVisible ? GameClient()->m_Pet.Position() : vec2();
+			const int Side = QmHudSwitchCountdownFollowSide(TeePosition.x, PetVisible, PetPosition.x);
+			const float Now = Client()->GameTick(Ring.m_Connection) / static_cast<float>(TickSpeed);
+			const vec2 Target = QmHudSwitchCountdownFollowTarget(TeePosition, Side, Ring.m_LayoutSlot, Now);
+			if(!Ring.m_Initialized)
+			{
+				Ring.m_Position = Target;
+				Ring.m_Velocity = vec2();
+				Ring.m_Initialized = true;
+			}
+			QmTClientPetAdvanceSpring(Ring.m_Position, Ring.m_Velocity, Target, Delta);
+			Ring.m_Alpha = std::min(1.0f, Ring.m_Alpha + Delta);
+		}
+		else
+		{
+			Ring.m_Alpha = std::max(0.0f, Ring.m_Alpha - Delta);
+		}
+
+		if(Ring.m_Alpha <= 0.0f)
+		{
+			if(!Ring.m_Seen)
+				Ring.Reset();
+			continue;
+		}
+		if(!in_range(Ring.m_Position.x, ScreenX0 - RingRadius, ScreenX1 + RingRadius) ||
+			!in_range(Ring.m_Position.y, ScreenY0 - RingRadius, ScreenY1 + RingRadius))
+			continue;
+
+		const int CurTick = Client()->GameTick(std::clamp(Ring.m_Connection, 0, NUM_DUMMIES - 1));
+		const int DurationTicks = Ring.m_EndTick - Ring.m_TriggerTick;
+		const float Progress = DurationTicks > 0 ? std::clamp((Ring.m_EndTick - CurTick) / static_cast<float>(DurationTicks), 0.0f, 1.0f) : 0.0f;
+		DrawMediaIslandArcGeometry(Graphics(), Ring.m_Position, RingRadius, RingThickness, 1.0f, RingColor.WithAlpha(Ring.m_Alpha * 0.18f));
+		DrawMediaIslandArcGeometry(Graphics(), Ring.m_Position, RingRadius, RingThickness, Progress, RingColor.WithAlpha(Ring.m_Alpha));
+	}
+	Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
 }
 
 void CHud::RenderConnectionWarning()
@@ -3657,7 +3824,9 @@ void CHud::RenderMediaIsland()
 	const int TickSpeed = Client()->GameTickSpeed();
 	const int Team = GameClient()->SwitchStateTeam();
 	const int SwitchNow = Client()->GameTick(g_Config.m_ClDummy);
-	if(TickSpeed > 0 && Team >= 0 && Team < NUM_DDRACE_TEAMS)
+	if(g_Config.m_QmSwitchCountdown &&
+		g_Config.m_QmSwitchCountdownMode == static_cast<int>(EQmSwitchCountdownMode::MEDIA_ISLAND) &&
+		TickSpeed > 0 && Team >= 0 && Team < NUM_DDRACE_TEAMS)
 	{
 		std::array<SHudMediaIslandCountdownInput, 255> aSwitchInputs{};
 		int SwitchInputCount = 0;
@@ -6795,6 +6964,7 @@ void CHud::OnRender()
 		RenderDummyMiniMap();
 		RenderTextInfo();
 		GameClient()->m_TClient.RenderCenterLines();
+		RenderFollowSwitchCountdowns();
 		if(ShowMediaIsland)
 			RenderMediaIsland();
 		else

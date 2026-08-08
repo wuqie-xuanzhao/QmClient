@@ -1921,6 +1921,9 @@ Disconnected
 Discord
 == Discord
 
+Display location
+== 표시 위치
+
 Display mode
 == 표시 모드
 
@@ -2608,6 +2611,9 @@ Folder Link
 Follow
 == 팔로우
 
+Follow Tee
+== Tee 따라가기
+
 Following
 == 현재
 
@@ -3108,6 +3114,9 @@ Import from clipboard
 
 Improved Anti Ping
 == 개선된 Anti Ping
+
+In Dynamic Island
+== 다이나믹 아일랜드에서
 
 In memory of me
 == 이 클라이언트에 나를 기억해 줘
@@ -6664,6 +6673,9 @@ Swap is not available on forced solo servers.
 Switch
 == 전환
 
+Switch countdown
+== 스위치 카운트다운
+
 Switch failed
 == 전환 실패
 
@@ -7206,6 +7218,9 @@ Total friends
 
 Total: %d save(s)
 == 총 %d개 저장
+
+Track timed switches
+== 시간제 스위치 추적
 
 Traditional
 == 번체

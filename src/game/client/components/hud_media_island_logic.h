@@ -102,6 +102,79 @@ struct SHudMediaIslandCountdownInput
 	bool m_SwapOutgoing = false;
 };
 
+enum class EQmSwitchCountdownMode
+{
+	FOLLOW_TEE = 0,
+	MEDIA_ISLAND,
+};
+
+struct SHudSwitchCountdownEntry
+{
+	int m_Team = 0;
+	int m_Number = 0;
+	int m_ClientId = -1;
+	int m_Connection = 0;
+	int m_TriggerTick = 0;
+	int m_EndTick = 0;
+	int m_CurrentTick = 0;
+};
+
+inline int QmHudSelectLatestSwitchCountdowns(
+	const SHudSwitchCountdownEntry *pEntries,
+	size_t EntryCount,
+	SHudSwitchCountdownEntry *pSelected,
+	size_t SelectedCapacity)
+{
+	if(pEntries == nullptr || pSelected == nullptr || SelectedCapacity == 0)
+		return 0;
+
+	const auto IsNewer = [](const SHudSwitchCountdownEntry &Left, const SHudSwitchCountdownEntry &Right) {
+		if(Left.m_TriggerTick != Right.m_TriggerTick)
+			return Left.m_TriggerTick > Right.m_TriggerTick;
+		if(Left.m_Team != Right.m_Team)
+			return Left.m_Team < Right.m_Team;
+		return Left.m_Number < Right.m_Number;
+	};
+
+	size_t SelectedCount = 0;
+	for(size_t i = 0; i < EntryCount; ++i)
+	{
+		const SHudSwitchCountdownEntry &Entry = pEntries[i];
+		if(Entry.m_ClientId < 0 || Entry.m_TriggerTick <= 0 || Entry.m_EndTick <= Entry.m_CurrentTick)
+			continue;
+
+		if(SelectedCount < SelectedCapacity)
+			pSelected[SelectedCount++] = Entry;
+		else if(IsNewer(Entry, pSelected[SelectedCount - 1]))
+			pSelected[SelectedCount - 1] = Entry;
+		else
+			continue;
+
+		std::stable_sort(pSelected, pSelected + SelectedCount, IsNewer);
+	}
+	return static_cast<int>(SelectedCount);
+}
+
+inline int QmHudSwitchCountdownFollowSide(float TeeX, bool PetVisible, float PetX)
+{
+	if(PetVisible && PetX < TeeX)
+		return 1;
+	return -1;
+}
+
+inline vec2 QmHudSwitchCountdownFollowTarget(vec2 TeePosition, int Side, int Slot, float Now)
+{
+	constexpr float BaseOffsetX = 48.0f;
+	constexpr float ItemSpacing = 24.0f;
+	constexpr float OffsetY = 52.0f;
+	constexpr float BobAmount = 4.0f;
+	Side = Side < 0 ? -1 : 1;
+	Slot = std::max(0, Slot);
+	return TeePosition + vec2(
+				     Side * (BaseOffsetX + ItemSpacing * Slot),
+				     -OffsetY + std::sin(Now / 2.0f) * BobAmount);
+}
+
 struct SHudMediaIslandSwapLifecycle
 {
 	bool m_Visible = false;
