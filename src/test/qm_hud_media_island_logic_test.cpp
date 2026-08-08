@@ -1017,6 +1017,54 @@ TEST(QmHudMediaIslandSatellite, CompletedSwapUsesCheckIconWithoutBottomReadyText
 	EXPECT_EQ(RenderBody.find("RenderBottomTextCentered(BottomTextY, SwapList"), std::string::npos);
 }
 
+TEST(QmHudMediaIslandTimerLayout, CheckpointUsesBottomThirtyPercent)
+{
+	const SHudMediaIslandTimerRowLayout Layout = QmHudMediaIslandTimerRows(1.0f, 16.0f, true);
+
+	EXPECT_FLOAT_EQ(Layout.m_RaceY, 1.0f);
+	EXPECT_FLOAT_EQ(Layout.m_RaceH, 11.2f);
+	EXPECT_FLOAT_EQ(Layout.m_CheckpointY, 12.2f);
+	EXPECT_FLOAT_EQ(Layout.m_CheckpointH, 4.8f);
+}
+
+TEST(QmHudMediaIslandTimerLayout, RaceUsesTheWholeSlotWithoutCheckpoint)
+{
+	const SHudMediaIslandTimerRowLayout Layout = QmHudMediaIslandTimerRows(1.0f, 16.0f, false);
+
+	EXPECT_FLOAT_EQ(Layout.m_RaceY, 1.0f);
+	EXPECT_FLOAT_EQ(Layout.m_RaceH, 16.0f);
+	EXPECT_FLOAT_EQ(Layout.m_CheckpointH, 0.0f);
+}
+
+TEST(QmHudMediaIslandWaveform, PlayingBarsVarySmoothlyAndPausedBarsSettle)
+{
+	bool AnyChanged = false;
+	for(int Bar = 0; Bar < 5; ++Bar)
+	{
+		const float First = QmHudMediaIslandWaveBarHeight(Bar, 1.0f, true);
+		const float Next = QmHudMediaIslandWaveBarHeight(Bar, 1.1f, true);
+		EXPECT_GE(First, 0.20f);
+		EXPECT_LE(First, 1.0f);
+		EXPECT_FLOAT_EQ(QmHudMediaIslandWaveBarHeight(Bar, 1.0f, false), 0.20f);
+		AnyChanged |= std::abs(First - Next) > 0.001f;
+	}
+	EXPECT_TRUE(AnyChanged);
+}
+
+TEST(QmHudMediaIslandSource, MovesClockAndFrozenCountIntoStackAndReplacesClockSlotWithWaveform)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string RenderBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
+	const std::string VisibleBody = FunctionBody(Source, "bool CHud::HasVisibleMediaIsland() const");
+
+	EXPECT_NE(RenderBody.find("const bool ShowInfoStack = ShowLocalTime || ShowFrozenSummary;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandWaveBarHeight"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandTimerRows"), std::string::npos);
+	EXPECT_NE(VisibleBody.find("BuildHudFrozenSummaryText"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("ShowFrozenSummaryInBottomRow"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("%s CP%d"), std::string::npos);
+}
+
 TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");

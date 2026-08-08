@@ -149,6 +149,37 @@ inline bool QmHudMediaIslandShouldShowTeam(bool ShowTeam, bool EntitiesDDRace, i
 	return ShowTeam && EntitiesDDRace && Team > 0;
 }
 
+struct SHudMediaIslandTimerRowLayout
+{
+	float m_RaceY = 0.0f;
+	float m_RaceH = 0.0f;
+	float m_CheckpointY = 0.0f;
+	float m_CheckpointH = 0.0f;
+};
+
+inline SHudMediaIslandTimerRowLayout QmHudMediaIslandTimerRows(float BoxY, float BoxH, bool HasCheckpoint)
+{
+	BoxH = std::max(0.0f, BoxH);
+	if(!HasCheckpoint)
+		return {BoxY, BoxH, BoxY + BoxH, 0.0f};
+
+	const float RaceH = BoxH * 0.70f;
+	return {BoxY, RaceH, BoxY + RaceH, BoxH - RaceH};
+}
+
+inline float QmHudMediaIslandWaveBarHeight(int BarIndex, float TimeSeconds, bool Playing)
+{
+	constexpr float RestHeight = 0.20f;
+	if(!Playing)
+		return RestHeight;
+
+	BarIndex = std::max(0, BarIndex);
+	const float Index = static_cast<float>(BarIndex);
+	const float Primary = 0.5f + 0.5f * std::sin(TimeSeconds * (4.6f + Index * 0.37f) + Index * 1.91f);
+	const float Secondary = 0.5f + 0.5f * std::sin(TimeSeconds * (7.3f + Index * 0.19f) + Index * 0.73f + 1.2f);
+	return std::clamp(RestHeight + (1.0f - RestHeight) * (Primary * 0.68f + Secondary * 0.32f), RestHeight, 1.0f);
+}
+
 struct SHudMediaIslandBlobPose
 {
 	float m_Travel = 0.0f;
