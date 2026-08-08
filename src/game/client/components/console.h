@@ -12,6 +12,9 @@
 #include <game/client/lineinput.h>
 #include <game/client/ui.h>
 
+#include <unordered_map>
+#include <vector>
+
 enum
 {
 	CONSOLE_CLOSED,
@@ -24,6 +27,15 @@ class CConsoleLogger;
 
 class CGameConsole : public CComponent
 {
+public:
+	struct SColorSpan
+	{
+		int m_CharIndex;
+		int m_Length;
+		ColorRGBA m_Color;
+	};
+
+private:
 	friend class CConsoleLogger;
 	class CInstance
 	{
@@ -55,6 +67,8 @@ class CGameConsole : public CComponent
 		CStaticRingBuffer<CBacklogEntry, 1024 * 1024, CRingBufferBase::FLAG_RECYCLE> m_Backlog;
 		CLock m_BacklogPendingLock;
 		CStaticRingBuffer<CBacklogEntry, 1024 * 1024, CRingBufferBase::FLAG_RECYCLE> m_BacklogPending GUARDED_BY(m_BacklogPendingLock);
+		std::unordered_map<int, std::vector<SColorSpan>> m_ColorSpansByExportId;
+		std::unordered_map<int, std::vector<SColorSpan>> m_PendingColorSpansByExportId GUARDED_BY(m_BacklogPendingLock);
 		CStaticRingBuffer<char, 64 * 1024, CRingBufferBase::FLAG_RECYCLE> m_History;
 		char *m_pHistoryEntry;
 
@@ -139,7 +153,7 @@ class CGameConsole : public CComponent
 		void ExecuteLine(const char *pLine);
 
 		bool OnInput(const IInput::CEvent &Event);
-		void PrintLine(const char *pLine, int Len, ColorRGBA PrintColor) REQUIRES(!m_BacklogPendingLock);
+		void PrintLine(const char *pLine, int Len, ColorRGBA PrintColor, const SColorSpan *pColorSpans = nullptr, size_t NumColorSpans = 0) REQUIRES(!m_BacklogPendingLock);
 		int GetLinesToScroll(int Direction, int LinesToScroll);
 		void ScrollToCenter(int StartLine, int EndLine);
 		void Dump() REQUIRES(!m_BacklogPendingLock);
@@ -241,6 +255,7 @@ public:
 	int Sizeof() const override { return sizeof(*this); }
 
 	void PrintLine(int Type, const char *pLine);
+	void PrintLineWithColorSpans(int Level, const char *pFrom, const char *pLine, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans);
 	void RequireUsername(bool UsernameReq);
 
 	void OnStateChange(int NewState, int OldState) override;

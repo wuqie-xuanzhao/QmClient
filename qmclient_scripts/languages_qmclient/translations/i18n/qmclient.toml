@@ -5465,6 +5465,22 @@ turkish = "Bellek"
 polish = "Pamięć"
 
 [[message]]
+key = "Message merging"
+[message.translations]
+japanese = "メッセージの統合"
+korean = "메시지 병합"
+simplified_chinese = "消息合并"
+traditional_chinese = "訊息合併"
+russian = "Объединение сообщений"
+german = "Nachrichten zusammenführen"
+spanish = "Combinar mensajes"
+french = "Fusion des messages"
+brazilian_portuguese = "Mesclar mensagens"
+portuguese = "Combinar mensagens"
+turkish = "Mesaj birleştirme"
+polish = "Scalanie wiadomości"
+
+[[message]]
 key = "Messages that already look like the target language will skip auto-translate"
 [message.translations]
 japanese = "すでにターゲット言語のように見えるメッセージは自動翻訳をスキップします"

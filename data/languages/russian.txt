@@ -3868,6 +3868,9 @@ Menu option - normal
 Menu option - selected
 == Пункт меню - выбранный
 
+Message merging
+== Объединение сообщений
+
 Message to send in chat:
 == Сообщение для отправки в чат:
 

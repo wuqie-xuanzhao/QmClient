@@ -73,6 +73,7 @@ public:
 	static void BeginLinePresentation(SPresentationState &Presentation, int64_t Now, bool GentleRefresh);
 	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds, bool ExtraAnimations = true);
 	static float SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds);
+	static bool CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now);
 
 private:
 	static constexpr float CHAT_HEIGHT_FULL = 200.0f;
@@ -95,6 +96,14 @@ private:
 	};
 
 	CLineInputBuffered<MAX_LINE_LENGTH> m_Input;
+	struct SMergedAuthor
+	{
+		int m_ClientId = -1;
+		char m_aName[MAX_NAME_LENGTH] = "";
+		char m_aPlayerName[MAX_NAME_LENGTH] = "";
+		ColorRGBA m_NameColor;
+	};
+
 	class CLine
 	{
 	public:
@@ -109,11 +118,13 @@ private:
 		bool m_Team;
 		bool m_Whisper;
 		int m_NameColor;
-		char m_aName[64];
+		char m_aName[MAX_CLIENTS * (MAX_NAME_LENGTH + 1)];
 		char m_aText[MAX_LINE_LENGTH];
+		std::vector<SMergedAuthor> m_vMergedAuthors;
 		bool m_Friend;
 		bool m_Highlighted;
 		bool m_ForceVisible;
+		bool m_ConsoleSuppressed;
 		QmHudNotifications::EServerMessageClass m_ServerMessageClass;
 		std::optional<ColorRGBA> m_CustomColor;
 
@@ -139,6 +150,7 @@ private:
 	int64_t m_LastPresentationUpdateTime;
 	int64_t m_LargeAreaOpenTick;
 	bool m_LastPresentationShowLargeArea;
+	int m_PendingConsoleLineIndex;
 
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
@@ -537,6 +549,11 @@ public:
 	int GetLineIndex(const CLine *pLine) const;
 	CLine *GetLineByIndex(int Index);
 	void InvalidateLineTranslation(CLine &Line);
+	ColorRGBA PlayerNameColor(int ClientId, int NameColor, bool TeamMessage) const;
+	void AddMergedAuthor(CLine &Line, int ClientId);
+	void RebuildMergedAuthorName(CLine &Line);
+	void PrintLineToConsole(const CLine &Line) const;
+	void FlushPendingConsoleLine(bool Force = false);
 
 	// ----- send functions -----
 

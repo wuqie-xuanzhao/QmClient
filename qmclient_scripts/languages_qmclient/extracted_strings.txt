@@ -1288,6 +1288,7 @@ Menu background
 Menu opened. Press Esc key again to close menu.
 Menu option - normal
 Menu option - selected
+Message merging
 Message to send in chat:
 Messages
 Microphone

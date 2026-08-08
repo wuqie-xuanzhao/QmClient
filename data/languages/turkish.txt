@@ -3868,6 +3868,9 @@ Menu option - normal
 Menu option - selected
 == Menü seçeneği - seçili
 
+Message merging
+== Mesaj birleştirme
+
 Message to send in chat:
 == Sohbette gönderilecek mesaj:
 

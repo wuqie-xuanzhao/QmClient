@@ -766,6 +766,10 @@ class CConsoleLogger : public ILogger
 {
 	CGameConsole *m_pConsole;
 	CLock m_ConsoleMutex;
+	CLock m_PendingColorSpansLock;
+	std::string m_PendingColorSpansSystem GUARDED_BY(m_PendingColorSpansLock);
+	std::string m_PendingColorSpansMessage GUARDED_BY(m_PendingColorSpansLock);
+	std::vector<CGameConsole::SColorSpan> m_vPendingColorSpans GUARDED_BY(m_PendingColorSpansLock);
 
 public:
 	CConsoleLogger(CGameConsole *pConsole) :
@@ -776,6 +780,8 @@ public:
 
 	void Log(const CLogMessage *pMessage) override REQUIRES(!m_ConsoleMutex);
 	void OnConsoleDeletion() REQUIRES(!m_ConsoleMutex);
+	void SetPendingColorSpans(const char *pSystem, const char *pMessage, const CGameConsole::SColorSpan *pColorSpans, size_t NumColorSpans) REQUIRES(!m_PendingColorSpansLock);
+	void ClearPendingColorSpans() REQUIRES(!m_PendingColorSpansLock);
 };
 
 void CConsoleLogger::Log(const CLogMessage *pMessage)
@@ -794,8 +800,40 @@ void CConsoleLogger::Log(const CLogMessage *pMessage)
 	const CLockScope LockScope(m_ConsoleMutex);
 	if(m_pConsole)
 	{
-		m_pConsole->m_LocalConsole.PrintLine(pMessage->m_aLine, pMessage->m_LineLength, Color);
+		std::vector<CGameConsole::SColorSpan> vColorSpans;
+		{
+			const CLockScope ColorSpansLockScope(m_PendingColorSpansLock);
+			if(m_PendingColorSpansSystem == pMessage->m_aSystem && m_PendingColorSpansMessage == pMessage->Message())
+			{
+				vColorSpans = std::move(m_vPendingColorSpans);
+				m_PendingColorSpansSystem.clear();
+				m_PendingColorSpansMessage.clear();
+				m_vPendingColorSpans.clear();
+			}
+		}
+		for(CGameConsole::SColorSpan &Span : vColorSpans)
+			Span.m_CharIndex += (int)str_utf8_offset_bytes_to_chars(pMessage->m_aLine, pMessage->m_LineMessageOffset);
+		m_pConsole->m_LocalConsole.PrintLine(pMessage->m_aLine, pMessage->m_LineLength, Color, vColorSpans.data(), vColorSpans.size());
 	}
+}
+
+void CConsoleLogger::SetPendingColorSpans(const char *pSystem, const char *pMessage, const CGameConsole::SColorSpan *pColorSpans, size_t NumColorSpans)
+{
+	const CLockScope LockScope(m_PendingColorSpansLock);
+	m_PendingColorSpansSystem = pSystem;
+	m_PendingColorSpansMessage = pMessage;
+	if(NumColorSpans == 0)
+		m_vPendingColorSpans.clear();
+	else
+		m_vPendingColorSpans.assign(pColorSpans, pColorSpans + NumColorSpans);
+}
+
+void CConsoleLogger::ClearPendingColorSpans()
+{
+	const CLockScope LockScope(m_PendingColorSpansLock);
+	m_PendingColorSpansSystem.clear();
+	m_PendingColorSpansMessage.clear();
+	m_vPendingColorSpans.clear();
 }
 
 void CConsoleLogger::OnConsoleDeletion()
@@ -977,6 +1015,7 @@ CGameConsole::CInstance::CInstance(int Type)
 	m_IsCommand = false;
 
 	m_Backlog.SetPopCallback([this](CBacklogEntry *pEntry) {
+		m_ColorSpansByExportId.erase(pEntry->m_ExportId);
 		if(pEntry->m_LineCount != -1 && MatchesLogFilter(pEntry))
 		{
 			m_NewLineCounter -= pEntry->m_LineCount;
@@ -1010,10 +1049,12 @@ void CGameConsole::CInstance::ClearBacklog()
 		// m_BacklogPendingLock or this will result in a dead lock.
 		const CLockScope LockScope(m_BacklogPendingLock);
 		m_BacklogPending.Init();
+		m_PendingColorSpansByExportId.clear();
 		m_NextExportId = 1;
 	}
 
 	m_Backlog.Init();
+	m_ColorSpansByExportId.clear();
 	m_BacklogCurLine = 0;
 	m_BacklogLastActiveLine = -1;
 	m_ScrollbarDragging = false;
@@ -1045,9 +1086,13 @@ void CGameConsole::CInstance::PumpBacklogPending()
 			const size_t EntrySize = sizeof(CBacklogEntry) + pPendingEntry->m_Length;
 			CBacklogEntry *pEntry = m_Backlog.Allocate(EntrySize);
 			mem_copy(pEntry, pPendingEntry, EntrySize);
+			const auto ColorSpansIt = m_PendingColorSpansByExportId.find(pPendingEntry->m_ExportId);
+			if(ColorSpansIt != m_PendingColorSpansByExportId.end())
+				m_ColorSpansByExportId[pEntry->m_ExportId] = std::move(ColorSpansIt->second);
 		}
 
 		m_BacklogPending.Init();
+		m_PendingColorSpansByExportId.clear();
 	}
 
 	// Update text attributes and count number of added lines
@@ -1523,7 +1568,7 @@ bool CGameConsole::CInstance::OnInput(const IInput::CEvent &Event)
 	return Handled;
 }
 
-void CGameConsole::CInstance::PrintLine(const char *pLine, int Len, ColorRGBA PrintColor)
+void CGameConsole::CInstance::PrintLine(const char *pLine, int Len, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans)
 {
 	// We must ensure that no log messages are printed while owning
 	// m_BacklogPendingLock or this will result in a dead lock.
@@ -1535,6 +1580,8 @@ void CGameConsole::CInstance::PrintLine(const char *pLine, int Len, ColorRGBA Pr
 	pEntry->m_LogCategory = ClassifyLogCategory(pLine, (size_t)Len);
 	pEntry->m_ExportId = m_NextExportId++;
 	pEntry->m_ExportSelected = false;
+	if(NumColorSpans > 0)
+		m_PendingColorSpansByExportId[pEntry->m_ExportId].assign(pColorSpans, pColorSpans + NumColorSpans);
 	pEntry->m_LineCount = -1;
 	str_copy(pEntry->m_aText, pLine, Len + 1);
 }
@@ -2682,6 +2729,12 @@ void CGameConsole::OnRender()
 			// TODO less jank way of detecting echo
 			CColoredParts ColoredParts(pEntry->m_aText, ParseColors);
 			ColoredParts.AddSplitsToCursor(EntryCursor);
+			const auto StoredColorSpans = pConsole->m_ColorSpansByExportId.find(pEntry->m_ExportId);
+			if((!pConsole->m_Searching || pConsole->m_CurrentMatchIndex == -1) && StoredColorSpans != pConsole->m_ColorSpansByExportId.end())
+			{
+				for(const SColorSpan &Span : StoredColorSpans->second)
+					EntryCursor.m_vColorSplits.emplace_back(Span.m_CharIndex, Span.m_Length, Span.m_Color);
+			}
 			if(!ColoredParts.Colors().empty() && ColoredParts.Colors()[0].m_Index == str_length("xxxx-xx-xx xx:xx:xx x chat/client: — "))
 			{
 				EntryCursor.m_vColorSplits[0].m_CharIndex -= str_length("— ");
@@ -3150,6 +3203,13 @@ void CGameConsole::PrintLine(int Type, const char *pLine)
 		m_LocalConsole.PrintLine(pLine, str_length(pLine), TextRender()->DefaultTextColor());
 	else if(Type == CONSOLETYPE_REMOTE)
 		m_RemoteConsole.PrintLine(pLine, str_length(pLine), TextRender()->DefaultTextColor());
+}
+
+void CGameConsole::PrintLineWithColorSpans(int Level, const char *pFrom, const char *pLine, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans)
+{
+	m_pConsoleLogger->SetPendingColorSpans(pFrom, pLine, pColorSpans, NumColorSpans);
+	Console()->Print(Level, pFrom, pLine, PrintColor);
+	m_pConsoleLogger->ClearPendingColorSpans();
 }
 
 void CGameConsole::OnConsoleInit()

@@ -3868,6 +3868,9 @@ Menu option - normal
 Menu option - selected
 == Opción de menú - seleccionada
 
+Message merging
+== Combinar mensajes
+
 Message to send in chat:
 == Mensaje a enviar en el chat:
 

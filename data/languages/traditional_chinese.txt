@@ -3868,6 +3868,9 @@ Menu option - normal
 Menu option - selected
 == 選單選項 - 選中
 
+Message merging
+== 訊息合併
+
 Message to send in chat:
 == 要在聊天中傳送的訊息：
 

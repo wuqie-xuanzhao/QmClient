@@ -3868,6 +3868,9 @@ Menu option - normal
 Menu option - selected
 == メニューオプション - 選択
 
+Message merging
+== メッセージの統合
+
 Message to send in chat:
 == チャットで送信するメッセージ:
 

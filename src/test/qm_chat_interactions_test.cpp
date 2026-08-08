@@ -3,6 +3,7 @@
 
 #include <game/client/components/chat.h>
 #include <game/client/components/chat_completion.h>
+#include <game/client/components/console.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
 #include <game/client/components/tclient/fast_practice.h>
 #include <game/client/components/tclient/warlist.h>
@@ -99,6 +100,69 @@ TEST(QmDummySyncChatCommand, MatchesOnlySupportedCommands)
 	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/vote particles"));
 	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/vote particle on"));
 	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("particle"));
+}
+
+TEST(QmChatMessageMerge, EligibilityUsesExactTextSlidingWindowAndPlayerMessagesOnly)
+{
+	const int64_t Start = TestTicks(10.0f);
+
+	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "same", Start + TestTicks(2.0f)));
+	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 1, "same", Start, 2, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "same", Start + TestTicks(2.01f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "Same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(-1, 0, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, -1, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, TEAM_WHISPER_RECV, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, TEAM_WHISPER_SEND, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 0, "same", Start - 1));
+}
+
+TEST(QmChatMessageMerge, ChatAndConsoleKeepStructuredMergedAuthors)
+{
+	const std::string ChatHeader = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string ConsoleHeader = ReadTestSourceFile("src/game/client/components/console.h");
+	const std::string Console = ReadTestSourceFile("src/game/client/components/console.cpp");
+	const std::string Translate = ReadTestSourceFile("src/game/client/components/qmclient/translate/translate.cpp");
+	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
+
+	EXPECT_NE(ChatHeader.find("struct SMergedAuthor"), std::string::npos);
+	EXPECT_NE(ChatHeader.find("std::vector<SMergedAuthor> m_vMergedAuthors"), std::string::npos);
+	EXPECT_NE(AddLine.find("g_Config.m_QmMessageMerge"), std::string::npos);
+	EXPECT_NE(AddLine.find("CanMergePlayerMessages("), std::string::npos);
+	EXPECT_NE(AddLine.find("PreviousLine.m_Team = false;"), std::string::npos);
+	EXPECT_NE(AddLine.find("PreviousLine.m_TeamNumber = 0;"), std::string::npos);
+	EXPECT_EQ(AddLine.find("PreviousLine.m_ClientId == ClientId"), std::string::npos);
+	EXPECT_NE(Chat.find("if(Author.m_ClientId == ClientId)"), std::string::npos);
+	EXPECT_NE(Chat.find("Author.m_NameColor = PlayerNameColor(ClientId, NameColor, false);"), std::string::npos);
+	EXPECT_NE(Chat.find("\" [%d]: \", Line.m_TimesRepeated + 1"), std::string::npos);
+	EXPECT_NE(Chat.find("FlushPendingConsoleLine"), std::string::npos);
+	EXPECT_NE(Chat.find("GameClient()->m_GameConsole.PrintLineWithColorSpans"), std::string::npos);
+	EXPECT_NE(Chat.find("const bool MergedPlayerMessages = Line.m_TimesRepeated > 0 && !Line.m_vMergedAuthors.empty();"), std::string::npos);
+	EXPECT_NE(Chat.find("m_PlayerLine = Line.m_vMergedAuthors.size() <= 1"), std::string::npos);
+
+	EXPECT_NE(ConsoleHeader.find("struct SColorSpan"), std::string::npos);
+	EXPECT_NE(ConsoleHeader.find("m_ColorSpansByExportId"), std::string::npos);
+	EXPECT_NE(ConsoleHeader.find("PrintLineWithColorSpans"), std::string::npos);
+	EXPECT_NE(Console.find("m_PendingColorSpansByExportId"), std::string::npos);
+	EXPECT_NE(Console.find("EntryCursor.m_vColorSplits.emplace_back"), std::string::npos);
+	EXPECT_NE(Translate.find("for(const CChat::SMergedAuthor &Author : pLine->m_vMergedAuthors)"), std::string::npos);
+}
+
+TEST(QmChatMessageMerge, SettingIsDefaultOnLocalizedInDreamFeaturesAndVersioned)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Translations = ReadTestSourceFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
+	const std::string Version = ReadTestSourceFile("src/game/version.h");
+	const size_t MiniFeatures = Menus.rfind("case EQmModuleId::MiniFeatures:");
+
+	ASSERT_NE(MiniFeatures, std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmMessageMerge, qm_message_merge, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
+	EXPECT_NE(Menus.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmMessageMerge, \"Message merging\", Localize(\"Message merging\")", MiniFeatures), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"Message merging\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"消息合并\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.11\""), std::string::npos);
 }
 
 TEST(QmWarListEnemyChat, FilteringKeepsChatLogPersistenceIndependent)

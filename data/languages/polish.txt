@@ -3868,6 +3868,9 @@ Menu option - normal
 Menu option - selected
 == Opcja menu - zaznaczona
 
+Message merging
+== Scalanie wiadomości
+
 Message to send in chat:
 == Wiadomość do wysłania na czacie:
 

@@ -3868,6 +3868,9 @@ Menu option - normal
 Menu option - selected
 == 메뉴 옵션 - 선택됨
 
+Message merging
+== 메시지 병합
+
 Message to send in chat:
 == 채팅으로 보낼 메시지:
 
