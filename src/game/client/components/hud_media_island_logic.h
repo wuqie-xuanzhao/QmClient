@@ -16,6 +16,13 @@
 #include <cstddef>
 #include <cstdint>
 
+constexpr float QmHudMediaIslandDesignScale = 0.8f;
+
+constexpr float QmHudMediaIslandScaled(float Value)
+{
+	return Value * QmHudMediaIslandDesignScale;
+}
+
 struct SHudMediaIslandTrackInput
 {
 	const char *m_pTitle = "";
@@ -262,9 +269,9 @@ inline SHudMediaIslandEntranceTimeline QmHudAdvanceMediaIslandEntranceTimeline(S
 
 inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &TargetRect, float TargetRadius, const ColorRGBA &TargetColor, float Progress, float DropProgress = 1.0f, float ScreenTop = 0.0f)
 {
-	constexpr float InitialDiameter = 16.0f;
+	constexpr float InitialDiameter = QmHudMediaIslandScaled(16.0f);
 	constexpr float InitialRadius = InitialDiameter * 0.5f;
-	constexpr float InitialHiddenGap = 2.0f;
+	constexpr float InitialHiddenGap = QmHudMediaIslandScaled(2.0f);
 	Progress = std::clamp(Progress, 0.0f, 1.0f);
 	const float ShapeProgress = QmHudMediaIslandLiquidSmoothStep(Progress);
 	const auto Lerp = [](float From, float To, float Amount) {
@@ -383,7 +390,7 @@ struct SHudMediaIslandSpectatorIconPose
 	float m_OpenScaleY = 0.44f;
 	float m_ClosedScale = 1.0f;
 	float m_CountAlpha = 0.0f;
-	float m_CountOffsetX = -3.0f;
+	float m_CountOffsetX = -QmHudMediaIslandScaled(3.0f);
 };
 
 inline float QmHudAdvanceMediaIslandSpectatorIconProgress(float Current, float DeltaSeconds, int MotionLevel)
@@ -418,7 +425,7 @@ inline SHudMediaIslandSpectatorIconPose QmHudMediaIslandSpectatorIconPose(float 
 	Pose.m_OpenScaleY = 0.44f + 0.56f * Eased;
 	Pose.m_ClosedScale = 1.0f - 0.12f * Eased;
 	Pose.m_CountAlpha = Eased;
-	Pose.m_CountOffsetX = -3.0f * (1.0f - Eased);
+	Pose.m_CountOffsetX = -QmHudMediaIslandScaled(3.0f) * (1.0f - Eased);
 	return Pose;
 }
 
@@ -470,6 +477,8 @@ struct SHudMediaIslandSdfRenderState
 	float m_RingThickness = 0.0f;
 	ColorRGBA m_BackgroundColor{};
 	float m_ScreenPixelSize = 1.0f;
+	float m_OuterShadowSize = 0.0f;
+	float m_OuterShadowOpacity = 0.0f;
 };
 
 inline float QmHudMediaIslandSdfPadding(const SHudMediaIslandSdfRenderState &State)
@@ -486,7 +495,9 @@ inline float QmHudMediaIslandSdfPadding(const SHudMediaIslandSdfRenderState &Sta
 	// SmoothUnion can move the zero contour outwards by Blend / 4. Keep the
 	// shader feather inside the quad as well, otherwise the liquid edge clips.
 	const float Feather = std::max(State.m_ScreenPixelSize, 0.0001f) * 0.9f;
-	return std::max(1.5f, std::max(0.0f, MaxSmoothUnion) * 0.25f + Feather);
+	const float ShapeOverflow = std::max(0.0f, MaxSmoothUnion) * 0.25f + Feather;
+	const float ShadowOverflow = std::max(0.0f, State.m_OuterShadowSize) + Feather;
+	return std::max(1.5f, std::max(ShapeOverflow, ShadowOverflow));
 }
 
 inline CUIRect QmHudMediaIslandSdfOuterRect(const SHudMediaIslandSdfRenderState &State)
@@ -537,6 +548,7 @@ inline bool QmHudMediaIslandBuildGpuSdfParams(const SHudMediaIslandSdfRenderStat
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_MAIN_PARAMS] = vec4(State.m_MainRadius, State.m_MainDisabledCornerRadius, State.m_RingRadius, State.m_RingThickness);
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_METADATA] = vec4((float)State.m_ItemCount, (float)State.m_MainCorners, State.m_HasRightCapsule ? 1.0f : 0.0f, std::max(State.m_ScreenPixelSize, 0.0001f));
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_CAPSULE_PARAMS] = vec4(State.m_RightCapsule.m_Radius, State.m_RightCapsule.m_SmoothUnion, 0.0f, 0.0f);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED] = vec4(std::max(0.0f, State.m_OuterShadowSize), std::clamp(State.m_OuterShadowOpacity, 0.0f, 1.0f), 0.0f, 0.0f);
 
 	for(int i = 0; i < State.m_ItemCount; ++i)
 	{

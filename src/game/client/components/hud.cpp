@@ -488,19 +488,20 @@ namespace
 			return Result;
 
 		constexpr float BoxY = 1.0f;
-		constexpr float BoxH = 16.0f;
-		constexpr float PaddingX = 4.0f;
+		constexpr float BoxH = QmHudMediaIslandScaled(16.0f);
+		constexpr float PaddingX = QmHudMediaIslandScaled(4.0f);
+		const float TimerTextWidth = TimerInfo.m_W * QmHudMediaIslandDesignScale;
 
 		Result.m_Visible = true;
 		Result.m_IsCritical = TimerInfo.m_IsCritical;
 		Result.m_Alpha = TimerInfo.m_Alpha;
-		Result.m_FontSize = TimerInfo.m_FontSize;
+		Result.m_FontSize = QmHudMediaIslandScaled(TimerInfo.m_FontSize);
 		Result.m_BoxY = BoxY;
 		Result.m_BoxH = BoxH;
-		Result.m_BoxW = std::round(TimerInfo.m_W + PaddingX * 2.0f);
+		Result.m_BoxW = std::round(TimerTextWidth + PaddingX * 2.0f);
 		Result.m_BoxX = std::round(TimerInfo.m_X + TimerInfo.m_W * 0.5f - Result.m_BoxW * 0.5f);
-		Result.m_TextX = std::round(Result.m_BoxX + (Result.m_BoxW - TimerInfo.m_W) * 0.5f);
-		Result.m_TextY = std::round(BoxY + (BoxH - TimerInfo.m_FontSize) * 0.5f - 0.5f);
+		Result.m_TextX = std::round(Result.m_BoxX + (Result.m_BoxW - TimerTextWidth) * 0.5f);
+		Result.m_TextY = std::round(BoxY + (BoxH - Result.m_FontSize) * 0.5f - QmHudMediaIslandScaled(0.5f));
 		str_copy(Result.m_aText, TimerInfo.m_aText, sizeof(Result.m_aText));
 		return Result;
 	}
@@ -747,10 +748,59 @@ namespace
 		return ColorRGBA(0.98f, 0.99f, 1.0f, 1.0f);
 	}
 
+	void DrawMediaIslandOuterShadowFallback(IGraphics *pGraphics, const SHudMediaIslandSdfRenderState &State)
+	{
+		if(pGraphics == nullptr || State.m_OuterShadowSize <= 0.0f || State.m_OuterShadowOpacity <= 0.0f)
+			return;
+
+		constexpr int LayerCount = 4;
+		const ColorRGBA LayerColor(0.0f, 0.0f, 0.0f, std::clamp(State.m_OuterShadowOpacity, 0.0f, 1.0f) / LayerCount);
+		for(int Layer = LayerCount; Layer >= 1; --Layer)
+		{
+			const float Expansion = State.m_OuterShadowSize * Layer / LayerCount;
+			DrawSmoothRoundedRect(
+				pGraphics,
+				State.m_MainRect.x - Expansion,
+				State.m_MainRect.y - Expansion,
+				State.m_MainRect.w + Expansion * 2.0f,
+				State.m_MainRect.h + Expansion * 2.0f,
+				State.m_MainRadius + Expansion,
+				LayerColor,
+				State.m_MainCorners);
+			for(int i = 0; i < State.m_ItemCount; ++i)
+			{
+				const SHudMediaIslandSdfItem &Item = State.m_Items[i];
+				const float Radius = std::max(0.0f, std::min(Item.m_Radii.x, Item.m_Radii.y));
+				DrawSmoothRoundedRect(
+					pGraphics,
+					Item.m_Center.x - Item.m_Radii.x - Expansion,
+					Item.m_Center.y - Item.m_Radii.y - Expansion,
+					Item.m_Radii.x * 2.0f + Expansion * 2.0f,
+					Item.m_Radii.y * 2.0f + Expansion * 2.0f,
+					Radius + Expansion,
+					LayerColor);
+			}
+			if(State.m_HasRightCapsule && State.m_RightCapsule.m_Rect.w > 0.0f && State.m_RightCapsule.m_Rect.h > 0.0f)
+			{
+				const CUIRect &Rect = State.m_RightCapsule.m_Rect;
+				DrawSmoothRoundedRect(
+					pGraphics,
+					Rect.x - Expansion,
+					Rect.y - Expansion,
+					Rect.w + Expansion * 2.0f,
+					Rect.h + Expansion * 2.0f,
+					State.m_RightCapsule.m_Radius + Expansion,
+					LayerColor,
+					IGraphics::CORNER_ALL);
+			}
+		}
+	}
+
 	void DrawMediaIslandGeometryFallback(IGraphics *pGraphics, const SHudMediaIslandSdfRenderState &State)
 	{
 		if(pGraphics == nullptr)
 			return;
+		DrawMediaIslandOuterShadowFallback(pGraphics, State);
 		DrawSmoothRoundedRect(pGraphics, State.m_MainRect.x, State.m_MainRect.y, State.m_MainRect.w, State.m_MainRect.h, State.m_MainRadius, State.m_BackgroundColor, State.m_MainCorners);
 		for(int i = 0; i < State.m_ItemCount; ++i)
 		{
@@ -1317,13 +1367,13 @@ void CHud::RenderGameTimer()
 	if(!TimerCapsule.m_Visible)
 		return;
 
-	constexpr float TimerRadius = 8.0f;
-	constexpr float StatusSectionGap = 3.0f;
-	constexpr float StatusPaddingLeft = 4.0f;
-	constexpr float StatusPaddingRight = 5.0f;
-	constexpr float StatusDotSize = 5.0f;
-	constexpr float StatusDotGap = 4.0f;
-	constexpr float StatusFontSize = 5.3f;
+	constexpr float TimerRadius = QmHudMediaIslandScaled(8.0f);
+	constexpr float StatusSectionGap = QmHudMediaIslandScaled(3.0f);
+	constexpr float StatusPaddingLeft = QmHudMediaIslandScaled(4.0f);
+	constexpr float StatusPaddingRight = QmHudMediaIslandScaled(5.0f);
+	constexpr float StatusDotSize = QmHudMediaIslandScaled(5.0f);
+	constexpr float StatusDotGap = QmHudMediaIslandScaled(4.0f);
+	constexpr float StatusFontSize = QmHudMediaIslandScaled(5.3f);
 
 	char aRecordingBuf[512];
 	const bool ShowRecordingStatus = BuildHudRecordingStatusText(*GameClient(), aRecordingBuf, sizeof(aRecordingBuf));
@@ -1378,15 +1428,15 @@ void CHud::RenderGameTimer()
 	if(RenderStatusSection)
 	{
 		const float DividerX = TimerBoxX + TimerCapsule.m_BoxW + StatusSectionGap * 0.5f;
-		Graphics()->DrawRect(DividerX, TimerCapsule.m_BoxY + 4.0f, 0.75f, TimerCapsule.m_BoxH - 8.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * StatusAlpha), IGraphics::CORNER_ALL, 0.375f);
+		Graphics()->DrawRect(DividerX, TimerCapsule.m_BoxY + QmHudMediaIslandScaled(4.0f), QmHudMediaIslandScaled(0.75f), TimerCapsule.m_BoxH - QmHudMediaIslandScaled(8.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * StatusAlpha), IGraphics::CORNER_ALL, QmHudMediaIslandScaled(0.375f));
 
 		const vec2 DotCenter(StatusSectionX + StatusPaddingLeft + StatusDotSize * 0.5f, TimerCapsule.m_BoxY + TimerCapsule.m_BoxH * 0.5f);
 		DrawSmoothCircle(Graphics(), DotCenter, StatusDotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, 0.95f * StatusAlpha));
 
-		if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedWidth + 2.0f)
+		if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedWidth + QmHudMediaIslandScaled(2.0f))
 		{
 			const float TextX = StatusSectionX + StatusPaddingLeft + StatusDotSize + StatusDotGap;
-			const float TextY = TimerCapsule.m_BoxY + (TimerCapsule.m_BoxH - StatusFontSize) * 0.5f - 0.5f;
+			const float TextY = TimerCapsule.m_BoxY + (TimerCapsule.m_BoxH - StatusFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f);
 			TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.90f * StatusTextAlpha);
 			TextRender()->Text(TextX, TextY, StatusFontSize, aRecordingBuf, -1.0f);
 		}
@@ -3456,26 +3506,26 @@ float CHud::GetTopIslandAvoidanceRight() const
 	if(!ShowTopRow)
 		return 0.0f;
 
-	constexpr float BaseIslandHeight = 16.0f;
-	constexpr float CoverSize = 12.0f;
-	constexpr float PaddingX = 2.0f;
-	constexpr float Gap = 2.0f;
-	constexpr float SpectatorGap = 1.0f;
-	constexpr float SpectatorSatellitePaddingX = 2.0f;
-	constexpr float SpectatorSatelliteIconSize = 6.4f;
-	constexpr float SpectatorSatelliteRestGap = 3.0f;
-	constexpr float TitleFontSize = 5.8f;
-	constexpr float MetaFontSize = 5.3f;
+	constexpr float BaseIslandHeight = QmHudMediaIslandScaled(16.0f);
+	constexpr float CoverSize = QmHudMediaIslandScaled(12.0f);
+	constexpr float PaddingX = QmHudMediaIslandScaled(2.0f);
+	constexpr float Gap = QmHudMediaIslandScaled(2.0f);
+	constexpr float SpectatorGap = QmHudMediaIslandScaled(1.0f);
+	constexpr float SpectatorSatellitePaddingX = QmHudMediaIslandScaled(2.0f);
+	constexpr float SpectatorSatelliteIconSize = QmHudMediaIslandScaled(6.4f);
+	constexpr float SpectatorSatelliteRestGap = QmHudMediaIslandScaled(3.0f);
+	constexpr float TitleFontSize = QmHudMediaIslandScaled(5.8f);
+	constexpr float MetaFontSize = QmHudMediaIslandScaled(5.3f);
 	constexpr float ScreenPadding = 5.0f;
-	constexpr float GapToTimer = 3.0f;
-	constexpr float TimerToStatusGap = 3.0f;
-	constexpr float StatusPaddingLeft = 4.0f;
-	constexpr float StatusPaddingRight = 5.0f;
-	constexpr float StatusDotSize = 5.0f;
-	constexpr float StatusDotGap = 4.0f;
-	constexpr float StatusFontSize = 5.3f;
-	constexpr float StackedStatusFontSize = 4.4f;
-	constexpr float WaveformSlotWidth = 12.0f;
+	constexpr float GapToTimer = QmHudMediaIslandScaled(3.0f);
+	constexpr float TimerToStatusGap = QmHudMediaIslandScaled(3.0f);
+	constexpr float StatusPaddingLeft = QmHudMediaIslandScaled(4.0f);
+	constexpr float StatusPaddingRight = QmHudMediaIslandScaled(5.0f);
+	constexpr float StatusDotSize = QmHudMediaIslandScaled(5.0f);
+	constexpr float StatusDotGap = QmHudMediaIslandScaled(4.0f);
+	constexpr float StatusFontSize = QmHudMediaIslandScaled(5.3f);
+	constexpr float StackedStatusFontSize = QmHudMediaIslandScaled(4.4f);
+	constexpr float WaveformSlotWidth = QmHudMediaIslandScaled(12.0f);
 
 	char aSpectatorBuf[16];
 	str_format(aSpectatorBuf, sizeof(aSpectatorBuf), "%d", ShowSpectator ? SpectatorCount : std::max(0, m_MediaIslandAnimState.m_SpectatorDisplayCount));
@@ -3525,7 +3575,7 @@ float CHud::GetTopIslandAvoidanceRight() const
 		BaseWidth = std::max(BaseWidth, BaseIslandHeight);
 
 	const bool Expanded = HasMediaState && m_MediaIslandAnimState.m_VisualState == SHudMediaIslandAnimState::EVisualState::EXPANDED;
-	const float MaxTitleWidth = std::clamp(m_Width * 0.18f, 42.0f, 88.0f);
+	const float MaxTitleWidth = std::clamp(m_Width * 0.18f * QmHudMediaIslandDesignScale, QmHudMediaIslandScaled(42.0f), QmHudMediaIslandScaled(88.0f));
 	float RightSlotWidth = 0.0f;
 	if(ShowInfoStack)
 		RightSlotWidth = InfoStackWidth;
@@ -3857,37 +3907,37 @@ void CHud::RenderMediaIsland()
 	if(Checkpoint > 0)
 		str_format(aCheckpointBuf, sizeof(aCheckpointBuf), "CP%d", Checkpoint);
 
-	constexpr float BaseIslandHeight = 16.0f;
-	constexpr float IslandY = 1.0f;
-	constexpr float CoverSize = 12.0f;
-	constexpr float PaddingX = 2.0f;
-	constexpr float Gap = 2.0f;
-	constexpr float SpectatorGap = 1.0f;
-	constexpr float SpectatorSatellitePaddingX = 2.0f;
-	constexpr float SpectatorSatelliteIconSize = 6.4f;
-	constexpr float SpectatorSatelliteRestGap = 3.0f;
-	constexpr float TuneZoneSatelliteIconSize = 6.0f;
-	constexpr float TuneZoneSatelliteItemGap = 1.5f;
-	constexpr float TuneZoneSatellitePaddingX = 2.0f;
-	constexpr float TitleFontSize = 5.8f;
-	constexpr float MetaFontSize = 5.3f;
+	constexpr float BaseIslandHeight = QmHudMediaIslandScaled(16.0f);
+	const float IslandY = 1.0f;
+	constexpr float CoverSize = QmHudMediaIslandScaled(12.0f);
+	constexpr float PaddingX = QmHudMediaIslandScaled(2.0f);
+	constexpr float Gap = QmHudMediaIslandScaled(2.0f);
+	constexpr float SpectatorGap = QmHudMediaIslandScaled(1.0f);
+	constexpr float SpectatorSatellitePaddingX = QmHudMediaIslandScaled(2.0f);
+	constexpr float SpectatorSatelliteIconSize = QmHudMediaIslandScaled(6.4f);
+	constexpr float SpectatorSatelliteRestGap = QmHudMediaIslandScaled(3.0f);
+	constexpr float TuneZoneSatelliteIconSize = QmHudMediaIslandScaled(6.0f);
+	constexpr float TuneZoneSatelliteItemGap = QmHudMediaIslandScaled(1.5f);
+	constexpr float TuneZoneSatellitePaddingX = QmHudMediaIslandScaled(2.0f);
+	constexpr float TitleFontSize = QmHudMediaIslandScaled(5.8f);
+	constexpr float MetaFontSize = QmHudMediaIslandScaled(5.3f);
 	constexpr float ScreenPadding = 5.0f;
-	constexpr float GapToTimer = 3.0f;
-	constexpr float TimerToStatusGap = 3.0f;
-	constexpr float StatusPaddingLeft = 4.0f;
-	constexpr float StatusPaddingRight = 5.0f;
-	constexpr float StatusDotSize = 5.0f;
-	constexpr float StatusDotGap = 4.0f;
-	constexpr float StatusFontSize = 5.3f;
-	constexpr float StackedStatusFontSize = 4.4f;
-	constexpr float WaveformSlotWidth = 12.0f;
-	constexpr float BottomFontSize = 5.2f;
-	constexpr float BottomRowPaddingX = 7.0f;
-	constexpr float BottomRowLineHeight = 7.0f;
-	constexpr float BottomRowPaddingY = 2.5f;
-	constexpr float BottomRowDividerInset = 7.0f;
+	constexpr float GapToTimer = QmHudMediaIslandScaled(3.0f);
+	constexpr float TimerToStatusGap = QmHudMediaIslandScaled(3.0f);
+	constexpr float StatusPaddingLeft = QmHudMediaIslandScaled(4.0f);
+	constexpr float StatusPaddingRight = QmHudMediaIslandScaled(5.0f);
+	constexpr float StatusDotSize = QmHudMediaIslandScaled(5.0f);
+	constexpr float StatusDotGap = QmHudMediaIslandScaled(4.0f);
+	constexpr float StatusFontSize = QmHudMediaIslandScaled(5.3f);
+	constexpr float StackedStatusFontSize = QmHudMediaIslandScaled(4.4f);
+	constexpr float WaveformSlotWidth = QmHudMediaIslandScaled(12.0f);
+	constexpr float BottomFontSize = QmHudMediaIslandScaled(5.2f);
+	constexpr float BottomRowPaddingX = QmHudMediaIslandScaled(7.0f);
+	constexpr float BottomRowLineHeight = QmHudMediaIslandScaled(7.0f);
+	constexpr float BottomRowPaddingY = QmHudMediaIslandScaled(2.5f);
+	constexpr float BottomRowDividerInset = QmHudMediaIslandScaled(7.0f);
 	const float MaxUnifiedWidth = std::max(0.0f, m_Width - ScreenPadding * 2.0f);
-	const float MaxTitleWidth = std::clamp(m_Width * 0.18f, 42.0f, 88.0f);
+	const float MaxTitleWidth = std::clamp(m_Width * 0.18f * QmHudMediaIslandDesignScale, QmHudMediaIslandScaled(42.0f), QmHudMediaIslandScaled(88.0f));
 
 	const bool ShowWaveform = HasMediaState;
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -3983,7 +4033,7 @@ void CHud::RenderMediaIsland()
 	const float TargetBottomHeight = ShowBottomRow ? (BottomRowPaddingY * 2.0f + BottomRowLineHeight * BottomRowLineCount) : 0.0f;
 	const float TargetHeight = BaseIslandHeight + TargetBottomHeight;
 	const float TitleAlphaTarget = Expanded && TitleWidth > 0.0f ? 1.0f : 0.0f;
-	const float TitleOffsetTarget = Expanded ? 0.0f : 4.0f;
+	const float TitleOffsetTarget = Expanded ? 0.0f : QmHudMediaIslandScaled(4.0f);
 	const float BottomAlphaTarget = ShowBottomRow ? 1.0f : 0.0f;
 	const int MotionLevel = std::clamp(g_Config.m_QmUiMotionLevel, 0, 2);
 	float EntranceDeltaSeconds = 0.0f;
@@ -3995,7 +4045,7 @@ void CHud::RenderMediaIsland()
 	AnimState.m_EntranceDropProgress = EntranceTimeline.m_DropProgress;
 	AnimState.m_EntranceProgress = EntranceTimeline.m_ExpandProgress;
 	const bool FullTrackMotion = MotionLevel >= 2;
-	const float TrackTextOffset = FullTrackMotion ? 5.0f : 0.0f;
+	const float TrackTextOffset = FullTrackMotion ? QmHudMediaIslandScaled(5.0f) : 0.0f;
 	const float CoverEnterScale = FullTrackMotion ? 0.95f : 1.0f;
 	const float CoverExitScale = FullTrackMotion ? 0.96f : 1.0f;
 	SUiSpringConfig CapsuleSpring;
@@ -4145,10 +4195,10 @@ void CHud::RenderMediaIsland()
 		if(FullTrackMotion && MorphElapsedSec < MorphCompressSec)
 		{
 			const float FromCenterX = AnimState.m_CapsuleMorphFromX + AnimState.m_CapsuleMorphFromWidth * 0.5f;
-			const float WidthSqueeze = std::clamp(AnimState.m_CapsuleMorphFromWidth * 0.08f, 2.0f, 7.0f);
-			const float HeightSqueeze = std::clamp(AnimState.m_CapsuleMorphFromHeight * 0.10f, 1.0f, 2.4f);
-			EffectiveTargetWidth = std::max(PaddingX * 2.0f + 4.0f, AnimState.m_CapsuleMorphFromWidth - WidthSqueeze);
-			EffectiveTargetHeight = std::max(BaseIslandHeight - 2.0f, AnimState.m_CapsuleMorphFromHeight - HeightSqueeze);
+			const float WidthSqueeze = std::clamp(AnimState.m_CapsuleMorphFromWidth * 0.08f, QmHudMediaIslandScaled(2.0f), QmHudMediaIslandScaled(7.0f));
+			const float HeightSqueeze = std::clamp(AnimState.m_CapsuleMorphFromHeight * 0.10f, QmHudMediaIslandScaled(1.0f), QmHudMediaIslandScaled(2.4f));
+			EffectiveTargetWidth = std::max(PaddingX * 2.0f + QmHudMediaIslandScaled(4.0f), AnimState.m_CapsuleMorphFromWidth - WidthSqueeze);
+			EffectiveTargetHeight = std::max(BaseIslandHeight - QmHudMediaIslandScaled(2.0f), AnimState.m_CapsuleMorphFromHeight - HeightSqueeze);
 			EffectiveTargetX = std::clamp(FromCenterX - EffectiveTargetWidth * 0.5f, ScreenPadding, std::max(ScreenPadding, m_Width - ScreenPadding - EffectiveTargetWidth));
 		}
 		else if(MorphElapsedSec > MorphMaxSec)
@@ -4212,21 +4262,21 @@ void CHud::RenderMediaIsland()
 	const float CoverRadius = CoverSize * 0.5f;
 	const float RightMetaX = IslandX + IslandWidth - PaddingX;
 	const float WaveformSlotX = ShowWaveform ? (RightMetaX - WaveformSlotWidth) : RightMetaX;
-	const float MetaY = IslandY + (BaseIslandHeight - MetaFontSize) * 0.5f - 0.5f;
+	const float MetaY = IslandY + (BaseIslandHeight - MetaFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f);
 	const float TeamAnchorX = ShowWaveform ? WaveformSlotX : RightMetaX;
 	const float TeamX = ShowTeam ? (TeamAnchorX - (ShowWaveform ? Gap : 0.0f) - TeamWidth) : TeamAnchorX;
 	const float TitleBaseX = CoverX + CoverSize + Gap;
 	const float TitleX = TitleBaseX + TitleOffset;
 	const float TitleRight = (ShowTeam ? TeamX : (ShowWaveform ? WaveformSlotX : (IslandX + IslandWidth - PaddingX))) - Gap;
 	const float TitleAvailableWidth = std::max(0.0f, TitleRight - TitleX);
-	const float TitleY = IslandY + (BaseIslandHeight - TitleFontSize) * 0.5f - 0.5f;
+	const float TitleY = IslandY + (BaseIslandHeight - TitleFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f);
 
 	const float SatelliteRadius = Radius;
 	const float SatelliteDiameter = SatelliteRadius * 2.0f;
-	constexpr float SatelliteItemGap = 2.0f;
-	constexpr float SatelliteRestGap = 3.0f;
+	constexpr float SatelliteItemGap = QmHudMediaIslandScaled(2.0f);
+	constexpr float SatelliteRestGap = QmHudMediaIslandScaled(3.0f);
 	const float SatelliteRingRadius = SatelliteRadius * 0.75f;
-	const float SatelliteRingThickness = std::max(1.25f, SatelliteRadius * 0.15f);
+	const float SatelliteRingThickness = std::max(QmHudMediaIslandScaled(1.25f), SatelliteRadius * 0.15f);
 	const float SatelliteIconSize = SatelliteRadius * 0.94f;
 	const float SatelliteCenterY = IslandY + BaseIslandHeight * 0.5f;
 
@@ -4362,7 +4412,7 @@ void CHud::RenderMediaIsland()
 	for(int i = 0; i < SatelliteRenderItemCount; ++i)
 	{
 		const SSatelliteRenderItem &Item = aSatelliteRenderItems[i];
-		SatelliteVisibleLeft = std::min(SatelliteVisibleLeft, Item.m_Center.x - Item.m_Radii.x - 1.0f);
+		SatelliteVisibleLeft = std::min(SatelliteVisibleLeft, Item.m_Center.x - Item.m_Radii.x - QmHudMediaIslandScaled(1.0f));
 	}
 	const unsigned int PrevFlags = TextRender()->GetRenderFlags();
 	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
@@ -4408,7 +4458,7 @@ void CHud::RenderMediaIsland()
 		SpectatorSatelliteWidth,
 		SpectatorSatelliteRestGap,
 		SpectatorBlobPose);
-	const float SpectatorVisibleRight = SpectatorLiquidCapsule.m_Rect.x + SpectatorLiquidCapsule.m_Rect.w + 1.0f;
+	const float SpectatorVisibleRight = SpectatorLiquidCapsule.m_Rect.x + SpectatorLiquidCapsule.m_Rect.w + QmHudMediaIslandScaled(1.0f);
 	const float EditorX = TimerCapsule.m_Visible ? TimerBoxX : IslandX;
 	const float EditorRight = TimerCapsule.m_Visible ? UnifiedRight : (IslandX + UnifiedWidth);
 	const float EditorWidth = std::max(0.0f, EditorRight - EditorX);
@@ -4418,9 +4468,9 @@ void CHud::RenderMediaIsland()
 	const bool RenderLeftSection = ShowCover || ShowTeam || ShowWaveform;
 	const SHudMediaIslandTimerRowLayout TimerRows = QmHudMediaIslandTimerRows(TimerCapsule.m_BoxY, TimerCapsule.m_BoxH, Checkpoint > 0);
 	const float TimerRaceFontSize = std::min(TimerCapsule.m_FontSize, TimerRows.m_RaceH);
-	const float TimerRaceTextY = Checkpoint > 0 ? TimerRows.m_RaceY + (TimerRows.m_RaceH - TimerRaceFontSize) * 0.5f - 0.5f : TimerCapsule.m_TextY;
+	const float TimerRaceTextY = Checkpoint > 0 ? TimerRows.m_RaceY + (TimerRows.m_RaceH - TimerRaceFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f) : TimerCapsule.m_TextY;
 	const float CheckpointFontSize = std::min(TimerCapsule.m_FontSize * 0.40f, TimerRows.m_CheckpointH);
-	const float CheckpointTextY = TimerRows.m_CheckpointY + (TimerRows.m_CheckpointH - CheckpointFontSize) * 0.5f - 0.5f;
+	const float CheckpointTextY = TimerRows.m_CheckpointY + (TimerRows.m_CheckpointH - CheckpointFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f);
 	ColorRGBA IslandBackgroundColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmHudIslandBgColor));
 	IslandBackgroundColor.a = std::clamp(g_Config.m_QmHudIslandBgOpacity / 100.0f, 0.0f, 1.0f);
 	const QmHudEditor::SEdgeMargin IslandEdgeMargin = QmHudEditor::SEdgeMargin::Uniform((float)g_Config.m_QmHudIslandEdgeMargin);
@@ -4472,6 +4522,8 @@ void CHud::RenderMediaIsland()
 	CurrentSdfState.m_RingThickness = SatelliteRingThickness;
 	CurrentSdfState.m_BackgroundColor = EntrancePose.m_BackgroundColor;
 	CurrentSdfState.m_ScreenPixelSize = ScreenPixelSize;
+	CurrentSdfState.m_OuterShadowSize = ScreenPixelSize * 2.0f;
+	CurrentSdfState.m_OuterShadowOpacity = 0.18f * EntrancePose.m_BackgroundColor.a;
 	CurrentSdfState.m_Rect = QmHudMediaIslandSdfOuterRect(CurrentSdfState);
 	if(PrepareMediaIslandBlur())
 		RenderMediaIslandBlur(CurrentSdfState.m_Rect, EntrancePose.m_BackgroundColor.a);
@@ -4525,7 +4577,7 @@ void CHud::RenderMediaIsland()
 		if(CountAlpha > 0.001f)
 		{
 			TextRender()->TextColor(0.98f, 0.99f, 1.0f, 0.86f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha * CountAlpha);
-			TextRender()->Text(ContentX + IconSize + ContentGap + SpectatorIconPose.m_CountOffsetX * ContentScale, SatelliteCenterY - FontSize * 0.5f - 0.5f, FontSize, aSpectatorBuf, -1.0f);
+			TextRender()->Text(ContentX + IconSize + ContentGap + SpectatorIconPose.m_CountOffsetX * ContentScale, SatelliteCenterY - FontSize * 0.5f - QmHudMediaIslandScaled(0.5f), FontSize, aSpectatorBuf, -1.0f);
 		}
 	}
 
@@ -4563,11 +4615,11 @@ void CHud::RenderMediaIsland()
 			{
 				char aOverflowBuf[8];
 				str_format(aOverflowBuf, sizeof(aOverflowBuf), "+%d", HiddenCategoryCount);
-				const float FontSize = 4.6f * ContentScale;
+				const float FontSize = QmHudMediaIslandScaled(4.6f) * ContentScale;
 				const float SlotX = ContentX + VisibleCategoryCount * (IconSize + ItemGap);
 				const float TextWidth = TextRender()->TextWidth(FontSize, aOverflowBuf);
 				TextRender()->TextColor(0.98f, 0.99f, 1.0f, 0.92f * ContentAlpha);
-				TextRender()->Text(SlotX + (IconSize - TextWidth) * 0.5f, Item.m_Center.y - FontSize * 0.5f - 0.5f, FontSize, aOverflowBuf, -1.0f);
+				TextRender()->Text(SlotX + (IconSize - TextWidth) * 0.5f, Item.m_Center.y - FontSize * 0.5f - QmHudMediaIslandScaled(0.5f), FontSize, aOverflowBuf, -1.0f);
 			}
 			continue;
 		}
@@ -4618,18 +4670,18 @@ void CHud::RenderMediaIsland()
 		const float PlaceholderFontSize = MetaFontSize * Scale;
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.35f * Alpha);
-		TextRender()->Text(CoverCenter.x - PlaceholderWidth * Scale * 0.5f, CoverCenter.y - PlaceholderFontSize * 0.5f - 0.5f, PlaceholderFontSize, FontIcons::FONT_ICON_MUSIC, -1.0f);
+		TextRender()->Text(CoverCenter.x - PlaceholderWidth * Scale * 0.5f, CoverCenter.y - PlaceholderFontSize * 0.5f - QmHudMediaIslandScaled(0.5f), PlaceholderFontSize, FontIcons::FONT_ICON_MUSIC, -1.0f);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	};
 	const auto RenderTrackText = [&](const SHudMediaIslandTrackSnapshot &Track, const char *pMeta, bool HasMeta, float TitleLayerAlpha, float MetaLayerAlpha, float TitleLayerOffset, float MetaLayerOffset) {
-		if(!ShowCover || TitleAlpha <= 0.001f || TitleAvailableWidth <= 2.0f)
+		if(!ShowCover || TitleAlpha <= 0.001f || TitleAvailableWidth <= QmHudMediaIslandScaled(2.0f))
 			return;
 
 		const char *pTitle = TrackDisplayTitle(Track);
 		const float EffectiveTitleAlpha = TitleAlpha * TitleLayerAlpha;
 		const float EffectiveMetaAlpha = TitleAlpha * MetaLayerAlpha;
-		const bool RenderMeta = HasMeta && EffectiveMetaAlpha > 0.001f && TitleAvailableWidth > 12.0f;
-		const float TitleDrawY = RenderMeta ? (IslandY + 2.0f) : TitleY;
+		const bool RenderMeta = HasMeta && EffectiveMetaAlpha > 0.001f && TitleAvailableWidth > QmHudMediaIslandScaled(12.0f);
+		const float TitleDrawY = RenderMeta ? (IslandY + QmHudMediaIslandScaled(2.0f)) : TitleY;
 		if(pTitle[0] != '\0' && EffectiveTitleAlpha > 0.001f)
 		{
 			CTextCursor Cursor;
@@ -4646,7 +4698,7 @@ void CHud::RenderMediaIsland()
 			Cursor.m_FontSize = MetaFontSize;
 			Cursor.m_LineWidth = TitleAvailableWidth;
 			Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
-			Cursor.SetPosition(vec2(TitleX + MetaLayerOffset, IslandY + 8.3f));
+			Cursor.SetPosition(vec2(TitleX + MetaLayerOffset, IslandY + QmHudMediaIslandScaled(8.3f)));
 			TextRender()->TextColor(0.85f, 0.88f, 0.94f, 0.68f * EffectiveMetaAlpha);
 			TextRender()->TextEx(&Cursor, pMeta);
 		}
@@ -4671,9 +4723,9 @@ void CHud::RenderMediaIsland()
 	if(ShowWaveform)
 	{
 		constexpr int WaveBarCount = 5;
-		constexpr float WaveBarWidth = 1.15f;
-		constexpr float WaveBarGap = 0.70f;
-		constexpr float WaveMaxHeight = 9.0f;
+		constexpr float WaveBarWidth = QmHudMediaIslandScaled(1.15f);
+		constexpr float WaveBarGap = QmHudMediaIslandScaled(0.70f);
+		constexpr float WaveMaxHeight = QmHudMediaIslandScaled(9.0f);
 		const float WaveWidth = WaveBarCount * WaveBarWidth + (WaveBarCount - 1) * WaveBarGap;
 		const float WaveX = WaveformSlotX + (WaveformSlotWidth - WaveWidth) * 0.5f;
 		const float WaveCenterY = IslandY + BaseIslandHeight * 0.5f;
@@ -4698,7 +4750,7 @@ void CHud::RenderMediaIsland()
 		if(RenderLeftSection)
 		{
 			const float LeftDividerX = TimerBoxX - GapToTimer * 0.5f;
-			Graphics()->DrawRect(LeftDividerX, IslandY + 4.0f, 0.75f, BaseIslandHeight - 8.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * EntranceContentAlpha), IGraphics::CORNER_ALL, 0.375f);
+			Graphics()->DrawRect(LeftDividerX, IslandY + QmHudMediaIslandScaled(4.0f), QmHudMediaIslandScaled(0.75f), BaseIslandHeight - QmHudMediaIslandScaled(8.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * EntranceContentAlpha), IGraphics::CORNER_ALL, QmHudMediaIslandScaled(0.375f));
 		}
 
 		if(TimerCapsule.m_IsCritical)
@@ -4720,7 +4772,7 @@ void CHud::RenderMediaIsland()
 		if(StatusSectionGap > 0.0f)
 		{
 			const float DividerX = StatusAnchorRight + StatusSectionGap * 0.5f;
-			Graphics()->DrawRect(DividerX, IslandY + 4.0f, 0.75f, BaseIslandHeight - 8.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * StatusAlpha * EntranceContentAlpha), IGraphics::CORNER_ALL, 0.375f);
+			Graphics()->DrawRect(DividerX, IslandY + QmHudMediaIslandScaled(4.0f), QmHudMediaIslandScaled(0.75f), BaseIslandHeight - QmHudMediaIslandScaled(8.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * StatusAlpha * EntranceContentAlpha), IGraphics::CORNER_ALL, QmHudMediaIslandScaled(0.375f));
 		}
 
 		if(ShowInfoStack)
@@ -4730,7 +4782,7 @@ void CHud::RenderMediaIsland()
 					return;
 				const float TextWidth = std::round(TextRender()->TextBoundingBox(InfoStackFontSize, pText).m_W);
 				const float TextX = StatusSectionX + std::max(0.0f, (StatusWidth - TextWidth) * 0.5f);
-				const float TextY = RowY + (RowH - InfoStackFontSize) * 0.5f - 0.4f;
+				const float TextY = RowY + (RowH - InfoStackFontSize) * 0.5f - QmHudMediaIslandScaled(0.4f);
 				TextRender()->TextColor(Color);
 				TextRender()->Text(TextX, TextY, InfoStackFontSize, pText, -1.0f);
 			};
@@ -4751,10 +4803,10 @@ void CHud::RenderMediaIsland()
 			const vec2 DotCenter(StatusSectionX + StatusPaddingLeft + StatusDotSize * 0.5f, IslandY + BaseIslandHeight * 0.5f);
 			DrawSmoothCircle(Graphics(), DotCenter, StatusDotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, 0.95f * StatusAlpha * EntranceContentAlpha));
 
-			if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedStatusWidth + 2.0f)
+			if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedStatusWidth + QmHudMediaIslandScaled(2.0f))
 			{
 				const float StatusTextX = StatusSectionX + StatusPaddingLeft + StatusDotSize + StatusDotGap;
-				const float StatusTextY = IslandY + (BaseIslandHeight - StatusFontSize) * 0.5f - 0.5f;
+				const float StatusTextY = IslandY + (BaseIslandHeight - StatusFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f);
 				TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.90f * StatusTextAlpha * EntranceContentAlpha);
 				TextRender()->Text(StatusTextX, StatusTextY, StatusFontSize, aRecordingBuf, -1.0f);
 			}
@@ -4762,17 +4814,17 @@ void CHud::RenderMediaIsland()
 	}
 
 	const float VisibleBottomAlpha = BottomAlpha * EntranceContentAlpha;
-	if(VisibleBottomAlpha > 0.01f && AnimatedIslandHeight > BaseIslandHeight + 0.5f)
+	if(VisibleBottomAlpha > 0.01f && AnimatedIslandHeight > BaseIslandHeight + QmHudMediaIslandScaled(0.5f))
 	{
 		const float BottomRowY = IslandY + BaseIslandHeight;
 		const float DividerInset = std::min(BottomRowDividerInset, UnifiedWidth * 0.25f);
 		const float DividerWidth = std::max(0.0f, UnifiedWidth - DividerInset * 2.0f);
 		if(DividerWidth > 0.0f)
 		{
-			Graphics()->DrawRect(IslandX + DividerInset, BottomRowY, DividerWidth, 0.75f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * VisibleBottomAlpha), IGraphics::CORNER_ALL, 0.375f);
+			Graphics()->DrawRect(IslandX + DividerInset, BottomRowY, DividerWidth, QmHudMediaIslandScaled(0.75f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * VisibleBottomAlpha), IGraphics::CORNER_ALL, QmHudMediaIslandScaled(0.375f));
 		}
 
-		const float BottomTextY = BottomRowY + BottomRowPaddingY;
+		float BottomTextY = BottomRowY + BottomRowPaddingY;
 		const float ContentX = IslandX + BottomRowPaddingX;
 		const float ContentWidth = std::max(0.0f, UnifiedWidth - BottomRowPaddingX * 2.0f);
 		const auto RenderBottomTextBlock = [&](float X, float Y, float MaxWidth, const char *pText, const ColorRGBA &Color, bool AlignRight) {

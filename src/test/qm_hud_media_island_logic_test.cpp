@@ -222,12 +222,19 @@ TEST(QmTuneZoneEffectsSource, DynamicIslandUsesCompactSharedSpacing)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 
-	EXPECT_NE(Source.find("constexpr float PaddingX = 4.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float GapToTimer = 3.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float TimerToStatusGap = 3.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float BottomRowPaddingX = 7.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float BottomRowItemGap = 5.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float SatelliteRestGap = 3.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(2.0f)"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(3.0f)"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(7.0f)"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(5.0f)"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandLayout, ScalesTheCompleteDesignToEightyPercent)
+{
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesignScale, 0.8f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(16.0f), 12.8f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(12.0f), 9.6f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(5.8f), 4.64f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(3.0f), 2.4f);
 }
 
 TEST(QmTuneZoneEffectsSource, SettingsExposeIconLegend)
@@ -408,12 +415,12 @@ TEST(QmHudMediaIslandEntrance, StartsAsOpaqueBlackCircleAtTargetCenter)
 
 	const SHudMediaIslandEntrancePose Pose = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.0f);
 
-	EXPECT_FLOAT_EQ(Pose.m_Rect.x, 132.0f);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.y, 9.0f);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.w, 16.0f);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.h, 16.0f);
-	EXPECT_FLOAT_EQ(Pose.m_Radius, 8.0f);
-	EXPECT_FLOAT_EQ(Pose.m_DisabledCornerRadius, 8.0f);
+	EXPECT_FLOAT_EQ(Pose.m_Rect.x, 133.6f);
+	EXPECT_FLOAT_EQ(Pose.m_Rect.y, 10.6f);
+	EXPECT_FLOAT_EQ(Pose.m_Rect.w, 12.8f);
+	EXPECT_FLOAT_EQ(Pose.m_Rect.h, 12.8f);
+	EXPECT_FLOAT_EQ(Pose.m_Radius, 6.4f);
+	EXPECT_FLOAT_EQ(Pose.m_DisabledCornerRadius, 6.4f);
 	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.r, 0.0f);
 	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.g, 0.0f);
 	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.b, 0.0f);
@@ -469,9 +476,9 @@ TEST(QmHudMediaIslandEntrance, DropStartsFullyAboveScreenAndEndsAtExpansionOrigi
 
 	EXPECT_LT(Hidden.m_Rect.y + Hidden.m_Rect.h, ScreenTop);
 	EXPECT_FLOAT_EQ(Hidden.m_Rect.x + Hidden.m_Rect.w * 0.5f, Target.x + Target.w * 0.5f);
-	EXPECT_FLOAT_EQ(Arrived.m_Rect.y, Target.y + Target.h * 0.5f - 8.0f);
-	EXPECT_FLOAT_EQ(Arrived.m_Rect.w, 16.0f);
-	EXPECT_FLOAT_EQ(Arrived.m_Rect.h, 16.0f);
+	EXPECT_FLOAT_EQ(Arrived.m_Rect.y, Target.y + Target.h * 0.5f - 6.4f);
+	EXPECT_FLOAT_EQ(Arrived.m_Rect.w, 12.8f);
+	EXPECT_FLOAT_EQ(Arrived.m_Rect.h, 12.8f);
 	EXPECT_FLOAT_EQ(Arrived.m_ContentAlpha, 0.0f);
 }
 
@@ -521,9 +528,9 @@ TEST(QmHudMediaIslandEntrance, IntermediatePoseMorphsGeometryAndConfiguredBackgr
 
 	const SHudMediaIslandEntrancePose Pose = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.5f);
 
-	EXPECT_GT(Pose.m_Rect.w, 16.0f);
+	EXPECT_GT(Pose.m_Rect.w, 12.8f);
 	EXPECT_LT(Pose.m_Rect.w, Target.w);
-	EXPECT_GT(Pose.m_Rect.h, 16.0f);
+	EXPECT_GT(Pose.m_Rect.h, 12.8f);
 	EXPECT_LT(Pose.m_Rect.h, Target.h);
 	EXPECT_GT(Pose.m_BackgroundColor.b, 0.0f);
 	EXPECT_LT(Pose.m_BackgroundColor.b, TargetColor.b);
@@ -690,7 +697,7 @@ TEST(QmHudMediaIslandSpectatorEye, ApprovedOpeningPoseCrossfadesAndOpensVertical
 	EXPECT_FLOAT_EQ(Closed.m_OpenScaleX, 0.88f);
 	EXPECT_FLOAT_EQ(Closed.m_OpenScaleY, 0.44f);
 	EXPECT_FLOAT_EQ(Closed.m_CountAlpha, 0.0f);
-	EXPECT_FLOAT_EQ(Closed.m_CountOffsetX, -3.0f);
+	EXPECT_FLOAT_EQ(Closed.m_CountOffsetX, -2.4f);
 
 	const SHudMediaIslandSpectatorIconPose Mid = QmHudMediaIslandSpectatorIconPose(0.5f);
 	EXPECT_FLOAT_EQ(Mid.m_ClosedAlpha, 0.5f);
@@ -864,6 +871,11 @@ TEST(QmHudMediaIslandSdfBounds, PaddingContainsSmoothUnionAndFeatherOverflow)
 	SHudMediaIslandSdfRenderState RestingState;
 	RestingState.m_ScreenPixelSize = ScreenPixelSize;
 	EXPECT_FLOAT_EQ(QmHudMediaIslandSdfPadding(RestingState), 1.5f);
+
+	SHudMediaIslandSdfRenderState ShadowState;
+	ShadowState.m_ScreenPixelSize = ScreenPixelSize;
+	ShadowState.m_OuterShadowSize = 3.0f;
+	EXPECT_GE(QmHudMediaIslandSdfPadding(ShadowState), 3.0f + ScreenPixelSize * 0.9f);
 }
 
 TEST(QmHudMediaIslandSdfBounds, OuterRectKeepsEveryLiquidEdgeInsideTheQuad)
@@ -911,6 +923,8 @@ TEST(QmHudMediaIslandSdfGpuPacking, CopiesAllShapeAndAnimationInputs)
 	State.m_RingThickness = 1.5f;
 	State.m_BackgroundColor = ColorRGBA(0.02f, 0.03f, 0.05f, 0.9f);
 	State.m_ScreenPixelSize = 0.5f;
+	State.m_OuterShadowSize = 1.0f;
+	State.m_OuterShadowOpacity = 0.14f;
 
 	IGraphics::SMediaIslandSdfParams Params;
 	ASSERT_TRUE(QmHudMediaIslandBuildGpuSdfParams(State, Params));
@@ -918,8 +932,8 @@ TEST(QmHudMediaIslandSdfGpuPacking, CopiesAllShapeAndAnimationInputs)
 	EXPECT_TRUE(Params.HasRightCapsule());
 	EXPECT_EQ(Params.MainCorners(), State.m_MainCorners);
 	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RECT].z, 80.0f);
-	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].x, 0.0f);
-	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].y, 0.0f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].x, 1.0f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].y, 0.14f);
 	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].z, 0.0f);
 	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED].w, 0.0f);
 	EXPECT_FLOAT_EQ(Params.Item(0, 0).z, 8.0f);
@@ -970,7 +984,7 @@ TEST(QmHudMediaIslandSatellite, RenderPathUsesBlobSatellitesInsteadOfCountdownTe
 	EXPECT_EQ(RenderBody.find("DrawMediaIslandRipple"), std::string::npos);
 	EXPECT_EQ(Source.find("m_MediaIslandRippleTexture"), std::string::npos);
 	EXPECT_NE(RenderBody.find("const float SatelliteRadius = Radius;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("constexpr float SatelliteItemGap = 2.0f;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("constexpr float SatelliteItemGap = QmHudMediaIslandScaled(2.0f);"), std::string::npos);
 	EXPECT_NE(RenderBody.find("aActiveSatelliteTargetCenters[i] = SatelliteCursorX + aActiveSatelliteTargetWidths[i] * 0.5f"), std::string::npos);
 	EXPECT_NE(RenderBody.find("const CUIRect MainIslandSdfRect = EntrancePose.m_Rect;"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("QmHudMediaIslandMainCapRect"), std::string::npos);
@@ -1293,6 +1307,51 @@ TEST(QmHudMediaIslandSource, BackgroundBlurFollowsOpacityAndKeepsTheSdfFallback)
 	ASSERT_NE(BlurDraw, std::string::npos);
 	ASSERT_NE(SdfDraw, std::string::npos);
 	EXPECT_LT(BlurDraw, SdfDraw);
+}
+
+TEST(QmHudMediaIslandSource, SharedScaleCoversLayoutTimerAndEntranceWithoutMovingTheTopAnchor)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string Logic = ReadTestSourceFile("src/game/client/components/hud_media_island_logic.h");
+	const std::string AvoidanceBody = FunctionBody(Source, "float CHud::GetTopIslandAvoidanceRight() const");
+	const std::string IslandBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
+	const std::string TimerBody = FunctionBody(Source, "SHudTopTimerCapsuleInfo BuildHudTopTimerCapsuleInfo(const SHudGameTimerInfo &TimerInfo)");
+
+	EXPECT_NE(Logic.find("QmHudMediaIslandDesignScale = 0.8f"), std::string::npos);
+	EXPECT_NE(Logic.find("QmHudMediaIslandScaled(16.0f)"), std::string::npos);
+	EXPECT_NE(AvoidanceBody.find("QmHudMediaIslandScaled(16.0f)"), std::string::npos);
+	EXPECT_NE(AvoidanceBody.find("QmHudMediaIslandScaled(5.8f)"), std::string::npos);
+	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(16.0f)"), std::string::npos);
+	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(12.0f)"), std::string::npos);
+	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(5.8f)"), std::string::npos);
+	EXPECT_NE(IslandBody.find("const float IslandY = 1.0f;"), std::string::npos);
+	EXPECT_NE(TimerBody.find("QmHudMediaIslandScaled(TimerInfo.m_FontSize)"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandSource, OuterShadowFollowsTheCombinedSdfAndPreservesBackdropBlur)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string OpenGlShader = ReadTestSourceFile("data/shader/media_island_sdf.frag");
+	const std::string VulkanShader = ReadTestSourceFile("data/shader/vulkan/media_island_sdf.frag");
+	const std::string IslandBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
+	const std::string FallbackBody = FunctionBody(Source, "void DrawMediaIslandGeometryFallback(IGraphics *pGraphics, const SHudMediaIslandSdfRenderState &State)");
+
+	EXPECT_NE(IslandBody.find("m_OuterShadowSize = ScreenPixelSize * 2.0f"), std::string::npos);
+	EXPECT_NE(IslandBody.find("m_OuterShadowOpacity = 0.18f * EntrancePose.m_BackgroundColor.a"), std::string::npos);
+	EXPECT_NE(IslandBody.find("RenderMediaIslandBlur(CurrentSdfState.m_Rect"), std::string::npos);
+	EXPECT_NE(FallbackBody.find("DrawMediaIslandOuterShadowFallback"), std::string::npos);
+
+	for(const std::string *pShader : {&OpenGlShader, &VulkanShader})
+	{
+		const size_t ShadowParams = pShader->find("vec4 ShadowParams = Data(7);");
+		const size_t ShadowComposite = pShader->find("Composite(PremulColor, Alpha, vec4(0.0, 0.0, 0.0, ShadowParams.y)");
+		const size_t BackgroundComposite = pShader->find("Composite(PremulColor, Alpha, Data(3)");
+		ASSERT_NE(ShadowParams, std::string::npos);
+		ASSERT_NE(ShadowComposite, std::string::npos);
+		ASSERT_NE(BackgroundComposite, std::string::npos);
+		EXPECT_LT(ShadowParams, ShadowComposite);
+		EXPECT_LT(ShadowComposite, BackgroundComposite);
+	}
 }
 
 TEST(QmHudPresentationSource, MediaIslandAndWeaponHudUseContinuousPresentationState)
