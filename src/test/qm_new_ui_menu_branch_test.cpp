@@ -662,7 +662,7 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(MiniFeatures.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", Localize(\"Better scoreboard\"), &g_Config.m_QmBetterScoreboard, &Row, LgLineHeight);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.11\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.12\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SwitchCountdownIsAnIndependentHudModuleWithCompatibleDefaults)

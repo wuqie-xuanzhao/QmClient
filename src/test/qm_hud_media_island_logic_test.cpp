@@ -1351,7 +1351,7 @@ TEST(QmHudMediaIslandSource, MediaIslandUsesGpuSdfCommandWithoutCpuRasterization
 	EXPECT_EQ(IslandBody.find("BeginRenderTarget"), std::string::npos);
 }
 
-TEST(QmHudMediaIslandSource, BackgroundBlurFollowsOpacityAndKeepsTheSdfFallback)
+TEST(QmHudMediaIslandSource, BackgroundBlurResourcesRemainAvailableButNewStyleSkipsBackdrop)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 	const std::string Header = ReadTestSourceFile("src/game/client/components/hud.h");
@@ -1377,11 +1377,9 @@ TEST(QmHudMediaIslandSource, BackgroundBlurFollowsOpacityAndKeepsTheSdfFallback)
 	EXPECT_NE(OnRender.find("DestroyMediaIslandBlurTargets"), std::string::npos);
 	EXPECT_NE(IslandBody.find("DrawMediaIslandGeometryFallback"), std::string::npos);
 
-	const size_t BlurDraw = IslandBody.find("RenderMediaIslandBlur(CurrentSdfState.m_Rect");
-	const size_t SdfDraw = IslandBody.find("Graphics()->RenderMediaIslandSdf");
-	ASSERT_NE(BlurDraw, std::string::npos);
-	ASSERT_NE(SdfDraw, std::string::npos);
-	EXPECT_LT(BlurDraw, SdfDraw);
+	EXPECT_EQ(IslandBody.find("PrepareMediaIslandBlur()"), std::string::npos);
+	EXPECT_EQ(IslandBody.find("RenderMediaIslandBlur(CurrentSdfState.m_Rect"), std::string::npos);
+	EXPECT_NE(IslandBody.find("Graphics()->RenderMediaIslandSdf"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandSource, SharedScaleCoversLayoutTimerAndEntranceWithoutMovingTheTopAnchor)
@@ -1403,17 +1401,20 @@ TEST(QmHudMediaIslandSource, SharedScaleCoversLayoutTimerAndEntranceWithoutMovin
 	EXPECT_NE(TimerBody.find("QmHudMediaIslandScaled(TimerInfo.m_FontSize)"), std::string::npos);
 }
 
-TEST(QmHudMediaIslandSource, OuterShadowFollowsTheCombinedSdfAndPreservesBackdropBlur)
+TEST(QmHudMediaIslandSource, OuterShadowFollowsTheCombinedSdfWithoutBackdropBlur)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 	const std::string OpenGlShader = ReadTestSourceFile("data/shader/media_island_sdf.frag");
 	const std::string VulkanShader = ReadTestSourceFile("data/shader/vulkan/media_island_sdf.frag");
 	const std::string IslandBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
 	const std::string FallbackBody = FunctionBody(Source, "void DrawMediaIslandGeometryFallback(IGraphics *pGraphics, const SHudMediaIslandSdfRenderState &State)");
+	const std::string ShadowBody = FunctionBody(Source, "void DrawMediaIslandOuterShadowFallback(IGraphics *pGraphics, const SHudMediaIslandSdfRenderState &State)");
 
-	EXPECT_NE(IslandBody.find("m_OuterShadowSize = ScreenPixelSize * 2.0f"), std::string::npos);
-	EXPECT_NE(IslandBody.find("m_OuterShadowOpacity = 0.18f * EntrancePose.m_BackgroundColor.a"), std::string::npos);
-	EXPECT_NE(IslandBody.find("RenderMediaIslandBlur(CurrentSdfState.m_Rect"), std::string::npos);
+	EXPECT_NE(IslandBody.find("m_OuterShadowSize = ScreenPixelSize * 5.0f"), std::string::npos);
+	EXPECT_NE(IslandBody.find("m_OuterShadowOpacity = 0.35f * EntrancePose.m_BackgroundColor.a"), std::string::npos);
+	EXPECT_EQ(IslandBody.find("RenderMediaIslandBlur(CurrentSdfState.m_Rect"), std::string::npos);
+	EXPECT_NE(ShadowBody.find("State.m_Items"), std::string::npos);
+	EXPECT_NE(ShadowBody.find("State.m_HasRightCapsule"), std::string::npos);
 	EXPECT_NE(FallbackBody.find("DrawMediaIslandOuterShadowFallback"), std::string::npos);
 
 	for(const std::string *pShader : {&OpenGlShader, &VulkanShader})
@@ -1425,6 +1426,8 @@ TEST(QmHudMediaIslandSource, OuterShadowFollowsTheCombinedSdfAndPreservesBackdro
 		ASSERT_NE(ShadowComposite, std::string::npos);
 		ASSERT_NE(BackgroundComposite, std::string::npos);
 		EXPECT_LT(ShadowParams, ShadowComposite);
+		EXPECT_NE(pShader->find("ShapeDistance = min(ShapeDistance, SatelliteDistance);"), std::string::npos);
+		EXPECT_NE(pShader->find("ShapeDistance = min(ShapeDistance, CapsuleDistance);"), std::string::npos);
 		EXPECT_LT(ShadowComposite, BackgroundComposite);
 	}
 }

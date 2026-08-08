@@ -4691,11 +4691,9 @@ void CHud::RenderMediaIsland()
 	CurrentSdfState.m_RingThickness = SatelliteRingThickness;
 	CurrentSdfState.m_BackgroundColor = EntrancePose.m_BackgroundColor;
 	CurrentSdfState.m_ScreenPixelSize = ScreenPixelSize;
-	CurrentSdfState.m_OuterShadowSize = ScreenPixelSize * 2.0f;
-	CurrentSdfState.m_OuterShadowOpacity = 0.18f * EntrancePose.m_BackgroundColor.a;
+	CurrentSdfState.m_OuterShadowSize = ScreenPixelSize * 5.0f;
+	CurrentSdfState.m_OuterShadowOpacity = 0.35f * EntrancePose.m_BackgroundColor.a;
 	CurrentSdfState.m_Rect = QmHudMediaIslandSdfOuterRect(CurrentSdfState);
-	if(PrepareMediaIslandBlur())
-		RenderMediaIslandBlur(CurrentSdfState.m_Rect, EntrancePose.m_BackgroundColor.a);
 	IGraphics::SMediaIslandSdfParams GpuSdfParams;
 	if(QmHudMediaIslandBuildGpuSdfParams(CurrentSdfState, GpuSdfParams))
 	{
