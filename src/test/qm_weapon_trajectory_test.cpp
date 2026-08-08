@@ -1,7 +1,63 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
+#include <game/client/components/qmclient/weapon_animation.h>
 #include <game/client/components/qmclient/weapon_trajectory.h>
 
 #include <gtest/gtest.h>
+
+TEST(QmWeaponReloadAnimation, UsesTheActualHammerReloadVariant)
+{
+	EXPECT_FLOAT_EQ(QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, WEAPON_HAMMER, false), 0.125f);
+	EXPECT_FLOAT_EQ(QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, WEAPON_HAMMER, true), 0.32f);
+	EXPECT_FLOAT_EQ(QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, WEAPON_NINJA, false), 0.8f);
+}
+
+TEST(QmWeaponReloadAnimation, RequiresReloadBelowOneAndAHalfTimesDefault)
+{
+	EXPECT_TRUE(QmWeaponReloadRotation(0.02f, 0.149f, 0.1f, 50).m_Active);
+	EXPECT_FALSE(QmWeaponReloadRotation(0.02f, 0.15f, 0.1f, 50).m_Active);
+	EXPECT_FALSE(QmWeaponReloadRotation(0.02f, 0.151f, 0.1f, 50).m_Active);
+}
+
+TEST(QmWeaponReloadAnimation, RotatesUniformlyUntilTheTickQuantizedReloadEnds)
+{
+	const SQmWeaponReloadRotation Start = QmWeaponReloadRotation(0.0f, 0.125f, 0.125f, 50);
+	const SQmWeaponReloadRotation Quarter = QmWeaponReloadRotation(0.03f, 0.125f, 0.125f, 50);
+	const SQmWeaponReloadRotation End = QmWeaponReloadRotation(0.12f, 0.125f, 0.125f, 50);
+
+	ASSERT_TRUE(Start.m_Active);
+	EXPECT_FLOAT_EQ(Start.m_Angle, 0.0f);
+	ASSERT_TRUE(Quarter.m_Active);
+	EXPECT_FLOAT_EQ(Quarter.m_Angle, pi / 2.0f);
+	EXPECT_FALSE(End.m_Active);
+	EXPECT_FLOAT_EQ(End.m_Angle, 0.0f);
+}
+
+TEST(QmWeaponReloadAnimation, ReloadRotationOverridesWeaponSwitchRotation)
+{
+	const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(0.03f, 0.125f, 0.125f, 50);
+	EXPECT_FLOAT_EQ(QmResolveWeaponAnimationRotation(0.75f, ReloadRotation, true), pi / 2.0f);
+	EXPECT_FLOAT_EQ(QmResolveWeaponAnimationRotation(0.75f, SQmWeaponReloadRotation(), true), 0.0f);
+	EXPECT_FLOAT_EQ(QmResolveWeaponAnimationRotation(0.75f, SQmWeaponReloadRotation(), false), 0.75f);
+}
+
+TEST(QmWeaponReloadAnimation, KeepsAnAttackBoundToItsWeaponAndTuneZone)
+{
+	SQmWeaponReloadAnimationState State;
+	State.ObserveAttack(100, WEAPON_GUN, 2, false);
+	EXPECT_TRUE(State.MatchesAttack(100, WEAPON_GUN));
+	EXPECT_EQ(State.m_AttackTuneZone, 2);
+
+	State.ObserveAttack(100, WEAPON_LASER, 3, false);
+	EXPECT_FALSE(State.MatchesAttack(100, WEAPON_LASER));
+	EXPECT_EQ(State.m_AttackTuneZone, 2);
+
+	State.ObserveAttack(101, WEAPON_LASER, 3, false);
+	EXPECT_TRUE(State.MatchesAttack(101, WEAPON_LASER));
+	EXPECT_EQ(State.m_AttackTuneZone, 3);
+
+	State.ObserveAttack(102, WEAPON_HAMMER, 4, true);
+	EXPECT_TRUE(State.m_PredictedHammerHit);
+}
 
 TEST(QmWeaponTrajectory, SelectsWeaponSpecificBaseColors)
 {

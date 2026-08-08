@@ -5,6 +5,7 @@
 #include <generated/protocol.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/weapon_animation.h>
 #include <game/client/render.h>
 
 class CPlayers : public CComponent
@@ -49,6 +50,7 @@ class CPlayers : public CComponent
 	int m_aWeaponSpriteMuzzleQuadContainerIndex[NUM_WEAPONS];
 	int m_aWeaponSwitchLastWeapons[MAX_CLIENTS];
 	double m_aWeaponSwitchStartTimes[MAX_CLIENTS];
+	SQmWeaponReloadAnimationState m_aWeaponReloadAnimationStates[MAX_CLIENTS];
 
 	void CreateNinjaTeeRenderInfo();
 	void CreateSpectatorTeeRenderInfo();

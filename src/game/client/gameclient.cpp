@@ -2837,7 +2837,8 @@ void CGameClient::FinalizeHammerHitEvents()
 			Event.m_Pos,
 			Event.m_Connection,
 			TargetWoke};
-		if((IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId)) && m_HammerHitTracker.Record(Hit))
+		const bool LocalRelated = IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId);
+		if((LocalRelated || Hit.m_AttackerId >= 0) && m_HammerHitTracker.Record(Hit) && LocalRelated)
 			HandleConfirmedHammerHit(Hit);
 
 		if(Event.m_RenderEffect)
