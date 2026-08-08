@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <vector>
 
 TEST(QmInputOverlayLayout, MouseClassificationRequiresMouseOnlyInputs)
@@ -85,6 +86,37 @@ TEST(QmScoreboardTeamModes, AggregationRequiresDisplayInfoAndCombinesKnownMember
 	EXPECT_TRUE(State.Practice());
 	EXPECT_TRUE(State.Team0Mode());
 	EXPECT_TRUE(State.Locked());
+}
+
+TEST(QmScoreboardTeamModes, SpecPlayersKeepTheirScoreboardTeamAndLastKnownModeState)
+{
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_GAME, false, false), TEAM_GAME);
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_SPECTATORS, true, false), TEAM_GAME);
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_SPECTATORS, false, false), TEAM_SPECTATORS);
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_SPECTATORS, true, true), TEAM_SPECTATORS);
+
+	constexpr int DdTeam = 3;
+	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aTeamModes{};
+	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aCachedTeamModes{};
+	std::array<bool, NUM_DDRACE_TEAMS> aTeamHasSpecPlayer{};
+
+	aTeamModes[DdTeam].m_Known = true;
+	aTeamModes[DdTeam].m_Flags = CHARACTERFLAG_PRACTICE_MODE | CHARACTERFLAG_LOCK_MODE;
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	EXPECT_TRUE(aCachedTeamModes[DdTeam].Practice());
+	EXPECT_TRUE(aCachedTeamModes[DdTeam].Locked());
+
+	aTeamModes = {};
+	aTeamHasSpecPlayer[DdTeam] = true;
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	EXPECT_TRUE(aTeamModes[DdTeam].m_Known);
+	EXPECT_TRUE(aTeamModes[DdTeam].Practice());
+	EXPECT_TRUE(aTeamModes[DdTeam].Locked());
+
+	aTeamModes = {};
+	aTeamHasSpecPlayer = {};
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	EXPECT_FALSE(aTeamModes[DdTeam].m_Known);
 }
 
 TEST(UiV2Layout, RowPaddingGapAndPosition)

@@ -96,6 +96,7 @@ class CScoreboard : public CComponent
 	{
 		std::array<CScoreboardPlayerRow, MAX_CLIENTS> m_aRows{};
 		std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> m_aTeamModes{};
+		std::array<bool, NUM_DDRACE_TEAMS> m_aTeamHasSpecPlayer{};
 		int m_Count = 0;
 	};
 
@@ -108,7 +109,8 @@ class CScoreboard : public CComponent
 	void DestroyBetterScoreboardBlurTargets();
 	bool PrepareBetterScoreboardBlur();
 	void RenderBetterScoreboardBlur(const CUIRect &Rect);
-	void BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan) const;
+	void UpdateTeamModeCache();
+	void BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan);
 	void RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart, int CountEnd, const CScoreboardPlayerRowPlan &Plan, CScoreboardRenderState &State);
 	void RenderRecordingNotification(float x);
 
@@ -132,6 +134,7 @@ class CScoreboard : public CComponent
 	int m_BetterScoreboardBlurWidth = 0;
 	int m_BetterScoreboardBlurHeight = 0;
 	bool m_BetterScoreboardBlurReady = false;
+	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> m_aCachedTeamModes{};
 
 	std::optional<vec2> m_LastMousePos;
 	bool m_MouseUnlocked = false;
