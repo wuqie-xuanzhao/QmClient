@@ -2364,6 +2364,7 @@ set(COPY_FILES
   ${SDL2_COPY_FILES}
   ${SQLite3_COPY_FILES}
   ${FFMPEG_COPY_FILES}
+  ${WAVPACK_COPY_FILES}
   ${WEBSOCKETS_COPY_FILES}
   ${DISCORDSDK_COPY_FILES}
   ${VULKAN_COPY_FILES}
@@ -3789,6 +3790,14 @@ if(CLIENT)
 
   if(TARGET sync_runtime_data)
     add_dependencies(game-client sync_runtime_data)
+  endif()
+
+  if(GLEW_BUNDLED)
+    target_compile_definitions(game-client PRIVATE CONF_GLEW_HAS_CONTEXT_INIT)
+  endif()
+
+  if(VULKAN)
+    target_compile_definitions(game-client PRIVATE CONF_BACKEND_VULKAN)
   endif()
 
   list(APPEND TARGETS_OWN game-client)
