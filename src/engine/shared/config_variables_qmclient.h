@@ -139,7 +139,7 @@ MACRO_CONFIG_INT(QmCycleTeeHueDummy, qm_cycle_tee_hue_dummy, 0, 0, 1, CFGFLAG_CL
 MACRO_CONFIG_INT(QmCycleTeeHueSpeed, qm_cycle_tee_hue_speed, 72, 0, 360, CFGFLAG_CLIENT | CFGFLAG_SAVE, "循环本体自定义 Tee 色调速度（度/秒）")
 MACRO_CONFIG_INT(QmRandomEmoteOnHit, qm_random_emote_on_hit, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "被锤/榴弹击中时随机表情")
 MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）")
-MACRO_CONFIG_COL(QmWeaponTrajectoryColor, qm_weapon_trajectory_color, 16750899, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线颜色")
+MACRO_CONFIG_COL(QmWeaponTrajectoryColor, qm_weapon_trajectory_color, 16750899, CFGFLAG_CLIENT | CFGFLAG_SAVE, "手榴弹弹道辅助线颜色")
 MACRO_CONFIG_INT(QmWeaponTrajectoryWidth, qm_weapon_trajectory_width, 2, 1, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线宽度")
 MACRO_CONFIG_INT(QmWeaponTrajectoryAlpha, qm_weapon_trajectory_alpha, 70, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线透明度")
 MACRO_CONFIG_INT(QmWeaponSwitchAnim, qm_weapon_switch_anim, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "切换武器时播放滑入旋转动画")

@@ -3611,6 +3611,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_lyrics_song_search_map_test.cpp
     qm_modes_test.cpp
     qm_tee_hue_cycle_test.cpp
+    qm_weapon_trajectory_test.cpp
     qmclient_update_version_test.cpp
     QmUiTokensTest.cpp
     qmclient_monitoring_test.cpp

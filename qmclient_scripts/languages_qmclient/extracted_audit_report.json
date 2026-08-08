@@ -105490,7 +105490,7 @@
     {
       "file": "src/test/qm_new_ui_menu_branch_test.cpp",
       "line": 665,
-      "text": "#define QMCLIENT_VERSION \"2.79.3\"",
+      "text": "#define QMCLIENT_VERSION \"2.79.4\"",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
@@ -111006,7 +111006,7 @@
     {
       "file": "src/test/qmclient_monitoring_test.cpp",
       "line": 2035,
-      "text": "#define QMCLIENT_VERSION \"2.79.3\"",
+      "text": "#define QMCLIENT_VERSION \"2.79.4\"",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
