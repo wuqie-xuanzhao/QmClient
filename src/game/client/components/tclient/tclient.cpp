@@ -3991,7 +3991,7 @@ void CTClient::ApplyFocusModeEffects()
 			FocusActive ? "[[$FF7F7F]]" : "[[$A5FFA5]]",
 			Localize("Zen Mode"),
 			Localize(FocusActive ? "On" : "Off"));
-		GameClient()->Echo(aFocusMsg, true);
+		GameClient()->Echo(aFocusMsg);
 	}
 
 	ApplyFocusOverride(m_FocusHudOverrideState, HideFocusHud, g_Config.m_ClShowhud, 0);
@@ -4058,7 +4058,7 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 			GoresActive ? "[[$FF7F7F]]" : "[[$A5FFA5]]",
 			Localize("Gores Mode"),
 			Localize(GoresActive ? "On" : "Off"));
-		GameClient()->Echo(aGoresMsg, true);
+		GameClient()->Echo(aGoresMsg);
 	}
 
 	FastInputConfigChanged = TcFastInputChanged || TcFastInputOthersChanged || DummyHammerChanged;

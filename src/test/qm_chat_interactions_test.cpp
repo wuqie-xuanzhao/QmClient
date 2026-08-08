@@ -282,6 +282,21 @@ TEST(QmLocalSaveJoinHint, UsesExpiringEchoMessages)
 	EXPECT_EQ(Body.find("GameClient()->Echo(CodesLine.c_str(), true);"), std::string::npos);
 }
 
+TEST(QmModeStatus, UsesExpiringEchoMessages)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string FocusBody = SourceFunctionBody(Source, "void CTClient::ApplyFocusModeEffects()");
+	const std::string GoresBody = SourceFunctionBody(Source, "void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)");
+	const std::string EchoBody = SourceFunctionBody(Chat, "void CChat::Echo(const char *pString)");
+
+	EXPECT_NE(FocusBody.find("GameClient()->Echo(aFocusMsg);"), std::string::npos);
+	EXPECT_EQ(FocusBody.find("GameClient()->Echo(aFocusMsg, true);"), std::string::npos);
+	EXPECT_NE(GoresBody.find("GameClient()->Echo(aGoresMsg);"), std::string::npos);
+	EXPECT_EQ(GoresBody.find("GameClient()->Echo(aGoresMsg, true);"), std::string::npos);
+	EXPECT_NE(EchoBody.find("GameClient()->m_QmHudNotifications.QueueEcho"), std::string::npos);
+}
+
 TEST(QmChatPresentation, ResetAndTimeRollbackKeepFiniteFreshState)
 {
 	CChat::SPresentationState Presentation;
