@@ -111,6 +111,20 @@ TEST(SystemMediaAlbumArt, CircularMaskUsesSmoothInwardFeather)
 	EXPECT_FLOAT_EQ(OpaqueInside, 1.0f);
 }
 
+TEST(SystemMediaAlbumArt, CircularMaskKeepsFullyTransparentOuterTexelBand)
+{
+	constexpr uint32_t Size = 256;
+	constexpr float Feather = 4.0f;
+	for(uint32_t Pixel = 0; Pixel < Size; ++Pixel)
+	{
+		const float PixelCenter = Pixel + 0.5f;
+		EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(0.5f, PixelCenter, Size, Size, Feather), 0.0f);
+		EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(Size - 0.5f, PixelCenter, Size, Size, Feather), 0.0f);
+		EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(PixelCenter, 0.5f, Size, Size, Feather), 0.0f);
+		EXPECT_FLOAT_EQ(SystemMediaControls::AlbumArtCircleMaskAlpha(PixelCenter, Size - 0.5f, Size, Size, Feather), 0.0f);
+	}
+}
+
 TEST(SystemMediaAlbumArt, ExpensivePixelMaskRunsBeforeWorkerPublishesCover)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/system_media_controls.cpp"));
@@ -145,6 +159,20 @@ TEST(SystemMediaAlbumArt, CircularMediaIslandTextureDoesNotReplaceLegacyCover)
 
 	EXPECT_NE(Source.find("TrackInput.m_Cover = MediaState.m_AlbumArtCircular;"), std::string::npos);
 	EXPECT_NE(Source.find("Graphics()->TextureSet(MediaState.m_AlbumArt);"), std::string::npos);
+}
+
+TEST(SystemMediaAlbumArt, CircularMediaIslandTextureUsesAlphaQuadWithoutGeometryClipping)
+{
+	std::ifstream File(TestSourcePath("src/game/client/components/hud.cpp"));
+	ASSERT_TRUE(File.good());
+	std::stringstream Buffer;
+	Buffer << File.rdbuf();
+	const std::string Source = Buffer.str();
+
+	EXPECT_NE(Source.find("void DrawTexturedQuad("), std::string::npos);
+	EXPECT_NE(Source.find("pGraphics->QuadsDrawTL(&CoverQuad, 1);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawTexturedQuad(Graphics(), Track.m_Cover, CoverCenter, CoverDrawRadius, Alpha);"), std::string::npos);
+	EXPECT_EQ(Source.find("DrawTexturedCircle("), std::string::npos);
 }
 
 TEST(SystemMediaTimeline, LastUpdatedChangeAdvancesTimelineGeneration)

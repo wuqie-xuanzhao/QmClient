@@ -35,6 +35,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/console.h>
+#include <game/client/components/hud_media_island_logic.h>
 #include <game/client/components/key_binder.h>
 #include <game/client/components/menu_background.h>
 #include <game/client/components/qmclient/perf_logging.h>
@@ -46,6 +47,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <unordered_map>
 #include <vector>
 
@@ -53,6 +55,143 @@ extern bool gs_SettingsAssetsEntityGamePreview;
 
 namespace
 {
+	constexpr int QmToggleMaskAtlasWidth = 256;
+	constexpr int QmToggleMaskAtlasHeight = 128;
+	constexpr int QmToggleMaskSupersampling = 8;
+	constexpr int QmToggleTrackRegionWidth = 160;
+	constexpr int QmToggleMaskRegionHeight = 96;
+	constexpr int QmToggleTrackShapeX = 14;
+	constexpr int QmToggleTrackShapeY = 8;
+	constexpr int QmToggleTrackShapeWidth = 132;
+	constexpr int QmToggleTrackShapeHeight = 80;
+	constexpr int QmToggleKnobRegionX = 160;
+	constexpr int QmToggleKnobShapeInset = 8;
+	constexpr int QmToggleKnobShapeSize = 80;
+
+	void RasterizeQmToggleCapsuleMask(CImageInfo &Image, int ShapeX, int ShapeY, int ShapeWidth, int ShapeHeight)
+	{
+		const float Radius = ShapeHeight * 0.5f;
+		const float CenterY = ShapeY + Radius;
+		const float MinCenterX = ShapeX + Radius;
+		const float MaxCenterX = ShapeX + ShapeWidth - Radius;
+		const float RadiusSquared = Radius * Radius;
+		constexpr int SampleCount = QmToggleMaskSupersampling * QmToggleMaskSupersampling;
+
+		for(int PixelY = ShapeY; PixelY < ShapeY + ShapeHeight; ++PixelY)
+		{
+			for(int PixelX = ShapeX; PixelX < ShapeX + ShapeWidth; ++PixelX)
+			{
+				int CoveredSamples = 0;
+				for(int SampleY = 0; SampleY < QmToggleMaskSupersampling; ++SampleY)
+				{
+					const float Y = PixelY + (SampleY + 0.5f) / QmToggleMaskSupersampling;
+					for(int SampleX = 0; SampleX < QmToggleMaskSupersampling; ++SampleX)
+					{
+						const float X = PixelX + (SampleX + 0.5f) / QmToggleMaskSupersampling;
+						const float NearestCenterX = std::clamp(X, MinCenterX, MaxCenterX);
+						const float DeltaX = X - NearestCenterX;
+						const float DeltaY = Y - CenterY;
+						if(DeltaX * DeltaX + DeltaY * DeltaY <= RadiusSquared)
+							++CoveredSamples;
+					}
+				}
+
+				const size_t Offset = ((size_t)PixelY * Image.m_Width + (size_t)PixelX) * Image.PixelSize();
+				Image.m_pData[Offset + 3] = (uint8_t)std::clamp(round_to_int(CoveredSamples * 255.0f / SampleCount), 0, 255);
+			}
+		}
+	}
+
+	IGraphics::CTextureHandle CreateQmToggleMaskTexture(IGraphics *pGraphics)
+	{
+		if(pGraphics == nullptr)
+			return {};
+
+		CImageInfo Image;
+		Image.m_Width = QmToggleMaskAtlasWidth;
+		Image.m_Height = QmToggleMaskAtlasHeight;
+		Image.m_Format = CImageInfo::FORMAT_RGBA;
+		size_t DataSize = 0;
+		if(!Image.DataSize(DataSize))
+			return {};
+		Image.m_pData = static_cast<uint8_t *>(malloc(DataSize));
+		if(Image.m_pData == nullptr)
+			return {};
+		for(size_t Offset = 0; Offset < DataSize; Offset += 4)
+		{
+			Image.m_pData[Offset + 0] = 255;
+			Image.m_pData[Offset + 1] = 255;
+			Image.m_pData[Offset + 2] = 255;
+			Image.m_pData[Offset + 3] = 0;
+		}
+
+		RasterizeQmToggleCapsuleMask(Image, QmToggleTrackShapeX, QmToggleTrackShapeY, QmToggleTrackShapeWidth, QmToggleTrackShapeHeight);
+		RasterizeQmToggleCapsuleMask(Image, QmToggleKnobRegionX + QmToggleKnobShapeInset, QmToggleKnobShapeInset, QmToggleKnobShapeSize, QmToggleKnobShapeSize);
+		return pGraphics->LoadTextureRawMove(Image, 0, "qm-toggle-mask");
+	}
+
+	void DrawQmToggleMasks(IGraphics *pGraphics, IGraphics::CTextureHandle Texture, const CUIRect &Track, ColorRGBA TrackColor, const CUIRect &Knob, ColorRGBA KnobColor)
+	{
+		const float TrackScaleX = Track.w / QmToggleTrackShapeWidth;
+		const float TrackScaleY = Track.h / QmToggleTrackShapeHeight;
+		const CUIRect TrackQuad{
+			Track.x - QmToggleTrackShapeX * TrackScaleX,
+			Track.y - QmToggleTrackShapeY * TrackScaleY,
+			QmToggleTrackRegionWidth * TrackScaleX,
+			QmToggleMaskRegionHeight * TrackScaleY};
+		const float KnobScaleX = Knob.w / QmToggleKnobShapeSize;
+		const float KnobScaleY = Knob.h / QmToggleKnobShapeSize;
+		const CUIRect KnobQuad{
+			Knob.x - QmToggleKnobShapeInset * KnobScaleX,
+			Knob.y - QmToggleKnobShapeInset * KnobScaleY,
+			(QmToggleMaskAtlasWidth - QmToggleKnobRegionX) * KnobScaleX,
+			QmToggleMaskRegionHeight * KnobScaleY};
+
+		pGraphics->TextureSet(Texture);
+		pGraphics->WrapClamp();
+		pGraphics->QuadsBegin();
+		pGraphics->SetColor(TrackColor);
+		pGraphics->QuadsSetSubset(0.0f, 0.0f, QmToggleTrackRegionWidth / (float)QmToggleMaskAtlasWidth, QmToggleMaskRegionHeight / (float)QmToggleMaskAtlasHeight);
+		const IGraphics::CQuadItem TrackItem(TrackQuad.x, TrackQuad.y, TrackQuad.w, TrackQuad.h);
+		pGraphics->QuadsDrawTL(&TrackItem, 1);
+		pGraphics->SetColor(KnobColor);
+		pGraphics->QuadsSetSubset(QmToggleKnobRegionX / (float)QmToggleMaskAtlasWidth, 0.0f, 1.0f, QmToggleMaskRegionHeight / (float)QmToggleMaskAtlasHeight);
+		const IGraphics::CQuadItem KnobItem(KnobQuad.x, KnobQuad.y, KnobQuad.w, KnobQuad.h);
+		pGraphics->QuadsDrawTL(&KnobItem, 1);
+		pGraphics->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		pGraphics->QuadsSetSubset(0.0f, 0.0f, 1.0f, 1.0f);
+		pGraphics->QuadsEnd();
+		pGraphics->WrapNormal();
+	}
+
+	float SnapUiToPixel(float Value, float PixelSize)
+	{
+		if(PixelSize <= 0.0f)
+			return Value;
+		return std::round(Value / PixelSize) * PixelSize;
+	}
+
+	void SplitMenuCheckboxRects(const CUIRect &Rect, bool UseQmToggleStyle, CUIRect *pBox, CUIRect *pLabel)
+	{
+		CUIRect Box, Label;
+		if(UseQmToggleStyle)
+		{
+			const float ToggleHeight = std::min(Rect.h, std::clamp(Rect.h * 0.68f, 10.0f, 18.0f));
+			const float ToggleWidth = ToggleHeight * 1.65f;
+			Rect.VSplitRight(ToggleWidth, &Label, &Box);
+			Label.VSplitRight(5.0f, &Label, nullptr);
+			Box.HMargin((Box.h - ToggleHeight) * 0.5f, &Box);
+		}
+		else
+		{
+			Rect.VSplitLeft(Rect.h, &Box, &Label);
+			Label.VSplitLeft(5.0f, nullptr, &Label);
+			Box.Margin(2.0f, &Box);
+		}
+		*pBox = Box;
+		*pLabel = Label;
+	}
+
 	class CUiRenderOnlyScope
 	{
 	public:
@@ -109,7 +248,15 @@ namespace
 	constexpr float MENU_TAB_DEFAULT_W_OFFSET = 0.0f;
 	constexpr float MENU_TAB_DEFAULT_H_OFFSET = 3.0f;
 	constexpr float MENU_TAB_ANIM_EPSILON = 0.0001f;
+	constexpr float MENU_TAB_INDICATOR_WIDTH_RATIO = 0.35f;
+	constexpr float MENU_TAB_INDICATOR_HEIGHT = 3.0f;
+	constexpr float MENU_TAB_SATELLITE_DURATION = 0.440f;
 	constexpr float MENU_MENUBAR_HEIGHT_NEW = 24.0f;
+	constexpr float MENU_MENUBAR_CONTROL_SCALE = 1.20f;
+	constexpr float MENU_MENUBAR_CONTROL_HEIGHT = 19.0f * MENU_MENUBAR_CONTROL_SCALE;
+	constexpr float MENU_MENUBAR_CONTENT_INSET = 2.0f * MENU_MENUBAR_CONTROL_SCALE;
+	constexpr float MENU_MENUBAR_LABEL_FONT_SIZE = 13.0f * MENU_MENUBAR_CONTROL_SCALE;
+	constexpr float MENU_MENUBAR_CONTROL_RADIUS = 7.0f * MENU_MENUBAR_CONTROL_SCALE;
 	constexpr float MENU_MENUBAR_HEIGHT_LEGACY = 30.0f;
 	constexpr float MENU_MENUBAR_LEGACY_ICON_BUTTON_SIZE = 29.0f;
 	constexpr float MENU_MENUBAR_LEGACY_GAP = 8.0f;
@@ -120,6 +267,51 @@ namespace
 	constexpr float MenuMenubarHeight(bool UseNewUi)
 	{
 		return UseNewUi ? MENU_MENUBAR_HEIGHT_NEW : MENU_MENUBAR_HEIGHT_LEGACY;
+	}
+
+	CUIRect MenubarIndicatorTargetRect(const CUIRect &TabRect)
+	{
+		CUIRect Indicator;
+		Indicator.w = TabRect.w * MENU_TAB_INDICATOR_WIDTH_RATIO;
+		Indicator.x = TabRect.x + (TabRect.w - Indicator.w) * 0.5f;
+		Indicator.y = TabRect.y + TabRect.h - MENU_TAB_INDICATOR_HEIGHT;
+		Indicator.h = MENU_TAB_INDICATOR_HEIGHT;
+		return Indicator;
+	}
+
+	CUIRect MenubarLiquidSatelliteRect(const CUIRect &BaseRect, const SHudMediaIslandBlobPose &BlobPose)
+	{
+		const float CenterX = BaseRect.x + BaseRect.w * 0.5f;
+		const float CenterY = BaseRect.y + BaseRect.h * 0.5f;
+		CUIRect Satellite;
+		Satellite.w = BaseRect.w * BlobPose.m_RadiusScale * BlobPose.m_StretchX;
+		Satellite.h = BaseRect.h * BlobPose.m_RadiusScale * BlobPose.m_StretchY;
+		Satellite.x = CenterX - Satellite.w * 0.5f;
+		Satellite.y = CenterY - Satellite.h * 0.5f;
+		return Satellite;
+	}
+
+	void DrawMenubarIndicatorLiquidBridge(const CUIRect &MainRect, const CUIRect &SatelliteRect, const ColorRGBA &Color, float ConnectionStrength)
+	{
+		ConnectionStrength = std::clamp(ConnectionStrength, 0.0f, 1.0f);
+		if(ConnectionStrength <= MENU_TAB_ANIM_EPSILON || SatelliteRect.w <= 0.0f || SatelliteRect.h <= 0.0f)
+			return;
+
+		const float MainCenterX = MainRect.x + MainRect.w * 0.5f;
+		const float SatelliteCenterX = SatelliteRect.x + SatelliteRect.w * 0.5f;
+		const bool MovesRight = SatelliteCenterX >= MainCenterX;
+		const float BridgeStart = MovesRight ? MainRect.x + MainRect.w : SatelliteRect.x + SatelliteRect.w;
+		const float BridgeEnd = MovesRight ? SatelliteRect.x : MainRect.x;
+		const float Gap = BridgeEnd - BridgeStart;
+		if(Gap <= 0.0f || Gap > MainRect.h * 3.0f)
+			return;
+
+		CUIRect Bridge;
+		Bridge.x = BridgeStart;
+		Bridge.w = Gap;
+		Bridge.h = minimum(MainRect.h, SatelliteRect.h) * 0.72f * ConnectionStrength;
+		Bridge.y = MainRect.y + MainRect.h * 0.5f - Bridge.h * 0.5f;
+		Bridge.Draw(Color, IGraphics::CORNER_ALL, Bridge.h * 0.5f);
 	}
 
 	CUIRect MenuButtonTextRect(const CUIRect *pRect, float FontFactor, float HoverLift)
@@ -907,9 +1099,9 @@ int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool
 	return Ui()->DoButtonLogic(pButtonId, 0, pRect, BUTTONFLAG_LEFT);
 }
 
-int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags)
+int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, bool ForceLegacyStyle)
 {
-	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, pBoxText, pRect, Flags, nullptr);
+	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, pBoxText, pRect, Flags, nullptr, ForceLegacyStyle);
 }
 
 void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const
@@ -936,11 +1128,12 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 		*pScrollBarRect = ScrollBar;
 }
 
-int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement)
+int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, bool ForceLegacyStyle)
 {
+	const bool HasCustomGlyph = pBoxText[0] != '\0' && pBoxText[0] != 'X';
+	const bool UseQmToggleStyle = g_Config.m_QmNewUi != 0 && !HasCustomGlyph && !ForceLegacyStyle;
 	CUIRect Box, Label;
-	pRect->VSplitLeft(pRect->h, &Box, &Label);
-	Label.VSplitLeft(5.0f, nullptr, &Label);
+	SplitMenuCheckboxRects(*pRect, UseQmToggleStyle, &Box, &Label);
 
 	const bool Hovered = Ui()->HotItem() == pId || Ui()->CheckActiveItem(pId);
 	static const uint64_t s_HoverScopeHash = static_cast<uint64_t>(str_quickhash("menu_checkbox_hover"));
@@ -948,27 +1141,60 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 	const uint64_t HoverNodeKey = BuildUiAnimNodeKey(s_HoverScopeHash, reinterpret_cast<uint64_t>(pId));
 	const uint64_t CheckNodeKey = BuildUiAnimNodeKey(s_CheckScopeHash, reinterpret_cast<uint64_t>(pId));
 	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+	const float TargetCheckStrength = *pBoxText == 'X' ? 1.0f : 0.0f;
 	const float HoverStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, HoverNodeKey, EUiAnimProperty::SCALE, Hovered ? 1.0f : 0.0f, 0.10f, EEasing::EASE_OUT), 0.0f, 1.0f);
-	const float CheckStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, CheckNodeKey, EUiAnimProperty::ALPHA, *pBoxText == 'X' ? 1.0f : 0.0f, 0.10f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	const float CheckStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, CheckNodeKey, EUiAnimProperty::ALPHA, TargetCheckStrength, 0.10f, EEasing::EASE_OUT), 0.0f, 1.0f);
 
-	Box.Margin(2.0f, &Box);
-	const float BoxAlpha = std::clamp(0.25f * Ui()->ButtonColorMul(pId) + 0.10f * HoverStrength + 0.08f * CheckStrength, 0.0f, 1.0f);
-	Box.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, BoxAlpha), IGraphics::CORNER_ALL, 3.0f);
-
-	const bool HasCustomGlyph = pBoxText[0] != '\0' && pBoxText[0] != 'X';
-	if(HasCustomGlyph)
+	if(UseQmToggleStyle)
 	{
-		Ui()->DoLabel(&Box, pBoxText, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		const float UiPixelSize = Ui()->PixelSize();
+		CUIRect ToggleTrack = Box;
+		ToggleTrack.x = SnapUiToPixel(ToggleTrack.x, UiPixelSize);
+		ToggleTrack.y = SnapUiToPixel(ToggleTrack.y, UiPixelSize);
+		ToggleTrack.w = std::max(UiPixelSize, SnapUiToPixel(ToggleTrack.w, UiPixelSize));
+		ToggleTrack.h = std::max(UiPixelSize, SnapUiToPixel(ToggleTrack.h, UiPixelSize));
+		const float ToggleProgress = std::abs(CheckStrength - TargetCheckStrength) <= MENU_TAB_ANIM_EPSILON ? TargetCheckStrength : CheckStrength;
+		const ColorRGBA OffTrackColor(1.0f, 1.0f, 1.0f, 0.06f + 0.04f * HoverStrength);
+		const ColorRGBA OnTrackColor(1.0f, 1.0f, 1.0f, 0.38f + 0.06f * HoverStrength);
+		const ColorRGBA TrackColor(1.0f, 1.0f, 1.0f, mix(OffTrackColor.a, OnTrackColor.a, ToggleProgress));
+
+		const float KnobPadding = std::max(UiPixelSize, SnapUiToPixel(std::max(1.25f, ToggleTrack.h * 0.14f), UiPixelSize));
+		const float KnobSize = std::max(UiPixelSize, SnapUiToPixel(ToggleTrack.h - 2.0f * KnobPadding, UiPixelSize));
+		const float KnobLeft = ToggleTrack.x + KnobPadding;
+		const float KnobRight = ToggleTrack.x + ToggleTrack.w - KnobSize - KnobPadding;
+		CUIRect ToggleKnob{KnobLeft + (KnobRight - KnobLeft) * ToggleProgress, ToggleTrack.y + (ToggleTrack.h - KnobSize) * 0.5f, KnobSize, KnobSize};
+		ToggleKnob.x = SnapUiToPixel(ToggleKnob.x, UiPixelSize);
+		ToggleKnob.y = SnapUiToPixel(ToggleKnob.y, UiPixelSize);
+		const float KnobAlpha = mix(0.30f + 0.08f * HoverStrength, 0.88f + 0.08f * HoverStrength, ToggleProgress);
+		const ColorRGBA KnobColor(1.0f, 1.0f, 1.0f, KnobAlpha);
+		if(m_QmToggleMaskTexture.IsValid())
+		{
+			DrawQmToggleMasks(Graphics(), m_QmToggleMaskTexture, ToggleTrack, TrackColor, ToggleKnob, KnobColor);
+		}
+		else
+		{
+			ToggleTrack.Draw(TrackColor, IGraphics::CORNER_ALL, ToggleTrack.h * 0.5f);
+			ToggleKnob.Draw(KnobColor, IGraphics::CORNER_ALL, KnobSize * 0.5f);
+		}
 	}
-	else if(CheckStrength > MENU_TAB_ANIM_EPSILON)
+	else
 	{
-		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		const ColorRGBA DefaultColor = TextRender()->DefaultTextColor();
-		TextRender()->TextColor(ColorRGBA(DefaultColor.r, DefaultColor.g, DefaultColor.b, DefaultColor.a * CheckStrength));
-		Ui()->DoLabel(&Box, FONT_ICON_XMARK, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
-		TextRender()->TextColor(DefaultColor);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		const float BoxAlpha = std::clamp(0.25f * Ui()->ButtonColorMul(pId) + 0.10f * HoverStrength + 0.08f * CheckStrength, 0.0f, 1.0f);
+		Box.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, BoxAlpha), IGraphics::CORNER_ALL, 3.0f);
+		if(HasCustomGlyph)
+		{
+			Ui()->DoLabel(&Box, pBoxText, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		}
+		else if(CheckStrength > MENU_TAB_ANIM_EPSILON)
+		{
+			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
+			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+			const ColorRGBA DefaultColor = TextRender()->DefaultTextColor();
+			TextRender()->TextColor(ColorRGBA(DefaultColor.r, DefaultColor.g, DefaultColor.b, DefaultColor.a * CheckStrength));
+			Ui()->DoLabel(&Box, FONT_ICON_XMARK, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			TextRender()->TextColor(DefaultColor);
+			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		}
 	}
 
 	TextRender()->SetRenderFlags(0);
@@ -999,9 +1225,7 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT);
 	}
 	CUIRect Box, Label;
-	pRect->VSplitLeft(pRect->h, &Box, &Label);
-	Label.VSplitLeft(5.0f, nullptr, &Label);
-	Box.Margin(2.0f, &Box);
+	SplitMenuCheckboxRects(*pRect, g_Config.m_QmNewUi != 0, &Box, &Label);
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
 	Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
@@ -1416,13 +1640,14 @@ int CMenus::DoButton_CheckBox_Number(const void *pId, const char *pText, int Che
 	return DoButton_CheckBox_Common(pId, pText, aBuf, pRect, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 }
 
-int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)
+int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, bool LargeMenubarControl, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)
 {
 	// Compose target background color from active / hover / idle states. Custom
 	// overrides are honored when supplied (Quit red, Home news green, favorite
 	// community appear-fade etc.); otherwise we fall back to feat-003 tokens.
 	const bool Hover = Ui()->HotItem() == static_cast<const void *>(pButtonContainer);
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
+	const bool UseLargeMenubarControl = UseNewUi && LargeMenubarControl;
 	const ColorRGBA DefaultColor = UseNewUi ? MenuTabDefaultColor() : ms_ColorTabbarInactive;
 	const ColorRGBA ActiveColor = UseNewUi ? MenuTabActiveColor() : ms_ColorTabbarActive;
 	const ColorRGBA HoverColor = UseNewUi ? MenuTabHoverColor() : ms_ColorTabbarHover;
@@ -1437,19 +1662,22 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 	const uint64_t NodeKey = BuildUiAnimNodeKey(MakeUiScopeHash("menubar_v2_tab"), reinterpret_cast<uint64_t>(pButtonContainer));
 	CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
 	const ColorRGBA Resolved = ResolveUiAnimValueColor(AnimRt, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
-	pRect->Draw(Resolved, Corners, UseNewUi ? 7.0f : 10.0f);
+	const float ControlRadius = UseLargeMenubarControl ? MENU_MENUBAR_CONTROL_RADIUS : (UseNewUi ? 7.0f : 10.0f);
+	pRect->Draw(Resolved, Corners, ControlRadius);
+	const float ContentInset = UseLargeMenubarControl ? MENU_MENUBAR_CONTENT_INSET : 2.0f;
 
 	if(pCommunityIcon != nullptr)
 	{
 		CUIRect IconRect;
-		pRect->Margin(2.0f, &IconRect);
+		pRect->Margin(ContentInset, &IconRect);
 		m_CommunityIcons.Render(pCommunityIcon, IconRect, true);
 	}
 	else
 	{
 		CUIRect Label;
-		pRect->HMargin(2.0f, &Label);
-		const float LabelFontSize = UseNewUi ? minimum(Label.h * CUi::ms_FontmodHeight, 13.0f) : Label.h * CUi::ms_FontmodHeight;
+		pRect->HMargin(ContentInset, &Label);
+		const float NewUiLabelFontSize = UseLargeMenubarControl ? MENU_MENUBAR_LABEL_FONT_SIZE : 13.0f;
+		const float LabelFontSize = UseNewUi ? minimum(Label.h * CUi::ms_FontmodHeight, NewUiLabelFontSize) : Label.h * CUi::ms_FontmodHeight;
 		if(pTextUiElement != nullptr)
 		{
 			CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);
@@ -1491,11 +1719,21 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	// paint a Steam-blue underline indicator after all tabs are rendered.
 	CUIRect MenubarActiveRect = {0.0f, 0.0f, 0.0f, 0.0f};
 	bool MenubarHaveActive = false;
+	CUIRect MenubarHoveredRect = {0.0f, 0.0f, 0.0f, 0.0f};
+	bool MenubarHaveHovered = false;
 	auto MenubarTrackActive = [&](int Page, const CUIRect &R) {
 		if(Page == ActivePage)
 		{
 			MenubarActiveRect = R;
 			MenubarHaveActive = true;
+		}
+	};
+	auto MenubarTrackPage = [&](int Page, const CUIRect &R, const void *pButtonId) {
+		MenubarTrackActive(Page, R);
+		if(Page != ActivePage && Ui()->HotItem() == pButtonId)
+		{
+			MenubarHoveredRect = R;
+			MenubarHaveHovered = true;
 		}
 	};
 
@@ -1508,7 +1746,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	if(UseNewUi)
 	{
 		const float MenubarOuterInsetX = 6.0f;
-		const float MenubarOuterInsetY = 2.5f;
+		const float MenubarOuterInsetY = maximum(0.0f, (Box.h - MENU_MENUBAR_CONTROL_HEIGHT) * 0.5f);
 		Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f), IGraphics::CORNER_ALL, 10.0f);
 		Box.VMargin(MenubarOuterInsetX, &Box);
 		Box.HMargin(MenubarOuterInsetY, &Box);
@@ -1530,7 +1768,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(QuitButton.w, QuitButton.h);
 			QuitButton.x += (QuitButton.w - CircleSize) / 2.0f;
 			QuitButton.w = CircleSize;
-			if(DoMenuTabV2(&s_QuitButton, FONT_ICON_POWER_OFF, false, &QuitButton, IGraphics::CORNER_ALL, &QuitButtonDefault, nullptr, &QuitButtonHover))
+			if(DoMenuTabV2(&s_QuitButton, FONT_ICON_POWER_OFF, false, &QuitButton, IGraphics::CORNER_ALL, true, &QuitButtonDefault, nullptr, &QuitButtonHover))
 			{
 				if(GameClient()->Editor()->HasUnsavedData() || (GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmQuitTime && g_Config.m_ClConfirmQuitTime >= 0) || m_MenusIngameTouchControls.UnsavedChanges() || GameClient()->m_TouchControls.HasEditingChanges())
 				{
@@ -1552,11 +1790,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(SettingsButton.w, SettingsButton.h);
 			SettingsButton.x += (SettingsButton.w - CircleSize) / 2.0f;
 			SettingsButton.w = CircleSize;
-			if(DoMenuTabV2(&s_SettingsButton, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &SettingsButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
+			if(DoMenuTabV2(&s_SettingsButton, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &SettingsButton, IGraphics::CORNER_ALL, true, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
 			{
 				NewPage = PAGE_SETTINGS;
 			}
-			MenubarTrackActive(PAGE_SETTINGS, SettingsButton);
+			MenubarTrackPage(PAGE_SETTINGS, SettingsButton, &s_SettingsButton);
 		}
 		GameClient()->m_Tooltips.DoToolTip(&s_SettingsButton, &Button, Localize("Settings"));
 
@@ -1568,7 +1806,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(EditorButton.w, EditorButton.h);
 			EditorButton.x += (EditorButton.w - CircleSize) / 2.0f;
 			EditorButton.w = CircleSize;
-			if(DoMenuTabV2(&s_EditorButton, FONT_ICON_PEN_TO_SQUARE, false, &EditorButton, IGraphics::CORNER_ALL, &IconButtonDefault, nullptr, &IconButtonHover))
+			if(DoMenuTabV2(&s_EditorButton, FONT_ICON_PEN_TO_SQUARE, false, &EditorButton, IGraphics::CORNER_ALL, true, &IconButtonDefault, nullptr, &IconButtonHover))
 			{
 				g_Config.m_ClEditor = 1;
 			}
@@ -1585,11 +1823,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				const float CircleSize = minimum(DemoButton.w, DemoButton.h);
 				DemoButton.x += (DemoButton.w - CircleSize) / 2.0f;
 				DemoButton.w = CircleSize;
-				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
+				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, true, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
 				{
 					NewPage = PAGE_DEMOS;
 				}
-				MenubarTrackActive(PAGE_DEMOS, DemoButton);
+				MenubarTrackPage(PAGE_DEMOS, DemoButton, &s_DemoButton);
 			}
 			GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
 			Box.VSplitRight(MenubarIconGap, &Box, nullptr);
@@ -1628,7 +1866,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				const float CircleSize = minimum(HomeButton.w, HomeButton.h);
 				HomeButton.x += (HomeButton.w - CircleSize) / 2.0f;
 				HomeButton.w = CircleSize;
-				if(DoMenuTabV2(&s_StartButton, pHomeScreenButtonLabel, false, &HomeButton, IGraphics::CORNER_ALL, pHomeButtonColor != nullptr ? pHomeButtonColor : &HomeButtonDefault, nullptr, pHomeButtonColorHover != nullptr ? pHomeButtonColorHover : &HomeButtonHover))
+				if(DoMenuTabV2(&s_StartButton, pHomeScreenButtonLabel, false, &HomeButton, IGraphics::CORNER_ALL, true, pHomeButtonColor != nullptr ? pHomeButtonColor : &HomeButtonDefault, nullptr, pHomeButtonColorHover != nullptr ? pHomeButtonColorHover : &HomeButtonHover))
 				{
 					m_ShowStart = true;
 				}
@@ -1639,31 +1877,31 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(6.0f, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_InternetButton;
-			if(DoMenuTabV2(&s_InternetButton, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_InternetButton, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_ALL, true))
 			{
 				NewPage = PAGE_INTERNET;
 			}
-			MenubarTrackActive(PAGE_INTERNET, Button);
+			MenubarTrackPage(PAGE_INTERNET, Button, &s_InternetButton);
 			GameClient()->m_Tooltips.DoToolTip(&s_InternetButton, &Button, Localize("Internet"));
 
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_LanButton;
-			if(DoMenuTabV2(&s_LanButton, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_LanButton, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_ALL, true))
 			{
 				NewPage = PAGE_LAN;
 			}
-			MenubarTrackActive(PAGE_LAN, Button);
+			MenubarTrackPage(PAGE_LAN, Button, &s_LanButton);
 			GameClient()->m_Tooltips.DoToolTip(&s_LanButton, &Button, Localize("LAN"));
 
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoritesButton;
-			if(DoMenuTabV2(&s_FavoritesButton, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_FavoritesButton, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_ALL, true))
 			{
 				NewPage = PAGE_FAVORITES;
 			}
-			MenubarTrackActive(PAGE_FAVORITES, Button);
+			MenubarTrackPage(PAGE_FAVORITES, Button, &s_FavoritesButton);
 			GameClient()->m_Tooltips.DoToolTip(&s_FavoritesButton, &Button, Localize("Favorites"));
 
 			TextRender()->SetRenderFlags(0);
@@ -1671,11 +1909,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoriteMapsButton;
-			if(DoMenuTabV2(&s_FavoriteMapsButton, "🔖", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_FavoriteMapsButton, "🔖", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_ALL, true))
 			{
 				NewPage = PAGE_FAVORITE_MAPS;
 			}
-			MenubarTrackActive(PAGE_FAVORITE_MAPS, Button);
+			MenubarTrackPage(PAGE_FAVORITE_MAPS, Button, &s_FavoriteMapsButton);
 			GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
 
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -1769,11 +2007,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				HoverColor.a *= AppearStrength;
 
 				const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
-				if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_ALL, &InactiveColor, &ActiveColor, &HoverColor, m_CommunityIcons.Find(pCommunity->Id())))
+				if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_ALL, true, &InactiveColor, &ActiveColor, &HoverColor, m_CommunityIcons.Find(pCommunity->Id())))
 				{
 					NewPage = Page;
 				}
-				MenubarTrackActive(Page, AnimatedButton);
+				MenubarTrackPage(Page, AnimatedButton, &s_aFavoriteCommunityButtons[FavoriteCommunityIndex]);
 				GameClient()->m_Tooltips.DoToolTip(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], &AnimatedButton, pCommunity->Name());
 
 				aCurFavoriteCommunityAnimNodes[CurFavoriteCommunityAnimNodeCount++] = NodeKey;
@@ -1809,30 +2047,30 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 
 			Box.VSplitLeft(GameButtonWidth, &Button, &Box);
 			static CButtonContainer s_GameButton;
-			if(DoIngameMenuTab(&s_GameButton, PAGE_GAME, "ingame-tab-game", Localize("Game"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_TL))
+			if(DoIngameMenuTab(&s_GameButton, PAGE_GAME, "ingame-tab-game", Localize("Game"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_ALL))
 				NewPage = PAGE_GAME;
-			MenubarTrackActive(PAGE_GAME, Button);
+			MenubarTrackPage(PAGE_GAME, Button, &s_GameButton);
 
 			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
 			Box.VSplitLeft(PlayersButtonWidth, &Button, &Box);
 			static CButtonContainer s_PlayersButton;
 			if(DoIngameMenuTab(&s_PlayersButton, PAGE_PLAYERS, "ingame-tab-players", Localize("Players"), ActivePage == PAGE_PLAYERS, &Button, IGraphics::CORNER_ALL))
 				NewPage = PAGE_PLAYERS;
-			MenubarTrackActive(PAGE_PLAYERS, Button);
+			MenubarTrackPage(PAGE_PLAYERS, Button, &s_PlayersButton);
 
 			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
 			Box.VSplitLeft(ServerInfoButtonWidth, &Button, &Box);
 			static CButtonContainer s_ServerInfoButton;
 			if(DoIngameMenuTab(&s_ServerInfoButton, PAGE_SERVER_INFO, "ingame-tab-server-info", Localize("Server info"), ActivePage == PAGE_SERVER_INFO, &Button, IGraphics::CORNER_ALL))
 				NewPage = PAGE_SERVER_INFO;
-			MenubarTrackActive(PAGE_SERVER_INFO, Button);
+			MenubarTrackPage(PAGE_SERVER_INFO, Button, &s_ServerInfoButton);
 
 			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_NetworkButton;
 			if(DoIngameMenuTab(&s_NetworkButton, PAGE_NETWORK, "ingame-tab-browser", Localize("Browser"), ActivePage == PAGE_NETWORK, &Button, IGraphics::CORNER_ALL))
 				NewPage = PAGE_NETWORK;
-			MenubarTrackActive(PAGE_NETWORK, Button);
+			MenubarTrackPage(PAGE_NETWORK, Button, &s_NetworkButton);
 
 			if(GameClient()->m_GameInfo.m_Race)
 			{
@@ -1841,7 +2079,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				static CButtonContainer s_GhostButton;
 				if(DoIngameMenuTab(&s_GhostButton, PAGE_GHOST, "ingame-tab-ghost", Localize("Ghost"), ActivePage == PAGE_GHOST, &Button, IGraphics::CORNER_ALL))
 					NewPage = PAGE_GHOST;
-				MenubarTrackActive(PAGE_GHOST, Button);
+				MenubarTrackPage(PAGE_GHOST, Button, &s_GhostButton);
 			}
 
 			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
@@ -1852,7 +2090,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				NewPage = PAGE_CALLVOTE;
 				m_ControlPageOpening = true;
 			}
-			MenubarTrackActive(PAGE_CALLVOTE, Button);
+			MenubarTrackPage(PAGE_CALLVOTE, Button, &s_CallVoteButton);
 
 			if(Box.w >= 10.0f + 33.0f + 10.0f)
 			{
@@ -1866,11 +2104,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				const float CircleSize = minimum(DemoButton.w, DemoButton.h);
 				DemoButton.x += (DemoButton.w - CircleSize) / 2.0f;
 				DemoButton.w = CircleSize;
-				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
+				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, true, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
 				{
 					NewPage = PAGE_DEMOS;
 				}
-				MenubarTrackActive(PAGE_DEMOS, DemoButton);
+				MenubarTrackPage(PAGE_DEMOS, DemoButton, &s_DemoButton);
 				GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
 				Box.VSplitRight(10.0f, &Box, nullptr);
 
@@ -2184,22 +2422,36 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		}
 	}
 
-	// feat-004: draw a 2px ACCENT_PRIMARY underline below the active page tab.
-	// This includes page-shaped icon buttons such as Settings/Demos, but still
-	// excludes pure action buttons like Quit/Editor.
+	// Keep the selected pill in place while a liquid satellite follows hovered
+	// page tabs. Pure action buttons are intentionally not tracked above.
 	if(UseNewUi && MenubarHaveActive)
 	{
-		CUIRect IndicatorTarget;
-		IndicatorTarget.x = MenubarActiveRect.x + MenubarActiveRect.w * 0.15f;
-		IndicatorTarget.y = MenubarActiveRect.y + MenubarActiveRect.h - 3.0f;
-		IndicatorTarget.w = MenubarActiveRect.w * 0.70f;
-		IndicatorTarget.h = 3.0f;
-
+		const CUIRect IndicatorTarget = MenubarIndicatorTargetRect(MenubarActiveRect);
 		const uint64_t IndicatorNode = BuildUiAnimNodeKey(MakeUiScopeHash("menubar_v2_indicator"), static_cast<uint64_t>(ClientState));
 		CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
 		const CUIRect IndicatorRect = ResolveUiAnimValueRect(AnimRt, IndicatorNode, IndicatorTarget, ui_curve::EMPHASIZED.m_DurationSec, ui_curve::EMPHASIZED.m_Easing);
 		const ColorRGBA IndicatorColor = g_Config.m_QmNewUi != 0 ? MenuUiColorAccent(1.0f) : ui_token::color::ACCENT_PRIMARY;
-		IndicatorRect.Draw(IndicatorColor, IGraphics::CORNER_ALL, 1.5f);
+		IndicatorRect.Draw(IndicatorColor, IGraphics::CORNER_ALL, IndicatorRect.h * 0.5f);
+
+		const uint64_t SatelliteNode = BuildUiAnimNodeKey(MakeUiScopeHash("menubar_v2_indicator_satellite"), static_cast<uint64_t>(ClientState));
+		const float SatelliteProgress = ResolveUiAnimValue(AnimRt, SatelliteNode, EUiAnimProperty::ALPHA, MenubarHaveHovered ? 1.0f : 0.0f, MENU_TAB_SATELLITE_DURATION, EEasing::LINEAR);
+		const CUIRect SatelliteTarget = MenubarIndicatorTargetRect(MenubarHaveHovered ? MenubarHoveredRect : MenubarActiveRect);
+		if(MenubarHaveHovered && SatelliteProgress <= MENU_TAB_ANIM_EPSILON)
+		{
+			SetUiPresentationStateValue(AnimRt, SatelliteNode, EUiAnimProperty::POS_X, IndicatorRect.x);
+			SetUiPresentationStateValue(AnimRt, SatelliteNode, EUiAnimProperty::POS_Y, IndicatorRect.y);
+			SetUiPresentationStateValue(AnimRt, SatelliteNode, EUiAnimProperty::WIDTH, IndicatorRect.w);
+			SetUiPresentationStateValue(AnimRt, SatelliteNode, EUiAnimProperty::HEIGHT, IndicatorRect.h);
+		}
+		const CUIRect SatelliteBaseRect = ResolveUiAnimValueRect(AnimRt, SatelliteNode, SatelliteTarget, MENU_TAB_SATELLITE_DURATION, ui_curve::EMPHASIZED.m_Easing);
+		if(MenubarHaveHovered || SatelliteProgress > MENU_TAB_ANIM_EPSILON)
+		{
+			const SHudMediaIslandBlobPose BlobPose = QmHudMediaIslandBlobPose(SatelliteProgress);
+			const CUIRect SatelliteRect = MenubarLiquidSatelliteRect(SatelliteBaseRect, BlobPose);
+			const float ConnectionStrength = QmHudMediaIslandBlobConnectionStrength(BlobPose.m_Travel);
+			DrawMenubarIndicatorLiquidBridge(IndicatorRect, SatelliteRect, IndicatorColor, ConnectionStrength);
+			SatelliteRect.Draw(IndicatorColor, IGraphics::CORNER_ALL, SatelliteRect.h * 0.5f);
+		}
 	}
 
 	// Draw a 2px ui_color underline below the active tab. The X/W position
@@ -2588,6 +2840,7 @@ void CMenus::OnInit()
 	Console()->Chain("demo_speed", ConchainDemoSpeed, this);
 
 	m_TextureBlob = Graphics()->LoadTexture("blob.png", IStorage::TYPE_ALL);
+	m_QmToggleMaskTexture = CreateQmToggleMaskTexture(Graphics());
 
 	m_IsInit = true;
 	LoadSettingsRuntimeCacheMetadata();
@@ -4396,6 +4649,8 @@ void CMenus::OnReset()
 
 void CMenus::OnShutdown()
 {
+	if(m_QmToggleMaskTexture.IsValid())
+		Graphics()->UnloadTexture(&m_QmToggleMaskTexture);
 	if(m_SettingsPerfWindowTracker.HasActiveWindow())
 	{
 		const SQmSettingsPerfWindowSummary Summary = m_SettingsPerfWindowTracker.FinishActiveWindow();
@@ -4525,10 +4780,10 @@ int CMenus::DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const 
 	if(pTextId == nullptr)
 		return DoButton_MenuTab(pButtonContainer, pText, Checked, pRect, Corners);
 	CUIRect Text = *pRect;
-	Text.HMargin(2.0f, &Text);
+	Text.HMargin(g_Config.m_QmNewUi != 0 ? MENU_MENUBAR_CONTENT_INSET : 2.0f, &Text);
 	SLabelProperties Props;
 	Props.m_MaxWidth = Text.w;
-	const float FontSize = g_Config.m_QmNewUi != 0 ? minimum(Text.h * CUi::ms_FontmodHeight, 13.0f) : Text.h * CUi::ms_FontmodHeight;
+	const float FontSize = g_Config.m_QmNewUi != 0 ? minimum(Text.h * CUi::ms_FontmodHeight, MENU_MENUBAR_LABEL_FONT_SIZE) : Text.h * CUi::ms_FontmodHeight;
 	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, FontSize, TEXTALIGN_MC, Props);
 	if(m_MenuTextPlanCollecting)
 	{
@@ -4537,7 +4792,7 @@ int CMenus::DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const 
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, StyleKey);
 	if(g_Config.m_QmNewUi != 0)
-		return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, nullptr, nullptr, nullptr, nullptr, &TextElement);
+		return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, true, nullptr, nullptr, nullptr, nullptr, &TextElement);
 	return DoButton_MenuTab(pButtonContainer, pText, Checked, pRect, Corners, nullptr, nullptr, nullptr, nullptr, 10.0f, nullptr, &TextElement);
 }
 
@@ -4575,9 +4830,7 @@ int CMenus::DoIngameMenuCheckBox(int Page, const char *pTextId, const void *pId,
 		return DoButton_CheckBox(pId, pText, Checked, pRect);
 
 	CUIRect Box, Label;
-	pRect->VSplitLeft(pRect->h, &Box, &Label);
-	Label.VSplitLeft(5.0f, nullptr, &Label);
-	Box.Margin(2.0f, &Box);
+	SplitMenuCheckboxRects(*pRect, g_Config.m_QmNewUi != 0, &Box, &Label);
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
 	Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
@@ -6104,11 +6357,11 @@ int CMenus::DoButton_CheckBox_Tristate(const void *pId, const char *pText, TRIST
 	switch(Checked)
 	{
 	case TRISTATE::NONE:
-		return DoButton_CheckBox_Common(pId, pText, "", pRect, BUTTONFLAG_LEFT);
+		return DoButton_CheckBox_Common(pId, pText, "", pRect, BUTTONFLAG_LEFT, true);
 	case TRISTATE::SOME:
-		return DoButton_CheckBox_Common(pId, pText, "O", pRect, BUTTONFLAG_LEFT);
+		return DoButton_CheckBox_Common(pId, pText, "O", pRect, BUTTONFLAG_LEFT, true);
 	case TRISTATE::ALL:
-		return DoButton_CheckBox_Common(pId, pText, "X", pRect, BUTTONFLAG_LEFT);
+		return DoButton_CheckBox_Common(pId, pText, "X", pRect, BUTTONFLAG_LEFT, true);
 	default:
 		dbg_assert_failed("Invalid tristate. Checked: %d", static_cast<int>(Checked));
 	}

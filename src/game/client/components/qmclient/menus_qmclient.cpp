@@ -26,6 +26,7 @@
 #include <game/client/components/binds.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
+#include <game/client/components/hud_media_island_logic.h>
 #include <game/client/components/menu_background.h>
 #include <game/client/components/menus.h>
 #include <game/client/components/qmclient/keyword_reply_rules.h>
@@ -935,7 +936,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			for(int Tab = 0; Tab < NUMBER_OF_QMCLIENT_SETTINGS_TABS; ++Tab)
 			{
 				TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
-				const int Corners = Tab == 0 ? IGraphics::CORNER_L :
+				const int Corners = Tab == 0                                    ? IGraphics::CORNER_L :
 						    Tab == NUMBER_OF_QMCLIENT_SETTINGS_TABS - 1 ? IGraphics::CORNER_R :
 												  IGraphics::CORNER_NONE;
 				const bool ClickedSearchBlurredTab = !PrewarmOnly && Ui()->MouseButtonClicked(0) && Ui()->MouseHovered(&Button) && ReleaseActiveQmClientSearchInput();
@@ -3161,7 +3162,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			TextRender()->TextColor(ColorRGBA(0.95f, 0.8f, 0.2f, 1.0f));
 			{
 				static const char *const s_apSponsors[] = {
-					"喵不一", "久桃", "芽芽", "碳烤綿芽", "骨头", "陌浅羽", "树羽小朋友", "望舒", "松子", "平凡..", "cixin", "洗点", "秀色", "朱朱", "Twen", "大恐龙", ":luv:", "小左", "Blue°F", "怯修", "yezeen", "鹑", "枫香°", "没问题啊", "·蓝蓝蓝蓝", "临渊捕鱼", "?hook?", "放肆zero", "Q币", "洛天依", "spider", "贝塔塔塔", "见月", "咩子的银耳", "Cancer", "少女`", "长亭寂寞独自愁", "fantuan", "无言鱼", "胖人老许", "夏日", "张宁我儿", "拌饭", "shengyan", "修勾在修沟", "taffy", "杀意没爱意", "DYL", "小信", "哆啦梦", "菜菜羊", "吃了吗chilem", "你就是我的", "xiaopang", "星星🌙", "軽い猫", "oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡","qwqQWQ嘿嘿","神马","月半猫","A Cup","怎样都好.","方休"};
+					"喵不一", "久桃", "芽芽", "碳烤綿芽", "骨头", "陌浅羽", "树羽小朋友", "望舒", "松子", "平凡..", "cixin", "洗点", "秀色", "朱朱", "Twen", "大恐龙", ":luv:", "小左", "Blue°F", "怯修", "yezeen", "鹑", "枫香°", "没问题啊", "·蓝蓝蓝蓝", "临渊捕鱼", "?hook?", "放肆zero", "Q币", "洛天依", "spider", "贝塔塔塔", "见月", "咩子的银耳", "Cancer", "少女`", "长亭寂寞独自愁", "fantuan", "无言鱼", "胖人老许", "夏日", "张宁我儿", "拌饭", "shengyan", "修勾在修沟", "taffy", "杀意没爱意", "DYL", "小信", "哆啦梦", "菜菜羊", "吃了吗chilem", "你就是我的", "xiaopang", "星星🌙", "軽い猫", "oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡", "qwqQWQ嘿嘿", "神马", "月半猫", "A Cup", "怎样都好.", "方休", "潇洒的吗喽"};
 				const float SponsorFontSize = maximum(LgBodySize * 1.1f - SponsorFontShrink, MinSponsorFontSize);
 				const float MaxLineWidth = RightContent.w;
 				static std::vector<std::string> s_SponsorLines;
@@ -7708,21 +7709,24 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				if(g_Config.m_QmSwitchCountdown || PrewarmOnly)
 				{
-					static std::vector<CButtonContainer> s_vSwitchCountdownModeButtons = {{}, {}};
-					int Mode = std::clamp(g_Config.m_QmSwitchCountdownMode, 0, 1);
-					if(DoSettingsLine_RadioMenu(
-						   SETTINGS_QMCLIENT,
-						   m_QmClientSettingsTab,
-						   m_QmClientSettingsTab,
-						   CardContent,
-						   "qmclient-switch-countdown-location-label",
-						   Localize("Display location"),
-						   s_vSwitchCountdownModeButtons,
-						   {"qmclient-switch-countdown-follow-tee", "qmclient-switch-countdown-media-island"},
-						   {Localize("Follow Tee"), Localize("In Dynamic Island")},
-						   {0, 1},
-						   Mode))
-						g_Config.m_QmSwitchCountdownMode = Mode;
+					static int s_SwitchCountdownFollowTeeId;
+					static int s_SwitchCountdownMediaIslandId;
+					const int CurrentMode = std::clamp(g_Config.m_QmSwitchCountdownMode, 0, static_cast<int>(EQmSwitchCountdownMode::BOTH));
+					int FollowTee = QmHudSwitchCountdownShowsFollowTee(CurrentMode);
+					int MediaIsland = QmHudSwitchCountdownShowsMediaIsland(CurrentMode);
+
+					CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
+					DoQmSettingsLabel("qmclient-switch-countdown-location-label", &Row, Localize("Display location"), LgBodySize * 0.84f);
+					CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					bool LocationChanged = DoQmSettingsCheckboxAuto(&s_SwitchCountdownFollowTeeId, "qmclient-switch-countdown-follow-tee", Localize("Follow Tee"), &FollowTee, &Row, LgLineHeight);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					LocationChanged |= DoQmSettingsCheckboxAuto(&s_SwitchCountdownMediaIslandId, "qmclient-switch-countdown-media-island", Localize("In Dynamic Island"), &MediaIsland, &Row, LgLineHeight);
+					if(LocationChanged)
+						g_Config.m_QmSwitchCountdownMode = QmHudSwitchCountdownModeFromLocations(FollowTee != 0, MediaIsland != 0, CurrentMode);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 

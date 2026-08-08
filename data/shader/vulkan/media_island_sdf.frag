@@ -1,9 +1,10 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(std140, set = 0, binding = 1) uniform SMediaIslandSdf
+layout(set = 0, binding = 0) uniform sampler2D gBackdropSampler;
+layout(std140, set = 1, binding = 1) uniform SMediaIslandSdf
 {
-	vec4 gMediaIslandSdfData[44];
+	vec4 gMediaIslandSdfData[45];
 } gSdf;
 
 layout(location = 0) noperspective in vec2 texCoord;
@@ -15,6 +16,7 @@ const float TAU = 6.28318530718;
 const int MAX_ITEMS = 12;
 const int ITEM_BASE = 8;
 const int ITEM_STRIDE = 3;
+const int BACKDROP_UV = 44;
 
 vec4 Data(int Index)
 {
@@ -147,7 +149,17 @@ void main()
 		float ShadowFalloff = 1.0 - smoothstep(0.0, ShadowSize, max(ShapeDistance, 0.0));
 		Composite(PremulColor, Alpha, vec4(0.0, 0.0, 0.0, ShadowParams.y), OutsideMask * ShadowFalloff);
 	}
-	Composite(PremulColor, Alpha, Data(3), Coverage(ShapeDistance, Feather));
+	float ShapeCoverage = Coverage(ShapeDistance, Feather);
+	vec4 Background = Data(3);
+	vec4 BackdropUv = Data(BACKDROP_UV);
+	if(abs(BackdropUv.z) > 0.000001 && abs(BackdropUv.w) > 0.000001)
+	{
+		vec3 Backdrop = texture(gBackdropSampler, BackdropUv.xy + texCoord * BackdropUv.zw).rgb;
+		vec3 ShapeColor = mix(Backdrop, Background.rgb, clamp(Background.a, 0.0, 1.0));
+		Composite(PremulColor, Alpha, vec4(ShapeColor, 1.0), ShapeCoverage);
+	}
+	else
+		Composite(PremulColor, Alpha, Background, ShapeCoverage);
 	for(int i = 0; i < ItemCount; ++i)
 	{
 		vec4 ItemShape = Data(ITEM_BASE + i * ITEM_STRIDE);

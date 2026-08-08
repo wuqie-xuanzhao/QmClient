@@ -420,8 +420,11 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 		{
 			UseProgram(m_pMediaIslandSdfProgram);
 			m_pMediaIslandSdfProgram->m_LocPos = m_pMediaIslandSdfProgram->GetUniformLoc("gPos");
+			m_pMediaIslandSdfProgram->m_LocTextureSampler = m_pMediaIslandSdfProgram->GetUniformLoc("gBackdropSampler");
 			m_pMediaIslandSdfProgram->m_LocData = m_pMediaIslandSdfProgram->GetUniformLoc("gMediaIslandSdfData[0]");
-			m_MediaIslandSdfProgramValid = m_pMediaIslandSdfProgram->m_LocPos >= 0 && m_pMediaIslandSdfProgram->m_LocData >= 0;
+			m_MediaIslandSdfProgramValid = m_pMediaIslandSdfProgram->m_LocPos >= 0 && m_pMediaIslandSdfProgram->m_LocTextureSampler >= 0 && m_pMediaIslandSdfProgram->m_LocData >= 0;
+			if(m_MediaIslandSdfProgramValid)
+				m_pMediaIslandSdfProgram->SetUniform(m_pMediaIslandSdfProgram->m_LocTextureSampler, 0);
 		}
 		pCommand->m_pCapabilities->m_MediaIslandSdf = m_MediaIslandSdfProgramValid;
 	}
@@ -909,6 +912,12 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderMediaIslandSdf(const CComman
 
 	UseProgram(m_pMediaIslandSdfProgram);
 	SetState(pCommand->m_State, m_pMediaIslandSdfProgram);
+	if(pCommand->m_BackdropTargetId >= 0 && (size_t)pCommand->m_BackdropTargetId < m_vRenderTargets.size())
+	{
+		const SOpenGLRenderTarget &Target = m_vRenderTargets[pCommand->m_BackdropTargetId];
+		if(Target.m_Texture != 0)
+			glBindTexture(GL_TEXTURE_2D, Target.m_Texture);
+	}
 	m_pMediaIslandSdfProgram->SetUniformVec4(m_pMediaIslandSdfProgram->m_LocData, IGraphics::SMediaIslandSdfParams::DATA_COUNT, (const float *)pCommand->m_Params.m_aData.data());
 
 	UploadStreamBufferData(pCommand->m_PrimType, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount);

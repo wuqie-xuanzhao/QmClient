@@ -2517,7 +2517,7 @@ void CGraphics_Threaded::RenderText(int BufferContainerIndex, int TextQuadNum, i
 	m_pCommandBuffer->AddRenderCalls(1);
 }
 
-void CGraphics_Threaded::RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params)
+void CGraphics_Threaded::RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params, CRenderTargetHandle Backdrop)
 {
 	const vec4 Rect = Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RECT];
 	if(Rect.z <= 0.0f || Rect.w <= 0.0f)
@@ -2531,8 +2531,13 @@ void CGraphics_Threaded::RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfPa
 	CCommandBuffer::SCommand_RenderMediaIslandSdf Cmd;
 	Cmd.m_State = m_State;
 	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
-	Cmd.m_State.m_Texture = -1;
+	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
+	Cmd.m_State.m_Texture = m_NullTexture.Id();
 	Cmd.m_Params = Params;
+	if(Backdrop.IsValid() && (size_t)Backdrop.Id() < m_vRenderTargetIndices.size() && m_vRenderTargetIndices[Backdrop.Id()] == -1)
+		Cmd.m_BackdropTargetId = Backdrop.Id();
+	else
+		Cmd.m_Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_BACKDROP_UV] = vec4();
 
 	CCommandBuffer::SVertex aVertices[4]{};
 	aVertices[0].m_Pos = vec2(Rect.x, Rect.y);

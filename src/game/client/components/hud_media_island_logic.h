@@ -106,7 +106,31 @@ enum class EQmSwitchCountdownMode
 {
 	FOLLOW_TEE = 0,
 	MEDIA_ISLAND,
+	BOTH,
 };
+
+inline bool QmHudSwitchCountdownShowsFollowTee(int Mode)
+{
+	return Mode == static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE) ||
+	       Mode == static_cast<int>(EQmSwitchCountdownMode::BOTH);
+}
+
+inline bool QmHudSwitchCountdownShowsMediaIsland(int Mode)
+{
+	return Mode == static_cast<int>(EQmSwitchCountdownMode::MEDIA_ISLAND) ||
+	       Mode == static_cast<int>(EQmSwitchCountdownMode::BOTH);
+}
+
+inline int QmHudSwitchCountdownModeFromLocations(bool FollowTee, bool MediaIsland, int CurrentMode)
+{
+	if(FollowTee && MediaIsland)
+		return static_cast<int>(EQmSwitchCountdownMode::BOTH);
+	if(FollowTee)
+		return static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE);
+	if(MediaIsland)
+		return static_cast<int>(EQmSwitchCountdownMode::MEDIA_ISLAND);
+	return std::clamp(CurrentMode, static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE), static_cast<int>(EQmSwitchCountdownMode::BOTH));
+}
 
 struct SHudSwitchCountdownEntry
 {
@@ -247,17 +271,81 @@ inline SHudMediaIslandTimerRowLayout QmHudMediaIslandTimerRows(float BoxY, float
 	return {BoxY, RaceH, BoxY + RaceH, BoxH - RaceH};
 }
 
-inline float QmHudMediaIslandWaveBarHeight(int BarIndex, float TimeSeconds, bool Playing)
+struct SHudMediaIslandSwapRows
+{
+	int m_InlineSwapCount = 0;
+	int m_BottomSwapCount = 0;
+	int m_BottomLineCount = 0;
+	int m_LyricsLineIndex = -1;
+};
+
+inline SHudMediaIslandSwapRows QmHudMediaIslandSwapRows(int IncomingSwapCount, bool HasRaceTimer, bool ShowLyrics)
+{
+	SHudMediaIslandSwapRows Result;
+	IncomingSwapCount = std::max(0, IncomingSwapCount);
+	Result.m_InlineSwapCount = HasRaceTimer && IncomingSwapCount > 0 ? 1 : 0;
+	Result.m_BottomSwapCount = IncomingSwapCount - Result.m_InlineSwapCount;
+	Result.m_LyricsLineIndex = ShowLyrics ? Result.m_BottomSwapCount : -1;
+	Result.m_BottomLineCount = Result.m_BottomSwapCount + (ShowLyrics ? 1 : 0);
+	return Result;
+}
+
+struct SHudMediaIslandInfoStackLayout
+{
+	float m_TopCenterY = 0.0f;
+	float m_BottomCenterY = 0.0f;
+};
+
+inline SHudMediaIslandInfoStackLayout QmHudMediaIslandMirroredInfoStack(float IslandY, float IslandHeight, float TextHeight, float TextGap)
+{
+	const float MidY = IslandY + std::max(0.0f, IslandHeight) * 0.5f;
+	const float CenterOffset = (std::max(0.0f, TextHeight) + std::max(0.0f, TextGap)) * 0.5f;
+	return {MidY - CenterOffset, MidY + CenterOffset};
+}
+
+inline float QmHudMediaIslandWaveBarHeight(int BarIndex, float TimeSeconds, float Activity)
 {
 	constexpr float RestHeight = 0.20f;
-	if(!Playing)
+	Activity = std::clamp(Activity, 0.0f, 1.0f);
+	if(Activity <= 0.0f)
 		return RestHeight;
 
-	BarIndex = std::max(0, BarIndex);
-	const float Index = static_cast<float>(BarIndex);
-	const float Primary = 0.5f + 0.5f * std::sin(TimeSeconds * (4.6f + Index * 0.37f) + Index * 1.91f);
-	const float Secondary = 0.5f + 0.5f * std::sin(TimeSeconds * (7.3f + Index * 0.19f) + Index * 0.73f + 1.2f);
-	return std::clamp(RestHeight + (1.0f - RestHeight) * (Primary * 0.68f + Secondary * 0.32f), RestHeight, 1.0f);
+	struct SWaveBarMotion
+	{
+		float m_PrimaryFrequency;
+		float m_SecondaryFrequency;
+		float m_PrimaryPhase;
+		float m_SecondaryPhase;
+		float m_PrimaryWeight;
+	};
+	constexpr std::array<SWaveBarMotion, 7> aMotions = {{
+		{2.9f, 8.1f, 0.2f, 1.7f, 0.72f},
+		{4.7f, 10.6f, 2.4f, 5.2f, 0.43f},
+		{6.8f, 13.4f, 4.7f, 0.6f, 0.65f},
+		{3.8f, 9.3f, 1.1f, 3.8f, 0.38f},
+		{5.7f, 12.0f, 5.6f, 2.9f, 0.57f},
+		{7.45f, 8.77f, 4.92f, 1.86f, 0.58f},
+		{2.6f, 14.77f, 0.1f, 2.2f, 0.41f},
+	}};
+	const size_t MotionIndex = static_cast<size_t>(std::max(0, BarIndex)) % aMotions.size();
+	const SWaveBarMotion &Motion = aMotions[MotionIndex];
+	const float Primary = 0.5f + 0.5f * std::sin(TimeSeconds * Motion.m_PrimaryFrequency + Motion.m_PrimaryPhase);
+	const float Secondary = 0.5f + 0.5f * std::sin(TimeSeconds * Motion.m_SecondaryFrequency + Motion.m_SecondaryPhase);
+	const float DynamicHeight = std::clamp(RestHeight + (1.0f - RestHeight) * (Primary * Motion.m_PrimaryWeight + Secondary * (1.0f - Motion.m_PrimaryWeight)), RestHeight, 1.0f);
+	return RestHeight + (DynamicHeight - RestHeight) * Activity;
+}
+
+inline float QmHudMediaIslandWaveBarSettleProgress(int BarIndex, int BarCount, float ElapsedSeconds)
+{
+	constexpr float LayerStaggerSeconds = 0.15f;
+	constexpr float LayerSettleSeconds = 0.45f;
+	if(BarCount <= 0)
+		return 1.0f;
+
+	BarIndex = std::clamp(BarIndex, 0, BarCount - 1);
+	const int Layer = std::min(BarIndex, BarCount - 1 - BarIndex);
+	const float LinearProgress = std::clamp((ElapsedSeconds - Layer * LayerStaggerSeconds) / LayerSettleSeconds, 0.0f, 1.0f);
+	return LinearProgress * LinearProgress * (3.0f - 2.0f * LinearProgress);
 }
 
 struct SHudMediaIslandBlobPose
@@ -535,6 +623,22 @@ struct SHudMediaIslandSdfCapsule
 	float m_SmoothUnion = 0.0f;
 };
 
+inline bool QmHudMediaIslandShouldPrepareBackdropBlur(int BackgroundOpacity)
+{
+	return BackgroundOpacity < 100;
+}
+
+inline vec4 QmHudMediaIslandBackdropUv(const CUIRect &OuterRect, const CUIRect &ScreenRect)
+{
+	if(OuterRect.w <= 0.0f || OuterRect.h <= 0.0f || ScreenRect.w <= 0.0f || ScreenRect.h <= 0.0f)
+		return vec4();
+	return vec4(
+		(OuterRect.x - ScreenRect.x) / ScreenRect.w,
+		1.0f - (OuterRect.y - ScreenRect.y) / ScreenRect.h,
+		OuterRect.w / ScreenRect.w,
+		-OuterRect.h / ScreenRect.h);
+}
+
 struct SHudMediaIslandSdfRenderState
 {
 	CUIRect m_Rect{};
@@ -552,6 +656,7 @@ struct SHudMediaIslandSdfRenderState
 	float m_ScreenPixelSize = 1.0f;
 	float m_OuterShadowSize = 0.0f;
 	float m_OuterShadowOpacity = 0.0f;
+	vec4 m_BackdropUv{};
 };
 
 inline float QmHudMediaIslandSdfPadding(const SHudMediaIslandSdfRenderState &State)
@@ -622,6 +727,7 @@ inline bool QmHudMediaIslandBuildGpuSdfParams(const SHudMediaIslandSdfRenderStat
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_METADATA] = vec4((float)State.m_ItemCount, (float)State.m_MainCorners, State.m_HasRightCapsule ? 1.0f : 0.0f, std::max(State.m_ScreenPixelSize, 0.0001f));
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_CAPSULE_PARAMS] = vec4(State.m_RightCapsule.m_Radius, State.m_RightCapsule.m_SmoothUnion, 0.0f, 0.0f);
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED] = vec4(std::max(0.0f, State.m_OuterShadowSize), std::clamp(State.m_OuterShadowOpacity, 0.0f, 1.0f), 0.0f, 0.0f);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_BACKDROP_UV] = State.m_BackdropUv;
 
 	for(int i = 0; i < State.m_ItemCount; ++i)
 	{

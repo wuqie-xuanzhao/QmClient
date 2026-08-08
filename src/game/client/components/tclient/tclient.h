@@ -17,6 +17,7 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
 #include <game/client/components/tclient/map_history.h>
+#include <game/client/components/tclient/swap_countdown_message.h>
 
 #include <deque>
 #include <queue>
@@ -329,10 +330,7 @@ class CTClient : public CComponent
 	static void ConRepeat(IConsole::IResult *pResult, void *pUserData);
 
 	// Swap倒计时提示
-	bool m_aSwapCountdownActive[NUM_DUMMIES] = {false, false};
-	bool m_aSwapCountdownOutgoing[NUM_DUMMIES] = {false, false};
-	int m_aSwapCountdownStartTick[NUM_DUMMIES] = {0, 0};
-	char m_aaSwapCountdownCounterpart[NUM_DUMMIES][MAX_NAME_LENGTH] = {{0}, {0}};
+	CSwapCountdownTracker m_aSwapCountdownTrackers[NUM_DUMMIES];
 	void StartSwapCountdown(int Dummy, const char *pCounterpart, bool Outgoing);
 	void ClearSwapCountdown(int Dummy = -1);
 
@@ -418,9 +416,7 @@ public:
 	// Swap倒计时公开接口
 	void HandleSwapCountdownMessage(const char *pText, int Dummy);
 	bool HasSwapCountdown(int Dummy = -1) const;
-	int GetSwapCountdownStartTick(int Dummy = -1) const;
-	const char *GetSwapCountdownCounterpart(int Dummy) const;
-	bool IsSwapCountdownOutgoing(int Dummy) const;
+	const std::vector<SSwapCountdownState> &GetSwapCountdowns(int Dummy) const;
 
 	// 收藏地图公开接口
 	bool IsFavoriteMap(const char *pMapName) const;

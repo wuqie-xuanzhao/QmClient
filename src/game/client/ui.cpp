@@ -1662,20 +1662,27 @@ float CUi::DoScrollbarV(const void *pId, const CUIRect *pRect, float Current)
 float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, const ColorRGBA *pColorInner)
 {
 	Current = std::clamp(Current, 0.0f, 1.0f);
+	const bool UseQmSliderStyle = g_Config.m_QmNewUi != 0;
 
 	// layout
 	CUIRect Rail;
-	if(pColorInner)
+	if(UseQmSliderStyle || pColorInner)
 		Rail = *pRect;
 	else
 		pRect->HMargin(5.0f, &Rail);
 
+	const float HandleSize = UseQmSliderStyle ? std::clamp(Rail.h * 0.75f, 8.0f, 16.0f) : 0.0f;
 	CUIRect Handle;
-	Rail.VSplitLeft(pColorInner ? 8.0f : std::clamp(33.0f, Rail.h, Rail.w / 3.0f), &Handle, nullptr);
+	Rail.VSplitLeft(UseQmSliderStyle ? HandleSize : (pColorInner ? 8.0f : std::clamp(33.0f, Rail.h, Rail.w / 3.0f)), &Handle, nullptr);
+	if(UseQmSliderStyle)
+	{
+		Handle.h = HandleSize;
+		Handle.y = Rail.y + (Rail.h - Handle.h) * 0.5f;
+	}
 	Handle.x += (Rail.w - Handle.w) * Current;
 
 	CUIRect HandleArea = Handle;
-	if(!pColorInner)
+	if(UseQmSliderStyle || !pColorInner)
 	{
 		HandleArea.h = pRect->h * 0.9f;
 		HandleArea.y = pRect->y + pRect->h * 0.05f;
@@ -1722,7 +1729,7 @@ float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, co
 		}
 	}
 
-	if(!pColorInner && (InsideHandle || Grabbed) && (CheckActiveItem(pId) || HotItem() == pId))
+	if(!UseQmSliderStyle && !pColorInner && (InsideHandle || Grabbed) && (CheckActiveItem(pId) || HotItem() == pId))
 	{
 		Handle.h += 3.0f;
 		Handle.y -= 1.5f;
@@ -1744,7 +1751,26 @@ float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, co
 
 	// render
 	const ColorRGBA HandleColor = ms_ScrollBarColorFunction.GetColor(CheckActiveItem(pId), HotItem() == pId);
-	if(pColorInner)
+	if(UseQmSliderStyle)
+	{
+		CUIRect VisualRail = Rail;
+		VisualRail.VMargin(HandleSize * 0.5f, &VisualRail);
+		VisualRail.h = std::clamp(pRect->h * 0.12f, 2.0f, 3.0f);
+		VisualRail.y = pRect->y + (pRect->h - VisualRail.h) * 0.5f;
+		VisualRail.Draw(ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.28f)), IGraphics::CORNER_ALL, VisualRail.h * 0.5f);
+		if(pColorInner)
+		{
+			Handle.Draw(ScaleBackgroundAlpha(ColorRGBA(0.08f, 0.08f, 0.08f, 0.75f)), IGraphics::CORNER_ALL, HandleSize * 0.5f);
+			CUIRect InnerHandle;
+			Handle.Margin(2.0f, &InnerHandle);
+			InnerHandle.Draw(ScaleBackgroundAlpha(pColorInner->Multiply(HandleColor)), IGraphics::CORNER_ALL, InnerHandle.h * 0.5f);
+		}
+		else
+		{
+			Handle.Draw(ScaleBackgroundAlpha(HandleColor), IGraphics::CORNER_ALL, HandleSize * 0.5f);
+		}
+	}
+	else if(pColorInner)
 	{
 		CUIRect Slider;
 		Handle.VMargin(-2.0f, &Slider);

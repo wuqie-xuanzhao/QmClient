@@ -1424,18 +1424,21 @@ void CTClient::HandleSwapCountdownMessage(const char *pText, int Dummy)
 	if(Action == ESwapCountdownMessageAction::Start)
 		StartSwapCountdown(Dummy, aCounterpart, Direction == ESwapCountdownMessageDirection::Outgoing);
 	else if(Action == ESwapCountdownMessageAction::Cancel)
-	{
-		const bool Outgoing = Direction == ESwapCountdownMessageDirection::Outgoing;
-		if(Outgoing == m_aSwapCountdownOutgoing[Dummy] && str_comp_nocase(aCounterpart, m_aaSwapCountdownCounterpart[Dummy]) == 0)
-		{
-			ClearSwapCountdown(Dummy);
-		}
-	}
+		m_aSwapCountdownTrackers[Dummy].Cancel(aCounterpart, Direction == ESwapCountdownMessageDirection::Outgoing);
 	else if(Action == ESwapCountdownMessageAction::Complete)
 	{
-		const char *pTargetName = Dummy == 0 ? g_Config.m_PlayerName : g_Config.m_ClDummyName;
-		if(pTargetName[0] != '\0' && str_find_nocase(pText, pTargetName))
-			ClearSwapCountdown(Dummy);
+		char aFirst[MAX_NAME_LENGTH];
+		char aSecond[MAX_NAME_LENGTH];
+		if(!ParseSwapCompletionMessage(pText, aFirst, sizeof(aFirst), aSecond, sizeof(aSecond)))
+			return;
+
+		const int LocalClientId = GameClient()->m_aLocalIds[Dummy];
+		const char *pLocalName = LocalClientId >= 0 && LocalClientId < MAX_CLIENTS ? GameClient()->m_aClients[LocalClientId].m_aName :
+											     (Dummy == 0 ? g_Config.m_PlayerName : g_Config.m_ClDummyName);
+		if(str_comp_nocase(aFirst, pLocalName) == 0)
+			m_aSwapCountdownTrackers[Dummy].Remove(aSecond);
+		else if(str_comp_nocase(aSecond, pLocalName) == 0)
+			m_aSwapCountdownTrackers[Dummy].Remove(aFirst);
 	}
 }
 
@@ -1444,10 +1447,7 @@ void CTClient::StartSwapCountdown(int Dummy, const char *pCounterpart, bool Outg
 	if(Dummy < 0 || Dummy >= NUM_DUMMIES)
 		return;
 
-	m_aSwapCountdownActive[Dummy] = true;
-	m_aSwapCountdownOutgoing[Dummy] = Outgoing;
-	m_aSwapCountdownStartTick[Dummy] = Client()->GameTick(Dummy);
-	str_copy(m_aaSwapCountdownCounterpart[Dummy], pCounterpart != nullptr ? pCounterpart : "", sizeof(m_aaSwapCountdownCounterpart[Dummy]));
+	m_aSwapCountdownTrackers[Dummy].Start(pCounterpart, Outgoing, Client()->GameTick(Dummy));
 }
 
 void CTClient::ClearSwapCountdown(int Dummy)
@@ -1461,42 +1461,28 @@ void CTClient::ClearSwapCountdown(int Dummy)
 	if(Dummy >= NUM_DUMMIES)
 		return;
 
-	m_aSwapCountdownActive[Dummy] = false;
-	m_aSwapCountdownOutgoing[Dummy] = false;
-	m_aSwapCountdownStartTick[Dummy] = 0;
-	m_aaSwapCountdownCounterpart[Dummy][0] = '\0';
+	m_aSwapCountdownTrackers[Dummy].Clear();
 }
 
 bool CTClient::HasSwapCountdown(int Dummy) const
 {
 	if(Dummy >= 0 && Dummy < NUM_DUMMIES)
-		return m_aSwapCountdownActive[Dummy];
+		return !m_aSwapCountdownTrackers[Dummy].Entries().empty();
 
 	for(int i = 0; i < NUM_DUMMIES; ++i)
 	{
-		if(m_aSwapCountdownActive[i])
+		if(!m_aSwapCountdownTrackers[i].Entries().empty())
 			return true;
 	}
 	return false;
 }
 
-int CTClient::GetSwapCountdownStartTick(int Dummy) const
+const std::vector<SSwapCountdownState> &CTClient::GetSwapCountdowns(int Dummy) const
 {
+	static const std::vector<SSwapCountdownState> s_Empty;
 	if(Dummy >= 0 && Dummy < NUM_DUMMIES)
-		return m_aSwapCountdownStartTick[Dummy];
-	return 0;
-}
-
-const char *CTClient::GetSwapCountdownCounterpart(int Dummy) const
-{
-	if(Dummy < 0 || Dummy >= NUM_DUMMIES)
-		return "";
-	return m_aaSwapCountdownCounterpart[Dummy];
-}
-
-bool CTClient::IsSwapCountdownOutgoing(int Dummy) const
-{
-	return Dummy >= 0 && Dummy < NUM_DUMMIES && m_aSwapCountdownOutgoing[Dummy];
+		return m_aSwapCountdownTrackers[Dummy].Entries();
+	return s_Empty;
 }
 
 void CTClient::ConSpecId(IConsole::IResult *pResult, void *pUserData)

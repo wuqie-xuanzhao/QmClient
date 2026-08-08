@@ -141,8 +141,8 @@ class CHud : public CComponent
 	SHudLocalTimeV2AnimState m_LocalTimeV2AnimState;
 	struct SHudMediaIslandAnimState
 	{
-		static constexpr int SATELLITE_LIVE_MAX_ITEMS = NUM_DUMMIES + SWITCH_COUNTDOWN_MAX_LINES + 2;
 		static constexpr int SATELLITE_MAX_ITEMS = IGraphics::MEDIA_ISLAND_SDF_MAX_ITEMS;
+		static constexpr int SATELLITE_LIVE_MAX_ITEMS = SATELLITE_MAX_ITEMS;
 
 		enum class EVisualState
 		{
@@ -174,6 +174,10 @@ class CHud : public CComponent
 		float m_EntranceDropProgress = 0.0f;
 		float m_EntranceProgress = 0.0f;
 		int64_t m_EntranceLastTick = 0;
+		bool m_WaveformWasPlaying = false;
+		bool m_WaveformSettling = false;
+		int64_t m_WaveformSettleStartTick = 0;
+		float m_WaveformSettleSampleTime = 0.0f;
 		bool m_LayoutInitialized = false;
 		bool m_HasTrackIdentity = false;
 		SHudMediaIslandTrackSnapshot m_CurrentTrack;
@@ -272,6 +276,10 @@ class CHud : public CComponent
 			m_EntranceDropProgress = 0.0f;
 			m_EntranceProgress = 0.0f;
 			m_EntranceLastTick = 0;
+			m_WaveformWasPlaying = false;
+			m_WaveformSettling = false;
+			m_WaveformSettleStartTick = 0;
+			m_WaveformSettleSampleTime = 0.0f;
 			m_LayoutInitialized = false;
 			m_HasTrackIdentity = false;
 			m_CurrentTrack.Reset();
@@ -464,7 +472,6 @@ class CHud : public CComponent
 	float GetTopIslandAvoidanceRight() const;
 	void DestroyMediaIslandBlurTargets();
 	bool PrepareMediaIslandBlur();
-	void RenderMediaIslandBlur(const CUIRect &Rect, float Alpha);
 	void RenderMediaIsland();
 
 	int m_LastSpectatorCountTick;

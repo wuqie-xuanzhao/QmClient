@@ -7932,12 +7932,12 @@ void CGameClient::MarkQmDeveloperClient(int ClientId, const char *pPlayerName, i
 bool CGameClient::IsQmDeveloperAuthenticated(int ClientId) const
 {
 	return ClientId >= 0 && ClientId < MAX_CLIENTS &&
-		IsQmDeveloperMarkCurrent(
-			m_aClients[ClientId].m_Active,
-			m_aaQmDeveloperMarkName[ClientId],
-			m_aClients[ClientId].m_aName,
-			m_aQmDeveloperMarkUntil[ClientId],
-			time_get());
+	       IsQmDeveloperMarkCurrent(
+		       m_aClients[ClientId].m_Active,
+		       m_aaQmDeveloperMarkName[ClientId],
+		       m_aClients[ClientId].m_aName,
+		       m_aQmDeveloperMarkUntil[ClientId],
+		       time_get());
 }
 
 bool CGameClient::IsQmDeveloperRainbow(int ClientId) const

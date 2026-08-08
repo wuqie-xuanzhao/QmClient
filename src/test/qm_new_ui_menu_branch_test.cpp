@@ -125,8 +125,9 @@ TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_NE(Source.find("const ColorRGBA DefaultColor = UseNewUi ? MenuTabDefaultColor() : ms_ColorTabbarInactive;"), std::string::npos);
 	EXPECT_NE(Source.find("const ColorRGBA ActiveColor = UseNewUi ? MenuTabActiveColor() : ms_ColorTabbarActive;"), std::string::npos);
 	EXPECT_NE(Source.find("const ColorRGBA HoverColor = UseNewUi ? MenuTabHoverColor() : ms_ColorTabbarHover;"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("pRect->Draw(Resolved, Corners, UseNewUi ? 7.0f : 10.0f);"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("const float LabelFontSize = UseNewUi ? minimum(Label.h * CUi::ms_FontmodHeight, 13.0f) : Label.h * CUi::ms_FontmodHeight;"), std::string::npos);
+	EXPECT_NE(DoMenuTabV2.find("const bool UseLargeMenubarControl = UseNewUi && LargeMenubarControl;"), std::string::npos);
+	EXPECT_NE(DoMenuTabV2.find("pRect->Draw(Resolved, Corners, ControlRadius);"), std::string::npos);
+	EXPECT_NE(DoMenuTabV2.find("const float LabelFontSize = UseNewUi ? minimum(Label.h * CUi::ms_FontmodHeight, NewUiLabelFontSize) : Label.h * CUi::ms_FontmodHeight;"), std::string::npos);
 	EXPECT_NE(DoMenuTabV2.find("Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);"), std::string::npos);
 	EXPECT_NE(Source.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;"), std::string::npos);
 	EXPECT_NE(Source.find("ColorRGBA InactiveColor = MenuTabDefaultColor();"), std::string::npos);
@@ -144,6 +145,7 @@ TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_NE(UseNewUiBlock.find("const float BrowserButtonWidth = 58.0f;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float GameButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float ServerInfoButtonWidth = CompactOnlineMenuTabs ? 94.0f : 104.0f;"), std::string::npos);
+	EXPECT_EQ(UseNewUiBlock.find("GameButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTROL_SCALE"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float OnlineTabGap = 4.0f;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_SettingsButton"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_InternetButton"), std::string::npos);
@@ -156,6 +158,44 @@ TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_NE(OldUiBlock.find("if(DoButton_MenuTab(&s_InternetButton"), std::string::npos);
 	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_SettingsButton"), std::string::npos);
 	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_InternetButton"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, MenubarControlsScaleVerticallyWithoutIncreasingPageTabWidths)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string Header = ReadTextFile("src/game/client/components/menus.h");
+	const std::string RenderMenubar = FunctionBody(Source, "void CMenus::RenderMenubar(");
+	const std::string DoIngameMenuTab = FunctionBody(Source, "int CMenus::DoIngameMenuTab(");
+
+	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_CONTROL_SCALE = 1.20f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_CONTROL_HEIGHT = 19.0f * MENU_MENUBAR_CONTROL_SCALE;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_CONTENT_INSET = 2.0f * MENU_MENUBAR_CONTROL_SCALE;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_LABEL_FONT_SIZE = 13.0f * MENU_MENUBAR_CONTROL_SCALE;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_CONTROL_RADIUS = 7.0f * MENU_MENUBAR_CONTROL_SCALE;"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("const float MenubarOuterInsetY = maximum(0.0f, (Box.h - MENU_MENUBAR_CONTROL_HEIGHT) * 0.5f);"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("const float MenubarIconButtonSize = Box.h;"), std::string::npos);
+	EXPECT_NE(Header.find("bool LargeMenubarControl = false"), std::string::npos);
+	EXPECT_NE(Source.find("const float ContentInset = UseLargeMenubarControl ? MENU_MENUBAR_CONTENT_INSET : 2.0f;"), std::string::npos);
+	EXPECT_NE(DoIngameMenuTab.find("Text.HMargin(g_Config.m_QmNewUi != 0 ? MENU_MENUBAR_CONTENT_INSET : 2.0f, &Text);"), std::string::npos);
+	EXPECT_NE(DoIngameMenuTab.find("DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, true"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("DoMenuTabV2(&s_SettingsButton, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &SettingsButton, IGraphics::CORNER_ALL, true"), std::string::npos);
+	EXPECT_NE(DoIngameMenuTab.find("minimum(Text.h * CUi::ms_FontmodHeight, MENU_MENUBAR_LABEL_FONT_SIZE)"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_HEIGHT_NEW = 24.0f;"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, MenubarIndicatorSplitsACompactSatelliteTowardHoveredPageTabs)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string RenderMenubar = FunctionBody(Source, "void CMenus::RenderMenubar(");
+
+	EXPECT_NE(Source.find("constexpr float MENU_TAB_INDICATOR_WIDTH_RATIO = 0.35f;"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandBlobPose(SatelliteProgress)"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandBlobConnectionStrength(BlobPose.m_Travel)"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("Page != ActivePage && Ui()->HotItem() == pButtonId"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("const CUIRect SatelliteTarget = MenubarIndicatorTargetRect(MenubarHaveHovered ? MenubarHoveredRect : MenubarActiveRect);"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("if(MenubarHaveHovered || SatelliteProgress > MENU_TAB_ANIM_EPSILON)"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("MenubarTrackPage(PAGE_GAME, Button, &s_GameButton);"), std::string::npos);
+	EXPECT_NE(RenderMenubar.find("DoIngameMenuTab(&s_GameButton, PAGE_GAME, \"ingame-tab-game\", Localize(\"Game\"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_ALL)"), std::string::npos);
 }
 
 TEST(QmCameraEffects, DynamicFovRemovalKeepsBaseZoomStable)
@@ -662,7 +702,7 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(MiniFeatures.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", Localize(\"Better scoreboard\"), &g_Config.m_QmBetterScoreboard, &Row, LgLineHeight);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.20\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.21\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SwitchCountdownIsAnIndependentHudModuleWithCompatibleDefaults)
@@ -674,11 +714,14 @@ TEST(QmNewUiMenuBranches, SwitchCountdownIsAnIndependentHudModuleWithCompatibleD
 	const std::string DynamicIslandModule = BlockBodyAfter(MenusSource, "case EQmModuleId::DynamicIsland:\n\t\t\t{");
 
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdown, qm_switch_countdown, 1, 0, 1"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 2"), std::string::npos);
 	EXPECT_NE(MenusSource.find("{EQmModuleId::SwitchCountdown, EQmModuleColumn::Right"), std::string::npos);
 	EXPECT_NE(SwitchModule.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmSwitchCountdown"), std::string::npos);
 	EXPECT_NE(SwitchModule.find("if(g_Config.m_QmSwitchCountdown || PrewarmOnly)"), std::string::npos);
-	EXPECT_NE(SwitchModule.find("DoSettingsLine_RadioMenu"), std::string::npos);
+	EXPECT_EQ(SwitchModule.find("DoSettingsLine_RadioMenu"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("DoQmSettingsCheckboxAuto(&s_SwitchCountdownFollowTeeId"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("DoQmSettingsCheckboxAuto(&s_SwitchCountdownMediaIslandId"), std::string::npos);
+	EXPECT_NE(SwitchModule.find("QmHudSwitchCountdownModeFromLocations"), std::string::npos);
 	EXPECT_NE(SwitchModule.find("Localize(\"Follow Tee\")"), std::string::npos);
 	EXPECT_NE(SwitchModule.find("Localize(\"In Dynamic Island\")"), std::string::npos);
 	EXPECT_EQ(DynamicIslandModule.find("m_QmSwitchCountdown"), std::string::npos);
@@ -770,13 +813,28 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmLyricsCacheEnable, qm_lyrics_cache_enable, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects, qm_hud_island_show_tune_zone_effects, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdown, qm_switch_countdown, 1, 0, 1"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 0, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 0, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 0, 0, 2"), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 2, 0, 2"), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 1, 0, 2"), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 2, 0, 2"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, LyricsAdvancedToggleUsesLyricsSpecificChineseTranslation)
+{
+	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Translations = ReadTextFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
+	const size_t LyricsAdvancedContext = Translations.find("context = \"Lyrics HUD\"");
+	const size_t LyricsAdvancedTranslation = Translations.find("simplified_chinese = \"高级\"", LyricsAdvancedContext);
+	const size_t NextMessage = Translations.find("[[message]]", LyricsAdvancedContext + 1);
+
+	EXPECT_NE(MenusSource.find("Localize(\"Advanced\", \"Lyrics HUD\")"), std::string::npos);
+	ASSERT_NE(LyricsAdvancedContext, std::string::npos);
+	ASSERT_NE(LyricsAdvancedTranslation, std::string::npos);
+	ASSERT_NE(NextMessage, std::string::npos);
+	EXPECT_LT(LyricsAdvancedTranslation, NextMessage);
 }
 
 TEST(QmNewUiMenuBranches, SkinTransitionTeeHueControlsDoNotRenderExplanatoryNotes)
@@ -1784,17 +1842,44 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesQmClientDisplayNames)
 	EXPECT_EQ(RenderSettingsGraphics.find("Localize(\"Renderer\")"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, LyricsAdvancedToggleUsesLyricsSpecificChineseTranslation)
+TEST(QmNewUiMenuBranches, GlobalFormControlsUseCompactNewUiStyle)
 {
-	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Translations = ReadTextFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
-	const size_t LyricsAdvancedContext = Translations.find("context = \"Lyrics HUD\"");
-	const size_t LyricsAdvancedTranslation = Translations.find("simplified_chinese = \"高级\"", LyricsAdvancedContext);
-	const size_t NextMessage = Translations.find("[[message]]", LyricsAdvancedContext + 1);
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string PixelSnap = FunctionBody(MenusSource, "float SnapUiToPixel(");
+	const std::string MaskRasterizer = FunctionBody(MenusSource, "void RasterizeQmToggleCapsuleMask(");
+	const std::string MaskTexture = FunctionBody(MenusSource, "IGraphics::CTextureHandle CreateQmToggleMaskTexture(");
+	const std::string MaskDraw = FunctionBody(MenusSource, "void DrawQmToggleMasks(");
+	const std::string CheckboxLayout = FunctionBody(MenusSource, "void SplitMenuCheckboxRects(");
+	const std::string Checkbox = FunctionBody(MenusSource, "int CMenus::DoButton_CheckBox_Common_WithLabelElement(");
+	const std::string TristateCheckbox = FunctionBody(MenusSource, "int CMenus::DoButton_CheckBox_Tristate(");
+	const std::string Slider = FunctionBody(UiSource, "float CUi::DoScrollbarH(");
+	const std::string OnInit = FunctionBody(MenusSource, "void CMenus::OnInit(");
+	const std::string OnShutdown = FunctionBody(MenusSource, "void CMenus::OnShutdown(");
 
-	EXPECT_NE(MenusSource.find("Localize(\"Advanced\", \"Lyrics HUD\")"), std::string::npos);
-	ASSERT_NE(LyricsAdvancedContext, std::string::npos);
-	ASSERT_NE(LyricsAdvancedTranslation, std::string::npos);
-	ASSERT_NE(NextMessage, std::string::npos);
-	EXPECT_LT(LyricsAdvancedTranslation, NextMessage);
+	EXPECT_NE(PixelSnap.find("std::round(Value / PixelSize) * PixelSize"), std::string::npos);
+	EXPECT_NE(MaskRasterizer.find("QmToggleMaskSupersampling"), std::string::npos);
+	EXPECT_NE(MaskTexture.find("LoadTextureRawMove"), std::string::npos);
+	EXPECT_NE(MaskDraw.find("QuadsSetSubset"), std::string::npos);
+	EXPECT_NE(CheckboxLayout.find("Rect.VSplitRight(ToggleWidth, &Label, &Box)"), std::string::npos);
+	EXPECT_NE(CheckboxLayout.find("Rect.h * 0.68f"), std::string::npos);
+	EXPECT_NE(Checkbox.find("const bool UseQmToggleStyle = g_Config.m_QmNewUi != 0 && !HasCustomGlyph"), std::string::npos);
+	EXPECT_NE(Checkbox.find("ToggleTrack.Draw"), std::string::npos);
+	EXPECT_NE(Checkbox.find("ToggleKnob.Draw"), std::string::npos);
+	EXPECT_NE(Checkbox.find("const ColorRGBA OffTrackColor(1.0f, 1.0f, 1.0f, 0.06f"), std::string::npos);
+	EXPECT_NE(Checkbox.find("const ColorRGBA OnTrackColor(1.0f, 1.0f, 1.0f, 0.38f"), std::string::npos);
+	EXPECT_EQ(Checkbox.find("Box.Margin(2.0f, &ToggleTrack)"), std::string::npos);
+	EXPECT_NE(Checkbox.find("const float UiPixelSize = Ui()->PixelSize()"), std::string::npos);
+	EXPECT_NE(Checkbox.find("ToggleTrack.x = SnapUiToPixel"), std::string::npos);
+	EXPECT_NE(Checkbox.find("ToggleKnob.x = SnapUiToPixel"), std::string::npos);
+	EXPECT_NE(Checkbox.find("std::abs(CheckStrength - TargetCheckStrength) <= MENU_TAB_ANIM_EPSILON ? TargetCheckStrength"), std::string::npos);
+	EXPECT_NE(Checkbox.find("if(m_QmToggleMaskTexture.IsValid())"), std::string::npos);
+	EXPECT_NE(Checkbox.find("DrawQmToggleMasks"), std::string::npos);
+	EXPECT_NE(TristateCheckbox.find("BUTTONFLAG_LEFT, true"), std::string::npos);
+	EXPECT_NE(OnInit.find("m_QmToggleMaskTexture = CreateQmToggleMaskTexture(Graphics())"), std::string::npos);
+	EXPECT_NE(OnShutdown.find("Graphics()->UnloadTexture(&m_QmToggleMaskTexture)"), std::string::npos);
+	EXPECT_NE(Slider.find("const bool UseQmSliderStyle = g_Config.m_QmNewUi != 0"), std::string::npos);
+	EXPECT_NE(Slider.find("VisualRail.h = std::clamp("), std::string::npos);
+	EXPECT_NE(Slider.find("Handle.Draw"), std::string::npos);
+	EXPECT_NE(Slider.find("HandleSize * 0.5f"), std::string::npos);
 }
