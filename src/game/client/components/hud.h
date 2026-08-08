@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_HUD_H
 #define GAME_CLIENT_COMPONENTS_HUD_H
 #include <engine/client.h>
+#include <engine/graphics.h>
 #include <engine/shared/protocol.h>
 #include <engine/textrender.h>
 
@@ -303,6 +304,12 @@ class CHud : public CComponent
 		}
 	};
 	SHudMediaIslandAnimState m_MediaIslandAnimState;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurSource;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurTemporary;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurTarget;
+	int m_MediaIslandBlurWidth = 0;
+	int m_MediaIslandBlurHeight = 0;
+	bool m_MediaIslandBlurReady = false;
 	struct SHudWeaponPresentationState
 	{
 		bool m_aClientInitialized[MAX_CLIENTS] = {};
@@ -426,6 +433,9 @@ class CHud : public CComponent
 	void RenderPlayerState(int ClientId);
 	bool HasVisibleMediaIsland() const;
 	float GetTopIslandAvoidanceRight() const;
+	void DestroyMediaIslandBlurTargets();
+	bool PrepareMediaIslandBlur();
+	void RenderMediaIslandBlur(const CUIRect &Rect, float Alpha);
 	void RenderMediaIsland();
 
 	int m_LastSpectatorCountTick;
@@ -475,6 +485,7 @@ public:
 	void OnRender() override;
 	void OnInit() override;
 	void OnNewSnapshot() override;
+	void OnRelease() override;
 
 	// DDRace
 

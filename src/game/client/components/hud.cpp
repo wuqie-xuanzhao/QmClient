@@ -63,6 +63,11 @@ namespace
 		return str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0;
 	}
 
+	int MediaIslandBlurTargetDimension(int ScreenDimension)
+	{
+		return ScreenDimension > 0 ? (ScreenDimension + 3) / 4 : 0;
+	}
+
 	struct SHudTextInfoLayout
 	{
 		float m_FpsX = 0.0f;
@@ -1103,6 +1108,93 @@ void CHud::OnInit()
 	PreparePlayerStateQuads();
 
 	Graphics()->QuadContainerUpload(m_HudQuadContainerIndex);
+}
+
+void CHud::DestroyMediaIslandBlurTargets()
+{
+	Graphics()->DestroyRenderTarget(&m_MediaIslandBlurSource);
+	Graphics()->DestroyRenderTarget(&m_MediaIslandBlurTemporary);
+	Graphics()->DestroyRenderTarget(&m_MediaIslandBlurTarget);
+	m_MediaIslandBlurWidth = 0;
+	m_MediaIslandBlurHeight = 0;
+	m_MediaIslandBlurReady = false;
+}
+
+bool CHud::PrepareMediaIslandBlur()
+{
+	m_MediaIslandBlurReady = false;
+	if(g_Config.m_QmHudIslandBgOpacity <= 0)
+		return false;
+	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
+	{
+		if(m_MediaIslandBlurSource.IsValid() || m_MediaIslandBlurTemporary.IsValid() || m_MediaIslandBlurTarget.IsValid())
+			DestroyMediaIslandBlurTargets();
+		return false;
+	}
+
+	const int BlurWidth = MediaIslandBlurTargetDimension(Graphics()->ScreenWidth());
+	const int BlurHeight = MediaIslandBlurTargetDimension(Graphics()->ScreenHeight());
+	if(BlurWidth <= 0 || BlurHeight <= 0)
+		return false;
+
+	const bool SizeChanged = BlurWidth != m_MediaIslandBlurWidth || BlurHeight != m_MediaIslandBlurHeight;
+	if(SizeChanged || !m_MediaIslandBlurSource.IsValid() || !m_MediaIslandBlurTemporary.IsValid() || !m_MediaIslandBlurTarget.IsValid())
+	{
+		DestroyMediaIslandBlurTargets();
+		m_MediaIslandBlurSource = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		m_MediaIslandBlurTemporary = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		m_MediaIslandBlurTarget = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		if(!m_MediaIslandBlurSource.IsValid() || !m_MediaIslandBlurTemporary.IsValid() || !m_MediaIslandBlurTarget.IsValid())
+		{
+			DestroyMediaIslandBlurTargets();
+			return false;
+		}
+		m_MediaIslandBlurWidth = BlurWidth;
+		m_MediaIslandBlurHeight = BlurHeight;
+	}
+
+	if(!Graphics()->CaptureBackbufferToRenderTarget(m_MediaIslandBlurSource))
+		return false;
+
+	IGraphics::SGaussianBlurParams BlurParams;
+	BlurParams.m_Radius = 4;
+	BlurParams.m_Sigma = 2.0f;
+	m_MediaIslandBlurReady = Graphics()->GaussianBlurRenderTarget(
+		m_MediaIslandBlurSource,
+		m_MediaIslandBlurTemporary,
+		m_MediaIslandBlurTarget,
+		BlurParams);
+	return m_MediaIslandBlurReady;
+}
+
+void CHud::RenderMediaIslandBlur(const CUIRect &Rect, float Alpha)
+{
+	if(!m_MediaIslandBlurReady || Rect.w <= 0.0f || Rect.h <= 0.0f || Alpha <= 0.0f)
+		return;
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float ScreenWidth = ScreenX1 - ScreenX0;
+	const float ScreenHeight = ScreenY1 - ScreenY0;
+	if(ScreenWidth <= 0.0f || ScreenHeight <= 0.0f)
+		return;
+
+	// Preserve the active HUD-editor transform when clipping the captured screen.
+	const float ScaleX = Graphics()->ScreenWidth() / ScreenWidth;
+	const float ScaleY = Graphics()->ScreenHeight() / ScreenHeight;
+	Graphics()->ClipEnable(
+		(int)((Rect.x - ScreenX0) * ScaleX),
+		(int)((Rect.y - ScreenY0) * ScaleY),
+		(int)(Rect.w * ScaleX),
+		(int)(Rect.h * ScaleY));
+	Graphics()->BlendNormal();
+	Graphics()->DrawRenderTarget(m_MediaIslandBlurTarget, ScreenX0, ScreenY0, ScreenWidth, ScreenHeight, std::clamp(Alpha, 0.0f, 1.0f));
+	Graphics()->ClipDisable();
+}
+
+void CHud::OnRelease()
+{
+	DestroyMediaIslandBlurTargets();
 }
 
 void CHud::RenderSpeedrunTimer()
@@ -4403,6 +4495,8 @@ void CHud::RenderMediaIsland()
 	CurrentSdfState.m_BackgroundColor = EntrancePose.m_BackgroundColor;
 	CurrentSdfState.m_ScreenPixelSize = ScreenPixelSize;
 	CurrentSdfState.m_Rect = QmHudMediaIslandSdfOuterRect(CurrentSdfState);
+	if(PrepareMediaIslandBlur())
+		RenderMediaIslandBlur(CurrentSdfState.m_Rect, EntrancePose.m_BackgroundColor.a);
 	IGraphics::SMediaIslandSdfParams GpuSdfParams;
 	if(QmHudMediaIslandBuildGpuSdfParams(CurrentSdfState, GpuSdfParams))
 	{
@@ -6580,6 +6674,11 @@ void CHud::OnNewSnapshot()
 
 void CHud::OnRender()
 {
+	m_MediaIslandBlurReady = false;
+	if((g_Config.m_QmHudIslandBgOpacity == 0 || g_Config.m_QmHudIslandUseOriginalStyle) &&
+		(m_MediaIslandBlurSource.IsValid() || m_MediaIslandBlurTemporary.IsValid() || m_MediaIslandBlurTarget.IsValid()))
+		DestroyMediaIslandBlurTargets();
+
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 

@@ -1212,7 +1212,39 @@ TEST(QmHudMediaIslandSource, MediaIslandUsesGpuSdfCommandWithoutCpuRasterization
 	EXPECT_EQ(Source.find("m_vMediaIslandSdfPixels"), std::string::npos);
 	EXPECT_EQ(Source.find("m_MediaIslandSdfTexture"), std::string::npos);
 	EXPECT_EQ(IslandBody.find("BeginRenderTarget"), std::string::npos);
-	EXPECT_EQ(IslandBody.find("DrawRenderTarget"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandSource, BackgroundBlurFollowsOpacityAndKeepsTheSdfFallback)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string Header = ReadTestSourceFile("src/game/client/components/hud.h");
+	const std::string PrepareBlur = FunctionBody(Source, "bool CHud::PrepareMediaIslandBlur()");
+	const std::string OnRelease = FunctionBody(Source, "void CHud::OnRelease()");
+	const std::string OnRender = FunctionBody(Source, "void CHud::OnRender()");
+	const size_t IslandBegin = Source.find("void CHud::RenderMediaIsland()");
+	ASSERT_NE(IslandBegin, std::string::npos);
+	const size_t IslandEnd = Source.find("float CHud::RenderLegacyMediaInfoAt", IslandBegin);
+	ASSERT_NE(IslandEnd, std::string::npos);
+	const std::string IslandBody = Source.substr(IslandBegin, IslandEnd - IslandBegin);
+
+	EXPECT_NE(Header.find("m_MediaIslandBlurSource"), std::string::npos);
+	EXPECT_NE(Header.find("void OnRelease() override;"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("m_QmHudIslandBgOpacity <= 0"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("IsBackbufferCaptureSupported"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("CaptureBackbufferToRenderTarget"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("GaussianBlurRenderTarget"), std::string::npos);
+	EXPECT_EQ(PrepareBlur.find("m_QmBetterScoreboard"), std::string::npos);
+	EXPECT_NE(OnRelease.find("DestroyMediaIslandBlurTargets"), std::string::npos);
+	EXPECT_NE(OnRender.find("g_Config.m_QmHudIslandUseOriginalStyle"), std::string::npos);
+	EXPECT_NE(OnRender.find("DestroyMediaIslandBlurTargets"), std::string::npos);
+	EXPECT_NE(IslandBody.find("DrawMediaIslandGeometryFallback"), std::string::npos);
+
+	const size_t BlurDraw = IslandBody.find("RenderMediaIslandBlur(CurrentSdfState.m_Rect");
+	const size_t SdfDraw = IslandBody.find("Graphics()->RenderMediaIslandSdf");
+	ASSERT_NE(BlurDraw, std::string::npos);
+	ASSERT_NE(SdfDraw, std::string::npos);
+	EXPECT_LT(BlurDraw, SdfDraw);
 }
 
 TEST(QmHudPresentationSource, MediaIslandAndWeaponHudUseContinuousPresentationState)
