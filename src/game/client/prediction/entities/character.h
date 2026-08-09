@@ -112,7 +112,6 @@ public:
 	}
 	int GetJumped() const { return m_Core.m_Jumped; }
 	int GetAttackTick() const { return m_AttackTick; }
-	int GetReloadTimer() const { return m_ReloadTimer; }
 	int GetStrongWeakId() const { return m_StrongWeakId; }
 	int GetLastDamageTick() const { return m_LastDamageTick; }
 	int GetLastDamageFrom() const { return m_LastDamageFrom; }
