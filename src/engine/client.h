@@ -433,6 +433,7 @@ public:
 	virtual void Echo(const char *pString) = 0;
 
 	virtual bool CanDisplayWarning() const = 0;
+	virtual bool PrepareForShutdown(bool Force) = 0;
 	virtual void RenderShutdownMessage() = 0;
 
 	virtual CNetObjHandler *GetNetObjHandler() = 0;

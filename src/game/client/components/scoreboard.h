@@ -35,11 +35,6 @@ struct SScoreboardTeamLabelLayout
 
 constexpr float SCOREBOARD_TEAM_MODE_ICON_SIZE = 12.0f;
 
-constexpr int ScoreboardBlurTargetDimension(int ScreenDimension)
-{
-	return ScreenDimension > 0 ? (ScreenDimension + 3) / 4 : 0;
-}
-
 constexpr SScoreboardRowRenderDetail ResolveScoreboardRowRenderDetail()
 {
 	return {};
@@ -106,9 +101,6 @@ class CScoreboard : public CComponent
 	void RenderMediaControls(CUIRect Controls);
 	void RenderSoundMuteBar(CUIRect ScoreboardRect);
 	void RenderTeamModeIcons(float x, float y, float IconSize, const SQmScoreboardTeamModeState &State, float Alpha);
-	void DestroyBetterScoreboardBlurTargets();
-	bool PrepareBetterScoreboardBlur();
-	void RenderBetterScoreboardBlur(const CUIRect &Rect);
 	void UpdateTeamModeCache();
 	void BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan);
 	void RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart, int CountEnd, const CScoreboardPlayerRowPlan &Plan, CScoreboardRenderState &State);
@@ -128,12 +120,6 @@ class CScoreboard : public CComponent
 	static constexpr int SOUND_MUTE_BUTTON_COUNT = 9;
 
 	IGraphics::CTextureHandle m_DeadTeeTexture;
-	IGraphics::CRenderTargetHandle m_BetterScoreboardBlurSource;
-	IGraphics::CRenderTargetHandle m_BetterScoreboardBlurTemporary;
-	IGraphics::CRenderTargetHandle m_BetterScoreboardBlurTarget;
-	int m_BetterScoreboardBlurWidth = 0;
-	int m_BetterScoreboardBlurHeight = 0;
-	bool m_BetterScoreboardBlurReady = false;
 	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> m_aCachedTeamModes{};
 
 	std::optional<vec2> m_LastMousePos;

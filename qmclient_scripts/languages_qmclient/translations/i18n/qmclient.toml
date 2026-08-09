@@ -8892,22 +8892,6 @@ turkish = "Diğer oyuncuların koordinatlarını göster"
 polish = "Pokaż współrzędne innych graczy"
 
 [[message]]
-key = "Show outdated version warning"
-[message.translations]
-japanese = "古いバージョンの警告を表示"
-korean = "오래된 버전 경고 표시"
-simplified_chinese = "显示版本过旧提示"
-traditional_chinese = "顯示版本過舊提示"
-russian = "Показывать предупреждение об устаревшей версии"
-german = "Warnung bei veralteter Version anzeigen"
-spanish = "Mostrar advertencia de versión desactualizada"
-french = "Afficher l'avertissement de version obsolète"
-brazilian_portuguese = "Mostrar aviso de versão desatualizada"
-portuguese = "Mostrar aviso de versão desatualizada"
-turkish = "Eski sürüm uyarısını göster"
-polish = "Pokaż ostrzeżenie o nieaktualnej wersji"
-
-[[message]]
 key = "Show own coordinates"
 [message.translations]
 japanese = "自分の座標を表示"

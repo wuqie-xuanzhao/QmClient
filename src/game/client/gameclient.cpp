@@ -1501,6 +1501,16 @@ void CGameClient::OnRender()
 	ProcessQmStutterFrame();
 
 	m_pFrameScheduler->BeginFrame(Client()->PerfFrame());
+	if(m_TClient.IsPreparingUpdateForShutdown())
+	{
+		Graphics()->Clear(0.0f, 0.0f, 0.0f);
+		Ui()->MapScreen();
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		Ui()->DoLabel(Ui()->Screen(), m_TClient.UpdateShutdownMessage(), 16.0f, TEXTALIGN_MC);
+		Input()->Clear();
+		m_pFrameScheduler->EndFrame();
+		return;
+	}
 
 	const ColorRGBA ClearColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClOverlayEntities ? g_Config.m_ClBackgroundEntitiesColor : g_Config.m_ClBackgroundColor));
 	Graphics()->Clear(ClearColor.r, ClearColor.g, ClearColor.b);
@@ -2686,6 +2696,11 @@ void CGameClient::RenderShutdownMessage()
 	Ui()->DoLabel(Ui()->Screen(), pMessage, 16.0f, TEXTALIGN_MC);
 	Graphics()->Swap();
 	Graphics()->Clear(0.0f, 0.0f, 0.0f);
+}
+
+bool CGameClient::PrepareForShutdown(bool Force)
+{
+	return m_TClient.PrepareForShutdown(Force);
 }
 
 void CGameClient::ProcessDemoSnapshot(CSnapshot *pSnap)

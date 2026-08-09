@@ -2235,6 +2235,50 @@ TEST(SettingsWarmup, TClientVisualSettingsUseStableTextIdsForPrebuildCoverage)
 	EXPECT_NE(TClient.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-wheel-animate-off\""), std::string::npos);
 }
 
+TEST(SettingsWarmup, TClientSettingsUseTwoLevelFontScale)
+{
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const std::string Ui = ReadTestSourceFile("src/game/client/ui.cpp");
+	const std::string KeyBinder = ReadTestSourceFile("src/game/client/components/key_binder.cpp");
+
+	EXPECT_NE(TClient.find("constexpr float TCLIENT_BODY_FONT_SIZE = 14.0f;"), std::string::npos);
+	EXPECT_NE(TClient.find("constexpr float TCLIENT_HEADLINE_FONT_SIZE = 20.0f;"), std::string::npos);
+	EXPECT_NE(TClient.find("Props.m_MinimumFontSize = FontSize;"), std::string::npos);
+	EXPECT_NE(TClient.find("Props.m_EllipsisAtEnd = true;"), std::string::npos);
+	EXPECT_NE(TClient.find("const float EditBoxFontSize = TCLIENT_BODY_FONT_SIZE;"), std::string::npos);
+	EXPECT_NE(TClient.find("const float ColorPickerLabelSize = TCLIENT_BODY_FONT_SIZE;"), std::string::npos);
+	EXPECT_EQ(TClient.find("const float EditBoxFontSize = 12.0f;"), std::string::npos);
+	EXPECT_EQ(TClient.find("const float ColorPickerLabelSize = 13.0f;"), std::string::npos);
+	EXPECT_EQ(TClient.find("Ui()->DoLabel(&Help, pVar->m_pHelp ? pVar->m_pHelp : \"\", 11.0f"), std::string::npos);
+	EXPECT_EQ(TClient.find("Ui()->DoEditBox(&s_NameInput, &ButtonL, 12.0f)"), std::string::npos);
+	EXPECT_EQ(TClient.find("Height / LineSize * FontSize"), std::string::npos);
+	EXPECT_NE(TClient.find("DoTClientLabel(Ui(), &Label, Profile.m_Name, TCLIENT_BODY_FONT_SIZE, TEXTALIGN_ML);"), std::string::npos);
+	EXPECT_NE(TClient.find("DoTClientLabel(Ui(), &Label, Profile.m_Clan, TCLIENT_BODY_FONT_SIZE, TEXTALIGN_ML);"), std::string::npos);
+	EXPECT_NE(TClient.find("DoLine_ColorPicker(&ResetId, ColorPickerLineSize, ColorPickerLabelSize, 0.0f, &ColorRect, \"\", &ColState.m_Working, DefaultColor, false, nullptr, pCol->m_Alpha, TCLIENT_BODY_FONT_SIZE);"), std::string::npos);
+	EXPECT_NE(TClient.find("DoTClientSettingsButton_Menu(&ResetBtn, \"tclient-config-reset\", Localize(\"Reset\")"), std::string::npos);
+	EXPECT_NE(TClient.find("DoKeyReader(&ReaderButton, &ClearButton, &KeyButton, Bind, false, TCLIENT_BODY_FONT_SIZE)"), std::string::npos);
+	EXPECT_NE(TClient.find("DoDropDown(&Button, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState, TCLIENT_BODY_FONT_SIZE)"), std::string::npos);
+	EXPECT_NE(TClient.find("DoButton_MenuTab(&s_aPageTabs[Tab], s_apTClientTabNames[Tab], m_TClientSettingsTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f, nullptr, nullptr, TCLIENT_BODY_FONT_SIZE)"), std::string::npos);
+	EXPECT_NE(TClient.find("DoEditBox_Search(&s_EntriesFilterInput, &EntriesSearch, TCLIENT_BODY_FONT_SIZE"), std::string::npos);
+
+	EXPECT_NE(Menus.find("const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;"), std::string::npos);
+	EXPECT_NE(Menus.find("FontSize = Page == SETTINGS_TCLIENT ? 14.0f : FontSize;"), std::string::npos);
+	EXPECT_NE(Menus.find("Props.m_MinimumFontSize = FixedFontSize ? FontSize : FontSize * 0.7f;"), std::string::npos);
+	EXPECT_NE(Menus.find("Props.m_EllipsisAtEnd = FixedFontSize;"), std::string::npos);
+	EXPECT_NE(Menus.find("FontSize = FixedFontSize ? FontSize : Box.h * CUi::ms_FontmodHeight;"), std::string::npos);
+	EXPECT_NE(Menus.find("return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement, FontSize);"), std::string::npos);
+	EXPECT_NE(KeyBinder.find("Props.m_MinimumFontSize = FontSize;"), std::string::npos);
+	EXPECT_NE(KeyBinder.find("Props.m_EllipsisAtEnd = true;"), std::string::npos);
+
+	EXPECT_NE(Ui.find("Props.m_FontSize = FontSize;"), std::string::npos);
+	EXPECT_NE(Ui.find("const int ExpectedLabelFlags = FixedFontSize ? TEXTFLAG_ELLIPSIS_AT_END : 0;"), std::string::npos);
+	EXPECT_NE(Ui.find("UIElement.Rect(0)->m_FontSize != FontSize"), std::string::npos);
+	EXPECT_NE(Ui.find("UIElement.Rect(0)->m_LabelMaxWidth != TextProps.m_MaxWidth"), std::string::npos);
+	EXPECT_NE(Ui.find("UIElement.Rect(0)->m_LabelFlags != ExpectedLabelFlags"), std::string::npos);
+	EXPECT_NE(Ui.find("State.m_SelectionPopupContext.m_MinimumFontSize = FontSize;"), std::string::npos);
+}
+
 TEST(SettingsWarmup, PassiveTooltipOnlyUiHelpersStayOutOfButtonLogic)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/ui.h");

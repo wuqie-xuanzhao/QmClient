@@ -31,7 +31,7 @@ bool CKeyBinder::OnInput(const IInput::CEvent &Event)
 	return true;
 }
 
-CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderButton, CButtonContainer *pClearButton, const CUIRect *pRect, const CBindSlot &CurrentBind, bool Activate)
+CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderButton, CButtonContainer *pClearButton, const CUIRect *pRect, const CBindSlot &CurrentBind, bool Activate, float FontSize)
 {
 	CKeyReaderResult Result = {CurrentBind, false};
 
@@ -88,7 +88,16 @@ CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderBu
 	KeyReaderButton.Draw(Color, IGraphics::CORNER_L, 5.0f);
 	CUIRect Label;
 	KeyReaderButton.HMargin(1.0f, &Label);
-	Ui()->DoLabel(&Label, aBuf, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+	if(FontSize > 0.0f)
+	{
+		SLabelProperties Props;
+		Props.m_MaxWidth = Label.w;
+		Props.m_MinimumFontSize = FontSize;
+		Props.m_EllipsisAtEnd = true;
+		Ui()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_MC, Props);
+	}
+	else
+		Ui()->DoLabel(&Label, aBuf, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 
 	return Result;
 }

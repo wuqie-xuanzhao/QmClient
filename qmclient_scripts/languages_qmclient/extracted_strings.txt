@@ -278,7 +278,7 @@ Auto-toggle fast input
 Auto-toggle fast input others
 Auto-translate incoming messages
 Auto-translate outgoing messages
-Automatic updates are only supported on Windows
+Automatic updates
 Automatically adds voting options for all maps
 Automatically close the current chat after waking from freeze
 Automatically create statboard csv
@@ -312,7 +312,6 @@ Behavior type
 Benchmark frame times for number of seconds to file, then quit
 Best
 Best match
-Better scoreboard
 Bind key to execute a command or view keybindings
 Bind Wheel
 Bind Wheel Key
@@ -922,6 +921,7 @@ Game/predicted tick
 Gameplay
 Gap aim rescue
 Gap between statusbar items
+Gaussian blur
 General
 Get all map players' skin IDs and auto add to rotate queue
 Getting game info
@@ -2048,7 +2048,6 @@ Show other players' hook collision lines
 Show other tees' trails
 Show others
 Show others (own team only)
-Show outdated version warning
 Show own coordinates
 Show own player's hook collision line
 Show ping colored circle in nameplates
@@ -2331,6 +2330,7 @@ The selected button is not visible. Do you want to deselect it or edit its visib
 The selected button is overlapping with other buttons.
 The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
+The update is ready and will be installed when you exit.
 The Visuals tab contains appearance and rendering options
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 Theme
@@ -2507,8 +2507,6 @@ Update
 Update a rcon key
 Update a rcon key with prehashed data
 Update failed. Please try again
-Update finished. Please restart the client
-Update finished. Restarting...
 Update notice
 Update or add a specific war group
 Updating feature list...

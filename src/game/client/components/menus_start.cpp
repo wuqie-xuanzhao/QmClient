@@ -466,21 +466,28 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 		char aTBuf[64];
 		str_format(aTBuf, sizeof(aTBuf), CLIENT_NAME " %s", CLIENT_RELEASE_VERSION);
 		Ui()->DoLabel(&TClientVersion, aTBuf, 14.0f, TEXTALIGN_MR);
-#if defined(CONF_AUTOUPDATE)
-		CUIRect UpdateToDateText;
-		MainView.HSplitTop(15.0f, &UpdateToDateText, nullptr);
-		UpdateToDateText.VSplitRight(40.0f, &UpdateToDateText, nullptr);
-		if(!GameClient()->m_TClient.m_FetchedQmClientUpdateInfo)
+#if defined(CONF_AUTOUPDATE) && defined(CONF_FAMILY_WINDOWS)
+		if(g_Config.m_QmAutoUpdate)
 		{
-			Ui()->DoLabel(&UpdateToDateText, Localize("(Fetching Update Info)"), 14.0f, TEXTALIGN_MR);
-		}
-		else if(GameClient()->m_TClient.NeedQmClientUpdate())
-		{
-			Ui()->DoLabel(&UpdateToDateText, Localize("(Update required)"), 14.0f, TEXTALIGN_MR);
-		}
-		else
-		{
-			Ui()->DoLabel(&UpdateToDateText, Localize("(On Latest)"), 14.0f, TEXTALIGN_MR);
+			CUIRect UpdateToDateText;
+			MainView.HSplitTop(15.0f, &UpdateToDateText, nullptr);
+			UpdateToDateText.VSplitRight(40.0f, &UpdateToDateText, nullptr);
+			if(GameClient()->m_TClient.m_UpdateCheckFailed)
+			{
+				Ui()->DoLabel(&UpdateToDateText, Localize("Update failed. Please try again"), 14.0f, TEXTALIGN_MR);
+			}
+			else if(!GameClient()->m_TClient.m_FetchedQmClientUpdateInfo)
+			{
+				Ui()->DoLabel(&UpdateToDateText, Localize("(Fetching Update Info)"), 14.0f, TEXTALIGN_MR);
+			}
+			else if(GameClient()->m_TClient.NeedQmClientUpdate())
+			{
+				Ui()->DoLabel(&UpdateToDateText, Localize("(Update required)"), 14.0f, TEXTALIGN_MR);
+			}
+			else
+			{
+				Ui()->DoLabel(&UpdateToDateText, Localize("(On Latest)"), 14.0f, TEXTALIGN_MR);
+			}
 		}
 #endif
 		static CButtonContainer s_ConsoleButton;

@@ -838,8 +838,8 @@ Auto-translate incoming messages
 Auto-translate outgoing messages
 == 送信メッセージの自動翻訳
 
-Automatic updates are only supported on Windows
-== 自動更新はWindowsのみ対応
+Automatic updates
+== 自動更新
 
 Automatically adds voting options for all maps
 == すべてのマップに自動的に投票オプションを追加
@@ -939,9 +939,6 @@ Best
 
 Best match
 == Best match
-
-Better scoreboard
-== より良いスコアボード
 
 Bind key to execute a command or view keybindings
 == キーをバインドしてコマンドを実行、またはキーバインドを表示
@@ -2769,6 +2766,9 @@ Gap aim rescue
 
 Gap between statusbar items
 == ステータスバー項目間の間隔
+
+Gaussian blur
+== ガウスぼかし
 
 General
 == 全般
@@ -6148,9 +6148,6 @@ Show others
 Show others (own team only)
 == 他のプレイヤーを表示（自分のチームのみ）
 
-Show outdated version warning
-== 古いバージョンの警告を表示
-
 Show own coordinates
 == 自分の座標を表示
 
@@ -6997,6 +6994,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == サーバーは純正ゲームタイプで非標準のチューニングを実行しています。
 
+The update is ready and will be installed when you exit.
+== アップデートの準備ができました。終了時にインストールされます。
+
 The Visuals tab contains appearance and rendering options
 == ビジュアルタブには外観とレンダリングオプションが含まれています
 
@@ -7524,12 +7524,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == アップデートに失敗しました。もう一度お試しください
-
-Update finished. Please restart the client
-== アップデートが完了しました。クライアントを再起動してください
-
-Update finished. Restarting...
-== アップデートが完了しました。再起動中...
 
 Update notice
 == 更新のお知らせ

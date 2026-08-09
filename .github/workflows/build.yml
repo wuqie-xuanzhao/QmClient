@@ -611,6 +611,25 @@ jobs:
       - name: List release assets
         run: ls -lah release-assets
 
+      - name: Sign Windows automatic update assets
+        env:
+          QM_UPDATE_ED25519_PRIVATE_KEY: ${{ secrets.QM_UPDATE_ED25519_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${QM_UPDATE_ED25519_PRIVATE_KEY}" ]; then
+            echo "Required secret QM_UPDATE_ED25519_PRIVATE_KEY is not configured"
+            exit 1
+          fi
+          python3 -m venv .update-signing-venv
+          .update-signing-venv/bin/python -m pip install cryptography==45.0.6
+          TAG_VERSION="${GITHUB_REF#refs/tags/}"
+          .update-signing-venv/bin/python qmclient_scripts/sign_update_release.py \
+            --package release-assets/QmClient-windows.zip \
+            --version "${TAG_VERSION}" \
+            --private-key-env QM_UPDATE_ED25519_PRIVATE_KEY \
+            --normalize-package \
+            --output-dir release-assets
+
       - name: Generate release notes
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/}"
@@ -629,6 +648,9 @@ jobs:
           body_path: release-assets/release-notes.md
           files: |
             release-assets/QmClient-windows.zip
+            release-assets/QmClient-windows.zip.sig
+            release-assets/QmClient-windows-update.json
+            release-assets/QmClient-windows-update.json.sig
             release-assets/QmClient-windows.7z
             release-assets/QmClient-ubuntu.tar.xz
             release-assets/QmClient-macOS.dmg
@@ -638,6 +660,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build_android
+      - release-desktop
     if: startsWith(github.ref, 'refs/tags/') && github.repository == 'wxj881027/QmClient'
     permissions:
       contents: write

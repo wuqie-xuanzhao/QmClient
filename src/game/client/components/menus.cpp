@@ -811,7 +811,7 @@ int CMenus::DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, 
 	return Active ? Ui()->DoButtonLogic(pId, Checked, pRect, Flags) : 0;
 }
 
-int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement)
+int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement, float FontSize)
 {
 	CUIRect Text = *pRect;
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
@@ -859,16 +859,25 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 	Text = MenuButtonTextRect(&Text, FontFactor, HoverLift);
 	if(pText != nullptr && pText[0] != '\0')
 	{
+		const bool FixedFontSize = FontSize > 0.0f;
+		FontSize = FixedFontSize ? FontSize : Text.h * CUi::ms_FontmodHeight;
+		SLabelProperties Props;
+		if(FixedFontSize)
+		{
+			Props.m_MaxWidth = Text.w;
+			Props.m_MinimumFontSize = FontSize;
+			Props.m_EllipsisAtEnd = true;
+		}
 		if(pTextUiElement != nullptr)
-			DoSettingsLabelStreamed(*pTextUiElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			DoSettingsLabelStreamed(*pTextUiElement, &Text, pText, FontSize, TEXTALIGN_MC, Props);
 		else
-			Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			Ui()->DoLabel(&Text, pText, FontSize, TEXTALIGN_MC, Props);
 	}
 
 	return Ui()->DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
 }
 
-int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator, const ColorRGBA *pDefaultColor, const ColorRGBA *pActiveColor, const ColorRGBA *pHoverColor, float EdgeRounding, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)
+int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator, const ColorRGBA *pDefaultColor, const ColorRGBA *pActiveColor, const ColorRGBA *pHoverColor, float EdgeRounding, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float FontSize)
 {
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
 	CUIRect AnimatedLabelRect = *pRect;
@@ -959,10 +968,19 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 	{
 		CUIRect Label;
 		AnimatedLabelRect.HMargin(2.0f, &Label);
+		const bool FixedFontSize = FontSize > 0.0f;
+		FontSize = FixedFontSize ? FontSize : Label.h * CUi::ms_FontmodHeight;
+		SLabelProperties Props;
+		if(FixedFontSize)
+		{
+			Props.m_MaxWidth = Label.w;
+			Props.m_MinimumFontSize = FontSize;
+			Props.m_EllipsisAtEnd = true;
+		}
 		if(pTextUiElement != nullptr && pTextUiElement->AreRectsInit())
-			Ui()->DoLabelStreamed(*pTextUiElement->Rect(0), &Label, pText, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			Ui()->DoLabelStreamed(*pTextUiElement->Rect(0), &Label, pText, FontSize, TEXTALIGN_MC, Props);
 		else
-			Ui()->DoLabel(&Label, pText, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			Ui()->DoLabel(&Label, pText, FontSize, TEXTALIGN_MC, Props);
 	}
 	Ui()->ClipDisable();
 
@@ -1099,9 +1117,9 @@ int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool
 	return Ui()->DoButtonLogic(pButtonId, 0, pRect, BUTTONFLAG_LEFT);
 }
 
-int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, bool ForceLegacyStyle)
+int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, bool ForceLegacyStyle, float FontSize)
 {
-	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, pBoxText, pRect, Flags, nullptr, ForceLegacyStyle);
+	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, pBoxText, pRect, Flags, nullptr, ForceLegacyStyle, FontSize);
 }
 
 void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const
@@ -1128,7 +1146,7 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 		*pScrollBarRect = ScrollBar;
 }
 
-int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, bool ForceLegacyStyle)
+int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, bool ForceLegacyStyle, float FontSize)
 {
 	const bool HasCustomGlyph = pBoxText[0] != '\0' && pBoxText[0] != 'X';
 	const bool UseQmToggleStyle = g_Config.m_QmNewUi != 0 && !HasCustomGlyph && !ForceLegacyStyle;
@@ -1198,10 +1216,12 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 	}
 
 	TextRender()->SetRenderFlags(0);
-	const float FontSize = Box.h * CUi::ms_FontmodHeight;
+	const bool FixedFontSize = FontSize > 0.0f;
+	FontSize = FixedFontSize ? FontSize : Box.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
-	Props.m_MinimumFontSize = FontSize * 0.7f;
+	Props.m_MinimumFontSize = FixedFontSize ? FontSize : FontSize * 0.7f;
+	Props.m_EllipsisAtEnd = FixedFontSize;
 	if(pText != nullptr && pText[0] != '\0')
 	{
 		if(pLabelElement != nullptr)
@@ -1218,25 +1238,29 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const 
 	return DoSettingsButton_CheckBox(Page, Tab, -1, pId, pTextId, pText, Checked, pRect);
 }
 
-int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)
+int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, float FontSize)
 {
+	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
+	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : FontSize;
 	if(pTextId == nullptr)
 	{
-		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT);
+		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, false, FixedFontSize ? FontSize : -1.0f);
 	}
 	CUIRect Box, Label;
 	SplitMenuCheckboxRects(*pRect, g_Config.m_QmNewUi != 0, &Box, &Label);
+	FontSize = FixedFontSize ? FontSize : Box.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
-	Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
-	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML, Props);
+	Props.m_MinimumFontSize = FixedFontSize ? FontSize : FontSize * 0.7f;
+	Props.m_EllipsisAtEnd = FixedFontSize;
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
 	if(m_MenuTextPlanCollecting)
 	{
-		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Label, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML, Props, StyleKey);
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
 		return 0;
 	}
 	CUIElement &LabelElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, &LabelElement);
+	return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, &LabelElement, false, FixedFontSize ? FontSize : -1.0f);
 }
 
 int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)
@@ -1252,30 +1276,44 @@ int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const 
 
 void CMenus::DoSettingsLabel(int Page, int Tab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, bool Render)
 {
+	SLabelProperties EffectiveProps = LabelProps;
+	if(Page == SETTINGS_TCLIENT && Size > 0.0f)
+	{
+		EffectiveProps.m_MaxWidth = EffectiveProps.m_MaxWidth >= 0.0f ? EffectiveProps.m_MaxWidth : pRect->w;
+		EffectiveProps.m_MinimumFontSize = Size;
+		EffectiveProps.m_EllipsisAtEnd = true;
+	}
 	if(pTextId == nullptr)
 	{
 		if(Render)
-			Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+			Ui()->DoLabel(pRect, pText, Size, Align, EffectiveProps);
 		return;
 	}
-	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(pRect, Size, Align, LabelProps);
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(pRect, Size, Align, EffectiveProps);
 	if(m_MenuTextPlanCollecting)
 	{
-		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, -1, pTextId, pText, pRect, Size, Align, LabelProps, StyleKey);
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, -1, pTextId, pText, pRect, Size, Align, EffectiveProps, StyleKey);
 		return;
 	}
 	CUIElement &Element = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, -1, pTextId, StyleKey);
-	DoSettingsLabelStreamed(Element, pRect, pText, Size, Align, LabelProps, -1, nullptr, Render);
+	DoSettingsLabelStreamed(Element, pRect, pText, Size, Align, EffectiveProps, -1, nullptr, Render);
 }
 
 void CMenus::DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &Props, int MaxWidth)
 {
+	SLabelProperties EffectiveProps = Props;
+	if(Page == SETTINGS_TCLIENT && Size > 0.0f)
+	{
+		EffectiveProps.m_MaxWidth = EffectiveProps.m_MaxWidth >= 0.0f ? EffectiveProps.m_MaxWidth : (MaxWidth >= 0 ? (float)MaxWidth : pRect->w);
+		EffectiveProps.m_MinimumFontSize = Size;
+		EffectiveProps.m_EllipsisAtEnd = true;
+	}
 	if(pTextId == nullptr)
 	{
-		Ui()->DoLabel(pRect, pText, Size, Align, Props);
+		Ui()->DoLabel(pRect, pText, Size, Align, EffectiveProps);
 		return;
 	}
-	SLabelProperties LabelProps = Props;
+	SLabelProperties LabelProps = EffectiveProps;
 	if(MaxWidth >= 0)
 		LabelProps.m_MaxWidth = (float)MaxWidth;
 	CUIRect ShellTitleLabel;
@@ -1291,32 +1329,39 @@ void CMenus::DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTex
 	DoSettingsLabelStreamed(Element, pLabelRect, pText, Size, Align, LabelProps, -1, nullptr, true);
 }
 
-int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding, const ColorRGBA &Color, float FontFactor)
+int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding, const ColorRGBA &Color, float FontFactor, float FontSize)
 {
 	dbg_assert(pBC != nullptr, "settings menu button requires a stable button container");
+	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
+	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : FontSize;
 	if(pTextId == nullptr)
 	{
-		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding);
+		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, nullptr, FixedFontSize ? FontSize : -1.0f);
 	}
 	CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
+	FontSize = FixedFontSize ? FontSize : Text.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Text.w;
-	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+	Props.m_MinimumFontSize = FixedFontSize ? FontSize : 5.0f;
+	Props.m_EllipsisAtEnd = FixedFontSize;
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, FontSize, TEXTALIGN_MC, Props);
 	if(m_MenuTextPlanCollecting)
 	{
-		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Text, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props, StyleKey);
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pText, &Text, FontSize, TEXTALIGN_MC, Props, StyleKey);
 		return 0;
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-	return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement);
+	if(!FixedFontSize)
+		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement);
+	return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement, FontSize);
 }
 
-bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
+bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText, float FontSize)
 {
-	return DoSettingsScrollbarOption(Page, Tab, -1, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
+	return DoSettingsScrollbarOption(Page, Tab, -1, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText, FontSize);
 }
 
-bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
+bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText, float FontSize)
 {
 	const bool Infinite = Flags & CUi::SCROLLBAR_OPTION_INFINITE;
 	const bool NoClampValue = Flags & CUi::SCROLLBAR_OPTION_NOCLAMPVALUE;
@@ -1325,12 +1370,15 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	{
 		CUIRect Label, ScrollBar;
 		SplitSettingsScrollbarRects(*pRect, Flags, &Label, nullptr, &ScrollBar);
-		const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
+		const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
+		FontSize = Page == SETTINGS_TCLIENT ? 14.0f : (FontSize > 0.0f ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f);
 		if(pTextId != nullptr)
 		{
 			SLabelProperties Props;
 			Props.m_MaxWidth = Label.w;
-			const SMenuTextStyleKey StyleKey = BuildSettingsScrollbarTextStyle(*pRect, Flags, &Label);
+			Props.m_MinimumFontSize = FixedFontSize ? FontSize : 5.0f;
+			Props.m_EllipsisAtEnd = FixedFontSize;
+			const SMenuTextStyleKey StyleKey = BuildSettingsScrollbarTextStyle(*pRect, Flags, &Label, FixedFontSize ? FontSize : -1.0f);
 			if(m_MenuTextPlanCollecting)
 			{
 				CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pStr, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
@@ -1381,12 +1429,15 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 
 	CUIRect Label, ValueRect, ScrollBar;
 	SplitSettingsScrollbarRects(*pRect, Flags, &Label, &ValueRect, &ScrollBar);
-	const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
+	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
+	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : (FontSize > 0.0f ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f);
 	if(pTextId != nullptr)
 	{
 		SLabelProperties Props;
 		Props.m_MaxWidth = Label.w;
-		const SMenuTextStyleKey StyleKey = BuildSettingsScrollbarTextStyle(*pRect, Flags, &Label);
+		Props.m_MinimumFontSize = FixedFontSize ? FontSize : 5.0f;
+		Props.m_EllipsisAtEnd = FixedFontSize;
+		const SMenuTextStyleKey StyleKey = BuildSettingsScrollbarTextStyle(*pRect, Flags, &Label, FixedFontSize ? FontSize : -1.0f);
 		if(m_MenuTextPlanCollecting)
 		{
 			CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pStr, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
@@ -1397,7 +1448,8 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	}
 	SLabelProperties ValueProps;
 	ValueProps.m_MaxWidth = ValueRect.w;
-	ValueProps.m_MinimumFontSize = FontSize * 0.7f;
+	ValueProps.m_MinimumFontSize = FixedFontSize ? FontSize : FontSize * 0.7f;
+	ValueProps.m_EllipsisAtEnd = FixedFontSize;
 	Ui()->DoLabel(&ValueRect, aValueBuf, FontSize, TEXTALIGN_MR, ValueProps);
 
 	Value = pScale->ToAbsolute(Ui()->DoScrollbarH(pId, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
@@ -1512,7 +1564,7 @@ bool CMenus::DoLine_RadioMenu(CUIRect &View, const char *pLabel, std::vector<CBu
 	return Pressed;
 }
 
-bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value)
+bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value, float FontSize)
 {
 	dbg_assert(vButtonContainers.size() == vValues.size(), "vButtonContainers and vValues must have the same size");
 	dbg_assert(vButtonContainers.size() == vLabels.size(), "vButtonContainers and vLabels must have the same size");
@@ -1525,7 +1577,9 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 	View.HSplitTop(ButtonHeight, &Buttons, &View);
 	Buttons.VSplitMid(&Label, &Buttons, 10.0f);
 	Buttons.HMargin(2.0f, &Buttons);
-	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, 13.0f, TEXTALIGN_ML);
+	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
+	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : (FontSize > 0.0f ? FontSize : 13.0f);
+	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, FontSize, TEXTALIGN_ML);
 	const float W = Buttons.w / N;
 	bool Pressed = false;
 	for(int i = 0; i < N; ++i)
@@ -1537,7 +1591,7 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 			Corner = IGraphics::CORNER_L;
 		if(i == N - 1)
 			Corner = IGraphics::CORNER_R;
-		if(DoSettingsButton_Menu(Page, Tab, Subtab, &vButtonContainers[i], vButtonTextIds[i], vLabels[i], vValues[i] == Value, &Button, BUTTONFLAG_LEFT, Corner))
+		if(DoSettingsButton_Menu(Page, Tab, Subtab, &vButtonContainers[i], vButtonTextIds[i], vLabels[i], vValues[i] == Value, &Button, BUTTONFLAG_LEFT, Corner, 5.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), 0.0f, FixedFontSize ? FontSize : -1.0f))
 		{
 			Pressed = true;
 			Value = vValues[i];
@@ -1546,7 +1600,7 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 	return Pressed;
 }
 
-ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float LineSize, const float LabelSize, const float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha)
+ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float LineSize, const float LabelSize, const float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha, float FontSize)
 {
 	CUIRect Section, ColorPickerButton, ResetButton, Label;
 
@@ -1561,7 +1615,7 @@ ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float Lin
 	if(pCheckBoxValue != nullptr)
 	{
 		Label.Margin(2.0f, &Label);
-		if(DoButton_CheckBox(pCheckBoxValue, pText, *pCheckBoxValue, &Label))
+		if(DoButton_CheckBox_Common(pCheckBoxValue, pText, *pCheckBoxValue ? "X" : "", &Label, BUTTONFLAG_LEFT, false, FontSize > 0.0f ? FontSize : -1.0f))
 			*pCheckBoxValue ^= 1;
 	}
 	else if(CheckBoxSpacing)
@@ -1570,13 +1624,23 @@ ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float Lin
 	}
 	if(pCheckBoxValue == nullptr)
 	{
-		Ui()->DoLabel(&Label, pText, LabelSize, TEXTALIGN_ML);
+		const float EffectiveFontSize = FontSize > 0.0f ? FontSize : LabelSize;
+		if(FontSize > 0.0f)
+		{
+			SLabelProperties Props;
+			Props.m_MaxWidth = Label.w;
+			Props.m_MinimumFontSize = EffectiveFontSize;
+			Props.m_EllipsisAtEnd = true;
+			Ui()->DoLabel(&Label, pText, EffectiveFontSize, TEXTALIGN_ML, Props);
+		}
+		else
+			Ui()->DoLabel(&Label, pText, EffectiveFontSize, TEXTALIGN_ML);
 	}
 
 	const ColorHSLA PickedColor = DoButton_ColorPicker(&ColorPickerButton, pColorValue, Alpha);
 
 	ResetButton.HMargin(2.0f, &ResetButton);
-	if(DoButton_Menu(pResetId, Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.1f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)))
+	if(DoButton_Menu(pResetId, Localize("Reset"), 0, &ResetButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.1f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), nullptr, FontSize))
 	{
 		*pColorValue = color_cast<ColorHSLA>(DefaultColor).Pack(Alpha);
 	}
@@ -2488,6 +2552,7 @@ void CMenus::StartLoading(int Total)
 
 void CMenus::RenderLoading(const char *pCaption, const char *pContent, int IncreaseCounter)
 {
+	CUiScopedGaussianBlur GaussianBlurScope(Ui());
 	// TODO: not supported right now due to separate render thread
 
 	const int CurLoadRenderCount = m_LoadingState.m_Current;
@@ -2974,6 +3039,7 @@ bool CMenus::CanDisplayWarning() const
 
 void CMenus::Render()
 {
+	CUiScopedGaussianBlur GaussianBlurScope(Ui());
 	CPerfTimer RenderTimer;
 	Ui()->MapScreen();
 	Ui()->ResetMouseSlow();
@@ -4720,15 +4786,18 @@ CMenus::SMenuTextPlanItem CMenus::AddStableTextDefault(int Page, int Tab, int Su
 	return Item;
 }
 
-CMenus::SMenuTextStyleKey CMenus::BuildSettingsScrollbarTextStyle(const CUIRect &Rect, unsigned Flags, CUIRect *pOutLabel) const
+CMenus::SMenuTextStyleKey CMenus::BuildSettingsScrollbarTextStyle(const CUIRect &Rect, unsigned Flags, CUIRect *pOutLabel, float FontSize) const
 {
 	CUIRect Label;
 	SplitSettingsScrollbarRects(Rect, Flags, &Label, nullptr, nullptr);
 	if(pOutLabel != nullptr)
 		*pOutLabel = Label;
-	const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
+	const bool FixedFontSize = FontSize > 0.0f;
+	FontSize = FixedFontSize ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
+	Props.m_MinimumFontSize = FixedFontSize ? FontSize : 5.0f;
+	Props.m_EllipsisAtEnd = FixedFontSize;
 	return BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
 }
 

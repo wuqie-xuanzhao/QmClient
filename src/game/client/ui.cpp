@@ -17,6 +17,7 @@
 #include <game/localization.h>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 using namespace FontIcons;
@@ -58,6 +59,19 @@ CUiScopedQuadBatch::~CUiScopedQuadBatch()
 {
 	if(m_pUi != nullptr)
 		m_pUi->EndQuadBatch();
+}
+
+CUiScopedGaussianBlur::CUiScopedGaussianBlur(CUi *pUi, float Alpha) :
+	m_pUi(pUi)
+{
+	if(m_pUi != nullptr)
+		m_pUi->BeginGaussianBlurScope(Alpha);
+}
+
+CUiScopedGaussianBlur::~CUiScopedGaussianBlur()
+{
+	if(m_pUi != nullptr)
+		m_pUi->EndGaussianBlurScope();
 }
 
 void CUIElement::SUIElementRect::Reset()
@@ -106,6 +120,8 @@ void CUIElement::SUIElementRect::Draw(const CUIRect *pRect, ColorRGBA Color, int
 		m_pParent->Ui()->Graphics()->SetColor(1, 1, 1, 1);
 	}
 
+	if(Color.a > 0.0f && Color.a < 1.0f && m_pParent->Ui()->GaussianBlurScopeActive())
+		m_pParent->Ui()->RenderGaussianBlur(*pRect, m_pParent->Ui()->GaussianBlurScopeAlpha());
 	m_pParent->Ui()->Graphics()->TextureClear();
 	m_pParent->Ui()->Graphics()->RenderQuadContainerEx(m_UIRectQuadContainer,
 		0, -1, m_X, m_Y, 1, 1);
@@ -141,7 +157,7 @@ void CUi::Init(IKernel *pKernel)
 	m_pGraphics = pKernel->RequestInterface<IGraphics>();
 	m_pInput = pKernel->RequestInterface<IInput>();
 	m_pTextRender = pKernel->RequestInterface<ITextRender>();
-	CUIRect::Init(m_pGraphics);
+	CUIRect::Init(m_pGraphics, this);
 	CLineInput::Init(m_pClient, m_pGraphics, m_pInput, m_pTextRender);
 	CUIElementBase::Init(this);
 }
@@ -156,6 +172,7 @@ CUi::CUi()
 
 CUi::~CUi()
 {
+	DestroyGaussianBlurTargets();
 	for(SQuadBatchRectContainer &Container : m_vQuadBatchRectContainers)
 	{
 		Graphics()->DeleteQuadContainer(Container.m_QuadContainerIndex);
@@ -227,7 +244,118 @@ void CUi::OnElementsReset()
 
 void CUi::OnWindowResize()
 {
+	DestroyGaussianBlurTargets();
 	OnElementsReset();
+}
+
+void CUi::BeginGaussianBlurScope(float Alpha)
+{
+	m_vGaussianBlurScopeAlphas.push_back(std::clamp(Alpha, 0.0f, 1.0f));
+	if(!g_Config.m_QmGaussianBlur && (m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid()))
+		DestroyGaussianBlurTargets();
+}
+
+void CUi::EndGaussianBlurScope()
+{
+	dbg_assert(!m_vGaussianBlurScopeAlphas.empty(), "gaussian blur scope underflow");
+	if(!m_vGaussianBlurScopeAlphas.empty())
+		m_vGaussianBlurScopeAlphas.pop_back();
+}
+
+void CUi::DestroyGaussianBlurTargets()
+{
+	if(m_pGraphics == nullptr)
+		return;
+	Graphics()->DestroyRenderTarget(&m_GaussianBlurSource);
+	Graphics()->DestroyRenderTarget(&m_GaussianBlurTemporary);
+	Graphics()->DestroyRenderTarget(&m_GaussianBlurTarget);
+	m_GaussianBlurWidth = 0;
+	m_GaussianBlurHeight = 0;
+}
+
+bool CUi::PrepareGaussianBlur()
+{
+	if(!g_Config.m_QmGaussianBlur)
+		return false;
+	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
+	{
+		if(m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid())
+			DestroyGaussianBlurTargets();
+		return false;
+	}
+
+	const int BlurWidth = UiGaussianBlurTargetDimension(Graphics()->ScreenWidth());
+	const int BlurHeight = UiGaussianBlurTargetDimension(Graphics()->ScreenHeight());
+	if(BlurWidth <= 0 || BlurHeight <= 0)
+		return false;
+
+	if(BlurWidth != m_GaussianBlurWidth || BlurHeight != m_GaussianBlurHeight || !m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
+	{
+		DestroyGaussianBlurTargets();
+		m_GaussianBlurSource = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		m_GaussianBlurTemporary = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		m_GaussianBlurTarget = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		if(!m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
+		{
+			DestroyGaussianBlurTargets();
+			return false;
+		}
+		m_GaussianBlurWidth = BlurWidth;
+		m_GaussianBlurHeight = BlurHeight;
+	}
+
+	FlushQuadBatch();
+	Graphics()->FlushVertices();
+	if(!Graphics()->CaptureBackbufferToRenderTarget(m_GaussianBlurSource))
+		return false;
+
+	IGraphics::SGaussianBlurParams BlurParams;
+	BlurParams.m_Radius = 4;
+	BlurParams.m_Sigma = 2.0f;
+	return Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_GaussianBlurTemporary, m_GaussianBlurTarget, BlurParams);
+}
+
+void CUi::RenderGaussianBlur(const CUIRect &Rect, float Alpha)
+{
+	if(Rect.w <= 0.0f || Rect.h <= 0.0f || Alpha <= 0.0f || !PrepareGaussianBlur())
+		return;
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float MappedWidth = ScreenX1 - ScreenX0;
+	const float MappedHeight = ScreenY1 - ScreenY0;
+	if(MappedWidth <= 0.0f || MappedHeight <= 0.0f)
+		return;
+
+	CUIRect ClippedRect = Rect;
+	if(IsClipped())
+	{
+		const CUIRect &CurrentClip = *ClipArea();
+		const float Left = std::max(ClippedRect.x, CurrentClip.x);
+		const float Top = std::max(ClippedRect.y, CurrentClip.y);
+		const float Right = std::min(ClippedRect.x + ClippedRect.w, CurrentClip.x + CurrentClip.w);
+		const float Bottom = std::min(ClippedRect.y + ClippedRect.h, CurrentClip.y + CurrentClip.h);
+		ClippedRect = {Left, Top, Right - Left, Bottom - Top};
+	}
+	if(ClippedRect.w <= 0.0f || ClippedRect.h <= 0.0f)
+		return;
+
+	const float PixelScaleX = Graphics()->ScreenWidth() / MappedWidth;
+	const float PixelScaleY = Graphics()->ScreenHeight() / MappedHeight;
+	const int ClipX0 = std::clamp((int)std::floor((ClippedRect.x - ScreenX0) * PixelScaleX), 0, Graphics()->ScreenWidth());
+	const int ClipY0 = std::clamp((int)std::floor((ClippedRect.y - ScreenY0) * PixelScaleY), 0, Graphics()->ScreenHeight());
+	const int ClipX1 = std::clamp((int)std::ceil((ClippedRect.x + ClippedRect.w - ScreenX0) * PixelScaleX), 0, Graphics()->ScreenWidth());
+	const int ClipY1 = std::clamp((int)std::ceil((ClippedRect.y + ClippedRect.h - ScreenY0) * PixelScaleY), 0, Graphics()->ScreenHeight());
+	if(ClipX1 <= ClipX0 || ClipY1 <= ClipY0)
+		return;
+
+	Graphics()->ClipEnable(ClipX0, ClipY0, ClipX1 - ClipX0, ClipY1 - ClipY0);
+	Graphics()->BlendNormal();
+	Graphics()->DrawRenderTarget(m_GaussianBlurTarget, ScreenX0, ScreenY0, MappedWidth, MappedHeight, std::clamp(Alpha, 0.0f, 1.0f));
+	if(IsClipped())
+		UpdateClipping();
+	else
+		Graphics()->ClipDisable();
 }
 
 void CUi::OnCursorMove(float X, float Y)
@@ -663,6 +791,8 @@ void CUi::EndQuadBatch() const
 
 void CUi::RenderBatchableRect(const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding) const
 {
+	if(Color.a > 0.0f && Color.a < 1.0f && GaussianBlurScopeActive())
+		const_cast<CUi *>(this)->RenderGaussianBlur(*pRect, GaussianBlurScopeAlpha());
 	const int QuadContainerIndex = QuadBatchRectContainer(pRect->w, pRect->h, Rounding, Corners);
 	RenderQuadContainerBatchable(QuadContainerIndex, pRect->x + pRect->w / 2.0f, pRect->y + pRect->h / 2.0f, Color);
 }
@@ -1286,10 +1416,22 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 		Text.VSplitRight(pRect->h * 0.25f, &Text, nullptr);
 		Text.VSplitRight(pRect->h * 0.75f, &Text, &DropDownIcon);
 	}
-
-	if(!UIElement.AreRectsInit() || Props.m_HintRequiresStringCheck || Props.m_HintCanChangePositionOrSize || !UIElement.Rect(0)->m_UITextContainer.Valid())
+	const bool FixedFontSize = Props.m_FontSize > 0.0f;
+	const float FontSize = FixedFontSize ? Props.m_FontSize : Text.h * CUi::ms_FontmodHeight;
+	SLabelProperties TextProps;
+	if(FixedFontSize)
 	{
-		bool NeedsRecalc = !UIElement.AreRectsInit() || !UIElement.Rect(0)->m_UITextContainer.Valid();
+		TextProps.m_MaxWidth = Text.w;
+		TextProps.m_MinimumFontSize = FontSize;
+		TextProps.m_EllipsisAtEnd = true;
+	}
+	const int ExpectedLabelFlags = FixedFontSize ? TEXTFLAG_ELLIPSIS_AT_END : 0;
+	const bool TextContainerMissing = !UIElement.AreRectsInit() || !UIElement.Rect(0)->m_UITextContainer.Valid();
+	const bool TextStyleChanged = !UIElement.AreRectsInit() || UIElement.Rect(0)->m_FontSize != FontSize || UIElement.Rect(0)->m_TextAlign != TEXTALIGN_MC || UIElement.Rect(0)->m_LabelMaxWidth != TextProps.m_MaxWidth || UIElement.Rect(0)->m_LabelFlags != ExpectedLabelFlags;
+
+	if(TextContainerMissing || TextStyleChanged || Props.m_HintRequiresStringCheck || Props.m_HintCanChangePositionOrSize)
+	{
+		bool NeedsRecalc = TextContainerMissing || TextStyleChanged;
 		if(Props.m_HintCanChangePositionOrSize)
 		{
 			if(UIElement.AreRectsInit())
@@ -1351,7 +1493,10 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 					NewRect.m_Text = pText;
 					if(Props.m_UseIconFont)
 						TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-					DoLabel(NewRect, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+					if(FixedFontSize)
+						DoLabel(NewRect, &Text, pText, FontSize, TEXTALIGN_MC, TextProps);
+					else
+						DoLabel(NewRect, &Text, pText, FontSize, TEXTALIGN_MC);
 					if(Props.m_UseIconFont)
 						TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				}
@@ -1365,6 +1510,9 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 		Index = 0;
 	else if(Enabled && HotItem() == pId)
 		Index = 1;
+	const ColorRGBA BackgroundColor = UIElement.Rect(Index)->m_QuadColor;
+	if(BackgroundColor.a > 0.0f && BackgroundColor.a < 1.0f && GaussianBlurScopeActive())
+		RenderGaussianBlur(*pRect, GaussianBlurScopeAlpha());
 	Graphics()->TextureClear();
 	Graphics()->RenderQuadContainer(UIElement.Rect(Index)->m_UIRectQuadContainer, -1);
 	if(Props.m_ShowDropDownIcon)
@@ -1419,14 +1567,23 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 	return DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
 }
 
-int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding, bool TransparentInactive, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
+int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding, bool TransparentInactive, bool Enabled, const std::optional<ColorRGBA> ButtonColor, float MinimumFontSize)
 {
 	if(!TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
 		pRect->Draw(ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), IGraphics::CORNER_ALL, 5.0f);
 
 	CUIRect Label;
 	pRect->Margin(Padding, &Label);
-	DoLabel(&Label, pText, Size, Align);
+	if(MinimumFontSize > 0.0f)
+	{
+		SLabelProperties Props;
+		Props.m_MaxWidth = Label.w;
+		Props.m_MinimumFontSize = MinimumFontSize;
+		Props.m_EllipsisAtEnd = true;
+		DoLabel(&Label, pText, Size, Align, Props);
+	}
+	else
+		DoLabel(&Label, pText, Size, Align);
 
 	return Enabled ? DoButtonLogic(pButtonContainer, 0, pRect, BUTTONFLAG_LEFT) : 0;
 }
@@ -2145,6 +2302,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_EntryPadding = 0.0f;
 	m_EntrySpacing = 5.0f;
 	m_FontSize = 10.0f;
+	m_MinimumFontSize = -1.0f;
 	m_Width = 300.0f + (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2;
 	m_AlignmentHeight = -1.0f;
 	m_TransparentButtons = false;
@@ -2196,7 +2354,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		View.HSplitTop(pSelectionPopup->m_EntryHeight, &Slot, &View);
 		if(pScrollRegion->AddRect(Slot))
 		{
-			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons))
+			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons, true, std::nullopt, pSelectionPopup->m_MinimumFontSize))
 			{
 				pSelectionPopup->m_pSelection = &Entry;
 				pSelectionPopup->m_SelectionIndex = Index;
@@ -2242,7 +2400,7 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 	DoPopupMenu(pContext, X, Y, pContext->m_Width, PopupHeight, pContext, PopupSelection, pContext->m_Props);
 }
 
-int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)
+int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, float FontSize)
 {
 	static CScrollRegion s_DefaultDropDownScrollRegion;
 
@@ -2260,6 +2418,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	Props.m_HintRequiresStringCheck = true;
 	Props.m_HintCanChangePositionOrSize = true;
 	Props.m_ShowDropDownIcon = true;
+	Props.m_FontSize = FontSize;
 	if(IsPopupOpen(&State.m_SelectionPopupContext))
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
 	if(DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props))
@@ -2275,7 +2434,8 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 			State.m_SelectionPopupContext.m_vEntries.emplace_back(pStrs[i]);
 		State.m_SelectionPopupContext.m_EntryHeight = pRect->h;
 		State.m_SelectionPopupContext.m_EntryPadding = pRect->h >= 20.0f ? 2.0f : 1.0f;
-		State.m_SelectionPopupContext.m_FontSize = (State.m_SelectionPopupContext.m_EntryHeight - 2 * State.m_SelectionPopupContext.m_EntryPadding) * CUi::ms_FontmodHeight;
+		State.m_SelectionPopupContext.m_FontSize = FontSize > 0.0f ? FontSize : (State.m_SelectionPopupContext.m_EntryHeight - 2 * State.m_SelectionPopupContext.m_EntryPadding) * CUi::ms_FontmodHeight;
+		State.m_SelectionPopupContext.m_MinimumFontSize = FontSize;
 		State.m_SelectionPopupContext.m_Width = pRect->w;
 		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
 		State.m_SelectionPopupContext.m_TransparentButtons = true;
@@ -2292,10 +2452,10 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	return CurSelection;
 }
 
-int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled)
+int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled, float FontSize)
 {
 	if(Enabled)
-		return DoDropDown(pRect, CurSelection, pStrs, Num, State);
+		return DoDropDown(pRect, CurSelection, pStrs, Num, State, FontSize);
 
 	if(!State.m_Init)
 	{
@@ -2312,6 +2472,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	Props.m_HintRequiresStringCheck = true;
 	Props.m_HintCanChangePositionOrSize = true;
 	Props.m_ShowDropDownIcon = true;
+	Props.m_FontSize = FontSize;
 	if(IsPopupOpen(&State.m_SelectionPopupContext))
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
 	DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props);

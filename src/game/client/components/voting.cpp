@@ -9,10 +9,10 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/localization.h>
 
 namespace
@@ -597,6 +597,7 @@ void CVoting::Render()
 
 	CUIRect View = {0.0f, 60.0f, 120.0f, 38.0f};
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::Voting, View);
+	Ui()->RenderGaussianBlur(View);
 	View.Draw(ui_token::color::SURFACE_GLASS, HudEditorScope.m_Corners, ui_token::radius::BASE);
 	View.Margin(3.0f, &View);
 

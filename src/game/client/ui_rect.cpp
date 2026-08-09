@@ -2,9 +2,20 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "ui_rect.h"
 
+#include "ui.h"
+
 #include <engine/graphics.h>
 
+#include <algorithm>
+
 IGraphics *CUIRect::ms_pGraphics = nullptr;
+CUi *CUIRect::ms_pUi = nullptr;
+
+void CUIRect::DrawRectBackdrop() const
+{
+	if(ms_pUi != nullptr && ms_pUi->GaussianBlurScopeActive())
+		ms_pUi->RenderGaussianBlur(*this, ms_pUi->GaussianBlurScopeAlpha());
+}
 
 void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing) const
 {
@@ -168,11 +179,16 @@ bool CUIRect::Inside(vec2 Point) const
 
 void CUIRect::Draw(ColorRGBA Color, int Corners, float Rounding) const
 {
+	if(Color.a > 0.0f && Color.a < 1.0f)
+		DrawRectBackdrop();
 	ms_pGraphics->DrawRect(x, y, w, h, Color, Corners, Rounding);
 }
 
 void CUIRect::Draw4(ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, int Corners, float Rounding) const
 {
+	const float MaximumAlpha = std::max({ColorTopLeft.a, ColorTopRight.a, ColorBottomLeft.a, ColorBottomRight.a});
+	if(MaximumAlpha > 0.0f && (ColorTopLeft.a < 1.0f || ColorTopRight.a < 1.0f || ColorBottomLeft.a < 1.0f || ColorBottomRight.a < 1.0f))
+		DrawRectBackdrop();
 	ms_pGraphics->DrawRect4(x, y, w, h, ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight, Corners, Rounding);
 }
 

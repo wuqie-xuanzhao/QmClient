@@ -20,7 +20,7 @@ public:
 		CBindSlot m_Bind;
 		bool m_Aborted;
 	};
-	CKeyReaderResult DoKeyReader(CButtonContainer *pReaderButton, CButtonContainer *pClearButton, const CUIRect *pRect, const CBindSlot &CurrentBind, bool Activate);
+	CKeyReaderResult DoKeyReader(CButtonContainer *pReaderButton, CButtonContainer *pClearButton, const CUIRect *pRect, const CBindSlot &CurrentBind, bool Activate, float FontSize = -1.0f);
 	bool IsActive() const;
 
 private:

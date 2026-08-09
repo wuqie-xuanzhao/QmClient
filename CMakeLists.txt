@@ -922,11 +922,17 @@ set_glob(RUST_ENGINE_SHARED GLOB_RECURSE "rs;toml" src/engine/shared
   build.rs
   config.rs
   lib.rs
+  qm_update.rs
   rust_version.rs
   snapshot/builder.rs
   snapshot/delta.rs
   snapshot/mod.rs
   uuid_manager.rs
+)
+
+set_glob(RUST_QM_UPDATE GLOB_RECURSE "rs;toml" src/qm-update
+  Cargo.toml
+  lib.rs
 )
 
 set_src(RUST_BRIDGE_SHARED GLOB_RECURSE src/rust-bridge
@@ -1035,6 +1041,7 @@ set(RUST_SRC
       ${RUST_BASE}
       ${RUST_ENGINE_INTERFACE}
       ${RUST_ENGINE_SHARED}
+      ${RUST_QM_UPDATE}
       Cargo.toml
       Cargo.lock
 )
@@ -2320,6 +2327,7 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   protocol_ex_msgs.h
   protocolglue.cpp
   protocolglue.h
+  qm_update.h
   ringbuffer.cpp
   ringbuffer.h
   serverinfo.cpp
@@ -2810,6 +2818,8 @@ if(CLIENT)
     components/qmclient/translate/translate_ui_settings.h
     components/qmclient/update_version.cpp
     components/qmclient/update_version.h
+    components/qmclient/update_manifest.cpp
+    components/qmclient/update_manifest.h
     components/qmclient/voice/voice_capture_pipeline.cpp
     components/qmclient/voice/voice_capture_pipeline.h
     components/qmclient/voice/voice_component.cpp
@@ -3231,6 +3241,17 @@ if(CLIENT)
   list(APPEND TARGETS_OWN game-client)
   list(APPEND TARGETS_LINK game-client)
 
+  if(TARGET_OS STREQUAL "windows")
+    add_executable(qm-client-updater WIN32 src/qm-update/updater_main.cpp)
+    set_property(TARGET qm-client-updater PROPERTY OUTPUT_NAME QmClient-Updater)
+    target_link_libraries(qm-client-updater rust_engine_shared ${PLATFORM_LIBS} comctl32.lib)
+    if(MSVC)
+      target_link_options(qm-client-updater PRIVATE /ENTRY:wWinMainCRTStartup)
+    endif()
+    list(APPEND TARGETS_OWN qm-client-updater)
+    list(APPEND TARGETS_LINK qm-client-updater)
+  endif()
+
 endif()
 
 
@@ -3613,6 +3634,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
     qmclient_update_version_test.cpp
+    qmclient_update_manifest_test.cpp
     QmUiTokensTest.cpp
     qmclient_monitoring_test.cpp
     race_test.cpp
@@ -3692,6 +3714,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/tee_hue_cycle.cpp
     src/game/client/components/qmclient/update_version.cpp
+    src/game/client/components/qmclient/update_manifest.cpp
     src/game/client/components/qmclient/qmclient_utils.cpp
     src/game/client/components/qmclient/translate/translate_parse.cpp
     src/game/client/components/qmclient/voice/voice_capture_pipeline.cpp
@@ -3976,6 +3999,9 @@ endif()
 set(CPACK_TARGETS)
 if(TARGET game-client)
   list(APPEND CPACK_TARGETS game-client)
+endif()
+if(TARGET qm-client-updater)
+  list(APPEND CPACK_TARGETS qm-client-updater)
 endif()
 if(TARGET game-server)
   list(APPEND CPACK_TARGETS game-server)

@@ -1535,7 +1535,8 @@ void CClient::Restart()
 
 void CClient::Quit()
 {
-	SetState(IClient::STATE_QUITTING);
+	if(!GameClient()->PrepareForShutdown(false))
+		SetState(IClient::STATE_QUITTING);
 }
 
 void CClient::ResetSocket()
@@ -3900,10 +3901,11 @@ void CClient::Run()
 			QmPerfLogStage("perf/main_thread", "input_update", StageTimer.ElapsedMs(), QuitRequested, this, nullptr, nullptr, aExtra);
 			if(QuitRequested)
 			{
-				if(State() == IClient::STATE_QUITTING)
-					break;
-				else
+				if(!GameClient()->PrepareForShutdown(true))
+				{
 					SetState(IClient::STATE_QUITTING); // SDL_QUIT
+					break;
+				}
 			}
 		}
 

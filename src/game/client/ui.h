@@ -19,6 +19,7 @@ class IClient;
 class IGraphics;
 class IKernel;
 class CUiScopedQuadBatch;
+class CUiScopedGaussianBlur;
 
 inline float QmUiVirtualScreenHeight(int ScalePercent)
 {
@@ -39,6 +40,11 @@ inline int QmUiVisibleRows(float AvailableHeight, float ReservedHeight, float Ro
 		return 0;
 	const int RowsByHeight = std::max(0, (int)((AvailableHeight - ReservedHeight) / RowHeight));
 	return std::min({RowsByHeight, ItemCount, MaxRows});
+}
+
+constexpr int UiGaussianBlurTargetDimension(int ScreenDimension)
+{
+	return ScreenDimension > 0 ? (ScreenDimension + 3) / 4 : 0;
 }
 
 enum class EEditState
@@ -177,6 +183,19 @@ public:
 
 	CUiScopedQuadBatch(const CUiScopedQuadBatch &) = delete;
 	CUiScopedQuadBatch &operator=(const CUiScopedQuadBatch &) = delete;
+
+private:
+	CUi *m_pUi;
+};
+
+class CUiScopedGaussianBlur
+{
+public:
+	explicit CUiScopedGaussianBlur(CUi *pUi, float Alpha = 1.0f);
+	~CUiScopedGaussianBlur();
+
+	CUiScopedGaussianBlur(const CUiScopedGaussianBlur &) = delete;
+	CUiScopedGaussianBlur &operator=(const CUiScopedGaussianBlur &) = delete;
 
 private:
 	CUi *m_pUi;
@@ -338,6 +357,7 @@ struct SMenuButtonProperties
 	int m_Corners = IGraphics::CORNER_ALL;
 	float m_Rounding = 5.0f;
 	float m_FontFactor = 0.0f;
+	float m_FontSize = -1.0f;
 	ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
 	unsigned m_Flags = BUTTONFLAG_LEFT;
 };
@@ -472,6 +492,12 @@ private:
 	mutable ColorRGBA m_QuadBatchColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	mutable std::vector<IGraphics::SRenderSpriteInfo> m_vQuadBatchSprites;
 	mutable std::vector<SQuadBatchRectContainer> m_vQuadBatchRectContainers;
+	std::vector<float> m_vGaussianBlurScopeAlphas;
+	IGraphics::CRenderTargetHandle m_GaussianBlurSource;
+	IGraphics::CRenderTargetHandle m_GaussianBlurTemporary;
+	IGraphics::CRenderTargetHandle m_GaussianBlurTarget;
+	int m_GaussianBlurWidth = 0;
+	int m_GaussianBlurHeight = 0;
 
 	const void *m_pHotItem = nullptr;
 	const void *m_pActiveItem = nullptr;
@@ -558,6 +584,8 @@ private:
 
 	int QuadBatchRectContainer(float Width, float Height, float Rounding, int Corners) const;
 	void RenderQuadContainerBatchable(int QuadContainerIndex, float X, float Y, const ColorRGBA &Color) const;
+	void DestroyGaussianBlurTargets();
+	bool PrepareGaussianBlur();
 
 public:
 	static const CLinearScrollbarScale ms_LinearScrollbarScale;
@@ -611,6 +639,11 @@ public:
 	void OnElementsReset();
 	void OnWindowResize();
 	void OnCursorMove(float X, float Y);
+	void BeginGaussianBlurScope(float Alpha = 1.0f);
+	void EndGaussianBlurScope();
+	bool GaussianBlurScopeActive() const { return !m_vGaussianBlurScopeAlphas.empty(); }
+	float GaussianBlurScopeAlpha() const { return GaussianBlurScopeActive() ? m_vGaussianBlurScopeAlphas.back() : 0.0f; }
+	void RenderGaussianBlur(const CUIRect &Rect, float Alpha = 1.0f);
 
 	void SetEnabled(bool Enabled) { m_Enabled = Enabled; }
 	bool Enabled() const { return m_Enabled; }
@@ -803,7 +836,7 @@ public:
 	int DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const std::function<const char *()> &GetTextLambda, const CUIRect *pRect, const SMenuButtonProperties &Props = {});
 	int DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags, int Corners = IGraphics::CORNER_ALL, bool Enabled = true, std::optional<ColorRGBA> ButtonColor = std::nullopt);
 	// only used for popup menus
-	int DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding = 0.0f, bool TransparentInactive = false, bool Enabled = true, std::optional<ColorRGBA> ButtonColor = std::nullopt);
+	int DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding = 0.0f, bool TransparentInactive = false, bool Enabled = true, std::optional<ColorRGBA> ButtonColor = std::nullopt, float MinimumFontSize = -1.0f);
 
 	// value selector
 	SEditResult<int64_t> DoValueSelectorWithState(const void *pId, const CUIRect *pRect, const char *pLabel, int64_t Current, int64_t Min, int64_t Max, const SValueSelectorProperties &Props = {});
@@ -893,6 +926,7 @@ public:
 		float m_EntryPadding;
 		float m_EntrySpacing;
 		float m_FontSize;
+		float m_MinimumFontSize = -1.0f;
 		float m_Width;
 		float m_AlignmentHeight;
 		bool m_TransparentButtons;
@@ -938,8 +972,8 @@ public:
 		CButtonContainer m_ButtonContainer;
 		bool m_Init = false;
 	};
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State);
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled);
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, float FontSize = -1.0f);
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled, float FontSize = -1.0f);
 };
 
 #endif

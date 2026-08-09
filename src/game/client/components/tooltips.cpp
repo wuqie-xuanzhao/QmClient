@@ -94,6 +94,7 @@ void CTooltips::OnRender()
 			return;
 		constexpr float SecondsFadeIn = 0.25f;
 		const float AlphaFactor = SecondsSinceActivation < SecondsBeforeFadeIn + SecondsFadeIn ? (SecondsSinceActivation - SecondsBeforeFadeIn) / SecondsFadeIn : 1.0f;
+		CUiScopedGaussianBlur GaussianBlurScope(Ui(), AlphaFactor);
 
 		constexpr float FontSize = 14.0f;
 		constexpr float Margin = 5.0f;

@@ -838,8 +838,8 @@ Auto-translate incoming messages
 Auto-translate outgoing messages
 == Ausgehende Nachrichten automatisch übersetzen
 
-Automatic updates are only supported on Windows
-== Automatische Updates werden nur unter Windows unterstützt
+Automatic updates
+== Automatische Updates
 
 Automatically adds voting options for all maps
 == Fügt automatisch Abstimmungsoptionen für alle Karten hinzu
@@ -939,9 +939,6 @@ Best
 
 Best match
 == Best match
-
-Better scoreboard
-== Verbesserte Bestenliste
 
 Bind key to execute a command or view keybindings
 == Taste binden, um einen Befehl auszuführen oder Tastenbelegungen anzuzeigen
@@ -2769,6 +2766,9 @@ Gap aim rescue
 
 Gap between statusbar items
 == Abstand zwischen Statusleisten-Elementen
+
+Gaussian blur
+== Gaußscher Weichzeichner
 
 General
 == Allgemein
@@ -6148,9 +6148,6 @@ Show others
 Show others (own team only)
 == Andere anzeigen (nur eigenes Team)
 
-Show outdated version warning
-== Warnung bei veralteter Version anzeigen
-
 Show own coordinates
 == Eigene Koordinaten anzeigen
 
@@ -6997,6 +6994,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == Der Server verwendet eine nicht standardmäßige Abstimmung in einem reinen Spieltyp.
 
+The update is ready and will be installed when you exit.
+== Das Update ist bereit und wird beim Beenden installiert.
+
 The Visuals tab contains appearance and rendering options
 == Der Reiter „Visuelles“ enthält Darstellungs- und Rendering-Optionen
 
@@ -7524,12 +7524,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Update fehlgeschlagen. Bitte versuche es erneut.
-
-Update finished. Please restart the client
-== Update abgeschlossen. Bitte starte den Client neu.
-
-Update finished. Restarting...
-== Update abgeschlossen. Neustart...
 
 Update notice
 == Hinweis aktualisieren

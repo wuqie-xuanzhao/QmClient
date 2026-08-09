@@ -7,13 +7,20 @@
 #include <base/vmath.h>
 
 class IGraphics;
+class CUi;
 
 class CUIRect
 {
 	static IGraphics *ms_pGraphics;
+	static CUi *ms_pUi;
+	void DrawRectBackdrop() const;
 
 public:
-	static void Init(IGraphics *pGraphics) { ms_pGraphics = pGraphics; }
+	static void Init(IGraphics *pGraphics, CUi *pUi)
+	{
+		ms_pGraphics = pGraphics;
+		ms_pUi = pUi;
+	}
 
 	float x, y, w, h;
 

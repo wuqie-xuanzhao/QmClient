@@ -1545,10 +1545,13 @@ void CHud::RenderScoreHud()
 					m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(m_Width - ScoreWidthMax - ImageSize - 2 * Split, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split, ScoreSingleBoxHeight, 5.0f, ScoreHudCorners);
 					m_aScoreInfo[t].m_RoundRectCorners = ScoreHudCorners;
 				}
-				Graphics()->TextureClear();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
+				{
+					Ui()->RenderGaussianBlur({m_Width - ScoreWidthMax - ImageSize - 2 * Split, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split, ScoreSingleBoxHeight});
+					Graphics()->TextureClear();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 					Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
+				}
 
 				// draw score
 				if(aRecreateTeamScore[t])
@@ -1728,10 +1731,13 @@ void CHud::RenderScoreHud()
 					m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split + PosSize, ScoreSingleBoxHeight, 5.0f, ScoreHudCorners);
 					m_aScoreInfo[t].m_RoundRectCorners = ScoreHudCorners;
 				}
-				Graphics()->TextureClear();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
+				{
+					Ui()->RenderGaussianBlur({m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split + PosSize, ScoreSingleBoxHeight});
+					Graphics()->TextureClear();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 					Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
+				}
 
 				if(RecreateScores)
 				{
@@ -5964,6 +5970,7 @@ void CHud::RenderKeyStatus()
 	if(Layout.m_H <= 0.0f)
 		return;
 
+	Ui()->RenderGaussianBlur({Layout.m_X, Layout.m_Y, Layout.m_W, Layout.m_H});
 	Graphics()->DrawRect(Layout.m_X, Layout.m_Y, Layout.m_W, Layout.m_H, ui_token::color::SURFACE_GLASS, IGraphics::CORNER_ALL, ui_token::radius::BASE);
 
 	float TextX = Layout.m_X + Layout.m_PaddingX;
@@ -6217,6 +6224,7 @@ void CHud::RenderMovementInformation()
 	m_MovementInfoBoxH = BoxHeight;
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::MovementInfo, {StartX, StartY, BoxWidth, BoxHeight});
 
+	Ui()->RenderGaussianBlur({StartX, StartY, BoxWidth, BoxHeight});
 	Graphics()->DrawRect(StartX, StartY, BoxWidth, BoxHeight, ui_token::color::SURFACE_GLASS, HudEditorScope.m_Corners, ui_token::radius::BASE);
 
 	const bool HasMovementContent = ShowMovementInfo && MovementBoxHeight > 0.0f;

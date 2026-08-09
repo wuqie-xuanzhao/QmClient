@@ -838,8 +838,8 @@ Auto-translate incoming messages
 Auto-translate outgoing messages
 == 발신 메시지 자동 번역
 
-Automatic updates are only supported on Windows
-== 자동 업데이트는 Windows에서만 지원됩니다
+Automatic updates
+== 자동 업데이트
 
 Automatically adds voting options for all maps
 == 모든 맵에 투표 옵션 자동 추가
@@ -939,9 +939,6 @@ Best
 
 Best match
 == Best match
-
-Better scoreboard
-== 더 나은 점수판
 
 Bind key to execute a command or view keybindings
 == 키를 바인딩하여 명령 실행 또는 키바인딩 보기
@@ -2769,6 +2766,9 @@ Gap aim rescue
 
 Gap between statusbar items
 == 상태 표시줄 항목 사이 간격
+
+Gaussian blur
+== 가우시안 블러
 
 General
 == 일반
@@ -6148,9 +6148,6 @@ Show others
 Show others (own team only)
 == 다른 플레이어 표시 (자신 팀만)
 
-Show outdated version warning
-== 오래된 버전 경고 표시
-
 Show own coordinates
 == 자신의 좌표 표시
 
@@ -6997,6 +6994,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == 서버가 순수 게임 유형에서 비표준 튜닝을 실행 중입니다.
 
+The update is ready and will be installed when you exit.
+== 업데이트가 준비되었습니다. 종료할 때 설치됩니다.
+
 The Visuals tab contains appearance and rendering options
 == 비주얼 탭에는 외형 및 렌더링 옵션이 포함되어 있습니다.
 
@@ -7524,12 +7524,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == 업데이트 실패. 다시 시도하세요
-
-Update finished. Please restart the client
-== 업데이트 완료. 클라이언트를 다시 시작하세요
-
-Update finished. Restarting...
-== 업데이트 완료. 다시 시작 중...
 
 Update notice
 == 공지 업데이트

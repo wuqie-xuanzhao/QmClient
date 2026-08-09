@@ -620,6 +620,22 @@ turkish = "Oylamayı otomatik reddet"
 polish = "Auto odrzucanie głosowania"
 
 [[message]]
+key = "Automatic updates"
+[message.translations]
+japanese = "自動更新"
+korean = "자동 업데이트"
+simplified_chinese = "自动更新"
+traditional_chinese = "自動更新"
+russian = "Автоматические обновления"
+german = "Automatische Updates"
+spanish = "Actualizaciones automáticas"
+french = "Mises à jour automatiques"
+brazilian_portuguese = "Atualizações automáticas"
+portuguese = "Atualizações automáticas"
+turkish = "Otomatik güncellemeler"
+polish = "Automatyczne aktualizacje"
+
+[[message]]
 key = "Automatic updates are only supported on Windows"
 [message.translations]
 japanese = "自動更新はWindowsのみ対応"
@@ -634,6 +650,22 @@ brazilian_portuguese = "Atualizações automáticas são suportadas apenas no Wi
 portuguese = "Atualizações automáticas são suportadas apenas no Windows"
 turkish = "Otomatik güncellemeler yalnızca Windows'ta desteklenir"
 polish = "Automatyczne aktualizacje są obsługiwane tylko na Windows"
+
+[[message]]
+key = "The update is ready and will be installed when you exit."
+[message.translations]
+japanese = "アップデートの準備ができました。終了時にインストールされます。"
+korean = "업데이트가 준비되었습니다. 종료할 때 설치됩니다."
+simplified_chinese = "更新已准备就绪，将在退出客户端时安装。"
+traditional_chinese = "更新已準備就緒，將在結束用戶端時安裝。"
+russian = "Обновление готово и будет установлено при выходе."
+german = "Das Update ist bereit und wird beim Beenden installiert."
+spanish = "La actualización está lista y se instalará al salir."
+french = "La mise à jour est prête et sera installée à la fermeture."
+brazilian_portuguese = "A atualização está pronta e será instalada ao sair."
+portuguese = "A atualização está pronta e será instalada ao sair."
+turkish = "Güncelleme hazır ve çıkışta kurulacak."
+polish = "Aktualizacja jest gotowa i zostanie zainstalowana przy wyjściu."
 
 [[message]]
 key = "Automatically reply to muted players"

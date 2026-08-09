@@ -838,8 +838,8 @@ Auto-translate incoming messages
 Auto-translate outgoing messages
 == 自動翻譯發送的訊息
 
-Automatic updates are only supported on Windows
-== 自動更新僅支援 Windows
+Automatic updates
+== 自動更新
 
 Automatically adds voting options for all maps
 == 自動為所有地圖新增投票選項
@@ -939,9 +939,6 @@ Best
 
 Best match
 == 最佳匹配
-
-Better scoreboard
-== 更好的計分板
 
 Bind key to execute a command or view keybindings
 == 綁定按鍵以執行命令或檢視按鍵綁定
@@ -2769,6 +2766,9 @@ Gap aim rescue
 
 Gap between statusbar items
 == 狀態列項目之間的間隔
+
+Gaussian blur
+== 高斯模糊
 
 General
 == 常規
@@ -6148,9 +6148,6 @@ Show others
 Show others (own team only)
 == 僅顯示同隊伍
 
-Show outdated version warning
-== 顯示版本過舊提示
-
 Show own coordinates
 == 顯示自己座標
 
@@ -6997,6 +6994,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == 此伺服器在純淨遊戲類型上使用了非標準調校。
 
+The update is ready and will be installed when you exit.
+== 更新已準備就緒，將在結束用戶端時安裝。
+
 The Visuals tab contains appearance and rendering options
 == 視覺頁包含外觀和渲染相關選項
 
@@ -7524,12 +7524,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == 更新失敗，請重試
-
-Update finished. Please restart the client
-== 更新完成，請重新啟動用戶端
-
-Update finished. Restarting...
-== 更新完成，正在重新啟動...
 
 Update notice
 == 更新提示
