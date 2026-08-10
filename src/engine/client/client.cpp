@@ -6110,6 +6110,7 @@ int main(int argc, const char **argv)
 
 #if defined(CONF_FAMILY_WINDOWS)
 	SDL_SetHint("SDL_IME_SHOW_UI", g_Config.m_InpImeNativeUi ? "1" : "0");
+	SDL_SetHint("SDL_QM_IME_SKIP_UILESS_UIELEMENT_PROCESSING", g_Config.m_InpImeNativeUi ? "0" : "1");
 #else
 	SDL_SetHint("SDL_IME_SHOW_UI", "1");
 #endif

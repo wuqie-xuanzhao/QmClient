@@ -1,0 +1,76 @@
+diff --git a/src/video/windows/SDL_windowskeyboard.c b/src/video/windows/SDL_windowskeyboard.c
+index 12f84a3..ff974ec 100644
+--- a/src/video/windows/SDL_windowskeyboard.c
++++ b/src/video/windows/SDL_windowskeyboard.c
+@@ -372,6 +372,11 @@ static SDL_bool WIN_ShouldShowNativeUI(void)
+     return SDL_GetHintBoolean(SDL_HINT_IME_SHOW_UI, SDL_FALSE);
+ }
+ 
++static SDL_bool WIN_ShouldSkipUIElementProcessing(void)
++{
++    return SDL_GetHintBoolean("SDL_QM_IME_SKIP_UILESS_UIELEMENT_PROCESSING", SDL_FALSE);
++}
++
+ static void IME_Init(SDL_VideoData *videodata, HWND hwnd)
+ {
+     HRESULT hResult = S_OK;
+@@ -1224,15 +1229,21 @@ ITfUIElement *UILess_GetUIElement(SDL_VideoData *videodata, DWORD dwUIElementId)
+ 
+ STDMETHODIMP UIElementSink_BeginUIElement(TSFSink *sink, DWORD dwUIElementId, BOOL *pbShow)
+ {
+-    ITfUIElement *element = UILess_GetUIElement((SDL_VideoData *)sink->data, dwUIElementId);
++    ITfUIElement *element = 0;
+     ITfReadingInformationUIElement *preading = 0;
+     ITfCandidateListUIElement *pcandlist = 0;
+     SDL_VideoData *videodata = (SDL_VideoData *)sink->data;
++
++    *pbShow = FALSE;
++    if (WIN_ShouldSkipUIElementProcessing()) {
++        return S_OK;
++    }
++
++    element = UILess_GetUIElement(videodata, dwUIElementId);
+     if (!element) {
+         return E_INVALIDARG;
+     }
+ 
+-    *pbShow = FALSE;
+     if (SUCCEEDED(element->lpVtbl->QueryInterface(element, &IID_ITfReadingInformationUIElement, (LPVOID *)&preading))) {
+         BSTR bstr;
+         if (SUCCEEDED(preading->lpVtbl->GetString(preading, &bstr)) && bstr) {
+@@ -1249,10 +1260,16 @@ STDMETHODIMP UIElementSink_BeginUIElement(TSFSink *sink, DWORD dwUIElementId, BO
+ 
+ STDMETHODIMP UIElementSink_UpdateUIElement(TSFSink *sink, DWORD dwUIElementId)
+ {
+-    ITfUIElement *element = UILess_GetUIElement((SDL_VideoData *)sink->data, dwUIElementId);
++    ITfUIElement *element = 0;
+     ITfReadingInformationUIElement *preading = 0;
+     ITfCandidateListUIElement *pcandlist = 0;
+     SDL_VideoData *videodata = (SDL_VideoData *)sink->data;
++
++    if (WIN_ShouldSkipUIElementProcessing()) {
++        return S_OK;
++    }
++
++    element = UILess_GetUIElement(videodata, dwUIElementId);
+     if (!element) {
+         return E_INVALIDARG;
+     }
+@@ -1275,10 +1292,16 @@ STDMETHODIMP UIElementSink_UpdateUIElement(TSFSink *sink, DWORD dwUIElementId)
+ 
+ STDMETHODIMP UIElementSink_EndUIElement(TSFSink *sink, DWORD dwUIElementId)
+ {
+-    ITfUIElement *element = UILess_GetUIElement((SDL_VideoData *)sink->data, dwUIElementId);
++    ITfUIElement *element = 0;
+     ITfReadingInformationUIElement *preading = 0;
+     ITfCandidateListUIElement *pcandlist = 0;
+     SDL_VideoData *videodata = (SDL_VideoData *)sink->data;
++
++    if (WIN_ShouldSkipUIElementProcessing()) {
++        return S_OK;
++    }
++
++    element = UILess_GetUIElement(videodata, dwUIElementId);
+     if (!element) {
+         return E_INVALIDARG;
+     }

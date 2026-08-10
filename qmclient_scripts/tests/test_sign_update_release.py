@@ -181,6 +181,20 @@ class SignUpdateReleaseTest(unittest.TestCase):
         ):
             self.assertIn(f"release-assets/{asset}", workflow[signing_step:])
 
+    def test_windows_updater_links_only_the_dedicated_update_library(self) -> None:
+        cmake = (REPO_ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+        updater_start = cmake.index("add_executable(qm-client-updater")
+        updater_end = cmake.index("list(APPEND TARGETS_OWN qm-client-updater)")
+        updater_block = cmake[updater_start:updater_end]
+        self.assertIn("rust_qm_update", updater_block)
+        self.assertNotIn("rust_engine_shared", updater_block)
+        self.assertIn('rust_target STREQUAL "qm_update"', cmake)
+        self.assertIn('CMAKE_STATIC_LIBRARY_PREFIX}qm_update', cmake)
+        update_library = (REPO_ROOT / "src/qm-update/lib.rs").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('extern "C" fn qm_update_apply', update_library)
+
 
 if __name__ == "__main__":
     unittest.main()

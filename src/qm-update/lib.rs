@@ -185,7 +185,7 @@ fn package_signature_message(digest: &[u8; 32]) -> Vec<u8> {
 
 fn hash_reader(mut reader: impl Read) -> Result<([u8; 32], u64), String> {
     let mut hasher = Sha256::new();
-    let mut buffer = [0; 1024 * 1024];
+    let mut buffer = vec![0; 1024 * 1024];
     let mut size = 0u64;
     loop {
         let read = reader
@@ -235,7 +235,7 @@ fn copy_exact(
     expected_size: u64,
 ) -> Result<[u8; 32], String> {
     let mut hasher = Sha256::new();
-    let mut buffer = [0; 1024 * 1024];
+    let mut buffer = vec![0; 1024 * 1024];
     let mut size = 0u64;
     loop {
         let read = source
@@ -638,7 +638,8 @@ pub unsafe fn ffi_extract_bootstrap_updater(
 }
 
 /// Re-verifies, extracts, and transactionally installs a signed update package.
-pub unsafe fn ffi_apply(
+#[no_mangle]
+pub unsafe extern "C" fn qm_update_apply(
     package_path: *const c_char,
     package_signature_path: *const c_char,
     manifest_path: *const c_char,
@@ -716,6 +717,27 @@ mod tests {
             verify_signature_with_key(b"tampered", &signature, key.verifying_key().as_bytes())
                 .is_err()
         );
+    }
+
+    #[test]
+    fn update_io_works_on_a_small_worker_stack() {
+        std::thread::Builder::new()
+            .stack_size(256 * 1024)
+            .spawn(|| {
+                let input = vec![0x5a; 2 * 1024 * 1024];
+                let (digest, size) = hash_reader(Cursor::new(&input)).unwrap();
+                assert_eq!(size, input.len() as u64);
+                assert_eq!(digest, Sha256::digest(&input).as_slice());
+
+                let mut output = Vec::new();
+                let copied_digest =
+                    copy_exact(Cursor::new(&input), &mut output, input.len() as u64).unwrap();
+                assert_eq!(output, input);
+                assert_eq!(copied_digest, digest);
+            })
+            .unwrap()
+            .join()
+            .unwrap();
     }
 
     #[test]

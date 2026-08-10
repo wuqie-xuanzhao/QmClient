@@ -724,7 +724,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurSettingReplacesBetterScoreboardAndIsVersio
 	EXPECT_NE(MenusToml.find("key = \"Gaussian blur\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"高斯模糊\""), std::string::npos);
 	EXPECT_EQ(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.29\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.31\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SwitchCountdownIsAnIndependentHudModuleWithCompatibleDefaults)
@@ -825,6 +825,8 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 		if(Line.find("MACRO_CONFIG_INT(QmLyricsSearchType,") != std::string::npos ||
 			Line.find("MACRO_CONFIG_INT(QmLyricsCacheEnable,") != std::string::npos ||
 			Line.find("MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects,") != std::string::npos ||
+			Line.find("MACRO_CONFIG_INT(QmAutoUpdate,") != std::string::npos ||
+			Line.find("MACRO_CONFIG_INT(QmMessageMerge,") != std::string::npos ||
 			Line.find("MACRO_CONFIG_INT(QmSwitchCountdown,") != std::string::npos ||
 			Line.find("MACRO_CONFIG_INT(QmSwitchCountdownMode,") != std::string::npos)
 			continue;

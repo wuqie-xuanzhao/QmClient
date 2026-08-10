@@ -5,7 +5,7 @@
         {
             "id": "body",
             "mapping": [
-                1,
+                328,
                 1,
                 283,
                 242
@@ -15,13 +15,13 @@
                 179
             ],
             "type": 0,
-            "z_level": 0
+            "z_level": 1
         },
         {
             "code": 1,
             "id": "lmb",
             "mapping": [
-                287,
+                1,
                 1,
                 139,
                 174
@@ -30,31 +30,14 @@
                 2,
                 0
             ],
-            "type": 0,
-            "z_level": 1
-        },
-        {
-            "code": 1,
-            "id": "lmb",
-            "mapping": [
-                287,
-                178,
-                139,
-                174
-            ],
-            "pos": [
-                2,
-                0
-            ],
             "type": 3,
-            "active_only": true,
-            "z_level": 2
+            "z_level": 1
         },
         {
             "code": 2,
             "id": "rmb",
             "mapping": [
-                429,
+                143,
                 1,
                 139,
                 174
@@ -63,63 +46,14 @@
                 146,
                 0
             ],
-            "type": 0,
+            "type": 3,
             "z_level": 1
         },
         {
-            "code": 2,
-            "id": "rmb",
+            "id": "wheel",
             "mapping": [
-                429,
-                178,
-                139,
-                174
-            ],
-            "pos": [
-                146,
-                0
-            ],
-            "type": 3,
-            "active_only": true,
-            "z_level": 2
-        },
-        {
-            "id": "mmb",
-            "mapping": [
-                571,
-                1,
-                48,
-                95
-            ],
-            "pos": [
-                117,
-                79
-            ],
-            "type": 0,
-            "z_level": 1
-        },
-        {
-            "code": 3,
-            "id": "mmb",
-            "mapping": [
-                622,
-                1,
-                48,
-                95
-            ],
-            "pos": [
-                117,
-                79
-            ],
-            "type": 3,
-            "active_only": true,
-            "z_level": 2
-        },
-        {
-            "id": "wheel_up",
-            "mapping": [
-                673,
-                1,
+                285,
+                246,
                 48,
                 95
             ],
@@ -128,30 +62,13 @@
                 79
             ],
             "type": 4,
-            "active_only": true,
-            "z_level": 1
-        },
-        {
-            "id": "wheel_down",
-            "mapping": [
-                724,
-                1,
-                48,
-                95
-            ],
-            "pos": [
-                117,
-                79
-            ],
-            "type": 4,
-            "active_only": true,
             "z_level": 1
         },
         {
             "code": 5,
-            "id": "smb2",
+            "id": "smb1",
             "mapping": [
-                775,
+                285,
                 1,
                 40,
                 62
@@ -160,31 +77,14 @@
                 0,
                 210
             ],
-            "type": 0,
+            "type": 3,
             "z_level": 1
         },
         {
-            "code": 5,
+            "code": 4,
             "id": "smb2",
             "mapping": [
-                775,
-                66,
-                40,
-                62
-            ],
-            "pos": [
-                0,
-                210
-            ],
-            "type": 3,
-            "active_only": true,
-            "z_level": 2
-        },
-        {
-            "code": 4,
-            "id": "smb1",
-            "mapping": [
-                818,
+                284,
                 1,
                 41,
                 62
@@ -193,41 +93,24 @@
                 11,
                 273
             ],
-            "type": 0,
-            "z_level": 1
-        },
-        {
-            "code": 4,
-            "id": "smb1",
-            "mapping": [
-                818,
-                66,
-                41,
-                62
-            ],
-            "pos": [
-                11,
-                273
-            ],
             "type": 3,
-            "active_only": true,
-            "z_level": 2
+            "z_level": 1
         },
         {
             "id": "arrow",
             "mapping": [
-                862,
+                614,
                 1,
                 100,
                 100
             ],
             "mouse_type": 1,
             "pos": [
-                102,
-                236
+                195,
+                235
             ],
             "type": 9,
-            "z_level": 3
+            "z_level": 1
         }
     ],
     "flags": 8,

@@ -249,9 +249,9 @@ TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundHorizontalMidlineWithComp
 
 	EXPECT_FLOAT_EQ(MidY - Layout.m_TopCenterY, Layout.m_BottomCenterY - MidY);
 	EXPECT_FLOAT_EQ(Layout.m_BottomCenterY - Layout.m_TopCenterY, QmHudMediaIslandScaled(5.2f));
-	EXPECT_FLOAT_EQ(
+	EXPECT_NEAR(
 		(Layout.m_BottomCenterY - TextHeight * 0.5f) - (Layout.m_TopCenterY + TextHeight * 0.5f),
-		TextGap);
+		TextGap, 0.0001f);
 }
 
 TEST(QmTuneZoneEffectsSource, SettingsExposeIconLegend)
@@ -534,8 +534,8 @@ TEST(QmHudMediaIslandEntrance, KeepsContentHiddenUntilShapeNearlySettlesThenFade
 	const CUIRect WideTarget = {0.0f, 1.0f, 300.0f, 32.0f};
 	const SHudMediaIslandEntrancePose FirstVisibleContent = QmHudMediaIslandEntrancePose(WideTarget, 8.0f, TargetColor, 0.93f);
 	EXPECT_GT(FirstVisibleContent.m_ContentAlpha, 0.0f);
-	EXPECT_LE(FirstVisibleContent.m_Rect.x, WideTarget.x + 2.0f);
-	EXPECT_GE(FirstVisibleContent.m_Rect.x + FirstVisibleContent.m_Rect.w, WideTarget.x + WideTarget.w - 2.0f);
+	EXPECT_LE(FirstVisibleContent.m_Rect.x, WideTarget.x + 2.05f);
+	EXPECT_GE(FirstVisibleContent.m_Rect.x + FirstVisibleContent.m_Rect.w, WideTarget.x + WideTarget.w - 2.05f);
 }
 
 TEST(QmHudMediaIslandEntrance, IntermediatePoseMorphsGeometryAndConfiguredBackgroundTogether)

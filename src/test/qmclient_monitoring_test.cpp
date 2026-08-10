@@ -1462,6 +1462,11 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 1168, "animated-style"},
 		{pFile, 1170, "animated-style"},
 		{pFile, 1171, "animated-style"},
+		{pFile, 1153, "animated-style"},
+		{pFile, 1160, "animated-style"},
+		{pFile, 1164, "animated-style"},
+		{pFile, 1169, "animated-style"},
+		{pFile, 1172, "animated-style"},
 		{pFile, 1987, "dynamic-value"},
 		{pFile, 2153, "icon-only"},
 		{pFile, 2480, "animated-style"},
@@ -1511,6 +1516,7 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 2609, "animated-style"},
 		{pFile, 2610, "user-generated"},
 		{pFile, 5903, "localized-setting-label"},
+		{pFile, 5920, "localized-setting-label"},
 		{pFile, 7202, "stateful-new-label"},
 	};
 	const std::vector<SStableTextCandidate> vUnexpected = FilterCandidatesNotCoveredByMenuPoolOrAllowlist(pFile, vCandidates, vAllowlist);
@@ -2032,7 +2038,7 @@ TEST(QmMonitoringHelpers, GeneralPerformanceModePlaceholderReplacesRefreshRateSl
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmPerformanceMode, qm_performance_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("key = \"Performance mode (placeholder)\""), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("simplified_chinese = \"性能模式（占位符）\""), std::string::npos);
-	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.29\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.31\""), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
@@ -2171,7 +2177,7 @@ TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
 	EXPECT_NE(Menus.find("RenderMenubar(TabBar, IClient::STATE_ONLINE);"), std::string::npos);
 	EXPECT_NE(Menus.find("RenderServerInfo(ContentView);"), std::string::npos);
 	EXPECT_EQ(Menus.find("AddIngameTab("), std::string::npos);
-	EXPECT_NE(Menus.find("return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, nullptr, nullptr, nullptr, nullptr, &TextElement);"), std::string::npos);
+	EXPECT_NE(Menus.find("return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, true, nullptr, nullptr, nullptr, nullptr, &TextElement);"), std::string::npos);
 	EXPECT_EQ(Menus.find("DoMenuTabV2(&s_ServerInfoButton, Localize(\"Server info\")"), std::string::npos);
 	EXPECT_NE(Ingame.find("DoIngameMenuTitleLabel(PAGE_SERVER_INFO, \"ingame-server-info-title\""), std::string::npos);
 	EXPECT_NE(Ingame.find("DoIngameMenuTitleLabel(PAGE_SERVER_INFO, \"ingame-game-info-title\""), std::string::npos);
@@ -4047,7 +4053,7 @@ TEST(QmMonitoringHelpers, IngameServerInfoCardTitlesHaveImmediateFallback)
 TEST(QmMonitoringHelpers, IngameMenuTabsHaveImmediateTextFallback)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, bool LargeMenubarControl, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
 	ASSERT_FALSE(Body.empty());
 
 	// Screenshot regression: the Ghost / Call vote ingame tabs are critical
@@ -4267,7 +4273,7 @@ TEST(QmMonitoringHelpers, IngameImmediateTextFallbackIsCountedForSchedulerCovera
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
+	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, bool LargeMenubarControl, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
 	const std::string ButtonBody = ExtractSourceFunctionBody(Source, "int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)");
 	const std::string LabelBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
 	const std::string TitleBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
@@ -4364,7 +4370,7 @@ TEST(QmMonitoringHelpers, IngameCriticalTextFallbacksAreLimited)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string StreamedBody = ExtractSourceFunctionBody(Source, "void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)");
-	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
+	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, bool LargeMenubarControl, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
 	const std::string TitleBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
 	const std::string LabelBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
 	ASSERT_FALSE(StreamedBody.empty());

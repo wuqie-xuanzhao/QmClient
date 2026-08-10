@@ -1899,17 +1899,6 @@ bool CChat::LineShouldHighlight(const char *pLine, const char *pName)
 	return false;
 }
 
-bool CChat::CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now)
-{
-	if(PreviousClientId < 0 || ClientId < 0 || PreviousTeam >= TEAM_WHISPER_SEND || Team >= TEAM_WHISPER_SEND)
-		return false;
-	if(pPreviousText == nullptr || pText == nullptr || str_comp(pPreviousText, pText) != 0)
-		return false;
-	if(Now < PreviousTime)
-		return false;
-	return Now - PreviousTime <= time_freq() * 2;
-}
-
 static constexpr const char *SAVES_HEADER[] = {
 	"Time",
 	"Player",

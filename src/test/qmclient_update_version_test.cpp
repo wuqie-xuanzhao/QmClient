@@ -25,6 +25,9 @@ TEST(QmClientUpdateVersion, SupportsCompactAndFourPartVersions)
 TEST(QmClientUpdateVersion, IgnoresInvalidOrOverflowingRemoteVersions)
 {
 	EXPECT_FALSE(IsQmClientRemoteVersionNewer("2.62-beta", "2.62.4"));
+	EXPECT_FALSE(IsQmClientRemoteVersionNewer("3.0.0-rc1", "2.62.4"));
+	EXPECT_FALSE(IsQmClientRemoteVersionNewer("3.0.", "2.62.4"));
 	EXPECT_FALSE(IsQmClientRemoteVersionNewer("999999999999.1", "2.62.4"));
+	EXPECT_FALSE(IsQmClientRemoteVersionNewer("3.999999999999.0", "2.62.4"));
 	EXPECT_FALSE(IsQmClientRemoteVersionNewer(nullptr, "2.62.4"));
 }
