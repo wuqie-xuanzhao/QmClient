@@ -287,7 +287,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 
 	if(TransitionActive && TransitionAlpha > 0.0f)
 	{
-		ContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+		DrawUiSwitchTransitionOverlay(ContentClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 	}
 	if(TransitionActive)
 	{
@@ -399,7 +399,7 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView)
 
 	if(TransitionActive && TransitionAlpha > 0.0f)
 	{
-		ContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+		DrawUiSwitchTransitionOverlay(ContentClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 	}
 	if(TransitionActive)
 	{

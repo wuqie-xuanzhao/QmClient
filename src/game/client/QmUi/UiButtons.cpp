@@ -22,6 +22,7 @@ bool DoStyledButton(const IUiContext &Ctx, CButtonContainer *pBtn, const char *p
 {
 	if(Ctx.m_pUi == nullptr || Ctx.m_pMenus == nullptr || pBtn == nullptr)
 		return false;
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 	if(Disabled)
 	{
@@ -73,6 +74,7 @@ bool IconButton(const IUiContext &Ctx, CButtonContainer *pBtn, const char *pIcon
 {
 	if(Ctx.m_pUi == nullptr || pBtn == nullptr)
 		return false;
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 	const bool HoverPrev = Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
 	const ColorRGBA Target = HoverPrev ? ui_token::color::ACCENT_PRIMARY_DIM : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
@@ -91,6 +93,7 @@ bool IconButton(const IUiContext &Ctx, CButtonContainer *pBtn, EQmIcon Icon, con
 {
 	if(Ctx.m_pUi == nullptr || pBtn == nullptr)
 		return false;
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 	const bool HoverPrev = Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
 	const ColorRGBA Target = HoverPrev ? ui_token::color::ACCENT_PRIMARY_DIM : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};

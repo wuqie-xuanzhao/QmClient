@@ -916,14 +916,17 @@ void CPlayers::RenderPlayer(
 			bool IsSit = Inactive && !InAir && Stationary;
 			vec2 WeaponSwitchOffset = vec2(0.0f, 0.0f);
 			float WeaponSwitchAngle = 0.0f;
-			const bool WeaponSwitchAnimEnabled = g_Config.m_QmWeaponSwitchAnim && ShouldRenderWeaponSwitchAnim(ClientId);
+			const bool WeaponSwitchAnimEnabled = g_Config.m_QmWeaponSwitchAnim && ShouldRenderWeaponAnimation(ClientId);
+			const bool WeaponReloadAnimEnabled = g_Config.m_QmWeaponReloadAnim && ShouldRenderWeaponAnimation(ClientId);
 			if(ClientId >= 0 && ClientId < MAX_CLIENTS)
 			{
 				SQmWeaponReloadAnimationState &ReloadAnimationState = m_aWeaponReloadAnimationStates[ClientId];
 				if(ReloadAnimationState.m_ObservedAttackTick != Player.m_AttackTick)
 				{
 					const int AttackTuneZone = QmWeaponAnimationTuneZone(GameClient(), Collision(), ClientId, Player);
-					ReloadAnimationState.ObserveAttack(Player.m_AttackTick, Player.m_Weapon, AttackTuneZone);
+					const bool PlayReloadAnimation = WeaponReloadAnimEnabled && QmWeaponUsesReloadFlip(Player.m_Weapon) &&
+						QmWeaponReloadAnimationSelected(g_Config.m_QmWeaponReloadAnimProbability, random_float());
+					ReloadAnimationState.ObserveAttack(Player.m_AttackTick, Player.m_Weapon, AttackTuneZone, PlayReloadAnimation);
 				}
 
 				if(m_aWeaponSwitchLastWeapons[ClientId] != Player.m_Weapon)
@@ -933,10 +936,10 @@ void CPlayers::RenderPlayer(
 					m_aWeaponSwitchLastWeapons[ClientId] = Player.m_Weapon;
 				}
 
+				constexpr float SwitchAnimDuration = 0.3f;
+				const float TimeSinceSwitch = (float)(Client()->LocalTime() - m_aWeaponSwitchStartTimes[ClientId]);
 				if(WeaponSwitchAnimEnabled)
 				{
-					constexpr float SwitchAnimDuration = 0.3f;
-					const float TimeSinceSwitch = (float)(Client()->LocalTime() - m_aWeaponSwitchStartTimes[ClientId]);
 					if(TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration)
 					{
 						const float Progress = TimeSinceSwitch / SwitchAnimDuration;
@@ -945,16 +948,16 @@ void CPlayers::RenderPlayer(
 						WeaponSwitchOffset += mix(Direction * 40.0f, vec2(0.0f, 0.0f), Ease);
 						WeaponSwitchAngle += (1.0f - Ease) * pi * 2.0f;
 					}
+				}
 
-					if(QmWeaponUsesReloadFlip(Player.m_Weapon) && ReloadAnimationState.MatchesAttack(Player.m_AttackTick, Player.m_Weapon))
-					{
-						const float ReloadSeconds = QmWeaponReloadDelaySeconds(*GameClient()->GetTuning(ReloadAnimationState.m_AttackTuneZone), Player.m_Weapon);
-						const float DefaultReloadSeconds = QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, Player.m_Weapon);
-						const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(LastAttackTime, ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed(), Direction.x < 0.0f);
-						const bool FireOverridesSwitchRotation = QmWeaponReloadAnimationEligible(ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed()) &&
-											 LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
-						WeaponSwitchAngle = QmResolveWeaponAnimationRotation(WeaponSwitchAngle, ReloadRotation, FireOverridesSwitchRotation);
-					}
+				if(WeaponReloadAnimEnabled && ReloadAnimationState.MatchesAttack(Player.m_AttackTick, Player.m_Weapon))
+				{
+					const float ReloadSeconds = QmWeaponReloadDelaySeconds(*GameClient()->GetTuning(ReloadAnimationState.m_AttackTuneZone), Player.m_Weapon);
+					const float DefaultReloadSeconds = QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, Player.m_Weapon);
+					const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(LastAttackTime, ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed(), Direction.x < 0.0f);
+					const bool FireOverridesSwitchRotation = WeaponSwitchAnimEnabled && QmWeaponReloadAnimationEligible(ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed()) &&
+						LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
+					WeaponSwitchAngle = QmResolveWeaponAnimationRotation(WeaponSwitchAngle, ReloadRotation, FireOverridesSwitchRotation);
 				}
 			}
 
@@ -1768,7 +1771,7 @@ inline bool CPlayers::IsPlayerInfoAvailable(int ClientId) const
 	       GameClient()->m_Snap.m_apPlayerInfos[ClientId] != nullptr;
 }
 
-bool CPlayers::ShouldRenderWeaponSwitchAnim(int ClientId) const
+bool CPlayers::ShouldRenderWeaponAnimation(int ClientId) const
 {
 	if(ClientId < 0)
 		return false;
@@ -1801,6 +1804,8 @@ void CPlayers::OnRender()
 		aRenderInfo[i] = ClientData.m_RenderInfo;
 		aRenderInfo[i].m_TeeRenderFlags = 0;
 		aRenderCurForTee[i] = ClientData.m_RenderCur;
+		if(GameClient()->m_Emoticon.ShouldRenderLocalBlink(i))
+			aRenderCurForTee[i].m_Emote = EMOTE_BLINK;
 
 		// predict freeze skin only for local players
 		bool Frozen = false;

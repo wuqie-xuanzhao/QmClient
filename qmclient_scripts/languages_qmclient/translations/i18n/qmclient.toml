@@ -734,6 +734,22 @@ turkish = "Animasyon süresi"
 polish = "Czas trwania animacji"
 
 [[message]]
+key = "Animation probability"
+[message.translations]
+japanese = "アニメーションの出現確率"
+korean = "애니메이션 표시 확률"
+simplified_chinese = "动画出现概率"
+traditional_chinese = "動畫出現機率"
+russian = "Вероятность анимации"
+german = "Animationswahrscheinlichkeit"
+spanish = "Probabilidad de animación"
+french = "Probabilité de l'animation"
+brazilian_portuguese = "Probabilidade da animação"
+portuguese = "Probabilidade da animação"
+turkish = "Animasyon olasılığı"
+polish = "Prawdopodobieństwo animacji"
+
+[[message]]
 key = "Animation range"
 [message.translations]
 japanese = "アニメーション範囲"
@@ -2389,6 +2405,22 @@ brazilian_portuguese = "Modelo de prompt personalizado"
 portuguese = "Modelo de prompt personalizado"
 turkish = "Özel istem şablonu"
 polish = "Niestandardowy szablon promptu"
+
+[[message]]
+key = "Customize weapon switch and reload animations"
+[message.translations]
+japanese = "武器切り替えとリロードのアニメーションをカスタマイズ"
+korean = "무기 전환 및 재장전 애니메이션 사용자 지정"
+simplified_chinese = "自定义武器切换和装填动画"
+traditional_chinese = "自訂武器切換和裝填動畫"
+russian = "Настроить анимации смены и перезарядки оружия"
+german = "Animationen für Waffenwechsel und Nachladen anpassen"
+spanish = "Personalizar animaciones de cambio y recarga de armas"
+french = "Personnaliser les animations de changement et de rechargement d'arme"
+brazilian_portuguese = "Personalizar animações de troca e recarga de armas"
+portuguese = "Personalizar animações de troca e recarga de armas"
+turkish = "Silah değiştirme ve yeniden doldurma animasyonlarını özelleştir"
+polish = "Dostosuj animacje zmiany i przeładowania broni"
 
 [[message]]
 key = "Customize translate button and menu colors"
@@ -7646,6 +7678,22 @@ brazilian_portuguese = "Expressão regular"
 portuguese = "Expressão regular"
 turkish = "Düzenli ifade"
 polish = "Wyrażenie regularne"
+
+[[message]]
+key = "Reload animation"
+[message.translations]
+japanese = "リロードアニメーション"
+korean = "재장전 애니메이션"
+simplified_chinese = "装填动画"
+traditional_chinese = "裝填動畫"
+russian = "Анимация перезарядки"
+german = "Nachladeanimation"
+spanish = "Animación de recarga"
+french = "Animation de rechargement"
+brazilian_portuguese = "Animação de recarga"
+portuguese = "Animação de recarga"
+turkish = "Yeniden doldurma animasyonu"
+polish = "Animacja przeładowania"
 
 [[message]]
 key = "Remote particle effects"

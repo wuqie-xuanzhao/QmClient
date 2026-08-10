@@ -4,11 +4,35 @@
 #define GAME_CLIENT_COMPONENTS_EMOTICON_H
 #include <base/vmath.h>
 
+#include <engine/client/enums.h>
 #include <engine/console.h>
 
 #include <game/client/component.h>
 #include <game/client/components/tclient/bindwheel.h>
 #include <game/client/ui.h>
+
+struct SQmLocalBlinkState
+{
+	static constexpr int DURATION_TICKS = 4;
+
+	void Trigger(int CurrentTick)
+	{
+		m_StopTick = CurrentTick + DURATION_TICKS;
+	}
+
+	void Reset()
+	{
+		m_StopTick = 0;
+	}
+
+	bool IsActive(int CurrentTick) const
+	{
+		return CurrentTick >= 0 && CurrentTick < m_StopTick;
+	}
+
+private:
+	int m_StopTick = 0;
+};
 
 class CEmoticon : public CComponent
 {
@@ -19,12 +43,14 @@ class CEmoticon : public CComponent
 	vec2 m_SelectorMouse;
 	int m_SelectedEmote;
 	int m_SelectedEyeEmote;
+	SQmLocalBlinkState m_aLocalBlinkStates[NUM_DUMMIES];
 
 	CUi::CTouchState m_TouchState;
 	bool m_TouchPressedOutside;
 
 	static void ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData);
 	static void ConEmote(IConsole::IResult *pResult, void *pUserData);
+	static void ConLocalBlink(IConsole::IResult *pResult, void *pUserData);
 
 public:
 	CEmoticon();
@@ -39,6 +65,8 @@ public:
 
 	void Emote(int Emoticon);
 	void EyeEmote(int EyeEmote);
+	void TriggerLocalBlink();
+	bool ShouldRenderLocalBlink(int ClientId) const;
 
 	bool IsActive() const { return m_Active; }
 

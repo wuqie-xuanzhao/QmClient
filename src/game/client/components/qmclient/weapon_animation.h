@@ -5,6 +5,8 @@
 
 #include <game/gamecore.h>
 
+#include <algorithm>
+
 struct SQmWeaponReloadRotation
 {
 	bool m_Active = false;
@@ -16,21 +18,29 @@ struct SQmWeaponReloadAnimationState
 	int m_ObservedAttackTick = -1;
 	int m_AttackWeapon = -1;
 	int m_AttackTuneZone = 0;
+	bool m_PlayReloadAnimation = false;
 
-	void ObserveAttack(int AttackTick, int Weapon, int TuneZone)
+	void ObserveAttack(int AttackTick, int Weapon, int TuneZone, bool PlayReloadAnimation)
 	{
 		if(AttackTick == m_ObservedAttackTick)
 			return;
 		m_ObservedAttackTick = AttackTick;
 		m_AttackWeapon = AttackTick > 0 ? Weapon : -1;
 		m_AttackTuneZone = TuneZone;
+		m_PlayReloadAnimation = AttackTick > 0 && PlayReloadAnimation;
 	}
 
 	bool MatchesAttack(int AttackTick, int Weapon) const
 	{
-		return AttackTick > 0 && AttackTick == m_ObservedAttackTick && Weapon == m_AttackWeapon;
+		return m_PlayReloadAnimation && AttackTick > 0 && AttackTick == m_ObservedAttackTick && Weapon == m_AttackWeapon;
 	}
 };
+
+inline bool QmWeaponReloadAnimationSelected(int Probability, float RandomValue)
+{
+	Probability = std::clamp(Probability, 0, 100);
+	return Probability >= 100 || (Probability > 0 && RandomValue < Probability / 100.0f);
+}
 
 inline bool QmWeaponUsesReloadFlip(int Weapon)
 {
@@ -59,7 +69,7 @@ inline float QmWeaponFlipAngle(float Progress, bool FacingLeft)
 	constexpr float aKeyframeProgress[] = {0.0f, 0.10f, 0.35f, 0.60f, 0.78f, 0.90f, 1.0f};
 	constexpr float aKeyframeDegrees[] = {0.0f, -8.0f, 120.0f, 240.0f, 370.0f, 355.0f, 360.0f};
 
-	Progress = clamp(Progress, 0.0f, 1.0f);
+	Progress = std::clamp(Progress, 0.0f, 1.0f);
 	float AngleDegrees = aKeyframeDegrees[0];
 	for(int i = 1; i < 7; ++i)
 	{

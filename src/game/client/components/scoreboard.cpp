@@ -172,6 +172,7 @@ namespace
 
 	int DoScoreboardMediaIconButton(CUi *pUi, ITextRender *pTextRender, CButtonContainer *pButtonContainer, const char *pIcon, const CUIRect *pRect, bool Enabled, ColorRGBA ButtonColor, float ContentAlpha)
 	{
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		const float IconAlpha = std::clamp(ContentAlpha, 0.0f, 1.0f);
 		pRect->Draw(pUi->ScaleBackgroundAlpha(ButtonColor), IGraphics::CORNER_ALL, 5.0f);
 
@@ -1285,6 +1286,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 			(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SPEC_FREEVIEW && pInfo->m_Local) ||
 			(GameClient()->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientId == GameClient()->m_Snap.m_SpecInfo.m_SpectatorId))
 		{
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 			Row.Draw(ScoreboardDecorationColor(ui_token::color::ACCENT_PRIMARY_DIM.WithMultipliedAlpha(ItemAlpha * 1.45f)), IGraphics::CORNER_ALL, RoundRadius);
 		}
 
@@ -1293,6 +1295,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 
 		if(m_MouseUnlocked && m_RenderInteractions)
 		{
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 			const int ButtonResult = Ui()->DoButtonLogic(&ClientData, 0, &Row, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 			if(ButtonResult != 0)
 			{
@@ -1696,7 +1699,8 @@ void CScoreboard::OnRender()
 	Ui()->MapScreen();
 
 	const float BackgroundAlphaFinal = ExtraAnimations ? m_Visibility : m_AnimContentAlpha;
-	CUiScopedGaussianBlur GaussianBlurScope(Ui(), BackgroundAlphaFinal);
+	const float GaussianBlurAlpha = WantActive ? 1.0f : m_AnimContentAlpha;
+	CUiScopedGaussianBlur GaussianBlurScope(Ui(), GaussianBlurAlpha);
 	const float ContentOffset = 0.0f;
 
 	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;

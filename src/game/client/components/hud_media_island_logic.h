@@ -261,14 +261,16 @@ struct SHudMediaIslandTimerRowLayout
 	float m_CheckpointH = 0.0f;
 };
 
-inline SHudMediaIslandTimerRowLayout QmHudMediaIslandTimerRows(float BoxY, float BoxH, bool HasCheckpoint)
+inline SHudMediaIslandTimerRowLayout QmHudMediaIslandTimerRows(float BoxY, float BoxH, bool HasSecondaryLine)
 {
 	BoxH = std::max(0.0f, BoxH);
-	if(!HasCheckpoint)
+	if(!HasSecondaryLine)
 		return {BoxY, BoxH, BoxY + BoxH, 0.0f};
 
-	const float RaceH = BoxH * 0.70f;
-	return {BoxY, RaceH, BoxY + RaceH, BoxH - RaceH};
+	const float TopMargin = BoxH * 0.10f;
+	const float RaceH = BoxH * 0.60f;
+	const float SecondaryY = BoxY + BoxH * 0.70f;
+	return {BoxY + TopMargin, RaceH, SecondaryY, BoxH - TopMargin - RaceH};
 }
 
 struct SHudMediaIslandSwapRows

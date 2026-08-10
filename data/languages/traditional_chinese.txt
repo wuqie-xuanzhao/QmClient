@@ -568,6 +568,9 @@ Animation
 Animation duration
 == 動畫持續多久
 
+Animation probability
+== 動畫出現機率
+
 Animation range
 == 動畫範圍
 
@@ -1644,6 +1647,9 @@ Custom prompt template
 
 Customize translate button and menu colors
 == 自訂翻譯按鈕和選單顏色
+
+Customize weapon switch and reload animations
+== 自訂武器切換和裝填動畫
 
 Cut interval
 == 裁剪區間
@@ -4615,9 +4621,6 @@ Ping the current server
 Pistol
 == 手槍
 
-Play a slide-in rotation animation when switching weapons
-== 切換武器時播放滑入旋轉動畫
-
 Play back a demo
 == 播放回放
 
@@ -5088,6 +5091,9 @@ Relative path
 
 Reload
 == 重新載入
+
+Reload animation
+== 裝填動畫
 
 Reload the announcements
 == 重新載入公告

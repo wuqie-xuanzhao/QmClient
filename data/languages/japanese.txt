@@ -568,6 +568,9 @@ Animation
 Animation duration
 == アニメーションの長さ
 
+Animation probability
+== アニメーションの出現確率
+
 Animation range
 == アニメーション範囲
 
@@ -1644,6 +1647,9 @@ Custom prompt template
 
 Customize translate button and menu colors
 == 翻訳ボタンとメニューの色をカスタマイズ
+
+Customize weapon switch and reload animations
+== 武器切り替えとリロードのアニメーションをカスタマイズ
 
 Cut interval
 == カット間隔
@@ -4615,9 +4621,6 @@ Ping the current server
 Pistol
 == ピストル
 
-Play a slide-in rotation animation when switching weapons
-== 武器切り替え時にスライドイン回転アニメーションを再生
-
 Play back a demo
 == デモを再生
 
@@ -5088,6 +5091,9 @@ Relative path
 
 Reload
 == 再読み込み
+
+Reload animation
+== リロードアニメーション
 
 Reload the announcements
 == アナウンスを再読み込み

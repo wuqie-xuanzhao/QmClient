@@ -440,12 +440,15 @@ void CMenusSettingsControls::RenderSettingsBlock(float Height, CUIRect *pParentR
 	pParentRect->HSplitTop(MARGIN, nullptr, pParentRect);
 	if(m_SettingsScrollRegion.AddRect(SettingsBlock) || m_SearchMatchReveal)
 	{
-		SettingsBlock.Draw(pExpandButton == nullptr || Ui()->HotItem() != pExpandButton ? ui_token::color::SURFACE_GLASS : ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::CARD);
-		CUIRect TopHighlight = SettingsBlock;
-		TopHighlight.h = 1.0f;
-		TopHighlight.x += ui_token::radius::BASE;
-		TopHighlight.w -= 2.0f * ui_token::radius::BASE;
-		TopHighlight.Draw(ui_token::color::SURFACE_HIGHLIGHT, IGraphics::CORNER_T, 0.0f);
+		{
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui(), pExpanded != nullptr);
+			SettingsBlock.Draw(pExpandButton == nullptr || Ui()->HotItem() != pExpandButton ? ui_token::color::SURFACE_GLASS : ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::CARD);
+			CUIRect TopHighlight = SettingsBlock;
+			TopHighlight.h = 1.0f;
+			TopHighlight.x += ui_token::radius::BASE;
+			TopHighlight.w -= 2.0f * ui_token::radius::BASE;
+			TopHighlight.Draw(ui_token::color::SURFACE_HIGHLIGHT, IGraphics::CORNER_T, 0.0f);
+		}
 		SettingsBlock.Margin(MARGIN, &SettingsBlock);
 
 		if(pTitle != nullptr)
@@ -459,6 +462,7 @@ void CMenusSettingsControls::RenderSettingsBlock(float Height, CUIRect *pParentR
 
 			if(pExpanded != nullptr)
 			{
+				CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 				CUIRect ButtonArea;
 				Label.Margin(-MARGIN, &ButtonArea);
 				if(Ui()->DoButtonLogic(pExpandButton, 0, &ButtonArea, BUTTONFLAG_LEFT))

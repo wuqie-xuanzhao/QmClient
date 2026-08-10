@@ -965,9 +965,9 @@ void CGraphics_Threaded::EndRenderTarget()
 	m_RenderTargetActive = false;
 }
 
-void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H, float Alpha)
+void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, const SRenderTargetDrawParams &Params)
 {
-	if(!IsRenderTargetSupported() || !Target.IsValid() || W <= 0.0f || H <= 0.0f)
+	if(!IsRenderTargetSupported() || !Target.IsValid() || Params.m_W <= 0.0f || Params.m_H <= 0.0f)
 		return;
 	const size_t TargetId = Target.Id();
 	if(TargetId >= m_vRenderTargetIndices.size() || m_vRenderTargetIndices[TargetId] != -1)
@@ -976,13 +976,130 @@ void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, float X, f
 	FlushVertices();
 	CCommandBuffer::SCommand_RenderTarget_Draw Cmd;
 	Cmd.m_TargetId = TargetId;
-	Cmd.m_X = X;
-	Cmd.m_Y = Y;
-	Cmd.m_W = W;
-	Cmd.m_H = H;
-	Cmd.m_Alpha = std::clamp(Alpha, 0.0f, 1.0f);
+	Cmd.m_X = Params.m_X;
+	Cmd.m_Y = Params.m_Y;
+	Cmd.m_W = Params.m_W;
+	Cmd.m_H = Params.m_H;
+	Cmd.m_Alpha = std::clamp(Params.m_Alpha, 0.0f, 1.0f);
 	Cmd.m_State = m_State;
-	AddCmd(Cmd);
+	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
+
+	std::vector<CCommandBuffer::SVertex> vVertices;
+	auto AddQuad = [&](vec2 Point0, vec2 Point1, vec2 Point2, vec2 Point3) {
+		const float InvW = 1.0f / Params.m_W;
+		const float InvH = 1.0f / Params.m_H;
+		const uint8_t Alpha = (uint8_t)(Cmd.m_Alpha * 255.0f + 0.5f);
+		const vec2 aPositions[] = {Point0, Point1, Point2, Point3};
+		for(const vec2 Position : aPositions)
+		{
+			CCommandBuffer::SVertex Vertex{};
+			Vertex.m_Pos = Position;
+			const float LocalU = (Position.x - Params.m_X) * InvW;
+			const float LocalV = (Position.y - Params.m_Y) * InvH;
+			Vertex.m_Tex = vec2(mix(Params.m_U0, Params.m_U1, LocalU), mix(Params.m_V0, Params.m_V1, LocalV));
+			Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, Alpha};
+			vVertices.push_back(Vertex);
+		}
+	};
+
+	const float Rounding = std::clamp(Params.m_Rounding, 0.0f, minimum(Params.m_W, Params.m_H) * 0.5f);
+	if(Params.m_Corners == CORNER_NONE || Rounding <= 0.0f)
+	{
+		AddQuad(
+			vec2(Params.m_X, Params.m_Y),
+			vec2(Params.m_X + Params.m_W, Params.m_Y),
+			vec2(Params.m_X + Params.m_W, Params.m_Y + Params.m_H),
+			vec2(Params.m_X, Params.m_Y + Params.m_H));
+	}
+	else
+	{
+		constexpr int NumSegments = RECT_CORNER_SEGMENTS;
+		const float SegmentsAngle = pi / 2 / NumSegments;
+		for(int i = 0; i < NumSegments; i += 2)
+		{
+			const float a1 = i * SegmentsAngle;
+			const float a2 = (i + 1) * SegmentsAngle;
+			const float a3 = (i + 2) * SegmentsAngle;
+			const float Ca1 = std::cos(a1);
+			const float Ca2 = std::cos(a2);
+			const float Ca3 = std::cos(a3);
+			const float Sa1 = std::sin(a1);
+			const float Sa2 = std::sin(a2);
+			const float Sa3 = std::sin(a3);
+			if(Params.m_Corners & CORNER_TL)
+				AddQuad(
+					vec2(Params.m_X + Rounding, Params.m_Y + Rounding),
+					vec2(Params.m_X + (1.0f - Ca1) * Rounding, Params.m_Y + (1.0f - Sa1) * Rounding),
+					vec2(Params.m_X + (1.0f - Ca2) * Rounding, Params.m_Y + (1.0f - Sa2) * Rounding),
+					vec2(Params.m_X + (1.0f - Ca3) * Rounding, Params.m_Y + (1.0f - Sa3) * Rounding));
+			if(Params.m_Corners & CORNER_TR)
+				AddQuad(
+					vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Rounding),
+					vec2(Params.m_X + Params.m_W - Rounding + Ca1 * Rounding, Params.m_Y + (1.0f - Sa1) * Rounding),
+					vec2(Params.m_X + Params.m_W - Rounding + Ca2 * Rounding, Params.m_Y + (1.0f - Sa2) * Rounding),
+					vec2(Params.m_X + Params.m_W - Rounding + Ca3 * Rounding, Params.m_Y + (1.0f - Sa3) * Rounding));
+			if(Params.m_Corners & CORNER_BL)
+				AddQuad(
+					vec2(Params.m_X + Rounding, Params.m_Y + Params.m_H - Rounding),
+					vec2(Params.m_X + (1.0f - Ca1) * Rounding, Params.m_Y + Params.m_H - Rounding + Sa1 * Rounding),
+					vec2(Params.m_X + (1.0f - Ca2) * Rounding, Params.m_Y + Params.m_H - Rounding + Sa2 * Rounding),
+					vec2(Params.m_X + (1.0f - Ca3) * Rounding, Params.m_Y + Params.m_H - Rounding + Sa3 * Rounding));
+			if(Params.m_Corners & CORNER_BR)
+				AddQuad(
+					vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H - Rounding),
+					vec2(Params.m_X + Params.m_W - Rounding + Ca1 * Rounding, Params.m_Y + Params.m_H - Rounding + Sa1 * Rounding),
+					vec2(Params.m_X + Params.m_W - Rounding + Ca2 * Rounding, Params.m_Y + Params.m_H - Rounding + Sa2 * Rounding),
+					vec2(Params.m_X + Params.m_W - Rounding + Ca3 * Rounding, Params.m_Y + Params.m_H - Rounding + Sa3 * Rounding));
+		}
+
+		AddQuad(
+			vec2(Params.m_X + Rounding, Params.m_Y + Rounding),
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Rounding),
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H - Rounding),
+			vec2(Params.m_X + Rounding, Params.m_Y + Params.m_H - Rounding));
+		AddQuad(
+			vec2(Params.m_X + Rounding, Params.m_Y),
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y),
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Rounding),
+			vec2(Params.m_X + Rounding, Params.m_Y + Rounding));
+		AddQuad(
+			vec2(Params.m_X + Rounding, Params.m_Y + Params.m_H - Rounding),
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H - Rounding),
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H),
+			vec2(Params.m_X + Rounding, Params.m_Y + Params.m_H));
+		AddQuad(
+			vec2(Params.m_X, Params.m_Y + Rounding),
+			vec2(Params.m_X + Rounding, Params.m_Y + Rounding),
+			vec2(Params.m_X + Rounding, Params.m_Y + Params.m_H - Rounding),
+			vec2(Params.m_X, Params.m_Y + Params.m_H - Rounding));
+		AddQuad(
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Rounding),
+			vec2(Params.m_X + Params.m_W, Params.m_Y + Rounding),
+			vec2(Params.m_X + Params.m_W, Params.m_Y + Params.m_H - Rounding),
+			vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H - Rounding));
+		if(!(Params.m_Corners & CORNER_TL))
+			AddQuad(vec2(Params.m_X, Params.m_Y), vec2(Params.m_X + Rounding, Params.m_Y), vec2(Params.m_X + Rounding, Params.m_Y + Rounding), vec2(Params.m_X, Params.m_Y + Rounding));
+		if(!(Params.m_Corners & CORNER_TR))
+			AddQuad(vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y), vec2(Params.m_X + Params.m_W, Params.m_Y), vec2(Params.m_X + Params.m_W, Params.m_Y + Rounding), vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Rounding));
+		if(!(Params.m_Corners & CORNER_BL))
+			AddQuad(vec2(Params.m_X, Params.m_Y + Params.m_H - Rounding), vec2(Params.m_X + Rounding, Params.m_Y + Params.m_H - Rounding), vec2(Params.m_X + Rounding, Params.m_Y + Params.m_H), vec2(Params.m_X, Params.m_Y + Params.m_H));
+		if(!(Params.m_Corners & CORNER_BR))
+			AddQuad(vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H - Rounding), vec2(Params.m_X + Params.m_W, Params.m_Y + Params.m_H - Rounding), vec2(Params.m_X + Params.m_W, Params.m_Y + Params.m_H), vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H));
+	}
+
+	Cmd.m_PrimCount = vVertices.size() / 4;
+	if(Cmd.m_PrimCount == 0)
+		return;
+	const size_t VerticesSize = vVertices.size() * sizeof(CCommandBuffer::SVertex);
+	Cmd.m_pVertices = (CCommandBuffer::SVertex *)AllocCommandBufferData(VerticesSize);
+	mem_copy(Cmd.m_pVertices, vVertices.data(), VerticesSize);
+	AddCmd(Cmd, [&] {
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(VerticesSize);
+		if(Cmd.m_pVertices == nullptr)
+			return false;
+		mem_copy(Cmd.m_pVertices, vVertices.data(), VerticesSize);
+		return true;
+	});
 }
 
 bool CGraphics_Threaded::CaptureBackbufferToRenderTarget(CRenderTargetHandle Target)

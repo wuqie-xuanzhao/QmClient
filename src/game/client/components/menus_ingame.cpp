@@ -1013,7 +1013,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		if(TransitionActive)
 		{
 			if(TransitionAlpha > 0.0f)
-				MenuContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+				DrawUiSwitchTransitionOverlay(MenuContentClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 			Ui()->ClipDisable();
 		}
 	}
@@ -1231,6 +1231,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 
 		if(!Item.m_Visible)
 			continue;
+		auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 		CUIRect Row = Item.m_Rect;
 		if(Count % 2 == 1)
@@ -2363,7 +2364,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	if(TransitionActive)
 	{
 		if(TransitionAlpha > 0.0f)
-			VoteContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+			DrawUiSwitchTransitionOverlay(VoteContentClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 		Ui()->ClipDisable();
 	}
 

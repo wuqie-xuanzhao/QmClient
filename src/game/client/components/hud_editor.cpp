@@ -710,24 +710,27 @@ void CHudEditor::RenderJumpHintTextEditor(const CUIRect &Screen)
 	static CButtonContainer s_CancelButton;
 	static CButtonContainer s_SaveButton;
 
-	ResetButton.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * Ui()->ButtonColorMul(&s_ResetButton)), IGraphics::CORNER_ALL, 4.0f);
-	CancelButton.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * Ui()->ButtonColorMul(&s_CancelButton)), IGraphics::CORNER_ALL, 4.0f);
-	SaveButton.Draw(ColorRGBA(0.25f, 0.62f, 1.0f, 0.22f * Ui()->ButtonColorMul(&s_SaveButton)), IGraphics::CORNER_ALL, 4.0f);
-	Ui()->DoLabel(&ResetButton, Localize("Reset"), FontSize, TEXTALIGN_MC);
-	Ui()->DoLabel(&CancelButton, Localize("Cancel"), FontSize, TEXTALIGN_MC);
-	Ui()->DoLabel(&SaveButton, Localize("Save"), FontSize, TEXTALIGN_MC);
-
-	if(Ui()->DoButtonLogic(&s_ResetButton, 0, &ResetButton, BUTTONFLAG_LEFT) != 0)
 	{
-		char aDecoded[sizeof(g_Config.m_QmJumpHintText)];
-		DecodeEscapedNewlines(JUMP_HINT_DEFAULT_TEXT, aDecoded, sizeof(aDecoded));
-		m_JumpHintTextInput.Set(aDecoded);
-		Ui()->SetActiveItem(&m_JumpHintTextInput);
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
+		ResetButton.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * Ui()->ButtonColorMul(&s_ResetButton)), IGraphics::CORNER_ALL, 4.0f);
+		CancelButton.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * Ui()->ButtonColorMul(&s_CancelButton)), IGraphics::CORNER_ALL, 4.0f);
+		SaveButton.Draw(ColorRGBA(0.25f, 0.62f, 1.0f, 0.22f * Ui()->ButtonColorMul(&s_SaveButton)), IGraphics::CORNER_ALL, 4.0f);
+		Ui()->DoLabel(&ResetButton, Localize("Reset"), FontSize, TEXTALIGN_MC);
+		Ui()->DoLabel(&CancelButton, Localize("Cancel"), FontSize, TEXTALIGN_MC);
+		Ui()->DoLabel(&SaveButton, Localize("Save"), FontSize, TEXTALIGN_MC);
+
+		if(Ui()->DoButtonLogic(&s_ResetButton, 0, &ResetButton, BUTTONFLAG_LEFT) != 0)
+		{
+			char aDecoded[sizeof(g_Config.m_QmJumpHintText)];
+			DecodeEscapedNewlines(JUMP_HINT_DEFAULT_TEXT, aDecoded, sizeof(aDecoded));
+			m_JumpHintTextInput.Set(aDecoded);
+			Ui()->SetActiveItem(&m_JumpHintTextInput);
+		}
+		if(Ui()->DoButtonLogic(&s_CancelButton, 0, &CancelButton, BUTTONFLAG_LEFT) != 0)
+			CloseJumpHintTextEditor();
+		if(Ui()->DoButtonLogic(&s_SaveButton, 0, &SaveButton, BUTTONFLAG_LEFT) != 0)
+			SaveJumpHintTextEditor();
 	}
-	if(Ui()->DoButtonLogic(&s_CancelButton, 0, &CancelButton, BUTTONFLAG_LEFT) != 0)
-		CloseJumpHintTextEditor();
-	if(Ui()->DoButtonLogic(&s_SaveButton, 0, &SaveButton, BUTTONFLAG_LEFT) != 0)
-		SaveJumpHintTextEditor();
 }
 
 void CHudEditor::OnRender()
@@ -919,8 +922,11 @@ void CHudEditor::OnRender()
 		TextRender()->Text(HelpX + HelpPaddingX, HelpY + HelpPaddingY + HelpLineHeight * i, HelpFontSize, apHelpLines[i], -1.0f);
 	}
 
-	ResetButton.Draw(ColorRGBA(0.03f, 0.04f, 0.06f, 0.78f), IGraphics::CORNER_ALL, 6.0f);
-	Ui()->DoLabel(&ResetButton, Localize("Reset default"), 8.0f, TEXTALIGN_MC);
+	{
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
+		ResetButton.Draw(ColorRGBA(0.03f, 0.04f, 0.06f, 0.78f), IGraphics::CORNER_ALL, 6.0f);
+		Ui()->DoLabel(&ResetButton, Localize("Reset default"), 8.0f, TEXTALIGN_MC);
+	}
 
 	RenderTools()->RenderCursor(Ui()->MousePos(), 24.0f);
 

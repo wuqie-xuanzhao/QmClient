@@ -568,6 +568,9 @@ Animation
 Animation duration
 == 애니메이션 지속 시간
 
+Animation probability
+== 애니메이션 표시 확률
+
 Animation range
 == 애니메이션 범위
 
@@ -1644,6 +1647,9 @@ Custom prompt template
 
 Customize translate button and menu colors
 == 번역 버튼 및 메뉴 색상 사용자 정의
+
+Customize weapon switch and reload animations
+== 무기 전환 및 재장전 애니메이션 사용자 지정
 
 Cut interval
 == 잘라내기 구간
@@ -4615,9 +4621,6 @@ Ping the current server
 Pistol
 == 권총
 
-Play a slide-in rotation animation when switching weapons
-== 무기 전환 시 슬라이드 회전 애니메이션 재생
-
 Play back a demo
 == 데모 재생
 
@@ -5088,6 +5091,9 @@ Relative path
 
 Reload
 == 다시 불러오기
+
+Reload animation
+== 재장전 애니메이션
 
 Reload the announcements
 == 공지사항 다시 불러오기

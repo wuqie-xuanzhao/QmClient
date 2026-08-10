@@ -67,17 +67,33 @@ TEST(QmWeaponReloadAnimation, ReloadRotationOverridesWeaponSwitchRotation)
 TEST(QmWeaponReloadAnimation, KeepsAnAttackBoundToItsWeaponAndTuneZone)
 {
 	SQmWeaponReloadAnimationState State;
-	State.ObserveAttack(100, WEAPON_GUN, 2);
+	State.ObserveAttack(100, WEAPON_GUN, 2, true);
 	EXPECT_TRUE(State.MatchesAttack(100, WEAPON_GUN));
 	EXPECT_EQ(State.m_AttackTuneZone, 2);
 
-	State.ObserveAttack(100, WEAPON_LASER, 3);
+	State.ObserveAttack(100, WEAPON_LASER, 3, false);
 	EXPECT_FALSE(State.MatchesAttack(100, WEAPON_LASER));
 	EXPECT_EQ(State.m_AttackTuneZone, 2);
 
-	State.ObserveAttack(101, WEAPON_LASER, 3);
+	State.ObserveAttack(101, WEAPON_LASER, 3, true);
 	EXPECT_TRUE(State.MatchesAttack(101, WEAPON_LASER));
 	EXPECT_EQ(State.m_AttackTuneZone, 3);
+}
+
+TEST(QmWeaponReloadAnimation, SelectsAnAttackOnceFromTheConfiguredProbability)
+{
+	EXPECT_FALSE(QmWeaponReloadAnimationSelected(0, 0.0f));
+	EXPECT_TRUE(QmWeaponReloadAnimationSelected(100, 1.0f));
+	EXPECT_TRUE(QmWeaponReloadAnimationSelected(25, 0.249f));
+	EXPECT_FALSE(QmWeaponReloadAnimationSelected(25, 0.25f));
+
+	SQmWeaponReloadAnimationState State;
+	State.ObserveAttack(100, WEAPON_LASER, 2, false);
+	EXPECT_FALSE(State.MatchesAttack(100, WEAPON_LASER));
+	State.ObserveAttack(100, WEAPON_LASER, 2, true);
+	EXPECT_FALSE(State.MatchesAttack(100, WEAPON_LASER));
+	State.ObserveAttack(101, WEAPON_LASER, 2, true);
+	EXPECT_TRUE(State.MatchesAttack(101, WEAPON_LASER));
 }
 
 TEST(QmWeaponTrajectory, SelectsWeaponSpecificBaseColors)

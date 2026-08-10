@@ -2032,7 +2032,7 @@ TEST(QmMonitoringHelpers, GeneralPerformanceModePlaceholderReplacesRefreshRateSl
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmPerformanceMode, qm_performance_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("key = \"Performance mode (placeholder)\""), std::string::npos);
 	EXPECT_NE(MenusTranslations.find("simplified_chinese = \"性能模式（占位符）\""), std::string::npos);
-	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.23\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.29\""), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
@@ -4350,6 +4350,14 @@ TEST(QmMonitoringHelpers, AssetsToolbarAndPlaceholdersUseBudgetedTextPipeline)
 	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, \"assets-loading-list\""), std::string::npos);
 	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, \"assets-workshop-no-assets\""), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoLabel(&LoadingRect, Localize(\"Loading"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsWorkshopVisibilityDefaultsToHidden)
+{
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+
+	EXPECT_NE(MenusHeader.find("bool m_ShowWorkshopAssets = false;"), std::string::npos);
+	EXPECT_EQ(MenusHeader.find("bool m_ShowWorkshopAssets = true;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, IngameCriticalTextFallbacksAreLimited)

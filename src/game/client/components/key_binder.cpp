@@ -33,6 +33,7 @@ bool CKeyBinder::OnInput(const IInput::CEvent &Event)
 
 CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderButton, CButtonContainer *pClearButton, const CUIRect *pRect, const CBindSlot &CurrentBind, bool Activate, float FontSize)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	CKeyReaderResult Result = {CurrentBind, false};
 
 	CUIRect KeyReaderButton, ClearButton;

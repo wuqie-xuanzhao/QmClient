@@ -188,6 +188,7 @@ Angle
 Angle:
 Animation
 Animation duration
+Animation probability
 Animation range
 Anti Latency Tools
 Anti Ping Smoothing
@@ -547,6 +548,7 @@ Custom colors
 Custom Font:
 Custom prompt template
 Customize translate button and menu colors
+Customize weapon switch and reload animations
 Cut interval
 Cut length
 Cut segments
@@ -1537,7 +1539,6 @@ Pie menu
 Ping
 Ping the current server
 Pistol
-Play a slide-in rotation animation when switching weapons
 Play back a demo
 Play background music
 Play the current demo
@@ -1695,6 +1696,7 @@ Regular background color
 Regular expression
 Relative path
 Reload
+Reload animation
 Reload the announcements
 Reload the censorlist
 Reload the map

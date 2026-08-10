@@ -60,7 +60,7 @@ enum
 	NUMBER_OF_TCLIENT_TABS
 };
 
-constexpr float TCLIENT_BODY_FONT_SIZE = 14.0f;
+constexpr float TCLIENT_BODY_FONT_SIZE = CMenus::TCLIENT_SETTINGS_BODY_FONT_SIZE;
 constexpr float TCLIENT_HEADLINE_FONT_SIZE = 20.0f;
 
 int CMenus::DoTClientSettingsButton_CheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)
@@ -731,6 +731,7 @@ bool CMenus::DoEditBoxWithLabel(CLineInput *LineInput, const CUIRect *pRect, con
 
 int CMenus::DoButtonLineSize_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, float ButtonLineSize, bool Fake, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, float FontSize)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	CUIRect Text = *pRect;
 
 	if(Checked)
@@ -830,6 +831,7 @@ void CMenus::RenderFontIcon(const CUIRect Rect, const char *pText, float Size, i
 
 int CMenus::DoButtonNoRect_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
 	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
@@ -996,7 +998,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 
 	if(TransitionActive && TransitionAlpha > 0.0f)
 	{
-		ContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+		DrawUiSwitchTransitionOverlay(ContentClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 	}
 	if(TransitionActive)
 	{
@@ -4247,6 +4249,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 				continue;
 
 			CUIRect PlayerRect, TeeRect, NameRect, ClanRect;
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 			Item.m_Rect.Margin(0.0f, &PlayerRect);
 			PlayerRect.VSplitLeft(25.0f, &TeeRect, &PlayerRect);
 			PlayerRect.VSplitMid(&NameRect, &ClanRect);
@@ -5142,6 +5145,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 		CListboxItem Item = s_ListBox.DoNextItem(&s_vProfileItemIds[i], s_SelectedProfile >= 0 && (size_t)s_SelectedProfile == i);
 		if(!Item.m_Visible)
 			continue;
+		auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 		RenderProfile(Item.m_Rect, vProfiles[i], false);
 	}

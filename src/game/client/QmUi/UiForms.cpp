@@ -66,6 +66,7 @@ bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect 
 {
 	if(Ctx.m_pUi == nullptr || pValue == nullptr)
 		return false;
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 	const int Result = Ctx.m_pUi->DoButtonLogic(pId, 0, &Rect, BUTTONFLAG_LEFT);
 	const bool Clicked = Result != 0;

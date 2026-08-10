@@ -74,6 +74,7 @@ namespace ui_widget
 	{
 		if(Ctx.m_pUi == nullptr)
 			return false;
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 		// Background: selected first, then hover blend on top.
 		if(Props.m_Selected)

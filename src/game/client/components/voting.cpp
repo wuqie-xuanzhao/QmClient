@@ -597,7 +597,7 @@ void CVoting::Render()
 
 	CUIRect View = {0.0f, 60.0f, 120.0f, 38.0f};
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::Voting, View);
-	Ui()->RenderGaussianBlur(View);
+	Ui()->RenderGaussianBlur(View, 1.0f, HudEditorScope.m_Corners, ui_token::radius::BASE);
 	View.Draw(ui_token::color::SURFACE_GLASS, HudEditorScope.m_Corners, ui_token::radius::BASE);
 	View.Margin(3.0f, &View);
 

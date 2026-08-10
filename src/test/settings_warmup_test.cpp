@@ -2237,12 +2237,14 @@ TEST(SettingsWarmup, TClientVisualSettingsUseStableTextIdsForPrebuildCoverage)
 
 TEST(SettingsWarmup, TClientSettingsUseTwoLevelFontScale)
 {
+	const std::string MenusHeader = ReadTestSourceFile("src/game/client/components/menus.h");
 	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
 	const std::string Ui = ReadTestSourceFile("src/game/client/ui.cpp");
 	const std::string KeyBinder = ReadTestSourceFile("src/game/client/components/key_binder.cpp");
 
-	EXPECT_NE(TClient.find("constexpr float TCLIENT_BODY_FONT_SIZE = 14.0f;"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("static constexpr float TCLIENT_SETTINGS_BODY_FONT_SIZE = 11.2f;"), std::string::npos);
+	EXPECT_NE(TClient.find("constexpr float TCLIENT_BODY_FONT_SIZE = CMenus::TCLIENT_SETTINGS_BODY_FONT_SIZE;"), std::string::npos);
 	EXPECT_NE(TClient.find("constexpr float TCLIENT_HEADLINE_FONT_SIZE = 20.0f;"), std::string::npos);
 	EXPECT_NE(TClient.find("Props.m_MinimumFontSize = FontSize;"), std::string::npos);
 	EXPECT_NE(TClient.find("Props.m_EllipsisAtEnd = true;"), std::string::npos);
@@ -2263,7 +2265,10 @@ TEST(SettingsWarmup, TClientSettingsUseTwoLevelFontScale)
 	EXPECT_NE(TClient.find("DoEditBox_Search(&s_EntriesFilterInput, &EntriesSearch, TCLIENT_BODY_FONT_SIZE"), std::string::npos);
 
 	EXPECT_NE(Menus.find("const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;"), std::string::npos);
-	EXPECT_NE(Menus.find("FontSize = Page == SETTINGS_TCLIENT ? 14.0f : FontSize;"), std::string::npos);
+	EXPECT_NE(Menus.find("FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : FontSize;"), std::string::npos);
+	EXPECT_NE(Menus.find("FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : (FontSize > 0.0f ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f);"), std::string::npos);
+	EXPECT_NE(Menus.find("FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : (FontSize > 0.0f ? FontSize : 13.0f);"), std::string::npos);
+	EXPECT_EQ(Menus.find("Page == SETTINGS_TCLIENT ? 14.0f"), std::string::npos);
 	EXPECT_NE(Menus.find("Props.m_MinimumFontSize = FixedFontSize ? FontSize : FontSize * 0.7f;"), std::string::npos);
 	EXPECT_NE(Menus.find("Props.m_EllipsisAtEnd = FixedFontSize;"), std::string::npos);
 	EXPECT_NE(Menus.find("FontSize = FixedFontSize ? FontSize : Box.h * CUi::ms_FontmodHeight;"), std::string::npos);

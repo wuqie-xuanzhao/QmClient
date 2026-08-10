@@ -426,7 +426,21 @@ public:
 	virtual void DestroyRenderTarget(CRenderTargetHandle *pTarget) = 0;
 	virtual bool BeginRenderTarget(CRenderTargetHandle Target, ColorRGBA ClearColor) = 0;
 	virtual void EndRenderTarget() = 0;
-	virtual void DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H, float Alpha = 1.0f) = 0;
+	struct SRenderTargetDrawParams
+	{
+		float m_X = 0.0f;
+		float m_Y = 0.0f;
+		float m_W = 0.0f;
+		float m_H = 0.0f;
+		float m_Alpha = 1.0f;
+		int m_Corners = 0;
+		float m_Rounding = 0.0f;
+		float m_U0 = 0.0f;
+		float m_V0 = 1.0f;
+		float m_U1 = 1.0f;
+		float m_V1 = 0.0f;
+	};
+	virtual void DrawRenderTarget(CRenderTargetHandle Target, const SRenderTargetDrawParams &Params) = 0;
 	// Captures all drawing submitted before this call and scales the current backbuffer
 	// into Target without a CPU readback. Must be called outside an active render target.
 	virtual bool CaptureBackbufferToRenderTarget(CRenderTargetHandle Target) = 0;

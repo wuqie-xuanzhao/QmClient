@@ -1067,7 +1067,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			DrawRow(Row);
 			if(TransitionAlpha > 0.0f)
 			{
-				ClipRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+				DrawUiSwitchTransitionOverlay(ClipRect, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 			}
 			Ui()->ClipDisable();
 		}
@@ -1589,7 +1589,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	{
 		if(TransitionAlpha > 0.0f)
 		{
-			YourSkinClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+			DrawUiSwitchTransitionOverlay(YourSkinClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 		}
 		Ui()->ClipDisable();
 	}
@@ -1811,6 +1811,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				{
 					continue;
 				}
+				auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 				LastVisible = (int)i;
 				LastVisibleRect = Item.m_Rect;
@@ -2044,6 +2045,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					const CListboxItem Item = s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, 3.0f);
 					if(!Item.m_Visible)
 						continue;
+					auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 					CUIRect SelectRect = Item.m_Rect;
 					CUIRect NameRect = SelectRect;
@@ -2248,6 +2250,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	int RowsIterated = 0;
 	int RowsRendered = 0;
 	auto DoButtonSkinQueue = [&](const void *pButtonId, const void *pParentId, bool InQueue, bool Disabled, const CUIRect *pRect) {
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 		if(InQueue || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId)
 		{
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -4371,6 +4374,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			const CListboxItem Item = s_AudioPackListBox.DoNextItem(&Entry, SelectedPack == (int)i);
 			if(!Item.m_Visible)
 				continue;
+			auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 			char aLabel[128];
 			if(str_comp(Entry.m_aName, "default") == 0)
@@ -4593,6 +4597,7 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 			continue;
 
 		void *pRowId = UseCache ? static_cast<void *>(&gs_aLanguageRowIds[i]) : const_cast<char *>(Language.m_Filename.c_str());
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 		const int ButtonResult = Ui()->DoButtonLogic(pRowId, 0, &ItemRect, BUTTONFLAG_LEFT);
 		if(ButtonResult)
 		{
@@ -4994,7 +4999,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		const int64_t StageStartTime = PerfDebugStartTime();
 		if(TransitionActive && TransitionAlpha > 0.0f)
 		{
-			ContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+			DrawUiSwitchTransitionOverlay(ContentClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 		}
 		if(TransitionActive)
 		{
@@ -6356,7 +6361,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 	if(TransitionActive && TransitionAlpha > 0.0f)
 	{
-		ContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+		DrawUiSwitchTransitionOverlay(ContentClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 	}
 	if(TransitionActive)
 	{

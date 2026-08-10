@@ -730,6 +730,12 @@ float CMenus::UiSwitchAnimationAlpha(const float Strength) const
 	return Strength * MENU_SWITCH_ALPHA_MAX;
 }
 
+void CMenus::DrawUiSwitchTransitionOverlay(const CUIRect &Rect, const ColorRGBA Color)
+{
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
+	Rect.Draw(Color, IGraphics::CORNER_NONE, 0.0f);
+}
+
 float CMenus::ApplyUiSwitchOffset(CUIRect &View, const float Strength, const float Direction, const bool Vertical, const float RelativeOffset, const float MinOffset, const float MaxOffset) const
 {
 	if(Strength <= 0.0f || Direction == 0.0f)
@@ -785,6 +791,7 @@ ColorRGBA CMenus::SettingsTabbarColor(float AlphaScale) const
 
 int CMenus::DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, bool Active, const unsigned Flags)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const float HoverTarget = Active && Ui()->HotItem() == pId ? 1.0f : 0.0f;
 	static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_toggle_hover"));
 	const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pId));
@@ -813,6 +820,7 @@ int CMenus::DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, 
 
 int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement, float FontSize)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	CUIRect Text = *pRect;
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
 	const bool Pressed = Ui()->CheckActiveItem(pButtonContainer);
@@ -879,6 +887,7 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 
 int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator, const ColorRGBA *pDefaultColor, const ColorRGBA *pActiveColor, const ColorRGBA *pHoverColor, float EdgeRounding, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float FontSize)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
 	CUIRect AnimatedLabelRect = *pRect;
 	const bool TabActive = Checked || MouseInside;
@@ -1080,6 +1089,7 @@ void CMenus::PrepareSettingsTabLabelCache(float MainViewWidth)
 
 int CMenus::DoButton_GridHeader(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Align)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	if(Checked == 2)
 		pRect->Draw(ColorRGBA(1, 0.98f, 0.5f, 0.55f), IGraphics::CORNER_T, 5.0f);
 	else if(Checked)
@@ -1093,6 +1103,7 @@ int CMenus::DoButton_GridHeader(const void *pId, const char *pText, int Checked,
 
 int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool Checked, const CUIRect *pRect)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const bool ShouldShow = Checked || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId;
 	static const uint64_t s_VisibilityScopeHash = static_cast<uint64_t>(str_quickhash("menu_favorite_visibility"));
 	static const uint64_t s_HoverScopeHash = static_cast<uint64_t>(str_quickhash("menu_favorite_hover"));
@@ -1148,6 +1159,7 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 
 int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, bool ForceLegacyStyle, float FontSize)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const bool HasCustomGlyph = pBoxText[0] != '\0' && pBoxText[0] != 'X';
 	const bool UseQmToggleStyle = g_Config.m_QmNewUi != 0 && !HasCustomGlyph && !ForceLegacyStyle;
 	CUIRect Box, Label;
@@ -1241,7 +1253,7 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const 
 int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, float FontSize)
 {
 	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
-	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : FontSize;
+	FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : FontSize;
 	if(pTextId == nullptr)
 	{
 		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, false, FixedFontSize ? FontSize : -1.0f);
@@ -1333,7 +1345,7 @@ int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContaine
 {
 	dbg_assert(pBC != nullptr, "settings menu button requires a stable button container");
 	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
-	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : FontSize;
+	FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : FontSize;
 	if(pTextId == nullptr)
 	{
 		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, nullptr, FixedFontSize ? FontSize : -1.0f);
@@ -1371,7 +1383,7 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 		CUIRect Label, ScrollBar;
 		SplitSettingsScrollbarRects(*pRect, Flags, &Label, nullptr, &ScrollBar);
 		const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
-		FontSize = Page == SETTINGS_TCLIENT ? 14.0f : (FontSize > 0.0f ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f);
+		FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : (FontSize > 0.0f ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f);
 		if(pTextId != nullptr)
 		{
 			SLabelProperties Props;
@@ -1430,7 +1442,7 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 	CUIRect Label, ValueRect, ScrollBar;
 	SplitSettingsScrollbarRects(*pRect, Flags, &Label, &ValueRect, &ScrollBar);
 	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
-	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : (FontSize > 0.0f ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f);
+	FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : (FontSize > 0.0f ? FontSize : Label.h * CUi::ms_FontmodHeight * 0.8f);
 	if(pTextId != nullptr)
 	{
 		SLabelProperties Props;
@@ -1578,7 +1590,7 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 	Buttons.VSplitMid(&Label, &Buttons, 10.0f);
 	Buttons.HMargin(2.0f, &Buttons);
 	const bool FixedFontSize = Page == SETTINGS_TCLIENT || FontSize > 0.0f;
-	FontSize = Page == SETTINGS_TCLIENT ? 14.0f : (FontSize > 0.0f ? FontSize : 13.0f);
+	FontSize = Page == SETTINGS_TCLIENT ? TCLIENT_SETTINGS_BODY_FONT_SIZE : (FontSize > 0.0f ? FontSize : 13.0f);
 	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, FontSize, TEXTALIGN_ML);
 	const float W = Buttons.w / N;
 	bool Pressed = false;
@@ -1650,6 +1662,7 @@ ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float Lin
 
 ColorHSLA CMenus::DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHslaColor, bool Alpha)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	ColorHSLA HslaColor = ColorHSLA(*pHslaColor, Alpha);
 
 	ColorRGBA Outline = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f);
@@ -1706,6 +1719,7 @@ int CMenus::DoButton_CheckBox_Number(const void *pId, const char *pText, int Che
 
 int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, bool LargeMenubarControl, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	// Compose target background color from active / hover / idle states. Custom
 	// overrides are honored when supplied (Quit red, Home news green, favorite
 	// community appear-fade etc.); otherwise we fall back to feat-003 tokens.
@@ -3237,7 +3251,7 @@ void CMenus::Render()
 
 			if(TransitionActive && TransitionAlpha > 0.0f)
 			{
-				MainViewClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+				DrawUiSwitchTransitionOverlay(MainViewClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 			}
 			if(TransitionActive)
 			{
@@ -3383,7 +3397,7 @@ void CMenus::Render()
 
 			if(TransitionActive && TransitionAlpha > 0.0f)
 			{
-				MainViewClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+				DrawUiSwitchTransitionOverlay(MainViewClip, ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha));
 			}
 			if(TransitionActive)
 			{

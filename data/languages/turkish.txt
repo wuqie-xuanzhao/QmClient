@@ -568,6 +568,9 @@ Animation
 Animation duration
 == Animasyon süresi
 
+Animation probability
+== Animasyon olasılığı
+
 Animation range
 == Animasyon aralığı
 
@@ -1644,6 +1647,9 @@ Custom prompt template
 
 Customize translate button and menu colors
 == Çevir düğmesi ve menü renklerini özelleştir
+
+Customize weapon switch and reload animations
+== Silah değiştirme ve yeniden doldurma animasyonlarını özelleştir
 
 Cut interval
 == Kesim aralığı
@@ -4615,9 +4621,6 @@ Ping the current server
 Pistol
 == Tabanca
 
-Play a slide-in rotation animation when switching weapons
-== Silah değiştirirken kayarak dönen bir animasyon oynat
-
 Play back a demo
 == Bir demoyu oynat
 
@@ -5088,6 +5091,9 @@ Relative path
 
 Reload
 == Yeniden yükle
+
+Reload animation
+== Yeniden doldurma animasyonu
 
 Reload the announcements
 == Duyuruları yeniden yükle

@@ -162,6 +162,7 @@ void CMenusStart::RenderStartMenuV2(CUIRect MainView)
 
 void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const bool TrackPerf = QmPerfEnabled();
 	const std::chrono::nanoseconds TotalStart = StartMenuPerfNow(TrackPerf);
 	GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_START);

@@ -568,6 +568,9 @@ Animation
 Animation duration
 == Duração da animação
 
+Animation probability
+== Probabilidade da animação
+
 Animation range
 == Alcance da animação
 
@@ -1644,6 +1647,9 @@ Custom prompt template
 
 Customize translate button and menu colors
 == Personalizar cores do botão de tradução e menu
+
+Customize weapon switch and reload animations
+== Personalizar animações de troca e recarga de armas
 
 Cut interval
 == Intervalo de corte
@@ -4615,9 +4621,6 @@ Ping the current server
 Pistol
 == Pistola
 
-Play a slide-in rotation animation when switching weapons
-== Reproduzir uma animação de rotação deslizante ao trocar de armas
-
 Play back a demo
 == Reproduzir uma demo
 
@@ -5088,6 +5091,9 @@ Relative path
 
 Reload
 == Recarregar
+
+Reload animation
+== Animação de recarga
 
 Reload the announcements
 == Recarregar os anúncios

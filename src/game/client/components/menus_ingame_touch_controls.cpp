@@ -122,7 +122,10 @@ void CMenusIngameTouchControls::RenderTouchButtonEditor(CUIRect MainView)
 	if(TransitionActive)
 	{
 		if(TransitionAlpha > 0.0f)
+		{
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 			BlockClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+		}
 		Ui()->ClipDisable();
 	}
 

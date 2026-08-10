@@ -4,6 +4,9 @@
 #include <game/client/qm_ime_manager.h>
 
 #include <gtest/gtest.h>
+#include <test/test.h>
+
+#include <string>
 
 TEST(QmImePlatform, SystemCandidateUiPolicyMatchesPlatform)
 {
@@ -38,4 +41,25 @@ TEST(QmImePlatform, CandidatePageSizeFallsBackToCount)
 {
 	EXPECT_EQ(QmImeCandidatePageSizeOrCount(0, 9), 9u);
 	EXPECT_EQ(QmImeCandidatePageSizeOrCount(5, 9), 5u);
+}
+
+TEST(QmImePlatform, PerfDiagnosticsDistinguishImeBlockingBoundaries)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/input.cpp");
+
+	for(const char *pStage : {
+		    "sdl_poll_event_call",
+		    "process_system_message",
+		    "ime_get_context",
+		    "ime_candidate_size_query",
+		    "ime_candidate_data_query",
+		    "ime_release_context",
+	    })
+	{
+		EXPECT_NE(Source.find(pStage), std::string::npos) << pStage;
+	}
+	EXPECT_NE(Source.find("wparam=%"), std::string::npos);
+	EXPECT_NE(Source.find("lparam=%"), std::string::npos);
+	EXPECT_NE(Source.find("candidate_index=%"), std::string::npos);
+	EXPECT_NE(Source.find("returned_size=%"), std::string::npos);
 }

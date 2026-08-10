@@ -20,6 +20,7 @@ class IGraphics;
 class IKernel;
 class CUiScopedQuadBatch;
 class CUiScopedGaussianBlur;
+class CUiScopedGaussianBlurSuppression;
 
 inline float QmUiVirtualScreenHeight(int ScalePercent)
 {
@@ -199,6 +200,21 @@ public:
 
 private:
 	CUi *m_pUi;
+};
+
+class CUiScopedGaussianBlurSuppression
+{
+public:
+	explicit CUiScopedGaussianBlurSuppression(CUi *pUi);
+	CUiScopedGaussianBlurSuppression(CUi *pUi, bool Active);
+	~CUiScopedGaussianBlurSuppression();
+
+	CUiScopedGaussianBlurSuppression(const CUiScopedGaussianBlurSuppression &) = delete;
+	CUiScopedGaussianBlurSuppression &operator=(const CUiScopedGaussianBlurSuppression &) = delete;
+
+private:
+	CUi *m_pUi;
+	bool m_Active;
 };
 
 inline bool UiBatchableRectHasPositiveSize(float Width, float Height)
@@ -493,6 +509,7 @@ private:
 	mutable std::vector<IGraphics::SRenderSpriteInfo> m_vQuadBatchSprites;
 	mutable std::vector<SQuadBatchRectContainer> m_vQuadBatchRectContainers;
 	std::vector<float> m_vGaussianBlurScopeAlphas;
+	int m_GaussianBlurSuppressionDepth = 0;
 	IGraphics::CRenderTargetHandle m_GaussianBlurSource;
 	IGraphics::CRenderTargetHandle m_GaussianBlurTemporary;
 	IGraphics::CRenderTargetHandle m_GaussianBlurTarget;
@@ -641,9 +658,11 @@ public:
 	void OnCursorMove(float X, float Y);
 	void BeginGaussianBlurScope(float Alpha = 1.0f);
 	void EndGaussianBlurScope();
-	bool GaussianBlurScopeActive() const { return !m_vGaussianBlurScopeAlphas.empty(); }
+	void BeginGaussianBlurSuppression() { ++m_GaussianBlurSuppressionDepth; }
+	void EndGaussianBlurSuppression();
+	bool GaussianBlurScopeActive() const { return !m_vGaussianBlurScopeAlphas.empty() && m_GaussianBlurSuppressionDepth == 0; }
 	float GaussianBlurScopeAlpha() const { return GaussianBlurScopeActive() ? m_vGaussianBlurScopeAlphas.back() : 0.0f; }
-	void RenderGaussianBlur(const CUIRect &Rect, float Alpha = 1.0f);
+	void RenderGaussianBlur(const CUIRect &Rect, float Alpha = 1.0f, int Corners = IGraphics::CORNER_NONE, float Rounding = 0.0f);
 
 	void SetEnabled(bool Enabled) { m_Enabled = Enabled; }
 	bool Enabled() const { return m_Enabled; }

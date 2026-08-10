@@ -13,7 +13,7 @@ class CUIRect
 {
 	static IGraphics *ms_pGraphics;
 	static CUi *ms_pUi;
-	void DrawRectBackdrop() const;
+	void DrawRectBackdrop(int Corners, float Rounding) const;
 
 public:
 	static void Init(IGraphics *pGraphics, CUi *pUi)

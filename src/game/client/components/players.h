@@ -44,7 +44,7 @@ class CPlayers : public CComponent
 		const CNetObj_Character *pPlayerChar,
 		int ClientId);
 	bool IsPlayerInfoAvailable(int ClientId) const;
-	bool ShouldRenderWeaponSwitchAnim(int ClientId) const;
+	bool ShouldRenderWeaponAnimation(int ClientId) const;
 
 	int m_WeaponEmoteQuadContainerIndex;
 	int m_aWeaponSpriteMuzzleQuadContainerIndex[NUM_WEAPONS];

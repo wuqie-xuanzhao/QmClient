@@ -3700,6 +3700,7 @@ vec2 CChat::GetChatMousePos() const
 void CChat::RenderTranslateButton(const CUIRect &ButtonRect)
 {
 	using namespace FontIcons;
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 
 	m_TranslateButton.m_X = ButtonRect.x;
 	m_TranslateButton.m_Y = ButtonRect.y;
@@ -4017,6 +4018,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupChatLineMenu(void *pContext, CUIRect V
 	constexpr float IconWidth = 21.0f;
 
 	auto DoEntry = [&](CButtonContainer *pButton, const char *pIcon, const char *pText, bool Enabled, ColorRGBA AccentColor) {
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		CUIRect Button, IconRect, LabelRect;
 		View.HSplitTop(ButtonHeight, &Button, &View);
 		View.HSplitTop(ButtonSpacing, nullptr, &View);
@@ -4114,6 +4116,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	// 自动入站翻译开关
 	{
 		CUIRect ToggleRect;
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		View.HSplitTop(ToggleHeight, &ToggleRect, &View);
 
 		const bool InboundEnabled = g_Config.m_QmTranslateAuto != 0;
@@ -4136,6 +4139,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	// 自动出站翻译开关
 	{
 		CUIRect ToggleRect;
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		View.HSplitTop(ToggleHeight, &ToggleRect, &View);
 
 		const bool OutboundEnabled = g_Config.m_QmTranslateAutoOutgoing != 0;

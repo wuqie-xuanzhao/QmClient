@@ -3379,7 +3379,7 @@ void CTClient::RenderMiniVoteHud(bool HudEditorPreview)
 {
 	CUIRect View = {0.0f, 60.0f, 70.0f, 35.0f};
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::Voting, View);
-	Ui()->RenderGaussianBlur(View);
+	Ui()->RenderGaussianBlur(View, 1.0f, HudEditorScope.m_Corners, 3.0f);
 	View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), HudEditorScope.m_Corners, 3.0f);
 	View.Margin(3.0f, &View);
 

@@ -8327,7 +8327,7 @@ public:
 
 	[[nodiscard]] bool Cmd_RenderTarget_Draw(const CCommandBuffer::SCommand_RenderTarget_Draw *pCommand)
 	{
-		if(pCommand->m_TargetId < 0 || (size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || pCommand->m_W <= 0.0f || pCommand->m_H <= 0.0f)
+		if(pCommand->m_TargetId < 0 || (size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || pCommand->m_W <= 0.0f || pCommand->m_H <= 0.0f || pCommand->m_pVertices == nullptr || pCommand->m_PrimCount == 0)
 			return true;
 		SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
 		if(Target.m_Image == VK_NULL_HANDLE || Target.m_aVKStandardTexturedDescrSets[0].m_Descriptor == VK_NULL_HANDLE)
@@ -8342,23 +8342,6 @@ public:
 			Target.m_Layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}
 
-		CCommandBuffer::SVertex aVertices[4];
-		const float X0 = pCommand->m_X;
-		const float Y0 = pCommand->m_Y;
-		const float X1 = pCommand->m_X + pCommand->m_W;
-		const float Y1 = pCommand->m_Y + pCommand->m_H;
-		aVertices[0].m_Pos = vec2(X0, Y0);
-		aVertices[0].m_Tex = vec2(0.0f, 1.0f);
-		aVertices[1].m_Pos = vec2(X1, Y0);
-		aVertices[1].m_Tex = vec2(1.0f, 1.0f);
-		aVertices[2].m_Pos = vec2(X1, Y1);
-		aVertices[2].m_Tex = vec2(1.0f, 0.0f);
-		aVertices[3].m_Pos = vec2(X0, Y1);
-		aVertices[3].m_Tex = vec2(0.0f, 0.0f);
-		const uint8_t Alpha = (uint8_t)(pCommand->m_Alpha * 255.0f + 0.5f);
-		for(auto &Vertex : aVertices)
-			Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, Alpha};
-
 		SRenderCommandExecuteBuffer ExecBuffer;
 		ExecBuffer.m_ThreadIndex = 0;
 		ExecBufferFillDynamicStates(pCommand->m_State, ExecBuffer);
@@ -8372,7 +8355,7 @@ public:
 		VkBuffer VKBuffer;
 		SDeviceMemoryBlock VKBufferMem;
 		size_t BufferOff = 0;
-		if(!CreateStreamVertexBuffer(0, VKBuffer, VKBufferMem, BufferOff, aVertices, sizeof(aVertices)))
+		if(!CreateStreamVertexBuffer(0, VKBuffer, VKBufferMem, BufferOff, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex) * pCommand->m_PrimCount * 4))
 			return false;
 		std::array<VkBuffer, 1> aVertexBuffers = {VKBuffer};
 		std::array<VkDeviceSize, 1> aOffsets = {(VkDeviceSize)BufferOff};
@@ -8383,7 +8366,7 @@ public:
 		std::array<float, (size_t)4 * 2> m;
 		GetStateMatrix(pCommand->m_State, m);
 		vkCmdPushConstants(CommandBuffer, PipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos), m.data());
-		vkCmdDrawIndexed(CommandBuffer, 6, 1, 0, 0, 0);
+		vkCmdDrawIndexed(CommandBuffer, pCommand->m_PrimCount * 6, 1, 0, 0, 0);
 		ResetDrawCommandState(0);
 		return true;
 	}

@@ -5,9 +5,51 @@
 
 #include <game/client/QmUi/QmAnim.h>
 #include <game/client/QmUi/QmAnimCurves.h>
+#include <game/client/components/emoticon.h>
 
 #include <cmath>
 #include <gtest/gtest.h>
+
+TEST(QmLocalBlink, StaysActiveForExactlyFourGameTicks)
+{
+	SQmLocalBlinkState State;
+	EXPECT_FALSE(State.IsActive(99));
+
+	State.Trigger(100);
+	EXPECT_TRUE(State.IsActive(100));
+	EXPECT_TRUE(State.IsActive(103));
+	EXPECT_FALSE(State.IsActive(104));
+}
+
+TEST(QmLocalBlink, RetriggerRestartsTheFourTickWindow)
+{
+	SQmLocalBlinkState State;
+	State.Trigger(100);
+	State.Trigger(102);
+
+	EXPECT_TRUE(State.IsActive(105));
+	EXPECT_FALSE(State.IsActive(106));
+}
+
+TEST(QmLocalBlink, ResetCancelsAnActiveBlink)
+{
+	SQmLocalBlinkState State;
+	State.Trigger(100);
+	ASSERT_TRUE(State.IsActive(100));
+
+	State.Reset();
+	EXPECT_FALSE(State.IsActive(100));
+}
+
+TEST(QmLocalBlink, KeepsMainAndDummyTimelinesIndependent)
+{
+	SQmLocalBlinkState MainState;
+	SQmLocalBlinkState DummyState;
+	MainState.Trigger(100);
+
+	EXPECT_TRUE(MainState.IsActive(100));
+	EXPECT_FALSE(DummyState.IsActive(100));
+}
 
 namespace
 {

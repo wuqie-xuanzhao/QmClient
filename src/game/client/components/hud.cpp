@@ -1547,7 +1547,7 @@ void CHud::RenderScoreHud()
 				}
 				if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
 				{
-					Ui()->RenderGaussianBlur({m_Width - ScoreWidthMax - ImageSize - 2 * Split, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split, ScoreSingleBoxHeight});
+					Ui()->RenderGaussianBlur({m_Width - ScoreWidthMax - ImageSize - 2 * Split, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split, ScoreSingleBoxHeight}, 1.0f, ScoreHudCorners, 5.0f);
 					Graphics()->TextureClear();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 					Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
@@ -1733,7 +1733,7 @@ void CHud::RenderScoreHud()
 				}
 				if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
 				{
-					Ui()->RenderGaussianBlur({m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split + PosSize, ScoreSingleBoxHeight});
+					Ui()->RenderGaussianBlur({m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split + PosSize, ScoreSingleBoxHeight}, 1.0f, ScoreHudCorners, 5.0f);
 					Graphics()->TextureClear();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 					Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
@@ -4690,7 +4690,7 @@ void CHud::RenderMediaIsland()
 	const float TimerRaceFontSize = std::min(TimerCapsule.m_FontSize, TimerRows.m_RaceH);
 	const float TimerRaceTextWidth = TextRender()->TextWidth(TimerRaceFontSize, TimerCapsule.m_aText);
 	const float TimerTextX = TimerBoxX + std::max(0.0f, (TimerCapsule.m_BoxW - TimerRaceTextWidth) * 0.5f);
-	const float TimerRaceTextY = ShowTimerSecondaryLine ? TimerRows.m_RaceY + (TimerRows.m_RaceH - TimerRaceFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f) : TimerCapsule.m_TextY;
+	const float TimerRaceTextY = ShowTimerSecondaryLine ? TimerRows.m_RaceY + (TimerRows.m_RaceH - TimerRaceFontSize) * 0.5f : TimerCapsule.m_TextY;
 	const float CheckpointFontSize = std::min(TimerCapsule.m_FontSize * 0.40f, TimerRows.m_CheckpointH);
 	const float CheckpointTextY = TimerRows.m_CheckpointY + (TimerRows.m_CheckpointH - CheckpointFontSize) * 0.5f - QmHudMediaIslandScaled(0.5f);
 	ColorRGBA IslandBackgroundColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmHudIslandBgColor));
@@ -5970,7 +5970,7 @@ void CHud::RenderKeyStatus()
 	if(Layout.m_H <= 0.0f)
 		return;
 
-	Ui()->RenderGaussianBlur({Layout.m_X, Layout.m_Y, Layout.m_W, Layout.m_H});
+	Ui()->RenderGaussianBlur({Layout.m_X, Layout.m_Y, Layout.m_W, Layout.m_H}, 1.0f, IGraphics::CORNER_ALL, ui_token::radius::BASE);
 	Graphics()->DrawRect(Layout.m_X, Layout.m_Y, Layout.m_W, Layout.m_H, ui_token::color::SURFACE_GLASS, IGraphics::CORNER_ALL, ui_token::radius::BASE);
 
 	float TextX = Layout.m_X + Layout.m_PaddingX;
@@ -6224,7 +6224,7 @@ void CHud::RenderMovementInformation()
 	m_MovementInfoBoxH = BoxHeight;
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::MovementInfo, {StartX, StartY, BoxWidth, BoxHeight});
 
-	Ui()->RenderGaussianBlur({StartX, StartY, BoxWidth, BoxHeight});
+	Ui()->RenderGaussianBlur({StartX, StartY, BoxWidth, BoxHeight}, 1.0f, HudEditorScope.m_Corners, ui_token::radius::BASE);
 	Graphics()->DrawRect(StartX, StartY, BoxWidth, BoxHeight, ui_token::color::SURFACE_GLASS, HudEditorScope.m_Corners, ui_token::radius::BASE);
 
 	const bool HasMovementContent = ShowMovementInfo && MovementBoxHeight > 0.0f;

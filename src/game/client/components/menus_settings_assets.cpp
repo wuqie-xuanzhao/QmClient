@@ -5872,6 +5872,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			ItemRect.Margin(Margin / 2, &ItemRect);
 			if(!Item.m_Visible)
 				continue;
+			auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 			if(FirstVisibleIndex < 0)
 				FirstVisibleIndex = (int)i;
 			LastVisibleIndex = (int)i;
@@ -7074,6 +7075,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					ItemRect.Margin(Margin / 2, &ItemRect);
 					if(!Item.m_Visible)
 						continue;
+					auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 					if(FirstVisibleLocalIndex < 0)
 						FirstVisibleLocalIndex = (int)LocalIndex;
 					CPerfTimer CardLayoutTextTimer;
@@ -7198,6 +7200,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					ItemRect.Margin(Margin / 2, &ItemRect);
 					if(!Item.m_Visible)
 						continue;
+					auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 					const int VisibleDownloadableIndex = static_cast<int>(DownloadableIndex);
 					if(FirstVisibleDownloadableIndex < 0)
