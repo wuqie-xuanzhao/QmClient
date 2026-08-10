@@ -958,6 +958,9 @@ Black
 Blend mode
 == Tryb mieszania
 
+Blink the active local tee
+== Mignij aktywną lokalną postacią
+
 Block enemy chat
 == Blokuj czat wrogów
 
@@ -3222,6 +3225,9 @@ Input switch
 
 Insane
 == Insane
+
+Installing update. Please wait...
+== Instalowanie aktualizacji. Proszę czekać...
 
 Interface
 == Interfejs

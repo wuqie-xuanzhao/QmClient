@@ -266,6 +266,24 @@ jobs:
           fi
           ls -lah dist
 
+      - name: Verify Windows update package contents
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+
+          package = Path("dist/QmClient-windows.zip")
+          required = {"DDNet.exe", "DDNet-Server.exe", "QmClient-Updater.exe"}
+          with zipfile.ZipFile(package) as archive:
+              basenames = [Path(name).name for name in archive.namelist() if not name.endswith("/")]
+          missing = sorted(name for name in required if basenames.count(name) != 1)
+          if missing:
+              raise SystemExit(f"Windows package is missing or duplicates required files: {missing}")
+          print("Verified Windows automatic update executables")
+          PY
+
       - name: Upload packaged artifact
         uses: actions/upload-artifact@v6
         with:
@@ -310,15 +328,17 @@ jobs:
         if: always()
         shell: bash
         run: |
-          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform**: ${{ matrix.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **OS**: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Type**: ${{ env.BUILD_TYPE }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Build Summary"
+            echo "- **Platform**: ${{ matrix.name }}"
+            echo "- **OS**: ${{ matrix.os }}"
+            echo "- **Build Type**: ${{ env.BUILD_TYPE }}"
+            echo "- **Status**: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ runner.os }}" = "Windows" ]; then
-            echo "- **Artifacts**: QmClient-windows.zip, QmClient-windows.7z" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifacts**: QmClient-windows.zip, QmClient-windows.7z" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- **Artifact**: ${{ matrix.output_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifact**: ${{ matrix.output_name }}" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Show ccache statistics (Linux/macOS)
@@ -578,10 +598,12 @@ jobs:
       - name: Build summary
         if: always()
         run: |
-          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform**: Android" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Artifacts**: QmClient-android.apk, QmClient-android.aab" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Build Summary"
+            echo "- **Platform**: Android"
+            echo "- **Status**: ${{ job.status }}"
+            echo "- **Artifacts**: QmClient-android.apk, QmClient-android.aab"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Show ccache statistics (Android)
         if: always()
@@ -611,6 +633,12 @@ jobs:
       - name: List release assets
         run: ls -lah release-assets
 
+      - name: Prepare Windows update signing environment
+        run: |
+          set -euo pipefail
+          python3 -m venv .update-signing-venv
+          .update-signing-venv/bin/python -m pip install cryptography==45.0.6
+
       - name: Sign Windows automatic update assets
         env:
           QM_UPDATE_ED25519_PRIVATE_KEY: ${{ secrets.QM_UPDATE_ED25519_PRIVATE_KEY }}
@@ -620,8 +648,6 @@ jobs:
             echo "Required secret QM_UPDATE_ED25519_PRIVATE_KEY is not configured"
             exit 1
           fi
-          python3 -m venv .update-signing-venv
-          .update-signing-venv/bin/python -m pip install cryptography==45.0.6
           TAG_VERSION="${GITHUB_REF#refs/tags/}"
           .update-signing-venv/bin/python qmclient_scripts/sign_update_release.py \
             --package release-assets/QmClient-windows.zip \
@@ -644,6 +670,8 @@ jobs:
       - name: Create release and upload desktop assets
         uses: softprops/action-gh-release@2bb465e97f322d3cb2a965294d483e0d26a67aa9  # v3.0.1
         with:
+          draft: false
+          prerelease: false
           generate_release_notes: false
           body_path: release-assets/release-notes.md
           files: |

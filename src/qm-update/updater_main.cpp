@@ -7,30 +7,20 @@
 #include <windows.h>
 
 #include <commctrl.h>
+#include <qm-update/updater_arguments.h>
 #include <shellapi.h>
+#include <winver.h>
 
-#include <algorithm>
 #include <atomic>
-#include <cctype>
 #include <iterator>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace
 {
 	constexpr wchar_t WINDOW_CLASS[] = L"QmClientUpdateWindow";
 	constexpr wchar_t WINDOW_TITLE[] = L"QmClient 更新";
-
-	struct SArguments
-	{
-		DWORD m_ParentPid = 0;
-		std::wstring m_Package;
-		std::wstring m_PackageSignature;
-		std::wstring m_Manifest;
-		std::wstring m_ManifestSignature;
-		std::wstring m_Install;
-		bool m_Elevated = false;
-	};
 
 	HWND g_hStatus = nullptr;
 	HWND g_hProgress = nullptr;
@@ -96,77 +86,15 @@ namespace
 		return Length > 0 && Length < std::size(aPath) ? std::wstring(aPath, Length) : std::wstring();
 	}
 
-	bool ParseArguments(SArguments &Arguments)
+	bool ParseArguments(QmUpdate::SArguments &Arguments)
 	{
 		int Argc = 0;
 		wchar_t **ppArgv = CommandLineToArgvW(GetCommandLineW(), &Argc);
 		if(!ppArgv)
 			return false;
-		bool Valid = true;
-		for(int Index = 1; Index < Argc && Valid; ++Index)
-		{
-			const std::wstring Name = ppArgv[Index];
-			const auto ReadValue = [&](std::wstring &Value) {
-				if(Index + 1 >= Argc)
-					return false;
-				Value = ppArgv[++Index];
-				return !Value.empty();
-			};
-			if(Name == L"--parent-pid")
-			{
-				std::wstring Value;
-				if(!ReadValue(Value))
-				{
-					Valid = false;
-					continue;
-				}
-				try
-				{
-					size_t ParsedLength = 0;
-					const unsigned long Pid = std::stoul(Value, &ParsedLength);
-					if(ParsedLength != Value.size() || Pid == 0 || Pid > MAXDWORD)
-						Valid = false;
-					else
-						Arguments.m_ParentPid = static_cast<DWORD>(Pid);
-				}
-				catch(...)
-				{
-					Valid = false;
-				}
-			}
-			else if(Name == L"--package")
-			{
-				if(!ReadValue(Arguments.m_Package))
-					Valid = false;
-			}
-			else if(Name == L"--package-signature")
-			{
-				if(!ReadValue(Arguments.m_PackageSignature))
-					Valid = false;
-			}
-			else if(Name == L"--manifest")
-			{
-				if(!ReadValue(Arguments.m_Manifest))
-					Valid = false;
-			}
-			else if(Name == L"--manifest-signature")
-			{
-				if(!ReadValue(Arguments.m_ManifestSignature))
-					Valid = false;
-			}
-			else if(Name == L"--install")
-			{
-				if(!ReadValue(Arguments.m_Install))
-					Valid = false;
-			}
-			else if(Name == L"--qm-elevated")
-				Arguments.m_Elevated = true;
-			else
-				Valid = false;
-		}
+		std::vector<std::wstring> ArgumentsList(ppArgv, ppArgv + Argc);
 		LocalFree(ppArgv);
-		return Valid && Arguments.m_ParentPid != 0 && !Arguments.m_Package.empty() && !Arguments.m_PackageSignature.empty() &&
-		       !Arguments.m_Manifest.empty() && !Arguments.m_ManifestSignature.empty() && !Arguments.m_Install.empty();
+		return QmUpdate::ParseArguments(ArgumentsList, Arguments);
 	}
 
 	std::wstring QuoteArgument(const std::wstring &Value)
@@ -192,26 +120,24 @@ namespace
 		return Result;
 	}
 
-	bool RelaunchElevated()
+	bool RelaunchElevated(const QmUpdate::SArguments &Arguments)
 	{
 		const std::wstring Executable = CurrentExecutablePath();
 		if(Executable.empty())
 			return false;
-		int Argc = 0;
-		wchar_t **ppArgv = CommandLineToArgvW(GetCommandLineW(), &Argc);
-		if(!ppArgv)
-			return false;
-		std::wstring Parameters;
-		for(int Index = 1; Index < Argc; ++Index)
-		{
-			if(!Parameters.empty())
-				Parameters.push_back(L' ');
-			Parameters += QuoteArgument(ppArgv[Index]);
-		}
-		if(!Parameters.empty())
+		std::wstring Parameters = L"--parent-pid 0";
+		const auto AppendPath = [&](const wchar_t *pName, const std::wstring &Value) {
 			Parameters.push_back(L' ');
-		Parameters += L"--qm-elevated";
-		LocalFree(ppArgv);
+			Parameters += pName;
+			Parameters.push_back(L' ');
+			Parameters += QuoteArgument(Value);
+		};
+		AppendPath(L"--package", Arguments.m_Package);
+		AppendPath(L"--package-signature", Arguments.m_PackageSignature);
+		AppendPath(L"--manifest", Arguments.m_Manifest);
+		AppendPath(L"--manifest-signature", Arguments.m_ManifestSignature);
+		AppendPath(L"--install", Arguments.m_Install);
+		Parameters += L" --qm-elevated";
 		SHELLEXECUTEINFOW Info{};
 		Info.cbSize = sizeof(Info);
 		Info.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -266,13 +192,6 @@ namespace
 		return Window;
 	}
 
-	bool IsPermissionError(const std::string &Error)
-	{
-		std::string Lower = Error;
-		std::transform(Lower.begin(), Lower.end(), Lower.begin(), [](unsigned char Character) { return static_cast<char>(std::tolower(Character)); });
-		return Lower.find("access is denied") != std::string::npos || Lower.find("permission denied") != std::string::npos || Lower.find("os error 5") != std::string::npos;
-	}
-
 	bool ToUtf8(const std::wstring &Value, std::string &Result)
 	{
 		const int Length = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, Value.c_str(), -1, nullptr, 0, nullptr, nullptr);
@@ -285,6 +204,36 @@ namespace
 		return true;
 	}
 
+	bool ReadInstalledVersion(const std::wstring &InstallPath, std::string &Version)
+	{
+		const std::wstring ClientPath = std::filesystem::path(InstallPath) / L"DDNet.exe";
+		DWORD Handle = 0;
+		const DWORD InfoSize = GetFileVersionInfoSizeW(ClientPath.c_str(), &Handle);
+		if(InfoSize == 0)
+			return false;
+		std::vector<unsigned char> vInfo(InfoSize);
+		if(!GetFileVersionInfoW(ClientPath.c_str(), 0, InfoSize, vInfo.data()))
+			return false;
+		struct SLanguageAndCodePage
+		{
+			WORD m_Language;
+			WORD m_CodePage;
+		};
+		SLanguageAndCodePage *pTranslation = nullptr;
+		UINT TranslationSize = 0;
+		if(!VerQueryValueW(vInfo.data(), L"\\VarFileInfo\\Translation", reinterpret_cast<void **>(&pTranslation), &TranslationSize) ||
+			TranslationSize < sizeof(*pTranslation))
+			return false;
+		wchar_t aQuery[64];
+		if(swprintf_s(aQuery, L"\\StringFileInfo\\%04x%04x\\ProductVersion", pTranslation->m_Language, pTranslation->m_CodePage) < 0)
+			return false;
+		wchar_t *pValue = nullptr;
+		UINT ValueSize = 0;
+		if(!VerQueryValueW(vInfo.data(), aQuery, reinterpret_cast<void **>(&pValue), &ValueSize) || pValue == nullptr || ValueSize <= 1)
+			return false;
+		return ToUtf8(std::wstring(pValue, ValueSize - 1), Version);
+	}
+
 	void CleanupPath(const std::wstring &Path, bool DelayIfLocked)
 	{
 		if(Path.empty())
@@ -293,7 +242,7 @@ namespace
 			MoveFileExW(Path.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
 	}
 
-	void CleanupTemporaryFiles(const SArguments &Arguments)
+	void CleanupTemporaryFiles(const QmUpdate::SArguments &Arguments)
 	{
 		CleanupPath(Arguments.m_Package, false);
 		CleanupPath(Arguments.m_PackageSignature, false);
@@ -307,8 +256,9 @@ int WINAPI wWinMain(HINSTANCE Instance, HINSTANCE, PWSTR, int)
 {
 	INITCOMMONCONTROLSEX CommonControls{sizeof(CommonControls), ICC_PROGRESS_CLASS};
 	InitCommonControlsEx(&CommonControls);
-	SArguments Arguments;
-	if(!ParseArguments(Arguments))
+	QmUpdate::SArguments Arguments;
+	const std::wstring ExecutablePath = CurrentExecutablePath();
+	if(!ParseArguments(Arguments) || ExecutablePath.empty() || !QmUpdate::ValidateSessionPaths(Arguments, ExecutablePath))
 	{
 		MessageBoxW(nullptr, L"更新参数无效。", WINDOW_TITLE, MB_OK | MB_ICONERROR);
 		return 2;
@@ -335,6 +285,7 @@ int WINAPI wWinMain(HINSTANCE Instance, HINSTANCE, PWSTR, int)
 	std::string Manifest;
 	std::string ManifestSignature;
 	std::string Install;
+	std::string CurrentVersion;
 	if(!ToUtf8(Arguments.m_Package, Package) || !ToUtf8(Arguments.m_PackageSignature, PackageSignature) ||
 		!ToUtf8(Arguments.m_Manifest, Manifest) || !ToUtf8(Arguments.m_ManifestSignature, ManifestSignature) ||
 		!ToUtf8(Arguments.m_Install, Install))
@@ -346,10 +297,19 @@ int WINAPI wWinMain(HINSTANCE Instance, HINSTANCE, PWSTR, int)
 		DestroyWindow(Window);
 		return 1;
 	}
+	if(!ReadInstalledVersion(Arguments.m_Install, CurrentVersion))
+	{
+		SetStatus(L"无法验证已安装的客户端。", false);
+		MessageBoxW(Window, L"安装目录中没有可验证的 QmClient 客户端，更新已取消。", WINDOW_TITLE, MB_OK | MB_ICONERROR);
+		CleanupTemporaryFiles(Arguments);
+		g_AllowClose = true;
+		DestroyWindow(Window);
+		return 1;
+	}
 	std::atomic<bool> Finished = false;
 	bool Success = false;
 	std::thread Worker([&] {
-		Success = qm_update_apply(Package.c_str(), PackageSignature.c_str(), Manifest.c_str(), ManifestSignature.c_str(), Install.c_str(), aError, sizeof(aError));
+		Success = qm_update_apply(Package.c_str(), PackageSignature.c_str(), Manifest.c_str(), ManifestSignature.c_str(), Install.c_str(), CurrentVersion.c_str(), aError, sizeof(aError));
 		Finished.store(true, std::memory_order_release);
 	});
 	while(!Finished.load(std::memory_order_acquire))
@@ -358,7 +318,7 @@ int WINAPI wWinMain(HINSTANCE Instance, HINSTANCE, PWSTR, int)
 		Sleep(20);
 	}
 	Worker.join();
-	if(!Success && !Arguments.m_Elevated && IsPermissionError(aError) && RelaunchElevated())
+	if(!Success && !Arguments.m_Elevated && QmUpdate::IsPermissionError(aError) && RelaunchElevated(Arguments))
 	{
 		DestroyWindow(Window);
 		return 0;

@@ -31,7 +31,9 @@ EXCEPTIONS = [
     "src/tools/config_common.h",
 ]
 
-GUARD_OVERRIDES = {}
+GUARD_OVERRIDES = {
+    "src/qm-update/updater_arguments.h": "QM_UPDATE_UPDATER_ARGUMENTS_H",
+}
 
 QMCLIENT_DIRS = [
     "src/game/client/components/qmclient/",

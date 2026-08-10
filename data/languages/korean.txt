@@ -958,6 +958,9 @@ Black
 Blend mode
 == 혼합 모드
 
+Blink the active local tee
+== 활성 로컬 캐릭터를 깜박이게 합니다
+
 Block enemy chat
 == 적대 플레이어 채팅 차단
 
@@ -3222,6 +3225,9 @@ Input switch
 
 Insane
 == 인세인
+
+Installing update. Please wait...
+== 업데이트 설치 중입니다. 잠시 기다려 주세요...
 
 Interface
 == 인터페이스

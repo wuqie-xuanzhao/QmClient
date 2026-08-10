@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -26,6 +27,11 @@ SPEC.loader.exec_module(SIGN_UPDATE_RELEASE)
 
 class SignUpdateReleaseTest(unittest.TestCase):
     PRIVATE_SEED = bytes(range(32))
+    PUBLIC_KEY = (
+        Ed25519PrivateKey.from_private_bytes(PRIVATE_SEED)
+        .public_key()
+        .public_bytes(Encoding.Raw, PublicFormat.Raw)
+    )
 
     def _write_package(self, path: Path, *, include_server: bool = True) -> None:
         files = {
@@ -50,6 +56,7 @@ class SignUpdateReleaseTest(unittest.TestCase):
                 version="v2.80.0",
                 private_key_base64=base64.b64encode(self.PRIVATE_SEED).decode(),
                 output_dir=root,
+                expected_public_key=self.PUBLIC_KEY,
             )
 
             manifest_bytes = outputs.manifest.read_bytes()
@@ -96,10 +103,16 @@ class SignUpdateReleaseTest(unittest.TestCase):
                     version="2.80.0",
                     private_key_base64=base64.b64encode(self.PRIVATE_SEED).decode(),
                     output_dir=root,
+                    expected_public_key=self.PUBLIC_KEY,
                 )
 
     def test_rejects_unstable_or_oversized_version(self) -> None:
-        for version in ("2.80.0-rc1", "2", "2." + "1" * 32):
+        for version in (
+            "2.80.0-rc1",
+            "2",
+            "2.2147483648",
+            "2." + "1" * 32,
+        ):
             with self.subTest(version=version):
                 with self.assertRaises(ValueError):
                     SIGN_UPDATE_RELEASE._normalize_version(version)
@@ -131,6 +144,22 @@ class SignUpdateReleaseTest(unittest.TestCase):
                 mock.patch.object(SIGN_UPDATE_RELEASE, "MAX_MANIFEST_SIZE", 1),
                 self.assertRaisesRegex(ValueError, "manifest exceeds"),
             ):
+                SIGN_UPDATE_RELEASE.sign_release(
+                    package=package,
+                    version="2.80.0",
+                    private_key_base64=base64.b64encode(self.PRIVATE_SEED).decode(),
+                    output_dir=root,
+                    expected_public_key=self.PUBLIC_KEY,
+                )
+
+    def test_rejects_private_key_that_does_not_match_embedded_public_key(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="qm-update-key-") as temp_dir:
+            root = Path(temp_dir)
+            package = root / "QmClient-windows.zip"
+            self._write_package(package)
+            with self.assertRaisesRegex(ValueError, "does not match"):
                 SIGN_UPDATE_RELEASE.sign_release(
                     package=package,
                     version="2.80.0",
@@ -168,11 +197,22 @@ class SignUpdateReleaseTest(unittest.TestCase):
         workflow = (REPO_ROOT / ".github/workflows/build.yml").read_text(
             encoding="utf-8"
         )
+        prepare_step = workflow.index("Prepare Windows update signing environment")
         signing_step = workflow.index("Sign Windows automatic update assets")
         release_step = workflow.index("Create release and upload desktop assets")
+        self.assertLess(prepare_step, signing_step)
         self.assertLess(signing_step, release_step)
-        self.assertIn("secrets.QM_UPDATE_ED25519_PRIVATE_KEY", workflow)
+        self.assertNotIn(
+            "secrets.QM_UPDATE_ED25519_PRIVATE_KEY",
+            workflow[prepare_step:signing_step],
+        )
+        self.assertIn(
+            "secrets.QM_UPDATE_ED25519_PRIVATE_KEY",
+            workflow[signing_step:release_step],
+        )
         self.assertIn("--normalize-package", workflow)
+        self.assertIn("Verify Windows update package contents", workflow)
+        self.assertIn("prerelease: false", workflow[release_step:])
         for asset in (
             "QmClient-windows.zip",
             "QmClient-windows.zip.sig",
@@ -189,7 +229,7 @@ class SignUpdateReleaseTest(unittest.TestCase):
         self.assertIn("rust_qm_update", updater_block)
         self.assertNotIn("rust_engine_shared", updater_block)
         self.assertIn('rust_target STREQUAL "qm_update"', cmake)
-        self.assertIn('CMAKE_STATIC_LIBRARY_PREFIX}qm_update', cmake)
+        self.assertIn("CMAKE_STATIC_LIBRARY_PREFIX}qm_update", cmake)
         update_library = (REPO_ROOT / "src/qm-update/lib.rs").read_text(
             encoding="utf-8"
         )

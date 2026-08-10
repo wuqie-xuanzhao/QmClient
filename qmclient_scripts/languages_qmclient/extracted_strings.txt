@@ -318,6 +318,7 @@ Bind Wheel
 Bind Wheel Key
 Black
 Blend mode
+Blink the active local tee
 Block enemy chat
 Blue
 Blue team
@@ -1073,6 +1074,7 @@ Input overlay
 Input overlay display
 Input switch
 Insane
+Installing update. Please wait...
 Interface
 Intermediate
 Internet

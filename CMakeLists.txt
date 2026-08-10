@@ -3633,6 +3633,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_hud_media_island_logic_test.cpp
     qm_hud_notifications_test.cpp
     qm_new_ui_menu_branch_test.cpp
+    qm_update_arguments_test.cpp
     qm_lyrics_cache_test.cpp
     qm_lyrics_clock_test.cpp
     qm_lyrics_match_test.cpp

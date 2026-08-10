@@ -958,6 +958,9 @@ Black
 Blend mode
 == ブレンドモード
 
+Blink the active local tee
+== 操作中のローカルキャラクターを点滅させる
+
 Block enemy chat
 == 敵対プレイヤーのチャットをブロック
 
@@ -3222,6 +3225,9 @@ Input switch
 
 Insane
 == Insane
+
+Installing update. Please wait...
+== アップデートをインストールしています。お待ちください...
 
 Interface
 == インターフェース

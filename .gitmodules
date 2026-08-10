@@ -1,6 +1,6 @@
 [submodule "ddnet-libs"]
 	path = ddnet-libs
-	url = https://github.com/wuqie-xuanzhao/ddnet-libs
+	url = https://github.com/wxj881027/ddnet-libs.git
 	shallow = true
 [submodule "docs/dyl/QmClient_docs"]
 	path = docs/dyl/QmClient_docs

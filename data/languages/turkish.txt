@@ -958,6 +958,9 @@ Black
 Blend mode
 == Karışım modu
 
+Blink the active local tee
+== Etkin yerel karakteri yanıp söndür
+
 Block enemy chat
 == Düşman sohbetini engelle
 
@@ -3222,6 +3225,9 @@ Input switch
 
 Insane
 == Çılgın
+
+Installing update. Please wait...
+== Güncelleme yükleniyor. Lütfen bekleyin...
 
 Interface
 == Arayüz
