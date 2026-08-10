@@ -162,7 +162,7 @@ TEST(QmChatMessageMerge, SettingIsDefaultOnLocalizedInDreamFeaturesAndVersioned)
 	EXPECT_NE(Menus.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmMessageMerge, \"Message merging\", Localize(\"Message merging\")", MiniFeatures), std::string::npos);
 	EXPECT_NE(Translations.find("key = \"Message merging\""), std::string::npos);
 	EXPECT_NE(Translations.find("simplified_chinese = \"消息合并\""), std::string::npos);
-	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.31\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.33\""), std::string::npos);
 }
 
 TEST(QmWarListEnemyChat, FilteringKeepsChatLogPersistenceIndependent)
