@@ -1022,7 +1022,6 @@ Distant line opacity decay per line (%)
 Distant line shrink per line (%)
 Do not auto-show server info on entering map
 Do not predict other players when frozen
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
 Do not set, used to mark official tutorial server
 Do not show Tees visible on screen
 Do not translate server messages
@@ -1243,6 +1242,7 @@ Enable speedrun timer
 Enable squishy Tee deformation
 Enable status bar
 Enable stereo positioning
+Enable switch countdown
 Enable system media control
 Enable system media lyrics
 Enable system media transport control integration
@@ -2102,6 +2102,7 @@ Menu opacity (0-100)
 Menu opened. Press Esc key again to close menu.
 Menu option - normal
 Menu option - selected
+Merge consecutive identical player messages within 2 seconds
 Message color
 Message displayed to players on join.
 Message to reply when game minimized
@@ -2444,7 +2445,6 @@ Override Entity Alpha for Unfreeze Tiles (0-100)
 Override Entry
 Override Freeze Tile Entity Alpha (0-100)
 Override Group
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
 Override Selected
 Overview
 Overwrite clan even if empty
@@ -3200,7 +3200,6 @@ Show current and next lyric lines on HUD
 Show daily message to client
 Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
 Show DDNet map finishes in server browser
 Show DDRace HUD
 Show death tile outlines
@@ -3640,6 +3639,7 @@ Swap is not available on forced solo servers.
 Swap option color
 Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
 Switch
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 Switch failed
 Switch interval
 Switch opacity
@@ -4358,6 +4358,9 @@ Zoom to current mouse target
 ⚠️ LibreTranslate API Key not set
 ⚠️ LLM API Key not configured
 ⚠️ Tencent Cloud API not configured
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
 [Assets editor blend mode]	Multiply
 [Assets editor blend mode]	Normal
 [Assets editor blend mode]	Overlay
@@ -5190,11 +5193,11 @@ Zoom to current mouse target
 [Graphics error]	An error during command recording occurred. Try to update your GPU drivers.
 [Graphics error]	Could not initialize the given graphics backend, reverting to the default backend now.
 [Graphics error]	Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
-[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 [Graphics error]	Failed to swap framebuffers. Try to update your GPU drivers.
 [Graphics error]	Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
 [Graphics error]	Submitting the render commands failed. Try to update your GPU drivers.
-[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 [Hammer Mode]	Normal
 [Hammer Mode]	Rotate with cursor
 [Hammer Mode]	Rotate with cursor like gun

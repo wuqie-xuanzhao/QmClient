@@ -124,6 +124,7 @@ static constexpr int64_t gs_HangTimeoutSeconds = 10;
 static constexpr const char *gs_pQmCrashDumpDir = "dumps/QmClient_Crash";
 static constexpr const char *gs_pQmLifecycleMarkerFile = "qmclient/lifecycle_pending.marker";
 static constexpr const char *gs_pQmGraphicsRecoveryStateFile = "qmclient/graphics_recovery.marker";
+static bool gs_aLoadedPreviousConfigPath[ConfigDomain::NUM] = {};
 
 struct SQmLatestCrashReport
 {
@@ -4212,6 +4213,7 @@ void CClient::Run()
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);
+	FinishQmConfigMigration();
 
 	InitChecksum();
 	m_pConsole->InitChecksum(ChecksumData());
@@ -4574,6 +4576,19 @@ void CClient::Run()
 
 	// shutdown text render while graphics are still available
 	m_pTextRender->Shutdown();
+}
+
+void CClient::FinishQmConfigMigration()
+{
+	if(!QmConfigMigrationPending(m_pStorage))
+		return;
+
+	if(!m_pConfigManager->Save(true) || !QmFinalizeConfigMigration(m_pStorage, gs_aLoadedPreviousConfigPath))
+	{
+		AddWarning(SWarning(Localize("Error saving settings")));
+		return;
+	}
+	log_info("config", "Migrated managed client configs to the qmclient folder");
 }
 
 bool CClient::InitNetworkClient(char *pError, size_t ErrorSize)
@@ -6021,47 +6036,17 @@ static bool UnknownArgumentCallback(const char *pCommand, void *pUser)
 	return false;
 }
 
-static bool SaveUnknownCommandCallback(const char *pCommand, void *pUser)
+struct SSaveUnknownCommandContext
 {
-	CClient *pClient = static_cast<CClient *>(pUser);
-	pClient->ConfigManager()->StoreUnknownCommand(pCommand);
+	CClient *m_pClient;
+	ConfigDomain m_ConfigDomain;
+};
+
+static bool SaveUnknownDomainCommandCallback(const char *pCommand, void *pUser)
+{
+	SSaveUnknownCommandContext *pContext = static_cast<SSaveUnknownCommandContext *>(pUser);
+	pContext->m_pClient->ConfigManager()->StoreUnknownCommand(pCommand, pContext->m_ConfigDomain);
 	return true;
-}
-
-static bool EnsureConfigPathFolder(IStorage *pStorage, const char *pConfigPath)
-{
-	const char *pSlash = str_rchr(pConfigPath, '/');
-	if(pSlash == nullptr)
-		return true;
-
-	const int FolderBufferSize = static_cast<int>(pSlash - pConfigPath) + 1;
-	char aFolder[IO_MAX_PATH_LENGTH];
-	if(FolderBufferSize <= 1 || FolderBufferSize > static_cast<int>(sizeof(aFolder)))
-		return false;
-
-	str_copy(aFolder, pConfigPath, FolderBufferSize);
-	if(pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE))
-		return true;
-	return pStorage->CreateFolder(aFolder, IStorage::TYPE_SAVE) || pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE);
-}
-
-static void MigrateConfigFile(IStorage *pStorage, const CConfigDomain &ConfigDomain)
-{
-	if(ConfigDomain.m_aLegacyConfigPath == nullptr)
-		return;
-	if(pStorage->FileExists(ConfigDomain.m_aConfigPath, IStorage::TYPE_SAVE))
-		return;
-	if(!pStorage->FileExists(ConfigDomain.m_aLegacyConfigPath, IStorage::TYPE_SAVE))
-		return;
-	if(!EnsureConfigPathFolder(pStorage, ConfigDomain.m_aConfigPath))
-	{
-		log_error("client", "failed to create config folder for '%s'", ConfigDomain.m_aConfigPath);
-		return;
-	}
-	if(!pStorage->RenameFile(ConfigDomain.m_aLegacyConfigPath, ConfigDomain.m_aConfigPath, IStorage::TYPE_SAVE))
-	{
-		log_error("client", "failed to migrate config from '%s' to '%s'", ConfigDomain.m_aLegacyConfigPath, ConfigDomain.m_aConfigPath);
-	}
 }
 
 static const char *GetConfigLoadPath(IStorage *pStorage, const CConfigDomain &ConfigDomain)
@@ -6070,6 +6055,8 @@ static const char *GetConfigLoadPath(IStorage *pStorage, const CConfigDomain &Co
 		return nullptr;
 	if(pStorage->FileExists(ConfigDomain.m_aConfigPath, IStorage::TYPE_ALL))
 		return ConfigDomain.m_aConfigPath;
+	if(ConfigDomain.m_aPreviousConfigPath != nullptr && pStorage->FileExists(ConfigDomain.m_aPreviousConfigPath, IStorage::TYPE_ALL))
+		return ConfigDomain.m_aPreviousConfigPath;
 	if(ConfigDomain.m_aLegacyConfigPath != nullptr && pStorage->FileExists(ConfigDomain.m_aLegacyConfigPath, IStorage::TYPE_ALL))
 		return ConfigDomain.m_aLegacyConfigPath;
 	return nullptr;
@@ -6419,19 +6406,21 @@ int main(int argc, const char **argv)
 	pClient->InitInterfaces();
 
 	// execute config file
-	pConsole->SetUnknownCommandCallback(SaveUnknownCommandCallback, pClient);
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
-		MigrateConfigFile(pStorage, s_aConfigDomains[ConfigDomain]);
-
 		const char *pConfigPath = GetConfigLoadPath(pStorage, s_aConfigDomains[ConfigDomain]);
 		if(pConfigPath == nullptr)
 		{
 			continue;
 		}
+		if(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath != nullptr && str_comp(pConfigPath, s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath) == 0)
+			gs_aLoadedPreviousConfigPath[ConfigDomain] = true;
 
+		SSaveUnknownCommandContext UnknownCommandContext{pClient, ConfigDomain};
+		pConsole->SetUnknownCommandCallback(SaveUnknownDomainCommandCallback, &UnknownCommandContext);
 		if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))
 		{
+			pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 			char aError[2048];
 			str_format(aError, sizeof(aError), "Failed to load config from '%s'.", pConfigPath);
 			log_error("client", "%s", aError);
@@ -6439,8 +6428,8 @@ int main(int argc, const char **argv)
 			PerformAllCleanup();
 			return -1;
 		}
+		pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 	}
-	pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 
 	if(pStorage->FileExists(AUTOEXEC_CLIENT_FILE, IStorage::TYPE_ALL))
 	{

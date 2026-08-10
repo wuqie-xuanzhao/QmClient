@@ -3071,9 +3071,6 @@ Do not auto-show server info on entering map
 Do not predict other players when frozen
 == 프리즈 시 다른 플레이어 예측 안 함
 
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== 이 변수를 설정하지 말고, 대신 settings_ddnet.cfg 옆에 ddnet-serverlist-urls.cfg를 생성하여 모든 가능한 서버 목록 URL을 지정하세요
-
 Do not set, used to mark official tutorial server
 == 설정하지 마세요, 공식 튜토리얼 서버 표시용
 
@@ -3733,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == 스테레오 포지셔닝 활성화
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == 시스템 미디어 제어 활성화
@@ -6311,6 +6311,9 @@ Menu option - normal
 Menu option - selected
 == 메뉴 옵션 - 선택됨
 
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
+
 Message color
 == 메시지 색상
 
@@ -7336,9 +7339,6 @@ Override Freeze Tile Entity Alpha (0-100)
 
 Override Group
 == 그룹 재정의
-
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== 핑 추정 위치 재정의, 옵션: auto, af, as, as:cn, eu, na, oc, sa (auto, 아프리카, 아시아, 중국, 유럽, 북미, 오세아니아/호주, 남미)
 
 Override Selected
 == 선택 항목 재정의
@@ -9605,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == DDNet 설정 변수 표시
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== DDNet 맵 완료 표시 (플레이어 이름을 info.ddnet.org/info로 전송)
-
 Show DDNet map finishes in server browser
 == 서버 브라우저에서 DDNet 맵 완료 표시
 
@@ -10924,6 +10921,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 
 Switch
 == 전환
+
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 
 Switch failed
 == 전환 실패
@@ -13079,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 텐센트 클라우드 API가 구성되지 않음
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == 곱하기
@@ -13200,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 지정된 그래픽 백엔드를 초기화할 수 없습니다. 통합 그래픽 카드 드라이버가 설치되지 않았을 수 있습니다.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 초기화 중 실패했습니다. 설정 디렉토리의 settings_ddnet.cfg 에서 gfx_backend 를 OpenGL 또는 Vulkan 으로 변경한 후 다시 시도하세요.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13216,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 렌더 명령 제출에 실패했습니다. GPU 드라이버를 업데이트해 보세요.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 알 수 없는 오류입니다. 설정 디렉토리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

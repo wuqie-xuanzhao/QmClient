@@ -266,8 +266,9 @@ public:
 	static bool CalculateGaussianBlurKernel(const SGaussianBlurParams &Params, std::array<float, GAUSSIAN_BLUR_MAX_RADIUS + 1> &aWeights);
 
 	// Fixed vec4-only layout shared by the threaded command buffer, GLSL and
-	// Vulkan std140 UBO. The shader treats this as 44 consecutive vec4 values:
-	// [0..7] are common fields and every item occupies three vec4 values.
+	// Vulkan std140 UBO. The shader treats this as 45 consecutive vec4 values:
+	// [0..7] are common fields, every item occupies three vec4 values and the
+	// final value maps the SDF quad to an optional backdrop texture.
 	struct SMediaIslandSdfParams
 	{
 		static constexpr int DATA_RECT = 0;
@@ -277,10 +278,11 @@ public:
 		static constexpr int DATA_MAIN_PARAMS = 4; // radius, disabled radius, ring radius, ring thickness
 		static constexpr int DATA_METADATA = 5; // item count, corners, has capsule, screen pixel size
 		static constexpr int DATA_CAPSULE_PARAMS = 6; // radius, smooth union, unused, unused
-		static constexpr int DATA_RESERVED = 7;
+		static constexpr int DATA_RESERVED = 7; // outer shadow size, opacity, unused, unused
 		static constexpr int DATA_ITEM_BASE = 8;
 		static constexpr int DATA_ITEM_STRIDE = 3;
-		static constexpr int DATA_COUNT = DATA_ITEM_BASE + MEDIA_ISLAND_SDF_MAX_ITEMS * DATA_ITEM_STRIDE;
+		static constexpr int DATA_BACKDROP_UV = DATA_ITEM_BASE + MEDIA_ISLAND_SDF_MAX_ITEMS * DATA_ITEM_STRIDE;
+		static constexpr int DATA_COUNT = DATA_BACKDROP_UV + 1;
 
 		std::array<vec4, DATA_COUNT> m_aData{};
 
@@ -540,7 +542,7 @@ public:
 	virtual void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
 	// Render a media-island SDF quad in a supported programmable backend.
 	// Callers use a geometry approximation when HasMediaIslandSdf() is false.
-	virtual void RenderMediaIslandSdf(const SMediaIslandSdfParams &Params) = 0;
+	virtual void RenderMediaIslandSdf(const SMediaIslandSdfParams &Params, CRenderTargetHandle Backdrop = CRenderTargetHandle()) = 0;
 	// Render a fill and optional border in one anti-aliased rounded-rectangle pass.
 	virtual void RenderRoundedRectSdf(const SRoundedRectSdfParams &Params) = 0;
 	// Draw only the outward anti-alias fringe of a rounded rectangle.

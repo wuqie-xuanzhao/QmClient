@@ -6049,7 +6049,7 @@ public:
 		aAttributeDescriptions[1] = {1, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 2};
 		aAttributeDescriptions[2] = {2, 0, VK_FORMAT_R8G8B8A8_UNORM, sizeof(float) * (2 + 2)};
 
-		std::array<VkDescriptorSetLayout, 1> aSetLayouts = {m_QuadUniformDescriptorSetLayout};
+		std::array<VkDescriptorSetLayout, 2> aSetLayouts = {m_StandardTexturedDescriptorSetLayout, m_QuadUniformDescriptorSetLayout};
 		std::array<VkPushConstantRange, 1> aPushConstants{};
 		aPushConstants[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos)};
 
@@ -6058,7 +6058,7 @@ public:
 		{
 			for(size_t j = 0; j < VULKAN_BACKEND_CLIP_MODE_COUNT; ++j)
 			{
-				Ret &= CreateGraphicsPipeline<true>(pVertName, pFragName, m_MediaIslandSdfPipeline, sizeof(CCommandBuffer::SVertex), aAttributeDescriptions, aSetLayouts, aPushConstants, VULKAN_BACKEND_TEXTURE_MODE_NOT_TEXTURED, EVulkanBackendBlendModes(i), EVulkanBackendClipModes(j));
+				Ret &= CreateGraphicsPipeline<true>(pVertName, pFragName, m_MediaIslandSdfPipeline, sizeof(CCommandBuffer::SVertex), aAttributeDescriptions, aSetLayouts, aPushConstants, VULKAN_BACKEND_TEXTURE_MODE_TEXTURED, EVulkanBackendBlendModes(i), EVulkanBackendClipModes(j));
 			}
 		}
 		return Ret;
@@ -8810,6 +8810,16 @@ public:
 
 	void Cmd_RenderMediaIslandSdf_FillExecuteBuffer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand_RenderMediaIslandSdf *pCommand)
 	{
+		const size_t AddressModeIndex = GetAddressModeIndex(pCommand->m_State);
+		if(pCommand->m_BackdropTargetId >= 0 && (size_t)pCommand->m_BackdropTargetId < m_vRenderTargets.size() &&
+			m_vRenderTargets[pCommand->m_BackdropTargetId].m_aVKStandardTexturedDescrSets[AddressModeIndex].m_Descriptor != VK_NULL_HANDLE)
+		{
+			ExecBuffer.m_aDescriptors[0] = m_vRenderTargets[pCommand->m_BackdropTargetId].m_aVKStandardTexturedDescrSets[AddressModeIndex];
+		}
+		else if(pCommand->m_State.m_Texture >= 0 && (size_t)pCommand->m_State.m_Texture < m_vTextures.size())
+		{
+			ExecBuffer.m_aDescriptors[0] = m_vTextures[pCommand->m_State.m_Texture].m_aVKStandardTexturedDescrSets[AddressModeIndex];
+		}
 		ExecBuffer.m_IndexBuffer = m_IndexBuffer;
 		ExecBuffer.m_EstimatedRenderCallCount = 1;
 		ExecBufferFillDynamicStates(pCommand->m_State, ExecBuffer);
@@ -8843,10 +8853,11 @@ public:
 		size_t DynamicIndex;
 		size_t AddressModeIndex;
 		GetStateIndices(ExecBuffer, pCommand->m_State, IsTextured, BlendModeIndex, DynamicIndex, AddressModeIndex);
-		(void)IsTextured;
+		if(!IsTextured)
+			return false;
 		(void)AddressModeIndex;
-		auto &PipeLayout = GetPipeLayout(m_MediaIslandSdfPipeline, false, BlendModeIndex, DynamicIndex);
-		auto &PipeLine = GetPipeline(m_MediaIslandSdfPipeline, false, BlendModeIndex, DynamicIndex);
+		auto &PipeLayout = GetPipeLayout(m_MediaIslandSdfPipeline, true, BlendModeIndex, DynamicIndex);
+		auto &PipeLine = GetPipeline(m_MediaIslandSdfPipeline, true, BlendModeIndex, DynamicIndex);
 
 		VkCommandBuffer *pCommandBuffer;
 		if(!GetGraphicCommandBuffer(pCommandBuffer, ExecBuffer.m_ThreadIndex))
@@ -8861,11 +8872,12 @@ public:
 			return false;
 		BindVertexBuffer(ExecBuffer.m_ThreadIndex, CommandBuffer, VKBuffer, (VkDeviceSize)BufferOff);
 		BindIndexBuffer(ExecBuffer.m_ThreadIndex, CommandBuffer, ExecBuffer.m_IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		BindDescriptorSet(ExecBuffer.m_ThreadIndex, CommandBuffer, PipeLayout, 0, ExecBuffer.m_aDescriptors[0]);
 
 		SDeviceDescriptorSet UniDescrSet;
 		if(!GetUniformBufferObject(ExecBuffer.m_ThreadIndex, true, UniDescrSet, 1, &pCommand->m_Params, sizeof(pCommand->m_Params)))
 			return false;
-		BindDescriptorSet(ExecBuffer.m_ThreadIndex, CommandBuffer, PipeLayout, 0, UniDescrSet);
+		BindDescriptorSet(ExecBuffer.m_ThreadIndex, CommandBuffer, PipeLayout, 1, UniDescrSet);
 		vkCmdPushConstants(CommandBuffer, PipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformGPos), m.data());
 		DrawIndexed(ExecBuffer.m_ThreadIndex, CommandBuffer, 6, 1, 0, 0, 0);
 		return true;

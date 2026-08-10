@@ -3071,9 +3071,6 @@ Do not auto-show server info on entering map
 Do not predict other players when frozen
 == Ne pas prédire les autres joueurs lorsqu'il est gelé
 
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== Ne définissez pas cette variable, créez plutôt ddnet-serverlist-urls.cfg à côté de settings_ddnet.cfg pour spécifier toutes les URL possibles de liste de serveurs
-
 Do not set, used to mark official tutorial server
 == Ne pas définir, utilisé pour marquer le serveur tutoriel officiel
 
@@ -3733,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == Activer le positionnement stéréo
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == Activer le contrôle multimédia système
@@ -6311,6 +6311,9 @@ Menu option - normal
 Menu option - selected
 == Option de menu - sélectionné
 
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
+
 Message color
 == Couleur du message
 
@@ -7336,9 +7339,6 @@ Override Freeze Tile Entity Alpha (0-100)
 
 Override Group
 == Remplacer le groupe
-
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== Remplacer l'emplacement d'estimation du ping, options : auto, af, as, as:cn, eu, na, oc, sa (auto, Afrique, Asie, Chine, Europe, Amérique du Nord, Océanie/Australie, Amérique du Sud)
 
 Override Selected
 == Remplacer la sélection
@@ -9605,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == Afficher les variables de configuration DDNet
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== Afficher l'achèvement des cartes DDNet (transmet le nom du joueur à info.ddnet.org/info)
-
 Show DDNet map finishes in server browser
 == Afficher les cartes DDNet terminées dans le navigateur de serveurs
 
@@ -10924,6 +10921,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 
 Switch
 == Commutateur
+
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 
 Switch failed
 == Échec de la commutation
@@ -13079,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ API Tencent Cloud non configurée
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == Produit
@@ -13200,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Impossible d'initialiser le backend graphique donné, probablement parce que vous n'avez pas installé le pilote de la carte graphique intégrée.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Échec lors de l'initialisation. Essayez de changer gfx_backend en OpenGL ou Vulkan dans settings_ddnet.cfg dans le répertoire de configuration et réessayez.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13216,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == La soumission des commandes de rendu a échoué. Essayez de mettre à jour vos pilotes GPU.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Erreur inconnue. Essayez de changer gfx_backend en OpenGL ou Vulkan dans settings_ddnet.cfg dans le répertoire de configuration et réessayez.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

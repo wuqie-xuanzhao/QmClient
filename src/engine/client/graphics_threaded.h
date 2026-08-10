@@ -251,6 +251,7 @@ public:
 			SCommand(CMD_RENDER_MEDIA_ISLAND_SDF) {}
 		SState m_State;
 		IGraphics::SMediaIslandSdfParams m_Params;
+		int m_BackdropTargetId = -1;
 		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
 		unsigned m_PrimCount = 1;
 		SVertex *m_pVertices = nullptr;
@@ -1419,7 +1420,7 @@ public:
 	void RenderBorderTiles(int BufferContainerIndex, const ColorRGBA &Color, char *pIndexBufferOffset, const vec2 &Offset, const vec2 &Scale, uint32_t DrawNum) override;
 	void RenderQuadLayer(int BufferContainerIndex, SQuadRenderInfo *pQuadInfo, size_t QuadNum, int QuadOffset, bool Grouped = false) override;
 	void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override;
-	void RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params) override;
+	void RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params, CRenderTargetHandle Backdrop = CRenderTargetHandle()) override;
 	void RenderRoundedRectSdf(const IGraphics::SRoundedRectSdfParams &Params) override;
 	void DrawRoundedRectAntialias(float x, float y, float w, float h, float Radius, int Corners, const ColorRGBA &Color) override;
 	void RenderTexturedMsdf(const IGraphics::STexturedMsdfParams &Params) override;

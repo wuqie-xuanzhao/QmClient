@@ -4906,7 +4906,8 @@ void CGameClient::FinalizeHammerHitEvents()
 			Event.m_Pos,
 			Event.m_Connection,
 			TargetWoke};
-		if((IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId)) && m_HammerHitTracker.Record(Hit))
+		const bool LocalRelated = IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId);
+		if((LocalRelated || Hit.m_AttackerId >= 0) && m_HammerHitTracker.Record(Hit) && LocalRelated)
 			HandleConfirmedHammerHit(Hit);
 
 		const bool PredictedHandled = Match.m_AttackerId >= 0 && Match.m_TargetId >= 0 && m_PredictedWorld.CheckPredictedHammerHitHandled(CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId));

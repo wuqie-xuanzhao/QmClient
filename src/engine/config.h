@@ -5,7 +5,7 @@
 
 #include "kernel.h"
 
-#define CONFIG_DOMAIN(Name, ConfigPath, LegacyConfigPath, HasVars) Name,
+#define CONFIG_DOMAIN(Name, ConfigPath, PreviousConfigPath, LegacyConfigPath, HasVars) Name,
 enum ConfigDomain // NOLINT(readability-enum-initial-value)
 {
 #include "shared/config_domains.h"
@@ -23,10 +23,11 @@ class CConfigDomain
 {
 public:
 	const char *m_aConfigPath;
+	const char *m_aPreviousConfigPath;
 	const char *m_aLegacyConfigPath;
 	bool m_HasVars;
 };
-#define CONFIG_DOMAIN(Name, ConfigPath, LegacyConfigPath, HasVars) {ConfigPath, LegacyConfigPath, HasVars},
+#define CONFIG_DOMAIN(Name, ConfigPath, PreviousConfigPath, LegacyConfigPath, HasVars) {ConfigPath, PreviousConfigPath, LegacyConfigPath, HasVars},
 static const CConfigDomain s_aConfigDomains[ConfigDomain::NUM] = {
 #include "shared/config_domains.h"
 };
@@ -52,14 +53,14 @@ public:
 	virtual void ResetGameSettings() = 0;
 	virtual void SetReadOnly(const char *pScriptName, bool ReadOnly) = 0;
 	virtual void SetGameSettingsReadOnly(bool ReadOnly) = 0;
-	virtual bool Save() = 0;
+	virtual bool Save(bool Force = false) = 0;
 	virtual class CConfig *Values() = 0;
 
 	virtual void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData, ConfigDomain ConfigDomain = ConfigDomain::DDNET) = 0;
 
 	virtual void WriteLine(const char *pLine, ConfigDomain ConfigDomain = ConfigDomain::DDNET) = 0;
 
-	virtual void StoreUnknownCommand(const char *pCommand) = 0;
+	virtual void StoreUnknownCommand(const char *pCommand, ConfigDomain ConfigDomain = ConfigDomain::DDNET) = 0;
 
 	virtual void PossibleConfigVariables(const char *pStr, int FlagMask, POSSIBLECFGFUNC pfnCallback, void *pUserData) = 0;
 	virtual EColorInputAlphaMode ColorValueInputAlphaMode(const char *pScriptName) const = 0;

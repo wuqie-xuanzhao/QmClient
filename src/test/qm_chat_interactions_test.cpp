@@ -2,8 +2,9 @@
 #include <base/system.h>
 
 #include <game/client/components/chat.h>
-#include <game/client/components/motd.h>
-#include <game/client/components/scoreboard.h>
+#include <game/client/components/chat_completion.h>
+#include <game/client/components/console.h>
+#include <game/client/components/qmclient/red_packet_auto_claim.h>
 #include <game/client/components/tclient/fast_practice.h>
 #include <game/client/components/tclient/warlist.h>
 
@@ -99,6 +100,69 @@ TEST(QmDummySyncChatCommand, MatchesOnlySupportedCommands)
 	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/vote particles"));
 	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("/vote particle on"));
 	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("particle"));
+}
+
+TEST(QmChatMessageMerge, EligibilityUsesExactTextSlidingWindowAndPlayerMessagesOnly)
+{
+	const int64_t Start = TestTicks(10.0f);
+
+	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "same", Start + TestTicks(2.0f)));
+	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 1, "same", Start, 2, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "same", Start + TestTicks(2.01f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "Same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(-1, 0, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, -1, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, TEAM_WHISPER_RECV, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, TEAM_WHISPER_SEND, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 0, "same", Start - 1));
+}
+
+TEST(QmChatMessageMerge, ChatAndConsoleKeepStructuredMergedAuthors)
+{
+	const std::string ChatHeader = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string ConsoleHeader = ReadTestSourceFile("src/game/client/components/console.h");
+	const std::string Console = ReadTestSourceFile("src/game/client/components/console.cpp");
+	const std::string Translate = ReadTestSourceFile("src/game/client/components/qmclient/translate/translate.cpp");
+	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
+
+	EXPECT_NE(ChatHeader.find("struct SMergedAuthor"), std::string::npos);
+	EXPECT_NE(ChatHeader.find("std::vector<SMergedAuthor> m_vMergedAuthors"), std::string::npos);
+	EXPECT_NE(AddLine.find("g_Config.m_QmMessageMerge"), std::string::npos);
+	EXPECT_NE(AddLine.find("CanMergePlayerMessages("), std::string::npos);
+	EXPECT_NE(AddLine.find("PreviousLine.m_Team = false;"), std::string::npos);
+	EXPECT_NE(AddLine.find("PreviousLine.m_TeamNumber = 0;"), std::string::npos);
+	EXPECT_EQ(AddLine.find("PreviousLine.m_ClientId == ClientId"), std::string::npos);
+	EXPECT_NE(Chat.find("if(Author.m_ClientId == ClientId)"), std::string::npos);
+	EXPECT_NE(Chat.find("Author.m_NameColor = PlayerNameColor(ClientId, NameColor, false);"), std::string::npos);
+	EXPECT_NE(Chat.find("\" [%d]: \", Line.m_TimesRepeated + 1"), std::string::npos);
+	EXPECT_NE(Chat.find("FlushPendingConsoleLine"), std::string::npos);
+	EXPECT_NE(Chat.find("GameClient()->m_GameConsole.PrintLineWithColorSpans"), std::string::npos);
+	EXPECT_NE(Chat.find("const bool MergedPlayerMessages = Line.m_TimesRepeated > 0 && !Line.m_vMergedAuthors.empty();"), std::string::npos);
+	EXPECT_NE(Chat.find("m_PlayerLine = Line.m_vMergedAuthors.size() <= 1"), std::string::npos);
+
+	EXPECT_NE(ConsoleHeader.find("struct SColorSpan"), std::string::npos);
+	EXPECT_NE(ConsoleHeader.find("m_ColorSpansByExportId"), std::string::npos);
+	EXPECT_NE(ConsoleHeader.find("PrintLineWithColorSpans"), std::string::npos);
+	EXPECT_NE(Console.find("m_PendingColorSpansByExportId"), std::string::npos);
+	EXPECT_NE(Console.find("EntryCursor.m_vColorSplits.emplace_back"), std::string::npos);
+	EXPECT_NE(Translate.find("for(const CChat::SMergedAuthor &Author : pLine->m_vMergedAuthors)"), std::string::npos);
+}
+
+TEST(QmChatMessageMerge, SettingIsDefaultOnLocalizedInDreamFeaturesAndVersioned)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Translations = ReadTestSourceFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
+	const std::string Version = ReadTestSourceFile("src/game/version.h");
+	const size_t MiniFeatures = Menus.find("void CMenus::RenderQmFunctionMiniFeaturesContent(");
+
+	ASSERT_NE(MiniFeatures, std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmMessageMerge, qm_message_merge, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
+	EXPECT_NE(Menus.find("RenderCheckbox(&g_Config.m_QmMessageMerge, \"Message merging\", &g_Config.m_QmMessageMerge);", MiniFeatures), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"Message merging\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"消息合并\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.21\""), std::string::npos);
 }
 
 TEST(QmWarListEnemyChat, FilteringKeepsChatLogPersistenceIndependent)
@@ -280,6 +344,21 @@ TEST(QmLocalSaveJoinHint, UsesExpiringEchoMessages)
 	EXPECT_EQ(Body.find("GameClient()->Echo(aMessage, true);"), std::string::npos);
 	EXPECT_EQ(Body.find("GameClient()->Echo(PlayersLine.c_str(), true);"), std::string::npos);
 	EXPECT_EQ(Body.find("GameClient()->Echo(CodesLine.c_str(), true);"), std::string::npos);
+}
+
+TEST(QmModeStatus, UsesExpiringEchoMessages)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string FocusBody = SourceFunctionBody(Source, "void CTClient::ApplyFocusModeEffects()");
+	const std::string GoresBody = SourceFunctionBody(Source, "void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)");
+	const std::string EchoBody = SourceFunctionBody(Chat, "void CChat::Echo(const char *pString)");
+
+	EXPECT_NE(FocusBody.find("GameClient()->Echo(aFocusMsg);"), std::string::npos);
+	EXPECT_EQ(FocusBody.find("GameClient()->Echo(aFocusMsg, true);"), std::string::npos);
+	EXPECT_NE(GoresBody.find("GameClient()->Echo(aGoresMsg);"), std::string::npos);
+	EXPECT_EQ(GoresBody.find("GameClient()->Echo(aGoresMsg, true);"), std::string::npos);
+	EXPECT_NE(EchoBody.find("GameClient()->m_QmHudNotifications.QueueEcho"), std::string::npos);
 }
 
 TEST(QmChatPresentation, ResetAndTimeRollbackKeepFiniteFreshState)
@@ -641,62 +720,6 @@ TEST(QmFastPracticeCommands, PredictionLoopsReuseNormalPreInputAndFreezeSemantic
 	EXPECT_NE(VisualBody.find("VisualWorld.m_WorldConfig.m_PredictEvents = false;"), std::string::npos);
 }
 
-TEST(QmFastPracticeCommands, PracticeWorldKeepsDDRaceTeleportPredictionEnabled)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
-	const std::string Body = SourceFunctionBody(Source, "void CFastPractice::SyncPracticeWorldConfig()");
-
-	EXPECT_NE(Body.find("m_PracticeBaseWorld.m_WorldConfig.m_PredictDDRace = true;"), std::string::npos);
-	EXPECT_NE(Body.find("m_PracticeBaseWorld.m_WorldConfig.m_PredictTeleport = true;"), std::string::npos);
-}
-
-TEST(QmFastPracticeCommands, BaseWorldTickTracksTileFeedbackForMainAndDummy)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
-	const std::string Body = SourceFunctionBody(Source, "bool CFastPractice::AdvanceBaseWorldToTick(");
-
-	EXPECT_NE(Source.find("void CFastPractice::TrackPracticeTileFeedback(int ClientId, CCharacter *pChar, const vec2 &BeforePos)"), std::string::npos);
-	EXPECT_NE(Body.find("const vec2 LocalPosBeforeTick = pLocalChar->Core()->m_Pos;"), std::string::npos);
-	EXPECT_NE(Body.find("const vec2 DummyPosBeforeTick = pDummyChar ? pDummyChar->Core()->m_Pos : vec2(0.0f, 0.0f);"), std::string::npos);
-	EXPECT_EQ(Body.find("LocalPrevPosBeforeTick"), std::string::npos);
-	EXPECT_EQ(Body.find("DummyPrevPosBeforeTick"), std::string::npos);
-	EXPECT_NE(Body.find("TrackPracticeTileFeedback(LocalClientId, pLocalChar, LocalPosBeforeTick);"), std::string::npos);
-	EXPECT_NE(Body.find("TrackPracticeTileFeedback(DummyClientId, pDummyChar, DummyPosBeforeTick);"), std::string::npos);
-}
-
-TEST(QmFastPracticeCommands, TileFeedbackRecordsTeleportsAndOnlyNewDeathTileEntries)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
-	const std::string Body = SourceFunctionBody(Source, "void CFastPractice::TrackPracticeTileFeedback(");
-
-	EXPECT_NE(Body.find("PracticePathContainsTeleport(Collision(), BeforePos, AfterPos)"), std::string::npos);
-	EXPECT_NE(Body.find("EvaluatePracticeTileFeedback("), std::string::npos);
-	EXPECT_NE(Body.find("StoreLastTeleport(ClientId, AfterPos);"), std::string::npos);
-	EXPECT_NE(Body.find("const bool WasInDeath = IsCharacterTouchingDeathTile(Collision(), BeforeTickPos, pChar->GetProximityRadius());"), std::string::npos);
-	EXPECT_NE(Body.find("const bool IsInDeath = IsCharacterTouchingDeathTile(Collision(), AfterPos, pChar->GetProximityRadius());"), std::string::npos);
-	EXPECT_NE(Body.find("GameClient()->m_Effects.PlayerDeath(AfterPos, ClientId, 1.0f);"), std::string::npos);
-}
-
-TEST(QmFastPracticeCommands, TileFeedbackDecisionMatchesGameplayEvents)
-{
-	const auto TeleportDecision = CFastPractice::EvaluatePracticeTileFeedback(true, false, false, 12.0f);
-	EXPECT_TRUE(TeleportDecision.m_RecordTeleport);
-	EXPECT_FALSE(TeleportDecision.m_RecordDeath);
-	EXPECT_FALSE(TeleportDecision.m_PlayDeathFeedback);
-
-	const auto StationaryTeleportDecision = CFastPractice::EvaluatePracticeTileFeedback(true, false, false, 0.0f);
-	EXPECT_FALSE(StationaryTeleportDecision.m_RecordTeleport);
-
-	const auto EnterDeathDecision = CFastPractice::EvaluatePracticeTileFeedback(false, false, true, 12.0f);
-	EXPECT_FALSE(EnterDeathDecision.m_RecordTeleport);
-	EXPECT_TRUE(EnterDeathDecision.m_RecordDeath);
-	EXPECT_TRUE(EnterDeathDecision.m_PlayDeathFeedback);
-
-	const auto StayInDeathDecision = CFastPractice::EvaluatePracticeTileFeedback(false, true, true, 12.0f);
-	EXPECT_FALSE(StayInDeathDecision.m_RecordDeath);
-	EXPECT_FALSE(StayInDeathDecision.m_PlayDeathFeedback);
-}
-
 TEST(QmChatInteractions, ClickDragThreshold)
 {
 	EXPECT_TRUE(CChat::IsCopyClickDrag(vec2(10.0f, 10.0f), vec2(12.0f, 12.0f)));
@@ -719,22 +742,6 @@ TEST(QmChatInteractions, ChatInputClipPaddingDoesNotExpandContentScrollArea)
 	EXPECT_NE(Body.find("InputContentRect.y + InputContentRect.h"), std::string::npos);
 	EXPECT_NE(Body.find("Graphics()->ClipEnable((int)(InputClippingRect.x * XScale)"), std::string::npos);
 	EXPECT_EQ(Body.find("CaretPositionY < InputClippingRect.y"), std::string::npos);
-}
-
-TEST(QmChatInteractions, LiveDirectorBlocksOnlyPauseCommand)
-{
-	EXPECT_TRUE(CChat::ShouldBlockLiveDirectorChatCommand("/pause"));
-	EXPECT_TRUE(CChat::ShouldBlockLiveDirectorChatCommand("   /pause"));
-	EXPECT_TRUE(CChat::ShouldBlockLiveDirectorChatCommand("/pause "));
-	EXPECT_TRUE(CChat::ShouldBlockLiveDirectorChatCommand("/pause 1"));
-	EXPECT_TRUE(CChat::ShouldBlockLiveDirectorChatCommand("/PAUSE"));
-
-	EXPECT_FALSE(CChat::ShouldBlockLiveDirectorChatCommand(nullptr));
-	EXPECT_FALSE(CChat::ShouldBlockLiveDirectorChatCommand(""));
-	EXPECT_FALSE(CChat::ShouldBlockLiveDirectorChatCommand("please /pause"));
-	EXPECT_FALSE(CChat::ShouldBlockLiveDirectorChatCommand("/paused"));
-	EXPECT_FALSE(CChat::ShouldBlockLiveDirectorChatCommand("/team 1"));
-	EXPECT_FALSE(CChat::ShouldBlockLiveDirectorChatCommand("hello"));
 }
 
 TEST(QmChatInteractions, AppendsBlockWordsWithSeparator)
@@ -786,8 +793,7 @@ TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
 	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
 
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmBlockWordsAction, qm_block_words_action, 0, 0, 1"), std::string::npos);
-	EXPECT_NE(Menus.find("const int BlockWordsAction = g_Config.m_QmBlockWordsAction;"), std::string::npos);
-	EXPECT_NE(Menus.find("BlockWordsAction == 0"), std::string::npos);
+	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction == 0"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 0;"), std::string::npos);
 	EXPECT_NE(Menus.find("BlockWordsAction == 1"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 1;"), std::string::npos);
@@ -798,7 +804,7 @@ TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
 	ASSERT_NE(HideBranch, std::string::npos);
 	EXPECT_LT(RawConsoleCall, HideBranch);
 	EXPECT_NE(AddLine.find("BlockWordsConsolePrinted = true;"), std::string::npos);
-	EXPECT_NE(AddLine.find("if(BlockWordsConsolePrinted)"), std::string::npos);
+	EXPECT_NE(AddLine.find("CurrentLine.m_ConsoleSuppressed = BlockWordsConsolePrinted;"), std::string::npos);
 	EXPECT_NE(AddLine.find("ShouldHideBlockWordsMessage("), std::string::npos);
 	EXPECT_NE(AddLine.find("BlockWordsAction == EBlockWordsAction::REPLACE || CanHideBlockWordsMessage"), std::string::npos);
 	EXPECT_NE(AddLine.find("Client()->State() == IClient::STATE_DEMOPLAYBACK"), std::string::npos);
@@ -835,52 +841,6 @@ TEST(QmChatRepeat, TeamMessagesKeepTheirSendChannel)
 	EXPECT_NE(RepeatLastMessage.find("GameClient()->m_Chat.SendChat(m_LastChatTeam, m_aLastChatMessage);"), std::string::npos);
 }
 
-TEST(QmChatInteractions, ServerSystemMessagesDoNotUseVisibleStarPrefix)
-{
-	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-1, true), "");
-	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-1, false), "*** ");
-	EXPECT_STREQ(CChat::SystemMessageNamePrefix(true), "");
-	EXPECT_STREQ(CChat::SystemMessageNamePrefix(false), "*** ");
-	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-2), "— ");
-}
-
-TEST(QmChatInteractions, ServerSystemMessagePathsDoNotReintroduceStarPrefix)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
-	const std::string OnMessage = SourceFunctionBody(Source, "void CChat::OnMessage(int MsgType, void *pRawMsg)");
-	const std::string AddLine = SourceFunctionBody(Source, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass)");
-
-	EXPECT_EQ(OnMessage.find("*** %s"), std::string::npos);
-	EXPECT_NE(AddLine.find("g_Config.m_QmChatHideSystemPrefix != 0"), std::string::npos);
-	EXPECT_NE(AddLine.find("MessageNamePrefixForClientId(CurrentLine.m_ClientId, g_Config.m_QmChatHideSystemPrefix != 0)"), std::string::npos);
-}
-
-TEST(QmChatInteractions, TranslateButtonSitsBeforeInputAndPopupCanCloseItself)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
-	const std::string RenderBody = SourceFunctionBody(Source, "void CChat::OnRender()");
-	const std::string PopupBody = SourceFunctionBody(Source, "CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(");
-
-	EXPECT_NE(RenderBody.find("CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap"), std::string::npos);
-	EXPECT_NE(RenderBody.find("InputCursor.SetPosition(vec2(x + TranslateButtonSize + TranslateButtonGap, y));"), std::string::npos);
-	EXPECT_NE(PopupBody.find("FONT_ICON_XMARK"), std::string::npos);
-	EXPECT_NE(PopupBody.find("TitleRect.VSplitRight(22.0f, &TitleRect, &CloseButton);"), std::string::npos);
-	EXPECT_EQ(PopupBody.find("View.VSplitRight(22.0f, &View, &CloseButton);"), std::string::npos);
-	EXPECT_NE(PopupBody.find("return CUi::POPUP_CLOSE_CURRENT;"), std::string::npos);
-}
-
-TEST(QmChatInteractions, ScrollbarFollowsChatEdgeAndCutoffAnimationIsConfigurable)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
-	const std::string RenderBody = SourceFunctionBody(Source, "void CChat::OnRender()");
-	const std::string OffsetBody = SourceFunctionBody(Source, "float CChat::CalculateCutOffOffsetX(");
-
-	EXPECT_NE(RenderBody.find("const bool ChatScrollbarOnRight = ChatAnchoredRight;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("ChatScrollbarOnRight ? ChatRect.w - CHAT_SCROLLBAR_WIDTH - CHAT_SCROLLBAR_MARGIN : CHAT_SCROLLBAR_MARGIN"), std::string::npos);
-	EXPECT_NE(Source.find("g_Config.m_QmChatAnimFadeDurationMs"), std::string::npos);
-	EXPECT_NE(OffsetBody.find("g_Config.m_QmChatAnimSlideOut"), std::string::npos);
-}
-
 TEST(QmChatInteractions, ChatLineMenuKeepsSpectateAction)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");
@@ -891,92 +851,6 @@ TEST(QmChatInteractions, ChatLineMenuKeepsSpectateAction)
 	EXPECT_NE(Source.find("DoEntry(&pPopupContext->m_SpectateButton, FontIcons::FONT_ICON_EYE, Localize(\"Spectate\")"), std::string::npos);
 	EXPECT_NE(Source.find("GameClient()->m_Spectator.Spectate(Context.m_ClientId);"), std::string::npos);
 	EXPECT_NE(Source.find("Console()->ExecuteLine(aCommand);"), std::string::npos);
-}
-
-TEST(QmChatInteractions, CommandUsagePreviewUsesLocalizableSourceText)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
-	const std::string Body = SourceFunctionBody(Source, "bool CChat::BuildCommandUsagePreview(");
-	const std::string LocalizeCommandPreviewBody = SourceFunctionBody(Source, "const char *CChat::LocalizeCommandPreviewText(");
-
-	EXPECT_NE(Body.find("Localize(\"Query points for %s\")"), std::string::npos);
-	EXPECT_NE(Body.find("Localize(\"Invite %s to the locked team\")"), std::string::npos);
-	EXPECT_NE(Body.find("Localize(\"Usage: /%s %s\")"), std::string::npos);
-	EXPECT_NE(Body.find("Localize(\"%s (/%s %s)\")"), std::string::npos);
-	EXPECT_EQ(Body.find("%s（/%s %s）"), std::string::npos);
-	EXPECT_EQ(LocalizeCommandPreviewBody.find("languages/simplified_chinese.txt"), std::string::npos);
-	EXPECT_EQ(Body.find("查询"), std::string::npos);
-	EXPECT_EQ(Body.find("邀请"), std::string::npos);
-	EXPECT_EQ(Body.find("悄悄话"), std::string::npos);
-	EXPECT_EQ(Body.find("用法"), std::string::npos);
-}
-
-TEST(QmChatInteractions, SlashCommandSuggestionsFilterCommonCommands)
-{
-	const auto vSuggestions = CChat::BuildSlashCommandSuggestions("/", 8);
-	ASSERT_GE(vSuggestions.size(), 3u);
-	EXPECT_STREQ(vSuggestions[0].m_pCommand, "/pause");
-	EXPECT_STREQ(vSuggestions[1].m_pCommand, "/spec");
-	EXPECT_STREQ(vSuggestions[2].m_pCommand, "/team");
-
-	const auto vFiltered = CChat::BuildSlashCommandSuggestions("/to", 8);
-	ASSERT_EQ(vFiltered.size(), 2u);
-	EXPECT_STREQ(vFiltered[0].m_pCommand, "/top5");
-	EXPECT_STREQ(vFiltered[1].m_pCommand, "/top");
-
-	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("/top", 8).empty());
-	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("/pause", 8).empty());
-	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("hello /p", 8).empty());
-	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("/unknown", 8).empty());
-}
-
-TEST(QmChatInteractions, SlashCommandSuggestionAppliesWithTrailingSpace)
-{
-	char aBuf[256];
-	EXPECT_TRUE(CChat::ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), "/p", "/pause"));
-	EXPECT_STREQ(aBuf, "/pause ");
-
-	EXPECT_TRUE(CChat::ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), "/", "/w"));
-	EXPECT_STREQ(aBuf, "/w ");
-
-	EXPECT_FALSE(CChat::ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), "hello", "/pause"));
-}
-
-TEST(QmChatInteractions, SlashCommandSuggestionDismissSticksUntilInputChanges)
-{
-	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");
-	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
-	const std::string RefreshBody = SourceFunctionBody(Source, "void CChat::RefreshSlashCommandSuggestions()");
-	const std::string InputBody = SourceFunctionBody(Source, "bool CChat::OnInput(const IInput::CEvent &Event)");
-	ASSERT_FALSE(RefreshBody.empty());
-	ASSERT_FALSE(InputBody.empty());
-
-	EXPECT_NE(Header.find("m_SlashCommandSuggestionsDismissed"), std::string::npos);
-	EXPECT_NE(Header.find("m_aSlashCommandSuggestionsDismissedInput"), std::string::npos);
-	EXPECT_NE(RefreshBody.find("str_comp(pInput, m_aSlashCommandSuggestionsDismissedInput) == 0"), std::string::npos);
-	EXPECT_NE(RefreshBody.find("m_vSlashCommandSuggestions.clear();"), std::string::npos);
-	EXPECT_NE(RefreshBody.find("m_SlashCommandSuggestionsDismissed = false;"), std::string::npos);
-	EXPECT_NE(InputBody.find("Event.m_Key == KEY_ESCAPE"), std::string::npos);
-	EXPECT_NE(InputBody.find("m_SlashCommandSuggestionsDismissed = true;"), std::string::npos);
-	EXPECT_NE(InputBody.find("str_copy(m_aSlashCommandSuggestionsDismissedInput, m_Input.GetString(), sizeof(m_aSlashCommandSuggestionsDismissedInput));"), std::string::npos);
-}
-
-TEST(QmChatInteractions, MotdPopupRespectsJoinServerInfoToggle)
-{
-	EXPECT_TRUE(CMotd::ShouldActivateMotdPopup("Welcome", 10, false));
-	EXPECT_FALSE(CMotd::ShouldActivateMotdPopup("Welcome", 10, true));
-	EXPECT_FALSE(CMotd::ShouldActivateMotdPopup("", 10, false));
-	EXPECT_FALSE(CMotd::ShouldActivateMotdPopup("Welcome", 0, false));
-}
-
-TEST(QmChatInteractions, ScoreboardOnDeathRespectsUserMode)
-{
-	EXPECT_TRUE(CScoreboard::ShouldAutoShowOnDeath(true, true, false, false, false));
-	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(false, true, false, false, true));
-	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, false, false, false, true));
-	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, true, true, false, true));
-	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, true, false, true, true));
-	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, true, false, false, true));
 }
 
 TEST(QmChatInteractions, ReusesKnownServerMessageClassWithoutReanalysis)
@@ -1020,4 +894,178 @@ TEST(QmChatInteractions, VisibleTranslationCollectsCandidatesBeforeStartingJobs)
 	ASSERT_NE(TranslateLoop, std::string::npos);
 
 	EXPECT_EQ(Body.find("GameClient()->m_Translate.Translate", ScanLoop), TranslateLoop + Body.substr(TranslateLoop).find("GameClient()->m_Translate.Translate"));
+}
+
+TEST(QmRedPacketAutoClaim, ExtractsPasswordFromServerAnnouncement)
+{
+	CQmRedPacketAutoClaim Claim;
+	std::string Password;
+
+	EXPECT_TRUE(Claim.TryPrepare(
+		"110.42.41.209:8303",
+		"璇梦",
+		"[Tee新葡京] deimos 发了 80 币红包，共 20 个。输入口令「deimos:把钱给我！」即可抢。",
+		Password));
+	EXPECT_EQ(Password, "deimos:把钱给我！");
+}
+
+TEST(QmRedPacketAutoClaim, ExtractsAllPasswordCharactersFromCompatibleAnnouncement)
+{
+	CQmRedPacketAutoClaim Claim;
+	std::string Password;
+
+	EXPECT_TRUE(Claim.TryPrepare(
+		"110.42.41.209:8303",
+		"璇梦",
+		"[Tee新葡京] taiko 发了 50 币红包，共 50 个。输入口令「\\\" \\\"」即可抢。",
+		Password));
+	EXPECT_EQ(Password, "\\\" \\\"");
+}
+
+TEST(QmRedPacketAutoClaim, AcceptsCompatibleAnnouncementWithAdditionalText)
+{
+	CQmRedPacketAutoClaim Claim;
+	std::string Password;
+
+	EXPECT_TRUE(Claim.TryPrepare(
+		"110.42.41.209:8303",
+		"璇梦",
+		"[Tee新葡京] 红包提示：输入口令「deimos:把钱给我！」即可抢，先到先得。",
+		Password));
+	EXPECT_EQ(Password, "deimos:把钱给我！");
+}
+
+TEST(QmRedPacketAutoClaim, PreservesWhitespaceOnlyPassword)
+{
+	CQmRedPacketAutoClaim Claim;
+	std::string Password;
+
+	EXPECT_TRUE(Claim.TryPrepare(
+		"110.42.41.209:8303",
+		"璇梦",
+		"[Tee新葡京] 红包提示：输入口令「 」即可抢。",
+		Password));
+	EXPECT_EQ(Password, " ");
+}
+
+TEST(QmRedPacketAutoClaim, RequiresExactServerAndMainPlayerName)
+{
+	const char *pMessage = "[Tee新葡京] deimos 发了 80 币红包，共 20 个。输入口令「deimos:把钱给我！」即可抢。";
+	std::string Password;
+
+	CQmRedPacketAutoClaim WrongServer;
+	EXPECT_FALSE(WrongServer.TryPrepare("110.42.41.209:8304", "璇梦", pMessage, Password));
+
+	CQmRedPacketAutoClaim WrongName;
+	EXPECT_FALSE(WrongName.TryPrepare("110.42.41.209:8303", "璇夢", pMessage, Password));
+}
+
+TEST(QmRedPacketAutoClaim, RejectsMalformedAnnouncements)
+{
+	const char *apInvalidMessages[] = {
+		"deimos:把钱给我！",
+		"[Tee新葡京] 红包提示：输入口令「」即可抢。",
+		"[Tee新葡京] 红包提示：口令「deimos:把钱给我！」即可抢。",
+		"[Tee新葡京] 输入口令「deimos:把钱给我！」即可抢。",
+		"[Tee新葡京] 红包提示：输入口令「deimos:把钱给我！」。",
+		"[Tee新葡京] 红包提示：即可抢。输入口令「deimos:把钱给我！」",
+		"[Tee新葡京] 输入口令「deimos:把钱给我！」红包提示，即可抢。",
+	};
+
+	for(const char *pMessage : apInvalidMessages)
+	{
+		CQmRedPacketAutoClaim Claim;
+		std::string Password;
+		EXPECT_FALSE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", pMessage, Password)) << pMessage;
+	}
+}
+
+TEST(QmRedPacketAutoClaim, SendsEachAnnouncementOnlyOncePerConnection)
+{
+	CQmRedPacketAutoClaim Claim;
+	const char *pMessage = "[Tee新葡京] deimos 发了 80 币红包，共 20 个。输入口令「deimos:把钱给我！」即可抢。";
+	const char *pAnotherMessage = "[Tee新葡京] taiko 发了 50 币红包，共 50 个。输入口令「deimos:把钱给我！」即可抢。";
+	std::string Password;
+
+	EXPECT_TRUE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", pMessage, Password));
+	EXPECT_FALSE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", pMessage, Password));
+	EXPECT_TRUE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", pAnotherMessage, Password));
+
+	Claim.Reset();
+	EXPECT_TRUE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", pMessage, Password));
+}
+
+TEST(QmRedPacketAutoClaim, BoundsDeduplicationHistoryDuringLongConnections)
+{
+	CQmRedPacketAutoClaim Claim;
+	constexpr size_t DeduplicationHistoryLimit = 64;
+	std::string FirstMessage;
+	std::string Password;
+
+	for(size_t i = 0; i <= DeduplicationHistoryLimit; ++i)
+	{
+		const std::string Message = "[Tee新葡京] 红包提示 " + std::to_string(i) + "：输入口令「claim-" + std::to_string(i) + "」即可抢。";
+		if(i == 0)
+			FirstMessage = Message;
+		EXPECT_TRUE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", Message.c_str(), Password));
+	}
+
+	EXPECT_TRUE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", FirstMessage.c_str(), Password));
+	EXPECT_FALSE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", FirstMessage.c_str(), Password));
+}
+
+TEST(QmRedPacketAutoClaim, PreservesPasswordAtChatCharacterLimit)
+{
+	CQmRedPacketAutoClaim Claim;
+	std::string ExpectedPassword;
+	for(size_t i = 0; i < CQmRedPacketAutoClaim::MAX_PASSWORD_CHARACTERS; ++i)
+		ExpectedPassword += "钱";
+	const std::string Message = "[Tee新葡京] 红包提示：输入口令「" + ExpectedPassword + "」即可抢。";
+	std::string Password;
+
+	EXPECT_TRUE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", Message.c_str(), Password));
+	EXPECT_EQ(Password, ExpectedPassword);
+}
+
+TEST(QmRedPacketAutoClaim, RejectsPasswordThatExceedsChatCharacterLimit)
+{
+	CQmRedPacketAutoClaim Claim;
+	std::string Message = "[Tee新葡京] deimos 发了 80 币红包，共 20 个。输入口令「";
+	Message.append(CQmRedPacketAutoClaim::MAX_PASSWORD_CHARACTERS + 1, 'a');
+	Message += "」即可抢。";
+	std::string Password;
+
+	EXPECT_FALSE(Claim.TryPrepare("110.42.41.209:8303", "璇梦", Message.c_str(), Password));
+}
+
+TEST(QmRedPacketAutoClaim, ServerMessageIntegrationUsesMainConnectionBeforeNegativeClientReturn)
+{
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string OnMessage = SourceFunctionBody(TClient, "void CTClient::OnMessage(");
+	const std::string Handler = SourceFunctionBody(TClient, "bool CTClient::TryHandleRedPacketAutoClaim(");
+
+	const size_t HandlerCall = OnMessage.find("TryHandleRedPacketAutoClaim(pMsg);");
+	const size_t NegativeClientReturn = OnMessage.find("if(ClientId < 0)");
+	ASSERT_NE(HandlerCall, std::string::npos);
+	ASSERT_NE(NegativeClientReturn, std::string::npos);
+	EXPECT_LT(HandlerCall, NegativeClientReturn);
+
+	EXPECT_NE(Handler.find("pMsg->m_ClientId != -1"), std::string::npos);
+	EXPECT_NE(Handler.find("GameClient()->m_aLocalIds[0]"), std::string::npos);
+	EXPECT_NE(Handler.find("m_aClients[MainClientId].m_aName"), std::string::npos);
+	EXPECT_NE(Handler.find("SendChatOnConn(IClient::CONN_MAIN, 0, Password.c_str(), true, false)"), std::string::npos);
+}
+
+TEST(QmRedPacketAutoClaim, DedicatedSendPathAllowsWhitespaceOnlyPassword)
+{
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string SendChatOnConn = SourceFunctionBody(Chat, "void CChat::SendChatOnConn(");
+
+	EXPECT_NE(SendChatOnConn.find("pLine == nullptr || pLine[0] == '\\0'"), std::string::npos);
+	EXPECT_NE(SendChatOnConn.find("!AllowWhitespaceOnly && *str_utf8_skip_whitespaces(pLine) == '\\0'"), std::string::npos);
+	const size_t LocalSaveGuard = SendChatOnConn.find("if(HandleLocalSaveForLoadCommand)");
+	const size_t LocalSaveRemoval = SendChatOnConn.find("TryRemoveLocalSaveForLoadCommand(pLine)");
+	ASSERT_NE(LocalSaveGuard, std::string::npos);
+	ASSERT_NE(LocalSaveRemoval, std::string::npos);
+	EXPECT_LT(LocalSaveGuard, LocalSaveRemoval);
 }

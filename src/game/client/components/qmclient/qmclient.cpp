@@ -365,10 +365,14 @@ namespace
 	{
 		IStorage *m_pStorage = nullptr;
 		std::string m_Content;
+		std::shared_ptr<std::mutex> m_pMutex;
 
 	protected:
 		void Run() override
 		{
+			if(m_pMutex == nullptr)
+				return;
+			std::lock_guard<std::mutex> Lock(*m_pMutex);
 			if(m_pStorage == nullptr || State() == IJob::STATE_ABORTED)
 				return;
 
@@ -387,9 +391,10 @@ namespace
 		}
 
 	public:
-		CQmClientLifecycleMarkerWriteJob(IStorage *pStorage, std::string Content) :
+		CQmClientLifecycleMarkerWriteJob(IStorage *pStorage, std::string Content, std::shared_ptr<std::mutex> pMutex) :
 			m_pStorage(pStorage),
-			m_Content(std::move(Content))
+			m_Content(std::move(Content)),
+			m_pMutex(std::move(pMutex))
 		{
 			Abortable(true);
 		}
@@ -810,6 +815,7 @@ bool CQmClient::ReadQmClientLifecycleMarker(int64_t &OutStartedAt, int64_t &OutL
 
 void CQmClient::WriteQmClientLifecycleMarker()
 {
+	std::lock_guard<std::mutex> Lock(*m_pQmClientLifecycleMarkerMutex);
 	if(m_QmClientMarkerStartedAt <= 0)
 		m_QmClientMarkerStartedAt = time_timestamp();
 	if(m_QmClientMarkerLastSeenAt <= 0)
@@ -859,7 +865,7 @@ void CQmClient::TouchQmClientLifecycleMarker(bool ForceWrite)
 	str_format(aLine, sizeof(aLine),
 		"session=%s\nstarted_at=%d\nlast_seen_at=%d\nclient_id=%s\n",
 		m_aQmClientLifecycleSessionId, (int)m_QmClientMarkerStartedAt, (int)m_QmClientMarkerLastSeenAt, m_aQmClientPlaytimeClientId);
-	m_pQmClientLifecycleMarkerWriteJob = std::make_shared<CQmClientLifecycleMarkerWriteJob>(Storage(), aLine);
+	m_pQmClientLifecycleMarkerWriteJob = std::make_shared<CQmClientLifecycleMarkerWriteJob>(Storage(), aLine, m_pQmClientLifecycleMarkerMutex);
 	Engine()->AddJob(m_pQmClientLifecycleMarkerWriteJob);
 }
 

@@ -25837,3 +25837,19 @@ key = "Show Tune Zone effects on HUD Dynamic Island"
 [message.translations]
 simplified_chinese = "HUD 灵动岛显示 Tune Zone 效果"
 traditional_chinese = "HUD 靈動島顯示 Tune Zone 效果"
+
+[[message]]
+key = "Message merging"
+[message.translations]
+simplified_chinese = "消息合并"
+traditional_chinese = "訊息合併"
+japanese = "メッセージの統合"
+korean = "메시지 병합"
+russian = "Объединение сообщений"
+german = "Nachrichten zusammenführen"
+spanish = "Combinar mensajes"
+french = "Fusion des messages"
+brazilian_portuguese = "Mesclar mensagens"
+portuguese = "Unir mensagens"
+turkish = "Mesaj birleştirme"
+polish = "Łączenie wiadomości"

@@ -1877,6 +1877,7 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmScoreboardPoints, "Scoreboard point check", &g_Config.m_QmScoreboardPoints);
 	RenderCheckbox(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", &g_Config.m_QmScoreboardOnDeath);
 	RenderCheckbox(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", &g_Config.m_QmHideJoinServerInfo);
+	RenderCheckbox(&g_Config.m_QmMessageMerge, "Message merging", &g_Config.m_QmMessageMerge);
 	RenderCheckbox(&g_Config.m_QmNewUi, "New UI", &g_Config.m_QmNewUi);
 	RenderCheckbox(&g_Config.m_QmShortServerNames, "Short server names", &g_Config.m_QmShortServerNames);
 	RenderCheckbox(&g_Config.m_QmImeAutoManage, "Auto manage IME while typing", &g_Config.m_QmImeAutoManage);
@@ -4985,7 +4986,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 			       (g_Config.m_QmAxiomAutoLogin ? Row(0.35f) * 2.0f : 0.0f) + Row(0.35f) +
 			       ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? Row() * 6.0f : 0.0f) + LineHeight;
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
-		case EQmModuleId::MiniFeatures: return Rows(17.0f);
+		case EQmModuleId::MiniFeatures: return Rows(18.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;
 		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 4.0f;
 		case EQmModuleId::FriendNotify:

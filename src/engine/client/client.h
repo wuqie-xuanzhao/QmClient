@@ -346,6 +346,7 @@ private:
 	void StopHangWatchdog();
 	void UpdateHangHeartbeat();
 	void WriteHangReportAndDump(int64_t Now, int64_t LastHeartbeat);
+	void FinishQmConfigMigration();
 
 	std::shared_ptr<ILogger> m_pFileLogger = nullptr;
 	std::shared_ptr<ILogger> m_pStdoutLogger = nullptr;

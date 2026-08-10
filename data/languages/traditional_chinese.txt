@@ -3071,9 +3071,6 @@ Do not auto-show server info on entering map
 Do not predict other players when frozen
 == 自己被凍結時不預測其他玩家
 
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== 不要設置此變量，而是在 settings_ddnet.cfg 旁邊創建 ddnet-serverlist-urls.cfg 以指定所有可能的伺服器列表 URL
-
 Do not set, used to mark official tutorial server
 == 勿修改：用於標記官方教學伺服器
 
@@ -3733,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == 啟用立體聲定位
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == 啟用系統媒體控制
@@ -6311,6 +6311,9 @@ Menu option - normal
 Menu option - selected
 == 菜單選項 - 選中
 
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
+
 Message color
 == 留言顏色
 
@@ -7336,9 +7339,6 @@ Override Freeze Tile Entity Alpha (0-100)
 
 Override Group
 == 覆蓋群組
-
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== 覆蓋 ping 估計的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自動、非洲、亞洲、中國、歐洲、北美、大洋洲/澳大利亞、南美洲
 
 Override Selected
 == 覆蓋選定項
@@ -9605,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == 顯示 DDNet 配置變量
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== 顯示你是否已完成 DDNet 地圖（將你的玩家姓名傳輸至 info.ddnet.org/info）
-
 Show DDNet map finishes in server browser
 == 在伺服器瀏覽器中顯示已完成的 DDNet 地圖
 
@@ -10924,6 +10921,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 
 Switch
 == 切換
+
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 
 Switch failed
 == 切換失敗
@@ -13079,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 騰訊雲 API 密鑰未配置
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == 正片疊底
@@ -13200,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 無法初始化當前配置的圖形後端，請檢查此電腦是否已安裝集成顯卡的驅動程序。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初始化失敗。請嘗試打開配置目錄中的 settings_ddnet.cfg 文件，將 gfx_backend 改為 OpenGL 或 Vulkan 再重試。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13216,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 渲染指令提交失敗。請嘗試更新顯卡驅動程序。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 未知錯誤。請嘗試打開配置目錄中的 settings_ddnet.cfg 並將 gfx_backend 改為 OpenGL 或 Vulkan 再重試。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

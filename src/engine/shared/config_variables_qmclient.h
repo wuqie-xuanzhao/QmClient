@@ -394,6 +394,10 @@ MACRO_CONFIG_INT(QmPlayerStatsMapProgressPosY, qm_player_stats_map_progress_pos_
 MACRO_CONFIG_INT(QmPlayerStatsMapProgressDbgRoute, qm_player_stats_map_progress_dbg_route, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show map progress test point route")
 MACRO_CONFIG_INT(QmPlayerStatsResetOnJoin, qm_player_stats_reset_on_join, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Reset stats on server join (0=persistent, 1=reset on join)")
 
+// Switch Countdown - 开关倒计时
+MACRO_CONFIG_INT(QmSwitchCountdown, qm_switch_countdown, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable switch countdown")
+MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)")
+
 // HUD Dynamic Island - 灵动岛/HUD 编辑器
 MACRO_CONFIG_INT(QmHudIslandUseOriginalStyle, qm_hud_island_use_original_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use original style for Dynamic Island")
 MACRO_CONFIG_INT(QmHudIslandShowTeam, qm_hud_island_show_team, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show team on HUD Dynamic Island")
@@ -468,6 +472,7 @@ MACRO_CONFIG_INT(QmSettingsPrewarm, qm_settings_prewarm, 0, 0, 1, CFGFLAG_CLIENT
 
 // Chat Bubble Settings - 聊天气泡
 MACRO_CONFIG_INT(QmChatSaveDraft, qm_chat_save_draft, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Keep unsent message on chat close")
+MACRO_CONFIG_INT(QmMessageMerge, qm_message_merge, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Merge consecutive identical player messages within 2 seconds")
 MACRO_CONFIG_INT(QmChatHideSystemPrefix, qm_chat_hide_system_prefix, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide the *** prefix before server chat messages")
 MACRO_CONFIG_INT(QmChatAnimSlideOut, qm_chat_anim_slide_out, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable left swipe offset on chat fade")
 MACRO_CONFIG_INT(QmChatAnimFadeDurationMs, qm_chat_anim_fade_duration_ms, 300, 0, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat fade smooth time (milliseconds)")

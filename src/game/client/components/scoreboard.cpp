@@ -354,6 +354,7 @@ void CScoreboard::OnReset()
 	m_MouseUnlocked = false;
 	m_RenderInteractions = false;
 	m_BetterScoreboardBlurReady = false;
+	m_aCachedTeamModes = {};
 	m_LastMousePos = std::nullopt;
 	m_SoundMuteButtonAnimState.Reset();
 	m_SoundMuteInfoAnimState.Reset();
@@ -368,6 +369,7 @@ void CScoreboard::OnRelease()
 	m_AnimContentAlpha = 0.0f;
 	m_PresentationInitialized = false;
 	m_RenderInteractions = false;
+	m_aCachedTeamModes = {};
 	m_SoundMuteButtonAnimState.Reset();
 	m_SoundMuteInfoAnimState.Reset();
 
@@ -584,6 +586,7 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 	TextRender()->TextOutlineColor(BaseOutlineColor);
 
 	const bool ShowMediaControls = g_Config.m_QmSmtcEnable != 0;
+	const bool IsTeamPlay = GameClient()->IsTeamPlay();
 	CUIRect SpectatorPanel = Spectators;
 	CUIRect MediaPanel;
 	if(ShowMediaControls)
@@ -628,7 +631,7 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 	int RemainingSpectators = 0;
 	for(const CNetObj_PlayerInfo *pInfo : GameClient()->m_Snap.m_apInfoByName)
 	{
-		if(!pInfo || pInfo->m_Team != TEAM_SPECTATORS)
+		if(!pInfo || QmScoreboardEffectivePlayerTeam(pInfo->m_Team, GameClient()->m_aClients[pInfo->m_ClientId].m_Spec, IsTeamPlay) != TEAM_SPECTATORS)
 			continue;
 		++RemainingSpectators;
 	}
@@ -643,7 +646,7 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 	bool CommaNeeded = false;
 	for(const CNetObj_PlayerInfo *pInfo : GameClient()->m_Snap.m_apInfoByName)
 	{
-		if(!pInfo || pInfo->m_Team != TEAM_SPECTATORS)
+		if(!pInfo || QmScoreboardEffectivePlayerTeam(pInfo->m_Team, GameClient()->m_aClients[pInfo->m_ClientId].m_Spec, IsTeamPlay) != TEAM_SPECTATORS)
 			continue;
 
 		if(CommaNeeded)
@@ -1059,19 +1062,43 @@ void CScoreboard::RenderSoundMuteBar(CUIRect ScoreboardRect)
 	TextRender()->TextOutlineColor(PrevOutlineColor);
 }
 
-void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan) const
+void CScoreboard::UpdateTeamModeCache()
+{
+	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aTeamModes{};
+	std::array<bool, NUM_DDRACE_TEAMS> aTeamHasSpecPlayer{};
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		if(GameClient()->m_Snap.m_apPlayerInfos[ClientId] == nullptr)
+			continue;
+
+		const int DDTeam = GameClient()->m_Teams.Team(ClientId);
+		if(DDTeam < TEAM_FLOCK || DDTeam >= NUM_DDRACE_TEAMS)
+			continue;
+
+		const auto &Character = GameClient()->m_Snap.m_aCharacters[ClientId];
+		AccumulateQmScoreboardTeamModeState(aTeamModes[DDTeam], Character.m_HasExtendedDisplayInfo, Character.m_ExtendedData.m_Flags);
+	}
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, m_aCachedTeamModes);
+}
+
+void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan)
 {
 	Plan.m_Count = 0;
 	Plan.m_aTeamModes = {};
+	Plan.m_aTeamHasSpecPlayer = {};
 	std::array<int, MAX_CLIENTS> aPreviousSourceDDTeam{};
 	std::array<int, MAX_CLIENTS> aNextSourceDDTeam{};
+	const bool IsTeamPlay = GameClient()->IsTeamPlay();
+	auto &&IsInScoreboardTeam = [&](const CNetObj_PlayerInfo *pInfo) {
+		return pInfo != nullptr && QmScoreboardEffectivePlayerTeam(pInfo->m_Team, GameClient()->m_aClients[pInfo->m_ClientId].m_Spec, IsTeamPlay) == Team;
+	};
 
 	int PreviousDDTeam = -1;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		aPreviousSourceDDTeam[i] = PreviousDDTeam;
 		const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apInfoByDDTeamScore[i];
-		if(pInfo != nullptr && pInfo->m_Team == Team)
+		if(IsInScoreboardTeam(pInfo))
 			PreviousDDTeam = GameClient()->m_Teams.Team(pInfo->m_ClientId);
 	}
 
@@ -1080,7 +1107,7 @@ void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan) c
 	{
 		aNextSourceDDTeam[i] = NextDDTeam;
 		const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apInfoByDDTeamScore[i];
-		if(pInfo != nullptr && pInfo->m_Team == Team)
+		if(IsInScoreboardTeam(pInfo))
 			NextDDTeam = GameClient()->m_Teams.Team(pInfo->m_ClientId);
 	}
 
@@ -1089,7 +1116,7 @@ void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan) c
 		for(int i = 0; i < MAX_CLIENTS; ++i)
 		{
 			const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apInfoByDDTeamScore[i];
-			if(pInfo == nullptr || pInfo->m_Team != Team)
+			if(!IsInScoreboardTeam(pInfo))
 				continue;
 			const bool IsDead = (Client()->m_TranslationContext.m_aClients[pInfo->m_ClientId].m_PlayerFlags7 & protocol7::PLAYERFLAG_DEAD) != 0;
 			if(IsDead != (RenderDead != 0))
@@ -1100,6 +1127,7 @@ void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan) c
 			Row.m_DDTeam = GameClient()->m_Teams.Team(pInfo->m_ClientId);
 			if(Row.m_DDTeam >= TEAM_FLOCK && Row.m_DDTeam < NUM_DDRACE_TEAMS)
 			{
+				Plan.m_aTeamHasSpecPlayer[Row.m_DDTeam] = Plan.m_aTeamHasSpecPlayer[Row.m_DDTeam] || GameClient()->m_aClients[pInfo->m_ClientId].m_Spec;
 				const auto &Character = GameClient()->m_Snap.m_aCharacters[pInfo->m_ClientId];
 				AccumulateQmScoreboardTeamModeState(Plan.m_aTeamModes[Row.m_DDTeam], Character.m_HasExtendedDisplayInfo, Character.m_ExtendedData.m_Flags);
 			}
@@ -1108,6 +1136,7 @@ void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan) c
 			Row.m_Dead = IsDead;
 		}
 	}
+	CacheAndRestoreQmScoreboardTeamModes(Plan.m_aTeamModes, Plan.m_aTeamHasSpecPlayer, m_aCachedTeamModes);
 }
 
 void CScoreboard::RenderTeamModeIcons(float x, float y, float IconSize, const SQmScoreboardTeamModeState &State, float Alpha)
@@ -1249,9 +1278,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	RoundRadius *= RowsVerticalScale;
 	FontSize *= RowsVerticalScale;
 
-	// At ten UI pixels or less the full Tee and secondary identity columns are no longer
-	// legible, but still account for most of the high-player-count render work.
-	const SScoreboardRowRenderDetail RowDetail = ResolveScoreboardRowRenderDetail(g_Config.m_QmBetterScoreboard != 0, LineHeight);
+	const SScoreboardRowRenderDetail RowDetail = ResolveScoreboardRowRenderDetail();
 	const bool ShowClientBrand = RowDetail.m_ShowClientBrand && g_Config.m_QmClientShowBadge;
 	const float ClientBrandLength = ShowClientBrand ? maximum(TextRender()->TextWidth(FontSize, "Qm"), TextRender()->TextWidth(FontSize, "Arg")) + CLIENT_BRAND_LABEL_GAP : 0.0f;
 	const float ClientBrandOffset = Scoreboard.x + 10.0f;
@@ -1695,6 +1722,7 @@ void CScoreboard::OnRender()
 
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
+	UpdateTeamModeCache();
 
 	if(ShouldHideFocusScoreboard(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideScoreboard != 0))
 		return;
@@ -1795,8 +1823,12 @@ void CScoreboard::OnRender()
 
 	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
 	const bool Teams = GameClient()->IsTeamPlay();
-	const auto &aTeamSize = GameClient()->m_Snap.m_aTeamSize;
-	const int NumPlayers = Teams ? maximum(aTeamSize[TEAM_RED], aTeamSize[TEAM_BLUE]) : aTeamSize[TEAM_RED];
+	CScoreboardPlayerRowPlan RedPlayerRows;
+	CScoreboardPlayerRowPlan BluePlayerRows;
+	BuildPlayerRowPlan(TEAM_RED, RedPlayerRows);
+	if(Teams)
+		BuildPlayerRowPlan(TEAM_BLUE, BluePlayerRows);
+	const int NumPlayers = Teams ? maximum(RedPlayerRows.m_Count, BluePlayerRows.m_Count) : RedPlayerRows.m_Count;
 	const bool TimeScore = GameClient()->m_GameInfo.m_TimeScore;
 
 	// Scoreboard width: clamp to screen width for narrow aspect ratios
@@ -1819,11 +1851,6 @@ void CScoreboard::OnRender()
 	CUIRect ScoreboardContent = Scoreboard;
 	ScoreboardContent.y += ContentOffset;
 	CScoreboardRenderState RenderState{};
-	CScoreboardPlayerRowPlan RedPlayerRows;
-	CScoreboardPlayerRowPlan BluePlayerRows;
-	BuildPlayerRowPlan(TEAM_RED, RedPlayerRows);
-	if(Teams)
-		BuildPlayerRowPlan(TEAM_BLUE, BluePlayerRows);
 	static CButtonContainer s_ScoreboardSortButton;
 	const float SortButtonFontSize = 10.0f;
 	const char *pSortLabel = nullptr;

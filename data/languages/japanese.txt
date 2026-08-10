@@ -3071,9 +3071,6 @@ Do not auto-show server info on entering map
 Do not predict other players when frozen
 == 自分がフリーズ中の他のプレイヤーを予測しない
 
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== この変数は設定しないでください。代わりに settings_ddnet.cfg の隣に ddnet-serverlist-urls.cfg を作成して、すべてのサーバーリスト URL を指定してください
-
 Do not set, used to mark official tutorial server
 == 設定しないでください。公式チュートリアルサーバーを示すために使用されます
 
@@ -3733,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == ステレオポジショニングを有効にする
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == システムメディアコントロールを有効にする
@@ -6311,6 +6311,9 @@ Menu option - normal
 Menu option - selected
 == メニューオプション - 選択中
 
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
+
 Message color
 == メッセージの色
 
@@ -7336,9 +7339,6 @@ Override Freeze Tile Entity Alpha (0-100)
 
 Override Group
 == 上書きグループ
-
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== Ping 推定位置を上書き、オプション: auto, af, as, as:cn, eu, na, oc, sa (auto, アフリカ, アジア, 中国, ヨーロッパ, 北アメリカ, オセアニア/オーストラリア, 南アメリカ)
 
 Override Selected
 == 選択項目を上書き
@@ -9605,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == DDNet 設定変数を表示
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== DDNet マップクリア状況を表示（プレイヤー名を info.ddnet.org/info に送信します）
-
 Show DDNet map finishes in server browser
 == サーバーブラウザで DDNet マップのクリア状況を表示
 
@@ -10924,6 +10921,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 
 Switch
 == 切り替え
+
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 
 Switch failed
 == 切り替え失敗
@@ -13079,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ テンセントクラウド API が設定されていません
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == 乗算
@@ -13200,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 指定のグラフィックスバックエンドを初期化できませんでした。内蔵グラフィックカードのドライバがインストールされていない可能性があります。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初期化中に失敗しました。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、もう一度試してください。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13216,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == レンダリングコマンドの送信に失敗しました。GPU ドライバーを更新してみてください。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 不明なエラーです。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、もう一度試してください。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

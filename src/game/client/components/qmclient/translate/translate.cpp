@@ -1557,11 +1557,21 @@ void CTranslate::Translate(const char *pName, bool ShowProgress)
 			{
 				if(pLine->m_ClientId == CChat::SERVER_MSG)
 					continue;
-				if(str_comp(pLine->m_aName, pName) == 0)
-					Score = 2;
-				else if(str_comp_nocase(pLine->m_aName, pName) == 0)
-					Score = 1;
-				else
+				for(const CChat::SMergedAuthor &Author : pLine->m_vMergedAuthors)
+				{
+					if(str_comp(Author.m_aName, pName) == 0 || str_comp(Author.m_aPlayerName, pName) == 0)
+						Score = maximum(Score, 2);
+					else if(str_comp_nocase(Author.m_aName, pName) == 0 || str_comp_nocase(Author.m_aPlayerName, pName) == 0)
+						Score = maximum(Score, 1);
+				}
+				if(pLine->m_vMergedAuthors.empty())
+				{
+					if(str_comp(pLine->m_aName, pName) == 0)
+						Score = 2;
+					else if(str_comp_nocase(pLine->m_aName, pName) == 0)
+						Score = 1;
+				}
+				if(Score == 0)
 					continue;
 			}
 			if(Score > ScoreBest)

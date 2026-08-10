@@ -80,6 +80,16 @@ cmake --build cmake-build-release --target run_tests
 - DDNet — Dennis Felsing and contributors
 - TaterClient — Community modifications
 - Best Client — Community modifications
+- [BetterLyrics](https://github.com/jayfunc/BetterLyrics) — [jayfunc](https://github.com/jayfunc)
+- [Lyricify Lyrics Helper](https://github.com/WXRIW/Lyricify-Lyrics-Helper) — [XY Wang (WXRIW)](https://github.com/WXRIW)
+- [163MusicLyrics](https://github.com/jitwxs/163MusicLyrics)
+- [NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
+- [qq-music-api](https://github.com/Rain120/qq-music-api)
+- [QQMusicApi](https://github.com/jsososo/QQMusicApi)
+- [LyricCapture](https://github.com/ElliottSilence/LyricCapture)
+- [QRCD](https://github.com/xmcp/QRCD)
+- [ntextcat](https://github.com/ivanakcheurov/ntextcat)
+- [LyricParser](https://github.com/HyPlayer/LyricParser)
 
 ## 📜 License
 

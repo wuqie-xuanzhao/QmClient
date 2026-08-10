@@ -82,6 +82,34 @@ static bool HasQmJellyHammerImpact(const CGameClient *pGameClient, int ClientId)
 	return LocalDummy >= 0 && pGameClient->m_aConfirmedHammerHitEvent[LocalDummy];
 }
 
+static int QmWeaponAnimationTuneZone(const CGameClient *pGameClient, const CCollision *pCollision, int ClientId, const CNetObj_Character &Player)
+{
+	if(ClientId >= 0 && ClientId < MAX_CLIENTS)
+	{
+		const CGameClient::CSnapState::CCharacterInfo &Character = pGameClient->m_Snap.m_aCharacters[ClientId];
+		if(Character.m_HasExtendedData && Character.m_ExtendedData.m_TuneZoneOverride >= 0)
+			return std::clamp(Character.m_ExtendedData.m_TuneZoneOverride, 0, NUM_TUNEZONES - 1);
+	}
+	return std::clamp(pCollision->IsTune(pCollision->GetMapIndex(vec2(Player.m_X, Player.m_Y))), 0, NUM_TUNEZONES - 1);
+}
+
+static bool HasQmWeaponAnimationHammerHit(const CGameClient *pGameClient, int ClientId, int AttackTick)
+{
+	return ClientId >= 0 && ClientId < MAX_CLIENTS && AttackTick >= 0 &&
+	       pGameClient->HammerHitTracker().FindLatest(ClientId, CQmHammerHitTracker::ANY_CLIENT, AttackTick);
+}
+
+static bool HasQmPredictedWeaponAnimationHammerHit(CGameClient *pGameClient, int ClientId, int AttackTick, int TuneZone, int TickSpeed)
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !pGameClient->m_aClients[ClientId].m_IsPredictedLocal)
+		return false;
+	const CCharacter *pCharacter = pGameClient->m_PredictedWorld.GetCharacterById(ClientId);
+	if(pCharacter == nullptr || pCharacter->GetAttackTick() != AttackTick)
+		return false;
+	const float MissReloadSeconds = QmWeaponReloadDelaySeconds(*pGameClient->GetTuning(TuneZone), WEAPON_HAMMER, false);
+	return pCharacter->GetReloadTimer() > QmWeaponReloadTicks(MissReloadSeconds, TickSpeed);
+}
+
 static bool IsSolidAt(const CCollision *pCollision, vec2 Pos)
 {
 	if(pCollision == nullptr)
@@ -932,6 +960,14 @@ void CPlayers::RenderPlayer(
 			const bool WeaponSwitchAnimEnabled = g_Config.m_QmWeaponSwitchAnim && ShouldRenderWeaponSwitchAnim(ClientId);
 			if(ClientId >= 0 && ClientId < MAX_CLIENTS)
 			{
+				SQmWeaponReloadAnimationState &ReloadAnimationState = m_aWeaponReloadAnimationStates[ClientId];
+				if(ReloadAnimationState.m_ObservedAttackTick != Player.m_AttackTick)
+				{
+					const int AttackTuneZone = QmWeaponAnimationTuneZone(GameClient(), Collision(), ClientId, Player);
+					const bool PredictedHammerHit = Player.m_Weapon == WEAPON_HAMMER && HasQmPredictedWeaponAnimationHammerHit(GameClient(), ClientId, Player.m_AttackTick, AttackTuneZone, Client()->GameTickSpeed());
+					ReloadAnimationState.ObserveAttack(Player.m_AttackTick, Player.m_Weapon, AttackTuneZone, PredictedHammerHit);
+				}
+
 				if(m_aWeaponSwitchLastWeapons[ClientId] != Player.m_Weapon)
 				{
 					if(WeaponSwitchAnimEnabled && m_aWeaponSwitchLastWeapons[ClientId] != -1)
@@ -950,6 +986,17 @@ void CPlayers::RenderPlayer(
 						const float RotationRadians = (g_Config.m_QmWeaponSwitchAnimRotation / 180.0f) * pi;
 						WeaponSwitchOffset += mix(Direction * (float)g_Config.m_QmWeaponSwitchAnimDistance, vec2(0.0f, 0.0f), Ease);
 						WeaponSwitchAngle += (1.0f - Ease) * RotationRadians;
+					}
+
+					if(ReloadAnimationState.MatchesAttack(Player.m_AttackTick, Player.m_Weapon))
+					{
+						const bool HammerHit = Player.m_Weapon == WEAPON_HAMMER && (ReloadAnimationState.m_PredictedHammerHit || HasQmWeaponAnimationHammerHit(GameClient(), ClientId, Player.m_AttackTick));
+						const float ReloadSeconds = QmWeaponReloadDelaySeconds(*GameClient()->GetTuning(ReloadAnimationState.m_AttackTuneZone), Player.m_Weapon, HammerHit);
+						const float DefaultReloadSeconds = QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, Player.m_Weapon, HammerHit);
+						const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(LastAttackTime, ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed());
+						const bool FireOverridesSwitchRotation = QmWeaponReloadAnimationEligible(ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed()) &&
+											 LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
+						WeaponSwitchAngle = QmResolveWeaponAnimationRotation(WeaponSwitchAngle, ReloadRotation, FireOverridesSwitchRotation);
 					}
 				}
 			}
@@ -2022,6 +2069,7 @@ void CPlayers::OnReset()
 {
 	std::fill(std::begin(m_aWeaponSwitchLastWeapons), std::end(m_aWeaponSwitchLastWeapons), -1);
 	std::fill(std::begin(m_aWeaponSwitchStartTimes), std::end(m_aWeaponSwitchStartTimes), 0.0);
+	std::fill(std::begin(m_aWeaponReloadAnimationStates), std::end(m_aWeaponReloadAnimationStates), SQmWeaponReloadAnimationState());
 }
 
 void CPlayers::OnInit()

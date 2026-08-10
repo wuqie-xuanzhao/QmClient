@@ -1,5 +1,5 @@
-#include <engine/client/backend_sdl.h>
 #include <engine/client/backend/vulkan/backend_vulkan.h>
+#include <engine/client/backend_sdl.h>
 #include <engine/client/plausible_sizes.h>
 #include <engine/client/rounded_rect_geometry.h>
 #include <engine/storage.h>
@@ -682,10 +682,10 @@ TEST(QmNewUiMenuBranches, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
 	EXPECT_EQ(RenderFavoriteMaps.find("SplitHistoryPanel"), std::string::npos);
 	EXPECT_EQ(RenderFavoriteMaps.find("SplitHistoryColumns"), std::string::npos);
 	EXPECT_NE(RenderFavoriteMaps.find("s_aFavoriteMapsWorkspaceTabButtons"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH)"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::StackControls(HistoryPanel.w)"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("s_MapHistoryListBox.DoStart(QmMapHistoryUi::CARD_ROW_HEIGHT"), std::string::npos);
-	EXPECT_NE(RenderFavoriteMaps.find("CUIRect CardHeader, StatsRow, LastEnteredRow"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH, CardRowHeight)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::StackControls(HistoryPanel.w, Layout.m_ControlHeight)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("s_MapHistoryListBox.SetScrollbarAlwaysReserved(true);"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("s_MapHistoryListBox.DoStart(CardRowHeight"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, QmLocalizationEnglishOverlayUsesExplicitEnglishFile)
@@ -884,10 +884,10 @@ TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmBetterScoreboard, qm_better_scoreboard, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(MiniFeaturesContent.find("RenderCheckbox(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", &g_Config.m_QmBetterScoreboard);"), std::string::npos);
 	EXPECT_NE(MiniFeaturesContent.find("RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(17.0f);"), std::string::npos);
+	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(18.0f);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.2\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.21\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
@@ -1240,6 +1240,8 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 		"QmLyricsAutoHideNoSmtc",
 		"QmLyricsHideWhenPaused",
 		"QmHudIslandShowTuneZoneEffects",
+		"QmSwitchCountdown",
+		"QmMessageMerge",
 	};
 	std::istringstream Lines(ConfigSource);
 	std::string Line;
@@ -1271,14 +1273,14 @@ TEST(QmNewUiMenuBranches, QmDefaultOffMigrationKeepsExplicitLegacyValues)
 	const std::string IncludeSource = ReadTextFile("src/engine/shared/config_includes.h");
 
 	EXPECT_NE(IncludeSource.find("SET_CONFIG_DOMAIN(ConfigDomain::QMCLIENT)\n#include \"config_variables_qmclient.h\""), std::string::npos);
-	EXPECT_NE(DomainSource.find("CONFIG_DOMAIN(QMCLIENT, \"QmClient/settings_qmclient.cfg\", \"settings_qmclient.cfg\", true)"), std::string::npos);
+	EXPECT_NE(DomainSource.find("CONFIG_DOMAIN(QMCLIENT, \"qmclient/settings_qmclient.cfg\", \"QmClient/settings_qmclient.cfg\", \"settings_qmclient.cfg\", true)"), std::string::npos);
 	EXPECT_NE(ClientSource.find("pConfigManager->Init();"), std::string::npos);
 	EXPECT_NE(ClientSource.find("if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))"), std::string::npos);
 	EXPECT_LT(ClientSource.find("pConfigManager->Init();"), ClientSource.find("if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))"));
 	EXPECT_NE(ConfigSource.find("pVariable->m_ConfigDomain == ConfigDomain && (pVariable->m_Flags & CFGFLAG_SAVE) != 0 && !pVariable->IsDefault()"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("pVariable->Serialize(aLineBuf, sizeof(aLineBuf));"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("WriteLine(aLineBuf, ConfigDomain);"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("char aLineBuf[32768];"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("std::vector<char> vLineBuf(pVariable->MaxSerializedSize());"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("pVariable->Serialize(vLineBuf.data(), vLineBuf.size());"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("WriteLine(vLineBuf.data(), ConfigDomain);"), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("Reset(\"qm_"), std::string::npos);
 }
 

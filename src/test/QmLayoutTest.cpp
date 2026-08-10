@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <vector>
 
 TEST(QmInputOverlayLayout, MouseClassificationRequiresMouseOnlyInputs)
@@ -95,6 +96,37 @@ TEST(QmScoreboardTeamModes, AggregationRequiresDisplayInfoAndCombinesKnownMember
 	EXPECT_TRUE(State.Practice());
 	EXPECT_TRUE(State.Team0Mode());
 	EXPECT_TRUE(State.Locked());
+}
+
+TEST(QmScoreboardTeamModes, SpecPlayersKeepTheirScoreboardTeamAndLastKnownModeState)
+{
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_GAME, false, false), TEAM_GAME);
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_SPECTATORS, true, false), TEAM_GAME);
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_SPECTATORS, false, false), TEAM_SPECTATORS);
+	EXPECT_EQ(QmScoreboardEffectivePlayerTeam(TEAM_SPECTATORS, true, true), TEAM_SPECTATORS);
+
+	constexpr int DdTeam = 3;
+	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aTeamModes{};
+	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aCachedTeamModes{};
+	std::array<bool, NUM_DDRACE_TEAMS> aTeamHasSpecPlayer{};
+
+	aTeamModes[DdTeam].m_Known = true;
+	aTeamModes[DdTeam].m_Flags = CHARACTERFLAG_PRACTICE_MODE | CHARACTERFLAG_LOCK_MODE;
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	EXPECT_TRUE(aCachedTeamModes[DdTeam].Practice());
+	EXPECT_TRUE(aCachedTeamModes[DdTeam].Locked());
+
+	aTeamModes = {};
+	aTeamHasSpecPlayer[DdTeam] = true;
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	EXPECT_TRUE(aTeamModes[DdTeam].m_Known);
+	EXPECT_TRUE(aTeamModes[DdTeam].Practice());
+	EXPECT_TRUE(aTeamModes[DdTeam].Locked());
+
+	aTeamModes = {};
+	aTeamHasSpecPlayer = {};
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	EXPECT_FALSE(aTeamModes[DdTeam].m_Known);
 }
 
 TEST(UiV2Layout, RowPaddingGapAndPosition)
@@ -287,25 +319,13 @@ TEST(QmScoreboardRender, BlurTargetUsesQuarterResolutionAndRoundsUp)
 	EXPECT_EQ(ScoreboardBlurTargetDimension(0), 0);
 }
 
-TEST(QmScoreboardRender, DenseRowsKeepClientBrandWhileReducingSecondaryDetail)
+TEST(QmScoreboardRender, PlayerRowsAlwaysUseFullDetail)
 {
-	const SScoreboardRowRenderDetail Disabled = ResolveScoreboardRowRenderDetail(false, 5.0f);
-	EXPECT_TRUE(Disabled.m_FullTee);
-	EXPECT_TRUE(Disabled.m_ShowClientBrand);
-	EXPECT_TRUE(Disabled.m_ShowClan);
-	EXPECT_TRUE(Disabled.m_ShowCountry);
-
-	const SScoreboardRowRenderDetail Regular = ResolveScoreboardRowRenderDetail(true, 13.5f);
-	EXPECT_TRUE(Regular.m_FullTee);
-	EXPECT_TRUE(Regular.m_ShowClientBrand);
-	EXPECT_TRUE(Regular.m_ShowClan);
-	EXPECT_TRUE(Regular.m_ShowCountry);
-
-	const SScoreboardRowRenderDetail Dense = ResolveScoreboardRowRenderDetail(true, 10.0f);
-	EXPECT_FALSE(Dense.m_FullTee);
-	EXPECT_TRUE(Dense.m_ShowClientBrand);
-	EXPECT_FALSE(Dense.m_ShowClan);
-	EXPECT_FALSE(Dense.m_ShowCountry);
+	const SScoreboardRowRenderDetail Detail = ResolveScoreboardRowRenderDetail();
+	EXPECT_TRUE(Detail.m_FullTee);
+	EXPECT_TRUE(Detail.m_ShowClientBrand);
+	EXPECT_TRUE(Detail.m_ShowClan);
+	EXPECT_TRUE(Detail.m_ShowCountry);
 }
 
 TEST(QmScoreboardRender, DdTeamLabelUsesBelowRowLayoutRegardlessOfColumnCount)

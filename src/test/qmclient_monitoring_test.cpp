@@ -6353,7 +6353,7 @@ TEST(QmMonitoringHelpers, GlobalCardOrderConfigHasMigrationLandingZone)
 	EXPECT_NE(QmConfig.find("MACRO_CONFIG_STR(QmSettingsCardOrder, qm_settings_card_order, 2048, \"\", CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(QmConfig.find("MACRO_CONFIG_STR(QmSidebarCardOrder, qm_sidebar_card_order, 2048, \"\", CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_EQ(QmConfig.find("qm_global_card_order, 2048"), std::string::npos);
-	EXPECT_NE(ConfigManager.find("char aLineBuf[32768];"), std::string::npos);
+	EXPECT_NE(ConfigManager.find("std::vector<char> vLineBuf(pVariable->MaxSerializedSize());"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, CardOrderModelUsesStableIdIndexForFind)

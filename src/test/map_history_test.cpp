@@ -1,6 +1,6 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
-#include <game/client/components/tclient/map_history.h>
 #include <game/client/components/qmclient/map_history_ui.h>
+#include <game/client/components/tclient/map_history.h>
 
 #include <gtest/gtest.h>
 
@@ -8,19 +8,47 @@
 
 using namespace QmMapHistory;
 
-TEST(MapHistoryUi, ResponsiveGridUsesOneTwoOrThreeColumns)
+TEST(MapHistoryUi, WorkspaceChromeScalesWithAvailableHeightWithinReadableBounds)
 {
-	EXPECT_EQ(QmMapHistoryUi::GridColumns(507.0f), 1);
-	EXPECT_EQ(QmMapHistoryUi::GridColumns(508.0f), 2);
-	EXPECT_EQ(QmMapHistoryUi::GridColumns(765.0f), 2);
-	EXPECT_EQ(QmMapHistoryUi::GridColumns(766.0f), 3);
-	EXPECT_EQ(QmMapHistoryUi::GridColumns(2000.0f), 3);
+	const QmMapHistoryUi::SWorkspaceMetrics Compact = QmMapHistoryUi::WorkspaceMetrics(320.0f);
+	const QmMapHistoryUi::SWorkspaceMetrics Standard = QmMapHistoryUi::WorkspaceMetrics(520.0f);
+	const QmMapHistoryUi::SWorkspaceMetrics Tall = QmMapHistoryUi::WorkspaceMetrics(900.0f);
+
+	EXPECT_LT(Compact.m_TabHeight, Standard.m_TabHeight);
+	EXPECT_LT(Standard.m_TabHeight, Tall.m_TabHeight);
+	EXPECT_LT(Compact.m_HeaderHeight, Standard.m_HeaderHeight);
+	EXPECT_LT(Standard.m_HeaderHeight, Tall.m_HeaderHeight);
+	EXPECT_GE(Compact.m_TabHeight, 22.0f);
+	EXPECT_LE(Tall.m_TabHeight, 28.0f);
+	EXPECT_GE(Compact.m_HeaderHeight, 26.0f);
+	EXPECT_LE(Tall.m_HeaderHeight, 32.0f);
 }
 
-TEST(MapHistoryUi, NarrowControlsStackBeforeCardGridBecomesCramped)
+TEST(MapHistoryUi, CardHeightFillsHistoryPanelWithWholeRows)
 {
-	EXPECT_TRUE(QmMapHistoryUi::StackControls(599.0f));
-	EXPECT_FALSE(QmMapHistoryUi::StackControls(600.0f));
+	EXPECT_EQ(QmMapHistoryUi::VisibleCardRows(116.0f), 2);
+	EXPECT_FLOAT_EQ(QmMapHistoryUi::CardRowHeight(116.0f), 58.0f);
+	EXPECT_EQ(QmMapHistoryUi::VisibleCardRows(409.4f), 7);
+	EXPECT_FLOAT_EQ(QmMapHistoryUi::CardRowHeight(409.4f), 409.4f / 7.0f);
+	EXPECT_EQ(QmMapHistoryUi::VisibleCardRows(1001.0f), 14);
+	EXPECT_FLOAT_EQ(QmMapHistoryUi::CardRowHeight(1001.0f), 1001.0f / 14.0f);
+}
+
+TEST(MapHistoryUi, ResponsiveGridPreservesCompactCardAspect)
+{
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(224.0f, 60.0f), 1);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(450.0f, 60.0f), 2);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(675.0f, 60.0f), 3);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(900.0f, 60.0f), 4);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(900.0f, 72.0f), 3);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(2000.0f, 60.0f), 8);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(4050.0f, 72.0f), 15);
+}
+
+TEST(MapHistoryUi, NarrowControlsStackRelativeToControlHeight)
+{
+	EXPECT_TRUE(QmMapHistoryUi::StackControls(549.0f, 22.0f));
+	EXPECT_FALSE(QmMapHistoryUi::StackControls(550.0f, 22.0f));
 }
 
 TEST(MapHistory, RepeatedVisitsAggregateByStableMapId)

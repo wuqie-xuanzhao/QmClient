@@ -92,3 +92,60 @@ TEST(SwapCountdownMessage, ParsesCompleteMessages)
 	EXPECT_EQ(Action, ESwapCountdownMessageAction::Complete);
 	EXPECT_STREQ(aCounterpart, "");
 }
+
+TEST(SwapCountdownMessage, ParsesCompletionParticipantsWithoutClearingUnrelatedRequests)
+{
+	char aFirst[64];
+	char aSecond[64];
+	EXPECT_TRUE(ParseSwapCompletionMessage("Alpha and Local have swapped.", aFirst, sizeof(aFirst), aSecond, sizeof(aSecond)));
+	EXPECT_STREQ(aFirst, "Alpha");
+	EXPECT_STREQ(aSecond, "Local");
+
+	EXPECT_TRUE(ParseSwapCompletionMessage("Local 与 Beta 已完成交换。", aFirst, sizeof(aFirst), aSecond, sizeof(aSecond)));
+	EXPECT_STREQ(aFirst, "Local");
+	EXPECT_STREQ(aSecond, "Beta");
+}
+
+TEST(SwapCountdownTracker, KeepsMultipleIncomingRequestsNewestFirst)
+{
+	CSwapCountdownTracker Tracker;
+	Tracker.Start("Alpha", false, 100);
+	Tracker.Start("Beta", false, 200);
+
+	ASSERT_EQ(Tracker.Entries().size(), 2u);
+	EXPECT_EQ(Tracker.Entries()[0].m_Counterpart, "Beta");
+	EXPECT_EQ(Tracker.Entries()[1].m_Counterpart, "Alpha");
+	EXPECT_FALSE(Tracker.Entries()[0].m_Outgoing);
+	EXPECT_NE(Tracker.Entries()[0].m_InstanceId, Tracker.Entries()[1].m_InstanceId);
+}
+
+TEST(SwapCountdownTracker, CancelAndCompleteOnlyRemoveTheMatchingRequest)
+{
+	CSwapCountdownTracker Tracker;
+	Tracker.Start("Alpha", false, 100);
+	Tracker.Start("Beta", false, 200);
+	Tracker.Start("Gamma", false, 300);
+
+	Tracker.Cancel("Beta", false);
+	ASSERT_EQ(Tracker.Entries().size(), 2u);
+	EXPECT_EQ(Tracker.Entries()[0].m_Counterpart, "Gamma");
+	EXPECT_EQ(Tracker.Entries()[1].m_Counterpart, "Alpha");
+
+	Tracker.Remove("Alpha");
+	ASSERT_EQ(Tracker.Entries().size(), 1u);
+	EXPECT_EQ(Tracker.Entries()[0].m_Counterpart, "Gamma");
+}
+
+TEST(SwapCountdownTracker, ReplacesTheSingleOutgoingRequestWithoutDroppingIncomingRequests)
+{
+	CSwapCountdownTracker Tracker;
+	Tracker.Start("Alpha", false, 100);
+	Tracker.Start("Beta", true, 200);
+	Tracker.Start("Gamma", true, 300);
+
+	ASSERT_EQ(Tracker.Entries().size(), 2u);
+	EXPECT_EQ(Tracker.Entries()[0].m_Counterpart, "Gamma");
+	EXPECT_TRUE(Tracker.Entries()[0].m_Outgoing);
+	EXPECT_EQ(Tracker.Entries()[1].m_Counterpart, "Alpha");
+	EXPECT_FALSE(Tracker.Entries()[1].m_Outgoing);
+}
