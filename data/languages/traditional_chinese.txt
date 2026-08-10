@@ -31,9 +31,6 @@
 %d more cut segments
 == 還有 %d 個裁剪片段
 
-%d new mentions
-== %d 條新被提及消息
-
 %d of %d server
 == %d/%d 個伺服器
 
@@ -220,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - 禁用，1-9999 分鐘
 
-1 new mention
-== 1 條新被提及消息
-
 1 star
 == 1 星
 
@@ -246,9 +240,6 @@
 
 5 stars
 == 5 星
-
-9+ new mentions
-== 9+ 條新被提及消息
 
 === All Local Saves ===
 == === 所有本地存檔 ===
@@ -557,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 調整外部控制台中的信息量（-3 = 無、-2 = 僅錯誤、-1 = 警告、0 = 信息、1 = 調試、2 = 跟蹤）
 
-Adjust your prediction margin while frozen
-== 調整凍結時的預測量
-
 Advanced
 == 高階
 
@@ -706,6 +694,21 @@ Angle
 
 Angle:
 == 角度：
+
+Animate chat box, emote selector, scoreboard, and spectate selection
+== 聊天框、表情選擇、計分板和觀戰選擇的展示動畫
+
+Animate lists when entering a page
+== Animate lists when entering a page
+
+Animate settings card expand and collapse height changes
+== 展開或折疊設定卡片時播放高度過渡動畫
+
+Animate settings card lists when entering a page
+== 進入設定頁面時播放卡片列表進場動畫
+
+Animate settings card reorder and layout reflow
+== 拖動排序或版面重排時播放卡片位置過渡動畫
 
 Animation
 == 動畫效果
@@ -1364,6 +1367,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 Base path for HTTPS map download URLs to clients
 == 用於向客戶端提供 HTTPS 地圖下載 URL 的基本路徑
 
+Base prediction margin
+== 基礎預測量
+
 Basic
 == 基本
 
@@ -1402,6 +1408,9 @@ Best input smooth percentage
 
 Best match
 == 最佳匹配
+
+Better scoreboard
+== 更好的計分板
 
 Bind address for client/server
 == 綁定客戶端/伺服器的地址
@@ -1445,6 +1454,9 @@ Black
 Blend mode
 == 疊加模式
 
+Block enemy chat
+== 封鎖敵對玩家聊天
+
 Block votes from blacklisted addresses
 == 阻擋來自黑名單位址的投票
 
@@ -1462,6 +1474,9 @@ Blue team wins!
 
 Body
 == 身體
+
+Bold
+== 粗體
 
 Border
 == 邊框
@@ -1622,6 +1637,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == 無法交換：對方不在你的隊伍中
 
+Card height animation
+== 設定卡片高度過渡動畫
+
+Card list entry animation
+== 設定卡片列表進場動畫
+
+Card reflow animation
+== 設定卡片重排動畫
+
 Category
 == 分類
 
@@ -1757,9 +1781,6 @@ Checking for existing player with your name
 CHN
 == 中國
 
-Choose and arrange status bar data fields
-== Choose and arrange status bar data fields
-
 Choose colors for weapons and entity lasers
 == Choose colors for weapons and entity lasers
 
@@ -1787,11 +1808,11 @@ Choose whether to browse replays or screenshots
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
 
-Clamp mouse to screen
-== 將鼠標限制在屏幕範圍內
-
 Cinematic camera
 == 電影鏡頭
+
+Clamp mouse to screen
+== 將鼠標限制在屏幕範圍內
 
 Clan
 == 戰隊
@@ -1909,6 +1930,9 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == 單擊從你的好友列表移除此玩家
+
+Click to restore full match
+== 點擊恢復完整比賽
 
 Click to select server. Double click to join your friend.
 == 點擊選擇伺服器。雙擊加入好友所在伺服器。
@@ -2191,6 +2215,9 @@ Configure the input overlay display
 
 Configure these settings
 == 配置這些設定
+
+Configure UI icon appearance
+== 設定介面圖示外觀
 
 Confirm both are on same server, same room, and support voice
 == 建議確認雙方在同服、同房間，並且對方也支持語音
@@ -2765,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == 新加入玩家發起投票或參與踢人/觀戰投票前的延遲（單位：秒）
 
+Delay before reduction
+== 降低前延遲
+
 Delay between rescues (seconds)
 == 兩次營救之間的延遲（單位：秒）
 
@@ -3008,6 +3038,9 @@ Displays X and Y velocity
 Displays your current angle in degrees
 == 顯示你當前的角度（度）
 
+Displays your current score
+== 顯示你目前的分數
+
 Displays your frames per second
 == 顯示你的每秒幀數
 
@@ -3037,9 +3070,6 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == 自己被凍結時不預測其他玩家
-
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== 不要設置此變量，而是在 settings_ddnet.cfg 旁邊創建 ddnet-serverlist-urls.cfg 以指定所有可能的伺服器列表 URL
 
 Do not set, used to mark official tutorial server
 == 勿修改：用於標記官方教學伺服器
@@ -3470,6 +3500,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == 為你當前隊伍啟用作弊，但將無法獲得排名
 
+Enable client stutter diagnostics at startup
+== 啟動時啟用用戶端卡頓診斷
+
 Enable colored console output
 == 啟用控制台彩色輸出
 
@@ -3511,6 +3544,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == 啟用增強激光特效（輝光+脈衝動畫）
+
+Enable enhanced scoreboard presentation
+== 啟用增強計分板顯示
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == 啟用事件觸發（伺服器在某些節日的眼睜表情，客戶端的聖誕皮膚）
@@ -3586,6 +3622,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == 啟用歌詞
+
+Enable macOS graphics diagnostics and Instruments signposts
+== 啟用 macOS 圖形診斷和 Instruments 標記
 
 Enable main thread and render stage performance debug logging
 == 啟用主線程與渲染階段性能調試日誌
@@ -3668,6 +3707,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == 啟用皮膚切換動畫
 
+Enable smooth cinematic camera while free spectating
+== 自由觀戰時啟用平滑電影鏡頭
+
 Enable sound
 == 聲音啟用
 
@@ -3688,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == 啟用立體聲定位
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == 啟用系統媒體控制
@@ -3929,12 +3974,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == 外部控制台密碼。需要設置此選項才能啟用經濟。
 
-Extra animations
-== 額外動畫
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== 額外的動畫：聊天框、表情選擇框、計分板和觀戰選擇頁使用 Presentation State 動畫
-
 Extras
 == 其他
 
@@ -4076,6 +4115,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == 包含公告的文件，每行一個
 
+Fill
+== 填充
+
 Filter chat messages by regular expression
 == 按正則表達式過濾聊天消息
 
@@ -4153,9 +4195,6 @@ First page in console
 
 Flip:
 == 翻轉：
-
-Focus color
-== 焦點顏色
 
 Focus mode
 == 專注模式
@@ -4328,8 +4367,8 @@ Friends
 Friends only
 == 僅限好友
 
-Frozen Margin
-== 凍結預測值
+Frozen prediction margin
+== 凍結時預測量
 
 FSAA samples
 == 全屏抗鋸齒（FSAA）採樣倍數
@@ -4346,8 +4385,14 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 == 全螢幕
 
+Full demo + sidecar
+== 完整 demo + sidecar
+
 Full map listen in same room
 == 同房間全圖收聽
+
+Full: each enabled animation category uses its complete transition
+== 完整：依下方各項開關播放完整過渡和展示動畫
 
 Fullscreen
 == 獨佔全屏
@@ -4493,6 +4538,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == 全局開關鍵
 
+Global UI size percentage
+== 全域 UI 大小百分比
+
 Glow
 == 輝光
 
@@ -4571,11 +4619,11 @@ Graphics card
 Graphics display
 == 圖像顯示
 
-Graphics library major version
-== 圖形庫主要版本
+Graphics library major version (0 = auto-detect)
+== Graphics library major version (0 = auto-detect)
 
-Graphics library minor version
-== 圖形庫次要版本
+Graphics library minor version (0 = auto-detect)
+== Graphics library minor version (0 = auto-detect)
 
 Graphics library patch version
 == 圖庫補丁版本
@@ -4648,6 +4696,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == 隱藏聊天框
+
+Hide chat messages from players marked as enemies
+== 隱藏被標記為敵人的玩家聊天訊息
 
 Hide death/respawn effects
 == 隱藏死亡/重生特效
@@ -4786,6 +4837,12 @@ Hide Settings Tabs
 
 Hide sponsor QR code
 == 隱藏贊助碼
+
+Hide system message prefix
+== 隱藏系統訊息前綴
+
+Hide the *** prefix before server chat messages
+== 隱藏伺服器聊天訊息前的 *** 前綴
 
 Hide toast
 == 隱藏提示
@@ -4964,6 +5021,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls/zh
 
@@ -5008,6 +5068,9 @@ I am away from the game window
 
 I muted you
 == 我屏蔽你了
+
+Icons
+== 圖示
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == 若為 1，僅在連接時自動開始錄製一次 demo；若為 0，遊戲結束後也會重新自動開始錄製
@@ -5174,20 +5237,20 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == 輸入設備打開失敗，建議重插耳機/麥克風後刷新，或重新選擇輸入設備
 
-Input focus color
-== 介面輸入焦點顏色
-
 Input overlay
 == 按鍵顯示
 
 Input overlay display
 == 按鍵顯示疊加
 
+Input overlay keyboard scale (percent)
+== 輸入覆蓋鍵盤比例（百分比）
+
+Input overlay mouse scale (percent)
+== 輸入覆蓋滑鼠比例（百分比）
+
 Input overlay opacity (percent)
 == 輸入疊加不透明度（百分比）
-
-Input overlay scale (percent)
-== 輸入疊加比例（百分比）
 
 Input overlay X position (percent)
 == 輸入疊加 X 位置（百分比）
@@ -5210,14 +5273,17 @@ Interface
 Interface animations
 == 介面動畫
 
-Interface color
-== 界面顏色
-
 Interface page
 == 界面頁面
 
 Interface settings page
 == 界面設置頁面
+
+Interface surface
+== 介面表面
+
+Interface surface color
+== 介面表面顏色
 
 Interface transparency
 == 通用介面透明度
@@ -5398,6 +5464,12 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == 卡鍵：重置本體
+
+Keyboard focus ring color
+== 鍵盤焦點環顏色
+
+Keyboard size
+== 鍵盤大小
 
 Keyword Reply
 == 關鍵詞回覆
@@ -5993,8 +6065,11 @@ Manual target
 Map
 == 地圖
 
-Map browser color
-== 地圖瀏覽器顏色
+Map browser surface
+== 地圖瀏覽器表面
+
+Map browser surface color
+== 地圖瀏覽器表面顏色
 
 Map browser transparency
 == 地圖瀏覽器透明度
@@ -6179,6 +6254,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == 最多可有多少玩家參與投票（0 = 無限制）
 
+Maximum reduction
+== 最大降低量
+
 Maximum rows
 == 最大行數
 
@@ -6233,6 +6311,9 @@ Menu option - normal
 Menu option - selected
 == 菜單選項 - 選中
 
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
+
 Message color
 == 留言顏色
 
@@ -6250,9 +6331,6 @@ Message to send on auto vote, leave empty to not send
 
 Messages
 == 消息
-
-Messages that already look like the target language will skip auto-translate
-== 看起來已經是目標語言的消息會跳過自動翻譯
 
 Microphone
 == 麥克風
@@ -6391,6 +6469,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == 菜單/編輯器中的鼠標靈敏度
+
+Mouse size
+== 滑鼠大小
 
 Move left
 == 向左移動
@@ -7001,14 +7082,14 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 == 每 tick 發送的投票選項數量
 
-Numeric-only messages will be skipped
-== 純數字消息會直接跳過
-
 o = Send rate
 == o = 發送速率
 
 Off
 == 關
+
+Off: disables all interface animations while preserving the options below
+== 關閉：停用全部介面動畫，但保留下面各項開關的設定
 
 Official
 == 官方
@@ -7258,9 +7339,6 @@ Override Freeze Tile Entity Alpha (0-100)
 
 Override Group
 == 覆蓋群組
-
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== 覆蓋 ping 估計的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自動、非洲、亞洲、中國、歐洲、北美、大洋洲/澳大利亞、南美洲
 
 Override Selected
 == 覆蓋選定項
@@ -7727,9 +7805,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == 預測提前量過高，請檢查預測設定與伺服器時序
 
-Prediction Margin
-== 預測量
-
 Prediction margin
 == 預測邊距
 
@@ -7741,6 +7816,9 @@ Prediction offset
 
 Preparing demo playback
 == 正在準備回放
+
+Presentation animations
+== 介面展示動畫
 
 Preset %d
 == 預設 %d
@@ -7810,6 +7888,12 @@ Preview the current chat appearance
 
 Preview visibilities
 == 預覽可見性
+
+Preview/render only one DDRace team from a full match demo
+== 從完整比賽 demo 中只預覽/渲染一個 DDRace 隊伍
+
+Preview/render only this team
+== 僅預覽/渲染此隊伍
 
 Previous
 == 上一個
@@ -7936,6 +8020,15 @@ q = Connection quality
 
 Qm
 == 棲夢
+
+Qm UI custom icon color
+== Qm 介面圖示自訂顏色
+
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm 介面圖示顏色：1=白色，2=黑色，3=自訂，4=彩虹
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm 介面圖示字重：0=標準，1=粗體，2=細體，3=填滿
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：序號必須在 1 到 %d 之間
@@ -8168,6 +8261,9 @@ Record chat replays.
 Record demo
 == 錄製回放
 
+Record match
+== 錄製比賽
+
 Record to a file
 == 記錄到文件
 
@@ -8183,8 +8279,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == 凍結時減少 antiping 和玩家預測
 
+Reduce prediction while frozen
+== 凍結時降低預測量
+
 Reduced
 == 降低
+
+Reduced: uses shorter transitions and disables presentation animations
+== 精簡：保留較短的過渡效果，並停用展示動畫
 
 Refresh
 == 刷新
@@ -8206,6 +8308,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == 向主伺服器註冊伺服器以進行公開列表，還可以接受要註冊的以逗號分隔的協議列表，例如“ipv4，ipv6”
+
+Regular
+== 標準
 
 Regular background color
 == 原圖層背景顏色
@@ -8344,9 +8449,6 @@ Remove from queue
 
 Remove Item
 == 刪除項
-
-Remove prediction & antiping in freeze
-== 在凍結時移除預測 & 延遲補償
 
 Remove right to vote from player with client ID
 == 刪除具有客戶端 ID 的玩家的投票權
@@ -8957,9 +9059,6 @@ Score limit
 Scoreboard
 == 計分板
 
-Scoreboard color
-== 計分板顏色
-
 Scoreboard cursor
 == 計分板光標
 
@@ -8971,6 +9070,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == 記分牌排序模式（0=分數，1=分）
+
+Scoreboard surface
+== 計分板表面
+
+Scoreboard surface color
+== 計分板表面顏色
 
 Scoreboard transparency
 == 計分板透明度
@@ -9311,6 +9416,15 @@ Sets your tee's eye emote
 Settings
 == 設置
 
+Settings card background
+== Settings card background
+
+Settings card background color
+== Settings card background color
+
+Settings card background transparency
+== Settings card background transparency
+
 Settings card border color
 == 設定卡片邊框顏色
 
@@ -9491,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == 顯示 DDNet 配置變量
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== 顯示你是否已完成 DDNet 地圖（將你的玩家姓名傳輸至 info.ddnet.org/info）
-
 Show DDNet map finishes in server browser
 == 在伺服器瀏覽器中顯示已完成的 DDNet 地圖
 
@@ -9508,9 +9619,6 @@ Show default flag in scoreboard
 
 Show default mod rules.
 == 顯示預設模組規則
-
-Show Directory
-== 顯示目錄
 
 Show dotted map route debug
 == 顯示地圖點狀路線調試
@@ -10127,6 +10235,12 @@ Show toast
 Show translation
 == 顯示翻譯
 
+Show Tune Zone effects
+== 顯示 Tune Zone 效果
+
+Show Tune Zone effects on HUD Dynamic Island
+== HUD 靈動島顯示 Tune Zone 效果
+
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 顯示影響自身玩家的調整參數信息（0 = 關閉，1 = 顯示已改變的，2 = 顯示全部）
 
@@ -10634,6 +10748,9 @@ Start marker of replay slice
 Start playback of ghosts
 == 開始播放鬼影
 
+Start QmLive full match demo recording
+== 開始 QmLive 完整比賽 demo 錄製
+
 Start recording a demo
 == 開始錄製回放
 
@@ -10699,6 +10816,9 @@ Stop match record
 
 Stop practice
 == 停止練習
+
+Stop QmLive full match demo recording
+== 停止 QmLive 完整比賽 demo 錄製
 
 Stop record
 == 停止錄製
@@ -10801,6 +10921,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 
 Switch
 == 切換
+
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 
 Switch failed
 == 切換失敗
@@ -11165,6 +11288,9 @@ Text alpha
 Text color
 == 文本顏色
 
+Text input focus ring color
+== 文字輸入焦點環顏色
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == 感謝您的陪伴與信任。正是如此，才給了我繼續前行的勇氣
 
@@ -11246,11 +11372,17 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == 編輯器中有尚未保存的地圖，建議先保存。
 
+Thin
+== 細體
+
 Thinking mode requires a reasoning model
 == 啟用思考模式需要使用推理模型
 
 This ID is not connected
 == 該 ID 未連接
+
+This is the master switch for all interface animation categories
+== 這是所有介面動畫類別的總開關
 
 This name cannot be used for files and folders
 == 此名稱不能用於文件和文件夾
@@ -11591,6 +11723,9 @@ Translation button cancel color
 Translation color
 == 翻譯顏色
 
+Translation color alpha migration completed flag
+== 翻譯顏色透明度遷移已完成標記
+
 Translation menu background color
 == 翻譯菜單背景顏色
 
@@ -11657,6 +11792,9 @@ Tune variable to value
 Tune variable to value or show current value
 == 將變量調到指定值，或顯示當前值
 
+Tune Zone effect icon legend
+== Tune Zone 效果圖示說明
+
 Tutorial
 == 教學
 
@@ -11693,11 +11831,23 @@ UI color
 UI controller sens.
 == 搖桿靈敏度（界面）
 
+UI icon color
+== 介面圖示顏色
+
+UI icon custom color
+== 介面圖示自訂顏色
+
+UI icon weight
+== 介面圖示粗細
+
 UI motion level
 == 介面動效強度
 
 UI mouse sens.
 == 鼠標靈敏度（界面）
+
+UI rounded corner segments (even numbers recommended)
+== UI 圓角分段數（建議使用偶數）
 
 UI scale
 == UI 大小
@@ -11900,9 +12050,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
 == 正在將地圖數據傳輸至顯卡
 
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
-
 URL for downloading community skins
 == 用於下載社區皮膚的 URL
 
@@ -11926,6 +12073,9 @@ Use 12 hour clock
 
 Use 12-hour clock for local time
 == 本地時間使用 12 小時制
+
+Use a fixed prediction margin while frozen
+== 凍結時使用固定預測量
 
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == 使用另一套 antiping 平滑算法，與 cl_antiping_smooth 不兼容
@@ -12043,6 +12193,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == 使用敵對列表作為指示器
+
+Used by active shared text and numeric input fields
+== 用於已啟用的共用文字與數值輸入框
 
 Uses the active action with the current aiming position.
 == 使用當前動作配合目前的瞄準位置。
@@ -12404,6 +12557,9 @@ What's done is done, no use saying more
 Wheel animate
 == 滾輪動畫
 
+When TClient rainbow Tee is enabled, this feature has no effect.
+== 已啟用 TClient 彩虹 Tee 時，本功能不會生效。
+
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 越過起跑線時，顯示復現最佳成績的影子 Tee
 
@@ -12497,6 +12653,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == 發送私聊：/w 玩家名 內容
 
+White
+== 白色
+
 Why are you slowmo replaying to read this?
 == 所以你為什麼要慢速回放來看這個？
 
@@ -12541,6 +12700,9 @@ Windowed fullscreen
 
 Word Filter
 == 屏蔽詞
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== 屏蔽詞操作：0=替換匹配詞，1=隱藏整條訊息
 
 Word highlight soft edge width (px)
 == 逐字邊緣軟過渡寬度 px
@@ -12917,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 騰訊雲 API 密鑰未配置
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == 正片疊底
@@ -13038,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 無法初始化當前配置的圖形後端，請檢查此電腦是否已安裝集成顯卡的驅動程序。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初始化失敗。請嘗試打開配置目錄中的 settings_ddnet.cfg 文件，將 gfx_backend 改為 OpenGL 或 Vulkan 再重試。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13054,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 渲染指令提交失敗。請嘗試更新顯卡驅動程序。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 未知錯誤。請嘗試打開配置目錄中的 settings_ddnet.cfg 並將 gfx_backend 改為 OpenGL 或 Vulkan 再重試。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

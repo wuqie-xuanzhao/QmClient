@@ -270,6 +270,9 @@ public:
 	// server info
 	virtual void GetServerInfo(class CServerInfo *pServerInfo) const = 0;
 	virtual bool ServerCapAnyPlayerFlag() const = 0;
+	virtual bool QmLiveObserverActive() const = 0;
+	virtual bool QmLiveDirectorActive() const = 0;
+	virtual bool QmLiveCompatDirectorActive() const = 0;
 
 	enum class EPredictionMarginState
 	{

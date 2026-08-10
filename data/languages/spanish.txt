@@ -217,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - Desactivado, 1-9999 minutos
 
-1 new mention
-== 1 nueva mención
-
 1 star
 == 1 estrella
 
@@ -551,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == Ajustar la verbosidad en la consola externa (-3 = ninguno, -2 = solo errores, -1 = advertencias, 0 = info, 1 = depuración, 2 = traza).
 
-Adjust your prediction margin while frozen
-== Ajustar el margen de predicción mientras estás congelado
-
 Advanced
 == Avanzado
 
@@ -700,6 +694,21 @@ Angle
 
 Angle:
 == Ángulo:
+
+Animate chat box, emote selector, scoreboard, and spectate selection
+== Animar el chat, el selector de emoticonos, el marcador y la selección de espectador
+
+Animate lists when entering a page
+== Animate lists when entering a page
+
+Animate settings card expand and collapse height changes
+== Animar los cambios de altura al expandir y contraer tarjetas de ajustes
+
+Animate settings card lists when entering a page
+== Animar las listas de tarjetas de ajustes al entrar en una página
+
+Animate settings card reorder and layout reflow
+== Animar la reordenación y el reajuste de diseño de las tarjetas de ajustes
 
 Animation
 == Animación
@@ -1358,6 +1367,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 Base path for HTTPS map download URLs to clients
 == Ruta base para las URL de descarga de mapas HTTPS para los clientes
 
+Base prediction margin
+== Margen de predicción base
+
 Basic
 == Básico
 
@@ -1397,6 +1409,9 @@ Best input smooth percentage
 Best match
 == Mejor coincidencia
 
+Better scoreboard
+== Tabla de puntuaciones mejorada
+
 Bind address for client/server
 == Dirección de enlace para el cliente/servidor
 
@@ -1405,9 +1420,6 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
-
-Better scoreboard
-== Tabla de puntuaciones mejorada
 
 Bind key to execute a command or view keybindings
 == Vincular tecla para ejecutar un comando o ver vinculaciones de teclas
@@ -1442,6 +1454,9 @@ Black
 Blend mode
 == Modo de mezcla
 
+Block enemy chat
+== Bloquear el chat de enemigos
+
 Block votes from blacklisted addresses
 == Bloquear votos de direcciones en la lista negra
 
@@ -1459,6 +1474,9 @@ Blue team wins!
 
 Body
 == Cuerpo
+
+Bold
+== Negrita
 
 Border
 == Borde
@@ -1619,6 +1637,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == No se puede intercambiar: el otro jugador no está en tu equipo
 
+Card height animation
+== Animación de altura de la tarjeta de ajustes
+
+Card list entry animation
+== Animación de entrada de la lista de tarjetas de ajustes
+
+Card reflow animation
+== Animación de reorganización de tarjetas de ajustes
+
 Category
 == Categoría
 
@@ -1754,9 +1781,6 @@ Checking for existing player with your name
 CHN
 == China
 
-Choose and arrange status bar data fields
-== Choose and arrange status bar data fields
-
 Choose colors for weapons and entity lasers
 == Choose colors for weapons and entity lasers
 
@@ -1783,6 +1807,9 @@ Choose whether to browse replays or screenshots
 
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
+
+Cinematic camera
+== Cámara cinematográfica
 
 Clamp mouse to screen
 == Sujetar ratón a la pantalla
@@ -2188,6 +2215,9 @@ Configure the input overlay display
 
 Configure these settings
 == Configurar estos ajustes
+
+Configure UI icon appearance
+== Configurar la apariencia de los iconos de la interfaz
 
 Confirm both are on same server, same room, and support voice
 == Confirma que ambos están en el mismo servidor, misma sala y son compatibles con voz
@@ -2762,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == Retraso antes de que los nuevos jugadores puedan iniciar votaciones o participar en votaciones de expulsión/espectador (segundos)
 
+Delay before reduction
+== Retardo antes de reducir
+
 Delay between rescues (seconds)
 == Retraso entre rescates (segundos)
 
@@ -3005,6 +3038,9 @@ Displays X and Y velocity
 Displays your current angle in degrees
 == Muestra tu ángulo actual en grados
 
+Displays your current score
+== Muestra tu puntuación actual
+
 Displays your frames per second
 == Muestra tus fotogramas por segundo
 
@@ -3034,9 +3070,6 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == No predecir otros jugadores cuando estás congelado
-
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== No establezca esta variable, en su lugar cree ddnet-serverlist-urls.cfg junto a settings_ddnet.cfg para especificar todas las URL posibles de la lista de servidores
 
 Do not set, used to mark official tutorial server
 == No configurar: usado para marcar servidor tutorial oficial
@@ -3467,6 +3500,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == Habilitar trampas para la carrera de tu equipo actual, pero no podrás obtener un ranking
 
+Enable client stutter diagnostics at startup
+== Activar el diagnóstico de tirones del cliente al iniciar
+
 Enable colored console output
 == Habilitar salida de consola en color
 
@@ -3508,6 +3544,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == Activar efecto láser mejorado (brillo + animación de pulso)
+
+Enable enhanced scoreboard presentation
+== Activar la presentación mejorada del marcador
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == Habilitar disparadores de eventos (ojos de emoticono del servidor en festivos, skin navideña del cliente)
@@ -3583,6 +3622,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == Habilitar letras
+
+Enable macOS graphics diagnostics and Instruments signposts
+== Activar el diagnóstico gráfico de macOS y las marcas de Instruments
 
 Enable main thread and render stage performance debug logging
 == Activar registro de depuración de rendimiento del hilo principal y fase de renderizado
@@ -3665,6 +3707,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == Activar animación de cambio de skin
 
+Enable smooth cinematic camera while free spectating
+== Activar la cámara cinemática fluida al espectar libremente
+
 Enable sound
 == Habilitar sonido
 
@@ -3685,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == Activar posicionamiento estéreo
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == Activar control multimedia del sistema
@@ -3926,12 +3974,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == Contraseña de consola externa. Debe configurarse para habilitar la economía.
 
-Extra animations
-== Animaciones adicionales
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== Animaciones adicionales: el cuadro de chat, el selector de emoticonos, la tabla de puntuaciones y la página de selección de espectador usan la animación de estado de presentación
-
 Extras
 == Extras
 
@@ -4073,6 +4115,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == Archivo con anuncios, uno por línea.
 
+Fill
+== Relleno
+
 Filter chat messages by regular expression
 == Filtrar mensajes de chat por expresión regular
 
@@ -4150,9 +4195,6 @@ First page in console
 
 Flip:
 == Voltear:
-
-Focus color
-== Color de enfoque
 
 Focus mode
 == Modo enfoque
@@ -4325,8 +4367,8 @@ Friends
 Friends only
 == Solo amigos
 
-Frozen Margin
-== Margen de Congelación
+Frozen prediction margin
+== Margen de predicción al estar congelado
 
 FSAA samples
 == Muestras FSAA
@@ -4348,6 +4390,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == Escuchar en todo el mapa en la misma sala
+
+Full: each enabled animation category uses its complete transition
+== Completo: cada categoría de animación activada usa su transición completa
 
 Fullscreen
 == Pantalla completa
@@ -4493,6 +4538,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == Tecla de activación global
 
+Global UI size percentage
+== Porcentaje de tamaño global de la interfaz
+
 Glow
 == Resplandor
 
@@ -4571,11 +4619,11 @@ Graphics card
 Graphics display
 == Visualización gráfica
 
-Graphics library major version
-== Versión principal de la biblioteca de gráficos
+Graphics library major version (0 = auto-detect)
+== Graphics library major version (0 = auto-detect)
 
-Graphics library minor version
-== Versión secundaria de la biblioteca de gráficos
+Graphics library minor version (0 = auto-detect)
+== Graphics library minor version (0 = auto-detect)
 
 Graphics library patch version
 == Versión de parche de la biblioteca de gráficos
@@ -4648,6 +4696,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == Ocultar chat
+
+Hide chat messages from players marked as enemies
+== Ocultar los mensajes de chat de jugadores marcados como enemigos
 
 Hide death/respawn effects
 == Ocultar efectos de muerte/resurrección
@@ -4786,6 +4837,12 @@ Hide Settings Tabs
 
 Hide sponsor QR code
 == Ocultar código QR del patrocinador
+
+Hide system message prefix
+== Ocultar prefijo de mensajes del sistema
+
+Hide the *** prefix before server chat messages
+== Ocultar el prefijo *** antes de los mensajes de chat del servidor
 
 Hide toast
 == Ocultar toast
@@ -4964,6 +5021,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5008,6 +5068,9 @@ I am away from the game window
 
 I muted you
 == Te silencié
+
+Icons
+== Iconos
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == Si es 1, grabar automáticamente solo una vez al conectar; si es 0, la grabación automática se reinicia después de que termine la partida
@@ -5174,20 +5237,20 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == Fallo al abrir el dispositivo de entrada, intenta reconectar los auriculares/micrófono o seleccionar otro dispositivo de entrada
 
-Input focus color
-== Color de foco
-
 Input overlay
 == Superposición de entrada
 
 Input overlay display
 == Visualización de superposición de entrada
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == Opacidad de la superposición de entrada (porcentaje)
-
-Input overlay scale (percent)
-== Escala de la superposición de entrada (porcentaje)
 
 Input overlay X position (percent)
 == Posición X de la superposición de entrada (porcentaje)
@@ -5210,14 +5273,17 @@ Interface
 Interface animations
 == Animaciones de interfaz
 
-Interface color
-== Color de la interfaz
-
 Interface page
 == Página de interfaz
 
 Interface settings page
 == Página de configuración de interfaz
+
+Interface surface
+== Superficie de la interfaz
+
+Interface surface color
+== Color de la superficie de la interfaz
 
 Interface transparency
 == Transparencia general de la interfaz
@@ -5398,6 +5464,12 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == Tecla Pegada: Reiniciar Propio
+
+Keyboard focus ring color
+== Color del anillo de enfoque del teclado
+
+Keyboard size
+== Tamaño del teclado
 
 Keyword Reply
 == Respuesta por palabras clave
@@ -5993,8 +6065,11 @@ Manual target
 Map
 == Mapa
 
-Map browser color
-== Color del navegador de mapas
+Map browser surface
+== Superficie del navegador de mapas
+
+Map browser surface color
+== Color de la superficie del navegador de mapas
 
 Map browser transparency
 == Transparencia del navegador de mapas
@@ -6179,6 +6254,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == Máximo de jugadores participando en una votación (0 = ilimitado)
 
+Maximum reduction
+== Reducción máxima
+
 Maximum rows
 == Filas máximas
 
@@ -6232,6 +6310,9 @@ Menu option - normal
 
 Menu option - selected
 == Opción de menú - seleccionada
+
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
 
 Message color
 == Color del mensaje
@@ -6388,6 +6469,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == Sensibilidad del ratón en menú/editor
+
+Mouse size
+== Tamaño del ratón
 
 Move left
 == Mover a la izquierda
@@ -6998,14 +7082,14 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 == Número de opciones de voto enviadas por tick
 
-Numeric-only messages will be skipped
-== Los mensajes solo numéricos se omitirán
-
 o = Send rate
 == o = Tasa de envío
 
 Off
 == Apagado
+
+Off: disables all interface animations while preserving the options below
+== Desactivado: desactiva todas las animaciones de la interfaz y conserva las opciones de abajo
 
 Official
 == Oficial
@@ -7256,9 +7340,6 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == Sobrescribir Grupo
 
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== Anular ubicación de estimación de ping, opciones: auto, af, as, as:cn, eu, na, oc, sa (auto, África, Asia, China, Europa, Norteamérica, Oceanía/Australia, Sudamérica)
-
 Override Selected
 == Sobrescribir Seleccionado
 
@@ -7375,9 +7456,6 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == Umbral de registro de depuración de rendimiento (ms)
-
-Performance mode (placeholder)
-== Modo de rendimiento (marcador de posición)
 
 Personal best:
 == Mejor personal:
@@ -7727,9 +7805,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == El adelanto de predicción es alto; comprueba la configuración de predicción y el tiempo del servidor
 
-Prediction Margin
-== Margen de Predicción
-
 Prediction margin
 == Margen de predicción
 
@@ -7741,6 +7816,9 @@ Prediction offset
 
 Preparing demo playback
 == Preparando reproducción de la demo
+
+Presentation animations
+== Animaciones de presentación
 
 Preset %d
 == Preajuste %d
@@ -7942,6 +8020,15 @@ q = Connection quality
 
 Qm
 == Qm
+
+Qm UI custom icon color
+== Color personalizado de iconos de Qm UI
+
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Color de los iconos de Qm UI: 1=blanco, 2=negro, 3=personalizado, 4=arcoíris
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Grosor de iconos de Qm UI: 0=normal, 1=negrita, 2=fino, 3=relleno
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: el índice debe estar entre 1 y %d
@@ -8192,8 +8279,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == Reducir antiping y predicción de jugador cuando está congelado
 
+Reduce prediction while frozen
+== Reducir la predicción al estar congelado
+
 Reduced
 == Reducido
+
+Reduced: uses shorter transitions and disables presentation animations
+== Reducido: usa transiciones más cortas y desactiva las animaciones de presentación
 
 Refresh
 == Refrescar
@@ -8215,6 +8308,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == Registrar servidor con servidor maestro para lista pública, acepta protocolos separados por comas, ej. 'ipv4,ipv6'
+
+Regular
+== Normal
 
 Regular background color
 == Color de fondo normal
@@ -8353,9 +8449,6 @@ Remove from queue
 
 Remove Item
 == Eliminar Elemento
-
-Remove prediction & antiping in freeze
-== Eliminar predicción y antiping en congelación
 
 Remove right to vote from player with client ID
 == Eliminar el derecho a voto del jugador con ID de cliente
@@ -8966,9 +9059,6 @@ Score limit
 Scoreboard
 == Tabla de puntuaciones
 
-Scoreboard color
-== Color de la tabla de puntuaciones
-
 Scoreboard cursor
 == Cursor de la tabla de puntuaciones
 
@@ -8980,6 +9070,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == Modo de ordenación de la tabla de clasificación (0=puntuación, 1=puntos)
+
+Scoreboard surface
+== Superficie del marcador
+
+Scoreboard surface color
+== Color de la superficie del marcador
 
 Scoreboard transparency
 == Transparencia de la tabla de clasificación
@@ -9320,6 +9416,15 @@ Sets your tee's eye emote
 Settings
 == Ajustes
 
+Settings card background
+== Settings card background
+
+Settings card background color
+== Settings card background color
+
+Settings card background transparency
+== Settings card background transparency
+
 Settings card border color
 == Color de los bordes de las tarjetas de configuración
 
@@ -9500,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == Mostrar variables de configuración de DDNet
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== Mostrar finalización de mapas de DDNet (transmite el nombre del jugador a info.ddnet.org/info)
-
 Show DDNet map finishes in server browser
 == Mostrar finalizaciones de mapas DDNet en el navegador de servidores
 
@@ -9517,9 +9619,6 @@ Show default flag in scoreboard
 
 Show default mod rules.
 == Mostrar reglas del mod predeterminado.
-
-Show Directory
-== Mostrar directorio
 
 Show dotted map route debug
 == Mostrar depuración de ruta de mapa punteada
@@ -10135,6 +10234,12 @@ Show toast
 
 Show translation
 == Mostrar traducción
+
+Show Tune Zone effects
+== Show Tune Zone effects
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Mostrar parámetros de ajuste que afectan al propio jugador (0 = Desactivado, 1 = Mostrar cambiados, 2 = Mostrar todos)
@@ -10817,6 +10922,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 Switch
 == Cambiar
 
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+
 Switch failed
 == Cambio fallido
 
@@ -11180,6 +11288,9 @@ Text alpha
 Text color
 == Color del texto
 
+Text input focus ring color
+== Color del anillo de enfoque de entrada de texto
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Gracias por su compañía y confianza. Esto es lo que me da el valor para seguir adelante.
 
@@ -11261,11 +11372,17 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == Hay un mapa sin guardar en el editor, quizás quieras guardarlo.
 
+Thin
+== Fino
+
 Thinking mode requires a reasoning model
 == El modo de pensamiento requiere un modelo de razonamiento
 
 This ID is not connected
 == Este ID no está conectado
+
+This is the master switch for all interface animation categories
+== Este es el interruptor principal de todas las categorías de animaciones de la interfaz
 
 This name cannot be used for files and folders
 == Este nombre no se puede usar para archivos y carpetas
@@ -11606,6 +11723,9 @@ Translation button cancel color
 Translation color
 == Color de traducción
 
+Translation color alpha migration completed flag
+== Indicador de migración de alfa de colores de traducción completada
+
 Translation menu background color
 == Color de fondo del menú de traducción
 
@@ -11672,6 +11792,9 @@ Tune variable to value
 Tune variable to value or show current value
 == Ajustar variable a valor o mostrar valor actual
 
+Tune Zone effect icon legend
+== Mostrar efectos de Tune Zone
+
 Tutorial
 == Tutorial
 
@@ -11708,11 +11831,23 @@ UI color
 UI controller sens.
 == Sensibilidad del mando en la interfaz
 
+UI icon color
+== Color de los iconos de la interfaz
+
+UI icon custom color
+== Color personalizado de los iconos de la interfaz
+
+UI icon weight
+== Grosor de los iconos de la interfaz
+
 UI motion level
 == Animación UI
 
 UI mouse sens.
 == Sens. ratón UI
+
+UI rounded corner segments (even numbers recommended)
+== Segmentos de esquina redondeada de la interfaz (se recomiendan números pares)
 
 UI scale
 == Escala de UI
@@ -11915,9 +12050,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
 == Subiendo datos del mapa a la GPU
 
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
-
 URL for downloading community skins
 == URL para descargar skins de la comunidad
 
@@ -11941,6 +12073,9 @@ Use 12 hour clock
 
 Use 12-hour clock for local time
 == Usar formato de 12 horas para la hora local
+
+Use a fixed prediction margin while frozen
+== Usar un margen de predicción fijo al estar congelado
 
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == Usar suavizado antiping alternativo, incompatible con cl_antiping_smooth
@@ -12058,6 +12193,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == Usar grupos de la lista de guerra para el indicador
+
+Used by active shared text and numeric input fields
+== Lo usan los campos compartidos activos de texto y números
 
 Uses the active action with the current aiming position.
 == Usa la acción activa con la posición de puntería actual.
@@ -12419,6 +12557,9 @@ What's done is done, no use saying more
 Wheel animate
 == Animación de la rueda
 
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Cuando el Tee arcoíris de TClient está activado, esta función no tiene efecto.
+
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Al cruzar la línea de salida, muestra un fantasma que replica los movimientos de tu mejor tiempo
 
@@ -12512,6 +12653,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == Susurro: /w jugador mensaje
 
+White
+== Blanco
+
 Why are you slowmo replaying to read this?
 == ¿Por qué estás reproduciendo en cámara lenta para leer esto?
 
@@ -12556,6 +12700,9 @@ Windowed fullscreen
 
 Word Filter
 == Filtro de palabras
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== Acción del filtro de palabras: 0=reemplazar palabras coincidentes, 1=ocultar el mensaje completo
 
 Word highlight soft edge width (px)
 == Karaoke highlight soft edge width px
@@ -12932,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ API de Tencent Cloud no configurada
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == Multiplicar
@@ -13053,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == No se pudo inicializar el backend gráfico dado, probablemente porque no instalaste el controlador de la tarjeta gráfica integrada.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Falló durante la inicialización. Intenta cambiar gfx_backend a OpenGL o Vulkan en settings_ddnet.cfg en el directorio de configuración e inténtalo de nuevo.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13069,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == Falló el envío de los comandos de renderizado. Intenta actualizar los controladores de tu GPU.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Error desconocido. Intenta cambiar gfx_backend a OpenGL o Vulkan en settings_ddnet.cfg en el directorio de configuración e inténtalo de nuevo.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

@@ -42,6 +42,10 @@ CMakeLists.txt text eol=lf
 *.txt text eol=lf
 *.rst text eol=lf
 
+# 本地化 key 可以以空格结尾，用于和后续编辑器控件拼接。生成产物必须逐字保留该空格。
+data/languages/*.txt whitespace=-trailing-space
+qmclient_scripts/languages_qmclient/extracted_strings.txt whitespace=-trailing-space
+
 # Shell 脚本：仓库 LF，工作区也 LF（bash 需要 LF，不能是 CRLF）
 *.sh text eol=lf
 *.bash text eol=lf

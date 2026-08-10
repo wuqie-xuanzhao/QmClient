@@ -2,6 +2,7 @@
 #include "test.h"
 
 #include <base/system.h>
+#include <base/thread.h>
 
 #include <engine/engine.h>
 #include <engine/http.h>

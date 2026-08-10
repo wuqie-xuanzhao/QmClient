@@ -113,10 +113,18 @@
 #include "components/touch_controls.h"
 #include "components/ui_effects.h"
 #include "components/voting.h"
+#if defined(CONF_QM_LIVE_CLIENT)
+#include "live/live_director.h"
+#include "live/live_finish_ranking.h"
+#include "live/live_match_replay.h"
+#include "live/live_replay_buffer.h"
+#include "live/live_team_render_filter.h"
+#endif
 
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -209,6 +217,13 @@ public:
 		int m_TargetY = 0;
 		unsigned m_WheelMask = 0;
 		uint64_t m_WheelSequence = 0;
+	};
+
+	enum class EQmLivePresentationMode
+	{
+		NORMAL,
+		LIVE_OBSERVER,
+		QMLIVE_DEMO,
 	};
 
 	friend class CTClient;
@@ -368,6 +383,7 @@ private:
 	CUi m_UI;
 	CUiRuntimeV2 m_UiRuntimeV2;
 	CQmIconManager m_QmIconManager;
+	int m_AppliedQmUiIconWeight = -1;
 	CQmImeManager m_QmImeManager;
 	CRaceHelper m_RaceHelper;
 	CQmHammerHitTracker m_HammerHitTracker;
@@ -392,8 +408,9 @@ private:
 
 	int m_EditorMovementDelay = 5;
 	void UpdateEditorIngameMoved();
-	void HandleHammerSkinSwap(CCharacter *pChar);
-	void HandleRandomEmoteOnHit(CCharacter *pLocalChar, int DummyIndex);
+	void HandleHammerSkinSwap(const SQmHammerHitRecord &Hit);
+	void HandleRandomGrenadeEmoteOnHit(CCharacter *pLocalChar, int DummyIndex);
+	void HandleConfirmedHammerHit(const SQmHammerHitRecord &Hit);
 	bool LivePresentationUsesLiveObserverOverlay() const;
 	bool LivePresentationUsesQmLiveDemo() const;
 	bool LivePresentationUsesOnlineDirector() const;
@@ -480,6 +497,12 @@ private:
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneZone(IConsole::IResult *pResult, void *pUserData);
 	static void ConMapbug(IConsole::IResult *pResult, void *pUserData);
+#if defined(CONF_QM_LIVE_CLIENT)
+	static void ConQmLiveMatchRecordStart(IConsole::IResult *pResult, void *pUserData);
+	static void ConQmLiveMatchRecordStop(IConsole::IResult *pResult, void *pUserData);
+	static void ConQmLiveTeamFilter(IConsole::IResult *pResult, void *pUserData);
+	static void ConQmLiveTeamFilterOff(IConsole::IResult *pResult, void *pUserData);
+#endif
 
 	static void ConchainMenuMap(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
@@ -512,6 +535,7 @@ public:
 	const class CUiRuntimeV2 *UiRuntimeV2() const { return &m_UiRuntimeV2; }
 	class CQmIconManager *QmIconManager() { return &m_QmIconManager; }
 	const class CQmIconManager *QmIconManager() const { return &m_QmIconManager; }
+	void SyncQmUiIconWeight();
 	class ISound *Sound() const { return m_pSound; }
 	class IInput *Input() const { return m_pInput; }
 	class IStorage *Storage() const { return m_pStorage; }
@@ -965,6 +989,10 @@ public:
 	int ClientVersion7() const override;
 	const SDemoHudPlaybackState *DemoHudPlaybackState() const { return m_DemoHudPlaybackState.m_Valid ? &m_DemoHudPlaybackState : nullptr; }
 	const SDemoInputPlaybackState *DemoInputPlaybackState() const { return m_DemoInputPlaybackState.m_Valid ? &m_DemoInputPlaybackState : nullptr; }
+	EQmLivePresentationMode LivePresentationMode() const;
+	bool IsQmLiveDemoPlayback() const { return LivePresentationMode() == EQmLivePresentationMode::QMLIVE_DEMO; }
+	bool ShouldSuppressStandardHud() const { return IsQmLiveDemoPlayback(); }
+
 	void DoTeamChangeMessage7(const char *pName, int ClientId, int Team, const char *pPrefix = "");
 
 	// actions
@@ -980,6 +1008,9 @@ public:
 	void SendKill();
 	void SendKill() const;
 	void SendReadyChange7();
+#if defined(CONF_QM_LIVE_CLIENT)
+	void SetLiveObserverSpectatorId(int SpectatorId);
+#endif
 
 	void ApplyPreInputs(int Tick, bool Direct, CGameWorld &GameWorld);
 	bool GetDummyFastInput(CNetObj_PlayerInput &DummyFastInput, const CNetObj_PlayerInput *pDummyInputData, const class CCharacter *pDummyChar, int LocalTee, int DummyTee) const;
@@ -1059,6 +1090,47 @@ public:
 	void Echo(const char *pString) override;
 	void Echo(const char *pString, bool ForceVisible);
 	bool IsOtherTeam(int ClientId) const;
+#if defined(CONF_QM_LIVE_CLIENT)
+	bool LiveObserverDimClient(int ClientId) const;
+	float LiveObserverClientAlpha(int ClientId) const;
+	bool LiveTeamFilterActive() const { return m_LiveTeamRenderFilter.Active(); }
+	int LiveTeamFilterTeam() const { return m_LiveTeamRenderFilter.Team(); }
+	bool LiveTeamFilterAllowsTeam(int Team) const { return m_LiveTeamRenderFilter.AllowsTeam(Team); }
+	bool LiveTeamFilterAllowsClient(int ClientId) const { return m_LiveTeamRenderFilter.AllowsClient(ClientId); }
+	bool LiveTeamFilterAllowsKnownOwner(int ClientId) const { return m_LiveTeamRenderFilter.AllowsKnownOwner(ClientId); }
+	bool LiveTeamFilterAllowsUnknownPlayerEvent() const { return m_LiveTeamRenderFilter.AllowsUnknownPlayerEvent(); }
+	bool LiveTeamFilterAudioEnabled() const { return !m_LiveTeamRenderFilter.Active() || m_LiveTeamRenderFilter.AudioEnabled(); }
+#else
+	bool LiveObserverDimClient(int ClientId) const
+	{
+		(void)ClientId;
+		return false;
+	}
+	float LiveObserverClientAlpha(int ClientId) const
+	{
+		(void)ClientId;
+		return 1.0f;
+	}
+	bool LiveTeamFilterActive() const { return false; }
+	int LiveTeamFilterTeam() const { return -1; }
+	bool LiveTeamFilterAllowsTeam(int Team) const
+	{
+		(void)Team;
+		return true;
+	}
+	bool LiveTeamFilterAllowsClient(int ClientId) const
+	{
+		(void)ClientId;
+		return true;
+	}
+	bool LiveTeamFilterAllowsKnownOwner(int ClientId) const
+	{
+		(void)ClientId;
+		return true;
+	}
+	bool LiveTeamFilterAllowsUnknownPlayerEvent() const { return true; }
+	bool LiveTeamFilterAudioEnabled() const { return true; }
+#endif
 	int SwitchStateTeam() const;
 	bool IsLocalCharSuper() const;
 	bool CanDisplayWarning() const override;
@@ -1266,11 +1338,54 @@ public:
 	void ClearQmVoiceSyncMarks();
 	void MarkQmVoiceSupportedClient(int ClientId, int64_t ExpireTick);
 	bool IsQmVoiceSupportedClient(int ClientId) const;
+	void ClearQmDeveloperMarks();
+	void MarkQmDeveloperClient(int ClientId, const char *pPlayerName, int64_t ExpireTick, bool Rainbow);
+	bool IsQmDeveloperAuthenticated(int ClientId) const;
+	bool IsQmDeveloperRainbow(int ClientId) const;
 	void ClearClientBrands();
 	EClientBrand ClientBrand(const char *pName) const;
 
 private:
 	std::vector<CSnapEntities> m_vSnapEntities;
+#if defined(CONF_QM_LIVE_CLIENT)
+	CLiveDirector m_LiveDirector;
+	CLiveFinishRanking m_LiveFinishRanking;
+	CLiveMatchReplay m_LiveMatchReplay;
+	CLiveReplayBuffer m_LiveReplayBuffer;
+	CLiveTeamRenderFilter m_LiveTeamRenderFilter;
+	SLiveReplaySidecarData m_QmLiveDemoSidecar;
+	std::array<int, MAX_CLIENTS> m_aQmLiveDemoTeams{};
+	std::vector<uint8_t> m_vLiveReplayScratch;
+	char m_aQmLiveDemoSidecarPath[IO_MAX_PATH_LENGTH] = "";
+	int m_LiveObserverCurrentTeam = -1;
+	int m_LiveObserverReturnTeam = -1;
+	int m_LiveObserverFollowClientId = SPEC_FREEVIEW;
+	int m_LiveObserverExpandedTeam = -1;
+	int m_QmLiveDemoLastTick = -1;
+	int m_QmLiveDemoWantedTeam = -1;
+	int m_QmLiveDemoFilterTeam = -1;
+	int m_QmLiveDemoFollowClientId = SPEC_FREEVIEW;
+	int m_QmLiveDemoSavedCurrentTeam = -1;
+	int m_QmLiveDemoSavedReturnTeam = -1;
+	int m_QmLiveDemoSavedFollowClientId = SPEC_FREEVIEW;
+	int m_QmLiveDemoSavedExpandedTeam = -1;
+	vec2 m_LiveObserverLastMousePos = vec2(0.0f, 0.0f);
+	int64_t m_LiveCompatLastSpectatorRequestTime = 0;
+	float m_LiveObserverPanelScroll = 0.0f;
+	float m_QmLiveDemoSavedPanelScroll = 0.0f;
+	bool m_LiveObserverMouseAbsolute = false;
+	bool m_LiveObserverFreeview = true;
+	bool m_LiveObserverHoldFreeview = false;
+	bool m_QmLiveDemoSidecarLoadAttempted = false;
+	bool m_QmLiveDemoSidecarValid = false;
+	bool m_QmLiveDemoManualFollow = false;
+	bool m_QmLiveDemoSavedObserverState = false;
+	bool m_QmLiveDemoSavedFreeview = true;
+	bool m_QmLiveDemoSavedHoldFreeview = false;
+	bool m_LiveFinishTeamsStateKnown = false;
+	int m_LiveFinishTeamsStateTick = -1;
+	int m_LiveTeamFilterResetSerial = 0;
+#endif
 	void SnapCollectEntities();
 	int GetFastInputPredictionAmountMs();
 	int GetFastInputPredictionTicks();
@@ -1288,6 +1403,7 @@ private:
 	void UpdatePrediction();
 	void UpdateSpectatorCursor();
 	void UpdateRenderedCharacters();
+	void RefreshStreamerSkinPrivacyAfterStateChange();
 	void RefreshPredictionAfterConfigChange();
 	void RequestPredictionRefreshAfterConfigChange();
 	void HandlePredictedEvents(int Tick);
@@ -1301,6 +1417,10 @@ private:
 
 	int m_IsDummySwapping;
 	bool m_RequestPredictionRefreshAfterConfigChange = false;
+	int m_LastStreamerHideSkins = -1;
+	int m_LastStreamerFriendsIgnoreClan = -1;
+	int m_aLastStreamerLocalIds[NUM_DUMMIES] = {-2, -2};
+	uint64_t m_LastStreamerFriendsRevision = std::numeric_limits<uint64_t>::max();
 	CCharOrder m_CharOrder;
 	int m_aSwitchStateTeam[NUM_DUMMIES];
 	int m_aAutoTeamLockLastTeam[NUM_DUMMIES] = {TEAM_FLOCK, TEAM_FLOCK};
@@ -1312,6 +1432,9 @@ private:
 	EClientBrand m_aQ1menGSyncClientBrands[MAX_CLIENTS] = {};
 	char m_aaQ1menGSyncQid[MAX_CLIENTS][33] = {{0}};
 	int64_t m_aQmVoiceSyncMarkUntil[MAX_CLIENTS] = {0};
+	int64_t m_aQmDeveloperMarkUntil[MAX_CLIENTS] = {0};
+	bool m_aQmDeveloperRainbow[MAX_CLIENTS] = {false};
+	char m_aaQmDeveloperMarkName[MAX_CLIENTS][MAX_NAME_LENGTH] = {{0}};
 	char m_aaClientBrandNames[MAX_CLIENTS][MAX_NAME_LENGTH] = {};
 	EClientBrand m_aClientBrands[MAX_CLIENTS] = {};
 

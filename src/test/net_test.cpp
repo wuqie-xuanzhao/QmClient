@@ -5,6 +5,7 @@
 #include <engine/shared/network.h>
 
 #include <gtest/gtest.h>
+#include <test/test.h>
 
 #include <chrono>
 #include <string>
@@ -15,6 +16,19 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+	TEST(Net, Ipv6SocketUsesIpv6TrafficClassOutsideWindows)
+	{
+		const std::string Source = ReadTestSourceFile("src/base/system.cpp");
+		const size_t Ipv6Start = Source.find("if(bindaddr.type & NETTYPE_IPV6)");
+		ASSERT_NE(Ipv6Start, std::string::npos);
+		const size_t Ipv6End = Source.find("#if defined(CONF_WEBSOCKETS)", Ipv6Start);
+		ASSERT_NE(Ipv6End, std::string::npos);
+		const std::string Ipv6SocketSetup = Source.substr(Ipv6Start, Ipv6End - Ipv6Start);
+
+		EXPECT_NE(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IPV6, IPV6_TCLASS"), std::string::npos);
+		EXPECT_EQ(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IP, IP_TOS"), std::string::npos);
+	}
 
 	void InitNetBase()
 	{
@@ -81,6 +95,151 @@ namespace
 		BindAddr.port = Port;
 		return net_udp_create(BindAddr);
 	}
+
+	int OnTestClientConnected(int ClientId, void *pUser, bool Sixup)
+	{
+		(void)Sixup;
+		*static_cast<int *>(pUser) = ClientId;
+		return 0;
+	}
+
+	int OnTestClientDisconnected(int ClientId, const char *pReason, void *pUser)
+	{
+		(void)ClientId;
+		(void)pReason;
+		(void)pUser;
+		return 0;
+	}
+
+	bool OpenLoopbackServer(CNetServer &Server, NETADDR &ServerAddr)
+	{
+		if(net_addr_from_str(&ServerAddr, "127.0.0.1"))
+			return false;
+		for(int Attempt = 0; Attempt < 100; ++Attempt)
+		{
+			ServerAddr.port = secure_rand_below(64511) + 1024;
+			if(Server.Open(ServerAddr, nullptr, 1, 1))
+				return true;
+		}
+		return false;
+	}
+
+	void DrainServerChunks(CNetServer &Server, std::vector<std::string> *pChunks)
+	{
+		CNetChunk Chunk;
+		SECURITY_TOKEN ResponseToken;
+		while(Server.Recv(&Chunk, &ResponseToken))
+		{
+			if(pChunks != nullptr)
+				pChunks->emplace_back(static_cast<const char *>(Chunk.m_pData), Chunk.m_DataSize);
+		}
+	}
+
+	void DrainClientChunks(CNetClient &Client, std::vector<std::string> *pChunks)
+	{
+		CNetChunk Chunk;
+		SECURITY_TOKEN ResponseToken;
+		while(Client.Recv(&Chunk, &ResponseToken, false))
+		{
+			if(pChunks != nullptr)
+				pChunks->emplace_back(static_cast<const char *>(Chunk.m_pData), Chunk.m_DataSize);
+		}
+	}
+
+	void PumpServerChunks(CNetServer &Server, CNetClient &Client, std::vector<std::string> *pChunks, size_t ExpectedChunks)
+	{
+		for(int Attempt = 0; Attempt < 200 && pChunks->size() < ExpectedChunks; ++Attempt)
+		{
+			DrainServerChunks(Server, pChunks);
+			DrainClientChunks(Client, nullptr);
+			Server.Update();
+			Client.Update();
+			if(pChunks->size() < ExpectedChunks)
+				std::this_thread::sleep_for(1ms);
+		}
+	}
+
+	void PumpClientChunks(CNetClient &Client, CNetServer &Server, std::vector<std::string> *pChunks, size_t ExpectedChunks)
+	{
+		for(int Attempt = 0; Attempt < 200 && pChunks->size() < ExpectedChunks; ++Attempt)
+		{
+			DrainClientChunks(Client, pChunks);
+			DrainServerChunks(Server, nullptr);
+			Client.Update();
+			Server.Update();
+			if(pChunks->size() < ExpectedChunks)
+				std::this_thread::sleep_for(1ms);
+		}
+	}
+
+	std::vector<unsigned char> MakeTestPayload(int Size, uint32_t Seed)
+	{
+		std::vector<unsigned char> vPayload(Size);
+		uint32_t State = Seed;
+		for(unsigned char &Byte : vPayload)
+		{
+			State = State * 1664525u + 1013904223u;
+			Byte = State >> 24;
+		}
+		return vPayload;
+	}
+
+	class CNetKcpBypassTest : public ::testing::Test
+	{
+	protected:
+		CNetServer m_Server;
+		CNetClient m_Client;
+		int m_ClientId = -1;
+		int m_OldConnTimeout = 0;
+		int m_OldSvKcp = 0;
+		int m_OldSvVanillaAntiSpoof = 0;
+
+		void SetUp() override
+		{
+			InitNetBase();
+			m_OldConnTimeout = g_Config.m_ConnTimeout;
+			m_OldSvKcp = g_Config.m_SvKcp;
+			m_OldSvVanillaAntiSpoof = g_Config.m_SvVanillaAntiSpoof;
+			g_Config.m_ConnTimeout = 10;
+			g_Config.m_SvKcp = 1;
+			g_Config.m_SvVanillaAntiSpoof = 0;
+
+			NETADDR ServerAddr;
+			ASSERT_TRUE(OpenLoopbackServer(m_Server, ServerAddr));
+			m_Server.SetCallbacks(OnTestClientConnected, OnTestClientDisconnected, &m_ClientId);
+
+			NETADDR ClientBindAddr = {};
+			ClientBindAddr.type = NETTYPE_IPV4;
+			ASSERT_TRUE(m_Client.Open(ClientBindAddr));
+			m_Client.Connect(&ServerAddr, 1);
+
+			for(int Attempt = 0; Attempt < 100 && (m_Client.State() != NETSTATE_ONLINE || m_ClientId < 0); ++Attempt)
+			{
+				DrainServerChunks(m_Server, nullptr);
+				DrainClientChunks(m_Client, nullptr);
+				m_Server.Update();
+				m_Client.Update();
+				std::this_thread::sleep_for(1ms);
+			}
+			ASSERT_EQ(m_Client.State(), NETSTATE_ONLINE) << m_Client.ErrorString();
+			ASSERT_EQ(m_ClientId, 0);
+
+			DrainServerChunks(m_Server, nullptr);
+			DrainClientChunks(m_Client, nullptr);
+			constexpr uint32_t KcpConv = 0x1357247u;
+			ASSERT_TRUE(m_Server.ActivateKcp(m_ClientId, KcpConv));
+			ASSERT_TRUE(m_Client.ActivateKcp(KcpConv));
+		}
+
+		void TearDown() override
+		{
+			m_Client.Close();
+			m_Server.Close();
+			g_Config.m_ConnTimeout = m_OldConnTimeout;
+			g_Config.m_SvKcp = m_OldSvKcp;
+			g_Config.m_SvVanillaAntiSpoof = m_OldSvVanillaAntiSpoof;
+		}
+	};
 
 } // namespace
 
@@ -400,4 +559,136 @@ TEST(Net, KcpSessionRejectsInvalidRebindWithoutChangingPeer)
 	EXPECT_EQ(*Session.PeerAddress(), OriginalPeer);
 
 	net_udp_close(Socket);
+}
+
+TEST_F(CNetKcpBypassTest, ClientFlushBypassDrainsQueuedVitalChunk)
+{
+	const std::vector<std::string> vCommands = {"client-spec", "client-tp", "client-spec-restore"};
+	for(const std::string &Command : vCommands)
+	{
+		CNetChunk VitalChunk = {};
+		VitalChunk.m_ClientId = 0;
+		VitalChunk.m_pData = Command.data();
+		VitalChunk.m_DataSize = Command.size();
+		VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+		ASSERT_EQ(m_Client.Send(&VitalChunk), 0);
+	}
+
+	const char aBypass[] = "client-bypass";
+	CNetChunk BypassChunk = {};
+	BypassChunk.m_ClientId = 0;
+	BypassChunk.m_pData = aBypass;
+	BypassChunk.m_DataSize = sizeof(aBypass) - 1;
+	BypassChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Client.Send(&BypassChunk), 0);
+
+	std::vector<std::string> vReceived;
+	PumpServerChunks(m_Server, m_Client, &vReceived, vCommands.size() + 1);
+	std::vector<std::string> vExpected = vCommands;
+	vExpected.emplace_back(aBypass);
+	EXPECT_EQ(vReceived, vExpected);
+}
+
+TEST_F(CNetKcpBypassTest, ClientFlushBypassJoinsPendingKcpPacket)
+{
+	const std::vector<unsigned char> vVital1 = MakeTestPayload(700, 1);
+	const std::vector<unsigned char> vVital2 = MakeTestPayload(600, 2);
+	for(const std::vector<unsigned char> *pVital : {&vVital1, &vVital2})
+	{
+		CNetChunk VitalChunk = {};
+		VitalChunk.m_ClientId = 0;
+		VitalChunk.m_pData = pVital->data();
+		VitalChunk.m_DataSize = pVital->size();
+		VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+		ASSERT_EQ(m_Client.Send(&VitalChunk), 0);
+	}
+	EXPECT_EQ(m_Client.TransportStats().m_SendQueueDepth, 0);
+
+	const std::vector<unsigned char> vTrailingInput = MakeTestPayload(70, 3);
+	CNetChunk InputChunk = {};
+	InputChunk.m_ClientId = 0;
+	InputChunk.m_pData = vTrailingInput.data();
+	InputChunk.m_DataSize = vTrailingInput.size();
+	InputChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Client.Send(&InputChunk), 0);
+	EXPECT_GE(m_Client.TransportStats().m_SendQueueDepth, 2);
+
+	std::vector<std::string> vReceived;
+	PumpServerChunks(m_Server, m_Client, &vReceived, 3);
+	ASSERT_EQ(vReceived.size(), 3u);
+	EXPECT_EQ(vReceived[0], std::string(reinterpret_cast<const char *>(vVital1.data()), vVital1.size()));
+	EXPECT_EQ(vReceived[1], std::string(reinterpret_cast<const char *>(vVital2.data()), vVital2.size()));
+	EXPECT_EQ(vReceived[2], std::string(reinterpret_cast<const char *>(vTrailingInput.data()), vTrailingInput.size()));
+}
+
+TEST_F(CNetKcpBypassTest, ClientFlushWithoutPendingDataKeepsRawBypass)
+{
+	const std::vector<unsigned char> vInput = MakeTestPayload(70, 3);
+	CNetChunk InputChunk = {};
+	InputChunk.m_ClientId = 0;
+	InputChunk.m_pData = vInput.data();
+	InputChunk.m_DataSize = vInput.size();
+	InputChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Client.Send(&InputChunk), 0);
+	EXPECT_EQ(m_Client.TransportStats().m_SendQueueDepth, 0);
+
+	std::vector<std::string> vReceived;
+	PumpServerChunks(m_Server, m_Client, &vReceived, 1);
+	ASSERT_EQ(vReceived.size(), 1u);
+	EXPECT_EQ(vReceived[0], std::string(reinterpret_cast<const char *>(vInput.data()), vInput.size()));
+}
+
+TEST_F(CNetKcpBypassTest, ServerFlushBypassDrainsQueuedVitalChunk)
+{
+	const char aVital[] = "server-vital";
+	CNetChunk VitalChunk = {};
+	VitalChunk.m_ClientId = m_ClientId;
+	VitalChunk.m_pData = aVital;
+	VitalChunk.m_DataSize = sizeof(aVital) - 1;
+	VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+	ASSERT_EQ(m_Server.Send(&VitalChunk), 0);
+
+	const char aBypass[] = "server-bypass";
+	CNetChunk BypassChunk = {};
+	BypassChunk.m_ClientId = m_ClientId;
+	BypassChunk.m_pData = aBypass;
+	BypassChunk.m_DataSize = sizeof(aBypass) - 1;
+	BypassChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Server.Send(&BypassChunk), 0);
+
+	std::vector<std::string> vReceived;
+	PumpClientChunks(m_Client, m_Server, &vReceived, 2);
+	EXPECT_EQ(vReceived, (std::vector<std::string>{aVital, aBypass}));
+}
+
+TEST_F(CNetKcpBypassTest, ServerFlushBypassJoinsPendingKcpPacket)
+{
+	const std::vector<unsigned char> vVital1 = MakeTestPayload(700, 4);
+	const std::vector<unsigned char> vVital2 = MakeTestPayload(600, 5);
+	for(const std::vector<unsigned char> *pVital : {&vVital1, &vVital2})
+	{
+		CNetChunk VitalChunk = {};
+		VitalChunk.m_ClientId = m_ClientId;
+		VitalChunk.m_pData = pVital->data();
+		VitalChunk.m_DataSize = pVital->size();
+		VitalChunk.m_Flags = NETSENDFLAG_VITAL;
+		ASSERT_EQ(m_Server.Send(&VitalChunk), 0);
+	}
+	EXPECT_EQ(m_Server.ClientTransportStats(m_ClientId).m_SendQueueDepth, 0);
+
+	const std::vector<unsigned char> vSnapshot = MakeTestPayload(70, 6);
+	CNetChunk SnapshotChunk = {};
+	SnapshotChunk.m_ClientId = m_ClientId;
+	SnapshotChunk.m_pData = vSnapshot.data();
+	SnapshotChunk.m_DataSize = vSnapshot.size();
+	SnapshotChunk.m_Flags = NETSENDFLAG_FLUSH;
+	ASSERT_EQ(m_Server.Send(&SnapshotChunk), 0);
+	EXPECT_GE(m_Server.ClientTransportStats(m_ClientId).m_SendQueueDepth, 2);
+
+	std::vector<std::string> vReceived;
+	PumpClientChunks(m_Client, m_Server, &vReceived, 3);
+	ASSERT_EQ(vReceived.size(), 3u);
+	EXPECT_EQ(vReceived[0], std::string(reinterpret_cast<const char *>(vVital1.data()), vVital1.size()));
+	EXPECT_EQ(vReceived[1], std::string(reinterpret_cast<const char *>(vVital2.data()), vVital2.size()));
+	EXPECT_EQ(vReceived[2], std::string(reinterpret_cast<const char *>(vSnapshot.data()), vSnapshot.size()));
 }

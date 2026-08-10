@@ -4,6 +4,7 @@
 
 #include <engine/shared/client_brand.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -36,5 +37,36 @@ struct SQmClientUsersParseResult
 };
 
 bool ParseQmClientUsersJson(const json_value *pRoot, const char *pServerAddress, SQmClientUsersParseResult &OutResult);
+
+enum class EQmDeveloperBadgeStyle
+{
+	BLACK,
+	RAINBOW,
+};
+
+struct SQmDeveloperPresence
+{
+	std::string m_DeveloperId;
+	std::string m_ServerAddress;
+	int m_PlayerId = -1;
+	std::string m_PlayerName;
+	bool m_Dummy = false;
+	int64_t m_IssuedAt = 0;
+	int64_t m_ExpiresAt = 0;
+	int m_StyleBucket = 0;
+};
+
+struct SQmDeveloperPresenceParseResult
+{
+	bool m_Parsed = false;
+	int64_t m_ServerTime = 0;
+	std::vector<SQmDeveloperPresence> m_vPresences;
+};
+
+bool ParseQmDeveloperPresencesJson(const json_value *pRoot, const char *pServerAddress, SQmDeveloperPresenceParseResult &OutResult);
+const SQmDeveloperPresence *FindQmDeveloperPresence(const std::vector<SQmDeveloperPresence> &vPresences, const char *pServerAddress, int PlayerId, const char *pPlayerName, int64_t Now);
+EQmDeveloperBadgeStyle QmDeveloperBadgeStyleFromBucket(int StyleBucket);
+bool ShouldShowQmDeveloperBadge(bool Authenticated, bool ShowName, bool HideIdentity);
+bool IsQmDeveloperMarkCurrent(bool Active, const char *pMarkedName, const char *pCurrentName, int64_t ExpireTick, int64_t NowTick);
 
 #endif

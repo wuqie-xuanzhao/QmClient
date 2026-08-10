@@ -61,6 +61,15 @@ namespace qm_card_registry
 	struct SCardNavigationTarget;
 }
 
+inline bool QmTextMatchesIncludeExcludeFilter(const char *pText, const char *pInclude, const char *pExclude)
+{
+	if(pText == nullptr)
+		return false;
+	const bool Includes = pInclude == nullptr || pInclude[0] == '\0' || str_utf8_find_nocase(pText, pInclude) != nullptr;
+	const bool Excludes = pExclude != nullptr && pExclude[0] != '\0' && str_utf8_find_nocase(pText, pExclude) != nullptr;
+	return Includes && !Excludes;
+}
+
 // IDs of the tabs in the Assets menu
 enum
 {
@@ -126,7 +135,7 @@ public:
 
 private:
 	IUiContext SettingsUiContext(const char *pScope, float UiScale = 1.0f);
-	int DoSettingsDropDown(CUIRect *pRect, int CurSelection, const char **ppStrs, int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties = {});
+	int DoSettingsDropDown(CUIRect *pRect, int CurSelection, const char *const *ppStrs, int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties = {});
 	SCardMotionSpec SettingsCardMotionSpec() const;
 	SSettingsCardDeckVisualOptions SettingsCardDeckVisualOptions() const;
 	qm_card_order::CModel &SettingsCardOrderModel();
@@ -1084,8 +1093,8 @@ public:
 			const char *pRegion = aRegion;
 			if(const char *pAfterPrefix = str_startswith_nocase(pRegion, "DDNet "))
 				pRegion = str_skip_whitespaces_const(pAfterPrefix);
-			else if(const char *pAfterPrefix = str_startswith_nocase(pRegion, "CHN DDR "))
-				pRegion = str_skip_whitespaces_const(pAfterPrefix);
+			else if(const char *pAfterChnPrefix = str_startswith_nocase(pRegion, "CHN DDR "))
+				pRegion = str_skip_whitespaces_const(pAfterChnPrefix);
 			const char *pDashText = str_find(aRegion, " - ");
 			if(char *pDash = const_cast<char *>(pDashText))
 				*pDash = '\0';
@@ -1427,6 +1436,7 @@ protected:
 	CUi::SDropDownState m_CallvoteMapSortDropDownState;
 	CLineInputBuffered<VOTE_REASON_LENGTH> m_CallvoteReasonInput;
 	CLineInputBuffered<64> m_FilterInput;
+	CLineInputBuffered<64> m_ExcludeInput;
 	bool m_ControlPageOpening;
 
 	// demo
@@ -1848,13 +1858,6 @@ protected:
 		CTextCursor m_BuildCursor;
 		int m_BuildByteOffset = 0;
 		float m_BuildHeight = 0.0f;
-		unsigned m_PreviousTextHash = 0;
-		float m_PreviousWidth = 0.0f;
-		float m_PreviousFontSize = 0.0f;
-		float m_PreviousHeight = 0.0f;
-		int64_t m_PreviousUpdateTime = -1;
-		std::string m_PreviousText;
-		STextContainerIndex m_PreviousTextContainerIndex;
 	};
 	struct SMenuSnapshotTextKey
 	{
@@ -1954,7 +1957,7 @@ protected:
 	bool RequestIngameMotdParagraphCache(CUIRect Motd, float FontSize);
 	bool IngameMotdParagraphCacheMatches(CUIRect Motd, float FontSize) const;
 	void DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame = false);
-	bool RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
+	bool RenderIngameMotdStableParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
 	void RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize);
 	void DrainIngameUiSnapshotTextRuntime();
 	void DrainIngameUiTextRuntime(bool AllowCurrentFrame = false);
@@ -2786,7 +2789,7 @@ private:
 	void RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly);
-	void RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly);
+	void RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly, unsigned Flags = 0u);
 	bool RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly);
 	bool IsQmNewFeatureRead(const char *pId) const;
 	void MarkQmNewFeatureRead(const char *pId);

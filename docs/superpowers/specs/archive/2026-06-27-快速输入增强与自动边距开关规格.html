@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="dcterms.date" content="2026-06-27" />
+  <meta name="status" content="archived" />
+  <title>FastInput 模式增强 与 AutoMargin 开关 · Spec</title>
+  <style>
+    :root {
+      --bg: #f5f3ed; --paper: #fffdf8; --paper-soft: #f9f5ed;
+      --ink: #292621; --muted: #706a60; --line: #ded6ca;
+      --accent: #315f68; --accent-soft: rgba(49,95,104,0.11); --accent-2: #9b684e;
+      --ok: #557a52; --warn: #9b7133; --bad: #a44d43;
+      --code-bg: #eee7dc; --shadow: 0 12px 36px rgba(58,48,38,0.10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--bg);
+      font-family: "Noto Sans SC", "Segoe UI", "Microsoft YaHei", sans-serif; line-height: 1.72; }
+    a { color: var(--accent); }
+    code { padding: 0.12em 0.36em; border-radius: 5px; background: var(--code-bg); color: #5f392d; font-size: 0.92em; }
+    pre { background: var(--code-bg); color: #5f392d; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.55; }
+    .page { max-width: 900px; margin: 0 auto; padding: 32px 22px 64px; }
+    .hero { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 24px 26px; box-shadow: var(--shadow); margin-bottom: 18px; }
+    .hero h1 { margin: 10px 0 6px; font-size: 26px; line-height: 1.3; }
+    .hero .muted { color: var(--muted); margin: 0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+    .pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper-soft); color: var(--muted); }
+    .pill.ok { color: var(--ok); border-color: var(--ok); }
+    .pill.warn { color: var(--warn); border-color: var(--warn); }
+    .pill.bad { color: var(--bad); border-color: var(--bad); }
+    .toc { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; font-size: 13px; }
+    .toc a { color: var(--accent); }
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .card h2 { margin: 0 0 8px; font-size: 18px; color: var(--accent); }
+    .card h3 { margin: 14px 0 4px; font-size: 15px; color: var(--accent-2); }
+    .card p, .card li { font-size: 14.5px; }
+    .card ul { margin: 6px 0; padding-left: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13.5px; display: block; overflow-x: auto; }
+    th, td { border-top: 1px solid var(--line); padding: 9px 11px; text-align: left; vertical-align: top; }
+    thead th { border-top: none; color: var(--muted); font-weight: 600; }
+    .badge { font-size: 12px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--paper-soft); color: var(--muted); white-space: nowrap; }
+    .badge.ok { color: var(--ok); border-color: var(--ok); }
+    .badge.warn { color: var(--warn); border-color: var(--warn); }
+    .badge.bad { color: var(--bad); border-color: var(--bad); }
+    .note { border-left: 3px solid var(--warn); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 13.5px; }
+    .note.bad { border-color: var(--bad); }
+    .footer { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="meta">
+        <span class="pill warn">draft spec</span>
+        <span class="pill">2026-06-27</span>
+        <span class="pill bad">未实现规格</span>
+      </div>
+      <h1>FastInput 模式增强 与 AutoMargin 开关</h1>
+      <p class="muted">在 QmClient 已有的 TClient FastInput + AutoMargin 基础上，吸收 BestClient 的 <code>best_input</code> / <code>saiko+</code> 输入模式，并给 AutoMargin 加开关。目标：让玩家可在「前推量 / 橡皮筋 / 延迟补偿」之间精细权衡，且 AutoMargin 与 LatencyComp 不再互踩。</p>
+      <nav class="toc">
+        <a href="#goal">① 目标</a>
+        <a href="#current">② 现状</a>
+        <a href="#absorb">③ 吸收项</a>
+        <a href="#config">④ 配置项</a>
+        <a href="#impl">⑤ 实现</a>
+        <a href="#risk">⑥ 风险</a>
+        <a href="#accept">⑦ 验收</a>
+        <a href="#source">⑧ 来源</a>
+      </nav>
+    </header>
+
+    <section class="card" id="goal">
+      <h2>① 目标与非目标</h2>
+      <table>
+        <thead><tr><th>类型</th><th>范围</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge ok">目标</span></td><td>给 AutoMargin 加开关 <code>qm_auto_margin</code>，关闭时 PredictionMargin 回退固定值。</td><td>让 LatencyComp（best_input）与 AutoMargin 不再方向冲突，玩家可二选一。</td></tr>
+          <tr><td><span class="badge ok">目标</span></td><td>吸收 BestClient 的 <code>best_input</code>(mode 3) 与 <code>saiko+</code>(mode 4) 模式。</td><td>提供比 <code>fast_input</code>(mode 0) 更精细的前推控制（Smoothing/LatencyComp/Interpolation）。</td></tr>
+          <tr><td><span class="badge ok">目标</span></td><td>PredictionMargin 集成 FastInputMargin：<code>BaseMargin = max(cl_predictionmargin, FastInputMargin)</code>。</td><td>让 AutoMargin 感知 FastInput 前推量，防护协调（对齐 BestClient）。</td></tr>
+          <tr><td><span class="badge warn">非目标</span></td><td>不改变默认行为：mode 0 + AutoMargin 开 = 当前现状。</td><td>保证老玩家无感升级。</td></tr>
+          <tr><td><span class="badge bad">禁止</span></td><td>不修改 demo 格式、网络协议、服务器端玩法语义。</td><td>CLAUDE.md 硬约束；本规格只动客户端预测时序的可见参数。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="current">
+      <h2>② 现状（QmClient 已实现，调研确认）</h2>
+      <table>
+        <thead><tr><th>能力</th><th>状态</th><th>实现</th></tr></thead>
+        <tbody>
+          <tr><td>FastInput 基础（mode 0）</td><td><span class="badge ok">已有</span></td><td><code>tc_fast_input</code> + <code>tclient/fast_practice.cpp</code>(2960 行) + <code>client.cpp:3571</code> 立即重预测 + <code>SmoothTick += FastInputTicks</code> 前推</td></tr>
+          <tr><td>AutoMargin（自适应缓冲）</td><td><span class="badge ok">已有</span></td><td><code>client.cpp:6431 PredictionMargin()</code>，按实时延迟/抖动<strong>单向向上</strong>加缓冲；<strong>无条件启用，无开关</strong></td></tr>
+          <tr><td>PredictionMarginState</td><td><span class="badge ok">已有</span></td><td>三态 STABLE/UNSTABLE/IGNORED_SPIKE + <code>hud.cpp:95</code> 颜色 + HUD 显示</td></tr>
+          <tr><td>PredictionMargin 集成 FastInputMargin</td><td><span class="badge bad">缺失</span></td><td>QmClient 的 PredictionMargin 不含 FastInput 前推量（与 BestClient 不同）</td></tr>
+          <tr><td>best_input / saiko+ 模式</td><td><span class="badge bad">缺失</span></td><td>无 <code>bc_fast_input_mode</code> 等价物，只有 mode 0</td></tr>
+          <tr><td>AutoMargin 开关</td><td><span class="badge bad">缺失</span></td><td>无开关，无法与 LatencyComp 解耦</td></tr>
+        </tbody>
+      </table>
+      <div class="note">关键认知修正（调研过程）：FastInput 与 AutoMargin 是<strong>正交两维</strong>——FastInput 管「输入响应速度 + 视觉前推」，AutoMargin 管「预测总距离/向上缓冲」。QmClient 已是双向系统，本规格是<strong>增强调参维度</strong>，不是补缺口。</div>
+    </section>
+
+    <section class="card" id="absorb">
+      <h2>③ 吸收项（来自 BestClient）</h2>
+
+      <h3>3.1 AutoMargin 开关 <code>qm_auto_margin</code></h3>
+      <p>给 <code>PredictionMargin()</code> 加开关，对齐 BestClient <code>bc_fast_input_auto_margin</code>：</p>
+      <pre><code>int CClient::PredictionMargin() const {
+    if(!m_ServerCapabilities.m_SyncWeaponInput) return 10;
+    const int BaseMargin = ...;  // 集成 FastInputMargin 后的 base（见 3.3）
+    if(!g_Config.m_QmAutoMargin)               // ← 新增开关
+        return std::clamp(BaseMargin, 1, 300);  // 关闭：固定值，不做自适应
+    // ... 原有 AutoMargin（Excess/Jitter/Problems）逻辑 ...
+}</code></pre>
+
+      <h3>3.2 FastInput 模式 <code>qm_fast_input_mode</code>（0/3/4）</h3>
+      <p>吸收 BestClient <code>EffectiveFastInputOffsetTicks</code>（<code>fast_practice.cpp:56-100</code>）的三模式分支：</p>
+      <table>
+        <thead><tr><th>模式</th><th>前推公式</th><th>调节维度</th></tr></thead>
+        <tbody>
+          <tr><td>0 = Fast input</td><td><code>tc_fast_input_amount / 20.0</code></td><td>1（amount，ms）</td></tr>
+          <tr><td>3 = Best input</td><td><code>offset/100 × (1−smoothing/200) × (1+latency_comp/100)</code></td><td>3（offset + smoothing + latency_comp）+ interpolation</td></tr>
+          <tr><td>4 = Saiko+</td><td><code>saiko_plus_amount / 100.0</code>，<code>ceil(offset+1.0)</code></td><td>1（amount，0.01 tick 细粒度）</td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.3 PredictionMargin 集成 FastInputMargin</h3>
+      <p>对齐 BestClient <code>client.cpp:5924</code>，把 FastInput 前推量算进 BaseMargin：</p>
+      <pre><code>int FastInputMargin = 0;
+if(g_Config.m_TcFastInput) {
+    const int Mode = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode);
+    if(Mode == 0)      FastInputMargin = std::max(0, g_Config.m_TcFastInputAmount);
+    else if(Mode == 4) FastInputMargin = (std::max(0, g_Config.m_QmSaikoPlusAmount) + 2) / 5;
+    else               FastInputMargin = (std::max(0, g_Config.m_QmBestInputOffset) + 2) / 5;
+}
+const int BaseMargin = std::max(g_Config.m_ClPredictionMargin, FastInputMargin);</code></pre>
+    </section>
+
+    <section class="card" id="config">
+      <h2>④ 配置项设计（<code>qm_</code> 前缀，符合 CLAUDE.md）</h2>
+      <table>
+        <thead><tr><th>配置项</th><th>类型/范围/默认</th><th>对应 BC</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>qm_auto_margin</code></td><td>INT 0-1, default <strong>1</strong></td><td>bc_fast_input_auto_margin</td><td>AutoMargin 开关。1=现状自适应，0=固定值</td></tr>
+          <tr><td><code>qm_fast_input_mode</code></td><td>INT 0-4, default <strong>0</strong></td><td>bc_fast_input_mode</td><td>0=fast, 3=best, 4=saiko+（1/2 legacy 归一化到 3）</td></tr>
+          <tr><td><code>qm_best_input_offset</code></td><td>INT 0-1000, default 0（0.01 tick）</td><td>bc_best_input_offset</td><td>Best input 预测偏移（0-10.00 tick）</td></tr>
+          <tr><td><code>qm_best_input_smoothing</code></td><td>INT 0-100, default 0（%）</td><td>bc_best_input_smoothing</td><td>平滑：越大前推越小，缓解橡皮筋</td></tr>
+          <tr><td><code>qm_best_input_latency_comp</code></td><td>INT 0-50, default 0（%）</td><td>bc_best_input_latency_comp</td><td>延迟补偿：越大前推越大（<strong>与 AutoMargin 方向相反</strong>）</td></tr>
+          <tr><td><code>qm_best_input_interpolation</code></td><td>INT 1-3, default 1</td><td>bc_best_input_interpolation</td><td>1=linear, 2=cubic, 3=smooth</td></tr>
+          <tr><td><code>qm_saiko_plus_amount</code></td><td>INT 0-500, default 0（0.01 tick）</td><td>bc_saiko_plus_amount</td><td>Saiko+ 输入量</td></tr>
+          <tr><td><code>qm_best_input_others</code></td><td>INT 0-1, default 0</td><td>bc_best_input_others</td><td>对其他 Tee 应用 best input</td></tr>
+          <tr><td><code>qm_saiko_plus_others</code></td><td>INT 0-1, default 0</td><td>bc_saiko_plus_others</td><td>对其他 Tee 应用 saiko+</td></tr>
+        </tbody>
+      </table>
+      <p>保留 TClient 既有：<code>tc_fast_input</code> / <code>tc_fast_input_amount</code> / <code>tc_fast_input_others</code>（mode 0 继续用）。</p>
+    </section>
+
+    <section class="card" id="impl">
+      <h2>⑤ 实现要点</h2>
+      <table>
+        <thead><tr><th>文件</th><th>改动</th></tr></thead>
+        <tbody>
+          <tr><td><code>src/engine/shared/config_variables_qmclient.h</code></td><td>新增 ④ 表 9 个 <code>qm_</code> 配置（MACRO_CONFIG_INT，CFGFLAG_CLIENT|CFGFLAG_SAVE）</td></tr>
+          <tr><td><code>src/game/client/components/tclient/fast_practice.cpp</code></td><td>重写 <code>EffectiveFastInputOffsetTicks</code>：加 mode 3/4 分支（照搬 BC 公式）；新增 <code>QmFastInputNormalizedMode</code>（legacy 1/2→3）</td></tr>
+          <tr><td><code>src/engine/client/client.cpp</code> <code>PredictionMargin()</code></td><td>① 集成 FastInputMargin（3.3）；② 加 <code>qm_auto_margin</code> 开关（3.1）</td></tr>
+          <tr><td><code>src/game/client/components/tclient/menus_tclient.cpp</code></td><td>UI：FastInput 区加「模式按钮组」(Fast/Best/Saiko+) + 各模式条件渲染对应 slider（参考 BC <code>menus_bestclient.cpp:4674-4894</code>）</td></tr>
+          <tr><td>测试</td><td>新增 <code>FastInputMode</code> 行为测试：三模式 offset 计算公式、<code>QmFastInputNormalizedMode</code> 归一化、AutoMargin 开关切换</td></tr>
+        </tbody>
+      </table>
+      <div class="note bad"><strong>硬约束提示</strong>：本规格触及预测/时序（CLAUDE.md「超出范围需明确批准」项）。实现前需明确批准；改完必须跑 <code>python qmclient_scripts/gate/check_gate.py --mode default</code>（C++ + Rust 全量测试），并派只读子代理按 <code>docs/ai-workflow/review.md</code> 审预测路径。</div>
+    </section>
+
+    <section class="card" id="risk">
+      <h2>⑥ 风险与权衡</h2>
+      <table>
+        <thead><tr><th>风险</th><th>说明</th><th>对策</th></tr></thead>
+        <tbody>
+          <tr><td>LatencyComp ↔ AutoMargin 方向冲突</td><td>两者都「延迟高时调整」：AutoMargin 加缓冲（向上），LatencyComp 加前推（向前），叠加会互踩。</td><td><code>qm_auto_margin</code> 开关让玩家二选一；UI 在启用 LatencyComp 时提示可关 AutoMargin。</td></tr>
+          <tr><td>预测时序回归</td><td>动 PredictionMargin / FastInput 影响所有玩家的输入手感与橡皮筋。</td><td>默认值=现状（mode 0 + auto_margin on + 各参数 0）；gate 全量；预测路径 review。</td></tr>
+          <tr><td>橡皮筋加剧</td><td>mode 3/4 前推更大，弱网下服务器纠正偏差更明显。</td><td>Smoothing 参数专门缓解；MaxLatencyTicks 重置 + predTick 范围检查已有防护。</td></tr>
+          <tr><td>UI 复杂度</td><td>3 模式 × 多参数，普通玩家难调。</td><td>mode 0 保持默认；高级参数折叠；给推荐预设（如「弱网稳」= Smoothing 高 + AutoMargin on）。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="accept">
+      <h2>⑦ 验收</h2>
+      <table>
+        <thead><tr><th>检查项</th><th>标准</th></tr></thead>
+        <tbody>
+          <tr><td>默认兼容</td><td><code>qm_fast_input_mode=0</code> + <code>qm_auto_margin=1</code> 时，PredictionMargin、FastInput、HUD 行为与当前完全一致。</td></tr>
+          <tr><td>AutoMargin 开关</td><td><code>qm_auto_margin=0</code> 时 PredictionMargin 返回 <code>clamp(BaseMargin,1,300)</code>，不随延迟/抖动变化。</td></tr>
+          <tr><td>模式切换</td><td>mode 3/4 各参数按 ③ 公式生效，<code>PredictionMarginState</code> 颜色仍正确反映 STABLE/UNSTABLE。</td></tr>
+          <tr><td>集成</td><td>开启 FastInput 后，<code>PredictionMargin()</code> 的 BaseMargin ≥ FastInputMargin（3.3）。</td></tr>
+          <tr><td>橡皮筋</td><td>弱网下 mode 3 + Smoothing↑ 比 mode 0 橡皮筋不恶化（实测可改善）。</td></tr>
+          <tr><td>gate</td><td><code>check_gate.py --mode default</code> 通过（C++/Rust 全量），无回归。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="source">
+      <h2>⑧ 来源溯源与关键证据</h2>
+      <ul>
+        <li>BestClient FastInput 核心：<code>docs/dyl/BestClient/src/game/client/components/bestclient/fast_practice.cpp</code> <code>EffectiveFastInputOffsetTicks</code>(:56-100)、<code>FastInputPredictionTicks</code>(:93)。</li>
+        <li>BestClient 配置：<code>docs/dyl/BestClient/src/engine/shared/config_variables_bestclient.h</code>(:87-100) + <code>config_variables_tclient.h</code>(:61-63)。</li>
+        <li>BestClient PredictionMargin + 模式归一化：<code>docs/dyl/BestClient/src/engine/client/client.cpp</code>(:5924)、<code>config.h:83 BcFastInputNormalizedMode</code>。</li>
+        <li>BestClient UI：<code>docs/dyl/BestClient/src/game/client/components/bestclient/menus_bestclient.cpp</code>(:4674-4894)。</li>
+        <li>QmClient 现状：<code>src/engine/client/client.cpp</code> <code>PredictionMargin</code>(:6431)、<code>SendInput</code>(:781)、Update FastInput 触发(:3571)；<code>src/game/client/components/tclient/fast_practice.cpp</code>(2960 行)；<code>src/game/client/components/tclient/tclient.cpp</code> <code>IsFastInputActive</code>(:3373)。</li>
+      </ul>
+      <div class="note">本规格基于 2026-06-27 对 QmClient（HEAD）与 <code>docs/dyl/BestClient</code> 的代码实测。BestClient 源自 TClient，其 FastInput 即 QmClient <code>4f0d66b960「吸收其他客户端」</code> 的来源之一；QmClient 现有 AutoMargin 经 <code>git log -S</code> 确认亦为同源吸收（官方 DDNet 无此逻辑，<code>ddnet/master</code> PredictionMargin 为纯固定一行）。</div>
+    </section>
+
+    <p class="footer">相关：上游基线调研 <code>docs/superpowers/explore/2026-06-27-ddnet上游基线同步差距调研.md</code>；TClient 现有 FastInput UI <code>src/game/client/components/tclient/menus_tclient.cpp</code>。</p>
+  </div>
+</body>
+</html>

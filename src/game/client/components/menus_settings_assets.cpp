@@ -25,6 +25,7 @@
 #include <game/client/QmUi/QmUiPerf.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/gameclient.h>
@@ -480,7 +481,7 @@ namespace
 		if(Shell.m_HasStatusTag && pStatusLabel != nullptr && pStatusLabel[0] != '\0')
 		{
 			CUIRect StatusRect = Shell.m_StatusTagRect;
-			StatusRect.Draw(StatusReady ? AssetsCardStatusReadyColor : AssetsCardStatusNetworkColor, IGraphics::CORNER_ALL, minimum(StatusRect.h / 2.0f, 6.0f));
+			DrawRoundedSurface(pUi, StatusRect, StatusReady ? AssetsCardStatusReadyColor : AssetsCardStatusNetworkColor, ColorRGBA(), minimum(StatusRect.h / 2.0f, 6.0f));
 			SLabelProperties StatusLabelProps;
 			StatusLabelProps.m_MaxWidth = static_cast<int>(StatusRect.w - AssetsCardStatusTagHorizontalPadding * 2.0f);
 			StatusLabelProps.m_StopAtEnd = true;
@@ -4697,6 +4698,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 	int OldSelected = -1;
 	float Margin = 10;
+	constexpr float AssetCardRadius = 10.0f;
 	float TextureWidth = 128;
 	float TextureHeight = 128;
 	SMenuAssetScanUser LazyLoadUser;
@@ -5148,7 +5150,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 	auto RenderCardBadge = [&](const CUIRect &Rect, const char *pLabel, const ColorRGBA &FillColor, float FontSize) {
 		CUIRect BadgeRect = Rect;
-		BadgeRect.Draw(FillColor, IGraphics::CORNER_ALL, minimum(BadgeRect.h / 2.0f, 6.0f));
+		DrawRoundedSurface(Ui(), BadgeRect, FillColor, ColorRGBA(), minimum(BadgeRect.h / 2.0f, 6.0f));
 		SLabelProperties BadgeLabelProps;
 		BadgeLabelProps.m_MaxWidth = static_cast<int>(BadgeRect.w - AssetsCardStatusTagHorizontalPadding * 2.0f);
 		BadgeLabelProps.m_StopAtEnd = true;
@@ -5159,7 +5161,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	auto RenderAssetStatusTag = [&](const CUIRect &TagRect, const char *pLabel, bool Positive) {
 		CUIRect StatusRect = TagRect;
 		const ColorRGBA TagColor = Positive ? AssetsCardStatusReadyColor : AssetsCardStatusNetworkColor;
-		StatusRect.Draw(TagColor, IGraphics::CORNER_ALL, minimum(StatusRect.h / 2.0f, 6.0f));
+		DrawRoundedSurface(Ui(), StatusRect, TagColor, ColorRGBA(), minimum(StatusRect.h / 2.0f, 6.0f));
 		SLabelProperties StatusLabelProps;
 		StatusLabelProps.m_MaxWidth = static_cast<int>(StatusRect.w - AssetsCardStatusTagHorizontalPadding * 2.0f);
 		StatusLabelProps.m_StopAtEnd = true;
@@ -5183,7 +5185,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	auto DrawPreviewFrame = [&](const CUIRect &TextureRect) -> CUIRect {
 		CUIRect PreviewFrame = TextureRect;
 		PreviewFrame.Margin(3.0f, &PreviewFrame);
-		PreviewFrame.Draw(ColorRGBA(0.03f, 0.05f, 0.08f, 0.18f), IGraphics::CORNER_ALL, 10.0f);
+		DrawRoundedSurface(Ui(), PreviewFrame, ColorRGBA(0.03f, 0.05f, 0.08f, 0.18f), ColorRGBA(), 10.0f);
 		if(s_CurCustomTab != ASSETS_TAB_GAME && s_CurCustomTab != ASSETS_TAB_STRONG_WEAK)
 			PreviewFrame.Margin(8.0f, &PreviewFrame);
 		return PreviewFrame;
@@ -5191,7 +5193,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 	auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell) {
 		CUIRect ShellRect = Shell.m_CardRect;
-		ShellRect.Draw(ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), IGraphics::CORNER_ALL, 10.0f);
+		DrawRoundedSurface(Ui(), ShellRect, ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), ColorRGBA(), AssetCardRadius);
 	};
 
 	constexpr float AssetCardFooterSpacing = 8.0f;
@@ -5370,7 +5372,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(WorkshopCard);
 		CUIRect LoadingRect = ComputePreviewDrawRect(PreviewFrameRect, PreviewContentWidth, PreviewContentHeight);
 		const ColorRGBA PlaceholderColor = DrawResult == ESettingsResourcePreviewDrawResult::FAILED_PLACEHOLDER ? ColorRGBA(0.18f, 0.08f, 0.10f, 0.16f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.10f);
-		LoadingRect.Draw(PlaceholderColor, IGraphics::CORNER_ALL, 6.0f);
+		DrawRoundedSurface(Ui(), LoadingRect, PlaceholderColor, ColorRGBA(), 6.0f);
 	};
 
 	auto RenderAssetsCardPreview = [&](const SSettingsAssetsCardShell &Shell, const SSettingsAssetsCardPreviewState &PreviewState, bool WorkshopCard, bool RenderPreview) {
@@ -5471,36 +5473,27 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	};
 
 	auto RenderEntityBgFallback = [&](const CUIRect &Rect) {
-		static CUIElement s_MapPreviewFallbackLabel;
-		if(!s_MapPreviewFallbackLabel.IsRegistered())
-			s_MapPreviewFallbackLabel.Init(Ui(), 1);
 		CUIRect FallbackRect = Rect;
 		FallbackRect.Margin(6.0f, &FallbackRect);
-		FallbackRect.Draw(ColorRGBA(0.14f, 0.16f, 0.18f, 0.9f), IGraphics::CORNER_ALL, 8.0f);
+		DrawRoundedSurface(Ui(), FallbackRect, ColorRGBA(0.14f, 0.16f, 0.18f, 0.9f), ColorRGBA(), 8.0f);
 
 		CUIRect LabelRect = FallbackRect;
 		LabelRect.Margin(8.0f, &LabelRect);
-		DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS, s_MapPreviewFallbackLabel, &LabelRect, Localize("Map Preview TODO"), 11.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&LabelRect, Localize("Map Preview TODO"), 11.0f, TEXTALIGN_MC);
 	};
 
 	auto RenderEntityBgVideoFallback = [&](const CUIRect &Rect) {
-		static CUIElement s_VideoPreviewFallbackIcon;
-		static CUIElement s_VideoPreviewFallbackLabel;
-		if(!s_VideoPreviewFallbackIcon.IsRegistered())
-			s_VideoPreviewFallbackIcon.Init(Ui(), 1);
-		if(!s_VideoPreviewFallbackLabel.IsRegistered())
-			s_VideoPreviewFallbackLabel.Init(Ui(), 1);
 		CUIRect FallbackRect = Rect;
 		FallbackRect.Margin(6.0f, &FallbackRect);
-		FallbackRect.Draw(ColorRGBA(0.12f, 0.14f, 0.19f, 0.92f), IGraphics::CORNER_ALL, 8.0f);
+		DrawRoundedSurface(Ui(), FallbackRect, ColorRGBA(0.12f, 0.14f, 0.19f, 0.92f), ColorRGBA(), 8.0f);
 
 		CUIRect IconRect, LabelRect;
 		FallbackRect.HSplitTop(FallbackRect.h * 0.58f, &IconRect, &LabelRect);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS, s_VideoPreviewFallbackIcon, &IconRect, FONT_ICON_PLAY, 30.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&IconRect, FONT_ICON_PLAY, 30.0f, TEXTALIGN_MC);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		LabelRect.Margin(6.0f, &LabelRect);
-		DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS, s_VideoPreviewFallbackLabel, &LabelRect, Localize("Video Background"), 10.5f, TEXTALIGN_MC);
+		Ui()->DoLabel(&LabelRect, Localize("Video Background"), 10.5f, TEXTALIGN_MC);
 	};
 
 	if(s_CurCustomTab == ASSETS_TAB_ENTITIES)
@@ -5916,7 +5909,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			if(pItem == nullptr)
 				continue;
 
-			const CListboxItem Item = s_ListBox.DoNextItem(pItem, OldSelected >= 0 && (size_t)OldSelected == i);
+			const CListboxItem Item = s_ListBox.DoNextItem(pItem, OldSelected >= 0 && (size_t)OldSelected == i, AssetCardRadius + Margin / 2.0f);
 			CUIRect ItemRect = Item.m_Rect;
 			ItemRect.Margin(Margin / 2, &ItemRect);
 			if(!Item.m_Visible)
@@ -5966,7 +5959,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				PreviewState.m_Loading = true;
 			}
 			RenderAssetsCardPreview(Shell, PreviewState, false, LocalCardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewReady));
-			if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !AssetsContentWarmupBlocked)
+			if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady)
 			{
 				if(IsEntityBgVideoAsset(pItem->m_aName))
 					RenderEntityBgVideoFallback(Shell.m_TextureRect);
@@ -6784,7 +6777,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			return;
 		}
 
-		WorkshopHudView.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f), IGraphics::CORNER_ALL, 8.0f);
+		DrawRoundedSurface(Ui(), WorkshopHudView, ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f), ColorRGBA(), 8.0f);
 		WorkshopHudView.Margin(8.0f, &WorkshopHudView);
 
 		CUIRect WorkshopListArea = WorkshopHudView;
@@ -7134,7 +7127,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 					const bool Selected = IsLocalAssetSelected(pItem->m_aName);
 
-					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(pItem, Selected);
+					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(pItem, Selected, AssetCardRadius + Margin / 2.0f);
 					CUIRect ItemRect = Item.m_Rect;
 					ItemRect.Margin(Margin / 2, &ItemRect);
 					if(!Item.m_Visible)
@@ -7234,7 +7227,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 						CountResourcePreviewPlaceholder();
 					}
 					RenderAssetsCardPreview(Shell, PreviewState, true, CardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewReady, PreviewState.m_EntityBgHeavyPreviewDeferred));
-					if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !PreviewState.m_DrawFolderIcon && !AssetsContentWarmupBlocked)
+					if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !PreviewState.m_DrawFolderIcon)
 					{
 						if(IsEntityBgVideoAsset(pItem->m_aName))
 							RenderEntityBgVideoFallback(Shell.m_TextureRect);
@@ -7258,7 +7251,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					const size_t AssetIndex = vVisibleDownloadableAssetIndices[DownloadableIndex];
 					SWorkshopHudAsset &Asset = WorkshopState.m_vAssets[AssetIndex];
 
-					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(&Asset, false);
+					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(&Asset, false, AssetCardRadius + Margin / 2.0f);
 					CUIRect ItemRect = Item.m_Rect;
 					ItemRect.Margin(Margin / 2, &ItemRect);
 					if(!Item.m_Visible)

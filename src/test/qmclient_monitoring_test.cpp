@@ -2,6 +2,7 @@
 #define CONF_TEST 1
 #include <engine/client/game_ping.h>
 #include <engine/client/gpu_upload_limiter.h>
+#include <engine/textrender.h>
 
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmUiPerf.h>
@@ -3356,7 +3357,7 @@ TEST(QmMonitoringHelpers, AssetsCardPreviewHeavyPathLeavesDrawLoop)
 	EXPECT_NE(Body.find("EnsureAssetsCardPreviewArtifact("), std::string::npos);
 	EXPECT_NE(Body.find("RenderAssetsCardPreview("), std::string::npos);
 	EXPECT_NE(Source.find("auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell)"), std::string::npos);
-	EXPECT_NE(Source.find("ShellRect.Draw(ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawRoundedSurface(Ui(), ShellRect, ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), ColorRGBA(), AssetCardRadius);"), std::string::npos);
 	const size_t ShellStart = Source.find("auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell)");
 	ASSERT_NE(ShellStart, std::string::npos);
 	const size_t ShellEnd = Source.find("};", ShellStart);
@@ -3600,7 +3601,8 @@ TEST(QmMonitoringHelpers, AssetsLocalEntityBgStartsPreviewPipelineAndKeepsFallba
 	EXPECT_NE(LocalBody.find("SettingsResourcePreviewDrawResult("), std::string::npos);
 	EXPECT_NE(LocalBody.find("StartAssetsEntityBgPreviewArtifactJob("), std::string::npos);
 	EXPECT_NE(LocalBody.find("RenderAssetsCardPreview(Shell, PreviewState"), std::string::npos);
-	EXPECT_NE(LocalBody.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !AssetsContentWarmupBlocked)"), std::string::npos);
+	EXPECT_NE(LocalBody.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady)"), std::string::npos);
+	EXPECT_EQ(LocalBody.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !AssetsContentWarmupBlocked)"), std::string::npos);
 	EXPECT_NE(LocalBody.find("RenderEntityBgFallback(Shell.m_TextureRect)"), std::string::npos);
 	EXPECT_NE(LocalBody.find("RenderEntityBgVideoFallback(Shell.m_TextureRect)"), std::string::npos);
 }
@@ -4018,29 +4020,175 @@ TEST(QmMonitoringHelpers, MotdParagraphDrainBuildsInChunks)
 	EXPECT_NE(DrainBody.find("str_utf8_isstart"), std::string::npos);
 	EXPECT_NE(DrainBody.find("TextRender()->CreateOrAppendTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
 	EXPECT_NE(DrainBody.find("m_IngameMotdParagraphCache.m_BuildByteOffset += ChunkLength"), std::string::npos);
-	EXPECT_NE(DrainBody.find("m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_NE(DrainBody.find("std::swap(m_MotdTextContainerIndex, m_IngameMotdParagraphCache.m_BuildTextContainerIndex)"), std::string::npos);
+	EXPECT_EQ(DrainBody.find("m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
 	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex"), std::string::npos);
 	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, MotdUsesReadyOrPreviousParagraphOnly)
+TEST(QmMonitoringHelpers, VulkanFrameSubmitFailureRecordsFrameContext)
+{
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const size_t QueueSubmitPos = VulkanSource.find("VkResult QueueSubmitRes = QueueSubmit(m_VKGraphicsQueue, 1, &SubmitInfo, m_vQueueSubmitFences[m_CurImageIndex]);");
+	const size_t DiagnosticPos = VulkanSource.find("frame submit failed: result=%d image=%u/%u command_buffers=%u", QueueSubmitPos);
+	const size_t ErrorPos = VulkanSource.find("SetError(EGfxErrorType::GFX_ERROR_TYPE_RENDER_SUBMIT_FAILED, \"Submitting to graphics queue failed.\"", QueueSubmitPos);
+	const size_t SubmitEnd = VulkanSource.find("MarkFrameTimestampQueryPending(m_CurImageIndex);", QueueSubmitPos);
+
+	EXPECT_NE(QueueSubmitPos, std::string::npos);
+	EXPECT_NE(DiagnosticPos, std::string::npos);
+	EXPECT_NE(ErrorPos, std::string::npos);
+	ASSERT_NE(SubmitEnd, std::string::npos);
+	const std::string SubmitBlock = VulkanSource.substr(QueueSubmitPos, SubmitEnd - QueueSubmitPos);
+	EXPECT_LT(QueueSubmitPos, DiagnosticPos);
+	EXPECT_LT(DiagnosticPos, ErrorPos);
+	EXPECT_NE(SubmitBlock.find("if(pCritErrorMsg != nullptr)"), std::string::npos);
+	EXPECT_NE(SubmitBlock.find("return false;"), std::string::npos);
+	EXPECT_EQ(SubmitBlock.find("else"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, VulkanNoVsyncPrefersImmediateAndKeepsNormalSwapchainDepth)
+{
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const size_t FunctionStart = VulkanSource.find("[[nodiscard]] bool GetPresentationMode(VkPresentModeKHR &VKIOMode)");
+	const size_t FunctionEnd = VulkanSource.find("\n\t[[nodiscard]] bool GetSurfaceProperties", FunctionStart);
+	ASSERT_NE(FunctionStart, std::string::npos);
+	ASSERT_NE(FunctionEnd, std::string::npos);
+	const std::string FunctionBody = VulkanSource.substr(FunctionStart, FunctionEnd - FunctionStart);
+
+	EXPECT_NE(FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};"), std::string::npos);
+	EXPECT_EQ(FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR};"), std::string::npos);
+
+	const std::string SwapImageBody = ExtractSourceFunctionBody(VulkanSource, "uint32_t GetNumberOfSwapImages(");
+	ASSERT_FALSE(SwapImageBody.empty());
+	EXPECT_NE(SwapImageBody.find("uint32_t ImgNumber = VKCapabilities.minImageCount + 1;"), std::string::npos);
+	EXPECT_EQ(SwapImageBody.find("if(!g_Config.m_GfxVsync)"), std::string::npos);
+	EXPECT_EQ(SwapImageBody.find("return VKCapabilities.minImageCount;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, RenderLoopKeepsConfiguredAsyncPolicyAndDisablesPerfHotPath)
+{
+	const std::string ClientSource = ReadRepoFile("src/engine/client/client.cpp");
+	const size_t RunStart = ClientSource.find("void CClient::Run()");
+	const size_t RunEnd = ClientSource.find("GameClient()->RenderShutdownMessage();", RunStart);
+	ASSERT_NE(RunStart, std::string::npos);
+	ASSERT_NE(RunEnd, std::string::npos);
+	const std::string RunBody = ClientSource.substr(RunStart, RunEnd - RunStart);
+
+	const size_t AsyncRenderPolicy = RunBody.find("bool AsyncRenderOld = g_Config.m_GfxAsyncRenderOld;");
+	const size_t GfxRefreshRate = RunBody.find("int GfxRefreshRate = g_Config.m_GfxRefreshRate;", AsyncRenderPolicy);
+	const size_t PerfPolicy = RunBody.find("const bool PerfEnabled = QmPerfEnabled();");
+	const size_t OptionalLoopTimer = RunBody.find("std::optional<CPerfTimer> LoopTimer;");
+	ASSERT_NE(AsyncRenderPolicy, std::string::npos);
+	ASSERT_NE(GfxRefreshRate, std::string::npos);
+	const std::string AsyncRenderPolicyBlock = RunBody.substr(AsyncRenderPolicy, GfxRefreshRate - AsyncRenderPolicy);
+	EXPECT_EQ(RunBody.find("MacosVulkanBackend"), std::string::npos);
+	EXPECT_EQ(AsyncRenderPolicyBlock.find("#if defined(CONF_PLATFORM_MACOS)"), std::string::npos);
+	EXPECT_EQ(AsyncRenderPolicyBlock.find("AsyncRenderOld = false;"), std::string::npos);
+	EXPECT_NE(PerfPolicy, std::string::npos);
+	EXPECT_NE(OptionalLoopTimer, std::string::npos);
+	EXPECT_LT(PerfPolicy, OptionalLoopTimer);
+	EXPECT_EQ(RunBody.find("CPerfTimer LoopTimer;"), std::string::npos);
+	EXPECT_NE(RunBody.find("int64_t AdditionalTime = GfxRefreshRate ? ((Now - LastRenderTime) - RenderFrameTicks) : 0;"), std::string::npos);
+	EXPECT_NE(RunBody.find("AdditionalTime > (time_freq() / 60)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, DedicatedDrawCommandsDoNotConsumeRetainedVertices)
+{
+	const std::string GraphicsSource = ReadRepoFile("src/engine/client/graphics_threaded.cpp");
+	const std::string Header = ReadRepoFile("src/engine/client/graphics_threaded.h");
+	const std::string TextBody = ExtractSourceFunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderText(int BufferContainerIndex");
+	const std::string QuadBody = ExtractSourceFunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderQuadContainer(int ContainerIndex, int QuadOffset");
+	const std::string QuadExBody = ExtractSourceFunctionBody(GraphicsSource, "void CGraphics_Threaded::RenderQuadContainerEx(int ContainerIndex");
+
+	ASSERT_FALSE(TextBody.empty());
+	ASSERT_FALSE(QuadBody.empty());
+	ASSERT_FALSE(QuadExBody.empty());
+	EXPECT_EQ(Header.find("FlushPendingVerticesForDrawCommand"), std::string::npos);
+	EXPECT_EQ(GraphicsSource.find("void CGraphics_Threaded::FlushPendingVerticesForDrawCommand()"), std::string::npos);
+	EXPECT_EQ(TextBody.find("FlushVertices"), std::string::npos);
+	EXPECT_EQ(QuadBody.find("FlushPendingVerticesForDrawCommand"), std::string::npos);
+	EXPECT_EQ(QuadExBody.find("FlushPendingVerticesForDrawCommand"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, VulkanKeepsBufferedR8TextPath)
+{
+	const std::string GraphicsSource = ReadRepoFile("src/engine/client/graphics_threaded.cpp");
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const size_t InitStart = GraphicsSource.find("int CGraphics_Threaded::IssueInit()");
+	const size_t InitEnd = GraphicsSource.find("// TClient", InitStart);
+	ASSERT_NE(InitStart, std::string::npos);
+	ASSERT_NE(InitEnd, std::string::npos);
+	const std::string InitBody = GraphicsSource.substr(InitStart, InitEnd - InitStart);
+
+	EXPECT_NE(InitBody.find("m_GLTextBufferingEnabled = (m_GLQuadContainerBufferingEnabled && m_pBackend->HasTextBuffering());"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("pCommand->m_pCapabilities->m_TextBuffering = true;"), std::string::npos);
+	EXPECT_EQ(VulkanSource.find("pCommand->m_pCapabilities->m_TextBuffering = false;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VK_FORMAT_R8_UNORM, VK_FORMAT_R8_UNORM"), std::string::npos);
+
+	EXPECT_EQ(VulkanSource.find("Skipping text command with unavailable Vulkan resources"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, VulkanProfilingTimersStayOutOfDisabledHotPath)
+{
+	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const std::string PrepareFrame = ExtractSourceFunctionBody(VulkanSource, "[[nodiscard]] bool PrepareFrame()");
+	const std::string RunCommand = ExtractSourceFunctionBody(VulkanSource, "[[nodiscard]] ERunCommandReturnTypes RunCommand(");
+	const std::string QueueSubmit = ExtractSourceFunctionBody(VulkanSource, "VkResult QueueSubmit(");
+
+	ASSERT_FALSE(PrepareFrame.empty());
+	ASSERT_FALSE(RunCommand.empty());
+	ASSERT_FALSE(QueueSubmit.empty());
+	EXPECT_NE(PrepareFrame.find("m_FrameProfilingActive = FrameProfilingEnabled();"), std::string::npos);
+	EXPECT_NE(RunCommand.find("if(m_FrameProfilingActive)"), std::string::npos);
+	EXPECT_NE(RunCommand.find("m_FrameProfilingActive ? time_get_nanoseconds() : 0ns"), std::string::npos);
+	EXPECT_NE(QueueSubmit.find("m_FrameProfilingActive ? time_get_nanoseconds() : 0ns"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MacosVulkanGraphicsErrorDialogKeepsWindowAlive)
+{
+	const std::string BackendSource = ReadRepoFile("src/engine/client/backend_sdl.cpp");
+	const std::string Body = ExtractSourceFunctionBody(BackendSource, "std::optional<int> CGraphicsBackend_SDL_GL::ShowMessageBox(const IGraphics::CMessageBox &MessageBox)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t MacosGuard = Body.find("#if defined(CONF_PLATFORM_MACOS)");
+	const size_t VulkanBranch = Body.find("if(m_BackendType == EBackendType::BACKEND_TYPE_VULKAN)", MacosGuard);
+	const size_t ParentlessMessageBox = Body.find("return ShowMessageBoxImpl(MessageBox, nullptr);", VulkanBranch);
+	const size_t Cleanup = Body.find("m_pProcessor->ErroneousCleanup();");
+	const size_t DestroyWindow = Body.find("SDL_DestroyWindow(m_pWindow);");
+
+	ASSERT_NE(MacosGuard, std::string::npos);
+	ASSERT_NE(VulkanBranch, std::string::npos);
+	ASSERT_NE(ParentlessMessageBox, std::string::npos);
+	ASSERT_NE(Cleanup, std::string::npos);
+	ASSERT_NE(DestroyWindow, std::string::npos);
+	EXPECT_LT(MacosGuard, VulkanBranch);
+	EXPECT_LT(VulkanBranch, ParentlessMessageBox);
+	EXPECT_LT(ParentlessMessageBox, Cleanup);
+	EXPECT_LT(ParentlessMessageBox, DestroyWindow);
+}
+
+TEST(QmMonitoringHelpers, MotdUsesReadyOrStableParagraphOnly)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerInfoMotd(CUIRect Motd)");
+	const std::string ResizeBody = ExtractSourceFunctionBody(Menus, "void CMenus::OnWindowResize()");
 	ASSERT_FALSE(Body.empty());
+	ASSERT_FALSE(ResizeBody.empty());
 
 	// MOTD can be prepared asynchronously, but visible rendering must not show a
-	// loading placeholder or blank range. It should render the current ready
-	// paragraph, or a previous same-size paragraph while the new one hydrates.
-	EXPECT_NE(Header.find("m_PreviousTextHash"), std::string::npos);
-	EXPECT_NE(Header.find("m_PreviousTextContainerIndex"), std::string::npos);
-	EXPECT_NE(Source.find("RenderIngameMotdPreviousParagraphCache("), std::string::npos);
+	// loading placeholder or blank range. The current stable paragraph remains
+	// the sole owner until a completed build replaces it.
+	EXPECT_NE(Header.find("m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_EQ(Header.find("m_PreviousTextContainerIndex"), std::string::npos);
+	EXPECT_NE(Source.find("RenderIngameMotdStableParagraphCache("), std::string::npos);
 	EXPECT_NE(Body.find("const bool RenderedMotdParagraph ="), std::string::npos);
-	EXPECT_NE(Body.find("RenderIngameMotdPreviousParagraphCache("), std::string::npos);
+	EXPECT_NE(Body.find("RenderIngameMotdStableParagraphCache("), std::string::npos);
 	EXPECT_NE(Body.find("RenderIngameMotdFallbackText("), std::string::npos);
 	EXPECT_NE(Body.find("server_info_not_ready=1"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Loading"), std::string::npos);
+	EXPECT_NE(ResizeBody.find("TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ValueSelectorDisplayUsesSingleLineShrink)
@@ -4056,14 +4204,19 @@ TEST(QmMonitoringHelpers, ValueSelectorDisplayUsesSingleLineShrink)
 	EXPECT_NE(Header.find("bool m_DisallowNewline"), std::string::npos);
 	EXPECT_NE(FlagsBody.find("LabelProps.m_DisallowNewline ? TEXTFLAG_DISALLOW_NEWLINE : 0"), std::string::npos);
 	EXPECT_NE(Body.find("SLabelProperties ValueLabelProps"), std::string::npos);
-	EXPECT_NE(Body.find("ValueLabelProps.m_MaxWidth = pRect->w"), std::string::npos);
+	EXPECT_NE(Body.find("pRect->VMargin(2.0f, &Textbox);"), std::string::npos);
+	EXPECT_NE(Body.find("ValueLabelProps.m_MaxWidth = Textbox.w"), std::string::npos);
 	EXPECT_NE(Body.find("ValueLabelProps.m_DisallowNewline = true"), std::string::npos);
 	EXPECT_NE(Body.find("ValueLabelProps.m_StopAtEnd = true"), std::string::npos);
 	EXPECT_NE(Body.find("ValueLabelProps.m_MinimumFontSize"), std::string::npos);
 	EXPECT_NE(Body.find("const char *pDisplayText = m_ActiveValueSelectorState.m_pLastTextId == pId ? m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString() : aBuf;"), std::string::npos);
-	EXPECT_NE(Body.find("DoLabel(pRect, pDisplayText, 10.0f, TEXTALIGN_MC, ValueLabelProps);"), std::string::npos);
-	EXPECT_NE(Body.find("auto RenderValueSelectorDisplay = [&]()"), std::string::npos);
+	EXPECT_NE(Body.find("const float ValueFontSize = QmFitSingleLineFontSize("), std::string::npos);
+	EXPECT_NE(Body.find("DoLabel(&Textbox, pDisplayText, ValueFontSize, Props.m_TextAlign, ValueLabelProps);"), std::string::npos);
+	EXPECT_NE(Body.find("auto RenderValueSelectorDisplay = [&](bool RenderText = true)"), std::string::npos);
 	EXPECT_NE(Body.find("RenderValueSelectorDisplay();"), std::string::npos);
+	EXPECT_NE(Body.find("RenderValueSelectorDisplay(false);"), std::string::npos);
+	EXPECT_NE(Body.find("const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();"), std::string::npos);
+	EXPECT_NE(Body.find("TextRender()->TextColor(PreviousTextColor);"), std::string::npos);
 	EXPECT_LT(Body.find("RenderValueSelectorDisplay();"), Body.find("if(Inside && !MouseButton(0) && !MouseButton(1))"));
 	EXPECT_EQ(Body.find("DoEditBox(&m_ActiveValueSelectorState.m_NumberInput"), std::string::npos);
 	EXPECT_EQ(Body.find("DoLabel(pRect, aBuf, 10.0f, TEXTALIGN_MC);\n"), std::string::npos);
@@ -4155,9 +4308,7 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesSharedIntervalNumericF
 	EXPECT_NE(Body.find("if(StackQueueInterval)"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Enabled\")"), std::string::npos);
 	EXPECT_EQ(Body.find("tee-skin-queue-enabled-heading"), std::string::npos);
-	EXPECT_NE(Body.find("IntervalControls.VSplitRight(minimum(IntervalControls.w, QueueIntervalControlsWidth), nullptr, &IntervalInputGroup);"), std::string::npos);
-	EXPECT_NE(Body.find("const float ResolvedQueueValueUnitWidth = minimum(IntervalInputGroup.w, QueueValueUnitWidth);"), std::string::npos);
-	EXPECT_NE(Body.find("IntervalInputGroup.VSplitRight(ResolvedQueueValueUnitWidth, &IntervalInput, &IntervalUnit);"), std::string::npos);
+	EXPECT_NE(Body.find("IntervalRow.VSplitLeft(minimum(IntervalRow.w, QueueIntervalLabelWidth), &IntervalLabel, &IntervalControls);"), std::string::npos);
 	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f * UiScale"), std::string::npos);
 	EXPECT_NE(Body.find("TextRender()->TextWidth(TeeMetrics.m_SmallSize, \"ms\")"), std::string::npos);
 	EXPECT_NE(Body.find("SLabelProperties QueueControlLabelProps;"), std::string::npos);
@@ -4170,7 +4321,7 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesSharedIntervalNumericF
 	const size_t InputCtxTreePos = Body.find("TeeSkinQueueIntervalCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", InputCtxAnimPos);
 	const size_t InputCtxScopePos = Body.find("TeeSkinQueueIntervalCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_queue_interval_text_input\");", InputCtxTreePos);
 	const size_t InputCtxFrameDtPos = Body.find("TeeSkinQueueIntervalCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", InputCtxScopePos);
-	const size_t NumericFieldPos = Body.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInput, QueueIntervalOptions);", InputCtxFrameDtPos);
+	const size_t NumericFieldPos = Body.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInputGroup, QueueIntervalOptions);", InputCtxFrameDtPos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(InputCtxPos, std::string::npos);
 	EXPECT_NE(InputCtxUiPos, std::string::npos);
@@ -4185,8 +4336,10 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesSharedIntervalNumericF
 	EXPECT_LT(InputCtxTreePos, InputCtxScopePos);
 	EXPECT_LT(InputCtxScopePos, InputCtxFrameDtPos);
 	EXPECT_LT(InputCtxFrameDtPos, NumericFieldPos);
+	EXPECT_NE(Body.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
+	EXPECT_NE(Body.find("QueueIntervalOptions.m_TrailingWidth = QueueValueUnitWidth;"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, 10.0f, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC)"), std::string::npos);
-	EXPECT_NE(Body.find("Ui()->DoLabel(&IntervalUnit, \"ms\""), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoLabel(&IntervalUnit, \"ms\""), std::string::npos);
 	EXPECT_EQ(Body.find("DoValueSelectorWithState(&s_aQueueIntervalInputIds[QueueDummy]"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoScrollbarH(&QueueInterval"), std::string::npos);
 	EXPECT_EQ(Body.find("IntervalScrollbar"), std::string::npos);
@@ -4207,10 +4360,10 @@ TEST(QmMonitoringHelpers, TeeSkinQueueDragShowsDropLineAndGhostRow)
 	EXPECT_NE(Body.find("static CUIRect s_QueueDraggedRect;"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect QueueDropLine;"), std::string::npos);
 	EXPECT_NE(Body.find("HasQueueDropLine = true;"), std::string::npos);
-	EXPECT_NE(Body.find("QueueDropLine.Draw(ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), IGraphics::CORNER_ALL, 1.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("DrawRoundedSurface(Ui(), QueueDropLine, ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), ColorRGBA(), 1.0f);"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect QueueDragGhost = s_QueueDraggedRect;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueDragGhost.x = Ui()->MouseX() - s_QueueDragGrabOffset.x;"), std::string::npos);
-	EXPECT_NE(Body.find("QueueDragGhost.Draw(ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), IGraphics::CORNER_ALL, 4.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("DrawRoundedSurface(Ui(), QueueDragGhost, ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), ColorRGBA(), 4.0f);"), std::string::npos);
 	EXPECT_NE(Body.find("QueueDragGhostLabel"), std::string::npos);
 	EXPECT_NE(Body.find("s_QueueDragGrabOffset = Ui()->MousePos() - vec2(Item.m_Rect.x, Item.m_Rect.y);"), std::string::npos);
 }
@@ -5409,8 +5562,8 @@ TEST(QmMonitoringHelpers, AssetsCardDrawLoopDoesNotRunHeavyPreview)
 	const size_t RenderLoop = Source.find("s_WorkshopAssetsListBox.SkipItems", VideoFallback);
 	ASSERT_NE(RenderLoop, std::string::npos);
 	const std::string FallbackBody = Source.substr(MapFallback, RenderLoop - MapFallback);
-	EXPECT_NE(FallbackBody.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
-	EXPECT_EQ(FallbackBody.find("Ui()->DoLabel(&LabelRect"), std::string::npos);
+	EXPECT_EQ(FallbackBody.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS"), std::string::npos);
+	EXPECT_NE(FallbackBody.find("Ui()->DoLabel(&LabelRect"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, AssetsCardDrawLoopDoesNotRunPreviewOrTextLayout)
@@ -5927,6 +6080,10 @@ TEST(QmMonitoringHelpers, AssetsEntityBgFallbackTextIsCenteredTodo)
 	EXPECT_NE(FallbackBody.find("Localize(\"Map Preview TODO\")"), std::string::npos);
 	EXPECT_NE(FallbackBody.find("TEXTALIGN_MC"), std::string::npos);
 	EXPECT_NE(FallbackBody.find("LabelRect = FallbackRect;"), std::string::npos);
+	EXPECT_NE(FallbackBody.find("Ui()->DoLabel(&LabelRect"), std::string::npos);
+	EXPECT_EQ(FallbackBody.find("DoMenuLabelStreamed"), std::string::npos);
+	EXPECT_NE(Source.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady)"), std::string::npos);
+	EXPECT_NE(Source.find("if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !PreviewState.m_DrawFolderIcon)"), std::string::npos);
 	EXPECT_EQ(FallbackBody.find("Localize(\"Map Preview\")"), std::string::npos);
 }
 
@@ -6162,10 +6319,11 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
 	ASSERT_FALSE(NoScrollBody.empty());
 	ASSERT_FALSE(ScrollRegionSlider.empty());
 	EXPECT_NE(ScrollRegion.find("bool CScrollRegion::ContentOverflows() const"), std::string::npos);
+	EXPECT_NE(ScrollRegionHeader.find("constexpr bool QmScrollRegionContentOverflows(float ContentSize, float ViewportSize, float PixelSize)"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("return !m_Params.m_HideScrollbar && ContentOverflows();"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("m_ContentSize 来自上一帧 End/AddRect 的测量结果"), std::string::npos);
 	EXPECT_NE(ScrollRegionSlider.find("const float ScrollMax = Metrics.MaxOffset();"), std::string::npos);
-	EXPECT_NE(ScrollRegionSlider.find("const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
+	EXPECT_NE(ScrollRegionSlider.find("const bool CanScroll = ContentOverflows() && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool IsActiveItem(const void *pId) const"), std::string::npos);
 	EXPECT_NE(ScrollRegionEnd.find("MaintainNoScrollSliderActive();"), std::string::npos);
 	EXPECT_NE(NoScrollBody.find("m_ScrollState.ResetForNonScrollableContent(Active);"), std::string::npos);
@@ -6195,7 +6353,7 @@ TEST(QmMonitoringHelpers, GlobalCardOrderConfigHasMigrationLandingZone)
 	EXPECT_NE(QmConfig.find("MACRO_CONFIG_STR(QmSettingsCardOrder, qm_settings_card_order, 2048, \"\", CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(QmConfig.find("MACRO_CONFIG_STR(QmSidebarCardOrder, qm_sidebar_card_order, 2048, \"\", CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_EQ(QmConfig.find("qm_global_card_order, 2048"), std::string::npos);
-	EXPECT_NE(ConfigManager.find("char aLineBuf[32768];"), std::string::npos);
+	EXPECT_NE(ConfigManager.find("std::vector<char> vLineBuf(pVariable->MaxSerializedSize());"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, CardOrderModelUsesStableIdIndexForFind)
@@ -6220,11 +6378,25 @@ TEST(QmMonitoringHelpers, SettingsCardOrderPersistenceCommitsGlobalConfigAtomica
 	const char *pTempBuffer = "char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)]";
 	const char *pSerialize = "m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized))";
 	const char *pCopy = "str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));";
-	const size_t LoadTempPos = LoadBody.find(pTempBuffer);
-	const size_t LoadSerializePos = LoadBody.find(pSerialize);
-	const size_t LoadCopyPos = LoadBody.find(pCopy);
-	const size_t LoadDirtyClearPos = LoadBody.find("m_SettingsCardOrderModel.ClearDirty();");
+	const size_t CandidateTempPos = LoadBody.find(pTempBuffer);
+	const size_t CandidateSerializePos = LoadBody.find("Candidate.Serialize(aSerialized, sizeof(aSerialized))", CandidateTempPos);
+	const size_t CandidateCopyPos = LoadBody.find(pCopy, CandidateSerializePos);
+	const size_t CandidateCommitPos = LoadBody.find("m_SettingsCardOrderModel.SetEntries(CopyModelEntries(Candidate));", CandidateCopyPos);
+	const size_t CandidateDirtyClearPos = LoadBody.find("m_SettingsCardOrderModel.ClearDirty();", CandidateCommitPos);
+	const size_t LoadTempPos = LoadBody.find(pTempBuffer, CandidateDirtyClearPos);
+	const size_t LoadSerializePos = LoadBody.find(pSerialize, LoadTempPos);
+	const size_t LoadCopyPos = LoadBody.find(pCopy, LoadSerializePos);
+	const size_t LoadDirtyClearPos = LoadBody.find("m_SettingsCardOrderModel.ClearDirty();", LoadCopyPos);
 	const size_t LoadMigratedPos = LoadBody.find("g_Config.m_QmCardOrderMigrated = 1;");
+	EXPECT_NE(CandidateTempPos, std::string::npos);
+	EXPECT_NE(CandidateSerializePos, std::string::npos);
+	EXPECT_NE(CandidateCopyPos, std::string::npos);
+	EXPECT_NE(CandidateCommitPos, std::string::npos);
+	EXPECT_NE(CandidateDirtyClearPos, std::string::npos);
+	EXPECT_LT(CandidateTempPos, CandidateSerializePos);
+	EXPECT_LT(CandidateSerializePos, CandidateCopyPos);
+	EXPECT_LT(CandidateCopyPos, CandidateCommitPos);
+	EXPECT_LT(CandidateCommitPos, CandidateDirtyClearPos);
 	EXPECT_NE(LoadTempPos, std::string::npos);
 	EXPECT_NE(LoadSerializePos, std::string::npos);
 	EXPECT_NE(LoadCopyPos, std::string::npos);
@@ -6260,7 +6432,21 @@ TEST(QmMonitoringHelpers, SettingsCardLayoutVersionMigrationRequiresWholeLegacyG
 	EXPECT_NE(LoadBody.find("const bool BindWheelStillOldDefault"), std::string::npos);
 	EXPECT_NE(LoadBody.find("IsAtOldDefault(\"deck:tclient-bind-wheel-editor\""), std::string::npos);
 	EXPECT_NE(LoadBody.find("IsAtOldDefault(\"deck:tclient-bind-wheel-preview\""), std::string::npos);
+	EXPECT_NE(LoadBody.find("MakeCandidate(Candidate);"), std::string::npos);
+	EXPECT_NE(LoadBody.find("TabContainsOnlyStableIds(Candidate, \"qmclient-contributors\""), std::string::npos);
+	EXPECT_NE(LoadBody.find("TabContainsOnlyStableIds(Candidate, \"tclient-bind-wheel\""), std::string::npos);
+	EXPECT_NE(LoadBody.find("MigrateExactLayout(Candidate, \"tclient-profiles\", vLegacyProfileLayout, vTargetProfileLayout, vProfileIds)"), std::string::npos);
+	EXPECT_NE(LoadBody.find("MigrateExactLayout(Candidate, \"tclient-status-bar\", vLegacyStatusBarDefaults, vTargetStatusBarLayout, vStatusBarIds)"), std::string::npos);
+	EXPECT_NE(LoadBody.find("MigrateExactLayout(Candidate, \"tee\", vLegacyTeeDefaults, vTargetTeeLayout, vTeeIds)"), std::string::npos);
 	EXPECT_EQ(LoadBody.find("MoveIfStillAtOldDefault"), std::string::npos);
+	EXPECT_NE(LoadBody.find("MigrateTClientMainCardsToAlternatingColumns"), std::string::npos);
+	EXPECT_NE(LoadBody.find("TClientMainCardsMigrationCommitPlan(MigrationResult)"), std::string::npos);
+	EXPECT_NE(LoadBody.find("PersistCandidate(Candidate, CandidateChanged)"), std::string::npos);
+	EXPECT_NE(LoadBody.find("g_Config.m_QmCardLayoutVersion = 1;"), std::string::npos);
+	EXPECT_NE(LoadBody.find("PersistAndAdvanceLayoutVersion(5, true)"), std::string::npos);
+	EXPECT_NE(LoadBody.find("if(CommitPlan.m_PersistSerialized)"), std::string::npos);
+	EXPECT_NE(LoadBody.find("if(CommitPlan.m_AdvanceVersion)"), std::string::npos);
+	EXPECT_NE(LoadBody.find("PersistAndAdvanceLayoutVersion(7, true)"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 {
@@ -6919,11 +7105,15 @@ TEST(QmMonitoringHelpers, InputFieldsConsumeSharedLayoutHelper)
 	EXPECT_NE(Header.find("struct SInputFieldLayout"), std::string::npos);
 	EXPECT_NE(Header.find("ResolveInputFieldLayout("), std::string::npos);
 	EXPECT_NE(Header.find("struct SInputFieldOptions"), std::string::npos);
-	EXPECT_NE(InputBody.find("ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, Options.m_TrailingWidth)"), std::string::npos);
+	EXPECT_NE(InputBody.find("const bool InlineTrailingText = Options.m_InlineTrailingText"), std::string::npos);
+	EXPECT_NE(InputBody.find("const float TrailingWidth = HasTrailingAction ? std::max(Options.m_TrailingWidth, Rect.h) : Options.m_TrailingWidth;"), std::string::npos);
+	EXPECT_NE(InputBody.find("ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : TrailingWidth)"), std::string::npos);
+	EXPECT_NE(InputBody.find("ResolveInlineTrailingTextLayout(Layout.m_ContentRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ContentRect.h * CUi::ms_FontmodHeight * 0.8f"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ContentRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_ClearRect"), std::string::npos);
 	EXPECT_NE(InputBody.find("Layout.m_TrailingRect"), std::string::npos);
+	EXPECT_NE(InputBody.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
 	EXPECT_NE(InputBody.find("Options.m_Mode == EInputFieldMode::MULTILINE"), std::string::npos);
 	EXPECT_NE(InputBody.find("DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect, Options.m_Mode == EInputFieldMode::MULTILINE);"), std::string::npos);
 	EXPECT_LT(InputBody.find("if(Options.m_SearchHotkeyEnabled"), InputBody.find("DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect, Options.m_Mode == EInputFieldMode::MULTILINE);"));
@@ -6931,6 +7121,7 @@ TEST(QmMonitoringHelpers, InputFieldsConsumeSharedLayoutHelper)
 TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 {
 	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");
+	const std::string CardHeader = ReadRepoFile("src/game/client/QmUi/SettingsCard.h");
 	const std::string DeckHeader = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
 	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string QmClientSource = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -6940,29 +7131,96 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("DrawState.m_DropFeedback"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_ReflowCompleteFeedback"), std::string::npos);
 	EXPECT_NE(Source.find("const bool InteractionComplete = DrawState.m_DropFeedback;"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_PointerInside, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused)"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardSubtitleVisible(DrawState.m_Hovered, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused)"), std::string::npos);
 	EXPECT_EQ(Source.find("PointInRect(DrawRect"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA Surface = ResolveSettingsCardSurfaceColor(Theme.m_Surface, DrawState);"), std::string::npos);
+	EXPECT_NE(Source.find("ColorRGBA Surface = ResolveSettingsCardSurfaceColor(VisualOptions.m_UseSurfaceColor ? VisualOptions.m_SurfaceColor : Theme.m_Surface, DrawState);"), std::string::npos);
+	EXPECT_NE(CardHeader.find("bool m_UseSurfaceColor = false;"), std::string::npos);
 	EXPECT_EQ(Source.find("ResolveSettingsCardLinkedSurfaceColor"), std::string::npos);
 	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_SurfaceHovered : Theme.m_Surface"), std::string::npos);
 	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
-	EXPECT_NE(Source.find("const bool DrawInteractionBorder = VisualOptions.m_AlwaysShowBorders;"), std::string::npos);
+	EXPECT_NE(Source.find("const bool DrawNormalBorder = VisualOptions.m_AlwaysShowBorders;"), std::string::npos);
+	EXPECT_NE(Source.find("const bool DrawAttentionBorder = DrawState.m_Focused || DrawState.m_Dragged || InteractionComplete;"), std::string::npos);
+	EXPECT_EQ(Source.find("DrawState.m_Hovered ? Theme.m_BorderHovered"), std::string::npos);
 	EXPECT_NE(Source.find("ResolveSettingsSmallFontSize(UiScale)"), std::string::npos);
 	EXPECT_EQ(Source.find("ui_token::font::SMALL * UiScale"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
-	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
-	EXPECT_NE(Source.find("ExecuteSettingsCardChromeDraw("), std::string::npos);
+	EXPECT_NE(Source.find("DrawRoundedSurface(Ctx, ChromeRect"), std::string::npos);
+	EXPECT_EQ(Source.find("ChromeRect.Draw(Surface, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_EQ(Source.find("ExecuteSettingsCardChromeDraw("), std::string::npos);
 	EXPECT_EQ(Source.find("ResolveSettingsCardBorderRingClipRects"), std::string::npos);
-	EXPECT_NE(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
-	EXPECT_NE(Source.find("DrawFrame.m_Rect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
+	EXPECT_NE(Source.find("DrawNormalBorder || DrawAttentionBorder ? BorderWidth : 0.0f"), std::string::npos);
+	EXPECT_EQ(Source.find("InnerSurface.Margin(BorderWidth, &InnerSurface);"), std::string::npos);
+	EXPECT_EQ(Source.find("ChromeRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("BorderRect.Draw(Border, IGraphics::CORNER_ALL, CardRadius);"), std::string::npos);
 	EXPECT_EQ(Source.find("FocusRect.Draw(FocusRing"), std::string::npos);
 	EXPECT_NE(DeckHeader.find("bool m_AllowHeaderDrag = true;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiCardOpacity / 100.0f"), std::string::npos);
+	EXPECT_EQ(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiOpacity / 100.0f"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
 	EXPECT_NE(QmClientSource.find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsCheckboxAndTClientConditionalRowsUseTheCanonicalSurfaceAndLayout)
+{
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string TClientSource = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string SettingsDeckSource = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+	const std::string AutoReply = ExtractSourceFunctionBody(TClientSource, "float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render)");
+	const std::string Hud = ExtractSourceFunctionBody(TClientSource, "float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)");
+
+	ASSERT_FALSE(AutoReply.empty());
+	ASSERT_FALSE(Hud.empty());
+	EXPECT_NE(MenusSource.find("const ColorRGBA BoxColor(1.0f, 1.0f, 1.0f, BoxAlpha);"), std::string::npos);
+	EXPECT_NE(MenusSource.find("DrawRoundedSurface(Ui(), Box, BoxColor, BoxColor, 3.0f);"), std::string::npos);
+	EXPECT_NE(AutoReply.find("if(g_Config.m_TcAutoReplyMuted)"), std::string::npos);
+	EXPECT_NE(AutoReply.find("if(g_Config.m_TcAutoReplyMinimized)"), std::string::npos);
+	EXPECT_EQ(AutoReply.find("ReplyRect = Rows.Next();\n\tif(Render && g_Config.m_TcAutoReplyMuted)"), std::string::npos);
+	EXPECT_EQ(AutoReply.find("ReplyRect = Rows.Next();\n\tif(Render && g_Config.m_TcAutoReplyMinimized)"), std::string::npos);
+	EXPECT_NE(Hud.find("if(g_Config.m_TcRenderCursorSpec)"), std::string::npos);
+	EXPECT_NE(Hud.find("if(g_Config.m_TcNotifyWhenLast)"), std::string::npos);
+	EXPECT_NE(Hud.find("if(g_Config.m_TcShowCenter)"), std::string::npos);
+	EXPECT_EQ(Hud.find("else\n\t{\n\t\tRows.Next();\n\t\tRows.Next();\n\t\tRows.Next();\n\t}"), std::string::npos);
+	EXPECT_NE(TClientSource.find("Hash = HashValueFnv1a64(Hash, g_Config.m_TcTinyTees > 0);"), std::string::npos);
+	EXPECT_NE(TClientSource.find("return HashValueFnv1a64(Hash, g_Config.m_TcPredMarginInFreeze);"), std::string::npos);
+	EXPECT_NE(TClientSource.find("if(g_Config.m_TcTinyTees > 0)\n\t\t\t{\n\t\t\t\tconst bool RenderTinyTeeSize"), std::string::npos);
+	EXPECT_NE(TClientSource.find("static std::vector<CButtonContainer> s_vTinyTeeModeButtons = {{}, {}, {}};"), std::string::npos);
+	EXPECT_NE(TClientSource.find("s_vTinyTeeModeButtons, {\"tclient-smaller-tees-none\""), std::string::npos);
+	EXPECT_NE(TClientSource.find("Ui()->DoButtonLogic(&s_vTinyTeeModeButtons[Index]"), std::string::npos);
+	EXPECT_EQ(TClientSource.find("s_vTinyTeePreLayoutButtons"), std::string::npos);
+	EXPECT_NE(TClientSource.find("if(g_Config.m_TcRemoveAnti)\n\t\t\t{\n\t\t\t\tCUIRect AmountButton = Rows.Next();"), std::string::npos);
+	EXPECT_NE(TClientSource.find("if(g_Config.m_TcTeeTrailColorMode == CTrails::COLORMODE_SOLID)\n\t\t\t{\n\t\t\t\tCUIRect ColorRow = Rows.Next();"), std::string::npos);
+	EXPECT_NE(TClientSource.find("BuildTClientConditionalRowsPreLayoutInput"), std::string::npos);
+	EXPECT_NE(TClientSource.find("Definition.m_PreLayoutInput = BuildTClientConditionalRowsPreLayoutInput(s_aDeckCardSpecs[Index].first);"), std::string::npos);
+	EXPECT_NE(TClientSource.find("static CUi::SDropDownState s_TrailDropDownState;"), std::string::npos);
+	EXPECT_NE(TClientSource.find("if(str_comp(pStableCardId, \"tclient:tee-trails\") == 0)"), std::string::npos);
+	EXPECT_NE(TClientSource.find("const int Selected = s_TrailDropDownState.m_SelectionPopupContext.m_SelectionIndex;"), std::string::npos);
+	EXPECT_NE(TClientSource.find("const int NewColorMode = Selected + 1;"), std::string::npos);
+	EXPECT_NE(TClientSource.find("g_Config.m_TcTeeTrailColorMode = NewColorMode;"), std::string::npos);
+	EXPECT_NE(TClientSource.find("Definition.m_HasPendingPreLayoutInput = []"), std::string::npos);
+	EXPECT_NE(TClientSource.find("return Selected >= 0 && Selected < 4;"), std::string::npos);
+	const size_t PendingInput = SettingsDeckSource.find("const bool HasPendingPreLayoutInput = Card.m_pDefinition->m_HasPendingPreLayoutInput");
+	const size_t PreLayoutInput = SettingsDeckSource.find("Card.m_pDefinition->m_PreLayoutInput(PreLayoutFrame.m_ContentRect)");
+	const size_t InvalidateCardHeight = SettingsDeckSource.find("m_vContentHeights[Card.m_StateIndex] = -1.0f;", PreLayoutInput);
+	const size_t InvalidateAllHeights = SettingsDeckSource.find("std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);", InvalidateCardHeight);
+	const size_t RebuildPreparedCards = SettingsDeckSource.find("BuildPreparedCards(*pColumns);", InvalidateAllHeights);
+	ASSERT_NE(PendingInput, std::string::npos);
+	ASSERT_NE(PreLayoutInput, std::string::npos);
+	ASSERT_NE(InvalidateCardHeight, std::string::npos);
+	ASSERT_NE(InvalidateAllHeights, std::string::npos);
+	ASSERT_NE(RebuildPreparedCards, std::string::npos);
+	EXPECT_LT(PendingInput, PreLayoutInput);
+	EXPECT_LT(PreLayoutInput, InvalidateCardHeight);
+	EXPECT_LT(InvalidateCardHeight, InvalidateAllHeights);
+	EXPECT_LT(InvalidateAllHeights, RebuildPreparedCards);
+	EXPECT_NE(TClientSource.find("tclient:visual-nameplates"), std::string::npos);
+	EXPECT_NE(TClientSource.find("tclient:visual-effects"), std::string::npos);
+	EXPECT_NE(TClientSource.find("tclient:anti-latency-tools"), std::string::npos);
+	EXPECT_NE(TClientSource.find("tclient:auto-reply"), std::string::npos);
+	EXPECT_NE(TClientSource.find("tclient:hud"), std::string::npos);
+	EXPECT_NE(TClientSource.find("return HashValueFnv1a64(Hash, g_Config.m_TcWhiteFeet);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, MigratedQmClientCardTitlesRemainLocalized)
@@ -7354,7 +7612,7 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Source.find("SettingsCardDeckAutoScrollDelta("), std::string::npos);
 	EXPECT_NE(Source.find("CommitSettingsCardDeckDrop("), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCard("), std::string::npos);
-	EXPECT_NE(Source.find("bool PointerInsideCurrentFrame = false;"), std::string::npos);
+	EXPECT_NE(Source.find("bool PointerInsideDrawFrame = false;"), std::string::npos);
 	EXPECT_NE(Header.find("std::string m_PendingRevealStableId"), std::string::npos);
 	EXPECT_EQ(Header.find("m_ReflowCompleteFeedbackRemaining"), std::string::npos);
 	EXPECT_NE(Header.find("m_CollapsedInitialized"), std::string::npos);
@@ -7442,7 +7700,8 @@ TEST(QmMonitoringHelpers, SettingsCardDeckSkipsAnimationRuntimeOnStableFrames)
 	EXPECT_NE(Source.find("else if(AnimationWork.m_ResolveReflow)"), std::string::npos);
 	EXPECT_NE(Source.find("State.m_ClipContent = SettingsCardDeckShouldClipContent(Card.m_Frame.m_ContentRect.w > 0.0f && Card.m_Frame.m_ContentRect.h > 0.0f, Card.m_ContentHeightAnimationActive);"), std::string::npos);
 	EXPECT_EQ(Source.find("State.m_ClipContent = ContentHeightAnimationActive;"), std::string::npos);
-	EXPECT_NE(CardSource.find("Ctx.m_pUi->ClipEnable(&DrawFrame.m_ContentRect);"), std::string::npos);
+	EXPECT_NE(CardSource.find("const CUIRect ClipRect = ResolveSettingsCardContentClipRect(DrawFrame.m_ContentRect, DrawFrame.m_Rect, UiScale);"), std::string::npos);
+	EXPECT_NE(CardSource.find("Ctx.m_pUi->ClipEnable(&ClipRect);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, RenderOnlyNumericFieldsAndDropDownsDoNotMutateControlState)
@@ -7451,7 +7710,7 @@ TEST(QmMonitoringHelpers, RenderOnlyNumericFieldsAndDropDownsDoNotMutateControlS
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
 	const std::string IntegerField = ExtractSourceFunctionBody(Forms, "SInputFieldResult IntegerField(");
 	const std::string NumericField = ExtractSourceFunctionBody(Forms, "bool NumericField(");
-	const std::string DropDown = ExtractSourceFunctionBody(Ui, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
+	const std::string DropDown = ExtractSourceFunctionBody(Ui, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
 	ASSERT_FALSE(IntegerField.empty());
 	ASSERT_FALSE(NumericField.empty());
 	ASSERT_FALSE(DropDown.empty());
@@ -7947,10 +8206,10 @@ TEST(QmMonitoringHelpers, TClientStatusSchemeTextInputUsesSharedQmTextField)
 
 	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
 	EXPECT_NE(Body.find("IUiContext TClientStatusSchemeTextInputCtx = SettingsUiContext(\"settings_tclient_status_scheme_text_inputs\", UiScale);"), std::string::npos);
-	const size_t LabelPos = Body.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, \"tclient-statusbar-scheme-label\", &Label, Localize(\"Status Scheme:\"), FontSize, TEXTALIGN_MR);");
+	const size_t LabelPos = Body.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, \"tclient-statusbar-scheme-label\", &SchemeLabel, Localize(\"Status Scheme:\"), FontSize, TEXTALIGN_MR);");
 	const size_t InputPos = Body.find("static CLineInput s_StatusScheme(g_Config.m_TcStatusBarScheme, sizeof(g_Config.m_TcStatusBarScheme));");
 	const size_t EmptyTextPos = Body.find("s_StatusScheme.SetEmptyText(\"\");", InputPos);
-	const size_t TextFieldPos = Body.find("ui_widget::InputField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, StatusScheme, nullptr, EditBoxFontSize);", EmptyTextPos);
+	const size_t TextFieldPos = Body.find("ui_widget::InputField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, SchemeInput, nullptr, EditBoxFontSize);", EmptyTextPos);
 	EXPECT_NE(LabelPos, std::string::npos);
 	EXPECT_NE(InputPos, std::string::npos);
 	EXPECT_NE(EmptyTextPos, std::string::npos);
@@ -8539,6 +8798,7 @@ TEST(QmMonitoringHelpers, ServerBrowserStatusInputsUseSharedQmFields)
 	EXPECT_NE(SearchSelectAllPos, std::string::npos);
 	EXPECT_NE(SearchFieldPos, std::string::npos);
 	EXPECT_NE(SearchRefreshPos, std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS"), std::string::npos);
 	EXPECT_LT(SearchPopupGuardPos, SearchHotkeyPos);
 	EXPECT_LT(SearchHotkeyPos, SearchFieldPos);
 	EXPECT_LT(SearchHotkeyPos, SearchSetActivePos);
@@ -9232,6 +9492,7 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(DropdownSource.find("Result.m_PopupVisible = Result.m_Rect.w > 0.0f && Result.m_Rect.h > 0.0f && RectsOverlap(Result.m_Rect, ViewportRect);"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool m_ClipToViewport = false;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool m_BlockUnderlyingScroll = false;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool m_BlockUnderlyingPointerInput = false;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("CUIRect m_Viewport{};"), std::string::npos);
 	EXPECT_NE(UiHeader.find("SQmDropdownPopupPolicy m_PopupPolicy;"), std::string::npos);
 	EXPECT_NE(SelectionResetBody.find("m_BlockUnderlyingScroll = false;"), std::string::npos);
@@ -9249,6 +9510,7 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollbarThickness = 10.0f"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollUnit = 3 *"), std::string::npos);
 	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_BlockUnderlyingScroll"), std::string::npos);
+	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_BlockUnderlyingPointerInput"), std::string::npos);
 	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_ClipToViewport"), std::string::npos);
 	EXPECT_NE(Body.find("pContext->m_AnchorVisible = Geometry.m_AnchorVisible;"), std::string::npos);
 	EXPECT_NE(Body.find("pContext->m_PopupVisible = Geometry.m_PopupVisible;"), std::string::npos);
@@ -9261,6 +9523,35 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(Body.find("PopupHeightResolved = Geometry.m_Rect.h;"), std::string::npos);
 	EXPECT_NE(Body.find("DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);"), std::string::npos);
 	EXPECT_EQ(Body.find("DoPopupMenu(pContext, X, Y, pContext->m_Width, PopupHeight, pContext, PopupSelection, pContext->m_Props);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ColorPickerUsesModalPointerInputAndFullGradientHitAreas)
+{
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
+	const std::string ColorPickerBody = ExtractSourceFunctionBody(Ui, "CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View, bool Active)");
+	const std::string ShowColorPickerBody = ExtractSourceFunctionBody(Ui, "void CUi::ShowPopupColorPicker(float X, float Y, SColorPickerPopupContext *pContext)");
+	const std::string MouseHoveredBody = ExtractSourceFunctionBody(Ui, "bool CUi::MouseHovered(const CUIRect *pRect) const");
+	ASSERT_FALSE(ColorPickerBody.empty());
+	ASSERT_FALSE(ShowColorPickerBody.empty());
+	ASSERT_FALSE(MouseHoveredBody.empty());
+
+	EXPECT_NE(UiHeader.find("bool UnderlyingPointerInputBlocked() const;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("int m_PopupInputDepth = 0;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("if(UnderlyingPointerInputBlocked())"), std::string::npos);
+	EXPECT_NE(MouseHoveredBody.find("!UnderlyingPointerInputBlocked()"), std::string::npos);
+	EXPECT_NE(ShowColorPickerBody.find("PopupProps.m_BlockUnderlyingPointerInput = true;"), std::string::npos);
+	EXPECT_NE(ShowColorPickerBody.find("PopupProps.m_BlockUnderlyingScroll = true;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const CUIRect ColorsHitArea = ColorsArea;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const CUIRect HueHitArea = HueArea;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("DoPickerLogic(&pColorPicker->m_ColorPickerId, &ColorsHitArea"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const float ColorX = std::clamp(PickerX - (ColorsArea.x - ColorsHitArea.x), 0.0f, ColorsArea.w);"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const float ColorY = std::clamp(PickerY - (ColorsArea.y - ColorsHitArea.y), 0.0f, ColorsArea.h);"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("PickerColorHSV.y = ColorX / ColorsArea.w;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("PickerColorHSV.z = 1.0f - ColorY / ColorsArea.h;"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("DoPickerLogic(&pColorPicker->m_HuePickerId, &HueHitArea"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("const float HueY = std::clamp(PickerY - (HueArea.y - HueHitArea.y), 0.0f, HueArea.h);"), std::string::npos);
+	EXPECT_NE(ColorPickerBody.find("PickerColorHSV.x = 1.0f - HueY / HueArea.h;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ListBoxResolvesMenuScrollPolicyFromRowSemantics)
@@ -9279,6 +9570,11 @@ TEST(QmMonitoringHelpers, ListBoxResolvesMenuScrollPolicyFromRowSemantics)
 	EXPECT_NE(DoStartBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);"), std::string::npos);
 	EXPECT_NE(DoStartBody.find("QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarThickness, m_ScrollbarWidth, m_ScrollbarWidthOverridden)"), std::string::npos);
 	EXPECT_NE(DoStartBody.find("ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;"), std::string::npos);
+	EXPECT_NE(Header.find("bool m_InitialScrollPending;"), std::string::npos);
+	EXPECT_NE(Header.find("QmListBoxShouldScrollToInitialSelection"), std::string::npos);
+	EXPECT_NE(Header.find("QmListBoxInitialScrollRemainsPending"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("if(QmListBoxShouldScrollToInitialSelection"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("m_InitialScrollPending = QmListBoxInitialScrollRemainsPending"), std::string::npos);
 	EXPECT_EQ(DoStartBody.find("m_ScrollbarThickness = ScrollbarWidthMax()"), std::string::npos);
 	EXPECT_EQ(DoStartBody.find("m_ScrollbarMargin = ScrollbarMargin()"), std::string::npos);
 	EXPECT_EQ(DoStartBody.find("m_ForceShowScrollbar = ForceShowScrollbar"), std::string::npos);
@@ -9367,20 +9663,23 @@ TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)
 	const std::string StyleBody = ExtractSourceFunctionBody(Menus, "CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const");
 	ASSERT_FALSE(StyleBody.empty());
 
-	EXPECT_NE(Containers.find("SCardProps QmClientCardProps(float UiScale = 1.0f)"), std::string::npos);
+	EXPECT_NE(Containers.find("SCardProps QmClientCardProps(float UiScale = 1.0f, const SUiTheme *pTheme = nullptr)"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_Padding = 14.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_Radius = 10.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_DrawBorder = true;"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_FillColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f);"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f);"), std::string::npos);
 	EXPECT_NE(Containers.find("Props.m_BorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f);"), std::string::npos);
-	EXPECT_NE(Containers.find("Rect.Draw(Props.m_FillColor"), std::string::npos);
+	EXPECT_NE(Containers.find("Props.m_FillColor = pTheme->m_Surface;"), std::string::npos);
+	EXPECT_NE(Containers.find("Props.m_BorderColor = pTheme->m_Border;"), std::string::npos);
+	EXPECT_NE(Containers.find("DrawRoundedSurface(Ctx, Rect, Props.m_FillColor"), std::string::npos);
 	EXPECT_NE(Containers.find("Highlight.Draw(Props.m_HighlightColor"), std::string::npos);
 	EXPECT_NE(Containers.find("BorderBg.Margin(-1.0f, &BorderBg);"), std::string::npos);
-	EXPECT_NE(Containers.find("BorderBg.Draw(Props.m_BorderColor"), std::string::npos);
+	EXPECT_NE(Containers.find("DrawRoundedSurface(Ctx, BorderBg, Props.m_BorderColor"), std::string::npos);
 	EXPECT_EQ(Containers.find("Border.Margin(0.5f, &Border);"), std::string::npos);
 	EXPECT_NE(Menus.find("#include <game/client/QmUi/UiContainers.h>"), std::string::npos);
-	EXPECT_NE(StyleBody.find("const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale);"), std::string::npos);
+	EXPECT_NE(StyleBody.find("const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));"), std::string::npos);
+	EXPECT_NE(StyleBody.find("const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale, &Theme);"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_Padding = CardProps.m_Padding;"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_CornerRadius = CardProps.m_Radius;"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_GlassColor = CardProps.m_FillColor;"), std::string::npos);
@@ -9454,6 +9753,8 @@ TEST(QmMonitoringHelpers, QmUiPresenceBacksImeCandidatePopup)
 	EXPECT_NE(Source.find("#include \"QmUi/QmTree.h\""), std::string::npos);
 	EXPECT_NE(Header.find("uint64_t m_PresenceGeneration = 1;"), std::string::npos);
 	EXPECT_NE(ResetBody.find("++m_PresenceGeneration;"), std::string::npos);
+	EXPECT_NE(ResetBody.find("m_Presentation = {};"), std::string::npos);
+	EXPECT_NE(ResetBody.find("m_CandidateStart = 0;"), std::string::npos);
 	EXPECT_NE(ResetBody.find("if(m_PresenceGeneration == 0)"), std::string::npos);
 	EXPECT_NE(RenderBody.find("CUiV2Tree &Tree = pGameClient->UiRuntimeV2()->Tree();"), std::string::npos);
 	EXPECT_NE(RenderBody.find("const uint64_t PopupKey = BuildUiAnimNodeKey(str_quickhash(\"qm_ime_popup\"), m_PresenceGeneration);"), std::string::npos);
@@ -9462,7 +9763,9 @@ TEST(QmMonitoringHelpers, QmUiPresenceBacksImeCandidatePopup)
 	EXPECT_NE(RenderBody.find("const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("AnimRuntime.SetValue(PopupKey, EUiAnimProperty::ALPHA"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::ALPHA"), std::string::npos);
-	EXPECT_NE(RenderBody.find("ResolveImePopupPresentationValue(AnimRuntime, PopupKey, EUiAnimProperty::POS_Y"), std::string::npos);
+	EXPECT_NE(RenderBody.find("CUIRect Panel = Presentation.m_Rect;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_X"), std::string::npos);
+	EXPECT_NE(RenderBody.find("const float CandidateDrawAlpha = Alpha * CandidateAlpha;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmUiPresenceBacksFavoriteButtonVisibility)
@@ -9997,7 +10300,10 @@ TEST(QmMonitoringHelpers, MenuUiPerfOperationsAreEmittedFromRealListOwners)
 
 TEST(QmMonitoringHelpers, P7AcceptanceDoesNotClaimUnsampledRuntimePercentiles)
 {
-	const std::string Report = ReadRepoFile("docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md");
+	static constexpr const char *pActiveReportPath = "docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md";
+	static constexpr const char *pArchivedReportPath = "docs/superpowers/reports/archive/2026-07-11-settings-ui-p7-acceptance.md";
+	const char *pReportPath = std::filesystem::exists(TestSourcePath(pActiveReportPath)) ? pActiveReportPath : pArchivedReportPath;
+	const std::string Report = ReadRepoFile(pReportPath);
 	EXPECT_NE(Report.find("**P7 automated evidence status:** complete"), std::string::npos);
 	const bool RuntimePending = Report.find("**P7 user runtime acceptance:** pending") != std::string::npos;
 	const bool RuntimeComplete = Report.find("**P7 user runtime acceptance:** complete") != std::string::npos;

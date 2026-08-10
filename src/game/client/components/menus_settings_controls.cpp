@@ -16,6 +16,7 @@
 #include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/key_binder.h>
@@ -279,12 +280,20 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)maximum(0, pActiveJoystick->GetNumAxes());
 		}
 	}
+	const bool HasControllerJoystick = NumJoysticks > 0 && Input()->GetActiveJoystick() != nullptr;
+	const int ControllerAxisCount = HasControllerJoystick ? Input()->GetActiveJoystick()->GetNumAxes() : 0;
+	const uint64_t ControllerMeasureRevision =
+		(uint64_t)(g_Config.m_InpControllerEnable != 0) |
+		((uint64_t)(g_Config.m_InpControllerAbsolute != 0) << 1) |
+		((uint64_t)HasControllerJoystick << 2) |
+		((uint64_t)maximum(0, ControllerAxisCount) << 3);
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)HasControllerJoystick;
 	for(bool Expanded : m_aBindGroupExpanded)
 		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (Expanded ? 1u : 0u);
 	const bool HasCustomBinds = std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; });
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (HasCustomBinds ? 1u : 0u);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(GameClient()->m_Menus.m_SettingsCardDeckDisplayCycle, GameClient()->m_Menus.m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
-	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly, CardLayoutRevision, CardCtx](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly, ControllerMeasureRevision, CardCtx](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(9);
 		const auto AddCard = [this](std::vector<SSettingsCardDefinition> &Cards, const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardPreLayoutHeaderInput PreLayoutHeaderInput = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
 			const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(pId);
@@ -308,8 +317,54 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			return Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f;
 		};
 		AddCard(vCards, "deck:controls-mouse", 0.0f, [this](float) { return MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
-		const uint64_t ControllerLayoutRevision = CardLayoutRevision;
-		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float Width) { return MeasureSettingsJoystickHeight(Width); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); }, {}, false, {}, {}, {}, false, ControllerLayoutRevision);
+		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float Width) { return MeasureSettingsJoystickHeight(Width); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); }, {}, false, {}, {}, {}, false, ControllerMeasureRevision);
+		vCards.back().m_PreLayoutInput = [this](CUIRect Content) {
+			bool Changed = false;
+			CUIRect Button;
+			Content.HSplitTop(BUTTON_SPACING, nullptr, &Content);
+			Content.HSplitTop(BUTTON_HEIGHT, &Button, &Content);
+			const bool WasJoystickEnabled = g_Config.m_InpControllerEnable != 0;
+			if(Ui()->DoButtonLogic(&g_Config.m_InpControllerEnable, 0, &Button, BUTTONFLAG_LEFT))
+			{
+				g_Config.m_InpControllerEnable ^= 1;
+				Changed = true;
+			}
+			if(!WasJoystickEnabled)
+				return Changed;
+
+			const IInput::IJoystick *pActiveJoystick = Input()->GetActiveJoystick();
+			if(Input()->NumJoysticks() <= 0 || pActiveJoystick == nullptr)
+				return Changed;
+			Content.HSplitTop(BUTTON_SPACING, nullptr, &Content);
+			Content.HSplitTop(BUTTON_HEIGHT, nullptr, &Content);
+
+			const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(Content.w);
+			const bool WasAbsolute = g_Config.m_InpControllerAbsolute != 0;
+			const SSettingsRadioRowLayout ModeLayout = ResolveSettingsRadioRowLayout(Content, 2, Metrics);
+			CUIRect ModeButtons = ModeLayout.m_ButtonsRect;
+			Content.HSplitTop(ModeLayout.m_Height, nullptr, &Content);
+			const float ButtonWidth = ModeButtons.w / (float)m_vJoystickIngameModeButtonContainers.size();
+			for(size_t Index = 0; Index < m_vJoystickIngameModeButtonContainers.size(); ++Index)
+			{
+				CUIRect ModeButton;
+				ModeButtons.VSplitLeft(ButtonWidth, &ModeButton, &ModeButtons);
+				if(Ui()->DoButtonLogic(&m_vJoystickIngameModeButtonContainers[Index], Index == (size_t)g_Config.m_InpControllerAbsolute, &ModeButton, BUTTONFLAG_LEFT))
+				{
+					g_Config.m_InpControllerAbsolute = (int)Index;
+					Changed = true;
+				}
+			}
+			if(!WasAbsolute)
+			{
+				Content.HSplitTop(BUTTON_SPACING, nullptr, &Content);
+				Content.HSplitTop(BUTTON_HEIGHT, nullptr, &Content);
+			}
+			Content.HSplitTop(BUTTON_SPACING, nullptr, &Content);
+			Content.HSplitTop(BUTTON_HEIGHT, nullptr, &Content);
+			Content.HSplitTop(BUTTON_SPACING, nullptr, &Content);
+			Content.HSplitTop(BUTTON_HEIGHT, nullptr, &Content);
+			return Changed;
+		};
 		const std::pair<EBindOptionGroup, const char *> aBindCards[] = {
 			{EBindOptionGroup::MOVEMENT, "deck:controls-movement"}, {EBindOptionGroup::WEAPON, "deck:controls-weapon"},
 			{EBindOptionGroup::VOTING, "deck:controls-voting"}, {EBindOptionGroup::CHAT, "deck:controls-chat"},
@@ -563,7 +618,7 @@ void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect
 		{
 			continue;
 		}
-		KeyReaders.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(Ui(), KeyReaders, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), ColorRGBA(), 5.0f);
 		KeyReaders.Margin(2.0f, &KeyReaders);
 
 		CUIRect Label, AddButton;
@@ -752,7 +807,7 @@ void CMenusSettingsControls::RenderSettingsJoystick(CUIRect View, bool ReadOnly)
 		View.h = minimum(View.h, ResolveSettingsControllerAxisPickerHeight(Input()->GetActiveJoystick()->GetNumAxes(), NUM_JOYSTICK_AXES, BUTTON_HEIGHT, BUTTON_SPACING));
 		if(ReadOnly || m_SettingsScrollRegion.AddRect(View))
 		{
-			View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);
+			DrawRoundedSurface(Ui(), View, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), ColorRGBA(), 5.0f);
 			RenderJoystickAxisPicker(View, ReadOnly);
 		}
 	}
@@ -793,7 +848,7 @@ void CMenusSettingsControls::RenderJoystickAxisPicker(CUIRect View, bool ReadOnl
 		{
 			continue;
 		}
-		Row.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(Ui(), Row, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f), ColorRGBA(), 5.0f);
 		Row.VSplitLeft(AxisWidth, &Axis, &Row);
 		Row.VSplitLeft(SpacingV, nullptr, &Row);
 		Row.VSplitLeft(StatusWidth, &Status, &Row);

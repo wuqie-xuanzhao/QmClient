@@ -12,6 +12,14 @@
 
 #include <game/client/component.h>
 
+#include <algorithm>
+
+inline int QmRespawnDefaultWantedWeapon(int ConfigWeapon)
+{
+	ConfigWeapon = std::clamp(ConfigWeapon, 0, WEAPON_LASER + 1);
+	return ConfigWeapon;
+}
+
 class CControls : public CComponent
 {
 public:

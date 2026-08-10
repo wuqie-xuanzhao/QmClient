@@ -110,12 +110,13 @@ void CGraphicsBackend_Threaded::StartProcessor(ICommandProcessor *pProcessor)
 void CGraphicsBackend_Threaded::StopProcessor()
 {
 	dbg_assert(!m_Shutdown, "Processor was already shut down.");
-	m_Shutdown = true;
 #if defined(CONF_PLATFORM_EMSCRIPTEN)
+	m_Shutdown = true;
 	m_Warning = m_pProcessor->GetWarning();
 #else
 	{
 		std::unique_lock<std::mutex> Lock(m_BufferSwapMutex);
+		m_Shutdown = true;
 		m_Warning = m_pProcessor->GetWarning();
 		m_BufferSwapCond.notify_all();
 	}
@@ -315,7 +316,7 @@ void CCommandProcessor_SDL_GL::HandleError()
 	switch(m_Error.m_ErrorType)
 	{
 	case GFX_ERROR_TYPE_INIT:
-		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.", "Graphics error")});
+		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.", "Graphics error")});
 		break;
 	case GFX_ERROR_TYPE_OUT_OF_MEMORY_IMAGE:
 		[[fallthrough]];
@@ -339,7 +340,7 @@ void CCommandProcessor_SDL_GL::HandleError()
 	case GFX_ERROR_TYPE_UNKNOWN:
 		[[fallthrough]];
 	default:
-		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.", "Graphics error")});
+		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.", "Graphics error")});
 		break;
 	}
 }
@@ -657,93 +658,8 @@ static bool BackendInitGlew(EBackendType BackendType, int &GlewMajor, int &GlewM
 
 static int IsVersionSupportedGlew(EBackendType BackendType, int VersionMajor, int VersionMinor, int VersionPatch, int GlewMajor, int GlewMinor, int GlewPatch)
 {
-	if(BackendType == BACKEND_TYPE_OPENGL)
-	{
-		if(VersionMajor >= 4 && GlewMajor < 4)
-		{
-			return -1;
-		}
-		else if(VersionMajor >= 3 && GlewMajor < 3)
-		{
-			return -1;
-		}
-		else if(VersionMajor == 3 && GlewMajor == 3)
-		{
-			if(VersionMinor >= 3 && GlewMinor < 3)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 2 && GlewMinor < 2)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 1 && GlewMinor < 1)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 0 && GlewMinor < 0)
-			{
-				return -1;
-			}
-		}
-		else if(VersionMajor >= 2 && GlewMajor < 2)
-		{
-			return -1;
-		}
-		else if(VersionMajor == 2 && GlewMajor == 2)
-		{
-			if(VersionMinor >= 1 && GlewMinor < 1)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 0 && GlewMinor < 0)
-			{
-				return -1;
-			}
-		}
-		else if(VersionMajor >= 1 && GlewMajor < 1)
-		{
-			return -1;
-		}
-		else if(VersionMajor == 1 && GlewMajor == 1)
-		{
-			if(VersionMinor >= 5 && GlewMinor < 5)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 4 && GlewMinor < 4)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 3 && GlewMinor < 3)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 2 && GlewMinor < 2)
-			{
-				return -1;
-			}
-			else if(VersionMinor == 2 && GlewMinor == 2)
-			{
-				if(VersionPatch >= 1 && GlewPatch < 1)
-				{
-					return -1;
-				}
-				if(VersionPatch >= 0 && GlewPatch < 0)
-				{
-					return -1;
-				}
-			}
-			if(VersionMinor >= 1 && GlewMinor < 1)
-			{
-				return -1;
-			}
-			if(VersionMinor >= 0 && GlewMinor < 0)
-			{
-				return -1;
-			}
-		}
-	}
+	if(BackendType == BACKEND_TYPE_OPENGL && !IsOpenGLVersionAtLeast({GlewMajor, GlewMinor, GlewPatch}, {VersionMajor, VersionMinor, VersionPatch}))
+		return -1;
 	return 0;
 }
 #endif // !CONF_HEADLESS_CLIENT
@@ -783,10 +699,26 @@ EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
 	return RetBackendType;
 }
 
+static void ResetOpenGLFallbackConfig()
+{
+	str_copy(g_Config.m_GfxBackend, "OpenGL");
+	// 让下一次初始化根据当前系统实际支持的 context 自动探测版本。
+	g_Config.m_GfxGLMajor = 0;
+	g_Config.m_GfxGLMinor = 0;
+	g_Config.m_GfxGLPatch = 0;
+}
+
 void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 {
 	if(BackendType == BACKEND_TYPE_OPENGL)
 	{
+		if(g_Config.m_GfxGLMajor == 0)
+		{
+			const SOpenGLVersion ProbeVersion = AutoOpenGLProbeVersion(BackendType);
+			g_Config.m_GfxGLMajor = ProbeVersion.m_Major;
+			g_Config.m_GfxGLMinor = ProbeVersion.m_Minor;
+			g_Config.m_GfxGLPatch = ProbeVersion.m_Patch;
+		}
 		// clamp the versions to existing versions(only for OpenGL major <= 3)
 		if(g_Config.m_GfxGLMajor == 1)
 		{
@@ -812,6 +744,13 @@ void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 	else if(BackendType == BACKEND_TYPE_OPENGL_ES)
 	{
 #if !defined(CONF_BACKEND_OPENGL_ES3)
+		if(g_Config.m_GfxGLMajor == 0)
+		{
+			const SOpenGLVersion ProbeVersion = AutoOpenGLProbeVersion(BackendType);
+			g_Config.m_GfxGLMajor = ProbeVersion.m_Major;
+			g_Config.m_GfxGLMinor = ProbeVersion.m_Minor;
+			g_Config.m_GfxGLPatch = ProbeVersion.m_Patch;
+		}
 		// Make sure GLES is set to 1.0 (which is equivalent to OpenGL 1.3), if its not set to >= 3.0(which is equivalent to OpenGL 3.3)
 		if(g_Config.m_GfxGLMajor < 3)
 		{
@@ -831,9 +770,10 @@ void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 	else if(BackendType == BACKEND_TYPE_VULKAN)
 	{
 #if defined(CONF_BACKEND_VULKAN)
-		g_Config.m_GfxGLMajor = gs_BackendVulkanMajor;
-		g_Config.m_GfxGLMinor = gs_BackendVulkanMinor;
-		g_Config.m_GfxGLPatch = 0;
+		const SVulkanVersion Version = NormalizeRequestedVulkanVersion({g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch});
+		g_Config.m_GfxGLMajor = Version.m_Major;
+		g_Config.m_GfxGLMinor = Version.m_Minor;
+		g_Config.m_GfxGLPatch = Version.m_Patch;
 #endif
 	}
 }
@@ -895,6 +835,13 @@ std::optional<int> ShowMessageBoxWithoutGraphics(const IGraphics::CMessageBox &M
 
 std::optional<int> CGraphicsBackend_SDL_GL::ShowMessageBox(const IGraphics::CMessageBox &MessageBox)
 {
+	// macOS 上 MoltenVK 仍有 CAMetalDrawable 回调时销毁 Vulkan 窗口，
+	// 回调线程可能抛出异常，导致原始图形错误被 SIGABRT 覆盖。
+#if defined(CONF_PLATFORM_MACOS)
+	if(m_BackendType == EBackendType::BACKEND_TYPE_VULKAN)
+		return ShowMessageBoxImpl(MessageBox, nullptr);
+#endif
+
 	if(m_pProcessor != nullptr)
 	{
 		m_pProcessor->ErroneousCleanup();
@@ -989,9 +936,16 @@ bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeT
 #ifdef CONF_BACKEND_VULKAN
 		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
 		{
-			Major = gs_BackendVulkanMajor;
-			Minor = gs_BackendVulkanMinor;
-			Patch = 0;
+			Major = gs_BackendVulkanMinimumVersion.m_Major;
+			Minor = gs_BackendVulkanMinimumVersion.m_Minor;
+			Patch = gs_BackendVulkanMinimumVersion.m_Patch;
+			return true;
+		}
+		else if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_MODERN)
+		{
+			Major = gs_BackendVulkanMaximumVersion.m_Major;
+			Minor = gs_BackendVulkanMaximumVersion.m_Minor;
+			Patch = gs_BackendVulkanMaximumVersion.m_Patch;
 			return true;
 		}
 #else
@@ -999,6 +953,29 @@ bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeT
 #endif
 	}
 	return false;
+}
+
+bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName)
+{
+	Major = 0;
+	Minor = 0;
+	Patch = 0;
+	pName = "";
+
+	if(m_BackendType == BACKEND_TYPE_OPENGL)
+		pName = "OpenGL";
+	else if(m_BackendType == BACKEND_TYPE_OPENGL_ES)
+		pName = "GLES";
+	else
+		return false;
+
+	if(m_Capabilities.m_DetectedContextMajor <= 0)
+		return false;
+
+	Major = m_Capabilities.m_DetectedContextMajor;
+	Minor = m_Capabilities.m_DetectedContextMinor;
+	Patch = m_Capabilities.m_DetectedContextPatch;
+	return true;
 }
 
 const char *CGraphicsBackend_SDL_GL::GetScreenName(int Screen) const
@@ -1169,17 +1146,24 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		}
 	}
 
-	EBackendType OldBackendType = m_BackendType;
+	// 每次后端重试都从干净状态开始，避免 Vulkan 失败后的 GPU 与能力残留到 OpenGL。
+	m_GpuList = {};
+	m_Capabilities.Reset();
+	m_ReadPresentedImageDataFunc = nullptr;
+	m_aVendorString[0] = '\0';
+	m_aVersionString[0] = '\0';
+	m_aRendererString[0] = '\0';
+
+	bool ConfiguredVulkanUnavailable = false;
+#if !defined(CONF_BACKEND_VULKAN)
+	ConfiguredVulkanUnavailable = SDL_getenv("DDNET_DRIVER") == nullptr && str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0;
+#endif
 	m_BackendType = DetectBackend();
 	// little fallback for Vulkan
-	if(OldBackendType != BACKEND_TYPE_AUTO &&
-		m_BackendType == BACKEND_TYPE_VULKAN)
+	if(ConfiguredVulkanUnavailable)
 	{
-		// try default opengl settings
-		str_copy(g_Config.m_GfxBackend, "OpenGL");
-		g_Config.m_GfxGLMajor = 3;
-		g_Config.m_GfxGLMinor = 0;
-		g_Config.m_GfxGLPatch = 0;
+		// 使用现代 OpenGL 回退，同时修复未编译 Vulkan 时遗留的 Vulkan 配置。
+		ResetOpenGLFallbackConfig();
 		// do another analysis round too, just in case
 		g_Config.m_Gfx3DTextureAnalysisRan = 0;
 		g_Config.m_GfxDriverIsBlocked = 0;
@@ -1539,6 +1523,15 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED;
 	}
 
+	const SOpenGLVersion RequestedVersion{g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch};
+	const SOpenGLVersion ActualVersion{m_Capabilities.m_DetectedContextMajor, m_Capabilities.m_DetectedContextMinor, m_Capabilities.m_DetectedContextPatch};
+	if(ShouldSyncActualOpenGLVersion(m_BackendType, RequestedVersion, ActualVersion))
+	{
+		g_Config.m_GfxGLMajor = ActualVersion.m_Major;
+		g_Config.m_GfxGLMinor = ActualVersion.m_Minor;
+		g_Config.m_GfxGLPatch = ActualVersion.m_Patch;
+	}
+
 	{
 		CCommandBuffer::SCommand_Update_Viewport CmdSDL2;
 		CmdSDL2.m_X = 0;
@@ -1652,7 +1645,7 @@ void CGraphicsBackend_SDL_GL::SetWindowParams(int FullscreenMode, bool IsBorderl
 		else // Windowed fullscreen
 		{
 			SDL_SetWindowFullscreen(m_pWindow, 0);
-			SDL_SetWindowBordered(m_pWindow, SDL_TRUE);
+			SDL_SetWindowBordered(m_pWindow, SDL_FALSE);
 			SDL_SetWindowResizable(m_pWindow, SDL_FALSE);
 			SDL_DisplayMode DpMode;
 			if(SDL_GetDesktopDisplayMode(g_Config.m_GfxScreen, &DpMode) < 0)

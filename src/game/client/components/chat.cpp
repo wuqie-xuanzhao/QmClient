@@ -20,6 +20,7 @@
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/censor.h>
+#include <game/client/components/console.h>
 #include <game/client/components/message_gradient.h>
 #include <game/client/components/qmclient/colored_parts.h>
 #include <game/client/components/qmclient/modes.h>
@@ -408,6 +409,7 @@ CChat::CLine::CLine()
 	m_CutOffProgress = 0.0f;
 	CChat::ResetPresentationState(m_Presentation);
 	m_ForceVisible = false;
+	m_ConsoleSuppressed = false;
 	m_ServerMessageClass = QmHudNotifications::EServerMessageClass::None;
 }
 
@@ -427,8 +429,10 @@ void CChat::CLine::Reset(CChat &This)
 	CChat::ResetPresentationState(m_Presentation);
 	m_Friend = false;
 	m_ForceVisible = false;
+	m_ConsoleSuppressed = false;
 	m_ServerMessageClass = QmHudNotifications::EServerMessageClass::None;
 	m_TimesRepeated = 0;
+	m_vMergedAuthors.clear();
 	m_pManagedTeeRenderInfo = nullptr;
 	m_pTranslateResponse = nullptr;
 
@@ -451,6 +455,7 @@ CChat::CChat()
 	m_LastPresentationUpdateTime = 0;
 	m_LargeAreaOpenTick = 0;
 	m_LastPresentationShowLargeArea = false;
+	m_PendingConsoleLineIndex = -1;
 	m_aChatLogLastCleanupDate[0] = '\0';
 
 	m_Input.SetCalculateOffsetCallback([this]() { return m_IsInputCensored; });
@@ -1019,6 +1024,7 @@ void CChat::RebuildChat()
 
 void CChat::ClearLines()
 {
+	FlushPendingConsoleLine(true);
 	for(auto &Line : m_aLines)
 		Line.Reset(*this);
 	m_BacklogCurLine = 0;
@@ -1164,12 +1170,14 @@ void CChat::Reset()
 
 void CChat::OnRelease()
 {
+	FlushPendingConsoleLine(true);
 	m_Show = false;
 	HideArgumentCandidates();
 }
 
 void CChat::OnStateChange(int NewState, int OldState)
 {
+	FlushPendingConsoleLine(true);
 	if(OldState <= IClient::STATE_CONNECTING)
 		Reset();
 }
@@ -1860,7 +1868,8 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
 			const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
 			QmHudNotifications::SServerMessageAnalysis ServerMessageAnalysis;
-			if(GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis))
+			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis);
+			if(ServerMessageHandled && QmHudNotifications::ShouldSuppressServerMessageChat(ServerMessageAnalysis, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages))
 			{
 				PrintSuppressedServerMessage();
 				return;
@@ -2119,6 +2128,143 @@ void CChat::PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLi
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor);
 }
 
+ColorRGBA CChat::PlayerNameColor(int ClientId, int NameColor, bool TeamMessage) const
+{
+	if(ClientId >= 0 && g_Config.m_TcWarList && g_Config.m_TcWarListChat && GameClient()->m_WarList.GetAnyWar(ClientId))
+		return GameClient()->m_WarList.GetPriorityColor(ClientId);
+	if(TeamMessage)
+		return CalculateNameColor(ColorHSLA(g_Config.m_ClMessageTeamColor));
+	if(NameColor == TEAM_RED)
+		return ColorRGBA(1.0f, 0.5f, 0.5f, 1.0f);
+	if(NameColor == TEAM_BLUE)
+		return ColorRGBA(0.7f, 0.7f, 1.0f, 1.0f);
+	if(NameColor == TEAM_SPECTATORS)
+		return ColorRGBA(0.75f, 0.5f, 0.75f, 1.0f);
+	if(ClientId >= 0 && g_Config.m_ClChatTeamColors && GameClient()->m_Teams.Team(ClientId))
+		return GameClient()->GetDDTeamColor(GameClient()->m_Teams.Team(ClientId), 0.75f);
+	return ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f);
+}
+
+void CChat::AddMergedAuthor(CLine &Line, int ClientId)
+{
+	for(const SMergedAuthor &Author : Line.m_vMergedAuthors)
+	{
+		if(Author.m_ClientId == ClientId)
+			return;
+	}
+
+	SMergedAuthor Author;
+	Author.m_ClientId = ClientId;
+	GameClient()->FormatStreamerName(ClientId, Author.m_aName, sizeof(Author.m_aName));
+	str_copy(Author.m_aPlayerName, GameClient()->m_aClients[ClientId].m_aName);
+
+	int NameColor = -2;
+	const CGameClient::CClientData &LineAuthor = GameClient()->m_aClients[ClientId];
+	if(LineAuthor.m_Active)
+	{
+		if(LineAuthor.m_Team == TEAM_SPECTATORS)
+			NameColor = TEAM_SPECTATORS;
+		if(GameClient()->IsTeamPlay())
+		{
+			if(LineAuthor.m_Team == TEAM_RED)
+				NameColor = TEAM_RED;
+			else if(LineAuthor.m_Team == TEAM_BLUE)
+				NameColor = TEAM_BLUE;
+		}
+	}
+	Author.m_NameColor = PlayerNameColor(ClientId, NameColor, false);
+	Line.m_vMergedAuthors.push_back(Author);
+	RebuildMergedAuthorName(Line);
+}
+
+void CChat::RebuildMergedAuthorName(CLine &Line)
+{
+	Line.m_aName[0] = '\0';
+	for(size_t i = 0; i < Line.m_vMergedAuthors.size(); ++i)
+	{
+		if(i > 0)
+			str_append(Line.m_aName, ",", sizeof(Line.m_aName));
+		str_append(Line.m_aName, Line.m_vMergedAuthors[i].m_aName, sizeof(Line.m_aName));
+	}
+}
+
+void CChat::PrintLineToConsole(const CLine &Line) const
+{
+	if(Line.m_ConsoleSuppressed)
+		return;
+
+	ColorRGBA ChatLogColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	if(Line.m_Highlighted)
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
+	else if(Line.m_Friend && g_Config.m_ClMessageFriend)
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor));
+	else if(Line.m_Team)
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
+	else if(Line.m_ClientId == SERVER_MSG)
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
+	else if(Line.m_ClientId == CLIENT_MSG)
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
+	else
+		ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
+
+	const char *pFrom;
+	if(Line.m_Whisper)
+		pFrom = "chat/whisper";
+	else if(Line.m_Team)
+		pFrom = "chat/team";
+	else if(Line.m_ClientId == SERVER_MSG)
+		pFrom = "chat/server";
+	else if(Line.m_ClientId == CLIENT_MSG)
+		pFrom = "chat/client";
+	else
+		pFrom = "chat/all";
+
+	char aBuf[4096] = "";
+	const bool Merged = Line.m_TimesRepeated > 0 && !Line.m_vMergedAuthors.empty();
+	if(!Merged)
+	{
+		str_format(aBuf, sizeof(aBuf), "%s%s%s", Line.m_aName, Line.m_ClientId >= 0 ? ": " : "", Line.m_aText);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor);
+		return;
+	}
+
+	std::vector<CGameConsole::SColorSpan> vColorSpans;
+	vColorSpans.reserve(Line.m_vMergedAuthors.size());
+	for(size_t i = 0; i < Line.m_vMergedAuthors.size(); ++i)
+	{
+		if(i > 0)
+			str_append(aBuf, ",", sizeof(aBuf));
+		const size_t StartByte = str_length(aBuf);
+		str_append(aBuf, Line.m_vMergedAuthors[i].m_aName, sizeof(aBuf));
+		const size_t EndByte = str_length(aBuf);
+		const int StartChar = (int)str_utf8_offset_bytes_to_chars(aBuf, StartByte);
+		const int EndChar = (int)str_utf8_offset_bytes_to_chars(aBuf, EndByte);
+		vColorSpans.push_back({StartChar, EndChar - StartChar, Line.m_vMergedAuthors[i].m_NameColor});
+	}
+	char aCount[16];
+	str_format(aCount, sizeof(aCount), " [%d]: ", Line.m_TimesRepeated + 1);
+	str_append(aBuf, aCount, sizeof(aBuf));
+	str_append(aBuf, Line.m_aText, sizeof(aBuf));
+	GameClient()->m_GameConsole.PrintLineWithColorSpans(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor, vColorSpans.data(), vColorSpans.size());
+}
+
+void CChat::FlushPendingConsoleLine(bool Force)
+{
+	if(m_PendingConsoleLineIndex < 0 || m_PendingConsoleLineIndex >= MAX_LINES)
+		return;
+	CLine &Line = m_aLines[m_PendingConsoleLineIndex];
+	if(!Line.m_Initialized)
+	{
+		m_PendingConsoleLineIndex = -1;
+		return;
+	}
+	const int64_t Now = time();
+	if(!Force && g_Config.m_QmMessageMerge && Now >= Line.m_Time && Now - Line.m_Time <= time_freq() * 2)
+		return;
+	PrintLineToConsole(Line);
+	m_PendingConsoleLineIndex = -1;
+}
+
 void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible)
 {
 	AddLine(ClientId, Team, pLine, ForceVisible, std::nullopt);
@@ -2126,6 +2272,9 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass)
 {
+	if(ClientId >= 0 && !GameClient()->LiveTeamFilterAllowsClient(ClientId))
+		return;
+
 	if(*pLine == 0 ||
 		(ClientId == SERVER_MSG && !g_Config.m_ClShowChatSystem) ||
 		(ClientId >= 0 && (GameClient()->m_aClients[ClientId].m_aName[0] == '\0' || // unknown client
@@ -2156,6 +2305,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		std::vector<std::string> *pMatched = g_Config.m_QmBlockWordsShowConsole ? &BlockedWords : nullptr;
 		if(ApplyBlockWords(Text, pMatched))
 		{
+			FlushPendingConsoleLine(true);
 			if(g_Config.m_QmBlockWordsShowConsole && !BlockedWords.empty())
 			{
 				std::string Joined;
@@ -2215,87 +2365,56 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 	bool Highlighted = false;
 
-	auto &&FChatMsgCheckAndPrint = [this, BlockWordsConsolePrinted](const CLine &Line) {
-		if(BlockWordsConsolePrinted)
-			return;
-
-		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "%s%s%s", Line.m_aName, Line.m_ClientId >= 0 ? ": " : "", Line.m_aText);
-
-		ColorRGBA ChatLogColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-		if(Line.m_Highlighted)
-		{
-			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
-		}
-		else
-		{
-			if(Line.m_Friend && g_Config.m_ClMessageFriend)
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor));
-			else if(Line.m_Team)
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
-			else if(Line.m_ClientId == SERVER_MSG)
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
-			else if(Line.m_ClientId == CLIENT_MSG)
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
-			else // regular message
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
-		}
-
-		const char *pFrom;
-		if(Line.m_Whisper)
-			pFrom = "chat/whisper";
-		else if(Line.m_Team)
-			pFrom = "chat/team";
-		else if(Line.m_ClientId == SERVER_MSG)
-			pFrom = "chat/server";
-		else if(Line.m_ClientId == CLIENT_MSG)
-			pFrom = "chat/client";
-		else
-			pFrom = "chat/all";
-
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor);
-	};
-
 	// Custom color for new line
 	std::optional<ColorRGBA> CustomColor = std::nullopt;
 	if(ClientId == CLIENT_MSG)
 		CustomColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
 
 	CLine &PreviousLine = m_aLines[m_CurrentLine];
+	const int64_t Now = time();
+	FlushPendingConsoleLine(false);
 
 	// Team Number:
 	// 0 = global; 1 = team; 2 = sending whisper; 3 = receiving whisper
 
-	// If it's a client message, m_aText will have ": " prepended so we have to work around it.
-	if(PreviousLine.m_Initialized &&
-		PreviousLine.m_TeamNumber == Team &&
-		PreviousLine.m_ClientId == ClientId &&
-		str_comp(PreviousLine.m_aText, pLine) == 0 &&
+	if(g_Config.m_QmMessageMerge &&
+		PreviousLine.m_Initialized &&
+		(PreviousLine.m_ConsoleSuppressed || m_PendingConsoleLineIndex == m_CurrentLine) &&
 		PreviousLine.m_CustomColor == CustomColor &&
-		PreviousLine.m_ForceVisible == ForceVisible)
+		PreviousLine.m_ForceVisible == ForceVisible &&
+		PreviousLine.m_ConsoleSuppressed == BlockWordsConsolePrinted &&
+		CanMergePlayerMessages(PreviousLine.m_ClientId, PreviousLine.m_TeamNumber, PreviousLine.m_aText, PreviousLine.m_Time, ClientId, Team, pLine, Now))
 	{
+		const int PreviousTeam = PreviousLine.m_TeamNumber;
 		PreviousLine.m_TimesRepeated++;
+		AddMergedAuthor(PreviousLine, ClientId);
+		if(PreviousTeam != Team)
+		{
+			PreviousLine.m_Team = false;
+			PreviousLine.m_TeamNumber = 0;
+		}
+		if(PreviousLine.m_vMergedAuthors.size() > 1)
+		{
+			PreviousLine.m_Friend = false;
+			PreviousLine.m_pManagedTeeRenderInfo = nullptr;
+		}
+		PreviousLine.m_ConsoleSuppressed |= BlockWordsConsolePrinted;
 		TextRender()->DeleteTextContainer(PreviousLine.m_TextContainerIndex);
 		Graphics()->DeleteQuadContainer(PreviousLine.m_QuadContainerIndex);
-		PreviousLine.m_Time = time();
+		PreviousLine.m_Time = Now;
 		PreviousLine.m_aYOffset[0] = -1.0f;
 		PreviousLine.m_aYOffset[1] = -1.0f;
 		PreviousLine.m_CutOffProgress = 0.0f;
 		BeginLinePresentation(PreviousLine.m_Presentation, PreviousLine.m_Time, true);
 
-		// Keep bubble lifetime in sync for repeated chat lines as well.
-		if(ClientId >= 0 && ClientId < MAX_CLIENTS)
-		{
-			CGameClient::CClientData &ClientData = GameClient()->m_aClients[ClientId];
-			str_copy(ClientData.m_aChatBubbleText, pLine, sizeof(ClientData.m_aChatBubbleText));
-			const int64_t BubbleStartTick = time();
-			ClientData.m_ChatBubbleStartTick = BubbleStartTick;
-			ClientData.m_ChatBubbleExpireTick = BubbleStartTick + time_freq() * g_Config.m_QmChatBubbleDuration;
-		}
-
-		FChatMsgCheckAndPrint(PreviousLine);
+		CGameClient::CClientData &ClientData = GameClient()->m_aClients[ClientId];
+		str_copy(ClientData.m_aChatBubbleText, pLine, sizeof(ClientData.m_aChatBubbleText));
+		ClientData.m_ChatBubbleStartTick = Now;
+		ClientData.m_ChatBubbleExpireTick = Now + time_freq() * g_Config.m_QmChatBubbleDuration;
 		return;
 	}
+
+	FlushPendingConsoleLine(true);
 
 	m_CurrentLine = (m_CurrentLine + 1) % MAX_LINES;
 	if(m_BacklogCurLine > 0)
@@ -2304,7 +2423,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 	CLine &CurrentLine = m_aLines[m_CurrentLine];
 	CurrentLine.Reset(*this);
 	CurrentLine.m_Initialized = true;
-	CurrentLine.m_Time = time();
+	CurrentLine.m_Time = Now;
 	BeginLinePresentation(CurrentLine.m_Presentation, CurrentLine.m_Time, false);
 	CurrentLine.m_aYOffset[0] = -1.0f;
 	CurrentLine.m_aYOffset[1] = -1.0f;
@@ -2315,6 +2434,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 	CurrentLine.m_NameColor = -2;
 	CurrentLine.m_CustomColor = CustomColor;
 	CurrentLine.m_ForceVisible = ForceVisible;
+	CurrentLine.m_ConsoleSuppressed = BlockWordsConsolePrinted;
 
 	// check for highlighted name
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
@@ -2340,7 +2460,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 	if(CurrentLine.m_ClientId == SERVER_MSG)
 	{
-		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId));
+		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId, g_Config.m_QmChatHideSystemPrefix != 0));
 	}
 	else if(CurrentLine.m_ClientId == CLIENT_MSG)
 	{
@@ -2400,12 +2520,17 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 			CurrentLine.m_Friend = LineAuthor.m_Friend;
 			CurrentLine.m_pManagedTeeRenderInfo = GameClient()->CreateManagedTeeRenderInfo(LineAuthor);
 		}
+
+		if(Team < TEAM_WHISPER_SEND)
+			AddMergedAuthor(CurrentLine, ClientId);
 	}
 
-	FChatMsgCheckAndPrint(CurrentLine);
+	if(g_Config.m_QmMessageMerge && ClientId >= 0 && Team < TEAM_WHISPER_SEND && !CurrentLine.m_ConsoleSuppressed)
+		m_PendingConsoleLineIndex = m_CurrentLine;
+	else
+		PrintLineToConsole(CurrentLine);
 
 	// play sound
-	int64_t Now = time();
 	if(ClientId == SERVER_MSG)
 	{
 		if(Now - m_aLastSoundPlayed[CHAT_SERVER] >= time_freq() * 3 / 10)
@@ -2543,9 +2668,11 @@ void CChat::OnPrepareLines(float y)
 
 		TextRender()->DeleteTextContainer(Line.m_TextContainerIndex);
 		Graphics()->DeleteQuadContainer(Line.m_QuadContainerIndex);
+		const bool MergedPlayerMessages = Line.m_TimesRepeated > 0 && !Line.m_vMergedAuthors.empty();
+		const bool MultipleAuthors = Line.m_vMergedAuthors.size() > 1;
 
 		char aClientId[16] = "";
-		if(g_Config.m_ClShowIds && Line.m_ClientId >= 0 && Line.m_aName[0] != '\0' && !GameClient()->ShouldHideStreamerIdentity(Line.m_ClientId))
+		if(!MultipleAuthors && g_Config.m_ClShowIds && Line.m_ClientId >= 0 && Line.m_aName[0] != '\0' && !GameClient()->ShouldHideStreamerIdentity(Line.m_ClientId))
 		{
 			GameClient()->FormatClientId(Line.m_ClientId, aClientId, EClientIdFormat::INDENT_AUTO);
 		}
@@ -2609,7 +2736,7 @@ void CChat::OnPrepareLines(float y)
 			MeasureCursor.m_Flags = 0;
 			MeasureCursor.m_LineWidth = LineWidth;
 
-			if(Line.m_ClientId >= 0 && Line.m_aName[0] != '\0')
+			if(!MultipleAuthors && Line.m_ClientId >= 0 && Line.m_aName[0] != '\0')
 			{
 				MeasureCursor.m_X += RealMsgPaddingTee;
 
@@ -2620,7 +2747,19 @@ void CChat::OnPrepareLines(float y)
 			}
 
 			TextRender()->TextEx(&MeasureCursor, aClientId);
-			TextRender()->TextEx(&MeasureCursor, Line.m_aName);
+			if(MergedPlayerMessages)
+			{
+				for(size_t i = 0; i < Line.m_vMergedAuthors.size(); ++i)
+				{
+					if(i > 0)
+						TextRender()->TextEx(&MeasureCursor, ",");
+					TextRender()->TextEx(&MeasureCursor, Line.m_vMergedAuthors[i].m_aName);
+				}
+			}
+			else
+			{
+				TextRender()->TextEx(&MeasureCursor, Line.m_aName);
+			}
 			if(Line.m_TimesRepeated > 0)
 				TextRender()->TextEx(&MeasureCursor, aCount);
 
@@ -2689,7 +2828,7 @@ void CChat::OnPrepareLines(float y)
 		LineCursor.m_LineWidth = LineWidth;
 
 		// Message is from valid player
-		if(Line.m_ClientId >= 0 && Line.m_aName[0] != '\0')
+		if(!MultipleAuthors && Line.m_ClientId >= 0 && Line.m_aName[0] != '\0')
 		{
 			LineCursor.m_X += RealMsgPaddingTee;
 
@@ -2708,24 +2847,28 @@ void CChat::OnPrepareLines(float y)
 			NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
 		else if(Line.m_ClientId == CLIENT_MSG)
 			NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
-		else if(Line.m_ClientId >= 0 && g_Config.m_TcWarList && g_Config.m_TcWarListChat && GameClient()->m_WarList.GetAnyWar(Line.m_ClientId)) // TClient
-			NameColor = GameClient()->m_WarList.GetPriorityColor(Line.m_ClientId);
-		else if(Line.m_Team)
-			NameColor = CalculateNameColor(ColorHSLA(g_Config.m_ClMessageTeamColor));
-		else if(Line.m_NameColor == TEAM_RED)
-			NameColor = ColorRGBA(1.0f, 0.5f, 0.5f, 1.0f);
-		else if(Line.m_NameColor == TEAM_BLUE)
-			NameColor = ColorRGBA(0.7f, 0.7f, 1.0f, 1.0f);
-		else if(Line.m_NameColor == TEAM_SPECTATORS)
-			NameColor = ColorRGBA(0.75f, 0.5f, 0.75f, 1.0f);
-		else if(Line.m_ClientId >= 0 && g_Config.m_ClChatTeamColors && GameClient()->m_Teams.Team(Line.m_ClientId))
-			NameColor = GameClient()->GetDDTeamColor(GameClient()->m_Teams.Team(Line.m_ClientId), 0.75f);
 		else
-			NameColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f);
+			NameColor = PlayerNameColor(Line.m_ClientId, Line.m_NameColor, Line.m_Team);
 
-		TextRender()->TextColor(NameColor);
-		TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, aClientId);
-		TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, Line.m_aName);
+		if(MergedPlayerMessages)
+		{
+			TextRender()->TextColor(Line.m_vMergedAuthors.front().m_NameColor);
+			TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, aClientId);
+			for(size_t i = 0; i < Line.m_vMergedAuthors.size(); ++i)
+			{
+				TextRender()->TextColor(Line.m_vMergedAuthors[i].m_NameColor);
+				if(i > 0)
+					TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, ",");
+				TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, Line.m_vMergedAuthors[i].m_aName);
+			}
+			NameColor = Line.m_vMergedAuthors.back().m_NameColor;
+		}
+		else
+		{
+			TextRender()->TextColor(NameColor);
+			TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, aClientId);
+			TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, Line.m_aName);
+		}
 
 		if(Line.m_TimesRepeated > 0)
 		{
@@ -2864,6 +3007,7 @@ void CChat::OnPrepareLines(float y)
 
 void CChat::OnRender()
 {
+	FlushPendingConsoleLine(false);
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 	const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
@@ -2889,6 +3033,7 @@ void CChat::OnRender()
 		m_Show ||
 		(InputActive && g_Config.m_ClShowChat == 1) ||
 		g_Config.m_ClShowChat == 2;
+	const bool ExtraAnimations = g_Config.m_QmExtraAnimations != 0 && GameClient()->UiRuntimeV2()->Enabled();
 	int64_t Now = time();
 	if(m_LastPresentationUpdateTime == 0 || Now < m_LastPresentationUpdateTime)
 		m_LastPresentationUpdateTime = Now;
@@ -3315,7 +3460,7 @@ void CChat::OnRender()
 		{
 			RenderedAnyLines = true;
 			ExtendBounds(x + AnimOffsetX, RenderY, ChatRect.w - x, LineHeight);
-			if(!g_Config.m_ClChatOld && Line.m_pManagedTeeRenderInfo != nullptr)
+			if(Line.m_vMergedAuthors.size() <= 1 && !g_Config.m_ClChatOld && Line.m_pManagedTeeRenderInfo != nullptr)
 			{
 				CTeeRenderInfo &TeeRenderInfo = Line.m_pManagedTeeRenderInfo->TeeRenderInfo();
 				TeeRenderInfo.m_Size = TeeSize * Line.m_Presentation.m_RenderScale;
@@ -3452,6 +3597,11 @@ static bool ShouldSyncDummyCommandToOther(const char *pLine)
 
 void CChat::SendChat(int Team, const char *pLine)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER && ShouldBlockLiveDirectorChatCommand(pLine))
+		return;
+#endif
+
 	// don't send empty messages
 	if(*str_utf8_skip_whitespaces(pLine) == '\0')
 		return;
@@ -3486,13 +3636,18 @@ void CChat::SendChat(int Team, const char *pLine)
 		SendChatOnConn(!g_Config.m_ClDummy, Team, pLine);
 }
 
-void CChat::SendChatOnConn(int Conn, int Team, const char *pLine)
+void CChat::SendChatOnConn(int Conn, int Team, const char *pLine, bool AllowWhitespaceOnly, bool HandleLocalSaveForLoadCommand)
 {
-	if(pLine == nullptr)
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER && ShouldBlockLiveDirectorChatCommand(pLine))
+		return;
+#endif
+
+	if(pLine == nullptr || pLine[0] == '\0')
 		return;
 
 	// don't send empty messages
-	if(*str_utf8_skip_whitespaces(pLine) == '\0')
+	if(!AllowWhitespaceOnly && *str_utf8_skip_whitespaces(pLine) == '\0')
 		return;
 
 	if(Conn != IClient::CONN_DUMMY)
@@ -3507,16 +3662,18 @@ void CChat::SendChatOnConn(int Conn, int Team, const char *pLine)
 		Msg7.m_Target = -1;
 		Msg7.m_pMessage = pLine;
 		Client()->SendPackMsg(Conn, &Msg7, MSGFLAG_VITAL, true);
-		GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
-		return;
+	}
+	else
+	{
+		// send chat message
+		CNetMsg_Cl_Say Msg;
+		Msg.m_Team = Team;
+		Msg.m_pMessage = pLine;
+		Client()->SendPackMsg(Conn, &Msg, MSGFLAG_VITAL);
 	}
 
-	// send chat message
-	CNetMsg_Cl_Say Msg;
-	Msg.m_Team = Team;
-	Msg.m_pMessage = pLine;
-	Client()->SendPackMsg(Conn, &Msg, MSGFLAG_VITAL);
-	GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
+	if(HandleLocalSaveForLoadCommand)
+		GameClient()->TClientComponent().TryRemoveLocalSaveForLoadCommand(pLine);
 }
 
 void CChat::SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation)
@@ -3750,7 +3907,7 @@ void CChat::OpenChatLineMenu(const CLine &Line, vec2 ChatMousePos)
 	m_ChatLinePopupContext.m_ClientId = Line.m_ClientId;
 	m_ChatLinePopupContext.m_TeamNumber = Line.m_TeamNumber;
 	str_copy(m_ChatLinePopupContext.m_aText, Line.m_aText);
-	m_ChatLinePopupContext.m_PlayerLine = Line.m_ClientId >= 0 && Line.m_ClientId < MAX_CLIENTS;
+	m_ChatLinePopupContext.m_PlayerLine = Line.m_vMergedAuthors.size() <= 1 && Line.m_ClientId >= 0 && Line.m_ClientId < MAX_CLIENTS;
 	m_ChatLinePopupContext.m_LocalPlayer = m_ChatLinePopupContext.m_PlayerLine && GameClient()->IsLocalClientId(Line.m_ClientId);
 	if(m_ChatLinePopupContext.m_PlayerLine)
 	{

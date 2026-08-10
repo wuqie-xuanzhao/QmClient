@@ -61,6 +61,7 @@ public:
 	virtual int ClientCountry(int ClientId) const = 0;
 	virtual bool ClientSlotEmpty(int ClientId) const = 0;
 	virtual bool ClientIngame(int ClientId) const = 0;
+	virtual bool ClientIsQmLiveObserver(int ClientId) const = 0;
 	virtual bool GetClientInfo(int ClientId, CClientInfo *pInfo) const = 0;
 	virtual void SetClientDDNetVersion(int ClientId, int DDNetVersion) = 0;
 	virtual const NETADDR *ClientAddr(int ClientId) const = 0;
@@ -349,6 +350,7 @@ public:
 	virtual void OnClientConnected(int ClientId, void *pPersistentData) = 0;
 
 	virtual void OnClientEnter(int ClientId) = 0;
+	virtual void OnLiveObserverEnter(int ClientId) = 0;
 	virtual void OnClientDrop(int ClientId, const char *pReason) = 0;
 	virtual void OnClientPrepareInput(int ClientId, void *pInput) = 0;
 	virtual void OnClientDirectInput(int ClientId, const void *pInput) = 0;

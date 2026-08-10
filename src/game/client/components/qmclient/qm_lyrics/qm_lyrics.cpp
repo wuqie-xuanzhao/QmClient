@@ -39,7 +39,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -604,11 +604,11 @@ namespace
 		Entry.m_StoredAt = NowSec;
 		Entry.m_LastUsedAt = NowSec;
 		if(!QmLyrics::CommitCacheEntry(
-			pStorage,
-			&pImpl->m_Cache,
-			Entry,
-			PayloadFromCandidate(Candidate, Entry.m_Source.c_str()),
-			CACHE_MAX_ENTRIES))
+			   pStorage,
+			   &pImpl->m_Cache,
+			   Entry,
+			   PayloadFromCandidate(Candidate, Entry.m_Source.c_str()),
+			   CACHE_MAX_ENTRIES))
 			return;
 		pImpl->m_CacheLoaded = true;
 		pImpl->m_CacheDirty = false;
@@ -937,11 +937,6 @@ void CQmLyrics::TickStateMachine()
 			{
 				for(int SourceIndex : m_pImpl->m_vSourceOrder)
 					DispatchSource(SourceIndex, Generation);
-				if(m_pImpl->m_PendingSources == 0)
-				{
-					m_pImpl->m_State = SImpl::EState::NO_RESULT;
-					SetStateStatus(m_pImpl.get(), Localize("Lyrics: no lyrics found"));
-				}
 			}
 		}
 	}

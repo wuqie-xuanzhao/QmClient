@@ -6,6 +6,7 @@
 
 #include <engine/console.h>
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
 #include <engine/shared/json.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -346,6 +347,8 @@ private:
 	// Font faces
 	FT_Face m_DefaultFace = nullptr;
 	FT_Face m_IconFace = nullptr;
+	FT_Face m_IconRegularFace = nullptr;
+	FT_Face m_IconBoldFace = nullptr;
 	FT_Face m_VariantFace = nullptr;
 	FT_Face m_SelectedFace = nullptr;
 	std::vector<FT_Face> m_vFallbackFaces;
@@ -695,11 +698,25 @@ public:
 
 	bool SetIconFaceByName(const char *pFamilyName)
 	{
-		m_IconFace = GetFaceByName(pFamilyName);
-		if(!m_IconFace)
+		m_IconRegularFace = GetFaceByName(pFamilyName);
+		if(!m_IconRegularFace)
 		{
 			log_error("textrender", "The icon font face '%s' could not be found", pFamilyName);
 			return false;
+		}
+		m_IconFace = m_IconRegularFace;
+		return true;
+	}
+
+	bool SetIconBoldFaceByName(const char *pFamilyName)
+	{
+		m_IconBoldFace = GetFaceByName(pFamilyName);
+		if(!m_IconBoldFace)
+		{
+			// Bold is a preference, not a reason to leave ICON_FONT_BOLD without a face.
+			m_IconBoldFace = m_IconRegularFace;
+			log_warn("textrender", "The bold icon font face '%s' could not be found, falling back to regular", pFamilyName);
+			return m_IconBoldFace != nullptr;
 		}
 		return true;
 	}
@@ -747,7 +764,20 @@ public:
 		case EFontPreset::ICON_FONT:
 			m_SelectedFace = m_IconFace;
 			break;
+		case EFontPreset::ICON_FONT_BOLD:
+			m_SelectedFace = m_IconBoldFace;
+			break;
 		}
+	}
+
+	void SetIconFontWeight(const bool Bold)
+	{
+		m_IconFace = Bold && m_IconBoldFace != nullptr ? m_IconBoldFace : m_IconRegularFace;
+	}
+
+	bool IsIconFaceSelected() const
+	{
+		return m_SelectedFace == m_IconFace || m_SelectedFace == m_IconBoldFace;
 	}
 
 	void Clear()
@@ -1035,8 +1065,17 @@ class CTextRender : public IEngineTextRender
 	unsigned m_RenderFlags;
 
 	ColorRGBA m_Color;
+	ColorRGBA m_UnmodifiedColor;
 	ColorRGBA m_OutlineColor;
 	ColorRGBA m_SelectionColor;
+	EFontPreset m_FontPreset = EFontPreset::DEFAULT_FONT;
+
+	ColorRGBA ResolveFontPresetColor(ColorRGBA Color) const
+	{
+		// Font selection must not overwrite semantic colors. Qm UI controls that
+		// opt into the White/Black preference pass that color explicitly.
+		return Color;
+	}
 
 	FT_Library m_FTLibrary;
 
@@ -1250,6 +1289,7 @@ public:
 		m_pGlyphMap = nullptr;
 
 		m_Color = DefaultTextColor();
+		m_UnmodifiedColor = m_Color;
 		m_OutlineColor = DefaultTextOutlineColor();
 		m_SelectionColor = DefaultTextSelectionColor();
 
@@ -1548,7 +1588,7 @@ public:
 			Success = false;
 		}
 
-		// extract icon font family name
+		// ICON_FONT 跟随保存的图标粗细，ICON_FONT_BOLD 供必须使用粗体字形的控件使用。
 		const json_value &IconFace = (*pJsonData)["icon"];
 		if(IconFace.type == json_string)
 		{
@@ -1563,6 +1603,22 @@ public:
 			Success = false;
 		}
 
+		const json_value &IconBoldFace = (*pJsonData)["icon bold"];
+		if(IconBoldFace.type == json_string)
+		{
+			if(!m_pGlyphMap->SetIconBoldFaceByName(IconBoldFace.u.string.ptr))
+			{
+				Success = false;
+			}
+		}
+		else
+		{
+			log_error("textrender", "Font index malformed: 'icon bold' must be a string");
+			Success = false;
+		}
+
+		m_pGlyphMap->SetIconFontWeight(g_Config.m_QmUiIconWeight == 1);
+
 		json_value_free(pJsonData);
 		return Success;
 	}
@@ -1570,6 +1626,20 @@ public:
 	void SetFontPreset(EFontPreset FontPreset) override
 	{
 		m_pGlyphMap->SetFontPreset(FontPreset);
+		m_FontPreset = FontPreset;
+		m_Color = ResolveFontPresetColor(m_UnmodifiedColor);
+	}
+
+	EFontPreset GetFontPreset() const override
+	{
+		return m_FontPreset;
+	}
+
+	void SetIconFontWeight(bool Bold) override
+	{
+		m_pGlyphMap->SetIconFontWeight(Bold);
+		if(m_FontPreset == EFontPreset::ICON_FONT)
+			m_pGlyphMap->SetFontPreset(EFontPreset::ICON_FONT);
 	}
 
 	void SetFontLanguageVariant(const char *pLanguageFile) override
@@ -1630,15 +1700,14 @@ public:
 
 	void TextColor(float r, float g, float b, float a) override
 	{
-		m_Color.r = r;
-		m_Color.g = g;
-		m_Color.b = b;
-		m_Color.a = a;
+		m_UnmodifiedColor = ColorRGBA(r, g, b, a);
+		m_Color = ResolveFontPresetColor(m_UnmodifiedColor);
 	}
 
 	void TextColor(ColorRGBA Color) override
 	{
-		m_Color = Color;
+		m_UnmodifiedColor = Color;
+		m_Color = ResolveFontPresetColor(m_UnmodifiedColor);
 	}
 
 	void TextOutlineColor(float r, float g, float b, float a) override
@@ -1682,8 +1751,36 @@ public:
 		return m_SelectionColor;
 	}
 
+	void InitTextContainer(STextContainer &TextContainer, CTextCursor *pCursor)
+	{
+		TextContainer.m_SingleTimeUse = (m_RenderFlags & TEXT_RENDER_FLAG_ONE_TIME_USE) != 0;
+
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		const vec2 FakeToScreen = vec2(Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0), Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
+		TextContainer.m_AlignedStartX = round_to_int(pCursor->m_X * FakeToScreen.x) / FakeToScreen.x;
+		TextContainer.m_AlignedStartY = round_to_int(pCursor->m_Y * FakeToScreen.y) / FakeToScreen.y;
+		TextContainer.m_X = pCursor->m_X;
+		TextContainer.m_Y = pCursor->m_Y;
+		TextContainer.m_Flags = pCursor->m_Flags;
+
+		if(pCursor->m_LineWidth <= 0.0f)
+			TextContainer.m_RenderFlags = m_RenderFlags | ETextRenderFlags::TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE;
+		else
+			TextContainer.m_RenderFlags = m_RenderFlags;
+	}
+
 	void TextEx(CTextCursor *pCursor, const char *pText, int Length = -1) override
 	{
+		if((pCursor->m_Flags & TEXTFLAG_RENDER) == 0)
+		{
+			// 仅布局的文本不占用文本容器索引，但字形查找仍可能更新图集。
+			STextContainer LayoutContainer;
+			InitTextContainer(LayoutContainer, pCursor);
+			AppendTextContainerImpl(LayoutContainer, pCursor, pText, Length);
+			return;
+		}
+
 		const unsigned OldRenderFlags = m_RenderFlags;
 		m_RenderFlags |= TEXT_RENDER_FLAG_ONE_TIME_USE;
 		STextContainerIndex TextCont;
@@ -1710,22 +1807,8 @@ public:
 		TextContainerIndex.Reset();
 		TextContainerIndex.m_Index = GetFreeTextContainerIndex();
 
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-
 		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
-		TextContainer.m_SingleTimeUse = (m_RenderFlags & TEXT_RENDER_FLAG_ONE_TIME_USE) != 0;
-		const vec2 FakeToScreen = vec2(Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0), Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
-		TextContainer.m_AlignedStartX = round_to_int(pCursor->m_X * FakeToScreen.x) / FakeToScreen.x;
-		TextContainer.m_AlignedStartY = round_to_int(pCursor->m_Y * FakeToScreen.y) / FakeToScreen.y;
-		TextContainer.m_X = pCursor->m_X;
-		TextContainer.m_Y = pCursor->m_Y;
-		TextContainer.m_Flags = pCursor->m_Flags;
-
-		if(pCursor->m_LineWidth <= 0.0f)
-			TextContainer.m_RenderFlags = m_RenderFlags | ETextRenderFlags::TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE;
-		else
-			TextContainer.m_RenderFlags = m_RenderFlags;
+		InitTextContainer(TextContainer, pCursor);
 
 		AppendTextContainer(TextContainerIndex, pCursor, pText, Length);
 
@@ -1759,7 +1842,11 @@ public:
 
 	void AppendTextContainer(STextContainerIndex TextContainerIndex, CTextCursor *pCursor, const char *pText, int Length = -1) override
 	{
-		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+		AppendTextContainerImpl(GetTextContainer(TextContainerIndex), pCursor, pText, Length);
+	}
+
+	void AppendTextContainerImpl(STextContainer &TextContainer, CTextCursor *pCursor, const char *pText, int Length = -1)
+	{
 		str_append(TextContainer.m_aDebugText, pText);
 
 		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
@@ -1820,6 +1907,7 @@ public:
 		const float CursorOuterInnerDiff = (CursorOuterWidth - CursorInnerWidth) / 2;
 
 		std::vector<IGraphics::CQuadItem> vSelectionQuads;
+		pCursor->m_vSelectionQuads.clear();
 		int SelectionQuadLine = -1;
 		bool SelectionStarted = false;
 		bool SelectionUsedPress = false;
@@ -1888,6 +1976,7 @@ public:
 			aCursorQuads[0] = IGraphics::CQuadItem(CursorPosX - CursorOuterInnerDiff, CursorPosY, CursorOuterWidth, pCursor->m_AlignedFontSize);
 			aCursorQuads[1] = IGraphics::CQuadItem(CursorPosX, CursorPosY + CursorOuterInnerDiff, CursorInnerWidth, pCursor->m_AlignedFontSize - CursorOuterInnerDiff * 2);
 			pCursor->m_CursorRenderedPosition = vec2(CursorPosX, CursorPosY);
+			pCursor->m_HasCursorRenderedPosition = true;
 		};
 		const auto &&CheckCursorAtCharacter = [&](float CursorPosX, float CursorPosY) {
 			if(pCursor->m_CursorMode != TEXT_CURSOR_CURSOR_MODE_NONE && pCursor->m_GlyphCount == pCursor->m_CursorCharacter)
@@ -2243,7 +2332,7 @@ public:
 
 					pCursor->m_GlyphCount++;
 
-					if(SelectionStarted && IsRendered)
+					if(SelectionStarted)
 					{
 						if(!vSelectionQuads.empty() && SelectionQuadLine == LineCount)
 						{
@@ -2324,31 +2413,35 @@ public:
 		}
 
 		const bool HasSelection = !vSelectionQuads.empty() && SelectionUsedPress && SelectionUsedRelease;
-		if((HasSelection || HasCursor) && IsRendered)
+		const bool HasRenderedCursor = HasCursor && pCursor->m_RenderCursor;
+		const bool HasRenderedSelection = HasSelection && pCursor->m_RenderSelection;
+		if((HasRenderedSelection || HasRenderedCursor) && IsRendered)
 		{
 			Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 			if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex == -1)
 				TextContainer.m_StringInfo.m_SelectionQuadContainerIndex = Graphics()->CreateQuadContainer(false);
-			if(HasCursor)
+			if(HasRenderedCursor)
 				Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, aCursorQuads, std::size(aCursorQuads));
-			if(HasSelection)
+			if(HasRenderedSelection)
 				Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, vSelectionQuads.data(), vSelectionQuads.size());
 			Graphics()->QuadContainerUpload(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex);
 
-			TextContainer.m_HasCursor = HasCursor;
-			TextContainer.m_HasSelection = HasSelection;
+			TextContainer.m_HasCursor = HasRenderedCursor;
+			TextContainer.m_HasSelection = HasRenderedSelection;
 			TextContainer.m_ForceCursorRendering = pCursor->m_ForceCursorRendering;
+		}
 
-			if(HasSelection)
-			{
-				pCursor->m_SelectionStart = SelectionStartChar;
-				pCursor->m_SelectionEnd = SelectionEndChar;
-			}
-			else
-			{
-				pCursor->m_SelectionStart = -1;
-				pCursor->m_SelectionEnd = -1;
-			}
+		if(HasSelection)
+		{
+			pCursor->m_SelectionStart = SelectionStartChar;
+			pCursor->m_SelectionEnd = SelectionEndChar;
+			if(!pCursor->m_RenderSelection)
+				pCursor->m_vSelectionQuads = std::move(vSelectionQuads);
+		}
+		else
+		{
+			pCursor->m_SelectionStart = -1;
+			pCursor->m_SelectionEnd = -1;
 		}
 
 		// even if no text is drawn the cursor position will be adjusted
@@ -2405,13 +2498,22 @@ public:
 		{
 			const auto UploadStart = time_get_nanoseconds();
 			STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+			if(TextContainer.m_StringInfo.m_vCharacterQuads.empty())
+				return;
+
 			size_t DataSize = TextContainer.m_StringInfo.m_vCharacterQuads.size() * sizeof(STextCharQuad);
 			void *pUploadData = TextContainer.m_StringInfo.m_vCharacterQuads.data();
-			TextContainer.m_StringInfo.m_QuadBufferObjectIndex = Graphics()->CreateBufferObject(DataSize, pUploadData, TextContainer.m_SingleTimeUse ? IGraphics::EBufferObjectCreateFlags::BUFFER_OBJECT_CREATE_FLAGS_ONE_TIME_USE_BIT : 0);
+			const int CreateFlags = TextContainer.m_SingleTimeUse ? IGraphics::EBufferObjectCreateFlags::BUFFER_OBJECT_CREATE_FLAGS_ONE_TIME_USE_BIT : 0;
+			if(TextContainer.m_StringInfo.m_QuadBufferObjectIndex == -1)
+				TextContainer.m_StringInfo.m_QuadBufferObjectIndex = Graphics()->CreateBufferObject(DataSize, pUploadData, CreateFlags);
+			else
+				Graphics()->RecreateBufferObject(TextContainer.m_StringInfo.m_QuadBufferObjectIndex, DataSize, pUploadData, CreateFlags);
 
-			m_DefaultTextContainerInfo.m_VertBufferBindingIndex = TextContainer.m_StringInfo.m_QuadBufferObjectIndex;
-
-			TextContainer.m_StringInfo.m_QuadBufferContainerIndex = Graphics()->CreateBufferContainer(&m_DefaultTextContainerInfo);
+			if(TextContainer.m_StringInfo.m_QuadBufferContainerIndex == -1)
+			{
+				m_DefaultTextContainerInfo.m_VertBufferBindingIndex = TextContainer.m_StringInfo.m_QuadBufferObjectIndex;
+				TextContainer.m_StringInfo.m_QuadBufferContainerIndex = Graphics()->CreateBufferContainer(&m_DefaultTextContainerInfo);
+			}
 			Graphics()->IndicesNumRequiredNotify(TextContainer.m_StringInfo.m_vCharacterQuads.size() * 6);
 			++m_QmPerfTextContainerUploads;
 			m_QmPerfTextContainerUploadMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - UploadStart).count();
@@ -2420,12 +2522,14 @@ public:
 
 	void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override
 	{
-		const STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
 
 		if(!TextContainer.m_StringInfo.m_vCharacterQuads.empty())
 		{
 			if(Graphics()->IsTextBufferingEnabled())
 			{
+				if(TextContainer.m_StringInfo.m_QuadBufferContainerIndex == -1)
+					UploadTextContainer(TextContainerIndex);
 				Graphics()->TextureClear();
 				// render buffered text
 				Graphics()->RenderText(TextContainer.m_StringInfo.m_QuadBufferContainerIndex, TextContainer.m_StringInfo.m_vCharacterQuads.size(), m_pGlyphMap->TextureDimension(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_FILL).Id(), m_pGlyphMap->Texture(CGlyphMap::FONT_TEXTURE_OUTLINE).Id(), TextColor, TextOutlineColor);
@@ -2488,9 +2592,9 @@ public:
 			if(TextContainer.m_HasCursor)
 			{
 				const auto CurTime = time_get_nanoseconds();
-
+				const bool RenderCursor = TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms;
 				Graphics()->TextureClear();
-				if(TextContainer.m_ForceCursorRendering || (CurTime - m_CursorRenderTime) > 500ms)
+				if(RenderCursor)
 				{
 					Graphics()->SetColor(TextOutlineColor);
 					Graphics()->RenderQuadContainerEx(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 0, 1, 0, 0);

@@ -18,6 +18,33 @@ namespace qm_card_registry
 		Right,
 		Full,
 	};
+	enum class ETClientMainCardsMigrationResult
+	{
+		NOT_LEGACY,
+		PERSIST_FAILED,
+		PERSISTED_DIRTY,
+		MIGRATED,
+	};
+	struct STClientMainCardsMigrationCommitPlan
+	{
+		bool m_PersistSerialized = false;
+		bool m_AdvanceVersion = false;
+	};
+	constexpr STClientMainCardsMigrationCommitPlan TClientMainCardsMigrationCommitPlan(const ETClientMainCardsMigrationResult Result)
+	{
+		switch(Result)
+		{
+		case ETClientMainCardsMigrationResult::NOT_LEGACY:
+			return {false, true};
+		case ETClientMainCardsMigrationResult::PERSIST_FAILED:
+			return {false, false};
+		case ETClientMainCardsMigrationResult::PERSISTED_DIRTY:
+			return {true, true};
+		case ETClientMainCardsMigrationResult::MIGRATED:
+			return {true, true};
+		}
+		return {};
+	}
 
 	struct SCardDefault
 	{
@@ -61,6 +88,9 @@ namespace qm_card_registry
 
 	// 构建完整默认全局模型 entries（从注册表派生），供首次迁移和缺失卡补位复用。
 	std::vector<qm_card_order::SEntry> BuildDefaultEntries();
+	bool IsTClientMainCardsLegacyLeft(const qm_card_order::CModel &Model);
+	bool MoveTClientMainCardsToAlternatingColumns(qm_card_order::CModel &Model);
+	ETClientMainCardsMigrationResult MigrateTClientMainCardsToAlternatingColumns(qm_card_order::CModel &Model, char *pSerialized, int SerializedSize);
 
 	// 从单一注册表构建本地化搜索视图，并以当前 model placement 返回导航 tab。
 	std::vector<SCardSearchResult> SearchCards(const char *pQuery, const qm_card_order::CModel &Model);

@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from qmclient_scripts.gate.check_settings_ui_migration import _find_legacy_color_picker_geometry, _find_raw_font_literals, _find_rect_derived_font_arguments, _find_rect_derived_font_assignments, PAGE_STABLE_IDS, PRODUCER_COMPLETE_PAGES, audit_page, audit_shared_contracts
+from qmclient_scripts.gate.check_settings_ui_migration import _contains_forbidden_token, _find_legacy_color_picker_geometry, _find_raw_font_literals, _find_rect_derived_font_arguments, _find_rect_derived_font_assignments, PAGE_STABLE_IDS, PRODUCER_COMPLETE_PAGES, audit_page, audit_shared_contracts
 
 
 class SettingsUiMigrationAuditTest(unittest.TestCase):
@@ -103,6 +103,12 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 
 	def test_clean_page_passes(self):
 		self.assertEqual(audit_page(self.make_repo(), "general"), [])
+
+	def test_sdf_backed_edit_box_requires_the_explicit_tee_allowlist(self):
+		allowed = "Ui()->DoEditBox(&ColorCodeInput, &ColorCodeEditBox, std::max(10.0f, BodySize * 0.85f), IGraphics::CORNER_ALL, {}, TEXTALIGN_MC)"
+		self.assertFalse(_contains_forbidden_token("tee", allowed, "Ui()->DoEditBox("))
+		self.assertTrue(_contains_forbidden_token("tee", "Ui()->DoEditBox(&OtherInput, &OtherRect, 10.0f)", "Ui()->DoEditBox("))
+		self.assertTrue(_contains_forbidden_token("general", allowed, "Ui()->DoEditBox("))
 
 	def test_missing_public_contract_fails(self):
 		errors = audit_page(self.make_repo(drop="SettingsCardDeckForRenderPass().RenderCached("), "general")

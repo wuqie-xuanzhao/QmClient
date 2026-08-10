@@ -35,6 +35,8 @@
 #include "components/qmclient/jelly_tee.h"
 #include "components/qmclient/modes.h"
 #include "components/qmclient/perf_logging.h"
+#include "components/qmclient/qmclient_utils.h"
+#include "components/qmclient/translate/translate_ui_settings.h"
 #include "components/race_demo.h"
 #include "components/scoreboard.h"
 #include "components/settings_resource_jobs.h"
@@ -111,6 +113,34 @@ namespace
 		QmPerfLogPayload("perf/settings-warmup", aPayload, pClient, "settings:tee");
 	}
 
+	void LogQmIconDiagnostics(const SQmIconDiagnostics &Diagnostics, const IClient *pClient)
+	{
+		if(!QmPerfEnabled())
+			return;
+		char aPayload[1024];
+		str_format(aPayload, sizeof(aPayload), "event=icon_frame alpha_draws=%" PRIu64 " msdf_draws=%" PRIu64 " msdf_manager_call_run_max=%" PRIu64 " msdf_manager_call_run_1=%" PRIu64 " msdf_manager_call_run_2=%" PRIu64 " msdf_manager_call_run_3_4=%" PRIu64 " msdf_manager_call_run_5_8=%" PRIu64 " msdf_manager_call_run_9_16=%" PRIu64 " msdf_manager_call_run_17_32=%" PRIu64 " msdf_manager_call_run_33_64=%" PRIu64 " msdf_manager_call_run_65_plus=%" PRIu64 " reload_attempts=%" PRIu64 " reload_successes=%" PRIu64 " msdf_probe_attempts=%" PRIu64 " msdf_probe_successes=%" PRIu64 " atlas_swaps=%" PRIu64 " texture_load_successes=%" PRIu64 " texture_load_failures=%" PRIu64 " texture_unloads=%" PRIu64,
+			Diagnostics.m_AlphaIconDraws,
+			Diagnostics.m_MsdfIconDraws,
+			Diagnostics.m_MaxMsdfManagerCallRun,
+			Diagnostics.m_MsdfManagerCallRunBuckets[0],
+			Diagnostics.m_MsdfManagerCallRunBuckets[1],
+			Diagnostics.m_MsdfManagerCallRunBuckets[2],
+			Diagnostics.m_MsdfManagerCallRunBuckets[3],
+			Diagnostics.m_MsdfManagerCallRunBuckets[4],
+			Diagnostics.m_MsdfManagerCallRunBuckets[5],
+			Diagnostics.m_MsdfManagerCallRunBuckets[6],
+			Diagnostics.m_MsdfManagerCallRunBuckets[7],
+			Diagnostics.m_ReloadAttempts,
+			Diagnostics.m_ReloadSuccesses,
+			Diagnostics.m_MsdfProbes,
+			Diagnostics.m_MsdfProbeSuccesses,
+			Diagnostics.m_AtlasSwaps,
+			Diagnostics.m_TextureLoads,
+			Diagnostics.m_TextureLoadFailures,
+			Diagnostics.m_TextureUnloads);
+		QmPerfLogPayload("perf/icons", aPayload, pClient);
+	}
+
 } // namespace
 #include <generated/protocol.h>
 #include <generated/protocol7.h>
@@ -127,57 +157,6 @@ namespace
 namespace
 {
 	constexpr int DEMO_INPUT_KEY_STATE_SIZE = KEY_LAST / 8;
-
-	float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)
-	{
-		if(pGameClient == nullptr || Owner < 0 || Owner >= MAX_CLIENTS)
-			return 1.0f;
-		return pGameClient->LiveObserverClientAlpha(Owner);
-	}
-
-	int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)
-	{
-		if(pGameClient == nullptr)
-			return -1;
-		constexpr float OwnerRadius = 96.0f;
-		int BestClient = -1;
-		float BestDistance = OwnerRadius;
-		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
-		{
-			if(pGameClient->m_Snap.m_aCharacters[ClientId].m_Active == 0)
-				continue;
-			const vec2 ClientPos = vec2(pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
-			const float Dist = distance(ClientPos, Pos);
-			if(Dist < BestDistance)
-			{
-				BestDistance = Dist;
-				BestClient = ClientId;
-			}
-		}
-		return BestClient;
-	}
-
-	int QmInferHammerHitOwner(CGameClient *pGameClient, vec2 Pos)
-	{
-		if(pGameClient == nullptr)
-			return -1;
-		constexpr float OwnerRadius = 120.0f;
-		int BestClient = -1;
-		float BestDistance = OwnerRadius;
-		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
-		{
-			if(pGameClient->m_Snap.m_aCharacters[ClientId].m_Active == 0)
-				continue;
-			const vec2 ClientPos = vec2(pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
-			const float Dist = distance(ClientPos, Pos);
-			if(Dist < BestDistance)
-			{
-				BestDistance = Dist;
-				BestClient = ClientId;
-			}
-		}
-		return BestClient;
-	}
 
 #if defined(CONF_QM_LIVE_CLIENT)
 	constexpr float LIVE_OBSERVER_UI_HEIGHT = 1200.0f;
@@ -227,6 +206,227 @@ namespace
 	void LogPerfStage(const CGameClient *pGameClient, const char *pStage, const double DurationMs, const bool Force = false, const char *pExtra = nullptr)
 	{
 		QmPerfLogStage("perf/gameclient", pStage, DurationMs, Force, pGameClient != nullptr ? pGameClient->Client() : nullptr, nullptr, nullptr, pExtra);
+	}
+
+	bool IsQmStutterFeatureConfigName(const char *pName)
+	{
+		return str_startswith(pName, "qm_") != nullptr ||
+		       str_startswith(pName, "tc_") != nullptr ||
+		       str_startswith(pName, "cl_") != nullptr;
+	}
+
+	void CollectQmStutterFeatureConfig(const SConfigVariable *pVariable, void *pUserData)
+	{
+		if(pVariable == nullptr || pVariable->m_Type != SConfigVariable::VAR_INT || !IsQmStutterFeatureConfigName(pVariable->m_pScriptName))
+			return;
+		const SIntConfigVariable *pIntVariable = static_cast<const SIntConfigVariable *>(pVariable);
+		if(pIntVariable->m_Max <= 0 || pIntVariable->m_Min != 0 || *pIntVariable->m_pVariable == 0)
+			return;
+		auto *pSnapshot = static_cast<std::vector<std::pair<std::string, int>> *>(pUserData);
+		pSnapshot->emplace_back(pVariable->m_pScriptName, *pIntVariable->m_pVariable);
+	}
+
+	int QmLocalReferenceClientId(const CGameClient *pGameClient)
+	{
+		const int LocalId = pGameClient->m_aLocalIds[g_Config.m_ClDummy];
+		if(LocalId >= 0 && LocalId < MAX_CLIENTS)
+			return LocalId;
+		const int MainLocalId = pGameClient->m_aLocalIds[0];
+		return MainLocalId >= 0 && MainLocalId < MAX_CLIENTS ? MainLocalId : -1;
+	}
+
+	bool QmCachedOtherTeam(const CGameClient *pGameClient, int ClientId)
+	{
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+			return false;
+
+		const int LocalId = QmLocalReferenceClientId(pGameClient);
+		if(LocalId < 0 || LocalId >= MAX_CLIENTS)
+			return false;
+		if(pGameClient->m_aClients[LocalId].m_Team == TEAM_SPECTATORS)
+			return false;
+
+		const bool Local = LocalId == ClientId;
+		if((pGameClient->m_aClients[LocalId].m_Solo || pGameClient->m_aClients[ClientId].m_Solo) && !Local)
+			return true;
+
+		if(pGameClient->m_Teams.Team(ClientId) == TEAM_SUPER || pGameClient->m_Teams.Team(LocalId) == TEAM_SUPER)
+			return false;
+
+		return pGameClient->m_Teams.Team(ClientId) != pGameClient->m_Teams.Team(LocalId);
+	}
+
+	float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)
+	{
+		if(Owner < 0 || Owner >= MAX_CLIENTS)
+			return 1.0f;
+
+		float Alpha = pGameClient->LiveObserverClientAlpha(Owner);
+		if(Alpha >= 1.0f && QmCachedOtherTeam(pGameClient, Owner))
+			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+		return Alpha;
+	}
+
+	void QmAddUniqueOwnerCandidate(int &Owner, bool &Ambiguous, int Candidate)
+	{
+		if(Candidate < 0 || Candidate >= MAX_CLIENTS || Ambiguous)
+			return;
+
+		if(Owner < 0)
+			Owner = Candidate;
+		else if(Owner != Candidate)
+			Ambiguous = true;
+	}
+
+	float QmDistancePointSegment(vec2 Pos, vec2 From, vec2 To)
+	{
+		const vec2 Segment = To - From;
+		const float SegmentLengthSquared = length_squared(Segment);
+		if(SegmentLengthSquared <= 0.000001f)
+			return distance(Pos, From);
+
+		const float Progress = std::clamp(dot(Pos - From, Segment) / SegmentLengthSquared, 0.0f, 1.0f);
+		return distance(Pos, From + Segment * Progress);
+	}
+
+	bool QmProjectileMotion(const CProjectileData &Projectile, const CTuningParams *pTuning, float &Curvature, float &Speed)
+	{
+		if(Projectile.m_Type == WEAPON_GRENADE)
+		{
+			Curvature = pTuning->m_GrenadeCurvature;
+			Speed = pTuning->m_GrenadeSpeed;
+			return true;
+		}
+		if(Projectile.m_Type == WEAPON_SHOTGUN)
+		{
+			Curvature = pTuning->m_ShotgunCurvature;
+			Speed = pTuning->m_ShotgunSpeed;
+			return true;
+		}
+		if(Projectile.m_Type == WEAPON_GUN)
+		{
+			Curvature = pTuning->m_GunCurvature;
+			Speed = pTuning->m_GunSpeed;
+			return true;
+		}
+		return false;
+	}
+
+	void QmAddExplosionProjectileCandidate(CGameClient *pGameClient, int &Owner, bool &Ambiguous, const CProjectileData &Projectile, vec2 Pos)
+	{
+		if(!Projectile.m_ExtraInfo || !Projectile.m_Explosive || Projectile.m_Owner < 0 || Projectile.m_Owner >= MAX_CLIENTS)
+			return;
+
+		float Curvature = 0.0f;
+		float Speed = 0.0f;
+		const int TuneZone = std::clamp(Projectile.m_TuneZone, 0, NUM_TUNEZONES - 1);
+		if(!QmProjectileMotion(Projectile, pGameClient->GetTuning(TuneZone), Curvature, Speed))
+			return;
+
+		const float FromTime = std::max(0.0f, (pGameClient->Client()->PrevGameTick(g_Config.m_ClDummy) - Projectile.m_StartTick) / (float)pGameClient->Client()->GameTickSpeed());
+		const float ToTime = std::max(0.0f, (pGameClient->Client()->GameTick(g_Config.m_ClDummy) - Projectile.m_StartTick) / (float)pGameClient->Client()->GameTickSpeed());
+		if(ToTime <= 0.0f && Projectile.m_StartTick > pGameClient->Client()->GameTick(g_Config.m_ClDummy))
+			return;
+
+		const vec2 From = CalcPos(Projectile.m_StartPos, Projectile.m_StartVel, Curvature, Speed, FromTime);
+		const vec2 To = CalcPos(Projectile.m_StartPos, Projectile.m_StartVel, Curvature, Speed, ToTime);
+		constexpr float MaxExplosionOwnerDistance = 96.0f;
+		if(QmDistancePointSegment(Pos, From, To) <= MaxExplosionOwnerDistance)
+			QmAddUniqueOwnerCandidate(Owner, Ambiguous, Projectile.m_Owner);
+	}
+
+	void QmAddExplosionWorldCandidates(CGameClient *pGameClient, CGameWorld &World, int &Owner, bool &Ambiguous, vec2 Pos)
+	{
+		for(CProjectile *pProj = static_cast<CProjectile *>(World.FindFirst(CGameWorld::ENTTYPE_PROJECTILE)); pProj; pProj = static_cast<CProjectile *>(pProj->TypeNext()))
+		{
+			const CProjectileData Projectile = pProj->GetData();
+			QmAddExplosionProjectileCandidate(pGameClient, Owner, Ambiguous, Projectile, Pos);
+		}
+	}
+
+	bool QmIsProjectileSnapType(int Type)
+	{
+		return Type == NETOBJTYPE_PROJECTILE || Type == NETOBJTYPE_DDRACEPROJECTILE || Type == NETOBJTYPE_DDNETPROJECTILE;
+	}
+
+	int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)
+	{
+		int Owner = -1;
+		bool Ambiguous = false;
+
+		for(const CSnapEntities &Ent : pGameClient->SnapEntities())
+		{
+			if(!QmIsProjectileSnapType(Ent.m_Item.m_Type))
+				continue;
+			const CProjectileData Projectile = ExtractProjectileInfo(Ent.m_Item.m_Type, Ent.m_Item.m_pData, &pGameClient->m_GameWorld, Ent.m_pDataEx);
+			QmAddExplosionProjectileCandidate(pGameClient, Owner, Ambiguous, Projectile, Pos);
+		}
+
+		QmAddExplosionWorldCandidates(pGameClient, pGameClient->m_GameWorld, Owner, Ambiguous, Pos);
+		QmAddExplosionWorldCandidates(pGameClient, pGameClient->m_PredictedWorld, Owner, Ambiguous, Pos);
+		QmAddExplosionWorldCandidates(pGameClient, pGameClient->m_PrevPredictedWorld, Owner, Ambiguous, Pos);
+
+		return Ambiguous ? -1 : Owner;
+	}
+
+	void QmAddHammerAttackSample(
+		SQmHammerAttackSample *pSamples,
+		int &NumSamples,
+		int MaxSamples,
+		int ClientId,
+		const CNetObj_Character *pCurrent,
+		const CNetObj_Character *pPrevious,
+		bool HammerHitEnabled,
+		int DDTeam,
+		bool Solo,
+		bool Super)
+	{
+		if(pCurrent == nullptr || NumSamples >= MaxSamples)
+			return;
+		SQmHammerAttackSample &Sample = pSamples[NumSamples++];
+		Sample.m_ClientId = ClientId;
+		Sample.m_AttackTick = pCurrent->m_AttackTick;
+		Sample.m_Weapon = pCurrent->m_Weapon;
+		Sample.m_HammerHitEnabled = HammerHitEnabled;
+		Sample.m_PrevPos = pPrevious != nullptr ? vec2(pPrevious->m_X, pPrevious->m_Y) : vec2(pCurrent->m_X, pCurrent->m_Y);
+		Sample.m_CurPos = vec2(pCurrent->m_X, pCurrent->m_Y);
+		Sample.m_Direction = direction(pCurrent->m_Angle / 256.0f);
+		Sample.m_ProximityRadius = CCharacterCore::PhysicalSize();
+		Sample.m_DDTeam = DDTeam;
+		Sample.m_Solo = Solo;
+		Sample.m_Super = Super;
+	}
+
+	SQmHammerHitMatch QmInferHammerHit(CGameClient *pGameClient, vec2 Pos, int EventTick)
+	{
+		SQmHammerAttackSample aAttackSamples[MAX_CLIENTS];
+		SQmHammerTargetSample aTargetSamples[MAX_CLIENTS];
+		int NumAttackSamples = 0;
+		int NumTargetSamples = 0;
+		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+		{
+			const auto *pCurrent = static_cast<const CNetObj_Character *>(pGameClient->Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_CHARACTER, ClientId));
+			const auto *pPrevious = static_cast<const CNetObj_Character *>(pGameClient->Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, ClientId));
+			const CGameClient::CSnapState::CCharacterInfo &Character = pGameClient->m_Snap.m_aCharacters[ClientId];
+			const int CharacterFlags = Character.m_HasExtendedData ? Character.m_ExtendedData.m_Flags : 0;
+			const bool HammerHitEnabled = (CharacterFlags & CHARACTERFLAG_HAMMER_HIT_DISABLED) == 0;
+			const int DDTeam = pGameClient->m_Teams.Team(ClientId);
+			const bool Solo = (CharacterFlags & CHARACTERFLAG_SOLO) != 0;
+			const bool Super = (CharacterFlags & CHARACTERFLAG_SUPER) != 0 || QmIsHammerSuperTeam(DDTeam, pGameClient->m_Teams.m_IsDDRace16);
+			QmAddHammerAttackSample(aAttackSamples, NumAttackSamples, std::size(aAttackSamples), ClientId, pCurrent, pPrevious, HammerHitEnabled, DDTeam, Solo, Super);
+			if((pCurrent == nullptr && pPrevious == nullptr) || NumTargetSamples >= MAX_CLIENTS)
+				continue;
+			SQmHammerTargetSample &Target = aTargetSamples[NumTargetSamples++];
+			Target.m_ClientId = ClientId;
+			Target.m_PrevPos = pPrevious != nullptr ? vec2(pPrevious->m_X, pPrevious->m_Y) : vec2(pCurrent->m_X, pCurrent->m_Y);
+			Target.m_CurPos = pCurrent != nullptr ? vec2(pCurrent->m_X, pCurrent->m_Y) : Target.m_PrevPos;
+			Target.m_ProximityRadius = CCharacterCore::PhysicalSize();
+			Target.m_DDTeam = DDTeam;
+			Target.m_Solo = Solo;
+			Target.m_Super = Super;
+		}
+
+		return QmMatchHammerHitEvent(Pos, EventTick, aAttackSamples, NumAttackSamples, aTargetSamples, NumTargetSamples);
 	}
 
 	void SetDemoInputKeyState(unsigned char *pKeyStates, int Key, bool Pressed)
@@ -636,6 +836,33 @@ static void MigrateJumpHintConfig()
 	MigrateInt(g_Config.m_QmJumpHintSize, g_Config.m_TcJumpHintSizeLegacy, DefaultConfig::QmJumpHintSize, DefaultConfig::TcJumpHintSizeLegacy);
 }
 
+// CFGFLAG_COLALPHA 将这组设置从六位 RGB 改为八位 ARGB。
+// 对已保存的 RGB 值仅迁移一次，恢复各自声明的默认 alpha。
+static void MigrateTranslateUiColorAlphaConfig(const IConfigManager *pConfigManager)
+{
+	bool Migrated = g_Config.m_QmTranslateColorAlphaMigrated != 0;
+	const auto InputAlphaMode = [pConfigManager](const char *pScriptName) {
+		return pConfigManager != nullptr ? pConfigManager->ColorValueInputAlphaMode(pScriptName) : EColorInputAlphaMode::PACKED;
+	};
+	NTranslateUiSettings::MigrateLegacyColorAlphas(Migrated,
+		g_Config.m_QmTranslateBtnColorDisabled,
+		g_Config.m_QmTranslateBtnColorEnabled,
+		g_Config.m_QmTranslateMenuBgColor,
+		g_Config.m_QmTranslateMenuOptionSelected,
+		g_Config.m_QmTranslateMenuOptionNormal,
+		DefaultConfig::QmTranslateBtnColorDisabled,
+		DefaultConfig::QmTranslateBtnColorEnabled,
+		DefaultConfig::QmTranslateMenuBgColor,
+		DefaultConfig::QmTranslateMenuOptionSelected,
+		DefaultConfig::QmTranslateMenuOptionNormal,
+		InputAlphaMode("qm_translate_btn_color_disabled"),
+		InputAlphaMode("qm_translate_btn_color_enabled"),
+		InputAlphaMode("qm_translate_menu_bg_color"),
+		InputAlphaMode("qm_translate_menu_option_selected"),
+		InputAlphaMode("qm_translate_menu_option_normal"));
+	g_Config.m_QmTranslateColorAlphaMigrated = Migrated ? 1 : 0;
+}
+
 static void GenerateTimeoutCode(char *pTimeoutCode)
 {
 	if(pTimeoutCode[0] == '\0' || str_comp(pTimeoutCode, "hGuEYnfxicsXGwFq") == 0)
@@ -671,6 +898,7 @@ void CGameClient::OnInit()
 
 	// Migrate legacy tc_jump_hint_text into qm_jump_hint_text before any HUD use.
 	MigrateJumpHintConfig();
+	MigrateTranslateUiColorAlphaConfig(ConfigManager());
 
 	// Initialize config tags system
 	InitConfigTags();
@@ -723,6 +951,7 @@ void CGameClient::OnInit()
 	m_RenderTools.Init(Graphics(), TextRender(), this); // TClient
 	m_RenderMap.Init(Graphics(), TextRender());
 	m_QmIconManager.Init(Graphics(), Storage(), Console());
+	m_AppliedQmUiIconWeight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
 
 	if(GIT_SHORTREV_HASH)
 	{
@@ -890,6 +1119,11 @@ void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoading
 
 void CGameClient::OnUpdate()
 {
+	// Vulkan swapchain 重建在渲染线程执行，能力状态可能晚于窗口 resize 回调变化。
+	// 这里仅在 DPI、图标配置或 MSDF capability 变化时重载 atlas。
+	SyncQmUiIconWeight();
+	m_QmIconManager.RefreshForCurrentDpi();
+
 	const bool TeeSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_TEE;
 	const bool AssetsSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_ASSETS;
 	m_Skins.PrepareSettingsThroughputForFrame();
@@ -899,8 +1133,13 @@ void CGameClient::OnUpdate()
 	m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, AssetsSettingsActive, FrameSkinUploadBudget);
 
 	HandleLanguageChanged();
+	RefreshStreamerSkinPrivacyAfterStateChange();
 
 	CUIElementBase::Init(Ui()); // update static pointer because game and editor use separate UI
+
+#if defined(CONF_QM_LIVE_CLIENT)
+	UpdateLiveObserverMouseMode();
+#endif
 
 	// handle mouse movement
 	float x = 0.0f, y = 0.0f;
@@ -962,6 +1201,41 @@ void CGameClient::OnUpdate()
 	RecordDemoHudState(false);
 	RecordDemoInputState(false);
 	RecordDemoInputWheelEvent();
+}
+
+void CGameClient::SyncQmUiIconWeight()
+{
+	const int Weight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
+	if(m_AppliedQmUiIconWeight == Weight)
+		return;
+
+	m_AppliedQmUiIconWeight = Weight;
+	TextRender()->SetIconFontWeight(QmIconWeightUsesBoldFontFallback(Weight));
+	m_QmIconManager.RefreshForCurrentDpi();
+	OnWindowResize();
+}
+
+void CGameClient::RefreshStreamerSkinPrivacyAfterStateChange()
+{
+	const uint64_t FriendsRevision = Friends() != nullptr ? Friends()->Revision() : 0;
+	if(m_LastStreamerHideSkins == g_Config.m_QmStreamerHideSkins &&
+		m_LastStreamerFriendsIgnoreClan == g_Config.m_ClFriendsIgnoreClan &&
+		m_aLastStreamerLocalIds[0] == m_aLocalIds[0] &&
+		m_aLastStreamerLocalIds[1] == m_aLocalIds[1] &&
+		m_LastStreamerFriendsRevision == FriendsRevision)
+		return;
+	m_LastStreamerHideSkins = g_Config.m_QmStreamerHideSkins;
+	m_LastStreamerFriendsIgnoreClan = g_Config.m_ClFriendsIgnoreClan;
+	std::copy(std::begin(m_aLocalIds), std::end(m_aLocalIds), std::begin(m_aLastStreamerLocalIds));
+	m_LastStreamerFriendsRevision = FriendsRevision;
+	for(CClientData &ClientData : m_aClients)
+	{
+		if(!ClientData.m_Active)
+			continue;
+		ClientData.m_Friend = !IsLocalClientId(ClientData.m_ClientId) && Friends() != nullptr && Friends()->IsFriend(ClientData.m_aName, ClientData.m_aClan, true);
+		if(ClientData.m_pSkinInfo != nullptr)
+			ClientData.UpdateRenderInfo();
+	}
 }
 
 int CGameClient::RenderThrottleRefreshRate() const
@@ -1131,8 +1405,13 @@ int CGameClient::OnSnapInput(int *pData, bool Dummy, bool Force)
 	if(!Dummy)
 	{
 		const int Size = m_Controls.SnapInput(pData);
+#if defined(CONF_QM_LIVE_CLIENT)
+		SanitizeLiveCompatInput(pData, Size);
+#endif
 		return Size;
 	}
+	if(LivePresentationUsesOnlineDirector())
+		return 0;
 	if(m_aLocalIds[!g_Config.m_ClDummy] < 0)
 	{
 		return 0;
@@ -1370,6 +1649,9 @@ void CGameClient::OnReset()
 	std::fill(std::begin(m_aQ1menGSyncFootParticlesEnabled), std::end(m_aQ1menGSyncFootParticlesEnabled), false);
 	std::fill(std::begin(m_aQ1menGSyncRemoteParticlesEnabled), std::end(m_aQ1menGSyncRemoteParticlesEnabled), false);
 	std::fill(std::begin(m_aQmVoiceSyncMarkUntil), std::end(m_aQmVoiceSyncMarkUntil), 0);
+	std::fill(std::begin(m_aQmDeveloperMarkUntil), std::end(m_aQmDeveloperMarkUntil), 0);
+	std::fill(std::begin(m_aQmDeveloperRainbow), std::end(m_aQmDeveloperRainbow), false);
+	mem_zero(m_aaQmDeveloperMarkName, sizeof(m_aaQmDeveloperMarkName));
 
 	m_PredictedDummyId = -1;
 	m_IsDummySwapping = false;
@@ -1409,6 +1691,46 @@ void CGameClient::OnReset()
 	std::fill(std::begin(m_MultiView.m_aLastFreeze), std::end(m_MultiView.m_aLastFreeze), 0.0f);
 	std::fill(std::begin(m_MultiView.m_aVanish), std::end(m_MultiView.m_aVanish), false);
 
+#if defined(CONF_QM_LIVE_CLIENT)
+	m_LiveDirector.Reset();
+	ResetLiveFinishRanking();
+	m_LiveMatchReplay.Reset();
+	m_LiveReplayBuffer.SetMaxFrames(Client()->GameTickSpeed() * 10);
+	m_LiveReplayBuffer.Clear();
+	m_LiveTeamRenderFilter.Reset();
+	m_QmLiveDemoSidecar = {};
+	m_aQmLiveDemoTeams.fill(TEAM_FLOCK);
+	m_vLiveReplayScratch.clear();
+	m_aQmLiveDemoSidecarPath[0] = '\0';
+	m_LiveObserverCurrentTeam = -1;
+	m_LiveObserverReturnTeam = -1;
+	m_LiveObserverFollowClientId = SPEC_FREEVIEW;
+	m_LiveObserverExpandedTeam = -1;
+	m_QmLiveDemoLastTick = -1;
+	m_QmLiveDemoWantedTeam = -1;
+	m_QmLiveDemoFilterTeam = -1;
+	m_QmLiveDemoFollowClientId = SPEC_FREEVIEW;
+	m_QmLiveDemoSavedCurrentTeam = -1;
+	m_QmLiveDemoSavedReturnTeam = -1;
+	m_QmLiveDemoSavedFollowClientId = SPEC_FREEVIEW;
+	m_QmLiveDemoSavedExpandedTeam = -1;
+	m_LiveObserverLastMousePos = vec2(0.0f, 0.0f);
+	m_LiveCompatLastSpectatorRequestTime = 0;
+	m_LiveObserverPanelScroll = 0.0f;
+	m_QmLiveDemoSavedPanelScroll = 0.0f;
+	m_LiveObserverMouseAbsolute = false;
+	m_LiveObserverFreeview = false;
+	m_LiveObserverHoldFreeview = false;
+	m_QmLiveDemoSidecarLoadAttempted = false;
+	m_QmLiveDemoSidecarValid = false;
+	m_QmLiveDemoManualFollow = false;
+	m_QmLiveDemoSavedObserverState = false;
+	m_QmLiveDemoSavedFreeview = true;
+	m_QmLiveDemoSavedHoldFreeview = false;
+	m_LiveTeamFilterResetSerial = 0;
+	Input()->MouseModeRelative();
+#endif
+
 	m_CursorInfo.m_CursorOwnerId = -1;
 	m_CursorInfo.m_NumSamples = 0;
 
@@ -1429,6 +1751,1555 @@ void CGameClient::OnReset()
 	Collision()->Unload();
 	Layers()->Unload();
 }
+
+bool CGameClient::LivePresentationUsesLiveObserverOverlay() const
+{
+	const EQmLivePresentationMode Mode = LivePresentationMode();
+	return Mode == EQmLivePresentationMode::LIVE_OBSERVER || Mode == EQmLivePresentationMode::QMLIVE_DEMO;
+}
+
+bool CGameClient::LivePresentationUsesQmLiveDemo() const
+{
+	return LivePresentationMode() == EQmLivePresentationMode::QMLIVE_DEMO;
+}
+
+bool CGameClient::LivePresentationUsesOnlineDirector() const
+{
+	return LivePresentationMode() == EQmLivePresentationMode::LIVE_OBSERVER;
+}
+
+#if defined(CONF_QM_LIVE_CLIENT)
+void CGameClient::SaveLiveObserverStateForQmLiveDemo()
+{
+	if(m_QmLiveDemoSavedObserverState)
+		return;
+	m_QmLiveDemoSavedCurrentTeam = m_LiveObserverCurrentTeam;
+	m_QmLiveDemoSavedReturnTeam = m_LiveObserverReturnTeam;
+	m_QmLiveDemoSavedFollowClientId = m_LiveObserverFollowClientId;
+	m_QmLiveDemoSavedExpandedTeam = m_LiveObserverExpandedTeam;
+	m_QmLiveDemoSavedPanelScroll = m_LiveObserverPanelScroll;
+	m_QmLiveDemoSavedFreeview = m_LiveObserverFreeview;
+	m_QmLiveDemoSavedHoldFreeview = m_LiveObserverHoldFreeview;
+	m_QmLiveDemoSavedObserverState = true;
+}
+
+void CGameClient::RestoreLiveObserverStateAfterQmLiveDemo()
+{
+	if(!m_QmLiveDemoSavedObserverState)
+		return;
+	m_LiveObserverCurrentTeam = m_QmLiveDemoSavedCurrentTeam;
+	m_LiveObserverReturnTeam = m_QmLiveDemoSavedReturnTeam;
+	m_LiveObserverFollowClientId = m_QmLiveDemoSavedFollowClientId;
+	m_LiveObserverExpandedTeam = m_QmLiveDemoSavedExpandedTeam;
+	m_LiveObserverPanelScroll = m_QmLiveDemoSavedPanelScroll;
+	m_LiveObserverFreeview = m_QmLiveDemoSavedFreeview;
+	m_LiveObserverHoldFreeview = m_QmLiveDemoSavedHoldFreeview;
+	m_QmLiveDemoSavedObserverState = false;
+}
+
+void CGameClient::ResetQmLiveDemoPlaybackState()
+{
+	RestoreLiveObserverStateAfterQmLiveDemo();
+	m_QmLiveDemoSidecar = {};
+	m_aQmLiveDemoTeams.fill(TEAM_FLOCK);
+	m_aQmLiveDemoSidecarPath[0] = '\0';
+	m_QmLiveDemoSidecarLoadAttempted = false;
+	m_QmLiveDemoSidecarValid = false;
+	m_QmLiveDemoLastTick = -1;
+	m_QmLiveDemoWantedTeam = -1;
+	m_QmLiveDemoFilterTeam = -1;
+	m_QmLiveDemoFollowClientId = SPEC_FREEVIEW;
+	m_QmLiveDemoManualFollow = false;
+	ResetLiveFinishRanking();
+	if(m_DemoSpecId != SPEC_FOLLOW)
+		m_DemoSpecId = SPEC_FOLLOW;
+}
+
+int CGameClient::QmLiveDemoPlaybackTick() const
+{
+	if(DemoPlayer() != nullptr && DemoPlayer()->BaseInfo() != nullptr)
+		return DemoPlayer()->BaseInfo()->m_CurrentTick;
+	return Client()->GameTick(g_Config.m_ClDummy);
+}
+
+bool CGameClient::TryLoadQmLiveDemoSidecar()
+{
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK || DemoPlayer() == nullptr)
+		return false;
+	if(m_QmLiveDemoSidecarLoadAttempted)
+		return m_QmLiveDemoSidecarValid;
+
+	const char *pDemoFilename = DemoPlayer()->Filename();
+	if(pDemoFilename == nullptr || pDemoFilename[0] == '\0' || Client()->GetCurrentMap()[0] == '\0')
+		return false;
+
+	m_QmLiveDemoSidecarLoadAttempted = true;
+	m_QmLiveDemoSidecarValid = false;
+	m_aQmLiveDemoSidecarPath[0] = '\0';
+	m_QmLiveDemoSidecar = {};
+
+	char aSidecarPath[IO_MAX_PATH_LENGTH];
+	if(!CLiveReplaySidecar::SidecarPathForDemo(pDemoFilename, aSidecarPath, sizeof(aSidecarPath)))
+		return false;
+
+	char *pFileData = Storage()->ReadFileStr(aSidecarPath, IStorage::TYPE_ALL_OR_ABSOLUTE);
+	if(pFileData == nullptr)
+	{
+		dbg_msg("qmlive_demo", "no QmLive replay sidecar found at '%s' for demo '%s'; using normal demo playback", aSidecarPath, pDemoFilename);
+		return false;
+	}
+
+	SLiveReplaySidecarData Sidecar;
+	char aError[128];
+	const bool Parsed = CLiveReplaySidecar::LoadFromString(pFileData, Sidecar, aError, sizeof(aError));
+	free(pFileData);
+	if(!Parsed)
+	{
+		dbg_msg("qmlive_demo", "ignored invalid QmLive replay sidecar '%s': %s; using normal demo playback", aSidecarPath, aError);
+		return false;
+	}
+	if(!CLiveReplaySidecar::MatchesDemo(Sidecar, pDemoFilename, Client()->GetCurrentMap(), Client()->GetCurrentMapSha256(), Client()->GetCurrentMapCrc()))
+	{
+		dbg_msg("qmlive_demo", "ignored non-matching QmLive replay sidecar '%s' for demo '%s'; using normal demo playback", aSidecarPath, pDemoFilename);
+		return false;
+	}
+
+	std::stable_sort(Sidecar.m_vTeamEvents.begin(), Sidecar.m_vTeamEvents.end(), [](const SLiveReplayTeamEvent &Left, const SLiveReplayTeamEvent &Right) {
+		if(Left.m_Tick != Right.m_Tick)
+			return Left.m_Tick < Right.m_Tick;
+		return Left.m_ClientId < Right.m_ClientId;
+	});
+	std::stable_sort(Sidecar.m_vFinishEvents.begin(), Sidecar.m_vFinishEvents.end(), [](const SLiveReplayFinishEvent &Left, const SLiveReplayFinishEvent &Right) {
+		if(Left.m_Tick != Right.m_Tick)
+			return Left.m_Tick < Right.m_Tick;
+		return Left.m_Team < Right.m_Team;
+	});
+
+	SaveLiveObserverStateForQmLiveDemo();
+	m_QmLiveDemoSidecar = std::move(Sidecar);
+	str_copy(m_aQmLiveDemoSidecarPath, aSidecarPath, sizeof(m_aQmLiveDemoSidecarPath));
+	m_QmLiveDemoSidecarValid = true;
+	m_QmLiveDemoLastTick = -1;
+	m_QmLiveDemoWantedTeam = -1;
+	m_QmLiveDemoFilterTeam = -1;
+	m_QmLiveDemoFollowClientId = SPEC_FREEVIEW;
+	m_QmLiveDemoManualFollow = false;
+	m_DemoSpecId = SPEC_FOLLOW;
+	dbg_msg("qmlive_demo", "enabled QmLive replay presentation from sidecar '%s'", aSidecarPath);
+	return true;
+}
+
+void CGameClient::RebuildQmLiveDemoTeams(int CurrentTick)
+{
+	m_aQmLiveDemoTeams.fill(TEAM_FLOCK);
+	for(const SLiveReplayTeamEvent &Event : m_QmLiveDemoSidecar.m_vTeamEvents)
+	{
+		if(Event.m_Tick > CurrentTick)
+			break;
+		m_aQmLiveDemoTeams[Event.m_ClientId] = Event.m_NewTeam;
+	}
+}
+
+int CGameClient::QmLiveDemoTeamForClient(int ClientId) const
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return TEAM_FLOCK;
+	return LivePresentationUsesQmLiveDemo() ? m_aQmLiveDemoTeams[ClientId] : m_Teams.Team(ClientId);
+}
+
+int CGameClient::LiveObserverDDRaceTeam(int ClientId) const
+{
+	return QmLiveDemoTeamForClient(ClientId);
+}
+
+int CGameClient::LiveFinishTimeForTeam(int Team) const
+{
+	for(const CLiveFinishEvent &Event : m_LiveFinishRanking.Events())
+	{
+		if(Event.m_Team == Team)
+			return Event.m_TimeMs;
+	}
+	return -1;
+}
+
+int CGameClient::QmLiveDemoPrimaryTargetForTeam(int Team, int CurrentTick) const
+{
+	for(auto It = m_QmLiveDemoSidecar.m_vTeamEvents.rbegin(); It != m_QmLiveDemoSidecar.m_vTeamEvents.rend(); ++It)
+	{
+		if(It->m_Tick > CurrentTick)
+			continue;
+		if(It->m_NewTeam != Team)
+			continue;
+		const int ClientId = It->m_ClientId;
+		if(ClientId >= 0 && ClientId < MAX_CLIENTS && LiveObserverGlobalPlayerActive(ClientId) && QmLiveDemoTeamForClient(ClientId) == Team)
+			return ClientId;
+	}
+	for(const SLiveReplayFinishEvent &Event : m_QmLiveDemoSidecar.m_vFinishEvents)
+	{
+		if(Event.m_Tick > CurrentTick)
+			continue;
+		if(Event.m_Team == Team && LiveObserverGlobalPlayerActive(Event.m_ClientId) && QmLiveDemoTeamForClient(Event.m_ClientId) == Team)
+			return Event.m_ClientId;
+	}
+	return -1;
+}
+
+int CGameClient::QmLiveDemoFallbackPlayerForTeam(int Team, int CurrentTick) const
+{
+	if(m_QmLiveDemoFollowClientId >= 0 && m_QmLiveDemoFollowClientId < MAX_CLIENTS &&
+		LiveObserverGlobalPlayerActive(m_QmLiveDemoFollowClientId) && QmLiveDemoTeamForClient(m_QmLiveDemoFollowClientId) == Team)
+	{
+		return m_QmLiveDemoFollowClientId;
+	}
+
+	const int PrimaryTarget = QmLiveDemoPrimaryTargetForTeam(Team, CurrentTick);
+	if(PrimaryTarget >= 0)
+		return PrimaryTarget;
+
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		if(LiveObserverGlobalPlayerActive(ClientId) && QmLiveDemoTeamForClient(ClientId) == Team)
+			return ClientId;
+	}
+	return -1;
+}
+
+void CGameClient::UpdateQmLiveDemoPlaybackState()
+{
+	if(!TryLoadQmLiveDemoSidecar())
+		return;
+
+	if(m_DemoSpecId != SPEC_FOLLOW)
+	{
+		if(m_DemoSpecId >= 0 && m_DemoSpecId < MAX_CLIENTS)
+		{
+			m_QmLiveDemoFollowClientId = m_DemoSpecId;
+			m_QmLiveDemoWantedTeam = QmLiveDemoTeamForClient(m_DemoSpecId);
+			m_QmLiveDemoManualFollow = true;
+		}
+		m_DemoSpecId = SPEC_FOLLOW;
+	}
+
+	const int CurrentTick = QmLiveDemoPlaybackTick();
+	const int PreviousTick = m_QmLiveDemoLastTick;
+	RebuildQmLiveDemoTeams(CurrentTick);
+
+	std::vector<CLiveFinishEvent> vFinishEvents;
+	vFinishEvents.reserve(m_QmLiveDemoSidecar.m_vFinishEvents.size());
+	for(const SLiveReplayFinishEvent &Event : m_QmLiveDemoSidecar.m_vFinishEvents)
+		vFinishEvents.push_back({Event.m_Team, Event.m_ClientId, Event.m_Time, Event.m_Tick});
+
+	m_LiveFinishRanking.SetTeamRange(g_Config.m_QmLiveRankTeamMin, g_Config.m_QmLiveRankTeamMax);
+	const bool FirstTick = PreviousTick < 0;
+	const bool Rewound = !FirstTick && CurrentTick <= PreviousTick;
+	const bool SeekedForward = !FirstTick && CurrentTick > PreviousTick + Client()->GameTickSpeed() * 2;
+	if(FirstTick || Rewound || SeekedForward)
+	{
+		m_LiveFinishRanking.RebuildFromEvents(vFinishEvents, CurrentTick);
+	}
+	else
+	{
+		m_LiveFinishRanking.OnTimelineTick(CurrentTick);
+		for(const SLiveReplayFinishEvent &Event : m_QmLiveDemoSidecar.m_vFinishEvents)
+		{
+			if(Event.m_Tick <= PreviousTick)
+				continue;
+			if(Event.m_Tick > CurrentTick)
+				break;
+			QueueLiveFinishResult(m_LiveFinishRanking.OnFinishMessage(Event.m_ClientId, Event.m_Time, Event.m_Tick, true, Event.m_Team));
+		}
+	}
+
+	std::array<int, MAX_CLIENTS> aTeams{};
+	std::array<bool, MAX_CLIENTS> aActivePlayers{};
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		aTeams[ClientId] = QmLiveDemoTeamForClient(ClientId);
+		aActivePlayers[ClientId] = LiveObserverGlobalPlayerActive(ClientId) && aTeams[ClientId] > TEAM_FLOCK && aTeams[ClientId] < TEAM_SUPER;
+	}
+	m_LiveDirector.UpdateEntries(aTeams, aActivePlayers);
+	if(!LiveObserverTeamActive(m_LiveObserverExpandedTeam))
+		m_LiveObserverExpandedTeam = -1;
+	ClampLiveObserverPanelScroll();
+
+	if(m_QmLiveDemoWantedTeam > TEAM_FLOCK && m_QmLiveDemoWantedTeam < TEAM_SUPER && !m_QmLiveDemoManualFollow)
+	{
+		const int FollowClientId = QmLiveDemoFallbackPlayerForTeam(m_QmLiveDemoWantedTeam, CurrentTick);
+		if(FollowClientId >= 0)
+			m_QmLiveDemoFollowClientId = FollowClientId;
+		else
+			m_QmLiveDemoFollowClientId = SPEC_FOLLOW;
+	}
+	else if(!m_QmLiveDemoManualFollow && m_QmLiveDemoFollowClientId < 0 && m_LiveDirector.HasDDRaceTeams())
+	{
+		m_QmLiveDemoWantedTeam = m_LiveDirector.SelectRandomTeam((unsigned)CurrentTick);
+		const int FollowClientId = QmLiveDemoFallbackPlayerForTeam(m_QmLiveDemoWantedTeam, CurrentTick);
+		if(FollowClientId >= 0)
+			m_QmLiveDemoFollowClientId = FollowClientId;
+		else
+			m_QmLiveDemoFollowClientId = SPEC_FOLLOW;
+	}
+
+	if(m_QmLiveDemoFollowClientId >= 0 && m_QmLiveDemoFollowClientId < MAX_CLIENTS && LiveObserverGlobalPlayerActive(m_QmLiveDemoFollowClientId))
+	{
+		m_Snap.m_SpecInfo.m_Active = true;
+		m_Snap.m_SpecInfo.m_SpectatorId = m_QmLiveDemoFollowClientId;
+		m_Snap.m_SpecInfo.m_UsePosition = false;
+		m_LiveObserverFollowClientId = m_QmLiveDemoFollowClientId;
+		m_LiveObserverFreeview = false;
+	}
+	else
+	{
+		m_Snap.m_SpecInfo.m_Active = true;
+		m_Snap.m_SpecInfo.m_SpectatorId = SPEC_FOLLOW;
+		m_Snap.m_SpecInfo.m_UsePosition = false;
+		m_LiveObserverFollowClientId = SPEC_FOLLOW;
+		m_LiveObserverFreeview = false;
+	}
+	if(m_Snap.m_SpecInfo.m_Zoom <= 0.0f)
+		m_Snap.m_SpecInfo.m_Zoom = 1.0f;
+
+	m_LiveTeamRenderFilter.UpdateTeams(m_aQmLiveDemoTeams);
+	m_QmLiveDemoLastTick = CurrentTick;
+}
+
+void CGameClient::PushLiveReplaySnapshot()
+{
+	if(!LivePresentationUsesOnlineDirector())
+		return;
+
+	m_vLiveReplayScratch.clear();
+	const auto &&AppendRaw = [this](const void *pData, size_t DataSize) {
+		const uint8_t *pBytes = static_cast<const uint8_t *>(pData);
+		m_vLiveReplayScratch.insert(m_vLiveReplayScratch.end(), pBytes, pBytes + DataSize);
+	};
+	const auto &&AppendInt = [&](int Value) {
+		AppendRaw(&Value, sizeof(Value));
+	};
+
+	const int NumItems = Client()->SnapNumItems(IClient::SNAP_CURRENT);
+	AppendInt(NumItems);
+	for(int Index = 0; Index < NumItems; ++Index)
+	{
+		const IClient::CSnapItem Item = Client()->SnapGetItem(IClient::SNAP_CURRENT, Index);
+		AppendInt(Item.m_Type);
+		AppendInt(Item.m_Id);
+		AppendInt(Item.m_DataSize);
+		if(Item.m_DataSize > 0 && Item.m_pData != nullptr)
+			AppendRaw(Item.m_pData, Item.m_DataSize);
+	}
+
+	m_LiveReplayBuffer.PushSnapshot(Client()->GameTick(g_Config.m_ClDummy), m_vLiveReplayScratch.data(), m_vLiveReplayScratch.size());
+}
+
+bool CGameClient::LiveObserverTeamActive(int Team) const
+{
+	if(Team <= TEAM_FLOCK || Team >= TEAM_SUPER)
+		return false;
+
+	for(const CLiveDirector::CEntry &Entry : m_LiveDirector.Entries())
+	{
+		if(Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM && Entry.m_Team == Team)
+			return true;
+	}
+	return false;
+}
+
+bool CGameClient::LiveObserverGlobalPlayerActive(int ClientId) const
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return false;
+
+	const CNetObj_PlayerInfo *pInfo = m_Snap.m_apPlayerInfos[ClientId];
+	return pInfo != nullptr && pInfo->m_Team != TEAM_SPECTATORS && m_aClients[ClientId].m_Active;
+}
+
+bool CGameClient::LiveObserverActivePlayerInTeam(int ClientId, int Team) const
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || Team <= TEAM_FLOCK || Team >= TEAM_SUPER)
+		return false;
+
+	return LiveObserverGlobalPlayerActive(ClientId) && LiveObserverDDRaceTeam(ClientId) == Team;
+}
+
+int CGameClient::LiveObserverTeamMemberCount(int Team) const
+{
+	int NumMembers = 0;
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		if(LiveObserverActivePlayerInTeam(ClientId, Team))
+			++NumMembers;
+	}
+	return NumMembers;
+}
+
+float CGameClient::LiveObserverPanelContentHeight() const
+{
+	if(m_LiveDirector.Entries().empty())
+		return LIVE_OBSERVER_ROW_HEIGHT;
+
+	float ContentHeight = 0.0f;
+	for(const CLiveDirector::CEntry &Entry : m_LiveDirector.Entries())
+	{
+		ContentHeight += LIVE_OBSERVER_ROW_HEIGHT + LIVE_OBSERVER_ROW_GAP;
+		if(Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM && Entry.m_Team == m_LiveObserverExpandedTeam)
+			ContentHeight += LiveObserverTeamMemberCount(Entry.m_Team) * (LIVE_OBSERVER_MEMBER_ROW_HEIGHT + LIVE_OBSERVER_ROW_GAP);
+	}
+	return maximum(0.0f, ContentHeight - LIVE_OBSERVER_ROW_GAP);
+}
+
+float CGameClient::LiveObserverPanelMaxScroll() const
+{
+	const float VisibleHeight = LIVE_OBSERVER_UI_HEIGHT - LIVE_OBSERVER_PANEL_MARGIN * 2.0f - LIVE_OBSERVER_PANEL_HEADER_H - 12.0f;
+	return maximum(0.0f, LiveObserverPanelContentHeight() - VisibleHeight);
+}
+
+void CGameClient::ClampLiveObserverPanelScroll()
+{
+	m_LiveObserverPanelScroll = std::clamp(m_LiveObserverPanelScroll, 0.0f, LiveObserverPanelMaxScroll());
+}
+
+int CGameClient::LiveObserverFallbackPlayerForTeam(int Team) const
+{
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		if(LiveObserverActivePlayerInTeam(ClientId, Team))
+			return ClientId;
+	}
+	return -1;
+}
+
+int CGameClient::FindLiveObserverClosestTeam(vec2 WorldPos) const
+{
+	int ClosestTeam = -1;
+	float ClosestDistance = 0.0f;
+	for(const CLiveDirector::CEntry &Entry : m_LiveDirector.Entries())
+	{
+		if(Entry.m_Type != CLiveDirector::EEntryType::DDRACE_TEAM)
+			continue;
+		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+		{
+			if(!LiveObserverActivePlayerInTeam(ClientId, Entry.m_Team))
+				continue;
+			if(!m_Snap.m_aCharacters[ClientId].m_Active)
+				continue;
+
+			const vec2 PlayerPos = vec2(m_Snap.m_aCharacters[ClientId].m_Cur.m_X, m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
+			const float Distance = distance(WorldPos, PlayerPos);
+			if(ClosestTeam < 0 || Distance < ClosestDistance)
+			{
+				ClosestTeam = Entry.m_Team;
+				ClosestDistance = Distance;
+			}
+		}
+	}
+	return ClosestTeam;
+}
+
+int CGameClient::RandomLiveObserverPlayerForTeam(int Team, unsigned Seed) const
+{
+	std::array<int, MAX_CLIENTS> aClientIds{};
+	int NumClients = 0;
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		if(LiveObserverActivePlayerInTeam(ClientId, Team))
+			aClientIds[NumClients++] = ClientId;
+	}
+
+	if(NumClients == 0)
+		return -1;
+	return aClientIds[Seed % NumClients];
+}
+
+void CGameClient::RequestLiveCompatSpectator()
+{
+	if(!Client()->QmLiveCompatDirectorActive() || Client()->State() != IClient::STATE_ONLINE)
+		return;
+	if(!m_Snap.m_pLocalInfo || m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS)
+		return;
+
+	const int64_t Now = time_get();
+	if(m_LiveCompatLastSpectatorRequestTime != 0 && Now < m_LiveCompatLastSpectatorRequestTime + time_freq() * 2)
+		return;
+
+	m_LiveCompatLastSpectatorRequestTime = Now;
+	SendSwitchTeam(TEAM_SPECTATORS);
+}
+
+void CGameClient::SanitizeLiveCompatInput(int *pData, int Size)
+{
+	if(!Client()->QmLiveCompatDirectorActive() || Size < (int)sizeof(CNetObj_PlayerInput))
+		return;
+
+	CNetObj_PlayerInput *pInput = (CNetObj_PlayerInput *)pData;
+	pInput->m_Direction = 0;
+	pInput->m_Jump = 0;
+	if((pInput->m_Fire & 1) != 0)
+		++pInput->m_Fire;
+	pInput->m_Fire &= INPUT_STATE_MASK;
+	pInput->m_Hook = 0;
+	pInput->m_WantedWeapon = 0;
+	pInput->m_NextWeapon = 0;
+	pInput->m_PrevWeapon = 0;
+	pInput->m_PlayerFlags = PLAYERFLAG_PLAYING;
+	pInput->m_TargetX = 1;
+	pInput->m_TargetY = 0;
+}
+
+void CGameClient::SetLiveObserverSpectatorId(int SpectatorId)
+{
+	if(SpectatorId < SPEC_FREEVIEW || SpectatorId >= MAX_CLIENTS ||
+		(SpectatorId >= 0 && !LiveObserverGlobalPlayerActive(SpectatorId)))
+	{
+		SpectatorId = SPEC_FREEVIEW;
+	}
+
+	m_Snap.m_SpecInfo.m_Active = true;
+	m_Snap.m_SpecInfo.m_SpectatorId = SpectatorId;
+	m_Snap.m_SpecInfo.m_UsePosition = false;
+	if(m_Snap.m_SpecInfo.m_Zoom <= 0.0f)
+		m_Snap.m_SpecInfo.m_Zoom = 1.0f;
+
+	m_LiveObserverFollowClientId = SpectatorId;
+	m_LiveObserverFreeview = SpectatorId == SPEC_FREEVIEW;
+	if(SpectatorId != SPEC_FREEVIEW)
+		m_LiveObserverHoldFreeview = false;
+	if(m_LiveObserverCurrentTeam < 0 || m_LiveObserverFreeview)
+		m_LiveDirector.SetMode(m_LiveObserverFreeview ? CLiveObserverSession::EDirectorMode::FREEVIEW : CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER);
+}
+
+void CGameClient::SetLiveObserverTeam(int Team)
+{
+	if(!LiveObserverTeamActive(Team))
+		return;
+
+	if(LivePresentationUsesQmLiveDemo())
+	{
+		ResetMultiView();
+		m_QmLiveDemoWantedTeam = Team;
+		m_QmLiveDemoManualFollow = false;
+		m_LiveObserverCurrentTeam = Team;
+		m_LiveObserverReturnTeam = Team;
+		m_LiveObserverHoldFreeview = false;
+		m_LiveObserverFreeview = false;
+		const int FollowClientId = QmLiveDemoFallbackPlayerForTeam(Team, QmLiveDemoPlaybackTick());
+		if(FollowClientId >= 0)
+			m_QmLiveDemoFollowClientId = FollowClientId;
+		else
+			m_QmLiveDemoFollowClientId = SPEC_FOLLOW;
+		m_LiveObserverFollowClientId = m_QmLiveDemoFollowClientId;
+		m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_TEAM);
+		return;
+	}
+
+	m_LiveObserverHoldFreeview = false;
+	m_LiveObserverFreeview = false;
+	m_LiveObserverCurrentTeam = Team;
+	m_LiveObserverReturnTeam = Team;
+
+	if(!m_MultiViewActivated || m_MultiViewTeam != Team)
+	{
+		ResetMultiView();
+		m_MultiViewActivated = true;
+		m_MultiViewTeam = Team;
+	}
+
+	const int FollowClientId = LiveObserverFallbackPlayerForTeam(Team);
+	m_Spectator.Spectate(FollowClientId);
+	m_LiveObserverCurrentTeam = Team;
+	m_LiveObserverFreeview = false;
+	m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_TEAM);
+}
+
+void CGameClient::SetLiveObserverTeamPlayer(int Team, int ClientId)
+{
+	if(!LiveObserverActivePlayerInTeam(ClientId, Team))
+		return;
+
+	if(LivePresentationUsesQmLiveDemo())
+	{
+		ResetMultiView();
+		m_QmLiveDemoWantedTeam = Team;
+		m_QmLiveDemoFollowClientId = ClientId;
+		m_QmLiveDemoManualFollow = true;
+		m_LiveObserverCurrentTeam = Team;
+		m_LiveObserverReturnTeam = Team;
+		m_LiveObserverExpandedTeam = Team;
+		m_LiveObserverHoldFreeview = false;
+		m_LiveObserverFreeview = false;
+		m_LiveObserverFollowClientId = ClientId;
+		m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER);
+		return;
+	}
+
+	if(m_MultiViewActivated)
+		ResetMultiView();
+	m_LiveObserverCurrentTeam = Team;
+	m_LiveObserverReturnTeam = Team;
+	m_LiveObserverExpandedTeam = Team;
+	m_LiveObserverHoldFreeview = false;
+	m_LiveObserverFreeview = false;
+	m_Spectator.Spectate(ClientId);
+	m_LiveObserverCurrentTeam = Team;
+	m_LiveObserverFreeview = false;
+	m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER);
+}
+
+void CGameClient::SetLiveObserverPlayer(int ClientId)
+{
+	if(!LiveObserverGlobalPlayerActive(ClientId))
+		return;
+
+	if(LivePresentationUsesQmLiveDemo())
+	{
+		ResetMultiView();
+		m_QmLiveDemoFollowClientId = ClientId;
+		m_QmLiveDemoWantedTeam = QmLiveDemoTeamForClient(ClientId);
+		m_QmLiveDemoManualFollow = true;
+		m_LiveObserverCurrentTeam = m_QmLiveDemoWantedTeam;
+		m_LiveObserverReturnTeam = m_QmLiveDemoWantedTeam;
+		m_LiveObserverExpandedTeam = m_QmLiveDemoWantedTeam;
+		m_LiveObserverHoldFreeview = false;
+		m_LiveObserverFreeview = false;
+		m_LiveObserverFollowClientId = ClientId;
+		m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER);
+		return;
+	}
+
+	if(m_MultiViewActivated)
+		ResetMultiView();
+	m_LiveObserverCurrentTeam = -1;
+	m_LiveObserverReturnTeam = -1;
+	m_LiveObserverExpandedTeam = -1;
+	m_LiveObserverHoldFreeview = false;
+	m_LiveObserverFreeview = false;
+	m_Spectator.Spectate(ClientId);
+	m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER);
+}
+
+void CGameClient::SetLiveObserverFreeview()
+{
+	if(LivePresentationUsesQmLiveDemo())
+		return;
+
+	if(LiveObserverTeamActive(m_LiveObserverCurrentTeam))
+		m_LiveObserverReturnTeam = m_LiveObserverCurrentTeam;
+	ResetMultiView();
+	m_LiveObserverCurrentTeam = -1;
+	m_LiveObserverHoldFreeview = true;
+	SetLiveObserverSpectatorId(SPEC_FREEVIEW);
+	m_LiveObserverHoldFreeview = true;
+	m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FREEVIEW);
+	m_LiveObserverLastMousePos = LiveObserverMousePos();
+	Input()->MouseModeRelative();
+	m_LiveObserverMouseAbsolute = false;
+}
+
+void CGameClient::ResetLiveFinishRanking()
+{
+	m_LiveFinishRanking.Reset();
+	m_LiveFinishTeamsStateKnown = false;
+	m_LiveFinishTeamsStateTick = -1;
+}
+
+void CGameClient::QueueLiveFinishResult(const CLiveFinishRanking::CResult &Result)
+{
+	if(Result.m_Status != CLiveFinishRanking::EFinishStatus::ACCEPTED)
+		return;
+
+	m_LiveMatchReplay.OnFinishEvent(Result.m_Event);
+
+	m_LiveFinishRanking.SetTeamRange(g_Config.m_QmLiveRankTeamMin, g_Config.m_QmLiveRankTeamMax);
+	const bool InRange = m_LiveFinishRanking.IsTeamInConfiguredRange(Result.m_Event.m_Team);
+	if(!InRange && !g_Config.m_QmLiveRankShowOutOfRange)
+		return;
+
+	const int Rank = m_LiveFinishRanking.RankForTeam(Result.m_Event.m_Team, !InRange);
+	if(Rank <= 0)
+		return;
+
+	m_LiveFinishRanking.EnqueueCard(Result.m_Event, Rank, Client()->GameTick(g_Config.m_ClDummy));
+}
+
+void CGameClient::HandleLiveFinishMessage(int MsgId, void *pRawMsg, int Conn)
+{
+	if(MsgId != NETMSGTYPE_SV_RACEFINISH || pRawMsg == nullptr)
+		return;
+
+	const CNetMsg_Sv_RaceFinish *pMsg = static_cast<CNetMsg_Sv_RaceFinish *>(pRawMsg);
+	const int ClientId = pMsg->m_ClientId;
+	const int FinishTick = Client()->GameTick(Conn);
+	const bool TeamKnown = ClientId >= 0 && ClientId < MAX_CLIENTS && m_LiveFinishTeamsStateKnown && m_LiveFinishTeamsStateTick >= 0 && m_LiveFinishTeamsStateTick <= FinishTick && m_aClients[ClientId].m_Active;
+	const int Team = TeamKnown ? m_Teams.Team(ClientId) : -1;
+	m_LiveFinishRanking.SetTeamRange(g_Config.m_QmLiveRankTeamMin, g_Config.m_QmLiveRankTeamMax);
+	QueueLiveFinishResult(m_LiveFinishRanking.OnFinishMessage(ClientId, pMsg->m_Time, FinishTick, TeamKnown, Team));
+}
+
+void CGameClient::ResolveLiveFinishPending(int CurrentTick)
+{
+	int aTeams[MAX_CLIENTS];
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+		aTeams[ClientId] = m_aClients[ClientId].m_Active ? m_Teams.Team(ClientId) : TEAM_FLOCK;
+
+	m_LiveFinishRanking.SetTeamRange(g_Config.m_QmLiveRankTeamMin, g_Config.m_QmLiveRankTeamMax);
+	const CLiveFinishRanking::CResolveResult Result = m_LiveFinishRanking.ResolvePending(aTeams, MAX_CLIENTS, CurrentTick);
+	if(Result.m_DroppedPending > 0)
+		dbg_msg("qmlive_rank", "dropped %d pending finish events without a valid DDRace team", Result.m_DroppedPending);
+	for(const CLiveFinishRanking::CResult &Accepted : Result.m_vAccepted)
+		QueueLiveFinishResult(Accepted);
+}
+
+bool CGameClient::TryRebuildLiveFinishRankingFromSidecar(int CurrentTick)
+{
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK || CurrentTick < 0 || DemoPlayer() == nullptr)
+		return false;
+
+	const char *pDemoFilename = DemoPlayer()->Filename();
+	if(pDemoFilename == nullptr || pDemoFilename[0] == '\0')
+		return false;
+
+	char aSidecarPath[IO_MAX_PATH_LENGTH];
+	if(!CLiveReplaySidecar::SidecarPathForDemo(pDemoFilename, aSidecarPath, sizeof(aSidecarPath)))
+		return false;
+
+	char *pFileData = Storage()->ReadFileStr(aSidecarPath, IStorage::TYPE_ALL_OR_ABSOLUTE);
+	if(pFileData == nullptr)
+		return false;
+
+	SLiveReplaySidecarData Sidecar;
+	char aError[128];
+	const bool Parsed = CLiveReplaySidecar::LoadFromString(pFileData, Sidecar, aError, sizeof(aError));
+	free(pFileData);
+	if(!Parsed)
+	{
+		dbg_msg("qmlive_rank", "ignored damaged finish ranking sidecar '%s': %s", aSidecarPath, aError);
+		return false;
+	}
+	if(!CLiveReplaySidecar::MatchesDemo(Sidecar, pDemoFilename, Client()->GetCurrentMap(), Client()->GetCurrentMapSha256(), Client()->GetCurrentMapCrc()))
+	{
+		dbg_msg("qmlive_rank", "ignored non-matching finish ranking sidecar '%s'", aSidecarPath);
+		return false;
+	}
+
+	std::vector<CLiveFinishEvent> vEvents;
+	vEvents.reserve(Sidecar.m_vFinishEvents.size());
+	for(const SLiveReplayFinishEvent &Event : Sidecar.m_vFinishEvents)
+		vEvents.push_back({Event.m_Team, Event.m_ClientId, Event.m_Time, Event.m_Tick});
+
+	m_LiveFinishRanking.SetTeamRange(g_Config.m_QmLiveRankTeamMin, g_Config.m_QmLiveRankTeamMax);
+	m_LiveFinishRanking.RebuildFromEvents(vEvents, CurrentTick);
+	dbg_msg("qmlive_rank", "rebuilt finish ranking from sidecar '%s' at tick %d", aSidecarPath, CurrentTick);
+	return true;
+}
+
+void CGameClient::UpdateLiveFinishTimeline()
+{
+	const int CurrentTick = Client()->GameTick(g_Config.m_ClDummy);
+	const int PreviousTick = m_LiveFinishRanking.LastObservedTick();
+	const bool DemoSeekForward = Client()->State() == IClient::STATE_DEMOPLAYBACK && PreviousTick >= 0 && CurrentTick > PreviousTick + 10 * Client()->GameTickSpeed();
+	if(DemoSeekForward)
+	{
+		ResetLiveFinishRanking();
+		m_LiveFinishRanking.OnTimelineTick(CurrentTick);
+		TryRebuildLiveFinishRankingFromSidecar(CurrentTick);
+		return;
+	}
+	if(m_LiveFinishRanking.OnTimelineTick(CurrentTick))
+	{
+		m_LiveFinishTeamsStateKnown = false;
+		m_LiveFinishTeamsStateTick = -1;
+		TryRebuildLiveFinishRankingFromSidecar(CurrentTick);
+	}
+
+	const int Dropped = m_LiveFinishRanking.DropExpiredPending(CurrentTick);
+	if(Dropped > 0)
+		dbg_msg("qmlive_rank", "dropped %d expired pending finish events", Dropped);
+}
+
+void CGameClient::RenderLiveFinishRankHud()
+{
+	const bool HudEditorPreview = m_HudEditor.IsActive();
+	if(!HudEditorPreview && (!g_Config.m_QmLiveRankHud || (Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)))
+		return;
+
+	const int DurationTicks = std::clamp(g_Config.m_QmLiveRankPopupSeconds, 1, 30) * Client()->GameTickSpeed();
+	const int CurrentTick = Client()->GameTick(g_Config.m_ClDummy);
+	const CLiveFinishCard *pCard = m_LiveFinishRanking.VisibleCard(CurrentTick, DurationTicks);
+	CLiveFinishCard PreviewCard;
+	if(pCard == nullptr)
+	{
+		if(!HudEditorPreview)
+			return;
+		PreviewCard.m_Event = {1, 0, 151420, CurrentTick};
+		PreviewCard.m_Rank = 1;
+		PreviewCard.m_DisplayStartTick = CurrentTick;
+		pCard = &PreviewCard;
+	}
+
+	const float Height = 300.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
+	float SavedScreenX0 = 0.0f;
+	float SavedScreenY0 = 0.0f;
+	float SavedScreenX1 = 0.0f;
+	float SavedScreenY1 = 0.0f;
+	Graphics()->GetScreen(&SavedScreenX0, &SavedScreenY0, &SavedScreenX1, &SavedScreenY1);
+	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
+
+	const float ConfigScale = std::clamp(g_Config.m_QmLiveRankScale, 50, 200) / 100.0f;
+	const float CardW = 154.0f * ConfigScale;
+	const float CardH = 57.0f * ConfigScale;
+	CUIRect CardRect = {Width * 0.5f - CardW * 0.5f, 38.0f, CardW, CardH};
+	const auto HudEditorScope = m_HudEditor.BeginTransform(EHudEditorElement::LiveFinishRank, CardRect);
+
+	float Alpha = std::clamp(g_Config.m_QmLiveRankAlpha, 0, 100) / 100.0f;
+	if(!HudEditorPreview && pCard->m_DisplayStartTick >= 0)
+	{
+		const int RemainingTicks = maximum(0, DurationTicks - (CurrentTick - pCard->m_DisplayStartTick));
+		const int FadeTicks = maximum(1, Client()->GameTickSpeed() / 3);
+		if(RemainingTicks < FadeTicks)
+			Alpha *= RemainingTicks / (float)FadeTicks;
+	}
+
+	char aTitle[64];
+	char aTime[64];
+	char aRank[64];
+	str_format(aTitle, sizeof(aTitle), "Team %d Finished", pCard->m_Event.m_Team);
+	str_time_float(pCard->m_Event.m_TimeMs / 1000.0f, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
+	str_format(aRank, sizeof(aRank), "Current Rank #%d", pCard->m_Rank);
+
+	const ColorRGBA BgColor(0.025f, 0.030f, 0.040f, 0.86f * Alpha);
+	const ColorRGBA BorderColor(1.0f, 1.0f, 1.0f, 0.16f * Alpha);
+	const ColorRGBA AccentColor = GetDDTeamColor(pCard->m_Event.m_Team, 0.62f).WithMultipliedAlpha(Alpha);
+	CardRect.Draw(BgColor, IGraphics::CORNER_ALL, 6.0f * ConfigScale);
+	const CUIRect AccentRect{CardRect.x, CardRect.y, 3.0f * ConfigScale, CardRect.h};
+	AccentRect.Draw(AccentColor, IGraphics::CORNER_L, 6.0f * ConfigScale);
+	const CUIRect TopBorderRect{CardRect.x, CardRect.y, CardRect.w, 1.0f * ConfigScale};
+	TopBorderRect.Draw(BorderColor, IGraphics::CORNER_T, 6.0f * ConfigScale);
+	const CUIRect BottomBorderRect{CardRect.x, CardRect.y + CardRect.h - 1.0f * ConfigScale, CardRect.w, 1.0f * ConfigScale};
+	BottomBorderRect.Draw(BorderColor, IGraphics::CORNER_B, 6.0f * ConfigScale);
+
+	const float PaddingX = 12.0f * ConfigScale;
+	const float TextX = CardRect.x + PaddingX;
+	const float TitleY = CardRect.y + 7.0f * ConfigScale;
+	const float TimeY = CardRect.y + 25.0f * ConfigScale;
+	const float RankY = CardRect.y + 40.0f * ConfigScale;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.96f * Alpha);
+	TextRender()->Text(TextX, TitleY, 10.0f * ConfigScale, aTitle, -1.0f);
+	TextRender()->TextColor(0.78f, 0.86f, 0.92f, 0.90f * Alpha);
+	TextRender()->Text(TextX, TimeY, 8.0f * ConfigScale, aTime, -1.0f);
+	TextRender()->TextColor(0.70f, 0.95f, 0.82f, 0.94f * Alpha);
+	TextRender()->Text(TextX, RankY, 8.0f * ConfigScale, aRank, -1.0f);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+	m_HudEditor.EndTransform(HudEditorScope);
+	Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
+}
+
+void CGameClient::UpdateLiveTeamFilterConfig()
+{
+	const int OldResetSerial = m_LiveTeamRenderFilter.ResetSerial();
+	const bool OldActive = m_LiveTeamRenderFilter.Active();
+	const int OldTeam = m_LiveTeamRenderFilter.Team();
+	const bool OldPreview = m_LiveTeamRenderFilter.PreviewEnabled();
+	const bool OldAudio = m_LiveTeamRenderFilter.AudioEnabled();
+	const bool OldHideExternalFinish = m_LiveTeamRenderFilter.HideExternalFinish();
+	const bool OldStrictUnknownEvents = m_LiveTeamRenderFilter.StrictUnknownEvents();
+
+	m_LiveTeamRenderFilter.SetPreviewEnabled(g_Config.m_QmLiveTeamFilterPreview != 0);
+	m_LiveTeamRenderFilter.SetAudioEnabled(g_Config.m_QmLiveTeamFilterAudio != 0);
+	m_LiveTeamRenderFilter.SetHideExternalFinish(g_Config.m_QmLiveTeamFilterHideExternalFinish != 0);
+	m_LiveTeamRenderFilter.SetStrictUnknownEvents(g_Config.m_QmLiveTeamFilterStrictUnknownEvents != 0);
+
+	if(m_LiveTeamRenderFilter.PreviewEnabled() && CLiveTeamRenderFilter::IsValidDDRaceTeam(g_Config.m_QmLiveTeamFilter))
+		m_LiveTeamRenderFilter.SetTeam(g_Config.m_QmLiveTeamFilter);
+	else
+		m_LiveTeamRenderFilter.Disable();
+
+	if(OldActive != m_LiveTeamRenderFilter.Active() ||
+		OldTeam != m_LiveTeamRenderFilter.Team() ||
+		OldPreview != m_LiveTeamRenderFilter.PreviewEnabled() ||
+		OldAudio != m_LiveTeamRenderFilter.AudioEnabled() ||
+		OldHideExternalFinish != m_LiveTeamRenderFilter.HideExternalFinish() ||
+		OldStrictUnknownEvents != m_LiveTeamRenderFilter.StrictUnknownEvents())
+	{
+		m_LiveTeamRenderFilter.MarkTransientReset();
+	}
+
+	if(OldResetSerial != m_LiveTeamRenderFilter.ResetSerial())
+		ResetLiveTeamFilterTransientState();
+}
+
+void CGameClient::ResetLiveTeamFilterTransientState()
+{
+	if(m_LiveTeamFilterResetSerial == m_LiveTeamRenderFilter.ResetSerial())
+		return;
+
+	m_InfoMessages.OnReset();
+	m_Particles.OnReset();
+	m_DamageInd.OnReset();
+	m_Sounds.OnReset();
+	for(CClientData &Client : m_aClients)
+	{
+		Client.m_Emoticon = -1;
+		Client.m_EmoticonStartTick = -1;
+		Client.m_EmoticonStartFraction = 0.0f;
+		Client.m_aChatBubbleText[0] = '\0';
+		Client.m_ChatBubbleStartTick = 0;
+		Client.m_ChatBubbleExpireTick = 0;
+	}
+	m_LiveTeamFilterResetSerial = m_LiveTeamRenderFilter.ResetSerial();
+}
+
+bool CGameClient::ShouldFilterLiveTeamMessage(int MsgId, void *pRawMsg) const
+{
+	if(!m_LiveTeamRenderFilter.Active() || pRawMsg == nullptr)
+		return false;
+
+	if(MsgId == NETMSGTYPE_SV_EMOTICON)
+	{
+		const CNetMsg_Sv_Emoticon *pMsg = static_cast<const CNetMsg_Sv_Emoticon *>(pRawMsg);
+		return !m_LiveTeamRenderFilter.AllowsClient(pMsg->m_ClientId);
+	}
+	if(MsgId == NETMSGTYPE_SV_CHAT)
+	{
+		const CNetMsg_Sv_Chat *pMsg = static_cast<const CNetMsg_Sv_Chat *>(pRawMsg);
+		if(pMsg->m_ClientId >= 0)
+			return !m_LiveTeamRenderFilter.AllowsClient(pMsg->m_ClientId);
+		return false;
+	}
+	if(MsgId == NETMSGTYPE_SV_RACEFINISH)
+	{
+		const CNetMsg_Sv_RaceFinish *pMsg = static_cast<const CNetMsg_Sv_RaceFinish *>(pRawMsg);
+		return m_LiveTeamRenderFilter.HideExternalFinish() && !m_LiveTeamRenderFilter.AllowsClient(pMsg->m_ClientId);
+	}
+	if(MsgId == NETMSGTYPE_SV_KILLMSG)
+	{
+		const CNetMsg_Sv_KillMsg *pMsg = static_cast<const CNetMsg_Sv_KillMsg *>(pRawMsg);
+		if(pMsg->m_Victim >= 0 && pMsg->m_Victim < MAX_CLIENTS && !m_LiveTeamRenderFilter.AllowsClient(pMsg->m_Victim))
+			return true;
+		if(pMsg->m_Killer >= 0 && pMsg->m_Killer < MAX_CLIENTS && !m_LiveTeamRenderFilter.AllowsClient(pMsg->m_Killer))
+			return true;
+		return false;
+	}
+	if(MsgId == NETMSGTYPE_SV_KILLMSGTEAM)
+	{
+		const CNetMsg_Sv_KillMsgTeam *pMsg = static_cast<const CNetMsg_Sv_KillMsgTeam *>(pRawMsg);
+		return !m_LiveTeamRenderFilter.AllowsTeam(pMsg->m_Team);
+	}
+	if(MsgId == NETMSGTYPE_SV_PREINPUT)
+	{
+		const CNetMsg_Sv_PreInput *pMsg = static_cast<const CNetMsg_Sv_PreInput *>(pRawMsg);
+		return !m_LiveTeamRenderFilter.AllowsKnownOwner(pMsg->m_Owner);
+	}
+	return false;
+}
+
+bool CGameClient::ShouldSuppressComponentForQmLiveDemo(const CComponent *pComponent) const
+{
+	if(!LivePresentationUsesQmLiveDemo())
+		return false;
+
+	return pComponent == &m_Hud ||
+	       pComponent == &m_Spectator ||
+	       pComponent == &m_Scoreboard ||
+	       pComponent == &m_Statboard ||
+	       pComponent == &m_FreezeBars ||
+	       pComponent == &m_PlayerIndicator ||
+	       pComponent == &m_StatusBar ||
+	       pComponent == &m_QmWeaponTrajectory ||
+	       pComponent == &m_QmHudNotifications ||
+	       pComponent == &m_QmLyrics ||
+	       pComponent == &m_InputOverlay ||
+	       pComponent == &m_TouchControls ||
+	       pComponent == &m_Mod ||
+	       pComponent == &m_Pet ||
+	       pComponent == &m_WarList ||
+	       pComponent == &m_InfoMessages ||
+	       pComponent == &m_Broadcast ||
+	       pComponent == &m_ImportantAlert;
+}
+
+void CGameClient::FinishLiveObserverHoldFreeview()
+{
+	if(!m_LiveObserverHoldFreeview)
+		return;
+
+	const int ClosestTeam = FindLiveObserverClosestTeam(m_Camera.m_Center);
+	int TargetTeam = LiveObserverTeamActive(ClosestTeam) ? ClosestTeam : -1;
+	if(TargetTeam < 0 && LiveObserverTeamActive(m_LiveObserverReturnTeam))
+		TargetTeam = m_LiveObserverReturnTeam;
+	if(TargetTeam < 0)
+		TargetTeam = m_LiveDirector.SelectRandomTeam((unsigned)time_get());
+
+	m_LiveObserverHoldFreeview = false;
+	m_LiveObserverFreeview = false;
+	Input()->MouseModeAbsolute();
+	m_LiveObserverMouseAbsolute = true;
+
+	if(LiveObserverTeamActive(TargetTeam))
+	{
+		m_LiveObserverCurrentTeam = TargetTeam;
+		m_LiveObserverReturnTeam = TargetTeam;
+		if(!m_MultiViewActivated || m_MultiViewTeam != TargetTeam)
+		{
+			ResetMultiView();
+			m_MultiViewActivated = true;
+			m_MultiViewTeam = TargetTeam;
+		}
+		const int FollowClientId = RandomLiveObserverPlayerForTeam(TargetTeam, (unsigned)time_get());
+		m_Spectator.Spectate(FollowClientId);
+		m_LiveObserverCurrentTeam = TargetTeam;
+		m_LiveObserverFreeview = false;
+		m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_TEAM);
+		return;
+	}
+
+	UpdateLiveObserverSnapshot();
+}
+
+void CGameClient::UpdateLiveObserverSnapshot()
+{
+	if(LivePresentationUsesQmLiveDemo())
+	{
+		UpdateQmLiveDemoPlaybackState();
+		return;
+	}
+
+	if(!LivePresentationUsesOnlineDirector())
+		return;
+
+	m_Snap.m_SpecInfo.m_Active = true;
+	if(m_Snap.m_SpecInfo.m_Zoom <= 0.0f)
+		m_Snap.m_SpecInfo.m_Zoom = 1.0f;
+
+	std::array<int, MAX_CLIENTS> aTeams{};
+	std::array<bool, MAX_CLIENTS> aActivePlayers{};
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		aTeams[ClientId] = m_Teams.Team(ClientId);
+		aActivePlayers[ClientId] = LiveObserverGlobalPlayerActive(ClientId);
+	}
+
+	m_LiveDirector.UpdateEntries(aTeams, aActivePlayers);
+	if(!LiveObserverTeamActive(m_LiveObserverExpandedTeam))
+		m_LiveObserverExpandedTeam = -1;
+	ClampLiveObserverPanelScroll();
+	PushLiveReplaySnapshot();
+	RequestLiveCompatSpectator();
+
+	if(m_LiveObserverHoldFreeview)
+	{
+		Input()->MouseModeRelative();
+		m_LiveObserverMouseAbsolute = false;
+		SetLiveObserverSpectatorId(SPEC_FREEVIEW);
+		m_LiveObserverHoldFreeview = true;
+		m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FREEVIEW);
+		return;
+	}
+
+	if(m_LiveDirector.HasDDRaceTeams())
+	{
+		if(!LiveObserverTeamActive(m_LiveObserverCurrentTeam))
+			m_LiveObserverCurrentTeam = m_LiveDirector.SelectRandomTeam((unsigned)time_get());
+
+		if(LiveObserverTeamActive(m_LiveObserverCurrentTeam))
+		{
+			if(m_LiveObserverExpandedTeam == m_LiveObserverCurrentTeam &&
+				m_LiveDirector.Mode() == CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER &&
+				LiveObserverActivePlayerInTeam(m_LiveObserverFollowClientId, m_LiveObserverCurrentTeam))
+			{
+				if(m_MultiViewActivated)
+					ResetMultiView();
+				m_Spectator.Spectate(m_LiveObserverFollowClientId);
+				m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER);
+				return;
+			}
+			SetLiveObserverTeam(m_LiveObserverCurrentTeam);
+			return;
+		}
+	}
+	else
+	{
+		m_LiveObserverExpandedTeam = -1;
+		m_LiveObserverPanelScroll = 0.0f;
+	}
+
+	if(m_LiveDirector.Mode() == CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER &&
+		m_LiveObserverFollowClientId >= 0 && m_LiveObserverFollowClientId < MAX_CLIENTS &&
+		LiveObserverGlobalPlayerActive(m_LiveObserverFollowClientId))
+	{
+		if(m_MultiViewActivated)
+			ResetMultiView();
+		m_Spectator.Spectate(m_LiveObserverFollowClientId);
+		m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER);
+		return;
+	}
+
+	const int FallbackPlayer = m_LiveDirector.FallbackPlayer();
+	if(FallbackPlayer >= 0)
+	{
+		SetLiveObserverPlayer(FallbackPlayer);
+		return;
+	}
+
+	if(m_MultiViewActivated)
+		ResetMultiView();
+	m_LiveObserverCurrentTeam = -1;
+	SetLiveObserverSpectatorId(SPEC_FREEVIEW);
+	m_LiveDirector.SetMode(CLiveObserverSession::EDirectorMode::FREEVIEW);
+}
+
+vec2 CGameClient::LiveObserverMousePos() const
+{
+	const float Width = LIVE_OBSERVER_UI_HEIGHT * Graphics()->ScreenAspect();
+	const float Height = LIVE_OBSERVER_UI_HEIGHT;
+	const float WindowWidth = maximum(1, Graphics()->WindowWidth());
+	const float WindowHeight = maximum(1, Graphics()->WindowHeight());
+	const vec2 NativeMousePos = Input()->NativeMousePos();
+	return vec2(NativeMousePos.x / WindowWidth * Width, NativeMousePos.y / WindowHeight * Height);
+}
+
+vec2 CGameClient::LiveObserverMouseWorldPos() const
+{
+	float Width = 0.0f;
+	float Height = 0.0f;
+	Graphics()->CalcScreenParams(Graphics()->ScreenAspect(), m_Camera.m_Zoom, &Width, &Height);
+
+	const float WindowWidth = maximum(1, Graphics()->WindowWidth());
+	const float WindowHeight = maximum(1, Graphics()->WindowHeight());
+	const vec2 NativeMousePos = Input()->NativeMousePos();
+	return vec2(
+		m_Camera.m_Center.x - Width / 2.0f + NativeMousePos.x / WindowWidth * Width,
+		m_Camera.m_Center.y - Height / 2.0f + NativeMousePos.y / WindowHeight * Height);
+}
+
+void CGameClient::UpdateLiveObserverMouseMode()
+{
+	if(!LivePresentationUsesLiveObserverOverlay())
+		return;
+	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		if(m_LiveObserverMouseAbsolute)
+		{
+			Input()->MouseModeRelative();
+			m_LiveObserverMouseAbsolute = false;
+		}
+		return;
+	}
+	if(m_GameConsole.IsActive() || m_Menus.IsActive() || Ui()->IsPopupOpen())
+	{
+		if(m_LiveObserverMouseAbsolute)
+		{
+			Input()->MouseModeRelative();
+			m_LiveObserverMouseAbsolute = false;
+		}
+		return;
+	}
+
+	if(m_LiveObserverHoldFreeview)
+	{
+		if(m_LiveObserverMouseAbsolute)
+		{
+			Input()->MouseModeRelative();
+			m_LiveObserverMouseAbsolute = false;
+		}
+		return;
+	}
+
+	if(!m_LiveObserverMouseAbsolute)
+	{
+		Input()->MouseModeAbsolute();
+		m_LiveObserverMouseAbsolute = true;
+	}
+	m_LiveObserverLastMousePos = LiveObserverMousePos();
+}
+
+bool CGameClient::LiveObserverOverlayContains(vec2 MousePos) const
+{
+	const CUIRect Freeview = {LIVE_OBSERVER_PANEL_MARGIN, LIVE_OBSERVER_PANEL_MARGIN, LIVE_OBSERVER_FREEVIEW_W, LIVE_OBSERVER_FREEVIEW_H};
+	if(Freeview.Inside(MousePos))
+		return true;
+	if(LiveObserverRecordRect().Inside(MousePos))
+		return true;
+	if(LiveObserverFilterRect().Inside(MousePos))
+		return true;
+	if(LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos))
+		return true;
+
+	return LiveObserverTeamPanelContains(MousePos);
+}
+
+bool CGameClient::LiveObserverTeamPanelContains(vec2 MousePos) const
+{
+	const float Width = LIVE_OBSERVER_UI_HEIGHT * Graphics()->ScreenAspect();
+	const CUIRect Panel = {
+		Width - LIVE_OBSERVER_PANEL_MARGIN - LIVE_OBSERVER_PANEL_WIDTH,
+		LIVE_OBSERVER_PANEL_MARGIN,
+		LIVE_OBSERVER_PANEL_WIDTH,
+		LIVE_OBSERVER_UI_HEIGHT - LIVE_OBSERVER_PANEL_MARGIN * 2.0f};
+	return Panel.Inside(MousePos);
+}
+
+bool CGameClient::HandleLiveObserverInput(const IInput::CEvent &Event)
+{
+	if(!LivePresentationUsesLiveObserverOverlay())
+		return false;
+	const bool QmLiveDemo = LivePresentationUsesQmLiveDemo();
+	if(Client()->State() != IClient::STATE_ONLINE && !QmLiveDemo)
+		return false;
+
+	const vec2 MousePos = LiveObserverMousePos();
+	const float Width = LIVE_OBSERVER_UI_HEIGHT * Graphics()->ScreenAspect();
+	const float PanelX = Width - LIVE_OBSERVER_PANEL_MARGIN - LIVE_OBSERVER_PANEL_WIDTH;
+	const float PanelY = LIVE_OBSERVER_PANEL_MARGIN;
+	const CUIRect Panel = {PanelX, PanelY, LIVE_OBSERVER_PANEL_WIDTH, LIVE_OBSERVER_UI_HEIGHT - LIVE_OBSERVER_PANEL_MARGIN * 2.0f};
+	const CUIRect ListClip = {PanelX, PanelY + LIVE_OBSERVER_PANEL_HEADER_H, LIVE_OBSERVER_PANEL_WIDTH, Panel.h - LIVE_OBSERVER_PANEL_HEADER_H - 10.0f};
+
+	if((Event.m_Key == KEY_MOUSE_WHEEL_UP || Event.m_Key == KEY_MOUSE_WHEEL_DOWN) && (Event.m_Flags & IInput::FLAG_RELEASE) == 0 && Panel.Inside(MousePos))
+	{
+		m_LiveObserverPanelScroll += Event.m_Key == KEY_MOUSE_WHEEL_UP ? -90.0f : 90.0f;
+		ClampLiveObserverPanelScroll();
+		return true;
+	}
+
+	if(Event.m_Key != KEY_MOUSE_1)
+		return false;
+
+	if((Event.m_Flags & IInput::FLAG_RELEASE) != 0)
+	{
+		if(!QmLiveDemo && m_LiveObserverHoldFreeview)
+		{
+			FinishLiveObserverHoldFreeview();
+			return true;
+		}
+		return false;
+	}
+
+	if(m_GameConsole.IsActive() || m_Menus.IsActive() || m_Chat.IsActive() || m_Spectator.IsActive() || m_Emoticon.IsActive() || Ui()->IsPopupOpen())
+		return false;
+
+	if((Event.m_Flags & IInput::FLAG_PRESS) == 0 || (Event.m_Flags & IInput::FLAG_REPEAT) != 0)
+		return false;
+
+	if(LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos))
+	{
+		g_Config.m_ClShowChat = g_Config.m_ClShowChat == 0 ? 1 : 0;
+		Input()->MouseModeAbsolute();
+		m_LiveObserverMouseAbsolute = true;
+		return true;
+	}
+
+	if(LiveObserverRecordRect().Inside(MousePos))
+	{
+		if(QmLiveDemo)
+			return true;
+		if(m_LiveMatchReplay.Recording(this))
+		{
+			g_Config.m_QmLiveMatchRecord = 0;
+			m_LiveMatchReplay.Stop(this);
+		}
+		else if(m_LiveMatchReplay.Start(this))
+		{
+			g_Config.m_QmLiveMatchRecord = 1;
+		}
+		Input()->MouseModeAbsolute();
+		m_LiveObserverMouseAbsolute = true;
+		return true;
+	}
+
+	if(LiveObserverFilterRect().Inside(MousePos))
+	{
+		if(QmLiveDemo)
+		{
+			if(m_LiveTeamRenderFilter.Active())
+			{
+				m_QmLiveDemoFilterTeam = -1;
+				m_LiveTeamRenderFilter.Disable();
+			}
+			else if(LiveObserverTeamActive(m_LiveObserverCurrentTeam))
+			{
+				m_QmLiveDemoFilterTeam = m_LiveObserverCurrentTeam;
+				m_LiveTeamRenderFilter.SetTeam(m_QmLiveDemoFilterTeam);
+			}
+		}
+		else
+		{
+			if(m_LiveTeamRenderFilter.Active())
+				g_Config.m_QmLiveTeamFilter = 0;
+			else if(LiveObserverTeamActive(m_LiveObserverCurrentTeam))
+				g_Config.m_QmLiveTeamFilter = m_LiveObserverCurrentTeam;
+			UpdateLiveTeamFilterConfig();
+		}
+		Input()->MouseModeAbsolute();
+		m_LiveObserverMouseAbsolute = true;
+		return true;
+	}
+
+	if(Panel.Inside(MousePos))
+	{
+		if(!ListClip.Inside(MousePos))
+			return true;
+
+		float RowY = ListClip.y - m_LiveObserverPanelScroll;
+		for(const CLiveDirector::CEntry &Entry : m_LiveDirector.Entries())
+		{
+			const CUIRect Row = {PanelX + 12.0f, RowY, LIVE_OBSERVER_PANEL_WIDTH - 24.0f, LIVE_OBSERVER_ROW_HEIGHT};
+			if(Row.Inside(MousePos))
+			{
+				if(Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM)
+				{
+					if(m_LiveObserverExpandedTeam == Entry.m_Team)
+						m_LiveObserverExpandedTeam = -1;
+					else
+						m_LiveObserverExpandedTeam = Entry.m_Team;
+					ClampLiveObserverPanelScroll();
+					SetLiveObserverTeam(Entry.m_Team);
+				}
+				else
+					SetLiveObserverPlayer(Entry.m_ClientId);
+				Input()->MouseModeAbsolute();
+				m_LiveObserverMouseAbsolute = true;
+				return true;
+			}
+			RowY += LIVE_OBSERVER_ROW_HEIGHT + LIVE_OBSERVER_ROW_GAP;
+
+			if(Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM && Entry.m_Team == m_LiveObserverExpandedTeam)
+			{
+				for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+				{
+					if(!LiveObserverActivePlayerInTeam(ClientId, Entry.m_Team))
+						continue;
+
+					const CUIRect MemberRow = {PanelX + 24.0f, RowY, LIVE_OBSERVER_PANEL_WIDTH - 36.0f, LIVE_OBSERVER_MEMBER_ROW_HEIGHT};
+					if(MemberRow.Inside(MousePos))
+					{
+						SetLiveObserverTeamPlayer(Entry.m_Team, ClientId);
+						Input()->MouseModeAbsolute();
+						m_LiveObserverMouseAbsolute = true;
+						return true;
+					}
+					RowY += LIVE_OBSERVER_MEMBER_ROW_HEIGHT + LIVE_OBSERVER_ROW_GAP;
+				}
+			}
+		}
+		return true;
+	}
+
+	if(LiveObserverOverlayContains(MousePos))
+		return true;
+
+	if(QmLiveDemo)
+		return false;
+
+	SetLiveObserverFreeview();
+	m_Controls.m_aMousePos[g_Config.m_ClDummy] = m_Camera.m_Center;
+	m_Controls.m_aMouseInputType[g_Config.m_ClDummy] = CControls::EMouseInputType::AUTOMATED;
+	m_Controls.ClampMousePos();
+	Input()->MouseModeRelative();
+	m_LiveObserverMouseAbsolute = false;
+	return true;
+}
+
+void CGameClient::RenderLiveObserverOverlay()
+{
+	if(!LivePresentationUsesLiveObserverOverlay())
+		return;
+	const bool QmLiveDemo = LivePresentationUsesQmLiveDemo();
+	if(Client()->State() != IClient::STATE_ONLINE && !QmLiveDemo)
+		return;
+	if(m_GameConsole.IsActive() || m_Menus.IsActive() || Ui()->IsPopupOpen())
+		return;
+
+	float OldScreenX0 = 0.0f;
+	float OldScreenY0 = 0.0f;
+	float OldScreenX1 = 0.0f;
+	float OldScreenY1 = 0.0f;
+	Graphics()->GetScreen(&OldScreenX0, &OldScreenY0, &OldScreenX1, &OldScreenY1);
+
+	const float Width = LIVE_OBSERVER_UI_HEIGHT * Graphics()->ScreenAspect();
+	const float Height = LIVE_OBSERVER_UI_HEIGHT;
+	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
+
+	const vec2 MousePos = LiveObserverMousePos();
+	const CUIRect Freeview = {LIVE_OBSERVER_PANEL_MARGIN, LIVE_OBSERVER_PANEL_MARGIN, LIVE_OBSERVER_FREEVIEW_W, LIVE_OBSERVER_FREEVIEW_H};
+	const ColorRGBA FreeviewColor = QmLiveDemo ? ColorRGBA(0.10f, 0.20f, 0.42f, 0.78f) : (m_LiveObserverHoldFreeview ? ColorRGBA(0.15f, 0.42f, 0.36f, 0.78f) : ColorRGBA(0.05f, 0.05f, 0.05f, 0.58f));
+	Freeview.Draw(FreeviewColor, IGraphics::CORNER_ALL, 8.0f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, QmLiveDemo || m_LiveObserverFreeview ? 1.0f : 0.72f);
+	TextRender()->Text(Freeview.x + 14.0f, Freeview.y + 11.0f, 16.0f, QmLiveDemo ? "QmLive Replay" : (m_LiveObserverHoldFreeview ? Localize("Temporary free camera") : Localize("Hold left click for free camera")), -1.0f);
+
+	const CUIRect RecordButton = LiveObserverRecordRect();
+	const bool Recording = m_LiveMatchReplay.Recording(this);
+	const bool RecordHovered = RecordButton.Inside(MousePos);
+	const ColorRGBA RecordColor = QmLiveDemo ? ColorRGBA(0.10f, 0.20f, 0.42f, 0.78f) : (Recording ? (RecordHovered ? ColorRGBA(0.58f, 0.16f, 0.16f, 0.88f) : ColorRGBA(0.42f, 0.10f, 0.10f, 0.78f)) : (RecordHovered ? ColorRGBA(0.12f, 0.38f, 0.34f, 0.86f) : ColorRGBA(0.08f, 0.24f, 0.23f, 0.74f)));
+	RecordButton.Draw(RecordColor, IGraphics::CORNER_ALL, 8.0f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.94f);
+	TextRender()->Text(RecordButton.x + 10.0f, RecordButton.y + 6.0f, 13.0f, QmLiveDemo ? "Read-only replay" : (Recording ? Localize("Stop match record") : Localize("Record match")), RecordButton.w - 20.0f);
+	char aActionBuf[128];
+	if(QmLiveDemo)
+	{
+		const char *pFilename = m_aQmLiveDemoSidecarPath;
+		const char *pSlash = str_rchr(pFilename, '/');
+		pFilename = pSlash == nullptr ? pFilename : pSlash + 1;
+		str_copy(aActionBuf, pFilename[0] == '\0' ? "JSON sidecar" : pFilename, sizeof(aActionBuf));
+	}
+	else if(Recording)
+	{
+		const int Seconds = m_LiveMatchReplay.LengthTicks(this) / maximum(1, Client()->GameTickSpeed());
+		const char *pFilename = m_LiveMatchReplay.DemoFilename();
+		const char *pSlash = str_rchr(pFilename, '/');
+		pFilename = pSlash == nullptr ? pFilename : pSlash + 1;
+		str_format(aActionBuf, sizeof(aActionBuf), "%02d:%02d  %s", Seconds / 60, Seconds % 60, pFilename);
+	}
+	else if(m_LiveMatchReplay.StatusMessage()[0] != '\0')
+	{
+		str_copy(aActionBuf, m_LiveMatchReplay.StatusMessage(), sizeof(aActionBuf));
+	}
+	else
+	{
+		str_copy(aActionBuf, Localize("Full demo + sidecar"), sizeof(aActionBuf));
+	}
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.66f);
+	TextRender()->Text(RecordButton.x + 10.0f, RecordButton.y + 22.0f, 9.0f, aActionBuf, RecordButton.w - 20.0f);
+
+	const CUIRect FilterButton = LiveObserverFilterRect();
+	const bool FilterHovered = FilterButton.Inside(MousePos);
+	const bool FilterActive = m_LiveTeamRenderFilter.Active();
+	const bool CanFilterCurrentTeam = LiveObserverTeamActive(m_LiveObserverCurrentTeam);
+	const ColorRGBA FilterColor = FilterActive ?
+					      (FilterHovered ? ColorRGBA(0.16f, 0.30f, 0.58f, 0.88f) : ColorRGBA(0.10f, 0.20f, 0.42f, 0.78f)) :
+					      (FilterHovered ? ColorRGBA(0.18f, 0.18f, 0.20f, 0.72f) : ColorRGBA(0.05f, 0.05f, 0.055f, 0.58f));
+	FilterButton.Draw(FilterColor, IGraphics::CORNER_ALL, 8.0f);
+	if(FilterActive)
+		str_format(aActionBuf, sizeof(aActionBuf), Localize("Filter: Team %d"), m_LiveTeamRenderFilter.Team());
+	else if(CanFilterCurrentTeam)
+		str_format(aActionBuf, sizeof(aActionBuf), Localize("Filter Team %d"), m_LiveObserverCurrentTeam);
+	else
+		str_copy(aActionBuf, Localize("Filter off"), sizeof(aActionBuf));
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, FilterActive || CanFilterCurrentTeam ? 0.92f : 0.55f);
+	TextRender()->Text(FilterButton.x + 10.0f, FilterButton.y + 7.0f, 13.0f, aActionBuf, FilterButton.w - 20.0f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.58f);
+	TextRender()->Text(FilterButton.x + 10.0f, FilterButton.y + 22.0f, 9.0f, FilterActive ? Localize("Click to restore full match") : Localize("Preview/render only this team"), FilterButton.w - 20.0f);
+
+	const CUIRect ChatToggle = LiveObserverChatToggleRect(Height);
+	const bool ChatVisible = g_Config.m_ClShowChat != 0;
+	const bool ChatToggleHovered = ChatToggle.Inside(MousePos);
+	const ColorRGBA ChatToggleColor = ChatVisible ?
+						  (ChatToggleHovered ? ColorRGBA(0.12f, 0.38f, 0.34f, 0.86f) : ColorRGBA(0.10f, 0.30f, 0.28f, 0.76f)) :
+						  (ChatToggleHovered ? ColorRGBA(0.18f, 0.18f, 0.20f, 0.72f) : ColorRGBA(0.05f, 0.05f, 0.055f, 0.58f));
+	ChatToggle.Draw(ChatToggleColor, IGraphics::CORNER_ALL, 8.0f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, ChatVisible ? 0.92f : 0.70f);
+	TextRender()->Text(ChatToggle.x + 14.0f, ChatToggle.y + 9.0f, 15.0f, ChatVisible ? Localize("Hide Chat") : Localize("Show chat"), -1.0f);
+
+	const float PanelX = Width - LIVE_OBSERVER_PANEL_MARGIN - LIVE_OBSERVER_PANEL_WIDTH;
+	const float PanelY = LIVE_OBSERVER_PANEL_MARGIN;
+	const CUIRect Panel = {PanelX, PanelY, LIVE_OBSERVER_PANEL_WIDTH, Height - LIVE_OBSERVER_PANEL_MARGIN * 2.0f};
+	Panel.Draw(ColorRGBA(0.02f, 0.02f, 0.025f, 0.62f), IGraphics::CORNER_ALL, 8.0f);
+
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.95f);
+	TextRender()->Text(PanelX + 14.0f, PanelY + 16.0f, 18.0f, QmLiveDemo ? "QmLive Replay" : Localize("Live director"), -1.0f);
+
+	char aBuf[64];
+	str_format(aBuf, sizeof(aBuf), m_LiveDirector.HasDDRaceTeams() ? Localize("%d teams") : Localize("%d players"), (int)m_LiveDirector.Entries().size());
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
+	TextRender()->Text(PanelX + 14.0f, PanelY + 42.0f, 13.0f, aBuf, -1.0f);
+
+	ClampLiveObserverPanelScroll();
+	const CUIRect ListClip = {PanelX, PanelY + LIVE_OBSERVER_PANEL_HEADER_H, LIVE_OBSERVER_PANEL_WIDTH, Panel.h - LIVE_OBSERVER_PANEL_HEADER_H - 10.0f};
+	const bool MouseInList = ListClip.Inside(MousePos);
+	const float XScale = Graphics()->ScreenWidth() / Width;
+	const float YScale = Graphics()->ScreenHeight() / Height;
+	Graphics()->ClipEnable((int)(ListClip.x * XScale), (int)(ListClip.y * YScale), (int)(ListClip.w * XScale), (int)(ListClip.h * YScale));
+
+	float RowY = ListClip.y - m_LiveObserverPanelScroll;
+	if(m_LiveDirector.Entries().empty())
+	{
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
+		TextRender()->Text(PanelX + 14.0f, RowY, 14.0f, QmLiveDemo ? "No replay teams available" : Localize("No director players available"), -1.0f);
+	}
+
+	for(const CLiveDirector::CEntry &Entry : m_LiveDirector.Entries())
+	{
+		const CUIRect Row = {PanelX + 12.0f, RowY, LIVE_OBSERVER_PANEL_WIDTH - 24.0f, LIVE_OBSERVER_ROW_HEIGHT};
+		const bool Selected = !m_LiveObserverFreeview &&
+				      ((Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM && Entry.m_Team == m_LiveObserverCurrentTeam) ||
+					      (Entry.m_Type == CLiveDirector::EEntryType::PLAYER && m_LiveObserverCurrentTeam < 0 && Entry.m_ClientId == m_LiveObserverFollowClientId));
+		const bool Hovered = MouseInList && Row.Inside(MousePos);
+		const ColorRGBA RowColor = Selected ? ColorRGBA(0.13f, 0.30f, 0.48f, 0.88f) : (Hovered ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.16f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f));
+		Row.Draw(RowColor, IGraphics::CORNER_ALL, 6.0f);
+
+		if(Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM)
+			str_format(aBuf, sizeof(aBuf), Localize("%c Team %d"), m_LiveObserverExpandedTeam == Entry.m_Team ? '-' : '+', Entry.m_Team);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s", m_aClients[Entry.m_ClientId].m_aName);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected ? 1.0f : 0.82f);
+		TextRender()->Text(Row.x + 10.0f, Row.y + 8.0f, 14.0f, aBuf, -1.0f);
+
+		if(Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM)
+		{
+			const int Rank = m_LiveFinishRanking.RankForTeam(Entry.m_Team, true);
+			const int FinishTime = LiveFinishTimeForTeam(Entry.m_Team);
+			if(QmLiveDemo && Rank > 0 && FinishTime >= 0)
+			{
+				char aTime[32];
+				str_time_float(FinishTime / 1000.0f, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
+				str_format(aBuf, sizeof(aBuf), "#%d %s", Rank, aTime);
+			}
+			else if(QmLiveDemo)
+			{
+				str_format(aBuf, sizeof(aBuf), "%d RUN", Entry.m_NumPlayers);
+			}
+			else
+			{
+				str_format(aBuf, sizeof(aBuf), "%d", Entry.m_NumPlayers);
+			}
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.62f);
+			TextRender()->Text(Row.x + Row.w - (QmLiveDemo ? 78.0f : 24.0f), Row.y + 8.0f, 14.0f, aBuf, QmLiveDemo ? 72.0f : -1.0f);
+		}
+
+		RowY += LIVE_OBSERVER_ROW_HEIGHT + LIVE_OBSERVER_ROW_GAP;
+
+		if(Entry.m_Type == CLiveDirector::EEntryType::DDRACE_TEAM && Entry.m_Team == m_LiveObserverExpandedTeam)
+		{
+			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+			{
+				if(!LiveObserverActivePlayerInTeam(ClientId, Entry.m_Team))
+					continue;
+
+				const CUIRect MemberRow = {PanelX + 24.0f, RowY, LIVE_OBSERVER_PANEL_WIDTH - 36.0f, LIVE_OBSERVER_MEMBER_ROW_HEIGHT};
+				const bool MemberSelected = !m_LiveObserverFreeview &&
+							    m_LiveObserverCurrentTeam == Entry.m_Team &&
+							    m_LiveDirector.Mode() == CLiveObserverSession::EDirectorMode::FOLLOW_PLAYER &&
+							    m_LiveObserverFollowClientId == ClientId;
+				const bool MemberHovered = MouseInList && MemberRow.Inside(MousePos);
+				const ColorRGBA MemberColor = MemberSelected ? ColorRGBA(0.10f, 0.34f, 0.30f, 0.82f) : (MemberHovered ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.13f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f));
+				MemberRow.Draw(MemberColor, IGraphics::CORNER_ALL, 5.0f);
+
+				str_format(aBuf, sizeof(aBuf), "%s", m_aClients[ClientId].m_aName);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, MemberSelected ? 1.0f : 0.72f);
+				TextRender()->Text(MemberRow.x + 12.0f, MemberRow.y + 6.0f, 12.0f, aBuf, -1.0f);
+				RowY += LIVE_OBSERVER_MEMBER_ROW_HEIGHT + LIVE_OBSERVER_ROW_GAP;
+			}
+		}
+	}
+
+	Graphics()->ClipDisable();
+
+	const float MaxScroll = LiveObserverPanelMaxScroll();
+	if(MaxScroll > 0.0f)
+	{
+		const CUIRect ScrollTrack = {PanelX + LIVE_OBSERVER_PANEL_WIDTH - 7.0f, ListClip.y, 3.0f, ListClip.h};
+		ScrollTrack.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f), IGraphics::CORNER_ALL, 1.5f);
+
+		const float ThumbHeight = maximum(36.0f, ListClip.h * ListClip.h / (ListClip.h + MaxScroll));
+		const float ThumbY = ListClip.y + (ListClip.h - ThumbHeight) * (m_LiveObserverPanelScroll / MaxScroll);
+		const CUIRect ScrollThumb = {ScrollTrack.x, ThumbY, ScrollTrack.w, ThumbHeight};
+		ScrollThumb.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.34f), IGraphics::CORNER_ALL, 1.5f);
+	}
+
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	Graphics()->MapScreen(OldScreenX0, OldScreenY0, OldScreenX1, OldScreenY1);
+}
+#endif
 
 void CGameClient::UpdatePositions()
 {
@@ -1479,6 +3350,26 @@ void CGameClient::UpdatePositions()
 				Client()->IntraGameTick(g_Config.m_ClDummy));
 			m_Snap.m_SpecInfo.m_UsePosition = true;
 		}
+#if defined(CONF_QM_LIVE_CLIENT)
+		else if(LivePresentationUsesQmLiveDemo() && m_Snap.m_SpecInfo.m_SpectatorId >= 0 && m_Snap.m_SpecInfo.m_SpectatorId < MAX_CLIENTS && m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorId].m_Active)
+		{
+			const int SpectatorId = m_Snap.m_SpecInfo.m_SpectatorId;
+			m_Snap.m_SpecInfo.m_Position = mix(
+				vec2(m_Snap.m_aCharacters[SpectatorId].m_Prev.m_X, m_Snap.m_aCharacters[SpectatorId].m_Prev.m_Y),
+				vec2(m_Snap.m_aCharacters[SpectatorId].m_Cur.m_X, m_Snap.m_aCharacters[SpectatorId].m_Cur.m_Y),
+				Client()->IntraGameTick(g_Config.m_ClDummy));
+			m_Snap.m_SpecInfo.m_UsePosition = true;
+		}
+		else if(LivePresentationUsesOnlineDirector() && m_Snap.m_SpecInfo.m_SpectatorId >= 0 && m_Snap.m_SpecInfo.m_SpectatorId < MAX_CLIENTS && m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorId].m_Active)
+		{
+			const int SpectatorId = m_Snap.m_SpecInfo.m_SpectatorId;
+			m_Snap.m_SpecInfo.m_Position = mix(
+				vec2(m_Snap.m_aCharacters[SpectatorId].m_Prev.m_X, m_Snap.m_aCharacters[SpectatorId].m_Prev.m_Y),
+				vec2(m_Snap.m_aCharacters[SpectatorId].m_Cur.m_X, m_Snap.m_aCharacters[SpectatorId].m_Cur.m_Y),
+				Client()->IntraGameTick(g_Config.m_ClDummy));
+			m_Snap.m_SpecInfo.m_UsePosition = true;
+		}
+#endif
 		else if(m_Snap.m_pSpectatorInfo && ((Client()->State() == IClient::STATE_DEMOPLAYBACK && m_DemoSpecId == SPEC_FOLLOW) || (Client()->State() != IClient::STATE_DEMOPLAYBACK && m_Snap.m_SpecInfo.m_SpectatorId != SPEC_FREEVIEW)))
 		{
 			if(m_Snap.m_pPrevSpectatorInfo && m_Snap.m_pPrevSpectatorInfo->m_SpectatorId == m_Snap.m_pSpectatorInfo->m_SpectatorId)
@@ -1499,7 +3390,6 @@ void CGameClient::UpdatePositions()
 void CGameClient::OnRender()
 {
 	CPerfTimer FrameTimer;
-	ProcessQmStutterFrame();
 
 	m_pFrameScheduler->BeginFrame(Client()->PerfFrame());
 
@@ -1510,7 +3400,12 @@ void CGameClient::OnRender()
 	if(!m_MultiView.m_IsInit && m_MultiViewActivated)
 	{
 		int TeamId = 0;
-		if(m_Snap.m_SpecInfo.m_SpectatorId >= 0)
+#if defined(CONF_QM_LIVE_CLIENT)
+		if(LivePresentationUsesOnlineDirector() && LiveObserverTeamActive(m_LiveObserverCurrentTeam))
+			TeamId = m_LiveObserverCurrentTeam;
+		else
+#endif
+			if(m_Snap.m_SpecInfo.m_SpectatorId >= 0)
 			TeamId = m_Teams.Team(m_Snap.m_SpecInfo.m_SpectatorId);
 
 		if(TeamId > MAX_CLIENTS || TeamId < 0)
@@ -1567,6 +3462,12 @@ void CGameClient::OnRender()
 	// render all systems
 	CPerfTimer ComponentsTimer;
 	const auto RenderComponent = [&](CComponent *pComponent) {
+#if defined(CONF_QM_LIVE_CLIENT)
+		if(ShouldSuppressComponentForQmLiveDemo(pComponent))
+			return;
+		if(pComponent == &m_HudEditor)
+			RenderLiveFinishRankHud();
+#endif
 		if(pComponent == &m_Menus)
 		{
 			CPerfTimer StageTimer;
@@ -1594,6 +3495,10 @@ void CGameClient::OnRender()
 	}
 	LogPerfStage(this, "components_total", ComponentsTimer.ElapsedMs());
 
+#if defined(CONF_QM_LIVE_CLIENT)
+	RenderLiveObserverOverlay();
+#endif
+
 	// clear all events/input for this frame
 	{
 		CPerfTimer StageTimer;
@@ -1616,6 +3521,8 @@ void CGameClient::OnRender()
 	LogPerfStage(this, "gameclient_onrender_total", FrameTimer.ElapsedMs());
 
 	m_pFrameScheduler->EndFrame();
+	if(QmPerfEnabled())
+		LogQmIconDiagnostics(m_QmIconManager.TakeDiagnostics(), Client());
 
 	// resend player and dummy info if it was filtered by server
 	if(m_aLocalIds[0] >= 0 && Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive() && WasNewTick)
@@ -1990,7 +3897,7 @@ ColorRGBA CGameClient::GetDDTeamColor(int DDTeam, float Lightness) const
 
 	// Use golden angle to generate unique colors with distinct adjacent colors.
 	// The first DDTeam (team 1) gets angle 0°, i.e. red hue.
-	const float Hue = std::fmod((DDTeam - 1) * (137.50776f / 360.0f), 1.0f);
+	const float Hue = std::fmod((DDTeam - 1) * normalized_golden_angle, 1.0f);
 	return color_cast<ColorRGBA>(ColorHSLA(Hue, 1.0f, Lightness));
 }
 
@@ -2291,6 +4198,10 @@ void CGameClient::FormatStreamerVoteText(const char *pText, char *pBuf, int BufS
 void CGameClient::PrepareInputForSend(int *pData, int Size, bool Dummy)
 {
 	m_FastPractice.PrepareInputForSend(pData, Size, Dummy);
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(!Dummy)
+		SanitizeLiveCompatInput(pData, Size);
+#endif
 }
 
 void CGameClient::OnRelease()
@@ -2385,6 +4296,13 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		return; // no need of all that stuff for the dummy
 	}
 
+#if defined(CONF_QM_LIVE_CLIENT)
+	m_LiveMatchReplay.OnMessage(this, MsgId, pRawMsg);
+	HandleLiveFinishMessage(MsgId, pRawMsg, Conn);
+	if(ShouldFilterLiveTeamMessage(MsgId, pRawMsg))
+		return;
+#endif
+
 	// TODO: this should be done smarter
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnMessage(MsgId, pRawMsg);
@@ -2445,6 +4363,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 
 		m_Ghost.m_AllowRestart = true;
 		m_RaceDemo.m_AllowRestart = true;
+#if defined(CONF_QM_LIVE_CLIENT)
+		m_LiveFinishTeamsStateKnown = true;
+		m_LiveFinishTeamsStateTick = Client()->GameTick(Conn);
+		ResolveLiveFinishPending(Client()->GameTick(Conn));
+#endif
 	}
 	else if(MsgId == NETMSGTYPE_SV_KILLMSG)
 	{
@@ -2639,13 +4562,32 @@ void CGameClient::ResetDemoPlaybackState()
 	m_DemoInputPlaybackState = {};
 	m_HammerHitTracker.Reset();
 	m_vPendingHammerHitEvents.clear();
+#if defined(CONF_QM_LIVE_CLIENT)
+	ResetLiveFinishRanking();
+	m_QmLiveDemoLastTick = -1;
+#endif
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	m_LiveMatchReplay.OnStateChange(this, NewState, OldState);
+	if(NewState == IClient::STATE_DEMOPLAYBACK && OldState != IClient::STATE_DEMOPLAYBACK)
+	{
+		ResetQmLiveDemoPlaybackState();
+		TryLoadQmLiveDemoSidecar();
+	}
+	else if(OldState == IClient::STATE_DEMOPLAYBACK && NewState != IClient::STATE_DEMOPLAYBACK)
+		ResetQmLiveDemoPlaybackState();
+#endif
 	// reset everything when not already connected (to keep gathered stuff)
 	if(NewState < IClient::STATE_ONLINE)
 		OnReset();
+
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(NewState != OldState && (NewState == IClient::STATE_ONLINE || NewState == IClient::STATE_DEMOPLAYBACK))
+		ResetLiveFinishRanking();
+#endif
 
 	// then change the state
 	for(auto &pComponent : m_vpAll)
@@ -2659,16 +4601,14 @@ void CGameClient::OnScreenshotTaken(CImageInfo &&Image)
 
 void CGameClient::OnShutdown()
 {
-	if(m_QmStutterDiagnosticsWasEnabled)
-	{
-		const SQmStutterFrameDecision Decision = m_QmStutterEpisodeTracker.Flush(EQmStutterFlushReason::SHUTDOWN);
-		FlushQmStutterWindow(Decision, true);
-		ResetQmStutterWindowSamples();
-		m_QmStutterDiagnosticsWasEnabled = false;
-	}
+#if defined(CONF_QM_LIVE_CLIENT)
+	m_LiveMatchReplay.OnShutdown(this);
+#endif
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnShutdown();
 
+	m_UI.OnShutdown();
+	m_QmIconManager.Shutdown();
 	m_LocalServer.KillServer();
 }
 
@@ -2695,6 +4635,9 @@ void CGameClient::OnStartRound()
 	// hence no need to reset stats until player leaves GameOver
 	// and it would be a mistake to reset stats after or during the pause
 	m_Statboard.OnReset();
+#if defined(CONF_QM_LIVE_CLIENT)
+	ResetLiveFinishRanking();
+#endif
 
 	// Restart automatic race demo recording
 	m_RaceDemo.OnReset();
@@ -2808,6 +4751,10 @@ void CGameClient::ProcessEvents()
 	for(int Index = 0; Index < Num; Index++)
 	{
 		const IClient::CSnapItem Item = Client()->SnapGetItem(SnapType, Index);
+#if defined(CONF_QM_LIVE_CLIENT)
+		const bool LiveRejectUnknownVisualEvent = m_LiveTeamRenderFilter.Active() && !m_LiveTeamRenderFilter.AllowsUnknownPlayerEvent();
+		const bool LiveRejectUnknownAudioEvent = m_LiveTeamRenderFilter.Active() && m_LiveTeamRenderFilter.AudioEnabled() && !m_LiveTeamRenderFilter.AllowsUnknownPlayerEvent();
+#endif
 
 		// TODO: We don't have enough info about us, others, to know a correct alpha or volume value.
 		const float Alpha = 1.0f;
@@ -2815,6 +4762,10 @@ void CGameClient::ProcessEvents()
 
 		if(Item.m_Type == NETEVENTTYPE_DAMAGEIND)
 		{
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(LiveRejectUnknownVisualEvent)
+				continue;
+#endif
 			const CNetEvent_DamageInd *pEvent = (const CNetEvent_DamageInd *)Item.m_pData;
 
 			vec2 DamageIndPos = vec2(pEvent->m_X, pEvent->m_Y);
@@ -2825,6 +4776,10 @@ void CGameClient::ProcessEvents()
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(LiveRejectUnknownVisualEvent)
+				continue;
+#endif
 			const CNetEvent_Explosion *pEvent = (const CNetEvent_Explosion *)Item.m_pData;
 
 			vec2 ExplosionPos = vec2(pEvent->m_X, pEvent->m_Y);
@@ -2837,36 +4792,32 @@ void CGameClient::ProcessEvents()
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
 			const CNetEvent_HammerHit *pEvent = (const CNetEvent_HammerHit *)Item.m_pData;
-			const vec2 HammerHitPos = vec2(pEvent->m_X, pEvent->m_Y);
-			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, HammerHitPos, -1, Client()->GameTick(g_Config.m_ClDummy))))
-			{
-				const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, QmInferHammerHitOwner(this, HammerHitPos));
-				m_Effects.HammerHit(HammerHitPos, HammerHitAlpha, Volume);
-			}
-
-			constexpr float QmJellyHammerHitRadius = 120.0f;
-			for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
-			{
-				const int LocalId = m_aLocalIds[Dummy];
-				if(LocalId < 0 || LocalId >= MAX_CLIENTS || !m_aClients[LocalId].m_Active)
-					continue;
-
-				const auto &Core = m_aClients[LocalId].m_Predicted;
-				const bool FiringHammer = Core.m_ActiveWeapon == WEAPON_HAMMER && (Core.m_Input.m_Fire & 1);
-				if(!FiringHammer)
-					continue;
-
-				if(distance(Core.m_Pos, HammerHitPos) <= QmJellyHammerHitRadius)
-					m_aPredictedHammerHitEvent[Dummy] = true;
-			}
+			const vec2 HammerHitPos(pEvent->m_X, pEvent->m_Y);
+			bool RenderEffect = true;
+#if defined(CONF_QM_LIVE_CLIENT)
+			RenderEffect = RenderEffect && !LiveRejectUnknownVisualEvent;
+#endif
+			m_vPendingHammerHitEvents.push_back({HammerHitPos,
+				Client()->GameTick(g_Config.m_ClDummy),
+				g_Config.m_ClDummy,
+				Index,
+				RenderEffect});
 		}
 		else if(Item.m_Type == NETEVENTTYPE_BIRTHDAY)
 		{
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(LiveRejectUnknownVisualEvent)
+				continue;
+#endif
 			const CNetEvent_Birthday *pEvent = (const CNetEvent_Birthday *)Item.m_pData;
 			m_Effects.Confetti(vec2(pEvent->m_X, pEvent->m_Y), Alpha);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_FINISH)
 		{
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(LiveRejectUnknownVisualEvent)
+				continue;
+#endif
 			const CNetEvent_Finish *pEvent = (const CNetEvent_Finish *)Item.m_pData;
 			m_Effects.Confetti(vec2(pEvent->m_X, pEvent->m_Y), Alpha);
 		}
@@ -2886,11 +4837,19 @@ void CGameClient::ProcessEvents()
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
 			const CNetEvent_Death *pEvent = (const CNetEvent_Death *)Item.m_pData;
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(!m_LiveTeamRenderFilter.AllowsClient(pEvent->m_ClientId))
+				continue;
+#endif
 			m_Effects.PlayerDeath(vec2(pEvent->m_X, pEvent->m_Y), pEvent->m_ClientId, Alpha);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SOUNDWORLD)
 		{
 			const CNetEvent_SoundWorld *pEvent = (const CNetEvent_SoundWorld *)Item.m_pData;
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(LiveRejectUnknownAudioEvent)
+				continue;
+#endif
 			if(Client()->IsSixup() && pEvent->m_SoundId == SOUND_PLAYER_AIRJUMP)
 			{
 				m_Effects.AirJump(vec2(pEvent->m_X, pEvent->m_Y), Alpha, Volume);
@@ -2947,10 +4906,12 @@ void CGameClient::FinalizeHammerHitEvents()
 			Event.m_Pos,
 			Event.m_Connection,
 			TargetWoke};
-		if((IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId)) && m_HammerHitTracker.Record(Hit))
+		const bool LocalRelated = IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId);
+		if((LocalRelated || Hit.m_AttackerId >= 0) && m_HammerHitTracker.Record(Hit) && LocalRelated)
 			HandleConfirmedHammerHit(Hit);
 
-		if(Event.m_RenderEffect)
+		const bool PredictedHandled = Match.m_AttackerId >= 0 && Match.m_TargetId >= 0 && m_PredictedWorld.CheckPredictedHammerHitHandled(CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId));
+		if(Event.m_RenderEffect && !PredictedHandled)
 		{
 			const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);
 			m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);
@@ -3175,6 +5136,10 @@ void CGameClient::OnNewSnapshot()
 		const int DemoTick = Client()->GameTick(g_Config.m_ClDummy);
 		if(m_LastDemoPlaybackStateTick != -1 && DemoTick <= m_LastDemoPlaybackStateTick)
 			ResetDemoPlaybackState();
+#if defined(CONF_QM_LIVE_CLIENT)
+		if(m_LiveTeamRenderFilter.ObservePlaybackTick(DemoTick))
+			ResetLiveTeamFilterTransientState();
+#endif
 		m_LastDemoPlaybackStateTick = DemoTick;
 	}
 	else
@@ -3567,11 +5532,6 @@ void CGameClient::OnNewSnapshot()
 		m_GameInfo = GetGameInfo(nullptr, 0, &ServerInfo);
 	}
 
-	for(CClientData &Client : m_aClients)
-	{
-		Client.UpdateSkinInfo();
-	}
-
 	// setup local pointers
 	if(m_Snap.m_LocalClientId >= 0)
 	{
@@ -3593,6 +5553,17 @@ void CGameClient::OnNewSnapshot()
 			m_Controls.OnPlayerDeath();
 		}
 	}
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		// Streamer skin privacy depends on local/friend classification, so publish it before skin render info.
+		m_aClients[i].m_Friend = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Friends()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
+		m_aClients[i].m_Foe = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Foes()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
+	}
+
+	for(CClientData &Client : m_aClients)
+		Client.UpdateSkinInfo();
+
 	if(m_FastPractice.Enabled())
 		m_PredictedDummyId = m_FastPractice.CurrentPracticeDummyId();
 	else if(Client()->DummyConnected() && m_aLocalIds[!g_Config.m_ClDummy] >= 0)
@@ -3630,15 +5601,6 @@ void CGameClient::OnNewSnapshot()
 	if(Client()->State() == IClient::STATE_ONLINE)
 	{
 		m_pDiscord->UpdatePlayerCount(m_Snap.m_NumPlayers);
-	}
-
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-	{
-		// update friend state
-		m_aClients[i].m_Friend = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Friends()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
-
-		// update foe state
-		m_aClients[i].m_Foe = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Foes()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
 	}
 
 	// check if we received all finish times
@@ -3737,6 +5699,29 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 
+#if defined(CONF_QM_LIVE_CLIENT)
+	UpdateLiveObserverSnapshot();
+	if(!LivePresentationUsesQmLiveDemo())
+	{
+		UpdateLiveTeamFilterConfig();
+		{
+			std::array<int, MAX_CLIENTS> aTeams{};
+			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+				aTeams[ClientId] = m_Teams.Team(ClientId);
+			m_LiveTeamRenderFilter.UpdateTeams(aTeams);
+		}
+		if(g_Config.m_QmLiveMatchRecord && !m_LiveMatchReplay.OwnsManualRecorder())
+		{
+			if(!m_LiveMatchReplay.Start(this))
+				g_Config.m_QmLiveMatchRecord = 0;
+		}
+		else if(!g_Config.m_QmLiveMatchRecord && m_LiveMatchReplay.OwnsManualRecorder())
+			m_LiveMatchReplay.Stop(this);
+		m_LiveMatchReplay.OnSnapshot(this);
+		UpdateLiveFinishTimeline();
+	}
+#endif
+
 	if(ServerInfo.m_aGameType[0] != '0')
 	{
 		if(str_comp(ServerInfo.m_aGameType, "DM") != 0 && str_comp(ServerInfo.m_aGameType, "TDM") != 0 && str_comp(ServerInfo.m_aGameType, "CTF") != 0)
@@ -3747,6 +5732,9 @@ void CGameClient::OnNewSnapshot()
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
 
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(!Client()->QmLiveObserverActive() && !LivePresentationUsesQmLiveDemo())
+#endif
 	{
 		// add tuning to demo when new recording was started, because server tune message was already received before
 		std::bitset<RECORDER_MAX> CurrentRecordings;
@@ -3786,7 +5774,11 @@ void CGameClient::OnNewSnapshot()
 			m_aDDRaceMsgSent[i] = true;
 		}
 
-		if(m_Snap.m_SpecInfo.m_Active && m_MultiViewActivated)
+		if(m_Snap.m_SpecInfo.m_Active && m_MultiViewActivated
+#if defined(CONF_QM_LIVE_CLIENT)
+			&& !LivePresentationUsesOnlineDirector()
+#endif
+		)
 		{
 			// dont show other teams while spectating in multi view
 			CNetMsg_Cl_ShowOthers Msg;
@@ -3928,6 +5920,10 @@ void CGameClient::OnNewSnapshot()
 		const auto &Character = m_Snap.m_aCharacters[i];
 		if(!Character.m_Active)
 			continue;
+#if defined(CONF_QM_LIVE_CLIENT)
+		if(!LiveTeamFilterAllowsClient(i))
+			continue;
+#endif
 
 		const bool AirJumpByJumpedState = (Character.m_Cur.m_Jumped & 2) && !(Character.m_Prev.m_Jumped & 2);
 		bool AirJumpByJumpCount = false;
@@ -3978,8 +5974,8 @@ void CGameClient::OnNewSnapshot()
 				vec2 Pos = mix(vec2(Character.m_Prev.m_X, Character.m_Prev.m_Y),
 					vec2(Character.m_Cur.m_X, Character.m_Cur.m_Y),
 					Client()->IntraGameTick(g_Config.m_ClDummy));
-				float Alpha = 1.0f;
-				if(IsOtherTeam(i))
+				float Alpha = LiveObserverClientAlpha(i);
+				if(Alpha >= 1.0f && IsOtherTeam(i))
 					Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 				const float Volume = 1.0f; // TODO snd_game_volume_others
 
@@ -3997,6 +5993,10 @@ void CGameClient::OnNewSnapshot()
 		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
 		{
 			auto &Character = m_Snap.m_aCharacters[ClientId];
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(!LiveTeamFilterAllowsClient(ClientId))
+				continue;
+#endif
 			if(Character.m_Active && Character.m_HasExtendedData && Character.m_pPrevExtendedData)
 			{
 				int FreezeTimeNow = Character.m_ExtendedData.m_FreezeEnd - Client()->GameTick(g_Config.m_ClDummy);
@@ -4397,14 +6397,14 @@ void CGameClient::OnPredict()
 	// don't predict inactive players, or entities from other teams
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		if(CCharacter *pChar = m_PredictedWorld.GetCharacterById(i))
-			if((!m_Snap.m_aCharacters[i].m_Active && pChar->m_SnapTicks > 10) || IsOtherTeam(i))
+			if((!m_Snap.m_aCharacters[i].m_Active && pChar->m_SnapTicks > 10) || IsOtherTeam(i) || LiveObserverDimClient(i))
 				pChar->Destroy();
 
 	CProjectile *pProjNext = nullptr;
 	for(CProjectile *pProj = (CProjectile *)m_PredictedWorld.FindFirst(CGameWorld::ENTTYPE_PROJECTILE); pProj; pProj = pProjNext)
 	{
 		pProjNext = (CProjectile *)pProj->TypeNext();
-		if(IsOtherTeam(pProj->GetOwner()))
+		if(IsOtherTeam(pProj->GetOwner()) || LiveObserverDimClient(pProj->GetOwner()))
 		{
 			pProj->Destroy();
 		}
@@ -5072,10 +7072,15 @@ void CGameClient::CClientData::UpdateSkinInfo()
 	}
 
 	const auto &&ApplySkinProperties = [&]() {
-		const int LocalDummy = LocalDummyIndex();
+		const int LocalDummy = LocalSkinConfigIndex();
+		const bool UseServerControlledSkin = LocalDummy >= 0 && m_pGameClient->ShouldUseServerControlledLocalSkin();
 		if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SIX)
 		{
-			if(LocalDummy >= 0)
+			if(UseServerControlledSkin)
+			{
+				m_pSkinInfo->TeeRenderInfo().ApplyColors(m_UseCustomColor, m_ColorBody, m_ColorFeet);
+			}
+			else if(LocalDummy >= 0)
 			{
 				m_pSkinInfo->TeeRenderInfo().ApplyColors(
 					LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor,
@@ -5095,7 +7100,11 @@ void CGameClient::CClientData::UpdateSkinInfo()
 				CTeeRenderInfo::CSixup &SixupSkinInfo = m_pSkinInfo->TeeRenderInfo().m_aSixup[Dummy];
 				for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
 				{
-					if(LocalDummy >= 0)
+					if(UseServerControlledSkin)
+					{
+						m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, m_aSixup[LocalDummy].m_aUseCustomColors[Part], m_aSixup[LocalDummy].m_aSkinPartColors[Part], Part);
+					}
+					else if(LocalDummy >= 0)
 					{
 						m_pGameClient->m_Skins7.ApplyColorTo(SixupSkinInfo, *CSkins7::ms_apUCCVariables[LocalDummy][Part], *CSkins7::ms_apColorVariables[LocalDummy][Part], Part);
 					}
@@ -5152,13 +7161,13 @@ namespace
 		}
 	}
 
-	void ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info)
+	bool ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info)
 	{
 		if(!pGameClient)
-			return;
+			return false;
 
 		Info.Reset();
-		if(const CSkin *pSkin = pGameClient->m_Skins.Find("default"))
+		if(const CSkin *pSkin = pGameClient->m_Skins.FindOrNullptr("default"))
 		{
 			Info.Apply(pSkin);
 		}
@@ -5175,6 +7184,7 @@ namespace
 			Info.m_aSixup[Dummy].m_HatTexture.Invalidate();
 			Info.m_aSixup[Dummy].m_BotTexture.Invalidate();
 		}
+		return Info.SixDescriptorReady() || Info.SevenDescriptorReady();
 	}
 
 	void CopySkinColorsOnly(CTeeRenderInfo &Target, const CTeeRenderInfo &Source)
@@ -5217,7 +7227,8 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	{
 		const float OriginalSize = NewRenderInfo.m_Size;
 		BuildDefaultSkinDescriptor(RenderSkinDescriptor);
-		ApplyDefaultSkin(m_pGameClient, NewRenderInfo);
+		if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo))
+			NewRenderInfo.Reset();
 		NewRenderInfo.m_Size = OriginalSize;
 	}
 
@@ -5270,13 +7281,14 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		}
 	}
 
-	if(m_pGameClient->ShouldHideStreamerSkin(m_ClientId))
+	if(m_pGameClient != nullptr && m_pGameClient->ShouldHideStreamerSkin(m_ClientId))
 	{
 		CTeeRenderInfo OriginalInfo = NewRenderInfo;
 		const float OriginalSize = NewRenderInfo.m_Size;
 		const bool KeepTeamColors = m_pGameClient->IsTeamPlay();
 
-		ApplyDefaultSkin(m_pGameClient, NewRenderInfo);
+		if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo))
+			NewRenderInfo.Reset();
 		NewRenderInfo.m_Size = OriginalSize;
 
 		if(KeepTeamColors)
@@ -5336,15 +7348,21 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 	CSkinTransitionKey Key;
 	Key.m_SkinDescriptor = SkinDescriptor;
 	Key.m_SkinGeneration = m_RenderInfoSkinGeneration;
-	const int LocalDummy = LocalDummyIndex();
-	Key.m_UseCustomColor = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor) : m_UseCustomColor;
-	Key.m_ColorBody = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) : m_ColorBody;
-	Key.m_ColorFeet = LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet) : m_ColorFeet;
+	const int LocalDummy = LocalSkinConfigIndex();
+	const bool UseServerControlledSkin = LocalDummy >= 0 && m_pGameClient->ShouldUseServerControlledLocalSkin();
+	Key.m_UseCustomColor = UseServerControlledSkin ? m_UseCustomColor : (LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor) : m_UseCustomColor);
+	Key.m_ColorBody = UseServerControlledSkin ? m_ColorBody : (LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) : m_ColorBody);
+	Key.m_ColorFeet = UseServerControlledSkin ? m_ColorFeet : (LocalDummy >= 0 ? (LocalDummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet) : m_ColorFeet);
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
 		for(int Part = 0; Part < protocol7::NUM_SKINPARTS; ++Part)
 		{
-			if(LocalDummy >= 0)
+			if(UseServerControlledSkin)
+			{
+				Key.m_aaSixupUseCustomColors[Dummy][Part] = m_aSixup[LocalDummy].m_aUseCustomColors[Part];
+				Key.m_aaSixupSkinPartColors[Dummy][Part] = m_aSixup[LocalDummy].m_aSkinPartColors[Part];
+			}
+			else if(LocalDummy >= 0)
 			{
 				Key.m_aaSixupUseCustomColors[Dummy][Part] = *CSkins7::ms_apUCCVariables[LocalDummy][Part];
 				Key.m_aaSixupSkinPartColors[Dummy][Part] = *CSkins7::ms_apColorVariables[LocalDummy][Part];
@@ -5355,6 +7373,14 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 				Key.m_aaSixupSkinPartColors[Dummy][Part] = m_aSixup[Dummy].m_aSkinPartColors[Part];
 			}
 		}
+	}
+	if(m_pGameClient != nullptr && m_pGameClient->ShouldHideStreamerSkin(m_ClientId))
+	{
+		m_LastSkinTransitionKey = Key;
+		m_HasSkinTransitionKey = true;
+		m_SkinTransitionPreviousRenderInfo.Reset();
+		m_SkinTransitionStart.reset();
+		return;
 	}
 
 	const bool IsTransitionClient = m_pGameClient != nullptr && m_pGameClient->ShouldRunSkinChangeTransition(m_ClientId);
@@ -5592,6 +7618,12 @@ void CGameClient::CClientData::CSixup::Reset()
 
 void CGameClient::SendSwitchTeam(int Team)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(Client()->QmLiveObserverActive())
+		return;
+	if(Client()->QmLiveCompatDirectorActive() && Team != TEAM_SPECTATORS)
+		return;
+#endif
 	if(Team == TEAM_SPECTATORS && m_FastPractice.Enabled())
 	{
 		m_FastPractice.ConsumeSpectatorCommand();
@@ -5605,6 +7637,11 @@ void CGameClient::SendSwitchTeam(int Team)
 
 void CGameClient::SendStartInfo7(bool Dummy)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(Client()->QmLiveObserverActive() && !Dummy)
+		return;
+#endif
+
 	const char *pClanToSend = Dummy ? Config()->m_ClDummyClan : Config()->m_PlayerClan;
 
 	protocol7::CNetMsg_Cl_StartInfo Msg;
@@ -5626,6 +7663,11 @@ void CGameClient::SendStartInfo7(bool Dummy)
 
 void CGameClient::SendSkinChange7(bool Dummy)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(Client()->QmLiveObserverActive() && !Dummy)
+		return;
+#endif
+
 	protocol7::CNetMsg_Cl_SkinChange Msg;
 	for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
 	{
@@ -5779,6 +7821,11 @@ void CGameClient::SendDummyInfo(bool Start)
 
 void CGameClient::SendKill()
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(LivePresentationUsesOnlineDirector())
+		return;
+#endif
+
 	if(m_FastPractice.ConsumeKillCommand())
 		return;
 
@@ -5824,6 +7871,57 @@ void CGameClient::ConReadyChange7(IConsole::IResult *pResult, void *pUserData)
 	if(pClient->Client()->State() == IClient::STATE_ONLINE)
 		pClient->SendReadyChange7();
 }
+
+#if defined(CONF_QM_LIVE_CLIENT)
+void CGameClient::ConQmLiveMatchRecordStart(IConsole::IResult *pResult, void *pUserData)
+{
+	(void)pResult;
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	if(pClient->m_LiveMatchReplay.Start(pClient))
+	{
+		g_Config.m_QmLiveMatchRecord = 1;
+		pClient->Echo("QmLive full match recording started");
+	}
+	else
+	{
+		pClient->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "qmlive/match", pClient->m_LiveMatchReplay.StatusMessage());
+	}
+}
+
+void CGameClient::ConQmLiveMatchRecordStop(IConsole::IResult *pResult, void *pUserData)
+{
+	(void)pResult;
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	g_Config.m_QmLiveMatchRecord = 0;
+	if(pClient->m_LiveMatchReplay.Stop(pClient))
+		pClient->Echo("QmLive full match recording stopped");
+}
+
+void CGameClient::ConQmLiveTeamFilter(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	const int Team = pResult->GetInteger(0);
+	if(!CLiveTeamRenderFilter::IsValidDDRaceTeam(Team))
+	{
+		pClient->Echo("QmLive team filter expects a DDRace team from 1 to 63");
+		return;
+	}
+	g_Config.m_QmLiveTeamFilter = Team;
+	pClient->UpdateLiveTeamFilterConfig();
+	char aBuf[64];
+	str_format(aBuf, sizeof(aBuf), "QmLive team filter: Team %d", Team);
+	pClient->Echo(aBuf);
+}
+
+void CGameClient::ConQmLiveTeamFilterOff(IConsole::IResult *pResult, void *pUserData)
+{
+	(void)pResult;
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	g_Config.m_QmLiveTeamFilter = 0;
+	pClient->UpdateLiveTeamFilterConfig();
+	pClient->Echo("QmLive team filter disabled");
+}
+#endif
 
 void CGameClient::ConchainLanguageUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
@@ -6711,6 +8809,38 @@ bool CGameClient::IsOtherTeam(int ClientId) const
 	return m_Teams.Team(ClientId) != m_Teams.Team(m_Snap.m_LocalClientId);
 }
 
+#if defined(CONF_QM_LIVE_CLIENT)
+bool CGameClient::LiveObserverDimClient(int ClientId) const
+{
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(m_LiveTeamRenderFilter.Active())
+		return !m_LiveTeamRenderFilter.AllowsClient(ClientId);
+#endif
+	if(!LivePresentationUsesLiveObserverOverlay())
+		return false;
+	if(m_LiveObserverFreeview || !LiveObserverTeamActive(m_LiveObserverCurrentTeam))
+		return false;
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return false;
+	if(!m_Snap.m_apPlayerInfos[ClientId])
+		return false;
+
+	const int Team = LiveObserverDDRaceTeam(ClientId);
+	if(Team <= TEAM_FLOCK || Team >= TEAM_SUPER)
+		return false;
+	return Team != m_LiveObserverCurrentTeam;
+}
+
+float CGameClient::LiveObserverClientAlpha(int ClientId) const
+{
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(m_LiveTeamRenderFilter.Active())
+		return m_LiveTeamRenderFilter.AllowsClient(ClientId) ? 1.0f : 0.0f;
+#endif
+	return LiveObserverDimClient(ClientId) ? LIVE_OBSERVER_DIM_ALPHA : 1.0f;
+}
+#endif
+
 int CGameClient::SwitchStateTeam() const
 {
 	if(m_aSwitchStateTeam[g_Config.m_ClDummy] >= 0)
@@ -7330,6 +9460,7 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 	CTeeRenderInfo &TeeInfo = pManagedTeeRenderInfo->TeeRenderInfo();
 	const CSkinDescriptor &SkinDescriptor = pManagedTeeRenderInfo->SkinDescriptor();
 	pManagedTeeRenderInfo->SetDescriptorRenderInfoReady(false);
+	TeeInfo.ResetMissingDescriptorBranches(SkinDescriptor.m_Flags);
 	bool SixReady = false;
 	bool SevenReady = false;
 
@@ -7339,7 +9470,7 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 		if(pSkin != nullptr)
 		{
 			TeeInfo.Apply(pSkin);
-			SixReady = true;
+			SixReady = TeeInfo.SixDescriptorReady();
 		}
 	}
 
@@ -7370,15 +9501,7 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 				}
 			}
 		}
-		SevenReady = false;
-		for(const auto &Sixup : TeeInfo.m_aSixup)
-		{
-			if(Sixup.PartTexture(protocol7::SKINPART_BODY).IsValid())
-			{
-				SevenReady = true;
-				break;
-			}
-		}
+		SevenReady = TeeInfo.SevenDescriptorReady();
 	}
 	bool DescriptorRenderInfoReady = SixReady || SevenReady;
 	pManagedTeeRenderInfo->SetDescriptorRenderInfoReady(DescriptorRenderInfoReady);
@@ -7394,7 +9517,7 @@ void CGameClient::RefreshSkins(int SkinDescriptorFlags)
 	dbg_assert(SkinDescriptorFlags != 0, "SkinDescriptorFlags invalid");
 
 	const auto SkinStartLoadTime = time_get_nanoseconds();
-	const auto &&ProgressCallback = [&]() {
+	const auto ProgressCallback = [this, SkinStartLoadTime]() {
 		// if skin refreshing takes to long, swap to a loading screen
 		if(time_get_nanoseconds() - SkinStartLoadTime > 500ms)
 		{
@@ -7407,7 +9530,14 @@ void CGameClient::RefreshSkins(int SkinDescriptorFlags)
 	}
 	if(SkinDescriptorFlags & CSkinDescriptor::FLAG_SEVEN)
 	{
-		m_Skins7.Refresh(ProgressCallback);
+		m_Skins7.Refresh([this, ProgressCallback]() {
+			ProgressCallback();
+			for(const std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo : m_vpManagedTeeRenderInfos)
+			{
+				if(pManagedTeeRenderInfo->SkinDescriptor().m_Flags & CSkinDescriptor::FLAG_SEVEN)
+					RefreshSkin(pManagedTeeRenderInfo);
+			}
+		});
 	}
 
 	for(std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo : m_vpManagedTeeRenderInfos)
@@ -8269,6 +10399,38 @@ bool CGameClient::IsQmVoiceSupportedClient(int ClientId) const
 		return false;
 
 	return m_aQmVoiceSyncMarkUntil[ClientId] > time_get();
+}
+
+void CGameClient::ClearQmDeveloperMarks()
+{
+	std::fill(std::begin(m_aQmDeveloperMarkUntil), std::end(m_aQmDeveloperMarkUntil), 0);
+	std::fill(std::begin(m_aQmDeveloperRainbow), std::end(m_aQmDeveloperRainbow), false);
+	mem_zero(m_aaQmDeveloperMarkName, sizeof(m_aaQmDeveloperMarkName));
+}
+
+void CGameClient::MarkQmDeveloperClient(int ClientId, const char *pPlayerName, int64_t ExpireTick, bool Rainbow)
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !pPlayerName || pPlayerName[0] == '\0' || ExpireTick <= 0)
+		return;
+	m_aQmDeveloperMarkUntil[ClientId] = maximum(m_aQmDeveloperMarkUntil[ClientId], ExpireTick);
+	m_aQmDeveloperRainbow[ClientId] = Rainbow;
+	str_copy(m_aaQmDeveloperMarkName[ClientId], pPlayerName);
+}
+
+bool CGameClient::IsQmDeveloperAuthenticated(int ClientId) const
+{
+	return ClientId >= 0 && ClientId < MAX_CLIENTS &&
+	       IsQmDeveloperMarkCurrent(
+		       m_aClients[ClientId].m_Active,
+		       m_aaQmDeveloperMarkName[ClientId],
+		       m_aClients[ClientId].m_aName,
+		       m_aQmDeveloperMarkUntil[ClientId],
+		       time_get());
+}
+
+bool CGameClient::IsQmDeveloperRainbow(int ClientId) const
+{
+	return IsQmDeveloperAuthenticated(ClientId) && m_aQmDeveloperRainbow[ClientId];
 }
 
 void CGameClient::ClearClientBrands()

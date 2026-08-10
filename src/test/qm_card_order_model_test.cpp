@@ -4,6 +4,8 @@
 #include <test/test.h>
 
 #include <cstring>
+#include <limits>
+#include <string>
 
 // 意图：全局卡片顺序已经迁移到 stableId|tab|column|order 格式；
 // 头文件注释必须同步说明旧冒号格式仅为兼容解析，避免后续实现继续按旧格式扩展。
@@ -139,6 +141,7 @@ TEST(QmCardOrderModel, SerializeReportsTruncation)
 
 	char aSmallBuf[20];
 	EXPECT_FALSE(M.Serialize(aSmallBuf, sizeof(aSmallBuf)));
+	EXPECT_EQ(aSmallBuf[0], '\0');
 
 	char aFullBuf[128];
 	EXPECT_TRUE(M.Serialize(aFullBuf, sizeof(aFullBuf)));
@@ -172,6 +175,53 @@ TEST(QmCardOrderModel, SerializeMergedReplacingPrefixReportsTruncation)
 	char aSmallBuf[24];
 	EXPECT_FALSE(qm_card_order::SerializeMergedReplacingPrefix(
 		"qm:a|visual|left|0;", "tclient:", ReplacementEntries, aSmallBuf, sizeof(aSmallBuf)));
+	EXPECT_EQ(aSmallBuf[0], '\0');
+}
+
+// 意图：非法泛化列与容量不足一样属于完整序列化失败，不能把已保留的其它命名空间半写入输出。
+TEST(QmCardOrderModel, SerializeMergedReplacingPrefixRejectsInvalidColumnAtomically)
+{
+	const std::vector<qm_card_order::SEntry> ReplacementEntries = {
+		{"tclient:invalid", "tclient", -1, 0},
+	};
+
+	char aBuf[128] = "stale";
+	EXPECT_FALSE(qm_card_order::SerializeMergedReplacingPrefix(
+		"qm:a|visual|left|0;", "tclient:", ReplacementEntries, aBuf, sizeof(aBuf)));
+	EXPECT_EQ(aBuf[0], '\0');
+}
+
+// 意图：合并写回必须逐 token 保留旧配置，不能因固定临时缓冲区把较长的其它命名空间拆碎。
+TEST(QmCardOrderModel, SerializeMergedReplacingPrefixPreservesLongExistingToken)
+{
+	const std::string LongStableId = "qm:" + std::string(220, 'a');
+	const std::string Existing = LongStableId + "|visual|left|0;tclient:old|tclient|left|0;";
+	const std::vector<qm_card_order::SEntry> ReplacementEntries = {
+		{"tclient:new", "tclient", 3, 0},
+	};
+
+	char aBuf[1024];
+	ASSERT_TRUE(qm_card_order::SerializeMergedReplacingPrefix(Existing.c_str(), "tclient:", ReplacementEntries, aBuf, sizeof(aBuf)));
+	EXPECT_EQ(std::string(aBuf), LongStableId + "|visual|left|0;tclient:new|tclient|3|0;");
+}
+
+// 意图：程序化 entry 不受旧 160 字节临时数组限制，且泛化列最大边界可无损往返。
+TEST(QmCardOrderModel, SerializeSupportsLongFieldsAndMaximumColumn)
+{
+	const std::string LongStableId = "deck:" + std::string(180, 'x');
+	const std::string LongTab = "tab-" + std::string(180, 'y');
+	qm_card_order::CModel Model;
+	Model.SetEntries({{LongStableId.c_str(), LongTab.c_str(), std::numeric_limits<int>::max(), 7}});
+
+	char aBuf[1024];
+	ASSERT_TRUE(Model.Serialize(aBuf, sizeof(aBuf)));
+	EXPECT_EQ(std::string(aBuf), LongStableId + "|" + LongTab + "|" + std::to_string(std::numeric_limits<int>::max()) + "|7;");
+	qm_card_order::CModel Reloaded;
+	ASSERT_TRUE(Reloaded.LoadMerged(aBuf, {{LongStableId.c_str(), LongTab.c_str(), 0, 0}}));
+	const auto &ReloadedEntry = Reloaded.Entry(Reloaded.FindByStableId(LongStableId.c_str()));
+	EXPECT_STREQ(ReloadedEntry.m_pDefaultTab, LongTab.c_str());
+	EXPECT_EQ(ReloadedEntry.m_Column, std::numeric_limits<int>::max());
+	EXPECT_EQ(ReloadedEntry.m_OrderInColumn, 0);
 }
 
 // 意图：全局卡片加载必须以注册表默认全量为基准，再用用户配置覆盖。

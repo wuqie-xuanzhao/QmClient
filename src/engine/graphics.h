@@ -156,6 +156,61 @@ enum EBackendType
 	BACKEND_TYPE_COUNT,
 };
 
+struct SOpenGLVersion
+{
+	int m_Major;
+	int m_Minor;
+	int m_Patch;
+};
+
+constexpr SOpenGLVersion AutoOpenGLProbeVersion(EBackendType BackendType)
+{
+	// 这里只定义渲染后端和平台能够尝试的 API 上限，设置项显示仍以 context 探测结果为准。
+	if(BackendType == EBackendType::BACKEND_TYPE_OPENGL_ES)
+		return {3, 0, 0};
+#if defined(CONF_PLATFORM_MACOS)
+	return {4, 1, 0};
+#else
+	return {4, 6, 0};
+#endif
+}
+
+constexpr bool IsOpenGLVersionAtLeast(SOpenGLVersion Available, SOpenGLVersion Required)
+{
+	if(Available.m_Major != Required.m_Major)
+		return Available.m_Major > Required.m_Major;
+	if(Available.m_Minor != Required.m_Minor)
+		return Available.m_Minor > Required.m_Minor;
+	return Available.m_Patch >= Required.m_Patch;
+}
+
+constexpr bool NextAutoOpenGLProbeVersion(SOpenGLVersion &Version)
+{
+	if(Version.m_Major == 4 && Version.m_Minor > 0)
+	{
+		--Version.m_Minor;
+		return true;
+	}
+	if(Version.m_Major == 4)
+	{
+		Version = {3, 3, 0};
+		return true;
+	}
+	if(Version.m_Major == 3 && Version.m_Minor > 0)
+	{
+		--Version.m_Minor;
+		return true;
+	}
+	return false;
+}
+
+constexpr bool ShouldSyncActualOpenGLVersion(EBackendType BackendType, SOpenGLVersion Requested, SOpenGLVersion Actual)
+{
+	const bool RequestedModernOpenGL = BackendType == EBackendType::BACKEND_TYPE_OPENGL && ((Requested.m_Major == 3 && Requested.m_Minor == 3) || Requested.m_Major >= 4);
+	const bool RequestedModernOpenGLES = BackendType == EBackendType::BACKEND_TYPE_OPENGL_ES && Requested.m_Major >= 3;
+	return (RequestedModernOpenGL || RequestedModernOpenGLES) && Actual.m_Major > 0;
+}
+
 struct STWGraphicGpu
 {
 	enum ETWGraphicsGpuType
@@ -195,8 +250,7 @@ protected:
 	int m_ScreenHeight;
 	int m_ScreenRefreshRate;
 	float m_ScreenHiDPIScale;
-	float m_ScreenAspectOverride = 0.0f;
-	ivec2 m_DesktopSize;
+	float m_GameScreenAspectOverride = 0.0f;
 
 public:
 	static constexpr int MEDIA_ISLAND_SDF_MAX_ITEMS = 12;
@@ -212,8 +266,9 @@ public:
 	static bool CalculateGaussianBlurKernel(const SGaussianBlurParams &Params, std::array<float, GAUSSIAN_BLUR_MAX_RADIUS + 1> &aWeights);
 
 	// Fixed vec4-only layout shared by the threaded command buffer, GLSL and
-	// Vulkan std140 UBO. The shader treats this as 44 consecutive vec4 values:
-	// [0..7] are common fields and every item occupies three vec4 values.
+	// Vulkan std140 UBO. The shader treats this as 45 consecutive vec4 values:
+	// [0..7] are common fields, every item occupies three vec4 values and the
+	// final value maps the SDF quad to an optional backdrop texture.
 	struct SMediaIslandSdfParams
 	{
 		static constexpr int DATA_RECT = 0;
@@ -223,10 +278,11 @@ public:
 		static constexpr int DATA_MAIN_PARAMS = 4; // radius, disabled radius, ring radius, ring thickness
 		static constexpr int DATA_METADATA = 5; // item count, corners, has capsule, screen pixel size
 		static constexpr int DATA_CAPSULE_PARAMS = 6; // radius, smooth union, unused, unused
-		static constexpr int DATA_RESERVED = 7;
+		static constexpr int DATA_RESERVED = 7; // outer shadow size, opacity, unused, unused
 		static constexpr int DATA_ITEM_BASE = 8;
 		static constexpr int DATA_ITEM_STRIDE = 3;
-		static constexpr int DATA_COUNT = DATA_ITEM_BASE + MEDIA_ISLAND_SDF_MAX_ITEMS * DATA_ITEM_STRIDE;
+		static constexpr int DATA_BACKDROP_UV = DATA_ITEM_BASE + MEDIA_ISLAND_SDF_MAX_ITEMS * DATA_ITEM_STRIDE;
+		static constexpr int DATA_COUNT = DATA_BACKDROP_UV + 1;
 
 		std::array<vec4, DATA_COUNT> m_aData{};
 
@@ -259,6 +315,21 @@ public:
 	static_assert(sizeof(vec4) == sizeof(float) * 4);
 	static_assert(sizeof(SMediaIslandSdfParams) == SMediaIslandSdfParams::DATA_COUNT * sizeof(vec4));
 
+	// A compact rounded-rectangle primitive shared by UI chrome. It intentionally
+	// remains separate from the Media Island data layout so UI controls do not
+	// inherit HUD-specific shape semantics.
+	struct SRoundedRectSdfParams
+	{
+		vec4 m_Rect{};
+		vec4 m_FillColor{};
+		vec4 m_BorderColor{};
+		// 左上、右上、右下、左下圆角半径
+		vec4 m_CornerRadii{};
+		// 边框宽度、逻辑像素大小、外部 quad padding、保留字段
+		vec4 m_Params{};
+	};
+	static_assert(sizeof(SRoundedRectSdfParams) == sizeof(vec4) * 5);
+
 	enum
 	{
 		TEXLOAD_TO_3D_TEXTURE = 1 << 0,
@@ -289,6 +360,18 @@ public:
 			m_Id = -1;
 			m_Generation = 0;
 		}
+	};
+
+	struct STexturedMsdfParams
+	{
+		CTextureHandle m_Texture;
+		vec4 m_Rect{};
+		vec4 m_UvRect{};
+		ColorRGBA m_Color{};
+		float m_PxRange = 0.0f;
+		float m_AtlasWidth = 0.0f;
+		float m_AtlasHeight = 0.0f;
+		float m_Rotation = 0.0f;
 	};
 
 	class CRenderTargetHandle
@@ -459,7 +542,14 @@ public:
 	virtual void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
 	// Render a media-island SDF quad in a supported programmable backend.
 	// Callers use a geometry approximation when HasMediaIslandSdf() is false.
-	virtual void RenderMediaIslandSdf(const SMediaIslandSdfParams &Params) = 0;
+	virtual void RenderMediaIslandSdf(const SMediaIslandSdfParams &Params, CRenderTargetHandle Backdrop = CRenderTargetHandle()) = 0;
+	// Render a fill and optional border in one anti-aliased rounded-rectangle pass.
+	virtual void RenderRoundedRectSdf(const SRoundedRectSdfParams &Params) = 0;
+	// Draw only the outward anti-alias fringe of a rounded rectangle.
+	virtual void DrawRoundedRectAntialias(float x, float y, float w, float h, float Radius, int Corners, const ColorRGBA &Color) = 0;
+	// Render a textured multi-channel signed-distance field with runtime tint.
+	// This is intentionally separate from normal alpha-texture quads and text glyphs.
+	virtual void RenderTexturedMsdf(const STexturedMsdfParams &Params) = 0;
 
 	// opengl 3.3 functions
 
@@ -481,14 +571,25 @@ public:
 
 	// returns true if the driver age type is supported, passing BACKEND_TYPE_AUTO for BackendType will query the values for the currently used backend
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
+	// 返回当前 OpenGL/GLES context 从驱动字符串解析出的真实版本，不能用配置请求版本代替。
+	virtual bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName)
+	{
+		Major = 0;
+		Minor = 0;
+		Patch = 0;
+		pName = "";
+		return false;
+	}
 	virtual bool IsConfigModernAPI() = 0;
 	virtual bool HasMediaIslandSdf() = 0;
+	virtual bool HasRoundedRectSdf() = 0;
+	virtual bool HasTexturedMsdf() = 0;
 	virtual bool IsTileBufferingEnabled() = 0;
 	virtual bool IsQuadBufferingEnabled() = 0;
 	virtual bool IsTextBufferingEnabled() = 0;
 	virtual bool IsQuadContainerBufferingEnabled() = 0;
 	virtual bool Uses2DTextureArrays() = 0;
-	virtual bool HasTextureArraysSupport() = 0;
+	virtual bool HasTextureArraysSupport() const = 0;
 
 	virtual const char *GetVendorString() = 0;
 	virtual const char *GetVersionString() = 0;

@@ -13,6 +13,18 @@ constexpr bool QmScrollRegionCanConsumeWheel(bool HotFromPreviousFrame, bool Hot
 	return (HotFromPreviousFrame || HotThisFrame) && (!UnderlyingScrollBlocked || RenderingPopup);
 }
 
+constexpr bool QmScrollRegionShouldReserveScrollbarSpace(bool AlwaysReserved, bool ScrollbarShown)
+{
+	return AlwaysReserved || ScrollbarShown;
+}
+
+// 相邻布局分割会留下微小的浮点误差。少于四分之一物理像素的尾部不应让滚动条在显示和隐藏间跳变。
+constexpr bool QmScrollRegionContentOverflows(float ContentSize, float ViewportSize, float PixelSize)
+{
+	const float Tolerance = PixelSize > 0.0f ? PixelSize * 0.25f : 0.0f;
+	return ContentSize > ViewportSize + Tolerance;
+}
+
 struct CScrollRegionParams
 {
 	float m_ScrollbarThickness;

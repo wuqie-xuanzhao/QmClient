@@ -15,7 +15,7 @@ related:
   - docs/superpowers/explore/components-modularization.md
   - docs/superpowers/explore/2026-05-27-DDNet菜单UI规范探索.md
   - docs/superpowers/explore/2026-05-26-设置页性能修复概要.md
-  - docs/superpowers/reviews/2026-06-09-性能量化系统代码审查.md
+  - docs/superpowers/reviews/archive/2026-06-09-性能量化系统代码审查.md
 ---
 
 ## 速答
@@ -183,7 +183,7 @@ flowchart TB
 - **使用 CodeGraph 查看：** `qmclient/` 目录文件清单、`colored_parts.h` 引用者
 - **参考已有文档：**
   - `docs/superpowers/explore/components-modularization.md` (active, 2026-06-09)
-  - `docs/superpowers/reviews/2026-06-09-性能量化系统代码审查.md` (active, 2026-06-09)
+  - `docs/superpowers/reviews/archive/2026-06-09-性能量化系统代码审查.md` (active, 2026-06-09)
   - `docs/superpowers/explore/2026-05-27-DDNet菜单UI规范探索.md` (partial-outdated, 2026-05-27)
 - **使用工具：** fuck-u-code 全仓扫描（已执行）、已有审查/探索报告交叉分析
 - **跳过：**
@@ -217,7 +217,7 @@ flowchart TB
 - `docs/superpowers/explore/components-modularization.md` — QmClient 组件目录模块化探索（active, 2026-06-09）
 - `docs/superpowers/explore/2026-05-27-DDNet菜单UI规范探索.md` — 菜单 UI 规范与代码入口（partial-outdated, 2026-05-27）
 - `docs/superpowers/explore/2026-05-26-设置页性能修复概要.md` — 设置页性能修复执行清单（outdated, 2026-05-26）
-- `docs/superpowers/reviews/2026-06-09-性能量化系统代码审查.md` — perf 系统审查报告（active, 2026-06-09）
+- `docs/superpowers/reviews/archive/2026-06-09-性能量化系统代码审查.md` — perf 系统审查报告（active, 2026-06-09）
 - `docs/ai-workflow/ddnet-development.md` — DDNet/QmClient 补丁范围约束
 
 ---

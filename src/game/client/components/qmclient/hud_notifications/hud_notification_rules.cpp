@@ -1214,6 +1214,17 @@ namespace QmHudNotifications
 		return DecideServerMessageEntry(Analysis, Config);
 	}
 
+	bool ShouldSuppressServerMessageChat(const SServerMessageAnalysis &Analysis, bool HideBasicInfo, bool HidePrompt)
+	{
+		if(Analysis.m_Route == EServerMessageRoute::Solo)
+			return true;
+		if(Analysis.m_Class == EServerMessageClass::BasicInfo)
+			return HideBasicInfo;
+		if(Analysis.m_Class == EServerMessageClass::Prompt)
+			return HidePrompt;
+		return false;
+	}
+
 	EServerMessageRoute ServerMessageRoute(const char *pMessage, ESoloPrompt PendingCompatPrompt, bool RouteSystemMessages)
 	{
 		if(pMessage == nullptr || pMessage[0] == '\0')

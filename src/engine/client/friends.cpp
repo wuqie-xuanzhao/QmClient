@@ -439,6 +439,7 @@ void CFriends::AddFriend(const char *pName, const char *pClan, const char *pCate
 	m_aFriends[m_NumFriends].m_NameHash = NameHash;
 	m_aFriends[m_NumFriends].m_ClanHash = ClanHash;
 	++m_NumFriends;
+	++m_Revision;
 }
 
 void CFriends::RemoveFriend(const char *pName, const char *pClan)
@@ -453,6 +454,7 @@ void CFriends::RemoveFriend(int Index)
 	dbg_assert(Index >= 0 && Index < m_NumFriends, "Invalid Index: %d", Index);
 	mem_move(&m_aFriends[Index], &m_aFriends[Index + 1], sizeof(CFriendInfo) * (m_NumFriends - (Index + 1)));
 	--m_NumFriends;
+	++m_Revision;
 }
 
 void CFriends::Friends()

@@ -937,6 +937,20 @@ TEST(QmHudNotificationRules, FocusModeHiddenMessagesOverrideCategoryFilters)
 	EXPECT_FALSE(Decision.m_QueueNotification);
 }
 
+TEST(QmHudNotificationRules, QueuedSystemNotificationsRemainVisibleInChat)
+{
+	const auto Prompt = QmHudNotifications::AnalyzeServerMessage("Welcome to DDraceNetwork!", QmHudNotifications::ESoloPrompt::None);
+	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(Prompt, false, false));
+	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(Prompt, false, true));
+
+	const auto BasicInfo = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 20.0", QmHudNotifications::ESoloPrompt::None);
+	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(BasicInfo, false, false));
+	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(BasicInfo, true, false));
+
+	const auto Solo = QmHudNotifications::AnalyzeServerMessage("You are now in a solo part", QmHudNotifications::ESoloPrompt::Enter);
+	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(Solo, false, false));
+}
+
 TEST(QmHudNotifications, HandleServerChatUsesFallbackNotificationForUnknownMessage)
 {
 	CTestHudNotifications Notifications;

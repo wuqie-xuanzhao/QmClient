@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clang-tidy 源码卫生探索</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7f4;
+      --panel: #ffffff;
+      --text: #202124;
+      --muted: #5f6368;
+      --border: #d8d7d2;
+      --accent: #1f6feb;
+      --warn: #8a5a00;
+      --danger: #b42318;
+      --ok: #1a7f37;
+      --code: #f1f3f4;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px 56px;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.25;
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      font-size: 22px;
+    }
+
+    h3 {
+      margin-top: 18px;
+      font-size: 17px;
+    }
+
+    p {
+      margin: 8px 0;
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--code);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 0.92em;
+    }
+
+    pre {
+      overflow: auto;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--code);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 9px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #eeeeea;
+      font-weight: 650;
+    }
+
+    ul {
+      margin: 8px 0 12px 22px;
+      padding: 0;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      margin: 16px 0 22px;
+    }
+
+    .meta div, .callout {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 10px 12px;
+    }
+
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .quick {
+      border-left: 4px solid var(--accent);
+    }
+
+    .danger {
+      border-left: 4px solid var(--danger);
+    }
+
+    .warn {
+      border-left: 4px solid var(--warn);
+    }
+
+    .ok {
+      color: var(--ok);
+      font-weight: 650;
+    }
+
+    .risk {
+      color: var(--danger);
+      font-weight: 650;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>clang-tidy 源码卫生探索</h1>
+
+  <section class="meta" aria-label="元信息">
+    <div><span class="label">type</span>question</div>
+    <div><span class="label">date</span>2026-05-20</div>
+    <div><span class="label">status</span>updated after patch</div>
+    <div><span class="label">confidence</span>high</div>
+    <div><span class="label">scope</span>GitHub Actions clang-tidy / style 与源码卫生 warning</div>
+  </section>
+
+  <section class="callout quick">
+    <h2>速答</h2>
+    <p>本轮已先落地低风险且值得做的源码卫生修复：<code>clang-tidy-22 no checks enabled</code> 的 CI 配置错误已修正，<code>modernize-avoid-bind</code>、<code>readability-static-definition-in-anonymous-namespace</code>、<code>readability-container-contains</code>、<code>readability-redundant-casting</code> 已按机械等价方式处理并推送。</p>
+    <p>最新提交为 <code>f0b960a9a fix(ci): 收敛clang-tidy源码卫生告警</code>。推送后新 CI 已触发：<code>Check style</code> run <code>26144029020</code> 已通过；<code>Check clang-tidy</code> run <code>26144029019</code> 与 <code>Check ASan &amp; UBSan</code> run <code>26144028996</code> 在更新本文时仍在运行。</p>
+    <pre><code>flowchart LR
+  A[Check clang-tidy workflow] -- 移除只禁用 checks 参数 --> B[读取 .clang-tidy]
+  B --> C[收集去重 warning]
+  C --> D[已修低风险机械清理]
+  C --> E[需人工判断的 bugprone / 控制流项]
+  C --> F[第三方与生成代码暂缓]</code></pre>
+  </section>
+
+  <section class="callout ok">
+    <h2>已落地状态</h2>
+    <ul>
+      <li><strong>已提交推送</strong>：<code>f0b960a9a fix(ci): 收敛clang-tidy源码卫生告警</code>，分支 <code>codex/official-ci-workflows</code>。</li>
+      <li><strong>已验证</strong>：<code>fix_style.py -n</code> 通过；Windows <code>game-client</code> 构建通过；<code>git diff --check</code> 通过。</li>
+      <li><strong>已知剩余门禁失败</strong>：本地 <code>check-gate.sh --mode quick</code> 仍失败于 33 个既有未使用配置项；style 阶段已通过。</li>
+      <li><strong>本次取舍</strong>：<code>menus_assets_editor.cpp</code> 触碰后按当前 clang-format 统一格式，导致 diff 较大；逻辑改动仍是机械源码卫生项。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键证据</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>结论</th>
+        <th>证据</th>
+        <th>位置</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>clang-tidy workflow 已切到 22</td>
+        <td>workflow 安装 <code>Clang 22</code>，并使用 <code>clang++-22</code>、<code>clang-22</code>、<code>clang-tidy-22</code>。</td>
+        <td><code>.github/workflows/clang-tidy.yml:31</code>, <code>.github/workflows/clang-tidy.yml:45</code>, <code>.github/workflows/clang-tidy.yml:47</code></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>clang-tidy 22 的配置阻断已修复</td>
+        <td>workflow 原先传入 <code>--checks=-readability-identifier-naming</code>，会让 clang-tidy 22 报 <code>no checks enabled</code>。当前已改为只传 <code>clang-tidy-22</code>，让工具读取仓库根部完整 <code>.clang-tidy</code> 检查集。</td>
+        <td><code>.github/workflows/clang-tidy.yml:47</code>, <code>.clang-tidy:27</code>, <code>.clang-tidy:113</code></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>style workflow 的 clang-format 缓存问题已按本机 symlink 方向修复</td>
+        <td>style 每次安装 <code>clang-format-22</code>，缓存只保留 style tools；检查阶段创建 <code>/home/runner/style-tools/clang-format</code> 到本机 <code>clang-format-22</code> 的 symlink。</td>
+        <td><code>.github/workflows/style.yml:30</code>, <code>.github/workflows/style.yml:57</code>, <code>.github/workflows/style.yml:58</code></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><code>std::bind</code> warning 已按等价 lambda 修复</td>
+        <td><code>CStatusItem</code> 成员初始化中的 <code>std::bind(&amp;CStatusBar::*Width, this)</code> 已改为显式 lambda，生命周期仍捕获同一个 <code>this</code>。</td>
+        <td><code>src/game/client/components/tclient/statusbar.h:36</code>, <code>src/game/client/components/tclient/statusbar.h:72</code></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>匿名 namespace 内冗余 static 已处理代表文件</td>
+        <td>已移除 assets editor / assets settings 中匿名 namespace 内文件级 helper 与缓存变量的冗余 <code>static</code>；函数内 <code>static</code> 状态未触碰。</td>
+        <td><code>src/game/client/components/menus_assets_editor.cpp:68</code>, <code>src/game/client/components/menus_assets_editor.cpp:70</code></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>冗余 cast 已按同类型删除</td>
+        <td><code>CImageInfo::m_pData</code> 已经是目标指针类型，相关 <code>static_cast</code> 已删除。</td>
+        <td><code>src/game/client/components/menus_assets_editor.cpp:1104</code>, <code>src/game/client/components/menus_assets_editor.cpp:1139</code>, <code>src/game/client/components/menus.h:705</code></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><code>goto</code> warning 需要人工判断，不适合机械替换</td>
+        <td>音频包导出逻辑使用 <code>goto AudioPackExportDone</code> 统一收口错误路径。改成早返回或 lambda 需要确认资源释放和状态更新不变。</td>
+        <td><code>src/game/client/components/menus_settings.cpp:2899</code>, <code>src/game/client/components/menus_settings.cpp:2905</code></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>第三方 rnnoise warning 不应按 QmClient 源码风格强修</td>
+        <td><code>rnnoise</code> 在非 AVX2 x86_64 下主动发出 SSE 性能提示，这是第三方性能提示而不是本项目逻辑缺陷。</td>
+        <td><code>src/engine/external/rnnoise/src/nnet.h:159</code>, <code>src/engine/external/rnnoise/src/nnet.h:163</code></td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>warning 修复建议表</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>类别</th>
+        <th>旧日志去重数量</th>
+        <th>代表位置</th>
+        <th>建议</th>
+        <th>优先级</th>
+        <th>判断</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>clang-tidy-22 no checks enabled</code></td>
+        <td>已修</td>
+        <td><code>.github/workflows/clang-tidy.yml:47</code></td>
+        <td>已移除 <code>--checks=-readability-identifier-naming</code>，改为让 <code>clang-tidy-22</code> 直接读取 <code>.clang-tidy</code>。</td>
+        <td><span class="ok">已落地</span></td>
+        <td>这是上一轮 clang-tidy 22 失败根因；新 run 已触发，需等待最终结果。</td>
+      </tr>
+      <tr>
+        <td><code>readability-static-definition-in-anonymous-namespace</code></td>
+        <td>部分已修</td>
+        <td><code>menus_assets_editor.cpp</code>, <code>menus_settings_assets.cpp</code>, <code>qmclient/monitoring.cpp</code></td>
+        <td>已移除 assets editor / assets settings 中匿名 namespace 内文件级 helper 与缓存变量的冗余 <code>static</code>。</td>
+        <td><span class="ok">已落地</span></td>
+        <td><code>qmclient/monitoring.cpp</code> 是否还有残留需等 clang-tidy 22 新日志确认。</td>
+      </tr>
+      <tr>
+        <td><code>modernize-avoid-bind</code></td>
+        <td>已修</td>
+        <td><code>components/tclient/statusbar.h</code></td>
+        <td>已把 <code>std::bind(&amp;CStatusBar::XWidth, this)</code> 改成显式 lambda。</td>
+        <td><span class="ok">已落地</span></td>
+        <td>Windows <code>game-client</code> 构建已通过。</td>
+      </tr>
+      <tr>
+        <td><code>readability-redundant-casting</code></td>
+        <td>已修</td>
+        <td><code>menus.h</code>, <code>menus_assets_editor.cpp</code></td>
+        <td>已删除 <code>CImageInfo::m_pData</code> 同类型 cast。</td>
+        <td><span class="ok">已落地</span></td>
+        <td>搜索确认目标 cast 已无残留。</td>
+      </tr>
+      <tr>
+        <td><code>readability-container-contains</code></td>
+        <td>已修</td>
+        <td><code>config.cpp</code>, <code>menus_settings_assets.cpp</code>, <code>player_points.cpp</code></td>
+        <td>已将适用的 map/set/unordered 容器查找改为 <code>contains(...)</code>。</td>
+        <td><span class="ok">已落地</span></td>
+        <td>剩余 <code>std::find(...)</code> 是 <code>vector</code> 场景，不属于该检查。</td>
+      </tr>
+      <tr>
+        <td><code>modernize-use-emplace</code></td>
+        <td>7</td>
+        <td><code>qmclient/colored_parts.h</code>, <code>input_overlay.cpp</code></td>
+        <td><code>push_back(T(...))</code> 改 <code>emplace_back(...)</code>。</td>
+        <td>低</td>
+        <td>收益有限但低风险；逐条确认构造参数和移动语义。</td>
+      </tr>
+      <tr>
+        <td><code>modernize-loop-convert</code> / <code>readability-use-anyofallof</code></td>
+        <td>23</td>
+        <td><code>background.h</code>, <code>menus_browser.cpp</code>, <code>menus_settings_assets.cpp</code></td>
+        <td>只改明显无索引语义、无提前复杂控制流的循环。</td>
+        <td>中低</td>
+        <td>DDNet 既有风格偏普通循环，不建议为了 tidy 大面积现代化。</td>
+      </tr>
+      <tr>
+        <td><code>cppcoreguidelines-avoid-goto</code></td>
+        <td>2</td>
+        <td><code>menus_settings.cpp:2900</code>, <code>menus_settings.cpp:2905</code></td>
+        <td>先读完整导出函数，再决定是否用 helper/lambda/早返回替代。</td>
+        <td>中</td>
+        <td>不是机械风格项；改错会影响错误路径状态收口。</td>
+      </tr>
+      <tr>
+        <td><code>bugprone-exception-escape</code></td>
+        <td>1</td>
+        <td><code>client.cpp:5199</code></td>
+        <td>先调查 main 初始化路径是否真的会抛 C++ 异常。</td>
+        <td>中高</td>
+        <td>可能是真风险，也可能是 clang-tidy 对入口函数过敏；不建议直接套 catch-all。</td>
+      </tr>
+      <tr>
+        <td><code>-W#warnings</code></td>
+        <td>1 类，多次重复</td>
+        <td><code>rnnoise/src/nnet.h:163</code></td>
+        <td>不改第三方源码；如需降噪，考虑 CI 汇总过滤或目标编译参数。</td>
+        <td>低</td>
+        <td>第三方性能提示，不是 QmClient 行为问题。</td>
+      </tr>
+      <tr>
+        <td><code>rust-bridge/base/cxx.h</code> 相关</td>
+        <td>多条重复</td>
+        <td><code>src/rust-bridge/base/cxx.h</code></td>
+        <td>暂缓。</td>
+        <td>低</td>
+        <td>桥接/生成风格代码，改动价值低且可能和生成源冲突。</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>探索范围</h2>
+    <ul>
+      <li>聚焦文件：<code>.github/workflows/clang-tidy.yml</code>、<code>.github/workflows/style.yml</code>、<code>.clang-tidy</code>。</li>
+      <li>代表源码样本：<code>src/game/client/components/tclient/statusbar.h</code>、<code>src/game/client/components/menus_assets_editor.cpp</code>、<code>src/game/client/components/menus_settings_assets.cpp</code>、<code>src/game/client/components/menus_settings.cpp</code>、<code>src/game/client/components/menus.h</code>、<code>src/engine/client/client.cpp</code>、<code>src/engine/external/rnnoise/src/nnet.h</code>。</li>
+      <li>CI 证据：GitHub Actions run <code>26140595184</code> 的 clang-tidy 20 成功日志 warning 分类，run <code>26141971847</code> 的 clang-tidy 22 失败日志；提交 <code>f0b960a9a</code> 后 run <code>26144029020</code> style 已通过，run <code>26144029019</code> clang-tidy 与 run <code>26144028996</code> sanitizer 更新本文时仍在运行。</li>
+      <li>跳过内容：没有逐条展开所有 warning 的源码上下文；本文目标是分类和修复优先级探索，不是最终 patch 计划。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>置信度说明</h2>
+    <p><strong>confidence: high</strong></p>
+    <p>已读取当前 workflow、<code>.clang-tidy</code> 配置和多个代表源码位置，并对 CI 日志中的 warning 做过去重分类。clang-tidy 22 的配置失败根因有直接日志支撑，且对应 workflow 补丁已经提交推送。</p>
+    <p class="muted">限制：本文更新时 clang-tidy 22 新 run 仍在运行，因此最终 warning 数量仍需等 <code>26144029019</code> 完成后刷新。</p>
+  </section>
+
+  <section>
+    <h2>后续建议</h2>
+    <p>等待 <code>Check clang-tidy</code> 新 run 完整结束后，基于 clang-tidy 22 的真实去重结果继续分类。优先只处理 QmClient 自有源码中低风险、等价、能降噪的项；<code>bugprone</code>、控制流重写、第三方与生成代码继续暂缓。</p>
+  </section>
+</main>
+</body>
+</html>

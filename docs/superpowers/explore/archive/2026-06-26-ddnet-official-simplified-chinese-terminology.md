@@ -7,7 +7,7 @@ scope:
   - tmp/ddnet-official-simplified_chinese.txt
   - qmclient_scripts/languages_qmclient/prompt_assets/terminology.toml
   - qmclient_scripts/languages_qmclient/translations/i18n/
-  - docs/superpowers/plans/2026-06-24-i18n-gores-laser-hook-cleanup.md
+  - docs/superpowers/plans/archive/2026-06-24-i18n-gores-laser-hook-cleanup.md
 commit: d68cd11ded
 related:
   - file: 2026-06-12-QmClient-i18n-调用点与分类清单.md
@@ -26,7 +26,7 @@ related:
 |---|---|---|---|
 | 1 | 官方 DDNet 将 `Hook` 译为“钩索”，不是“钩子” | `Hook` 对应 `== 钩索`，同一文件后段再次出现 `Hook == 钩索` | `tmp/ddnet-official-simplified_chinese.txt:181`, `tmp/ddnet-official-simplified_chinese.txt:1954` |
 | 2 | 官方 DDNet 将 hook collision UI 的简中口径主要写作“钩索辅助线” | `Hook collisions == 钩索辅助线`、`Hook collision line == 钩索辅助线`；标题大小写版 `Hook Collisions == 瞄准辅助` 是上下文标题译法，不代表单词 `Hook` 改译 | `tmp/ddnet-official-simplified_chinese.txt:799`, `tmp/ddnet-official-simplified_chinese.txt:1309`, `tmp/ddnet-official-simplified_chinese.txt:1327` |
-| 3 | QmClient 当前维护源的 Hook 单词已经与官方一致，但旧计划仍要求改成“钩子” | `key = "Hook"` 的简中为“钩索”；旧计划 Task 2 写“hook = 钩子”并要求替换“钩索” | `qmclient_scripts/languages_qmclient/translations/i18n/menus.toml:3330`, `docs/superpowers/plans/2026-06-24-i18n-gores-laser-hook-cleanup.md:95` |
+| 3 | QmClient 当前维护源的 Hook 单词已经与官方一致，但旧计划仍要求改成“钩子” | `key = "Hook"` 的简中为“钩索”；旧计划 Task 2 写“hook = 钩子”并要求替换“钩索” | `qmclient_scripts/languages_qmclient/translations/i18n/menus.toml:3330`, `docs/superpowers/plans/archive/2026-06-24-i18n-gores-laser-hook-cleanup.md:95` |
 | 4 | `Grenade` 是当前最明确的官方差异 | 官方 `Grenade == 榴弹枪`，QmClient 术语表和菜单维护源均写“榴弹炮” | `tmp/ddnet-official-simplified_chinese.txt:169`, `qmclient_scripts/languages_qmclient/prompt_assets/terminology.toml:212`, `qmclient_scripts/languages_qmclient/translations/i18n/menus.toml:3234` |
 | 5 | 多数基础词可确认当前 QmClient 维护源与官方简中一致 | 官方 `Clan=战队`、`Dummy=分身`、`Map=地图`、`Hammer=锤子`、`Shotgun=霰弹枪`、`Laser=激光`、`Tee=Tee`；QmClient 对应维护源也使用这些译法 | `tmp/ddnet-official-simplified_chinese.txt:58`, `tmp/ddnet-official-simplified_chinese.txt:1052`, `tmp/ddnet-official-simplified_chinese.txt:208`, `tmp/ddnet-official-simplified_chinese.txt:172`, `tmp/ddnet-official-simplified_chinese.txt:352`, `tmp/ddnet-official-simplified_chinese.txt:520`, `tmp/ddnet-official-simplified_chinese.txt:1780` |
 | 6 | `data/languages/*.txt` 不能作为术语权威，只能作为生成结果核对 | 本仓库验证文档明确写 `translations/i18n/*.toml` 是维护源，`data/languages/*.txt` 是运行时生成产物 | `docs/ai-workflow/verification.md:11`, `docs/ai-workflow/verification.md:21` |
@@ -86,7 +86,7 @@ related:
 ## Related Documents
 
 - `2026-06-12-QmClient-i18n-调用点与分类清单.md`：补充 i18n 调用点和迁移清单，本文件只回答官方简中术语基线。
-- `docs/superpowers/plans/2026-06-24-i18n-gores-laser-hook-cleanup.md`：该计划的 hook 术语前提已被本文件纠正，实施前必须按本调查更新 Task 2 / Task 7。
+- `docs/superpowers/plans/archive/2026-06-24-i18n-gores-laser-hook-cleanup.md`：该计划的 hook 术语前提已被本文件纠正，实施前必须按本调查更新 Task 2 / Task 7。
 
 ## Next Steps
 

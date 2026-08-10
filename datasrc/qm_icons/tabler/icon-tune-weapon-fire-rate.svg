@@ -1,0 +1,6 @@
+<!-- QmClient hand-drawn Tune Zone weapon fire-rate icon: a fast clock with three shots. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <circle cx="108" cy="134" r="76" stroke="currentColor" stroke-width="20"/>
+  <path d="M108 84v52l38 22" stroke="currentColor" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M184 66h48M194 108h42M190 150h38" stroke="currentColor" stroke-width="18" stroke-linecap="round"/>
+</svg>

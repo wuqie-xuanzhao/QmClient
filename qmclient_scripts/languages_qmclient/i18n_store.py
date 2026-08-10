@@ -597,7 +597,12 @@ def _may_keep_source_text(source: str) -> bool:
     return False
 
 
-def dump_message_block(message: Message, translations: dict[str, str]) -> str:
+def dump_message_block(
+    message: Message,
+    translations: dict[str, str],
+    *,
+    preserve_verbatim: bool = False,
+) -> str:
     lines = ["[[message]]", f"key = {toml_quote(message.key)}"]
     if message.context:
         lines.append(f"context = {toml_quote(message.context)}")
@@ -665,6 +670,25 @@ def language_map_for(
     return flattened
 
 
+def english_fallback_identities(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+) -> set[tuple[str, str]]:
+    return {
+        identity
+        for module_name in BILINGUAL_FALLBACK_MODULES
+        for identity in store.get(module_name, {})
+    }
+
+
+def verbatim_translation_identities(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+) -> set[tuple[str, str]]:
+    return {
+        identity
+        for module_name in VERBATIM_TRANSLATION_MODULES
+        for identity in store.get(module_name, {})
+    }
+
 
 def missing_translations_for(
     store: dict[str, dict[tuple[str, str], dict[str, str]]],
@@ -717,7 +741,11 @@ def write_language_store(
             (Message(key, context), translations)
             for (key, context), translations in entries.items()
         ]
-        path.write_text(dump_module(messages), encoding="utf-8", newline="\n")
+        path.write_text(
+            dump_module(messages, module_name=module_name),
+            encoding="utf-8",
+            newline="\n",
+        )
 
 
 def _parse_assignment_value(line: str, name: str) -> str | None:
@@ -769,7 +797,12 @@ def _block_identity(lines: list[str]) -> tuple[str, str] | None:
     return (key, context)
 
 
-def _patch_message_block(lines: list[str], entries: dict[str, str]) -> list[str]:
+def _patch_message_block(
+    lines: list[str],
+    entries: dict[str, str],
+    *,
+    preserve_verbatim: bool = False,
+) -> list[str]:
     identity = _block_identity(lines)
     if identity is None:
         return lines
@@ -779,7 +812,11 @@ def _patch_message_block(lines: list[str], entries: dict[str, str]) -> list[str]
             translations[language] = translation
         elif language in translations:
             del translations[language]
-    return dump_message_block(Message(*identity), translations).splitlines()
+    return dump_message_block(
+        Message(*identity),
+        translations,
+        preserve_verbatim=preserve_verbatim,
+    ).splitlines()
 
 
 def patch_module_store(
@@ -795,7 +832,11 @@ def patch_module_store(
             (Message(key, context), translations)
             for (key, context), translations in entries.items()
         ]
-        path.write_text(dump_module(messages), encoding="utf-8", newline="\n")
+        path.write_text(
+            dump_module(messages, module_name=module_name),
+            encoding="utf-8",
+            newline="\n",
+        )
         return
 
     original = path.read_text(encoding="utf-8")

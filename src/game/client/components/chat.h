@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <string_view>
+#include <string>
 #include <vector>
 
 class CTranslateResponse
@@ -73,6 +73,16 @@ public:
 	static void BeginLinePresentation(SPresentationState &Presentation, int64_t Now, bool GentleRefresh);
 	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds, bool ExtraAnimations = true);
 	static float SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds);
+	static bool CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now)
+	{
+		if(PreviousClientId < 0 || ClientId < 0 || PreviousTeam >= TEAM_WHISPER_SEND || Team >= TEAM_WHISPER_SEND)
+			return false;
+		if(pPreviousText == nullptr || pText == nullptr || str_comp(pPreviousText, pText) != 0)
+			return false;
+		if(Now < PreviousTime)
+			return false;
+		return Now - PreviousTime <= time_freq() * 2;
+	}
 
 private:
 	static constexpr float CHAT_HEIGHT_FULL = 200.0f;
@@ -95,6 +105,14 @@ private:
 	};
 
 	CLineInputBuffered<MAX_LINE_LENGTH> m_Input;
+	struct SMergedAuthor
+	{
+		int m_ClientId = -1;
+		char m_aName[MAX_NAME_LENGTH] = "";
+		char m_aPlayerName[MAX_NAME_LENGTH] = "";
+		ColorRGBA m_NameColor;
+	};
+
 	class CLine
 	{
 	public:
@@ -109,11 +127,13 @@ private:
 		bool m_Team;
 		bool m_Whisper;
 		int m_NameColor;
-		char m_aName[64];
+		char m_aName[MAX_CLIENTS * (MAX_NAME_LENGTH + 1)];
 		char m_aText[MAX_LINE_LENGTH];
+		std::vector<SMergedAuthor> m_vMergedAuthors;
 		bool m_Friend;
 		bool m_Highlighted;
 		bool m_ForceVisible;
+		bool m_ConsoleSuppressed;
 		QmHudNotifications::EServerMessageClass m_ServerMessageClass;
 		std::optional<ColorRGBA> m_CustomColor;
 
@@ -139,6 +159,7 @@ private:
 	int64_t m_LastPresentationUpdateTime;
 	int64_t m_LargeAreaOpenTick;
 	bool m_LastPresentationShowLargeArea;
+	int m_PendingConsoleLineIndex;
 
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
@@ -278,9 +299,15 @@ private:
 	void SaveChatLogLine(int ClientId, int Team, const char *pLine);
 	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
 	const CCommand *FindServerCommand(const char *pName) const;
+	void RefreshSlashCommandSuggestions();
 	const char *LocalizeCommandPreviewText(const char *pText) const;
 	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;
-	void RefreshSlashCommandSuggestions();
+	void RefreshArgumentCandidates();
+	void HideArgumentCandidates();
+	bool ApplyArgumentCandidate(int Index);
+	void EnsureArgumentCandidateVisible();
+	int ArgumentCandidateIndexAt(vec2 MousePos) const;
+	void RenderArgumentCandidates(const CUIRect &InputRect, float Width);
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
 	int CountInitializedLines() const;
 	int CountVisibleLinesFrom(int BacklogLine) const;
@@ -458,13 +485,17 @@ public:
 		str_append(pBuf, "\"", BufSize);
 		return true;
 	}
-	static const char *MessageNamePrefixForClientId(int ClientId)
+	static const char *MessageNamePrefixForClientId(int ClientId, bool HideSystemPrefix = true)
 	{
 		if(ClientId == SERVER_MSG)
-			return "";
+			return HideSystemPrefix ? "" : "*** ";
 		if(ClientId == CLIENT_MSG)
 			return "— ";
 		return "";
+	}
+	static const char *SystemMessageNamePrefix(bool HideSystemPrefix = true)
+	{
+		return MessageNamePrefixForClientId(SERVER_MSG, HideSystemPrefix);
 	}
 	static std::vector<SSlashCommandSuggestion> BuildSlashCommandSuggestions(std::string_view Input, size_t MaxSuggestions)
 	{
@@ -502,6 +533,22 @@ public:
 		str_copy(pBuf, pCommand, BufSize);
 		str_append(pBuf, " ", BufSize);
 		return true;
+	}
+	static bool ShouldHideBlockWordsMessage(EBlockWordsAction Action, bool Matched, int ClientId, bool IsLocalClient, int Team)
+	{
+		return Action == EBlockWordsAction::HIDE_MESSAGE && Matched &&
+		       ClientId >= 0 && ClientId < MAX_CLIENTS && !IsLocalClient && Team != TEAM_WHISPER_SEND;
+	}
+	static bool ShouldSyncDummyCommand(const char *pLine)
+	{
+		if(pLine == nullptr)
+			return false;
+
+		const char *pTeamArgument = str_startswith_nocase(pLine, "/team ");
+		if(pTeamArgument != nullptr)
+			return *str_utf8_skip_whitespaces(pTeamArgument) != '\0';
+
+		return str_comp_nocase(pLine, "/vote particle") == 0;
 	}
 	static QmHudNotifications::EServerMessageClass ResolveLineServerMessageClass(int ClientId, const char *pLine, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass = std::nullopt)
 	{
@@ -582,6 +629,11 @@ public:
 	int GetLineIndex(const CLine *pLine) const;
 	CLine *GetLineByIndex(int Index);
 	void InvalidateLineTranslation(CLine &Line);
+	ColorRGBA PlayerNameColor(int ClientId, int NameColor, bool TeamMessage) const;
+	void AddMergedAuthor(CLine &Line, int ClientId);
+	void RebuildMergedAuthorName(CLine &Line);
+	void PrintLineToConsole(const CLine &Line) const;
+	void FlushPendingConsoleLine(bool Force = false);
 
 	// ----- send functions -----
 
@@ -591,7 +643,7 @@ public:
 	// @param pLine the chat message
 	void SendChat(int Team, const char *pLine);
 	// Sends a chat message using the specified connection (main/dummy).
-	void SendChatOnConn(int Conn, int Team, const char *pLine);
+	void SendChatOnConn(int Conn, int Team, const char *pLine, bool AllowWhitespaceOnly = false, bool HandleLocalSaveForLoadCommand = true);
 
 	// Sends a chat message to the server.
 	//

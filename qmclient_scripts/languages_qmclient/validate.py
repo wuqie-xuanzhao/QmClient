@@ -97,6 +97,8 @@ else:
     print("  OK: extracted_audit_report.json is readable")
 
 active_source_keys = sorted((item.key, item.context) for item in extracted_strings)
+loaded_i18n_store = i18n_store.load_language_store()
+english_fallback_identities = i18n_store.english_fallback_identities(loaded_i18n_store)
 
 for language in generate_all.GENERATED_LANGUAGES:
     path = generate_all.runtime_language_path(language)

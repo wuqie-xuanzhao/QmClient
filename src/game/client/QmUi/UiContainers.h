@@ -6,6 +6,8 @@
 
 #include "QmScroll.h"
 #include "UiContext.h"
+#include "UiSurface.h"
+#include "UiTheme.h"
 #include "UiTokens.h"
 
 #include <engine/graphics.h>
@@ -30,15 +32,24 @@ namespace ui_widget
 		ColorRGBA m_BorderColor = ui_token::color::BORDER_SUBTLE;
 	};
 
-	inline SCardProps QmClientCardProps(float UiScale = 1.0f)
+	inline SCardProps QmClientCardProps(float UiScale = 1.0f, const SUiTheme *pTheme = nullptr)
 	{
 		SCardProps Props;
 		Props.m_Padding = 14.0f * UiScale;
 		Props.m_Radius = 10.0f * UiScale;
 		Props.m_DrawBorder = true;
-		Props.m_FillColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f);
-		Props.m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f);
-		Props.m_BorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f);
+		if(pTheme != nullptr)
+		{
+			Props.m_FillColor = pTheme->m_Surface;
+			Props.m_HighlightColor = pTheme->m_SurfaceHovered.WithAlpha(std::clamp(std::max(0.04f, pTheme->m_Surface.a * 0.10f), 0.0f, 0.16f));
+			Props.m_BorderColor = pTheme->m_Border;
+		}
+		else
+		{
+			Props.m_FillColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f);
+			Props.m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f);
+			Props.m_BorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f);
+		}
 		return Props;
 	}
 
@@ -66,19 +77,19 @@ namespace ui_widget
 			CUIRect Shadow = Rect;
 			Shadow.x += ShadowX;
 			Shadow.y += ShadowY;
-			Shadow.Draw(ui_token::color::SURFACE_SHADOW, IGraphics::CORNER_ALL, Props.m_Radius);
+			DrawRoundedSurface(Ctx, Shadow, ui_token::color::SURFACE_SHADOW, ColorRGBA(), Props.m_Radius);
 		}
 
-		// 2) 可选外扩描边底层：先画在主体下面，只露出外圈 hairline，避免整卡被染色。
+		// 2) 保持外扩细描边的几何尺寸，同时使用统一表面绘制路径。
 		if(Props.m_DrawBorder)
 		{
 			CUIRect BorderBg = Rect;
 			BorderBg.Margin(-1.0f, &BorderBg);
-			BorderBg.Draw(Props.m_BorderColor, IGraphics::CORNER_ALL, Props.m_Radius + 1.0f);
+			DrawRoundedSurface(Ctx, BorderBg, Props.m_BorderColor, ColorRGBA(), Props.m_Radius + 1.0f);
 		}
 
 		// 3) Card fill (glass)
-		Rect.Draw(Props.m_FillColor, IGraphics::CORNER_ALL, Props.m_Radius);
+		DrawRoundedSurface(Ctx, Rect, Props.m_FillColor, ColorRGBA(), Props.m_Radius);
 
 		// 4) Top 1px highlight (sub-pixel sliver near upper edge for the lift cue)
 		CUIRect Highlight = Rect;
@@ -159,9 +170,9 @@ namespace ui_widget
 		if(Frame.m_ScrollbarVisible)
 		{
 			if(Props.m_TrackColor.a > 0.0f)
-				Frame.m_ScrollbarTrackRect.Draw(Props.m_TrackColor, IGraphics::CORNER_ALL, Props.m_Radius);
+				DrawRoundedSurface(Ctx, Frame.m_ScrollbarTrackRect, Props.m_TrackColor, ColorRGBA(), Props.m_Radius);
 			if(Props.m_ThumbColor.a > 0.0f)
-				Frame.m_ScrollbarThumbRect.Draw(Props.m_ThumbColor, IGraphics::CORNER_ALL, Props.m_Radius);
+				DrawRoundedSurface(Ctx, Frame.m_ScrollbarThumbRect, Props.m_ThumbColor, ColorRGBA(), Props.m_Radius);
 		}
 		return Frame;
 	}

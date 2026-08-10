@@ -100,6 +100,10 @@ static constexpr const char *QMCLIENT_HEALTH_URL = "http://42.194.185.210:8080/h
 static constexpr const char *QMCLIENT_PLAYTIME_START_URL = "http://42.194.185.210:8080/playtime/start";
 static constexpr const char *QMCLIENT_PLAYTIME_STOP_URL = "http://42.194.185.210:8080/playtime/stop";
 static constexpr const char *QMCLIENT_PLAYTIME_QUERY_URL = "http://42.194.185.210:8080/playtime/query";
+static constexpr const char *QMCLIENT_DEVELOPER_PRESENCE_URL = "https://qmclient.icu/api/v1/developers/presence";
+static constexpr const char *QMCLIENT_DEVELOPER_PRESENCES_URL = "https://qmclient.icu/api/v1/developers/presences";
+static constexpr const char *QMCLIENT_DEVELOPER_TOKEN_FILE = "qmclient/developer_token.txt";
+static constexpr int QMCLIENT_DEVELOPER_SYNC_INTERVAL_SECONDS = 5;
 static constexpr const char *QMCLIENT_LIFECYCLE_MARKER_FILE = "qmclient/lifecycle_pending.marker";
 static constexpr const char *QMCLIENT_PLAYTIME_CLIENT_ID_FILE = "qmclient/playtime_client_id.txt";
 static constexpr const char *QMCLIENT_MACHINE_ID_FALLBACK_FILE = "qmclient/voice_machine_id.txt";
@@ -361,10 +365,14 @@ namespace
 	{
 		IStorage *m_pStorage = nullptr;
 		std::string m_Content;
+		std::shared_ptr<std::mutex> m_pMutex;
 
 	protected:
 		void Run() override
 		{
+			if(m_pMutex == nullptr)
+				return;
+			std::lock_guard<std::mutex> Lock(*m_pMutex);
 			if(m_pStorage == nullptr || State() == IJob::STATE_ABORTED)
 				return;
 
@@ -383,9 +391,10 @@ namespace
 		}
 
 	public:
-		CQmClientLifecycleMarkerWriteJob(IStorage *pStorage, std::string Content) :
+		CQmClientLifecycleMarkerWriteJob(IStorage *pStorage, std::string Content, std::shared_ptr<std::mutex> pMutex) :
 			m_pStorage(pStorage),
-			m_Content(std::move(Content))
+			m_Content(std::move(Content)),
+			m_pMutex(std::move(pMutex))
 		{
 			Abortable(true);
 		}
@@ -712,6 +721,7 @@ static bool IsValidQmClientPlaytimeId(const char *pClientId)
 void CQmClient::OnInit()
 {
 	InitQmClientLifecycle();
+	InitQmDeveloperAuthentication();
 }
 
 void CQmClient::OnShutdown()
@@ -739,6 +749,8 @@ void CQmClient::OnShutdown()
 	AbortTask(m_pQmClientAuthTokenTask);
 	AbortTask(m_pQmClientUsersTask);
 	AbortTask(m_pQmClientUsersSendTask);
+	AbortTask(m_pQmDeveloperPresenceTask);
+	AbortTask(m_pQmDeveloperPresencesTask);
 	m_pQmClientUsersParseJob = nullptr;
 	m_pQmDdnetPlayerParseJob = nullptr;
 }
@@ -746,6 +758,7 @@ void CQmClient::OnShutdown()
 void CQmClient::OnUpdate()
 {
 	UpdateQmClientRecognition();
+	UpdateQmDeveloperPresence();
 	UpdateQmClientLifecycleAndServerTime();
 	UpdateQmDdnetPlayerStats();
 }
@@ -757,6 +770,17 @@ void CQmClient::OnStateChange(int NewState, int OldState)
 		m_QmClientShutdownReported = true;
 		TouchQmClientLifecycleMarker(true);
 		SendQmClientLifecyclePing(NewState == IClient::STATE_RESTARTING ? "restart" : "shutdown", m_pQmClientLifecycleStopTask);
+	}
+
+	if(NewState == IClient::STATE_ONLINE && OldState != IClient::STATE_ONLINE)
+	{
+		secure_random_password(m_aQmDeveloperSessionId, sizeof(m_aQmDeveloperSessionId), sizeof(m_aQmDeveloperSessionId) - 1);
+		m_QmDeveloperLastSync = 0;
+	}
+	else if(NewState != IClient::STATE_ONLINE && OldState == IClient::STATE_ONLINE)
+	{
+		ResetQmDeveloperPresenceTasks();
+		m_aQmDeveloperSessionId[0] = '\0';
 	}
 }
 
@@ -791,6 +815,7 @@ bool CQmClient::ReadQmClientLifecycleMarker(int64_t &OutStartedAt, int64_t &OutL
 
 void CQmClient::WriteQmClientLifecycleMarker()
 {
+	std::lock_guard<std::mutex> Lock(*m_pQmClientLifecycleMarkerMutex);
 	if(m_QmClientMarkerStartedAt <= 0)
 		m_QmClientMarkerStartedAt = time_timestamp();
 	if(m_QmClientMarkerLastSeenAt <= 0)
@@ -840,7 +865,7 @@ void CQmClient::TouchQmClientLifecycleMarker(bool ForceWrite)
 	str_format(aLine, sizeof(aLine),
 		"session=%s\nstarted_at=%d\nlast_seen_at=%d\nclient_id=%s\n",
 		m_aQmClientLifecycleSessionId, (int)m_QmClientMarkerStartedAt, (int)m_QmClientMarkerLastSeenAt, m_aQmClientPlaytimeClientId);
-	m_pQmClientLifecycleMarkerWriteJob = std::make_shared<CQmClientLifecycleMarkerWriteJob>(Storage(), aLine);
+	m_pQmClientLifecycleMarkerWriteJob = std::make_shared<CQmClientLifecycleMarkerWriteJob>(Storage(), aLine, m_pQmClientLifecycleMarkerMutex);
 	Engine()->AddJob(m_pQmClientLifecycleMarkerWriteJob);
 }
 
@@ -1281,6 +1306,200 @@ void CQmClient::InitQmClientLifecycle()
 		if(!m_pQmClientLifecycleCrashTask)
 			m_QmClientRecoveryNextRetry = time_get() + (int64_t)QMCLIENT_RECOVERY_RETRY_SECONDS * time_freq();
 	}
+}
+
+void CQmClient::InitQmDeveloperAuthentication()
+{
+	m_aQmDeveloperToken[0] = '\0';
+	char *pTokenText = Storage()->ReadFileStr(QMCLIENT_DEVELOPER_TOKEN_FILE, IStorage::TYPE_SAVE);
+	if(!pTokenText)
+		return;
+
+	char *pToken = str_skip_whitespaces(pTokenText);
+	char *pEnd = pToken + str_length(pToken);
+	while(pEnd > pToken && std::isspace((unsigned char)pEnd[-1]))
+		--pEnd;
+	*pEnd = '\0';
+
+	const int TokenLength = str_length(pToken);
+	bool Valid = TokenLength == 64;
+	for(int i = 0; Valid && i < TokenLength; ++i)
+		Valid = std::isxdigit((unsigned char)pToken[i]) != 0;
+	if(Valid)
+		str_copy(m_aQmDeveloperToken, pToken, sizeof(m_aQmDeveloperToken));
+	else
+		log_warn("qmclient", "ignored invalid developer credential file");
+	free(pTokenText);
+}
+
+void CQmClient::ResetQmDeveloperPresenceTasks()
+{
+	if(m_pQmDeveloperPresenceTask)
+	{
+		m_pQmDeveloperPresenceTask->Abort();
+		m_pQmDeveloperPresenceTask = nullptr;
+	}
+	if(m_pQmDeveloperPresencesTask)
+	{
+		m_pQmDeveloperPresencesTask->Abort();
+		m_pQmDeveloperPresencesTask = nullptr;
+	}
+	m_aQmDeveloperPendingServerAddress[0] = '\0';
+	m_QmDeveloperLastSync = 0;
+	GameClient()->ClearQmDeveloperMarks();
+}
+
+void CQmClient::SendQmDeveloperPresence(const char *pServerAddress)
+{
+	if(m_aQmDeveloperToken[0] == '\0' || m_aQmDeveloperSessionId[0] == '\0' || !pServerAddress || pServerAddress[0] == '\0')
+		return;
+	if(m_pQmDeveloperPresenceTask && !m_pQmDeveloperPresenceTask->Done())
+		return;
+
+	CJsonStringWriter JsonWriter;
+	JsonWriter.BeginObject();
+	JsonWriter.WriteAttribute("server_address");
+	JsonWriter.WriteStrValue(pServerAddress);
+	JsonWriter.WriteAttribute("session_id");
+	JsonWriter.WriteStrValue(m_aQmDeveloperSessionId);
+	JsonWriter.WriteAttribute("players");
+	JsonWriter.BeginArray();
+	int PlayerCount = 0;
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		if(Dummy == 1 && !Client()->DummyConnected())
+			continue;
+		const int ClientId = GameClient()->m_aLocalIds[Dummy];
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS || !GameClient()->m_aClients[ClientId].m_Active)
+			continue;
+
+		JsonWriter.BeginObject();
+		JsonWriter.WriteAttribute("player_id");
+		JsonWriter.WriteIntValue(ClientId);
+		JsonWriter.WriteAttribute("player_name");
+		JsonWriter.WriteStrValue(GameClient()->m_aClients[ClientId].m_aName);
+		JsonWriter.WriteAttribute("dummy");
+		JsonWriter.WriteBoolValue(Dummy == 1);
+		JsonWriter.EndObject();
+		++PlayerCount;
+	}
+	JsonWriter.EndArray();
+	JsonWriter.EndObject();
+	if(PlayerCount == 0)
+		return;
+
+	const std::string JsonBody = JsonWriter.GetOutputString();
+	m_pQmDeveloperPresenceTask = HttpPostJson(QMCLIENT_DEVELOPER_PRESENCE_URL, JsonBody.c_str());
+	m_pQmDeveloperPresenceTask->MaxResponseSize(16 * 1024);
+	char aAuthorization[80];
+	str_format(aAuthorization, sizeof(aAuthorization), "Bearer %s", m_aQmDeveloperToken);
+	m_pQmDeveloperPresenceTask->HeaderString("Authorization", aAuthorization);
+	m_pQmDeveloperPresenceTask->Timeout(CTimeout{3000, 5000, 500, 5});
+	m_pQmDeveloperPresenceTask->LogProgress(HTTPLOG::FAILURE);
+	Http()->Run(m_pQmDeveloperPresenceTask);
+}
+
+void CQmClient::FetchQmDeveloperPresences(const char *pServerAddress)
+{
+	if(!pServerAddress || pServerAddress[0] == '\0')
+		return;
+	if(m_pQmDeveloperPresencesTask && !m_pQmDeveloperPresencesTask->Done())
+		return;
+
+	char aEscapedServerAddress[NETADDR_MAXSTRSIZE * 3];
+	EscapeUrl(aEscapedServerAddress, sizeof(aEscapedServerAddress), pServerAddress);
+	char aUrl[512];
+	str_format(aUrl, sizeof(aUrl), "%s?server_address=%s", QMCLIENT_DEVELOPER_PRESENCES_URL, aEscapedServerAddress);
+	m_pQmDeveloperPresencesTask = HttpGet(aUrl);
+	m_pQmDeveloperPresencesTask->MaxResponseSize(128 * 1024);
+	m_pQmDeveloperPresencesTask->Timeout(CTimeout{3000, 5000, 500, 5});
+	m_pQmDeveloperPresencesTask->LogProgress(HTTPLOG::FAILURE);
+	Http()->Run(m_pQmDeveloperPresencesTask);
+	str_copy(m_aQmDeveloperPendingServerAddress, pServerAddress, sizeof(m_aQmDeveloperPendingServerAddress));
+}
+
+void CQmClient::FinishQmDeveloperPresences(const char *pServerAddress)
+{
+	GameClient()->ClearQmDeveloperMarks();
+	if(!m_pQmDeveloperPresencesTask || m_pQmDeveloperPresencesTask->State() != EHttpState::DONE || m_pQmDeveloperPresencesTask->StatusCode() != 200)
+		return;
+
+	char aCurrentServerAddress[NETADDR_MAXSTRSIZE] = "";
+	if(Client()->State() == IClient::STATE_ONLINE)
+	{
+		const NETADDR *pServerAddr = Client()->ServerAddress();
+		if(pServerAddr)
+			net_addr_str(pServerAddr, aCurrentServerAddress, sizeof(aCurrentServerAddress), true);
+	}
+	if(!pServerAddress || str_comp(aCurrentServerAddress, pServerAddress) != 0)
+		return;
+
+	json_value *pRoot = m_pQmDeveloperPresencesTask->ResultJson();
+	if(!pRoot)
+		return;
+	SQmDeveloperPresenceParseResult Result;
+	const bool Parsed = ParseQmDeveloperPresencesJson(pRoot, pServerAddress, Result);
+	json_value_free(pRoot);
+	if(!Parsed)
+		return;
+
+	const int64_t NowTick = time_get();
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		if(!GameClient()->m_aClients[ClientId].m_Active)
+			continue;
+		const SQmDeveloperPresence *pPresence = FindQmDeveloperPresence(
+			Result.m_vPresences,
+			pServerAddress,
+			ClientId,
+			GameClient()->m_aClients[ClientId].m_aName,
+			Result.m_ServerTime);
+		if(!pPresence)
+			continue;
+		const int64_t RemainingSeconds = std::min<int64_t>(pPresence->m_ExpiresAt - Result.m_ServerTime, QMCLIENT_DEVELOPER_SYNC_INTERVAL_SECONDS * 2);
+		if(RemainingSeconds <= 0)
+			continue;
+		GameClient()->MarkQmDeveloperClient(
+			ClientId,
+			pPresence->m_PlayerName.c_str(),
+			NowTick + RemainingSeconds * time_freq(),
+			QmDeveloperBadgeStyleFromBucket(pPresence->m_StyleBucket) == EQmDeveloperBadgeStyle::RAINBOW);
+	}
+}
+
+void CQmClient::UpdateQmDeveloperPresence()
+{
+	if(m_pQmDeveloperPresenceTask && m_pQmDeveloperPresenceTask->Done())
+		m_pQmDeveloperPresenceTask = nullptr;
+	if(m_pQmDeveloperPresencesTask && m_pQmDeveloperPresencesTask->Done())
+	{
+		FinishQmDeveloperPresences(m_aQmDeveloperPendingServerAddress);
+		m_pQmDeveloperPresencesTask = nullptr;
+		m_aQmDeveloperPendingServerAddress[0] = '\0';
+	}
+
+	if(Client()->State() != IClient::STATE_ONLINE)
+	{
+		GameClient()->ClearQmDeveloperMarks();
+		return;
+	}
+	if(m_aQmDeveloperSessionId[0] == '\0')
+		secure_random_password(m_aQmDeveloperSessionId, sizeof(m_aQmDeveloperSessionId), sizeof(m_aQmDeveloperSessionId) - 1);
+
+	const int64_t Now = time_get();
+	if(m_QmDeveloperLastSync != 0 && Now - m_QmDeveloperLastSync < (int64_t)QMCLIENT_DEVELOPER_SYNC_INTERVAL_SECONDS * time_freq())
+		return;
+
+	char aServerAddress[NETADDR_MAXSTRSIZE] = "";
+	const NETADDR *pServerAddr = Client()->ServerAddress();
+	if(pServerAddr)
+		net_addr_str(pServerAddr, aServerAddress, sizeof(aServerAddress), true);
+	if(aServerAddress[0] == '\0')
+		return;
+
+	SendQmDeveloperPresence(aServerAddress);
+	FetchQmDeveloperPresences(aServerAddress);
+	m_QmDeveloperLastSync = Now;
 }
 
 void CQmClient::ResetQmClientRecognitionTasks()

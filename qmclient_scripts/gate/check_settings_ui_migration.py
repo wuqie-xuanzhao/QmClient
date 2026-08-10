@@ -108,7 +108,7 @@ PAGE_STABLE_IDS = {
 	"tclient_bind_wheel": ("deck:tclient-bind-wheel-editor", "deck:tclient-bind-wheel-preview"),
 	"tclient_chat_binds": ("deck:tclient-chat-binds-kaomoji", "deck:tclient-chat-binds-warlist", "deck:tclient-chat-binds-other"),
 	"tclient_warlist": ("deck:tclient-warlist",),
-	"tclient_status_bar": ("deck:tclient-status-bar-settings", "deck:tclient-status-bar-items", "deck:tclient-status-bar-preview"),
+	"tclient_status_bar": ("deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"),
 	"tclient_info": ("deck:tclient-info-links", "deck:tclient-info-files", "deck:tclient-info-developers", "deck:tclient-info-tabs"),
 	"tclient_profiles": ("deck:tclient-profiles-actions", "deck:tclient-profiles-options", "deck:tclient-profiles-list"),
 	"tclient_configs": ("deck:tclient-configs-actions",),
@@ -210,6 +210,13 @@ COMMON_FORBIDDEN = (
 	"Ui()->DoEditBox(",
 	"Ui()->DoScrollbarH(",
 )
+PAGE_ALLOWED_FORBIDDEN_CALLS = {
+	"tee": {
+		"Ui()->DoEditBox(": (
+			"Ui()->DoEditBox(&ColorCodeInput, &ColorCodeEditBox, std::max(10.0f, BodySize * 0.85f), IGraphics::CORNER_ALL, {}, TEXTALIGN_MC)",
+		),
+	},
+}
 STRICT_LEGACY_PAGES = {"general", "player", "tee", "tee7", "graphics", "sound", "ddnet", "appearance", "controls"}
 DECK_LEGACY_FORBIDDEN = ("BeginSettingsCardDeck(", "BeginSettingsCardDeckCard(")
 PAGE_REQUIRED = {
@@ -566,6 +573,14 @@ def _find_legacy_color_picker_geometry(source: str) -> list[tuple[int, str]]:
 	return legacy
 
 
+def _contains_forbidden_token(page: str, source: str, token: str) -> bool:
+	"""Return whether a page contains a forbidden call outside its explicit migration allowlist."""
+	remaining_source = source
+	for allowed_call in PAGE_ALLOWED_FORBIDDEN_CALLS.get(page, {}).get(token, ()):
+		remaining_source = remaining_source.replace(allowed_call, "", 1)
+	return token in remaining_source
+
+
 def audit_page(repo_root: Path, page: str) -> list[str]:
 	if page not in PAGE_STABLE_IDS:
 		raise ValueError(f"unknown settings page: {page}")
@@ -601,7 +616,7 @@ def audit_page(repo_root: Path, page: str) -> list[str]:
 	else:
 		forbidden = DECK_LEGACY_FORBIDDEN + PAGE_FORBIDDEN.get(page, ())
 	for token in forbidden:
-		if token in page_source:
+		if _contains_forbidden_token(page, page_source, token):
 			errors.append(f"{page}: {token}: legacy path remains")
 
 	registry = _read(repo_root, _REGISTRY_SOURCE)

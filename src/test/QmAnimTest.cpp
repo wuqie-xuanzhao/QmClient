@@ -59,21 +59,26 @@ namespace
 
 	TEST(SettingsCard, MotionPolicyKeepsRequiredFeedbackAtLevelZero)
 	{
-		const SCardMotionSpec Full = ResolveCardMotionSpec(2, true);
-		const SCardMotionSpec Reduced = ResolveCardMotionSpec(1, true);
-		const SCardMotionSpec Off = ResolveCardMotionSpec(0, true);
+		const SCardMotionSpec Full = ResolveCardMotionSpec(2, true, true, true, true);
+		const SCardMotionSpec Reduced = ResolveCardMotionSpec(1, true, true, true, true);
+		const SCardMotionSpec Off = ResolveCardMotionSpec(0, true, true, true, true);
 		EXPECT_GT(Full.m_EntryDistance, Reduced.m_EntryDistance);
 		EXPECT_FLOAT_EQ(Full.m_EntryDuration, 0.16f);
+		EXPECT_FLOAT_EQ(Full.m_ContentHeightDuration, 0.18f);
 		EXPECT_FLOAT_EQ(Reduced.m_ReflowDuration, 0.12f);
 		EXPECT_TRUE(Full.m_DecorativeMotion);
-		EXPECT_FALSE(ResolveCardMotionSpec(2, false).m_DecorativeMotion);
+		EXPECT_FALSE(ResolveCardMotionSpec(2, true, true, true, false).m_DecorativeMotion);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(2, false, true, true, true).m_EntryDuration, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(2, true, false, true, true).m_ContentHeightDuration, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(2, true, true, false, true).m_ReflowDuration, 0.0f);
 		EXPECT_FLOAT_EQ(Off.m_EntryDistance, 0.0f);
 		EXPECT_FLOAT_EQ(Off.m_EntryDuration, 0.0f);
+		EXPECT_FLOAT_EQ(Off.m_ContentHeightDuration, 0.0f);
 		EXPECT_FLOAT_EQ(Off.m_ReflowDuration, 0.0f);
 		EXPECT_GT(Off.m_DropFeedbackDuration, 0.0f);
 		EXPECT_GT(Off.m_ReflowCompleteFeedbackDuration, 0.0f);
-		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(-1, true).m_EntryDistance, 0.0f);
-		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(99, true).m_EntryDistance, Full.m_EntryDistance);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(-1, true, true, true, true).m_EntryDistance, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(99, true, true, true, true).m_EntryDistance, Full.m_EntryDistance);
 		EXPECT_TRUE(Off.m_KeepDragProxy);
 		EXPECT_TRUE(Off.m_KeepDropFeedback);
 		EXPECT_TRUE(Off.m_KeepReflowCompleteFeedback);
@@ -260,14 +265,21 @@ namespace
 
 		const SSettingsListCardGeometry OneMode = ResolveSettingsGraphicsModesGeometry(1, Metrics);
 		const SSettingsListCardGeometry ManyModes = ResolveSettingsGraphicsModesGeometry(20, Metrics);
-		EXPECT_FLOAT_EQ(OneMode.m_ContentHeight, Metrics.m_RowStep + Metrics.m_ListRowHeight);
-		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, Metrics.m_RowStep + 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(OneMode.m_ContentHeight, Metrics.m_RowStep * 2.0f + Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(ManyModes.m_ContentHeight, Metrics.m_RowStep * 2.0f + 8.0f * Metrics.m_ListRowHeight);
 		EXPECT_FLOAT_EQ(ManyModes.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
 
-		const SSettingsListCardGeometry AudioPacks = ResolveSettingsSoundAudioPackGeometry(Metrics);
-		EXPECT_EQ(AudioPacks.m_VisibleRows, 8);
-		EXPECT_FLOAT_EQ(AudioPacks.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
-		EXPECT_FLOAT_EQ(AudioPacks.m_ContentHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing + AudioPacks.m_ListViewportHeight + 16.0f);
+		const SSettingsListCardGeometry OneAudioPack = ResolveSettingsSoundAudioPackGeometry(1, Metrics);
+		const SSettingsListCardGeometry EightAudioPacks = ResolveSettingsSoundAudioPackGeometry(8, Metrics);
+		const SSettingsListCardGeometry NineAudioPacks = ResolveSettingsSoundAudioPackGeometry(9, Metrics);
+		EXPECT_EQ(OneAudioPack.m_VisibleRows, 1);
+		EXPECT_FLOAT_EQ(OneAudioPack.m_ListViewportHeight, Metrics.m_ListRowHeight);
+		EXPECT_EQ(EightAudioPacks.m_VisibleRows, 8);
+		EXPECT_FLOAT_EQ(EightAudioPacks.m_ListViewportHeight, 8.0f * Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(NineAudioPacks.m_ListViewportHeight, EightAudioPacks.m_ListViewportHeight);
+		EXPECT_FLOAT_EQ(OneAudioPack.m_ContentHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing + OneAudioPack.m_ListViewportHeight + 16.0f);
+		EXPECT_NE(ResolveSettingsSoundLayoutRevision(false, true, 7), ResolveSettingsSoundLayoutRevision(false, true, 8));
+		EXPECT_EQ(ResolveSettingsSoundLayoutRevision(false, true, 9), ResolveSettingsSoundLayoutRevision(false, true, 10));
 	}
 
 	TEST(SettingsPageLayout, GeneralDefinitionsRevisionTracksDynamicListCounts)
@@ -372,13 +384,32 @@ namespace
 		EXPECT_GT(ResolveSettingsProfilesListHeight(Metrics, 300.0f, 4), ResolveSettingsProfilesListHeight(Metrics, 900.0f, 4));
 	}
 
-	TEST(SettingsPageLayout, TeeQueuePresetsReserveEightStandardRows)
+	TEST(SettingsPageLayout, TeeQueueListViewportUsesCompleteRowsAndPrioritizesQueueSpace)
 	{
 		const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
 		const float FixedChromeHeight = Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + Metrics.m_ButtonHeight;
-		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics), FixedChromeHeight + Metrics.m_ListRowHeight * 8.0f);
-		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 6), FixedChromeHeight + Metrics.m_ListRowHeight * 6.0f);
-		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePanelHeight(Metrics), 440.0f);
+		const float PresetRowSpacing = Metrics.m_LineSpacing * 0.5f;
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 3), FixedChromeHeight + ResolveSettingsListViewportHeight(3, Metrics.m_ListRowHeight, PresetRowSpacing));
+		EXPECT_FLOAT_EQ(ResolveSettingsTeeQueuePresetHeight(Metrics, 6), FixedChromeHeight + ResolveSettingsListViewportHeight(6, Metrics.m_ListRowHeight, PresetRowSpacing));
+		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(0), 2);
+		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(3), 3);
+		EXPECT_EQ(ResolveSettingsTeeVisiblePresetRows(12), 3);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(1), 1);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(8), 8);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(9), 8);
+		EXPECT_EQ(ResolveSettingsTeeVisibleQueueRows(10), 8);
+		const SSettingsTeeQueuePanelGeometry OneQueueItem = ResolveSettingsTeeQueuePanelGeometry(Metrics, 1, 12);
+		const SSettingsTeeQueuePanelGeometry EightQueueItems = ResolveSettingsTeeQueuePanelGeometry(Metrics, 8, 12);
+		const SSettingsTeeQueuePanelGeometry NineQueueItems = ResolveSettingsTeeQueuePanelGeometry(Metrics, 9, 12);
+		EXPECT_FLOAT_EQ(OneQueueItem.m_QueueListViewportHeight, Metrics.m_ListRowHeight);
+		EXPECT_FLOAT_EQ(EightQueueItems.m_QueueListViewportHeight, Metrics.m_ListRowHeight * 8.0f);
+		EXPECT_FLOAT_EQ(NineQueueItems.m_QueueListViewportHeight, EightQueueItems.m_QueueListViewportHeight);
+		EXPECT_FLOAT_EQ(EightQueueItems.m_QueueListSurfaceHeight, Metrics.m_LineHeight + Metrics.m_LineSpacing * 3.0f + EightQueueItems.m_QueueListViewportHeight);
+		EXPECT_EQ(EightQueueItems.m_VisiblePresetRows, 3);
+		const float StackedIntervalHeight = Metrics.m_LineHeight + Metrics.m_LineSpacing + Metrics.m_InputHeight;
+		EXPECT_GE(EightQueueItems.m_ContentHeight, Metrics.m_LineSpacing * 5.0f + Metrics.m_LineHeight + StackedIntervalHeight + EightQueueItems.m_QueueListSurfaceHeight + EightQueueItems.m_QueuePresetHeight);
+		EXPECT_NE(ResolveSettingsTeeQueueLayoutRevision(false, false, false, 7, 3), ResolveSettingsTeeQueueLayoutRevision(false, false, false, 8, 3));
+		EXPECT_EQ(ResolveSettingsTeeQueueLayoutRevision(false, false, false, 9, 3), ResolveSettingsTeeQueueLayoutRevision(false, false, false, 10, 4));
 	}
 
 	TEST(SettingsPageLayout, TeeIdentityPreviewReservesSemanticHeight)
@@ -476,7 +507,7 @@ namespace
 	{
 		const SSettingsContentMetrics Compact = ResolveSettingsContentMetrics(640.0f);
 		EXPECT_FLOAT_EQ(Compact.m_UiScale, 0.78f);
-		EXPECT_NEAR(ResolveAppearanceChatMessagesHeight(Compact), 258.7f, 0.001f);
+		EXPECT_NEAR(ResolveAppearanceChatMessagesHeight(Compact), 278.6f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudCoordsHeight(Compact), 155.3f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, false, false), 95.6f, 0.001f);
 		EXPECT_NEAR(ResolveQmHudNotificationsHeight(Compact, true, false), 311.4f, 0.001f);
@@ -487,7 +518,7 @@ namespace
 
 		const SSettingsContentMetrics Standard = ResolveSettingsContentMetrics(1000.0f);
 		EXPECT_FLOAT_EQ(Standard.m_UiScale, 1.0f);
-		EXPECT_FLOAT_EQ(ResolveAppearanceChatMessagesHeight(Standard), 325.0f);
+		EXPECT_FLOAT_EQ(ResolveAppearanceChatMessagesHeight(Standard), 350.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudCoordsHeight(Standard), 195.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, false, false), 120.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Standard, true, false), 390.0f);
@@ -515,7 +546,7 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 150.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 390.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 490.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 46.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 25.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, true), 121.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, false, false, false, 0, false, false), 20.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, false, false, 0, false, false), 145.0f);
@@ -541,15 +572,22 @@ namespace
 
 	TEST(SettingsPageLayout, ConditionalRowsUseFrameSnapshotUntilNextLayout)
 	{
+		bool ReplaysEnabled = true;
 		bool RaceGhostEnabled = false;
+		const bool ReplaysFrameSnapshot = ReplaysEnabled;
 		const bool FrameSnapshot = RaceGhostEnabled;
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(FrameSnapshot, false), 5.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysFrameSnapshot, FrameSnapshot, false), 5.0f);
 
+		ReplaysEnabled = false;
 		RaceGhostEnabled = true;
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(FrameSnapshot, false), 5.0f);
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(RaceGhostEnabled, false), 8.0f);
-		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(RaceGhostEnabled, true), 9.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysFrameSnapshot, FrameSnapshot, false), 5.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysEnabled, RaceGhostEnabled, false), 6.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(ReplaysEnabled, RaceGhostEnabled, true), 7.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(true, RaceGhostEnabled, false), 8.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetDemoRows(true, RaceGhostEnabled, true), 9.0f);
 		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(false, false), 9.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(true, false), 9.0f);
+		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(false, true), 12.0f);
 		EXPECT_FLOAT_EQ(ResolveDDNetGameplayRows(true, true), 12.0f);
 	}
 
@@ -620,6 +658,7 @@ namespace
 		EXPECT_NE(Blue.m_Accent.b, RedHalf.m_Accent.b);
 		EXPECT_LT(RedHalf.m_Surface.a, Blue.m_Surface.a);
 		EXPECT_FLOAT_EQ(RedHalf.m_InputSurface.a, RedHalf.m_Surface.a);
+		EXPECT_GE(RedHalf.m_FocusRing.a, 0.60f);
 	}
 
 	TEST(InputField, AffordanceSlotsOnlyExistWhenRequested)
@@ -661,6 +700,19 @@ namespace
 		EXPECT_FLOAT_EQ(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Rect.x + Rect.w);
 		EXPECT_LE(Layout.m_ContentRect.x + Layout.m_ContentRect.w, Layout.m_TrailingRect.x);
 		EXPECT_GE(Layout.m_ContentRect.w, 52.0f);
+	}
+
+	TEST(InputField, InlineTrailingTextCentersItsVisualGroup)
+	{
+		const CUIRect Content{10.0f, 20.0f, 120.0f, 24.0f};
+		const ui_widget::SInlineTrailingTextLayout Layout = ui_widget::ResolveInlineTrailingTextLayout(Content, 24.0f, 12.0f, 1.0f);
+
+		EXPECT_FLOAT_EQ(Layout.m_VisualGroupRect.x + Layout.m_VisualGroupRect.w * 0.5f, Content.x + Content.w * 0.5f);
+		EXPECT_FLOAT_EQ(Layout.m_TrailingRect.x, Layout.m_VisualGroupRect.x + 27.0f);
+		EXPECT_FLOAT_EQ(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Layout.m_VisualGroupRect.x + Layout.m_VisualGroupRect.w);
+		EXPECT_FLOAT_EQ(Layout.m_TextRect.x + Layout.m_TextRect.w, Layout.m_VisualGroupRect.x + 24.0f);
+		EXPECT_GE(Layout.m_TextRect.x, Content.x);
+		EXPECT_LE(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Content.x + Content.w);
 	}
 
 	TEST(InputField, FocusRingExpandsShellAndMultilineDefaultsToTopLeft)
@@ -721,6 +773,17 @@ namespace
 		Request.m_TrackId = TrackId;
 		return Request;
 	}
+}
+
+TEST(InputField, ClearAndTrailingSlotsDoNotOverlap)
+{
+	const CUIRect Rect{10.0f, 20.0f, 160.0f, 32.0f};
+	const ui_widget::SInputFieldLayout Layout = ui_widget::ResolveInputFieldLayout(Rect, false, true, 1.0f, Rect.h);
+
+	EXPECT_GT(Layout.m_ClearRect.w, 0.0f);
+	EXPECT_GT(Layout.m_TrailingRect.w, 0.0f);
+	EXPECT_LE(Layout.m_TrailingRect.x + Layout.m_TrailingRect.w, Layout.m_ClearRect.x);
+	EXPECT_LT(Layout.m_ContentRect.x + Layout.m_ContentRect.w, Layout.m_TrailingRect.x);
 }
 
 TEST(SettingsPageLayout, ConfigRowsIncludePaddingAndResponsiveControlBlock)
@@ -2488,6 +2551,56 @@ TEST(UiV2ScrollPolicy, ListBoxExplicitScrollbarMetricsOverridePolicyDefaults)
 	EXPECT_NEAR(QmListBoxScrollbarMetric(20.0f, 15.0f, true), 15.0f, 0.001f);
 }
 
+TEST(UiV2ScrollPolicy, ScrollbarReservationPreventsNestedListWidthJitter)
+{
+	EXPECT_FALSE(QmScrollRegionShouldReserveScrollbarSpace(false, false));
+	EXPECT_TRUE(QmScrollRegionShouldReserveScrollbarSpace(false, true));
+	EXPECT_TRUE(QmScrollRegionShouldReserveScrollbarSpace(true, false));
+	EXPECT_TRUE(QmScrollRegionShouldReserveScrollbarSpace(true, true));
+}
+
+TEST(UiV2ScrollPolicy, ScrollbarOverflowIgnoresSubpixelLayoutRemainder)
+{
+	EXPECT_FALSE(QmScrollRegionContentOverflows(100.0f, 100.0f, 0.5f));
+	EXPECT_FALSE(QmScrollRegionContentOverflows(100.125f, 100.0f, 0.5f));
+	EXPECT_TRUE(QmScrollRegionContentOverflows(100.126f, 100.0f, 0.5f));
+	EXPECT_FALSE(QmScrollRegionContentOverflows(100.0625f, 100.0f, 0.25f));
+	EXPECT_TRUE(QmScrollRegionContentOverflows(100.0626f, 100.0f, 0.25f));
+}
+
+TEST(UiV2ScrollPolicy, ListBoxInitialSelectionRequestsOneAnimatedReveal)
+{
+	EXPECT_TRUE(QmListBoxShouldScrollToInitialSelection(true, 4));
+	EXPECT_FALSE(QmListBoxShouldScrollToInitialSelection(true, -1));
+	EXPECT_FALSE(QmListBoxShouldScrollToInitialSelection(false, 4));
+	EXPECT_TRUE(QmListBoxInitialScrollRemainsPending(true, -1));
+	EXPECT_FALSE(QmListBoxInitialScrollRemainsPending(true, 4));
+	EXPECT_FALSE(QmListBoxInitialScrollRemainsPending(false, -1));
+}
+
+TEST(UiV2ScrollPolicy, ListBoxEntryAnimationStartsAfterAnInactiveGap)
+{
+	EXPECT_TRUE(QmListBoxShouldStartEntryAnimation(true, false, 0, 1000, 400));
+	EXPECT_TRUE(QmListBoxShouldStartEntryAnimation(true, false, 500, 1000, 400));
+	EXPECT_FALSE(QmListBoxShouldStartEntryAnimation(true, false, 600, 1000, 400));
+	EXPECT_FALSE(QmListBoxShouldStartEntryAnimation(false, false, 0, 1000, 400));
+	EXPECT_FALSE(QmListBoxShouldStartEntryAnimation(true, true, 0, 1000, 400));
+	EXPECT_NEAR(QmListBoxEntryOffset(0.0f, 0.16f, 12.0f), -12.0f, 0.001f);
+	EXPECT_LT(QmListBoxEntryOffset(0.08f, 0.16f, 12.0f), 0.0f);
+	EXPECT_NEAR(QmListBoxEntryOffset(0.16f, 0.16f, 12.0f), 0.0f, 0.001f);
+	EXPECT_FALSE(QmListBoxEntryAnimationFinished(true, false, 0.08f, 0.16f));
+	EXPECT_TRUE(QmListBoxEntryAnimationFinished(true, false, 0.16f, 0.16f));
+	EXPECT_TRUE(QmListBoxEntryAnimationFinished(true, false, 0.20f, 0.16f));
+	EXPECT_TRUE(QmListBoxEntryAnimationFinished(false, false, 0.0f, 0.16f));
+	EXPECT_FALSE(QmListBoxEntryAnimationFinished(true, true, 0.20f, 0.16f));
+	const CUIRect BaseRect{10.0f, 20.0f, 100.0f, 18.0f};
+	const CUIRect AnimatedRect = QmListBoxEntryAnimatedRect(BaseRect, -12.0f);
+	EXPECT_FLOAT_EQ(AnimatedRect.x, BaseRect.x);
+	EXPECT_FLOAT_EQ(AnimatedRect.y, 8.0f);
+	EXPECT_FLOAT_EQ(AnimatedRect.w, BaseRect.w);
+	EXPECT_FLOAT_EQ(AnimatedRect.h, BaseRect.h);
+}
+
 TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
 {
 	SQmScrollRequest Settings;
@@ -3120,6 +3233,23 @@ TEST(UiV2ScrollState, DeferredProgrammaticTargetUsesFinalContentMetrics)
 	EXPECT_NEAR(State.Offset(), FinalMetrics.MaxOffset(), 1e-6f);
 }
 
+TEST(UiV2ScrollState, UserWheelSupersedesDeferredProgrammaticTarget)
+{
+	SQmScrollMetrics Metrics;
+	Metrics.m_ViewportSize = 100.0f;
+	Metrics.m_ContentSize = 600.0f;
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+
+	CQmScrollState State;
+	State.SetOffset(100.0f, Metrics, Config);
+	State.RequestScrollTo(400.0f);
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	State.Advance(0.0f, Metrics, Config);
+
+	State.Advance(0.5f, Metrics, Config);
+	EXPECT_NEAR(State.Offset(), 100.0f + Config.m_WheelScale, 1e-6f);
+}
+
 TEST(UiV2ScrollState, NonScrollableResetPreservesActiveThumbGrabUntilRelease)
 {
 	SQmScrollMetrics Metrics;
@@ -3441,13 +3571,18 @@ TEST(UiV2DropdownGeometry, RejectsPartiallyVisibleAnchorBeforeOpening)
 
 TEST(UiV2DropdownVisuals, SettingsStyleSharesTriggerAndPopupSurface)
 {
-	const SQmDropdownVisualStyle Style = QmSettingsDropdownVisualStyle();
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.r, Style.m_PopupBackgroundColor.r);
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.g, Style.m_PopupBackgroundColor.g);
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.b, Style.m_PopupBackgroundColor.b);
-	EXPECT_FLOAT_EQ(Style.m_TriggerColor.a, Style.m_PopupBackgroundColor.a);
+	const SUiTheme Theme = ResolveUiTheme(ColorHSLA(0.20f, 0.50f, 0.40f, 1.0f), 0.75f);
+	const SQmDropdownVisualStyle Style = QmSettingsDropdownVisualStyle(Theme);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.r, Theme.m_InputSurface.r);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.g, Theme.m_InputSurface.g);
+	EXPECT_FLOAT_EQ(Style.m_TriggerColor.b, Theme.m_InputSurface.b);
+	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.a, Theme.m_Surface.a);
 	EXPECT_TRUE(Style.m_TransparentEntries);
-	EXPECT_GT(Style.m_PopupBorderColor.a, 0.0f);
+	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.a, Theme.m_Border.a);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.r, Theme.m_SurfaceHovered.r);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.g, Theme.m_SurfaceHovered.g);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.b, Theme.m_SurfaceHovered.b);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.a, Theme.m_SurfaceHovered.a);
 }
 
 TEST(UiV2DropdownGeometry, FlipsAboveWhenBelowWouldOverflow)

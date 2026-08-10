@@ -206,7 +206,7 @@ bool CEditor::CallbackAddQuadArt(const char *pFilepath, int StorageType, void *p
 
 	if(!pEditor->Graphics()->LoadPng(pEditor->m_QuadArtImageInfo, pFilepath, StorageType))
 	{
-		pEditor->ShowFileDialogError("无法从文件“%s”加载图像。", pFilepath);
+		pEditor->ShowFileDialogError(Localize("Failed to load image from file '%s'.", "Editor"), pFilepath);
 		return false;
 	}
 

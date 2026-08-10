@@ -55,6 +55,9 @@ bool CCommandProcessorFragment_Null::Cmd_Init(const SCommand_Init *pCommand)
 	pCommand->m_pCapabilities->m_ContextMajor = 0;
 	pCommand->m_pCapabilities->m_ContextMinor = 0;
 	pCommand->m_pCapabilities->m_ContextPatch = 0;
+	pCommand->m_pCapabilities->m_DetectedContextMajor = 0;
+	pCommand->m_pCapabilities->m_DetectedContextMinor = 0;
+	pCommand->m_pCapabilities->m_DetectedContextPatch = 0;
 	return false;
 }
 

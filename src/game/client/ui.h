@@ -382,6 +382,13 @@ struct SValueSelectorProperties
 	FValueSelectorParseCallback m_pfnParseValue = nullptr;
 };
 
+inline float QmFitSingleLineFontSize(float PreferredSize, float MinimumSize, float TextWidth, float AvailableWidth)
+{
+	if(PreferredSize <= 0.0f || MinimumSize <= 0.0f || TextWidth <= 0.0f || AvailableWidth <= 0.0f || TextWidth <= AvailableWidth)
+		return PreferredSize;
+	return std::clamp(PreferredSize * AvailableWidth / TextWidth, MinimumSize, PreferredSize);
+}
+
 struct SProgressSpinnerProperties
 {
 	float m_Progress = -1.0f; // between 0.0f and 1.0f, or negative for indeterminate progress
@@ -404,6 +411,7 @@ struct SPopupMenuProperties
 	bool m_AutoReposition = true;
 	bool m_ClipToViewport = false;
 	bool m_BlockUnderlyingScroll = false;
+	bool m_BlockUnderlyingPointerInput = false;
 	bool m_RequireSourceRefresh = false;
 	uint64_t m_SourceFrame = 0;
 	CUIRect m_Viewport{};
@@ -586,6 +594,7 @@ private:
 
 	bool m_Enabled;
 	int m_RenderOnlyDepth = 0;
+	int m_PreLayoutInputDepth = 0;
 	float m_DropDownFontSize = -1.0f;
 	mutable int m_QuadBatchDepth = 0;
 	mutable int m_QuadBatchContainerIndex = -1;
@@ -680,6 +689,8 @@ private:
 	};
 	std::vector<SPopupMenu> m_vPopupMenus;
 	FPopupMenuClosedCallback m_pfnPopupMenuClosedCallback = nullptr;
+	int m_PopupInputDepth = 0;
+	bool UnderlyingPointerInputBlocked() const;
 
 	static CUi::EPopupMenuFunctionResult PopupMessage(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupConfirm(void *pContext, CUIRect View, bool Active);
@@ -753,6 +764,7 @@ public:
 
 	void AddUIElement(CUIElement *pElement);
 	void RemoveUIElement(CUIElement *pElement);
+	void OnShutdown();
 	void OnElementsReset();
 	void OnWindowResize();
 	void OnCursorMove(float X, float Y);
@@ -762,6 +774,13 @@ public:
 	void BeginRenderOnly();
 	void EndRenderOnly();
 	bool RenderOnly() const { return m_RenderOnlyDepth > 0; }
+	void BeginPreLayoutInput() { ++m_PreLayoutInputDepth; }
+	void EndPreLayoutInput()
+	{
+		if(m_PreLayoutInputDepth > 0)
+			--m_PreLayoutInputDepth;
+	}
+	bool PreLayoutInput() const { return m_PreLayoutInputDepth > 0; }
 	void SetDropDownFontSize(float FontSize) { m_DropDownFontSize = FontSize; }
 	float DropDownFontSize() const { return m_DropDownFontSize; }
 	void Update();
@@ -817,6 +836,8 @@ public:
 	}
 	bool CheckActiveItem(const void *pId)
 	{
+		if(UnderlyingPointerInputBlocked())
+			return false;
 		if(m_pActiveItem == pId)
 		{
 			m_ActiveItemValid = true;
@@ -862,7 +883,7 @@ public:
 
 	bool MouseInside(const CUIRect *pRect) const;
 	bool MouseInsideClip() const { return !IsClipped() || MouseInside(ClipArea()); }
-	bool MouseHovered(const CUIRect *pRect) const { return !RenderOnly() && MouseInside(pRect) && MouseInsideClip(); }
+	bool MouseHovered(const CUIRect *pRect) const;
 	void RegisterPassiveHotItem(const void *pId, const CUIRect *pRect);
 	void ConvertMouseMove(float *pX, float *pY, IInput::ECursorType CursorType) const;
 	void UpdateTouchState(CTouchState &State) const;
@@ -905,11 +926,13 @@ public:
 	struct SEditBoxRenderOptions
 	{
 		SEditBoxRenderOptions() :
-			m_DrawBackground(true)
+			m_DrawBackground(true),
+			m_pHitRect(nullptr)
 		{
 		}
 
 		bool m_DrawBackground;
+		const CUIRect *m_pHitRect;
 	};
 
 	void DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr) const;
@@ -1081,6 +1104,7 @@ public:
 		float m_FontSize;
 		float m_Width;
 		float m_AlignmentHeight;
+		ColorRGBA m_ActiveEntryColor;
 		bool m_TransparentButtons;
 		bool m_AnchorVisible = true;
 		bool m_PopupVisible = true;
@@ -1160,8 +1184,8 @@ public:
 		const CUIRect *m_pPopupViewport;
 		SQmDropdownVisualStyle m_VisualStyle;
 	};
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled);
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, bool Enabled);
 };
 
 #endif

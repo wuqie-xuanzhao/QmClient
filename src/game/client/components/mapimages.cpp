@@ -3,7 +3,9 @@
 #include "mapimages.h"
 
 #include <base/log.h>
+#include <base/math.h>
 
+#include <engine/gfx/image_manipulation.h>
 #include <engine/graphics.h>
 #include <engine/map.h>
 #include <engine/storage.h>
@@ -26,6 +28,7 @@ CMapImages::CMapImages()
 	m_Count = 0;
 	std::fill(std::begin(m_aEntitiesIsLoaded), std::end(m_aEntitiesIsLoaded), false);
 	m_SpeedupArrowIsLoaded = false;
+	m_TuneColorsIsLoaded = false;
 
 	str_copy(m_aEntitiesPath, "editor/entities_clear");
 
@@ -314,6 +317,11 @@ IGraphics::CTextureHandle CMapImages::GetEntities(EMapImageEntityLayerType Entit
 			}
 			const size_t CopyWidth = ImgInfo.m_Width / 16;
 			const size_t CopyHeight = ImgInfo.m_Height / 16;
+			const size_t TuneTileX = static_cast<size_t>(TILE_TUNE % 16) * CopyWidth;
+			const size_t TuneTileY = static_cast<size_t>(TILE_TUNE / 16) * CopyHeight;
+
+			// The tune tile is recolored per tune zone below, so start from grayscale.
+			ConvertToGrayscaleRect(ImgInfo, TuneTileX, TuneTileY, CopyWidth, CopyHeight);
 
 			// build game layer
 			for(int LayerType = 0; LayerType < MAP_IMAGE_ENTITY_LAYER_TYPE_COUNT; ++LayerType)
@@ -343,6 +351,42 @@ IGraphics::CTextureHandle CMapImages::GetEntities(EMapImageEntityLayerType Entit
 			}
 
 			BuildImageInfo.Free();
+
+			// Build one colored tune tile per texture-array index.
+			if(Graphics()->HasTextureArraysSupport())
+			{
+				CImageInfo TuneMapInfo;
+				TuneMapInfo.m_Width = ImgInfo.m_Width;
+				TuneMapInfo.m_Height = ImgInfo.m_Height;
+				TuneMapInfo.m_Format = ImgInfo.m_Format;
+				size_t TuneMapDataSize = 0;
+				if(!ImageDataSizeValid(TuneMapInfo, TuneMapDataSize))
+				{
+					log_error("mapimages", "Failed to build tune color texture: invalid image size.");
+				}
+				else
+				{
+					TuneMapInfo.m_pData = static_cast<uint8_t *>(malloc(TuneMapDataSize));
+					if(TuneMapInfo.m_pData == nullptr)
+					{
+						log_error("mapimages", "Failed to build tune color texture: allocation failed.");
+					}
+					else
+					{
+						mem_zero(TuneMapInfo.m_pData, TuneMapDataSize);
+						for(int TileIndex = 1; TileIndex < 256; ++TileIndex)
+						{
+							const size_t StartX = CopyWidth * (TileIndex % 16);
+							const size_t StartY = CopyHeight * (TileIndex / 16);
+							TuneMapInfo.CopyRectFrom(ImgInfo, TuneTileX, TuneTileY, CopyWidth, CopyHeight, StartX, StartY);
+							const float Hue = std::fmod((TileIndex - 1) * normalized_golden_angle, 1.0f);
+							ColorizeWithHueRect(TuneMapInfo, Hue, 0.75f, StartX, StartY, CopyWidth, CopyHeight);
+						}
+						m_TuneColorMapTexture = Graphics()->LoadTextureRawMove(TuneMapInfo, TextureLoadFlag);
+						m_TuneColorsIsLoaded = true;
+					}
+				}
+			}
 			ImgInfo.Free();
 		}
 	}
@@ -359,6 +403,21 @@ IGraphics::CTextureHandle CMapImages::GetSpeedupArrow()
 		m_SpeedupArrowIsLoaded = true;
 	}
 	return m_SpeedupArrowTexture;
+}
+
+IGraphics::CTextureHandle CMapImages::GetTuneColors()
+{
+	if(Graphics()->HasTextureArraysSupport())
+	{
+		if(!m_TuneColorsIsLoaded)
+		{
+			// Loading entities also creates the tune color map.
+			GetEntities(EMapImageEntityLayerType::MAP_IMAGE_ENTITY_LAYER_TYPE_ALL_EXCEPT_SWITCH);
+			dbg_assert(m_TuneColorsIsLoaded, "Entities did not load the tune color map");
+		}
+		return m_TuneColorMapTexture;
+	}
+	return GetEntities(MAP_IMAGE_ENTITY_LAYER_TYPE_ALL_EXCEPT_SWITCH);
 }
 
 IGraphics::CTextureHandle CMapImages::GetOverlayBottom()

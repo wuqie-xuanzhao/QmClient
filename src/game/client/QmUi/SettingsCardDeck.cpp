@@ -280,7 +280,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			const float TargetContentHeight = Collapsed ? 0.0f : std::max(0.0f, CachedContentHeight);
 			const bool HeightInitializedThisFrame = !Runtime.m_ContentHeightInitialized;
 			const bool HeightTargetChanged = Runtime.m_ContentHeightInitialized && std::abs(Runtime.m_LastContentHeightTarget - TargetContentHeight) > 0.01f;
-			const SSettingsCardHeightAnimationWork HeightWork = ResolveSettingsCardHeightAnimationWork(HeightInitializedThisFrame, HeightTargetChanged, Runtime.m_ContentHeightWasActive, Motion.m_ReflowDuration, m_Drag.Active() || Ctx.m_pAnim == nullptr);
+			const SSettingsCardHeightAnimationWork HeightWork = ResolveSettingsCardHeightAnimationWork(HeightInitializedThisFrame, HeightTargetChanged, Runtime.m_ContentHeightWasActive, Motion.m_ContentHeightDuration, m_Drag.Active() || Ctx.m_pAnim == nullptr);
 			if(HeightInitializedThisFrame)
 			{
 				if(Input.m_pDiagnostics != nullptr)
@@ -295,7 +295,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				if(Input.m_pDiagnostics != nullptr)
 					m_FrameRuntime.CountHeightAnimationResolve();
 				const uint64_t HeightKey = SettingsCardHeightNodeKey(pTab, pDefinition->m_Spec.m_pStableId);
-				Runtime.m_AnimatedContentHeight = ResolveUiAnimValue(*Ctx.m_pAnim, HeightKey, EUiAnimProperty::HEIGHT, TargetContentHeight, Motion.m_ReflowDuration, EEasing::EASE_OUT);
+				Runtime.m_AnimatedContentHeight = ResolveUiAnimValue(*Ctx.m_pAnim, HeightKey, EUiAnimProperty::HEIGHT, TargetContentHeight, Motion.m_ContentHeightDuration, EEasing::EASE_OUT);
 				Runtime.m_ContentHeightWasActive = Ctx.m_pAnim->HasActiveAnimation(HeightKey, EUiAnimProperty::HEIGHT);
 			}
 			else if(HeightWork.m_SetHeightTarget)
@@ -365,8 +365,11 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	m_vPreviousActiveStateIndices = m_vActiveStateIndices;
 	bool PreLayoutGeometryChanged = false;
 	const bool HasPointerInput = Input.m_MousePressed || Input.m_MouseDown || Input.m_MouseReleased;
-	if(HasPointerInput)
+	// Header buttons必须每帧运行以先建立 HotItem；否则鼠标首次按下时
+	// DoButtonLogic 无法进入 active，释放时也就不会提交点击。
 	{
+		if(Ctx.m_pUi != nullptr)
+			Ctx.m_pUi->BeginPreLayoutInput();
 		for(const SPreparedCard &Card : m_vPreparedCards)
 		{
 			SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
@@ -378,13 +381,16 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
 			const bool CollapsedBeforeHeader = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			bool HeaderGeometryChanged = false;
-			if(ControllerVisible && Card.m_pDefinition->m_PreLayoutHeaderInput)
+			// ActiveItem 可能在前一张卡片的释放阶段被清除。逐卡读取，避免
+			// 已经完成的点击继续驱动后续被裁剪卡片的预布局回调。
+			const bool HasActiveHeaderContinuation = SettingsCardDeckHasActiveItemContinuation(HasPointerInput, Ctx.m_pUi != nullptr && Ctx.m_pUi->ActiveItem() != nullptr);
+			if((ControllerVisible || HasActiveHeaderContinuation) && Card.m_pDefinition->m_PreLayoutHeaderInput)
 			{
 				m_FrameRuntime.CountPreLayoutInput();
 				HeaderGeometryChanged = Card.m_pDefinition->m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader);
 				CardGeometryChanged = HeaderGeometryChanged;
 			}
-			else if(ControllerVisible && Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly() && SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput)) &&
+			else if((ControllerVisible || HasActiveHeaderContinuation) && Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly() && SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput)) &&
 				Ctx.m_pUi->DoButtonLogic(&Runtime.m_DefaultCollapseButtonId, CollapsedBeforeHeader, &PreLayoutFrame.m_HandleRect, BUTTONFLAG_LEFT))
 			{
 				Runtime.m_DefaultCollapsed = SettingsCardDeckApplyDefaultCollapseToggle(HasCustomCollapsedState, Runtime.m_DefaultCollapsed, true, false);
@@ -396,7 +402,9 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				Ctx.m_pUi->ClosePopupMenus();
 
 			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
-			if(SettingsCardDeckShouldRunPreLayoutInput(true, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)
+			const bool HasPendingPreLayoutInput = Card.m_pDefinition->m_HasPendingPreLayoutInput && Card.m_pDefinition->m_HasPendingPreLayoutInput();
+			const bool HasActiveContentContinuation = SettingsCardDeckHasActiveItemContinuation(HasPointerInput, Ctx.m_pUi != nullptr && Ctx.m_pUi->ActiveItem() != nullptr);
+			if(SettingsCardDeckShouldRunPreLayoutInput(HasPointerInput, HasPendingPreLayoutInput, HasActiveContentContinuation, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)
 			{
 				m_FrameRuntime.CountPreLayoutInput();
 				CardGeometryChanged = Card.m_pDefinition->m_PreLayoutInput(PreLayoutFrame.m_ContentRect) || CardGeometryChanged;
@@ -407,11 +415,20 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				PreLayoutGeometryChanged = true;
 			}
 		}
+		if(Ctx.m_pUi != nullptr)
+			Ctx.m_pUi->EndPreLayoutInput();
 	}
 	RebuildActiveStateIndices();
 	if(m_vActiveStateIndices != m_vPreviousActiveStateIndices || PreLayoutGeometryChanged)
 	{
 		GeometryStateChanged = true;
+		if(PreLayoutGeometryChanged)
+		{
+			// 一个卡片的开关可能同时影响同一层的对齐卡片（例如 Tee
+			// 页面自定义颜色区域）。统一清除内容高度，保证第二次布局
+			// 使用同一份配置状态，而不是让相邻卡片保留旧高度。
+			std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);
+		}
 		pColumns = &m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
 		BuildPreparedCards(*pColumns);
 	}
@@ -670,11 +687,11 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			State.m_ShowDefaultCollapseButton = SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput));
 			State.m_HoverFeedbackEnabled = !m_SuppressHoverFeedbackOnce && !ScrollMovedThisFrame && !EntryPositionActive &&
 						       !ContentHeightAnimationActive && !ReflowTargetChanged && !ReflowPositionActive;
-			bool PointerInsideCurrentFrame = false;
+			bool PointerInsideDrawFrame = false;
 			SettingsCard(Ctx, Card.m_Frame, Card.m_pDefinition->m_Spec, State, VisualOptions,
 				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_Render : FSettingsCardRender{}, Card.m_pDefinition->m_HeaderAction,
-				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_RenderMeasured : FSettingsCardRenderMeasured{}, &PointerInsideCurrentFrame);
-			Runtime.m_PointerInsideLastFrame = PointerInsideCurrentFrame;
+				SettingsCardDeckRendersContent(Collapsed) ? Card.m_pDefinition->m_RenderMeasured : FSettingsCardRenderMeasured{}, &PointerInsideDrawFrame);
+			Runtime.m_PointerInsideLastFrame = PointerInsideDrawFrame;
 			if(Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly())
 			{
 				Runtime.m_LastDrawOffsetX = State.m_DrawOffsetX;

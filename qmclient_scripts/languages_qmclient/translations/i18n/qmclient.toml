@@ -17680,6 +17680,28 @@ turkish = "Takımı göster"
 polish = "Pokaż drużynę"
 
 [[message]]
+key = "Show Tune Zone effects"
+[message.translations]
+japanese = "Tune Zone 効果を表示"
+korean = "Tune Zone 효과 표시"
+simplified_chinese = "显示 Tune Zone 效果"
+traditional_chinese = "顯示 Tune Zone 效果"
+
+[[message]]
+key = "Tune Zone effect icon legend"
+[message.translations]
+simplified_chinese = "Tune Zone 效果图标说明"
+traditional_chinese = "Tune Zone 效果圖示說明"
+russian = "Показывать эффекты Tune Zone"
+german = "Tune-Zone-Effekte anzeigen"
+spanish = "Mostrar efectos de Tune Zone"
+french = "Afficher les effets de Tune Zone"
+brazilian_portuguese = "Mostrar efeitos da Tune Zone"
+portuguese = "Mostrar efeitos da Tune Zone"
+turkish = "Tune Zone etkilerini göster"
+polish = "Pokaż efekty Tune Zone"
+
+[[message]]
 key = "Show team on HUD Dynamic Island"
 [message.translations]
 simplified_chinese = "HUD 灵动岛显示队伍"
@@ -20478,6 +20500,22 @@ brazilian_portuguese = "Cor do botão de tradução quando cancelado"
 portuguese = "Cor do botão de tradução quando cancelado"
 turkish = "Çeviri düğmesi kapalı rengi"
 polish = "Kolor przycisku tłumaczenia po anulowaniu"
+
+[[message]]
+key = "Translation color alpha migration completed flag"
+[message.translations]
+simplified_chinese = "翻译颜色透明度迁移已完成标记"
+traditional_chinese = "翻譯顏色透明度遷移已完成標記"
+japanese = "翻訳カラーのアルファ移行完了フラグ"
+korean = "번역 색상 알파 마이그레이션 완료 플래그"
+russian = "Флаг завершения переноса альфа-канала цветов перевода"
+german = "Abschlusskennzeichen für die Alpha-Migration der Übersetzungsfarben"
+spanish = "Indicador de migración de alfa de colores de traducción completada"
+french = "Indicateur de migration alpha des couleurs de traduction terminée"
+brazilian_portuguese = "Indicador de migração de alfa das cores de tradução concluída"
+portuguese = "Indicador de migração de alfa das cores de tradução concluída"
+turkish = "Çeviri renkleri alfa taşıma tamamlama işareti"
+polish = "Flaga ukończenia migracji kanału alfa kolorów tłumaczenia"
 
 [[message]]
 key = "Translation color"
@@ -23972,7 +24010,7 @@ polish = "Kolejka ponownych wysyłek ważnych fragmentów"
 [[message]]
 key = "Choose the menu font and cursor appearance"
 [message.translations]
-simplified_chinese = "Choose the menu font and cursor appearance"
+simplified_chinese = "选择菜单字体和光标外观"
 traditional_chinese = "Choose the menu font and cursor appearance"
 japanese = "Choose the menu font and cursor appearance"
 korean = "Choose the menu font and cursor appearance"
@@ -23988,7 +24026,7 @@ polish = "Choose the menu font and cursor appearance"
 [[message]]
 key = "Adjust player nameplate details and visibility"
 [message.translations]
-simplified_chinese = "Adjust player nameplate details and visibility"
+simplified_chinese = "调整玩家名称牌细节和可见性"
 traditional_chinese = "Adjust player nameplate details and visibility"
 japanese = "Adjust player nameplate details and visibility"
 korean = "Adjust player nameplate details and visibility"
@@ -24004,7 +24042,7 @@ polish = "Adjust player nameplate details and visibility"
 [[message]]
 key = "Tune additional world and player effects"
 [message.translations]
-simplified_chinese = "Tune additional world and player effects"
+simplified_chinese = "调整额外的世界和玩家效果"
 traditional_chinese = "Tune additional world and player effects"
 japanese = "Tune additional world and player effects"
 korean = "Tune additional world and player effects"
@@ -24020,7 +24058,7 @@ polish = "Tune additional world and player effects"
 [[message]]
 key = "Configure input helpers and cursor behavior"
 [message.translations]
-simplified_chinese = "Configure input helpers and cursor behavior"
+simplified_chinese = "配置输入辅助和光标行为"
 traditional_chinese = "Configure input helpers and cursor behavior"
 japanese = "Configure input helpers and cursor behavior"
 korean = "Configure input helpers and cursor behavior"
@@ -24036,7 +24074,7 @@ polish = "Configure input helpers and cursor behavior"
 [[message]]
 key = "Control latency compensation tools"
 [message.translations]
-simplified_chinese = "Control latency compensation tools"
+simplified_chinese = "控制延迟补偿工具"
 traditional_chinese = "Control latency compensation tools"
 japanese = "Control latency compensation tools"
 korean = "Control latency compensation tools"
@@ -24052,7 +24090,7 @@ polish = "Control latency compensation tools"
 [[message]]
 key = "Fine-tune improved anti-ping prediction"
 [message.translations]
-simplified_chinese = "Fine-tune improved anti-ping prediction"
+simplified_chinese = "微调改进的抗延迟预测"
 traditional_chinese = "Fine-tune improved anti-ping prediction"
 japanese = "Fine-tune improved anti-ping prediction"
 korean = "Fine-tune improved anti-ping prediction"
@@ -24068,7 +24106,7 @@ polish = "Fine-tune improved anti-ping prediction"
 [[message]]
 key = "Run selected commands after joining a server"
 [message.translations]
-simplified_chinese = "Run selected commands after joining a server"
+simplified_chinese = "加入服务器后运行选定命令"
 traditional_chinese = "Run selected commands after joining a server"
 japanese = "Run selected commands after joining a server"
 korean = "Run selected commands after joining a server"
@@ -24084,7 +24122,7 @@ polish = "Run selected commands after joining a server"
 [[message]]
 key = "Customize vote display and interaction"
 [message.translations]
-simplified_chinese = "Customize vote display and interaction"
+simplified_chinese = "自定义投票显示和交互"
 traditional_chinese = "Customize vote display and interaction"
 japanese = "Customize vote display and interaction"
 korean = "Customize vote display and interaction"
@@ -24100,7 +24138,7 @@ polish = "Customize vote display and interaction"
 [[message]]
 key = "Define automatic chat reply rules"
 [message.translations]
-simplified_chinese = "Define automatic chat reply rules"
+simplified_chinese = "定义自动聊天回复规则"
 traditional_chinese = "Define automatic chat reply rules"
 japanese = "Define automatic chat reply rules"
 korean = "Define automatic chat reply rules"
@@ -24116,7 +24154,7 @@ polish = "Define automatic chat reply rules"
 [[message]]
 key = "Highlight selected players in the game world"
 [message.translations]
-simplified_chinese = "Highlight selected players in the game world"
+simplified_chinese = "高亮游戏世界中的选定玩家"
 traditional_chinese = "Highlight selected players in the game world"
 japanese = "Highlight selected players in the game world"
 korean = "Highlight selected players in the game world"
@@ -24132,7 +24170,7 @@ polish = "Highlight selected players in the game world"
 [[message]]
 key = "Configure the companion appearance and movement"
 [message.translations]
-simplified_chinese = "Configure the companion appearance and movement"
+simplified_chinese = "配置伙伴的外观和移动"
 traditional_chinese = "Configure the companion appearance and movement"
 japanese = "Configure the companion appearance and movement"
 korean = "Configure the companion appearance and movement"
@@ -24148,7 +24186,7 @@ polish = "Configure the companion appearance and movement"
 [[message]]
 key = "Adjust TClient heads-up display elements"
 [message.translations]
-simplified_chinese = "Adjust TClient heads-up display elements"
+simplified_chinese = "调整 TClient 抬头显示元素"
 traditional_chinese = "Adjust TClient heads-up display elements"
 japanese = "Adjust TClient heads-up display elements"
 korean = "Adjust TClient heads-up display elements"
@@ -24164,7 +24202,7 @@ polish = "Adjust TClient heads-up display elements"
 [[message]]
 key = "Build the status text shown above Tees"
 [message.translations]
-simplified_chinese = "Build the status text shown above Tees"
+simplified_chinese = "构建显示在 Tee 头顶的状态文本"
 traditional_chinese = "Build the status text shown above Tees"
 japanese = "Build the status text shown above Tees"
 korean = "Build the status text shown above Tees"
@@ -24180,7 +24218,7 @@ polish = "Build the status text shown above Tees"
 [[message]]
 key = "Show configurable outlines around map tiles"
 [message.translations]
-simplified_chinese = "Show configurable outlines around map tiles"
+simplified_chinese = "显示地图方块周围可配置的轮廓"
 traditional_chinese = "Show configurable outlines around map tiles"
 japanese = "Show configurable outlines around map tiles"
 korean = "Show configurable outlines around map tiles"
@@ -24196,7 +24234,7 @@ polish = "Show configurable outlines around map tiles"
 [[message]]
 key = "Configure ghost recording and playback tools"
 [message.translations]
-simplified_chinese = "Configure ghost recording and playback tools"
+simplified_chinese = "配置幽灵录制和回放工具"
 traditional_chinese = "Configure ghost recording and playback tools"
 japanese = "Configure ghost recording and playback tools"
 korean = "Configure ghost recording and playback tools"
@@ -24212,7 +24250,7 @@ polish = "Configure ghost recording and playback tools"
 [[message]]
 key = "Customize animated rainbow colors"
 [message.translations]
-simplified_chinese = "Customize animated rainbow colors"
+simplified_chinese = "自定义动态彩虹颜色"
 traditional_chinese = "Customize animated rainbow colors"
 japanese = "Customize animated rainbow colors"
 korean = "Customize animated rainbow colors"
@@ -24228,7 +24266,7 @@ polish = "Customize animated rainbow colors"
 [[message]]
 key = "Adjust trails rendered behind Tees"
 [message.translations]
-simplified_chinese = "Adjust trails rendered behind Tees"
+simplified_chinese = "调整 Tee 身后的轨迹效果"
 traditional_chinese = "Adjust trails rendered behind Tees"
 japanese = "Adjust trails rendered behind Tees"
 korean = "Adjust trails rendered behind Tees"
@@ -24244,7 +24282,7 @@ polish = "Adjust trails rendered behind Tees"
 [[message]]
 key = "Control custom background drawing"
 [message.translations]
-simplified_chinese = "Control custom background drawing"
+simplified_chinese = "控制自定义背景绘制"
 traditional_chinese = "Control custom background drawing"
 japanese = "Control custom background drawing"
 korean = "Control custom background drawing"
@@ -24260,7 +24298,7 @@ polish = "Control custom background drawing"
 [[message]]
 key = "Format player names after a finish"
 [message.translations]
-simplified_chinese = "Format player names after a finish"
+simplified_chinese = "完成后格式化玩家名称"
 traditional_chinese = "Format player names after a finish"
 japanese = "Format player names after a finish"
 korean = "Format player names after a finish"
@@ -24276,7 +24314,7 @@ polish = "Format player names after a finish"
 [[message]]
 key = "Find QmClient communities and project links"
 [message.translations]
-simplified_chinese = "Find QmClient communities and project links"
+simplified_chinese = "查找 QmClient 社区和项目链接"
 traditional_chinese = "Find QmClient communities and project links"
 japanese = "Find QmClient communities and project links"
 korean = "Find QmClient communities and project links"
@@ -24292,7 +24330,7 @@ polish = "Find QmClient communities and project links"
 [[message]]
 key = "View the people supporting QmClient development"
 [message.translations]
-simplified_chinese = "View the people supporting QmClient development"
+simplified_chinese = "查看支持 QmClient 开发的成员"
 traditional_chinese = "View the people supporting QmClient development"
 japanese = "View the people supporting QmClient development"
 korean = "View the people supporting QmClient development"
@@ -24308,7 +24346,7 @@ polish = "View the people supporting QmClient development"
 [[message]]
 key = "Search settings by title, feature, or keyword"
 [message.translations]
-simplified_chinese = "Search settings by title, feature, or keyword"
+simplified_chinese = "按标题、功能或关键字搜索设置"
 traditional_chinese = "Search settings by title, feature, or keyword"
 japanese = "Search settings by title, feature, or keyword"
 korean = "Search settings by title, feature, or keyword"
@@ -24324,7 +24362,7 @@ polish = "Search settings by title, feature, or keyword"
 [[message]]
 key = "Open a matching settings card directly"
 [message.translations]
-simplified_chinese = "Open a matching settings card directly"
+simplified_chinese = "直接打开匹配的设置卡片"
 traditional_chinese = "Open a matching settings card directly"
 japanese = "Open a matching settings card directly"
 korean = "Open a matching settings card directly"
@@ -24340,7 +24378,7 @@ polish = "Open a matching settings card directly"
 [[message]]
 key = "Configure camera, weapon, and gameplay defaults"
 [message.translations]
-simplified_chinese = "Configure camera, weapon, and gameplay defaults"
+simplified_chinese = "配置相机、武器和游戏默认设置"
 traditional_chinese = "Configure camera, weapon, and gameplay defaults"
 japanese = "Configure camera, weapon, and gameplay defaults"
 korean = "Configure camera, weapon, and gameplay defaults"
@@ -24356,7 +24394,7 @@ polish = "Configure camera, weapon, and gameplay defaults"
 [[message]]
 key = "Choose the language used by the client"
 [message.translations]
-simplified_chinese = "Choose the language used by the client"
+simplified_chinese = "选择客户端使用的语言"
 traditional_chinese = "Choose the language used by the client"
 japanese = "Choose the language used by the client"
 korean = "Choose the language used by the client"
@@ -24372,7 +24410,7 @@ polish = "Choose the language used by the client"
 [[message]]
 key = "Manage client theme and menu preferences"
 [message.translations]
-simplified_chinese = "Manage client theme and menu preferences"
+simplified_chinese = "管理客户端主题和菜单偏好"
 traditional_chinese = "Manage client theme and menu preferences"
 japanese = "Manage client theme and menu preferences"
 korean = "Manage client theme and menu preferences"
@@ -24388,7 +24426,7 @@ polish = "Manage client theme and menu preferences"
 [[message]]
 key = "Automate demos, screenshots, and match exports"
 [message.translations]
-simplified_chinese = "Automate demos, screenshots, and match exports"
+simplified_chinese = "自动处理录像、截图和比赛导出"
 traditional_chinese = "Automate demos, screenshots, and match exports"
 japanese = "Automate demos, screenshots, and match exports"
 korean = "Automate demos, screenshots, and match exports"
@@ -24404,7 +24442,7 @@ polish = "Automate demos, screenshots, and match exports"
 [[message]]
 key = "Edit player and dummy identity information"
 [message.translations]
-simplified_chinese = "Edit player and dummy identity information"
+simplified_chinese = "编辑玩家和分身身份信息"
 traditional_chinese = "Edit player and dummy identity information"
 japanese = "Edit player and dummy identity information"
 korean = "Edit player and dummy identity information"
@@ -24420,7 +24458,7 @@ polish = "Edit player and dummy identity information"
 [[message]]
 key = "Select the country flag for each player"
 [message.translations]
-simplified_chinese = "Select the country flag for each player"
+simplified_chinese = "为每名玩家选择国旗"
 traditional_chinese = "Select the country flag for each player"
 japanese = "Select the country flag for each player"
 korean = "Select the country flag for each player"
@@ -24436,7 +24474,7 @@ polish = "Select the country flag for each player"
 [[message]]
 key = "Preview player and dummy appearance"
 [message.translations]
-simplified_chinese = "Preview player and dummy appearance"
+simplified_chinese = "预览玩家和分身外观"
 traditional_chinese = "Preview player and dummy appearance"
 japanese = "Preview player and dummy appearance"
 korean = "Preview player and dummy appearance"
@@ -24452,7 +24490,7 @@ polish = "Preview player and dummy appearance"
 [[message]]
 key = "Configure skin colors, eyes, and filters"
 [message.translations]
-simplified_chinese = "Configure skin colors, eyes, and filters"
+simplified_chinese = "配置皮肤颜色、眼睛和筛选条件"
 traditional_chinese = "Configure skin colors, eyes, and filters"
 japanese = "Configure skin colors, eyes, and filters"
 korean = "Configure skin colors, eyes, and filters"
@@ -24468,7 +24506,7 @@ polish = "Configure skin colors, eyes, and filters"
 [[message]]
 key = "Search skins and manage the skin queue"
 [message.translations]
-simplified_chinese = "Search skins and manage the skin queue"
+simplified_chinese = "搜索皮肤并管理皮肤队列"
 traditional_chinese = "Search skins and manage the skin queue"
 japanese = "Search skins and manage the skin queue"
 korean = "Search skins and manage the skin queue"
@@ -24484,7 +24522,7 @@ polish = "Search skins and manage the skin queue"
 [[message]]
 key = "Edit individual Tee 7 skin parts"
 [message.translations]
-simplified_chinese = "Edit individual Tee 7 skin parts"
+simplified_chinese = "编辑单个 Tee 7 皮肤部件"
 traditional_chinese = "Edit individual Tee 7 skin parts"
 japanese = "Edit individual Tee 7 skin parts"
 korean = "Edit individual Tee 7 skin parts"
@@ -24500,7 +24538,7 @@ polish = "Edit individual Tee 7 skin parts"
 [[message]]
 key = "Enable audio output and choose a device"
 [message.translations]
-simplified_chinese = "Enable audio output and choose a device"
+simplified_chinese = "启用音频输出并选择设备"
 traditional_chinese = "Enable audio output and choose a device"
 japanese = "Enable audio output and choose a device"
 korean = "Enable audio output and choose a device"
@@ -24516,7 +24554,7 @@ polish = "Enable audio output and choose a device"
 [[message]]
 key = "Balance master, music, and game volume"
 [message.translations]
-simplified_chinese = "Balance master, music, and game volume"
+simplified_chinese = "平衡主音量、音乐和游戏音量"
 traditional_chinese = "Balance master, music, and game volume"
 japanese = "Balance master, music, and game volume"
 korean = "Balance master, music, and game volume"
@@ -24532,7 +24570,7 @@ polish = "Balance master, music, and game volume"
 [[message]]
 key = "Browse and activate custom audio packs"
 [message.translations]
-simplified_chinese = "Browse and activate custom audio packs"
+simplified_chinese = "浏览并启用自定义音频包"
 traditional_chinese = "Browse and activate custom audio packs"
 japanese = "Browse and activate custom audio packs"
 korean = "Browse and activate custom audio packs"
@@ -24548,7 +24586,7 @@ polish = "Browse and activate custom audio packs"
 [[message]]
 key = "Configure DDNet demo recording behavior"
 [message.translations]
-simplified_chinese = "Configure DDNet demo recording behavior"
+simplified_chinese = "配置 DDNet 录像录制行为"
 traditional_chinese = "Configure DDNet demo recording behavior"
 japanese = "Configure DDNet demo recording behavior"
 korean = "Configure DDNet demo recording behavior"
@@ -24564,7 +24602,7 @@ polish = "Configure DDNet demo recording behavior"
 [[message]]
 key = "Adjust DDNet gameplay indicators and assists"
 [message.translations]
-simplified_chinese = "Adjust DDNet gameplay indicators and assists"
+simplified_chinese = "调整 DDNet 游戏指示器和辅助功能"
 traditional_chinese = "Adjust DDNet gameplay indicators and assists"
 japanese = "Adjust DDNet gameplay indicators and assists"
 korean = "Adjust DDNet gameplay indicators and assists"
@@ -24580,7 +24618,7 @@ polish = "Adjust DDNet gameplay indicators and assists"
 [[message]]
 key = "Choose the menu map and background colors"
 [message.translations]
-simplified_chinese = "Choose the menu map and background colors"
+simplified_chinese = "选择菜单地图和背景颜色"
 traditional_chinese = "Choose the menu map and background colors"
 japanese = "Choose the menu map and background colors"
 korean = "Choose the menu map and background colors"
@@ -24596,7 +24634,7 @@ polish = "Choose the menu map and background colors"
 [[message]]
 key = "Configure remaining DDNet client preferences"
 [message.translations]
-simplified_chinese = "Configure remaining DDNet client preferences"
+simplified_chinese = "配置其余 DDNet 客户端偏好"
 traditional_chinese = "Configure remaining DDNet client preferences"
 japanese = "Configure remaining DDNet client preferences"
 korean = "Configure remaining DDNet client preferences"
@@ -24612,7 +24650,7 @@ polish = "Configure remaining DDNet client preferences"
 [[message]]
 key = "Assign commands and labels to wheel slots"
 [message.translations]
-simplified_chinese = "Assign commands and labels to wheel slots"
+simplified_chinese = "为转盘槽位分配命令和标签"
 traditional_chinese = "Assign commands and labels to wheel slots"
 japanese = "Assign commands and labels to wheel slots"
 korean = "Assign commands and labels to wheel slots"
@@ -24628,7 +24666,7 @@ polish = "Assign commands and labels to wheel slots"
 [[message]]
 key = "Preview the bind wheel layout and selection"
 [message.translations]
-simplified_chinese = "Preview the bind wheel layout and selection"
+simplified_chinese = "预览绑定转盘布局和选择"
 traditional_chinese = "Preview the bind wheel layout and selection"
 japanese = "Preview the bind wheel layout and selection"
 korean = "Preview the bind wheel layout and selection"
@@ -24644,7 +24682,7 @@ polish = "Preview the bind wheel layout and selection"
 [[message]]
 key = "Adjust status bar position and text style"
 [message.translations]
-simplified_chinese = "Adjust status bar position and text style"
+simplified_chinese = "调整状态栏位置和文本样式"
 traditional_chinese = "Adjust status bar position and text style"
 japanese = "Adjust status bar position and text style"
 korean = "Adjust status bar position and text style"
@@ -24660,7 +24698,7 @@ polish = "Adjust status bar position and text style"
 [[message]]
 key = "Choose and arrange status bar data fields"
 [message.translations]
-simplified_chinese = "Choose and arrange status bar data fields"
+simplified_chinese = "选择并排列状态栏数据字段"
 traditional_chinese = "Choose and arrange status bar data fields"
 japanese = "Choose and arrange status bar data fields"
 korean = "Choose and arrange status bar data fields"
@@ -24676,7 +24714,7 @@ polish = "Choose and arrange status bar data fields"
 [[message]]
 key = "Preview the composed status bar output"
 [message.translations]
-simplified_chinese = "Preview the composed status bar output"
+simplified_chinese = "预览组合后的状态栏输出"
 traditional_chinese = "Preview the composed status bar output"
 japanese = "Preview the composed status bar output"
 korean = "Preview the composed status bar output"
@@ -24692,7 +24730,7 @@ polish = "Preview the composed status bar output"
 [[message]]
 key = "Manage kaomoji chat shortcuts"
 [message.translations]
-simplified_chinese = "Manage kaomoji chat shortcuts"
+simplified_chinese = "管理颜文字聊天快捷方式"
 traditional_chinese = "Manage kaomoji chat shortcuts"
 japanese = "Manage kaomoji chat shortcuts"
 korean = "Manage kaomoji chat shortcuts"
@@ -24708,7 +24746,7 @@ polish = "Manage kaomoji chat shortcuts"
 [[message]]
 key = "Manage hostile-list chat shortcuts"
 [message.translations]
-simplified_chinese = "Manage hostile-list chat shortcuts"
+simplified_chinese = "管理敌对列表聊天快捷方式"
 traditional_chinese = "Manage hostile-list chat shortcuts"
 japanese = "Manage hostile-list chat shortcuts"
 korean = "Manage hostile-list chat shortcuts"
@@ -24724,7 +24762,7 @@ polish = "Manage hostile-list chat shortcuts"
 [[message]]
 key = "Manage additional custom chat shortcuts"
 [message.translations]
-simplified_chinese = "Manage additional custom chat shortcuts"
+simplified_chinese = "管理其他自定义聊天快捷方式"
 traditional_chinese = "Manage additional custom chat shortcuts"
 japanese = "Manage additional custom chat shortcuts"
 korean = "Manage additional custom chat shortcuts"
@@ -24740,7 +24778,7 @@ polish = "Manage additional custom chat shortcuts"
 [[message]]
 key = "Manage hostile players, groups, and display rules"
 [message.translations]
-simplified_chinese = "Manage hostile players, groups, and display rules"
+simplified_chinese = "管理敌对玩家、分组和显示规则"
 traditional_chinese = "Manage hostile players, groups, and display rules"
 japanese = "Manage hostile players, groups, and display rules"
 korean = "Manage hostile players, groups, and display rules"
@@ -24756,7 +24794,7 @@ polish = "Manage hostile players, groups, and display rules"
 [[message]]
 key = "Open TClient community and source links"
 [message.translations]
-simplified_chinese = "Open TClient community and source links"
+simplified_chinese = "打开 TClient 社区和源码链接"
 traditional_chinese = "Open TClient community and source links"
 japanese = "Open TClient community and source links"
 korean = "Open TClient community and source links"
@@ -24772,7 +24810,7 @@ polish = "Open TClient community and source links"
 [[message]]
 key = "Open TClient configuration file locations"
 [message.translations]
-simplified_chinese = "Open TClient configuration file locations"
+simplified_chinese = "打开 TClient 配置文件位置"
 traditional_chinese = "Open TClient configuration file locations"
 japanese = "Open TClient configuration file locations"
 korean = "Open TClient configuration file locations"
@@ -24788,7 +24826,7 @@ polish = "Open TClient configuration file locations"
 [[message]]
 key = "View the developers and contributors"
 [message.translations]
-simplified_chinese = "View the developers and contributors"
+simplified_chinese = "查看开发者和贡献者"
 traditional_chinese = "View the developers and contributors"
 japanese = "View the developers and contributors"
 korean = "View the developers and contributors"
@@ -24804,7 +24842,7 @@ polish = "View the developers and contributors"
 [[message]]
 key = "Choose which TClient settings tabs are visible"
 [message.translations]
-simplified_chinese = "Choose which TClient settings tabs are visible"
+simplified_chinese = "选择要显示的 TClient 设置标签页"
 traditional_chinese = "Choose which TClient settings tabs are visible"
 japanese = "Choose which TClient settings tabs are visible"
 korean = "Choose which TClient settings tabs are visible"
@@ -24820,7 +24858,7 @@ polish = "Choose which TClient settings tabs are visible"
 [[message]]
 key = "Load, save, overwrite, or delete profiles"
 [message.translations]
-simplified_chinese = "Load, save, overwrite, or delete profiles"
+simplified_chinese = "加载、保存、覆盖或删除配置档"
 traditional_chinese = "Load, save, overwrite, or delete profiles"
 japanese = "Load, save, overwrite, or delete profiles"
 korean = "Load, save, overwrite, or delete profiles"
@@ -24836,7 +24874,7 @@ polish = "Load, save, overwrite, or delete profiles"
 [[message]]
 key = "Select which player fields a profile stores"
 [message.translations]
-simplified_chinese = "Select which player fields a profile stores"
+simplified_chinese = "选择配置档保存的玩家字段"
 traditional_chinese = "Select which player fields a profile stores"
 japanese = "Select which player fields a profile stores"
 korean = "Select which player fields a profile stores"
@@ -24852,7 +24890,7 @@ polish = "Select which player fields a profile stores"
 [[message]]
 key = "Browse profiles saved on this device"
 [message.translations]
-simplified_chinese = "Browse profiles saved on this device"
+simplified_chinese = "浏览保存在此设备上的配置档"
 traditional_chinese = "Browse profiles saved on this device"
 japanese = "Browse profiles saved on this device"
 korean = "Browse profiles saved on this device"
@@ -24868,7 +24906,7 @@ polish = "Browse profiles saved on this device"
 [[message]]
 key = "Review and reset changed configuration values"
 [message.translations]
-simplified_chinese = "Review and reset changed configuration values"
+simplified_chinese = "查看并重置已更改的配置值"
 traditional_chinese = "Review and reset changed configuration values"
 japanese = "Review and reset changed configuration values"
 korean = "Review and reset changed configuration values"
@@ -24884,7 +24922,7 @@ polish = "Review and reset changed configuration values"
 [[message]]
 key = "Configure health, ammo, timer, and race HUD"
 [message.translations]
-simplified_chinese = "Configure health, ammo, timer, and race HUD"
+simplified_chinese = "配置生命、弹药、计时器和竞速 HUD"
 traditional_chinese = "Configure health, ammo, timer, and race HUD"
 japanese = "Configure health, ammo, timer, and race HUD"
 korean = "Configure health, ammo, timer, and race HUD"
@@ -24900,7 +24938,7 @@ polish = "Configure health, ammo, timer, and race HUD"
 [[message]]
 key = "Adjust DDRace-specific HUD indicators"
 [message.translations]
-simplified_chinese = "Adjust DDRace-specific HUD indicators"
+simplified_chinese = "调整 DDRace 专用 HUD 指示器"
 traditional_chinese = "Adjust DDRace-specific HUD indicators"
 japanese = "Adjust DDRace-specific HUD indicators"
 korean = "Adjust DDRace-specific HUD indicators"
@@ -24916,7 +24954,7 @@ polish = "Adjust DDRace-specific HUD indicators"
 [[message]]
 key = "Configure chat position, size, and visibility"
 [message.translations]
-simplified_chinese = "Configure chat position, size, and visibility"
+simplified_chinese = "配置聊天位置、大小和可见性"
 traditional_chinese = "Configure chat position, size, and visibility"
 japanese = "Configure chat position, size, and visibility"
 korean = "Configure chat position, size, and visibility"
@@ -24932,7 +24970,7 @@ polish = "Configure chat position, size, and visibility"
 [[message]]
 key = "Style chat names, text, and message colors"
 [message.translations]
-simplified_chinese = "Style chat names, text, and message colors"
+simplified_chinese = "设置聊天名称、文本和消息颜色样式"
 traditional_chinese = "Style chat names, text, and message colors"
 japanese = "Style chat names, text, and message colors"
 korean = "Style chat names, text, and message colors"
@@ -24948,7 +24986,7 @@ polish = "Style chat names, text, and message colors"
 [[message]]
 key = "Preview the current chat appearance"
 [message.translations]
-simplified_chinese = "Preview the current chat appearance"
+simplified_chinese = "预览当前聊天外观"
 traditional_chinese = "Preview the current chat appearance"
 japanese = "Preview the current chat appearance"
 korean = "Preview the current chat appearance"
@@ -24964,7 +25002,7 @@ polish = "Preview the current chat appearance"
 [[message]]
 key = "Configure nameplate text, badges, and visibility"
 [message.translations]
-simplified_chinese = "Configure nameplate text, badges, and visibility"
+simplified_chinese = "配置名称牌文字、标识和可见性"
 traditional_chinese = "Configure nameplate text, badges, and visibility"
 japanese = "Configure nameplate text, badges, and visibility"
 korean = "Configure nameplate text, badges, and visibility"
@@ -24980,7 +25018,7 @@ polish = "Configure nameplate text, badges, and visibility"
 [[message]]
 key = "Preview player and dummy nameplates"
 [message.translations]
-simplified_chinese = "Preview player and dummy nameplates"
+simplified_chinese = "预览玩家和分身名称牌"
 traditional_chinese = "Preview player and dummy nameplates"
 japanese = "Preview player and dummy nameplates"
 korean = "Preview player and dummy nameplates"
@@ -24996,7 +25034,7 @@ polish = "Preview player and dummy nameplates"
 [[message]]
 key = "Configure hook range and collision guide lines"
 [message.translations]
-simplified_chinese = "Configure hook range and collision guide lines"
+simplified_chinese = "配置钩爪范围和碰撞引导线"
 traditional_chinese = "Configure hook range and collision guide lines"
 japanese = "Configure hook range and collision guide lines"
 korean = "Configure hook range and collision guide lines"
@@ -25012,7 +25050,7 @@ polish = "Configure hook range and collision guide lines"
 [[message]]
 key = "Preview hook collision colors and line styles"
 [message.translations]
-simplified_chinese = "Preview hook collision colors and line styles"
+simplified_chinese = "预览钩爪碰撞颜色和线条样式"
 traditional_chinese = "Preview hook collision colors and line styles"
 japanese = "Preview hook collision colors and line styles"
 korean = "Preview hook collision colors and line styles"
@@ -25028,7 +25066,7 @@ polish = "Preview hook collision colors and line styles"
 [[message]]
 key = "Style kill, finish, and system messages"
 [message.translations]
-simplified_chinese = "Style kill, finish, and system messages"
+simplified_chinese = "设置击杀、完成和系统消息样式"
 traditional_chinese = "Style kill, finish, and system messages"
 japanese = "Style kill, finish, and system messages"
 korean = "Style kill, finish, and system messages"
@@ -25044,7 +25082,7 @@ polish = "Style kill, finish, and system messages"
 [[message]]
 key = "Configure laser shape, glow, and animation"
 [message.translations]
-simplified_chinese = "Configure laser shape, glow, and animation"
+simplified_chinese = "配置激光形状、辉光和动画"
 traditional_chinese = "Configure laser shape, glow, and animation"
 japanese = "Configure laser shape, glow, and animation"
 korean = "Configure laser shape, glow, and animation"
@@ -25060,7 +25098,7 @@ polish = "Configure laser shape, glow, and animation"
 [[message]]
 key = "Choose colors for weapons and entity lasers"
 [message.translations]
-simplified_chinese = "Choose colors for weapons and entity lasers"
+simplified_chinese = "选择武器和实体激光的颜色"
 traditional_chinese = "Choose colors for weapons and entity lasers"
 japanese = "Choose colors for weapons and entity lasers"
 korean = "Choose colors for weapons and entity lasers"
@@ -25076,7 +25114,7 @@ polish = "Choose colors for weapons and entity lasers"
 [[message]]
 key = "Preview laser bodies, outlines, and impacts"
 [message.translations]
-simplified_chinese = "Preview laser bodies, outlines, and impacts"
+simplified_chinese = "预览激光主体、轮廓和碰撞效果"
 traditional_chinese = "Preview laser bodies, outlines, and impacts"
 japanese = "Preview laser bodies, outlines, and impacts"
 korean = "Preview laser bodies, outlines, and impacts"
@@ -25092,7 +25130,7 @@ polish = "Preview laser bodies, outlines, and impacts"
 [[message]]
 key = "Adjust mouse sensitivity and cursor limits"
 [message.translations]
-simplified_chinese = "Adjust mouse sensitivity and cursor limits"
+simplified_chinese = "调整鼠标灵敏度和光标限制"
 traditional_chinese = "Adjust mouse sensitivity and cursor limits"
 japanese = "Adjust mouse sensitivity and cursor limits"
 korean = "Adjust mouse sensitivity and cursor limits"
@@ -25108,7 +25146,7 @@ polish = "Adjust mouse sensitivity and cursor limits"
 [[message]]
 key = "Enable and calibrate controller input"
 [message.translations]
-simplified_chinese = "Enable and calibrate controller input"
+simplified_chinese = "启用并校准控制器输入"
 traditional_chinese = "Enable and calibrate controller input"
 japanese = "Enable and calibrate controller input"
 korean = "Enable and calibrate controller input"
@@ -25124,7 +25162,7 @@ polish = "Enable and calibrate controller input"
 [[message]]
 key = "Bind movement, jump, hook, and fire actions"
 [message.translations]
-simplified_chinese = "Bind movement, jump, hook, and fire actions"
+simplified_chinese = "绑定移动、跳跃、钩爪和开火操作"
 traditional_chinese = "Bind movement, jump, hook, and fire actions"
 japanese = "Bind movement, jump, hook, and fire actions"
 korean = "Bind movement, jump, hook, and fire actions"
@@ -25140,7 +25178,7 @@ polish = "Bind movement, jump, hook, and fire actions"
 [[message]]
 key = "Bind weapon selection and switching actions"
 [message.translations]
-simplified_chinese = "Bind weapon selection and switching actions"
+simplified_chinese = "绑定武器选择和切换操作"
 traditional_chinese = "Bind weapon selection and switching actions"
 japanese = "Bind weapon selection and switching actions"
 korean = "Bind weapon selection and switching actions"
@@ -25156,7 +25194,7 @@ polish = "Bind weapon selection and switching actions"
 [[message]]
 key = "Bind voting and server browser actions"
 [message.translations]
-simplified_chinese = "Bind voting and server browser actions"
+simplified_chinese = "绑定投票和服务器浏览器操作"
 traditional_chinese = "Bind voting and server browser actions"
 japanese = "Bind voting and server browser actions"
 korean = "Bind voting and server browser actions"
@@ -25172,7 +25210,7 @@ polish = "Bind voting and server browser actions"
 [[message]]
 key = "Bind chat, team chat, and history actions"
 [message.translations]
-simplified_chinese = "Bind chat, team chat, and history actions"
+simplified_chinese = "绑定聊天、队伍聊天和历史记录操作"
 traditional_chinese = "Bind chat, team chat, and history actions"
 japanese = "Bind chat, team chat, and history actions"
 korean = "Bind chat, team chat, and history actions"
@@ -25188,7 +25226,7 @@ polish = "Bind chat, team chat, and history actions"
 [[message]]
 key = "Bind dummy control and copy actions"
 [message.translations]
-simplified_chinese = "Bind dummy control and copy actions"
+simplified_chinese = "绑定分身控制和复制操作"
 traditional_chinese = "Bind dummy control and copy actions"
 japanese = "Bind dummy control and copy actions"
 korean = "Bind dummy control and copy actions"
@@ -25204,7 +25242,7 @@ polish = "Bind dummy control and copy actions"
 [[message]]
 key = "Bind scoreboard, emote, and console actions"
 [message.translations]
-simplified_chinese = "Bind scoreboard, emote, and console actions"
+simplified_chinese = "绑定计分板、表情和控制台操作"
 traditional_chinese = "Bind scoreboard, emote, and console actions"
 japanese = "Bind scoreboard, emote, and console actions"
 korean = "Bind scoreboard, emote, and console actions"
@@ -25220,7 +25258,7 @@ polish = "Bind scoreboard, emote, and console actions"
 [[message]]
 key = "Review and edit custom key bindings"
 [message.translations]
-simplified_chinese = "Review and edit custom key bindings"
+simplified_chinese = "查看并编辑自定义按键绑定"
 traditional_chinese = "Review and edit custom key bindings"
 japanese = "Review and edit custom key bindings"
 korean = "Review and edit custom key bindings"
@@ -25424,3 +25462,394 @@ brazilian_portuguese = "UI rounded corner segment limit"
 portuguese = "UI rounded corner segment limit"
 turkish = "UI rounded corner segment limit"
 polish = "UI rounded corner segment limit"
+
+[[message]]
+key = "Cinematic camera"
+[message.translations]
+japanese = "シネマティックカメラ"
+korean = "시네마틱 카메라"
+simplified_chinese = "电影镜头"
+traditional_chinese = "電影鏡頭"
+russian = "Кинематографическая камера"
+german = "Filmische Kamera"
+spanish = "Cámara cinematográfica"
+french = "Caméra cinématique"
+brazilian_portuguese = "Câmera cinematográfica"
+portuguese = "Câmara cinematográfica"
+turkish = "Sinematik kamera"
+polish = "Kamera filmowa"
+
+[[message]]
+key = "Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow"
+[message.translations]
+simplified_chinese = "Qm 界面图标颜色：1=白色，2=黑色，3=自定义，4=彩虹"
+traditional_chinese = "Qm 介面圖示顏色：1=白色，2=黑色，3=自訂，4=彩虹"
+japanese = "Qm UI アイコンの色: 1=白、2=黒、3=カスタム、4=虹色"
+korean = "Qm UI 아이콘 색상: 1=흰색, 2=검정, 3=사용자 지정, 4=무지개"
+russian = "Цвет значков Qm UI: 1=белый, 2=черный, 3=пользовательский, 4=радуга"
+german = "Qm-UI-Symbolfarbe: 1=Weiß, 2=Schwarz, 3=Benutzerdefiniert, 4=Regenbogen"
+spanish = "Color de los iconos de Qm UI: 1=blanco, 2=negro, 3=personalizado, 4=arcoíris"
+french = "Couleur des icônes Qm UI : 1=blanc, 2=noir, 3=personnalisée, 4=arc-en-ciel"
+brazilian_portuguese = "Cor dos ícones da interface Qm: 1=branco, 2=preto, 3=personalizado, 4=arco-íris"
+portuguese = "Cor dos ícones da interface Qm: 1=branco, 2=preto, 3=personalizado, 4=arco-íris"
+turkish = "Qm arayüz simgesi rengi: 1=Beyaz, 2=Siyah, 3=Özel, 4=Gökkuşağı"
+polish = "Kolor ikon interfejsu Qm: 1=biały, 2=czarny, 3=niestandardowy, 4=tęczowy"
+
+[[message]]
+key = "Qm UI custom icon color"
+[message.translations]
+simplified_chinese = "Qm 界面图标自定义颜色"
+traditional_chinese = "Qm 介面圖示自訂顏色"
+japanese = "Qm UI アイコンのカスタム色"
+korean = "Qm UI 아이콘 사용자 지정 색상"
+russian = "Пользовательский цвет значков Qm UI"
+german = "Benutzerdefinierte Qm-UI-Symbolfarbe"
+spanish = "Color personalizado de iconos de Qm UI"
+french = "Couleur personnalisée des icônes Qm UI"
+brazilian_portuguese = "Cor personalizada dos ícones da interface Qm"
+portuguese = "Cor personalizada dos ícones da interface Qm"
+turkish = "Qm arayüzü simgesi özel rengi"
+polish = "Niestandardowy kolor ikon interfejsu Qm"
+
+[[message]]
+key = "Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill"
+[message.translations]
+simplified_chinese = "Qm 界面图标字重：0=常规，1=粗体，2=细体，3=填充"
+traditional_chinese = "Qm 介面圖示字重：0=標準，1=粗體，2=細體，3=填滿"
+japanese = "Qm UI アイコンの太さ: 0=標準、1=太字、2=細字、3=塗りつぶし"
+korean = "Qm UI 아이콘 굵기: 0=보통, 1=굵게, 2=얇게, 3=채우기"
+russian = "Толщина значков Qm UI: 0=обычная, 1=жирная, 2=тонкая, 3=заливка"
+german = "Qm-UI-Symbolstärke: 0=Normal, 1=Fett, 2=Dünn, 3=Gefüllt"
+spanish = "Grosor de iconos de Qm UI: 0=normal, 1=negrita, 2=fino, 3=relleno"
+french = "Épaisseur des icônes Qm UI : 0=normal, 1=gras, 2=fin, 3=rempli"
+brazilian_portuguese = "Espessura dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido"
+portuguese = "Espessura dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido"
+turkish = "Qm arayüz simgesi kalınlığı: 0=Normal, 1=Kalın, 2=İnce, 3=Dolgulu"
+polish = "Grubość ikon interfejsu Qm: 0=zwykła, 1=pogrubiona, 2=cienka, 3=wypełniona"
+
+[[message]]
+key = "Enable client stutter diagnostics at startup"
+[message.translations]
+simplified_chinese = "启动时启用客户端卡顿诊断"
+traditional_chinese = "啟動時啟用用戶端卡頓診斷"
+japanese = "起動時にクライアントのスタッター診断を有効にする"
+korean = "시작 시 클라이언트 끊김 진단 활성화"
+russian = "Включить диагностику рывков клиента при запуске"
+german = "Client-Ruckeldiagnose beim Start aktivieren"
+spanish = "Activar el diagnóstico de tirones del cliente al iniciar"
+french = "Activer le diagnostic des saccades du client au démarrage"
+brazilian_portuguese = "Ativar o diagnóstico de travamentos do cliente na inicialização"
+portuguese = "Ativar o diagnóstico de interrupções do cliente ao iniciar"
+turkish = "Başlangıçta istemci takılma tanılamasını etkinleştir"
+polish = "Włącz diagnostykę przycięć klienta przy uruchamianiu"
+
+[[message]]
+key = "Enable enhanced scoreboard presentation"
+[message.translations]
+simplified_chinese = "启用增强计分板显示"
+traditional_chinese = "啟用增強計分板顯示"
+japanese = "拡張スコアボード表示を有効にする"
+korean = "향상된 점수판 표시 활성화"
+russian = "Включить расширенное отображение таблицы счёта"
+german = "Erweiterte Punktetafelansicht aktivieren"
+spanish = "Activar la presentación mejorada del marcador"
+french = "Activer l'affichage amélioré du tableau des scores"
+brazilian_portuguese = "Ativar a exibição aprimorada do placar"
+portuguese = "Ativar a apresentação melhorada do marcador"
+turkish = "Geliştirilmiş skor tablosu görünümünü etkinleştir"
+polish = "Włącz rozszerzony widok tablicy wyników"
+
+[[message]]
+key = "Enable macOS graphics diagnostics and Instruments signposts"
+[message.translations]
+simplified_chinese = "启用 macOS 图形诊断和 Instruments 标记"
+traditional_chinese = "啟用 macOS 圖形診斷和 Instruments 標記"
+japanese = "macOS グラフィックス診断と Instruments サインポストを有効にする"
+korean = "macOS 그래픽 진단 및 Instruments 표지 활성화"
+russian = "Включить графическую диагностику macOS и метки Instruments"
+german = "macOS-Grafikdiagnose und Instruments-Signposts aktivieren"
+spanish = "Activar el diagnóstico gráfico de macOS y las marcas de Instruments"
+french = "Activer le diagnostic graphique macOS et les signposts Instruments"
+brazilian_portuguese = "Ativar o diagnóstico gráfico do macOS e os marcadores do Instruments"
+portuguese = "Ativar o diagnóstico gráfico do macOS e os marcadores do Instruments"
+turkish = "macOS grafik tanılamasını ve Instruments işaretlerini etkinleştir"
+polish = "Włącz diagnostykę grafiki macOS i znaczniki Instruments"
+
+[[message]]
+key = "Enable smooth cinematic camera while free spectating"
+[message.translations]
+simplified_chinese = "自由观战时启用平滑电影镜头"
+traditional_chinese = "自由觀戰時啟用平滑電影鏡頭"
+japanese = "フリー観戦中に滑らかなシネマティックカメラを有効にする"
+korean = "자유 관전 중 부드러운 시네마틱 카메라 활성화"
+russian = "Включить плавную кинематографическую камеру в свободном наблюдении"
+german = "Sanfte Kinokamera beim freien Zuschauen aktivieren"
+spanish = "Activar la cámara cinemática fluida al espectar libremente"
+french = "Activer la caméra cinématique fluide en observation libre"
+brazilian_portuguese = "Ativar a câmera cinematográfica suave ao espectar livremente"
+portuguese = "Ativar a câmara cinematográfica suave ao observar livremente"
+turkish = "Serbest izlerken akıcı sinematik kamerayı etkinleştir"
+polish = "Włącz płynną kamerę filmową podczas swobodnej obserwacji"
+
+[[message]]
+key = "Global UI size percentage"
+[message.translations]
+simplified_chinese = "全局 UI 大小百分比"
+traditional_chinese = "全域 UI 大小百分比"
+japanese = "全体 UI サイズの割合"
+korean = "전체 UI 크기 백분율"
+russian = "Общий масштаб интерфейса в процентах"
+german = "Globale UI-Größe in Prozent"
+spanish = "Porcentaje de tamaño global de la interfaz"
+french = "Pourcentage de taille globale de l'interface"
+brazilian_portuguese = "Porcentagem global do tamanho da interface"
+portuguese = "Percentagem global do tamanho da interface"
+turkish = "Genel arayüz boyutu yüzdesi"
+polish = "Globalny rozmiar interfejsu w procentach"
+
+[[message]]
+key = "Hide chat messages from players marked as enemies"
+[message.translations]
+simplified_chinese = "隐藏被标记为敌人的玩家的聊天消息"
+traditional_chinese = "隱藏被標記為敵人的玩家聊天訊息"
+japanese = "敵としてマークしたプレイヤーのチャットメッセージを隠す"
+korean = "적으로 표시한 플레이어의 채팅 메시지 숨기기"
+russian = "Скрывать сообщения чата от игроков, отмеченных как враги"
+german = "Chatnachrichten von als Feinde markierten Spielern ausblenden"
+spanish = "Ocultar los mensajes de chat de jugadores marcados como enemigos"
+french = "Masquer les messages de chat des joueurs marqués comme ennemis"
+brazilian_portuguese = "Ocultar mensagens de chat de jogadores marcados como inimigos"
+portuguese = "Ocultar mensagens de chat de jogadores marcados como inimigos"
+turkish = "Düşman olarak işaretlenen oyuncuların sohbet mesajlarını gizle"
+polish = "Ukrywaj wiadomości czatu od graczy oznaczonych jako wrogowie"
+
+[[message]]
+key = "RTT"
+[message.translations]
+simplified_chinese = "往返延迟"
+
+[[message]]
+key = "UI rounded corner segments (even numbers recommended)"
+[message.translations]
+simplified_chinese = "UI 圆角分段数（建议使用偶数）"
+traditional_chinese = "UI 圓角分段數（建議使用偶數）"
+japanese = "UI 角丸セグメント数（偶数を推奨）"
+korean = "UI 둥근 모서리 세그먼트 수(짝수 권장)"
+russian = "Количество сегментов скругления UI (рекомендуются чётные числа)"
+german = "UI-Eckrundungssegmente (gerade Zahlen empfohlen)"
+spanish = "Segmentos de esquina redondeada de la interfaz (se recomiendan números pares)"
+french = "Segments d'angles arrondis de l'interface (nombres pairs recommandés)"
+brazilian_portuguese = "Segmentos de cantos arredondados da interface (números pares recomendados)"
+portuguese = "Segmentos de cantos arredondados da interface (recomendam-se números pares)"
+turkish = "Arayüz yuvarlatılmış köşe segmentleri (çift sayılar önerilir)"
+polish = "Segmenty zaokrąglonych rogów interfejsu (zalecane liczby parzyste)"
+
+[[message]]
+key = "Word filter action: 0=replace matching words, 1=hide entire message"
+[message.translations]
+simplified_chinese = "屏蔽词操作：0=替换匹配词，1=隐藏整条消息"
+traditional_chinese = "屏蔽詞操作：0=替換匹配詞，1=隱藏整條訊息"
+japanese = "単語フィルター操作: 0=一致する単語を置換、1=メッセージ全体を非表示"
+korean = "단어 필터 동작: 0=일치하는 단어 교체, 1=메시지 전체 숨기기"
+russian = "Действие фильтра слов: 0=заменять совпадающие слова, 1=скрывать сообщение целиком"
+german = "Wortfilter-Aktion: 0=übereinstimmende Wörter ersetzen, 1=gesamte Nachricht ausblenden"
+spanish = "Acción del filtro de palabras: 0=reemplazar palabras coincidentes, 1=ocultar el mensaje completo"
+french = "Action du filtre de mots : 0=remplacer les mots correspondants, 1=masquer tout le message"
+brazilian_portuguese = "Ação do filtro de palavras: 0=substituir palavras correspondentes, 1=ocultar a mensagem inteira"
+portuguese = "Ação do filtro de palavras: 0=substituir palavras correspondentes, 1=ocultar a mensagem inteira"
+turkish = "Kelime filtresi eylemi: 0=eşleşen kelimeleri değiştir, 1=tüm mesajı gizle"
+polish = "Działanie filtra słów: 0=zamień pasujące słowa, 1=ukryj całą wiadomość"
+
+[[message]]
+key = "Animate chat box, emote selector, scoreboard, and spectate selection"
+[message.translations]
+simplified_chinese = "聊天框、表情选择、计分板和观战选择的展示动画"
+traditional_chinese = "聊天框、表情選擇、計分板和觀戰選擇的展示動畫"
+japanese = "チャットボックス、絵文字選択、スコアボード、観戦選択をアニメーション化"
+korean = "채팅창, 이모티콘 선택기, 점수판 및 관전 선택에 애니메이션 적용"
+russian = "Анимировать чат, выбор эмоций, табло и выбор наблюдения"
+german = "Chatfenster, Emote-Auswahl, Anzeigetafel und Zuschauerwahl animieren"
+spanish = "Animar el chat, el selector de emoticonos, el marcador y la selección de espectador"
+french = "Animer la boîte de discussion, le sélecteur d'émoticônes, le tableau des scores et la sélection de spectateur"
+brazilian_portuguese = "Animar a caixa de chat, o seletor de emoticons, o placar e a seleção de espectador"
+portuguese = "Animar a caixa de chat, o seletor de emoticons, o placar e a seleção de espetador"
+turkish = "Sohbet kutusunu, ifade seçiciyi, skor tablosunu ve izleyici seçimini canlandır"
+polish = "Animuj okno czatu, wybór emotikon, tablicę wyników i wybór obserwowania"
+
+[[message]]
+key = "Animate settings card expand and collapse height changes"
+[message.translations]
+simplified_chinese = "展开或折叠设置卡片时播放高度过渡动画"
+traditional_chinese = "展開或折疊設定卡片時播放高度過渡動畫"
+japanese = "設定カードの展開・折りたたみ時の高さ変化をアニメーション化"
+korean = "설정 카드 확장 및 접기 높이 변경에 애니메이션 적용"
+russian = "Анимировать изменение высоты при разворачивании и сворачивании карточек настроек"
+german = "Höhenänderungen beim Auf- und Zuklappen von Einstellungskarten animieren"
+spanish = "Animar los cambios de altura al expandir y contraer tarjetas de ajustes"
+french = "Animer les changements de hauteur lors du déploiement et du repli des cartes de paramètres"
+brazilian_portuguese = "Animar alterações de altura ao expandir e recolher cartões de configurações"
+portuguese = "Animar alterações de altura ao expandir e recolher cartões de definições"
+turkish = "Ayar kartlarını genişletip daraltırken yükseklik değişimlerini canlandır"
+polish = "Animuj zmiany wysokości podczas rozwijania i zwijania kart ustawień"
+
+[[message]]
+key = "Animate settings card lists when entering a page"
+[message.translations]
+simplified_chinese = "进入设置页面时播放卡片列表入场动画"
+traditional_chinese = "進入設定頁面時播放卡片列表進場動畫"
+japanese = "ページを開くときに設定カード一覧をアニメーション表示"
+korean = "페이지 진입 시 설정 카드 목록 애니메이션 적용"
+russian = "Анимировать список карточек настроек при входе на страницу"
+german = "Einstellungskartenlisten beim Öffnen einer Seite animieren"
+spanish = "Animar las listas de tarjetas de ajustes al entrar en una página"
+french = "Animer les listes de cartes de paramètres à l'ouverture d'une page"
+brazilian_portuguese = "Animar listas de cartões de configurações ao entrar em uma página"
+portuguese = "Animar listas de cartões de definições ao entrar numa página"
+turkish = "Bir sayfaya girerken ayar kartı listelerini canlandır"
+polish = "Animuj listy kart ustawień przy otwieraniu strony"
+
+[[message]]
+key = "Animate settings card reorder and layout reflow"
+[message.translations]
+simplified_chinese = "拖动排序或布局重排时播放卡片位置过渡动画"
+traditional_chinese = "拖動排序或版面重排時播放卡片位置過渡動畫"
+japanese = "設定カードの並べ替えとレイアウト再配置をアニメーション化"
+korean = "설정 카드 정렬 및 레이아웃 재배치에 애니메이션 적용"
+russian = "Анимировать сортировку и перестроение раскладки карточек настроек"
+german = "Neuanordnung und Layout-Umfluss von Einstellungskarten animieren"
+spanish = "Animar la reordenación y el reajuste de diseño de las tarjetas de ajustes"
+french = "Animer la réorganisation et le réagencement des cartes de paramètres"
+brazilian_portuguese = "Animar a reorganização e o reajuste do layout dos cartões de configurações"
+portuguese = "Animar a reorganização e o reajuste do layout dos cartões de definições"
+turkish = "Ayar kartı sıralamasını ve düzen yeniden akışını canlandır"
+polish = "Animuj zmianę kolejności i przepływ układu kart ustawień"
+
+[[message]]
+key = "Interface surface color"
+[message.translations]
+simplified_chinese = "界面表面颜色"
+traditional_chinese = "介面表面顏色"
+japanese = "インターフェース表面の色"
+korean = "인터페이스 표면 색상"
+russian = "Цвет поверхности интерфейса"
+german = "Farbe der Benutzeroberfläche"
+spanish = "Color de la superficie de la interfaz"
+french = "Couleur de la surface de l'interface"
+brazilian_portuguese = "Cor da superfície da interface"
+portuguese = "Cor da superfície da interface"
+turkish = "Arayüz yüzey rengi"
+polish = "Kolor powierzchni interfejsu"
+
+[[message]]
+key = "Keyboard focus ring color"
+[message.translations]
+simplified_chinese = "键盘焦点环颜色"
+traditional_chinese = "鍵盤焦點環顏色"
+japanese = "キーボードフォーカスリングの色"
+korean = "키보드 포커스 링 색상"
+russian = "Цвет кольца клавиатурного фокуса"
+german = "Farbe des Tastaturfokusrings"
+spanish = "Color del anillo de enfoque del teclado"
+french = "Couleur de l'anneau de focus clavier"
+brazilian_portuguese = "Cor do anel de foco do teclado"
+portuguese = "Cor do anel de foco do teclado"
+turkish = "Klavye odak halkası rengi"
+polish = "Kolor pierścienia fokusu klawiatury"
+
+[[message]]
+key = "Map browser surface color"
+[message.translations]
+simplified_chinese = "地图浏览器表面颜色"
+traditional_chinese = "地圖瀏覽器表面顏色"
+japanese = "マップブラウザー表面の色"
+korean = "맵 브라우저 표면 색상"
+russian = "Цвет поверхности браузера карт"
+german = "Farbe der Kartenbrowser-Oberfläche"
+spanish = "Color de la superficie del navegador de mapas"
+french = "Couleur de la surface du navigateur de cartes"
+brazilian_portuguese = "Cor da superfície do navegador de mapas"
+portuguese = "Cor da superfície do navegador de mapas"
+turkish = "Harita tarayıcısı yüzey rengi"
+polish = "Kolor powierzchni przeglądarki map"
+
+[[message]]
+key = "Scoreboard surface color"
+[message.translations]
+simplified_chinese = "计分板表面颜色"
+traditional_chinese = "計分板表面顏色"
+japanese = "スコアボード表面の色"
+korean = "점수판 표면 색상"
+russian = "Цвет поверхности табло"
+german = "Farbe der Anzeigetafeloberfläche"
+spanish = "Color de la superficie del marcador"
+french = "Couleur de la surface du tableau des scores"
+brazilian_portuguese = "Cor da superfície do placar"
+portuguese = "Cor da superfície do placar"
+turkish = "Skor tablosu yüzey rengi"
+polish = "Kolor powierzchni tablicy wyników"
+
+[[message]]
+key = "Keyboard size"
+[message.translations]
+simplified_chinese = "键盘大小"
+traditional_chinese = "鍵盤大小"
+japanese = "キーボードサイズ"
+korean = "키보드 크기"
+russian = "Размер клавиатуры"
+german = "Tastaturgröße"
+spanish = "Tamaño del teclado"
+french = "Taille du clavier"
+brazilian_portuguese = "Tamanho do teclado"
+portuguese = "Tamanho do teclado"
+turkish = "Klavye boyutu"
+polish = "Rozmiar klawiatury"
+
+[[message]]
+key = "Mouse size"
+[message.translations]
+simplified_chinese = "鼠标大小"
+traditional_chinese = "滑鼠大小"
+japanese = "マウスサイズ"
+korean = "마우스 크기"
+russian = "Размер мыши"
+german = "Mausgröße"
+spanish = "Tamaño del ratón"
+french = "Taille de la souris"
+brazilian_portuguese = "Tamanho do mouse"
+portuguese = "Tamanho do rato"
+turkish = "Fare boyutu"
+polish = "Rozmiar myszy"
+
+[[message]]
+key = "Input overlay keyboard scale (percent)"
+[message.translations]
+simplified_chinese = "输入覆盖键盘比例（百分比）"
+traditional_chinese = "輸入覆蓋鍵盤比例（百分比）"
+
+[[message]]
+key = "Input overlay mouse scale (percent)"
+[message.translations]
+simplified_chinese = "输入覆盖鼠标比例（百分比）"
+traditional_chinese = "輸入覆蓋滑鼠比例（百分比）"
+
+[[message]]
+key = "Show Tune Zone effects on HUD Dynamic Island"
+[message.translations]
+simplified_chinese = "HUD 灵动岛显示 Tune Zone 效果"
+traditional_chinese = "HUD 靈動島顯示 Tune Zone 效果"
+
+[[message]]
+key = "Message merging"
+[message.translations]
+simplified_chinese = "消息合并"
+traditional_chinese = "訊息合併"
+japanese = "メッセージの統合"
+korean = "메시지 병합"
+russian = "Объединение сообщений"
+german = "Nachrichten zusammenführen"
+spanish = "Combinar mensajes"
+french = "Fusion des messages"
+brazilian_portuguese = "Mesclar mensagens"
+portuguese = "Unir mensagens"
+turkish = "Mesaj birleştirme"
+polish = "Łączenie wiadomości"

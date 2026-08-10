@@ -17,7 +17,9 @@
 
 #include <game/client/component.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/red_packet_auto_claim.h>
 #include <game/client/components/tclient/map_history.h>
+#include <game/client/components/tclient/swap_countdown_message.h>
 
 #include <deque>
 #include <queue>
@@ -29,6 +31,7 @@
 #include <vector>
 
 class IJob;
+struct CNetMsg_Sv_Chat;
 
 // 玩家统计数据结构
 struct SPlayerStats
@@ -142,6 +145,8 @@ class CTClient : public CComponent
 
 	bool ServerCommandExists(const char *pCommand);
 	int64_t m_LastAutoReplyTime = 0;
+	CQmRedPacketAutoClaim m_RedPacketAutoClaim;
+	bool TryHandleRedPacketAutoClaim(const CNetMsg_Sv_Chat *pMsg);
 
 	// Water Fall Detection
 	bool m_aWasInDeath[NUM_DUMMIES] = {false, false};
@@ -337,7 +342,8 @@ class CTClient : public CComponent
 	static void ConSaveList(IConsole::IResult *pResult, void *pUserData);
 
 	// 复读功能
-	char m_aLastChatMessage[2048] = ""; // 最新一条公屏消息
+	char m_aLastChatMessage[2048] = ""; // 最新一条公屏或队伍聊天消息
+	int m_LastChatTeam = 0;
 	int64_t m_LastRepeatTime = 0; // 上次发送复读时间
 	int64_t m_LastRepeatKeyPressTime = 0; // 上次按下复读按键时间
 	bool m_RepeatKeyDown = false; // 仅在按下沿计次，避免长按触发双击
@@ -345,10 +351,7 @@ class CTClient : public CComponent
 	static void ConRepeat(IConsole::IResult *pResult, void *pUserData);
 
 	// Swap倒计时提示
-	bool m_aSwapCountdownActive[NUM_DUMMIES] = {false, false};
-	bool m_aSwapCountdownOutgoing[NUM_DUMMIES] = {false, false};
-	int m_aSwapCountdownStartTick[NUM_DUMMIES] = {0, 0};
-	char m_aaSwapCountdownCounterpart[NUM_DUMMIES][MAX_NAME_LENGTH] = {{0}, {0}};
+	CSwapCountdownTracker m_aSwapCountdownTrackers[NUM_DUMMIES];
 	void StartSwapCountdown(int Dummy, const char *pCounterpart, bool Outgoing);
 	void ClearSwapCountdown(int Dummy = -1);
 
@@ -435,9 +438,7 @@ public:
 	// Swap倒计时公开接口
 	void HandleSwapCountdownMessage(const char *pText, int Dummy);
 	bool HasSwapCountdown(int Dummy = -1) const;
-	int GetSwapCountdownStartTick(int Dummy = -1) const;
-	const char *GetSwapCountdownCounterpart(int Dummy) const;
-	bool IsSwapCountdownOutgoing(int Dummy) const;
+	const std::vector<SSwapCountdownState> &GetSwapCountdowns(int Dummy) const;
 
 	// 收藏地图公开接口
 	bool IsFavoriteMap(const char *pMapName) const;

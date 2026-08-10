@@ -145,18 +145,12 @@ inline bool QmUpdateAxiomAutoLoginState(SQmAxiomAutoLoginState &State, int64_t N
 
 class CQmAxiomAutoLogin : public CComponent
 {
-	bool m_AutoLoginAnnounced = false;
-	bool m_AutoLoginSucceeded = false;
-	bool m_AutoLoginWaitingReply = false;
-	bool m_AutoLoginSlowRetryMode = false;
-	bool m_AutoLoginHardFailed = false;
-	int m_AutoLoginAttempts = 0;
-	int64_t m_AutoLoginNextTryTick = 0;
-	bool m_AutoLoginEnabledLastFrame = false;
+	SQmAxiomAutoLoginState m_AutoLoginState;
 	char m_aAutoLoginServer[NETADDR_MAXSTRSIZE] = "";
 	bool m_DummyAutoLoginSent = false;
 	bool m_DummyWasConnected = false;
 	bool m_DummyLoginAllowedThisServer = false;
+	bool m_AutoLoginEnabledLastFrame = false;
 	char m_aDummyAutoLoginServer[NETADDR_MAXSTRSIZE] = "";
 
 	const char *CurrentCommunityId() const;

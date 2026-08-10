@@ -362,6 +362,7 @@ public:
 	bool OnClientDataPersist(int ClientId, void *pData) override;
 	void OnClientConnected(int ClientId, void *pData) override;
 	void OnClientEnter(int ClientId) override;
+	void OnLiveObserverEnter(int ClientId) override;
 	void OnClientDrop(int ClientId, const char *pReason) override;
 	void OnClientPrepareInput(int ClientId, void *pInput) override;
 	void OnClientDirectInput(int ClientId, const void *pInput) override;

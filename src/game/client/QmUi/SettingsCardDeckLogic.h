@@ -79,9 +79,16 @@ private:
 	SSettingsCardDeckFrameDiagnostics *m_pDiagnostics = nullptr;
 };
 
-inline bool SettingsCardDeckShouldRunPreLayoutInput(const bool HasPointerInput, const bool ControllerVisible, const bool Collapsed, const float VisibleContentHeight)
+inline bool SettingsCardDeckHasActiveItemContinuation(const bool HasPointerInput, const bool HasActiveItem)
 {
-	return HasPointerInput && ControllerVisible && !Collapsed && VisibleContentHeight > 0.0f;
+	// 持续处理只服务于按住/释放的鼠标序列。空闲的文本编辑或数值编辑
+	// 不应驱动整个 Deck（包括被裁剪卡片）的预布局回调。
+	return HasPointerInput && HasActiveItem;
+}
+
+inline bool SettingsCardDeckShouldRunPreLayoutInput(const bool HasPointerInput, const bool HasPendingInput, const bool HasActiveItemContinuation, const bool ControllerVisible, const bool Collapsed, const float VisibleContentHeight)
+{
+	return (((HasPointerInput || HasPendingInput) && ControllerVisible) || HasActiveItemContinuation) && !Collapsed && VisibleContentHeight > 0.0f;
 }
 
 inline bool SettingsCardDeckUsesDefaultCollapseControl(const bool HasCustomCollapsedState, const bool HasCustomHeaderInput)

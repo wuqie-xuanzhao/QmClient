@@ -32,6 +32,7 @@
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmDropdown.h>
 #include <game/client/QmUi/QmModuleLayoutAdapter.h>
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/QmUiPerf.h>
@@ -39,6 +40,7 @@
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTheme.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
@@ -49,6 +51,7 @@
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui_listbox.h>
 #include <game/localization.h>
 
@@ -544,8 +547,10 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 	return Context;
 }
 
-int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char **ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)
+int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char *const *ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)
 {
+	// 所有设置页下拉框统一使用当前设置主题，调用点不得回退到旧的默认配色。
+	Properties.m_VisualStyle = QmSettingsDropdownVisualStyle(m_SettingsUiTheme);
 	// 锚点必须留在当前卡片内，弹层可以越过卡片但不能越过设置页 viewport。
 	if(Properties.m_pAnchorViewport == nullptr)
 		Properties.m_pAnchorViewport = Ui()->IsClipped() ? Ui()->ClipArea() : Ui()->Screen();
@@ -556,7 +561,12 @@ int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const cha
 
 SCardMotionSpec CMenus::SettingsCardMotionSpec() const
 {
-	return ResolveCardMotionSpec(g_Config.m_QmUiMotionLevel, g_Config.m_QmExtraAnimations != 0);
+	return ResolveCardMotionSpec(
+		g_Config.m_QmUiMotionLevel,
+		g_Config.m_QmUiListEntryAnimations != 0,
+		g_Config.m_QmUiCardHeightAnimations != 0,
+		g_Config.m_QmUiCardReflowAnimations != 0,
+		g_Config.m_QmExtraAnimations != 0);
 }
 
 SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
@@ -565,6 +575,9 @@ SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
 	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0;
 	Options.m_AlwaysShowBorders = g_Config.m_QmUiCardBorders != 0;
 	Options.m_BorderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiCardBorderColor, true));
+	const ColorRGBA CardColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiCardColor).UnclampLighting(0.42f));
+	Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiCardOpacity / 100.0f, 0.0f, 1.0f));
+	Options.m_UseSurfaceColor = true;
 	return Options;
 }
 
@@ -600,114 +613,219 @@ void CMenus::LoadSettingsCardOrderModel()
 
 	const std::vector<qm_card_order::SEntry> Defaults = qm_card_registry::BuildDefaultEntries();
 	m_SettingsCardOrderModel.LoadMerged(g_Config.m_QmGlobalCardOrder, Defaults);
+	const auto CopyModelEntries = [](const qm_card_order::CModel &Source) {
+		std::vector<qm_card_order::SEntry> vEntries;
+		vEntries.reserve(Source.Count());
+		for(int EntryIndex = 0; EntryIndex < Source.Count(); ++EntryIndex)
+			vEntries.push_back(Source.Entry(EntryIndex));
+		return vEntries;
+	};
+	const auto MakeCandidate = [&](qm_card_order::CModel &Candidate) {
+		Candidate.SetEntries(CopyModelEntries(m_SettingsCardOrderModel));
+		if(!m_SettingsCardOrderModel.IsDirty())
+			Candidate.ClearDirty();
+	};
+	const auto PersistCandidate = [&](const qm_card_order::CModel &Candidate, const bool CandidateChanged, const bool ForcePersist = false) {
+		if(!ForcePersist && !CandidateChanged && !m_SettingsCardOrderModel.IsDirty())
+			return true;
+		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(!Candidate.Serialize(aSerialized, sizeof(aSerialized)))
+			return false;
+		str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+		if(CandidateChanged)
+			m_SettingsCardOrderModel.SetEntries(CopyModelEntries(Candidate));
+		m_SettingsCardOrderModel.ClearDirty();
+		return true;
+	};
+	const auto PersistCurrentLayout = [&]() {
+		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(!m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+			return false;
+		str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+		m_SettingsCardOrderModel.ClearDirty();
+		return true;
+	};
+	const auto PersistAndAdvanceLayoutVersion = [&](const int Version, const bool ForcePersist = false) {
+		if((ForcePersist || m_SettingsCardOrderModel.IsDirty()) && !PersistCurrentLayout())
+			return false;
+		g_Config.m_QmCardLayoutVersion = Version;
+		return true;
+	};
 	if(g_Config.m_QmGlobalCardOrder[0] == '\0' && g_Config.m_QmCardOrderMigrated == 0)
 	{
-		qm_module::LoadLegacyQmLayoutIntoModel(m_SettingsCardOrderModel, g_Config.m_QmSidebarCardOrder);
-		qm_module::LoadLegacyTClientLayoutIntoModel(m_SettingsCardOrderModel, g_Config.m_QmSettingsCardOrder);
-		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-		if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
+		const bool QmLayoutChanged = qm_module::LoadLegacyQmLayoutIntoModel(Candidate, g_Config.m_QmSidebarCardOrder);
+		const bool TClientLayoutChanged = qm_module::LoadLegacyTClientLayoutIntoModel(Candidate, g_Config.m_QmSettingsCardOrder);
+		const bool CandidateChanged = QmLayoutChanged || TClientLayoutChanged;
+		if(!PersistCandidate(Candidate, CandidateChanged, true))
 		{
-			str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-			m_SettingsCardOrderModel.ClearDirty();
-			g_Config.m_QmCardOrderMigrated = 1;
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
+		g_Config.m_QmCardOrderMigrated = 1;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 1)
 	{
-		bool LayoutChanged = false;
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
 		const auto IsAtOldDefault = [&](const char *pStableId, const char *pTab, int OldColumn, int OldOrder) {
-			const int Index = m_SettingsCardOrderModel.FindByStableId(pStableId);
+			const int Index = Candidate.FindByStableId(pStableId);
 			if(Index < 0)
 				return false;
-			const qm_card_order::SEntry &Entry = m_SettingsCardOrderModel.Entry(Index);
+			const qm_card_order::SEntry &Entry = Candidate.Entry(Index);
 			return str_comp(Entry.m_pDefaultTab, pTab) == 0 && Entry.m_Column == OldColumn && Entry.m_OrderInColumn == OldOrder;
+		};
+		bool CandidateChanged = false;
+		const std::vector<const char *> vContributorIds = {
+			"deck:qmclient-contributors-community",
+			"deck:qmclient-contributors-sponsors",
 		};
 		const bool ContributorsStillOldDefault =
 			IsAtOldDefault("deck:qmclient-contributors-community", "qmclient-contributors", 0, 0) &&
-			IsAtOldDefault("deck:qmclient-contributors-sponsors", "qmclient-contributors", 0, 1);
+			IsAtOldDefault("deck:qmclient-contributors-sponsors", "qmclient-contributors", 0, 1) &&
+			qm_card_order::TabContainsOnlyStableIds(Candidate, "qmclient-contributors", vContributorIds);
 		if(ContributorsStillOldDefault)
 		{
-			m_SettingsCardOrderModel.MoveToTab("deck:qmclient-contributors-sponsors", "qmclient-contributors", 2, 0);
-			m_SettingsCardOrderModel.MoveToTab("deck:qmclient-contributors-community", "qmclient-contributors", 1, 0);
-			LayoutChanged = true;
+			Candidate.MoveToTab("deck:qmclient-contributors-sponsors", "qmclient-contributors", 2, 0);
+			Candidate.MoveToTab("deck:qmclient-contributors-community", "qmclient-contributors", 1, 0);
+			CandidateChanged = true;
 		}
+		const std::vector<const char *> vBindWheelIds = {
+			"deck:tclient-bind-wheel-editor",
+			"deck:tclient-bind-wheel-preview",
+		};
 		const bool BindWheelStillOldDefault =
 			IsAtOldDefault("deck:tclient-bind-wheel-editor", "tclient-bind-wheel", 1, 0) &&
-			IsAtOldDefault("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 1, 1);
+			IsAtOldDefault("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 1, 1) &&
+			qm_card_order::TabContainsOnlyStableIds(Candidate, "tclient-bind-wheel", vBindWheelIds);
 		if(BindWheelStillOldDefault)
 		{
-			m_SettingsCardOrderModel.MoveToTab("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 2, 0);
-			LayoutChanged = true;
+			Candidate.MoveToTab("deck:tclient-bind-wheel-preview", "tclient-bind-wheel", 2, 0);
+			CandidateChanged = true;
 		}
-		if(LayoutChanged)
+		if(!PersistCandidate(Candidate, CandidateChanged))
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 1;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 2)
 	{
-		const std::vector<qm_card_order::SEntry> vLegacyProfileDefaults = {
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
+		const std::vector<qm_card_order::SEntry> vLegacyProfileLayout = {
 			{"deck:tclient-profiles-actions", "tclient-profiles", 0, 0},
+			{"deck:tclient-profiles-options", "tclient-profiles", 2, 0},
+			{"deck:tclient-profiles-list", "tclient-profiles", 1, 0},
 		};
-		const bool LayoutChanged =
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyProfileDefaults, "deck:tclient-profiles-actions", "tclient-profiles", 1, 0);
-		if(LayoutChanged)
+		const std::vector<qm_card_order::SEntry> vTargetProfileLayout = {
+			{"deck:tclient-profiles-actions", "tclient-profiles", 1, 0},
+			{"deck:tclient-profiles-options", "tclient-profiles", 2, 0},
+			{"deck:tclient-profiles-list", "tclient-profiles", 1, 1},
+		};
+		const std::vector<const char *> vProfileIds = {
+			"deck:tclient-profiles-actions",
+			"deck:tclient-profiles-options",
+			"deck:tclient-profiles-list",
+		};
+		const std::vector<const char *> vRequiredProfileIds = {"deck:tclient-profiles-actions"};
+		const qm_card_order::EExplicitLayoutStatus ExplicitStatus = qm_card_order::ClassifyExplicitLayout(g_Config.m_QmGlobalCardOrder, vLegacyProfileLayout, vRequiredProfileIds);
+		if(ExplicitStatus == qm_card_order::EExplicitLayoutStatus::INVALID)
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		const bool ShouldMigrate = ExplicitStatus == qm_card_order::EExplicitLayoutStatus::MATCH;
+		const bool CandidateChanged = ShouldMigrate && qm_card_order::MigrateExactLayout(Candidate, "tclient-profiles", vLegacyProfileLayout, vTargetProfileLayout, vProfileIds);
+		if(ShouldMigrate && !CandidateChanged)
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		if(!PersistCandidate(Candidate, CandidateChanged))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 2;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 3)
 	{
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
 		const std::vector<qm_card_order::SEntry> vLegacyStatusBarDefaults = {
 			{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
 			{"deck:tclient-status-bar-items", "tclient-status-bar", 1, 1},
 			{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 2},
 		};
-		const bool LayoutChanged =
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, "deck:tclient-status-bar-items", "tclient-status-bar", 2, 0) |
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, "deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1);
-		if(LayoutChanged)
+		const std::vector<const char *> vStatusBarIds = {
+			"deck:tclient-status-bar-settings",
+			"deck:tclient-status-bar-items",
+			"deck:tclient-status-bar-preview",
+		};
+		const std::vector<qm_card_order::SEntry> vTargetStatusBarLayout = {
+			{"deck:tclient-status-bar-settings", "tclient-status-bar", 1, 0},
+			{"deck:tclient-status-bar-items", "tclient-status-bar", 2, 0},
+			{"deck:tclient-status-bar-preview", "tclient-status-bar", 1, 1},
+		};
+		const qm_card_order::EExplicitLayoutStatus ExplicitStatus = qm_card_order::ClassifyExplicitLayout(g_Config.m_QmGlobalCardOrder, vLegacyStatusBarDefaults, vStatusBarIds);
+		if(ExplicitStatus == qm_card_order::EExplicitLayoutStatus::INVALID)
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		const bool ShouldMigrate = ExplicitStatus == qm_card_order::EExplicitLayoutStatus::MATCH;
+		const bool CandidateChanged = ShouldMigrate && qm_card_order::MigrateExactLayout(Candidate, "tclient-status-bar", vLegacyStatusBarDefaults, vTargetStatusBarLayout, vStatusBarIds);
+		if(ShouldMigrate && !CandidateChanged)
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		if(!PersistCandidate(Candidate, CandidateChanged))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 3;
 	}
 	if(g_Config.m_QmCardLayoutVersion < 4)
 	{
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
 		const std::vector<qm_card_order::SEntry> vLegacyTeeDefaults = {
 			{"deck:tee-identity", "tee", 0, 0},
 			{"deck:tee-skin-options", "tee", 1, 0},
 			{"deck:tee-skin-list", "tee", 2, 0},
 		};
-		const bool LayoutChanged =
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-identity", "tee", 1, 0) |
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-skin-options", "tee", 2, 0) |
-			qm_card_order::MigrateLegacyDefaultGroup(m_SettingsCardOrderModel, g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, "deck:tee-skin-list", "tee", 0, 0);
-		if(LayoutChanged)
+		const std::vector<const char *> vTeeIds = {
+			"deck:tee-identity",
+			"deck:tee-skin-options",
+			"deck:tee-skin-list",
+		};
+		const std::vector<qm_card_order::SEntry> vTargetTeeLayout = {
+			{"deck:tee-identity", "tee", 1, 0},
+			{"deck:tee-skin-options", "tee", 2, 0},
+			{"deck:tee-skin-list", "tee", 0, 0},
+		};
+		const qm_card_order::EExplicitLayoutStatus ExplicitStatus = qm_card_order::ClassifyExplicitLayout(g_Config.m_QmGlobalCardOrder, vLegacyTeeDefaults, vTeeIds);
+		if(ExplicitStatus == qm_card_order::EExplicitLayoutStatus::INVALID)
 		{
-			char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-			if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
-			{
-				str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
-				m_SettingsCardOrderModel.ClearDirty();
-			}
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		const bool ShouldMigrate = ExplicitStatus == qm_card_order::EExplicitLayoutStatus::MATCH;
+		const bool CandidateChanged = ShouldMigrate && qm_card_order::MigrateExactLayout(Candidate, "tee", vLegacyTeeDefaults, vTargetTeeLayout, vTeeIds);
+		if(ShouldMigrate && !CandidateChanged)
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		if(!PersistCandidate(Candidate, CandidateChanged))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
 		}
 		g_Config.m_QmCardLayoutVersion = 4;
 	}
@@ -715,13 +833,34 @@ void CMenus::LoadSettingsCardOrderModel()
 	{
 		// 敌对列表从五张独立卡收敛为一个完整编辑器；LoadMerged 已按新 registry
 		// 清理旧 stable ID，这里把规范化后的结果写回，避免每次启动重复迁移。
+		if(!PersistAndAdvanceLayoutVersion(5, true))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+	}
+	if(g_Config.m_QmCardLayoutVersion < 6)
+	{
 		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
-		if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+		const qm_card_registry::ETClientMainCardsMigrationResult MigrationResult = qm_card_registry::MigrateTClientMainCardsToAlternatingColumns(m_SettingsCardOrderModel, aSerialized, sizeof(aSerialized));
+		const qm_card_registry::STClientMainCardsMigrationCommitPlan CommitPlan = qm_card_registry::TClientMainCardsMigrationCommitPlan(MigrationResult);
+		if(CommitPlan.m_PersistSerialized)
 		{
 			str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
 			m_SettingsCardOrderModel.ClearDirty();
 		}
-		g_Config.m_QmCardLayoutVersion = 5;
+		if(CommitPlan.m_AdvanceVersion)
+			g_Config.m_QmCardLayoutVersion = 6;
+	}
+	if(g_Config.m_QmCardLayoutVersion < 7)
+	{
+		// 状态栏代码已并入预览卡。LoadMerged 会按当前 registry 移除旧 stable ID，
+		// 强制写回使旧布局不会在后续启动时反复参与合并。
+		if(!PersistAndAdvanceLayoutVersion(7, true))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
 	}
 	m_SettingsCardOrderLoaded = true;
 }
@@ -887,11 +1026,11 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 	else // TClient, why was this not here? ig they never use "checked" anywhere important
 		Color.a *= Ui()->ButtonColorMul(pButtonContainer);
 
-	pRect->Draw(Color, Corners, Rounding);
+	DrawRoundedSurface(Ui(), *pRect, Color, ColorRGBA(), Rounding, 0.0f, Corners);
 	if(HoverStrength > MENU_TAB_ANIM_EPSILON)
 	{
 		const float OverlayAlpha = (Checked ? 0.05f : 0.08f) * HoverStrength;
-		pRect->Draw(ColorRGBA(1.0f, 1.0f, 1.0f, OverlayAlpha), Corners, Rounding);
+		DrawRoundedSurface(Ui(), *pRect, ColorRGBA(1.0f, 1.0f, 1.0f, OverlayAlpha), ColorRGBA(), Rounding, 0.0f, Corners);
 	}
 
 	if(pImageName)
@@ -961,7 +1100,7 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 		if(pActiveColor)
 			ColorMenuTab = *pActiveColor;
 
-		pRect->Draw(ColorMenuTab, Corners, EdgeRounding);
+		DrawRoundedSurface(Ui(), *pRect, ColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 	}
 	else
 	{
@@ -971,7 +1110,7 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 			if(pHoverColor)
 				HoverColorMenuTab = *pHoverColor;
 
-			pRect->Draw(HoverColorMenuTab, Corners, EdgeRounding);
+			DrawRoundedSurface(Ui(), *pRect, HoverColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 		}
 		else
 		{
@@ -979,7 +1118,7 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 			if(pDefaultColor)
 				ColorMenuTab = *pDefaultColor;
 
-			pRect->Draw(ColorMenuTab, Corners, EdgeRounding);
+			DrawRoundedSurface(Ui(), *pRect, ColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 		}
 	}
 
@@ -1124,9 +1263,9 @@ void CMenus::PrepareSettingsTabLabelCache(float MainViewWidth, float TabBarWidth
 int CMenus::DoButton_GridHeader(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Align)
 {
 	if(Checked == 2)
-		pRect->Draw(ColorRGBA(1, 0.98f, 0.5f, 0.55f), IGraphics::CORNER_T, 5.0f);
+		DrawRoundedSurface(Ui(), *pRect, ColorRGBA(1, 0.98f, 0.5f, 0.55f), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_T);
 	else if(Checked)
-		pRect->Draw(ColorRGBA(1, 1, 1, 0.5f), IGraphics::CORNER_T, 5.0f);
+		DrawRoundedSurface(Ui(), *pRect, ColorRGBA(1, 1, 1, 0.5f), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_T);
 
 	CUIRect Temp;
 	pRect->VMargin(5.0f, &Temp);
@@ -1201,6 +1340,12 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 
 int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, const bool ProcessInput, const float LabelFontSize)
 {
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	CUIRect Box, Label;
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
 	Label.VSplitLeft(5.0f, nullptr, &Label);
@@ -1216,7 +1361,8 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 
 	Box.Margin(2.0f, &Box);
 	const float BoxAlpha = std::clamp(0.25f * Ui()->ButtonColorMul(pId) + 0.10f * HoverStrength + 0.08f * CheckStrength, 0.0f, 1.0f);
-	Box.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, BoxAlpha), IGraphics::CORNER_ALL, 3.0f);
+	const ColorRGBA BoxColor(1.0f, 1.0f, 1.0f, BoxAlpha);
+	DrawRoundedSurface(Ui(), Box, BoxColor, BoxColor, 3.0f);
 
 	const bool HasCustomGlyph = pBoxText[0] != '\0' && pBoxText[0] != 'X';
 	if(HasCustomGlyph)
@@ -1230,11 +1376,14 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 		const ColorRGBA DefaultColor = TextRender()->DefaultTextColor();
 		TextRender()->TextColor(ColorRGBA(DefaultColor.r, DefaultColor.g, DefaultColor.b, DefaultColor.a * CheckStrength));
 		Ui()->DoLabel(&Box, FONT_ICON_XMARK, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
-		TextRender()->TextColor(DefaultColor);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		TextRender()->SetRenderFlags(PreviousRenderFlags);
+		TextRender()->SetFontPreset(PreviousFontPreset);
+		TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+		TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+		TextRender()->TextColor(PreviousTextColor);
 	}
 
-	TextRender()->SetRenderFlags(0);
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
 	const float FontSize = LabelFontSize > 0.0f ? LabelFontSize : Box.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
@@ -1246,6 +1395,12 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 		else
 			Ui()->DoLabel(&Label, pText, FontSize, TEXTALIGN_ML, Props);
 	}
+
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
 
 	return ProcessInput ? Ui()->DoButtonLogic(pId, 0, pRect, Flags) : 0;
 }
@@ -1625,11 +1780,7 @@ ColorHSLA CMenus::DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHsla
 	ColorRGBA Outline = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f);
 	Outline.a *= Ui()->ButtonColorMul(pHslaColor);
 
-	CUIRect Rect;
-	pRect->Margin(3.0f, &Rect);
-
-	pRect->Draw(Outline, IGraphics::CORNER_ALL, 4.0f);
-	Rect.Draw(color_cast<ColorRGBA>(HslaColor), IGraphics::CORNER_ALL, 4.0f);
+	DrawRoundedSurface(Ui(), *pRect, color_cast<ColorRGBA>(HslaColor), Outline, 4.0f, 3.0f);
 
 	if(Ui()->DoButtonLogic(pHslaColor, 0, pRect, BUTTONFLAG_LEFT))
 	{
@@ -1699,7 +1850,7 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 		CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
 		Resolved = ResolveUiAnimValueColor(AnimRt, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
 	}
-	pRect->Draw(Resolved, Corners, UseNewUi ? 7.0f : 10.0f);
+	DrawRoundedSurface(Ui(), *pRect, Resolved, ColorRGBA(), UseNewUi ? 7.0f : 10.0f, 0.0f, Corners);
 
 	if(pCommunityIcon != nullptr)
 	{
@@ -1767,6 +1918,21 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
+	auto RenderFavoriteMapsIcon = [&](const CUIRect &Tab) {
+		const float IconSide = minimum(Tab.w, Tab.h) * 0.56f;
+		const CUIRect IconRect{Tab.x + (Tab.w - IconSide) * 0.5f, Tab.y + (Tab.h - IconSide) * 0.5f, IconSide, IconSide};
+		const ColorRGBA IconColor = ConfiguredQmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+		if(GameClient()->QmIconManager()->RenderIcon(EQmIcon::BOOKMARK, IconRect, IconColor))
+			return;
+
+		const unsigned OldFlags = TextRender()->GetRenderFlags();
+		const EFontPreset OldPreset = TextRender()->GetFontPreset();
+		TextRender()->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+		Ui()->DoLabel(&Tab, FONT_ICON_BOOKMARK, IconSide, TEXTALIGN_MC);
+		TextRender()->SetRenderFlags(OldFlags);
+		TextRender()->SetFontPreset(OldPreset);
+	};
 	if(UseNewUi)
 	{
 		const float MenubarOuterInsetX = 6.0f;
@@ -1933,10 +2099,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoriteMapsButton;
-			if(DoMenuTabV2(&s_FavoriteMapsButton, "🔖", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_FavoriteMapsButton, "", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_ALL))
 			{
 				NewPage = PAGE_FAVORITE_MAPS;
 			}
+			RenderFavoriteMapsIcon(Button);
 			MenubarTrackActive(PAGE_FAVORITE_MAPS, Button);
 			GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
 
@@ -2235,10 +2402,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoriteMapsButton;
-			if(DoButton_MenuTab(&s_FavoriteMapsButton, "🔖", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_FAVORITE_MAPS]))
+			if(DoButton_MenuTab(&s_FavoriteMapsButton, "", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_FAVORITE_MAPS]))
 			{
 				NewPage = PAGE_FAVORITE_MAPS;
 			}
+			RenderFavoriteMapsIcon(Button);
 			GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
 
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -2471,7 +2639,7 @@ void CMenus::RenderLoading(const char *pCaption, const char *pContent, int Incre
 		return;
 
 	// need up date this here to get correct
-	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiColor));
+	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColor, true));
 
 	Ui()->MapScreen();
 
@@ -3452,7 +3620,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 	Box = Screen;
 	if(m_Popup != POPUP_FIRST_LAUNCH)
 	{
-		Box.Margin(150.0f, &Box);
+		Box.Margin(QmUiCenteredMargin(Box, 150.0f, 300.0f, 300.0f), &Box);
 	}
 
 	// Background
@@ -4510,6 +4678,8 @@ void CMenus::RenderThemeSelection(CUIRect MainView, const SSettingsContentMetric
 	auto &MenuBackground = GameClient()->m_MenuBackground;
 	const SSettingsContentMetrics Metrics = pMetrics != nullptr ? *pMetrics : ResolveSettingsContentMetrics(MainView.w);
 	s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
+	s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+	s_ListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_SELECTED, ui_token::color::LIST_ITEM_HOVER);
 
 	const float HeaderHeight = Metrics.m_LineHeight;
 	const float HeaderSpacing = Metrics.m_LineSpacing;
@@ -4525,7 +4695,10 @@ void CMenus::RenderThemeSelection(CUIRect MainView, const SSettingsContentMetric
 	HeaderRow.VSplitRight(80.0f * Metrics.m_UiScale, nullptr, &RefreshButton);
 	RefreshButton.VMargin(Metrics.m_LineSpacing * 0.5f, &RefreshButton);
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), nullptr, Metrics.m_BodySize))
+	{
 		MenuBackground.RefreshThemes();
+		s_ListBox.ResetScroll();
+	}
 
 	const std::vector<CTheme> &vThemes = MenuBackground.GetThemes();
 
@@ -4746,7 +4919,8 @@ void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsSc
 CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 {
 	SQmSettingsCardStyle Style;
-	const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale);
+	const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));
+	const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale, &Theme);
 	const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);
 	Style.m_Padding = CardProps.m_Padding;
 	Style.m_Spacing = std::clamp(16.0f * UiScale, 10.0f, 16.0f);
@@ -6537,11 +6711,9 @@ void CMenus::OnStateChange(int NewState, int OldState)
 	if(OldState == IClient::STATE_ONLINE || OldState == IClient::STATE_OFFLINE)
 	{
 		TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
-		TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex);
+		TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex);
 		m_IngameMotdParagraphCache.m_Valid = false;
 		m_IngameMotdParagraphCache.m_Pending = false;
-		m_IngameMotdParagraphCache.m_PreviousTextHash = 0;
-		m_IngameMotdParagraphCache.m_PreviousText.clear();
 		for(auto &[Key, Entry] : m_SnapshotTextCache)
 		{
 			(void)Key;
@@ -6592,11 +6764,9 @@ void CMenus::OnStateChange(int NewState, int OldState)
 void CMenus::OnWindowResize()
 {
 	TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
-	TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex);
+	TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex);
 	m_IngameMotdParagraphCache.m_Valid = false;
 	m_IngameMotdParagraphCache.m_Pending = false;
-	m_IngameMotdParagraphCache.m_PreviousTextHash = 0;
-	m_IngameMotdParagraphCache.m_PreviousText.clear();
 	for(auto &[Key, Entry] : m_SnapshotTextCache)
 	{
 		(void)Key;
@@ -6722,7 +6892,7 @@ void CMenus::OnRender()
 
 void CMenus::UpdateColors()
 {
-	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiColor));
+	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColor, true));
 
 	ms_ColorTabbarInactiveOutgame = MenuUiColorSurface(0.45f, 0.16f);
 	ms_ColorTabbarActiveOutgame = MenuUiColorSurface(0.70f, 0.16f);
@@ -6747,10 +6917,16 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsDrawTL(&BackgroundQuadItem, 1);
 	Graphics()->QuadsEnd();
 
+	// 空菜单地图即显式的 "(none)" 主题。DDNet 默认棋盘格为黑色，
+	// 在黑色 UI 颜色上不可见；保留同一程序化图案但改用对比色。
+	const bool NoMenuTheme = g_Config.m_ClMenuMap[0] == '\0';
+	const float GuiLuminance = (ms_GuiColor.r + ms_GuiColor.g + ms_GuiColor.b) / 3.0f;
+	const ColorRGBA CheckerColor = NoMenuTheme ? (GuiLuminance < 0.5f ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.10f)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.045f);
+
 	// render the tiles
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.045f);
+	Graphics()->SetColor(CheckerColor);
 	const float Size = 15.0f;
 	const float OffsetTime = std::fmod(GameClient()->GlobalTimeOrZero() * 0.15f, 2.0f);
 	IGraphics::CQuadItem aCheckerItems[64];

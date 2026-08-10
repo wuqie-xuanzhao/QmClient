@@ -10,6 +10,7 @@
 #include <engine/keys.h>
 #include <engine/shared/config.h>
 
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/components/controls.h>
 #include <game/client/gameclient.h>
 #include <game/localization.h>
@@ -913,7 +914,8 @@ void CHudEditor::OnRender()
 	const float HelpHeight = HelpPaddingY * 2.0f + HelpLineHeight * (float)std::size(apHelpLines);
 	const float HelpX = pUiScreen->x + (pUiScreen->w - (HelpWidth + HelpPaddingX * 2.0f)) * 0.5f;
 	const float HelpY = pUiScreen->y + pUiScreen->h - HelpHeight - 10.0f;
-	Graphics()->DrawRect(HelpX, HelpY, HelpWidth + HelpPaddingX * 2.0f, HelpHeight, ColorRGBA(0.03f, 0.04f, 0.06f, 0.78f), IGraphics::CORNER_ALL, 6.0f);
+	const CUIRect HelpRect{HelpX, HelpY, HelpWidth + HelpPaddingX * 2.0f, HelpHeight};
+	DrawRoundedSurface(Ui(), HelpRect, ColorRGBA(0.03f, 0.04f, 0.06f, 0.78f), ColorRGBA(), 6.0f);
 	for(size_t i = 0; i < std::size(apHelpLines); ++i)
 	{
 		TextRender()->Text(HelpX + HelpPaddingX, HelpY + HelpPaddingY + HelpLineHeight * i, HelpFontSize, apHelpLines[i], -1.0f);

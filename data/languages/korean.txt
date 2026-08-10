@@ -217,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - 비활성화, 1-9999 분
 
-1 new mention
-== 1 개의 새로운 언급
-
 1 star
 == 1성
 
@@ -243,9 +240,6 @@
 
 5 stars
 == 5성
-
-9+ new mentions
-== 9+ 개의 새로운 언급
 
 === All Local Saves ===
 == === 모든 로컬 저장 ===
@@ -554,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 외부 콘솔 상세도 조정 (-3 = 없음, -2 = 오류만, -1 = 경고, 0 = 정보, 1 = 디버그, 2 = 추적).
 
-Adjust your prediction margin while frozen
-== 얼어붙었을 때 예측 여백 조정
-
 Advanced
 == 고급
 
@@ -703,6 +694,21 @@ Angle
 
 Angle:
 == 각도:
+
+Animate chat box, emote selector, scoreboard, and spectate selection
+== 채팅창, 이모티콘 선택기, 점수판 및 관전 선택에 애니메이션 적용
+
+Animate lists when entering a page
+== Animate lists when entering a page
+
+Animate settings card expand and collapse height changes
+== 설정 카드 확장 및 접기 높이 변경에 애니메이션 적용
+
+Animate settings card lists when entering a page
+== 페이지 진입 시 설정 카드 목록 애니메이션 적용
+
+Animate settings card reorder and layout reflow
+== 설정 카드 정렬 및 레이아웃 재배치에 애니메이션 적용
 
 Animation
 == 애니메이션
@@ -1361,6 +1367,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 Base path for HTTPS map download URLs to clients
 == 클라이언트에 HTTPS 맵 다운로드 URL을 제공하기 위한 기본 경로
 
+Base prediction margin
+== 기본 예측 여유
+
 Basic
 == 기본
 
@@ -1400,6 +1409,9 @@ Best input smooth percentage
 Best match
 == 최적 일치
 
+Better scoreboard
+== 더 나은 점수판
+
 Bind address for client/server
 == 클라이언트/서버 바인딩 주소
 
@@ -1408,9 +1420,6 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
-
-Better scoreboard
-== 더 나은 점수판
 
 Bind key to execute a command or view keybindings
 == 키를 바인딩하여 명령을 실행하거나 키바인딩을 확인합니다
@@ -1445,6 +1454,9 @@ Black
 Blend mode
 == 혼합 모드
 
+Block enemy chat
+== 적대 플레이어 채팅 차단
+
 Block votes from blacklisted addresses
 == 블랙리스트 주소의 투표 차단
 
@@ -1462,6 +1474,9 @@ Blue team wins!
 
 Body
 == 몸통
+
+Bold
+== 굵게
 
 Border
 == 테두리
@@ -1622,6 +1637,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == 스왑할 수 없음: 상대방이 당신의 팀에 없습니다
 
+Card height animation
+== 설정 카드 높이 애니메이션
+
+Card list entry animation
+== 설정 카드 목록 진입 애니메이션
+
+Card reflow animation
+== 설정 카드 재배치 애니메이션
+
 Category
 == 카테고리
 
@@ -1757,9 +1781,6 @@ Checking for existing player with your name
 CHN
 == 중국
 
-Choose and arrange status bar data fields
-== Choose and arrange status bar data fields
-
 Choose colors for weapons and entity lasers
 == Choose colors for weapons and entity lasers
 
@@ -1787,11 +1808,11 @@ Choose whether to browse replays or screenshots
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
 
-Clamp mouse to screen
-== 마우스를 화면에 고정
-
 Cinematic camera
 == 시네마틱 카메라
+
+Clamp mouse to screen
+== 마우스를 화면에 고정
 
 Clan
 == 클랜
@@ -2194,6 +2215,9 @@ Configure the input overlay display
 
 Configure these settings
 == 이 설정 구성
+
+Configure UI icon appearance
+== UI 아이콘 모양 구성
 
 Confirm both are on same server, same room, and support voice
 == 둘 다 같은 서버, 같은 방에 있으며 음성을 지원하는지 확인
@@ -2768,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == 새 플레이어가 투표를 시작하거나 추방/관전 투표에 참여하기 전 지연 시간 (초)
 
+Delay before reduction
+== 감소 전 지연
+
 Delay between rescues (seconds)
 == 구조 사이의 지연 시간 (초)
 
@@ -3011,6 +3038,9 @@ Displays X and Y velocity
 Displays your current angle in degrees
 == 현재 각도(도) 표시
 
+Displays your current score
+== 현재 점수 표시
+
 Displays your frames per second
 == 초당 프레임 수를 표시합니다
 
@@ -3040,9 +3070,6 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == 프리즈 시 다른 플레이어 예측 안 함
-
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== 이 변수를 설정하지 말고, 대신 settings_ddnet.cfg 옆에 ddnet-serverlist-urls.cfg를 생성하여 모든 가능한 서버 목록 URL을 지정하세요
 
 Do not set, used to mark official tutorial server
 == 설정하지 마세요, 공식 튜토리얼 서버 표시용
@@ -3473,6 +3500,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == 현재 팀의 실행에 치트를 활성화하지만, 순위를 획득할 수 없습니다
 
+Enable client stutter diagnostics at startup
+== 시작 시 클라이언트 끊김 진단 활성화
+
 Enable colored console output
 == 콘솔 컬러 출력 활성화
 
@@ -3514,6 +3544,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == 강화 레이저 효과 활성화 (광선 + 펄스 애니메이션)
+
+Enable enhanced scoreboard presentation
+== 향상된 점수판 표시 활성화
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == 이벤트 트리거 활성화 (서버의 휴일 눈 이모트, 클라이언트 크리스마스 스킨)
@@ -3589,6 +3622,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == 가사 활성화
+
+Enable macOS graphics diagnostics and Instruments signposts
+== macOS 그래픽 진단 및 Instruments 표지 활성화
 
 Enable main thread and render stage performance debug logging
 == 메인 스레드 및 렌더링 단계 성능 디버그 로그 활성화
@@ -3671,6 +3707,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == 스킨 전환 애니메이션 활성화
 
+Enable smooth cinematic camera while free spectating
+== 자유 관전 중 부드러운 시네마틱 카메라 활성화
+
 Enable sound
 == 소리 활성화
 
@@ -3691,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == 스테레오 포지셔닝 활성화
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == 시스템 미디어 제어 활성화
@@ -3932,12 +3974,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == 외부 콘솔 비밀번호. 경제를 활성화하려면 설정해야 함
 
-Extra animations
-== 추가 애니메이션
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== 추가 애니메이션: 채팅창, 이모지 선택창, 점수판 및 관전 선택 페이지에서 Presentation State 애니메이션 사용
-
 Extras
 == 기타
 
@@ -4079,6 +4115,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == 공지사항이 포함된 파일, 한 줄에 하나씩
 
+Fill
+== 채우기
+
 Filter chat messages by regular expression
 == 정규 표현식으로 채팅 메시지 필터링
 
@@ -4156,9 +4195,6 @@ First page in console
 
 Flip:
 == 뒤집기:
-
-Focus color
-== 포커스 색상
 
 Focus mode
 == 집중 모드
@@ -4331,8 +4367,8 @@ Friends
 Friends only
 == 친구만
 
-Frozen Margin
-== 얼음 여유값
+Frozen prediction margin
+== 동결 중 예측 여유
 
 FSAA samples
 == FSAA 샘플
@@ -4354,6 +4390,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == 같은 방에서 전체 맵 듣기
+
+Full: each enabled animation category uses its complete transition
+== 전체: 활성화된 각 애니메이션 범주에 전체 전환을 사용합니다
 
 Fullscreen
 == 전체 화면
@@ -4499,6 +4538,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == 전역 토글 키
 
+Global UI size percentage
+== 전체 UI 크기 백분율
+
 Glow
 == 글로우
 
@@ -4577,11 +4619,11 @@ Graphics card
 Graphics display
 == 그래픽 표시
 
-Graphics library major version
-== 그래픽 라이브러리 주 버전
+Graphics library major version (0 = auto-detect)
+== Graphics library major version (0 = auto-detect)
 
-Graphics library minor version
-== 그래픽 라이브러리 부 버전
+Graphics library minor version (0 = auto-detect)
+== Graphics library minor version (0 = auto-detect)
 
 Graphics library patch version
 == 그래픽 라이브러리 패치 버전
@@ -4654,6 +4696,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == 채팅 숨기기
+
+Hide chat messages from players marked as enemies
+== 적으로 표시한 플레이어의 채팅 메시지 숨기기
 
 Hide death/respawn effects
 == 사망/부활 효과 숨기기
@@ -4792,6 +4837,12 @@ Hide Settings Tabs
 
 Hide sponsor QR code
 == 스폰서 QR 코드 숨기기
+
+Hide system message prefix
+== 시스템 메시지 접두사 숨기기
+
+Hide the *** prefix before server chat messages
+== 서버 채팅 메시지 앞의 *** 접두사 숨기기
 
 Hide toast
 == 알림 숨기기
@@ -4970,6 +5021,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5014,6 +5068,9 @@ I am away from the game window
 
 I muted you
 == 내가 당신을 음소거했습니다
+
+Icons
+== 아이콘
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == 1이면 연결 시 한 번만 자동 녹화하고, 0이면 게임 종료 후 자동 녹화가 다시 시작됩니다.
@@ -5180,20 +5237,20 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == 입력 장치 열기 실패, 헤드셋/마이크를 다시 연결하거나 입력 장치를 다시 선택해 보세요
 
-Input focus color
-== 인터페이스 입력 포커스 색상
-
 Input overlay
 == 입력 오버레이
 
 Input overlay display
 == 입력 오버레이 표시
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == 입력 오버레이 불투명도 (백분율)
-
-Input overlay scale (percent)
-== 입력 오버레이 배율 (백분율)
 
 Input overlay X position (percent)
 == 입력 오버레이 X 위치 (백분율)
@@ -5216,14 +5273,17 @@ Interface
 Interface animations
 == 인터페이스 애니메이션
 
-Interface color
-== 인터페이스 색상
-
 Interface page
 == 인터페이스 페이지
 
 Interface settings page
 == 인터페이스 설정 페이지
+
+Interface surface
+== 인터페이스 표면
+
+Interface surface color
+== 인터페이스 표면 색상
 
 Interface transparency
 == 일반 UI 투명도
@@ -5404,6 +5464,12 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == 키 고정: 본체 초기화
+
+Keyboard focus ring color
+== 키보드 포커스 링 색상
+
+Keyboard size
+== 키보드 크기
 
 Keyword Reply
 == 키워드 답장
@@ -5999,8 +6065,11 @@ Manual target
 Map
 == 맵
 
-Map browser color
-== 맵 브라우저 색상
+Map browser surface
+== 맵 브라우저 표면
+
+Map browser surface color
+== 맵 브라우저 표면 색상
 
 Map browser transparency
 == 맵 브라우저 투명도
@@ -6185,6 +6254,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == 투표에 참여할 수 있는 최대 플레이어 수 (0 = 무제한)
 
+Maximum reduction
+== 최대 감소량
+
 Maximum rows
 == 최대 행 수
 
@@ -6238,6 +6310,9 @@ Menu option - normal
 
 Menu option - selected
 == 메뉴 옵션 - 선택됨
+
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
 
 Message color
 == 메시지 색상
@@ -6394,6 +6469,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == 메뉴/에디터에서의 마우스 감도
+
+Mouse size
+== 마우스 크기
 
 Move left
 == 왼쪽으로 이동
@@ -7004,14 +7082,14 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 == 틱당 전송되는 투표 옵션 수
 
-Numeric-only messages will be skipped
-== 숫자만 있는 메시지는 건너뜁니다
-
 o = Send rate
 == o = 전송 속도
 
 Off
 == 끄기
+
+Off: disables all interface animations while preserving the options below
+== 끄기: 아래 옵션 설정은 유지하면서 모든 인터페이스 애니메이션을 비활성화합니다
 
 Official
 == 공식
@@ -7262,9 +7340,6 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == 그룹 재정의
 
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== 핑 추정 위치 재정의, 옵션: auto, af, as, as:cn, eu, na, oc, sa (auto, 아프리카, 아시아, 중국, 유럽, 북미, 오세아니아/호주, 남미)
-
 Override Selected
 == 선택 항목 재정의
 
@@ -7381,9 +7456,6 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == 성능 디버그 로그 임계값 (ms)
-
-Performance mode (placeholder)
-== 성능 모드 (자리 표시자)
 
 Personal best:
 == 개인 최고 기록:
@@ -7733,9 +7805,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == 예측 선행 시간이 높습니다. 예측 설정과 서버 타이밍을 확인하세요
 
-Prediction Margin
-== 예측 여유
-
 Prediction margin
 == 예측 여유
 
@@ -7747,6 +7816,9 @@ Prediction offset
 
 Preparing demo playback
 == 데모 재생 준비 중
+
+Presentation animations
+== 표시 애니메이션
 
 Preset %d
 == 프리셋 %d
@@ -7948,6 +8020,15 @@ q = Connection quality
 
 Qm
 == Qm
+
+Qm UI custom icon color
+== Qm UI 아이콘 사용자 지정 색상
+
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm UI 아이콘 색상: 1=흰색, 2=검정, 3=사용자 지정, 4=무지개
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm UI 아이콘 굵기: 0=보통, 1=굵게, 2=얇게, 3=채우기
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다.
@@ -8198,8 +8279,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == 얼었을 때 안티핑 및 플레이어 예측 감소
 
+Reduce prediction while frozen
+== 동결 중 예측량 줄이기
+
 Reduced
 == 감소
+
+Reduced: uses shorter transitions and disables presentation animations
+== 간소화: 더 짧은 전환을 사용하고 연출 애니메이션을 비활성화합니다
 
 Refresh
 == 새로고침
@@ -8221,6 +8308,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == 공개 목록을 위해 마스터 서버에 서버 등록, 쉼표로 구분된 프로토콜 허용 (예: 'ipv4,ipv6')
+
+Regular
+== 보통
 
 Regular background color
 == 일반 배경 색상
@@ -8359,9 +8449,6 @@ Remove from queue
 
 Remove Item
 == 항목 제거
-
-Remove prediction & antiping in freeze
-== 프리즈에서 예측 및 안티핑 제거
 
 Remove right to vote from player with client ID
 == 클라이언트 ID를 가진 플레이어의 투표권 제거
@@ -8972,9 +9059,6 @@ Score limit
 Scoreboard
 == 점수판
 
-Scoreboard color
-== 점수판 색상
-
 Scoreboard cursor
 == 점수판 커서
 
@@ -8986,6 +9070,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == 점수판 정렬 모드 (0=점수, 1=분)
+
+Scoreboard surface
+== 점수판 표면
+
+Scoreboard surface color
+== 점수판 표면 색상
 
 Scoreboard transparency
 == 스코어보드 투명도
@@ -9326,6 +9416,15 @@ Sets your tee's eye emote
 Settings
 == 설정
 
+Settings card background
+== Settings card background
+
+Settings card background color
+== Settings card background color
+
+Settings card background transparency
+== Settings card background transparency
+
 Settings card border color
 == 설정 카드 테두리 색상
 
@@ -9506,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == DDNet 설정 변수 표시
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== DDNet 맵 완료 표시 (플레이어 이름을 info.ddnet.org/info로 전송)
-
 Show DDNet map finishes in server browser
 == 서버 브라우저에서 DDNet 맵 완료 표시
 
@@ -9523,9 +9619,6 @@ Show default flag in scoreboard
 
 Show default mod rules.
 == 기본 모드 규칙 표시
-
-Show Directory
-== 디렉토리 표시
 
 Show dotted map route debug
 == 맵 점선 경로 디버그 표시
@@ -10141,6 +10234,12 @@ Show toast
 
 Show translation
 == 번역 표시
+
+Show Tune Zone effects
+== Tune Zone 효과 표시
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 자신의 플레이어에 영향을 미치는 튜닝 파라미터 표시 (0 = 끄기, 1 = 변경된 것만 표시, 2 = 모두 표시)
@@ -10823,6 +10922,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 Switch
 == 전환
 
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+
 Switch failed
 == 전환 실패
 
@@ -11186,6 +11288,9 @@ Text alpha
 Text color
 == 텍스트 색상
 
+Text input focus ring color
+== 텍스트 입력 포커스 링 색상
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == 당신의 동행과 신뢰에 감사드립니다. 그것이 제가 계속 나아갈 용기를 주는 것입니다.
 
@@ -11267,11 +11372,17 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == 편집기에 저장되지 않은 맵이 있습니다. 저장하는 것이 좋습니다.
 
+Thin
+== 얇게
+
 Thinking mode requires a reasoning model
 == 사고 모드를 사용하려면 추론 모델이 필요합니다
 
 This ID is not connected
 == 이 ID는 연결되지 않음
+
+This is the master switch for all interface animation categories
+== 이것은 모든 인터페이스 애니메이션 범주의 마스터 스위치입니다
 
 This name cannot be used for files and folders
 == 이 이름은 파일 및 폴더에 사용할 수 없습니다
@@ -11612,6 +11723,9 @@ Translation button cancel color
 Translation color
 == 번역 색상
 
+Translation color alpha migration completed flag
+== 번역 색상 알파 마이그레이션 완료 플래그
+
 Translation menu background color
 == 번역 메뉴 배경 색상
 
@@ -11678,6 +11792,9 @@ Tune variable to value
 Tune variable to value or show current value
 == 변수를 값으로 조정하거나 현재 값을 표시합니다.
 
+Tune Zone effect icon legend
+== Tune Zone effect icon legend
+
 Tutorial
 == 튜토리얼
 
@@ -11714,11 +11831,23 @@ UI color
 UI controller sens.
 == UI 컨트롤러 감도
 
+UI icon color
+== UI 아이콘 색상
+
+UI icon custom color
+== UI 아이콘 사용자 지정 색상
+
+UI icon weight
+== UI 아이콘 굵기
+
 UI motion level
 == UI 애니메이션 강도
 
 UI mouse sens.
 == UI 마우스 감도
+
+UI rounded corner segments (even numbers recommended)
+== UI 둥근 모서리 세그먼트 수(짝수 권장)
 
 UI scale
 == UI 크기
@@ -11921,9 +12050,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
 == 맵 데이터를 GPU 에 업로드 중
 
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
-
 URL for downloading community skins
 == 커뮤니티 스킨 다운로드 URL
 
@@ -11947,6 +12073,9 @@ Use 12 hour clock
 
 Use 12-hour clock for local time
 == 현지 시간에 12시간제 사용
+
+Use a fixed prediction margin while frozen
+== 동결 중 고정 예측 여유 사용
 
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == 대체 안티핑 평활화 사용, cl_antiping_smooth와 호환되지 않음
@@ -12064,6 +12193,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == 표시기에 전쟁 목록 그룹 사용
+
+Used by active shared text and numeric input fields
+== 활성화된 공용 텍스트 및 숫자 입력 필드에서 사용됩니다
 
 Uses the active action with the current aiming position.
 == 현재 조준 위치로 활성 작업을 사용합니다.
@@ -12425,6 +12557,9 @@ What's done is done, no use saying more
 Wheel animate
 == 휠 애니메이션
 
+When TClient rainbow Tee is enabled, this feature has no effect.
+== TClient 무지개 Tee가 켜져 있으면 이 기능은 적용되지 않습니다.
+
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 출발선을 넘으면 최고 기록의 움직임을 재현하는 고스트 티를 표시합니다
 
@@ -12518,6 +12653,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == 귓속말: /w 플레이어 메시지
 
+White
+== 흰색
+
 Why are you slowmo replaying to read this?
 == 이걸 읽으려고 느린 재생을 하고 계신가요?
 
@@ -12562,6 +12700,9 @@ Windowed fullscreen
 
 Word Filter
 == 단어 필터
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== 단어 필터 동작: 0=일치하는 단어 교체, 1=메시지 전체 숨기기
 
 Word highlight soft edge width (px)
 == 글자별 가장자리 부드러운 전환 폭 px
@@ -12938,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 텐센트 클라우드 API가 구성되지 않음
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == 곱하기
@@ -13059,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 지정된 그래픽 백엔드를 초기화할 수 없습니다. 통합 그래픽 카드 드라이버가 설치되지 않았을 수 있습니다.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 초기화 중 실패했습니다. 설정 디렉토리의 settings_ddnet.cfg 에서 gfx_backend 를 OpenGL 또는 Vulkan 으로 변경한 후 다시 시도하세요.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13075,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 렌더 명령 제출에 실패했습니다. GPU 드라이버를 업데이트해 보세요.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 알 수 없는 오류입니다. 설정 디렉토리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

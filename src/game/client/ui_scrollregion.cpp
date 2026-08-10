@@ -10,6 +10,8 @@
 #include <engine/keys.h>
 #include <engine/shared/config.h>
 
+#include <game/client/QmUi/UiSurface.h>
+
 #include <cmath>
 
 CScrollRegion::CScrollRegion()
@@ -184,7 +186,7 @@ bool CScrollRegion::RectClipped(const CUIRect &Rect) const
 
 bool CScrollRegion::ContentOverflows() const
 {
-	return m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
+	return m_Params.m_ScrollHorizontal ? QmScrollRegionContentOverflows(m_ContentSize, m_ClipRect.w, Ui()->PixelSize()) : QmScrollRegionContentOverflows(m_ContentSize, m_ClipRect.h, Ui()->PixelSize());
 }
 
 bool CScrollRegion::ScrollbarShown() const
@@ -220,7 +222,7 @@ bool CScrollRegion::Active() const
 CUIRect CScrollRegion::SplitContentArea()
 {
 	CUIRect ScrollbarBg;
-	const bool ReserveScrollbarSpace = m_Params.m_ScrollbarAlwaysReserved || ScrollbarShown();
+	const bool ReserveScrollbarSpace = QmScrollRegionShouldReserveScrollbarSpace(m_Params.m_ScrollbarAlwaysReserved, ScrollbarShown());
 	if(m_Params.m_ScrollHorizontal)
 		m_ClipRect.HSplitBottom(m_Params.m_ScrollbarThickness, ReserveScrollbarSpace ? &m_ClipRect : nullptr, &ScrollbarBg);
 	else
@@ -254,18 +256,18 @@ void CScrollRegion::DrawBackground(const CUIRect &ScrollbarBg)
 		if(m_Params.m_ScrollbarBgColor.a > 0.0f)
 		{
 			int Corners = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_B : IGraphics::CORNER_R;
-			ScrollbarBg.Draw(m_Params.m_ScrollbarBgColor, Corners, 4.0f);
+			DrawRoundedSurface(Ui(), ScrollbarBg, m_Params.m_ScrollbarBgColor, ColorRGBA(), 4.0f, 0.0f, Corners);
 		}
 		if(m_Params.m_RailBgColor.a > 0.0f)
 		{
 			float Rounding = m_Params.m_ScrollHorizontal ? m_RailRect.h / 2.0f : m_RailRect.w / 2.0f;
-			m_RailRect.Draw(m_Params.m_RailBgColor, IGraphics::CORNER_ALL, Rounding);
+			DrawRoundedSurface(Ui(), m_RailRect, m_Params.m_RailBgColor, ColorRGBA(), Rounding);
 		}
 	}
 	if(m_Params.m_ClipBgColor.a > 0.0f)
 	{
 		int CornersPartial = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_T : IGraphics::CORNER_L;
-		m_ClipRect.Draw(m_Params.m_ClipBgColor, ScrollbarShown() ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
+		DrawRoundedSurface(Ui(), m_ClipRect, m_Params.m_ClipBgColor, ColorRGBA(), 4.0f, 0.0f, ScrollbarShown() ? CornersPartial : IGraphics::CORNER_ALL);
 	}
 }
 
@@ -350,7 +352,7 @@ void CScrollRegion::DoSlider()
 
 	const float ClipSize = m_Params.m_ScrollHorizontal ? m_ClipRect.w : m_ClipRect.h;
 	const float RailSize = m_Params.m_ScrollHorizontal ? m_RailRect.w : m_RailRect.h;
-	const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;
+	const bool CanScroll = ContentOverflows() && ScrollMax > 0.0f && RailSize > 0.0f;
 	const float SliderMaxSize = maximum(0.0f, RailSize);
 	const float SliderMinSize = minimum(m_Params.m_SliderMinSize, SliderMaxSize);
 	const float SliderSize = CanScroll ? std::clamp(ClipSize / m_ContentSize * RailSize, SliderMinSize, SliderMaxSize) : SliderMaxSize;
@@ -370,7 +372,7 @@ void CScrollRegion::DoSlider()
 		MaintainNoScrollSliderActive();
 		const bool Active = Ui()->IsActiveItem(pId);
 		const float Rounding = m_Params.m_ScrollHorizontal ? Slider.h / 2.0f : Slider.w / 2.0f;
-		Slider.Draw(m_Params.SliderColor(Active, Ui()->HotItem() == pId), IGraphics::CORNER_ALL, Rounding);
+		DrawRoundedSurface(Ui(), Slider, m_Params.SliderColor(Active, Ui()->HotItem() == pId), ColorRGBA(), Rounding);
 		return;
 	}
 
@@ -394,5 +396,5 @@ void CScrollRegion::DoSlider()
 	}
 
 	const float Rounding = m_Params.m_ScrollHorizontal ? Slider.h / 2.0f : Slider.w / 2.0f;
-	Slider.Draw(m_Params.SliderColor(Ui()->CheckActiveItem(pId), Ui()->HotItem() == pId), IGraphics::CORNER_ALL, Rounding);
+	DrawRoundedSurface(Ui(), Slider, m_Params.SliderColor(Ui()->CheckActiveItem(pId), Ui()->HotItem() == pId), ColorRGBA(), Rounding);
 }

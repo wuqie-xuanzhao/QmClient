@@ -285,7 +285,7 @@ void CSkins7::ProcessCompletedJobs()
 			continue;
 		}
 
-		if(!GameClient()->GpuUploadLimiter()->CanUpload())
+		if(!GameClient()->GpuUploadLimiter()->CanUpload(2))
 		{
 			break;
 		}
@@ -308,11 +308,6 @@ void CSkins7::ProcessCompletedJobs()
 				log_trace("skins7", "Loaded skin part '%s/%s'", CSkins7::ms_apSkinPartNames[Result.m_PartType], Part.m_aName);
 			}
 			m_avSkinParts[Result.m_PartType].emplace_back(Part);
-
-			if(m_SkinLoadedCallback)
-			{
-				m_SkinLoadedCallback();
-			}
 		}
 
 		Iter = m_PendingSkinPartJobs.erase(Iter);
@@ -320,8 +315,11 @@ void CSkins7::ProcessCompletedJobs()
 
 	if(m_PendingSkinPartJobs.empty() && m_Loading)
 	{
+		RebuildSkins();
 		m_Loading = false;
 		m_LastRefreshTime = time_get_nanoseconds();
+		if(m_SkinLoadedCallback)
+			m_SkinLoadedCallback();
 	}
 }
 
@@ -332,6 +330,15 @@ public:
 	CSkins7 *m_pThis;
 	CSkins7::TSkinLoadedCallback m_SkinLoadedCallback;
 };
+
+void CSkins7::RebuildSkins()
+{
+	m_vSkins.clear();
+	CSkinScanData SkinScanData;
+	SkinScanData.m_pThis = this;
+	SkinScanData.m_SkinLoadedCallback = []() {};
+	Storage()->ListDirectory(IStorage::TYPE_ALL, SKINS_DIR, SkinScan, &SkinScanData);
+}
 
 int CSkins7::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
@@ -528,6 +535,11 @@ void CSkins7::OnReset()
 	ProcessCompletedJobs();
 }
 
+void CSkins7::OnUpdate()
+{
+	ProcessCompletedJobs();
+}
+
 void CSkins7::InitPlaceholderSkinParts()
 {
 	for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
@@ -583,13 +595,16 @@ void CSkins7::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)
 	m_SkinLoadedCallback = std::move(SkinLoadedCallback);
 	m_Loading = true;
 
-	CSkinScanData SkinScanData;
-	SkinScanData.m_pThis = this;
-	SkinScanData.m_SkinLoadedCallback = m_SkinLoadedCallback;
-	Storage()->ListDirectory(IStorage::TYPE_ALL, SKINS_DIR, SkinScan, &SkinScanData);
-
 	LoadXmasHat();
 	LoadBotDecoration();
+	if(m_PendingSkinPartJobs.empty())
+	{
+		RebuildSkins();
+		m_Loading = false;
+		m_LastRefreshTime = time_get_nanoseconds();
+		if(m_SkinLoadedCallback)
+			m_SkinLoadedCallback();
+	}
 }
 
 void CSkins7::LoadXmasHat()

@@ -5,6 +5,8 @@
 
 #include <base/color.h>
 
+#include <engine/shared/config.h>
+
 #include <algorithm>
 
 struct SUiTheme
@@ -46,7 +48,8 @@ inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const C
 		std::clamp(Theme.m_Surface.g * 0.88f, 0.0f, 1.0f),
 		std::clamp(Theme.m_Surface.b * 0.88f, 0.0f, 1.0f), Theme.m_Surface.a);
 	Theme.m_InputSurfaceFocused = Theme.m_InputSurface;
-	Theme.m_FocusRing = color_cast<ColorRGBA>(FocusColor).WithAlpha(0.90f * Opacity);
+	// 焦点环是键盘与输入焦点的唯一稳定反馈，不随低表面透明度弱化到不可辨认。
+	Theme.m_FocusRing = color_cast<ColorRGBA>(FocusColor).WithAlpha(std::clamp(std::max(0.60f, 0.90f * Opacity), 0.0f, 1.0f));
 	Theme.m_Accent = AccentBase.WithAlpha(std::clamp(std::max(AccentBase.a, 0.85f) * Opacity, 0.0f, 1.0f));
 	Theme.m_TextTitle = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	Theme.m_TextBody = ColorRGBA(0.92f, 0.92f, 0.94f, 1.0f);
@@ -56,7 +59,9 @@ inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const C
 
 inline SUiTheme ResolveInputFallbackTheme(const unsigned FocusColor)
 {
-	return ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f, ColorHSLA(FocusColor));
+	// 某些设置页的旧调用点只提供最小 IUiContext。回退主题仍必须与
+	// SettingsUiContext 使用相同的用户颜色和透明度，避免同一输入组件出现两套外壳。
+	return ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(FocusColor));
 }
 
 #endif

@@ -1181,6 +1181,29 @@ const char *CTClient::CurrentCommunityIdForFinishCheck() const
 	return pCommunityId;
 }
 
+bool CTClient::TryHandleRedPacketAutoClaim(const CNetMsg_Sv_Chat *pMsg)
+{
+	if(pMsg == nullptr || pMsg->m_ClientId != -1 || pMsg->m_pMessage == nullptr)
+		return false;
+
+	const int MainClientId = GameClient()->m_aLocalIds[0];
+	if(MainClientId < 0 || MainClientId >= MAX_CLIENTS || !GameClient()->m_aClients[MainClientId].m_Active)
+		return false;
+
+	const NETADDR *pServerAddress = Client()->ServerAddress();
+	if(pServerAddress == nullptr)
+		return false;
+	char aServerAddress[NETADDR_MAXSTRSIZE];
+	net_addr_str(pServerAddress, aServerAddress, sizeof(aServerAddress), true);
+
+	std::string Password;
+	if(!m_RedPacketAutoClaim.TryPrepare(aServerAddress, GameClient()->m_aClients[MainClientId].m_aName, pMsg->m_pMessage, Password))
+		return false;
+
+	GameClient()->m_Chat.SendChatOnConn(IClient::CONN_MAIN, 0, Password.c_str(), true, false);
+	return true;
+}
+
 void CTClient::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
@@ -1206,6 +1229,7 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		int ClientId = pMsg->m_ClientId;
+		TryHandleRedPacketAutoClaim(pMsg);
 
 		if(ClientId < 0)
 		{
@@ -1226,17 +1250,19 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 		if(ClientId == LocalId && pMsg->m_pMessage != nullptr)
 			str_copy(m_PreviousOwnMessage, pMsg->m_pMessage);
 
-		// === 复读功能: 保存最新的公屏消息 ===
-		if(ClientId >= 0 && ClientId < MAX_CLIENTS && pMsg->m_Team == 0 && pMsg->m_pMessage != nullptr)
+		// === 复读功能: 保存最新的公屏或队伍消息 ===
+		const bool IsRepeatChatChannel = pMsg->m_Team == 0 || pMsg->m_Team == 1;
+		if(ClientId >= 0 && ClientId < MAX_CLIENTS && IsRepeatChatChannel && pMsg->m_pMessage != nullptr)
 		{
 			const char *pMessage = pMsg->m_pMessage;
 			const bool IsValidCandidate = pMessage[0] != '\0' && pMessage[0] != '/';
 			const bool SenderIsActiveClient = GameClient()->m_aClients[ClientId].m_Active;
 			const bool IsRepeatCandidate = !IsOwnMessage && SenderIsActiveClient && IsValidCandidate;
-			// 保存最新的公屏消息（不是自己发的）
+			// 保存最新的公屏或队伍消息（不是自己发的）
 			if(IsRepeatCandidate)
 			{
 				str_copy(m_aLastChatMessage, pMessage, sizeof(m_aLastChatMessage));
+				m_LastChatTeam = pMsg->m_Team;
 			}
 		}
 
@@ -1424,18 +1450,21 @@ void CTClient::HandleSwapCountdownMessage(const char *pText, int Dummy)
 	if(Action == ESwapCountdownMessageAction::Start)
 		StartSwapCountdown(Dummy, aCounterpart, Direction == ESwapCountdownMessageDirection::Outgoing);
 	else if(Action == ESwapCountdownMessageAction::Cancel)
-	{
-		const bool Outgoing = Direction == ESwapCountdownMessageDirection::Outgoing;
-		if(Outgoing == m_aSwapCountdownOutgoing[Dummy] && str_comp_nocase(aCounterpart, m_aaSwapCountdownCounterpart[Dummy]) == 0)
-		{
-			ClearSwapCountdown(Dummy);
-		}
-	}
+		m_aSwapCountdownTrackers[Dummy].Cancel(aCounterpart, Direction == ESwapCountdownMessageDirection::Outgoing);
 	else if(Action == ESwapCountdownMessageAction::Complete)
 	{
-		const char *pTargetName = Dummy == 0 ? g_Config.m_PlayerName : g_Config.m_ClDummyName;
-		if(pTargetName[0] != '\0' && str_find_nocase(pText, pTargetName))
-			ClearSwapCountdown(Dummy);
+		char aFirst[MAX_NAME_LENGTH];
+		char aSecond[MAX_NAME_LENGTH];
+		if(!ParseSwapCompletionMessage(pText, aFirst, sizeof(aFirst), aSecond, sizeof(aSecond)))
+			return;
+
+		const int LocalClientId = GameClient()->m_aLocalIds[Dummy];
+		const char *pLocalName = LocalClientId >= 0 && LocalClientId < MAX_CLIENTS ? GameClient()->m_aClients[LocalClientId].m_aName :
+											     (Dummy == 0 ? g_Config.m_PlayerName : g_Config.m_ClDummyName);
+		if(str_comp_nocase(aFirst, pLocalName) == 0)
+			m_aSwapCountdownTrackers[Dummy].Remove(aSecond);
+		else if(str_comp_nocase(aSecond, pLocalName) == 0)
+			m_aSwapCountdownTrackers[Dummy].Remove(aFirst);
 	}
 }
 
@@ -1444,10 +1473,7 @@ void CTClient::StartSwapCountdown(int Dummy, const char *pCounterpart, bool Outg
 	if(Dummy < 0 || Dummy >= NUM_DUMMIES)
 		return;
 
-	m_aSwapCountdownActive[Dummy] = true;
-	m_aSwapCountdownOutgoing[Dummy] = Outgoing;
-	m_aSwapCountdownStartTick[Dummy] = Client()->GameTick(Dummy);
-	str_copy(m_aaSwapCountdownCounterpart[Dummy], pCounterpart != nullptr ? pCounterpart : "", sizeof(m_aaSwapCountdownCounterpart[Dummy]));
+	m_aSwapCountdownTrackers[Dummy].Start(pCounterpart, Outgoing, Client()->GameTick(Dummy));
 }
 
 void CTClient::ClearSwapCountdown(int Dummy)
@@ -1461,42 +1487,28 @@ void CTClient::ClearSwapCountdown(int Dummy)
 	if(Dummy >= NUM_DUMMIES)
 		return;
 
-	m_aSwapCountdownActive[Dummy] = false;
-	m_aSwapCountdownOutgoing[Dummy] = false;
-	m_aSwapCountdownStartTick[Dummy] = 0;
-	m_aaSwapCountdownCounterpart[Dummy][0] = '\0';
+	m_aSwapCountdownTrackers[Dummy].Clear();
 }
 
 bool CTClient::HasSwapCountdown(int Dummy) const
 {
 	if(Dummy >= 0 && Dummy < NUM_DUMMIES)
-		return m_aSwapCountdownActive[Dummy];
+		return !m_aSwapCountdownTrackers[Dummy].Entries().empty();
 
 	for(int i = 0; i < NUM_DUMMIES; ++i)
 	{
-		if(m_aSwapCountdownActive[i])
+		if(!m_aSwapCountdownTrackers[i].Entries().empty())
 			return true;
 	}
 	return false;
 }
 
-int CTClient::GetSwapCountdownStartTick(int Dummy) const
+const std::vector<SSwapCountdownState> &CTClient::GetSwapCountdowns(int Dummy) const
 {
+	static const std::vector<SSwapCountdownState> s_Empty;
 	if(Dummy >= 0 && Dummy < NUM_DUMMIES)
-		return m_aSwapCountdownStartTick[Dummy];
-	return 0;
-}
-
-const char *CTClient::GetSwapCountdownCounterpart(int Dummy) const
-{
-	if(Dummy < 0 || Dummy >= NUM_DUMMIES)
-		return "";
-	return m_aaSwapCountdownCounterpart[Dummy];
-}
-
-bool CTClient::IsSwapCountdownOutgoing(int Dummy) const
-{
-	return Dummy >= 0 && Dummy < NUM_DUMMIES && m_aSwapCountdownOutgoing[Dummy];
+		return m_aSwapCountdownTrackers[Dummy].Entries();
+	return s_Empty;
 }
 
 void CTClient::ConSpecId(IConsole::IResult *pResult, void *pUserData)
@@ -3001,10 +3013,12 @@ void CTClient::OnStateChange(int NewState, int OldState)
 		m_GoresAutoMapToken = 0;
 		ClearSwapCountdown();
 		m_aLastChatMessage[0] = '\0';
+		m_LastChatTeam = 0;
 		m_LastRepeatTime = 0;
 		m_LastRepeatKeyPressTime = 0;
 		m_RepeatKeyDown = false;
 		m_LastAutoReplyTime = 0;
+		m_RedPacketAutoClaim.Reset();
 		m_FinishTextTimeout = 0.0f;
 		for(int i = 0; i < NUM_DUMMIES; ++i)
 		{
@@ -3015,8 +3029,6 @@ void CTClient::OnStateChange(int NewState, int OldState)
 			m_aWasInFreeze[i] = false;
 			m_aLastFreezeEmoteTime[i] = 0;
 			m_aLastFreezeMessageTime[i] = 0;
-			m_aWasInFreezeForWakeupPopup[i] = false;
-			m_aWasInFreezeForUnspec[i] = false;
 			m_aWasInFreezeForSwitch[i] = false;
 			m_aWasInFreezeForGoresHammer[i] = false;
 			m_aGoresHammerWakeupFirePendingRelease[i] = false;
@@ -3049,7 +3061,8 @@ void CTClient::OnStateChange(int NewState, int OldState)
 void CTClient::OnNewSnapshot()
 {
 	CheckHammerWakeupActions();
-	SetForcedAspect();
+	// snapshot 处理期间不能同步触发全局 resize，延迟到下一次常规更新处理。
+	QueueAspectApply();
 	ApplyGoresFastInputLink(true);
 	MaybeShowLocalSaveJoinHint();
 	// Update volleyball
@@ -3488,7 +3501,7 @@ void CTClient::UpdateGoresWeaponCycle()
 	{
 		InFreeze = GameClient()->m_aClients[ClientId].m_FreezeEnd != 0;
 		const bool JustUnfrozen = m_aWasInFreezeForGoresHammer[Dummy] && !InFreeze;
-		ExternalHammerWakeup = JustUnfrozen && DetectFreezeWakeupType(GameClient(), ClientId) == EFreezeWakeupType::EXTERNAL_HAMMER;
+		ExternalHammerWakeup = JustUnfrozen && DetectFreezeWakeupType(GameClient(), ClientId, Client()->GameTick(Dummy)) == EFreezeWakeupType::EXTERNAL_HAMMER;
 	}
 
 	const bool CurrentWeaponIsHammer = GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER;
@@ -4143,7 +4156,7 @@ void CTClient::ApplyFocusModeEffects()
 			FocusActive ? "[[$FF7F7F]]" : "[[$A5FFA5]]",
 			Localize("Zen Mode"),
 			Localize(FocusActive ? "On" : "Off"));
-		GameClient()->Echo(aFocusMsg, true);
+		GameClient()->Echo(aFocusMsg);
 	}
 
 	ApplyFocusOverride(m_FocusHudOverrideState, HideFocusHud, g_Config.m_ClShowhud, 0);
@@ -4210,7 +4223,7 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 			GoresActive ? "[[$FF7F7F]]" : "[[$A5FFA5]]",
 			Localize("Gores Mode"),
 			Localize(GoresActive ? "On" : "Off"));
-		GameClient()->Echo(aGoresMsg, true);
+		GameClient()->Echo(aGoresMsg);
 	}
 
 	FastInputConfigChanged = TcFastInputChanged || TcFastInputOthersChanged || DummyHammerChanged;
@@ -5508,5 +5521,5 @@ void CTClient::RepeatLastMessage()
 	m_LastRepeatTime = Now;
 
 	// 发送复读消息
-	GameClient()->m_Chat.SendChat(0, m_aLastChatMessage);
+	GameClient()->m_Chat.SendChat(m_LastChatTeam, m_aLastChatMessage);
 }

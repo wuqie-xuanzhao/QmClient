@@ -18,6 +18,9 @@ CConfig g_Config;
 // ----------------------- Config Variables
 namespace
 {
+	constexpr const char *QM_CONFIG_MIGRATION_MARKER = "qmclient/config_migration_v1.done";
+	constexpr const char *QM_CONFIG_MIGRATION_BACKUP_DIR = "qmclient/migration_backup_v1";
+
 	std::unordered_map<const SIntConfigVariable *, int> *s_pToggleRestoreInts = nullptr;
 
 	std::unordered_map<const SIntConfigVariable *, int> &ToggleRestoreInts()
@@ -43,6 +46,126 @@ namespace
 			return true;
 		return pStorage->CreateFolder(aFolder, IStorage::TYPE_SAVE) || pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE);
 	}
+	EColorInputAlphaMode ColorInputAlphaMode(const char *pValue)
+	{
+		if(pValue == nullptr || pValue[0] == '\0')
+			return EColorInputAlphaMode::PACKED;
+		if(pValue[0] == '$')
+		{
+			const int HexLength = str_length(pValue + 1);
+			if(HexLength == 3 || HexLength == 6)
+				return EColorInputAlphaMode::OMITTED;
+			if(HexLength == 4 || HexLength == 8)
+				return EColorInputAlphaMode::EXPLICIT;
+			return EColorInputAlphaMode::PACKED;
+		}
+		// 颜色名没有 alpha 分量。负数 packed 与旧版本序列化兼容，必须保留其来源信息；
+		// 无符号与带正号 packed 则可用最高字节区分旧 RGB 和新的 ARGB。
+		if(pValue[0] == '-' && str_isallnum(pValue + 1))
+			return EColorInputAlphaMode::SIGNED_PACKED;
+		if(str_isallnum(pValue) || (pValue[0] == '+' && str_isallnum(pValue + 1)))
+			return EColorInputAlphaMode::PACKED;
+		return EColorInputAlphaMode::OMITTED;
+	}
+
+	bool WriteStorageFileAtomically(IStorage *pStorage, const char *pPath, const char *pContents)
+	{
+		if(!EnsureConfigPathFolder(pStorage, pPath))
+			return false;
+
+		char aTmpPath[IO_MAX_PATH_LENGTH];
+		IStorage::FormatTmpPath(aTmpPath, sizeof(aTmpPath), pPath);
+		IOHANDLE File = pStorage->OpenFile(aTmpPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(!File)
+			return false;
+
+		bool Success = io_write(File, pContents, str_length(pContents)) == static_cast<unsigned>(str_length(pContents));
+		if(Success && io_sync(File) != 0)
+			Success = false;
+		if(io_close(File) != 0)
+			Success = false;
+		if(Success)
+			Success = pStorage->RenameFile(aTmpPath, pPath, IStorage::TYPE_SAVE);
+		if(!Success)
+			pStorage->RemoveFile(aTmpPath, IStorage::TYPE_SAVE);
+		return Success;
+	}
+}
+
+bool QmConfigMigrationPending(IStorage *pStorage)
+{
+	return pStorage && !pStorage->FileExists(QM_CONFIG_MIGRATION_MARKER, IStorage::TYPE_SAVE);
+}
+
+bool QmFinalizeConfigMigration(IStorage *pStorage, const bool *pArchivePreviousPaths)
+{
+	if(!pStorage)
+		return false;
+	if(!QmConfigMigrationPending(pStorage))
+		return true;
+
+	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
+	{
+		if(!pStorage->FileExists(s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_SAVE))
+		{
+			log_error("config", "Cannot finish config migration because '%s' is missing", s_aConfigDomains[ConfigDomain].m_aConfigPath);
+			return false;
+		}
+	}
+
+	if(!pStorage->FolderExists(QM_CONFIG_MIGRATION_BACKUP_DIR, IStorage::TYPE_SAVE) &&
+		!pStorage->CreateFolder(QM_CONFIG_MIGRATION_BACKUP_DIR, IStorage::TYPE_SAVE) &&
+		!pStorage->FolderExists(QM_CONFIG_MIGRATION_BACKUP_DIR, IStorage::TYPE_SAVE))
+	{
+		log_error("config", "Cannot create config migration backup folder '%s'", QM_CONFIG_MIGRATION_BACKUP_DIR);
+		return false;
+	}
+
+	const auto ArchiveConfig = [pStorage](const char *pSourcePath, const char *pBackupName) {
+		if(!pSourcePath || !pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
+			return true;
+
+		char aBackupPath[IO_MAX_PATH_LENGTH];
+		str_format(aBackupPath, sizeof(aBackupPath), "%s/%s", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName);
+		if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
+		{
+			str_format(aBackupPath, sizeof(aBackupPath), "%s/%s.%d.bak", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName, pid());
+			if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
+			{
+				log_error("config", "Cannot archive legacy config '%s' because backup targets already exist", pSourcePath);
+				return false;
+			}
+		}
+
+		if(pStorage->RenameFile(pSourcePath, aBackupPath, IStorage::TYPE_SAVE))
+			return true;
+		if(!pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
+			return true;
+		log_error("config", "Cannot archive legacy config '%s' to '%s'", pSourcePath, aBackupPath);
+		return false;
+	};
+
+	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
+	{
+		const char *pLegacyPath = s_aConfigDomains[ConfigDomain].m_aLegacyConfigPath;
+		if(!ArchiveConfig(pLegacyPath, pLegacyPath))
+			return false;
+
+		if(pArchivePreviousPaths && pArchivePreviousPaths[ConfigDomain] && s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath)
+		{
+			char aBackupName[IO_MAX_PATH_LENGTH];
+			str_format(aBackupName, sizeof(aBackupName), "previous_%s", fs_filename(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath));
+			if(!ArchiveConfig(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath, aBackupName))
+				return false;
+		}
+	}
+
+	if(!WriteStorageFileAtomically(pStorage, QM_CONFIG_MIGRATION_MARKER, "1\n"))
+	{
+		log_error("config", "Cannot write config migration marker '%s'", QM_CONFIG_MIGRATION_MARKER);
+		return false;
+	}
+	return true;
 }
 
 static void EscapeParam(char *pDst, const char *pSrc, int Size)
@@ -109,6 +232,11 @@ bool SIntConfigVariable::IsDefault() const
 	return *m_pVariable == m_Default;
 }
 
+size_t SIntConfigVariable::MaxSerializedSize() const
+{
+	return str_length(m_pScriptName) + 32;
+}
+
 void SIntConfigVariable::Serialize(char *pOut, size_t Size, int Value) const
 {
 	str_format(pOut, Size, "%s %i", m_pScriptName, Value);
@@ -153,6 +281,7 @@ void SColorConfigVariable::CommandCallback(IConsole::IResult *pResult, void *pUs
 		const unsigned Value = Color.Pack(pData->m_DarkestLighting, pData->m_Alpha);
 
 		*pData->m_pVariable = Value;
+		pData->m_LastInputAlphaMode = pData->m_Alpha ? ColorInputAlphaMode(pResult->GetString(0)) : EColorInputAlphaMode::PACKED;
 		if(pResult->m_ClientId != IConsole::CLIENT_ID_GAME)
 			pData->m_OldValue = Value;
 	}
@@ -185,6 +314,11 @@ void SColorConfigVariable::Register()
 bool SColorConfigVariable::IsDefault() const
 {
 	return *m_pVariable == m_Default;
+}
+
+size_t SColorConfigVariable::MaxSerializedSize() const
+{
+	return str_length(m_pScriptName) + 32;
 }
 
 void SColorConfigVariable::Serialize(char *pOut, size_t Size, unsigned Value) const
@@ -262,6 +396,11 @@ bool SStringConfigVariable::IsDefault() const
 	return str_comp(m_pStr, m_pDefault) == 0;
 }
 
+size_t SStringConfigVariable::MaxSerializedSize() const
+{
+	return str_length(m_pScriptName) + 2 * m_MaxSize + 4;
+}
+
 void SStringConfigVariable::Serialize(char *pOut, size_t Size, const char *pValue) const
 {
 	str_copy(pOut, m_pScriptName, Size);
@@ -280,9 +419,9 @@ void SStringConfigVariable::SetValue(const char *pValue)
 {
 	if(CheckReadOnly())
 		return;
-	char aBuf[2048];
-	Serialize(aBuf, sizeof(aBuf), pValue);
-	ExecuteLine(aBuf);
+	std::vector<char> vBuf(MaxSerializedSize());
+	Serialize(vBuf.data(), vBuf.size(), pValue);
+	ExecuteLine(vBuf.data());
 }
 
 void SStringConfigVariable::ResetToDefault()
@@ -401,9 +540,11 @@ void CConfigManager::SetGameSettingsReadOnly(bool ReadOnly)
 	}
 }
 
-bool CConfigManager::Save()
+bool CConfigManager::Save(bool Force)
 {
-	if(!m_pStorage || !g_Config.m_ClSaveSettings)
+	if(!m_pStorage)
+		return false;
+	if(!Force && !g_Config.m_ClSaveSettings)
 		return true;
 
 	bool aFailedError[ConfigDomain::NUM] = {};
@@ -442,14 +583,13 @@ bool CConfigManager::Save()
 			continue;
 		if(!m_aConfigFile[ConfigDomain])
 			continue;
-		// 最大字符串配置为 8000 字节，转义引号和反斜杠后最坏会接近两倍。
-		char aLineBuf[32768];
 		for(const SConfigVariable *pVariable : m_vpAllVariables)
 		{
 			if(pVariable->m_ConfigDomain == ConfigDomain && (pVariable->m_Flags & CFGFLAG_SAVE) != 0 && !pVariable->IsDefault())
 			{
-				pVariable->Serialize(aLineBuf, sizeof(aLineBuf));
-				WriteLine(aLineBuf, ConfigDomain);
+				std::vector<char> vLineBuf(pVariable->MaxSerializedSize());
+				pVariable->Serialize(vLineBuf.data(), vLineBuf.size());
+				WriteLine(vLineBuf.data(), ConfigDomain);
 			}
 		}
 	}
@@ -464,40 +604,41 @@ bool CConfigManager::Save()
 			Callback.m_pfnFunc(this, Callback.m_pUserData);
 	}
 
-	if(!m_aFailed[ConfigDomain::DDNET] && m_aConfigFile[ConfigDomain::DDNET])
-		for(const char *pCommand : m_vpUnknownCommands)
-			WriteLine(pCommand);
+	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
+	{
+		if(m_aFailed[ConfigDomain] || !m_aConfigFile[ConfigDomain])
+			continue;
+		for(const char *pCommand : m_avpUnknownCommands[ConfigDomain])
+			WriteLine(pCommand, ConfigDomain);
+	}
 
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
 		if(!m_aConfigFile[ConfigDomain])
 			continue;
+		if(m_aFailed[ConfigDomain] && !aFailedError[ConfigDomain])
+		{
+			log_error("config", "ERROR: writing to %s failed", aaConfigFileTmp[ConfigDomain]);
+			aFailedError[ConfigDomain] = true;
+		}
+		if(!m_aFailed[ConfigDomain] && io_sync(m_aConfigFile[ConfigDomain]) != 0)
+		{
+			log_error("config", "ERROR: synchronizing %s failed", aaConfigFileTmp[ConfigDomain]);
+			aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
+		}
+		if(io_close(m_aConfigFile[ConfigDomain]) != 0)
+		{
+			log_error("config", "ERROR: closing %s failed", aaConfigFileTmp[ConfigDomain]);
+			aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
+		}
+		m_aConfigFile[ConfigDomain] = nullptr;
+		if(!m_aFailed[ConfigDomain] && !m_pStorage->RenameFile(aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_SAVE))
+		{
+			log_error("config", "ERROR: renaming %s to %s failed", aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath);
+			aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
+		}
 		if(m_aFailed[ConfigDomain])
-		{
-			if(!aFailedError[ConfigDomain])
-			{
-				log_error("config", "ERROR: writing to %s failed", aaConfigFileTmp[ConfigDomain]);
-				aFailedError[ConfigDomain] = true;
-			}
-		}
-		else
-		{
-			if(io_sync(m_aConfigFile[ConfigDomain]) != 0)
-			{
-				log_error("config", "ERROR: synchronizing %s failed", aaConfigFileTmp[ConfigDomain]);
-				aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
-			}
-			else if(io_close(m_aConfigFile[ConfigDomain]) != 0)
-			{
-				log_error("config", "ERROR: closing %s failed", aaConfigFileTmp[ConfigDomain]);
-				aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
-			}
-			else if(!m_pStorage->RenameFile(aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_SAVE))
-			{
-				log_error("config", "ERROR: renaming %s to %s failed", aaConfigFileTmp[ConfigDomain], s_aConfigDomains[ConfigDomain].m_aConfigPath);
-				aFailedError[ConfigDomain] = m_aFailed[ConfigDomain] = true;
-			}
-		}
+			m_pStorage->RemoveFile(aaConfigFileTmp[ConfigDomain], IStorage::TYPE_SAVE);
 	}
 
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
@@ -525,9 +666,9 @@ void CConfigManager::WriteLine(const char *pLine, ConfigDomain ConfigDomain)
 	}
 }
 
-void CConfigManager::StoreUnknownCommand(const char *pCommand)
+void CConfigManager::StoreUnknownCommand(const char *pCommand, ConfigDomain ConfigDomain)
 {
-	m_vpUnknownCommands.push_back(m_ConfigHeap.StoreString(pCommand));
+	m_avpUnknownCommands[ConfigDomain].push_back(m_ConfigHeap.StoreString(pCommand));
 }
 
 void CConfigManager::PossibleConfigVariables(const char *pStr, int FlagMask, POSSIBLECFGFUNC pfnCallback, void *pUserData)
@@ -542,6 +683,18 @@ void CConfigManager::PossibleConfigVariables(const char *pStr, int FlagMask, POS
 			}
 		}
 	}
+}
+
+EColorInputAlphaMode CConfigManager::ColorValueInputAlphaMode(const char *pScriptName) const
+{
+	if(pScriptName == nullptr)
+		return EColorInputAlphaMode::PACKED;
+	for(const SConfigVariable *pVariable : m_vpAllVariables)
+	{
+		if(pVariable->m_Type == SConfigVariable::VAR_COLOR && str_comp(pVariable->m_pScriptName, pScriptName) == 0)
+			return static_cast<const SColorConfigVariable *>(pVariable)->m_LastInputAlphaMode;
+	}
+	return EColorInputAlphaMode::PACKED;
 }
 
 void CConfigManager::Con_Reset(IConsole::IResult *pResult, void *pUserData)

@@ -2119,7 +2119,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, CEnvelope *pEnvelope, int QuadI
 	else if(Ui()->HotItem() == pPoint && Map()->m_CurrentQuadIndex == QuadIndex)
 	{
 		Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-		str_copy(m_aTooltip, Localize("Left mouse button to move. Hold ctrl to rotate. Hold alt to ignore grid.", "Editor"));
+		str_copy(m_aTooltip, "鼠标左键移动。按住 Ctrl 旋转，按住 Alt 忽略网格。");
 
 		if(Ui()->MouseButton(0))
 		{

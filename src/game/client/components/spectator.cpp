@@ -741,11 +741,27 @@ void CSpectator::Spectate(int SpectatorId)
 		return;
 	}
 
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(Client()->QmLiveObserverActive())
+	{
+		GameClient()->SetLiveObserverSpectatorId(SpectatorId);
+		return;
+	}
+	const bool LiveCompatDirector = Client()->QmLiveCompatDirectorActive();
+#else
+	const bool LiveCompatDirector = false;
+#endif
+
 	if(GameClient()->m_FastPractice.ConsumeSpectatorCommand())
 		return;
 
-	if(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SpectatorId)
+	if(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SpectatorId && !LiveCompatDirector)
 		return;
+
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(LiveCompatDirector)
+		GameClient()->SetLiveObserverSpectatorId(SpectatorId);
+#endif
 
 	if(Client()->IsSixup())
 	{

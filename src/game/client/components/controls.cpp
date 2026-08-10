@@ -23,14 +23,6 @@ namespace
 {
 	bool s_aQmHadLocalCharacter[NUM_DUMMIES] = {};
 
-	int QmRespawnDefaultWantedWeapon()
-	{
-		const int ConfigWeapon = std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5);
-		if(ConfigWeapon <= 0)
-			return 0;
-		return minimum(ConfigWeapon, WEAPON_LASER + 1);
-	}
-
 	bool QmDummyHasActiveCharacter(const CGameClient *pGameClient, int Dummy)
 	{
 		if(Dummy < 0 || Dummy >= NUM_DUMMIES)
@@ -413,7 +405,7 @@ void CControls::OnRender()
 		const bool HasActiveCharacter = QmDummyHasActiveCharacter(GameClient(), Dummy);
 		if(HasActiveCharacter && !s_aQmHadLocalCharacter[Dummy])
 		{
-			m_aQmRespawnWantedWeapon[Dummy] = QmRespawnDefaultWantedWeapon();
+			m_aQmRespawnWantedWeapon[Dummy] = QmRespawnDefaultWantedWeapon(g_Config.m_QmRespawnDefaultWeapon);
 			m_aQmRespawnWeaponPending[Dummy] = m_aQmRespawnWantedWeapon[Dummy] > 0;
 		}
 		if(HasActiveCharacter && m_aQmRespawnWeaponPending[Dummy])

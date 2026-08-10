@@ -64,14 +64,7 @@ void CQmAxiomAutoLogin::DisableDummyReconnectForServer()
 
 void CQmAxiomAutoLogin::ResetState()
 {
-	m_AutoLoginAnnounced = false;
-	m_AutoLoginSucceeded = false;
-	m_AutoLoginWaitingReply = false;
-	m_AutoLoginSlowRetryMode = false;
-	m_AutoLoginHardFailed = false;
-	m_AutoLoginAttempts = 0;
-	m_AutoLoginNextTryTick = 0;
-	m_AutoLoginEnabledLastFrame = false;
+	m_AutoLoginState = {};
 	m_aAutoLoginServer[0] = '\0';
 	m_DummyAutoLoginSent = false;
 	m_DummyWasConnected = false;

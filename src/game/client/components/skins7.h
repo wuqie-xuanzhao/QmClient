@@ -123,6 +123,7 @@ public:
 
 	int Sizeof() const override { return sizeof(*this); }
 	void OnInit() override;
+	void OnUpdate() override;
 	void OnReset() override;
 
 	void Refresh(TSkinLoadedCallback &&SkinLoadedCallback);
@@ -170,6 +171,7 @@ private:
 	bool LoadSkinPart(int PartType, const char *pName, int DirType);
 	void StartSkinPartLoadJob(int PartType, const char *pName, int DirType);
 	void ProcessCompletedJobs();
+	void RebuildSkins();
 	static int SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
 	bool LoadSkin(const char *pName, int DirType);
 

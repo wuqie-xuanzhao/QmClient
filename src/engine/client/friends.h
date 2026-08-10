@@ -15,6 +15,7 @@ class CFriends : public IFriends
 	int m_Foes;
 	int m_NumFriends;
 	int m_NumCategories;
+	uint64_t m_Revision = 0;
 
 	static void ConAddFriend(IConsole::IResult *pResult, void *pUserData);
 	static void ConRemoveFriend(IConsole::IResult *pResult, void *pUserData);
@@ -39,6 +40,7 @@ public:
 	void Init(bool Foes = false) override;
 
 	int NumFriends() const override { return m_NumFriends; }
+	uint64_t Revision() const override { return m_Revision; }
 	const CFriendInfo *GetFriend(int Index) const override;
 	int GetFriendState(const char *pName, const char *pClan) const override;
 	bool IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const override;

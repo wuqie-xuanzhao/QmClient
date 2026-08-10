@@ -12,6 +12,8 @@
 
 #include <game/client/ui_rect.h>
 
+#include <chrono>
+
 enum class EInputPriority
 {
 	NONE = 0,
@@ -56,6 +58,17 @@ namespace qm_ime_overlay
 		return Viewport;
 	}
 } // namespace qm_ime_overlay
+
+namespace qm_lineinput
+{
+	inline bool CaretVisibleForElapsed(std::chrono::nanoseconds Elapsed)
+	{
+		using namespace std::chrono_literals;
+		if(Elapsed < 0ns)
+			return true;
+		return Elapsed % 1s < 500ms;
+	}
+} // namespace qm_lineinput
 
 // line input helper
 class CLineInput
@@ -106,6 +119,7 @@ private:
 	float m_ScrollOffset;
 	float m_ScrollOffsetChange;
 	vec2 m_CaretPosition;
+	std::chrono::nanoseconds m_CaretBlinkStartTime{};
 	SMouseSelection m_MouseSelection;
 	size_t m_LastCompositionCursorPos;
 
@@ -128,6 +142,8 @@ private:
 	};
 	static void MoveCursor(EMoveDirection Direction, bool MoveWord, const char *pStr, size_t MaxSize, size_t *pCursorPos);
 	static void SetCompositionWindowPosition(vec2 Anchor, float LineHeight);
+	void RenderCaret(const CTextCursor &Cursor, bool ForceVisible, ColorRGBA TextColor, ColorRGBA TextOutlineColor);
+	void RenderSelection(const CTextCursor &Cursor, ColorRGBA SelectionColor);
 
 	void OnActivate();
 	void OnDeactivate();

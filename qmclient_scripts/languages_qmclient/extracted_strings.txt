@@ -71,7 +71,6 @@
 /map is disabled
 /times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
 0 - Disabled, 1-9999 minutes
-1 new mention
 1 star
 2 stars
 3 stars
@@ -182,7 +181,6 @@ Adjust TClient heads-up display elements
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
 Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
-Adjust your prediction margin while frozen
 Advanced
 Advanced options
 AFR
@@ -232,6 +230,11 @@ Amount
 And pick one randomly
 Angle
 Angle:
+Animate chat box, emote selector, scoreboard, and spectate selection
+Animate lists when entering a page
+Animate settings card expand and collapse height changes
+Animate settings card lists when entering a page
+Animate settings card reorder and layout reflow
 Animation
 Animation duration
 Animation range
@@ -451,6 +454,7 @@ Ban range in a region
 Ban reason for "sv_dnsbl_ban"
 Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 Base path for HTTPS map download URLs to clients
+Base prediction margin
 Basic
 Before I die
 Behavior
@@ -464,6 +468,7 @@ Best input others
 Best input prediction offset (0.01 tick)
 Best input smooth percentage
 Best match
+Better scoreboard
 Bind address for client/server
 Bind chat, team chat, and history actions
 Bind dummy control and copy actions
@@ -478,12 +483,14 @@ Bind Wheel Key
 Bit flags for disabling settings tabs
 Black
 Blend mode
+Block enemy chat
 Block votes from blacklisted addresses
 Block words
 Blue
 Blue team
 Blue team wins!
 Body
+Bold
 Border
 Border color
 Border range
@@ -537,6 +544,9 @@ Cancel
 Cancel your swap request
 Candidate files
 Cannot swap: the other player is not in your team
+Card height animation
+Card list entry animation
+Card reflow animation
 Category
 Category name
 Censor replacement character
@@ -582,7 +592,6 @@ Check input device, system default mic, and mic permission first
 Check output device, confirm headphones/speakers are still online
 Checking for existing player with your name
 CHN
-Choose and arrange status bar data fields
 Choose colors for weapons and entity lasers
 Choose country flag
 Choose default eyes when joining a server
@@ -592,6 +601,7 @@ Choose the menu font and cursor appearance
 Choose the menu map and background colors
 Choose whether to browse replays or screenshots
 Choose which TClient settings tabs are visible
+Cinematic camera
 Clamp mouse to screen
 Clan
 Clan color in friends list
@@ -632,6 +642,7 @@ Click to copy this player's name to clipboard
 Click to remove this clan from your friends list.
 Click to remove this community from favorites
 Click to remove this player from your friends list.
+Click to restore full match
 Click to select server. Double click to join your friend.
 Click to set color
 Client
@@ -726,6 +737,7 @@ Configure Tee appearance and skins
 Configure the companion appearance and movement
 Configure the input overlay display
 Configure these settings
+Configure UI icon appearance
 Confirm both are on same server, same room, and support voice
 Confirm clear all
 Confirm clear finished
@@ -917,6 +929,7 @@ Define automatic chat reply rules
 Delay
 Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
+Delay before reduction
 Delay between rescues (seconds)
 Delay between SQL queries for a single player (in seconds)
 Delay in seconds before loading a saved game or swapping
@@ -998,6 +1011,7 @@ Displays the number of unacknowledged vital chunks
 Displays the time since the last complete snapshot
 Displays X and Y velocity
 Displays your current angle in degrees
+Displays your current score
 Displays your frames per second
 Displays your local time
 Displays your ping to the current server
@@ -1008,7 +1022,6 @@ Distant line opacity decay per line (%)
 Distant line shrink per line (%)
 Do not auto-show server info on entering map
 Do not predict other players when frozen
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
 Do not set, used to mark official tutorial server
 Do not show Tees visible on screen
 Do not translate server messages
@@ -1152,6 +1165,7 @@ Enable chat mention sound
 Enable chat message sound
 Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
+Enable client stutter diagnostics at startup
 Enable colored console output
 Enable coloring and hearts for friends
 Enable controller
@@ -1166,6 +1180,7 @@ Enable dynamic FOV
 Enable dynamic FOV, wider view at higher speed
 Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 Enable enhanced laser effect (glow + pulse animation)
+Enable enhanced scoreboard presentation
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 Enable fast input for other players in Gores mode
 Enable fast input in Gores mode
@@ -1191,6 +1206,7 @@ Enable LLM thinking mode (may increase response time)
 Enable local lyrics cache
 Enable lyric HUD overlay
 Enable lyrics
+Enable macOS graphics diagnostics and Instruments signposts
 Enable main thread and render stage performance debug logging
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 Enable mod weapon on %d: %s
@@ -1218,6 +1234,7 @@ Enable shout when holding fire while in water
 Enable Sixup connection.
 Enable skin queue rotation
 Enable skin switch animation
+Enable smooth cinematic camera while free spectating
 Enable sound
 Enable sound when rendering video
 Enable spectator cursor (if available)
@@ -1225,6 +1242,7 @@ Enable speedrun timer
 Enable squishy Tee deformation
 Enable status bar
 Enable stereo positioning
+Enable switch countdown
 Enable system media control
 Enable system media lyrics
 Enable system media transport control integration
@@ -1305,8 +1323,6 @@ Exported %d chat messages
 Exported to %s
 Expose playback controls to the operating system
 External console password. Must be set to enable economy.
-Extra animations
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
 Extras
 f = Frame rate
 Fade and slide
@@ -1354,6 +1370,7 @@ File already exists, do you want to overwrite it?
 File executed on map change/reload to set default server settings
 File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
+Fill
 Filter chat messages by regular expression
 Filter connecting players
 Filter empty servers in browser
@@ -1380,7 +1397,6 @@ Finished maps
 Fire
 First page in console
 Flip:
-Focus color
 Focus mode
 Folder
 Folder Link
@@ -1438,7 +1454,7 @@ Friend online notification
 Friend option color
 Friends
 Friends only
-Frozen Margin
+Frozen prediction margin
 FSAA samples
 FSAA samples (may cause lag)
 FTAPI
@@ -1446,6 +1462,7 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 Full demo + sidecar
 Full map listen in same room
+Full: each enabled animation category uses its complete transition
 Fullscreen
 Fun
 Functions
@@ -1494,6 +1511,7 @@ Global card
 Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 Global toggle key
+Global UI size percentage
 Glow
 Glow alpha
 Glow color
@@ -1520,8 +1538,8 @@ Graphics
 Graphics backend
 Graphics card
 Graphics display
-Graphics library major version
-Graphics library minor version
+Graphics library major version (0 = auto-detect)
+Graphics library minor version (0 = auto-detect)
 Graphics library patch version
 Graphics library texture sampling lod bias multiplied by 1000
 Greeting text
@@ -1546,6 +1564,7 @@ Helpful for Gores: allow negative internal certainty for more conservative predi
 Hi!
 Hide basic system info (join, version, rules) in Zen mode
 Hide Chat
+Hide chat messages from players marked as enemies
 Hide death/respawn effects
 Hide death/respawn effects in Zen Mode
 Hide direction in Zen mode
@@ -1592,6 +1611,8 @@ Hide server prompt notifications
 Hide server tip notifications (including notification bar) in Zen mode
 Hide Settings Tabs
 Hide sponsor QR code
+Hide system message prefix
+Hide the *** prefix before server chat messages
 Hide toast
 Hide typing emoji during input
 Hide UI for focused gameplay
@@ -1651,6 +1672,7 @@ HTTP map download: low speed limit (in bytes/s, 0=disabled)
 HTTP map download: low speed limit period (0=disabled)
 https://ddnet.org/discord
 https://wiki.ddnet.org/
+https://wiki.ddnet.org/wiki/Mapping
 https://wiki.ddnet.org/wiki/Touch_controls
 HUD
 HUD animation speed (percent)
@@ -1666,6 +1688,7 @@ i = Receive rate
 I am a robot
 I am away from the game window
 I muted you
+Icons
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 If 1, current driver is in blocking error state.
 If chat score exceeds this value, the player is muted for sv_spam_mute_duration seconds
@@ -1721,11 +1744,11 @@ Input device
 Input device not found
 Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
-Input focus color
 Input overlay
 Input overlay display
+Input overlay keyboard scale (percent)
+Input overlay mouse scale (percent)
 Input overlay opacity (percent)
-Input overlay scale (percent)
 Input overlay X position (percent)
 Input overlay Y position (percent)
 Input smoothing
@@ -1733,9 +1756,10 @@ Input switch
 Insane
 Interface
 Interface animations
-Interface color
 Interface page
 Interface settings page
+Interface surface
+Interface surface color
 Interface transparency
 Intermediate
 Internet
@@ -1796,6 +1820,8 @@ Key Sticking: ?
 Key Sticking: Off
 Key Sticking: On
 Key Sticking: Reset Self
+Keyboard focus ring color
+Keyboard size
 Keyword Reply
 Keyword reply
 Keyword reply rules (each line: [rename] [regex] keyword=>reply)
@@ -1994,7 +2020,8 @@ Manual scope
 Manual source file
 Manual target
 Map
-Map browser color
+Map browser surface
+Map browser surface color
 Map browser transparency
 Map danger border
 Map download send window
@@ -2056,6 +2083,7 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
+Maximum reduction
 Maximum rows
 Maximum team size.
 Maximum undo steps in editor history (editor, envelope editor, and server settings editor are independent)
@@ -2074,6 +2102,7 @@ Menu opacity (0-100)
 Menu opened. Press Esc key again to close menu.
 Menu option - normal
 Menu option - selected
+Merge consecutive identical player messages within 2 seconds
 Message color
 Message displayed to players on join.
 Message to reply when game minimized
@@ -2126,6 +2155,7 @@ Motion and focus feedback
 Mouse
 Mouse sensitivity
 Mouse sensitivity in menu/editor
+Mouse size
 Move left
 Move player to spectators
 Move right
@@ -2329,9 +2359,9 @@ Number of reserved slots for special players.
 Number of slots reserved for spectators
 Number of threads backend can use for rendering (Note: value may be ignored by backend)
 Number of vote options sent per tick
-Numeric-only messages will be skipped
 o = Send rate
 Off
+Off: disables all interface animations while preserving the options below
 Official
 Official community links
 Offline
@@ -2415,7 +2445,6 @@ Override Entity Alpha for Unfreeze Tiles (0-100)
 Override Entry
 Override Freeze Tile Entity Alpha (0-100)
 Override Group
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
 Override Selected
 Overview
 Overwrite clan even if empty
@@ -2571,11 +2600,11 @@ Prediction jitter is obvious, prediction timing is changing
 Prediction Lead
 Prediction lead
 Prediction lead is high, check prediction settings and server timing
-Prediction Margin
 Prediction margin
 Prediction margin when frozen
 Prediction offset
 Preparing demo playback
+Presentation animations
 Preset %d
 Preset bar
 Preset when encoding video with libx264, default 5 (medium), 0 is ultrafast, 9 is placebo (slowest, not recommended)
@@ -2643,6 +2672,9 @@ Puts you out of solo part
 Pyramid
 q = Connection quality
 Qm
+Qm UI custom icon color
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
 qm_profile_queue: index must be between 1 and %d
 QmClient
 QmClient / Function
@@ -2720,12 +2752,15 @@ Recent
 Reconnect in %d sec
 Record chat replays.
 Record demo
+Record match
 Record to a file
 Red
 Red team
 Red team wins!
 Reduce antiping and player prediction when frozen
+Reduce prediction while frozen
 Reduced
+Reduced: uses shorter transitions and disables presentation animations
 Refresh
 Refresh interval
 Refresh Rate
@@ -2733,6 +2768,7 @@ Refresh the demo list
 Regex
 Region
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
+Regular
 Regular background color
 Regular expression
 Relative path
@@ -2779,7 +2815,6 @@ Remove from favorites
 Remove from history
 Remove from queue
 Remove Item
-Remove prediction & antiping in freeze
 Remove right to vote from player with client ID
 Remove right to vote from player with IP address
 Remove team clan:
@@ -2983,11 +3018,12 @@ Scanning current server...
 Score
 Score limit
 Scoreboard
-Scoreboard color
 Scoreboard cursor
 Scoreboard point check
 Scoreboard score lookup
 Scoreboard sort mode (0=Score, 1=Points)
+Scoreboard surface
+Scoreboard surface color
 Scoreboard transparency
 Scores are private on this server
 Scores are public on this server
@@ -3101,6 +3137,9 @@ Set your checkpoints based on another player
 Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided
 Sets your tee's eye emote
 Settings
+Settings card background
+Settings card background color
+Settings card background transparency
 Settings card border color
 Settings card default layout migration version
 Settings card titles use rainbow colors
@@ -3161,13 +3200,11 @@ Show current and next lyric lines on HUD
 Show daily message to client
 Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
 Show DDNet map finishes in server browser
 Show DDRace HUD
 Show death tile outlines
 Show default flag in scoreboard
 Show default mod rules.
-Show Directory
 Show dotted map route debug
 Show draggable virtual back button
 Show dummy actions
@@ -3373,6 +3410,8 @@ Show the server rules
 Show tiles layers from BG map
 Show toast
 Show translation
+Show Tune Zone effects
+Show Tune Zone effects on HUD Dynamic Island
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 Show unfreeze/deep unfreeze tile outlines
 Show unknown server messages
@@ -3542,6 +3581,7 @@ Start here to quickly diagnose if the issue is with device, server, or room
 Start holding the hook before loading the savegame to keep the hook
 Start marker of replay slice
 Start playback of ghosts
+Start QmLive full match demo recording
 Start recording a demo
 Start recording a video
 Statboard
@@ -3564,6 +3604,7 @@ Steam profile name
 Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop match record
 Stop practice
+Stop QmLive full match demo recording
 Stop record
 Stop recording
 Stop recording a demo
@@ -3598,6 +3639,7 @@ Swap is not available on forced solo servers.
 Swap option color
 Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
 Switch
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 Switch failed
 Switch interval
 Switch opacity
@@ -3719,6 +3761,7 @@ Tencent Cloud Translation SecretId
 Tencent Cloud Translation SecretKey
 Text alpha
 Text color
+Text input focus ring color
 Thank you for your company and trust. This is what gives me the courage to keep going.
 Thanks for supporting QmClient
 The audio device couldn't be initialised.
@@ -3746,8 +3789,10 @@ There's a %s second delay between map-votes, please wait %s seconds.
 There's a %s second wait time between kick votes for each player please wait %s second(s)
 There's an unsaved change in the touch controls editor, you might want to save it.
 There's an unsaved map in the editor, you might want to save it.
+Thin
 Thinking mode requires a reasoning model
 This ID is not connected
+This is the master switch for all interface animation categories
 This name cannot be used for files and folders
 This server has an initial chat delay, you will be able to talk in %s seconds.
 This skin name cannot be used.
@@ -3861,6 +3906,7 @@ Translation backend invalid, sending original
 Translation button active color
 Translation button cancel color
 Translation color
+Translation color alpha migration completed flag
 Translation menu background color
 Translation menu normal color
 Translation menu selected color
@@ -3883,6 +3929,7 @@ Tune in zone a variable to value
 Tune layer opacity
 Tune variable to value
 Tune variable to value or show current value
+Tune Zone effect icon legend
 Tutorial
 Twinkle strength
 Type
@@ -3895,8 +3942,12 @@ UDP seems to be filtered.
 UDP socket not open
 UI color
 UI controller sens.
+UI icon color
+UI icon custom color
+UI icon weight
 UI motion level
 UI mouse sens.
+UI rounded corner segments (even numbers recommended)
 UI scale
 UI server address
 UI size percentage
@@ -3964,7 +4015,6 @@ Update or add a specific war group
 Update Rate
 Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
-Upper limit for automatically selected UI rounded corner segments
 URL for downloading community skins
 URL for downloading maps (must start with https://)
 URL for downloading skins
@@ -3973,6 +4023,7 @@ Usage: %s %s
 Usage: /%s %s
 Use 12 hour clock
 Use 12-hour clock for local time
+Use a fixed prediction margin while frozen
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 Use alternative world tick calculation making hooks behave as if all players have Strong.
 Use colored skins for frozen tees
@@ -4012,6 +4063,7 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 Use warlist colors instead of regular colors
 Use warlist groups for indicator
+Used by active shared text and numeric input fields
 Uses the active action with the current aiming position.
 v = Velocity
 V-Sync
@@ -4132,6 +4184,7 @@ Welcome to DDNet
 What level DDRace binding is set to (automatic, you don't need to use it).
 What's done is done, no use saying more
 Wheel animate
+When TClient rainbow Tee is enabled, this feature has no effect.
 When you cross the start line, show a ghost tee replicating the movements of your best time
 Whether a switch is deactivated by default (otherwise activated)
 Whether dummy copies your movement
@@ -4163,6 +4216,7 @@ Whisper something to someone (private message)
 Whisper to %s
 Whisper to %s: %s
 Whisper: /w player message
+White
 Why are you slowmo replaying to read this?
 Width
 Width and height are required to be within the range from %d to %d.
@@ -4178,6 +4232,7 @@ Windowed
 Windowed borderless
 Windowed fullscreen
 Word Filter
+Word filter action: 0=replace matching words, 1=hide entire message
 Word highlight soft edge width (px)
 Write local console contents to a text file
 Write performance debug logs to dedicated file
@@ -4303,6 +4358,9 @@ Zoom to current mouse target
 ⚠️ LibreTranslate API Key not set
 ⚠️ LLM API Key not configured
 ⚠️ Tencent Cloud API not configured
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
 [Assets editor blend mode]	Multiply
 [Assets editor blend mode]	Normal
 [Assets editor blend mode]	Overlay
@@ -4324,6 +4382,808 @@ Zoom to current mouse target
 [Direct touch input]	Disabled
 [Direct touch input]	Fire
 [Direct touch input]	Hook
+[Editor]	%d new mentions
+[Editor]	%d.%03ds
+[Editor]	%d:%02d.%03dmin
+[Editor]	%d:%02dmin
+[Editor]	%dmin
+[Editor]	%dms
+[Editor]	%ds
+[Editor]	%s i[value]
+[Editor]	%s Right click for context menu.
+[Editor]	%s value: %s (position %d, parameter "%s")
+[Editor]	%s: Hold the left mouse button to draw. Alt+left click temporarily fills. Ctrl+mouse wheel changes thickness.
+[Editor]	1 new mention
+[Editor]	9+ new mentions
+[Editor]	[Alt+Down] Move the selected command down.
+[Editor]	[Alt+Enter] Update the selected command based on the entered value.
+[Editor]	[Alt+Up] Move the selected command up.
+[Editor]	[Ctrl+F] Find empty slot.
+[Editor]	[Ctrl+F] Find next free checkpoint number.
+[Editor]	[Ctrl+F] Find next free tele number.
+[Editor]	[Ctrl+F] Find unused zone.
+[Editor]	[Ctrl+G] Toggle grid.
+[Editor]	[Ctrl+H] Toggle high detail.
+[Editor]	[Ctrl+I] Show tile information.
+[Editor]	[Ctrl+L] Open a map for editing.
+[Editor]	[Ctrl+N] Create a new map.
+[Editor]	[Ctrl+Q] Add a new quad.
+[Editor]	[Ctrl+Q] Add a new sound source.
+[Editor]	[Ctrl+S] Save the current map.
+[Editor]	[Ctrl+Shift+Alt+S] Save a copy of the current map under a new name.
+[Editor]	[Ctrl+Shift+C] Color pipette. Pick a color from the screen by clicking on it.
+[Editor]	[Ctrl+Shift+I] Show tile information in hexadecimal.
+[Editor]	[Ctrl+Shift+L] Open the current ingame map for editing.
+[Editor]	[Ctrl+Shift+S] Save the current map under a new name.
+[Editor]	[Delete] Delete the selected command from the command list.
+[Editor]	[Enter] Add a command to the command list.
+[Editor]	[Enter] Replace the corresponding command in the command list.
+[Editor]	[Escape] Exit from the editor.
+[Editor]	[Home] Restore map focus.
+[Editor]	[M] Flip the brush vertically.
+[Editor]	[N] Flip the brush horizontally.
+[Editor]	[N] Show next switcher with this number.
+[Editor]	[N] Show next tele with this number.
+[Editor]	[NumPad*] Reset zoom to default value.
+[Editor]	[Numpad*] Zoom to normal and remove editor offset.
+[Editor]	[NumPad+] Zoom in horizontally, hold shift to zoom vertically.
+[Editor]	[Numpad+] Zoom in.
+[Editor]	[NumPad-] Zoom out horizontally, hold shift to zoom vertically.
+[Editor]	[Numpad-] Zoom out.
+[Editor]	[R] Rotate the brush counter-clockwise.
+[Editor]	[T] Rotate the brush clockwise.
+[Editor]	Add
+[Editor]	Add a new group.
+[Editor]	Add command
+[Editor]	Add front layer
+[Editor]	Add group
+[Editor]	Add image
+[Editor]	Add quad
+[Editor]	Add quadart
+[Editor]	Add sound
+[Editor]	Add sound source
+[Editor]	Add speedup layer
+[Editor]	Add switch layer
+[Editor]	Add tele layer
+[Editor]	Add tile layer
+[Editor]	Add tileart
+[Editor]	Add tune layer
+[Editor]	Adjust the map details of the current map.
+[Editor]	Air
+[Editor]	Align
+[Editor]	Align coordinates of the quad points.
+[Editor]	Align quads
+[Editor]	All combined
+[Editor]	Allow all unknown settings
+[Editor]	Allow quad alignment to other quads/points when moving quads.
+[Editor]	Allow the fade tool to randomly erase to air.
+[Editor]	Angle
+[Editor]	Angle 
+[Editor]	Apply the changes.
+[Editor]	Are you sure that you want to delete the %s '%s'?
+[Editor]	Are you sure that you want to remove all unused envelopes from this map?
+[Editor]	Aspect ratio
+[Editor]	Author:
+[Editor]	Auto map reload
+[Editor]	Automap
+[Editor]	Automatically run the automapper after modifications.
+[Editor]	Below is a report of the invalid map settings found when loading the map. Please fix them before proceeding further.
+[Editor]	Bezier in-tangent. Left mouse to drag. Hold ctrl to be more precise. Shift+right click to reset.
+[Editor]	Bezier out-tangent. Left mouse to drag. Hold ctrl to be more precise. Shift+right click to reset.
+[Editor]	Big image
+[Editor]	Blue Check-Tele
+[Editor]	BLUE CHECKPOINT TELEPORT: Sends tees to CTO with the same number as the last touched TELEPORT CHECKPOINT. Speed and hook are kept.
+[Editor]	BLUE SPIKE: Blue team spikes. Gives negative points when killer is in red team. Amount of points given is set inside the server.
+[Editor]	BLUE TELEPORT: After falling into this tile, tees appear on TO with the same number. Speed and hook are kept.
+[Editor]	BONUS: Subtracts time from your current race time. Opposite of PENALTY.
+[Editor]	browser(internet)
+[Editor]	browser(lan)
+[Editor]	Brush coloring
+[Editor]	Brush draw (x%d) on %d layers
+[Editor]	BULLET: Bounces off the walls without explosion. Touching the bullet works like FREEZE tile (freezes for 3 seconds by default).
+[Editor]	Cancel
+[Editor]	Cancel fixing this command.
+[Editor]	Center pivot
+[Editor]	Center the pivot of the current quad.
+[Editor]	Centralize
+[Editor]	Change sound source shape.
+[Editor]	Change the animation settings.
+[Editor]	Change the grid settings.
+[Editor]	Change the size of the editor by dragging.
+[Editor]	Checkpoint
+[Editor]	CHECKPOINT TELEPORT TO: Tees will appear here after touching TELEPORT CHECKPOINT with the same number and falling into CFROM TELEPORT.
+[Editor]	CHECKPOINT TELEPORT: After having touched this tile, any CFRM will teleport you to CTO with the same number.
+[Editor]	Choose
+[Editor]	Choose game layer entities image for different gametypes.
+[Editor]	Choose this command.
+[Editor]	Circle
+[Editor]	Clean up game tiles
+[Editor]	Clear the history.
+[Editor]	Click to show the color picker. Shift+right click to copy color to clipboard. Shift+left click to paste color from clipboard.
+[Editor]	Clip H
+[Editor]	Clip W
+[Editor]	Clip X
+[Editor]	Clip Y
+[Editor]	Close this dialog.
+[Editor]	Collaboration
+[Editor]	Collaboration connection cancelled
+[Editor]	COLLISION OFF: You can't collide with others.
+[Editor]	COLLISION: You can collide with others.
+[Editor]	Color
+[Editor]	color, size
+[Editor]	Color:
+[Editor]	Command
+[Editor]	Commit
+[Editor]	Configure Quadart
+[Editor]	Confirm
+[Editor]	Confirm delete
+[Editor]	Confirm editing of this command.
+[Editor]	Confirm overwrite
+[Editor]	Connection failed: the collaboration service address is too long
+[Editor]	Connection failed: the HTTP service is unavailable
+[Editor]	Construct '%s' game tiles (x%d)
+[Editor]	Construct 'tele' game tiles (x%d)
+[Editor]	Construct game tiles from this layer.
+[Editor]	Copy the current collaboration room code.
+[Editor]	Could not replace command
+[Editor]	Create
+[Editor]	Create a collaboration room for up to 4 people.
+[Editor]	Create a new folder.
+[Editor]	Create a new item layer.
+[Editor]	Create a new quads layer.
+[Editor]	Create a new sound layer.
+[Editor]	Create a new speedup layer.
+[Editor]	Create a new switch layer.
+[Editor]	Create a new tele layer.
+[Editor]	Create a new tile layer.
+[Editor]	Create a new tuning layer.
+[Editor]	Create an identical copy of the selected layer.
+[Editor]	Create new folder
+[Editor]	Create or join an editor collaboration room for up to 4 people.
+[Editor]	Create Quadart
+[Editor]	Create room
+[Editor]	Creating collaboration room...
+[Editor]	Credits:
+[Editor]	CREDITS: Who designed the entities.
+[Editor]	Current path: %s
+[Editor]	Current room: %s (%d/%d people)
+[Editor]	Custom entities cannot have the same name as default entities.
+[Editor]	custom(1)
+[Editor]	custom(2)
+[Editor]	custom(3)
+[Editor]	custom(4)
+[Editor]	custom(5)
+[Editor]	Custom…
+[Editor]	Death
+[Editor]	DEATH: Kills the tee.
+[Editor]	Decrease animation speed.
+[Editor]	Decrease value.
+[Editor]	Deep Freeze
+[Editor]	DEEP FREEZE: Permanent freeze. Only UNDEEP tile can cancel this effect.
+[Editor]	Deep Unfreeze
+[Editor]	Default
+[Editor]	Delay
+[Editor]	Delete
+[Editor]	Delete command %d
+[Editor]	Delete command %d; Edit command %d
+[Editor]	Delete group
+[Editor]	Delete group %d
+[Editor]	Delete layer
+[Editor]	Delete quad (x%d)
+[Editor]	Delete sound source %d in layer %d of group %d
+[Editor]	Delete the current quad.
+[Editor]	Delete the current sound source.
+[Editor]	Delete the group.
+[Editor]	Delete the layer.
+[Editor]	Delete the selected file.
+[Editor]	Delete the selected folder.
+[Editor]	Delete this command.
+[Editor]	demos
+[Editor]	Destructive
+[Editor]	Disable brush coloring.
+[Editor]	Disallow/allow unknown or invalid commands.
+[Editor]	Do not perform quad alignment to other quads/points when moving quads.
+[Editor]	Do not run 'hot_reload' on the local server while rcon authed on map save.
+[Editor]	Do not select layers when ctrl+right clicking on a tile.
+[Editor]	Do not show how weapons, shields, hearts and flags appear ingame.
+[Editor]	Do not show quad bounds when moving quads.
+[Editor]	Do not show tile information.
+[Editor]	Done
+[Editor]	DOOR: Combined with LASER LENGTH creates doors. Doesn't allow to go through it (only with NINJA).
+[Editor]	DRAGGING LASER: Grabs and attracts the closest tee to it. Can reach tees through walls but not through LASER BLOCKER. Medium strength.
+[Editor]	DRAGGING LASER: Grabs and attracts the closest tee to it. Can reach tees through walls but not through LASER BLOCKER. Strong.
+[Editor]	DRAGGING LASER: Grabs and attracts the closest tee to it. Can reach tees through walls but not through LASER BLOCKER. Weak.
+[Editor]	DRAGGING LASER: Grabs and attracts the closest tee to it. Can't reach tees through walls and LASER BLOCKER. Medium strength.
+[Editor]	DRAGGING LASER: Grabs and attracts the closest tee to it. Can't reach tees through walls and LASER BLOCKER. Strong.
+[Editor]	DRAGGING LASER: Grabs and attracts the closest tee to it. Can't reach tees through walls and LASER BLOCKER. Weak.
+[Editor]	Draw after lightly smoothing the mouse path.
+[Editor]	Drawing tool: Drag a rectangle to fill it with the current tile. An empty brush erases to air.
+[Editor]	Drawing tool: Drag to create a rectangle, ellipse, triangle or N-gon.
+[Editor]	Drawing tool: Draw a continuous line along the mouse path.
+[Editor]	Drawing tool: Ellipse
+[Editor]	Drawing tool: Fade
+[Editor]	Drawing tool: Fill
+[Editor]	Drawing tool: Line
+[Editor]	Drawing tool: N-gon
+[Editor]	Drawing tool: Probabilistically scatter tiles with a fade inside the dragged rectangle.
+[Editor]	Drawing tool: Rectangle
+[Editor]	Drawing tool: Triangle
+[Editor]	Drawing tools
+[Editor]	Duplicate
+[Editor]	Duplicate layer
+[Editor]	Edge softness strength.
+[Editor]	Edit %d layers common property: %s
+[Editor]	Edit command %d
+[Editor]	Edit group %d %s property
+[Editor]	Edit layer %d in group %d %s property
+[Editor]	Edit layers group and order (x%d)
+[Editor]	Edit quad point %s property in layer %d of group %d
+[Editor]	Edit quad points
+[Editor]	Edit quads layer %d in group %d %s property
+[Editor]	Edit shape of sound source %d in layer %d of group %d to %s
+[Editor]	Edit sound source %d in layer %d of group %d %s property
+[Editor]	Edit sound source %d in layer %d of group %d sound shape %s property
+[Editor]	Edit sounds layer %d in group %d %s property
+[Editor]	Edit tiles layer %d in group %d %s property
+[Editor]	Editing multiple layers
+[Editor]	Editor
+[Editor]	Editor history. Click on an action to undo all actions above.
+[Editor]	Ellipse
+[Editor]	Ellipse shape.
+[Editor]	Embed
+[Editor]	Embed the image into the map file.
+[Editor]	Embedding is not possible because the image could not be loaded.
+[Editor]	EMPTY: Can be used as an eraser.
+[Editor]	Enable brush coloring.
+[Editor]	Enable quad knife mode.
+[Editor]	Enable text mode? Pressing letters and numbers on your keyboard will place tiles.
+[Editor]	End probability strength.
+[Editor]	End% 
+[Editor]	ENDLESS HOOK OFF: Deactivates endless hook.
+[Editor]	ENDLESS HOOK: Activates endless hook.
+[Editor]	Enter a room code to join a collaboration room.
+[Editor]	Enter a server setting. Press ctrl+space to show available settings.
+[Editor]	Enter the room code
+[Editor]	ENTITIES OFF SIGN: Informs people playing with entities about important marks, tips, information or text on the map.
+[Editor]	Entities: %s
+[Editor]	Envelope
+[Editor]	Envelope point drag
+[Editor]	Error: could not allocate memory for embedded image "%s".
+[Editor]	Error: could not allocate memory for embedded sound "%s".
+[Editor]	Error: could not allocate memory for map settings.
+[Editor]	Error: could not allocate temporary memory for the tile layer.
+[Editor]	Error: could not convert external image "%s".
+[Editor]	Error: could not find image '%s' in the mapres folder.
+[Editor]	Error: could not find sound '%s' in the mapres folder.
+[Editor]	Error: could not read embedded image "%s".
+[Editor]	Error: could not read embedded sound "%s".
+[Editor]	Error: could not save because the data for image "%s" is invalid or too large.
+[Editor]	Error: could not save because the data for sound "%s" is invalid or too large.
+[Editor]	Error: could not save because the map settings data is too large.
+[Editor]	Error: could not save because the quad layer data is too large.
+[Editor]	Error: could not save because the sound layer data is too large.
+[Editor]	Error: could not save because the speedup layer data is too large.
+[Editor]	Error: could not save because the switch layer data is too large.
+[Editor]	Error: could not save because the tele layer data is too large.
+[Editor]	Error: could not save because the tile layer dimensions are invalid or too large.
+[Editor]	Error: could not save because the tune layer data is too large.
+[Editor]	Error: Failed to open map file. See local console for details.
+[Editor]	Error: The map has an unsupported version.
+[Editor]	Exit
+[Editor]	Exit the editor
+[Editor]	Expand or collapse all groups.
+[Editor]	EXPLODING BULLET: Bounces off the walls with explosion. Touching the bullet works like FREEZE tile (freezes for 3 seconds by default).
+[Editor]	Export
+[Editor]	Export the image to a separate file.
+[Editor]	Export the sound to a separate file.
+[Editor]	Exporting is not possible because the image could not be loaded.
+[Editor]	Exporting is not possible because the sound could not be loaded.
+[Editor]	External
+[Editor]	Fade
+[Editor]	Fade angle.
+[Editor]	Failed to convert image from file "%s".
+[Editor]	Failed to create room: connection failed
+[Editor]	Failed to create room: the collaboration service returned an error
+[Editor]	Failed to create the folder '%s'.
+[Editor]	Failed to delete file '%s'. Check the local console for details.
+[Editor]	Failed to delete folder '%s'. Make sure it's empty first. Check the local console for details.
+[Editor]	Failed to join: connection failed
+[Editor]	Failed to join: the collaboration service returned an error
+[Editor]	Failed to join: the room code is invalid or the room has expired
+[Editor]	Failed to load image from file '%s'.
+[Editor]	Failed to load map from file '%s'.
+[Editor]	Failed to load sound from file '%s'.
+[Editor]	Failed to load the image (check the local console for details).
+[Editor]	Failed to load the sound (check the local console for details). Make sure you enabled sounds in the settings.
+[Editor]	Failed to open file '%s'.
+[Editor]	Failed to open sound file '%s'.
+[Editor]	Failed to open the directory '%s'.
+[Editor]	Failed to save map to file '%s'.
+[Editor]	Failed to write image to file '%s'.
+[Editor]	favorites
+[Editor]	File
+[Editor]	Filename %s
+[Editor]	Filename:
+[Editor]	Fill
+[Editor]	FINISH: End of race.
+[Editor]	Fix
+[Editor]	Fix this command (needed before it can be chosen).
+[Editor]	Fix this command.
+[Editor]	FLAG: Not used in DDRace. Place where blue team flag is.
+[Editor]	FLAG: Not used in DDRace. Place where red team flag is.
+[Editor]	FLAG: Not used in FNG. Place where blue team flag is.
+[Editor]	FLAG: Not used in FNG. Place where red team flag is.
+[Editor]	FLAG: Place where blue team flag is.
+[Editor]	FLAG: Place where red team flag is.
+[Editor]	folder
+[Editor]	Force
+[Editor]	Freeze
+[Editor]	FREEZE: Freezes tees for 3 seconds.
+[Editor]	FREEZE: Freezes tees for defined amount of seconds.
+[Editor]	Front
+[Editor]	G
+[Editor]	Game
+[Editor]	Game Layer
+[Editor]	Game tiles
+[Editor]	Game tiles: %s
+[Editor]	Game tiles: Air
+[Editor]	Game tiles: Blue Check Tele
+[Editor]	Game tiles: Death
+[Editor]	Game tiles: Deep Freeze
+[Editor]	Game tiles: Deep Unfreeze
+[Editor]	Game tiles: Freeze
+[Editor]	Game tiles: Hookable
+[Editor]	Game tiles: Hookthrough
+[Editor]	Game tiles: Live Freeze
+[Editor]	Game tiles: Live Unfreeze
+[Editor]	Game tiles: Red Check Tele
+[Editor]	Game tiles: Unfreeze
+[Editor]	Game tiles: Unhookable
+[Editor]	Generate quadart from image.
+[Editor]	Generate tileart from image.
+[Editor]	GLOBAL COLLISION OFF: Nobody can collide with others. Place only one tile somewhere on the map.
+[Editor]	GLOBAL ENDLESS HOOK ON: Everyone has endless hook. Place only one tile somewhere on the map.
+[Editor]	GLOBAL HIT OTHERS OFF: Nobody can hit others. Place only one tile somewhere on the map.
+[Editor]	GLOBAL HOOK OTHERS OFF: Nobody can hook others. Place only one tile somewhere on the map.
+[Editor]	GLOBAL OLD SHOTGUN: Shotgun drags others always towards the shooter, even after having bounced. Shooter can't hit themselves. Place only one tile somewhere on the map.
+[Editor]	Go
+[Editor]	Go to a specified coordinate point on the map.
+[Editor]	Go to images management.
+[Editor]	Go to layers management.
+[Editor]	Go to sounds management.
+[Editor]	GOLDEN SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
+[Editor]	Goto position
+[Editor]	GREEN SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
+[Editor]	GRENADE LAUNCHER: Throws exploding bullets. Also known as rocket.
+[Editor]	GRENADE SHIELD: Takes grenade away.
+[Editor]	GRENADE: Gives you grenade weapon with 10 charges.
+[Editor]	GRENADE: Gives you grenade weapon with 10 charges. Not really useful in FNG.
+[Editor]	Group
+[Editor]	HD
+[Editor]	HEART: Does nothing in FNG.
+[Editor]	HEART: Gives player +1 health
+[Editor]	HEART: Works like a FREEZE tile. Freezes tees for 3 seconds by default.
+[Editor]	Height
+[Editor]	History
+[Editor]	HIT OTHERS: You can activate hitting others for single weapons, using delay number to select which.
+[Editor]	HIT OTHERS: You can deactivate hitting others for single weapons, using delay number to select which.
+[Editor]	HIT OTHERS: You can hit others.
+[Editor]	HIT OTHERS: You can't hit others.
+[Editor]	Hold shift to keep alignment on one axis.
+[Editor]	HOOK OTHERS OFF: You can't hook others.
+[Editor]	HOOK OTHERS: You can hook others.
+[Editor]	HOOK TELEPORT: Teleports hooks entering into it to TELEPORT TO, where it comes out. Direction, angle and length are kept.
+[Editor]	Hookable
+[Editor]	HOOKABLE: It's possible to hook and collide with it.
+[Editor]	Hookthrough
+[Editor]	HOOKTHROUGH: Combined with (UN)HOOKABLE tiles, allows to hook through the walls.
+[Editor]	HOOKTHROUGH: Combined with a collision tile is new hookthrough, otherwise stops hook, from one direction.
+[Editor]	HOOKTHROUGH: Combined with a collision tile is new hookthrough, otherwise stops hooks, from all directions.
+[Editor]	HOOKTHROUGH: Shortcut for new hookthrough.
+[Editor]	Image
+[Editor]	Image named '%s' was already added.
+[Editor]	Image pixelsize
+[Editor]	Image width/height
+[Editor]	In group %d, %s %s layer
+[Editor]	In group %d, delete the %s layer
+[Editor]	Increase animation speed.
+[Editor]	Increase value.
+[Editor]	Ingame
+[Editor]	Invalid parameter value: %s (position %d, parameter "%s"); out of range [%d, %d]
+[Editor]	JETPACK OFF: You lose your jetpack gun.
+[Editor]	JETPACK: You have a jetpack gun.
+[Editor]	Join room
+[Editor]	Joined room %s (%d/%d people)
+[Editor]	Joining collaboration room...
+[Editor]	JUMP: Sets defined amount of jumps (default is 2).
+[Editor]	Keep the mouse path as a polyline.
+[Editor]	KILL: Kills the tee.
+[Editor]	Large layer
+[Editor]	LASER BLOCKER: Doesn't let DRAGGING & SPINNING LASER and PLASMA TURRET reach tees through it.
+[Editor]	LASER LENGTH CHANGE: Put next to LASER LENGTH, causes it to length and shorten constantly. Works only on (NON-)SPINNING LASER, not on DOOR. Lengthen, fast.
+[Editor]	LASER LENGTH CHANGE: Put next to LASER LENGTH, causes it to length and shorten constantly. Works only on (NON-)SPINNING LASER, not on DOOR. Lengthen, medium speed.
+[Editor]	LASER LENGTH CHANGE: Put next to LASER LENGTH, causes it to length and shorten constantly. Works only on (NON-)SPINNING LASER, not on DOOR. Lengthen, slow.
+[Editor]	LASER LENGTH CHANGE: Put next to LASER LENGTH, causes it to length and shorten constantly. Works only on (NON-)SPINNING LASER, not on DOOR. Shorten, fast.
+[Editor]	LASER LENGTH CHANGE: Put next to LASER LENGTH, causes it to length and shorten constantly. Works only on (NON-)SPINNING LASER, not on DOOR. Shorten, medium speed.
+[Editor]	LASER LENGTH CHANGE: Put next to LASER LENGTH, causes it to length and shorten constantly. Works only on (NON-)SPINNING LASER, not on DOOR. Shorten, slow.
+[Editor]	LASER LENGTH: Put next to DOOR or SPINNING LASER, makes it 3 tiles long.
+[Editor]	LASER LENGTH: Put next to DOOR or SPINNING LASER, makes it 6 tiles long.
+[Editor]	LASER LENGTH: Put next to DOOR or SPINNING LASER, makes it 9 tiles long.
+[Editor]	LASER SHIELD: Takes laser away.
+[Editor]	LASER: Gives you laser weapon with 10 charges.
+[Editor]	LASER: Gives you laser weapon with 10 charges. Not really useful in FNG.
+[Editor]	LASER: Unfreezes hit tee. Bounces off the walls. Also known as laser.
+[Editor]	Layer type does not match a sound layer
+[Editor]	Layer: add image
+[Editor]	Leave room
+[Editor]	Leave the current collaboration room.
+[Editor]	Leaving collaboration room...
+[Editor]	Left click to pick a color from the screen. Right click to cancel pipette mode.
+[Editor]	Left mouse button to move. Hold alt to ignore grid.
+[Editor]	Left mouse button to move. Hold shift to move pivot. Hold alt to ignore grid. Shift+right click to delete.
+[Editor]	Left mouse button to move. Hold shift to move the texture. Hold alt to ignore grid.
+[Editor]	Left the collaboration room
+[Editor]	Left the collaboration room, but could not notify the collaboration service
+[Editor]	License:
+[Editor]	Line
+[Editor]	Line thickness.
+[Editor]	Line thickness: %d
+[Editor]	Live Freeze
+[Editor]	LIVE FREEZE: Live frozen tees cannot move or jump, while hook and weapons can still be used.
+[Editor]	Live Unfreeze
+[Editor]	LIVE UNFREEZE: Removes LIVE FREEZE effect.
+[Editor]	Load
+[Editor]	Load a new image to use in the map.
+[Editor]	Load a new sound to use in the map.
+[Editor]	Load current map
+[Editor]	Load custom entities
+[Editor]	Load map
+[Editor]	Loaded map
+[Editor]	Loaded the collaboration room's map snapshot
+[Editor]	loading brush from slot %d
+[Editor]	Local server is restarting. Please wait…
+[Editor]	Make external
+[Editor]	Map details
+[Editor]	Map settings error
+[Editor]	Max images
+[Editor]	Max sounds
+[Editor]	Max Speed
+[Editor]	Menu
+[Editor]	Move command %d down
+[Editor]	Move command %d up
+[Editor]	Move sound source %d of layer %d in group %d
+[Editor]	Moved ingame
+[Editor]	N-gon
+[Editor]	N-gon shape.
+[Editor]	New
+[Editor]	New folder
+[Editor]	New group
+[Editor]	New map
+[Editor]	New quad in layer %d of group %d
+[Editor]	New sound in layer %d of group %d
+[Editor]	news
+[Editor]	NINJA SHIELD: Takes ninja away.
+[Editor]	NINJA: Does nothing in FNG.
+[Editor]	NINJA: Gives you ninja for a period of time.
+[Editor]	NINJA: Makes you invisible in the darkest nights.
+[Editor]	No
+[Editor]	No tile layer selected
+[Editor]	NON-SPINNING LASER: Tile where freezing laser (made with LASER LENGTH) begins.
+[Editor]	None
+[Editor]	None:
+[Editor]	NORMAL SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
+[Editor]	Not currently in a collaboration room
+[Editor]	Not in a collaboration room
+[Editor]	Number
+[Editor]	Number of sides for the N-gon.
+[Editor]	OLD SPEEDUP: Gives tee defined speed. Arrow shows direction and angle. Deprecated.
+[Editor]	Open
+[Editor]	Open the current directory in the file browser.
+[Editor]	Open the selected file.
+[Editor]	Open the selected folder.
+[Editor]	Optimize
+[Editor]	Order
+[Editor]	Outline
+[Editor]	Outline thickness.
+[Editor]	Override with this command.
+[Editor]	Para X
+[Editor]	Para Y
+[Editor]	PENALTY: Adds time to your current race time. Opposite of BONUS.
+[Editor]	Pick mapres image for currently selected layer.
+[Editor]	Pipette
+[Editor]	Place border
+[Editor]	Place border tiles
+[Editor]	Place tiles in a 2-tile wide border at the edges of the selected tile layer.
+[Editor]	PLASMA TURRET: Shoots plasma bullets at the closest tee. They explode on an obstactle they hit (wall or tee).
+[Editor]	PLASMA TURRET: Shoots plasma bullets that work like FREEZE at the closest tee.
+[Editor]	PLASMA TURRET: Shoots plasma bullets that work like FREEZE at the closest tee. They also explode on an obstactly they hit (wall or tee).
+[Editor]	PLASMA TURRET: Shoots plasma bullets that work like UNFREEZE at the closest tee.
+[Editor]	Play/pause audio preview.
+[Editor]	Polyline
+[Editor]	Pos X
+[Editor]	Pos Y
+[Editor]	Press shift to scale the time. Press alt to scale along midpoint. Press ctrl to be more precise.
+[Editor]	Preview quad envelopes
+[Editor]	Proof
+[Editor]	PURPLE SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
+[Editor]	Quad pixelsize
+[Editor]	Quad place (x%d)
+[Editor]	Quads
+[Editor]	Radius
+[Editor]	Random perturbation strength.
+[Editor]	Randomness 
+[Editor]	Re-import
+[Editor]	Re-import the image from the mapres folder.
+[Editor]	Re-import the sound from the mapres folder.
+[Editor]	Received a sync update from room %s (%d/%d people)
+[Editor]	Rectangle
+[Editor]	Rectangle shape.
+[Editor]	Red Check-Tele
+[Editor]	RED CHECKPOINT TELEPORT: Send tees to CTO with the same number as the last touched TELEPORT CHECKPOINT. Speed and hook are reset.
+[Editor]	RED SPIKE: Red team spikes. Gives negative points when killer is in blue team. Amount of points given is set inside the server.
+[Editor]	RED TELEPORT: After falling into this tile, tees appear on TO with the same number. Speed and hooks are reset.
+[Editor]	REFILL JUMPS: Restores all jumps.
+[Editor]	Refocus
+[Editor]	Refresh
+[Editor]	Refresh the list of files.
+[Editor]	Remove
+[Editor]	Remove all unused envelopes from the map.
+[Editor]	Remove game tiles that aren't based on a layer.
+[Editor]	Remove image
+[Editor]	Remove sound
+[Editor]	Remove the image from the map file.
+[Editor]	Remove the image from the map.
+[Editor]	Remove the sound from the map.
+[Editor]	Remove unused envelopes
+[Editor]	Replace
+[Editor]	Replace image
+[Editor]	Replace sound
+[Editor]	Replace the image with a new one.
+[Editor]	Replace the sound with a new one.
+[Editor]	reserved settings(1)
+[Editor]	reserved settings(2)
+[Editor]	reserved(1)
+[Editor]	reserved(2)
+[Editor]	reserved(3)
+[Editor]	Reset to normal animation speed.
+[Editor]	Reset to normal grid size.
+[Editor]	Reset zoom
+[Editor]	Resize the current quad based on the aspect ratio of its image.
+[Editor]	Restart server
+[Editor]	Restarting server
+[Editor]	Room %s is in sync (%d/%d people)
+[Editor]	Room code
+[Editor]	Room code copied
+[Editor]	Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+[Editor]	Run 'hot_reload' on the local server while rcon authed on map save.
+[Editor]	Run a local server with the current map and connect you to it.
+[Editor]	Run the automapper.
+[Editor]	Save
+[Editor]	Save as
+[Editor]	Save copy
+[Editor]	Save file with the specified name.
+[Editor]	Save image
+[Editor]	Save map
+[Editor]	Save sound
+[Editor]	saving current brush to %d
+[Editor]	Saving…
+[Editor]	Scale %
+[Editor]	SCORE: Old tile used for showing blue team score using laser text. No longer usable in FNG2.
+[Editor]	SCORE: Old tile used for showing red team score using laser text. No longer usable in FNG2.
+[Editor]	Search:
+[Editor]	Select layers by tile
+[Editor]	Select layers when ctrl+right clicking on a tile.
+[Editor]	Select proof mode.
+[Editor]	Select the wanted image:
+[Editor]	Select the wanted sound:
+[Editor]	Server settings
+[Editor]	Settings
+[Editor]	settings(appearance)
+[Editor]	settings(assets)
+[Editor]	settings(controls)
+[Editor]	settings(ddnet)
+[Editor]	settings(general)
+[Editor]	settings(graphics)
+[Editor]	settings(language)
+[Editor]	settings(player)
+[Editor]	settings(sound)
+[Editor]	settings(tee)
+[Editor]	Shape
+[Editor]	Shape thickness: %d
+[Editor]	SHIELD: Does nothing in FNG.
+[Editor]	SHIELD: Gives player +1 shield.
+[Editor]	SHIELD: Takes all weapons (except hammer and pistol) away.
+[Editor]	Shift down.
+[Editor]	Shift left.
+[Editor]	Shift right.
+[Editor]	Shift up.
+[Editor]	SHOTGUN SHIELD: Takes shotgun away.
+[Editor]	SHOTGUN: Drags the tees towards it. Bounces off the walls.
+[Editor]	SHOTGUN: Gives you shotgun weapon with 10 charges.
+[Editor]	SHOTGUN: Not used in FNG. Gives you shotgun with 10 charges.
+[Editor]	Show Directory
+[Editor]	Show how weapons, shields, hearts and flags appear ingame.
+[Editor]	Show info: Dec
+[Editor]	Show info: Hex
+[Editor]	Show info: Off
+[Editor]	Show ingame entities
+[Editor]	Show map editor history.
+[Editor]	Show quad bounds when moving quads.
+[Editor]	Show quads bounds
+[Editor]	Show server settings editor history.
+[Editor]	Size
+[Editor]	size
+[Editor]	Size: %d × %d
+[Editor]	Size: %zu × %zu
+[Editor]	Slice
+[Editor]	Smooth
+[Editor]	Softness 
+[Editor]	SOLO: You are now in a solo part.
+[Editor]	SOLO: You are now out of the solo part.
+[Editor]	Sort by filename.
+[Editor]	Sort by time modified.
+[Editor]	Sound
+[Editor]	Sound named '%s' was already added.
+[Editor]	Sound place (x%d)
+[Editor]	SPAWN: Blue team members spawn here, same as normal spawn in DDRace.
+[Editor]	SPAWN: Blue team members spawn here.
+[Editor]	SPAWN: Here tees will appear after joining the game or dying somewhere on the map.
+[Editor]	SPAWN: Here tees will appear after joining the game or dying.
+[Editor]	SPAWN: Red team members spawn here, same as normal spawn in DDRace.
+[Editor]	SPAWN: Red team members spawn here.
+[Editor]	Speed
+[Editor]	SPEEDER: Causes weapons, SHIELD, HEART and SPINNING LASER to move quickly.
+[Editor]	SPEEDER: Causes weapons, SHIELD, HEART and SPINNING LASER to move slowly.
+[Editor]	Speedup
+[Editor]	SPEEDUP: Gives tee defined speed. Arrow shows direction and angle.
+[Editor]	SPIKE: Old FNG spikes. Deprecated.
+[Editor]	SPINNING LASER: Tile where freezing laser (made with LASER LENGTH) begins. Clockwise, fast.
+[Editor]	SPINNING LASER: Tile where freezing laser (made with LASER LENGTH) begins. Clockwise, medium speed.
+[Editor]	SPINNING LASER: Tile where freezing laser (made with LASER LENGTH) begins. Clockwise, slow.
+[Editor]	SPINNING LASER: Tile where freezing laser (made with LASER LENGTH) begins. Counter-Clockwise, fast.
+[Editor]	SPINNING LASER: Tile where freezing laser (made with LASER LENGTH) begins. Counter-Clockwise, medium speed.
+[Editor]	SPINNING LASER: Tile where freezing laser (made with LASER LENGTH) begins. Counter-Clockwise, slow.
+[Editor]	Square
+[Editor]	Square the current quad.
+[Editor]	start
+[Editor]	Start probability strength.
+[Editor]	Start% 
+[Editor]	START: Starts counting your race time.
+[Editor]	Stop audio preview.
+[Editor]	STOPPER: You can hook and shoot through it. You can't go through it against the arrow.
+[Editor]	STOPPER: You can hook and shoot through it. You can't go through it.
+[Editor]	SUPER JUMP OFF: You don't have unlimited air jumps.
+[Editor]	SUPER JUMP: You have unlimited air jumps.
+[Editor]	SWITCH: Activates switch (e.g. closes door) with the same number.
+[Editor]	SWITCH: Deactivates switch (e.g. opens door) with the same number.
+[Editor]	Symmetry drawing: Off -> X -> Y -> XY. The center is the tile coordinate where the mouse was pressed.
+[Editor]	Symmetry: Off
+[Editor]	Symmetry: X
+[Editor]	Symmetry: XY
+[Editor]	Symmetry: Y
+[Editor]	Sync failed: could not connect to the collaboration service
+[Editor]	Sync failed: could not load the remote map snapshot
+[Editor]	Sync failed: could not read the map snapshot
+[Editor]	Sync failed: could not save the map snapshot
+[Editor]	Sync failed: could not write the complete remote map snapshot
+[Editor]	Sync failed: could not write the remote map snapshot
+[Editor]	Sync failed: map snapshot save failed
+[Editor]	Sync failed: the collaboration service returned an error
+[Editor]	Sync failed: the map is too large to sync in real time
+[Editor]	Sync failed: the map snapshot data is invalid
+[Editor]	Sync failed: the received map snapshot is too large
+[Editor]	Sync interrupted: connection failed
+[Editor]	Sync interrupted: the collaboration service address is too long
+[Editor]	Sync interrupted: the HTTP service is unavailable
+[Editor]	Sync interrupted: the room does not exist or has expired
+[Editor]	Sync interrupted: you are no longer in this room
+[Editor]	Sync the current editor map snapshot by room code, with up to 4 people collaborating.
+[Editor]	Synced to room %s (%d/%d people)
+[Editor]	TELEGRENADE OFF: Turn grenade off as telegun weapon.
+[Editor]	TELEGRENADE: Turn grenade on as telegun weapon.
+[Editor]	TELEGUN OFF: Turn gun off as telegun weapon.
+[Editor]	TELEGUN: Place on top of a collision tile, activates a spot to teleport to, cancels movement, for single weapons, using delay number to select which.
+[Editor]	TELEGUN: Place on top of a collision tile, activates a spot to teleport to, cancels movement.
+[Editor]	TELEGUN: Place on top of a collision tile, activates a spot to teleport to, preserves movement, for single weapons, using delay number to select which.
+[Editor]	TELEGUN: Place on top of a collision tile, activates a spot to teleport to, preserves movement.
+[Editor]	TELEGUN: Turn gun on as telegun weapon.
+[Editor]	TELELASER OFF: Turn laser off as telegun weapon.
+[Editor]	TELELASER: Turn laser on as telegun weapon.
+[Editor]	TELEPORT TO: Destination tile for FROMs, WEAPON & HOOK TELEPORTs with the same numbers.
+[Editor]	Test map locally
+[Editor]	Tex U
+[Editor]	Tex V
+[Editor]	The animation speed.
+[Editor]	The client only allows a maximum of %zu images.
+[Editor]	The client only allows a maximum of %zu sounds.
+[Editor]	The client only supports 64 images but more would be needed to add the selected image as tileart.
+[Editor]	The file '%s' already exists.\n\nAre you sure that you want to overwrite it?
+[Editor]	The map contains unsaved data, you might want to save it before you create a new map.\n\nContinue anyway?
+[Editor]	The map contains unsaved data, you might want to save it before you exit the editor.\n\nContinue anyway?
+[Editor]	The map contains unsaved data, you might want to save it before you load a new map.\n\nContinue anyway?
+[Editor]	The map isn't saved in the maps/ folder. It must be saved there to load on the server.
+[Editor]	The room is full; up to 4 people can collaborate
+[Editor]	The selected image contains many colors, which will lead to a big mapfile. You may want to consider reducing the number of colors.\n\nContinue anyway?
+[Editor]	The selected image is big. Converting it to tileart may take some time.\n\nContinue anyway?
+[Editor]	The selected image is really big. Expect performance issues!\n\nContinue anyway?
+[Editor]	The width or height of this image is not divisible by 16. This is required for images used in tile layers.
+[Editor]	These borders represent what a player maximum can see.
+[Editor]	These borders represent what will be shown in the menu.
+[Editor]	Thickness 
+[Editor]	This image is used in the map. Removing it will reset all layers that use this image to their default.\n\nRemove anyway?
+[Editor]	This is going to overwrite any existing tiles around the edges of the layer.\n\nContinue?
+[Editor]	This map has unsaved changes.
+[Editor]	This name cannot be used for files and folders.
+[Editor]	This sound is used in the map. Removing it will reset all layers that use this sound to their default.\n\nRemove anyway?
+[Editor]	TIME CHECKPOINT: Compares your current race time with your record to show you whether you are running faster or slower.
+[Editor]	Time modified %s
+[Editor]	TIME SWITCH: Activates switch (e.g. closes door) with the same number for a set amount of seconds.
+[Editor]	TIME SWITCH: Deactivates switch (e.g. opens door) with the same number for a set amount of seconds.
+[Editor]	Toggle grid
+[Editor]	Toggle preview of how layers will be zoomed ingame.
+[Editor]	Toggle previewing the paths of quads with a position envelope when a quad layer is selected.
+[Editor]	Toggle proof borders. These borders represent the area that a player can see with default zoom.
+[Editor]	Toggle solid/outline drawing.
+[Editor]	Toggle the editor history view.
+[Editor]	Toggle the envelope editor.
+[Editor]	Toggle the server settings editor.
+[Editor]	Too many colors
+[Editor]	Too many parameters
+[Editor]	Tools
+[Editor]	Triangle
+[Editor]	Triangle shape.
+[Editor]	TUNE ZONE: Area where defined tunes work.
+[Editor]	Type on your keyboard to insert letters and numbers. Press Escape to end text mode.
+[Editor]	Type your number. Press enter to confirm.
+[Editor]	UNDEEP: Removes DEEP FREEZE effect.
+[Editor]	Unfreeze
+[Editor]	UNFREEZE: Unfreezes tees immediately.
+[Editor]	Unhookable
+[Editor]	UNHOOKABLE: It's not possible to hook it, but can collide with it.
+[Editor]	Unknown
+[Editor]	Unknown server setting: %s
+[Editor]	UNLOCK TEAM: Forces team to be unlocked so that team doesn't get killed when one dies.
+[Editor]	Use a room code to join a collaboration room.
+[Editor]	Use Clipping
+[Editor]	Use shift+mouse wheel up/down to adjust the tele numbers. Use ctrl+f to change all tele numbers to the first unused number.
+[Editor]	Version:
+[Editor]	View
+[Editor]	WALLJUMP: Placed next to a wall. Enables climbing up the wall.
+[Editor]	WEAPON TELEPORT: Teleports bullets shot into it to TELEPORT TO, where it comes out. Direction, angle and length are kept.
+[Editor]	Width
+[Editor]	Yes
+[Editor]	You are trying to set the height or width of a layer to more than 1000 tiles. This is actually possible, but only rarely necessary. It may cause the editor to work slower and will result in a larger file size as well as higher memory usage for client and server.
+[Editor]	You have a local server running, but you are not authorized or connected.\n\nDo you want to restart the server and reconnect?
+[Editor]	Zone
+[Editor]	Zoom
+[Editor]	Zoom in
+[Editor]	Zoom out
+[Editor automapper]	A
+[Editor command value error]	Incomplete
+[Editor command value error]	Invalid
+[Editor coordinate label]	X
+[Editor coordinate label]	Y
+[Editor envelope alpha channel]	A
+[Editor envelope blue channel]	B
+[Editor envelope channel]	X
+[Editor envelope channel]	Y
+[Editor envelope red channel]	R
+[Editor envelope rotation channel]	R
+[Editor file label]	Name:
+[Editor layer type]	Switch
+[Editor layer type]	Tele
+[Editor property label]	Name:
+[Editor property value]	value
+[Editor quick action]	Hookthrough
+[Editor server setting]	Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
+[Editor server setting]	Tune in zone a variable to value
+[Editor server setting]	Tune variable to value or show current value
+[Editor server setting]	Whether a switch is deactivated by default (otherwise activated)
+[Editor server setting]	Which message to display on zone enter; use 0 for normal area
+[Editor server setting]	Which message to display on zone leave; use 0 for normal area
+[Editor tile action]	Construct game tiles from this layer.
+[Editor tile shift]	shift
+[Editor tile shift amount]	Shift by
 [Friend auto follow]	Follow this friend across servers
 [Friend auto follow]	Following %s
 [Friend auto follow]	Following %s: switching in %.0fs
@@ -4333,11 +5193,11 @@ Zoom to current mouse target
 [Graphics error]	An error during command recording occurred. Try to update your GPU drivers.
 [Graphics error]	Could not initialize the given graphics backend, reverting to the default backend now.
 [Graphics error]	Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
-[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 [Graphics error]	Failed to swap framebuffers. Try to update your GPU drivers.
 [Graphics error]	Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
 [Graphics error]	Submitting the render commands failed. Try to update your GPU drivers.
-[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 [Hammer Mode]	Normal
 [Hammer Mode]	Rotate with cursor
 [Hammer Mode]	Rotate with cursor like gun

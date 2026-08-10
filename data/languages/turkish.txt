@@ -217,9 +217,6 @@
 0 - Disabled, 1-9999 minutes
 == 0 - Devre Dışı, 1-9999 dakika
 
-1 new mention
-== 1 yeni bahsedilme
-
 1 star
 == 1 yıldız
 
@@ -551,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == Harici konsoldaki ayrıntı düzeyini ayarla (-3 = yok, -2 = yalnızca hatalar, -1 = uyarılar, 0 = bilgi, 1 = hata ayıklama, 2 = izleme).
 
-Adjust your prediction margin while frozen
-== Donmuşken tahmin marjını ayarla
-
 Advanced
 == Gelişmiş
 
@@ -700,6 +694,21 @@ Angle
 
 Angle:
 == Açı:
+
+Animate chat box, emote selector, scoreboard, and spectate selection
+== Sohbet kutusunu, ifade seçiciyi, skor tablosunu ve izleyici seçimini canlandır
+
+Animate lists when entering a page
+== Animate lists when entering a page
+
+Animate settings card expand and collapse height changes
+== Ayar kartlarını genişletip daraltırken yükseklik değişimlerini canlandır
+
+Animate settings card lists when entering a page
+== Bir sayfaya girerken ayar kartı listelerini canlandır
+
+Animate settings card reorder and layout reflow
+== Ayar kartı sıralamasını ve düzen yeniden akışını canlandır
 
 Animation
 == Animasyon
@@ -1358,6 +1367,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 Base path for HTTPS map download URLs to clients
 == İstemcilere HTTPS harita indirme URL'leri için temel yol
 
+Base prediction margin
+== Temel tahmin payı
+
 Basic
 == Temel
 
@@ -1397,6 +1409,9 @@ Best input smooth percentage
 Best match
 == En iyi eşleşme
 
+Better scoreboard
+== Geliştirilmiş skor tablosu
+
 Bind address for client/server
 == İstemci/sunucu için bağlama adresi
 
@@ -1405,9 +1420,6 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
-
-Better scoreboard
-== Geliştirilmiş skor tablosu
 
 Bind key to execute a command or view keybindings
 == Bir komutu yürütmek için tuş bağla veya tuş bağlantılarını görüntüle
@@ -1442,6 +1454,9 @@ Black
 Blend mode
 == Karışım modu
 
+Block enemy chat
+== Düşman sohbetini engelle
+
 Block votes from blacklisted addresses
 == Kara listedeki adreslerden gelen oylamaları engelle
 
@@ -1459,6 +1474,9 @@ Blue team wins!
 
 Body
 == Vücut
+
+Bold
+== Kalın
 
 Border
 == Kenarlık
@@ -1619,6 +1637,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == Takas yapılamıyor: diğer oyuncu takımında değil
 
+Card height animation
+== Ayar kartı yüksekliği animasyonu
+
+Card list entry animation
+== Ayar kartı listesi giriş animasyonu
+
+Card reflow animation
+== Ayar kartı yeniden düzenleme animasyonu
+
 Category
 == Kategori
 
@@ -1754,9 +1781,6 @@ Checking for existing player with your name
 CHN
 == Çin
 
-Choose and arrange status bar data fields
-== Choose and arrange status bar data fields
-
 Choose colors for weapons and entity lasers
 == Choose colors for weapons and entity lasers
 
@@ -1783,6 +1807,9 @@ Choose whether to browse replays or screenshots
 
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
+
+Cinematic camera
+== Sinematik kamera
 
 Clamp mouse to screen
 == Fareyi ekrana sıkıştır
@@ -2188,6 +2215,9 @@ Configure the input overlay display
 
 Configure these settings
 == Bu ayarları yapılandır
+
+Configure UI icon appearance
+== Arayüz simgelerinin görünümünü yapılandır
 
 Confirm both are on same server, same room, and support voice
 == Her ikisinin de aynı sunucuda, aynı odada olduğunu ve sesi desteklediğini onaylayın
@@ -2762,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == Yeni oyuncuların oylama başlatması veya tekmeleme/izleme oylamalarına katılması için gecikme (saniye)
 
+Delay before reduction
+== Azaltmadan önce gecikme
+
 Delay between rescues (seconds)
 == Kurtarmalar arasındaki gecikme (saniye)
 
@@ -3005,6 +3038,9 @@ Displays X and Y velocity
 Displays your current angle in degrees
 == Geçerli açınızı derece olarak gösterir
 
+Displays your current score
+== Mevcut skorunuzu gösterir
+
 Displays your frames per second
 == Saniyedeki kare sayınızı gösterir
 
@@ -3034,9 +3070,6 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == Donduğunda diğer oyuncuları tahmin etme
-
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== Bu değişkeni ayarlamayın, bunun yerine tüm olası sunucu listesi URL'lerini belirtmek için settings_ddnet.cfg yanında ddnet-serverlist-urls.cfg oluşturun
 
 Do not set, used to mark official tutorial server
 == Ayarlamayın, resmi eğitim sunucusunu işaretlemek için kullanılır
@@ -3467,6 +3500,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == Mevcut takımının koşusu için hileleri etkinleştir, ancak sıralama kazanamazsın
 
+Enable client stutter diagnostics at startup
+== Başlangıçta istemci takılma tanılamasını etkinleştir
+
 Enable colored console output
 == Renkli konsol çıktısını etkinleştir
 
@@ -3508,6 +3544,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == Gelişmiş lazer efektlerini etkinleştir (parlama + darbe animasyonu)
+
+Enable enhanced scoreboard presentation
+== Geliştirilmiş skor tablosu görünümünü etkinleştir
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == Olay tetikleyicilerini etkinleştir (sunucu tatillerde göz ifadeleri, istemci Noel skin'i)
@@ -3583,6 +3622,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == Şarkı sözlerini etkinleştir
+
+Enable macOS graphics diagnostics and Instruments signposts
+== macOS grafik tanılamasını ve Instruments işaretlerini etkinleştir
 
 Enable main thread and render stage performance debug logging
 == Ana iş parçacığı ve işleme aşaması performans hata ayıklama günlüklerini etkinleştir
@@ -3665,6 +3707,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == Cilt değiştirme animasyonunu etkinleştir
 
+Enable smooth cinematic camera while free spectating
+== Serbest izlerken akıcı sinematik kamerayı etkinleştir
+
 Enable sound
 == Sesi etkinleştir
 
@@ -3685,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == Stereo konumlandırmayı etkinleştir
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == Sistem medya kontrolünü etkinleştir
@@ -3926,12 +3974,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == Harici konsol şifresi. Ekonomiyi etkinleştirmek için ayarlanmalıdır.
 
-Extra animations
-== Ek animasyonlar
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== Ekstra animasyonlar: Sohbet kutusu, ifade seçme kutusu, skor tablosu ve izleyici seçme sayfası Presentation State animasyonu kullanır
-
 Extras
 == Ekstralar
 
@@ -4073,6 +4115,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == Duyuruları içeren dosya, her satırda bir tane.
 
+Fill
+== Dolgu
+
 Filter chat messages by regular expression
 == Sohbet mesajlarını düzenli ifadeyle filtrele
 
@@ -4150,9 +4195,6 @@ First page in console
 
 Flip:
 == Çevir:
-
-Focus color
-== Odak rengi
 
 Focus mode
 == Odak modu
@@ -4325,8 +4367,8 @@ Friends
 Friends only
 == Yalnızca arkadaşlar
 
-Frozen Margin
-== Donma Marjı
+Frozen prediction margin
+== Donmuşken tahmin payı
 
 FSAA samples
 == FSAA örnekleri
@@ -4348,6 +4390,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == Aynı odada tam harita dinleme
+
+Full: each enabled animation category uses its complete transition
+== Tam: etkin her animasyon kategorisi tam geçişini kullanır
 
 Fullscreen
 == Tam ekran
@@ -4493,6 +4538,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == Genel açma/kapama tuşu
 
+Global UI size percentage
+== Genel arayüz boyutu yüzdesi
+
 Glow
 == Parlama
 
@@ -4571,11 +4619,11 @@ Graphics card
 Graphics display
 == Grafik görüntüsü
 
-Graphics library major version
-== Grafik kütüphanesi ana sürümü
+Graphics library major version (0 = auto-detect)
+== Graphics library major version (0 = auto-detect)
 
-Graphics library minor version
-== Grafik kütüphanesi alt sürümü
+Graphics library minor version (0 = auto-detect)
+== Graphics library minor version (0 = auto-detect)
 
 Graphics library patch version
 == Grafik kütüphanesi yama sürümü
@@ -4648,6 +4696,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == Sohbeti gizle
+
+Hide chat messages from players marked as enemies
+== Düşman olarak işaretlenen oyuncuların sohbet mesajlarını gizle
 
 Hide death/respawn effects
 == Ölüm/yeniden doğma efektlerini gizle
@@ -4786,6 +4837,12 @@ Hide Settings Tabs
 
 Hide sponsor QR code
 == Sponsor QR kodunu gizle
+
+Hide system message prefix
+== Sistem mesajı önekini gizle
+
+Hide the *** prefix before server chat messages
+== Sunucu sohbet mesajlarından önceki *** önekini gizle
 
 Hide toast
 == Toast'ı gizle
@@ -4964,6 +5021,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5008,6 +5068,9 @@ I am away from the game window
 
 I muted you
 == Seni sessize aldım
+
+Icons
+== Simgeler
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == 1 ise, bağlantıda yalnızca bir kez otomatik kayıt yap; 0 ise, oyun bittikten sonra otomatik kayıt yeniden başlar
@@ -5174,20 +5237,20 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == Giriş cihazı açılamadı, kulaklığı/mikrofonu yeniden takmayı veya giriş cihazını yeniden seçmeyi deneyin
 
-Input focus color
-== Arayüz giriş odak rengi
-
 Input overlay
 == Giriş kaplaması
 
 Input overlay display
 == Giriş kaplaması görüntüsü
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == Giriş Katmanı Opaklığı (Yüzde)
-
-Input overlay scale (percent)
-== Giriş Katmanı Ölçeği (Yüzde)
 
 Input overlay X position (percent)
 == Giriş Katmanı X Konumu (Yüzde)
@@ -5210,14 +5273,17 @@ Interface
 Interface animations
 == Arayüz animasyonları
 
-Interface color
-== Arayüz rengi
-
 Interface page
 == Arayüz sayfası
 
 Interface settings page
 == Arayüz ayarları sayfası
+
+Interface surface
+== Arayüz yüzeyi
+
+Interface surface color
+== Arayüz yüzey rengi
 
 Interface transparency
 == Genel arayüz şeffaflığı
@@ -5398,6 +5464,12 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == Tuş Kilitleme: Kendini Sıfırla
+
+Keyboard focus ring color
+== Klavye odak halkası rengi
+
+Keyboard size
+== Klavye boyutu
 
 Keyword Reply
 == Anahtar Kelime Yanıtı
@@ -5993,8 +6065,11 @@ Manual target
 Map
 == Harita
 
-Map browser color
-== Harita tarayıcı rengi
+Map browser surface
+== Harita tarayıcısı yüzeyi
+
+Map browser surface color
+== Harita tarayıcısı yüzey rengi
 
 Map browser transparency
 == Harita tarayıcısı şeffaflığı
@@ -6179,6 +6254,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == Bir oylamaya katılabilecek maksimum oyuncu sayısı (0 = sınırsız)
 
+Maximum reduction
+== Maksimum azaltma
+
 Maximum rows
 == Maksimum satır
 
@@ -6232,6 +6310,9 @@ Menu option - normal
 
 Menu option - selected
 == Menü seçeneği - seçili
+
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
 
 Message color
 == Mesaj rengi
@@ -6388,6 +6469,9 @@ Mouse sensitivity
 
 Mouse sensitivity in menu/editor
 == Menü/düzenleyicide fare hassasiyeti
+
+Mouse size
+== Fare boyutu
 
 Move left
 == Sola hareket et
@@ -6998,14 +7082,14 @@ Number of threads backend can use for rendering (Note: value may be ignored by b
 Number of vote options sent per tick
 == Tick başına gönderilen oylama seçeneği sayısı
 
-Numeric-only messages will be skipped
-== Yalnızca sayısal mesajlar atlanacak
-
 o = Send rate
 == o = Gönderme hızı
 
 Off
 == Kapalı
+
+Off: disables all interface animations while preserving the options below
+== Kapalı: aşağıdaki seçenekleri korurken tüm arayüz animasyonlarını devre dışı bırakır
 
 Official
 == Resmi
@@ -7256,9 +7340,6 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == Grubu Geçersiz Kıl
 
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== Ping tahmini konumunu geçersiz kıl, seçenekler: auto, af, as, as:cn, eu, na, oc, sa (auto, Afrika, Asya, Çin, Avrupa, Kuzey Amerika, Okyanusya/Avustralya, Güney Amerika)
-
 Override Selected
 == Seçileni Geçersiz Kıl
 
@@ -7375,9 +7456,6 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == Performans hata ayıklama günlüğü eşiği (ms)
-
-Performance mode (placeholder)
-== Performans modu (yer tutucu)
 
 Personal best:
 == Kişisel en iyi:
@@ -7727,9 +7805,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == Tahmin öndeliği yüksek, tahmin ayarlarını ve sunucu zamanlamasını kontrol edin
 
-Prediction Margin
-== Tahmin Marjı
-
 Prediction margin
 == Tahmin payı
 
@@ -7741,6 +7816,9 @@ Prediction offset
 
 Preparing demo playback
 == Demo oynatımı hazırlanıyor
+
+Presentation animations
+== Sunum animasyonları
 
 Preset %d
 == Ön ayar %d
@@ -7942,6 +8020,15 @@ q = Connection quality
 
 Qm
 == Qm
+
+Qm UI custom icon color
+== Qm arayüzü simgesi özel rengi
+
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm arayüz simgesi rengi: 1=Beyaz, 2=Siyah, 3=Özel, 4=Gökkuşağı
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm arayüz simgesi kalınlığı: 0=Normal, 1=Kalın, 2=İnce, 3=Dolgulu
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: indeks 1 ile %d arasında olmalıdır
@@ -8192,8 +8279,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == Donduğunda antiping ve oyuncu tahminini azalt
 
+Reduce prediction while frozen
+== Donmuşken tahmini azalt
+
 Reduced
 == Azaltılmış
+
+Reduced: uses shorter transitions and disables presentation animations
+== Azaltılmış: daha kısa geçişler kullanır ve sunum animasyonlarını devre dışı bırakır
 
 Refresh
 == Yenile
@@ -8215,6 +8308,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == Sunucuyu genel liste için ana sunucuya kaydet, virgülle ayrılmış protokolleri kabul eder, örn. 'ipv4,ipv6'
+
+Regular
+== Normal
 
 Regular background color
 == Normal arka plan rengi
@@ -8353,9 +8449,6 @@ Remove from queue
 
 Remove Item
 == Öğeyi Kaldır
-
-Remove prediction & antiping in freeze
-== Donmada tahmin ve gecikme karşıtını kaldır
 
 Remove right to vote from player with client ID
 == İstemci kimliğine sahip oyuncunun oy kullanma hakkını kaldır
@@ -8966,9 +9059,6 @@ Score limit
 Scoreboard
 == Skor tablosu
 
-Scoreboard color
-== Skor tablosu rengi
-
 Scoreboard cursor
 == Skor tablosu imleci
 
@@ -8980,6 +9070,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == Skor Tablosu Sıralama Modu (0=Puan, 1=Skor)
+
+Scoreboard surface
+== Skor tablosu yüzeyi
+
+Scoreboard surface color
+== Skor tablosu yüzey rengi
 
 Scoreboard transparency
 == Skor Tablosu Şeffaflığı
@@ -9320,6 +9416,15 @@ Sets your tee's eye emote
 Settings
 == Ayarlar
 
+Settings card background
+== Settings card background
+
+Settings card background color
+== Settings card background color
+
+Settings card background transparency
+== Settings card background transparency
+
 Settings card border color
 == Ayar kartı kenarlık rengi
 
@@ -9500,9 +9605,6 @@ Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
 == DDNet yapılandırma değişkenlerini göster
 
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== DDNet harita tamamlamasını göster (oyuncu adını info.ddnet.org/info adresine iletir)
-
 Show DDNet map finishes in server browser
 == Sunucu tarayıcısında tamamlanan DDNet haritalarını göster
 
@@ -9517,9 +9619,6 @@ Show default flag in scoreboard
 
 Show default mod rules.
 == Varsayılan mod kurallarını göster.
-
-Show Directory
-== Dizini Göster
 
 Show dotted map route debug
 == Noktalı harita rota hata ayıklamasını göster
@@ -10135,6 +10234,12 @@ Show toast
 
 Show translation
 == Çeviriyi göster
+
+Show Tune Zone effects
+== Show Tune Zone effects
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Kendi oyuncunu etkileyen ayar parametrelerini göster (0=Kapalı, 1=Değişenleri göster, 2=Tümünü göster)
@@ -10817,6 +10922,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 Switch
 == Değiştir
 
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+
 Switch failed
 == Değiştirme başarısız
 
@@ -11180,6 +11288,9 @@ Text alpha
 Text color
 == Metin rengi
 
+Text input focus ring color
+== Metin girişi odak halkası rengi
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Arkadaşlığınız ve güveniniz için teşekkür ederim. Devam etme cesaretini bana veren şey budur.
 
@@ -11261,11 +11372,17 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == Düzenleyicide kaydedilmemiş bir harita var, kaydetmek isteyebilirsiniz.
 
+Thin
+== İnce
+
 Thinking mode requires a reasoning model
 == Düşünme modu bir akıl yürütme modeli gerektirir
 
 This ID is not connected
 == Bu ID bağlı değil
+
+This is the master switch for all interface animation categories
+== Bu, tüm arayüz animasyonu kategorileri için ana anahtardır
 
 This name cannot be used for files and folders
 == Bu isim dosya ve klasörler için kullanılamaz
@@ -11606,6 +11723,9 @@ Translation button cancel color
 Translation color
 == Çeviri rengi
 
+Translation color alpha migration completed flag
+== Çeviri renkleri alfa taşıma tamamlama işareti
+
 Translation menu background color
 == Çeviri menüsü arka plan rengi
 
@@ -11672,6 +11792,9 @@ Tune variable to value
 Tune variable to value or show current value
 == Değişkeni değere ayarla veya geçerli değeri göster
 
+Tune Zone effect icon legend
+== Tune Zone etkilerini göster
+
 Tutorial
 == Eğitim
 
@@ -11708,11 +11831,23 @@ UI color
 UI controller sens.
 == Arayüz kumanda hassasiyeti
 
+UI icon color
+== Arayüz simgesi rengi
+
+UI icon custom color
+== Özel arayüz simgesi rengi
+
+UI icon weight
+== Arayüz simgesi kalınlığı
+
 UI motion level
 == Arayüz animasyon yoğunluğu
 
 UI mouse sens.
 == Arayüz fare hassasiyeti
+
+UI rounded corner segments (even numbers recommended)
+== Arayüz yuvarlatılmış köşe segmentleri (çift sayılar önerilir)
 
 UI scale
 == UI ölçeği
@@ -11915,9 +12050,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
 == Harita verileri GPU'ya yükleniyor
 
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
-
 URL for downloading community skins
 == Topluluk skinleri indirmek için URL
 
@@ -11941,6 +12073,9 @@ Use 12 hour clock
 
 Use 12-hour clock for local time
 == Yerel saat için 12 saatlik saat kullan
+
+Use a fixed prediction margin while frozen
+== Donmuşken sabit tahmin payı kullan
 
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == Alternatif antiping yumuşatma kullan, cl_antiping_smooth ile uyumsuz
@@ -12058,6 +12193,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == Gösterge için savaş listesi gruplarını kullan
+
+Used by active shared text and numeric input fields
+== Etkin ortak metin ve sayısal giriş alanları tarafından kullanılır
 
 Uses the active action with the current aiming position.
 == Mevcut nişan alma konumuyla etkin eylemi kullanır.
@@ -12419,6 +12557,9 @@ What's done is done, no use saying more
 Wheel animate
 == Tekerlek animasyonu
 
+When TClient rainbow Tee is enabled, this feature has no effect.
+== TClient gökkuşağı Tee açıkken bu özellik etkili olmaz.
+
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Başlangıç çizgisini geçtiğinde, en iyi zamanının hareketlerini gösteren bir hayalet oyuncu belirir
 
@@ -12512,6 +12653,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == Fısıltı: /w oyuncu mesaj
 
+White
+== Beyaz
+
 Why are you slowmo replaying to read this?
 == Bunu okumak için neden ağır çekimde oynatıyorsunuz?
 
@@ -12556,6 +12700,9 @@ Windowed fullscreen
 
 Word Filter
 == Kelime Filtresi
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== Kelime filtresi eylemi: 0=eşleşen kelimeleri değiştir, 1=tüm mesajı gizle
 
 Word highlight soft edge width (px)
 == Karaoke highlight soft edge width px
@@ -12932,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ Tencent Cloud API yapılandırılmamış
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == Çarp
@@ -13053,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Verilen grafik arka ucu başlatılamadı, bunun nedeni muhtemelen tümleşik grafik kartının sürücüsünü yüklememiş olmanızdır.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Başlatma sırasında başarısız oldu. Yapılandırma dizinindeki settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13069,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == Render komutlarının gönderilmesi başarısız oldu. GPU sürücülerinizi güncellemeyi deneyin.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Bilinmeyen hata. Yapılandırma dizinindeki settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

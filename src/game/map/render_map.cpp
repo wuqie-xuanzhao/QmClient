@@ -1264,7 +1264,7 @@ void CRenderMap::RenderSwitchmap(CSwitchTile *pSwitchTile, int w, int h, float S
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
-void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, ColorRGBA Color, int RenderFlags)
+void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, ColorRGBA Color, int RenderFlags, CTuneColorMapper *pTuneColorMapper)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -1319,7 +1319,7 @@ void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, Colo
 
 			int c = mx + my * w;
 
-			unsigned char Index = pTune[c].m_Type;
+			const unsigned char Index = pTune[c].m_Type;
 			if(Index)
 			{
 				bool Render = false;
@@ -1328,6 +1328,15 @@ void CRenderMap::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, Colo
 
 				if(Render)
 				{
+					const unsigned char Number = pTune[c].m_Number;
+					if(Number == 0 || pTuneColorMapper == nullptr)
+						Graphics()->SetColor(Color);
+					else
+					{
+						const uint8_t ColorIndex = pTuneColorMapper->TuneNumberToColorIndex(Number);
+						Graphics()->SetColor(pTuneColorMapper->TuneColorIndexToColor(ColorIndex).Multiply(Color));
+					}
+
 					int tx = Index % 16;
 					int ty = Index / 16;
 					int Px0 = tx * (1024 / 16);

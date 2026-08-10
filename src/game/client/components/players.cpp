@@ -82,6 +82,34 @@ static bool HasQmJellyHammerImpact(const CGameClient *pGameClient, int ClientId)
 	return LocalDummy >= 0 && pGameClient->m_aConfirmedHammerHitEvent[LocalDummy];
 }
 
+static int QmWeaponAnimationTuneZone(const CGameClient *pGameClient, const CCollision *pCollision, int ClientId, const CNetObj_Character &Player)
+{
+	if(ClientId >= 0 && ClientId < MAX_CLIENTS)
+	{
+		const CGameClient::CSnapState::CCharacterInfo &Character = pGameClient->m_Snap.m_aCharacters[ClientId];
+		if(Character.m_HasExtendedData && Character.m_ExtendedData.m_TuneZoneOverride >= 0)
+			return std::clamp(Character.m_ExtendedData.m_TuneZoneOverride, 0, NUM_TUNEZONES - 1);
+	}
+	return std::clamp(pCollision->IsTune(pCollision->GetMapIndex(vec2(Player.m_X, Player.m_Y))), 0, NUM_TUNEZONES - 1);
+}
+
+static bool HasQmWeaponAnimationHammerHit(const CGameClient *pGameClient, int ClientId, int AttackTick)
+{
+	return ClientId >= 0 && ClientId < MAX_CLIENTS && AttackTick >= 0 &&
+	       pGameClient->HammerHitTracker().FindLatest(ClientId, CQmHammerHitTracker::ANY_CLIENT, AttackTick);
+}
+
+static bool HasQmPredictedWeaponAnimationHammerHit(CGameClient *pGameClient, int ClientId, int AttackTick, int TuneZone, int TickSpeed)
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !pGameClient->m_aClients[ClientId].m_IsPredictedLocal)
+		return false;
+	const CCharacter *pCharacter = pGameClient->m_PredictedWorld.GetCharacterById(ClientId);
+	if(pCharacter == nullptr || pCharacter->GetAttackTick() != AttackTick)
+		return false;
+	const float MissReloadSeconds = QmWeaponReloadDelaySeconds(*pGameClient->GetTuning(TuneZone), WEAPON_HAMMER, false);
+	return pCharacter->GetReloadTimer() > QmWeaponReloadTicks(MissReloadSeconds, TickSpeed);
+}
+
 static bool IsSolidAt(const CCollision *pCollision, vec2 Pos)
 {
 	if(pCollision == nullptr)
@@ -150,13 +178,15 @@ void CPlayers::RenderHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir,
 {
 	const vec2 HandPos = CalculateHandPosition(CenterPos, Dir, PostRotOffset);
 	const float HandAngle = CalculateHandAngle(Dir, AngleOffset);
-	if(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_HANDS).IsValid())
+	if(CTeeRenderInfo::IsDrawableTexture(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_HANDS)))
 	{
 		RenderHand7(pInfo, HandPos, HandAngle, Alpha);
 	}
 	else
 	{
-		RenderHand6(pInfo, HandPos, HandAngle, Alpha);
+		const CSkin::CSkinTextures &SkinTextures = pInfo->m_CustomColoredSkin ? pInfo->m_ColorableRenderSkin : pInfo->m_OriginalRenderSkin;
+		if(CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_HandsOutline) && CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_Hands))
+			RenderHand6(pInfo, HandPos, HandAngle, Alpha);
 	}
 }
 
@@ -520,8 +550,8 @@ void CPlayers::RenderHookCollLine(
 	// Render hook coll line
 	const int HookCollSize = Local ? g_Config.m_ClHookCollSize : g_Config.m_ClHookCollSizeOther;
 
-	float Alpha = 1.0f;
-	if(GameClient()->IsOtherTeam(ClientId))
+	float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
 		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 	Alpha *= (float)g_Config.m_ClHookCollAlpha / 100;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
@@ -618,17 +648,19 @@ void CPlayers::RenderHook(
 		Intra = GameClient()->m_aClients[ClientId].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy);
 
 	bool OtherTeam = GameClient()->IsOtherTeam(ClientId);
-	float Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
+	float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f)
+		Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
 	if(ClientId == -2) // ghost
 		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	RenderInfo.m_Size = 64.0f;
@@ -723,10 +755,14 @@ void CPlayers::RenderPlayer(
 	RenderTools()->m_LocalTeeRender = Local; // TClient
 
 	float Alpha = 1.0f;
-	if(OtherTeam || ClientId < 0)
-		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-	else if(g_Config.m_TcShowOthersGhosts && !Local && !Spec)
-		Alpha = g_Config.m_TcPredGhostsAlpha / 100.0f;
+	Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f)
+	{
+		if(OtherTeam || ClientId < 0)
+			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+		else if(g_Config.m_TcShowOthersGhosts && !Local && !Spec)
+			Alpha = g_Config.m_TcPredGhostsAlpha / 100.0f;
+	}
 
 	if(!OtherTeam && g_Config.m_TcShowOthersGhosts && !Local && g_Config.m_TcUnpredOthersInFreeze && Client()->m_IsLocalFrozen && !Spec)
 		Alpha = 1.0f;
@@ -736,11 +772,11 @@ void CPlayers::RenderPlayer(
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 	// TODO: snd_game_volume_others
 	const float Volume = 1.0f;
@@ -924,6 +960,14 @@ void CPlayers::RenderPlayer(
 			const bool WeaponSwitchAnimEnabled = g_Config.m_QmWeaponSwitchAnim && ShouldRenderWeaponSwitchAnim(ClientId);
 			if(ClientId >= 0 && ClientId < MAX_CLIENTS)
 			{
+				SQmWeaponReloadAnimationState &ReloadAnimationState = m_aWeaponReloadAnimationStates[ClientId];
+				if(ReloadAnimationState.m_ObservedAttackTick != Player.m_AttackTick)
+				{
+					const int AttackTuneZone = QmWeaponAnimationTuneZone(GameClient(), Collision(), ClientId, Player);
+					const bool PredictedHammerHit = Player.m_Weapon == WEAPON_HAMMER && HasQmPredictedWeaponAnimationHammerHit(GameClient(), ClientId, Player.m_AttackTick, AttackTuneZone, Client()->GameTickSpeed());
+					ReloadAnimationState.ObserveAttack(Player.m_AttackTick, Player.m_Weapon, AttackTuneZone, PredictedHammerHit);
+				}
+
 				if(m_aWeaponSwitchLastWeapons[ClientId] != Player.m_Weapon)
 				{
 					if(WeaponSwitchAnimEnabled && m_aWeaponSwitchLastWeapons[ClientId] != -1)
@@ -942,6 +986,17 @@ void CPlayers::RenderPlayer(
 						const float RotationRadians = (g_Config.m_QmWeaponSwitchAnimRotation / 180.0f) * pi;
 						WeaponSwitchOffset += mix(Direction * (float)g_Config.m_QmWeaponSwitchAnimDistance, vec2(0.0f, 0.0f), Ease);
 						WeaponSwitchAngle += (1.0f - Ease) * RotationRadians;
+					}
+
+					if(ReloadAnimationState.MatchesAttack(Player.m_AttackTick, Player.m_Weapon))
+					{
+						const bool HammerHit = Player.m_Weapon == WEAPON_HAMMER && (ReloadAnimationState.m_PredictedHammerHit || HasQmWeaponAnimationHammerHit(GameClient(), ClientId, Player.m_AttackTick));
+						const float ReloadSeconds = QmWeaponReloadDelaySeconds(*GameClient()->GetTuning(ReloadAnimationState.m_AttackTuneZone), Player.m_Weapon, HammerHit);
+						const float DefaultReloadSeconds = QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, Player.m_Weapon, HammerHit);
+						const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(LastAttackTime, ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed());
+						const bool FireOverridesSwitchRotation = QmWeaponReloadAnimationEligible(ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed()) &&
+											 LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
+						WeaponSwitchAngle = QmResolveWeaponAnimationRotation(WeaponSwitchAngle, ReloadRotation, FireOverridesSwitchRotation);
 					}
 				}
 			}
@@ -1342,19 +1397,23 @@ void CPlayers::RenderPlayerGhost(
 
 	bool FrozenSwappingHide = (GameClient()->m_aClients[ClientId].m_FreezeEnd > 0) && g_Config.m_TcHideFrozenGhosts && g_Config.m_TcSwapGhosts;
 
-	if(OtherTeam || ClientId < 0)
-		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-	else
-		Alpha = g_Config.m_TcUnpredGhostsAlpha / 100.0f;
+	Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f)
+	{
+		if(OtherTeam || ClientId < 0)
+			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+		else
+			Alpha = g_Config.m_TcUnpredGhostsAlpha / 100.0f;
+	}
 
 	if(!OtherTeam && FrozenSwappingHide)
 		Alpha = 1.0f;
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
-		GameClient()->m_aClients[ClientId].m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
 	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	// set size
@@ -1773,7 +1832,8 @@ void CPlayers::RenderPlayerGhost(
 
 inline bool CPlayers::IsPlayerInfoAvailable(int ClientId) const
 {
-	return GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
+	return GameClient()->LiveTeamFilterAllowsClient(ClientId) &&
+	       GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
 	       GameClient()->m_Snap.m_apPrevPlayerInfos[ClientId] != nullptr &&
 	       GameClient()->m_Snap.m_apPlayerInfos[ClientId] != nullptr;
 }
@@ -1922,10 +1982,15 @@ void CPlayers::OnRender()
 		if(FollowingPlayer && ClientId == RenderLastId && IsPlayerInfoAvailable(ClientId))
 			continue;
 
-		float Alpha = 1.0f;
-		const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
-		const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
-		Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
+		float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+		if(Alpha <= 0.0f)
+			continue;
+		if(Alpha >= 1.0f)
+		{
+			const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
+			const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
+			Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
+		}
 		if(ClientId == -2) // ghost
 		{
 			Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;
@@ -2004,6 +2069,7 @@ void CPlayers::OnReset()
 {
 	std::fill(std::begin(m_aWeaponSwitchLastWeapons), std::end(m_aWeaponSwitchLastWeapons), -1);
 	std::fill(std::begin(m_aWeaponSwitchStartTimes), std::end(m_aWeaponSwitchStartTimes), 0.0);
+	std::fill(std::begin(m_aWeaponReloadAnimationStates), std::end(m_aWeaponReloadAnimationStates), SQmWeaponReloadAnimationState());
 }
 
 void CPlayers::OnInit()

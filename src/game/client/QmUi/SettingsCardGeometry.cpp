@@ -28,7 +28,7 @@ SSettingsCardFrame BuildSettingsCardFrame(const CUIRect &Slot, const SSettingsCa
 	return Frame;
 }
 
-SCardMotionSpec ResolveCardMotionSpec(const int MotionLevel, const bool ExtraAnimations)
+SCardMotionSpec ResolveCardMotionSpec(const int MotionLevel, const bool ListEntryAnimations, const bool CardHeightAnimations, const bool CardReflowAnimations, const bool PresentationAnimations)
 {
 	const int Level = std::clamp(MotionLevel, 0, 2);
 	SCardMotionSpec Spec{};
@@ -37,15 +37,27 @@ SCardMotionSpec ResolveCardMotionSpec(const int MotionLevel, const bool ExtraAni
 
 	if(Level == 1)
 	{
-		Spec.m_EntryDistance = 6.0f;
-		Spec.m_EntryDuration = 0.10f;
-		Spec.m_ReflowDuration = 0.12f;
+		if(ListEntryAnimations)
+		{
+			Spec.m_EntryDistance = 6.0f;
+			Spec.m_EntryDuration = 0.10f;
+		}
+		if(CardHeightAnimations)
+			Spec.m_ContentHeightDuration = 0.12f;
+		if(CardReflowAnimations)
+			Spec.m_ReflowDuration = 0.12f;
 		return Spec;
 	}
 
-	Spec.m_EntryDistance = 12.0f;
-	Spec.m_EntryDuration = 0.16f;
-	Spec.m_ReflowDuration = 0.18f;
-	Spec.m_DecorativeMotion = ExtraAnimations;
+	if(ListEntryAnimations)
+	{
+		Spec.m_EntryDistance = 12.0f;
+		Spec.m_EntryDuration = 0.16f;
+	}
+	if(CardHeightAnimations)
+		Spec.m_ContentHeightDuration = 0.18f;
+	if(CardReflowAnimations)
+		Spec.m_ReflowDuration = 0.18f;
+	Spec.m_DecorativeMotion = PresentationAnimations;
 	return Spec;
 }

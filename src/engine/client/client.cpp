@@ -124,6 +124,7 @@ static constexpr int64_t gs_HangTimeoutSeconds = 10;
 static constexpr const char *gs_pQmCrashDumpDir = "dumps/QmClient_Crash";
 static constexpr const char *gs_pQmLifecycleMarkerFile = "qmclient/lifecycle_pending.marker";
 static constexpr const char *gs_pQmGraphicsRecoveryStateFile = "qmclient/graphics_recovery.marker";
+static bool gs_aLoadedPreviousConfigPath[ConfigDomain::NUM] = {};
 
 struct SQmLatestCrashReport
 {
@@ -265,10 +266,12 @@ static bool ApplyQmSafeGraphicsRecovery()
 		str_copy(g_Config.m_GfxBackend, "OpenGL");
 		Changed = true;
 	}
-	if(g_Config.m_GfxGLMajor != 3 || g_Config.m_GfxGLMinor != 0 || g_Config.m_GfxGLPatch != 0)
+	const int FallbackGLMajor = 0;
+	const int FallbackGLMinor = 0;
+	if(g_Config.m_GfxGLMajor != FallbackGLMajor || g_Config.m_GfxGLMinor != FallbackGLMinor || g_Config.m_GfxGLPatch != 0)
 	{
-		g_Config.m_GfxGLMajor = 3;
-		g_Config.m_GfxGLMinor = 0;
+		g_Config.m_GfxGLMajor = FallbackGLMajor;
+		g_Config.m_GfxGLMinor = FallbackGLMinor;
 		g_Config.m_GfxGLPatch = 0;
 		Changed = true;
 	}
@@ -327,7 +330,7 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	const bool Changed = ApplyQmSafeGraphicsRecovery();
 	if(Changed)
 	{
-		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to OpenGL 3.0 windowed mode without FSAA", Latest.m_aPath);
+		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to auto-detected OpenGL in windowed mode without FSAA", Latest.m_aPath);
 	}
 	else
 	{
@@ -565,6 +568,10 @@ void CClient::SendInfo(int Conn)
 	MsgVer.AddString(GameClient()->DDNetVersionStr());
 	SendMsg(Conn, &MsgVer, MSGFLAG_VITAL);
 
+#if defined(CONF_QM_LIVE_CLIENT)
+	SendQmLiveObserverRequest(Conn);
+#endif
+
 	if(IsSixup())
 	{
 		CMsgPacker Msg(NETMSG_INFO, true);
@@ -613,14 +620,68 @@ void CClient::SendKcpProbe(int Conn)
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
 
+void CClient::SendQmLiveObserverRequest(int Conn)
+{
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(Conn != CONN_MAIN)
+		return;
+
+	CMsgPacker Msg(NETMSG_QM_LIVE_OBSERVER_REQUEST, true);
+	Msg.AddInt(QM_LIVE_OBSERVER_PROTOCOL_VERSION);
+	Msg.AddInt(SERVERCAP_LIVE_OBSERVER | SERVERCAP_LIVE_DIRECTOR);
+	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
+	m_LiveObserverSession.StartRequest();
+	m_LiveObserverRequestTime = time_get();
+#else
+	(void)Conn;
+#endif
+}
+
+void CClient::EnableQmLiveCompatDirector(EQmLiveDenyReason Reason, const char *pReasonText)
+{
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(m_LiveObserverSession.CompatDirectorActive() || m_LiveObserverSession.Accepted())
+		return;
+
+	m_LiveObserverSession.StartCompatDirector(Reason, pReasonText);
+	m_LiveObserverRequestTime = 0;
+
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "live observer fallback: %s", m_LiveObserverSession.DenyReasonText());
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf, gs_ClientNetworkPrintColor);
+
+	if(m_LiveObserverSession.ReadyPending())
+	{
+		m_LiveObserverSession.SetReadyPending(false);
+		SendReady(CONN_MAIN);
+	}
+#else
+	(void)Reason;
+	(void)pReasonText;
+#endif
+}
+
 void CClient::SendEnterGame(int Conn)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(Conn == CONN_MAIN && m_LiveObserverSession.Accepted())
+		return;
+#endif
+
 	CMsgPacker Msg(NETMSG_ENTERGAME, true);
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
 
 void CClient::SendReady(int Conn)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(Conn == CONN_MAIN && m_LiveObserverSession.RequestPending())
+	{
+		m_LiveObserverSession.SetReadyPending(true);
+		return;
+	}
+#endif
+
 	CMsgPacker Msg(NETMSG_READY, true);
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
@@ -835,8 +896,48 @@ int CClient::PendingResendCount() const
 	return m_aNetClient[g_Config.m_ClDummy].PendingResendCount();
 }
 
+#if defined(CONF_QM_LIVE_CLIENT)
+void CClient::SendQmLiveObserverInputAck()
+{
+	constexpr int Conn = CONN_MAIN;
+	const int PredTick = m_aPredTick[Conn];
+	if(PredTick <= 0)
+		return;
+
+	const int64_t Now = time_get();
+
+	CMsgPacker Msg(NETMSG_INPUT, true);
+	Msg.AddInt(m_aAckGameTick[Conn]);
+	Msg.AddInt(PredTick);
+	// Keep the normal snapshot ack and input-timing loop alive without sending gameplay input.
+	Msg.AddInt(0);
+
+	m_aInputs[Conn][m_aCurrentInput[Conn]].m_Tick = PredTick;
+	m_aInputs[Conn][m_aCurrentInput[Conn]].m_PredictedTime = m_PredictedTime.Get(Now);
+	m_aInputs[Conn][m_aCurrentInput[Conn]].m_PredictionMargin = PredictionMargin() * time_freq() / 1000;
+	if(g_Config.m_TcSmoothPredictionMargin)
+		m_aInputs[Conn][m_aCurrentInput[Conn]].m_PredictionMargin = m_PredictedTime.GetMargin(Now);
+	m_aInputs[Conn][m_aCurrentInput[Conn]].m_Time = Now;
+
+	m_aCurrentInput[Conn]++;
+	m_aCurrentInput[Conn] %= 200;
+
+	SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
+	if(m_aNetClient[Conn].IsKcpActive())
+		SendMsg(Conn, &Msg, MSGFLAG_FLUSH);
+}
+#endif
+
 void CClient::SendInput()
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(m_LiveObserverSession.Accepted())
+	{
+		SendQmLiveObserverInputAck();
+		return;
+	}
+#endif
+
 	int64_t Now = time_get();
 
 	if(m_aPredTick[g_Config.m_ClDummy] <= 0)
@@ -958,10 +1059,7 @@ void CClient::SetState(EClientState State)
 		const NETADDR *pServerAddr = ServerAddress();
 		dbg_assert(pServerAddr != nullptr, "online state requires server address");
 		const bool Registered = m_ServerBrowser.IsRegistered(*pServerAddr);
-		CServerInfo CurrentServerInfo;
-		GetServerInfo(&CurrentServerInfo);
-
-		Discord()->SetGameInfo(CurrentServerInfo, m_aCurrentMap, Registered);
+		Discord()->SetGameInfo(m_CurrentServerInfo, Registered);
 		Steam()->SetGameInfo(*pServerAddr, m_aCurrentMap, Registered);
 	}
 	else if(OldState == IClient::STATE_ONLINE)
@@ -1242,6 +1340,10 @@ void CClient::Connect(const char *pAddress, const char *pPassword)
 	}
 
 	m_CanReceiveServerCapabilities = true;
+#if defined(CONF_QM_LIVE_CLIENT)
+	m_LiveObserverSession.Reset();
+	m_LiveObserverRequestTime = 0;
+#endif
 
 	m_Sixup = OnlySixup;
 	if(m_Sixup)
@@ -1292,6 +1394,10 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_KcpNegotiated = false;
 	m_KcpNegotiationStartTime = 0;
 	m_KcpNegotiationConv = 0;
+#if defined(CONF_QM_LIVE_CLIENT)
+	m_LiveObserverSession.Reset();
+	m_LiveObserverRequestTime = 0;
+#endif
 	m_UseTempRconCommands = 0;
 	m_ExpectedRconCommands = -1;
 	m_GotRconCommands = 0;
@@ -1371,6 +1477,12 @@ bool CClient::DummyConnectingDelayed() const
 
 void CClient::DummyConnect()
 {
+	if(QmLiveDirectorActive())
+	{
+		log_info("client", "Dummy connection is disabled for QmLive director.");
+		return;
+	}
+
 	if(m_aNetClient[CONN_MAIN].State() != NETSTATE_ONLINE)
 	{
 		log_info("client", "Not online.");
@@ -1442,12 +1554,23 @@ void CClient::DummyDisconnect(const char *pReason)
 
 bool CClient::DummyAllowed() const
 {
+	if(QmLiveDirectorActive())
+		return false;
 	return m_ServerCapabilities.m_AllowDummy;
 }
 
 void CClient::GetServerInfo(CServerInfo *pServerInfo) const
 {
-	mem_copy(pServerInfo, &m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
+	*pServerInfo = m_CurrentServerInfo;
+}
+
+void CClient::SetCurrentServerInfo(const CServerInfo &ServerInfo)
+{
+	m_CurrentServerInfo = ServerInfo;
+	m_CurrentServerInfoRequestTime = -1;
+	str_copy(m_CurrentServerInfo.m_aMap, GetCurrentMap());
+	m_CurrentServerInfo.m_MapCrc = m_pMap->Crc();
+	m_CurrentServerInfo.m_MapSize = m_pMap->Size();
 }
 
 void CClient::ServerInfoRequest()
@@ -1733,6 +1856,17 @@ const char *CClient::ErrorString() const
 
 void CClient::Render()
 {
+	if(!QmPerfEnabled())
+	{
+		if(m_EditorActive)
+			m_pEditor->OnRender();
+		else
+			GameClient()->OnRender();
+		RenderDebug();
+		RenderGraphs();
+		return;
+	}
+
 	CPerfTimer RenderTimer;
 
 	if(m_EditorActive)
@@ -2105,9 +2239,8 @@ void CClient::ProcessServerInfo(int RawType, NETADDR *pFrom, const void *pData, 
 			if(SavedType >= m_CurrentServerInfo.m_Type &&
 				m_pMap->IsLoaded())
 			{
-				m_CurrentServerInfo = Info;
-				m_CurrentServerInfoRequestTime = -1;
-				Discord()->UpdateServerInfo(Info, m_aCurrentMap);
+				SetCurrentServerInfo(Info);
+				Discord()->UpdateServerInfo(m_CurrentServerInfo);
 			}
 
 			bool ValidPong = false;
@@ -2177,6 +2310,12 @@ static CServerCapabilities GetServerCapabilities(int Version, int Flags, bool Si
 	if(Version >= 6)
 	{
 		Result.m_Kcp = Flags & SERVERCAPFLAG_KCP;
+	}
+	if(Version >= 7)
+	{
+		Result.m_LiveObserver = Flags & SERVERCAP_LIVE_OBSERVER;
+		Result.m_LiveDirector = Flags & SERVERCAP_LIVE_DIRECTOR;
+		Result.m_LiveReplay = Flags & SERVERCAP_LIVE_REPLAY;
 	}
 	return Result;
 }
@@ -2315,6 +2454,33 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf, gs_ClientNetworkPrintColor);
 			}
 		}
+#if defined(CONF_QM_LIVE_CLIENT)
+		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_QM_LIVE_OBSERVER_ACCEPT)
+		{
+			const int Capabilities = Unpacker.GetInt();
+			if(Unpacker.Error())
+			{
+				return;
+			}
+			m_LiveObserverSession.Accept(Capabilities);
+			m_LiveObserverRequestTime = 0;
+			if(m_LiveObserverSession.ReadyPending())
+			{
+				m_LiveObserverSession.SetReadyPending(false);
+				SendReady(CONN_MAIN);
+			}
+		}
+		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_QM_LIVE_OBSERVER_DENY)
+		{
+			const EQmLiveDenyReason Reason = QmLiveDenyReasonFromInt(Unpacker.GetInt());
+			const char *pReasonText = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(Unpacker.Error())
+			{
+				return;
+			}
+			EnableQmLiveCompatDirector(Reason, pReasonText);
+		}
+#endif
 		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_CLIENT_BRANDS)
 		{
 			GameClient()->OnClientBrandsMessage(&Unpacker);
@@ -2505,6 +2671,13 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				return;
 			}
 			GameClient()->OnConnected();
+#if defined(CONF_QM_LIVE_CLIENT)
+			if(m_LiveObserverSession.Accepted())
+			{
+				// Live observers do not get a game-layer ReadyToEnter because the server never creates a CPlayer.
+				EnterGame(CONN_MAIN);
+			}
+#endif
 			if(m_DummyReconnectOnReload)
 			{
 				m_DummySendConnInfo = true;
@@ -4040,6 +4213,7 @@ void CClient::Run()
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);
+	FinishQmConfigMigration();
 
 	InitChecksum();
 	m_pConsole->InitChecksum(ChecksumData());
@@ -4067,7 +4241,10 @@ void CClient::Run()
 
 	while(true)
 	{
-		CPerfTimer LoopTimer;
+		const bool PerfEnabled = QmPerfEnabled();
+		std::optional<CPerfTimer> LoopTimer;
+		if(PerfEnabled)
+			LoopTimer.emplace();
 		++m_PerfFrame;
 		set_new_tick();
 		UpdateHangHeartbeat();
@@ -4102,11 +4279,17 @@ void CClient::Run()
 
 		// update input
 		{
-			CPerfTimer StageTimer;
-			const bool QuitRequested = Input()->Update();
-			char aExtra[96];
-			str_format(aExtra, sizeof(aExtra), "state=%d quit=%d", State(), QuitRequested ? 1 : 0);
-			QmPerfLogStage("perf/main_thread", "input_update", StageTimer.ElapsedMs(), QuitRequested, this, nullptr, nullptr, aExtra);
+			bool QuitRequested;
+			if(PerfEnabled)
+			{
+				CPerfTimer StageTimer;
+				QuitRequested = Input()->Update();
+				char aExtra[96];
+				str_format(aExtra, sizeof(aExtra), "state=%d quit=%d", State(), QuitRequested ? 1 : 0);
+				QmPerfLogStage("perf/main_thread", "input_update", StageTimer.ElapsedMs(), QuitRequested, this, nullptr, nullptr, aExtra);
+			}
+			else
+				QuitRequested = Input()->Update();
 			if(QuitRequested)
 			{
 				if(State() == IClient::STATE_QUITTING)
@@ -4128,19 +4311,25 @@ void CClient::Run()
 		}
 
 #if defined(CONF_AUTOUPDATE)
+		if(PerfEnabled)
 		{
 			CPerfTimer StageTimer;
 			Updater()->Update();
 			QmPerfLogStage("perf/main_thread", "updater_update", StageTimer.ElapsedMs(), false, this);
 		}
+		else
+			Updater()->Update();
 #endif
 
 		// update sound
+		if(PerfEnabled)
 		{
 			CPerfTimer StageTimer;
 			Sound()->Update();
 			QmPerfLogStage("perf/main_thread", "sound_update", StageTimer.ElapsedMs(), false, this);
 		}
+		else
+			Sound()->Update();
 
 		if(CtrlShiftKey(KEY_D, LastD))
 			g_Config.m_Debug ^= 1;
@@ -4171,6 +4360,7 @@ void CClient::Run()
 				m_EditorActive = false;
 			}
 
+			if(PerfEnabled)
 			{
 				CPerfTimer StageTimer;
 				Update();
@@ -4178,6 +4368,8 @@ void CClient::Run()
 				str_format(aExtra, sizeof(aExtra), "state=%d editor=%d", State(), m_EditorActive ? 1 : 0);
 				QmPerfLogStage("perf/main_thread", "client_update", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 			}
+			else
+				Update();
 			int64_t Now = time_get();
 
 			bool IsRenderActive = (g_Config.m_GfxBackgroundRender || m_pGraphics->WindowOpen());
@@ -4248,6 +4440,7 @@ void CClient::Run()
 				LastRenderTime = Now - AdditionalTime;
 				m_LastRenderTime = Now;
 
+				if(PerfEnabled)
 				{
 					CPerfTimer StageTimer;
 					Render();
@@ -4255,6 +4448,9 @@ void CClient::Run()
 					str_format(aExtra, sizeof(aExtra), "state=%d render_rate=%d throttle=%d", State(), GfxRefreshRate, RequestedRenderThrottleRate);
 					QmPerfLogStage("perf/main_thread", "frame_render", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 				}
+				else
+					Render();
+				if(PerfEnabled)
 				{
 					CPerfTimer StageTimer;
 					m_pGraphics->Swap();
@@ -4262,6 +4458,8 @@ void CClient::Run()
 					str_format(aExtra, sizeof(aExtra), "state=%d render_rate=%d throttle=%d", State(), GfxRefreshRate, RequestedRenderThrottleRate);
 					QmPerfLogStage("perf/main_thread", "graphics_swap", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 				}
+				else
+					m_pGraphics->Swap();
 			}
 			else if(!IsRenderActive)
 			{
@@ -4275,7 +4473,8 @@ void CClient::Run()
 		AutoCSV_Cleanup();
 
 		m_Fifo.Update();
-		QmPerfLogStage("perf/main_thread", "loop_total", LoopTimer.ElapsedMs(), false, this);
+		if(PerfEnabled)
+			QmPerfLogStage("perf/main_thread", "loop_total", LoopTimer->ElapsedMs(), false, this);
 
 		if(State() == IClient::STATE_QUITTING || State() == IClient::STATE_RESTARTING)
 			break;
@@ -4377,6 +4576,19 @@ void CClient::Run()
 
 	// shutdown text render while graphics are still available
 	m_pTextRender->Shutdown();
+}
+
+void CClient::FinishQmConfigMigration()
+{
+	if(!QmConfigMigrationPending(m_pStorage))
+		return;
+
+	if(!m_pConfigManager->Save(true) || !QmFinalizeConfigMigration(m_pStorage, gs_aLoadedPreviousConfigPath))
+	{
+		AddWarning(SWarning(Localize("Error saving settings")));
+		return;
+	}
+	log_info("config", "Migrated managed client configs to the qmclient folder");
 }
 
 bool CClient::InitNetworkClient(char *pError, size_t ErrorSize)
@@ -5824,47 +6036,17 @@ static bool UnknownArgumentCallback(const char *pCommand, void *pUser)
 	return false;
 }
 
-static bool SaveUnknownCommandCallback(const char *pCommand, void *pUser)
+struct SSaveUnknownCommandContext
 {
-	CClient *pClient = static_cast<CClient *>(pUser);
-	pClient->ConfigManager()->StoreUnknownCommand(pCommand);
+	CClient *m_pClient;
+	ConfigDomain m_ConfigDomain;
+};
+
+static bool SaveUnknownDomainCommandCallback(const char *pCommand, void *pUser)
+{
+	SSaveUnknownCommandContext *pContext = static_cast<SSaveUnknownCommandContext *>(pUser);
+	pContext->m_pClient->ConfigManager()->StoreUnknownCommand(pCommand, pContext->m_ConfigDomain);
 	return true;
-}
-
-static bool EnsureConfigPathFolder(IStorage *pStorage, const char *pConfigPath)
-{
-	const char *pSlash = str_rchr(pConfigPath, '/');
-	if(pSlash == nullptr)
-		return true;
-
-	const int FolderBufferSize = static_cast<int>(pSlash - pConfigPath) + 1;
-	char aFolder[IO_MAX_PATH_LENGTH];
-	if(FolderBufferSize <= 1 || FolderBufferSize > static_cast<int>(sizeof(aFolder)))
-		return false;
-
-	str_copy(aFolder, pConfigPath, FolderBufferSize);
-	if(pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE))
-		return true;
-	return pStorage->CreateFolder(aFolder, IStorage::TYPE_SAVE) || pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE);
-}
-
-static void MigrateConfigFile(IStorage *pStorage, const CConfigDomain &ConfigDomain)
-{
-	if(ConfigDomain.m_aLegacyConfigPath == nullptr)
-		return;
-	if(pStorage->FileExists(ConfigDomain.m_aConfigPath, IStorage::TYPE_SAVE))
-		return;
-	if(!pStorage->FileExists(ConfigDomain.m_aLegacyConfigPath, IStorage::TYPE_SAVE))
-		return;
-	if(!EnsureConfigPathFolder(pStorage, ConfigDomain.m_aConfigPath))
-	{
-		log_error("client", "failed to create config folder for '%s'", ConfigDomain.m_aConfigPath);
-		return;
-	}
-	if(!pStorage->RenameFile(ConfigDomain.m_aLegacyConfigPath, ConfigDomain.m_aConfigPath, IStorage::TYPE_SAVE))
-	{
-		log_error("client", "failed to migrate config from '%s' to '%s'", ConfigDomain.m_aLegacyConfigPath, ConfigDomain.m_aConfigPath);
-	}
 }
 
 static const char *GetConfigLoadPath(IStorage *pStorage, const CConfigDomain &ConfigDomain)
@@ -5873,6 +6055,8 @@ static const char *GetConfigLoadPath(IStorage *pStorage, const CConfigDomain &Co
 		return nullptr;
 	if(pStorage->FileExists(ConfigDomain.m_aConfigPath, IStorage::TYPE_ALL))
 		return ConfigDomain.m_aConfigPath;
+	if(ConfigDomain.m_aPreviousConfigPath != nullptr && pStorage->FileExists(ConfigDomain.m_aPreviousConfigPath, IStorage::TYPE_ALL))
+		return ConfigDomain.m_aPreviousConfigPath;
 	if(ConfigDomain.m_aLegacyConfigPath != nullptr && pStorage->FileExists(ConfigDomain.m_aLegacyConfigPath, IStorage::TYPE_ALL))
 		return ConfigDomain.m_aLegacyConfigPath;
 	return nullptr;
@@ -6222,19 +6406,21 @@ int main(int argc, const char **argv)
 	pClient->InitInterfaces();
 
 	// execute config file
-	pConsole->SetUnknownCommandCallback(SaveUnknownCommandCallback, pClient);
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
-		MigrateConfigFile(pStorage, s_aConfigDomains[ConfigDomain]);
-
 		const char *pConfigPath = GetConfigLoadPath(pStorage, s_aConfigDomains[ConfigDomain]);
 		if(pConfigPath == nullptr)
 		{
 			continue;
 		}
+		if(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath != nullptr && str_comp(pConfigPath, s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath) == 0)
+			gs_aLoadedPreviousConfigPath[ConfigDomain] = true;
 
+		SSaveUnknownCommandContext UnknownCommandContext{pClient, ConfigDomain};
+		pConsole->SetUnknownCommandCallback(SaveUnknownDomainCommandCallback, &UnknownCommandContext);
 		if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))
 		{
+			pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 			char aError[2048];
 			str_format(aError, sizeof(aError), "Failed to load config from '%s'.", pConfigPath);
 			log_error("client", "%s", aError);
@@ -6242,8 +6428,8 @@ int main(int argc, const char **argv)
 			PerformAllCleanup();
 			return -1;
 		}
+		pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 	}
-	pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 
 	if(pStorage->FileExists(AUTOEXEC_CLIENT_FILE, IStorage::TYPE_ALL))
 	{

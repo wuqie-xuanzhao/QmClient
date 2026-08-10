@@ -5,6 +5,7 @@
 
 #include "UiFormLogic.h"
 #include "UiMotion.h"
+#include "UiSurface.h"
 #include "UiTheme.h"
 
 #include <engine/graphics.h>
@@ -12,6 +13,7 @@
 #include <engine/shared/config.h>
 
 #include <game/client/lineinput.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
 #include <game/localization.h>
@@ -46,10 +48,7 @@ namespace ui_widget
 			const SUiTheme Theme = ThemeFor(Ctx);
 			ColorRGBA Border = Theme.m_Border;
 			Border.a = std::max(Border.a, 0.24f);
-			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(Border), Corners, Radius);
-			CUIRect Inner = Rect;
-			Inner.Margin(1.0f, &Inner);
-			Inner.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(Fill), Corners, std::max(0.0f, Radius - 1.0f));
+			DrawRoundedSurface(Ctx, Rect, Ctx.m_pUi->ScaleBackgroundAlpha(Fill), Ctx.m_pUi->ScaleBackgroundAlpha(Border), Radius, 1.0f, Corners);
 		}
 
 		bool NumericFieldTextIsInfinite(const char *pText)
@@ -84,10 +83,7 @@ namespace ui_widget
 			const SUiTheme &Theme = ThemeFor(Ctx);
 			ColorRGBA RingColor = Theme.m_FocusRing;
 			RingColor.a *= Alpha;
-			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(RingColor), IGraphics::CORNER_ALL, ui_token::radius::BASE + Theme.m_FocusRingWidth);
-			CUIRect Inner = Rect;
-			Inner.Margin(Theme.m_FocusRingWidth, &Inner);
-			Inner.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(Theme.m_InputSurface), IGraphics::CORNER_ALL, ui_token::radius::BASE);
+			DrawRoundedSurface(Ctx, Rect, Ctx.m_pUi->ScaleBackgroundAlpha(Theme.m_InputSurface), Ctx.m_pUi->ScaleBackgroundAlpha(RingColor), ui_token::radius::BASE + Theme.m_FocusRingWidth, Theme.m_FocusRingWidth);
 		}
 
 		void DrawTextFieldFocusBorder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect)
@@ -120,15 +116,39 @@ namespace ui_widget
 			return Active;
 		}
 
-		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon)
+		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon, const ColorRGBA &Color, const int QmIcon = -1)
 		{
-			if(pIcon == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
+			const bool HasQmIcon = QmIcon >= 0 && QmIcon < static_cast<int>(EQmIcon::COUNT);
+			if((pIcon == nullptr && !HasQmIcon) || Rect.w <= 0.0f || Rect.h <= 0.0f)
 				return;
-			Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-			Ctx.m_pUi->TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);
-			Ctx.m_pUi->TextRender()->SetRenderFlags(0);
-			Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+			// Phosphor 的 eye-off 将眼睛拆分给对角线，主体比 eye 更窄。
+			// 仅补偿这对密码可见性图标，避免改变其他图标的既有比例。
+			const float EyeOffScale = QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? 1.25f : 1.15f;
+			const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;
+			if(HasQmIcon && Ctx.m_pIconManager != nullptr)
+			{
+				const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;
+				const CUIRect IconRect{Rect.x + (Rect.w - IconSide) * 0.5f, Rect.y + (Rect.h - IconSide) * 0.5f, IconSide, IconSide};
+				if(Ctx.m_pIconManager->RenderIcon(static_cast<EQmIcon>(QmIcon), IconRect, Color))
+					return;
+			}
+			if(pIcon == nullptr)
+				return;
+			ITextRender *pTextRender = Ctx.m_pUi->TextRender();
+			const ColorRGBA PreviousColor = pTextRender->GetTextColor();
+			const ColorRGBA PreviousOutlineColor = pTextRender->GetTextOutlineColor();
+			const ColorRGBA PreviousSelectionColor = pTextRender->GetTextSelectionColor();
+			const unsigned PreviousFlags = pTextRender->GetRenderFlags();
+			const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
+			pTextRender->TextColor(Color);
+			pTextRender->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
+			pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);
+			pTextRender->SetRenderFlags(PreviousFlags);
+			pTextRender->SetFontPreset(PreviousPreset);
+			pTextRender->TextOutlineColor(PreviousOutlineColor);
+			pTextRender->TextSelectionColor(PreviousSelectionColor);
+			pTextRender->TextColor(PreviousColor);
 		}
 
 	} // namespace
@@ -142,21 +162,39 @@ namespace ui_widget
 		const bool WasEmpty = pInput->IsEmpty();
 		const bool Search = Options.m_Mode == EInputFieldMode::SEARCH;
 		const bool HasIcon = Options.m_pLeadingIcon != nullptr || Search;
-		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, Options.m_TrailingWidth);
+		const bool HasTrailingAction = Options.m_pTrailingActionId != nullptr && Options.m_pTrailingActionIcon != nullptr;
+		const bool InlineTrailingText = Options.m_InlineTrailingText && Options.m_pTrailingText != nullptr && Options.m_pTrailingText[0] != '\0';
+		const float TrailingWidth = HasTrailingAction ? std::max(Options.m_TrailingWidth, Rect.h) : Options.m_TrailingWidth;
+		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale, InlineTrailingText ? 0.0f : TrailingWidth);
 		const float FontSize = std::min(Options.m_FontSize, Layout.m_ContentRect.h * CUi::ms_FontmodHeight * 0.8f);
+		CUIRect TextRect = Layout.m_ContentRect;
+		CUIRect TrailingRect = Layout.m_TrailingRect;
+		if(InlineTrailingText)
+		{
+			const char *pDisplayText = pInput->GetDisplayedString();
+			const float TextWidth = Ctx.m_pUi->TextRender()->TextWidth(FontSize, pDisplayText);
+			const float TrailingTextWidth = Ctx.m_pUi->TextRender()->TextWidth(FontSize * 0.82f, Options.m_pTrailingText);
+			const SInlineTrailingTextLayout InlineLayout = ResolveInlineTrailingTextLayout(Layout.m_ContentRect, TextWidth, TrailingTextWidth, Ctx.m_UiScale);
+			TextRect = InlineLayout.m_TextRect;
+			TrailingRect = InlineLayout.m_TrailingRect;
+		}
+		const int TextAlign = InlineTrailingText ? TEXTALIGN_MR : ResolveInputFieldTextAlign(Options);
 		if(Ctx.m_pUi->RenderOnly())
 		{
 			// 文本计划只收集稳定文本，不绘制输入框 chrome，也不修改输入、焦点或动画状态。
 			const char *pPlaceholder = Options.m_pPlaceholder != nullptr ? Options.m_pPlaceholder : (Search ? Localize("Search") : nullptr);
 			if(WasEmpty && pPlaceholder != nullptr)
-				Ctx.m_pUi->DoLabel(&Layout.m_ContentRect, pPlaceholder, FontSize, ResolveInputFieldTextAlign(Options));
+				Ctx.m_pUi->DoLabel(&TextRect, pPlaceholder, FontSize, TextAlign);
 			else if(!WasEmpty && !pInput->IsHidden())
-				Ctx.m_pUi->DoLabel(&Layout.m_ContentRect, pInput->GetString(), FontSize, ResolveInputFieldTextAlign(Options));
-			if(Options.m_pTrailingText != nullptr && Layout.m_TrailingRect.w > 0.0f)
-				Ctx.m_pUi->DoLabel(&Layout.m_TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
+				Ctx.m_pUi->DoLabel(&TextRect, pInput->GetString(), FontSize, TextAlign);
+			if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
+				Ctx.m_pUi->DoLabel(&TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
 			return {};
 		}
 		const SUiTheme &Theme = ThemeFor(Ctx);
+		const auto ActionHoverColor = [&Theme](float State) {
+			return Theme.m_BorderHovered.WithAlpha(std::clamp(Theme.m_BorderHovered.a * (State - 1.0f), 0.0f, 1.0f));
+		};
 		const bool Hovered = Ctx.m_pUi->HotItem() == pInput;
 		const ColorRGBA PlateColor = Hovered && !pInput->IsActive() ? Theme.m_SurfaceHovered : Theme.m_InputSurface;
 		DrawTextFieldShell(Ctx, Layout.m_ShellRect, PlateColor, Options.m_Corners, ui_token::radius::BASE);
@@ -169,22 +207,29 @@ namespace ui_widget
 		}
 		DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect, Options.m_Mode == EInputFieldMode::MULTILINE);
 
-		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr));
+		const ColorRGBA InputIconColor = ConfiguredQmUiIconColor(SQmIconStyle().Color(EQmIconState::NORMAL));
+		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr), InputIconColor, Search ? static_cast<int>(EQmIcon::SEARCH) : -1);
 		CUi::SEditBoxRenderOptions RenderOptions;
 		RenderOptions.m_DrawBackground = false;
+		CUIRect InputHitRect = Layout.m_ShellRect;
+		if(Options.m_Clearable && Layout.m_ClearRect.w > 0.0f)
+			InputHitRect.VSplitRight(Layout.m_ClearRect.w, &InputHitRect, nullptr);
+		if(HasTrailingAction && TrailingRect.w > 0.0f)
+			InputHitRect.VSplitRight(TrailingRect.w, &InputHitRect, nullptr);
+		RenderOptions.m_pHitRect = &InputHitRect;
 		bool Changed = false;
 		if(Options.m_Mode == EInputFieldMode::MULTILINE)
-			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &Layout.m_ContentRect, FontSize, Options.m_LineSpacing, ResolveInputFieldTextAlign(Options), RenderOptions);
+			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &TextRect, FontSize, Options.m_LineSpacing, TextAlign, RenderOptions);
 		else
-			Changed = Ctx.m_pUi->DoEditBox(pInput, &Layout.m_ContentRect, FontSize, Options.m_Corners, {}, ResolveInputFieldTextAlign(Options), RenderOptions);
+			Changed = Ctx.m_pUi->DoEditBox(pInput, &TextRect, FontSize, Options.m_Corners, {}, TextAlign, RenderOptions);
 
 		if(Options.m_Clearable)
 		{
 			const CUIRect &ClearRect = Layout.m_ClearRect;
 			const float ClearState = Ctx.m_pUi->ButtonColorMul(pInput->GetClearButtonId());
 			if(ClearState > 1.0f)
-				ClearRect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * (ClearState - 1.0f))), IGraphics::CORNER_R, ui_token::radius::BASE);
-			DrawInputFieldIcon(Ctx, ClearRect, FontIcons::FONT_ICON_XMARK);
+				DrawRoundedSurface(Ctx, ClearRect, Ctx.m_pUi->ScaleBackgroundAlpha(ActionHoverColor(ClearState)), ColorRGBA(), ui_token::radius::BASE, 0.0f, IGraphics::CORNER_R);
+			DrawInputFieldIcon(Ctx, ClearRect, FontIcons::FONT_ICON_XMARK, InputIconColor, static_cast<int>(EQmIcon::CLOSE));
 			if(Ctx.m_pUi->DoButtonLogic(pInput->GetClearButtonId(), 0, &ClearRect, BUTTONFLAG_LEFT))
 			{
 				pInput->Clear();
@@ -192,10 +237,21 @@ namespace ui_widget
 				Changed = true;
 			}
 		}
-		if(Options.m_pTrailingText != nullptr && Layout.m_TrailingRect.w > 0.0f)
-			Ctx.m_pUi->DoLabel(&Layout.m_TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
+		bool TrailingAction = false;
+		if(HasTrailingAction && TrailingRect.w > 0.0f)
+		{
+			const float ActionState = Ctx.m_pUi->ButtonColorMul(Options.m_pTrailingActionId);
+			if(ActionState > 1.0f)
+				DrawRoundedSurface(Ctx, TrailingRect, Ctx.m_pUi->ScaleBackgroundAlpha(ActionHoverColor(ActionState)), ColorRGBA(), ui_token::radius::BASE, 0.0f, Options.m_Clearable ? IGraphics::CORNER_NONE : IGraphics::CORNER_R);
+			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor, Options.m_TrailingActionQmIcon);
+			TrailingAction = Ctx.m_pUi->DoButtonLogic(Options.m_pTrailingActionId, 0, &TrailingRect, BUTTONFLAG_LEFT) != 0;
+		}
+		if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
+			Ctx.m_pUi->DoLabel(&TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
 
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Options.m_Clearable);
+		SInputFieldResult Result = BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Options.m_Clearable);
+		Result.m_TrailingAction = TrailingAction;
+		return Result;
 	}
 	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
@@ -345,7 +401,7 @@ namespace ui_widget
 		}
 
 		const bool HasSuffix = Options.m_pSuffix != nullptr && Options.m_pSuffix[0] != '\0';
-		const float SuffixWidth = HasSuffix ? 34.0f : 0.0f;
+		const float SuffixWidth = HasSuffix ? std::max(18.0f, Options.m_TrailingWidth) : 0.0f;
 		const float MinimumValueWidth = 52.0f + SuffixWidth + 22.0f;
 		const float ValueWidth = std::clamp((MultiLine ? ValueRect.w : Controls.w) * 0.26f, MinimumValueWidth, 128.0f);
 		const bool HasSlider = MultiLine || Controls.w > ValueWidth + 42.0f;
@@ -383,9 +439,17 @@ namespace ui_widget
 			else if(Options.m_pMaxText != nullptr && DisplayValue == Max)
 				str_copy(aValue, Options.m_pMaxText);
 			else
-				str_format(aValue, sizeof(aValue), "%d%s", DisplayValue, HasSuffix ? Options.m_pSuffix : "");
+				str_format(aValue, sizeof(aValue), "%d", DisplayValue);
 			const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
-			Ctx.m_pUi->DoLabel(&InputField, aValue, FieldFontSize, TEXTALIGN_MC);
+			if(HasSuffix)
+			{
+				const SInputFieldLayout FieldLayout = ResolveInputFieldLayout(InputField, false, false, Ctx.m_UiScale);
+				const SInlineTrailingTextLayout InlineLayout = ResolveInlineTrailingTextLayout(FieldLayout.m_ContentRect, Ctx.m_pUi->TextRender()->TextWidth(FieldFontSize, aValue), Ctx.m_pUi->TextRender()->TextWidth(FieldFontSize * 0.82f, Options.m_pSuffix), Ctx.m_UiScale);
+				Ctx.m_pUi->DoLabel(&InlineLayout.m_TextRect, aValue, FieldFontSize, TEXTALIGN_MR);
+				Ctx.m_pUi->DoLabel(&InlineLayout.m_TrailingRect, Options.m_pSuffix, FieldFontSize * 0.82f, TEXTALIGN_MC);
+			}
+			else
+				Ctx.m_pUi->DoLabel(&InputField, aValue, FieldFontSize, TEXTALIGN_MC);
 			return false;
 		}
 
@@ -478,8 +542,8 @@ namespace ui_widget
 			CUIRect Handle;
 			Rail.VSplitLeft(std::clamp(33.0f, Rail.h, Rail.w / 3.0f), &Handle, nullptr);
 			Handle.x += (Rail.w - Handle.w) * Normalized;
-			Rail.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_ALL, Rail.h / 2.0f);
-			Handle.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_ScrollBarColorFunction.GetColor(false, false)), IGraphics::CORNER_ALL, Rail.h / 2.0f);
+			DrawRoundedSurface(Ctx, Rail, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), ColorRGBA(), Rail.h / 2.0f);
+			DrawRoundedSurface(Ctx, Handle, Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_ScrollBarColorFunction.GetColor(false, false)), ColorRGBA(), Handle.h / 2.0f);
 		}
 
 		// 输入框：特殊值（♾️ 或 pMaxText）在非编辑状态下显示为文本
@@ -496,7 +560,7 @@ namespace ui_widget
 		FieldOptions.m_FontSize = FieldFontSize;
 		FieldOptions.m_TextAlign = TEXTALIGN_MC;
 		FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;
-		FieldOptions.m_TrailingWidth = SuffixWidth;
+		FieldOptions.m_InlineTrailingText = HasSuffix;
 		SInputFieldResult Result = ui_widget::InputField(Ctx, pInput, InputField, FieldOptions);
 
 		if(bShowMaxText)
@@ -555,7 +619,7 @@ namespace ui_widget
 			const uint64_t TrackKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash ^ 0xA5A5ull, reinterpret_cast<uint64_t>(pId));
 			Track = ResolveUiAnimValueColor(*Ctx.m_pAnim, TrackKey, Track, ui_curve::DECELERATE.m_DurationSec, ui_curve::DECELERATE.m_Easing);
 		}
-		Rect.Draw(Track, IGraphics::CORNER_ALL, Rect.h * 0.5f);
+		DrawRoundedSurface(Ctx, Rect, Track, Track, Rect.h * 0.5f);
 
 		// Knob — slides between left and right ends. Uses a SPRING request so the
 		// motion has the expected snappy bounce on the v2 runtime.
@@ -588,7 +652,7 @@ namespace ui_widget
 		Knob.y = Rect.y + Padding;
 		Knob.w = KnobSize;
 		Knob.h = KnobSize;
-		Knob.Draw(ui_token::color::TEXT_PRIMARY, IGraphics::CORNER_ALL, KnobSize * 0.5f);
+		DrawRoundedSurface(Ctx, Knob, ui_token::color::TEXT_PRIMARY, ui_token::color::TEXT_PRIMARY, KnobSize * 0.5f);
 
 		return Clicked;
 	}

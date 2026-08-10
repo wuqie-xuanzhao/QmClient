@@ -270,6 +270,7 @@ struct SConfigVariable
 
 	virtual void Register() = 0;
 	virtual bool IsDefault() const = 0;
+	virtual size_t MaxSerializedSize() const = 0;
 	virtual void Serialize(char *pOut, size_t Size) const = 0;
 	virtual void ResetToDefault() = 0;
 	virtual void ResetToOld() = 0;
@@ -303,6 +304,7 @@ struct SIntConfigVariable : public SConfigVariable
 	static void CommandCallback(IConsole::IResult *pResult, void *pUserData);
 	void Register() override;
 	bool IsDefault() const override;
+	size_t MaxSerializedSize() const override;
 	void Serialize(char *pOut, size_t Size, int Value) const;
 	void Serialize(char *pOut, size_t Size) const override;
 	void SetValue(int Value);
@@ -316,6 +318,7 @@ struct SColorConfigVariable : public SConfigVariable
 	unsigned m_Default;
 	float m_DarkestLighting;
 	bool m_Alpha;
+	EColorInputAlphaMode m_LastInputAlphaMode;
 	unsigned m_OldValue;
 
 	SColorConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey, unsigned *pVariable, unsigned Default) :
@@ -323,6 +326,7 @@ struct SColorConfigVariable : public SConfigVariable
 		m_pVariable(pVariable),
 		m_Default(Default),
 		m_Alpha(Flags & CFGFLAG_COLALPHA),
+		m_LastInputAlphaMode(EColorInputAlphaMode::PACKED),
 		m_OldValue(Default)
 	{
 		*m_pVariable = m_Default;
@@ -345,6 +349,7 @@ struct SColorConfigVariable : public SConfigVariable
 	static void CommandCallback(IConsole::IResult *pResult, void *pUserData);
 	void Register() override;
 	bool IsDefault() const override;
+	size_t MaxSerializedSize() const override;
 	void Serialize(char *pOut, size_t Size, unsigned Value) const;
 	void Serialize(char *pOut, size_t Size) const override;
 	void SetValue(unsigned Value);
@@ -365,6 +370,7 @@ struct SStringConfigVariable : public SConfigVariable
 	static void CommandCallback(IConsole::IResult *pResult, void *pUserData);
 	void Register() override;
 	bool IsDefault() const override;
+	size_t MaxSerializedSize() const override;
 	void Serialize(char *pOut, size_t Size, const char *pValue) const;
 	void Serialize(char *pOut, size_t Size) const override;
 	void SetValue(const char *pValue);
@@ -395,7 +401,7 @@ class CConfigManager : public IConfigManager
 
 	std::vector<SConfigVariable *> m_vpAllVariables;
 	std::vector<SConfigVariable *> m_vpGameVariables;
-	std::vector<const char *> m_vpUnknownCommands; // TODO: per config domain
+	std::vector<const char *> m_avpUnknownCommands[ConfigDomain::NUM];
 	CHeap m_ConfigHeap;
 
 	static void Con_Reset(IConsole::IResult *pResult, void *pUserData);
@@ -411,7 +417,7 @@ public:
 	void ResetGameSettings() override;
 	void SetReadOnly(const char *pScriptName, bool ReadOnly) override;
 	void SetGameSettingsReadOnly(bool ReadOnly) override;
-	bool Save() override;
+	bool Save(bool Force = false) override;
 
 	CConfig *Values() override { return &g_Config; }
 
@@ -419,9 +425,13 @@ public:
 
 	void WriteLine(const char *pLine, ConfigDomain ConfigDomain = ConfigDomain::DDNET) override;
 
-	void StoreUnknownCommand(const char *pCommand) override;
+	void StoreUnknownCommand(const char *pCommand, ConfigDomain ConfigDomain = ConfigDomain::DDNET) override;
 
 	void PossibleConfigVariables(const char *pStr, int FlagMask, POSSIBLECFGFUNC pfnCallback, void *pUserData) override;
+	EColorInputAlphaMode ColorValueInputAlphaMode(const char *pScriptName) const override;
 };
+
+bool QmConfigMigrationPending(class IStorage *pStorage);
+bool QmFinalizeConfigMigration(class IStorage *pStorage, const bool *pArchivePreviousPaths = nullptr);
 
 #endif

@@ -548,9 +548,6 @@ Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 == 外部コンソールの詳細度を調整（-3=なし、-2=エラーのみ、-1=警告、0=情報、1=デバッグ、2=トレース）
 
-Adjust your prediction margin while frozen
-== 凍結時の予測マージンを調整
-
 Advanced
 == 詳細設定
 
@@ -697,6 +694,21 @@ Angle
 
 Angle:
 == 角度：
+
+Animate chat box, emote selector, scoreboard, and spectate selection
+== チャットボックス、絵文字選択、スコアボード、観戦選択をアニメーション化
+
+Animate lists when entering a page
+== Animate lists when entering a page
+
+Animate settings card expand and collapse height changes
+== 設定カードの展開・折りたたみ時の高さ変化をアニメーション化
+
+Animate settings card lists when entering a page
+== ページを開くときに設定カード一覧をアニメーション表示
+
+Animate settings card reorder and layout reflow
+== 設定カードの並べ替えとレイアウト再配置をアニメーション化
 
 Animation
 == アニメーション
@@ -1355,6 +1367,9 @@ Ban time after being voted kicked (in minutes, 0 = kick only, no ban)
 Base path for HTTPS map download URLs to clients
 == クライアント向け HTTPS マップダウンロード URL のベースパス
 
+Base prediction margin
+== 基本予測マージン
+
 Basic
 == 基本
 
@@ -1394,6 +1409,9 @@ Best input smooth percentage
 Best match
 == 最適一致
 
+Better scoreboard
+== より良いスコアボード
+
 Bind address for client/server
 == クライアント/サーバーのバインドアドレス
 
@@ -1402,9 +1420,6 @@ Bind chat, team chat, and history actions
 
 Bind dummy control and copy actions
 == Bind dummy control and copy actions
-
-Better scoreboard
-== より良いスコアボード
 
 Bind key to execute a command or view keybindings
 == キーにコマンドをバインド、またはキーバインドを表示
@@ -1439,6 +1454,9 @@ Black
 Blend mode
 == ブレンドモード
 
+Block enemy chat
+== 敵対プレイヤーのチャットをブロック
+
 Block votes from blacklisted addresses
 == ブラックリストのアドレスからの投票をブロック
 
@@ -1456,6 +1474,9 @@ Blue team wins!
 
 Body
 == ボディ
+
+Bold
+== 太字
 
 Border
 == 境界線
@@ -1616,6 +1637,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == 交換できません：相手があなたのチームにいません
 
+Card height animation
+== 設定カードの高さアニメーション
+
+Card list entry animation
+== 設定カード一覧の入場アニメーション
+
+Card reflow animation
+== 設定カードの再配置アニメーション
+
 Category
 == カテゴリ
 
@@ -1751,9 +1781,6 @@ Checking for existing player with your name
 CHN
 == 中国
 
-Choose and arrange status bar data fields
-== Choose and arrange status bar data fields
-
 Choose colors for weapons and entity lasers
 == Choose colors for weapons and entity lasers
 
@@ -1781,11 +1808,11 @@ Choose whether to browse replays or screenshots
 Choose which TClient settings tabs are visible
 == Choose which TClient settings tabs are visible
 
-Clamp mouse to screen
-== マウスを画面内に固定
-
 Cinematic camera
 == シネマティックカメラ
+
+Clamp mouse to screen
+== マウスを画面内に固定
 
 Clan
 == クラン
@@ -2188,6 +2215,9 @@ Configure the input overlay display
 
 Configure these settings
 == これらの設定を構成
+
+Configure UI icon appearance
+== UI アイコンの外観を設定
 
 Confirm both are on same server, same room, and support voice
 == 両方が同じサーバー、同じルームにいて、音声をサポートしていることを確認する
@@ -2762,6 +2792,9 @@ Delay before executing tc_execute_on_join (milliseconds)
 Delay before new players can start votes or participate in kick/spectate votes (seconds)
 == 新規プレイヤーが投票を開始したり、キック/観戦投票に参加できるようになるまでの遅延（秒）
 
+Delay before reduction
+== 削減前の遅延
+
 Delay between rescues (seconds)
 == レスキュー間の遅延（秒）
 
@@ -3005,6 +3038,9 @@ Displays X and Y velocity
 Displays your current angle in degrees
 == 現在の角度（度）を表示
 
+Displays your current score
+== 現在のスコアを表示
+
 Displays your frames per second
 == フレームレートを表示
 
@@ -3034,9 +3070,6 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == 自分がフリーズ中の他のプレイヤーを予測しない
-
-Do not set this variable, instead create ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible server list URLs
-== この変数は設定しないでください。代わりに settings_ddnet.cfg の隣に ddnet-serverlist-urls.cfg を作成して、すべてのサーバーリスト URL を指定してください
 
 Do not set, used to mark official tutorial server
 == 設定しないでください。公式チュートリアルサーバーを示すために使用されます
@@ -3467,6 +3500,9 @@ Enable chat with all/team mode
 Enable cheats for your current team's run, but you can't earn a rank
 == 現在のチームのランでチートを有効にしますが、ランクは獲得できません
 
+Enable client stutter diagnostics at startup
+== 起動時にクライアントのスタッター診断を有効にする
+
 Enable colored console output
 == コンソールのカラー出力を有効にする
 
@@ -3508,6 +3544,9 @@ Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.
 
 Enable enhanced laser effect (glow + pulse animation)
 == 強化レーザーエフェクトを有効化（グロー＋パルスアニメーション）
+
+Enable enhanced scoreboard presentation
+== 拡張スコアボード表示を有効にする
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
 == イベントトリガー（休日のサーバーアイエモート、クライアントのクリスマススキン）を有効にする
@@ -3583,6 +3622,9 @@ Enable lyric HUD overlay
 
 Enable lyrics
 == 歌詞を有効化
+
+Enable macOS graphics diagnostics and Instruments signposts
+== macOS グラフィックス診断と Instruments サインポストを有効にする
 
 Enable main thread and render stage performance debug logging
 == メインスレッドとレンダリングフェーズのパフォーマンスデバッグログを有効化
@@ -3665,6 +3707,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == スキン切り替えアニメーションを有効化
 
+Enable smooth cinematic camera while free spectating
+== フリー観戦中に滑らかなシネマティックカメラを有効にする
+
 Enable sound
 == サウンドを有効にする
 
@@ -3685,6 +3730,9 @@ Enable status bar
 
 Enable stereo positioning
 == ステレオポジショニングを有効にする
+
+Enable switch countdown
+== Enable switch countdown
 
 Enable system media control
 == システムメディアコントロールを有効にする
@@ -3926,12 +3974,6 @@ Expose playback controls to the operating system
 External console password. Must be set to enable economy.
 == 外部コンソールパスワード。エコノミーを有効にするには設定が必要
 
-Extra animations
-== 追加アニメーション
-
-Extra animations: Chat box, emote selector, scoreboard, and spectate selection use Presentation State animations
-== 追加アニメーション：チャットボックス、絵文字選択ボックス、スコアボード、観戦選択ページで Presentation State アニメーションを使用
-
 Extras
 == その他
 
@@ -4073,6 +4115,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == 告知ファイル（1 行に 1 件）
 
+Fill
+== 塗りつぶし
+
 Filter chat messages by regular expression
 == 正規表現でチャットメッセージをフィルタリング
 
@@ -4150,9 +4195,6 @@ First page in console
 
 Flip:
 == 反転：
-
-Focus color
-== フォーカス色
 
 Focus mode
 == フォーカスモード
@@ -4325,8 +4367,8 @@ Friends
 Friends only
 == フレンドのみ
 
-Frozen Margin
-== フリーズマージン
+Frozen prediction margin
+== 凍結中の予測マージン
 
 FSAA samples
 == FSAA サンプル数
@@ -4348,6 +4390,9 @@ Full demo + sidecar
 
 Full map listen in same room
 == 同じ部屋でマップ全体を聴く
+
+Full: each enabled animation category uses its complete transition
+== 完全：有効な各アニメーションカテゴリで完全な遷移を使用します
 
 Fullscreen
 == フルスクリーン
@@ -4493,6 +4538,9 @@ Global card ordering old config migration completed flag
 Global toggle key
 == グローバルトグルキー
 
+Global UI size percentage
+== 全体 UI サイズの割合
+
 Glow
 == グロー
 
@@ -4571,11 +4619,11 @@ Graphics card
 Graphics display
 == グラフィック表示
 
-Graphics library major version
-== グラフィックスライブラリメジャーバージョン
+Graphics library major version (0 = auto-detect)
+== Graphics library major version (0 = auto-detect)
 
-Graphics library minor version
-== グラフィックスライブラリマイナーバージョン
+Graphics library minor version (0 = auto-detect)
+== Graphics library minor version (0 = auto-detect)
 
 Graphics library patch version
 == グラフィックスライブラリパッチバージョン
@@ -4648,6 +4696,9 @@ Hide basic system info (join, version, rules) in Zen mode
 
 Hide Chat
 == チャットを非表示
+
+Hide chat messages from players marked as enemies
+== 敵としてマークしたプレイヤーのチャットメッセージを隠す
 
 Hide death/respawn effects
 == 死亡/復活エフェクトを非表示
@@ -4786,6 +4837,12 @@ Hide Settings Tabs
 
 Hide sponsor QR code
 == スポンサーQRコードを非表示
+
+Hide system message prefix
+== システムメッセージの接頭辞を非表示
+
+Hide the *** prefix before server chat messages
+== サーバーチャットメッセージの前の *** 接頭辞を非表示
 
 Hide toast
 == トーストを隠す
@@ -4964,6 +5021,9 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5008,6 +5068,9 @@ I am away from the game window
 
 I muted you
 == ミュートしました
+
+Icons
+== アイコン
 
 If 1, auto record only once on connect; if 0, auto record restarts after game end
 == 1 の場合、接続時に一度だけ自動録画を開始します。0 の場合、ゲーム終了後に自動録画が再開されます。
@@ -5174,20 +5237,20 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 == 入力デバイスのオープンに失敗しました。ヘッドセット/マイクを再接続して更新するか、入力デバイスを再選択してください
 
-Input focus color
-== インターフェース入力フォーカス色
-
 Input overlay
 == 入力オーバーレイ
 
 Input overlay display
 == 入力オーバーレイ表示
 
+Input overlay keyboard scale (percent)
+== Input overlay keyboard scale (percent)
+
+Input overlay mouse scale (percent)
+== Input overlay mouse scale (percent)
+
 Input overlay opacity (percent)
 == 入力オーバーレイの不透明度（パーセント）
-
-Input overlay scale (percent)
-== 入力オーバーレイのスケール（パーセント）
 
 Input overlay X position (percent)
 == 入力オーバーレイ X 位置（パーセント）
@@ -5210,14 +5273,17 @@ Interface
 Interface animations
 == インターフェースアニメーション
 
-Interface color
-== インターフェース色
-
 Interface page
 == インターフェースページ
 
 Interface settings page
 == インターフェース設定ページ
+
+Interface surface
+== インターフェース表面
+
+Interface surface color
+== インターフェース表面の色
 
 Interface transparency
 == 汎用インターフェース透明度
@@ -5398,6 +5464,12 @@ Key Sticking: On
 
 Key Sticking: Reset Self
 == キースティッキング：自分をリセット
+
+Keyboard focus ring color
+== キーボードフォーカスリングの色
+
+Keyboard size
+== キーボードサイズ
 
 Keyword Reply
 == キーワード返信
@@ -5993,8 +6065,11 @@ Manual target
 Map
 == マップ
 
-Map browser color
-== マップブラウザの色
+Map browser surface
+== マップブラウザー表面
+
+Map browser surface color
+== マップブラウザー表面の色
 
 Map browser transparency
 == マップブラウザの透明度
@@ -6179,6 +6254,9 @@ Maximum number of skins loaded simultaneously
 Maximum players participating in a vote (0 = unlimited)
 == 投票に参加できる最大プレイヤー数（0 = 無制限）
 
+Maximum reduction
+== 最大削減量
+
 Maximum rows
 == 最大行数
 
@@ -6233,6 +6311,9 @@ Menu option - normal
 Menu option - selected
 == メニューオプション - 選択中
 
+Merge consecutive identical player messages within 2 seconds
+== Merge consecutive identical player messages within 2 seconds
+
 Message color
 == メッセージの色
 
@@ -6250,9 +6331,6 @@ Message to send on auto vote, leave empty to not send
 
 Messages
 == メッセージ
-
-Messages that already look like the target language will skip auto-translate
-== 既にターゲット言語のように見えるメッセージは自動翻訳をスキップします
 
 Microphone
 == マイク
@@ -6392,6 +6470,9 @@ Mouse sensitivity
 Mouse sensitivity in menu/editor
 == メニュー/エディターでのマウス感度
 
+Mouse size
+== マウスサイズ
+
 Move left
 == 左に移動
 
@@ -6403,9 +6484,6 @@ Move right
 
 Move to category
 == カテゴリに移動
-
-Moved ingame
-== ゲーム内で移動済み
 
 Movement
 == 移動
@@ -7010,6 +7088,9 @@ o = Send rate
 Off
 == オフ
 
+Off: disables all interface animations while preserving the options below
+== オフ：下の設定を保持したまま、すべてのインターフェースアニメーションを無効にします
+
 Official
 == 公式
 
@@ -7259,9 +7340,6 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == 上書きグループ
 
-Override ping estimation location, options: auto, af, as, as:cn, eu, na, oc, sa (auto, Africa, Asia, China, Europe, North America, Oceania/Australia, South America)
-== Ping 推定位置を上書き、オプション: auto, af, as, as:cn, eu, na, oc, sa (auto, アフリカ, アジア, 中国, ヨーロッパ, 北アメリカ, オセアニア/オーストラリア, 南アメリカ)
-
 Override Selected
 == 選択項目を上書き
 
@@ -7378,9 +7456,6 @@ Per-word highlight (karaoke)
 
 Performance debug log threshold (ms)
 == パフォーマンスデバッグログのしきい値（ms）
-
-Performance mode (placeholder)
-== パフォーマンスモード（プレースホルダー）
 
 Personal best:
 == 自己ベスト：
@@ -7730,9 +7805,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 == 予測先行時間が長すぎます。予測設定とサーバーのタイミングを確認してください
 
-Prediction Margin
-== 予測マージン
-
 Prediction margin
 == 予測マージン
 
@@ -7744,6 +7816,9 @@ Prediction offset
 
 Preparing demo playback
 == デモ再生を準備中
+
+Presentation animations
+== 表示アニメーション
 
 Preset %d
 == プリセット %d
@@ -7945,6 +8020,15 @@ q = Connection quality
 
 Qm
 == Qm
+
+Qm UI custom icon color
+== Qm UI アイコンのカスタム色
+
+Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
+== Qm UI アイコンの色: 1=白、2=黒、3=カスタム、4=虹色
+
+Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+== Qm UI アイコンの太さ: 0=標準、1=太字、2=細字、3=塗りつぶし
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：インデックスは 1 から %d の間でなければなりません
@@ -8195,8 +8279,14 @@ Red team wins!
 Reduce antiping and player prediction when frozen
 == フリーズ時にアンチピンとプレイヤー予測を軽減
 
+Reduce prediction while frozen
+== 凍結中に予測量を減らす
+
 Reduced
 == 縮小
+
+Reduced: uses shorter transitions and disables presentation animations
+== 軽減：短い遷移を使用し、演出アニメーションを無効にします
 
 Refresh
 == 更新
@@ -8218,6 +8308,9 @@ Region
 
 Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'
 == 公開リスト用にマスターサーバーにサーバーを登録、カンマ区切りのプロトコルを受け入れます。例: 'ipv4,ipv6'
+
+Regular
+== 標準
 
 Regular background color
 == 通常の背景色
@@ -8356,9 +8449,6 @@ Remove from queue
 
 Remove Item
 == アイテムを削除
-
-Remove prediction & antiping in freeze
-== フリーズ中の予測＆アンチピングを削除
 
 Remove right to vote from player with client ID
 == クライアント ID を持つプレイヤーから投票権を削除
@@ -8969,9 +9059,6 @@ Score limit
 Scoreboard
 == スコアボード
 
-Scoreboard color
-== スコアボードの色
-
 Scoreboard cursor
 == スコアボードカーソル
 
@@ -8983,6 +9070,12 @@ Scoreboard score lookup
 
 Scoreboard sort mode (0=Score, 1=Points)
 == スコアボードのソートモード（0=スコア、1=ポイント）
+
+Scoreboard surface
+== スコアボード表面
+
+Scoreboard surface color
+== スコアボード表面の色
 
 Scoreboard transparency
 == スコアボード透明度
@@ -9323,6 +9416,15 @@ Sets your tee's eye emote
 Settings
 == 設定
 
+Settings card background
+== Settings card background
+
+Settings card background color
+== Settings card background color
+
+Settings card background transparency
+== Settings card background transparency
+
 Settings card border color
 == 設定カードの枠線色
 
@@ -9502,9 +9604,6 @@ Show Danger Tiles in Hitbox Mode
 
 Show DDNet config variables
 == DDNet 設定変数を表示
-
-Show DDNet map completion (transmits player name to info.ddnet.org/info)
-== DDNet マップクリア状況を表示（プレイヤー名を info.ddnet.org/info に送信します）
 
 Show DDNet map finishes in server browser
 == サーバーブラウザで DDNet マップのクリア状況を表示
@@ -10135,6 +10234,12 @@ Show toast
 
 Show translation
 == 翻訳を表示
+
+Show Tune Zone effects
+== Tune Zone 効果を表示
+
+Show Tune Zone effects on HUD Dynamic Island
+== Show Tune Zone effects on HUD Dynamic Island
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 自身のプレイヤーに影響するチューニングパラメーターを表示（0 = オフ、1 = 変更のみ表示、2 = すべて表示）
@@ -10817,6 +10922,9 @@ Swaps the active action (fire and hook) for direct touch input and virtual joyst
 Switch
 == 切り替え
 
+Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+
 Switch failed
 == 切り替え失敗
 
@@ -11180,6 +11288,9 @@ Text alpha
 Text color
 == テキスト色
 
+Text input focus ring color
+== テキスト入力フォーカスリングの色
+
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == ご支援と信頼に感謝します。それが私に前進し続ける勇気を与えてくれます。
 
@@ -11261,11 +11372,17 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == エディターに未保存のマップがあります。保存することをお勧めします。
 
+Thin
+== 細字
+
 Thinking mode requires a reasoning model
 == 思考モードを使用するには推論モデルが必要です
 
 This ID is not connected
 == この ID は接続されていません
+
+This is the master switch for all interface animation categories
+== これはすべてのインターフェースアニメーションカテゴリの主スイッチです
 
 This name cannot be used for files and folders
 == この名前はファイルやフォルダーに使用できません
@@ -11606,6 +11723,9 @@ Translation button cancel color
 Translation color
 == 翻訳の色
 
+Translation color alpha migration completed flag
+== 翻訳カラーのアルファ移行完了フラグ
+
 Translation menu background color
 == 翻訳メニュー背景色
 
@@ -11672,6 +11792,9 @@ Tune variable to value
 Tune variable to value or show current value
 == チューン変数を値に設定するか、現在の値を表示
 
+Tune Zone effect icon legend
+== Tune Zone effect icon legend
+
 Tutorial
 == チュートリアル
 
@@ -11708,11 +11831,23 @@ UI color
 UI controller sens.
 == UI コントローラー感度
 
+UI icon color
+== UI アイコンの色
+
+UI icon custom color
+== UI アイコンのカスタム色
+
+UI icon weight
+== UI アイコンの太さ
+
 UI motion level
 == UIアニメーションの強度
 
 UI mouse sens.
 == UI マウス感度
+
+UI rounded corner segments (even numbers recommended)
+== UI 角丸セグメント数（偶数を推奨）
 
 UI scale
 == UI スケール
@@ -11915,9 +12050,6 @@ Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
 == マップデータを GPU にアップロード中
 
-Upper limit for automatically selected UI rounded corner segments
-== Upper limit for automatically selected UI rounded corner segments
-
 URL for downloading community skins
 == コミュニティスキン用ダウンロード URL
 
@@ -11941,6 +12073,9 @@ Use 12 hour clock
 
 Use 12-hour clock for local time
 == ローカル時刻に 12 時間制を使用
+
+Use a fixed prediction margin while frozen
+== 凍結中は固定の予測マージンを使用する
 
 Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == 代替アンチピングスムージングを使用、cl_antiping_smooth とは互換性なし
@@ -12058,6 +12193,9 @@ Use warlist colors instead of regular colors
 
 Use warlist groups for indicator
 == インジケーターに敵対リストグループを使用
+
+Used by active shared text and numeric input fields
+== 有効な共通テキスト・数値入力欄で使用されます
 
 Uses the active action with the current aiming position.
 == 現在の照準位置でアクティブアクションを使用します。
@@ -12515,6 +12653,9 @@ Whisper to %s: %s
 Whisper: /w player message
 == ウィスパー：/w プレイヤー名 メッセージ
 
+White
+== 白
+
 Why are you slowmo replaying to read this?
 == なぜスローモーションリプレイでこれを読んでいるのですか？
 
@@ -12559,6 +12700,9 @@ Windowed fullscreen
 
 Word Filter
 == ワードフィルター
+
+Word filter action: 0=replace matching words, 1=hide entire message
+== 単語フィルター操作: 0=一致する単語を置換、1=メッセージ全体を非表示
 
 Word highlight soft edge width (px)
 == 文字単位のエッジソフトトランジション幅 px
@@ -12935,6 +13079,15 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ テンセントクラウド API が設定されていません
 
+不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
+
+显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
+
+覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
+
 [Assets editor blend mode]
 Multiply
 == 乗算
@@ -13056,8 +13209,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 指定のグラフィックスバックエンドを初期化できませんでした。内蔵グラフィックカードのドライバがインストールされていない可能性があります。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初期化中に失敗しました。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、もう一度試してください。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13072,8 +13225,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == レンダリングコマンドの送信に失敗しました。GPU ドライバーを更新してみてください。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 不明なエラーです。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、もう一度試してください。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
 
 [Hammer Mode]
 Normal

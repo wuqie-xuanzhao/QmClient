@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_HUD_H
 #define GAME_CLIENT_COMPONENTS_HUD_H
 #include <engine/client.h>
+#include <engine/graphics.h>
 #include <engine/shared/protocol.h>
 #include <engine/textrender.h>
 
@@ -11,6 +12,7 @@
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/component.h>
 #include <game/client/components/hud_media_island_logic.h>
+#include <game/client/components/qmclient/tune_zone_effects.h>
 #include <game/client/ui_rect.h>
 #include <game/teamscore.h>
 
@@ -139,8 +141,8 @@ class CHud : public CComponent
 	SHudLocalTimeV2AnimState m_LocalTimeV2AnimState;
 	struct SHudMediaIslandAnimState
 	{
-		static constexpr int SATELLITE_LIVE_MAX_ITEMS = NUM_DUMMIES + SWITCH_COUNTDOWN_MAX_LINES + 1;
-		static constexpr int SATELLITE_MAX_ITEMS = SATELLITE_LIVE_MAX_ITEMS * 2;
+		static constexpr int SATELLITE_MAX_ITEMS = IGraphics::MEDIA_ISLAND_SDF_MAX_ITEMS;
+		static constexpr int SATELLITE_LIVE_MAX_ITEMS = SATELLITE_MAX_ITEMS;
 
 		enum class EVisualState
 		{
@@ -172,6 +174,10 @@ class CHud : public CComponent
 		float m_EntranceDropProgress = 0.0f;
 		float m_EntranceProgress = 0.0f;
 		int64_t m_EntranceLastTick = 0;
+		bool m_WaveformWasPlaying = false;
+		bool m_WaveformSettling = false;
+		int64_t m_WaveformSettleStartTick = 0;
+		float m_WaveformSettleSampleTime = 0.0f;
 		bool m_LayoutInitialized = false;
 		bool m_HasTrackIdentity = false;
 		SHudMediaIslandTrackSnapshot m_CurrentTrack;
@@ -203,6 +209,8 @@ class CHud : public CComponent
 			float m_Progress = 0.0f;
 			float m_LiquidProgress = 0.0f;
 			float m_LiquidOriginCenterX = 0.0f;
+			float m_LiquidOriginWidth = 0.0f;
+			SQmTuneZoneEffectSummary m_TuneZoneSummary;
 
 			void Reset()
 			{
@@ -268,6 +276,10 @@ class CHud : public CComponent
 			m_EntranceDropProgress = 0.0f;
 			m_EntranceProgress = 0.0f;
 			m_EntranceLastTick = 0;
+			m_WaveformWasPlaying = false;
+			m_WaveformSettling = false;
+			m_WaveformSettleStartTick = 0;
+			m_WaveformSettleSampleTime = 0.0f;
 			m_LayoutInitialized = false;
 			m_HasTrackIdentity = false;
 			m_CurrentTrack.Reset();
@@ -300,6 +312,12 @@ class CHud : public CComponent
 		}
 	};
 	SHudMediaIslandAnimState m_MediaIslandAnimState;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurSource;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurTemporary;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurTarget;
+	int m_MediaIslandBlurWidth = 0;
+	int m_MediaIslandBlurHeight = 0;
+	bool m_MediaIslandBlurReady = false;
 	struct SHudWeaponPresentationState
 	{
 		bool m_aClientInitialized[MAX_CLIENTS] = {};
@@ -369,10 +387,35 @@ class CHud : public CComponent
 		}
 	};
 	SHudSwitchCountdownAnimState m_SwitchCountdownAnimState;
+	struct SHudSwitchCountdownRingState
+	{
+		int m_Team = -1;
+		int m_Number = 0;
+		int m_ClientId = -1;
+		int m_Connection = 0;
+		int m_TriggerTick = 0;
+		int m_EndTick = 0;
+		int m_LayoutSlot = 0;
+		vec2 m_Position{};
+		vec2 m_Velocity{};
+		float m_Alpha = 0.0f;
+		bool m_Seen = false;
+		bool m_Initialized = false;
+
+		void Reset()
+		{
+			*this = {};
+			m_Team = -1;
+			m_ClientId = -1;
+		}
+	};
+	std::array<SHudSwitchCountdownRingState, SWITCH_COUNTDOWN_MAX_LINES> m_aSwitchCountdownRings{};
 	struct SHudSwitchCountdownTracker
 	{
 		int m_aaEndTick[NUM_DDRACE_TEAMS][256] = {};
 		int m_aaTouchTick[NUM_DDRACE_TEAMS][256] = {};
+		int m_aaClientId[NUM_DDRACE_TEAMS][256] = {};
+		int m_aaConnection[NUM_DDRACE_TEAMS][256] = {};
 
 		void Reset()
 		{
@@ -382,6 +425,8 @@ class CHud : public CComponent
 				{
 					m_aaEndTick[t][i] = 0;
 					m_aaTouchTick[t][i] = 0;
+					m_aaClientId[t][i] = -1;
+					m_aaConnection[t][i] = -1;
 				}
 			}
 		}
@@ -411,6 +456,8 @@ class CHud : public CComponent
 	void UpdateSwitchCountdownTracker();
 	bool HasActiveSwitchCountdown() const;
 	bool BuildSwitchCountdownSummary(char *pBuf, size_t BufSize) const;
+	void ResetSwitchCountdownRings();
+	void RenderFollowSwitchCountdowns();
 	void RenderDummyMiniMap();
 	bool GetDummyMiniMapRect(float &X, float &Y, float &W, float &H) const;
 	void RenderConnectionWarning();
@@ -423,6 +470,8 @@ class CHud : public CComponent
 	void RenderPlayerState(int ClientId);
 	bool HasVisibleMediaIsland() const;
 	float GetTopIslandAvoidanceRight() const;
+	void DestroyMediaIslandBlurTargets();
+	bool PrepareMediaIslandBlur();
 	void RenderMediaIsland();
 
 	int m_LastSpectatorCountTick;
@@ -472,6 +521,7 @@ public:
 	void OnRender() override;
 	void OnInit() override;
 	void OnNewSnapshot() override;
+	void OnRelease() override;
 
 	// DDRace
 

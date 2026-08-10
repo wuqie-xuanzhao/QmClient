@@ -59,6 +59,7 @@ namespace ui_widget
 		bool m_Submitted = false;
 		bool m_Deactivated = false;
 		bool m_Cleared = false;
+		bool m_TrailingAction = false;
 	};
 
 	inline SInputFieldResult BuildInputFieldResult(bool WasActive, bool IsActive, bool Changed, bool SubmitPressed, bool WasEmpty, bool IsEmpty, bool Clearable)
@@ -81,6 +82,34 @@ namespace ui_widget
 		CUIRect m_ClearRect;
 		CUIRect m_TrailingRect;
 	};
+
+	// 用实际文本宽度将数值和单位作为一个整体居中；编辑矩形保留最小宽度，
+	// 但其右边界仍贴合数值末尾，避免固定单位槽制造视觉空白。
+	struct SInlineTrailingTextLayout
+	{
+		CUIRect m_TextRect;
+		CUIRect m_TrailingRect;
+		CUIRect m_VisualGroupRect;
+	};
+
+	inline SInlineTrailingTextLayout ResolveInlineTrailingTextLayout(const CUIRect &ContentRect, float TextWidth, float TrailingTextWidth, float UiScale = 1.0f)
+	{
+		SInlineTrailingTextLayout Layout{};
+		const float Scale = std::max(UiScale, 0.1f);
+		const float AvailableWidth = std::max(0.0f, ContentRect.w);
+		const float ResolvedTextWidth = std::min(std::max(0.0f, TextWidth), AvailableWidth);
+		const float ResolvedTrailingWidth = std::min(std::max(0.0f, TrailingTextWidth), std::max(0.0f, AvailableWidth - ResolvedTextWidth));
+		const float Gap = std::min(3.0f * Scale, std::max(0.0f, AvailableWidth - ResolvedTextWidth - ResolvedTrailingWidth));
+		const float GroupWidth = ResolvedTextWidth + Gap + ResolvedTrailingWidth;
+		Layout.m_VisualGroupRect = {ContentRect.x + (AvailableWidth - GroupWidth) * 0.5f, ContentRect.y, GroupWidth, ContentRect.h};
+
+		const float TextRight = Layout.m_VisualGroupRect.x + ResolvedTextWidth;
+		const float MinimumEditWidth = 52.0f * Scale;
+		const float EditWidth = std::min(AvailableWidth, std::max(MinimumEditWidth, ResolvedTextWidth));
+		Layout.m_TextRect = {std::max(ContentRect.x, TextRight - EditWidth), ContentRect.y, std::min(EditWidth, TextRight - ContentRect.x), ContentRect.h};
+		Layout.m_TrailingRect = {TextRight + Gap, ContentRect.y, ResolvedTrailingWidth, ContentRect.h};
+		return Layout;
+	}
 
 	inline SInputFieldLayout ResolveInputFieldLayout(const CUIRect &Rect, bool HasIcon, bool Clearable, float UiScale = 1.0f, float TrailingWidth = 0.0f)
 	{
@@ -118,7 +147,9 @@ namespace ui_widget
 		{
 			Layout.m_TrailingRect = Rect;
 			Layout.m_TrailingRect.w = std::min(TrailingWidth, std::max(0.0f, Rect.w));
-			Layout.m_TrailingRect.x = Rect.x + std::max(0.0f, Rect.w - Layout.m_TrailingRect.w);
+			const float TrailingRight = Clearable ? Layout.m_ClearRect.x : Rect.x + Rect.w;
+			Layout.m_TrailingRect.x = std::max(Rect.x, TrailingRight - Layout.m_TrailingRect.w);
+			Layout.m_TrailingRect.w = std::max(0.0f, TrailingRight - Layout.m_TrailingRect.x);
 			const float Consumed = std::min(Layout.m_ContentRect.w, Layout.m_TrailingRect.w + Gap);
 			Layout.m_ContentRect.w = std::max(0.0f, Layout.m_ContentRect.w - Consumed);
 		}
@@ -152,11 +183,16 @@ namespace ui_widget
 		const char *m_pPlaceholder = nullptr;
 		const char *m_pLeadingIcon = nullptr;
 		const char *m_pTrailingText = nullptr;
+		const void *m_pTrailingActionId = nullptr;
+		const char *m_pTrailingActionIcon = nullptr;
+		// -1 使用字体字形回退；Qm 图集图标使用统一的方形视图框。
+		int m_TrailingActionQmIcon = -1;
 		float m_TrailingWidth = 0.0f;
 		EInputFieldMode m_Mode = EInputFieldMode::TEXT;
 		EInputTextStyle m_TextStyle = EInputTextStyle::BODY;
 		bool m_Clearable = false;
 		bool m_SearchHotkeyEnabled = false;
+		bool m_InlineTrailingText = false;
 		int m_Corners = IGraphics::CORNER_ALL;
 		int m_TextAlign = -1;
 		float m_FontSize = ui_token::font::BODY;
@@ -239,6 +275,7 @@ namespace ui_widget
 		const char *m_pMaxText = nullptr; // 当值为 Max 且非 Infinite 时显示
 		float m_FontSize = ui_token::font::BODY;
 		float m_LineSpacing = 1.0f;
+		float m_TrailingWidth = 34.0f;
 		int m_LabelAlign = TEXTALIGN_ML;
 		int m_ValueMultiplier = 1; // 滑动条以 Min/Multiplier..Max/Multiplier 为单位，显示/编辑真实值
 		int m_ValueStep = 1; // 滑动条、滚轮和提交值按该 stored-value 步进量化

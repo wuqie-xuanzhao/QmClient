@@ -100,6 +100,18 @@ Dropdown trigger
                  └─ CScrollRegion + POPUP_LIST
 ```
 
+### 3.1 图标决策（2026-07-31）
+
+- Phosphor SVG 是 Qm 图标唯一源，提供真实 `Regular` 与 `Bold` 两个资源族；粗细来自源 SVG 或对应字体文件，禁止通过缩放、shader 或 tint 伪造。
+- 图标有两条明确路径：字体字形图标继续使用 FreeType 单通道 alpha glyph atlas；独立 Qm UI atlas 在支持的 OpenGL 3/GLES 3/Vulkan 后端使用 Phosphor MSDF atlas。普通文本不迁移为 MSDF。
+- `EFontPreset::ICON_FONT` 跟随 Graphics 的 Regular/Bold 选择；SettingsCard 的折叠箭头固定使用 `EFontPreset::ICON_FONT_BOLD`，必须继续走 Phosphor Bold 字体 glyph 路径，不能改成几何或 bitmap atlas。
+- Graphics 页 `Icons` 卡片提供 `White / Black` 和 `Regular / Bold`。白黑为运行时 tint，不复制图集资源；直接传入语义色的 HUD/游戏图标不受该偏好覆盖。
+- MSDF atlas 使用 `px_range=6`、outline padding 和独立 shader 采样。无法使用专用 MSDF renderer 或资源加载失败时，回退至现有 1x/2x/4x alpha atlas。
+- Media Island SDF 和 rounded-rectangle SDF 分别只用于 HUD 外形与 SettingsCard chrome，不承担普通图标 glyph。
+- MSDF 性能结论：Median + `fwidth` 的片元计算确实比单通道 glyph 采样更重，但当前独立 UI 图标数量很少，不能把地图缩放时的游戏 FPS 问题归因于 MSDF。更现实的热点是每图标独立 draw、pipeline/state 切换、Vulkan descriptor/UBO 和 stream/staging upload。
+- 当前 MSDF PNG 虽然是 RGB distance field，但运行时仍沿用普通纹理上传路径，尚未实现 R8 单通道替代或专用图标 batching；因此 MSDF 的当前收益是缩放质量和统一资产边界，不应宣传成已经完成的性能优化。只有 profile 证明纹理带宽或 derivative 是热点时，才继续评估预计算 `screenPxRange`、batch/cache 或 R8 SDF 实验。
+- 本轮独立 Review 还检查了 Vulkan swapchain 生命周期：MSDF pipeline 销毁/重建会同步 backend capability，swapchain 重建失败会向上返回，失效 pipeline 的旧 command 会被跳过；glyph fallback 使用显式 icon state color，不再借用全局文字颜色。
+
 整体方向是正确的：壳层、metrics、Card shell/Deck、scroll policy 和 Dropdown policy 都已经存在。当前主要风险不在“没有公共组件”，而在公共组件旁边仍有可绕过路径，且部分公共层同时承载了业务页面的手写高度公式。
 
 ## 4. 页面壳层、宽度与响应式设计
@@ -815,6 +827,13 @@ CLOSE
 - 每个 subtitle 为空或唯一；禁止通用 fallback 重复超过一次。
 - 裸字号例外按 stable semantic ID + 注释登记，不按宽泛源码片段放行。
 
+### 17.4 本轮自动证据与人工边界
+
+- Python 资产测试检查 Regular/Bold 两套 MSDF manifest、RGB PNG、非空图标区域、RGB 通道距离数据和 cell padding；它不能证明最终 shader 在每个 GPU 上的视觉质量。
+- C++ 图标测试检查 runtime icon 名称、Regular/Bold 资源、manifest 完整性、MSDF shader 的 derivative 抗锯齿契约、alpha fallback、glyph 状态恢复和 Vulkan MSDF capability 生命周期。
+- `game-client` 构建和 C++ 全量测试只证明编译、链接与自动化契约；不证明 SettingsCard 点击、箭头可见性、Retina 圆角、窗口生命周期或 FPS。
+- 客户端启动、截图、Retina/不同 UI scale、OpenGL/Vulkan fallback、M2 同场景 FPS 与帧 pacing 留给用户人工验证；这些项目未在本轮自动声称通过。
+
 ## 18. 人工 UI/UX 验收矩阵
 
 人工验收由用户执行，结果应记录为 pass/fail/gap，不用截图作为本代理的自动证据。
@@ -844,6 +863,8 @@ CLOSE
 6. `game-client`、`testrunner`、全量 C++ tests、settings migration gate、quick/default gate 按仓库规范串行通过。
 7. 独立只读 review 无未解决 P0/P1 finding。
 8. 用户完成客户端视觉/交互验收；未验收项明确写为视觉 gap，不能写“已通过”。
+
+本轮实现完成时，汇报必须同时列出实际执行过的自动命令与结果；任何未启动客户端、未做 GPU capture 或未做用户视觉检查的项目都必须保留为 gap。
 
 ## 20. 非目标
 

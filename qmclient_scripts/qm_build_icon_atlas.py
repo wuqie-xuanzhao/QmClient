@@ -4,8 +4,8 @@
 Build QmClient SVG icon PNG atlases.
 
 This script is intentionally build-time only: runtime code loads the generated
-PNG atlas and JSON manifest, never SVG. It expects source SVG files in
-datasrc/qm_icons/tabler and writes data/qmclient/icons/qm_icons_{scale}x.*
+PNG atlas and JSON manifest, never SVG. It accepts an explicit SVG source
+directory and writes a named atlas family under data/qmclient/icons/.
 """
 
 from __future__ import annotations
@@ -29,11 +29,12 @@ ICON_ALIASES = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", type=Path, required=True)
+    parser.add_argument("--source", type=Path, action="append", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--sizes", type=int, nargs="+", default=[1, 2, 4])
     parser.add_argument("--base-size", type=int, default=24)
     parser.add_argument("--padding", type=int, default=4)
+    parser.add_argument("--atlas-name", default="qm_icons")
     return parser.parse_args()
 
 
@@ -43,6 +44,23 @@ def find_renderer() -> str | None:
         if path:
             return path
     return None
+
+
+def collect_svg_files(source_dirs: list[Path]) -> list[Path]:
+    svg_files = sorted(
+        (svg for source_dir in source_dirs for svg in source_dir.glob("*.svg")),
+        key=lambda svg: svg.name,
+    )
+    if not svg_files:
+        raise SystemExit(f"No SVG files found in {', '.join(str(source_dir) for source_dir in source_dirs)}")
+
+    icon_names: set[str] = set()
+    for svg in svg_files:
+        name = ICON_ALIASES.get(svg.stem.removeprefix("icon-"), svg.stem.removeprefix("icon-"))
+        if name in icon_names:
+            raise SystemExit(f"Duplicate icon name: {name}")
+        icon_names.add(name)
+    return svg_files
 
 
 def _float_attr(node: ET.Element, name: str, default: float = 0.0) -> float:
@@ -177,6 +195,31 @@ def _sample_cubic_bezier(
     return points
 
 
+def _sample_quadratic_bezier(
+    start: tuple[float, float],
+    control: tuple[float, float],
+    end: tuple[float, float],
+) -> list[tuple[float, float]]:
+    control_length = math.dist(start, control) + math.dist(control, end)
+    segments = max(4, math.ceil(control_length / 8.0))
+    points: list[tuple[float, float]] = []
+    for index in range(1, segments + 1):
+        t = index / segments
+        inverse = 1.0 - t
+        points.append(
+            (
+                inverse * inverse * start[0]
+                + 2.0 * inverse * t * control[0]
+                + t * t * end[0],
+                inverse * inverse * start[1]
+                + 2.0 * inverse * t * control[1]
+                + t * t * end[1],
+            )
+        )
+    points[-1] = end
+    return points
+
+
 def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
     tokens = _PATH_TOKEN_RE.findall(path_data.replace(",", " "))
     polylines: list[list[tuple[float, float]]] = []
@@ -184,6 +227,7 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
     current = (0.0, 0.0)
     subpath_start = (0.0, 0.0)
     last_cubic_control: tuple[float, float] | None = None
+    last_quadratic_control: tuple[float, float] | None = None
     command = ""
     index = 0
 
@@ -227,6 +271,7 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             subpath_start = current
             current_polyline = [current]
             last_cubic_control = None
+            last_quadratic_control = None
             command = "l" if relative else "L"
         elif upper == "L":
             x = number()
@@ -236,18 +281,21 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
                 y += current[1]
             append((x, y))
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "H":
             x = number()
             if relative:
                 x += current[0]
             append((x, current[1]))
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "V":
             y = number()
             if relative:
                 y += current[1]
             append((current[0], y))
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "C":
             control1 = (number(), number())
             control2 = (number(), number())
@@ -265,6 +313,7 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             for point in _sample_cubic_bezier(current, control1, control2, end):
                 append(point)
             last_cubic_control = control2
+            last_quadratic_control = None
         elif upper == "S":
             control1 = (
                 current
@@ -285,6 +334,33 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             for point in _sample_cubic_bezier(current, control1, control2, end):
                 append(point)
             last_cubic_control = control2
+            last_quadratic_control = None
+        elif upper == "Q":
+            control = (number(), number())
+            end = (number(), number())
+            if relative:
+                control = (control[0] + current[0], control[1] + current[1])
+                end = (end[0] + current[0], end[1] + current[1])
+            for point in _sample_quadratic_bezier(current, control, end):
+                append(point)
+            last_cubic_control = None
+            last_quadratic_control = control
+        elif upper == "T":
+            control = (
+                current
+                if last_quadratic_control is None
+                else (
+                    current[0] * 2.0 - last_quadratic_control[0],
+                    current[1] * 2.0 - last_quadratic_control[1],
+                )
+            )
+            end = (number(), number())
+            if relative:
+                end = (end[0] + current[0], end[1] + current[1])
+            for point in _sample_quadratic_bezier(current, control, end):
+                append(point)
+            last_cubic_control = None
+            last_quadratic_control = control
         elif upper == "A":
             rx = number()
             ry = number()
@@ -302,12 +378,14 @@ def _parse_path_polylines(path_data: str) -> list[list[tuple[float, float]]]:
             ):
                 append(point)
             last_cubic_control = None
+            last_quadratic_control = None
         elif upper == "Z":
             append(subpath_start)
             flush()
             current = subpath_start
             command = ""
             last_cubic_control = None
+            last_quadratic_control = None
         else:
             raise ValueError(f"Unsupported SVG path command {command!r}")
 
@@ -495,7 +573,12 @@ def _render_svg_fallback(source: Path, output: Path, size: int) -> None:
 
 
 def render_svg(renderer, source: Path, output: Path, size: int) -> None:
-    if renderer is None:
+    # ImageMagick does not resolve SVG currentColor consistently. The bundled
+    # Phosphor sources use it for monochrome paths, so keep this path visible.
+    if renderer is None or (
+        Path(renderer).name.lower() == "magick"
+        and "currentColor" in source.read_text(encoding="utf-8")
+    ):
         _render_svg_fallback(source, output, size)
         return
 
@@ -578,7 +661,12 @@ def icon_id(path: Path) -> str:
 
 
 def build_scale(
-    source_dir: Path, output_dir: Path, scale: int, base_size: int, padding: int
+    source_dirs: list[Path],
+    output_dir: Path,
+    atlas_name: str,
+    scale: int,
+    base_size: int,
+    padding: int,
 ) -> None:
     try:
         from PIL import Image
@@ -587,9 +675,7 @@ def build_scale(
 
     renderer = find_renderer()
 
-    svg_files = sorted(source_dir.glob("*.svg"))
-    if not svg_files:
-        raise SystemExit(f"No SVG files found in {source_dir}")
+    svg_files = collect_svg_files(source_dirs)
 
     icon_size = base_size * scale
     pad = padding * scale
@@ -611,6 +697,12 @@ def build_scale(
             if image.size != (icon_size, icon_size):
                 image = image.resize((icon_size, icon_size), Image.Resampling.LANCZOS)
 
+            # Atlas rendering is tinted at runtime. Normalize every visible
+            # pixel to white and keep only the source alpha coverage.
+            normalized = Image.new("RGBA", image.size, (255, 255, 255, 0))
+            normalized.putalpha(image.getchannel("A"))
+            image = normalized
+
             col = index % columns
             row = index // columns
             x = col * tile + pad
@@ -619,8 +711,8 @@ def build_scale(
             icons[icon_id(svg)] = {"x": x, "y": y, "w": icon_size, "h": icon_size}
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    image_name = f"qm_icons_{scale}x.png"
-    manifest_name = f"qm_icons_{scale}x.json"
+    image_name = f"{atlas_name}_{scale}x.png"
+    manifest_name = f"{atlas_name}_{scale}x.json"
     atlas = dilate_image(atlas)
     atlas.save(output_dir / image_name)
     manifest = {
@@ -646,7 +738,14 @@ def main() -> int:
     for scale in args.sizes:
         if scale <= 0:
             raise SystemExit("sizes must be positive")
-        build_scale(args.source, args.output, scale, args.base_size, args.padding)
+        build_scale(
+            args.source,
+            args.output,
+            args.atlas_name,
+            scale,
+            args.base_size,
+            args.padding,
+        )
     return 0
 
 

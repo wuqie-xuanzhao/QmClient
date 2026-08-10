@@ -3,6 +3,9 @@
 
 #include <generated/protocol.h>
 
+#include <string>
+#include <vector>
+
 enum class ESwapCountdownMessageAction
 {
 	None,
@@ -18,5 +21,27 @@ enum class ESwapCountdownMessageDirection
 };
 
 bool ParseSwapCountdownMessage(const char *pText, ESwapCountdownMessageAction &Action, ESwapCountdownMessageDirection &Direction, char *pCounterpart, int CounterpartSize);
+bool ParseSwapCompletionMessage(const char *pText, char *pFirst, int FirstSize, char *pSecond, int SecondSize);
+
+struct SSwapCountdownState
+{
+	std::string m_Counterpart;
+	int m_StartTick = 0;
+	int m_InstanceId = 0;
+	bool m_Outgoing = false;
+};
+
+class CSwapCountdownTracker
+{
+	std::vector<SSwapCountdownState> m_vEntries;
+	int m_NextInstanceId = 1;
+
+public:
+	void Start(const char *pCounterpart, bool Outgoing, int StartTick);
+	void Cancel(const char *pCounterpart, bool Outgoing);
+	void Remove(const char *pCounterpart);
+	void Clear();
+	const std::vector<SSwapCountdownState> &Entries() const { return m_vEntries; }
+};
 
 #endif

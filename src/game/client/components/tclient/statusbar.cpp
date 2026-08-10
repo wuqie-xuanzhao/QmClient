@@ -251,6 +251,40 @@ void CStatusBar::ZoomRender()
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
+float CStatusBar::ScoreWidth()
+{
+	char aBuf[32];
+	if(!FormatScore(aBuf, sizeof(aBuf)))
+		return 0.0f;
+
+	return TextRender()->TextWidth(m_FontSize, aBuf);
+}
+
+void CStatusBar::ScoreRender()
+{
+	char aBuf[32];
+	if(!FormatScore(aBuf, sizeof(aBuf)))
+		return;
+
+	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
+}
+
+bool CStatusBar::FormatScore(char *pBuf, int BufSize)
+{
+	if(m_PlayerId < 0 || m_PlayerId >= MAX_CLIENTS)
+		return false;
+
+	const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId];
+	if(!pInfo)
+		return false;
+
+	const CGameClient::CClientData &ClientData = GameClient()->m_aClients[m_PlayerId];
+	const bool Race7 = Client()->IsSixup() && (GameClient()->m_Snap.m_pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE);
+	tclient_statusbar::FormatScore(pBuf, BufSize, pInfo->m_Score, Race7, GameClient()->m_GameInfo.m_TimeScore,
+		GameClient()->m_ReceivedDDNetPlayerFinishTimes, ClientData.m_FinishTimeSeconds, ClientData.m_FinishTimeMillis);
+	return pBuf[0] != '\0';
+}
+
 float CStatusBar::DownstreamWidth()
 {
 	return TextRender()->TextWidth(m_FontSize, "000ms");

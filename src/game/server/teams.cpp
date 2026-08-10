@@ -476,7 +476,7 @@ void CGameTeams::SetForceCharacterTeam(int ClientId, int Team)
 	if(OldTeam != Team)
 	{
 		for(int LoopClientId = 0; LoopClientId < MAX_CLIENTS; ++LoopClientId)
-			if(GetPlayer(LoopClientId))
+			if(GetPlayer(LoopClientId) || Server()->ClientIsQmLiveObserver(LoopClientId))
 				SendTeamsState(LoopClientId);
 
 		if(GetPlayer(ClientId))
@@ -594,7 +594,7 @@ void CGameTeams::SendTeamsState(int ClientId)
 	if(g_Config.m_SvTeam == SV_TEAM_FORCED_SOLO)
 		return;
 
-	if(!m_pGameContext->m_apPlayers[ClientId])
+	if(!m_pGameContext->m_apPlayers[ClientId] && !Server()->ClientIsQmLiveObserver(ClientId))
 		return;
 
 	CMsgPacker Msg(NETMSGTYPE_SV_TEAMSSTATE);
@@ -607,7 +607,7 @@ void CGameTeams::SendTeamsState(int ClientId)
 	}
 
 	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientId);
-	int ClientVersion = m_pGameContext->m_apPlayers[ClientId]->GetClientVersion();
+	int ClientVersion = m_pGameContext->m_apPlayers[ClientId] ? m_pGameContext->m_apPlayers[ClientId]->GetClientVersion() : Server()->GetClientVersion(ClientId);
 	if(!Server()->IsSixup(ClientId) && VERSION_DDRACE < ClientVersion && ClientVersion < VERSION_DDNET_MSG_LEGACY)
 	{
 		Server()->SendMsg(&MsgLegacy, MSGFLAG_VITAL, ClientId);

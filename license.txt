@@ -30,15 +30,13 @@ DejaVuSans.ttf:
 Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
 Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below)
 
-Font_Awesome_6_Free-Solid-900.otf:
-----------------------------------
+Phosphor-Regular.ttf and Phosphor-Bold.ttf:
+---------------------------------------------
 
-Copyright (c) 2023 Fonticons, Inc. (https://fontawesome.com)
-with Reserved Font Name: "Font Awesome".
+Copyright (c) 2020 Phosphor Icons
 
-This Font Software is licensed under the SIL Open Font License, Version 1.1.
-This license is copied below, and is also available with a FAQ at:
-http://scripts.sil.org/OFL
+Licensed under the MIT License. The complete license text is included in
+datasrc/qm_icons/LICENSE_PHOSPHOR.txt.
 
 GlowSansJ-Compressed-Book.otf:
 ------------------------------

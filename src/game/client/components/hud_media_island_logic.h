@@ -16,6 +16,13 @@
 #include <cstddef>
 #include <cstdint>
 
+constexpr float QmHudMediaIslandDesignScale = 0.8f;
+
+constexpr float QmHudMediaIslandScaled(float Value)
+{
+	return Value * QmHudMediaIslandDesignScale;
+}
+
 struct SHudMediaIslandTrackInput
 {
 	const char *m_pTitle = "";
@@ -70,7 +77,8 @@ enum class EHudMediaIslandTrackUpdate
 
 enum class EHudMediaIslandCountdownType
 {
-	SWAP = 0,
+	TUNE_ZONE = 0,
+	SWAP,
 	SWITCH,
 	MUTE,
 };
@@ -93,6 +101,103 @@ struct SHudMediaIslandCountdownInput
 	bool m_Completed = false;
 	bool m_SwapOutgoing = false;
 };
+
+enum class EQmSwitchCountdownMode
+{
+	FOLLOW_TEE = 0,
+	MEDIA_ISLAND,
+	BOTH,
+};
+
+inline bool QmHudSwitchCountdownShowsFollowTee(int Mode)
+{
+	return Mode == static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE) ||
+	       Mode == static_cast<int>(EQmSwitchCountdownMode::BOTH);
+}
+
+inline bool QmHudSwitchCountdownShowsMediaIsland(int Mode)
+{
+	return Mode == static_cast<int>(EQmSwitchCountdownMode::MEDIA_ISLAND) ||
+	       Mode == static_cast<int>(EQmSwitchCountdownMode::BOTH);
+}
+
+inline int QmHudSwitchCountdownModeFromLocations(bool FollowTee, bool MediaIsland, int CurrentMode)
+{
+	if(FollowTee && MediaIsland)
+		return static_cast<int>(EQmSwitchCountdownMode::BOTH);
+	if(FollowTee)
+		return static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE);
+	if(MediaIsland)
+		return static_cast<int>(EQmSwitchCountdownMode::MEDIA_ISLAND);
+	return std::clamp(CurrentMode, static_cast<int>(EQmSwitchCountdownMode::FOLLOW_TEE), static_cast<int>(EQmSwitchCountdownMode::BOTH));
+}
+
+struct SHudSwitchCountdownEntry
+{
+	int m_Team = 0;
+	int m_Number = 0;
+	int m_ClientId = -1;
+	int m_Connection = 0;
+	int m_TriggerTick = 0;
+	int m_EndTick = 0;
+	int m_CurrentTick = 0;
+};
+
+inline int QmHudSelectLatestSwitchCountdowns(
+	const SHudSwitchCountdownEntry *pEntries,
+	size_t EntryCount,
+	SHudSwitchCountdownEntry *pSelected,
+	size_t SelectedCapacity)
+{
+	if(pEntries == nullptr || pSelected == nullptr || SelectedCapacity == 0)
+		return 0;
+
+	const auto IsNewer = [](const SHudSwitchCountdownEntry &Left, const SHudSwitchCountdownEntry &Right) {
+		if(Left.m_TriggerTick != Right.m_TriggerTick)
+			return Left.m_TriggerTick > Right.m_TriggerTick;
+		if(Left.m_Team != Right.m_Team)
+			return Left.m_Team < Right.m_Team;
+		return Left.m_Number < Right.m_Number;
+	};
+
+	size_t SelectedCount = 0;
+	for(size_t i = 0; i < EntryCount; ++i)
+	{
+		const SHudSwitchCountdownEntry &Entry = pEntries[i];
+		if(Entry.m_ClientId < 0 || Entry.m_TriggerTick <= 0 || Entry.m_EndTick <= Entry.m_CurrentTick)
+			continue;
+
+		if(SelectedCount < SelectedCapacity)
+			pSelected[SelectedCount++] = Entry;
+		else if(IsNewer(Entry, pSelected[SelectedCount - 1]))
+			pSelected[SelectedCount - 1] = Entry;
+		else
+			continue;
+
+		std::stable_sort(pSelected, pSelected + SelectedCount, IsNewer);
+	}
+	return static_cast<int>(SelectedCount);
+}
+
+inline int QmHudSwitchCountdownFollowSide(float TeeX, bool PetVisible, float PetX)
+{
+	if(PetVisible && PetX < TeeX)
+		return 1;
+	return -1;
+}
+
+inline vec2 QmHudSwitchCountdownFollowTarget(vec2 TeePosition, int Side, int Slot, float Now)
+{
+	constexpr float BaseOffsetX = 48.0f;
+	constexpr float ItemSpacing = 24.0f;
+	constexpr float OffsetY = 52.0f;
+	constexpr float BobAmount = 4.0f;
+	Side = Side < 0 ? -1 : 1;
+	Slot = std::max(0, Slot);
+	return TeePosition + vec2(
+				     Side * (BaseOffsetX + ItemSpacing * Slot),
+				     -OffsetY + std::sin(Now / 2.0f) * BobAmount);
+}
 
 struct SHudMediaIslandSwapLifecycle
 {
@@ -146,6 +251,101 @@ inline bool QmHudMediaIslandSwapVisibleForConnection(int SwapConnection, int Act
 inline bool QmHudMediaIslandShouldShowTeam(bool ShowTeam, bool EntitiesDDRace, int Team)
 {
 	return ShowTeam && EntitiesDDRace && Team > 0;
+}
+
+struct SHudMediaIslandTimerRowLayout
+{
+	float m_RaceY = 0.0f;
+	float m_RaceH = 0.0f;
+	float m_CheckpointY = 0.0f;
+	float m_CheckpointH = 0.0f;
+};
+
+inline SHudMediaIslandTimerRowLayout QmHudMediaIslandTimerRows(float BoxY, float BoxH, bool HasCheckpoint)
+{
+	BoxH = std::max(0.0f, BoxH);
+	if(!HasCheckpoint)
+		return {BoxY, BoxH, BoxY + BoxH, 0.0f};
+
+	const float RaceH = BoxH * 0.70f;
+	return {BoxY, RaceH, BoxY + RaceH, BoxH - RaceH};
+}
+
+struct SHudMediaIslandSwapRows
+{
+	int m_InlineSwapCount = 0;
+	int m_BottomSwapCount = 0;
+	int m_BottomLineCount = 0;
+	int m_LyricsLineIndex = -1;
+};
+
+inline SHudMediaIslandSwapRows QmHudMediaIslandSwapRows(int IncomingSwapCount, bool HasRaceTimer, bool ShowLyrics)
+{
+	SHudMediaIslandSwapRows Result;
+	IncomingSwapCount = std::max(0, IncomingSwapCount);
+	Result.m_InlineSwapCount = HasRaceTimer && IncomingSwapCount > 0 ? 1 : 0;
+	Result.m_BottomSwapCount = IncomingSwapCount - Result.m_InlineSwapCount;
+	Result.m_LyricsLineIndex = ShowLyrics ? Result.m_BottomSwapCount : -1;
+	Result.m_BottomLineCount = Result.m_BottomSwapCount + (ShowLyrics ? 1 : 0);
+	return Result;
+}
+
+struct SHudMediaIslandInfoStackLayout
+{
+	float m_TopCenterY = 0.0f;
+	float m_BottomCenterY = 0.0f;
+};
+
+inline SHudMediaIslandInfoStackLayout QmHudMediaIslandMirroredInfoStack(float IslandY, float IslandHeight, float TextHeight, float TextGap)
+{
+	const float MidY = IslandY + std::max(0.0f, IslandHeight) * 0.5f;
+	const float CenterOffset = (std::max(0.0f, TextHeight) + std::max(0.0f, TextGap)) * 0.5f;
+	return {MidY - CenterOffset, MidY + CenterOffset};
+}
+
+inline float QmHudMediaIslandWaveBarHeight(int BarIndex, float TimeSeconds, float Activity)
+{
+	constexpr float RestHeight = 0.20f;
+	Activity = std::clamp(Activity, 0.0f, 1.0f);
+	if(Activity <= 0.0f)
+		return RestHeight;
+
+	struct SWaveBarMotion
+	{
+		float m_PrimaryFrequency;
+		float m_SecondaryFrequency;
+		float m_PrimaryPhase;
+		float m_SecondaryPhase;
+		float m_PrimaryWeight;
+	};
+	constexpr std::array<SWaveBarMotion, 7> aMotions = {{
+		{2.9f, 8.1f, 0.2f, 1.7f, 0.72f},
+		{4.7f, 10.6f, 2.4f, 5.2f, 0.43f},
+		{6.8f, 13.4f, 4.7f, 0.6f, 0.65f},
+		{3.8f, 9.3f, 1.1f, 3.8f, 0.38f},
+		{5.7f, 12.0f, 5.6f, 2.9f, 0.57f},
+		{7.45f, 8.77f, 4.92f, 1.86f, 0.58f},
+		{2.6f, 14.77f, 0.1f, 2.2f, 0.41f},
+	}};
+	const size_t MotionIndex = static_cast<size_t>(std::max(0, BarIndex)) % aMotions.size();
+	const SWaveBarMotion &Motion = aMotions[MotionIndex];
+	const float Primary = 0.5f + 0.5f * std::sin(TimeSeconds * Motion.m_PrimaryFrequency + Motion.m_PrimaryPhase);
+	const float Secondary = 0.5f + 0.5f * std::sin(TimeSeconds * Motion.m_SecondaryFrequency + Motion.m_SecondaryPhase);
+	const float DynamicHeight = std::clamp(RestHeight + (1.0f - RestHeight) * (Primary * Motion.m_PrimaryWeight + Secondary * (1.0f - Motion.m_PrimaryWeight)), RestHeight, 1.0f);
+	return RestHeight + (DynamicHeight - RestHeight) * Activity;
+}
+
+inline float QmHudMediaIslandWaveBarSettleProgress(int BarIndex, int BarCount, float ElapsedSeconds)
+{
+	constexpr float LayerStaggerSeconds = 0.15f;
+	constexpr float LayerSettleSeconds = 0.45f;
+	if(BarCount <= 0)
+		return 1.0f;
+
+	BarIndex = std::clamp(BarIndex, 0, BarCount - 1);
+	const int Layer = std::min(BarIndex, BarCount - 1 - BarIndex);
+	const float LinearProgress = std::clamp((ElapsedSeconds - Layer * LayerStaggerSeconds) / LayerSettleSeconds, 0.0f, 1.0f);
+	return LinearProgress * LinearProgress * (3.0f - 2.0f * LinearProgress);
 }
 
 struct SHudMediaIslandBlobPose
@@ -230,9 +430,9 @@ inline SHudMediaIslandEntranceTimeline QmHudAdvanceMediaIslandEntranceTimeline(S
 
 inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &TargetRect, float TargetRadius, const ColorRGBA &TargetColor, float Progress, float DropProgress = 1.0f, float ScreenTop = 0.0f)
 {
-	constexpr float InitialDiameter = 16.0f;
+	constexpr float InitialDiameter = QmHudMediaIslandScaled(16.0f);
 	constexpr float InitialRadius = InitialDiameter * 0.5f;
-	constexpr float InitialHiddenGap = 2.0f;
+	constexpr float InitialHiddenGap = QmHudMediaIslandScaled(2.0f);
 	Progress = std::clamp(Progress, 0.0f, 1.0f);
 	const float ShapeProgress = QmHudMediaIslandLiquidSmoothStep(Progress);
 	const auto Lerp = [](float From, float To, float Amount) {
@@ -300,6 +500,14 @@ inline float QmHudMediaIslandBlobBlend(float Radius, float RadiusScale)
 	return std::max(0.0f, Radius) * 0.72f * std::clamp(RadiusScale, 0.0f, 1.0f);
 }
 
+inline float QmHudMediaIslandBlobConnectionStrength(float Travel)
+{
+	constexpr float DetachStart = 0.86f;
+	constexpr float DetachEnd = 0.985f;
+	const float DetachProgress = std::clamp((Travel - DetachStart) / (DetachEnd - DetachStart), 0.0f, 1.0f);
+	return 1.0f - QmHudMediaIslandLiquidSmoothStep(DetachProgress);
+}
+
 inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightBlobCapsule(float MainRight, float CenterY, float Radius, float ContentWidth, float RestGap, const SHudMediaIslandBlobPose &Pose)
 {
 	Radius = std::max(0.0f, Radius);
@@ -318,7 +526,7 @@ inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightBlobCapsule(float MainR
 	SHudMediaIslandLiquidCapsule Capsule;
 	Capsule.m_Rect = {CenterX - Width * 0.5f, CenterY - Height * 0.5f, Width, Height};
 	Capsule.m_Radius = std::min(Width, Height) * 0.5f;
-	Capsule.m_SmoothUnion = QmHudMediaIslandBlobBlend(Radius, Pose.m_RadiusScale);
+	Capsule.m_SmoothUnion = QmHudMediaIslandBlobBlend(Radius, Pose.m_RadiusScale) * QmHudMediaIslandBlobConnectionStrength(Pose.m_Travel);
 	Capsule.m_ContentAlpha = Pose.m_ContentAlpha;
 	return Capsule;
 }
@@ -343,7 +551,7 @@ struct SHudMediaIslandSpectatorIconPose
 	float m_OpenScaleY = 0.44f;
 	float m_ClosedScale = 1.0f;
 	float m_CountAlpha = 0.0f;
-	float m_CountOffsetX = -3.0f;
+	float m_CountOffsetX = -QmHudMediaIslandScaled(3.0f);
 };
 
 inline float QmHudAdvanceMediaIslandSpectatorIconProgress(float Current, float DeltaSeconds, int MotionLevel)
@@ -378,7 +586,7 @@ inline SHudMediaIslandSpectatorIconPose QmHudMediaIslandSpectatorIconPose(float 
 	Pose.m_OpenScaleY = 0.44f + 0.56f * Eased;
 	Pose.m_ClosedScale = 1.0f - 0.12f * Eased;
 	Pose.m_CountAlpha = Eased;
-	Pose.m_CountOffsetX = -3.0f * (1.0f - Eased);
+	Pose.m_CountOffsetX = -QmHudMediaIslandScaled(3.0f) * (1.0f - Eased);
 	return Pose;
 }
 
@@ -415,6 +623,22 @@ struct SHudMediaIslandSdfCapsule
 	float m_SmoothUnion = 0.0f;
 };
 
+inline bool QmHudMediaIslandShouldPrepareBackdropBlur(int BackgroundOpacity)
+{
+	return BackgroundOpacity < 100;
+}
+
+inline vec4 QmHudMediaIslandBackdropUv(const CUIRect &OuterRect, const CUIRect &ScreenRect)
+{
+	if(OuterRect.w <= 0.0f || OuterRect.h <= 0.0f || ScreenRect.w <= 0.0f || ScreenRect.h <= 0.0f)
+		return vec4();
+	return vec4(
+		(OuterRect.x - ScreenRect.x) / ScreenRect.w,
+		1.0f - (OuterRect.y - ScreenRect.y) / ScreenRect.h,
+		OuterRect.w / ScreenRect.w,
+		-OuterRect.h / ScreenRect.h);
+}
+
 struct SHudMediaIslandSdfRenderState
 {
 	CUIRect m_Rect{};
@@ -430,6 +654,9 @@ struct SHudMediaIslandSdfRenderState
 	float m_RingThickness = 0.0f;
 	ColorRGBA m_BackgroundColor{};
 	float m_ScreenPixelSize = 1.0f;
+	float m_OuterShadowSize = 0.0f;
+	float m_OuterShadowOpacity = 0.0f;
+	vec4 m_BackdropUv{};
 };
 
 inline float QmHudMediaIslandSdfPadding(const SHudMediaIslandSdfRenderState &State)
@@ -446,7 +673,9 @@ inline float QmHudMediaIslandSdfPadding(const SHudMediaIslandSdfRenderState &Sta
 	// SmoothUnion can move the zero contour outwards by Blend / 4. Keep the
 	// shader feather inside the quad as well, otherwise the liquid edge clips.
 	const float Feather = std::max(State.m_ScreenPixelSize, 0.0001f) * 0.9f;
-	return std::max(1.5f, std::max(0.0f, MaxSmoothUnion) * 0.25f + Feather);
+	const float ShapeOverflow = std::max(0.0f, MaxSmoothUnion) * 0.25f + Feather;
+	const float ShadowOverflow = std::max(0.0f, State.m_OuterShadowSize) + Feather;
+	return std::max(1.5f, std::max(ShapeOverflow, ShadowOverflow));
 }
 
 inline CUIRect QmHudMediaIslandSdfOuterRect(const SHudMediaIslandSdfRenderState &State)
@@ -497,6 +726,8 @@ inline bool QmHudMediaIslandBuildGpuSdfParams(const SHudMediaIslandSdfRenderStat
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_MAIN_PARAMS] = vec4(State.m_MainRadius, State.m_MainDisabledCornerRadius, State.m_RingRadius, State.m_RingThickness);
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_METADATA] = vec4((float)State.m_ItemCount, (float)State.m_MainCorners, State.m_HasRightCapsule ? 1.0f : 0.0f, std::max(State.m_ScreenPixelSize, 0.0001f));
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_CAPSULE_PARAMS] = vec4(State.m_RightCapsule.m_Radius, State.m_RightCapsule.m_SmoothUnion, 0.0f, 0.0f);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED] = vec4(std::max(0.0f, State.m_OuterShadowSize), std::clamp(State.m_OuterShadowOpacity, 0.0f, 1.0f), 0.0f, 0.0f);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_BACKDROP_UV] = State.m_BackdropUv;
 
 	for(int i = 0; i < State.m_ItemCount; ++i)
 	{

@@ -1666,15 +1666,6 @@ def _business_data_records_from_path(
                     )
                 )
 
-    if normalized.endswith("src/game/client/components/menus_settings.cpp"):
-        for text, line in _extract_cpp_string_literal_records(content):
-            if text == "Vulkan QmClient":
-                records.append(
-                    StringAuditRecord(
-                        path, line, text, "business_data", "graphics backend brand data"
-                    )
-                )
-
     if normalized.endswith("src/game/client/components/qmclient/axiom_auto_login.cpp"):
         for text, line in _extract_cpp_string_literal_records(content):
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""

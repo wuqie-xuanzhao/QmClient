@@ -311,6 +311,11 @@ jobs:
             echo "Verified: $file ($size bytes)"
           done
 
+      - name: Verify macOS DMG contents
+        if: runner.os == 'macOS'
+        shell: bash
+        run: qmclient_scripts/verify_macos_dmg.sh "dist/${{ matrix.output_name }}"
+
       - name: Upload packaged artifact
         uses: actions/upload-artifact@v6
         with:
