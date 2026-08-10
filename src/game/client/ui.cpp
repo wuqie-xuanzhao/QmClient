@@ -23,6 +23,7 @@
 #include <game/localization.h>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 using namespace FontIcons;
@@ -66,6 +67,38 @@ CUiScopedQuadBatch::~CUiScopedQuadBatch()
 		m_pUi->EndQuadBatch();
 }
 
+CUiScopedGaussianBlur::CUiScopedGaussianBlur(CUi *pUi, float Alpha) :
+	m_pUi(pUi)
+{
+	if(m_pUi != nullptr)
+		m_pUi->BeginGaussianBlurScope(Alpha);
+}
+
+CUiScopedGaussianBlur::~CUiScopedGaussianBlur()
+{
+	if(m_pUi != nullptr)
+		m_pUi->EndGaussianBlurScope();
+}
+
+CUiScopedGaussianBlurSuppression::CUiScopedGaussianBlurSuppression(CUi *pUi) :
+	CUiScopedGaussianBlurSuppression(pUi, true)
+{
+}
+
+CUiScopedGaussianBlurSuppression::CUiScopedGaussianBlurSuppression(CUi *pUi, bool Active) :
+	m_pUi(pUi),
+	m_Active(Active)
+{
+	if(m_pUi != nullptr && m_Active)
+		m_pUi->BeginGaussianBlurSuppression();
+}
+
+CUiScopedGaussianBlurSuppression::~CUiScopedGaussianBlurSuppression()
+{
+	if(m_pUi != nullptr && m_Active)
+		m_pUi->EndGaussianBlurSuppression();
+}
+
 void CUIElement::SUIElementRect::Reset()
 {
 	m_UIRectQuadContainer = -1;
@@ -94,7 +127,7 @@ void CUIElement::SUIElementRect::Reset()
 void CUIElement::SUIElementRect::Draw(const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding)
 {
 	bool NeedsRecreate = false;
-	if(m_UIRectQuadContainer == -1 || m_Width != pRect->w || m_Height != pRect->h || m_QuadColor != Color)
+	if(m_UIRectQuadContainer == -1 || m_Width != pRect->w || m_Height != pRect->h || m_QuadColor != Color || m_Rounding != Rounding || m_Corners != Corners)
 	{
 		m_pParent->Ui()->Graphics()->DeleteQuadContainer(m_UIRectQuadContainer);
 		NeedsRecreate = true;
@@ -105,6 +138,8 @@ void CUIElement::SUIElementRect::Draw(const CUIRect *pRect, ColorRGBA Color, int
 	{
 		m_Width = pRect->w;
 		m_Height = pRect->h;
+		m_Rounding = Rounding;
+		m_Corners = Corners;
 		m_QuadColor = Color;
 
 		m_pParent->Ui()->Graphics()->SetColor(Color);
@@ -112,6 +147,8 @@ void CUIElement::SUIElementRect::Draw(const CUIRect *pRect, ColorRGBA Color, int
 		m_pParent->Ui()->Graphics()->SetColor(1, 1, 1, 1);
 	}
 
+	if(Color.a > 0.0f && Color.a < 1.0f && m_pParent->Ui()->GaussianBlurScopeActive())
+		m_pParent->Ui()->RenderGaussianBlur(*pRect, m_pParent->Ui()->GaussianBlurScopeAlpha(), Corners, Rounding);
 	m_pParent->Ui()->Graphics()->TextureClear();
 	m_pParent->Ui()->Graphics()->RenderQuadContainerEx(m_UIRectQuadContainer,
 		0, -1, m_X, m_Y, 1, 1);
@@ -147,7 +184,7 @@ void CUi::Init(IKernel *pKernel)
 	m_pGraphics = pKernel->RequestInterface<IGraphics>();
 	m_pInput = pKernel->RequestInterface<IInput>();
 	m_pTextRender = pKernel->RequestInterface<ITextRender>();
-	CUIRect::Init(m_pGraphics);
+	CUIRect::Init(m_pGraphics, this);
 	CLineInput::Init(m_pClient, m_pGraphics, m_pInput, m_pTextRender);
 	CUIElementBase::Init(this);
 }
@@ -236,7 +273,137 @@ void CUi::OnElementsReset()
 
 void CUi::OnWindowResize()
 {
+	DestroyGaussianBlurTargets();
 	OnElementsReset();
+}
+
+void CUi::BeginGaussianBlurScope(float Alpha)
+{
+	m_vGaussianBlurScopeAlphas.push_back(std::clamp(Alpha, 0.0f, 1.0f));
+	if(!g_Config.m_QmGaussianBlur && (m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid()))
+		DestroyGaussianBlurTargets();
+}
+
+void CUi::EndGaussianBlurScope()
+{
+	dbg_assert(!m_vGaussianBlurScopeAlphas.empty(), "gaussian blur scope underflow");
+	if(!m_vGaussianBlurScopeAlphas.empty())
+		m_vGaussianBlurScopeAlphas.pop_back();
+}
+
+void CUi::EndGaussianBlurSuppression()
+{
+	dbg_assert(m_GaussianBlurSuppressionDepth > 0, "gaussian blur suppression scope underflow");
+	if(m_GaussianBlurSuppressionDepth > 0)
+		--m_GaussianBlurSuppressionDepth;
+}
+
+void CUi::DestroyGaussianBlurTargets()
+{
+	if(m_pGraphics == nullptr)
+		return;
+	Graphics()->DestroyRenderTarget(&m_GaussianBlurSource);
+	Graphics()->DestroyRenderTarget(&m_GaussianBlurTemporary);
+	Graphics()->DestroyRenderTarget(&m_GaussianBlurTarget);
+	m_GaussianBlurWidth = 0;
+	m_GaussianBlurHeight = 0;
+}
+
+bool CUi::PrepareGaussianBlur()
+{
+	if(!g_Config.m_QmGaussianBlur)
+		return false;
+	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
+	{
+		if(m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid())
+			DestroyGaussianBlurTargets();
+		return false;
+	}
+
+	const int BlurWidth = UiGaussianBlurTargetDimension(Graphics()->ScreenWidth());
+	const int BlurHeight = UiGaussianBlurTargetDimension(Graphics()->ScreenHeight());
+	if(BlurWidth <= 0 || BlurHeight <= 0)
+		return false;
+
+	if(BlurWidth != m_GaussianBlurWidth || BlurHeight != m_GaussianBlurHeight || !m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
+	{
+		DestroyGaussianBlurTargets();
+		m_GaussianBlurSource = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		m_GaussianBlurTemporary = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		m_GaussianBlurTarget = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		if(!m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
+		{
+			DestroyGaussianBlurTargets();
+			return false;
+		}
+		m_GaussianBlurWidth = BlurWidth;
+		m_GaussianBlurHeight = BlurHeight;
+	}
+
+	FlushQuadBatch();
+	Graphics()->FlushVertices();
+	if(!Graphics()->CaptureBackbufferToRenderTarget(m_GaussianBlurSource))
+		return false;
+
+	IGraphics::SGaussianBlurParams BlurParams;
+	BlurParams.m_Radius = 4;
+	BlurParams.m_Sigma = 2.0f;
+	return Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_GaussianBlurTemporary, m_GaussianBlurTarget, BlurParams);
+}
+
+void CUi::RenderGaussianBlur(const CUIRect &Rect, float Alpha, int Corners, float Rounding)
+{
+	if(m_GaussianBlurSuppressionDepth > 0 || Rect.w <= 0.0f || Rect.h <= 0.0f || Alpha <= 0.0f || !PrepareGaussianBlur())
+		return;
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float MappedWidth = ScreenX1 - ScreenX0;
+	const float MappedHeight = ScreenY1 - ScreenY0;
+	if(MappedWidth <= 0.0f || MappedHeight <= 0.0f)
+		return;
+
+	CUIRect ClippedRect = Rect;
+	if(IsClipped())
+	{
+		const CUIRect &CurrentClip = *ClipArea();
+		const float Left = std::max(ClippedRect.x, CurrentClip.x);
+		const float Top = std::max(ClippedRect.y, CurrentClip.y);
+		const float Right = std::min(ClippedRect.x + ClippedRect.w, CurrentClip.x + CurrentClip.w);
+		const float Bottom = std::min(ClippedRect.y + ClippedRect.h, CurrentClip.y + CurrentClip.h);
+		ClippedRect = {Left, Top, Right - Left, Bottom - Top};
+	}
+	if(ClippedRect.w <= 0.0f || ClippedRect.h <= 0.0f)
+		return;
+
+	const float PixelScaleX = Graphics()->ScreenWidth() / MappedWidth;
+	const float PixelScaleY = Graphics()->ScreenHeight() / MappedHeight;
+	const int ClipX0 = std::clamp((int)std::floor((ClippedRect.x - ScreenX0) * PixelScaleX), 0, Graphics()->ScreenWidth());
+	const int ClipY0 = std::clamp((int)std::floor((ClippedRect.y - ScreenY0) * PixelScaleY), 0, Graphics()->ScreenHeight());
+	const int ClipX1 = std::clamp((int)std::ceil((ClippedRect.x + ClippedRect.w - ScreenX0) * PixelScaleX), 0, Graphics()->ScreenWidth());
+	const int ClipY1 = std::clamp((int)std::ceil((ClippedRect.y + ClippedRect.h - ScreenY0) * PixelScaleY), 0, Graphics()->ScreenHeight());
+	if(ClipX1 <= ClipX0 || ClipY1 <= ClipY0)
+		return;
+
+	Graphics()->ClipEnable(ClipX0, ClipY0, ClipX1 - ClipX0, ClipY1 - ClipY0);
+	Graphics()->BlendNormal();
+	IGraphics::SRenderTargetDrawParams DrawParams;
+	DrawParams.m_X = Rect.x;
+	DrawParams.m_Y = Rect.y;
+	DrawParams.m_W = Rect.w;
+	DrawParams.m_H = Rect.h;
+	DrawParams.m_Alpha = std::clamp(Alpha, 0.0f, 1.0f);
+	DrawParams.m_Corners = Corners;
+	DrawParams.m_Rounding = Rounding;
+	DrawParams.m_U0 = (Rect.x - ScreenX0) / MappedWidth;
+	DrawParams.m_U1 = (Rect.x + Rect.w - ScreenX0) / MappedWidth;
+	DrawParams.m_V0 = 1.0f - (Rect.y - ScreenY0) / MappedHeight;
+	DrawParams.m_V1 = 1.0f - (Rect.y + Rect.h - ScreenY0) / MappedHeight;
+	Graphics()->DrawRenderTarget(m_GaussianBlurTarget, DrawParams);
+	if(IsClipped())
+		UpdateClipping();
+	else
+		Graphics()->ClipDisable();
 }
 
 void CUi::OnCursorMove(float X, float Y)
@@ -754,6 +921,8 @@ void CUi::EndQuadBatch() const
 
 void CUi::RenderBatchableRect(const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding) const
 {
+	if(Color.a > 0.0f && Color.a < 1.0f && GaussianBlurScopeActive())
+		const_cast<CUi *>(this)->RenderGaussianBlur(*pRect, GaussianBlurScopeAlpha(), Corners, Rounding);
 	const int QuadContainerIndex = QuadBatchRectContainer(pRect->w, pRect->h, Rounding, Corners);
 	RenderQuadContainerBatchable(QuadContainerIndex, pRect->x + pRect->w / 2.0f, pRect->y + pRect->h / 2.0f, Color);
 }
@@ -1480,9 +1649,17 @@ bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float
 	TextRender()->TextColor(PreviousTextColor);
 	if(DoButtonLogic(pLineInput->GetClearButtonId(), 0, &ClearButton, BUTTONFLAG_LEFT))
 	{
-		pLineInput->Clear();
-		SetActiveItem(pLineInput);
-		ReturnValue = true;
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
+		ClearButton.Draw(ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f * ButtonColorMul(pLineInput->GetClearButtonId()))), Corners & ~IGraphics::CORNER_L, EditBoxRounding);
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+		DoLabel(&ClearButton, "×", ClearButton.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
+		TextRender()->SetRenderFlags(0);
+		if(DoButtonLogic(pLineInput->GetClearButtonId(), 0, &ClearButton, BUTTONFLAG_LEFT))
+		{
+			pLineInput->Clear();
+			SetActiveItem(pLineInput);
+			ReturnValue = true;
+		}
 	}
 
 	return ReturnValue;
@@ -1523,6 +1700,7 @@ bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float F
 
 int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const std::function<const char *()> &GetTextLambda, const CUIRect *pRect, const SMenuButtonProperties &Props)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 	const bool Enabled = Props.m_Enabled;
 	const bool UseRoundedRectSdf = Graphics()->HasRoundedRectSdf();
 	CUIRect Text = *pRect, DropDownIcon;
@@ -1681,14 +1859,23 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 	return DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
 }
 
-int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding, bool TransparentInactive, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
+int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding, bool TransparentInactive, bool Enabled, const std::optional<ColorRGBA> ButtonColor, float MinimumFontSize)
 {
 	if(ButtonColor.has_value() || !TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
 		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), ColorRGBA(), 5.0f);
 
 	CUIRect Label;
 	pRect->Margin(Padding, &Label);
-	DoLabel(&Label, pText, Size, Align);
+	if(MinimumFontSize > 0.0f)
+	{
+		SLabelProperties Props;
+		Props.m_MaxWidth = Label.w;
+		Props.m_MinimumFontSize = MinimumFontSize;
+		Props.m_EllipsisAtEnd = true;
+		DoLabel(&Label, pText, Size, Align, Props);
+	}
+	else
+		DoLabel(&Label, pText, Size, Align);
 
 	return Enabled ? DoButtonLogic(pButtonContainer, 0, pRect, BUTTONFLAG_LEFT) : 0;
 }
@@ -1700,6 +1887,7 @@ int64_t CUi::DoValueSelector(const void *pId, const CUIRect *pRect, const char *
 
 SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRect *pRect, const char *pLabel, int64_t Current, int64_t Min, int64_t Max, const SValueSelectorProperties &Props)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 	// logic
 	const bool Inside = MouseInside(pRect);
 	const int Base = Props.m_IsHex ? 16 : 10;
@@ -2636,6 +2824,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_EntryPadding = 0.0f;
 	m_EntrySpacing = 5.0f;
 	m_FontSize = 10.0f;
+	m_MinimumFontSize = -1.0f;
 	m_Width = 300.0f + (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2;
 	m_AlignmentHeight = -1.0f;
 	m_ActiveEntryColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.22f);

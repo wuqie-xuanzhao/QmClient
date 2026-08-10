@@ -716,6 +716,9 @@ Animation
 Animation duration
 == Czas trwania animacji
 
+Animation probability
+== Prawdopodobieństwo animacji
+
 Animation range
 == Zasięg animacji
 
@@ -12028,12 +12031,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Aktualizacja nie powiodła się. Spróbuj ponownie
-
-Update finished. Please restart the client
-== Aktualizacja zakończona. Uruchom ponownie klienta
-
-Update finished. Restarting...
-== Aktualizacja zakończona. Restartowanie...
 
 Update notice
 == Aktualizuj powiadomienie

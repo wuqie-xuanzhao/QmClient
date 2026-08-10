@@ -237,6 +237,7 @@ Animate settings card lists when entering a page
 Animate settings card reorder and layout reflow
 Animation
 Animation duration
+Animation probability
 Animation range
 Announcements sequential or random.
 Anti Latency Tools
@@ -4008,8 +4009,6 @@ Update
 Update a rcon key
 Update a rcon key with prehashed data
 Update failed. Please try again
-Update finished. Please restart the client
-Update finished. Restarting...
 Update notice
 Update or add a specific war group
 Update Rate

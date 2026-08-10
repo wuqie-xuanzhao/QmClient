@@ -716,6 +716,9 @@ Animation
 Animation duration
 == Animationsdauer
 
+Animation probability
+== Animationswahrscheinlichkeit
+
 Animation range
 == Animationsbereich
 
@@ -12028,12 +12031,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Update fehlgeschlagen. Bitte versuche es erneut.
-
-Update finished. Please restart the client
-== Update abgeschlossen. Bitte starte den Client neu.
-
-Update finished. Restarting...
-== Update abgeschlossen. Neustart...
 
 Update notice
 == Hinweis aktualisieren

@@ -435,6 +435,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// Live button
 	if(pInfo->m_LiveDemo)
 	{
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 		CUIRect LiveButton;
 		SeekBar.VSplitRight(SeekBar.h, &SeekBar, &LiveButton);
 		SeekBar.VSplitRight(2.0f, &SeekBar, nullptr);
@@ -2238,6 +2239,7 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 
 		if(ListItem.m_Visible)
 		{
+			auto GaussianBlurSuppression = ListItem.SuppressGaussianBlur();
 			VisibleRows++;
 			if(FirstVisibleIndex < 0)
 				FirstVisibleIndex = ItemIndex;

@@ -732,27 +732,43 @@ TEST(QmNewUiMenuBranches, QmClientUpdateFlowUsesQmClientNamingAndComparisonHelpe
 	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
 	const std::string TClientHeader = ReadTextFile("src/game/client/components/tclient/tclient.h");
 	const std::string MenusStartSource = ReadTextFile("src/game/client/components/menus_start.cpp");
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string QmMenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string OnUpdate = FunctionBody(TClientSource, "void CTClient::OnUpdate()");
 
 	EXPECT_NE(TClientSource.find("#include <game/client/components/qmclient/update_version.h>"), std::string::npos);
 	EXPECT_NE(TClientSource.find("static constexpr const char *QMCLIENT_INFO_URL"), std::string::npos);
-	EXPECT_NE(TClientSource.find("static constexpr const char *QMCLIENT_UPDATE_EXE_URL"), std::string::npos);
+	EXPECT_NE(TClientSource.find("QMCLIENT_UPDATE_PACKAGE_NAME = \"QmClient-windows.zip\""), std::string::npos);
+	EXPECT_NE(TClientSource.find("qm_update_verify_manifest_package"), std::string::npos);
+	EXPECT_NE(TClientSource.find("qm_update_verify_package_digest"), std::string::npos);
+	EXPECT_NE(TClientSource.find("qm_update_extract_bootstrap_updater"), std::string::npos);
+	EXPECT_NE(TClientSource.find("ResultSha256()"), std::string::npos);
 	EXPECT_NE(TClientSource.find("FetchQmClientUpdateInfo();"), std::string::npos);
 	EXPECT_NE(TClientSource.find("FinishQmClientUpdateInfo();"), std::string::npos);
 	EXPECT_NE(TClientSource.find("ResetQmClientUpdateInfoTask();"), std::string::npos);
 	EXPECT_NE(TClientSource.find("NeedQmClientUpdate()"), std::string::npos);
 	EXPECT_NE(TClientSource.find("RequestQmClientUpdateCheckAndUpdate()"), std::string::npos);
-	EXPECT_NE(TClientSource.find("IsQmClientRemoteVersionNewer(pLatestVersion, QMCLIENT_VERSION)"), std::string::npos);
+	EXPECT_NE(TClientSource.find("ParseQmClientUpdateRelease"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("NeedUpdate()"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("FetchTClientInfo()"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("FinishTClientInfo()"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("ResetTClientInfoTask()"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("TCLIENT_INFO_URL"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("TCLIENT_UPDATE_EXE_URL"), std::string::npos);
+	EXPECT_EQ(TClientSource.find("CalculateHashes(m_aUpdatePackageTmp"), std::string::npos);
+	EXPECT_LT(OnUpdate.find("FinishUpdateDownloads();"), OnUpdate.find("!IsUpdateChecking() && !IsUpdateDownloading() && !m_UpdateReady"));
+	EXPECT_NE(TClientSource.find("Force && m_UpdateShutdownRequested"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmAutoUpdate, qm_auto_update, 1"), std::string::npos);
+	EXPECT_EQ(ConfigSource.find("QmShowOutdatedVersionWarning"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoUpdate, \"Automatic updates\""), std::string::npos);
+	EXPECT_EQ(QmMenusSource.find("Show outdated version warning"), std::string::npos);
 
 	EXPECT_NE(TClientHeader.find("m_pQmClientUpdateInfoTask"), std::string::npos);
 	EXPECT_NE(TClientHeader.find("m_FetchedQmClientUpdateInfo"), std::string::npos);
 	EXPECT_NE(TClientHeader.find("m_QmClientAutoUpdateAfterCheck"), std::string::npos);
 	EXPECT_NE(TClientHeader.find("m_aQmClientLatestVersionStr"), std::string::npos);
+	EXPECT_NE(TClientHeader.find("m_pUpdatePackageTask"), std::string::npos);
+	EXPECT_NE(TClientHeader.find("m_UpdateShutdownRequested"), std::string::npos);
 	EXPECT_EQ(TClientHeader.find("m_pTClientInfoTask"), std::string::npos);
 	EXPECT_EQ(TClientHeader.find("m_FetchedTClientInfo"), std::string::npos);
 	EXPECT_EQ(TClientHeader.find("m_AutoUpdateAfterCheck"), std::string::npos);
@@ -760,6 +776,8 @@ TEST(QmNewUiMenuBranches, QmClientUpdateFlowUsesQmClientNamingAndComparisonHelpe
 
 	EXPECT_NE(MenusStartSource.find("m_FetchedQmClientUpdateInfo"), std::string::npos);
 	EXPECT_NE(MenusStartSource.find("NeedQmClientUpdate()"), std::string::npos);
+	EXPECT_NE(MenusStartSource.find("defined(CONF_AUTOUPDATE) && defined(CONF_FAMILY_WINDOWS)"), std::string::npos);
+	EXPECT_NE(MenusStartSource.find("if(g_Config.m_QmAutoUpdate)"), std::string::npos);
 	EXPECT_EQ(MenusStartSource.find("m_FetchedTClientInfo"), std::string::npos);
 	EXPECT_EQ(MenusStartSource.find("NeedUpdate()"), std::string::npos);
 }
@@ -873,7 +891,7 @@ TEST(QmNewUiMenuBranches, AssetsPreviewUsesInnerFrameRectForPreviewImage)
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureWidth);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, BetterScoreboardSettingIsOptInLocalizedAndVersioned)
+TEST(QmNewUiMenuBranches, GaussianBlurSettingReplacesBetterScoreboardAndIsVersioned)
 {
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -1901,7 +1919,7 @@ TEST(QmNewUiMenuBranches, ScoreboardMediaButtonSymbolsFollowContentAlpha)
 	EXPECT_EQ(Source.find("Ui()->DoButton_FontIcon(&s_SmtcNextButton"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, BetterScoreboardUsesOneRowPlanAndDenseTeeLod)
+TEST(QmNewUiMenuBranches, ScoreboardUsesOneRowPlanAndDenseTeeLod)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/scoreboard.cpp");
 	const std::string OnRender = FunctionBody(Source, "void CScoreboard::OnRender()");
@@ -1917,23 +1935,195 @@ TEST(QmNewUiMenuBranches, BetterScoreboardUsesOneRowPlanAndDenseTeeLod)
 	EXPECT_NE(RenderScoreboard.find("m_PlayerPoints.GetPoints"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, BetterScoreboardBuildsOneSharedBlurWithFallback)
+TEST(QmNewUiMenuBranches, GaussianBlurUsesSharedUiBackdropWithTransparentFallback)
 {
-	const std::string Source = ReadTextFile("src/game/client/components/scoreboard.cpp");
-	const std::string PrepareBlur = FunctionBody(Source, "bool CScoreboard::PrepareBetterScoreboardBlur()");
-	const std::string RenderBlur = FunctionBody(Source, "void CScoreboard::RenderBetterScoreboardBlur(");
-	const std::string OnRelease = FunctionBody(Source, "void CScoreboard::OnRelease()");
+	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string UiRectSource = ReadTextFile("src/game/client/ui_rect.cpp");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string ScoreboardSource = ReadTextFile("src/game/client/components/scoreboard.cpp");
+	const std::string TooltipsSource = ReadTextFile("src/game/client/components/tooltips.cpp");
+	const std::string ImeSource = ReadTextFile("src/game/client/qm_ime_manager.cpp");
+	const std::string CachedRectDraw = FunctionBody(UiSource, "void CUIElement::SUIElementRect::Draw(");
+	const std::string BatchableRectDraw = FunctionBody(UiSource, "void CUi::RenderBatchableRect(");
+	const std::string MenuButtonDraw = FunctionBody(UiSource, "int CUi::DoButton_Menu(");
+	const std::string RectDraw = FunctionBody(UiRectSource, "void CUIRect::Draw(");
+	const std::string RectDraw4 = FunctionBody(UiRectSource, "void CUIRect::Draw4(");
+	const std::string MenuRender = FunctionBody(MenusSource, "void CMenus::Render()");
+	const std::string LoadingRender = FunctionBody(MenusSource, "void CMenus::RenderLoading(");
 
-	EXPECT_NE(PrepareBlur.find("IsBackbufferCaptureSupported"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("CaptureBackbufferToRenderTarget"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("GaussianBlurRenderTarget"), std::string::npos);
-	EXPECT_NE(RenderBlur.find("m_BetterScoreboardBlurTarget"), std::string::npos);
-	EXPECT_NE(RenderBlur.find("m_Visibility"), std::string::npos);
-	EXPECT_NE(OnRelease.find("DestroyBetterScoreboardBlurTargets"), std::string::npos);
+	EXPECT_NE(UiHeader.find("CUiScopedGaussianBlur(CUi *pUi, float Alpha = 1.0f)"), std::string::npos);
+	EXPECT_NE(UiHeader.find("GaussianBlurScopeAlpha() const"), std::string::npos);
+	EXPECT_NE(UiHeader.find("RenderGaussianBlur(const CUIRect &Rect, float Alpha"), std::string::npos);
+	EXPECT_NE(UiSource.find("IsBackbufferCaptureSupported"), std::string::npos);
+	EXPECT_NE(UiSource.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
+	EXPECT_NE(UiSource.find("CaptureBackbufferToRenderTarget"), std::string::npos);
+	EXPECT_NE(UiSource.find("GaussianBlurRenderTarget"), std::string::npos);
+	EXPECT_NE(UiSource.find("Graphics()->GetScreen"), std::string::npos);
+	EXPECT_NE(UiSource.find("UiGaussianBlurTargetDimension"), std::string::npos);
+	EXPECT_NE(CachedRectDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
+	EXPECT_NE(BatchableRectDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
+	EXPECT_NE(MenuButtonDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
+	EXPECT_EQ(CachedRectDraw.find("RenderGaussianBlur(*pRect, Color.a)"), std::string::npos);
+	EXPECT_EQ(BatchableRectDraw.find("RenderGaussianBlur(*pRect, Color.a)"), std::string::npos);
+	EXPECT_EQ(MenuButtonDraw.find("RenderGaussianBlur(*pRect, BackgroundColor.a)"), std::string::npos);
+	EXPECT_NE(RectDraw.find("DrawRectBackdrop(Corners, Rounding)"), std::string::npos);
+	EXPECT_NE(RectDraw4.find("DrawRectBackdrop(Corners, Rounding)"), std::string::npos);
+	EXPECT_NE(MenuRender.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
+	EXPECT_NE(LoadingRender.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
+	EXPECT_NE(ScoreboardSource.find("const float GaussianBlurAlpha = WantActive ? 1.0f : m_AnimContentAlpha;"), std::string::npos);
+	EXPECT_NE(ScoreboardSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), GaussianBlurAlpha);"), std::string::npos);
+	EXPECT_EQ(ScoreboardSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
+	EXPECT_EQ(ScoreboardSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), BackgroundAlphaFinal);"), std::string::npos);
+	EXPECT_NE(TooltipsSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), AlphaFactor);"), std::string::npos);
+	EXPECT_NE(ImeSource.find("CUiScopedGaussianBlur GaussianBlurScope(m_pGameClient->Ui());"), std::string::npos);
+	EXPECT_EQ(ScoreboardSource.find("BetterScoreboardBlur"), std::string::npos);
 
 	// Existing translucent surfaces remain the unsupported-backend fallback.
-	EXPECT_NE(Source.find("Scoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal)"), std::string::npos);
+	EXPECT_NE(ScoreboardSource.find("Scoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal)"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GaussianBlurCoversRequestedHudAndVoteBackgroundsOnly)
+{
+	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
+	const std::string VotingSource = ReadTextFile("src/game/client/components/voting.cpp");
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string MovementInfo = FunctionBody(HudSource, "void CHud::RenderMovementInformation()");
+	const std::string KeyStatus = FunctionBody(HudSource, "void CHud::RenderKeyStatus()");
+	const std::string ScoreHud = FunctionBody(HudSource, "void CHud::RenderScoreHud()");
+	const std::string Vote = FunctionBody(VotingSource, "void CVoting::Render()");
+	const std::string MiniVote = FunctionBody(TClientSource, "void CTClient::RenderMiniVoteHud(");
+
+	EXPECT_NE(MovementInfo.find("RenderGaussianBlur"), std::string::npos);
+	EXPECT_NE(KeyStatus.find("RenderGaussianBlur"), std::string::npos);
+	EXPECT_NE(ScoreHud.find("RenderGaussianBlur"), std::string::npos);
+	EXPECT_NE(Vote.find("RenderGaussianBlur"), std::string::npos);
+	EXPECT_NE(MiniVote.find("RenderGaussianBlur"), std::string::npos);
+	EXPECT_NE(Vote.find("View.Draw(ui_token::color::SURFACE_GLASS"), std::string::npos);
+	EXPECT_NE(MiniVote.find("View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f)"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GaussianBlurSkipsPageSwitchTransitionOverlays)
+{
+	const std::string MenusHeader = ReadTextFile("src/game/client/components/menus.h");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string BrowserSource = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string IngameSource = ReadTextFile("src/game/client/components/menus_ingame.cpp");
+	const std::string TouchControlsSource = ReadTextFile("src/game/client/components/menus_ingame_touch_controls.cpp");
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Settings7Source = ReadTextFile("src/game/client/components/menus_settings7.cpp");
+	const std::string QmClientSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string TransitionSources = MenusSource + BrowserSource + IngameSource + SettingsSource + Settings7Source + QmClientSource + TClientSource;
+	const std::string TransitionOverlay = FunctionBody(MenusSource, "void CMenus::DrawUiSwitchTransitionOverlay(");
+	const std::string TouchButtonEditor = FunctionBody(TouchControlsSource, "void CMenusIngameTouchControls::RenderTouchButtonEditor(");
+	const std::regex DirectTransitionOverlayDraw(R"(\b[A-Za-z_][A-Za-z0-9_]*\.Draw\([^\n]*(TransitionAlpha|TabTransitionAlpha))");
+
+	EXPECT_NE(MenusHeader.find("void DrawUiSwitchTransitionOverlay(const CUIRect &Rect, ColorRGBA Color);"), std::string::npos);
+	EXPECT_NE(TransitionOverlay.find("CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());"), std::string::npos);
+	EXPECT_NE(TransitionOverlay.find("Rect.Draw(Color, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
+	EXPECT_FALSE(std::regex_search(TransitionSources, DirectTransitionOverlayDraw));
+	EXPECT_NE(TouchButtonEditor.find("CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());"), std::string::npos);
+	EXPECT_NE(TouchButtonEditor.find("BlockClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_NE(IngameSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_NE(SettingsSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_NE(Settings7Source.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_NE(QmClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_NE(TClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
+{
+	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string UiListboxHeader = ReadTextFile("src/game/client/ui_listbox.h");
+	const std::string UiListboxSource = ReadTextFile("src/game/client/ui_listbox.cpp");
+	const std::string UiRectSource = ReadTextFile("src/game/client/ui_rect.cpp");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string BrowserSource = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string DemoSource = ReadTextFile("src/game/client/components/menus_demo.cpp");
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string SettingsAssetsSource = ReadTextFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string SettingsControlsSource = ReadTextFile("src/game/client/components/menus_settings_controls.cpp");
+	const std::string StartSource = ReadTextFile("src/game/client/components/menus_start.cpp");
+	const std::string QmClientSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string ButtonsSource = ReadTextFile("src/game/client/QmUi/UiButtons.cpp");
+	const std::string FormsSource = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string NavigationSource = ReadTextFile("src/game/client/QmUi/UiNavigation.cpp");
+	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
+	const std::string VotingSource = ReadTextFile("src/game/client/components/voting.cpp");
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string BrowserServerList = FunctionBody(BrowserSource, "void CMenus::RenderServerbrowserServerList(");
+	const std::string BrowserFade = BlockBodyAfter(BrowserServerList, "if(NumServers * ms_ListheaderHeight > ListView.h)");
+	const std::string StartMenu = FunctionBody(StartSource, "void CMenusStart::RenderStartMenuImpl(");
+	const std::string SettingsBlock = FunctionBody(SettingsControlsSource, "void CMenusSettingsControls::RenderSettingsBlock(");
+
+	EXPECT_NE(UiHeader.find("class CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(UiHeader.find("RenderGaussianBlur(const CUIRect &Rect, float Alpha = 1.0f, int Corners = IGraphics::CORNER_NONE, float Rounding = 0.0f)"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiRectSource, "void CUIRect::DrawRectBackdrop(").find("Corners, Rounding"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "void CUIElement::SUIElementRect::Draw(").find("Corners, Rounding"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "void CUi::RenderBatchableRect(").find("Corners, Rounding"), std::string::npos);
+
+	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_Menu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_FontIcon(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_PopupMenu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "bool CUi::DoClearableEditBox(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "SEditResult<int64_t> CUi::DoValueSelectorWithState(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_Menu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_MenuTab(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_Toggle(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_CheckBox_Common_WithLabelElement(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(MenusSource, "ColorHSLA CMenus::DoButton_ColorPicker(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoMenuTabV2(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(ButtonsSource, "bool DoStyledButton(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(ButtonsSource, "bool IconButton(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(FormsSource, "bool Toggle(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(NavigationSource, "bool ListItem(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(BrowserSource, "void CMenus::RenderServerbrowserServerList(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(StartMenu.find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_EQ(StartMenu.find("CUiScopedGaussianBlur GaussianBlurScope"), std::string::npos);
+
+	EXPECT_NE(UiListboxHeader.find("SuppressGaussianBlur() const"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiListboxSource, "CListboxItem CListBox::DoNextItem(").find("Item.m_GaussianBlurSuppressed = true;"), std::string::npos);
+	EXPECT_NE(DemoSource.find("auto GaussianBlurSuppression = ListItem.SuppressGaussianBlur();"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("auto GaussianBlurSuppression = Item.SuppressGaussianBlur();"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("auto GaussianBlurSuppression = Item.SuppressGaussianBlur();"), std::string::npos);
+	EXPECT_NE(SettingsAssetsSource.find("auto GaussianBlurSuppression = Item.SuppressGaussianBlur();"), std::string::npos);
+	EXPECT_NE(BrowserFade.find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(BrowserFade.find("Fade.Draw4("), std::string::npos);
+
+	const size_t SettingsSuppression = SettingsBlock.find("CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui(), pExpanded != nullptr);");
+	ASSERT_NE(SettingsSuppression, std::string::npos);
+	const size_t SettingsSuppressionBlockStart = SettingsBlock.rfind('{', SettingsSuppression);
+	ASSERT_NE(SettingsSuppressionBlockStart, std::string::npos);
+	const size_t SettingsSuppressionBlockEnd = MatchingBrace(SettingsBlock, SettingsSuppressionBlockStart);
+	ASSERT_NE(SettingsSuppressionBlockEnd, std::string::npos);
+	const size_t SettingsContent = SettingsBlock.find("RenderContentFunction(SettingsBlock);", SettingsSuppression);
+	ASSERT_NE(SettingsContent, std::string::npos);
+	EXPECT_GT(SettingsContent, SettingsSuppressionBlockEnd);
+
+	const size_t PreviewSuppression = QmClientSource.find("CUiScopedGaussianBlurSuppression PreviewBlurSuppression(Ui());");
+	ASSERT_NE(PreviewSuppression, std::string::npos);
+	const size_t PreviewBlockStart = QmClientSource.rfind('{', PreviewSuppression);
+	ASSERT_NE(PreviewBlockStart, std::string::npos);
+	const size_t PreviewBlockEnd = MatchingBrace(QmClientSource, PreviewBlockStart);
+	ASSERT_NE(PreviewBlockEnd, std::string::npos);
+	const size_t PreviewDraw = QmClientSource.find("PreviewFrame.Draw(", PreviewSuppression);
+	const size_t PreviewMargin = QmClientSource.find("PreviewRect.Margin(maximum", PreviewSuppression);
+	const size_t PreviewButtonLogic = QmClientSource.find("Ui()->DoButtonLogic(&s_PieMenuColorPreviewButton", PreviewSuppression);
+	ASSERT_NE(PreviewDraw, std::string::npos);
+	ASSERT_NE(PreviewMargin, std::string::npos);
+	ASSERT_NE(PreviewButtonLogic, std::string::npos);
+	EXPECT_LT(PreviewDraw, PreviewBlockEnd);
+	EXPECT_GT(PreviewMargin, PreviewBlockEnd);
+	EXPECT_GT(PreviewButtonLogic, PreviewBlockEnd);
+
+	EXPECT_NE(HudSource.find("ScoreHudCorners, 5.0f"), std::string::npos);
+	EXPECT_NE(HudSource.find("IGraphics::CORNER_ALL, ui_token::radius::BASE"), std::string::npos);
+	EXPECT_NE(HudSource.find("HudEditorScope.m_Corners, ui_token::radius::BASE"), std::string::npos);
+	EXPECT_NE(VotingSource.find("HudEditorScope.m_Corners, ui_token::radius::BASE"), std::string::npos);
+	EXPECT_NE(TClientSource.find("HudEditorScope.m_Corners, 3.0f"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, IngameMenuPrimaryActionLabelsUseEnglishKeys)

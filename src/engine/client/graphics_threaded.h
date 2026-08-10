@@ -331,6 +331,8 @@ public:
 		float m_W = 0.0f;
 		float m_H = 0.0f;
 		float m_Alpha = 1.0f;
+		unsigned m_PrimCount = 0;
+		SVertex *m_pVertices = nullptr;
 		SState m_State;
 	};
 
@@ -1146,7 +1148,7 @@ public:
 	void DestroyRenderTarget(CRenderTargetHandle *pTarget) override;
 	bool BeginRenderTarget(CRenderTargetHandle Target, ColorRGBA ClearColor) override;
 	void EndRenderTarget() override;
-	void DrawRenderTarget(CRenderTargetHandle Target, float X, float Y, float W, float H, float Alpha = 1.0f) override;
+	void DrawRenderTarget(CRenderTargetHandle Target, const SRenderTargetDrawParams &Params) override;
 	bool CaptureBackbufferToRenderTarget(CRenderTargetHandle Target) override;
 	bool GaussianBlurRenderTarget(CRenderTargetHandle Source, CRenderTargetHandle Temporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params) override;
 	CRenderTargetReadbackHandle BeginRenderTargetReadback(CRenderTargetHandle Target) override;

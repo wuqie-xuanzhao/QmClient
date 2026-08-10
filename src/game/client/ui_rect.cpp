@@ -12,6 +12,13 @@
 #include <cmath>
 
 IGraphics *CUIRect::ms_pGraphics = nullptr;
+CUi *CUIRect::ms_pUi = nullptr;
+
+void CUIRect::DrawRectBackdrop(int Corners, float Rounding) const
+{
+	if(ms_pUi != nullptr && ms_pUi->GaussianBlurScopeActive())
+		ms_pUi->RenderGaussianBlur(*this, ms_pUi->GaussianBlurScopeAlpha(), Corners, Rounding);
+}
 
 namespace
 {
@@ -211,6 +218,9 @@ void CUIRect::Draw(ColorRGBA Color, int Corners, float Rounding) const
 
 void CUIRect::Draw4(ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, int Corners, float Rounding) const
 {
+	const float MaximumAlpha = std::max({ColorTopLeft.a, ColorTopRight.a, ColorBottomLeft.a, ColorBottomRight.a});
+	if(MaximumAlpha > 0.0f && (ColorTopLeft.a < 1.0f || ColorTopRight.a < 1.0f || ColorBottomLeft.a < 1.0f || ColorBottomRight.a < 1.0f))
+		DrawRectBackdrop(Corners, Rounding);
 	ms_pGraphics->DrawRect4(x, y, w, h, ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight, Corners, Rounding);
 }
 

@@ -716,6 +716,9 @@ Animation
 Animation duration
 == 動畫持續多久
 
+Animation probability
+== 動畫出現機率
+
 Animation range
 == 動畫範圍
 
@@ -2572,6 +2575,9 @@ Customize translate button and menu colors
 
 Customize vote display and interaction
 == Customize vote display and interaction
+
+Customize weapon switch and reload animations
+== 自訂武器切換和裝填動畫
 
 Cut interval
 == 裁剪區間
@@ -4462,6 +4468,9 @@ Gap between statusbar items
 
 Gap between tee and nametag
 == 三通與銘牌間隙尺寸
+
+Gaussian blur
+== 高斯模糊
 
 General
 == 常規
@@ -8332,6 +8341,9 @@ Reload
 
 Reload map when empty (1 = once, 2 = each time)
 == 伺服器空時重新加載地圖（1 = 重新加載一次，2 = 每次伺服器空時重新加載）
+
+Reload animation
+== 裝填動畫
 
 Reload the announcements
 == 重新加載公告

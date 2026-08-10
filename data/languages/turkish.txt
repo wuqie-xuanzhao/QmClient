@@ -716,6 +716,9 @@ Animation
 Animation duration
 == Animasyon süresi
 
+Animation probability
+== Animasyon olasılığı
+
 Animation range
 == Animasyon aralığı
 
@@ -12028,12 +12031,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Güncelleme başarısız oldu. Lütfen tekrar deneyin
-
-Update finished. Please restart the client
-== Güncelleme tamamlandı. Lütfen istemciyi yeniden başlatın
-
-Update finished. Restarting...
-== Güncelleme tamamlandı. Yeniden başlatılıyor...
 
 Update notice
 == Bildirimi güncelle

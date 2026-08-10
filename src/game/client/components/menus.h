@@ -147,6 +147,7 @@ private:
 	void TriggerUiSwitchAnimation(uint64_t NodeKey, float DurationSec = 0.18f);
 	float ReadUiSwitchAnimation(uint64_t NodeKey) const;
 	float UiSwitchAnimationAlpha(float Strength) const;
+	void DrawUiSwitchTransitionOverlay(const CUIRect &Rect, ColorRGBA Color);
 	float ApplyUiSwitchOffset(CUIRect &View, float Strength, float Direction, bool Vertical, float RelativeOffset, float MinOffset, float MaxOffset) const;
 	float ResolveMenuTabAnimationValue(const void *pButtonId, bool Active, float DurationSec = 0.10f) const;
 	void InitSettingsTabLabelCache();
@@ -1153,7 +1154,7 @@ protected:
 	std::vector<std::string> m_vEntityBgSourceNames;
 	std::unordered_map<std::string, EEntityBgHierarchyEntrySource> m_vEntityBgSourceKinds;
 	char m_aEntityBgCurrentFolder[IO_MAX_PATH_LENGTH] = "";
-	bool m_ShowWorkshopAssets = true;
+	bool m_ShowWorkshopAssets = false;
 	std::vector<SCustomExtras> m_vExtrasList;
 	std::deque<SSettingsAssetPreviewHandle> m_aaCustomPreviewDecodeQueue[NUMBER_OF_ASSETS_TABS];
 	std::deque<SSettingsAssetPreviewHandle> m_aaCustomPreviewReadyQueue[NUMBER_OF_ASSETS_TABS];
@@ -2195,6 +2196,7 @@ public:
 
 		SETTINGS_LENGTH,
 	};
+	static constexpr float TCLIENT_SETTINGS_BODY_FONT_SIZE = 11.2f;
 
 	enum
 	{

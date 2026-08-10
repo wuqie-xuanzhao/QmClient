@@ -4,6 +4,9 @@
 #include <game/client/qm_ime_manager.h>
 
 #include <gtest/gtest.h>
+#include <test/test.h>
+
+#include <string>
 
 TEST(QmImePlatform, SystemCandidateUiPolicyMatchesPlatform)
 {

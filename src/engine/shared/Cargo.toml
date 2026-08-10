@@ -21,5 +21,8 @@ libtw2-snapshot = { git = "https://github.com/heinrich5991/libtw2" }
 libtw2-warn = { git = "https://github.com/heinrich5991/libtw2" }
 uuid = "1.0"
 
+[target.'cfg(windows)'.dependencies]
+qm-update = { path = "../../qm-update" }
+
 [dev-dependencies]
 ddnet-test = { path = "../../rust-bridge/test", features = ["link-test-libraries"] }

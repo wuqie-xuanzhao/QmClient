@@ -716,6 +716,9 @@ Animation
 Animation duration
 == Durée de l'animation
 
+Animation probability
+== Probabilité de l'animation
+
 Animation range
 == Portée de l'animation
 
@@ -12028,12 +12031,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Échec de la mise à jour. Veuillez réessayer
-
-Update finished. Please restart the client
-== Mise à jour terminée. Veuillez redémarrer le client
-
-Update finished. Restarting...
-== Mise à jour terminée. Redémarrage...
 
 Update notice
 == Mettre à jour l'avis

@@ -54,6 +54,13 @@ struct CListboxItem
 	bool m_Visible;
 	bool m_Selected;
 	CUIRect m_Rect;
+	CUi *m_pUi = nullptr;
+	bool m_GaussianBlurSuppressed = false;
+
+	CUiScopedGaussianBlurSuppression SuppressGaussianBlur() const
+	{
+		return CUiScopedGaussianBlurSuppression(m_pUi, m_GaussianBlurSuppressed);
+	}
 };
 
 // Instances of CListBox must be static, as member addresses are used as UI item IDs

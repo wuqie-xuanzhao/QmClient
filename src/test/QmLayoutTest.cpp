@@ -310,13 +310,13 @@ TEST(UiV2Layout, ScoreboardSoundMuteVerticalButtons)
 	EXPECT_FLOAT_EQ(vChildren[8].m_Box.m_Y, 208.0f);
 }
 
-TEST(QmScoreboardRender, BlurTargetUsesQuarterResolutionAndRoundsUp)
+TEST(QmGaussianBlurRender, TargetUsesQuarterResolutionAndRoundsUp)
 {
-	EXPECT_EQ(ScoreboardBlurTargetDimension(1920), 480);
-	EXPECT_EQ(ScoreboardBlurTargetDimension(1080), 270);
-	EXPECT_EQ(ScoreboardBlurTargetDimension(1081), 271);
-	EXPECT_EQ(ScoreboardBlurTargetDimension(1), 1);
-	EXPECT_EQ(ScoreboardBlurTargetDimension(0), 0);
+	EXPECT_EQ(UiGaussianBlurTargetDimension(1920), 480);
+	EXPECT_EQ(UiGaussianBlurTargetDimension(1080), 270);
+	EXPECT_EQ(UiGaussianBlurTargetDimension(1081), 271);
+	EXPECT_EQ(UiGaussianBlurTargetDimension(1), 1);
+	EXPECT_EQ(UiGaussianBlurTargetDimension(0), 0);
 }
 
 TEST(QmScoreboardRender, PlayerRowsAlwaysUseFullDetail)

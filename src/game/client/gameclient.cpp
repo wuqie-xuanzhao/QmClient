@@ -3392,6 +3392,16 @@ void CGameClient::OnRender()
 	CPerfTimer FrameTimer;
 
 	m_pFrameScheduler->BeginFrame(Client()->PerfFrame());
+	if(m_TClient.IsPreparingUpdateForShutdown())
+	{
+		Graphics()->Clear(0.0f, 0.0f, 0.0f);
+		Ui()->MapScreen();
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		Ui()->DoLabel(Ui()->Screen(), m_TClient.UpdateShutdownMessage(), 16.0f, TEXTALIGN_MC);
+		Input()->Clear();
+		m_pFrameScheduler->EndFrame();
+		return;
+	}
 
 	const ColorRGBA ClearColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClOverlayEntities ? g_Config.m_ClBackgroundEntitiesColor : g_Config.m_ClBackgroundColor));
 	Graphics()->Clear(ClearColor.r, ClearColor.g, ClearColor.b);
@@ -4704,6 +4714,11 @@ void CGameClient::RenderShutdownMessage()
 	Graphics()->Clear(0.0f, 0.0f, 0.0f);
 }
 
+bool CGameClient::PrepareForShutdown(bool Force)
+{
+	return m_TClient.PrepareForShutdown(Force);
+}
+
 void CGameClient::ProcessDemoSnapshot(CSnapshot *pSnap)
 {
 	for(int Index = 0; Index < pSnap->NumItems(); Index++)
@@ -4906,8 +4921,7 @@ void CGameClient::FinalizeHammerHitEvents()
 			Event.m_Pos,
 			Event.m_Connection,
 			TargetWoke};
-		const bool LocalRelated = IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId);
-		if((LocalRelated || Hit.m_AttackerId >= 0) && m_HammerHitTracker.Record(Hit) && LocalRelated)
+		if((IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId)) && m_HammerHitTracker.Record(Hit))
 			HandleConfirmedHammerHit(Hit);
 
 		const bool PredictedHandled = Match.m_AttackerId >= 0 && Match.m_TargetId >= 0 && m_PredictedWorld.CheckPredictedHammerHitHandled(CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId));

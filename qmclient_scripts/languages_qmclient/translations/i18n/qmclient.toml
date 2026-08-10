@@ -896,6 +896,22 @@ turkish = "Animasyon süresi"
 polish = "Czas trwania animacji"
 
 [[message]]
+key = "Animation probability"
+[message.translations]
+japanese = "アニメーションの出現確率"
+korean = "애니메이션 표시 확률"
+simplified_chinese = "动画出现概率"
+traditional_chinese = "動畫出現機率"
+russian = "Вероятность анимации"
+german = "Animationswahrscheinlichkeit"
+spanish = "Probabilidad de animación"
+french = "Probabilité de l'animation"
+brazilian_portuguese = "Probabilidade da animação"
+portuguese = "Probabilidade da animação"
+turkish = "Animasyon olasılığı"
+polish = "Prawdopodobieństwo animacji"
+
+[[message]]
 key = "Animation range"
 [message.translations]
 simplified_chinese = "动画范围"

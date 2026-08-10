@@ -977,6 +977,7 @@ public:
 	std::shared_ptr<CManagedTeeRenderInfo> CreateManagedTeeRenderInfo(const CClientData &Client);
 	void CollectManagedTeeRenderInfos(const std::function<void(const char *pSkinName)> &ActiveSkinAcceptor);
 
+	bool PrepareForShutdown(bool Force) override;
 	void RenderShutdownMessage() override;
 	void ProcessDemoSnapshot(CSnapshot *pSnap) override;
 

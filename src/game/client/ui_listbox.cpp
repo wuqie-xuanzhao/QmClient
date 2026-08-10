@@ -192,6 +192,7 @@ CListboxItem CListBox::DoNextRow()
 
 CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRadius)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	if(m_AutoSpacing > 0.0f && m_ListBoxItemIndex > 0)
 		DoSpacing(m_AutoSpacing);
 
@@ -207,6 +208,8 @@ CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRa
 	}
 
 	CListboxItem Item = DoNextRow();
+	Item.m_pUi = Ui();
+	Item.m_GaussianBlurSuppressed = true;
 	const int ItemClicked = Item.m_Visible ? Ui()->DoButtonLogic(pId, 0, &Item.m_Rect, BUTTONFLAG_LEFT) : 0;
 	if(ItemClicked)
 	{

@@ -17516,210 +17516,210 @@
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 650,
+      "line": 651,
       "text": "Pause the current demo",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 650,
+      "line": 651,
       "text": "Play the current demo",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 661,
+      "line": 662,
       "text": "Stop the current demo",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 671,
+      "line": 672,
       "text": "Go back the specified duration",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 688,
+      "line": 689,
       "text": "%s min.",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 690,
+      "line": 691,
       "text": "%s sec.",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 699,
+      "line": 700,
       "text": "Change the skip duration",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 710,
+      "line": 711,
       "text": "Go forward the specified duration",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 720,
+      "line": 721,
       "text": "Go back one tick",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 730,
+      "line": 731,
       "text": "Go forward one tick",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 740,
+      "line": 741,
       "text": "Go back one marker",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 750,
+      "line": 751,
       "text": "Go forward one marker",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 758,
+      "line": 759,
       "text": "Slow down the demo",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 766,
+      "line": 767,
       "text": "Speed up the demo",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 788,
+      "line": 789,
       "text": "Mark the beginning of a cut (right click to reset)",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 805,
+      "line": 806,
       "text": "Mark the end of a cut (right click to reset)",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 817,
+      "line": 818,
       "text": "Current cut is invalid or already added",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 821,
+      "line": 822,
       "text": "Add current cut to the export list",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 844,
+      "line": 845,
       "text": "Clear current cut (right click to clear all cuts)",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 863,
+      "line": 864,
       "text": "Export cut as a separate demo",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 874,
+      "line": 875,
       "text": "Close the demo player",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 884,
+      "line": 885,
       "text": "Toggle keyboard shortcuts",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 896,
+      "line": 897,
       "text": "Toggle auto camera",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 903,
+      "line": 904,
       "text": "Demofile: %s",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 954,
+      "line": 955,
       "text": "Export demo cut",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 985,
+      "line": 986,
       "text": "Cut segments",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 995,
+      "line": 996,
       "text": "Cut interval",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 998,
+      "line": 999,
       "text": "Cut length",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 1016,
+      "line": 1017,
       "text": "Cut segments",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 1046,
+      "line": 1047,
       "text": "%d more cut segments",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
@@ -20414,7 +20414,7 @@
     },
     {
       "file": "src/game/client/components/menus_ingame_touch_controls.cpp",
-      "line": 1132,
+      "line": 1135,
       "text": "Unsaved changes",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
@@ -24929,77 +24929,77 @@
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 194,
+      "line": 195,
       "text": "Discord",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 196,
+      "line": 197,
       "text": "https://ddnet.org/discord",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 200,
+      "line": 201,
       "text": "Learn",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 202,
+      "line": 203,
       "text": "https://wiki.ddnet.org/",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 207,
+      "line": 208,
       "text": "Tutorial",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 227,
+      "line": 228,
       "text": "Can't find a Tutorial server",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 233,
+      "line": 234,
       "text": "Website",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 239,
+      "line": 240,
       "text": "Stats",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 243,
+      "line": 244,
       "text": "News",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 255,
+      "line": 256,
       "text": "Before I die",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 256,
+      "line": 257,
       "text": "In memory of me",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
@@ -32720,14 +32720,14 @@
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 268,
+      "line": 269,
       "text": "Show scoreboard",
       "category": "must_i18n",
       "reason": "active source key (register_help)"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 269,
+      "line": 270,
       "text": "Toggle scoreboard cursor",
       "category": "must_i18n",
       "reason": "active source key (register_help)"
@@ -37809,28 +37809,28 @@
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 607,
+      "line": 608,
       "text": "%ds left",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 640,
+      "line": 641,
       "text": "Reason:",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 654,
+      "line": 655,
       "text": "Vote yes",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 659,
+      "line": 660,
       "text": "Vote no",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
@@ -57607,7 +57607,7 @@
     },
     {
       "file": "src/game/client/components/menus.cpp",
-      "line": 246,
+      "line": 438,
       "text": "",
       "category": "business_data",
       "reason": "empty or whitespace literal"
@@ -59962,7 +59962,7 @@
       "line": 571,
       "text": "audio/",
       "category": "business_data",
-      "reason": "path, file name, or URL data"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/menus.h",
@@ -60046,7 +60046,7 @@
       "line": 692,
       "text": "Assets editor blend mode",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/menus.h",
@@ -62255,56 +62255,56 @@
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 688,
+      "line": 689,
       "text": "Demo player duration",
       "category": "business_data",
       "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 690,
+      "line": 691,
       "text": "Demo player duration",
       "category": "business_data",
       "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 771,
+      "line": 772,
       "text": "×%g",
       "category": "business_data",
       "reason": "command, diagnostic, or payload format template"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 985,
+      "line": 986,
       "text": "%s: %d",
       "category": "business_data",
       "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 995,
+      "line": 996,
       "text": "%s: %s – %s",
       "category": "business_data",
       "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 998,
+      "line": 999,
       "text": "%s: %s",
       "category": "business_data",
       "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 1016,
+      "line": 1017,
       "text": "%s: %d",
       "category": "business_data",
       "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/menus_demo.cpp",
-      "line": 1031,
+      "line": 1032,
       "text": "#%d  %s – %s",
       "category": "business_data",
       "reason": "display formatting template"
@@ -63550,7 +63550,7 @@
     },
     {
       "file": "src/game/client/components/menus_ingame.cpp",
-      "line": 1930,
+      "line": 1931,
       "text": "Team status",
       "category": "business_data",
       "reason": "localization context metadata"
@@ -63987,14 +63987,14 @@
       "line": 3222,
       "text": "ingame-ghost-directory",
       "category": "business_data",
-      "reason": "localization context metadata"
+      "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/menus_ingame.cpp",
       "line": 3225,
       "text": "ghosts",
       "category": "business_data",
-      "reason": "machine/log/matcher call argument"
+      "reason": "localization context metadata"
     },
     {
       "file": "src/game/client/components/menus_ingame.cpp",
@@ -64047,7 +64047,7 @@
     },
     {
       "file": "src/game/client/components/menus_ingame_touch_controls.cpp",
-      "line": 290,
+      "line": 293,
       "text": "%s:",
       "category": "business_data",
       "reason": "display formatting template"
@@ -71411,49 +71411,49 @@
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 178,
+      "line": 179,
       "text": "start_menu_logo",
       "category": "business_data",
       "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 189,
+      "line": 190,
       "text": "start_menu_external_layout",
       "category": "business_data",
       "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 222,
+      "line": 223,
       "text": "couldn't find tutorial server, retrying in 5 seconds",
       "category": "business_data",
       "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 222,
+      "line": 223,
       "text": "menus",
       "category": "business_data",
       "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 235,
+      "line": 236,
       "text": "https://ddnet.org/",
       "category": "business_data",
       "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 245,
+      "line": 246,
       "text": "start_menu_external_buttons",
       "category": "business_data",
       "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/components/menus_start.cpp",
-      "line": 274,
+      "line": 275,
       "text": "start_menu",
       "category": "business_data",
       "reason": "command, config, or machine token"
@@ -77497,7 +77497,7 @@
       "line": 2919,
       "text": "DDmaX",
       "category": "business_data",
-      "reason": "settings matcher, command, or serialized config token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -77910,7 +77910,7 @@
       "line": 3598,
       "text": "tx_rx_active",
       "category": "business_data",
-      "reason": "settings matcher, command, or serialized config token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -78113,7 +78113,7 @@
       "line": 3658,
       "text": "input_device_not_found",
       "category": "business_data",
-      "reason": "settings matcher, command, or serialized config token"
+      "reason": "settings module search keyword data"
     },
     {
       "file": "src/game/client/components/qmclient/menus_qmclient.cpp",
@@ -84822,6 +84822,174 @@
       "reason": "machine/log/matcher call argument"
     },
     {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 1,
+      "text": "update_manifest.h",
+      "category": "business_data",
+      "reason": "command, config, or machine token"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 3,
+      "text": "update_version.h",
+      "category": "business_data",
+      "reason": "command, config, or machine token"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 15,
+      "text": "https://github.com/wxj881027/QmClient/releases/download/",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 57,
+      "text": "browser_download_url",
+      "category": "business_data",
+      "reason": "command, config, or machine token"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 72,
+      "text": "Invalid GitHub release metadata",
+      "category": "business_data",
+      "reason": "machine/log/matcher call argument"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 86,
+      "text": "tag_name",
+      "category": "business_data",
+      "reason": "command, config, or machine token"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 99,
+      "text": "GitHub release version is not newer",
+      "category": "business_data",
+      "reason": "machine/log/matcher call argument"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 112,
+      "text": "QmClient-windows.zip",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 113,
+      "text": "QmClient-windows.zip.sig",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 114,
+      "text": "QmClient-windows-update.json",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 115,
+      "text": "QmClient-windows-update.json.sig",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 139,
+      "text": "GitHub release is missing a required update asset",
+      "category": "business_data",
+      "reason": "machine/log/matcher call argument"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 145,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 153,
+      "text": "Invalid update manifest",
+      "category": "business_data",
+      "reason": "machine/log/matcher call argument"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 181,
+      "text": "Update manifest version is not newer",
+      "category": "business_data",
+      "reason": "machine/log/matcher call argument"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 189,
+      "text": "QmClient-windows.zip",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 193,
+      "text": "Update manifest package metadata is invalid",
+      "category": "business_data",
+      "reason": "machine/log/matcher call argument"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.cpp",
+      "line": 200,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.h",
+      "line": 11,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.h",
+      "line": 18,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.h",
+      "line": 19,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.h",
+      "line": 20,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.h",
+      "line": 21,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
+      "file": "src/game/client/components/qmclient/update_manifest.h",
+      "line": 22,
+      "text": "",
+      "category": "business_data",
+      "reason": "empty or whitespace literal"
+    },
+    {
       "file": "src/game/client/components/qmclient/update_version.cpp",
       "line": 2,
       "text": "update_version.h",
@@ -86398,35 +86566,35 @@
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 268,
+      "line": 269,
       "text": "",
       "category": "business_data",
       "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 268,
+      "line": 269,
       "text": "+scoreboard",
       "category": "business_data",
       "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 269,
+      "line": 270,
       "text": "",
       "category": "business_data",
       "reason": "empty or whitespace literal"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 269,
+      "line": 270,
       "text": "toggle_scoreboard_cursor",
       "category": "business_data",
       "reason": "command, config, or machine token"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 274,
+      "line": 275,
       "text": "deadtee.png",
       "category": "business_data",
       "reason": "path, file name, or URL data"
@@ -95141,70 +95309,91 @@
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 63,
-      "text": "http://42.194.185.210:8080/client/version",
+      "line": 70,
+      "text": "https://api.github.com/repos/wxj881027/QmClient/releases/latest",
       "category": "business_data",
       "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 64,
-      "text": "https://github.com/wxj881027/QmClient/releases/latest/download/DDNet.exe",
+      "line": 71,
+      "text": "QmClient-windows.zip",
       "category": "business_data",
       "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 65,
+      "line": 72,
+      "text": "QmClient-windows.zip.sig",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 73,
+      "text": "QmClient-windows-update.json",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 74,
+      "text": "QmClient-windows-update.json.sig",
+      "category": "business_data",
+      "reason": "path, file name, or URL data"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 79,
       "text": "qmclient/map_categories.json",
       "category": "business_data",
       "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 67,
+      "line": 81,
       "text": "qmclient/map_notes.json",
       "category": "business_data",
       "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 69,
+      "line": 83,
       "text": "qmclient/map_history.json",
       "category": "business_data",
       "reason": "path, file name, or URL data"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 70,
+      "line": 84,
       "text": "快醒醒!",
       "category": "business_data",
       "reason": "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 101,
+      "line": 115,
       "text": "但是",
       "category": "business_data",
       "reason": "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 103,
+      "line": 117,
       "text": "不过",
       "category": "business_data",
       "reason": "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 104,
+      "line": 118,
       "text": "然而",
       "category": "business_data",
       "reason": "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text"
     },
     {
       "file": "src/game/client/components/tclient/tclient.cpp",
-      "line": 105,
+      "line": 119,
       "text": "可是",
       "category": "business_data",
       "reason": "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text"
@@ -97682,42 +97871,42 @@
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 627,
+      "line": 628,
       "text": "No reason given",
       "category": "business_data",
       "reason": "vote command, matcher, notification title, or preview fixture data"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 640,
+      "line": 641,
       "text": "%s %s",
       "category": "business_data",
       "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 653,
+      "line": 654,
       "text": "vote yes",
       "category": "business_data",
       "reason": "vote command, matcher, notification title, or preview fixture data"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 654,
+      "line": 655,
       "text": "%s - %s",
       "category": "business_data",
       "reason": "display formatting template"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 658,
+      "line": 659,
       "text": "vote no",
       "category": "business_data",
       "reason": "vote command, matcher, notification title, or preview fixture data"
     },
     {
       "file": "src/game/client/components/voting.cpp",
-      "line": 659,
+      "line": 660,
       "text": "%s - %s",
       "category": "business_data",
       "reason": "display formatting template"
@@ -102252,6 +102441,13 @@
       "reason": "command, config, or machine token"
     },
     {
+      "file": "src/game/client/qm_ime_manager.cpp",
+      "line": 8,
+      "text": "ui.h",
+      "category": "business_data",
+      "reason": "command, config, or machine token"
+    },
+    {
       "file": "src/game/client/qm_ime_manager.h",
       "line": 7,
       "text": "qm_ime_candidate_popup.h",
@@ -103060,6 +103256,13 @@
       "file": "src/game/client/ui_rect.cpp",
       "line": 3,
       "text": "ui_rect.h",
+      "category": "business_data",
+      "reason": "command, config, or machine token"
+    },
+    {
+      "file": "src/game/client/ui_rect.cpp",
+      "line": 5,
+      "text": "ui.h",
       "category": "business_data",
       "reason": "command, config, or machine token"
     },
@@ -117109,14 +117312,14 @@
     },
     {
       "file": "src/test/qm_hud_media_island_logic_test.cpp",
-      "line": 343,
+      "line": 359,
       "text": "Artist A",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/qm_hud_media_island_logic_test.cpp",
-      "line": 343,
+      "line": 359,
       "text": "Song A",
       "category": "test_only",
       "reason": "test fixture or assertion text"
@@ -155168,455 +155371,560 @@
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 148,
+      "line": 150,
       "text": "void CGraphics_Threaded::DrawRenderTarget",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 150,
-      "text": "std::clamp(Alpha, 0.0f, 1.0f)",
+      "line": 152,
+      "text": "std::clamp(Params.m_Alpha, 0.0f, 1.0f)",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 153,
+      "line": 158,
       "text": "void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_Draw",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 154,
+      "line": 159,
       "text": "void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_Draw",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 155,
-      "text": "[[nodiscard]] bool Cmd_RenderTarget_Draw",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 159,
-      "text": "pCommand->m_Alpha * 255.0f + 0.5f",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
       "line": 160,
-      "text": "pCommand->m_Alpha * 255.0f + 0.5f",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 161,
-      "text": "pCommand->m_Alpha * 255.0f + 0.5f",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 168,
       "text": "[[nodiscard]] bool Cmd_RenderTarget_Draw",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 169,
+      "line": 164,
+      "text": "Cmd.m_Alpha * 255.0f + 0.5f",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 172,
+      "text": "void CGraphics_Threaded::DrawRenderTarget",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 175,
+      "text": "Params.m_Corners == CORNER_NONE || Rounding <= 0.0f",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 176,
+      "text": "constexpr int NumSegments = RECT_CORNER_SEGMENTS",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 182,
+      "text": "vec2(Params.m_X + Rounding, Params.m_Y + Rounding),\\n",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 183,
+      "text": "\\t\\t\\t\\t\\tvec2(Params.m_X + (1.0f - Ca1) * Rounding, Params.m_Y + (1.0f - Sa1) * Rounding),\\n",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 184,
+      "text": "\\t\\t\\t\\t\\tvec2(Params.m_X + (1.0f - Ca2) * Rounding, Params.m_Y + (1.0f - Sa2) * Rounding),\\n",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 185,
+      "text": "\\t\\t\\t\\t\\tvec2(Params.m_X + (1.0f - Ca3) * Rounding, Params.m_Y + (1.0f - Sa3) * Rounding)",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 187,
+      "text": "Cmd.m_PrimCount = vVertices.size() / 4;",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 188,
+      "text": "const size_t VerticesSize = vVertices.size() * sizeof(CCommandBuffer::SVertex);",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 190,
+      "text": "AddCmd(Cmd, [&]",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 193,
+      "text": "mem_copy(Cmd.m_pVertices, vVertices.data(), VerticesSize);",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 198,
+      "text": "void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_Draw",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 199,
+      "text": "[[nodiscard]] bool Cmd_RenderTarget_Draw",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 203,
+      "text": "UploadStreamBufferData(EPrimitiveType::QUADS, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount)",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 204,
+      "text": "glDrawElements(GL_TRIANGLES, pCommand->m_PrimCount * 6",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 205,
+      "text": "sizeof(CCommandBuffer::SVertex) * pCommand->m_PrimCount * 4",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 206,
+      "text": "vkCmdDrawIndexed(CommandBuffer, pCommand->m_PrimCount * 6",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 213,
+      "text": "[[nodiscard]] bool Cmd_RenderTarget_Draw",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 214,
       "text": "[[nodiscard]] bool Cmd_RenderTarget_GaussianBlurPass",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 178,
+      "line": 223,
       "text": "return true;",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 218,
+      "line": 263,
       "text": "bool CGraphics_Threaded::BeginRenderTarget",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 222,
+      "line": 267,
       "text": "Cmd.m_State.m_ClipEnable = false;",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 231,
+      "line": 276,
       "text": "IGraphics::CRenderTargetReadbackHandle CGraphics_Threaded::BeginRenderTargetReadback",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 241,
+      "line": 286,
       "text": "bool CGraphics_Threaded::ReadRenderTarget",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 252,
+      "line": 297,
       "text": "bool CGraphics_Threaded::ResolveRenderTargetReadback",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 253,
+      "line": 298,
       "text": "void CGraphics_Threaded::CancelRenderTargetReadback",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 256,
+      "line": 301,
       "text": "pHandle == nullptr",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 258,
-      "text": "pHandle == nullptr",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 275,
-      "text": "bool CGraphics_Threaded::CaptureBackbufferToRenderTarget",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 289,
-      "text": "void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 291,
-      "text": "m_BackbufferCapture = false",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 292,
-      "text": "m_BackbufferCapture = pCommand->m_pCapabilities->m_RenderTargets",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 296,
-      "text": "GL_COLOR_BUFFER_BIT, GL_LINEAR",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
       "line": 303,
-      "text": "[[nodiscard]] bool SupportsBackbufferCapture() const",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 304,
-      "text": "[[nodiscard]] bool Cmd_RenderTarget_CaptureBackbuffer",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 315,
-      "text": "VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 319,
-      "text": "Target.m_Height, 0",
+      "text": "pHandle == nullptr",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
       "line": 320,
-      "text": "VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL",
+      "text": "bool CGraphics_Threaded::CaptureBackbufferToRenderTarget",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 321,
-      "text": "VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR",
+      "line": 334,
+      "text": "void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 330,
-      "text": "bool CGraphics_Threaded::IsBackbufferCaptureSupported",
+      "line": 336,
+      "text": "m_BackbufferCapture = false",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 331,
-      "text": "bool CGraphics_Threaded::SetMultiSampling",
+      "line": 337,
+      "text": "m_BackbufferCapture = pCommand->m_pCapabilities->m_RenderTargets",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 332,
-      "text": "void CGraphics_Threaded::Swap",
+      "line": 341,
+      "text": "GL_COLOR_BUFFER_BIT, GL_LINEAR",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 345,
-      "text": "[[nodiscard]] bool GetGraphicCommandBuffer",
+      "line": 348,
+      "text": "[[nodiscard]] bool SupportsBackbufferCapture() const",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 346,
-      "text": "void StartCommands",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 347,
-      "text": "[[nodiscard]] bool PrepareFrame",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 351,
-      "text": "m_ThreadCount < 2 || m_ForceSingleThreadedRender",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 353,
-      "text": "m_ForceSingleThreadedRender = false",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 354,
-      "text": "m_ForceSingleThreadedRender = false",
+      "line": 349,
+      "text": "[[nodiscard]] bool Cmd_RenderTarget_CaptureBackbuffer",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
       "line": 360,
-      "text": "[[nodiscard]] bool CreateRenderPass",
+      "text": "VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 369,
-      "text": "bool CGraphics_Threaded::GaussianBlurRenderTarget",
+      "line": 364,
+      "text": "Target.m_Height, 0",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 372,
-      "text": "Source.Id() == Temporary.Id()",
+      "line": 365,
+      "text": "VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 374,
-      "text": "Horizontal.m_Horizontal = true",
+      "line": 366,
+      "text": "VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
       "line": 375,
-      "text": "Vertical.m_Horizontal = false",
+      "text": "bool CGraphics_Threaded::IsBackbufferCaptureSupported",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 383,
-      "text": "bool CGraphics_Threaded::BeginRenderTarget",
+      "line": 376,
+      "text": "bool CGraphics_Threaded::SetMultiSampling",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 384,
-      "text": "void CGraphics_Threaded::EndRenderTarget",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 388,
-      "text": "m_RenderTargetActive = true",
+      "line": 377,
+      "text": "void CGraphics_Threaded::Swap",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
       "line": 390,
-      "text": "m_RenderTargetActive = false",
+      "text": "[[nodiscard]] bool GetGraphicCommandBuffer",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 403,
-      "text": "vec4 Result",
+      "line": 391,
+      "text": "void StartCommands",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 392,
+      "text": "[[nodiscard]] bool PrepareFrame",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 396,
+      "text": "m_ThreadCount < 2 || m_ForceSingleThreadedRender",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 398,
+      "text": "m_ForceSingleThreadedRender = false",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 399,
+      "text": "m_ForceSingleThreadedRender = false",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
       "line": 405,
-      "text": "vec4(Result.rgb, 1.0)",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 412,
-      "text": "[[nodiscard]] bool CreateGaussianBlurGraphicsPipeline",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 416,
-      "text": "m_RenderTargetGaussianBlur = SupportsRenderTargetGaussianBlur()",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 424,
-      "text": "m_RenderTargetGaussianBlur = pCommand->m_pCapabilities->m_RenderTargets && m_GaussianBlurProgramValid",
-      "category": "test_only",
-      "reason": "test fixture or assertion text"
-    },
-    {
-      "file": "src/test/render_target_test.cpp",
-      "line": 430,
       "text": "[[nodiscard]] bool CreateRenderPass",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 434,
-      "text": "FinalLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ? 2 : 1",
+      "line": 414,
+      "text": "bool CGraphics_Threaded::GaussianBlurRenderTarget",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 440,
-      "text": "m_MultiSamplingCount = (g_Config.m_GfxFsaaSamples & 0xFFFFFFFE)",
+      "line": 417,
+      "text": "Source.Id() == Temporary.Id()",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 442,
-      "text": "m_RenderTargets = SupportsRenderTargetReadback()",
+      "line": 419,
+      "text": "Horizontal.m_Horizontal = true",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 420,
+      "text": "Vertical.m_Horizontal = false",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 428,
+      "text": "bool CGraphics_Threaded::BeginRenderTarget",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 429,
+      "text": "void CGraphics_Threaded::EndRenderTarget",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 433,
+      "text": "m_RenderTargetActive = true",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 435,
+      "text": "m_RenderTargetActive = false",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
       "line": 448,
+      "text": "vec4 Result",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 450,
+      "text": "vec4(Result.rgb, 1.0)",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 457,
+      "text": "[[nodiscard]] bool CreateGaussianBlurGraphicsPipeline",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 461,
+      "text": "m_RenderTargetGaussianBlur = SupportsRenderTargetGaussianBlur()",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 469,
+      "text": "m_RenderTargetGaussianBlur = pCommand->m_pCapabilities->m_RenderTargets && m_GaussianBlurProgramValid",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 475,
+      "text": "[[nodiscard]] bool CreateRenderPass",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 479,
+      "text": "FinalLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ? 2 : 1",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 485,
+      "text": "m_MultiSamplingCount = (g_Config.m_GfxFsaaSamples & 0xFFFFFFFE)",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 487,
+      "text": "m_RenderTargets = SupportsRenderTargetReadback()",
+      "category": "test_only",
+      "reason": "test fixture or assertion text"
+    },
+    {
+      "file": "src/test/render_target_test.cpp",
+      "line": 493,
       "text": "m_VKRenderTargetRenderPass != VK_NULL_HANDLE",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 453,
+      "line": 498,
       "text": "m_OptimalSwapChainImageBlitting && m_OptimalRGBAImageBlitting && m_LinearRGBAImageBlitting",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 459,
+      "line": 504,
       "text": "void BeginSwapRenderPass",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 477,
+      "line": 522,
       "text": "[[nodiscard]] bool SubmitCurrentCommandsAndRestartSwapPass()",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 490,
+      "line": 535,
       "text": "[[nodiscard]] bool Cmd_RenderTarget_Readback",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 505,
+      "line": 550,
       "text": "[[nodiscard]] bool SupportsRenderTargetReadback() const",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 506,
+      "line": 551,
       "text": "[[nodiscard]] bool Cmd_RenderTarget_Create",
       "category": "test_only",
       "reason": "test fixture or assertion text"
     },
     {
       "file": "src/test/render_target_test.cpp",
-      "line": 510,
+      "line": 555,
       "text": "HasMultiSampling() ||",
       "category": "test_only",
       "reason": "test fixture or assertion text"
@@ -165567,6 +165875,62 @@
       "file": "src/game/client/components/tclient/menus_tclient.cpp",
       "line": 5920,
       "text": "Saved Profiles",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 2976,
+      "text": "Update failed",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 2995,
+      "text": "One or more update assets failed to download",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 3009,
+      "text": "Failed to read the downloaded update manifest",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 3016,
+      "text": "Failed to read the downloaded manifest signature",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 3023,
+      "text": "Failed to read the downloaded package signature",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 3043,
+      "text": "Update manifest does not match the selected release",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 3054,
+      "text": "Downloaded update package size or SHA-256 is invalid",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/tclient/tclient.cpp",
+      "line": 3064,
+      "text": "Failed to create the update working directory",
       "category": "needs_review",
       "reason": "unclassified human-readable client string"
     }

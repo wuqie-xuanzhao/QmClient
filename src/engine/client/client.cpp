@@ -1790,7 +1790,8 @@ void CClient::Restart()
 
 void CClient::Quit()
 {
-	SetState(IClient::STATE_QUITTING);
+	if(!GameClient()->PrepareForShutdown(false))
+		SetState(IClient::STATE_QUITTING);
 }
 
 void CClient::ResetSocket()
@@ -4292,10 +4293,11 @@ void CClient::Run()
 				QuitRequested = Input()->Update();
 			if(QuitRequested)
 			{
-				if(State() == IClient::STATE_QUITTING)
-					break;
-				else
+				if(!GameClient()->PrepareForShutdown(true))
+				{
 					SetState(IClient::STATE_QUITTING); // SDL_QUIT
+					break;
+				}
 			}
 		}
 

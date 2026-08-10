@@ -1227,23 +1227,32 @@ TEST(QmHudMediaIslandSatellite, CompletedSwapUsesCheckIconWithoutBottomReadyText
 	EXPECT_EQ(RenderBody.find("RenderBottomTextCentered(BottomTextY, SwapList"), std::string::npos);
 }
 
-TEST(QmHudMediaIslandTimerLayout, CheckpointUsesBottomThirtyPercent)
+TEST(QmHudMediaIslandTimerLayout, SecondaryLinePreservesTenPercentTopMargin)
 {
 	const SHudMediaIslandTimerRowLayout Layout = QmHudMediaIslandTimerRows(1.0f, 16.0f, true);
 
-	EXPECT_FLOAT_EQ(Layout.m_RaceY, 1.0f);
-	EXPECT_FLOAT_EQ(Layout.m_RaceH, 11.2f);
+	EXPECT_FLOAT_EQ(Layout.m_RaceY, 2.6f);
+	EXPECT_FLOAT_EQ(Layout.m_RaceH, 9.6f);
 	EXPECT_FLOAT_EQ(Layout.m_CheckpointY, 12.2f);
 	EXPECT_FLOAT_EQ(Layout.m_CheckpointH, 4.8f);
 }
 
-TEST(QmHudMediaIslandTimerLayout, RaceUsesTheWholeSlotWithoutCheckpoint)
+TEST(QmHudMediaIslandTimerLayout, RaceUsesTheWholeSlotWithoutSecondaryLine)
 {
 	const SHudMediaIslandTimerRowLayout Layout = QmHudMediaIslandTimerRows(1.0f, 16.0f, false);
 
 	EXPECT_FLOAT_EQ(Layout.m_RaceY, 1.0f);
 	EXPECT_FLOAT_EQ(Layout.m_RaceH, 16.0f);
 	EXPECT_FLOAT_EQ(Layout.m_CheckpointH, 0.0f);
+}
+
+TEST(QmHudMediaIslandTimerLayout, CheckpointOrSwapRaceTextDoesNotIntrudeIntoTopMargin)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string RenderBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
+
+	EXPECT_NE(RenderBody.find("const bool ShowTimerSecondaryLine = SwapRows.m_InlineSwapCount > 0 || Checkpoint > 0;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("ShowTimerSecondaryLine ? TimerRows.m_RaceY + (TimerRows.m_RaceH - TimerRaceFontSize) * 0.5f : TimerCapsule.m_TextY"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandWaveform, PlayingBarsVaryIndependentlyAndPausedBarsSettle)

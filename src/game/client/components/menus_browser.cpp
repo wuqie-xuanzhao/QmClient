@@ -1033,6 +1033,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	}
 	if(NumServers * ms_ListheaderHeight > ListView.h)
 	{
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 		CUIRect Fade = ListView;
 		Fade.VSplitRight(s_ListBox.ScrollbarWidthMax(), &Fade, nullptr);
 		constexpr float FadeHeight = 44.0f;
@@ -1464,7 +1465,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		if(TransitionActive)
 		{
 			if(TransitionAlpha > 0.0f)
-				TabContents.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)), IGraphics::CORNER_NONE, 0.0f);
+				DrawUiSwitchTransitionOverlay(TabContents, BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)));
 			Ui()->ClipDisable();
 		}
 	}
@@ -1546,6 +1547,7 @@ void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,
 		const void *pItemId = &vItemIds[ItemIndex];
 		const char *pName = GetItemName(ItemIndex);
 		const bool Active = !Filter.Filtered(pName);
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 
 		const int Click = Ui()->DoButtonLogic(pItemId, 0, &Item, BUTTONFLAG_ALL);
 		if(Click == 1 || Click == 2)
@@ -1937,6 +1939,7 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 		const CListboxItem Item = s_ListBox.DoNextItem(&CurrentClient);
 		if(!Item.m_Visible)
 			continue;
+		auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 		CUIRect Skin, Name, Clan, Score, Flag;
 		Name = Item.m_Rect;
@@ -3405,6 +3408,7 @@ void CMenus::RenderServerbrowserQm(CUIRect View)
 		const CListboxItem Item = s_QmServerListBox.DoNextItem(&s_vQmServerItemIds[i], SelectedQmIndex == (int)i);
 		if(!Item.m_Visible)
 			continue;
+		auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 		CUIRect ItemRect, TextRect, CountRect, TitleRect, DetailRect, UsersRect, DummiesRect;
 		Item.m_Rect.Margin(4.0f, &ItemRect);
@@ -3660,6 +3664,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 				const CListboxItem Item = s_FavoriteMapsListBox.DoNextItem(&s_vFavoriteMapItemIds[FavoriteMapIndex], false);
 				if(Item.m_Visible)
 				{
+					auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 					CUIRect Row = Item.m_Rect;
 					Row.Margin(4.0f, &Row);
 					Row.Draw(BrowserOpacityColor(ColorRGBA(1.0f, 0.85f, 0.0f, 0.08f)), IGraphics::CORNER_ALL, 5.0f);
@@ -3812,6 +3817,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 				const CListboxItem Item = s_MapHistoryListBox.DoNextItem(&s_vMapHistoryItemIds[HistoryIndex], false);
 				if(!Item.m_Visible)
 					continue;
+				auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 				char aDeaths[32];
 				str_format(aDeaths, sizeof(aDeaths), "%d", Record.m_DeathCount);
@@ -3906,6 +3912,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		const CListboxItem Item = s_SavesListBox.DoNextItem(&s_vSaveItemIds[SaveIndex], false);
 		if(!Item.m_Visible)
 			continue;
+		auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 		CUIRect Row, TopLine, BottomLine, TimeLabel;
 		Item.m_Rect.Margin(4.0f, &Row);
@@ -4044,7 +4051,7 @@ void CMenus::RenderServerbrowserToolBox(CUIRect ToolBox)
 	if(TransitionActive)
 	{
 		if(TransitionAlpha > 0.0f)
-			ContentClip.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)), IGraphics::CORNER_NONE, 0.0f);
+			DrawUiSwitchTransitionOverlay(ContentClip, BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)));
 		Ui()->ClipDisable();
 	}
 }
@@ -4172,7 +4179,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 		{
 			if(TransitionAlpha > 0.0f)
 			{
-				ServerListBase.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)), IGraphics::CORNER_NONE, 0.0f);
+				DrawUiSwitchTransitionOverlay(ServerListBase, BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)));
 			}
 			Ui()->ClipDisable();
 		}
@@ -4204,7 +4211,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 		{
 			if(TransitionAlpha > 0.0f)
 			{
-				ToolBoxBase.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)), IGraphics::CORNER_NONE, 0.0f);
+				DrawUiSwitchTransitionOverlay(ToolBoxBase, BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)));
 			}
 			Ui()->ClipDisable();
 		}

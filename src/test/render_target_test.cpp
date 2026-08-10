@@ -18,7 +18,7 @@ namespace
 	using TCancelRenderTargetReadback = void (IGraphics::*)(IGraphics::CRenderTargetReadbackHandle *);
 	using TGaussianBlurRenderTarget = bool (IGraphics::*)(IGraphics::CRenderTargetHandle, IGraphics::CRenderTargetHandle, IGraphics::CRenderTargetHandle, const IGraphics::SGaussianBlurParams &);
 	using TCaptureBackbufferToRenderTarget = bool (IGraphics::*)(IGraphics::CRenderTargetHandle);
-	using TDrawRenderTarget = void (IGraphics::*)(IGraphics::CRenderTargetHandle, float, float, float, float, float);
+	using TDrawRenderTarget = void (IGraphics::*)(IGraphics::CRenderTargetHandle, const IGraphics::SRenderTargetDrawParams &);
 
 	std::string ReadFile(const char *pPath)
 	{
@@ -133,6 +133,7 @@ TEST(GraphicsRenderTarget, CommandStructsExposeExpectedFields)
 	Draw.m_W = 3.0f;
 	Draw.m_H = 4.0f;
 	Draw.m_Alpha = 0.25f;
+	Draw.m_PrimCount = 2;
 	EXPECT_EQ(Draw.m_Cmd, CCommandBuffer::CMD_RENDER_TARGET_DRAW);
 	EXPECT_EQ(Draw.m_TargetId, 4);
 	EXPECT_FLOAT_EQ(Draw.m_X, 1.0f);
@@ -140,6 +141,7 @@ TEST(GraphicsRenderTarget, CommandStructsExposeExpectedFields)
 	EXPECT_FLOAT_EQ(Draw.m_W, 3.0f);
 	EXPECT_FLOAT_EQ(Draw.m_H, 4.0f);
 	EXPECT_FLOAT_EQ(Draw.m_Alpha, 0.25f);
+	EXPECT_EQ(Draw.m_PrimCount, 2U);
 }
 
 TEST(GraphicsRenderTarget, DrawAlphaIsClampedAndForwardedToBackends)
@@ -147,8 +149,11 @@ TEST(GraphicsRenderTarget, DrawAlphaIsClampedAndForwardedToBackends)
 	const std::string FrontendSource = ReadFile("src/engine/client/graphics_threaded.cpp");
 	const std::string FrontendBody = ExtractFunctionBody(FrontendSource, "void CGraphics_Threaded::DrawRenderTarget");
 	ASSERT_FALSE(FrontendBody.empty());
-	EXPECT_NE(FrontendBody.find("std::clamp(Alpha, 0.0f, 1.0f)"), std::string::npos);
+	EXPECT_NE(FrontendBody.find("std::clamp(Params.m_Alpha, 0.0f, 1.0f)"), std::string::npos);
 	EXPECT_NE(FrontendBody.find("Cmd.m_Alpha"), std::string::npos);
+	EXPECT_NE(FrontendBody.find("Params.m_Corners"), std::string::npos);
+	EXPECT_NE(FrontendBody.find("Params.m_Rounding"), std::string::npos);
+	EXPECT_NE(FrontendBody.find("Cmd.m_pVertices"), std::string::npos);
 
 	const std::string OpenGlBody = ExtractFunctionBody(ReadFile("src/engine/client/backend/opengl/backend_opengl.cpp"), "void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_Draw");
 	const std::string OpenGl3Body = ExtractFunctionBody(ReadFile("src/engine/client/backend/opengl/backend_opengl3.cpp"), "void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_Draw");
@@ -156,9 +161,49 @@ TEST(GraphicsRenderTarget, DrawAlphaIsClampedAndForwardedToBackends)
 	ASSERT_FALSE(OpenGlBody.empty());
 	ASSERT_FALSE(OpenGl3Body.empty());
 	ASSERT_FALSE(VulkanBody.empty());
-	EXPECT_NE(OpenGlBody.find("pCommand->m_Alpha * 255.0f + 0.5f"), std::string::npos);
-	EXPECT_NE(OpenGl3Body.find("pCommand->m_Alpha * 255.0f + 0.5f"), std::string::npos);
-	EXPECT_NE(VulkanBody.find("pCommand->m_Alpha * 255.0f + 0.5f"), std::string::npos);
+	EXPECT_NE(FrontendBody.find("Cmd.m_Alpha * 255.0f + 0.5f"), std::string::npos);
+	EXPECT_NE(OpenGlBody.find("pCommand->m_pVertices"), std::string::npos);
+	EXPECT_NE(OpenGl3Body.find("pCommand->m_PrimCount"), std::string::npos);
+	EXPECT_NE(VulkanBody.find("pCommand->m_PrimCount"), std::string::npos);
+}
+
+TEST(GraphicsRenderTarget, RoundedDrawUsesQuadVertexOrderAndRequeuesVertexData)
+{
+	const std::string FrontendBody = ExtractFunctionBody(ReadFile("src/engine/client/graphics_threaded.cpp"), "void CGraphics_Threaded::DrawRenderTarget");
+	ASSERT_FALSE(FrontendBody.empty());
+
+	const size_t PlainRectBranch = FrontendBody.find("Params.m_Corners == CORNER_NONE || Rounding <= 0.0f");
+	const size_t RoundedRectBranch = FrontendBody.find("constexpr int NumSegments = RECT_CORNER_SEGMENTS");
+	ASSERT_NE(PlainRectBranch, std::string::npos);
+	ASSERT_NE(RoundedRectBranch, std::string::npos);
+	EXPECT_LT(PlainRectBranch, RoundedRectBranch);
+
+	const std::string QuadVertexOrder =
+		"vec2(Params.m_X + Rounding, Params.m_Y + Rounding),\n"
+		"\t\t\t\t\tvec2(Params.m_X + (1.0f - Ca1) * Rounding, Params.m_Y + (1.0f - Sa1) * Rounding),\n"
+		"\t\t\t\t\tvec2(Params.m_X + (1.0f - Ca2) * Rounding, Params.m_Y + (1.0f - Sa2) * Rounding),\n"
+		"\t\t\t\t\tvec2(Params.m_X + (1.0f - Ca3) * Rounding, Params.m_Y + (1.0f - Sa3) * Rounding)";
+	EXPECT_NE(FrontendBody.find(QuadVertexOrder), std::string::npos);
+	EXPECT_NE(FrontendBody.find("Cmd.m_PrimCount = vVertices.size() / 4;"), std::string::npos);
+	EXPECT_NE(FrontendBody.find("const size_t VerticesSize = vVertices.size() * sizeof(CCommandBuffer::SVertex);"), std::string::npos);
+
+	const size_t AddCommand = FrontendBody.find("AddCmd(Cmd, [&]");
+	ASSERT_NE(AddCommand, std::string::npos);
+	EXPECT_NE(FrontendBody.find("m_pCommandBuffer->AllocData(VerticesSize)", AddCommand), std::string::npos);
+	EXPECT_NE(FrontendBody.find("mem_copy(Cmd.m_pVertices, vVertices.data(), VerticesSize);", AddCommand), std::string::npos);
+}
+
+TEST(GraphicsRenderTarget, ModernBackendsSubmitFourVerticesPerIndexedQuad)
+{
+	const std::string OpenGl3Body = ExtractFunctionBody(ReadFile("src/engine/client/backend/opengl/backend_opengl3.cpp"), "void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_Draw");
+	const std::string VulkanBody = ExtractFunctionBody(ReadFile("src/engine/client/backend/vulkan/backend_vulkan.cpp"), "[[nodiscard]] bool Cmd_RenderTarget_Draw");
+	ASSERT_FALSE(OpenGl3Body.empty());
+	ASSERT_FALSE(VulkanBody.empty());
+
+	EXPECT_NE(OpenGl3Body.find("UploadStreamBufferData(EPrimitiveType::QUADS, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount)"), std::string::npos);
+	EXPECT_NE(OpenGl3Body.find("glDrawElements(GL_TRIANGLES, pCommand->m_PrimCount * 6"), std::string::npos);
+	EXPECT_NE(VulkanBody.find("sizeof(CCommandBuffer::SVertex) * pCommand->m_PrimCount * 4"), std::string::npos);
+	EXPECT_NE(VulkanBody.find("vkCmdDrawIndexed(CommandBuffer, pCommand->m_PrimCount * 6"), std::string::npos);
 }
 
 TEST(GraphicsRenderTarget, VulkanExternalDrawsInvalidateRawBindingCache)

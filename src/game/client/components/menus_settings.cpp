@@ -2102,6 +2102,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				{
 					DragTarget = -1;
 				}
+				auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 				s_QueueListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 				s_QueueListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
@@ -5519,6 +5520,7 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView, const SSettingsContentMet
 		++VisibleLanguages;
 
 		void *pRowId = UseCache ? static_cast<void *>(&gs_aLanguageRowIds[i]) : const_cast<char *>(Language.m_Filename.c_str());
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 		const int ButtonResult = Ui()->DoButtonLogic(pRowId, 0, &ItemRect, BUTTONFLAG_LEFT);
 		if(ButtonResult)
 		{

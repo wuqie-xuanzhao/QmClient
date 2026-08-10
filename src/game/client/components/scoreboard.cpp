@@ -172,6 +172,7 @@ namespace
 
 	int DoScoreboardMediaIconButton(CUi *pUi, ITextRender *pTextRender, CButtonContainer *pButtonContainer, const char *pIcon, const CUIRect *pRect, bool Enabled, ColorRGBA ButtonColor, float ContentAlpha)
 	{
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		const float IconAlpha = std::clamp(ContentAlpha, 0.0f, 1.0f);
 		pRect->Draw(pUi->ScaleBackgroundAlpha(ButtonColor), IGraphics::CORNER_ALL, 5.0f);
 
@@ -274,75 +275,6 @@ void CScoreboard::OnInit()
 	m_DeadTeeTexture = Graphics()->LoadTexture("deadtee.png", IStorage::TYPE_ALL);
 }
 
-void CScoreboard::DestroyBetterScoreboardBlurTargets()
-{
-	Graphics()->DestroyRenderTarget(&m_BetterScoreboardBlurSource);
-	Graphics()->DestroyRenderTarget(&m_BetterScoreboardBlurTemporary);
-	Graphics()->DestroyRenderTarget(&m_BetterScoreboardBlurTarget);
-	m_BetterScoreboardBlurWidth = 0;
-	m_BetterScoreboardBlurHeight = 0;
-	m_BetterScoreboardBlurReady = false;
-}
-
-bool CScoreboard::PrepareBetterScoreboardBlur()
-{
-	m_BetterScoreboardBlurReady = false;
-	if(!g_Config.m_QmBetterScoreboard)
-		return false;
-	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
-	{
-		if(m_BetterScoreboardBlurSource.IsValid() || m_BetterScoreboardBlurTemporary.IsValid() || m_BetterScoreboardBlurTarget.IsValid())
-			DestroyBetterScoreboardBlurTargets();
-		return false;
-	}
-
-	const int BlurWidth = ScoreboardBlurTargetDimension(Graphics()->ScreenWidth());
-	const int BlurHeight = ScoreboardBlurTargetDimension(Graphics()->ScreenHeight());
-	if(BlurWidth <= 0 || BlurHeight <= 0)
-		return false;
-
-	const bool SizeChanged = BlurWidth != m_BetterScoreboardBlurWidth || BlurHeight != m_BetterScoreboardBlurHeight;
-	if(SizeChanged || !m_BetterScoreboardBlurSource.IsValid() || !m_BetterScoreboardBlurTemporary.IsValid() || !m_BetterScoreboardBlurTarget.IsValid())
-	{
-		DestroyBetterScoreboardBlurTargets();
-		m_BetterScoreboardBlurSource = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
-		m_BetterScoreboardBlurTemporary = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
-		m_BetterScoreboardBlurTarget = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
-		if(!m_BetterScoreboardBlurSource.IsValid() || !m_BetterScoreboardBlurTemporary.IsValid() || !m_BetterScoreboardBlurTarget.IsValid())
-		{
-			DestroyBetterScoreboardBlurTargets();
-			return false;
-		}
-		m_BetterScoreboardBlurWidth = BlurWidth;
-		m_BetterScoreboardBlurHeight = BlurHeight;
-	}
-
-	if(!Graphics()->CaptureBackbufferToRenderTarget(m_BetterScoreboardBlurSource))
-		return false;
-
-	IGraphics::SGaussianBlurParams BlurParams;
-	BlurParams.m_Radius = 4;
-	BlurParams.m_Sigma = 2.0f;
-	m_BetterScoreboardBlurReady = Graphics()->GaussianBlurRenderTarget(
-		m_BetterScoreboardBlurSource,
-		m_BetterScoreboardBlurTemporary,
-		m_BetterScoreboardBlurTarget,
-		BlurParams);
-	return m_BetterScoreboardBlurReady;
-}
-
-void CScoreboard::RenderBetterScoreboardBlur(const CUIRect &Rect)
-{
-	if(!m_BetterScoreboardBlurReady || Rect.w <= 0.0f || Rect.h <= 0.0f)
-		return;
-
-	const CUIRect Screen = *Ui()->Screen();
-	Ui()->ClipEnable(&Rect);
-	Graphics()->BlendNormal();
-	Graphics()->DrawRenderTarget(m_BetterScoreboardBlurTarget, Screen.x, Screen.y, Screen.w, Screen.h, std::clamp(m_Visibility, 0.0f, 1.0f));
-	Ui()->ClipDisable();
-}
-
 void CScoreboard::OnReset()
 {
 	m_Active = false;
@@ -353,7 +285,6 @@ void CScoreboard::OnReset()
 	m_PresentationInitialized = false;
 	m_MouseUnlocked = false;
 	m_RenderInteractions = false;
-	m_BetterScoreboardBlurReady = false;
 	m_aCachedTeamModes = {};
 	m_LastMousePos = std::nullopt;
 	m_SoundMuteButtonAnimState.Reset();
@@ -362,7 +293,6 @@ void CScoreboard::OnReset()
 
 void CScoreboard::OnRelease()
 {
-	DestroyBetterScoreboardBlurTargets();
 	m_Active = false;
 	m_Visibility = 0.0f;
 	m_OpenTime = 0.0f;
@@ -550,7 +480,6 @@ void CScoreboard::RenderTitleBar(CUIRect TitleBar, int Team, const char *pTitle)
 void CScoreboard::RenderGoals(CUIRect Goals)
 {
 	const float ContentAlpha = m_AnimContentAlpha;
-	RenderBetterScoreboardBlur(Goals);
 	Goals.Draw(ScoreboardUiColorSurface(ContentAlpha), IGraphics::CORNER_ALL, 7.5f);
 	Goals.VMargin(5.0f, &Goals);
 
@@ -608,7 +537,6 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 	}
 
 	const float CornerRadius = 7.5f;
-	RenderBetterScoreboardBlur(SpectatorPanel);
 	SpectatorPanel.Draw(ScoreboardUiColorSurface(ContentAlpha), IGraphics::CORNER_ALL, CornerRadius);
 	CUIRect SpectatorList = SpectatorPanel;
 	SpectatorList.Margin(5.0f, &SpectatorList);
@@ -616,7 +544,6 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 	CUIRect MediaControls;
 	if(ShowMediaControls)
 	{
-		RenderBetterScoreboardBlur(MediaPanel);
 		MediaPanel.Draw(ScoreboardUiColorSurface(ContentAlpha), IGraphics::CORNER_ALL, CornerRadius);
 		MediaControls = MediaPanel;
 		MediaControls.Margin(5.0f, &MediaControls);
@@ -1403,6 +1330,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 			(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SPEC_FREEVIEW && pInfo->m_Local) ||
 			(GameClient()->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientId == GameClient()->m_Snap.m_SpecInfo.m_SpectatorId))
 		{
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 			Row.Draw(ScoreboardDecorationColor(ui_token::color::ACCENT_PRIMARY_DIM.WithMultipliedAlpha(ItemAlpha * 1.45f)), IGraphics::CORNER_ALL, RoundRadius);
 		}
 
@@ -1411,6 +1339,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 
 		if(m_MouseUnlocked && m_RenderInteractions)
 		{
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 			const int ButtonResult = Ui()->DoButtonLogic(&ClientData, 0, &Row, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 			if(ButtonResult != 0)
 			{
@@ -1716,9 +1645,6 @@ void CScoreboard::RenderRecordingNotification(float x)
 void CScoreboard::OnRender()
 {
 	m_RenderInteractions = false;
-	m_BetterScoreboardBlurReady = false;
-	if(!g_Config.m_QmBetterScoreboard && (m_BetterScoreboardBlurSource.IsValid() || m_BetterScoreboardBlurTemporary.IsValid() || m_BetterScoreboardBlurTarget.IsValid()))
-		DestroyBetterScoreboardBlurTargets();
 
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
@@ -1817,9 +1743,9 @@ void CScoreboard::OnRender()
 	Ui()->MapScreen();
 
 	const float BackgroundAlphaFinal = ExtraAnimations ? m_Visibility : m_AnimContentAlpha;
+	const float GaussianBlurAlpha = WantActive ? 1.0f : m_AnimContentAlpha;
+	CUiScopedGaussianBlur GaussianBlurScope(Ui(), GaussianBlurAlpha);
 	const float ContentOffset = 0.0f;
-	if(BackgroundAlphaFinal > 0.01f)
-		PrepareBetterScoreboardBlur();
 
 	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
 	const bool Teams = GameClient()->IsTeamPlay();
@@ -1938,8 +1864,6 @@ void CScoreboard::OnRender()
 			RedScoreboard = CUiV2LegacyAdapter::ToCUIRect(vColumns[0].m_Box);
 			BlueScoreboard = CUiV2LegacyAdapter::ToCUIRect(vColumns[1].m_Box);
 		}
-		const CUIRect RedScoreboardBackground = RedScoreboard;
-		const CUIRect BlueScoreboardBackground = BlueScoreboard;
 		RedScoreboard.HSplitTop(TitleHeight, &RedTitle, &RedScoreboard);
 		BlueScoreboard.HSplitTop(TitleHeight, &BlueTitle, &BlueScoreboard);
 		{
@@ -1978,8 +1902,6 @@ void CScoreboard::OnRender()
 			SortButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[1].m_Box);
 		}
 
-		RenderBetterScoreboardBlur(RedScoreboardBackground);
-		RenderBetterScoreboardBlur(BlueScoreboardBackground);
 		RedTitle.Draw(ScoreboardWithUiAlpha(ui_token::color::DANGER, BackgroundAlphaFinal), IGraphics::CORNER_T, ui_token::radius::CARD);
 		BlueTitleBackground.Draw(ScoreboardWithUiAlpha(ui_token::color::ACCENT_PRIMARY_DIM, BackgroundAlphaFinal), IGraphics::CORNER_T, ui_token::radius::CARD);
 		RedScoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal), IGraphics::CORNER_B, ui_token::radius::CARD);
@@ -1993,7 +1915,6 @@ void CScoreboard::OnRender()
 	}
 	else
 	{
-		RenderBetterScoreboardBlur(Scoreboard);
 		Scoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal), IGraphics::CORNER_ALL, ui_token::radius::CARD);
 
 		const char *pTitle;

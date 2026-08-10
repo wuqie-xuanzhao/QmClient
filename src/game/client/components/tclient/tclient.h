@@ -18,6 +18,7 @@
 #include <game/client/component.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
+#include <game/client/components/qmclient/update_manifest.h>
 #include <game/client/components/tclient/map_history.h>
 #include <game/client/components/tclient/swap_countdown_message.h>
 
@@ -140,8 +141,12 @@ class CTClient : public CComponent
 	void DoFinishCheck();
 	const char *CurrentCommunityIdForFinishCheck() const;
 	void StartUpdateDownload();
-	void ResetUpdateExeTask();
-	bool ReplaceClientFromUpdate();
+	void ResetUpdateDownloadTasks();
+	void RemoveUpdateTempFiles();
+	bool LaunchUpdateInstaller();
+	void ResetUpdateTasks();
+	void StartUpdateCheckIfDue();
+	void FinishUpdateDownloads();
 
 	bool ServerCommandExists(const char *pCommand);
 	int64_t m_LastAutoReplyTime = 0;
@@ -407,16 +412,28 @@ public:
 	void SetForcedAspect();
 	bool HasFreezeWakeupPopups() const;
 	void RenderFreezeWakeupPopups();
+	bool PrepareForShutdown(bool Force);
+	const char *UpdateShutdownMessage() const;
+	bool IsPreparingUpdateForShutdown() const { return m_UpdateShutdownRequested; }
 
 	std::shared_ptr<CHttpRequest> m_pQmClientUpdateInfoTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pUpdateExeTask = nullptr;
+	std::shared_ptr<CHttpRequest> m_pUpdatePackageTask = nullptr;
+	std::shared_ptr<CHttpRequest> m_pUpdatePackageSignatureTask = nullptr;
+	std::shared_ptr<CHttpRequest> m_pUpdateManifestTask = nullptr;
+	std::shared_ptr<CHttpRequest> m_pUpdateManifestSignatureTask = nullptr;
 	void FetchQmClientUpdateInfo();
 	void FinishQmClientUpdateInfo();
 	void ResetQmClientUpdateInfoTask();
 	bool NeedQmClientUpdate();
 	void RequestQmClientUpdateCheckAndUpdate();
-	bool IsUpdateChecking() const { return m_pQmClientUpdateInfoTask && !m_pQmClientUpdateInfoTask->Done(); }
-	bool IsUpdateDownloading() const { return m_pUpdateExeTask && !m_pUpdateExeTask->Done(); }
+	bool IsUpdateChecking() const { return m_pQmClientUpdateInfoTask != nullptr; }
+	bool IsUpdateDownloading() const
+	{
+		return m_pUpdatePackageTask != nullptr ||
+		       m_pUpdatePackageSignatureTask != nullptr ||
+		       m_pUpdateManifestTask != nullptr ||
+		       m_pUpdateManifestSignatureTask != nullptr;
+	}
 
 	void RenderMiniVoteHud(bool HudEditorPreview = false);
 	void RenderCenterLines();
@@ -426,7 +443,21 @@ public:
 	bool InfoTaskDone() const { return m_pQmClientUpdateInfoTask && m_pQmClientUpdateInfoTask->State() == EHttpState::DONE; }
 	bool m_FetchedQmClientUpdateInfo = false;
 	bool m_QmClientAutoUpdateAfterCheck = false;
-	char m_aUpdateExeTmp[64] = "";
+	char m_aUpdatePackageTmp[IO_MAX_PATH_LENGTH] = "";
+	char m_aUpdatePackageSignatureTmp[IO_MAX_PATH_LENGTH] = "";
+	char m_aUpdateManifestTmp[IO_MAX_PATH_LENGTH] = "";
+	char m_aUpdateManifestSignatureTmp[IO_MAX_PATH_LENGTH] = "";
+	char m_aUpdateInstallerTmp[IO_MAX_PATH_LENGTH] = "";
+	SQmClientUpdateRelease m_UpdateRelease;
+	bool m_UpdateShutdownRequested = false;
+	bool m_UpdateInstallerStarted = false;
+	bool m_UpdateReady = false;
+	bool m_UpdateCheckFailed = false;
+	bool m_UpdateFailureNoticeShown = false;
+	bool m_UpdateAutoEnabled = false;
+	int64_t m_UpdateFailureExitAt = 0;
+	int64_t m_UpdateNextCheck = 0;
+	char m_aUpdateError[256] = "";
 	char m_aQmClientLatestVersionStr[32] = "0";
 
 	Regex m_RegexChatIgnore;

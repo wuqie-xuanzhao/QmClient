@@ -753,6 +753,7 @@ int CInput::Update()
 	bool IgnoreKeys = false;
 	CPerfTimer EventPumpTimer;
 	int EventCount = 0;
+	const bool TrackPerf = QmPerfEnabled();
 
 	const auto &&AddKeyEventChecked = [&](int Key, int Flags) {
 		if(Key != KEY_UNKNOWN && !IgnoreKeys && (!(Flags & IInput::FLAG_PRESS) || !HasComposition()))
@@ -770,12 +771,58 @@ int CInput::Update()
 
 	while(SDL_PollEvent(&Event))
 	{
+		const int64_t PollEventStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
+		const int PollResult = SDL_PollEvent(&Event);
+		if(TrackPerf)
+		{
+			const double PollEventDurationMs = (time_get_nanoseconds().count() - PollEventStartNs) / 1000000.0;
+			if(QmPerfShouldLogDuration(PollEventDurationMs))
+			{
+				char aPollExtra[192];
+#if defined(CONF_FAMILY_WINDOWS)
+				if(PollResult != 0 && Event.type == SDL_SYSWMEVENT && Event.syswm.msg != nullptr && Event.syswm.msg->subsystem == SDL_SYSWM_WINDOWS)
+				{
+					str_format(aPollExtra, sizeof(aPollExtra), "result=%d event_type=%u message=%u wparam=%llu lparam=%lld", PollResult, (unsigned)Event.type, (unsigned)Event.syswm.msg->msg.win.msg, (unsigned long long)Event.syswm.msg->msg.win.wParam, (long long)Event.syswm.msg->msg.win.lParam);
+				}
+				else
+#endif
+				{
+					str_format(aPollExtra, sizeof(aPollExtra), "result=%d event_type=%d", PollResult, PollResult != 0 ? (int)Event.type : -1);
+				}
+				LogPerfStage(m_pClient, "sdl_poll_event_call", PollEventDurationMs, false, aPollExtra);
+			}
+		}
+		if(PollResult == 0)
+			break;
+
 		++EventCount;
 		switch(Event.type)
 		{
 		case SDL_SYSWMEVENT:
+		{
+			const int64_t SystemMessageStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
 			ProcessSystemMessage(Event.syswm.msg);
+			if(TrackPerf)
+			{
+				const double SystemMessageDurationMs = (time_get_nanoseconds().count() - SystemMessageStartNs) / 1000000.0;
+				if(QmPerfShouldLogDuration(SystemMessageDurationMs))
+				{
+					char aSystemMessageExtra[192];
+#if defined(CONF_FAMILY_WINDOWS)
+					if(Event.syswm.msg != nullptr && Event.syswm.msg->subsystem == SDL_SYSWM_WINDOWS)
+					{
+						str_format(aSystemMessageExtra, sizeof(aSystemMessageExtra), "subsystem=%d message=%u wparam=%llu lparam=%lld", (int)Event.syswm.msg->subsystem, (unsigned)Event.syswm.msg->msg.win.msg, (unsigned long long)Event.syswm.msg->msg.win.wParam, (long long)Event.syswm.msg->msg.win.lParam);
+					}
+					else
+#endif
+					{
+						str_format(aSystemMessageExtra, sizeof(aSystemMessageExtra), "subsystem=%d", Event.syswm.msg != nullptr ? (int)Event.syswm.msg->subsystem : -1);
+					}
+					LogPerfStage(m_pClient, "process_system_message", SystemMessageDurationMs, false, aSystemMessageExtra);
+				}
+			}
 			break;
+		}
 
 		case SDL_TEXTEDITING:
 			HandleTextEditingEvent(Event.edit.text, Event.edit.start, Event.edit.length);
@@ -950,7 +997,19 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 		case IMN_CHANGECANDIDATE:
 		{
 			HWND WindowHandle = pMsg->msg.win.hwnd;
+			const bool TrackPerf = QmPerfEnabled();
+			const int64_t GetContextStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
 			HIMC ImeContext = ImmGetContext(WindowHandle);
+			if(TrackPerf)
+			{
+				const double GetContextDurationMs = (time_get_nanoseconds().count() - GetContextStartNs) / 1000000.0;
+				if(QmPerfShouldLogDuration(GetContextDurationMs))
+				{
+					char aExtra[192];
+					str_format(aExtra, sizeof(aExtra), "wparam=%llu lparam=%lld has_context=%d", (unsigned long long)pMsg->msg.win.wParam, (long long)pMsg->msg.win.lParam, ImeContext != nullptr ? 1 : 0);
+					LogPerfStage(m_pClient, "ime_get_context", GetContextDurationMs, false, aExtra);
+				}
+			}
 			if(ImeContext == nullptr)
 				break;
 
@@ -958,7 +1017,18 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 			LPCANDIDATELIST pCandidateList = nullptr;
 			DWORD Size = 0;
 			const auto LoadCandidateList = [&](DWORD CandidateListIndex) {
+				const int64_t SizeQueryStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
 				DWORD CandidateListSize = ImmGetCandidateListW(ImeContext, CandidateListIndex, nullptr, 0);
+				if(TrackPerf)
+				{
+					const double SizeQueryDurationMs = (time_get_nanoseconds().count() - SizeQueryStartNs) / 1000000.0;
+					if(QmPerfShouldLogDuration(SizeQueryDurationMs))
+					{
+						char aExtra[256];
+						str_format(aExtra, sizeof(aExtra), "wparam=%llu lparam=%lld candidate_flags=%u candidate_index=%u returned_size=%u", (unsigned long long)pMsg->msg.win.wParam, (long long)pMsg->msg.win.lParam, (unsigned)CandidateListFlags, (unsigned)CandidateListIndex, (unsigned)CandidateListSize);
+						LogPerfStage(m_pClient, "ime_candidate_size_query", SizeQueryDurationMs, false, aExtra);
+					}
+				}
 				if(CandidateListSize == 0)
 					return false;
 
@@ -966,7 +1036,19 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 				if(pLoadedCandidateList == nullptr)
 					return false;
 
-				CandidateListSize = ImmGetCandidateListW(ImeContext, CandidateListIndex, pLoadedCandidateList, CandidateListSize);
+				const DWORD RequestedSize = CandidateListSize;
+				const int64_t DataQueryStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
+				CandidateListSize = ImmGetCandidateListW(ImeContext, CandidateListIndex, pLoadedCandidateList, RequestedSize);
+				if(TrackPerf)
+				{
+					const double DataQueryDurationMs = (time_get_nanoseconds().count() - DataQueryStartNs) / 1000000.0;
+					if(QmPerfShouldLogDuration(DataQueryDurationMs))
+					{
+						char aExtra[256];
+						str_format(aExtra, sizeof(aExtra), "wparam=%llu lparam=%lld candidate_flags=%u candidate_index=%u requested_size=%u returned_size=%u", (unsigned long long)pMsg->msg.win.wParam, (long long)pMsg->msg.win.lParam, (unsigned)CandidateListFlags, (unsigned)CandidateListIndex, (unsigned)RequestedSize, (unsigned)CandidateListSize);
+						LogPerfStage(m_pClient, "ime_candidate_data_query", DataQueryDurationMs, false, aExtra);
+					}
+				}
 				if(CandidateListSize == 0)
 				{
 					free(pLoadedCandidateList);
@@ -1028,7 +1110,18 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 				m_CandidateSelectedIndex = -1;
 			}
 			free(pCandidateList);
-			ImmReleaseContext(WindowHandle, ImeContext);
+			const int64_t ReleaseContextStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
+			const BOOL ReleaseContextResult = ImmReleaseContext(WindowHandle, ImeContext);
+			if(TrackPerf)
+			{
+				const double ReleaseContextDurationMs = (time_get_nanoseconds().count() - ReleaseContextStartNs) / 1000000.0;
+				if(QmPerfShouldLogDuration(ReleaseContextDurationMs))
+				{
+					char aExtra[192];
+					str_format(aExtra, sizeof(aExtra), "wparam=%llu lparam=%lld result=%d", (unsigned long long)pMsg->msg.win.wParam, (long long)pMsg->msg.win.lParam, ReleaseContextResult != FALSE ? 1 : 0);
+					LogPerfStage(m_pClient, "ime_release_context", ReleaseContextDurationMs, false, aExtra);
+				}
+			}
 			break;
 		}
 		case IMN_CLOSECANDIDATE:

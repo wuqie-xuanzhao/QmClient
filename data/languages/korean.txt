@@ -716,6 +716,9 @@ Animation
 Animation duration
 == 애니메이션 지속 시간
 
+Animation probability
+== 애니메이션 표시 확률
+
 Animation range
 == 애니메이션 범위
 
@@ -4462,6 +4465,9 @@ Gap between statusbar items
 
 Gap between tee and nametag
 == 티와 이름표 사이 간격
+
+Gaussian blur
+== 가우시안 블러
 
 General
 == 일반

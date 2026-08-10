@@ -5,6 +5,7 @@
 
 #include "gameclient.h"
 #include "lineinput.h"
+#include "ui.h"
 
 #include <engine/input.h>
 #include <engine/shared/config.h>
@@ -140,6 +141,7 @@ SQmImePopupState CQmImeManager::BuildPopupState() const
 
 void CQmImeManager::RenderCandidatePopup()
 {
+	CUiScopedGaussianBlur GaussianBlurScope(m_pGameClient->Ui());
 	const EQmImeCandidateRenderAction RenderAction = QmImeComputeCandidateRenderAction(QmImeShouldRenderCustomCandidateUi(), g_Config.m_QmNewIme);
 
 	if(RenderAction == EQmImeCandidateRenderAction::VALIDATE_ONLY)

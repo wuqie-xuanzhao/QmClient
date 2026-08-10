@@ -4,38 +4,62 @@
 
 #include <gtest/gtest.h>
 
-TEST(QmWeaponReloadAnimation, UsesTheActualHammerReloadVariant)
+TEST(QmWeaponReloadAnimation, UsesFlipOnlyForShotgunGrenadeAndLaser)
 {
-	EXPECT_FLOAT_EQ(QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, WEAPON_HAMMER, false), 0.125f);
-	EXPECT_FLOAT_EQ(QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, WEAPON_HAMMER, true), 0.32f);
-	EXPECT_FLOAT_EQ(QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, WEAPON_NINJA, false), 0.8f);
+	EXPECT_FALSE(QmWeaponUsesReloadFlip(WEAPON_HAMMER));
+	EXPECT_FALSE(QmWeaponUsesReloadFlip(WEAPON_GUN));
+	EXPECT_TRUE(QmWeaponUsesReloadFlip(WEAPON_SHOTGUN));
+	EXPECT_TRUE(QmWeaponUsesReloadFlip(WEAPON_GRENADE));
+	EXPECT_TRUE(QmWeaponUsesReloadFlip(WEAPON_LASER));
+	EXPECT_FALSE(QmWeaponUsesReloadFlip(WEAPON_NINJA));
 }
 
 TEST(QmWeaponReloadAnimation, RequiresReloadBelowOneAndAHalfTimesDefault)
 {
-	EXPECT_TRUE(QmWeaponReloadRotation(0.02f, 0.149f, 0.1f, 50).m_Active);
-	EXPECT_FALSE(QmWeaponReloadRotation(0.02f, 0.15f, 0.1f, 50).m_Active);
-	EXPECT_FALSE(QmWeaponReloadRotation(0.02f, 0.151f, 0.1f, 50).m_Active);
+	EXPECT_TRUE(QmWeaponReloadRotation(0.02f, 0.149f, 0.1f, 50, false).m_Active);
+	EXPECT_FALSE(QmWeaponReloadRotation(0.02f, 0.15f, 0.1f, 50, false).m_Active);
+	EXPECT_FALSE(QmWeaponReloadRotation(0.02f, 0.151f, 0.1f, 50, false).m_Active);
 }
 
-TEST(QmWeaponReloadAnimation, RotatesUniformlyUntilTheTickQuantizedReloadEnds)
+TEST(QmWeaponReloadAnimation, FollowsAnticipationFlipCatchAndSettleKeyframes)
 {
-	const SQmWeaponReloadRotation Start = QmWeaponReloadRotation(0.0f, 0.125f, 0.125f, 50);
-	const SQmWeaponReloadRotation Quarter = QmWeaponReloadRotation(0.03f, 0.125f, 0.125f, 50);
-	const SQmWeaponReloadRotation End = QmWeaponReloadRotation(0.12f, 0.125f, 0.125f, 50);
+	constexpr float DegreesToRadians = pi / 180.0f;
+	EXPECT_NEAR(QmWeaponFlipAngle(0.0f, false), 0.0f, 0.00001f);
+	EXPECT_NEAR(QmWeaponFlipAngle(0.10f, false), -8.0f * DegreesToRadians, 0.00001f);
+	EXPECT_NEAR(QmWeaponFlipAngle(0.35f, false), 120.0f * DegreesToRadians, 0.00001f);
+	EXPECT_NEAR(QmWeaponFlipAngle(0.60f, false), 240.0f * DegreesToRadians, 0.00001f);
+	EXPECT_NEAR(QmWeaponFlipAngle(0.78f, false), 370.0f * DegreesToRadians, 0.00001f);
+	EXPECT_NEAR(QmWeaponFlipAngle(0.90f, false), 355.0f * DegreesToRadians, 0.00001f);
+	EXPECT_NEAR(QmWeaponFlipAngle(1.0f, false), 360.0f * DegreesToRadians, 0.00001f);
+
+	const float AnticipationMidpoint = QmWeaponFlipAngle(0.05f, false);
+	EXPECT_LT(AnticipationMidpoint, 0.0f);
+	EXPECT_GT(AnticipationMidpoint, -8.0f * DegreesToRadians);
+}
+
+TEST(QmWeaponReloadAnimation, MirrorsTheFlipForLeftFacingWeapons)
+{
+	EXPECT_FLOAT_EQ(QmWeaponFlipAngle(0.35f, true), -QmWeaponFlipAngle(0.35f, false));
+}
+
+TEST(QmWeaponReloadAnimation, EndsAtTheTickQuantizedReloadBoundary)
+{
+	const SQmWeaponReloadRotation Start = QmWeaponReloadRotation(0.0f, 0.5f, 0.5f, 50, false);
+	const SQmWeaponReloadRotation Flip = QmWeaponReloadRotation(0.175f, 0.5f, 0.5f, 50, false);
+	const SQmWeaponReloadRotation End = QmWeaponReloadRotation(0.5f, 0.5f, 0.5f, 50, false);
 
 	ASSERT_TRUE(Start.m_Active);
 	EXPECT_FLOAT_EQ(Start.m_Angle, 0.0f);
-	ASSERT_TRUE(Quarter.m_Active);
-	EXPECT_FLOAT_EQ(Quarter.m_Angle, pi / 2.0f);
+	ASSERT_TRUE(Flip.m_Active);
+	EXPECT_NEAR(Flip.m_Angle, 120.0f * pi / 180.0f, 0.00001f);
 	EXPECT_FALSE(End.m_Active);
 	EXPECT_FLOAT_EQ(End.m_Angle, 0.0f);
 }
 
 TEST(QmWeaponReloadAnimation, ReloadRotationOverridesWeaponSwitchRotation)
 {
-	const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(0.03f, 0.125f, 0.125f, 50);
-	EXPECT_FLOAT_EQ(QmResolveWeaponAnimationRotation(0.75f, ReloadRotation, true), pi / 2.0f);
+	const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(0.175f, 0.5f, 0.5f, 50, false);
+	EXPECT_NEAR(QmResolveWeaponAnimationRotation(0.75f, ReloadRotation, true), 120.0f * pi / 180.0f, 0.00001f);
 	EXPECT_FLOAT_EQ(QmResolveWeaponAnimationRotation(0.75f, SQmWeaponReloadRotation(), true), 0.0f);
 	EXPECT_FLOAT_EQ(QmResolveWeaponAnimationRotation(0.75f, SQmWeaponReloadRotation(), false), 0.75f);
 }
@@ -43,7 +67,7 @@ TEST(QmWeaponReloadAnimation, ReloadRotationOverridesWeaponSwitchRotation)
 TEST(QmWeaponReloadAnimation, KeepsAnAttackBoundToItsWeaponAndTuneZone)
 {
 	SQmWeaponReloadAnimationState State;
-	State.ObserveAttack(100, WEAPON_GUN, 2, false);
+	State.ObserveAttack(100, WEAPON_GUN, 2, true);
 	EXPECT_TRUE(State.MatchesAttack(100, WEAPON_GUN));
 	EXPECT_EQ(State.m_AttackTuneZone, 2);
 
@@ -51,12 +75,25 @@ TEST(QmWeaponReloadAnimation, KeepsAnAttackBoundToItsWeaponAndTuneZone)
 	EXPECT_FALSE(State.MatchesAttack(100, WEAPON_LASER));
 	EXPECT_EQ(State.m_AttackTuneZone, 2);
 
-	State.ObserveAttack(101, WEAPON_LASER, 3, false);
+	State.ObserveAttack(101, WEAPON_LASER, 3, true);
 	EXPECT_TRUE(State.MatchesAttack(101, WEAPON_LASER));
 	EXPECT_EQ(State.m_AttackTuneZone, 3);
+}
 
-	State.ObserveAttack(102, WEAPON_HAMMER, 4, true);
-	EXPECT_TRUE(State.m_PredictedHammerHit);
+TEST(QmWeaponReloadAnimation, SelectsAnAttackOnceFromTheConfiguredProbability)
+{
+	EXPECT_FALSE(QmWeaponReloadAnimationSelected(0, 0.0f));
+	EXPECT_TRUE(QmWeaponReloadAnimationSelected(100, 1.0f));
+	EXPECT_TRUE(QmWeaponReloadAnimationSelected(25, 0.249f));
+	EXPECT_FALSE(QmWeaponReloadAnimationSelected(25, 0.25f));
+
+	SQmWeaponReloadAnimationState State;
+	State.ObserveAttack(100, WEAPON_LASER, 2, false);
+	EXPECT_FALSE(State.MatchesAttack(100, WEAPON_LASER));
+	State.ObserveAttack(100, WEAPON_LASER, 2, true);
+	EXPECT_FALSE(State.MatchesAttack(100, WEAPON_LASER));
+	State.ObserveAttack(101, WEAPON_LASER, 2, true);
+	EXPECT_TRUE(State.MatchesAttack(101, WEAPON_LASER));
 }
 
 TEST(QmWeaponTrajectory, SelectsWeaponSpecificBaseColors)

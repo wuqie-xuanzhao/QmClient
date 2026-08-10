@@ -81,10 +81,16 @@ void CEmoticon::ConEmote(IConsole::IResult *pResult, void *pUserData)
 	((CEmoticon *)pUserData)->Emote(pResult->GetInteger(0));
 }
 
+void CEmoticon::ConLocalBlink(IConsole::IResult *, void *pUserData)
+{
+	((CEmoticon *)pUserData)->TriggerLocalBlink();
+}
+
 void CEmoticon::OnConsoleInit()
 {
 	Console()->Register("+emote", "", CFGFLAG_CLIENT, ConKeyEmoticon, this, "Open emote selector");
 	Console()->Register("emote", "i[emote-id]", CFGFLAG_CLIENT, ConEmote, this, "Use emote");
+	Console()->Register("qm_blink", "", CFGFLAG_CLIENT, ConLocalBlink, this, "Blink the active local tee");
 }
 
 void CEmoticon::OnReset()
@@ -94,6 +100,8 @@ void CEmoticon::OnReset()
 	m_PresentationInitialized = false;
 	m_SelectedEmote = -1;
 	m_SelectedEyeEmote = -1;
+	for(auto &LocalBlinkState : m_aLocalBlinkStates)
+		LocalBlinkState.Reset();
 	m_TouchPressedOutside = false;
 }
 
@@ -356,4 +364,24 @@ void CEmoticon::EyeEmote(int Emote)
 		break;
 	}
 	GameClient()->m_Chat.SendChat(0, aBuf);
+}
+
+void CEmoticon::TriggerLocalBlink()
+{
+	const int Dummy = g_Config.m_ClDummy;
+	const int ClientId = GameClient()->m_aLocalIds[Dummy];
+	if(Client()->State() != IClient::STATE_ONLINE || ClientId < 0 || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+		return;
+
+	m_aLocalBlinkStates[Dummy].Trigger(Client()->GameTick(Dummy));
+}
+
+bool CEmoticon::ShouldRenderLocalBlink(int ClientId) const
+{
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		if(GameClient()->m_aLocalIds[Dummy] == ClientId && m_aLocalBlinkStates[Dummy].IsActive(Client()->GameTick(Dummy)))
+			return true;
+	}
+	return false;
 }
