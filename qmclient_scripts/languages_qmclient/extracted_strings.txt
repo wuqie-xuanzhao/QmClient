@@ -485,6 +485,7 @@ Bind Wheel Key
 Bit flags for disabling settings tabs
 Black
 Blend mode
+Blink the active local tee
 Block enemy chat
 Block votes from blacklisted addresses
 Block words
@@ -1758,6 +1759,7 @@ Input overlay Y position (percent)
 Input smoothing
 Input switch
 Insane
+Installing update. Please wait...
 Interface
 Interface accent color
 Interface animations

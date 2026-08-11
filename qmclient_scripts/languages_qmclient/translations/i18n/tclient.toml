@@ -2480,6 +2480,38 @@ turkish = "Güncelleme indiriliyor..."
 polish = "Pobieranie aktualizacji..."
 
 [[message]]
+key = "Blink the active local tee"
+[message.translations]
+japanese = "操作中のローカルキャラクターを点滅させる"
+korean = "활성 로컬 캐릭터를 깜박이게 합니다"
+simplified_chinese = "让当前本地角色闪烁"
+traditional_chinese = "讓目前本機角色閃爍"
+russian = "Заставить активного локального персонажа мигнуть"
+german = "Aktiven lokalen Charakter blinken lassen"
+spanish = "Hacer parpadear al personaje local activo"
+french = "Faire clignoter le personnage local actif"
+brazilian_portuguese = "Fazer o personagem local ativo piscar"
+portuguese = "Fazer a personagem local ativa piscar"
+turkish = "Etkin yerel karakteri yanıp söndür"
+polish = "Mignij aktywną lokalną postacią"
+
+[[message]]
+key = "Installing update. Please wait..."
+[message.translations]
+japanese = "アップデートをインストールしています。お待ちください..."
+korean = "업데이트 설치 중입니다. 잠시 기다려 주세요..."
+simplified_chinese = "正在安装更新，请稍等..."
+traditional_chinese = "正在安裝更新，請稍等..."
+russian = "Установка обновления. Пожалуйста, подождите..."
+german = "Update wird installiert. Bitte warten..."
+spanish = "Instalando la actualización. Espera..."
+french = "Installation de la mise à jour. Veuillez patienter..."
+brazilian_portuguese = "Instalando a atualização. Aguarde..."
+portuguese = "A instalar a atualização. Aguarda..."
+turkish = "Güncelleme yükleniyor. Lütfen bekleyin..."
+polish = "Instalowanie aktualizacji. Proszę czekać..."
+
+[[message]]
 key = "Draw lines showing screen/clickbox center"
 [message.translations]
 simplified_chinese = "绘制线条显示屏幕/点击框中心"

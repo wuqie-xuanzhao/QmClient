@@ -1045,10 +1045,17 @@ set(RUST_SRC
       Cargo.lock
 )
 set(RUST_TARGETS engine_shared)
+if(TARGET_OS STREQUAL "windows")
+  list(APPEND RUST_TARGETS qm_update)
+endif()
 if(NOT CMAKE_OSX_ARCHITECTURES)
   set(RUST_OUTPUTS)
   foreach(rust_target ${RUST_TARGETS})
-    set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}ddnet_${rust_target}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    if(rust_target STREQUAL "qm_update")
+      set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}qm_update${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    else()
+      set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}ddnet_${rust_target}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    endif()
     add_library(rust_${rust_target} STATIC IMPORTED GLOBAL)
     add_custom_target(rust_${rust_target}_target DEPENDS "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR}/${LIBRARY_NAME}")
     add_dependencies(rust_${rust_target} rust_${rust_target}_target)
@@ -1067,7 +1074,11 @@ if(NOT CMAKE_OSX_ARCHITECTURES)
   )
 else()
   foreach(rust_target ${RUST_TARGETS})
-    set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}ddnet_${rust_target}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    if(rust_target STREQUAL "qm_update")
+      set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}qm_update${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    else()
+      set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}ddnet_${rust_target}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    endif()
     add_library(rust_${rust_target} STATIC IMPORTED GLOBAL)
     set_target_properties(rust_${rust_target} PROPERTIES
       IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_RELEASE}/${LIBRARY_NAME}"
@@ -1088,7 +1099,11 @@ else()
   foreach(arch ${RUST_OSX_ARCHITECTURES})
     set(RUST_OUTPUTS)
     foreach(rust_target ${RUST_TARGETS})
-      set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}ddnet_${rust_target}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      if(rust_target STREQUAL "qm_update")
+        set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}qm_update${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      else()
+        set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}ddnet_${rust_target}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      endif()
       list(APPEND RUST_OUTPUTS "${PROJECT_BINARY_DIR}/${arch}/${CARGO_BUILD_DIR}/${LIBRARY_NAME}")
     endforeach()
     add_custom_command(
@@ -3427,7 +3442,7 @@ if(CLIENT)
   if(TARGET_OS STREQUAL "windows")
     add_executable(qm-client-updater WIN32 src/qm-update/updater_main.cpp)
     set_property(TARGET qm-client-updater PROPERTY OUTPUT_NAME QmClient-Updater)
-    target_link_libraries(qm-client-updater rust_engine_shared ${PLATFORM_LIBS} comctl32.lib)
+    target_link_libraries(qm-client-updater rust_qm_update ${PLATFORM_LIBS} comctl32.lib)
     if(MSVC)
       target_link_options(qm-client-updater PRIVATE /ENTRY:wWinMainCRTStartup)
     endif()
@@ -3933,6 +3948,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_hud_notifications_test.cpp
     qm_ime_platform_test.cpp
     qm_new_ui_menu_branch_test.cpp
+    qm_update_arguments_test.cpp
     qm_live_client_test.cpp
     qm_lyrics_cache_test.cpp
     qm_lyrics_clock_test.cpp

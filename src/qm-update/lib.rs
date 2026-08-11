@@ -22,6 +22,7 @@ const MAX_PACKAGE_SIZE: u64 = 5 * 1024 * 1024 * 1024;
 const MAX_FILE_SIZE: u64 = 2 * 1024 * 1024 * 1024;
 const MAX_TOTAL_SIZE: u64 = 10 * 1024 * 1024 * 1024;
 const MAX_FILE_COUNT: usize = 100_000;
+const PERMISSION_DENIED_MARKER: &str = "QM_UPDATE_PERMISSION_DENIED:";
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -57,6 +58,30 @@ fn validate_version(version: &str) -> Result<(), String> {
             .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
     {
         return Err("the update version is not a stable numeric version".into());
+    }
+    for part in parts {
+        part.parse::<i32>()
+            .map_err(|_| "the update version component is too large")?;
+    }
+    Ok(())
+}
+
+fn version_parts(version: &str) -> Result<[i32; 4], String> {
+    validate_version(version)?;
+    let mut result = [0; 4];
+    for (index, part) in version.split('.').enumerate() {
+        result[index] = part
+            .parse()
+            .map_err(|_| "the update version component is too large")?;
+    }
+    Ok(result)
+}
+
+fn validate_not_downgrade(update_version: &str, current_version: &str) -> Result<(), String> {
+    if version_parts(update_version)? < version_parts(current_version)? {
+        return Err(
+            "the signed update version is older than the installed QmClient version".into(),
+        );
     }
     Ok(())
 }
@@ -183,14 +208,101 @@ fn package_signature_message(digest: &[u8; 32]) -> Vec<u8> {
     message
 }
 
+fn format_io_error(context: &str, error: &io::Error) -> String {
+    if error.kind() == io::ErrorKind::PermissionDenied {
+        format!("{PERMISSION_DENIED_MARKER} {context}: {error}")
+    } else {
+        format!("{context}: {error}")
+    }
+}
+
+#[cfg(windows)]
+fn is_reparse_point(metadata: &fs::Metadata) -> bool {
+    use std::os::windows::fs::MetadataExt;
+
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
+    metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0
+}
+
+#[cfg(not(windows))]
+fn is_reparse_point(metadata: &fs::Metadata) -> bool {
+    metadata.file_type().is_symlink()
+}
+
+fn path_metadata(path: &Path, context: &str) -> Result<Option<fs::Metadata>, String> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) => Ok(Some(metadata)),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(format_io_error(context, &error)),
+    }
+}
+
+fn validate_regular_file(path: &Path, context: &str) -> Result<(), String> {
+    let metadata =
+        path_metadata(path, context)?.ok_or_else(|| format!("{context}: file does not exist"))?;
+    if !metadata.is_file() || is_reparse_point(&metadata) {
+        return Err(format!("{context}: file is not a regular file"));
+    }
+    Ok(())
+}
+
+fn validate_install_root(install: &Path) -> Result<(), String> {
+    let metadata = path_metadata(install, "failed inspecting the QmClient install directory")?
+        .ok_or_else(|| "the QmClient install directory does not exist".to_string())?;
+    if !metadata.is_dir() || is_reparse_point(&metadata) {
+        return Err("the QmClient install directory is not a regular directory".into());
+    }
+    validate_regular_file(
+        &install.join("DDNet.exe"),
+        "the QmClient install directory is missing DDNet.exe",
+    )?;
+    validate_regular_file(
+        &install.join("data/qmclient/gui_logo.png"),
+        "the QmClient install directory is missing data/qmclient/gui_logo.png",
+    )?;
+    Ok(())
+}
+
+fn validate_install_target(install: &Path, relative: &Path) -> Result<(), String> {
+    let components: Vec<_> = relative.components().collect();
+    let mut current = install.to_path_buf();
+    for (index, component) in components.iter().enumerate() {
+        current.push(component.as_os_str());
+        let metadata = match path_metadata(&current, "failed inspecting an update target")? {
+            Some(metadata) => metadata,
+            None => continue,
+        };
+        if is_reparse_point(&metadata) {
+            return Err(format!(
+                "update target contains a symbolic link or reparse point: {}",
+                current.display()
+            ));
+        }
+        if index + 1 == components.len() {
+            if !metadata.is_file() {
+                return Err(format!(
+                    "update target is not a regular file: {}",
+                    current.display()
+                ));
+            }
+        } else if !metadata.is_dir() {
+            return Err(format!(
+                "update target parent is not a directory: {}",
+                current.display()
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn hash_reader(mut reader: impl Read) -> Result<([u8; 32], u64), String> {
     let mut hasher = Sha256::new();
-    let mut buffer = [0; 1024 * 1024];
+    let mut buffer = vec![0; 1024 * 1024];
     let mut size = 0u64;
     loop {
         let read = reader
             .read(&mut buffer)
-            .map_err(|error| format!("failed reading update data: {error}"))?;
+            .map_err(|error| format_io_error("failed reading update data", &error))?;
         if read == 0 {
             break;
         }
@@ -203,12 +315,14 @@ fn hash_reader(mut reader: impl Read) -> Result<([u8; 32], u64), String> {
 }
 
 fn read_limited(path: &Path, limit: usize) -> Result<Vec<u8>, String> {
+    validate_regular_file(path, &format!("failed reading {}", path.display()))?;
     let metadata = fs::metadata(path)
-        .map_err(|error| format!("failed reading {}: {error}", path.display()))?;
+        .map_err(|error| format_io_error(&format!("failed reading {}", path.display()), &error))?;
     if metadata.len() > limit as u64 {
         return Err(format!("{} is too large", path.display()));
     }
-    fs::read(path).map_err(|error| format!("failed reading {}: {error}", path.display()))
+    fs::read(path)
+        .map_err(|error| format_io_error(&format!("failed reading {}", path.display()), &error))
 }
 
 fn validate_package(
@@ -216,8 +330,9 @@ fn validate_package(
     package_signature: &[u8],
     manifest: &Manifest,
 ) -> Result<(), String> {
+    validate_regular_file(package_path, "failed opening update package")?;
     let package = File::open(package_path)
-        .map_err(|error| format!("failed opening update package: {error}"))?;
+        .map_err(|error| format_io_error("failed opening update package", &error))?;
     let (digest, size) = hash_reader(package)?;
     if size != manifest.package.size || digest != parse_hash(&manifest.package.sha256)? {
         return Err("update package size or SHA-256 does not match the signed manifest".into());
@@ -235,12 +350,12 @@ fn copy_exact(
     expected_size: u64,
 ) -> Result<[u8; 32], String> {
     let mut hasher = Sha256::new();
-    let mut buffer = [0; 1024 * 1024];
+    let mut buffer = vec![0; 1024 * 1024];
     let mut size = 0u64;
     loop {
         let read = source
             .read(&mut buffer)
-            .map_err(|error| format!("failed extracting update file: {error}"))?;
+            .map_err(|error| format_io_error("failed extracting update file", &error))?;
         if read == 0 {
             break;
         }
@@ -252,7 +367,7 @@ fn copy_exact(
         }
         target
             .write_all(&buffer[..read])
-            .map_err(|error| format!("failed writing staged update file: {error}"))?;
+            .map_err(|error| format_io_error("failed writing staged update file", &error))?;
         hasher.update(&buffer[..read]);
     }
     if size != expected_size {
@@ -275,7 +390,10 @@ fn unique_child(root: &Path, prefix: &str) -> Result<PathBuf, String> {
             Ok(()) => return Ok(path),
             Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
             Err(error) => {
-                return Err(format!("failed creating {}: {error}", path.display()));
+                return Err(format_io_error(
+                    &format!("failed creating {}", path.display()),
+                    &error,
+                ));
             }
         }
     }
@@ -283,8 +401,9 @@ fn unique_child(root: &Path, prefix: &str) -> Result<PathBuf, String> {
 }
 
 fn extract_package(package_path: &Path, staging: &Path, manifest: &Manifest) -> Result<(), String> {
+    validate_regular_file(package_path, "failed opening update package")?;
     let package = File::open(package_path)
-        .map_err(|error| format!("failed opening update package: {error}"))?;
+        .map_err(|error| format_io_error("failed opening update package", &error))?;
     let mut archive =
         ZipArchive::new(package).map_err(|error| format!("invalid ZIP update package: {error}"))?;
     let expected: HashMap<_, _> = manifest
@@ -326,14 +445,14 @@ fn extract_package(package_path: &Path, staging: &Path, manifest: &Manifest) -> 
         let output_path = staging.join(relative);
         if let Some(parent) = output_path.parent() {
             fs::create_dir_all(parent)
-                .map_err(|error| format!("failed creating staging directory: {error}"))?;
+                .map_err(|error| format_io_error("failed creating staging directory", &error))?;
         }
         let mut output = File::create(&output_path)
-            .map_err(|error| format!("failed creating staged update file: {error}"))?;
+            .map_err(|error| format_io_error("failed creating staged update file", &error))?;
         let extracted_digest = copy_exact(&mut entry, &mut output, signed.size)?;
         output
             .flush()
-            .map_err(|error| format!("failed flushing staged update file: {error}"))?;
+            .map_err(|error| format_io_error("failed flushing staged update file", &error))?;
         if extracted_digest != parse_hash(&signed.sha256)? {
             return Err(format!("staged file hash mismatch: {}", signed.path));
         }
@@ -355,8 +474,9 @@ fn extract_bootstrap_updater(
         .iter()
         .find(|file| file.path == UPDATER_NAME)
         .ok_or_else(|| format!("update package is missing {UPDATER_NAME}"))?;
+    validate_regular_file(package_path, "failed opening update package")?;
     let package = File::open(package_path)
-        .map_err(|error| format!("failed opening update package: {error}"))?;
+        .map_err(|error| format_io_error("failed opening update package", &error))?;
     let mut archive =
         ZipArchive::new(package).map_err(|error| format!("invalid ZIP update package: {error}"))?;
     let mut updater_index = None;
@@ -384,11 +504,11 @@ fn extract_bootstrap_updater(
     }
     let result = (|| {
         let mut output = File::create(destination)
-            .map_err(|error| format!("failed creating bootstrap updater: {error}"))?;
+            .map_err(|error| format_io_error("failed creating bootstrap updater", &error))?;
         let digest = copy_exact(&mut entry, &mut output, signed.size)?;
         output
             .flush()
-            .map_err(|error| format!("failed flushing bootstrap updater: {error}"))?;
+            .map_err(|error| format_io_error("failed flushing bootstrap updater", &error))?;
         if digest != parse_hash(&signed.sha256)? {
             return Err("bootstrap updater hash does not match signed manifest".into());
         }
@@ -405,12 +525,61 @@ struct AppliedFile {
     backup: Option<PathBuf>,
 }
 
-fn rollback(applied: &[AppliedFile]) {
+fn rollback(applied: &[AppliedFile]) -> Result<(), String> {
+    let mut errors = Vec::new();
     for file in applied.iter().rev() {
-        let _ = fs::remove_file(&file.target);
-        if let Some(backup) = &file.backup {
-            let _ = fs::rename(backup, &file.target);
+        if let Err(error) = fs::remove_file(&file.target) {
+            if error.kind() != io::ErrorKind::NotFound {
+                errors.push(format_io_error(
+                    &format!("failed removing {} during rollback", file.target.display()),
+                    &error,
+                ));
+            }
         }
+        if let Some(backup) = &file.backup {
+            if let Err(error) = fs::rename(backup, &file.target) {
+                errors.push(format_io_error(
+                    &format!(
+                        "failed restoring {} from {}",
+                        file.target.display(),
+                        backup.display()
+                    ),
+                    &error,
+                ));
+            }
+        }
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors.join("; "))
+    }
+}
+
+#[derive(Debug)]
+struct InstallFailure {
+    message: String,
+}
+
+fn rollback_install(message: String, applied: &[AppliedFile], backup: &Path) -> InstallFailure {
+    match rollback(applied) {
+        Ok(()) => match fs::remove_dir_all(backup) {
+            Ok(()) => InstallFailure { message },
+            Err(error) if error.kind() == io::ErrorKind::NotFound => InstallFailure { message },
+            Err(error) => InstallFailure {
+                message: format!(
+                    "{message}; rollback completed, but backup cleanup failed: {}; backup remains in {}",
+                    format_io_error("failed removing rollback backup", &error),
+                    backup.display()
+                ),
+            },
+        },
+        Err(error) => InstallFailure {
+            message: format!(
+                "{message}; rollback failed: {error}; recovery files remain in {}",
+                backup.display()
+            ),
+        },
     }
 }
 
@@ -419,50 +588,63 @@ fn install_staged(
     backup: &Path,
     install: &Path,
     manifest: &Manifest,
-) -> Result<(), String> {
+) -> Result<(), InstallFailure> {
     let mut applied = Vec::new();
     for signed in &manifest.files {
-        let relative = validate_relative_path(&signed.path)?;
+        let relative = validate_relative_path(&signed.path)
+            .map_err(|error| rollback_install(error, &applied, backup))?;
+        validate_install_target(install, &relative)
+            .map_err(|error| rollback_install(error, &applied, backup))?;
         let source = staging.join(&relative);
         let target = install.join(&relative);
         if let Some(parent) = target.parent() {
             if let Err(error) = fs::create_dir_all(parent) {
-                rollback(&applied);
-                return Err(format!("failed creating install directory: {error}"));
+                return Err(rollback_install(
+                    format_io_error("failed creating install directory", &error),
+                    &applied,
+                    backup,
+                ));
             }
         }
         let backup_path = if target.exists() {
             let path = backup.join(&relative);
             if let Some(parent) = path.parent() {
                 if let Err(error) = fs::create_dir_all(parent) {
-                    rollback(&applied);
-                    return Err(format!("failed creating backup directory: {error}"));
+                    return Err(rollback_install(
+                        format_io_error("failed creating backup directory", &error),
+                        &applied,
+                        backup,
+                    ));
                 }
             }
             if let Err(error) = fs::rename(&target, &path) {
-                rollback(&applied);
-                return Err(format!(
-                    "failed backing up {} (close DDNet-Server.exe if it is running): {error}",
-                    signed.path
+                return Err(rollback_install(
+                    format_io_error(
+                        &format!(
+                            "failed backing up {} (close DDNet-Server.exe if it is running)",
+                            signed.path
+                        ),
+                        &error,
+                    ),
+                    &applied,
+                    backup,
                 ));
             }
             Some(path)
         } else {
             None
         };
-        if let Err(error) = fs::rename(&source, &target) {
-            if let Some(path) = &backup_path {
-                let _ = fs::rename(path, &target);
-            } else {
-                let _ = fs::remove_file(&target);
-            }
-            rollback(&applied);
-            return Err(format!("failed installing {}: {error}", signed.path));
-        }
         applied.push(AppliedFile {
-            target,
+            target: target.clone(),
             backup: backup_path,
         });
+        if let Err(error) = fs::rename(&source, &target) {
+            return Err(rollback_install(
+                format_io_error(&format!("failed installing {}", signed.path), &error),
+                &applied,
+                backup,
+            ));
+        }
     }
     Ok(())
 }
@@ -473,15 +655,15 @@ fn apply_update(
     manifest_path: &Path,
     manifest_signature_path: &Path,
     install_path: &Path,
+    current_version: &str,
 ) -> Result<(), String> {
     let manifest_bytes = read_limited(manifest_path, MAX_MANIFEST_SIZE)?;
     let manifest_signature = read_limited(manifest_signature_path, 64)?;
     let manifest = verify_manifest(&manifest_bytes, &manifest_signature)?;
+    validate_not_downgrade(&manifest.version, current_version)?;
     let package_signature = read_limited(package_signature_path, 64)?;
     validate_package(package_path, &package_signature, &manifest)?;
-    if !install_path.is_dir() {
-        return Err("the QmClient install directory does not exist".into());
-    }
+    validate_install_root(install_path)?;
     let staging = unique_child(install_path, "qm-update-staging")?;
     let backup = match unique_child(install_path, "qm-update-backup") {
         Ok(path) => path,
@@ -498,14 +680,9 @@ fn apply_update(
     let result = install_staged(&staging, &backup, install_path, &manifest);
     let _ = fs::remove_dir_all(&staging);
     match result {
-        Ok(()) => {
-            let _ = fs::remove_dir_all(&backup);
-            Ok(())
-        }
-        Err(error) => Err(format!(
-            "{error}; any files that could not be restored remain in {}",
-            backup.display()
-        )),
+        Ok(()) => fs::remove_dir_all(&backup)
+            .map_err(|error| format_io_error("failed removing completed update backup", &error)),
+        Err(error) => Err(error.message),
     }
 }
 
@@ -527,6 +704,15 @@ unsafe fn input_path<'a>(value: *const c_char) -> Result<&'a Path, String> {
         .to_str()
         .map_err(|_| "update path is not valid UTF-8")?;
     Ok(Path::new(text))
+}
+
+unsafe fn input_string<'a>(value: *const c_char) -> Result<&'a str, String> {
+    if value.is_null() {
+        return Err("null update string".into());
+    }
+    CStr::from_ptr(value)
+        .to_str()
+        .map_err(|_| "update string is not valid UTF-8".into())
 }
 
 unsafe fn write_error(error: &str, output: *mut c_char, output_size: usize) {
@@ -638,12 +824,14 @@ pub unsafe fn ffi_extract_bootstrap_updater(
 }
 
 /// Re-verifies, extracts, and transactionally installs a signed update package.
-pub unsafe fn ffi_apply(
+#[no_mangle]
+pub unsafe extern "C" fn qm_update_apply(
     package_path: *const c_char,
     package_signature_path: *const c_char,
     manifest_path: *const c_char,
     manifest_signature_path: *const c_char,
     install_path: *const c_char,
+    current_version: *const c_char,
     error: *mut c_char,
     error_size: usize,
 ) -> bool {
@@ -652,13 +840,16 @@ pub unsafe fn ffi_apply(
             input_path(manifest_path).and_then(|manifest| {
                 input_path(manifest_signature_path).and_then(|manifest_signature| {
                     input_path(install_path).and_then(|install| {
-                        apply_update(
-                            package,
-                            package_signature,
-                            manifest,
-                            manifest_signature,
-                            install,
-                        )
+                        input_string(current_version).and_then(|current_version| {
+                            apply_update(
+                                package,
+                                package_signature,
+                                manifest,
+                                manifest_signature,
+                                install,
+                                current_version,
+                            )
+                        })
                     })
                 })
             })
@@ -716,6 +907,44 @@ mod tests {
             verify_signature_with_key(b"tampered", &signature, key.verifying_key().as_bytes())
                 .is_err()
         );
+    }
+
+    #[test]
+    fn signed_update_version_cannot_downgrade_installed_client() {
+        assert!(validate_not_downgrade("2.79.31", "2.79.31").is_ok());
+        assert!(validate_not_downgrade("2.80.0", "2.79.31").is_ok());
+        assert!(validate_not_downgrade("2.79.30", "2.79.31").is_err());
+        assert!(validate_not_downgrade("2.2147483647", "2.79.31").is_ok());
+        assert!(validate_not_downgrade("2.2147483648", "2.79.31").is_err());
+    }
+
+    #[test]
+    fn permission_errors_have_a_locale_independent_marker() {
+        let error = io::Error::new(io::ErrorKind::PermissionDenied, "拒绝访问");
+        let message = format_io_error("failed replacing update file", &error);
+        assert!(message.starts_with(PERMISSION_DENIED_MARKER));
+        assert!(message.contains("拒绝访问"));
+    }
+
+    #[test]
+    fn update_io_works_on_a_small_worker_stack() {
+        std::thread::Builder::new()
+            .stack_size(256 * 1024)
+            .spawn(|| {
+                let input = vec![0x5a; 2 * 1024 * 1024];
+                let (digest, size) = hash_reader(Cursor::new(&input)).unwrap();
+                assert_eq!(size, input.len() as u64);
+                assert_eq!(digest, Sha256::digest(&input).as_slice());
+
+                let mut output = Vec::new();
+                let copied_digest =
+                    copy_exact(Cursor::new(&input), &mut output, input.len() as u64).unwrap();
+                assert_eq!(output, input);
+                assert_eq!(copied_digest, digest);
+            })
+            .unwrap()
+            .join()
+            .unwrap();
     }
 
     #[test]
@@ -817,7 +1046,10 @@ mod tests {
         let install = root.path().join("install");
         fs::create_dir_all(&staging).unwrap();
         fs::create_dir_all(&backup).unwrap();
-        fs::create_dir_all(&install).unwrap();
+        fs::create_dir_all(install.join("data")).unwrap();
+        fs::write(install.join("DDNet.exe"), b"client").unwrap();
+        fs::create_dir_all(install.join("data/qmclient")).unwrap();
+        fs::write(install.join("data/qmclient/gui_logo.png"), b"logo").unwrap();
         fs::write(staging.join("DDNet.exe"), b"new client").unwrap();
         fs::write(install.join("DDNet.exe"), b"old client").unwrap();
         fs::create_dir(install.join("blocked")).unwrap();
@@ -844,6 +1076,63 @@ mod tests {
         };
         assert!(install_staged(&staging, &backup, &install, &manifest).is_err());
         assert_eq!(fs::read(install.join("DDNet.exe")).unwrap(), b"old client");
+        assert!(!backup.exists());
+    }
+
+    #[test]
+    fn install_target_validation_rejects_directory_in_place_of_file() {
+        let root = tempdir().unwrap();
+        let install = root.path().join("install");
+        fs::create_dir_all(install.join("data/file.txt")).unwrap();
+        let error = validate_install_target(&install, Path::new("data/file.txt")).unwrap_err();
+        assert!(error.contains("not a regular file"));
+    }
+
+    #[test]
+    fn install_root_requires_existing_qmclient_layout() {
+        let root = tempdir().unwrap();
+        let install = root.path().join("install");
+        fs::create_dir_all(install.join("data/qmclient")).unwrap();
+        assert!(validate_install_root(&install).is_err());
+        fs::write(install.join("DDNet.exe"), b"client").unwrap();
+        assert!(validate_install_root(&install).is_err());
+        fs::write(install.join("data/qmclient/gui_logo.png"), b"logo").unwrap();
+        assert!(validate_install_root(&install).is_ok());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn install_target_validation_rejects_symbolic_link_parent() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempdir().unwrap();
+        let install = root.path().join("install");
+        let outside = root.path().join("outside");
+        fs::create_dir_all(&install).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        symlink(&outside, install.join("data")).unwrap();
+        let error = validate_install_target(&install, Path::new("data/file.txt")).unwrap_err();
+        assert!(error.contains("symbolic link or reparse point"));
+    }
+
+    #[test]
+    fn failed_rollback_preserves_backup_for_manual_recovery() {
+        let root = tempdir().unwrap();
+        let backup = root.path().join("backup");
+        let target = root.path().join("target-directory");
+        fs::create_dir(&backup).unwrap();
+        fs::create_dir(&target).unwrap();
+        let failure = rollback_install(
+            "installation failed".into(),
+            &[AppliedFile {
+                target,
+                backup: None,
+            }],
+            &backup,
+        );
+        assert!(failure.message.contains("rollback failed"));
+        assert!(failure.message.contains(&backup.display().to_string()));
+        assert!(backup.exists());
     }
 
     #[test]

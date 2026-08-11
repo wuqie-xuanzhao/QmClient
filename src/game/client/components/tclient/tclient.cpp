@@ -3258,7 +3258,7 @@ const char *CTClient::UpdateShutdownMessage() const
 	if(m_UpdateCheckFailed)
 		return Localize("Update failed. Please try again");
 	if(m_UpdateReady)
-		return Localize("Quitting. Please wait…");
+		return Localize("Installing update. Please wait...");
 	return Localize("Downloading update...");
 }
 

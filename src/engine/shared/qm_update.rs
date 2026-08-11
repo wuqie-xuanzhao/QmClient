@@ -89,25 +89,3 @@ pub unsafe extern "C" fn qm_update_extract_bootstrap_updater(
         error_size,
     )
 }
-
-/// Verifies and transactionally installs a complete update package.
-#[no_mangle]
-pub unsafe extern "C" fn qm_update_apply(
-    package_path: *const c_char,
-    package_signature_path: *const c_char,
-    manifest_path: *const c_char,
-    manifest_signature_path: *const c_char,
-    install_path: *const c_char,
-    error: *mut c_char,
-    error_size: usize,
-) -> bool {
-    ::qm_update::ffi_apply(
-        package_path,
-        package_signature_path,
-        manifest_path,
-        manifest_signature_path,
-        install_path,
-        error,
-        error_size,
-    )
-}

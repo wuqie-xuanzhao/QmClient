@@ -15,6 +15,7 @@ from pathlib import Path, PurePosixPath
 from typing import NamedTuple
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 
 MAX_PACKAGE_SIZE = 5 * 1024 * 1024 * 1024
@@ -24,6 +25,42 @@ MAX_TOTAL_SIZE = 10 * 1024 * 1024 * 1024
 MAX_FILE_COUNT = 100_000
 REQUIRED_FILES = {"DDNet.exe", "DDNet-Server.exe", "QmClient-Updater.exe"}
 PACKAGE_SIGNATURE_CONTEXT = b"QmClient update package SHA-256\0"
+EXPECTED_PUBLIC_KEY = bytes(
+    [
+        88,
+        90,
+        115,
+        247,
+        47,
+        84,
+        75,
+        33,
+        140,
+        114,
+        135,
+        159,
+        223,
+        101,
+        133,
+        81,
+        150,
+        125,
+        144,
+        190,
+        246,
+        220,
+        67,
+        117,
+        92,
+        49,
+        2,
+        211,
+        109,
+        81,
+        45,
+        156,
+    ]
+)
 
 
 class SignedReleaseOutputs(NamedTuple):
@@ -41,6 +78,8 @@ def _normalize_version(version: str) -> str:
         not part.isascii() or not part.isdigit() for part in parts
     ):
         raise ValueError(f"invalid stable version: {version}")
+    if any(int(part) > 2_147_483_647 for part in parts):
+        raise ValueError(f"stable version component is too large: {version}")
     if len(normalized) >= 32:
         raise ValueError(f"stable version is too long: {version}")
     return normalized
@@ -178,18 +217,31 @@ def build_manifest(package: Path, version: str) -> dict[str, object]:
     }
 
 
-def _load_private_key(private_key_base64: str) -> Ed25519PrivateKey:
+def _load_private_key(
+    private_key_base64: str, expected_public_key: bytes
+) -> Ed25519PrivateKey:
     try:
         key = base64.b64decode(private_key_base64.strip(), validate=True)
     except ValueError as error:
         raise ValueError("private key must be valid Base64") from error
     if len(key) != 32:
         raise ValueError("private key must encode a 32-byte Ed25519 seed")
-    return Ed25519PrivateKey.from_private_bytes(key)
+    private_key = Ed25519PrivateKey.from_private_bytes(key)
+    public_key = private_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    if public_key != expected_public_key:
+        raise ValueError(
+            "private key does not match the Ed25519 public key embedded in QmClient"
+        )
+    return private_key
 
 
 def sign_release(
-    *, package: Path, version: str, private_key_base64: str, output_dir: Path
+    *,
+    package: Path,
+    version: str,
+    private_key_base64: str,
+    output_dir: Path,
+    expected_public_key: bytes = EXPECTED_PUBLIC_KEY,
 ) -> SignedReleaseOutputs:
     manifest = build_manifest(package, version)
     manifest_bytes = (
@@ -198,7 +250,7 @@ def sign_release(
     ).encode("utf-8")
     if len(manifest_bytes) > MAX_MANIFEST_SIZE:
         raise ValueError("update manifest exceeds the supported size")
-    private_key = _load_private_key(private_key_base64)
+    private_key = _load_private_key(private_key_base64, expected_public_key)
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "QmClient-windows-update.json"
     manifest_signature_path = output_dir / "QmClient-windows-update.json.sig"

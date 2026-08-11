@@ -1460,6 +1460,9 @@ Black
 Blend mode
 == 疊加模式
 
+Blink the active local tee
+== 讓目前本機角色閃爍
+
 Block enemy chat
 == 封鎖敵對玩家聊天
 
@@ -5278,6 +5281,9 @@ Input switch
 
 Insane
 == 瘋狂
+
+Installing update. Please wait...
+== 正在安裝更新，請稍等...
 
 Interface
 == 界面

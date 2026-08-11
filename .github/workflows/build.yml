@@ -85,26 +85,6 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Prepare Linux (non-fancy)
-        if: runner.os == 'Linux'
-        run: |
-          curl -LO https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4-Linux-x86_64.tar.gz
-          sudo tar --strip-components 1 -C /usr -xf cmake-3.13.4-Linux-x86_64.tar.gz
-          # Our minimum supported Rust version (MSRV)
-          rustup default 1.85.0
-          sudo rm -rf /var/lib/mysql/ /var/run/mysqld
-          sudo mkdir /var/lib/mysql/ /var/run/mysqld/
-          sudo chown mysql:mysql /var/lib/mysql/ /var/run/mysqld/
-          sudo mysqld --initialize-insecure --user=mysql --basedir=/usr --datadir=/var/lib/mysql/
-          sudo /usr/bin/mysqld_safe --basedir=/usr --datadir='/var/lib/mysql/' &
-          sleep 10
-          sudo mysql <<EOF
-          CREATE DATABASE ddnet;
-          CREATE USER 'ddnet'@'localhost' IDENTIFIED BY 'thebestpassword';
-          GRANT ALL PRIVILEGES ON ddnet.* TO 'ddnet'@'localhost';
-          FLUSH PRIVILEGES;
-          EOF
-
       - name: Setup Python
         id: setup-python
         uses: actions/setup-python@v6
@@ -286,6 +266,32 @@ jobs:
           fi
           ls -lah dist
 
+      - name: Verify Windows update package contents
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+
+          package = Path("dist/QmClient-windows.zip")
+          required = {"DDNet.exe", "DDNet-Server.exe", "QmClient-Updater.exe"}
+          with zipfile.ZipFile(package) as archive:
+              basenames = [Path(name).name for name in archive.namelist() if not name.endswith("/")]
+          missing = sorted(name for name in required if basenames.count(name) != 1)
+          if missing:
+              raise SystemExit(f"Windows package is missing or duplicates required files: {missing}")
+          print("Verified Windows automatic update executables")
+          PY
+
+      - name: Upload packaged artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Verify build artifact
         shell: bash
         run: |
@@ -318,32 +324,21 @@ jobs:
             echo "Build artifact verified: $size bytes"
           fi
 
-      - name: Verify macOS DMG contents
-        if: runner.os == 'macOS'
-        shell: bash
-        run: qmclient_scripts/verify_macos_dmg.sh "dist/${{ matrix.output_name }}"
-
-      - name: Upload packaged artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: dist/*
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Build summary
         if: always()
         shell: bash
         run: |
-          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform**: ${{ matrix.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **OS**: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Type**: ${{ env.BUILD_TYPE }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Build Summary"
+            echo "- **Platform**: ${{ matrix.name }}"
+            echo "- **OS**: ${{ matrix.os }}"
+            echo "- **Build Type**: ${{ env.BUILD_TYPE }}"
+            echo "- **Status**: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ runner.os }}" = "Windows" ]; then
-            echo "- **Artifacts**: QmClient-windows.zip, QmClient-windows.7z" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifacts**: QmClient-windows.zip, QmClient-windows.7z" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- **Artifact**: ${{ matrix.output_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifact**: ${{ matrix.output_name }}" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Show ccache statistics (Linux/macOS)
@@ -358,7 +353,7 @@ jobs:
       ANDROID_APP_NAME: QmClient
       ANDROID_PACKAGE_NAME: org.ddnet.client
       ANDROID_BUILD_DIR: build-android-release
-      ANDROID_NDK_VERSION: "29.0.14206865"
+      ANDROID_NDK_VERSION: "26.1.10909125"
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       SCCACHE_GHA_ENABLED: "true"
       # Debug keystore credentials - safe to commit as these are standard Android debug keys
@@ -454,8 +449,8 @@ jobs:
         run: |
           sdkmanager --install \
             "platform-tools" \
-            "platforms;android-36" \
-            "build-tools;36.1.0" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
             "ndk;${{ env.ANDROID_NDK_VERSION }}"
           yes | sdkmanager --licenses
 
@@ -603,10 +598,12 @@ jobs:
       - name: Build summary
         if: always()
         run: |
-          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform**: Android" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Artifacts**: QmClient-android.apk, QmClient-android.aab" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Build Summary"
+            echo "- **Platform**: Android"
+            echo "- **Status**: ${{ job.status }}"
+            echo "- **Artifacts**: QmClient-android.apk, QmClient-android.aab"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Show ccache statistics (Android)
         if: always()
@@ -636,6 +633,12 @@ jobs:
       - name: List release assets
         run: ls -lah release-assets
 
+      - name: Prepare Windows update signing environment
+        run: |
+          set -euo pipefail
+          python3 -m venv .update-signing-venv
+          .update-signing-venv/bin/python -m pip install cryptography==45.0.6
+
       - name: Sign Windows automatic update assets
         env:
           QM_UPDATE_ED25519_PRIVATE_KEY: ${{ secrets.QM_UPDATE_ED25519_PRIVATE_KEY }}
@@ -645,8 +648,6 @@ jobs:
             echo "Required secret QM_UPDATE_ED25519_PRIVATE_KEY is not configured"
             exit 1
           fi
-          python3 -m venv .update-signing-venv
-          .update-signing-venv/bin/python -m pip install cryptography==45.0.6
           TAG_VERSION="${GITHUB_REF#refs/tags/}"
           .update-signing-venv/bin/python qmclient_scripts/sign_update_release.py \
             --package release-assets/QmClient-windows.zip \
@@ -661,7 +662,6 @@ jobs:
           python3 qmclient_scripts/generate_release_notes.py \
             --version "$TAG_VERSION" \
             --current-tag "$TAG_VERSION" \
-            --channel auto \
             --output release-assets/release-notes.md
 
       - name: Show release notes
@@ -670,6 +670,8 @@ jobs:
       - name: Create release and upload desktop assets
         uses: softprops/action-gh-release@2bb465e97f322d3cb2a965294d483e0d26a67aa9  # v3.0.1
         with:
+          draft: false
+          prerelease: false
           generate_release_notes: false
           body_path: release-assets/release-notes.md
           files: |

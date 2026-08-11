@@ -1460,6 +1460,9 @@ Black
 Blend mode
 == Mischmodus
 
+Blink the active local tee
+== Aktiven lokalen Charakter blinken lassen
+
 Block enemy chat
 == Gegner-Chat blockieren
 
@@ -5278,6 +5281,9 @@ Input switch
 
 Insane
 == Irrsinnig
+
+Installing update. Please wait...
+== Update wird installiert. Bitte warten...
 
 Interface
 == Oberfläche

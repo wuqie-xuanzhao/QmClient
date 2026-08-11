@@ -162,7 +162,7 @@ TEST(QmChatMessageMerge, SettingIsDefaultOnLocalizedInDreamFeaturesAndVersioned)
 	EXPECT_NE(Menus.find("RenderCheckbox(&g_Config.m_QmMessageMerge, \"Message merging\", &g_Config.m_QmMessageMerge);", MiniFeatures), std::string::npos);
 	EXPECT_NE(Translations.find("key = \"Message merging\""), std::string::npos);
 	EXPECT_NE(Translations.find("simplified_chinese = \"消息合并\""), std::string::npos);
-	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.30\""), std::string::npos);
+	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.33\""), std::string::npos);
 }
 
 TEST(QmWarListEnemyChat, FilteringKeepsChatLogPersistenceIndependent)
@@ -804,6 +804,7 @@ TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
 	ASSERT_NE(HideBranch, std::string::npos);
 	EXPECT_LT(RawConsoleCall, HideBranch);
 	EXPECT_NE(AddLine.find("BlockWordsConsolePrinted = true;"), std::string::npos);
+	EXPECT_NE(AddLine.find("PreviousLine.m_ConsoleSuppressed == BlockWordsConsolePrinted"), std::string::npos);
 	EXPECT_NE(AddLine.find("CurrentLine.m_ConsoleSuppressed = BlockWordsConsolePrinted;"), std::string::npos);
 	EXPECT_NE(AddLine.find("ShouldHideBlockWordsMessage("), std::string::npos);
 	EXPECT_NE(AddLine.find("BlockWordsAction == EBlockWordsAction::REPLACE || CanHideBlockWordsMessage"), std::string::npos);

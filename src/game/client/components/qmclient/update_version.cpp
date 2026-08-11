@@ -29,70 +29,39 @@ namespace
 		}
 	}
 
-	bool ReadNextVersionPart(const char *&pCursor, int &OutValue)
+	bool ParseQmClientVersion(const char *pVersion, int (&aParts)[4])
 	{
-		OutValue = 0;
-		if(!pCursor || pCursor[0] == '\0')
+		if(!pVersion || pVersion[0] == '\0')
 			return false;
 
-		if(pCursor[0] == '.')
-			pCursor++;
-		if(pCursor[0] == '\0')
-			return false;
-
-		bool HasDigit = false;
-		while(*pCursor >= '0' && *pCursor <= '9')
+		int PartCount = 0;
+		const char *pCursor = pVersion;
+		while(*pCursor != '\0')
 		{
-			HasDigit = true;
-			const int Digit = *pCursor - '0';
-			if(OutValue > (INT_MAX - Digit) / 10)
+			if(PartCount == 4)
 				return false;
-			OutValue = OutValue * 10 + Digit;
-			pCursor++;
-		}
-
-		if(!HasDigit)
-			return false;
-		if(*pCursor != '\0' && *pCursor != '.')
-			return false;
-		return true;
-	}
-
-	bool CompareQmClientVersions(const char *pLeft, const char *pRight, int &OutComparison)
-	{
-		const char *pLeftCursor = pLeft;
-		const char *pRightCursor = pRight;
-		int aLeftParts[4] = {};
-		int aRightParts[4] = {};
-		int LeftPartCount = 0;
-		int RightPartCount = 0;
-		OutComparison = 0;
-
-		while(pLeftCursor[0] != '\0' && LeftPartCount < 4)
-		{
-			if(!ReadNextVersionPart(pLeftCursor, aLeftParts[LeftPartCount]))
-				return false;
-			++LeftPartCount;
-		}
-		while(pRightCursor[0] != '\0' && RightPartCount < 4)
-		{
-			if(!ReadNextVersionPart(pRightCursor, aRightParts[RightPartCount]))
-				return false;
-			++RightPartCount;
-		}
-		if(pLeftCursor[0] != '\0' || pRightCursor[0] != '\0' || LeftPartCount != RightPartCount)
-			return false;
-
-		for(int Index = 0; Index < LeftPartCount; ++Index)
-		{
-			if(aLeftParts[Index] != aRightParts[Index])
+			int Value = 0;
+			bool HasDigit = false;
+			while(*pCursor >= '0' && *pCursor <= '9')
 			{
-				OutComparison = aLeftParts[Index] < aRightParts[Index] ? -1 : 1;
-				return true;
+				HasDigit = true;
+				const int Digit = *pCursor - '0';
+				if(Value > (INT_MAX - Digit) / 10)
+					return false;
+				Value = Value * 10 + Digit;
+				pCursor++;
+			}
+			if(!HasDigit || (*pCursor != '\0' && *pCursor != '.'))
+				return false;
+			aParts[PartCount++] = Value;
+			if(*pCursor == '.')
+			{
+				pCursor++;
+				if(*pCursor == '\0')
+					return false;
 			}
 		}
-
-		return true;
+		return PartCount >= 2;
 	}
 
 } // namespace
@@ -107,9 +76,15 @@ bool IsQmClientRemoteVersionNewer(const char *pRemoteVersion, const char *pLocal
 	if(aRemote[0] == '\0' || aLocal[0] == '\0')
 		return false;
 
-	int Comparison = 0;
-	if(!CompareQmClientVersions(aRemote, aLocal, Comparison))
+	int aRemoteParts[4] = {};
+	int aLocalParts[4] = {};
+	if(!ParseQmClientVersion(aRemote, aRemoteParts) || !ParseQmClientVersion(aLocal, aLocalParts))
 		return false;
 
-	return Comparison > 0;
+	for(int Index = 0; Index < 4; ++Index)
+	{
+		if(aRemoteParts[Index] != aLocalParts[Index])
+			return aRemoteParts[Index] > aLocalParts[Index];
+	}
+	return false;
 }
