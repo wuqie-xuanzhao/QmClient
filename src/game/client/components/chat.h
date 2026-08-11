@@ -73,16 +73,7 @@ public:
 	static void BeginLinePresentation(SPresentationState &Presentation, int64_t Now, bool GentleRefresh);
 	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds, bool ExtraAnimations = true);
 	static float SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds);
-	static bool CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now)
-	{
-		if(PreviousClientId < 0 || ClientId < 0 || PreviousTeam >= TEAM_WHISPER_SEND || Team >= TEAM_WHISPER_SEND)
-			return false;
-		if(pPreviousText == nullptr || pText == nullptr || str_comp(pPreviousText, pText) != 0)
-			return false;
-		if(Now < PreviousTime)
-			return false;
-		return Now - PreviousTime <= time_freq() * 2;
-	}
+	static bool CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now);
 
 private:
 	static constexpr float CHAT_HEIGHT_FULL = 200.0f;

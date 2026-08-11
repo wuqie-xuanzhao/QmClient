@@ -4378,9 +4378,9 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 
 			EntryRect.HMargin(MarginExtraSmall, &EntryRect);
 			EntryRect.HSplitMid(&EntryRect, &WarType, MarginSmall);
-		DoTClientLabel(Ui(), &EntryRect, aBuf, StandardFontSize, TEXTALIGN_ML);
+			DoTClientLabel(Ui(), &EntryRect, aBuf, StandardFontSize, TEXTALIGN_ML);
 			TextRender()->TextColor(pEntry->m_pWarType->m_Color);
-		DoTClientLabel(Ui(), &WarType, pEntry->m_pWarType->m_aWarName, StandardFontSize, TEXTALIGN_ML);
+			DoTClientLabel(Ui(), &WarType, pEntry->m_pWarType->m_aWarName, StandardFontSize, TEXTALIGN_ML);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 
@@ -4581,7 +4581,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 					m_pRemoveWarType = pType;
 			}
 			TextRender()->TextColor(pType->m_Color);
-		DoTClientLabel(Ui(), &TypeRect, pType->m_aWarName, StandardFontSize, TEXTALIGN_ML);
+			DoTClientLabel(Ui(), &TypeRect, pType->m_aWarName, StandardFontSize, TEXTALIGN_ML);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 
