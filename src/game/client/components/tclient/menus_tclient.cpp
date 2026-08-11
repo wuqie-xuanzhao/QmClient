@@ -69,9 +69,23 @@ enum
 constexpr float TCLIENT_BODY_FONT_SIZE = CMenus::TCLIENT_SETTINGS_BODY_FONT_SIZE;
 constexpr float TCLIENT_HEADLINE_FONT_SIZE = 20.0f;
 
+static SLabelProperties TClientFixedLabelProperties(float FontSize, float MaxWidth = -1.0f)
+{
+	SLabelProperties Props;
+	Props.m_MaxWidth = MaxWidth;
+	Props.m_MinimumFontSize = FontSize;
+	Props.m_EllipsisAtEnd = true;
+	return Props;
+}
+
+static void DoTClientLabel(CUi *pUi, const CUIRect *pRect, const char *pText, float FontSize, int Align)
+{
+	pUi->DoLabel(pRect, pText, FontSize, Align, TClientFixedLabelProperties(FontSize, pRect->w));
+}
+
 int CMenus::DoTClientSettingsButton_CheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)
 {
-	return DoSettingsButton_CheckBox(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, pId, pTextId, pText, Checked, pRect, TCLIENT_BODY_FONT_SIZE);
+	return DoSettingsButton_CheckBox(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, pId, pTextId, pText, Checked, pRect, TClientFixedLabelProperties(TCLIENT_BODY_FONT_SIZE, pRect->w), true, TCLIENT_BODY_FONT_SIZE);
 }
 
 int CMenus::DoTClientSettingsButton_Menu(CButtonContainer *pButtonContainer, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)
@@ -953,7 +967,11 @@ int CMenus::DoButtonLineSize_Menu(CButtonContainer *pButtonContainer, const char
 	Text.HMargin((Text.h - ButtonLineSize) / 2.0f, &Text);
 	Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Text);
 	Text.HMargin((Text.h * FontFactor) / 2.0f, &Text);
-	Ui()->DoLabel(&Text, pText, CurrentSettingsContentMetrics().m_BodySize, TEXTALIGN_MC);
+	const float EffectiveFontSize = FontSize > 0.0f ? FontSize : CurrentSettingsContentMetrics().m_BodySize;
+	if(FontSize > 0.0f)
+		DoTClientLabel(Ui(), &Text, pText, EffectiveFontSize, TEXTALIGN_MC);
+	else
+		Ui()->DoLabel(&Text, pText, EffectiveFontSize, TEXTALIGN_MC);
 
 	if(Fake)
 		return 0;

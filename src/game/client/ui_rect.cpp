@@ -2,6 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "ui_rect.h"
 
+#include "ui.h"
+
 #include <base/vmath.h>
 
 #include <engine/graphics.h>
@@ -203,6 +205,8 @@ bool CUIRect::Inside(vec2 Point) const
 
 void CUIRect::Draw(ColorRGBA Color, int Corners, float Rounding) const
 {
+	if(Color.a > 0.0f && Color.a < 1.0f)
+		DrawRectBackdrop(Corners, Rounding);
 	if(ms_pGraphics->HasRoundedRectSdf() && Rounding > 0.0f && Corners != IGraphics::CORNER_NONE)
 	{
 		const float PixelSize = CurrentPixelSize(ms_pGraphics);

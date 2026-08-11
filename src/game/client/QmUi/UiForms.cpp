@@ -600,21 +600,22 @@ namespace ui_widget
 		return Result.m_Changed || Changed;
 	}
 
-	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect)
+	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect, bool ProcessInput, bool Animate)
 	{
 		if(Ctx.m_pUi == nullptr || pValue == nullptr)
 			return false;
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
-		const int Result = Ctx.m_pUi->DoButtonLogic(pId, 0, &Rect, BUTTONFLAG_LEFT);
+		const int Result = ProcessInput ? Ctx.m_pUi->DoButtonLogic(pId, 0, &Rect, BUTTONFLAG_LEFT) : 0;
 		const bool Clicked = Result != 0;
 		if(Clicked)
 			*pValue = !*pValue;
 
 		// Track
-		const ColorRGBA TrackOn = ui_token::color::ACCENT_PRIMARY;
+		const ColorRGBA TrackOn = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
 		const ColorRGBA TrackOff = ui_token::color::BORDER_SUBTLE;
 		ColorRGBA Track = *pValue ? TrackOn : TrackOff;
-		if(Ctx.m_pAnim != nullptr)
+		if(Animate && Ctx.m_pAnim != nullptr)
 		{
 			const uint64_t TrackKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash ^ 0xA5A5ull, reinterpret_cast<uint64_t>(pId));
 			Track = ResolveUiAnimValueColor(*Ctx.m_pAnim, TrackKey, Track, ui_curve::DECELERATE.m_DurationSec, ui_curve::DECELERATE.m_Easing);
@@ -628,7 +629,7 @@ namespace ui_widget
 		const float LeftX = Rect.x + Padding;
 		const float RightX = Rect.x + Rect.w - KnobSize - Padding;
 		float KnobX = *pValue ? RightX : LeftX;
-		if(Ctx.m_pAnim != nullptr)
+		if(Animate && Ctx.m_pAnim != nullptr)
 		{
 			const uint64_t KnobKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash ^ 0x5A5Aull, reinterpret_cast<uint64_t>(pId));
 			const float Target = *pValue ? RightX : LeftX;
@@ -667,7 +668,7 @@ namespace ui_widget
 		Track.VSplitRight(ui_token::spacing::SM, &Track, nullptr);
 
 		const float Normalized = std::clamp((*pValue - Min) / (Max - Min), 0.0f, 1.0f);
-		const ColorRGBA Inner = ui_token::color::ACCENT_PRIMARY;
+		const ColorRGBA Inner = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
 		const float NewNormalized = Ctx.m_pUi->DoScrollbarH(pId, &Track, Normalized, &Inner);
 		const float NewValue = Min + NewNormalized * (Max - Min);
 		const bool Changed = std::abs(NewValue - *pValue) > 1e-4f;

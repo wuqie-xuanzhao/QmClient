@@ -300,6 +300,7 @@ void CUi::EndGaussianBlurSuppression()
 
 void CUi::DestroyGaussianBlurTargets()
 {
+	m_GaussianBlurPrepared = false;
 	if(m_pGraphics == nullptr)
 		return;
 	Graphics()->DestroyRenderTarget(&m_GaussianBlurSource);
@@ -312,9 +313,13 @@ void CUi::DestroyGaussianBlurTargets()
 bool CUi::PrepareGaussianBlur()
 {
 	if(!g_Config.m_QmGaussianBlur)
+	{
+		m_GaussianBlurPrepared = false;
 		return false;
+	}
 	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
 	{
+		m_GaussianBlurPrepared = false;
 		if(m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid())
 			DestroyGaussianBlurTargets();
 		return false;
@@ -323,7 +328,10 @@ bool CUi::PrepareGaussianBlur()
 	const int BlurWidth = UiGaussianBlurTargetDimension(Graphics()->ScreenWidth());
 	const int BlurHeight = UiGaussianBlurTargetDimension(Graphics()->ScreenHeight());
 	if(BlurWidth <= 0 || BlurHeight <= 0)
+	{
+		m_GaussianBlurPrepared = false;
 		return false;
+	}
 
 	if(BlurWidth != m_GaussianBlurWidth || BlurHeight != m_GaussianBlurHeight || !m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
 	{
@@ -340,15 +348,29 @@ bool CUi::PrepareGaussianBlur()
 		m_GaussianBlurHeight = BlurHeight;
 	}
 
+	const uint64_t PerfFrame = Client()->PerfFrame();
+	if(m_GaussianBlurPrepared && m_GaussianBlurPreparedFrame == PerfFrame)
+		return true;
+
 	FlushQuadBatch();
 	Graphics()->FlushVertices();
 	if(!Graphics()->CaptureBackbufferToRenderTarget(m_GaussianBlurSource))
+	{
+		m_GaussianBlurPrepared = false;
 		return false;
+	}
 
 	IGraphics::SGaussianBlurParams BlurParams;
 	BlurParams.m_Radius = 4;
 	BlurParams.m_Sigma = 2.0f;
-	return Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_GaussianBlurTemporary, m_GaussianBlurTarget, BlurParams);
+	if(!Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_GaussianBlurTemporary, m_GaussianBlurTarget, BlurParams))
+	{
+		m_GaussianBlurPrepared = false;
+		return false;
+	}
+	m_GaussianBlurPreparedFrame = PerfFrame;
+	m_GaussianBlurPrepared = true;
+	return true;
 }
 
 void CUi::RenderGaussianBlur(const CUIRect &Rect, float Alpha, int Corners, float Rounding)
@@ -1627,6 +1649,7 @@ bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float
 
 bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
 	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
 	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
@@ -1827,6 +1850,7 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 
 int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, int Corners, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 	DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(ColorRGBA(1.0f, 1.0f, 1.0f, (Checked ? 0.1f : 0.5f) * ButtonColorMul(pButtonContainer)))), ColorRGBA(), 5.0f, 0.0f, Corners);
 
 	const ColorRGBA PreviousColor = TextRender()->GetTextColor();
@@ -1861,6 +1885,7 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 
 int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding, bool TransparentInactive, bool Enabled, const std::optional<ColorRGBA> ButtonColor, float MinimumFontSize)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 	if(ButtonColor.has_value() || !TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
 		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), ColorRGBA(), 5.0f);
 

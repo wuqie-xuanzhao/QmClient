@@ -287,8 +287,9 @@ namespace ui_widget
 	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options);
 
 	// Boolean switch. Slider position animates with a spring driver between left
-	// (off) and right (on). Returns true on click.
-	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect);
+	// (off) 与右侧 (on) 之间。调用者拥有更大的点击区域时可关闭内部输入；
+	// 预布局时可同时关闭动画。点击时返回 true。
+	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect, bool ProcessInput = true, bool Animate = true);
 
 	// Horizontal slider with a numeric label on the right. Wraps DoScrollbarH.
 	// Returns true when the value changed this frame.

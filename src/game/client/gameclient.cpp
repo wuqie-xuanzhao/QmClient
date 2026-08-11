@@ -3404,6 +3404,28 @@ void CGameClient::OnRender()
 	}
 
 	const ColorRGBA ClearColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClOverlayEntities ? g_Config.m_ClBackgroundEntitiesColor : g_Config.m_ClBackgroundColor));
+
+#if defined(CONF_PLATFORM_MACOS)
+	if(g_Config.m_QmMacosGraphicsDiagnostics != 0)
+	{
+		// 仅在诊断开启后的首次及相关配置变化时记录，避免污染每帧日志。
+		static int s_LastOverlayEntities = -1;
+		static unsigned s_LastBackgroundColor = 0;
+		static unsigned s_LastBackgroundEntitiesColor = 0;
+		static char s_aLastBackgroundEntities[IO_MAX_PATH_LENGTH] = "";
+		if(s_LastOverlayEntities != g_Config.m_ClOverlayEntities ||
+			s_LastBackgroundColor != g_Config.m_ClBackgroundColor ||
+			s_LastBackgroundEntitiesColor != g_Config.m_ClBackgroundEntitiesColor ||
+			str_comp(s_aLastBackgroundEntities, g_Config.m_ClBackgroundEntities) != 0)
+		{
+			log_info("gfx/entities", "clear: overlay=%d background=%06x entities_background=%06x clear_rgb=%.3f,%.3f,%.3f entities_map='%s'", g_Config.m_ClOverlayEntities, g_Config.m_ClBackgroundColor, g_Config.m_ClBackgroundEntitiesColor, ClearColor.r, ClearColor.g, ClearColor.b, g_Config.m_ClBackgroundEntities);
+			s_LastOverlayEntities = g_Config.m_ClOverlayEntities;
+			s_LastBackgroundColor = g_Config.m_ClBackgroundColor;
+			s_LastBackgroundEntitiesColor = g_Config.m_ClBackgroundEntitiesColor;
+			str_copy(s_aLastBackgroundEntities, g_Config.m_ClBackgroundEntities, sizeof(s_aLastBackgroundEntities));
+		}
+	}
+#endif
 	Graphics()->Clear(ClearColor.r, ClearColor.g, ClearColor.b);
 
 	// check if multi view got activated

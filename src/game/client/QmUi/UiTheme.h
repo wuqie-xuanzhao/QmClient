@@ -21,6 +21,7 @@ struct SUiTheme
 	ColorRGBA m_InputSurfaceFocused;
 	ColorRGBA m_FocusRing;
 	ColorRGBA m_Accent;
+	ColorRGBA m_Selected;
 	ColorRGBA m_TextTitle;
 	ColorRGBA m_TextBody;
 	ColorRGBA m_TextSmall;
@@ -28,11 +29,12 @@ struct SUiTheme
 	float m_FocusRingInset = 1.0f;
 };
 
-inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const ColorHSLA FocusColor = ColorHSLA(0.60f, 0.78f, 0.52f, 1.0f))
+inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const ColorHSLA FocusColor = ColorHSLA(0.60f, 0.78f, 0.52f, 1.0f), const ColorHSLA AccentColor = ColorHSLA(0x8FDDAD), const ColorHSLA SelectedColor = ColorHSLA(0x8FDDAD))
 {
 	Opacity = std::clamp(Opacity, 0.0f, 1.0f);
 	const ColorRGBA SurfaceBase = color_cast<ColorRGBA>(BaseColor.UnclampLighting(0.42f));
-	const ColorRGBA AccentBase = color_cast<ColorRGBA>(BaseColor.UnclampLighting(0.48f));
+	const ColorRGBA AccentBase = color_cast<ColorRGBA>(AccentColor);
+	const ColorRGBA SelectedBase = color_cast<ColorRGBA>(SelectedColor);
 	SUiTheme Theme;
 	Theme.m_Surface = SurfaceBase.WithAlpha(std::clamp(std::max(SurfaceBase.a, 0.70f) * Opacity, 0.0f, 1.0f));
 	Theme.m_SurfaceHovered = ColorRGBA(
@@ -50,7 +52,8 @@ inline SUiTheme ResolveUiTheme(const ColorHSLA BaseColor, float Opacity, const C
 	Theme.m_InputSurfaceFocused = Theme.m_InputSurface;
 	// 焦点环是键盘与输入焦点的唯一稳定反馈，不随低表面透明度弱化到不可辨认。
 	Theme.m_FocusRing = color_cast<ColorRGBA>(FocusColor).WithAlpha(std::clamp(std::max(0.60f, 0.90f * Opacity), 0.0f, 1.0f));
-	Theme.m_Accent = AccentBase.WithAlpha(std::clamp(std::max(AccentBase.a, 0.85f) * Opacity, 0.0f, 1.0f));
+	Theme.m_Accent = AccentBase.WithAlpha(std::max(AccentBase.a, 0.85f));
+	Theme.m_Selected = SelectedBase.WithAlpha(0.22f);
 	Theme.m_TextTitle = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	Theme.m_TextBody = ColorRGBA(0.92f, 0.92f, 0.94f, 1.0f);
 	Theme.m_TextSmall = ColorRGBA(0.72f, 0.74f, 0.78f, 1.0f);
@@ -61,7 +64,7 @@ inline SUiTheme ResolveInputFallbackTheme(const unsigned FocusColor)
 {
 	// 某些设置页的旧调用点只提供最小 IUiContext。回退主题仍必须与
 	// SettingsUiContext 使用相同的用户颜色和透明度，避免同一输入组件出现两套外壳。
-	return ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(FocusColor));
+	return ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(FocusColor), ColorHSLA(g_Config.m_QmUiAccentColor), ColorHSLA(g_Config.m_QmUiSelectedColor));
 }
 
 #endif

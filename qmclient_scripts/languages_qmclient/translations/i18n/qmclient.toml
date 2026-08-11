@@ -25773,6 +25773,70 @@ turkish = "Klavye odak halkası rengi"
 polish = "Kolor pierścienia fokusu klawiatury"
 
 [[message]]
+key = "Interface accent color"
+[message.translations]
+simplified_chinese = "界面强调色"
+traditional_chinese = "介面強調色"
+japanese = "インターフェースのアクセントカラー"
+korean = "인터페이스 강조 색상"
+russian = "Акцентный цвет интерфейса"
+german = "Akzentfarbe der Benutzeroberfläche"
+spanish = "Color de acento de la interfaz"
+french = "Couleur d'accent de l'interface"
+brazilian_portuguese = "Cor de destaque da interface"
+portuguese = "Cor de destaque da interface"
+turkish = "Arayüz vurgu rengi"
+polish = "Kolor akcentu interfejsu"
+
+[[message]]
+key = "Selected item color"
+[message.translations]
+simplified_chinese = "选中项颜色"
+traditional_chinese = "已選項目顏色"
+japanese = "選択項目の色"
+korean = "선택 항목 색상"
+russian = "Цвет выбранного элемента"
+german = "Farbe des ausgewählten Elements"
+spanish = "Color del elemento seleccionado"
+french = "Couleur de l'élément sélectionné"
+brazilian_portuguese = "Cor do item selecionado"
+portuguese = "Cor do item selecionado"
+turkish = "Seçili öğe rengi"
+polish = "Kolor wybranego elementu"
+
+[[message]]
+key = "Enable Gaussian blur for translucent interface and selected HUD backgrounds"
+[message.translations]
+simplified_chinese = "为半透明界面和指定 HUD 背景启用高斯模糊"
+traditional_chinese = "為半透明介面和指定 HUD 背景啟用高斯模糊"
+japanese = "半透明インターフェースと選択した HUD 背景にガウスぼかしを有効化"
+korean = "반투명 인터페이스와 선택한 HUD 배경에 가우시안 흐림 효과 사용"
+russian = "Включить размытие по Гауссу для полупрозрачного интерфейса и выбранных фонов HUD"
+german = "Gaußsche Unschärfe für transparente Oberflächen und ausgewählte HUD-Hintergründe aktivieren"
+spanish = "Activar desenfoque gaussiano para la interfaz translúcida y los fondos de HUD seleccionados"
+french = "Activer le flou gaussien pour l'interface translucide et certains arrière-plans du HUD"
+brazilian_portuguese = "Ativar desfoque gaussiano para a interface translúcida e os fundos de HUD selecionados"
+portuguese = "Ativar desfocagem gaussiana para a interface translúcida e os fundos de HUD selecionados"
+turkish = "Yarı saydam arayüz ve seçili HUD arka planları için Gauss bulanıklığını etkinleştir"
+polish = "Włącz rozmycie gaussowskie dla półprzezroczystego interfejsu i wybranych teł HUD"
+
+[[message]]
+key = "Automatic updates"
+[message.translations]
+simplified_chinese = "自动更新"
+traditional_chinese = "自動更新"
+japanese = "自動更新"
+korean = "자동 업데이트"
+russian = "Автоматические обновления"
+german = "Automatische Updates"
+spanish = "Actualizaciones automáticas"
+french = "Mises à jour automatiques"
+brazilian_portuguese = "Atualizações automáticas"
+portuguese = "Atualizações automáticas"
+turkish = "Otomatik güncellemeler"
+polish = "Automatyczne aktualizacje"
+
+[[message]]
 key = "Map browser surface color"
 [message.translations]
 simplified_chinese = "地图浏览器表面颜色"
@@ -25869,3 +25933,19 @@ brazilian_portuguese = "Mesclar mensagens"
 portuguese = "Unir mensagens"
 turkish = "Mesaj birleştirme"
 polish = "Łączenie wiadomości"
+
+[[message]]
+key = "Displays the DDNet Points of the current player"
+[message.translations]
+simplified_chinese = "显示当前玩家的 DDNet 积分"
+traditional_chinese = "顯示目前玩家的 DDNet 積分"
+japanese = "現在のプレイヤーのDDNetポイントを表示"
+korean = "현재 플레이어의 DDNet 포인트를 표시"
+russian = "Показывать очки DDNet текущего игрока"
+german = "DDNet-Punkte des aktuellen Spielers anzeigen"
+spanish = "Muestra los puntos de DDNet del jugador actual"
+french = "Affiche les points DDNet du joueur actuel"
+brazilian_portuguese = "Exibe os pontos DDNet do jogador atual"
+portuguese = "Mostra os pontos DDNet do jogador atual"
+turkish = "Geçerli oyuncunun DDNet puanlarını gösterir"
+polish = "Wyświetla punkty DDNet bieżącego gracza"

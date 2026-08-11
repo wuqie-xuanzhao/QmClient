@@ -45,12 +45,15 @@ MACRO_CONFIG_INT(DbgQmUiDogfood, dbg_qm_ui_dogfood, 0, 0, 1, CFGFLAG_CLIENT, "Sh
 MACRO_CONFIG_INT(QmNewUi, qm_new_ui, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable new settings page UI")
 MACRO_CONFIG_COL(QmUiColor, qm_ui_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface surface color")
 MACRO_CONFIG_COL(QmUiFocusColor, qm_ui_focus_color, 0x97FFA6, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Keyboard focus ring color")
+MACRO_CONFIG_COL(QmUiAccentColor, qm_ui_accent_color, 0x8FDDAD, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface accent color")
+MACRO_CONFIG_COL(QmUiSelectedColor, qm_ui_selected_color, 0x8FDDAD, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Selected item color")
 MACRO_CONFIG_COL(QmMapBrowserColor, qm_map_browser_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Map browser surface color")
 MACRO_CONFIG_COL(QmScoreboardColor, qm_scoreboard_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scoreboard surface color")
 MACRO_CONFIG_INT(QmUiOpacity, qm_ui_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface transparency")
 MACRO_CONFIG_INT(QmMapBrowserOpacity, qm_map_browser_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Map browser transparency")
 MACRO_CONFIG_INT(QmScoreboardOpacity, qm_scoreboard_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scoreboard transparency")
 MACRO_CONFIG_INT(QmShowOutdatedVersionWarning, qm_show_outdated_version_warning, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show outdated version warning")
+MACRO_CONFIG_INT(QmAutoUpdate, qm_auto_update, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically check for stable updates and install them on exit")
 MACRO_CONFIG_STR(QmNewFeatureMarksRead, qm_new_feature_marks_read, 1024, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Read new feature indicators")
 MACRO_CONFIG_INT(QmImeAutoManage, qm_ime_auto_manage, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto enable/disable IME on text focus")
 MACRO_CONFIG_INT(QmNewIme, qm_new_ime, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable new IME candidate bar")
@@ -65,7 +68,7 @@ MACRO_CONFIG_STR(QmReportAppId, qm_report_app_id, 128, "desktop", CFGFLAG_CLIENT
 MACRO_CONFIG_STR(QmReportSecret, qm_report_secret, 128, "SsF-7wLdC9dO-RCb5sGieLII9gVW0v5lPpiK6zitUNo", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Report service signing key")
 
 // UI / 界面
-MACRO_CONFIG_INT(QmGaussianBlur, qm_gaussian_blur, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "为半透明界面和指定 HUD 背景启用高斯模糊")
+MACRO_CONFIG_INT(QmGaussianBlur, qm_gaussian_blur, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Gaussian blur for translucent interface and selected HUD backgrounds")
 
 // Scoreboard / 计分板
 MACRO_CONFIG_INT(QmScoreboardPoints, qm_scoreboard_points, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scoreboard score lookup")
@@ -186,6 +189,8 @@ MACRO_CONFIG_INT(QmWeaponSwitchAnimDurationMs, qm_weapon_switch_anim_duration_ms
 MACRO_CONFIG_INT(QmWeaponSwitchAnimDistance, qm_weapon_switch_anim_distance, 40, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon switch animation slide distance")
 MACRO_CONFIG_INT(QmWeaponSwitchAnimRotation, qm_weapon_switch_anim_rotation, 360, 0, 1440, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon switch animation rotation angle")
 MACRO_CONFIG_INT(QmWeaponSwitchAnimEasing, qm_weapon_switch_anim_easing, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon switch animation easing mode")
+MACRO_CONFIG_INT(QmWeaponReloadAnim, qm_weapon_reload_anim, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Play a flip animation while reloading weapons")
+MACRO_CONFIG_INT(QmWeaponReloadAnimProbability, qm_weapon_reload_anim_probability, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon reload animation probability")
 MACRO_CONFIG_INT(QmRespawnDefaultWeapon, qm_respawn_default_weapon, 0, 0, 5, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Default weapon on respawn (0=Off, 1=Hammer, 2=Pistol, 3=Shotgun, 4=Grenade, 5=Laser)")
 MACRO_CONFIG_INT(QmDeepflyMode, qm_deepfly_mode, 0, 0, 3, CFGFLAG_CLIENT, "Deepfly mode (0=Normal, 1=DF, 2=HDF, 3=Custom)")
 

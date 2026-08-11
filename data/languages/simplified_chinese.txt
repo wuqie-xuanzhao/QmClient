@@ -716,9 +716,6 @@ Animation
 Animation duration
 == 动画持续多久
 
-Animation probability
-== 动画出现概率
-
 Animation range
 == 动画范围
 
@@ -1178,6 +1175,9 @@ Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 == 自动游戏结束统计板屏幕截图
 
+Automatic updates
+== 自动更新
+
 Automatic updates are only supported on Windows
 == 自动更新仅支持 Windows
 
@@ -1186,6 +1186,9 @@ Automatically adds voting options for all maps
 
 Automatically ban blacklisted addresses
 == 自动禁止黑名单地址
+
+Automatically check for stable updates and install them on exit
+== Automatically check for stable updates and install them on exit
 
 Automatically close the current chat after waking from freeze
 == 从冻结状态中醒来自动关闭聊天框
@@ -3026,6 +3029,9 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == 显示客户端的预测提前量
 
+Displays the DDNet Points of the current player
+== 显示当前玩家的 DDNet 积分
+
 Displays the game connection round-trip time
 == 显示游戏连接的往返时间
 
@@ -3040,9 +3046,6 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == 显示你当前的角度（度）
-
-Displays your current score
-== 显示你当前的分数
 
 Displays your frames per second
 == 显示你的每秒帧数
@@ -3574,6 +3577,12 @@ Enable FTAPI auto-translate (may overload the service)
 
 Enable game sounds
 == 启用游戏声音
+
+Enable Gaussian blur
+== 启用高斯模糊
+
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
+== 为半透明界面和指定 HUD 背景启用高斯模糊
 
 Enable ghost
 == 启用影子
@@ -5273,6 +5282,9 @@ Insane
 Interface
 == 界面
 
+Interface accent color
+== 界面强调色
+
 Interface animations
 == 界面动画
 
@@ -6322,6 +6334,9 @@ Message color
 
 Message displayed to players on join.
 == 将向加入服务器的玩家显示的消息
+
+Message merging
+== 消息合并
 
 Message to reply when game minimized
 == 游戏最小化时回复的消息
@@ -7513,6 +7528,9 @@ Pistol
 
 Plasma gun shots per second
 == 等离子枪每秒发射多少发子弹
+
+Play a flip animation while reloading weapons
+== Play a flip animation while reloading weapons
 
 Play a slide-in rotation animation when switching weapons
 == 切换武器时播放滑入旋转动画
@@ -9187,6 +9205,9 @@ Selected candidate
 
 Selected candidate %d/%d under cursor.
 == 已选中光标下的候选项 %d/%d。
+
+Selected item color
+== 选中项颜色
 
 Selected server
 == 已选中服务器
@@ -12032,6 +12053,12 @@ Update a rcon key with prehashed data
 Update failed. Please try again
 == 更新失败，请重试
 
+Update finished. Please restart the client
+== 更新完成，请重启客户端
+
+Update finished. Restarting...
+== 更新完成，正在重启……
+
 Update notice
 == 更新提示
 
@@ -12487,6 +12514,9 @@ Weapon interaction range
 
 Weapon range color
 == 武器范围颜色
+
+Weapon reload animation probability
+== Weapon reload animation probability
 
 Weapon switch animation
 == 武器切换动画

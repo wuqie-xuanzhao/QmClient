@@ -716,9 +716,6 @@ Animation
 Animation duration
 == Animationsdauer
 
-Animation probability
-== Animationswahrscheinlichkeit
-
 Animation range
 == Animationsbereich
 
@@ -1178,6 +1175,9 @@ Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 == Automatischer Bildschirmfoto der Bestenliste am Spielende
 
+Automatic updates
+== Automatische Updates
+
 Automatic updates are only supported on Windows
 == Automatische Updates werden nur unter Windows unterstützt
 
@@ -1186,6 +1186,9 @@ Automatically adds voting options for all maps
 
 Automatically ban blacklisted addresses
 == Auf der schwarzen Liste stehende Adressen automatisch bannen
+
+Automatically check for stable updates and install them on exit
+== Automatically check for stable updates and install them on exit
 
 Automatically close the current chat after waking from freeze
 == Chat nach dem Aufwachen aus dem Eis automatisch schließen
@@ -3026,6 +3029,9 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == Den Vorlauf der Client-Vorhersage anzeigen
 
+Displays the DDNet Points of the current player
+== DDNet-Punkte des aktuellen Spielers anzeigen
+
 Displays the game connection round-trip time
 == Die Roundtrip-Zeit der Spielverbindung anzeigen
 
@@ -3040,9 +3046,6 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == Zeigt deinen aktuellen Winkel in Grad an
-
-Displays your current score
-== Zeigt deinen aktuellen Punktestand an
 
 Displays your frames per second
 == Zeigt deine Bilder pro Sekunde an
@@ -3574,6 +3577,12 @@ Enable FTAPI auto-translate (may overload the service)
 
 Enable game sounds
 == Spiel-Sounds aktivieren
+
+Enable Gaussian blur
+== Gaußsche Unschärfe aktivieren
+
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
+== Gaußsche Unschärfe für transparente Oberflächen und ausgewählte HUD-Hintergründe aktivieren
 
 Enable ghost
 == Geist aktivieren
@@ -5273,6 +5282,9 @@ Insane
 Interface
 == Oberfläche
 
+Interface accent color
+== Akzentfarbe der Benutzeroberfläche
+
 Interface animations
 == Oberflächenanimationen
 
@@ -6322,6 +6334,9 @@ Message color
 
 Message displayed to players on join.
 == Nachricht, die Spielern beim Beitritt angezeigt wird.
+
+Message merging
+== Nachrichten zusammenführen
 
 Message to reply when game minimized
 == Nachricht zum Antworten, wenn das Spiel minimiert ist
@@ -7513,6 +7528,9 @@ Pistol
 
 Plasma gun shots per second
 == Plasmaschüsse pro Sekunde
+
+Play a flip animation while reloading weapons
+== Play a flip animation while reloading weapons
 
 Play a slide-in rotation animation when switching weapons
 == Beim Waffenwechsel eine Hineingleit-Rotationsanimation abspielen
@@ -9187,6 +9205,9 @@ Selected candidate
 
 Selected candidate %d/%d under cursor.
 == Ausgewählter Kandidat %d/%d unter Cursor.
+
+Selected item color
+== Farbe des ausgewählten Elements
 
 Selected server
 == Ausgewählter Server
@@ -12032,6 +12053,12 @@ Update a rcon key with prehashed data
 Update failed. Please try again
 == Update fehlgeschlagen. Bitte versuche es erneut.
 
+Update finished. Please restart the client
+== Update abgeschlossen. Bitte starte den Client neu.
+
+Update finished. Restarting...
+== Update abgeschlossen. Neustart...
+
 Update notice
 == Hinweis aktualisieren
 
@@ -12487,6 +12514,9 @@ Weapon interaction range
 
 Weapon range color
 == Farbe des Waffenbereichs
+
+Weapon reload animation probability
+== Weapon reload animation probability
 
 Weapon switch animation
 == Waffenwechselanimation

@@ -716,9 +716,6 @@ Animation
 Animation duration
 == Animasyon süresi
 
-Animation probability
-== Animasyon olasılığı
-
 Animation range
 == Animasyon aralığı
 
@@ -1178,6 +1175,9 @@ Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 == Otomatik oyun sonu skor tablosu ekran görüntüsü
 
+Automatic updates
+== Otomatik güncellemeler
+
 Automatic updates are only supported on Windows
 == Otomatik güncellemeler yalnızca Windows'ta desteklenir
 
@@ -1186,6 +1186,9 @@ Automatically adds voting options for all maps
 
 Automatically ban blacklisted addresses
 == Kara listedeki adresleri otomatik olarak yasakla
+
+Automatically check for stable updates and install them on exit
+== Automatically check for stable updates and install them on exit
 
 Automatically close the current chat after waking from freeze
 == Donmadan uyandıktan sonra mevcut sohbeti otomatik kapat
@@ -3026,6 +3029,9 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == İstemcinin tahmin öndeliğini göster
 
+Displays the DDNet Points of the current player
+== Geçerli oyuncunun DDNet puanlarını gösterir
+
 Displays the game connection round-trip time
 == Oyun bağlantısının gidiş-dönüş süresini göster
 
@@ -3040,9 +3046,6 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == Geçerli açınızı derece olarak gösterir
-
-Displays your current score
-== Mevcut skorunuzu gösterir
 
 Displays your frames per second
 == Saniyedeki kare sayınızı gösterir
@@ -3574,6 +3577,12 @@ Enable FTAPI auto-translate (may overload the service)
 
 Enable game sounds
 == Oyun seslerini etkinleştir
+
+Enable Gaussian blur
+== Gauss bulanıklığını etkinleştir
+
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
+== Yarı saydam arayüz ve seçili HUD arka planları için Gauss bulanıklığını etkinleştir
 
 Enable ghost
 == Hayaleti etkinleştir
@@ -5273,6 +5282,9 @@ Insane
 Interface
 == Arayüz
 
+Interface accent color
+== Arayüz vurgu rengi
+
 Interface animations
 == Arayüz animasyonları
 
@@ -6322,6 +6334,9 @@ Message color
 
 Message displayed to players on join.
 == Oyuna katılan oyunculara gösterilen mesaj.
+
+Message merging
+== Mesaj birleştirme
 
 Message to reply when game minimized
 == Oyun simge durumuna getirildiğinde yanıtlanacak mesaj
@@ -7513,6 +7528,9 @@ Pistol
 
 Plasma gun shots per second
 == Plazma tabancasının saniyedeki atış sayısı
+
+Play a flip animation while reloading weapons
+== Play a flip animation while reloading weapons
 
 Play a slide-in rotation animation when switching weapons
 == Silah değiştirirken kayarak dönen bir animasyon oynat
@@ -9187,6 +9205,9 @@ Selected candidate
 
 Selected candidate %d/%d under cursor.
 == İmleç altında seçilen aday %d/%d.
+
+Selected item color
+== Seçili öğe rengi
 
 Selected server
 == Seçili sunucu
@@ -12032,6 +12053,12 @@ Update a rcon key with prehashed data
 Update failed. Please try again
 == Güncelleme başarısız oldu. Lütfen tekrar deneyin
 
+Update finished. Please restart the client
+== Güncelleme tamamlandı. Lütfen istemciyi yeniden başlatın
+
+Update finished. Restarting...
+== Güncelleme tamamlandı. Yeniden başlatılıyor...
+
 Update notice
 == Bildirimi güncelle
 
@@ -12487,6 +12514,9 @@ Weapon interaction range
 
 Weapon range color
 == Silah menzil rengi
+
+Weapon reload animation probability
+== Weapon reload animation probability
 
 Weapon switch animation
 == Silah değiştirme animasyonu

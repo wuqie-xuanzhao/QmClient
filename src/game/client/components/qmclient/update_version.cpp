@@ -62,22 +62,32 @@ namespace
 	{
 		const char *pLeftCursor = pLeft;
 		const char *pRightCursor = pRight;
+		int aLeftParts[4] = {};
+		int aRightParts[4] = {};
+		int LeftPartCount = 0;
+		int RightPartCount = 0;
 		OutComparison = 0;
 
-		for(int Index = 0; Index < 4; ++Index)
+		while(pLeftCursor[0] != '\0' && LeftPartCount < 4)
 		{
-			int LeftPart = 0;
-			int RightPart = 0;
-			const bool LeftOk = ReadNextVersionPart(pLeftCursor, LeftPart);
-			const bool RightOk = ReadNextVersionPart(pRightCursor, RightPart);
-
-			if(!LeftOk && !RightOk)
-				return true;
-			if(LeftOk != RightOk)
+			if(!ReadNextVersionPart(pLeftCursor, aLeftParts[LeftPartCount]))
 				return false;
-			if(LeftPart != RightPart)
+			++LeftPartCount;
+		}
+		while(pRightCursor[0] != '\0' && RightPartCount < 4)
+		{
+			if(!ReadNextVersionPart(pRightCursor, aRightParts[RightPartCount]))
+				return false;
+			++RightPartCount;
+		}
+		if(pLeftCursor[0] != '\0' || pRightCursor[0] != '\0' || LeftPartCount != RightPartCount)
+			return false;
+
+		for(int Index = 0; Index < LeftPartCount; ++Index)
+		{
+			if(aLeftParts[Index] != aRightParts[Index])
 			{
-				OutComparison = LeftPart < RightPart ? -1 : 1;
+				OutComparison = aLeftParts[Index] < aRightParts[Index] ? -1 : 1;
 				return true;
 			}
 		}

@@ -716,9 +716,6 @@ Animation
 Animation duration
 == 動畫持續多久
 
-Animation probability
-== 動畫出現機率
-
 Animation range
 == 動畫範圍
 
@@ -1178,6 +1175,9 @@ Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 == 自動遊戲結束統計板屏幕截圖
 
+Automatic updates
+== 自動更新
+
 Automatic updates are only supported on Windows
 == 自動更新僅支持 Windows
 
@@ -1186,6 +1186,9 @@ Automatically adds voting options for all maps
 
 Automatically ban blacklisted addresses
 == 自動禁止黑名單地址
+
+Automatically check for stable updates and install them on exit
+== Automatically check for stable updates and install them on exit
 
 Automatically close the current chat after waking from freeze
 == 從凍結狀態中醒來自動關閉聊天框
@@ -2576,9 +2579,6 @@ Customize translate button and menu colors
 Customize vote display and interaction
 == Customize vote display and interaction
 
-Customize weapon switch and reload animations
-== 自訂武器切換和裝填動畫
-
 Cut interval
 == 裁剪區間
 
@@ -3029,6 +3029,9 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == 顯示用戶端的預測提前量
 
+Displays the DDNet Points of the current player
+== 顯示目前玩家的 DDNet 積分
+
 Displays the game connection round-trip time
 == 顯示遊戲連線的往返時間
 
@@ -3043,9 +3046,6 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == 顯示你當前的角度（度）
-
-Displays your current score
-== 顯示你目前的分數
 
 Displays your frames per second
 == 顯示你的每秒幀數
@@ -3577,6 +3577,12 @@ Enable FTAPI auto-translate (may overload the service)
 
 Enable game sounds
 == 啟用遊戲聲音
+
+Enable Gaussian blur
+== 啟用高斯模糊
+
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
+== 為半透明介面和指定 HUD 背景啟用高斯模糊
 
 Enable ghost
 == 啟用影子
@@ -4469,9 +4475,6 @@ Gap between statusbar items
 Gap between tee and nametag
 == 三通與銘牌間隙尺寸
 
-Gaussian blur
-== 高斯模糊
-
 General
 == 常規
 
@@ -5278,6 +5281,9 @@ Insane
 
 Interface
 == 界面
+
+Interface accent color
+== 介面強調色
 
 Interface animations
 == 介面動畫
@@ -6328,6 +6334,9 @@ Message color
 
 Message displayed to players on join.
 == 將向加入伺服器的玩家顯示的消息
+
+Message merging
+== 訊息合併
 
 Message to reply when game minimized
 == 遊戲最小化時回覆的消息
@@ -7520,6 +7529,9 @@ Pistol
 Plasma gun shots per second
 == 等離子槍每秒發射多少發子彈
 
+Play a flip animation while reloading weapons
+== Play a flip animation while reloading weapons
+
 Play a slide-in rotation animation when switching weapons
 == 切換武器時播放滑入旋轉動畫
 
@@ -8341,9 +8353,6 @@ Reload
 
 Reload map when empty (1 = once, 2 = each time)
 == 伺服器空時重新加載地圖（1 = 重新加載一次，2 = 每次伺服器空時重新加載）
-
-Reload animation
-== 裝填動畫
 
 Reload the announcements
 == 重新加載公告
@@ -9196,6 +9205,9 @@ Selected candidate
 
 Selected candidate %d/%d under cursor.
 == 已選中光標下的候選項 %d/%d。
+
+Selected item color
+== 已選項目顏色
 
 Selected server
 == 已選中伺服器
@@ -12502,6 +12514,9 @@ Weapon interaction range
 
 Weapon range color
 == 武器範圍顏色
+
+Weapon reload animation probability
+== Weapon reload animation probability
 
 Weapon switch animation
 == 武器切換動畫

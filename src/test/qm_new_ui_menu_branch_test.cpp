@@ -42,36 +42,19 @@ TEST(PlausibleSizes, RefreshRateAndWindowGuardsMatchContract)
 	EXPECT_FALSE(IsPlausibleWindowSize(1920, 16385)); // over max height
 }
 
-TEST(TClientStatusBarScore, FormatsScoreModesAndBounds)
+TEST(TClientStatusBarScore, FormatsPlayerPointsStates)
 {
 	char aBuf[32];
 
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), -999, false, false, false, 0, 0);
-	EXPECT_STREQ(aBuf, "-999");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), 99999, false, false, false, 0, 0);
-	EXPECT_STREQ(aBuf, "99999");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), 123456, false, false, false, 0, 0);
-	EXPECT_STREQ(aBuf, "99999");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), -1000, false, false, false, 0, 0);
-	EXPECT_STREQ(aBuf, "-999");
-
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), 125, false, true, false, 0, 0);
-	EXPECT_STREQ(aBuf, "02:05");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), -125, false, true, false, 0, 0);
-	EXPECT_STREQ(aBuf, "02:05");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), FinishTime::NOT_FINISHED_TIMESCORE, false, true, false, 0, 0);
-	EXPECT_STREQ(aBuf, "");
-
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), 0, false, true, true, 65, 430);
-	EXPECT_STREQ(aBuf, "01:05");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), 0, false, true, true, 3661, 990);
-	EXPECT_STREQ(aBuf, "01:01:01");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), 125, false, true, true, FinishTime::NOT_FINISHED_MILLIS, 0);
-	EXPECT_STREQ(aBuf, "02:05");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), 65430, true, false, false, 0, 0);
-	EXPECT_STREQ(aBuf, "01:05.43");
-	tclient_statusbar::FormatScore(aBuf, sizeof(aBuf), FinishTime::NOT_FINISHED_MILLIS, true, false, false, 0, 0);
-	EXPECT_STREQ(aBuf, "");
+	EXPECT_TRUE(tclient_statusbar::FormatPlayerPoints(aBuf, sizeof(aBuf), EPointsStatus::READY, 12345));
+	EXPECT_STREQ(aBuf, "12345");
+	EXPECT_TRUE(tclient_statusbar::FormatPlayerPoints(aBuf, sizeof(aBuf), EPointsStatus::NOT_REQUESTED, 0));
+	EXPECT_STREQ(aBuf, "...");
+	EXPECT_TRUE(tclient_statusbar::FormatPlayerPoints(aBuf, sizeof(aBuf), EPointsStatus::FETCHING, 0));
+	EXPECT_STREQ(aBuf, "...");
+	EXPECT_TRUE(tclient_statusbar::FormatPlayerPoints(aBuf, sizeof(aBuf), EPointsStatus::FAILED, 0));
+	EXPECT_STREQ(aBuf, "?");
+	EXPECT_FALSE(tclient_statusbar::FormatPlayerPoints(aBuf, 0, EPointsStatus::READY, 0));
 }
 
 TEST(QmNewUiMenuBranches, RespawnWeaponAndCallvoteFiltersUseSharedBoundedSemantics)
@@ -180,7 +163,7 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
 	const std::string ApplyScheme = FunctionBody(Source, "void CStatusBar::ApplyStatusBarScheme(const char *pScheme)");
 	const std::string UpdateScheme = FunctionBody(Source, "void CStatusBar::UpdateStatusBarScheme(char *pScheme)");
-	const std::string ScoreRegistration = "\"s\", \"Score\", \"\", \"Displays your current score\"";
+	const std::string ScoreRegistration = "\"s\", \"Points\", \"Points\", \"Displays the DDNet Points of the current player\"";
 
 	const size_t RegistrationPos = Header.find(ScoreRegistration);
 	ASSERT_NE(RegistrationPos, std::string::npos);
@@ -758,10 +741,10 @@ TEST(QmNewUiMenuBranches, QmClientUpdateFlowUsesQmClientNamingAndComparisonHelpe
 	EXPECT_EQ(TClientSource.find("CalculateHashes(m_aUpdatePackageTmp"), std::string::npos);
 	EXPECT_LT(OnUpdate.find("FinishUpdateDownloads();"), OnUpdate.find("!IsUpdateChecking() && !IsUpdateDownloading() && !m_UpdateReady"));
 	EXPECT_NE(TClientSource.find("Force && m_UpdateShutdownRequested"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmAutoUpdate, qm_auto_update, 1"), std::string::npos);
-	EXPECT_EQ(ConfigSource.find("QmShowOutdatedVersionWarning"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoUpdate, \"Automatic updates\""), std::string::npos);
-	EXPECT_EQ(QmMenusSource.find("Show outdated version warning"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmAutoUpdate, qm_auto_update, 0"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("QmShowOutdatedVersionWarning"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("RenderCheckbox(&g_Config.m_QmAutoUpdate, \"Automatic updates\", &g_Config.m_QmAutoUpdate);"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Show outdated version warning"), std::string::npos);
 
 	EXPECT_NE(TClientHeader.find("m_pQmClientUpdateInfoTask"), std::string::npos);
 	EXPECT_NE(TClientHeader.find("m_FetchedQmClientUpdateInfo"), std::string::npos);
@@ -902,10 +885,27 @@ TEST(QmNewUiMenuBranches, GaussianBlurSettingReplacesBetterScoreboardAndIsVersio
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmBetterScoreboard, qm_better_scoreboard, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
 	EXPECT_NE(MiniFeaturesContent.find("RenderCheckbox(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", &g_Config.m_QmBetterScoreboard);"), std::string::npos);
 	EXPECT_NE(MiniFeaturesContent.find("RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(18.0f);"), std::string::npos);
+	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(19.0f);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.21\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.30\""), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, NewSettingsUseToggleAndExposeAccentAndBlurControls)
+{
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+
+	EXPECT_NE(ConfigSource.find("QmUiAccentColor, qm_ui_accent_color"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("QmUiSelectedColor, qm_ui_selected_color"), std::string::npos);
+	const std::string SettingsCheckbox = FunctionBody(MenusSource, "int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, const bool ProcessInput, const float RequestedFontSize)");
+	EXPECT_NE(SettingsCheckbox.find("if(g_Config.m_QmNewUi)"), std::string::npos);
+	EXPECT_NE(SettingsCheckbox.find("ui_widget::Toggle(Context, pId, &ToggleValue, ToggleRect, false, ProcessInput)"), std::string::npos);
+	EXPECT_NE(SettingsCheckbox.find("Ui()->DoButtonLogic(pId, 0, pRect, BUTTONFLAG_LEFT)"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Localize(\"Interface accent color\")"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Localize(\"Selected item color\")"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Localize(\"Enable Gaussian blur\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
@@ -1959,11 +1959,15 @@ TEST(QmNewUiMenuBranches, GaussianBlurUsesSharedUiBackdropWithTransparentFallbac
 	EXPECT_NE(UiSource.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
 	EXPECT_NE(UiSource.find("CaptureBackbufferToRenderTarget"), std::string::npos);
 	EXPECT_NE(UiSource.find("GaussianBlurRenderTarget"), std::string::npos);
+	const std::string PrepareBlur = FunctionBody(UiSource, "bool CUi::PrepareGaussianBlur()");
+	EXPECT_NE(PrepareBlur.find("m_GaussianBlurPrepared && m_GaussianBlurPreparedFrame == PerfFrame"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("m_GaussianBlurPreparedFrame = PerfFrame"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("m_GaussianBlurPrepared = true"), std::string::npos);
 	EXPECT_NE(UiSource.find("Graphics()->GetScreen"), std::string::npos);
 	EXPECT_NE(UiSource.find("UiGaussianBlurTargetDimension"), std::string::npos);
 	EXPECT_NE(CachedRectDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
 	EXPECT_NE(BatchableRectDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
-	EXPECT_NE(MenuButtonDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
+	EXPECT_NE(MenuButtonDraw.find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_EQ(CachedRectDraw.find("RenderGaussianBlur(*pRect, Color.a)"), std::string::npos);
 	EXPECT_EQ(BatchableRectDraw.find("RenderGaussianBlur(*pRect, Color.a)"), std::string::npos);
 	EXPECT_EQ(MenuButtonDraw.find("RenderGaussianBlur(*pRect, BackgroundColor.a)"), std::string::npos);
@@ -2027,10 +2031,10 @@ TEST(QmNewUiMenuBranches, GaussianBlurSkipsPageSwitchTransitionOverlays)
 	EXPECT_NE(TouchButtonEditor.find("BlockClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)"), std::string::npos);
 	EXPECT_NE(BrowserSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
 	EXPECT_NE(IngameSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_NE(SettingsSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_NE(Settings7Source.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_NE(QmClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_NE(TClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_EQ(SettingsSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_EQ(Settings7Source.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_EQ(QmClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
+	EXPECT_EQ(TClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
@@ -2045,7 +2049,6 @@ TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
 	const std::string DemoSource = ReadTextFile("src/game/client/components/menus_demo.cpp");
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string SettingsAssetsSource = ReadTextFile("src/game/client/components/menus_settings_assets.cpp");
-	const std::string SettingsControlsSource = ReadTextFile("src/game/client/components/menus_settings_controls.cpp");
 	const std::string StartSource = ReadTextFile("src/game/client/components/menus_start.cpp");
 	const std::string QmClientSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string ButtonsSource = ReadTextFile("src/game/client/QmUi/UiButtons.cpp");
@@ -2057,7 +2060,6 @@ TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
 	const std::string BrowserServerList = FunctionBody(BrowserSource, "void CMenus::RenderServerbrowserServerList(");
 	const std::string BrowserFade = BlockBodyAfter(BrowserServerList, "if(NumServers * ms_ListheaderHeight > ListView.h)");
 	const std::string StartMenu = FunctionBody(StartSource, "void CMenusStart::RenderStartMenuImpl(");
-	const std::string SettingsBlock = FunctionBody(SettingsControlsSource, "void CMenusSettingsControls::RenderSettingsBlock(");
 
 	EXPECT_NE(UiHeader.find("class CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(UiHeader.find("RenderGaussianBlur(const CUIRect &Rect, float Alpha = 1.0f, int Corners = IGraphics::CORNER_NONE, float Rounding = 0.0f)"), std::string::npos);
@@ -2068,7 +2070,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
 	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_Menu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_FontIcon(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_PopupMenu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "bool CUi::DoClearableEditBox(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(UiSource, "SEditResult<int64_t> CUi::DoValueSelectorWithState(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_Menu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_MenuTab(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
@@ -2093,16 +2095,6 @@ TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
 	EXPECT_NE(BrowserFade.find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(BrowserFade.find("Fade.Draw4("), std::string::npos);
 
-	const size_t SettingsSuppression = SettingsBlock.find("CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui(), pExpanded != nullptr);");
-	ASSERT_NE(SettingsSuppression, std::string::npos);
-	const size_t SettingsSuppressionBlockStart = SettingsBlock.rfind('{', SettingsSuppression);
-	ASSERT_NE(SettingsSuppressionBlockStart, std::string::npos);
-	const size_t SettingsSuppressionBlockEnd = MatchingBrace(SettingsBlock, SettingsSuppressionBlockStart);
-	ASSERT_NE(SettingsSuppressionBlockEnd, std::string::npos);
-	const size_t SettingsContent = SettingsBlock.find("RenderContentFunction(SettingsBlock);", SettingsSuppression);
-	ASSERT_NE(SettingsContent, std::string::npos);
-	EXPECT_GT(SettingsContent, SettingsSuppressionBlockEnd);
-
 	const size_t PreviewSuppression = QmClientSource.find("CUiScopedGaussianBlurSuppression PreviewBlurSuppression(Ui());");
 	ASSERT_NE(PreviewSuppression, std::string::npos);
 	const size_t PreviewBlockStart = QmClientSource.rfind('{', PreviewSuppression);
@@ -2111,7 +2103,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
 	ASSERT_NE(PreviewBlockEnd, std::string::npos);
 	const size_t PreviewDraw = QmClientSource.find("PreviewFrame.Draw(", PreviewSuppression);
 	const size_t PreviewMargin = QmClientSource.find("PreviewRect.Margin(maximum", PreviewSuppression);
-	const size_t PreviewButtonLogic = QmClientSource.find("Ui()->DoButtonLogic(&s_PieMenuColorPreviewButton", PreviewSuppression);
+	const size_t PreviewButtonLogic = QmClientSource.find("Ui()->DoButtonLogic(&s_ColorPreviewButton", PreviewSuppression);
 	ASSERT_NE(PreviewDraw, std::string::npos);
 	ASSERT_NE(PreviewMargin, std::string::npos);
 	ASSERT_NE(PreviewButtonLogic, std::string::npos);

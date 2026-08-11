@@ -2133,7 +2133,7 @@ TEST(QmMonitoringHelpers, SettingsTextPlanPrebuildSeparatesInvisibleWarmupFromVi
 							"m_MenuTextStableUnplannedThisFrame",
 							"std::unordered_set<std::string> m_SettingsMenuTextPlannedDescriptors;",
 						}));
-		EXPECT_NE(Source.find("bool DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = \"\", const char *pMaxText = nullptr, float FontSize = -1.0f);"), std::string::npos);
+		EXPECT_NE(Source.find("bool DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = \"\", const char *pMaxText = nullptr);"), std::string::npos);
 	}
 	{
 		std::ifstream File(TestSourcePath("src/game/client/components/menus.cpp"));
@@ -2176,7 +2176,7 @@ TEST(QmMonitoringHelpers, SettingsTextPlanPrebuildSeparatesInvisibleWarmupFromVi
 		EXPECT_NE(PrebuildItemBody.find("pRect->m_UITextContainer.Valid()"), std::string::npos);
 		EXPECT_NE(PrebuildItemBody.find("Entry.m_Built = true;"), std::string::npos);
 		EXPECT_NE(PrebuildItemBody.find("Entry.m_Generation = m_MenuTextPoolGeneration;"), std::string::npos);
-		EXPECT_NE(Source.find("bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText, float FontSize)"), std::string::npos);
+		EXPECT_NE(Source.find("bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)"), std::string::npos);
 		EXPECT_EQ(Source.find("RenderSettingsTClient(ContentView, true);"), std::string::npos);
 		EXPECT_EQ(Source.find("RenderSettingsQmClient(ContentView, false, true);"), std::string::npos);
 		EXPECT_EQ(Source.find("PrebuildVisibleSettingsTextPool(ContentView"), std::string::npos);
@@ -4055,8 +4055,12 @@ TEST(QmMonitoringHelpers, VulkanNoVsyncPrefersImmediateAndKeepsNormalSwapchainDe
 	ASSERT_NE(FunctionEnd, std::string::npos);
 	const std::string FunctionBody = VulkanSource.substr(FunctionStart, FunctionEnd - FunctionStart);
 
-	EXPECT_NE(FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};"), std::string::npos);
-	EXPECT_EQ(FunctionBody.find("aPreferredModes = {VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR};"), std::string::npos);
+	EXPECT_EQ(FunctionBody.find("#if defined(CONF_PLATFORM_MACOS)"), std::string::npos);
+	const size_t Immediate = FunctionBody.find("VK_PRESENT_MODE_IMMEDIATE_KHR");
+	const size_t Mailbox = FunctionBody.find("VK_PRESENT_MODE_MAILBOX_KHR", Immediate);
+	ASSERT_NE(Immediate, std::string::npos);
+	ASSERT_NE(Mailbox, std::string::npos);
+	EXPECT_LT(Immediate, Mailbox);
 
 	const std::string SwapImageBody = ExtractSourceFunctionBody(VulkanSource, "uint32_t GetNumberOfSwapImages(");
 	ASSERT_FALSE(SwapImageBody.empty());
@@ -7829,7 +7833,7 @@ TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 	EXPECT_NE(Forms.find("ResolveInputFallbackTheme(g_Config.m_QmUiFocusColor)"), std::string::npos);
 	EXPECT_EQ(Forms.find("CUi::ms_LightButtonColorFunction"), std::string::npos);
 	EXPECT_EQ(Forms.find("ui_token::color::BORDER_FOCUS"), std::string::npos);
-	EXPECT_NE(ContextBody.find("m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));"), std::string::npos);
+	EXPECT_NE(ContextBody.find("m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor), ColorHSLA(g_Config.m_QmUiAccentColor), ColorHSLA(g_Config.m_QmUiSelectedColor));"), std::string::npos);
 	EXPECT_NE(ContextBody.find("Context.m_pIconManager = GameClient()->QmIconManager();"), std::string::npos);
 	EXPECT_NE(ContextBody.find("Context.m_pTooltips = &GameClient()->m_Tooltips;"), std::string::npos);
 	EXPECT_NE(ContextBody.find("Context.m_pTheme = &m_SettingsUiTheme;"), std::string::npos);
@@ -9686,7 +9690,7 @@ TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)
 	EXPECT_NE(Containers.find("DrawRoundedSurface(Ctx, BorderBg, Props.m_BorderColor"), std::string::npos);
 	EXPECT_EQ(Containers.find("Border.Margin(0.5f, &Border);"), std::string::npos);
 	EXPECT_NE(Menus.find("#include <game/client/QmUi/UiContainers.h>"), std::string::npos);
-	EXPECT_NE(StyleBody.find("const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));"), std::string::npos);
+	EXPECT_NE(StyleBody.find("const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor), ColorHSLA(g_Config.m_QmUiAccentColor), ColorHSLA(g_Config.m_QmUiSelectedColor));"), std::string::npos);
 	EXPECT_NE(StyleBody.find("const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale, &Theme);"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_Padding = CardProps.m_Padding;"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_CornerRadius = CardProps.m_Radius;"), std::string::npos);

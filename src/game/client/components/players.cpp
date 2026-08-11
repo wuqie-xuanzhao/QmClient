@@ -949,7 +949,7 @@ void CPlayers::RenderPlayer(
 				{
 					const int AttackTuneZone = QmWeaponAnimationTuneZone(GameClient(), Collision(), ClientId, Player);
 					const bool PlayReloadAnimation = WeaponReloadAnimEnabled && QmWeaponUsesReloadFlip(Player.m_Weapon) &&
-						QmWeaponReloadAnimationSelected(g_Config.m_QmWeaponReloadAnimProbability, random_float());
+									 QmWeaponReloadAnimationSelected(g_Config.m_QmWeaponReloadAnimProbability, random_float());
 					ReloadAnimationState.ObserveAttack(Player.m_AttackTick, Player.m_Weapon, AttackTuneZone, PlayReloadAnimation);
 				}
 
@@ -982,7 +982,7 @@ void CPlayers::RenderPlayer(
 					const float DefaultReloadSeconds = QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, Player.m_Weapon);
 					const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(LastAttackTime, ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed(), Direction.x < 0.0f);
 					const bool FireOverridesSwitchRotation = WeaponSwitchAnimEnabled && QmWeaponReloadAnimationEligible(ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed()) &&
-						LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
+										 LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
 					WeaponSwitchAngle = QmResolveWeaponAnimationRotation(WeaponSwitchAngle, ReloadRotation, FireOverridesSwitchRotation);
 				}
 			}

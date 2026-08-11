@@ -4795,9 +4795,13 @@ public:
 
 		std::array<VkPresentModeKHR, 2> aPreferredModes;
 		if(g_Config.m_GfxVsync)
-			aPreferredModes = {VK_PRESENT_MODE_FIFO_KHR, VK_PRESENT_MODE_FIFO_RELAXED_KHR};
+			aPreferredModes = {
+				VK_PRESENT_MODE_FIFO_KHR,
+				VK_PRESENT_MODE_FIFO_RELAXED_KHR};
 		else
-			aPreferredModes = {VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR};
+			aPreferredModes = {
+				VK_PRESENT_MODE_IMMEDIATE_KHR,
+				VK_PRESENT_MODE_MAILBOX_KHR};
 		for(const VkPresentModeKHR PreferredMode : aPreferredModes)
 		{
 			for(const VkPresentModeKHR AvailableMode : vPresentModeList)

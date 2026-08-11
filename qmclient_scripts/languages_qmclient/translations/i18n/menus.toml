@@ -20535,6 +20535,22 @@ turkish = "Arayüz yüzeyi"
 polish = "Powierzchnia interfejsu"
 
 [[message]]
+key = "Enable Gaussian blur"
+[message.translations]
+simplified_chinese = "启用高斯模糊"
+traditional_chinese = "啟用高斯模糊"
+japanese = "ガウスぼかしを有効化"
+korean = "가우시안 블러 사용"
+russian = "Включить размытие по Гауссу"
+german = "Gaußsche Unschärfe aktivieren"
+spanish = "Activar desenfoque gaussiano"
+french = "Activer le flou gaussien"
+brazilian_portuguese = "Ativar desfoque gaussiano"
+portuguese = "Ativar desfocagem gaussiana"
+turkish = "Gauss bulanıklığını etkinleştir"
+polish = "Włącz rozmycie gaussowskie"
+
+[[message]]
 key = "Map browser surface"
 [message.translations]
 simplified_chinese = "地图浏览器表面"

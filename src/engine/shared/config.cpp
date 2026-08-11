@@ -18,8 +18,10 @@ CConfig g_Config;
 // ----------------------- Config Variables
 namespace
 {
-	constexpr const char *QM_CONFIG_MIGRATION_MARKER = "qmclient/config_migration_v1.done";
-	constexpr const char *QM_CONFIG_MIGRATION_BACKUP_DIR = "qmclient/migration_backup_v1";
+	constexpr const char *QM_CONFIG_MIGRATION_MARKER = "qmclient/config_migration_v2.done";
+	constexpr const char *QM_CONFIG_MIGRATION_BACKUP_DIR = "qmclient/migration_backup_v2";
+	constexpr const char *QM_CONFIG_MIGRATION_V1_BACKUP_DDNET = "qmclient/migration_backup_v1/settings_ddnet.cfg";
+	constexpr const char *QM_CONFIG_SHARED_DDNET_PATH = "settings_ddnet.cfg";
 
 	std::unordered_map<const SIntConfigVariable *, int> *s_pToggleRestoreInts = nullptr;
 
@@ -68,7 +70,7 @@ namespace
 		return EColorInputAlphaMode::OMITTED;
 	}
 
-	bool WriteStorageFileAtomically(IStorage *pStorage, const char *pPath, const char *pContents)
+	bool WriteStorageFileAtomically(IStorage *pStorage, const char *pPath, const void *pContents, size_t ContentsSize)
 	{
 		if(!EnsureConfigPathFolder(pStorage, pPath))
 			return false;
@@ -79,7 +81,7 @@ namespace
 		if(!File)
 			return false;
 
-		bool Success = io_write(File, pContents, str_length(pContents)) == static_cast<unsigned>(str_length(pContents));
+		bool Success = io_write(File, pContents, ContentsSize) == ContentsSize;
 		if(Success && io_sync(File) != 0)
 			Success = false;
 		if(io_close(File) != 0)
@@ -89,6 +91,27 @@ namespace
 		if(!Success)
 			pStorage->RemoveFile(aTmpPath, IStorage::TYPE_SAVE);
 		return Success;
+	}
+
+	bool CopyStorageFile(IStorage *pStorage, const char *pSourcePath, const char *pDestinationPath)
+	{
+		void *pContents = nullptr;
+		unsigned ContentsSize = 0;
+		if(!pStorage->ReadFile(pSourcePath, IStorage::TYPE_SAVE, &pContents, &ContentsSize))
+			return false;
+		const bool Success = WriteStorageFileAtomically(pStorage, pDestinationPath, pContents, ContentsSize);
+		free(pContents);
+		return Success;
+	}
+
+	bool StorageFileIsEmpty(IStorage *pStorage, const char *pPath)
+	{
+		void *pContents = nullptr;
+		unsigned ContentsSize = 0;
+		if(!pStorage->ReadFile(pPath, IStorage::TYPE_SAVE, &pContents, &ContentsSize))
+			return false;
+		free(pContents);
+		return ContentsSize == 0;
 	}
 }
 
@@ -121,7 +144,8 @@ bool QmFinalizeConfigMigration(IStorage *pStorage, const bool *pArchivePreviousP
 		return false;
 	}
 
-	const auto ArchiveConfig = [pStorage](const char *pSourcePath, const char *pBackupName) {
+	// 配置根目录同时供 DDNet/TClient 使用，迁移只能复制备份，不能移动原文件。
+	const auto BackupConfig = [pStorage](const char *pSourcePath, const char *pBackupName) {
 		if(!pSourcePath || !pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
 			return true;
 
@@ -129,38 +153,42 @@ bool QmFinalizeConfigMigration(IStorage *pStorage, const bool *pArchivePreviousP
 		str_format(aBackupPath, sizeof(aBackupPath), "%s/%s", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName);
 		if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
 		{
-			str_format(aBackupPath, sizeof(aBackupPath), "%s/%s.%d.bak", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName, pid());
-			if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
-			{
-				log_error("config", "Cannot archive legacy config '%s' because backup targets already exist", pSourcePath);
-				return false;
-			}
+			return true;
 		}
 
-		if(pStorage->RenameFile(pSourcePath, aBackupPath, IStorage::TYPE_SAVE))
+		if(CopyStorageFile(pStorage, pSourcePath, aBackupPath))
 			return true;
-		if(!pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
-			return true;
-		log_error("config", "Cannot archive legacy config '%s' to '%s'", pSourcePath, aBackupPath);
+		log_error("config", "Cannot back up legacy config '%s' to '%s'", pSourcePath, aBackupPath);
 		return false;
 	};
+
+	const bool SharedDdnetConfigMissing = !pStorage->FileExists(QM_CONFIG_SHARED_DDNET_PATH, IStorage::TYPE_SAVE);
+	const bool SharedDdnetConfigEmpty = !SharedDdnetConfigMissing && StorageFileIsEmpty(pStorage, QM_CONFIG_SHARED_DDNET_PATH);
+	if((SharedDdnetConfigMissing || SharedDdnetConfigEmpty) &&
+		pStorage->FileExists(QM_CONFIG_MIGRATION_V1_BACKUP_DDNET, IStorage::TYPE_SAVE) &&
+		!StorageFileIsEmpty(pStorage, QM_CONFIG_MIGRATION_V1_BACKUP_DDNET) &&
+		!CopyStorageFile(pStorage, QM_CONFIG_MIGRATION_V1_BACKUP_DDNET, QM_CONFIG_SHARED_DDNET_PATH))
+	{
+		log_error("config", "Cannot restore shared config '%s' from the v1 backup", QM_CONFIG_SHARED_DDNET_PATH);
+		return false;
+	}
 
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
 		const char *pLegacyPath = s_aConfigDomains[ConfigDomain].m_aLegacyConfigPath;
-		if(!ArchiveConfig(pLegacyPath, pLegacyPath))
+		if(!BackupConfig(pLegacyPath, pLegacyPath))
 			return false;
 
 		if(pArchivePreviousPaths && pArchivePreviousPaths[ConfigDomain] && s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath)
 		{
 			char aBackupName[IO_MAX_PATH_LENGTH];
 			str_format(aBackupName, sizeof(aBackupName), "previous_%s", fs_filename(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath));
-			if(!ArchiveConfig(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath, aBackupName))
+			if(!BackupConfig(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath, aBackupName))
 				return false;
 		}
 	}
 
-	if(!WriteStorageFileAtomically(pStorage, QM_CONFIG_MIGRATION_MARKER, "1\n"))
+	if(!WriteStorageFileAtomically(pStorage, QM_CONFIG_MIGRATION_MARKER, "1\n", 2))
 	{
 		log_error("config", "Cannot write config migration marker '%s'", QM_CONFIG_MIGRATION_MARKER);
 		return false;

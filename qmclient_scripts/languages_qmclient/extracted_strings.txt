@@ -237,7 +237,6 @@ Animate settings card lists when entering a page
 Animate settings card reorder and layout reflow
 Animation
 Animation duration
-Animation probability
 Animation range
 Announcements sequential or random.
 Anti Latency Tools
@@ -391,9 +390,11 @@ Auto-unspec when unfrozen
 Automate demos, screenshots, and match exports
 Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
+Automatic updates
 Automatic updates are only supported on Windows
 Automatically adds voting options for all maps
 Automatically ban blacklisted addresses
+Automatically check for stable updates and install them on exit
 Automatically close the current chat after waking from freeze
 Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
@@ -1007,12 +1008,12 @@ Displays estimated process UDP receive rate
 Displays estimated process UDP send rate
 Displays prediction timing jitter
 Displays the client's prediction lead
+Displays the DDNet Points of the current player
 Displays the game connection round-trip time
 Displays the number of unacknowledged vital chunks
 Displays the time since the last complete snapshot
 Displays X and Y velocity
 Displays your current angle in degrees
-Displays your current score
 Displays your frames per second
 Displays your local time
 Displays your ping to the current server
@@ -1190,6 +1191,8 @@ Enable fat skin
 Enable freeze call sound
 Enable FTAPI auto-translate (may overload the service)
 Enable game sounds
+Enable Gaussian blur
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
 Enable ghost
 Enable Gores mode
 Enable Gores mode (King of Gores helper tools)
@@ -1756,6 +1759,7 @@ Input smoothing
 Input switch
 Insane
 Interface
+Interface accent color
 Interface animations
 Interface page
 Interface settings page
@@ -2106,6 +2110,7 @@ Menu option - selected
 Merge consecutive identical player messages within 2 seconds
 Message color
 Message displayed to players on join.
+Message merging
 Message to reply when game minimized
 Message to send in chat:
 Message to send on auto vote, leave empty to not send
@@ -2503,6 +2508,7 @@ Ping
 Ping the current server
 Pistol
 Plasma gun shots per second
+Play a flip animation while reloading weapons
 Play a slide-in rotation animation when switching weapons
 Play back a demo
 Play background music
@@ -3061,6 +3067,7 @@ Selected %d
 Selected button not visible
 Selected candidate
 Selected candidate %d/%d under cursor.
+Selected item color
 Selected server
 Selected timertype is not supported by your client
 Selection
@@ -4009,6 +4016,8 @@ Update
 Update a rcon key
 Update a rcon key with prehashed data
 Update failed. Please try again
+Update finished. Please restart the client
+Update finished. Restarting...
 Update notice
 Update or add a specific war group
 Update Rate
@@ -4161,6 +4170,7 @@ Weapon
 Weapon animation
 Weapon interaction range
 Weapon range color
+Weapon reload animation probability
 Weapon switch animation
 Weapon switch animation duration (ms)
 Weapon switch animation easing mode

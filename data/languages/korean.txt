@@ -716,9 +716,6 @@ Animation
 Animation duration
 == 애니메이션 지속 시간
 
-Animation probability
-== 애니메이션 표시 확률
-
 Animation range
 == 애니메이션 범위
 
@@ -1178,6 +1175,9 @@ Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 == 게임 종료 시 자동 점수판 스크린샷
 
+Automatic updates
+== 자동 업데이트
+
 Automatic updates are only supported on Windows
 == 자동 업데이트는 Windows에서만 지원됩니다
 
@@ -1186,6 +1186,9 @@ Automatically adds voting options for all maps
 
 Automatically ban blacklisted addresses
 == 블랙리스트 주소 자동 차단
+
+Automatically check for stable updates and install them on exit
+== Automatically check for stable updates and install them on exit
 
 Automatically close the current chat after waking from freeze
 == 얼음에서 깨어난 후 현재 채팅 자동 닫기
@@ -3026,6 +3029,9 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == 클라이언트의 예측 선행 시간 표시
 
+Displays the DDNet Points of the current player
+== 현재 플레이어의 DDNet 포인트를 표시
+
 Displays the game connection round-trip time
 == 게임 연결 왕복 시간 표시
 
@@ -3040,9 +3046,6 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == 현재 각도(도) 표시
-
-Displays your current score
-== 현재 점수 표시
 
 Displays your frames per second
 == 초당 프레임 수를 표시합니다
@@ -3574,6 +3577,12 @@ Enable FTAPI auto-translate (may overload the service)
 
 Enable game sounds
 == 게임 사운드 활성화
+
+Enable Gaussian blur
+== 가우시안 블러 사용
+
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
+== 반투명 인터페이스와 선택한 HUD 배경에 가우시안 흐림 효과 사용
 
 Enable ghost
 == 고스트 활성화
@@ -4466,9 +4475,6 @@ Gap between statusbar items
 Gap between tee and nametag
 == 티와 이름표 사이 간격
 
-Gaussian blur
-== 가우시안 블러
-
 General
 == 일반
 
@@ -5275,6 +5281,9 @@ Insane
 
 Interface
 == 인터페이스
+
+Interface accent color
+== 인터페이스 강조 색상
 
 Interface animations
 == 인터페이스 애니메이션
@@ -6325,6 +6334,9 @@ Message color
 
 Message displayed to players on join.
 == 접속 시 플레이어에게 표시되는 메시지
+
+Message merging
+== 메시지 병합
 
 Message to reply when game minimized
 == 게임 최소화 시 회신 메시지
@@ -7516,6 +7528,9 @@ Pistol
 
 Plasma gun shots per second
 == 플라즈마 건 초당 발사 수
+
+Play a flip animation while reloading weapons
+== Play a flip animation while reloading weapons
 
 Play a slide-in rotation animation when switching weapons
 == 무기 전환 시 슬라이드인 회전 애니메이션 재생
@@ -9190,6 +9205,9 @@ Selected candidate
 
 Selected candidate %d/%d under cursor.
 == 커서 아래에 선택된 후보 %d/%d.
+
+Selected item color
+== 선택 항목 색상
 
 Selected server
 == 선택한 서버
@@ -12496,6 +12514,9 @@ Weapon interaction range
 
 Weapon range color
 == 무기 범위 색상
+
+Weapon reload animation probability
+== Weapon reload animation probability
 
 Weapon switch animation
 == 무기 전환 애니메이션

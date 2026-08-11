@@ -49,6 +49,7 @@ namespace ui_widget
 		{
 			if(Ctx.m_pUi == nullptr || pBtn == nullptr)
 				return false;
+			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 			if(Disabled)
 			{
@@ -80,7 +81,8 @@ namespace ui_widget
 
 	bool PrimaryButton(const IUiContext &Ctx, CButtonContainer *pBtn, const char *pText, const CUIRect &Rect, bool Disabled)
 	{
-		return DoStyledButton(Ctx, pBtn, pText, Rect, Disabled, ui_token::color::ACCENT_PRIMARY_DIM, ui_token::color::ACCENT_PRIMARY_HOVER, false);
+		const ColorRGBA Accent = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
+		return DoStyledButton(Ctx, pBtn, pText, Rect, Disabled, Accent.WithAlpha(0.18f), Accent, false);
 	}
 
 	bool SecondaryButton(const IUiContext &Ctx, CButtonContainer *pBtn, const char *pText, const CUIRect &Rect, bool Disabled)
@@ -88,17 +90,20 @@ namespace ui_widget
 		// Idle is fully transparent so only the border shows; on hover, tint
 		// gently toward ACCENT_PRIMARY_DIM.
 		const ColorRGBA Idle{0.0f, 0.0f, 0.0f, 0.0f};
-		return DoStyledButton(Ctx, pBtn, pText, Rect, Disabled, Idle, ui_token::color::ACCENT_PRIMARY_DIM, true);
+		const ColorRGBA Accent = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
+		return DoStyledButton(Ctx, pBtn, pText, Rect, Disabled, Idle, Accent.WithAlpha(0.18f), true);
 	}
 
 	bool IconButton(const IUiContext &Ctx, CButtonContainer *pBtn, const char *pIcon, const CUIRect &Rect, bool Disabled)
 	{
 		if(Ctx.m_pUi == nullptr || pBtn == nullptr)
 			return false;
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 		const bool HoverPrev = Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
 		const bool Pressed = Ctx.m_pUi->CheckActiveItem(pBtn);
-		const ColorRGBA Target = HoverPrev || Pressed ? ui_token::color::ACCENT_PRIMARY_DIM : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
+		const ColorRGBA Accent = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
+		const ColorRGBA Target = HoverPrev || Pressed ? Accent.WithAlpha(0.18f) : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
 		ColorRGBA BgColor = Target;
 		if(Ctx.m_pAnim != nullptr)
 		{
@@ -120,10 +125,12 @@ namespace ui_widget
 	{
 		if(Ctx.m_pUi == nullptr || pBtn == nullptr)
 			return false;
+		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 		const bool HoverPrev = Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
 		const bool Pressed = Ctx.m_pUi->CheckActiveItem(pBtn);
-		const ColorRGBA Target = HoverPrev || Pressed ? ui_token::color::ACCENT_PRIMARY_DIM : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
+		const ColorRGBA Accent = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
+		const ColorRGBA Target = HoverPrev || Pressed ? Accent.WithAlpha(0.18f) : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
 		ColorRGBA BgColor = Target;
 		if(Ctx.m_pAnim != nullptr)
 		{

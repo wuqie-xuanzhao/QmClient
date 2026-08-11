@@ -10,7 +10,7 @@ struct SQmClientUpdateManifest
 {
 	char m_aVersion[32] = "";
 	uint64_t m_PackageSize = 0;
-	SHA256_DIGEST m_PackageSha256 = SHA256_ZEROED;
+	SHA256_DIGEST m_PackageSha256{};
 };
 
 struct SQmClientUpdateRelease

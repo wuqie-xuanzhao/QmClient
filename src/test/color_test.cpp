@@ -3,6 +3,8 @@
 
 #include <base/color.h>
 
+#include <engine/shared/config.h>
+
 #include <game/client/components/qmclient/tee_color_code.h>
 
 #include <gtest/gtest.h>
@@ -110,6 +112,14 @@ TEST(Color, ConvKeepsAlpha)
 		ASSERT_FLOAT_EQ(color_cast<ColorHSVA>(ColorRGBA(0.1f, 0.2f, 0.3f, Alpha)).a, Alpha);
 		ASSERT_FLOAT_EQ(color_cast<ColorHSVA>(ColorHSLA(0.1f, 0.2f, 0.3f, Alpha)).a, Alpha);
 	}
+}
+
+TEST(Color, EntitiesBackgroundDefaultIsNeutralGray)
+{
+	const ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ClBackgroundEntitiesColor));
+	EXPECT_NEAR(Color.r, 0.5f, 0.01f);
+	EXPECT_NEAR(Color.g, 0.5f, 0.01f);
+	EXPECT_NEAR(Color.b, 0.5f, 0.01f);
 }
 
 TEST(Color, QmTeeColorCodeAcceptsRgbAndShortRgb)

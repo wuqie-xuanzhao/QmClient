@@ -253,36 +253,37 @@ void CStatusBar::ZoomRender()
 
 float CStatusBar::ScoreWidth()
 {
-	char aBuf[32];
-	if(!FormatScore(aBuf, sizeof(aBuf)))
+	if(!m_HasFormattedPoints)
 		return 0.0f;
 
-	return TextRender()->TextWidth(m_FontSize, aBuf);
+	return TextRender()->TextWidth(m_FontSize, m_aFormattedPoints);
 }
 
 void CStatusBar::ScoreRender()
 {
-	char aBuf[32];
-	if(!FormatScore(aBuf, sizeof(aBuf)))
+	if(!m_HasFormattedPoints)
 		return;
 
-	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
+	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, m_aFormattedPoints);
 }
 
-bool CStatusBar::FormatScore(char *pBuf, int BufSize)
+void CStatusBar::UpdateFormattedPoints()
 {
+	m_HasFormattedPoints = false;
+	m_aFormattedPoints[0] = '\0';
 	if(m_PlayerId < 0 || m_PlayerId >= MAX_CLIENTS)
-		return false;
+		return;
 
-	const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId];
-	if(!pInfo)
-		return false;
+	if(!GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
+		return;
 
-	const CGameClient::CClientData &ClientData = GameClient()->m_aClients[m_PlayerId];
-	const bool Race7 = Client()->IsSixup() && (GameClient()->m_Snap.m_pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE);
-	tclient_statusbar::FormatScore(pBuf, BufSize, pInfo->m_Score, Race7, GameClient()->m_GameInfo.m_TimeScore,
-		GameClient()->m_ReceivedDDNetPlayerFinishTimes, ClientData.m_FinishTimeSeconds, ClientData.m_FinishTimeMillis);
-	return pBuf[0] != '\0';
+	const char *pPlayerName = GameClient()->m_aClients[m_PlayerId].m_aName;
+	if(pPlayerName[0] == '\0')
+		return;
+
+	GameClient()->m_PlayerPoints.EnsureQueried(pPlayerName);
+	const SPlayerPointsResult Points = GameClient()->m_PlayerPoints.GetPoints(pPlayerName);
+	m_HasFormattedPoints = tclient_statusbar::FormatPlayerPoints(m_aFormattedPoints, sizeof(m_aFormattedPoints), Points.m_Status, Points.m_Points);
 }
 
 float CStatusBar::DownstreamWidth()
@@ -483,6 +484,9 @@ void CStatusBar::OnRender()
 	m_PlayerId = GameClient()->m_Snap.m_LocalClientId;
 	if(GameClient()->m_Snap.m_SpecInfo.m_Active)
 		m_PlayerId = GameClient()->m_Snap.m_SpecInfo.m_SpectatorId;
+	m_HasFormattedPoints = false;
+	if(std::find(m_StatusBarItems.begin(), m_StatusBarItems.end(), &m_Score) != m_StatusBarItems.end())
+		UpdateFormattedPoints();
 
 	UpdateStatusBarSize();
 

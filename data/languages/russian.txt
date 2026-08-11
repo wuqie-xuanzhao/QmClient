@@ -716,9 +716,6 @@ Animation
 Animation duration
 == Длительность анимации
 
-Animation probability
-== Вероятность анимации
-
 Animation range
 == Диапазон анимации
 
@@ -1178,6 +1175,9 @@ Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 == Автоматический скриншот таблицы результатов при завершении игры
 
+Automatic updates
+== Автоматические обновления
+
 Automatic updates are only supported on Windows
 == Автоматические обновления поддерживаются только на Windows
 
@@ -1186,6 +1186,9 @@ Automatically adds voting options for all maps
 
 Automatically ban blacklisted addresses
 == Автоматически банить адреса из чёрного списка
+
+Automatically check for stable updates and install them on exit
+== Automatically check for stable updates and install them on exit
 
 Automatically close the current chat after waking from freeze
 == Автоматически закрывать текущий чат после пробуждения от заморозки
@@ -3026,6 +3029,9 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == Показывать упреждение предсказания клиента
 
+Displays the DDNet Points of the current player
+== Показывать очки DDNet текущего игрока
+
 Displays the game connection round-trip time
 == Показывать время кругового обхода игрового соединения
 
@@ -3040,9 +3046,6 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == Показывает текущий угол в градусах
-
-Displays your current score
-== Показывает ваш текущий счет
 
 Displays your frames per second
 == Показывает кадры в секунду
@@ -3574,6 +3577,12 @@ Enable FTAPI auto-translate (may overload the service)
 
 Enable game sounds
 == Включить звуки игры
+
+Enable Gaussian blur
+== Включить размытие по Гауссу
+
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
+== Включить размытие по Гауссу для полупрозрачного интерфейса и выбранных фонов HUD
 
 Enable ghost
 == Включить призрак
@@ -5273,6 +5282,9 @@ Insane
 Interface
 == Интерфейс
 
+Interface accent color
+== Акцентный цвет интерфейса
+
 Interface animations
 == Анимации интерфейса
 
@@ -6322,6 +6334,9 @@ Message color
 
 Message displayed to players on join.
 == Сообщение, отображаемое игрокам при входе.
+
+Message merging
+== Объединение сообщений
 
 Message to reply when game minimized
 == Сообщение для ответа при свёрнутой игре
@@ -7513,6 +7528,9 @@ Pistol
 
 Plasma gun shots per second
 == Выстрелов плазменной пушки в секунду
+
+Play a flip animation while reloading weapons
+== Play a flip animation while reloading weapons
 
 Play a slide-in rotation animation when switching weapons
 == Воспроизводить анимацию вращения при смене оружия
@@ -9187,6 +9205,9 @@ Selected candidate
 
 Selected candidate %d/%d under cursor.
 == Выбран кандидат %d/%d под курсором.
+
+Selected item color
+== Цвет выбранного элемента
 
 Selected server
 == Выбранный сервер
@@ -12032,6 +12053,12 @@ Update a rcon key with prehashed data
 Update failed. Please try again
 == Обновление не удалось. Пожалуйста, попробуйте снова
 
+Update finished. Please restart the client
+== Обновление завершено. Пожалуйста, перезапустите клиент
+
+Update finished. Restarting...
+== Обновление завершено. Перезапуск...
+
 Update notice
 == Обновить уведомление
 
@@ -12487,6 +12514,9 @@ Weapon interaction range
 
 Weapon range color
 == Цвет диапазона оружия
+
+Weapon reload animation probability
+== Weapon reload animation probability
 
 Weapon switch animation
 == Анимация смены оружия

@@ -2102,8 +2102,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				{
 					DragTarget = -1;
 				}
-				auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
-
 				s_QueueListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
 				s_QueueListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_INNER);
 				s_QueueListBox.SetScrollbarAlwaysReserved(true);
@@ -2116,6 +2114,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					{
 						continue;
 					}
+					auto GaussianBlurSuppression = Item.SuppressGaussianBlur();
 
 					LastVisible = (int)i;
 					LastVisibleRect = Item.m_Rect;
@@ -3736,7 +3735,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
-	const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight});
+	const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
 	const float GraphicsIconsContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsIconsMinCardHeight = IconsChromeHeight + GraphicsIconsContentHeight;
@@ -4054,6 +4053,20 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			if(DoLine_AlphaColorPicker(&s_UiColorResetId, ColorMetrics, &UiColorRow, Localize("Interface surface"), &g_Config.m_QmUiColor, &g_Config.m_QmUiOpacity, DefaultConfig::QmUiColor, DefaultConfig::QmUiOpacity))
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
+			static CButtonContainer s_UiAccentColorResetId;
+			const unsigned OldUiAccentColor = g_Config.m_QmUiAccentColor;
+			CUIRect UiAccentColorRow = Rows.NextButton();
+			DoLine_ColorPicker(&s_UiAccentColorResetId, ColorMetrics, &UiAccentColorRow, Localize("Interface accent color"), &g_Config.m_QmUiAccentColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiAccentColor)), false, nullptr, false);
+			if(OldUiAccentColor != g_Config.m_QmUiAccentColor)
+				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+			static CButtonContainer s_UiSelectedColorResetId;
+			const unsigned OldUiSelectedColor = g_Config.m_QmUiSelectedColor;
+			CUIRect UiSelectedColorRow = Rows.NextButton();
+			DoLine_ColorPicker(&s_UiSelectedColorResetId, ColorMetrics, &UiSelectedColorRow, Localize("Selected item color"), &g_Config.m_QmUiSelectedColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiSelectedColor)), false, nullptr, false);
+			if(OldUiSelectedColor != g_Config.m_QmUiSelectedColor)
+				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
 			static CButtonContainer s_UiCardColorResetId;
 			CUIRect UiCardColorRow = Rows.NextButton();
 			if(DoLine_AlphaColorPicker(&s_UiCardColorResetId, ColorMetrics, &UiCardColorRow, Localize("Settings card background"), &g_Config.m_QmUiCardColor, &g_Config.m_QmUiCardOpacity, DefaultConfig::QmUiCardColor, DefaultConfig::QmUiCardOpacity))
@@ -4070,6 +4083,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			CUIRect Button = Rows.NextLine();
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmGaussianBlur, "enable-gaussian-blur", Localize("Enable Gaussian blur"), g_Config.m_QmGaussianBlur, &Button))
+				g_Config.m_QmGaussianBlur ^= 1;
+
+			Button = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
 				g_Config.m_QmUiCardBorders ^= 1;
 
@@ -5697,6 +5714,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 
 	{
 		CPerfTimer StageTimer;
+		const ColorRGBA SettingsNavigationSelected = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiSelectedColor)).WithAlpha(0.42f);
+		const ColorRGBA SettingsNavigationHover = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiSelectedColor)).WithAlpha(0.20f);
 		static constexpr int s_aSettingsTabOrder[] = {
 			SETTINGS_GENERAL,
 			SETTINGS_TEE,
@@ -5719,14 +5738,14 @@ void CMenus::RenderSettings(CUIRect MainView)
 			{
 				TabBar.HSplitTop(ui_token::settings::TAB_GAP, nullptr, &TabBar);
 				TabBar.HSplitTop(ui_token::settings::TAB_HEIGHT, &Button, &TabBar);
-				if(DoButton_MenuTab(&m_aSettingsTabButtons[i], m_apSettingsTabs[i], Active, &Button, IGraphics::CORNER_ALL, &m_aAnimatorsSettingsTab[i], nullptr, nullptr, nullptr, 10.0f, nullptr, &m_aSettingsTabLabelElements[i]))
+				if(DoButton_MenuTab(&m_aSettingsTabButtons[i], m_apSettingsTabs[i], Active, &Button, IGraphics::CORNER_ALL, &m_aAnimatorsSettingsTab[i], nullptr, &SettingsNavigationSelected, &SettingsNavigationHover, 10.0f, nullptr, &m_aSettingsTabLabelElements[i]))
 					g_Config.m_UiSettingsPage = i;
 				if(Active)
 				{
 					CUIRect Accent = Button;
 					Accent.VSplitLeft(3.0f, &Accent, nullptr);
 					Accent.HMargin(5.0f, &Accent);
-					Accent.Draw(ui_token::color::ACCENT_PRIMARY, IGraphics::CORNER_ALL, 2.0f);
+					Accent.Draw(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiAccentColor)), IGraphics::CORNER_ALL, 2.0f);
 				}
 			}
 			else

@@ -643,6 +643,8 @@ private:
 	IGraphics::CRenderTargetHandle m_GaussianBlurTarget;
 	int m_GaussianBlurWidth = 0;
 	int m_GaussianBlurHeight = 0;
+	bool m_GaussianBlurPrepared = false;
+	uint64_t m_GaussianBlurPreparedFrame = 0;
 
 	const void *m_pHotItem = nullptr;
 	const void *m_pActiveItem = nullptr;

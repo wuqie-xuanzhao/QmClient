@@ -652,8 +652,8 @@ namespace
 
 	TEST(UiTheme, RuntimeThemeTracksBaseColorAndOpacity)
 	{
-		const SUiTheme Blue = ResolveUiTheme(ColorHSLA(0.60f, 0.75f, 0.45f, 1.0f), 1.0f);
-		const SUiTheme RedHalf = ResolveUiTheme(ColorHSLA(0.00f, 0.75f, 0.45f, 1.0f), 0.5f);
+		const SUiTheme Blue = ResolveUiTheme(ColorHSLA(0.60f, 0.75f, 0.45f, 1.0f), 1.0f, ColorHSLA(0.60f, 0.78f, 0.52f, 1.0f), ColorHSLA(0.60f, 0.75f, 0.45f, 1.0f));
+		const SUiTheme RedHalf = ResolveUiTheme(ColorHSLA(0.00f, 0.75f, 0.45f, 1.0f), 0.5f, ColorHSLA(0.60f, 0.78f, 0.52f, 1.0f), ColorHSLA(0.00f, 0.75f, 0.45f, 1.0f));
 		EXPECT_NE(Blue.m_Accent.r, RedHalf.m_Accent.r);
 		EXPECT_NE(Blue.m_Accent.b, RedHalf.m_Accent.b);
 		EXPECT_LT(RedHalf.m_Surface.a, Blue.m_Surface.a);

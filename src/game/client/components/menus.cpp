@@ -526,7 +526,7 @@ CMenus::CMenus()
 
 IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 {
-	m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));
+	m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor), ColorHSLA(g_Config.m_QmUiAccentColor), ColorHSLA(g_Config.m_QmUiSelectedColor));
 	IUiContext Context;
 	Context.m_pUi = Ui();
 	Context.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
@@ -1108,6 +1108,8 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 		ColorRGBA ColorMenuTab = ms_ColorTabbarActive;
 		if(pActiveColor)
 			ColorMenuTab = *pActiveColor;
+		else if(g_Config.m_QmNewUi)
+			ColorMenuTab = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiSelectedColor)).WithAlpha(0.42f);
 
 		DrawRoundedSurface(Ui(), *pRect, ColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 	}
@@ -1118,6 +1120,8 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 			ColorRGBA HoverColorMenuTab = ms_ColorTabbarHover;
 			if(pHoverColor)
 				HoverColorMenuTab = *pHoverColor;
+			else if(g_Config.m_QmNewUi)
+				HoverColorMenuTab = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiSelectedColor)).WithAlpha(0.20f);
 
 			DrawRoundedSurface(Ui(), *pRect, HoverColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 		}
@@ -1360,6 +1364,7 @@ void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CU
 
 int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags, CUIElement *pLabelElement, const bool ProcessInput, const float LabelFontSize)
 {
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
 	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
 	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
@@ -1404,6 +1409,7 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 	}
 
 	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	const bool FixedFontSize = LabelFontSize > 0.0f;
 	const float FontSize = LabelFontSize > 0.0f ? LabelFontSize : Box.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
@@ -1431,7 +1437,7 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const 
 	return DoSettingsButton_CheckBox(Page, Tab, -1, pId, pTextId, pText, Checked, pRect);
 }
 
-int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, float FontSize)
+int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)
 {
 	SLabelProperties Props;
 	return DoSettingsButton_CheckBox(Page, Tab, Subtab, pId, pTextId, pText, Checked, pRect, Props);
@@ -1448,6 +1454,22 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	if(pTextId == nullptr)
 	{
 		return DoButton_CheckBox_Common_WithLabelElement(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, nullptr, ProcessInput, BodySize);
+	}
+	if(g_Config.m_QmNewUi)
+	{
+		CUIRect Label, ToggleRect;
+		pRect->VSplitRight(std::max(pRect->h * 1.65f, 30.0f), &Label, &ToggleRect);
+		Label.VSplitRight(8.0f, &Label, nullptr);
+		SLabelProperties Props = LabelProps;
+		Props.m_MaxWidth = Label.w;
+		DoSettingsMenuLabel(Page, Tab, Subtab, pTextId, &Label, pText, BodySize, TEXTALIGN_ML, Props);
+		if(m_MenuTextPlanCollecting)
+			return 0;
+
+		bool ToggleValue = Checked != 0;
+		IUiContext Context = SettingsUiContext("settings-switch", CurrentSettingsContentMetrics().m_UiScale);
+		ui_widget::Toggle(Context, pId, &ToggleValue, ToggleRect, false, ProcessInput);
+		return ProcessInput ? Ui()->DoButtonLogic(pId, 0, pRect, BUTTONFLAG_LEFT) : 0;
 	}
 	CUIRect Box, Label;
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
@@ -1547,7 +1569,6 @@ int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContaine
 		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, nullptr, ResolvedBodySize);
 	}
 	CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
-	FontSize = FixedFontSize ? FontSize : Text.h * CUi::ms_FontmodHeight;
 	SLabelProperties Props;
 	Props.m_MaxWidth = Text.w;
 	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, ResolvedBodySize, TEXTALIGN_MC, Props);
@@ -1565,9 +1586,9 @@ int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContaine
 	return DoSettingsButton_Menu(Page, Tab, Subtab, pBC, pTextId, pText, Checked, pRect, Flags, Corners, Rounding, Color, FontFactor, Metrics.m_BodySize);
 }
 
-bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText, float FontSize)
+bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
 {
-	return DoSettingsScrollbarOption(Page, Tab, -1, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText, FontSize);
+	return DoSettingsScrollbarOption(Page, Tab, -1, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
 }
 
 bool CMenus::PrepareSettingsNumericFieldLabel(int Page, int Tab, int Subtab, const char *pTextId, const CUIRect &Rect, const char *pLabel, unsigned Flags, ui_widget::SNumericFieldOptions &Options)
@@ -4959,7 +4980,7 @@ void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsSc
 CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 {
 	SQmSettingsCardStyle Style;
-	const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor));
+	const SUiTheme Theme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f, ColorHSLA(g_Config.m_QmUiFocusColor), ColorHSLA(g_Config.m_QmUiAccentColor), ColorHSLA(g_Config.m_QmUiSelectedColor));
 	const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale, &Theme);
 	const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);
 	Style.m_Padding = CardProps.m_Padding;

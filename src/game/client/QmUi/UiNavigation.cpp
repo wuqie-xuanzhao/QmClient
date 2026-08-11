@@ -66,7 +66,7 @@ namespace ui_widget
 		Indicator.y = Underline.y;
 		Indicator.w = TabWidth * 0.70f;
 		Indicator.h = Underline.h;
-		Indicator.Draw(ui_token::color::ACCENT_PRIMARY, IGraphics::CORNER_NONE, 0.0f);
+		Indicator.Draw(Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY, IGraphics::CORNER_NONE, 0.0f);
 
 		return *pActive;
 	}
@@ -79,7 +79,7 @@ namespace ui_widget
 
 		// Background: selected first, then hover blend on top.
 		if(Props.m_Selected)
-			Rect.Draw(ui_token::color::ACCENT_PRIMARY_DIM, IGraphics::CORNER_ALL, ui_token::radius::TIGHT);
+			Rect.Draw(Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Selected : ui_token::color::ACCENT_PRIMARY_DIM, IGraphics::CORNER_ALL, ui_token::radius::TIGHT);
 
 		if(Ctx.m_pAnim != nullptr)
 		{

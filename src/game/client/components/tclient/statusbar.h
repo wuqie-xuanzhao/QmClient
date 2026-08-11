@@ -7,41 +7,31 @@
 #include <engine/shared/protocol.h>
 
 #include <game/client/component.h>
+#include <game/client/components/player_points.h>
 
 #include <algorithm>
 
 namespace tclient_statusbar
 {
-	inline void FormatScore(char *pBuf, int BufSize, int Score, bool Race7, bool TimeScore, bool HasFinishTime, int FinishTimeSeconds, int FinishTimeMillis)
+	inline bool FormatPlayerPoints(char *pBuf, int BufSize, EPointsStatus Status, int Points)
 	{
 		if(BufSize <= 0)
-			return;
+			return false;
 
-		const int64_t ScoreMagnitude = Score < 0 ? -(int64_t)Score : Score;
-		if(Race7)
+		switch(Status)
 		{
-			if(Score == FinishTime::NOT_FINISHED_MILLIS)
-				pBuf[0] = '\0';
-			else
-				str_time(ScoreMagnitude / 10, TIME_MINS_CENTISECS, pBuf, BufSize);
+		case EPointsStatus::READY:
+			str_format(pBuf, BufSize, "%d", Points);
+			return true;
+		case EPointsStatus::NOT_REQUESTED:
+		case EPointsStatus::FETCHING:
+			str_copy(pBuf, "...", BufSize);
+			return true;
+		case EPointsStatus::FAILED:
+			str_copy(pBuf, "?", BufSize);
+			return true;
 		}
-		else if(TimeScore)
-		{
-			if(HasFinishTime && FinishTimeSeconds != FinishTime::NOT_FINISHED_MILLIS)
-			{
-				const int64_t SecondsMagnitude = FinishTimeSeconds < 0 ? -(int64_t)FinishTimeSeconds : FinishTimeSeconds;
-				const int64_t MillisMagnitude = FinishTimeMillis < 0 ? -(int64_t)FinishTimeMillis : FinishTimeMillis;
-				str_time((SecondsMagnitude * 1000 + MillisMagnitude % 1000) / 10, TIME_HOURS, pBuf, BufSize);
-			}
-			else if(Score != FinishTime::NOT_FINISHED_TIMESCORE)
-				str_time(ScoreMagnitude * 100, TIME_HOURS, pBuf, BufSize);
-			else
-				pBuf[0] = '\0';
-		}
-		else
-		{
-			str_format(pBuf, BufSize, "%d", std::clamp(Score, -999, 99999));
-		}
+		return false;
 	}
 }
 
@@ -94,7 +84,7 @@ public:
 	CStatusItem m_Zoom = CStatusItem([this] { ZoomRender(); }, [this] { return ZoomWidth(); },
 		"z", "Zoom", "", "Displays current zoom value");
 	CStatusItem m_Score = CStatusItem([this] { ScoreRender(); }, [this] { return ScoreWidth(); },
-		"s", "Score", "", "Displays your current score");
+		"s", "Points", "Points", "Displays the DDNet Points of the current player");
 	CStatusItem m_Downstream = CStatusItem([this] { DownstreamRender(); }, [this] { return DownstreamWidth(); },
 		"u", "Round-trip time", "RTT", "Displays the game connection round-trip time");
 	CStatusItem m_Upstream = CStatusItem([this] { UpstreamRender(); }, [this] { return UpstreamWidth(); },
@@ -134,6 +124,8 @@ private:
 	float m_CursorX, m_CursorY, m_BarX = 0.0f, m_BarY;
 	float m_Width, m_Height;
 	float m_BarHeight, m_Margin;
+	char m_aFormattedPoints[32] = {};
+	bool m_HasFormattedPoints = false;
 
 	int m_CurrentRaceTime = 0;
 	float GetDurationWidth(int Duration);
@@ -167,7 +159,7 @@ private:
 
 	float ScoreWidth();
 	void ScoreRender();
-	bool FormatScore(char *pBuf, int BufSize);
+	void UpdateFormattedPoints();
 
 	float DownstreamWidth();
 	void DownstreamRender();

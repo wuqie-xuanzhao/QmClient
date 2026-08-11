@@ -716,9 +716,6 @@ Animation
 Animation duration
 == アニメーションの持続時間
 
-Animation probability
-== アニメーションの出現確率
-
 Animation range
 == アニメーションの範囲
 
@@ -1178,6 +1175,9 @@ Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 == ゲーム終了時の自動スコアボードスクリーンショット
 
+Automatic updates
+== 自動更新
+
 Automatic updates are only supported on Windows
 == 自動更新は Windows のみ対応
 
@@ -1186,6 +1186,9 @@ Automatically adds voting options for all maps
 
 Automatically ban blacklisted addresses
 == ブラックリストに登録されたアドレスを自動的に禁止
+
+Automatically check for stable updates and install them on exit
+== Automatically check for stable updates and install them on exit
 
 Automatically close the current chat after waking from freeze
 == フリーズ解除後に現在のチャットを自動的に閉じる
@@ -3026,6 +3029,9 @@ Displays prediction timing jitter
 Displays the client's prediction lead
 == クライアントの予測先行時間を表示
 
+Displays the DDNet Points of the current player
+== 現在のプレイヤーのDDNetポイントを表示
+
 Displays the game connection round-trip time
 == ゲーム接続の往復時間を表示
 
@@ -3040,9 +3046,6 @@ Displays X and Y velocity
 
 Displays your current angle in degrees
 == 現在の角度（度）を表示
-
-Displays your current score
-== 現在のスコアを表示
 
 Displays your frames per second
 == フレームレートを表示
@@ -3574,6 +3577,12 @@ Enable FTAPI auto-translate (may overload the service)
 
 Enable game sounds
 == ゲームサウンドを有効化
+
+Enable Gaussian blur
+== ガウスぼかしを有効化
+
+Enable Gaussian blur for translucent interface and selected HUD backgrounds
+== 半透明インターフェースと選択した HUD 背景にガウスぼかしを有効化
 
 Enable ghost
 == ゴーストを有効化
@@ -4466,9 +4475,6 @@ Gap between statusbar items
 Gap between tee and nametag
 == Tee とネームタグの間のギャップ
 
-Gaussian blur
-== ガウスぼかし
-
 General
 == 一般
 
@@ -5275,6 +5281,9 @@ Insane
 
 Interface
 == インターフェース
+
+Interface accent color
+== インターフェースのアクセントカラー
 
 Interface animations
 == インターフェースアニメーション
@@ -6325,6 +6334,9 @@ Message color
 
 Message displayed to players on join.
 == 参加時にプレイヤーに表示されるメッセージ
+
+Message merging
+== メッセージの統合
 
 Message to reply when game minimized
 == ゲーム最小化時に返信するメッセージ
@@ -7516,6 +7528,9 @@ Pistol
 
 Plasma gun shots per second
 == プラズマガンの毎秒発射数
+
+Play a flip animation while reloading weapons
+== Play a flip animation while reloading weapons
 
 Play a slide-in rotation animation when switching weapons
 == 武器切り替え時にスライドイン回転アニメーションを再生
@@ -9190,6 +9205,9 @@ Selected candidate
 
 Selected candidate %d/%d under cursor.
 == カーソル下の候補 %d/%d が選択されました。
+
+Selected item color
+== 選択項目の色
 
 Selected server
 == 選択したサーバー
@@ -12496,6 +12514,9 @@ Weapon interaction range
 
 Weapon range color
 == 武器範囲の色
+
+Weapon reload animation probability
+== Weapon reload animation probability
 
 Weapon switch animation
 == 武器切り替えアニメーション
