@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 3.12...3.27.4)
 
-set(DEFAULT_MACOS_DEPLOYMENT_TARGET "10.15")
-if(APPLE)
-  set(DEFAULT_MACOS_DEPLOYMENT_TARGET "26.0")
-endif()
-set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version" FORCE)
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.15)
-  message(WARNING "Building for macOS < 10.15 is not supported")
+set(DEFAULT_MACOS_DEPLOYMENT_TARGET "11.0")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version")
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 11.0)
+  message(WARNING "Building for macOS < 11.0 is not supported")
 endif()
 
 file(STRINGS src/game/version.h VERSION_LINE

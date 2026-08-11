@@ -154,7 +154,7 @@ How to build the DDNet client for Android
 	- The fifth parameter denotes the build folder.
 -	Example to build only for `x86_64` architecture in debug mode:
 	```shell
-	scripts/android/cmake_android.sh x86_64 DDNet org.ddnet.client Debug build-android-debug
+	scripts/android/cmake_android.sh x86_64 QmClient com.qmclient.client Debug build-android-debug
 	```
 -	To build a signed APK, generate a signing key and export environment variables before running the build script:
 	```shell
@@ -180,7 +180,7 @@ How to build the DDNet client for Android
 	export TW_KEY_PW=mypassword
 	export TW_KEY_ALIAS=Teeworlds-Key
 	# Version code and name will be determined automatically
-	scripts/android/cmake_android.sh all DDNet org.ddnet.client Release build-android-release
+	scripts/android/cmake_android.sh all QmClient com.qmclient.client Release build-android-release
 	```
 -	Note that you should only generate a signing key once (and make backups).
 	Users can only update apps automatically if the same package name and signing key have been used,

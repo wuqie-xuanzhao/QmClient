@@ -85,13 +85,20 @@ export TW_KEY_NAME="${DEFAULT_KEY_NAME}"
 export TW_KEY_PW=$DEFAULT_KEY_PW
 export TW_KEY_ALIAS=$DEFAULT_KEY_ALIAS
 
+QMCLIENT_VERSION=$(awk '/^#define QMCLIENT_VERSION / {gsub(/"/, "", $3); print $3; exit}' src/game/version.h)
+if [[ ! "${QMCLIENT_VERSION}" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+	log_error "Could not parse QMCLIENT_VERSION from src/game/version.h"
+	exit 1
+fi
+
+IFS='.' read -r QMCLIENT_VERSION_MAJOR QMCLIENT_VERSION_MINOR QMCLIENT_VERSION_PATCH <<< "${QMCLIENT_VERSION}"
+QMCLIENT_VERSION_PATCH=${QMCLIENT_VERSION_PATCH:-0}
+QMCLIENT_VERSION_CODE=$((10#${QMCLIENT_VERSION_MAJOR} * 1000000 + 10#${QMCLIENT_VERSION_MINOR} * 1000 + 10#${QMCLIENT_VERSION_PATCH}))
+
 ANDROID_VERSION_CODE=1
 if [ -z ${TW_VERSION_CODE+x} ]; then
-	ANDROID_VERSION_CODE=$(grep '#define DDNET_VERSION_NUMBER' src/game/version.h | awk '{print $3}')
-	if [ -z ${ANDROID_VERSION_CODE+x} ]; then
-		ANDROID_VERSION_CODE=1
-	fi
-	log_warn "Did not pass a version code, using default: ${ANDROID_VERSION_CODE}"
+	ANDROID_VERSION_CODE=${QMCLIENT_VERSION_CODE}
+	log_warn "Did not pass a version code, using QmClient version: ${ANDROID_VERSION_CODE}"
 else
 	ANDROID_VERSION_CODE=$TW_VERSION_CODE
 fi
@@ -100,11 +107,8 @@ export TW_VERSION_CODE=$ANDROID_VERSION_CODE
 
 ANDROID_VERSION_NAME="1.0"
 if [ -z ${TW_VERSION_NAME+x} ]; then
-	ANDROID_VERSION_NAME="$(grep '#define GAME_RELEASE_VERSION_INTERNAL' src/game/version.h | awk '{print $3}')"
-	if [ -z ${ANDROID_VERSION_NAME+x} ]; then
-		ANDROID_VERSION_NAME="1.0"
-	fi
-	log_warn "Did not pass a version name, using default: ${ANDROID_VERSION_NAME}"
+	ANDROID_VERSION_NAME="${QMCLIENT_VERSION}"
+	log_warn "Did not pass a version name, using QmClient version: ${ANDROID_VERSION_NAME}"
 else
 	ANDROID_VERSION_NAME=$TW_VERSION_NAME
 fi

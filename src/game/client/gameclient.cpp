@@ -1858,7 +1858,7 @@ bool CGameClient::TryLoadQmLiveDemoSidecar()
 		dbg_msg("qmlive_demo", "ignored invalid QmLive replay sidecar '%s': %s; using normal demo playback", aSidecarPath, aError);
 		return false;
 	}
-	if(!CLiveReplaySidecar::MatchesDemo(Sidecar, pDemoFilename, Client()->GetCurrentMap(), Client()->GetCurrentMapSha256(), Client()->GetCurrentMapCrc()))
+	if(!CLiveReplaySidecar::MatchesDemo(Sidecar, pDemoFilename, Client()->GetCurrentMap(), Map()->Sha256(), Map()->Crc()))
 	{
 		dbg_msg("qmlive_demo", "ignored non-matching QmLive replay sidecar '%s' for demo '%s'; using normal demo playback", aSidecarPath, pDemoFilename);
 		return false;
@@ -2475,7 +2475,7 @@ bool CGameClient::TryRebuildLiveFinishRankingFromSidecar(int CurrentTick)
 		dbg_msg("qmlive_rank", "ignored damaged finish ranking sidecar '%s': %s", aSidecarPath, aError);
 		return false;
 	}
-	if(!CLiveReplaySidecar::MatchesDemo(Sidecar, pDemoFilename, Client()->GetCurrentMap(), Client()->GetCurrentMapSha256(), Client()->GetCurrentMapCrc()))
+	if(!CLiveReplaySidecar::MatchesDemo(Sidecar, pDemoFilename, Client()->GetCurrentMap(), Map()->Sha256(), Map()->Crc()))
 	{
 		dbg_msg("qmlive_rank", "ignored non-matching finish ranking sidecar '%s'", aSidecarPath);
 		return false;
