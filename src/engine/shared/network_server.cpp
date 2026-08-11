@@ -1118,6 +1118,8 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 
 int CNetServer::Send(CNetChunk *pChunk)
 {
+	pChunk->AssertSizeSanity();
+
 	if(pChunk->m_Flags & NETSENDFLAG_CONNLESS)
 		return SendLegacy(pChunk);
 	return SendClient(pChunk);
@@ -1193,12 +1195,6 @@ int CNetServer::SendClient(CNetChunk *pChunk)
 
 int CNetServer::SendLegacy(CNetChunk *pChunk)
 {
-	if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
-	{
-		dbg_msg("netserver", "packet payload too big. %d. dropping packet", pChunk->m_DataSize);
-		return -1;
-	}
-
 	if(pChunk->m_Flags & NETSENDFLAG_CONNLESS)
 	{
 		// send connectionless packet
@@ -1227,7 +1223,7 @@ int CNetServer::SendLegacy(CNetChunk *pChunk)
 
 int CNetServer::SendLegacyBypass(CNetChunk *pChunk)
 {
-	if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
+	if(pChunk->m_DataSize > NET_MAX_CHUNK_SIZE)
 	{
 		dbg_msg("netserver", "packet payload too big. %d. dropping packet", pChunk->m_DataSize);
 		return -1;
