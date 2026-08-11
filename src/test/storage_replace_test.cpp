@@ -77,7 +77,7 @@ TEST(StorageReplace, ExistingBackupDoesNotDamagePreviousFile)
 	EXPECT_EQ(ReadStorageFile(pStorage.get(), "temp.txt.backup"), "occupied");
 }
 
-TEST(ConfigMigration, KeepsTClientFilesAndSharedDdnetConfigInPlace)
+TEST(ConfigMigration, KeepsOtherClientsConfigsAndArchivesOnlyQmClientLegacyConfig)
 {
 	CTestInfo Info;
 	std::unique_ptr<IStorage> pStorage = Info.CreateTestStorage();
@@ -87,6 +87,7 @@ TEST(ConfigMigration, KeepsTClientFilesAndSharedDdnetConfigInPlace)
 	for(ConfigDomain Domain = ConfigDomain::START; Domain < ConfigDomain::NUM; ++Domain)
 		WriteStorageFile(pStorage.get(), s_aConfigDomains[Domain].m_aConfigPath, "canonical\n");
 	WriteStorageFile(pStorage.get(), "settings_ddnet.cfg", "bind x say shared\n");
+	WriteStorageFile(pStorage.get(), "settings_qmclient.cfg", "qm_fast_input 1\n");
 	WriteStorageFile(pStorage.get(), "settings_tclient.cfg", "tc_fast_input 1\n");
 	WriteStorageFile(pStorage.get(), "tclient_chatbinds.cfg", "chatbind 1 say untouched\n");
 	WriteStorageFile(pStorage.get(), "tclient_profiles.cfg", "profile untouched\n");
@@ -94,22 +95,26 @@ TEST(ConfigMigration, KeepsTClientFilesAndSharedDdnetConfigInPlace)
 
 	ASSERT_TRUE(QmFinalizeConfigMigration(pStorage.get()));
 	EXPECT_EQ(ReadStorageFile(pStorage.get(), "settings_ddnet.cfg"), "bind x say shared\n");
+	EXPECT_EQ(ReadStorageFile(pStorage.get(), "settings_qmclient.cfg"), "qm_fast_input 1\n");
 	EXPECT_EQ(ReadStorageFile(pStorage.get(), "settings_tclient.cfg"), "tc_fast_input 1\n");
 	EXPECT_EQ(ReadStorageFile(pStorage.get(), "tclient_chatbinds.cfg"), "chatbind 1 say untouched\n");
 	EXPECT_EQ(ReadStorageFile(pStorage.get(), "tclient_profiles.cfg"), "profile untouched\n");
 	EXPECT_EQ(ReadStorageFile(pStorage.get(), "tclient_warlist.cfg"), "warlist untouched\n");
 	EXPECT_EQ(ReadStorageFile(pStorage.get(), "qmclient/migration_backup_v2/settings_ddnet.cfg"), "bind x say shared\n");
+	EXPECT_EQ(ReadStorageFile(pStorage.get(), "qmclient/migration_backup_v2/settings_qmclient.cfg"), "qm_fast_input 1\n");
 	EXPECT_FALSE(pStorage->FileExists("qmclient/migration_backup_v2/settings_tclient.cfg", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->FileExists("qmclient/config_migration_v2.done", IStorage::TYPE_SAVE));
 
 	for(ConfigDomain Domain = ConfigDomain::START; Domain < ConfigDomain::NUM; ++Domain)
 		EXPECT_TRUE(pStorage->RemoveFile(s_aConfigDomains[Domain].m_aConfigPath, IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFile("settings_ddnet.cfg", IStorage::TYPE_SAVE));
+	EXPECT_TRUE(pStorage->RemoveFile("settings_qmclient.cfg", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFile("settings_tclient.cfg", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFile("tclient_chatbinds.cfg", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFile("tclient_profiles.cfg", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFile("tclient_warlist.cfg", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFile("qmclient/migration_backup_v2/settings_ddnet.cfg", IStorage::TYPE_SAVE));
+	EXPECT_TRUE(pStorage->RemoveFile("qmclient/migration_backup_v2/settings_qmclient.cfg", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFile("qmclient/config_migration_v2.done", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFolder("qmclient/migration_backup_v2", IStorage::TYPE_SAVE));
 	EXPECT_TRUE(pStorage->RemoveFolder("qmclient", IStorage::TYPE_SAVE));
