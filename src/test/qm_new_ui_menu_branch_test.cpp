@@ -4192,12 +4192,16 @@ TEST(QmNewUiMenuBranches, VulkanSelectionKeepsCompatibilityAndHighestTiersSepara
 	const std::string GraphicsThreadedSource = ReadTextFile("src/engine/client/graphics_threaded.cpp");
 	const std::string VulkanSource = ReadTextFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string ClampDriverVersion = FunctionBody(BackendSource, "void CGraphicsBackend_SDL_GL::ClampDriverVersion(");
 	const std::string DriverVersions = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDriverVersion(");
 	const std::string CreateInstance = FunctionBody(VulkanSource, "bool CreateVulkanInstance(");
 	const std::string SelectGpu = FunctionBody(VulkanSource, "bool SelectGpu(");
 
 	EXPECT_NE(DriverVersions.find("gs_BackendVulkanMinimumVersion"), std::string::npos);
 	EXPECT_NE(DriverVersions.find("gs_BackendVulkanMaximumVersion"), std::string::npos);
+	EXPECT_EQ(ClampDriverVersion.find("NormalizeRequestedVulkanVersion"), std::string::npos);
+	EXPECT_EQ(ClampDriverVersion.find("g_Config.m_GfxGLMajor = Version.m_Major"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("const SVulkanVersion RequestedVersion = gs_BackendVulkanMinimumVersion;"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("SDL_Vulkan_GetVkGetInstanceProcAddr"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("vkEnumerateInstanceVersion"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("FirstCompatibleDeviceIndex"), std::string::npos);

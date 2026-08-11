@@ -4239,7 +4239,7 @@ public:
 
 	[[nodiscard]] bool ResolveRequestedVulkanApiVersion()
 	{
-		const SVulkanVersion RequestedVersion = NormalizeRequestedVulkanVersion({g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch});
+		const SVulkanVersion RequestedVersion = gs_BackendVulkanMinimumVersion;
 		m_RequestedApiVersion = VK_MAKE_API_VERSION(0, RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch);
 
 		uint32_t LoaderApiVersion = VK_API_VERSION_1_0;

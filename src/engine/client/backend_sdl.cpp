@@ -767,15 +767,6 @@ void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 		g_Config.m_GfxGLPatch = 0;
 #endif
 	}
-	else if(BackendType == BACKEND_TYPE_VULKAN)
-	{
-#if defined(CONF_BACKEND_VULKAN)
-		const SVulkanVersion Version = NormalizeRequestedVulkanVersion({g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch});
-		g_Config.m_GfxGLMajor = Version.m_Major;
-		g_Config.m_GfxGLMinor = Version.m_Minor;
-		g_Config.m_GfxGLPatch = Version.m_Patch;
-#endif
-	}
 }
 
 static Uint32 MessageBoxTypeToSdlFlags(IGraphics::EMessageBoxType Type)
