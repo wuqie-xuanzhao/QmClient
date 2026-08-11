@@ -155,6 +155,47 @@ jobs:
               }
             }
 
+      - name: Cache WebP for Windows
+        if: runner.os == 'Windows'
+        id: cache-webp-windows
+        uses: actions/cache@v5
+        with:
+          path: |
+            ddnet-libs/webp/include
+            ddnet-libs/webp/windows
+          key: webp-windows-v1.6.0-${{ hashFiles('.github/workflows/build.yml') }}
+          restore-keys: webp-windows-v1.6.0-
+
+      - name: Build WebP for Windows
+        if: runner.os == 'Windows' && steps.cache-webp-windows.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK_DIR="$(mktemp -d)"
+          trap 'rm -rf "$WORK_DIR"' EXIT
+
+          git clone --depth 1 --branch v1.6.0 https://chromium.googlesource.com/webm/libwebp "$WORK_DIR/libwebp"
+          cmake -S "$WORK_DIR/libwebp" -B "$WORK_DIR/build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$WORK_DIR/install" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DWEBP_BUILD_ANIM_UTILS=OFF \
+            -DWEBP_BUILD_CWEBP=OFF \
+            -DWEBP_BUILD_DWEBP=OFF \
+            -DWEBP_BUILD_EXTRAS=OFF \
+            -DWEBP_BUILD_GIF2WEBP=OFF \
+            -DWEBP_BUILD_IMG2WEBP=OFF \
+            -DWEBP_BUILD_VWEBP=OFF \
+            -DWEBP_BUILD_WEBPINFO=OFF \
+            -DWEBP_BUILD_WEBPMUX=OFF \
+            -DWEBP_BUILD_WEBP_JS=OFF
+          cmake --build "$WORK_DIR/build" --parallel
+          cmake --install "$WORK_DIR/build"
+
+          mkdir -p ddnet-libs/webp/include ddnet-libs/webp/windows/lib64
+          cp -R "$WORK_DIR/install/include/webp" ddnet-libs/webp/include/
+          cp "$WORK_DIR/install/lib/"*.lib ddnet-libs/webp/windows/lib64/
+
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
