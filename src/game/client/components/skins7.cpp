@@ -535,6 +535,11 @@ void CSkins7::OnReset()
 	ProcessCompletedJobs();
 }
 
+void CSkins7::OnShutdown()
+{
+	m_PendingSkinPartJobs.clear();
+}
+
 void CSkins7::OnUpdate()
 {
 	ProcessCompletedJobs();

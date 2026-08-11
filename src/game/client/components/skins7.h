@@ -123,6 +123,7 @@ public:
 
 	int Sizeof() const override { return sizeof(*this); }
 	void OnInit() override;
+	void OnShutdown() override;
 	void OnUpdate() override;
 	void OnReset() override;
 
