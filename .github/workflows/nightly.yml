@@ -201,7 +201,13 @@ jobs:
           ARGS=(-G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DDOWNLOAD_GTEST=ON -DPython3_EXECUTABLE="${PYTHON_EXECUTABLE}")
           case "$RUNNER_OS" in
             Linux)
-              ARGS+=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
+              # Rust doctests link the C++ bridge through lld. GCC LTO objects
+              # in rust_test are not consumable by that linker.
+              ARGS+=(
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+                -DIPO=OFF
+              )
               ;;
             macOS)
               SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"

@@ -280,8 +280,8 @@ log_info "Preparing gradle build..."
 
 rm -R -f src/main/java/org
 mkdir -p src/main/java
-cp -R ../scripts/android/files/java/org src/main/java/
-cp -R ../ddnet-libs/sdl/java/org src/main/java/
+cp -R ../scripts/android/files/java/org/. src/main/java/org/
+cp -R ../ddnet-libs/sdl/java/org/. src/main/java/org/
 
 # shellcheck disable=SC1091
 source ./build.sh "$GAME_NAME" "$PACKAGE_NAME" "$BUILD_TYPE"

@@ -4019,6 +4019,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/settings_resource_jobs.cpp
     src/game/client/components/settings_warmup.cpp
     src/game/client/ui_rect.cpp
+    src/game/client/QmUi/UiSurface.cpp
+    src/test/ui_rect_test_helpers.cpp
     src/game/client/QmUi/QmAnim.cpp
     src/game/client/QmUi/QmAnimResolve.cpp
     src/game/client/QmUi/QmLayout.cpp
