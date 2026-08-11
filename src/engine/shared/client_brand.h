@@ -16,7 +16,7 @@ inline EClientBrand ClientBrandFromVersionString(const char *pVersion)
 {
 	if(!pVersion)
 		return EClientBrand::NONE;
-	if(str_find_nocase(pVersion, "QmClient"))
+	if(str_find_nocase(pVersion, "QmClient") || str_find_nocase(pVersion, "QmLiveClient"))
 		return EClientBrand::QM;
 	if(str_find_nocase(pVersion, "Arghena") || str_find_nocase(pVersion, "ArgClient"))
 		return EClientBrand::ARG;

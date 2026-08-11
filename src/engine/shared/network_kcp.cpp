@@ -181,15 +181,17 @@ bool CNetKcpSession::Input(const NETADDR &Addr, const unsigned char *pData, int 
 	if(!UnpackHeader(pData, DataSize, &Conv, &pPayload, &PayloadSize) || Conv != m_Conv)
 		return false;
 
-	if(m_PeerAddr != Addr)
+	const bool PeerAddressChanged = m_PeerAddr != Addr;
+	if(PeerAddressChanged)
 	{
 		if(!AllowRebind || net_addr_comp_noport(&m_PeerAddr, &Addr) != 0)
 			return false;
-		m_PeerAddr = Addr;
 	}
 
 	if(ikcp_input(m_pKcp, (const char *)pPayload, PayloadSize) < 0)
 		return false;
+	if(PeerAddressChanged)
+		m_PeerAddr = Addr;
 
 	m_LastInputTime = time_get();
 	m_BytesRecv += (uint64_t)DataSize;

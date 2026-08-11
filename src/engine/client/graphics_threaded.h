@@ -1,14 +1,16 @@
 #ifndef ENGINE_CLIENT_GRAPHICS_THREADED_H
 #define ENGINE_CLIENT_GRAPHICS_THREADED_H
 
+#include <base/dbg.h>
+#include <base/sphore.h>
 #include <base/system.h>
-#include <base/tl/threading.h>
 
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -179,6 +181,8 @@ public:
 		CMD_WINDOW_DESTROY_NTF,
 
 		CMD_RENDER_MEDIA_ISLAND_SDF,
+		CMD_RENDER_ROUNDED_RECT_SDF,
+		CMD_RENDER_TEXTURED_MSDF,
 
 		CMD_COUNT,
 	};
@@ -248,6 +252,28 @@ public:
 		SState m_State;
 		IGraphics::SMediaIslandSdfParams m_Params;
 		int m_BackdropTargetId = -1;
+		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
+		unsigned m_PrimCount = 1;
+		SVertex *m_pVertices = nullptr;
+	};
+
+	struct SCommand_RenderRoundedRectSdf : public SCommand
+	{
+		SCommand_RenderRoundedRectSdf() :
+			SCommand(CMD_RENDER_ROUNDED_RECT_SDF) {}
+		SState m_State;
+		IGraphics::SRoundedRectSdfParams m_Params;
+		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
+		unsigned m_PrimCount = 1;
+		SVertex *m_pVertices = nullptr;
+	};
+
+	struct SCommand_RenderTexturedMsdf : public SCommand
+	{
+		SCommand_RenderTexturedMsdf() :
+			SCommand(CMD_RENDER_TEXTURED_MSDF) {}
+		SState m_State;
+		vec4 m_MsdfParams{};
 		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
 		unsigned m_PrimCount = 1;
 		SVertex *m_pVertices = nullptr;
@@ -802,8 +828,8 @@ public:
 
 	virtual void Minimize() = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;
-	virtual bool SetWindowScreen(int Index, bool MoveToCenter) = 0;
-	virtual bool UpdateDisplayMode(int Index) = 0;
+	virtual bool SetWindowScreen(int Index, bool MoveToCenter, ivec2 *pDesktopSize) = 0;
+	virtual bool UpdateDisplayMode(int Index, ivec2 *pDesktopSize) = 0;
 	virtual int GetWindowScreen() = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
@@ -823,9 +849,19 @@ public:
 	virtual void WaitForIdle() = 0;
 
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
+	virtual bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName)
+	{
+		Major = 0;
+		Minor = 0;
+		Patch = 0;
+		pName = "";
+		return false;
+	}
 	// checks if the current values of the config are a graphics modern API
 	virtual bool IsConfigModernAPI() { return false; }
 	virtual bool HasMediaIslandSdf() { return false; }
+	virtual bool HasRoundedRectSdf() { return false; }
+	virtual bool HasTexturedMsdf() { return false; }
 	virtual bool UseTrianglesAsQuad() { return false; }
 	virtual bool HasTileBuffering() { return false; }
 	virtual bool HasQuadBuffering() { return false; }
@@ -837,7 +873,7 @@ public:
 	virtual bool RenderTargetExternalPassRequiresSingleSample() { return false; }
 	virtual const char *RenderTargetSupportReason() { return HasRenderTargets() ? "supported" : "unsupported_by_backend"; }
 	virtual bool Uses2DTextureArrays() { return false; }
-	virtual bool HasTextureArraysSupport() { return false; }
+	virtual bool HasTextureArraysSupport() const { return false; }
 	virtual const char *GetErrorString() { return nullptr; }
 
 	virtual const char *GetVendorString() = 0;
@@ -901,12 +937,24 @@ class CGraphics_Threaded : public IEngineGraphics
 	CCommandBuffer::STexCoord m_aTexture[4];
 
 	bool m_RenderEnable;
+	ivec2 m_DesktopSize = ivec2(0, 0);
 
 	float m_Rotation;
 	EDrawing m_Drawing;
 	bool m_DoScreenshot;
 	char m_aScreenshotName[IO_MAX_PATH_LENGTH];
 	FScreenshotCallback m_pfnScreenshotCallback;
+#if defined(CONF_PLATFORM_MACOS)
+	bool m_MacosGraphicsDiagnosticsEnabled = false;
+	uint32_t m_MacosGraphicsDiagnosticFrameCount = 0;
+	double m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
+	double m_MacosMetalWaitForIdleMsSum = 0.0;
+	uint64_t m_MacosMetalWaitForIdleCount = 0;
+	uint64_t m_MsdfCommandCount = 0;
+	uint64_t m_MsdfFlushCount = 0;
+	uint64_t m_RoundedRectSdfCommandCount = 0;
+	uint64_t m_RoundedRectSdfFlushCount = 0;
+#endif
 
 	CTextureHandle m_NullTexture;
 
@@ -1287,8 +1335,8 @@ public:
 	// sprites
 private:
 	float RoundedRectAntialiasSize() const;
-	void DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color);
-	void DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight);
+	void DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color, bool ResolveGeometry = true);
+	void DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, bool ResolveGeometry = true);
 	void AddRectExtAntialiasToContainer(int ContainerIndex, float x, float y, float w, float h, float r, int Corners, ColorRGBA Color);
 	void SetColor4Raw(ColorRGBA TopLeft, ColorRGBA TopRight, ColorRGBA BottomLeft, ColorRGBA BottomRight);
 
@@ -1374,7 +1422,10 @@ public:
 	void RenderBorderTiles(int BufferContainerIndex, const ColorRGBA &Color, char *pIndexBufferOffset, const vec2 &Offset, const vec2 &Scale, uint32_t DrawNum) override;
 	void RenderQuadLayer(int BufferContainerIndex, SQuadRenderInfo *pQuadInfo, size_t QuadNum, int QuadOffset, bool Grouped = false) override;
 	void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) override;
-	void RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params, CRenderTargetHandle Backdrop) override;
+	void RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfParams &Params, CRenderTargetHandle Backdrop = CRenderTargetHandle()) override;
+	void RenderRoundedRectSdf(const IGraphics::SRoundedRectSdfParams &Params) override;
+	void DrawRoundedRectAntialias(float x, float y, float w, float h, float Radius, int Corners, const ColorRGBA &Color) override;
+	void RenderTexturedMsdf(const IGraphics::STexturedMsdfParams &Params) override;
 
 	// modern GL functions
 	int CreateBufferObject(size_t UploadDataSize, void *pUploadData, int CreateFlags, bool IsMovedPointer = false) override;
@@ -1431,9 +1482,6 @@ public:
 	int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen) override;
 	void GetCurrentVideoMode(CVideoMode &CurMode, int Screen) override;
 
-	virtual int GetDesktopScreenWidth() const { return g_Config.m_GfxDesktopWidth; }
-	virtual int GetDesktopScreenHeight() const { return g_Config.m_GfxDesktopHeight; }
-
 	// synchronization
 	void InsertSignal(CSemaphore *pSemaphore) override;
 	bool IsIdle() const override;
@@ -1447,14 +1495,17 @@ public:
 	bool IsBackendInitialized() override;
 
 	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override { return m_pBackend->GetDriverVersion(DriverAgeType, Major, Minor, Patch, pName, BackendType); }
+	bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName) override { return m_pBackend->GetDetectedContextVersion(Major, Minor, Patch, pName); }
 	bool IsConfigModernAPI() override { return m_pBackend->IsConfigModernAPI(); }
 	bool HasMediaIslandSdf() override { return m_pBackend->HasMediaIslandSdf(); }
+	bool HasRoundedRectSdf() override { return m_pBackend->HasRoundedRectSdf(); }
+	bool HasTexturedMsdf() override { return m_pBackend->HasTexturedMsdf(); }
 	bool IsTileBufferingEnabled() override { return m_GLTileBufferingEnabled; }
 	bool IsQuadBufferingEnabled() override { return m_GLQuadBufferingEnabled; }
 	bool IsTextBufferingEnabled() override { return m_GLTextBufferingEnabled; }
 	bool IsQuadContainerBufferingEnabled() override { return m_GLQuadContainerBufferingEnabled; }
 	bool Uses2DTextureArrays() override { return m_GLUses2DTextureArrays; }
-	bool HasTextureArraysSupport() override { return m_GLHasTextureArraysSupport; }
+	bool HasTextureArraysSupport() const override { return m_GLHasTextureArraysSupport; }
 
 	const char *GetVendorString() override;
 	const char *GetVersionString() override;

@@ -21,6 +21,7 @@
 
 #include <generated/client_data.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/console.h>
 #include <game/client/gameclient.h>
@@ -555,7 +556,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		Ui()->DoLabel(&SeekBar, aSeekBarLabel, SeekBar.h * 0.70f, TEXTALIGN_MC);
 
 		// do the logic
-		const bool Inside = Ui()->MouseInside(&SeekBar);
 		const auto &&SnapToTimelineMarker = [&](float AmountSeek) {
 			if(pInfo->m_NumTimelineMarkers <= 0)
 				return AmountSeek;
@@ -580,30 +580,24 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		{
 			if(!Ui()->MouseButton(0))
 			{
+				if(!m_PausedBeforeSeeking)
+				{
+					DemoPlayer()->Unpause();
+				}
 				Ui()->SetActiveItem(nullptr);
 			}
 			else
 			{
-				static float s_PrevAmount = 0.0f;
-				float AmountSeek = std::clamp((Ui()->MouseX() - SeekBar.x - Rounding) / (SeekBar.w - 2 * Rounding), 0.0f, 1.0f);
+				float SeekAmount = std::clamp((Ui()->MouseX() - SeekBar.x - Rounding) / (SeekBar.w - 2 * Rounding), 0.0f, 1.0f);
 				if(!Input()->ShiftIsPressed())
-					AmountSeek = SnapToTimelineMarker(AmountSeek);
-
+					SeekAmount = SnapToTimelineMarker(SeekAmount);
 				if(Input()->ShiftIsPressed())
 				{
-					AmountSeek = s_PrevAmount + (AmountSeek - s_PrevAmount) * 0.05f;
-					if(AmountSeek >= 0.0f && AmountSeek <= 1.0f && absolute(s_PrevAmount - AmountSeek) >= 0.0001f)
-					{
-						PositionToSeek = AmountSeek;
-					}
+					Ui()->SetMouseSlow(true);
 				}
-				else
+				if(absolute(m_PrevSeekAmount - SeekAmount) >= 0.0001f)
 				{
-					if(AmountSeek >= 0.0f && AmountSeek <= 1.0f && absolute(s_PrevAmount - AmountSeek) >= 0.001f)
-					{
-						s_PrevAmount = AmountSeek;
-						PositionToSeek = AmountSeek;
-					}
+					PositionToSeek = m_PrevSeekAmount = SeekAmount;
 				}
 			}
 		}
@@ -611,11 +605,17 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		{
 			if(Ui()->MouseButton(0))
 			{
+				m_PrevSeekAmount = -1.0f;
+				m_PausedBeforeSeeking = pInfo->m_Paused;
+				if(!pInfo->m_Paused)
+				{
+					DemoPlayer()->Pause();
+				}
 				Ui()->SetActiveItem(&s_SeekBarId);
 			}
 		}
 
-		if(Inside && !Ui()->MouseButton(0))
+		if(Ui()->MouseInside(&SeekBar) && !Ui()->MouseButton(0))
 			Ui()->SetHotItem(&s_SeekBarId);
 
 		if(Ui()->HotItem() == &s_SeekBarId)
@@ -1049,6 +1049,13 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 		}
 	}
 
+	IUiContext DemoSliceTextInputCtx;
+	DemoSliceTextInputCtx.m_pUi = Ui();
+	DemoSliceTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	DemoSliceTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	DemoSliceTextInputCtx.m_ScopeHash = MakeUiScopeHash("demo_slice_text_input");
+	DemoSliceTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 	// file name
 	CUIRect NameLabel, NameBox;
 	Box.HSplitTop(24.0f, &NameLabel, &Box);
@@ -1056,7 +1063,10 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 	NameLabel.VSplitLeft(150.0f, &NameLabel, &NameBox);
 	NameBox.VSplitLeft(20.0f, nullptr, &NameBox);
 	Ui()->DoLabel(&NameLabel, Localize("New name:"), 18.0f, TEXTALIGN_ML);
-	Ui()->DoEditBox(&m_DemoSliceInput, &NameBox, 12.0f);
+	ui_widget::SInputFieldOptions SliceNameInputOptions;
+	SliceNameInputOptions.m_pPlaceholder = Localize("New name");
+	SliceNameInputOptions.m_FontSize = 12.0f;
+	ui_widget::InputField(DemoSliceTextInputCtx, &m_DemoSliceInput, NameBox, SliceNameInputOptions);
 
 	// remove chat checkbox
 	static int s_RemoveChat = 0;
@@ -1495,6 +1505,25 @@ void CMenus::DemolistPopulate()
 	{
 		m_DemoPopulateStartTime = time_get_nanoseconds();
 		Storage()->ListDirectory(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+
+		// Make sure there is a demo item to navigate back to the parent folder, if the folder contents could not be enumerated.
+		if(m_vDemos.empty())
+		{
+			CDemoItem Item;
+			str_copy(Item.m_aFilename, "..");
+			str_copy(Item.m_aName, "../");
+			Item.m_Date = 0;
+			Item.m_DateLoaded = true;
+			Item.m_DateValid = false;
+			Item.m_Size = 0;
+			Item.m_SizeLoaded = true;
+			Item.m_InfosLoaded = false;
+			Item.m_Valid = false;
+			Item.m_IsDir = true;
+			Item.m_IsLink = false;
+			Item.m_StorageType = m_DemolistStorageType;
+			m_vDemos.push_back(Item);
+		}
 
 		std::stable_sort(m_vDemos.begin(), m_vDemos.end());
 	}
@@ -2191,14 +2220,15 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	}
 
 	s_ListBox.DoAutoSpacing(1.0f);
-	s_ListBox.DoStart(UseNewUi ? RowHeight : ms_ListheaderHeight, m_vpFilteredDemos.size(), 1, 3, m_DemolistSelectedIndex, &ListBox, false, IGraphics::CORNER_ALL, true);
+	s_ListBox.DoStart(UseNewUi ? RowHeight : ms_ListheaderHeight, m_vpFilteredDemos.size(), 1, 3, m_DemolistSelectedIndex, &ListBox, false, IGraphics::CORNER_ALL);
 
 	char aBuf[64];
 	int ItemIndex = -1;
 	int VisibleRows = 0;
 	int FirstVisibleIndex = -1;
 	int EndVisibleIndex = -1;
-	CPerfTimer ListFrameTimer;
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto ListFrameStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	for(auto &pItem : m_vpFilteredDemos)
 	{
 		ItemIndex++;
@@ -2302,6 +2332,7 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	const int OldSelected = m_DemolistSelectedIndex;
 	const bool WasItemSelected = s_ListBox.WasItemSelected();
 	const int NewSelected = s_ListBox.DoEnd();
+	const bool ListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
 	const bool PlainItemClick = WasItemSelected && !Input()->ShiftIsPressed() && !Input()->ModifierIsPressed();
 	if(WasItemSelected && NewSelected >= 0)
 	{
@@ -2372,13 +2403,26 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	m_DemoBrowserMetadataBackgroundAllowed = true;
 	s_DemoLastFirstVisibleIndex = FirstVisibleIndex;
 	s_DemoLastEndVisibleIndex = EndVisibleIndex;
-	const double ListFrameDurationMs = ListFrameTimer.ElapsedMs();
+	const double ListFrameDurationMs = MenuUiPerfEnabled ? std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count() : -1.0;
 	if(QmPerfEnabled() && ListFrameDurationMs >= QmPerfThresholdMs())
 	{
 		char aPayload[160];
 		str_format(aPayload, sizeof(aPayload), "event=list_frame page=demo_browser items_total=%d rows_visible=%d rows_processed=%d rows_skipped=%d dur_ms=%.3f",
 			(int)m_vpFilteredDemos.size(), VisibleRows, VisibleRows, (int)m_vpFilteredDemos.size() - VisibleRows, ListFrameDurationMs);
 		QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
+	}
+	if(ListScrollActive)
+	{
+		StartSettingsPerfScrollWindow("demo_browser_scroll", SettingsPerfContextName(), "demo_browser", "none");
+		SQmMenuUiFramePerf MenuUiPerf;
+		MenuUiPerf.m_pPage = "demo_browser";
+		MenuUiPerf.m_pOperation = "demo_browser_scroll";
+		MenuUiPerf.m_ItemsTotal = (int)m_vpFilteredDemos.size();
+		MenuUiPerf.m_ItemsVisible = VisibleRows;
+		MenuUiPerf.m_ItemsProcessed = VisibleRows;
+		MenuUiPerf.m_ItemsSkipped = maximum(0, (int)m_vpFilteredDemos.size() - VisibleRows);
+		MenuUiPerf.m_UiMs = (float)ListFrameDurationMs;
+		QmLogMenuUiFramePerf(MenuUiPerf, Client());
 	}
 }
 
@@ -2532,12 +2576,12 @@ void CMenus::RenderDemoBrowserDetails(CUIRect DetailsView)
 	Contents.HSplitTop(4.0f, nullptr, &Contents);
 
 	Contents.HSplitTop(18.0f, &Left, &Contents);
-	if(pItem->m_MapInfo.m_Sha256 != SHA256_ZEROED)
+	if(pItem->m_MapInfo.m_Sha256.has_value())
 	{
 		Ui()->DoLabel(&Left, "SHA256", FontSize, TEXTALIGN_ML);
 		Contents.HSplitTop(18.0f, &Left, &Contents);
 		char aSha[SHA256_MAXSTRSIZE];
-		sha256_str(pItem->m_MapInfo.m_Sha256, aSha, sizeof(aSha));
+		sha256_str(pItem->m_MapInfo.m_Sha256.value(), aSha, sizeof(aSha));
 		SLabelProperties Props;
 		Props.m_MaxWidth = Left.w;
 		Props.m_EllipsisAtEnd = true;
@@ -2559,6 +2603,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 	const bool BrowsingScreenshots = DemoBrowserBrowsingScreenshots();
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
 	const char *pBaseFolder = DemoBrowserBaseFolder();
+	const IUiContext DemoBrowserSearchCtx = SettingsUiContext("demo_browser_search");
 
 	const auto &&SetIconMode = [&](bool Enable) {
 		if(Enable)
@@ -2590,16 +2635,16 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		const float TightSpacing = 4.0f;
 		const float GroupSpacing = 6.0f;
 
-		const bool HasSingleSelection =
+		bool HasSingleSelection =
 			NumSelectedDemos() == 1 &&
 			m_DemolistSelectedIndex >= 0 &&
 			m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 			IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 		CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
-		const int NumSelectedDeletable = NumSelectedDeletableDemos();
+		int NumSelectedDeletable = NumSelectedDeletableDemos();
 		CUIRect LeftGroup = MainRow;
 		CUIRect RightGroup;
-		const bool CanRenderDemo =
+		bool CanRenderDemo =
 #if defined(CONF_VIDEORECORDER)
 			!BrowsingScreenshots && HasSingleSelection && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
 #else
@@ -2630,7 +2675,12 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			LeftGroup.VSplitLeft(minimum(SearchWidth, LeftGroup.w), &DemoSearch, &LeftGroup);
 			if(LeftGroup.w > TightSpacing)
 				LeftGroup.VSplitLeft(TightSpacing, nullptr, &LeftGroup);
-			if(Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch, 13.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+			ui_widget::SInputFieldOptions NewUiSearchOptions;
+			NewUiSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+			NewUiSearchOptions.m_Clearable = true;
+			NewUiSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+			NewUiSearchOptions.m_FontSize = 13.0f;
+			if(ui_widget::InputField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, NewUiSearchOptions).m_Changed)
 			{
 				RefreshFilteredDemos();
 				DemolistOnUpdate(false);
@@ -2762,6 +2812,19 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			SetIconMode(false);
 		}
 
+		HasSingleSelection =
+			NumSelectedDemos() == 1 &&
+			m_DemolistSelectedIndex >= 0 &&
+			m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
+			IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
+		pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+		NumSelectedDeletable = NumSelectedDeletableDemos();
+#if defined(CONF_VIDEORECORDER)
+		CanRenderDemo = !BrowsingScreenshots && HasSingleSelection && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
+#else
+		CanRenderDemo = false;
+#endif
+
 		if(m_aCurrentDemoFolder[0] != '\0')
 		{
 			if(HasSingleSelection && IsDemoItemDeletable(*pSelectedItem))
@@ -2863,7 +2926,12 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		CUIRect DemoSearch;
 		ButtonBarTop.VSplitLeft(ButtonBarBottom.h * 21.0f, &DemoSearch, &ButtonBarTop);
 		ButtonBarTop.VSplitLeft(ButtonBarTop.h / 2.0f, nullptr, &ButtonBarTop);
-		if(Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+		ui_widget::SInputFieldOptions LegacySearchOptions;
+		LegacySearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+		LegacySearchOptions.m_Clearable = true;
+		LegacySearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+		LegacySearchOptions.m_FontSize = 14.0f;
+		if(ui_widget::InputField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, LegacySearchOptions).m_Changed)
 		{
 			RefreshFilteredDemos();
 			DemolistOnUpdate(false);
@@ -2875,13 +2943,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		SelectAllDemos();
 	}
 
-	const bool HasSingleSelection =
+	bool HasSingleSelection =
 		NumSelectedDemos() == 1 &&
 		m_DemolistSelectedIndex >= 0 &&
 		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 	CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
-	const int NumSelectedDeletable = NumSelectedDeletableDemos();
+	int NumSelectedDeletable = NumSelectedDeletableDemos();
 
 	// refresh button
 	{
@@ -2897,7 +2965,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			DemolistOnUpdate(false);
 		}
 		SetIconMode(false);
-		GameClient()->m_Tooltips.DoToolTip(&s_RefreshButton, &RefreshButton, Localize("Refresh"));
+		GameClient()->m_Tooltips.DoToolTip(&s_RefreshButton, &RefreshButton, Localize("Refresh the demo list"));
 	}
 
 	// fetch info checkbox
@@ -2939,9 +3007,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		SetIconMode(true);
 		static CButtonContainer s_PlayButton;
 		const char *pOpenIcon = pSelectedItem->m_IsDir ? FONT_ICON_FOLDER_OPEN : (BrowsingScreenshots ? FONT_ICON_IMAGE : FONT_ICON_PLAY);
-		if(DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) || (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+		const bool ActivateSelectedItem = DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated ||
+						  Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) ||
+						  (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive());
+		SetIconMode(false);
+
+		if(ActivateSelectedItem)
 		{
-			SetIconMode(false);
 			if(pSelectedItem->m_IsDir) // folder
 			{
 				m_DemoSearchInput.Clear();
@@ -2998,9 +3070,19 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			}
 		}
 		SetIconMode(false);
-		const char *pPlayTooltip = pSelectedItem->m_IsDir ? Localize("Open the selected folder.", "Editor") : (BrowsingScreenshots ? Localize("Open", "Editor") : Localize("Play", "Start menu"));
+		const char *pPlayTooltip = pSelectedItem->m_IsDir ? Localize("Open the selected folder") : (BrowsingScreenshots ? Localize("Open the selected screenshot") : Localize("Play the selected demo"));
 		GameClient()->m_Tooltips.DoToolTip(&s_PlayButton, &PlayButton, pPlayTooltip);
 	}
+
+	// The selected item can disappear when returning to the parent of a folder
+	// that was deleted externally, so all later controls must re-check it.
+	HasSingleSelection =
+		NumSelectedDemos() == 1 &&
+		m_DemolistSelectedIndex >= 0 &&
+		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
+		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
+	pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+	NumSelectedDeletable = NumSelectedDeletableDemos();
 
 	if(m_aCurrentDemoFolder[0] != '\0')
 	{

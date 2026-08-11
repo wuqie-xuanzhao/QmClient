@@ -4,11 +4,11 @@
 #ifndef GAME_CLIENT_QMUI_QMANIMRESOLVE_H
 #define GAME_CLIENT_QMUI_QMANIMRESOLVE_H
 
+#include "QmAnim.h"
+
 #include <base/color.h>
 
 #include <cstdint>
-
-#include "QmAnim.h"
 
 class CUIRect;
 
@@ -18,16 +18,49 @@ class CUIRect;
 uint64_t BuildUiAnimNodeKey(uint64_t ScopeHash, uint64_t Id);
 
 // Drives a single float property toward Target through the v2 animation
-// runtime using MERGE_TARGET interrupt policy. Caches per-node last-target so
-// new requests are only issued when Target changes or the value is out of
-// sync. Returns the current frame value (already advanced).
-float ResolveUiAnimValue(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, EUiAnimProperty Property, float Target, float DurationSec, EEasing Easing);
+// runtime using MERGE_TARGET interrupt policy. The runtime owns the per-node
+// last-target cache, so new requests are only issued when Target changes or the
+// value is out of sync. Returns the current frame value (already advanced).
+float ResolveUiAnimValue(
+	CUiV2AnimationRuntime &AnimRuntime,
+	uint64_t NodeKey,
+	EUiAnimProperty Property,
+	float Target,
+	float DurationSec,
+	EEasing Easing);
+float ResolveUiAnimSpringValue(
+	CUiV2AnimationRuntime &AnimRuntime,
+	uint64_t NodeKey,
+	EUiAnimProperty Property,
+	float Target,
+	const SUiSpringConfig &Spring,
+	int Priority = 1);
 
 // Convenience wrappers: drive four channels of a Rect or Color in lockstep.
 // Each component is an independent track keyed by (NodeKey, EUiAnimProperty),
 // so MERGE_TARGET continuity behaviour holds per-component.
-CUIRect ResolveUiAnimValueRect(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, const CUIRect &Target, float DurationSec, EEasing Easing);
-ColorRGBA ResolveUiAnimValueColor(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, const ColorRGBA &Target, float DurationSec, EEasing Easing);
+CUIRect ResolveUiAnimValueRect(
+	CUiV2AnimationRuntime &AnimRuntime,
+	uint64_t NodeKey,
+	const CUIRect &Target,
+	float DurationSec,
+	EEasing Easing);
+CUIRect ResolveUiAnimSpringRectXY(
+	CUiV2AnimationRuntime &AnimRuntime,
+	uint64_t NodeKey,
+	const CUIRect &Target,
+	const SUiSpringConfig &Spring,
+	int Priority = 1);
+ColorRGBA ResolveUiAnimValueColor(
+	CUiV2AnimationRuntime &AnimRuntime,
+	uint64_t NodeKey,
+	const ColorRGBA &Target,
+	float DurationSec,
+	EEasing Easing);
+ColorRGBA ResolveUiAnimInterpolatedColor(
+	const ColorRGBA &From,
+	const ColorRGBA &To,
+	float Amount);
 
 // Presentation State resolver for interruptible, redirectable UI surfaces.
 // The caller updates Target from business state; this helper keeps a single

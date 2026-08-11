@@ -1,8 +1,31 @@
 #include "connection.h"
 
+#include <base/str.h>
+
 IDbConnection::IDbConnection(const char *pPrefix)
 {
 	str_copy(m_aPrefix, pPrefix);
+}
+
+std::optional<float> IDbConnection::GetOptionalFloat(int Col)
+{
+	if(IsNull(Col))
+		return std::nullopt;
+	return GetInt(Col);
+}
+
+std::optional<int> IDbConnection::GetOptionalInt(int Col)
+{
+	if(IsNull(Col))
+		return std::nullopt;
+	return GetInt(Col);
+}
+
+std::optional<int64_t> IDbConnection::GetOptionalInt64(int Col)
+{
+	if(IsNull(Col))
+		return std::nullopt;
+	return GetInt64(Col);
 }
 
 void IDbConnection::FormatCreateRace(char *aBuf, unsigned int BufferSize, bool Backup) const

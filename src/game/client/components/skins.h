@@ -124,7 +124,7 @@ public:
 			 */
 			BACKGROUND_REQUESTED,
 			/**
-			 * Skin is unloaded and should be loaded when a slot is free. Skin will enter @link LOADING @endlink
+			 * Skin is unloaded and should be loaded when a slot is free. Skin will enter @link EState::LOADING @endlink
 			 * state when maximum number of loaded skins is not exceeded.
 			 */
 			PENDING,
@@ -164,6 +164,12 @@ public:
 		const char *Name() const { return m_aName; }
 		EType Type() const { return m_Type; }
 		int StorageType() const { return m_StorageType; }
+		time_t LastModified() const { return m_LastModified; }
+		void SetLastModified(time_t LastModified) { m_LastModified = LastModified; }
+		int OfficialReleaseDate() const { return m_OfficialReleaseDate; }
+		void SetOfficialReleaseDate(int OfficialReleaseDate) { m_OfficialReleaseDate = OfficialReleaseDate; }
+		const char *OfficialCreator() const { return m_aOfficialCreator; }
+		void SetOfficialCreator(const char *pOfficialCreator) { str_copy(m_aOfficialCreator, pOfficialCreator == nullptr ? "" : pOfficialCreator, sizeof(m_aOfficialCreator)); }
 		bool IsVanilla() const { return m_Vanilla; }
 		bool IsSpecial() const { return m_Special; }
 		bool IsAlwaysLoaded() const { return m_AlwaysLoaded; }
@@ -238,6 +244,9 @@ public:
 		char m_aName[MAX_SKIN_LENGTH];
 		EType m_Type;
 		int m_StorageType;
+		time_t m_LastModified = 0;
+		int m_OfficialReleaseDate = 0;
+		char m_aOfficialCreator[MAX_NAME_LENGTH] = {};
 		bool m_Vanilla;
 		bool m_Special;
 		bool m_AlwaysLoaded;
@@ -337,11 +346,13 @@ public:
 	public:
 		std::vector<CSkinListEntry> &Skins() { return m_vSkins; }
 		int UnfilteredCount() const { return m_UnfilteredCount; }
+		uint64_t Revision() const { return m_Revision; }
 		void ForceRefresh() { m_NeedsUpdate = true; }
 
 	private:
 		std::vector<CSkinListEntry> m_vSkins;
 		int m_UnfilteredCount = 0;
+		uint64_t m_Revision = 0;
 		int m_Dummy = -1;
 		CSkinListEntry::SColorKey m_MainColorKey;
 		CSkinListEntry::SColorKey m_DummyColorKey;
@@ -461,6 +472,7 @@ public:
 	void Refresh(TSkinLoadedCallback &&SkinLoadedCallback);
 	CSkinLoadingStats LoadingStats() const;
 	CSkinList &SkinList(int Dummy);
+	void RebuildSkinListPlan();
 	bool SkinListSkeletonReady() const;
 	bool SkinListReady() const;
 	uint64_t SettingsSourceUploadsCompleted() const { return m_SettingsSourceUploadsCompleted; }
@@ -530,18 +542,46 @@ public:
 	class CSkinQueuePreset
 	{
 	public:
+		enum class EKind
+		{
+			USER,
+			SERVER,
+		};
+
 		std::string m_Name;
 		std::vector<CSkinQueueEntry> m_Queue;
+		EKind m_Kind = EKind::USER;
+
+		bool IsProtected() const { return m_Kind != EKind::USER; }
+		EKind Kind() const { return m_Kind; }
 	};
 
 	const std::vector<CSkinQueueEntry> &SkinQueue(int Dummy) const { return m_aSkinQueue[Dummy]; }
 	const std::vector<CSkinQueuePreset> &SkinQueuePresets(int Dummy) const { return m_vSkinQueuePresets; }
-	int ActiveSkinQueuePresetIndex(int Dummy) const { return m_aActiveSkinQueuePresetIndex[Dummy]; }
 	int AppliedSkinQueuePresetIndex(int Dummy) const { return m_aAppliedSkinQueuePresetIndex[Dummy]; }
-	const std::vector<CSkinQueueEntry> &ActiveSkinQueue(int Dummy) const;
+	bool SkinQueueDirty(int Dummy) const { return m_aSkinQueueDirty[Dummy]; }
+	static constexpr size_t SKIN_QUEUE_DEFAULT_PRESET = 0;
+	static constexpr size_t SKIN_QUEUE_SERVER_PRESET = 1;
+	bool IsBuiltInSkinQueuePreset(size_t PresetIndex) const { return PresetIndex < 2; }
+	// A preset is writable (Save can overwrite it) when it exists and is not the
+	// dynamic Server preset. Pure helper, defined inline so unit tests can call
+	// it without linking the full CSkins object.
+	static bool IsSkinQueuePresetWritable(int PresetIndex, size_t PresetCount)
+	{
+		return PresetIndex >= 0 && (size_t)PresetIndex < PresetCount && PresetIndex != (int)SKIN_QUEUE_SERVER_PRESET;
+	}
+	// After removing a preset, recompute a dummy's Applied index: the removed
+	// preset → -1, anything above shifts down, anything below is unchanged.
+	static int NextAppliedPresetIndexAfterRemove(int Current, int Removed)
+	{
+		if(Current == Removed)
+			return -1;
+		if(Current > Removed)
+			return Current - 1;
+		return Current;
+	}
 	bool IsInSkinQueue(const char *pName, int Dummy) const;
 	bool IsInSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
-	bool IsInActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
 	bool AddSkinQueue(const char *pName, int Dummy);
 	bool AddSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool AddActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
@@ -556,9 +596,9 @@ public:
 	void TrimSkinQueueToLimit(int Dummy);
 	void TrimActiveSkinQueueToLimit(int Dummy);
 	bool AddSkinQueuePresetFromCurrent(int Dummy);
+	bool SaveSkinQueueToAppliedPreset(int Dummy);
 	bool RenameSkinQueuePreset(size_t PresetIndex, const char *pName, int Dummy);
-	bool SelectSkinQueuePreset(size_t PresetIndex, int Dummy);
-	void ClearSkinQueuePresetSelection(int Dummy);
+	void ClearSkinQueue(int Dummy);
 	bool ApplySkinQueuePreset(size_t PresetIndex, int Dummy);
 	bool RemoveSkinQueuePreset(size_t PresetIndex, int Dummy);
 
@@ -567,6 +607,26 @@ public:
 	const char *SkinPrefix() const;
 
 	static bool IsSpecialSkin(const char *pName);
+	static int ParseOfficialSkinReleaseDateKey(const char *pDate)
+	{
+		if(pDate == nullptr)
+			return 0;
+		int Key = 0;
+		for(int i = 0; i < 10; ++i)
+		{
+			const char c = pDate[i];
+			if(i == 4 || i == 7)
+			{
+				if(c != '-')
+					return 0;
+				continue;
+			}
+			if(c < '0' || c > '9')
+				return 0;
+			Key = Key * 10 + (c - '0');
+		}
+		return pDate[10] == '\0' ? Key : 0;
+	}
 
 private:
 	static bool IsVanillaSkin(const char *pName);
@@ -708,12 +768,14 @@ private:
 		bool m_NotFound = false;
 		bool m_Special = false;
 		bool m_ForceShowNotFound = false;
+		int m_OfficialReleaseDate = 0;
+		time_t m_LastModified = 0;
 	};
 
 	class CSkinListPlanJob : public IJob
 	{
 	public:
-		CSkinListPlanJob(std::vector<SSkinListSnapshotEntry> vEntries, std::string Filter, int Generation);
+		CSkinListPlanJob(std::vector<SSkinListSnapshotEntry> vEntries, std::string Filter, int Generation, int SortMode);
 
 		struct SResult
 		{
@@ -731,6 +793,7 @@ private:
 	private:
 		std::vector<SSkinListSnapshotEntry> m_vEntries;
 		std::string m_Filter;
+		int m_SortMode = 0;
 		SResult m_Result;
 	};
 
@@ -741,7 +804,14 @@ private:
 
 		struct SResult
 		{
-			std::vector<std::pair<std::string, int>> m_vEntries;
+			struct SEntry
+			{
+				std::string m_Name;
+				CSkinContainer::EType m_Type = CSkinContainer::EType::LOCAL;
+				int m_StorageType = IStorage::TYPE_ALL;
+				time_t m_LastModified = 0;
+			};
+			std::vector<SEntry> m_vEntries;
 		};
 
 		SResult TakeResult() { return std::move(m_Result); }
@@ -750,10 +820,12 @@ private:
 		void Run() override;
 
 	private:
-		static int ScanCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+		static int ScanCallback(const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser);
+		void ScanDirectory(const char *pDirectory, CSkinContainer::EType Type);
 
 		IStorage *m_pStorage;
 		SResult m_Result;
+		CSkinContainer::EType m_CurrentScanType = CSkinContainer::EType::LOCAL;
 	};
 
 	static bool PrepareSkinData(const char *pName, CSkinLoadData &Data);
@@ -772,6 +844,10 @@ private:
 	size_t LoadedSkinLimit() const;
 	void QueueSkinDirectoryScanJob();
 	void ProcessSkinDirectoryScanJob();
+	void QueueOfficialSkinIndexRequest();
+	void ProcessOfficialSkinIndexRequest();
+	void LoadOfficialSkinIndexCache();
+	bool ApplyOfficialSkinIndexJson(const char *pJson, size_t JsonSize);
 	void QueueSkinListPlanJob(int Dummy);
 	void ProcessSkinListPlanJob();
 	CSkinListEntry MakeSkinListEntry(const CSkinContainer *pSkinContainer, std::optional<CSkinListEntry::SColorKey> ColorKey) const;
@@ -802,7 +878,6 @@ private:
 	bool AddSkinQueuePresetItem(int PresetIndex, const char *pSkinName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool AddSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
 	bool RemoveSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
-	std::vector<CSkinQueueEntry> &ActiveSkinQueueMutable(int Dummy);
 
 	friend class CSkinProfiles;
 
@@ -818,19 +893,20 @@ private:
 	CSkinList m_SkinList;
 	std::shared_ptr<CSkinDirectoryScanJob> m_pSkinDirectoryScanJob;
 	std::shared_ptr<CSkinListPlanJob> m_pSkinListPlanJob;
+	std::shared_ptr<CHttpRequest> m_pOfficialSkinIndexRequest;
 	std::vector<SSettingsSkinListEntry> m_vPendingSkinListMergeEntries;
 	std::vector<CSkinListEntry> m_vPendingSkinListEntries;
 	size_t m_SkinListMergeCursor = 0;
 	int m_PendingSkinListUnfilteredCount = 0;
 	bool m_HasPendingSkinListMergePlan = false;
 	int m_SkinListPlanGeneration = 0;
-	std::vector<std::pair<std::string, int>> m_vPendingSkinDirectoryEntries;
+	std::vector<CSkinDirectoryScanJob::SResult::SEntry> m_vPendingSkinDirectoryEntries;
 	size_t m_SkinDirectoryMergeCursor = 0;
 	std::set<std::string> m_Favorites;
 	std::array<std::vector<CSkinQueueEntry>, NUM_DUMMIES> m_aSkinQueue;
 	std::vector<CSkinQueuePreset> m_vSkinQueuePresets;
-	std::array<int, NUM_DUMMIES> m_aActiveSkinQueuePresetIndex = {};
 	std::array<int, NUM_DUMMIES> m_aAppliedSkinQueuePresetIndex = {};
+	std::array<bool, NUM_DUMMIES> m_aSkinQueueDirty = {};
 	std::array<std::chrono::nanoseconds, NUM_DUMMIES> m_aSkinQueueElapsed = {};
 	std::array<std::optional<std::chrono::nanoseconds>, NUM_DUMMIES> m_aSkinQueueLastUpdate = {};
 

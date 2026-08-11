@@ -66,7 +66,7 @@ public:
 	CCharacter *GetCharacterById(int Id) { return (Id >= 0 && Id < MAX_CLIENTS) ? m_apCharacters[Id] : nullptr; }
 
 	// from gamecontext
-	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, int ActivatedTeam, CClientMask Mask);
+	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, int ActivatedTeam, CClientMask Mask, int Id = -1);
 
 	// for client side prediction
 	struct
@@ -113,6 +113,35 @@ public:
 
 	bool EmulateBug(int Bug) const;
 
+	class CPredictedEvent
+	{
+	public:
+		int m_EventId;
+		vec2 m_Pos; // NetEvent's Pos are integers
+		int m_Id; // identifier to prevent adding the same event multiple times
+		int m_Tick;
+
+		int m_ExtraInfo;
+		bool m_Handled = false;
+
+		CPredictedEvent(int EventId, vec2 Pos, int Id, int Tick, int ExtraInfo = -1) :
+			m_EventId(EventId), m_Pos(vec2((int)Pos.x, (int)Pos.y)), m_Id(Id), m_Tick(Tick), m_ExtraInfo(ExtraInfo)
+		{
+		}
+	};
+
+	std::vector<CPredictedEvent> m_PredictedEvents;
+
+	void CreatePredictedEvent(const CPredictedEvent &NewEvent);
+	bool CheckPredictedEventHandled(const CPredictedEvent &CheckEvent);
+	bool CheckPredictedHammerHitHandled(const CPredictedEvent &CheckEvent);
+	void PlayPredictedEvents(int Tick);
+
+	void CreatePredictedSound(vec2 Pos, int SoundId, int Id = -1);
+	void CreatePredictedExplosionEvent(vec2 Pos, int Id = -1);
+	void CreatePredictedHammerHitEvent(vec2 Pos, int Id = -1, int TargetId = -1);
+	void CreatePredictedDamageIndEvent(vec2 Pos, float Angle, int Amount, int Id = -1);
+
 private:
 	void RemoveEntities();
 
@@ -125,6 +154,42 @@ private:
 	CTuningParams *m_pTuningList;
 	const CMapBugs *m_pMapBugs;
 };
+
+inline bool QmCheckPredictedHammerHitHandled(std::vector<CGameWorld::CPredictedEvent> &vPredictedEvents, const CGameWorld::CPredictedEvent &CheckEvent)
+{
+	constexpr float MaxPositionCorrection = 32.0f;
+	constexpr float MaxPositionCorrectionSquared = MaxPositionCorrection * MaxPositionCorrection;
+	constexpr int MaxTickDifference = SERVER_TICK_SPEED;
+	if(CheckEvent.m_Id < 0 || CheckEvent.m_ExtraInfo < 0)
+		return false;
+	auto Closest = vPredictedEvents.end();
+	int ClosestTickDifference = MaxTickDifference + 1;
+	float ClosestDistanceSquared = 0.0f;
+	bool AmbiguousClosest = false;
+	for(auto It = vPredictedEvents.begin(); It != vPredictedEvents.end(); ++It)
+	{
+		if(!It->m_Handled || It->m_EventId != NETEVENTTYPE_HAMMERHIT || CheckEvent.m_EventId != NETEVENTTYPE_HAMMERHIT ||
+			(CheckEvent.m_Id >= 0 && It->m_Id != CheckEvent.m_Id) || It->m_Tick > CheckEvent.m_Tick || CheckEvent.m_Tick - It->m_Tick > MaxTickDifference || It->m_ExtraInfo != CheckEvent.m_ExtraInfo)
+			continue;
+		const float DistanceSquared = length_squared(It->m_Pos - CheckEvent.m_Pos);
+		if(DistanceSquared > MaxPositionCorrectionSquared)
+			continue;
+		const int TickDifference = CheckEvent.m_Tick - It->m_Tick;
+		if(Closest == vPredictedEvents.end() || TickDifference < ClosestTickDifference || (TickDifference == ClosestTickDifference && DistanceSquared < ClosestDistanceSquared))
+		{
+			Closest = It;
+			ClosestTickDifference = TickDifference;
+			ClosestDistanceSquared = DistanceSquared;
+			AmbiguousClosest = false;
+		}
+		else if(TickDifference == ClosestTickDifference && DistanceSquared == ClosestDistanceSquared)
+			AmbiguousClosest = true;
+	}
+	if(Closest == vPredictedEvents.end() || AmbiguousClosest)
+		return false;
+	vPredictedEvents.erase(Closest);
+	return true;
+}
 
 class CCharOrder
 {

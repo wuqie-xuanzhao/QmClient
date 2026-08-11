@@ -67,7 +67,7 @@ public:
 	CTeamsCore *TeamsCore();
 	bool Freeze(int Seconds);
 	bool Freeze();
-	bool UnFreeze();
+	bool Unfreeze();
 	void GiveAllWeapons();
 	void ResetPickups();
 	int Team();
@@ -161,6 +161,8 @@ private:
 
 	int m_MoveRestrictions;
 
+	int m_PainSoundTimer;
+
 	// these are non-heldback inputs
 	CNetObj_PlayerInput m_LatestPrevInput;
 	CNetObj_PlayerInput m_LatestInput;
@@ -181,7 +183,7 @@ private:
 
 	// DDRace
 
-	static bool IsSwitchActiveCb(int Number, void *pUser);
+	static bool IsSwitchActiveCb(unsigned char Number, void *pUser);
 	void HandleTiles(int Index);
 	bool TryPredictTeleport(int MapIndex);
 	bool TryPredictCheckpointTeleport(bool ResetVelocity, bool ReleaseHookedPlayers);

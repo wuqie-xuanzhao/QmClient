@@ -11,9 +11,11 @@
 class CUi;
 class CMenus;
 class CUiV2AnimationRuntime;
+class CUiV2Tree;
 class CQmIconManager;
 class CTooltips;
 class ITextRender;
+struct SUiTheme;
 
 // Lightweight dependency-injection bundle for ui_widget primitives. Constructed
 // once at the start of a page render (CMenus has access to the protected
@@ -24,11 +26,15 @@ struct IUiContext
 {
 	CUi *m_pUi = nullptr;
 	CUiV2AnimationRuntime *m_pAnim = nullptr;
+	CUiV2Tree *m_pTree = nullptr;
 	CQmIconManager *m_pIconManager = nullptr;
 	CMenus *m_pMenus = nullptr;
 	CTooltips *m_pTooltips = nullptr;
 	ITextRender *m_pTextRender = nullptr;
+	const SUiTheme *m_pTheme = nullptr;
 	uint64_t m_ScopeHash = 0;
+	float m_FrameDt = 1.0f / 60.0f;
+	float m_UiScale = 1.0f;
 };
 
 // Stable hash of a page identifier, used to seed BuildUiAnimNodeKey so

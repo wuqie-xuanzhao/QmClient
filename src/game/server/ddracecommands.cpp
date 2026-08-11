@@ -8,7 +8,7 @@
 
 #include <game/mapitems.h>
 #include <game/server/entities/character.h>
-#include <game/server/gamemodes/DDRace.h>
+#include <game/server/gamemodes/ddnet.h>
 #include <game/server/player.h>
 #include <game/server/save.h>
 #include <game/server/teams.h>
@@ -150,7 +150,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData)
 	if(pChr && !pChr->IsSuper())
 	{
 		pChr->SetSuper(true);
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 	}
 }
 
@@ -206,14 +206,14 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData)
 		pChr->Freeze();
 }
 
-void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData)
+void CGameContext::ConUnfreeze(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!CheckClientId(pResult->m_ClientId))
 		return;
 	CCharacter *pChr = pSelf->GetPlayerChar(pResult->m_ClientId);
 	if(pChr)
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 }
 
 void CGameContext::ConDeep(IConsole::IResult *pResult, void *pUserData)
@@ -235,7 +235,7 @@ void CGameContext::ConUnDeep(IConsole::IResult *pResult, void *pUserData)
 	if(pChr)
 	{
 		pChr->SetDeepFrozen(false);
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 	}
 }
 
@@ -484,7 +484,7 @@ void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData)
 		}
 		pSelf->Teleport(pChr, Pos);
 		pChr->ResetJumps();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 		pChr->SetVelocity(vec2(0, 0));
 	}
 }
@@ -553,16 +553,19 @@ void CGameContext::ConSetDDRTeam(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	int Target = pResult->GetVictim();
-	int Team = pResult->GetInteger(1);
+	const int Target = pResult->GetVictim();
+	CPlayer *pPlayer = pSelf->m_apPlayers[Target];
+	if(!pPlayer)
+		return;
 
-	if(Team < TEAM_FLOCK || Team >= TEAM_SUPER)
+	const int Team = pResult->GetInteger(1);
+	if(!pController->Teams().IsValidTeamNumber(Team))
 		return;
 
 	CCharacter *pChr = pSelf->GetPlayerChar(Target);
 
-	if((pSelf->GetDDRaceTeam(Target) && pController->Teams().GetDDRaceState(pSelf->m_apPlayers[Target]) == ERaceState::STARTED) || (pChr && pController->Teams().IsPractice(pChr->Team())))
-		pSelf->m_apPlayers[Target]->KillCharacter(WEAPON_GAME);
+	if((pSelf->GetDDRaceTeam(Target) && pController->Teams().GetDDRaceState(pPlayer) == ERaceState::STARTED) || (pChr && pController->Teams().IsPractice(pChr->Team())))
+		pPlayer->KillCharacter(WEAPON_GAME);
 
 	pController->Teams().SetForceCharacterTeam(Target, Team);
 	pController->Teams().SetTeamLock(Team, true);
@@ -573,14 +576,18 @@ void CGameContext::ConUninvite(IConsole::IResult *pResult, void *pUserData)
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	auto *pController = pSelf->m_pController;
 
-	pController->Teams().SetClientInvited(pResult->GetInteger(1), pResult->GetVictim(), false);
+	const int Target = pResult->GetVictim();
+	if(!pSelf->m_apPlayers[Target])
+		return;
+
+	pController->Teams().SetClientInvited(pResult->GetInteger(1), Target, false);
 }
 
 void CGameContext::ConVoteNo(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	pSelf->ForceVote(pResult->m_ClientId, false);
+	pSelf->ForceVote(false);
 }
 
 void CGameContext::ConDrySave(IConsole::IResult *pResult, void *pUserData)

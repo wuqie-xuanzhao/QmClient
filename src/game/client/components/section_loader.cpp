@@ -95,7 +95,13 @@ void CSectionLoader::SetMaxSectionsPerFrame(int MaxSectionsPerFrame)
 
 void CSectionLoader::Begin(CUIRect MainView, float TimeBudgetMs)
 {
+	Begin(MainView, MainView, TimeBudgetMs);
+}
+
+void CSectionLoader::Begin(CUIRect MainView, CUIRect Viewport, float TimeBudgetMs)
+{
 	m_MainView = MainView;
+	m_Viewport = Viewport;
 	m_BudgetPerFrameMs = (double)TimeBudgetMs;
 	m_CurrentIndex = 0;
 
@@ -103,7 +109,7 @@ void CSectionLoader::Begin(CUIRect MainView, float TimeBudgetMs)
 	m_TotalFrameTimeMs = 0.0;
 }
 
-bool CSectionLoader::Process()
+bool CSectionLoader::Process(bool RenderSections)
 {
 	m_LastFrameStats = {};
 	m_LastFrameStats.m_SectionsTotal = (int)m_vSections.size();
@@ -207,7 +213,7 @@ bool CSectionLoader::Process()
 			if(Priority <= 1)
 			{
 				Section.m_State = ESettingsSectionState::COMPACT;
-				if(Section.m_RenderCompactFn)
+				if(RenderSections && Section.m_RenderCompactFn)
 				{
 					Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
 					Section.m_HasCachedHeight = true;
@@ -233,7 +239,7 @@ bool CSectionLoader::Process()
 			if(BudgetAvailable && UnlockedThisFrame < MaxUnlockPerFrame && Priority <= 1)
 			{
 				Section.m_State = ESettingsSectionState::FULL;
-				if(Section.m_RenderFullFn)
+				if(RenderSections && Section.m_RenderFullFn)
 				{
 					Section.m_CachedHeight = Section.m_RenderFullFn(m_RunningColumn);
 					Section.m_HasCachedHeight = true;
@@ -248,7 +254,7 @@ bool CSectionLoader::Process()
 				++m_CurrentIndex;
 				break;
 			}
-			if(Section.m_RenderCompactFn)
+			if(RenderSections && Section.m_RenderCompactFn)
 			{
 				Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
 				Section.m_HasCachedHeight = true;
@@ -274,7 +280,7 @@ bool CSectionLoader::Process()
 				++m_CurrentIndex;
 				break;
 			}
-			if(Section.m_RenderFullFn)
+			if(RenderSections && Section.m_RenderFullFn)
 			{
 				Section.m_CachedHeight = Section.m_RenderFullFn(m_RunningColumn);
 				Section.m_HasCachedHeight = true;
@@ -602,8 +608,8 @@ const char *CSectionLoader::GetPerfReport() const
 
 int CSectionLoader::ComputeViewportPriority(const CUIRect &SectionRect) const
 {
-	const float ViewportTop = m_MainView.y - m_ScrollY;
-	const float ViewportBottom = ViewportTop + m_MainView.h;
+	const float ViewportTop = m_Viewport.y;
+	const float ViewportBottom = m_Viewport.y + m_Viewport.h;
 	const float PrefetchMargin = 200.0f;
 
 	if(SectionRect.y + SectionRect.h >= ViewportTop - PrefetchMargin &&

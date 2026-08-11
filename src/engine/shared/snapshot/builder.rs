@@ -5,7 +5,6 @@ use libtw2_snapshot::snap;
 use std::mem;
 use std::pin::Pin;
 
-#[allow(unused_must_use)] // in generated code for CSnapshotBuilder_New
 #[cxx::bridge]
 mod ffi {
     extern "C++" {
@@ -16,8 +15,8 @@ mod ffi {
     extern "Rust" {
         type CSnapshotBuilder;
 
-        #[allow(unused_must_use)]
-        pub fn CSnapshotBuilder_New() -> Box<CSnapshotBuilder>;
+        #[Self = "CSnapshotBuilder"]
+        pub fn New() -> Box<CSnapshotBuilder>;
         pub fn Init(&mut self, sixup: bool);
         pub fn NewItem(&mut self, type_: i32, id: i32, data: &[i32]) -> bool;
         pub fn FinishIfNoDroppedItems(&mut self, buffer: Pin<&mut CSnapshotBuffer>) -> i32;
@@ -29,16 +28,16 @@ mod ffi {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```
 /// # extern crate ddnet_test;
-/// use ddnet_engine_shared::CSnapshotBuffer_New;
-/// use ddnet_engine_shared::CSnapshotBuilder_New;
+/// use ddnet_engine_shared::CSnapshotBuffer;
+/// use ddnet_engine_shared::CSnapshotBuilder;
 ///
-/// let mut builder = CSnapshotBuilder_New();
+/// let mut builder = CSnapshotBuilder::New();
 /// builder.Init(false);
 /// assert!(builder.NewItem(1, 123, &[1, 2, 3]));
 ///
-/// let mut buffer = CSnapshotBuffer_New();
+/// let mut buffer = CSnapshotBuffer::New();
 /// assert_eq!(builder.Finish(buffer.pin_mut()), 28);
 /// assert_eq!(&buffer.pin_mut().AsMutSlice()[..7], &[
 ///     16, // data size in bytes
@@ -60,18 +59,18 @@ pub struct CSnapshotBuilder {
     builder: Takeable<snap::Builder>,
 }
 
-/// Creates a new [`CSnapshotBuilder`].
-/// ```no_run
-/// # extern crate ddnet_test;
-/// use ddnet_engine_shared::CSnapshotBuilder_New;
-///
-/// let builder = CSnapshotBuilder_New();
-/// ```
-pub fn CSnapshotBuilder_New() -> Box<CSnapshotBuilder> {
-    Box::new(CSnapshotBuilder::default())
-}
-
 impl CSnapshotBuilder {
+    /// Creates a new [`CSnapshotBuilder`].
+    /// ```
+    /// # extern crate ddnet_test;
+    /// use ddnet_engine_shared::CSnapshotBuilder;
+    ///
+    /// let builder = CSnapshotBuilder::New();
+    /// ```
+    pub fn New() -> Box<CSnapshotBuilder> {
+        Box::new(CSnapshotBuilder::default())
+    }
+
     /// Starts building a snapshot.
     ///
     /// `sixup` indicates whether the builder should do translation for a 0.7

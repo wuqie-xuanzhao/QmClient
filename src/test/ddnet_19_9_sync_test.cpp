@@ -27,7 +27,7 @@ TEST(DDNet199Sync, UsesLoadedMapForDiscordActivity)
 	EXPECT_NE(Client.find("m_pMap->IsLoaded()"), std::string::npos);
 	EXPECT_NE(Client.find("str_copy(m_CurrentServerInfo.m_aMap, GetCurrentMap());"), std::string::npos);
 	EXPECT_NE(Client.find("m_CurrentServerInfo.m_MapCrc = m_pMap->Crc();"), std::string::npos);
-	EXPECT_NE(Client.find("m_CurrentServerInfo.m_MapSize = m_pMap->MapSize();"), std::string::npos);
+	EXPECT_NE(Client.find("m_CurrentServerInfo.m_MapSize = m_pMap->Size();"), std::string::npos);
 	EXPECT_EQ(Client.find("GameClient()->Map()"), std::string::npos);
 	EXPECT_NE(Client.find("Discord()->SetGameInfo(m_CurrentServerInfo, Registered);"), std::string::npos);
 	EXPECT_NE(Discord.find("str_copy(m_Activity.state, ServerInfo.m_aMap"), std::string::npos);
@@ -40,14 +40,17 @@ TEST(DDNet199Sync, SupportsUnbufferedQuadClippingAndTuneZoneColors)
 	const std::string MapImages = ReadTestSourceFile("src/game/client/components/mapimages.cpp");
 	const std::string RenderLayer = ReadTestSourceFile("src/game/map/render_layer.cpp");
 	const std::string RenderMap = ReadTestSourceFile("src/game/map/render_map.cpp");
+	const std::string RenderMapHeader = ReadTestSourceFile("src/game/map/render_map.h");
 
 	EXPECT_NE(RenderLayer.find("// create clip region for unbuffered backends"), std::string::npos);
 	EXPECT_NE(RenderLayer.find("CalculateClipping(QuadCluster);"), std::string::npos);
 	EXPECT_NE(Math.find("constexpr float normalized_golden_angle"), std::string::npos);
 	EXPECT_NE(MapImages.find("IGraphics::CTextureHandle CMapImages::GetTuneColors()"), std::string::npos);
 	EXPECT_NE(MapImages.find("ColorizeWithHueRect"), std::string::npos);
-	EXPECT_NE(RenderMap.find("CTuneColorMapper::TuneNumberToColorIndex"), std::string::npos);
-	EXPECT_NE(RenderMap.find("CTuneColorMapper::TuneColorIndexToColor"), std::string::npos);
+	EXPECT_NE(RenderMap.find("RenderTunemap"), std::string::npos);
+	EXPECT_NE(RenderMapHeader.find("uint8_t TuneNumberToColorIndex"), std::string::npos);
+	EXPECT_NE(RenderMapHeader.find("uint8_t TileTextureIndex"), std::string::npos);
+	EXPECT_NE(RenderMapHeader.find("ColorRGBA TuneColorIndexToColor"), std::string::npos);
 }
 
 TEST(DDNet199Sync, KeepsPredictEventsDisabledAndPopupSelectionHighlighted)

@@ -8,26 +8,33 @@
 
 namespace
 {
-float QmWrapHue(float Hue)
-{
-	const float Wrapped = std::fmod(Hue, 1.0f);
-	return Wrapped < 0.0f ? Wrapped + 1.0f : Wrapped;
-}
+	float QmWrapHue(float Hue)
+	{
+		const float Wrapped = std::fmod(Hue, 1.0f);
+		return Wrapped < 0.0f ? Wrapped + 1.0f : Wrapped;
+	}
 
-bool QmValidSixupIndex(int SixupIndex)
-{
-	return SixupIndex >= 0 && SixupIndex < NUM_DUMMIES;
-}
+	bool QmValidSixupIndex(int SixupIndex)
+	{
+		return SixupIndex >= 0 && SixupIndex < NUM_DUMMIES;
+	}
 
-bool QmSixupUsesBodyOrFeetCustomColor(const CTeeRenderInfo &Info, int SixupIndex)
-{
-	if(!QmValidSixupIndex(SixupIndex))
-		return false;
+	bool QmSixupUsesBodyOrFeetCustomColor(const CTeeRenderInfo &Info, int SixupIndex)
+	{
+		if(!QmValidSixupIndex(SixupIndex))
+			return false;
 
-	const CTeeRenderInfo::CSixup &Sixup = Info.m_aSixup[SixupIndex];
-	return Sixup.m_aUseCustomColors[protocol7::SKINPART_BODY] || Sixup.m_aUseCustomColors[protocol7::SKINPART_FEET];
-}
+		const CTeeRenderInfo::CSixup &Sixup = Info.m_aSixup[SixupIndex];
+		return Sixup.m_aUseCustomColors[protocol7::SKINPART_BODY] || Sixup.m_aUseCustomColors[protocol7::SKINPART_FEET];
+	}
 } // namespace
+
+bool QmShouldApplyLocalTeeHueCycle(const SQmLocalTeeHueCycleEligibility &Eligibility)
+{
+	return Eligibility.m_IsLocal &&
+	       (!Eligibility.m_IsDummy || Eligibility.m_DummyEnabled) &&
+	       (Eligibility.m_UseCustomColors || Eligibility.m_UseCustomColors7);
+}
 
 float QmTeeHueCyclePhase(double TimeSeconds, int SpeedDegreesPerSecond)
 {

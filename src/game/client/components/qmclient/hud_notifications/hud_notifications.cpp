@@ -7,6 +7,7 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
+#include <game/client/components/hud_editor.h>
 #include <game/client/gameclient.h>
 #include <game/localization.h>
 
@@ -197,9 +198,9 @@ void CQmHudNotifications::OnRender()
 		PreviewScope.m_AnchoredRight,
 		PreviewScope.m_VisibleRect.x + PreviewScope.m_VisibleRect.w * 0.5f,
 		Width * 0.5f);
-	CUIRect RenderAnchorRect = QmHudNotifications::InsetAnchoredRect(
+	CUIRect RenderAnchorRect = QmHudEditor::ApplyEdgeMargin(
 		AnchorRect,
-		Margin.m_Left,
+		Margin,
 		PreviewScope.m_AnchoredLeft,
 		PreviewScope.m_AnchoredRight,
 		PreviewScope.m_AnchoredTop,
@@ -215,9 +216,9 @@ void CQmHudNotifications::OnRender()
 		VisiblePreviewScope.m_VisibleRect.x + VisiblePreviewScope.m_VisibleRect.w * 0.5f,
 		Width * 0.5f);
 	Flow = VisibleFlow;
-	RenderAnchorRect = QmHudNotifications::InsetAnchoredRect(
+	RenderAnchorRect = QmHudEditor::ApplyEdgeMargin(
 		AnchorRect,
-		Margin.m_Left,
+		Margin,
 		VisiblePreviewScope.m_AnchoredLeft,
 		VisiblePreviewScope.m_AnchoredRight,
 		VisiblePreviewScope.m_AnchoredTop,
@@ -225,7 +226,7 @@ void CQmHudNotifications::OnRender()
 	RenderBaseRect = QmHudNotifications::EditorPreviewRenderBaseRect(RenderAnchorRect, DefaultRect.w, Flow);
 	ReportedVisibleRect = MeasureVisibleRect(RenderBaseRect, PreviewContent, Flow, HudEditorPreview);
 	if(ReportedVisibleRect.w <= 0.0f || ReportedVisibleRect.h <= 0.0f)
-		ReportedVisibleRect = AnchorRect;
+		ReportedVisibleRect = RenderAnchorRect;
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::HudNotifications, AnchorRect, ReportedVisibleRect, Margin);
 	RenderNotifications(RenderBaseRect, ReportedVisibleRect, PreviewContent, HudEditorPreview, Flow);
 	GameClient()->m_HudEditor.EndTransform(HudEditorScope);
@@ -317,7 +318,10 @@ void CQmHudNotifications::RenderNotifications(const CUIRect &BaseRect, const CUI
 		}
 
 		const STextBoundingBox TextBox = TextRender()->TextBoundingBox(FontSize, Notification.m_aText, -1, TextMaxWidth);
-		const float NaturalBoxW = maximum(MinBoxWidth, TextBox.m_W + PaddingX * 2.0f);
+		const bool HasRepeatText = Notification.m_aRepeatText[0] != '\0';
+		const STextBoundingBox RepeatTextBox = HasRepeatText ? TextRender()->TextBoundingBox(FontSize, Notification.m_aRepeatText, -1, TextMaxWidth) : STextBoundingBox{};
+		const float RepeatGap = HasRepeatText ? 4.0f * QmHudNotifications::SmallTextScale(FontSize) : 0.0f;
+		const float NaturalBoxW = maximum(MinBoxWidth, TextBox.m_W + RepeatGap + RepeatTextBox.m_W + PaddingX * 2.0f);
 		const float BoxW = QmHudNotifications::NotificationBoxWidth(BaseRect, NaturalBoxW);
 		const float BoxH = maximum(FontSize + PaddingY * 2.0f, TextBox.m_H + PaddingY * 2.0f);
 		CUIRect Box = {QmHudNotifications::NotificationBoxX(BaseRect, BoxW, Flow, OffsetX), Y, BoxW, BoxH};
@@ -330,6 +334,13 @@ void CQmHudNotifications::RenderNotifications(const CUIRect &BaseRect, const CUI
 		const ColorRGBA TextColor = color_cast<ColorRGBA>(ColorHSLA(TextColorConfig.m_Color, TextColorConfig.m_HasAlpha));
 		TextRender()->TextColor(ApplyAlpha(TextColor, Alpha));
 		TextRender()->Text(Box.x + PaddingX, Box.y + PaddingY, FontSize, Notification.m_aText, TextMaxWidth);
+		if(HasRepeatText)
+		{
+			const int RepeatElapsedMs = Notification.m_RepeatAnimTime > 0 ? (int)((Now - Notification.m_RepeatAnimTime) * 1000 / time_freq()) : AnimMs;
+			float RepeatScale = QmHudNotifications::RepeatCountElasticScale(AnimMs > 0 ? RepeatElapsedMs / (float)AnimMs : 1.0f);
+			const float RepeatX = Box.x + PaddingX + TextBox.m_W + RepeatGap;
+			TextRender()->Text(RepeatX, Box.y + PaddingY, FontSize * RepeatScale, Notification.m_aRepeatText, TextMaxWidth);
+		}
 
 		Y += BoxH + Gap;
 	}

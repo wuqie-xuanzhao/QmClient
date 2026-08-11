@@ -20,6 +20,10 @@ public:
 	CMotd();
 	int Sizeof() const override { return sizeof(*this); }
 
+	static bool ShouldActivateMotdPopup(const char *pMotd, int MotdTime, bool HideJoinServerInfo)
+	{
+		return pMotd != nullptr && pMotd[0] != '\0' && MotdTime > 0 && !HideJoinServerInfo;
+	}
 	const char *ServerMotd() const { return m_aServerMotd; }
 	int64_t ServerMotdUpdateTime() const { return m_ServerMotdUpdateTime; }
 	void Clear();

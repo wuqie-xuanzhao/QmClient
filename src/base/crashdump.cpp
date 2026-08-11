@@ -1,4 +1,8 @@
+#include "crashdump.h"
+
 #include "detect.h"
+#include "str.h"
+#include "system.h"
 
 #if defined(CONF_CRASHDUMP)
 #if !defined(CONF_FAMILY_WINDOWS)
@@ -11,16 +15,17 @@ void crashdump_init_if_available(const char *log_file_path)
 #else
 
 #include "log.h"
-#include "system.h"
+#include "windows.h"
+
+#include <windows.h>
+
+#include <dbghelp.h>
+#include <tlhelp32.h>
 
 #include <atomic>
 #include <csignal>
 #include <cstdint>
 #include <exception>
-
-#include <windows.h>
-#include <dbghelp.h>
-#include <tlhelp32.h>
 
 static const char *CRASHDUMP_LIB = "exchndl.dll";
 static const char *CRASHDUMP_FN = "ExcHndlSetLogFileNameW";
@@ -232,8 +237,7 @@ static void WriteExceptionModule(HANDLE FileHandle, const void *pAddress)
 			}
 			Found = true;
 			break;
-		}
-		while(Module32NextW(SnapshotHandle, &ModuleEntry));
+		} while(Module32NextW(SnapshotHandle, &ModuleEntry));
 	}
 
 	if(!Found)
@@ -284,8 +288,7 @@ static void WriteLoadedModules(HANDLE FileHandle)
 				aModulePath[0] != '\0' ? aModulePath : "(unknown-path)");
 			WriteRaw(FileHandle, aLine);
 			++ModuleCount;
-		}
-		while(Module32NextW(SnapshotHandle, &ModuleEntry));
+		} while(Module32NextW(SnapshotHandle, &ModuleEntry));
 	}
 	else
 	{

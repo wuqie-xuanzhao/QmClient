@@ -243,7 +243,15 @@ private:
 		bool operator==(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) == 0; }
 	};
 
+	struct SSlashCommandSuggestion
+	{
+		const char *m_pCommand;
+	};
+
 	std::vector<CCommand> m_vServerCommands;
+	std::vector<SSlashCommandSuggestion> m_vSlashCommandSuggestions;
+	bool m_SlashCommandSuggestionsDismissed = false;
+	char m_aSlashCommandSuggestionsDismissedInput[MAX_LINE_LENGTH] = "";
 	bool m_ServerCommandsNeedSorting;
 
 	struct CHistoryEntry
@@ -282,6 +290,7 @@ private:
 	void SaveChatLogLine(int ClientId, int Team, const char *pLine);
 	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
 	const CCommand *FindServerCommand(const char *pName) const;
+	void RefreshSlashCommandSuggestions();
 	const char *LocalizeCommandPreviewText(const char *pText) const;
 	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;
 	void RefreshArgumentCandidates();
@@ -413,6 +422,19 @@ public:
 	{
 		return length(Release - Press) <= 5.0f;
 	}
+	static float CalculateCutOffOffsetX(float Progress);
+	static bool ShouldBlockLiveDirectorChatCommand(const char *pLine)
+	{
+		if(pLine == nullptr)
+			return false;
+
+		const char *pCommand = str_utf8_skip_whitespaces(pLine);
+		const char *pRest = str_startswith_nocase(pCommand, "/pause");
+		if(pRest == nullptr)
+			return false;
+
+		return pRest[0] == '\0' || str_utf8_skip_whitespaces(pRest) != pRest;
+	}
 	static bool AppendBlockWordToList(char *pList, size_t ListSize, const char *pWord)
 	{
 		if(pList == nullptr || pWord == nullptr || pWord[0] == '\0' || ListSize == 0)
@@ -452,6 +474,55 @@ public:
 		char *pDst = pBuf + str_length(pBuf);
 		str_escape(&pDst, pName, pBuf + BufSize);
 		str_append(pBuf, "\"", BufSize);
+		return true;
+	}
+	static const char *MessageNamePrefixForClientId(int ClientId, bool HideSystemPrefix = true)
+	{
+		if(ClientId == SERVER_MSG)
+			return HideSystemPrefix ? "" : "*** ";
+		if(ClientId == CLIENT_MSG)
+			return "— ";
+		return "";
+	}
+	static const char *SystemMessageNamePrefix(bool HideSystemPrefix = true)
+	{
+		return MessageNamePrefixForClientId(SERVER_MSG, HideSystemPrefix);
+	}
+	static std::vector<SSlashCommandSuggestion> BuildSlashCommandSuggestions(std::string_view Input, size_t MaxSuggestions)
+	{
+		static constexpr const char *s_apCommonCommands[] = {
+			"/pause",
+			"/spec",
+			"/team",
+			"/w",
+			"/top5",
+			"/top",
+		};
+		std::vector<SSlashCommandSuggestion> vSuggestions;
+		if(Input.empty() || Input[0] != '/' || Input.find(' ') != std::string_view::npos)
+			return vSuggestions;
+
+		char aInput[MAX_LINE_LENGTH];
+		str_truncate(aInput, sizeof(aInput), Input.data(), (int)Input.size());
+		for(const char *pCommand : s_apCommonCommands)
+		{
+			if(str_comp_nocase(aInput, pCommand) == 0)
+				return {};
+			if(str_startswith_nocase(pCommand, aInput))
+			{
+				vSuggestions.push_back({pCommand});
+				if(vSuggestions.size() >= MaxSuggestions)
+					break;
+			}
+		}
+		return vSuggestions;
+	}
+	static bool ApplySlashCommandSuggestion(char *pBuf, size_t BufSize, const char *pInput, const char *pCommand)
+	{
+		if(pBuf == nullptr || pInput == nullptr || pCommand == nullptr || BufSize == 0 || pInput[0] != '/' || str_find(pInput, " ") != nullptr || !str_startswith_nocase(pCommand, pInput))
+			return false;
+		str_copy(pBuf, pCommand, BufSize);
+		str_append(pBuf, " ", BufSize);
 		return true;
 	}
 	static bool ShouldHideBlockWordsMessage(EBlockWordsAction Action, bool Matched, int ClientId, bool IsLocalClient, int Team)

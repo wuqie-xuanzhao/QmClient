@@ -20,30 +20,30 @@ void NTranslateUiSettings::RenderTranslateUiModule(CMenus *pMenus, CUIRect &Card
 	CardContent.HSplitTop(LineHeight, &Row, &CardContent);
 	pMenus->DoLine_ColorPicker(&s_TranslateBtnDisabledId, LineHeight, BodySize, 0, &Row,
 		Localize("Button - Disabled"), &g_Config.m_QmTranslateBtnColorDisabled,
-		color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmTranslateBtnColorDisabled, true)), true, nullptr, true);
+		color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmTranslateBtnColorDisabled, true)), true, nullptr, true);
 	CardContent.HSplitTop(LineSpacing, nullptr, &CardContent);
 
 	CardContent.HSplitTop(LineHeight, &Row, &CardContent);
 	pMenus->DoLine_ColorPicker(&s_TranslateBtnEnabledId, LineHeight, BodySize, 0, &Row,
 		Localize("Button - Enabled"), &g_Config.m_QmTranslateBtnColorEnabled,
-		color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmTranslateBtnColorEnabled, true)), true, nullptr, true);
+		color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmTranslateBtnColorEnabled, true)), true, nullptr, true);
 	CardContent.HSplitTop(LineSpacing, nullptr, &CardContent);
 
 	CardContent.HSplitTop(LineHeight, &Row, &CardContent);
 	pMenus->DoLine_ColorPicker(&s_TranslateMenuBgId, LineHeight, BodySize, 0, &Row,
 		Localize("Menu background"), &g_Config.m_QmTranslateMenuBgColor,
-		color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmTranslateMenuBgColor, true)), true, nullptr, true);
+		color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmTranslateMenuBgColor, true)), true, nullptr, true);
 	CardContent.HSplitTop(LineSpacing, nullptr, &CardContent);
 
 	CardContent.HSplitTop(LineHeight, &Row, &CardContent);
 	pMenus->DoLine_ColorPicker(&s_TranslateMenuSelectedId, LineHeight, BodySize, 0, &Row,
 		Localize("Menu option - selected"), &g_Config.m_QmTranslateMenuOptionSelected,
-		color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmTranslateMenuOptionSelected, true)), true, nullptr, true);
+		color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmTranslateMenuOptionSelected, true)), true, nullptr, true);
 	CardContent.HSplitTop(LineSpacing, nullptr, &CardContent);
 
 	CardContent.HSplitTop(LineHeight, &Row, &CardContent);
 	pMenus->DoLine_ColorPicker(&s_TranslateMenuNormalId, LineHeight, BodySize, 0, &Row,
 		Localize("Menu option - normal"), &g_Config.m_QmTranslateMenuOptionNormal,
-		color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmTranslateMenuOptionNormal, true)), true, nullptr, true);
+		color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmTranslateMenuOptionNormal, true)), true, nullptr, true);
 	CardContent.HSplitTop(LineSpacing, nullptr, &CardContent);
 }

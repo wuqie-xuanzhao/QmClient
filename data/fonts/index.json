@@ -1,7 +1,8 @@
 {
     "font files": [
         "DejaVuSans.ttf",
-        "Font_Awesome_6_Free-Solid-900.otf",
+        "Phosphor-Regular.ttf",
+        "Phosphor-Bold.ttf",
         "GlowSansJ-Compressed-Book.otf",
         "SourceHanSans.ttc",
         "NotoEmoji-Regular.ttf"
@@ -17,5 +18,6 @@
         "Source Han Sans",
         "Noto Emoji"
     ],
-    "icon": "Font Awesome 6 Free"
+    "icon": "Phosphor",
+    "icon bold": "Phosphor-Bold"
 }

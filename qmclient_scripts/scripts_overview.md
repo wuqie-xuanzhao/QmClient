@@ -26,6 +26,7 @@
 |------|------|
 | `qmclient_scripts/gate/check_gate.py` | Python 版仓库级门禁总入口 |
 | `checks/strict_build` | 严格构建与静态分析（`check_gate.py` 调度模块） |
+| `qmclient_scripts/gate/check_settings_ui_migration.py` | P5 标准设置页统一 UI 迁移结构清单（按页面或全量） |
 | `qmclient_scripts/gate/baseline_debt_allowlist.json` | 基线白名单数据 |
 
 适用：
@@ -43,6 +44,8 @@
 - `qmclient_scripts/cmake-windows.cmd`
 - `qmclient_scripts/darwin_fix_install_names.py`
 - `qmclient_scripts/make_lib_openssl.sh`
+- `qmclient_scripts/cmake-windows-filter.py` — 过滤 Windows/MSVC 构建日志噪音（如"注意: 包含文件:"前缀）
+- `qmclient_scripts/repair_ninja_msvc_prefix.py` — 修复 Ninja + MSVC 下的依赖前缀编码（configure/build 通用）
 
 ### 3. 代码卫生与内容生成辅助
 
@@ -70,22 +73,22 @@
 
 `qmclient_scripts/languages_qmclient/` 语言脚本入口：
 
-- `source_keys.py`：共享源码 key 提取器，扫描全 `src/`，提取 `Localize` / `Localizable`、`Register` help 和 QmClient 间接 key
-- `extract_strings.py`：写出 `extracted_strings.txt`，并生成 `extracted_audit_report.json`；active key 清单继续只承载 i18n 主链 source key，审计报告另外输出 `must_i18n`、`business_data`、`test_only`、`needs_review`、`violation`
+- `source_keys.py`：共享源码 key 提取器，支持全量扫描与 Git diff 增量合并，提取 `Localize` / `Localizable`、`Register` help 和 QmClient 间接 key
+- `extract_strings.py`：默认按 Git diff 增量更新完整 `extracted_strings.txt`、`extracted_records_cache.json` 和 `extracted_audit_report.json`；传 `--full` 时重扫源码并重建缓存；active key 清单继续只承载 i18n 主链 source key，审计报告另外输出 `must_i18n`、`business_data`、`test_only`、`needs_review`、`violation`
 - `translations/i18n/*.toml`：按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全量语言留空
 - `generate_all.py`：从当前源码 key 和模块化 TOML 维护源生成 `generate_all.GENERATED_LANGUAGES` 中登记的 `data/languages/*.txt`，缺失时回退英文 key
 - `review_duplicate_entries.py`：只读审查重复、相似、空译文和疑似未使用项；unused 直接按最终 active source key 集合判断，避免 context 漂移误报
-- `audit_translation_drift.py`：只读对比当前 `translations/i18n/*.toml` 与 Git 历史里的 `data/languages/simplified_chinese.txt`，用于审查历史译法是否被新维护源改偏；默认基线为 `HEAD`，报告写到被忽略的 `tmp/translation_drift_report.txt`
+- `audit_translation_drift.py`：只读对比当前 `translations/i18n/*.toml` 与 Git 历史里的 `data/languages/simplified_chinese.txt`，用于审查历史译法是否被新维护源改偏；默认基线为 `HEAD`
 - `translate_with_local_http.py`：通过 OpenAI-compatible HTTP 接口生成翻译 draft；所有语言默认只写 `translations_draft/<language>/*.toml`，审核通过后才允许显式 `--write-back` 回填主 TOML 维护源；回填必须按审核通过的条目做 patch，不重写整份模块 TOML
-- `validate.py`：校验提取文件与审计报告新鲜度、生成产物覆盖、模块化 i18n store 可读性和 legacy overlay 删除状态；`violation` 会返回失败，`needs_review` 只作为人工清理 backlog 提示
+- `validate.py`：默认重扫源码校验提取文件与审计报告新鲜度、生成产物覆盖、模块化 i18n store 可读性和 legacy overlay 删除状态；传 `--incremental` 时使用增量缓存做本地快速校验；`violation` 会返回失败，`needs_review` 只作为人工清理 backlog 提示
 
 推荐 i18n 工作流：
 
 1. 修改源码中的英文 key 或新增 `Localize` / `Localizable` / `Register` help 调用
-2. 运行 `python qmclient_scripts/languages_qmclient/extract_strings.py`
+2. 运行 `python3 qmclient_scripts/languages_qmclient/extract_strings.py`（默认增量；需要重建缓存时加 `--full`）
 3. 按需更新 `qmclient_scripts/languages_qmclient/translations/i18n/*.toml`
-4. 运行 `python qmclient_scripts/languages_qmclient/generate_all.py`
-5. 运行 `python qmclient_scripts/languages_qmclient/validate.py` 与 `python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
+4. 运行 `python3 qmclient_scripts/languages_qmclient/generate_all.py`
+5. 运行 `python3 qmclient_scripts/languages_qmclient/validate.py` 与 `python3 qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
 
 说明：
 
@@ -93,37 +96,49 @@
 - `translations/i18n/*.toml` 才是翻译维护源；按代码模块拆分，单条记录可带多语言翻译，未填写的语言在生成时回退英文 key。
 - `translations_draft/<language>/*.toml` 是 HTTP 模型生成的草稿维护源，用于人工审阅或后续回填，不参与运行时生成链；所有语言都先走 draft，回填必须显式使用 `--write-back`，且只 patch 审核通过的目标条目。
 - 新增英文 source key 后，推荐流程是：`extract_strings.py` 提取 key -> `translate_with_local_http.py --languages ...` 生成多语言 draft -> 人工审核 draft -> `--write-back` 回填主 TOML -> `generate_all.py` 生成运行时语言文件 -> `validate.py` 验证。
+- 生成 draft 补缺时不要传 `--rewrite`；它会把已有译文也纳入任务，导致接近全量重翻。`--timeout` 只控制单个 HTTP 请求，不控制整条命令总时长；远端大批量翻译应按语言或模块分段运行，避免被外层任务超时直接杀掉。
 - 字符串分类按职责判断，不再按“是不是中文”判断是否漏翻译：客户端自有展示文案进入 i18n；兼容匹配/解析字面量留在业务层；测试样本文本只留测试。
 - 当需要核对“当前 TOML 是否偏离项目原有简中口径”时，运行 `audit_translation_drift.py`。它是历史译法审计工具，不参与运行时生成链，也不阻断 `validate.py`。
 
 ## 推荐入口
 
+macOS/Linux 使用 `python3`；Windows 使用 `py -3` 或已配置的 `python`。
+
 ### 仓库级门禁
 
 ```bash
-python qmclient_scripts/gate/check_gate.py --mode quick
-python qmclient_scripts/gate/check_gate.py --mode default
-python qmclient_scripts/gate/check_gate.py --mode full
+python3 qmclient_scripts/gate/check_gate.py --mode quick
+python3 qmclient_scripts/gate/check_gate.py --mode default
+python3 qmclient_scripts/gate/check_gate.py --mode full
 ```
+
+### P5 设置页迁移结构清单
+
+```bash
+python3 qmclient_scripts/gate/check_settings_ui_migration.py --page general
+python3 qmclient_scripts/gate/check_settings_ui_migration.py --all
+```
+
+该清单只核对 P5 的页面结构契约：统一 layout/card/deck/scroll/input 路径、旧路径删除，以及 card registry 和搜索导航目标。页面尚未迁移时 `--all` 预期失败；每个页面切片完成后先跑对应 `--page`，P5 收口时再跑 `--all`。
 
 ### GitHub Release 说明
 
 ```bash
-python qmclient_scripts/generate_release_notes.py --version vX.Y.Z --current-tag vX.Y.Z --output tmp/release-notes.md
+python3 qmclient_scripts/generate_release_notes.py --version vX.Y.Z --current-tag vX.Y.Z --output tmp/release-notes.md
 ```
 
 ### 版本号收口
 
 ```bash
-python qmclient_scripts/bump_version.py --version X.Y.Z
-python qmclient_scripts/bump_version.py --tag vX.Y.Z
+python3 qmclient_scripts/bump_version.py --version X.Y.Z
+python3 qmclient_scripts/bump_version.py --tag vX.Y.Z
 ```
 
 ### baseline allowlist
 
 ```bash
-python qmclient_scripts/gate/check_gate.py --mode quick --report-json-path tmp/check-gate-report.json
-python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-report.json --output qmclient_scripts/gate/baseline_debt_allowlist.json
+python3 qmclient_scripts/gate/check_gate.py --mode quick --report-json-path tmp/check-gate-report.json
+python3 qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-report.json --output qmclient_scripts/gate/baseline_debt_allowlist.json
 ```
 
 说明：
@@ -140,6 +155,7 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 它负责：
 
 - 把源码卫生检查、严格调试检查、测试、allowlist 与 JSON 报告收口成统一工作流
+- 通过声明式检查注册表统一 mode、skip、scope 和特殊参数，避免在主流程按检查名分支
 - 区分“已知历史债务”和“当前新增阻断”
 
 ### 模式
@@ -153,10 +169,11 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 默认内容：
 
 - 配置变量使用检查
-- 文档一致性检查
 - 头文件 guard 检查
 - 标准头文件检查
 - `fix_style.py -n`
+- 改动触及统一设置页文件时，运行 P5 设置页迁移结构清单
+- 构建或测试前检查递归 Git 子模块是否已经初始化
 
 #### `default`
 
@@ -198,10 +215,14 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 - `仓库基线债务`
 - `当前改动/构建阻断`
 
+JSON 与控制台报告同时区分 `RUN`、显式 `SKIP` 和按范围 `NOT_APPLICABLE`。必需检查被显式跳过时，结果标记为 `DEGRADED`，不能表述为完整 mode 通过；`--dry-run` 标记为 `DRY_RUN`。报告写入失败属于 gate 失败，必须返回非零退出码。
+
+scope 同时保留全部改动路径和首方 C/C++ 子集：前者用于按路径触发翻译、文档、设置页等专项检查，后者继续用于格式、命名和 clang-tidy 等 C/C++ 检查。
+
 ### 常用命令
 
 ```bash
-python qmclient_scripts/gate/check_gate.py --mode default --explain-scope --report-json-path tmp/check-gate-report.json
+python3 qmclient_scripts/gate/check_gate.py --mode default --explain-scope --report-json-path tmp/check-gate-report.json
 ```
 
 ## 不要这样用
@@ -210,3 +231,8 @@ python qmclient_scripts/gate/check_gate.py --mode default --explain-scope --repo
 - 不要绕开 `qmclient_scripts/gate/check_gate.py` 自己临时拼一套等价门禁
 - 不要把 `qmclient_scripts/` 根目录当成完全平级；门禁相关内容统一以 `gate/` 为准
 - 不要在 QmClient gate 或 workflow 中直接调用根目录 `scripts/` 下的 QmClient 特化脚本；改用 `qmclient_scripts/` 复制件
+
+## 关联文档
+
+- `.agents/README.md`
+- `.agents/skills/qmclient-verification-gate/SKILL.md`

@@ -1,17 +1,13 @@
-# Contributing code to QmClient
+# Contributing code to DDNet
 
 > 📄 This document is available in <a href="CONTRIBUTING_zh.md">中文</a></p>
 
-## QmClient contribution entry
-
-Open issues and pull requests against [wxj881027/QmClient](https://github.com/wxj881027/QmClient), not the upstream DDNet repository. Discuss behavior changes before implementation, follow the repository workflow in `AGENTS.md`, and run the relevant gate and tests before requesting review.
-
-QmClient inherits the compatibility and C++ conventions below from DDNet. Links to DDNet issues and pull requests in the retained upstream guidance are background examples, not QmClient submission targets.
+> ℹ️ This is the upstream DDNet guide. **QmClient-specific workflow** (commit/PR format, release, gate, AI agent rules) is in [`AGENTS.md`](AGENTS.md) and [`docs/ai-workflow/`](docs/ai-workflow/meta.md) — follow those for QmClient work.
 
 ## General
 
-Please open a QmClient issue first to discuss the idea before starting to write code.
-It would be unfortunate if you spend time working on a contribution that does not align with the scope and compatibility requirements of QmClient.
+Please open an issue first discussing the idea before starting to write code.
+It would be unfortunate if you spend time working on a contribution that does not align with the ideals of the DDNet project.
 
 A non-exhaustive list of things that usually get rejected:
 - Extending dummy with new gameplay-affecting features.
@@ -23,16 +19,18 @@ A non-exhaustive list of things that usually get rejected:
 	- Existing maps should not break.
 	- New gameplay should not make runs easier on already completed maps.
 
-Check the [QmClient issue list](https://github.com/wxj881027/QmClient/issues) to find issues to work on.
-Unlabeled or unconfirmed issues may not be ready for implementation, so confirm their status with a maintainer first.
+Check the [list of issues](https://github.com/ddnet/ddnet/issues) to find issues to work on.
+Unlabeled issues have not been triaged yet and are usually not good candidates.
+Furthermore, the label https://github.com/ddnet/ddnet/labels/needs-discussion indicates issues that still need discussion before they can be implemented and issues with the label https://github.com/ddnet/ddnet/labels/fix-changes-physics are too involved for new contributors.
+Working on issues with the labels https://github.com/ddnet/ddnet/labels/good%20first%20issue, https://github.com/ddnet/ddnet/labels/bug and https://github.com/ddnet/ddnet/labels/feature-accepted is recommended.
 Make sure the issue is not already being worked on by someone else, by checking its assignment and whether there are open pull requests linked to it.
 If you would like to work on an issue, please comment on it to be assigned to it or if you have any questions.
 
-Adding new features requires maintainer agreement before implementation to avoid feature creep.
+Adding new features generally requires the support of at least two maintainers to avoid feature creep.
 
 ## Programming languages
 
-We currently use the following languages to develop the DDNet-derived QmClient codebase.
+We currently use the following languages to develop DDNet.
 
 - C++
 - very marginally Rust
@@ -52,7 +50,7 @@ If your github pipeline shows some errors please have a look at the logs and try
 
 Such fix commits should ideally be squashed into one big commit using `git commit --amend` or `git rebase -i`.
 
-A lot of style issues can be fixed automatically with `python qmclient_scripts/fix_style.py`. Use `-n` for a dry run.
+A lot of the style offenses can be fixed automatically by running the fix script `./scripts/fix_style.py`.
 
 We use clang-format 20 to format C++ code.
 
@@ -373,6 +371,16 @@ The documentation is updated regularly and available at https://codedoc.ddnet.or
 
 We use [Javadoc style block comments](https://www.doxygen.nl/manual/docblocks.html) and prefix [doxygen commands](https://www.doxygen.nl/manual/commands.html) with `@`, not with `\`.
 
+## Localization
+
+We use [Weblate](https://hosted.weblate.org/engage/ddnet/) to translate user-facing strings in the DDNet client.
+Register on Weblate to contribute to the translation project.
+Refer to the [Weblate documentation](https://docs.weblate.org/en/latest/index.html) for an introduction into translating with Weblate.
+To suggest adding translation for another language: [open an issue on GitHub](https://github.com/ddnet/ddnet/issues/new).
+
+The translation files in the `data/languages` folder should not be changed manually by translators.
+Maintainers will update the translation files for releases based on the translations on Weblate.
+
 ## Commit messages
 
-Describe the change your contribution makes for the player/user instead of only listing technical edits. QmClient commit and PR titles use `<type>(<scope>): <中文简述>`; the body starts with the problem or background and groups details under labels such as `fix`, `test`, and `docs`.
+Describe the change your contribution is making for the player/user instead of talking about what you did in a technical sense. Your PR messages will ideally be in a format that can directly be used in the [change log](https://ddnet.org/downloads/).

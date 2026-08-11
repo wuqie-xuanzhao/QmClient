@@ -13,6 +13,8 @@
 #include <engine/shared/protocol.h>
 #include <engine/textrender.h>
 
+#include <generated/protocol.h>
+
 #include <game/client/component.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
@@ -131,6 +133,11 @@ class CTClient : public CComponent
 	void TryAppendKeywordReplyRenameSuffix(bool UseDummy);
 
 	float m_FinishTextTimeout = 0.0f;
+	bool m_aFinishRenamePending[NUM_DUMMIES] = {false, false};
+	int m_aFinishRenameAttempts[NUM_DUMMIES] = {0, 0};
+	int64_t m_aFinishRenamePendingSince[NUM_DUMMIES] = {0, 0};
+	char m_aaFinishRenameTarget[NUM_DUMMIES][MAX_NAME_LENGTH] = {};
+	void ResetFinishRenameState(int Dummy = -1);
 	void DoFinishCheck();
 	const char *CurrentCommunityIdForFinishCheck() const;
 	void StartUpdateDownload();
@@ -193,6 +200,16 @@ class CTClient : public CComponent
 	int m_aaComboLastHammerHitSnapshotTick[NUM_DUMMIES][MAX_CLIENTS] = {};
 	int m_aComboLastHookedPlayer[NUM_DUMMIES] = {-1, -1};
 
+	// Auto Switch on Unfreeze (HJ大佬辅助)
+	bool m_aWasInFreezeForSwitch[NUM_DUMMIES] = {false, false};
+	void CheckAutoSwitchOnUnfreeze();
+	bool m_aWasInFreezeForGoresHammer[NUM_DUMMIES] = {false, false};
+	bool m_aGoresHammerWakeupFirePendingRelease[NUM_DUMMIES] = {false, false};
+
+	// Auto Close Chat on Unfreeze (HJ大佬辅助)
+	bool m_aWasInFreezeForChatClose[NUM_DUMMIES] = {false, false};
+	void CheckAutoCloseChatOnUnfreeze();
+
 	// 玩家统计跟踪
 	SPlayerStats m_aPlayerStats[NUM_DUMMIES];
 	int m_aLastGameplayLogicTick[NUM_DUMMIES] = {-1, -1};
@@ -243,10 +260,14 @@ class CTClient : public CComponent
 	int m_aGoresRunStartDistanceToFinish[NUM_DUMMIES] = {0, 0};
 	bool m_aGoresMapProgressValid[NUM_DUMMIES] = {false, false};
 	float m_aGoresMapProgress[NUM_DUMMIES] = {0.0f, 0.0f};
+	int m_aGoresPreHammerWeapon[NUM_DUMMIES] = {WEAPON_GUN, WEAPON_GUN};
+	bool m_aGoresHasPreHammerWeapon[NUM_DUMMIES] = {false, false};
+	bool m_aPrevFireForGores[NUM_DUMMIES] = {false, false};
 	bool IsGoresGameMode() const;
 	bool IsGoresMapProgressMap() const;
 	bool IsGoresModuleEnabled() const;
 	bool HasBlockingGoresWeapon() const;
+	bool HasExtraGoresWeapon() const;
 	void UpdateGoresWeaponCycle();
 	void InvalidateGoresDistanceField();
 	void EnsureGoresDistanceField();
@@ -383,6 +404,7 @@ public:
 	void OnRender() override;
 	bool OnInput(const IInput::CEvent &Event) override;
 	bool ShouldAppendGoresPrevWeapon() const;
+	bool IsFinishRenamePending(int Dummy) const { return Dummy >= 0 && Dummy < NUM_DUMMIES && m_aFinishRenamePending[Dummy]; }
 
 	void OnStateChange(int NewState, int OldState) override;
 	void OnNewSnapshot() override;
@@ -496,6 +518,8 @@ public:
 	// Gores FastInput Link
 	bool m_GoresModeStateKnown = false;
 	bool m_PrevGoresModeActive = false;
+	SQmFocusConfigOverrideState m_GoresDummyHammerOverride;
+	void ResetGoresDummyHammerOverride();
 	bool m_GoresAutoMapKnown = false;
 	unsigned m_GoresAutoMapToken = 0;
 	bool IsFastInputActive() const;

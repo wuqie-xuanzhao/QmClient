@@ -49,8 +49,9 @@ class AddSignatureTest(unittest.TestCase):
 
     def test_repository_files_keep_valid_prologs(self) -> None:
         modes_test = MODES_TEST_PATH.read_bytes()
-        self.assertTrue(modes_test.startswith(codecs.BOM_UTF8))
-        self.assertEqual(modes_test.count(codecs.BOM_UTF8), 1)
+        self.assertFalse(modes_test.startswith(codecs.BOM_UTF8))
+        self.assertEqual(modes_test.count(codecs.BOM_UTF8), 0)
+        self.assertTrue(modes_test.startswith(b'#include "test.h"'))
 
         openssl_script = OPENSSL_SCRIPT_PATH.read_bytes()
         self.assertEqual(

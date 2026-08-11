@@ -1583,15 +1583,15 @@ TEST(VoiceCore, ConfigDefaultsMatchFactoryDefaults)
 {
 	const auto Defaults = VoiceProcessingFactoryDefaults();
 
-	EXPECT_EQ(CConfig::ms_QmVoiceNoiseSuppressEnable, Defaults.m_NoiseSuppressMode);
-	EXPECT_EQ(CConfig::ms_QmVoiceNoiseSuppressStrength, Defaults.m_NoiseSuppressStrength);
-	EXPECT_NEAR(CConfig::ms_QmVoiceCompThreshold / 100.0f, Defaults.m_CompressorThreshold, 0.001f);
-	EXPECT_NEAR(CConfig::ms_QmVoiceCompRatio / 10.0f, Defaults.m_CompressorRatio, 0.001f);
-	EXPECT_NEAR(CConfig::ms_QmVoiceCompAttackMs / 1000.0f, Defaults.m_CompressorAttackSec, 0.001f);
-	EXPECT_NEAR(CConfig::ms_QmVoiceCompReleaseMs / 1000.0f, Defaults.m_CompressorReleaseSec, 0.001f);
-	EXPECT_NEAR(CConfig::ms_QmVoiceCompMakeup / 100.0f, Defaults.m_CompressorMakeupGain, 0.001f);
-	EXPECT_NEAR(CConfig::ms_QmVoiceLimiter / 100.0f, Defaults.m_Limiter, 0.001f);
-	EXPECT_EQ(CConfig::ms_QmVoiceAgcEnable, 0);
+	EXPECT_EQ(DefaultConfig::QmVoiceNoiseSuppressEnable, Defaults.m_NoiseSuppressMode);
+	EXPECT_EQ(DefaultConfig::QmVoiceNoiseSuppressStrength, Defaults.m_NoiseSuppressStrength);
+	EXPECT_NEAR(DefaultConfig::QmVoiceCompThreshold / 100.0f, Defaults.m_CompressorThreshold, 0.001f);
+	EXPECT_NEAR(DefaultConfig::QmVoiceCompRatio / 10.0f, Defaults.m_CompressorRatio, 0.001f);
+	EXPECT_NEAR(DefaultConfig::QmVoiceCompAttackMs / 1000.0f, Defaults.m_CompressorAttackSec, 0.001f);
+	EXPECT_NEAR(DefaultConfig::QmVoiceCompReleaseMs / 1000.0f, Defaults.m_CompressorReleaseSec, 0.001f);
+	EXPECT_NEAR(DefaultConfig::QmVoiceCompMakeup / 100.0f, Defaults.m_CompressorMakeupGain, 0.001f);
+	EXPECT_NEAR(DefaultConfig::QmVoiceLimiter / 100.0f, Defaults.m_Limiter, 0.001f);
+	EXPECT_EQ(DefaultConfig::QmVoiceAgcEnable, 0);
 }
 
 TEST(VoiceCore, VoiceProcessTraceCallbackRecordsStagesInOrder)

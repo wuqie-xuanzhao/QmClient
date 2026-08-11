@@ -2,10 +2,16 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "ui.h"
 
+#include "QmUi/QmDropdown.h"
+#include "QmUi/QmUiPerf.h"
+#include "QmUi/UiSurface.h"
+#include "components/qmclient/perf_logging.h"
+#include "qm_icon_manager.h"
 #include "ui_scrollregion.h"
 
 #include <base/log.h>
 #include <base/math.h>
+#include <base/perf_timer.h>
 #include <base/system.h>
 
 #include <engine/client.h>
@@ -193,15 +199,6 @@ CUi::CUi()
 
 CUi::~CUi()
 {
-	DestroyGaussianBlurTargets();
-	for(SQuadBatchRectContainer &Container : m_vQuadBatchRectContainers)
-	{
-		Graphics()->DeleteQuadContainer(Container.m_QuadContainerIndex);
-		Container.m_QuadContainerIndex = -1;
-	}
-	m_vQuadBatchRectContainers.clear();
-	m_vQuadBatchSprites.clear();
-
 	for(CUIElement *pEl : m_vpUIElements)
 	{
 		if(pEl != nullptr)
@@ -214,6 +211,17 @@ CUi::~CUi()
 		delete pEl;
 	}
 	m_vpOwnUIElements.clear();
+}
+
+void CUi::OnShutdown()
+{
+	if(m_pGraphics == nullptr || m_pTextRender == nullptr)
+		return;
+	OnElementsReset();
+	m_pClient = nullptr;
+	m_pGraphics = nullptr;
+	m_pInput = nullptr;
+	m_pTextRender = nullptr;
 }
 
 CUIElement *CUi::GetNewUIElement(int RequestedRectCount)
@@ -292,6 +300,7 @@ void CUi::EndGaussianBlurSuppression()
 
 void CUi::DestroyGaussianBlurTargets()
 {
+	m_GaussianBlurPrepared = false;
 	if(m_pGraphics == nullptr)
 		return;
 	Graphics()->DestroyRenderTarget(&m_GaussianBlurSource);
@@ -304,9 +313,13 @@ void CUi::DestroyGaussianBlurTargets()
 bool CUi::PrepareGaussianBlur()
 {
 	if(!g_Config.m_QmGaussianBlur)
+	{
+		m_GaussianBlurPrepared = false;
 		return false;
+	}
 	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
 	{
+		m_GaussianBlurPrepared = false;
 		if(m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid())
 			DestroyGaussianBlurTargets();
 		return false;
@@ -315,7 +328,10 @@ bool CUi::PrepareGaussianBlur()
 	const int BlurWidth = UiGaussianBlurTargetDimension(Graphics()->ScreenWidth());
 	const int BlurHeight = UiGaussianBlurTargetDimension(Graphics()->ScreenHeight());
 	if(BlurWidth <= 0 || BlurHeight <= 0)
+	{
+		m_GaussianBlurPrepared = false;
 		return false;
+	}
 
 	if(BlurWidth != m_GaussianBlurWidth || BlurHeight != m_GaussianBlurHeight || !m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
 	{
@@ -332,15 +348,29 @@ bool CUi::PrepareGaussianBlur()
 		m_GaussianBlurHeight = BlurHeight;
 	}
 
+	const uint64_t PerfFrame = Client()->PerfFrame();
+	if(m_GaussianBlurPrepared && m_GaussianBlurPreparedFrame == PerfFrame)
+		return true;
+
 	FlushQuadBatch();
 	Graphics()->FlushVertices();
 	if(!Graphics()->CaptureBackbufferToRenderTarget(m_GaussianBlurSource))
+	{
+		m_GaussianBlurPrepared = false;
 		return false;
+	}
 
 	IGraphics::SGaussianBlurParams BlurParams;
 	BlurParams.m_Radius = 4;
 	BlurParams.m_Sigma = 2.0f;
-	return Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_GaussianBlurTemporary, m_GaussianBlurTarget, BlurParams);
+	if(!Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_GaussianBlurTemporary, m_GaussianBlurTarget, BlurParams))
+	{
+		m_GaussianBlurPrepared = false;
+		return false;
+	}
+	m_GaussianBlurPreparedFrame = PerfFrame;
+	m_GaussianBlurPrepared = true;
+	return true;
 }
 
 void CUi::RenderGaussianBlur(const CUIRect &Rect, float Alpha, int Corners, float Rounding)
@@ -409,15 +439,39 @@ void CUi::OnCursorMove(float X, float Y)
 	m_UpdatedMouseDelta += vec2(X, Y);
 }
 
-void CUi::Update(vec2 MouseWorldPos)
+void CUi::BeginWheelOwnershipFrame()
 {
+	const uint64_t FrameId = Client()->PerfFrame();
+	if(m_WheelOwnership.FrameStarted(FrameId))
+		return;
+	float RawDelta = 0.0f;
+	if(ConsumeHotkey(HOTKEY_SCROLL_UP))
+		RawDelta += 120.0f;
+	if(ConsumeHotkey(HOTKEY_SCROLL_DOWN))
+		RawDelta -= 120.0f;
+	m_WheelOwnership.BeginFrame(FrameId, RawDelta, Input() != nullptr && Input()->AltIsPressed());
+}
+
+void CUi::RegisterWheelOwner(const void *pOwnerId, EUiWheelOwnerPriority Priority, const CUIRect &HotRect, bool Eligible)
+{
+	QmRegisterWheelOwnerCandidate(m_WheelOwnership, {pOwnerId, Priority, HotRect, Eligible}, MousePos(), Enabled());
+}
+
+bool CUi::TryConsumeWheel(const void *pOwnerId, float *pDelta)
+{
+	return QmTryConsumeWheel(m_WheelOwnership, pOwnerId, pDelta);
+}
+
+void CUi::Update()
+{
+	BeginWheelOwnershipFrame();
+	m_MenuUiFirstWheelPerf = false;
 	const int UiScale = std::clamp(g_Config.m_QmUiScale, 50, 200);
 	if(UiScale != m_LastUiScale)
 	{
 		m_LastUiScale = UiScale;
 		Client()->OnWindowResize();
 	}
-
 	const vec2 WindowSize = vec2(Graphics()->WindowWidth(), Graphics()->WindowHeight());
 	const CUIRect *pScreen = Screen();
 
@@ -450,7 +504,7 @@ void CUi::Update(vec2 MouseWorldPos)
 			{
 				if(m_pHotScrollRegion != nullptr)
 				{
-					m_pHotScrollRegion->ScrollRelativeDirect(-m_TouchState.m_ScrollAmount.y * pScreen->h);
+					m_pHotScrollRegion->ScrollRelativeDirect(-m_TouchState.m_ScrollAmount * pScreen->Size());
 				}
 				m_TouchState.m_ScrollAmount = vec2(0.0f, 0.0f);
 			}
@@ -471,7 +525,6 @@ void CUi::Update(vec2 MouseWorldPos)
 	m_MousePos = m_UpdatedMousePos * vec2(pScreen->w, pScreen->h) / WindowSize;
 	m_MouseDelta = m_UpdatedMouseDelta;
 	m_UpdatedMouseDelta = vec2(0.0f, 0.0f);
-	m_MouseWorldPos = MouseWorldPos;
 	m_LastMouseButtons = m_MouseButtons;
 	m_MouseButtons = m_UpdatedMouseButtons;
 	m_UpdatedMouseButtons = UpdatedMouseButtonsNext;
@@ -482,6 +535,16 @@ void CUi::Update(vec2 MouseWorldPos)
 	m_pBecomingHotItem = nullptr;
 	m_pHotScrollRegion = m_pBecomingHotScrollRegion;
 	m_pBecomingHotScrollRegion = nullptr;
+	m_BecomingHotScrollRegionPriority = EUiWheelOwnerPriority::PAGE;
+	m_UnderlyingScrollBlocked = false;
+	for(const SPopupMenu &PopupMenu : m_vPopupMenus)
+	{
+		if(PopupMenu.m_Props.m_BlockUnderlyingScroll && MouseInside(&PopupMenu.m_Rect) && (!PopupMenu.m_Props.m_ClipToViewport || MouseInside(&PopupMenu.m_Props.m_Viewport)))
+		{
+			m_UnderlyingScrollBlocked = true;
+			break;
+		}
+	}
 
 	if(Enabled())
 	{
@@ -512,6 +575,21 @@ void CUi::DebugRender(float X, float Y)
 bool CUi::MouseInside(const CUIRect *pRect) const
 {
 	return pRect->Inside(MousePos());
+}
+
+bool CUi::UnderlyingPointerInputBlocked() const
+{
+	if(m_PopupInputDepth > 0)
+		return false;
+
+	return std::any_of(m_vPopupMenus.begin(), m_vPopupMenus.end(), [](const SPopupMenu &PopupMenu) {
+		return PopupMenu.m_Props.m_BlockUnderlyingPointerInput;
+	});
+}
+
+bool CUi::MouseHovered(const CUIRect *pRect) const
+{
+	return !RenderOnly() && !UnderlyingPointerInputBlocked() && MouseInside(pRect) && MouseInsideClip();
 }
 
 void CUi::ConvertMouseMove(float *pX, float *pY, IInput::ECursorType CursorType) const
@@ -608,6 +686,13 @@ void CUi::UpdateTouchState(CTouchState &State) const
 				// Accumulate average delta of the two fingers
 				State.m_ScrollAmount.y += (Delta0.y + Delta1.y) / 2.0f;
 			}
+			else if(absolute(Delta0.x) > DirectionThreshold * absolute(Delta0.y) && // Horizontal scrolling (x-delta must be larger than y-delta)
+				absolute(Delta1.x) > DirectionThreshold * absolute(Delta1.y) &&
+				Delta0.x * Delta1.x > 0.0f) // Same x direction required
+			{
+				// Accumulate average delta of the two fingers
+				State.m_ScrollAmount.x += (Delta0.x + Delta1.x) / 2.0f;
+			}
 		}
 	}
 	else
@@ -696,18 +781,34 @@ float CUi::PixelSize()
 	return Screen()->w / Graphics()->ScreenWidth();
 }
 
+void CUi::BeginRenderOnly()
+{
+	if(m_RenderOnlyDepth++ == 0)
+	{
+		CUIRect RenderOnlyClip = IsClipped() ? *ClipArea() : *Screen();
+		// 锚定在现有裁剪区右下角，确保后续嵌套裁剪不会产生负宽高。
+		RenderOnlyClip.x += RenderOnlyClip.w;
+		RenderOnlyClip.y += RenderOnlyClip.h;
+		RenderOnlyClip.w = 0.0f;
+		RenderOnlyClip.h = 0.0f;
+		ClipEnable(&RenderOnlyClip);
+	}
+}
+
+void CUi::EndRenderOnly()
+{
+	dbg_assert(m_RenderOnlyDepth > 0, "render-only UI scope underflow");
+	if(--m_RenderOnlyDepth == 0)
+		ClipDisable();
+}
+
 void CUi::ClipEnable(const CUIRect *pRect)
 {
 	FlushQuadBatch();
 	if(IsClipped())
 	{
 		const CUIRect *pOldRect = ClipArea();
-		CUIRect Intersection;
-		Intersection.x = std::max(pRect->x, pOldRect->x);
-		Intersection.y = std::max(pRect->y, pOldRect->y);
-		Intersection.w = std::min(pRect->x + pRect->w, pOldRect->x + pOldRect->w) - pRect->x;
-		Intersection.h = std::min(pRect->y + pRect->h, pOldRect->y + pOldRect->h) - pRect->y;
-		m_vClips.push_back(Intersection);
+		m_vClips.push_back(pRect->Intersection(*pOldRect));
 	}
 	else
 	{
@@ -730,6 +831,12 @@ const CUIRect *CUi::ClipArea() const
 	return &m_vClips.back();
 }
 
+const CUIRect *CUi::OutermostClipArea() const
+{
+	dbg_assert(IsClipped(), "no clip region");
+	return &m_vClips.front();
+}
+
 void CUi::UpdateClipping()
 {
 	if(IsClipped())
@@ -737,7 +844,12 @@ void CUi::UpdateClipping()
 		const CUIRect *pRect = ClipArea();
 		const float XScale = Graphics()->ScreenWidth() / Screen()->w;
 		const float YScale = Graphics()->ScreenHeight() / Screen()->h;
-		Graphics()->ClipEnable((int)(pRect->x * XScale), (int)(pRect->y * YScale), (int)(pRect->w * XScale), (int)(pRect->h * YScale));
+
+		const float ScaledX = pRect->x * XScale;
+		const float ScaledY = pRect->y * YScale;
+		const float RoundX = std::round(ScaledX);
+		const float RoundY = std::round(ScaledY);
+		Graphics()->ClipEnable(RoundX, RoundY, std::round(pRect->w * XScale + (ScaledX - RoundX)), std::round(pRect->h * YScale + (ScaledY - RoundY)));
 	}
 	else
 	{
@@ -844,6 +956,35 @@ int CUi::DoButtonLogic(const void *pId, int Checked, const CUIRect *pRect, const
 
 	int ReturnValue = 0;
 	const bool Inside = MouseHovered(pRect);
+	bool PreLayoutCurrentFramePress = false;
+	if(PreLayoutInput() && Inside && !IsPopupOpen())
+	{
+		for(int Button = 0; Button < 3; ++Button)
+		{
+			if((Flags & (BUTTONFLAG_LEFT << Button)) && MouseButtonClicked(Button))
+			{
+				PreLayoutCurrentFramePress = true;
+				break;
+			}
+		}
+	}
+	// Deck 的预布局发生在正式渲染之前，鼠标按下可能早于上一帧正式布局建立
+	// HotItem。只在该受控阶段按当前命中矩形补齐 HotItem，避免首次点击丢失；
+	// popup 打开时仍保持底层控件不可穿透。
+	if(PreLayoutCurrentFramePress)
+	{
+		// 新按下意味着旧控件不应继续占用 ActiveItem。被裁剪的卡片可能
+		// 没有机会在上一帧处理释放，这里只在 Deck 的预布局路径清理陈旧状态。
+		if(m_pActiveItem != nullptr || m_pLastActiveItem != nullptr)
+		{
+			if(CLineInput *pActiveInput = CLineInput::GetActiveInput())
+				pActiveInput->Deactivate();
+			m_pLastActiveItem = nullptr;
+			SetActiveItem(nullptr);
+		}
+		m_pHotItem = pId;
+		m_pBecomingHotItem = pId;
+	}
 
 	if(CheckActiveItem(pId))
 	{
@@ -863,7 +1004,10 @@ int CUi::DoButtonLogic(const void *pId, int Checked, const CUIRect *pRect, const
 		if((Flags & (BUTTONFLAG_LEFT << Button)) && MouseButton(Button))
 		{
 			NoRelevantButtonsPressed = false;
-			if(HotItem() == pId)
+			// 预布局先于正式渲染，同帧新出现或正在重排的控件可能尚未
+			// 进入上一帧 HotItem。首次按下直接建立 ActiveItem，释放仍由
+			// 同一套按钮状态机处理，避免只在按住期间显示 pressed。
+			if(HotItem() == pId || (PreLayoutCurrentFramePress && MouseButtonClicked(Button)))
 			{
 				SetActiveItem(pId);
 				m_ActiveButtonLogicButton = Button;
@@ -970,33 +1114,30 @@ EEditState CUi::DoPickerLogic(const void *pId, const CUIRect *pRect, float *pX, 
 	if(RenderOnly())
 		return EEditState::NONE;
 
-	if(MouseHovered(pRect))
+	const bool Inside = MouseHovered(pRect);
+	if(Inside)
 		SetHotItem(pId);
 
-	EEditState Res = EEditState::EDITING;
-
-	if(HotItem() == pId && MouseButtonClicked(0))
+	if(!CheckActiveItem(pId))
 	{
-		SetActiveItem(pId);
-		if(!m_pLastEditingItem)
+		if(Inside && MouseButtonClicked(0))
 		{
-			m_pLastEditingItem = pId;
-			Res = EEditState::START;
+			SetActiveItem(pId);
+		}
+		else
+		{
+			return EEditState::NONE;
 		}
 	}
 
-	if(CheckActiveItem(pId) && !MouseButton(0))
+	EEditState Res = EEditState::EDITING;
+	if(!MouseButton(0))
 	{
 		SetActiveItem(nullptr);
-		if(m_pLastEditingItem == pId)
-		{
-			m_pLastEditingItem = nullptr;
-			Res = EEditState::END;
-		}
+		Res = EEditState::END;
 	}
-
-	if(!CheckActiveItem(pId) && Res == EEditState::EDITING)
-		return EEditState::NONE;
+	else if(MouseButtonClicked(0))
+		Res = EEditState::START;
 
 	if(Input()->ShiftIsPressed())
 		m_MouseSlow = true;
@@ -1280,14 +1421,21 @@ CLabelResult CUi::DoLabel_AutoLineSize(const char *pText, float FontSize, int Al
 
 bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align)
 {
+	return DoEditBox(pLineInput, pRect, FontSize, Corners, vColorSplits, Align, {});
+}
+
+bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions)
+{
 	const float VSpacing = 2.0f;
 	const float EditBoxRounding = 5.0f;
+	const CUIRect *pHitRect = RenderOptions.m_pHitRect != nullptr ? RenderOptions.m_pHitRect : pRect;
 	CUIRect Textbox;
 	pRect->VMargin(VSpacing, &Textbox);
 	if(RenderOnly())
 	{
 		const bool Active = m_pLastActiveItem == pLineInput;
-		pRect->Draw(ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput)), Corners, EditBoxRounding);
+		if(RenderOptions.m_DrawBackground)
+			DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput)), ColorRGBA(), EditBoxRounding, 0.0f, Corners);
 		ClipEnable(pRect);
 		Textbox.x -= pLineInput->GetScrollOffset();
 		pLineInput->Render(&Textbox, FontSize, Align, false, -1.0f, 0.0f, vColorSplits);
@@ -1295,7 +1443,7 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 		return false;
 	}
 
-	const bool Inside = MouseHovered(pRect);
+	const bool Inside = MouseHovered(pHitRect);
 	bool Active = m_pLastActiveItem == pLineInput;
 	const bool Changed = pLineInput->WasChanged();
 	const bool CursorChanged = pLineInput->WasCursorChanged();
@@ -1319,7 +1467,7 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 			SetActiveItem(nullptr);
 		}
 	}
-	else if(HotItem() == pLineInput)
+	else if(Inside)
 	{
 		if(MouseButton(0))
 		{
@@ -1380,7 +1528,8 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	}
 
 	// Render
-	pRect->Draw(ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput)), Corners, EditBoxRounding);
+	if(RenderOptions.m_DrawBackground)
+		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput)), ColorRGBA(), EditBoxRounding, 0.0f, Corners);
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
 	const STextBoundingBox BoundingBox = pLineInput->Render(&Textbox, FontSize, Align, Changed || CursorChanged, -1.0f, 0.0f, vColorSplits);
@@ -1404,14 +1553,124 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	return Changed;
 }
 
+bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, float LineSpacing, int TextAlign, const SEditBoxRenderOptions &RenderOptions)
+{
+	if(pLineInput == nullptr || pRect == nullptr)
+		return false;
+
+	const CUIRect *pHitRect = RenderOptions.m_pHitRect != nullptr ? RenderOptions.m_pHitRect : pRect;
+	const bool Inside = MouseHovered(pHitRect);
+	bool Active = ActiveItem() == pLineInput || pLineInput->IsActive();
+	const bool Changed = pLineInput->WasChanged();
+	const bool CursorChanged = pLineInput->WasCursorChanged();
+	const bool ClickedOutside = (MouseButtonClicked(0) || MouseButtonClicked(1)) && !Inside;
+
+	constexpr float VSpacing = 2.0f;
+	CUIRect Textbox;
+	pRect->VMargin(VSpacing, &Textbox);
+	const float LineWidth = Textbox.w;
+
+	bool JustGotActive = false;
+	if(CheckActiveItem(pLineInput))
+	{
+		if(MouseButton(0))
+		{
+			if(pLineInput->IsActive() && (Input()->HasComposition() || Input()->GetCandidateCount()))
+			{
+				Input()->StopTextInput();
+				Input()->StartTextInput();
+			}
+		}
+		else
+		{
+			SetActiveItem(nullptr);
+		}
+	}
+	else if(HotItem() == pLineInput)
+	{
+		if(MouseButton(0))
+		{
+			if(!Active)
+				JustGotActive = true;
+			SetActiveItem(pLineInput);
+		}
+	}
+
+	if(Inside && !MouseButton(0))
+		SetHotItem(pLineInput);
+	if(Active && ClickedOutside)
+	{
+		ReleaseActiveTextInput(pLineInput);
+		Active = false;
+	}
+
+	if(Enabled() && Active && !JustGotActive)
+		pLineInput->Activate(EInputPriority::UI);
+	else
+		pLineInput->Deactivate();
+
+	CLineInput::SMouseSelection *pMouseSelection = pLineInput->GetMouseSelection();
+	if(Inside)
+	{
+		if(!pMouseSelection->m_Selecting && MouseButtonClicked(0))
+		{
+			pMouseSelection->m_Selecting = true;
+			pMouseSelection->m_PressMouse = MousePos();
+			pMouseSelection->m_Offset = vec2(0.0f, 0.0f);
+		}
+	}
+	if(pMouseSelection->m_Selecting)
+	{
+		pMouseSelection->m_ReleaseMouse = MousePos();
+		if(!MouseButton(0))
+		{
+			pMouseSelection->m_Selecting = false;
+			if(Active)
+				Input()->EnsureScreenKeyboardShown();
+		}
+	}
+
+	if(RenderOptions.m_DrawBackground)
+		DrawRoundedSurface(this, *pRect, ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput), ColorRGBA(), 3.0f);
+	ClipEnable(pRect);
+	pLineInput->Render(&Textbox, FontSize, TextAlign, Changed || CursorChanged, LineWidth, LineSpacing);
+	ClipDisable();
+
+	pLineInput->SetScrollOffset(0.0f);
+	pLineInput->SetScrollOffsetChange(0.0f);
+
+	return Changed;
+}
+
 bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits)
 {
+	return DoClearableEditBox(pLineInput, pRect, FontSize, Corners, vColorSplits, {});
+}
+
+bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)
+{
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	const float EditBoxRounding = 5.0f;
 	CUIRect EditBox, ClearButton;
 	pRect->VSplitRight(pRect->h, &EditBox, &ClearButton);
 
-	bool ReturnValue = DoEditBox(pLineInput, &EditBox, FontSize, Corners & ~IGraphics::CORNER_R, vColorSplits);
+	bool ReturnValue = DoEditBox(pLineInput, &EditBox, FontSize, Corners & ~IGraphics::CORNER_R, vColorSplits, TEXTALIGN_ML, RenderOptions);
 
+	DrawRoundedSurface(this, ClearButton, ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f * ButtonColorMul(pLineInput->GetClearButtonId()))), ColorRGBA(), EditBoxRounding, 0.0f, Corners & ~IGraphics::CORNER_L);
+	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+	DoLabel(&ClearButton, "×", ClearButton.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
+	if(DoButtonLogic(pLineInput->GetClearButtonId(), 0, &ClearButton, BUTTONFLAG_LEFT))
 	{
 		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 		ClearButton.Draw(ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f * ButtonColorMul(pLineInput->GetClearButtonId()))), Corners & ~IGraphics::CORNER_L, EditBoxRounding);
@@ -1431,13 +1690,27 @@ bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float
 
 bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled)
 {
+	return DoEditBox_Search(pLineInput, pRect, FontSize, HotkeyEnabled, {});
+}
+
+bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions)
+{
+	const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousTextOutlineColor = TextRender()->GetTextOutlineColor();
+	const ColorRGBA PreviousTextSelectionColor = TextRender()->GetTextSelectionColor();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
+
 	CUIRect QuickSearch = *pRect;
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 	DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS, FontSize, TEXTALIGN_ML);
 	const float SearchWidth = TextRender()->TextWidth(FontSize, FONT_ICON_MAGNIFYING_GLASS);
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
+	TextRender()->SetFontPreset(PreviousFontPreset);
+	TextRender()->TextOutlineColor(PreviousTextOutlineColor);
+	TextRender()->TextSelectionColor(PreviousTextSelectionColor);
+	TextRender()->TextColor(PreviousTextColor);
 	QuickSearch.VSplitLeft(SearchWidth + 5.0f, nullptr, &QuickSearch);
 	if(HotkeyEnabled && Input()->ModifierIsPressed() && Input()->KeyPress(KEY_F))
 	{
@@ -1445,42 +1718,32 @@ bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float F
 		pLineInput->SelectAll();
 	}
 	pLineInput->SetEmptyText(Localize("Search"));
-	return DoClearableEditBox(pLineInput, &QuickSearch, FontSize);
+	return DoClearableEditBox(pLineInput, &QuickSearch, FontSize, IGraphics::CORNER_ALL, {}, RenderOptions);
 }
 
 int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const std::function<const char *()> &GetTextLambda, const CUIRect *pRect, const SMenuButtonProperties &Props)
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 	const bool Enabled = Props.m_Enabled;
+	const bool UseRoundedRectSdf = Graphics()->HasRoundedRectSdf();
 	CUIRect Text = *pRect, DropDownIcon;
 	Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Text);
 	Text.HMargin((Text.h * Props.m_FontFactor) / 2.0f, &Text);
+	const float FontSize = Props.m_FontSize > 0.0f ? Props.m_FontSize : Text.h * CUi::ms_FontmodHeight;
 	if(Props.m_ShowDropDownIcon)
 	{
 		Text.VSplitRight(pRect->h * 0.25f, &Text, nullptr);
 		Text.VSplitRight(pRect->h * 0.75f, &Text, &DropDownIcon);
 	}
-	const bool FixedFontSize = Props.m_FontSize > 0.0f;
-	const float FontSize = FixedFontSize ? Props.m_FontSize : Text.h * CUi::ms_FontmodHeight;
-	SLabelProperties TextProps;
-	if(FixedFontSize)
-	{
-		TextProps.m_MaxWidth = Text.w;
-		TextProps.m_MinimumFontSize = FontSize;
-		TextProps.m_EllipsisAtEnd = true;
-	}
-	const int ExpectedLabelFlags = FixedFontSize ? TEXTFLAG_ELLIPSIS_AT_END : 0;
-	const bool TextContainerMissing = !UIElement.AreRectsInit() || !UIElement.Rect(0)->m_UITextContainer.Valid();
-	const bool TextStyleChanged = !UIElement.AreRectsInit() || UIElement.Rect(0)->m_FontSize != FontSize || UIElement.Rect(0)->m_TextAlign != TEXTALIGN_MC || UIElement.Rect(0)->m_LabelMaxWidth != TextProps.m_MaxWidth || UIElement.Rect(0)->m_LabelFlags != ExpectedLabelFlags;
 
-	if(TextContainerMissing || TextStyleChanged || Props.m_HintRequiresStringCheck || Props.m_HintCanChangePositionOrSize)
+	if(!UIElement.AreRectsInit() || Props.m_HintRequiresStringCheck || Props.m_HintCanChangePositionOrSize || !UIElement.Rect(0)->m_UITextContainer.Valid() || (UseRoundedRectSdf ? UIElement.Rect(0)->m_UIRectQuadContainer != -1 : UIElement.Rect(0)->m_UIRectQuadContainer == -1))
 	{
-		bool NeedsRecalc = TextContainerMissing || TextStyleChanged;
+		bool NeedsRecalc = !UIElement.AreRectsInit() || !UIElement.Rect(0)->m_UITextContainer.Valid() || (UseRoundedRectSdf ? UIElement.Rect(0)->m_UIRectQuadContainer != -1 : UIElement.Rect(0)->m_UIRectQuadContainer == -1);
 		if(Props.m_HintCanChangePositionOrSize)
 		{
 			if(UIElement.AreRectsInit())
 			{
-				if(UIElement.Rect(0)->m_X != pRect->x || UIElement.Rect(0)->m_Y != pRect->y || UIElement.Rect(0)->m_Width != pRect->w || UIElement.Rect(0)->m_Height != pRect->h || UIElement.Rect(0)->m_Rounding != Props.m_Rounding || UIElement.Rect(0)->m_Corners != Props.m_Corners || UIElement.Rect(0)->m_BackgroundAlphaScale != m_BackgroundAlphaScale)
+				if(UIElement.Rect(0)->m_X != pRect->x || UIElement.Rect(0)->m_Y != pRect->y || UIElement.Rect(0)->m_Width != pRect->w || UIElement.Rect(0)->m_Height != pRect->h || UIElement.Rect(0)->m_Rounding != Props.m_Rounding || UIElement.Rect(0)->m_Corners != Props.m_Corners || UIElement.Rect(0)->m_BackgroundAlphaScale != m_BackgroundAlphaScale || UIElement.Rect(0)->m_FontSize != FontSize)
 				{
 					NeedsRecalc = true;
 				}
@@ -1518,10 +1781,13 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 				if(!Enabled)
 					Color.a *= 0.65f;
 				Color = ScaleBackgroundAlpha(Color);
-				Graphics()->SetColor(Color);
-
 				CUIElement::SUIElementRect &NewRect = *UIElement.Rect(i);
-				NewRect.m_UIRectQuadContainer = Graphics()->CreateRectQuadContainer(pRect->x, pRect->y, pRect->w, pRect->h, Props.m_Rounding, Props.m_Corners);
+				NewRect.m_QuadColor = Color;
+				if(!UseRoundedRectSdf)
+				{
+					Graphics()->SetColor(Color);
+					NewRect.m_UIRectQuadContainer = Graphics()->CreateRectQuadContainer(pRect->x, pRect->y, pRect->w, pRect->h, Props.m_Rounding, Props.m_Corners);
+				}
 
 				NewRect.m_X = pRect->x;
 				NewRect.m_Y = pRect->y;
@@ -1537,10 +1803,7 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 					NewRect.m_Text = pText;
 					if(Props.m_UseIconFont)
 						TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-					if(FixedFontSize)
-						DoLabel(NewRect, &Text, pText, FontSize, TEXTALIGN_MC, TextProps);
-					else
-						DoLabel(NewRect, &Text, pText, FontSize, TEXTALIGN_MC);
+					DoLabel(NewRect, &Text, pText, FontSize, TEXTALIGN_MC);
 					if(Props.m_UseIconFont)
 						TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				}
@@ -1554,11 +1817,13 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 		Index = 0;
 	else if(Enabled && HotItem() == pId)
 		Index = 1;
-	const ColorRGBA BackgroundColor = UIElement.Rect(Index)->m_QuadColor;
-	if(BackgroundColor.a > 0.0f && BackgroundColor.a < 1.0f && GaussianBlurScopeActive())
-		RenderGaussianBlur(*pRect, GaussianBlurScopeAlpha(), Props.m_Corners, Props.m_Rounding);
-	Graphics()->TextureClear();
-	Graphics()->RenderQuadContainer(UIElement.Rect(Index)->m_UIRectQuadContainer, -1);
+	if(UseRoundedRectSdf)
+		DrawRoundedSurface(this, *pRect, UIElement.Rect(Index)->m_QuadColor, ColorRGBA(), Props.m_Rounding, 0.0f, Props.m_Corners);
+	else
+	{
+		Graphics()->TextureClear();
+		Graphics()->RenderQuadContainer(UIElement.Rect(Index)->m_UIRectQuadContainer, -1);
+	}
 	if(Props.m_ShowDropDownIcon)
 	{
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -1586,12 +1851,16 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, int Corners, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
-	pRect->Draw(ScaleBackgroundAlpha(ButtonColor.value_or(ColorRGBA(1.0f, 1.0f, 1.0f, (Checked ? 0.1f : 0.5f) * ButtonColorMul(pButtonContainer)))), Corners, 5.0f);
+	DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(ColorRGBA(1.0f, 1.0f, 1.0f, (Checked ? 0.1f : 0.5f) * ButtonColorMul(pButtonContainer)))), ColorRGBA(), 5.0f, 0.0f, Corners);
 
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+	const ColorRGBA PreviousColor = TextRender()->GetTextColor();
+	const ColorRGBA PreviousOutlineColor = TextRender()->GetTextOutlineColor();
+	const unsigned PreviousFlags = TextRender()->GetRenderFlags();
+	const EFontPreset PreviousPreset = TextRender()->GetFontPreset();
+	TextRender()->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
 	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	TextRender()->TextColor(ConfiguredQmUiIconColor(TextRender()->DefaultTextColor()));
 
 	CUIRect Label;
 	pRect->HMargin(2.0f, &Label);
@@ -1606,8 +1875,10 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
 
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	TextRender()->SetRenderFlags(PreviousFlags);
+	TextRender()->SetFontPreset(PreviousPreset);
+	TextRender()->TextOutlineColor(PreviousOutlineColor);
+	TextRender()->TextColor(PreviousColor);
 
 	return DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
 }
@@ -1615,8 +1886,8 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding, bool TransparentInactive, bool Enabled, const std::optional<ColorRGBA> ButtonColor, float MinimumFontSize)
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
-	if(!TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
-		pRect->Draw(ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), IGraphics::CORNER_ALL, 5.0f);
+	if(ButtonColor.has_value() || !TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
+		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), ColorRGBA(), 5.0f);
 
 	CUIRect Label;
 	pRect->Margin(Padding, &Label);
@@ -1645,32 +1916,44 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 	// logic
 	const bool Inside = MouseInside(pRect);
 	const int Base = Props.m_IsHex ? 16 : 10;
-	auto RenderValueSelectorDisplay = [&]() {
+	auto RenderValueSelectorDisplay = [&](bool RenderText = true) {
+		CUIRect Textbox;
+		pRect->VMargin(2.0f, &Textbox);
 		char aBuf[128];
-		if(pLabel[0] != '\0')
+		if(Props.m_pfnFormatValue != nullptr)
+		{
+			char aValueBuf[64];
+			Props.m_pfnFormatValue(Current, aValueBuf, sizeof(aValueBuf), Base, Props.m_HexPrefix);
+			if(pLabel[0] != '\0')
+				str_format(aBuf, sizeof(aBuf), "%s %s", pLabel, aValueBuf);
+			else
+				str_copy(aBuf, aValueBuf);
+		}
+		else if(pLabel[0] != '\0')
 		{
 			if(Props.m_IsHex)
 				str_format(aBuf, sizeof(aBuf), "%s #%0*" PRIX64, pLabel, Props.m_HexPrefix, Current);
 			else
 				str_format(aBuf, sizeof(aBuf), "%s %" PRId64, pLabel, Current);
 		}
+		else if(Props.m_IsHex)
+			str_format(aBuf, sizeof(aBuf), "#%0*" PRIX64, Props.m_HexPrefix, Current);
 		else
-		{
-			if(Props.m_IsHex)
-				str_format(aBuf, sizeof(aBuf), "#%0*" PRIX64, Props.m_HexPrefix, Current);
-			else
-				str_format(aBuf, sizeof(aBuf), "%" PRId64, Current);
-		}
+			str_format(aBuf, sizeof(aBuf), "%" PRId64, Current);
 		const bool Active = CheckActiveItem(pId) || m_ActiveValueSelectorState.m_pLastTextId == pId;
 		const bool Hovered = HotItem() == pId;
-		pRect->Draw(ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, Hovered)), IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, Hovered)), ColorRGBA(), 5.0f);
 		SLabelProperties ValueLabelProps;
-		ValueLabelProps.m_MaxWidth = pRect->w;
+		ValueLabelProps.m_MaxWidth = Textbox.w;
 		ValueLabelProps.m_DisallowNewline = true;
 		ValueLabelProps.m_StopAtEnd = true;
-		ValueLabelProps.m_MinimumFontSize = 6.0f;
-		const char *pDisplayText = m_ActiveValueSelectorState.m_pLastTextId == pId ? m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString() : aBuf;
-		DoLabel(pRect, pDisplayText, 10.0f, TEXTALIGN_MC, ValueLabelProps);
+		if(RenderText)
+		{
+			const char *pDisplayText = m_ActiveValueSelectorState.m_pLastTextId == pId ? m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString() : aBuf;
+			const float ValueFontSize = QmFitSingleLineFontSize(10.0f, 6.0f, TextRender()->TextWidth(10.0f, pDisplayText), Textbox.w);
+			ValueLabelProps.m_MinimumFontSize = ValueFontSize;
+			DoLabel(&Textbox, pDisplayText, ValueFontSize, Props.m_TextAlign, ValueLabelProps);
+		}
 	};
 
 	if(CheckActiveItem(pId))
@@ -1687,7 +1970,16 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 			if(Inside && ((m_ActiveValueSelectorState.m_Button == 0 && !m_ActiveValueSelectorState.m_DidScroll) || m_ActiveValueSelectorState.m_Button == 1))
 			{
 				m_ActiveValueSelectorState.m_pLastTextId = pId;
-				m_ActiveValueSelectorState.m_NumberInput.SetInteger64(Current, Base, Props.m_HexPrefix);
+				if(Props.m_pfnFormatValue != nullptr)
+				{
+					char aEditBuf[64];
+					Props.m_pfnFormatValue(Current, aEditBuf, sizeof(aEditBuf), Base, Props.m_HexPrefix);
+					m_ActiveValueSelectorState.m_NumberInput.Set(aEditBuf);
+				}
+				else
+				{
+					m_ActiveValueSelectorState.m_NumberInput.SetInteger64(Current, Base, Props.m_HexPrefix);
+				}
 				if(Props.m_SelectAllOnActivate)
 				{
 					m_ActiveValueSelectorState.m_NumberInput.SelectAll();
@@ -1706,13 +1998,25 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 	{
 		SetActiveItem(&m_ActiveValueSelectorState.m_NumberInput);
 		m_ActiveValueSelectorState.m_NumberInput.Activate(EInputPriority::UI);
-		TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
-		m_ActiveValueSelectorState.m_NumberInput.Render(pRect, 10.0f, Props.m_TextAlign, false, -1.0f, 0.0f, {});
-		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		RenderValueSelectorDisplay(false);
+		const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();
+		const char *pEditText = m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString();
+		CUIRect Textbox;
+		pRect->VMargin(2.0f, &Textbox);
+		const float EditFontSize = QmFitSingleLineFontSize(10.0f, 6.0f, TextRender()->TextWidth(10.0f, pEditText), Textbox.w);
+		m_ActiveValueSelectorState.m_NumberInput.Render(&Textbox, EditFontSize, Props.m_TextAlign, false, -1.0f, 0.0f, {});
+		TextRender()->TextColor(PreviousTextColor);
 
 		if(Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER) || ConsumeHotkey(HOTKEY_ENTER) || ((MouseButtonClicked(1) || MouseButtonClicked(0)) && !Inside))
 		{
-			Current = std::clamp(m_ActiveValueSelectorState.m_NumberInput.GetInteger64(Base), Min, Max);
+			int64_t ParsedValue = 0;
+			if(Props.m_pfnParseValue != nullptr)
+			{
+				if(Props.m_pfnParseValue(m_ActiveValueSelectorState.m_NumberInput.GetString(), ParsedValue, Base))
+					Current = std::clamp(ParsedValue, Min, Max);
+			}
+			else
+				Current = std::clamp(m_ActiveValueSelectorState.m_NumberInput.GetInteger64(Base), Min, Max);
 			DisableMouseLock();
 			ReleaseActiveTextInput(&m_ActiveValueSelectorState.m_NumberInput);
 			m_ActiveValueSelectorState.m_pLastTextId = nullptr;
@@ -1769,7 +2073,8 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 		}
 	}
 
-	RenderValueSelectorDisplay();
+	if(m_ActiveValueSelectorState.m_pLastTextId != pId)
+		RenderValueSelectorDisplay();
 
 	if(Inside && !MouseButton(0) && !MouseButton(1))
 		SetHotItem(pId);
@@ -1857,8 +2162,8 @@ float CUi::DoScrollbarV(const void *pId, const CUIRect *pRect, float Current)
 	}
 
 	// render
-	Rail.Draw(ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_ALL, Rail.w / 2.0f);
-	Handle.Draw(ScaleBackgroundAlpha(ms_ScrollBarColorFunction.GetColor(CheckActiveItem(pId), HotItem() == pId)), IGraphics::CORNER_ALL, Handle.w / 2.0f);
+	DrawRoundedSurface(this, Rail, ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), ColorRGBA(), Rail.w / 2.0f);
+	DrawRoundedSurface(this, Handle, ScaleBackgroundAlpha(ms_ScrollBarColorFunction.GetColor(CheckActiveItem(pId), HotItem() == pId)), ColorRGBA(), Handle.w / 2.0f);
 
 	return ReturnValue;
 }
@@ -1979,14 +2284,14 @@ float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, co
 		CUIRect Slider;
 		Handle.VMargin(-2.0f, &Slider);
 		Slider.HMargin(-3.0f, &Slider);
-		Slider.Draw(ScaleBackgroundAlpha(ColorRGBA(0.15f, 0.15f, 0.15f, 1.0f).Multiply(HandleColor)), IGraphics::CORNER_ALL, 5.0f);
+		DrawRoundedSurface(this, Slider, ScaleBackgroundAlpha(ColorRGBA(0.15f, 0.15f, 0.15f, 1.0f).Multiply(HandleColor)), ColorRGBA(), 5.0f);
 		Slider.Margin(2.0f, &Slider);
-		Slider.Draw(ScaleBackgroundAlpha(pColorInner->Multiply(HandleColor)), IGraphics::CORNER_ALL, 3.0f);
+		DrawRoundedSurface(this, Slider, ScaleBackgroundAlpha(pColorInner->Multiply(HandleColor)), ColorRGBA(), 3.0f);
 	}
 	else
 	{
-		Rail.Draw(ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_ALL, Rail.h / 2.0f);
-		Handle.Draw(ScaleBackgroundAlpha(HandleColor), IGraphics::CORNER_ALL, Rail.h / 2.0f);
+		DrawRoundedSurface(this, Rail, ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), ColorRGBA(), Rail.h / 2.0f);
+		DrawRoundedSurface(this, Handle, ScaleBackgroundAlpha(HandleColor), ColorRGBA(), Rail.h / 2.0f);
 	}
 
 	return ReturnValue;
@@ -2077,9 +2382,64 @@ bool CUi::DoScrollbarOption(const void *pId, int *pOption, const CUIRect *pRect,
 void CUi::RenderProgressBar(CUIRect ProgressBar, float Progress)
 {
 	const float Rounding = minimum(5.0f, ProgressBar.h / 2.0f);
-	ProgressBar.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), IGraphics::CORNER_ALL, Rounding);
+	DrawRoundedSurface(this, ProgressBar, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), ColorRGBA(), Rounding);
 	ProgressBar.w = maximum(ProgressBar.w * Progress, 2 * Rounding);
-	ProgressBar.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), IGraphics::CORNER_ALL, Rounding);
+	DrawRoundedSurface(this, ProgressBar, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), ColorRGBA(), Rounding);
+}
+
+void CUi::RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds) const
+{
+	if(NotFinished)
+		return;
+
+	char aBuf[128];
+
+	str_time(((int64_t)absolute(Seconds)) * 100, TIME_HOURS, aBuf, sizeof(aBuf));
+
+	// align in vertical middle
+	vec2 Cursor = TimeRect.TopLeft();
+	float TextHeight = 0.0f;
+	float SecondsMaxHeight = 0.0f;
+	STextSizeProperties TextSizeProps{};
+	TextSizeProps.m_pMaxCharacterHeightInLine = &SecondsMaxHeight;
+	TextSizeProps.m_pHeight = &TextHeight;
+
+	float SecondsWidth = std::min(TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f, 0, TextSizeProps), TimeRect.w);
+	Cursor.x += TimeRect.w - SecondsWidth; // align right
+	Cursor.y += ((TimeRect.h - SecondsMaxHeight) / 2.0f - (FontSize - SecondsMaxHeight));
+
+	// show milliseconds or centiseconds if we are under an hour
+	if(Millis >= 0 && Seconds < 60 * 60)
+	{
+		constexpr float GoldenRatio = 0.61803398875f;
+		const float CentisecondFontSize = FontSize * GoldenRatio;
+
+		// format 2 or 3 digits
+		char aMillis[4];
+		Millis %= 1000;
+		if(!TrueMilliseconds)
+			str_format(aMillis, sizeof(aMillis), "%02d", (int)std::round(Millis / 10));
+		else
+			str_format(aMillis, sizeof(aMillis), "%03d", Millis);
+
+		float MillisWidth = TextRender()->TextWidth(CentisecondFontSize, aMillis, -1, -1.0f, 0, TextSizeProps);
+
+		// make space for millis, but put them 1/6th of a char tighter together
+		Cursor.x -= MillisWidth - (TrueMilliseconds ? MillisWidth / (3 * 6) : MillisWidth / (2 * 6));
+
+		vec2 CursorMillis = TimeRect.TopLeft();
+		CursorMillis.x += TimeRect.w - MillisWidth; // align right
+		CursorMillis.y += ((TimeRect.h - SecondsMaxHeight) / 2.0f - (CentisecondFontSize - SecondsMaxHeight));
+		CursorMillis.y -= (CursorMillis.y - Cursor.y) * GoldenRatio;
+
+		TextRender()->Text(Cursor.x, Cursor.y, FontSize, aBuf);
+		TextRender()->Text(CursorMillis.x, CursorMillis.y, CentisecondFontSize, aMillis);
+	}
+	else
+	{
+		str_time(((int64_t)absolute(Seconds)) * 100, TIME_HOURS, aBuf, sizeof(aBuf));
+		TextRender()->Text(Cursor.x, Cursor.y, FontSize, aBuf);
+	}
 }
 
 void CUi::RenderProgressSpinner(vec2 Center, float OuterRadius, const SProgressSpinnerProperties &Props) const
@@ -2122,13 +2482,126 @@ void CUi::RenderProgressSpinner(vec2 Center, float OuterRadius, const SProgressS
 	Graphics()->QuadsEnd();
 }
 
+void CUi::DoBackButton()
+{
+	if(!g_Config.m_ClBackButton)
+		return;
+
+	MapScreen();
+	const CUIRect *pScreen = Screen();
+	const float Size = pScreen->h * 0.1f;
+	constexpr float PositionScale = 1000000.0f;
+	const auto ClampPos = [&](vec2 Pos) {
+		Pos.x = std::clamp(Pos.x, 0.0f, pScreen->w - Size);
+		Pos.y = std::clamp(Pos.y, 0.0f, pScreen->h - Size);
+		return Pos;
+	};
+
+	vec2 ButtonPos = ClampPos({g_Config.m_ClBackButtonX / PositionScale * pScreen->w, g_Config.m_ClBackButtonY / PositionScale * pScreen->h});
+	CUIRect ButtonRect{ButtonPos.x, ButtonPos.y, Size, Size};
+
+	bool Clicked = false;
+	bool Abrupted = false;
+	const int Result = DoDraggableButtonLogic(&m_BackButtonId, 0, &ButtonRect, &Clicked, &Abrupted);
+
+	// Detect the press transition. DoDraggableButtonLogic sets the active item on the
+	// press frame but returns 0 there, so check CheckActiveItem to catch it.
+	if(m_BackButtonOp == EBackButtonOp::NONE && CheckActiveItem(&m_BackButtonId))
+	{
+		m_BackButtonInitialMouse = MousePos();
+		m_BackButtonDragOffset = ButtonPos - MousePos();
+		m_BackButtonOp = EBackButtonOp::CLICKED;
+		if(m_OnBackButtonPressedFunction)
+			m_OnBackButtonPressedFunction();
+	}
+
+	if(m_BackButtonOp == EBackButtonOp::CLICKED && length(MousePos() - m_BackButtonInitialMouse) > 5.0f)
+	{
+		m_BackButtonOp = EBackButtonOp::DRAGGING;
+	}
+
+	if(m_BackButtonOp == EBackButtonOp::DRAGGING)
+	{
+		ButtonPos = ClampPos(MousePos() + m_BackButtonDragOffset);
+		g_Config.m_ClBackButtonX = round_to_int(ButtonPos.x / pScreen->w * PositionScale);
+		g_Config.m_ClBackButtonY = round_to_int(ButtonPos.y / pScreen->h * PositionScale);
+		ButtonRect.x = ButtonPos.x;
+		ButtonRect.y = ButtonPos.y;
+	}
+
+	if(Result && Clicked)
+	{
+		if(m_BackButtonOp == EBackButtonOp::CLICKED && m_DispatchInputFunction)
+		{
+			IInput::CEvent Event;
+			Event.m_Key = KEY_ESCAPE;
+			Event.m_InputCount = 0;
+			Event.m_aText[0] = '\0';
+			Event.m_Flags = IInput::FLAG_PRESS;
+			m_DispatchInputFunction(Event);
+			Event.m_Flags = IInput::FLAG_RELEASE;
+			m_DispatchInputFunction(Event);
+		}
+		m_BackButtonOp = EBackButtonOp::NONE;
+	}
+	else if(Result && Abrupted)
+	{
+		m_BackButtonOp = EBackButtonOp::NONE;
+	}
+
+	m_BackButtonRect = ButtonRect;
+}
+
+void CUi::RenderBackButton()
+{
+	if(!g_Config.m_ClBackButton)
+		return;
+
+	MapScreen();
+
+	// Override hot/active claims made by UI rendered between DoBackButton and RenderBackButton.
+	if(m_BackButtonOp != EBackButtonOp::NONE)
+		SetActiveItem(&m_BackButtonId);
+	else if(MouseHovered(&m_BackButtonRect) && !MouseButton(0) && !MouseButton(1) && !MouseButton(2))
+		SetHotItem(&m_BackButtonId);
+
+	const bool Pressed = m_BackButtonOp != EBackButtonOp::NONE;
+	const bool Hovered = !Pressed && HotItem() == &m_BackButtonId;
+	const float Alpha = Pressed ? 0.9f : (Hovered ? 0.35f : 0.5f);
+	m_BackButtonRect.Draw({0.0f, 0.0f, 0.0f, Alpha}, IGraphics::CORNER_ALL, 12.0f);
+
+	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH |
+				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING |
+				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
+	DoLabel(&m_BackButtonRect, FONT_ICON_CHEVRON_LEFT, m_BackButtonRect.w * 0.5f, TEXTALIGN_MC);
+	TextRender()->SetRenderFlags(0);
+	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+}
+
 void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props)
 {
-	constexpr float Margin = SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN;
-	if(X + Width > Screen()->w - Margin)
-		X = maximum<float>(X - Width, Margin);
-	if(Y + Height > Screen()->h - Margin)
-		Y = maximum<float>(Y - Height, Margin);
+	if(Props.m_AutoReposition)
+	{
+		constexpr float Margin = SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN;
+		if(X + Width > Screen()->w - Margin)
+			X = maximum<float>(X - Width, Margin);
+		if(Y + Height > Screen()->h - Margin)
+			Y = maximum<float>(Y - Height, Margin);
+	}
+
+	auto ExistingPopupMenu = std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end(), [pId](const SPopupMenu &PopupMenu) { return PopupMenu.m_pId == pId; });
+	if(ExistingPopupMenu != m_vPopupMenus.end())
+	{
+		ExistingPopupMenu->m_Props = Props;
+		ExistingPopupMenu->m_Rect.x = X;
+		ExistingPopupMenu->m_Rect.y = Y;
+		ExistingPopupMenu->m_Rect.w = Width;
+		ExistingPopupMenu->m_Rect.h = Height;
+		ExistingPopupMenu->m_pContext = pContext;
+		ExistingPopupMenu->m_pfnFunc = pfnFunc;
+		return;
+	}
 
 	m_vPopupMenus.emplace_back();
 	SPopupMenu *pNewMenu = &m_vPopupMenus.back();
@@ -2140,16 +2613,36 @@ void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, fl
 	pNewMenu->m_Rect.h = Height;
 	pNewMenu->m_pContext = pContext;
 	pNewMenu->m_pfnFunc = pfnFunc;
+	if(Props.m_BlockUnderlyingPointerInput)
+	{
+		if(CLineInput *pActiveInput = CLineInput::GetActiveInput())
+			pActiveInput->Deactivate();
+		m_pLastActiveItem = nullptr;
+		SetActiveItem(nullptr);
+		m_ActiveButtonLogicButton = -1;
+		SetHotItem(pId);
+	}
 }
 
 void CUi::RenderPopupMenus()
 {
+	m_RenderingPopupMenus = true;
 	for(size_t i = 0; i < m_vPopupMenus.size(); ++i)
 	{
 		const SPopupMenu &PopupMenu = m_vPopupMenus[i];
 		const SPopupMenuId *pId = PopupMenu.m_pId;
-		const bool Inside = MouseInside(&PopupMenu.m_Rect);
+		if(PopupMenu.m_Props.m_RequireSourceRefresh && !QmDropdownSourceAlive(Client()->PerfFrame(), PopupMenu.m_Props.m_SourceFrame, true))
+		{
+			ClosePopupMenu(pId);
+			--i;
+			continue;
+		}
+		const bool Inside = MouseInside(&PopupMenu.m_Rect) && (!PopupMenu.m_Props.m_ClipToViewport || MouseInside(&PopupMenu.m_Props.m_Viewport));
 		const bool Active = i == m_vPopupMenus.size() - 1;
+		const bool ClipToViewport = PopupMenu.m_Props.m_ClipToViewport;
+		const bool AllowPopupPointerInput = Active && PopupMenu.m_Props.m_BlockUnderlyingPointerInput;
+		if(AllowPopupPointerInput)
+			++m_PopupInputDepth;
 
 		if(Active)
 		{
@@ -2176,29 +2669,35 @@ void CUi::RenderPopupMenus()
 				SetActiveItem(pId);
 		}
 
-		if(Inside)
+		if(Inside && PopupMenu.m_Props.m_BlockUnderlyingScroll)
 		{
 			// Prevent scroll regions directly behind popup menus from using the mouse scroll events.
 			SetHotScrollRegion(nullptr);
 		}
+		if(ClipToViewport)
+			ClipEnable(&PopupMenu.m_Props.m_Viewport);
 
 		CUIRect PopupRect = PopupMenu.m_Rect;
-		PopupRect.Draw(PopupMenu.m_Props.m_BorderColor, PopupMenu.m_Props.m_Corners, 3.0f);
+		DrawRoundedSurface(this, PopupRect, PopupMenu.m_Props.m_BackgroundColor, PopupMenu.m_Props.m_BorderColor, 3.0f, SPopupMenu::POPUP_BORDER, PopupMenu.m_Props.m_Corners);
 		PopupRect.Margin(SPopupMenu::POPUP_BORDER, &PopupRect);
-		PopupRect.Draw(PopupMenu.m_Props.m_BackgroundColor, PopupMenu.m_Props.m_Corners, 3.0f);
 		PopupRect.Margin(SPopupMenu::POPUP_MARGIN, &PopupRect);
 
 		// The popup render function can open/close popups, which may resize the vector and thus
 		// invalidate the variable PopupMenu. We therefore store pId in a separate variable.
 		EPopupMenuFunctionResult Result = PopupMenu.m_pfnFunc(PopupMenu.m_pContext, PopupRect, Active);
+		if(ClipToViewport)
+			ClipDisable();
+		if(AllowPopupPointerInput)
+			--m_PopupInputDepth;
 		if(Result != POPUP_KEEP_OPEN || (Active && ConsumeHotkey(HOTKEY_ESCAPE)))
 			ClosePopupMenu(pId, Result == POPUP_CLOSE_CURRENT_AND_DESCENDANTS);
 	}
+	m_RenderingPopupMenus = false;
 }
 
 void CUi::ClosePopupMenu(const SPopupMenuId *pId, bool IncludeDescendants)
 {
-	auto PopupMenuToClose = std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end(), [pId](const SPopupMenu PopupMenu) { return PopupMenu.m_pId == pId; });
+	auto PopupMenuToClose = std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end(), [pId](const SPopupMenu &PopupMenu) { return PopupMenu.m_pId == pId; });
 	if(PopupMenuToClose != m_vPopupMenus.end())
 	{
 		if(IncludeDescendants)
@@ -2343,6 +2842,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_aMessage[0] = '\0';
 	m_pSelection = nullptr;
 	m_SelectionIndex = -1;
+	m_ActiveIndex = -1;
 	m_vEntries.clear();
 	m_vButtonContainers.clear();
 	m_EntryHeight = 12.0f;
@@ -2352,12 +2852,23 @@ void CUi::SSelectionPopupContext::Reset()
 	m_MinimumFontSize = -1.0f;
 	m_Width = 300.0f + (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2;
 	m_AlignmentHeight = -1.0f;
+	m_ActiveEntryColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.22f);
 	m_TransparentButtons = false;
+	m_AnchorVisible = true;
+	m_PopupVisible = true;
+	m_BlockUnderlyingScroll = false;
+	m_Scrollable = false;
+	m_ScrollToActiveItem = false;
+	m_MenuUiFirstWheelLogged = false;
+	m_Viewport = {};
+	m_PopupPolicy = {};
 	m_SpecialFontRenderMode = false;
 }
 
 CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)
 {
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto MenuUiStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	SSelectionPopupContext *pSelectionPopup = static_cast<SSelectionPopupContext *>(pContext);
 	CUi *pUI = pSelectionPopup->m_pUI;
 	CScrollRegion *pScrollRegion = pSelectionPopup->m_pScrollRegion;
@@ -2368,11 +2879,17 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	}
 
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarWidth = 10.0f;
-	ScrollParams.m_ScrollbarMargin = SPopupMenu::POPUP_MARGIN;
-	ScrollParams.m_ScrollbarNoMarginRight = true;
-	ScrollParams.m_ScrollUnit = 3 * (pSelectionPopup->m_EntryHeight + pSelectionPopup->m_EntrySpacing);
+	SQmScrollRequest ScrollRequest;
+	ScrollRequest.m_Profile = EQmScrollProfile::POPUP_LIST;
+	ScrollRequest.m_RowExtent = pSelectionPopup->m_EntryHeight + pSelectionPopup->m_EntrySpacing;
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	ScrollParams.m_HideScrollbar = !pSelectionPopup->m_Scrollable;
+	ScrollParams.m_ScrollbarNoOuterMargin = true;
+	ScrollParams.m_pWheelOwnerId = pSelectionPopup;
+	ScrollParams.m_WheelOwnerPreRegistered = true;
+	const float PopupOuterHeight = (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2.0f;
+	pScrollRegion->SetContentHeightForNextFrame(std::max(0.0f, pSelectionPopup->m_PopupPolicy.m_ContentHeight - PopupOuterHeight));
 	pScrollRegion->Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
@@ -2390,6 +2907,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	pSelectionPopup->m_vButtonContainers.resize(pSelectionPopup->m_vEntries.size());
 
 	size_t Index = 0;
+	int VisibleEntries = 0;
 	for(const auto &Entry : pSelectionPopup->m_vEntries)
 	{
 		// TClient
@@ -2399,9 +2917,13 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		if(pSelectionPopup->m_aMessage[0] != '\0' || Index != 0)
 			View.HSplitTop(pSelectionPopup->m_EntrySpacing, nullptr, &View);
 		View.HSplitTop(pSelectionPopup->m_EntryHeight, &Slot, &View);
-		if(pScrollRegion->AddRect(Slot))
+		const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);
+		if(pScrollRegion->AddRect(Slot, QmDropdownActiveItemShouldScrollIntoView(pSelectionPopup->m_ScrollToActiveItem, ActiveEntry)))
 		{
-			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons, true, std::nullopt, pSelectionPopup->m_MinimumFontSize))
+			++VisibleEntries;
+			// 活动项与悬浮项使用同一种整行背景，避免左侧竖条与条目背景重叠。
+			const std::optional<ColorRGBA> ActiveColor = ActiveEntry ? std::optional<ColorRGBA>(pSelectionPopup->m_ActiveEntryColor) : std::nullopt;
+			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons, true, ActiveColor))
 			{
 				pSelectionPopup->m_pSelection = &Entry;
 				pSelectionPopup->m_SelectionIndex = Index;
@@ -2414,84 +2936,229 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		pUI->TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 
 	pScrollRegion->End();
+	pSelectionPopup->m_ScrollToActiveItem = false;
+	if(!pSelectionPopup->m_MenuUiFirstWheelLogged && pScrollRegion->WheelConsumedThisFrame())
+	{
+		pUI->m_MenuUiFirstWheelPerf = MenuUiPerfEnabled;
+		SQmMenuUiFramePerf MenuUiPerf;
+		MenuUiPerf.m_pPage = "dropdown";
+		MenuUiPerf.m_pOperation = "dropdown_first_wheel";
+		MenuUiPerf.m_ItemsTotal = (int)pSelectionPopup->m_vEntries.size();
+		MenuUiPerf.m_ItemsVisible = VisibleEntries;
+		MenuUiPerf.m_ItemsProcessed = VisibleEntries;
+		MenuUiPerf.m_ItemsSkipped = maximum(0, MenuUiPerf.m_ItemsTotal - VisibleEntries);
+		MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? std::chrono::duration<double, std::milli>(time_get_nanoseconds() - MenuUiStartTime).count() : -1.0;
+		QmLogMenuUiFramePerf(MenuUiPerf, pUI->Client());
+		pSelectionPopup->m_MenuUiFirstWheelLogged = true;
+	}
 
 	return pSelectionPopup->m_pSelection == nullptr ? CUi::POPUP_KEEP_OPEN : CUi::POPUP_CLOSE_CURRENT;
 }
 
 void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 {
+	const bool HasMessage = pContext->m_aMessage[0] != '\0';
 	const STextBoundingBox TextBoundingBox = TextRender()->TextBoundingBox(pContext->m_FontSize, pContext->m_aMessage, -1, pContext->m_Width);
-	const float PopupHeight = minimum((pContext->m_aMessage[0] == '\0' ? -pContext->m_EntrySpacing : TextBoundingBox.m_H) + pContext->m_vEntries.size() * (pContext->m_EntryHeight + pContext->m_EntrySpacing) + (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2 + CScrollRegion::HEIGHT_MAGIC_FIX, Screen()->h * 0.4f);
+	const float OuterHeight = (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2;
+	pContext->m_PopupPolicy = QmResolveDropdownPopupPolicy(pContext->m_vEntries.size(), pContext->m_EntryHeight, pContext->m_EntrySpacing, HasMessage, TextBoundingBox.m_H, OuterHeight);
+	const float PopupHeight = pContext->m_PopupPolicy.m_PreferredHeight;
+	if(pContext->m_Viewport.w <= 0.0f || pContext->m_Viewport.h <= 0.0f)
+		pContext->m_Viewport = *Screen();
+	const CUIRect &Viewport = pContext->m_Viewport;
 	pContext->m_pUI = this;
 	pContext->m_pSelection = nullptr;
 	pContext->m_SelectionIndex = -1;
 	pContext->m_Props.m_Corners = IGraphics::CORNER_ALL;
+	float PopupWidth = pContext->m_Width;
+	float PopupHeightResolved = PopupHeight;
 	if(pContext->m_AlignmentHeight >= 0.0f)
 	{
 		constexpr float Margin = SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN;
-		if(X + pContext->m_Width > Screen()->w - Margin)
+		CUIRect AnchorRect;
+		AnchorRect.x = X;
+		AnchorRect.y = Y;
+		AnchorRect.w = pContext->m_Width;
+		AnchorRect.h = pContext->m_AlignmentHeight;
+		SQmDropdownGeometryConfig GeometryConfig;
+		GeometryConfig.m_Width = pContext->m_Width;
+		GeometryConfig.m_Height = PopupHeight;
+		GeometryConfig.m_Margin = Margin;
+		const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, Viewport, GeometryConfig);
+		pContext->m_AnchorVisible = Geometry.m_AnchorVisible;
+		pContext->m_PopupVisible = Geometry.m_PopupVisible;
+		if(!pContext->m_AnchorVisible || !pContext->m_PopupVisible)
 		{
-			X = maximum<float>(X - pContext->m_Width, Margin);
+			ClosePopupMenu(pContext);
+			return;
 		}
-		if(Y + pContext->m_AlignmentHeight + PopupHeight > Screen()->h - Margin)
-		{
-			Y -= PopupHeight;
-			pContext->m_Props.m_Corners = IGraphics::CORNER_T;
-		}
-		else
-		{
-			Y += pContext->m_AlignmentHeight;
-			pContext->m_Props.m_Corners = IGraphics::CORNER_B;
-		}
+		X = Geometry.m_Rect.x;
+		Y = Geometry.m_Rect.y;
+		PopupWidth = Geometry.m_Rect.w;
+		PopupHeightResolved = Geometry.m_Rect.h;
+		pContext->m_Props.m_AutoReposition = false;
+		pContext->m_Props.m_Corners = Geometry.m_PlacedBelow ? IGraphics::CORNER_B : IGraphics::CORNER_T;
 	}
-	DoPopupMenu(pContext, X, Y, pContext->m_Width, PopupHeight, pContext, PopupSelection, pContext->m_Props);
+	const CUIRect PopupRect{X, Y, PopupWidth, PopupHeightResolved};
+	const bool Scrollable = pContext->m_PopupVisible && QmDropdownPopupScrollable(pContext->m_PopupPolicy, PopupHeightResolved);
+	const bool BlockUnderlying = QmDropdownPopupBlocksUnderlying(pContext->m_PopupVisible);
+	RegisterWheelOwner(pContext, EUiWheelOwnerPriority::POPUP, PopupRect, BlockUnderlying);
+	pContext->m_Scrollable = Scrollable;
+	pContext->m_BlockUnderlyingScroll = BlockUnderlying;
+	pContext->m_Props.m_ClipToViewport = true;
+	pContext->m_Props.m_BlockUnderlyingScroll = BlockUnderlying;
+	pContext->m_Props.m_Viewport = Viewport;
+	DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);
 }
 
-int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, float FontSize)
+int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)
 {
-	static CScrollRegion s_DefaultDropDownScrollRegion;
+	const float ResolvedFontSize = DropDownProps.m_FontSize > 0.0f ? DropDownProps.m_FontSize : m_DropDownFontSize > 0.0f ? m_DropDownFontSize :
+																pRect->h * ms_FontmodHeight * 0.8f;
+	if(RenderOnly())
+	{
+		if(pRect != nullptr && pStrs != nullptr && CurSelection >= 0 && CurSelection < Num)
+			DoLabel(pRect, pStrs[CurSelection], ResolvedFontSize, TEXTALIGN_MC);
+		return CurSelection;
+	}
 
 	if(!State.m_Init)
 	{
 		State.m_UiElement.Init(this, -1);
+		State.m_pOwnedScrollRegion = std::make_shared<CScrollRegion>();
+		State.m_pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion != nullptr ? State.m_SelectionPopupContext.m_pScrollRegion : State.m_pOwnedScrollRegion.get();
+		State.m_SelectionPopupContext.m_pScrollRegion = State.m_pScrollRegion;
 		State.m_Init = true;
 	}
+	else if(State.m_SelectionPopupContext.m_pScrollRegion != nullptr && State.m_SelectionPopupContext.m_pScrollRegion != State.m_pScrollRegion)
+		State.m_pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion;
+
+	bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
+	// 弹窗使用设置页最外层裁剪区，不能越过 Tab 或页面容器；卡片内容裁剪区
+	// 只判断锚点是否仍完整可见，锚点滚出卡片后应关闭弹窗。
+	const CUIRect Viewport = DropDownProps.m_pPopupViewport != nullptr ? *DropDownProps.m_pPopupViewport : IsClipped() ? *OutermostClipArea() :
+															     *Screen();
+	const CUIRect AnchorViewport = DropDownProps.m_pAnchorViewport != nullptr ? *DropDownProps.m_pAnchorViewport : IsClipped() ? *ClipArea() :
+																     Viewport;
+	const uint64_t SourceFrame = Client()->PerfFrame();
+	if(PopupOpen && !QmDropdownAnchorFullyVisible(*pRect, AnchorViewport))
+	{
+		ClosePopupMenu(&State.m_SelectionPopupContext);
+		State.m_DropDownState.Reset();
+		State.m_SelectionPopupContext.Reset();
+		PopupOpen = false;
+	}
+	if(State.m_DropDownState.IsOpen() && !PopupOpen)
+		State.m_DropDownState.Reset();
 
 	const auto LabelFunc = [CurSelection, pStrs]() {
 		return CurSelection > -1 ? pStrs[CurSelection] : "";
 	};
+	if(!DropDownProps.m_Enabled)
+	{
+		if(DropDownProps.m_ClosePopupWhenDisabled)
+		{
+			if(State.m_DropDownState.Disable(PopupOpen))
+				ClosePopupMenu(&State.m_SelectionPopupContext);
+			State.m_SelectionPopupContext.m_SelectionIndex = -1;
+			State.m_SelectionPopupContext.m_ActiveIndex = -1;
+		}
+		SMenuButtonProperties ButtonProps;
+		ButtonProps.m_Enabled = false;
+		ButtonProps.m_HintRequiresStringCheck = true;
+		ButtonProps.m_HintCanChangePositionOrSize = true;
+		ButtonProps.m_ShowDropDownIcon = true;
+		ButtonProps.m_FontSize = ResolvedFontSize;
+		ButtonProps.m_Color = DropDownProps.m_VisualStyle.m_TriggerColor;
+		DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, ButtonProps);
+		return CurSelection;
+	}
 
 	SMenuButtonProperties Props;
 	Props.m_HintRequiresStringCheck = true;
 	Props.m_HintCanChangePositionOrSize = true;
 	Props.m_ShowDropDownIcon = true;
-	Props.m_FontSize = FontSize;
-	if(IsPopupOpen(&State.m_SelectionPopupContext))
+	Props.m_FontSize = ResolvedFontSize;
+	Props.m_Color = DropDownProps.m_VisualStyle.m_TriggerColor;
+	if(PopupOpen)
+	{
+		State.m_SelectionPopupContext.m_Props.m_RequireSourceRefresh = true;
+		State.m_SelectionPopupContext.m_Props.m_SourceFrame = SourceFrame;
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
-	if(DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props))
+	}
+	const bool TogglePressed = DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props);
+
+	SQmDropdownInput DropDownInput;
+	DropDownInput.m_TogglePressed = TogglePressed;
+	DropDownInput.m_InitialIndex = CurSelection;
+	if(PopupOpen && State.m_SelectionPopupContext.m_SelectionIndex < 0)
+	{
+		DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);
+		DropDownInput.m_KeyDown = ConsumeHotkey(HOTKEY_DOWN);
+		DropDownInput.m_KeyEnter = ConsumeHotkey(HOTKEY_ENTER);
+		DropDownInput.m_KeyEscape = ConsumeHotkey(HOTKEY_ESCAPE);
+	}
+	const int PreviousActiveIndex = State.m_DropDownState.ActiveIndex();
+	const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);
+	State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
+	if(QmDropdownShouldRequestActiveScroll(PopupOpen, PreviousActiveIndex, State.m_DropDownState.ActiveIndex()))
+		State.m_SelectionPopupContext.m_ScrollToActiveItem = true;
+	if(PopupOpen)
+	{
+		State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;
+		State.m_SelectionPopupContext.m_EntryHeight = pRect->h;
+		State.m_SelectionPopupContext.m_EntryPadding = pRect->h >= 20.0f ? 2.0f : 1.0f;
+		State.m_SelectionPopupContext.m_Width = pRect->w;
+		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
+		State.m_SelectionPopupContext.m_Viewport = Viewport;
+		State.m_SelectionPopupContext.m_Props.m_BorderColor = DropDownProps.m_VisualStyle.m_PopupBorderColor;
+		State.m_SelectionPopupContext.m_Props.m_BackgroundColor = DropDownProps.m_VisualStyle.m_PopupBackgroundColor;
+		State.m_SelectionPopupContext.m_ActiveEntryColor = DropDownProps.m_VisualStyle.m_ActiveEntryColor;
+		State.m_SelectionPopupContext.m_TransparentButtons = DropDownProps.m_VisualStyle.m_TransparentEntries;
+		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
+		PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
+		if(State.m_DropDownState.IsOpen() && !PopupOpen)
+			State.m_DropDownState.Reset();
+	}
+	if(DropDownResult.m_Opened)
 	{
 		CScrollRegion *pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion;
 		const bool SpecialFontRenderMode = State.m_SelectionPopupContext.m_SpecialFontRenderMode;
 		State.m_SelectionPopupContext.Reset();
-		State.m_SelectionPopupContext.m_pScrollRegion = pScrollRegion != nullptr ? pScrollRegion : &s_DefaultDropDownScrollRegion;
+		State.m_SelectionPopupContext.m_pScrollRegion = pScrollRegion != nullptr ? pScrollRegion : State.m_pScrollRegion;
 		State.m_SelectionPopupContext.m_SpecialFontRenderMode = SpecialFontRenderMode;
-		State.m_SelectionPopupContext.m_Props.m_BorderColor = ColorRGBA(0.7f, 0.7f, 0.7f, 0.9f);
-		State.m_SelectionPopupContext.m_Props.m_BackgroundColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f);
+		State.m_SelectionPopupContext.m_Props.m_BorderColor = DropDownProps.m_VisualStyle.m_PopupBorderColor;
+		State.m_SelectionPopupContext.m_Props.m_BackgroundColor = DropDownProps.m_VisualStyle.m_PopupBackgroundColor;
+		State.m_SelectionPopupContext.m_ActiveEntryColor = DropDownProps.m_VisualStyle.m_ActiveEntryColor;
 		for(int i = 0; i < Num; ++i)
 			State.m_SelectionPopupContext.m_vEntries.emplace_back(pStrs[i]);
 		State.m_SelectionPopupContext.m_EntryHeight = pRect->h;
 		State.m_SelectionPopupContext.m_EntryPadding = pRect->h >= 20.0f ? 2.0f : 1.0f;
-		State.m_SelectionPopupContext.m_FontSize = FontSize > 0.0f ? FontSize : (State.m_SelectionPopupContext.m_EntryHeight - 2 * State.m_SelectionPopupContext.m_EntryPadding) * CUi::ms_FontmodHeight;
-		State.m_SelectionPopupContext.m_MinimumFontSize = FontSize;
+		State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;
 		State.m_SelectionPopupContext.m_Width = pRect->w;
 		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
-		State.m_SelectionPopupContext.m_TransparentButtons = true;
+		State.m_SelectionPopupContext.m_TransparentButtons = DropDownProps.m_VisualStyle.m_TransparentEntries;
+		State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
+		State.m_SelectionPopupContext.m_Props.m_RequireSourceRefresh = true;
+		State.m_SelectionPopupContext.m_Props.m_SourceFrame = SourceFrame;
+		State.m_SelectionPopupContext.m_ScrollToActiveItem = true;
+		State.m_SelectionPopupContext.m_Viewport = Viewport;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 	}
-
-	if(State.m_SelectionPopupContext.m_SelectionIndex >= 0)
+	if(DropDownResult.m_Selected)
+	{
+		ClosePopupMenu(&State.m_SelectionPopupContext);
+		State.m_SelectionPopupContext.Reset();
+		return DropDownResult.m_SelectedIndex;
+	}
+	else if(DropDownResult.m_Closed)
+	{
+		ClosePopupMenu(&State.m_SelectionPopupContext);
+		State.m_SelectionPopupContext.Reset();
+	}
+	else if(State.m_SelectionPopupContext.m_SelectionIndex >= 0)
 	{
 		const int NewSelection = State.m_SelectionPopupContext.m_SelectionIndex;
+		State.m_DropDownState.Reset();
 		State.m_SelectionPopupContext.Reset();
 		return NewSelection;
 	}
@@ -2499,31 +3166,12 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	return CurSelection;
 }
 
-int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled, float FontSize)
+int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, bool Enabled)
 {
-	if(Enabled)
-		return DoDropDown(pRect, CurSelection, pStrs, Num, State, FontSize);
-
-	if(!State.m_Init)
-	{
-		State.m_UiElement.Init(this, -1);
-		State.m_Init = true;
-	}
-
-	const auto LabelFunc = [CurSelection, pStrs]() {
-		return CurSelection > -1 ? pStrs[CurSelection] : "";
-	};
-
-	SMenuButtonProperties Props;
-	Props.m_Enabled = false;
-	Props.m_HintRequiresStringCheck = true;
-	Props.m_HintCanChangePositionOrSize = true;
-	Props.m_ShowDropDownIcon = true;
-	Props.m_FontSize = FontSize;
-	if(IsPopupOpen(&State.m_SelectionPopupContext))
-		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
-	DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props);
-	return CurSelection;
+	SDropDownProperties DropDownProps;
+	DropDownProps.m_Enabled = Enabled;
+	DropDownProps.m_ClosePopupWhenDisabled = false;
+	return DoDropDown(pRect, CurSelection, pStrs, Num, State, DropDownProps);
 }
 
 CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View, bool Active)
@@ -2536,9 +3184,11 @@ CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View
 
 	View.HSplitTop(140.0f, &ColorsArea, &BottomArea);
 	ColorsArea.VSplitRight(20.0f, &ColorsArea, &HueArea);
+	const CUIRect ColorsHitArea = ColorsArea;
 
 	BottomArea.HSplitTop(3.0f, nullptr, &BottomArea);
 	HueArea.VSplitLeft(3.0f, nullptr, &HueArea);
+	const CUIRect HueHitArea = HueArea;
 
 	BottomArea.HSplitTop(20.0f, &HueRect, &BottomArea);
 	BottomArea.HSplitTop(3.0f, nullptr, &BottomArea);
@@ -2733,20 +3383,23 @@ CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View
 
 	// Logic
 	float PickerX, PickerY;
-	EEditState ColorPickerRes = pUI->DoPickerLogic(&pColorPicker->m_ColorPickerId, &ColorsArea, &PickerX, &PickerY);
+	EEditState ColorPickerRes = pUI->DoPickerLogic(&pColorPicker->m_ColorPickerId, &ColorsHitArea, &PickerX, &PickerY);
 	if(ColorPickerRes != EEditState::NONE)
 	{
-		PickerColorHSV.y = PickerX / ColorsArea.w;
-		PickerColorHSV.z = 1.0f - PickerY / ColorsArea.h;
+		const float ColorX = std::clamp(PickerX - (ColorsArea.x - ColorsHitArea.x), 0.0f, ColorsArea.w);
+		const float ColorY = std::clamp(PickerY - (ColorsArea.y - ColorsHitArea.y), 0.0f, ColorsArea.h);
+		PickerColorHSV.y = ColorX / ColorsArea.w;
+		PickerColorHSV.z = 1.0f - ColorY / ColorsArea.h;
 		PickerColorHSL = color_cast<ColorHSLA>(PickerColorHSV);
 		PickerColorRGB = color_cast<ColorRGBA>(PickerColorHSL);
 		pColorPicker->m_State = ColorPickerRes;
 	}
 
-	EEditState HuePickerRes = pUI->DoPickerLogic(&pColorPicker->m_HuePickerId, &HueArea, &PickerX, &PickerY);
+	EEditState HuePickerRes = pUI->DoPickerLogic(&pColorPicker->m_HuePickerId, &HueHitArea, &PickerX, &PickerY);
 	if(HuePickerRes != EEditState::NONE)
 	{
-		PickerColorHSV.x = 1.0f - PickerY / HueArea.h;
+		const float HueY = std::clamp(PickerY - (HueArea.y - HueHitArea.y), 0.0f, HueArea.h);
+		PickerColorHSV.x = 1.0f - HueY / HueArea.h;
 		PickerColorHSL = color_cast<ColorHSLA>(PickerColorHSV);
 		PickerColorRGB = color_cast<ColorRGBA>(PickerColorHSL);
 		pColorPicker->m_State = HuePickerRes;
@@ -2759,13 +3412,8 @@ CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View
 	const float MarkerOutlineInd = PickerColorHSV.z > 0.5f ? 0.0f : 1.0f;
 	const ColorRGBA MarkerOutline = ColorRGBA(MarkerOutlineInd, MarkerOutlineInd, MarkerOutlineInd, 1.0f);
 
-	pUI->Graphics()->TextureClear();
-	pUI->Graphics()->QuadsBegin();
-	pUI->Graphics()->SetColor(MarkerOutline);
-	pUI->Graphics()->DrawCircle(MarkerX, MarkerY, 4.5f, 32);
-	pUI->Graphics()->SetColor(PickerColorRGB);
-	pUI->Graphics()->DrawCircle(MarkerX, MarkerY, 3.5f, 32);
-	pUI->Graphics()->QuadsEnd();
+	const CUIRect ColorMarker{MarkerX - 4.5f, MarkerY - 4.5f, 9.0f, 9.0f};
+	DrawRoundedSurface(pUI, ColorMarker, PickerColorRGB, MarkerOutline, 4.5f, 1.0f);
 
 	// Marker Hue Area
 	CUIRect HueMarker;
@@ -2777,9 +3425,7 @@ CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View
 	const float HueMarkerOutlineColor = PickerColorHSV.x > 0.75f ? 1.0f : 0.0f;
 	const ColorRGBA HueMarkerOutline = ColorRGBA(HueMarkerOutlineColor, HueMarkerOutlineColor, HueMarkerOutlineColor, 1.0f);
 
-	HueMarker.Draw(HueMarkerOutline, IGraphics::CORNER_ALL, 1.2f);
-	HueMarker.Margin(1.2f, &HueMarker);
-	HueMarker.Draw(HueMarkerColor, IGraphics::CORNER_ALL, 1.2f);
+	DrawRoundedSurface(pUI, HueMarker, HueMarkerColor, HueMarkerOutline, 1.2f, 1.2f);
 
 	pColorPicker->m_HsvaColor = PickerColorHSV;
 	pColorPicker->m_RgbaColor = PickerColorRGB;
@@ -2809,5 +3455,8 @@ void CUi::ShowPopupColorPicker(float X, float Y, SColorPickerPopupContext *pCont
 	pContext->m_pUI = this;
 	if(pContext->m_ColorMode == SColorPickerPopupContext::MODE_UNSET)
 		pContext->m_ColorMode = SColorPickerPopupContext::MODE_HSVA;
-	DoPopupMenu(pContext, X, Y, 160.0f + 10.0f, 209.0f + 10.0f, pContext, PopupColorPicker);
+	SPopupMenuProperties PopupProps;
+	PopupProps.m_BlockUnderlyingPointerInput = true;
+	PopupProps.m_BlockUnderlyingScroll = true;
+	DoPopupMenu(pContext, X, Y, 160.0f + 10.0f, 209.0f + 10.0f, pContext, PopupColorPicker, PopupProps);
 }

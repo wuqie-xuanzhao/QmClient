@@ -24,6 +24,8 @@ namespace ui_token::color
 	inline constexpr ColorRGBA SURFACE_SHADOW{0.0f, 0.0f, 0.0f, 0.12f};
 	inline constexpr ColorRGBA BORDER_SUBTLE{1.0f, 1.0f, 1.0f, 0.08f};
 	inline constexpr ColorRGBA BORDER_FOCUS{0.4f, 0.753f, 0.957f, 0.85f};
+	inline constexpr ColorRGBA LIST_ITEM_SELECTED{1.0f, 1.0f, 1.0f, 0.14f};
+	inline constexpr ColorRGBA LIST_ITEM_HOVER{1.0f, 1.0f, 1.0f, 0.08f};
 
 	// accent
 	inline constexpr ColorRGBA ACCENT_PRIMARY{0.4f, 0.753f, 0.957f, 1.0f};
@@ -67,6 +69,28 @@ namespace ui_token::spacing
 	inline constexpr float XL = 24.0f;
 } // namespace ui_token::spacing
 
+namespace ui_token::settings
+{
+	inline constexpr float MAX_CONTENT_WIDTH = 1000.0f;
+	inline constexpr float OUTER_SCROLLBAR_SLOT = 20.0f;
+	inline constexpr float PAGE_INSET = 16.0f;
+	inline constexpr float TAB_HEIGHT = 26.0f;
+	inline constexpr float TAB_GAP = 10.0f;
+	inline constexpr float TAB_FONT_SIZE = 13.0f;
+	inline constexpr float SUB_TAB_HEIGHT = TAB_HEIGHT;
+	inline constexpr float SUB_TAB_GAP = TAB_GAP;
+	inline constexpr float CARD_GAP = 16.0f;
+	inline constexpr float ROW_HEIGHT = 20.0f;
+	inline constexpr float ROW_GAP = 5.0f;
+	inline constexpr float TWO_COLUMN_MIN_WIDTH = 760.0f;
+	inline constexpr float CARD_PADDING = 14.0f;
+	inline constexpr float CARD_HEADER_TITLE_HEIGHT = 18.0f;
+	inline constexpr float CARD_HEADER_SUBTITLE_HEIGHT = 12.0f;
+	inline constexpr float CARD_HEADER_GAP = 6.0f;
+	inline constexpr float CARD_HANDLE_SIZE = 24.0f;
+	inline constexpr float CARD_RADIUS = 12.0f;
+} // namespace ui_token::settings
+
 namespace ui_token::radius
 {
 	inline constexpr float NONE = 0.0f;
@@ -90,7 +114,9 @@ namespace ui_token::font
 {
 	inline constexpr float HEADLINE_LG = 16.0f;
 	inline constexpr float HEADLINE = 14.0f;
+	inline constexpr float TITLE = 18.0f;
 	inline constexpr float BODY = 12.0f;
+	inline constexpr float SMALL = 10.0f;
 	inline constexpr float CAPTION = 10.0f;
 	inline constexpr float TIP = 9.0f;
 } // namespace ui_token::font
@@ -98,24 +124,24 @@ namespace ui_token::font
 namespace ui_token::ime
 {
 	inline constexpr float SCALE = 0.68f;
-	inline constexpr ColorRGBA PANEL_BG_LIGHT{0.110f, 0.110f, 0.118f, 0.96f};
+	inline constexpr ColorRGBA PANEL_BG_LIGHT{1.0f, 1.0f, 1.0f, 0.96f};
 	inline constexpr ColorRGBA PANEL_BG_DARK{0.110f, 0.110f, 0.118f, 0.96f};
-	inline constexpr ColorRGBA PANEL_BORDER_LIGHT{1.0f, 1.0f, 1.0f, 0.18f};
-	inline constexpr ColorRGBA PANEL_BORDER_DARK{1.0f, 1.0f, 1.0f, 0.18f};
-	inline constexpr ColorRGBA PANEL_SHADOW_LIGHT{0.0f, 0.0f, 0.0f, 0.0f};
+	inline constexpr ColorRGBA PANEL_BORDER_LIGHT{0.0f, 0.0f, 0.0f, 0.08f};
+	inline constexpr ColorRGBA PANEL_BORDER_DARK{1.0f, 1.0f, 1.0f, 0.10f};
+	inline constexpr ColorRGBA PANEL_SHADOW_LIGHT{0.0f, 0.0f, 0.0f, 0.16f};
 	inline constexpr ColorRGBA PANEL_SHADOW_DARK{0.0f, 0.0f, 0.0f, 0.0f};
-	inline constexpr ColorRGBA COMPOSITION_BG_LIGHT{1.0f, 1.0f, 1.0f, 0.03f};
+	inline constexpr ColorRGBA COMPOSITION_BG_LIGHT{1.0f, 1.0f, 1.0f, 0.18f};
 	inline constexpr ColorRGBA COMPOSITION_BG_DARK{1.0f, 1.0f, 1.0f, 0.03f};
-	inline constexpr ColorRGBA COMPOSITION_SELECTION{0.184f, 0.502f, 0.929f, 0.18f};
-	inline constexpr ColorRGBA COMPOSITION_UNDERLINE_LIGHT{1.0f, 1.0f, 1.0f, 0.16f};
+	inline constexpr ColorRGBA COMPOSITION_SELECTION{0.0f, 0.478f, 1.0f, 0.18f};
+	inline constexpr ColorRGBA COMPOSITION_UNDERLINE_LIGHT{0.05f, 0.06f, 0.08f, 0.18f};
 	inline constexpr ColorRGBA COMPOSITION_UNDERLINE_DARK{1.0f, 1.0f, 1.0f, 0.16f};
-	inline constexpr ColorRGBA SELECTED_BG_LIGHT{0.184f, 0.502f, 0.929f, 0.16f};
-	inline constexpr ColorRGBA SELECTED_BG_DARK{0.184f, 0.502f, 0.929f, 0.16f};
-	inline constexpr ColorRGBA TEXT_LIGHT{1.0f, 1.0f, 1.0f, 0.98f};
-	inline constexpr ColorRGBA TEXT_DARK{1.0f, 1.0f, 1.0f, 0.98f};
-	inline constexpr ColorRGBA TEXT_MUTED_LIGHT{0.557f, 0.557f, 0.576f, 0.92f};
-	inline constexpr ColorRGBA TEXT_MUTED_DARK{0.557f, 0.557f, 0.576f, 0.92f};
-	inline constexpr ColorRGBA TEXT_SELECTED_LIGHT{0.184f, 0.502f, 0.929f, 1.0f};
+	inline constexpr ColorRGBA SELECTED_BG_LIGHT{0.0f, 0.478f, 1.0f, 0.22f};
+	inline constexpr ColorRGBA SELECTED_BG_DARK{0.26f, 0.55f, 1.0f, 0.28f};
+	inline constexpr ColorRGBA TEXT_LIGHT{0.055f, 0.065f, 0.08f, 0.98f};
+	inline constexpr ColorRGBA TEXT_DARK{1.0f, 1.0f, 1.0f, 0.96f};
+	inline constexpr ColorRGBA TEXT_MUTED_LIGHT{0.08f, 0.09f, 0.11f, 0.52f};
+	inline constexpr ColorRGBA TEXT_MUTED_DARK{0.557f, 0.557f, 0.580f, 0.56f};
+	inline constexpr ColorRGBA TEXT_SELECTED_LIGHT{0.0f, 0.32f, 0.74f, 1.0f};
 	inline constexpr ColorRGBA TEXT_SELECTED_DARK{0.184f, 0.502f, 0.929f, 1.0f};
 	inline constexpr ColorRGBA PANEL_BG = PANEL_BG_LIGHT;
 	inline constexpr ColorRGBA PANEL_BORDER = PANEL_BORDER_LIGHT;
@@ -127,29 +153,29 @@ namespace ui_token::ime
 	inline constexpr ColorRGBA TEXT_MUTED = TEXT_MUTED_LIGHT;
 	inline constexpr ColorRGBA TEXT_SELECTED = TEXT_SELECTED_LIGHT;
 	inline constexpr float FONT_COMPOSITION = 7.2f * SCALE;
-	inline constexpr float FONT_CANDIDATE = 8.6f * SCALE;
-	inline constexpr float PADDING_X = 7.0f * SCALE;
-	inline constexpr float PADDING_Y = 3.2f * SCALE;
-	inline constexpr float ROW_GAP = 2.8f * SCALE;
-	inline constexpr float ROW_HEIGHT = 15.0f * SCALE;
-	inline constexpr float COMPOSITION_ROW_HEIGHT = 9.8f * SCALE;
+	inline constexpr float FONT_CANDIDATE = 8.1f * SCALE;
+	inline constexpr float PADDING_X = 4.6f * SCALE;
+	inline constexpr float PADDING_Y = 2.6f * SCALE;
+	inline constexpr float ROW_GAP = 1.4f * SCALE;
+	inline constexpr float ROW_HEIGHT = 14.0f * SCALE;
+	inline constexpr float COMPOSITION_ROW_HEIGHT = 11.8f * SCALE;
 	inline constexpr float NUM_WIDTH = 5.5f * SCALE;
-	inline constexpr float MIN_WIDTH = 96.0f * SCALE;
-	inline constexpr float MAX_WIDTH = 390.0f * SCALE;
-	inline constexpr float RADIUS = 12.0f * SCALE;
+	inline constexpr float MIN_WIDTH = 72.0f * SCALE;
+	inline constexpr float MAX_WIDTH = 360.0f * SCALE;
+	inline constexpr float RADIUS = 8.2f * SCALE;
 	inline constexpr float SCREEN_HEIGHT = 300.0f;
 	inline constexpr float SCREEN_MARGIN = 4.0f;
 	inline constexpr float SHADOW_X = 0.0f;
-	inline constexpr float SHADOW_Y = 0.0f;
+	inline constexpr float SHADOW_Y = 2.0f * SCALE;
 	inline constexpr float BORDER_INSET = 0.35f * SCALE;
-	inline constexpr float COMPOSITION_TEXT_PADDING_X = 4.2f * SCALE;
-	inline constexpr float CANDIDATE_NUM_PADDING_X = 3.2f * SCALE;
-	inline constexpr float CANDIDATE_GAP = 12.0f * SCALE;
-	inline constexpr float CANDIDATE_PADDING_X = 4.6f * SCALE;
-	inline constexpr float SELECTED_PADDING_X = 5.4f * SCALE;
-	inline constexpr float TEXT_SAFE_PADDING_X = 1.3f * SCALE;
-	inline constexpr float TEXT_SAFE_PADDING_Y = 1.8f * SCALE;
-	inline constexpr float TRAILING_WIDTH = 16.0f * SCALE;
+	inline constexpr float COMPOSITION_TEXT_PADDING_X = 4.6f * SCALE;
+	inline constexpr float CANDIDATE_NUM_PADDING_X = 3.6f * SCALE;
+	inline constexpr float CANDIDATE_GAP = 7.0f * SCALE;
+	inline constexpr float CANDIDATE_PADDING_X = 5.6f * SCALE;
+	inline constexpr float SELECTED_PADDING_X = 6.2f * SCALE;
+	inline constexpr float TEXT_SAFE_PADDING_X = 1.8f * SCALE;
+	inline constexpr float TEXT_SAFE_PADDING_Y = 2.4f * SCALE;
+	inline constexpr float TRAILING_WIDTH = 20.0f * SCALE;
 	inline constexpr float MAX_CANDIDATE_TEXT_WIDTH = 1000.0f;
 } // namespace ui_token::ime
 
@@ -164,6 +190,7 @@ namespace ui_token::motion
 	inline constexpr const SUiAnimTransition &TOAST_SLIDE = ui_curve::EMPHASIZED;
 	inline constexpr const SUiAnimTransition &TOOLTIP_FADE = ui_curve::DECELERATE;
 	inline constexpr const SUiSpringConfig &TOGGLE_SPRING = ui_spring::SNAPPY;
+	inline constexpr SUiSpringConfig CARD_REORDER{1.0f, 900.0f, 48.0f, 0.01f, 0.05f};
 
 	inline constexpr const SUiAnimTransition &BTN_HOVER = HOVER_FADE;
 	inline constexpr const SUiAnimTransition &BTN_PRESS = PRESS_SCALE;

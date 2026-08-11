@@ -8,145 +8,105 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - 依赖管理：Git Submodules（`ddnet-libs/`）
 - 目标平台：Windows、Linux、macOS、Android（后续也许有 IOS）
 
+## 文档系统
+
+- **可执行 AI 工作流规则只在** `.agents/skills/<name>/SKILL.md`；按需细则在同 skill 的 `references/`（如 `advanced/`、质量扫描长提示词）。说明见 `.agents/README.md`。
+- `docs/superpowers/` 存放探索、计划、规格与任务记录；会老化。带 `文档已过时` / `部分内容已过时` banner 的文件仅供参考。
+- 有效文档以最新日期和 `status`（如 `active`、`draft`）为准；无标注或明确为当前有效的才是实现依据。
+
+### 文档地图
+
+| 路径 | 内容 | 何时阅读 |
+|------|------|----------|
+| `.agents/README.md` | skills 边界与布局 | 维护 agent 工作流时 |
+| `.agents/skills/qmclient-cpp-conventions/SKILL.md` | C++ 兼容性 / 风格 / 热路径；`references/advanced/` 专项 | 改 cpp/h 或专项风险 |
+| `.agents/skills/qmclient-verification-gate/SKILL.md` | gate 分层、构建测试串行、证据格式 | 完成任务 / 验收前 |
+| `.agents/skills/qmclient-code-review/SKILL.md` | 审查立场与 findings 格式 | review / 核心逻辑改完后 |
+| `.agents/skills/qmclient-git-commit/SKILL.md` | commit / PR / 汇报 / Release | 提交与发版 |
+| `.agents/skills/audit-qmclient-quality/` | 质量审计；长提示词 `references/quality-scan-prompt.md` | 质量扫描 / 发布审计 |
+| `.agents/skills/qmclient-i18n-workflow/` 等 | i18n / i18n-audit / codegraph | 任务匹配 skill 描述时 |
+| `qmclient_scripts/scripts_overview.md` | 脚本分层与推荐入口 | 使用脚本时 |
+
 ## 极简工作流
 
 ### 范围边界
 
-- 一次只做一个功能或一个明确问题；超出当前需求的上游改动、协议/物理/预测/格式改动默认不做。
-- 实现时保持补丁聚焦：遵循 DDNet/QmClient 现有模式，不顺手重构无关代码，不把“现代化”当目标。
+- 一次只做一个功能或明确问题；上游协议 / 物理 / 预测 / 格式改动默认不做。
+- 补丁聚焦：遵循现有 DDNet/QmClient 模式，不顺手重构，不为「现代化」扩 scope。
 
 ### 启动顺序
 
-- 修改前检查附近源码、调用点、配置变量、翻译和测试；不理解现状时不要直接写代码。
+1. 读匹配的 `docs/superpowers/plans/` 或 `docs/superpowers/specs/`（有效者）。
+2. 加载最小相关 `.agents/skills/*`（先 `SKILL.md`，需要再读 `references/`）。
+3. 改前弄清附近源码、调用点、配置、翻译与测试。
 
 ### 完成任务后
 
-- 除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate；代码改动完成后，至少补一条与范围匹配的 `python qmclient_scripts/gate/check_gate.py --mode ...` 验证。
-- 默认口径：常规代码改动至少跑 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前如环境允许优先补到 `--mode default`，该模式覆盖 C++ 全量测试和 Rust 全量测试；集中收口或准发布改动再用 `--mode full`，full 只是在 default 基础上增加高噪音/更重附加检查，不作为“全量测试”的默认入口。
-- 过滤测试只用于 TDD 红绿灯、定位和快速复现；最终汇报、交给用户验收或提交前，应跑对应测试入口的全量版本。没跑全量测试就必须写成 gap，不能说“无回归”或“测试通过”。
-- 同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 必须串行执行，不要并行；要并行只能拆到不同 build 目录。
-- 子代理指出的问题修完后，再看这次改动能否最小化提交：只保留和当前任务直接相关的文件与说明。
+- 验证：按 **`qmclient-verification-gate`**（mode、串行、全量 vs 过滤、证据、gap 写法）。
+- 代码改动默认至少 `python3 qmclient_scripts/gate/check_gate.py --mode quick`；提交前优先 `--mode default`；准发布再用 `--mode full`。Windows 使用 `py -3` 或环境中的 `python`。纯文档人工核对，不跑代码 gate。
+- 核心逻辑改完：只读子代理按 **`qmclient-code-review`** 出 findings，再结论。
+- 汇报：写清改动、验证命令与结果、gaps。没跑的不说通过。
 
-### 提交 commit / PR 前（用户说要提交改动的时候）
+### 提交 commit / PR 前（用户要求提交时）
 
-- 提交不必在意干净的提交, 用户同时可能进行多个工作, 所以可能会有多种的改动.
-- 提交默认只做一次；只有用户明确要求拆分，或改动能自然分成差异明显的类别时才拆分。
-- 先确认 review findings 已收口、gate 证据已补齐；不要带着“只跑过 build/test、没跑 gate”的状态进入 commit / PR。
-- 如果仓库开启了受保护分支，而当前操作者不是仓库主或没有直推权限，默认走：本地提交 -> 推到新分支 -> 开 PR -> 合并 PR -> 删分支。只有仓库主或被明确授予直推权限的人，才可以不走这条默认路径。
-- commit 和 PR 标题统一用 `<type>(<scope>): <中文简述>`，正文先写问题/背景，再按 `fix`、`test`、`docs` 等分组。
-- 如果准备提 PR，先确保这轮审查结论已经收口，不要带着已知 review finding 进入 PR。
+- 文案与拆分策略：按 **`qmclient-git-commit`**（标题 `<type>(<scope>): <中文简述>`）。
+- 工作树可脏（多任务并行）；默认一次提交，仅用户要求或边界清晰时再拆。
+- review findings 与 gate 证据先收口；受保护分支默认走 PR，勿直推。
 
-### 最终汇报
+### 修改文档后
 
-- 最终汇报必须写清：改了什么、跑了哪些验证、结果如何、还有哪些 gaps。
-- 没跑的不要说通过；没收口的不要说完成。
+- 人工核对路径、相对链接、`status` 与权威来源；不要批量删 `docs/superpowers/`，过时用 banner / supersedes。
 
-## 全局硬约束
+### 发版（用户要求发新版本时）
 
-- 完成记录由提交、PR 和 Git 历史保存，不在当前树复制历史文档。
-- 一次只处理一个功能，直接以当前用户请求作为范围边界。
-- 如果功能请求有歧义，先问清行为、范围和兼容性边界，再开始实现。
-- 改行为之前先读真实代码。优先遵循本地模式和 DDNet 兼容性，而不是套用泛化的现代 C++ 偏好。
-- 如果有 图谱代码类 MCP（如 codegraph），优先使用它获取代码上下文，而不是直接阅读真实代码。
-- 保护 DDNet 兼容性：没有明确批准，不要改协议、demo/skin 格式、物理、预测、碰撞、地图行为、rank 可达性或既有玩法语义（通用现代 C++ 最佳实践（见 context7）与 DDNet 既有风格或兼容性约束冲突时，优先服从 DDNet 约束）
-- 补丁必须聚焦。不要重写无关的上游 DDNet 代码，也不要为小改动引入大抽象（优先遵循 DDNet 现有实现模式，不为了”现代化”重写既有代码）
-- QmClient 特有工作通常应落在 `src/game/client/components/qmclient/`、`src/game/client/QmUi/`、QmClient 配置头、翻译、文档、metadata 和 `qmclient_scripts/`
-- 超出范围的区域需要明确批准：上游引擎核心、服务端玩法、地图编辑器、第三方库、CI release 工作流、协议字段、物理、预测、snapshot、输入、碰撞、时序和回放语义
-- 默认不要修改根目录 `CMakeLists.txt`、协议字段、序列化布局或文件格式定义，除非任务明确要求
-- QmClient 的配置项统一使用 `qm_` / `Qm` 前缀，不使用 `cl_` 前缀
-- 完成一个完整功能或改进后，除非用户明确把任务限制为调查或纯文本输出，否则按 MMP 规则更新 QmClient 版本
-- 新功能、玩法变化或较大行为改动，默认先讨论，不直接扩展实现
-- 不要写空模块、空文档、stub 或”以后再决定”这类占位式交付描述
-- 工程实现默认走 TDD：先写失败测试，再做最小实现通过测试，最后再整理代码
-- 编码必须使用 UTF-8，保留原 BOM 状态（如有）
-- 修改前检测原文件换行符（CRLF/LF）和缩进风格（Tab/空格数），修改后保持一致
-- 真实 commit / PR 标题使用 `<type>(<scope>): <中文简述>`，并默认补全 commit body
-- `FEAT`、`FIX`、`DEL` 可用于 commit body 分组，也可用于最终汇报分组
-- 仓库文档中的文件、命令行和目录路径统一使用前斜杠 `/`（如 `src/game/client/components/qmclient/`, `qmclient_scripts/cmake-windows.cmd`）
+1. `python3 qmclient_scripts/bump_version.py --tag vX.Y.Z`（Windows 使用 `py -3` 或 `python`）
+2. 提交：`chore: bump version to X.Y.Z`
+3. `git tag vX.Y.Z && git push origin vX.Y.Z`
+4. CI 构建并调用 `generate_release_notes.py`（**自动汇总并润色**，不调外部 AI）发布 GitHub Release
+5. **Nightly 以脚本输出为终稿，无需人工润色**；Stable 可选手动再改。细则：`docs/RELEASE_NOTE_TEMPLATE.md` §0 与 **`qmclient-git-commit`**「Release 说明」
 
-## 构建与命令
+## 全局硬约束（简略；细则见 `qmclient-cpp-conventions`）
 
-- 优先用脚本，不要依赖记忆。具体命令见 `qmclient_scripts/scripts_overview.md`。
-- 修改 `qmclient_scripts/languages_qmclient/`、`data/languages/*.txt`、`qmclient_scripts/languages_qmclient/translations/i18n/*.toml`，或新增/删除 `Localize`、`Localizable`、`Register` help 文本后，按顺序运行 `python qmclient_scripts/languages_qmclient/extract_strings.py`、`python qmclient_scripts/languages_qmclient/generate_all.py`、`python qmclient_scripts/languages_qmclient/validate.py`、`python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
-- `qmclient_scripts/languages_qmclient/translations/i18n/*.toml` 是翻译维护库；`data/languages/*.txt` 是生成产物，不作为手工维护的长期真相源。
-- 新增英文 source key 后，先用 `extract_strings.py` 更新 active key，再用 `translate_with_local_http.py --languages ...` 生成 `translations_draft/<language>/*.toml`；审核 draft 后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，随后运行 `generate_all.py` 生成运行时语言文件。
-- Windows 上默认用 `qmclient_scripts/cmake-windows.cmd` 作为构建入口；常规构建/测试目录是 `cmake-build-release`，交互式完整构建命令：`qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`。自动化子进程显式走 `cmd.exe` 宿主时再使用 `cmd /c qmclient_scripts/cmake-windows.cmd ...`；只有已确认当前 shell 已注入可用的 VS/MSVC 环境时，才直接使用裸 `cmake`
-- 构建目录名规范：debug - `cmake-build-debug`；release - `cmake-build-release`；release-pdb - `cmake-build-release-pdb`
-- 同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 不要并行发起；这些目标会共享生成产物和中间文件，必须串行执行。需要并行时，只能拆到不同 build 目录。
+- 仓库即记录系统：决策、计划、状态、证据、交接写入版本化文件。
+- 一次一个功能；范围 = 用户请求 + 有效 plan/spec。歧义先问清。
+- 改行为前读真实代码；优先本地模式与 DDNet 兼容，不套泛化「现代 C++」。
+- 有 codegraph 类图谱工具时优先用其取上下文。
+- 无明确批准：不改协议、demo/skin 格式、物理、预测、碰撞、地图行为、rank 可达性、既有玩法语义。
+- 补丁聚焦；不重写无关上游；小改不动大抽象。
+- QmClient 特有工作优先落在 `src/game/client/components/qmclient/`、`src/game/client/QmUi/`、Qm 配置头、翻译、文档、metadata、`qmclient_scripts/`。
+- 超出范围需批准：引擎核心、服务端玩法、地图编辑器、第三方库、CI release、协议字段、snapshot/输入/时序/回放语义等。
+- 默认不改根 `CMakeLists.txt`、协议字段、序列化布局、文件格式定义（任务明确要求除外）。
+- 配置项前缀 `qm_` / `Qm`，不用 `cl_`。
+- 完整功能/改进后按 MMP 更新版本（纯调查/纯文本输出除外）。
+- 新功能与较大行为改动默认先讨论。
+- 不交付空模块、空文档、stub、「以后再决定」。
+- 默认 TDD：失败测试 → 最小实现 → 整理。
+- UTF-8；保留原 BOM；保持原换行（CRLF/LF）与缩进。
+- commit/PR 标题与 body 按 `qmclient-git-commit`；`FEAT`/`FIX`/`DEL` 可用于 body 与汇报分组。
+- 文档路径统一前斜杠 `/`。
+- 代码注释用中文。
+
+## 构建与命令（摘要）
+
+- 细节与 mode 表：见 **`qmclient-verification-gate`** 与 `qmclient_scripts/scripts_overview.md`。
+- i18n：`extract_strings` → `generate_all` → `validate` → `review_duplicate_entries`；维护源 `translations/i18n/*.toml`，`data/languages/*.txt` 为产物。细则 `qmclient-i18n-workflow`。
+- Windows 构建入口：`qmclient_scripts/cmake-windows.cmd`；目录 `cmake-build-debug` / `cmake-build-release`。例：`cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`。
+- 同 build 目录内 `game-client` / `testrunner` / `run_cxx_tests` / `run_rust_tests` / `package_default` **串行**。
+- 日志与临时文件放 `tmp/`，勿堆仓库根。
 
 ## 十二原则：软件工程
 
-除非另有明确说明，本项目中的所有任务都遵循以下规则。
-基本倾向：遇到非简单任务时，宁可慢一点，也要更谨慎。简单任务则自行判断，不必过度流程化。
+非简单任务宁可慢一点、更谨慎；简单任务勿过度流程化。
 
-## 规则 1 — 写代码前先想清楚
-
-明确说出你的假设。
-不确定时先问，不要猜。
-如果需求有歧义，列出可能的理解。
-如果有更简单的做法，要主动指出。
-如果卡住了，就停下来，说明哪里不清楚。
-
-## 规则 2 — 简单优先
-
-用能解决问题的最少代码。不要做预判式扩展。
-不要实现需求之外的功能。不要为了只用一次的代码引入抽象。
-自检标准：如果一位资深工程师会觉得这太复杂，那就简化。
-
-## 规则 3 — 精准修改
-
-只改必须改的地方。只清理你自己造成的问题。
-不要顺手“优化”旁边的代码、注释或格式。
-没坏的东西不要重构。保持和现有代码风格一致。
-
-## 规则 4 — 以目标为导向
-
-先定义成功标准，再不断验证，直到达成。
-不要只是机械地执行步骤。要明确什么叫完成，并围绕它迭代。
-清晰的成功标准能让你独立推进，而不是不断迷失在流程里。
-
-## 规则 5 — 只把模型用于判断类工作
-
-可以用我来做：分类、起草、总结、提取。
-不要用我来做：路由、重试、确定性转换。
-如果代码能给出答案，就让代码来回答。
-
-## 规则 6 — Token 预算必须认真对待
-
-单个任务：4,000 tokens。单个会话：30,000 tokens。
-如果快接近预算，就先总结，再重新开始。
-预算可能超限时要明确说出来，不要悄悄超支。
-
-## 规则 7 — 暴露冲突，不要折中混合
-
-如果两种模式互相冲突，选择其中一种，优先选更新的或验证更多的。
-说明你为什么这样选，并把另一种标记为后续需要清理。
-不要把冲突的做法混在一起。
-
-## 规则 8 — 写之前先读
-
-加代码之前，先看导出项、直接调用方和共享工具。
-“看起来互不相关”并不安全。
-如果不明白代码为什么这样组织，就先问。
-
-## 规则 9 — 测试要验证意图，而不只是行为
-
-测试应该体现这个行为为什么重要，而不只是检查它做了什么。
-如果业务逻辑变了，测试却不会失败，那这个测试就是错的。
-
-## 规则 10 — 重要步骤后要设检查点
-
-每完成一个重要步骤，都总结：做了什么、验证了什么、还剩什么。
-不要在一个自己都说不清的状态上继续往前走。
-如果发现自己丢了上下文，就停下来，重新整理当前状态。
-
-## 规则 11 — 遵循代码库约定，即使你不认同
-
-在代码库内部，一致性优先于个人偏好。
-如果你确实认为某个约定有问题，要明确指出。不要偷偷另起一套风格。
-
-## 规则 12 — 失败要说清楚
-
-如果有任何内容被跳过，就不能说“已完成”。
-如果有任何测试被跳过，就不能说“测试通过”。
-默认暴露不确定性，而不是把它藏起来。
+1. **写前想清楚** — 说假设；歧义先问；有更简做法主动指出。
+2. **简单优先** — 最少代码；不为一次性用法加抽象。
+3. **精准修改** — 只改必须改的；不顺手「优化」邻域。
+4. **目标导向** — 先定义完成标准再迭代。
+5. **模型做判断** — 分类/起草/总结；确定性转换交给代码。
+6. **Token 预算** — 单任务约 4k、会话约 30k 为警戒；将超限时先总结。
+7. **暴露冲突** — 二选一并说明，不折中混用。
+8. **写前先读** — 导出、调用方、共享工具。
+9. **测试验意图** — 业务变了测试应失败。
+10. **检查点** — 重要步骤后总结做了/验了/还剩什么。
+11. **遵循仓库约定** — 一致性优先；反对约定要明说。
+12. **失败说清楚** — 跳过项不得称完成；默认暴露不确定性。

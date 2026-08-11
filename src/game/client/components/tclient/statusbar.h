@@ -1,7 +1,39 @@
 #ifndef GAME_CLIENT_COMPONENTS_TCLIENT_STATUSBAR_H
 #define GAME_CLIENT_COMPONENTS_TCLIENT_STATUSBAR_H
 
+#include <base/str.h>
+#include <base/time.h>
+
+#include <engine/shared/protocol.h>
+
 #include <game/client/component.h>
+#include <game/client/components/player_points.h>
+
+#include <algorithm>
+
+namespace tclient_statusbar
+{
+	inline bool FormatPlayerPoints(char *pBuf, int BufSize, EPointsStatus Status, int Points)
+	{
+		if(BufSize <= 0)
+			return false;
+
+		switch(Status)
+		{
+		case EPointsStatus::READY:
+			str_format(pBuf, BufSize, "%d", Points);
+			return true;
+		case EPointsStatus::NOT_REQUESTED:
+		case EPointsStatus::FETCHING:
+			str_copy(pBuf, "...", BufSize);
+			return true;
+		case EPointsStatus::FAILED:
+			str_copy(pBuf, "?", BufSize);
+			return true;
+		}
+		return false;
+	}
+}
 
 enum
 {
@@ -51,18 +83,22 @@ public:
 		"v", "Velocity", "", "Displays X and Y velocity");
 	CStatusItem m_Zoom = CStatusItem([this] { ZoomRender(); }, [this] { return ZoomWidth(); },
 		"z", "Zoom", "", "Displays current zoom value");
+	CStatusItem m_Score = CStatusItem([this] { ScoreRender(); }, [this] { return ScoreWidth(); },
+		"s", "Points", "Points", "Displays the DDNet Points of the current player");
 	CStatusItem m_Downstream = CStatusItem([this] { DownstreamRender(); }, [this] { return DownstreamWidth(); },
-		"u", "Snapshot Latency", "Latency", "Displays server snapshot latency");
+		"u", "Round-trip time", "RTT", "Displays the game connection round-trip time");
 	CStatusItem m_Upstream = CStatusItem([this] { UpstreamRender(); }, [this] { return UpstreamWidth(); },
-		"n", "Prediction Latency", "Prediction latency", "Displays client prediction latency");
+		"n", "Prediction Lead", "Prediction lead", "Displays the client's prediction lead");
 	CStatusItem m_Jitter = CStatusItem([this] { JitterRender(); }, [this] { return JitterWidth(); },
-		"j", "Latency Jitter", "Latency jitter", "Displays latency jitter");
+		"j", "Latency Jitter", "Prediction jitter", "Displays prediction timing jitter");
+	CStatusItem m_SnapshotGap = CStatusItem([this] { SnapshotGapRender(); }, [this] { return SnapshotGapWidth(); },
+		"g", "Snapshot Age", "Snapshot age", "Displays the time since the last complete snapshot");
 	CStatusItem m_PacketLoss = CStatusItem([this] { PacketLossRender(); }, [this] { return PacketLossWidth(); },
-		"k", "Resend Loss", "Resend loss", "Displays resend-based packet loss estimate");
+		"k", "Vital Resend Queue", "Vital resend queue", "Displays the number of unacknowledged vital chunks");
 	CStatusItem m_DownRate = CStatusItem([this] { DownRateRender(); }, [this] { return DownRateWidth(); },
-		"i", "Receive Rate", "Receive rate", "Displays client receive rate");
+		"i", "Receive Rate", "Process UDP RX (est.)", "Displays estimated process UDP receive rate");
 	CStatusItem m_UpRate = CStatusItem([this] { UpRateRender(); }, [this] { return UpRateWidth(); },
-		"o", "Send Rate", "Send rate", "Displays client send rate");
+		"o", "Send Rate", "Process UDP TX (est.)", "Displays estimated process UDP send rate");
 	CStatusItem m_ConnectionGrade = CStatusItem([this] { ConnectionGradeRender(); }, [this] { return ConnectionGradeWidth(); },
 		"q", "Connection Quality", "Connection quality", "Displays connection quality grade");
 	CStatusItem m_Cpu = CStatusItem([this] { CpuRender(); }, [this] { return CpuWidth(); },
@@ -72,7 +108,7 @@ public:
 	CStatusItem m_Space = CStatusItem([this] { SpaceRender(); }, [this] { return SpaceWidth(); },
 		" _", "Space", " ", "Gap between statusbar items", false);
 
-	std::vector<CStatusItem> m_StatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Downstream, m_Upstream, m_Jitter, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
+	std::vector<CStatusItem> m_StatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Score, m_Downstream, m_Upstream, m_Jitter, m_SnapshotGap, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
 	std::vector<CStatusItem *> m_StatusBarItems = {&m_LocalTime, &m_FPS, &m_Space, &m_Angle, &m_Space, &m_Ping};
 
 	void UpdateStatusBarSize();
@@ -88,6 +124,8 @@ private:
 	float m_CursorX, m_CursorY, m_BarX = 0.0f, m_BarY;
 	float m_Width, m_Height;
 	float m_BarHeight, m_Margin;
+	char m_aFormattedPoints[32] = {};
+	bool m_HasFormattedPoints = false;
 
 	int m_CurrentRaceTime = 0;
 	float GetDurationWidth(int Duration);
@@ -119,6 +157,10 @@ private:
 	float ZoomWidth();
 	void ZoomRender();
 
+	float ScoreWidth();
+	void ScoreRender();
+	void UpdateFormattedPoints();
+
 	float DownstreamWidth();
 	void DownstreamRender();
 
@@ -127,6 +169,9 @@ private:
 
 	float JitterWidth();
 	void JitterRender();
+
+	float SnapshotGapWidth();
+	void SnapshotGapRender();
 
 	float PacketLossWidth();
 	void PacketLossRender();

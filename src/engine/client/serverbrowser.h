@@ -12,6 +12,7 @@
 
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 
 typedef struct _json_value json_value;
@@ -221,7 +222,7 @@ private:
 class CCommunityCache : public ICommunityCache
 {
 	IServerBrowser *m_pServerBrowser;
-	SHA256_DIGEST m_InfoSha256 = SHA256_ZEROED;
+	std::optional<SHA256_DIGEST> m_InfoSha256;
 	int m_LastType = IServerBrowser::NUM_TYPES; // initial value does not appear normally, marking uninitialized cache
 	unsigned m_SelectedCommunitiesHash = 0;
 	std::vector<const CCommunity *> m_vpSelectedCommunities;
@@ -279,6 +280,8 @@ public:
 	void UpdateServerFriends(CServerInfo *pInfo) const;
 	void UpdateServerCommunity(CServerInfo *pInfo) const;
 	void UpdateServerRank(CServerInfo *pInfo) const;
+	void UpdateServerLatency(CServerInfo *pInfo, int OwnLocation) const;
+	int DetermineOwnLocation() const;
 	void ValidateServerlistType();
 	const char *GetTutorialServer() override;
 
@@ -290,7 +293,7 @@ public:
 	unsigned CurrentCommunitiesHash() const override;
 
 	bool DDNetInfoAvailable() const override { return m_pDDNetInfo != nullptr; }
-	SHA256_DIGEST DDNetInfoSha256() const override { return m_DDNetInfoSha256; }
+	std::optional<SHA256_DIGEST> DDNetInfoSha256() const override { return m_DDNetInfoSha256; }
 
 	ICommunityCache &CommunityCache() override { return m_CommunityCache; }
 	const ICommunityCache &CommunityCache() const override { return m_CommunityCache; }
@@ -353,7 +356,7 @@ private:
 	CExcludedCommunityTypeFilterList m_TypesFilter;
 
 	json_value *m_pDDNetInfo = nullptr;
-	SHA256_DIGEST m_DDNetInfoSha256 = SHA256_ZEROED;
+	std::optional<SHA256_DIGEST> m_DDNetInfoSha256;
 
 	CServerEntry *m_pFirstReqServer; // request list
 	CServerEntry *m_pLastReqServer;

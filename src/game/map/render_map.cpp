@@ -53,11 +53,11 @@ int IEnvelopePointAccess::FindPointIndex(CFixedTime Time) const
 CMapBasedEnvelopePointAccess::CMapBasedEnvelopePointAccess(CDataFileReader *pReader)
 {
 	bool FoundBezierEnvelope = false;
-	int EnvStart, EnvNum;
-	pReader->GetType(MAPITEMTYPE_ENVELOPE, &EnvStart, &EnvNum);
-	for(int EnvIndex = 0; EnvIndex < EnvNum; EnvIndex++)
+	int EnvelopeStart, EnvelopeNum;
+	pReader->GetType(MAPITEMTYPE_ENVELOPE, &EnvelopeStart, &EnvelopeNum);
+	for(int EnvelopeIndex = 0; EnvelopeIndex < EnvelopeNum; EnvelopeIndex++)
 	{
-		CMapItemEnvelope *pEnvelope = static_cast<CMapItemEnvelope *>(pReader->GetItem(EnvStart + EnvIndex));
+		CMapItemEnvelope *pEnvelope = static_cast<CMapItemEnvelope *>(pReader->GetItem(EnvelopeStart + EnvelopeIndex));
 		if(pEnvelope->m_Version >= CMapItemEnvelope::VERSION_TEEWORLDS_BEZIER)
 		{
 			FoundBezierEnvelope = true;
@@ -1407,38 +1407,4 @@ void CRenderMap::RenderDebugClip(float ClipX, float ClipY, float ClipW, float Cl
 	// clamp zoom and set line width, because otherwise the text can be partially clipped out
 	TextRender()->Text(ClipX, ClipY, std::min(12.0f * Zoom, 20.0f), pLabel, ClipW);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-}
-
-CTuneColorMapper::CTuneColorMapper()
-{
-	Reset();
-}
-
-uint8_t CTuneColorMapper::TuneNumberToColorIndex(uint8_t TuneNumber)
-{
-	if(TuneNumber == 0)
-		return 0;
-
-	uint8_t &TuneColorIndex = m_aTuneNumberToColorIndex[TuneNumber - 1];
-	if(TuneColorIndex == 0)
-	{
-		TuneColorIndex = m_NextTuneNumberIndex + 1;
-		++m_NextTuneNumberIndex;
-	}
-	return TuneColorIndex;
-}
-
-ColorRGBA CTuneColorMapper::TuneColorIndexToColor(uint8_t TuneColorIndex) const
-{
-	if(TuneColorIndex == 0)
-		return ColorRGBA(1.0f, 1.0f, 1.0f);
-
-	const float Hue = std::fmod((TuneColorIndex - 1) * normalized_golden_angle, 1.0f);
-	return color_cast<ColorRGBA>(ColorHSLA(Hue, 0.75f, 0.5f, 1.0f));
-}
-
-void CTuneColorMapper::Reset()
-{
-	m_aTuneNumberToColorIndex.fill(0);
-	m_NextTuneNumberIndex = 0;
 }

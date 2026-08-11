@@ -70,6 +70,9 @@ void CTrails::OnRender()
 
 			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
 				continue;
+			if(!GameClient()->LiveTeamFilterAllowsClient(ClientId))
+				continue;
+
 			// Render for both local players (main + dummy when connected).
 			if(!IsLocalClient)
 				continue;
@@ -82,7 +85,8 @@ void CTrails::OnRender()
 			vec2 Direction = direction(Angle);
 
 			float Alpha = 1.0f;
-			if(GameClient()->IsOtherTeam(ClientId))
+			Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+			if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
 				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
 		}
@@ -97,6 +101,9 @@ void CTrails::OnRender()
 
 			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
 				continue;
+			if(!GameClient()->LiveTeamFilterAllowsClient(ClientId))
+				continue;
+
 			if(IsLocalClient)
 				continue; // Remote rendering is only for other players.
 
@@ -114,7 +121,8 @@ void CTrails::OnRender()
 			vec2 Direction = direction(Angle);
 
 			float Alpha = 1.0f;
-			if(GameClient()->IsOtherTeam(ClientId))
+			Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+			if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
 				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 			// Render foot trail for recognized Q1menG client
 			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
@@ -144,7 +152,16 @@ void CTrails::OnRender()
 				ClearHistory(ClientId);
 			continue;
 		}
-		m_HistoryValid[ClientId] = true;
+		if(!GameClient()->LiveTeamFilterAllowsClient(ClientId))
+		{
+			if(m_HistoryValid[ClientId])
+				ClearHistory(ClientId);
+			continue;
+		}
+		else
+		{
+			m_HistoryValid[ClientId] = true;
+		}
 
 		CTeeRenderInfo TeeInfo = GameClient()->m_aClients[ClientId].m_RenderInfo;
 
@@ -196,7 +213,10 @@ void CTrails::OnRender()
 			Alpha *= g_Config.m_ClRaceGhostAlpha / 100.0f;
 		else if(ClientId >= 0)
 		{
-			if(GameClient()->IsOtherTeam(ClientId))
+			const float LiveObserverAlpha = GameClient()->LiveObserverClientAlpha(ClientId);
+			if(LiveObserverAlpha < 1.0f)
+				Alpha *= LiveObserverAlpha;
+			else if(GameClient()->IsOtherTeam(ClientId))
 				Alpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
 		}
 		else

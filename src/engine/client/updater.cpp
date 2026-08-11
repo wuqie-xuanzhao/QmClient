@@ -1,5 +1,8 @@
 #include "updater.h"
 
+#include <base/fs.h>
+#include <base/log.h>
+#include <base/str.h>
 #include <base/system.h>
 
 #include <engine/client.h>
@@ -11,15 +14,17 @@
 
 #include <game/version.h>
 
-#include <cstdlib> // system
 #include <unordered_set>
 
-using std::string;
+#if !defined(CONF_FAMILY_WINDOWS)
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 class CUpdaterFetchTask : public CHttpRequest
 {
 	char m_aBuf[256];
-	char m_aBuf2[256];
 	CUpdater *m_pUpdater;
 
 protected:
@@ -37,6 +42,33 @@ static inline bool IsUnreserved(unsigned char c)
 	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
 	       (c >= '0' && c <= '9') || c == '-' || c == '_' ||
 	       c == '.' || c == '~' || c == '/';
+}
+
+static bool IsAllowedUpdaterPath(const char *pPath)
+{
+	if(!fs_is_relative_path(pPath) || str_find(pPath, "..") != nullptr)
+		return false;
+
+	char aSegment[IO_MAX_PATH_LENGTH];
+	size_t SegmentLength = 0;
+	for(const char *pIter = pPath;; ++pIter)
+	{
+		if(*pIter == '/' || *pIter == '\0')
+		{
+			if(SegmentLength == 0 || SegmentLength >= sizeof(aSegment))
+				return false;
+			aSegment[SegmentLength] = '\0';
+			if(str_comp(aSegment, ".") == 0 || !str_valid_filename(aSegment))
+				return false;
+			SegmentLength = 0;
+			if(*pIter == '\0')
+				return true;
+			continue;
+		}
+		if(SegmentLength + 1 >= sizeof(aSegment))
+			return false;
+		aSegment[SegmentLength++] = *pIter;
+	}
 }
 
 static void UrlEncodePath(const char *pIn, char *pOut, size_t OutSize)
@@ -84,21 +116,52 @@ static const char *GetUpdaterUrl(char *pBuf, int BufSize, const char *pFile)
 	return pBuf;
 }
 
-static const char *GetUpdaterDestPath(char *pBuf, int BufSize, const char *pFile, const char *pDestPath)
+static void FormatUpdaterDestPath(char *pBuf, int BufSize, const char *pFile, const char *pDestPath)
 {
 	if(!pDestPath)
 	{
 		pDestPath = pFile;
 	}
 	str_format(pBuf, BufSize, "update/%s", pDestPath);
-	return pBuf;
 }
+
+#if !defined(CONF_FAMILY_WINDOWS)
+static bool SetExecutableBit(const char *pPath)
+{
+	const int FileDescriptor = open(pPath, O_RDWR);
+	if(FileDescriptor < 0)
+	{
+		log_error("updater", "Failed to open file descriptor to set executable bit of '%s'", pPath);
+		return false;
+	}
+	bool Success = true;
+	struct stat FileStats;
+	if(fstat(FileDescriptor, &FileStats) != 0)
+	{
+		log_error("updater", "Failed to determine file stats to set executable bit of '%s'", pPath);
+		Success = false;
+	}
+	else if(fchmod(FileDescriptor, FileStats.st_mode | S_IXUSR | S_IXGRP | S_IXOTH) != 0)
+	{
+		log_error("updater", "Failed to set executable bit of '%s'", pPath);
+		Success = false;
+	}
+	if(close(FileDescriptor) != 0)
+	{
+		log_error("updater", "Failed to close file descriptor after setting executable bit of '%s'", pPath);
+		Success = false;
+	}
+	return Success;
+}
+#endif
 
 CUpdaterFetchTask::CUpdaterFetchTask(CUpdater *pUpdater, const char *pFile, const char *pDestPath) :
 	CHttpRequest(GetUpdaterUrl(m_aBuf, sizeof(m_aBuf), pFile)),
 	m_pUpdater(pUpdater)
 {
-	WriteToFile(pUpdater->m_pStorage, GetUpdaterDestPath(m_aBuf2, sizeof(m_aBuf2), pFile, pDestPath), -2);
+	char aDestination[IO_MAX_PATH_LENGTH];
+	FormatUpdaterDestPath(aDestination, sizeof(aDestination), pFile, pDestPath);
+	WriteToFile(pUpdater->m_pStorage, aDestination, -2);
 	// Large binary downloads should fail fast enough on broken links, while
 	// still allowing slower connections to complete.
 	Timeout(CTimeout{10000, 10 * 60 * 1000, 8192, 20});
@@ -112,12 +175,7 @@ void CUpdaterFetchTask::OnProgress()
 
 void CUpdaterFetchTask::OnCompletion(EHttpState State)
 {
-	const char *pFilename = nullptr;
-	for(const char *pPath = Dest(); *pPath; pPath++)
-		if(*pPath == '/')
-			pFilename = pPath + 1;
-	pFilename = pFilename ? pFilename : Dest();
-	if(!str_comp(pFilename, "update.json"))
+	if(!str_comp(fs_filename(Dest()), "update.json"))
 	{
 		if(State == EHttpState::DONE)
 			m_pUpdater->SetCurrentState(IUpdater::GOT_MANIFEST);
@@ -184,21 +242,20 @@ void CUpdater::FetchFile(const char *pFile, const char *pDestPath)
 
 bool CUpdater::MoveFile(const char *pFile)
 {
-	char aBuf[256];
-	const size_t Length = str_length(pFile);
+	char aBuf[IO_MAX_PATH_LENGTH];
 	bool Success = true;
 
 #if !defined(CONF_FAMILY_WINDOWS)
-	if(!str_comp_nocase(pFile + Length - 4, ".dll"))
+	if(str_endswith_nocase(pFile, ".dll"))
 		return Success;
 #endif
 
 #if !defined(CONF_PLATFORM_LINUX)
-	if(!str_comp_nocase(pFile + Length - 3, ".so"))
+	if(str_endswith_nocase(pFile, ".so"))
 		return Success;
 #endif
 
-	if(!str_comp_nocase(pFile + Length - 4, ".dll") || !str_comp_nocase(pFile + Length - 4, ".ttf") || !str_comp_nocase(pFile + Length - 3, ".so"))
+	if(str_endswith_nocase(pFile, ".dll") || str_endswith_nocase(pFile, ".so"))
 	{
 		str_format(aBuf, sizeof(aBuf), "%s.old", pFile);
 		m_pStorage->RenameBinaryFile(pFile, aBuf);
@@ -239,7 +296,7 @@ void CUpdater::AddFileJob(const char *pFile, bool Job)
 
 bool CUpdater::ReplaceClient()
 {
-	dbg_msg("updater", "replacing " PLAT_CLIENT_EXEC);
+	log_debug("updater", "Replacing " PLAT_CLIENT_EXEC);
 	bool Success = true;
 	char aPath[IO_MAX_PATH_LENGTH];
 
@@ -251,20 +308,14 @@ bool CUpdater::ReplaceClient()
 	m_pStorage->RemoveBinaryFile(CLIENT_EXEC ".old");
 #if !defined(CONF_FAMILY_WINDOWS)
 	m_pStorage->GetBinaryPath(PLAT_CLIENT_EXEC, aPath, sizeof(aPath));
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "chmod +x %s", aPath);
-	if(system(aBuf))
-	{
-		dbg_msg("updater", "ERROR: failed to set client executable bit");
-		Success = false;
-	}
+	Success &= SetExecutableBit(aPath);
 #endif
 	return Success;
 }
 
 bool CUpdater::ReplaceServer()
 {
-	dbg_msg("updater", "replacing " PLAT_SERVER_EXEC);
+	log_debug("updater", "Replacing " PLAT_SERVER_EXEC);
 	bool Success = true;
 	char aPath[IO_MAX_PATH_LENGTH];
 
@@ -276,13 +327,7 @@ bool CUpdater::ReplaceServer()
 	m_pStorage->RemoveBinaryFile(SERVER_EXEC ".old");
 #if !defined(CONF_FAMILY_WINDOWS)
 	m_pStorage->GetBinaryPath(PLAT_SERVER_EXEC, aPath, sizeof(aPath));
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "chmod +x %s", aPath);
-	if(system(aBuf))
-	{
-		dbg_msg("updater", "ERROR: failed to set server executable bit");
-		Success = false;
-	}
+	Success &= SetExecutableBit(aPath);
 #endif
 	return Success;
 }
@@ -300,8 +345,7 @@ void CUpdater::ParseUpdate()
 
 	if(!pVersions || pVersions->type != json_array)
 	{
-		if(pVersions)
-			json_value_free(pVersions);
+		json_value_free(pVersions);
 		return;
 	}
 
@@ -332,8 +376,11 @@ void CUpdater::ParseUpdate()
 			for(int j = 0; j < json_array_length(pDownload); j++)
 			{
 				const char *pName = json_string_get(json_array_get(pDownload, j));
-				if(!pName)
+				if(!pName || !IsAllowedUpdaterPath(pName))
+				{
+					log_error("updater", "Update manifest contains invalid path to download: '%s'", pName == nullptr ? "(not a string)" : pName);
 					continue;
+				}
 
 				if(SkipSet.insert(pName).second)
 				{
@@ -348,8 +395,11 @@ void CUpdater::ParseUpdate()
 			for(int j = 0; j < json_array_length(pRemove); j++)
 			{
 				const char *pName = json_string_get(json_array_get(pRemove, j));
-				if(!pName)
+				if(!pName || !IsAllowedUpdaterPath(pName))
+				{
+					log_error("updater", "Update manifest contains invalid path to remove: '%s'", pName == nullptr ? "(not a string)" : pName);
 					continue;
+				}
 
 				if(SkipSet.insert(pName).second)
 				{
@@ -380,7 +430,7 @@ void CUpdater::InitiateUpdate()
 void CUpdater::PerformUpdate()
 {
 	SetCurrentState(IUpdater::PARSING_UPDATE);
-	dbg_msg("updater", "parsing update.json");
+	log_debug("updater", "Parsing update.json");
 	ParseUpdate();
 	m_CurrentJob = m_FileJobs.begin();
 	SetCurrentState(IUpdater::DOWNLOADING);
@@ -406,11 +456,11 @@ void CUpdater::RunningUpdate()
 		if(Job.second)
 		{
 			const char *pFile = Job.first.c_str();
-			const size_t Length = str_length(pFile);
-			if(!str_comp_nocase(pFile + Length - 4, ".dll"))
+			if(str_endswith_nocase(pFile, ".dll"))
 			{
 #if defined(CONF_FAMILY_WINDOWS)
-				char aBuf[512];
+				const size_t Length = str_length(pFile);
+				char aBuf[IO_MAX_PATH_LENGTH];
 				str_copy(aBuf, pFile, sizeof(aBuf)); // SDL
 				str_copy(aBuf + Length - 4, "-" PLAT_NAME, sizeof(aBuf) - Length + 4); // -win32
 				str_append(aBuf, pFile + Length - 4); // .dll
@@ -418,10 +468,11 @@ void CUpdater::RunningUpdate()
 #endif
 				// Ignore DLL downloads on other platforms
 			}
-			else if(!str_comp_nocase(pFile + Length - 3, ".so"))
+			else if(str_endswith_nocase(pFile, ".so"))
 			{
 #if defined(CONF_PLATFORM_LINUX)
-				char aBuf[512];
+				const size_t Length = str_length(pFile);
+				char aBuf[IO_MAX_PATH_LENGTH];
 				str_copy(aBuf, pFile, sizeof(aBuf)); // libsteam_api
 				str_copy(aBuf + Length - 3, "-" PLAT_NAME, sizeof(aBuf) - Length + 3); // -linux-x86_64
 				str_append(aBuf, pFile + Length - 3); // .so

@@ -9,15 +9,34 @@
 
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
+
+static bool ColorChanged(const ColorRGBA &A, const ColorRGBA &B)
+{
+	constexpr float COLOR_EPSILON = 0.0001f;
+	return std::abs(A.r - B.r) > COLOR_EPSILON ||
+	       std::abs(A.g - B.g) > COLOR_EPSILON ||
+	       std::abs(A.b - B.b) > COLOR_EPSILON ||
+	       std::abs(A.a - B.a) > COLOR_EPSILON;
+}
 
 void CUiV2AnimationRuntime::Reset()
 {
 	m_TimeSec = 0.0f;
 	m_CompletedEvents.clear();
+	m_GroupCompletedEvents.clear();
 	m_NextTrackId = 1;
+	m_NextGroupId = 1;
 	m_Values.clear();
 	m_ActiveTracks.clear();
 	m_QueuedTracks.clear();
+	m_CustomEasings.clear();
+	m_LastTargets.clear();
+	m_ResolveUseCounter = 0;
+	m_ColorTargets.clear();
+	m_ColorUseCounter = 0;
+	m_TrackAwaitGroups.clear();
+	m_AwaitGroups.clear();
 }
 
 static float SolveBezierY(float TargetX, const SUiBezier &Bezier)
@@ -78,8 +97,27 @@ float CUiV2AnimationRuntime::ApplyEasing(float t, const SUiAnimTransition &Trans
 		return Clamped < 0.5f ? 4.0f * Clamped * Clamped * Clamped : 1.0f - std::pow(-2.0f * Clamped + 2.0f, 3.0f) / 2.0f;
 	case EEasing::CUBIC_BEZIER:
 		return SolveBezierY(Clamped, Transition.m_Bezier);
+	case EEasing::CUSTOM:
+	{
+		const auto ItCustom = m_CustomEasings.find(Transition.m_CustomEasingId);
+		if(ItCustom != m_CustomEasings.end() && ItCustom->second.m_pfnEasing != nullptr)
+			return std::clamp(ItCustom->second.m_pfnEasing(Clamped, ItCustom->second.m_pUser), 0.0f, 1.0f);
+		return Clamped;
+	}
 	}
 	return Clamped;
+}
+
+float CUiV2AnimationRuntime::ApplyTrackEasing(float t, const SActiveTrack &Track) const
+{
+	const float Clamped = std::clamp(t, 0.0f, 1.0f);
+	if(Track.m_Transition.m_Easing == EEasing::CUSTOM)
+	{
+		if(Track.m_pfnCustomEasing != nullptr)
+			return std::clamp(Track.m_pfnCustomEasing(Clamped, Track.m_pCustomEasingUser), 0.0f, 1.0f);
+		return Clamped;
+	}
+	return ApplyEasing(Clamped, Track.m_Transition);
 }
 
 float CUiV2AnimationRuntime::TrackProgress(const SActiveTrack &Track) const
@@ -107,12 +145,22 @@ bool CUiV2AnimationRuntime::StartTrack(const STrackKey &Key, const SUiAnimReques
 	if(Track.m_Transition.m_DelaySec < 0.0f)
 		Track.m_Transition.m_DelaySec = 0.0f;
 	Track.m_TrackId = Request.m_TrackId != 0 ? Request.m_TrackId : m_NextTrackId++;
+	if(Track.m_Transition.m_Easing == EEasing::CUSTOM)
+	{
+		const auto ItCustom = m_CustomEasings.find(Track.m_Transition.m_CustomEasingId);
+		if(ItCustom != m_CustomEasings.end())
+		{
+			Track.m_pfnCustomEasing = ItCustom->second.m_pfnEasing;
+			Track.m_pCustomEasingUser = ItCustom->second.m_pUser;
+		}
+	}
 
 	const bool IsSpring = Track.m_Transition.m_Driver == EUiAnimDriver::SPRING;
 	if(!IsSpring && Track.m_Transition.m_DurationSec <= 0.0f && Track.m_Transition.m_DelaySec <= 0.0f)
 	{
 		m_Values[Key] = Track.m_Target;
 		m_CompletedEvents.push_back({Key.m_NodeKey, Key.m_Property, Track.m_TrackId});
+		CompleteAwaitedTrack(Track.m_TrackId);
 		return false;
 	}
 
@@ -120,6 +168,7 @@ bool CUiV2AnimationRuntime::StartTrack(const STrackKey &Key, const SUiAnimReques
 	{
 		m_Values[Key] = Track.m_Target;
 		m_CompletedEvents.push_back({Key.m_NodeKey, Key.m_Property, Track.m_TrackId});
+		CompleteAwaitedTrack(Track.m_TrackId);
 		return false;
 	}
 
@@ -155,8 +204,88 @@ void CUiV2AnimationRuntime::CompleteTrack(const STrackKey &Key, const SActiveTra
 	const uint32_t TrackId = Track.m_TrackId;
 	m_Values[Key] = Target;
 	m_CompletedEvents.push_back({Key.m_NodeKey, Key.m_Property, TrackId});
+	CompleteAwaitedTrack(TrackId);
 	m_ActiveTracks.erase(Key);
 	StartQueuedTracks(Key, Target);
+}
+
+void CUiV2AnimationRuntime::CompleteAwaitedTrack(uint32_t TrackId)
+{
+	auto ItTrackGroup = m_TrackAwaitGroups.find(TrackId);
+	if(ItTrackGroup != m_TrackAwaitGroups.end())
+	{
+		const std::vector<uint32_t> vGroupIds = ItTrackGroup->second;
+		m_TrackAwaitGroups.erase(ItTrackGroup);
+		for(const uint32_t GroupId : vGroupIds)
+		{
+			auto ItGroup = m_AwaitGroups.find(GroupId);
+			if(ItGroup != m_AwaitGroups.end())
+			{
+				--ItGroup->second.m_Remaining;
+				if(ItGroup->second.m_Remaining <= 0)
+				{
+					m_GroupCompletedEvents.push_back({GroupId});
+					m_AwaitGroups.erase(ItGroup);
+				}
+			}
+		}
+	}
+}
+
+void CUiV2AnimationRuntime::CancelAwaitedTrack(uint32_t TrackId)
+{
+	auto ItTrackGroup = m_TrackAwaitGroups.find(TrackId);
+	if(ItTrackGroup == m_TrackAwaitGroups.end())
+		return;
+	const std::vector<uint32_t> vGroupIds = ItTrackGroup->second;
+	for(const uint32_t GroupId : vGroupIds)
+		CancelAwaitGroup(GroupId);
+}
+
+void CUiV2AnimationRuntime::CancelAwaitGroup(uint32_t GroupId)
+{
+	if(m_AwaitGroups.erase(GroupId) == 0)
+		return;
+
+	for(auto ItTrackGroup = m_TrackAwaitGroups.begin(); ItTrackGroup != m_TrackAwaitGroups.end();)
+	{
+		std::vector<uint32_t> &vGroupIds = ItTrackGroup->second;
+		vGroupIds.erase(std::remove(vGroupIds.begin(), vGroupIds.end(), GroupId), vGroupIds.end());
+		if(vGroupIds.empty())
+			ItTrackGroup = m_TrackAwaitGroups.erase(ItTrackGroup);
+		else
+			++ItTrackGroup;
+	}
+}
+
+void CUiV2AnimationRuntime::CancelQueuedTracksForKey(const STrackKey &Key)
+{
+	const auto ItQueued = m_QueuedTracks.find(Key);
+	if(ItQueued == m_QueuedTracks.end())
+		return;
+	for(const SUiAnimRequest &Request : ItQueued->second)
+		CancelAwaitedTrack(Request.m_TrackId);
+	m_QueuedTracks.erase(ItQueued);
+}
+
+bool CUiV2AnimationRuntime::IsTrackPending(uint32_t TrackId) const
+{
+	if(TrackId == 0)
+		return false;
+	for(const auto &Pair : m_ActiveTracks)
+	{
+		if(Pair.second.m_TrackId == TrackId)
+			return true;
+	}
+	for(const auto &Pair : m_QueuedTracks)
+	{
+		for(const SUiAnimRequest &Request : Pair.second)
+		{
+			if(Request.m_TrackId == TrackId)
+				return true;
+		}
+	}
+	return false;
 }
 
 float CUiV2AnimationRuntime::CurrentValueFor(const STrackKey &Key, float DefaultValue) const
@@ -176,8 +305,17 @@ void CUiV2AnimationRuntime::SetValue(uint64_t NodeKey, EUiAnimProperty Property,
 {
 	const STrackKey Key{NodeKey, Property};
 	m_Values[Key] = Value;
-	m_ActiveTracks.erase(Key);
-	m_QueuedTracks.erase(Key);
+	const auto ItActive = m_ActiveTracks.find(Key);
+	if(ItActive != m_ActiveTracks.end())
+	{
+		CancelAwaitedTrack(ItActive->second.m_TrackId);
+		m_ActiveTracks.erase(ItActive);
+	}
+	const auto ItQueued = m_QueuedTracks.find(Key);
+	if(ItQueued != m_QueuedTracks.end())
+	{
+		CancelQueuedTracksForKey(Key);
+	}
 }
 
 float CUiV2AnimationRuntime::GetValue(uint64_t NodeKey, EUiAnimProperty Property, float DefaultValue) const
@@ -206,7 +344,8 @@ bool CUiV2AnimationRuntime::RequestAnimation(const SUiAnimRequest &Request)
 	{
 	case EUiAnimInterruptPolicy::REPLACE:
 	{
-		m_QueuedTracks.erase(Key);
+		CancelQueuedTracksForKey(Key);
+		CancelAwaitedTrack(Active.m_TrackId);
 		StartTrack(Key, EffectiveRequest, Active.m_Current);
 		return true;
 	}
@@ -219,7 +358,8 @@ bool CUiV2AnimationRuntime::RequestAnimation(const SUiAnimRequest &Request)
 	{
 		if(Active.m_Transition.m_Priority > EffectiveRequest.m_Transition.m_Priority)
 			return false;
-		m_QueuedTracks.erase(Key);
+		CancelQueuedTracksForKey(Key);
+		CancelAwaitedTrack(Active.m_TrackId);
 		StartTrack(Key, EffectiveRequest, Active.m_Current);
 		return true;
 	}
@@ -233,6 +373,8 @@ bool CUiV2AnimationRuntime::RequestAnimation(const SUiAnimRequest &Request)
 			const uint32_t TrackId = EffectiveRequest.m_TrackId != 0 ? EffectiveRequest.m_TrackId : Active.m_TrackId;
 			m_Values[Key] = EffectiveRequest.m_Target;
 			m_CompletedEvents.push_back({Key.m_NodeKey, Key.m_Property, TrackId});
+			if(TrackId != Active.m_TrackId)
+				CancelAwaitedTrack(Active.m_TrackId);
 			m_ActiveTracks.erase(Key);
 			StartQueuedTracks(Key, EffectiveRequest.m_Target);
 			return true;
@@ -240,27 +382,42 @@ bool CUiV2AnimationRuntime::RequestAnimation(const SUiAnimRequest &Request)
 
 		if(Active.m_Transition.m_Driver == EUiAnimDriver::SPRING)
 		{
+			const uint32_t OldTrackId = Active.m_TrackId;
 			Active.m_Target = EffectiveRequest.m_Target;
 			Active.m_Transition.m_Priority = EffectiveRequest.m_Transition.m_Priority;
 			if(!RequestIsTween)
 				Active.m_Transition.m_Spring = EffectiveRequest.m_Transition.m_Spring;
 			Active.m_RestTimerSec = 0.0f;
 			Active.m_TrackId = EffectiveRequest.m_TrackId != 0 ? EffectiveRequest.m_TrackId : Active.m_TrackId;
+			if(Active.m_TrackId != OldTrackId)
+				CancelAwaitedTrack(OldTrackId);
 			return true;
 		}
 
-		const float Progress = ApplyEasing(TrackProgress(Active), Active.m_Transition);
 		const float Current = Active.m_Current;
-		const float Denominator = 1.0f - Progress;
-		float NewStart = Current;
-		if(std::abs(Denominator) > 1e-6f)
-		{
-			NewStart = (Current - Progress * EffectiveRequest.m_Target) / Denominator;
-		}
-		Active.m_Start = NewStart;
+		Active.m_Start = Current;
 		Active.m_Target = EffectiveRequest.m_Target;
-		Active.m_Transition.m_Priority = EffectiveRequest.m_Transition.m_Priority;
+		Active.m_ElapsedSec = 0.0f;
+		Active.m_Transition = EffectiveRequest.m_Transition;
+		if(Active.m_Transition.m_DurationSec < 0.0f)
+			Active.m_Transition.m_DurationSec = 0.0f;
+		if(Active.m_Transition.m_DelaySec < 0.0f)
+			Active.m_Transition.m_DelaySec = 0.0f;
+		Active.m_pfnCustomEasing = nullptr;
+		Active.m_pCustomEasingUser = nullptr;
+		if(Active.m_Transition.m_Easing == EEasing::CUSTOM)
+		{
+			const auto ItCustom = m_CustomEasings.find(Active.m_Transition.m_CustomEasingId);
+			if(ItCustom != m_CustomEasings.end())
+			{
+				Active.m_pfnCustomEasing = ItCustom->second.m_pfnEasing;
+				Active.m_pCustomEasingUser = ItCustom->second.m_pUser;
+			}
+		}
+		const uint32_t OldTrackId = Active.m_TrackId;
 		Active.m_TrackId = EffectiveRequest.m_TrackId != 0 ? EffectiveRequest.m_TrackId : Active.m_TrackId;
+		if(Active.m_TrackId != OldTrackId)
+			CancelAwaitedTrack(OldTrackId);
 		return true;
 	}
 	}
@@ -334,7 +491,7 @@ void CUiV2AnimationRuntime::Advance(float Dt)
 		else
 		{
 			const float RawProgress = TrackProgress(Track);
-			const float Progress = ApplyEasing(RawProgress, Track.m_Transition);
+			const float Progress = ApplyTrackEasing(RawProgress, Track);
 			Track.m_Current = Track.m_Start + (Track.m_Target - Track.m_Start) * Progress;
 			m_Values[Key] = Track.m_Current;
 
@@ -356,6 +513,102 @@ bool CUiV2AnimationRuntime::HasActiveAnimation(uint64_t NodeKey, EUiAnimProperty
 	return m_ActiveTracks.contains({NodeKey, Property});
 }
 
+void CUiV2AnimationRuntime::PruneResolveTargetCache(uint64_t CurrentUseCounter)
+{
+	if(m_LastTargets.empty())
+		m_LastTargets.reserve(MAX_LAST_TARGETS_SOFT);
+
+	if((CurrentUseCounter % 1024) != 0 || m_LastTargets.size() <= MAX_LAST_TARGETS_SOFT)
+		return;
+
+	for(auto It = m_LastTargets.begin(); It != m_LastTargets.end();)
+	{
+		if(CurrentUseCounter - It->second.m_LastUseCounter > MAX_LAST_TARGETS_HARD)
+			It = m_LastTargets.erase(It);
+		else
+			++It;
+	}
+	if(m_LastTargets.size() > MAX_LAST_TARGETS_HARD)
+		m_LastTargets.clear();
+}
+
+float CUiV2AnimationRuntime::ResolveTargetValue(uint64_t NodeKey, EUiAnimProperty Property, float Target, const SUiAnimTransition &Transition)
+{
+	constexpr float ANIM_EPSILON = 0.0001f;
+	const STrackKey Key{NodeKey, Property};
+	const float CurrentValue = GetValue(NodeKey, Property, Target);
+	const uint64_t CurrentUseCounter = ++m_ResolveUseCounter;
+
+	PruneResolveTargetCache(CurrentUseCounter);
+
+	auto [ItLastTarget, Inserted] = m_LastTargets.try_emplace(Key, SResolveTargetState{Target, Transition.m_Driver, CurrentUseCounter});
+	const bool HasLastTarget = !Inserted;
+	const bool TargetChanged = !HasLastTarget || std::abs(Target - ItLastTarget->second.m_Target) > ANIM_EPSILON;
+	const bool DriverChanged = !HasLastTarget || ItLastTarget->second.m_Driver != Transition.m_Driver;
+	const bool NeedsSync = !HasActiveAnimation(NodeKey, Property) && std::abs(Target - CurrentValue) > ANIM_EPSILON;
+	if(TargetChanged || DriverChanged || NeedsSync)
+	{
+		SUiAnimRequest Request;
+		Request.m_NodeKey = NodeKey;
+		Request.m_Property = Property;
+		Request.m_Target = Target;
+		Request.m_Transition = Transition;
+		RequestAnimation(Request);
+		ItLastTarget->second.m_Target = Target;
+		ItLastTarget->second.m_Driver = Transition.m_Driver;
+	}
+	ItLastTarget->second.m_LastUseCounter = CurrentUseCounter;
+
+	return GetValue(NodeKey, Property, Target);
+}
+
+void CUiV2AnimationRuntime::PruneColorTargetCache(uint64_t CurrentUseCounter)
+{
+	if(m_ColorTargets.empty())
+		m_ColorTargets.reserve(4096);
+
+	if((CurrentUseCounter % 1024) != 0 || m_ColorTargets.size() <= 4096)
+		return;
+
+	for(auto It = m_ColorTargets.begin(); It != m_ColorTargets.end();)
+	{
+		if(CurrentUseCounter - It->second.m_LastUseCounter > 8192)
+			It = m_ColorTargets.erase(It);
+		else
+			++It;
+	}
+	if(m_ColorTargets.size() > 4096 * 2)
+		m_ColorTargets.clear();
+}
+
+ColorRGBA CUiV2AnimationRuntime::ResolveColorFromValue(uint64_t NodeKey, const ColorRGBA &Current, const ColorRGBA &Target)
+{
+	const uint64_t CurrentUseCounter = ++m_ColorUseCounter;
+	PruneColorTargetCache(CurrentUseCounter);
+
+	auto [ItTarget, Inserted] = m_ColorTargets.try_emplace(NodeKey, SColorTargetState{Current, Target, CurrentUseCounter});
+	if(Inserted || ColorChanged(ItTarget->second.m_Target, Target))
+	{
+		SetValue(NodeKey, EUiAnimProperty::COLOR_MIX, 0.0f);
+		ItTarget->second.m_From = Current;
+		ItTarget->second.m_Target = Target;
+	}
+	ItTarget->second.m_LastUseCounter = CurrentUseCounter;
+	return ItTarget->second.m_From;
+}
+
+float CUiV2AnimationRuntime::ResolveColorMixValue(uint64_t NodeKey, const ColorRGBA &Target, float DurationSec, EEasing Easing)
+{
+	SUiAnimTransition Transition;
+	Transition.m_DurationSec = DurationSec;
+	Transition.m_DelaySec = 0.0f;
+	Transition.m_Priority = 1;
+	Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
+	Transition.m_Easing = Easing;
+	Transition.m_Driver = EUiAnimDriver::TWEEN;
+	return ResolveTargetValue(NodeKey, EUiAnimProperty::COLOR_MIX, 1.0f, Transition);
+}
+
 int CUiV2AnimationRuntime::ActiveTrackCount() const
 {
 	return static_cast<int>(m_ActiveTracks.size());
@@ -369,12 +622,61 @@ int CUiV2AnimationRuntime::QueuedTrackCount() const
 	return Count;
 }
 
+void CUiV2AnimationRuntime::RegisterCustomEasing(uint32_t EasingId, FCustomEasing pfnEasing, void *pUser)
+{
+	if(EasingId == 0 || pfnEasing == nullptr)
+		return;
+	m_CustomEasings[EasingId] = SCustomEasing{pfnEasing, pUser};
+}
+
+void CUiV2AnimationRuntime::UnregisterCustomEasing(uint32_t EasingId)
+{
+	m_CustomEasings.erase(EasingId);
+}
+
 bool CUiV2AnimationRuntime::PollCompletedEvent(SUiAnimCompleteEvent &EventOut)
 {
 	if(m_CompletedEvents.empty())
 		return false;
 	EventOut = m_CompletedEvents.front();
 	m_CompletedEvents.pop_front();
+	return true;
+}
+
+uint32_t CUiV2AnimationRuntime::AwaitTracks(const uint32_t *pTrackIds, int NumTrackIds)
+{
+	if(pTrackIds == nullptr || NumTrackIds <= 0)
+		return 0;
+
+	const uint32_t GroupId = m_NextGroupId++;
+	int Registered = 0;
+	std::unordered_set<uint32_t> vSeenTrackIds;
+	vSeenTrackIds.reserve(static_cast<size_t>(NumTrackIds));
+	for(int i = 0; i < NumTrackIds; ++i)
+	{
+		const uint32_t TrackId = pTrackIds[i];
+		if(TrackId == 0)
+			continue;
+		if(!vSeenTrackIds.insert(TrackId).second)
+			continue;
+		if(!IsTrackPending(TrackId))
+			continue;
+		m_TrackAwaitGroups[TrackId].push_back(GroupId);
+		++Registered;
+	}
+	if(Registered <= 0)
+		return 0;
+
+	m_AwaitGroups[GroupId] = SAwaitGroup{Registered};
+	return GroupId;
+}
+
+bool CUiV2AnimationRuntime::PollGroupCompletedEvent(SUiAnimGroupCompleteEvent &EventOut)
+{
+	if(m_GroupCompletedEvents.empty())
+		return false;
+	EventOut = m_GroupCompletedEvents.front();
+	m_GroupCompletedEvents.pop_front();
 	return true;
 }
 

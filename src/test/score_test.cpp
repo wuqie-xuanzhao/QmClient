@@ -1,5 +1,7 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include <base/detect.h>
+#include <base/str.h>
+#include <base/time.h>
 
 #include <engine/server/databases/connection.h>
 #include <engine/server/databases/connection_pool.h>

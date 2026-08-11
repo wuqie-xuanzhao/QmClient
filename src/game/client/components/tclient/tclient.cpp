@@ -118,7 +118,33 @@ static constexpr const char *s_apKeywordClauseContrastWords[] = {
 	"然而",
 	"可是",
 };
+// 好友进服默认文案：英文 source key（extract 靠下方 Localize 字面量收录）
 static constexpr const char *s_pFriendEnterBroadcastDefaultText = "%s joined this server";
+static constexpr const char *s_pFriendEnterGreetDefaultText = "Hi!";
+
+// 配置为空或仍是出厂默认时走 Localize(字面量)；用户自定义文案再 Localize（无译文则回退原文）
+// 兼容旧版中文默认：映射到英文 source 后再 Localize，避免英文界面锁死中文
+static const char *ResolveFriendEnterLocalizeText(const char *pConfigText, const char *pDefaultEnglish)
+{
+	if(pConfigText != nullptr)
+	{
+		if(str_comp(pConfigText, "%s好友进入本服") == 0)
+			pConfigText = s_pFriendEnterBroadcastDefaultText;
+		else if(str_comp(pConfigText, "你好啊!") == 0)
+			pConfigText = s_pFriendEnterGreetDefaultText;
+	}
+
+	const bool UseDefault = pConfigText == nullptr || pConfigText[0] == '\0' || str_comp(pConfigText, pDefaultEnglish) == 0;
+	if(UseDefault)
+	{
+		if(pDefaultEnglish == s_pFriendEnterBroadcastDefaultText || str_comp(pDefaultEnglish, s_pFriendEnterBroadcastDefaultText) == 0)
+			return Localize("%s joined this server");
+		if(pDefaultEnglish == s_pFriendEnterGreetDefaultText || str_comp(pDefaultEnglish, s_pFriendEnterGreetDefaultText) == 0)
+			return Localize("Hi!");
+		return Localize(pDefaultEnglish);
+	}
+	return Localize(pConfigText);
+}
 
 static int AutoReplySeparatorLength(const char *pStr);
 static bool AppendAutoReplyRuleBlock(char *pOutRules, size_t OutRulesSize, const char *pRules);
@@ -1722,13 +1748,30 @@ void CTClient::RandomFlag(void *pUserData)
 	g_Config.m_PlayerCountry = Flag.m_CountryCode;
 }
 
+void CTClient::ResetFinishRenameState(int Dummy)
+{
+	const int First = Dummy < 0 ? 0 : Dummy;
+	const int Last = Dummy < 0 ? NUM_DUMMIES : Dummy + 1;
+	for(int i = First; i < Last; ++i)
+	{
+		m_aFinishRenamePending[i] = false;
+		m_aFinishRenameAttempts[i] = 0;
+		m_aFinishRenamePendingSince[i] = 0;
+		m_aaFinishRenameTarget[i][0] = '\0';
+	}
+}
+
 void CTClient::DoFinishCheck()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		ResetFinishRenameState();
 		return;
+	}
 	if(g_Config.m_TcChangeNameNearFinish <= 0)
 	{
 		m_FinishTextTimeout = 0.0f;
+		ResetFinishRenameState();
 		return;
 	}
 	m_FinishTextTimeout -= Client()->RenderFrameTime();
@@ -1782,27 +1825,63 @@ void CTClient::DoFinishCheck()
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
 		Client()->SendMsg(Conn, &Packer, MSGFLAG_VITAL);
-		GameClient()->m_aCheckInfo[Conn] = Client()->GameTickSpeed(); // 1 second
+		// 终点临时改名由本组件自己的 pending/超时状态管理，不能进入通用
+		// SendInfo 重发路径，否则会被配置名字覆盖并重复弹通知。
+		GameClient()->m_aCheckInfo[Conn] = -1;
 	};
 
 	const int Dummy = std::clamp(g_Config.m_ClDummy, 0, NUM_DUMMIES - 1);
 	const int LocalId = GameClient()->m_aLocalIds[Dummy];
 	if(LocalId < 0 || LocalId >= MAX_CLIENTS)
+	{
+		ResetFinishRenameState(Dummy);
 		return;
+	}
 	const auto &Player = GameClient()->m_aClients[LocalId];
 	if(!Player.m_Active)
+	{
+		ResetFinishRenameState(Dummy);
 		return;
+	}
 	const char *pNewName = g_Config.m_TcFinishName;
 	if(!pNewName || pNewName[0] == '\0')
+	{
+		ResetFinishRenameState(Dummy);
 		return;
+	}
+	if(str_comp(m_aaFinishRenameTarget[Dummy], pNewName) != 0)
+	{
+		str_copy(m_aaFinishRenameTarget[Dummy], pNewName, sizeof(m_aaFinishRenameTarget[Dummy]));
+		m_aFinishRenamePending[Dummy] = false;
+		m_aFinishRenameAttempts[Dummy] = 0;
+	}
 	if(str_comp(Player.m_aName, pNewName) == 0)
+	{
+		m_aFinishRenamePending[Dummy] = false;
+		m_aFinishRenameAttempts[Dummy] = 0;
 		return;
+	}
 	if(!NearFinishTile(Player.m_RenderPos, TILE_FINISH))
+	{
+		m_aFinishRenamePending[Dummy] = false;
+		m_aFinishRenameAttempts[Dummy] = 0;
+		return;
+	}
+	if(m_aFinishRenamePending[Dummy])
+	{
+		if(time_get() - m_aFinishRenamePendingSince[Dummy] < 8 * time_freq())
+			return;
+		m_aFinishRenamePending[Dummy] = false;
+	}
+	if(m_aFinishRenameAttempts[Dummy] >= 3)
 		return;
 	char aBuf[64];
 	str_format(aBuf, sizeof(aBuf), Localize("Changing name to %s near finish"), pNewName);
 	GameClient()->Echo(aBuf);
 	SendUrgentRename(Dummy, pNewName);
+	m_aFinishRenamePending[Dummy] = true;
+	m_aFinishRenamePendingSince[Dummy] = time_get();
+	m_aFinishRenameAttempts[Dummy]++;
 }
 
 bool CTClient::ServerCommandExists(const char *pCommand)
@@ -2702,6 +2781,7 @@ void CTClient::CheckFriendEnterGreet()
 	const float Now = LocalTime();
 	if(AutoGreetEnabled && !m_FriendEnterPendingNames.empty() && Now >= m_FriendEnterPendingSendAt)
 	{
+		// 空配置表示关闭问候；非空则按当前语言 Localize 后再发送
 		if(g_Config.m_QmFriendEnterGreetText[0] != '\0')
 		{
 			char aMsg[256];
@@ -2709,7 +2789,7 @@ void CTClient::CheckFriendEnterGreet()
 			str_append(aMsg, m_FriendEnterPendingNames.c_str(), sizeof(aMsg));
 			if(aMsg[0] != '\0')
 				str_append(aMsg, ": ", sizeof(aMsg));
-			str_append(aMsg, g_Config.m_QmFriendEnterGreetText, sizeof(aMsg));
+			str_append(aMsg, ResolveFriendEnterLocalizeText(g_Config.m_QmFriendEnterGreetText, s_pFriendEnterGreetDefaultText), sizeof(aMsg));
 
 			if(aMsg[0] != '\0')
 				GameClient()->m_Chat.SendChat(0, aMsg);
@@ -2789,7 +2869,10 @@ void CTClient::CheckFriendEnterGreet()
 
 	if(BroadcastEnabled)
 	{
-		const std::string BroadcastText = BuildFriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, NewNames);
+		// 配置默认是英文 source；Localize 后替换 %s 好友名
+		const std::string BroadcastText = BuildFriendEnterBroadcastText(
+			ResolveFriendEnterLocalizeText(g_Config.m_QmFriendEnterBroadcastText, s_pFriendEnterBroadcastDefaultText),
+			NewNames);
 		if(!BroadcastText.empty())
 			GameClient()->m_Broadcast.DoBroadcast(BroadcastText.c_str());
 	}
@@ -3226,6 +3309,8 @@ void CTClient::OnStateChange(int NewState, int OldState)
 	SetForcedAspect();
 	if(NewState != IClient::STATE_ONLINE)
 	{
+		ResetGoresDummyHammerOverride();
+		ResetFinishRenameState();
 		EndMapHistorySession(true);
 		m_MapHistorySuppressedMapId.clear();
 	}
@@ -3257,6 +3342,10 @@ void CTClient::OnStateChange(int NewState, int OldState)
 			m_aWasInFreeze[i] = false;
 			m_aLastFreezeEmoteTime[i] = 0;
 			m_aLastFreezeMessageTime[i] = 0;
+			m_aWasInFreezeForSwitch[i] = false;
+			m_aWasInFreezeForGoresHammer[i] = false;
+			m_aGoresHammerWakeupFirePendingRelease[i] = false;
+			m_aWasInFreezeForChatClose[i] = false;
 		}
 		ResetComboState();
 		InvalidateGoresDistanceField();
@@ -3285,7 +3374,8 @@ void CTClient::OnStateChange(int NewState, int OldState)
 void CTClient::OnNewSnapshot()
 {
 	CheckHammerWakeupActions();
-	SetForcedAspect();
+	// snapshot 处理期间不能同步触发全局 resize，延迟到下一次常规更新处理。
+	QueueAspectApply();
 	ApplyGoresFastInputLink(true);
 	MaybeShowLocalSaveJoinHint();
 	// Update volleyball
@@ -3664,9 +3754,15 @@ bool CTClient::ShouldHideGoresGuides(bool ManualGuideVisible) const
 
 bool CTClient::HasBlockingGoresWeapon() const
 {
-	if(!g_Config.m_QmGoresDisableIfWeapons || Client()->State() != IClient::STATE_ONLINE || !GameClient()->m_Snap.m_pLocalCharacter)
+	if(!g_Config.m_QmGoresDisableIfWeapons)
 		return false;
+	return HasExtraGoresWeapon();
+}
 
+bool CTClient::HasExtraGoresWeapon() const
+{
+	if(Client()->State() != IClient::STATE_ONLINE || !GameClient()->m_Snap.m_pLocalCharacter)
+		return false;
 	const CCharacterCore &Core = GameClient()->m_PredictedPrevChar;
 	return Core.m_aWeapons[WEAPON_SHOTGUN].m_Got ||
 	       Core.m_aWeapons[WEAPON_GRENADE].m_Got ||
@@ -3680,16 +3776,99 @@ bool CTClient::ShouldAppendGoresPrevWeapon() const
 	       !GameClient()->m_Snap.m_SpecInfo.m_Active &&
 	       GameClient()->m_Snap.m_pLocalCharacter != nullptr &&
 	       IsGoresModuleEnabled() &&
-	       !HasBlockingGoresWeapon();
+	       g_Config.m_QmGoresAutoWeaponSwitch != 0 &&
+	       !HasExtraGoresWeapon();
 }
 
 void CTClient::UpdateGoresWeaponCycle()
 {
-	if(!ShouldAppendGoresPrevWeapon())
+	const int Dummy = g_Config.m_ClDummy;
+	CNetObj_PlayerInput &Input = GameClient()->m_Controls.m_aInputData[Dummy];
+	const bool FireHeld = (Input.m_Fire & 1) != 0;
+	const bool FireJustPressed = FireHeld && !m_aPrevFireForGores[Dummy];
+	m_aPrevFireForGores[Dummy] = FireHeld;
+	if(ShouldReleaseQmGoresHammerWakeupFire(m_aGoresHammerWakeupFirePendingRelease[Dummy], Input.m_Fire))
+		Input.m_Fire = QmGoresHammerWakeupReleaseFireState(Input.m_Fire);
+	m_aGoresHammerWakeupFirePendingRelease[Dummy] = false;
+
+	const bool GoresCycleActive = ShouldAppendGoresPrevWeapon();
+	const bool MultiWeaponPulseActive =
+		Client()->State() == IClient::STATE_ONLINE &&
+		!GameClient()->m_Snap.m_SpecInfo.m_Active &&
+		GameClient()->m_Snap.m_pLocalCharacter != nullptr &&
+		IsGoresModuleEnabled() &&
+		g_Config.m_QmGoresAutoWeaponSwitch != 0 &&
+		g_Config.m_QmGoresDisableIfWeapons != 0 &&
+		HasExtraGoresWeapon();
+	if(!GoresCycleActive && !MultiWeaponPulseActive)
+	{
+		for(bool &WasInFreeze : m_aWasInFreezeForGoresHammer)
+			WasInFreeze = false;
+		m_aGoresHasPreHammerWeapon[Dummy] = false;
 		return;
+	}
+
+	const int ClientId = GameClient()->m_aLocalIds[Dummy];
+	bool InFreeze = false;
+	bool ExternalHammerWakeup = false;
+	if(ClientId >= 0 && ClientId < MAX_CLIENTS && GameClient()->m_aClients[ClientId].m_Active)
+	{
+		InFreeze = GameClient()->m_aClients[ClientId].m_FreezeEnd != 0;
+		const bool JustUnfrozen = m_aWasInFreezeForGoresHammer[Dummy] && !InFreeze;
+		ExternalHammerWakeup = JustUnfrozen && DetectFreezeWakeupType(GameClient(), ClientId, Client()->GameTick(Dummy)) == EFreezeWakeupType::EXTERNAL_HAMMER;
+	}
+
+	const bool CurrentWeaponIsHammer = GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER;
+	if(ShouldPulseGoresHammerOnFire(MultiWeaponPulseActive, FireJustPressed, CurrentWeaponIsHammer, ExternalHammerWakeup))
+	{
+		m_aGoresPreHammerWeapon[Dummy] = GameClient()->m_Snap.m_pLocalCharacter->m_Weapon;
+		m_aGoresHasPreHammerWeapon[Dummy] = true;
+		Input.m_WantedWeapon = WEAPON_HAMMER + 1;
+		Input.m_Fire = QmGoresHammerWakeupFireState(Input.m_Fire);
+		m_aGoresHammerWakeupFirePendingRelease[Dummy] = !FireHeld;
+		m_aWasInFreezeForGoresHammer[Dummy] = InFreeze;
+		return;
+	}
+
+	if(ShouldRestoreGoresWeaponAfterHammer(CurrentWeaponIsHammer, m_aGoresHasPreHammerWeapon[Dummy]))
+	{
+		const int RestoreWeapon = GoresRestoreWeaponAfterHammer(m_aGoresPreHammerWeapon[Dummy], true);
+		GameClient()->m_Controls.m_aInputData[Dummy].m_WantedWeapon = RestoreWeapon + 1;
+		m_aGoresHasPreHammerWeapon[Dummy] = false;
+		m_aWasInFreezeForGoresHammer[Dummy] = InFreeze;
+		return;
+	}
+
+	if(!GoresCycleActive)
+	{
+		m_aWasInFreezeForGoresHammer[Dummy] = InFreeze;
+		return;
+	}
+
+	const bool HammerRequested = Input.m_WantedWeapon == WEAPON_HAMMER + 1;
+	if(ShouldTriggerQmGoresHammerWakeup(GoresCycleActive, HammerRequested, ExternalHammerWakeup))
+	{
+		Input.m_WantedWeapon = WEAPON_HAMMER + 1;
+		Input.m_Fire = QmGoresHammerWakeupFireState(Input.m_Fire);
+		m_aGoresHammerWakeupFirePendingRelease[Dummy] = !FireHeld;
+		m_aWasInFreezeForGoresHammer[Dummy] = InFreeze;
+		return;
+	}
+
+	if(ShouldKeepQmGoresHammerInFreeze(GoresCycleActive, InFreeze, HammerRequested))
+	{
+		m_aWasInFreezeForGoresHammer[Dummy] = InFreeze;
+		return;
+	}
 
 	if(GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER)
-		GameClient()->m_Controls.m_aInputData[g_Config.m_ClDummy].m_WantedWeapon = WEAPON_GUN + 1;
+	{
+		const int RestoreWeapon = GoresRestoreWeaponAfterHammer(m_aGoresPreHammerWeapon[Dummy], m_aGoresHasPreHammerWeapon[Dummy]);
+		GameClient()->m_Controls.m_aInputData[Dummy].m_WantedWeapon = RestoreWeapon + 1;
+		m_aGoresHasPreHammerWeapon[Dummy] = false;
+	}
+
+	m_aWasInFreezeForGoresHammer[Dummy] = InFreeze;
 }
 
 bool CTClient::IsGoresMapProgressEnabled() const
@@ -4346,7 +4525,7 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 	if(TcFastInputOthersChanged)
 		g_Config.m_TcFastInputOthers = TcFastInputOthers ? 1 : 0;
 	bool DummyHammerChanged = false;
-	const int DummyHammer = ApplyQmGoresDummyHammerConfig(GoresActive, g_Config.m_ClDummyHammer, DummyHammerChanged);
+	const int DummyHammer = ApplyQmGoresDummyHammerOverride(m_GoresDummyHammerOverride, GoresActive, g_Config.m_QmGoresDisableDummyHammer != 0, g_Config.m_ClDummyHammer, DummyHammerChanged);
 	if(DummyHammerChanged)
 		g_Config.m_ClDummyHammer = DummyHammer;
 	if(!StateWasKnown)
@@ -4369,6 +4548,13 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 	{
 		GameClient()->RequestPredictionRefresh();
 	}
+}
+
+void CTClient::ResetGoresDummyHammerOverride()
+{
+	if(m_GoresDummyHammerOverride.m_WasActive && m_GoresDummyHammerOverride.m_AutoChangedValue && g_Config.m_ClDummyHammer == 0)
+		g_Config.m_ClDummyHammer = m_GoresDummyHammerOverride.m_SavedValue;
+	m_GoresDummyHammerOverride = {};
 }
 
 bool CTClient::BuildGoresDebugRoute(std::vector<vec2> &vRoutePoints, int Dummy) const
@@ -5039,24 +5225,33 @@ void CTClient::SaveMapHistory()
 {
 	Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
 
-	IOHANDLE File = Storage()->OpenFile(MAP_HISTORY_FILE, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	char aTempFilename[IO_MAX_PATH_LENGTH];
+	IStorage::FormatTmpPath(aTempFilename, sizeof(aTempFilename), MAP_HISTORY_FILE);
+	IOHANDLE File = Storage()->OpenFile(aTempFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 	{
-		log_error("qmclient", "map history file open failed");
+		log_error("qmclient", "map history temp file open failed");
 		return;
 	}
 
 	const std::string Json = m_MapHistory.ToJson();
-	const bool Ok = io_write(File, Json.data(), (unsigned)Json.size()) == Json.size();
+	const bool Written = io_write(File, Json.data(), (unsigned)Json.size()) == Json.size();
 	io_close(File);
-	if(!Ok)
+	if(!Written)
 	{
-		log_error("qmclient", "map history file write failed");
+		Storage()->RemoveFile(aTempFilename, IStorage::TYPE_SAVE);
+		log_error("qmclient", "map history temp file write failed");
+		return;
+	}
+
+	char aBackupFilename[2 * IO_MAX_PATH_LENGTH];
+	if(!IStorage::ReplaceFileSafely(Storage(), aTempFilename, MAP_HISTORY_FILE, aBackupFilename, sizeof(aBackupFilename)))
+	{
+		log_error("qmclient", "map history replacement failed; previous history was restored or remains at %s", aBackupFilename[0] != '\0' ? aBackupFilename : MAP_HISTORY_FILE);
 		return;
 	}
 	m_MapHistoryDirty = false;
 }
-
 void CTClient::MarkMapHistoryDirty()
 {
 	const size_t OldSize = m_MapHistory.Size();
@@ -5072,18 +5267,10 @@ std::string CTClient::CurrentMapHistoryId() const
 	if(pMapName == nullptr || pMapName[0] == '\0')
 		return {};
 
-	const SHA256_DIGEST Sha256 = Client()->GetCurrentMapSha256();
-	char aBuf[SHA256_MAXSTRSIZE + 16];
-	if(Sha256 != SHA256_ZEROED)
-	{
-		char aSha256[SHA256_MAXSTRSIZE];
-		sha256_str(Sha256, aSha256, sizeof(aSha256));
-		str_format(aBuf, sizeof(aBuf), "sha256:%s", aSha256);
-		return aBuf;
-	}
-
-	str_format(aBuf, sizeof(aBuf), "crc:%08x:%s", Client()->GetCurrentMapCrc(), pMapName);
-	return aBuf;
+	const char *pMapPath = Client()->GetCurrentMapPath();
+	if(pMapPath != nullptr && pMapPath[0] != '\0')
+		return std::string("path:") + pMapPath;
+	return std::string("name:") + pMapName;
 }
 
 int64_t CTClient::CurrentMapHistoryPlayTimeMs() const

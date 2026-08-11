@@ -127,6 +127,7 @@ public:
 	 * @return true iff the given point is inside *this* CUIRect.
 	 */
 	bool Inside(vec2 Point) const;
+	CUIRect Intersection(const CUIRect &Other) const;
 
 	/**
 	 * Fill background of *this* CUIRect.

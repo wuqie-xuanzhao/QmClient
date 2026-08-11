@@ -133,7 +133,8 @@ void CMod::OnRender()
 				continue;
 
 			float Alpha = 1.0f;
-			if(GameClient()->IsOtherTeam(ClientId))
+			Alpha *= GameClient()->LiveObserverClientAlpha(ClientId);
+			if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
 				Alpha *= (float)g_Config.m_ClShowOthersAlpha / 100.0f;
 
 			RenderHitbox(Player.m_RenderPos, Alpha);

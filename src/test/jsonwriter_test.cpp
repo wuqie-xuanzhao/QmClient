@@ -3,6 +3,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "test.h"
 
+#include <base/fs.h>
+#include <base/str.h>
 #include <base/system.h>
 
 #include <engine/shared/jsonwriter.h>
@@ -53,7 +55,7 @@ public:
 		}
 		else
 		{
-			fs_remove(m_aOutputFilename);
+			EXPECT_FALSE(fs_remove(m_aOutputFilename));
 		}
 	}
 };

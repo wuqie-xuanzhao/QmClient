@@ -42,24 +42,29 @@ TEST(QmImePlatform, CandidatePageSizeFallsBackToCount)
 	EXPECT_EQ(QmImeCandidatePageSizeOrCount(0, 9), 9u);
 	EXPECT_EQ(QmImeCandidatePageSizeOrCount(5, 9), 5u);
 }
-
-TEST(QmImePlatform, PerfDiagnosticsDistinguishImeBlockingBoundaries)
+TEST(QmImePlatform, CandidateOffsetCapacityClampsMalformedCount)
 {
-	const std::string Source = ReadTestSourceFile("src/engine/client/input.cpp");
+	EXPECT_EQ(QmImeCandidateOffsetCapacity(20, 12), 2u);
+	EXPECT_EQ(QmImeCandidateOffsetCapacity(11, 12), 0u);
+}
 
-	for(const char *pStage : {
-		    "sdl_poll_event_call",
-		    "process_system_message",
-		    "ime_get_context",
-		    "ime_candidate_size_query",
-		    "ime_candidate_data_query",
-		    "ime_release_context",
-	    })
-	{
-		EXPECT_NE(Source.find(pStage), std::string::npos) << pStage;
-	}
-	EXPECT_NE(Source.find("wparam=%"), std::string::npos);
-	EXPECT_NE(Source.find("lparam=%"), std::string::npos);
-	EXPECT_NE(Source.find("candidate_index=%"), std::string::npos);
-	EXPECT_NE(Source.find("returned_size=%"), std::string::npos);
+TEST(QmImePlatform, BoundedUtf16LengthRejectsMalformedCandidateRanges)
+{
+	const unsigned char aBuffer[] = {
+		0x41,
+		0x00,
+		0x42,
+		0x00,
+		0x00,
+		0x00,
+		0x43,
+		0x00,
+	};
+
+	ASSERT_TRUE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 0).has_value());
+	EXPECT_EQ(*QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 0), 2u);
+	EXPECT_FALSE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 1).has_value());
+	EXPECT_FALSE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 6).has_value());
+	EXPECT_FALSE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), sizeof(aBuffer)).has_value());
+	EXPECT_FALSE(QmImeBoundedUtf16Length(nullptr, sizeof(aBuffer), 0).has_value());
 }

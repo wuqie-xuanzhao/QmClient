@@ -10,9 +10,9 @@
 #include <generated/protocol.h>
 
 #include <game/client/QmUi/QmAnimResolve.h>
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/client/ui.h>
 
 #include <algorithm>
@@ -236,6 +236,9 @@ void CEmoticon::OnRender()
 	}
 
 	const vec2 ScreenCenter = Screen.Center();
+	const float EmoticonSelectorShadowOpacity = 0.24f * PresentationAlpha;
+	const float EmoticonSelectorShadowOffsetX = 2.0f * PresentationScale;
+	const float EmoticonSelectorShadowOffsetY = 3.0f * PresentationScale;
 
 	Ui()->MapScreen();
 
@@ -258,13 +261,24 @@ void CEmoticon::OnRender()
 
 		Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[Emote]);
 		Graphics()->QuadsSetSubset(0, 0, 1, 1);
-		Graphics()->QuadsBegin();
 		const float Reveal = EmoticonStaggerReveal(Emote, NUM_EMOTICONS, PresentationAlpha);
 		const float ItemAlpha = PresentationAlpha * Reveal;
 		const float ItemScale = PresentationScale * (0.70f + 0.30f * Reveal);
 		const vec2 Nudge = direction(Angle) * s_OuterItemRadius * ItemScale;
 		const float HoverPhase = Emote == m_SelectedEmote ? 1.0f : 0.0f;
 		const float Size = (50.0f + HoverPhase * 30.0f) * ItemScale;
+		if(g_Config.m_QmEmoticonShadow)
+		{
+			Graphics()->TextureClear();
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, EmoticonSelectorShadowOpacity);
+			IGraphics::CQuadItem ShadowQuad(ScreenCenter.x + Nudge.x + EmoticonSelectorShadowOffsetX, ScreenCenter.y + Nudge.y + EmoticonSelectorShadowOffsetY, Size, Size);
+			Graphics()->QuadsDraw(&ShadowQuad, 1);
+			Graphics()->QuadsEnd();
+			Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[Emote]);
+			Graphics()->QuadsSetSubset(0, 0, 1, 1);
+		}
+		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, ItemAlpha);
 		IGraphics::CQuadItem QuadItem(ScreenCenter.x + Nudge.x, ScreenCenter.y + Nudge.y, Size, Size);
 		Graphics()->QuadsDraw(&QuadItem, 1);

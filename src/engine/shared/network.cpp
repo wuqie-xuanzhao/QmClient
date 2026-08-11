@@ -22,56 +22,83 @@ void WriteSecurityToken(unsigned char *pData, SECURITY_TOKEN Token)
 	uint_to_bytes_be(pData, Token);
 }
 
-void CNetRecvUnpacker::Clear()
+void CPacketChunkUnpacker::FeedPacket(const NETADDR &Addr, const CNetPacketConstruct &Packet, CNetConnection *pConnection, int ClientId)
 {
-	m_Valid = false;
-}
-
-void CNetRecvUnpacker::Start(const NETADDR *pAddr, CNetConnection *pConnection, int ClientId)
-{
-	m_Addr = *pAddr;
+	dbg_assert(!m_Valid, "Chunk unpacker is already unpacking");
+	m_Valid = true;
+	m_Addr = Addr;
 	m_pConnection = pConnection;
 	m_ClientId = ClientId;
 	m_CurrentChunk = 0;
-	m_Valid = true;
+	m_Data = Packet;
+	dbg_assert((m_Data.m_Flags & (NET_PACKETFLAG_CONNLESS | NET_PACKETFLAG_CONTROL)) == 0 && m_Data.m_DataSize > 0 && m_Data.m_NumChunks > 0,
+		"Invalid packet for chunk unpacker: flags=%d size=%d chunks=%d", m_Data.m_Flags, m_Data.m_DataSize, m_Data.m_NumChunks);
 }
 
-// TODO: rename this function
-int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
+bool CPacketChunkUnpacker::UnpackNextChunk(CNetChunk *pChunk)
 {
-	CNetChunkHeader Header;
-	unsigned char *pEnd = m_Data.m_aChunkData + m_Data.m_DataSize;
+	if(!m_Valid)
+	{
+		return false;
+	}
+
+	const unsigned char *const pEnd = m_Data.m_aChunkData + m_Data.m_DataSize;
 
 	while(true)
 	{
-		unsigned char *pData = m_Data.m_aChunkData;
-
-		// check for old data to unpack
-		if(!m_Valid || m_CurrentChunk >= m_Data.m_NumChunks)
+		if(m_CurrentChunk >= m_Data.m_NumChunks)
 		{
-			Clear();
-			return 0;
+			m_Valid = false;
+			return false;
 		}
 
-		// TODO: add checking here so we don't read too far
+		const int HeaderSplit = m_pConnection->m_Sixup ? 6 : 4;
+		auto HasBytes = [pEnd](const unsigned char *pData, int Size) {
+			return Size >= 0 && pData <= pEnd && pEnd - pData >= Size;
+		};
+		auto UnpackChunkHeader = [HasBytes, HeaderSplit](unsigned char *&pData, CNetChunkHeader &Header) {
+			if(!HasBytes(pData, 2))
+			{
+				return false;
+			}
+			const bool Vital = ((pData[0] >> 6) & NET_CHUNKFLAG_VITAL) != 0;
+			if(Vital && !HasBytes(pData, 3))
+			{
+				return false;
+			}
+			pData = Header.Unpack(pData, HeaderSplit);
+			return true;
+		};
+
+		unsigned char *pData = m_Data.m_aChunkData;
 		for(int i = 0; i < m_CurrentChunk; i++)
 		{
-			pData = Header.Unpack(pData, (m_pConnection && m_pConnection->m_Sixup) ? 6 : 4);
-			pData += Header.m_Size;
+			CNetChunkHeader SkippedHeader;
+			if(!UnpackChunkHeader(pData, SkippedHeader) || !HasBytes(pData, SkippedHeader.m_Size))
+			{
+				m_Valid = false;
+				return false;
+			}
+			pData += SkippedHeader.m_Size;
 		}
 
 		// unpack the header
-		pData = Header.Unpack(pData, (m_pConnection && m_pConnection->m_Sixup) ? 6 : 4);
+		CNetChunkHeader Header;
+		if(!UnpackChunkHeader(pData, Header))
+		{
+			m_Valid = false;
+			return false;
+		}
 		m_CurrentChunk++;
 
-		if(pData + Header.m_Size > pEnd)
+		if(!HasBytes(pData, Header.m_Size))
 		{
-			Clear();
-			return 0;
+			m_Valid = false;
+			return false;
 		}
 
 		// handle sequence stuff
-		if(m_pConnection && (Header.m_Flags & NET_CHUNKFLAG_VITAL))
+		if((Header.m_Flags & NET_CHUNKFLAG_VITAL) != 0)
 		{
 			// anti spoof: ignore unknown sequence
 			if(Header.m_Sequence == (m_pConnection->m_Ack + 1) % NET_MAX_SEQUENCE || m_pConnection->m_UnknownSeq)
@@ -109,7 +136,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		pChunk->m_Flags = Header.m_Flags;
 		pChunk->m_DataSize = Header.m_Size;
 		pChunk->m_pData = pData;
-		return 1;
+		return true;
 	}
 }
 
@@ -418,6 +445,8 @@ void CNetBase::SendControlMsgWithToken7(NETSOCKET Socket, NETADDR *pAddr, TOKEN 
 
 unsigned char *CNetChunkHeader::Pack(unsigned char *pData, int Split) const
 {
+	dbg_assert(m_Size >= 0 && m_Size < 1 << (Split + 6), "Invalid network chunk size: %d", m_Size);
+
 	pData[0] = ((m_Flags & 3) << 6) | ((m_Size >> Split) & 0x3f);
 	pData[1] = (m_Size & ((1 << Split) - 1));
 	if(m_Flags & NET_CHUNKFLAG_VITAL)

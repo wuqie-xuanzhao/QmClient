@@ -1,0 +1,2 @@
+git_ref=HEAD
+diff_count=0

@@ -12,38 +12,38 @@
 
 namespace ui_curve
 {
-inline constexpr SUiAnimTransition STANDARD = {
-	.m_DurationSec = 0.30f,
-	.m_Easing = EEasing::EASE_IN_OUT_CUBIC,
-};
+	inline constexpr SUiAnimTransition STANDARD = {
+		.m_DurationSec = 0.30f,
+		.m_Easing = EEasing::EASE_IN_OUT_CUBIC,
+	};
 
-inline constexpr SUiAnimTransition EMPHASIZED = {
-	.m_DurationSec = 0.50f,
-	.m_Easing = EEasing::CUBIC_BEZIER,
-	.m_Bezier = {0.2f, 0.0f, 0.0f, 1.0f},
-};
+	inline constexpr SUiAnimTransition EMPHASIZED = {
+		.m_DurationSec = 0.50f,
+		.m_Easing = EEasing::CUBIC_BEZIER,
+		.m_Bezier = {0.2f, 0.0f, 0.0f, 1.0f},
+	};
 
-inline constexpr SUiAnimTransition DECELERATE = {
-	.m_DurationSec = 0.25f,
-	.m_Easing = EEasing::EASE_OUT_QUART,
-};
+	inline constexpr SUiAnimTransition DECELERATE = {
+		.m_DurationSec = 0.25f,
+		.m_Easing = EEasing::EASE_OUT_QUART,
+	};
 
-inline constexpr SUiAnimTransition ACCELERATE = {
-	.m_DurationSec = 0.20f,
-	.m_Easing = EEasing::EASE_IN,
-};
+	inline constexpr SUiAnimTransition ACCELERATE = {
+		.m_DurationSec = 0.20f,
+		.m_Easing = EEasing::EASE_IN,
+	};
 
-inline constexpr SUiAnimTransition BOUNCE_OUT = {
-	.m_DurationSec = 0.35f,
-	.m_Easing = EEasing::EASE_OUT_BACK,
-};
+	inline constexpr SUiAnimTransition BOUNCE_OUT = {
+		.m_DurationSec = 0.35f,
+		.m_Easing = EEasing::EASE_OUT_BACK,
+	};
 } // namespace ui_curve
 
 namespace ui_spring
 {
-inline constexpr SUiSpringConfig GENTLE = {1.0f, 120.0f, 14.0f};
-inline constexpr SUiSpringConfig SNAPPY = {1.0f, 280.0f, 26.0f};
-inline constexpr SUiSpringConfig WOBBLY = {1.0f, 180.0f, 12.0f};
+	inline constexpr SUiSpringConfig GENTLE = {1.0f, 120.0f, 14.0f};
+	inline constexpr SUiSpringConfig SNAPPY = {1.0f, 280.0f, 26.0f};
+	inline constexpr SUiSpringConfig WOBBLY = {1.0f, 180.0f, 12.0f};
 } // namespace ui_spring
 
 #endif

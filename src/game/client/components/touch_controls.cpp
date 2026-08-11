@@ -5,6 +5,7 @@
 #include <base/system.h>
 
 #include <engine/client.h>
+#include <engine/console.h>
 #include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
 #include <engine/shared/json.h>
@@ -26,6 +27,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iterator>
+#include <limits>
 #include <queue>
 
 using namespace std::chrono_literals;
@@ -501,7 +503,7 @@ void CTouchControls::CEmoticonTouchButtonBehavior::OnDeactivate(bool ByFinger)
 {
 	if(!ByFinger)
 		return;
-	m_pTouchControls->Console()->ExecuteLineStroked(1, "+emote");
+	m_pTouchControls->Console()->ExecuteLineStroked(1, "+emote", IConsole::CLIENT_ID_UNSPECIFIED);
 }
 
 // Spectate button: keeps the spectate menu open, next touch in spectate menu will close it again.
@@ -514,7 +516,7 @@ void CTouchControls::CSpectateTouchButtonBehavior::OnDeactivate(bool ByFinger)
 {
 	if(!ByFinger)
 		return;
-	m_pTouchControls->Console()->ExecuteLineStroked(1, "+spectate");
+	m_pTouchControls->Console()->ExecuteLineStroked(1, "+spectate", IConsole::CLIENT_ID_UNSPECIFIED);
 }
 
 // Swap action button:
@@ -538,7 +540,7 @@ void CTouchControls::CSwapActionTouchButtonBehavior::OnActivate()
 	if(m_pTouchControls->m_JoystickPressCount != 0)
 	{
 		m_ActiveAction = m_pTouchControls->NextActiveAction(m_pTouchControls->m_ActionSelected);
-		m_pTouchControls->Console()->ExecuteLineStroked(1, ACTION_COMMANDS[m_ActiveAction]);
+		m_pTouchControls->Console()->ExecuteLineStroked(1, ACTION_COMMANDS[m_ActiveAction], IConsole::CLIENT_ID_UNSPECIFIED);
 	}
 	else
 	{
@@ -550,7 +552,7 @@ void CTouchControls::CSwapActionTouchButtonBehavior::OnDeactivate(bool ByFinger)
 {
 	if(m_ActiveAction != NUM_ACTIONS)
 	{
-		m_pTouchControls->Console()->ExecuteLineStroked(0, ACTION_COMMANDS[m_ActiveAction]);
+		m_pTouchControls->Console()->ExecuteLineStroked(0, ACTION_COMMANDS[m_ActiveAction], IConsole::CLIENT_ID_UNSPECIFIED);
 		m_ActiveAction = NUM_ACTIONS;
 	}
 }
@@ -568,12 +570,12 @@ CTouchControls::CButtonLabel CTouchControls::CUseActionTouchButtonBehavior::GetL
 void CTouchControls::CUseActionTouchButtonBehavior::OnActivate()
 {
 	m_ActiveAction = m_pTouchControls->m_ActionSelected;
-	m_pTouchControls->Console()->ExecuteLineStroked(1, ACTION_COMMANDS[m_ActiveAction]);
+	m_pTouchControls->Console()->ExecuteLineStroked(1, ACTION_COMMANDS[m_ActiveAction], IConsole::CLIENT_ID_UNSPECIFIED);
 }
 
 void CTouchControls::CUseActionTouchButtonBehavior::OnDeactivate(bool ByFinger)
 {
-	m_pTouchControls->Console()->ExecuteLineStroked(0, ACTION_COMMANDS[m_ActiveAction]);
+	m_pTouchControls->Console()->ExecuteLineStroked(0, ACTION_COMMANDS[m_ActiveAction], IConsole::CLIENT_ID_UNSPECIFIED);
 	m_ActiveAction = NUM_ACTIONS;
 }
 
@@ -593,7 +595,7 @@ void CTouchControls::CJoystickTouchButtonBehavior::OnActivate()
 	OnUpdate();
 	if(m_ActiveAction != ACTION_AIM)
 	{
-		m_pTouchControls->Console()->ExecuteLineStroked(1, ACTION_COMMANDS[m_ActiveAction]);
+		m_pTouchControls->Console()->ExecuteLineStroked(1, ACTION_COMMANDS[m_ActiveAction], IConsole::CLIENT_ID_UNSPECIFIED);
 	}
 	m_pTouchControls->m_JoystickPressCount++;
 }
@@ -602,7 +604,7 @@ void CTouchControls::CJoystickTouchButtonBehavior::OnDeactivate(bool ByFinger)
 {
 	if(m_ActiveAction != ACTION_AIM)
 	{
-		m_pTouchControls->Console()->ExecuteLineStroked(0, ACTION_COMMANDS[m_ActiveAction]);
+		m_pTouchControls->Console()->ExecuteLineStroked(0, ACTION_COMMANDS[m_ActiveAction], IConsole::CLIENT_ID_UNSPECIFIED);
 	}
 	m_ActiveAction = NUM_ACTIONS;
 	m_pTouchControls->m_JoystickPressCount--;
@@ -635,11 +637,6 @@ void CTouchControls::CJoystickTouchButtonBehavior::OnUpdate()
 }
 
 // Joystick that uses the active action.
-void CTouchControls::CJoystickActionTouchButtonBehavior::Init(CTouchButton *pTouchButton)
-{
-	CPredefinedTouchButtonBehavior::Init(pTouchButton);
-}
-
 int CTouchControls::CJoystickActionTouchButtonBehavior::SelectedAction() const
 {
 	return m_pTouchControls->m_ActionSelected;
@@ -671,13 +668,13 @@ CTouchControls::CButtonLabel CTouchControls::CBindTouchButtonBehavior::GetLabel(
 
 void CTouchControls::CBindTouchButtonBehavior::OnActivate()
 {
-	m_pTouchControls->Console()->ExecuteLineStroked(1, m_Command.c_str());
+	m_pTouchControls->Console()->ExecuteLineStroked(1, m_Command.c_str(), IConsole::CLIENT_ID_UNSPECIFIED);
 	m_Repeating = false;
 }
 
 void CTouchControls::CBindTouchButtonBehavior::OnDeactivate(bool ByFinger)
 {
-	m_pTouchControls->Console()->ExecuteLineStroked(0, m_Command.c_str());
+	m_pTouchControls->Console()->ExecuteLineStroked(0, m_Command.c_str(), IConsole::CLIENT_ID_UNSPECIFIED);
 }
 
 void CTouchControls::CBindTouchButtonBehavior::OnUpdate()
@@ -690,7 +687,7 @@ void CTouchControls::CBindTouchButtonBehavior::OnUpdate()
 		if(m_AccumulatedRepeatingTime >= BIND_REPEAT_RATE)
 		{
 			m_AccumulatedRepeatingTime -= BIND_REPEAT_RATE;
-			m_pTouchControls->Console()->ExecuteLineStroked(1, m_Command.c_str());
+			m_pTouchControls->Console()->ExecuteLineStroked(1, m_Command.c_str(), IConsole::CLIENT_ID_UNSPECIFIED);
 		}
 	}
 	else if(Now - m_ActivationStartTime >= BIND_REPEAT_INITIAL_DELAY)
@@ -725,7 +722,7 @@ CTouchControls::CButtonLabel CTouchControls::CBindToggleTouchButtonBehavior::Get
 
 void CTouchControls::CBindToggleTouchButtonBehavior::OnActivate()
 {
-	m_pTouchControls->Console()->ExecuteLine(m_vCommands[m_ActiveCommandIndex].m_Command.c_str());
+	m_pTouchControls->Console()->ExecuteLine(m_vCommands[m_ActiveCommandIndex].m_Command.c_str(), IConsole::CLIENT_ID_UNSPECIFIED);
 	m_ActiveCommandIndex = (m_ActiveCommandIndex + 1) % m_vCommands.size();
 }
 
@@ -1026,7 +1023,7 @@ void CTouchControls::UpdateButtonsGame(const std::vector<IInput::CTouchFingerSta
 			m_aDirectTouchActionStates[Action].m_Active = false;
 			if(Action != ACTION_AIM)
 			{
-				Console()->ExecuteLineStroked(0, ACTION_COMMANDS[Action]);
+				Console()->ExecuteLineStroked(0, ACTION_COMMANDS[Action], IConsole::CLIENT_ID_UNSPECIFIED);
 			}
 		}
 		else
@@ -1173,7 +1170,7 @@ void CTouchControls::UpdateButtonsGame(const std::vector<IInput::CTouchFingerSta
 	// Activate action after the mouse position is set.
 	if(ActivateAction != ACTION_AIM && ActivateAction != NUM_ACTIONS)
 	{
-		Console()->ExecuteLineStroked(1, ACTION_COMMANDS[ActivateAction]);
+		Console()->ExecuteLineStroked(1, ACTION_COMMANDS[ActivateAction], IConsole::CLIENT_ID_UNSPECIFIED);
 	}
 }
 
@@ -1975,68 +1972,8 @@ void CTouchControls::UpdateButtonsEditor(const std::vector<IInput::CTouchFingerS
 			UnitWHDelta.y = (std::abs(m_ActiveFingerState.value().m_Position.y - m_ZoomFingerState.value().m_Position.y) - std::abs(m_ZoomStartPos.y)) * BUTTON_SIZE_SCALE;
 			m_ShownRect->m_W = m_pSampleButton->m_UnitRect.m_W + UnitWHDelta.x;
 			m_ShownRect->m_H = m_pSampleButton->m_UnitRect.m_H + UnitWHDelta.y;
-			m_ShownRect->m_W = std::clamp(m_ShownRect->m_W, BUTTON_SIZE_MINIMUM, BUTTON_SIZE_MAXIMUM);
-			m_ShownRect->m_H = std::clamp(m_ShownRect->m_H, BUTTON_SIZE_MINIMUM, BUTTON_SIZE_MAXIMUM);
-			if(m_ShownRect->m_W + m_ShownRect->m_X > BUTTON_SIZE_SCALE)
-				m_ShownRect->m_W = BUTTON_SIZE_SCALE - m_ShownRect->m_X;
-			if(m_ShownRect->m_H + m_ShownRect->m_Y > BUTTON_SIZE_SCALE)
-				m_ShownRect->m_H = BUTTON_SIZE_SCALE - m_ShownRect->m_Y;
-			// Clamp the biggest W and H so they won't overlap with other buttons. Known as "FindPositionWH".
-			std::optional<int> BiggestW;
-			std::optional<int> BiggestH;
-			std::optional<int> LimitH, LimitW;
-			for(const auto &Rect : vVisibleButtonRects)
-			{
-				// If Overlap
-				if(!(Rect.m_X + Rect.m_W <= m_ShownRect->m_X || m_ShownRect->m_X + m_ShownRect->m_W <= Rect.m_X || Rect.m_Y + Rect.m_H <= m_ShownRect->m_Y || m_ShownRect->m_Y + m_ShownRect->m_H <= Rect.m_Y))
-				{
-					// Calculate the biggest Height and Width it could have.
-					LimitH = Rect.m_Y - m_ShownRect->m_Y;
-					LimitW = Rect.m_X - m_ShownRect->m_X;
-					if(LimitH < BUTTON_SIZE_MINIMUM)
-						LimitH = std::nullopt;
-					if(LimitW < BUTTON_SIZE_MINIMUM)
-						LimitW = std::nullopt;
-					if(LimitH.has_value() && LimitW.has_value())
-					{
-						if(std::abs(*LimitH - m_ShownRect->m_H) < std::abs(*LimitW - m_ShownRect->m_W))
-						{
-							BiggestH = std::min(*LimitH, BiggestH.value_or(BUTTON_SIZE_SCALE));
-						}
-						else
-						{
-							BiggestW = std::min(*LimitW, BiggestW.value_or(BUTTON_SIZE_SCALE));
-						}
-					}
-					else
-					{
-						if(LimitH.has_value())
-						{
-							BiggestH = std::min(*LimitH, BiggestH.value_or(BUTTON_SIZE_SCALE));
-						}
-						else if(LimitW.has_value())
-						{
-							BiggestW = std::min(*LimitW, BiggestW.value_or(BUTTON_SIZE_SCALE));
-						}
-						else
-						{
-							/*
-							 * LimitH and W can be nullopt at the same time, because two buttons may be overlapping.
-							 * Holding for long press while another finger is pressed.
-							 * Then it will instantly enter zoom mode while buttons are overlapping with each other.
-							 */
-							auto Hitbox = CalculateHitbox(m_pSampleButton->m_UnitRect, m_pSampleButton->m_Shape);
-							m_ShownRect = FindPositionXY(vVisibleButtonRects, Hitbox);
-							dbg_assert(m_ShownRect.has_value(), "Unexpected nullopt in m_ShownRect. Original rect: %d %d %d %d", Hitbox.m_X, Hitbox.m_Y, Hitbox.m_W, Hitbox.m_H);
-							BiggestW = std::nullopt;
-							BiggestH = std::nullopt;
-							break;
-						}
-					}
-				}
-			}
-			m_ShownRect->m_W = BiggestW.value_or(m_ShownRect->m_W);
-			m_ShownRect->m_H = BiggestH.value_or(m_ShownRect->m_H);
+
+			m_ShownRect = FindSizeWH(vVisibleButtonRects, m_ShownRect.value());
 			m_UnsavedChanges = true;
 		}
 		// No finger on screen, then show it as is.
@@ -2386,6 +2323,75 @@ void CTouchControls::BuildPositionXY(std::vector<CUnitRect> vVisibleButtonRects,
 			m_vTargets.emplace_back(CurrentX, Space.y - MyRect.m_H);
 		}
 	}
+}
+
+// 从 m_pSampleButton 获取尺寸数据并适当缩小，确保随后写入 m_ShownRect 后不会与其他按钮重叠。
+CTouchControls::CUnitRect CTouchControls::FindSizeWH(std::vector<CUnitRect> vVisibleButtonRects, CUnitRect MyRect)
+{
+	MyRect.m_W = std::clamp(MyRect.m_W, BUTTON_SIZE_MINIMUM, BUTTON_SIZE_MAXIMUM);
+	MyRect.m_H = std::clamp(MyRect.m_H, BUTTON_SIZE_MINIMUM, BUTTON_SIZE_MAXIMUM);
+	MyRect.m_W = std::min(MyRect.m_W, BUTTON_SIZE_SCALE - MyRect.m_X);
+	MyRect.m_H = std::min(MyRect.m_H, BUTTON_SIZE_SCALE - MyRect.m_Y);
+	// 只保留会与 MyRect 重叠的矩形。
+	vVisibleButtonRects.erase(std::remove_if(vVisibleButtonRects.begin(), vVisibleButtonRects.end(), [&](const CUnitRect &TargetRect) {
+		return !MyRect.IsOverlap(TargetRect);
+	}),
+		vVisibleButtonRects.end());
+	if(vVisibleButtonRects.empty())
+		return MyRect;
+
+	// 只考虑左上角。
+	std::sort(vVisibleButtonRects.begin(), vVisibleButtonRects.end(), [](const CUnitRect &Lhs, const CUnitRect &Rhs) {
+		return Lhs.m_X != Rhs.m_X ? Lhs.m_X < Rhs.m_X : Lhs.m_Y > Rhs.m_Y;
+	});
+
+	// 删除不会影响结果的元素。
+	size_t Read = 1, Write = 1, Comp = 0;
+	while(Read < vVisibleButtonRects.size())
+	{
+		if(vVisibleButtonRects[Read].m_Y >= vVisibleButtonRects[Comp].m_Y)
+		{
+			Read++;
+			continue;
+		}
+		vVisibleButtonRects[Write] = vVisibleButtonRects[Read];
+		Comp = Write;
+		Write++;
+		Read++;
+	}
+	vVisibleButtonRects.resize(Write);
+
+	int64_t Delta = std::numeric_limits<int64_t>::max();
+	CUnitRect Result = MyRect;
+	auto CalculateDelta = [&](int64_t NewHeight, int64_t NewWidth) -> int64_t {
+		return (MyRect.m_H - NewHeight) * (MyRect.m_H - NewHeight) + (MyRect.m_W - NewWidth) * (MyRect.m_W - NewWidth);
+	};
+	for(size_t Index = 0; Index < vVisibleButtonRects.size() - 1; Index++)
+	{
+		int LimitH = vVisibleButtonRects[Index].m_Y - MyRect.m_Y;
+		int LimitW = vVisibleButtonRects[Index + 1].m_X - MyRect.m_X;
+		if(std::min(LimitH, LimitW) >= BUTTON_SIZE_MINIMUM && Delta > CalculateDelta(LimitH, LimitW))
+		{
+			Delta = CalculateDelta(LimitH, LimitW);
+			Result.m_H = LimitH;
+			Result.m_W = LimitW;
+		}
+	}
+	int LimitH = vVisibleButtonRects.back().m_Y - MyRect.m_Y, LimitW = vVisibleButtonRects.front().m_X - MyRect.m_X;
+	if(LimitH >= BUTTON_SIZE_MINIMUM && Delta > CalculateDelta(LimitH, MyRect.m_W))
+	{
+		Delta = CalculateDelta(LimitH, MyRect.m_W);
+		Result.m_H = LimitH;
+		Result.m_W = MyRect.m_W;
+	}
+	if(LimitW >= BUTTON_SIZE_MINIMUM && Delta > CalculateDelta(MyRect.m_H, LimitW))
+	{
+		Result.m_H = MyRect.m_H;
+		Result.m_W = LimitW;
+	}
+
+	// FindPositionXY 已经提前调用过，正常不会失败；失败时保持 MyRect 不变。
+	return Result;
 }
 
 // Create a new button and push_back to m_vTouchButton, then return a pointer.

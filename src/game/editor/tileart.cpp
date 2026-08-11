@@ -154,50 +154,48 @@ static void SetTilelayerIndices(const std::shared_ptr<CLayerTiles> &pLayer, cons
 	}
 }
 
-void CEditor::AddTileart(bool IgnoreHistory)
+void CEditorMap::AddTileArt(CImageInfo &&Image, const char *pFilename, bool IgnoreHistory)
 {
 	char aTileArtFilename[IO_MAX_PATH_LENGTH];
-	IStorage::StripPathAndExtension(m_aTileartFilename, aTileArtFilename, sizeof(aTileArtFilename));
+	IStorage::StripPathAndExtension(pFilename, aTileArtFilename, sizeof(aTileArtFilename));
 
-	auto vUniqueColors = GetUniqueColors(m_TileartImageInfo);
+	std::shared_ptr<CLayerGroup> pGroup = NewGroup();
+	str_copy(pGroup->m_aName, aTileArtFilename);
+
+	int ImageCount = m_vpImages.size();
+
+	auto vUniqueColors = GetUniqueColors(Image);
 	auto vaColorGroups = GroupColors(vUniqueColors);
 	auto vColorImages = ColorGroupsToImages(vaColorGroups);
 	if(vColorImages.size() != vaColorGroups.size())
 	{
-		m_TileartImageInfo.Free();
-		ShowFileDialogError(Localize("Could not generate the tile art image.", "Editor"));
+		Image.Free();
+		Editor()->ShowFileDialogError("无法生成图块画图像。");
 		return;
 	}
-
-	std::shared_ptr<CLayerGroup> pGroup = m_Map.NewGroup();
-	str_copy(pGroup->m_aName, aTileArtFilename);
-
-	int ImageCount = m_Map.m_vpImages.size();
-
 	char aImageName[IO_MAX_PATH_LENGTH];
 	for(size_t i = 0; i < vColorImages.size(); i++)
 	{
 		str_format(aImageName, sizeof(aImageName), "%s %" PRIzu, aTileArtFilename, i + 1);
-		std::shared_ptr<CLayerTiles> pLayer = AddLayerWithImage(&m_Map, pGroup, m_TileartImageInfo.m_Width, m_TileartImageInfo.m_Height, vColorImages[i], aImageName);
-		SetTilelayerIndices(pLayer, vaColorGroups[i], m_TileartImageInfo);
+		std::shared_ptr<CLayerTiles> pLayer = AddLayerWithImage(this, pGroup, Image.m_Width, Image.m_Height, vColorImages[i], aImageName);
+		SetTilelayerIndices(pLayer, vaColorGroups[i], Image);
 	}
-	auto IndexMap = m_Map.SortImages();
+	auto IndexMap = SortImages();
 
 	if(!IgnoreHistory)
 	{
-		m_Map.m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileArt>(&m_Map, ImageCount, m_aTileartFilename, IndexMap));
+		m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileArt>(this, ImageCount, pFilename, IndexMap));
 	}
 
-	m_TileartImageInfo.Free();
-	m_Map.OnModify();
-	OnDialogClose();
+	Image.Free();
+	OnModify();
 }
 
 void CEditor::TileartCheckColors()
 {
 	auto vUniqueColors = GetUniqueColors(m_TileartImageInfo);
 	int NumColorGroups = std::ceil(vUniqueColors.size() / 255.0f);
-	if(m_Map.m_vpImages.size() + NumColorGroups >= 64)
+	if(Map()->m_vpImages.size() + NumColorGroups >= 64)
 	{
 		m_PopupEventType = CEditor::POPEVENT_TILEART_TOO_MANY_COLORS;
 		m_PopupEventActivated = true;
@@ -210,7 +208,8 @@ void CEditor::TileartCheckColors()
 	}
 	else
 	{
-		AddTileart();
+		Map()->AddTileArt(std::move(m_TileartImageInfo), m_aTileartFilename, false);
+		OnDialogClose();
 	}
 }
 

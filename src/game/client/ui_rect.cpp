@@ -4,9 +4,14 @@
 
 #include "ui.h"
 
+#include <base/vmath.h>
+
 #include <engine/graphics.h>
 
+#include <game/client/QmUi/UiSurface.h>
+
 #include <algorithm>
+#include <cmath>
 
 IGraphics *CUIRect::ms_pGraphics = nullptr;
 CUi *CUIRect::ms_pUi = nullptr;
@@ -15,6 +20,27 @@ void CUIRect::DrawRectBackdrop(int Corners, float Rounding) const
 {
 	if(ms_pUi != nullptr && ms_pUi->GaussianBlurScopeActive())
 		ms_pUi->RenderGaussianBlur(*this, ms_pUi->GaussianBlurScopeAlpha(), Corners, Rounding);
+}
+
+namespace
+{
+	float CurrentPixelSize(IGraphics *pGraphics)
+	{
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		const int ScreenWidth = pGraphics->ScreenWidth();
+		return ScreenWidth > 0 ? std::max(std::abs(ScreenX1 - ScreenX0) / ScreenWidth, 0.0001f) : 0.0001f;
+	}
+}
+
+CUIRect CUIRect::Intersection(const CUIRect &Other) const
+{
+	CUIRect Result;
+	Result.x = std::max(x, Other.x);
+	Result.y = std::max(y, Other.y);
+	Result.w = std::max(0.0f, std::min(x + w, Other.x + Other.w) - Result.x);
+	Result.h = std::max(0.0f, std::min(y + h, Other.y + Other.h) - Result.y);
+	return Result;
 }
 
 void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing) const
@@ -181,6 +207,16 @@ void CUIRect::Draw(ColorRGBA Color, int Corners, float Rounding) const
 {
 	if(Color.a > 0.0f && Color.a < 1.0f)
 		DrawRectBackdrop(Corners, Rounding);
+	if(ms_pGraphics->HasRoundedRectSdf() && Rounding > 0.0f && Corners != IGraphics::CORNER_NONE)
+	{
+		const float PixelSize = CurrentPixelSize(ms_pGraphics);
+		SRoundedSurfaceParams Params;
+		Params.m_Radius = Rounding;
+		Params.m_PixelSize = PixelSize;
+		Params.m_Corners = Corners;
+		if(DrawRoundedSurface(ms_pGraphics, *this, Color, ColorRGBA(), Params))
+			return;
+	}
 	ms_pGraphics->DrawRect(x, y, w, h, Color, Corners, Rounding);
 }
 

@@ -3,6 +3,8 @@
 
 #include <base/color.h>
 
+#include <engine/shared/config.h>
+
 #include <game/client/components/qmclient/tee_color_code.h>
 
 #include <gtest/gtest.h>
@@ -112,6 +114,14 @@ TEST(Color, ConvKeepsAlpha)
 	}
 }
 
+TEST(Color, EntitiesBackgroundDefaultIsNeutralGray)
+{
+	const ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ClBackgroundEntitiesColor));
+	EXPECT_NEAR(Color.r, 0.5f, 0.01f);
+	EXPECT_NEAR(Color.g, 0.5f, 0.01f);
+	EXPECT_NEAR(Color.b, 0.5f, 0.01f);
+}
+
 TEST(Color, QmTeeColorCodeAcceptsRgbAndShortRgb)
 {
 	const std::optional<unsigned> White = QmParseTeeColorCode("#ffffff");
@@ -153,14 +163,14 @@ TEST(Color, QmTeeColorCodeInputsBindClassicBodyAndFeetColors)
 	const std::string Settings7 = ReadTestSourceFile("src/game/client/components/menus_settings7.cpp");
 
 	EXPECT_NE(Settings.find("static CLineInputBuffered<QM_TEE_COLOR_CODE_INPUT_SIZE> s_aaTeeColorCodeInputs[NUM_DUMMIES][2]"), std::string::npos);
-	EXPECT_NE(Settings.find("CLineInput &ColorCodeInput = s_aaTeeColorCodeInputs[m_Dummy][i]"), std::string::npos);
-	EXPECT_NE(Settings.find("QmFormatTeeColorCode(*apColors[i])"), std::string::npos);
+	EXPECT_NE(Settings.find("CLineInput &ColorCodeInput = s_aaTeeColorCodeInputs[m_Dummy][Part]"), std::string::npos);
+	EXPECT_NE(Settings.find("QmFormatTeeColorCode(*apColors[Part])"), std::string::npos);
 	EXPECT_NE(Settings.find("if(!ColorCodeInput.IsActive())"), std::string::npos);
 	EXPECT_EQ(Settings7.find("QmParseTeeColorCode"), std::string::npos);
 
 	const size_t ParsePosition = Settings.find("QmParseTeeColorCode(ColorCodeInput.GetString())");
 	ASSERT_NE(ParsePosition, std::string::npos);
-	const size_t AssignmentPosition = Settings.find("*apColors[i] = *Color", ParsePosition);
+	const size_t AssignmentPosition = Settings.find("*apColors[Part] = *Color", ParsePosition);
 	const size_t SendPosition = Settings.find("SetNeedSendInfo()", ParsePosition);
 	const size_t SlidersPosition = Settings.find("if(RenderHslaScrollbars", ParsePosition);
 	ASSERT_NE(AssignmentPosition, std::string::npos);

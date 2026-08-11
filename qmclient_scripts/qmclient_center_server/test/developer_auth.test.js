@@ -186,8 +186,9 @@ test("developer routes support the center server rate limiter", () => {
 	const ListResponse = InvokeRoute(App, "GET", "/api/v1/developers/presences", {
 		query: { server_address: "127.0.0.1:8303" }
 	});
-	assert.equal(ListResponse.statusCode, 200);
-	assert.equal(Checks, 1);
+	assert.equal(ListResponse.statusCode, 429);
+	assert.deepEqual(ListResponse.payload, { ok: false, error: "rate_limited" });
+	assert.equal(Checks, 2);
 });
 
 test("presence validation binds server session and every player field without trusting client wall time", () => {

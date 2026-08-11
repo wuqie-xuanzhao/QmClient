@@ -1,7 +1,8 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "test.h"
 
-#include <base/system.h>
+#include <base/mem.h>
+#include <base/str.h>
 
 #include <engine/shared/packer.h>
 

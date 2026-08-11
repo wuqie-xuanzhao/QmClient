@@ -3,13 +3,10 @@
 
 #include <cstddef> // size_t
 
-enum
-{
-	SHA256_DIGEST_LENGTH = 256 / 8,
-	SHA256_MAXSTRSIZE = 2 * SHA256_DIGEST_LENGTH + 1,
-	MD5_DIGEST_LENGTH = 128 / 8,
-	MD5_MAXSTRSIZE = 2 * MD5_DIGEST_LENGTH + 1,
-};
+static constexpr size_t SHA256_DIGEST_LENGTH = 256 / 8;
+static constexpr size_t SHA256_MAXSTRSIZE = 2 * SHA256_DIGEST_LENGTH + 1;
+static constexpr size_t MD5_DIGEST_LENGTH = 128 / 8;
+static constexpr size_t MD5_MAXSTRSIZE = 2 * MD5_DIGEST_LENGTH + 1;
 
 struct SHA256_DIGEST
 {
@@ -30,8 +27,6 @@ MD5_DIGEST md5(const void *message, size_t message_len);
 void md5_str(MD5_DIGEST digest, char *str, size_t max_len);
 int md5_from_str(MD5_DIGEST *out, const char *str);
 int md5_comp(MD5_DIGEST digest1, MD5_DIGEST digest2);
-
-extern const SHA256_DIGEST SHA256_ZEROED;
 
 inline bool operator==(const SHA256_DIGEST &that, const SHA256_DIGEST &other)
 {

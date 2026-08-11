@@ -70,7 +70,7 @@ int CMap::NumItems() const
 	return m_DataFile.NumItems();
 }
 
-bool CMap::Load(const char *pMapName)
+bool CMap::Load(const char *pMapName, int StorageType)
 {
 	IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
 	if(!pStorage)
@@ -79,7 +79,7 @@ bool CMap::Load(const char *pMapName)
 	// Ensure current datafile is not left in an inconsistent state if loading fails,
 	// by loading the new datafile separately first.
 	CDataFileReader NewDataFile;
-	if(!NewDataFile.Open(pStorage, pMapName, IStorage::TYPE_ALL))
+	if(!NewDataFile.Open(pStorage, pMapName, StorageType))
 		return false;
 
 	// Check version
@@ -150,7 +150,7 @@ IOHANDLE CMap::File() const
 SHA256_DIGEST CMap::Sha256() const
 {
 	if(!IsLoaded())
-		return SHA256_ZEROED;
+		return SHA256_DIGEST{};
 	return m_DataFile.Sha256();
 }
 
@@ -161,11 +161,11 @@ unsigned CMap::Crc() const
 	return m_DataFile.Crc();
 }
 
-int CMap::MapSize() const
+int CMap::Size() const
 {
 	if(!IsLoaded())
 		return 0;
-	return m_DataFile.MapSize();
+	return m_DataFile.Size();
 }
 
 void CMap::ExtractTiles(CTile *pDest, size_t DestSize, const CTile *pSrc, size_t SrcSize)
@@ -176,8 +176,10 @@ void CMap::ExtractTiles(CTile *pDest, size_t DestSize, const CTile *pSrc, size_t
 	{
 		for(unsigned Counter = 0; Counter <= pSrc[SrcIndex].m_Skip && DestIndex < DestSize; Counter++)
 		{
-			pDest[DestIndex] = pSrc[SrcIndex];
+			pDest[DestIndex].m_Index = pSrc[SrcIndex].m_Index;
+			pDest[DestIndex].m_Flags = pSrc[SrcIndex].m_Flags;
 			pDest[DestIndex].m_Skip = 0;
+			pDest[DestIndex].m_Reserved = 0;
 			DestIndex++;
 		}
 		SrcIndex++;

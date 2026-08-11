@@ -147,6 +147,14 @@ namespace QmHudEditor
 			Rect.h};
 	}
 
+	inline CUIRect ChatEdgeBaseRect(float ScreenWidth, float ChatWidth, float EdgeMargin, bool AnchoredRight)
+	{
+		const float Width = std::min(ScreenWidth, std::max(190.0f, ChatWidth + 32.0f));
+		const float SafeMargin = std::max(0.0f, EdgeMargin);
+		const float X = AnchoredRight ? std::max(0.0f, ScreenWidth - Width - SafeMargin) : SafeMargin;
+		return {X, 50.0f, Width, 250.0f};
+	}
+
 	// 通用版：从可见矩形位置推导贴左/贴右。
 	// 与 anchor 距离 < EPSILON 视为贴边；非贴边按中心和屏幕中心比较。
 	inline EHorizontalFlow ResolveHorizontalFlow(const CUIRect &VisibleRect, float ScreenStartX, float ScreenWidth)
@@ -188,6 +196,7 @@ enum class EHudEditorElement
 	VoiceOverlay,
 	InputOverlay,
 	HudNotifications,
+	LiveFinishRank,
 
 	Count,
 };
@@ -222,6 +231,7 @@ namespace QmHudEditor
 		case EHudEditorElement::VoiceOverlay: return "voice_overlay";
 		case EHudEditorElement::InputOverlay: return "input_overlay";
 		case EHudEditorElement::HudNotifications: return "hud_notifications";
+		case EHudEditorElement::LiveFinishRank: return "live_finish_rank";
 		case EHudEditorElement::Count: break;
 		}
 		return "";

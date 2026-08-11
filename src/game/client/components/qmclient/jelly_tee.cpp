@@ -14,35 +14,35 @@
 
 namespace
 {
-constexpr float MIN_DELTA_TIME = 1.0f / 240.0f;
-constexpr float MAX_DELTA_TIME = 1.0f / 20.0f;
+	constexpr float MIN_DELTA_TIME = 1.0f / 240.0f;
+	constexpr float MAX_DELTA_TIME = 1.0f / 20.0f;
 
-vec2 NormalizeOr(vec2 Value, vec2 Fallback)
-{
-	const float ValueLength = length(Value);
-	if(ValueLength > 0.0001f)
-		return Value / ValueLength;
+	vec2 NormalizeOr(vec2 Value, vec2 Fallback)
+	{
+		const float ValueLength = length(Value);
+		if(ValueLength > 0.0001f)
+			return Value / ValueLength;
 
-	const float FallbackLength = length(Fallback);
-	if(FallbackLength > 0.0001f)
-		return Fallback / FallbackLength;
+		const float FallbackLength = length(Fallback);
+		if(FallbackLength > 0.0001f)
+			return Fallback / FallbackLength;
 
-	return vec2(0.0f, -1.0f);
-}
+		return vec2(0.0f, -1.0f);
+	}
 
-float DurationScale()
-{
-	const float Duration = g_Config.m_QmJellyTeeDuration / 100.0f;
-	return std::pow(std::clamp(Duration, 0.2f, 5.0f), 1.65f);
-}
+	float DurationScale()
+	{
+		const float Duration = g_Config.m_QmJellyTeeDuration / 100.0f;
+		return std::pow(std::clamp(Duration, 0.2f, 5.0f), 1.65f);
+	}
 
-void ClampDeform(SQmJellyDeform &Deform)
-{
-	Deform.m_BodyScale.x = std::clamp(Deform.m_BodyScale.x, 0.94f, 1.22f);
-	Deform.m_BodyScale.y = std::clamp(Deform.m_BodyScale.y, 0.74f, 1.22f);
-	Deform.m_FeetScale.x = std::clamp(Deform.m_FeetScale.x, 0.95f, 1.15f);
-	Deform.m_FeetScale.y = std::clamp(Deform.m_FeetScale.y, 0.70f, 1.10f);
-}
+	void ClampDeform(SQmJellyDeform &Deform)
+	{
+		Deform.m_BodyScale.x = std::clamp(Deform.m_BodyScale.x, 0.94f, 1.22f);
+		Deform.m_BodyScale.y = std::clamp(Deform.m_BodyScale.y, 0.74f, 1.22f);
+		Deform.m_FeetScale.x = std::clamp(Deform.m_FeetScale.x, 0.95f, 1.15f);
+		Deform.m_FeetScale.y = std::clamp(Deform.m_FeetScale.y, 0.70f, 1.10f);
+	}
 } // namespace
 
 CQmJelly::CQmJelly(CGameClient *pClient) :

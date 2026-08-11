@@ -1,11 +1,10 @@
-// 请抬头享受阳光｜日子很好 我很我---------致咩子
-#include <gtest/gtest.h>
-
 #include <base/system.h>
 
 #include <game/client/components/assets_resource_registry.h>
 #include <game/client/components/background.h>
 #include <game/client/components/menus.h>
+
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <fstream>
@@ -14,20 +13,20 @@
 
 namespace
 {
-bool ContainsWorkshopName(const SAssetResourceCategory *pCategory, const char *pWorkshopName)
-{
-	if(pCategory == nullptr || pWorkshopName == nullptr)
-		return false;
+	bool ContainsWorkshopName(const SAssetResourceCategory *pCategory, const char *pWorkshopName)
+	{
+		if(pCategory == nullptr || pWorkshopName == nullptr)
+			return false;
 
-	if(pCategory->m_pWorkshopCategory != nullptr && std::string_view(pCategory->m_pWorkshopCategory) == pWorkshopName)
-		return true;
-	if(pCategory->m_pWorkshopCategoryAlt != nullptr && std::string_view(pCategory->m_pWorkshopCategoryAlt) == pWorkshopName)
-		return true;
+		if(pCategory->m_pWorkshopCategory != nullptr && std::string_view(pCategory->m_pWorkshopCategory) == pWorkshopName)
+			return true;
+		if(pCategory->m_pWorkshopCategoryAlt != nullptr && std::string_view(pCategory->m_pWorkshopCategoryAlt) == pWorkshopName)
+			return true;
 
-	return std::any_of(pCategory->m_vWorkshopCategoryAliases.begin(), pCategory->m_vWorkshopCategoryAliases.end(), [pWorkshopName](const char *pAlias) {
-		return pAlias != nullptr && std::string_view(pAlias) == pWorkshopName;
-	});
-}
+		return std::any_of(pCategory->m_vWorkshopCategoryAliases.begin(), pCategory->m_vWorkshopCategoryAliases.end(), [pWorkshopName](const char *pAlias) {
+			return pAlias != nullptr && std::string_view(pAlias) == pWorkshopName;
+		});
+	}
 }
 
 TEST(AssetsResourceRegistry, IncludesAllApprovedCategories)

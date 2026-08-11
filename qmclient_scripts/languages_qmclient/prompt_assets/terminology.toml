@@ -1,6 +1,11 @@
-# 请抬头享受阳光｜日子很好 我很我---------致咩子
+# QmClient / DDNet 术语表（机翻与人工审校共用）
+# enforce: exact=译文须含该译名；pattern=短语命中时优先；prompt_only=只进提示词不强校验
+# Dummy copy（cl_dummy_copy_moves）中文社区习惯称「分身同步」，英文 source 用 Copy 不用 Sync
+# Hook collisions 指钩子瞄准辅助线，不是物理“碰撞”字面
+
 [[term]]
 source = "Clan"
+enforce = "exact"
 simplified_chinese = "战队"
 traditional_chinese = "戰隊"
 korean = "클랜"
@@ -16,21 +21,14 @@ polish = "Klan"
 
 [[term]]
 source = "Dummy"
+enforce = "exact"
 simplified_chinese = "分身"
 traditional_chinese = "分身"
-korean = "더미"
-japanese = "ダミー"
-russian = "Дамми"
-german = "Dummy"
-spanish = "Dummy"
-french = "Dummy"
-brazilian_portuguese = "Dummy"
-portuguese = "Dummy"
-turkish = "Dummy"
-polish = "Kukła"
+
 
 [[term]]
 source = "Server"
+enforce = "prompt_only"
 simplified_chinese = "服务器"
 traditional_chinese = "伺服器"
 korean = "서버"
@@ -46,6 +44,7 @@ polish = "Serwer"
 
 [[term]]
 source = "Map"
+enforce = "prompt_only"
 simplified_chinese = "地图"
 traditional_chinese = "地圖"
 korean = "맵"
@@ -61,6 +60,7 @@ polish = "Mapa"
 
 [[term]]
 source = "Tencent Cloud"
+enforce = "pattern"
 simplified_chinese = "腾讯云"
 traditional_chinese = "騰訊雲"
 korean = "텐센트 클라우드"
@@ -73,3 +73,526 @@ brazilian_portuguese = "Tencent Cloud"
 portuguese = "Tencent Cloud"
 turkish = "Tencent Cloud"
 polish = "Tencent Cloud"
+
+[[term]]
+source = "Lyrics"
+enforce = "pattern"
+simplified_chinese = "歌词"
+traditional_chinese = "歌詞"
+korean = "가사"
+japanese = "歌詞"
+russian = "Текст песни"
+german = "Songtext"
+spanish = "Letra"
+french = "Paroles"
+brazilian_portuguese = "Letra"
+portuguese = "Letra"
+turkish = "Şarkı sözleri"
+polish = "Tekst utworu"
+
+[[term]]
+source = "HUD"
+enforce = "pattern"
+simplified_chinese = "HUD"
+traditional_chinese = "HUD"
+korean = "HUD"
+japanese = "HUD"
+russian = "HUD"
+german = "HUD"
+spanish = "HUD"
+french = "HUD"
+brazilian_portuguese = "HUD"
+portuguese = "HUD"
+turkish = "HUD"
+polish = "HUD"
+
+[[term]]
+source = "cache"
+enforce = "prompt_only"
+simplified_chinese = "缓存"
+traditional_chinese = "快取"
+korean = "캐시"
+japanese = "キャッシュ"
+russian = "кэш"
+german = "Cache"
+spanish = "caché"
+french = "cache"
+brazilian_portuguese = "cache"
+portuguese = "cache"
+turkish = "önbellek"
+polish = "pamięć podręczna"
+
+[[term]]
+source = "source"
+enforce = "prompt_only"
+simplified_chinese = "来源"
+traditional_chinese = "來源"
+korean = "소스"
+japanese = "ソース"
+russian = "источник"
+german = "Quelle"
+spanish = "fuente"
+french = "source"
+brazilian_portuguese = "fonte"
+portuguese = "fonte"
+turkish = "kaynak"
+polish = "źródło"
+
+[[term]]
+source = "threshold"
+enforce = "prompt_only"
+simplified_chinese = "阈值"
+traditional_chinese = "閾值"
+korean = "임계값"
+japanese = "しきい値"
+russian = "порог"
+german = "Schwellwert"
+spanish = "umbral"
+french = "seuil"
+brazilian_portuguese = "limiar"
+portuguese = "limiar"
+turkish = "eşik"
+polish = "próg"
+
+[[term]]
+source = "px"
+enforce = "exact"
+simplified_chinese = "px"
+traditional_chinese = "px"
+korean = "px"
+japanese = "px"
+russian = "px"
+german = "px"
+spanish = "px"
+french = "px"
+brazilian_portuguese = "px"
+portuguese = "px"
+turkish = "px"
+polish = "px"
+
+[[term]]
+source = "ms"
+enforce = "exact"
+simplified_chinese = "ms"
+traditional_chinese = "ms"
+korean = "ms"
+japanese = "ms"
+russian = "ms"
+german = "ms"
+spanish = "ms"
+french = "ms"
+brazilian_portuguese = "ms"
+portuguese = "ms"
+turkish = "ms"
+polish = "ms"
+
+[[term]]
+source = "Hammer"
+enforce = "exact"
+simplified_chinese = "锤子"
+traditional_chinese = "槌子"
+korean = "망치"
+japanese = "ハンマー"
+russian = "молот"
+german = "Hammer"
+spanish = "martillo"
+french = "marteau"
+brazilian_portuguese = "martelo"
+portuguese = "martelo"
+turkish = "çekiç"
+polish = "młotek"
+
+[[term]]
+source = "Shotgun"
+enforce = "exact"
+simplified_chinese = "霰弹枪"
+traditional_chinese = "霰彈槍"
+korean = "산탄총"
+japanese = "ショットガン"
+russian = "дробовик"
+german = "Schrotflinte"
+spanish = "escopeta"
+french = "fusil à pompe"
+brazilian_portuguese = "escopeta"
+portuguese = "caçadeira"
+turkish = "pompalı"
+polish = "strzelba"
+
+[[term]]
+source = "Grenade"
+enforce = "pattern"
+simplified_chinese = "榴弹枪"
+traditional_chinese = "榴彈砲"
+korean = "유탄"
+japanese = "グレネード"
+russian = "гранатомёт"
+german = "Granate"
+spanish = "granada"
+french = "lance-grenades"
+brazilian_portuguese = "granada"
+portuguese = "granada"
+turkish = "bomba"
+polish = "granat"
+
+[[term]]
+source = "Hook"
+enforce = "exact"
+simplified_chinese = "钩索"
+traditional_chinese = "鉤索"
+
+
+[[term]]
+source = "Hook collision line"
+enforce = "exact"
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
+
+
+[[term]]
+source = "Strong hook"
+enforce = "exact"
+simplified_chinese = "强钩"
+traditional_chinese = "強鉤"
+
+
+[[term]]
+source = "Weak hook"
+enforce = "exact"
+simplified_chinese = "弱钩"
+traditional_chinese = "弱鉤"
+
+
+[[term]]
+source = "Zhipu AI"
+enforce = "pattern"
+simplified_chinese = "智谱清言"
+traditional_chinese = "智譜清言"
+korean = "Zhipu AI"
+japanese = "Zhipu AI"
+russian = "Zhipu AI"
+german = "Zhipu AI"
+spanish = "Zhipu AI"
+french = "Zhipu AI"
+brazilian_portuguese = "Zhipu AI"
+portuguese = "Zhipu AI"
+turkish = "Zhipu AI"
+polish = "Zhipu AI"
+
+[[term]]
+source = "Grenade Launcher"
+enforce = "exact"
+simplified_chinese = "榴弹炮"
+traditional_chinese = "榴彈砲"
+korean = "유탄 발사기"
+japanese = "グレネードランチャー"
+russian = "гранатомёт"
+german = "Granatwerfer"
+spanish = "lanzagranadas"
+french = "lance-grenades"
+brazilian_portuguese = "lançador de granadas"
+portuguese = "lançador de granadas"
+turkish = "bomba atar"
+polish = "granatnik"
+
+[[term]]
+source = "Laser"
+enforce = "exact"
+simplified_chinese = "激光"
+traditional_chinese = "雷射"
+korean = "레이저"
+japanese = "レーザー"
+russian = "лазер"
+german = "Laser"
+spanish = "láser"
+french = "laser"
+brazilian_portuguese = "laser"
+portuguese = "laser"
+turkish = "lazer"
+polish = "laser"
+
+[[term]]
+source = "Ninja"
+enforce = "exact"
+simplified_chinese = "忍者"
+traditional_chinese = "忍者"
+korean = "닌자"
+japanese = "ニンジャ"
+russian = "ниндзя"
+german = "Ninja"
+spanish = "ninja"
+french = "ninja"
+brazilian_portuguese = "ninja"
+portuguese = "ninja"
+turkish = "ninja"
+polish = "ninja"
+
+[[term]]
+source = "Pistol"
+enforce = "exact"
+simplified_chinese = "手枪"
+
+[[term]]
+source = "Gun"
+enforce = "prompt_only"
+simplified_chinese = "手枪"
+
+[[term]]
+source = "Tee"
+enforce = "prompt_only"
+simplified_chinese = "Tee"
+
+[[term]]
+source = "Scoreboard"
+enforce = "exact"
+simplified_chinese = "计分板"
+
+[[term]]
+source = "Console"
+enforce = "exact"
+simplified_chinese = "控制台"
+
+[[term]]
+source = "Demo"
+enforce = "prompt_only"
+simplified_chinese = "回放"
+
+[[term]]
+source = "Editor"
+enforce = "exact"
+simplified_chinese = "编辑器"
+
+[[term]]
+source = "Client"
+enforce = "prompt_only"
+simplified_chinese = "客户端"
+
+[[term]]
+source = "Settings"
+enforce = "prompt_only"
+simplified_chinese = "设置"
+
+[[term]]
+source = "Team"
+enforce = "prompt_only"
+simplified_chinese = "队伍"
+
+[[term]]
+source = "Vote"
+enforce = "prompt_only"
+simplified_chinese = "投票"
+
+[[term]]
+source = "Spectate"
+enforce = "prompt_only"
+simplified_chinese = "旁观"
+traditional_chinese = "旁觀"
+
+
+[[term]]
+source = "Freeze"
+enforce = "prompt_only"
+simplified_chinese = "冻结"
+traditional_chinese = "凍結"
+
+
+[[term]]
+source = "Unfreeze"
+enforce = "prompt_only"
+simplified_chinese = "解冻"
+traditional_chinese = "解凍"
+
+
+[[term]]
+source = "Skin"
+enforce = "prompt_only"
+simplified_chinese = "皮肤"
+
+[[term]]
+source = "Assets"
+enforce = "prompt_only"
+simplified_chinese = "资源"
+
+[[term]]
+source = "Entities"
+enforce = "prompt_only"
+simplified_chinese = "实体层"
+
+[[term]]
+source = "Prediction"
+enforce = "prompt_only"
+simplified_chinese = "预测"
+
+[[term]]
+source = "AntiPing"
+enforce = "prompt_only"
+simplified_chinese = "延迟补偿（AntiPing）"
+
+[[term]]
+source = "Skin queue"
+enforce = "pattern"
+simplified_chinese = "皮肤队列"
+
+[[term]]
+source = "Preset"
+enforce = "prompt_only"
+simplified_chinese = "预设"
+
+[[term]]
+source = "Gores mode"
+enforce = "pattern"
+simplified_chinese = "Gores 模式"
+
+[[term]]
+source = "Hitbox mode"
+enforce = "pattern"
+simplified_chinese = "碰撞箱模式"
+
+[[term]]
+source = "Notification"
+enforce = "prompt_only"
+simplified_chinese = "通知"
+
+[[term]]
+source = "Translation backend"
+enforce = "pattern"
+simplified_chinese = "翻译后端"
+
+[[term]]
+source = "Voice chat"
+enforce = "pattern"
+simplified_chinese = "语音聊天"
+
+[[term]]
+source = "Lyrics HTTP request timeout"
+enforce = "pattern"
+simplified_chinese = "歌词 HTTP 请求超时"
+
+[[term]]
+source = "FPS"
+enforce = "exact"
+simplified_chinese = "FPS"
+
+[[term]]
+source = "Ping"
+enforce = "prompt_only"
+simplified_chinese = "Ping"
+
+[[term]]
+source = "KiB"
+enforce = "exact"
+simplified_chinese = "KiB"
+
+[[term]]
+source = "MiB"
+enforce = "exact"
+simplified_chinese = "MiB"
+
+[[term]]
+source = "API"
+enforce = "exact"
+simplified_chinese = "API"
+
+[[term]]
+source = "HTTP"
+enforce = "exact"
+simplified_chinese = "HTTP"
+
+[[term]]
+source = "JSON"
+enforce = "exact"
+simplified_chinese = "JSON"
+
+[[term]]
+source = "UI"
+enforce = "exact"
+simplified_chinese = "UI"
+
+[[term]]
+source = "Hook collisions"
+enforce = "exact"
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
+
+
+[[term]]
+source = "Hook Collisions"
+enforce = "exact"
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
+
+
+[[term]]
+source = "Air jump"
+enforce = "pattern"
+simplified_chinese = "空中跳"
+traditional_chinese = "空中跳"
+
+
+[[term]]
+source = "Unlimited air jumps"
+enforce = "pattern"
+simplified_chinese = "无限空中跳"
+traditional_chinese = "無限空中跳"
+
+
+[[term]]
+source = "Infinite jump"
+enforce = "pattern"
+simplified_chinese = "无限跳"
+traditional_chinese = "無限跳"
+
+
+[[term]]
+source = "Dummy copy"
+enforce = "exact"
+simplified_chinese = "分身同步"
+traditional_chinese = "分身同步"
+
+[[term]]
+source = "Dummy Copy"
+enforce = "exact"
+simplified_chinese = "分身同步"
+traditional_chinese = "分身同步"
+
+[[term]]
+source = "Dummy control"
+enforce = "pattern"
+simplified_chinese = "分身控制"
+traditional_chinese = "分身控制"
+
+[[term]]
+source = "Dummy Control"
+enforce = "pattern"
+simplified_chinese = "分身控制"
+traditional_chinese = "分身控制"
+
+[[term]]
+source = "Spectator"
+enforce = "prompt_only"
+simplified_chinese = "旁观"
+traditional_chinese = "旁觀"
+
+[[term]]
+source = "Practice mode"
+enforce = "prompt_only"
+simplified_chinese = "练习模式"
+traditional_chinese = "練習模式"
+
+[[term]]
+source = "Team 0"
+enforce = "prompt_only"
+simplified_chinese = "0 队"
+traditional_chinese = "0 隊"
+
+[[term]]
+source = "Deepfly"
+enforce = "prompt_only"
+simplified_chinese = "深飞"
+traditional_chinese = "深飛"
+
+[[term]]
+source = "Edgebug"
+enforce = "exact"
+simplified_chinese = "Edgebug"
+traditional_chinese = "Edgebug"
+

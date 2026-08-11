@@ -19,6 +19,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 /*
@@ -56,6 +57,7 @@ class IEngine;
 class IStorage;
 struct CAntibotRoundData;
 struct CScoreRandomMapResult;
+struct CScorePlayerResult;
 
 struct CSnapContext
 {
@@ -66,7 +68,7 @@ struct CSnapContext
 
 	int GetClientVersion() const { return m_ClientVersion; }
 	bool IsSixup() const { return m_Sixup; }
-	bool ClientId() const { return m_ClientId; }
+	int ClientId() const { return m_ClientId; }
 
 private:
 	int m_ClientVersion;
@@ -81,6 +83,8 @@ public:
 	bool m_Initialized = false;
 	bool m_InitialDelay;
 	char m_aReason[128];
+	char m_aClientName[MAX_NAME_LENGTH];
+	bool m_NameKnown;
 
 	int SecondsLeft() const;
 };
@@ -90,7 +94,7 @@ class CMutes
 public:
 	CMutes(const char *pSystemName);
 
-	bool Mute(const NETADDR *pAddr, int Seconds, const char *pReason, bool InitialDelay);
+	bool Mute(const NETADDR *pAddr, int Seconds, const char *pReason, const char *pClientName, bool InitialDelay);
 	void UnmuteIndex(int Index);
 	void UnmuteAddr(const NETADDR *pAddr);
 	void UnmuteExpired();
@@ -115,7 +119,7 @@ class CGameContext : public IGameServer
 	CCollision m_Collision;
 	protocol7::CNetObjHandler m_NetObjHandler7;
 	CNetObjHandler m_NetObjHandler;
-	CTuningParams m_aTuningList[NUM_TUNEZONES];
+	CTuningParams m_aTuningList[TuneZone::NUM];
 	std::vector<std::string> m_vCensorlist;
 
 	bool m_TeeHistorianActive;
@@ -172,13 +176,15 @@ class CGameContext : public IGameServer
 	void AddVote(const char *pDescription, const char *pCommand);
 	static int MapScan(const char *pName, int IsDir, int DirType, void *pUserData);
 
-	struct CPersistentData
+	class CPersistentData
 	{
+	public:
 		CUuid m_PrevGameUuid;
 	};
 
-	struct CPersistentClientData
+	class CPersistentClientData
 	{
+	public:
 		bool m_IsSpectator;
 		bool m_IsAfk;
 		int m_LastWhisperTo;
@@ -224,6 +230,10 @@ public:
 	// helper functions
 	CCharacter *GetPlayerChar(int ClientId);
 	const CCharacter *GetPlayerChar(int ClientId) const;
+	const CPlayer *FindPlayerByName(const char *pName) const;
+	// Returns `nullptr` if no player is found.
+	CPlayer *FindPlayerByName(const char *pName);
+	std::optional<int> FindClientIdByName(const char *pName) const;
 	bool EmulateBug(int Bug) const;
 	std::vector<SSwitchers> &Switchers() { return m_World.m_Core.m_vSwitchers; }
 
@@ -245,8 +255,8 @@ public:
 	char m_aVoteReason[VOTE_REASON_LENGTH];
 	int m_NumVoteOptions;
 	int m_VoteEnforce;
-	char m_aaZoneEnterMsg[NUM_TUNEZONES][256]; // 0 is used for switching from or to area without tunings
-	char m_aaZoneLeaveMsg[NUM_TUNEZONES][256];
+	char m_aaZoneEnterMsg[TuneZone::NUM][256]; // 0 is used for switching from or to area without tunings
+	char m_aaZoneLeaveMsg[TuneZone::NUM][256];
 
 	void CreateAllEntities(bool Initial);
 	CPlayer *CreatePlayer(int ClientId, int StartTeam, bool Afk, int LastWhisperTo);
@@ -280,8 +290,8 @@ public:
 	void CreateSoundGlobal(int Sound, int Target = -1) const;
 
 	void SnapSwitchers(int SnappingClient);
-	bool SnapLaserObject(const CSnapContext &Context, int SnapId, const vec2 &To, const vec2 &From, int StartTick, int Owner = -1, int LaserType = -1, int Subtype = -1, int SwitchNumber = -1) const;
-	bool SnapPickup(const CSnapContext &Context, int SnapId, const vec2 &Pos, int Type, int SubType, int SwitchNumber, int Flags) const;
+	void SnapLaserObject(const CSnapContext &Context, int SnapId, const vec2 &To, const vec2 &From, int StartTick, int Owner = -1, int LaserType = -1, int Subtype = -1, int SwitchNumber = -1) const;
+	void SnapPickup(const CSnapContext &Context, int SnapId, const vec2 &Pos, int Type, int SubType, int SwitchNumber, int Flags) const;
 
 	enum
 	{
@@ -300,8 +310,9 @@ public:
 	void SendMotd(int ClientId) const;
 	void SendSettings(int ClientId) const;
 	void SendServerAlert(const char *pMessage);
-	void SendModeratorAlert(const char *pMessage, int ToClientId);
+	void SendModeratorAlert(int ToClientId, const char *pMessage);
 	void SendBroadcast(const char *pText, int ClientId, bool IsImportant = true);
+	void SendSkinChange7(int ClientId);
 
 	void List(int ClientId, const char *pFilter);
 
@@ -324,7 +335,7 @@ public:
 	void OnShutdown(void *pPersistentData) override;
 
 	void OnTick() override;
-	void OnSnap(int ClientId, bool GlobalSnap) override;
+	void OnSnap(int ClientId, bool GlobalSnap, bool RecordingDemo) override;
 	void OnPostGlobalSnap() override;
 
 	void UpdatePlayerMaps();
@@ -351,6 +362,7 @@ public:
 	bool OnClientDataPersist(int ClientId, void *pData) override;
 	void OnClientConnected(int ClientId, void *pData) override;
 	void OnClientEnter(int ClientId) override;
+	void OnLiveObserverEnter(int ClientId) override;
 	void OnClientDrop(int ClientId, const char *pReason) override;
 	void OnClientPrepareInput(int ClientId, void *pInput) override;
 	void OnClientDirectInput(int ClientId, const void *pInput) override;
@@ -394,7 +406,7 @@ public:
 	bool PlayerExists(int ClientId) const override { return m_apPlayers[ClientId]; }
 	// Returns true if someone is actively moderating.
 	bool PlayerModerating() const;
-	void ForceVote(int EnforcerId, bool Success);
+	void ForceVote(bool Success);
 
 	// Checks if player can vote and notify them about the reason
 	bool RateLimitPlayerVote(int ClientId);
@@ -406,6 +418,10 @@ public:
 	bool PracticeByDefault() const;
 
 	std::shared_ptr<CScoreRandomMapResult> m_SqlRandomMapResult;
+
+	// cached map info from database
+	std::shared_ptr<CScorePlayerResult> m_pLoadMapInfoResult;
+	char m_aMapInfoMessage[512];
 
 private:
 	// starting 1 to make 0 the special value "no client id"
@@ -424,7 +440,7 @@ private:
 	static void ConSolo(IConsole::IResult *pResult, void *pUserData);
 	static void ConUnSolo(IConsole::IResult *pResult, void *pUserData);
 	static void ConFreeze(IConsole::IResult *pResult, void *pUserData);
-	static void ConUnFreeze(IConsole::IResult *pResult, void *pUserData);
+	static void ConUnfreeze(IConsole::IResult *pResult, void *pUserData);
 	static void ConDeep(IConsole::IResult *pResult, void *pUserData);
 	static void ConUnDeep(IConsole::IResult *pResult, void *pUserData);
 	static void ConLiveFreeze(IConsole::IResult *pResult, void *pUserData);
@@ -635,7 +651,7 @@ public:
 	bool IsRunningKickOrSpecVote(int ClientId) const;
 
 	void SendRecord(int ClientId);
-	void SendFinish(int ClientId, float Time, float PreviousBestTime);
+	void SendFinish(int ClientId, float Time, std::optional<float> PreviousBestTime);
 	void SendSaveCode(int Team, int TeamSize, int State, const char *pError, const char *pSaveRequester, const char *pServerName, const char *pGeneratedCode, const char *pCode);
 	void OnSetAuthed(int ClientId, int Level) override;
 

@@ -285,7 +285,7 @@ void CSkins7::ProcessCompletedJobs()
 			continue;
 		}
 
-		if(!GameClient()->GpuUploadLimiter()->CanUpload())
+		if(!GameClient()->GpuUploadLimiter()->CanUpload(2))
 		{
 			break;
 		}
@@ -308,11 +308,6 @@ void CSkins7::ProcessCompletedJobs()
 				log_trace("skins7", "Loaded skin part '%s/%s'", CSkins7::ms_apSkinPartNames[Result.m_PartType], Part.m_aName);
 			}
 			m_avSkinParts[Result.m_PartType].emplace_back(Part);
-
-			if(m_SkinLoadedCallback)
-			{
-				m_SkinLoadedCallback();
-			}
 		}
 
 		Iter = m_PendingSkinPartJobs.erase(Iter);
@@ -320,8 +315,11 @@ void CSkins7::ProcessCompletedJobs()
 
 	if(m_PendingSkinPartJobs.empty() && m_Loading)
 	{
+		RebuildSkins();
 		m_Loading = false;
 		m_LastRefreshTime = time_get_nanoseconds();
+		if(m_SkinLoadedCallback)
+			m_SkinLoadedCallback();
 	}
 }
 
@@ -333,13 +331,39 @@ public:
 	CSkins7::TSkinLoadedCallback m_SkinLoadedCallback;
 };
 
+void CSkins7::RebuildSkins()
+{
+	m_vSkins.clear();
+	CSkinScanData SkinScanData;
+	SkinScanData.m_pThis = this;
+	SkinScanData.m_SkinLoadedCallback = []() {};
+	Storage()->ListDirectory(IStorage::TYPE_ALL, SKINS_DIR, SkinScan, &SkinScanData);
+}
+
 int CSkins7::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
-	if(IsDir || !str_endswith(pName, ".json"))
+	if(IsDir)
+	{
 		return 0;
+	}
+
+	const char *pSuffix = str_endswith(pName, ".json");
+	if(pSuffix == nullptr)
+	{
+		return 0;
+	}
+
+	char aSkinName[IO_MAX_PATH_LENGTH];
+	str_truncate(aSkinName, sizeof(aSkinName), pName, pSuffix - pName);
+	if(str_length(aSkinName) >= (int)sizeof(CSkin().m_aName) || !str_valid_filename(aSkinName))
+	{
+		log_error("skins7", "Skin name is not valid: %s", aSkinName);
+		log_error("skins7", "Skin names must be valid filenames shorter than %d characters.", (int)sizeof(CSkin().m_aName));
+		return 0;
+	}
 
 	CSkinScanData *pScanData = static_cast<CSkinScanData *>(pUser);
-	pScanData->m_pThis->LoadSkin(pName, DirType);
+	pScanData->m_pThis->LoadSkin(aSkinName, DirType);
 	pScanData->m_SkinLoadedCallback();
 	return 0;
 }
@@ -347,7 +371,7 @@ int CSkins7::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 bool CSkins7::LoadSkin(const char *pName, int DirType)
 {
 	char aFilename[IO_MAX_PATH_LENGTH];
-	str_format(aFilename, sizeof(aFilename), SKINS_DIR "/%s", pName);
+	str_format(aFilename, sizeof(aFilename), SKINS_DIR "/%s.json", pName);
 	void *pFileData;
 	unsigned JsonFileSize;
 	if(!Storage()->ReadFile(aFilename, DirType, &pFileData, &JsonFileSize))
@@ -357,7 +381,7 @@ bool CSkins7::LoadSkin(const char *pName, int DirType)
 	}
 
 	CSkin Skin;
-	str_copy(Skin.m_aName, pName, 1 + str_length(pName) - str_length(".json"));
+	str_copy(Skin.m_aName, pName);
 	const bool SpecialSkin = IsSpecialSkin(Skin.m_aName);
 	Skin.m_Flags = 0;
 	if(SpecialSkin)
@@ -503,12 +527,15 @@ void CSkins7::OnInit()
 
 	InitPlaceholderSkinParts();
 
-	Refresh([this]() {
-		GameClient()->m_Menus.RenderLoading(Localize("Loading DDNet Client"), Localize("Loading skin files"), 0);
-	});
+	Refresh([]() {});
 }
 
 void CSkins7::OnReset()
+{
+	ProcessCompletedJobs();
+}
+
+void CSkins7::OnUpdate()
 {
 	ProcessCompletedJobs();
 }
@@ -568,13 +595,16 @@ void CSkins7::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)
 	m_SkinLoadedCallback = std::move(SkinLoadedCallback);
 	m_Loading = true;
 
-	CSkinScanData SkinScanData;
-	SkinScanData.m_pThis = this;
-	SkinScanData.m_SkinLoadedCallback = m_SkinLoadedCallback;
-	Storage()->ListDirectory(IStorage::TYPE_ALL, SKINS_DIR, SkinScan, &SkinScanData);
-
 	LoadXmasHat();
 	LoadBotDecoration();
+	if(m_PendingSkinPartJobs.empty())
+	{
+		RebuildSkins();
+		m_Loading = false;
+		m_LastRefreshTime = time_get_nanoseconds();
+		if(m_SkinLoadedCallback)
+			m_SkinLoadedCallback();
+	}
 }
 
 void CSkins7::LoadXmasHat()
@@ -646,8 +676,11 @@ void CSkins7::AddSkinFromConfigVariables(const char *pName, int Dummy)
 	m_LastRefreshTime = time_get_nanoseconds();
 }
 
-bool CSkins7::RemoveSkin(const CSkin *pSkin)
+bool CSkins7::RemoveSkin(const char *pName)
 {
+	const CSkin *pSkin = FindSkin(pName, true);
+	if(pSkin == nullptr)
+		return false;
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), SKINS_DIR "/%s.json", pSkin->m_aName);
 	if(!Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE))
@@ -670,6 +703,18 @@ const std::vector<CSkins7::CSkin> &CSkins7::GetSkins() const
 const std::vector<CSkins7::CSkinPart> &CSkins7::GetSkinParts(int Part) const
 {
 	return m_avSkinParts[Part];
+}
+
+const CSkins7::CSkin *CSkins7::FindSkin(const char *pName, bool AllowSpecialSkin) const
+{
+	if(pName == nullptr)
+		return nullptr;
+	for(const CSkin &Skin : m_vSkins)
+	{
+		if((AllowSpecialSkin || (Skin.m_Flags & SKINFLAG_SPECIAL) == 0) && str_comp(Skin.m_aName, pName) == 0)
+			return &Skin;
+	}
+	return nullptr;
 }
 
 const CSkins7::CSkinPart *CSkins7::FindSkinPartOrNullptr(int Part, const char *pName, bool AllowSpecialPart) const

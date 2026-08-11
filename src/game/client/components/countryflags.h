@@ -93,6 +93,8 @@ private:
 
 	std::deque<std::shared_ptr<CCountryFlagLoadJob>> m_PendingJobs;
 
+	static bool ValidateCountryCodeString(const char *pString);
+	static bool ValidateCountryCodeIntegerString(const char *pString);
 	void LoadCountryflagsIndexfile();
 	void StartFlagLoadJob(int Index);
 	void ProcessCompletedJobs();

@@ -6,6 +6,7 @@
 #include <base/log.h>
 #include <base/str.h>
 #include <base/system.h>
+#include <base/windows.h>
 
 #include <engine/client.h>
 #include <engine/client/enums.h>
@@ -153,6 +154,7 @@ static constexpr const char *QMCLIENT_FREEZE_WAKEUP_TEXT = "快醒醒!";
 	"然而",
 	"可是",
 };
+// 与 tclient 一致：默认英文 source key，空模板回退用
 static constexpr const char *s_pFriendEnterBroadcastDefaultText = "%s joined this server";
 
 [[maybe_unused]] static int AutoReplySeparatorLength(const char *pStr);

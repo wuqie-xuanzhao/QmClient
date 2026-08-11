@@ -172,6 +172,28 @@ public:
 	int m_LocData;
 };
 
+class CGLSLRoundedRectSdfProgram : public CGLSLTWProgram
+{
+public:
+	CGLSLRoundedRectSdfProgram() :
+		m_LocData(-1)
+	{
+	}
+
+	int m_LocData;
+};
+
+class CGLSLTexturedMsdfProgram : public CGLSLTWProgram
+{
+public:
+	CGLSLTexturedMsdfProgram() :
+		m_LocParams(-1)
+	{
+	}
+
+	int m_LocParams;
+};
+
 class CGLSLGaussianBlurProgram : public CGLSLTWProgram
 {
 public:

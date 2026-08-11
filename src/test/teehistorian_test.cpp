@@ -1,15 +1,16 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include <base/detect.h>
 
-#include <engine/external/json-parser/json.h>
 #include <engine/server.h>
 #include <engine/shared/config.h>
+#include <engine/shared/json.h>
 
 #include <game/gamecore.h>
 #include <game/server/teehistorian.h>
 
 #include <gtest/gtest.h>
 
+#include <string>
 #include <vector>
 
 void RegisterGameUuids(CUuidManager *pManager);
@@ -108,7 +109,7 @@ protected:
 	void Expect(const unsigned char *pOutput, size_t OutputSize)
 	{
 		static CUuid TEEHISTORIAN_UUID = CalculateUuid("teehistorian@ddnet.tw");
-		static const char PREFIX1[] = "{\"comment\":\"teehistorian@ddnet.tw\",\"version\":\"2\",\"version_minor\":\"17\",\"game_uuid\":\"a1eb7182-796e-3b3e-941d-38ca71b2a4a8\",\"server_version\":\"DDNet test\",\"start_time\":\"";
+		static const char PREFIX1[] = "{\"comment\":\"teehistorian@ddnet.tw\",\"version\":\"2\",\"version_minor\":\"22\",\"game_uuid\":\"a1eb7182-796e-3b3e-941d-38ca71b2a4a8\",\"server_version\":\"DDNet test\",\"start_time\":\"";
 		static const char PREFIX2[] = "\",\"server_name\":\"server name\",\"server_port\":\"8303\",\"game_type\":\"game type\",\"map_name\":\"Kobra 3 Solo\",\"map_size\":\"903514\",\"map_sha256\":\"0123456789012345678901234567890123456789012345678901234567890123\",\"map_crc\":\"eceaf25c\",\"prng_description\":\"test-prng:02468ace\",\"config\":{},\"tuning\":{},\"uuids\":[";
 		static const char PREFIX3[] = "]}";
 
@@ -159,25 +160,47 @@ protected:
 			io_close(File);
 		}
 
-		printf("pOutput = {");
-		size_t Start = 0; // skip over header;
+		// skip over header
+		size_t StartActual = 0;
 		for(size_t i = 0; i < m_vBuffer.size(); i++)
 		{
-			if(Start == 0)
+			if(m_vBuffer[i] == 0)
 			{
-				if(m_vBuffer[i] == 0)
-					Start = i + 1;
-				continue;
+				StartActual = i + 1;
+				break;
 			}
-			if((i - Start) % 10 == 0)
-				printf("\n\t");
-			else
-				printf(", ");
-			printf("0x%.2x", m_vBuffer[i]);
 		}
-		printf("\n}\n");
-		ASSERT_EQ(m_vBuffer.size(), OutputSize);
-		ASSERT_TRUE(mem_comp(m_vBuffer.data(), pOutput, OutputSize) == 0);
+		size_t StartExpected = 0;
+		for(size_t i = 0; i < OutputSize; i++)
+		{
+			if(pOutput[i] == 0)
+			{
+				StartExpected = i + 1;
+				break;
+			}
+		}
+
+		std::string OutputActualHex;
+		if(StartActual < m_vBuffer.size())
+		{
+			const size_t DataSize = m_vBuffer.size() - StartActual;
+			OutputActualHex.resize(6 * DataSize + 1);
+			str_hex_cstyle(OutputActualHex.data(), OutputActualHex.length(), &m_vBuffer[StartActual], DataSize, 10);
+		}
+		std::string OutputExpectedHex;
+		if(StartExpected < OutputSize)
+		{
+			const size_t DataSize = OutputSize - StartExpected;
+			OutputExpectedHex.resize(6 * DataSize + 1);
+			str_hex_cstyle(OutputExpectedHex.data(), OutputExpectedHex.length(), &pOutput[StartExpected], DataSize, 10);
+		}
+
+		ASSERT_EQ(StartActual, StartExpected) << "Header size mismatch. Actual " << StartActual << ", expected " << StartExpected << ".";
+		ASSERT_TRUE(mem_comp(m_vBuffer.data(), pOutput, StartExpected) == 0) << "Header mismatch. Check full output in .teehistorian files.";
+		ASSERT_EQ(m_vBuffer.size(), OutputSize) << "Output size mismatch. Actual " << m_vBuffer.size() << ", expected " << OutputSize << ".";
+		ASSERT_TRUE(mem_comp(m_vBuffer.data(), pOutput, OutputSize) == 0) << "Output mismatch. Actual m_vBuffer = {\n"
+										  << OutputActualHex.c_str() << "\n}\nExpected pOutput = {\n"
+										  << OutputExpectedHex.c_str() << "\n}";
 	}
 
 	void Tick(int Tick)
@@ -243,7 +266,10 @@ TEST_F(TeeHistorian, Finished)
 TEST_F(TeeHistorian, TickImplicitOneTick)
 {
 	const unsigned char EXPECTED[] = {
-		0x42, 0x00, 0x01, 0x02, // PLAYERNEW cid=0 x=1 y=2
+		0x42,
+		0x00,
+		0x01,
+		0x02, // PLAYERNEW cid=0 x=1 y=2
 		0x40, // FINISH
 	};
 	Tick(1);
@@ -255,8 +281,13 @@ TEST_F(TeeHistorian, TickImplicitOneTick)
 TEST_F(TeeHistorian, TickImplicitTwoTicks)
 {
 	const unsigned char EXPECTED[] = {
-		0x42, 0x00, 0x01, 0x02, // PLAYER_NEW cid=0 x=1 y=2
-		0x00, 0x01, 0x40, // PLAYER cid=0 dx=1 dy=-1
+		0x42,
+		0x00,
+		0x01,
+		0x02, // PLAYER_NEW cid=0 x=1 y=2
+		0x00,
+		0x01,
+		0x40, // PLAYER cid=0 dx=1 dy=-1
 		0x40, // FINISH
 	};
 	Tick(1);
@@ -270,8 +301,14 @@ TEST_F(TeeHistorian, TickImplicitTwoTicks)
 TEST_F(TeeHistorian, TickImplicitDescendingClientId)
 {
 	const unsigned char EXPECTED[] = {
-		0x42, 0x01, 0x02, 0x03, // PLAYER_NEW cid=1 x=2 y=3
-		0x42, 0x00, 0x04, 0x05, // PLAYER_NEW cid=0 x=4 y=5
+		0x42,
+		0x01,
+		0x02,
+		0x03, // PLAYER_NEW cid=1 x=2 y=3
+		0x42,
+		0x00,
+		0x04,
+		0x05, // PLAYER_NEW cid=0 x=4 y=5
 		0x40, // FINISH
 	};
 	Tick(1);
@@ -287,9 +324,16 @@ TEST_F(TeeHistorian, TickImplicitDescendingClientId)
 TEST_F(TeeHistorian, TickExplicitAscendingClientId)
 {
 	const unsigned char EXPECTED[] = {
-		0x42, 0x00, 0x04, 0x05, // PLAYER_NEW cid=0 x=4 y=5
-		0x41, 0x00, // TICK_SKIP dt=0
-		0x42, 0x01, 0x02, 0x03, // PLAYER_NEW cid=1 x=2 y=3
+		0x42,
+		0x00,
+		0x04,
+		0x05, // PLAYER_NEW cid=0 x=4 y=5
+		0x41,
+		0x00, // TICK_SKIP dt=0
+		0x42,
+		0x01,
+		0x02,
+		0x03, // PLAYER_NEW cid=1 x=2 y=3
 		0x40, // FINISH
 	};
 	Tick(1);
@@ -322,8 +366,13 @@ TEST_F(TeeHistorian, TickImplicitEmpty)
 TEST_F(TeeHistorian, TickExplicitStart)
 {
 	const unsigned char EXPECTED[] = {
-		0x41, 0xb3, 0x07, // TICK_SKIP dt=499
-		0x42, 0x00, 0x40, 0x40, // PLAYER_NEW cid=0 x=-1 y=-1
+		0x41,
+		0xb3,
+		0x07, // TICK_SKIP dt=499
+		0x42,
+		0x00,
+		0x40,
+		0x40, // PLAYER_NEW cid=0 x=-1 y=-1
 		0x40, // FINISH
 	};
 	Tick(500);
@@ -335,8 +384,12 @@ TEST_F(TeeHistorian, TickExplicitStart)
 TEST_F(TeeHistorian, TickExplicitPlayerMessage)
 {
 	const unsigned char EXPECTED[] = {
-		0x41, 0x00, // TICK_SKIP dt=0
-		0x46, 0x3f, 0x01, 0x00, // MESSAGE cid=63 msg="\0"
+		0x41,
+		0x00, // TICK_SKIP dt=0
+		0x46,
+		0x3f,
+		0x01,
+		0x00, // MESSAGE cid=63 msg="\0"
 		0x40, // FINISH
 	};
 	Tick(1);
@@ -349,11 +402,26 @@ TEST_F(TeeHistorian, TickExplicitPlayerMessage)
 TEST_F(TeeHistorian, ExtraMessage)
 {
 	const unsigned char EXPECTED[] = {
-		0x41, 0x00, // TICK_SKIP dt=0
+		0x41,
+		0x00, // TICK_SKIP dt=0
 		// EX uuid=6bb8ba88-0f0b-382e-8dae-dbf4052b8b7d data_len=0
 		0x4a,
-		0x6b, 0xb8, 0xba, 0x88, 0x0f, 0x0b, 0x38, 0x2e,
-		0x8d, 0xae, 0xdb, 0xf4, 0x05, 0x2b, 0x8b, 0x7d,
+		0x6b,
+		0xb8,
+		0xba,
+		0x88,
+		0x0f,
+		0x0b,
+		0x38,
+		0x2e,
+		0x8d,
+		0xae,
+		0xdb,
+		0xf4,
+		0x05,
+		0x2b,
+		0x8b,
+		0x7d,
 		0x00,
 		0x40, // FINISH
 	};
@@ -369,26 +437,99 @@ TEST_F(TeeHistorian, DDNetVersion)
 	const unsigned char EXPECTED[] = {
 		// EX uuid=60daba5c-52c4-3aeb-b8ba-b2953fb55a17 data_len=50
 		0x4a,
-		0x13, 0x97, 0xb6, 0x3e, 0xee, 0x4e, 0x39, 0x19,
-		0xb8, 0x6a, 0xb0, 0x58, 0x88, 0x7f, 0xca, 0xf5,
+		0x13,
+		0x97,
+		0xb6,
+		0x3e,
+		0xee,
+		0x4e,
+		0x39,
+		0x19,
+		0xb8,
+		0x6a,
+		0xb0,
+		0x58,
+		0x88,
+		0x7f,
+		0xca,
+		0xf5,
 		0x32,
 		// (DDNETVER) cid=0 connection_id=fb13a576-d35f-4893-b815-eedc6d98015b
 		// ddnet_version=13010 ddnet_version_str=DDNet 13.1 (3623f5e4cd184556)
 		0x00,
-		0xfb, 0x13, 0xa5, 0x76, 0xd3, 0x5f, 0x48, 0x93,
-		0xb8, 0x15, 0xee, 0xdc, 0x6d, 0x98, 0x01, 0x5b,
-		0x92, 0xcb, 0x01, 'D', 'D', 'N', 'e', 't',
-		' ', '1', '3', '.', '1', ' ', '(', '3',
-		'6', '2', '3', 'f', '5', 'e', '4', 'c',
-		'd', '1', '8', '4', '5', '5', '6', ')',
+		0xfb,
+		0x13,
+		0xa5,
+		0x76,
+		0xd3,
+		0x5f,
+		0x48,
+		0x93,
+		0xb8,
+		0x15,
+		0xee,
+		0xdc,
+		0x6d,
+		0x98,
+		0x01,
+		0x5b,
+		0x92,
+		0xcb,
+		0x01,
+		'D',
+		'D',
+		'N',
+		'e',
+		't',
+		' ',
+		'1',
+		'3',
+		'.',
+		'1',
+		' ',
+		'(',
+		'3',
+		'6',
+		'2',
+		'3',
+		'f',
+		'5',
+		'e',
+		'4',
+		'c',
+		'd',
+		'1',
+		'8',
+		'4',
+		'5',
+		'5',
+		'6',
+		')',
 		0x00,
 		// EX uuid=41b49541-f26f-325d-8715-9baf4b544ef9 data_len=4
 		0x4a,
-		0x41, 0xb4, 0x95, 0x41, 0xf2, 0x6f, 0x32, 0x5d,
-		0x87, 0x15, 0x9b, 0xaf, 0x4b, 0x54, 0x4e, 0xf9,
+		0x41,
+		0xb4,
+		0x95,
+		0x41,
+		0xf2,
+		0x6f,
+		0x32,
+		0x5d,
+		0x87,
+		0x15,
+		0x9b,
+		0xaf,
+		0x4b,
+		0x54,
+		0x4e,
+		0xf9,
 		0x04,
 		// (DDNETVER_OLD) cid=1 ddnet_version=13010
-		0x01, 0x92, 0xcb, 0x01,
+		0x01,
+		0x92,
+		0xcb,
+		0x01,
 		0x40, // FINISH
 	};
 	CUuid ConnectionId = {
@@ -405,31 +546,114 @@ TEST_F(TeeHistorian, Auth)
 	const unsigned char EXPECTED[] = {
 		// EX uuid=60daba5c-52c4-3aeb-b8ba-b2953fb55a17 data_len=16
 		0x4a,
-		0x60, 0xda, 0xba, 0x5c, 0x52, 0xc4, 0x3a, 0xeb,
-		0xb8, 0xba, 0xb2, 0x95, 0x3f, 0xb5, 0x5a, 0x17,
+		0x60,
+		0xda,
+		0xba,
+		0x5c,
+		0x52,
+		0xc4,
+		0x3a,
+		0xeb,
+		0xb8,
+		0xba,
+		0xb2,
+		0x95,
+		0x3f,
+		0xb5,
+		0x5a,
+		0x17,
 		0x10,
 		// (AUTH_INIT) cid=0 level=3 auth_name="default_admin"
-		0x00, 0x03, 'd', 'e', 'f', 'a', 'u', 'l',
-		't', '_', 'a', 'd', 'm', 'i', 'n', 0x00,
+		0x00,
+		0x03,
+		'd',
+		'e',
+		'f',
+		'a',
+		'u',
+		'l',
+		't',
+		'_',
+		'a',
+		'd',
+		'm',
+		'i',
+		'n',
+		0x00,
 		// EX uuid=37ecd3b8-9218-3bb9-a71b-a935b86f6a81 data_len=9
 		0x4a,
-		0x37, 0xec, 0xd3, 0xb8, 0x92, 0x18, 0x3b, 0xb9,
-		0xa7, 0x1b, 0xa9, 0x35, 0xb8, 0x6f, 0x6a, 0x81,
+		0x37,
+		0xec,
+		0xd3,
+		0xb8,
+		0x92,
+		0x18,
+		0x3b,
+		0xb9,
+		0xa7,
+		0x1b,
+		0xa9,
+		0x35,
+		0xb8,
+		0x6f,
+		0x6a,
+		0x81,
 		0x09,
 		// (AUTH_LOGIN) cid=1 level=2 auth_name="foobar"
-		0x01, 0x02, 'f', 'o', 'o', 'b', 'a', 'r',
+		0x01,
+		0x02,
+		'f',
+		'o',
+		'o',
+		'b',
+		'a',
+		'r',
 		0x00,
 		// EX uuid=37ecd3b8-9218-3bb9-a71b-a935b86f6a81 data_len=7
 		0x4a,
-		0x37, 0xec, 0xd3, 0xb8, 0x92, 0x18, 0x3b, 0xb9,
-		0xa7, 0x1b, 0xa9, 0x35, 0xb8, 0x6f, 0x6a, 0x81,
+		0x37,
+		0xec,
+		0xd3,
+		0xb8,
+		0x92,
+		0x18,
+		0x3b,
+		0xb9,
+		0xa7,
+		0x1b,
+		0xa9,
+		0x35,
+		0xb8,
+		0x6f,
+		0x6a,
+		0x81,
 		0x07,
 		// (AUTH_LOGIN) cid=1 level=2 auth_name="help"
-		0x02, 0x01, 'h', 'e', 'l', 'p', 0x00,
+		0x02,
+		0x01,
+		'h',
+		'e',
+		'l',
+		'p',
+		0x00,
 		// EX uuid=d4f5abe8-edd2-3fb9-abd8-1c8bb84f4a63 data_len=7
 		0x4a,
-		0xd4, 0xf5, 0xab, 0xe8, 0xed, 0xd2, 0x3f, 0xb9,
-		0xab, 0xd8, 0x1c, 0x8b, 0xb8, 0x4f, 0x4a, 0x63,
+		0xd4,
+		0xf5,
+		0xab,
+		0xe8,
+		0xed,
+		0xd2,
+		0x3f,
+		0xb9,
+		0xab,
+		0xd8,
+		0x1c,
+		0x8b,
+		0xb8,
+		0x4f,
+		0x4a,
+		0x63,
 		0x01,
 		// (AUTH_LOGOUT) cid=1
 		0x01,
@@ -448,26 +672,73 @@ TEST_F(TeeHistorian, JoinLeave)
 	const unsigned char EXPECTED[] = {
 		// EX uuid=1899a382-71e3-36da-937d-c9de6bb95b1d data_len=1
 		0x4a,
-		0x18, 0x99, 0xa3, 0x82, 0x71, 0xe3, 0x36, 0xda,
-		0x93, 0x7d, 0xc9, 0xde, 0x6b, 0xb9, 0x5b, 0x1d,
+		0x18,
+		0x99,
+		0xa3,
+		0x82,
+		0x71,
+		0xe3,
+		0x36,
+		0xda,
+		0x93,
+		0x7d,
+		0xc9,
+		0xde,
+		0x6b,
+		0xb9,
+		0x5b,
+		0x1d,
 		0x01,
 		// (JOINVER6) cid=6
 		0x06,
 		// JOIN cid=7
-		0x47, 0x06,
+		0x47,
+		0x06,
 		// EX uuid=59239b05-0540-318d-bea4-9aa1e80e7d2b data_len=1
 		0x4a,
-		0x59, 0x23, 0x9b, 0x05, 0x05, 0x40, 0x31, 0x8d,
-		0xbe, 0xa4, 0x9a, 0xa1, 0xe8, 0x0e, 0x7d, 0x2b,
+		0x59,
+		0x23,
+		0x9b,
+		0x05,
+		0x05,
+		0x40,
+		0x31,
+		0x8d,
+		0xbe,
+		0xa4,
+		0x9a,
+		0xa1,
+		0xe8,
+		0x0e,
+		0x7d,
+		0x2b,
 		0x01,
 		// (JOINVER7) cid=7
 		0x07,
 		// JOIN cid=7
-		0x47, 0x07,
+		0x47,
+		0x07,
 		// LEAVE cid=6 reason="too many pancakes"
-		0x48, 0x06, 't', 'o', 'o', ' ', 'm', 'a',
-		'n', 'y', ' ', 'p', 'a', 'n', 'c', 'a',
-		'k', 'e', 's', 0x00,
+		0x48,
+		0x06,
+		't',
+		'o',
+		'o',
+		' ',
+		'm',
+		'a',
+		'n',
+		'y',
+		' ',
+		'p',
+		'a',
+		'n',
+		'c',
+		'a',
+		'k',
+		'e',
+		's',
+		0x00,
 		0x40, // FINISH
 	};
 	m_TH.RecordPlayerJoin(6, CTeeHistorian::PROTOCOL_6);
@@ -795,8 +1066,22 @@ TEST_F(TeeHistorian, AntibotEmpty)
 	const unsigned char EXPECTED[] = {
 		// EX uuid=866bfdac-fb49-3c0b-a887-5fe1f3ea00b8 datalen=0
 		0x4a,
-		0x86, 0x6b, 0xfd, 0xac, 0xfb, 0x49, 0x3c, 0x0b,
-		0xa8, 0x87, 0x5f, 0xe1, 0xf3, 0xea, 0x00, 0xb8,
+		0x86,
+		0x6b,
+		0xfd,
+		0xac,
+		0xfb,
+		0x49,
+		0x3c,
+		0x0b,
+		0xa8,
+		0x87,
+		0x5f,
+		0xe1,
+		0xf3,
+		0xea,
+		0x00,
+		0xb8,
 		0x00,
 		// (ANTIBOT) antibot_data
 	};
@@ -893,14 +1178,28 @@ TEST_F(TeeHistorian, PrevGameUuid)
 	m_GameInfo.m_HavePrevGameUuid = true;
 	CUuid PrevGameUuid = {{
 		// fe19c218-f555-4002-a273-126c59ccc17a
-		0xfe, 0x19, 0xc2, 0x18, 0xf5, 0x55, 0x40, 0x02,
-		0xa2, 0x73, 0x12, 0x6c, 0x59, 0xcc, 0xc1, 0x7a,
+		0xfe,
+		0x19,
+		0xc2,
+		0x18,
+		0xf5,
+		0x55,
+		0x40,
+		0x02,
+		0xa2,
+		0x73,
+		0x12,
+		0x6c,
+		0x59,
+		0xcc,
+		0xc1,
+		0x7a,
 		//
 	}};
 	m_GameInfo.m_PrevGameUuid = PrevGameUuid;
 	Reset(&m_GameInfo);
 	Finish();
-	json_value *pJson = json_parse((const char *)m_vBuffer.data() + 16, -1);
+	json_value *pJson = JsonParse((const char *)m_vBuffer.data() + 16, -1);
 	ASSERT_TRUE(pJson);
 	const json_value &JsonPrevGameUuid = (*pJson)["prev_game_uuid"];
 	ASSERT_EQ(JsonPrevGameUuid.type, json_string);

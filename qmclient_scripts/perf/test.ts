@@ -10,6 +10,8 @@ import {
   operationSignature,
 } from './lib/quality_core.ts';
 import {
+  NON_CARD_MENU_BASELINES,
+  nonCardMenuBudgetSummary,
   reportQuality,
   summarizeForBundle,
 } from './lib/quality.ts';
@@ -1491,42 +1493,64 @@ function testAnalyzeWritesBundleAndArchiveSummaryFiles() {
   assert.match(source, /summarizeForBundle/);
 }
 
-function testStutterDiagnosticsRanksMeasuredComponentsAndKeepsFeatureState() {
-  const entries = parseLog([
-    '2026-07-18 12:00:00 I perf/stutter: schema=1 event=stutter_event stutter_id=7 segment=2 classification=sustained_low end_reason=periodic target_fps=300 target_ms=3.333 sample_frames=2500 sample_seconds=10.000 fps_avg=250.000 fps_min=120.000 fps_1pct_low=180.000 frame_ms_avg=4.000 frame_ms_p95=5.500 frame_ms_p99=8.000 frame_ms_max=12.000 window_start_frame=100 window_end_frame=2599 worst_frame=600 cap_limited=0 cap_reason=none page=game tab=none',
-    '2026-07-18 12:00:00 I perf/stutter: schema=1 event=component_sample stutter_id=7 segment=2 module=players callback=on_render sample_count=2500 total_ms=4000.000 avg_ms=1.600 p95_ms=2.100 max_ms=4.000 max_frame=600',
-    '2026-07-18 12:00:00 I perf/stutter: schema=1 event=component_sample stutter_id=7 segment=2 module=particles callback=on_update sample_count=2500 total_ms=1000.000 avg_ms=0.400 p95_ms=0.800 max_ms=2.000 max_frame=601',
-    '2026-07-18 12:00:00 I perf/stutter: schema=1 event=feature_snapshot stutter_id=7 segment=2 frame=600 owner=qmclient feature=qm_3d_particles config_enabled=1 config_value=1 hud_visible=-1 settings_visible=-1 executed_in_frame=-1 executed_in_window=-1',
-    '2026-07-18 12:00:00 I perf/main_thread: stage=graphics_swap duration_ms=6.000 frame=600',
-  ].join('\n'));
-
-  const summary = stutterDiagnosticsSummary(entries);
-  assert.equal(summary.available, true);
-  assert.equal(summary.windows.length, 1);
-  assert.equal(summary.windows[0].targetFps, 300);
-  assert.equal(summary.components[0].component, 'players');
-  assert.equal(summary.components[0].phase, 'render');
-  assert.equal(summary.featureStates[0].name, 'qm_3d_particles');
-  assert.equal(summary.stages[0].stage, 'graphics_swap');
-
-  const html = generateReport(entries, 'qm_perf_stutter.log', null);
-  assert.match(html, /客户端卡顿诊断/);
-  assert.match(html, /players/);
-  assert.match(html, /qm_3d_particles/);
-  assert.match(html, /CPU 模块耗时排名/);
+function nonCardMenuFixture(options: { missingCache?: boolean; missingRealSample?: boolean; exceed?: boolean } = {}) {
+  return Object.entries(NON_CARD_MENU_BASELINES).flatMap(([operation, budget], index) => {
+    const p99 = options.exceed && index === 0 ? budget.p99 + 1 : budget.p99 - 1;
+    const onePctSource = options.missingRealSample && index === 1 ? 'p99_derived' : 'real_sampled';
+    const cacheFields = options.missingCache && index === 2 ? '' : ' cache_hits=9 cache_misses=1 cache_evictions=0';
+    return [
+      `2026-07-13 12:00:${String(index).padStart(2, '0')} I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"${operation}","context":"scroll","page":"menu","tab":"none","sample_frames":120,"sample_seconds":2,"fps_avg":120,"fps_min":60,"fps_max":240,"fps_1pct_low":90,"fps_1pct_source":"${onePctSource}","window_start_frame":${index * 200},"window_end_frame":${index * 200 + 119},"frame_ms_avg":4,"frame_ms_p95":${budget.p95 - 1},"frame_ms_p99":${p99},"frame_ms_max":${budget.max - 1},"menu_ms_max":${budget.menuMax - 1},"cap_limited":0}`,
+      `2026-07-13 12:01:${String(index).padStart(2, '0')} I perf/menu-ui: event=menu_ui_frame page=menu operation=${operation} frame=${index * 200 + 10} items_total=100 items_visible=10 items_processed=10 items_skipped=90 ui_ms=3.000 layout_ms=-1.000 text_ms=-1.000 heap_allocs=-1${cacheFields} source=qm_ui_perf`,
+    ];
+  }).join('\n');
 }
 
-function testStutterDiagnosticsKeepsFrameLimitNonCausal() {
-  const entries = parseLog([
-    '2026-07-18 12:10:00 I perf/stutter: event=stutter_event stutter_id=8 segment=0 classification=sustained_low end_reason=periodic target_fps=300 target_ms=3.333 sample_frames=1440 sample_seconds=10 fps_avg=144 fps_min=140 fps_1pct_low=141 frame_ms_avg=6.944 frame_ms_p95=7 frame_ms_p99=7.1 frame_ms_max=8 window_start_frame=1 window_end_frame=1440 worst_frame=42 cap_limited=1 cap_reason=vsync page=game tab=none',
-    '2026-07-18 12:10:00 I perf/stutter: event=component_sample stutter_id=8 segment=0 module=players callback=on_render sample_count=1440 total_ms=500 avg_ms=0.347 p95_ms=0.5 max_ms=1 max_frame=42',
-  ].join('\n'));
+function testNonCardMenuBudgetsCoverEightOperationsAndRejectIncompleteEvidence() {
+  assert.equal(Object.keys(NON_CARD_MENU_BASELINES).length, 8);
+  const passing = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture()));
+  assert.equal(passing.operations.length, 8);
+  assert.ok(passing.operations.every(operation => operation.verdict === 'PASS'));
 
-  const summary = stutterDiagnosticsSummary(entries);
-  assert.equal(summary.status, 'cap_limited');
-  const html = generateReport(entries, 'qm_perf_stutter_vsync.log', null);
-  assert.match(html, /仅作为优化候选，不判定任何模块为卡顿原因/);
-  assert.match(html, /vsync/);
+  const missingReal = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture({ missingRealSample: true })));
+  assert.equal(missingReal.operations.find(operation => operation.operation === 'friends_scroll')?.verdict, 'FAIL');
+  assert.match(missingReal.operations.find(operation => operation.operation === 'friends_scroll')?.reason ?? '', /real_sampled/);
+
+  const missingCache = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture({ missingCache: true })));
+  assert.equal(missingCache.operations.find(operation => operation.operation === 'demo_browser_scroll')?.verdict, 'WARN');
+  assert.match(missingCache.operations.find(operation => operation.operation === 'demo_browser_scroll')?.reason ?? '', /cache/i);
+
+  const exceeded = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture({ exceed: true })));
+  const server = exceeded.operations.find(operation => operation.operation === 'server_browser_scroll');
+  assert.equal(server?.verdict, 'FAIL');
+  assert.match(server?.reason ?? '', /p99.*16\.7/);
+
+  const fpsOnly = parseLog(nonCardMenuFixture().split('\n').filter(line => line.includes('perf/fps')).join('\n'));
+  const missingAllMenuWork = nonCardMenuBudgetSummary(fpsOnly);
+  assert.equal(missingAllMenuWork.available, true);
+  assert.ok(missingAllMenuWork.operations.every(operation => operation.verdict === 'FAIL'));
+
+  const mismatchedFrames = nonCardMenuBudgetSummary(parseLog(nonCardMenuFixture().replace(/frame=(\d+)/g, (_match, frame) => `frame=${Number(frame) + 1000}`)));
+  assert.ok(mismatchedFrames.operations.every(operation => operation.verdict === 'FAIL'));
+}
+
+function testNonCardMenuReportShowsFixedBudgetAndCacheWorkTable() {
+  const html = generateReport(parseLog(nonCardMenuFixture()), 'qm_perf_non_card_menu.log', null);
+  assert.match(html, /非卡片菜单预算/);
+  assert.match(html, /server_browser_scroll/);
+  assert.match(html, /dropdown_first_wheel/);
+  assert.match(html, /Cache Hit/);
+  assert.match(html, /Cache Miss/);
+  assert.match(html, /Eviction/);
+  assert.match(html, /Processed/);
+  assert.match(html, /Skipped/);
+}
+
+function testAnalyzeSupportsExactOutputAndSiblingSummary() {
+  const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'analyze.ts'), 'utf-8');
+  assert.match(source, /--output/);
+  assert.match(source, /resolve\(outputPath\)/);
+  assert.match(source, /extname\(outPath\)/);
+  assert.match(source, /summary\.json/);
 }
 
 testParseKeepsEventOnlyPerfLines();
@@ -1605,7 +1629,8 @@ testReportSamplesLargeEmbeddedChartData();
 testSummaryJsonCanBeSerializedForDebugBundle();
 testSummaryJsonMarksUnavailableVerdictForEmptyFrameSamples();
 testAnalyzeWritesBundleAndArchiveSummaryFiles();
-testStutterDiagnosticsRanksMeasuredComponentsAndKeepsFeatureState();
-testStutterDiagnosticsKeepsFrameLimitNonCausal();
+testNonCardMenuBudgetsCoverEightOperationsAndRejectIncompleteEvidence();
+testNonCardMenuReportShowsFixedBudgetAndCacheWorkTable();
+testAnalyzeSupportsExactOutputAndSiblingSummary();
 
 console.log('qmclient perf tests passed');

@@ -7,42 +7,42 @@
 
 namespace
 {
-bool IsGradientDelimiter(char Character)
-{
-	return Character == ',' || Character == ';' || Character == ' ' || Character == '\t';
-}
+	bool IsGradientDelimiter(char Character)
+	{
+		return Character == ',' || Character == ';' || Character == ' ' || Character == '\t';
+	}
 
-ColorRGBA LerpColor(const ColorRGBA &From, const ColorRGBA &To, float Amount)
-{
-	Amount = std::clamp(Amount, 0.0f, 1.0f);
-	return ColorRGBA(
-		From.r + (To.r - From.r) * Amount,
-		From.g + (To.g - From.g) * Amount,
-		From.b + (To.b - From.b) * Amount,
-		From.a + (To.a - From.a) * Amount);
-}
+	ColorRGBA LerpColor(const ColorRGBA &From, const ColorRGBA &To, float Amount)
+	{
+		Amount = std::clamp(Amount, 0.0f, 1.0f);
+		return ColorRGBA(
+			From.r + (To.r - From.r) * Amount,
+			From.g + (To.g - From.g) * Amount,
+			From.b + (To.b - From.b) * Amount,
+			From.a + (To.a - From.a) * Amount);
+	}
 
-ColorRGBA SampleGradient(const ColorRGBA *pColors, int NumColors, float Amount)
-{
-	if(NumColors <= 0)
-		return ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	if(NumColors == 1)
-		return pColors[0];
+	ColorRGBA SampleGradient(const ColorRGBA *pColors, int NumColors, float Amount)
+	{
+		if(NumColors <= 0)
+			return ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		if(NumColors == 1)
+			return pColors[0];
 
-	Amount = std::clamp(Amount, 0.0f, 1.0f);
-	const float ScaledAmount = Amount * (NumColors - 1);
-	const int ColorIndex = std::clamp((int)ScaledAmount, 0, NumColors - 2);
-	return LerpColor(pColors[ColorIndex], pColors[ColorIndex + 1], ScaledAmount - ColorIndex);
-}
+		Amount = std::clamp(Amount, 0.0f, 1.0f);
+		const float ScaledAmount = Amount * (NumColors - 1);
+		const int ColorIndex = std::clamp((int)ScaledAmount, 0, NumColors - 2);
+		return LerpColor(pColors[ColorIndex], pColors[ColorIndex + 1], ScaledAmount - ColorIndex);
+	}
 
-int CountUtf8Chars(const char *pText)
-{
-	int NumChars = 0;
-	const char *pCurrent = pText;
-	while(str_utf8_decode(&pCurrent) > 0)
-		++NumChars;
-	return NumChars;
-}
+	int CountUtf8Chars(const char *pText)
+	{
+		int NumChars = 0;
+		const char *pCurrent = pText;
+		while(str_utf8_decode(&pCurrent) > 0)
+			++NumChars;
+		return NumChars;
+	}
 }
 
 int CMessageGradient::Unpack(const char *pGradient, unsigned *pColors, int MaxColors)

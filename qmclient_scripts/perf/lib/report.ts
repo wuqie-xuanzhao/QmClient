@@ -4,7 +4,7 @@
 import { basename } from 'node:path';
 
 import type { PerfEntry } from './parse.ts';
-import { FPS_BASELINES, fpsBaselineVerdict, reportQuality, type ParseDiagnostics } from './quality.ts';
+import { FPS_BASELINES, fpsBaselineVerdict, nonCardMenuBudgetSummary, reportQuality, type ParseDiagnostics } from './quality.ts';
 import {
   calcPercentiles, toTimeSeries, detectSpikes, histogram, pageBreakdown,
   complianceRate, computeVerdict, generateNarrative, isSamplingBiased, BUDGET,
@@ -149,6 +149,7 @@ export function generateReport(
   const attribution = pagePerformanceAttribution(entries);
   const sectionTop = sectionPerformanceTop(entries, 10);
   const fps = fpsSummaries(entries);
+  const nonCardMenu = nonCardMenuBudgetSummary(entries);
   const coldTabSwitchFps = coldTabSwitchFpsSummaries(entries);
   const warmTabSwitchFps = warmTabSwitchFpsSummaries(entries);
   const targetSettings = targetSettingsSnapshot(entries);
@@ -316,6 +317,21 @@ export function generateReport(
       <div class="coverage-card"><div class="coverage-label">Visible Widgets</div><div class="coverage-value">${settingsUiBudget.maxVisibleWidgets}</div></div>
     </div>
     <p class="small-note">这些字段来自 settings UI frame budget 事件，用于和 fps window、text/runtime、preview/upload 事件一起做窗口归因。</p>
+  </div>`;
+  const nonCardMenuHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>非卡片菜单预算</span>
+      <span class="badge ${nonCardMenu.operations.some(row => row.verdict === 'FAIL') ? 'bad' : nonCardMenu.operations.some(row => row.verdict === 'WARN') ? 'warn' : 'ok'}">FIXED SCENES</span>
+    </div>
+    <div class="table-scroll"><table class="data-table compact">
+      <thead><tr><th>Operation</th><th>Verdict</th><th>P95</th><th>P99</th><th>Max</th><th>Menu Max</th><th>1% Low</th><th>Processed</th><th>Skipped</th><th>Cache Hit</th><th>Cache Miss</th><th>Eviction</th></tr></thead>
+      <tbody>${nonCardMenu.operations.map(row => `<tr>
+        <td class="mono">${escapeHtml(row.operation)}</td><td><span class="badge ${row.verdict === 'PASS' ? 'ok' : row.verdict === 'WARN' ? 'warn' : 'bad'}" title="${escapeHtml(row.reason)}">${row.verdict}</span></td>
+        <td class="num">${row.frameMsP95.toFixed(3)}ms</td><td class="num">${row.frameMsP99.toFixed(3)}ms</td><td class="num">${row.frameMsMax.toFixed(3)}ms</td><td class="num">${row.uiFieldsAvailable ? `${row.menuMsMax.toFixed(3)}ms` : 'N/A'}</td><td class="num">${row.fpsOnePctLow.toFixed(1)}</td>
+        <td class="num">${row.itemsProcessed}</td><td class="num">${row.itemsSkipped}</td><td class="num">${row.cacheFieldsAvailable ? row.cacheHits : 'N/A'}</td><td class="num">${row.cacheFieldsAvailable ? row.cacheMisses : 'N/A'}</td><td class="num">${row.cacheFieldsAvailable ? row.cacheEvictions : 'N/A'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+    <p class="small-note">八个固定 operation 必须同时包含真实采样 1% low 与 menu_ui_frame 可见工作；缺缓存字段只降级为 WARN。</p>
   </div>`;
   const textRuntimeBudgetHtml = `<div class="coverage-panel">
     <div class="coverage-title">
@@ -935,6 +951,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
   ${assetsDrawDistributionHtml}
   ${textRuntimeDistributionHtml}
   ${settingsUiBudgetHtml}
+  ${nonCardMenuHtml}
   ${textRuntimeBudgetHtml}
   ${adaptiveBudgetHtml}
   ${coldWarmTabSwitchHtml}

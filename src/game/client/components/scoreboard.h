@@ -95,7 +95,9 @@ class CScoreboard : public CComponent
 		int m_Count = 0;
 	};
 
-	void RenderTitle(CUIRect TitleBar, int Team, const char *pTitle);
+	void RenderTitleScore(CUIRect ScoreLabel, int Team, float TitleFontSize);
+	void RenderTitle(CUIRect TitleLabel, int Team, const char *pTitle, float TitleFontSize);
+	void RenderTitleBar(CUIRect TitleBar, int Team, const char *pTitle);
 	void RenderGoals(CUIRect Goals);
 	void RenderSpectators(CUIRect Spectators);
 	void RenderMediaControls(CUIRect Controls);
@@ -105,6 +107,7 @@ class CScoreboard : public CComponent
 	void BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan);
 	void RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart, int CountEnd, const CScoreboardPlayerRowPlan &Plan, CScoreboardRenderState &State);
 	void RenderRecordingNotification(float x);
+	static CUi::EPopupMenuFunctionResult PopupScoreboard(void *pContext, CUIRect View, bool Active);
 
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
 	static void ConToggleScoreboardCursor(IConsole::IResult *pResult, void *pUserData);
@@ -161,6 +164,7 @@ class CScoreboard : public CComponent
 	} m_SoundMuteInfoAnimState;
 
 	void SetUiMousePos(vec2 Pos);
+	void LockMouse();
 
 	class CScoreboardPopupContext : public SPopupMenuId
 	{
@@ -174,13 +178,37 @@ class CScoreboard : public CComponent
 
 		int m_ClientId;
 		bool m_IsLocal;
+		bool m_IsSpectating;
+
+		static CUi::EPopupMenuFunctionResult Render(void *pContext, CUIRect View, bool Active);
 	} m_ScoreboardPopupContext;
 
-	static CUi::EPopupMenuFunctionResult PopupScoreboard(void *pContext, CUIRect View, bool Active);
+	class CMapTitlePopupContext : public SPopupMenuId
+	{
+	public:
+		CScoreboard *m_pScoreboard = nullptr;
+
+		float m_FontSize;
+
+		static CUi::EPopupMenuFunctionResult Render(void *pContext, CUIRect View, bool Active);
+	} m_MapTitlePopupContext;
+	char m_MapTitleButtonId;
+
+	class CPlayerElement
+	{
+	public:
+		char m_PlayerButtonId;
+		char m_SpectatorSecondLineButtonId;
+	};
+	CPlayerElement m_aPlayers[MAX_CLIENTS];
 
 public:
 	CScoreboard();
 	int Sizeof() const override { return sizeof(*this); }
+	static bool ShouldAutoShowOnDeath(bool ConfigEnabled, bool HasLocalInfo, bool Spectating, bool GamePaused, bool HasLocalCharacter)
+	{
+		return ConfigEnabled && HasLocalInfo && !Spectating && !GamePaused && !HasLocalCharacter;
+	}
 	void OnConsoleInit() override;
 	void OnInit() override;
 	void OnReset() override;

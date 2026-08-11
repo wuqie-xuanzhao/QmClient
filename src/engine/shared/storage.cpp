@@ -376,6 +376,12 @@ namespace
 			return;
 #endif
 
+			if(fs_executable_path(m_aBinarydir, sizeof(m_aBinarydir)) == 0)
+			{
+				fs_parent_dir(m_aBinarydir);
+				return;
+			}
+
 			// check for usable path in argv[0]
 			{
 				unsigned int Pos = ~0U;
@@ -388,6 +394,12 @@ namespace
 					char aBuf[IO_MAX_PATH_LENGTH];
 					str_copy(m_aBinarydir, pArgv0, Pos + 1);
 					str_format(aBuf, sizeof(aBuf), "%s/" PLAT_SERVER_EXEC, m_aBinarydir);
+					if(fs_is_file(aBuf))
+					{
+						return;
+					}
+					// Also look for client binary. (see https://github.com/ddnet/ddnet/issues/11418)
+					str_format(aBuf, sizeof(aBuf), "%s/" PLAT_CLIENT_EXEC, m_aBinarydir);
 					if(fs_is_file(aBuf))
 					{
 						return;
@@ -949,6 +961,31 @@ const char *IStorage::FormatTmpPath(char *aBuf, unsigned BufSize, const char *pP
 	return aBuf;
 }
 
+bool IStorage::ReplaceFileSafely(IStorage *pStorage, const char *pTempFilename, const char *pRealFilename, char *pBackupFilename, unsigned BackupFilenameSize)
+{
+	if(pStorage == nullptr || pTempFilename == nullptr || pRealFilename == nullptr || pBackupFilename == nullptr || BackupFilenameSize == 0)
+		return false;
+	pBackupFilename[0] = '\0';
+
+	const bool HadPreviousFile = pStorage->FileExists(pRealFilename, IStorage::TYPE_SAVE);
+	if(HadPreviousFile)
+	{
+		str_format(pBackupFilename, BackupFilenameSize, "%s.backup", pTempFilename);
+		if(pStorage->FileExists(pBackupFilename, IStorage::TYPE_SAVE) || !pStorage->RenameFile(pRealFilename, pBackupFilename, IStorage::TYPE_SAVE))
+			return false;
+	}
+
+	if(pStorage->RenameFile(pTempFilename, pRealFilename, IStorage::TYPE_SAVE))
+	{
+		if(HadPreviousFile && !pStorage->RemoveFile(pBackupFilename, IStorage::TYPE_SAVE))
+			log_error("storage", "failed to delete replaced-file backup: %s", pBackupFilename);
+		return true;
+	}
+
+	if(HadPreviousFile)
+		pStorage->RenameFile(pBackupFilename, pRealFilename, IStorage::TYPE_SAVE);
+	return false;
+}
 IStorage *CreateStorage(IStorage::EInitializationType InitializationType, int NumArgs, const char **ppArguments)
 {
 	return CStorage::Create(InitializationType, NumArgs, ppArguments);

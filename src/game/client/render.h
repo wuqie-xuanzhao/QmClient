@@ -7,6 +7,7 @@
 #include <base/vmath.h>
 
 #include <engine/client/enums.h>
+#include <engine/textrender.h>
 
 #include <generated/protocol.h>
 #include <generated/protocol7.h>
@@ -66,6 +67,26 @@ public:
 class CTeeRenderInfo
 {
 public:
+	static bool IsDrawableTextureState(const bool IsValid, const bool IsNullTexture)
+	{
+		return IsValid && !IsNullTexture;
+	}
+
+	static bool IsDrawableTexture(const IGraphics::CTextureHandle &Texture)
+	{
+		return IsDrawableTextureState(Texture.IsValid(), Texture.IsNullTexture());
+	}
+
+	static bool AreTextureVariantsDrawableState(const bool OriginalValid, const bool OriginalNullTexture, const bool ColorableValid, const bool ColorableNullTexture)
+	{
+		return IsDrawableTextureState(OriginalValid, OriginalNullTexture) && IsDrawableTextureState(ColorableValid, ColorableNullTexture);
+	}
+
+	static bool AreTextureVariantsDrawable(const IGraphics::CTextureHandle &Original, const IGraphics::CTextureHandle &Colorable)
+	{
+		return AreTextureVariantsDrawableState(Original.IsValid(), Original.IsNullTexture(), Colorable.IsValid(), Colorable.IsNullTexture());
+	}
+
 	CTeeRenderInfo()
 	{
 		Reset();
@@ -106,6 +127,21 @@ public:
 		m_SkinMetrics = TeeRenderInfo.m_SkinMetrics;
 	}
 
+	void ResetMissingDescriptorBranches(const unsigned Flags)
+	{
+		if(!(Flags & CSkinDescriptor::FLAG_SIX))
+		{
+			m_OriginalRenderSkin.Reset();
+			m_ColorableRenderSkin.Reset();
+			m_SkinMetrics.Reset();
+		}
+		if(!(Flags & CSkinDescriptor::FLAG_SEVEN))
+		{
+			for(auto &Sixup : m_aSixup)
+				Sixup.Reset();
+		}
+	}
+
 	void ApplyColors(bool CustomColoredSkin, int ColorBody, int ColorFeet)
 	{
 		m_CustomColoredSkin = CustomColoredSkin;
@@ -119,6 +155,22 @@ public:
 			m_ColorBody = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 			m_ColorFeet = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		}
+	}
+
+	bool Valid() const
+	{
+		if(IsDrawableTexture(m_CustomColoredSkin ? m_ColorableRenderSkin.m_Body : m_OriginalRenderSkin.m_Body))
+		{
+			return true;
+		}
+		for(const auto &Sixup : m_aSixup)
+		{
+			if(IsDrawableTexture(Sixup.PartTexture(protocol7::SKINPART_BODY)))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	CSkin::CSkinTextures m_OriginalRenderSkin;
@@ -136,11 +188,6 @@ public:
 	bool m_GotAirJump;
 	int m_TeeRenderFlags;
 	bool m_FeetFlipped;
-
-	bool Valid() const
-	{
-		return m_CustomColoredSkin ? m_ColorableRenderSkin.m_Body.IsValid() : m_OriginalRenderSkin.m_Body.IsValid();
-	}
 
 	class CSixup
 	{
@@ -178,9 +225,32 @@ public:
 		{
 			return (m_aUseCustomColors[Part] ? m_aColorableTextures : m_aOriginalTextures)[Part];
 		}
+
+		bool RequiredPartTextureVariantsDrawable() const
+		{
+			constexpr int s_aRequiredParts[] = {
+				protocol7::SKINPART_BODY,
+				protocol7::SKINPART_HANDS,
+				protocol7::SKINPART_FEET,
+				protocol7::SKINPART_EYES,
+			};
+			return std::all_of(std::begin(s_aRequiredParts), std::end(s_aRequiredParts), [&](int Part) {
+				return CTeeRenderInfo::AreTextureVariantsDrawable(m_aOriginalTextures[Part], m_aColorableTextures[Part]);
+			});
+		}
 	};
 
 	CSixup m_aSixup[NUM_DUMMIES];
+
+	bool SixDescriptorReady() const
+	{
+		return AreTextureVariantsDrawable(m_OriginalRenderSkin.m_Body, m_ColorableRenderSkin.m_Body);
+	}
+
+	bool SevenDescriptorReady() const
+	{
+		return std::all_of(std::begin(m_aSixup), std::end(m_aSixup), [](const CSixup &Sixup) { return Sixup.RequiredPartTextureVariantsDrawable(); });
+	}
 };
 
 constexpr int DEFAULT_SKIN_CHANGE_TRANSITION_DURATION_MS = 500;
@@ -192,7 +262,18 @@ enum
 	SKIN_CHANGE_TRANSITION_SLIDE_LEFT,
 	SKIN_CHANGE_TRANSITION_SPIN_POP,
 	SKIN_CHANGE_TRANSITION_THEME_SWITCH,
+	SKIN_CHANGE_TRANSITION_GLITCH,
+	SKIN_CHANGE_TRANSITION_ELASTIC,
 	SKIN_CHANGE_TRANSITION_TYPE_COUNT,
+};
+
+enum
+{
+	SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC = 0,
+	SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK,
+	SKIN_CHANGE_TRANSITION_EASING_LINEAR,
+	SKIN_CHANGE_TRANSITION_EASING_EASE_IN_OUT_QUAD,
+	SKIN_CHANGE_TRANSITION_EASING_COUNT,
 };
 
 struct SSkinChangeTransitionBlend
@@ -217,6 +298,37 @@ inline float ClampSkinChangeTransitionProgress(float Progress)
 inline int ClampSkinChangeTransitionType(int TransitionType)
 {
 	return std::clamp(TransitionType, 0, SKIN_CHANGE_TRANSITION_TYPE_COUNT - 1);
+}
+
+inline int ClampSkinChangeTransitionEasing(int Easing)
+{
+	return std::clamp(Easing, 0, SKIN_CHANGE_TRANSITION_EASING_COUNT - 1);
+}
+
+inline float SkinChangeTransitionIntensityScale(int Intensity)
+{
+	return std::clamp(Intensity, 0, 300) / 100.0f;
+}
+
+inline float QmEvaluateVisualEasing(float Progress, int Easing)
+{
+	Progress = ClampSkinChangeTransitionProgress(Progress);
+	switch(ClampSkinChangeTransitionEasing(Easing))
+	{
+	case SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK:
+	{
+		constexpr float Overshoot = 1.70158f;
+		const float T = Progress - 1.0f;
+		return 1.0f + (Overshoot + 1.0f) * T * T * T + Overshoot * T * T;
+	}
+	case SKIN_CHANGE_TRANSITION_EASING_LINEAR:
+		return Progress;
+	case SKIN_CHANGE_TRANSITION_EASING_EASE_IN_OUT_QUAD:
+		return Progress < 0.5f ? 2.0f * Progress * Progress : 1.0f - std::pow(-2.0f * Progress + 2.0f, 2.0f) * 0.5f;
+	case SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC:
+	default:
+		return 1.0f - std::pow(1.0f - Progress, 3.0f);
+	}
 }
 
 inline float SkinChangeTransitionDurationSeconds(int DurationMs)
@@ -254,24 +366,31 @@ inline ESkinChangeTransitionAction ResolveSkinChangeTransitionAction(bool HasPre
 	return SkinChanged ? ESkinChangeTransitionAction::START : ESkinChangeTransitionAction::CANCEL;
 }
 
-inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, vec2 BodyScale, vec2 FeetScale, int TransitionType)
+inline bool ShouldRunLiveSkinChangeTransition(bool DemoPlayback)
+{
+	return !DemoPlayback;
+}
+
+inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, vec2 BodyScale, vec2 FeetScale, int TransitionType, int Easing, int Intensity)
 {
 	Progress = ClampSkinChangeTransitionProgress(Progress);
 	TransitionType = ClampSkinChangeTransitionType(TransitionType);
 
-	const float EaseOut = 1.0f - std::pow(1.0f - Progress, 3.0f);
+	const float EaseOut = QmEvaluateVisualEasing(Progress, Easing);
+	const float AlphaProgress = std::clamp(EaseOut, 0.0f, 1.0f);
 	const float Enter = 1.0f - EaseOut;
-	const float Pop = std::sin(Progress * pi);
+	const float IntensityScale = SkinChangeTransitionIntensityScale(Intensity);
+	const float Pop = std::sin(Progress * pi) * IntensityScale;
 	SSkinChangeTransitionBlend Blend;
 
 	switch(TransitionType)
 	{
 	case SKIN_CHANGE_TRANSITION_FADE_SCALE:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.06f * EaseOut;
-		const float CurrentScaleFactor = 0.88f + 0.12f * EaseOut;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.06f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.12f * IntensityScale + 0.12f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
@@ -280,53 +399,89 @@ inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progres
 	}
 	case SKIN_CHANGE_TRANSITION_SLIDE_LEFT:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.03f * EaseOut;
-		const float CurrentScaleFactor = 0.97f + 0.03f * EaseOut;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.03f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.03f * IntensityScale + 0.03f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
 		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
-		Blend.m_PreviousPosOffset = vec2(-14.0f * EaseOut, 0.0f);
-		Blend.m_CurrentPosOffset = vec2(18.0f * Enter, 0.0f);
+		Blend.m_PreviousPosOffset = vec2(-14.0f * IntensityScale * EaseOut, 0.0f);
+		Blend.m_CurrentPosOffset = vec2(18.0f * IntensityScale * Enter, 0.0f);
 		break;
 	}
 	case SKIN_CHANGE_TRANSITION_SPIN_POP:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.04f * EaseOut;
-		const float CurrentScaleFactor = 0.92f + 0.08f * EaseOut + 0.03f * Pop;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.04f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.08f * IntensityScale + 0.08f * IntensityScale * EaseOut + 0.03f * Pop;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
 		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
-		Blend.m_PreviousAngleOffset = -0.18f * (1.0f - Progress);
-		Blend.m_CurrentAngleOffset = 0.20f * Enter;
+		Blend.m_PreviousAngleOffset = -0.18f * IntensityScale * (1.0f - Progress);
+		Blend.m_CurrentAngleOffset = 0.20f * IntensityScale * Enter;
 		break;
 	}
 	case SKIN_CHANGE_TRANSITION_THEME_SWITCH:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.02f * EaseOut;
-		const float CurrentScaleFactor = 0.96f + 0.04f * EaseOut;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.02f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.04f * IntensityScale + 0.04f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
 		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
-		Blend.m_PreviousPosOffset = vec2(0.0f, -8.0f * EaseOut);
-		Blend.m_CurrentPosOffset = vec2(0.0f, 8.0f * Enter);
+		Blend.m_PreviousPosOffset = vec2(0.0f, -8.0f * IntensityScale * EaseOut);
+		Blend.m_CurrentPosOffset = vec2(0.0f, 8.0f * IntensityScale * Enter);
+		break;
+	}
+	case SKIN_CHANGE_TRANSITION_GLITCH:
+	{
+		// Faulty/jitter transition: high-frequency horizontal jitter on both skins.
+		// Previous skin jitters leftwards while fading out; current jitters in from the right.
+		const float JitterFreq = 7.0f;
+		const float JitterAmp = 6.0f * IntensityScale;
+		const float PreviousJitter = std::sin(Progress * JitterFreq * pi) * JitterAmp;
+		const float CurrentJitter = std::sin((1.0f - Progress) * JitterFreq * pi) * JitterAmp;
+		const float PreviousScaleFactor = 1.0f - 0.04f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.04f * IntensityScale + 0.04f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
+		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
+		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
+		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
+		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
+		Blend.m_PreviousPosOffset = vec2(-10.0f * IntensityScale * EaseOut + PreviousJitter, 0.0f);
+		Blend.m_CurrentPosOffset = vec2(10.0f * IntensityScale * Enter + CurrentJitter, 0.0f);
+		break;
+	}
+	case SKIN_CHANGE_TRANSITION_ELASTIC:
+	{
+		// Elastic squash-and-stretch: previous skin squashes vertically and fades;
+		// current skin bounces in with an overshoot pop. No rotation.
+		const float PreviousScaleFactor = 1.0f - 0.10f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.08f * IntensityScale + 0.08f * IntensityScale * EaseOut + 0.06f * Pop;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
+		Blend.m_PreviousBodyScale = vec2(BodyScale.x * (1.0f + 0.06f * IntensityScale * EaseOut), BodyScale.y * PreviousScaleFactor);
+		Blend.m_PreviousFeetScale = vec2(FeetScale.x * (1.0f + 0.06f * IntensityScale * EaseOut), FeetScale.y * PreviousScaleFactor);
+		Blend.m_CurrentBodyScale = vec2(BodyScale.x * CurrentScaleFactor, BodyScale.y * CurrentScaleFactor);
+		Blend.m_CurrentFeetScale = vec2(FeetScale.x * CurrentScaleFactor, FeetScale.y * CurrentScaleFactor);
+		Blend.m_PreviousPosOffset = vec2(0.0f, 6.0f * IntensityScale * EaseOut);
+		Blend.m_CurrentPosOffset = vec2(0.0f, -6.0f * IntensityScale * Enter);
 		break;
 	}
 	case SKIN_CHANGE_TRANSITION_GHOST_POP:
 	default:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.06f * EaseOut;
-		const float CurrentScaleFactor = 0.94f + 0.06f * EaseOut + 0.05f * Pop;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = 0.18f + 0.82f * EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.06f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.06f * IntensityScale + 0.06f * IntensityScale * EaseOut + 0.05f * Pop;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = 0.18f + 0.82f * AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
@@ -336,6 +491,16 @@ inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progres
 	}
 
 	return Blend;
+}
+
+inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, vec2 BodyScale, vec2 FeetScale, int TransitionType)
+{
+	return ComputeSkinChangeTransitionBlend(Progress, BodyScale, FeetScale, TransitionType, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+}
+
+inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, int TransitionType, int Easing, int Intensity)
+{
+	return ComputeSkinChangeTransitionBlend(Progress, vec2(1.0f, 1.0f), vec2(1.0f, 1.0f), TransitionType, Easing, Intensity);
 }
 
 inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, int TransitionType)
@@ -353,6 +518,7 @@ class CManagedTeeRenderInfo
 	friend class CGameClient;
 	CTeeRenderInfo m_TeeRenderInfo;
 	CSkinDescriptor m_SkinDescriptor;
+	bool m_DescriptorRenderInfoReady = false;
 	std::function<void()> m_RefreshCallback = nullptr;
 
 public:
@@ -365,6 +531,8 @@ public:
 	CTeeRenderInfo &TeeRenderInfo() { return m_TeeRenderInfo; }
 	const CTeeRenderInfo &TeeRenderInfo() const { return m_TeeRenderInfo; }
 	const CSkinDescriptor &SkinDescriptor() const { return m_SkinDescriptor; }
+	bool DescriptorRenderInfoReady() const { return m_DescriptorRenderInfoReady; }
+	void SetDescriptorRenderInfoReady(bool Ready) { m_DescriptorRenderInfoReady = Ready; }
 	void SetRefreshCallback(const std::function<void()> &RefreshCallback) { m_RefreshCallback = RefreshCallback; }
 };
 
@@ -398,6 +566,27 @@ inline bool HasTeePreviewLayer(int TeeRenderFlags, int PreviewLayer)
 	return (ResolveTeePreviewLayers(TeeRenderFlags) & PreviewLayer) != 0;
 }
 
+enum
+{
+	QM_TEXT_EFFECT_BORDER = 1 << 0,
+	QM_TEXT_EFFECT_GRADIENT = 1 << 1,
+	QM_TEXT_EFFECT_RAINBOW = 1 << 2,
+	QM_TEXT_EFFECT_GLOW = 1 << 3,
+};
+
+struct SQmTextEffectRenderStyle
+{
+	int m_Effects = 0;
+	ColorRGBA m_TextColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	ColorRGBA m_OutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.3f);
+	ColorRGBA m_BorderColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f);
+	ColorRGBA m_GradientColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	ColorRGBA m_GlowColor = ColorRGBA(0.35f, 0.75f, 1.0f, 0.35f);
+	float m_BorderRange = 1.0f;
+	float m_GlowRange = 0.0f;
+	float m_Time = 0.0f;
+};
+
 class CRenderTools
 {
 	class IGraphics *m_pGraphics;
@@ -425,6 +614,7 @@ public:
 
 	void RenderCursor(vec2 Center, float Size, float Alpha = 1.0f) const;
 	void RenderIcon(int ImageId, int SpriteId, const CUIRect *pRect, const ColorRGBA *pColor = nullptr) const;
+	void RenderTextContainerWithEffects(STextContainerIndex TextContainerIndex, const SQmTextEffectRenderStyle &Style, float X, float Y) const;
 
 	// larger rendering methods
 	static void GetRenderTeeBodySize(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, vec2 &BodyOffset, float &Width, float &Height);

@@ -41,7 +41,7 @@ namespace
 
 	ivec2 MouseTile(CEditor *pEditor, const std::shared_ptr<CLayerTiles> &pLayer)
 	{
-		std::shared_ptr<CLayerGroup> pGroup = pEditor->GetSelectedGroup();
+		std::shared_ptr<CLayerGroup> pGroup = pEditor->Map()->SelectedGroup();
 		if(!pGroup || !pLayer)
 			return ivec2(0, 0);
 
@@ -317,9 +317,9 @@ void CEditorDrawingTools::FinishDrag(CEditor *pEditor, const std::pair<int, std:
 
 	if(Submitted)
 	{
-		std::shared_ptr<IEditorAction> pAction = std::make_shared<CEditorBrushDrawAction>(&pEditor->m_Map, pEditor->m_SelectedGroup);
+		std::shared_ptr<IEditorAction> pAction = std::make_shared<CEditorBrushDrawAction>(pEditor->Map(), pEditor->Map()->m_SelectedGroup);
 		if(!pAction->IsEmpty())
-			pEditor->m_Map.m_EditorHistory.RecordAction(pAction, pActionName);
+			pEditor->Map()->m_EditorHistory.RecordAction(pAction, pActionName);
 	}
 }
 
@@ -354,7 +354,7 @@ bool CEditorDrawingTools::HandleMapEditorInput(CEditor *pEditor, const std::pair
 		str_copy(pEditor->m_aTooltip, aTooltip);
 	}
 
-	if(Inside && pEditor->Ui()->CheckActiveItem(nullptr) && pEditor->Ui()->MouseButton(0) && !pEditor->m_QuadKnifeActive)
+	if(Inside && pEditor->Ui()->CheckActiveItem(nullptr) && pEditor->Ui()->MouseButton(0) && !pEditor->QuadKnife()->IsActive())
 	{
 		pEditor->Ui()->SetActiveItem(this);
 		BeginDrag(pEditor, Tile.x, Tile.y, ActiveTool);
@@ -669,45 +669,45 @@ std::shared_ptr<CLayerTiles> CEditorDrawingTools::MakeTileBrush(CEditor *pEditor
 		*pSourceAir = Empty;
 
 	std::shared_ptr<CLayerTiles> pBrush;
-	if(pTargetLayer == pEditor->m_Map.m_pGameLayer)
+	if(pTargetLayer == pEditor->Map()->m_pGameLayer)
 	{
-		pBrush = std::make_shared<CLayerGame>(&pEditor->m_Map, 1, 1);
+		pBrush = std::make_shared<CLayerGame>(pEditor->Map(), 1, 1);
 	}
-	else if(pTargetLayer == pEditor->m_Map.m_pFrontLayer)
+	else if(pTargetLayer == pEditor->Map()->m_pFrontLayer)
 	{
-		pBrush = std::make_shared<CLayerFront>(&pEditor->m_Map, 1, 1);
+		pBrush = std::make_shared<CLayerFront>(pEditor->Map(), 1, 1);
 	}
-	else if(pTargetLayer == pEditor->m_Map.m_pTeleLayer)
+	else if(pTargetLayer == pEditor->Map()->m_pTeleLayer)
 	{
-		auto pTeleBrush = std::make_shared<CLayerTele>(&pEditor->m_Map, 1, 1);
+		auto pTeleBrush = std::make_shared<CLayerTele>(pEditor->Map(), 1, 1);
 		pTeleBrush->m_TeleNumber = pEditor->m_TeleNumber;
 		pTeleBrush->m_TeleCheckpointNumber = pEditor->m_TeleCheckpointNumber;
 		pBrush = pTeleBrush;
 	}
-	else if(pTargetLayer == pEditor->m_Map.m_pSpeedupLayer)
+	else if(pTargetLayer == pEditor->Map()->m_pSpeedupLayer)
 	{
-		auto pSpeedupBrush = std::make_shared<CLayerSpeedup>(&pEditor->m_Map, 1, 1);
+		auto pSpeedupBrush = std::make_shared<CLayerSpeedup>(pEditor->Map(), 1, 1);
 		pSpeedupBrush->m_SpeedupForce = pEditor->m_SpeedupForce;
 		pSpeedupBrush->m_SpeedupMaxSpeed = pEditor->m_SpeedupMaxSpeed;
 		pSpeedupBrush->m_SpeedupAngle = pEditor->m_SpeedupAngle;
 		pBrush = pSpeedupBrush;
 	}
-	else if(pTargetLayer == pEditor->m_Map.m_pSwitchLayer)
+	else if(pTargetLayer == pEditor->Map()->m_pSwitchLayer)
 	{
-		auto pSwitchBrush = std::make_shared<CLayerSwitch>(&pEditor->m_Map, 1, 1);
+		auto pSwitchBrush = std::make_shared<CLayerSwitch>(pEditor->Map(), 1, 1);
 		pSwitchBrush->m_SwitchNumber = pEditor->m_SwitchNumber;
 		pSwitchBrush->m_SwitchDelay = pEditor->m_SwitchDelay;
 		pBrush = pSwitchBrush;
 	}
-	else if(pTargetLayer == pEditor->m_Map.m_pTuneLayer)
+	else if(pTargetLayer == pEditor->Map()->m_pTuneLayer)
 	{
-		auto pTuneBrush = std::make_shared<CLayerTune>(&pEditor->m_Map, 1, 1);
+		auto pTuneBrush = std::make_shared<CLayerTune>(pEditor->Map(), 1, 1);
 		pTuneBrush->m_TuningNumber = pEditor->m_TuningNumber;
 		pBrush = pTuneBrush;
 	}
 	else
 	{
-		pBrush = std::make_shared<CLayerTiles>(&pEditor->m_Map, 1, 1);
+		pBrush = std::make_shared<CLayerTiles>(pEditor->Map(), 1, 1);
 	}
 
 	if(!pBrush)
@@ -722,7 +722,7 @@ std::shared_ptr<CLayerTiles> CEditorDrawingTools::MakeTileBrush(CEditor *pEditor
 	pBrush->m_HasSpeedup = pTargetLayer->m_HasSpeedup;
 	pBrush->m_HasSwitch = pTargetLayer->m_HasSwitch;
 	pBrush->m_HasTune = pTargetLayer->m_HasTune;
-	str_copy(pBrush->m_aFilename, pEditor->m_aFilename);
+	str_copy(pBrush->m_aFilename, pEditor->Map()->m_aFilename);
 
 	if(Empty)
 	{
@@ -800,17 +800,17 @@ bool CEditorDrawingTools::IsValidTileForLayer(CEditor *pEditor, const std::share
 {
 	if(Index == TILE_AIR || pEditor->IsAllowPlaceUnusedTiles())
 		return true;
-	if(pLayer == pEditor->m_Map.m_pGameLayer)
+	if(pLayer == pEditor->Map()->m_pGameLayer)
 		return IsValidGameTile(Index);
-	if(pLayer == pEditor->m_Map.m_pFrontLayer)
+	if(pLayer == pEditor->Map()->m_pFrontLayer)
 		return IsValidFrontTile(Index);
-	if(pLayer == pEditor->m_Map.m_pTeleLayer)
+	if(pLayer == pEditor->Map()->m_pTeleLayer)
 		return IsValidTeleTile(Index);
-	if(pLayer == pEditor->m_Map.m_pSpeedupLayer)
+	if(pLayer == pEditor->Map()->m_pSpeedupLayer)
 		return IsValidSpeedupTile(Index);
-	if(pLayer == pEditor->m_Map.m_pSwitchLayer)
+	if(pLayer == pEditor->Map()->m_pSwitchLayer)
 		return IsValidSwitchTile(Index);
-	if(pLayer == pEditor->m_Map.m_pTuneLayer)
+	if(pLayer == pEditor->Map()->m_pTuneLayer)
 		return IsValidTuneTile(Index);
 	return true;
 }
@@ -849,7 +849,7 @@ void CEditorDrawingTools::RenderPreview(CEditor *pEditor)
 	if(!m_Drawing || pEditor->m_ShowPicker)
 		return;
 
-	std::shared_ptr<CLayerGroup> pGroup = pEditor->GetSelectedGroup();
+	std::shared_ptr<CLayerGroup> pGroup = pEditor->Map()->SelectedGroup();
 	if(pGroup)
 		pGroup->MapScreen();
 

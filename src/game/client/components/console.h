@@ -179,8 +179,6 @@ private:
 		 * @param aCmd the command the cursor is at
 		 */
 		void GetCommand(const char *pInput, char (&aCmd)[IConsole::CMDLINE_LENGTH]);
-		static void PossibleCommandsCompleteCallback(int Index, const char *pStr, void *pUser);
-		static void PossibleArgumentsCompleteCallback(int Index, const char *pStr, void *pUser);
 
 		void UpdateEntryTextAttributes(CBacklogEntry *pEntry) const;
 

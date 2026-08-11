@@ -12,6 +12,14 @@
 
 #include <game/client/component.h>
 
+#include <algorithm>
+
+inline int QmRespawnDefaultWantedWeapon(int ConfigWeapon)
+{
+	ConfigWeapon = std::clamp(ConfigWeapon, 0, WEAPON_LASER + 1);
+	return ConfigWeapon;
+}
+
 class CControls : public CComponent
 {
 public:
@@ -32,6 +40,8 @@ public:
 	EMouseInputType m_aMouseInputType[NUM_DUMMIES];
 
 	int m_aAmmoCount[NUM_WEAPONS];
+	int m_aQmRespawnWantedWeapon[NUM_DUMMIES] = {};
+	bool m_aQmRespawnWeaponPending[NUM_DUMMIES] = {};
 
 	int64_t m_LastSendTime;
 	CNetObj_PlayerInput m_aInputData[NUM_DUMMIES];

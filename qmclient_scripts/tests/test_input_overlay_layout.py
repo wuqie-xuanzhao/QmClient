@@ -170,8 +170,9 @@ class InputOverlayLayoutTest(unittest.TestCase):
             render_source,
         )
         self.assertIn("Layout.m_IsMouseLayout", render_source)
-        self.assertIn('Localize("Keyboard size")', menu_source)
-        self.assertIn('Localize("Mouse size")', menu_source)
+        self.assertIn("RenderQmHudLabel(pTextId, &LabelColumn, Localize(pText), BodySize);", menu_source)
+        self.assertIn('RenderValue("qmclient-input-overlay-keyboard-size", "Keyboard size",', menu_source)
+        self.assertIn('RenderValue("qmclient-input-overlay-mouse-size", "Mouse size",', menu_source)
         self.assertIn("m_QmInputOverlayMouseScale", menu_source)
 
 

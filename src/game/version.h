@@ -24,7 +24,11 @@ extern const char *GIT_SHORTREV_HASH;
 #endif
 
 // custom
+#if defined(CONF_QM_LIVE_CLIENT)
+#define CLIENT_NAME "QmLiveClient"
+#else
 #define CLIENT_NAME "QmClient"
+#endif
 #define CLIENT_RELEASE_VERSION QMCLIENT_VERSION
 
 #endif

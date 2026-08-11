@@ -11,6 +11,8 @@ This script is read-only. It validates:
 
 import os
 import sys
+import argparse
+from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.dirname(__file__))
@@ -18,7 +20,16 @@ sys.path.insert(0, os.path.dirname(__file__))
 import generate_all
 import i18n_store
 import source_keys
+import translate_with_local_http
 import twlang_qmclient as twlang
+
+parser = argparse.ArgumentParser(description="Validate QmClient language sync.")
+parser.add_argument(
+    "--incremental",
+    action="store_true",
+    help="use the incremental source-key cache instead of rescanning all source files",
+)
+args = parser.parse_args()
 
 errors = []
 count = 0
@@ -29,10 +40,29 @@ legacy_overlay_dir = os.path.join(
 audit_report_path = source_keys.AUDIT_REPORT_FILE
 
 extracted_strings = generate_all.read_strings()
+if not args.incremental:
+    current_records = source_keys.collect_source_key_records()
+    current_audit = source_keys.build_string_audit_report()
+    scan_mode = "full"
+else:
+    current_records, changed_files, records_full_scan = (
+        source_keys.collect_incremental_source_key_records()
+    )
+    if records_full_scan:
+        current_audit = source_keys.build_string_audit_report()
+        audit_full_scan = True
+    else:
+        current_audit, _audit_changed_files, audit_full_scan = (
+            source_keys.collect_incremental_string_audit_report(
+                changed_files=changed_files
+            )
+        )
+    scan_mode = "full" if records_full_scan or audit_full_scan else "incremental"
+
 current_strings = sorted(
     {
         generate_all.SourceString(record.key, record.context)
-        for record in source_keys.collect_source_key_records()
+        for record in current_records
     },
     key=lambda item: (
         item.context.casefold(),
@@ -41,7 +71,7 @@ current_strings = sorted(
         item.key,
     ),
 )
-current_audit = source_keys.build_string_audit_report()
+print(f"  OK: source scan mode: {scan_mode}")
 if extracted_strings != current_strings:
     errors.append(
         "extracted_strings.txt is out of date. Run "
@@ -66,11 +96,7 @@ else:
     count += 1
     print("  OK: extracted_audit_report.json is readable")
 
-active_source_keys = sorted(
-    (item.key, item.context)
-    for item in extracted_strings
-    if not generate_all.is_chinese(item.key)
-)
+active_source_keys = sorted((item.key, item.context) for item in extracted_strings)
 loaded_i18n_store = i18n_store.load_language_store()
 english_fallback_identities = i18n_store.english_fallback_identities(loaded_i18n_store)
 
@@ -146,6 +172,71 @@ for language in generate_all.GENERATED_LANGUAGES:
         print(f"  FAIL: TOML missing {language} translations: {len(missing_toml)}")
         for key, context in missing_toml[:10]:
             print(f"    - [{context}] {key}" if context else f"    - {key}")
+
+terminology_by_language = {}
+terminology_path = (
+    Path(__file__).resolve().parent / "prompt_assets" / "terminology.toml"
+)
+if terminology_path.exists():
+    parsed_terminology = translate_with_local_http.parse_terminology_terms(
+        terminology_path.read_text(encoding="utf-8")
+    )
+    terminology_by_language = {
+        "simplified_chinese": parsed_terminology.get("simplified_chinese", {})
+    }
+translation_quality_report = i18n_store.translation_quality_report(
+    loaded_i18n_store,
+    active_module_identities={
+        (
+            i18n_store.module_name_for_source(record.source),
+            record.key,
+            record.context,
+        )
+        for record in current_records
+    },
+    terminology_by_language=terminology_by_language,
+    limit=None,
+)
+translation_quality_errors = translation_quality_report.errors
+if translation_quality_errors:
+    errors.append(f"TOML translation quality errors: {len(translation_quality_errors)}")
+    print(f"  FAIL: TOML translation quality errors: {len(translation_quality_errors)}")
+    for error in translation_quality_errors[:10]:
+        print(f"    - {error}")
+else:
+    print("  OK: TOML translation quality checks")
+if translation_quality_report.warnings:
+    print(
+        f"  WARN: TOML translation quality warnings: "
+        f"{len(translation_quality_report.warnings)}"
+    )
+    for warning in translation_quality_report.warnings[:10]:
+        print(f"    - {warning}")
+else:
+    print("  OK: TOML translation quality warnings")
+
+store_integrity_errors = i18n_store.store_integrity_errors(
+    loaded_i18n_store,
+    active_identities=set(active_source_keys),
+)
+if store_integrity_errors:
+    errors.append(f"TOML store integrity errors: {len(store_integrity_errors)}")
+    print(f"  FAIL: TOML store integrity errors: {len(store_integrity_errors)}")
+    for error in store_integrity_errors[:10]:
+        print(f"    - {error}")
+else:
+    print("  OK: TOML store integrity checks")
+
+toml_format_errors = []
+for path in sorted(i18n_store.TRANSLATIONS_DIR.glob("*.toml")):
+    toml_format_errors.extend(i18n_store.toml_format_errors(path))
+if toml_format_errors:
+    errors.append(f"TOML format errors: {len(toml_format_errors)}")
+    print(f"  FAIL: TOML format errors: {len(toml_format_errors)}")
+    for error in toml_format_errors[:10]:
+        print(f"    - {error}")
+else:
+    print("  OK: TOML format checks")
 
 if os.path.isdir(legacy_overlay_dir):
     errors.append("legacy overlay directory still exists: data/qmclient/languages")

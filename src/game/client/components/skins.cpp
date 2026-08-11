@@ -14,6 +14,7 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <engine/shared/http.h>
+#include <engine/shared/json.h>
 #include <engine/storage.h>
 
 #include <generated/client_data.h>
@@ -36,7 +37,17 @@
 
 using namespace std::chrono_literals;
 
-static constexpr int SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 10;
+static constexpr int SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 1000;
+static constexpr const char *OFFICIAL_SKIN_INDEX_URL = "https://ddnet.org/skins/skin/skins.json";
+static constexpr const char *OFFICIAL_SKIN_INDEX_CACHE_PATH = "downloadedskins/official_skins.json";
+#if defined(CONF_QM_LIVE_CLIENT)
+static constexpr size_t LIVE_OBSERVER_SKINS_LOADED_MAX = 96;
+#endif
+
+static int &SkinQueueEnabledVar(int Dummy)
+{
+	return Dummy ? g_Config.m_QmDummySkinQueueEnabled : g_Config.m_QmSkinQueueEnabled;
+}
 
 static int SettingsSkinDecodeJobWorkerBudget()
 {
@@ -279,6 +290,7 @@ static int SettingsSkinMaxPerFrame(const CGameClient *pGameClient)
 
 static constexpr int SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS = 24;
 static constexpr int SKIN_QUEUE_HARD_LIMIT = 1024;
+static constexpr int SKIN_QUEUE_PRESET_HARD_LIMIT = 256;
 
 static int &SkinQueueLengthVar(int Dummy)
 {
@@ -442,9 +454,10 @@ CSkins::CSkinLoadJob::CSkinLoadJob(CSkins *pSkins, const char *pName, int Storag
 {
 }
 
-CSkins::CSkinListPlanJob::CSkinListPlanJob(std::vector<SSkinListSnapshotEntry> vEntries, std::string Filter, int Generation) :
+CSkins::CSkinListPlanJob::CSkinListPlanJob(std::vector<SSkinListSnapshotEntry> vEntries, std::string Filter, int Generation, int SortMode) :
 	m_vEntries(std::move(vEntries)),
-	m_Filter(std::move(Filter))
+	m_Filter(std::move(Filter)),
+	m_SortMode(SortMode)
 {
 	m_Result.m_Generation = Generation;
 }
@@ -454,12 +467,13 @@ CSkins::CSkinDirectoryScanJob::CSkinDirectoryScanJob(IStorage *pStorage) :
 {
 }
 
-int CSkins::CSkinDirectoryScanJob::ScanCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+int CSkins::CSkinDirectoryScanJob::ScanCallback(const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser)
 {
 	auto *pSelf = static_cast<CSkinDirectoryScanJob *>(pUser);
 	if(IsDir)
 		return 0;
 
+	const char *pName = pInfo->m_pName;
 	const char *pSuffix = str_endswith(pName, ".png");
 	if(pSuffix == nullptr)
 		return 0;
@@ -469,13 +483,20 @@ int CSkins::CSkinDirectoryScanJob::ScanCallback(const char *pName, int IsDir, in
 	if(!CSkin::IsValidName(aSkinName))
 		return 0;
 
-	pSelf->m_Result.m_vEntries.emplace_back(aSkinName, StorageType);
+	pSelf->m_Result.m_vEntries.push_back({aSkinName, pSelf->m_CurrentScanType, StorageType, pInfo->m_TimeModified});
 	return 0;
+}
+
+void CSkins::CSkinDirectoryScanJob::ScanDirectory(const char *pDirectory, CSkinContainer::EType Type)
+{
+	m_CurrentScanType = Type;
+	m_pStorage->ListDirectoryInfo(IStorage::TYPE_ALL, pDirectory, ScanCallback, this);
 }
 
 void CSkins::CSkinDirectoryScanJob::Run()
 {
-	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "skins", ScanCallback, this);
+	ScanDirectory("skins", CSkinContainer::EType::LOCAL);
+	ScanDirectory("downloadedskins", CSkinContainer::EType::DOWNLOAD);
 }
 
 void CSkins::CSkinListPlanJob::Run()
@@ -504,11 +525,13 @@ void CSkins::CSkinListPlanJob::Run()
 		PlanEntry.m_Selected = Entry.m_SelectedMain || Entry.m_SelectedDummy;
 		PlanEntry.m_Favorite = Entry.m_Favorite;
 		PlanEntry.m_ColorKey = Entry.m_ColorKey.has_value() ? std::make_optional(MakeSettingsSkinListColorKey(Entry.m_ColorKey.value())) : std::nullopt;
+		PlanEntry.m_OfficialReleaseDate = Entry.m_OfficialReleaseDate;
+		PlanEntry.m_LastModified = Entry.m_LastModified;
 		vPlanEntries.push_back(std::move(PlanEntry));
 	}
 
 	m_Result.m_Filter = m_Filter;
-	m_Result.m_Plan = BuildSettingsSkinListPlan(std::move(vPlanEntries));
+	m_Result.m_Plan = BuildSettingsSkinListPlan(std::move(vPlanEntries), m_SortMode);
 }
 
 CSkins::CSkinContainer::CSkinContainer(CSkins *pSkins, const char *pName, EType Type, int StorageType) :
@@ -738,6 +761,19 @@ bool CSkins::CSkinListEntry::operator<(const CSkins::CSkinListEntry &Other) cons
 	{
 		return false;
 	}
+	if(g_Config.m_QmSkinSortMode == 1)
+	{
+		const int OfficialReleaseDate = m_pSkinContainer->OfficialReleaseDate();
+		const int OtherOfficialReleaseDate = Other.m_pSkinContainer->OfficialReleaseDate();
+		if(OfficialReleaseDate != OtherOfficialReleaseDate)
+		{
+			return OfficialReleaseDate > OtherOfficialReleaseDate;
+		}
+		if(m_pSkinContainer->LastModified() != Other.m_pSkinContainer->LastModified())
+		{
+			return m_pSkinContainer->LastModified() > Other.m_pSkinContainer->LastModified();
+		}
+	}
 	const int NameCompare = str_comp(m_pSkinContainer->Name(), Other.m_pSkinContainer->Name());
 	if(NameCompare != 0)
 	{
@@ -771,8 +807,9 @@ void CSkins::CSkinListEntry::RequestLoad(ESettingsResourcePriority Priority)
 CSkins::CSkins() :
 	m_PlaceholderSkin("dummy")
 {
-	std::fill(m_aActiveSkinQueuePresetIndex.begin(), m_aActiveSkinQueuePresetIndex.end(), -1);
 	std::fill(m_aAppliedSkinQueuePresetIndex.begin(), m_aAppliedSkinQueuePresetIndex.end(), -1);
+	m_vSkinQueuePresets.push_back({"Default preset", {}, CSkinQueuePreset::EKind::USER});
+	m_vSkinQueuePresets.push_back({"Server preset", {}, CSkinQueuePreset::EKind::SERVER});
 	m_PlaceholderSkin.m_OriginalSkin.Reset();
 	m_PlaceholderSkin.m_ColorableSkin.Reset();
 	m_PlaceholderSkin.m_BloodColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -837,6 +874,12 @@ int CSkins::SkinScan(const char *pName, int IsDir, int StorageType, void *pUser)
 
 	CSkinContainer SkinContainer(pSelf, aSkinName, CSkinContainer::EType::LOCAL, StorageType);
 	auto &&pSkinContainer = std::make_unique<CSkinContainer>(std::move(SkinContainer));
+	char aPath[IO_MAX_PATH_LENGTH];
+	str_format(aPath, sizeof(aPath), "skins/%s", pName);
+	time_t Created = 0;
+	time_t Modified = 0;
+	if(pSelf->Storage()->RetrieveTimes(aPath, StorageType, &Created, &Modified))
+		pSkinContainer->SetLastModified(Modified);
 	pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
 	pSelf->m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)});
 	pUserReal->m_SkinLoadedCallback();
@@ -1231,9 +1274,7 @@ void CSkins::OnInit()
 	RefreshEventSkins();
 
 	// load skins
-	Refresh([this]() {
-		GameClient()->m_Menus.RenderLoading(Localize("Loading DDNet Client"), Localize("Loading skin files"), 0);
-	});
+	Refresh([]() {});
 }
 
 void CSkins::OnShutdown()
@@ -1242,6 +1283,8 @@ void CSkins::OnShutdown()
 		m_pSkinDirectoryScanJob->Abort();
 	if(m_pSkinListPlanJob)
 		m_pSkinListPlanJob->Abort();
+	if(m_pOfficialSkinIndexRequest)
+		m_pOfficialSkinIndexRequest->Abort();
 	for(auto &[_, pSkinContainer] : m_Skins)
 	{
 		if(pSkinContainer->m_pLoadJob)
@@ -1278,6 +1321,7 @@ void CSkins::OnUpdate()
 	FindContainerOrNullptr(g_Config.m_ClDummySkin);
 
 	CSkinLoadingStats Stats = LoadingStats();
+	ProcessOfficialSkinIndexRequest();
 	ProcessSkinDirectoryScanJob();
 	UpdateUnloadSkins(Stats);
 	UpdateStartLoading(Stats);
@@ -1295,6 +1339,10 @@ void CSkins::UpdateForSettingsWarmup()
 
 size_t CSkins::LoadedSkinLimit() const
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER)
+		return minimum((size_t)g_Config.m_ClSkinsLoadedMax, LIVE_OBSERVER_SKINS_LOADED_MAX);
+#endif
 	return (size_t)g_Config.m_ClSkinsLoadedMax;
 }
 
@@ -1468,9 +1516,9 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 {
 	SyncSkinQueueFromMapPlayers(Dummy);
 	auto &Queue = m_aSkinQueue[Dummy];
-	const int QueueInterval = SkinQueueIntervalVar(Dummy);
+	const int QueueInterval = maximum(1, SkinQueueIntervalVar(Dummy));
 	const int QueueActiveCount = (int)Queue.size();
-	if(Queue.empty() || QueueActiveCount <= 0 || QueueInterval <= 0)
+	if(!SkinQueueEnabledVar(Dummy) || Queue.empty() || QueueActiveCount <= 0)
 	{
 		m_aSkinQueueLastUpdate[Dummy].reset();
 		m_aSkinQueueElapsed[Dummy] = 0ns;
@@ -1494,7 +1542,7 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 	m_aSkinQueueElapsed[Dummy] += Now - m_aSkinQueueLastUpdate[Dummy].value();
 	m_aSkinQueueLastUpdate[Dummy] = Now;
 
-	const auto Interval = std::chrono::milliseconds(QueueInterval * 1000 / SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND);
+	const auto Interval = std::chrono::milliseconds(QueueInterval);
 	if(Interval <= 0ns)
 	{
 		return;
@@ -1505,12 +1553,14 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 	{
 		QueueIndex = 0;
 	}
-	while(m_aSkinQueueElapsed[Dummy] >= Interval)
+	const int64_t StepsElapsed = m_aSkinQueueElapsed[Dummy] / Interval;
+	if(StepsElapsed <= 0)
 	{
-		m_aSkinQueueElapsed[Dummy] -= Interval;
-		QueueIndex = (QueueIndex + 1) % QueueActiveCount;
-		ApplySkinQueueCurrent(Dummy);
+		return;
 	}
+	m_aSkinQueueElapsed[Dummy] -= Interval * StepsElapsed;
+	QueueIndex = (QueueIndex + (int)(StepsElapsed % QueueActiveCount)) % QueueActiveCount;
+	ApplySkinQueueCurrent(Dummy);
 }
 
 void CSkins::SyncSkinQueueFromMapPlayers(int Dummy)
@@ -1554,8 +1604,21 @@ void CSkins::SyncSkinQueueFromMapPlayers(int Dummy)
 	}
 
 	auto &Queue = m_aSkinQueue[Dummy];
-	if(Queue.size() >= DesiredCount && std::equal(Queue.begin(), Queue.begin() + DesiredCount, aMapSkins.begin()))
+	// Sync only runs in server-rotation mode (caller opens RotateMap then calls
+	// this), so the playing queue is always attributed to the Server preset.
+	if(Queue.size() == DesiredCount && std::equal(Queue.begin(), Queue.end(), aMapSkins.begin()))
 	{
+		// Map-player skins belong to the Server preset (index 1), not the
+		// Default preset (index 0), so the Default preset stays user-owned.
+		// Only re-assign the Server template when it actually differs: this is a
+		// per-frame, per-dummy hot path and the steady state (no player-skin
+		// change) hits this branch every frame.
+		auto &ServerTemplate = m_vSkinQueuePresets[SKIN_QUEUE_SERVER_PRESET].m_Queue;
+		if(ServerTemplate.size() != DesiredCount || !std::equal(ServerTemplate.begin(), ServerTemplate.end(), aMapSkins.begin()))
+		{
+			m_vSkinQueuePresets[SKIN_QUEUE_SERVER_PRESET].m_Queue.assign(aMapSkins.begin(), aMapSkins.begin() + DesiredCount);
+		}
+		m_aAppliedSkinQueuePresetIndex[Dummy] = (int)SKIN_QUEUE_SERVER_PRESET;
 		return;
 	}
 
@@ -1566,7 +1629,10 @@ void CSkins::SyncSkinQueueFromMapPlayers(int Dummy)
 		CurrentSkin = Queue[SkinQueueIndexVar(Dummy)];
 	}
 
-	if(SyncSkinQueueEntriesInPlace(Queue, aMapSkins.data(), DesiredCount, false))
+	const bool QueueChanged = Queue.size() != DesiredCount || !std::equal(Queue.begin(), Queue.end(), aMapSkins.begin());
+	Queue.assign(aMapSkins.begin(), aMapSkins.begin() + DesiredCount);
+	m_vSkinQueuePresets[SKIN_QUEUE_SERVER_PRESET].m_Queue = Queue;
+	if(QueueChanged)
 	{
 		m_SkinList.ForceRefresh();
 	}
@@ -1582,10 +1648,14 @@ void CSkins::SyncSkinQueueFromMapPlayers(int Dummy)
 		QueueIndex = It != Queue.end() ? (int)(It - Queue.begin()) : 0;
 	}
 	ClampSkinQueueIndex(Dummy);
+	m_aAppliedSkinQueuePresetIndex[Dummy] = (int)SKIN_QUEUE_SERVER_PRESET;
 
 	m_aSkinQueueElapsed[Dummy] = 0ns;
 	m_aSkinQueueLastUpdate[Dummy].reset();
-	ApplySkinQueueCurrent(Dummy);
+	if(SkinQueueEnabledVar(Dummy))
+	{
+		ApplySkinQueueCurrent(Dummy);
+	}
 }
 
 void CSkins::UpdateUnloadSkins(CSkinLoadingStats &Stats)
@@ -2251,7 +2321,7 @@ void CSkins::RefreshEventSkins()
 
 	if(g_Config.m_Events)
 	{
-		if(time_season() == SEASON_XMAS)
+		if(time_season() == ETimeSeason::XMAS)
 		{
 			str_copy(m_aEventSkinPrefix, "santa");
 		}
@@ -2280,22 +2350,18 @@ void CSkins::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)
 
 	for(auto &[_, pSkinContainer] : m_Skins)
 	{
+		if(str_comp(pSkinContainer->Name(), "default") == 0)
+		{
+			continue;
+		}
 		if(pSkinContainer->m_pLoadJob)
 		{
 			pSkinContainer->m_pLoadJob->Abort();
+			pSkinContainer->m_pLoadJob = nullptr;
 		}
-		if(pSkinContainer->m_pSkin)
-		{
-			pSkinContainer->m_pSkin->m_OriginalSkin.Unload(Graphics());
-			pSkinContainer->m_pSkin->m_ColorableSkin.Unload(Graphics());
-			pSkinContainer->m_SettingsSourceApproxBytes = 0;
-		}
+		if(pSkinContainer->m_State != CSkinContainer::EState::LOADED)
+			pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
 	}
-	m_Skins.clear();
-	m_SkinsUsageList.clear();
-	m_SkinsBackgroundList.clear();
-	m_SkinList.m_vSkins.clear();
-	m_SkinList.m_UnfilteredCount = 0;
 	m_SkinList.m_NeedsUpdate = true;
 
 	const auto LoadSpecialSkinDirect = [&](const char *pName) {
@@ -2309,7 +2375,9 @@ void CSkins::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)
 	};
 
 	LoadSkinDirect("default");
+	LoadOfficialSkinIndexCache();
 	SkinLoadedCallback();
+	QueueOfficialSkinIndexRequest();
 	LoadSpecialSkinDirect("x_ninja");
 	LoadSpecialSkinDirect("x_spec");
 	QueueSkinDirectoryScanJob();
@@ -2376,6 +2444,11 @@ CSkins::CSkinList &CSkins::SkinList(int Dummy)
 		return m_SkinList;
 	}
 	return m_SkinList;
+}
+
+void CSkins::RebuildSkinListPlan()
+{
+	m_SkinList.ForceRefresh();
 }
 
 bool CSkins::SkinListReady() const
@@ -2556,6 +2629,8 @@ void CSkins::QueueSkinListPlanJob(int Dummy)
 		Entry.m_NotFound = pSkinContainer->m_State == CSkinContainer::EState::NOT_FOUND;
 		Entry.m_Special = pSkinContainer->IsSpecial();
 		Entry.m_ForceShowNotFound = ForceShowNotFound;
+		Entry.m_OfficialReleaseDate = pSkinContainer->OfficialReleaseDate();
+		Entry.m_LastModified = pSkinContainer->LastModified();
 		vEntries.push_back(std::move(Entry));
 	};
 
@@ -2579,7 +2654,7 @@ void CSkins::QueueSkinListPlanJob(int Dummy)
 		AddSkinListSnapshotEntry(SkinIt->second.get(), QueueColorKey, true);
 	}
 
-	m_pSkinListPlanJob = std::make_shared<CSkinListPlanJob>(std::move(vEntries), g_Config.m_ClSkinFilterString, ++m_SkinListPlanGeneration);
+	m_pSkinListPlanJob = std::make_shared<CSkinListPlanJob>(std::move(vEntries), g_Config.m_ClSkinFilterString, ++m_SkinListPlanGeneration, std::clamp(g_Config.m_QmSkinSortMode, 0, 1));
 	m_SkinList.m_Dummy = Dummy;
 	m_SkinList.m_MainColorKey = MainColorKey;
 	m_SkinList.m_DummyColorKey = DummyColorKey;
@@ -2610,12 +2685,24 @@ void CSkins::ProcessSkinDirectoryScanJob()
 	MergeBudget.m_MaxListEntries = 64;
 	while(m_SkinDirectoryMergeCursor < m_vPendingSkinDirectoryEntries.size() && SettingsResourceConsumeMergeEntry(MergeBudget, SettingsFrameBudgetOrNull(GameClient())))
 	{
-		const auto &[Name, StorageType] = m_vPendingSkinDirectoryEntries[m_SkinDirectoryMergeCursor++];
-		auto ExistingSkin = m_Skins.find(Name);
+		const auto &Entry = m_vPendingSkinDirectoryEntries[m_SkinDirectoryMergeCursor++];
+		auto ExistingSkin = m_Skins.find(Entry.m_Name);
 		if(ExistingSkin != m_Skins.end())
 		{
 			CSkinContainer *pSkinContainer = ExistingSkin->second.get();
-			if(pSkinContainer->Type() == CSkinContainer::EType::DOWNLOAD)
+			const bool KeepExistingLocalSkin =
+				pSkinContainer->Type() == CSkinContainer::EType::LOCAL &&
+				Entry.m_Type == CSkinContainer::EType::DOWNLOAD;
+			if(KeepExistingLocalSkin)
+			{
+				continue;
+			}
+			if(pSkinContainer->LastModified() != Entry.m_LastModified)
+			{
+				pSkinContainer->SetLastModified(Entry.m_LastModified);
+				DirectoryScanDirty = true;
+			}
+			if(pSkinContainer->Type() != Entry.m_Type)
 			{
 				const CSkinContainer::EState OldState = pSkinContainer->m_State;
 				const ESettingsResourcePriority OldPriority = pSkinContainer->m_LoadPriority;
@@ -2628,8 +2715,8 @@ void CSkins::ProcessSkinDirectoryScanJob()
 					pSkinContainer->m_pLoadJob->Abort();
 					pSkinContainer->m_pLoadJob = nullptr;
 				}
-				pSkinContainer->m_Type = CSkinContainer::EType::LOCAL;
-				pSkinContainer->m_StorageType = StorageType;
+				pSkinContainer->m_Type = Entry.m_Type;
+				pSkinContainer->m_StorageType = Entry.m_StorageType;
 				if(OldState == CSkinContainer::EState::LOADED && pSkinContainer->m_pSkin)
 				{
 					pSkinContainer->m_pSkin->m_OriginalSkin.Unload(Graphics());
@@ -2650,8 +2737,9 @@ void CSkins::ProcessSkinDirectoryScanJob()
 			continue;
 		}
 
-		CSkinContainer SkinContainer(this, Name.c_str(), CSkinContainer::EType::LOCAL, StorageType);
+		CSkinContainer SkinContainer(this, Entry.m_Name.c_str(), Entry.m_Type, Entry.m_StorageType);
 		auto &&pSkinContainer = std::make_unique<CSkinContainer>(std::move(SkinContainer));
+		pSkinContainer->SetLastModified(Entry.m_LastModified);
 		pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
 		m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)});
 		DirectoryScanDirty = true;
@@ -2664,6 +2752,91 @@ void CSkins::ProcessSkinDirectoryScanJob()
 		m_vPendingSkinDirectoryEntries.clear();
 		m_SkinDirectoryMergeCursor = 0;
 	}
+}
+
+void CSkins::QueueOfficialSkinIndexRequest()
+{
+	if(m_pOfficialSkinIndexRequest && !m_pOfficialSkinIndexRequest->Done())
+		return;
+	m_pOfficialSkinIndexRequest = HttpGetFile(OFFICIAL_SKIN_INDEX_URL, Storage(), OFFICIAL_SKIN_INDEX_CACHE_PATH, IStorage::TYPE_SAVE);
+	m_pOfficialSkinIndexRequest->Timeout(CTimeout{10000, 0, 8192, 10});
+	m_pOfficialSkinIndexRequest->SkipByFileTime(true);
+	m_pOfficialSkinIndexRequest->LogProgress(HTTPLOG::NONE);
+	m_pOfficialSkinIndexRequest->FailOnErrorStatus(false);
+	Http()->Run(m_pOfficialSkinIndexRequest);
+}
+
+void CSkins::ProcessOfficialSkinIndexRequest()
+{
+	if(m_pOfficialSkinIndexRequest == nullptr || !m_pOfficialSkinIndexRequest->Done())
+		return;
+	const bool Success = m_pOfficialSkinIndexRequest->State() == EHttpState::DONE && m_pOfficialSkinIndexRequest->StatusCode() < 400;
+	m_pOfficialSkinIndexRequest.reset();
+	if(Success)
+	{
+		LoadOfficialSkinIndexCache();
+	}
+}
+
+void CSkins::LoadOfficialSkinIndexCache()
+{
+	void *pFileData = nullptr;
+	unsigned FileSize = 0;
+	if(!Storage()->ReadFile(OFFICIAL_SKIN_INDEX_CACHE_PATH, IStorage::TYPE_SAVE, &pFileData, &FileSize))
+		return;
+	const bool Dirty = ApplyOfficialSkinIndexJson(static_cast<const char *>(pFileData), FileSize);
+	free(pFileData);
+	if(Dirty)
+	{
+		m_SkinList.ForceRefresh();
+	}
+}
+
+bool CSkins::ApplyOfficialSkinIndexJson(const char *pJson, size_t JsonSize)
+{
+	json_value *pRoot = JsonParse(static_cast<const json_char *>(pJson), JsonSize);
+	if(pRoot == nullptr)
+		return false;
+
+	bool Dirty = false;
+	const json_value &Skins = (*pRoot)["skins"];
+	if(Skins.type == json_array)
+	{
+		for(int i = 0; i < json_array_length(&Skins); ++i)
+		{
+			const json_value *pEntry = json_array_get(&Skins, i);
+			if(pEntry == nullptr || pEntry->type != json_object)
+				continue;
+			const char *pName = json_string_get(json_object_get(pEntry, "name"));
+			const char *pDate = json_string_get(json_object_get(pEntry, "date"));
+			const char *pCreator = json_string_get(json_object_get(pEntry, "creator"));
+			const int ReleaseDate = ParseOfficialSkinReleaseDateKey(pDate);
+			if(pName == nullptr || ReleaseDate == 0 || !CSkin::IsValidName(pName))
+				continue;
+			auto ExistingSkin = m_Skins.find(pName);
+			if(ExistingSkin == m_Skins.end())
+			{
+				CSkinContainer SkinContainer(this, pName, CSkinContainer::EType::DOWNLOAD, IStorage::TYPE_SAVE);
+				auto &&pSkinContainer = std::make_unique<CSkinContainer>(std::move(SkinContainer));
+				pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
+				ExistingSkin = m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)}).first;
+				Dirty = true;
+			}
+			CSkinContainer *pSkinContainer = ExistingSkin->second.get();
+			if(pSkinContainer->OfficialReleaseDate() != ReleaseDate)
+			{
+				pSkinContainer->SetOfficialReleaseDate(ReleaseDate);
+				Dirty = true;
+			}
+			if(pCreator != nullptr && str_comp(pSkinContainer->OfficialCreator(), pCreator) != 0)
+			{
+				pSkinContainer->SetOfficialCreator(pCreator);
+				Dirty = true;
+			}
+		}
+	}
+	json_value_free(pRoot);
+	return Dirty;
 }
 
 void CSkins::ProcessSkinListPlanJob()
@@ -2722,6 +2895,7 @@ void CSkins::ProcessSkinListPlanJob()
 		{
 			m_SkinList.m_vSkins = std::move(m_vPendingSkinListEntries);
 			m_SkinList.m_UnfilteredCount = m_PendingSkinListUnfilteredCount;
+			++m_SkinList.m_Revision;
 		}
 		if(MergeComplete)
 		{
@@ -2850,23 +3024,6 @@ bool CSkins::IsInSkinQueue(const char *pName, int Dummy) const
 	return IsInSkinQueue(pName, false, 0, 0, Dummy);
 }
 
-std::vector<CSkins::CSkinQueueEntry> &CSkins::ActiveSkinQueueMutable(int Dummy)
-{
-	const int ActivePresetIndex = m_aActiveSkinQueuePresetIndex[Dummy];
-	if(ActivePresetIndex >= 0 && ActivePresetIndex < (int)m_vSkinQueuePresets.size())
-	{
-		return m_vSkinQueuePresets[ActivePresetIndex].m_Queue;
-	}
-	m_aActiveSkinQueuePresetIndex[Dummy] = -1;
-	return m_aSkinQueue[Dummy];
-}
-
-const std::vector<CSkins::CSkinQueueEntry> &CSkins::ActiveSkinQueue(int Dummy) const
-{
-	const int ActivePresetIndex = m_aActiveSkinQueuePresetIndex[Dummy];
-	return ActivePresetIndex >= 0 ? m_vSkinQueuePresets[ActivePresetIndex].m_Queue : m_aSkinQueue[Dummy];
-}
-
 bool CSkins::AddSkinQueue(const char *pName, int Dummy)
 {
 	return AddSkinQueue(pName, false, 0, 0, Dummy);
@@ -2875,13 +3032,6 @@ bool CSkins::AddSkinQueue(const char *pName, int Dummy)
 bool CSkins::IsInSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const
 {
 	const auto &Queue = m_aSkinQueue[Dummy];
-	const CSkinQueueEntry Entry = MakeSkinQueueEntry(pName, UseCustomColor, ColorBody, ColorFeet);
-	return std::find(Queue.begin(), Queue.end(), Entry) != Queue.end();
-}
-
-bool CSkins::IsInActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const
-{
-	const auto &Queue = ActiveSkinQueue(Dummy);
 	const CSkinQueueEntry Entry = MakeSkinQueueEntry(pName, UseCustomColor, ColorBody, ColorFeet);
 	return std::find(Queue.begin(), Queue.end(), Entry) != Queue.end();
 }
@@ -2908,7 +3058,7 @@ bool CSkins::AddSkinQueue(const char *pName, bool UseCustomColor, int ColorBody,
 	}
 
 	Queue.push_back(MakeSkinQueueEntry(pName, UseCustomColor, ColorBody, ColorFeet));
-	m_aAppliedSkinQueuePresetIndex[Dummy] = -1;
+	m_aSkinQueueDirty[Dummy] = true;
 	ClampSkinQueueIndex(Dummy);
 	m_SkinList.ForceRefresh();
 	return true;
@@ -2916,30 +3066,9 @@ bool CSkins::AddSkinQueue(const char *pName, bool UseCustomColor, int ColorBody,
 
 bool CSkins::AddActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy)
 {
-	if(m_aActiveSkinQueuePresetIndex[Dummy] < 0)
-	{
-		return AddSkinQueue(pName, UseCustomColor, ColorBody, ColorFeet, Dummy);
-	}
-	if(!CSkin::IsValidName(pName))
-	{
-		log_error("skins", "Queue skin name '%s' is not valid", pName);
-		log_error("skins", "%s", CSkin::m_aSkinNameRestrictions);
-		return false;
-	}
-	auto &Queue = ActiveSkinQueueMutable(Dummy);
-	const CSkinQueueEntry Entry = MakeSkinQueueEntry(pName, UseCustomColor, ColorBody, ColorFeet);
-	if(std::find(Queue.begin(), Queue.end(), Entry) != Queue.end())
-	{
-		return false;
-	}
-	const int Limit = minimum(SKIN_QUEUE_HARD_LIMIT, maximum(0, SkinQueueLengthVar(Dummy)));
-	if((int)Queue.size() >= Limit)
-	{
-		return false;
-	}
-	Queue.push_back(Entry);
-	m_SkinList.ForceRefresh();
-	return true;
+	// The playing queue (m_aSkinQueue) is the only editable workspace now;
+	// presets are read-only templates until Save / Save-As.
+	return AddSkinQueue(pName, UseCustomColor, ColorBody, ColorFeet, Dummy);
 }
 
 bool CSkins::RemoveSkinQueue(const char *pName, int Dummy)
@@ -2964,7 +3093,7 @@ bool CSkins::RemoveSkinQueue(const CSkinQueueEntry &Entry, int Dummy)
 	const int RemovedIndex = (int)(It - Queue.begin());
 	Queue.erase(It);
 	int &QueueIndex = SkinQueueIndexVar(Dummy);
-	m_aAppliedSkinQueuePresetIndex[Dummy] = -1;
+	m_aSkinQueueDirty[Dummy] = true;
 	if(RemovedIndex < QueueIndex)
 	{
 		QueueIndex--;
@@ -2981,19 +3110,8 @@ bool CSkins::RemoveActiveSkinQueue(const char *pName, bool UseCustomColor, int C
 
 bool CSkins::RemoveActiveSkinQueue(const CSkinQueueEntry &Entry, int Dummy)
 {
-	if(m_aActiveSkinQueuePresetIndex[Dummy] < 0)
-	{
-		return RemoveSkinQueue(Entry, Dummy);
-	}
-	auto &Queue = ActiveSkinQueueMutable(Dummy);
-	auto It = std::find(Queue.begin(), Queue.end(), Entry);
-	if(It == Queue.end())
-	{
-		return false;
-	}
-	Queue.erase(It);
-	m_SkinList.ForceRefresh();
-	return true;
+	// Editing always targets the playing queue now.
+	return RemoveSkinQueue(Entry, Dummy);
 }
 
 void CSkins::MoveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy)
@@ -3022,27 +3140,15 @@ void CSkins::MoveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy)
 		CurrentIndex++;
 	}
 	SkinQueueIndexVar(Dummy) = CurrentIndex;
-	m_aAppliedSkinQueuePresetIndex[Dummy] = -1;
+	m_aSkinQueueDirty[Dummy] = true;
 	ClampSkinQueueIndex(Dummy);
 	m_SkinList.ForceRefresh();
 }
 
 void CSkins::MoveActiveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy)
 {
-	if(m_aActiveSkinQueuePresetIndex[Dummy] < 0)
-	{
-		MoveSkinQueueItem(FromIndex, ToIndex, Dummy);
-		return;
-	}
-	auto &Queue = ActiveSkinQueueMutable(Dummy);
-	if(FromIndex >= Queue.size() || ToIndex >= Queue.size() || FromIndex == ToIndex)
-	{
-		return;
-	}
-	CSkinQueueEntry Moving = std::move(Queue[FromIndex]);
-	Queue.erase(Queue.begin() + FromIndex);
-	Queue.insert(Queue.begin() + ToIndex, std::move(Moving));
-	m_SkinList.ForceRefresh();
+	// Editing always targets the playing queue now.
+	MoveSkinQueueItem(FromIndex, ToIndex, Dummy);
 }
 
 bool CSkins::ApplySkinQueueIndex(size_t QueueIndex, int Dummy)
@@ -3070,33 +3176,37 @@ void CSkins::TrimSkinQueueToLimit(int Dummy)
 
 void CSkins::TrimActiveSkinQueueToLimit(int Dummy)
 {
-	if(m_aActiveSkinQueuePresetIndex[Dummy] < 0)
-	{
-		TrimSkinQueueToLimit(Dummy);
-		return;
-	}
-	auto &Queue = ActiveSkinQueueMutable(Dummy);
-	const int Limit = maximum(0, SkinQueueLengthVar(Dummy));
-	if((int)Queue.size() > Limit)
-	{
-		Queue.resize(Limit);
-		m_SkinList.ForceRefresh();
-	}
+	// Editing always targets the playing queue now.
+	TrimSkinQueueToLimit(Dummy);
 }
 
 bool CSkins::AddSkinQueuePreset(const char *pName, int Dummy)
 {
 	auto &Presets = m_vSkinQueuePresets;
+	if(Presets.size() >= SKIN_QUEUE_PRESET_HARD_LIMIT)
+	{
+		return false;
+	}
+
 	char aPresetName[MAX_SKIN_LENGTH];
 	if(pName == nullptr || pName[0] == '\0')
 	{
-		str_format(aPresetName, sizeof(aPresetName), Localize("Preset %d"), (int)Presets.size() + 1);
+		str_format(aPresetName, sizeof(aPresetName), Localize("Preset %d"), maximum(1, (int)Presets.size() - 1));
 		pName = aPresetName;
 	}
 	str_copy(aPresetName, pName, sizeof(aPresetName));
 
+	const auto ExistingPreset = std::find_if(Presets.begin(), Presets.end(), [aPresetName](const CSkinQueuePreset &Preset) {
+		return Preset.Kind() == CSkinQueuePreset::EKind::USER && str_comp(Preset.m_Name.c_str(), aPresetName) == 0;
+	});
+	if(ExistingPreset != Presets.end())
+	{
+		return true;
+	}
+
 	Presets.push_back({});
 	Presets.back().m_Name = aPresetName;
+	Presets.back().m_Kind = CSkinQueuePreset::EKind::USER;
 	return true;
 }
 
@@ -3140,9 +3250,11 @@ bool CSkins::AddSkinQueuePresetFromCurrent(int Dummy)
 	}
 
 	char aPresetName[MAX_SKIN_LENGTH];
-	str_format(aPresetName, sizeof(aPresetName), Localize("Preset %d"), (int)m_vSkinQueuePresets.size() + 1);
+	str_format(aPresetName, sizeof(aPresetName), Localize("Preset %d"), maximum(1, (int)m_vSkinQueuePresets.size() - 1));
 	AddSkinQueuePreset(aPresetName, Dummy);
 	m_vSkinQueuePresets.back().m_Queue = Queue;
+	m_aAppliedSkinQueuePresetIndex[Dummy] = (int)m_vSkinQueuePresets.size() - 1;
+	m_aSkinQueueDirty[Dummy] = false;
 	return true;
 }
 
@@ -3150,6 +3262,10 @@ bool CSkins::RenameSkinQueuePreset(size_t PresetIndex, const char *pName, int Du
 {
 	auto &Presets = m_vSkinQueuePresets;
 	if(PresetIndex >= Presets.size() || pName == nullptr)
+	{
+		return false;
+	}
+	if(Presets[PresetIndex].Kind() != CSkinQueuePreset::EKind::USER)
 	{
 		return false;
 	}
@@ -3166,19 +3282,34 @@ bool CSkins::RenameSkinQueuePreset(size_t PresetIndex, const char *pName, int Du
 	return true;
 }
 
-bool CSkins::SelectSkinQueuePreset(size_t PresetIndex, int Dummy)
+void CSkins::ClearSkinQueue(int Dummy)
 {
-	if(PresetIndex >= m_vSkinQueuePresets.size())
-	{
-		return false;
-	}
-	m_aActiveSkinQueuePresetIndex[Dummy] = (int)PresetIndex;
-	return true;
+	// Clear the playing queue only. AppliedPresetIndex is kept so clear-then-save
+	// still writes back to the preset the queue came from; the cleared state is
+	// just marked dirty until saved or another preset is applied.
+	m_aSkinQueue[Dummy].clear();
+	SkinQueueIndexVar(Dummy) = 0;
+	// Disable server rotation so the queue does not immediately refill from
+	// map players after being cleared.
+	SkinQueueRotateMapVar(Dummy) = 0;
+	m_aSkinQueueDirty[Dummy] = true;
+	m_aSkinQueueElapsed[Dummy] = 0ns;
+	m_aSkinQueueLastUpdate[Dummy].reset();
+	m_SkinList.ForceRefresh();
 }
 
-void CSkins::ClearSkinQueuePresetSelection(int Dummy)
+bool CSkins::SaveSkinQueueToAppliedPreset(int Dummy)
 {
-	m_aActiveSkinQueuePresetIndex[Dummy] = -1;
+	const int PresetIndex = m_aAppliedSkinQueuePresetIndex[Dummy];
+	if(!IsSkinQueuePresetWritable(PresetIndex, m_vSkinQueuePresets.size()))
+	{
+		// The UI turns a failed save (Server preset or nothing applied) into "Save As".
+		return false;
+	}
+	m_vSkinQueuePresets[PresetIndex].m_Queue = m_aSkinQueue[Dummy];
+	m_aSkinQueueDirty[Dummy] = false;
+	m_SkinList.ForceRefresh();
+	return true;
 }
 
 bool CSkins::ApplySkinQueuePreset(size_t PresetIndex, int Dummy)
@@ -3188,9 +3319,21 @@ bool CSkins::ApplySkinQueuePreset(size_t PresetIndex, int Dummy)
 	{
 		return false;
 	}
-	SyncSkinQueueEntriesInPlace(m_aSkinQueue[Dummy], Presets[PresetIndex].m_Queue.data(), Presets[PresetIndex].m_Queue.size());
-	SkinQueueIndexVar(Dummy) = 0;
+	// Clicking a preset applies it to the playing queue immediately (the list
+	// doubles as the apply control; there is no separate Apply button).
+	if(PresetIndex == SKIN_QUEUE_SERVER_PRESET)
+	{
+		SkinQueueRotateMapVar(Dummy) = 1;
+		SyncSkinQueueFromMapPlayers(Dummy);
+	}
+	else
+	{
+		m_aSkinQueue[Dummy] = Presets[PresetIndex].m_Queue;
+		SkinQueueIndexVar(Dummy) = 0;
+		SkinQueueRotateMapVar(Dummy) = Presets[PresetIndex].Kind() == CSkinQueuePreset::EKind::SERVER ? 1 : 0;
+	}
 	m_aAppliedSkinQueuePresetIndex[Dummy] = (int)PresetIndex;
+	m_aSkinQueueDirty[Dummy] = false;
 	m_aSkinQueueElapsed[Dummy] = 0ns;
 	m_aSkinQueueLastUpdate[Dummy].reset();
 	ApplySkinQueueCurrent(Dummy);
@@ -3205,24 +3348,20 @@ bool CSkins::RemoveSkinQueuePreset(size_t PresetIndex, int Dummy)
 	{
 		return false;
 	}
+	if(PresetIndex < 2)
+	{
+		return false;
+	}
 	Presets.erase(Presets.begin() + PresetIndex);
 	for(int PresetDummy = 0; PresetDummy < NUM_DUMMIES; ++PresetDummy)
 	{
-		if(m_aActiveSkinQueuePresetIndex[PresetDummy] == (int)PresetIndex)
+		const int OldApplied = m_aAppliedSkinQueuePresetIndex[PresetDummy];
+		m_aAppliedSkinQueuePresetIndex[PresetDummy] = NextAppliedPresetIndexAfterRemove(OldApplied, (int)PresetIndex);
+		if(OldApplied == (int)PresetIndex)
 		{
-			m_aActiveSkinQueuePresetIndex[PresetDummy] = -1;
-		}
-		else if(m_aActiveSkinQueuePresetIndex[PresetDummy] > (int)PresetIndex)
-		{
-			m_aActiveSkinQueuePresetIndex[PresetDummy]--;
-		}
-		if(m_aAppliedSkinQueuePresetIndex[PresetDummy] == (int)PresetIndex)
-		{
-			m_aAppliedSkinQueuePresetIndex[PresetDummy] = -1;
-		}
-		else if(m_aAppliedSkinQueuePresetIndex[PresetDummy] > (int)PresetIndex)
-		{
-			m_aAppliedSkinQueuePresetIndex[PresetDummy]--;
+			// The playing queue no longer maps to any preset; flag it so the UI
+			// shows the unsaved dot instead of a misleading "clean" state.
+			m_aSkinQueueDirty[PresetDummy] = true;
 		}
 	}
 	return true;
@@ -3300,11 +3439,22 @@ void CSkins::CSkinLoadJob::Run()
 	char aPath[IO_MAX_PATH_LENGTH];
 	str_format(aPath, sizeof(aPath), "skins/%s.png", m_aName);
 
+	if(State() == IJob::STATE_ABORTED)
+	{
+		return;
+	}
+
 	void *pFileData = nullptr;
 	unsigned FileSize = 0;
 	if(!m_pSkins->Storage()->ReadFile(aPath, m_StorageType, &pFileData, &FileSize))
 	{
 		log_error("skins", "Failed to read skin file '%s'", aPath);
+		return;
+	}
+
+	if(State() == IJob::STATE_ABORTED)
+	{
+		free(pFileData);
 		return;
 	}
 
@@ -3504,7 +3654,8 @@ void CSkins::ConAddSkinQueuePreset(IConsole::IResult *pResult, void *pUserData)
 
 void CSkins::ConAddDummySkinQueuePreset(IConsole::IResult *pResult, void *pUserData)
 {
-	log_info("skins", "Ignoring legacy dummy skin queue preset '%s'; skin queue presets are shared now", pResult->GetString(0));
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->AddSkinQueuePreset(pResult->GetString(0), 0);
 }
 
 void CSkins::ConAddSkinQueuePresetItem(IConsole::IResult *pResult, void *pUserData)
@@ -3515,7 +3666,8 @@ void CSkins::ConAddSkinQueuePresetItem(IConsole::IResult *pResult, void *pUserDa
 
 void CSkins::ConAddDummySkinQueuePresetItem(IConsole::IResult *pResult, void *pUserData)
 {
-	log_info("skins", "Ignoring legacy dummy skin queue preset item %d '%s'; skin queue presets are shared now", pResult->GetInteger(0), pResult->GetString(1));
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->AddSkinQueuePresetItem(pResult->GetInteger(0), pResult->GetString(1), 0);
 }
 
 void CSkins::ConAddSkinQueuePresetItemEx(IConsole::IResult *pResult, void *pUserData)
@@ -3526,7 +3678,8 @@ void CSkins::ConAddSkinQueuePresetItemEx(IConsole::IResult *pResult, void *pUser
 
 void CSkins::ConAddDummySkinQueuePresetItemEx(IConsole::IResult *pResult, void *pUserData)
 {
-	log_info("skins", "Ignoring legacy dummy skin queue preset item %d '%s'; skin queue presets are shared now", pResult->GetInteger(0), pResult->GetString(1));
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->AddSkinQueuePresetItem(pResult->GetInteger(0), pResult->GetString(1), pResult->GetInteger(2) != 0, pResult->GetInteger(3), pResult->GetInteger(4), 0);
 }
 
 void CSkins::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
@@ -3602,9 +3755,14 @@ void CSkins::OnQueueConfigSave(IConfigManager *pConfigManager)
 		WriteQueueEntry(QueueSkin, true, -1);
 	}
 
-	int PresetIndex = 0;
-	for(const auto &Preset : m_vSkinQueuePresets)
+	for(size_t QueuePresetIndex = 0; QueuePresetIndex < m_vSkinQueuePresets.size(); ++QueuePresetIndex)
 	{
+		const auto &Preset = m_vSkinQueuePresets[QueuePresetIndex];
+		if(Preset.Kind() != CSkinQueuePreset::EKind::USER)
+		{
+			continue;
+		}
+		if(QueuePresetIndex != SKIN_QUEUE_DEFAULT_PRESET)
 		{
 			char aBuffer[64 + MAX_SKIN_LENGTH];
 			str_format(aBuffer, sizeof(aBuffer), "add_skin_queue_preset \"%s\"", Preset.m_Name.c_str());
@@ -3612,8 +3770,7 @@ void CSkins::OnQueueConfigSave(IConfigManager *pConfigManager)
 		}
 
 		for(const auto &QueueSkin : Preset.m_Queue)
-			WriteQueueEntry(QueueSkin, false, PresetIndex);
-		PresetIndex++;
+			WriteQueueEntry(QueueSkin, false, (int)QueuePresetIndex);
 	}
 }
 

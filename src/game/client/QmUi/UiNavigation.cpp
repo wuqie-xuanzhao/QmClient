@@ -4,6 +4,7 @@
 #include "UiNavigation.h"
 
 #include "QmAnimResolve.h"
+#include "UiMotion.h"
 #include "UiTokens.h"
 
 #include <engine/graphics.h>
@@ -65,7 +66,7 @@ namespace ui_widget
 		Indicator.y = Underline.y;
 		Indicator.w = TabWidth * 0.70f;
 		Indicator.h = Underline.h;
-		Indicator.Draw(ui_token::color::ACCENT_PRIMARY, IGraphics::CORNER_NONE, 0.0f);
+		Indicator.Draw(Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY, IGraphics::CORNER_NONE, 0.0f);
 
 		return *pActive;
 	}
@@ -78,14 +79,13 @@ namespace ui_widget
 
 		// Background: selected first, then hover blend on top.
 		if(Props.m_Selected)
-			Rect.Draw(ui_token::color::ACCENT_PRIMARY_DIM, IGraphics::CORNER_ALL, ui_token::radius::TIGHT);
+			Rect.Draw(Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Selected : ui_token::color::ACCENT_PRIMARY_DIM, IGraphics::CORNER_ALL, ui_token::radius::TIGHT);
 
 		if(Ctx.m_pAnim != nullptr)
 		{
-			const uint64_t NodeKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash, reinterpret_cast<uint64_t>(pId));
 			const bool HoverPrev = Ctx.m_pUi->HotItem() == pId;
 			const float TargetAlpha = HoverPrev ? 1.0f : 0.0f;
-			const float Alpha = ResolveUiAnimValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE.m_DurationSec, ui_curve::DECELERATE.m_Easing);
+			const float Alpha = AnimateStateValue(Ctx, pId, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);
 			if(Alpha > 0.01f)
 			{
 				ColorRGBA HoverBg = ui_token::color::SURFACE_HIGHLIGHT;

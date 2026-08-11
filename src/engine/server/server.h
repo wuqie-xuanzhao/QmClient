@@ -20,6 +20,7 @@
 #include <engine/shared/netban.h>
 #include <engine/shared/network.h>
 #include <engine/shared/protocol.h>
+#include <engine/shared/qm_live_protocol.h>
 #include <engine/shared/snapshot.h>
 #include <engine/shared/uuid_manager.h>
 
@@ -125,6 +126,7 @@ public:
 			STATE_CONNECTING,
 			STATE_READY,
 			STATE_INGAME,
+			STATE_LIVE_OBSERVER,
 		};
 
 		enum
@@ -172,6 +174,9 @@ public:
 		int m_Flags;
 		bool m_ShowIps;
 		bool m_DebugDummy;
+		bool m_QmLiveObserver;
+		bool m_IsLiveObserver;
+		int m_QmLiveCapabilities;
 		bool m_ForceHighBandwidthOnSpectate;
 		NETADDR m_DebugDummyAddr;
 		std::array<char, NETADDR_MAXSTRSIZE> m_aDebugDummyAddrString;
@@ -214,7 +219,7 @@ public:
 
 		bool IncludedInServerInfo() const
 		{
-			return m_State != STATE_EMPTY && !m_DebugDummy;
+			return m_State != STATE_EMPTY && !m_DebugDummy && !m_IsLiveObserver;
 		}
 	};
 
@@ -223,8 +228,9 @@ public:
 	CClient m_aClients[MAX_CLIENTS];
 	int m_aIdMap[MAX_CLIENTS * VANILLA_MAX_CLIENTS];
 
-	CSnapshotDelta m_SnapshotDelta;
-	CSnapshotBuilder m_SnapshotBuilder;
+	rust::Box<CSnapshotDelta> m_pSnapshotDelta;
+	rust::Box<CSnapshotDelta> m_pSnapshotDeltaSixup;
+	rust::Box<CSnapshotBuilder> m_pSnapshotBuilder;
 	CSnapIdPool m_IdPool;
 	CNetServer m_NetServer;
 	CEcon m_Econ;
@@ -318,7 +324,7 @@ public:
 
 	int Init();
 
-	static bool StrHideIps(const char *pInput, char *pOutputWithIps, int OutputWithIpsSize, char *pOutputWithoutIps, int OutputWithoutIpsSize);
+	static bool StrHideIps(const char *pInput, char *pOutputWithIps, size_t OutputWithIpsSize, char *pOutputWithoutIps, size_t OutputWithoutIpsSize);
 	void SendLogLine(const CLogMessage *pMessage);
 	void SetRconCid(int ClientId) override;
 	int GetAuthedState(int ClientId) const override;
@@ -336,6 +342,7 @@ public:
 	int ClientCountry(int ClientId) const override;
 	bool ClientSlotEmpty(int ClientId) const override;
 	bool ClientIngame(int ClientId) const override;
+	bool ClientIsQmLiveObserver(int ClientId) const override;
 	int Port() const override;
 	int MaxClients() const override;
 	int ClientCount() const override;
@@ -358,6 +365,10 @@ public:
 	void SendClientBrandsToKnownClients();
 	void UpdateClientBrand(int ClientId, const char *pVersionString);
 	bool CanReceiveClientBrands(int ClientId) const;
+	int QmLiveCapabilities() const;
+	int NumQmLiveObservers() const;
+	void SendQmLiveObserverAccept(int ClientId);
+	void SendQmLiveObserverDeny(int ClientId, EQmLiveDenyReason Reason);
 	void SendKcpFallback(int ClientId, const char *pReason);
 	void SendKcpFallbackLegacy(int ClientId, const char *pReason);
 	void SendMap(int ClientId);
@@ -415,11 +426,13 @@ public:
 	};
 	CCache m_aServerInfoCache[3 * 2];
 	CCache m_aSixupServerInfoCache[2];
-	bool m_ServerInfoNeedsUpdate;
+	bool m_ServerInfoNeedsUpdate = false;
+	bool m_ServerInfoNeedsResend = false;
 
 	void FillAntibot(CAntibotRoundData *pData) override;
 
 	void ExpireServerInfo() override;
+	void ExpireServerInfoAndQueueResend();
 	void CacheServerInfo(CCache *pCache, int Type, bool SendClients);
 	void CacheServerInfoSixup(CCache *pCache, bool SendClients, int MaxConsideredClients);
 	void SendServerInfo(const NETADDR *pAddr, int Token, int Type, bool SendClients);
@@ -427,7 +440,7 @@ public:
 	bool RateLimitServerInfoConnless();
 	void SendServerInfoConnless(const NETADDR *pAddr, int Token, int Type);
 	void UpdateRegisterServerInfo();
-	void UpdateServerInfo(bool Resend = false);
+	void UpdateServerInfo(bool Resend);
 
 	void PumpNetwork(bool PacketWaiting);
 
@@ -495,10 +508,11 @@ public:
 
 	void RegisterCommands();
 
-	int SnapNewId() override;
+	std::optional<int> SnapNewId() override;
 	void SnapFreeId(int Id) override;
-	void *SnapNewItem(int Type, int Id, int Size) override;
+	bool SnapNewItem(int Type, int Id, rust::Slice<const int32_t> Data) override;
 	void SnapSetStaticsize(int ItemType, int Size) override;
+	void SnapSetStaticsize7(int ItemType, int Size) override;
 
 	// DDRace
 

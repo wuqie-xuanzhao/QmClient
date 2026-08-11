@@ -311,6 +311,11 @@ jobs:
             echo "Verified: $file ($size bytes)"
           done
 
+      - name: Verify macOS DMG contents
+        if: runner.os == 'macOS'
+        shell: bash
+        run: qmclient_scripts/verify_macos_dmg.sh "dist/${{ matrix.output_name }}"
+
       - name: Upload packaged artifact
         uses: actions/upload-artifact@v6
         with:
@@ -330,7 +335,7 @@ jobs:
       ANDROID_APP_NAME: QmClient
       ANDROID_PACKAGE_NAME: org.ddnet.client
       ANDROID_BUILD_DIR: build-android-release
-      ANDROID_NDK_VERSION: "26.1.10909125"
+      ANDROID_NDK_VERSION: "29.0.14206865"
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       SCCACHE_GHA_ENABLED: "true"
       TW_KEY_NAME: /home/runner/.android/debug.keystore
@@ -415,8 +420,8 @@ jobs:
         run: |
           sdkmanager --install \
             "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0" \
+            "platforms;android-36" \
+            "build-tools;36.1.0" \
             "ndk;${{ env.ANDROID_NDK_VERSION }}"
           yes | sdkmanager --licenses
 
@@ -558,7 +563,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Download packaged artifacts
         uses: actions/download-artifact@v6
@@ -570,30 +575,22 @@ jobs:
       - name: List release assets
         run: ls -lah release-assets
 
-      - name: Write nightly notes
+      - name: Generate pre-release notes
         shell: bash
         run: |
-          {
-            echo "# 更新日志"
-            echo "> Version: nightly"
-            echo "> Commit: ${GITHUB_SHA}"
-            echo "> Branch: ${GITHUB_REF_NAME}"
-            echo "> Built at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-            echo
-            echo "##feat."
-            echo "- nightly: 这是内部测试构建，包含当前分支的最新提交，可能会被下一次 nightly 构建替换。"
-            echo
-            echo "## fix"
-            echo "- None"
-            echo
-            echo "# What's Changed"
-            echo
-            echo "## feat."
-            echo "- nightly: Internal testing build for the latest commits on the current branch. It may be replaced by the next nightly run."
-            echo
-            echo "## fix"
-            echo "- None"
-          } > release-assets/nightly-notes.md
+          set -euo pipefail
+          # 先打本地 nightly 指向当前 SHA，便于 git log 解析
+          git tag -f nightly "${GITHUB_SHA}"
+          BUILT_AT="$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          python3 qmclient_scripts/generate_release_notes.py \
+            --version nightly \
+            --current-tag nightly \
+            --channel pre-release \
+            --commit "${GITHUB_SHA}" \
+            --branch "${GITHUB_REF_NAME}" \
+            --built-at "${BUILT_AT}" \
+            --output release-assets/nightly-notes.md
+          cat release-assets/nightly-notes.md
 
       - name: Replace nightly prerelease
         env:

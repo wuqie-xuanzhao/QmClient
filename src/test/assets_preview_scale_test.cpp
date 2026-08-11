@@ -9,6 +9,19 @@
 #include <fstream>
 #include <sstream>
 
+TEST(AssetsPreviewScale, EntityPreviewTileSizeFitsBothAxes)
+{
+	// Square rect, 7x7 grid → tile is rect/7.
+	EXPECT_FLOAT_EQ(ComputeEntityPreviewTileSize(700.0f, 700.0f, 7, 7), 100.0f);
+	// Width-bound: 7 cols of a wide-ish rect → limited by width.
+	EXPECT_FLOAT_EQ(ComputeEntityPreviewTileSize(700.0f, 1400.0f, 7, 7), 100.0f);
+	// Height-bound: 7 rows of a tall rect → limited by height.
+	EXPECT_FLOAT_EQ(ComputeEntityPreviewTileSize(1400.0f, 700.0f, 7, 7), 100.0f);
+	// 4 cols, 2 rows: the smaller axis wins.
+	EXPECT_FLOAT_EQ(ComputeEntityPreviewTileSize(800.0f, 200.0f, 4, 2), 100.0f); // height (200/2)
+	EXPECT_FLOAT_EQ(ComputeEntityPreviewTileSize(200.0f, 800.0f, 4, 2), 50.0f); // width (200/4)
+}
+
 TEST(AssetsPreviewScale, LocalPreviewCapKeeps4kImagesAtNativeResolution)
 {
 	const auto Scaled = ComputePreviewTargetSize(4096, 2048, LOCAL_ASSET_PREVIEW_MAX_TEXTURE_SIZE);
@@ -236,8 +249,9 @@ TEST(AssetsPreviewScale, EntitiesPreviewTileSizeIsClampedByBothAxes)
 	Buffer << File.rdbuf();
 	const std::string Source = Buffer.str();
 
-	EXPECT_NE(Source.find("float TileSize = minimum(PreviewRect.w / (float)COLS, PreviewRect.h / (float)ROWS);"), std::string::npos);
-	EXPECT_EQ(Source.find("float TileSize = PreviewRect.w / (float)COLS;"), std::string::npos);
+	// TileSize now comes from the shared ComputeEntityPreviewTileSize helper
+	// (behavior-tested in EntityPreviewTileSizeFitsBothAxes), not an inline minimum.
+	EXPECT_NE(Source.find("TileSize = ComputeEntityPreviewTileSize(PreviewRect.w, PreviewRect.h, COLS, ROWS);"), std::string::npos);
 }
 
 TEST(AssetsPreviewScale, CursorAndArrowPreviewCardsUseSmallerContentBounds)

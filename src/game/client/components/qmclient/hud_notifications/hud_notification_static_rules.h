@@ -131,8 +131,8 @@
 	X("Teams are not available on this server ；队伍上锁后，队内任意玩家死亡都会导致全队死亡", "Teams are not available on this server; if the team is locked, any team member dying will kill the whole team") \
 	X("本服务器允许组队；队伍上锁后，队内任意玩家死亡都会导致全队死亡", "Teams are available on this server; if the team is locked, any team member dying will kill the whole team") \
 	X("本服务器不允许组队；队伍上锁后，队内任意玩家死亡都会导致全队死亡", "Teams are not available on this server; if the team is locked, any team member dying will kill the whole team") \
-	X("You have to be in a team to play on this server and all of your team will die if the team is locked", "You have to be in a team to play on this server and all of your team will die if the team is locked") \
-	X("你必须加入队伍才能在本服务器游玩；队伍上锁后，队内任意玩家死亡都会导致全队死亡", "You have to be in a team to play on this server and all of your team will die if the team is locked") \
+	X("You have to be in a team to play on this server and all of your team will die if the team is locked", "You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team") \
+	X("你必须加入队伍才能在本服务器游玩；队伍上锁后，队内任意玩家死亡都会导致全队死亡", "You have to be in a team to play on this server; if the team is locked, any team member dying will kill the whole team") \
 	X("Players can collide on this server", "Players can collide on this server") \
 	X("Players can't collide on this server", "Players can't collide on this server") \
 	X("Players can hook each other on this server", "Players can hook each other on this server") \

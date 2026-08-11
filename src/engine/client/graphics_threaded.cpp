@@ -6,6 +6,8 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/client/plausible_sizes.h>
+#include <engine/client/rounded_rect_geometry.h>
 #include <engine/engine.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
@@ -18,8 +20,14 @@
 
 #include <game/localization.h>
 
+#include <cinttypes>
 #include <limits>
 #include <thread>
+
+#if defined(CONF_PLATFORM_MACOS)
+#include <os/log.h>
+#include <os/signpost.h>
+#endif
 
 #if defined(CONF_VIDEORECORDER)
 #include <engine/shared/video.h>
@@ -31,8 +39,25 @@ class CSemaphore;
 
 static std::thread::id gs_MainThreadId;
 static bool gs_MainThreadIdInitialized = false;
-static constexpr int RECT_CORNER_SEGMENTS = 16;
+static constexpr int RECT_CORNER_SEGMENTS = 48; // 圆角段数上限（栈数组大小）
+static inline int RoundedRectSegmentCount()
+{
+	return std::clamp(g_Config.m_QmRectCornerSegments & ~1, 8, RECT_CORNER_SEGMENTS);
+}
 static constexpr float RECT_ANTIALIAS_PIXEL_SIZE = 1.25f;
+
+#if defined(CONF_PLATFORM_MACOS)
+static bool MacosGraphicsDiagnosticsEnabled()
+{
+	return g_Config.m_QmMacosGraphicsDiagnostics != 0;
+}
+
+static os_log_t MacosGraphicsSignpostLog()
+{
+	static os_log_t s_Log = os_log_create("org.ddnet.qmclient", "graphics");
+	return s_Log;
+}
+#endif
 
 static ColorRGBA CommandColorToColorRGBA(const CCommandBuffer::SColor &Color)
 {
@@ -80,16 +105,6 @@ static void EnsureMainThreadIdInitialized()
 static bool IsMainThread()
 {
 	return std::this_thread::get_id() == gs_MainThreadId;
-}
-
-static bool IsPlausibleWindowRefreshRate(int RefreshRate)
-{
-	return RefreshRate >= 0 && RefreshRate <= 1000;
-}
-
-static bool IsPlausibleWindowSize(int Width, int Height)
-{
-	return Width >= 320 && Height >= 240 && Width <= 16384 && Height <= 16384;
 }
 
 static int LogicalWindowSizeFromViewport(int ViewportSize, float HiDPIScale)
@@ -201,7 +216,7 @@ CGraphics_Threaded::CGraphics_Threaded()
 	m_State.m_ClipW = 0;
 	m_State.m_ClipH = 0;
 	m_State.m_Texture = -1;
-	m_State.m_BlendMode = EBlendMode::NONE;
+	m_State.m_BlendMode = EBlendMode::ALPHA;
 	m_State.m_WrapMode = EWrapMode::REPEAT;
 
 	m_CurrentCommandBuffer = 0;
@@ -1956,8 +1971,17 @@ float CGraphics_Threaded::RoundedRectAntialiasSize() const
 	return maximum(ScreenWidth / (float)m_ScreenWidth, ScreenHeight / (float)m_ScreenHeight) * RECT_ANTIALIAS_PIXEL_SIZE;
 }
 
-void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color)
+void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color, bool ResolveGeometry)
 {
+	if(ResolveGeometry && Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r <= 0.0f || Color.a <= 0.0f)
 		return;
 
@@ -2006,11 +2030,12 @@ void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h
 	}
 
 	const float OuterRadius = r + AntialiasSize;
-	const float SegmentsAngle = pi / 2 / RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
+	const float SegmentsAngle = pi / 2 / NumSegments;
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
-	for(int Segment = 0; Segment < RECT_CORNER_SEGMENTS; ++Segment)
+	for(int Segment = 0; Segment < NumSegments; ++Segment)
 	{
 		const float AngleStart = Segment * SegmentsAngle;
 		const float AngleEnd = (Segment + 1) * SegmentsAngle;
@@ -2036,9 +2061,18 @@ void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h
 
 void CGraphics_Threaded::DrawRectExt(float x, float y, float w, float h, float r, int Corners)
 {
-	constexpr int NumSegments = RECT_CORNER_SEGMENTS;
+	if(Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
+	const int NumSegments = RoundedRectSegmentCount();
 	const float SegmentsAngle = pi / 2 / NumSegments;
-	IGraphics::CFreeformItem aFreeform[NumSegments * 4];
+	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int i = 0; i < NumSegments; i += 2)
@@ -2101,11 +2135,20 @@ void CGraphics_Threaded::DrawRectExt(float x, float y, float w, float h, float r
 		aQuads[NumItems++] = CQuadItem(x + w, y + h, -r, -r);
 
 	QuadsDrawTL(aQuads, NumItems);
-	DrawRectExtAntialias(x, y, w, h, r, Corners, CommandColorToColorRGBA(m_aColor[0]));
+	DrawRectExtAntialias(x, y, w, h, r, Corners, CommandColorToColorRGBA(m_aColor[0]), false);
 }
 
-void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight)
+void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, bool ResolveGeometry)
 {
+	if(ResolveGeometry && Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r <= 0.0f)
 		return;
 
@@ -2158,13 +2201,14 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 	}
 
 	const float OuterRadius = r + AntialiasSize;
-	const float SegmentsAngle = pi / 2 / RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
+	const float SegmentsAngle = pi / 2 / NumSegments;
 	auto DrawCorner = [&](int Corner, ColorRGBA CornerColor, float CenterX, float CenterY, float XDirection, float YDirection) {
 		if(!(Corners & Corner) || CornerColor.a <= 0.0f)
 			return;
 
 		IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS];
-		for(int Segment = 0; Segment < RECT_CORNER_SEGMENTS; ++Segment)
+		for(int Segment = 0; Segment < NumSegments; ++Segment)
 		{
 			const float AngleStart = Segment * SegmentsAngle;
 			const float AngleEnd = (Segment + 1) * SegmentsAngle;
@@ -2173,7 +2217,7 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 
 		const ColorRGBA TransparentColor = ColorWithAlpha(CornerColor, 0.0f);
 		SetColor4(CornerColor, TransparentColor, CornerColor, TransparentColor);
-		QuadsDrawFreeform(aFreeform, std::size(aFreeform));
+		QuadsDrawFreeform(aFreeform, NumSegments);
 	};
 
 	DrawCorner(CORNER_TL, ColorTopLeft, x + r, y + r, -1.0f, -1.0f);
@@ -2186,6 +2230,15 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 
 void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, float r, int Corners)
 {
+	if(Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r == 0.0f)
 	{
 		SetColor4(ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight);
@@ -2194,7 +2247,7 @@ void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorR
 		return;
 	}
 
-	constexpr int NumSegments = RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
 	const float SegmentsAngle = pi / 2 / NumSegments;
 	for(int i = 0; i < NumSegments; i += 2)
 	{
@@ -2301,7 +2354,7 @@ void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorR
 		QuadsDrawTL(&ItemQ, 1);
 	}
 
-	DrawRectExt4Antialias(x, y, w, h, r, Corners, ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight);
+	DrawRectExt4Antialias(x, y, w, h, r, Corners, ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight, false);
 }
 
 void CGraphics_Threaded::AddRectExtAntialiasToContainer(int ContainerIndex, float x, float y, float w, float h, float r, int Corners, ColorRGBA Color)
@@ -2354,11 +2407,12 @@ void CGraphics_Threaded::AddRectExtAntialiasToContainer(int ContainerIndex, floa
 	}
 
 	const float OuterRadius = r + AntialiasSize;
-	const float SegmentsAngle = pi / 2 / RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
+	const float SegmentsAngle = pi / 2 / NumSegments;
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
-	for(int Segment = 0; Segment < RECT_CORNER_SEGMENTS; ++Segment)
+	for(int Segment = 0; Segment < NumSegments; ++Segment)
 	{
 		const float AngleStart = Segment * SegmentsAngle;
 		const float AngleEnd = (Segment + 1) * SegmentsAngle;
@@ -2386,6 +2440,15 @@ int CGraphics_Threaded::CreateRectQuadContainer(float x, float y, float w, float
 {
 	int ContainerIndex = CreateQuadContainer(false);
 
+	if(Corners != 0 && r > 0.0f)
+	{
+		const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(x, y, w, h, r, RoundedRectAntialiasSize() / RECT_ANTIALIAS_PIXEL_SIZE);
+		x = Geometry.m_X;
+		y = Geometry.m_Y;
+		w = Geometry.m_W;
+		h = Geometry.m_H;
+		r = Geometry.m_Rounding;
+	}
 	if(Corners == 0 || r == 0.0f)
 	{
 		CQuadItem ItemQ = CQuadItem(x, y, w, h);
@@ -2395,9 +2458,9 @@ int CGraphics_Threaded::CreateRectQuadContainer(float x, float y, float w, float
 		return ContainerIndex;
 	}
 
-	constexpr int NumSegments = RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
 	const float SegmentsAngle = pi / 2 / NumSegments;
-	IGraphics::CFreeformItem aFreeform[NumSegments * 4];
+	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int i = 0; i < NumSegments; i += 2)
@@ -2675,6 +2738,119 @@ void CGraphics_Threaded::RenderMediaIslandSdf(const IGraphics::SMediaIslandSdfPa
 	});
 	mem_copy(Cmd.m_pVertices, aVertices, sizeof(aVertices));
 	m_pCommandBuffer->AddRenderCalls(1);
+}
+
+void CGraphics_Threaded::RenderRoundedRectSdf(const IGraphics::SRoundedRectSdfParams &Params)
+{
+	const vec4 Rect = Params.m_Rect;
+	if(Rect.z <= 0.0f || Rect.w <= 0.0f)
+		return;
+
+	if(m_NumVertices > 0)
+	{
+#if defined(CONF_PLATFORM_MACOS)
+		if(m_MacosGraphicsDiagnosticsEnabled)
+			m_RoundedRectSdfFlushCount++;
+#endif
+		FlushVertices();
+	}
+
+	CCommandBuffer::SCommand_RenderRoundedRectSdf Cmd;
+	Cmd.m_State = m_State;
+	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
+	Cmd.m_State.m_Texture = -1;
+	Cmd.m_Params = Params;
+
+	const float Padding = maximum(0.0f, Params.m_Params.z);
+	CCommandBuffer::SVertex aVertices[4]{};
+	aVertices[0].m_Pos = vec2(Rect.x - Padding, Rect.y - Padding);
+	aVertices[1].m_Pos = vec2(Rect.x + Rect.z + Padding, Rect.y - Padding);
+	aVertices[2].m_Pos = vec2(Rect.x + Rect.z + Padding, Rect.y + Rect.w + Padding);
+	aVertices[3].m_Pos = vec2(Rect.x - Padding, Rect.y + Rect.w + Padding);
+	aVertices[0].m_Tex = vec2(0.0f, 0.0f);
+	aVertices[1].m_Tex = vec2(1.0f, 0.0f);
+	aVertices[2].m_Tex = vec2(1.0f, 1.0f);
+	aVertices[3].m_Tex = vec2(0.0f, 1.0f);
+	for(auto &Vertex : aVertices)
+		Vertex.m_Color = CCommandBuffer::SColor(255, 255, 255, 255);
+
+	Cmd.m_pVertices = (CCommandBuffer::SVertex *)AllocCommandBufferData(sizeof(aVertices));
+	AddCmd(Cmd, [&] {
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(aVertices));
+		return Cmd.m_pVertices != nullptr;
+	});
+	mem_copy(Cmd.m_pVertices, aVertices, sizeof(aVertices));
+	m_pCommandBuffer->AddRenderCalls(1);
+#if defined(CONF_PLATFORM_MACOS)
+	if(m_MacosGraphicsDiagnosticsEnabled)
+		m_RoundedRectSdfCommandCount++;
+#endif
+}
+
+void CGraphics_Threaded::DrawRoundedRectAntialias(const float x, const float y, const float w, const float h, const float Radius, const int Corners, const ColorRGBA &Color)
+{
+	TextureClear();
+	QuadsBegin();
+	SetColor(Color);
+	DrawRectExtAntialias(x, y, w, h, Radius, Corners, Color);
+	QuadsEnd();
+}
+
+void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams &Params)
+{
+	if(!Params.m_Texture.IsValid() || !IsTextureHandleAllocated(Params.m_Texture) || Params.m_Rect.z <= 0.0f || Params.m_Rect.w <= 0.0f || Params.m_PxRange <= 0.0f || Params.m_AtlasWidth <= 0.0f || Params.m_AtlasHeight <= 0.0f || Params.m_Color.a <= 0.0f)
+		return;
+
+	if(m_NumVertices > 0)
+	{
+#if defined(CONF_PLATFORM_MACOS)
+		if(m_MacosGraphicsDiagnosticsEnabled)
+			m_MsdfFlushCount++;
+#endif
+		FlushVertices();
+	}
+
+	CCommandBuffer::SCommand_RenderTexturedMsdf Cmd;
+	Cmd.m_State = m_State;
+	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
+	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
+	Cmd.m_State.m_Texture = Params.m_Texture.Id();
+	Cmd.m_MsdfParams = vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, 0.0f);
+
+	const float CenterX = Params.m_Rect.x + Params.m_Rect.z * 0.5f;
+	const float CenterY = Params.m_Rect.y + Params.m_Rect.w * 0.5f;
+	const float CosRotation = std::cos(Params.m_Rotation);
+	const float SinRotation = std::sin(Params.m_Rotation);
+	auto Rotate = [&](float X, float Y) {
+		const float OffsetX = X - CenterX;
+		const float OffsetY = Y - CenterY;
+		return vec2(OffsetX * CosRotation - OffsetY * SinRotation + CenterX, OffsetX * SinRotation + OffsetY * CosRotation + CenterY);
+	};
+
+	CCommandBuffer::SVertex aVertices[4]{};
+	aVertices[0].m_Pos = Rotate(Params.m_Rect.x, Params.m_Rect.y);
+	aVertices[1].m_Pos = Rotate(Params.m_Rect.x + Params.m_Rect.z, Params.m_Rect.y);
+	aVertices[2].m_Pos = Rotate(Params.m_Rect.x + Params.m_Rect.z, Params.m_Rect.y + Params.m_Rect.w);
+	aVertices[3].m_Pos = Rotate(Params.m_Rect.x, Params.m_Rect.y + Params.m_Rect.w);
+	aVertices[0].m_Tex = vec2(Params.m_UvRect.x, Params.m_UvRect.y);
+	aVertices[1].m_Tex = vec2(Params.m_UvRect.z, Params.m_UvRect.y);
+	aVertices[2].m_Tex = vec2(Params.m_UvRect.z, Params.m_UvRect.w);
+	aVertices[3].m_Tex = vec2(Params.m_UvRect.x, Params.m_UvRect.w);
+	const CCommandBuffer::SColor Color = ColorRGBAToCommandColor(Params.m_Color);
+	for(auto &Vertex : aVertices)
+		Vertex.m_Color = Color;
+
+	Cmd.m_pVertices = (CCommandBuffer::SVertex *)AllocCommandBufferData(sizeof(aVertices));
+	AddCmd(Cmd, [&] {
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(aVertices));
+		return Cmd.m_pVertices != nullptr;
+	});
+	mem_copy(Cmd.m_pVertices, aVertices, sizeof(aVertices));
+	m_pCommandBuffer->AddRenderCalls(1);
+#if defined(CONF_PLATFORM_MACOS)
+	if(m_MacosGraphicsDiagnosticsEnabled)
+		m_MsdfCommandCount++;
+#endif
 }
 
 int CGraphics_Threaded::CreateQuadContainer(bool AutomaticUpload)
@@ -3427,7 +3603,7 @@ int CGraphics_Threaded::IssueInit()
 		Flags |= IGraphicsBackend::INITFLAG_VSYNC;
 	}
 
-	const int Result = m_pBackend->Init("DDNet Client", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, &g_Config.m_GfxScreenRefreshRate, &g_Config.m_GfxFsaaSamples, Flags, &g_Config.m_GfxDesktopWidth, &g_Config.m_GfxDesktopHeight, &m_ScreenWidth, &m_ScreenHeight, m_pStorage);
+	const int Result = m_pBackend->Init("DDNet Client", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, &g_Config.m_GfxScreenRefreshRate, &g_Config.m_GfxFsaaSamples, Flags, &m_DesktopSize.x, &m_DesktopSize.y, &m_ScreenWidth, &m_ScreenHeight, m_pStorage);
 	AddBackEndWarningIfExists();
 	if(Result == 0)
 	{
@@ -3529,9 +3705,25 @@ void CGraphics_Threaded::AddBackEndWarningIfExists()
 
 int CGraphics_Threaded::InitWindow()
 {
+	const bool VulkanRequested = str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0;
+	bool RestoreAutomaticOpenGLConfig = g_Config.m_GfxGLMajor == 0 && (str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0 || str_comp_nocase(g_Config.m_GfxBackend, "GLES") == 0);
+	const auto RestoreAutomaticOpenGLConfigFn = [&RestoreAutomaticOpenGLConfig]() {
+		if(RestoreAutomaticOpenGLConfig)
+		{
+			g_Config.m_GfxGLMajor = 0;
+			g_Config.m_GfxGLMinor = 0;
+			g_Config.m_GfxGLPatch = 0;
+		}
+	};
+	const auto FinishSuccessfulInit = [VulkanRequested, &RestoreAutomaticOpenGLConfig, &RestoreAutomaticOpenGLConfigFn]() {
+		if(VulkanRequested && (str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0 || str_comp_nocase(g_Config.m_GfxBackend, "GLES") == 0))
+			RestoreAutomaticOpenGLConfig = true;
+		RestoreAutomaticOpenGLConfigFn();
+		return 0;
+	};
 	int ErrorCode = IssueInit();
 	if(ErrorCode == 0)
-		return 0;
+		return FinishSuccessfulInit();
 
 	// try disabling fsaa
 	while(g_Config.m_GfxFsaaSamples)
@@ -3550,7 +3742,32 @@ int CGraphics_Threaded::InitWindow()
 
 		ErrorCode = IssueInit();
 		if(ErrorCode == 0)
-			return 0;
+			return FinishSuccessfulInit();
+	}
+
+	const bool Vulkan14Requested = VulkanRequested && g_Config.m_GfxGLMajor == 1 && g_Config.m_GfxGLMinor >= 4;
+	if(Vulkan14Requested)
+	{
+		g_Config.m_GfxGLMajor = 1;
+		g_Config.m_GfxGLMinor = 1;
+		g_Config.m_GfxGLPatch = 0;
+		log_warn("gfx", "Failed to initialize Vulkan 1.4. Trying Vulkan 1.1 instead.");
+		ErrorCode = IssueInit();
+		if(ErrorCode == 0)
+			return FinishSuccessfulInit();
+	}
+
+	if(VulkanRequested)
+	{
+		str_copy(g_Config.m_GfxBackend, "OpenGL");
+		g_Config.m_GfxGLMajor = 0;
+		g_Config.m_GfxGLMinor = 0;
+		g_Config.m_GfxGLPatch = 0;
+		RestoreAutomaticOpenGLConfig = true;
+		log_warn("gfx", "Failed to initialize Vulkan. Falling back to automatically detected OpenGL.");
+		ErrorCode = IssueInit();
+		if(ErrorCode == 0)
+			return FinishSuccessfulInit();
 	}
 
 	size_t GLInitTryCount = 0;
@@ -3560,7 +3777,14 @@ int CGraphics_Threaded::InitWindow()
 		if(ErrorCode == EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED)
 		{
 			// try next smaller major/minor or patch version
-			if(g_Config.m_GfxGLMajor >= 4)
+			SOpenGLVersion AutoProbeVersion{g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch};
+			if(RestoreAutomaticOpenGLConfig && NextAutoOpenGLProbeVersion(AutoProbeVersion))
+			{
+				g_Config.m_GfxGLMajor = AutoProbeVersion.m_Major;
+				g_Config.m_GfxGLMinor = AutoProbeVersion.m_Minor;
+				g_Config.m_GfxGLPatch = AutoProbeVersion.m_Patch;
+			}
+			else if(g_Config.m_GfxGLMajor >= 4)
 			{
 				g_Config.m_GfxGLMajor = 3;
 				g_Config.m_GfxGLMinor = 3;
@@ -3621,10 +3845,10 @@ int CGraphics_Threaded::InitWindow()
 		ErrorCode = IssueInit();
 		if(ErrorCode == 0)
 		{
-			return 0;
+			return FinishSuccessfulInit();
 		}
 
-		if(++GLInitTryCount >= 9)
+		if(++GLInitTryCount >= 16)
 		{
 			// try something else
 			break;
@@ -3639,7 +3863,7 @@ int CGraphics_Threaded::InitWindow()
 		log_warn("gfx", "Failed to initialize graphics. Setting resolution to %dx%d and trying again.", g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
 
 		if(IssueInit() == 0)
-			return 0;
+			return FinishSuccessfulInit();
 	}
 
 	// at the very end, just try to set to gl 1.4
@@ -3650,7 +3874,7 @@ int CGraphics_Threaded::InitWindow()
 		log_warn("gfx", "Failed to initialize graphics. Setting GL version %d.%d.%d and trying again.", g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
 
 		if(IssueInit() == 0)
-			return 0;
+			return FinishSuccessfulInit();
 	}
 
 	log_error("gfx", "Failed to initialize graphics. Out of ideas.");
@@ -3744,6 +3968,18 @@ int CGraphics_Threaded::Init()
 
 void CGraphics_Threaded::Shutdown()
 {
+	// 关闭流程可能由错误恢复和正常退出分别触发。backend 已释放后必须成为无操作。
+	if(m_pBackend == nullptr)
+		return;
+
+	// 游戏与文本模块在关闭时会追加资源销毁命令。先提交并等候，保证命令在 backend
+	// 仍然存活时执行，不能直接丢弃当前 command buffer。
+	if(m_pCommandBuffer != nullptr && m_pCommandBuffer->m_CommandCount > 0)
+	{
+		KickCommandBuffer();
+		m_pBackend->WaitForIdle();
+	}
+
 	// shutdown the backend
 	m_pBackend->Shutdown();
 
@@ -3759,10 +3995,14 @@ void CGraphics_Threaded::Shutdown()
 	}
 	delete m_pBackend;
 	m_pBackend = nullptr;
+	m_pCommandBuffer = nullptr;
 
 	// delete the command buffers
 	for(auto &pCommandBuffer : m_apCommandBuffers)
+	{
 		delete pCommandBuffer;
+		pCommandBuffer = nullptr;
+	}
 }
 
 int CGraphics_Threaded::GetNumScreens() const
@@ -3795,7 +4035,7 @@ void CGraphics_Threaded::SetWindowParams(int FullscreenMode, bool IsBorderless)
 
 	m_pBackend->SetWindowParams(g_Config.m_GfxFullscreen, g_Config.m_GfxBorderless);
 	CVideoMode CurMode;
-	m_pBackend->GetCurrentVideoMode(CurMode, m_ScreenHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, g_Config.m_GfxScreen);
+	m_pBackend->GetCurrentVideoMode(CurMode, m_ScreenHiDPIScale, m_DesktopSize.x, m_DesktopSize.y, g_Config.m_GfxScreen);
 	GotResized(CurMode.m_WindowWidth, CurMode.m_WindowHeight, CurMode.m_RefreshRate);
 
 	for(auto &PropChangedListener : m_vPropChangeListeners)
@@ -3804,7 +4044,7 @@ void CGraphics_Threaded::SetWindowParams(int FullscreenMode, bool IsBorderless)
 
 bool CGraphics_Threaded::SetWindowScreen(int Index, bool MoveToCenter)
 {
-	if(!m_pBackend->SetWindowScreen(Index, MoveToCenter))
+	if(!m_pBackend->SetWindowScreen(Index, MoveToCenter, &m_DesktopSize))
 	{
 		return false;
 	}
@@ -3863,7 +4103,8 @@ void CGraphics_Threaded::Move(int x, int y)
 
 	// Only handling CurScreen != m_GfxScreen doesn't work reliably
 	const int CurScreen = m_pBackend->GetWindowScreen();
-	m_pBackend->UpdateDisplayMode(CurScreen);
+	if(!m_pBackend->UpdateDisplayMode(CurScreen, &m_DesktopSize))
+		return;
 
 	// send a got resized event so that the current canvas size is requested
 	GotResized(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, g_Config.m_GfxScreenRefreshRate);
@@ -3886,7 +4127,7 @@ bool CGraphics_Threaded::Resize(int w, int h, int RefreshRate)
 	if(m_pBackend->ResizeWindow(w, h, RefreshRate))
 	{
 		CVideoMode CurMode;
-		m_pBackend->GetCurrentVideoMode(CurMode, m_ScreenHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, g_Config.m_GfxScreen);
+		m_pBackend->GetCurrentVideoMode(CurMode, m_ScreenHiDPIScale, m_DesktopSize.x, m_DesktopSize.y, g_Config.m_GfxScreen);
 		GotResized(w, h, RefreshRate);
 		return true;
 	}
@@ -3914,7 +4155,7 @@ void CGraphics_Threaded::GotResized(int w, int h, int RefreshRate)
 	// if RefreshRate is -1 use the current config refresh rate
 	if(RefreshRate == -1)
 		RefreshRate = g_Config.m_GfxScreenRefreshRate;
-	if(!IsPlausibleWindowRefreshRate(RefreshRate))
+	if(!IsPlausibleRefreshRate(RefreshRate))
 	{
 		log_warn("gfx", "Ignoring implausible refresh rate during resize: %d", RefreshRate);
 		RefreshRate = m_ScreenRefreshRate;
@@ -4087,6 +4328,15 @@ void CGraphics_Threaded::TakeCustomScreenshot(const char *pFilename)
 
 void CGraphics_Threaded::Swap()
 {
+#if defined(CONF_PLATFORM_MACOS)
+	const bool PreviousMacosDiagnostics = m_MacosGraphicsDiagnosticsEnabled;
+	const bool MacosDiagnostics = MacosGraphicsDiagnosticsEnabled();
+	m_MacosGraphicsDiagnosticsEnabled = MacosDiagnostics;
+	const auto SubmitStart = MacosDiagnostics ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+	double SubmitMs = 0.0;
+	double MetalWaitForIdleMs = 0.0;
+	bool MetalWaitForIdle = false;
+#endif
 	bool Swapped = false;
 	ScreenshotDirect(&Swapped);
 	ReadPixelDirect(&Swapped);
@@ -4098,24 +4348,77 @@ void CGraphics_Threaded::Swap()
 	}
 
 	KickCommandBuffer();
+#if defined(CONF_PLATFORM_MACOS)
+	if(MacosDiagnostics)
+		SubmitMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - SubmitStart).count();
+
+	// TODO: Remove when https://github.com/libsdl-org/SDL/issues/5203 is fixed
+	if(str_find(GetVersionString(), "Metal"))
+	{
+		MetalWaitForIdle = true;
+		const auto WaitForIdleStart = MacosDiagnostics ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+		WaitForIdle();
+		if(MacosDiagnostics)
+			MetalWaitForIdleMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - WaitForIdleStart).count();
+	}
+
+	if(!MacosDiagnostics)
+	{
+		if(PreviousMacosDiagnostics)
+		{
+			m_MacosGraphicsDiagnosticFrameCount = 0;
+			m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
+			m_MacosMetalWaitForIdleMsSum = 0.0;
+			m_MacosMetalWaitForIdleCount = 0;
+			m_MsdfCommandCount = 0;
+			m_MsdfFlushCount = 0;
+			m_RoundedRectSdfCommandCount = 0;
+			m_RoundedRectSdfFlushCount = 0;
+		}
+	}
+	else
+	{
+		const char *pBackend = GetVersionString();
+		os_signpost_event_emit(MacosGraphicsSignpostLog(), OS_SIGNPOST_ID_EXCLUSIVE, "frame_submit", "submit_duration_ms=%{public}.3f metal_wait_for_idle_ms=%{public}.3f backend=%{public}s drawable=%dx%d hidpi=%.3f", SubmitMs, MetalWaitForIdleMs, pBackend, m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale);
+
+		if(PreviousMacosDiagnostics)
+		{
+			++m_MacosGraphicsDiagnosticFrameCount;
+			m_MacosGraphicsDiagnosticSubmitMsSum += SubmitMs;
+			if(MetalWaitForIdle)
+			{
+				m_MacosMetalWaitForIdleMsSum += MetalWaitForIdleMs;
+				m_MacosMetalWaitForIdleCount++;
+			}
+			if(m_MacosGraphicsDiagnosticFrameCount == 120)
+			{
+				const double MetalWaitForIdleMsAvg = m_MacosMetalWaitForIdleCount > 0 ? m_MacosMetalWaitForIdleMsSum / (double)m_MacosMetalWaitForIdleCount : 0.0;
+				const int UnlimitedConfig = g_Config.m_GfxVsync == 0 && g_Config.m_GfxRefreshRate == 0 && g_Config.m_ClRefreshRate == 0;
+				dbg_msg("perf/macos_graphics", "event=frame_submit sample_frames=120 submit_duration_ms_sum=%.3f submit_duration_ms_avg=%.3f metal_wait_for_idle_count=%" PRIu64 " metal_wait_for_idle_ms_sum=%.3f metal_wait_for_idle_ms_avg=%.3f unlimited_config=%d vsync=%d gfx_refresh_rate=%d cl_refresh_rate=%d cl_refresh_rate_inactive=%d debug=%d dbg_graphs=%d async_render_old=%d backend=%s renderer=%s vendor=%s drawable_width=%d drawable_height=%d hidpi_scale=%.3f fullscreen=%d fsaa=%u refresh_hz=%d msdf_commands_sum=%" PRIu64 " msdf_flushes_sum=%" PRIu64 " rounded_sdf_commands_sum=%" PRIu64 " rounded_sdf_flushes_sum=%" PRIu64,
+					m_MacosGraphicsDiagnosticSubmitMsSum, m_MacosGraphicsDiagnosticSubmitMsSum / 120.0, m_MacosMetalWaitForIdleCount, m_MacosMetalWaitForIdleMsSum, MetalWaitForIdleMsAvg, UnlimitedConfig, g_Config.m_GfxVsync, g_Config.m_GfxRefreshRate, g_Config.m_ClRefreshRate, g_Config.m_ClRefreshRateInactive, g_Config.m_Debug, g_Config.m_DbgGraphs, g_Config.m_GfxAsyncRenderOld, pBackend, GetRendererString(), GetVendorString(), m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale, g_Config.m_GfxFullscreen, m_MultiSamplingCount, m_ScreenRefreshRate, m_MsdfCommandCount, m_MsdfFlushCount, m_RoundedRectSdfCommandCount, m_RoundedRectSdfFlushCount);
+				m_MacosGraphicsDiagnosticFrameCount = 0;
+				m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
+				m_MacosMetalWaitForIdleMsSum = 0.0;
+				m_MacosMetalWaitForIdleCount = 0;
+				m_MsdfCommandCount = 0;
+				m_MsdfFlushCount = 0;
+				m_RoundedRectSdfCommandCount = 0;
+				m_RoundedRectSdfFlushCount = 0;
+			}
+		}
+	}
+#endif
 	if(m_PendingMultiSamplingCount >= 0)
 	{
 		m_MultiSamplingCount = (uint32_t)m_PendingMultiSamplingCount;
 		m_PendingMultiSamplingCount = -1;
 	}
-	// TODO: Remove when https://github.com/libsdl-org/SDL/issues/5203 is fixed
-#ifdef CONF_PLATFORM_MACOS
-	if(str_find(GetVersionString(), "Metal"))
-		WaitForIdle();
-#endif
 }
 
 bool CGraphics_Threaded::SetVSync(bool State)
 {
 	if(!m_pCommandBuffer)
 		return true;
-
-	const bool OldState = State;
 
 	// add vsync command
 	bool RetOk = false;
@@ -4128,7 +4431,10 @@ bool CGraphics_Threaded::SetVSync(bool State)
 	KickCommandBuffer();
 	WaitForIdle();
 
-	g_Config.m_GfxVsync = RetOk ? State : OldState;
+	if(RetOk)
+	{
+		g_Config.m_GfxVsync = State;
+	}
 	return RetOk;
 }
 
@@ -4254,13 +4560,13 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 	}
 
 	int NumModes = 0;
-	m_pBackend->GetVideoModes(pModes, MaxModes, &NumModes, m_ScreenHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, Screen);
+	m_pBackend->GetVideoModes(pModes, MaxModes, &NumModes, m_ScreenHiDPIScale, m_DesktopSize.x, m_DesktopSize.y, Screen);
 	return NumModes;
 }
 
 void CGraphics_Threaded::GetCurrentVideoMode(CVideoMode &CurMode, int Screen)
 {
-	m_pBackend->GetCurrentVideoMode(CurMode, m_ScreenHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, Screen);
+	m_pBackend->GetCurrentVideoMode(CurMode, m_ScreenHiDPIScale, m_DesktopSize.x, m_DesktopSize.y, Screen);
 }
 
 extern IEngineGraphics *CreateEngineGraphicsThreaded()

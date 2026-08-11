@@ -1,7 +1,6 @@
-// 请抬头享受阳光｜日子很好 我很我---------致咩子
-#include <gtest/gtest.h>
-
 #include <game/client/components/theme_scan.h>
+
+#include <gtest/gtest.h>
 
 TEST(ThemeScan, FileCandidateDetection)
 {

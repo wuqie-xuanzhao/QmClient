@@ -5,6 +5,7 @@
 #include <base/system.h>
 
 #include <engine/config.h>
+#include <engine/console.h>
 #include <engine/shared/config.h>
 #include <engine/shared/console.h>
 #include <engine/shared/protocol.h>
@@ -17,8 +18,10 @@ CConfig g_Config;
 // ----------------------- Config Variables
 namespace
 {
-	constexpr const char *QM_CONFIG_MIGRATION_MARKER = "qmclient/config_migration_v1.done";
-	constexpr const char *QM_CONFIG_MIGRATION_BACKUP_DIR = "qmclient/migration_backup_v1";
+	constexpr const char *QM_CONFIG_MIGRATION_MARKER = "qmclient/config_migration_v2.done";
+	constexpr const char *QM_CONFIG_MIGRATION_BACKUP_DIR = "qmclient/migration_backup_v2";
+	constexpr const char *QM_CONFIG_MIGRATION_V1_BACKUP_DDNET = "qmclient/migration_backup_v1/settings_ddnet.cfg";
+	constexpr const char *QM_CONFIG_SHARED_DDNET_PATH = "settings_ddnet.cfg";
 
 	std::unordered_map<const SIntConfigVariable *, int> *s_pToggleRestoreInts = nullptr;
 
@@ -45,8 +48,29 @@ namespace
 			return true;
 		return pStorage->CreateFolder(aFolder, IStorage::TYPE_SAVE) || pStorage->FolderExists(aFolder, IStorage::TYPE_SAVE);
 	}
+	EColorInputAlphaMode ColorInputAlphaMode(const char *pValue)
+	{
+		if(pValue == nullptr || pValue[0] == '\0')
+			return EColorInputAlphaMode::PACKED;
+		if(pValue[0] == '$')
+		{
+			const int HexLength = str_length(pValue + 1);
+			if(HexLength == 3 || HexLength == 6)
+				return EColorInputAlphaMode::OMITTED;
+			if(HexLength == 4 || HexLength == 8)
+				return EColorInputAlphaMode::EXPLICIT;
+			return EColorInputAlphaMode::PACKED;
+		}
+		// 颜色名没有 alpha 分量。负数 packed 与旧版本序列化兼容，必须保留其来源信息；
+		// 无符号与带正号 packed 则可用最高字节区分旧 RGB 和新的 ARGB。
+		if(pValue[0] == '-' && str_isallnum(pValue + 1))
+			return EColorInputAlphaMode::SIGNED_PACKED;
+		if(str_isallnum(pValue) || (pValue[0] == '+' && str_isallnum(pValue + 1)))
+			return EColorInputAlphaMode::PACKED;
+		return EColorInputAlphaMode::OMITTED;
+	}
 
-	bool WriteStorageFileAtomically(IStorage *pStorage, const char *pPath, const char *pContents)
+	bool WriteStorageFileAtomically(IStorage *pStorage, const char *pPath, const void *pContents, size_t ContentsSize)
 	{
 		if(!EnsureConfigPathFolder(pStorage, pPath))
 			return false;
@@ -57,7 +81,7 @@ namespace
 		if(!File)
 			return false;
 
-		bool Success = io_write(File, pContents, str_length(pContents)) == static_cast<unsigned>(str_length(pContents));
+		bool Success = io_write(File, pContents, ContentsSize) == ContentsSize;
 		if(Success && io_sync(File) != 0)
 			Success = false;
 		if(io_close(File) != 0)
@@ -67,6 +91,27 @@ namespace
 		if(!Success)
 			pStorage->RemoveFile(aTmpPath, IStorage::TYPE_SAVE);
 		return Success;
+	}
+
+	bool CopyStorageFile(IStorage *pStorage, const char *pSourcePath, const char *pDestinationPath)
+	{
+		void *pContents = nullptr;
+		unsigned ContentsSize = 0;
+		if(!pStorage->ReadFile(pSourcePath, IStorage::TYPE_SAVE, &pContents, &ContentsSize))
+			return false;
+		const bool Success = WriteStorageFileAtomically(pStorage, pDestinationPath, pContents, ContentsSize);
+		free(pContents);
+		return Success;
+	}
+
+	bool StorageFileIsEmpty(IStorage *pStorage, const char *pPath)
+	{
+		void *pContents = nullptr;
+		unsigned ContentsSize = 0;
+		if(!pStorage->ReadFile(pPath, IStorage::TYPE_SAVE, &pContents, &ContentsSize))
+			return false;
+		free(pContents);
+		return ContentsSize == 0;
 	}
 }
 
@@ -99,7 +144,8 @@ bool QmFinalizeConfigMigration(IStorage *pStorage, const bool *pArchivePreviousP
 		return false;
 	}
 
-	const auto ArchiveConfig = [pStorage](const char *pSourcePath, const char *pBackupName) {
+	// 配置根目录同时供 DDNet/TClient 使用，迁移只能复制备份，不能移动原文件。
+	const auto BackupConfig = [pStorage](const char *pSourcePath, const char *pBackupName) {
 		if(!pSourcePath || !pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
 			return true;
 
@@ -107,38 +153,42 @@ bool QmFinalizeConfigMigration(IStorage *pStorage, const bool *pArchivePreviousP
 		str_format(aBackupPath, sizeof(aBackupPath), "%s/%s", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName);
 		if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
 		{
-			str_format(aBackupPath, sizeof(aBackupPath), "%s/%s.%d.bak", QM_CONFIG_MIGRATION_BACKUP_DIR, pBackupName, pid());
-			if(pStorage->FileExists(aBackupPath, IStorage::TYPE_SAVE))
-			{
-				log_error("config", "Cannot archive legacy config '%s' because backup targets already exist", pSourcePath);
-				return false;
-			}
+			return true;
 		}
 
-		if(pStorage->RenameFile(pSourcePath, aBackupPath, IStorage::TYPE_SAVE))
+		if(CopyStorageFile(pStorage, pSourcePath, aBackupPath))
 			return true;
-		if(!pStorage->FileExists(pSourcePath, IStorage::TYPE_SAVE))
-			return true;
-		log_error("config", "Cannot archive legacy config '%s' to '%s'", pSourcePath, aBackupPath);
+		log_error("config", "Cannot back up legacy config '%s' to '%s'", pSourcePath, aBackupPath);
 		return false;
 	};
+
+	const bool SharedDdnetConfigMissing = !pStorage->FileExists(QM_CONFIG_SHARED_DDNET_PATH, IStorage::TYPE_SAVE);
+	const bool SharedDdnetConfigEmpty = !SharedDdnetConfigMissing && StorageFileIsEmpty(pStorage, QM_CONFIG_SHARED_DDNET_PATH);
+	if((SharedDdnetConfigMissing || SharedDdnetConfigEmpty) &&
+		pStorage->FileExists(QM_CONFIG_MIGRATION_V1_BACKUP_DDNET, IStorage::TYPE_SAVE) &&
+		!StorageFileIsEmpty(pStorage, QM_CONFIG_MIGRATION_V1_BACKUP_DDNET) &&
+		!CopyStorageFile(pStorage, QM_CONFIG_MIGRATION_V1_BACKUP_DDNET, QM_CONFIG_SHARED_DDNET_PATH))
+	{
+		log_error("config", "Cannot restore shared config '%s' from the v1 backup", QM_CONFIG_SHARED_DDNET_PATH);
+		return false;
+	}
 
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
 		const char *pLegacyPath = s_aConfigDomains[ConfigDomain].m_aLegacyConfigPath;
-		if(!ArchiveConfig(pLegacyPath, pLegacyPath))
+		if(!BackupConfig(pLegacyPath, pLegacyPath))
 			return false;
 
 		if(pArchivePreviousPaths && pArchivePreviousPaths[ConfigDomain] && s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath)
 		{
 			char aBackupName[IO_MAX_PATH_LENGTH];
 			str_format(aBackupName, sizeof(aBackupName), "previous_%s", fs_filename(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath));
-			if(!ArchiveConfig(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath, aBackupName))
+			if(!BackupConfig(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath, aBackupName))
 				return false;
 		}
 	}
 
-	if(!WriteStorageFileAtomically(pStorage, QM_CONFIG_MIGRATION_MARKER, "1\n"))
+	if(!WriteStorageFileAtomically(pStorage, QM_CONFIG_MIGRATION_MARKER, "1\n", 2))
 	{
 		log_error("config", "Cannot write config migration marker '%s'", QM_CONFIG_MIGRATION_MARKER);
 		return false;
@@ -259,6 +309,7 @@ void SColorConfigVariable::CommandCallback(IConsole::IResult *pResult, void *pUs
 		const unsigned Value = Color.Pack(pData->m_DarkestLighting, pData->m_Alpha);
 
 		*pData->m_pVariable = Value;
+		pData->m_LastInputAlphaMode = pData->m_Alpha ? ColorInputAlphaMode(pResult->GetString(0)) : EColorInputAlphaMode::PACKED;
 		if(pResult->m_ClientId != IConsole::CLIENT_ID_GAME)
 			pData->m_OldValue = Value;
 	}
@@ -285,7 +336,7 @@ void SColorConfigVariable::CommandCallback(IConsole::IResult *pResult, void *pUs
 
 void SColorConfigVariable::Register()
 {
-	m_pConsole->Register(m_pScriptName, "?i", m_Flags, CommandCallback, this, m_pHelp);
+	m_pConsole->Register(m_pScriptName, "?c", m_Flags, CommandCallback, this, m_pHelp);
 }
 
 bool SColorConfigVariable::IsDefault() const
@@ -329,8 +380,8 @@ void SColorConfigVariable::ResetToOld()
 
 // -----
 
-SStringConfigVariable::SStringConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, char *pStr, const char *pDefault, size_t MaxSize, char *pOldValue) :
-	SConfigVariable(pConsole, pScriptName, Type, Flags, pHelp),
+SStringConfigVariable::SStringConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey, char *pStr, const char *pDefault, size_t MaxSize, char *pOldValue) :
+	SConfigVariable(pConsole, pScriptName, Type, Flags, pHelp, pHelpLocalizeKey),
 	m_pStr(pStr),
 	m_pDefault(pDefault),
 	m_MaxSize(MaxSize),
@@ -440,7 +491,7 @@ void CConfigManager::Init()
 #define MACRO_CONFIG_INT(Name, ScriptName, Def, Min, Max, Flags, Desc) \
 	{ \
 		const char *pHelp = Min == Max ? Desc " (default: " #Def ")" : (Max == 0 ? Desc " (default: " #Def ", min: " #Min ")" : Desc " (default: " #Def ", min: " #Min ", max: " #Max ")"); \
-		AddVariable(m_ConfigHeap.Allocate<SIntConfigVariable>(m_pConsole, #ScriptName, SConfigVariable::VAR_INT, Flags, pHelp, &g_Config.m_##Name, Def, Min, Max)); \
+		AddVariable(m_ConfigHeap.Allocate<SIntConfigVariable>(m_pConsole, #ScriptName, SConfigVariable::VAR_INT, Flags, pHelp, Desc, &g_Config.m_##Name, Def, Min, Max)); \
 	}
 
 #define MACRO_CONFIG_COL(Name, ScriptName, Def, Flags, Desc) \
@@ -449,7 +500,7 @@ void CConfigManager::Init()
 		char *pHelp = static_cast<char *>(m_ConfigHeap.Allocate(HelpSize)); \
 		const bool Alpha = ((Flags) & CFGFLAG_COLALPHA) != 0; \
 		str_format(pHelp, HelpSize, "%s (default: $%0*X)", Desc, Alpha ? 8 : 6, color_cast<ColorRGBA>(ColorHSLA(Def, Alpha)).Pack(Alpha)); \
-		AddVariable(m_ConfigHeap.Allocate<SColorConfigVariable>(m_pConsole, #ScriptName, SConfigVariable::VAR_COLOR, Flags, pHelp, &g_Config.m_##Name, Def)); \
+		AddVariable(m_ConfigHeap.Allocate<SColorConfigVariable>(m_pConsole, #ScriptName, SConfigVariable::VAR_COLOR, Flags, pHelp, Desc, &g_Config.m_##Name, Def)); \
 	}
 
 #define MACRO_CONFIG_STR(Name, ScriptName, Len, Def, Flags, Desc) \
@@ -458,7 +509,7 @@ void CConfigManager::Init()
 		char *pHelp = static_cast<char *>(m_ConfigHeap.Allocate(HelpSize)); \
 		str_format(pHelp, HelpSize, "%s (default: \"%s\", max length: %d)", Desc, Def, Len - 1); \
 		char *pOldValue = static_cast<char *>(m_ConfigHeap.Allocate(Len)); \
-		AddVariable(m_ConfigHeap.Allocate<SStringConfigVariable>(m_pConsole, #ScriptName, SConfigVariable::VAR_STRING, Flags, pHelp, g_Config.m_##Name, Def, Len, pOldValue)); \
+		AddVariable(m_ConfigHeap.Allocate<SStringConfigVariable>(m_pConsole, #ScriptName, SConfigVariable::VAR_STRING, Flags, pHelp, Desc, g_Config.m_##Name, Def, Len, pOldValue)); \
 	}
 #define SET_CONFIG_DOMAIN(_ConfigDomain) ConfigDomain = _ConfigDomain;
 #include "config_includes.h"
@@ -660,6 +711,18 @@ void CConfigManager::PossibleConfigVariables(const char *pStr, int FlagMask, POS
 			}
 		}
 	}
+}
+
+EColorInputAlphaMode CConfigManager::ColorValueInputAlphaMode(const char *pScriptName) const
+{
+	if(pScriptName == nullptr)
+		return EColorInputAlphaMode::PACKED;
+	for(const SConfigVariable *pVariable : m_vpAllVariables)
+	{
+		if(pVariable->m_Type == SConfigVariable::VAR_COLOR && str_comp(pVariable->m_pScriptName, pScriptName) == 0)
+			return static_cast<const SColorConfigVariable *>(pVariable)->m_LastInputAlphaMode;
+	}
+	return EColorInputAlphaMode::PACKED;
 }
 
 void CConfigManager::Con_Reset(IConsole::IResult *pResult, void *pUserData)

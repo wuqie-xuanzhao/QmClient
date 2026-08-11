@@ -2,16 +2,9 @@ cmake_minimum_required(VERSION 3.12...3.27.4)
 
 set(DEFAULT_MACOS_DEPLOYMENT_TARGET "10.15")
 if(APPLE)
-  set(DEFAULT_MACOS_DEPLOYMENT_TARGET "${CMAKE_HOST_SYSTEM_VERSION}")
-  string(REGEX MATCH "^[0-9]+" DEFAULT_MACOS_DEPLOYMENT_TARGET_MAJOR "${DEFAULT_MACOS_DEPLOYMENT_TARGET}")
-  if(NOT DEFAULT_MACOS_DEPLOYMENT_TARGET_MAJOR STREQUAL "")
-    set(DEFAULT_MACOS_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET_MAJOR}.0")
-  endif()
-  if(DEFAULT_MACOS_DEPLOYMENT_TARGET STREQUAL "" OR DEFAULT_MACOS_DEPLOYMENT_TARGET VERSION_LESS 10.15)
-    set(DEFAULT_MACOS_DEPLOYMENT_TARGET "10.15")
-  endif()
+  set(DEFAULT_MACOS_DEPLOYMENT_TARGET "26.0")
 endif()
-set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version" FORCE)
 if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.15)
   message(WARNING "Building for macOS < 10.15 is not supported")
 endif()
@@ -115,9 +108,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
   include(CheckLinkerFlag)
 endif()
 include(CheckSymbolExists)
-if(NOT (TARGET_OS STREQUAL "emscripten"))
-  include(CheckAtomic)
-endif()
+include(CheckAtomic)
 
 check_symbol_exists(__i386 "" TARGET_ARCH_X86_i386)
 if(TARGET_ARCH_X86_i386)
@@ -131,10 +122,10 @@ set(AUTO_DEPENDENCIES_DEFAULT OFF)
 set(AUTO_VULKAN_BACKEND ON)
 if(TARGET_OS STREQUAL "windows")
   set(AUTO_DEPENDENCIES_DEFAULT ON)
-  if(TARGET_CPU_ARCHITECTURE STREQUAL "x86")
-    set(AUTO_VULKAN_BACKEND ON)
-  endif()
+  set(AUTO_VULKAN_BACKEND OFF)
 elseif(TARGET_OS STREQUAL "mac")
+  # macOS 的 Vulkan 路径依赖 MoltenVK 和 shader 工具；保持显式 opt-in，
+  # 让没有完整 SDK 的干净环境仍可直接使用 OpenGL 配置。
   set(AUTO_VULKAN_BACKEND OFF)
 endif()
 
@@ -169,7 +160,7 @@ option(QM_DISABLE_PARALLEL_COMPILE "Disable /MP for compiler warnings-sensitive 
 option(QM_MSVC_USE_EMBEDDED_DEBUG_INFO "Use embedded MSVC debug information instead of per-target PDB files" OFF)
 option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF)
 option(QM_STRICT_WARNINGS "Treat compiler warnings as errors" OFF)
-option(QM_BUILD_ICON_ATLAS "Build QmClient Tabler PNG icon atlas from SVG sources" ON)
+option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor PNG icon atlases from SVG sources" ON)
 
 if(TARGET_OS STREQUAL "android")
   set(DISCORD OFF)
@@ -363,6 +354,12 @@ if(NOT MSVC AND NOT HAIKU)
     add_cxx_compiler_flag_if_supported(OUR_FLAGS_LINK -Wl,--no-insert-timestamp)
   endif()
 
+  if(NOT CMAKE_BUILD_TYPE STREQUAL Debug AND NOT DEV)
+    add_cxx_compiler_flag_if_supported(OUR_FLAGS -ffile-prefix-map=${CMAKE_SOURCE_DIR}=/${CMAKE_PROJECT_NAME})
+    add_cxx_compiler_flag_if_supported(OUR_FLAGS -ffile-prefix-map=${PROJECT_BINARY_DIR}=/${CMAKE_PROJECT_NAME})
+    add_cxx_compiler_flag_if_supported(OUR_FLAGS -fno-ident)
+  endif()
+
   if(TARGET_OS STREQUAL "mac")
     add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -stdlib=libc++)
   endif()
@@ -397,7 +394,6 @@ if(NOT MSVC AND NOT HAIKU)
   add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wsuggest-override)
   add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wdynamic-class-memaccess) # clang
   add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wclass-memaccess) # gcc
-  add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-deprecated-enum-float-conversion) # c++20 arithmetic between floating-point type and enumeration type
   add_linker_flag_if_supported(OUR_FLAGS_LINK -Wno-alloc-size-larger-than) # save.cpp with LTO
   # add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wdouble-promotion) # Many occurrences
   # add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wnull-dereference) # Many occurrences
@@ -613,10 +609,10 @@ endif()
 if(TARGET_OS AND TARGET_OS STREQUAL "mac")
   find_program(CMAKE_OTOOL otool)
   find_program(DMGBUILD dmgbuild)
+  set(DMGBUILD_FOUND ${DMGBUILD})
 endif()
 
 set(VULKAN_SHADER_FILE_LIST "" CACHE STRING "Vulkan shader file list")
-set(VULKAN_SHADER_FILE_SHA256 "" CACHE STRING "Vulkan shader file hash")
 if(CLIENT AND VULKAN)
   find_package(Vulkan)
   include(cmake/BuildVulkanShaders.cmake)
@@ -649,9 +645,6 @@ function(show_dependency_status OUTPUT_NAME NAME)
 endfunction()
 
 show_dependency_status("Curl" CURL)
-if(TARGET_OS AND TARGET_OS STREQUAL "mac")
-  show_dependency_status("Dmg tools" DMGTOOLS)
-endif()
 if(CLIENT AND VIDEORECORDER)
   show_dependency_status("FFmpeg" FFMPEG)
 endif()
@@ -727,7 +720,7 @@ if(DISCORD_DYNAMIC)
     message(SEND_ERROR "You must enable the DISCORD flag if you want to link the Discord SDK")
   endif()
 endif()
-if(NOT(PNG_FOUND))
+if((CLIENT OR TOOLS) AND NOT(PNG_FOUND))
   message(SEND_ERROR "You must install libpng to compile ${CMAKE_PROJECT_NAME}")
 endif()
 if(CLIENT AND NOT(FREETYPE_FOUND))
@@ -746,7 +739,7 @@ if(CLIENT AND NOT(SDL2_FOUND))
   message(SEND_ERROR "You must install SDL2 to compile the ${CMAKE_PROJECT_NAME} client")
 endif()
 if(TARGET_OS STREQUAL "android" AND NOT(CRYPTO_FOUND))
-  message(SEND_ERROR "You must install OpenSSL to compile ${CMAKE_PROJECT_NAME}")
+  message(SEND_ERROR "You must install BoringSSL to compile ${CMAKE_PROJECT_NAME} for Android")
 endif()
 if(NOT(GTEST_FOUND))
   if(DOWNLOAD_GTEST)
@@ -907,6 +900,7 @@ endif()
 set_glob(RUST_BASE GLOB_RECURSE "rs;toml" src/base
   Cargo.toml
   color.rs
+  dbg.rs
   lib.rs
   rust.rs
 )
@@ -945,6 +939,10 @@ set_src(RUST_BRIDGE_SHARED GLOB_RECURSE src/rust-bridge
   cpp/uuid_manager.h
   engine/shared/rust_version.cpp
   engine/shared/rust_version.h
+  engine/shared/snapshot/builder.cpp
+  engine/shared/snapshot/builder.h
+  engine/shared/snapshot/delta.cpp
+  engine/shared/snapshot/delta.h
 )
 
 set_glob(RUST_MASTERSRV GLOB "rs;toml" src/mastersrv/src
@@ -979,12 +977,13 @@ endif()
 
 if(TARGET_OS STREQUAL "android")
   set(CARGO_BUILD_DIR "${CARGO_NDK_TARGET}/")
-  set(CARGO_BUILD ${CMAKE_COMMAND} -E env ${CARGO_BUILD_ENV} ${RUST_CARGO} ndk --manifest-path "${PROJECT_SOURCE_DIR}/Cargo.toml" --target ${CARGO_NDK_TARGET} --platform ${CARGO_NDK_API} build)
-  set(CARGO_TEST ${CMAKE_COMMAND} -E env ${CARGO_TEST_ENV} ${RUST_CARGO} ndk --target ${CARGO_NDK_TARGET} --platform ${CARGO_NDK_API} test)
+  set(CARGO_BUILD ${CMAKE_COMMAND} -E env ${CARGO_BUILD_ENV} ${RUST_CARGO} ndk --manifest-path "${PROJECT_SOURCE_DIR}/Cargo.toml" --target ${CARGO_NDK_TARGET} --platform ${CARGO_NDK_API} build --locked)
+  set(CARGO_TEST ${CMAKE_COMMAND} -E env ${CARGO_TEST_ENV} ${RUST_CARGO} ndk --target ${CARGO_NDK_TARGET} --platform ${CARGO_NDK_API} test --locked)
 else()
   set(CARGO_BUILD_DIR "")
-  set(CARGO_BUILD ${CMAKE_COMMAND} -E env ${CARGO_BUILD_ENV} ${RUST_CARGO} build --manifest-path "${PROJECT_SOURCE_DIR}/Cargo.toml")
-  set(CARGO_TEST ${CMAKE_COMMAND} -E env ${CARGO_TEST_ENV} ${RUST_CARGO} test)
+  set(CARGO_BUILD ${CMAKE_COMMAND} -E env ${CARGO_BUILD_ENV} ${RUST_CARGO} build --locked --manifest-path "${PROJECT_SOURCE_DIR}/Cargo.toml")
+  set(CARGO_TEST ${CMAKE_COMMAND} -E env ${CARGO_TEST_ENV} ${RUST_CARGO} test --locked)
+
 endif()
 if(MSVC)
   list(INSERT CARGO_BUILD 0 ${CMAKE_COMMAND} -E env $<$<CONFIG:Debug>:CFLAGS=/MTd> $<$<CONFIG:Debug>:CXXFLAGS=/MTd>)
@@ -1561,7 +1560,8 @@ set(EXPECTED_DATA
   emoticons.png
   extras.png
   fonts/DejaVuSans.ttf
-  fonts/Font_Awesome_6_Free-Solid-900.otf
+  fonts/Phosphor-Regular.ttf
+  fonts/Phosphor-Bold.ttf
   fonts/GlowSansJ-Compressed-Book.otf
   fonts/NotoEmoji-Regular.ttf
   fonts/SourceHanSans.ttc
@@ -1619,13 +1619,39 @@ set(EXPECTED_DATA
   languages/traditional_chinese.txt
   languages/turkish.txt
   languages/ukrainian.txt
-  qmclient/icons/qm_icons_1x.json
-  qmclient/icons/qm_icons_1x.png
-  qmclient/icons/qm_icons_2x.json
-  qmclient/icons/qm_icons_2x.png
-  qmclient/icons/qm_icons_4x.json
-  qmclient/icons/qm_icons_4x.png
   qmclient/icons/README.md
+  qmclient/icons/qm_icons_bold_1x.json
+  qmclient/icons/qm_icons_bold_1x.png
+  qmclient/icons/qm_icons_bold_2x.json
+  qmclient/icons/qm_icons_bold_2x.png
+  qmclient/icons/qm_icons_bold_4x.json
+  qmclient/icons/qm_icons_bold_4x.png
+  qmclient/icons/qm_icons_bold_msdf.json
+  qmclient/icons/qm_icons_bold_msdf.png
+  qmclient/icons/qm_icons_fill_1x.json
+  qmclient/icons/qm_icons_fill_1x.png
+  qmclient/icons/qm_icons_fill_2x.json
+  qmclient/icons/qm_icons_fill_2x.png
+  qmclient/icons/qm_icons_fill_4x.json
+  qmclient/icons/qm_icons_fill_4x.png
+  qmclient/icons/qm_icons_fill_msdf.json
+  qmclient/icons/qm_icons_fill_msdf.png
+  qmclient/icons/qm_icons_regular_1x.json
+  qmclient/icons/qm_icons_regular_1x.png
+  qmclient/icons/qm_icons_regular_2x.json
+  qmclient/icons/qm_icons_regular_2x.png
+  qmclient/icons/qm_icons_regular_4x.json
+  qmclient/icons/qm_icons_regular_4x.png
+  qmclient/icons/qm_icons_regular_msdf.json
+  qmclient/icons/qm_icons_regular_msdf.png
+  qmclient/icons/qm_icons_thin_1x.json
+  qmclient/icons/qm_icons_thin_1x.png
+  qmclient/icons/qm_icons_thin_2x.json
+  qmclient/icons/qm_icons_thin_2x.png
+  qmclient/icons/qm_icons_thin_4x.json
+  qmclient/icons/qm_icons_thin_4x.png
+  qmclient/icons/qm_icons_thin_msdf.json
+  qmclient/icons/qm_icons_thin_msdf.png
   mapres/basic_freeze.png
   mapres/bg_cloud1.png
   mapres/bg_cloud2.png
@@ -1643,6 +1669,7 @@ set(EXPECTED_DATA
   mapres/desert_mountains_new_background.png
   mapres/desert_mountains_new_foreground.png
   mapres/desert_sun.png
+  mapres/easter_0.7.png
   mapres/entities.png
   mapres/fadeout.png
   mapres/font_teeworlds.png
@@ -1730,6 +1757,10 @@ set(EXPECTED_DATA
   shader/gaussian_blur.vert
   shader/media_island_sdf.frag
   shader/media_island_sdf.vert
+  shader/rounded_rect_sdf.frag
+  shader/rounded_rect_sdf.vert
+  shader/textured_msdf.frag
+  shader/textured_msdf.vert
   shader/pipeline.frag
   shader/pipeline.vert
   shader/prim.frag
@@ -1750,6 +1781,10 @@ set(EXPECTED_DATA
   shader/vulkan/gaussian_blur.vert
   shader/vulkan/media_island_sdf.frag
   shader/vulkan/media_island_sdf.vert
+  shader/vulkan/rounded_rect_sdf.frag
+  shader/vulkan/rounded_rect_sdf.vert
+  shader/vulkan/textured_msdf.frag
+  shader/vulkan/textured_msdf.vert
   shader/vulkan/prim.frag
   shader/vulkan/prim.vert
   shader/vulkan/prim3d.frag
@@ -2147,13 +2182,18 @@ generate_source("src/generated/protocol.h" "network_header")
 generate_source("src/generated/server_data.cpp" "server_content_source")
 generate_source("src/generated/server_data.h" "server_content_header")
 
+add_custom_target(generate_content_types
+  DEPENDS
+    src/generated/data_types.h
+)
+
 generate_source7("src/generated/protocol7.cpp" "network_source")
 generate_source7("src/generated/protocol7.h" "network_header")
 generate_source7("src/generated/client_data7.cpp" "client_content_source")
 generate_source7("src/generated/client_data7.h" "client_content_header")
 
 generate_maps("src/generated/protocolglue.h" "map_header")
-generate_maps("src/generated/protocolglue.cpp" "map_source")
+generate_maps("src/generated/protocolglue_generated.cpp" "map_source")
 
 add_custom_target(generate_protocol
   DEPENDS
@@ -2170,13 +2210,46 @@ add_custom_command(OUTPUT "src/generated/wordlist.h"
 )
 
 file(GLOB QM_ICON_ATLAS_SVG_SOURCES
+  datasrc/qm_icons/phosphor_bold/*.svg
+  datasrc/qm_icons/phosphor_fill/*.svg
+  datasrc/qm_icons/phosphor_regular/*.svg
+  datasrc/qm_icons/phosphor_thin/*.svg
   datasrc/qm_icons/tabler/*.svg
 )
 add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_bold
     --source datasrc/qm_icons/tabler
     --output data/qmclient/icons
+    --atlas-name qm_icons_bold
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_fill
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_fill
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_regular
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_regular
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_thin
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_thin
     --sizes 1 2 4
     --base-size 24
     --padding 4
@@ -2184,7 +2257,40 @@ add_custom_target(qm-icon-atlas
   DEPENDS
     qmclient_scripts/qm_build_icon_atlas.py
     ${QM_ICON_ATLAS_SVG_SOURCES}
-  COMMENT "Building QmClient Tabler icon PNG atlases"
+  COMMENT "Building QmClient Phosphor icon PNG atlases"
+)
+
+# msdfgen 只用于资源制作。生成产物已提交，普通构建不依赖本机安装。
+add_custom_target(qm-icon-msdf-atlas
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_bold
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_bold
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_fill
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_fill
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_regular
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_regular
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_thin
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_thin
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  DEPENDS
+    qmclient_scripts/qm_build_icon_msdf.py
+    ${QM_ICON_ATLAS_SVG_SOURCES}
+  COMMENT "Building QmClient Phosphor MSDF icon atlases"
 )
 
 if(QM_BUILD_ICON_ATLAS)
@@ -2204,6 +2310,9 @@ set_src(BASE GLOB_RECURSE src/base
   color.cpp
   color.h
   crashdump.cpp
+  crashdump.h
+  dbg.cpp
+  dbg.h
   detect.h
   dynamic.h
   fs.cpp
@@ -2219,21 +2328,32 @@ set_src(BASE GLOB_RECURSE src/base
   log.h
   logger.h
   math.h
+  mem.cpp
+  mem.h
   perf_timer.h
   rust.h
+  secure.cpp
+  secure.h
+  sphore.cpp
+  sphore.h
   str.cpp
   str.h
   system.cpp
   system.h
-  tl/threading.h
+  thread.cpp
+  thread.h
+  time.cpp
+  time.h
   types.h
   unicode/confusables.cpp
   unicode/confusables.h
-  unicode/confusables_data.h
+  unicode/confusables_data.cpp
   unicode/tolower.cpp
   unicode/tolower_data.cpp
   unicode/tolower_data.h
   vmath.h
+  windows.cpp
+  windows.h
 )
 set_src(ENGINE_INTERFACE GLOB src/engine
   antibot.h
@@ -2342,12 +2462,14 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   protocol_ex_msgs.h
   protocolglue.cpp
   protocolglue.h
-  qm_update.h
+  qm_live_observer_session.cpp
+  qm_live_observer_session.h
+  qm_live_protocol.cpp
+  qm_live_protocol.h
   ringbuffer.cpp
   ringbuffer.h
   serverinfo.cpp
   serverinfo.h
-  sixup_translate_snapshot.cpp
   snapshot.cpp
   snapshot.h
   storage.cpp
@@ -2464,7 +2586,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "src/game/version
 # A bit hacky, but these are needed to register all the UUIDs, even for stuff
 # that doesn't link game.
 set(ENGINE_UUID_SHARED
-  src/generated/protocolglue.cpp
+  src/generated/protocolglue_generated.cpp
   src/generated/protocolglue.h
   src/generated/protocol7.cpp
   src/generated/protocol7.h
@@ -2493,6 +2615,8 @@ set(LIBS
   ${SQLite3_LIBRARIES}
   ${WEBSOCKETS_LIBRARIES}
   ${ZLIB_LIBRARIES}
+  # Add Rust part of our code.
+  rust_engine_shared
   ${PLATFORM_LIBS}
   # Add pthreads (on non-Windows) at the end, so that other libraries can depend
   # on it.
@@ -2591,6 +2715,7 @@ if(CLIENT)
     friends.h
     ghost.cpp
     ghost.h
+    game_ping.h
     gpu_upload_limiter.h
     graph.cpp
     graph.h
@@ -2627,7 +2752,11 @@ if(CLIENT)
   set_src(GAME_CLIENT GLOB_RECURSE src/game/client
     QmUi/QmAnim.cpp
     QmUi/QmAnim.h
+    QmUi/QmUiPerf.cpp
+    QmUi/QmUiPerf.h
     QmUi/QmAnimCurves.h
+    QmUi/QmDropdown.cpp
+    QmUi/QmDropdown.h
     QmUi/QmAnimResolve.cpp
     QmUi/QmAnimResolve.h
     QmUi/QmLayout.cpp
@@ -2639,21 +2768,42 @@ if(CLIENT)
     QmUi/QmRender.h
     QmUi/QmRt.cpp
     QmUi/QmRt.h
+    QmUi/QmScroll.cpp
+    QmUi/QmScroll.h
     QmUi/QmTheme.h
     QmUi/QmTree.cpp
     QmUi/QmTree.h
+    QmUi/SettingsCard.cpp
+    QmUi/SettingsCard.h
+    QmUi/SettingsCardGeometry.cpp
+    QmUi/SettingsCardGeometry.h
     QmUi/UiButtons.cpp
     QmUi/UiButtons.h
     QmUi/UiContainers.h
     QmUi/UiContext.h
     QmUi/UiDogfood.cpp
     QmUi/UiDogfood.h
+    QmUi/UiFormLogic.cpp
+    QmUi/UiFormLogic.h
     QmUi/UiForms.cpp
     QmUi/UiForms.h
     QmUi/UiNavigation.cpp
     QmUi/UiNavigation.h
     QmUi/UiOverlays.h
+    QmUi/UiSurface.cpp
+    QmUi/UiSurface.h
     QmUi/UiTokens.h
+    QmUi/QmCardOrderModel.cpp
+    QmUi/QmCardOrderModel.h
+    QmUi/QmCardRegistry.cpp
+    QmUi/QmCardRegistry.h
+    QmUi/SettingsCardDeckLogic.cpp
+    QmUi/SettingsCardDeckLogic.h
+    QmUi/SettingsCardDeck.cpp
+    QmUi/SettingsCardDeck.h
+    QmUi/QmModuleLayoutAdapter.cpp
+    QmUi/QmModuleLayoutAdapter.h
+    QmUi/QmModuleTypes.h
     animstate.cpp
     animstate.h
     component.cpp
@@ -2928,6 +3078,18 @@ if(CLIENT)
     laser_data.h
     lineinput.cpp
     lineinput.h
+    live/live_director.cpp
+    live/live_director.h
+    live/live_finish_ranking.cpp
+    live/live_finish_ranking.h
+    live/live_match_replay.cpp
+    live/live_match_replay.h
+    live/live_replay_buffer.cpp
+    live/live_replay_buffer.h
+    live/live_replay_sidecar.cpp
+    live/live_replay_sidecar.h
+    live/live_team_render_filter.cpp
+    live/live_team_render_filter.h
     pickup_data.cpp
     pickup_data.h
     prediction/entities/character.cpp
@@ -3052,6 +3214,8 @@ if(CLIENT)
     proof_mode.h
     quadart.cpp
     quadart.h
+    quad_knife.cpp
+    quad_knife.h
     quick_action.h
     quick_actions.cpp
     quick_actions.h
@@ -3077,6 +3241,21 @@ if(CLIENT)
     render_map.cpp
     render_map.h
   )
+  set(GAME_LIVE_CLIENT
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_director.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_director.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_finish_ranking.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_finish_ranking.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_match_replay.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_match_replay.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_buffer.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_buffer.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_sidecar.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_sidecar.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_team_render_filter.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_team_render_filter.h
+  )
+  list(REMOVE_ITEM GAME_CLIENT ${GAME_LIVE_CLIENT})
   set(GAME_GENERATED_CLIENT
     src/generated/checksum.cpp
     src/generated/client_data.cpp
@@ -3085,6 +3264,7 @@ if(CLIENT)
     src/generated/client_data7.h
   )
   set(CLIENT_SRC ${ENGINE_CLIENT} ${PLATFORM_CLIENT} ${GAME_CLIENT} ${GAME_EDITOR} ${GAME_MAP} ${GAME_GENERATED_CLIENT})
+  set(LIVE_CLIENT_SRC ${CLIENT_SRC} ${GAME_LIVE_CLIENT})
 
   set(DEPS_CLIENT ${DEPS} ${GLEW_DEP} ${WAVPACK_DEP})
 
@@ -3106,7 +3286,6 @@ if(CLIENT)
     ${VULKAN_LIBRARIES}
 
     ${TARGET_STEAMAPI}
-    rust_engine_shared
 
     ${PLATFORM_CLIENT_LIBS}
     ${LIBS}
@@ -3220,6 +3399,10 @@ if(CLIENT)
       $<TARGET_OBJECTS:rust-bridge-shared>
     )
   endif()
+  add_dependencies(game-client generate_content_types)
+  if(VULKAN)
+    add_dependencies(game-client build_vulkan_shaders)
+  endif()
   set_property(TARGET game-client
       PROPERTY OUTPUT_NAME ${CLIENT_EXECUTABLE}
   )
@@ -3267,6 +3450,67 @@ if(CLIENT)
     list(APPEND TARGETS_LINK qm-client-updater)
   endif()
 
+  if(NOT TARGET_OS STREQUAL "android")
+    if(TARGET_OS STREQUAL "windows")
+      set(VERSION_EXECUTABLE "QmLiveClient")
+      set(VERSION_COMPANY "QmLiveClient Team")
+      configure_file("other/versioninfo/versioninfo.rc.in" "live_client.versioninfo.rc")
+      configure_file("other/manifest/live_client.manifest.in" "live_client.manifest")
+      set(LIVE_CLIENT_VERSIONINFO "${CMAKE_CURRENT_BINARY_DIR}/live_client.versioninfo.rc")
+      if(NOT MINGW)
+        set(LIVE_CLIENT_MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/live_client.manifest")
+      else()
+        set(LIVE_CLIENT_MANIFEST "other/manifest/client.rc")
+      endif()
+    else()
+      set(LIVE_CLIENT_VERSIONINFO)
+      set(LIVE_CLIENT_MANIFEST)
+    endif()
+
+    add_executable(game-live-client WIN32
+      ${LIVE_CLIENT_SRC}
+      ${CLIENT_ICON}
+      ${LIVE_CLIENT_VERSIONINFO}
+      ${LIVE_CLIENT_MANIFEST}
+      ${DEPS_CLIENT}
+      $<TARGET_OBJECTS:engine-gfx>
+      $<TARGET_OBJECTS:engine-shared>
+      $<TARGET_OBJECTS:game-shared>
+      $<TARGET_OBJECTS:rust-bridge-shared>
+    )
+    if(VULKAN)
+      add_dependencies(game-live-client build_vulkan_shaders)
+    endif()
+    set_property(TARGET game-live-client
+        PROPERTY OUTPUT_NAME QmLiveClient
+    )
+    target_link_libraries(game-live-client game-client-common)
+    target_compile_definitions(game-live-client PRIVATE CONF_QM_LIVE_CLIENT)
+    if(STEAMAPI_RUNTIME_FILE)
+      add_custom_command(TARGET game-live-client POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${STEAMAPI_RUNTIME_FILE}" "$<TARGET_FILE_DIR:game-live-client>/${STEAMAPI_RUNTIME_FILE_NAME}"
+        COMMENT "Copying official Steam API runtime for QmLiveClient")
+    endif()
+    if(MSVC)
+      target_compile_options(game-live-client PRIVATE /bigobj)
+      target_link_options(game-live-client PRIVATE /ENTRY:mainCRTStartup)
+    endif()
+
+    if(WIN32 AND NOT MSVC)
+      target_compile_options(game-live-client PRIVATE -Wa,-mbig-obj)
+    endif()
+
+    if(STEAMAPI_KIND STREQUAL SHARED OR DISCORD_DYNAMIC)
+      set_own_rpath(game-live-client)
+    endif()
+
+    if(TARGET sync_runtime_data)
+      add_dependencies(game-live-client sync_runtime_data)
+    endif()
+
+    list(APPEND TARGETS_OWN game-live-client)
+    list(APPEND TARGETS_LINK game-live-client)
+  endif()
 endif()
 
 
@@ -3343,12 +3587,14 @@ if(SERVER)
     gamecontext.h
     gamecontroller.cpp
     gamecontroller.h
-    gamemodes/DDRace.cpp
-    gamemodes/DDRace.h
+    gamemodes/ddnet.cpp
+    gamemodes/ddnet.h
     gamemodes/mod.cpp
     gamemodes/mod.h
     gameworld.cpp
     gameworld.h
+    interactions.cpp
+    interactions.h
     mutes.cpp
     player.cpp
     player.h
@@ -3394,7 +3640,6 @@ if(SERVER)
     ${MINIUPNPC_LIBRARIES}
     ${MYSQL_LIBRARIES}
     ${TARGET_ANTIBOT}
-    rust_engine_shared
 
     ${LIBS}
   )
@@ -3447,6 +3692,61 @@ if(SERVER)
   list(APPEND TARGETS_OWN game-server)
   list(APPEND TARGETS_LINK game-server)
 
+  if(TARGET_OS STREQUAL "windows")
+    set(VERSION_EXECUTABLE "QmLiveServer")
+    set(VERSION_COMPANY "${CLIENT_EXECUTABLE} Team")
+    configure_file("other/versioninfo/versioninfo.rc.in" "live_server.versioninfo.rc")
+    set(LIVE_SERVER_VERSIONINFO "${CMAKE_CURRENT_BINARY_DIR}/live_server.versioninfo.rc")
+  else()
+    set(LIVE_SERVER_VERSIONINFO)
+  endif()
+
+  add_library(game-live-server-without-main OBJECT
+      ${DEPS}
+      ${SERVER_SRC}
+      $<TARGET_OBJECTS:engine-shared>
+      $<TARGET_OBJECTS:game-shared>
+      $<TARGET_OBJECTS:rust-bridge-shared>
+  )
+  set_property(TARGET game-live-server-without-main
+      PROPERTY OUTPUT_NAME QmLiveServer
+  )
+  target_compile_definitions(game-live-server-without-main PRIVATE CONF_QM_LIVE_SERVER)
+  target_link_libraries(game-live-server-without-main game-server-common)
+  list(APPEND TARGETS_OWN game-live-server-without-main)
+  list(APPEND TARGETS_LINK game-live-server-without-main)
+
+  if(TARGET_OS STREQUAL "android")
+    add_library(game-live-server SHARED
+      ${DEPS}
+      $<TARGET_OBJECTS:game-live-server-without-main>
+      "${PROJECT_SOURCE_DIR}/src/engine/server/main.cpp"
+      ${SERVER_ICON}
+      ${LIVE_SERVER_VERSIONINFO}
+      $<TARGET_OBJECTS:engine-shared>
+      $<TARGET_OBJECTS:game-shared>
+      $<TARGET_OBJECTS:rust-bridge-shared>
+    )
+  else()
+    add_executable(game-live-server
+      ${DEPS}
+      "${PROJECT_SOURCE_DIR}/src/engine/server/main.cpp"
+      ${SERVER_ICON}
+      ${LIVE_SERVER_VERSIONINFO}
+      $<TARGET_OBJECTS:game-live-server-without-main>
+      $<TARGET_OBJECTS:engine-shared>
+      $<TARGET_OBJECTS:game-shared>
+      $<TARGET_OBJECTS:rust-bridge-shared>
+    )
+  endif()
+  set_property(TARGET game-live-server
+      PROPERTY OUTPUT_NAME QmLiveServer
+  )
+  target_compile_definitions(game-live-server PRIVATE CONF_QM_LIVE_SERVER)
+  target_link_libraries(game-live-server game-server-common)
+  list(APPEND TARGETS_OWN game-live-server)
+  list(APPEND TARGETS_LINK game-live-server)
+
   if(TARGET_OS AND TARGET_OS STREQUAL "mac")
     set(SERVER_LAUNCHER_SRC src/macos/server.mm)
     add_executable(game-server-launcher ${SERVER_LAUNCHER_SRC})
@@ -3465,9 +3765,18 @@ if(CMAKE_GENERATOR MATCHES ".*Makefiles.*")
     add_custom_target(${CLIENT_EXECUTABLE})
     add_dependencies(${CLIENT_EXECUTABLE} game-client)
   endif()
+  if(TARGET game-live-client)
+    add_custom_target(QmLiveClient)
+    add_dependencies(QmLiveClient game-live-client)
+  endif()
+
   if(TARGET game-server)
     add_custom_target(${SERVER_EXECUTABLE})
     add_dependencies(${SERVER_EXECUTABLE} game-server)
+  endif()
+  if(TARGET game-live-server)
+    add_custom_target(QmLiveServer)
+    add_dependencies(QmLiveServer game-live-server)
   endif()
 endif()
 
@@ -3532,6 +3841,7 @@ if(TOOLS)
         ${EXTRA_TOOL_SRC}
         $<TARGET_OBJECTS:engine-shared>
         $<TARGET_OBJECTS:game-shared>
+        $<TARGET_OBJECTS:rust-bridge-shared>
       )
       target_include_directories(${TOOL} SYSTEM PRIVATE ${TOOL_INCLUDE_DIRS})
       target_link_libraries(${TOOL} ${TOOL_LIBS})
@@ -3586,6 +3896,9 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     QmIconAtlasTest.cpp
     QmLayoutTest.cpp
     QmUiTokensTest.cpp
+    qm_card_order_model_test.cpp
+    qm_card_registry_test.cpp
+    qm_module_layout_adapter_test.cpp
     aio_test.cpp
     assets_editor_layout_test.cpp
     assets_preview_scale_test.cpp
@@ -3601,6 +3914,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     compression_test.cpp
     csv_test.cpp
     datafile_test.cpp
+    dbg_test.cpp
     ddnet_19_9_sync_test.cpp
     editor_test.cpp
     fs_test.cpp
@@ -3620,7 +3934,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     mapbugs_test.cpp
     mapitems_test.cpp
     math_test.cpp
-    memory_test.cpp
+    mem_test.cpp
     name_ban_test.cpp
     net_test.cpp
     netaddr_test.cpp
@@ -3632,8 +3946,10 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_hammer_hit_detection_test.cpp
     qm_hud_media_island_logic_test.cpp
     qm_hud_notifications_test.cpp
+    qm_ime_platform_test.cpp
     qm_new_ui_menu_branch_test.cpp
     qm_update_arguments_test.cpp
+    qm_live_client_test.cpp
     qm_lyrics_cache_test.cpp
     qm_lyrics_clock_test.cpp
     qm_lyrics_match_test.cpp
@@ -3655,17 +3971,19 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qmclient_monitoring_test.cpp
     race_test.cpp
     score_test.cpp
+    storage_replace_test.cpp
     section_loader_test.cpp
     swap_countdown_message_test.cpp
     secure_random_test.cpp
     server_test.cpp
     serverbrowser_test.cpp
     serverinfo_test.cpp
+    settings_card_deck_logic_test.cpp
     settings_warmup_test.cpp
     skin_transition_test.cpp
     skins_test.cpp
     render_target_test.cpp
-    shell_execute_test.cpp
+    windows_test.cpp
     snapshot_test.cpp
     steam_presence_test.cpp
     str_test.cpp
@@ -3703,8 +4021,19 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/settings_runtime_cache.cpp
     src/game/client/components/settings_resource_jobs.cpp
     src/game/client/components/settings_warmup.cpp
+    src/game/client/ui_rect.cpp
     src/game/client/QmUi/QmAnim.cpp
+    src/game/client/QmUi/QmAnimResolve.cpp
     src/game/client/QmUi/QmLayout.cpp
+    src/game/client/QmUi/UiFormLogic.cpp
+    src/game/client/QmUi/QmCardOrderModel.cpp
+    src/game/client/QmUi/QmDropdown.cpp
+    src/game/client/QmUi/QmScroll.cpp
+    src/game/client/QmUi/QmTree.cpp
+    src/game/client/QmUi/QmCardRegistry.cpp
+    src/game/client/QmUi/SettingsCardDeckLogic.cpp
+    src/game/client/QmUi/QmModuleLayoutAdapter.cpp
+    src/game/client/QmUi/SettingsCardGeometry.cpp
     src/game/client/components/assets_resource_registry.cpp
     src/game/client/components/binds_deepfly_mode.cpp
     src/generated/client_data.h
@@ -3726,6 +4055,11 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
+    src/game/client/live/live_director.cpp
+    src/game/client/live/live_finish_ranking.cpp
+    src/game/client/live/live_replay_buffer.cpp
+    src/game/client/live/live_replay_sidecar.cpp
+    src/game/client/live/live_team_render_filter.cpp
     src/game/client/components/qmclient/modes.cpp
     src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/tee_hue_cycle.cpp
@@ -4083,22 +4417,24 @@ if(NOT DEV)
     endif()
   endforeach()
   foreach(file ${VULKAN_SHADER_FILE_LIST})
-    install(FILES ${PROJECT_BINARY_DIR}/${file} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ddnet/data/shader/vulkan COMPONENT client)
+    install(FILES ${file} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ddnet/data/shader/vulkan COMPONENT client)
   endforeach()
 endif()
 
 if(DEV)
   # Don't generate CPack targets.
 else()
-  set(EXTRA_ARGS DESTINATION ${CPACK_PACKAGE_FILE_NAME} COMPONENT portable EXCLUDE_FROM_ALL)
-  install(TARGETS ${CPACK_TARGETS} ${EXTRA_ARGS})
-  install(DIRECTORY ${CPACK_DIRS} ${EXTRA_ARGS})
-  set(CPACK_FILES_TMP ${CPACK_FILES} ${CPACK_GEN_FILES})
-  install(FILES ${CPACK_FILES_TMP} ${EXTRA_ARGS})
+  install(TARGETS ${CPACK_TARGETS} DESTINATION ${CPACK_PACKAGE_FILE_NAME} COMPONENT portable EXCLUDE_FROM_ALL)
+  install(DIRECTORY ${CPACK_DIRS} DESTINATION ${CPACK_PACKAGE_FILE_NAME} COMPONENT portable EXCLUDE_FROM_ALL)
+  install(FILES ${CPACK_FILES} DESTINATION ${CPACK_PACKAGE_FILE_NAME} COMPONENT portable EXCLUDE_FROM_ALL)
+  foreach(file ${CPACK_GEN_FILES})
+    get_filename_component(parent_path ${file} PATH)
+    install(FILES "${PROJECT_BINARY_DIR}/${file}" DESTINATION "${CPACK_PACKAGE_FILE_NAME}/${parent_path}" COMPONENT portable EXCLUDE_FROM_ALL)
+  endforeach()
 endif()
 
 set(PACKAGE_TARGETS)
-if(CLIENT AND DMGBUILD)
+if(CLIENT AND DMGBUILD_FOUND)
   file(MAKE_DIRECTORY bundle/client/)
   file(MAKE_DIRECTORY bundle/server/)
   configure_file(other/bundle/client/Info.plist.in bundle/client/Info.plist)
@@ -4128,6 +4464,10 @@ if(CLIENT AND DMGBUILD)
     list(APPEND TARGET_TOOLS_FILES $<TARGET_FILE:${target}>)
   endforeach()
 
+  set(DMG_VULKAN_ICD_COMMANDS)
+  set(DMG_VULKAN_RUNTIME_COPY_COMMANDS)
+  set(DMG_WEBP_COPY_COMMANDS)
+
 
 	# macOS DMG: resolve Homebrew library paths at configure time
   if(APPLE)
@@ -4137,27 +4477,47 @@ if(CLIENT AND DMGBUILD)
 	  else()
 	    set(WEBP_LIB_DIR "${PROJECT_SOURCE_DIR}/ddnet-libs/webp/${LIB_DIR}")
 	  endif()
+	  file(GLOB WEBP_DYLIB_FILES "${WEBP_LIB_DIR}/*.dylib")
+	  foreach(file ${WEBP_DYLIB_FILES})
+	    # Copy ABI-named files only (for example libwebp.7.dylib), not the
+	    # unversioned and fully-versioned symlink targets alongside them.
+	    get_filename_component(file_name "${file}" NAME)
+	    if(file_name MATCHES "^[^.]+\\.[0-9]+\\.dylib$")
+	      list(APPEND DMG_WEBP_COPY_COMMANDS
+	        COMMAND ${CMAKE_COMMAND} -E copy "${file}" "${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/")
+	    endif()
+	  endforeach()
 
-	  # Vulkan: resolve dylib paths (brew on CI, ddnet-libs fallback for local)
+	  # Vulkan: 打包与链接匹配的运行库。bundled 构建不能被主机的 Homebrew
+	  # 库替换，否则版本或架构可能不一致。
 	  if(VULKAN)
-	    find_program(BREW brew)
-	    if(BREW)
-	      execute_process(COMMAND ${BREW} --prefix vulkan-loader
-	        OUTPUT_VARIABLE VK_LOADER_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-	      execute_process(COMMAND ${BREW} --prefix molten-vk
-	        OUTPUT_VARIABLE MOLTENVK_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-	      if(VK_LOADER_PREFIX AND EXISTS "${VK_LOADER_PREFIX}/lib/libvulkan.1.dylib")
-	        set(MACOS_VULKAN_LIB_DIR "${VK_LOADER_PREFIX}/lib")
-	      endif()
-	      if(MOLTENVK_PREFIX AND EXISTS "${MOLTENVK_PREFIX}/lib/libMoltenVK.dylib")
-	        set(MACOS_MOLTENVK_LIB_DIR "${MOLTENVK_PREFIX}/lib")
+	    if(PREFER_BUNDLED_LIBS)
+	      set(MACOS_MOLTENVK_LIB_DIR "${PROJECT_SOURCE_DIR}/ddnet-libs/vulkan/${LIB_DIR}")
+	    elseif(VULKAN_LIBRARIES MATCHES "libMoltenVK\\.dylib$")
+	      get_filename_component(MACOS_MOLTENVK_LIB_DIR "${VULKAN_LIBRARIES}" DIRECTORY)
+	    else()
+	      find_program(BREW brew)
+	      if(BREW)
+	        execute_process(COMMAND ${BREW} --prefix vulkan-loader
+	          OUTPUT_VARIABLE VK_LOADER_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+	        execute_process(COMMAND ${BREW} --prefix molten-vk
+	          OUTPUT_VARIABLE MOLTENVK_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+	        if(VK_LOADER_PREFIX AND EXISTS "${VK_LOADER_PREFIX}/lib/libvulkan.1.dylib")
+	          set(MACOS_VULKAN_LIB_DIR "${VK_LOADER_PREFIX}/lib")
+	        endif()
+	        if(MOLTENVK_PREFIX AND EXISTS "${MOLTENVK_PREFIX}/lib/libMoltenVK.dylib")
+	          set(MACOS_MOLTENVK_LIB_DIR "${MOLTENVK_PREFIX}/lib")
+	        endif()
 	      endif()
 	    endif()
-	    if(NOT MACOS_VULKAN_LIB_DIR)
-	      set(MACOS_VULKAN_LIB_DIR "${PROJECT_SOURCE_DIR}/ddnet-libs/vulkan/${LIB_DIR}")
+	    if(NOT MACOS_MOLTENVK_LIB_DIR OR NOT EXISTS "${MACOS_MOLTENVK_LIB_DIR}/libMoltenVK.dylib")
+	      message(FATAL_ERROR "Could not find the MoltenVK runtime required for macOS packaging.")
 	    endif()
-	    if(NOT MACOS_MOLTENVK_LIB_DIR)
-	      set(MACOS_MOLTENVK_LIB_DIR "${MACOS_VULKAN_LIB_DIR}")
+	    set(DMG_VULKAN_RUNTIME_COPY_COMMANDS
+	      COMMAND ${CMAKE_COMMAND} -E copy ${MACOS_MOLTENVK_LIB_DIR}/libMoltenVK.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/)
+	    if(MACOS_VULKAN_LIB_DIR AND EXISTS "${MACOS_VULKAN_LIB_DIR}/libvulkan.1.dylib")
+	      list(APPEND DMG_VULKAN_RUNTIME_COPY_COMMANDS
+		COMMAND ${CMAKE_COMMAND} -E copy ${MACOS_VULKAN_LIB_DIR}/libvulkan.1.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/)
 	    endif()
 	    # Generate MoltenVK ICD JSON at configure time
 	    file(WRITE "${PROJECT_BINARY_DIR}/MoltenVK_icd.json"
@@ -4169,6 +4529,9 @@ if(CLIENT AND DMGBUILD)
 	"        \"is_portability_driver\": true\n"
 	"    }\n"
 	"}\n")
+	    list(APPEND DMG_VULKAN_ICD_COMMANDS
+	      COMMAND ${CMAKE_COMMAND} -E make_directory ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/vulkan/icd.d
+	      COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/MoltenVK_icd.json ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/vulkan/icd.d/)
 	  endif()
 	endif()
 
@@ -4190,6 +4553,7 @@ if(CLIENT AND DMGBUILD)
     endforeach()
   endif()
 
+
   add_custom_command(OUTPUT ${CPACK_PACKAGE_FILE_NAME}.dmg
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${DMG_TMPDIR}
     ${DMG_MKDIR_COMMANDS}
@@ -4206,16 +4570,13 @@ if(CLIENT AND DMGBUILD)
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/png/${LIB_DIR}/libpng16.16.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
     ${DMG_FFMPEG_COPY_COMMANDS}
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libsteam_api.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-	COMMAND ${CMAKE_COMMAND} -E copy ${WEBP_LIB_DIR}/libwebp.7.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-	COMMAND ${CMAKE_COMMAND} -E copy ${WEBP_LIB_DIR}/libwebpdemux.2.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-	COMMAND ${CMAKE_COMMAND} -E copy ${WEBP_LIB_DIR}/libwebpmux.3.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-	COMMAND ${CMAKE_COMMAND} -E copy ${WEBP_LIB_DIR}/libsharpyuv.0.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-	COMMAND ${CMAKE_COMMAND} -E copy ${MACOS_VULKAN_LIB_DIR}/libvulkan.1.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-	COMMAND ${CMAKE_COMMAND} -E copy ${MACOS_MOLTENVK_LIB_DIR}/libMoltenVK.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
+	${DMG_WEBP_COPY_COMMANDS}
+	${DMG_VULKAN_RUNTIME_COPY_COMMANDS}
     COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_strip_rpath.py ${CMAKE_OTOOL} ${CMAKE_INSTALL_NAME_TOOL} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
     COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath @loader_path/../Frameworks ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
     COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/qmclient_scripts/darwin_fix_install_names.py ${CMAKE_OTOOL} ${CMAKE_INSTALL_NAME_TOOL} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks --executable ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
     COMMAND codesign --force --sign - ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/*.dylib
+    COMMAND codesign --force --sign - ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/SDL2.framework/Versions/A/SDL2
     COMMAND codesign --force --sign - ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
 
     # SERVER
@@ -4227,9 +4588,11 @@ if(CLIENT AND DMGBUILD)
     COMMAND codesign --force --sign - ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
     COMMAND ${CMAKE_COMMAND} -E copy ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
 
-	# ICD JSON for MoltenVK (non-code, placed after codesign)
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/vulkan/icd.d
-	COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/MoltenVK_icd.json ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/vulkan/icd.d/
+	${DMG_VULKAN_ICD_COMMANDS}
+
+	# Sign the completed bundles after nested binaries have been signed explicitly.
+	COMMAND codesign --force --sign - ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app
+	COMMAND codesign --force --sign - ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app
 
     # DMG
     COMMAND dmgbuild -s ${PROJECT_SOURCE_DIR}/other/dmgsettings.py -D client=${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app -D server=${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app -D background=${PROJECT_SOURCE_DIR}/other/dmgbackground.png "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}" ${CPACK_PACKAGE_FILE_NAME}.dmg
@@ -4458,6 +4821,7 @@ foreach(target ${TARGETS_OWN})
     # See https://learn.microsoft.com/en-us/windows/win32/winprog/using-the-windows-headers
     target_compile_definitions(${target} PRIVATE NOMINMAX) # windows.h shouldn't define min/max macros
     target_compile_definitions(${target} PRIVATE WIN32_LEAN_AND_MEAN) # windows.h shouldn't define the name IStorage
+    target_compile_definitions(${target} PRIVATE NOGDI) # wingdi.h shouldn't define the name ERROR
     # 0x0501 (Windows XP) is required for mingw to get getaddrinfo to work
     # 0x0600 (Windows Vista) is required to use RegGetValueW and RegDeleteTreeW
     target_compile_definitions(${target} PRIVATE NTDDI_VERSION=0x06000000) # Minimum OS version (new macro, since Vista)
@@ -4515,10 +4879,10 @@ foreach(target ${TARGETS_OWN})
   if(TEST_MYSQL)
     target_compile_definitions(${target} PRIVATE CONF_TEST_MYSQL)
   endif()
-  if(AUTOUPDATE)
+  if(AUTOUPDATE AND NOT "${target}" STREQUAL "game-live-client")
     target_compile_definitions(${target} PRIVATE CONF_AUTOUPDATE)
   endif()
-  if(INFORM_UPDATE)
+  if(INFORM_UPDATE AND NOT "${target}" STREQUAL "game-live-client")
     target_compile_definitions(${target} PRIVATE CONF_INFORM_UPDATE)
   endif()
   # if(STEAM)
@@ -4535,9 +4899,14 @@ foreach(target ${TARGETS_OWN})
   # endif()
   if(TARGET_OS STREQUAL "android")
     if(ANDROID_PACKAGE_NAME)
-      target_compile_definitions(${target} PRIVATE ANDROID_PACKAGE_NAME=${ANDROID_PACKAGE_NAME})
+      target_compile_definitions(${target} PRIVATE ANDROID_PACKAGE_NAME="${ANDROID_PACKAGE_NAME}")
     else()
-      message(FATAL_ERROR "ANDROID_PACKAGE_NAME must define the package name when compiling for Android (using underscores instead of dots, e.g. org_example_app)")
+      message(FATAL_ERROR "ANDROID_PACKAGE_NAME must define the package name when compiling for Android (e.g. org.example.app)")
+    endif()
+    if(ANDROID_PACKAGE_NAME_JNI)
+      target_compile_definitions(${target} PRIVATE ANDROID_PACKAGE_NAME_JNI=${ANDROID_PACKAGE_NAME_JNI})
+    else()
+      message(FATAL_ERROR "ANDROID_PACKAGE_NAME_JNI must define the package name when compiling for Android (using underscores instead of dots, e.g. org_example_app)")
     endif()
   endif()
 endforeach()

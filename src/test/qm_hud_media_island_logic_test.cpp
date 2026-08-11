@@ -251,7 +251,8 @@ TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundHorizontalMidlineWithComp
 	EXPECT_FLOAT_EQ(Layout.m_BottomCenterY - Layout.m_TopCenterY, QmHudMediaIslandScaled(5.2f));
 	EXPECT_NEAR(
 		(Layout.m_BottomCenterY - TextHeight * 0.5f) - (Layout.m_TopCenterY + TextHeight * 0.5f),
-		TextGap, 0.0001f);
+		TextGap,
+		0.0001f);
 }
 
 TEST(QmTuneZoneEffectsSource, SettingsExposeIconLegend)

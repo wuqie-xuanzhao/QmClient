@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <functional>
+#include <string_view>
 
 namespace QmLyrics
 {
@@ -133,6 +135,49 @@ namespace QmLyrics
 		for(int i = 0; i < SubtitleCount; ++i)
 			Height += SubtitleFontSize + maximum(1.0f, LineSpacing * 0.35f);
 		return Height + LineSpacing;
+	}
+
+	void UpdateTextWidthCache(STextWidthCache *pCache, const char *pText, float FontSize, size_t ContextHash, void *pUser, FTextMeasureCallback pfnMeasure)
+	{
+		if(pCache == nullptr || pfnMeasure == nullptr)
+			return;
+
+		const char *pMeasureText = pText != nullptr ? pText : "";
+		const std::string_view MeasureText(pMeasureText);
+		const size_t TextHash = std::hash<std::string_view>{}(MeasureText);
+		if(pCache->m_Valid && pCache->m_FontSize == FontSize && pCache->m_ContextHash == ContextHash && pCache->m_TextHash == TextHash)
+			return;
+
+		pCache->m_FontSize = FontSize;
+		pCache->m_ContextHash = ContextHash;
+		pCache->m_TextHash = TextHash;
+		pCache->m_TextWidth = pfnMeasure(pUser, FontSize, pMeasureText);
+		pCache->m_Valid = true;
+	}
+
+	void UpdateLineTextWidthCache(SLineTextWidthCache *pCache, const SLyricsLine &Line, float FontSize, size_t ContextHash, void *pUser, FTextMeasureCallback pfnMeasure)
+	{
+		if(pCache == nullptr || pfnMeasure == nullptr)
+			return;
+
+		size_t TextHash = std::hash<std::string>{}(Line.m_RawText);
+		for(const SLyricsWord &Word : Line.m_vWords)
+		{
+			TextHash ^= std::hash<std::string>{}(Word.m_Text) + 0x9e3779b9 + (TextHash << 6) + (TextHash >> 2);
+		}
+		if(pCache->m_Valid && pCache->m_FontSize == FontSize && pCache->m_ContextHash == ContextHash && pCache->m_TextHash == TextHash && pCache->m_vWordWidths.size() == Line.m_vWords.size())
+			return;
+
+		pCache->m_FontSize = FontSize;
+		pCache->m_ContextHash = ContextHash;
+		pCache->m_TextHash = TextHash;
+		pCache->m_RawTextWidth = pfnMeasure(pUser, FontSize, Line.m_RawText.empty() ? "♪" : Line.m_RawText.c_str());
+		pCache->m_SpaceWidth = pfnMeasure(pUser, FontSize, " ");
+		pCache->m_vWordWidths.clear();
+		pCache->m_vWordWidths.reserve(Line.m_vWords.size());
+		for(const SLyricsWord &Word : Line.m_vWords)
+			pCache->m_vWordWidths.push_back(pfnMeasure(pUser, FontSize, Word.m_Text.c_str()));
+		pCache->m_Valid = true;
 	}
 
 	SLineVisual BuildLineVisual(int LineIndex, int ActiveLineIndex, float PrimaryAnchorY, float DistanceFromActive, float FontActive, float FontOther, float LineSpacing, float Opacity, float InactiveMinOpacity, float ScaleActive, float ScaleFalloff, float FadePerLine, int SubtitleCount, float SubtitleFontSize)

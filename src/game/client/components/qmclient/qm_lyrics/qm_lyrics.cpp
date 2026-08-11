@@ -604,11 +604,11 @@ namespace
 		Entry.m_StoredAt = NowSec;
 		Entry.m_LastUsedAt = NowSec;
 		if(!QmLyrics::CommitCacheEntry(
-			pStorage,
-			&pImpl->m_Cache,
-			Entry,
-			PayloadFromCandidate(Candidate, Entry.m_Source.c_str()),
-			CACHE_MAX_ENTRIES))
+			   pStorage,
+			   &pImpl->m_Cache,
+			   Entry,
+			   PayloadFromCandidate(Candidate, Entry.m_Source.c_str()),
+			   CACHE_MAX_ENTRIES))
 			return;
 		pImpl->m_CacheLoaded = true;
 		pImpl->m_CacheDirty = false;
@@ -672,7 +672,7 @@ namespace
 		if(TryApplyBestCandidate(pImpl, pStorage, TrackKey))
 			return;
 		pImpl->m_State = CQmLyrics::SImpl::EState::NO_RESULT;
-		SetStateStatus(pImpl, "Lyrics: no lyrics found");
+		SetStateStatus(pImpl, Localize("Lyrics: no lyrics found"));
 		pImpl->m_vPendingCandidates.clear();
 	}
 
@@ -821,7 +821,7 @@ void CQmLyrics::TickStateMachine()
 			CancelAllSources(m_pImpl.get());
 		ResetPlaybackState(m_pImpl.get());
 		m_pImpl->m_State = SImpl::EState::IDLE;
-		SetStateStatus(m_pImpl.get(), "Lyrics: no media playing");
+		SetStateStatus(m_pImpl.get(), Localize("Lyrics: no media playing"));
 		return;
 	}
 	const bool MediaIdentityChanged = !QmLyrics::MediaIdentityEquals(m_pImpl->m_LastMediaIdentity, MediaState);
@@ -917,7 +917,7 @@ void CQmLyrics::TickStateMachine()
 		else if(!HasUsefulQuery(m_pImpl->m_PendingQuery))
 		{
 			m_pImpl->m_State = SImpl::EState::NO_RESULT;
-			SetStateStatus(m_pImpl.get(), "Lyrics: no media playing");
+			SetStateStatus(m_pImpl.get(), Localize("Lyrics: no media playing"));
 		}
 		else if(TryLoadCache(m_pImpl.get(), Storage(), m_pImpl->m_LastTrackKey, RequiredSourceId, m_pImpl->m_vSourceOrder))
 		{
@@ -926,7 +926,7 @@ void CQmLyrics::TickStateMachine()
 		else if(g_Config.m_QmLyricsAutoFetch)
 		{
 			m_pImpl->m_State = SImpl::EState::FETCHING;
-			SetStateStatus(m_pImpl.get(), "Lyrics: searching...");
+			SetStateStatus(m_pImpl.get(), Localize("Lyrics: searching..."));
 			m_pImpl->m_SearchGeneration++;
 			m_pImpl->m_PendingSources = 0;
 			m_pImpl->m_NextSourceOrderIndex = 0;
@@ -964,7 +964,7 @@ void CQmLyrics::TickStateMachine()
 		if(!Dispatched)
 		{
 			m_pImpl->m_State = SImpl::EState::NO_RESULT;
-			SetStateStatus(m_pImpl.get(), "Lyrics: no lyrics found");
+			SetStateStatus(m_pImpl.get(), Localize("Lyrics: no lyrics found"));
 			m_pImpl->m_vPendingCandidates.clear();
 		}
 	}
@@ -1076,10 +1076,9 @@ namespace
 		pGraphics->ClipDisable();
 	}
 
-	float ScrolledTextX(ITextRender *pTextRender, const CUIRect &Rect, const char *pText, float FontSize, bool AllowScroll, float Progress)
+	float ScrolledTextX(const CUIRect &Rect, float TextW, bool AllowScroll, float Progress)
 	{
 		const float MaxWidth = maximum(1.0f, Rect.w - HUD_PADDING_X * 2.0f);
-		const float TextW = pTextRender->TextWidth(FontSize, pText);
 		if(TextW <= MaxWidth)
 			return Rect.x + Rect.w * 0.5f - TextW * 0.5f;
 		if(!AllowScroll)
@@ -1098,10 +1097,34 @@ namespace
 		return {Rect.x, Rect.y, 0.0f, 0.0f};
 	}
 
-	void DrawCenteredTextLine(ITextRender *pTextRender, IGraphics *pGraphics, const CUIRect &Rect, const char *pText, float FontSize, float Y, const ColorRGBA &Color, bool AllowScroll, float Progress)
+	void DrawCenteredTextLine(ITextRender *pTextRender, IGraphics *pGraphics, const CUIRect &Rect, const char *pText, float TextWidth, float FontSize, float Y, const ColorRGBA &Color, bool AllowScroll, float Progress)
 	{
-		const float X = ScrolledTextX(pTextRender, Rect, pText, FontSize, AllowScroll, Progress);
+		const float X = ScrolledTextX(Rect, TextWidth, AllowScroll, Progress);
 		DrawTextClipped(pTextRender, pGraphics, LineClipRect(Rect, Y, FontSize), pText, X, Y, FontSize, Color);
+	}
+
+	float MeasureLyricsTextWidth(void *pUser, float FontSize, const char *pText)
+	{
+		return static_cast<ITextRender *>(pUser)->TextWidth(FontSize, pText);
+	}
+
+	size_t TextWidthContextHash()
+	{
+		size_t Hash = std::hash<std::string_view>{}(g_Config.m_TcCustomFont);
+		Hash ^= std::hash<std::string_view>{}(g_Config.m_ClLanguagefile) + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+		return Hash;
+	}
+
+	const QmLyrics::SLineTextWidthCache &LineTextWidthCache(ITextRender *pTextRender, const QmLyrics::SLyricsLine &Line, float FontSize)
+	{
+		QmLyrics::UpdateLineTextWidthCache(&Line.m_TextWidthCache, Line, FontSize, TextWidthContextHash(), pTextRender, MeasureLyricsTextWidth);
+		return Line.m_TextWidthCache;
+	}
+
+	const QmLyrics::STextWidthCache &TextWidthCache(ITextRender *pTextRender, QmLyrics::STextWidthCache *pCache, const char *pText, float FontSize)
+	{
+		QmLyrics::UpdateTextWidthCache(pCache, pText, FontSize, TextWidthContextHash(), pTextRender, MeasureLyricsTextWidth);
+		return *pCache;
 	}
 
 	void DrawStatusLine(ITextRender *pTextRender, const CUIRect &Rect, const char *pText, float FontSize, float Y, const ColorRGBA &Color)
@@ -1118,7 +1141,8 @@ namespace
 	float PlayedWidthForLine(ITextRender *pTextRender, const QmLyrics::SLyricsLine &Line, int64_t NowMs, float FontSize)
 	{
 		const char *pText = VisibleLineText(Line);
-		const float FullLineWidth = pTextRender->TextWidth(FontSize, pText);
+		const QmLyrics::SLineTextWidthCache &Cache = LineTextWidthCache(pTextRender, Line, FontSize);
+		const float FullLineWidth = Cache.m_RawTextWidth;
 		if(Line.m_vWords.empty())
 			return FullLineWidth * QmLyrics::LinePlayProgress(Line, NowMs);
 		if(QmLyrics::WordPlayProgress(Line.m_vWords.front(), NowMs) <= 0.0f)
@@ -1127,17 +1151,17 @@ namespace
 			return FullLineWidth;
 
 		float FallbackWidth = 0.0f;
-		const float SpaceWidth = pTextRender->TextWidth(FontSize, " ");
 		size_t SearchOffset = 0;
 		const bool HasRawText = !Line.m_RawText.empty();
-		for(const QmLyrics::SLyricsWord &Word : Line.m_vWords)
+		for(size_t WordIndex = 0; WordIndex < Line.m_vWords.size(); ++WordIndex)
 		{
-			const float WordWidth = pTextRender->TextWidth(FontSize, Word.m_Text.c_str());
+			const QmLyrics::SLyricsWord &Word = Line.m_vWords[WordIndex];
+			const float WordWidth = WordIndex < Cache.m_vWordWidths.size() ? Cache.m_vWordWidths[WordIndex] : pTextRender->TextWidth(FontSize, Word.m_Text.c_str());
 			if(HasRawText && !Word.m_Text.empty())
 			{
 				const size_t WordOffset = QmLyrics::FindNextWordTextOffset(Line.m_RawText, Word.m_Text, SearchOffset);
 				if(QmLyrics::HasOnlyAsciiSpacingBetweenWords(Line.m_RawText, SearchOffset, WordOffset))
-					FallbackWidth += (float)(WordOffset - SearchOffset) * SpaceWidth;
+					FallbackWidth += (float)(WordOffset - SearchOffset) * Cache.m_SpaceWidth;
 				if(WordOffset != std::string::npos)
 					SearchOffset = WordOffset + Word.m_Text.size();
 			}
@@ -1167,7 +1191,8 @@ namespace
 	{
 		const char *pText = VisibleLineText(Line);
 		const float LineProgress = QmLyrics::LinePlayProgress(Line, NowMs);
-		const float X = ScrolledTextX(pTextRender, Rect, pText, FontSize, true, LineProgress);
+		const QmLyrics::SLineTextWidthCache &Cache = LineTextWidthCache(pTextRender, Line, FontSize);
+		const float X = ScrolledTextX(Rect, Cache.m_RawTextWidth, true, LineProgress);
 		const CUIRect BaseClip = LineClipRect(Rect, Y, FontSize);
 		if(Line.m_vWords.empty() || !g_Config.m_QmLyricsKaraoke)
 		{
@@ -1177,7 +1202,7 @@ namespace
 
 		DrawTextClipped(pTextRender, pGraphics, BaseClip, pText, X, Y, FontSize, WithMultipliedAlpha(Unplayed, Alpha));
 
-		const float PlayedWidth = std::clamp(PlayedWidthForLine(pTextRender, Line, NowMs, FontSize), 0.0f, pTextRender->TextWidth(FontSize, pText));
+		const float PlayedWidth = std::clamp(PlayedWidthForLine(pTextRender, Line, NowMs, FontSize), 0.0f, Cache.m_RawTextWidth);
 		if(PlayedWidth <= 0.0f)
 			return;
 
@@ -1485,15 +1510,20 @@ void CQmLyrics::RenderHud()
 				float SubtitleY = Visual.m_SubtitleY;
 				if(g_Config.m_QmLyricsShowTranslation && Line.m_Translation.has_value() && !Line.m_Translation->empty())
 				{
-					DrawCenteredTextLine(TextRender(), Graphics(), Rect, Line.m_Translation->c_str(), SubtitleFontSize, SubtitleY, WithMultipliedAlpha(Translation, Visual.m_Alpha * 0.9f), true, QmLyrics::LinePlayProgress(Line, NowMs));
+					const QmLyrics::STextWidthCache &Cache = TextWidthCache(TextRender(), &Line.m_TranslationWidthCache, Line.m_Translation->c_str(), SubtitleFontSize);
+					DrawCenteredTextLine(TextRender(), Graphics(), Rect, Line.m_Translation->c_str(), Cache.m_TextWidth, SubtitleFontSize, SubtitleY, WithMultipliedAlpha(Translation, Visual.m_Alpha * 0.9f), true, QmLyrics::LinePlayProgress(Line, NowMs));
 					SubtitleY += SubtitleFontSize + maximum(1.0f, LineGap * 0.35f);
 				}
 				if(g_Config.m_QmLyricsShowTransliteration && Line.m_Transliteration.has_value() && !Line.m_Transliteration->empty())
-					DrawCenteredTextLine(TextRender(), Graphics(), Rect, Line.m_Transliteration->c_str(), SubtitleFontSize, SubtitleY, WithMultipliedAlpha(Translation, Visual.m_Alpha * 0.72f), true, QmLyrics::LinePlayProgress(Line, NowMs));
+				{
+					const QmLyrics::STextWidthCache &Cache = TextWidthCache(TextRender(), &Line.m_TransliterationWidthCache, Line.m_Transliteration->c_str(), SubtitleFontSize);
+					DrawCenteredTextLine(TextRender(), Graphics(), Rect, Line.m_Transliteration->c_str(), Cache.m_TextWidth, SubtitleFontSize, SubtitleY, WithMultipliedAlpha(Translation, Visual.m_Alpha * 0.72f), true, QmLyrics::LinePlayProgress(Line, NowMs));
+				}
 			}
 			else
 			{
-				DrawCenteredTextLine(TextRender(), Graphics(), Rect, VisibleLineText(Line), Visual.m_FontSize, Visual.m_PrimaryY, WithMultipliedAlpha(Unplayed, Visual.m_Alpha), false, 0.0f);
+				const QmLyrics::SLineTextWidthCache &Cache = LineTextWidthCache(TextRender(), Line, Visual.m_FontSize);
+				DrawCenteredTextLine(TextRender(), Graphics(), Rect, VisibleLineText(Line), Cache.m_RawTextWidth, Visual.m_FontSize, Visual.m_PrimaryY, WithMultipliedAlpha(Unplayed, Visual.m_Alpha), false, 0.0f);
 			}
 		};
 

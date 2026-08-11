@@ -76,13 +76,20 @@ bool SettingsSkinListEntryReady(bool SourceReady, bool TerminalFailure, bool Pre
 	return SettingsSkinListEntryVisualReady(SourceReady, TerminalFailure, PreviewCacheReady);
 }
 
-SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries)
+SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries, int SortMode)
 {
-	std::stable_sort(vEntries.begin(), vEntries.end(), [](const SSettingsSkinListEntry &A, const SSettingsSkinListEntry &B) {
+	std::stable_sort(vEntries.begin(), vEntries.end(), [SortMode](const SSettingsSkinListEntry &A, const SSettingsSkinListEntry &B) {
 		if(A.m_Selected != B.m_Selected)
 			return A.m_Selected && !B.m_Selected;
 		if(A.m_Favorite != B.m_Favorite)
 			return A.m_Favorite && !B.m_Favorite;
+		if(SortMode == 1)
+		{
+			if(A.m_OfficialReleaseDate != B.m_OfficialReleaseDate)
+				return A.m_OfficialReleaseDate > B.m_OfficialReleaseDate;
+			if(A.m_LastModified != B.m_LastModified)
+				return A.m_LastModified > B.m_LastModified;
+		}
 		return A.m_Name < B.m_Name;
 	});
 
@@ -333,6 +340,16 @@ int SettingsSkinListBackgroundWarmupCount(int TotalEntries, int MaxEntriesPerFra
 	return std::min(TotalEntries, MaxEntriesPerFrame);
 }
 
+size_t SettingsSkinBackgroundScanIndex(size_t StartCursor, size_t Attempt, size_t ItemCount)
+{
+	return ItemCount == 0 ? 0 : (StartCursor + Attempt) % ItemCount;
+}
+
+size_t SettingsSkinBackgroundScanNextCursor(size_t StartCursor, size_t ScannedCount, size_t ItemCount)
+{
+	return SettingsSkinBackgroundScanIndex(StartCursor, ScannedCount, ItemCount);
+}
+
 bool SettingsSkinBackgroundWarmupShouldRun(bool PageVisible, bool VisibleBacklog, bool InputActive)
 {
 	return PageVisible && !VisibleBacklog && !InputActive;
@@ -413,6 +430,16 @@ int SettingsSkinGpuUploadUnits(bool TeeSettingsActive)
 	return TeeSettingsActive ? 8 : 1;
 }
 
+static int SettingsRecoveryBudget(const SSettingsResourceFrameContext &Context, int ScrollBudget, int IdleBudget)
+{
+	const int RemainingFrames = maximum(Context.m_PostScrollRecoveryFrames, 0);
+	if(RemainingFrames <= 0)
+		return IdleBudget;
+	const int RecoveryFrames = maximum(2, RemainingFrames);
+	const int CompletedFrames = std::clamp(RecoveryFrames - RemainingFrames + 1, 1, RecoveryFrames);
+	return ScrollBudget + (IdleBudget - ScrollBudget) * CompletedFrames / (RecoveryFrames + 1);
+}
+
 int SettingsSkinFinalizeFrameBudget(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive)
 {
 	if(!TeeSettingsActive)
@@ -420,7 +447,7 @@ int SettingsSkinFinalizeFrameBudget(const SSettingsResourceFrameContext &Context
 	if(Context.m_ScrollActive)
 		return 16;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return 48;
+		return SettingsRecoveryBudget(Context, 16, SettingsSkinFinalizeMaxPerFrame(true));
 	return SettingsSkinFinalizeMaxPerFrame(true);
 }
 
@@ -431,7 +458,7 @@ int SettingsSkinGpuUploadFrameUnits(const SSettingsResourceFrameContext &Context
 	if(Context.m_ScrollActive)
 		return 4;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return 8;
+		return SettingsRecoveryBudget(Context, 4, SettingsSkinGpuUploadUnits(true));
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 12;
 	return SettingsSkinGpuUploadUnits(true);
@@ -444,7 +471,7 @@ int SettingsSkinGpuUploadLimiterUnits(const SSettingsResourceFrameContext &Conte
 	if(Context.m_ScrollActive)
 		return 96;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return 192;
+		return SettingsRecoveryBudget(Context, 96, 192);
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 288;
 	return 192;
@@ -508,6 +535,17 @@ SSettingsSkinBackgroundRequestBudgetOutput SettingsSkinBackgroundRequestBudgetDe
 	return Output;
 }
 
+SSettingsTeeOffscreenLifecycleOutput SettingsTeeOffscreenLifecycleDecision(const SSettingsTeeOffscreenLifecycleInput &Input)
+{
+	SSettingsTeeOffscreenLifecycleOutput Output;
+	Output.m_FullListReady = Input.m_TotalEntries > 0 &&
+				 Input.m_ValidEntries == Input.m_TotalEntries &&
+				 Input.m_SettledEntries == Input.m_TotalEntries;
+	Output.m_CompleteDrainSession = Input.m_DrainSessionActive && Output.m_FullListReady;
+	Output.m_LogCompletion = Output.m_CompleteDrainSession && Input.m_PerfDebugEnabled;
+	return Output;
+}
+
 SSettingsSkinSourceAdmissionOutput SettingsSkinSourceAdmissionDecision(const SSettingsSkinSourceAdmissionInput &Input)
 {
 	SSettingsSkinSourceAdmissionOutput Output;
@@ -553,7 +591,7 @@ int SettingsSkinSourceLoadNormalWindow(const SSettingsResourceFrameContext &Cont
 	if(Context.m_ScrollActive)
 		return SettingsSkinSourceLoadWindowClamp(48, LoadedMax);
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return SettingsSkinSourceLoadWindowClamp(128, LoadedMax);
+		return SettingsSkinSourceLoadWindowClamp(SettingsRecoveryBudget(Context, 48, 256), LoadedMax);
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 256;
 	return SettingsSkinSourceLoadWindowClamp(256, LoadedMax);
@@ -566,7 +604,7 @@ int SettingsSkinSourceLoadVisibleWindow(const SSettingsResourceFrameContext &Con
 	if(Context.m_ScrollActive)
 		return SettingsSkinSourceLoadWindowClamp(128, LoadedMax);
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return SettingsSkinSourceLoadWindowClamp(192, LoadedMax);
+		return SettingsSkinSourceLoadWindowClamp(SettingsRecoveryBudget(Context, 128, 256), LoadedMax);
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 256;
 	return SettingsSkinSourceLoadWindowClamp(256, LoadedMax);
@@ -1261,7 +1299,12 @@ int SettingsResourceSharedHeavyBudget(const SSettingsResourceFrameContext &Conte
 	if(Context.m_ScrollActive || Context.m_JumpScrollActive)
 		return 0;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return std::max(0, RecoveryBudget);
+	{
+		const int ClampedRecoveryBudget = std::max(0, RecoveryBudget);
+		if(ClampedRecoveryBudget <= 0)
+			return 0;
+		return std::min(ClampedRecoveryBudget, std::max(1, SettingsRecoveryBudget(Context, 0, ClampedRecoveryBudget)));
+	}
 	return std::max(0, NormalBudget);
 }
 

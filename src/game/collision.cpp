@@ -138,27 +138,30 @@ void CCollision::Init(class CLayers *pLayers)
 			m_pFront = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->FrontLayer()->m_Front));
 	}
 
-	for(int i = 0; i < m_Width * m_Height; i++)
+	if(m_pSwitch)
 	{
-		int Index;
-		if(m_pSwitch)
+		for(int i = 0; i < m_Width * m_Height; i++)
 		{
 			if(m_pSwitch[i].m_Number > m_HighestSwitchNumber)
+			{
 				m_HighestSwitchNumber = m_pSwitch[i].m_Number;
+			}
 
-			if(m_pSwitch[i].m_Number)
-				m_pDoor[i].m_Number = m_pSwitch[i].m_Number;
-			else
-				m_pDoor[i].m_Number = 0;
+			m_pDoor[i].m_Number = m_pSwitch[i].m_Number;
 
-			Index = m_pSwitch[i].m_Type;
-
+			const unsigned char Index = m_pSwitch[i].m_Type;
 			if(Index <= TILE_NPH_ENABLE)
 			{
-				if((Index >= TILE_JUMP && Index <= TILE_SUBTRACT_TIME) || Index == TILE_ALLOW_TELE_GUN || Index == TILE_ALLOW_BLUE_TELE_GUN)
+				if((Index >= TILE_JUMP && Index <= TILE_SUBTRACT_TIME) ||
+					Index == TILE_ALLOW_TELE_GUN ||
+					Index == TILE_ALLOW_BLUE_TELE_GUN)
+				{
 					m_pSwitch[i].m_Type = Index;
+				}
 				else
+				{
 					m_pSwitch[i].m_Type = 0;
+				}
 			}
 		}
 	}
@@ -167,25 +170,26 @@ void CCollision::Init(class CLayers *pLayers)
 	{
 		for(int i = 0; i < m_Width * m_Height; i++)
 		{
-			int Number = m_pTele[i].m_Number;
-			int Type = m_pTele[i].m_Type;
-			if(Number > 0)
+			const unsigned char Number = m_pTele[i].m_Number;
+			const unsigned char Type = m_pTele[i].m_Type;
+			if(Number && Type)
 			{
+				const vec2 TelePos = vec2(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
 				if(Type == TILE_TELEIN)
 				{
-					m_TeleIns[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
+					m_TeleIns[Number - 1].push_back(TelePos);
 				}
 				else if(Type == TILE_TELEOUT)
 				{
-					m_TeleOuts[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
+					m_TeleOuts[Number - 1].push_back(TelePos);
 				}
 				else if(Type == TILE_TELECHECKOUT)
 				{
-					m_TeleCheckOuts[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
+					m_TeleCheckOuts[Number - 1].push_back(TelePos);
 				}
-				else if(Type)
+				else
 				{
-					m_TeleOthers[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
+					m_TeleOthers[Number - 1].push_back(TelePos);
 				}
 			}
 		}
@@ -369,7 +373,7 @@ int CCollision::GetMoveRestrictions(CALLBACK_SWITCHACTIVE pfnSwitchActive, void 
 		{
 			CDoorTile DoorTile;
 			GetDoorTile(ModMapIndex, &DoorTile);
-			if(in_range(DoorTile.m_Number, 0, m_HighestSwitchNumber) &&
+			if((int)DoorTile.m_Number <= m_HighestSwitchNumber &&
 				pfnSwitchActive(DoorTile.m_Number, pUser))
 			{
 				Restrictions |= ::GetMoveRestrictions(d, DoorTile.m_Index, DoorTile.m_Flags);
@@ -586,6 +590,16 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size) const
 	return false;
 }
 
+bool CCollision::IsOnGround(vec2 Pos, float Size) const
+{
+	if(CheckPoint(Pos.x + Size / 2, Pos.y + Size / 2 + 5))
+		return true;
+	if(CheckPoint(Pos.x - Size / 2, Pos.y + Size / 2 + 5))
+		return true;
+
+	return false;
+}
+
 void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, vec2 Elasticity, bool *pGrounded) const
 {
 	// do the move
@@ -797,15 +811,9 @@ int CCollision::IsTeleportHook(int Index) const
 	return 0;
 }
 
-int CCollision::IsSpeedup(int Index) const
+bool CCollision::IsSpeedup(int Index) const
 {
-	if(!m_pSpeedup || !IsValidTileIndex(Index, m_Width, m_Height))
-		return 0;
-
-	if(m_pSpeedup[Index].m_Force > 0)
-		return Index;
-
-	return 0;
+	return m_pSpeedup && IsValidTileIndex(Index, m_Width, m_Height) && m_pSpeedup[Index].m_Force > 0;
 }
 
 int CCollision::IsTune(int Index) const
@@ -1194,7 +1202,7 @@ void CCollision::SetCollisionAt(float x, float y, int Index)
 	m_pTiles[Ny * m_Width + Nx].m_Index = Index;
 }
 
-void CCollision::SetDoorCollisionAt(float x, float y, int Type, int Flags, int Number)
+void CCollision::SetDoorCollisionAt(float x, float y, unsigned char Type, unsigned char Flags, unsigned char Number)
 {
 	if(!m_pDoor || m_Width <= 0 || m_Height <= 0)
 		return;
@@ -1204,6 +1212,14 @@ void CCollision::SetDoorCollisionAt(float x, float y, int Type, int Flags, int N
 	m_pDoor[Ny * m_Width + Nx].m_Index = Type;
 	m_pDoor[Ny * m_Width + Nx].m_Flags = Flags;
 	m_pDoor[Ny * m_Width + Nx].m_Number = Number;
+}
+
+void CCollision::SetDoorCollisionAt(float x, float y, int Type, int Flags, int Number)
+{
+	if(!in_range(Type, 0, 255) || !in_range(Flags, 0, 255) || !in_range(Number, 0, 255))
+		return;
+
+	SetDoorCollisionAt(x, y, static_cast<unsigned char>(Type), static_cast<unsigned char>(Flags), static_cast<unsigned char>(Number));
 }
 
 void CCollision::GetDoorTile(int Index, CDoorTile *pDoorTile) const

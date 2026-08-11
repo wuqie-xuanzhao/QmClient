@@ -36,6 +36,8 @@ struct SQmClientUsersParseResult
 	int m_OnlineDummyCount = 0;
 };
 
+bool ParseQmClientUsersJson(const json_value *pRoot, const char *pServerAddress, SQmClientUsersParseResult &OutResult);
+
 enum class EQmDeveloperBadgeStyle
 {
 	BLACK,
@@ -61,7 +63,6 @@ struct SQmDeveloperPresenceParseResult
 	std::vector<SQmDeveloperPresence> m_vPresences;
 };
 
-bool ParseQmClientUsersJson(const json_value *pRoot, const char *pServerAddress, SQmClientUsersParseResult &OutResult);
 bool ParseQmDeveloperPresencesJson(const json_value *pRoot, const char *pServerAddress, SQmDeveloperPresenceParseResult &OutResult);
 const SQmDeveloperPresence *FindQmDeveloperPresence(const std::vector<SQmDeveloperPresence> &vPresences, const char *pServerAddress, int PlayerId, const char *pPlayerName, int64_t Now);
 EQmDeveloperBadgeStyle QmDeveloperBadgeStyleFromBucket(int StyleBucket);

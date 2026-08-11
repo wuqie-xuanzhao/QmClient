@@ -12,7 +12,7 @@
 
 #include <game/client/ui_rect.h>
 
-#include <algorithm>
+#include <chrono>
 
 enum class EInputPriority
 {
@@ -24,44 +24,51 @@ enum class EInputPriority
 
 namespace qm_ime_overlay
 {
-inline constexpr int FIXED_CANDIDATE_VIEWPORT_SIZE = 7;
+	inline constexpr int FIXED_CANDIDATE_VIEWPORT_SIZE = 7;
 
-inline int NormalizeSelectedCandidateIndex(int SelectedIndex, int CandidateCount)
-{
-	if(CandidateCount <= 0)
-		return -1;
-	if(SelectedIndex < 0 || SelectedIndex >= CandidateCount)
-		return 0;
-	return SelectedIndex;
-}
-
-struct SQmImeCandidateViewport
-{
-	int m_Start = 0;
-	int m_Count = 0;
-};
-
-inline SQmImeCandidateViewport BuildCandidateViewport(int CandidateCount, int SelectedIndex, int PreviousStart, int MaxVisibleCandidates = FIXED_CANDIDATE_VIEWPORT_SIZE)
-{
-	SQmImeCandidateViewport Viewport;
-	if(CandidateCount <= 0 || MaxVisibleCandidates <= 0)
-		return Viewport;
-
-	Viewport.m_Count = std::min(CandidateCount, MaxVisibleCandidates);
-	const int MaxStart = std::max(0, CandidateCount - Viewport.m_Count);
-	int Start = std::clamp(PreviousStart, 0, MaxStart);
-	const int Selected = NormalizeSelectedCandidateIndex(SelectedIndex, CandidateCount);
-	if(Selected >= 0)
+	struct SQmImeCandidateViewport
 	{
+		int m_Start = 0;
+		int m_Count = 0;
+	};
+
+	inline int NormalizeSelectedCandidateIndex(int SelectedIndex, int CandidateCount)
+	{
+		if(CandidateCount <= 0)
+			return -1;
+		if(SelectedIndex < 0 || SelectedIndex >= CandidateCount)
+			return 0;
+		return SelectedIndex;
+	}
+	inline SQmImeCandidateViewport BuildCandidateViewport(int CandidateCount, int SelectedIndex, int PreviousStart)
+	{
+		SQmImeCandidateViewport Viewport;
+		if(CandidateCount <= 0)
+			return Viewport;
+
+		Viewport.m_Count = minimum(CandidateCount, FIXED_CANDIDATE_VIEWPORT_SIZE);
+		const int MaxStart = maximum(0, CandidateCount - Viewport.m_Count);
+		const int Selected = NormalizeSelectedCandidateIndex(SelectedIndex, CandidateCount);
+		int Start = std::clamp(PreviousStart, 0, MaxStart);
 		if(Selected < Start)
 			Start = Selected;
 		else if(Selected >= Start + Viewport.m_Count)
 			Start = Selected - Viewport.m_Count + 1;
+		Viewport.m_Start = std::clamp(Start, 0, MaxStart);
+		return Viewport;
 	}
-	Viewport.m_Start = std::clamp(Start, 0, MaxStart);
-	return Viewport;
-}
 } // namespace qm_ime_overlay
+
+namespace qm_lineinput
+{
+	inline bool CaretVisibleForElapsed(std::chrono::nanoseconds Elapsed)
+	{
+		using namespace std::chrono_literals;
+		if(Elapsed < 0ns)
+			return true;
+		return Elapsed % 1s < 500ms;
+	}
+} // namespace qm_lineinput
 
 // line input helper
 class CLineInput
@@ -112,6 +119,7 @@ private:
 	float m_ScrollOffset;
 	float m_ScrollOffsetChange;
 	vec2 m_CaretPosition;
+	std::chrono::nanoseconds m_CaretBlinkStartTime{};
 	SMouseSelection m_MouseSelection;
 	size_t m_LastCompositionCursorPos;
 
@@ -134,6 +142,8 @@ private:
 	};
 	static void MoveCursor(EMoveDirection Direction, bool MoveWord, const char *pStr, size_t MaxSize, size_t *pCursorPos);
 	static void SetCompositionWindowPosition(vec2 Anchor, float LineHeight);
+	void RenderCaret(const CTextCursor &Cursor, bool ForceVisible, ColorRGBA TextColor, ColorRGBA TextOutlineColor);
+	void RenderSelection(const CTextCursor &Cursor, ColorRGBA SelectionColor);
 
 	void OnActivate();
 	void OnDeactivate();

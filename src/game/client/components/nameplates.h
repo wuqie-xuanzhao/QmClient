@@ -6,6 +6,11 @@
 
 #include <game/client/component.h>
 
+inline bool QmNameplateUsesPhysicalPixelAlignment(const float HiDpiScale, const bool IsMacos)
+{
+	return IsMacos && HiDpiScale > 1.0f;
+}
+
 struct CNetObj_PlayerInfo;
 
 class CNamePlates : public CComponent
@@ -22,6 +27,7 @@ public:
 	void RenderChatBubble(vec2 Position, int ClientId, float Alpha);
 	void ResetNamePlates();
 	int Sizeof() const override { return sizeof(*this); }
+	void OnShutdown() override;
 	void OnWindowResize() override;
 	void OnRender() override;
 	CNamePlates();

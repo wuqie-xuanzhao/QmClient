@@ -4,6 +4,7 @@
 
 #include <base/color.h>
 
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/components/binds.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
@@ -35,28 +36,36 @@ CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderBu
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	CKeyReaderResult Result = {CurrentBind, false};
+	const bool ReadOnly = Ui()->RenderOnly();
 
 	CUIRect KeyReaderButton, ClearButton;
 	pRect->VSplitRight(pRect->h, &KeyReaderButton, &ClearButton);
+	const ColorRGBA ReaderBaseColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * Ui()->ButtonColorMul(pReaderButton));
+	DrawRoundedSurface(Ui(), *pRect, ReaderBaseColor, ColorRGBA(), 5.0f);
 
+	const int ClearChecked = Result.m_Bind == CBindSlot(KEY_UNKNOWN, KeyModifier::NONE) ? 1 : 0;
+	if(ClearChecked == 0)
+	{
+		const float ClearSurfaceAlpha = 0.22f * Ui()->ButtonColorMul(pClearButton);
+		DrawRoundedSurface(Ui(), ClearButton, ColorRGBA(1.0f, 1.0f, 1.0f, ClearSurfaceAlpha), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_R);
+	}
 	const int ClearButtonResult = Ui()->DoButton_FontIcon(
 		pClearButton, FONT_ICON_TRASH,
-		Result.m_Bind == CBindSlot(KEY_UNKNOWN, KeyModifier::NONE) ? 1 : 0,
-		&ClearButton, BUTTONFLAG_LEFT, IGraphics::CORNER_R);
+		ClearChecked, &ClearButton, BUTTONFLAG_LEFT, IGraphics::CORNER_R, true, ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
 
 	const int ButtonResult = Ui()->DoButtonLogic(pReaderButton, 0, &KeyReaderButton, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
-	if(ButtonResult == 1 || Activate)
+	if(!ReadOnly && (ButtonResult == 1 || Activate))
 	{
 		m_pKeyReaderId = pReaderButton;
 		m_TakeKey = true;
 		m_Key = std::nullopt;
 	}
-	else if(ButtonResult == 2 || ClearButtonResult != 0)
+	else if(!ReadOnly && (ButtonResult == 2 || ClearButtonResult != 0))
 	{
 		Result.m_Bind = CBindSlot(KEY_UNKNOWN, KeyModifier::NONE);
 	}
 
-	if(m_pKeyReaderId == pReaderButton && m_Key.has_value())
+	if(!ReadOnly && m_pKeyReaderId == pReaderButton && m_Key.has_value())
 	{
 		if(m_Key.value().m_Key == KEY_ESCAPE)
 		{
@@ -85,8 +94,8 @@ CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderBu
 		GameClient()->m_Binds.GetKeyBindName(Result.m_Bind.m_Key, Result.m_Bind.m_ModifierMask, aBuf, sizeof(aBuf));
 	}
 
-	const ColorRGBA Color = m_pKeyReaderId == pReaderButton && m_TakeKey ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.4f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * Ui()->ButtonColorMul(pReaderButton));
-	KeyReaderButton.Draw(Color, IGraphics::CORNER_L, 5.0f);
+	if(m_pKeyReaderId == pReaderButton && m_TakeKey)
+		DrawRoundedSurface(Ui(), KeyReaderButton, ColorRGBA(0.0f, 1.0f, 0.0f, 0.4f), ColorRGBA(), 5.0f, 0.0f, IGraphics::CORNER_L);
 	CUIRect Label;
 	KeyReaderButton.HMargin(1.0f, &Label);
 	if(FontSize > 0.0f)
@@ -106,4 +115,13 @@ CKeyBinder::CKeyReaderResult CKeyBinder::DoKeyReader(CButtonContainer *pReaderBu
 bool CKeyBinder::IsActive() const
 {
 	return m_TakeKey;
+}
+
+bool CKeyBinder::AbortPendingKey()
+{
+	if(m_pKeyReaderId == nullptr)
+		return false;
+	m_Key = CBindSlot(KEY_ESCAPE, KeyModifier::NONE);
+	m_TakeKey = false;
+	return true;
 }

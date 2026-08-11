@@ -14,7 +14,7 @@ namespace QmHudNotifications
 			{EServerMessageRoute::System, EServerMessageClass::Prompt, EServerMessageDomain::Status, false, "You will now see all tees on this server, no matter the distance"},
 			{EServerMessageRoute::System, EServerMessageClass::Prompt, EServerMessageDomain::Status, false, "You will no longer see all tees on this server"},
 			{EServerMessageRoute::System, EServerMessageClass::Prompt, EServerMessageDomain::SwapRescue, false, "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled."},
-			{EServerMessageRoute::System, EServerMessageClass::Prompt, EServerMessageDomain::Status, false, "Unknown emote... Say /emote"},
+			{EServerMessageRoute::System, EServerMessageClass::Prompt, EServerMessageDomain::Status, false, "Unknown emote. Use /emote to see available emotes."},
 			{EServerMessageRoute::System, EServerMessageClass::Prompt, EServerMessageDomain::Status, false, "Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee"},
 			{EServerMessageRoute::System, EServerMessageClass::Prompt, EServerMessageDomain::Team, false, "Team save already in progress"},
 		};

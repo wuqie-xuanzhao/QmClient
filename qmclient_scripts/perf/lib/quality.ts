@@ -53,6 +53,116 @@ export const FPS_BASELINES = {
   settings_tab_switch: { p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
 } as const;
 
+export const NON_CARD_MENU_BASELINES = {
+  server_browser_scroll: { p95: 8.33, p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+  friends_scroll: { p95: 8.33, p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+  demo_browser_scroll: { p95: 8.33, p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+  assets_grid_scroll: { p95: 12.5, p99: 16.7, max: 33.4, menuMax: 12.0, onePctLow: 60 },
+  skins_grid_scroll: { p95: 12.5, p99: 16.7, max: 33.4, menuMax: 12.0, onePctLow: 60 },
+  flags_grid_scroll: { p95: 8.33, p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+  language_list_scroll: { p95: 8.33, p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+  dropdown_first_wheel: { p95: 8.33, p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+} as const;
+
+export type NonCardMenuOperation = keyof typeof NON_CARD_MENU_BASELINES;
+
+export interface NonCardMenuOperationSummary {
+  operation: NonCardMenuOperation;
+  verdict: Verdict;
+  reason: string;
+  sampleCount: number;
+  frameMsP95: number;
+  frameMsP99: number;
+  frameMsMax: number;
+  menuMsMax: number;
+  fpsOnePctLow: number;
+  itemsProcessed: number;
+  itemsSkipped: number;
+  cacheHits: number;
+  cacheMisses: number;
+  cacheEvictions: number;
+  uiFieldsAvailable: boolean;
+  cacheFieldsAvailable: boolean;
+}
+
+export interface NonCardMenuBudgetSummary {
+  available: boolean;
+  operations: NonCardMenuOperationSummary[];
+}
+
+function perfNumber(entry: PerfEntry, name: string): number {
+  const parsed = Number(entry.fields[name]);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function perfFieldAvailable(entry: PerfEntry, name: string): boolean {
+  if (!(name in entry.fields)) return false;
+  const parsed = Number(entry.fields[name]);
+  return Number.isFinite(parsed) && parsed >= 0;
+}
+
+export function nonCardMenuBudgetSummary(entries: PerfEntry[]): NonCardMenuBudgetSummary {
+  const fps = fpsSummaries(entries);
+  const trackedMenuEntries = entries.filter(entry =>
+    entry.system === 'perf/menu-ui' &&
+    entry.fields.event === 'menu_ui_frame' &&
+    entry.fields.operation in NON_CARD_MENU_BASELINES);
+  const operations = (Object.keys(NON_CARD_MENU_BASELINES) as NonCardMenuOperation[]).map(operation => {
+    const baseline = NON_CARD_MENU_BASELINES[operation];
+    const fpsSamples = fps.filter(sample => sample.operation === operation);
+    const operationMenuSamples = trackedMenuEntries.filter(entry => entry.fields.operation === operation);
+    const menuSamples = operationMenuSamples.filter(entry => {
+      const frame = perfNumber(entry, 'frame');
+      return fpsSamples.some(sample => frame >= sample.windowStartFrame && frame <= sample.windowEndFrame);
+    });
+    const failures: string[] = [];
+    const warnings: string[] = [];
+    const frameMsP95 = Math.max(0, ...fpsSamples.map(sample => sample.frameMsP95));
+    const frameMsP99 = Math.max(0, ...fpsSamples.map(sample => sample.frameMsP99));
+    const frameMsMax = Math.max(0, ...fpsSamples.map(sample => sample.frameMsMax));
+    const fpsMenuMsMax = Math.max(0, ...fpsSamples.map(sample => sample.menuMsMax));
+    const uiMenuMsMax = Math.max(0, ...menuSamples.map(sample => perfNumber(sample, 'ui_ms')));
+    const menuMsMax = Math.max(fpsMenuMsMax, uiMenuMsMax);
+    const fpsOnePctLow = Math.min(...fpsSamples.filter(sample => sample.fpsOnePctLowAvailable).map(sample => sample.fpsOnePctLow), Number.POSITIVE_INFINITY);
+    const uiFieldsAvailable = menuSamples.length > 0 && menuSamples.every(sample => perfFieldAvailable(sample, 'ui_ms'));
+    const cacheFieldsAvailable = menuSamples.length > 0 && menuSamples.every(sample =>
+      perfFieldAvailable(sample, 'cache_hits') && perfFieldAvailable(sample, 'cache_misses') && perfFieldAvailable(sample, 'cache_evictions'));
+
+    if (fpsSamples.length === 0 || fpsSamples.some(sample => !sample.fpsOnePctLowAvailable)) failures.push('missing fps_1pct_source=real_sampled');
+    else if (fpsOnePctLow < baseline.onePctLow) failures.push(`1pct_low=${fpsOnePctLow.toFixed(1)}<${baseline.onePctLow}`);
+    if (frameMsP95 > baseline.p95) failures.push(`p95=${frameMsP95.toFixed(3)}>${baseline.p95}`);
+    if (frameMsP99 > baseline.p99) failures.push(`p99=${frameMsP99.toFixed(3)}>${baseline.p99}`);
+    if (frameMsMax > baseline.max) failures.push(`max=${frameMsMax.toFixed(3)}>${baseline.max}`);
+    if (menuMsMax > baseline.menuMax) failures.push(`menu_max=${menuMsMax.toFixed(3)}>${baseline.menuMax}`);
+    if (menuSamples.length === 0) failures.push('missing menu_ui_frame visual work');
+    else {
+      if (!uiFieldsAvailable) warnings.push('missing ui_ms field');
+      if (!cacheFieldsAvailable) warnings.push('missing cache hit/miss/eviction fields');
+    }
+
+    return {
+      operation,
+      verdict: failures.length > 0 ? 'FAIL' : warnings.length > 0 ? 'WARN' : 'PASS',
+      reason: [...failures, ...warnings].join(' '),
+      sampleCount: menuSamples.length,
+      frameMsP95,
+      frameMsP99,
+      frameMsMax,
+      menuMsMax,
+      fpsOnePctLow: Number.isFinite(fpsOnePctLow) ? fpsOnePctLow : 0,
+      itemsProcessed: Math.max(0, ...menuSamples.map(sample => perfNumber(sample, 'items_processed'))),
+      itemsSkipped: Math.max(0, ...menuSamples.map(sample => perfNumber(sample, 'items_skipped'))),
+      cacheHits: menuSamples.reduce((sum, sample) => sum + perfNumber(sample, 'cache_hits'), 0),
+      cacheMisses: menuSamples.reduce((sum, sample) => sum + perfNumber(sample, 'cache_misses'), 0),
+      cacheEvictions: menuSamples.reduce((sum, sample) => sum + perfNumber(sample, 'cache_evictions'), 0),
+      uiFieldsAvailable,
+      cacheFieldsAvailable,
+    } satisfies NonCardMenuOperationSummary;
+  });
+  const trackedFpsAvailable = fps.some(sample => sample.operation in NON_CARD_MENU_BASELINES);
+  return { available: trackedFpsAvailable || trackedMenuEntries.length > 0, operations };
+}
+
 export type FpsBaselineOperation = keyof typeof FPS_BASELINES;
 
 export function fpsBaselineVerdict(summary: FpsSummary): { operation: FpsBaselineOperation; passed: boolean; reason: string } | null {
@@ -96,6 +206,7 @@ export interface PerfBundleSummary {
     available: boolean;
     summaries: FpsSummary[];
   };
+  nonCardMenu: NonCardMenuBudgetSummary;
   targetSettings: TargetSettingsSnapshot;
   stutterDiagnostics: StutterDiagnosticsSummary;
   assetsPreviewAdmission: {
@@ -345,7 +456,12 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
   if (FpsWindowMissingRealOnePctLow) {
     warnings.push('fps_1pct_low_missing_real_sampled: fps_summary windows without fps_1pct_source=real_sampled cannot pass the 240Hz gate');
   }
-  const Failed = budgetCorrelation.failingWindowCount > 0 || FpsWindowMissingRealOnePctLow || AggregateOnlyTargetFpsFailures.length > 0 || FpsBaselineFailures.length > 0;
+  const nonCardMenu = nonCardMenuBudgetSummary(entries);
+  const NonCardMenuFailures = nonCardMenu.available ? nonCardMenu.operations.filter(operation => operation.verdict === 'FAIL') : [];
+  const NonCardMenuWarnings = nonCardMenu.available ? nonCardMenu.operations.filter(operation => operation.verdict === 'WARN') : [];
+  for (const operation of NonCardMenuFailures) warnings.push(`non_card_menu_fail: ${operation.operation} ${operation.reason}`);
+  for (const operation of NonCardMenuWarnings) warnings.push(`non_card_menu_warn: ${operation.operation} ${operation.reason}`);
+  const Failed = budgetCorrelation.failingWindowCount > 0 || FpsWindowMissingRealOnePctLow || AggregateOnlyTargetFpsFailures.length > 0 || FpsBaselineFailures.length > 0 || NonCardMenuFailures.length > 0;
 
   return {
     sampleCount: frameEntries.length,
@@ -366,6 +482,7 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
   const percentiles = calcPercentiles(durations);
   const spikes = detectSpikes(frameEntries, BUDGET.h60);
   const fps = fpsSummaries(entries);
+  const nonCardMenu = nonCardMenuBudgetSummary(entries);
   const targetSettings = targetSettingsSnapshot(entries);
   const assetsPreviewAdmission = assetsPreviewAdmissionSummary(entries);
   const assetsVisibleReady = assetsVisibleReadySummary(entries);
@@ -392,6 +509,7 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
       available: fps.length > 0,
       summaries: fps,
     },
+    nonCardMenu,
     targetSettings,
     stutterDiagnostics,
     assetsPreviewAdmission,

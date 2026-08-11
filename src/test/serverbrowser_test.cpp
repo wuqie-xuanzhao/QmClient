@@ -102,4 +102,10 @@ TEST(ServerBrowser, PingCache)
 	EXPECT_EQ(pPingCache->GetPing(aLocalhostBoth, 2), 345);
 	EXPECT_EQ(pPingCache->GetPing(&OtherLocalhost4, 1), 1337);
 	EXPECT_EQ(pPingCache->GetPing(&OtherLocalhost6, 1), 345);
+
+	// 重复加载必须复位读取语句，周期性缓存刷新不能把 SQLITE_DONE 当作失败。
+	pPingCache->Load();
+	EXPECT_EQ(pPingCache->NumEntries(), 2);
+	EXPECT_EQ(pPingCache->GetPing(&Localhost4, 1), 1337);
+	EXPECT_EQ(pPingCache->GetPing(&Localhost6, 1), 345);
 }

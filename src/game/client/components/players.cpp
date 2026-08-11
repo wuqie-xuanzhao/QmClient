@@ -161,13 +161,15 @@ void CPlayers::RenderHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir,
 {
 	const vec2 HandPos = CalculateHandPosition(CenterPos, Dir, PostRotOffset);
 	const float HandAngle = CalculateHandAngle(Dir, AngleOffset);
-	if(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_HANDS).IsValid())
+	if(CTeeRenderInfo::IsDrawableTexture(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_HANDS)))
 	{
 		RenderHand7(pInfo, HandPos, HandAngle, Alpha);
 	}
 	else
 	{
-		RenderHand6(pInfo, HandPos, HandAngle, Alpha);
+		const CSkin::CSkinTextures &SkinTextures = pInfo->m_CustomColoredSkin ? pInfo->m_ColorableRenderSkin : pInfo->m_OriginalRenderSkin;
+		if(CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_HandsOutline) && CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_Hands))
+			RenderHand6(pInfo, HandPos, HandAngle, Alpha);
 	}
 }
 
@@ -296,6 +298,7 @@ void CPlayers::RenderHookCollLine(
 
 	if(!GameClient()->m_GameInfo.m_AllowHookColl)
 		return;
+
 	bool Local = GameClient()->m_Snap.m_LocalClientId == ClientId;
 
 #if defined(CONF_VIDEORECORDER)
@@ -341,6 +344,9 @@ void CPlayers::RenderHookCollLine(
 	vec2 Position = GameClient()->m_aClients[ClientId].m_RenderPos;
 
 	static constexpr float HOOK_START_DISTANCE = CCharacterCore::PhysicalSize() * 1.5f;
+
+	// When the other player isn't predicted, we don't know their tunes.
+	// Use our own tunes instead. This is wrong, but a good heuristic.
 	const CCharacterCore &PlayerCore = GameClient()->m_aClients[ClientId].m_IsPredicted ? GameClient()->m_aClients[ClientId].m_Predicted : GameClient()->m_aClients[GameClient()->m_aLocalIds[g_Config.m_ClDummy]].m_Predicted;
 	float HookLength = PlayerCore.m_Tuning.m_HookLength;
 	float HookFireSpeed = PlayerCore.m_Tuning.m_HookFireSpeed;
@@ -408,7 +414,6 @@ void CPlayers::RenderHookCollLine(
 			if(!HookEnteredTelehook)
 			{
 				vec2 RetractingHookEndPos = BasePos + normalize(SegmentEndPos - BasePos) * HookLength;
-
 				// you can't hook a player, if the hook is behind solids, however you miss the solids as well
 				int Hit = Collision()->IntersectLineTeleHook(SegmentStartPos, RetractingHookEndPos, &HitPos, nullptr, &Tele);
 
@@ -423,10 +428,14 @@ void CPlayers::RenderHookCollLine(
 				{
 					// The hook misses the player, but also misses the solid
 					vLineSegments.emplace_back(LineStartPos, SegmentStartPos);
+
+					// The player hook misses due to a solid
 					HookTipLineSegment = IGraphics::CLineItem(SegmentStartPos, HitPos);
 					break;
 				}
 
+				// we are missing the player, the solid hookline stopped already, but we want this extra line segment
+				// the player-hooking-hook is only longer, if we didn't go through a tele hook
 				HookTipLineSegment = IGraphics::CLineItem(SegmentStartPos, RetractingHookEndPos);
 			}
 
@@ -524,8 +533,8 @@ void CPlayers::RenderHookCollLine(
 	// Render hook coll line
 	const int HookCollSize = Local ? g_Config.m_ClHookCollSize : g_Config.m_ClHookCollSizeOther;
 
-	float Alpha = 1.0f;
-	if(GameClient()->IsOtherTeam(ClientId))
+	float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f && GameClient()->IsOtherTeam(ClientId))
 		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 	Alpha *= (float)g_Config.m_ClHookCollAlpha / 100;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
@@ -543,8 +552,7 @@ void CPlayers::RenderHookCollLine(
 		float LineWidth = 0.5f + (float)(HookCollSize - 1) * 0.25f;
 		const vec2 PerpToAngle = normalize(vec2(Direction.y, -Direction.x)) * GameClient()->m_Camera.m_Zoom;
 
-		for(const auto &LineSegment : vLineSegments)
-		{
+		auto ConvertLineSegments = [&](const IGraphics::CLineItem &LineSegment) {
 			vec2 DrawInitPos(LineSegment.m_X0, LineSegment.m_Y0);
 			vec2 DrawFinishPos(LineSegment.m_X1, LineSegment.m_Y1);
 			vec2 Pos0 = DrawFinishPos + PerpToAngle * -LineWidth;
@@ -552,21 +560,22 @@ void CPlayers::RenderHookCollLine(
 			vec2 Pos2 = DrawInitPos + PerpToAngle * -LineWidth;
 			vec2 Pos3 = DrawInitPos + PerpToAngle * LineWidth;
 			vLineQuadSegments.emplace_back(Pos0.x, Pos0.y, Pos1.x, Pos1.y, Pos2.x, Pos2.y, Pos3.x, Pos3.y);
+		};
+
+		for(const auto &LineSegment : vLineSegments)
+		{
+			ConvertLineSegments(LineSegment);
 		}
+
+		vLineSegments.clear();
+
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(HookCollColor.WithAlpha(Alpha));
 		Graphics()->QuadsDrawFreeform(vLineQuadSegments.data(), vLineQuadSegments.size());
 		if(HookTipLineSegment.has_value() && HookCollTipColor.a > 0.0f && !g_Config.m_TcRevertHookLine)
 		{
 			vLineQuadSegments.clear();
-			const auto &LineSegment = HookTipLineSegment.value();
-			vec2 DrawInitPos(LineSegment.m_X0, LineSegment.m_Y0);
-			vec2 DrawFinishPos(LineSegment.m_X1, LineSegment.m_Y1);
-			vec2 Pos0 = DrawFinishPos + PerpToAngle * -LineWidth;
-			vec2 Pos1 = DrawFinishPos + PerpToAngle * LineWidth;
-			vec2 Pos2 = DrawInitPos + PerpToAngle * -LineWidth;
-			vec2 Pos3 = DrawInitPos + PerpToAngle * LineWidth;
-			vLineQuadSegments.emplace_back(Pos0.x, Pos0.y, Pos1.x, Pos1.y, Pos2.x, Pos2.y, Pos3.x, Pos3.y);
+			ConvertLineSegments(HookTipLineSegment.value());
 			Graphics()->SetColor(HookCollTipColor.WithMultipliedAlpha(Alpha));
 			Graphics()->QuadsDrawFreeform(vLineQuadSegments.data(), vLineQuadSegments.size());
 		}
@@ -622,11 +631,21 @@ void CPlayers::RenderHook(
 		Intra = GameClient()->m_aClients[ClientId].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy);
 
 	bool OtherTeam = GameClient()->IsOtherTeam(ClientId);
-	float Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
+	float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f)
+		Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
 	if(ClientId == -2) // ghost
 		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
+	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
+						  GameClient()->m_aClients[ClientId].m_Afk,
+						  Client()->State() == IClient::STATE_ONLINE,
+						  GameClient()->m_Menus.IsActive(),
+						  ClientId,
+						  GameClient()->m_Snap.m_LocalClientId);
+	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
+
 	RenderInfo.m_Size = 64.0f;
 
 	vec2 Position;
@@ -636,7 +655,7 @@ void CPlayers::RenderHook(
 		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Intra);
 
 	// draw hook
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Afk ? Alpha : 1.0f);
 	if(ClientId < 0)
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 
@@ -719,10 +738,14 @@ void CPlayers::RenderPlayer(
 	RenderTools()->m_LocalTeeRender = Local; // TClient
 
 	float Alpha = 1.0f;
-	if(OtherTeam || ClientId < 0)
-		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-	else if(g_Config.m_TcShowOthersGhosts && !Local && !Spec)
-		Alpha = g_Config.m_TcPredGhostsAlpha / 100.0f;
+	Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f)
+	{
+		if(OtherTeam || ClientId < 0)
+			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+		else if(g_Config.m_TcShowOthersGhosts && !Local && !Spec)
+			Alpha = g_Config.m_TcPredGhostsAlpha / 100.0f;
+	}
 
 	if(!OtherTeam && g_Config.m_TcShowOthersGhosts && !Local && g_Config.m_TcUnpredOthersInFreeze && Client()->m_IsLocalFrozen && !Spec)
 		Alpha = 1.0f;
@@ -737,6 +760,7 @@ void CPlayers::RenderPlayer(
 						  GameClient()->m_Menus.IsActive(),
 						  ClientId,
 						  GameClient()->m_Snap.m_LocalClientId);
+	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 	// TODO: snd_game_volume_others
 	const float Volume = 1.0f;
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
@@ -925,7 +949,7 @@ void CPlayers::RenderPlayer(
 				{
 					const int AttackTuneZone = QmWeaponAnimationTuneZone(GameClient(), Collision(), ClientId, Player);
 					const bool PlayReloadAnimation = WeaponReloadAnimEnabled && QmWeaponUsesReloadFlip(Player.m_Weapon) &&
-						QmWeaponReloadAnimationSelected(g_Config.m_QmWeaponReloadAnimProbability, random_float());
+									 QmWeaponReloadAnimationSelected(g_Config.m_QmWeaponReloadAnimProbability, random_float());
 					ReloadAnimationState.ObserveAttack(Player.m_AttackTick, Player.m_Weapon, AttackTuneZone, PlayReloadAnimation);
 				}
 
@@ -940,13 +964,15 @@ void CPlayers::RenderPlayer(
 				const float TimeSinceSwitch = (float)(Client()->LocalTime() - m_aWeaponSwitchStartTimes[ClientId]);
 				if(WeaponSwitchAnimEnabled)
 				{
+					const float SwitchAnimDuration = maximum(g_Config.m_QmWeaponSwitchAnimDurationMs, 1) / 1000.0f;
+					const float TimeSinceSwitch = (float)(Client()->LocalTime() - m_aWeaponSwitchStartTimes[ClientId]);
 					if(TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration)
 					{
 						const float Progress = TimeSinceSwitch / SwitchAnimDuration;
-						const float InvProgress = 1.0f - Progress;
-						const float Ease = 1.0f - InvProgress * InvProgress * InvProgress;
-						WeaponSwitchOffset += mix(Direction * 40.0f, vec2(0.0f, 0.0f), Ease);
-						WeaponSwitchAngle += (1.0f - Ease) * pi * 2.0f;
+						const float Ease = QmEvaluateVisualEasing(Progress, g_Config.m_QmWeaponSwitchAnimEasing);
+						const float RotationRadians = (g_Config.m_QmWeaponSwitchAnimRotation / 180.0f) * pi;
+						WeaponSwitchOffset += mix(Direction * (float)g_Config.m_QmWeaponSwitchAnimDistance, vec2(0.0f, 0.0f), Ease);
+						WeaponSwitchAngle += (1.0f - Ease) * RotationRadians;
 					}
 				}
 
@@ -956,7 +982,7 @@ void CPlayers::RenderPlayer(
 					const float DefaultReloadSeconds = QmWeaponReloadDelaySeconds(CTuningParams::DEFAULT, Player.m_Weapon);
 					const SQmWeaponReloadRotation ReloadRotation = QmWeaponReloadRotation(LastAttackTime, ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed(), Direction.x < 0.0f);
 					const bool FireOverridesSwitchRotation = WeaponSwitchAnimEnabled && QmWeaponReloadAnimationEligible(ReloadSeconds, DefaultReloadSeconds, Client()->GameTickSpeed()) &&
-						LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
+										 LastAttackTime >= 0.0f && LastAttackTime < SwitchAnimDuration && TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration;
 					WeaponSwitchAngle = QmResolveWeaponAnimationRotation(WeaponSwitchAngle, ReloadRotation, FireOverridesSwitchRotation);
 				}
 			}
@@ -1133,7 +1159,7 @@ void CPlayers::RenderPlayer(
 				if(AttackTicksPassed < g_pData->m_Weapons.m_aId[CurrentWeapon].m_Muzzleduration + 3.0f)
 				{
 					float t = AttackTicksPassed / g_pData->m_Weapons.m_aId[CurrentWeapon].m_Muzzleduration;
-					AlphaMuzzle = mix(2.0f, 0.0f, minimum(1.0f, maximum(0.0f, t)));
+					AlphaMuzzle = mix(2.0f, 0.0f, std::clamp(t, 0.0f, 1.0f));
 				}
 				if(AlphaMuzzle > 0.0f)
 				{
@@ -1172,7 +1198,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// render the "shadow" tee
-	if(Local && ((g_Config.m_Debug && g_Config.m_ClUnpredictedShadow >= 0) || g_Config.m_ClUnpredictedShadow == 1))
+	if(g_Config.m_ClUnpredictedShadow == 3 || (Local && g_Config.m_ClUnpredictedShadow == 1) || (!Local && g_Config.m_ClUnpredictedShadow == 2))
 	{
 		vec2 ShadowPosition = Position;
 		if(ClientId >= 0)
@@ -1181,28 +1207,31 @@ void CPlayers::RenderPlayer(
 				vec2(GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y),
 				Client()->IntraGameTick(g_Config.m_ClDummy));
 
-		RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, ShadowPosition, 0.5f, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle); // render ghost
+		RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, ShadowPosition, g_Config.m_ClUnpredictedShadowAlpha / 100.f, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle); // render ghost
 	}
 
 	const std::chrono::nanoseconds Now = time_get_nanoseconds();
 	const CTeeRenderInfo *pPreviousSkinInfo = ClientId >= 0 ? GameClient()->m_aClients[ClientId].SkinChangePreviousRenderInfo(Now) : nullptr;
 	const float SkinTransitionProgress = ClientId >= 0 ? GameClient()->m_aClients[ClientId].SkinChangeTransitionProgress(Now) : 1.0f;
 	CTeeRenderInfo PreviousSkinInfoHueCycle;
-	int LocalDummy = -1;
-	if(ClientId >= 0)
+	const int LocalDummy = LocalDummyIndexForClient(GameClient(), ClientId);
+	const bool IsDummy = LocalDummy == 1;
+	const bool LocalDummyHueAllowed = LocalDummy == 0 || g_Config.m_QmCycleTeeHueDummy != 0;
+	const bool LocalDummyCustomColorEnabled = LocalDummy != 0 ? g_Config.m_ClDummyUseCustomColor != 0 : g_Config.m_ClPlayerUseCustomColor != 0;
+	const bool UseCustomColors = LocalDummyCustomColorEnabled;
+	const bool UseCustomColors7 = IsDummy ? (g_Config.m_ClDummy7UseCustomColorBody != 0 || g_Config.m_ClDummy7UseCustomColorFeet != 0) : (g_Config.m_ClPlayer7UseCustomColorBody != 0 || g_Config.m_ClPlayer7UseCustomColorFeet != 0);
+	const SQmLocalTeeHueCycleEligibility HueEligibility{
+		LocalDummy >= 0,
+		IsDummy,
+		LocalDummyHueAllowed,
+		UseCustomColors,
+		UseCustomColors7,
+	};
+	if(QmShouldApplyLocalTeeHueCycle(HueEligibility))
 	{
-		if(ClientId == GameClient()->m_aLocalIds[0])
-			LocalDummy = 0;
-		else if(ClientId == GameClient()->m_aLocalIds[1])
-			LocalDummy = 1;
-	}
-	if(LocalDummy >= 0 && (LocalDummy == 0 || g_Config.m_QmCycleTeeHueDummy != 0))
-	{
-		const bool UseCustomColors = LocalDummy != 0 ? g_Config.m_ClDummyUseCustomColor != 0 : g_Config.m_ClPlayerUseCustomColor != 0;
-		const bool UseCustomColors7 = LocalDummy != 0 ? (g_Config.m_ClDummy7UseCustomColorBody != 0 || g_Config.m_ClDummy7UseCustomColorFeet != 0) : (g_Config.m_ClPlayer7UseCustomColorBody != 0 || g_Config.m_ClPlayer7UseCustomColorFeet != 0);
 		SQmTeeHueCycleConfig HueCycleConfig;
 		HueCycleConfig.m_Enabled = g_Config.m_QmCycleTeeHue != 0;
-		HueCycleConfig.m_PlayerUsesCustomColors = !GameClient()->IsTeamPlay() && (UseCustomColors || UseCustomColors7);
+		HueCycleConfig.m_PlayerUsesCustomColors = true;
 		HueCycleConfig.m_TClientRainbowTees = g_Config.m_TcRainbowTees != 0;
 		HueCycleConfig.m_SpeedDegreesPerSecond = g_Config.m_QmCycleTeeHueSpeed;
 		HueCycleConfig.m_TimeSeconds = Now.count() / 1000000000.0;
@@ -1254,11 +1283,19 @@ void CPlayers::RenderPlayer(
 		return;
 
 	int QuadOffsetToEmoticon = NUM_WEAPONS * 2 + 4;
-	if((Player.m_PlayerFlags & PLAYERFLAG_CHATTING) && !Afk)
+	constexpr float EmoticonShadowOpacity = 0.75f;
+	constexpr float EmoticonShadowOffsetX = 2.0f;
+	constexpr float EmoticonShadowOffsetY = 2.0f;
+	if((Player.m_PlayerFlags & PLAYERFLAG_CHATTING) && !GameClient()->m_aClients[ClientId].m_Afk)
 	{
 		int CurEmoticon = (SPRITE_DOTDOT - SPRITE_OOP);
 		Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[CurEmoticon]);
 		int QuadOffset = QuadOffsetToEmoticon + CurEmoticon;
+		if(g_Config.m_QmEmoticonShadow)
+		{
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, Alpha * EmoticonShadowOpacity);
+			Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x + 24.f + EmoticonShadowOffsetX, Position.y - 40.f + EmoticonShadowOffsetY);
+		}
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
 		Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x + 24.f, Position.y - 40.f);
 
@@ -1271,6 +1308,11 @@ void CPlayers::RenderPlayer(
 		int CurEmoticon = (SPRITE_ZZZ - SPRITE_OOP);
 		Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[CurEmoticon]);
 		int QuadOffset = QuadOffsetToEmoticon + CurEmoticon;
+		if(g_Config.m_QmEmoticonShadow)
+		{
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, Alpha * EmoticonShadowOpacity);
+			Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x + 24.f + EmoticonShadowOffsetX, Position.y - 40.f + EmoticonShadowOffsetY);
+		}
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
 		Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x + 24.f, Position.y - 40.f);
 
@@ -1302,9 +1344,14 @@ void CPlayers::RenderPlayer(
 
 			Graphics()->QuadsSetRotation(pi / 6 * WiggleAngle);
 
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, a * Alpha);
 			int QuadOffset = QuadOffsetToEmoticon + GameClient()->m_aClients[ClientId].m_Emoticon;
 			Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[GameClient()->m_aClients[ClientId].m_Emoticon]);
+			if(g_Config.m_QmEmoticonShadow)
+			{
+				Graphics()->SetColor(0.0f, 0.0f, 0.0f, a * Alpha * EmoticonShadowOpacity);
+				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x + EmoticonShadowOffsetX * h, Position.y - 23.f - 32.f * h + EmoticonShadowOffsetY * h, h, h);
+			}
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, a * Alpha);
 			Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x, Position.y - 23.f - 32.f * h, h, h);
 
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1336,10 +1383,14 @@ void CPlayers::RenderPlayerGhost(
 
 	bool FrozenSwappingHide = (GameClient()->m_aClients[ClientId].m_FreezeEnd > 0) && g_Config.m_TcHideFrozenGhosts && g_Config.m_TcSwapGhosts;
 
-	if(OtherTeam || ClientId < 0)
-		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-	else
-		Alpha = g_Config.m_TcUnpredGhostsAlpha / 100.0f;
+	Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+	if(Alpha >= 1.0f)
+	{
+		if(OtherTeam || ClientId < 0)
+			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+		else
+			Alpha = g_Config.m_TcUnpredGhostsAlpha / 100.0f;
+	}
 
 	if(!OtherTeam && FrozenSwappingHide)
 		Alpha = 1.0f;
@@ -1349,6 +1400,7 @@ void CPlayers::RenderPlayerGhost(
 						  GameClient()->m_Menus.IsActive(),
 						  ClientId,
 						  GameClient()->m_Snap.m_LocalClientId);
+	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
@@ -1504,7 +1556,7 @@ void CPlayers::RenderPlayerGhost(
 	{
 		if(!(RenderInfo.m_TeeRenderFlags & TEE_NO_WEAPON))
 		{
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, Afk ? Alpha : 1.0f);
 			Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle * pi * 2 + Angle);
 
 			if(ClientId < 0)
@@ -1766,7 +1818,8 @@ void CPlayers::RenderPlayerGhost(
 
 inline bool CPlayers::IsPlayerInfoAvailable(int ClientId) const
 {
-	return GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
+	return GameClient()->LiveTeamFilterAllowsClient(ClientId) &&
+	       GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
 	       GameClient()->m_Snap.m_apPrevPlayerInfos[ClientId] != nullptr &&
 	       GameClient()->m_Snap.m_apPlayerInfos[ClientId] != nullptr;
 }
@@ -1917,10 +1970,15 @@ void CPlayers::OnRender()
 		if(FollowingPlayer && ClientId == RenderLastId && IsPlayerInfoAvailable(ClientId))
 			continue;
 
-		float Alpha = 1.0f;
-		const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
-		const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
-		Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
+		float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+		if(Alpha <= 0.0f)
+			continue;
+		if(Alpha >= 1.0f)
+		{
+			const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
+			const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
+			Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
+		}
 		if(ClientId == -2) // ghost
 		{
 			Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;

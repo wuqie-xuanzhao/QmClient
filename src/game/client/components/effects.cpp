@@ -203,16 +203,18 @@ void CEffects::BulletTrail(vec2 Pos, float Alpha, float TimePassed)
 	GameClient()->m_Particles.Add(CParticles::GROUP_PROJECTILE_TRAIL, &p, TimePassed);
 }
 
-void CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
+int CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 {
 	const bool PlaySound = ShouldPlayFocusDeathOrSpawnSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteDeathSounds != 0, g_Config.m_SndGame);
 	if(ShouldHideFocusKillEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideKillEffects != 0))
 	{
+		++GameClient()->m_SpawnEffectsFiltered;
 		if(PlaySound)
 			GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, Volume, Pos);
-		return;
+		return 0;
 	}
 
+	int CreatedParticles = 0;
 	for(int i = 0; i < 32; i++)
 	{
 		CParticle p;
@@ -229,10 +231,14 @@ void CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 		p.m_Friction = 0.7f;
 		p.m_Color = ColorRGBA(0xb5 / 255.0f, 0x50 / 255.0f, 0xcb / 255.0f, Alpha);
 		p.m_StartAlpha = Alpha;
-		GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
+		if(GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p))
+			++CreatedParticles;
+		else
+			++GameClient()->m_SpawnParticleAddFailures;
 	}
 	if(PlaySound)
 		GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, Volume, Pos);
+	return CreatedParticles;
 }
 
 void CEffects::PlayerDeath(vec2 Pos, int ClientId, float Alpha)
@@ -473,13 +479,10 @@ void CEffects::FootTrail(vec2 Pos, vec2 Direction, float Alpha)
 
 void CEffects::OnRender()
 {
-	float Speed = 1.0f;
-	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-		Speed = DemoPlayer()->BaseInfo()->m_Speed;
-
+	const float Speed = GameClient()->GetAnimationPlaybackSpeed();
 	const int64_t Now = time();
 	auto UpdateClock = [&](bool &Add, int64_t &LastUpdate, int Frequency) {
-		Add = Now - LastUpdate > time_freq() / ((float)Frequency * Speed);
+		Add = (Now - LastUpdate) / (float)time_freq() * Speed > 1.0f / Frequency;
 		if(Add)
 			LastUpdate = Now;
 	};

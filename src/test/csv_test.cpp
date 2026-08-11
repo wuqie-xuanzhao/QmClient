@@ -1,6 +1,7 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "test.h"
 
+#include <base/fs.h>
 #include <base/system.h>
 
 #include <engine/shared/csv.h>
@@ -21,7 +22,7 @@ static void Expect(int NumColumns, const char *const *ppColumns, const char *pEx
 	ASSERT_TRUE(File);
 	int Read = io_read(File, aBuf, sizeof(aBuf));
 	io_close(File);
-	fs_remove(Info.m_aFilename);
+	EXPECT_FALSE(fs_remove(Info.m_aFilename));
 
 	ASSERT_TRUE(Read >= 1);
 	Read -= 1;

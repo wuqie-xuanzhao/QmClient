@@ -22,6 +22,11 @@
 
 #include <generated/client_data.h>
 
+#include <game/client/QmUi/QmUiPerf.h>
+#include <game/client/QmUi/SettingsPageLayout.h>
+#include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui_listbox.h>
@@ -299,8 +304,10 @@ namespace
 		}
 	};
 
-	static constexpr size_t SETTINGS_ASSETS_CARD_METADATA_CACHE_MAX_ENTRIES = 512;
 	static std::unordered_map<SSettingsAssetsCardCacheKey, SSettingsAssetsCardMetadataCacheEntry, SSettingsAssetsCardCacheKeyHash> gs_SettingsAssetsCardMetadataCache;
+	static int gs_SettingsAssetsCardMetadataCacheHits = 0;
+	static int gs_SettingsAssetsCardMetadataCacheMisses = 0;
+	static int gs_SettingsAssetsCardMetadataCacheEvictions = 0;
 	static std::deque<SSettingsAssetsCardMetadataRequest> gs_SettingsAssetsCardMetadataRequests;
 	static std::unordered_set<SSettingsAssetsCardCacheKey, SSettingsAssetsCardCacheKeyHash> gs_SettingsAssetsCardMetadataRequestKeys;
 	static CSettingsResourcePreviewCache gs_SettingsAssetsResourcePreviewCache;
@@ -352,17 +359,22 @@ namespace
 	{
 		const auto It = gs_SettingsAssetsCardMetadataCache.find(Key);
 		if(It == gs_SettingsAssetsCardMetadataCache.end() || !It->second.m_Ready)
+		{
+			++gs_SettingsAssetsCardMetadataCacheMisses;
 			return nullptr;
+		}
+		++gs_SettingsAssetsCardMetadataCacheHits;
 		return &It->second;
 	}
 
 	static void TrimAssetsCardMetadataCacheForInsert(const SSettingsAssetsCardCacheKey &Key)
 	{
-		if(gs_SettingsAssetsCardMetadataCache.size() < SETTINGS_ASSETS_CARD_METADATA_CACHE_MAX_ENTRIES)
+		if(gs_SettingsAssetsCardMetadataCache.size() < QM_ASSET_METADATA_CACHE_CAPACITY)
 			return;
 		if(gs_SettingsAssetsCardMetadataCache.find(Key) != gs_SettingsAssetsCardMetadataCache.end())
 			return;
 		gs_SettingsAssetsCardMetadataCache.erase(gs_SettingsAssetsCardMetadataCache.begin());
+		++gs_SettingsAssetsCardMetadataCacheEvictions;
 	}
 
 	static SSettingsAssetsCardMetadataCacheEntry *HydrateAssetsCardMetadata(const SSettingsAssetsCardCacheKey &Key, const char *pTitle, const char *pAuthor, const char *pStatusLabel, bool Installed, bool DownloadFailed, bool LocalOnly)
@@ -469,7 +481,7 @@ namespace
 		if(Shell.m_HasStatusTag && pStatusLabel != nullptr && pStatusLabel[0] != '\0')
 		{
 			CUIRect StatusRect = Shell.m_StatusTagRect;
-			StatusRect.Draw(StatusReady ? AssetsCardStatusReadyColor : AssetsCardStatusNetworkColor, IGraphics::CORNER_ALL, minimum(StatusRect.h / 2.0f, 6.0f));
+			DrawRoundedSurface(pUi, StatusRect, StatusReady ? AssetsCardStatusReadyColor : AssetsCardStatusNetworkColor, ColorRGBA(), minimum(StatusRect.h / 2.0f, 6.0f));
 			SLabelProperties StatusLabelProps;
 			StatusLabelProps.m_MaxWidth = static_cast<int>(StatusRect.w - AssetsCardStatusTagHorizontalPadding * 2.0f);
 			StatusLabelProps.m_StopAtEnd = true;
@@ -589,6 +601,16 @@ namespace
 		gs_SettingsAssetsResourcePreviewUploadScheduler.Drain(UploadBudget, ResourcePreviewTelemetry, gs_SettingsAssetsResourcePreviewCache, pGraphics);
 	}
 
+}
+
+void CMenus::ClearSettingsAssetsCardMetadataCache()
+{
+	gs_SettingsAssetsCardMetadataCache.clear();
+	gs_SettingsAssetsCardMetadataRequests.clear();
+	gs_SettingsAssetsCardMetadataRequestKeys.clear();
+	gs_SettingsAssetsCardMetadataCacheHits = 0;
+	gs_SettingsAssetsCardMetadataCacheMisses = 0;
+	gs_SettingsAssetsCardMetadataCacheEvictions = 0;
 }
 
 typedef std::function<void()> TMenuAssetScanLoadedFunc;
@@ -1935,7 +1957,7 @@ namespace
 		if(!TryGetLocalAssetSourcePath(pStorage, Tab, pLocalName, aPath, sizeof(aPath)))
 			return false;
 
-		SHA256_DIGEST Sha256 = SHA256_ZEROED;
+		SHA256_DIGEST Sha256 = {};
 		if(!pStorage->CalculateHashes(aPath, IStorage::TYPE_SAVE, &Sha256))
 			return false;
 
@@ -3824,91 +3846,50 @@ void CMenus::InvalidateSettingsAssetResourcePlan()
 	gs_NextAssetWarmupTab = ASSETS_TAB_ENTITIES;
 }
 
+template<typename TItem>
+static void PublishSettingsAssetMergeEntriesTyped(std::vector<TItem> &vList, int Tab, const std::vector<CMenus::SSettingsAssetMergeEntry> &vEntries, IStorage *pStorage)
+{
+	vList.reserve(vList.size() + vEntries.size());
+	for(const CMenus::SSettingsAssetMergeEntry &Entry : vEntries)
+	{
+		TItem Item;
+		str_copy(Item.m_aName, Entry.m_aName);
+		PopulateLocalAssetAuthor(Item, Tab, pStorage);
+		vList.push_back(Item);
+	}
+}
+
 void CMenus::PublishSettingsAssetMergeEntries(int Tab, const std::vector<SSettingsAssetMergeEntry> &vEntries)
 {
 	switch(Tab)
 	{
 	case ASSETS_TAB_ENTITIES:
-		m_vEntitiesList.reserve(m_vEntitiesList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomEntities Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vEntitiesList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomEntities>(m_vEntitiesList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_GAME:
-		m_vGameList.reserve(m_vGameList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomGame Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vGameList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomGame>(m_vGameList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_EMOTICONS:
-		m_vEmoticonList.reserve(m_vEmoticonList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomEmoticon Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vEmoticonList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomEmoticon>(m_vEmoticonList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_PARTICLES:
-		m_vParticlesList.reserve(m_vParticlesList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomParticle Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vParticlesList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomParticle>(m_vParticlesList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_HUD:
-		m_vHudList.reserve(m_vHudList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomHud Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vHudList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomHud>(m_vHudList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_GUI_CURSOR:
-		m_vGuiCursorList.reserve(m_vGuiCursorList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomGuiCursor Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vGuiCursorList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomGuiCursor>(m_vGuiCursorList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_ARROW:
-		m_vArrowList.reserve(m_vArrowList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomArrow Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vArrowList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomArrow>(m_vArrowList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_STRONG_WEAK:
-		m_vStrongWeakList.reserve(m_vStrongWeakList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomStrongWeak Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vStrongWeakList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomStrongWeak>(m_vStrongWeakList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_ENTITY_BG:
+		// ENTITY_BG maintains a source-name/source-kind index instead of an item list,
+		// so it cannot share the typed merge path used by the other tabs.
 		m_vEntityBgSourceNames.reserve(m_vEntityBgSourceNames.size() + vEntries.size());
 		for(const SSettingsAssetMergeEntry &Entry : vEntries)
 		{
@@ -3921,14 +3902,7 @@ void CMenus::PublishSettingsAssetMergeEntries(int Tab, const std::vector<SSettin
 		}
 		break;
 	case ASSETS_TAB_EXTRAS:
-		m_vExtrasList.reserve(m_vExtrasList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomExtras Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vExtrasList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomExtras>(m_vExtrasList, Tab, vEntries, Storage());
 		break;
 	default:
 		break;
@@ -4181,6 +4155,7 @@ static int InitSearchList(std::vector<TName *> &vpSearchList, std::vector<TName>
 
 void CMenus::RenderSettingsCustom(CUIRect MainView)
 {
+	const SSettingsContentMetrics ContentMetrics = ResolveSettingsContentMetrics(MainView.w);
 	s_CurCustomTab = std::clamp(s_CurCustomTab, (int)ASSETS_TAB_ENTITIES, NUMBER_OF_ASSETS_TABS - 1);
 
 	if(m_AssetsEditorState.m_Open)
@@ -4188,8 +4163,14 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		RenderAssetsEditorScreen(MainView);
 		return;
 	}
+	CUIRect TabBar, CustomList, QuickSearch, ReloadButton, WorkshopHudView;
+	const SSettingsSubTabLayoutFrame AssetsSubTabs = ResolveSettingsSubTabLayout(MainView, ContentMetrics.m_UiScale);
+	TabBar = AssetsSubTabs.m_TabBarRect;
+	MainView = AssetsSubTabs.m_ContentRect;
+	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, ContentMetrics.m_UiScale);
+	MainView = Page.m_UnreservedScrollViewport;
 
-	CUIRect TabBar, CustomList, QuickSearch, DirectoryButton, ReloadButton, WorkshopHudView;
+	const IUiContext AssetsSearchCtx = SettingsUiContext("settings_assets_search", ContentMetrics.m_UiScale);
 	static bool s_AssetsTransitionInitialized = false;
 	static int s_PrevAssetsTab = ASSETS_TAB_ENTITIES;
 	static int s_AssetsTabSwitchFirstFrame = 0;
@@ -4197,13 +4178,16 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	static bool s_AssetsResetListScrollOnTabSwitch = false;
 	static float s_AssetsTransitionDirection = 0.0f;
 	const uint64_t AssetsTabSwitchNode = UiAnimNodeKey("settings_assets_tab_switch");
-	CPerfTimer AssetsUiBudgetTimer;
+	const bool MenuUiPerfEnabled = QmPerfEnabled();
+	const auto AssetsUiBudgetStartTime = MenuUiPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+	gs_SettingsAssetsCardMetadataCacheHits = 0;
+	gs_SettingsAssetsCardMetadataCacheMisses = 0;
+	gs_SettingsAssetsCardMetadataCacheEvictions = 0;
 	auto LogAssetsFramePerfStage = [&](const char *pStage, double DurationMs, bool Force = false, const char *pExtra = nullptr) {
 		LogAssetsPerfStageForClient(Client(), pStage, DurationMs, Force, pExtra);
 	};
 
-	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	const float TabWidth = TabBar.w / NUMBER_OF_ASSETS_TABS;
+	const float TabWidth = TabBar.w / (float)NUMBER_OF_ASSETS_TABS;
 	static CButtonContainer s_aPageTabs[NUMBER_OF_ASSETS_TABS] = {};
 	static const char *s_apAssetsTabNames[NUMBER_OF_ASSETS_TABS] = {};
 	static char s_aAssetsLanguageFile[IO_MAX_PATH_LENGTH] = {};
@@ -4500,12 +4484,77 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		if(m_vExtrasList.size() != gs_aCustomListSize[s_CurCustomTab])
 			gs_aInitCustomList[s_CurCustomTab] = true;
 		break;
+	default:
+		dbg_assert_failed("Invalid s_CurCustomTab: %d", s_CurCustomTab);
+		break;
 	}
 
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
+	const SAssetResourceCategory *pCurrentCategory = AssetResourceCategoryByTab(s_CurCustomTab);
+	const bool SupportsWorkshopSync = pCurrentCategory != nullptr && pCurrentCategory->m_WorkshopEnabled;
+	const bool SupportsAssetsEditor = s_CurCustomTab == ASSETS_TAB_ENTITIES || s_CurCustomTab == ASSETS_TAB_GAME ||
+					  s_CurCustomTab == ASSETS_TAB_EMOTICONS || s_CurCustomTab == ASSETS_TAB_PARTICLES ||
+					  s_CurCustomTab == ASSETS_TAB_HUD || s_CurCustomTab == ASSETS_TAB_GUI_CURSOR ||
+					  s_CurCustomTab == ASSETS_TAB_ARROW || s_CurCustomTab == ASSETS_TAB_STRONG_WEAK ||
+					  s_CurCustomTab == ASSETS_TAB_EXTRAS;
+	const bool ShowEntityPreviewToggle = s_CurCustomTab == ASSETS_TAB_ENTITIES;
+	auto ComputeToolbarButtonWidth = [&](const char *pLabel) {
+		constexpr float MinButtonWidth = 90.0f;
+		constexpr float HorizontalPadding = 18.0f;
+		return maximum(MinButtonWidth, TextRender()->TextWidth(10.0f, Localize(pLabel), -1, -1.0f) + HorizontalPadding);
+	};
+	const float AssetsDirButtonWidth = ComputeToolbarButtonWidth("Assets directory");
+	const float AssetsEditorButtonWidth = ComputeToolbarButtonWidth("Assets editor");
+	const float EntityPreviewButtonWidth = ComputeToolbarButtonWidth("Entity Preview");
+	const float ShowWorkshopAssetsButtonWidth = ComputeToolbarButtonWidth("Show Workshop Assets");
+	const float WorkshopSyncButtonWidth = ComputeToolbarButtonWidth("Sync Workshop Assets");
+	constexpr float ToolbarGap = 10.0f;
+	constexpr float ToolbarRowGap = 5.0f;
+	auto ForEachToolbarButtonWidth = [&](auto &&Callback) {
+		if(ShowEntityPreviewToggle)
+			Callback(EntityPreviewButtonWidth);
+		Callback(AssetsDirButtonWidth);
+		if(SupportsAssetsEditor)
+			Callback(AssetsEditorButtonWidth);
+		if(SupportsWorkshopSync)
+		{
+			Callback(WorkshopSyncButtonWidth);
+			Callback(ShowWorkshopAssetsButtonWidth);
+		}
+		Callback(25.0f);
+	};
+	auto ComputeToolbarWidth = [&]() {
+		float Width = 0.0f;
+		ForEachToolbarButtonWidth([&](float ButtonWidth) {
+			if(Width > 0.0f)
+				Width += ToolbarGap;
+			Width += ButtonWidth;
+		});
+		return Width;
+	};
+	const float ToolbarWidth = ComputeToolbarWidth();
+	auto ComputeToolbarRowCount = [&](float AvailableWidth) {
+		int RowCount = 1;
+		float UsedWidth = 0.0f;
+		ForEachToolbarButtonWidth([&](float ButtonWidth) {
+			const float RequiredWidth = (UsedWidth > 0.0f ? ToolbarGap : 0.0f) + ButtonWidth;
+			if(UsedWidth > 0.0f && UsedWidth + RequiredWidth > AvailableWidth)
+			{
+				++RowCount;
+				UsedWidth = ButtonWidth;
+			}
+			else
+				UsedWidth += RequiredWidth;
+		});
+		return RowCount;
+	};
+	constexpr float AssetsSearchWidth = 220.0f;
+	const bool ToolbarUsesOwnRows = MainView.w < AssetsSearchWidth + ToolbarGap + ToolbarWidth;
+	const int ToolbarRowCount = ToolbarUsesOwnRows ? ComputeToolbarRowCount(MainView.w) : 1;
+	const float FooterHeight = ToolbarUsesOwnRows ? ms_ButtonHeight * (1.0f + ToolbarRowCount) + ToolbarRowGap * ToolbarRowCount : ms_ButtonHeight;
 
 	// skin selector
-	MainView.HSplitTop(MainView.h - 10.0f - ms_ButtonHeight, &CustomList, &MainView);
+	MainView.HSplitTop(MainView.h - 10.0f - FooterHeight, &CustomList, &MainView);
 	if(UsesCombinedAssetList(AssetResourceCategoryByTab(s_CurCustomTab)))
 	{
 		WorkshopHudView = CustomList;
@@ -4580,7 +4629,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			CUIRect LoadingTextRect;
 			CustomList.HSplitTop(SpinnerRect.y - CustomList.y + SpinnerSize + 10.0f, nullptr, &LoadingTextRect);
 			LoadingTextRect.h = 20.0f;
-			DoSettingsMenuLabel(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, "assets-loading-list", &LoadingTextRect, Localize("Loading assets..."), 14.0f, TEXTALIGN_MC);
+			DoSettingsMenuLabel(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, "assets-loading-list", &LoadingTextRect, Localize("Loading assets..."), ContentMetrics.m_BodySize, TEXTALIGN_MC);
 		}
 	}
 
@@ -4649,9 +4698,9 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 	int OldSelected = -1;
 	float Margin = 10;
+	constexpr float AssetCardRadius = 10.0f;
 	float TextureWidth = 128;
 	float TextureHeight = 128;
-	const SAssetResourceCategory *pCurrentCategory = AssetResourceCategoryByTab(s_CurCustomTab);
 	SMenuAssetScanUser LazyLoadUser;
 	LazyLoadUser.m_pUser = this;
 	constexpr size_t MaxPreviewUploadBytesPerFrame = ASSET_PREVIEW_UPLOAD_MAX_BYTES_PER_FRAME;
@@ -4715,7 +4764,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	str_copy(AdaptiveBudgetInput.m_aTab, AssetsSettingsTabName(s_CurCustomTab), sizeof(AdaptiveBudgetInput.m_aTab));
 	str_copy(AdaptiveBudgetInput.m_aContext, SettingsPerfContextName(), sizeof(AdaptiveBudgetInput.m_aContext));
 	AdaptiveBudgetInput.m_FrameMsAverage = PerfSnapshot.m_FrameTimeMs;
-	AdaptiveBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeSpikeMs > 0.0f ? PerfSnapshot.m_FrameTimeSpikeMs : PerfSnapshot.m_FrameTimeMs;
+	AdaptiveBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeP95Ms > 0.0f ? PerfSnapshot.m_FrameTimeP95Ms : PerfSnapshot.m_FrameTimeMs;
 	AdaptiveBudgetInput.m_TargetFrameMs = 8.333f;
 	AdaptiveBudgetInput.m_ScrollActive = ResourceFrameContext.m_ScrollActive;
 	AdaptiveBudgetInput.m_JumpScrollActive = ResourceFrameContext.m_JumpScrollActive;
@@ -5101,7 +5150,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 	auto RenderCardBadge = [&](const CUIRect &Rect, const char *pLabel, const ColorRGBA &FillColor, float FontSize) {
 		CUIRect BadgeRect = Rect;
-		BadgeRect.Draw(FillColor, IGraphics::CORNER_ALL, minimum(BadgeRect.h / 2.0f, 6.0f));
+		DrawRoundedSurface(Ui(), BadgeRect, FillColor, ColorRGBA(), minimum(BadgeRect.h / 2.0f, 6.0f));
 		SLabelProperties BadgeLabelProps;
 		BadgeLabelProps.m_MaxWidth = static_cast<int>(BadgeRect.w - AssetsCardStatusTagHorizontalPadding * 2.0f);
 		BadgeLabelProps.m_StopAtEnd = true;
@@ -5112,7 +5161,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	auto RenderAssetStatusTag = [&](const CUIRect &TagRect, const char *pLabel, bool Positive) {
 		CUIRect StatusRect = TagRect;
 		const ColorRGBA TagColor = Positive ? AssetsCardStatusReadyColor : AssetsCardStatusNetworkColor;
-		StatusRect.Draw(TagColor, IGraphics::CORNER_ALL, minimum(StatusRect.h / 2.0f, 6.0f));
+		DrawRoundedSurface(Ui(), StatusRect, TagColor, ColorRGBA(), minimum(StatusRect.h / 2.0f, 6.0f));
 		SLabelProperties StatusLabelProps;
 		StatusLabelProps.m_MaxWidth = static_cast<int>(StatusRect.w - AssetsCardStatusTagHorizontalPadding * 2.0f);
 		StatusLabelProps.m_StopAtEnd = true;
@@ -5136,7 +5185,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	auto DrawPreviewFrame = [&](const CUIRect &TextureRect) -> CUIRect {
 		CUIRect PreviewFrame = TextureRect;
 		PreviewFrame.Margin(3.0f, &PreviewFrame);
-		PreviewFrame.Draw(ColorRGBA(0.03f, 0.05f, 0.08f, 0.18f), IGraphics::CORNER_ALL, 10.0f);
+		DrawRoundedSurface(Ui(), PreviewFrame, ColorRGBA(0.03f, 0.05f, 0.08f, 0.18f), ColorRGBA(), 10.0f);
 		if(s_CurCustomTab != ASSETS_TAB_GAME && s_CurCustomTab != ASSETS_TAB_STRONG_WEAK)
 			PreviewFrame.Margin(8.0f, &PreviewFrame);
 		return PreviewFrame;
@@ -5144,7 +5193,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 	auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell) {
 		CUIRect ShellRect = Shell.m_CardRect;
-		ShellRect.Draw(ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), IGraphics::CORNER_ALL, 10.0f);
+		DrawRoundedSurface(Ui(), ShellRect, ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), ColorRGBA(), AssetCardRadius);
 	};
 
 	constexpr float AssetCardFooterSpacing = 8.0f;
@@ -5265,7 +5314,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 		const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(true);
 		const CUIRect PreviewRect = ComputePreviewDrawRect(PreviewFrameRect, PreviewContentWidth, PreviewContentHeight);
-		const float TileSize = minimum(PreviewRect.w / (float)COLS, PreviewRect.h / (float)ROWS);
+		const float TileSize = ComputeEntityPreviewTileSize(PreviewRect.w, PreviewRect.h, COLS, ROWS);
 		const float OffX = PreviewRect.x;
 		const float OffY = PreviewRect.y + (PreviewRect.h - ROWS * TileSize) / 2.0f;
 
@@ -5323,7 +5372,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(WorkshopCard);
 		CUIRect LoadingRect = ComputePreviewDrawRect(PreviewFrameRect, PreviewContentWidth, PreviewContentHeight);
 		const ColorRGBA PlaceholderColor = DrawResult == ESettingsResourcePreviewDrawResult::FAILED_PLACEHOLDER ? ColorRGBA(0.18f, 0.08f, 0.10f, 0.16f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.10f);
-		LoadingRect.Draw(PlaceholderColor, IGraphics::CORNER_ALL, 6.0f);
+		DrawRoundedSurface(Ui(), LoadingRect, PlaceholderColor, ColorRGBA(), 6.0f);
 	};
 
 	auto RenderAssetsCardPreview = [&](const SSettingsAssetsCardShell &Shell, const SSettingsAssetsCardPreviewState &PreviewState, bool WorkshopCard, bool RenderPreview) {
@@ -5424,36 +5473,27 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	};
 
 	auto RenderEntityBgFallback = [&](const CUIRect &Rect) {
-		static CUIElement s_MapPreviewFallbackLabel;
-		if(!s_MapPreviewFallbackLabel.IsRegistered())
-			s_MapPreviewFallbackLabel.Init(Ui(), 1);
 		CUIRect FallbackRect = Rect;
 		FallbackRect.Margin(6.0f, &FallbackRect);
-		FallbackRect.Draw(ColorRGBA(0.14f, 0.16f, 0.18f, 0.9f), IGraphics::CORNER_ALL, 8.0f);
+		DrawRoundedSurface(Ui(), FallbackRect, ColorRGBA(0.14f, 0.16f, 0.18f, 0.9f), ColorRGBA(), 8.0f);
 
 		CUIRect LabelRect = FallbackRect;
 		LabelRect.Margin(8.0f, &LabelRect);
-		DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS, s_MapPreviewFallbackLabel, &LabelRect, Localize("Map Preview TODO"), 11.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&LabelRect, Localize("Map Preview TODO"), 11.0f, TEXTALIGN_MC);
 	};
 
 	auto RenderEntityBgVideoFallback = [&](const CUIRect &Rect) {
-		static CUIElement s_VideoPreviewFallbackIcon;
-		static CUIElement s_VideoPreviewFallbackLabel;
-		if(!s_VideoPreviewFallbackIcon.IsRegistered())
-			s_VideoPreviewFallbackIcon.Init(Ui(), 1);
-		if(!s_VideoPreviewFallbackLabel.IsRegistered())
-			s_VideoPreviewFallbackLabel.Init(Ui(), 1);
 		CUIRect FallbackRect = Rect;
 		FallbackRect.Margin(6.0f, &FallbackRect);
-		FallbackRect.Draw(ColorRGBA(0.12f, 0.14f, 0.19f, 0.92f), IGraphics::CORNER_ALL, 8.0f);
+		DrawRoundedSurface(Ui(), FallbackRect, ColorRGBA(0.12f, 0.14f, 0.19f, 0.92f), ColorRGBA(), 8.0f);
 
 		CUIRect IconRect, LabelRect;
 		FallbackRect.HSplitTop(FallbackRect.h * 0.58f, &IconRect, &LabelRect);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS, s_VideoPreviewFallbackIcon, &IconRect, FONT_ICON_PLAY, 30.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&IconRect, FONT_ICON_PLAY, 30.0f, TEXTALIGN_MC);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		LabelRect.Margin(6.0f, &LabelRect);
-		DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS, s_VideoPreviewFallbackLabel, &LabelRect, Localize("Video Background"), 10.5f, TEXTALIGN_MC);
+		Ui()->DoLabel(&LabelRect, Localize("Video Background"), 10.5f, TEXTALIGN_MC);
 	};
 
 	if(s_CurCustomTab == ASSETS_TAB_ENTITIES)
@@ -5801,7 +5841,9 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	if(!UsesCombinedAssetList(pCurrentCategory))
 	{
 		static CListBox s_ListBox;
-		const int LocalColumns = maximum(1, (int)(CustomList.w / (Margin + TextureWidth)));
+		s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_OUTER);
+		const CUIRect StableCustomList = AssetsCardListAreaWithStableScrollbar(CustomList, s_ListBox.ScrollbarWidthMax(), s_ListBox.ScrollbarMargin());
+		const int LocalColumns = maximum(1, (int)(StableCustomList.w / (Margin + TextureWidth)));
 		OldSelected = SelectedCustomAssetIndex(s_CurCustomTab, SearchListSize);
 		if(s_AssetsResetListScrollOnTabSwitch)
 		{
@@ -5827,7 +5869,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		CSettingsResourcePreviewScheduler LocalPreviewPipelineScheduler;
 		LocalPreviewPipelineScheduler.BeginFrame(AssetsPreviewArtifactTokensThisFrame, LocalColumns, AssetsScrollPressure ? 0 : AdaptiveBudget.m_BackgroundTokens, AssetsTextureUploadTokensThisFrame);
 		LocalPreviewPipelineScheduler.SetShellOnlyFrame(AssetsShellOnlyFrame);
-		const float LocalCardWidth = maximum(1.0f, CustomList.w / (float)LocalColumns - Margin);
+		const float LocalCardWidth = maximum(1.0f, StableCustomList.w / (float)LocalColumns - Margin);
 		auto PrepareAssetsLocalVisibleContentBudgeted = [&]() {
 			const bool ShowLocalOnlyBadge = pCurrentCategory != nullptr && pCurrentCategory->m_LocalOnlyBadge && !pCurrentCategory->m_WorkshopEnabled;
 			for(int VisibleIndex = LocalVisibleRange.m_FirstItem; VisibleIndex < LocalVisibleRange.m_EndItem; ++VisibleIndex)
@@ -5867,7 +5909,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			if(pItem == nullptr)
 				continue;
 
-			const CListboxItem Item = s_ListBox.DoNextItem(pItem, OldSelected >= 0 && (size_t)OldSelected == i);
+			const CListboxItem Item = s_ListBox.DoNextItem(pItem, OldSelected >= 0 && (size_t)OldSelected == i, AssetCardRadius + Margin / 2.0f);
 			CUIRect ItemRect = Item.m_Rect;
 			ItemRect.Margin(Margin / 2, &ItemRect);
 			if(!Item.m_Visible)
@@ -5918,7 +5960,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				PreviewState.m_Loading = true;
 			}
 			RenderAssetsCardPreview(Shell, PreviewState, false, LocalCardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewReady));
-			if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !AssetsContentWarmupBlocked)
+			if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady)
 			{
 				if(IsEntityBgVideoAsset(pItem->m_aName))
 					RenderEntityBgVideoFallback(Shell.m_TextureRect);
@@ -5941,9 +5983,24 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			s_CurCustomTab, LocalVisibleRange.m_TotalItems, LocalVisibleRange.m_RenderedItems, LocalVisibleRange.m_SkippedItems,
 			LocalVisibleRange.m_TotalRows, LocalVisibleRange.m_VisibleRows, LocalVisibleRange.m_FirstItem, LocalVisibleRange.m_EndItem);
 		LogAssetsFramePerfStage("assets_local_list_frame", 0.0, true, aLocalListFrameExtra);
-
 		const int NewSelected = s_ListBox.DoEnd();
-		const bool ListScrollActive = s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating();
+		const bool ListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
+		if(ListScrollActive)
+		{
+			StartSettingsPerfScrollWindow("assets_grid_scroll", SettingsPerfContextName(), "settings:assets", "none");
+			SQmMenuUiFramePerf MenuUiPerf;
+			MenuUiPerf.m_pPage = "settings:assets";
+			MenuUiPerf.m_pOperation = "assets_grid_scroll";
+			MenuUiPerf.m_ItemsTotal = LocalVisibleRange.m_TotalItems;
+			MenuUiPerf.m_ItemsVisible = LocalVisibleRange.m_RenderedItems;
+			MenuUiPerf.m_ItemsProcessed = LocalVisibleRange.m_RenderedItems;
+			MenuUiPerf.m_ItemsSkipped = LocalVisibleRange.m_SkippedItems;
+			MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - AssetsUiBudgetStartTime).count() : -1.0f;
+			MenuUiPerf.m_CacheHits = gs_SettingsAssetsCardMetadataCacheHits;
+			MenuUiPerf.m_CacheMisses = gs_SettingsAssetsCardMetadataCacheMisses;
+			MenuUiPerf.m_CacheEvictions = gs_SettingsAssetsCardMetadataCacheEvictions;
+			QmLogMenuUiFramePerf(MenuUiPerf, Client());
+		}
 		const int PreviousFirstVisibleIndex = s_AssetsLastFirstVisibleIndex[s_CurCustomTab];
 		const int PreviousLastVisibleIndex = s_AssetsLastLastVisibleIndex[s_CurCustomTab];
 		const int VisibleJumpThreshold = maximum(1, LocalColumns) * 2;
@@ -6721,7 +6778,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			return;
 		}
 
-		WorkshopHudView.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f), IGraphics::CORNER_ALL, 8.0f);
+		DrawRoundedSurface(Ui(), WorkshopHudView, ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f), ColorRGBA(), 8.0f);
 		WorkshopHudView.Margin(8.0f, &WorkshopHudView);
 
 		CUIRect WorkshopListArea = WorkshopHudView;
@@ -6790,16 +6847,17 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				str_format(aText, sizeof(aText), "%s: %s", Localize("Failed to load"), WorkshopState.m_aError[0] != '\0' ? WorkshopState.m_aError : "unknown");
 				SLabelProperties LabelProps;
 				LabelProps.m_MaxWidth = static_cast<int>(WorkshopListArea.w);
-				Ui()->DoLabel(&WorkshopListArea, aText, 11.0f, TEXTALIGN_MC, LabelProps);
+				Ui()->DoLabel(&WorkshopListArea, aText, ContentMetrics.m_BodySize, TEXTALIGN_MC, LabelProps);
 			}
 			else
 			{
-				DoSettingsMenuLabel(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, "assets-workshop-no-assets", &WorkshopListArea, Localize("No assets"), 12.0f, TEXTALIGN_MC);
+				DoSettingsMenuLabel(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, "assets-workshop-no-assets", &WorkshopListArea, Localize("No assets"), ContentMetrics.m_BodySize, TEXTALIGN_MC);
 			}
 		}
 		else
 		{
 			static CListBox s_WorkshopAssetsListBox;
+			s_WorkshopAssetsListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_OUTER);
 			const CUIRect StableWorkshopListArea = AssetsCardListAreaWithStableScrollbar(WorkshopListArea, s_WorkshopAssetsListBox.ScrollbarWidthMax(), s_WorkshopAssetsListBox.ScrollbarMargin());
 			const int Columns = std::max(1, static_cast<int>(StableWorkshopListArea.w / (Margin + TextureWidth)));
 			const int OldCombinedSelected = SelectedCombinedAssetIndex(s_CurCustomTab, vVisibleLocalAssetIndices);
@@ -6809,7 +6867,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				s_WorkshopAssetsListBox.ResetScroll();
 				s_AssetsResetListScrollOnTabSwitch = false;
 			}
-			s_WorkshopAssetsListBox.DoStart(WorkshopRowHeight, CombinedCount, Columns, 1, OldCombinedSelected, &WorkshopListArea, false, IGraphics::CORNER_ALL, true);
+			s_WorkshopAssetsListBox.DoStart(WorkshopRowHeight, CombinedCount, Columns, 1, OldCombinedSelected, &WorkshopListArea, false, IGraphics::CORNER_ALL);
 
 			static std::vector<CButtonContainer> s_vWorkshopLocalDeleteButtons;
 			s_vWorkshopLocalDeleteButtons.resize(LocalAssetTotalCount);
@@ -6936,7 +6994,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			PreviewPipelineScheduler.BeginFrame(AssetsPreviewArtifactTokensThisFrame, Columns, AssetsScrollPressure ? 0 : AdaptiveBudget.m_BackgroundTokens, AssetsTextureUploadTokensThisFrame);
 			PreviewPipelineScheduler.SetShellOnlyFrame(AssetsShellOnlyFrame);
 			SSettingsAssetsCardHydrationScheduler CardHydrationScheduler = BeginAssetsCardHydrationFrame(AssetsShellOnlyFrame, AssetsTabSwitchCooldownActive, WorkshopVisibleRange.m_RenderedItems, AssetsMetadataLayoutTokensThisFrame, AssetsPreviewArtifactTokensThisFrame);
-			const float WorkshopCardWidth = maximum(1.0f, WorkshopListArea.w / (float)Columns - Margin);
+			const float WorkshopCardWidth = maximum(1.0f, StableWorkshopListArea.w / (float)Columns - Margin);
 			auto PrepareAssetsVisibleContentBudgeted = [&]() {
 				CPerfTimer ThumbSchedulingTimer;
 				VisiblePreflight.m_State = EAssetsVisiblePreflightState::PLANNING;
@@ -7070,7 +7128,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 					const bool Selected = IsLocalAssetSelected(pItem->m_aName);
 
-					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(pItem, Selected);
+					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(pItem, Selected, AssetCardRadius + Margin / 2.0f);
 					CUIRect ItemRect = Item.m_Rect;
 					ItemRect.Margin(Margin / 2, &ItemRect);
 					if(!Item.m_Visible)
@@ -7171,7 +7229,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 						CountResourcePreviewPlaceholder();
 					}
 					RenderAssetsCardPreview(Shell, PreviewState, true, CardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewReady, PreviewState.m_EntityBgHeavyPreviewDeferred));
-					if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !PreviewState.m_DrawFolderIcon && !AssetsContentWarmupBlocked)
+					if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG && !PreviewReady && !PreviewState.m_DrawFolderIcon)
 					{
 						if(IsEntityBgVideoAsset(pItem->m_aName))
 							RenderEntityBgVideoFallback(Shell.m_TextureRect);
@@ -7195,7 +7253,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					const size_t AssetIndex = vVisibleDownloadableAssetIndices[DownloadableIndex];
 					SWorkshopHudAsset &Asset = WorkshopState.m_vAssets[AssetIndex];
 
-					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(&Asset, false);
+					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(&Asset, false, AssetCardRadius + Margin / 2.0f);
 					CUIRect ItemRect = Item.m_Rect;
 					ItemRect.Margin(Margin / 2, &ItemRect);
 					if(!Item.m_Visible)
@@ -7299,9 +7357,24 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				s_CurCustomTab, WorkshopVisibleRange.m_TotalItems, WorkshopVisibleRange.m_RenderedItems, WorkshopVisibleRange.m_SkippedItems,
 				WorkshopVisibleRange.m_TotalRows, WorkshopVisibleRange.m_VisibleRows, WorkshopVisibleRange.m_FirstItem, WorkshopVisibleRange.m_EndItem);
 			LogAssetsFramePerfStage("assets_workshop_list_frame", 0.0, true, aWorkshopListFrameExtra);
-
 			const int NewCombinedSelected = s_WorkshopAssetsListBox.DoEnd();
-			const bool WorkshopListScrollActive = s_WorkshopAssetsListBox.ScrollbarActive() || s_WorkshopAssetsListBox.ScrollbarAnimating();
+			const bool WorkshopListScrollActive = QmMenuUiScrollPerfActive(s_WorkshopAssetsListBox.WheelConsumedThisFrame(), s_WorkshopAssetsListBox.ScrollbarActive(), s_WorkshopAssetsListBox.ScrollbarAnimating());
+			if(WorkshopListScrollActive)
+			{
+				StartSettingsPerfScrollWindow("assets_grid_scroll", SettingsPerfContextName(), "settings:assets", "none");
+				SQmMenuUiFramePerf MenuUiPerf;
+				MenuUiPerf.m_pPage = "settings:assets";
+				MenuUiPerf.m_pOperation = "assets_grid_scroll";
+				MenuUiPerf.m_ItemsTotal = WorkshopVisibleRange.m_TotalItems;
+				MenuUiPerf.m_ItemsVisible = WorkshopVisibleRange.m_RenderedItems;
+				MenuUiPerf.m_ItemsProcessed = WorkshopVisibleRange.m_RenderedItems;
+				MenuUiPerf.m_ItemsSkipped = WorkshopVisibleRange.m_SkippedItems;
+				MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - AssetsUiBudgetStartTime).count() : -1.0f;
+				MenuUiPerf.m_CacheHits = gs_SettingsAssetsCardMetadataCacheHits;
+				MenuUiPerf.m_CacheMisses = gs_SettingsAssetsCardMetadataCacheMisses;
+				MenuUiPerf.m_CacheEvictions = gs_SettingsAssetsCardMetadataCacheEvictions;
+				QmLogMenuUiFramePerf(MenuUiPerf, Client());
+			}
 			RefreshAssetsScrollUploadCooldownForOffset(WorkshopListScrollActive, s_WorkshopAssetsListBox.ScrollOffsetY(), s_aAssetsLastWorkshopScrollOffsetY[s_CurCustomTab], WorkshopRowHeight, WorkshopListJumpScrollActive);
 			RefreshWorkshopAssetsUploadBudget();
 			s_AssetsLastFirstVisibleCombinedIndex[s_CurCustomTab] = WorkshopVisibleRange.m_FirstItem < WorkshopVisibleRange.m_EndItem ? WorkshopVisibleRange.m_FirstItem : -1;
@@ -7463,58 +7536,52 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	}
 
 	// Quick search - 底部按钮栏布局
-	MainView.HSplitBottom(ms_ButtonHeight, &MainView, &QuickSearch);
-	CUIRect AssetsEditorButton;
-	QuickSearch.VSplitLeft(220.0f, &QuickSearch, &DirectoryButton);
+	CUIRect Footer;
+	MainView.HSplitBottom(FooterHeight, &MainView, &Footer);
+	CUIRect AssetsEditorButton, AssetsDirButton, EntityPreviewButton, ShowWorkshopAssetsButton, WorkshopSyncButton;
+	CUIRect ToolbarArea;
+	if(ToolbarUsesOwnRows)
+	{
+		Footer.HSplitTop(ms_ButtonHeight, &QuickSearch, &Footer);
+		Footer.HSplitTop(ToolbarRowGap, nullptr, &ToolbarArea);
+	}
+	else
+	{
+		QuickSearch = Footer;
+		QuickSearch.VSplitLeft(AssetsSearchWidth, &QuickSearch, &ToolbarArea);
+	}
 	QuickSearch.HSplitTop(5.0f, nullptr, &QuickSearch);
-	if(Ui()->DoEditBox_Search(&s_aFilterInputs[s_CurCustomTab], &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+	ui_widget::SInputFieldOptions AssetsSearchOptions;
+	AssetsSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	AssetsSearchOptions.m_Clearable = true;
+	AssetsSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+	AssetsSearchOptions.m_FontSize = ContentMetrics.m_BodySize;
+	if(ui_widget::InputField(AssetsSearchCtx, &s_aFilterInputs[s_CurCustomTab], QuickSearch, AssetsSearchOptions).m_Changed)
 	{
 		gs_aInitCustomList[s_CurCustomTab] = true;
 	}
 
-	// 从右往左切分按钮
-	DirectoryButton.HSplitTop(5.0f, nullptr, &DirectoryButton);
-	auto ComputeToolbarButtonWidth = [&](const char *pLabel) {
-		constexpr float MinButtonWidth = 90.0f;
-		constexpr float HorizontalPadding = 18.0f;
-		return maximum(MinButtonWidth, TextRender()->TextWidth(10.0f, Localize(pLabel), -1, -1.0f) + HorizontalPadding);
+	float ToolbarX = ToolbarUsesOwnRows ? ToolbarArea.x : ToolbarArea.x + maximum(0.0f, ToolbarArea.w - ToolbarWidth);
+	float ToolbarY = ToolbarArea.y;
+	const float ToolbarRowStartX = ToolbarX;
+	auto PlaceToolbarButton = [&](CUIRect &ButtonRect, float ButtonWidth) {
+		if(ToolbarUsesOwnRows && ToolbarX > ToolbarRowStartX && ToolbarX + ToolbarGap + ButtonWidth > ToolbarArea.x + ToolbarArea.w)
+		{
+			ToolbarX = ToolbarRowStartX;
+			ToolbarY += ms_ButtonHeight + ToolbarRowGap;
+		}
+		if(ToolbarX > ToolbarRowStartX)
+			ToolbarX += ToolbarGap;
+		ButtonRect = {ToolbarX, ToolbarY + 5.0f, ButtonWidth, maximum(0.0f, ms_ButtonHeight - 5.0f)};
+		ToolbarX += ButtonWidth;
 	};
-	const bool SupportsWorkshopSync = pCurrentCategory != nullptr && pCurrentCategory->m_WorkshopEnabled;
-	const bool SupportsAssetsEditor = s_CurCustomTab == ASSETS_TAB_ENTITIES || s_CurCustomTab == ASSETS_TAB_GAME ||
-					  s_CurCustomTab == ASSETS_TAB_EMOTICONS || s_CurCustomTab == ASSETS_TAB_PARTICLES ||
-					  s_CurCustomTab == ASSETS_TAB_HUD || s_CurCustomTab == ASSETS_TAB_GUI_CURSOR ||
-					  s_CurCustomTab == ASSETS_TAB_ARROW || s_CurCustomTab == ASSETS_TAB_STRONG_WEAK ||
-					  s_CurCustomTab == ASSETS_TAB_EXTRAS;
-	const bool ShowEntityPreviewToggle = s_CurCustomTab == ASSETS_TAB_ENTITIES;
-	const float AssetsDirButtonWidth = ComputeToolbarButtonWidth("Assets directory");
-	const float AssetsEditorButtonWidth = ComputeToolbarButtonWidth("Assets editor");
-	const float EntityPreviewButtonWidth = ComputeToolbarButtonWidth("Entity Preview");
-	const float ShowWorkshopAssetsButtonWidth = ComputeToolbarButtonWidth("Show Workshop Assets");
-	const float WorkshopSyncButtonWidth = ComputeToolbarButtonWidth("Sync Workshop Assets");
-	float ToolbarWidth = 25.0f + 10.0f + AssetsDirButtonWidth;
 	if(ShowEntityPreviewToggle)
-		ToolbarWidth += 10.0f + EntityPreviewButtonWidth;
-	if(SupportsAssetsEditor)
-		ToolbarWidth += 10.0f + AssetsEditorButtonWidth;
-	if(SupportsWorkshopSync)
-		ToolbarWidth += 10.0f + WorkshopSyncButtonWidth + 10.0f + ShowWorkshopAssetsButtonWidth;
-	DirectoryButton.VSplitRight(ToolbarWidth, nullptr, &DirectoryButton);
-	DirectoryButton.VSplitRight(25.0f, &DirectoryButton, &ReloadButton);
-	DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
-	CUIRect ShowWorkshopAssetsButton;
-	CUIRect WorkshopSyncButton;
-	if(SupportsWorkshopSync)
-	{
-		DirectoryButton.VSplitRight(ShowWorkshopAssetsButtonWidth, &DirectoryButton, &ShowWorkshopAssetsButton);
-		DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
-		DirectoryButton.VSplitRight(WorkshopSyncButtonWidth, &DirectoryButton, &WorkshopSyncButton);
-		DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
-	}
+		PlaceToolbarButton(EntityPreviewButton, EntityPreviewButtonWidth);
+	PlaceToolbarButton(AssetsDirButton, AssetsDirButtonWidth);
 	static CButtonContainer s_AssetsEditorButton;
 	if(SupportsAssetsEditor)
 	{
-		DirectoryButton.VSplitRight(AssetsEditorButtonWidth, &DirectoryButton, &AssetsEditorButton);
-		DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
+		PlaceToolbarButton(AssetsEditorButton, AssetsEditorButtonWidth);
 		if(DoSettingsButton_Menu(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, &s_AssetsEditorButton, "assets-toolbar-editor", Localize("Assets editor"), 0, &AssetsEditorButton))
 		{
 			int AssetsEditorType = ASSETS_EDITOR_TYPE_GAME;
@@ -7538,22 +7605,22 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			return;
 		}
 	}
-
-	CUIRect AssetsDirButton;
-	DirectoryButton.VSplitRight(AssetsDirButtonWidth, &DirectoryButton, &AssetsDirButton);
+	if(SupportsWorkshopSync)
+	{
+		PlaceToolbarButton(WorkshopSyncButton, WorkshopSyncButtonWidth);
+		PlaceToolbarButton(ShowWorkshopAssetsButton, ShowWorkshopAssetsButtonWidth);
+	}
+	PlaceToolbarButton(ReloadButton, 25.0f);
 
 	// Entity Preview 按钮（仅实体层标签页显示）
 	if(ShowEntityPreviewToggle)
 	{
-		CUIRect ToggleRect;
-		DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
-		DirectoryButton.VSplitRight(EntityPreviewButtonWidth, &DirectoryButton, &ToggleRect);
 		static CButtonContainer s_EntityPreviewToggleId;
-		if(DoSettingsButton_Menu(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, &s_EntityPreviewToggleId, "assets-toolbar-entity-preview", Localize("Entity Preview"), gs_SettingsAssetsEntityGamePreview, &ToggleRect))
+		if(DoSettingsButton_Menu(SETTINGS_ASSETS, s_CurCustomTab, s_CurCustomTab, &s_EntityPreviewToggleId, "assets-toolbar-entity-preview", Localize("Entity Preview"), gs_SettingsAssetsEntityGamePreview, &EntityPreviewButton))
 		{
 			gs_SettingsAssetsEntityGamePreview = !gs_SettingsAssetsEntityGamePreview;
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_EntityPreviewToggleId, &ToggleRect, Localize("Toggle between game scene preview and raw texture"));
+		GameClient()->m_Tooltips.DoToolTip(&s_EntityPreviewToggleId, &EntityPreviewButton, Localize("Toggle between game scene preview and raw texture"));
 	}
 
 	static CButtonContainer s_AssetsDirId;

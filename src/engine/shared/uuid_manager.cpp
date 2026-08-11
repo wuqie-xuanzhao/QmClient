@@ -195,12 +195,12 @@ void CUuidManager::DebugDump() const
 	}
 }
 
-std::unique_ptr<CUuidManager> CUuidManager_New()
+std::unique_ptr<CUuidManager> CUuidManager::New()
 {
 	return std::make_unique<CUuidManager>();
 }
 
-const CUuidManager &CUuidManager_Global()
+const CUuidManager &CUuidManager::Global()
 {
 	return g_UuidManager;
 }

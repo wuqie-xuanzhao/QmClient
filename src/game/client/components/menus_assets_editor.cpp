@@ -12,6 +12,7 @@
 
 #include <generated/client_data.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/components/assets_resource_registry.h>
 #include <game/client/components/menus.h>
 #include <game/client/gameclient.h>
@@ -1966,7 +1967,10 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	char aExportPlaceholder[64];
 	str_format(aExportPlaceholder, sizeof(aExportPlaceholder), Localize("my_%s"), AssetsEditorTypeName(m_AssetsEditorState.m_Type));
 	s_ExportNameInput.SetEmptyText(aExportPlaceholder);
-	if(Ui()->DoEditBox(&s_ExportNameInput, &ExportRow, EditBoxFontSize))
+	const IUiContext AssetsEditorExportNameCtx = SettingsUiContext("assets_editor_export_name");
+	ui_widget::SInputFieldOptions ExportNameOptions;
+	ExportNameOptions.m_FontSize = EditBoxFontSize;
+	if(ui_widget::InputField(AssetsEditorExportNameCtx, &s_ExportNameInput, ExportRow, ExportNameOptions).m_Changed)
 		AssetsEditorCommitExportNameForType();
 
 	static CUi::SDropDownState s_BlendModeDropDownState;
@@ -2312,7 +2316,12 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	CUIRect DonorSearchLabel, DonorSearchBox;
 	SplitLeftSafe(LeftBottomRow1, SearchLabelWidth, &DonorSearchLabel, &DonorSearchBox);
 	Ui()->DoLabel(&DonorSearchLabel, Localize("Search"), FontSize, TEXTALIGN_ML);
-	Ui()->DoClearableEditBox(&s_aDonorSearchInputs[m_AssetsEditorState.m_Type], &DonorSearchBox, EditBoxFontSize);
+	const IUiContext AssetsEditorDonorSearchCtx = SettingsUiContext("assets_editor_donor_search");
+	ui_widget::SInputFieldOptions DonorSearchOptions;
+	DonorSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	DonorSearchOptions.m_Clearable = true;
+	DonorSearchOptions.m_FontSize = EditBoxFontSize;
+	ui_widget::InputField(AssetsEditorDonorSearchCtx, &s_aDonorSearchInputs[m_AssetsEditorState.m_Type], DonorSearchBox, DonorSearchOptions);
 
 	CUIRect DonorLabel, DonorDropDown;
 	SplitLeftSafe(LeftBottomRow2, DonorLabelWidth, &DonorLabel, &DonorDropDown);
@@ -2355,7 +2364,12 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	CUIRect MainSearchLabel, MainSearchBox;
 	SplitLeftSafe(RightBottomRow1, MainSearchLabelWidth, &MainSearchLabel, &MainSearchBox);
 	Ui()->DoLabel(&MainSearchLabel, Localize("Search"), FontSize, TEXTALIGN_ML);
-	Ui()->DoClearableEditBox(&s_aMainSearchInputs[m_AssetsEditorState.m_Type], &MainSearchBox, EditBoxFontSize);
+	const IUiContext AssetsEditorMainSearchCtx = SettingsUiContext("assets_editor_main_search");
+	ui_widget::SInputFieldOptions MainSearchOptions;
+	MainSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	MainSearchOptions.m_Clearable = true;
+	MainSearchOptions.m_FontSize = EditBoxFontSize;
+	ui_widget::InputField(AssetsEditorMainSearchCtx, &s_aMainSearchInputs[m_AssetsEditorState.m_Type], MainSearchBox, MainSearchOptions);
 
 	CUIRect BottomMainRow, ResetAllButton;
 	const float ResetButtonWidth = minimum(140.0f, maximum(90.0f, TextRender()->TextWidth(FontSize, Localize("Reset All"), -1, -1.0f) + 20.0f));

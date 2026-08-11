@@ -11,6 +11,7 @@
 #include <base/perf_timer.h>
 #include <base/system.h>
 
+#include <engine/console.h>
 #include <engine/demo.h>
 #include <engine/favorites.h>
 #include <engine/friends.h>
@@ -28,12 +29,15 @@
 #include <generated/client_data.h>
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiSurface.h>
 #include <game/client/animstate.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/touch_controls.h>
 #include <game/client/frame_scheduler.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/client/ui_scrollregion.h>
@@ -447,20 +451,26 @@ void CMenus::RenderGame(CUIRect MainView)
 	const int LocalTeam = HasLocalInfo ? GameClient()->m_Snap.m_pLocalInfo->m_Team : TEAM_SPECTATORS;
 	const bool Recording = DemoRecorder(RECORDER_MANUAL)->IsRecording();
 	const bool FastPracticeEnabled = GameClient()->m_FastPractice.Enabled();
+	const bool LiveDirectorActive = GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER;
 	const bool ReportDisabledOnAxiom = GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
 
 	const char *pDisconnectButtonLabel = Localize("Disconnect");
-	const char *pDummyButtonLabel = Localize("Connect dummy");
-	const char *pDummyButtonTextId = "ingame-game-connect-dummy";
-	if(Client()->DummyConnecting())
+	const char *pDummyButtonLabel = nullptr;
+	const char *pDummyButtonTextId = nullptr;
+	if(!LiveDirectorActive)
 	{
-		pDummyButtonLabel = Localize("Connecting dummy");
-		pDummyButtonTextId = "ingame-game-connecting-dummy";
-	}
-	else if(Client()->DummyConnected())
-	{
-		pDummyButtonLabel = Localize("Disconnect dummy");
-		pDummyButtonTextId = "ingame-game-disconnect-dummy";
+		pDummyButtonLabel = Localize("Connect dummy");
+		pDummyButtonTextId = "ingame-game-connect-dummy";
+		if(Client()->DummyConnecting())
+		{
+			pDummyButtonLabel = Localize("Connecting dummy");
+			pDummyButtonTextId = "ingame-game-connecting-dummy";
+		}
+		else if(Client()->DummyConnected())
+		{
+			pDummyButtonLabel = Localize("Disconnect dummy");
+			pDummyButtonTextId = "ingame-game-disconnect-dummy";
+		}
 	}
 	const char *pEditHudButtonLabel = Localize("Edit HUD");
 	const char *pDemoButtonLabel = Recording ? Localize("Stop record") : Localize("Record demo");
@@ -489,8 +499,8 @@ void CMenus::RenderGame(CUIRect MainView)
 	const float CompactPracticeButtonWidth = CalcMenuButtonWidth("fp", MenuButtonPaddingCompact, PracticeButtonMinWidth);
 	const float DisconnectButtonWidthNormal = CalcMenuButtonWidth(pDisconnectButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float DisconnectButtonWidthCompact = CalcMenuButtonWidth(pDisconnectButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
-	const float DummyButtonWidthNormal = CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
-	const float DummyButtonWidthCompact = CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
+	const float DummyButtonWidthNormal = LiveDirectorActive ? 0.0f : CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
+	const float DummyButtonWidthCompact = LiveDirectorActive ? 0.0f : CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 	const float EditHudButtonWidthNormal = CalcMenuButtonWidth(pEditHudButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float EditHudButtonWidthCompact = CalcMenuButtonWidth(pEditHudButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 	const float DemoButtonWidthNormal = CalcMenuButtonWidth(pDemoButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
@@ -502,7 +512,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	const float ReportButtonWidthNormal = CalcMenuButtonWidth(pReportButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float ReportButtonWidthCompact = CalcMenuButtonWidth(pReportButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 
-	const bool ShowGameplayButtons = HasLocalInfo && HasGameInfo && !Paused && !Spec;
+	const bool ShowGameplayButtons = HasLocalInfo && HasGameInfo && !Paused && !Spec && !LiveDirectorActive;
 	const bool ShowSpectateButton = ShowGameplayButtons && LocalTeam != TEAM_SPECTATORS && !FastPracticeEnabled;
 	const bool ShowJoinRedButton = ShowGameplayButtons && IsTeamPlay && LocalTeam != TEAM_RED;
 	const bool ShowJoinBlueButton = ShowGameplayButtons && IsTeamPlay && LocalTeam != TEAM_BLUE;
@@ -513,9 +523,9 @@ void CMenus::RenderGame(CUIRect MainView)
 	const bool ShowAutoCameraButton = HasLocalInfo && (LocalTeam == TEAM_SPECTATORS || Paused || Spec);
 
 	const float UtilityButtonWidthNormal =
-		DisconnectButtonWidthNormal + DummyButtonWidthNormal + EditHudButtonWidthNormal + DemoButtonWidthNormal + SaveReplayButtonWidthNormal + DemoMarkerButtonWidthNormal + ReportButtonWidthNormal + UtilityButtonSpacingNormal * 6.0f;
+		DisconnectButtonWidthNormal + (LiveDirectorActive ? 0.0f : DummyButtonWidthNormal + UtilityButtonSpacingNormal) + EditHudButtonWidthNormal + DemoButtonWidthNormal + SaveReplayButtonWidthNormal + DemoMarkerButtonWidthNormal + ReportButtonWidthNormal + UtilityButtonSpacingNormal * 5.0f;
 	const float UtilityButtonWidthCompact =
-		DisconnectButtonWidthCompact + DummyButtonWidthCompact + EditHudButtonWidthCompact + DemoButtonWidthCompact + SaveReplayButtonWidthCompact + DemoMarkerButtonWidthCompact + ReportButtonWidthCompact + UtilityButtonSpacingCompact * 6.0f;
+		DisconnectButtonWidthCompact + (LiveDirectorActive ? 0.0f : DummyButtonWidthCompact + UtilityButtonSpacingCompact) + EditHudButtonWidthCompact + DemoButtonWidthCompact + SaveReplayButtonWidthCompact + DemoMarkerButtonWidthCompact + ReportButtonWidthCompact + UtilityButtonSpacingCompact * 5.0f;
 	const float PrimaryButtonBarWidth = maximum(0.0f, MainView.w - 20.0f);
 
 	auto CalcPrimaryButtonsWidth = [&](bool IncludeTeamplayDDRaceButtons) {
@@ -659,44 +669,49 @@ void CMenus::RenderGame(CUIRect MainView)
 	}
 
 	UtilityButtonBar.VSplitRight(UtilityButtonSpacing, &UtilityButtonBar, nullptr);
-	UtilityButtonBar.VSplitRight(DummyButtonWidth, &UtilityButtonBar, &Button);
+	if(!LiveDirectorActive)
+	{
+		UtilityButtonBar.VSplitRight(DummyButtonWidth, &UtilityButtonBar, &Button);
 
-	static CButtonContainer s_DummyButton;
-	if(!Client()->DummyAllowed())
-	{
-		DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
-		GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Dummies are not allowed on this server"));
-	}
-	else if(Client()->DummyConnectingDelayed())
-	{
-		DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
-		GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Please wait…"));
-	}
-	else if(Client()->DummyConnecting())
-	{
-		DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
-	}
-	else if(DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 0, &Button))
-	{
-		if(!Client()->DummyConnected())
+		static CButtonContainer s_DummyButton;
+		if(!Client()->DummyAllowed())
 		{
-			Client()->DummyConnect();
+			DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
+			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Dummies are not allowed on this server"));
 		}
-		else
+		else if(Client()->DummyConnectingDelayed())
 		{
-			if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
+			DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
+			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Please wait…"));
+		}
+		else if(Client()->DummyConnecting())
+		{
+			DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
+		}
+		else if(DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 0, &Button))
+		{
+			if(!Client()->DummyConnected())
 			{
-				PopupConfirm(Localize("Disconnect dummy"), Localize("Are you sure that you want to disconnect your dummy?"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnectDummy);
+				GameClient()->m_QmAxiomAutoLogin.EnableDummyReconnectForServer();
+				Client()->DummyConnect();
 			}
 			else
 			{
-				Client()->DummyDisconnect(nullptr);
-				SetActive(false);
+				if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
+				{
+					PopupConfirm(Localize("Disconnect dummy"), Localize("Are you sure that you want to disconnect your dummy?"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnectDummy);
+				}
+				else
+				{
+					GameClient()->OnDummyManualDisconnect();
+					Client()->DummyDisconnect(nullptr);
+					SetActive(false);
+				}
 			}
 		}
-	}
 
-	UtilityButtonBar.VSplitRight(UtilityButtonSpacing, &UtilityButtonBar, nullptr);
+		UtilityButtonBar.VSplitRight(UtilityButtonSpacing, &UtilityButtonBar, nullptr);
+	}
 	UtilityButtonBar.VSplitRight(EditHudButtonWidth, &UtilityButtonBar, &Button);
 	static CButtonContainer s_EditHudButton;
 	if(DoIngameMenuButton(PAGE_GAME, "ingame-game-edit-hud", &s_EditHudButton, pEditHudButtonLabel, 0, &Button))
@@ -836,7 +851,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			static CButtonContainer s_PauseButton;
 			if(DoIngameMenuButton(PAGE_GAME, pPauseButtonTextId, &s_PauseButton, pPauseButtonLabel, 0, &Button))
 			{
-				Console()->ExecuteLine("say /pause");
+				Console()->ExecuteLine("say /pause", IConsole::CLIENT_ID_UNSPECIFIED);
 				SetActive(false);
 			}
 		}
@@ -930,7 +945,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		static CButtonContainer s_RemoveConsoleButton;
 		if(DoIngameMenuButton(PAGE_GAME, "ingame-game-remote-console", &s_RemoveConsoleButton, Localize("Remote console"), 0, &Button))
 		{
-			Console()->ExecuteLine("toggle_remote_console");
+			Console()->ExecuteLine("toggle_remote_console", IConsole::CLIENT_ID_UNSPECIFIED);
 		}
 
 		ButtonBar2.VSplitRight(5.0f, &ButtonBar2, nullptr);
@@ -938,7 +953,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		static CButtonContainer s_LocalConsoleButton;
 		if(DoIngameMenuButton(PAGE_GAME, "ingame-game-console", &s_LocalConsoleButton, Localize("Console"), 0, &Button))
 		{
-			Console()->ExecuteLine("toggle_local_console");
+			Console()->ExecuteLine("toggle_local_console", IConsole::CLIENT_ID_UNSPECIFIED);
 		}
 		// Only when these are all false, the preview page is rendered. Once the page is not rendered, update is needed upon next rendering.
 		if(!GameClient()->m_TouchControls.IsEditingActive() || m_MenusIngameTouchControls.m_CurrentMenu != CMenusIngameTouchControls::EMenuType::MENU_BUTTONS || GameClient()->m_TouchControls.IsButtonEditing())
@@ -1028,6 +1043,7 @@ void CMenus::PopupConfirmDisconnect()
 
 void CMenus::PopupConfirmDisconnectDummy()
 {
+	GameClient()->OnDummyManualDisconnect();
 	Client()->DummyDisconnect(nullptr);
 	SetActive(false);
 }
@@ -1160,6 +1176,11 @@ void CMenus::PopupConfirmTurnOffEditor()
 		GameClient()->m_TouchControls.SetEditingActive(!GameClient()->m_TouchControls.IsEditingActive());
 		m_MenusIngameTouchControls.ResetButtonPointers();
 	}
+}
+
+void CMenus::PopupConfirmOpenWiki()
+{
+	Client()->ViewLink(Localize("https://wiki.ddnet.org/wiki/Touch_controls"));
 }
 
 void CMenus::RenderPlayers(CUIRect MainView)
@@ -1652,17 +1673,9 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 
 			if(m_IngameMotdParagraphCache.m_BuildByteOffset >= TextLength)
 			{
-				TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex);
-				if(m_IngameMotdParagraphCache.m_Valid && m_MotdTextContainerIndex.Valid())
-				{
-					m_IngameMotdParagraphCache.m_PreviousTextHash = m_IngameMotdParagraphCache.m_TextHash;
-					m_IngameMotdParagraphCache.m_PreviousUpdateTime = m_IngameMotdParagraphCache.m_UpdateTime;
-					m_IngameMotdParagraphCache.m_PreviousWidth = m_IngameMotdParagraphCache.m_Width;
-					m_IngameMotdParagraphCache.m_PreviousFontSize = m_IngameMotdParagraphCache.m_FontSize;
-					m_IngameMotdParagraphCache.m_PreviousHeight = m_IngameMotdParagraphCache.m_Height;
-					m_IngameMotdParagraphCache.m_PreviousTextContainerIndex = m_MotdTextContainerIndex;
-				}
-				m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex;
+				// 文本容器不支持多 owner；构建期间继续显示旧容器，完成后再原子替换。
+				TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
+				std::swap(m_MotdTextContainerIndex, m_IngameMotdParagraphCache.m_BuildTextContainerIndex);
 				m_IngameMotdParagraphCache.m_BuildTextContainerIndex.Reset();
 				m_IngameMotdParagraphCache.m_BuildCursor = CTextCursor();
 				m_IngameMotdParagraphCache.m_BuildByteOffset = 0;
@@ -1674,7 +1687,6 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 				m_IngameMotdParagraphCache.m_LastStableHeight = m_IngameMotdParagraphCache.m_Height;
 				m_IngameMotdParagraphCache.m_Valid = true;
 				m_IngameMotdParagraphCache.m_Pending = false;
-				m_IngameMotdParagraphCache.m_PreviousText = pMotd;
 			}
 		}
 	}
@@ -1691,7 +1703,7 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 	}
 }
 
-bool CMenus::RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea)
+bool CMenus::RenderIngameMotdStableParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea)
 {
 	if(m_IngameMotdParagraphCache.m_Valid && m_MotdTextContainerIndex.Valid() &&
 		absolute(m_IngameMotdParagraphCache.m_Width - Motd.w) < 0.01f &&
@@ -1700,13 +1712,7 @@ bool CMenus::RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize
 		TextRender()->RenderTextContainer(m_MotdTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), MotdTextArea.x, MotdTextArea.y);
 		return true;
 	}
-	if(!m_IngameMotdParagraphCache.m_PreviousTextContainerIndex.Valid())
-		return false;
-	if(absolute(m_IngameMotdParagraphCache.m_PreviousWidth - Motd.w) >= 0.01f ||
-		absolute(m_IngameMotdParagraphCache.m_PreviousFontSize - FontSize) >= 0.01f)
-		return false;
-	TextRender()->RenderTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), MotdTextArea.x, MotdTextArea.y);
-	return true;
+	return false;
 }
 
 void CMenus::RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize)
@@ -1933,11 +1939,11 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		default:
 			dbg_assert_failed("unknown team mode");
 		}
-		if((Config()->m_SvTeam == SV_TEAM_ALLOWED || Config()->m_SvTeam == SV_TEAM_MANDATORY) && (Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize || Config()->m_SvMaxTeamSize != CConfig::ms_SvMaxTeamSize))
+		if((Config()->m_SvTeam == SV_TEAM_ALLOWED || Config()->m_SvTeam == SV_TEAM_MANDATORY) && (Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize || Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize))
 		{
-			if(Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize && Config()->m_SvMaxTeamSize != CConfig::ms_SvMaxTeamSize)
+			if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize && Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize)
 				str_format(aBuf, sizeof(aBuf), "%s (%s %d, %s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
-			else if(Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize)
+			else if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize)
 				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize);
 			else
 				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
@@ -1953,6 +1959,13 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
 	str_format(aBuf, sizeof(aBuf), "%d/%d", GameClient()->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients);
 	DoServerInfoField("ingame-game-info-players-label", "ingame-game-info-players-value", m_IngameServerInfoTextSnapshot.m_PlayersHash, &Label, Localize("Players"), aBuf);
+
+	IUiContext ServerInfoTextInputCtx;
+	ServerInfoTextInputCtx.m_pUi = Ui();
+	ServerInfoTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	ServerInfoTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	ServerInfoTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_server_info_text_inputs");
+	ServerInfoTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 	if(CurrentServerInfo.m_aMap[0] != '\0' && GameInfo.h >= 34.0f)
 	{
@@ -1971,7 +1984,10 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		NoteRow.VSplitLeft(72.0f, &NoteLabel, &NoteInput);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Note"));
 		DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-game-info-note", &NoteLabel, aBuf, FontSizeBody, TEXTALIGN_ML);
-		if(Ui()->DoEditBox(&s_MapNoteInput, &NoteInput, FontSizeBody * 0.85f))
+		ui_widget::SInputFieldOptions MapNoteInputOptions;
+		MapNoteInputOptions.m_pPlaceholder = Localize("Note");
+		MapNoteInputOptions.m_FontSize = FontSizeBody * 0.85f;
+		if(ui_widget::InputField(ServerInfoTextInputCtx, &s_MapNoteInput, NoteInput, MapNoteInputOptions).m_Changed)
 			GameClient()->m_TClient.SetMapNote(CurrentServerInfo.m_aMap, s_MapNoteInput.GetString());
 	}
 
@@ -1997,7 +2013,7 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
 	ScrollParams.m_ScrollUnit = 5 * MotdFontSize;
 	s_ScrollRegion.Begin(&Motd, &ScrollOffset, &ScrollParams);
 	Motd.y += ScrollOffset.y;
@@ -2006,8 +2022,7 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	const bool CacheReady = IngameMotdParagraphCacheMatches(Motd, MotdFontSize);
 
 	CUIRect MotdTextArea;
-	const float PreviousHeight = m_IngameMotdParagraphCache.m_PreviousTextContainerIndex.Valid() ? m_IngameMotdParagraphCache.m_PreviousHeight : 0.0f;
-	const float MotdTextHeight = CacheReady ? m_IngameMotdParagraphCache.m_Height : maximum(maximum(m_IngameMotdParagraphCache.m_LastStableHeight, PreviousHeight), maximum(3.0f * MotdFontSize, Motd.h));
+	const float MotdTextHeight = CacheReady ? m_IngameMotdParagraphCache.m_Height : maximum(m_IngameMotdParagraphCache.m_LastStableHeight, maximum(3.0f * MotdFontSize, Motd.h));
 	Motd.HSplitTop(MotdTextHeight, &MotdTextArea, &Motd);
 	s_ScrollRegion.AddRect(MotdTextArea);
 
@@ -2017,7 +2032,7 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	}
 	else
 	{
-		const bool RenderedMotdParagraph = RenderIngameMotdPreviousParagraphCache(Motd, MotdFontSize, MotdTextArea);
+		const bool RenderedMotdParagraph = RenderIngameMotdStableParagraphCache(Motd, MotdFontSize, MotdTextArea);
 		if(!RenderedMotdParagraph)
 			RenderIngameMotdFallbackText(MotdTextArea, MotdFontSize);
 		if(!RenderedMotdParagraph && QmPerfEnabled())
@@ -2101,7 +2116,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)
 	int i = 0;
 	for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption; pOption = pOption->m_pNext, i++)
 	{
-		if(!m_FilterInput.IsEmpty() && !str_utf8_find_nocase(pOption->m_aDescription, m_FilterInput.GetString()))
+		if(!QmTextMatchesIncludeExcludeFilter(pOption->m_aDescription, m_FilterInput.GetString(), m_ExcludeInput.GetString()))
 			continue;
 		const int Stars = ParseCallvoteMapStars(pOption->m_aDescription);
 		if(!IsVisibleBySortMode(Stars))
@@ -2204,7 +2219,7 @@ bool CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators, bo
 		if(Index == GameClient()->m_Snap.m_LocalClientId || (FilterSpectators && pInfoByName->m_Team == TEAM_SPECTATORS))
 			continue;
 
-		if(!str_utf8_find_nocase(GameClient()->m_aClients[Index].m_aName, m_FilterInput.GetString()))
+		if(!QmTextMatchesIncludeExcludeFilter(GameClient()->m_aClients[Index].m_aName, m_FilterInput.GetString(), m_ExcludeInput.GetString()))
 			continue;
 
 		if(m_CallvoteSelectedPlayer == Index)
@@ -2266,7 +2281,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	MainView.HSplitTop(20.0f, &Bottom, &MainView);
 	Bottom.Draw(ms_ColorTabbarActive, IGraphics::CORNER_NONE, 0.0f);
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	MainView.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
+	DrawRoundedSurface(Ui(), MainView, ms_ColorTabbarActive, ms_ColorTabbarActive, 10.0f, 0.0f, IGraphics::CORNER_B);
 	MainView.Margin(10.0f, &MainView);
 
 	if(Client()->RconAuthed())
@@ -2308,18 +2323,49 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	Bottom.HSplitTop(5.0f, nullptr, &Bottom);
 
 	// render quick search
-	CUIRect QuickSearch;
+	CUIRect QuickSearch, QuickExclude;
 	Bottom.VSplitLeft(5.0f, nullptr, &Bottom);
-	Bottom.VSplitLeft(250.0f, &QuickSearch, &Bottom);
+	const bool HasMapSort = s_ControlPage == EServerControlTab::SETTINGS;
+	const float MapSortWidth = HasMapSort ? 140.0f : 0.0f;
+	const float MapSortGap = HasMapSort ? 10.0f : 0.0f;
+	const float FilterWidth = std::min(220.0f, std::max(1.0f, (Bottom.w - 5.0f - MapSortWidth - MapSortGap) * 0.5f));
+	Bottom.VSplitLeft(FilterWidth, &QuickSearch, &Bottom);
+	Bottom.VSplitLeft(5.0f, nullptr, &Bottom);
+	Bottom.VSplitLeft(FilterWidth, &QuickExclude, &Bottom);
 	if(m_ControlPageOpening)
 	{
 		m_ControlPageOpening = false;
 		Ui()->SetActiveItem(&m_FilterInput);
 		m_FilterInput.SelectAll();
 	}
-	bool Searching = Ui()->DoEditBox_Search(&m_FilterInput, &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	IUiContext CallvoteSearchCtx;
+	CallvoteSearchCtx.m_pUi = Ui();
+	CallvoteSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	CallvoteSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	CallvoteSearchCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_search");
+	CallvoteSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	ui_widget::SInputFieldOptions CallvoteSearchOptions;
+	CallvoteSearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	CallvoteSearchOptions.m_Clearable = true;
+	CallvoteSearchOptions.m_SearchHotkeyEnabled = !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive();
+	CallvoteSearchOptions.m_FontSize = 14.0f;
+	bool Searching = ui_widget::InputField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, CallvoteSearchOptions).m_Changed;
+	IUiContext CallvoteExcludeCtx = CallvoteSearchCtx;
+	CallvoteExcludeCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_exclude");
+	ui_widget::SInputFieldOptions CallvoteExcludeOptions;
+	CallvoteExcludeOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+	CallvoteExcludeOptions.m_Clearable = true;
+	CallvoteExcludeOptions.m_pPlaceholder = Localize("Exclude");
+	CallvoteExcludeOptions.m_FontSize = 14.0f;
+	Searching = ui_widget::InputField(CallvoteExcludeCtx, &m_ExcludeInput, QuickExclude, CallvoteExcludeOptions).m_Changed || Searching;
+	IUiContext CallvoteTextInputCtx;
+	CallvoteTextInputCtx.m_pUi = Ui();
+	CallvoteTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	CallvoteTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	CallvoteTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_text_inputs");
+	CallvoteTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
-	if(s_ControlPage == EServerControlTab::SETTINGS)
+	if(HasMapSort)
 	{
 		static CScrollRegion s_CallvoteMapSortScrollRegion;
 		m_CallvoteMapSortDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_CallvoteMapSortScrollRegion;
@@ -2336,7 +2382,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		static_assert(std::size(apSortLabels) == (int)ECallvoteMapSort::NUM_MODES);
 		const int OldSort = (int)m_CallvoteMapSort;
 		CUIRect SortDropDown;
-		Bottom.VSplitLeft(10.0f, nullptr, &Bottom);
+		Bottom.VSplitLeft(MapSortGap, nullptr, &Bottom);
 		Bottom.VSplitLeft(130.0f, &SortDropDown, &Bottom);
 		const int NewSort = Ui()->DoDropDown(&SortDropDown, OldSort, apSortLabels, std::size(apSortLabels), m_CallvoteMapSortDropDownState);
 		if(NewSort != OldSort && NewSort >= 0 && NewSort < (int)ECallvoteMapSort::NUM_MODES)
@@ -2418,7 +2464,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		Ui()->SetActiveItem(&m_CallvoteReasonInput);
 		m_CallvoteReasonInput.SelectAll();
 	}
-	Ui()->DoEditBox(&m_CallvoteReasonInput, &Reason, 14.0f);
+	ui_widget::SInputFieldOptions ReasonInputOptions;
+	ReasonInputOptions.m_pPlaceholder = Localize("Reason");
+	ReasonInputOptions.m_FontSize = 14.0f;
+	ui_widget::InputField(CallvoteTextInputCtx, &m_CallvoteReasonInput, Reason, ReasonInputOptions);
 
 	// vote option loading indicator
 	if(s_ControlPage == EServerControlTab::SETTINGS && GameClient()->m_Voting.IsReceivingOptions())
@@ -2502,10 +2551,16 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 			Bottom.VSplitLeft(5.0f, nullptr, &Bottom);
 			Bottom.VSplitLeft(250.0f, &Button, &Bottom);
-			Ui()->DoEditBox(&s_VoteDescriptionInput, &Button, 14.0f);
+			ui_widget::SInputFieldOptions VoteDescriptionInputOptions;
+			VoteDescriptionInputOptions.m_pPlaceholder = Localize("Vote description");
+			VoteDescriptionInputOptions.m_FontSize = 14.0f;
+			ui_widget::InputField(CallvoteTextInputCtx, &s_VoteDescriptionInput, Button, VoteDescriptionInputOptions);
 
 			Bottom.VMargin(20.0f, &Button);
-			Ui()->DoEditBox(&s_VoteCommandInput, &Button, 14.0f);
+			ui_widget::SInputFieldOptions VoteCommandInputOptions;
+			VoteCommandInputOptions.m_pPlaceholder = Localize("Vote command");
+			VoteCommandInputOptions.m_FontSize = 14.0f;
+			ui_widget::InputField(CallvoteTextInputCtx, &s_VoteCommandInput, Button, VoteCommandInputOptions);
 		}
 	}
 }
@@ -2534,7 +2589,16 @@ void CMenus::RenderUnfinishedMaps(CUIRect MainView)
 	static CLineInput s_PlayerNameInput(s_aPlayerName, sizeof(s_aPlayerName));
 	s_PlayerNameInput.SetEmptyText(Client()->PlayerName());
 	static bool s_NameDirty = false;
-	if(Ui()->DoEditBox(&s_PlayerNameInput, &Row, 12.0f))
+	IUiContext UnfinishedMapsTextInputCtx;
+	UnfinishedMapsTextInputCtx.m_pUi = Ui();
+	UnfinishedMapsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	UnfinishedMapsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	UnfinishedMapsTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_unfinished_maps_text_inputs");
+	UnfinishedMapsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	ui_widget::SInputFieldOptions PlayerNameInputOptions;
+	PlayerNameInputOptions.m_pPlaceholder = Client()->PlayerName();
+	PlayerNameInputOptions.m_FontSize = 12.0f;
+	if(ui_widget::InputField(UnfinishedMapsTextInputCtx, &s_PlayerNameInput, Row, PlayerNameInputOptions).m_Changed)
 		s_NameDirty = true;
 
 	MainView.HSplitTop(6.0f, nullptr, &MainView);
@@ -2769,14 +2833,73 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	TabBar.VSplitLeft(75.0f, &Button, &TabBar);
 	static CButtonContainer s_FavoriteMapsButton;
-	if(DoMenuTabV2(&s_FavoriteMapsButton, "🔖", g_Config.m_UiPage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_NONE))
+	if(DoMenuTabV2(&s_FavoriteMapsButton, "", g_Config.m_UiPage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_NONE))
 	{
 		NewPage = PAGE_FAVORITE_MAPS;
+	}
+	const float FavoriteMapsIconSide = minimum(Button.w, Button.h) * 0.56f;
+	const CUIRect FavoriteMapsIconRect{Button.x + (Button.w - FavoriteMapsIconSide) * 0.5f, Button.y + (Button.h - FavoriteMapsIconSide) * 0.5f, FavoriteMapsIconSide, FavoriteMapsIconSide};
+	const ColorRGBA FavoriteMapsIconColor = ConfiguredQmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+	if(!GameClient()->QmIconManager()->RenderIcon(EQmIcon::BOOKMARK, FavoriteMapsIconRect, FavoriteMapsIconColor))
+	{
+		const unsigned OldFlags = TextRender()->GetRenderFlags();
+		const EFontPreset OldPreset = TextRender()->GetFontPreset();
+		const ColorRGBA OldTextColor = TextRender()->GetTextColor();
+		TextRender()->TextColor(FavoriteMapsIconColor);
+		TextRender()->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+		Ui()->DoLabel(&FavoriteMapsIconRect, FONT_ICON_BOOKMARK, FavoriteMapsIconSide, TEXTALIGN_MC);
+		TextRender()->SetRenderFlags(OldFlags);
+		TextRender()->SetFontPreset(OldPreset);
+		TextRender()->TextColor(OldTextColor);
 	}
 	GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
 
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+
+	int MaxPage = PAGE_FAVORITES + ServerBrowser()->FavoriteCommunities().size();
+	if(
+		!Ui()->IsPopupOpen() &&
+		CLineInput::GetActiveInput() == nullptr &&
+		((g_Config.m_UiPage >= PAGE_INTERNET && g_Config.m_UiPage <= MaxPage) || g_Config.m_UiPage == PAGE_FAVORITE_MAPS) &&
+		((m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITE_COMMUNITY_5) || m_MenuPage == PAGE_FAVORITE_MAPS))
+	{
+		if(Input()->KeyPress(KEY_RIGHT))
+		{
+			if(g_Config.m_UiPage == PAGE_FAVORITES)
+			{
+				NewPage = PAGE_FAVORITE_MAPS;
+			}
+			else if(g_Config.m_UiPage == PAGE_FAVORITE_MAPS)
+			{
+				NewPage = ServerBrowser()->FavoriteCommunities().empty() ? PAGE_INTERNET : PAGE_FAVORITE_COMMUNITY_1;
+			}
+			else
+			{
+				NewPage = g_Config.m_UiPage + 1;
+			}
+			if(NewPage > MaxPage && NewPage != PAGE_FAVORITE_MAPS)
+				NewPage = PAGE_INTERNET;
+		}
+		if(Input()->KeyPress(KEY_LEFT))
+		{
+			if(g_Config.m_UiPage == PAGE_FAVORITE_MAPS)
+			{
+				NewPage = PAGE_FAVORITES;
+			}
+			else if(!ServerBrowser()->FavoriteCommunities().empty() && g_Config.m_UiPage == PAGE_FAVORITE_COMMUNITY_1)
+			{
+				NewPage = PAGE_FAVORITE_MAPS;
+			}
+			else
+			{
+				NewPage = g_Config.m_UiPage - 1;
+			}
+			if(NewPage < PAGE_INTERNET)
+				NewPage = ServerBrowser()->FavoriteCommunities().empty() ? PAGE_FAVORITE_MAPS : MaxPage;
+		}
+	}
 
 	size_t FavoriteCommunityIndex = 0;
 	static CButtonContainer s_aFavoriteCommunityButtons[5];
@@ -2785,7 +2908,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 	{
 		TabBar.VSplitLeft(75.0f, &Button, &TabBar);
 		const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
-		if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, g_Config.m_UiPage == Page, &Button, IGraphics::CORNER_NONE, false, nullptr, nullptr, nullptr, m_CommunityIcons.Find(pCommunity->Id())))
+		if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, g_Config.m_UiPage == Page, &Button, IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, m_CommunityIcons.Find(pCommunity->Id())))
 		{
 			NewPage = Page;
 		}
@@ -2820,7 +2943,7 @@ int CMenus::GhostlistFetchCallback(const CFsFileInfo *pInfo, int IsDir, int Stor
 	str_format(aFilename, sizeof(aFilename), "%s/%s", pSelf->GameClient()->m_Ghost.GetGhostDir(), pInfo->m_pName);
 
 	CGhostInfo Info;
-	if(!pSelf->GameClient()->m_Ghost.GhostLoader()->GetGhostInfo(aFilename, &Info, pMap, pSelf->Client()->GetCurrentMapSha256(), pSelf->Client()->GetCurrentMapCrc()))
+	if(!pSelf->GameClient()->m_Ghost.GhostLoader()->GetGhostInfo(aFilename, &Info, pMap, pSelf->GameClient()->Map()->Sha256(), pSelf->GameClient()->Map()->Crc()))
 		return 0;
 
 	CGhostItem Item;

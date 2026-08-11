@@ -1,45 +1,14 @@
 #!/bin/bash
 set -e
 
-# Ensure that binaries from MSYS2 are preferred over Windows-native commands like find and sort which work differently.
-PATH="/usr/bin/:$PATH"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+# shellcheck source=scripts/compile_libs/_build_common.sh
+source "${SCRIPT_DIR}/../compile_libs/_build_common.sh"
 
-# $ANDROID_HOME can be used-defined, else the default location is used. Important notes:
-# - The path must not contain spaces on Windows.
-# - $HOME must be used instead of ~ else cargo-ndk cannot find the folder.
-ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
-export ANDROID_HOME
+assert_android_ndk_found
 
-BUILD_FLAGS="${BUILD_FLAGS:--j$(nproc)}"
-export BUILD_FLAGS
-
-ANDROID_NDK_VERSION="$(cd "$ANDROID_HOME/ndk" && find . -maxdepth 1 | sort -n | tail -1)"
-ANDROID_NDK_VERSION="${ANDROID_NDK_VERSION:2}"
-# ANDROID_NDK_HOME must be exported for cargo-ndk
-export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
-
-# ANDROID_API_LEVEL must specify the _minimum_ supported SDK version, otherwise this will cause linking errors at launch
-ANDROID_API_LEVEL=24
 ANDROID_SUB_BUILD_DIR=build_arch
-
-COLOR_RED="\e[1;31m"
-COLOR_YELLOW="\e[1;33m"
-COLOR_CYAN="\e[1;36m"
-COLOR_RESET="\e[0m"
-
 SHOW_USAGE_INFO=0
-
-log_info() {
-	printf "${COLOR_CYAN}%s${COLOR_RESET}\n" "$1"
-}
-
-log_warn() {
-	printf "${COLOR_YELLOW}%s${COLOR_RESET}\n" "$1" 1>&2
-}
-
-log_error() {
-	printf "${COLOR_RED}%s${COLOR_RESET}\n" "$1" 1>&2
-}
 
 if [ -z ${1+x} ]; then
 	SHOW_USAGE_INFO=1
@@ -142,28 +111,56 @@ fi
 
 export TW_VERSION_NAME=$ANDROID_VERSION_NAME
 
+if [ -z ${SOURCE_DATE_EPOCH+x} ]; then
+	if SOURCE_DATE_EPOCH="$(git log -1 --format=%ct 2> /dev/null)"; then
+		export SOURCE_DATE_EPOCH
+	elif [ -e source_date_epoch ]; then
+		SOURCE_DATE_EPOCH="$(cat source_date_epoch)"
+		export SOURCE_DATE_EPOCH
+	else
+		unset SOURCE_DATE_EPOCH
+		if [ -z ${TW_ALLOW_NON_REPRODUCIBLE_BUILD+x} ]; then
+			log_warn "Building non-reproducibly"
+		else
+			log_error "Cannot build reproducibly: Source directory not in git repository, not from an official source download and \`SOURCE_DATE_EPOCH\` is unset."
+			log_error "Set \`TW_ALLOW_NON_REPRODUCIBLE_BUILD=1\` to build unreproducibly and ignore this check."
+			exit 1
+		fi
+	fi
+fi
+
 function build_for_type() {
+	# Remove absolute build paths from binary
+	build_extra_cflags="-ffile-prefix-map=${ANDROID_TOOLCHAIN_ROOT}=ANDROID_TOOLCHAIN_ROOT"
+	if [[ "${BUILD_TYPE}" == "Release" ]]; then
+		build_extra_cflags="${build_extra_cflags} ${ANDROID_EXTRA_RELEASE_CFLAGS}"
+	fi
+
 	cmake \
 		-H. \
 		-G "Ninja" \
 		-DPREFER_BUNDLED_LIBS=ON \
 		-DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-		-DANDROID_PLATFORM="android-${ANDROID_API_LEVEL}" \
+		-DCMAKE_C_FLAGS="${build_extra_cflags}" \
+		-DCMAKE_CXX_FLAGS="${build_extra_cflags}" \
+		-DCMAKE_ASM_FLAGS="${build_extra_cflags}" \
+		-DANDROID_PLATFORM="android-${ANDROID_API}" \
 		-DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
 		-DANDROID_NDK="$ANDROID_NDK_HOME" \
 		-DANDROID_ABI="${2}" \
 		-DANDROID_ARM_NEON=TRUE \
-		-DANDROID_PACKAGE_NAME="${PACKAGE_NAME//./_}" \
+		-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON \
+		-DANDROID_PACKAGE_NAME="${PACKAGE_NAME}" \
+		-DANDROID_PACKAGE_NAME_JNI="${PACKAGE_NAME//./_}" \
 		-DCMAKE_ANDROID_NDK="$ANDROID_NDK_HOME" \
 		-DCMAKE_SYSTEM_NAME=Android \
-		-DCMAKE_SYSTEM_VERSION="$ANDROID_API_LEVEL" \
+		-DCMAKE_SYSTEM_VERSION="$ANDROID_API" \
 		-DCMAKE_ANDROID_ARCH_ABI="${2}" \
 		-DCARGO_NDK_TARGET="${3}" \
-		-DCARGO_NDK_API="$ANDROID_API_LEVEL" \
+		-DCARGO_NDK_API="$ANDROID_API" \
 		-B"${BUILD_FOLDER}/$ANDROID_SUB_BUILD_DIR/$1" \
 		-DSERVER=ON \
 		-DTOOLS=OFF \
-		-DDEV=TRUE \
 		-DCMAKE_CROSSCOMPILING=ON \
 		-DVULKAN=ON \
 		-DVIDEORECORDER=OFF
@@ -257,12 +254,9 @@ if [[ "${ANDROID_BUILD}" == "all" ]]; then
 fi
 
 log_info "Copying data folder..."
+rm -rf assets/asset_integrity_files/data
 mkdir -p assets/asset_integrity_files
 cp -R "$ANDROID_SUB_BUILD_DIR/$ANDROID_BUILD_DUMMY/data" ./assets/asset_integrity_files
-
-log_info "Downloading certificate..."
-curl -s -S --remote-name --time-cond cacert.pem https://curl.se/ca/cacert.pem
-cp ./cacert.pem ./assets/asset_integrity_files/data/cacert.pem || exit 1
 
 log_info "Creating integrity index file..."
 (

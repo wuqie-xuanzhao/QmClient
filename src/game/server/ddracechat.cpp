@@ -12,7 +12,7 @@
 #include <game/localization.h>
 #include <game/mapitems.h>
 #include <game/server/entities/character.h>
-#include <game/server/gamemodes/DDRace.h>
+#include <game/server/gamemodes/ddnet.h>
 #include <game/server/teams.h>
 #include <game/team_state.h>
 #include <game/teamscore.h>
@@ -603,6 +603,14 @@ void CGameContext::ConMapInfo(IConsole::IResult *pResult, void *pUserData)
 	if(!pPlayer)
 		return;
 
+	// use cached map info for current map
+	const bool IsCurrentMap = pResult->NumArguments() == 0 || str_comp_nocase(pResult->GetString(0), pSelf->Server()->GetMapName()) == 0;
+	if(IsCurrentMap && pSelf->m_aMapInfoMessage[0] != '\0')
+	{
+		pSelf->SendChatTarget(pResult->m_ClientId, pSelf->m_aMapInfoMessage);
+		return;
+	}
+
 	if(pResult->NumArguments() > 0)
 		pSelf->Score()->MapInfo(pResult->m_ClientId, pResult->GetString(0));
 	else
@@ -675,7 +683,7 @@ void CGameContext::ConPractice(IConsole::IResult *pResult, void *pUserData)
 
 	int Team = Teams.m_Core.Team(pResult->m_ClientId);
 
-	if(Team < TEAM_FLOCK || (Team == TEAM_FLOCK && g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO) || Team >= TEAM_SUPER)
+	if(!Teams.IsValidTeamNumber(Team) || (Team == TEAM_FLOCK && g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO))
 	{
 		pSelf->Console()->Print(
 			IConsole::OUTPUT_LEVEL_STANDARD,
@@ -781,7 +789,7 @@ void CGameContext::ConUnPractice(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	if(Teams.Count(Team) > g_Config.m_SvMaxTeamSize && pSelf->m_pController->Teams().TeamLocked(Team))
+	if(Teams.TeamSize(Team) > g_Config.m_SvMaxTeamSize && pSelf->m_pController->Teams().TeamLocked(Team))
 	{
 		log_info("chatresp", "Can't disable practice. This team exceeds the maximum allowed size of %d players for regular team", g_Config.m_SvMaxTeamSize);
 		return;
@@ -810,6 +818,7 @@ void CGameContext::ConUnPractice(IConsole::IResult *pResult, void *pUserData)
 
 	Teams.KillCharacterOrTeam(pResult->m_ClientId, Team);
 	Teams.SetPractice(Team, false);
+	pPlayer->Respawn(); // set spawn as strong hook
 }
 
 void CGameContext::ConPracticeCmdList(IConsole::IResult *pResult, void *pUserData)
@@ -868,7 +877,7 @@ void CGameContext::ConSwap(IConsole::IResult *pResult, void *pUserData)
 
 	int Team = Teams.m_Core.Team(pResult->m_ClientId);
 
-	if(Team < TEAM_FLOCK || Team >= TEAM_SUPER)
+	if(!Teams.IsValidTeamNumber(Team))
 	{
 		pSelf->Console()->Print(
 			IConsole::OUTPUT_LEVEL_STANDARD,
@@ -880,14 +889,7 @@ void CGameContext::ConSwap(IConsole::IResult *pResult, void *pUserData)
 	int TargetClientId = -1;
 	if(pResult->NumArguments() == 1)
 	{
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(pSelf->m_apPlayers[i] && !str_comp(pName, pSelf->Server()->ClientName(i)))
-			{
-				TargetClientId = i;
-				break;
-			}
-		}
+		TargetClientId = pSelf->FindClientIdByName(pName).value_or(-1);
 	}
 	else
 	{
@@ -991,7 +993,7 @@ void CGameContext::ConCancelSwap(IConsole::IResult *pResult, void *pUserData)
 
 	int Team = Teams.m_Core.Team(pResult->m_ClientId);
 
-	if(Team < TEAM_FLOCK || Team >= TEAM_SUPER)
+	if(!pSelf->m_pController->Teams().IsValidTeamNumber(Team))
 	{
 		pSelf->Console()->Print(
 			IConsole::OUTPUT_LEVEL_STANDARD,
@@ -1128,7 +1130,7 @@ void CGameContext::ConLock(IConsole::IResult *pResult, void *pUserData)
 	if(pResult->NumArguments() > 0)
 		Lock = !pResult->GetInteger(0);
 
-	if(Team <= TEAM_FLOCK || Team >= TEAM_SUPER)
+	if(Team == TEAM_FLOCK || !pSelf->m_pController->Teams().IsValidTeamNumber(Team))
 	{
 		pSelf->Console()->Print(
 			IConsole::OUTPUT_LEVEL_STANDARD,
@@ -1172,7 +1174,7 @@ void CGameContext::ConUnlock(IConsole::IResult *pResult, void *pUserData)
 
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 
-	if(Team <= TEAM_FLOCK || Team >= TEAM_SUPER)
+	if(Team == TEAM_FLOCK || !pSelf->m_pController->Teams().IsValidTeamNumber(Team))
 		return;
 
 	if(pSelf->ProcessSpamProtection(pResult->m_ClientId, false))
@@ -1219,7 +1221,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 		pPlayer->GetCharacter()->m_LastStartWarning = Server()->Tick();
 	}
 
-	if(Team < 0 || Team >= TEAM_SUPER)
+	if(!m_pController->Teams().IsValidTeamNumber(Team))
 	{
 		auto EmptyTeam = m_pController->Teams().GetFirstEmptyTeam();
 		if(!EmptyTeam.has_value())
@@ -1232,7 +1234,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 	}
 
 	char aError[512];
-	if(pPlayer->m_LastDDRaceTeamChange + (int64_t)Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick())
+	if(pPlayer->m_LastDDRaceTeamChange.has_value() && pPlayer->m_LastDDRaceTeamChange.value() + (int64_t)Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick())
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chatresp",
 			"你切换队伍太快了");
@@ -1244,7 +1246,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 				"这个队伍已用 /lock 锁定，只有队伍成员才能用 /lock 解锁" :
 				"这个队伍已用 /lock 锁定，只有队伍成员才能邀请你或用 /lock 解锁");
 	}
-	else if(Team != TEAM_FLOCK && m_pController->Teams().Count(Team) >= g_Config.m_SvMaxTeamSize && !m_pController->Teams().TeamFlock(Team) && !m_pController->Teams().IsPractice(Team))
+	else if(Team != TEAM_FLOCK && m_pController->Teams().TeamSize(Team) >= g_Config.m_SvMaxTeamSize && !m_pController->Teams().TeamFlock(Team) && !m_pController->Teams().IsPractice(Team))
 	{
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "这个队伍已经达到最大人数上限 %d", g_Config.m_SvMaxTeamSize);
@@ -1259,7 +1261,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 		if(PracticeByDefault())
 		{
 			// joined an empty team
-			if(m_pController->Teams().Count(Team) == 1)
+			if(m_pController->Teams().TeamSize(Team) == 1)
 				m_pController->Teams().SetPractice(Team, true);
 		}
 
@@ -1298,19 +1300,10 @@ void CGameContext::ConInvite(IConsole::IResult *pResult, void *pUserData)
 	}
 
 	int Team = pController->Teams().m_Core.Team(pResult->m_ClientId);
-	if(Team > TEAM_FLOCK && Team < TEAM_SUPER)
+	if(Team != TEAM_FLOCK && pController->Teams().IsValidTeamNumber(Team))
 	{
-		int Target = -1;
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(!str_comp(pName, pSelf->Server()->ClientName(i)))
-			{
-				Target = i;
-				break;
-			}
-		}
-
-		if(Target < 0)
+		int Target = pSelf->FindClientIdByName(pName).value_or(-1);
+		if(Target == -1)
 		{
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chatresp", "未找到该玩家");
 			return;
@@ -1369,7 +1362,7 @@ void CGameContext::ConTeam0Mode(IConsole::IResult *pResult, void *pUserData)
 	int Team = pController->Teams().m_Core.Team(pResult->m_ClientId);
 	bool Mode = pController->Teams().TeamFlock(Team);
 
-	if(Team <= TEAM_FLOCK || Team >= TEAM_SUPER)
+	if(Team == TEAM_FLOCK || !pController->Teams().IsValidTeamNumber(Team))
 	{
 		pSelf->Console()->Print(
 			IConsole::OUTPUT_LEVEL_STANDARD,
@@ -1393,7 +1386,7 @@ void CGameContext::ConTeam0Mode(IConsole::IResult *pResult, void *pUserData)
 	char aBuf[512];
 	if(Mode)
 	{
-		if(pController->Teams().Count(Team) > g_Config.m_SvMaxTeamSize)
+		if(pController->Teams().TeamSize(Team) > g_Config.m_SvMaxTeamSize)
 		{
 			str_format(aBuf, sizeof(aBuf), "无法关闭 team 0 模式。该队伍人数已超过普通队伍允许上限 %d", g_Config.m_SvMaxTeamSize);
 			pSelf->SendChatTarget(pResult->m_ClientId, aBuf);
@@ -1471,17 +1464,8 @@ void CGameContext::ConJoin(IConsole::IResult *pResult, void *pUserData)
 	if(!CheckClientId(pResult->m_ClientId))
 		return;
 
-	int Target = -1;
 	const char *pName = pResult->GetString(0);
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(!str_comp(pName, pSelf->Server()->ClientName(i)))
-		{
-			Target = i;
-			break;
-		}
-	}
-
+	int Target = pSelf->FindClientIdByName(pName).value_or(-1);
 	if(Target == -1)
 	{
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chatresp", "未找到该玩家");
@@ -1695,11 +1679,8 @@ void CGameContext::ConSayTime(IConsole::IResult *pResult, void *pUserData)
 
 	if(pResult->NumArguments() > 0)
 	{
-		for(ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
-			if(str_comp(pResult->GetString(0), pSelf->Server()->ClientName(ClientId)) == 0)
-				break;
-
-		if(ClientId == MAX_CLIENTS)
+		ClientId = pSelf->FindClientIdByName(pResult->GetString(0)).value_or(-1);
+		if(ClientId == -1)
 			return;
 
 		str_format(aBufName, sizeof(aBufName), "%s 的", pSelf->Server()->ClientName(ClientId));
@@ -1850,14 +1831,14 @@ void CGameContext::ConRescue(IConsole::IResult *pResult, void *pUserData)
 
 	if(pPlayer->m_RescueMode == RESCUEMODE_MANUAL)
 	{
-		// if character can't set his rescue state then we should rescue him instead
+		// if character can't set their rescue state then we should rescue them instead
 		GoRescue = !pChr->TrySetRescue(RESCUEMODE_MANUAL);
 	}
 
 	if(GoRescue)
 	{
 		pChr->Rescue();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 	}
 }
 
@@ -1931,7 +1912,7 @@ void CGameContext::ConBack(IConsole::IResult *pResult, void *pUserData)
 		}
 		pChr->GetLastRescueTeeRef(pPlayer->m_RescueMode) = pPlayer->m_LastDeath.value();
 		pChr->Rescue();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 	}
 }
 
@@ -1964,23 +1945,13 @@ void CGameContext::ConTeleTo(IConsole::IResult *pResult, void *pUserData)
 	}
 	else
 	{
-		// Search for player with this name
-		int ClientId;
-		for(ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
-		{
-			if(str_comp(pResult->GetString(0), pSelf->Server()->ClientName(ClientId)) == 0)
-				break;
-		}
-		if(ClientId == MAX_CLIENTS)
+		const CPlayer *pDestPlayer = pSelf->FindPlayerByName(pResult->GetString(0));
+		if(!pDestPlayer)
 		{
 			pSelf->SendChatTarget(pCallingPlayer->GetCid(), "未找到这个名字的玩家。");
 			return;
 		}
-
-		CPlayer *pDestPlayer = pSelf->m_apPlayers[ClientId];
-		if(!pDestPlayer)
-			return;
-		CCharacter *pDestCharacter = pDestPlayer->GetCharacter();
+		const CCharacter *pDestCharacter = pDestPlayer->GetCharacter();
 		if(!pDestCharacter)
 			return;
 
@@ -1991,7 +1962,7 @@ void CGameContext::ConTeleTo(IConsole::IResult *pResult, void *pUserData)
 	// Teleport tee
 	pSelf->Teleport(pCallingCharacter, Pos);
 	pCallingCharacter->ResetJumps();
-	pCallingCharacter->UnFreeze();
+	pCallingCharacter->Unfreeze();
 	pCallingCharacter->ResetVelocity();
 	pCallingPlayer->m_LastTeleTee.Save(pCallingCharacter);
 }
@@ -2069,7 +2040,7 @@ void CGameContext::ConTeleXY(IConsole::IResult *pResult, void *pUserData)
 	// Teleport tee
 	pSelf->Teleport(pCallingCharacter, Pos);
 	pCallingCharacter->ResetJumps();
-	pCallingCharacter->UnFreeze();
+	pCallingCharacter->Unfreeze();
 	pCallingCharacter->ResetVelocity();
 	pCallingPlayer->m_LastTeleTee.Save(pCallingCharacter);
 }
@@ -2103,28 +2074,20 @@ void CGameContext::ConTeleCursor(IConsole::IResult *pResult, void *pUserData)
 	}
 	else if(pResult->NumArguments() > 0)
 	{
-		int ClientId;
-		for(ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
-		{
-			if(str_comp(pResult->GetString(0), pSelf->Server()->ClientName(ClientId)) == 0)
-				break;
-		}
-		if(ClientId == MAX_CLIENTS)
+		const CPlayer *pPlayerTo = pSelf->FindPlayerByName(pResult->GetString(0));
+		if(!pPlayerTo)
 		{
 			pSelf->SendChatTarget(pPlayer->GetCid(), "未找到这个名字的玩家。");
 			return;
 		}
-		CPlayer *pPlayerTo = pSelf->m_apPlayers[ClientId];
-		if(!pPlayerTo)
-			return;
-		CCharacter *pChrTo = pPlayerTo->GetCharacter();
+		const CCharacter *pChrTo = pPlayerTo->GetCharacter();
 		if(!pChrTo)
 			return;
 		Pos = pChrTo->m_Pos;
 	}
 	pSelf->Teleport(pChr, Pos);
 	pChr->ResetJumps();
-	pChr->UnFreeze();
+	pChr->Unfreeze();
 	pChr->ResetVelocity();
 	pPlayer->m_LastTeleTee.Save(pChr);
 }
@@ -2192,7 +2155,7 @@ void CGameContext::ConPracticeToTeleporter(IConsole::IResult *pResult, void *pUs
 
 		ConToTeleporter(pResult, pUserData);
 		pChr->ResetJumps();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 		pChr->ResetVelocity();
 		pChr->GetPlayer()->m_LastTeleTee.Save(pChr);
 	}
@@ -2212,7 +2175,7 @@ void CGameContext::ConPracticeToCheckTeleporter(IConsole::IResult *pResult, void
 
 		ConToCheckTeleporter(pResult, pUserData);
 		pChr->ResetJumps();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 		pChr->ResetVelocity();
 		pChr->GetPlayer()->m_LastTeleTee.Save(pChr);
 	}
@@ -2282,7 +2245,7 @@ void CGameContext::ConPracticeUnDeep(IConsole::IResult *pResult, void *pUserData
 		return;
 
 	pChr->SetDeepFrozen(false);
-	pChr->UnFreeze();
+	pChr->Unfreeze();
 }
 
 void CGameContext::ConPracticeDeep(IConsole::IResult *pResult, void *pUserData)

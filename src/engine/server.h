@@ -61,6 +61,7 @@ public:
 	virtual int ClientCountry(int ClientId) const = 0;
 	virtual bool ClientSlotEmpty(int ClientId) const = 0;
 	virtual bool ClientIngame(int ClientId) const = 0;
+	virtual bool ClientIsQmLiveObserver(int ClientId) const = 0;
 	virtual bool GetClientInfo(int ClientId, CClientInfo *pInfo) const = 0;
 	virtual void SetClientDDNetVersion(int ClientId, int DDNetVersion) = 0;
 	virtual const NETADDR *ClientAddr(int ClientId) const = 0;
@@ -80,7 +81,8 @@ public:
 	virtual int GetClientVersion(int ClientId) const = 0;
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientId) = 0;
 
-	template<class T, typename std::enable_if<!protocol7::is_sixup<T>::value, int>::type = 0>
+	template<class T>
+		requires(!protocol7::is_sixup<T>::value)
 	int SendPackMsg(const T *pMsg, int Flags, int ClientId)
 	{
 		int Result = 0;
@@ -97,7 +99,8 @@ public:
 		return Result;
 	}
 
-	template<class T, typename std::enable_if<protocol7::is_sixup<T>::value, int>::type = 1>
+	template<class T>
+		requires(protocol7::is_sixup<T>::value)
 	int SendPackMsg(const T *pMsg, int Flags, int ClientId)
 	{
 		int Result = 0;
@@ -233,18 +236,19 @@ public:
 	virtual void SetClientScore(int ClientId, std::optional<int> Score) = 0;
 	virtual void SetClientFlags(int ClientId, int Flags) = 0;
 
-	virtual int SnapNewId() = 0;
+	virtual std::optional<int> SnapNewId() = 0;
 	virtual void SnapFreeId(int Id) = 0;
-	virtual void *SnapNewItem(int Type, int Id, int Size) = 0;
+	virtual bool SnapNewItem(int Type, int Id, rust::Slice<const int32_t> Data) = 0;
 
 	template<typename T>
-	T *SnapNewItem(int Id)
+	bool SnapNewItem(int Id, const T &Data)
 	{
 		const int Type = protocol7::is_sixup<T>::value ? -T::ms_MsgId : T::ms_MsgId;
-		return static_cast<T *>(SnapNewItem(Type, Id, sizeof(T)));
+		return SnapNewItem(Type, Id, Data.AsSlice());
 	}
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
+	virtual void SnapSetStaticsize7(int ItemType, int Size) = 0;
 
 	enum
 	{
@@ -318,7 +322,8 @@ public:
 	//
 	// GlobalSnap is true when sending snapshots to all clients,
 	// otherwise only forced high bandwidth clients would receive snap.
-	virtual void OnSnap(int ClientId, bool GlobalSnap) = 0;
+	// RecordingDemo is true when this snapshot will be recorded to a demo.
+	virtual void OnSnap(int ClientId, bool GlobalSnap, bool RecordingDemo) = 0;
 
 	// Called after sending snapshots to all clients.
 	//
@@ -345,6 +350,7 @@ public:
 	virtual void OnClientConnected(int ClientId, void *pPersistentData) = 0;
 
 	virtual void OnClientEnter(int ClientId) = 0;
+	virtual void OnLiveObserverEnter(int ClientId) = 0;
 	virtual void OnClientDrop(int ClientId, const char *pReason) = 0;
 	virtual void OnClientPrepareInput(int ClientId, void *pInput) = 0;
 	virtual void OnClientDirectInput(int ClientId, const void *pInput) = 0;

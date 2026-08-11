@@ -501,22 +501,32 @@ const CChat::CCommand *CChat::FindServerCommand(const char *pName) const
 	return nullptr;
 }
 
+void CChat::RefreshSlashCommandSuggestions()
+{
+	const char *pInput = m_Input.GetString();
+	if(m_SlashCommandSuggestionsDismissed && str_comp(pInput, m_aSlashCommandSuggestionsDismissedInput) == 0)
+	{
+		m_vSlashCommandSuggestions.clear();
+		return;
+	}
+	m_SlashCommandSuggestionsDismissed = false;
+	m_aSlashCommandSuggestionsDismissedInput[0] = '\0';
+	m_vSlashCommandSuggestions = BuildSlashCommandSuggestions(pInput, 8);
+}
+
 const char *CChat::LocalizeCommandPreviewText(const char *pText) const
 {
 	if(pText == nullptr || pText[0] == '\0')
 		return pText;
 
-	static CLocalizationDatabase s_SimplifiedChineseLocalization;
-	static bool s_LoadedSimplifiedChineseLocalization = false;
-	if(!s_LoadedSimplifiedChineseLocalization)
-	{
-		s_LoadedSimplifiedChineseLocalization = true;
-		if(!s_SimplifiedChineseLocalization.Load("languages/simplified_chinese.txt", Storage(), Console()))
-			log_error("chat-preview", "failed to load simplified chinese localization");
-	}
+	return Localize(pText);
+}
 
-	const char *pLocalizedText = s_SimplifiedChineseLocalization.FindString(str_quickhash(pText), str_quickhash(""));
-	return pLocalizedText != nullptr ? pLocalizedText : Localize(pText);
+float CChat::CalculateCutOffOffsetX(float Progress)
+{
+	if(!g_Config.m_QmChatAnimSlideOut)
+		return 0.0f;
+	return -24.0f * std::clamp(Progress, 0.0f, 1.0f);
 }
 
 bool CChat::BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const
@@ -546,134 +556,134 @@ bool CChat::BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufS
 	if(CommandPreviewNameIs(aCommand, "points"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "查询玩家%s的分数", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Query points for %s"), aRestArg);
 		else
-			str_copy(pBuf, "查询自己的分数", BufSize);
+			str_format(pBuf, PreviewBufSize, Localize("Query points for %s"), Localize("yourself"));
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "rank"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "查询玩家%s的排名", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Query rank for %s"), aRestArg);
 		else
-			str_copy(pBuf, "查询自己的排名", BufSize);
+			str_format(pBuf, PreviewBufSize, Localize("Query rank for %s"), Localize("yourself"));
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "teamrank") || CommandPreviewNameIs(aCommand, "rankteam"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "查询玩家%s所在队伍的排名", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Query team rank for %s"), aRestArg);
 		else
-			str_copy(pBuf, "查询自己队伍的排名", BufSize);
+			str_format(pBuf, PreviewBufSize, Localize("Query team rank for %s"), Localize("yourself"));
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "r") || CommandPreviewNameIs(aCommand, "rescue"))
 	{
-		str_copy(pBuf, "救援：自动模式下传送出冻结；手动模式下落地记录救援点，冻结时传送出去", BufSize);
+		str_copy(pBuf, Localize("Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "w") || CommandPreviewNameIs(aCommand, "whisper"))
 	{
 		if(aFirstArg[0] != '\0' && aRestAfterFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "对%s说悄悄话：%s", aFirstArg, aRestAfterFirstArg);
+			str_format(pBuf, PreviewBufSize, Localize("Whisper to %s: %s"), aFirstArg, aRestAfterFirstArg);
 		else if(aFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "对%s说悄悄话", aFirstArg);
+			str_format(pBuf, PreviewBufSize, Localize("Whisper to %s"), aFirstArg);
 		else
-			str_copy(pBuf, "发送悄悄话：/w 玩家名 内容", BufSize);
+			str_copy(pBuf, Localize("Whisper: /w player message"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "c") || CommandPreviewNameIs(aCommand, "converse"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "对上一个私聊对象说：%s", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Reply to the last whisper target: %s"), aRestArg);
 		else
-			str_copy(pBuf, "继续给上一个私聊对象发送悄悄话", BufSize);
+			str_copy(pBuf, Localize("Reply to the last whisper target"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "mapinfo"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "查询地图%s的信息", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Query map info for %s"), aRestArg);
 		else
-			str_copy(pBuf, "查询当前地图的信息", BufSize);
+			str_copy(pBuf, Localize("Query current map info"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "team"))
 	{
 		if(aFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "加入队伍%s", aFirstArg);
+			str_format(pBuf, PreviewBufSize, Localize("Join team %s"), aFirstArg);
 		else
-			str_copy(pBuf, "查看自己所在队伍", BufSize);
+			str_copy(pBuf, Localize("Show your current team"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "lock"))
 	{
 		if(str_comp(aFirstArg, "0") == 0)
-			str_copy(pBuf, "解锁队伍", BufSize);
+			str_copy(pBuf, Localize("Unlock the team"), BufSize);
 		else
-			str_copy(pBuf, "锁定队伍，其他玩家不能直接加入", BufSize);
+			str_copy(pBuf, Localize("Lock the team so other players cannot join directly"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "invite"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "邀请%s加入锁定队伍", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Invite %s to the locked team"), aRestArg);
 		else
-			str_copy(pBuf, "邀请玩家加入锁定队伍", BufSize);
+			str_format(pBuf, PreviewBufSize, Localize("Invite %s to the locked team"), Localize("a player"));
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "swap"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "请求和%s交换位置", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Request to swap positions with %s"), aRestArg);
 		else
-			str_copy(pBuf, "请求交换!球球惹", BufSize);
+			str_copy(pBuf, Localize("Request a position swap"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "save"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "将队伍保存为%s", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Save the team as %s"), aRestArg);
 		else
-			str_copy(pBuf, "保存当前队伍", BufSize);
+			str_copy(pBuf, Localize("Save the current team"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "load"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "载入存档%s", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("Load save %s"), aRestArg);
 		else
-			str_copy(pBuf, "查看已有存档", BufSize);
+			str_copy(pBuf, Localize("Show existing saves"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "settings"))
 	{
 		if(aFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "查询服务器设置：%s", aFirstArg);
+			str_format(pBuf, PreviewBufSize, Localize("Query server setting: %s"), aFirstArg);
 		else
-			str_copy(pBuf, "查看服务器设置列表", BufSize);
+			str_copy(pBuf, Localize("Show server settings"), BufSize);
 		return true;
 	}
 
 	if(CommandPreviewNameIs(aCommand, "help"))
 	{
 		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "查看 /%s 的帮助", aRestArg);
+			str_format(pBuf, PreviewBufSize, Localize("%s (/%s %s)"), Localize("Usage"), aCommand, aRestArg);
 		else
-			str_copy(pBuf, "查看命令帮助", BufSize);
+			str_format(pBuf, PreviewBufSize, Localize("Usage: /%s %s"), aCommand, "");
 		return true;
 	}
 
@@ -685,7 +695,7 @@ bool CChat::BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufS
 	if(pHelpText != nullptr && pHelpText[0] != '\0')
 	{
 		if(pCommand->m_aParams[0] != '\0')
-			str_format(pBuf, PreviewBufSize, "%s（/%s %s）", pHelpText, pCommand->m_aName, pCommand->m_aParams);
+			str_format(pBuf, PreviewBufSize, Localize("%s (/%s %s)"), pHelpText, pCommand->m_aName, pCommand->m_aParams);
 		else
 			str_copy(pBuf, pHelpText, BufSize);
 		return true;
@@ -693,7 +703,7 @@ bool CChat::BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufS
 
 	if(pCommand->m_aParams[0] != '\0')
 	{
-		str_format(pBuf, PreviewBufSize, "用法：/%s %s", pCommand->m_aName, pCommand->m_aParams);
+		str_format(pBuf, PreviewBufSize, Localize("Usage: /%s %s"), pCommand->m_aName, pCommand->m_aParams);
 		return true;
 	}
 
@@ -1150,6 +1160,7 @@ void CChat::Reset()
 	m_ServerSupportsCommandInfo = false;
 	m_ServerCommandsNeedSorting = false;
 	m_aCurrentInputText[0] = '\0';
+	m_vSlashCommandSuggestions.clear();
 	DisableMode();
 	m_vServerCommands.clear();
 
@@ -1410,6 +1421,8 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 	{
 		const float Height = 300.0f;
 		const float Width = Height * Graphics()->ScreenAspect();
+		const bool ChatAnchoredRight = true;
+		const bool ChatScrollbarOnRight = ChatAnchoredRight;
 		const CUIRect ChatRect = {0.0f, 50.0f, std::min(Width, std::max(190.0f, g_Config.m_ClChatWidth + 32.0f)), 250.0f};
 		float HistoryBottom = Height - (20.0f * FontSize() / 6.0f + (g_Config.m_TcStatusBar ? g_Config.m_TcStatusBarHeight : 0.0f));
 		HistoryBottom -= FontSize() * (8.0f / 6.0f);
@@ -1509,6 +1522,7 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 			return true;
 		}
 
+		m_vSlashCommandSuggestions.clear();
 		DisableMode();
 		GameClient()->OnRelease();
 		if(g_Config.m_ClChatReset)
@@ -1540,10 +1554,18 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		m_SavedInputPending = false;
 		m_aSavedInputText[0] = '\0';
 		m_pHistoryEntry = nullptr;
+		m_vSlashCommandSuggestions.clear();
 		DisableMode();
 		GameClient()->OnRelease();
 		m_Input.Clear();
 	}
+	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
+	{
+		m_SlashCommandSuggestionsDismissed = true;
+		str_copy(m_aSlashCommandSuggestionsDismissedInput, m_Input.GetString(), sizeof(m_aSlashCommandSuggestionsDismissedInput));
+		m_vSlashCommandSuggestions.clear();
+	}
+
 	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
 		const bool ShiftPressed = Input()->ShiftIsPressed();
@@ -1739,6 +1761,7 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		}
 
 		m_Input.ProcessInput(Event);
+		RefreshSlashCommandSuggestions();
 	}
 
 	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
@@ -1838,14 +1861,15 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 				if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 					StoreSave(pMsg->m_pMessage);
 				char aBuf[1024];
-				str_format(aBuf, sizeof(aBuf), "*** %s", pMsg->m_pMessage);
+				str_copy(aBuf, pMsg->m_pMessage);
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat/server", aBuf, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor)));
 			};
 			const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
 			const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
 			const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
 			QmHudNotifications::SServerMessageAnalysis ServerMessageAnalysis;
-			if(GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis))
+			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis);
+			if(ServerMessageHandled && QmHudNotifications::ShouldSuppressServerMessageChat(ServerMessageAnalysis, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages))
 			{
 				PrintSuppressedServerMessage();
 				return;
@@ -2248,6 +2272,9 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass)
 {
+	if(ClientId >= 0 && !GameClient()->LiveTeamFilterAllowsClient(ClientId))
+		return;
+
 	if(*pLine == 0 ||
 		(ClientId == SERVER_MSG && !g_Config.m_ClShowChatSystem) ||
 		(ClientId >= 0 && (GameClient()->m_aClients[ClientId].m_aName[0] == '\0' || // unknown client
@@ -2433,11 +2460,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 	if(CurrentLine.m_ClientId == SERVER_MSG)
 	{
-		str_copy(CurrentLine.m_aName, "*** ");
+		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId, g_Config.m_QmChatHideSystemPrefix != 0));
 	}
 	else if(CurrentLine.m_ClientId == CLIENT_MSG)
 	{
-		str_copy(CurrentLine.m_aName, "— ");
+		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId));
 	}
 	else
 	{
@@ -2631,8 +2658,7 @@ void CChat::OnPrepareLines(float y)
 			// 否则只有“首次创建”时受高度限制，后续帧又会溢出。
 			if(Line.m_aYOffset[OffsetType] >= 0.0f)
 			{
-				y -= Line.m_aYOffset[OffsetType] *
-				     ClampPresentationProgress(Line.m_Presentation.m_LayoutVisibility);
+				y -= Line.m_aYOffset[OffsetType] * ClampPresentationProgress(Line.m_Presentation.m_LayoutVisibility);
 
 				if(y < HeightLimit)
 					break;
@@ -3012,6 +3038,8 @@ void CChat::OnRender()
 	if(m_LastPresentationUpdateTime == 0 || Now < m_LastPresentationUpdateTime)
 		m_LastPresentationUpdateTime = Now;
 	float DeltaSeconds = std::clamp((Now - m_LastPresentationUpdateTime) / (float)time_freq(), 0.0f, CHAT_PRESENTATION_MAX_DELTA_SECONDS);
+	const float ChatFadeDurationSeconds = g_Config.m_QmChatAnimFadeDurationMs / 1000.0f;
+	(void)ChatFadeDurationSeconds;
 	m_LastPresentationUpdateTime = Now;
 	if(HudEditorPreview)
 		DeltaSeconds = 0.0f;
@@ -3036,6 +3064,8 @@ void CChat::OnRender()
 	const float Height = 300.0f;
 	const float Width = Height * Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
+	const bool ChatAnchoredRight = true;
+	const bool ChatScrollbarOnRight = ChatAnchoredRight;
 	const CUIRect ChatRect = {0.0f, 50.0f, std::min(Width, std::max(190.0f, g_Config.m_ClChatWidth + 32.0f)), 250.0f};
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::Chat, ChatRect);
 
@@ -3085,6 +3115,7 @@ void CChat::OnRender()
 		// render chat input
 		CTextCursor InputCursor;
 		InputCursor.SetPosition(vec2(x, y));
+		InputCursor.SetPosition(vec2(x + TranslateButtonSize + TranslateButtonGap, y));
 		InputCursor.m_FontSize = ScaledFontSize;
 		InputCursor.m_LineWidth = InputLineWidth;
 
@@ -3226,7 +3257,7 @@ void CChat::OnRender()
 	m_BacklogCurLine = ClampBacklogLine(m_BacklogCurLine, TotalVisibleLines, VisibleLineCapacity);
 
 	const bool ShowChatScrollbar = InputActive && MaxScroll > 0 && HistoryHeight > 0.0f;
-	CUIRect ScrollbarRect = {ChatRect.w - CHAT_SCROLLBAR_WIDTH - CHAT_SCROLLBAR_MARGIN, HeightLimit, CHAT_SCROLLBAR_WIDTH, HistoryHeight};
+	CUIRect ScrollbarRect = {ChatScrollbarOnRight ? ChatRect.w - CHAT_SCROLLBAR_WIDTH - CHAT_SCROLLBAR_MARGIN : CHAT_SCROLLBAR_MARGIN, HeightLimit, CHAT_SCROLLBAR_WIDTH, HistoryHeight};
 	float ScrollbarHandleY = ScrollbarRect.y;
 	float ScrollbarHandleH = ScrollbarRect.h;
 	if(ShowChatScrollbar)
@@ -3387,7 +3418,7 @@ void CChat::OnRender()
 		const float RenderY = Line.m_Presentation.m_RenderY + Line.m_Presentation.m_RenderOffsetY;
 		Line.m_CutOffProgress = 0.0f;
 		const float AnimAlpha = ClampPresentationProgress(Line.m_Presentation.m_RenderAlpha);
-		const float AnimOffsetX = Line.m_Presentation.m_RenderOffsetX;
+		const float AnimOffsetX = Line.m_Presentation.m_RenderOffsetX + CalculateCutOffOffsetX(Line.m_CutOffProgress);
 		const float AnimOffsetY = (RenderY + RealMsgPaddingY / 2.0f) - Line.m_TextYOffset;
 
 		if(AnimAlpha <= 0.001f)
@@ -3566,6 +3597,11 @@ static bool ShouldSyncDummyCommandToOther(const char *pLine)
 
 void CChat::SendChat(int Team, const char *pLine)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER && ShouldBlockLiveDirectorChatCommand(pLine))
+		return;
+#endif
+
 	// don't send empty messages
 	if(*str_utf8_skip_whitespaces(pLine) == '\0')
 		return;
@@ -3602,6 +3638,11 @@ void CChat::SendChat(int Team, const char *pLine)
 
 void CChat::SendChatOnConn(int Conn, int Team, const char *pLine, bool AllowWhitespaceOnly, bool HandleLocalSaveForLoadCommand)
 {
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER && ShouldBlockLiveDirectorChatCommand(pLine))
+		return;
+#endif
+
 	if(pLine == nullptr || pLine[0] == '\0')
 		return;
 
@@ -4099,6 +4140,11 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	// 标题
 	CUIRect TitleRect;
 	View.HSplitTop(TitleHeight, &TitleRect, &View);
+	static CButtonContainer s_CloseButton;
+	CUIRect CloseButton;
+	TitleRect.VSplitRight(22.0f, &TitleRect, &CloseButton);
+	if(pUi->DoButton_FontIcon(&s_CloseButton, FontIcons::FONT_ICON_XMARK, 0, &CloseButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
+		return CUi::POPUP_CLOSE_CURRENT;
 	DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_TITLE], TitleRect, Localize("Translation Settings"), FontSize, TEXTALIGN_MC);
 	View.HSplitTop(SectionSpacing, nullptr, &View);
 

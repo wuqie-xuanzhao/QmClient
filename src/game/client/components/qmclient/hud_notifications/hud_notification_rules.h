@@ -109,6 +109,7 @@ namespace QmHudNotifications
 	SServerMessageAnalysis AnalyzeServerMessage(const char *pMessage, ESoloPrompt PendingCompatPrompt);
 	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, const SServerMessageRouteConfig &Config);
 	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt);
+	bool ShouldSuppressServerMessageChat(const SServerMessageAnalysis &Analysis, bool HideBasicInfo, bool HidePrompt);
 	EServerMessageRoute ServerMessageRoute(const char *pMessage, ESoloPrompt PendingCompatPrompt, bool RouteSystemMessages);
 	EServerMessageClass ServerMessageClass(const char *pMessage, ESoloPrompt PendingCompatPrompt);
 	bool TryFormatLocalizedNotificationMessage(const char *pMessage, char *pBuf, size_t BufSize);

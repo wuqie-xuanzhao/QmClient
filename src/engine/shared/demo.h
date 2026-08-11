@@ -15,6 +15,10 @@
 
 typedef std::function<void()> TUpdateIntraTimesFunc;
 
+struct CSnapshotDelta;
+class IConsole;
+class IStorage;
+
 class CDemoRecorder : public IDemoRecorder
 {
 	class IConsole *m_pConsole;
@@ -26,8 +30,8 @@ class CDemoRecorder : public IDemoRecorder
 	int m_LastKeyFrame;
 	int m_FirstTick;
 
-	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
-	class CSnapshotDelta *m_pSnapshotDelta;
+	CSnapshotBuffer m_LastSnapshotData;
+	CSnapshotDelta *m_pSnapshotDelta;
 
 	int m_NumTimelineMarkers;
 	int m_aTimelineMarkers[MAX_TIMELINE_MARKERS];
@@ -41,7 +45,7 @@ class CDemoRecorder : public IDemoRecorder
 	void Write(int Type, const void *pData, int Size);
 
 public:
-	CDemoRecorder(class CSnapshotDelta *pSnapshotDelta, bool NoMapData = false);
+	CDemoRecorder(CSnapshotDelta *pSnapshotDelta, bool NoMapData = false);
 	CDemoRecorder() = default;
 	~CDemoRecorder() override;
 
@@ -133,10 +137,11 @@ private:
 	unsigned char m_aChunkData[CSnapshot::MAX_SIZE];
 	// Storage for the full snapshot
 	// where the delta gets unpacked into.
-	unsigned char m_aSnapshot[CSnapshot::MAX_SIZE];
-	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
+	CSnapshotBuffer m_Snapshot;
+	CSnapshotBuffer m_LastSnapshotData;
 	int m_LastSnapshotDataSize;
-	class CSnapshotDelta *m_pSnapshotDelta;
+	CSnapshotDelta *m_pSnapshotDelta;
+	CSnapshotDelta *m_pSnapshotDeltaSixup;
 
 	bool m_UseVideo;
 #if defined(CONF_VIDEORECORDER)
@@ -163,12 +168,13 @@ private:
 	int64_t Time();
 	bool m_Sixup;
 
-public:
-	CDemoPlayer(class CSnapshotDelta *pSnapshotDelta, bool UseVideo);
-	CDemoPlayer(class CSnapshotDelta *pSnapshotDelta, bool UseVideo, TUpdateIntraTimesFunc &&UpdateIntraTimesFunc);
-	~CDemoPlayer() override;
+	CSnapshotDelta *SnapshotDelta();
+	void Construct(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo);
 
-	void Construct(class CSnapshotDelta *pSnapshotDelta, bool UseVideo);
+public:
+	CDemoPlayer(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo);
+	CDemoPlayer(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo, TUpdateIntraTimesFunc &&UpdateIntraTimesFunc);
+	~CDemoPlayer() override;
 
 	void SetListener(IListener *pListener);
 
@@ -182,10 +188,10 @@ public:
 	void SetSpeed(float Speed) override;
 	void SetSpeedIndex(int SpeedIndex) override;
 	void AdjustSpeedIndex(int Offset) override;
-	int SeekPercent(float Percent) override;
-	int SeekTime(float Seconds) override;
-	int SeekTick(ETickOffset TickOffset) override;
-	int SetPos(int WantedTick) override;
+	bool SeekPercent(float Percent) override;
+	bool SeekTime(float Seconds) override;
+	bool SeekTick(ETickOffset TickOffset) override;
+	bool SetPos(int WantedTick) override;
 	const CInfo *BaseInfo() const override { return &m_Info.m_Info; }
 	void GetDemoName(char *pBuffer, size_t BufferSize) const override;
 	bool GetDemoInfo(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader, CTimelineMarkers *pTimelineMarkers, CMapInfo *pMapInfo, IOHANDLE *pFile = nullptr, char *pErrorMessage = nullptr, size_t ErrorMessageSize = 0) const override;
@@ -204,10 +210,11 @@ class CDemoEditor : public IDemoEditor
 {
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
-	class CSnapshotDelta *m_pSnapshotDelta;
+	CSnapshotDelta *m_pSnapshotDelta;
+	CSnapshotDelta *m_pSnapshotDeltaSixup;
 
 public:
-	virtual void Init(class CSnapshotDelta *pSnapshotDelta, class IConsole *pConsole, class IStorage *pStorage);
+	virtual void Init(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, class IConsole *pConsole, class IStorage *pStorage);
 	bool Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick, DEMOFUNC_FILTER pfnFilter, void *pUser) override;
 	bool Slice(const char *pDemo, const char *pDst, const std::vector<SDemoSliceSegment> &vSegments, DEMOFUNC_FILTER pfnFilter, void *pUser) override;
 };

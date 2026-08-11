@@ -251,6 +251,41 @@ void CStatusBar::ZoomRender()
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
+float CStatusBar::ScoreWidth()
+{
+	if(!m_HasFormattedPoints)
+		return 0.0f;
+
+	return TextRender()->TextWidth(m_FontSize, m_aFormattedPoints);
+}
+
+void CStatusBar::ScoreRender()
+{
+	if(!m_HasFormattedPoints)
+		return;
+
+	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, m_aFormattedPoints);
+}
+
+void CStatusBar::UpdateFormattedPoints()
+{
+	m_HasFormattedPoints = false;
+	m_aFormattedPoints[0] = '\0';
+	if(m_PlayerId < 0 || m_PlayerId >= MAX_CLIENTS)
+		return;
+
+	if(!GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
+		return;
+
+	const char *pPlayerName = GameClient()->m_aClients[m_PlayerId].m_aName;
+	if(pPlayerName[0] == '\0')
+		return;
+
+	GameClient()->m_PlayerPoints.EnsureQueried(pPlayerName);
+	const SPlayerPointsResult Points = GameClient()->m_PlayerPoints.GetPoints(pPlayerName);
+	m_HasFormattedPoints = tclient_statusbar::FormatPlayerPoints(m_aFormattedPoints, sizeof(m_aFormattedPoints), Points.m_Status, Points.m_Points);
+}
+
 float CStatusBar::DownstreamWidth()
 {
 	return TextRender()->TextWidth(m_FontSize, "000ms");
@@ -259,7 +294,7 @@ float CStatusBar::DownstreamWidth()
 void CStatusBar::DownstreamRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_SnapshotLatencyMs);
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PingMs);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -271,7 +306,7 @@ float CStatusBar::UpstreamWidth()
 void CStatusBar::UpstreamRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PredictionLatencyMs);
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PredictionLeadMs);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -283,19 +318,31 @@ float CStatusBar::JitterWidth()
 void CStatusBar::JitterRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_JitterMs);
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PredictionJitterMs);
+	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
+}
+
+float CStatusBar::SnapshotGapWidth()
+{
+	return TextRender()->TextWidth(m_FontSize, "000ms");
+}
+
+void CStatusBar::SnapshotGapRender()
+{
+	char aBuf[32];
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_SnapshotGapMs);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
 float CStatusBar::PacketLossWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000.0%");
+	return TextRender()->TextWidth(m_FontSize, "000");
 }
 
 void CStatusBar::PacketLossRender()
 {
 	char aBuf[32];
-	FormatMetricValue(aBuf, sizeof(aBuf), "%", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PacketLossPct, 1);
+	FormatMetricValue(aBuf, sizeof(aBuf), "", (float)GameClient()->m_QmMonitoring.Snapshot().m_Network.m_VitalResendCount);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -307,7 +354,8 @@ float CStatusBar::DownRateWidth()
 void CStatusBar::DownRateRender()
 {
 	char aBuf[32];
-	FormatRateValue(aBuf, sizeof(aBuf), GameClient()->m_QmMonitoring.Snapshot().m_Network.m_DownBytesPerSec);
+	const float EstimatedBytesPerSec = GameClient()->m_QmMonitoring.Snapshot().m_Network.m_Recv.m_RateKibPerSec * 1024.0f;
+	FormatRateValue(aBuf, sizeof(aBuf), EstimatedBytesPerSec);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -319,7 +367,8 @@ float CStatusBar::UpRateWidth()
 void CStatusBar::UpRateRender()
 {
 	char aBuf[32];
-	FormatRateValue(aBuf, sizeof(aBuf), GameClient()->m_QmMonitoring.Snapshot().m_Network.m_UpBytesPerSec);
+	const float EstimatedBytesPerSec = GameClient()->m_QmMonitoring.Snapshot().m_Network.m_Send.m_RateKibPerSec * 1024.0f;
+	FormatRateValue(aBuf, sizeof(aBuf), EstimatedBytesPerSec);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
@@ -435,6 +484,9 @@ void CStatusBar::OnRender()
 	m_PlayerId = GameClient()->m_Snap.m_LocalClientId;
 	if(GameClient()->m_Snap.m_SpecInfo.m_Active)
 		m_PlayerId = GameClient()->m_Snap.m_SpecInfo.m_SpectatorId;
+	m_HasFormattedPoints = false;
+	if(std::find(m_StatusBarItems.begin(), m_StatusBarItems.end(), &m_Score) != m_StatusBarItems.end())
+		UpdateFormattedPoints();
 
 	UpdateStatusBarSize();
 

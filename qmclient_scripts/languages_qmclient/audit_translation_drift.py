@@ -22,8 +22,7 @@ def load_historical_map(git_ref: str) -> dict[tuple[str, str], str]:
         errors="replace",
     ).stdout
     temp_path = Path(".git") / "tmp_hist_simplified_chinese_for_audit.txt"
-    with temp_path.open("w", encoding="utf-8", newline="\n") as file:
-        file.write(content)
+    temp_path.write_text(content, encoding="utf-8", newline="\n")
     try:
         return {
             identity: values[1]
@@ -65,8 +64,7 @@ def main() -> None:
         lines.append(f"OLD={old}")
         lines.append(f"NEW={new}")
         lines.append("")
-    with output.open("w", encoding="utf-8", newline="\n") as file:
-        file.write("\n".join(lines))
+    output.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"Wrote {len(rows)} drift rows to {output}")
 
 

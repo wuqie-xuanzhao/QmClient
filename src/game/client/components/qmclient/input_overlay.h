@@ -18,39 +18,39 @@ typedef struct _json_value json_value;
 
 namespace QmInputOverlay
 {
-struct SScaledBounds
-{
-	float m_MinX;
-	float m_MinY;
-	float m_MaxX;
-	float m_MaxY;
-};
+	struct SScaledBounds
+	{
+		float m_MinX;
+		float m_MinY;
+		float m_MaxX;
+		float m_MaxY;
+	};
 
-inline bool IsMouseOnlyLayout(bool HasKeyboardInput, bool HasMouseInput)
-{
-	return !HasKeyboardInput && HasMouseInput;
-}
+	inline bool IsMouseOnlyLayout(bool HasKeyboardInput, bool HasMouseInput)
+	{
+		return !HasKeyboardInput && HasMouseInput;
+	}
 
-inline float LayoutScale(bool IsMouseLayout, float KeyboardScale, float MouseScale)
-{
-	return IsMouseLayout ? MouseScale : KeyboardScale;
-}
+	inline float LayoutScale(bool IsMouseLayout, float KeyboardScale, float MouseScale)
+	{
+		return IsMouseLayout ? MouseScale : KeyboardScale;
+	}
 
-inline SScaledBounds ScaledLayoutBounds(float OffsetX, float OffsetY, float Width, float Height, float OffsetScale, float ContentScale)
-{
-	const float MinX = OffsetX * OffsetScale;
-	const float MinY = OffsetY * OffsetScale;
-	return {MinX, MinY, MinX + Width * ContentScale, MinY + Height * ContentScale};
-}
+	inline SScaledBounds ScaledLayoutBounds(float OffsetX, float OffsetY, float Width, float Height, float OffsetScale, float ContentScale)
+	{
+		const float MinX = OffsetX * OffsetScale;
+		const float MinY = OffsetY * OffsetScale;
+		return {MinX, MinY, MinX + Width * ContentScale, MinY + Height * ContentScale};
+	}
 
-inline SScaledBounds UnionBounds(const SScaledBounds &A, const SScaledBounds &B)
-{
-	return {
-		std::min(A.m_MinX, B.m_MinX),
-		std::min(A.m_MinY, B.m_MinY),
-		std::max(A.m_MaxX, B.m_MaxX),
-		std::max(A.m_MaxY, B.m_MaxY)};
-}
+	inline SScaledBounds UnionBounds(const SScaledBounds &A, const SScaledBounds &B)
+	{
+		return {
+			std::min(A.m_MinX, B.m_MinX),
+			std::min(A.m_MinY, B.m_MinY),
+			std::max(A.m_MaxX, B.m_MaxX),
+			std::max(A.m_MaxY, B.m_MaxY)};
+	}
 }
 
 class CInputOverlay : public CComponent

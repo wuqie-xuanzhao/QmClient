@@ -6,6 +6,7 @@
 
 #include <base/vmath.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -57,6 +58,7 @@ private:
 	SPresentationTargets m_Presentation;
 	int m_CandidateStart = 0;
 	bool m_WasVisible = false;
+	uint64_t m_PresenceGeneration = 1;
 };
 
 #endif

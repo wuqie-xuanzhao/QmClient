@@ -6,6 +6,7 @@
 
 #include <base/perf_timer.h>
 #include <base/system.h>
+#include <base/windows.h>
 
 #include <engine/client.h>
 #include <engine/console.h>
@@ -20,6 +21,7 @@
 #include <SDL.h>
 
 #include <algorithm>
+#include <cstddef>
 
 // support older SDL version (pre 2.0.6)
 #ifndef SDL_JOYSTICK_AXIS_MIN
@@ -722,6 +724,18 @@ static int TranslateMouseWheelEventKey(const SDL_MouseWheelEvent &MouseWheelEven
 	}
 }
 
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+extern "C" {
+
+// This will be called from Emscripten JS code
+bool EmscriptenQuit = false;
+void EmscriptenCallbackQuit()
+{
+	EmscriptenQuit = true;
+}
+}
+#endif
+
 int CInput::Update()
 {
 	const int64_t Now = time_get();
@@ -748,7 +762,14 @@ int CInput::Update()
 		}
 	};
 
-	while(true)
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+	if(EmscriptenQuit)
+	{
+		return 1;
+	}
+#endif
+
+	while(SDL_PollEvent(&Event))
 	{
 		const int64_t PollEventStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
 		const int PollResult = SDL_PollEvent(&Event);
@@ -1053,19 +1074,31 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 			m_CandidatePageStart = 0;
 			m_CandidatePageSize = 0;
 			m_CandidateTotalCount = 0;
-			if(pCandidateList && Size > 0)
+			if(pCandidateList && Size >= offsetof(CANDIDATELIST, dwOffset))
 			{
-				const DWORD PageStart = std::min(pCandidateList->dwPageStart, pCandidateList->dwCount);
-				const DWORD PageSize = (DWORD)QmImeCandidatePageSizeOrCount(pCandidateList->dwPageSize, pCandidateList->dwCount);
-				const DWORD PageEnd = PageStart + std::min(PageSize, pCandidateList->dwCount - PageStart);
+				const size_t BufferSize = Size;
+				const size_t HeaderSize = offsetof(CANDIDATELIST, dwOffset);
+				const size_t AvailableOffsets = QmImeCandidateOffsetCapacity(BufferSize, HeaderSize);
+				const DWORD CandidateCount = std::min<DWORD>(pCandidateList->dwCount, (DWORD)AvailableOffsets);
+				const DWORD PageStart = std::min(pCandidateList->dwPageStart, CandidateCount);
+				const DWORD PageSize = (DWORD)QmImeCandidatePageSizeOrCount(pCandidateList->dwPageSize, CandidateCount);
+				const DWORD PageEnd = PageStart + std::min(PageSize, CandidateCount - PageStart);
+				const auto *pBufferBegin = reinterpret_cast<const unsigned char *>(pCandidateList);
+				const auto *pBufferEnd = pBufferBegin + BufferSize;
 				m_CandidatePageStart = (int)PageStart;
 				m_CandidatePageSize = (int)PageSize;
-				m_CandidateTotalCount = (int)pCandidateList->dwCount;
+				m_CandidateTotalCount = (int)CandidateCount;
 				m_vCandidates.reserve(PageEnd - PageStart);
 				for(DWORD i = PageStart; i < PageEnd; i++)
 				{
-					LPCWSTR pCandidate = (LPCWSTR)((DWORD_PTR)pCandidateList + pCandidateList->dwOffset[i]);
-					m_vCandidates.push_back(windows_wide_to_utf8(pCandidate).value_or("<invalid candidate>"));
+					const size_t Offset = pCandidateList->dwOffset[i];
+					const std::optional<size_t> CandidateLength = QmImeBoundedUtf16Length(pBufferBegin, BufferSize, Offset);
+					if(!CandidateLength.has_value())
+						continue;
+					const auto *pCandidate = reinterpret_cast<const wchar_t *>(pBufferBegin + Offset);
+					const auto Candidate = windows_wide_to_utf8_bounded(pCandidate, pCandidate + *CandidateLength + 1);
+					if(Candidate.has_value())
+						m_vCandidates.push_back(*Candidate);
 				}
 				if(pCandidateList->dwSelection >= PageStart && pCandidateList->dwSelection < PageEnd)
 					m_CandidateSelectedIndex = pCandidateList->dwSelection - PageStart;
@@ -1099,8 +1132,28 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 #endif
 }
 
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+extern "C" {
+
+// This will be called from Emscripten JS code
+char aEmscriptenDropFile[IO_MAX_PATH_LENGTH] = "";
+void EmscriptenCallbackDropFile(const char *pFile)
+{
+	str_copy(aEmscriptenDropFile, pFile);
+}
+}
+#endif
+
 bool CInput::GetDropFile(char *aBuf, int Len)
 {
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+	if(aEmscriptenDropFile[0] != '\0')
+	{
+		str_copy(aBuf, aEmscriptenDropFile, Len);
+		aEmscriptenDropFile[0] = '\0';
+		return true;
+	}
+#endif
 	if(m_aDropFile[0] != '\0')
 	{
 		str_copy(aBuf, m_aDropFile, Len);

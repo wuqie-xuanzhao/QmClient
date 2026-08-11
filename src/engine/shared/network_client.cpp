@@ -10,7 +10,10 @@
 
 #include <algorithm>
 
-bool CNetClient::Open(NETADDR BindAddr)
+static constexpr int CNET_QOS_MAX_ATTEMPTS = 3;
+static constexpr int CNET_QOS_RETRY_DELAY_SECONDS = 2;
+
+bool CNetClient::Open(NETADDR BindAddr, bool LowLatency)
 {
 	// open socket
 	NETSOCKET Socket;
@@ -23,6 +26,8 @@ bool CNetClient::Open(NETADDR BindAddr)
 
 	// init
 	m_Socket = Socket;
+	m_LowLatency = LowLatency;
+	m_QosStatus = LowLatency ? ENetQosStatus::PENDING : ENetQosStatus::DISABLED;
 	m_pStun = new CStun(m_Socket);
 	m_Connection.Init(m_Socket, false);
 	m_TokenCache.Init(m_Socket);
@@ -37,6 +42,8 @@ void CNetClient::Close()
 		return;
 	}
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	if(m_pStun)
 	{
 		delete m_pStun;
@@ -49,13 +56,71 @@ void CNetClient::Close()
 void CNetClient::Disconnect(const char *pReason)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Disconnect(pReason);
 }
 
 void CNetClient::Drop(const char *pReason)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Drop(pReason);
+}
+
+void CNetClient::ResetQos()
+{
+	net_qos_remove_socket(m_Qos);
+	m_Qos = nullptr;
+	m_QosAttempted = false;
+	m_QosAttemptCount = 0;
+	m_QosNextAttempt = 0;
+	m_QosStatus = m_LowLatency ? ENetQosStatus::PENDING : ENetQosStatus::DISABLED;
+}
+
+const char *CNetClient::QosStatusName() const
+{
+	switch(m_QosStatus)
+	{
+	case ENetQosStatus::DISABLED: return "disabled";
+	case ENetQosStatus::PENDING: return "pending";
+	case ENetQosStatus::ACTIVE: return "active";
+	case ENetQosStatus::UNAVAILABLE: return "unavailable";
+	case ENetQosStatus::FAILED: return "failed";
+	}
+	dbg_assert_failed("invalid QoS status");
+}
+
+void CNetClient::SetLowLatency(bool LowLatency)
+{
+	if(m_LowLatency == LowLatency)
+		return;
+	m_LowLatency = LowLatency;
+	ResetQos();
+	if(m_LowLatency)
+		TryConfigureQos();
+}
+
+void CNetClient::TryConfigureQos()
+{
+	if(!m_LowLatency || !m_QosPeerValidated || !m_Socket)
+		return;
+	if(m_QosAttempted && (m_QosNextAttempt == 0 || time_get() < m_QosNextAttempt))
+		return;
+	if(m_QosAttemptCount >= CNET_QOS_MAX_ATTEMPTS)
+		return;
+	const NETADDR *pPeerAddr = m_Connection.PeerAddress();
+	if((pPeerAddr->type & (NETTYPE_IPV4 | NETTYPE_IPV6)) == 0)
+		return;
+
+	// qWAVE 由系统策略决定实际标记；Windows IPv4 仍保留原有低延迟 TOS，IPv6 回退为 Best Effort。
+	m_QosAttempted = true;
+	m_QosAttemptCount++;
+	m_QosNextAttempt = 0;
+	m_Qos = net_qos_add_socket(m_Socket, pPeerAddr, &m_QosStatus);
+	if(!m_Qos && m_QosStatus == ENetQosStatus::FAILED && m_QosAttemptCount < CNET_QOS_MAX_ATTEMPTS)
+		m_QosNextAttempt = time_get() + (int64_t)CNET_QOS_RETRY_DELAY_SECONDS * time_freq();
 }
 
 void CNetClient::Update()
@@ -75,6 +140,7 @@ void CNetClient::Update()
 	}
 
 	m_Connection.Update();
+	TryConfigureQos();
 	if(m_Connection.State() == CNetConnection::EState::ERROR)
 		Disconnect(m_Connection.ErrorString());
 	if(m_pStun)
@@ -85,12 +151,16 @@ void CNetClient::Update()
 void CNetClient::Connect(const NETADDR *pAddr, int NumAddrs)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Connect(pAddr, NumAddrs);
 }
 
 void CNetClient::Connect7(const NETADDR *pAddr, int NumAddrs)
 {
 	DeactivateKcp();
+	m_QosPeerValidated = false;
+	ResetQos();
 	m_Connection.Connect7(pAddr, NumAddrs);
 }
 
@@ -106,8 +176,8 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 
 	while(true)
 	{
-		// check for a chunk
-		if(m_RecvUnpacker.FetchChunk(pChunk))
+		// Unpack next chunk from stored packet if available
+		if(m_PacketChunkUnpacker.UnpackNextChunk(pChunk))
 			return 1;
 		if(FetchKcpChunk(pChunk, pResponseToken, Sixup))
 			return 1;
@@ -128,10 +198,19 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 
 		if(CNetKcpSession::IsKcpPacket(pData, Bytes))
 		{
-			if(m_Transport == ENetTransport::KCP && m_Kcp.Input(Addr, pData, Bytes, true))
+			if(m_Transport == ENetTransport::KCP &&
+				m_Connection.State() != CNetConnection::EState::OFFLINE &&
+				m_Connection.State() != CNetConnection::EState::ERROR &&
+				m_Kcp.Input(Addr, pData, Bytes, true))
 			{
-				m_Connection.UpdatePeerAddressForRebind(Addr);
+				const NETADDR PreviousPeerAddr = *m_Connection.PeerAddress();
+				const bool PeerAddressUpdated = m_Connection.UpdatePeerAddressForRebind(Addr) && PreviousPeerAddr != *m_Connection.PeerAddress();
 				m_Kcp.SetPeerAddress(Addr);
+				if(PeerAddressUpdated)
+				{
+					ResetQos();
+					TryConfigureQos();
+				}
 				m_TransportStats = m_Kcp.Stats();
 			}
 			continue;
@@ -139,40 +218,49 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 
 		SECURITY_TOKEN Token;
 		*pResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
-		if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup, &Token, pResponseToken) == 0)
+		if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvBuffer, Sixup, &Token, pResponseToken) == 0)
 		{
 			if(Sixup)
 			{
 				Addr.type |= NETTYPE_TW7;
 			}
-			if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
+			if(m_RecvBuffer.m_Flags & NET_PACKETFLAG_CONNLESS)
 			{
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 				pChunk->m_ClientId = -1;
 				pChunk->m_Address = Addr;
-				pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
-				pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
-				if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_EXTENDED)
+				pChunk->m_DataSize = m_RecvBuffer.m_DataSize;
+				pChunk->m_pData = m_RecvBuffer.m_aChunkData;
+				if(m_RecvBuffer.m_Flags & NET_PACKETFLAG_EXTENDED)
 				{
 					pChunk->m_Flags |= NETSENDFLAG_EXTENDED;
-					mem_copy(pChunk->m_aExtraData, m_RecvUnpacker.m_Data.m_aExtraData, sizeof(pChunk->m_aExtraData));
+					mem_copy(pChunk->m_aExtraData, m_RecvBuffer.m_aExtraData, sizeof(pChunk->m_aExtraData));
 				}
 				return 1;
 			}
 			else
 			{
+				const bool Control = (m_RecvBuffer.m_Flags & NET_PACKETFLAG_CONTROL) != 0;
 				if(Sixup &&
-					(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONTROL) != 0 &&
-					m_RecvUnpacker.m_Data.m_DataSize >= 1 + (int)sizeof(SECURITY_TOKEN) &&
-					m_RecvUnpacker.m_Data.m_aChunkData[0] == protocol7::NET_CTRLMSG_TOKEN)
+					Control &&
+					m_RecvBuffer.m_DataSize >= 1 + (int)sizeof(SECURITY_TOKEN) &&
+					m_RecvBuffer.m_aChunkData[0] == protocol7::NET_CTRLMSG_TOKEN)
 				{
 					m_TokenCache.AddToken(&Addr, *pResponseToken);
 				}
 				if(m_Connection.State() != CNetConnection::EState::OFFLINE &&
 					m_Connection.State() != CNetConnection::EState::ERROR &&
-					m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr, Token, *pResponseToken))
+					m_Connection.Feed(&m_RecvBuffer, &Addr, Token, *pResponseToken))
 				{
-					m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
+					m_QosPeerValidated = true;
+					// 首个有效响应确定服务器地址后再创建仅针对该目标的 QoS flow。
+					TryConfigureQos();
+					if(!Control &&
+						m_RecvBuffer.m_DataSize > 0 &&
+						m_RecvBuffer.m_NumChunks > 0)
+					{
+						m_PacketChunkUnpacker.FeedPacket(Addr, m_RecvBuffer, &m_Connection, 0);
+					}
 				}
 			}
 		}
@@ -189,38 +277,44 @@ bool CNetClient::FetchKcpChunk(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken
 	if(Size <= 0 || Size > NET_MAX_PACKETSIZE)
 		return false;
 
-	unsigned char *pData = m_RecvUnpacker.m_aBuffer;
-	const int Bytes = m_Kcp.Recv(pData, sizeof(m_RecvUnpacker.m_aBuffer));
+	unsigned char aBuffer[NET_MAX_PACKETSIZE];
+	const int Bytes = m_Kcp.Recv(aBuffer, sizeof(aBuffer));
 	if(Bytes <= 0)
 		return false;
 
 	SECURITY_TOKEN Token;
 	*pResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
-	if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup, &Token, pResponseToken) != 0)
+	if(CNetBase::UnpackPacket(aBuffer, Bytes, &m_RecvBuffer, Sixup, &Token, pResponseToken) != 0)
 		return false;
 
 	NETADDR Addr = *m_Connection.PeerAddress();
-	if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
+	if(m_RecvBuffer.m_Flags & NET_PACKETFLAG_CONNLESS)
 	{
 		pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 		pChunk->m_ClientId = -1;
 		pChunk->m_Address = Addr;
-		pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
-		pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
-		if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_EXTENDED)
+		pChunk->m_DataSize = m_RecvBuffer.m_DataSize;
+		pChunk->m_pData = m_RecvBuffer.m_aChunkData;
+		if(m_RecvBuffer.m_Flags & NET_PACKETFLAG_EXTENDED)
 		{
 			pChunk->m_Flags |= NETSENDFLAG_EXTENDED;
-			mem_copy(pChunk->m_aExtraData, m_RecvUnpacker.m_Data.m_aExtraData, sizeof(pChunk->m_aExtraData));
+			mem_copy(pChunk->m_aExtraData, m_RecvBuffer.m_aExtraData, sizeof(pChunk->m_aExtraData));
 		}
 		return true;
 	}
 
+	const bool Control = (m_RecvBuffer.m_Flags & NET_PACKETFLAG_CONTROL) != 0;
 	if(m_Connection.State() != CNetConnection::EState::OFFLINE &&
 		m_Connection.State() != CNetConnection::EState::ERROR &&
-		m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr, Token, *pResponseToken))
+		m_Connection.Feed(&m_RecvBuffer, &Addr, Token, *pResponseToken))
 	{
-		m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
-		return m_RecvUnpacker.FetchChunk(pChunk) != 0;
+		if(!Control &&
+			m_RecvBuffer.m_DataSize > 0 &&
+			m_RecvBuffer.m_NumChunks > 0)
+		{
+			m_PacketChunkUnpacker.FeedPacket(Addr, m_RecvBuffer, &m_Connection, 0);
+			return m_PacketChunkUnpacker.UnpackNextChunk(pChunk);
+		}
 	}
 	return false;
 }
@@ -365,6 +459,7 @@ SNetTransportStats CNetClient::TransportStats() const
 	if(m_Transport == ENetTransport::KCP)
 		return m_Kcp.Stats();
 	SNetTransportStats Stats = m_TransportStats;
+	Stats.m_RttMs = m_Connection.LastRttMs();
 	Stats.m_LossPermille = (int)std::clamp(m_Connection.PacketLoss() * 10.0f, 0.0f, 1000.0f);
 	Stats.m_ResendCount = m_Connection.PendingResendCount();
 	Stats.m_SendQueueDepth = Stats.m_ResendCount;

@@ -352,19 +352,61 @@ bool CScoreboard::OnInput(const IInput::CEvent &Event)
 	return IsActive() && m_MouseUnlocked;
 }
 
-void CScoreboard::RenderTitle(CUIRect TitleBar, int Team, const char *pTitle)
+void CScoreboard::RenderTitle(CUIRect TitleLabel, int Team, const char *pTitle, float TitleFontSize)
 {
-	dbg_assert(Team == TEAM_RED || Team == TEAM_BLUE, "Team invalid");
-
-	char aScore[128] = "";
-	if(GameClient()->m_GameInfo.m_TimeScore)
+	const bool IsMapTitle = Team == TEAM_GAME && !GameClient()->IsTeamPlay();
+	if(IsMapTitle && m_MouseUnlocked && GameClient()->m_aMapDescription[0] != '\0')
 	{
-		if(m_ServerRecord > 0)
+		const int ButtonResult = Ui()->DoButtonLogic(&m_MapTitleButtonId, 0, &TitleLabel, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+		if(ButtonResult != 0)
 		{
-			str_time_float(m_ServerRecord, TIME_HOURS, aScore, sizeof(aScore));
+			m_MapTitlePopupContext.m_pScoreboard = this;
+
+			m_MapTitlePopupContext.m_FontSize = 12.0f;
+			const float MaxWidth = 300.0f;
+			const float Margin = 5.0f;
+			const char *pDescription = GameClient()->m_aMapDescription;
+			const float TextWidth = minimum(std::ceil(TextRender()->TextWidth(m_MapTitlePopupContext.m_FontSize, pDescription) + 0.5f), MaxWidth);
+			float TextHeight = 0.0f;
+			STextSizeProperties TextSizeProps{};
+			TextSizeProps.m_pHeight = &TextHeight;
+			TextRender()->TextWidth(m_MapTitlePopupContext.m_FontSize, pDescription, -1, TextWidth, 0, TextSizeProps);
+
+			Ui()->DoPopupMenu(&m_MapTitlePopupContext, Ui()->MouseX(), Ui()->MouseY(), TextWidth + Margin * 2, TextHeight + Margin * 2, &m_MapTitlePopupContext, CMapTitlePopupContext::Render);
+		}
+		if(Ui()->HotItem() == &m_MapTitleButtonId)
+		{
+			TitleLabel.Draw(ColorRGBA(0.7f, 0.7f, 0.7f, 0.3f), IGraphics::CORNER_ALL, 5.0f);
 		}
 	}
-	else if(GameClient()->IsTeamPlay())
+
+	SLabelProperties Props;
+	Props.m_MaxWidth = TitleLabel.w;
+	Props.m_EllipsisAtEnd = true;
+	Ui()->DoLabel(&TitleLabel, pTitle, TitleFontSize, Team == TEAM_RED ? TEXTALIGN_ML : TEXTALIGN_MR, Props);
+}
+
+void CScoreboard::RenderTitleScore(CUIRect ScoreLabel, int Team, float TitleFontSize)
+{
+	// map best
+	char aScore[128] = "";
+	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
+	const bool TimeScore = GameClient()->m_GameInfo.m_TimeScore;
+	const bool Race7 = Client()->IsSixup() && pGameInfoObj && pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE;
+	if(GameClient()->m_ReceivedDDNetPlayerFinishTimes || TimeScore || Race7)
+	{
+		if(GameClient()->m_MapBestTimeSeconds != FinishTime::UNSET)
+		{
+			Ui()->RenderTime(ScoreLabel,
+				TitleFontSize,
+				GameClient()->m_MapBestTimeSeconds,
+				GameClient()->m_MapBestTimeSeconds == FinishTime::NOT_FINISHED_MILLIS,
+				GameClient()->m_MapBestTimeMillis,
+				GameClient()->m_ReceivedDDNetPlayerFinishTimesMillis);
+			return;
+		}
+	}
+	else if(GameClient()->IsTeamPlay()) // normal score
 	{
 		const CNetObj_GameData *pGameDataObj = GameClient()->m_Snap.m_pGameDataObj;
 		if(pGameDataObj)
@@ -386,8 +428,19 @@ void CScoreboard::RenderTitle(CUIRect TitleBar, int Team, const char *pTitle)
 		}
 	}
 
+	const float ScoreTextWidth = aScore[0] != '\0' ? TextRender()->TextWidth(TitleFontSize, aScore, -1, -1.0f, 0) : 0.0f;
+	if(ScoreTextWidth != 0.0f)
+	{
+		Ui()->DoLabel(&ScoreLabel, aScore, TitleFontSize, Team == TEAM_RED ? TEXTALIGN_MR : TEXTALIGN_ML);
+	}
+}
+
+void CScoreboard::RenderTitleBar(CUIRect TitleBar, int Team, const char *pTitle)
+{
+	dbg_assert(Team == TEAM_RED || Team == TEAM_BLUE || Team == TEAM_GAME, "Team invalid");
+
 	const float TitleFontSize = 20.0f;
-	const float ScoreTextWidth = TextRender()->TextWidth(TitleFontSize, aScore);
+	const float ScoreTextWidth = TextRender()->TextWidth(TitleFontSize, "00:00:00");
 
 	TitleBar.VMargin(10.0f, &TitleBar);
 	CUIRect TitleLabel;
@@ -402,7 +455,7 @@ void CScoreboard::RenderTitle(CUIRect TitleBar, int Team, const char *pTitle)
 		static thread_local std::vector<SUiLayoutChild> s_vTitleChildren;
 		std::vector<SUiLayoutChild> &vTitleChildren = s_vTitleChildren;
 		vTitleChildren.assign(2, SUiLayoutChild{});
-		if(Team == TEAM_RED)
+		if(Team == TEAM_RED || Team == TEAM_GAME)
 		{
 			vTitleChildren[0].m_Style.m_Width = SUiLength::Flex(1.0f);
 			vTitleChildren[1].m_Style.m_Width = SUiLength::Px(ScoreTextWidth);
@@ -420,17 +473,8 @@ void CScoreboard::RenderTitle(CUIRect TitleBar, int Team, const char *pTitle)
 		}
 	}
 
-	{
-		SLabelProperties Props;
-		Props.m_MaxWidth = TitleLabel.w;
-		Props.m_EllipsisAtEnd = true;
-		Ui()->DoLabel(&TitleLabel, pTitle, TitleFontSize, Team == TEAM_RED ? TEXTALIGN_ML : TEXTALIGN_MR, Props);
-	}
-
-	if(aScore[0] != '\0')
-	{
-		Ui()->DoLabel(&ScoreLabel, aScore, TitleFontSize, Team == TEAM_RED ? TEXTALIGN_MR : TEXTALIGN_ML);
-	}
+	RenderTitle(TitleLabel, Team, pTitle, TitleFontSize);
+	RenderTitleScore(ScoreLabel, Team, TitleFontSize);
 }
 
 void CScoreboard::RenderGoals(CUIRect Goals)
@@ -1863,8 +1907,8 @@ void CScoreboard::OnRender()
 		RedScoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal), IGraphics::CORNER_B, ui_token::radius::CARD);
 		BlueScoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal), IGraphics::CORNER_B, ui_token::radius::CARD);
 
-		RenderTitle(RedTitleContent, TEAM_RED, pRedTeamName == nullptr ? Localize("Red team") : pRedTeamName);
-		RenderTitle(BlueTitleContent, TEAM_BLUE, pBlueTeamName == nullptr ? Localize("Blue team") : pBlueTeamName);
+		RenderTitleBar(RedTitleContent, TEAM_RED, pRedTeamName == nullptr ? Localize("Red team") : pRedTeamName);
+		RenderTitleBar(BlueTitleContent, TEAM_BLUE, pBlueTeamName == nullptr ? Localize("Blue team") : pBlueTeamName);
 		DoSortButton(SortButton);
 		RenderScoreboard(RedScoreboardContent, TEAM_RED, 0, NumPlayers, RedPlayerRows, RenderState);
 		RenderScoreboard(BlueScoreboardContent, TEAM_BLUE, 0, NumPlayers, BluePlayerRows, RenderState);
@@ -1902,7 +1946,7 @@ void CScoreboard::OnRender()
 			Title = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[0].m_Box);
 			SortButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[1].m_Box);
 		}
-		RenderTitle(Title, TEAM_GAME, pTitle);
+		RenderTitleBar(Title, TEAM_GAME, pTitle);
 		DoSortButton(SortButton);
 
 		if(NumPlayers <= 16)
@@ -2227,6 +2271,15 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 			}
 		}
 	}
+
+	return CUi::POPUP_KEEP_OPEN;
+}
+CUi::EPopupMenuFunctionResult CScoreboard::CMapTitlePopupContext::Render(void *pContext, CUIRect View, bool Active)
+{
+	CMapTitlePopupContext *pPopupContext = static_cast<CMapTitlePopupContext *>(pContext);
+	CScoreboard *pScoreboard = pPopupContext->m_pScoreboard;
+
+	pScoreboard->TextRender()->Text(View.x, View.y, pPopupContext->m_FontSize, pScoreboard->GameClient()->m_aMapDescription, View.w);
 
 	return CUi::POPUP_KEEP_OPEN;
 }

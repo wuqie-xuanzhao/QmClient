@@ -75,6 +75,9 @@ public:
 
 	static void StripPathAndExtension(const char *pFilename, char *pBuffer, int BufferSize);
 	static const char *FormatTmpPath(char *aBuf, unsigned BufSize, const char *pPath);
+
+	// Replaces a save file through a same-directory backup. If the replacement fails, the old file is restored when possible.
+	static bool ReplaceFileSafely(IStorage *pStorage, const char *pTempFilename, const char *pRealFilename, char *pBackupFilename, unsigned BackupFilenameSize);
 };
 
 extern IStorage *CreateStorage(IStorage::EInitializationType InitializationType, int NumArgs, const char **ppArguments);

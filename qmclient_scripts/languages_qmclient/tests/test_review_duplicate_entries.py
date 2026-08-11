@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 import sys
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -95,6 +96,26 @@ class AuditSimplifiedChineseTest(unittest.TestCase):
             [(entry.key, entry.context) for entry in report.unused],
             [("Unused key", "")],
         )
+
+    def test_collect_used_keys_reads_extracted_strings_without_full_source_scan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            strings_path = Path(tmp) / "extracted_strings.txt"
+            strings_path.write_text(
+                "Plain key\n[Menu]\tContext key\n",
+                encoding="utf-8",
+            )
+
+            with (
+                mock.patch.object(audit, "STRINGS_FILE", strings_path),
+                mock.patch.object(
+                    source_keys,
+                    "collect_source_key_identities",
+                    side_effect=AssertionError("should not scan source files"),
+                ),
+            ):
+                used_keys = audit.collect_used_keys()
+
+        self.assertEqual(used_keys, {("Plain key", ""), ("Context key", "Menu")})
 
     def test_extracts_register_help_strings(self):
         content = """

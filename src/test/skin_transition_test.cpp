@@ -23,12 +23,10 @@ TEST(SkinTransition, ProgressEndsExactlyAtConfiguredDuration)
 	EXPECT_FLOAT_EQ(ResolveSkinChangeTransitionProgress(0.501f, 500), 1.0f);
 }
 
-TEST(SkinTransition, AppearanceChangesOnlyAnimateWhenTheSkinChanges)
+TEST(SkinTransition, DemoPlaybackDoesNotRunLiveSkinChangeTransition)
 {
-	EXPECT_EQ(ResolveSkinChangeTransitionAction(false, false, false), ESkinChangeTransitionAction::KEEP);
-	EXPECT_EQ(ResolveSkinChangeTransitionAction(true, false, false), ESkinChangeTransitionAction::KEEP);
-	EXPECT_EQ(ResolveSkinChangeTransitionAction(true, true, true), ESkinChangeTransitionAction::START);
-	EXPECT_EQ(ResolveSkinChangeTransitionAction(true, false, true), ESkinChangeTransitionAction::CANCEL);
+	EXPECT_FALSE(ShouldRunLiveSkinChangeTransition(true));
+	EXPECT_TRUE(ShouldRunLiveSkinChangeTransition(false));
 }
 
 TEST(SkinTransition, BlendAtStartShowsCurrentSkinImmediately)
@@ -115,4 +113,74 @@ TEST(SkinTransition, ThemeSwitchTypeUsesVerticalMotion)
 	EXPECT_GT(Blend.m_CurrentPosOffset.y, 0.0f);
 	EXPECT_FLOAT_EQ(Blend.m_PreviousPosOffset.x, 0.0f);
 	EXPECT_FLOAT_EQ(Blend.m_CurrentPosOffset.x, 0.0f);
+}
+
+TEST(SkinTransition, CustomIntensityScalesVisualParameters)
+{
+	const SSkinChangeTransitionBlend Normal = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_SLIDE_LEFT, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend Strong = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_SLIDE_LEFT, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 200);
+
+	EXPECT_LT(Strong.m_PreviousPosOffset.x, Normal.m_PreviousPosOffset.x);
+	EXPECT_GT(Strong.m_CurrentPosOffset.x, Normal.m_CurrentPosOffset.x);
+}
+
+TEST(SkinTransition, EasingChangesIntermediateBlendButKeepsEndpoints)
+{
+	const SSkinChangeTransitionBlend CubicStart = ComputeSkinChangeTransitionBlend(0.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend BackStart = ComputeSkinChangeTransitionBlend(0.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+	const SSkinChangeTransitionBlend CubicMid = ComputeSkinChangeTransitionBlend(0.5f, SKIN_CHANGE_TRANSITION_FADE_SCALE, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend BackMid = ComputeSkinChangeTransitionBlend(0.5f, SKIN_CHANGE_TRANSITION_FADE_SCALE, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+	const SSkinChangeTransitionBlend CubicEnd = ComputeSkinChangeTransitionBlend(1.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend BackEnd = ComputeSkinChangeTransitionBlend(1.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+
+	EXPECT_FLOAT_EQ(CubicStart.m_CurrentAlpha, BackStart.m_CurrentAlpha);
+	EXPECT_NE(CubicMid.m_CurrentAlpha, BackMid.m_CurrentAlpha);
+	EXPECT_FLOAT_EQ(CubicEnd.m_CurrentAlpha, BackEnd.m_CurrentAlpha);
+}
+
+TEST(SkinTransition, ElasticBackKeepsAlphaInDrawableRange)
+{
+	const SSkinChangeTransitionBlend SkinBlend = ComputeSkinChangeTransitionBlend(0.5f, SKIN_CHANGE_TRANSITION_FADE_SCALE, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+
+	EXPECT_GE(SkinBlend.m_PreviousAlpha, 0.0f);
+	EXPECT_LE(SkinBlend.m_PreviousAlpha, 1.0f);
+	EXPECT_GE(SkinBlend.m_CurrentAlpha, 0.0f);
+	EXPECT_LE(SkinBlend.m_CurrentAlpha, 1.0f);
+}
+
+TEST(SkinTransition, GlitchTypeAppliesJitterAndStaysDrawable)
+{
+	const SSkinChangeTransitionBlend Blend = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_GLITCH);
+	EXPECT_GT(Blend.m_PreviousAlpha, 0.0f);
+	EXPECT_LT(Blend.m_PreviousAlpha, 1.0f);
+	EXPECT_GT(Blend.m_CurrentAlpha, 0.0f);
+	EXPECT_LT(Blend.m_CurrentAlpha, 1.0f);
+	// Glitch always produces horizontal motion (jitter + drift); vertical stays zero.
+	EXPECT_NE(Blend.m_PreviousPosOffset.x, 0.0f);
+	EXPECT_NE(Blend.m_CurrentPosOffset.x, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousPosOffset.y, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentPosOffset.y, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousAngleOffset, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentAngleOffset, 0.0f);
+	// Higher intensity widens the drift component of the previous offset.
+	const SSkinChangeTransitionBlend Strong = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_GLITCH, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 200);
+	EXPECT_LT(Strong.m_PreviousPosOffset.x, Blend.m_PreviousPosOffset.x);
+}
+
+TEST(SkinTransition, ElasticTypeSquashesVerticallyAndStaysDrawable)
+{
+	const SSkinChangeTransitionBlend Blend = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_ELASTIC);
+	EXPECT_GT(Blend.m_PreviousAlpha, 0.0f);
+	EXPECT_LT(Blend.m_PreviousAlpha, 1.0f);
+	EXPECT_GT(Blend.m_CurrentAlpha, 0.0f);
+	EXPECT_LT(Blend.m_CurrentAlpha, 1.0f);
+	// Elastic uses vertical motion, no horizontal drift, no rotation.
+	EXPECT_GT(Blend.m_PreviousPosOffset.y, 0.0f);
+	EXPECT_LT(Blend.m_CurrentPosOffset.y, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousPosOffset.x, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentPosOffset.x, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousAngleOffset, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentAngleOffset, 0.0f);
+	// Previous skin squashes (Y scale shrinks) while current is larger than 1 at the pop.
+	EXPECT_LT(Blend.m_PreviousBodyScale.y, 1.0f);
 }

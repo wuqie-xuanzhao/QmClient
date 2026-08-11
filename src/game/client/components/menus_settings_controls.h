@@ -9,6 +9,7 @@
 #include <game/client/ui.h>
 #include <game/client/ui_scrollregion.h>
 
+#include <cstdint>
 #include <vector>
 
 enum class EBindOptionGroup
@@ -66,6 +67,7 @@ private:
 	std::vector<CBindOption> m_vBindOptions;
 	size_t m_NumPredefinedBindOptions;
 	bool m_BindOptionsDirty = true;
+	uint64_t m_BindLayoutRevision = 1;
 	void UpdateBindOptions();
 
 	CScrollRegion m_SettingsScrollRegion;
@@ -76,31 +78,25 @@ private:
 	bool m_SearchMatchReveal = false;
 	void UpdateSearchMatches();
 
-	void RenderSettingsBlock(float Height, CUIRect *pParentRect, const char *pTitle,
-		const char *pTitleId, bool *pExpanded, CButtonContainer *pExpandButton, const std::function<void(CUIRect Rect)> &RenderContentFunction);
-
-	void RenderSettingsBindsBlock(EBindOptionGroup Group, CUIRect *pParentRect, const char *pTitleId, const char *pTitle);
 	float MeasureSettingsBindsHeight(EBindOptionGroup Group) const;
-	void RenderSettingsBinds(EBindOptionGroup Group, CUIRect View);
+	void RenderSettingsBinds(EBindOptionGroup Group, CUIRect View, bool ReadOnly);
+	void RenderSettingsBindCard(EBindOptionGroup Group, CUIRect View, bool ReadOnly);
 
 	float MeasureSettingsMouseHeight() const;
 	void RenderSettingsMouse(CUIRect View);
-	CButtonContainer m_IngameMouseSensValueSelector;
-	CButtonContainer m_UiMouseSensValueSelector;
-
 	std::vector<CButtonContainer> m_vJoystickIngameModeButtonContainers = {{}, {}};
 	char m_aaJoystickAxisCheckboxIds[NUM_JOYSTICK_AXES][2]; // 2 for X and Y buttons
 	CScrollRegion m_JoystickDropDownScrollRegion;
 	CUi::SDropDownState m_JoystickDropDownState;
-	float MeasureSettingsJoystickHeight() const;
-	void RenderSettingsJoystick(CUIRect View);
-	void RenderJoystickAxisPicker(CUIRect View);
+	float MeasureSettingsJoystickHeight(float ContentWidth) const;
+	void RenderSettingsJoystick(CUIRect View, bool ReadOnly);
+	void RenderJoystickAxisPicker(CUIRect View, bool ReadOnly);
 	void RenderJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
+	bool DoSettingsControlsNumericField(const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u);
 
 	void DoSettingsControlsLabel(const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}) const;
 	void DoSettingsControlsMenuLabel(const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &Props = {}, int MaxWidth = -1) const;
 	int DoSettingsControlsCheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect) const;
-	bool DoSettingsControlsScrollbarOption(const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr) const;
 };
 
 #endif

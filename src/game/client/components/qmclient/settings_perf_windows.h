@@ -74,6 +74,13 @@ public:
 		return Interrupted;
 	}
 
+	SQmSettingsPerfWindowFrameResult EnsureScrollWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, float IdleTimeoutSeconds, bool CapLimited, uint64_t WindowStartFrame = 0)
+	{
+		if(m_Active && m_ScrollWindow && str_comp(m_Summary.m_aOperation, pOperation != nullptr ? pOperation : "") == 0)
+			return {};
+		return StartScrollWindow(pOperation, pContext, pPage, pTab, IdleTimeoutSeconds, CapLimited, WindowStartFrame);
+	}
+
 	bool HasActiveWindow() const { return m_Active; }
 	const char *ActiveOperation() const { return m_Active ? m_Summary.m_aOperation : "none"; }
 	const char *ActivePage() const { return m_Active ? m_Summary.m_aPage : ""; }

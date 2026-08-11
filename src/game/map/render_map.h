@@ -8,6 +8,7 @@
 
 #include <array>
 #include <chrono>
+#include <cmath>
 
 enum
 {
@@ -56,10 +57,40 @@ class ITextRender;
 class CTuneColorMapper
 {
 public:
-	CTuneColorMapper();
-	uint8_t TuneNumberToColorIndex(uint8_t TuneNumber);
-	ColorRGBA TuneColorIndexToColor(uint8_t TuneColorIndex) const;
-	void Reset();
+	CTuneColorMapper() { Reset(); }
+	uint8_t TuneNumberToColorIndex(uint8_t TuneNumber)
+	{
+		if(TuneNumber == 0)
+			return 0;
+
+		uint8_t &TuneColorIndex = m_aTuneNumberToColorIndex[TuneNumber - 1];
+		if(TuneColorIndex == 0)
+		{
+			TuneColorIndex = m_NextTuneNumberIndex + 1;
+			++m_NextTuneNumberIndex;
+		}
+		return TuneColorIndex;
+	}
+	uint8_t TileTextureIndex(uint8_t TileType, uint8_t TuneNumber, bool HasTextureArrays)
+	{
+		// 非 array 后端采样普通实体贴图，编号颜色图集仅供 texture array 后端使用。
+		if(!HasTextureArrays || TuneNumber == 0)
+			return TileType;
+		return TuneNumberToColorIndex(TuneNumber);
+	}
+	ColorRGBA TuneColorIndexToColor(uint8_t TuneColorIndex) const
+	{
+		if(TuneColorIndex == 0)
+			return ColorRGBA(1.0f, 1.0f, 1.0f);
+
+		const float Hue = std::fmod((TuneColorIndex - 1) * normalized_golden_angle, 1.0f);
+		return color_cast<ColorRGBA>(ColorHSLA(Hue, 0.75f, 0.5f, 1.0f));
+	}
+	void Reset()
+	{
+		m_aTuneNumberToColorIndex.fill(0);
+		m_NextTuneNumberIndex = 0;
+	}
 
 private:
 	std::array<uint8_t, 255> m_aTuneNumberToColorIndex;

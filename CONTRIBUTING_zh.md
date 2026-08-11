@@ -1,17 +1,13 @@
-# 为 QmClient 贡献代码
+# 为 DDNet 贡献代码
 
 > 📄 本文档另有 <a href="CONTRIBUTING.md">English</a> 版本</p>
 
-## QmClient 贡献入口
-
-Issue 和 Pull Request 应提交到 [wxj881027/QmClient](https://github.com/wxj881027/QmClient)，而不是上游 DDNet 仓库。行为改动应在实现前讨论，开发时遵循 `AGENTS.md`，请求审查前运行相关 gate 和测试。
-
-QmClient 继承下文的 DDNet 兼容性与 C++ 约定。保留的 DDNet Issue 和 Pull Request 链接只是上游背景示例，不是 QmClient 的提交目标。
+> ℹ️ 这是上游 DDNet 的贡献指南。**QmClient 专属工作流**（commit/PR 格式、release、gate、AI agent 规则）在 [`AGENTS.md`](AGENTS.md) 与 [`docs/ai-workflow/`](docs/ai-workflow/meta.md)，做 QmClient 相关工作时以那里为准。
 
 ## 概述
 
-在开始编写代码之前，请先创建一个 QmClient Issue 讨论这个想法。
-如果花费时间开发的贡献不符合 QmClient 的范围和兼容性要求，那将是很遗憾的。
+在开始编写代码之前，请先创建一个 Issue 讨论这个想法。
+如果花费时间开发的贡献不符合 DDNet 项目的理念，那将是很遗憾的。
 
 通常会被拒绝的事项列表：
 
@@ -24,16 +20,18 @@ QmClient 继承下文的 DDNet 兼容性与 C++ 约定。保留的 DDNet Issue �
   - 现有地图不应被破坏。
   - 新玩法不应使已完成地图的跑图变得更容易。
 
-查看 [QmClient 问题列表](https://github.com/wxj881027/QmClient/issues)寻找可以处理的问题。
-未标记或未确认的问题可能还不适合实现，请先向维护者确认状态。
+查看[问题列表](https://github.com/ddnet/ddnet/issues)寻找可以处理的问题。
+未标记的问题尚未分类，通常不是好的候选者。
+此外，标签 https://github.com/ddnet/ddnet/labels/needs-discussion 表示仍需讨论才能实施的问题，标签 https://github.com/ddnet/ddnet/labels/fix-changes-physics 表示对新手贡献者来说过于复杂的问题。
+推荐处理带有标签 https://github.com/ddnet/ddnet/labels/good%20first%20issue、https://github.com/ddnet/ddnet/labels/bug 和 https://github.com/ddnet/ddnet/labels/feature-accepted 的问题。
 通过检查分配情况和是否有相关的开放 Pull Request，确保该问题没有被其他人处理。
 如果您想处理某个问题，请发表评论以便分配给您，或如果您有任何问题。
 
-新增功能需要在实现前取得维护者同意，以避免功能蔓延。
+添加新功能通常需要至少两位维护者的支持，以避免功能蔓延。
 
 ## 编程语言
 
-我们目前使用以下语言开发基于 DDNet 的 QmClient：
+我们目前使用以下语言开发 DDNet：
 
 - C++
 - 极少量的 Rust
@@ -50,8 +48,6 @@ QmClient 继承下文的 DDNet 兼容性与 C++ 约定。保留的 DDNet Issue �
 如果您的 GitHub pipeline 显示一些错误，请查看日志并尝试修复它们。
 
 此类修复提交理想情况下应使用 `git commit --amend` 或 `git rebase -i` 压缩为一个大提交。
-
-许多格式问题可通过 `python qmclient_scripts/fix_style.py` 自动修复；使用 `-n` 只检查而不写入。
 
 我们使用 clang-format 20 来格式化 C++ 代码。
 
@@ -374,4 +370,4 @@ src/game/foo_bar.cpp
 
 ## 提交信息
 
-描述您的贡献为玩家/用户带来的变化，而不是只罗列技术修改。QmClient 的 commit 和 PR 标题使用 `<type>(<scope>): <中文简述>`；正文先写问题或背景，再按 `fix`、`test`、`docs` 等标签分组。
+描述您的贡献为玩家/用户带来的变化，而不是从技术角度谈论您做了什么。您的 PR 信息最好采用可以直接用于[更新日志](https://ddnet.org/downloads/)的格式。

@@ -40,6 +40,16 @@ typedef int (*FS_LISTDIR_CALLBACK_FILEINFO)(const CFsFileInfo *info, int is_dir,
  * @ingroup Network-General
  */
 typedef struct NETSOCKET_INTERNAL *NETSOCKET;
+typedef struct NETQOS_INTERNAL *NETQOS;
+
+enum class ENetQosStatus
+{
+	DISABLED,
+	PENDING,
+	ACTIVE,
+	UNAVAILABLE,
+	FAILED,
+};
 
 /**
  * The maximum bytes necessary to encode one Unicode codepoint with UTF-8.
@@ -92,6 +102,7 @@ typedef struct NETSTATS
 {
 	uint64_t sent_packets;
 	uint64_t sent_bytes;
+	uint64_t send_errors;
 	uint64_t recv_packets;
 	uint64_t recv_bytes;
 } NETSTATS;

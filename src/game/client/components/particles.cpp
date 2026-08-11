@@ -13,7 +13,7 @@
 
 CParticles::CParticles()
 {
-	OnReset();
+	CParticles::OnReset();
 	m_RenderTrail.m_pParts = this;
 	m_RenderTrailExtra.m_pParts = this;
 	m_RenderExplosions.m_pParts = this;
@@ -23,6 +23,7 @@ CParticles::CParticles()
 
 void CParticles::OnReset()
 {
+	m_LastRenderTime = time_get();
 	// reset particles
 	for(int i = 0; i < MAX_PARTICLES; i++)
 	{
@@ -38,22 +39,22 @@ void CParticles::OnReset()
 		FirstPart = -1;
 }
 
-void CParticles::Add(int Group, CParticle *pPart, float TimePassed)
+bool CParticles::Add(int Group, CParticle *pPart, float TimePassed)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 		if(pInfo->m_Paused)
-			return;
+			return false;
 	}
 	else
 	{
 		if(GameClient()->m_Snap.m_pGameInfoObj && GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED)
-			return;
+			return false;
 	}
 
 	if(m_FirstFree == -1)
-		return;
+		return false;
 
 	// remove from the free list
 	int Id = m_FirstFree;
@@ -73,6 +74,7 @@ void CParticles::Add(int Group, CParticle *pPart, float TimePassed)
 
 	// set some parameters
 	m_aParticles[Id].m_Life = TimePassed;
+	return true;
 }
 
 void CParticles::Update(float TimePassed)
@@ -149,21 +151,9 @@ void CParticles::OnRender()
 		return;
 
 	set_new_tick();
-	int64_t t = time();
-
-	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-	{
-		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		if(!pInfo->m_Paused)
-			Update((float)((t - m_LastRenderTime) / (double)time_freq()) * pInfo->m_Speed);
-	}
-	else
-	{
-		if(GameClient()->m_Snap.m_pGameInfoObj && !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
-			Update((float)((t - m_LastRenderTime) / (double)time_freq()));
-	}
-
-	m_LastRenderTime = t;
+	const int64_t Now = time();
+	Update((float)((Now - m_LastRenderTime) / (double)time_freq()) * GameClient()->GetAnimationPlaybackSpeed());
+	m_LastRenderTime = Now;
 }
 
 void CParticles::OnInit()
@@ -208,6 +198,9 @@ bool CParticles::ParticleIsVisibleOnScreen(const vec2 &CurPos, float CurSize)
 
 void CParticles::RenderGroup(int Group)
 {
+	const bool IsExtraGroup = Group == GROUP_EXTRA || Group == GROUP_TRAIL_EXTRA;
+	if((IsExtraGroup && !GameClient()->m_ExtrasSkinLoaded) || (!IsExtraGroup && !GameClient()->m_ParticlesSkinLoaded))
+		return;
 	IGraphics::CTextureHandle *aParticles = GameClient()->m_ParticlesSkin.m_aSpriteParticles;
 	int FirstParticleOffset = SPRITE_PART_SLICE;
 	int ParticleQuadContainerIndex = m_ParticleQuadContainerIndex;
@@ -310,7 +303,6 @@ void CParticles::RenderGroup(int Group)
 	{
 		int i = m_aFirstPart[Group];
 
-		Graphics()->BlendNormal();
 		Graphics()->WrapClamp();
 
 		while(i != -1)
@@ -346,6 +338,5 @@ void CParticles::RenderGroup(int Group)
 			i = m_aParticles[i].m_NextPart;
 		}
 		Graphics()->WrapNormal();
-		Graphics()->BlendNormal();
 	}
 }

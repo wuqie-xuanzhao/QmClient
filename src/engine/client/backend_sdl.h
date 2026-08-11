@@ -122,6 +122,8 @@ struct SBackendCapabilities
 	bool m_2DArrayTexturesAsExtension;
 	bool m_ShaderSupport;
 	bool m_MediaIslandSdf = false;
+	bool m_RoundedRectSdf = false;
+	std::atomic<bool> m_TexturedMsdf{false};
 	bool m_RenderTargets;
 	bool m_RenderTargetGaussianBlur = false;
 	bool m_BackbufferCapture = false;
@@ -134,6 +136,41 @@ struct SBackendCapabilities
 	int m_ContextMajor;
 	int m_ContextMinor;
 	int m_ContextPatch;
+
+	// 只保存从 GL_VERSION/GLES_VERSION 解析出的真实上下文版本。
+	// m_Context* 可能因兼容性降级而变化，不能用于展示实际驱动版本。
+	int m_DetectedContextMajor = 0;
+	int m_DetectedContextMinor = 0;
+	int m_DetectedContextPatch = 0;
+
+	void Reset()
+	{
+		m_TileBuffering = false;
+		m_QuadBuffering = false;
+		m_TextBuffering = false;
+		m_QuadContainerBuffering = false;
+		m_MipMapping = false;
+		m_NPOTTextures = false;
+		m_3DTextures = false;
+		m_2DArrayTextures = false;
+		m_2DArrayTexturesAsExtension = false;
+		m_ShaderSupport = false;
+		m_MediaIslandSdf = false;
+		m_RoundedRectSdf = false;
+		m_TexturedMsdf.store(false, std::memory_order_relaxed);
+		m_RenderTargets = false;
+		m_RenderTargetGaussianBlur = false;
+		m_BackbufferCapture = false;
+		m_RenderTargetExternalPassRequiresSingleSample = false;
+		m_pRenderTargetSupportReason = "not_initialized";
+		m_TrianglesAsQuads = false;
+		m_ContextMajor = 0;
+		m_ContextMinor = 0;
+		m_ContextPatch = 0;
+		m_DetectedContextMajor = 0;
+		m_DetectedContextMinor = 0;
+		m_DetectedContextPatch = 0;
+	}
 };
 
 // takes care of sdl related commands
@@ -256,8 +293,8 @@ public:
 
 	void Minimize() override;
 	void SetWindowParams(int FullscreenMode, bool IsBorderless) override;
-	bool SetWindowScreen(int Index, bool MoveToCenter) override;
-	bool UpdateDisplayMode(int Index) override;
+	bool SetWindowScreen(int Index, bool MoveToCenter, ivec2 *pDesktopSize) override;
+	bool UpdateDisplayMode(int Index, ivec2 *pDesktopSize) override;
 	int GetWindowScreen() override;
 	int WindowActive() override;
 	int WindowOpen() override;
@@ -271,8 +308,21 @@ public:
 	void WindowCreateNtf(uint32_t WindowId) override;
 
 	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override;
-	bool IsConfigModernAPI() override { return IsModernAPI(m_BackendType); }
+	bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName) override;
+	bool IsConfigModernAPI() override
+	{
+		if(g_Config.m_GfxGLMajor == 0 && m_Capabilities.m_DetectedContextMajor > 0)
+		{
+			if(m_BackendType == BACKEND_TYPE_OPENGL)
+				return (m_Capabilities.m_DetectedContextMajor == 3 && m_Capabilities.m_DetectedContextMinor >= 3) || m_Capabilities.m_DetectedContextMajor >= 4;
+			if(m_BackendType == BACKEND_TYPE_OPENGL_ES)
+				return m_Capabilities.m_DetectedContextMajor >= 3;
+		}
+		return IsModernAPI(m_BackendType);
+	}
 	bool HasMediaIslandSdf() override { return m_Capabilities.m_MediaIslandSdf; }
+	bool HasRoundedRectSdf() override { return m_Capabilities.m_RoundedRectSdf; }
+	bool HasTexturedMsdf() override { return m_Capabilities.m_TexturedMsdf.load(std::memory_order_acquire); }
 	bool UseTrianglesAsQuad() override { return m_Capabilities.m_TrianglesAsQuads; }
 	bool HasTileBuffering() override { return m_Capabilities.m_TileBuffering; }
 	bool HasQuadBuffering() override { return m_Capabilities.m_QuadBuffering; }
@@ -284,7 +334,7 @@ public:
 	bool RenderTargetExternalPassRequiresSingleSample() override { return m_Capabilities.m_RenderTargetExternalPassRequiresSingleSample; }
 	const char *RenderTargetSupportReason() override { return m_Capabilities.m_RenderTargets ? "supported" : m_Capabilities.m_pRenderTargetSupportReason; }
 	bool Uses2DTextureArrays() override { return m_Capabilities.m_2DArrayTextures; }
-	bool HasTextureArraysSupport() override { return m_Capabilities.m_2DArrayTextures || m_Capabilities.m_3DTextures; }
+	bool HasTextureArraysSupport() const override { return m_Capabilities.m_2DArrayTextures || m_Capabilities.m_3DTextures; }
 
 	const char *GetErrorString() override
 	{

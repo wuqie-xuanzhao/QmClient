@@ -6,7 +6,8 @@
 #include <game/client/components/qmclient/input_overlay.h>
 #include <game/client/components/qmclient/scoreboard_team_modes.h>
 #include <game/client/components/scoreboard.h>
-#include <game/client/ui.h>
+#include <game/map/render_map.h>
+#include <game/mapitems.h>
 
 #include <gtest/gtest.h>
 
@@ -52,6 +53,14 @@ TEST(QmInputOverlayLayout, VisibleBoundsUseIndependentContentScales)
 	const auto LargeBounds = QmInputOverlay::UnionBounds(Keyboard, LargeMouse);
 	EXPECT_FLOAT_EQ(LargeBounds.m_MaxX, 376.0f);
 	EXPECT_FLOAT_EQ(LargeBounds.m_MaxY, 210.5f);
+}
+
+TEST(QmTuneColorMapper, NonArrayBackendsKeepTheOriginalTuneTileIndex)
+{
+	CTuneColorMapper Mapper;
+	EXPECT_EQ(Mapper.TileTextureIndex(TILE_TUNE, 7, false), TILE_TUNE);
+	EXPECT_EQ(Mapper.TileTextureIndex(TILE_TUNE, 0, true), TILE_TUNE);
+	EXPECT_EQ(Mapper.TileTextureIndex(TILE_TUNE, 7, true), 1);
 }
 
 TEST(QmAfkPresentation, ServerAndEscMenuStatesRemainAvailableForNonOpacityIndicators)

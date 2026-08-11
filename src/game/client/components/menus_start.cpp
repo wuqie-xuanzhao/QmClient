@@ -273,6 +273,7 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 			Ctx.m_pTooltips = &GameClient()->m_Tooltips;
 			Ctx.m_pTextRender = TextRender();
 			Ctx.m_ScopeHash = MakeUiScopeHash("start_menu");
+			Ctx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 			static CButtonContainer s_QuitButton;
 			bool UsedEscape = false;

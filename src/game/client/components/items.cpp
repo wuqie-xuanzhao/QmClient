@@ -31,6 +31,17 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 {
 	int CurWeapon = std::clamp(pCurrent->m_Type, 0, NUM_WEAPONS - 1);
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
+	if(pCurrent->m_ExtraInfo)
+	{
+		if(pCurrent->m_Owner >= 0 && !GameClient()->LiveTeamFilterAllowsKnownOwner(pCurrent->m_Owner))
+			return;
+		if(pCurrent->m_Owner < 0 && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+			return;
+	}
+	else if(GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+	{
+		return;
+	}
 
 	// get positions
 	float Curvature = 0;
@@ -96,8 +107,8 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 	vec2 Pos = CalcPos(pCurrent->m_StartPos, pCurrent->m_StartVel, Curvature, Speed, Ct);
 	vec2 PrevPos = CalcPos(pCurrent->m_StartPos, pCurrent->m_StartVel, Curvature, Speed, Ct - 0.001f);
 
-	float Alpha = 1.0f;
-	if(IsOtherTeam)
+	float Alpha = pCurrent->m_ExtraInfo && pCurrent->m_Owner >= 0 ? GameClient()->LiveObserverClientAlpha(pCurrent->m_Owner) : 1.0f;
+	if(Alpha >= 1.0f && IsOtherTeam)
 	{
 		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 	}
@@ -112,23 +123,8 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 			GameClient()->m_Effects.SmokeTrail(Pos, Vel * -1, Alpha, 0.0f);
 		static float s_Time = 0.0f;
 		static float s_LastLocalTime = LocalTime();
-
-		if(AllowEffects)
-		{
-			if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-			{
-				const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-				if(!pInfo->m_Paused)
-					s_Time += (LocalTime() - s_LastLocalTime) * pInfo->m_Speed;
-			}
-			else
-			{
-				if(GameClient()->m_Snap.m_pGameInfoObj && !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
-					s_Time += LocalTime() - s_LastLocalTime;
-			}
-			s_LastLocalTime = LocalTime();
-		}
-
+		s_Time += (LocalTime() - s_LastLocalTime) * GameClient()->GetAnimationPlaybackSpeed();
+		s_LastLocalTime = LocalTime();
 		Graphics()->QuadsSetRotation(s_Time * pi * 2 * 2 + ItemId);
 	}
 	else
@@ -227,23 +223,9 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	static float s_Time = 0.0f;
 	static float s_LastLocalTime = LocalTime();
 	float Offset = Pos.y / 32.0f + Pos.x / 32.0f;
-	if(AllowEffects)
-	{
-		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-		{
-			const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-			if(!pInfo->m_Paused)
-				s_Time += (LocalTime() - s_LastLocalTime) * pInfo->m_Speed;
-		}
-		else
-		{
-			if(GameClient()->m_Snap.m_pGameInfoObj && !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
-				s_Time += LocalTime() - s_LastLocalTime;
-		}
-		s_LastLocalTime = LocalTime();
-	}
-	Pos += direction(s_Time * 2.0f + Offset) * 2.5f;
+	s_Time += (LocalTime() - s_LastLocalTime) * GameClient()->GetAnimationPlaybackSpeed();
 	s_LastLocalTime = LocalTime();
+	Pos += direction(s_Time * 2.0f + Offset) * 2.5f;
 
 	Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, QuadOffset, Pos.x, Pos.y, Scale.x, Scale.y);
 	Graphics()->QuadsSetRotation(0);
@@ -296,6 +278,17 @@ void CItems::RenderLaser(const CLaserData *pCurrent, bool IsPredicted)
 {
 	int Type = std::clamp(pCurrent->m_Type, -1, NUM_LASERTYPES - 1);
 	const bool PlayerLaserType = Type == LASERTYPE_RIFLE || Type == LASERTYPE_SHOTGUN || Type == LASERTYPE_GUN || Type == LASERTYPE_PLASMA;
+	if(pCurrent->m_ExtraInfo)
+	{
+		if(pCurrent->m_Owner >= 0 && !GameClient()->LiveTeamFilterAllowsKnownOwner(pCurrent->m_Owner))
+			return;
+		if(pCurrent->m_Owner < 0 && PlayerLaserType && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+			return;
+	}
+	else if(PlayerLaserType && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+	{
+		return;
+	}
 	int ColorIn, ColorOut;
 	switch(Type)
 	{
@@ -339,8 +332,8 @@ void CItems::RenderLaser(const CLaserData *pCurrent, bool IsPredicted)
 
 	bool IsOtherTeam = (pCurrent->m_ExtraInfo && pCurrent->m_Owner >= 0 && GameClient()->IsOtherTeam(pCurrent->m_Owner));
 
-	float Alpha = 1.0f;
-	if(IsOtherTeam)
+	float Alpha = pCurrent->m_ExtraInfo && pCurrent->m_Owner >= 0 ? GameClient()->LiveObserverClientAlpha(pCurrent->m_Owner) : 1.0f;
+	if(Alpha >= 1.0f && IsOtherTeam)
 		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 
 	const ColorRGBA OuterColor = color_cast<ColorRGBA>(ColorHSLA(ColorOut).WithAlpha(Alpha));
@@ -494,11 +487,74 @@ void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA In
 				Pos + Out - ExtraOutlinePos);
 			Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
+			// Round caps mirror the enhanced-laser path so toggling
+			// QmLaserRoundCaps is visible even without QmLaserEnhanced.
+			if(g_Config.m_QmLaserRoundCaps)
+			{
+				const float OutlineWidth = 7.0f * Ia;
+				const float InnerWidth = 5.0f * Ia;
+				Graphics()->SetColor(OuterColor);
+				Graphics()->DrawCircle(From.x, From.y, OutlineWidth, 16);
+				Graphics()->DrawCircle(Pos.x, Pos.y, OutlineWidth, 16);
+				Graphics()->SetColor(InnerColor);
+				Graphics()->DrawCircle(From.x, From.y, InnerWidth, 16);
+				Graphics()->DrawCircle(Pos.x, Pos.y, InnerWidth, 16);
+			}
+
 			Graphics()->QuadsEnd();
 		}
 	}
 
-	// render head
+	// DDNet entity beams reuse the laser rendering path, but their endpoints are
+	// not normal laser impact splats. Keep these branches aligned with upstream:
+	// door draws the blocker at Pos, dragger draws the pulley/orbs at From, and
+	// freeze draws the hectagon/snowflake at Pos. The generic splat below is only
+	// for weapon lasers and other non-entity laser types.
+	if(Type == LASERTYPE_DOOR)
+	{
+		Graphics()->TextureClear();
+		Graphics()->QuadsSetRotation(0.0f);
+		Graphics()->SetColor(OuterColor);
+		Graphics()->RenderQuadContainerEx(m_ItemsQuadContainerIndex, m_DoorHeadOffset, 1, Pos.x - 8.0f, Pos.y - 8.0f);
+		Graphics()->SetColor(InnerColor);
+		Graphics()->RenderQuadContainerEx(m_ItemsQuadContainerIndex, m_DoorHeadOffset, 1, Pos.x - 6.0f, Pos.y - 6.0f, 6.0f / 8.0f, 6.0f / 8.0f);
+	}
+	else if(Type == LASERTYPE_DRAGGER)
+	{
+		Graphics()->TextureSet(GameClient()->m_ExtrasSkin.m_SpritePulley);
+		for(int Inner = 0; Inner < 2; ++Inner)
+		{
+			Graphics()->SetColor(Inner ? InnerColor : OuterColor);
+			float Size = Inner ? 4.0f / 5.0f : 1.0f;
+			if(Len > 0.0f)
+			{
+				Graphics()->QuadsSetRotation(0.0f);
+				Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_PulleyHeadOffset, From.x, From.y, Size, Size);
+			}
+
+			Size = Inner ? 0.75f - 1.0f / 5.0f : 0.75f;
+			for(int Orb = 0; Orb < 3; ++Orb)
+			{
+				vec2 Offset(10.0f, 0.0f);
+				Offset = rotate(Offset, Orb * 120.0f + TicksHead);
+				Graphics()->QuadsSetRotation(TicksHead + Orb * pi * 2.0f / 3.0f);
+				Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_PulleyHeadOffset, From.x + Offset.x, From.y + Offset.y, Size, Size);
+			}
+		}
+	}
+	else if(Type == LASERTYPE_FREEZE)
+	{
+		const float Pulsation = 6.0f / 5.0f + 1.0f / 10.0f * std::sin(TicksHead / 2.0f);
+		const float Angle = angle(Pos - From);
+		Graphics()->TextureSet(GameClient()->m_ExtrasSkin.m_SpriteHectagon);
+		Graphics()->QuadsSetRotation(Angle);
+		Graphics()->SetColor(OuterColor);
+		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_FreezeHeadOffset, Pos.x, Pos.y, 6.0f / 5.0f * Pulsation, 6.0f / 5.0f * Pulsation);
+		Graphics()->TextureSet(GameClient()->m_ExtrasSkin.m_SpriteParticleSnowflake);
+		Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f));
+		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_FreezeHeadOffset, Pos.x, Pos.y, Pulsation, Pulsation);
+	}
+	else
 	{
 		int CurParticle = (int)TicksHead % 3;
 		Graphics()->TextureSet(GameClient()->m_ParticlesSkin.m_aSpriteParticleSplat[CurParticle]);
@@ -569,6 +625,8 @@ void CItems::OnRender()
 	{
 		for(auto *pProj = (CProjectile *)GameClient()->m_PrevPredictedWorld.FindFirst(CGameWorld::ENTTYPE_PROJECTILE); pProj; pProj = (CProjectile *)pProj->NextEntity())
 		{
+			if(GameClient()->LiveObserverDimClient(pProj->GetOwner()))
+				continue;
 			if(!IsSuper && pProj->m_Number > 0 && pProj->m_Number < (int)aSwitchers.size() && !aSwitchers[pProj->m_Number].m_aStatus[SwitcherTeam] && (pProj->m_Explosive ? BlinkingProjEx : BlinkingProj))
 				continue;
 
@@ -627,7 +685,7 @@ void CItems::OnRender()
 						ReconstructSmokeTrail(&Data, pProj->m_DestroyTick);
 					}
 					pProj->m_LastRenderTick = Client()->GameTick(g_Config.m_ClDummy);
-					if(!IsOtherTeam)
+					if(!IsOtherTeam && !GameClient()->LiveObserverDimClient(pProj->GetOwner()))
 						continue;
 				}
 			}
@@ -781,6 +839,17 @@ void CItems::ReconstructSmokeTrail(const CProjectileData *pCurrent, int DestroyT
 {
 	if(GameClient()->IsRenderingDummyMiniMap())
 		return;
+	if(pCurrent->m_ExtraInfo)
+	{
+		if(pCurrent->m_Owner >= 0 && !GameClient()->LiveTeamFilterAllowsKnownOwner(pCurrent->m_Owner))
+			return;
+		if(pCurrent->m_Owner < 0 && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+			return;
+	}
+	else if(GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+	{
+		return;
+	}
 
 	bool LocalPlayerInGame = false;
 
@@ -824,7 +893,8 @@ void CItems::ReconstructSmokeTrail(const CProjectileData *pCurrent, int DestroyT
 	float Alpha = 1.f;
 	if(pCurrent->m_ExtraInfo && pCurrent->m_Owner >= 0)
 	{
-		if(GameClient()->IsOtherTeam(pCurrent->m_Owner))
+		Alpha = GameClient()->LiveObserverClientAlpha(pCurrent->m_Owner);
+		if(Alpha >= 1.0f && GameClient()->IsOtherTeam(pCurrent->m_Owner))
 			Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
 	}
 

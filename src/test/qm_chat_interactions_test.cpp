@@ -155,11 +155,11 @@ TEST(QmChatMessageMerge, SettingIsDefaultOnLocalizedInDreamFeaturesAndVersioned)
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Translations = ReadTestSourceFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
 	const std::string Version = ReadTestSourceFile("src/game/version.h");
-	const size_t MiniFeatures = Menus.rfind("case EQmModuleId::MiniFeatures:");
+	const size_t MiniFeatures = Menus.find("void CMenus::RenderQmFunctionMiniFeaturesContent(");
 
 	ASSERT_NE(MiniFeatures, std::string::npos);
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmMessageMerge, qm_message_merge, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
-	EXPECT_NE(Menus.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmMessageMerge, \"Message merging\", Localize(\"Message merging\")", MiniFeatures), std::string::npos);
+	EXPECT_NE(Menus.find("RenderCheckbox(&g_Config.m_QmMessageMerge, \"Message merging\", &g_Config.m_QmMessageMerge);", MiniFeatures), std::string::npos);
 	EXPECT_NE(Translations.find("key = \"Message merging\""), std::string::npos);
 	EXPECT_NE(Translations.find("simplified_chinese = \"消息合并\""), std::string::npos);
 	EXPECT_NE(Version.find("#define QMCLIENT_VERSION \"2.79.33\""), std::string::npos);
@@ -795,9 +795,9 @@ TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmBlockWordsAction, qm_block_words_action, 0, 0, 1"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction == 0"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 0;"), std::string::npos);
-	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction == 1"), std::string::npos);
+	EXPECT_NE(Menus.find("BlockWordsAction == 1"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 1;"), std::string::npos);
-	EXPECT_NE(Menus.find("qmclient-word-filter-match-mode\", &LabelCol, Localize(\"Mode\")"), std::string::npos);
+	EXPECT_NE(Menus.find("qmclient-word-filter-match-mode\", &LabelColumn, Localize(\"Mode\")"), std::string::npos);
 	const size_t RawConsoleCall = AddLine.find("PrintBlockedMessageToConsole(ClientId, Team, pLine);");
 	const size_t HideBranch = AddLine.find("if(CanHideBlockWordsMessage)");
 	ASSERT_NE(RawConsoleCall, std::string::npos);

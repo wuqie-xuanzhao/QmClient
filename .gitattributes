@@ -20,6 +20,9 @@ src/engine/external/* linguist-vendored
 # Rust 源码：仓库 LF，工作区跟随平台
 *.rs text
 
+# Cargo vendor 源码按字节校验，Windows 检出不能改写 vendor 下 Rust 源码换行。
+vendor/**/*.rs text eol=lf
+
 # 脚本和配置：仓库 LF，工作区也固定 LF
 *.py text eol=lf
 *.cmake text eol=lf
@@ -38,6 +41,10 @@ CMakeLists.txt text eol=lf
 *.md text eol=lf
 *.txt text eol=lf
 *.rst text eol=lf
+
+# 本地化 key 可以以空格结尾，用于和后续编辑器控件拼接。生成产物必须逐字保留该空格。
+data/languages/*.txt whitespace=-trailing-space
+qmclient_scripts/languages_qmclient/extracted_strings.txt whitespace=-trailing-space
 
 # Shell 脚本：仓库 LF，工作区也 LF（bash 需要 LF，不能是 CRLF）
 *.sh text eol=lf

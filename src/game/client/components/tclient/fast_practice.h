@@ -44,6 +44,20 @@ public:
 	int CurrentPracticeDummyId() const;
 	bool IsPracticeDummy(int ClientId) const;
 	int PracticeDummyId() const;
+	struct SPracticeTileFeedbackDecision
+	{
+		bool m_RecordTeleport = false;
+		bool m_RecordDeath = false;
+		bool m_PlayDeathFeedback = false;
+	};
+	static SPracticeTileFeedbackDecision EvaluatePracticeTileFeedback(bool PathContainsTeleport, bool WasInDeath, bool IsInDeath, float DistanceMoved)
+	{
+		SPracticeTileFeedbackDecision Decision;
+		Decision.m_RecordTeleport = PathContainsTeleport && DistanceMoved > 0.001f;
+		Decision.m_RecordDeath = IsInDeath && !WasInDeath;
+		Decision.m_PlayDeathFeedback = Decision.m_RecordDeath;
+		return Decision;
+	}
 	static vec2 PracticeTeleCursorTarget(vec2 CharacterPos, vec2 Target, float Zoom, int Deadzone, int FollowFactor)
 	{
 		vec2 TargetCameraOffset(0.0f, 0.0f);
@@ -162,6 +176,7 @@ private:
 	void TrackFireSound(int ClientId, CCharacter *pChar);
 	static int WeaponFireSound(int Weapon);
 	void MaybePlayHammerHitEffect(CCharacter *pChar);
+	void TrackPracticeTileFeedback(int ClientId, CCharacter *pChar, const vec2 &BeforePos);
 	void StandbyCharacter(CCharacter *pChar) const;
 	void RenderGhost(const SGhostData &Ghost, float Alpha) const;
 	void ReleaseBufferedInputState();

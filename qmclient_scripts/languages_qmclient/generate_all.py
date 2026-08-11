@@ -50,10 +50,15 @@ SIMPLIFIED_CHINESE_PASSTHROUGH_KEYS = {
     "HDF",
     "HUD",
     "LLM API",
+    "LibreTranslate",
     "OpenAI",
+    "QmClient / HUD",
     "TClient",
     "Tee",
     "Tee 0.7",
+    "https://ddnet.org/discord",
+    "https://wiki.ddnet.org/",
+    "https://wiki.ddnet.org/wiki/Mapping",
 }
 SIMPLIFIED_CHINESE_PASSTHROUGH_IDENTITIES = {
     ("Hz", "Hertz"),
@@ -102,6 +107,9 @@ def format_language_entry(key: str, context: str, translation: str) -> str:
     translation = translation.replace("\r", "\\r").replace("\n", "\\n")
     if context:
         return f"[{context}]\n{key}\n== {translation}"
+    # 运行时解析器会把所有以 '[' 开头的行视为上下文；显式空上下文可保护这类 source key。
+    if key.startswith("["):
+        return f"[]\n{key}\n== {translation}"
     return f"{key}\n== {translation}"
 
 
@@ -128,8 +136,6 @@ def generate_language_entries(
     missing: list[tuple[str, str]] = []
 
     for source in strings:
-        if is_chinese(source.key):
-            continue
         identity = source.identity()
         if language != "simplified_chinese" and identity in english_fallback_identities:
             continue
@@ -140,6 +146,8 @@ def generate_language_entries(
         )
         entries.append((identity, translation))
         if language == "simplified_chinese" and translation == source.key:
+            if is_chinese(source.key):
+                continue
             if (
                 source.key in SIMPLIFIED_CHINESE_PASSTHROUGH_KEYS
                 or identity in SIMPLIFIED_CHINESE_PASSTHROUGH_IDENTITIES
@@ -185,14 +193,15 @@ def write_language_file(
             item[0][0],
         ),
     )
-    with path.open("w", encoding="utf-8", newline="\n") as file:
-        file.write(
-            "\n\n".join(
-                format_language_entry(key, context, translation)
-                for (key, context), translation in sorted_entries
-            )
-            + ("\n" if sorted_entries else "")
+    path.write_text(
+        "\n\n".join(
+            format_language_entry(key, context, translation)
+            for (key, context), translation in sorted_entries
         )
+        + ("\n" if sorted_entries else ""),
+        encoding="utf-8",
+        newline="\n",
+    )
     print(f"  Generated {len(sorted_entries)} entries to {path}")
 
 

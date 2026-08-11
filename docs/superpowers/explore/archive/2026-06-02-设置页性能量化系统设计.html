@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QmClient 性能分析报告 — 报表预览</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --ink:#0a1f3d;--ink-rgb:10,31,61;
+  --paper:#faf9f7;--paper-rgb:250,249,247;--paper-tint:#eae8e4;
+  --accent:#2563eb;--accent-rgb:37,99,235;
+  --ok: #8FA89A;
+  --ok-bg: #EFF4F1;
+  --warn: #C4A77D;
+  --warn-bg: #F7F2EB;
+  --bad: #B5838D;
+  --bad-bg: #F5EFF0;
+  --hairline:rgba(10,31,61,0.09);--hairline-strong:rgba(10,31,61,0.16);
+  --serif:'Noto Serif SC',Georgia,'Source Han Serif SC','SimSun',serif;
+  --sans:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei UI',sans-serif;
+  --mono:'IBM Plex Mono','JetBrains Mono',Consolas,monospace;
+  --max-w:960px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:15px;scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weight:400;line-height:1.75;-webkit-font-smoothing:antialiased}
+
+.title-page{max-width:var(--max-w);margin:0 auto;padding:6rem 2rem 3rem;border-bottom:1px solid var(--hairline-strong)}
+.title-page h1{font-family:var(--serif);font-weight:700;font-size:2.4rem;line-height:1.3;letter-spacing:-0.02em}
+.title-page .subtitle{font-family:var(--serif);font-size:1.15rem;color:rgba(var(--ink-rgb),0.5);margin-top:0.5rem}
+.title-page .meta-grid{display:grid;grid-template-columns:auto 1fr;gap:0.25rem 1.2rem;margin-top:2rem;font-family:var(--mono);font-size:0.8rem;color:rgba(var(--ink-rgb),0.5)}
+.title-page .meta-grid .label{text-transform:uppercase;letter-spacing:0.05em;font-weight:500}
+.title-page .meta-grid .value{color:rgba(var(--ink-rgb),0.75)}
+
+.abstract{max-width:var(--max-w);margin:0 auto;padding:2.5rem 2rem;border-bottom:1px solid var(--hairline)}
+.abstract .kicker{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(var(--ink-rgb),0.4);margin-bottom:0.6rem}
+.abstract p{font-size:0.95rem;line-height:1.85;color:rgba(var(--ink-rgb),0.72)}
+.verdict-banner{display:inline-block;padding:0.15rem 0.7rem;border-radius:2px;font-family:var(--mono);font-size:0.7rem;font-weight:500;letter-spacing:0.04em;margin-left:0.5rem;vertical-align:middle}
+.verdict-banner.bad{background:var(--bad-bg);color:var(--bad)}
+
+.section{max-width:var(--max-w);margin:0 auto;padding:2.5rem 2rem;border-bottom:1px solid var(--hairline)}
+.section-head{display:flex;align-items:baseline;gap:0.8rem;margin-bottom:1.5rem}
+.section-num{font-family:var(--mono);font-size:0.7rem;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);opacity:0.7}
+.section-head h2{font-family:var(--serif);font-weight:700;font-size:1.35rem;letter-spacing:-0.01em}
+.section p.body-text{font-size:0.92rem;line-height:1.85;color:rgba(var(--ink-rgb),0.68);margin-bottom:1rem}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
+.kpi-card{border:1px solid var(--hairline-strong);border-radius:2px;padding:1rem 1.2rem;text-align:center;background:white}
+.kpi-card .kpi-label{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(var(--ink-rgb),0.4);margin-bottom:0.3rem}
+.kpi-card .kpi-value{font-family:var(--serif);font-size:1.8rem;font-weight:700;letter-spacing:-0.02em;line-height:1.2}
+.kpi-card .kpi-value.ok{color:var(--ok)}.kpi-card .kpi-value.warn{color:var(--warn)}.kpi-card .kpi-value.bad{color:var(--bad)}
+.kpi-card .kpi-unit{font-family:var(--sans);font-size:0.7rem;color:rgba(var(--ink-rgb),0.35);margin-top:0.15rem}
+
+.figure{margin-top:1rem}
+.figure .chart-wrap{background:white;border:1px solid var(--hairline-strong);border-radius:2px;overflow:hidden}
+.figure .chart-inner{width:100%;height:320px}
+.figure .chart-inner.tall{height:400px}
+.figure .chart-inner.short{height:240px}
+.figcaption{font-family:var(--mono);font-size:0.68rem;color:rgba(var(--ink-rgb),0.38);margin-top:0.6rem;padding-left:0.2rem}
+.figcaption em{font-style:italic;color:rgba(var(--ink-rgb),0.52)}
+
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+
+.data-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:0.5rem}
+.data-table thead th{font-family:var(--mono);font-size:0.63rem;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:rgba(var(--ink-rgb),0.42);border-bottom:2px solid var(--hairline-strong);padding:0.5rem 0.8rem;text-align:left}
+.data-table tbody td{padding:0.5rem 0.8rem;border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums}
+.data-table tbody tr:hover{background:rgba(var(--ink-rgb),0.02)}
+.data-table .mono{font-family:var(--mono);font-size:0.8rem}
+.badge{display:inline-block;padding:0.1rem 0.5rem;border-radius:1px;font-family:var(--mono);font-size:0.63rem;font-weight:500}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}.badge.warn{background:var(--warn-bg);color:var(--warn)}.badge.bad{background:var(--bad-bg);color:var(--bad)}
+
+.methodology p{font-size:0.88rem;line-height:1.8;color:rgba(var(--ink-rgb),0.62);margin-bottom:0.8rem}
+.methodology code{font-family:var(--mono);font-size:0.82rem;background:rgba(var(--ink-rgb),0.05);padding:0.1em 0.4em;border-radius:2px}
+
+.report-footer{max-width:var(--max-w);margin:0 auto;padding:1.5rem 2rem 3rem;font-family:var(--mono);font-size:0.63rem;color:rgba(var(--ink-rgb),0.28);text-transform:uppercase;letter-spacing:0.05em}
+@media print{html{font-size:11pt}.chart-wrap{break-inside:avoid}.section{break-inside:avoid}}
+@media(max-width:700px){.title-page{padding:3rem 1.2rem 2rem}.title-page h1{font-size:1.6rem}.section{padding:1.5rem 1.2rem}.chart-grid{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<header class="title-page">
+  <h1>QmClient 设置页性能分析报告</h1>
+  <div class="subtitle">Settings Page UI Performance Quantitative Analysis</div>
+  <div class="meta-grid">
+    <span class="label">Date</span><span class="value">2026-06-02 01:17:23</span>
+    <span class="label">Source</span><span class="value">qm_perf_2026-06-02_01-17-23.log</span>
+    <span class="label">Verdict</span><span class="value"><span class="verdict-banner bad">FAIL</span></span>
+    <span class="label">Total Frames</span><span class="value">512</span>
+    <span class="label">Menu Frames</span><span class="value">142</span>
+    <span class="label">Spikes</span><span class="value">3 (&gt;16.67ms)</span>
+  </div>
+</header>
+
+<div class="abstract">
+  <div class="kicker">Executive Summary</div>
+  <p>
+    本次 session 共采集 142 帧渲染数据（采样阈值 1ms），整体存在显著性能问题。帧预算合规率：240Hz (4.17ms) 为 88.7%，120Hz (8.33ms) 为 91.5%，60Hz (16.67ms) 为 97.9%。检测到 3 个性能尖峰（>16.67ms），最大尖峰耗时 471.2ms（超标 28.2x），出现在 general 页面。中位数帧耗时 2.1ms；p99 达 15.3ms，反映尾部帧体验。
+  </p>
+</div>
+
+<section class="section">
+  <div class="section-head"><span class="section-num">§1</span><h2>关键性能指标</h2></div>
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">p50</div><div class="kpi-value ok">2.1</div><div class="kpi-unit">ms · median</div></div>
+    <div class="kpi-card"><div class="kpi-label">p95</div><div class="kpi-value warn">8.2</div><div class="kpi-unit">ms</div></div>
+    <div class="kpi-card"><div class="kpi-label">p99</div><div class="kpi-value warn">15.3</div><div class="kpi-unit">ms</div></div>
+    <div class="kpi-card"><div class="kpi-label">Max</div><div class="kpi-value bad">471.2</div><div class="kpi-unit">ms · worst</div></div>
+    <div class="kpi-card"><div class="kpi-label">240Hz 合规</div><div class="kpi-value warn">88.7</div><div class="kpi-unit">% ≤4.17ms</div></div>
+    <div class="kpi-card"><div class="kpi-label">120Hz 合规</div><div class="kpi-value warn">91.5</div><div class="kpi-unit">% ≤8.33ms</div></div>
+    <div class="kpi-card"><div class="kpi-label">60Hz 合规</div><div class="kpi-value ok">97.9</div><div class="kpi-unit">% ≤16.67ms</div></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><span class="section-num">§2</span><h2>描述统计</h2></div>
+  <p class="body-text">样本量 N=142，均值 6.84ms，标准差 42.17ms。IQR (Q3−Q1) = 3.82ms，反映中间 50% 数据的离散程度。</p>
+  <table class="data-table">
+    <thead><tr><th>Statistic</th><th>Value</th><th>Statistic</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Min</td><td>0.84 ms</td><td class="mono">Max</td><td>471.24 ms</td></tr>
+      <tr><td class="mono">Q1 (p25)</td><td>1.42 ms</td><td class="mono">Q3 (p75)</td><td>5.24 ms</td></tr>
+      <tr><td class="mono">Median (p50)</td><td>2.08 ms</td><td class="mono">IQR</td><td>3.82 ms</td></tr>
+      <tr><td class="mono">Mean</td><td>6.84 ms</td><td class="mono">Std Dev</td><td>42.17 ms</td></tr>
+      <tr><td class="mono">p90</td><td>5.82 ms</td><td class="mono">p95</td><td>8.24 ms</td></tr>
+      <tr><td class="mono">p99</td><td>15.32 ms</td><td class="mono">Spikes</td><td>3</td></tr>
+    </tbody>
+  </table>
+  <div class="figcaption"><em>Table 1.</em> 描述统计摘要。Spikes 定义为超过 16.67ms (60Hz 帧预算) 的帧数。</div>
+</section>
+
+<section class="section">
+  <div class="section-head"><span class="section-num">§3</span><h2>帧时间趋势</h2></div>
+  <div class="figure">
+    <div class="chart-wrap"><div id="chart-timeline" class="chart-inner tall"></div></div>
+    <div class="figcaption"><em>Figure 1.</em> 帧耗时时间序列（Y 轴对数刻度，兼顾正常帧与尖峰帧）。可拖拽缩放查看细节。</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><span class="section-num">§4</span><h2>分布与百分位</h2></div>
+  <div class="chart-grid">
+    <div class="figure">
+      <div class="chart-wrap"><div id="chart-histogram" class="chart-inner short"></div></div>
+      <div class="figcaption"><em>Figure 2.</em> 帧耗时分布直方图 + 核密度估计曲线 (KDE)。</div>
+    </div>
+    <div class="figure">
+      <div class="chart-wrap"><div id="chart-qq" class="chart-inner short"></div></div>
+      <div class="figcaption"><em>Figure 3.</em> QQ 图（分位数-分位数图）。偏离参考线 = 偏离正态分布。</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><span class="section-num">§5</span><h2>页面级耗时分解</h2></div>
+  <div class="chart-grid">
+    <div class="figure">
+      <div class="chart-wrap"><div id="chart-boxplot" class="chart-inner short"></div></div>
+      <div class="figcaption"><em>Figure 4.</em> 各页面帧耗时箱线图 (Box Plot)。箱体 = Q1→Q3，中线 = 中位数，须 = 1.5×IQR，圆点 = 离群值。</div>
+    </div>
+    <div class="figure">
+      <div class="chart-wrap"><div id="chart-percentiles" class="chart-inner short"></div></div>
+      <div class="figcaption"><em>Figure 5.</em> 关键百分位 (p50 / p90 / p95 / p99 / max)。</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><span class="section-num">§6</span><h2>尖峰帧详细分析</h2></div>
+  <table class="data-table">
+    <thead><tr><th>Timestamp</th><th>Stage</th><th>Page</th><th>Duration</th><th>Overrun</th><th>Severity</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">01:17:24</td><td>settings_page_content</td><td>general</td><td style="font-weight:600;color:var(--bad)">471.2ms</td><td class="mono">28.2x</td><td><span class="badge bad">Critical</span></td></tr>
+      <tr><td class="mono">01:18:03</td><td>settings_page_content</td><td>tee</td><td style="font-weight:600;color:var(--bad)">202.4ms</td><td class="mono">12.1x</td><td><span class="badge bad">Critical</span></td></tr>
+      <tr><td class="mono">01:18:15</td><td>settings_page_content</td><td>skin</td><td style="font-weight:600;color:var(--warn)">32.8ms</td><td class="mono">2.0x</td><td><span class="badge warn">Warning</span></td></tr>
+    </tbody>
+  </table>
+  <div class="figcaption"><em>Table 2.</em> 超过 16.67ms 阈值的尖峰帧，按耗时降序。</div>
+</section>
+
+<section class="section methodology">
+  <div class="section-head"><span class="section-num">§7</span><h2>数据采集方法</h2></div>
+  <p>性能数据通过 QmClient 内置的 <code>perf/menu</code> 日志系统采集，需启用 <code>qm_perf_debug 1</code> 和 <code>qm_perf_logfile 1</code>。日志输出至 <code>%APPDATA%/DDNet/dumps/QmClient_Perf/</code>。</p>
+  <p>帧预算基准：240Hz → 4.17ms，120Hz → 8.33ms，60Hz → 16.67ms。百分位采用最近秩法 (nearest-rank)。直方图分桶 [0, 2, 4, 8, 16, 33, 100, 500] ms。</p>
+  <p>判定标准：p99 &lt; 16.67ms 且尖峰 &lt; 5 → <span class="badge ok">PASS</span>；p99 &lt; 33ms 或尖峰 &ge; 1 → <span class="badge warn">WARN</span>；p99 &ge; 33ms 或尖峰 &ge; 5 → <span class="badge bad">FAIL</span>。</p>
+</section>
+
+<footer class="report-footer">Generated by QmClient Perf Analyzer &mdash; 2026-06-02 05:12:00 &nbsp;|&nbsp; Sample Preview</footer>
+
+<script>
+(function(){
+  // ── 模拟数据 ──
+  var times=[],durations=[];
+  var spikeIdx=[18,95,130];
+  var base=new Date('2026-06-02T01:17:23').getTime();
+  for(var i=0;i<142;i++){
+    times.push(new Date(base+i*500).toISOString().slice(0,19));
+    if(i===spikeIdx[0]) durations.push(471.2);
+    else if(i===spikeIdx[1]) durations.push(202.4);
+    else if(i===spikeIdx[2]) durations.push(32.8);
+    else durations.push(1.2+Math.random()*3.5);
+  }
+
+  var F="'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+  var ink='#0a1f3d';
+  var axisLbl={color:'#8a8a8a',fontFamily:F,fontSize:11};
+  var axisName={color:'#a3a3a3',fontFamily:F,fontSize:11};
+  var gridLine={lineStyle:{color:'#e5e3df',type:'dashed'}};
+  var axisLine={lineStyle:{color:'#d1cec8'}};
+  var tooltipStyle={backgroundColor:'#fdfcfa',borderColor:'#d1cec8',borderWidth:1,textStyle:{color:ink,fontFamily:F,fontSize:12},extraCssText:'box-shadow:0 2px 8px rgba(10,31,61,0.06);'};
+  var primary='#8B9DAF';
+  var areaFill={type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(139,157,175,0.10)'},{offset:1,color:'rgba(139,157,175,0)'}]};
+  var m={green:'#8FA89A',yellow:'#C4A77D',red:'#B5838D',purple:'#9B8BB4',blue:'#8B9DAF',blueLt:'#A5B5C7'};
+
+  // §3 Timeline
+  var tl=echarts.init(document.getElementById('chart-timeline'));
+  tl.setOption({
+    textStyle:{fontFamily:F},backgroundColor:'transparent',
+    tooltip:Object.assign({},tooltipStyle,{trigger:'axis',valueFormatter:function(v){return v.toFixed(2)+' ms'}}),
+    xAxis:{type:'category',data:times,axisLabel:{show:false},axisLine:axisLine,axisTick:{show:false}},
+    yAxis:{type:'log',name:'ms',nameTextStyle:axisName,axisLabel:Object.assign({},axisLbl,{formatter:'{value}'}),splitLine:gridLine,minorSplitLine:{show:true,lineStyle:{color:'#edeae6',type:'dashed'}}},
+    dataZoom:[
+      {type:'inside',brushSelect:false},
+      {type:'slider',height:18,bottom:6,borderColor:'#d1d5db',fillerColor:'rgba(59,89,152,0.1)',handleStyle:{color:primary},textStyle:{color:'#9ca3af',fontFamily:F,fontSize:10},dataBackground:{lineStyle:{color:'#d1d5db'},areaStyle:{color:'#e5e7eb'}}}
+    ],
+    series:[{
+      type:'line',data:durations,symbol:'none',
+      lineStyle:{color:primary,width:1.2},
+      areaStyle:{color:areaFill},
+      markLine:{silent:true,symbol:'none',label:{fontFamily:F,fontSize:10,color:'#8a8a8a'},data:[
+        {yAxis:4.17,lineStyle:{color:m.purple,type:'dotted',width:1},label:{formatter:'4.17ms / 240Hz',position:'insideStart',color:m.purple}},
+        {yAxis:8.33,lineStyle:{color:m.green,type:'dashed',width:1},label:{formatter:'8.33ms / 120Hz',position:'insideStart',color:m.green}},
+        {yAxis:16.67,lineStyle:{color:m.red,type:'dashed',width:1},label:{formatter:'16.67ms / 60Hz',position:'insideStart',color:m.red}},
+      ]},
+      markPoint:{data:[
+        {coord:[spikeIdx[0],471.2],value:'471ms',symbol:'diamond',symbolSize:10,itemStyle:{color:m.red},label:{show:true,color:m.red,fontFamily:F,fontSize:10,fontWeight:600,position:'top'}},
+        {coord:[spikeIdx[1],202.4],value:'202ms',symbol:'diamond',symbolSize:10,itemStyle:{color:m.red},label:{show:true,color:m.red,fontFamily:F,fontSize:10,fontWeight:600,position:'top'}},
+        {coord:[spikeIdx[2],32.8],value:'33ms',symbol:'diamond',symbolSize:10,itemStyle:{color:m.red},label:{show:true,color:m.red,fontFamily:F,fontSize:10,fontWeight:600,position:'top'}},
+      ]},
+    }],
+    grid:{left:50,right:14,top:14,bottom:48},
+  });
+
+  // §4 Histogram + KDE
+  var hist=echarts.init(document.getElementById('chart-histogram'));
+  var hc=[m.green,m.green,m.yellow,m.yellow,m.red,m.red,m.red];
+  // Generate KDE data from simulated durations
+  var sorted=durations.slice().sort(function(a,b){return a-b});
+  var kdePoints=[];
+  var kdeMin=0,kdeMax=Math.max.apply(null,durations);
+  var kdeStep=kdeMax/80;
+  var bandwidth=3.0;
+  function gaussianKernel(x){return Math.exp(-0.5*x*x)/2.5066;}
+  for(var kx=0;kx<=kdeMax;kx+=kdeStep){
+    var density=0;
+    for(var di=0;di<sorted.length;di++){
+      density+=gaussianKernel((kx-sorted[di])/bandwidth);
+    }
+    density/=(sorted.length*bandwidth);
+    kdePoints.push([parseFloat(kx.toFixed(2)),parseFloat(density.toFixed(6))]);
+  }
+  hist.setOption({
+    textStyle:{fontFamily:F},backgroundColor:'transparent',
+    tooltip:Object.assign({},tooltipStyle,{trigger:'axis'}),
+    xAxis:{type:'category',data:['0-2ms','2-4ms','4-8ms','8-16ms','16-33ms','33-100ms','100-500ms'],axisLabel:Object.assign({},axisLbl,{fontSize:10}),axisLine:axisLine},
+    yAxis:[
+      {type:'value',name:'frames',nameTextStyle:axisName,axisLabel:Object.assign({},axisLbl,{fontSize:10}),splitLine:gridLine},
+      {type:'value',name:'density',nameTextStyle:axisName,axisLabel:Object.assign({},axisLbl,{fontSize:10}),splitLine:{show:false}}
+    ],
+    series:[
+      {type:'bar',data:[42,58,28,9,1,1,2].map(function(v,i){return{value:v,itemStyle:{color:hc[i]}}}),barWidth:'55%',yAxisIndex:0},
+      {type:'line',data:kdePoints.map(function(p){return p[1]}),xAxisIndex:0,yAxisIndex:1,smooth:true,symbol:'none',lineStyle:{color:m.purple,width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(155,139,180,0.08)'},{offset:1,color:'rgba(155,139,180,0)'}]}}}
+    ],
+    grid:{left:42,right:42,top:12,bottom:26},
+  });
+
+  // §4 QQ Plot
+  var qq=echarts.init(document.getElementById('chart-qq'));
+  var qqData=[];
+  var n=sorted.length;
+  for(var qi=0;qi<n;qi++){
+    var p=(qi+0.5)/n;
+    var z=inverseNormal(p);
+    qqData.push([parseFloat((z*42.17+6.84).toFixed(2)),parseFloat(sorted[qi].toFixed(2))]);
+  }
+  // Approximate inverse normal (rational approximation)
+  function inverseNormal(p){
+    if(p<=0)return -6;if(p>=1)return 6;
+    var a1=-3.9696830286,a2=2.7542557,a3=-1.2897596,a4=-0.0381877,b5=0.7989356,b6=-0.0630516,c1=1.78853,c2=-0.76936,c3=0.114633,c4=0.0056797,d15=-1.3739,d16=0.79277;
+    var q=p-0.5,r=q*q;
+    if(r<0.42){return q*((((a4*r+a3)*r+a2)*r+a1)*r+1)/((((b6*r+b5)*r+1)*r+1)*r+1);}
+    if(p<0.5){r=p;}else{r=1-p;}
+    r=Math.log(-Math.log(r));
+    var s=c1+r*(c2+r*(c3+r*c4));
+    var num=s*s;
+    s=num/(d15+r*(d16+r));
+    return(q<0)?-s:s;
+  }
+  var qqMin=Math.min(qqData[0][0],qqData[0][1]);
+  var qqMax=Math.max(qqData[n-1][0],qqData[n-1][1]);
+  qq.setOption({
+    textStyle:{fontFamily:F},backgroundColor:'transparent',
+    tooltip:Object.assign({},tooltipStyle,{trigger:'item',formatter:function(p){return'Theoretical: '+p.data[0].toFixed(2)+' ms<br>Sample: '+p.data[1].toFixed(2)+' ms'}}),
+    xAxis:{type:'value',name:'Theoretical (ms)',nameTextStyle:axisName,axisLabel:Object.assign({},axisLbl,{fontSize:10}),axisLine:axisLine,splitLine:gridLine},
+    yAxis:{type:'value',name:'Sample (ms)',nameTextStyle:axisName,axisLabel:Object.assign({},axisLbl,{fontSize:10}),splitLine:gridLine},
+    series:[
+      {type:'scatter',data:qqData,symbolSize:4,itemStyle:{color:m.blue,opacity:0.7}},
+      {type:'line',data:[[qqMin,qqMin],[qqMax,qqMax]],symbol:'none',lineStyle:{color:m.red,type:'dashed',width:1.5}}
+    ],
+    grid:{left:42,right:14,top:12,bottom:26},
+  });
+
+  // §5 Box Plot
+  var bp=echarts.init(document.getElementById('chart-boxplot'));
+  var pageNames=['general','tee','skin','ddnet','laser'];
+  var boxData=[
+    [15, 22, 35, 52, 120],
+    [8, 14, 20, 35, 80],
+    [1.5, 2.8, 4.2, 6, 15],
+    [1, 2, 2.8, 4, 8],
+    [0.8, 1.5, 1.9, 2.8, 5]
+  ];
+  var outliers=[
+    [{value:471,name:'general'}],
+    [{value:202,name:'tee'}],
+    [],
+    [],
+    []
+  ];
+  bp.setOption({
+    textStyle:{fontFamily:F},backgroundColor:'transparent',
+    tooltip:Object.assign({},tooltipStyle,{trigger:'item'}),
+    xAxis:{type:'category',data:pageNames,axisLabel:Object.assign({},axisLbl,{fontSize:10}),axisLine:axisLine},
+    yAxis:{type:'log',name:'ms',nameTextStyle:axisName,axisLabel:Object.assign({},axisLbl,{fontSize:10,formatter:'{value}'}),splitLine:gridLine,minorSplitLine:{show:true,lineStyle:{color:'#edeae6',type:'dashed'}}},
+    series:[
+      {
+        type:'boxplot',
+        data:boxData,
+        itemStyle:{color:'rgba(139,157,175,0.25)',borderColor:m.blue,borderWidth:1.5},
+        boxWidth:['30%','50%']
+      },
+      {
+        type:'scatter',
+        data:(function(){
+          var pts=[];
+          for(var oi=0;oi<outliers.length;oi++){
+            for(var oj=0;oj<outliers[oi].length;oj++){
+              pts.push({value:[oi,outliers[oi][oj].value],itemStyle:{color:m.red}});
+            }
+          }
+          return pts;
+        })(),
+        symbolSize:8,
+        symbol:'circle'
+      }
+    ],
+    grid:{left:42,right:14,top:12,bottom:26},
+  });
+
+  // §5 Percentiles
+  var pc=echarts.init(document.getElementById('chart-percentiles'));
+  var pC=[m.green,m.green,m.yellow,m.yellow,m.red];
+  pc.setOption({
+    textStyle:{fontFamily:F},backgroundColor:'transparent',
+    tooltip:Object.assign({},tooltipStyle,{trigger:'axis',valueFormatter:function(v){return v.toFixed(2)+' ms'}}),
+    xAxis:{type:'category',data:['p50','p90','p95','p99','max'],axisLabel:axisLbl,axisLine:axisLine},
+    yAxis:{type:'value',name:'ms',nameTextStyle:axisName,axisLabel:Object.assign({},axisLbl,{fontSize:10}),splitLine:gridLine},
+    series:[{
+      type:'bar',
+      data:[2.1,5.8,8.2,15.3,471.2].map(function(v,i){return{value:v,itemStyle:{color:pC[i]}}}),
+      barWidth:'48%',
+      markLine:{silent:true,symbol:'none',label:{fontFamily:F,fontSize:10},data:[
+        {yAxis:4.17,lineStyle:{color:m.purple,type:'dotted',width:1}},
+        {yAxis:8.33,lineStyle:{color:m.green,type:'dashed',width:1}},
+        {yAxis:16.67,lineStyle:{color:m.red,type:'dashed',width:1}},
+      ]},
+    }],
+    grid:{left:42,right:10,top:12,bottom:26},
+  });
+
+  window.addEventListener('resize',function(){tl.resize();hist.resize();qq.resize();bp.resize();pc.resize()});
+})();
+</script>
+</body>
+</html>

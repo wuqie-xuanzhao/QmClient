@@ -250,7 +250,7 @@ void CFileBrowser::OnRender(CUIRect _)
 	}
 
 	// File list
-	m_ListBox.DoStart(15.0f, m_vpFilteredFileList.size(), 1, 5, m_SelectedFileIndex, &View, false, IGraphics::CORNER_ALL, true);
+	m_ListBox.DoStart(15.0f, m_vpFilteredFileList.size(), 1, 5, m_SelectedFileIndex, &View, false, IGraphics::CORNER_ALL);
 
 	for(size_t i = 0; i < m_vpFilteredFileList.size(); i++)
 	{
@@ -561,7 +561,6 @@ void CFileBrowser::RenderFilePreview(CUIRect Preview)
 			}
 
 			Graphics()->TextureSet(m_PreviewImage);
-			Graphics()->BlendNormal();
 			Graphics()->QuadsBegin();
 			IGraphics::CQuadItem QuadItem(PreviewImage.x, PreviewImage.y, Width, Height);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
@@ -820,13 +819,13 @@ int CFileBrowser::DirectoryListingCallback(const CFsFileInfo *pInfo, int IsDir, 
 
 std::optional<bool> CFileBrowser::CompareCommon(const CFilelistItem *pLhs, const CFilelistItem *pRhs)
 {
-	if(str_comp(pLhs->m_aFilename, "..") == 0)
-	{
-		return true;
-	}
 	if(str_comp(pRhs->m_aFilename, "..") == 0)
 	{
 		return false;
+	}
+	if(str_comp(pLhs->m_aFilename, "..") == 0)
+	{
+		return true;
 	}
 	if(pLhs->m_IsLink != pRhs->m_IsLink)
 	{

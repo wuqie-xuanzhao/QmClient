@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第三方 DDNet 客户端持续优化方法论报告</title>
+  <style>
+    :root {
+      --bg: #f7f7f8;
+      --paper: #ffffff;
+      --text: #1f2328;
+      --muted: #59636e;
+      --border: #d8dee4;
+      --accent: #0969da;
+      --code-bg: #f6f8fa;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.72;
+    }
+    main {
+      max-width: 920px;
+      margin: 40px auto;
+      padding: 48px 56px;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(31, 35, 40, 0.06);
+    }
+    h1 {
+      font-size: 2.1rem;
+      line-height: 1.25;
+      margin: 0 0 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    h2 {
+      font-size: 1.45rem;
+      margin-top: 42px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin-top: 28px;
+    }
+    p {
+      margin: 0.75rem 0;
+    }
+    ul {
+      margin: 0.6rem 0 1rem 1.35rem;
+      padding: 0;
+    }
+    li {
+      margin: 0.25rem 0;
+    }
+    blockquote {
+      margin: 1.2rem 0;
+      padding: 0.8rem 1rem;
+      border-left: 4px solid var(--accent);
+      background: #f0f6ff;
+      color: var(--muted);
+      border-radius: 8px;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      overflow: auto;
+      line-height: 1.5;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92rem;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 720px) {
+      main {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        padding: 28px 22px;
+      }
+      h1 {
+        font-size: 1.65rem;
+      }
+    }
+    @media print {
+      body {
+        background: #fff;
+      }
+      main {
+        box-shadow: none;
+        border: none;
+        margin: 0;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>第三方 DDNet 客户端持续优化方法论报告</h1>
+<blockquote>
+<p>主题：为什么有些开源项目可以每天密集更新，以及第三方 DDNet 客户端如何建立类似的持续优化循环</p>
+<p>适用对象：DDNet / Teeworlds 类实时游戏客户端、第三方客户端维护者、个人开源项目开发者</p>
+<p>生成日期：2026-06-04</p>
+</blockquote>
+<hr>
+<h2>1. 摘要</h2>
+<p>第三方 DDNet 客户端很难像 agent/TUI 类工具那样每天自然产生大量显性的更新日志。原因并不是你的项目“不值得优化”，而是两类软件的问题空间不同。</p>
+<p>像 oh-my-pi 这样的 agent runtime / TUI / 多模型网关项目，同时面对多模型供应商、多终端协议、多 shell、多文件系统、多平台和复杂用户环境。因此它每天都会遇到很多格式不一致、兼容性错误、终端渲染边界、工具调用异常、session 存储性能等问题。</p>
+<p>而 DDNet 客户端的问题通常更隐蔽。它的核心体验不是“能不能打开某个功能”，而是：</p>
+<ul>
+<li>输入是否跟手；</li>
+<li>prediction / antiping 是否稳定；</li>
+<li>FPS 是否有尖刺；</li>
+<li>网络抖动时体验是否可接受；</li>
+<li>渲染是否在不同平台、DPI、GPU、窗口模式下稳定；</li>
+<li>UI 是否在不同分辨率、语言、缩放下可读；</li>
+<li>与官方 DDNet 的行为是否一致；</li>
+<li>新功能是否无意中影响了基础游戏体验。</li>
+</ul>
+<p>因此，第三方 DDNet 客户端的持续优化，不应该从“每天加什么功能”出发，而应该从“每天能不能看见更多真实问题”出发。</p>
+<p>本报告的核心结论是：</p>
+<blockquote>
+<p>**持续优化不是靠灵感，而是靠反馈回路。**</p>
+<p>真实使用 → 看见异常 → 复现 → 修复 → 加观测/测试 → 下次更容易发现异常。</p>
+</blockquote>
+<hr>
+<h2>2. 为什么 oh-my-pi 类项目每天能更新很多</h2>
+<p>oh-my-pi v15.9.0 的更新包含模型 provider 兼容、SessionStorage 重构、OpenTelemetry tracing、TUI 终端协议检测、Kitty 图像协议、session resume 性能、glob 扫描、ANSI escape 死循环等大量细节。它看起来每天都能修很多东西，是因为它的问题来源非常密集。</p>
+<h3>2.1 它的问题空间极大</h3>
+<p>agent/TUI 工具同时面对：</p>
+<ul>
+<li>OpenAI / Anthropic / Gemini / MiniMax / LiteLLM / LM Studio / Ollama / vLLM 等 provider；</li>
+<li>不同 provider 对 OpenAI / Anthropic wire format 的非标准兼容；</li>
+<li>streaming tool call 参数格式差异；</li>
+<li>MCP / tool schema 的兼容性问题；</li>
+<li>不同终端：Kitty、Ghostty、Alacritty、iTerm2、Windows Terminal；</li>
+<li>不同 multiplexer：tmux、screen、zellij、cmux；</li>
+<li>ANSI escape、emoji width、OSC、DCS、scrollback、resize、inline image；</li>
+<li>session 存储、长上下文、head/tail 读取；</li>
+<li>本地文件系统、workspace、shell job、后台任务取消。</li>
+</ul>
+<p>这种软件天然会产生很多边界条件。</p>
+<h3>2.2 它有短反馈回路</h3>
+<p>这类项目的更新来源通常包括：</p>
+<ul>
+<li>用户 issue；</li>
+<li>作者自己高强度 dogfooding；</li>
+<li>trace / log / telemetry；</li>
+<li>crash 或 error message；</li>
+<li>兼容性矩阵测试；</li>
+<li>回归测试；</li>
+<li>debug 面板和协议测试工具。</li>
+</ul>
+<p>因此，它不是每天凭空“想新功能”，而是每天从真实摩擦中提取问题。</p>
+<hr>
+<h2>3. DDNet 第三方客户端为什么感觉“没那么多东西可改”</h2>
+<p>DDNet 客户端的问题不一定显性。很多时候不是：</p>
+<blockquote>
+<p>功能坏了 / 功能没坏。</p>
+</blockquote>
+<p>而是：</p>
+<blockquote>
+<p>在某个环境下手感差了一点；</p>
+<p>某个 ping 下 prediction correction 多了一点；</p>
+<p>某张地图 p99 frame time 有尖刺；</p>
+<p>alt-tab 后输入偶尔异常；</p>
+<p>高 DPI 下 UI 点击区域偏移；</p>
+<p>某个新 overlay 对 FPS 有轻微影响；</p>
+<p>官方客户端正常，但你的客户端有细微不一致。</p>
+</blockquote>
+<p>这些问题通常不会主动跳出来。它们需要被“观测”出来。</p>
+<p>所以，第三方 DDNet 客户端缺的往往不是功能灵感，而是：</p>
+<ul>
+<li>诊断工具；</li>
+<li>性能指标；</li>
+<li>问题捕获包；</li>
+<li>A/B 对照；</li>
+<li>测试场景库；</li>
+<li>用户反馈格式；</li>
+<li>回归测试；</li>
+<li>问题 backlog。</li>
+</ul>
+<hr>
+<h2>4. 第三方 DDNet 客户端的 8 个优化雷达</h2>
+<p>建议把持续优化来源分成 8 个方向。</p>
+<h3>4.1 输入延迟与输入稳定性</h3>
+<p>关注点：</p>
+<ul>
+<li>键盘输入；</li>
+<li>鼠标输入；</li>
+<li>dummy input；</li>
+<li>输入队列；</li>
+<li>窗口焦点；</li>
+<li>alt-tab 后输入恢复；</li>
+<li>中文输入法或其他输入法状态；</li>
+<li>低 FPS 下输入是否仍然稳定；</li>
+<li>fullscreen / borderless / windowed 下输入差异。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>input event 到 game tick 使用之间的延迟；</li>
+<li>focus lost / focus gained 事件；</li>
+<li>输入丢失次数；</li>
+<li>长按状态异常次数。</li>
+</ul>
+<h3>4.2 Prediction / Antiping</h3>
+<p>关注点：</p>
+<ul>
+<li>hook；</li>
+<li>tele hook；</li>
+<li>freeze / unfreeze；</li>
+<li>weapon prediction；</li>
+<li>dummy；</li>
+<li>high ping；</li>
+<li>packet loss；</li>
+<li>jitter；</li>
+<li>prediction correction 次数。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>每分钟 prediction correction 次数；</li>
+<li>correction magnitude；</li>
+<li>correction 发生时的 ping / jitter；</li>
+<li>correction 对应的 map / tile / weapon / dummy 状态。</li>
+</ul>
+<h3>4.3 渲染稳定性</h3>
+<p>关注点：</p>
+<ul>
+<li>FPS avg / p95 / p99；</li>
+<li>frame time spike；</li>
+<li>大地图；</li>
+<li>粒子；</li>
+<li>缩放；</li>
+<li>DPI；</li>
+<li>多显示器；</li>
+<li>OpenGL / Vulkan / SDL 差异；</li>
+<li>texture upload；</li>
+<li>UI redraw。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>frame time p95 / p99；</li>
+<li>每帧 allocation；</li>
+<li>texture reload 次数；</li>
+<li>draw calls；</li>
+<li>map load time；</li>
+<li>UI layout time。</li>
+</ul>
+<h3>4.4 网络体验</h3>
+<p>关注点：</p>
+<ul>
+<li>ping；</li>
+<li>jitter；</li>
+<li>packet loss；</li>
+<li>reconnect；</li>
+<li>snapshot delay；</li>
+<li>server browser；</li>
+<li>version mismatch；</li>
+<li>DNS / timeout / connection refused 的区分。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>ping avg / p95；</li>
+<li>jitter avg / p95；</li>
+<li>packet loss；</li>
+<li>reconnect reason；</li>
+<li>snapshot delay；</li>
+<li>server browser query time。</li>
+</ul>
+<h3>4.5 UI / UX</h3>
+<p>关注点：</p>
+<ul>
+<li>设置页；</li>
+<li>server browser；</li>
+<li>搜索；</li>
+<li>HUD 可读性；</li>
+<li>多语言；</li>
+<li>字体 fallback；</li>
+<li>小窗口；</li>
+<li>高 DPI；</li>
+<li>4K；</li>
+<li>ultrawide；</li>
+<li>输入框；</li>
+<li>滚动区域；</li>
+<li>tooltip。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>UI scale；</li>
+<li>当前分辨率；</li>
+<li>文本溢出 warning；</li>
+<li>点击区域 mismatch；</li>
+<li>server browser 搜索耗时；</li>
+<li>用户常改设置。</li>
+</ul>
+<h3>4.6 兼容性</h3>
+<p>关注点：</p>
+<ul>
+<li>官方 DDNet 新版本；</li>
+<li>旧 config；</li>
+<li>demo 文件；</li>
+<li>map 文件；</li>
+<li>skin；</li>
+<li>asset 路径；</li>
+<li>server protocol；</li>
+<li>第三方功能与官方行为差异。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>config migration warning；</li>
+<li>demo playback error；</li>
+<li>map load warning；</li>
+<li>protocol mismatch；</li>
+<li>官方客户端 A/B 差异。</li>
+</ul>
+<h3>4.7 性能退化</h3>
+<p>关注点：</p>
+<ul>
+<li>当前版本比上一版本慢；</li>
+<li>新 overlay 导致 frame spike；</li>
+<li>server browser 卡顿；</li>
+<li>UI 文本重排成本；</li>
+<li>资源加载；</li>
+<li>per-frame allocation；</li>
+<li>内存增长。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>benchmark 对比；</li>
+<li>frame time histogram；</li>
+<li>memory over time；</li>
+<li>map load time；</li>
+<li>server browser refresh time。</li>
+</ul>
+<h3>4.8 玩家行为边界</h3>
+<p>关注点：</p>
+<ul>
+<li>长时间运行；</li>
+<li>快速切图；</li>
+<li>反复 reconnect；</li>
+<li>大量收藏服务器；</li>
+<li>奇怪昵称；</li>
+<li>奇怪地图名；</li>
+<li>特殊字符；</li>
+<li>超大 config；</li>
+<li>多 dummy 操作；</li>
+<li>开着输入法玩。</li>
+</ul>
+<p>可观察指标：</p>
+<ul>
+<li>session duration；</li>
+<li>reconnect count；</li>
+<li>config size；</li>
+<li>favorite server count；</li>
+<li>last 50 warnings；</li>
+<li>crash 前最近行为。</li>
+</ul>
+<hr>
+<h2>5. 建议新增：诊断模式</h2>
+<p>第三方 DDNet 客户端最值得先做的不是新玩法功能，而是诊断能力。</p>
+<p>可以新增隐藏命令或 debug 菜单：</p>
+<pre><code>/debug_client
+/debug_net
+/debug_prediction
+/debug_render
+/export_diagnostics</code></pre>
+<h3>5.1 `/debug_client`</h3>
+<p>显示：</p>
+<pre><code>Client version:
+Git commit:
+Build type:
+OS:
+CPU:
+GPU:
+Renderer backend:
+SDL version:
+Resolution:
+DPI:
+Fullscreen mode:
+Refresh rate:
+Config profile:
+Official DDNet baseline version:</code></pre>
+<h3>5.2 `/debug_net`</h3>
+<p>显示：</p>
+<pre><code>Server:
+Map:
+Ping avg / p95:
+Jitter avg / p95:
+Packet loss:
+Snapshot delay:
+Reconnect count:
+Last disconnect reason:
+Server browser query time:</code></pre>
+<h3>5.3 `/debug_prediction`</h3>
+<p>显示：</p>
+<pre><code>Prediction enabled:
+Antiping settings:
+Prediction corrections per minute:
+Last correction magnitude:
+Last correction reason:
+Dummy state:
+Weapon state:
+Hook state:
+Freeze state:</code></pre>
+<h3>5.4 `/debug_render`</h3>
+<p>显示：</p>
+<pre><code>FPS avg:
+Frame time avg:
+Frame time p95:
+Frame time p99:
+Draw calls:
+Texture reloads:
+Map load time:
+UI layout time:
+Particle count:
+Memory usage:</code></pre>
+<hr>
+<h2>6. 建议新增：Export Debug Bundle</h2>
+<p>当用户反馈“卡”“飘”“不跟手”“偶尔坏了”时，文字描述通常不够。建议做一个按钮：</p>
+<pre><code>Report Issue / Export Debug Bundle</code></pre>
+<p>导出一个 zip：</p>
+<pre><code>client_version.txt
+system_info.txt
+config_sanitized.cfg
+last_log.txt
+perf_summary.json
+net_summary.json
+prediction_summary.json
+render_summary.json
+recent_actions.txt
+optional_demo.dem</code></pre>
+<h3>6.1 需要脱敏的信息</h3>
+<p>导出前应处理：</p>
+<ul>
+<li>用户名；</li>
+<li>本地路径；</li>
+<li>token；</li>
+<li>私有服务器地址；</li>
+<li>聊天内容；</li>
+<li>IP；</li>
+<li>其他个人标识信息。</li>
+</ul>
+<h3>6.2 为什么它重要</h3>
+<p>没有 debug bundle 时，用户反馈可能是：</p>
+<blockquote>
+<p>bro your client laggy</p>
+</blockquote>
+<p>有 debug bundle 后，反馈可以变成：</p>
+<blockquote>
+<p>Windows 11 + NVIDIA + borderless + 165Hz 下，进入某地图后 p99 frame time 从 6ms 变成 28ms；prediction corrections 正常，因此更可能是渲染 spike，而不是网络问题。</p>
+</blockquote>
+<p>这就是从“感觉”变成“证据”。</p>
+<hr>
+<h2>7. 和官方 DDNet 做 A/B 对照</h2>
+<p>第三方客户端有一个天然优势：官方 DDNet 可以作为 baseline。</p>
+<p>建议建立固定 A/B 测试流程：</p>
+<pre><code>同一台机器
+同一个 server
+同一张 map
+同一个 config
+官方 DDNet 玩 5 分钟
+你的客户端玩 5 分钟
+比较：
+- FPS p95 / p99
+- prediction corrections
+- input feel
+- memory
+- CPU
+- reconnect behavior
+- demo playback
+- map loading</code></pre>
+<p>每天问：</p>
+<pre><code>哪里比官方差？
+哪里和官方不一致？
+哪里只在我的客户端发生？
+哪里我的新功能影响了原始体验？</code></pre>
+<p>第三方客户端最容易出问题的不是大功能完全坏，而是：</p>
+<pre><code>加了 overlay，结果影响 FPS spike
+加了自动功能，结果干扰 input timing
+改了 UI，结果某些 scale 下文字溢出
+改了 prediction 相关显示，结果高 ping 下误导用户
+改了资源加载，结果某些地图加载慢
+改了 config，结果官方配置迁移回来坏了</code></pre>
+<p>A/B 对照可以让这些问题更早暴露。</p>
+<hr>
+<h2>8. 每日优化工作流</h2>
+<p>每天不用追求大改。可以按下面流程做一个小闭环。</p>
+<h3>8.1 每日 30 分钟流程</h3>
+<pre><code>1. 选择一个测试维度
+2. 跑固定测试场景
+3. 记录一个异常或一个观察盲区
+4. 修一个最小问题，或加一个诊断指标
+5. 写入 changelog / backlog
+6. 如果修了 bug，就补一个测试或 debug counter</code></pre>
+<h3>8.2 每天换一个维度</h3>
+<p>#### Day 1：网络</p>
+<pre><code>20ms ping
+80ms ping
+160ms ping
+2% packet loss
+ping jitter 30ms
+频繁 reconnect
+边玩边切服务器</code></pre>
+<p>#### Day 2：渲染</p>
+<pre><code>720p / 1080p / 1440p / 4K
+窗口化 / 全屏 / 无边框
+60Hz / 144Hz / 240Hz
+UI scale 0.75 / 1.0 / 1.5 / 2.0
+大地图
+粒子多的场景</code></pre>
+<p>#### Day 3：输入</p>
+<pre><code>alt-tab 后输入
+中文输入法开着
+按键长按
+快速切 dummy
+鼠标锁定 / 释放
+窗口失焦后恢复
+低 FPS 下输入</code></pre>
+<p>#### Day 4：兼容</p>
+<pre><code>旧 config
+旧 demo
+旧地图
+官方客户端能进但你的客户端不能进的服务器
+官方能正常预测但你的客户端不正常的场景</code></pre>
+<p>#### Day 5：UI</p>
+<pre><code>小窗口
+高 DPI
+4K
+长昵称
+特殊字符
+多语言
+server browser 大量结果
+设置页极端值</code></pre>
+<p>#### Day 6：长时间运行</p>
+<pre><code>运行 1 小时
+切换多个服务器
+多次 reconnect
+观察内存增长
+观察日志 warning
+观察 FPS p99 是否变差</code></pre>
+<p>#### Day 7：回归整理</p>
+<pre><code>整理本周 issue
+补测试
+补 debug counter
+清理 warning
+写 release note
+同步官方 DDNet upstream</code></pre>
+<hr>
+<h2>9. 问题库存：不要靠灵感开发</h2>
+<p>建议维护一个问题池，而不是每天想新功能。</p>
+<h3>9.1 Backlog 分类</h3>
+<pre><code>Bugs
+明确坏了的问题。
+
+Paper cuts
+小体验刺痛，例如错误提示不清楚、UI 细节不顺、设置项难懂。
+
+Unknowns
+玩家说怪，但你还没有证据的问题。
+
+Diagnostics
+需要加观测的问题。
+
+Compatibility
+和官方、旧版本、不同平台、不同 renderer 不一致的问题。
+
+Performance
+慢、卡、尖刺、内存增长。
+
+Regression tests
+修过但还没防复发的问题。</code></pre>
+<h3>9.2 每个 issue 的建议格式</h3>
+<pre><code>Title:
+Category:
+Environment:
+Official DDNet behavior:
+My client behavior:
+Reproduction steps:
+Expected:
+Actual:
+Diagnostics:
+Hypothesis:
+Fix:
+Regression prevention:</code></pre>
+<hr>
+<h2>10. 回归测试建议</h2>
+<p>每修一个 bug，都问：</p>
+<blockquote>
+<p>以后怎么自动知道它又坏了？</p>
+</blockquote>
+<p>DDNet 客户端可做的测试包括：</p>
+<pre><code>config parser fuzz test
+settings migration test
+demo playback smoke test
+map loading smoke test
+UI layout snapshot test
+protocol packet fuzz test
+prediction deterministic test
+server browser parser test
+renderer smoke test
+input focus transition test</code></pre>
+<p>即使一开始不能完全自动化，也可以建立：</p>
+<pre><code>test_maps/
+test_demos/
+test_configs/
+test_servers.md
+manual_regression_checklist.md</code></pre>
+<p>这样每次 release 前至少能跑一遍固定场景。</p>
+<hr>
+<h2>11. Changelog 写法建议</h2>
+<p>不要只写：</p>
+<pre><code>- Fixed bugs
+- Improved performance</code></pre>
+<p>可以写得更像成熟项目：</p>
+<pre><code>### Diagnostics
+- Added `/debug_prediction` to show correction count and last correction magnitude.
+- Added sanitized debug bundle export for user bug reports.
+
+### Rendering
+- Reduced frame-time spikes when opening the server browser on large favorite lists.
+- Fixed UI text clipping at 150% scale on 1440p displays.
+
+### Networking
+- Improved disconnect reason reporting for timeout vs version mismatch.
+- Added jitter and packet loss summary to debug panel.
+
+### Compatibility
+- Fixed old config migration for removed variable `xxx`.
+- Matched official DDNet behavior when loading legacy demo files.
+
+### Regression Tests
+- Added smoke test for demo playback on legacy maps.</code></pre>
+<p>这种 changelog 可以让用户看到你不是“随便修了点东西”，而是在系统性提高质量。</p>
+<hr>
+<h2>12. 三阶段实施路线图</h2>
+<h3>阶段一：先看见问题</h3>
+<p>目标：让用户和你自己都能描述问题。</p>
+<p>建议完成：</p>
+<ul>
+<li>`/debug_client`</li>
+<li>`/debug_net`</li>
+<li>`/debug_render`</li>
+<li>`/debug_prediction`</li>
+<li>`Export Debug Bundle`</li>
+<li>日志 warning 分类</li>
+<li>基础性能指标：FPS avg / p95 / p99、ping、jitter、prediction corrections</li>
+</ul>
+<p>产出：</p>
+<ul>
+<li>用户反馈质量提升；</li>
+<li>你能判断问题属于网络、渲染、输入还是 prediction；</li>
+<li>不再只能靠“感觉”修。</li>
+</ul>
+<h3>阶段二：建立固定测试场景</h3>
+<p>目标：让边界问题稳定出现。</p>
+<p>建议完成：</p>
+<ul>
+<li>官方 DDNet A/B 测试表；</li>
+<li>20 个手动测试场景；</li>
+<li>test_maps / test_demos / test_configs；</li>
+<li>release 前 checklist；</li>
+<li>每周一次长时间运行测试。</li>
+</ul>
+<p>产出：</p>
+<ul>
+<li>更容易发现小众边界；</li>
+<li>新功能更不容易破坏基础体验；</li>
+<li>每次 release 更有信心。</li>
+</ul>
+<h3>阶段三：自动化和回归防护</h3>
+<p>目标：让修过的问题不再反复出现。</p>
+<p>建议完成：</p>
+<ul>
+<li>config parser fuzz test；</li>
+<li>demo playback smoke test；</li>
+<li>map loading smoke test；</li>
+<li>settings migration test；</li>
+<li>server browser parser test；</li>
+<li>prediction deterministic test；</li>
+<li>CI 中跑核心测试；</li>
+<li>benchmark 对比上个版本。</li>
+</ul>
+<p>产出：</p>
+<ul>
+<li>changelog 中会自然出现更多“小但扎实”的更新；</li>
+<li>项目质量逐步积累；</li>
+<li>维护者从“修眼前 bug”变成“建设反馈系统”。</li>
+</ul>
+<hr>
+<h2>13. 结论</h2>
+<p>你不需要强行每天“发明更新”。</p>
+<p>对于第三方 DDNet 客户端，最有价值的不是堆功能，而是让客户端变得：</p>
+<ul>
+<li>更跟手；</li>
+<li>更稳；</li>
+<li>更兼容官方；</li>
+<li>更少 frame spike；</li>
+<li>更容易定位问题；</li>
+<li>更少让玩家困惑；</li>
+<li>更容易从用户反馈中提取有效信息。</li>
+</ul>
+<p>真正的持续优化来自这条循环：</p>
+<pre><code>真实使用
+→ 看见异常
+→ 复现
+→ 修复
+→ 加观测 / 测试
+→ 下次更容易发现异常</code></pre>
+<p>当这个循环跑起来后，你自然会发现每天都有东西能改。</p>
+<p>不是因为你每天灵感爆发，而是因为你的项目终于开始“告诉你哪里不舒服”。</p>
+<hr>
+<h2>14. 推荐的最小起步版本</h2>
+<p>如果只能先做 5 件事，建议按这个顺序：</p>
+<p>1. 新增 `/debug_client`，显示版本、系统、renderer、FPS p95/p99、ping、jitter、prediction correction。</p>
+<p>2. 新增 `Export Debug Bundle`，让用户反馈可以带上日志、配置、性能、网络、prediction 信息。</p>
+<p>3. 建立官方 DDNet A/B 对照流程。</p>
+<p>4. 维护 20 个固定测试场景。</p>
+<p>5. 每修一个 bug，都补一个 debug counter、日志字段、测试或 checklist 项。</p>
+<p>这五件事完成后，你的项目就会从“凭感觉开发”进入“反馈驱动开发”。</p>
+  </main>
+</body>
+</html>

@@ -1,7 +1,8 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "test.h"
 
-#include <base/system.h>
+#include <base/sphore.h>
+#include <base/thread.h>
 
 #include <engine/shared/host_lookup.h>
 #include <engine/shared/jobs.h>

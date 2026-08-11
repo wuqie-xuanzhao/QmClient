@@ -226,7 +226,7 @@ int CVoting::SecondsLeft() const
 CVoting::CVoting()
 {
 	ClearOptions();
-	OnReset();
+	CVoting::OnReset();
 	ClearUnfinishedMapVoteChain();
 }
 
@@ -461,7 +461,7 @@ void CVoting::OnReset()
 	m_Voted = 0;
 	m_ReceivingOptions = false;
 
-	if(GameClient() && Client()->State() != IClient::STATE_ONLINE)
+	if(GameClient() && !GameClient()->ClientStateOnline())
 		ClearUnfinishedMapVoteChain();
 }
 

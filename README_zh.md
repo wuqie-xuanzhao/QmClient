@@ -15,6 +15,8 @@
 QmClient客户端是基于 DDNet 和 TaterClient 构建的定制版本。  
 项目旨在提供更现代的 UI 体验、更丰富的视觉效果配置选项，同时保持与核心游戏玩法的兼容性。
 
+> 🤖 **AI agent / 贡献者**：工作流规则（commit、PR、release、构建）在 [`AGENTS.md`](AGENTS.md) 与 [`docs/ai-workflow/`](docs/ai-workflow/meta.md)，请从这里开始。
+
 ## ✨ 功能特性
 
 - 流畅的 UI 过渡和 HUD 动画
@@ -91,7 +93,7 @@ cmake --build cmake-build-release --target run_tests
 
 ## 📜 许可证
 
-本项目基于 DDNet 和 TaterClient。上游代码仍遵循 zlib/libpng 许可证。  
+本项目基于 DDNet 和 TaterClient。上游代码仍遵循 zlib/libpng 许可证。
 修改版本必须明确标注来源，不得歪曲原作者身份。
 
 ## 📮 说明

@@ -4,7 +4,9 @@
 
 #include <base/color.h>
 #include <base/vmath.h>
+
 #include <engine/graphics.h>
+
 #include <game/client/component.h>
 
 // UI Effects component for smooth transitions and animations
@@ -28,7 +30,7 @@ private:
 		float m_Target;
 		float m_Speed;
 		ETransitionType m_Type;
-		
+
 		CSmoothValue() : m_Current(0.0f), m_Target(0.0f), m_Speed(1.0f), m_Type(TRANSITION_EASE_OUT) {}
 	};
 

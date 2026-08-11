@@ -2,7 +2,9 @@
 #include "test.h"
 
 #include <base/system.h>
+
 #include <engine/shared/config.h>
+
 #include <game/client/components/chat.h>
 
 #include <gtest/gtest.h>

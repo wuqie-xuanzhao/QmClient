@@ -103,13 +103,13 @@ private:
 
 	static const char *ms_pGhostDir;
 
-	class IGhostLoader *m_pGhostLoader;
-	class IGhostRecorder *m_pGhostRecorder;
+	class IGhostLoader *m_pGhostLoader = nullptr;
+	class IGhostRecorder *m_pGhostRecorder = nullptr;
 
 	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
 	CGhostItem m_CurGhost;
 
-	char m_aTmpFilename[IO_MAX_PATH_LENGTH];
+	char m_aTmpFilename[IO_MAX_PATH_LENGTH] = "";
 
 	int m_NewRenderTick = -1;
 	int m_StartRenderTick = -1;

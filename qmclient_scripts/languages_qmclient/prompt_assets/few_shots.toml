@@ -22,3 +22,20 @@ simplified_chinese = "列出普通玩家可用的所有命令"
 traditional_chinese = "列出一般玩家可用的所有命令"
 korean = "일반 플레이어가 사용할 수 있는 모든 명령을 나열"
 japanese = "一般プレイヤーが使用できるすべてのコマンドを一覧表示"
+
+[[example]]
+key = "Dummy copy"
+context = ""
+simplified_chinese = "分身同步"
+traditional_chinese = "分身同步"
+korean = "더미 복사"
+japanese = "ダミーコピー"
+
+[[example]]
+key = "Hook collisions"
+context = ""
+simplified_chinese = "钩子辅助线"
+traditional_chinese = "鉤子輔助線"
+korean = "갈고리 보조선"
+japanese = "フック補助線"
+

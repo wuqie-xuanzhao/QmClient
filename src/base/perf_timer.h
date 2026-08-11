@@ -1,9 +1,9 @@
 #ifndef BASE_PERF_TIMER_H
 #define BASE_PERF_TIMER_H
 
-#include <chrono>
-
 #include <base/system.h>
+
+#include <chrono>
 
 class CPerfTimer
 {

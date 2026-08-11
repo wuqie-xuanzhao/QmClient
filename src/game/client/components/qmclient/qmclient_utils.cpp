@@ -275,7 +275,7 @@ bool ShouldShowQmDeveloperBadge(bool Authenticated, bool ShowName, bool HideIden
 bool IsQmDeveloperMarkCurrent(bool Active, const char *pMarkedName, const char *pCurrentName, int64_t ExpireTick, int64_t NowTick)
 {
 	return Active &&
-		pMarkedName && pMarkedName[0] != '\0' &&
-		pCurrentName && str_comp(pMarkedName, pCurrentName) == 0 &&
-		ExpireTick > NowTick;
+	       pMarkedName && pMarkedName[0] != '\0' &&
+	       pCurrentName && str_comp(pMarkedName, pCurrentName) == 0 &&
+	       ExpireTick > NowTick;
 }

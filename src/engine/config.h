@@ -33,6 +33,14 @@ static const CConfigDomain s_aConfigDomains[ConfigDomain::NUM] = {
 };
 #undef CONFIG_DOMAIN
 
+enum class EColorInputAlphaMode
+{
+	PACKED,
+	SIGNED_PACKED,
+	OMITTED,
+	EXPLICIT,
+};
+
 class IConfigManager : public IInterface
 {
 	MACRO_INTERFACE("config")
@@ -55,6 +63,7 @@ public:
 	virtual void StoreUnknownCommand(const char *pCommand, ConfigDomain ConfigDomain = ConfigDomain::DDNET) = 0;
 
 	virtual void PossibleConfigVariables(const char *pStr, int FlagMask, POSSIBLECFGFUNC pfnCallback, void *pUserData) = 0;
+	virtual EColorInputAlphaMode ColorValueInputAlphaMode(const char *pScriptName) const = 0;
 };
 
 extern IConfigManager *CreateConfigManager();

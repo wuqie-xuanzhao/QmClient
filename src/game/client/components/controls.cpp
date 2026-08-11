@@ -23,14 +23,6 @@ namespace
 {
 	bool s_aQmHadLocalCharacter[NUM_DUMMIES] = {};
 
-	int QmRespawnDefaultWantedWeapon()
-	{
-		const int ConfigWeapon = std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5);
-		if(ConfigWeapon <= 0)
-			return 0;
-		return minimum(ConfigWeapon, WEAPON_LASER + 1);
-	}
-
 	bool QmDummyHasActiveCharacter(const CGameClient *pGameClient, int Dummy)
 	{
 		if(Dummy < 0 || Dummy >= NUM_DUMMIES)
@@ -61,6 +53,8 @@ void CControls::OnReset()
 		AmmoCount = 0;
 	for(bool &HadLocalCharacter : s_aQmHadLocalCharacter)
 		HadLocalCharacter = false;
+	std::fill(std::begin(m_aQmRespawnWantedWeapon), std::end(m_aQmRespawnWantedWeapon), 0);
+	std::fill(std::begin(m_aQmRespawnWeaponPending), std::end(m_aQmRespawnWeaponPending), false);
 
 	m_LastSendTime = 0;
 }
@@ -83,7 +77,12 @@ void CControls::OnPlayerDeath()
 {
 	for(int &AmmoCount : m_aAmmoCount)
 		AmmoCount = 0;
-	s_aQmHadLocalCharacter[g_Config.m_ClDummy] = false;
+	const int Dummy = std::clamp(g_Config.m_ClDummy, 0, NUM_DUMMIES - 1);
+	s_aQmHadLocalCharacter[Dummy] = false;
+	m_aQmRespawnWantedWeapon[Dummy] = 0;
+	m_aQmRespawnWeaponPending[Dummy] = false;
+	// 不让死亡前残留的选择在下一次重生等待期间继续发送。
+	m_aInputData[Dummy].m_WantedWeapon = 0;
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -359,7 +358,6 @@ int CControls::SnapInput(int *pData)
 		}
 
 		// stress testing
-#ifdef CONF_DEBUG
 		if(g_Config.m_DbgStress)
 		{
 			float t = Client()->LocalTime();
@@ -373,7 +371,7 @@ int CControls::SnapInput(int *pData)
 			m_aInputData[g_Config.m_ClDummy].m_TargetX = (int)(std::sin(t * 3) * 100.0f);
 			m_aInputData[g_Config.m_ClDummy].m_TargetY = (int)(std::cos(t * 3) * 100.0f);
 		}
-#endif
+
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Jump != m_aLastData[g_Config.m_ClDummy].m_Jump;
@@ -405,11 +403,40 @@ void CControls::OnRender()
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
 		const bool HasActiveCharacter = QmDummyHasActiveCharacter(GameClient(), Dummy);
-		if(Dummy == g_Config.m_ClDummy && HasActiveCharacter && !s_aQmHadLocalCharacter[Dummy])
+		if(HasActiveCharacter && !s_aQmHadLocalCharacter[Dummy])
 		{
-			const int WantedWeapon = QmRespawnDefaultWantedWeapon();
-			if(WantedWeapon > 0)
-				m_aInputData[Dummy].m_WantedWeapon = WantedWeapon;
+			m_aQmRespawnWantedWeapon[Dummy] = QmRespawnDefaultWantedWeapon(g_Config.m_QmRespawnDefaultWeapon);
+			m_aQmRespawnWeaponPending[Dummy] = m_aQmRespawnWantedWeapon[Dummy] > 0;
+		}
+		if(HasActiveCharacter && m_aQmRespawnWeaponPending[Dummy])
+		{
+			const int WantedWeapon = m_aQmRespawnWantedWeapon[Dummy];
+			if(m_aInputData[Dummy].m_WantedWeapon != 0 && m_aInputData[Dummy].m_WantedWeapon != WantedWeapon)
+			{
+				// 用户主动选择了其他武器，取消这次自动选择。
+				m_aQmRespawnWeaponPending[Dummy] = false;
+				m_aQmRespawnWantedWeapon[Dummy] = 0;
+			}
+			else
+			{
+				const int Weapon = WantedWeapon - 1;
+				const int LocalId = GameClient()->m_aLocalIds[Dummy];
+				const bool HasWeapon = Weapon <= WEAPON_GUN ||
+						       (LocalId >= 0 && LocalId < MAX_CLIENTS && Weapon >= 0 && Weapon < NUM_WEAPONS && GameClient()->m_aClients[LocalId].m_Predicted.m_aWeapons[Weapon].m_Got);
+				if(HasWeapon)
+				{
+					m_aInputData[Dummy].m_WantedWeapon = WantedWeapon;
+					m_aQmRespawnWeaponPending[Dummy] = false;
+				}
+				else
+					m_aInputData[Dummy].m_WantedWeapon = 0;
+			}
+		}
+		else if(!HasActiveCharacter)
+		{
+			m_aQmRespawnWantedWeapon[Dummy] = 0;
+			m_aQmRespawnWeaponPending[Dummy] = false;
+			m_aInputData[Dummy].m_WantedWeapon = 0;
 		}
 		s_aQmHadLocalCharacter[Dummy] = HasActiveCharacter;
 	}

@@ -3,6 +3,7 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
+#include "game_ping.h"
 #include "graph.h"
 #include "smooth_time.h"
 
@@ -22,6 +23,7 @@
 #include <engine/shared/fifo.h>
 #include <engine/shared/http.h>
 #include <engine/shared/network.h>
+#include <engine/shared/qm_live_observer_session.h>
 #include <engine/textrender.h>
 #include <engine/warning.h>
 
@@ -59,6 +61,9 @@ public:
 	bool m_AllowDummy = false;
 	bool m_SyncWeaponInput = false;
 	bool m_Kcp = false;
+	bool m_LiveObserver = false;
+	bool m_LiveDirector = false;
+	bool m_LiveReplay = false;
 };
 
 class CClient : public IClient, public CDemoPlayer::IListener
@@ -83,9 +88,14 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	IUpdater *m_pUpdater = nullptr;
 	CHttp m_Http;
 
+	rust::Box<CSnapshotDelta> m_pSnapshotDelta;
+	rust::Box<CSnapshotDelta> m_pSnapshotDeltaSixup;
+	CSnapshotDelta *SnapshotDelta();
+
 	CNetClient m_aNetClient[NUM_CONNS];
 	CDemoPlayer m_DemoPlayer;
-	CDemoRecorder m_aDemoRecorder[RECORDER_MAX];
+	CDemoRecorder m_aDemoRecorders[RECORDER_MAX];
+	CDemoRecorder m_aDemoRecordersSixup[RECORDER_MAX];
 	CDemoEditor m_DemoEditor;
 	CGhostRecorder m_GhostRecorder;
 	CGhostLoader m_GhostLoader;
@@ -149,7 +159,8 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	char m_aVersionStr[10] = "0";
 
 	// pinging
-	int64_t m_PingStartTime = 0;
+	SManualPingProbe m_ManualPingProbe;
+	SGamePingProbe m_aGamePingProbes[NUM_DUMMIES];
 
 	char m_aCurrentMap[IO_MAX_PATH_LENGTH] = "";
 	char m_aCurrentMapPath[IO_MAX_PATH_LENGTH] = "";
@@ -176,8 +187,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	int m_MapdownloadCrc = 0;
 	int m_MapdownloadAmount = -1;
 	int m_MapdownloadTotalsize = -1;
-	bool m_MapdownloadSha256Present = false;
-	SHA256_DIGEST m_MapdownloadSha256 = SHA256_ZEROED;
+	std::optional<SHA256_DIGEST> m_MapdownloadSha256;
 
 	class CMapDetails
 	{
@@ -228,19 +238,21 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	CSnapshotStorage::CHolder *m_aapSnapshots[NUM_DUMMIES][NUM_SNAPSHOT_TYPES];
 
 	int m_aReceivedSnapshots[NUM_DUMMIES] = {0, 0};
+	SClientSnapshotStats m_aSnapshotStats[NUM_DUMMIES];
+	int64_t m_aLastSnapshotTime[NUM_DUMMIES] = {0, 0};
+	int m_aLastSnapshotTick[NUM_DUMMIES] = {-1, -1};
 	char m_aaSnapshotIncomingData[NUM_DUMMIES][CSnapshot::MAX_SIZE];
 	int m_aSnapshotIncomingDataSize[NUM_DUMMIES] = {0, 0};
 
 	CSnapshotStorage::CHolder m_aDemorecSnapshotHolders[NUM_SNAPSHOT_TYPES];
-	char m_aaaDemorecSnapshotData[NUM_SNAPSHOT_TYPES][2][CSnapshot::MAX_SIZE];
-
-	CSnapshotDelta m_SnapshotDelta;
+	CSnapshotBuffer m_aaDemorecSnapshotData[NUM_SNAPSHOT_TYPES][2];
 
 	std::deque<std::shared_ptr<CDemoEdit>> m_EditJobs;
 
-	mutable int64_t m_AutoMarginLastSampleTime = 0;
-	mutable float m_AutoMarginLatencyAverageMs = 0.0f;
-	mutable float m_AutoMarginLatencyJitterMs = 0.0f;
+	int m_PredictionMarginMs = 10;
+	int64_t m_AutoMarginLastSampleTime = 0;
+	float m_AutoMarginLatencyAverageMs = 0.0f;
+	float m_AutoMarginLatencyJitterMs = 0.0f;
 
 	//
 	bool m_CanReceiveServerCapabilities = false;
@@ -250,9 +262,37 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	bool m_KcpNegotiated = false;
 	int64_t m_KcpNegotiationStartTime = 0;
 	int m_KcpNegotiationConv = 0;
+#if defined(CONF_QM_LIVE_CLIENT)
+	CLiveObserverSession m_LiveObserverSession;
+	int64_t m_LiveObserverRequestTime = 0;
+#endif
 
 public:
 	bool ServerCapAnyPlayerFlag() const override { return m_ServerCapabilities.m_AnyPlayerFlag; }
+	bool QmLiveObserverActive() const override
+	{
+#if defined(CONF_QM_LIVE_CLIENT)
+		return m_LiveObserverSession.Accepted();
+#else
+		return false;
+#endif
+	}
+	bool QmLiveDirectorActive() const override
+	{
+#if defined(CONF_QM_LIVE_CLIENT)
+		return m_LiveObserverSession.DirectorActive();
+#else
+		return false;
+#endif
+	}
+	bool QmLiveCompatDirectorActive() const override
+	{
+#if defined(CONF_QM_LIVE_CLIENT)
+		return m_LiveObserverSession.CompatDirectorActive();
+#else
+		return false;
+#endif
+	}
 
 private:
 	CServerInfo m_CurrentServerInfo;
@@ -299,6 +339,8 @@ private:
 
 	void UpdateDemoIntraTimers();
 	int MaxLatencyTicks() const;
+	void ResetAutoPredictionMargin();
+	void UpdatePredictionMargin();
 	int PredictionMargin() const;
 	void StartHangWatchdog();
 	void StopHangWatchdog();
@@ -311,6 +353,7 @@ private:
 	std::shared_ptr<ILogger> m_pPerfFileLogger = nullptr;
 
 	void UpdateNetStatsSnapshot() const;
+	void UpdateGamePing();
 
 	// Shared by RenderDebug and Qm monitoring.
 	mutable NETSTATS m_NetstatsPrev = {};
@@ -348,6 +391,8 @@ public:
 	void SendInfo(int Conn);
 	void SendKcpCapability(int Conn);
 	void SendKcpProbe(int Conn);
+	void SendQmLiveObserverRequest(int Conn);
+	void EnableQmLiveCompatDirector(EQmLiveDenyReason Reason, const char *pReasonText);
 	void SendEnterGame(int Conn);
 	void SendReady(int Conn);
 	void SendMapRequest();
@@ -368,6 +413,9 @@ public:
 	IGraphics::CTextureHandle GetDebugFont() const override { return m_DebugFont; }
 
 	void SendInput();
+#if defined(CONF_QM_LIVE_CLIENT)
+	void SendQmLiveObserverInputAck();
+#endif
 
 	// TODO: OPT: do this a lot smarter!
 	int *GetInput(int Tick, int IsDummy) const override;
@@ -408,13 +456,14 @@ public:
 	CSnapItem SnapGetItem(int SnapId, int Index) const override;
 	int GetPredictionTick() override;
 	EPredictionMarginState PredictionMarginState() const override;
-	float SnapshotLatencyMs() const override;
-	float PredictionLatencyMs() const override;
+	float PingMs() const override;
+	float PredictionLeadMs() const override;
 	float PredictionMarginMs() const override;
 	float PredictionJitterMs() const override;
 	float GameTimeMarginMs() const override;
 	bool IsGameConnectionAlive() const override;
 	void NetStatsSnapshot(NETSTATS &Prev, NETSTATS &Current, std::chrono::nanoseconds &LastUpdate) const override;
+	void SnapshotStats(SClientSnapshotStats &Stats) const override;
 	int PendingResendCount() const override;
 	const void *SnapFindItem(int SnapId, int Type, int Id) const override;
 	int SnapNumItems(int SnapId) const override;
@@ -433,8 +482,8 @@ public:
 	const char *DummyName() override;
 	const char *ErrorString() const override;
 
-	const char *LoadMap(const char *pName, const char *pFilename, SHA256_DIGEST *pWantedSha256, unsigned WantedCrc);
-	const char *LoadMapSearch(const char *pMapName, SHA256_DIGEST *pWantedSha256, int WantedCrc);
+	const char *LoadMap(const char *pName, const char *pFilename, const std::optional<SHA256_DIGEST> &WantedSha256, unsigned WantedCrc);
+	const char *LoadMapSearch(const char *pMapName, const std::optional<SHA256_DIGEST> &WantedSha256, int WantedCrc);
 
 	int TranslateSysMsg(int *pMsgId, bool System, CUnpacker *pUnpacker, CPacker *pPacker, CNetChunk *pPacket, bool *pIsExMsg);
 
@@ -443,7 +492,7 @@ public:
 	void ProcessServerInfo(int Type, NETADDR *pFrom, const void *pData, int DataSize);
 	void ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy);
 
-	int UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshot *pTo);
+	int UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshotBuffer *pTo);
 
 	void ResetMapDownload(bool ResetActive);
 	void FinishMapDownload();
@@ -481,6 +530,7 @@ public:
 	static void Con_Connect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Disconnect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_QmTimeoutDisconnect(IConsole::IResult *pResult, void *pUserData);
+	static void Con_QmNetQosStatus(IConsole::IResult *pResult, void *pUserData);
 
 	static void Con_DummyConnect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_DummyDisconnect(IConsole::IResult *pResult, void *pUserData);
@@ -527,6 +577,7 @@ public:
 	static void ConchainNetReset(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainLoglevel(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainStdoutOutputLevel(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainProcessHighPriority(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	static void Con_DemoSlice(IConsole::IResult *pResult, void *pUserData);
 	static void Con_DemoSliceBegin(IConsole::IResult *pResult, void *pUserData);
@@ -536,11 +587,12 @@ public:
 	void RegisterCommands();
 
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType) override;
-	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp, int Recorder, bool Verbose = false) override;
+	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp, int Recorder) override;
 	void DemoRecorder_HandleAutoStart() override;
 	void DemoRecorder_UpdateReplayRecorder() override;
 	bool DemoRecorder_AddDemoMarker(int Recorder);
 	IDemoRecorder *DemoRecorder(int Recorder) override;
+	CDemoRecorder (&DemoRecorders())[RECORDER_MAX];
 
 	void AutoScreenshot_Start() override;
 	void AutoStatScreenshot_Start() override;
@@ -574,8 +626,6 @@ public:
 
 	const char *GetCurrentMap() const override;
 	const char *GetCurrentMapPath() const override;
-	SHA256_DIGEST GetCurrentMapSha256() const override;
-	unsigned GetCurrentMapCrc() const override;
 
 	void RaceRecord_Start(const char *pFilename) override;
 	void RaceRecord_Stop() override;

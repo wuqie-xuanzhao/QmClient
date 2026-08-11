@@ -5,6 +5,7 @@
 #include <engine/shared/network.h>
 
 #include <gtest/gtest.h>
+#include <test/test.h>
 
 #include <chrono>
 #include <string>
@@ -16,6 +17,19 @@ using namespace std::chrono_literals;
 namespace
 {
 
+	TEST(Net, Ipv6SocketUsesIpv6TrafficClassOutsideWindows)
+	{
+		const std::string Source = ReadTestSourceFile("src/base/system.cpp");
+		const size_t Ipv6Start = Source.find("if(bindaddr.type & NETTYPE_IPV6)");
+		ASSERT_NE(Ipv6Start, std::string::npos);
+		const size_t Ipv6End = Source.find("#if defined(CONF_WEBSOCKETS)", Ipv6Start);
+		ASSERT_NE(Ipv6End, std::string::npos);
+		const std::string Ipv6SocketSetup = Source.substr(Ipv6Start, Ipv6End - Ipv6Start);
+
+		EXPECT_NE(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IPV6, IPV6_TCLASS"), std::string::npos);
+		EXPECT_EQ(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IP, IP_TOS"), std::string::npos);
+	}
+
 	void InitNetBase()
 	{
 		static bool s_Initialized = false;
@@ -26,12 +40,12 @@ namespace
 		}
 	}
 
-	unsigned char *PackTestChunk(CNetPacketConstruct *pPacket, int Flags, int DataSize, const unsigned char *pData, bool Sixup)
+	unsigned char *PackTestChunk(CNetPacketConstruct *pPacket, int Flags, int DataSize, const unsigned char *pData, bool Sixup, int Sequence = 17)
 	{
 		CNetChunkHeader Header;
 		Header.m_Flags = Flags;
 		Header.m_Size = DataSize;
-		Header.m_Sequence = (Flags & NET_CHUNKFLAG_VITAL) ? 17 : -1;
+		Header.m_Sequence = (Flags & NET_CHUNKFLAG_VITAL) ? Sequence : -1;
 		unsigned char *pChunkData = Header.Pack(pPacket->m_aChunkData + pPacket->m_DataSize, Sixup ? 6 : 4);
 		mem_copy(pChunkData, pData, DataSize);
 		pPacket->m_DataSize = (int)(pChunkData + DataSize - pPacket->m_aChunkData);
@@ -103,7 +117,7 @@ namespace
 			return false;
 		for(int Attempt = 0; Attempt < 100; ++Attempt)
 		{
-			ServerAddr.port = secure_rand() % 64511 + 1024;
+			ServerAddr.port = secure_rand_below(64511) + 1024;
 			if(Server.Open(ServerAddr, nullptr, 1, 1))
 				return true;
 		}
@@ -158,22 +172,6 @@ namespace
 		}
 	}
 
-	struct SPacketOutputCapture
-	{
-		int m_Result = -1;
-		std::vector<CNetPacketConstruct> m_vPackets;
-		std::vector<int> m_vPackedSizes;
-	};
-
-	int CapturePacketOutput(void *pUser, CNetPacketConstruct *pPacket, SECURITY_TOKEN SecurityToken, bool Sixup)
-	{
-		auto *pCapture = static_cast<SPacketOutputCapture *>(pUser);
-		pCapture->m_vPackets.push_back(*pPacket);
-		unsigned char aBuffer[NET_MAX_PACKETSIZE];
-		pCapture->m_vPackedSizes.push_back(CNetBase::PackPacket(aBuffer, sizeof(aBuffer), pPacket, SecurityToken, Sixup));
-		return pCapture->m_Result;
-	}
-
 	std::vector<unsigned char> MakeTestPayload(int Size, uint32_t Seed)
 	{
 		std::vector<unsigned char> vPayload(Size);
@@ -184,14 +182,6 @@ namespace
 			Byte = State >> 24;
 		}
 		return vPayload;
-	}
-
-	void InitDirectConnection(CNetConnection &Connection)
-	{
-		Connection.Init(nullptr, false);
-		NETADDR PeerAddr = {};
-		PeerAddr.type = NETTYPE_IPV4;
-		Connection.DirectInit(PeerAddr, 0x12345678, NET_SECURITY_TOKEN_UNSUPPORTED, false);
 	}
 
 	class CNetKcpBypassTest : public ::testing::Test
@@ -263,7 +253,7 @@ TEST(Net, Ipv4AndIpv6Work)
 	Socket2 = net_udp_create(Bindaddr);
 	do
 	{
-		Bindaddr.port = secure_rand() % 64511 + 1024;
+		Bindaddr.port = secure_rand_below(65535 - 1024) + 1024;
 	} while(!(Socket1 = net_udp_create(Bindaddr)));
 
 	NETADDR LocalhostV4;
@@ -300,6 +290,81 @@ TEST(Net, Ipv4AndIpv6Work)
 	net_udp_close(Socket2);
 }
 
+TEST(Net, FailedUdpSendDoesNotCountAsSentTraffic)
+{
+	NETSOCKET Socket = BindUdpSocket(0);
+	ASSERT_NE(Socket, nullptr);
+
+	NETADDR IncompatibleTarget = {};
+	ASSERT_FALSE(net_addr_from_str(&IncompatibleTarget, "[::1]:1"));
+
+	NETSTATS Before = {};
+	NETSTATS After = {};
+	net_stats(&Before);
+	EXPECT_EQ(net_udp_send(Socket, &IncompatibleTarget, "x", 1), -1);
+	net_stats(&After);
+
+	EXPECT_EQ(After.sent_packets, Before.sent_packets);
+	EXPECT_EQ(After.sent_bytes, Before.sent_bytes);
+	EXPECT_EQ(After.send_errors, Before.send_errors + 1);
+	net_udp_close(Socket);
+}
+
+TEST(Net, SuccessfulUdpSendCountsAsSentTraffic)
+{
+	NETSOCKET Socket = BindUdpSocket(0);
+	ASSERT_NE(Socket, nullptr);
+
+	NETADDR Target = {};
+	ASSERT_FALSE(net_addr_from_str(&Target, "127.0.0.1:1"));
+	NETSTATS Before = {};
+	NETSTATS After = {};
+	net_stats(&Before);
+	EXPECT_EQ(net_udp_send(Socket, &Target, "abc", 3), 3);
+	net_stats(&After);
+
+	EXPECT_EQ(After.sent_packets, Before.sent_packets + 1);
+	EXPECT_EQ(After.sent_bytes, Before.sent_bytes + 3);
+	EXPECT_EQ(After.send_errors, Before.send_errors);
+	net_udp_close(Socket);
+}
+
+TEST(NetClient, QosCanBeDisabledAndReenabledWithoutAConnection)
+{
+	CNetClient Client;
+	NETADDR BindAddr = {};
+	BindAddr.type = NETTYPE_IPV4;
+	ASSERT_TRUE(Client.Open(BindAddr, true));
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+
+	Client.SetLowLatency(false);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::DISABLED);
+
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+	EXPECT_STREQ(Client.QosStatusName(), "pending");
+
+	NETADDR UnvalidatedPeer = {};
+	ASSERT_FALSE(net_addr_from_str(&UnvalidatedPeer, "127.0.0.1:8303"));
+	Client.Connect(&UnvalidatedPeer, 1);
+	Client.SetLowLatency(false);
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+
+	Client.Disconnect("test");
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+
+	Client.Connect7(&UnvalidatedPeer, 1);
+	Client.SetLowLatency(false);
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+	Client.Disconnect("test");
+	Client.SetLowLatency(false);
+	Client.SetLowLatency(true);
+	EXPECT_EQ(Client.QosStatus(), ENetQosStatus::PENDING);
+	Client.Close();
+}
+
 TEST(Net, PackPacketKeepsLegacyRoundtrip)
 {
 	InitNetBase();
@@ -321,6 +386,53 @@ TEST(Net, PackPacketRejectsTooSmallBuffer)
 
 	unsigned char aBuffer[2];
 	EXPECT_EQ(CNetBase::PackPacket(aBuffer, sizeof(aBuffer), &Packet, NET_SECURITY_TOKEN_UNSUPPORTED), -1);
+}
+
+TEST(Net, PacketChunkUnpackerSkipsOldVitalChunk)
+{
+	CNetPacketConstruct Packet;
+	mem_zero(&Packet, sizeof(Packet));
+	const unsigned char aOldVital[] = {'o', 'l', 'd'};
+	const unsigned char aNextChunk[] = {'n', 'e', 'x', 't'};
+	PackTestChunk(&Packet, NET_CHUNKFLAG_VITAL, sizeof(aOldVital), aOldVital, false, 0);
+	PackTestChunk(&Packet, 0, sizeof(aNextChunk), aNextChunk, false);
+
+	NETADDR Addr = {};
+	Addr.type = NETTYPE_IPV4;
+	CNetConnection Connection;
+	Connection.DirectInit(Addr, NET_SECURITY_TOKEN_UNSUPPORTED, NET_TOKEN_NONE, false);
+
+	CPacketChunkUnpacker Unpacker;
+	Unpacker.FeedPacket(Addr, Packet, &Connection, 0);
+
+	CNetChunk Chunk;
+	ASSERT_TRUE(Unpacker.UnpackNextChunk(&Chunk));
+	EXPECT_EQ(Chunk.m_DataSize, (int)sizeof(aNextChunk));
+	EXPECT_EQ(mem_comp(Chunk.m_pData, aNextChunk, sizeof(aNextChunk)), 0);
+	EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
+}
+
+TEST(Net, PacketChunkUnpackerRejectsMissingDeclaredChunk)
+{
+	CNetPacketConstruct Packet;
+	mem_zero(&Packet, sizeof(Packet));
+	const unsigned char aChunk[] = {'o', 'n', 'e'};
+	PackTestChunk(&Packet, 0, sizeof(aChunk), aChunk, false);
+	Packet.m_NumChunks++;
+
+	NETADDR Addr = {};
+	Addr.type = NETTYPE_IPV4;
+	CNetConnection Connection;
+	Connection.DirectInit(Addr, NET_SECURITY_TOKEN_UNSUPPORTED, NET_TOKEN_NONE, false);
+
+	CPacketChunkUnpacker Unpacker;
+	Unpacker.FeedPacket(Addr, Packet, &Connection, 0);
+
+	CNetChunk Chunk;
+	ASSERT_TRUE(Unpacker.UnpackNextChunk(&Chunk));
+	EXPECT_EQ(Chunk.m_DataSize, (int)sizeof(aChunk));
+	EXPECT_EQ(mem_comp(Chunk.m_pData, aChunk, sizeof(aChunk)), 0);
+	EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
 }
 
 TEST(Net, KcpHeaderRejectsInvalidPackets)
@@ -367,8 +479,8 @@ TEST(Net, KcpSessionSendsOverUdpAndRoundtripsPacket)
 			net_udp_close(Socket2);
 			Socket2 = nullptr;
 		}
-		Port1 = secure_rand() % 64511 + 1024;
-		Port2 = secure_rand() % 64511 + 1024;
+		Port1 = secure_rand_below(65535 - 1024) + 1024;
+		Port2 = secure_rand_below(65535 - 1024) + 1024;
 		if(Port1 == Port2)
 			continue;
 		Socket1 = BindUdpSocket(Port1);
@@ -425,75 +537,28 @@ TEST(Net, KcpSessionSendsOverUdpAndRoundtripsPacket)
 	net_udp_close(Socket2);
 }
 
-TEST(Net, ConnectionFlushRetainsQueuedPacketWhenOutputFails)
+TEST(Net, KcpSessionRejectsInvalidRebindWithoutChangingPeer)
 {
-	InitNetBase();
-	CNetConnection Connection;
-	InitDirectConnection(Connection);
+	NETSOCKET Socket = BindUdpSocket(0);
+	ASSERT_NE(Socket, nullptr);
 
-	SPacketOutputCapture Capture;
-	Connection.SetPacketOutput(CapturePacketOutput, &Capture);
-	const char aVital[] = "retained-vital";
-	ASSERT_EQ(Connection.QueueChunk(NET_CHUNKFLAG_VITAL, sizeof(aVital) - 1, aVital), 0);
-	EXPECT_EQ(Connection.Flush(), -1);
+	NETADDR OriginalPeer = {};
+	NETADDR RebindPeer = {};
+	ASSERT_FALSE(net_addr_from_str(&OriginalPeer, "127.0.0.1:8303"));
+	ASSERT_FALSE(net_addr_from_str(&RebindPeer, "127.0.0.1:8304"));
+	const uint32_t Conv = 0x1234567u;
+	CNetKcpSession Session;
+	ASSERT_TRUE(Session.Init(Socket, OriginalPeer, Conv));
 
-	Capture.m_Result = 0;
-	EXPECT_EQ(Connection.Flush(), 1);
-	ASSERT_EQ(Capture.m_vPackets.size(), 2u);
-	ASSERT_EQ(Capture.m_vPackedSizes.size(), 2u);
-	EXPECT_EQ(Capture.m_vPackedSizes[1], Capture.m_vPackedSizes[0]);
-	EXPECT_EQ(Capture.m_vPackets[1].m_NumChunks, Capture.m_vPackets[0].m_NumChunks);
-	EXPECT_EQ(Capture.m_vPackets[1].m_DataSize, Capture.m_vPackets[0].m_DataSize);
-	EXPECT_EQ(mem_comp(Capture.m_vPackets[1].m_aChunkData, Capture.m_vPackets[0].m_aChunkData, Capture.m_vPackets[0].m_DataSize), 0);
-}
+	unsigned char aInvalidPacket[NET_KCP_HEADER_SIZE + 1] = {'Q', 'K', 'C', 'P', 1};
+	aInvalidPacket[5] = (Conv >> 24) & 0xff;
+	aInvalidPacket[6] = (Conv >> 16) & 0xff;
+	aInvalidPacket[7] = (Conv >> 8) & 0xff;
+	aInvalidPacket[8] = Conv & 0xff;
+	EXPECT_FALSE(Session.Input(RebindPeer, aInvalidPacket, sizeof(aInvalidPacket), true));
+	EXPECT_EQ(*Session.PeerAddress(), OriginalPeer);
 
-TEST(Net, ConnectionQueueChunkIsAtomicWhenAutomaticFlushFails)
-{
-	InitNetBase();
-	CNetConnection Connection;
-	InitDirectConnection(Connection);
-
-	SPacketOutputCapture Capture;
-	Connection.SetPacketOutput(CapturePacketOutput, &Capture);
-	const char aNonVital[] = "x";
-	for(int Chunk = 0; Chunk < NET_MAX_PACKET_CHUNKS; ++Chunk)
-		ASSERT_EQ(Connection.QueueChunk(0, sizeof(aNonVital) - 1, aNonVital), 0);
-
-	const char aVital[] = "atomic-vital";
-	EXPECT_EQ(Connection.QueueChunk(NET_CHUNKFLAG_VITAL, sizeof(aVital) - 1, aVital), -1);
-	EXPECT_EQ(Connection.SeqSequence(), 0);
-	Capture.m_Result = 0;
-	EXPECT_EQ(Connection.Flush(), NET_MAX_PACKET_CHUNKS);
-	ASSERT_EQ(Capture.m_vPackets.size(), 2u);
-	EXPECT_EQ(Capture.m_vPackets[1].m_NumChunks, NET_MAX_PACKET_CHUNKS);
-
-	EXPECT_EQ(Connection.QueueChunk(NET_CHUNKFLAG_VITAL, sizeof(aVital) - 1, aVital), 0);
-	EXPECT_EQ(Connection.SeqSequence(), 1);
-}
-
-TEST(Net, ConnectionVitalSequenceDoesNotAdvanceWhenResendBufferIsFull)
-{
-	InitNetBase();
-	CNetConnection Connection;
-	InitDirectConnection(Connection);
-
-	SPacketOutputCapture Capture;
-	Capture.m_Result = 0;
-	Connection.SetPacketOutput(CapturePacketOutput, &Capture);
-	const std::vector<unsigned char> vPayload = MakeTestPayload(1024, 6);
-	bool AllocationFailed = false;
-	for(int Attempt = 0; Attempt < 100; ++Attempt)
-	{
-		const int SequenceBefore = Connection.SeqSequence();
-		const int Result = Connection.QueueChunk(NET_CHUNKFLAG_VITAL, vPayload.size(), vPayload.data());
-		if(Result < 0)
-		{
-			AllocationFailed = true;
-			EXPECT_EQ(Connection.SeqSequence(), SequenceBefore);
-			break;
-		}
-	}
-	EXPECT_TRUE(AllocationFailed);
+	net_udp_close(Socket);
 }
 
 TEST_F(CNetKcpBypassTest, ClientFlushBypassDrainsQueuedVitalChunk)

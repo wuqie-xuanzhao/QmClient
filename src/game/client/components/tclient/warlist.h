@@ -3,14 +3,14 @@
 
 #include <base/str.h>
 
-#include <string_view>
-#include <unordered_map>
-#include <vector>
-
 #include <engine/console.h>
 #include <engine/shared/protocol.h>
 
 #include <game/client/component.h>
+
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 enum
 {

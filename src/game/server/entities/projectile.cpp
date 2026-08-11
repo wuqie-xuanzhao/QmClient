@@ -10,7 +10,7 @@
 
 #include <game/mapitems.h>
 #include <game/server/gamecontext.h>
-#include <game/server/gamemodes/DDRace.h>
+#include <game/server/gamemodes/ddnet.h>
 
 CProjectile::CProjectile(
 	CGameWorld *pGameWorld,
@@ -25,7 +25,7 @@ CProjectile::CProjectile(
 	vec2 InitDir,
 	int Layer,
 	int Number) :
-	CEntity(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE)
+	CEntity(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, true)
 {
 	m_Type = Type;
 	m_Pos = Pos;
@@ -38,6 +38,7 @@ CProjectile::CProjectile(
 
 	m_Layer = Layer;
 	m_Number = Number;
+	m_Bouncing = 0;
 	m_Freeze = Freeze;
 
 	m_InitDir = InitDir;
@@ -282,7 +283,7 @@ void CProjectile::Snap(int SnappingClient)
 {
 	float Ct = (Server()->Tick() - m_StartTick) / (float)Server()->TickSpeed();
 
-	if(NetworkClipped(SnappingClient, GetPos(Ct)))
+	if(NetworkClipped(SnappingClient, GetPos(Ct)) || !GetId().has_value())
 		return;
 
 	int SnappingClientVersion = GameServer()->GetClientVersion(SnappingClient);
@@ -310,31 +311,29 @@ void CProjectile::Snap(int SnappingClient)
 
 	if(SnappingClientVersion >= VERSION_DDNET_ENTITY_NETOBJS)
 	{
-		CNetObj_DDNetProjectile *pDDNetProjectile = static_cast<CNetObj_DDNetProjectile *>(Server()->SnapNewItem(NETOBJTYPE_DDNETPROJECTILE, GetId(), sizeof(CNetObj_DDNetProjectile)));
-		if(!pDDNetProjectile)
-		{
-			return;
-		}
-		FillExtraInfo(pDDNetProjectile);
+		CNetObj_DDNetProjectile DDNetProjectile;
+		FillExtraInfo(&DDNetProjectile);
+		Server()->SnapNewItem(GetId().value(), DDNetProjectile);
 	}
 	else if(SnappingClientVersion >= VERSION_DDNET_ANTIPING_PROJECTILE && FillExtraInfoLegacy(&DDRaceProjectile))
 	{
-		int Type = SnappingClientVersion < VERSION_DDNET_MSG_LEGACY ? (int)NETOBJTYPE_PROJECTILE : NETOBJTYPE_DDRACEPROJECTILE;
-		void *pProj = Server()->SnapNewItem(Type, GetId(), sizeof(DDRaceProjectile));
-		if(!pProj)
+		if(SnappingClientVersion >= VERSION_DDNET_MSG_LEGACY)
 		{
-			return;
+			Server()->SnapNewItem(GetId().value(), DDRaceProjectile);
 		}
-		mem_copy(pProj, &DDRaceProjectile, sizeof(DDRaceProjectile));
+		else
+		{
+			CNetObj_Projectile Projectile = {};
+			static_assert(sizeof(DDRaceProjectile) == sizeof(Projectile));
+			mem_copy(&Projectile, &DDRaceProjectile, sizeof(Projectile));
+			Server()->SnapNewItem(GetId().value(), Projectile);
+		}
 	}
 	else
 	{
-		CNetObj_Projectile *pProj = Server()->SnapNewItem<CNetObj_Projectile>(GetId());
-		if(!pProj)
-		{
-			return;
-		}
-		FillInfo(pProj);
+		CNetObj_Projectile Projectile;
+		FillInfo(&Projectile);
+		Server()->SnapNewItem(GetId().value(), Projectile);
 	}
 }
 

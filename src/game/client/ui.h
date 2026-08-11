@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_UI_H
 #define GAME_CLIENT_UI_H
 
+#include "QmUi/QmDropdown.h"
 #include "lineinput.h"
 #include "ui_rect.h"
 
@@ -11,6 +12,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -399,6 +402,9 @@ class CButtonContainer
 
 struct SValueSelectorProperties
 {
+	typedef void (*FValueSelectorFormatCallback)(int64_t Value, char *pBuf, int BufSize, int Base, int HexPrefix);
+	typedef bool (*FValueSelectorParseCallback)(const char *pText, int64_t &Value, int Base);
+
 	bool m_UseScroll = true;
 	int64_t m_Step = 1;
 	float m_Scale = 1.0f;
@@ -407,7 +413,16 @@ struct SValueSelectorProperties
 	ColorRGBA m_Color = ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f);
 	int m_TextAlign = TEXTALIGN_ML;
 	bool m_SelectAllOnActivate = true;
+	FValueSelectorFormatCallback m_pfnFormatValue = nullptr;
+	FValueSelectorParseCallback m_pfnParseValue = nullptr;
 };
+
+inline float QmFitSingleLineFontSize(float PreferredSize, float MinimumSize, float TextWidth, float AvailableWidth)
+{
+	if(PreferredSize <= 0.0f || MinimumSize <= 0.0f || TextWidth <= 0.0f || AvailableWidth <= 0.0f || TextWidth <= AvailableWidth)
+		return PreferredSize;
+	return std::clamp(PreferredSize * AvailableWidth / TextWidth, MinimumSize, PreferredSize);
+}
 
 struct SProgressSpinnerProperties
 {
@@ -428,8 +443,119 @@ struct SPopupMenuProperties
 	int m_Corners = IGraphics::CORNER_ALL;
 	ColorRGBA m_BorderColor = ColorRGBA(0.5f, 0.5f, 0.5f, 0.75f);
 	ColorRGBA m_BackgroundColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.75f);
+	bool m_AutoReposition = true;
+	bool m_ClipToViewport = false;
+	bool m_BlockUnderlyingScroll = false;
+	bool m_BlockUnderlyingPointerInput = false;
+	bool m_RequireSourceRefresh = false;
+	uint64_t m_SourceFrame = 0;
+	CUIRect m_Viewport{};
 };
 
+enum class EUiWheelOwnerPriority
+{
+	PAGE = 0,
+	COMPOSITE_CONTROL = 1,
+	POPUP = 2,
+};
+
+constexpr bool QmHotScrollRegionPriorityWins(EUiWheelOwnerPriority Current, EUiWheelOwnerPriority Candidate)
+{
+	return static_cast<int>(Candidate) >= static_cast<int>(Current);
+}
+
+class CScrollWheelOwnership
+{
+public:
+	bool BeginFrame(uint64_t FrameId, float RawDelta, bool AltPressed)
+	{
+		if(FrameStarted(FrameId))
+			return false;
+		m_vOwners.clear();
+		m_FrameId = FrameId;
+		m_RawDelta = RawDelta * (AltPressed ? 3.0f : 1.0f);
+		m_NextOrder = 0;
+		m_HasFrame = true;
+		m_Consumed = false;
+		return true;
+	}
+
+	bool FrameStarted(uint64_t FrameId) const { return m_HasFrame && m_FrameId == FrameId; }
+
+	void Register(const void *pOwnerId, EUiWheelOwnerPriority Priority, bool Eligible)
+	{
+		if(pOwnerId == nullptr)
+			return;
+		const auto It = std::find_if(m_vOwners.begin(), m_vOwners.end(), [pOwnerId](const SOwner &Owner) { return Owner.m_pId == pOwnerId; });
+		if(It != m_vOwners.end())
+		{
+			It->m_Priority = Priority;
+			It->m_Eligible = Eligible;
+			It->m_Order = ++m_NextOrder;
+			return;
+		}
+		m_vOwners.push_back({pOwnerId, Priority, ++m_NextOrder, Eligible});
+	}
+
+	bool TryConsume(const void *pOwnerId, float *pDelta)
+	{
+		if(pOwnerId == nullptr || pDelta == nullptr || m_Consumed || m_RawDelta == 0.0f)
+			return false;
+		const SOwner *pWinner = nullptr;
+		for(const SOwner &Owner : m_vOwners)
+		{
+			if(!Owner.m_Eligible)
+				continue;
+			if(pWinner == nullptr || static_cast<int>(Owner.m_Priority) > static_cast<int>(pWinner->m_Priority) ||
+				(Owner.m_Priority == pWinner->m_Priority && Owner.m_Order > pWinner->m_Order))
+				pWinner = &Owner;
+		}
+		if(pWinner == nullptr || pWinner->m_pId != pOwnerId)
+			return false;
+		*pDelta = m_RawDelta;
+		m_Consumed = true;
+		return true;
+	}
+
+private:
+	struct SOwner
+	{
+		const void *m_pId = nullptr;
+		EUiWheelOwnerPriority m_Priority = EUiWheelOwnerPriority::PAGE;
+		uint64_t m_Order = 0;
+		bool m_Eligible = false;
+	};
+
+	std::vector<SOwner> m_vOwners;
+	uint64_t m_FrameId = 0;
+	float m_RawDelta = 0.0f;
+	uint64_t m_NextOrder = 0;
+	bool m_HasFrame = false;
+	bool m_Consumed = false;
+};
+
+struct SQmWheelOwnerCandidate
+{
+	const void *m_pOwnerId = nullptr;
+	EUiWheelOwnerPriority m_Priority = EUiWheelOwnerPriority::PAGE;
+	CUIRect m_HotRect{};
+	bool m_Eligible = false;
+};
+
+inline void QmRegisterWheelOwnerCandidate(CScrollWheelOwnership &Ownership, const SQmWheelOwnerCandidate &Candidate, const vec2 &PointerPosition, bool UiEnabled)
+{
+	const bool PointerInside =
+		PointerPosition.x >= Candidate.m_HotRect.x &&
+		PointerPosition.x <= Candidate.m_HotRect.x + Candidate.m_HotRect.w &&
+		PointerPosition.y >= Candidate.m_HotRect.y &&
+		PointerPosition.y <= Candidate.m_HotRect.y + Candidate.m_HotRect.h;
+	Ownership.Register(Candidate.m_pOwnerId, Candidate.m_Priority, Candidate.m_Eligible && UiEnabled && PointerInside);
+}
+
+inline bool QmTryConsumeWheel(CScrollWheelOwnership &Ownership, const void *pOwnerId, float *pDelta)
+{
+	return Ownership.TryConsume(pOwnerId, pDelta);
+}
 class CUi
 {
 public:
@@ -503,6 +629,8 @@ private:
 
 	bool m_Enabled;
 	int m_RenderOnlyDepth = 0;
+	int m_PreLayoutInputDepth = 0;
+	float m_DropDownFontSize = -1.0f;
 	mutable int m_QuadBatchDepth = 0;
 	mutable int m_QuadBatchContainerIndex = -1;
 	mutable ColorRGBA m_QuadBatchColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -515,6 +643,8 @@ private:
 	IGraphics::CRenderTargetHandle m_GaussianBlurTarget;
 	int m_GaussianBlurWidth = 0;
 	int m_GaussianBlurHeight = 0;
+	bool m_GaussianBlurPrepared = false;
+	uint64_t m_GaussianBlurPreparedFrame = 0;
 
 	const void *m_pHotItem = nullptr;
 	const void *m_pActiveItem = nullptr;
@@ -522,6 +652,11 @@ private:
 	const void *m_pBecomingHotItem = nullptr;
 	CScrollRegion *m_pHotScrollRegion = nullptr;
 	CScrollRegion *m_pBecomingHotScrollRegion = nullptr;
+	EUiWheelOwnerPriority m_BecomingHotScrollRegionPriority = EUiWheelOwnerPriority::PAGE;
+	bool m_UnderlyingScrollBlocked = false;
+	bool m_RenderingPopupMenus = false;
+	bool m_MenuUiFirstWheelPerf = false;
+	CScrollWheelOwnership m_WheelOwnership;
 	bool m_ActiveItemValid = false;
 
 	int m_ActiveButtonLogicButton = -1;
@@ -554,7 +689,6 @@ private:
 	vec2 m_UpdatedMouseDelta = vec2(0.0f, 0.0f); // in window screen space
 	vec2 m_MousePos = vec2(0.0f, 0.0f); // in gui space
 	vec2 m_MouseDelta = vec2(0.0f, 0.0f); // in gui space
-	vec2 m_MouseWorldPos = vec2(-1.0f, -1.0f); // in world space
 	unsigned m_UpdatedMouseButtons = 0;
 	unsigned m_MouseButtons = 0;
 	unsigned m_LastMouseButtons = 0;
@@ -564,6 +698,21 @@ private:
 	const void *m_pMouseLockId = nullptr;
 
 	unsigned m_HotkeysPressed = 0;
+
+	enum class EBackButtonOp
+	{
+		NONE,
+		CLICKED,
+		DRAGGING,
+	};
+	EBackButtonOp m_BackButtonOp = EBackButtonOp::NONE;
+	vec2 m_BackButtonDragOffset = vec2(0.0f, 0.0f);
+	vec2 m_BackButtonInitialMouse = vec2(0.0f, 0.0f);
+	CUIRect m_BackButtonRect = {0.0f, 0.0f, 0.0f, 0.0f};
+	const char m_BackButtonId = 0;
+
+	std::function<void(const IInput::CEvent &Event)> m_DispatchInputFunction;
+	std::function<void()> m_OnBackButtonPressedFunction;
 
 	CUIRect m_Screen;
 	int m_LastUiScale = -1;
@@ -584,6 +733,8 @@ private:
 	};
 	std::vector<SPopupMenu> m_vPopupMenus;
 	FPopupMenuClosedCallback m_pfnPopupMenuClosedCallback = nullptr;
+	int m_PopupInputDepth = 0;
+	bool UnderlyingPointerInputBlocked() const;
 
 	static CUi::EPopupMenuFunctionResult PopupMessage(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupConfirm(void *pContext, CUIRect View, bool Active);
@@ -615,6 +766,12 @@ public:
 
 	void Init(IKernel *pKernel);
 	IClient *Client() const { return m_pClient; }
+	bool ConsumeMenuUiFirstWheelPerf()
+	{
+		const bool Result = m_MenuUiFirstWheelPerf;
+		m_MenuUiFirstWheelPerf = false;
+		return Result;
+	}
 	IGraphics *Graphics() const { return m_pGraphics; }
 	IInput *Input() const { return m_pInput; }
 	ITextRender *TextRender() const { return m_pTextRender; }
@@ -653,6 +810,7 @@ public:
 
 	void AddUIElement(CUIElement *pElement);
 	void RemoveUIElement(CUIElement *pElement);
+	void OnShutdown();
 	void OnElementsReset();
 	void OnWindowResize();
 	void OnCursorMove(float X, float Y);
@@ -666,14 +824,19 @@ public:
 
 	void SetEnabled(bool Enabled) { m_Enabled = Enabled; }
 	bool Enabled() const { return m_Enabled; }
-	void BeginRenderOnly() { ++m_RenderOnlyDepth; }
-	void EndRenderOnly()
-	{
-		dbg_assert(m_RenderOnlyDepth > 0, "render-only UI scope underflow");
-		--m_RenderOnlyDepth;
-	}
+	void BeginRenderOnly();
+	void EndRenderOnly();
 	bool RenderOnly() const { return m_RenderOnlyDepth > 0; }
-	void Update(vec2 MouseWorldPos = vec2(-1.0f, -1.0f));
+	void BeginPreLayoutInput() { ++m_PreLayoutInputDepth; }
+	void EndPreLayoutInput()
+	{
+		if(m_PreLayoutInputDepth > 0)
+			--m_PreLayoutInputDepth;
+	}
+	bool PreLayoutInput() const { return m_PreLayoutInputDepth > 0; }
+	void SetDropDownFontSize(float FontSize) { m_DropDownFontSize = FontSize; }
+	float DropDownFontSize() const { return m_DropDownFontSize; }
+	void Update();
 	void DebugRender(float X, float Y);
 
 	vec2 MousePos() const { return m_MousePos; }
@@ -682,9 +845,6 @@ public:
 	vec2 MouseDelta() const { return m_MouseDelta; }
 	float MouseDeltaX() const { return m_MouseDelta.x; }
 	float MouseDeltaY() const { return m_MouseDelta.y; }
-	vec2 MouseWorldPos() const { return m_MouseWorldPos; }
-	float MouseWorldX() const { return m_MouseWorldPos.x; }
-	float MouseWorldY() const { return m_MouseWorldPos.y; }
 	vec2 UpdatedMousePos() const { return m_UpdatedMousePos; }
 	vec2 UpdatedMouseDelta() const { return m_UpdatedMouseDelta; }
 	int LastMouseButton(int Index) const { return (m_LastMouseButtons >> Index) & 1; } // TClient
@@ -729,6 +889,8 @@ public:
 	}
 	bool CheckActiveItem(const void *pId)
 	{
+		if(UnderlyingPointerInputBlocked())
+			return false;
 		if(m_pActiveItem == pId)
 		{
 			m_ActiveItemValid = true;
@@ -736,11 +898,30 @@ public:
 		}
 		return false;
 	}
-	void SetHotScrollRegion(CScrollRegion *pId) { m_pBecomingHotScrollRegion = pId; }
+	bool IsActiveItem(const void *pId) const { return m_pActiveItem == pId; }
+	void SetHotScrollRegion(CScrollRegion *pId, EUiWheelOwnerPriority Priority = EUiWheelOwnerPriority::PAGE)
+	{
+		if(pId == nullptr)
+		{
+			m_pBecomingHotScrollRegion = nullptr;
+			m_BecomingHotScrollRegionPriority = EUiWheelOwnerPriority::PAGE;
+		}
+		else if(m_pBecomingHotScrollRegion == nullptr || QmHotScrollRegionPriorityWins(m_BecomingHotScrollRegionPriority, Priority))
+		{
+			m_pBecomingHotScrollRegion = pId;
+			m_BecomingHotScrollRegionPriority = Priority;
+		}
+	}
 	const void *HotItem() const { return m_pHotItem; }
 	const void *NextHotItem() const { return m_pBecomingHotItem; }
 	const void *ActiveItem() const { return m_pActiveItem; }
 	const CScrollRegion *HotScrollRegion() const { return m_pHotScrollRegion; }
+	const CScrollRegion *NextHotScrollRegion() const { return m_pBecomingHotScrollRegion; }
+	bool UnderlyingScrollBlocked() const { return m_UnderlyingScrollBlocked; }
+	bool RenderingPopupMenus() const { return m_RenderingPopupMenus; }
+	void BeginWheelOwnershipFrame();
+	void RegisterWheelOwner(const void *pOwnerId, EUiWheelOwnerPriority Priority, const CUIRect &HotRect, bool Eligible);
+	bool TryConsumeWheel(const void *pOwnerId, float *pDelta);
 
 	void StartCheck() { m_ActiveItemValid = false; }
 	void FinishCheck()
@@ -755,11 +936,11 @@ public:
 
 	bool MouseInside(const CUIRect *pRect) const;
 	bool MouseInsideClip() const { return !IsClipped() || MouseInside(ClipArea()); }
-	bool MouseHovered(const CUIRect *pRect) const { return !RenderOnly() && MouseInside(pRect) && MouseInsideClip(); }
+	bool MouseHovered(const CUIRect *pRect) const;
 	void RegisterPassiveHotItem(const void *pId, const CUIRect *pRect);
 	void ConvertMouseMove(float *pX, float *pY, IInput::ECursorType CursorType) const;
 	void UpdateTouchState(CTouchState &State) const;
-	void ResetMouseSlow() { m_MouseSlow = false; }
+	void SetMouseSlow(bool MouseSlow) { m_MouseSlow = MouseSlow; }
 
 	bool ConsumeHotkey(EHotkey Hotkey);
 	void ClearHotkeys() { m_HotkeysPressed = 0; }
@@ -777,6 +958,7 @@ public:
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
 	const CUIRect *ClipArea() const;
+	const CUIRect *OutermostClipArea() const;
 	bool IsClipped() const { return !m_vClips.empty(); }
 	void BeginQuadBatch() const;
 	void FlushQuadBatch() const;
@@ -793,6 +975,18 @@ public:
 
 	CLabelResult DoLabel(const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}) const;
 	CLabelResult DoLabel_AutoLineSize(const char *pText, float FontSize, int Align, CUIRect *pRect, float LineSize, const SLabelProperties &LabelProps = {}) const;
+
+	struct SEditBoxRenderOptions
+	{
+		SEditBoxRenderOptions() :
+			m_DrawBackground(true),
+			m_pHitRect(nullptr)
+		{
+		}
+
+		bool m_DrawBackground;
+		const CUIRect *m_pHitRect;
+	};
 
 	void DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr) const;
 	void RenderLabelTextContainerAligned(const CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, int Align) const;
@@ -815,6 +1009,8 @@ public:
 	 * @return true if the value of the input field changed since the last call.
 	 */
 	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = IGraphics::CORNER_ALL, const std::vector<STextColorSplit> &vColorSplits = {}, int Align = TEXTALIGN_ML);
+	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions);
+	bool DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, float LineSpacing, int TextAlign = TEXTALIGN_TL, const SEditBoxRenderOptions &RenderOptions = {});
 
 	/**
 	 * Creates an input field with a clear [x] button attached to it.
@@ -833,6 +1029,7 @@ public:
 	 * @return true if the value of the input field changed since the last call.
 	 */
 	bool DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = IGraphics::CORNER_ALL, const std::vector<STextColorSplit> &vColorSplits = {});
+	bool DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions);
 
 	/**
 	 * Creates an input field with a search icon and a clear [x] button attached to it.
@@ -851,6 +1048,7 @@ public:
 	 * @return true if the value of the input field changed since the last call.
 	 */
 	bool DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled);
+	bool DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions);
 
 	int DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const std::function<const char *()> &GetTextLambda, const CUIRect *pRect, const SMenuButtonProperties &Props = {});
 	int DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags, int Corners = IGraphics::CORNER_ALL, bool Enabled = true, std::optional<ColorRGBA> ButtonColor = std::nullopt);
@@ -876,10 +1074,21 @@ public:
 	// progress bar
 	void RenderProgressBar(CUIRect ProgressBar, float Progress);
 
+	// render time with hundredths or thousands aligned to the right of the UIRect
+	void RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds) const;
+
 	// progress spinner
 	void RenderProgressSpinner(vec2 Center, float OuterRadius, const SProgressSpinnerProperties &Props = {}) const;
 
+	// virtual back button
+	void DoBackButton();
+	void RenderBackButton();
+	void SetDispatchInputCallback(std::function<void(const IInput::CEvent &Event)> pfnCallback) { m_DispatchInputFunction = std::move(pfnCallback); }
+	// Fired the moment the back button transitions to active (mouse-down inside it).
+	void SetOnBackButtonPressedCallback(std::function<void()> pfnCallback) { m_OnBackButtonPressedFunction = std::move(pfnCallback); }
+
 	// popup menu
+	static constexpr float PopupMenuContentInset() { return (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2.0f; }
 	void DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props = {});
 	void RenderPopupMenus();
 	void ClosePopupMenu(const SPopupMenuId *pId, bool IncludeDescendants = false);
@@ -941,6 +1150,7 @@ public:
 		std::vector<CButtonContainer> m_vButtonContainers;
 		const std::string *m_pSelection;
 		int m_SelectionIndex;
+		int m_ActiveIndex;
 		float m_EntryHeight;
 		float m_EntryPadding;
 		float m_EntrySpacing;
@@ -948,7 +1158,16 @@ public:
 		float m_MinimumFontSize = -1.0f;
 		float m_Width;
 		float m_AlignmentHeight;
+		ColorRGBA m_ActiveEntryColor;
 		bool m_TransparentButtons;
+		bool m_AnchorVisible = true;
+		bool m_PopupVisible = true;
+		bool m_BlockUnderlyingScroll = false;
+		bool m_Scrollable = false;
+		bool m_ScrollToActiveItem = false;
+		bool m_MenuUiFirstWheelLogged = false;
+		CUIRect m_Viewport{};
+		SQmDropdownPopupPolicy m_PopupPolicy;
 
 		bool m_SpecialFontRenderMode = false; // TClient
 
@@ -986,13 +1205,41 @@ public:
 	// dropdown menu
 	struct SDropDownState
 	{
+		SDropDownState() = default;
+		SDropDownState(const SDropDownState &) = delete;
+		SDropDownState &operator=(const SDropDownState &) = delete;
+
 		SSelectionPopupContext m_SelectionPopupContext;
+		CQmDropdownState m_DropDownState;
+		std::shared_ptr<CScrollRegion> m_pOwnedScrollRegion;
+		CScrollRegion *m_pScrollRegion = nullptr;
 		CUIElement m_UiElement;
 		CButtonContainer m_ButtonContainer;
 		bool m_Init = false;
 	};
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, float FontSize = -1.0f);
-	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool Enabled, float FontSize = -1.0f);
+	struct SDropDownProperties
+	{
+		SDropDownProperties() :
+			m_FontSize(-1.0f),
+			m_Enabled(true),
+			m_ClosePopupWhenDisabled(true),
+			m_pAnchorViewport(nullptr),
+			m_pPopupViewport(nullptr)
+		{
+		}
+
+		float m_FontSize;
+		bool m_Enabled;
+		bool m_ClosePopupWhenDisabled;
+		// 下拉框的锚点和弹层有不同的裁剪语义：锚点必须仍在所属控件内，
+		// 弹层则允许离开卡片，但不能越过设置页滚动 viewport。未指定时沿用
+		// 当前 clip stack，旧调用方因此保持兼容。
+		const CUIRect *m_pAnchorViewport;
+		const CUIRect *m_pPopupViewport;
+		SQmDropdownVisualStyle m_VisualStyle;
+	};
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps = {});
+	int DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, bool Enabled);
 };
 
 #endif

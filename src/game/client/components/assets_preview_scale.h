@@ -14,6 +14,13 @@ inline constexpr int LOCAL_ASSET_PREVIEW_MAX_TEXTURE_SIZE = 4096;
 inline constexpr int WORKSHOP_ASSET_PREVIEW_MAX_TEXTURE_SIZE = 2048;
 inline constexpr int LOCAL_ASSET_PREVIEW_MAX_FILE_SIZE = 64 * 1024 * 1024;
 
+// Tile size for the entity preview grid: the largest square that fits both axes
+// given the available rect and the column/row count. Pure so it is unit-testable.
+inline float ComputeEntityPreviewTileSize(float RectW, float RectH, int Cols, int Rows)
+{
+	return std::min(RectW / (float)Cols, RectH / (float)Rows);
+}
+
 struct SPreviewTargetSize
 {
 	int m_Width;
@@ -143,7 +150,7 @@ inline bool WorkshopAssetCanDecodeInstalledPreview(const char *pCategoryId, bool
 inline bool WorkshopAssetCanDecodeAnyLocalPreview(const char *pCategoryId, bool Installed, bool ThumbCacheFailed, bool HasThumbCache)
 {
 	return WorkshopAssetCanDecodeInstalledPreview(pCategoryId, Installed, ThumbCacheFailed) ||
-		(!ThumbCacheFailed && HasThumbCache);
+	       (!ThumbCacheFailed && HasThumbCache);
 }
 
 inline SWorkshopPreviewDecodeSourcePlan BuildWorkshopPreviewDecodeSourcePlan(const char *pCategoryId, bool Installed, bool HasThumbCache)
@@ -161,10 +168,10 @@ inline bool DetectCorruptEntityBgInstallHeader(const void *pData, size_t DataSiz
 
 	const uint8_t *pBytes = static_cast<const uint8_t *>(pData);
 	const bool IsPng = DataSize >= 8 &&
-		std::memcmp(pBytes, "\x89PNG\r\n\x1a\n", 8) == 0;
+			   std::memcmp(pBytes, "\x89PNG\r\n\x1a\n", 8) == 0;
 	const bool IsWebp = DataSize >= 12 &&
-		std::memcmp(pBytes, "RIFF", 4) == 0 &&
-		std::memcmp(pBytes + 8, "WEBP", 4) == 0;
+			    std::memcmp(pBytes, "RIFF", 4) == 0 &&
+			    std::memcmp(pBytes + 8, "WEBP", 4) == 0;
 	return IsPng || IsWebp;
 }
 

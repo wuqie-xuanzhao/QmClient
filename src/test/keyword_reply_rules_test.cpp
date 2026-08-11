@@ -1,7 +1,6 @@
-// 请抬头享受阳光｜日子很好 我很我---------致咩子
-#include <gtest/gtest.h>
-
 #include <game/client/components/qmclient/keyword_reply_rules.h>
+
+#include <gtest/gtest.h>
 
 #include <cstring>
 
@@ -35,4 +34,38 @@ TEST(KeywordReplyRules, KeepsLiteralBackslashN)
 
 	EXPECT_STREQ(aEncoded, "路径=>C:\\\\new");
 	EXPECT_STREQ(aDecoded, pRules);
+}
+
+TEST(KeywordReplyRules, EveryEditorMutationCommitsExceptDuringRenderOnly)
+{
+	QmKeywordReplyRules::SEditorChanges Changes;
+	EXPECT_FALSE(Changes.Any());
+	EXPECT_FALSE(Changes.ShouldCommit(false));
+
+	Changes.m_Added = true;
+	EXPECT_TRUE(Changes.ShouldCommit(false));
+	EXPECT_FALSE(Changes.ShouldCommit(true));
+	Changes = {};
+	Changes.m_Removed = true;
+	EXPECT_TRUE(Changes.ShouldCommit(false));
+	Changes = {};
+	Changes.m_TriggerText = true;
+	EXPECT_TRUE(Changes.ShouldCommit(false));
+	Changes = {};
+	Changes.m_ReplyText = true;
+	EXPECT_TRUE(Changes.ShouldCommit(false));
+	Changes = {};
+	Changes.m_Rename = true;
+	EXPECT_TRUE(Changes.ShouldCommit(false));
+	Changes = {};
+	Changes.m_Regex = true;
+	EXPECT_TRUE(Changes.ShouldCommit(false));
+}
+
+TEST(KeywordReplyRules, ExternalConfigInvalidatesInitializedEditorRows)
+{
+	EXPECT_TRUE(QmKeywordReplyRules::EditorConfigChanged(false, "same", "same"));
+	EXPECT_FALSE(QmKeywordReplyRules::EditorConfigChanged(true, "same", "same"));
+	EXPECT_TRUE(QmKeywordReplyRules::EditorConfigChanged(true, "old", "external"));
+	EXPECT_FALSE(QmKeywordReplyRules::EditorConfigChanged(true, nullptr, nullptr));
 }

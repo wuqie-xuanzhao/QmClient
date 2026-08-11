@@ -774,6 +774,7 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info) cons
 	pEntry->m_Info = Info;
 	pEntry->m_Info.m_Favorite = TmpInfo.m_Favorite;
 	pEntry->m_Info.m_FavoriteAllowPing = TmpInfo.m_FavoriteAllowPing;
+	pEntry->m_Info.m_ServerIndex = TmpInfo.m_ServerIndex;
 	mem_copy(pEntry->m_Info.m_aAddresses, TmpInfo.m_aAddresses, sizeof(pEntry->m_Info.m_aAddresses));
 	pEntry->m_Info.m_NumAddresses = TmpInfo.m_NumAddresses;
 	ServerBrowserFormatAddresses(pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress), pEntry->m_Info.m_aAddresses, pEntry->m_Info.m_NumAddresses);
@@ -781,6 +782,7 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info) cons
 	str_copy(pEntry->m_Info.m_aCommunityCountry, TmpInfo.m_aCommunityCountry);
 	str_copy(pEntry->m_Info.m_aCommunityType, TmpInfo.m_aCommunityType);
 	UpdateServerRank(&pEntry->m_Info);
+	pEntry->m_Info.m_GametypeColor = CServerInfo::GametypeColor(pEntry->m_Info.m_aGameType);
 
 	if(pEntry->m_Info.m_ClientScoreKind == CServerInfo::CLIENT_SCORE_KIND_UNSPECIFIED)
 	{
@@ -882,7 +884,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR *pAddrs, int Num
 {
 	// create new pEntry
 	CServerEntry *pEntry = m_ServerlistHeap.Allocate<CServerEntry>();
-	mem_zero(pEntry, sizeof(CServerEntry));
+	*pEntry = {};
 
 	// set the info
 	mem_copy(pEntry->m_Info.m_aAddresses, pAddrs, NumAddrs * sizeof(pAddrs[0]));
@@ -1201,20 +1203,7 @@ void CServerBrowser::SetCurrentServerPing(const NETADDR &Addr, int Ping)
 
 void CServerBrowser::UpdateFromHttp()
 {
-	int OwnLocation;
-	if(str_comp(g_Config.m_BrLocation, "auto") == 0)
-	{
-		OwnLocation = m_OwnLocation;
-	}
-	else
-	{
-		if(CServerInfo::ParseLocation(&OwnLocation, g_Config.m_BrLocation))
-		{
-			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "cannot parse br_location: '%s'", g_Config.m_BrLocation);
-			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "serverbrowser", aBuf);
-		}
-	}
+	const int OwnLocation = DetermineOwnLocation();
 
 	int NumServers = m_pHttp->NumServers();
 	m_vpServerlist.reserve(NumServers);
@@ -1261,16 +1250,7 @@ void CServerBrowser::UpdateFromHttp()
 		{
 			continue;
 		}
-		int Ping = m_pPingCache->GetPing(Info.m_aAddresses, Info.m_NumAddresses);
-		Info.m_LatencyIsEstimated = Ping == -1;
-		if(Info.m_LatencyIsEstimated)
-		{
-			Info.m_Latency = CServerInfo::EstimateLatency(OwnLocation, Info.m_Location);
-		}
-		else
-		{
-			Info.m_Latency = Ping;
-		}
+		UpdateServerLatency(&Info, OwnLocation);
 		CServerEntry *pEntry = Add(Info.m_aAddresses, Info.m_NumAddresses);
 		SetInfo(pEntry, Info);
 		pEntry->m_RequestIgnoreInfo = true;
@@ -1419,12 +1399,19 @@ void CServerBrowser::Update()
 const json_value *CServerBrowser::LoadDDNetInfo()
 {
 	LoadDDNetInfoJson();
+	const int PreviousOwnLocation = DetermineOwnLocation();
 	LoadDDNetLocation();
+	const int OwnLocation = DetermineOwnLocation();
+	const bool UpdateLatency = PreviousOwnLocation != OwnLocation;
 	LoadDDNetServers();
 	for(CServerEntry *pEntry : m_vpServerlist)
 	{
 		UpdateServerCommunity(&pEntry->m_Info);
 		UpdateServerRank(&pEntry->m_Info);
+		if(UpdateLatency)
+		{
+			UpdateServerLatency(&pEntry->m_Info, OwnLocation);
+		}
 	}
 	ValidateServerlistType();
 	RequestResort();
@@ -1437,7 +1424,7 @@ void CServerBrowser::LoadDDNetInfoJson()
 	unsigned Length;
 	if(!m_pStorage->ReadFile(DDNET_INFO_FILE, IStorage::TYPE_SAVE, &pBuf, &Length))
 	{
-		m_DDNetInfoSha256 = SHA256_ZEROED;
+		// Keep old info if available
 		return;
 	}
 
@@ -1681,7 +1668,7 @@ void CServerBrowser::LoadDDNetServers()
 
 	// Add default none community
 	{
-		CCommunity NoneCommunity(COMMUNITY_NONE, "None", SHA256_ZEROED, "");
+		CCommunity NoneCommunity(COMMUNITY_NONE, "None", std::nullopt, "");
 		NoneCommunity.m_vCountries.emplace_back(COMMUNITY_COUNTRY_NONE, -1);
 		NoneCommunity.m_vTypes.emplace_back(COMMUNITY_TYPE_NONE);
 		m_vCommunities.push_back(std::move(NoneCommunity));
@@ -1739,6 +1726,35 @@ void CServerBrowser::UpdateServerRank(CServerInfo *pInfo) const
 {
 	const CCommunity *pCommunity = Community(pInfo->m_aCommunityId);
 	pInfo->m_HasRank = pCommunity == nullptr ? CServerInfo::RANK_UNAVAILABLE : pCommunity->HasRank(pInfo->m_aMap);
+}
+
+void CServerBrowser::UpdateServerLatency(CServerInfo *pInfo, int OwnLocation) const
+{
+	int Ping = m_pPingCache->GetPing(pInfo->m_aAddresses, pInfo->m_NumAddresses);
+	pInfo->m_LatencyIsEstimated = Ping == -1;
+	if(pInfo->m_LatencyIsEstimated)
+	{
+		pInfo->m_Latency = CServerInfo::EstimateLatency(OwnLocation, pInfo->m_Location);
+	}
+	else
+	{
+		pInfo->m_Latency = Ping;
+	}
+}
+
+int CServerBrowser::DetermineOwnLocation() const
+{
+	if(str_comp(g_Config.m_BrLocation, "auto") == 0)
+	{
+		return m_OwnLocation;
+	}
+
+	int OwnLocation;
+	if(CServerInfo::ParseLocation(&OwnLocation, g_Config.m_BrLocation))
+	{
+		log_error("serverbrowser", "Cannot parse br_location: '%s'", g_Config.m_BrLocation);
+	}
+	return OwnLocation;
 }
 
 void CServerBrowser::ValidateServerlistType()
@@ -2477,6 +2493,41 @@ int CServerInfo::EstimateLatency(int Loc1, int Loc2)
 		return 199;
 	}
 	return 99;
+}
+
+ColorRGBA CServerInfo::GametypeColor(const char *pGametype)
+{
+	ColorHSLA HslaColor;
+	if(str_comp(pGametype, "DM") == 0 || str_comp(pGametype, "TDM") == 0 || str_comp(pGametype, "CTF") == 0 || str_comp(pGametype, "LMS") == 0 || str_comp(pGametype, "LTS") == 0)
+		HslaColor = ColorHSLA(0.33f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "catch"))
+		HslaColor = ColorHSLA(0.17f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "dm") || str_find_nocase(pGametype, "tdm") || str_find_nocase(pGametype, "ctf") || str_find_nocase(pGametype, "lms") || str_find_nocase(pGametype, "lts"))
+	{
+		if(pGametype[0] == 'i' || pGametype[0] == 'g')
+			HslaColor = ColorHSLA(0.0f, 1.0f, 0.75f);
+		else
+			HslaColor = ColorHSLA(0.40f, 1.0f, 0.75f);
+	}
+	else if(str_find_nocase(pGametype, "s-ddracex"))
+		HslaColor = ColorHSLA(1.0f, 1.0f, 0.7f);
+	else if(str_find_nocase(pGametype, "f-ddrace") || str_find_nocase(pGametype, "freeze"))
+		HslaColor = ColorHSLA(0.0f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "fng"))
+		HslaColor = ColorHSLA(0.83f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "gores"))
+		HslaColor = ColorHSLA(0.525f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "BW"))
+		HslaColor = ColorHSLA(0.05f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "ddracenet") || str_find_nocase(pGametype, "ddnet") || str_find_nocase(pGametype, "0xf"))
+		HslaColor = ColorHSLA(0.58f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "ddrace") || str_find_nocase(pGametype, "mkrace"))
+		HslaColor = ColorHSLA(0.75f, 1.0f, 0.75f);
+	else if(str_find_nocase(pGametype, "race") || str_find_nocase(pGametype, "fastcap"))
+		HslaColor = ColorHSLA(0.46f, 1.0f, 0.75f);
+	else
+		HslaColor = ColorHSLA(1.0f, 1.0f, 1.0f);
+	return color_cast<ColorRGBA>(HslaColor);
 }
 
 bool CServerInfo::ParseLocation(int *pResult, const char *pString)

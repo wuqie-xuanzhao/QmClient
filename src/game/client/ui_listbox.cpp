@@ -8,6 +8,8 @@
 #include <engine/config.h>
 #include <engine/shared/config.h>
 
+#include <game/client/QmUi/UiSurface.h>
+#include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
 
 CListBox::CListBox()
@@ -22,20 +24,36 @@ void CListBox::Reset()
 	m_ScrollbarShown = false;
 	m_AutoSpacing = 0.0f;
 	m_ScrollRegion.Reset();
-	m_ScrollbarWidth = 20.0f;
-	m_ScrollbarMargin = 5.0f;
+	m_ScrollProfile = EQmScrollProfile::MENU_LIST;
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
+	m_WheelOwnerPriority = EUiWheelOwnerPriority::PAGE;
+	m_ScrollbarWidth = ScrollParams.m_ScrollbarThickness;
+	m_ScrollbarMargin = ScrollParams.m_ScrollbarMargin;
+	m_ScrollbarWidthOverridden = false;
+	m_ScrollbarMarginOverridden = false;
 	m_HasHeader = false;
 	m_Active = true;
+	m_HideScrollbar = false;
+	m_ScrollbarAlwaysReserved = false;
+	m_InitialScrollPending = true;
+	m_EntryAnimationOffset = 0.0f;
+	m_LastRenderTime = 0;
+	m_EntryAnimationStartTime = 0;
+	m_BackgroundCorners = IGraphics::CORNER_ALL;
+	m_SelectedItemActiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
+	m_SelectedItemInactiveColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
+	m_HoveredItemColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f);
 }
 
-void CListBox::DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing)
+void CListBox::DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing, int BackgroundCorners)
 {
 	CUIRect View = *pRect;
 	CUIRect Header;
+	m_BackgroundCorners = BackgroundCorners;
 
 	// background
 	View.HSplitTop(HeaderHeight + Spacing, &Header, nullptr);
-	Header.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), m_BackgroundCorners & IGraphics::CORNER_T, 5.0f);
+	DrawRoundedSurface(Ui(), Header, Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), ColorRGBA(), 5.0f, 0.0f, m_BackgroundCorners & IGraphics::CORNER_T);
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
@@ -55,7 +73,7 @@ void CListBox::DoSpacing(float Spacing)
 	m_ListBoxView = View;
 }
 
-void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect, bool Background, int BackgroundCorners, bool ForceShowScrollbar)
+void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect, bool Background, int BackgroundCorners)
 {
 	CUIRect View;
 	if(pRect)
@@ -66,7 +84,7 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	// background
 	m_BackgroundCorners = BackgroundCorners;
 	if(Background)
-		View.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), m_BackgroundCorners & (m_HasHeader ? IGraphics::CORNER_B : IGraphics::CORNER_ALL), 5.0f);
+		DrawRoundedSurface(Ui(), View, Ui()->ScaleBackgroundAlpha(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), ColorRGBA(), 5.0f, 0.0f, m_BackgroundCorners & (m_HasHeader ? IGraphics::CORNER_B : IGraphics::CORNER_ALL));
 
 	// setup the variables
 	m_ListBoxView = View;
@@ -80,6 +98,32 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	m_ListBoxItemsPerRow = ItemsPerRow;
 	m_ListBoxItemActivated = false;
 	m_ListBoxItemSelected = false;
+	const int64_t Now = time_get();
+	const int64_t Frequency = maximum<int64_t>(1, time_freq());
+	const bool EntryAnimationEnabled = g_Config.m_QmUiListEntryAnimations != 0 && g_Config.m_QmUiMotionLevel > 0;
+	const int64_t InactiveGap = Frequency * 2 / 5;
+	const bool RenderOnly = Ui()->RenderOnly();
+	if(!EntryAnimationEnabled && !RenderOnly)
+		m_EntryAnimationStartTime = 0;
+	else if(QmListBoxShouldStartEntryAnimation(EntryAnimationEnabled, RenderOnly, m_LastRenderTime, Now, InactiveGap))
+		m_EntryAnimationStartTime = Now;
+	m_EntryAnimationOffset = 0.0f;
+	if(!RenderOnly && EntryAnimationEnabled && m_EntryAnimationStartTime > 0)
+	{
+		const float EntryDuration = g_Config.m_QmUiMotionLevel == 1 ? 0.10f : 0.16f;
+		const float EntryDistance = g_Config.m_QmUiMotionLevel == 1 ? 6.0f : 12.0f;
+		const float ElapsedSeconds = static_cast<float>(Now - m_EntryAnimationStartTime) / static_cast<float>(Frequency);
+		m_EntryAnimationOffset = QmListBoxEntryOffset(ElapsedSeconds, EntryDuration, EntryDistance);
+		if(QmListBoxEntryAnimationFinished(EntryAnimationEnabled, RenderOnly, ElapsedSeconds, EntryDuration))
+			m_EntryAnimationStartTime = 0;
+	}
+	if(!RenderOnly)
+		m_LastRenderTime = Now;
+	if(QmListBoxShouldScrollToInitialSelection(m_InitialScrollPending, SelectedIndex))
+	{
+		m_ListBoxUpdateScroll = true;
+	}
+	m_InitialScrollPending = QmListBoxInitialScrollRemainsPending(m_InitialScrollPending, SelectedIndex);
 
 	// handle input
 	if(m_Active && !Input()->ModifierIsPressed() && !Input()->ShiftIsPressed() && !Input()->AltIsPressed())
@@ -104,11 +148,21 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 
 	// setup the scrollbar
 	vec2 ScrollOffset = vec2(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarWidth = ScrollbarWidthMax();
-	ScrollParams.m_ScrollbarMargin = ScrollbarMargin();
-	ScrollParams.m_ScrollUnit = (m_ListBoxRowHeight + m_AutoSpacing) * RowsPerScroll;
-	ScrollParams.m_Flags = ForceShowScrollbar ? CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH : 0;
+	SQmScrollRequest ScrollRequest;
+	ScrollRequest.m_Profile = m_ScrollProfile;
+	ScrollRequest.m_RowExtent = m_ListBoxRowHeight + m_AutoSpacing;
+	ScrollRequest.m_RowsPerStep = RowsPerScroll;
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	ScrollParams.m_WheelOwnerPriority = m_WheelOwnerPriority;
+	ScrollParams.m_HideScrollbar = m_HideScrollbar;
+	ScrollParams.m_ScrollbarAlwaysReserved = m_ScrollbarAlwaysReserved;
+	m_ScrollbarWidth = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarThickness, m_ScrollbarWidth, m_ScrollbarWidthOverridden);
+	m_ScrollbarMargin = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarMargin, m_ScrollbarMargin, m_ScrollbarMarginOverridden);
+	ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;
+	ScrollParams.m_ScrollbarMargin = m_ScrollbarMargin;
+	const int NumRows = (m_ListBoxNumItems + maximum(1, m_ListBoxItemsPerRow) - 1) / maximum(1, m_ListBoxItemsPerRow);
+	m_ScrollRegion.SetContentHeightForNextFrame(NumRows * m_ListBoxRowHeight + maximum(0, NumRows - 1) * m_AutoSpacing);
 	m_ScrollRegion.Begin(&m_ListBoxView, &ScrollOffset, &ScrollParams);
 	m_ListBoxView.y += ScrollOffset.y;
 }
@@ -129,6 +183,7 @@ CListboxItem CListBox::DoNextRow()
 	m_RowView.VSplitLeft(m_RowView.w / (m_ListBoxItemsPerRow - m_ListBoxItemIndex % m_ListBoxItemsPerRow), &Item.m_Rect, &m_RowView);
 
 	Item.m_Selected = m_ListBoxSelectedIndex == m_ListBoxItemIndex;
+	Item.m_Rect = QmListBoxEntryAnimatedRect(Item.m_Rect, m_EntryAnimationOffset);
 	Item.m_Visible = !m_ScrollRegion.RectClipped(Item.m_Rect);
 
 	m_ListBoxItemIndex++;
@@ -144,6 +199,9 @@ CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRa
 	const int ThisItemIndex = m_ListBoxItemIndex;
 	if(Selected)
 	{
+		if(QmListBoxShouldScrollToInitialSelection(m_InitialScrollPending, ThisItemIndex))
+			m_ListBoxUpdateScroll = true;
+		m_InitialScrollPending = QmListBoxInitialScrollRemainsPending(m_InitialScrollPending, ThisItemIndex);
 		if(m_ListBoxSelectedIndex == m_ListBoxNewSelected)
 			m_ListBoxNewSelected = ThisItemIndex;
 		m_ListBoxSelectedIndex = ThisItemIndex;
@@ -172,11 +230,11 @@ CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRa
 			}
 		}
 
-		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, m_Active ? 0.5f : 0.33f)), IGraphics::CORNER_ALL, CornerRadius);
+		DrawRoundedSurface(Ui(), Item.m_Rect, Ui()->ScaleBackgroundAlpha(m_Active ? m_SelectedItemActiveColor : m_SelectedItemInactiveColor), ColorRGBA(), CornerRadius);
 	}
 	if(Ui()->HotItem() == pId && !m_ScrollRegion.Animating())
 	{
-		Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f)), IGraphics::CORNER_ALL, CornerRadius);
+		DrawRoundedSurface(Ui(), Item.m_Rect, Ui()->ScaleBackgroundAlpha(m_HoveredItemColor), ColorRGBA(), CornerRadius);
 	}
 
 	return Item;
@@ -218,14 +276,16 @@ CListboxItem CListBox::DoCustomRow(float Height, bool ScrollHere)
 {
 	CListboxItem Item = {};
 	m_ListBoxView.HSplitTop(Height, &Item.m_Rect, &m_ListBoxView);
-	Item.m_Visible = m_ScrollRegion.AddRect(Item.m_Rect, ScrollHere);
+	m_ScrollRegion.AddRect(Item.m_Rect, ScrollHere);
+	Item.m_Rect = QmListBoxEntryAnimatedRect(Item.m_Rect, m_EntryAnimationOffset);
+	Item.m_Visible = !m_ScrollRegion.RectClipped(Item.m_Rect);
 	return Item;
 }
 
 CListboxItem CListBox::DoSubheader()
 {
 	CListboxItem Item = DoNextRow();
-	Item.m_Rect.Draw(Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.2f)), IGraphics::CORNER_NONE, 0.0f);
+	DrawRoundedSurface(Ui(), Item.m_Rect, Ui()->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.2f)), ColorRGBA(), 0.0f, 0.0f, IGraphics::CORNER_NONE);
 	return Item;
 }
 
@@ -235,6 +295,8 @@ int CListBox::DoEnd()
 	m_Active |= m_ScrollRegion.Active();
 
 	m_ScrollbarShown = m_ScrollRegion.ScrollbarShown();
+	if(m_ListBoxItemSelected || m_ScrollRegion.WheelConsumedThisFrame() || m_ScrollRegion.Active())
+		m_InitialScrollPending = false;
 	if(m_ListBoxNewSelOffset != 0 && m_ListBoxNumItems > 0 && m_ListBoxSelectedIndex == m_ListBoxNewSelected)
 	{
 		if(m_ListBoxNewSelected == -1)

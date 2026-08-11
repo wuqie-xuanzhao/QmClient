@@ -112,8 +112,8 @@ bool HasEntityBgWorkshopFolder(const std::vector<std::string> &vAssetNames, cons
 bool IsEntityBgWorkshopRootEntry(const SEntityBgHierarchyEntry &Entry)
 {
 	return Entry.m_IsDirectory &&
-		Entry.m_Source == EEntityBgHierarchyEntrySource::WORKSHOP &&
-		str_comp(Entry.m_aName, "entity_bg") == 0;
+	       Entry.m_Source == EEntityBgHierarchyEntrySource::WORKSHOP &&
+	       str_comp(Entry.m_aName, "entity_bg") == 0;
 }
 
 EEntityBgHierarchyEntrySource MergeEntityBgHierarchyEntrySource(EEntityBgHierarchyEntrySource Existing, EEntityBgHierarchyEntrySource Incoming)

@@ -69,23 +69,25 @@ namespace
 
 	float EffectiveFastInputOffsetTicks(const CGameClient *pGameClient)
 	{
-		if(!pGameClient->TClientComponent().IsFastInputActive())
-			return 0.0f;
-		if(g_Config.m_TcFastInputAmount <= 0)
-			return 0.0f;
-		return g_Config.m_TcFastInputAmount / 20.0f;
+		SQmFastInputSettings Settings;
+		Settings.m_Enabled = pGameClient->TClientComponent().IsFastInputActive();
+		Settings.m_Mode = g_Config.m_QmFastInputMode;
+		Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
+		Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
+		Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
+		Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
+		Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
+		return QmEffectiveFastInputOffsetTicks(Settings);
 	}
 
 	int FastInputPredictionTicks(float OffsetTicks)
 	{
-		if(OffsetTicks <= 0.0f)
-			return 0;
-		return (int)std::ceil(OffsetTicks);
+		return QmFastInputPredictionTicks(OffsetTicks, g_Config.m_QmFastInputMode);
 	}
 
 	bool EffectiveFastInputOthers(const CGameClient *pGameClient)
 	{
-		return pGameClient->TClientComponent().IsFastInputOthersActive();
+		return QmEffectiveFastInputOthers(pGameClient->TClientComponent().IsFastInputActive(), g_Config.m_QmFastInputMode, g_Config.m_TcFastInputOthers != 0, g_Config.m_QmBestInputOthers != 0, g_Config.m_QmSaikoPlusOthers != 0);
 	}
 
 	bool IsFrozenState(const CCharacter *pChar)
@@ -152,6 +154,46 @@ namespace
 		Particle.m_FlowAffected = 0.0f;
 		Particle.m_Collides = false;
 		pGameClient->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &Particle);
+	}
+
+	bool IsDeathTileAt(CCollision *pCollision, const vec2 &Pos)
+	{
+		if(!pCollision)
+			return false;
+
+		const int X = round_to_int(Pos.x);
+		const int Y = round_to_int(Pos.y);
+		return pCollision->GetCollisionAt(X, Y) == TILE_DEATH ||
+		       pCollision->GetFrontCollisionAt(X, Y) == TILE_DEATH;
+	}
+
+	bool IsCharacterTouchingDeathTile(CCollision *pCollision, const vec2 &Pos, float ProximityRadius)
+	{
+		const float Offset = ProximityRadius / 3.0f;
+		return IsDeathTileAt(pCollision, Pos) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(Offset, -Offset)) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(Offset, Offset)) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(-Offset, -Offset)) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(-Offset, Offset));
+	}
+
+	bool PracticePathContainsTeleport(CCollision *pCollision, const vec2 &From, const vec2 &To)
+	{
+		if(!pCollision)
+			return false;
+
+		const std::vector<int> vIndices = pCollision->GetMapIndices(From, To);
+		for(int Index : vIndices)
+		{
+			if(pCollision->IsTeleport(Index) > 0 ||
+				pCollision->IsEvilTeleport(Index) > 0 ||
+				pCollision->IsCheckTeleport(Index) ||
+				pCollision->IsCheckEvilTeleport(Index))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	void CollectTrackedProjectiles(CGameWorld &World, int LocalClientId, int DummyClientId, std::vector<STrackedProjectile> &vOut)
@@ -1244,6 +1286,34 @@ void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)
 	}
 }
 
+void CFastPractice::TrackPracticeTileFeedback(int ClientId, CCharacter *pChar, const vec2 &BeforePos)
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !pChar)
+		return;
+
+	const vec2 BeforeTickPos = BeforePos;
+	const vec2 AfterPos = pChar->Core()->m_Pos;
+	const bool PathContainsTeleport = PracticePathContainsTeleport(Collision(), BeforePos, AfterPos);
+	const bool WasInDeath = IsCharacterTouchingDeathTile(Collision(), BeforeTickPos, pChar->GetProximityRadius());
+	const bool IsInDeath = IsCharacterTouchingDeathTile(Collision(), AfterPos, pChar->GetProximityRadius());
+	const SPracticeTileFeedbackDecision FeedbackDecision = EvaluatePracticeTileFeedback(PathContainsTeleport, WasInDeath, IsInDeath, distance(BeforePos, AfterPos));
+	if(FeedbackDecision.m_RecordTeleport)
+	{
+		StoreLastDeathPosition(ClientId, BeforePos);
+		StoreLastTeleport(ClientId, AfterPos);
+	}
+
+	if(!FeedbackDecision.m_RecordDeath)
+		return;
+
+	StoreLastDeathPosition(ClientId, AfterPos);
+	if(FeedbackDecision.m_PlayDeathFeedback && !GameClient()->m_SuppressEvents)
+		GameClient()->m_Effects.PlayerDeath(AfterPos, ClientId, 1.0f);
+	if(FeedbackDecision.m_PlayDeathFeedback && g_Config.m_SndGame && !GameClient()->m_SuppressEvents)
+		if(ShouldPlayFocusDeathOrSpawnSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteDeathSounds != 0, g_Config.m_SndGame))
+			GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_DIE, 1.0f, AfterPos);
+}
+
 bool CFastPractice::AdvanceBaseWorldToTick(int TargetTick, int LocalClientId, int DummyClientId)
 {
 	if(!m_PracticeWorldInitialized)
@@ -1321,6 +1391,9 @@ bool CFastPractice::AdvanceBaseWorldToTick(int TargetTick, int LocalClientId, in
 		if(pDummyInputData && !DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
 
+		const vec2 LocalPosBeforeTick = pLocalChar->Core()->m_Pos;
+		const vec2 DummyPosBeforeTick = pDummyChar ? pDummyChar->Core()->m_Pos : vec2(0.0f, 0.0f);
+
 		GameClient()->ApplyPreInputs(Tick, true, m_PracticeBaseWorld);
 
 		m_PracticeBaseWorld.m_GameTick = Tick;
@@ -1332,6 +1405,10 @@ bool CFastPractice::AdvanceBaseWorldToTick(int TargetTick, int LocalClientId, in
 		GameClient()->ApplyPreInputs(Tick, false, m_PracticeBaseWorld);
 
 		m_PracticeBaseWorld.Tick();
+
+		TrackPracticeTileFeedback(LocalClientId, pLocalChar, LocalPosBeforeTick);
+		if(pDummyChar)
+			TrackPracticeTileFeedback(DummyClientId, pDummyChar, DummyPosBeforeTick);
 
 		TrackSafeRescuePosition(LocalClientId, pLocalChar);
 		if(pDummyChar)
@@ -2074,7 +2151,7 @@ void CFastPractice::NormalizeCharacterAfterReset(CCharacter *pChar, bool KeepFre
 	pChar->ResetVelocity();
 	if(!KeepFreezeFlags)
 	{
-		pChar->UnFreeze();
+		pChar->Unfreeze();
 		pChar->m_FreezeTime = 0;
 	}
 	pChar->m_CanMoveInFreeze = false;
@@ -2582,7 +2659,7 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 		{
 			Core.m_DeepFrozen = false;
 			pChar->SetCore(Core);
-			pChar->UnFreeze();
+			pChar->Unfreeze();
 		}
 		NormalizeCharacterAfterReset(pChar, Cmd == "deep");
 		return true;
@@ -2594,7 +2671,7 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 		Core.m_LiveFrozen = Cmd == "livefreeze";
 		pChar->SetCore(Core);
 		if(Cmd == "unlivefreeze")
-			pChar->UnFreeze();
+			pChar->Unfreeze();
 		NormalizeCharacterAfterReset(pChar, Cmd == "livefreeze");
 		return true;
 	}
@@ -2737,7 +2814,7 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 				State.m_InvincibleAddedEndlessJump = false;
 			}
 			pChar->SetCore(Core);
-			pChar->UnFreeze();
+			pChar->Unfreeze();
 			pChar->m_FreezeTime = 0;
 		}
 

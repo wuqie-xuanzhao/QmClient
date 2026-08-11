@@ -8,6 +8,7 @@ import ast
 import json
 import os
 import re
+import subprocess
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,13 +19,20 @@ SOURCE_EXTENSIONS = {".c", ".cpp", ".h", ".hpp"}
 SOURCE_PATHS = (PROJECT_ROOT / "src",)
 AUDIT_PATHS = (PROJECT_ROOT / "src", SCRIPT_DIR)
 AUDIT_REPORT_FILE = SCRIPT_DIR / "extracted_audit_report.json"
-IGNORED_SOURCE_DIRS = {
-    PROJECT_ROOT / "src" / "engine" / "external",
+SOURCE_RECORD_CACHE_FILE = SCRIPT_DIR / "extracted_records_cache.json"
+EXTRACTOR_LOGIC_FILES = {
+    "qmclient_scripts/languages_qmclient/source_keys.py",
 }
 
 CPP_STRING_LITERAL_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 LOCALIZE_CALL_RE = re.compile(r"\b(?:Localize|Localizable)\s*\(")
 REGISTER_CALL_RE = re.compile(r"\bRegister\s*\(")
+CONFIG_MACRO_CALL_RE = re.compile(r"\bMACRO_CONFIG_(?:INT|COL|STR)\s*\(")
+CONFIG_MACRO_HELP_HEADERS = (
+    "src/engine/shared/config_variables.h",
+    "src/engine/shared/config_variables_qmclient.h",
+    "src/engine/shared/config_variables_tclient.h",
+)
 CONFIG_OR_COMMAND_TOKEN_RE = re.compile(r"^(?:\+?[a-z][a-z0-9_./:-]*|[A-Z0-9_./:-]+)$")
 PATH_OR_URL_RE = re.compile(
     r"^(?:https?://|[a-z0-9_./-]+\.(?:cfg|csv|exe|json|png|txt|toml|wav|webp|zip)|"
@@ -111,7 +119,6 @@ EXTRA_LOCALIZE_STRINGS = {
     "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue",
     "Temporary free camera",
     "Trying Axiom auto login",
-    "Trying Axiom dummy auto login",
     "Update notice",
     "You are already on the latest version",
     "Your current version is outdated. Please update from the QQ group.",
@@ -191,7 +198,9 @@ def strip_cpp_comments(content: str) -> str:
     return "".join(out)
 
 
-def _find_matching_paren(content: str, open_index: int) -> int:
+def _find_matching_delimiter(
+    content: str, open_index: int, open_char: str, close_char: str
+) -> int:
     depth = 1
     i = open_index + 1
     while i < len(content):
@@ -207,14 +216,18 @@ def _find_matching_paren(content: str, open_index: int) -> int:
                     break
                 i += 1
             continue
-        if ch == "(":
+        if ch == open_char:
             depth += 1
-        elif ch == ")":
+        elif ch == close_char:
             depth -= 1
             if depth == 0:
                 return i
         i += 1
     return -1
+
+
+def _find_matching_paren(content: str, open_index: int) -> int:
+    return _find_matching_delimiter(content, open_index, "(", ")")
 
 
 def _split_top_level_args(arg_src: str) -> list[str]:
@@ -322,6 +335,54 @@ def extract_localize_key_records(content: str) -> list[SourceKeyRecord]:
     return records
 
 
+def extract_qm_card_registry_records(content: str) -> list[SourceKeyRecord]:
+    records: list[SourceKeyRecord] = []
+    entry_re = re.compile(r'^\s*\{\s*"(?:qm|tclient|deck):', re.MULTILINE)
+    for match in entry_re.finditer(content):
+        open_brace = content.find("{", match.start())
+        close_brace = _find_matching_delimiter(content, open_brace, "{", "}")
+        if close_brace == -1:
+            continue
+        args = _split_top_level_args(content[open_brace + 1 : close_brace])
+        if len(args) < 6:
+            continue
+        line_number = _line_number(content, match.start())
+        for index in (4, 6):
+            if index >= len(args):
+                continue
+            literals = _extract_string_literals(args[index])
+            if len(literals) == 1 and literals[0]:
+                records.append(
+                    SourceKeyRecord(
+                        literals[0], "card_registry", None, "", line_number
+                    )
+                )
+    return records
+
+
+def extract_qm_runtime_card_records(content: str) -> list[SourceKeyRecord]:
+    records: list[SourceKeyRecord] = []
+    for match in re.finditer(r"\bAddCard\s*\(", content):
+        open_paren = content.find("(", match.start())
+        close_paren = _find_matching_paren(content, open_paren)
+        if close_paren == -1:
+            continue
+        args = _split_top_level_args(content[open_paren + 1 : close_paren])
+        if len(args) < 4:
+            continue
+        stable_id = _decode_string_argument(args[1])
+        if stable_id is None or not stable_id.startswith("qm:"):
+            continue
+        line_number = _line_number(content, match.start())
+        for index in (2, 3):
+            key = _decode_string_argument(args[index])
+            if key:
+                records.append(
+                    SourceKeyRecord(key, "card_runtime", None, "", line_number)
+                )
+    return records
+
+
 def extract_register_help_strings(content: str) -> set[str]:
     keys: set[tuple[str, str]] = set()
     for record in extract_register_help_records(content):
@@ -379,6 +440,25 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
     string_literal = r'"((?:[^"\\]|\\.)*)"'
 
     if normalized.endswith("src/game/client/components/qmclient/menus_qmclient.cpp"):
+        localized_wrapper_re = re.compile(
+            r"\b(?:RenderCheckbox|RenderDropDown|RenderIntOption|RenderLabel|RenderLyricsSlider|"
+            r"RenderLyricSlider|RenderPassword|RenderSection|RenderSlider|RenderText|RenderValue)\s*\("
+        )
+        for match in localized_wrapper_re.finditer(content):
+            if _is_inside_string_literal(content, match.start()):
+                continue
+            open_paren = content.find("(", match.start())
+            close_paren = _find_matching_paren(content, open_paren)
+            if close_paren == -1:
+                continue
+            line_number = _line_number(content, match.start())
+            for argument in _split_top_level_args(content[open_paren + 1 : close_paren]):
+                key = _decode_string_argument(argument)
+                if key and looks_like_localized_wrapper_label(key):
+                    records.append(
+                        SourceKeyRecord(key, "indirect", path, "", line_number)
+                    )
+
         helper_pattern = re.compile(
             rf"DoFocus(?:SectionLabel|Checkbox)\([^;\n]*,\s*{string_literal}\s*\)"
         )
@@ -392,6 +472,29 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
                     _line_number(content, match.start()),
                 )
             )
+
+    if normalized.endswith("src/game/client/components/tclient/menus_tclient.cpp"):
+        for match in re.finditer(r"\bAddCard\s*\(", content):
+            if _is_inside_string_literal(content, match.start()):
+                continue
+            open_paren = content.find("(", match.start())
+            close_paren = _find_matching_paren(content, open_paren)
+            if close_paren == -1:
+                continue
+            args = _split_top_level_args(content[open_paren + 1 : close_paren])
+            if len(args) < 2:
+                continue
+            title = _decode_string_argument(args[1])
+            if title:
+                records.append(
+                    SourceKeyRecord(
+                        title,
+                        "indirect",
+                        path,
+                        "",
+                        _line_number(content, match.start()),
+                    )
+                )
 
     if normalized.endswith(
         "src/game/client/components/qmclient/monitoring/monitoring.cpp"
@@ -473,6 +576,28 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
             records.append(
                 SourceKeyRecord(
                     decode_language_key(match.group(1)),
+                    "indirect",
+                    path,
+                    "",
+                    _line_number(content, match.start()),
+                )
+            )
+
+    if any(normalized.endswith(header) for header in CONFIG_MACRO_HELP_HEADERS):
+        for match in CONFIG_MACRO_CALL_RE.finditer(content):
+            open_paren = content.find("(", match.start())
+            close_paren = _find_matching_paren(content, open_paren)
+            if close_paren == -1:
+                continue
+            args = _split_top_level_args(content[open_paren + 1 : close_paren])
+            if not args:
+                continue
+            description = _decode_string_argument(args[-1])
+            if not description:
+                continue
+            records.append(
+                SourceKeyRecord(
+                    description,
                     "indirect",
                     path,
                     "",
@@ -574,8 +699,6 @@ def iter_source_files(paths: tuple[Path, ...] = SOURCE_PATHS) -> list[Path]:
             files.append(root)
             continue
         for path in sorted(root.rglob("*")):
-            if any(path.is_relative_to(ignored) for ignored in IGNORED_SOURCE_DIRS):
-                continue
             if path.suffix in SOURCE_EXTENSIONS:
                 files.append(path)
     return sorted(files)
@@ -611,6 +734,18 @@ def collect_source_key_records(
             )
             for record in extract_register_help_records(content)
         )
+        records.extend(
+            SourceKeyRecord(
+                record.key, record.category, path, record.context, record.line
+            )
+            for record in extract_qm_card_registry_records(content)
+        )
+        records.extend(
+            SourceKeyRecord(
+                record.key, record.category, path, record.context, record.line
+            )
+            for record in extract_qm_runtime_card_records(content)
+        )
         records.extend(extract_known_indirect_records(path, content))
     return sorted(
         records,
@@ -623,6 +758,190 @@ def collect_source_key_records(
     )
 
 
+def _source_record_sort_key(record: SourceKeyRecord) -> tuple[str, str, str, int, str]:
+    return (
+        record.key.casefold(),
+        record.category,
+        record.source.as_posix() if record.source else "",
+        record.line,
+        record.context,
+    )
+
+
+def _extra_source_key_records(
+    extra_strings: set[str] | None = None,
+) -> list[SourceKeyRecord]:
+    return [
+        SourceKeyRecord(key, "extra", None)
+        for key in sorted(
+            EXTRA_LOCALIZE_STRINGS if extra_strings is None else extra_strings
+        )
+    ]
+
+
+def collect_file_source_key_records(path: Path) -> list[SourceKeyRecord]:
+    if not path.exists() or path.suffix not in SOURCE_EXTENSIONS:
+        return []
+    content = strip_cpp_comments(read_source_text(path))
+    records: list[SourceKeyRecord] = []
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_localize_key_records(content)
+    )
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_register_help_records(content)
+    )
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_qm_card_registry_records(content)
+    )
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_qm_runtime_card_records(content)
+    )
+    records.extend(extract_known_indirect_records(path, content))
+    return sorted(records, key=_source_record_sort_key)
+
+
+def write_source_record_cache(path: Path, records: list[SourceKeyRecord]) -> None:
+    data = [
+        {
+            "key": record.key,
+            "category": record.category,
+            "source": _normalized_relpath(record.source) if record.source else None,
+            "context": record.context,
+            "line": record.line,
+        }
+        for record in sorted(records, key=_source_record_sort_key)
+    ]
+    path.write_text(
+        json.dumps({"records": data}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def read_source_record_cache(path: Path) -> list[SourceKeyRecord]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    records: list[SourceKeyRecord] = []
+    for item in data.get("records", []):
+        source = item.get("source")
+        records.append(
+            SourceKeyRecord(
+                item["key"],
+                item.get("category", "localize_or_localizable"),
+                None
+                if source is None
+                else (
+                    PROJECT_ROOT / source
+                    if not Path(source).is_absolute()
+                    else Path(source)
+                ),
+                item.get("context", ""),
+                int(item.get("line", 0)),
+            )
+        )
+    return sorted(records, key=_source_record_sort_key)
+
+
+def _changed_file_key(path: Path) -> str:
+    return _normalized_relpath(path)
+
+
+def merge_source_key_records_for_changed_files(
+    cached_records: list[SourceKeyRecord],
+    changed_files: tuple[Path, ...],
+    extra_strings: set[str] | None = None,
+) -> list[SourceKeyRecord]:
+    changed_keys = {_changed_file_key(path) for path in changed_files}
+    merged = [
+        record
+        for record in cached_records
+        if record.source is None or _changed_file_key(record.source) not in changed_keys
+    ]
+    for path in changed_files:
+        merged.extend(collect_file_source_key_records(path))
+    merged = [record for record in merged if record.category != "extra"]
+    merged.extend(_extra_source_key_records(extra_strings))
+    return sorted(merged, key=_source_record_sort_key)
+
+
+def _git_changed_paths() -> list[str]:
+    commands = (
+        ("git", "diff", "--name-only"),
+        ("git", "diff", "--cached", "--name-only"),
+        ("git", "ls-files", "--others", "--exclude-standard"),
+    )
+    names: set[str] = set()
+    for command in commands:
+        result = subprocess.run(
+            command,
+            cwd=PROJECT_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        names.update(
+            line.strip() for line in result.stdout.splitlines() if line.strip()
+        )
+    return sorted(names)
+
+
+def git_changed_language_source_files() -> tuple[Path, ...]:
+    paths: list[Path] = []
+    for name in _git_changed_paths():
+        path = PROJECT_ROOT / name
+        if path.suffix in SOURCE_EXTENSIONS or (
+            path.suffix == ".py"
+            and _normalized_relpath(path).startswith(
+                "qmclient_scripts/languages_qmclient/"
+            )
+        ):
+            paths.append(path)
+    return tuple(sorted(paths))
+
+
+def extractor_logic_changed(changed_files: tuple[Path, ...]) -> bool:
+    return any(
+        _normalized_relpath(path) in EXTRACTOR_LOGIC_FILES for path in changed_files
+    )
+
+
+def collect_incremental_source_key_records(
+    cache_path: Path = SOURCE_RECORD_CACHE_FILE,
+    changed_files: tuple[Path, ...] | None = None,
+    extra_strings: set[str] | None = None,
+) -> tuple[list[SourceKeyRecord], tuple[Path, ...], bool]:
+    if changed_files is None:
+        try:
+            changed_files = git_changed_language_source_files()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            changed_files = ()
+            cached_records = []
+        else:
+            cached_records = (
+                read_source_record_cache(cache_path) if cache_path.exists() else []
+            )
+    else:
+        cached_records = (
+            read_source_record_cache(cache_path) if cache_path.exists() else []
+        )
+
+    if not cached_records:
+        records = collect_source_key_records(extra_strings=extra_strings)
+        return records, changed_files, True
+
+    if extractor_logic_changed(changed_files):
+        records = collect_source_key_records(extra_strings=extra_strings)
+        return records, changed_files, True
+
+    records = merge_source_key_records_for_changed_files(
+        cached_records, changed_files, extra_strings=extra_strings
+    )
+    return records, changed_files, False
+
+
 def has_cjk(value: str) -> bool:
     return any("\u3400" <= ch <= "\u4dbf" or "\u4e00" <= ch <= "\u9fff" for ch in value)
 
@@ -633,6 +952,19 @@ def looks_human_readable(value: str) -> bool:
     if has_cjk(value):
         return True
     return " " in value and any(ch.isalpha() for ch in value)
+
+
+def looks_like_localized_wrapper_label(value: str) -> bool:
+    text = value.strip()
+    if looks_human_readable(text):
+        return True
+    if text in {"d", "ms", "s", "deg", "%", "px", ""}:
+        return False
+    if CONFIG_OR_COMMAND_TOKEN_RE.match(text) and any(
+        token in text for token in ("_", "/", ".", ":", "-")
+    ):
+        return False
+    return len(text) >= 2 and bool(re.fullmatch(r"[A-Za-z][A-Za-z+]*", text))
 
 
 def _looks_like_business_literal(value: str) -> tuple[bool, str]:
@@ -863,8 +1195,6 @@ def _iter_audit_files(paths: tuple[Path, ...]) -> list[Path]:
             files.append(root)
             continue
         for path in sorted(root.rglob("*")):
-            if any(path.is_relative_to(ignored) for ignored in IGNORED_SOURCE_DIRS):
-                continue
             if path.suffix in SOURCE_EXTENSIONS or path.suffix == ".py":
                 files.append(path)
     return sorted(files)
@@ -1126,6 +1456,7 @@ def _business_data_records_from_path(
             if (
                 re.fullmatch(r"DDmaX (?:Easy|Next|Pro|Nut)", text)
                 or text == "%d/5 ★"
+                or text == ", SettingsPerfContextName(), "
                 or text in {"Address: ddnet://%s\\n", "Map: %s\\n"}
                 or "&&" in text
                 or "||" in text
@@ -1186,6 +1517,154 @@ def _business_data_records_from_path(
                     )
                 )
         return records
+
+    if (
+        "src/game/client/components/qmclient/qm_lyrics/" in normalized
+        and normalized.endswith(".cpp")
+    ):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if any(
+                token in line_text
+                for token in (
+                    "m_aLastError",
+                    "pErr",
+                    "str_copy(",
+                    "str_format(",
+                    "json_object_get(",
+                )
+            ) and (looks_human_readable(text) or "%" in text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "lyrics API response parser diagnostic text",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/QmUi/QmCardRegistry.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            records.append(
+                StringAuditRecord(
+                    path,
+                    line,
+                    text,
+                    "business_data",
+                    "settings card registry metadata or search keyword data",
+                )
+            )
+        # Card titles that are user-visible are separately covered by Localizable/Localize.
+        # Continue with generic rules for the remaining source files.
+
+    if normalized.endswith("src/game/client/components/ghost.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            records.append(
+                StringAuditRecord(
+                    path, line, text, "business_data", "ghost parser diagnostic text"
+                )
+            )
+
+    if normalized.endswith("src/game/client/live/live_match_replay.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            records.append(
+                StringAuditRecord(
+                    path, line, text, "business_data", "QmLive recorder diagnostic text"
+                )
+            )
+
+    if normalized.endswith("src/game/client/components/qmclient/menus_qmclient.cpp"):
+        # 贡献者、服务商、语言名、地图名和歌词预览是运行时数据，不是翻译源文案。
+        DataTexts = {
+            "栖梦(璇梦),夏日,DYL",
+            "腾讯云",
+            "中文",
+            "日本語",
+            "繁體中文",
+            "tab=function module=pie_menu",
+            "DDmaX Easy",
+            "DDmaX Next",
+            "DDmaX Pro",
+            "DDmaX Nut",
+            "AMLL TTML DB",
+            "Apple Music",
+            "Stop and stare",
+            "I think I'm moving but I go nowhere",
+            "Yeah I know that everyone gets scared",
+        }
+        sponsor_array_start = content.find("s_apSponsors[]")
+        sponsor_array_end = content.find("};", sponsor_array_start)
+        sponsor_line_start = _line_number(content, sponsor_array_start)
+        sponsor_line_end = _line_number(content, sponsor_array_end)
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts or sponsor_line_start <= line <= sponsor_line_end:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "contributor or preview sample data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/gameclient.cpp"):
+        DataTexts = {
+            "s[tuning] ?f[value]",
+            "i[zone] s[tuning] f[value]",
+            "Current Rank #%d",
+            "JSON sidecar",
+            "QmLive full match recording started",
+            "QmLive full match recording stopped",
+            "QmLive team filter expects a DDRace team from 1 to 63",
+            "QmLive team filter disabled",
+        }
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "diagnostic or formatting data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/menus.cpp"):
+        DataTexts = {"sv_motd ", "sv_motd \"", "sv_map Tutorial", "sv_register 0"}
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "server command fixture data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/menus.h"):
+        DataTexts = {"活动", "极限", "训练", "娱乐"}
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in DataTexts:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "server game type matcher data"
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/menus_browser.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text == ", SettingsPerfContextName(), ":
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "performance call syntax fragment",
+                    )
+                )
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "SettingsPerfContextName()" in line_text:
+                records.append(
+                    StringAuditRecord(
+                        path, line, text, "business_data", "performance context metadata"
+                    )
+                )
 
     if normalized.endswith("src/game/client/components/qmclient/axiom_auto_login.cpp"):
         for text, line in _extract_cpp_string_literal_records(content):
@@ -1470,6 +1949,54 @@ def _business_data_records_from_path(
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
             if "dbg_assert" in line_text or "m_SkinsUsageList" in text:
                 add_business(text, line, "skin manager assertion diagnostic text")
+            elif text in {"Default preset", "Server preset"}:
+                add_business(text, line, "skin queue built-in preset storage name")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/menus.h"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "return " in line_text and any(
+                token in text
+                for token in (
+                    "DDmaX",
+                    "古典",
+                    "简单图",
+                    "中阶图",
+                    "高阶",
+                    "疯狂",
+                    "分身",
+                    "单人",
+                )
+            ):
+                add_business(
+                    text, line, "server browser normalized game type display name"
+                )
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/system_media_controls.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "APPLE_MUSIC_ARTIST_ALBUM_SEPARATOR" in line_text:
+                add_business(text, line, "Apple Music metadata parser separator")
+        if records:
+            return records
+
+    if "/src/game/client/components/qmclient/qm_lyrics/" in f"/{normalized}":
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                'HeaderString("User-Agent"' in line_text
+                or "Error(" in line_text
+                or text == "': pOut->append("
+            ) and looks_human_readable(text):
+                add_business(
+                    text,
+                    line,
+                    "lyrics provider request metadata or internal diagnostic text",
+                )
         if records:
             return records
 
@@ -1892,13 +2419,14 @@ def build_string_audit_report(
     for record in source_key_records:
         if record.source is None:
             continue
+        cjk_source_key_violation = has_cjk(record.key) and record.category != "indirect"
         audit_record = StringAuditRecord(
             record.source,
             record.line,
             record.key,
-            "violation" if has_cjk(record.key) else "must_i18n",
+            "violation" if cjk_source_key_violation else "must_i18n",
             "source key contains CJK"
-            if has_cjk(record.key)
+            if cjk_source_key_violation
             else f"active source key ({record.category})",
         )
         claimed.add((_normalized_relpath(record.source), record.line, record.key))
@@ -2005,6 +2533,65 @@ def build_string_audit_report(
     )
 
 
+def _audit_record_file_key(record: StringAuditRecord) -> str:
+    return _normalized_relpath(record.file)
+
+
+def merge_string_audit_report_for_changed_files(
+    cached_report: StringAuditReport,
+    changed_files: tuple[Path, ...],
+) -> StringAuditReport:
+    changed_keys = {_normalized_relpath(path) for path in changed_files}
+    current_report = build_string_audit_report(paths=changed_files)
+
+    def merge_records(
+        old_records: list[StringAuditRecord],
+        new_records: list[StringAuditRecord],
+    ) -> list[StringAuditRecord]:
+        kept = [
+            record
+            for record in old_records
+            if _audit_record_file_key(record) not in changed_keys
+        ]
+        kept.extend(new_records)
+        return _dedupe_audit_records(kept)
+
+    return StringAuditReport(
+        merge_records(cached_report.must_i18n, current_report.must_i18n),
+        merge_records(cached_report.business_data, current_report.business_data),
+        merge_records(cached_report.test_only, current_report.test_only),
+        merge_records(cached_report.needs_review, current_report.needs_review),
+        merge_records(cached_report.violation, current_report.violation),
+    )
+
+
+def collect_incremental_string_audit_report(
+    audit_path: Path = AUDIT_REPORT_FILE,
+    changed_files: tuple[Path, ...] | None = None,
+) -> tuple[StringAuditReport, tuple[Path, ...], bool]:
+    if changed_files is None:
+        try:
+            changed_files = git_changed_language_source_files()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            changed_files = ()
+
+    if not audit_path.exists():
+        return build_string_audit_report(), changed_files, True
+
+    cached_report = read_string_audit_report(audit_path)
+    if not changed_files:
+        return cached_report, changed_files, False
+
+    if extractor_logic_changed(changed_files):
+        return build_string_audit_report(), changed_files, True
+
+    return (
+        merge_string_audit_report_for_changed_files(cached_report, changed_files),
+        changed_files,
+        False,
+    )
+
+
 def audit_report_to_dict(report: StringAuditReport) -> dict[str, object]:
     def serialize(records: list[StringAuditRecord]) -> list[dict[str, object]]:
         return [
@@ -2029,11 +2616,11 @@ def audit_report_to_dict(report: StringAuditReport) -> dict[str, object]:
 
 
 def write_string_audit_report(path: Path, report: StringAuditReport) -> None:
-    with path.open("w", encoding="utf-8", newline="\n") as file:
-        file.write(
-            json.dumps(audit_report_to_dict(report), ensure_ascii=False, indent=2)
-            + "\n"
-        )
+    path.write_text(
+        json.dumps(audit_report_to_dict(report), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def read_string_audit_report(path: Path) -> StringAuditReport:

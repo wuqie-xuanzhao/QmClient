@@ -133,6 +133,18 @@ TEST(QmImeOverlay, CandidateViewportKeepsStableStartWhileSelectionStaysVisible)
 	EXPECT_EQ(ShiftLeft.m_Count, 7);
 }
 
+TEST(QmLineInput, CaretBlinkUsesStableHalfSecondPhases)
+{
+	using namespace std::chrono_literals;
+
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(0ns));
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(499ms));
+	EXPECT_FALSE(qm_lineinput::CaretVisibleForElapsed(500ms));
+	EXPECT_FALSE(qm_lineinput::CaretVisibleForElapsed(999ms));
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(1000ms));
+	EXPECT_TRUE(qm_lineinput::CaretVisibleForElapsed(-1ns));
+}
+
 TEST(QmImeOverlay, CandidatePopupOnlyAppearsForCandidateText)
 {
 	SQmImePopupState State;
@@ -163,11 +175,15 @@ TEST(QmImePresentationSource, PopupUsesContinuousRedirectablePresentationState)
 	EXPECT_NE(PopupSource.find("ResolveUiPresentationStateValue"), std::string::npos);
 	EXPECT_NE(PopupSource.find("SetUiPresentationStateValue"), std::string::npos);
 	EXPECT_NE(PopupSource.find("TargetPresentation.m_CandidateAlpha"), std::string::npos);
-	EXPECT_EQ(PopupSource.find("TargetPresentation.m_TypingAlpha"), std::string::npos);
-	EXPECT_EQ(PopupSource.find("TypingNode"), std::string::npos);
-	EXPECT_EQ(PopupSource.find("m_CompositionRowHeight"), std::string::npos);
-	EXPECT_EQ(PopupSource.find("DrawState.m_Composition.c_str()"), std::string::npos);
-	EXPECT_NE(PopupSource.find("2.0f * Ime.m_PaddingY + CandidateRowHeight"), std::string::npos);
+	// 首次状态只初始化一次；后续显示、重定向和淡出都沿用同一组可动画状态。
+	EXPECT_NE(PopupSource.find("if(!m_Presentation.m_Initialized)"), std::string::npos);
+	EXPECT_NE(PopupSource.find("m_Presentation.m_Initialized = true;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("Presence.m_FreshEnter"), std::string::npos);
+	EXPECT_NE(PopupSource.find("const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);"), std::string::npos);
+	EXPECT_NE(PopupSource.find("const float CandidateDrawAlpha = Alpha * CandidateAlpha;"), std::string::npos);
+	EXPECT_NE(PopupSource.find("WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha)"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("(void)PresentationAlpha;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("(void)CandidateAlpha;"), std::string::npos);
 	EXPECT_NE(PopupSource.find("IME_CONTENT_TIME_SCALE = 0.40f"), std::string::npos);
 	EXPECT_NE(PopupSource.find("BuildCandidateViewport"), std::string::npos);
 	EXPECT_EQ(PopupSource.find("ResolveMotionValue"), std::string::npos);

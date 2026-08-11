@@ -13,6 +13,10 @@
 
 #include <gtest/gtest.h>
 
+#include <fstream>
+#include <sstream>
+#include <string>
+
 void CComponentInterfaces::OnInterfacesInit(CGameClient *pClient)
 {
 }
@@ -68,6 +72,38 @@ namespace
 		}
 		return false;
 	}
+
+	std::string ReadHudNotificationTestFile(const char *pPath)
+	{
+		std::ifstream File(std::string(DDNET_TEST_SOURCE_DIR) + "/" + pPath, std::ios::binary);
+		EXPECT_TRUE(File.good()) << pPath;
+		std::ostringstream Buffer;
+		Buffer << File.rdbuf();
+		return Buffer.str();
+	}
+
+	std::string FunctionBodySource(const std::string &Source, const std::string &Signature)
+	{
+		const size_t Start = Source.find(Signature);
+		if(Start == std::string::npos)
+			return {};
+		const size_t OpenBrace = Source.find('{', Start);
+		if(OpenBrace == std::string::npos)
+			return {};
+		int Depth = 0;
+		for(size_t i = OpenBrace; i < Source.size(); ++i)
+		{
+			if(Source[i] == '{')
+				++Depth;
+			else if(Source[i] == '}')
+			{
+				--Depth;
+				if(Depth == 0)
+					return Source.substr(Start, i - Start + 1);
+			}
+		}
+		return {};
+	}
 } // namespace
 
 TEST(QmHudNotifications, MatchesKnownSoloPrompts)
@@ -77,6 +113,47 @@ TEST(QmHudNotifications, MatchesKnownSoloPrompts)
 	EXPECT_EQ(QmHudNotifications::MatchKnownSoloPrompt("你现在处于单人区域"), QmHudNotifications::ESoloPrompt::Enter);
 	EXPECT_EQ(QmHudNotifications::MatchKnownSoloPrompt("你现在已离开单人区域"), QmHudNotifications::ESoloPrompt::Leave);
 	EXPECT_EQ(QmHudNotifications::MatchKnownSoloPrompt("regular server message"), QmHudNotifications::ESoloPrompt::None);
+}
+
+TEST(QmHudNotifications, HudEdgeMarginHelperOffsetsAnchoredRects)
+{
+	const CUIRect Rect{10.0f, 20.0f, 100.0f, 40.0f};
+	const QmHudEditor::SEdgeMargin Margin = QmHudEditor::SEdgeMargin::Uniform(8.0f);
+
+	const CUIRect LeftTop = QmHudEditor::ApplyEdgeMargin(Rect, Margin, true, false, true, false);
+	EXPECT_FLOAT_EQ(LeftTop.x, 18.0f);
+	EXPECT_FLOAT_EQ(LeftTop.y, 28.0f);
+	EXPECT_FLOAT_EQ(LeftTop.w, Rect.w);
+	EXPECT_FLOAT_EQ(LeftTop.h, Rect.h);
+
+	const CUIRect RightBottom = QmHudEditor::ApplyEdgeMargin(Rect, Margin, false, true, false, true);
+	EXPECT_FLOAT_EQ(RightBottom.x, 2.0f);
+	EXPECT_FLOAT_EQ(RightBottom.y, 12.0f);
+	EXPECT_FLOAT_EQ(RightBottom.w, Rect.w);
+	EXPECT_FLOAT_EQ(RightBottom.h, Rect.h);
+}
+
+TEST(QmHudNotifications, ChatEdgeBaseRectPreservesLegacyDefaultAndSupportsRightEdge)
+{
+	const CUIRect Legacy = QmHudEditor::ChatEdgeBaseRect(600.0f, 200.0f, 0.0f, false);
+	EXPECT_FLOAT_EQ(Legacy.x, 0.0f);
+	EXPECT_FLOAT_EQ(Legacy.y, 50.0f);
+	EXPECT_FLOAT_EQ(Legacy.w, 232.0f);
+	EXPECT_FLOAT_EQ(Legacy.h, 250.0f);
+
+	const CUIRect Right = QmHudEditor::ChatEdgeBaseRect(600.0f, 200.0f, 8.0f, true);
+	EXPECT_FLOAT_EQ(Right.x, 600.0f - 232.0f - 8.0f);
+	EXPECT_FLOAT_EQ(Right.y, 50.0f);
+	EXPECT_FLOAT_EQ(Right.w, 232.0f);
+	EXPECT_FLOAT_EQ(Right.h, 250.0f);
+}
+
+TEST(QmHudNotifications, HudEditorEdgeAnchoringUsesDragSnapDistance)
+{
+	const std::string Source = ReadHudNotificationTestFile("src/game/client/components/hud_editor.cpp");
+
+	EXPECT_NE(Source.find("HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::SNAP_DISTANCE"), std::string::npos);
+	EXPECT_EQ(Source.find("HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::EPSILON"), std::string::npos);
 }
 
 TEST(QmHudNotifications, CatalogProvidesCanonicalTextAndMetadata)
@@ -196,7 +273,7 @@ TEST(QmHudNotifications, FormatsKnownSystemNotifications)
 	EXPECT_STREQ(aBuf, "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
 
 	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedNotificationMessage("未知表情。输入 /emote 查看帮助", aBuf, sizeof(aBuf)));
-	EXPECT_STREQ(aBuf, "Unknown emote... Say /emote");
+	EXPECT_STREQ(aBuf, "Unknown emote. Use /emote to see available emotes.");
 
 	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedNotificationMessage("本服务器允许组队；队伍上锁后，队内任意玩家死亡都会导致全队死亡", aBuf, sizeof(aBuf)));
 	EXPECT_STREQ(aBuf, "Teams are available on this server; if the team is locked, any team member dying will kill the whole team");
@@ -278,6 +355,22 @@ TEST(QmHudNotifications, StaticEnglishAndChineseMessagesShareTheSameSemanticKey)
 
 	EXPECT_EQ(English.m_MessageKey, Chinese.m_MessageKey);
 	EXPECT_STREQ(English.m_aLocalizedText, Chinese.m_aLocalizedText);
+}
+
+TEST(QmHudNotifications, RepeatedNotificationsAnimateOnlyTheCounter)
+{
+	const std::string Header = ReadHudNotificationTestFile("src/game/client/components/qmclient/hud_notifications/hud_notifications.h");
+	EXPECT_NE(Header.find("int64_t m_RepeatAnimTime = 0;"), std::string::npos);
+	EXPECT_NE(Header.find("Last.m_RepeatAnimTime = time_get();"), std::string::npos);
+	EXPECT_EQ(Header.find("Last.m_StartTime = time_get();"), std::string::npos);
+	EXPECT_NE(Header.find("str_format(Last.m_aRepeatText, sizeof(Last.m_aRepeatText), \"x%d\", Last.m_RepeatCount);"), std::string::npos);
+
+	const std::string Source = ReadHudNotificationTestFile("src/game/client/components/qmclient/hud_notifications/hud_notifications.cpp");
+	const std::string RenderNotifications = FunctionBodySource(Source, "void CQmHudNotifications::RenderNotifications(");
+	ASSERT_FALSE(RenderNotifications.empty());
+	EXPECT_NE(RenderNotifications.find("RepeatScale = QmHudNotifications::RepeatCountElasticScale"), std::string::npos);
+	EXPECT_NE(RenderNotifications.find("Notification.m_aRepeatText"), std::string::npos);
+	EXPECT_NE(RenderNotifications.find("TextRender()->Text(RepeatX, Box.y + PaddingY, FontSize * RepeatScale"), std::string::npos);
 }
 
 TEST(QmHudNotifications, TimeoutCodeSetRequiresTheExplicitSemanticAliasText)
@@ -600,7 +693,7 @@ TEST(QmHudNotificationRules, AnalyzesUnknownEmoteMessageInChinese)
 	EXPECT_EQ(Analysis.m_Route, QmHudNotifications::EServerMessageRoute::System);
 	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::Prompt);
 	EXPECT_EQ(Analysis.m_Domain, QmHudNotifications::EServerMessageDomain::Status);
-	EXPECT_STREQ(Analysis.m_aLocalizedText, "Unknown emote... Say /emote");
+	EXPECT_STREQ(Analysis.m_aLocalizedText, "Unknown emote. Use /emote to see available emotes.");
 	EXPECT_FALSE(Analysis.m_UseFallbackLocalization);
 }
 
@@ -662,6 +755,19 @@ TEST(QmHudNotificationRules, AnalyzesStaticStatusMessage)
 	EXPECT_EQ(Analysis.m_Domain, QmHudNotifications::EServerMessageDomain::Status);
 	EXPECT_STREQ(Analysis.m_aLocalizedText, "Players are not allowed to chat from VPNs at this time");
 	EXPECT_FALSE(Analysis.m_UseFallbackLocalization);
+}
+
+TEST(QmHudNotificationRules, SimplifiedChineseTranslationsUsePlainPromptText)
+{
+	const std::string Translations = ReadHudNotificationTestFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
+
+	EXPECT_NE(Translations.find("key = \"Scoreboard point check\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"计分板积分检查\""), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"Team can't be saved while a dragger is active\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"有拖拽器生效时不能保存队伍存档\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"本服务器不允许查看队伍前 5 名\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"你现在可以用锤子攻击其他玩家\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"你现在不能用锤子攻击其他玩家\""), std::string::npos);
 }
 
 TEST(QmHudNotificationRules, AnalyzesStaticVoteModerationMessage)
@@ -831,6 +937,20 @@ TEST(QmHudNotificationRules, FocusModeHiddenMessagesOverrideCategoryFilters)
 	EXPECT_FALSE(Decision.m_QueueNotification);
 }
 
+TEST(QmHudNotificationRules, QueuedSystemNotificationsRemainVisibleInChat)
+{
+	const auto Prompt = QmHudNotifications::AnalyzeServerMessage("Welcome to DDraceNetwork!", QmHudNotifications::ESoloPrompt::None);
+	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(Prompt, false, false));
+	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(Prompt, false, true));
+
+	const auto BasicInfo = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 20.0", QmHudNotifications::ESoloPrompt::None);
+	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(BasicInfo, false, false));
+	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(BasicInfo, true, false));
+
+	const auto Solo = QmHudNotifications::AnalyzeServerMessage("You are now in a solo part", QmHudNotifications::ESoloPrompt::Enter);
+	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(Solo, false, false));
+}
+
 TEST(QmHudNotifications, HandleServerChatUsesFallbackNotificationForUnknownMessage)
 {
 	CTestHudNotifications Notifications;
@@ -839,6 +959,21 @@ TEST(QmHudNotifications, HandleServerChatUsesFallbackNotificationForUnknownMessa
 	EXPECT_TRUE(Analysis.m_UseFallbackLocalization);
 	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
 	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "regular server message");
+}
+
+TEST(QmHudNotifications, ConsecutiveIdenticalSystemNotificationsCollapseIntoRepeatCount)
+{
+	CTestHudNotifications Notifications;
+	QmHudNotifications::SServerMessageAnalysis Analysis;
+
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
+
+	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
+	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "Team save already in progress");
+	EXPECT_EQ(Notifications.LastNotificationRepeatCountForTests(), 3);
+	EXPECT_STREQ(Notifications.LastNotificationRepeatTextForTests(), "x3");
 }
 
 TEST(QmHudNotifications, HandleServerChatRespectsDisabledSystemRoute)
@@ -1066,10 +1201,11 @@ TEST(QmHudNotificationsGeometry, EdgeMarginInsetsOnlyAnchoredPreviewEdges)
 {
 	const CUIRect AnchorRect = {0.0f, 0.0f, 128.0f, 92.0f};
 	const CUIRect FreeRect = {100.0f, 40.0f, 128.0f, 92.0f};
+	const QmHudEditor::SEdgeMargin Margin = QmHudEditor::SEdgeMargin::Uniform(8.0f);
 
-	const CUIRect LeftInset = QmHudNotifications::InsetAnchoredRect(AnchorRect, 8.0f, true, false, true, false);
-	const CUIRect RightInset = QmHudNotifications::InsetAnchoredRect(AnchorRect, 8.0f, false, true, false, true);
-	const CUIRect FreeInset = QmHudNotifications::InsetAnchoredRect(FreeRect, 8.0f, false, false, false, false);
+	const CUIRect LeftInset = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, true, false, true, false);
+	const CUIRect RightInset = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, false, true, false, true);
+	const CUIRect FreeInset = QmHudEditor::ApplyEdgeMargin(FreeRect, Margin, false, false, false, false);
 
 	EXPECT_FLOAT_EQ(LeftInset.x, 8.0f);
 	EXPECT_FLOAT_EQ(LeftInset.y, 8.0f);
@@ -1081,7 +1217,7 @@ TEST(QmHudNotificationsGeometry, EdgeMarginInsetsOnlyAnchoredPreviewEdges)
 	EXPECT_FLOAT_EQ(FreeInset.y, FreeRect.y);
 }
 
-TEST(QmHudEditorGeometry, ApplyEdgeMarginMatchesInsetAnchoredRectAcrossAnchors)
+TEST(QmHudEditorGeometry, ApplyEdgeMarginMatchesLegacyNotificationInsetAcrossAnchors)
 {
 	const CUIRect AnchorRect = {0.0f, 0.0f, 128.0f, 92.0f};
 	const QmHudEditor::SEdgeMargin Margin = QmHudEditor::SEdgeMargin::Uniform(8.0f);

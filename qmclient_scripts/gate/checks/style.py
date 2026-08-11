@@ -55,9 +55,21 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
             return False
         return True
 
+    existing = [file for file in included if (REPO_ROOT / file).exists()]
+    skipped = len(included) - len(existing)
+    if not existing:
+        results.add(
+            "WARN",
+            "代码格式检查",
+            "改动范围内首方 C/C++ 文件都已删除，跳过 fix_style.py 检查",
+        )
+        return
+    if skipped:
+        results.add("INFO", "代码格式检查范围", f"跳过 {skipped} 个已删除文件")
+
     batch: list[str] = []
     batch_len = 0
-    for file in included:
+    for file in existing:
         file_len = len(file) + 3
         if batch and batch_len + file_len > 6000:
             if not _run_batch(batch):

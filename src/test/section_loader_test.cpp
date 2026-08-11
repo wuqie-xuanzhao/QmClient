@@ -65,6 +65,308 @@ TEST(SectionLoader, StateTransitions)
 	EXPECT_TRUE(Loader.IsComplete());
 }
 
+TEST(SettingsCardDeckDrag, CtrlHeaderStableIdStartsDrag)
+{
+	SSettingsCardDeckItem Item;
+	Item.m_pStableId = "tclient:visual-font-cursor";
+	Item.m_pSectionName = "Visual: Font & Cursor";
+	Item.m_Column = ESettingsCardDeckColumn::LEFT;
+	Item.m_Order = 0;
+
+	SSettingsCardDeckDragStartInput Input;
+	Input.m_pItem = &Item;
+	Input.m_CtrlPressed = true;
+	Input.m_HitRegion = ESettingsCardDragHitRegion::CHROME;
+
+	EXPECT_TRUE(SettingsCardDeckCanStartDrag(Input));
+}
+
+TEST(SettingsCardDeckDrag, PressPromotesToDragOnHold)
+{
+	SSettingsCardDeckItem Item;
+	Item.m_pStableId = "tclient:visual-font-cursor";
+	Item.m_pSectionName = "Visual: Font & Cursor";
+	Item.m_Column = ESettingsCardDeckColumn::LEFT;
+	Item.m_Order = 0;
+	Item.m_CachedHeight = 120.0f;
+
+	SSettingsCardDeckDragState DragState;
+	SettingsCardDeckBeginPress(DragState, Item);
+	EXPECT_TRUE(DragState.m_PressPending);
+	EXPECT_FALSE(DragState.m_Active);
+
+	EXPECT_TRUE(SettingsCardDeckTryPromotePress(DragState));
+	EXPECT_TRUE(DragState.m_Active);
+	EXPECT_FALSE(DragState.m_PressPending);
+	EXPECT_FLOAT_EQ(DragState.m_PlaceholderHeight, 120.0f);
+	EXPECT_EQ(DragState.m_DropIndex, 0);
+
+	SettingsCardDeckClearPress(DragState);
+	EXPECT_FALSE(DragState.m_PressPending);
+	EXPECT_TRUE(DragState.m_Active);
+}
+
+TEST(SettingsCardDeckDrag, PressPromotesFromOriginalItemAfterPointerLeavesHeader)
+{
+	SSettingsCardDeckItem PressedItem;
+	PressedItem.m_pStableId = "tclient:visual-font-cursor";
+	PressedItem.m_pSectionName = "Visual: Font & Cursor";
+	PressedItem.m_Column = ESettingsCardDeckColumn::LEFT;
+	PressedItem.m_Order = 0;
+	PressedItem.m_CachedHeight = 120.0f;
+
+	SSettingsCardDeckItem CurrentHoveredItem;
+	CurrentHoveredItem.m_pStableId = "tclient:auto-reply";
+	CurrentHoveredItem.m_pSectionName = "Auto reply";
+	CurrentHoveredItem.m_Column = ESettingsCardDeckColumn::LEFT;
+	CurrentHoveredItem.m_Order = 1;
+	CurrentHoveredItem.m_CachedHeight = 90.0f;
+
+	SSettingsCardDeckDragState DragState;
+	SettingsCardDeckBeginPress(DragState, PressedItem);
+
+	EXPECT_TRUE(SettingsCardDeckTryPromotePress(DragState));
+	EXPECT_TRUE(SettingsCardDeckSameStableId(DragState.m_Item, PressedItem));
+	EXPECT_FALSE(SettingsCardDeckSameStableId(DragState.m_Item, CurrentHoveredItem));
+	EXPECT_FLOAT_EQ(DragState.m_PlaceholderHeight, 120.0f);
+	EXPECT_EQ(DragState.m_DropIndex, 0);
+}
+
+TEST(SettingsCardDeckDrag, PlainClickContentAndMissingIdDoNotStartDrag)
+{
+	SSettingsCardDeckItem Item;
+	Item.m_pStableId = "tclient:visual-font-cursor";
+	Item.m_pSectionName = "Visual: Font & Cursor";
+	Item.m_Column = ESettingsCardDeckColumn::LEFT;
+	Item.m_Order = 0;
+
+	SSettingsCardDeckDragStartInput Input;
+	Input.m_pItem = &Item;
+	Input.m_CtrlPressed = false;
+	Input.m_HitRegion = ESettingsCardDragHitRegion::CHROME;
+	EXPECT_TRUE(SettingsCardDeckCanStartDrag(Input)); // 长按不检查 Ctrl：CHROME + 有效 id → 可拖
+
+	Input.m_CtrlPressed = true;
+	Input.m_HitRegion = ESettingsCardDragHitRegion::CONTENT;
+	EXPECT_FALSE(SettingsCardDeckCanStartDrag(Input));
+
+	Item.m_pStableId = "";
+	Input.m_HitRegion = ESettingsCardDragHitRegion::CHROME;
+	EXPECT_FALSE(SettingsCardDeckCanStartDrag(Input));
+
+	Input.m_pItem = nullptr;
+	EXPECT_FALSE(SettingsCardDeckCanStartDrag(Input));
+}
+
+TEST(SettingsSecondaryPanel, ClampsInsideScreenAndKeepsPreferredSize)
+{
+	SSecondaryPanelSpec Spec;
+	Spec.m_AnchorX = 780.0f;
+	Spec.m_AnchorY = 580.0f;
+	Spec.m_PreferredWidth = 300.0f;
+	Spec.m_PreferredHeight = 120.0f;
+	Spec.m_MinWidth = 220.0f;
+	Spec.m_MinHeight = 80.0f;
+	Spec.m_MaxWidth = 420.0f;
+	Spec.m_MaxHeight = 260.0f;
+	Spec.m_ScreenWidth = 800.0f;
+	Spec.m_ScreenHeight = 600.0f;
+	Spec.m_Margin = 8.0f;
+
+	const CUIRect Panel = SettingsSecondaryPanelRect(Spec);
+	EXPECT_FLOAT_EQ(Panel.w, 300.0f);
+	EXPECT_FLOAT_EQ(Panel.h, 120.0f);
+	EXPECT_LE(Panel.x + Panel.w, 792.0f);
+	EXPECT_LE(Panel.y + Panel.h, 592.0f);
+	EXPECT_GE(Panel.x, 8.0f);
+	EXPECT_GE(Panel.y, 8.0f);
+}
+
+TEST(SettingsCardDeckDrag, MoveWithinColumnReordersByStableId)
+{
+	std::vector<std::string> vOrder = {"tclient:visual-font-cursor", "tclient:auto-reply", "tclient:pet"};
+
+	EXPECT_TRUE(SettingsCardDeckMoveWithinColumn(vOrder, "tclient:auto-reply", 0));
+	EXPECT_EQ(vOrder, (std::vector<std::string>{"tclient:auto-reply", "tclient:visual-font-cursor", "tclient:pet"}));
+
+	EXPECT_TRUE(SettingsCardDeckMoveWithinColumn(vOrder, "tclient:auto-reply", 3));
+	EXPECT_EQ(vOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet", "tclient:auto-reply"}));
+
+	EXPECT_FALSE(SettingsCardDeckMoveWithinColumn(vOrder, "tclient:missing", 1));
+	EXPECT_EQ(vOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet", "tclient:auto-reply"}));
+}
+
+TEST(SettingsCardDeckDrag, MoveWithinColumnAdjustsDropIndexAfterErase)
+{
+	std::vector<std::string> vOrder = {"tclient:visual-font-cursor", "tclient:auto-reply", "tclient:pet"};
+
+	EXPECT_TRUE(SettingsCardDeckMoveWithinColumn(vOrder, "tclient:visual-font-cursor", 1));
+	EXPECT_EQ(vOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:auto-reply", "tclient:pet"}));
+
+	EXPECT_TRUE(SettingsCardDeckMoveWithinColumn(vOrder, "tclient:visual-font-cursor", 2));
+	EXPECT_EQ(vOrder, (std::vector<std::string>{"tclient:auto-reply", "tclient:visual-font-cursor", "tclient:pet"}));
+}
+
+TEST(SettingsCardDeckDrag, MoveBetweenColumnsMovesStableIdToTargetOrder)
+{
+	std::vector<std::string> vLeftOrder = {"tclient:visual-font-cursor", "tclient:auto-reply", "tclient:pet"};
+	std::vector<std::string> vRightOrder = {"tclient:rainbow", "tclient:ghost"};
+
+	EXPECT_TRUE(SettingsCardDeckMoveBetweenColumns(vLeftOrder, vRightOrder, "tclient:auto-reply", 1));
+	EXPECT_EQ(vLeftOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet"}));
+	EXPECT_EQ(vRightOrder, (std::vector<std::string>{"tclient:rainbow", "tclient:auto-reply", "tclient:ghost"}));
+
+	EXPECT_FALSE(SettingsCardDeckMoveBetweenColumns(vLeftOrder, vRightOrder, "tclient:missing", 0));
+	EXPECT_EQ(vLeftOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet"}));
+	EXPECT_EQ(vRightOrder, (std::vector<std::string>{"tclient:rainbow", "tclient:auto-reply", "tclient:ghost"}));
+
+	EXPECT_FALSE(SettingsCardDeckMoveBetweenColumns(vLeftOrder, vRightOrder, "", 0));
+	EXPECT_EQ(vLeftOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet"}));
+	EXPECT_EQ(vRightOrder, (std::vector<std::string>{"tclient:rainbow", "tclient:auto-reply", "tclient:ghost"}));
+}
+
+TEST(SettingsCardDeckDrag, DropIndexUsesHoveredCardHalf)
+{
+	SSettingsCardDeckItem Item;
+	Item.m_Order = 2;
+	Item.m_Rect = {10.0f, 100.0f, 200.0f, 80.0f};
+
+	EXPECT_EQ(SettingsCardDeckDropIndexForHoveredItem(Item, 120.0f), 2);
+	EXPECT_EQ(SettingsCardDeckDropIndexForHoveredItem(Item, 141.0f), 3);
+}
+
+TEST(SettingsCardDeckDrag, ColumnDropIndexSupportsBlankSpaceAndColumnTail)
+{
+	std::vector<SSettingsCardDeckItem> vItems;
+	SSettingsCardDeckItem First;
+	First.m_pStableId = "tclient:visual-font-cursor";
+	First.m_Column = ESettingsCardDeckColumn::LEFT;
+	First.m_Order = 0;
+	First.m_Rect = {10.0f, 100.0f, 200.0f, 80.0f};
+	vItems.push_back(First);
+	SSettingsCardDeckItem Second = First;
+	Second.m_pStableId = "tclient:auto-reply";
+	Second.m_Order = 1;
+	Second.m_Rect = {10.0f, 220.0f, 200.0f, 80.0f};
+	vItems.push_back(Second);
+
+	EXPECT_EQ(SettingsCardDeckDropIndexForColumnItems(vItems, ESettingsCardDeckColumn::LEFT, 50.0f, 170.0f, -1), 1);
+	EXPECT_EQ(SettingsCardDeckDropIndexForColumnItems(vItems, ESettingsCardDeckColumn::LEFT, 50.0f, 360.0f, -1), 2);
+	EXPECT_EQ(SettingsCardDeckDropIndexForColumnItems(vItems, ESettingsCardDeckColumn::LEFT, 500.0f, 360.0f, 7), 7);
+}
+
+TEST(SettingsCardDeckDrag, DropColumnUsesColumnBounds)
+{
+	CUIRect LeftColumn{10.0f, 100.0f, 200.0f, 500.0f};
+	CUIRect RightColumn{230.0f, 100.0f, 200.0f, 500.0f};
+
+	EXPECT_EQ(SettingsCardDeckDropColumnForMouseX(LeftColumn, RightColumn, 120.0f, ESettingsCardDeckColumn::RIGHT), ESettingsCardDeckColumn::LEFT);
+	EXPECT_EQ(SettingsCardDeckDropColumnForMouseX(LeftColumn, RightColumn, 350.0f, ESettingsCardDeckColumn::LEFT), ESettingsCardDeckColumn::RIGHT);
+	EXPECT_EQ(SettingsCardDeckDropColumnForMouseX(LeftColumn, RightColumn, 220.0f, ESettingsCardDeckColumn::LEFT), ESettingsCardDeckColumn::LEFT);
+}
+
+TEST(SettingsCardDeckDrag, ApplyOrderKeepsUnknownSectionsAfterOrderedCards)
+{
+	std::vector<SSettingsSection> vSections;
+	SSettingsSection Theme;
+	Theme.m_pName = "Visual: Font & Cursor";
+	Theme.m_pStableCardId = "tclient:visual-font-cursor";
+	vSections.push_back(Theme);
+	SSettingsSection AutoReply;
+	AutoReply.m_pName = "Auto reply";
+	AutoReply.m_pStableCardId = "tclient:auto-reply";
+	vSections.push_back(AutoReply);
+	SSettingsSection Unknown;
+	Unknown.m_pName = "Local section";
+	vSections.push_back(Unknown);
+
+	SettingsCardDeckApplyOrder(vSections, {"tclient:auto-reply", "tclient:visual-font-cursor", "tclient:stale"});
+
+	ASSERT_EQ(vSections.size(), 3);
+	EXPECT_STREQ(vSections[0].m_pStableCardId, "tclient:auto-reply");
+	EXPECT_STREQ(vSections[1].m_pStableCardId, "tclient:visual-font-cursor");
+	EXPECT_STREQ(vSections[2].m_pName, "Local section");
+}
+
+TEST(SettingsCardDeckDrag, ApplyOrderKeepsNonCardSectionSlotsStable)
+{
+	std::vector<SSettingsSection> vSections;
+	SSettingsSection Theme;
+	Theme.m_pName = "Visual: Font & Cursor";
+	Theme.m_pStableCardId = "tclient:visual-font-cursor";
+	vSections.push_back(Theme);
+	SSettingsSection Nameplates;
+	Nameplates.m_pName = "Visual: Nameplates";
+	vSections.push_back(Nameplates);
+	SSettingsSection AutoReply;
+	AutoReply.m_pName = "Auto reply";
+	AutoReply.m_pStableCardId = "tclient:auto-reply";
+	vSections.push_back(AutoReply);
+	SSettingsSection PlayerIndicator;
+	PlayerIndicator.m_pName = "Player Indicator";
+	vSections.push_back(PlayerIndicator);
+	SSettingsSection Pet;
+	Pet.m_pName = "Pet";
+	Pet.m_pStableCardId = "tclient:pet";
+	vSections.push_back(Pet);
+
+	SettingsCardDeckApplyOrder(vSections, {"tclient:pet", "tclient:auto-reply", "tclient:visual-font-cursor"});
+
+	ASSERT_EQ(vSections.size(), 5);
+	EXPECT_STREQ(vSections[0].m_pStableCardId, "tclient:pet");
+	EXPECT_STREQ(vSections[1].m_pName, "Visual: Nameplates");
+	EXPECT_STREQ(vSections[2].m_pStableCardId, "tclient:auto-reply");
+	EXPECT_STREQ(vSections[3].m_pName, "Player Indicator");
+	EXPECT_STREQ(vSections[4].m_pStableCardId, "tclient:visual-font-cursor");
+}
+
+TEST(SettingsCardDeckDrag, AutoScrollDeltaUsesEdgeBandsOnly)
+{
+	EXPECT_LT(SettingsCardDeckAutoScrollDelta(104.0f, 100.0f, 400.0f, 24.0f, 60.0f), 0.0f);
+	EXPECT_GT(SettingsCardDeckAutoScrollDelta(396.0f, 100.0f, 400.0f, 24.0f, 60.0f), 0.0f);
+	EXPECT_FLOAT_EQ(SettingsCardDeckAutoScrollDelta(250.0f, 100.0f, 400.0f, 24.0f, 60.0f), 0.0f);
+	EXPECT_FLOAT_EQ(SettingsCardDeckAutoScrollDelta(104.0f, 100.0f, 400.0f, 0.0f, 60.0f), 0.0f);
+}
+
+TEST(SettingsCardDeckDrag, VisualHelpersIdentifyDraggedItemAndIndicator)
+{
+	SSettingsCardDeckItem Item;
+	Item.m_pStableId = "tclient:auto-reply";
+	Item.m_Column = ESettingsCardDeckColumn::LEFT;
+	Item.m_Order = 1;
+	Item.m_Rect = {20.0f, 120.0f, 240.0f, 80.0f};
+
+	SSettingsCardDeckDragState DragState;
+	DragState.m_Active = true;
+	DragState.m_Item = Item;
+
+	EXPECT_TRUE(SettingsCardDeckIsDraggingItem(DragState, Item));
+
+	SSettingsCardDeckItem Other = Item;
+	Other.m_pStableId = "tclient:pet";
+	EXPECT_FALSE(SettingsCardDeckIsDraggingItem(DragState, Other));
+
+	CUIRect IndicatorTop = SettingsCardDeckDropIndicatorRect(Item, 1, 4.0f);
+	EXPECT_FLOAT_EQ(IndicatorTop.y, 118.0f);
+	EXPECT_FLOAT_EQ(IndicatorTop.h, 4.0f);
+
+	CUIRect IndicatorBottom = SettingsCardDeckDropIndicatorRect(Item, 2, 4.0f);
+	EXPECT_FLOAT_EQ(IndicatorBottom.y, 198.0f);
+	EXPECT_FLOAT_EQ(IndicatorBottom.h, 4.0f);
+}
+
+TEST(SettingsCardDeckDrag, ProxyRectFollowsMouseAndKeepsCardSize)
+{
+	SSettingsCardDeckItem Item;
+	Item.m_Rect = {20.0f, 120.0f, 240.0f, 80.0f};
+
+	CUIRect Proxy = SettingsCardDeckProxyRect(Item, 400.0f, 300.0f);
+	EXPECT_FLOAT_EQ(Proxy.x, 280.0f);
+	EXPECT_FLOAT_EQ(Proxy.y, 260.0f);
+	EXPECT_FLOAT_EQ(Proxy.w, 240.0f);
+	EXPECT_FLOAT_EQ(Proxy.h, 80.0f);
+}
+
 TEST(SectionLoader, FrameBudgetTruncation)
 {
 	CSectionLoader Loader;
@@ -239,9 +541,8 @@ TEST(SectionLoader, FarFullSectionRendersAfterScrollingIntoView)
 	EXPECT_FALSE(Loader.Process());
 	EXPECT_EQ(FarFullRenderCount, 0);
 
-	Loader.m_ScrollY = -900.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(CUIRect{0, -900.0f, 400, 240}, 100.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 900.0f, 400, 240}, 100.0f);
 	EXPECT_FALSE(Loader.Process());
 	EXPECT_EQ(FarFullRenderCount, 1);
 }
@@ -398,9 +699,8 @@ TEST(SectionLoader, FarCompactSectionAdvancesWithoutRendering)
 	EXPECT_TRUE(Loader.Process());
 	EXPECT_EQ(FarCompactRenderCount, 1);
 
-	Loader.m_ScrollY = -1000.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(CUIRect{0, 0, 400, 240}, 0.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 1000.0f, 400, 240}, 0.0f);
 	EXPECT_TRUE(Loader.Process());
 
 	EXPECT_EQ(FarCompactRenderCount, 1);
@@ -435,9 +735,8 @@ TEST(SectionLoader, CompactRenderUpdatesCachedHeightForSkippedFrames)
 	EXPECT_EQ(CompactRenderCount, 1);
 	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 80.0f);
 
-	Loader.m_ScrollY = -1000.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(CUIRect{0, 0, 400, 240}, 0.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 1000.0f, 400, 240}, 0.0f);
 	EXPECT_TRUE(Loader.Process());
 	EXPECT_EQ(CompactRenderCount, 1);
 	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 80.0f);
@@ -491,15 +790,14 @@ TEST(SectionLoader, ScrollOffsetPromotesScrolledIntoViewSection)
 		return std::vector<SSettingsSection>{First, Second};
 	};
 
-	CUIRect ScrolledMainView{0, -500.0f, 400, 600};
-	Loader.m_ScrollY = -500.0f;
+	CUIRect MainView{0, 0, 400, 600};
+	CUIRect ScrolledViewport{0, 500.0f, 400, 600};
 	Loader.Register(MakeSections());
-	Loader.Begin(ScrolledMainView, 100.0f);
+	Loader.Begin(MainView, ScrolledViewport, 100.0f);
 	EXPECT_TRUE(Loader.Process());
 
-	Loader.m_ScrollY = -500.0f;
 	Loader.Register(MakeSections());
-	Loader.Begin(ScrolledMainView, 100.0f);
+	Loader.Begin(MainView, ScrolledViewport, 100.0f);
 	EXPECT_TRUE(Loader.Process());
 	EXPECT_EQ(CompactRenderCount, 1);
 }
@@ -977,14 +1275,24 @@ TEST(SectionLoader, VisibilityTelemetryUsesMeasuredSectionRect)
 	Section.m_RenderCompactFn = Section.m_MeasureFn;
 	Section.m_RenderFullFn = Section.m_MeasureFn;
 
-	Loader.m_ScrollY = -400.0f;
 	Loader.Register({Section});
-	Loader.Begin(CUIRect{0, -400.0f, 400, 240}, 100.0f);
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 400.0f, 400, 240}, 100.0f);
 
 	EXPECT_FALSE(Loader.Process());
 	EXPECT_EQ(Loader.LastFrameStats().m_SectionsTotal, 1);
 	EXPECT_EQ(Loader.LastFrameStats().m_SectionsVisible, 1);
 	EXPECT_EQ(Loader.LastFrameStats().m_SectionsSkipped, 0);
+}
+
+TEST(SectionLoader, ExplicitViewportDoesNotShiftContentGeometry)
+{
+	CSectionLoader Loader;
+	Loader.SetProgressiveEnabled(false);
+	Loader.Register({MakeTestSection("Top", 900.0f), MakeTestSection("Visible after scroll", 50.0f)});
+	Loader.Begin(CUIRect{0, 0, 400, 240}, CUIRect{0, 900.0f, 400, 240}, 100.0f);
+
+	EXPECT_FALSE(Loader.Process());
+	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 950.0f);
 }
 
 TEST(SectionLoader, RejectsVisibleSummarySectionNames)
@@ -1024,4 +1332,17 @@ TEST(SectionLoaderCleanup, HeaderNoLongerExposesRecordedTargetCacheApi)
 	EXPECT_EQ(Source.find("DrawCachedSectionByName"), std::string::npos);
 	EXPECT_EQ(Source.find("MakeRenderTargetCacheRectForTests"), std::string::npos);
 	EXPECT_EQ(Source.find("m_LiveStaticCacheRecordingEnabled"), std::string::npos);
+}
+
+TEST(SectionLoaderCleanup, HeaderNoLongerExposesCardHeightOrScrollTruth)
+{
+	std::ifstream File(TestSourcePath("src/game/client/components/section_loader.h"));
+	ASSERT_TRUE(File.good());
+	std::stringstream Buffer;
+	Buffer << File.rdbuf();
+	const std::string Source = Buffer.str();
+
+	EXPECT_EQ(Source.find("CachedHeightForStableCardId"), std::string::npos);
+	EXPECT_EQ(Source.find("m_ScrollY"), std::string::npos);
+	EXPECT_NE(Source.find("void Begin(CUIRect MainView, CUIRect Viewport, float TimeBudgetMs);"), std::string::npos);
 }
