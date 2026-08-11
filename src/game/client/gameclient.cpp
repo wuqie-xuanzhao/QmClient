@@ -3285,6 +3285,7 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	Info.m_NoSkinChangeForFrozen = false;
 	Info.m_DDRaceTeam = false;
 	Info.m_PredictEvents = Vanilla;
+	Info.m_Supports128Teams = false;
 
 	if(Version >= 0)
 	{
@@ -3351,6 +3352,10 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	if(Version >= 11)
 	{
 		Info.m_PredictEvents = Flags2 & GAMEINFOFLAG2_PREDICT_EVENTS;
+	}
+	if(Version >= 12)
+	{
+		Info.m_Supports128Teams = Flags2 & GAMEINFOFLAG2_SUPPORTS_128_TEAMS;
 	}
 	// TClient
 	str_copy(Info.m_aGameType, pFallbackServerInfo->m_aGameType);
@@ -3728,9 +3733,7 @@ void CGameClient::OnNewSnapshot()
 					continue;
 				}
 				const CNetObj_SwitchState *pSwitchStateData = (const CNetObj_SwitchState *)Item.m_pData;
-				// TODO: use NUM_DDRACE_TEAMS-1 instead of hardcoding 63
-				//       once https://github.com/ddnet/ddnet/pull/11232 is resolved
-				int Team = std::clamp(Item.m_Id, (int)TEAM_FLOCK, 63);
+				int Team = std::clamp(Item.m_Id, (int)TEAM_FLOCK, NUM_DDRACE_TEAMS - 1);
 
 				int HighestSwitchNumber = std::clamp(pSwitchStateData->m_HighestSwitchNumber, 0, 255);
 				if(HighestSwitchNumber != maximum(0, (int)Switchers().size() - 1))
@@ -3787,6 +3790,13 @@ void CGameClient::OnNewSnapshot()
 		m_GameInfo = GetGameInfo(nullptr, 0, &ServerInfo);
 	}
 
+	// Sv_TeamsState can arrive before the first snapshot, so derive this here instead of in the message handler
+	m_Teams.m_IsDDRace64 = !m_GameInfo.m_Supports128Teams;
+
+	for(CClientData &Client : m_aClients)
+	{
+		Client.UpdateSkinInfo();
+	}
 	// setup local pointers
 	if(m_Snap.m_LocalClientId >= 0)
 	{
@@ -7021,7 +7031,7 @@ bool CGameClient::IsOtherTeam(int ClientId) const
 	}
 	else if(m_Snap.m_SpecInfo.m_Active && m_Snap.m_SpecInfo.m_SpectatorId != SPEC_FREEVIEW)
 	{
-		if(m_Teams.Team(ClientId) == TEAM_SUPER || m_Teams.Team(m_Snap.m_SpecInfo.m_SpectatorId) == TEAM_SUPER)
+		if(m_Teams.Team(ClientId) == m_Teams.TeamSuper() || m_Teams.Team(m_Snap.m_SpecInfo.m_SpectatorId) == m_Teams.TeamSuper())
 			return false;
 		return m_Teams.Team(ClientId) != m_Teams.Team(m_Snap.m_SpecInfo.m_SpectatorId);
 	}
@@ -7030,7 +7040,7 @@ bool CGameClient::IsOtherTeam(int ClientId) const
 		return true;
 	}
 
-	if(m_Teams.Team(ClientId) == TEAM_SUPER || m_Teams.Team(m_Snap.m_LocalClientId) == TEAM_SUPER)
+	if(m_Teams.Team(ClientId) == m_Teams.TeamSuper() || m_Teams.Team(m_Snap.m_LocalClientId) == m_Teams.TeamSuper())
 		return false;
 
 	return m_Teams.Team(ClientId) != m_Teams.Team(m_Snap.m_LocalClientId);

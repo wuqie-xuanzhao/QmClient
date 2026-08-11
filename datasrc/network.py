@@ -111,6 +111,7 @@ GameInfoFlags2 = [
 	"NO_SKIN_CHANGE_FOR_FROZEN",
 	"DDRACE_TEAM",
 	"PREDICT_EVENTS",
+	"SUPPORTS_128_TEAMS",
 ]
 ExPlayerFlags = ["AFK", "PAUSED", "SPEC"]
 LegacyProjectileFlags = [f"CLIENTID_BIT{i}" for i in range(8)] + [
@@ -212,7 +213,7 @@ enum
 
 enum
 {
-	GAMEINFO_CURVERSION=11,
+	GAMEINFO_CURVERSION=12,
 };
 """
 

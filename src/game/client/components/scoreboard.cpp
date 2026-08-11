@@ -1399,7 +1399,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 
 			if(EndsDDTeam)
 			{
-				if(DDTeam == TEAM_SUPER)
+				if(DDTeam == GameClient()->m_Teams.TeamSuper())
 					str_copy(aBuf, Localize("Super"));
 				else if(CurrentDDTeamSize > 1)
 					str_format(aBuf, sizeof(aBuf), Localize("Team %d (%d/%d)"), DDTeam, CurrentDDTeamSize, MaxTeamSize);

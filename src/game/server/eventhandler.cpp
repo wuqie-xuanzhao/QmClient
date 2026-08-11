@@ -57,10 +57,30 @@ void CEventHandler::Snap(int SnappingClient)
 				int Type = m_aTypes[i];
 				int Size = m_aSizes[i];
 				const char *pData = &m_aData[m_aOffsets[i]];
-				if(GameServer()->Server()->IsSixup(SnappingClient))
-					EventToSixup(&Type, &Size, &pData);
+					if(GameServer()->Server()->IsSixup(SnappingClient))
+						EventToSixup(&Type, &Size, &pData);
 
-				GameServer()->Server()->SnapNewItem(Type, i, rust::Slice((const int32_t *)pData, Size / sizeof(int32_t)));
+					const auto &&SnapEvent = [&]() {
+						GameServer()->Server()->SnapNewItem(Type, i, rust::Slice((const int32_t *)pData, Size / sizeof(int32_t)));
+					};
+				const auto &&SnapTranslateEvent = [&](int *pClientId) {
+					int ClientId = *pClientId; // Save real Id
+					if(GameServer()->Server()->Translate(*pClientId, SnappingClient))
+					{
+						SnapEvent();
+						*pClientId = ClientId; // Reset Id for others
+					}
+				};
+
+				if(Type == NETEVENTTYPE_DEATH)
+				{
+					CNetEvent_Death *pDeath = (CNetEvent_Death *)pData;
+					SnapTranslateEvent(&pDeath->m_ClientId);
+				}
+				else
+					{
+						SnapEvent();
+					}
 			}
 		}
 	}
@@ -79,6 +99,7 @@ void CEventHandler::EventToSixup(int *pType, int *pSize, const char **ppData)
 		pEvent7->m_X = pEvent->m_X;
 		pEvent7->m_Y = pEvent->m_Y;
 
+		// If ClientId is used in the future, translate it like death
 		pEvent7->m_ClientId = 0;
 		pEvent7->m_Angle = 0;
 

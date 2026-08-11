@@ -206,6 +206,9 @@ public:
 		bool m_CapabilitiesSent;
 		EClientBrand m_ClientBrand;
 
+		int m_aIdMap[LEGACY_MAX_CLIENTS];
+		int m_aReverseIdMap[MAX_CLIENTS];
+
 		// DNSBL
 		EDnsblState m_DnsblState;
 		std::shared_ptr<CHostLookup> m_pDnsblLookup;
@@ -221,7 +224,6 @@ public:
 	IConsole::EAccessLevel ConsoleAccessLevel(int ClientId) const;
 
 	CClient m_aClients[MAX_CLIENTS];
-	int m_aIdMap[MAX_CLIENTS * VANILLA_MAX_CLIENTS];
 
 	rust::Box<CSnapshotDelta> m_pSnapshotDelta;
 	rust::Box<CSnapshotDelta> m_pSnapshotDeltaSixup;
@@ -514,6 +516,7 @@ public:
 	void InitMaplist();
 
 	int *GetIdMap(int ClientId) override;
+	int *GetReverseIdMap(int ClientId) override;
 
 	void InitDnsbl(int ClientId);
 	bool DnsblWhite(int ClientId) override

@@ -629,28 +629,20 @@ void CGameContext::ConTimeout(IConsole::IResult *pResult, void *pUserData)
 
 	const char *pTimeout = pResult->NumArguments() > 0 ? pResult->GetString(0) : pPlayer->m_aTimeoutCode;
 
-	if(!pSelf->Server()->IsSixup(pResult->m_ClientId))
+	for(int i = 0; i < pSelf->Server()->MaxClients(); i++)
 	{
-		for(int i = 0; i < pSelf->Server()->MaxClients(); i++)
+		if(i == pResult->m_ClientId)
+			continue;
+		if(!pSelf->m_apPlayers[i])
+			continue;
+		if(str_comp(pSelf->m_apPlayers[i]->m_aTimeoutCode, pTimeout))
+			continue;
+		if(pSelf->Server()->SetTimedOut(i, pResult->m_ClientId))
 		{
-			if(i == pResult->m_ClientId)
-				continue;
-			if(!pSelf->m_apPlayers[i])
-				continue;
-			if(str_comp(pSelf->m_apPlayers[i]->m_aTimeoutCode, pTimeout))
-				continue;
-			if(pSelf->Server()->SetTimedOut(i, pResult->m_ClientId))
-			{
-				if(pSelf->m_apPlayers[i]->GetCharacter())
-					pSelf->SendTuningParams(i, pSelf->m_apPlayers[i]->GetCharacter()->m_TuneZone);
-				return;
-			}
+			if(pSelf->m_apPlayers[i]->GetCharacter())
+				pSelf->SendTuningParams(i, pSelf->m_apPlayers[i]->GetCharacter()->m_TuneZone);
+			return;
 		}
-	}
-	else
-	{
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chatresp",
-			"你的超时保护码已设置。0.7 客户端在超时后无法重新认领自己的 tee；不过 0.6 客户端可以认领你的 tee ");
 	}
 
 	pSelf->Server()->SetTimeoutProtected(pResult->m_ClientId);

@@ -175,6 +175,8 @@ public:
 	bool m_DDRaceTeam;
 	bool m_PredictEvents;
 	char m_aGameType[16];
+
+	bool m_Supports128Teams;
 };
 
 class CSnapEntities
