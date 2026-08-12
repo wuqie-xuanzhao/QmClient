@@ -236,6 +236,12 @@ namespace ui_widget
 		return std::clamp(SliderInputStoredValue(DisplayValue, ValueMultiplier), InputMin, TextInputMax);
 	}
 	inline bool SliderInputIsInfiniteValue(int StoredValue, bool Infinite) { return Infinite && StoredValue == 0; }
+	// 将无限值留出稳定的拖拽区域，避免它与有限最大值挤在不足一个像素的末端。
+	inline float NumericFieldInfiniteEndpointStart(float SliderWidth, float UiScale)
+	{
+		const float EndpointWidth = std::clamp(12.0f * std::max(UiScale, 0.1f) / std::max(SliderWidth, 1.0f), 0.04f, 0.20f);
+		return 1.0f - EndpointWidth;
+	}
 	inline int SliderInputWheelStoredValue(int StoredValue, int SliderMin, int SliderMax, bool Infinite, int Increment)
 	{
 		const int SliderValue = SliderInputIsInfiniteValue(StoredValue, Infinite) ? SliderMax : std::clamp(StoredValue, SliderMin, SliderMax);

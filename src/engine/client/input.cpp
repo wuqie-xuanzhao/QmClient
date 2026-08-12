@@ -769,7 +769,7 @@ int CInput::Update()
 	}
 #endif
 
-	while(SDL_PollEvent(&Event))
+	while(true)
 	{
 		const int64_t PollEventStartNs = TrackPerf ? time_get_nanoseconds().count() : 0;
 		const int PollResult = SDL_PollEvent(&Event);

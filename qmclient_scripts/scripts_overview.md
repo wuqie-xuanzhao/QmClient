@@ -69,7 +69,7 @@
 - `qmclient_scripts/qmclient_center_server/`
 - `qmclient_scripts/diff_update.py`
 - `qmclient_scripts/tw_api.py`
-- `qmclient_scripts/update.zsh`
+- `qmclient_scripts/update.zsh`：旧增量更新服务部署脚本；必须显式设置 `QM_UPDATE_SCRIPTS_DIR` 与 `QM_UPDATE_OUTPUT_DIR`，可用 `QM_UPDATE_RELEASE_REPOSITORY` 覆盖发布仓库
 
 `qmclient_scripts/languages_qmclient/` 语言脚本入口：
 

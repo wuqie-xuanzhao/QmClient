@@ -188,9 +188,9 @@ jobs:
         run: |
           "${PYTHON_EXECUTABLE}" -m pip install --upgrade pip
           if [ "$RUNNER_OS" = "macOS" ]; then
-            "${PYTHON_EXECUTABLE}" -m pip install dmgbuild Pillow
+            "${PYTHON_EXECUTABLE}" -m pip install dmgbuild==1.6.7 Pillow==12.3.0
           else
-            "${PYTHON_EXECUTABLE}" -m pip install Pillow
+            "${PYTHON_EXECUTABLE}" -m pip install Pillow==12.3.0
           fi
 
       - name: Configure
@@ -201,7 +201,13 @@ jobs:
           ARGS=(-G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DDOWNLOAD_GTEST=ON -DPython3_EXECUTABLE="${PYTHON_EXECUTABLE}")
           case "$RUNNER_OS" in
             Linux)
-              ARGS+=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
+              # Rust doctests link the C++ bridge through lld. GCC LTO objects
+              # in rust_test are not consumable by that linker.
+              ARGS+=(
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+                -DIPO=OFF
+              )
               ;;
             macOS)
               SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
@@ -333,9 +339,10 @@ jobs:
     timeout-minutes: 180
     env:
       ANDROID_APP_NAME: QmClient
-      ANDROID_PACKAGE_NAME: org.ddnet.client
+      ANDROID_PACKAGE_NAME: com.qmclient.client
       ANDROID_BUILD_DIR: build-android-release
       ANDROID_NDK_VERSION: "29.0.14206865"
+      CARGO_NDK_VERSION: "4.1.2"
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       SCCACHE_GHA_ENABLED: "true"
       TW_KEY_NAME: /home/runner/.android/debug.keystore
@@ -378,7 +385,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/cargo-ndk
-          key: nightly-cargo-ndk-${{ runner.os }}
+          key: nightly-cargo-ndk-${{ runner.os }}-${{ env.CARGO_NDK_VERSION }}
 
       - name: Cache Android NDK
         uses: actions/cache@v5
@@ -406,7 +413,7 @@ jobs:
             cmake ninja-build pkg-config curl python3 python3-pip python3-pil \
             glslang-tools spirv-tools ccache
           if [ ! -f ~/.cargo/bin/cargo-ndk ]; then
-            cargo install cargo-ndk
+            cargo install cargo-ndk --version "${CARGO_NDK_VERSION}" --locked
           fi
           rustup target add armv7-linux-androideabi
           rustup target add i686-linux-android

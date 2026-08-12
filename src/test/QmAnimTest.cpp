@@ -4008,4 +4008,7 @@ TEST(UiForms, SliderInputValueMappingPreservesStoredScaleAndInfiniteSentinel)
 	EXPECT_FALSE(ui_widget::SliderInputIsInfiniteValue(1, true));
 	EXPECT_EQ(ui_widget::SliderInputWheelStoredValue(0, 1, 1001, true, -28), 973);
 	EXPECT_EQ(ui_widget::SliderInputWheelStoredValue(0, 1, 1001, true, 28), 0);
+	EXPECT_NEAR(ui_widget::NumericFieldInfiniteEndpointStart(240.0f, 1.0f), 0.95f, 0.001f);
+	EXPECT_LE(ui_widget::NumericFieldInfiniteEndpointStart(240.0f, 1.0f), 0.96f);
+	EXPECT_GE(ui_widget::NumericFieldInfiniteEndpointStart(240.0f, 1.0f), 0.94f);
 }

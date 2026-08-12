@@ -495,17 +495,18 @@ namespace ui_widget
 			pInput->SelectAll();
 		}
 
-		// 滑动条以缩放单位工作；输入框激活时仅绘制静态滑块，不响应拖拽
+		// 无限值使用末端专属区域，避免与有限最大值共享不足一个像素的命中区。
 		int SliderValue = IsInfinite ? SliderMax : StoredValue;
-
-		const float Normalized = std::clamp(pScale->ToRelative(SliderValue, SliderMin, SliderMax), 0.0f, 1.0f);
+		const float InfiniteEndpointStart = Infinite ? NumericFieldInfiniteEndpointStart(ScrollBar.w, Ctx.m_UiScale) : 1.0f;
+		const float Normalized = IsInfinite ? 1.0f : std::clamp(pScale->ToRelative(SliderValue, SliderMin, FiniteSliderMax), 0.0f, 1.0f) * InfiniteEndpointStart;
 		const bool SliderWasActive = pState->m_SliderWasActive;
 		if(HasSlider && !RenderOnly && !pInput->IsActive())
 		{
 			const float NewNormalized = Ctx.m_pUi->DoScrollbarH(pId, &ScrollBar, Normalized);
 			const bool SliderActive = Ctx.m_pUi->CheckActiveItem(pId);
 			const bool SliderReleased = SliderWasActive && !SliderActive;
-			const int NewSliderValue = pScale->ToAbsolute(NewNormalized, SliderMin, SliderMax);
+			const bool NewInfiniteValue = Infinite && NewNormalized >= (1.0f + InfiniteEndpointStart) * 0.5f;
+			const int NewSliderValue = NewInfiniteValue ? SliderMax : pScale->ToAbsolute(NewNormalized / InfiniteEndpointStart, SliderMin, FiniteSliderMax);
 			if(NewSliderValue != SliderValue || SliderReleased)
 			{
 				int CandidateStored = QuantizeNumericFieldStoredValue(NewSliderValue, SliderMin, FiniteSliderMax, ValueStep);
@@ -536,14 +537,8 @@ namespace ui_widget
 		}
 		else if(HasSlider)
 		{
-			// 编辑数值时保留 DDNet 横向滑条的视觉，但不接管文本输入焦点。
-			CUIRect Rail;
-			ScrollBar.HMargin(5.0f, &Rail);
-			CUIRect Handle;
-			Rail.VSplitLeft(std::clamp(33.0f, Rail.h, Rail.w / 3.0f), &Handle, nullptr);
-			Handle.x += (Rail.w - Handle.w) * Normalized;
-			DrawRoundedSurface(Ctx, Rail, Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), ColorRGBA(), Rail.h / 2.0f);
-			DrawRoundedSurface(Ctx, Handle, Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_ScrollBarColorFunction.GetColor(false, false)), ColorRGBA(), Handle.h / 2.0f);
+			// 编辑数值时只禁用交互，仍复用全局滑条的当前主题样式。
+			Ctx.m_pUi->RenderScrollbarH(pId, &ScrollBar, Normalized);
 		}
 
 		// 输入框：特殊值（♾️ 或 pMaxText）在非编辑状态下显示为文本

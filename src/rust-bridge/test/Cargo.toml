@@ -10,6 +10,7 @@ license = "Zlib"
 path = "lib.rs"
 
 [dependencies]
+cxx = "=1.0.194"
 link-cplusplus = "1.0.6"
 
 [features]

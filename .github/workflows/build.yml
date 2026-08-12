@@ -1,6 +1,7 @@
 name: Build and Release
 
 on:
+  pull_request:
   push:
     tags:
       - "v*"
@@ -154,6 +155,47 @@ jobs:
               }
             }
 
+      - name: Cache WebP for Windows
+        if: runner.os == 'Windows'
+        id: cache-webp-windows
+        uses: actions/cache@v5
+        with:
+          path: |
+            ddnet-libs/webp/include
+            ddnet-libs/webp/windows
+          key: webp-windows-v1.6.0-${{ hashFiles('.github/workflows/build.yml') }}
+          restore-keys: webp-windows-v1.6.0-
+
+      - name: Build WebP for Windows
+        if: runner.os == 'Windows' && steps.cache-webp-windows.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK_DIR="$(mktemp -d)"
+          trap 'rm -rf "$WORK_DIR"' EXIT
+
+          git clone --depth 1 --branch v1.6.0 https://chromium.googlesource.com/webm/libwebp "$WORK_DIR/libwebp"
+          cmake -S "$WORK_DIR/libwebp" -B "$WORK_DIR/build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$WORK_DIR/install" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DWEBP_BUILD_ANIM_UTILS=OFF \
+            -DWEBP_BUILD_CWEBP=OFF \
+            -DWEBP_BUILD_DWEBP=OFF \
+            -DWEBP_BUILD_EXTRAS=OFF \
+            -DWEBP_BUILD_GIF2WEBP=OFF \
+            -DWEBP_BUILD_IMG2WEBP=OFF \
+            -DWEBP_BUILD_VWEBP=OFF \
+            -DWEBP_BUILD_WEBPINFO=OFF \
+            -DWEBP_BUILD_WEBPMUX=OFF \
+            -DWEBP_BUILD_WEBP_JS=OFF
+          cmake --build "$WORK_DIR/build" --parallel
+          cmake --install "$WORK_DIR/build"
+
+          mkdir -p ddnet-libs/webp/include ddnet-libs/webp/windows/lib64
+          cp -R "$WORK_DIR/install/include/webp" ddnet-libs/webp/include/
+          cp "$WORK_DIR/install/lib/"*.lib ddnet-libs/webp/windows/lib64/
+
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -190,9 +232,9 @@ jobs:
         run: |
           "${PYTHON_EXECUTABLE}" -m pip install --upgrade pip
           if [ "$RUNNER_OS" = "macOS" ]; then
-            "${PYTHON_EXECUTABLE}" -m pip install dmgbuild Pillow
+            "${PYTHON_EXECUTABLE}" -m pip install dmgbuild==1.6.7 Pillow==12.3.0
           else
-            "${PYTHON_EXECUTABLE}" -m pip install Pillow
+            "${PYTHON_EXECUTABLE}" -m pip install Pillow==12.3.0
           fi
 
       - name: Configure
@@ -203,7 +245,13 @@ jobs:
           ARGS=(-G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DDOWNLOAD_GTEST=ON -DPython3_EXECUTABLE="${PYTHON_EXECUTABLE}")
           case "$RUNNER_OS" in
             Linux)
-              ARGS+=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
+              # Rust doctests link the C++ bridge through lld. GCC LTO objects
+              # in rust_test are not consumable by that linker.
+              ARGS+=(
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+                -DIPO=OFF
+              )
               ;;
             macOS)
               SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
@@ -324,6 +372,11 @@ jobs:
             echo "Build artifact verified: $size bytes"
           fi
 
+      - name: Verify macOS DMG contents
+        if: runner.os == 'macOS'
+        shell: bash
+        run: qmclient_scripts/verify_macos_dmg.sh "dist/${{ matrix.output_name }}"
+
       - name: Build summary
         if: always()
         shell: bash
@@ -351,16 +404,12 @@ jobs:
     timeout-minutes: 180
     env:
       ANDROID_APP_NAME: QmClient
-      ANDROID_PACKAGE_NAME: org.ddnet.client
+      ANDROID_PACKAGE_NAME: com.qmclient.client
       ANDROID_BUILD_DIR: build-android-release
       ANDROID_NDK_VERSION: "26.1.10909125"
+      CARGO_NDK_VERSION: "4.1.2"
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       SCCACHE_GHA_ENABLED: "true"
-      # Debug keystore credentials - safe to commit as these are standard Android debug keys
-      # For production releases, use GitHub Secrets for keystore credentials
-      TW_KEY_NAME: /home/runner/.android/debug.keystore
-      TW_KEY_PW: android
-      TW_KEY_ALIAS: androiddebugkey
     steps:
       - name: Free disk space
         run: |
@@ -407,7 +456,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/cargo-ndk
-          key: cargo-ndk-${{ runner.os }}
+          key: cargo-ndk-${{ runner.os }}-${{ env.CARGO_NDK_VERSION }}
 
       - name: Cache Android NDK
         uses: actions/cache@v5
@@ -435,7 +484,7 @@ jobs:
             cmake ninja-build pkg-config curl python3 python3-pip python3-pil \
             glslang-tools spirv-tools ccache
           if [ ! -f ~/.cargo/bin/cargo-ndk ]; then
-            cargo install cargo-ndk
+            cargo install cargo-ndk --version "${CARGO_NDK_VERSION}" --locked
           fi
           rustup target add armv7-linux-androideabi
           rustup target add i686-linux-android
@@ -530,20 +579,45 @@ jobs:
 
       - name: Prepare Android signing keystore
         shell: bash
+        env:
+          QM_ANDROID_KEYSTORE_BASE64: ${{ secrets.QM_ANDROID_KEYSTORE_BASE64 }}
+          QM_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.QM_ANDROID_KEYSTORE_PASSWORD }}
+          QM_ANDROID_KEY_ALIAS: ${{ secrets.QM_ANDROID_KEY_ALIAS }}
         run: |
           set -euo pipefail
-          mkdir -p "$(dirname "${TW_KEY_NAME}")"
-          if [ ! -f "${TW_KEY_NAME}" ]; then
-            keytool -genkeypair -v \
-              -keystore "${TW_KEY_NAME}" \
-              -storepass "${TW_KEY_PW}" \
-              -keypass "${TW_KEY_PW}" \
-              -alias "${TW_KEY_ALIAS}" \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -dname "CN=GitHub Actions, OU=CI, O=QmClient, L=Unknown, ST=Unknown, C=US"
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            for variable in QM_ANDROID_KEYSTORE_BASE64 QM_ANDROID_KEYSTORE_PASSWORD QM_ANDROID_KEY_ALIAS; do
+              if [ -z "${!variable}" ]; then
+                echo "Required Android release secret ${variable} is not configured"
+                exit 1
+              fi
+            done
+            TW_KEY_NAME="${RUNNER_TEMP}/qmclient-release.jks"
+            printf '%s' "${QM_ANDROID_KEYSTORE_BASE64}" | base64 --decode > "${TW_KEY_NAME}"
+            TW_KEY_PW="${QM_ANDROID_KEYSTORE_PASSWORD}"
+            TW_KEY_ALIAS="${QM_ANDROID_KEY_ALIAS}"
+          else
+            TW_KEY_NAME="${HOME}/.android/debug.keystore"
+            TW_KEY_PW=android
+            TW_KEY_ALIAS=androiddebugkey
+            mkdir -p "$(dirname "${TW_KEY_NAME}")"
+            if [ ! -f "${TW_KEY_NAME}" ]; then
+              keytool -genkeypair -v \
+                -keystore "${TW_KEY_NAME}" \
+                -storepass "${TW_KEY_PW}" \
+                -keypass "${TW_KEY_PW}" \
+                -alias "${TW_KEY_ALIAS}" \
+                -keyalg RSA \
+                -keysize 2048 \
+                -validity 10000 \
+                -dname "CN=GitHub Actions, OU=CI, O=QmClient, L=Unknown, ST=Unknown, C=US"
+            fi
           fi
+          {
+            echo "TW_KEY_NAME=${TW_KEY_NAME}"
+            echo "TW_KEY_PW=${TW_KEY_PW}"
+            echo "TW_KEY_ALIAS=${TW_KEY_ALIAS}"
+          } >> "${GITHUB_ENV}"
 
       - name: Build Android APK/AAB
         shell: bash

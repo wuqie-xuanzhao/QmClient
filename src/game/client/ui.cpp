@@ -2168,7 +2168,7 @@ float CUi::DoScrollbarV(const void *pId, const CUIRect *pRect, float Current)
 	return ReturnValue;
 }
 
-float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, const ColorRGBA *pColorInner)
+void CUi::RenderScrollbarH(const void *pId, const CUIRect *pRect, float Current, const ColorRGBA *pColorInner)
 {
 	Current = std::clamp(Current, 0.0f, 1.0f);
 	const bool UseQmSliderStyle = g_Config.m_QmNewUi != 0;
@@ -2199,66 +2199,12 @@ float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, co
 		HandleArea.x -= 3.0f;
 	}
 
-	// logic
-	const bool InsideRail = MouseHovered(&Rail);
-	const bool InsideHandle = MouseHovered(&HandleArea);
-	bool Grabbed = false; // whether to apply the offset
-
-	if(CheckActiveItem(pId))
-	{
-		if(MouseButton(0))
-		{
-			Grabbed = true;
-			if(Input()->ShiftIsPressed())
-				m_MouseSlow = true;
-		}
-		else
-		{
-			SetActiveItem(nullptr);
-		}
-	}
-	else if(HotItem() == pId)
-	{
-		if(InsideHandle)
-		{
-			if(MouseButton(0))
-			{
-				SetActiveItem(pId);
-				m_pLastActiveScrollbar = pId;
-				m_ActiveScrollbarOffset = MouseX() - Handle.x;
-				Grabbed = true;
-			}
-		}
-		else if(MouseButtonClicked(0))
-		{
-			SetActiveItem(pId);
-			m_pLastActiveScrollbar = pId;
-			m_ActiveScrollbarOffset = Handle.w / 2.0f;
-			Grabbed = true;
-		}
-	}
-
-	if(!UseQmSliderStyle && !pColorInner && (InsideHandle || Grabbed) && (CheckActiveItem(pId) || HotItem() == pId))
+	if(!UseQmSliderStyle && !pColorInner && MouseHovered(&HandleArea) && (CheckActiveItem(pId) || HotItem() == pId))
 	{
 		Handle.h += 3.0f;
 		Handle.y -= 1.5f;
 	}
 
-	if(InsideRail && !MouseButton(0))
-	{
-		SetHotItem(pId);
-	}
-
-	float ReturnValue = Current;
-	if(Grabbed)
-	{
-		const float Min = Rail.x;
-		const float Max = Rail.w - Handle.w;
-		const float Cur = MouseX() - m_ActiveScrollbarOffset;
-		ReturnValue = std::clamp((Cur - Min) / Max, 0.0f, 1.0f);
-	}
-
-	// render
 	const ColorRGBA HandleColor = ms_ScrollBarColorFunction.GetColor(CheckActiveItem(pId), HotItem() == pId);
 	if(UseQmSliderStyle)
 	{
@@ -2293,6 +2239,88 @@ float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, co
 		DrawRoundedSurface(this, Rail, ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), ColorRGBA(), Rail.h / 2.0f);
 		DrawRoundedSurface(this, Handle, ScaleBackgroundAlpha(HandleColor), ColorRGBA(), Rail.h / 2.0f);
 	}
+}
+
+float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, const ColorRGBA *pColorInner)
+{
+	Current = std::clamp(Current, 0.0f, 1.0f);
+	const bool UseQmSliderStyle = g_Config.m_QmNewUi != 0;
+
+	// layout
+	CUIRect Rail;
+	if(UseQmSliderStyle || pColorInner)
+		Rail = *pRect;
+	else
+		pRect->HMargin(5.0f, &Rail);
+
+	const float HandleSize = UseQmSliderStyle ? std::clamp(Rail.h * 0.75f, 8.0f, 16.0f) : 0.0f;
+	CUIRect Handle;
+	Rail.VSplitLeft(UseQmSliderStyle ? HandleSize : (pColorInner ? 8.0f : std::clamp(33.0f, Rail.h, Rail.w / 3.0f)), &Handle, nullptr);
+	if(UseQmSliderStyle)
+	{
+		Handle.h = HandleSize;
+		Handle.y = Rail.y + (Rail.h - Handle.h) * 0.5f;
+	}
+	Handle.x += (Rail.w - Handle.w) * Current;
+
+	CUIRect HandleArea = Handle;
+	if(UseQmSliderStyle || !pColorInner)
+	{
+		HandleArea.h = pRect->h * 0.9f;
+		HandleArea.y = pRect->y + pRect->h * 0.05f;
+		HandleArea.w += 6.0f;
+		HandleArea.x -= 3.0f;
+	}
+
+	const bool InsideRail = MouseHovered(&Rail);
+	const bool InsideHandle = MouseHovered(&HandleArea);
+	bool Grabbed = false;
+	if(CheckActiveItem(pId))
+	{
+		if(MouseButton(0))
+		{
+			Grabbed = true;
+			if(Input()->ShiftIsPressed())
+				m_MouseSlow = true;
+		}
+		else
+		{
+			SetActiveItem(nullptr);
+		}
+	}
+	else if(HotItem() == pId)
+	{
+		if(InsideHandle)
+		{
+			if(MouseButton(0))
+			{
+				SetActiveItem(pId);
+				m_pLastActiveScrollbar = pId;
+				m_ActiveScrollbarOffset = MouseX() - Handle.x;
+				Grabbed = true;
+			}
+		}
+		else if(MouseButtonClicked(0))
+		{
+			SetActiveItem(pId);
+			m_pLastActiveScrollbar = pId;
+			m_ActiveScrollbarOffset = Handle.w / 2.0f;
+			Grabbed = true;
+		}
+	}
+
+	if(InsideRail && !MouseButton(0))
+		SetHotItem(pId);
+
+	float ReturnValue = Current;
+	if(Grabbed)
+	{
+		const float Max = Rail.w - Handle.w;
+		const float Cur = MouseX() - m_ActiveScrollbarOffset;
+		ReturnValue = std::clamp((Cur - Rail.x) / Max, 0.0f, 1.0f);
+	}
+
+	RenderScrollbarH(pId, pRect, ReturnValue, pColorInner);
 
 	return ReturnValue;
 }

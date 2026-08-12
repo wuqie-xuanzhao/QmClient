@@ -10,4 +10,7 @@
 #![warn(missing_docs)]
 
 #[allow(unused_extern_crates)]
+extern crate cxx;
+
+#[allow(unused_extern_crates)]
 extern crate link_cplusplus;
