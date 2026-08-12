@@ -299,6 +299,7 @@ protected:
 	void ClearVideoBackground(bool UnloadTexture = true);
 	bool LoadVideoBackground(const char *pPath);
 	bool UpdateVideoBackground();
+	void RenderBackgroundColor();
 	bool RenderBackgroundTexture();
 	IGraphics::CTextureHandle ActiveBackgroundTexture() const { return m_BackgroundTexture; }
 #if defined(CONF_VIDEORECORDER)

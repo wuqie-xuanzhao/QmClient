@@ -13,18 +13,20 @@ VERSION=$2
 renice -n 19 -p $$
 ionice -c 3 -p $$
 
-# Set directories
-SCRIPTS_DIR="/var/www/tclient.app/scripts"
-UPDATES_DIR="/var/www/tclient.app/updates"
+# This legacy delta updater is intentionally opt-in: its deployment paths and
+# release source must match the active QmClient update service.
+SCRIPTS_DIR="${QM_UPDATE_SCRIPTS_DIR:?set QM_UPDATE_SCRIPTS_DIR to the deployment scripts directory}"
+UPDATES_DIR="${QM_UPDATE_OUTPUT_DIR:?set QM_UPDATE_OUTPUT_DIR to the update output directory}"
+RELEASE_REPOSITORY="${QM_UPDATE_RELEASE_REPOSITORY:-wxj881027/QmClient}"
 
 cd "$SCRIPTS_DIR"
 
 # Download from github
-wget -O QmClient-${OLD_VERSION}-win64.zip "https://github.com/sjrc6/TaterClient-ddnet/releases/download/V${OLD_VERSION}/QmClient-windows.zip"
-wget -O QmClient-${OLD_VERSION}-linux_x86_64.tar.xz "https://github.com/sjrc6/TaterClient-ddnet/releases/download/V${OLD_VERSION}/QmClient-ubuntu.tar.xz"
+wget -O QmClient-${OLD_VERSION}-win64.zip "https://github.com/${RELEASE_REPOSITORY}/releases/download/v${OLD_VERSION}/QmClient-windows.zip"
+wget -O QmClient-${OLD_VERSION}-linux_x86_64.tar.xz "https://github.com/${RELEASE_REPOSITORY}/releases/download/v${OLD_VERSION}/QmClient-ubuntu.tar.xz"
 
-wget -O QmClient-${VERSION}-win64.zip "https://github.com/sjrc6/TaterClient-ddnet/releases/download/V${VERSION}/QmClient-windows.zip"
-wget -O QmClient-${VERSION}-linux_x86_64.tar.xz "https://github.com/sjrc6/TaterClient-ddnet/releases/download/V${VERSION}/QmClient-ubuntu.tar.xz"
+wget -O QmClient-${VERSION}-win64.zip "https://github.com/${RELEASE_REPOSITORY}/releases/download/v${VERSION}/QmClient-windows.zip"
+wget -O QmClient-${VERSION}-linux_x86_64.tar.xz "https://github.com/${RELEASE_REPOSITORY}/releases/download/v${VERSION}/QmClient-ubuntu.tar.xz"
 
 # Unpack directories
 unzip -d QmClient-${OLD_VERSION}-win64 QmClient-${OLD_VERSION}-win64.zip

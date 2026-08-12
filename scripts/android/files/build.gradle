@@ -20,8 +20,8 @@ android {
 	compileSdkVersion 36
 	buildToolsVersion "36.1.0"
 	defaultConfig {
-		applicationId "org.ddnet.client"
-		namespace = "org.ddnet.client"
+		applicationId "com.qmclient.client"
+		namespace = "com.qmclient.client"
 		minSdkVersion 24
 		targetSdkVersion 36
 		versionCode TW_VERSION_CODE

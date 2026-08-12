@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 3.12...3.27.4)
 
-set(DEFAULT_MACOS_DEPLOYMENT_TARGET "10.15")
-if(APPLE)
-  set(DEFAULT_MACOS_DEPLOYMENT_TARGET "26.0")
-endif()
-set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version" FORCE)
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.15)
-  message(WARNING "Building for macOS < 10.15 is not supported")
+set(DEFAULT_MACOS_DEPLOYMENT_TARGET "11.0")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version")
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 11.0)
+  message(WARNING "Building for macOS < 11.0 is not supported")
 endif()
 
 file(STRINGS src/game/version.h VERSION_LINE
@@ -124,9 +121,8 @@ if(TARGET_OS STREQUAL "windows")
   set(AUTO_DEPENDENCIES_DEFAULT ON)
   set(AUTO_VULKAN_BACKEND OFF)
 elseif(TARGET_OS STREQUAL "mac")
-  # macOS 的 Vulkan 路径依赖 MoltenVK 和 shader 工具；保持显式 opt-in，
-  # 让没有完整 SDK 的干净环境仍可直接使用 OpenGL 配置。
-  set(AUTO_VULKAN_BACKEND OFF)
+  # macOS 通过 MoltenVK 使用 Vulkan，开发与默认构建均启用该后端。
+  set(AUTO_VULKAN_BACKEND ON)
 endif()
 
 option(WEBSOCKETS "Enable websockets support" OFF)
@@ -4022,6 +4018,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/settings_resource_jobs.cpp
     src/game/client/components/settings_warmup.cpp
     src/game/client/ui_rect.cpp
+    src/game/client/QmUi/UiSurface.cpp
+    src/test/ui_rect_test_helpers.cpp
     src/game/client/QmUi/QmAnim.cpp
     src/game/client/QmUi/QmAnimResolve.cpp
     src/game/client/QmUi/QmLayout.cpp

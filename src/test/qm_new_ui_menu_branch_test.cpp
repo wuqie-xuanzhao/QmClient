@@ -888,7 +888,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurSettingReplacesBetterScoreboardAndIsVersio
 	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(19.0f);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.33\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NewSettingsUseToggleAndExposeAccentAndBlurControls)

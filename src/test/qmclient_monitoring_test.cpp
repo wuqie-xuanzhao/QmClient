@@ -4279,6 +4279,23 @@ TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
 	EXPECT_NE(Body.find("FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, NumericFieldSharesScrollbarStyleAndReservesInfiniteEndpoint)
+{
+	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
+	const std::string FormsSource = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
+	const std::string UiSource = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string NumericBody = ExtractSourceFunctionBody(FormsSource, "bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)");
+	ASSERT_FALSE(NumericBody.empty());
+
+	EXPECT_NE(FormsHeader.find("NumericFieldInfiniteEndpointStart"), std::string::npos);
+	EXPECT_NE(NumericBody.find("const float InfiniteEndpointStart = Infinite ? NumericFieldInfiniteEndpointStart(ScrollBar.w, Ctx.m_UiScale) : 1.0f;"), std::string::npos);
+	EXPECT_NE(NumericBody.find("const bool NewInfiniteValue = Infinite && NewNormalized >= (1.0f + InfiniteEndpointStart) * 0.5f;"), std::string::npos);
+	EXPECT_NE(NumericBody.find("Ctx.m_pUi->RenderScrollbarH(pId, &ScrollBar, Normalized);"), std::string::npos);
+	EXPECT_NE(UiHeader.find("void RenderScrollbarH(const void *pId"), std::string::npos);
+	EXPECT_NE(UiSource.find("void CUi::RenderScrollbarH(const void *pId"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, SkinTransitionDurationLabelUsesSingleLineShrink)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -7439,6 +7456,11 @@ TEST(QmMonitoringHelpers, P6FunctionGoresContentExtractionKeepsStableHeightAndIn
 	EXPECT_NE(GoresBody.find("s_AxiomDummyLoginPassword"), std::string::npos);
 	EXPECT_NE(GoresBody.find("RenderQmFunctionCheckbox"), std::string::npos);
 	EXPECT_NE(GoresBody.find("toggle qm_gores 0 1"), std::string::npos);
+	EXPECT_NE(GoresBody.find("Content.HSplitTop(LineSpacing, nullptr, &Content);"), std::string::npos);
+	EXPECT_NE(GoresBody.find("InputField(TextInputCtx, &Input, ControlColumn, Options)"), std::string::npos);
+	EXPECT_NE(GoresBody.find("DoKeyReader(&s_ReaderButtonGoresToggle, &s_ClearButtonGoresToggle, &BindKey"), std::string::npos);
+	EXPECT_EQ(GoresBody.find("CenterControl"), std::string::npos);
+	EXPECT_EQ(GoresBody.find("0.35f"), std::string::npos);
 	EXPECT_EQ(GoresBody.find("RegisterModuleCard"), std::string::npos);
 }
 
@@ -10434,4 +10456,22 @@ TEST(QmMonitoringHelpers, AndroidBundledCryptoUsesBoringSslAndSystemCertificates
 	EXPECT_EQ(FindCrypto.find("set_extra_dirs_lib(CRYPTO openssl)"), std::string::npos);
 	EXPECT_NE(Http.find("curl_easy_setopt(pH, CURLOPT_CAPATH, \"/system/etc/security/cacerts\");"), std::string::npos);
 	EXPECT_EQ(Http.find("curl_easy_setopt(pH, CURLOPT_CAINFO, \"data/cacert.pem\");"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, EntitiesBackgroundExplicitlyDrawsConfiguredColor)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/background.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/background.cpp");
+	const std::string Render = ExtractSourceFunctionBody(Source, "void CBackground::OnRender()");
+	const std::string RenderCustom = ExtractSourceFunctionBody(Source, "bool CBackground::RenderCustom(const vec2 &Center, float Zoom)");
+	const std::string RenderColor = ExtractSourceFunctionBody(Source, "void CBackground::RenderBackgroundColor()");
+	ASSERT_FALSE(Render.empty());
+	ASSERT_FALSE(RenderCustom.empty());
+	ASSERT_FALSE(RenderColor.empty());
+
+	EXPECT_NE(Header.find("void RenderBackgroundColor();"), std::string::npos);
+	EXPECT_NE(RenderColor.find("g_Config.m_ClBackgroundEntitiesColor"), std::string::npos);
+	EXPECT_NE(RenderColor.find("Graphics()->DrawRect("), std::string::npos);
+	EXPECT_LT(Render.find("RenderBackgroundColor();"), Render.find("if(!m_Loaded)"));
+	EXPECT_LT(RenderCustom.find("RenderBackgroundColor();"), RenderCustom.find("if(!m_Loaded)"));
 }

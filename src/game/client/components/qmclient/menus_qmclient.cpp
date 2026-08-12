@@ -1688,13 +1688,13 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 	static bool s_ShowAxiomPassword = false;
 	static bool s_ShowAxiomDummyPassword = false;
 	CUIRect Row, LabelColumn, ControlColumn;
-	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pTextId, const char *pText, int *pValue, float Spacing = 1.0f) {
+	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pTextId, const char *pText, int *pValue) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		RenderQmFunctionCheckbox(pId, pTextId, Localize(pText), pValue, &Row, PrewarmOnly);
-		Content.HSplitTop(LineSpacing * Spacing, nullptr, &Content);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 	RenderCheckbox(&g_Config.m_QmGores, "qmclient-gores-enable", "Enable Gores mode", &g_Config.m_QmGores);
-	RenderCheckbox(&g_Config.m_QmAxiomAutoLogin, "qmclient-gores-axiom-auto-login", "Auto login Axiom server", &g_Config.m_QmAxiomAutoLogin, 0.0f);
+	RenderCheckbox(&g_Config.m_QmAxiomAutoLogin, "qmclient-gores-axiom-auto-login", "Auto login Axiom server", &g_Config.m_QmAxiomAutoLogin);
 
 	if(g_Config.m_QmAxiomAutoLogin)
 	{
@@ -1712,7 +1712,7 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 			Options.m_TrailingWidth = ControlColumn.h;
 			if(ui_widget::InputField(TextInputCtx, &Input, ControlColumn, Options).m_TrailingAction)
 				Visible = !Visible;
-			Content.HSplitTop(LineSpacing * 0.35f, nullptr, &Content);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
 		};
 		static CLineInput s_AxiomLoginPassword(g_Config.m_QmAxiomLoginPassword, sizeof(g_Config.m_QmAxiomLoginPassword));
 		static CLineInput s_AxiomDummyLoginPassword(g_Config.m_QmAxiomDummyLoginPassword, sizeof(g_Config.m_QmAxiomDummyLoginPassword));
@@ -1720,7 +1720,7 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 		RenderPassword("qmclient-gores-axiom-dummy-password", "Axiom dummy password", s_AxiomDummyLoginPassword, s_AxiomDummyPasswordToggleButton, s_ShowAxiomDummyPassword);
 	}
 
-	RenderCheckbox(&g_Config.m_QmGoresAutoEnable, "qmclient-gores-auto-enable", "Auto enable in Gores mode", &g_Config.m_QmGoresAutoEnable, 0.35f);
+	RenderCheckbox(&g_Config.m_QmGoresAutoEnable, "qmclient-gores-auto-enable", "Auto enable in Gores mode", &g_Config.m_QmGoresAutoEnable);
 	if(g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable)
 	{
 		RenderCheckbox(&g_Config.m_QmGoresAutoWeaponSwitch, "qmclient-gores-auto-weapon-switch", "Auto weapon switch", &g_Config.m_QmGoresAutoWeaponSwitch);
@@ -1728,7 +1728,7 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 		RenderCheckbox(&g_Config.m_QmGoresFastInputOthers, "qmclient-gores-fast-input-others", "Auto-toggle fast input others", &g_Config.m_QmGoresFastInputOthers);
 		RenderCheckbox(&g_Config.m_QmGoresDisableIfWeapons, "qmclient-gores-disable-if-weapons", "Disable after picking up other weapons", &g_Config.m_QmGoresDisableIfWeapons);
 		RenderCheckbox(&g_Config.m_QmGoresDisableDummyHammer, "qmclient-gores-disable-dummy-hammer", "Temporarily disable dummy hammering", &g_Config.m_QmGoresDisableDummyHammer);
-		RenderCheckbox(&g_Config.m_QmGoresHideGuides, "qmclient-gores-hide-guides", "Hide guide lines", &g_Config.m_QmGoresHideGuides, 0.35f);
+		RenderCheckbox(&g_Config.m_QmGoresHideGuides, "qmclient-gores-hide-guides", "Hide guide lines", &g_Config.m_QmGoresHideGuides);
 	}
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
@@ -4986,9 +4986,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		case EQmModuleId::GoresActor:
 			return !g_Config.m_TcFreezeChatEnabled ? Row() : Row() * (g_Config.m_TcFreezeChatEmoticon ? 5.0f : 4.0f);
 		case EQmModuleId::Gores:
-			return Row() + LineHeight +
-			       (g_Config.m_QmAxiomAutoLogin ? Row(0.35f) * 2.0f : 0.0f) + Row(0.35f) +
-			       ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? Row() * 6.0f : 0.0f) + LineHeight;
+			return Row() * (3.0f + (g_Config.m_QmAxiomAutoLogin ? 2.0f : 0.0f) + ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? 6.0f : 0.0f)) + LineHeight;
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
 		case EQmModuleId::MiniFeatures: return Rows(19.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;

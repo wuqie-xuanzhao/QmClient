@@ -106,7 +106,7 @@ bool CLiveMatchReplay::Start(CGameClient *pGameClient)
 
 	char aDemoName[IO_MAX_PATH_LENGTH];
 	FormatMatchDemoName(pGameClient, aDemoName, sizeof(aDemoName));
-	pGameClient->Client()->DemoRecorder_Start(aDemoName, false, RECORDER_MANUAL, true);
+	pGameClient->Client()->DemoRecorder_Start(aDemoName, false, RECORDER_MANUAL);
 	if(!pGameClient->Client()->DemoRecorder(RECORDER_MANUAL)->IsRecording())
 	{
 		SetStatus("failed to start demo recorder");
@@ -157,8 +157,8 @@ void CLiveMatchReplay::BeginSidecar(CGameClient *pGameClient)
 	m_Sidecar.Start(
 		m_aDemoFilename,
 		pGameClient->Client()->GetCurrentMap(),
-		pGameClient->Client()->GetCurrentMapSha256(),
-		pGameClient->Client()->GetCurrentMapCrc(),
+		pGameClient->Map()->Sha256(),
+		pGameClient->Map()->Crc(),
 		m_StartTick);
 }
 

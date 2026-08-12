@@ -1068,6 +1068,7 @@ public:
 		SCROLLBAR_OPTION_DELAYUPDATE = 1 << 3,
 	};
 	float DoScrollbarV(const void *pId, const CUIRect *pRect, float Current);
+	void RenderScrollbarH(const void *pId, const CUIRect *pRect, float Current, const ColorRGBA *pColorInner = nullptr);
 	float DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, const ColorRGBA *pColorInner = nullptr);
 	bool DoScrollbarOption(const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
 
