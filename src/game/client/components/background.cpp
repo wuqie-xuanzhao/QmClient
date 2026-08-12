@@ -1560,6 +1560,14 @@ bool CBackground::RenderBackgroundTexture()
 	return true;
 }
 
+void CBackground::RenderBackgroundColor()
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const ColorRGBA BackgroundColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundEntitiesColor));
+	Graphics()->DrawRect(ScreenX0, ScreenY0, ScreenX1 - ScreenX0, ScreenY1 - ScreenY0, BackgroundColor, IGraphics::CORNER_NONE, 0.0f);
+}
+
 void CBackground::OnInit()
 {
 	m_pBackgroundMap = CreateBGMap();
@@ -1655,13 +1663,15 @@ void CBackground::OnMapLoad()
 
 void CBackground::OnRender()
 {
-	if(!m_Loaded)
-		return;
-
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
 	if(g_Config.m_ClOverlayEntities != 100)
+		return;
+
+	// 实体层纯色背景必须在此阶段显式绘制，不能依赖帧首清屏状态。
+	RenderBackgroundColor();
+	if(!m_Loaded)
 		return;
 
 	if(RenderBackgroundTexture())
@@ -1672,14 +1682,15 @@ void CBackground::OnRender()
 
 bool CBackground::RenderCustom(const vec2 &Center, float Zoom)
 {
-	if(!m_Loaded)
-		return false;
-
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return false;
 
 	if(g_Config.m_ClOverlayEntities != 100)
 		return false;
+
+	RenderBackgroundColor();
+	if(!m_Loaded)
+		return true;
 
 	if(RenderBackgroundTexture())
 		return true;

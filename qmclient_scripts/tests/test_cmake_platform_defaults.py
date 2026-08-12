@@ -9,15 +9,16 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class CmakePlatformDefaultsTest(unittest.TestCase):
-	def test_macos_disables_vulkan_by_default(self) -> None:
+	def test_macos_enables_vulkan_by_default(self) -> None:
 		cmake_source = (REPO_ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
 		block_start = cmake_source.index("set(AUTO_VULKAN_BACKEND ON)")
 		block_end = cmake_source.index("option(WEBSOCKETS", block_start)
 		platform_defaults = cmake_source[block_start:block_end]
 
 		self.assertIn('if(TARGET_OS STREQUAL "windows")', platform_defaults)
-		self.assertIn("set(AUTO_VULKAN_BACKEND OFF)", platform_defaults)
 		self.assertIn('elseif(TARGET_OS STREQUAL "mac")', platform_defaults)
+		macos_defaults = platform_defaults.split('elseif(TARGET_OS STREQUAL "mac")', 1)[1]
+		self.assertIn("set(AUTO_VULKAN_BACKEND ON)", macos_defaults)
 
 	def test_macos_deployment_target_is_overridable(self) -> None:
 		cmake_source = (REPO_ROOT / "CMakeLists.txt").read_text(encoding="utf-8")

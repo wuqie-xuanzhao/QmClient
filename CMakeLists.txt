@@ -121,9 +121,8 @@ if(TARGET_OS STREQUAL "windows")
   set(AUTO_DEPENDENCIES_DEFAULT ON)
   set(AUTO_VULKAN_BACKEND OFF)
 elseif(TARGET_OS STREQUAL "mac")
-  # macOS 的 Vulkan 路径依赖 MoltenVK 和 shader 工具；保持显式 opt-in，
-  # 让没有完整 SDK 的干净环境仍可直接使用 OpenGL 配置。
-  set(AUTO_VULKAN_BACKEND OFF)
+  # macOS 通过 MoltenVK 使用 Vulkan，开发与默认构建均启用该后端。
+  set(AUTO_VULKAN_BACKEND ON)
 endif()
 
 option(WEBSOCKETS "Enable websockets support" OFF)

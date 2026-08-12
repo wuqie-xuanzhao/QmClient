@@ -87,6 +87,7 @@ jobs:
       run: |
         mkdir clang-tidy
         cd clang-tidy
+        # 可选特性构建保留 CMake 清单告警，不将既有 source list 漂移升级为错误。
         cmake -G Ninja \
           -DCMAKE_CXX_COMPILER="clang++-${CLANG_VERSION}" \
           -DCMAKE_C_COMPILER="clang-${CLANG_VERSION}" \
@@ -102,8 +103,6 @@ jobs:
           -DVIDEORECORDER=ON \
           -DVULKAN=ON \
           -DWEBSOCKETS=ON \
-          # The optional-feature build should report CMake inventory warnings
-          # without treating existing source-list drift as a compile failure.
           -Wno-error=author ..
         cmake --build . --config Debug --target everything -- -k 0
 
