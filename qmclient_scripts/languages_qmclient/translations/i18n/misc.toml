@@ -1344,6 +1344,22 @@ turkish = "Klan adı"
 polish = "Nazwa klanu"
 
 [[message]]
+key = "[Developer]"
+[message.translations]
+simplified_chinese = "[开发者]"
+traditional_chinese = "[開發者]"
+japanese = "[開発者]"
+korean = "[개발자]"
+russian = "[Разработчик]"
+german = "[Entwickler]"
+spanish = "[Desarrollador]"
+french = "[Développeur]"
+brazilian_portuguese = "[Desenvolvedor]"
+portuguese = "[Programador]"
+turkish = "[Geliştirici]"
+polish = "[Deweloper]"
+
+[[message]]
 key = "Clear"
 [message.translations]
 simplified_chinese = "清空"

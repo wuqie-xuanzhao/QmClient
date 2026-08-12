@@ -1850,6 +1850,10 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		if(Client()->State() != IClient::STATE_DEMOPLAYBACK &&
+			GameClient()->IsLocalClientId(pMsg->m_ClientId) &&
+			IsSensitiveChatCommand(pMsg->m_pMessage))
+			return;
 
 		auto &Re = GameClient()->m_TClient.m_RegexChatIgnore;
 		if(Re.error().empty() && Re.test(pMsg->m_pMessage))
@@ -2376,6 +2380,22 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 	// Team Number:
 	// 0 = global; 1 = team; 2 = sending whisper; 3 = receiving whisper
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		if(ClientId >= 0 && ClientId != GameClient()->m_aLocalIds[0] && ClientId != GameClient()->m_aLocalIds[1])
+		{
+			for(int LocalId : GameClient()->m_aLocalIds)
+			{
+				Highlighted |= LocalId >= 0 && LineShouldHighlight(pLine, GameClient()->m_aClients[LocalId].m_aName);
+			}
+		}
+	}
+	else
+	{
+		// on demo playback use local id from snap directly,
+		// since m_aLocalIds isn't valid there
+		Highlighted |= GameClient()->m_Snap.m_LocalClientId >= 0 && LineShouldHighlight(pLine, GameClient()->m_aClients[GameClient()->m_Snap.m_LocalClientId].m_aName);
+	}
 
 	if(g_Config.m_QmMessageMerge &&
 		PreviousLine.m_Initialized &&
@@ -2383,16 +2403,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		PreviousLine.m_CustomColor == CustomColor &&
 		PreviousLine.m_ForceVisible == ForceVisible &&
 		PreviousLine.m_ConsoleSuppressed == BlockWordsConsolePrinted &&
+		!Highlighted &&
 		CanMergePlayerMessages(PreviousLine.m_ClientId, PreviousLine.m_TeamNumber, PreviousLine.m_aText, PreviousLine.m_Time, ClientId, Team, pLine, Now))
 	{
-		const int PreviousTeam = PreviousLine.m_TeamNumber;
 		PreviousLine.m_TimesRepeated++;
 		AddMergedAuthor(PreviousLine, ClientId);
-		if(PreviousTeam != Team)
-		{
-			PreviousLine.m_Team = false;
-			PreviousLine.m_TeamNumber = 0;
-		}
 		if(PreviousLine.m_vMergedAuthors.size() > 1)
 		{
 			PreviousLine.m_Friend = false;
@@ -2436,23 +2451,6 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 	CurrentLine.m_ForceVisible = ForceVisible;
 	CurrentLine.m_ConsoleSuppressed = BlockWordsConsolePrinted;
 
-	// check for highlighted name
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
-	{
-		if(ClientId >= 0 && ClientId != GameClient()->m_aLocalIds[0] && ClientId != GameClient()->m_aLocalIds[1])
-		{
-			for(int LocalId : GameClient()->m_aLocalIds)
-			{
-				Highlighted |= LocalId >= 0 && LineShouldHighlight(pLine, GameClient()->m_aClients[LocalId].m_aName);
-			}
-		}
-	}
-	else
-	{
-		// on demo playback use local id from snap directly,
-		// since m_aLocalIds isn't valid there
-		Highlighted |= GameClient()->m_Snap.m_LocalClientId >= 0 && LineShouldHighlight(pLine, GameClient()->m_aClients[GameClient()->m_Snap.m_LocalClientId].m_aName);
-	}
 	CurrentLine.m_Highlighted = Highlighted;
 
 	str_copy(CurrentLine.m_aText, pLine);
@@ -3680,6 +3678,12 @@ void CChat::SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTransl
 {
 	if(!pLine || str_length(pLine) < 1)
 		return;
+
+	if(IsSensitiveChatCommand(pLine))
+	{
+		SendChat(Team, pLine);
+		return;
+	}
 
 	// 自动出站翻译
 	if(AllowOutgoingTranslation && GameClient()->m_Translate.ShouldAutoTranslateOutgoing(pLine))

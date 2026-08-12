@@ -82,6 +82,7 @@
 === All Local Saves ===
 === Saves for '%s' ===
 [%s] %s (Map: %s, Time: %s)
+[Developer]
 _ or ' ' = blank spacer
 a = View angle
 A demo with this name already exists

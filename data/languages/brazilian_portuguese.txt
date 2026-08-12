@@ -251,6 +251,10 @@
 [%s] %s (Map: %s, Time: %s)
 == [%s] %s (mapa: %s, hora: %s)
 
+[]
+[Developer]
+== [Desenvolvedor]
+
 _ or ' ' = blank spacer
 == _ ou ' ' = espaço em branco
 

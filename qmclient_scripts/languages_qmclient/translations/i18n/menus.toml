@@ -12912,22 +12912,6 @@ turkish = "Başlangıç döşemesinden geçerken silahları sıfırla"
 polish = "Resetuj broń przy przejściu przez kafelek startowy"
 
 [[message]]
-key = "Respawn default weapon"
-[message.translations]
-simplified_chinese = "重生默认武器"
-traditional_chinese = "重生默認武器"
-japanese = "リスポーン時のデフォルト武器"
-korean = "부활 기본 무기"
-russian = "Оружие после возрождения"
-german = "Standardwaffe nach Respawn"
-spanish = "Arma predeterminada al reaparecer"
-french = "Arme par défaut à la réapparition"
-brazilian_portuguese = "Arma padrão ao renascer"
-portuguese = "Arma predefinida ao renascer"
-turkish = "Yeniden doğuş varsayılan silahı"
-polish = "Domyślna broń po odrodzeniu"
-
-[[message]]
 key = "Rifle Laser Inner Color"
 [message.translations]
 simplified_chinese = "激光枪弹道实心颜色"

@@ -74,6 +74,18 @@ public:
 	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds, bool ExtraAnimations = true);
 	static float SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds);
 	static bool CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now);
+	static bool IsSensitiveChatCommand(const char *pLine)
+	{
+		if(pLine == nullptr)
+			return false;
+
+		const char *pCommand = str_utf8_skip_whitespaces(pLine);
+		const char *pArguments = str_startswith_nocase(pCommand, "/login");
+		if(pArguments == nullptr || pArguments == str_utf8_skip_whitespaces(pArguments))
+			return false;
+
+		return *str_utf8_skip_whitespaces(pArguments) != '\0';
+	}
 
 private:
 	static constexpr float CHAT_HEIGHT_FULL = 200.0f;
@@ -683,6 +695,8 @@ static inline float ChatPresentationTicksToSeconds(int64_t Ticks)
 inline bool CChat::CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now)
 {
 	if(PreviousClientId < 0 || ClientId < 0 || PreviousTeam >= TEAM_WHISPER_SEND || Team >= TEAM_WHISPER_SEND)
+		return false;
+	if(PreviousTeam != Team)
 		return false;
 	if(pPreviousText == nullptr || pText == nullptr || str_comp(pPreviousText, pText) != 0)
 		return false;

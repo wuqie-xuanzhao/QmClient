@@ -63,7 +63,7 @@ inline EQmAxiomLoginReply QmClassifyAxiomLoginReply(const char *pText)
 	if(TextContainsAny(pText, {"fail", "failed", "unsuccessful", "not successful", "not succeeded", "did not succeed", "denied", "error", "went wrong", "not logged in", "登入失败", "登录失败", "登入失敗", "登录失敗", "失败", "失敗", "错误", "錯誤", "拒绝", "拒絕", "无法连接", "無法連接", "已有玩家在线", "已有玩家在線"}))
 		return EQmAxiomLoginReply::RETRYABLE_FAILURE;
 
-	if(TextContainsAny(pText, {"success", "successful", "logged in", "welcome", "succeeded", "already logged", "authenticated", "登入成功", "登录成功", "欢迎", "歡迎", "已经登录", "已登录", "已經登入", "已登入"}))
+	if(TextContainsAny(pText, {"login successful", "login success", "you are logged in", "you are now logged in", "already logged in", "authentication successful", "authenticated successfully", "登入成功", "登录成功", "已经登录", "已登录", "已經登入", "已登入"}))
 		return EQmAxiomLoginReply::SUCCESS;
 
 	if(TextContainsAny(pText, {"verifying", "verification in progress", "authenticating", "验证中", "驗證中"}))

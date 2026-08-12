@@ -655,7 +655,6 @@ public:
 class CNamePlatePartDeveloper : public CNamePlatePartText
 {
 private:
-	static constexpr const char *ms_pText = "[开发者]";
 	static constexpr float ms_FontSizeScale = 0.8f;
 	float m_FontSize = -INFINITY;
 	float m_Alpha = 1.0f;
@@ -676,23 +675,24 @@ protected:
 	{
 		m_FontSize = Data.m_FontSize * ms_FontSizeScale;
 		m_Rainbow = Data.m_DeveloperRainbow;
+		const char *pText = Localize("[Developer]");
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		if(m_Rainbow)
 		{
 			int NumChars = 0;
-			const char *pCurrent = ms_pText;
+			const char *pCurrent = pText;
 			while(str_utf8_decode(&pCurrent) > 0)
 				++NumChars;
 			Cursor.m_vColorSplits.reserve(NumChars);
-			pCurrent = ms_pText;
+			pCurrent = pText;
 			for(int CharIndex = 0; CharIndex < NumChars; ++CharIndex)
 			{
 				const char *pNext = pCurrent;
 				if(str_utf8_decode(&pNext) <= 0)
 					break;
 				const float Hue = (float)CharIndex / NumChars;
-				Cursor.m_vColorSplits.emplace_back((int)(pCurrent - ms_pText), (int)(pNext - pCurrent), color_cast<ColorRGBA>(ColorHSLA(Hue, 0.8f, 0.65f)));
+				Cursor.m_vColorSplits.emplace_back((int)(pCurrent - pText), (int)(pNext - pCurrent), color_cast<ColorRGBA>(ColorHSLA(Hue, 0.8f, 0.65f)));
 				pCurrent = pNext;
 			}
 		}
@@ -700,7 +700,7 @@ protected:
 		{
 			Cursor.m_vColorSplits.emplace_back(0, -1, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 		}
-		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, ms_pText);
+		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, pText);
 	}
 
 	void Render(CGameClient &This, vec2 Pos) const override

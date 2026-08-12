@@ -251,6 +251,10 @@
 [%s] %s (Map: %s, Time: %s)
 == [%s] %s (harita: %s, zaman: %s)
 
+[]
+[Developer]
+== [Geliştirici]
+
 _ or ' ' = blank spacer
 == _ veya ' ' = boşluk
 

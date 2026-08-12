@@ -4,6 +4,7 @@
 #include <game/client/components/chat.h>
 #include <game/client/components/chat_completion.h>
 #include <game/client/components/console.h>
+#include <game/client/components/qmclient/axiom_auto_login.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
 #include <game/client/components/tclient/fast_practice.h>
 #include <game/client/components/tclient/warlist.h>
@@ -102,14 +103,45 @@ TEST(QmDummySyncChatCommand, MatchesOnlySupportedCommands)
 	EXPECT_FALSE(CChat::ShouldSyncDummyCommand("particle"));
 }
 
-TEST(QmChatMessageMerge, EligibilityUsesExactTextSlidingWindowAndPlayerMessagesOnly)
+TEST(QmChatSecurity, SensitiveLoginCommandsAreNotPersisted)
+{
+	EXPECT_TRUE(CChat::IsSensitiveChatCommand("/login secret"));
+	EXPECT_TRUE(CChat::IsSensitiveChatCommand(" \t/LOGIN secret"));
+	EXPECT_TRUE(CChat::IsSensitiveChatCommand("/login\tsecret"));
+	EXPECT_FALSE(CChat::IsSensitiveChatCommand("/login"));
+	EXPECT_FALSE(CChat::IsSensitiveChatCommand("/login "));
+	EXPECT_FALSE(CChat::IsSensitiveChatCommand("/login-secret"));
+	EXPECT_FALSE(CChat::IsSensitiveChatCommand("hello /login secret"));
+
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
+	const std::string SendChatQueued = SourceFunctionBody(Chat, "void CChat::SendChatQueued(int Team");
+
+	EXPECT_NE(OnMessage.find("GameClient()->IsLocalClientId(pMsg->m_ClientId)"), std::string::npos);
+	EXPECT_NE(OnMessage.find("IsSensitiveChatCommand(pMsg->m_pMessage)"), std::string::npos);
+	const size_t SensitiveCheck = SendChatQueued.find("if(IsSensitiveChatCommand(pLine))");
+	const size_t SendNow = SendChatQueued.find("SendChat(Team, pLine);");
+	const size_t TranslateCheck = SendChatQueued.find("ShouldAutoTranslateOutgoing(pLine)");
+	const size_t PendingQueue = SendChatQueued.find("m_PendingChatCounter");
+	ASSERT_NE(SensitiveCheck, std::string::npos);
+	ASSERT_NE(SendNow, std::string::npos);
+	ASSERT_NE(TranslateCheck, std::string::npos);
+	ASSERT_NE(PendingQueue, std::string::npos);
+	EXPECT_LT(SensitiveCheck, SendNow);
+	EXPECT_LT(SensitiveCheck, TranslateCheck);
+	EXPECT_LT(SendNow, PendingQueue);
+}
+
+TEST(QmChatMessageMerge, EligibilityUsesExactTextSlidingWindowAndMatchingChannelsOnly)
 {
 	const int64_t Start = TestTicks(10.0f);
 
-	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "same", Start + TestTicks(2.0f)));
-	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 1, "same", Start, 2, 0, "same", Start + TestTicks(0.1f)));
-	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "same", Start + TestTicks(2.01f)));
-	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "Same", Start + TestTicks(0.1f)));
+	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 0, "same", Start + TestTicks(2.0f)));
+	EXPECT_TRUE(CChat::CanMergePlayerMessages(2, 1, "same", Start, 7, 1, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 1, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 1, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 0, "same", Start + TestTicks(2.01f)));
+	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 0, "Same", Start + TestTicks(0.1f)));
 	EXPECT_FALSE(CChat::CanMergePlayerMessages(-1, 0, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
 	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, -1, 0, "same", Start + TestTicks(0.1f)));
 	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, TEAM_WHISPER_RECV, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
@@ -130,8 +162,9 @@ TEST(QmChatMessageMerge, ChatAndConsoleKeepStructuredMergedAuthors)
 	EXPECT_NE(ChatHeader.find("std::vector<SMergedAuthor> m_vMergedAuthors"), std::string::npos);
 	EXPECT_NE(AddLine.find("g_Config.m_QmMessageMerge"), std::string::npos);
 	EXPECT_NE(AddLine.find("CanMergePlayerMessages("), std::string::npos);
-	EXPECT_NE(AddLine.find("PreviousLine.m_Team = false;"), std::string::npos);
-	EXPECT_NE(AddLine.find("PreviousLine.m_TeamNumber = 0;"), std::string::npos);
+	EXPECT_NE(AddLine.find("!Highlighted &&"), std::string::npos);
+	EXPECT_EQ(AddLine.find("PreviousLine.m_Team = false;"), std::string::npos);
+	EXPECT_EQ(AddLine.find("PreviousLine.m_TeamNumber = 0;"), std::string::npos);
 	EXPECT_EQ(AddLine.find("PreviousLine.m_ClientId == ClientId"), std::string::npos);
 	EXPECT_NE(Chat.find("if(Author.m_ClientId == ClientId)"), std::string::npos);
 	EXPECT_NE(Chat.find("Author.m_NameColor = PlayerNameColor(ClientId, NameColor, false);"), std::string::npos);
@@ -147,6 +180,40 @@ TEST(QmChatMessageMerge, ChatAndConsoleKeepStructuredMergedAuthors)
 	EXPECT_NE(Console.find("m_PendingColorSpansByExportId"), std::string::npos);
 	EXPECT_NE(Console.find("EntryCursor.m_vColorSplits.emplace_back"), std::string::npos);
 	EXPECT_NE(Translate.find("for(const CChat::SMergedAuthor &Author : pLine->m_vMergedAuthors)"), std::string::npos);
+}
+
+TEST(QmChatMessageMerge, HighlightedMessagesAreNotMerged)
+{
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
+
+	const size_t HighlightCheck = AddLine.find("LineShouldHighlight(pLine");
+	const size_t MergeCheck = AddLine.find("CanMergePlayerMessages(");
+	ASSERT_NE(HighlightCheck, std::string::npos);
+	ASSERT_NE(MergeCheck, std::string::npos);
+	EXPECT_LT(HighlightCheck, MergeCheck);
+	EXPECT_NE(AddLine.find("!Highlighted &&"), std::string::npos);
+}
+
+TEST(QmAxiomAutoLogin, ClassifiesOnlyExplicitLoginSuccessReplies)
+{
+	EXPECT_EQ(QmClassifyAxiomLoginReply("Login successful."), EQmAxiomLoginReply::SUCCESS);
+	EXPECT_EQ(QmClassifyAxiomLoginReply("You are logged in."), EQmAxiomLoginReply::SUCCESS);
+	EXPECT_EQ(QmClassifyAxiomLoginReply("登录成功"), EQmAxiomLoginReply::SUCCESS);
+	EXPECT_EQ(QmClassifyAxiomLoginReply("Welcome, please login with /login."), EQmAxiomLoginReply::IGNORE);
+	EXPECT_EQ(QmClassifyAxiomLoginReply("Authentication is required before login."), EQmAxiomLoginReply::IGNORE);
+	EXPECT_EQ(QmClassifyAxiomLoginReply("You must be logged in to use this command."), EQmAxiomLoginReply::IGNORE);
+	EXPECT_EQ(QmClassifyAxiomLoginReply("Login successful, but an error occurred."), EQmAxiomLoginReply::RETRYABLE_FAILURE);
+}
+
+TEST(QmNameplates, DeveloperBadgeUsesLocalizedSourceKey)
+{
+	const std::string Nameplates = ReadTestSourceFile("src/game/client/components/nameplates.cpp");
+	const std::string Translations = ReadTestSourceFile("qmclient_scripts/languages_qmclient/translations/i18n/misc.toml");
+
+	EXPECT_NE(Nameplates.find("Localize(\"[Developer]\")"), std::string::npos);
+	EXPECT_EQ(Nameplates.find("ms_pText = \"[开发者]\""), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"[Developer]\""), std::string::npos);
 }
 
 TEST(QmChatMessageMerge, SettingIsDefaultOnLocalizedInDreamFeaturesAndVersioned)

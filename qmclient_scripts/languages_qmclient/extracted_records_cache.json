@@ -1030,6 +1030,13 @@
       "line": 79
     },
     {
+      "key": "[Developer]",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/nameplates.cpp",
+      "context": "",
+      "line": 678
+    },
+    {
       "key": "[Enter] Add a command to the command list.",
       "category": "localize_or_localizable",
       "source": "src/game/editor/editor_server_settings.cpp",
