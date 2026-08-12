@@ -181,7 +181,7 @@ void CFontTyper::TextModeOff()
 	if(Editor()->m_Dialog == DIALOG_PSEUDO_FONT_TYPER)
 		Editor()->m_Dialog = DIALOG_NONE;
 	if(m_TilesPlacedSinceActivate)
-		Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(Map(), Map()->m_SelectedGroup), "文字输入");
+		Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(Map(), Map()->m_SelectedGroup), Localize("Font typer", "Editor"));
 	m_TilesPlacedSinceActivate = 0;
 	m_Active = false;
 	m_pLastLayer = nullptr;

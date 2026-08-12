@@ -4832,22 +4832,6 @@ turkish = "Ekstra silah alındığında Gores otomatik değiştirmeyi devre dı�
 polish = "Wyłącz automatyczne przełączanie Gores po zdobyciu dodatkowej broni"
 
 [[message]]
-key = "Disable QmLive team preview/render filter"
-[message.translations]
-simplified_chinese = "关闭 QmLive 队伍预览/渲染过滤"
-traditional_chinese = "關閉 QmLive 隊伍預覽/渲染過濾"
-japanese = "QmLive チームプレビュー/レンダリングフィルターを無効化"
-korean = "QmLive 팀 미리보기/렌더 필터 비활성화"
-russian = "Отключить фильтр предпросмотра/рендера команды QmLive"
-german = "QmLive-Teamvorschau-/Renderfilter deaktivieren"
-spanish = "Desactivar el filtro de vista previa/representación del equipo de QmLive"
-french = "Désactiver le filtre d'aperçu/rendu d'équipe QmLive"
-brazilian_portuguese = "Desativar filtro de pré-visualização/renderização da equipe QmLive"
-portuguese = "Desativar filtro de pré-visualização/ renderização da equipe QmLive"
-turkish = "QmLive takım önizleme/oluşturma filtresini devre dışı bırak."
-polish = "Wyłącz filtr podglądu/renderingu drużyny QmLive"
-
-[[message]]
 key = "Display mode"
 [message.translations]
 simplified_chinese = "显示模式"
@@ -14944,214 +14928,6 @@ turkish = "Qimeng kenar çubuğu modülü sıralaması"
 polish = "Kolejność modułów paska bocznego QmDream"
 
 [[message]]
-key = "QmLiveClient: Default filter for unrecognized source player events"
-[message.translations]
-simplified_chinese = "QmLiveClient：无法识别来源的玩家型事件默认过滤"
-traditional_chinese = "QmLiveClient：無法識別來源的玩家型事件默認過濾"
-japanese = "QmLiveClient：ソース不明のプレイヤー型イベントデフォルトフィルター"
-korean = "QmLiveClient：출처를 식별할 수 없는 플레이어 이벤트 기본 필터"
-russian = "QmLiveClient: Фильтр по умолчанию для событий игроков с неопределённым источником"
-german = "QmLiveClient: Standardfilter für spielerbezogene Ereignisse ohne erkennbare Quelle"
-spanish = "QmLiveClient: Filtro predeterminado para eventos de jugador con fuente no identificada"
-french = "QmLiveClient : Filtre par défaut pour les événements de joueur de source non identifiée"
-brazilian_portuguese = "QmLiveClient: filtro padrão para eventos de jogador com origem não identificada"
-portuguese = "QmLiveClient: filtro padrão para eventos de tipo jogador com origem não identificada"
-turkish = "QmLiveClient: Kaynağı tanımlanamayan oyuncu tipi olaylar için varsayılan filtre"
-polish = "QmLiveClient: Domyślne filtrowanie zdarzeń gracza o nierozpoznanym źródle"
-
-[[message]]
-key = "QmLiveClient: Enable single team isolation audio filter"
-[message.translations]
-simplified_chinese = "QmLiveClient：启用单队隔离音效过滤"
-traditional_chinese = "QmLiveClient：啟用單隊隔離音效過濾"
-japanese = "QmLiveClient：単チーム隔離サウンドフィルターを有効化"
-korean = "QmLiveClient：단일 팀 격리 음향 필터 활성화"
-russian = "QmLiveClient: Включить фильтр звука для изоляции одной команды"
-german = "QmLiveClient: Einzelteam-Isolationsaudiofilter aktivieren"
-spanish = "QmLiveClient: Habilitar filtro de audio de equipo aislado"
-french = "QmLiveClient : Activer le filtre audio d'équipe isolée"
-brazilian_portuguese = "QmLiveClient: ativar filtro de áudio de equipe isolada"
-portuguese = "QmLiveClient: ativar filtro de áudio de isolamento de equipe única"
-turkish = "QmLiveClient: Tek takım izolasyon ses filtrelemesini etkinleştir"
-polish = "QmLiveClient: Włącz filtrowanie dźwięku dla pojedynczej drużyny w izolacji"
-
-[[message]]
-key = "QmLiveClient: Enable single team isolation visual filter"
-[message.translations]
-simplified_chinese = "QmLiveClient：启用单队隔离画面过滤"
-traditional_chinese = "QmLiveClient：啟用單隊隔離畫面過濾"
-japanese = "QmLiveClient：単チーム隔離画面フィルターを有効化"
-korean = "QmLiveClient：단일 팀 격리 화면 필터 활성화"
-russian = "QmLiveClient: Включить фильтр изображения для изоляции одной команды"
-german = "QmLiveClient: Einzelteam-Isolationsbildfilter aktivieren"
-spanish = "QmLiveClient: Habilitar filtro de pantalla de equipo aislado"
-french = "QmLiveClient : Activer le filtre d'écran d'équipe isolée"
-brazilian_portuguese = "QmLiveClient: ativar filtro de tela de equipe isolada"
-portuguese = "QmLiveClient: ativar filtro de tela de isolamento de equipe única"
-turkish = "QmLiveClient: Tek takım izolasyon görüntü filtrelemesini etkinleştir"
-polish = "QmLiveClient: Włącz filtrowanie obrazu dla pojedynczej drużyny w izolacji"
-
-[[message]]
-key = "QmLiveClient: Finish ranking card display seconds"
-[message.translations]
-simplified_chinese = "QmLiveClient：完成排名卡片显示秒数"
-traditional_chinese = "QmLiveClient：完成排名卡片顯示秒數"
-japanese = "QmLiveClient：完了ランキングカード表示秒数"
-korean = "QmLiveClient：완료 순위 카드 표시 시간(초)"
-russian = "QmLiveClient: Время отображения карточки финиша в секундах"
-german = "QmLiveClient: Anzeigedauer der Abschluss-Rangliste in Sekunden"
-spanish = "QmLiveClient: Segundos de visualización de la tarjeta de clasificación final"
-french = "QmLiveClient : Durée d'affichage de la carte de classement de fin en secondes"
-brazilian_portuguese = "QmLiveClient: segundos de exibição do cartão de classificação de conclusão"
-portuguese = "QmLiveClient: segundos de exibição do cartão de conclusão de classificação"
-turkish = "QmLiveClient: Bitirme sıralaması kartı gösterim süresi (saniye)"
-polish = "QmLiveClient: Liczba sekund wyświetlania karty ukończenia rankingu"
-
-[[message]]
-key = "QmLiveClient: Finish ranking card opacity percent"
-[message.translations]
-simplified_chinese = "QmLiveClient：完成排名卡片不透明度百分比"
-traditional_chinese = "QmLiveClient：完成排名卡片不透明度百分比"
-japanese = "QmLiveClient：完了ランキングカード不透明度パーセント"
-korean = "QmLiveClient：완료 순위 카드 불투명도 백분율"
-russian = "QmLiveClient: Непрозрачность карточки финиша в процентах"
-german = "QmLiveClient: Deckkraft der Abschluss-Rangliste in Prozent"
-spanish = "QmLiveClient: Porcentaje de opacidad de la tarjeta de clasificación final"
-french = "QmLiveClient : Pourcentage d'opacité de la carte de classement de fin"
-brazilian_portuguese = "QmLiveClient: porcentagem de opacidade do cartão de classificação de conclusão"
-portuguese = "QmLiveClient: porcentagem de opacidade do cartão de conclusão de classificação"
-turkish = "QmLiveClient: Bitirme sıralaması kartı opaklık yüzdesi"
-polish = "QmLiveClient: Procent nieprzezroczystości karty ukończenia rankingu"
-
-[[message]]
-key = "QmLiveClient: Finish ranking card scale percent"
-[message.translations]
-simplified_chinese = "QmLiveClient：完成排名卡片缩放百分比"
-traditional_chinese = "QmLiveClient：完成排名卡片縮放百分比"
-japanese = "QmLiveClient：完了ランキングカードスケールパーセント"
-korean = "QmLiveClient：완료 순위 카드 확대/축소 백분율"
-russian = "QmLiveClient: Масштаб карточки финиша в процентах"
-german = "QmLiveClient: Skalierung der Abschluss-Rangliste in Prozent"
-spanish = "QmLiveClient: Porcentaje de escala de la tarjeta de clasificación final"
-french = "QmLiveClient : Pourcentage de zoom de la carte de classement de fin"
-brazilian_portuguese = "QmLiveClient: porcentagem de escala do cartão de classificação de conclusão"
-portuguese = "QmLiveClient: porcentagem de zoom do cartão de conclusão de classificação"
-turkish = "QmLiveClient: Bitirme sıralaması kartı ölçek yüzdesi"
-polish = "QmLiveClient: Procent skali karty ukończenia rankingu"
-
-[[message]]
-key = "QmLiveClient: Full match demo recording toggle"
-[message.translations]
-simplified_chinese = "QmLiveClient：完整比赛 demo 录制开关"
-traditional_chinese = "QmLiveClient：完整比賽 demo 錄製開關"
-japanese = "QmLiveClient：完全試合デモ録画スイッチ"
-korean = "QmLiveClient：전체 경기 데모 녹화 스위치"
-russian = "QmLiveClient: Включить запись полного демо матча"
-german = "QmLiveClient: Schalter für vollständige Match-Demo-Aufnahme"
-spanish = "QmLiveClient: Interruptor de grabación de demo de partida completa"
-french = "QmLiveClient : Activer/désactiver l'enregistrement de démo de match complet"
-brazilian_portuguese = "QmLiveClient: alternar gravação de demo de partida completa"
-portuguese = "QmLiveClient: alternância de gravação de demo de partida completa"
-turkish = "QmLiveClient: Tam maç demo kaydı anahtarı"
-polish = "QmLiveClient: Przełącznik nagrywania pełnego dema meczu"
-
-[[message]]
-key = "QmLiveClient: Hide non-target team finish prompts"
-[message.translations]
-simplified_chinese = "QmLiveClient：隐藏非目标队伍完成提示"
-traditional_chinese = "QmLiveClient：隱藏非目標隊伍完成提示"
-japanese = "QmLiveClient：非対象チーム完了通知を非表示"
-korean = "QmLiveClient：비대상 팀 완료 알림 숨기기"
-russian = "QmLiveClient: Скрывать уведомления о финише нецелевых команд"
-german = "QmLiveClient: Abschlussbenachrichtigungen für nicht-Zielteams ausblenden"
-spanish = "QmLiveClient: Ocultar notificaciones de finalización de equipos no objetivo"
-french = "QmLiveClient : Masquer les notifications de fin pour les équipes non cibles"
-brazilian_portuguese = "QmLiveClient: ocultar notificações de conclusão de equipes não alvo"
-portuguese = "QmLiveClient: ocultar notificações de conclusão de equipes não alvo"
-turkish = "QmLiveClient: Hedef olmayan takım bitirme bildirimlerini gizle"
-polish = "QmLiveClient: Ukryj powiadomienia o ukończeniu dla drużyn niebędących celem"
-
-[[message]]
-key = "QmLiveClient: Ranking HUD team range lower bound"
-[message.translations]
-simplified_chinese = "QmLiveClient：排名 HUD 队伍范围下限"
-traditional_chinese = "QmLiveClient：排名 HUD 隊伍範圍下限"
-japanese = "QmLiveClient：ランキング HUD チーム範囲下限"
-korean = "QmLiveClient：순위 HUD 팀 범위 하한"
-russian = "QmLiveClient: Нижняя граница диапазона команд в HUD рейтинга"
-german = "QmLiveClient: Untergrenze des Teambereichs im Ranglisten-HUD"
-spanish = "QmLiveClient: Límite inferior del rango de equipos en el HUD de clasificación"
-french = "QmLiveClient : Limite inférieure de la plage d'équipes du HUD de classement"
-brazilian_portuguese = "QmLiveClient: limite inferior do intervalo de equipe do HUD de classificação"
-portuguese = "QmLiveClient: limite inferior do intervalo de equipes do HUD de classificação"
-turkish = "QmLiveClient: Sıralama HUD takım aralığı alt sınırı"
-polish = "QmLiveClient: Dolny zakres drużyn w HUD rankingu"
-
-[[message]]
-key = "QmLiveClient: Ranking HUD team range upper bound"
-[message.translations]
-simplified_chinese = "QmLiveClient：排名 HUD 队伍范围上限"
-traditional_chinese = "QmLiveClient：排名 HUD 隊伍範圍上限"
-japanese = "QmLiveClient：ランキング HUD チーム範囲上限"
-korean = "QmLiveClient：순위 HUD 팀 범위 상한"
-russian = "QmLiveClient: Верхняя граница диапазона команд в HUD рейтинга"
-german = "QmLiveClient: Obergrenze des Teambereichs im Ranglisten-HUD"
-spanish = "QmLiveClient: Límite superior del rango de equipos en el HUD de clasificación"
-french = "QmLiveClient : Limite supérieure de la plage d'équipes du HUD de classement"
-brazilian_portuguese = "QmLiveClient: limite superior do intervalo de equipe do HUD de classificação"
-portuguese = "QmLiveClient: limite superior do intervalo de equipes do HUD de classificação"
-turkish = "QmLiveClient: Sıralama HUD takım aralığı üst sınırı"
-polish = "QmLiveClient: Górny zakres drużyn w HUD rankingu"
-
-[[message]]
-key = "QmLiveClient: Show finish cards for teams outside range"
-[message.translations]
-simplified_chinese = "QmLiveClient：显示配置范围外队伍的完成卡片"
-traditional_chinese = "QmLiveClient：顯示配置範圍外隊伍的完成卡片"
-japanese = "QmLiveClient：設定範囲外チームの完了カードを表示"
-korean = "QmLiveClient：설정 범위 밖 팀의 완료 카드 표시"
-russian = "QmLiveClient: Показывать карточки финиша команд вне настроенного диапазона"
-german = "QmLiveClient: Abschlusskarten für Teams außerhalb des konfigurierten Bereichs anzeigen"
-spanish = "QmLiveClient: Mostrar tarjetas de finalización de equipos fuera del rango configurado"
-french = "QmLiveClient : Afficher les cartes de classement de fin pour les équipes hors de la plage configurée"
-brazilian_portuguese = "QmLiveClient: exibir cartões de conclusão de equipes fora do intervalo configurado"
-portuguese = "QmLiveClient: exibir cartões de conclusão de equipes fora do intervalo configurado"
-turkish = "QmLiveClient: Yapılandırma aralığı dışındaki takımların bitirme kartlarını göster"
-polish = "QmLiveClient: Pokaż karty ukończenia dla drużyn spoza skonfigurowanego zakresu"
-
-[[message]]
-key = "QmLiveClient: Show team finish ranking card"
-[message.translations]
-simplified_chinese = "QmLiveClient：显示队伍完成排名卡片"
-traditional_chinese = "QmLiveClient：顯示隊伍完成排名卡片"
-japanese = "QmLiveClient：チーム完了ランキングカードを表示"
-korean = "QmLiveClient：팀 완료 순위 카드 표시"
-russian = "QmLiveClient: Показывать карточки финиша команд"
-german = "QmLiveClient: Abschluss-Rangkarten für Teams anzeigen"
-spanish = "QmLiveClient: Mostrar tarjeta de clasificación final del equipo"
-french = "QmLiveClient : Afficher les cartes de classement de fin d'équipe"
-brazilian_portuguese = "QmLiveClient: exibir cartão de classificação de conclusão da equipe"
-portuguese = "QmLiveClient: exibir cartões de conclusão de classificação de equipes"
-turkish = "QmLiveClient: Takım bitirme sıralaması kartlarını göster"
-polish = "QmLiveClient: Pokaż karty ukończenia rankingu drużyn"
-
-[[message]]
-key = "QmLiveClient: Single team isolation preview/render team, 0=Off"
-[message.translations]
-simplified_chinese = "QmLiveClient：单队隔离预览/渲染队伍，0=关闭"
-traditional_chinese = "QmLiveClient：單隊隔離預覽/渲染隊伍，0=關閉"
-japanese = "QmLiveClient：単チーム隔離プレビュー/レンダリングチーム，0=オフ"
-korean = "QmLiveClient：단일 팀 격리 미리보기/렌더링 팀, 0=끄기"
-russian = "QmLiveClient: Изоляция одной команды/предпросмотр команд, 0=выкл"
-german = "QmLiveClient: Einzelteam-Isolationsvorschau/Renderteam, 0=aus"
-spanish = "QmLiveClient: Vista previa/renderizado de equipo aislado, 0=desactivado"
-french = "QmLiveClient : Aperçu/rendu d'équipe isolée par équipe, 0=désactivé"
-brazilian_portuguese = "QmLiveClient: visualização/ renderização de equipe isolada, 0=desligado"
-portuguese = "QmLiveClient: visualização/rendering de isolamento de equipe única, 0=desligado"
-turkish = "QmLiveClient: Tek takım izolasyon önizlemesi/oluşturma takımı, 0=kapalı"
-polish = "QmLiveClient: Podgląd/rendering pojedynczej drużyny w izolacji, 0=wyłączone"
-
-[[message]]
 key = "QmUi animation intensity: 0=Off, 1=Reduced, 2=Full"
 [message.translations]
 simplified_chinese = "QmUi 动效强度：0=关闭 1=降低 2=完整"
@@ -17702,12 +17478,22 @@ japanese = "Tune Zone 効果を表示"
 korean = "Tune Zone 효과 표시"
 simplified_chinese = "显示 Tune Zone 效果"
 traditional_chinese = "顯示 Tune Zone 效果"
+russian = "Показывать эффекты Tune Zone"
+german = "Tune-Zone-Effekte anzeigen"
+spanish = "Mostrar efectos de Tune Zone"
+french = "Afficher les effets de Tune Zone"
+brazilian_portuguese = "Mostrar efeitos da Tune Zone"
+portuguese = "Mostrar efeitos da Tune Zone"
+turkish = "Tune Zone etkilerini göster"
+polish = "Pokaż efekty Tune Zone"
 
 [[message]]
 key = "Tune Zone effect icon legend"
 [message.translations]
 simplified_chinese = "Tune Zone 效果图标说明"
 traditional_chinese = "Tune Zone 效果圖示說明"
+japanese = "Tune Zone エフェクトアイコン一覧"
+korean = "Tune Zone 효과 아이콘 안내"
 russian = "Показывать эффекты Tune Zone"
 german = "Tune-Zone-Effekte anzeigen"
 spanish = "Mostrar efectos de Tune Zone"
@@ -18822,22 +18608,6 @@ turkish = "Kancayı tutmak için kaydı yüklemeden önce kancayı basılı tutu
 polish = "Przytrzymaj hak przed wczytaniem zapisu, aby zachować hak"
 
 [[message]]
-key = "Start QmLive full match demo recording"
-[message.translations]
-simplified_chinese = "开始 QmLive 完整比赛 demo 录制"
-traditional_chinese = "開始 QmLive 完整比賽 demo 錄製"
-japanese = "QmLive フルマッチデモ録画を開始"
-korean = "QmLive 전체 매치 데모 녹화 시작"
-russian = "Начать запись полного матч-демо QmLive"
-german = "QmLive Vollmatch-Demo-Aufnahme starten"
-spanish = "Iniciar grabación de demo de partida completa de QmLive"
-french = "Démarrer l'enregistrement de la démo de match complet QmLive"
-brazilian_portuguese = "Iniciar gravação de demo de partida completa do QmLive"
-portuguese = "Iniciar gravação de demo de partida completa do QmLive"
-turkish = "QmLive tam maç demo kaydını başlat"
-polish = "Rozpocznij nagrywanie pełnego dema meczu QmLive"
-
-[[message]]
 key = "Status normal, check details below if still experiencing issues"
 [message.translations]
 simplified_chinese = "当前状态正常，如仍异常请查看下方详细原因"
@@ -18868,22 +18638,6 @@ brazilian_portuguese = "Parar gravação de partida"
 portuguese = "Parar gravação de partida"
 turkish = "Maç kaydını durdur"
 polish = "Zatrzymaj nagrywanie meczu"
-
-[[message]]
-key = "Stop QmLive full match demo recording"
-[message.translations]
-simplified_chinese = "停止 QmLive 完整比赛 demo 录制"
-traditional_chinese = "停止 QmLive 完整比賽 demo 錄製"
-japanese = "QmLive フルマッチデモ録画を停止"
-korean = "QmLive 전체 매치 데모 녹화 중지"
-russian = "Остановить запись полного матч-демо QmLive"
-german = "QmLive Vollmatch-Demo-Aufnahme stoppen"
-spanish = "Detener grabación de demo de partida completa de QmLive"
-french = "Arrêter l'enregistrement de la démo de match complet QmLive"
-brazilian_portuguese = "Parar gravação de demo de partida completa do QmLive"
-portuguese = "Parar gravação de demo de partida completa do QmLive"
-turkish = "QmLive tam maç demo kaydını durdur"
-polish = "Zatrzymaj nagrywanie pełnego dema meczu QmLive"
 
 [[message]]
 key = "Streamed memory"
@@ -25905,18 +25659,48 @@ key = "Input overlay keyboard scale (percent)"
 [message.translations]
 simplified_chinese = "输入覆盖键盘比例（百分比）"
 traditional_chinese = "輸入覆蓋鍵盤比例（百分比）"
+japanese = "入力オーバーレイのキーボード倍率（パーセント）"
+korean = "입력 오버레이 키보드 배율(퍼센트)"
+russian = "Масштаб клавиатуры в оверлее ввода (проценты)"
+german = "Tastaturskalierung der Eingabeanzeige (Prozent)"
+spanish = "Escala del teclado en la superposición de entrada (porcentaje)"
+french = "Échelle du clavier dans la superposition des entrées (pourcentage)"
+brazilian_portuguese = "Escala do teclado na sobreposição de entrada (porcentagem)"
+portuguese = "Escala do teclado na sobreposição de entrada (percentagem)"
+turkish = "Giriş katmanındaki klavye ölçeği (yüzde)"
+polish = "Skala klawiatury w nakładce wejścia (procent)"
 
 [[message]]
 key = "Input overlay mouse scale (percent)"
 [message.translations]
 simplified_chinese = "输入覆盖鼠标比例（百分比）"
 traditional_chinese = "輸入覆蓋滑鼠比例（百分比）"
+japanese = "入力オーバーレイのマウス倍率（パーセント）"
+korean = "입력 오버레이 마우스 배율(퍼센트)"
+russian = "Масштаб мыши в оверлее ввода (проценты)"
+german = "Mausskalierung der Eingabeanzeige (Prozent)"
+spanish = "Escala del ratón en la superposición de entrada (porcentaje)"
+french = "Échelle de la souris dans la superposition des entrées (pourcentage)"
+brazilian_portuguese = "Escala do mouse na sobreposição de entrada (porcentagem)"
+portuguese = "Escala do rato na sobreposição de entrada (percentagem)"
+turkish = "Giriş katmanındaki fare ölçeği (yüzde)"
+polish = "Skala myszy w nakładce wejścia (procent)"
 
 [[message]]
 key = "Show Tune Zone effects on HUD Dynamic Island"
 [message.translations]
 simplified_chinese = "HUD 灵动岛显示 Tune Zone 效果"
 traditional_chinese = "HUD 靈動島顯示 Tune Zone 效果"
+japanese = "HUD ダイナミックアイランドに Tune Zone 効果を表示"
+korean = "HUD 다이내믹 아일랜드에 Tune Zone 효과 표시"
+russian = "Показывать эффекты Tune Zone в динамическом острове HUD"
+german = "Tune-Zone-Effekte auf der dynamischen HUD-Insel anzeigen"
+spanish = "Mostrar efectos de Tune Zone en la isla dinámica del HUD"
+french = "Afficher les effets de Tune Zone dans l'îlot dynamique du HUD"
+brazilian_portuguese = "Mostrar efeitos da Tune Zone na ilha dinâmica do HUD"
+portuguese = "Mostrar efeitos da Tune Zone na ilha dinâmica do HUD"
+turkish = "Tune Zone etkilerini HUD Dinamik Ada'da göster"
+polish = "Pokazuj efekty Tune Zone na dynamicznej wyspie HUD"
 
 [[message]]
 key = "Message merging"
@@ -25949,3 +25733,147 @@ brazilian_portuguese = "Exibe os pontos DDNet do jogador atual"
 portuguese = "Mostra os pontos DDNet do jogador atual"
 turkish = "Geçerli oyuncunun DDNet puanlarını gösterir"
 polish = "Wyświetla punkty DDNet bieżącego gracza"
+
+[[message]]
+key = "Animate lists when entering a page"
+[message.translations]
+simplified_chinese = "进入页面时播放列表动画"
+traditional_chinese = "進入頁面時播放列表動畫"
+japanese = "ページ表示時にリストをアニメーション"
+korean = "페이지 진입 시 목록 애니메이션 재생"
+russian = "Анимировать списки при открытии страницы"
+german = "Listen beim Öffnen einer Seite animieren"
+spanish = "Animar las listas al entrar en una página"
+french = "Animer les listes à l'ouverture d'une page"
+brazilian_portuguese = "Animar listas ao entrar em uma página"
+portuguese = "Animar listas ao entrar numa página"
+turkish = "Bir sayfaya girerken listeleri canlandır"
+polish = "Animuj listy podczas otwierania strony"
+
+[[message]]
+key = "Automatically check for stable updates and install them on exit"
+[message.translations]
+simplified_chinese = "自动检查稳定版更新并在退出时安装"
+traditional_chinese = "自動檢查穩定版更新並在結束時安裝"
+japanese = "安定版の更新を自動的に確認し、終了時にインストール"
+korean = "안정 버전 업데이트를 자동으로 확인하고 종료할 때 설치"
+russian = "Автоматически проверять стабильные обновления и устанавливать их при выходе"
+german = "Automatisch nach stabilen Updates suchen und sie beim Beenden installieren"
+spanish = "Buscar automáticamente actualizaciones estables e instalarlas al salir"
+french = "Rechercher automatiquement les mises à jour stables et les installer à la fermeture"
+brazilian_portuguese = "Verificar automaticamente atualizações estáveis e instalá-las ao sair"
+portuguese = "Procurar automaticamente atualizações estáveis e instalá-las ao sair"
+turkish = "Kararlı güncellemeleri otomatik olarak denetle ve çıkışta yükle"
+polish = "Automatycznie sprawdzaj stabilne aktualizacje i instaluj je przy wyjściu"
+
+[[message]]
+key = "Enable switch countdown"
+[message.translations]
+simplified_chinese = "启用开关倒计时"
+traditional_chinese = "啟用開關倒數"
+japanese = "スイッチのカウントダウンを有効化"
+korean = "스위치 카운트다운 활성화"
+russian = "Включить обратный отсчет переключателя"
+german = "Schalter-Countdown aktivieren"
+spanish = "Activar la cuenta atrás del interruptor"
+french = "Activer le compte à rebours de l'interrupteur"
+brazilian_portuguese = "Ativar a contagem regressiva do interruptor"
+portuguese = "Ativar a contagem decrescente do interruptor"
+turkish = "Anahtar geri sayımını etkinleştir"
+polish = "Włącz odliczanie przełącznika"
+
+[[message]]
+key = "Merge consecutive identical player messages within 2 seconds"
+[message.translations]
+simplified_chinese = "合并 2 秒内连续出现的相同玩家消息"
+traditional_chinese = "合併 2 秒內連續出現的相同玩家訊息"
+japanese = "2 秒以内に連続した同一プレイヤーの同じメッセージを統合"
+korean = "2초 안에 연속으로 표시된 동일 플레이어의 같은 메시지 병합"
+russian = "Объединять последовательные одинаковые сообщения игрока в течение 2 секунд"
+german = "Aufeinanderfolgende identische Spielernachrichten innerhalb von 2 Sekunden zusammenführen"
+spanish = "Combinar mensajes consecutivos idénticos de un jugador en un intervalo de 2 segundos"
+french = "Fusionner les messages identiques consécutifs d'un joueur dans un délai de 2 secondes"
+brazilian_portuguese = "Mesclar mensagens idênticas consecutivas de um jogador em até 2 segundos"
+portuguese = "Unir mensagens idênticas consecutivas de um jogador num intervalo de 2 segundos"
+turkish = "2 saniye içindeki art arda gelen aynı oyuncu mesajlarını birleştir"
+polish = "Łącz kolejne identyczne wiadomości gracza w ciągu 2 sekund"
+
+[[message]]
+key = "Play a flip animation while reloading weapons"
+[message.translations]
+simplified_chinese = "武器装填时播放翻转动画"
+traditional_chinese = "武器裝填時播放翻轉動畫"
+japanese = "武器のリロード中に反転アニメーションを再生"
+korean = "무기 재장전 중 뒤집기 애니메이션 재생"
+russian = "Воспроизводить анимацию переворота при перезарядке оружия"
+german = "Beim Nachladen von Waffen eine Drehanimation abspielen"
+spanish = "Reproducir una animación de giro al recargar las armas"
+french = "Jouer une animation de retournement lors du rechargement des armes"
+brazilian_portuguese = "Reproduzir uma animação de giro ao recarregar as armas"
+portuguese = "Reproduzir uma animação de rotação ao recarregar as armas"
+turkish = "Silahları yeniden doldururken çevirme animasyonu oynat"
+polish = "Odtwarzaj animację obrotu podczas przeładowywania broni"
+
+[[message]]
+key = "Settings card background color"
+[message.translations]
+simplified_chinese = "设置卡片背景颜色"
+traditional_chinese = "設定卡片背景顏色"
+japanese = "設定カードの背景色"
+korean = "설정 카드 배경색"
+russian = "Цвет фона карточки настроек"
+german = "Hintergrundfarbe der Einstellungskarte"
+spanish = "Color de fondo de la tarjeta de ajustes"
+french = "Couleur d'arrière-plan de la carte des paramètres"
+brazilian_portuguese = "Cor de fundo do cartão de configurações"
+portuguese = "Cor de fundo do cartão de definições"
+turkish = "Ayar kartı arka plan rengi"
+polish = "Kolor tła karty ustawień"
+
+[[message]]
+key = "Settings card background transparency"
+[message.translations]
+simplified_chinese = "设置卡片背景透明度"
+traditional_chinese = "設定卡片背景透明度"
+japanese = "設定カードの背景透明度"
+korean = "설정 카드 배경 투명도"
+russian = "Прозрачность фона карточки настроек"
+german = "Transparenz des Hintergrunds der Einstellungskarte"
+spanish = "Transparencia del fondo de la tarjeta de ajustes"
+french = "Transparence de l'arrière-plan de la carte des paramètres"
+brazilian_portuguese = "Transparência do fundo do cartão de configurações"
+portuguese = "Transparência do fundo do cartão de definições"
+turkish = "Ayar kartı arka plan saydamlığı"
+polish = "Przezroczystość tła karty ustawień"
+
+[[message]]
+key = "Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)"
+[message.translations]
+simplified_chinese = "开关倒计时位置（0 = 跟随 Tee，1 = 灵动岛，2 = 两者）"
+traditional_chinese = "開關倒數位置（0 = 跟隨 Tee，1 = 靈動島，2 = 兩者）"
+japanese = "スイッチカウントダウンの位置（0 = Tee に追従、1 = ダイナミックアイランド、2 = 両方）"
+korean = "스위치 카운트다운 위치(0 = Tee 따라가기, 1 = 다이내믹 아일랜드, 2 = 둘 다)"
+russian = "Положение обратного отсчета переключателя (0 = следовать за Tee, 1 = динамический остров, 2 = оба)"
+german = "Position des Schalter-Countdowns (0 = Tee folgen, 1 = dynamische Insel, 2 = beides)"
+spanish = "Posición de la cuenta atrás del interruptor (0 = seguir al Tee, 1 = isla dinámica, 2 = ambos)"
+french = "Position du compte à rebours de l'interrupteur (0 = suivre le Tee, 1 = îlot dynamique, 2 = les deux)"
+brazilian_portuguese = "Posição da contagem regressiva do interruptor (0 = seguir o Tee, 1 = ilha dinâmica, 2 = ambos)"
+portuguese = "Posição da contagem decrescente do interruptor (0 = seguir o Tee, 1 = ilha dinâmica, 2 = ambos)"
+turkish = "Anahtar geri sayımının konumu (0 = Tee'yi takip et, 1 = Dinamik Ada, 2 = ikisi de)"
+polish = "Pozycja odliczania przełącznika (0 = podążaj za Tee, 1 = dynamiczna wyspa, 2 = oba)"
+
+[[message]]
+key = "Weapon reload animation probability"
+[message.translations]
+simplified_chinese = "武器装填动画概率"
+traditional_chinese = "武器裝填動畫機率"
+japanese = "武器リロードアニメーションの確率"
+korean = "무기 재장전 애니메이션 확률"
+russian = "Вероятность анимации перезарядки оружия"
+german = "Wahrscheinlichkeit der Waffen-Nachladeanimation"
+spanish = "Probabilidad de la animación de recarga del arma"
+french = "Probabilité de l'animation de rechargement de l'arme"
+brazilian_portuguese = "Probabilidade da animação de recarga da arma"
+portuguese = "Probabilidade da animação de recarga da arma"
+turkish = "Silah yeniden doldurma animasyonu olasılığı"
+polish = "Prawdopodobieństwo animacji przeładowania broni"

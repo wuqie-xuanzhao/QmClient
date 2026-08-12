@@ -7,7 +7,8 @@ data/
 docs/dyl/BestClient/
 .ruff_cache
 
-# Agent 本地缓存（.agents/ 为项目 skills 真相源，纳入版本控制）
+# Agent 本地缓存
+/.agents/
 .codex/
 .codegraph/
 .env

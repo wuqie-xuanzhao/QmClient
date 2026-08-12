@@ -117,6 +117,7 @@ _CHECK_SPECS = (
 		frozenset({"full"}),
 		enable_attr="include_identifier_check",
 		enable_modes=_SOURCE_MODES,
+		needs_base_ref=True,
 	),
 	CheckSpec(
 		"clang_format",

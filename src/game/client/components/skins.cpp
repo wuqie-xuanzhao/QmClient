@@ -40,9 +40,6 @@ using namespace std::chrono_literals;
 static constexpr int SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 1000;
 static constexpr const char *OFFICIAL_SKIN_INDEX_URL = "https://ddnet.org/skins/skin/skins.json";
 static constexpr const char *OFFICIAL_SKIN_INDEX_CACHE_PATH = "downloadedskins/official_skins.json";
-#if defined(CONF_QM_LIVE_CLIENT)
-static constexpr size_t LIVE_OBSERVER_SKINS_LOADED_MAX = 96;
-#endif
 
 static int &SkinQueueEnabledVar(int Dummy)
 {
@@ -714,8 +711,7 @@ void CSkins::CSkinContainer::SetState(EState State, ESettingsResourcePriority Pr
 
 	if(UsageTrackingUpdate(m_State, m_AlwaysLoaded, m_UsageEntryIterator.has_value(), Priority).m_ShouldErase)
 	{
-		m_pSkins->m_SkinsUsageList.erase(m_UsageEntryIterator.value());
-		m_UsageEntryIterator = std::nullopt;
+		ClearUsage();
 	}
 	if((m_State == EState::UNLOADED || m_State == EState::ERROR || m_State == EState::NOT_FOUND || Priority != ESettingsResourcePriority::BACKGROUND) && m_BackgroundEntryIterator.has_value())
 		ClearBackgroundUsage();
@@ -727,12 +723,17 @@ void CSkins::CSkinContainer::SetState(EState State, ESettingsResourcePriority Pr
 void CSkins::CSkinContainer::TouchUsage()
 {
 	ClearBackgroundUsage();
-	if(m_UsageEntryIterator.has_value())
-	{
-		m_pSkins->m_SkinsUsageList.erase(m_UsageEntryIterator.value());
-	}
+	ClearUsage();
 	m_pSkins->m_SkinsUsageList.emplace_front(Name());
 	m_UsageEntryIterator = m_pSkins->m_SkinsUsageList.begin();
+}
+
+void CSkins::CSkinContainer::ClearUsage()
+{
+	if(!m_UsageEntryIterator.has_value())
+		return;
+	m_pSkins->m_SkinsUsageList.erase(m_UsageEntryIterator.value());
+	m_UsageEntryIterator = std::nullopt;
 }
 
 void CSkins::CSkinContainer::TouchBackgroundUsage()
@@ -1339,10 +1340,6 @@ void CSkins::UpdateForSettingsWarmup()
 
 size_t CSkins::LoadedSkinLimit() const
 {
-#if defined(CONF_QM_LIVE_CLIENT)
-	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER)
-		return minimum((size_t)g_Config.m_ClSkinsLoadedMax, LIVE_OBSERVER_SKINS_LOADED_MAX);
-#endif
 	return (size_t)g_Config.m_ClSkinsLoadedMax;
 }
 
@@ -1539,7 +1536,7 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 		return;
 	}
 
-	m_aSkinQueueElapsed[Dummy] += Now - m_aSkinQueueLastUpdate[Dummy].value();
+	m_aSkinQueueElapsed[Dummy] += Now - m_aSkinQueueLastUpdate[Dummy].value_or(Now);
 	m_aSkinQueueLastUpdate[Dummy] = Now;
 
 	const auto Interval = std::chrono::milliseconds(QueueInterval);
@@ -1765,8 +1762,7 @@ void CSkins::UpdateUnloadSkins(CSkinLoadingStats &Stats)
 		{
 			if(SkinIt != m_Skins.end() && SkinIt->second->m_UsageEntryIterator.has_value())
 			{
-				m_SkinsUsageList.erase(SkinIt->second->m_UsageEntryIterator.value());
-				SkinIt->second->m_UsageEntryIterator = std::nullopt;
+				SkinIt->second->ClearUsage();
 			}
 			else
 				m_SkinsUsageList.remove(SkinName);
@@ -2009,8 +2005,7 @@ void CSkins::UpdateStartLoading(CSkinLoadingStats &Stats)
 		{
 			if(It != m_Skins.end() && It->second->m_UsageEntryIterator.has_value())
 			{
-				m_SkinsUsageList.erase(It->second->m_UsageEntryIterator.value());
-				It->second->m_UsageEntryIterator = std::nullopt;
+				It->second->ClearUsage();
 			}
 			else
 			{
@@ -2221,8 +2216,7 @@ void CSkins::UpdateFinishLoading(CSkinLoadingStats &Stats, std::chrono::nanoseco
 		{
 			if(It != m_Skins.end() && It->second->m_UsageEntryIterator.has_value())
 			{
-				m_SkinsUsageList.erase(It->second->m_UsageEntryIterator.value());
-				It->second->m_UsageEntryIterator = std::nullopt;
+				It->second->ClearUsage();
 			}
 			else
 			{

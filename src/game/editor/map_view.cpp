@@ -328,19 +328,19 @@ void CEditor::DoMapEditor(CUIRect View)
 			}
 			else if(m_pBrush->IsEmpty() && Map()->SelectedLayerType(0, LAYERTYPE_QUADS) != nullptr)
 			{
-				str_copy(m_aTooltip, "按住鼠标左键拖拽创建画笔。按住 Shift 选择多个四边形。按 R 旋转选中四边形。Ctrl+右键选择图层。");
+				str_copy(m_aTooltip, Localize("Use left mouse button to drag and create a brush. Hold shift to select multiple quads. Press R to rotate selected quads. Use ctrl+right click to select layer.", "Editor"));
 			}
 			else if(m_pBrush->IsEmpty())
 			{
 				if(g_Config.m_EdLayerSelector)
-					str_copy(m_aTooltip, "按住鼠标左键拖拽创建画笔。Ctrl+右键选择悬停图块所在图层。");
+					str_copy(m_aTooltip, Localize("Use left mouse button to drag and create a brush. Use ctrl+right click to select layer of hovered tile.", "Editor"));
 				else
-					str_copy(m_aTooltip, "按住鼠标左键拖拽创建画笔。");
+					str_copy(m_aTooltip, Localize("Use left mouse button to drag and create a brush.", "Editor"));
 			}
 			else
 			{
 				// Alt behavior handled in CEditor::MouseAxisLock
-				str_copy(m_aTooltip, "使用鼠标左键用画笔绘制。右键清空画笔。按住 Alt 将鼠标移动锁定到单轴。");
+				str_copy(m_aTooltip, Localize("Use left mouse button to paint with the brush. Right click to clear the brush. Hold Alt to lock the mouse movement to a single axis.", "Editor"));
 			}
 
 			const bool DrawingToolsHandled = (Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::NONE || m_DrawingTools.IsDrawing()) && m_pContainerPanned == nullptr && m_DrawingTools.HandleMapEditorInput(this, apEditLayers, NumEditLayers, Inside);
@@ -617,9 +617,10 @@ void CEditor::DoMapEditor(CUIRect View)
 					}
 					else if(Ui()->HotItem() == pPositionId)
 					{
-						char aTooltipPrefix[32] = "切换验证位置到";
+						char aTooltipPrefix[32];
+						str_copy(aTooltipPrefix, Localize("Switch proof position to", "Editor"));
 						if(i == CurrentMenuProofIndex)
-							str_copy(aTooltipPrefix, "当前验证位置在");
+							str_copy(aTooltipPrefix, Localize("Current proof position at", "Editor"));
 
 						char aNumBuf[8];
 						if(i < (TILE_TIME_CHECKPOINT_LAST - TILE_TIME_CHECKPOINT_FIRST))
@@ -633,7 +634,7 @@ void CEditor::DoMapEditor(CUIRect View)
 						for(int k : MapView()->ProofMode()->MenuBackgroundCollisions(i))
 						{
 							if(k == CurrentMenuProofIndex)
-								str_copy(aTooltipPrefix, "当前验证位置在");
+								str_copy(aTooltipPrefix, Localize("Current proof position at", "Editor"));
 
 							Pos = Positions[k];
 							Pos += MapView()->GetWorldOffset() - Positions[CurrentMenuProofIndex];

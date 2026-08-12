@@ -231,8 +231,3 @@ python3 qmclient_scripts/gate/check_gate.py --mode default --explain-scope --rep
 - 不要绕开 `qmclient_scripts/gate/check_gate.py` 自己临时拼一套等价门禁
 - 不要把 `qmclient_scripts/` 根目录当成完全平级；门禁相关内容统一以 `gate/` 为准
 - 不要在 QmClient gate 或 workflow 中直接调用根目录 `scripts/` 下的 QmClient 特化脚本；改用 `qmclient_scripts/` 复制件
-
-## 关联文档
-
-- `.agents/README.md`
-- `.agents/skills/qmclient-verification-gate/SKILL.md`

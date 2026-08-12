@@ -11,6 +11,7 @@
 #include <game/client/components/qmclient/scoreboard_team_modes.h>
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
+#include <game/client/ui_scrollregion.h>
 #include <game/teamscore.h>
 
 #include <array>
@@ -179,6 +180,9 @@ class CScoreboard : public CComponent
 		int m_ClientId;
 		bool m_IsLocal;
 		bool m_IsSpectating;
+		bool m_ShowAxiomScores = false;
+		char m_aAxiomPlayerName[MAX_NAME_LENGTH] = "";
+		CScrollRegion m_AxiomScrollRegion;
 
 		static CUi::EPopupMenuFunctionResult Render(void *pContext, CUIRect View, bool Active);
 	} m_ScoreboardPopupContext;

@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 GATE_DIR = REPO_ROOT / "qmclient_scripts" / "gate"
 sys.path.insert(0, str(GATE_DIR))
 
-from checks import config_vars, env, settings_ui  # noqa: E402
+from checks import clang_tidy_warn, config_vars, env, identifiers, settings_ui  # noqa: E402
 import check_gate  # noqa: E402
 from lib import scope  # noqa: E402
 from lib.report import ResultCollector  # noqa: E402
@@ -175,6 +175,36 @@ class GateLibraryContractTest(unittest.TestCase):
 
 		self.assertTrue(results.has_failures())
 		self.assertTrue(any(item.title == "Git 子模块前置检查" for item in results.items))
+
+	def test_analysis_checks_ignore_deleted_translation_units(self):
+		included = [
+			"src/test/definitely_deleted.cpp",
+			"src/test/qm_axiom_scores_test.cpp",
+			"src/game/client/gameclient.cpp",
+			"src/game/client/gameclient.h",
+		]
+
+		self.assertEqual(
+			clang_tidy_warn._existing_source_files(included),
+			["src/test/qm_axiom_scores_test.cpp", "src/game/client/gameclient.cpp"],
+		)
+		self.assertEqual(
+			identifiers._existing_source_files(included),
+			["src/game/client/gameclient.cpp"],
+		)
+
+	def test_identifier_rows_are_limited_to_changed_lines(self):
+		rows = [
+			{"file": r"src\game\client\gameclient.cpp", "line": "10"},
+			{"file": r"src\game\client\gameclient.cpp", "line": "20"},
+			{"file": r"src\game\client\gameclient.h", "line": "30"},
+		]
+		ranges = {
+			"src/game/client/gameclient.cpp": [(8, 12)],
+			"src/game/client/gameclient.h": [(30, 30)],
+		}
+
+		self.assertEqual(identifiers._filter_changed_rows(rows, ranges), [rows[0], rows[2]])
 
 
 if __name__ == "__main__":

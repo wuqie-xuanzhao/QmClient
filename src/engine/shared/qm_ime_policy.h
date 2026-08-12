@@ -2,6 +2,8 @@
 #ifndef ENGINE_SHARED_QM_IME_POLICY_H
 #define ENGINE_SHARED_QM_IME_POLICY_H
 
+#include <base/detect.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <optional>

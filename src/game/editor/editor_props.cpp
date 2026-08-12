@@ -37,7 +37,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 
 			Shifter.VSplitRight(10.0f, &Shifter, &Inc);
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
-			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0, pColor);
+			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, Localize("Use left mouse button to drag and change the value. Hold shift to be more precise. Right click to edit as text.", "Editor"), false, false, 0, pColor);
 			int NewValue = NewValueRes.m_Value;
 			if(NewValue != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
@@ -86,7 +86,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			const bool Shift = Input()->ShiftIsPressed();
 			int Step = Shift ? 1 : 45;
 
-			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0);
+			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, Localize("Use left mouse button to drag and change the value. Hold shift to be more precise. Right click to edit as text.", "Editor"), false, false, 0);
 			int NewValue = NewValueRes.m_Value;
 			if(DoButton_FontIcon(&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, Localize("Decrease value.", "Editor"), IGraphics::CORNER_L, 7.0f))
 			{
@@ -207,7 +207,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0 || pProps[i].m_Min < 0 || pProps[i].m_Min >= (int)Map()->m_vpImages.size())
-				pName = "无";
+				pName = Localize("None", "Editor");
 			else
 				pName = Map()->m_vpImages[pProps[i].m_Min]->m_AutoMapper.GetConfigName(pProps[i].m_Value);
 
@@ -268,7 +268,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				aBuf[0] = '\0';
 			}
 
-			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, CurValue, 0, Map()->m_vpEnvelopes.size(), 1, 1.0f, "选择包络线.", false, false, IGraphics::CORNER_NONE);
+			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, CurValue, 0, Map()->m_vpEnvelopes.size(), 1, 1.0f, Localize("Select the envelope.", "Editor"), false, false, IGraphics::CORNER_NONE);
 			int NewVal = NewValueRes.m_Value;
 			if(NewVal != CurValue || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
@@ -280,13 +280,13 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				State = NewValueRes.m_State;
 			}
 
-			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "选择上一个包络线.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, Localize("Select previous envelope.", "Editor envelope selector"), IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = pProps[i].m_Value - 1;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "选择下一个包络线.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, Localize("Select next envelope.", "Editor envelope selector"), IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = pProps[i].m_Value + 1;
 				Change = i;

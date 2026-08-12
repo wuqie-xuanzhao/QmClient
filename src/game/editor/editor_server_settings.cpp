@@ -124,7 +124,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	// redo button
 	ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 	static int s_RedoButton = 0;
-	if(DoButton_FontIcon(&s_RedoButton, FONT_ICON_REDO, Map()->m_ServerSettingsHistory.CanRedo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, "[Ctrl+Y] 重做上次的命令编辑.", IGraphics::CORNER_R, 11.0f))
+	if(DoButton_FontIcon(&s_RedoButton, FONT_ICON_REDO, Map()->m_ServerSettingsHistory.CanRedo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Y] Redo the last command edit.", "Editor"), IGraphics::CORNER_R, 11.0f))
 	{
 		Map()->m_ServerSettingsHistory.Redo();
 	}
@@ -133,7 +133,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 	ToolBar.VSplitRight(5.0f, &ToolBar, nullptr);
 	static int s_UndoButton = 0;
-	if(DoButton_FontIcon(&s_UndoButton, FONT_ICON_UNDO, Map()->m_ServerSettingsHistory.CanUndo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, "[Ctrl+Z] 撤销上次的命令编辑.", IGraphics::CORNER_L, 11.0f))
+	if(DoButton_FontIcon(&s_UndoButton, FONT_ICON_UNDO, Map()->m_ServerSettingsHistory.CanUndo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Z] Undo the last command edit.", "Editor"), IGraphics::CORNER_L, 11.0f))
 	{
 		Map()->m_ServerSettingsHistory.Undo();
 	}

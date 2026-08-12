@@ -576,22 +576,6 @@ turkish = "Sol tıklamanın en yakın oyuncuyu izleme ile serbest görünüm ara
 polish = "Zezwól na przełączanie między obserwowaniem najbliższego gracza a swobodnym widokiem za pomocą lewego przycisku myszy"
 
 [[message]]
-key = "Allow QmLiveClient to connect as hidden read-only observer"
-[message.translations]
-simplified_chinese = "允许 QmLiveClient 以隐藏只读 observer 连接"
-traditional_chinese = "允許 QmLiveClient 以隱藏只讀 observer 連接"
-japanese = "QmLiveClient が隠し読み取り専用オブザーバーとして接続することを許可"
-korean = "QmLiveClient가 숨겨진 읽기 전용 관전자로 연결 허용"
-russian = "Разрешить QmLiveClient подключаться как скрытый наблюдатель только для чтения"
-german = "QmLiveClient erlauben, sich als versteckter, schreibgeschützter Observer zu verbinden"
-spanish = "Permitir que QmLiveClient se conecte como observador oculto de solo lectura"
-french = "Autoriser QmLiveClient à se connecter en tant qu'observateur caché en lecture seule"
-brazilian_portuguese = "Permitir que QmLiveClient se conecte como observador oculto somente leitura"
-portuguese = "Permitir QmLiveClient conectar-se como observador oculto só de leitura"
-turkish = "QmLiveClient'ın gizli salt okunur gözlemci olarak bağlanmasına izin ver"
-polish = "Zezwól QmLiveClient na połączenie jako ukryty, tylko do odczytu obserwator"
-
-[[message]]
 key = "Allow voting to kick players"
 [message.translations]
 simplified_chinese = "允许投票踢出玩家"
@@ -9086,22 +9070,6 @@ brazilian_portuguese = "Taxa de quadros máxima para fundo de vídeo da camada d
 portuguese = "Taxa de fotogramas máxima para fundo de vídeo da camada de entidades"
 turkish = "Varlık katmanı video arka planı için maksimum kare hızı"
 polish = "Maksymalna liczba klatek na sekundę dla tła wideo warstwy encji"
-
-[[message]]
-key = "Maximum number of allowed QmLive observer connections"
-[message.translations]
-simplified_chinese = "最多允许的 QmLive observer 连接数"
-traditional_chinese = "最多允許的 QmLive observer 連接數"
-japanese = "許可される QmLive observer 接続の最大数"
-korean = "허용되는 최대 QmLive 관전자 연결 수"
-russian = "Максимальное количество разрешенных подключений наблюдателей QmLive"
-german = "Maximale Anzahl erlaubter QmLive-Beobachterverbindungen"
-spanish = "Número máximo de conexiones de observador QmLive permitidas"
-french = "Nombre maximal de connexions d'observateur QmLive autorisées"
-brazilian_portuguese = "Número máximo de conexões de observador QmLive permitidas"
-portuguese = "Número máximo de conexões de observador QmLive permitidas"
-turkish = "İzin verilen maksimum QmLive gözlemci bağlantısı sayısı"
-polish = "Maksymalna dozwolona liczba połączeń obserwatorów QmLive"
 
 [[message]]
 key = "Maximum number of auto recorded demos (0 = unlimited)"
@@ -20813,3 +20781,99 @@ brazilian_portuguese = "Usado por campos compartilhados ativos de texto e númer
 portuguese = "Usado por campos partilhados ativos de texto e números"
 turkish = "Etkin ortak metin ve sayısal giriş alanları tarafından kullanılır"
 polish = "Używane przez aktywne współdzielone pola tekstowe i numeryczne"
+
+[[message]]
+key = "Do not set this variable, instead create a ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible serverlist URLs"
+[message.translations]
+simplified_chinese = "不要设置此变量；请在 settings_ddnet.cfg 旁创建 ddnet-serverlist-urls.cfg，以指定所有可用的服务器列表 URL"
+traditional_chinese = "不要設定此變數；請在 settings_ddnet.cfg 旁建立 ddnet-serverlist-urls.cfg，以指定所有可用的伺服器列表 URL"
+japanese = "この変数は設定せず、settings_ddnet.cfg と同じ場所に ddnet-serverlist-urls.cfg を作成して、使用可能なすべてのサーバーリスト URL を指定してください"
+korean = "이 변수는 설정하지 말고 settings_ddnet.cfg 옆에 ddnet-serverlist-urls.cfg를 만들어 사용 가능한 모든 서버 목록 URL을 지정하세요"
+russian = "Не задавайте эту переменную. Вместо этого создайте ddnet-serverlist-urls.cfg рядом с settings_ddnet.cfg и укажите все возможные URL списков серверов"
+german = "Diese Variable nicht setzen, sondern neben settings_ddnet.cfg eine ddnet-serverlist-urls.cfg mit allen möglichen Serverlisten-URLs erstellen"
+spanish = "No establezcas esta variable; crea ddnet-serverlist-urls.cfg junto a settings_ddnet.cfg para especificar todas las URL posibles de listas de servidores"
+french = "Ne définissez pas cette variable ; créez plutôt ddnet-serverlist-urls.cfg à côté de settings_ddnet.cfg pour indiquer toutes les URL possibles de listes de serveurs"
+brazilian_portuguese = "Não defina esta variável; crie ddnet-serverlist-urls.cfg ao lado de settings_ddnet.cfg para especificar todas as URLs possíveis de listas de servidores"
+portuguese = "Não definas esta variável; cria ddnet-serverlist-urls.cfg junto de settings_ddnet.cfg para especificar todos os URL possíveis de listas de servidores"
+turkish = "Bu değişkeni ayarlamayın; bunun yerine tüm olası sunucu listesi URL'lerini belirtmek için settings_ddnet.cfg dosyasının yanında ddnet-serverlist-urls.cfg oluşturun"
+polish = "Nie ustawiaj tej zmiennej; zamiast tego utwórz ddnet-serverlist-urls.cfg obok settings_ddnet.cfg, aby określić wszystkie możliwe adresy URL list serwerów"
+
+[[message]]
+key = "Graphics library major version (0 = auto-detect)"
+[message.translations]
+simplified_chinese = "图形库主版本（0 = 自动检测）"
+traditional_chinese = "圖形庫主版本（0 = 自動偵測）"
+japanese = "グラフィックスライブラリのメジャーバージョン（0 = 自動検出）"
+korean = "그래픽 라이브러리 주 버전(0 = 자동 감지)"
+russian = "Основная версия графической библиотеки (0 = автоопределение)"
+german = "Hauptversion der Grafikbibliothek (0 = automatisch erkennen)"
+spanish = "Versión principal de la biblioteca gráfica (0 = detección automática)"
+french = "Version majeure de la bibliothèque graphique (0 = détection automatique)"
+brazilian_portuguese = "Versão principal da biblioteca gráfica (0 = detecção automática)"
+portuguese = "Versão principal da biblioteca gráfica (0 = deteção automática)"
+turkish = "Grafik kitaplığının ana sürümü (0 = otomatik algıla)"
+polish = "Główna wersja biblioteki graficznej (0 = wykrywanie automatyczne)"
+
+[[message]]
+key = "Graphics library minor version (0 = auto-detect)"
+[message.translations]
+simplified_chinese = "图形库次版本（0 = 自动检测）"
+traditional_chinese = "圖形庫次版本（0 = 自動偵測）"
+japanese = "グラフィックスライブラリのマイナーバージョン（0 = 自動検出）"
+korean = "그래픽 라이브러리 부 버전(0 = 자동 감지)"
+russian = "Дополнительная версия графической библиотеки (0 = автоопределение)"
+german = "Nebenversion der Grafikbibliothek (0 = automatisch erkennen)"
+spanish = "Versión secundaria de la biblioteca gráfica (0 = detección automática)"
+french = "Version mineure de la bibliothèque graphique (0 = détection automatique)"
+brazilian_portuguese = "Versão secundária da biblioteca gráfica (0 = detecção automática)"
+portuguese = "Versão secundária da biblioteca gráfica (0 = deteção automática)"
+turkish = "Grafik kitaplığının alt sürümü (0 = otomatik algıla)"
+polish = "Pomocnicza wersja biblioteki graficznej (0 = wykrywanie automatyczne)"
+
+[[message]]
+key = "Override location for ping estimation, available: auto, af, as, as:cn, eu, na, oc, sa (Automatic, Africa, Asia, China, Europe, North America, Oceania/Australia, South America"
+[message.translations]
+simplified_chinese = "覆盖 Ping 估计位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲）"
+traditional_chinese = "覆寫 Ping 估算位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自動、非洲、亞洲、中國、歐洲、北美洲、大洋洲/澳洲、南美洲）"
+japanese = "Ping 推定地域を上書きします。選択肢：auto、af、as、as:cn、eu、na、oc、sa（自動、アフリカ、アジア、中国、ヨーロッパ、北米、オセアニア/オーストラリア、南米）"
+korean = "Ping 추정 위치를 재정의합니다. 사용 가능: auto, af, as, as:cn, eu, na, oc, sa(자동, 아프리카, 아시아, 중국, 유럽, 북미, 오세아니아/호주, 남미)"
+russian = "Переопределить регион для оценки Ping: auto, af, as, as:cn, eu, na, oc, sa (автоматически, Африка, Азия, Китай, Европа, Северная Америка, Океания/Австралия, Южная Америка)"
+german = "Standort für die Ping-Schätzung überschreiben, verfügbar: auto, af, as, as:cn, eu, na, oc, sa (Automatisch, Afrika, Asien, China, Europa, Nordamerika, Ozeanien/Australien, Südamerika)"
+spanish = "Sobrescribir la ubicación para estimar el Ping; opciones: auto, af, as, as:cn, eu, na, oc, sa (Automático, África, Asia, China, Europa, Norteamérica, Oceanía/Australia, Sudamérica)"
+french = "Remplacer la région d'estimation du Ping, choix disponibles : auto, af, as, as:cn, eu, na, oc, sa (Automatique, Afrique, Asie, Chine, Europe, Amérique du Nord, Océanie/Australie, Amérique du Sud)"
+brazilian_portuguese = "Substituir a região de estimativa do Ping; opções: auto, af, as, as:cn, eu, na, oc, sa (Automático, África, Ásia, China, Europa, América do Norte, Oceania/Austrália, América do Sul)"
+portuguese = "Substituir a região de estimativa do Ping; opções: auto, af, as, as:cn, eu, na, oc, sa (Automático, África, Ásia, China, Europa, América do Norte, Oceânia/Austrália, América do Sul)"
+turkish = "Ping tahmini konumunu geçersiz kıl; seçenekler: auto, af, as, as:cn, eu, na, oc, sa (Otomatik, Afrika, Asya, Çin, Avrupa, Kuzey Amerika, Okyanusya/Avustralya, Güney Amerika)"
+polish = "Zastąp region szacowania Ping; dostępne opcje: auto, af, as, as:cn, eu, na, oc, sa (Automatycznie, Afryka, Azja, Chiny, Europa, Ameryka Północna, Oceania/Australia, Ameryka Południowa)"
+
+[[message]]
+key = "Settings card background"
+[message.translations]
+simplified_chinese = "设置卡片背景"
+traditional_chinese = "設定卡片背景"
+japanese = "設定カードの背景"
+korean = "설정 카드 배경"
+russian = "Фон карточки настроек"
+german = "Hintergrund der Einstellungskarte"
+spanish = "Fondo de la tarjeta de ajustes"
+french = "Arrière-plan de la carte des paramètres"
+brazilian_portuguese = "Fundo do cartão de configurações"
+portuguese = "Fundo do cartão de definições"
+turkish = "Ayar kartı arka planı"
+polish = "Tło karty ustawień"
+
+[[message]]
+key = "Show whether you have finished a DDNet map (transmits your player name to info.ddnet.org/info)"
+[message.translations]
+simplified_chinese = "显示你是否已完成 DDNet 地图（会将你的玩家名传输至 info.ddnet.org/info）"
+traditional_chinese = "顯示你是否已完成 DDNet 地圖（會將你的玩家名稱傳送至 info.ddnet.org/info）"
+japanese = "DDNet マップをクリア済みか表示します（プレイヤー名を info.ddnet.org/info に送信します）"
+korean = "DDNet 맵 완료 여부를 표시합니다(플레이어 이름을 info.ddnet.org/info로 전송)"
+russian = "Показывать, пройдена ли карта DDNet (имя игрока передается на info.ddnet.org/info)"
+german = "Anzeigen, ob du eine DDNet-Karte abgeschlossen hast (überträgt deinen Spielernamen an info.ddnet.org/info)"
+spanish = "Mostrar si has completado un mapa de DDNet (envía tu nombre de jugador a info.ddnet.org/info)"
+french = "Indiquer si vous avez terminé une carte DDNet (transmet votre nom de joueur à info.ddnet.org/info)"
+brazilian_portuguese = "Mostrar se você concluiu um mapa do DDNet (envia seu nome de jogador para info.ddnet.org/info)"
+portuguese = "Mostrar se concluíste um mapa do DDNet (envia o teu nome de jogador para info.ddnet.org/info)"
+turkish = "Bir DDNet haritasını bitirip bitirmediğinizi gösterir (oyuncu adınızı info.ddnet.org/info adresine gönderir)"
+polish = "Pokazuj, czy ukończono mapę DDNet (wysyła nazwę gracza do info.ddnet.org/info)"

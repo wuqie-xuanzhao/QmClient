@@ -233,21 +233,6 @@ MACRO_CONFIG_INT(QmHudNotificationsAnimMs, qm_hud_notifications_anim_ms, 220, 0,
 MACRO_CONFIG_INT(QmHudNotificationsMaxVisible, qm_hud_notifications_max_visible, 3, 1, 8, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Maximum notification count")
 MACRO_CONFIG_INT(QmHudNotificationsEdgeMargin, qm_hud_notifications_edge_margin, 8, 0, 32, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Margin when notification is docked")
 
-// QmLive finish ranking HUD / QmLive 完成排名 HUD
-MACRO_CONFIG_INT(QmLiveRankHud, qm_live_rank_hud, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Show team finish ranking card")
-MACRO_CONFIG_INT(QmLiveRankTeamMin, qm_live_rank_team_min, 1, 1, 63, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Ranking HUD team range lower bound")
-MACRO_CONFIG_INT(QmLiveRankTeamMax, qm_live_rank_team_max, 30, 1, 63, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Ranking HUD team range upper bound")
-MACRO_CONFIG_INT(QmLiveRankPopupSeconds, qm_live_rank_popup_seconds, 4, 1, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Finish ranking card display seconds")
-MACRO_CONFIG_INT(QmLiveRankShowOutOfRange, qm_live_rank_show_out_of_range, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Show finish cards for teams outside range")
-MACRO_CONFIG_INT(QmLiveRankScale, qm_live_rank_scale, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Finish ranking card scale percent")
-MACRO_CONFIG_INT(QmLiveRankAlpha, qm_live_rank_alpha, 92, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Finish ranking card opacity percent")
-MACRO_CONFIG_INT(QmLiveMatchRecord, qm_live_match_record, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Full match demo recording toggle")
-MACRO_CONFIG_INT(QmLiveTeamFilter, qm_live_team_filter, 0, 0, 63, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Single team isolation preview/render team, 0=Off")
-MACRO_CONFIG_INT(QmLiveTeamFilterPreview, qm_live_team_filter_preview, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Enable single team isolation visual filter")
-MACRO_CONFIG_INT(QmLiveTeamFilterAudio, qm_live_team_filter_audio, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Enable single team isolation audio filter")
-MACRO_CONFIG_INT(QmLiveTeamFilterHideExternalFinish, qm_live_team_filter_hide_external_finish, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Hide non-target team finish prompts")
-MACRO_CONFIG_INT(QmLiveTeamFilterStrictUnknownEvents, qm_live_team_filter_strict_unknown_events, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient: Default filter for unrecognized source player events")
-
 MACRO_CONFIG_INT(QmMonitoringHudOpacity, qm_monitoring_hud_opacity, 66, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Debug graph panel opacity (percent)")
 
 // Voice / 语音

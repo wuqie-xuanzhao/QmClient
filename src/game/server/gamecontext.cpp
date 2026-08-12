@@ -1814,12 +1814,6 @@ void CGameContext::OnClientEnter(int ClientId)
 	LogEvent("Connect", ClientId);
 }
 
-void CGameContext::OnLiveObserverEnter(int ClientId)
-{
-	m_pController->Teams().SendTeamsState(ClientId);
-	m_VoteUpdate = true;
-}
-
 bool CGameContext::OnClientDataPersist(int ClientId, void *pData)
 {
 	CPersistentClientData *pPersistent = (CPersistentClientData *)pData;
@@ -2338,20 +2332,19 @@ void CGameContext::OnSayNetMessage(const CNetMsg_Cl_Say *pMsg, int ClientId, con
 
 	if(pMsg->m_pMessage[0] == '/')
 	{
-		const char *pWhisper;
-		if((pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "w ")))
+		if(const char *pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "w "); pWhisper != nullptr)
 		{
 			Whisper(pPlayer->GetCid(), const_cast<char *>(pWhisper));
 		}
-		else if((pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "whisper ")))
+		else if(const char *pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "whisper "); pWhisper != nullptr)
 		{
 			Whisper(pPlayer->GetCid(), const_cast<char *>(pWhisper));
 		}
-		else if((pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "c ")))
+		else if(const char *pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "c "); pWhisper != nullptr)
 		{
 			Converse(pPlayer->GetCid(), const_cast<char *>(pWhisper));
 		}
-		else if((pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "converse ")))
+		else if(const char *pWhisper = str_startswith_nocase(pMsg->m_pMessage + 1, "converse "); pWhisper != nullptr)
 		{
 			Converse(pPlayer->GetCid(), const_cast<char *>(pWhisper));
 		}
@@ -5030,11 +5023,15 @@ bool CGameContext::ProcessSpamProtection(int ClientId, bool RespectChatInitialDe
 		return true;
 	}
 
-	if(g_Config.m_SvSpamMuteDuration && (m_apPlayers[ClientId]->m_ChatScore += g_Config.m_SvChatPenalty) > g_Config.m_SvChatThreshold)
+	if(g_Config.m_SvSpamMuteDuration)
 	{
-		MuteWithMessage(Server()->ClientAddr(ClientId), g_Config.m_SvSpamMuteDuration, "Spam protection", Server()->ClientName(ClientId));
-		m_apPlayers[ClientId]->m_ChatScore = 0;
-		return true;
+		m_apPlayers[ClientId]->m_ChatScore += g_Config.m_SvChatPenalty;
+		if(m_apPlayers[ClientId]->m_ChatScore > g_Config.m_SvChatThreshold)
+		{
+			MuteWithMessage(Server()->ClientAddr(ClientId), g_Config.m_SvSpamMuteDuration, "Spam protection", Server()->ClientName(ClientId));
+			m_apPlayers[ClientId]->m_ChatScore = 0;
+			return true;
+		}
 	}
 
 	return false;

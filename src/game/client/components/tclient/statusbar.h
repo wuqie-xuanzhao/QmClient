@@ -86,7 +86,9 @@ public:
 	CStatusItem m_Score = CStatusItem([this] { ScoreRender(); }, [this] { return ScoreWidth(); },
 		"s", "Points", "Points", "Displays the DDNet Points of the current player");
 	CStatusItem m_Downstream = CStatusItem([this] { DownstreamRender(); }, [this] { return DownstreamWidth(); },
-		"u", "Round-trip time", "RTT", "Displays the game connection round-trip time");
+		"u", "Snapshot Latency", "Latency", "Displays server snapshot latency");
+	CStatusItem m_Rtt = CStatusItem([this] { RttRender(); }, [this] { return RttWidth(); },
+		"t", "Round-trip time", "RTT", "Displays the game connection round-trip time");
 	CStatusItem m_Upstream = CStatusItem([this] { UpstreamRender(); }, [this] { return UpstreamWidth(); },
 		"n", "Prediction Lead", "Prediction lead", "Displays the client's prediction lead");
 	CStatusItem m_Jitter = CStatusItem([this] { JitterRender(); }, [this] { return JitterWidth(); },
@@ -108,7 +110,7 @@ public:
 	CStatusItem m_Space = CStatusItem([this] { SpaceRender(); }, [this] { return SpaceWidth(); },
 		" _", "Space", " ", "Gap between statusbar items", false);
 
-	std::vector<CStatusItem> m_StatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Score, m_Downstream, m_Upstream, m_Jitter, m_SnapshotGap, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
+	std::vector<CStatusItem> m_vStatusItemTypes = {m_Angle, m_Ping, m_Prediction, m_Position, m_LocalTime, m_RaceTime, m_FPS, m_Velocity, m_Zoom, m_Score, m_Downstream, m_Rtt, m_Upstream, m_Jitter, m_SnapshotGap, m_PacketLoss, m_DownRate, m_UpRate, m_ConnectionGrade, m_Cpu, m_Memory, m_Space};
 	std::vector<CStatusItem *> m_StatusBarItems = {&m_LocalTime, &m_FPS, &m_Space, &m_Angle, &m_Space, &m_Ping};
 
 	void UpdateStatusBarSize();
@@ -163,6 +165,8 @@ private:
 
 	float DownstreamWidth();
 	void DownstreamRender();
+	float RttWidth();
+	void RttRender();
 
 	float UpstreamWidth();
 	void UpstreamRender();

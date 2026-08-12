@@ -8,25 +8,6 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - 依赖管理：Git Submodules（`ddnet-libs/`）
 - 目标平台：Windows、Linux、macOS、Android（后续也许有 IOS）
 
-## 文档系统
-
-- **可执行 AI 工作流规则只在** `.agents/skills/<name>/SKILL.md`；按需细则在同 skill 的 `references/`（如 `advanced/`、质量扫描长提示词）。说明见 `.agents/README.md`。
-- `docs/superpowers/` 存放探索、计划、规格与任务记录；会老化。带 `文档已过时` / `部分内容已过时` banner 的文件仅供参考。
-- 有效文档以最新日期和 `status`（如 `active`、`draft`）为准；无标注或明确为当前有效的才是实现依据。
-
-### 文档地图
-
-| 路径 | 内容 | 何时阅读 |
-|------|------|----------|
-| `.agents/README.md` | skills 边界与布局 | 维护 agent 工作流时 |
-| `.agents/skills/qmclient-cpp-conventions/SKILL.md` | C++ 兼容性 / 风格 / 热路径；`references/advanced/` 专项 | 改 cpp/h 或专项风险 |
-| `.agents/skills/qmclient-verification-gate/SKILL.md` | gate 分层、构建测试串行、证据格式 | 完成任务 / 验收前 |
-| `.agents/skills/qmclient-code-review/SKILL.md` | 审查立场与 findings 格式 | review / 核心逻辑改完后 |
-| `.agents/skills/qmclient-git-commit/SKILL.md` | commit / PR / 汇报 / Release | 提交与发版 |
-| `.agents/skills/audit-qmclient-quality/` | 质量审计；长提示词 `references/quality-scan-prompt.md` | 质量扫描 / 发布审计 |
-| `.agents/skills/qmclient-i18n-workflow/` 等 | i18n / i18n-audit / codegraph | 任务匹配 skill 描述时 |
-| `qmclient_scripts/scripts_overview.md` | 脚本分层与推荐入口 | 使用脚本时 |
-
 ## 极简工作流
 
 ### 范围边界
@@ -36,26 +17,19 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 ### 启动顺序
 
-1. 读匹配的 `docs/superpowers/plans/` 或 `docs/superpowers/specs/`（有效者）。
-2. 加载最小相关 `.agents/skills/*`（先 `SKILL.md`，需要再读 `references/`）。
-3. 改前弄清附近源码、调用点、配置、翻译与测试。
+1. 改前弄清附近源码、调用点、配置、翻译与测试。
 
 ### 完成任务后
 
-- 验证：按 **`qmclient-verification-gate`**（mode、串行、全量 vs 过滤、证据、gap 写法）。
 - 代码改动默认至少 `python3 qmclient_scripts/gate/check_gate.py --mode quick`；提交前优先 `--mode default`；准发布再用 `--mode full`。Windows 使用 `py -3` 或环境中的 `python`。纯文档人工核对，不跑代码 gate。
-- 核心逻辑改完：只读子代理按 **`qmclient-code-review`** 出 findings，再结论。
+- 核心逻辑改完后进行只读代码审查，先列 findings，再给结论。
 - 汇报：写清改动、验证命令与结果、gaps。没跑的不说通过。
 
 ### 提交 commit / PR 前（用户要求提交时）
 
-- 文案与拆分策略：按 **`qmclient-git-commit`**（标题 `<type>(<scope>): <中文简述>`）。
+- 标题使用 `<type>(<scope>): <中文简述>`。
 - 工作树可脏（多任务并行）；默认一次提交，仅用户要求或边界清晰时再拆。
 - review findings 与 gate 证据先收口；受保护分支默认走 PR，勿直推。
-
-### 修改文档后
-
-- 人工核对路径、相对链接、`status` 与权威来源；不要批量删 `docs/superpowers/`，过时用 banner / supersedes。
 
 ### 发版（用户要求发新版本时）
 
@@ -63,9 +37,9 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 2. 提交：`chore: bump version to X.Y.Z`
 3. `git tag vX.Y.Z && git push origin vX.Y.Z`
 4. CI 构建并调用 `generate_release_notes.py`（**自动汇总并润色**，不调外部 AI）发布 GitHub Release
-5. **Nightly 以脚本输出为终稿，无需人工润色**；Stable 可选手动再改。细则：`docs/RELEASE_NOTE_TEMPLATE.md` §0 与 **`qmclient-git-commit`**「Release 说明」
+5. **Nightly 以脚本输出为终稿，无需人工润色**；Stable 可选手动再改。细则见 `docs/RELEASE_NOTE_TEMPLATE.md` §0。
 
-## 全局硬约束（简略；细则见 `qmclient-cpp-conventions`）
+## 全局硬约束
 
 - 仓库即记录系统：决策、计划、状态、证据、交接写入版本化文件。
 - 一次一个功能；范围 = 用户请求 + 有效 plan/spec。歧义先问清。
@@ -82,14 +56,14 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - 不交付空模块、空文档、stub、「以后再决定」。
 - 默认 TDD：失败测试 → 最小实现 → 整理。
 - UTF-8；保留原 BOM；保持原换行（CRLF/LF）与缩进。
-- commit/PR 标题与 body 按 `qmclient-git-commit`；`FEAT`/`FIX`/`DEL` 可用于 body 与汇报分组。
+- commit/PR 标题使用 `<type>(<scope>): <中文简述>`；`FEAT`/`FIX`/`DEL` 可用于 body 与汇报分组。
 - 文档路径统一前斜杠 `/`。
 - 代码注释用中文。
 
 ## 构建与命令（摘要）
 
-- 细节与 mode 表：见 **`qmclient-verification-gate`** 与 `qmclient_scripts/scripts_overview.md`。
-- i18n：`extract_strings` → `generate_all` → `validate` → `review_duplicate_entries`；维护源 `translations/i18n/*.toml`，`data/languages/*.txt` 为产物。细则 `qmclient-i18n-workflow`。
+- 脚本分层与推荐入口见 `qmclient_scripts/scripts_overview.md`。
+- i18n：`extract_strings` → `generate_all` → `validate` → `review_duplicate_entries`；维护源 `translations/i18n/*.toml`，`data/languages/*.txt` 为产物。
 - Windows 构建入口：`qmclient_scripts/cmake-windows.cmd`；目录 `cmake-build-debug` / `cmake-build-release`。例：`cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`。
 - 同 build 目录内 `game-client` / `testrunner` / `run_cxx_tests` / `run_rust_tests` / `package_default` **串行**。
 - 日志与临时文件放 `tmp/`，勿堆仓库根。

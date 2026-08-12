@@ -174,6 +174,21 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 	EXPECT_NE(UpdateScheme.find("pScheme[Index++] = pItem->m_aLetters[0];"), std::string::npos);
 }
 
+TEST(TClientStatusBarNetworkMetrics, PreservesSnapshotLatencyAndSeparatesRoundTripTime)
+{
+	const std::string Header = ReadTextFile("src/game/client/components/tclient/statusbar.h");
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
+	const std::string SnapshotLatencyRender = FunctionBody(Source, "void CStatusBar::DownstreamRender()");
+	const std::string RoundTripTimeRender = FunctionBody(Source, "void CStatusBar::RttRender()");
+
+	EXPECT_NE(Header.find("\"u\", \"Snapshot Latency\", \"Latency\", \"Displays server snapshot latency\""), std::string::npos);
+	EXPECT_NE(Header.find("\"t\", \"Round-trip time\", \"RTT\", \"Displays the game connection round-trip time\""), std::string::npos);
+	EXPECT_NE(Header.find("m_Score, m_Downstream, m_Rtt, m_Upstream"), std::string::npos);
+	EXPECT_NE(SnapshotLatencyRender.find("Client()->GetServerInfo(&CurrentServerInfo)"), std::string::npos);
+	EXPECT_NE(SnapshotLatencyRender.find("CurrentServerInfo.m_Latency"), std::string::npos);
+	EXPECT_NE(RoundTripTimeRender.find("m_PingMs"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, SettingsShellAndOuterScrollbarUseStableContracts)
 {
 	const std::string ShellSource = ReadTextFile("src/game/client/QmUi/SettingsPageLayout.h");
@@ -888,7 +903,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurSettingReplacesBetterScoreboardAndIsVersio
 	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(19.0f);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.79.33\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.80.0\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NewSettingsUseToggleAndExposeAccentAndBlurControls)
@@ -4066,24 +4081,6 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	EXPECT_LT(HookCall, CommandLineParse);
 }
 
-TEST(QmNewUiMenuBranches, LiveDirectorChatToggleIsHandledByOverlayInput)
-{
-	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
-	const std::string Contains = FunctionBody(Source, "bool CGameClient::LiveObserverOverlayContains");
-	const std::string Input = FunctionBody(Source, "bool CGameClient::HandleLiveObserverInput");
-	const std::string Render = FunctionBody(Source, "void CGameClient::RenderLiveObserverOverlay");
-
-	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_W"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_H"), std::string::npos);
-	EXPECT_NE(Source.find("CUIRect LiveObserverChatToggleRect(float Height)"), std::string::npos);
-	EXPECT_NE(Contains.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), std::string::npos);
-	EXPECT_NE(Input.find("g_Config.m_ClShowChat = g_Config.m_ClShowChat == 0 ? 1 : 0;"), std::string::npos);
-	EXPECT_NE(Input.find("Input()->MouseModeAbsolute();"), std::string::npos);
-	EXPECT_LT(Input.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), Input.find("if(Panel.Inside(MousePos))"));
-	EXPECT_NE(Render.find("const CUIRect ChatToggle = LiveObserverChatToggleRect(Height);"), std::string::npos);
-	EXPECT_NE(Render.find("ChatVisible ? Localize(\"Hide Chat\") : Localize(\"Show chat\")"), std::string::npos);
-}
-
 TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
 {
 	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");
@@ -5347,7 +5344,6 @@ TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 	const std::string Effects = ReadTextFile("src/game/client/components/ui_effects.cpp");
 	const std::string HudEditor = ReadTextFile("src/game/client/components/hud_editor.cpp");
 	const std::string TClientMenus = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string GameClient = ReadTextFile("src/game/client/gameclient.cpp");
 	const std::string Chat = ReadTextFile("src/game/client/components/chat.cpp");
 
 	EXPECT_NE(Appearance.find("DrawRoundedSurface(Ui(), MessageBackground"), std::string::npos);
@@ -5358,9 +5354,6 @@ TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 	EXPECT_EQ(HudEditor.find("Graphics()->DrawRect(HelpX, HelpY"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), BodyColor"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), FeetColor"), std::string::npos);
-	EXPECT_NE(GameClient.find("AccentRect.Draw(AccentColor"), std::string::npos);
-	EXPECT_NE(GameClient.find("TopBorderRect.Draw(BorderColor"), std::string::npos);
-	EXPECT_NE(GameClient.find("BottomBorderRect.Draw(BorderColor"), std::string::npos);
 
 	// 聊天滚动条和实时预览仍属于高频绘制，保留批量直绘路径。
 	EXPECT_NE(Chat.find("Graphics()->DrawRect(ScrollbarRect.x"), std::string::npos);

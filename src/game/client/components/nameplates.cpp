@@ -1831,10 +1831,7 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 
 	if(g_Config.m_ClNamePlatesAlways == 0)
 		Alpha *= std::clamp(1.0f - std::pow(distance(GameClient()->m_Controls.m_aTargetPos[g_Config.m_ClDummy], Position) / 200.0f, 16.0f), 0.0f, 1.0f);
-	const float LiveObserverAlpha = GameClient()->LiveObserverClientAlpha(ClientId);
-	if(LiveObserverAlpha < 1.0f)
-		Alpha *= LiveObserverAlpha;
-	else if(OtherTeam)
+	if(OtherTeam)
 		Alpha *= (float)g_Config.m_ClShowOthersAlpha / 100.0f;
 	if(GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(pPlayerInfo->m_ClientId))
 		Alpha = std::min(Alpha, 0.5f);
@@ -2692,12 +2689,6 @@ void CNamePlates::OnRender()
 		{
 			const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apPlayerInfos[i];
 			if(!pInfo)
-			{
-				ResetChatBubbleAnimState(i);
-				m_pData->m_aCoordXAlign[i] = SCoordXAlignState();
-				continue;
-			}
-			if(!GameClient()->LiveTeamFilterAllowsClient(i))
 			{
 				ResetChatBubbleAnimState(i);
 				m_pData->m_aCoordXAlign[i] = SCoordXAlignState();

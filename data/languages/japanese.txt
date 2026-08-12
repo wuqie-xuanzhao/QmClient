@@ -638,9 +638,6 @@ Allow left-click to toggle between spectating nearest player and free view
 Allow mic permission in system settings, then reopen voice
 == システム設定でマイクの許可を許可してから、ボイスを再度開いてください
 
-Allow QmLiveClient to connect as hidden read-only observer
-== QmLiveClient が隠し読み取り専用オブザーバーとして接続することを許可
-
 Allow voting to kick players
 == プレイヤーをキックする投票を許可
 
@@ -699,7 +696,7 @@ Animate chat box, emote selector, scoreboard, and spectate selection
 == チャットボックス、絵文字選択、スコアボード、観戦選択をアニメーション化
 
 Animate lists when entering a page
-== Animate lists when entering a page
+== ページ表示時にリストをアニメーション
 
 Animate settings card expand and collapse height changes
 == 設定カードの展開・折りたたみ時の高さ変化をアニメーション化
@@ -1178,9 +1175,6 @@ Automatic game-end scoreboard screenshot
 Automatic updates
 == 自動更新
 
-Automatic updates are only supported on Windows
-== 自動更新は Windows のみ対応
-
 Automatically adds voting options for all maps
 == すべてのマップに投票オプションを自動追加
 
@@ -1188,7 +1182,7 @@ Automatically ban blacklisted addresses
 == ブラックリストに登録されたアドレスを自動的に禁止
 
 Automatically check for stable updates and install them on exit
-== Automatically check for stable updates and install them on exit
+== 安定版の更新を自動的に確認し、終了時にインストール
 
 Automatically close the current chat after waking from freeze
 == フリーズ解除後に現在のチャットを自動的に閉じる
@@ -1229,6 +1223,9 @@ Available resolutions
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == 平均 %.*f   ↓ %.*f   ↑ %.*f
 
+Axiom API returned an error
+== Axiom API がエラーを返しました
+
 Axiom auto login failed
 == Axiom 自動ログイン失敗
 
@@ -1243,6 +1240,12 @@ Axiom dummy password
 
 Axiom main account password
 == Axiom メインアカウントパスワード
+
+Axiom score request failed
+== Axiom スコアの取得に失敗しました
+
+Axiom scores
+== Axiom スコア
 
 Axis
 == 軸
@@ -1940,9 +1943,6 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == クリックしてこのプレイヤーをフレンドリストから削除します。
 
-Click to restore full match
-== クリックしてフルマッチを復元
-
 Click to select server. Double click to join your friend.
 == クリックでサーバー選択、ダブルクリックで友達のサーバーに参加。
 
@@ -2083,6 +2083,9 @@ Compatible with single-player area hints from other servers
 
 Complete snapshots are arriving late or not arriving
 == 完全なスナップショットの到着が遅れているか、届いていません
+
+Completed maps
+== クリア済みマップ
 
 Compressor attack time (ms)
 == コンプレッサーのアタックタイム（ミリ秒）
@@ -2957,9 +2960,6 @@ Disable clipping
 Disable Gores auto-switch when picking up extra weapon
 == 追加武器取得時に Gores 自動切り替えを無効化
 
-Disable QmLive team preview/render filter
-== QmLive チームプレビュー/レンダリングフィルターを無効化
-
 Disabled
 == 無効
 
@@ -3029,6 +3029,9 @@ Displays estimated process UDP send rate
 Displays prediction timing jitter
 == 予測タイミングのジッターを表示
 
+Displays server snapshot latency
+== サーバースナップショットレイテンシを表示
+
 Displays the client's prediction lead
 == クライアントの予測先行時間を表示
 
@@ -3079,6 +3082,9 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == 自分がフリーズ中の他のプレイヤーを予測しない
+
+Do not set this variable, instead create a ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible serverlist URLs
+== この変数は設定せず、settings_ddnet.cfg と同じ場所に ddnet-serverlist-urls.cfg を作成して、使用可能なすべてのサーバーリスト URL を指定してください
 
 Do not set, used to mark official tutorial server
 == 設定しないでください。公式チュートリアルサーバーを示すために使用されます
@@ -3747,7 +3753,7 @@ Enable stereo positioning
 == ステレオポジショニングを有効にする
 
 Enable switch countdown
-== Enable switch countdown
+== スイッチのカウントダウンを有効化
 
 Enable system media control
 == システムメディアコントロールを有効にする
@@ -4148,9 +4154,6 @@ Filter full servers in browser
 Filter game type
 == フィルターするゲームタイプ
 
-Filter off
-== フィルターオフ
-
 Filter out password protected servers in browser
 == ブラウザでパスワード保護されたサーバーをフィルターする
 
@@ -4165,12 +4168,6 @@ Filter out servers without friends
 
 Filter out spectators from player count
 == プレイヤー数から観戦者を除外
-
-Filter Team %d
-== チーム %d をフィルター
-
-Filter: Team %d
-== フィルター: チーム %d
 
 Filtered word console color
 == ブロックワードコンソール色
@@ -4400,9 +4397,6 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 == フル
 
-Full demo + sidecar
-== フルデモ + サイドカー
-
 Full map listen in same room
 == 同じ部屋でマップ全体を聴く
 
@@ -4550,6 +4544,9 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == グローバルカードソート旧設定移行完了フラグ
 
+Global rank
+== 世界順位
+
 Global toggle key
 == グローバルトグルキー
 
@@ -4635,10 +4632,10 @@ Graphics display
 == グラフィック表示
 
 Graphics library major version (0 = auto-detect)
-== Graphics library major version (0 = auto-detect)
+== グラフィックスライブラリのメジャーバージョン（0 = 自動検出）
 
 Graphics library minor version (0 = auto-detect)
-== Graphics library minor version (0 = auto-detect)
+== グラフィックスライブラリのマイナーバージョン（0 = 自動検出）
 
 Graphics library patch version
 == グラフィックスライブラリパッチバージョン
@@ -4708,9 +4705,6 @@ Hi!
 
 Hide basic system info (join, version, rules) in Zen mode
 == 禅モードで入場、バージョン、ルールなどの基本システム情報を非表示
-
-Hide Chat
-== チャットを非表示
 
 Hide chat messages from players marked as enemies
 == 敵としてマークしたプレイヤーのチャットメッセージを隠す
@@ -5036,9 +5030,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5259,10 +5250,10 @@ Input overlay display
 == 入力オーバーレイ表示
 
 Input overlay keyboard scale (percent)
-== Input overlay keyboard scale (percent)
+== 入力オーバーレイのキーボード倍率（パーセント）
 
 Input overlay mouse scale (percent)
-== Input overlay mouse scale (percent)
+== 入力オーバーレイのマウス倍率（パーセント）
 
 Input overlay opacity (percent)
 == 入力オーバーレイの不透明度（パーセント）
@@ -5323,6 +5314,9 @@ Interpolation
 
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == 現在のエディターマップコピーを「auto」フォルダーに自動保存する間隔（0 = オフ）
+
+Invalid Axiom API response
+== Axiom API の応答が無効です
 
 Invalid client id to kick
 == キックするクライアントIDが無効です
@@ -5606,6 +5600,9 @@ Last entered
 Last page in console
 == コンソールの最終ページ
 
+Latency
+== レイテンシ
+
 Latency compensation
 == レイテンシ補正
 
@@ -5806,6 +5803,9 @@ Loading
 
 Loading assets...
 == アセットを読み込み中...
+
+Loading Axiom scores...
+== Axiom スコアを読み込み中...
 
 Loading commands…
 == コマンドを読み込み中…
@@ -6146,6 +6146,9 @@ Map to use on server
 Map type:
 == マップタイプ：
 
+Maps
+== マップ
+
 Margin when notification is docked
 == 通知バーが端に寄ったときの余白
 
@@ -6248,9 +6251,6 @@ Maximum framerate for entity layer video background
 Maximum notification count
 == 通知バーの最大表示数
 
-Maximum number of allowed QmLive observer connections
-== 許可される QmLive observer 接続の最大数
-
 Maximum number of auto recorded demos (0 = unlimited)
 == 自動録画デモの最大数（0 = 無制限）
 
@@ -6333,7 +6333,7 @@ Menu option - selected
 == メニューオプション - 選択中
 
 Merge consecutive identical player messages within 2 seconds
-== Merge consecutive identical player messages within 2 seconds
+== 2 秒以内に連続した同一プレイヤーの同じメッセージを統合
 
 Message color
 == メッセージの色
@@ -6367,6 +6367,9 @@ Microphone volume
 
 Microphone volume (percent)
 == マイク音量（パーセント）
+
+Mileage
+== 走行距離
 
 Milliseconds
 == ミリ秒
@@ -6520,6 +6523,9 @@ Moves to the tile with x/y-number ii
 
 Multi-View
 == マルチビュー
+
+Multiple exact Axiom players found
+== 完全一致する Axiom プレイヤーが複数見つかりました
 
 Mute
 == ミュート
@@ -7022,6 +7028,12 @@ Not open, check input device or mic permission
 Not open, check output device
 == 開いていません。出力デバイスを確認してください
 
+Not ranked
+== ランク外
+
+Not requested
+== 未取得
+
 Note
 == メモ
 
@@ -7364,6 +7376,9 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == 上書きグループ
 
+Override location for ping estimation, available: auto, af, as, as:cn, eu, na, oc, sa (Automatic, Africa, Asia, China, Europe, North America, Oceania/Australia, South America
+== Ping 推定地域を上書きします。選択肢：auto、af、as、as:cn、eu、na、oc、sa（自動、アフリカ、アジア、中国、ヨーロッパ、北米、オセアニア/オーストラリア、南米）
+
 Override Selected
 == 選択項目を上書き
 
@@ -7481,6 +7496,9 @@ Per-word highlight (karaoke)
 Performance debug log threshold (ms)
 == パフォーマンスデバッグログのしきい値（ms）
 
+Performance points
+== パフォーマンスポイント
+
 Personal best:
 == 自己ベスト：
 
@@ -7536,7 +7554,7 @@ Plasma gun shots per second
 == プラズマガンの毎秒発射数
 
 Play a flip animation while reloading weapons
-== Play a flip animation while reloading weapons
+== 武器のリロード中に反転アニメーションを再生
 
 Play a slide-in rotation animation when switching weapons
 == 武器切り替え時にスライドイン回転アニメーションを再生
@@ -7555,6 +7573,9 @@ Play the current demo
 
 Play the selected demo
 == 選択したデモを再生
+
+Play time
+== プレイ時間
 
 Play/Pause
 == 再生/一時停止
@@ -7645,6 +7666,9 @@ Player name:
 
 Player not found
 == プレイヤーが見つかりません
+
+Player not found on Axiom
+== Axiom でプレイヤーが見つかりません
 
 Player preview
 == プレイヤープレビュー
@@ -7916,12 +7940,6 @@ Preview the current chat appearance
 Preview visibilities
 == 表示状態をプレビュー
 
-Preview/render only one DDRace team from a full match demo
-== 完全試合デモから DDRace チームを1つだけプレビュー/描画
-
-Preview/render only this team
-== このチームのみをプレビュー/レンダリング
-
 Previous
 == 前へ
 
@@ -8096,45 +8114,6 @@ QmClient sidebar module collapse state
 QmClient sidebar module order
 == 栖夢サイドバーモジュール並び順
 
-QmLiveClient: Default filter for unrecognized source player events
-== QmLiveClient：ソース不明のプレイヤー型イベントデフォルトフィルター
-
-QmLiveClient: Enable single team isolation audio filter
-== QmLiveClient：単チーム隔離サウンドフィルターを有効化
-
-QmLiveClient: Enable single team isolation visual filter
-== QmLiveClient：単チーム隔離画面フィルターを有効化
-
-QmLiveClient: Finish ranking card display seconds
-== QmLiveClient：完了ランキングカード表示秒数
-
-QmLiveClient: Finish ranking card opacity percent
-== QmLiveClient：完了ランキングカード不透明度パーセント
-
-QmLiveClient: Finish ranking card scale percent
-== QmLiveClient：完了ランキングカードスケールパーセント
-
-QmLiveClient: Full match demo recording toggle
-== QmLiveClient：完全試合デモ録画スイッチ
-
-QmLiveClient: Hide non-target team finish prompts
-== QmLiveClient：非対象チーム完了通知を非表示
-
-QmLiveClient: Ranking HUD team range lower bound
-== QmLiveClient：ランキング HUD チーム範囲下限
-
-QmLiveClient: Ranking HUD team range upper bound
-== QmLiveClient：ランキング HUD チーム範囲上限
-
-QmLiveClient: Show finish cards for teams outside range
-== QmLiveClient：設定範囲外チームの完了カードを表示
-
-QmLiveClient: Show team finish ranking card
-== QmLiveClient：チーム完了ランキングカードを表示
-
-QmLiveClient: Single team isolation preview/render team, 0=Off
-== QmLiveClient：単チーム隔離プレビュー/レンダリングチーム，0=オフ
-
 QmUi animation intensity: 0=Off, 1=Reduced, 2=Full
 == QmUi アニメーション強度：0=オフ 1=低減 2=フル
 
@@ -8287,9 +8266,6 @@ Record chat replays.
 
 Record demo
 == デモを録画
-
-Record match
-== 試合を録画
 
 Record to a file
 == ファイルに記録
@@ -9447,13 +9423,13 @@ Settings
 == 設定
 
 Settings card background
-== Settings card background
+== 設定カードの背景
 
 Settings card background color
-== Settings card background color
+== 設定カードの背景色
 
 Settings card background transparency
-== Settings card background transparency
+== 設定カードの背景透明度
 
 Settings card border color
 == 設定カードの枠線色
@@ -10269,7 +10245,7 @@ Show Tune Zone effects
 == Tune Zone 効果を表示
 
 Show Tune Zone effects on HUD Dynamic Island
-== Show Tune Zone effects on HUD Dynamic Island
+== HUD ダイナミックアイランドに Tune Zone 効果を表示
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 自身のプレイヤーに影響するチューニングパラメーターを表示（0 = オフ、1 = 変更のみ表示、2 = すべて表示）
@@ -10306,6 +10282,9 @@ Show weapon trajectory guide
 
 Show welcome message indicating first client launch
 == 初回クライアント起動を示すウェルカムメッセージを表示
+
+Show whether you have finished a DDNet map (transmits your player name to info.ddnet.org/info)
+== DDNet マップをクリア済みか表示します（プレイヤー名を info.ddnet.org/info に送信します）
 
 Show Workshop Assets
 == ワークショップアセットを表示
@@ -10568,6 +10547,9 @@ Snapshot Age
 Snapshot age
 == スナップショット経過時間
 
+Snapshot Latency
+== スナップショットレイテンシ
+
 Snapshot payload
 == スナップショットのペイロード
 
@@ -10778,9 +10760,6 @@ Start marker of replay slice
 Start playback of ghosts
 == ゴーストの再生を開始
 
-Start QmLive full match demo recording
-== QmLive フルマッチデモ録画を開始
-
 Start recording a demo
 == デモの録画を開始
 
@@ -10841,14 +10820,8 @@ Steam profile name
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == 切り替え時のキー入力を停止（0 = オフ、1 = ダミー、2 = プレイヤー）
 
-Stop match record
-== マッチ録画を停止
-
 Stop practice
 == 練習を停止
-
-Stop QmLive full match demo recording
-== QmLive フルマッチデモ録画を停止
 
 Stop record
 == 録画を停止
@@ -10953,7 +10926,7 @@ Switch
 == 切り替え
 
 Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
-== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== スイッチカウントダウンの位置（0 = Tee に追従、1 = ダイナミックアイランド、2 = 両方）
 
 Switch failed
 == 切り替え失敗
@@ -11146,6 +11119,9 @@ Team mode change disabled
 
 Team mode change is disabled on this server.
 == このサーバーではチームモード変更は無効です。
+
+Team rank
+== チーム順位
 
 Team save already in progress
 == チーム保存は既に進行中です
@@ -11359,6 +11335,9 @@ The selected part stays highlighted while you adjust its color.
 
 The server is running a non-standard tuning on a pure game type.
 == サーバーが純粋なゲームタイプで非標準のチューニングを実行しています。
+
+The update is ready and will be installed when you exit.
+== アップデートの準備ができました。終了時にインストールされます。
 
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == テクスチャ %s の幅が %d で割り切れないか、高さが %d で割り切れないため、表示に問題が発生する可能性があります。
@@ -11823,7 +11802,7 @@ Tune variable to value or show current value
 == チューン変数を値に設定するか、現在の値を表示
 
 Tune Zone effect icon legend
-== Tune Zone effect icon legend
+== Tune Zone エフェクトアイコン一覧
 
 Tutorial
 == チュートリアル
@@ -12058,12 +12037,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == 更新に失敗しました。もう一度お試しください
-
-Update finished. Please restart the client
-== 更新が完了しました。クライアントを再起動してください
-
-Update finished. Restarting...
-== 更新が完了しました。再起動中...
 
 Update notice
 == お知らせを更新
@@ -12522,7 +12495,7 @@ Weapon range color
 == 武器範囲の色
 
 Weapon reload animation probability
-== Weapon reload animation probability
+== 武器リロードアニメーションの確率
 
 Weapon switch animation
 == 武器切り替えアニメーション
@@ -13112,15 +13085,6 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ テンセントクラウド API が設定されていません
 
-不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-
-显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-
-覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-
 [Assets editor blend mode]
 Multiply
 == 乗算
@@ -13243,7 +13207,7 @@ Could not initialize the given graphics backend, this is probably because you di
 
 [Graphics error]
 Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 初期化に失敗しました。設定ディレクトリの qmclient/settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13259,7 +13223,7 @@ Submitting the render commands failed. Try to update your GPU drivers.
 
 [Graphics error]
 Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 不明なエラー。設定ディレクトリの qmclient/settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
 
 [Hammer Mode]
 Normal
