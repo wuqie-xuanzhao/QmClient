@@ -13,6 +13,11 @@
 
 namespace tclient_statusbar
 {
+	inline bool IsValidPlayerId(int PlayerId)
+	{
+		return PlayerId >= 0 && PlayerId < MAX_CLIENTS;
+	}
+
 	inline bool FormatPlayerPoints(char *pBuf, int BufSize, EPointsStatus Status, int Points)
 	{
 		if(BufSize <= 0)

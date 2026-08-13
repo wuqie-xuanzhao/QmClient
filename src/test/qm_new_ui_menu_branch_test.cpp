@@ -57,6 +57,15 @@ TEST(TClientStatusBarScore, FormatsPlayerPointsStates)
 	EXPECT_FALSE(tclient_statusbar::FormatPlayerPoints(aBuf, 0, EPointsStatus::READY, 0));
 }
 
+TEST(TClientStatusBar, ValidatesPlayerIds)
+{
+	EXPECT_FALSE(tclient_statusbar::IsValidPlayerId(SPEC_FREEVIEW));
+	EXPECT_FALSE(tclient_statusbar::IsValidPlayerId(-1));
+	EXPECT_TRUE(tclient_statusbar::IsValidPlayerId(0));
+	EXPECT_TRUE(tclient_statusbar::IsValidPlayerId(MAX_CLIENTS - 1));
+	EXPECT_FALSE(tclient_statusbar::IsValidPlayerId(MAX_CLIENTS));
+}
+
 TEST(QmNewUiMenuBranches, RespawnWeaponAndCallvoteFiltersUseSharedBoundedSemantics)
 {
 	EXPECT_EQ(QmRespawnDefaultWantedWeapon(-1), 0);
@@ -161,6 +170,7 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 {
 	const std::string Header = ReadTextFile("src/game/client/components/tclient/statusbar.h");
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
+	const std::string Config = ReadTextFile("src/engine/shared/config_variables_tclient.h");
 	const std::string ApplyScheme = FunctionBody(Source, "void CStatusBar::ApplyStatusBarScheme(const char *pScheme)");
 	const std::string UpdateScheme = FunctionBody(Source, "void CStatusBar::UpdateStatusBarScheme(char *pScheme)");
 	const std::string ScoreRegistration = "\"s\", \"Points\", \"Points\", \"Displays the DDNet Points of the current player\"";
@@ -172,6 +182,23 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 	EXPECT_NE(ApplyScheme.find("for(char ItemLetter : ItemType.m_aLetters)"), std::string::npos);
 	EXPECT_NE(ApplyScheme.find("m_StatusBarItems.push_back(&ItemType);"), std::string::npos);
 	EXPECT_NE(UpdateScheme.find("pScheme[Index++] = pItem->m_aLetters[0];"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_STR(TcStatusBarScheme, tc_statusbar_scheme, 129,"), std::string::npos);
+	EXPECT_NE(Header.find("STATUSBAR_MAX_SIZE = 128"), std::string::npos);
+}
+
+TEST(TClientStatusBar, IgnoresPlayerItemsForInvalidSpectatorIds)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
+	const std::string AngleWidth = FunctionBody(Source, "float CStatusBar::AngleWidth()");
+	const std::string PingWidth = FunctionBody(Source, "float CStatusBar::PingWidth()");
+	const std::string PositionWidth = FunctionBody(Source, "float CStatusBar::PositionWidth()");
+	const std::string VelocityWidth = FunctionBody(Source, "float CStatusBar::VelocityWidth()");
+
+	EXPECT_NE(Source.find("static_assert(STATUSBAR_MAX_SIZE < sizeof(g_Config.m_TcStatusBarScheme));"), std::string::npos);
+	EXPECT_NE(AngleWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId))"), std::string::npos);
+	EXPECT_NE(PingWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])"), std::string::npos);
+	EXPECT_NE(PositionWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])"), std::string::npos);
+	EXPECT_NE(VelocityWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsShellAndOuterScrollbarUseStableContracts)

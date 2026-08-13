@@ -12,6 +12,8 @@
 
 namespace
 {
+	static_assert(STATUSBAR_MAX_SIZE < sizeof(g_Config.m_TcStatusBarScheme));
+
 	const char *ConnectionGradeLabel(EQmConnectionGrade Grade)
 	{
 		switch(Grade)
@@ -75,7 +77,7 @@ float CStatusBar::GetDurationWidth(int Duration)
 
 float CStatusBar::AngleWidth()
 {
-	if(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SPEC_FREEVIEW)
+	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId))
 		return 0.0f;
 
 	return TextRender()->TextWidth(m_FontSize, "000.00");
@@ -102,7 +104,7 @@ void CStatusBar::AngleRender()
 
 float CStatusBar::PingWidth()
 {
-	if(!GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
+	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
 		return 0.0f;
 
 	return TextRender()->TextWidth(m_FontSize, "0000");
@@ -191,7 +193,7 @@ void CStatusBar::FPSRender()
 
 float CStatusBar::PositionWidth()
 {
-	if(!GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
+	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
 		return 0.0f;
 
 	return TextRender()->TextWidth(m_FontSize, "-0000.00, -0000.00");
@@ -210,7 +212,7 @@ void CStatusBar::PositionRender()
 
 float CStatusBar::VelocityWidth()
 {
-	if(!GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
+	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
 		return 0.0f;
 
 	return TextRender()->TextWidth(m_FontSize, "+00.00, +00.00");
@@ -420,6 +422,7 @@ void CStatusBar::UpdateStatusBarSize()
 	m_FontSize = m_BarHeight - (m_Margin * 2);
 	m_Margin *= 1.5f;
 }
+
 void CStatusBar::OnInit()
 {
 	UpdateStatusBarSize();
