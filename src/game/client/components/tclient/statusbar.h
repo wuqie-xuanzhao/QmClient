@@ -133,6 +133,7 @@ private:
 	bool m_HasFormattedPoints = false;
 
 	int m_CurrentRaceTime = 0;
+	int CalculateRaceTime();
 	float GetDurationWidth(int Duration);
 	int GetDigitsIndex(int Value, int Max);
 	float AngleWidth();
@@ -201,6 +202,8 @@ private:
 
 	void LabelRender(const char *pLabel);
 	float LabelWidth(const char *pLabel);
+
+	char m_aAppliedStatusBarScheme[STATUSBAR_MAX_SIZE + 1] = {};
 };
 
 #endif

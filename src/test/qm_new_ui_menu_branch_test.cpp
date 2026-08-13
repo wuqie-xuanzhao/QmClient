@@ -201,6 +201,31 @@ TEST(TClientStatusBar, IgnoresPlayerItemsForInvalidSpectatorIds)
 	EXPECT_NE(VelocityWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])"), std::string::npos);
 }
 
+TEST(TClientStatusBar, RefreshesDynamicLayoutInputsBeforeRendering)
+{
+	const std::string Header = ReadTextFile("src/game/client/components/tclient/statusbar.h");
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
+	const std::string Render = FunctionBody(Source, "void CStatusBar::OnRender()");
+	const std::string RaceRender = FunctionBody(Source, "void CStatusBar::RaceTimeRender()");
+	const std::string ApplyScheme = FunctionBody(Source, "void CStatusBar::ApplyStatusBarScheme(const char *pScheme)");
+	const std::string UpdateScheme = FunctionBody(Source, "void CStatusBar::UpdateStatusBarScheme(char *pScheme)");
+	const std::string ConnectionWidth = FunctionBody(Source, "float CStatusBar::ConnectionGradeWidth()");
+
+	EXPECT_NE(Header.find("int CalculateRaceTime();"), std::string::npos);
+	const size_t RaceTimeUpdate = Render.find("m_CurrentRaceTime = CalculateRaceTime();");
+	const size_t LayoutWidth = Render.find("LayoutItem.m_ItemWidth = pItem->m_GetWidth();");
+	ASSERT_NE(RaceTimeUpdate, std::string::npos);
+	ASSERT_NE(LayoutWidth, std::string::npos);
+	EXPECT_LT(RaceTimeUpdate, LayoutWidth);
+	EXPECT_NE(RaceRender.find("const int RaceTime = m_CurrentRaceTime;"), std::string::npos);
+	EXPECT_NE(Header.find("m_aAppliedStatusBarScheme"), std::string::npos);
+	EXPECT_NE(Render.find("str_comp(m_aAppliedStatusBarScheme, g_Config.m_TcStatusBarScheme) != 0"), std::string::npos);
+	EXPECT_NE(ApplyScheme.find("str_copy(m_aAppliedStatusBarScheme, pScheme"), std::string::npos);
+	EXPECT_NE(UpdateScheme.find("str_copy(m_aAppliedStatusBarScheme, pScheme"), std::string::npos);
+	EXPECT_NE(ConnectionWidth.find("ConnectionGradeLabel(GameClient()->m_QmMonitoring.Snapshot().m_Verdict.m_Grade)"), std::string::npos);
+	EXPECT_EQ(ConnectionWidth.find("Localize(\"Severe\")"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, SettingsShellAndOuterScrollbarUseStableContracts)
 {
 	const std::string ShellSource = ReadTextFile("src/game/client/QmUi/SettingsPageLayout.h");

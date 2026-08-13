@@ -147,7 +147,7 @@ float CStatusBar::RaceTimeWidth()
 {
 	return GetDurationWidth(m_CurrentRaceTime);
 }
-void CStatusBar::RaceTimeRender()
+int CStatusBar::CalculateRaceTime()
 {
 	int RaceTime = 0;
 	if(GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit && (GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer <= 0))
@@ -165,7 +165,11 @@ void CStatusBar::RaceTimeRender()
 	{
 		RaceTime = (Client()->GameTick(g_Config.m_ClDummy) - GameClient()->m_Snap.m_pGameInfoObj->m_RoundStartTick) / Client()->GameTickSpeed();
 	}
-	m_CurrentRaceTime = RaceTime;
+	return RaceTime;
+}
+void CStatusBar::RaceTimeRender()
+{
+	const int RaceTime = m_CurrentRaceTime;
 	char aTimeBuf[64];
 	str_time((int64_t)RaceTime * 100, TIME_DAYS, aTimeBuf, sizeof(aTimeBuf));
 
@@ -376,7 +380,7 @@ void CStatusBar::UpRateRender()
 
 float CStatusBar::ConnectionGradeWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, Localize("Severe"));
+	return TextRender()->TextWidth(m_FontSize, Localize(ConnectionGradeLabel(GameClient()->m_QmMonitoring.Snapshot().m_Verdict.m_Grade)));
 }
 
 void CStatusBar::ConnectionGradeRender()
@@ -460,6 +464,7 @@ void CStatusBar::ApplyStatusBarScheme(const char *pScheme)
 			}
 		}
 	}
+	str_copy(m_aAppliedStatusBarScheme, pScheme, sizeof(m_aAppliedStatusBarScheme));
 }
 
 void CStatusBar::UpdateStatusBarScheme(char *pScheme)
@@ -472,6 +477,7 @@ void CStatusBar::UpdateStatusBarScheme(char *pScheme)
 		pScheme[Index++] = pItem->m_aLetters[0];
 	}
 	pScheme[Index] = '\0';
+	str_copy(m_aAppliedStatusBarScheme, pScheme, sizeof(m_aAppliedStatusBarScheme));
 }
 
 void CStatusBar::OnRender()
@@ -484,6 +490,9 @@ void CStatusBar::OnRender()
 	if(!g_Config.m_TcStatusBar || !GameClient()->m_Snap.m_pGameInfoObj)
 		return;
 
+	if(str_comp(m_aAppliedStatusBarScheme, g_Config.m_TcStatusBarScheme) != 0)
+		ApplyStatusBarScheme(g_Config.m_TcStatusBarScheme);
+
 	m_PlayerId = GameClient()->m_Snap.m_LocalClientId;
 	if(GameClient()->m_Snap.m_SpecInfo.m_Active)
 		m_PlayerId = GameClient()->m_Snap.m_SpecInfo.m_SpectatorId;
@@ -492,6 +501,7 @@ void CStatusBar::OnRender()
 		UpdateFormattedPoints();
 
 	UpdateStatusBarSize();
+	m_CurrentRaceTime = CalculateRaceTime();
 
 	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);
 	Graphics()->DrawRect(m_BarX, m_BarY, m_Width, m_BarHeight, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_TcStatusBarColor)).WithAlpha(g_Config.m_TcStatusBarAlpha / 100.0f), 0, 0);
