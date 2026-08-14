@@ -140,6 +140,11 @@ bool CPacketChunkUnpacker::UnpackNextChunk(CNetChunk *pChunk)
 	}
 }
 
+void CPacketChunkUnpacker::Reset()
+{
+	m_Valid = false;
+}
+
 bool CNetBase::IsValidConnectionOrientedPacket(const CNetPacketConstruct *pPacket)
 {
 	if((pPacket->m_Flags & ~(NET_PACKETFLAG_CONTROL | NET_PACKETFLAG_RESEND | NET_PACKETFLAG_COMPRESSION)) != 0)

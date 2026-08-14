@@ -505,6 +505,7 @@ class CPacketChunkUnpacker
 public:
 	void FeedPacket(const NETADDR &Addr, const CNetPacketConstruct &Packet, CNetConnection *pConnection, int ClientId);
 	bool UnpackNextChunk(CNetChunk *pChunk);
+	void Reset();
 
 private:
 	bool m_Valid = false;

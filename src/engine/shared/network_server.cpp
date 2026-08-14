@@ -961,7 +961,11 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 	{
 		// Unpack next chunk from stored packet if available
 		if(m_PacketChunkUnpacker.UnpackNextChunk(pChunk))
-			return 1;
+		{
+			if(m_aSlots[pChunk->m_ClientId].m_Connection.State() != CNetConnection::EState::OFFLINE)
+				return 1;
+			m_PacketChunkUnpacker.Reset();
+		}
 		if(FetchKcpChunk(pChunk, pResponseToken))
 			return 1;
 
