@@ -238,9 +238,9 @@ TEST(QmHudMediaIslandLayout, ScalesTheCompleteDesignToEightyPercent)
 	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(3.0f), 2.4f);
 }
 
-TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundHorizontalMidlineWithCompactGap)
+TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundTopAnchoredHorizontalMidlineWithCompactGap)
 {
-	constexpr float IslandY = 1.0f;
+	constexpr float IslandY = 0.0f;
 	constexpr float IslandHeight = QmHudMediaIslandScaled(16.0f);
 	constexpr float TextHeight = QmHudMediaIslandScaled(4.4f);
 	constexpr float TextGap = QmHudMediaIslandScaled(0.8f);
@@ -397,15 +397,15 @@ TEST(QmHudMediaIslandLogic, Utf8TitlesStayNulTerminatedInFixedSnapshot)
 
 TEST(QmHudMediaIslandLogic, TopEffectMovesBelowOverlappingIsland)
 {
-	const CUIRect Island = {120.0f, 1.0f, 80.0f, 38.0f};
+	const CUIRect Island = {120.0f, 0.0f, 80.0f, 38.0f};
 
-	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, Island, true), 42.0f);
+	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, Island, true), 41.0f);
 }
 
 TEST(QmHudMediaIslandLogic, TopEffectDoesNotMoveForHorizontalSeparationOrHiddenIsland)
 {
-	const CUIRect SideIsland = {20.0f, 1.0f, 60.0f, 38.0f};
-	const CUIRect CenterIsland = {120.0f, 1.0f, 80.0f, 38.0f};
+	const CUIRect SideIsland = {20.0f, 0.0f, 60.0f, 38.0f};
+	const CUIRect CenterIsland = {120.0f, 0.0f, 80.0f, 38.0f};
 
 	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, SideIsland, true), 20.0f);
 	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, CenterIsland, false), 20.0f);
@@ -1605,7 +1605,7 @@ TEST(QmHudMediaIslandSource, SharedScaleCoversLayoutTimerAndEntranceWithoutMovin
 	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(16.0f)"), std::string::npos);
 	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(12.0f)"), std::string::npos);
 	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(5.8f)"), std::string::npos);
-	EXPECT_NE(IslandBody.find("const float IslandY = 1.0f;"), std::string::npos);
+	EXPECT_NE(IslandBody.find("const float IslandY = 0.0f;"), std::string::npos);
 	EXPECT_NE(TimerBody.find("QmHudMediaIslandScaled(TimerInfo.m_FontSize)"), std::string::npos);
 }
 

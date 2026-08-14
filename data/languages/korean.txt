@@ -1182,9 +1182,6 @@ Automatic game-end scoreboard screenshot
 Automatic updates
 == 자동 업데이트
 
-Automatic updates are only supported on Windows
-== 자동 업데이트는 Windows에서만 지원됩니다
-
 Automatically adds voting options for all maps
 == 모든 맵에 투표 옵션을 자동으로 추가합니다
 
@@ -1463,9 +1460,6 @@ Black
 
 Blend mode
 == 혼합 모드
-
-Blink the active local tee
-== 활성 로컬 캐릭터를 깜박이게 합니다
 
 Block enemy chat
 == 적대 플레이어 채팅 차단
@@ -11364,6 +11358,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == 서버가 순수 게임 유형에서 비표준 튜닝을 실행 중입니다.
 
+The update is ready and will be installed when you exit.
+== The update is ready and will be installed when you exit.
+
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == 텍스처 %s의 너비가 %d로 나누어 떨어지지 않거나 높이가 %d로 나누어 떨어지지 않아 시각적 버그가 발생할 수 있습니다.
 
@@ -12062,12 +12059,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == 업데이트 실패. 다시 시도해 주세요
-
-Update finished. Please restart the client
-== 업데이트 완료. 클라이언트를 다시 시작해 주세요
-
-Update finished. Restarting...
-== 업데이트 완료. 다시 시작 중...
 
 Update notice
 == 공지 업데이트

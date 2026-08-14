@@ -1182,9 +1182,6 @@ Automatic game-end scoreboard screenshot
 Automatic updates
 == Automatische Updates
 
-Automatic updates are only supported on Windows
-== Automatische Updates werden nur unter Windows unterstützt
-
 Automatically adds voting options for all maps
 == Fügt automatisch Abstimmungsoptionen für alle Karten hinzu
 
@@ -1463,9 +1460,6 @@ Black
 
 Blend mode
 == Mischmodus
-
-Blink the active local tee
-== Aktiven lokalen Charakter blinken lassen
 
 Block enemy chat
 == Gegner-Chat blockieren
@@ -11364,6 +11358,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == Der Server verwendet eine nicht standardmäßige Abstimmung in einem reinen Spieltyp.
 
+The update is ready and will be installed when you exit.
+== The update is ready and will be installed when you exit.
+
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == Die Breite der Textur %s ist nicht durch %d teilbar, oder die Höhe ist nicht durch %d teilbar, was zu visuellen Fehlern führen kann.
 
@@ -12062,12 +12059,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Update fehlgeschlagen. Bitte versuche es erneut.
-
-Update finished. Please restart the client
-== Update abgeschlossen. Bitte starte den Client neu.
-
-Update finished. Restarting...
-== Update abgeschlossen. Neustart...
 
 Update notice
 == Hinweis aktualisieren

@@ -6495,14 +6495,18 @@ int main(int argc, const char **argv)
 		pFutureFileLogger->Set(log_logger_noop());
 	}
 
-	if(g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug || g_Config.m_QmPerfStutterDiagnostics)
+	const bool MacosGraphicsDiagnostics = g_Config.m_QmMacosGraphicsDiagnostics != 0;
+	const bool PerfLoggingConfigured = g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug || g_Config.m_QmPerfStutterDiagnostics;
+	if(PerfLoggingConfigured || MacosGraphicsDiagnostics)
 	{
 		pStorage->CreateFolder("dumps", IStorage::TYPE_SAVE);
-		pStorage->CreateFolder("dumps/QmClient_Perf", IStorage::TYPE_SAVE);
+		const char *pDiagnosticsDirectory = MacosGraphicsDiagnostics && !PerfLoggingConfigured ? "dumps/QmClient_AutoDiagnostics" : "dumps/QmClient_Perf";
+		const char *pDiagnosticsPrefix = MacosGraphicsDiagnostics && !PerfLoggingConfigured ? "qm_auto_diag" : "qm_perf";
+		pStorage->CreateFolder(pDiagnosticsDirectory, IStorage::TYPE_SAVE);
 		char aDate[64];
 		str_timestamp(aDate, sizeof(aDate));
 		char aPerfLogPath[128];
-		str_format(aPerfLogPath, sizeof(aPerfLogPath), "dumps/QmClient_Perf/qm_perf_%s.log", aDate);
+		str_format(aPerfLogPath, sizeof(aPerfLogPath), "%s/%s_%s.log", pDiagnosticsDirectory, pDiagnosticsPrefix, aDate);
 		char aPerfLogCompletePath[IO_MAX_PATH_LENGTH];
 		pStorage->GetCompletePath(IStorage::TYPE_SAVE, aPerfLogPath, aPerfLogCompletePath, sizeof(aPerfLogCompletePath));
 		IOHANDLE PerfLogfile = pStorage->OpenFile(aPerfLogPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
@@ -7031,24 +7035,29 @@ void CClient::GetGpuInfoString(char (&aGpuInfo)[512])
 		str_copy(aGpuInfo, "Configured graphics backend: headless");
 	}
 #else
+	char aConfiguredBackend[128];
+	if(str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0)
+		str_copy(aConfiguredBackend, "Vulkan - performance mode");
+	else
+		str_format(aConfiguredBackend, sizeof(aConfiguredBackend), "%s %d.%d.%d", g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
 	if(m_pGraphics == nullptr || !m_pGraphics->IsBackendInitialized())
 	{
 		str_format(aGpuInfo, std::size(aGpuInfo),
-			"Configured graphics backend: %s %d.%d.%d\n"
+			"Configured graphics backend: %s\n"
 			"Graphics %s not yet initialized.",
-			g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch,
+			aConfiguredBackend,
 			m_pGraphics == nullptr ? "were" : "backend was");
 	}
 	else
 	{
 		str_format(aGpuInfo, std::size(aGpuInfo),
-			"Configured graphics backend: %s %d.%d.%d\n"
+			"Configured graphics backend: %s\n"
 			"GPU: %s - %s - %s\n"
 			"Texture: %.2f MiB, "
 			"Buffer: %.2f MiB, "
 			"Streamed: %.2f MiB, "
 			"Staging: %.2f MiB",
-			g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch,
+			aConfiguredBackend,
 			m_pGraphics->GetVendorString(), m_pGraphics->GetRendererString(), m_pGraphics->GetVersionString(),
 			m_pGraphics->TextureMemoryUsage() / 1024.0 / 1024.0,
 			m_pGraphics->BufferMemoryUsage() / 1024.0 / 1024.0,

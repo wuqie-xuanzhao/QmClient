@@ -954,6 +954,9 @@ class CGraphics_Threaded : public IEngineGraphics
 	uint64_t m_MsdfFlushCount = 0;
 	uint64_t m_RoundedRectSdfCommandCount = 0;
 	uint64_t m_RoundedRectSdfFlushCount = 0;
+	uint64_t m_BufferedTextCommandCount = 0;
+	uint64_t m_BufferedTextNoContainerCount = 0;
+	uint64_t m_BufferedTextZeroQuadCount = 0;
 #endif
 
 	CTextureHandle m_NullTexture;

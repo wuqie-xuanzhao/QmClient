@@ -4069,6 +4069,58 @@ TEST(QmMonitoringHelpers, VulkanNoVsyncPrefersImmediateAndKeepsNormalSwapchainDe
 	EXPECT_EQ(SwapImageBody.find("return VKCapabilities.minImageCount;"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, MacosGraphicsDiagnosticsWritesAutodiagAndChecksBufferedTextResources)
+{
+	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string Graphics = ReadRepoFile("src/engine/client/graphics_threaded.cpp");
+	const std::string Vulkan = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const std::string Config = ReadRepoFile("src/engine/shared/config_variables_qmclient.h");
+
+	EXPECT_NE(Client.find("const bool MacosGraphicsDiagnostics = g_Config.m_QmMacosGraphicsDiagnostics != 0;"), std::string::npos);
+	EXPECT_NE(Client.find("dumps/QmClient_AutoDiagnostics"), std::string::npos);
+	EXPECT_NE(Client.find("qm_auto_diag"), std::string::npos);
+	EXPECT_NE(Graphics.find("buffered_text_commands_sum"), std::string::npos);
+	EXPECT_NE(Graphics.find("buffered_text_no_container_sum"), std::string::npos);
+	EXPECT_NE(Graphics.find("buffered_text_zero_quad_sum"), std::string::npos);
+	EXPECT_NE(Vulkan.find("text_bad_container"), std::string::npos);
+	EXPECT_NE(Vulkan.find("text_missing_descriptor"), std::string::npos);
+	EXPECT_NE(Vulkan.find("if(ExecBuffer.m_SkipRender)"), std::string::npos);
+	EXPECT_NE(Vulkan.find("perf/autodiag_vulkan"), std::string::npos);
+	EXPECT_NE(Vulkan.find("swapchain present:"), std::string::npos);
+	EXPECT_EQ(Vulkan.find("log_info(\"gfx/vulkan\", \"swapchain present:"), std::string::npos);
+	EXPECT_NE(Config.find("automatic report logging"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MacosGraphicsDiagnosticsTracksSystemMessageLifecycleWithoutText)
+{
+	const std::string Chat = ReadRepoFile("src/game/client/components/chat.cpp");
+	const std::string PerfLogging = ReadRepoFile("src/game/client/components/qmclient/perf_logging.h");
+
+	EXPECT_NE(Chat.find("event=server_message_received"), std::string::npos);
+	EXPECT_NE(Chat.find("event=server_message_presentation"), std::string::npos);
+	EXPECT_NE(Chat.find("event=server_message_upload_requested"), std::string::npos);
+	EXPECT_NE(Chat.find("event=server_message_prepare_skip reason=collapsed"), std::string::npos);
+	EXPECT_NE(Chat.find("event=server_message_render_skip reason=invalid_text_container"), std::string::npos);
+	EXPECT_EQ(Chat.find("pMsg->m_pMessage, Client()"), std::string::npos);
+	EXPECT_NE(PerfLogging.find("QmMacosGraphicsDiagnosticsLogPayload"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MacosGraphicsDiagnosticsTracksHudTextPresentationState)
+{
+	const std::string Hud = ReadRepoFile("src/game/client/components/hud.cpp");
+	const std::string HudHeader = ReadRepoFile("src/game/client/components/hud.h");
+
+	EXPECT_NE(Hud.find("event=hud_text_info"), std::string::npos);
+	EXPECT_NE(Hud.find("perf/autodiag_hud"), std::string::npos);
+	EXPECT_NE(Hud.find("target_alpha="), std::string::npos);
+	EXPECT_NE(Hud.find("resolved_alpha="), std::string::npos);
+	EXPECT_NE(Hud.find("text_container_valid="), std::string::npos);
+	EXPECT_NE(Hud.find("QmMacosGraphicsDiagnosticsEnabled()"), std::string::npos);
+	EXPECT_NE(HudHeader.find("m_DiagnosticFpsSignature"), std::string::npos);
+	EXPECT_NE(HudHeader.find("m_DiagnosticPredSignature"), std::string::npos);
+	EXPECT_NE(HudHeader.find("m_DiagnosticLossSignature"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, RenderLoopKeepsConfiguredAsyncPolicyAndDisablesPerfHotPath)
 {
 	const std::string ClientSource = ReadRepoFile("src/engine/client/client.cpp");
@@ -4138,14 +4190,19 @@ TEST(QmMonitoringHelpers, VulkanProfilingTimersStayOutOfDisabledHotPath)
 	const std::string PrepareFrame = ExtractSourceFunctionBody(VulkanSource, "[[nodiscard]] bool PrepareFrame()");
 	const std::string RunCommand = ExtractSourceFunctionBody(VulkanSource, "[[nodiscard]] ERunCommandReturnTypes RunCommand(");
 	const std::string QueueSubmit = ExtractSourceFunctionBody(VulkanSource, "VkResult QueueSubmit(");
+	const std::string RenderTextPrepare = ExtractSourceFunctionBody(VulkanSource, "void Cmd_RenderText_FillExecuteBuffer(");
 
 	ASSERT_FALSE(PrepareFrame.empty());
 	ASSERT_FALSE(RunCommand.empty());
 	ASSERT_FALSE(QueueSubmit.empty());
+	ASSERT_FALSE(RenderTextPrepare.empty());
 	EXPECT_NE(PrepareFrame.find("m_FrameProfilingActive = FrameProfilingEnabled();"), std::string::npos);
 	EXPECT_NE(RunCommand.find("if(m_FrameProfilingActive)"), std::string::npos);
 	EXPECT_NE(RunCommand.find("m_FrameProfilingActive ? time_get_nanoseconds() : 0ns"), std::string::npos);
 	EXPECT_NE(QueueSubmit.find("m_FrameProfilingActive ? time_get_nanoseconds() : 0ns"), std::string::npos);
+	EXPECT_NE(RenderTextPrepare.find("const bool RecordProfile = m_FrameProfilingActive;"), std::string::npos);
+	EXPECT_NE(RenderTextPrepare.find("if(RecordProfile)\n\t\t\tStats.m_TextRenderPrepares++;"), std::string::npos);
+	EXPECT_NE(RenderTextPrepare.find("if(RecordProfile)\n\t\t\t\tStats.m_TextRenderInvalidContainer++;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, MacosVulkanGraphicsErrorDialogKeepsWindowAlive)
@@ -4257,12 +4314,24 @@ TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
 	EXPECT_NE(Body.find("int InputMin = -1, int InputMax = -1"), std::string::npos);
 	EXPECT_NE(Body.find("Options.m_InputMin = InputMin;"), std::string::npos);
 	EXPECT_NE(Body.find("Options.m_InputMax = InputMax;"), std::string::npos);
-	EXPECT_NE(Body.find("CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000"), std::string::npos);
+	EXPECT_NE(Body.find("10, 10000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000"), std::string::npos);
 	EXPECT_NE(NumericFieldBody.find("NumericFieldTextIsInfinite(pInput->GetString())"), std::string::npos);
 	EXPECT_NE(NumericFieldBody.find("if(!ParsedInfinite && (Options.m_InputMin >= 0 || Options.m_InputMax >= 0))"), std::string::npos);
 	EXPECT_NE(NumericFieldBody.find("Parsed = NumericFieldTextInputStoredValue("), std::string::npos);
 	EXPECT_EQ(Body.find("FormatInfiniteValueSelector"), std::string::npos);
 	EXPECT_EQ(Body.find("ParseInfiniteValueSelector"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, RefreshRateNumericFieldsUseTheSharedUnlimitedRange)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string GeneralBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsGeneral(CUIRect MainView)");
+	const std::string GraphicsBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(GeneralBody.empty());
+	ASSERT_FALSE(GraphicsBody.empty());
+
+	EXPECT_NE(GeneralBody.find("DoNumericField(\"general-refresh-rate\", &g_Config.m_ClRefreshRate, &g_Config.m_ClRefreshRate, Button, Localize(\"Update Rate\"), 10, 10000"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("DoGraphicsNumericField(\"graphics-refresh-rate\", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize(\"Refresh Rate\"), 10, 10000"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
@@ -4291,6 +4360,9 @@ TEST(QmMonitoringHelpers, NumericFieldSharesScrollbarStyleAndReservesInfiniteEnd
 	EXPECT_NE(FormsHeader.find("NumericFieldInfiniteEndpointStart"), std::string::npos);
 	EXPECT_NE(NumericBody.find("const float InfiniteEndpointStart = Infinite ? NumericFieldInfiniteEndpointStart(ScrollBar.w, Ctx.m_UiScale) : 1.0f;"), std::string::npos);
 	EXPECT_NE(NumericBody.find("const bool NewInfiniteValue = Infinite && NewNormalized >= (1.0f + InfiniteEndpointStart) * 0.5f;"), std::string::npos);
+	EXPECT_NE(NumericBody.find("const bool SliderOwnsInput = Ctx.m_pUi->CheckActiveItem(pId);"), std::string::npos);
+	EXPECT_NE(NumericBody.find("if(HasSlider && !RenderOnly && (!pInput->IsActive() || SliderOwnsInput))"), std::string::npos);
+	EXPECT_NE(NumericBody.find("FieldOptions.m_ProcessInput = !SliderActive;"), std::string::npos);
 	EXPECT_NE(NumericBody.find("Ctx.m_pUi->RenderScrollbarH(pId, &ScrollBar, Normalized);"), std::string::npos);
 	EXPECT_NE(UiHeader.find("void RenderScrollbarH(const void *pId"), std::string::npos);
 	EXPECT_NE(UiSource.find("void CUi::RenderScrollbarH(const void *pId"), std::string::npos);

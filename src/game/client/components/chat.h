@@ -148,6 +148,9 @@ private:
 		float m_TextYOffset;
 		float m_CutOffProgress;
 		SPresentationState m_Presentation;
+		int m_DiagnosticPresentationState;
+		bool m_DiagnosticCollapsedSkipLogged;
+		bool m_DiagnosticInvalidTextLogged;
 
 		int m_TimesRepeated;
 

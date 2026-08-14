@@ -98,6 +98,9 @@ class CHud : public CComponent
 		bool m_PredPositionInitialized = false;
 		bool m_LossPositionInitialized = false;
 		bool m_AlphaInitialized = false;
+		uint64_t m_DiagnosticFpsSignature = UINT64_MAX;
+		uint64_t m_DiagnosticPredSignature = UINT64_MAX;
+		uint64_t m_DiagnosticLossSignature = UINT64_MAX;
 
 		void Reset()
 		{
@@ -120,6 +123,9 @@ class CHud : public CComponent
 			m_PredPositionInitialized = false;
 			m_LossPositionInitialized = false;
 			m_AlphaInitialized = false;
+			m_DiagnosticFpsSignature = UINT64_MAX;
+			m_DiagnosticPredSignature = UINT64_MAX;
+			m_DiagnosticLossSignature = UINT64_MAX;
 		}
 	};
 	SHudTextInfoV2AnimState m_TextInfoV2AnimState;

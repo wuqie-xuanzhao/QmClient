@@ -193,6 +193,8 @@ namespace ui_widget
 		bool m_Clearable = false;
 		bool m_SearchHotkeyEnabled = false;
 		bool m_InlineTrailingText = false;
+		// 复合控件拖拽期间可保留外层的鼠标捕获，同时显示输入框。
+		bool m_ProcessInput = true;
 		int m_Corners = IGraphics::CORNER_ALL;
 		int m_TextAlign = -1;
 		float m_FontSize = ui_token::font::BODY;

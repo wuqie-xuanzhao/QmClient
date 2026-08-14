@@ -24,6 +24,7 @@
 #include <game/client/components/message_gradient.h>
 #include <game/client/components/qmclient/colored_parts.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/skins.h>
 #include <game/client/components/sounds.h>
@@ -408,6 +409,9 @@ CChat::CLine::CLine()
 	m_TextYOffset = 0.0f;
 	m_CutOffProgress = 0.0f;
 	CChat::ResetPresentationState(m_Presentation);
+	m_DiagnosticPresentationState = -1;
+	m_DiagnosticCollapsedSkipLogged = false;
+	m_DiagnosticInvalidTextLogged = false;
 	m_ForceVisible = false;
 	m_ConsoleSuppressed = false;
 	m_ServerMessageClass = QmHudNotifications::EServerMessageClass::None;
@@ -427,6 +431,9 @@ void CChat::CLine::Reset(CChat &This)
 	m_TextYOffset = 0.0f;
 	m_CutOffProgress = 0.0f;
 	CChat::ResetPresentationState(m_Presentation);
+	m_DiagnosticPresentationState = -1;
+	m_DiagnosticCollapsedSkipLogged = false;
+	m_DiagnosticInvalidTextLogged = false;
 	m_Friend = false;
 	m_ForceVisible = false;
 	m_ConsoleSuppressed = false;
@@ -1122,6 +1129,23 @@ void CChat::UpdatePresentationStates(int64_t Now, float DeltaSeconds, bool ShowL
 			m_LargeAreaOpenTick,
 			RecallDelaySeconds,
 			ExtraAnimations);
+
+		if(Line.m_ClientId == SERVER_MSG && QmMacosGraphicsDiagnosticsEnabled())
+		{
+			const int PresentationState = static_cast<int>(Line.m_Presentation.m_State);
+			if(Line.m_DiagnosticPresentationState != PresentationState)
+			{
+				char aPayload[384];
+				str_format(aPayload, sizeof(aPayload), "event=server_message_presentation line_age_ms=%.0f class=%d state=%d force_visible=%d show_large=%d text_container=%d text_container_valid=%d render_alpha=%.3f layout_visibility=%.3f",
+					ChatPresentationTicksToSeconds(Now - Line.m_Time) * 1000.0f,
+					static_cast<int>(Line.m_ServerMessageClass), PresentationState, Line.m_ForceVisible ? 1 : 0, ShowLargeArea ? 1 : 0,
+					Line.m_TextContainerIndex.m_Index, Line.m_TextContainerIndex.Valid() ? 1 : 0,
+					Line.m_Presentation.m_RenderAlpha, Line.m_Presentation.m_LayoutVisibility);
+				QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_chat", aPayload, Client());
+				Line.m_DiagnosticPresentationState = PresentationState;
+				Line.m_DiagnosticCollapsedSkipLogged = false;
+			}
+		}
 	}
 }
 
@@ -1873,6 +1897,15 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
 			QmHudNotifications::SServerMessageAnalysis ServerMessageAnalysis;
 			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis);
+			if(QmMacosGraphicsDiagnosticsEnabled())
+			{
+				char aPayload[256];
+				str_format(aPayload, sizeof(aPayload), "event=server_message_received handled=%d show_chat_system=%d notifications=%d focus_hide_info=%d focus_hide_prompt=%d route=%d class=%d text_len=%d",
+					ServerMessageHandled ? 1 : 0, g_Config.m_ClShowChatSystem, g_Config.m_QmHudNotificationsSystem,
+					FocusHideSystemInfoMessages ? 1 : 0, FocusHideSystemPromptMessages ? 1 : 0,
+					static_cast<int>(ServerMessageAnalysis.m_Route), static_cast<int>(ServerMessageAnalysis.m_Class), str_length(pMsg->m_pMessage));
+				QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_chat", aPayload, Client());
+			}
 			if(ServerMessageHandled && QmHudNotifications::ShouldSuppressServerMessageChat(ServerMessageAnalysis, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages))
 			{
 				PrintSuppressedServerMessage();
@@ -2647,6 +2680,14 @@ void CChat::OnPrepareLines(float y)
 		}
 		if(!ShowLargeArea && !Line.m_ForceVisible && Line.m_Presentation.m_State == EPresentationState::COLLAPSED)
 		{
+			if(Line.m_ClientId == SERVER_MSG && QmMacosGraphicsDiagnosticsEnabled() && !Line.m_DiagnosticCollapsedSkipLogged)
+			{
+				char aPayload[256];
+				str_format(aPayload, sizeof(aPayload), "event=server_message_prepare_skip reason=collapsed class=%d text_container=%d text_container_valid=%d",
+					static_cast<int>(Line.m_ServerMessageClass), Line.m_TextContainerIndex.m_Index, Line.m_TextContainerIndex.Valid() ? 1 : 0);
+				QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_chat", aPayload, Client());
+				Line.m_DiagnosticCollapsedSkipLogged = true;
+			}
 			continue;
 		}
 
@@ -2998,6 +3039,13 @@ void CChat::OnPrepareLines(float y)
 		TextRender()->SetRenderFlags(CurRenderFlags);
 		if(Line.m_TextContainerIndex.Valid())
 			TextRender()->UploadTextContainer(Line.m_TextContainerIndex);
+		if(Line.m_ClientId == SERVER_MSG && Line.m_TextContainerIndex.Valid() && QmMacosGraphicsDiagnosticsEnabled())
+		{
+			char aPayload[192];
+			str_format(aPayload, sizeof(aPayload), "event=server_message_upload_requested class=%d text_container=%d text_buffering=%d",
+				static_cast<int>(Line.m_ServerMessageClass), Line.m_TextContainerIndex.m_Index, Graphics()->IsTextBufferingEnabled() ? 1 : 0);
+			QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_chat", aPayload, Client());
+		}
 	}
 
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -3452,6 +3500,15 @@ void CChat::OnRender()
 				Graphics()->SetColor(BackgroundBaseColor.WithMultipliedAlpha(AnimAlpha));
 				Graphics()->RenderQuadContainerEx(Line.m_QuadContainerIndex, 0, -1, QuadOffsetX, QuadOffsetY, QuadScale, QuadScale);
 			}
+		}
+
+		if(Line.m_ClientId == SERVER_MSG && !Line.m_TextContainerIndex.Valid() && AnimAlpha > 0.001f && QmMacosGraphicsDiagnosticsEnabled() && !Line.m_DiagnosticInvalidTextLogged)
+		{
+			char aPayload[192];
+			str_format(aPayload, sizeof(aPayload), "event=server_message_render_skip reason=invalid_text_container class=%d state=%d render_alpha=%.3f",
+				static_cast<int>(Line.m_ServerMessageClass), static_cast<int>(Line.m_Presentation.m_State), AnimAlpha);
+			QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_chat", aPayload, Client());
+			Line.m_DiagnosticInvalidTextLogged = true;
 		}
 
 		if(Line.m_TextContainerIndex.Valid())

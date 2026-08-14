@@ -1182,9 +1182,6 @@ Automatic game-end scoreboard screenshot
 Automatic updates
 == Otomatik güncellemeler
 
-Automatic updates are only supported on Windows
-== Otomatik güncellemeler yalnızca Windows'ta desteklenir
-
 Automatically adds voting options for all maps
 == Tüm haritalar için otomatik olarak oylama seçenekleri ekler
 
@@ -1463,9 +1460,6 @@ Black
 
 Blend mode
 == Karışım modu
-
-Blink the active local tee
-== Etkin yerel karakteri yanıp söndür
 
 Block enemy chat
 == Düşman sohbetini engelle
@@ -11364,6 +11358,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == Sunucu, saf bir oyun türünde standart olmayan bir ayar çalıştırıyor.
 
+The update is ready and will be installed when you exit.
+== The update is ready and will be installed when you exit.
+
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == %s dokusunun genişliği %d'ye bölünemiyor veya yüksekliği %d'ye bölünemiyor, bu da görsel hatalara neden olabilir.
 
@@ -12062,12 +12059,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Güncelleme başarısız oldu. Lütfen tekrar deneyin
-
-Update finished. Please restart the client
-== Güncelleme tamamlandı. Lütfen istemciyi yeniden başlatın
-
-Update finished. Restarting...
-== Güncelleme tamamlandı. Yeniden başlatılıyor...
 
 Update notice
 == Bildirimi güncelle

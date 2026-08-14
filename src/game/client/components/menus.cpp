@@ -2274,10 +2274,16 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float GhostButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
 			const float CallVoteButtonWidth = CompactOnlineMenuTabs ? 80.0f : 88.0f;
 			const float OnlineTabGap = 4.0f;
+			const float OnlineDemoButtonSize = Box.h;
+			const float OnlineDemoGap = 6.0f;
+			const float RequiredOnlineTabsWidth = GameButtonWidth + PlayersButtonWidth + ServerInfoButtonWidth + BrowserButtonWidth + CallVoteButtonWidth +
+				OnlineTabGap * 4.0f + (GameClient()->m_GameInfo.m_Race ? GhostButtonWidth + OnlineTabGap : 0.0f);
+			const bool HasOnlineDemoButton = Box.w >= RequiredOnlineTabsWidth + 2.0f * OnlineDemoGap + OnlineDemoButtonSize;
+			CUIRect DemoButton;
 
 			Box.VSplitLeft(GameButtonWidth, &Button, &Box);
 			static CButtonContainer s_GameButton;
-			if(DoIngameMenuTab(&s_GameButton, PAGE_GAME, "ingame-tab-game", Localize("Game"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_TL))
+			if(DoIngameMenuTab(&s_GameButton, PAGE_GAME, "ingame-tab-game", Localize("Game"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_ALL))
 				NewPage = PAGE_GAME;
 			MenubarTrackActive(PAGE_GAME, Button);
 
@@ -2322,25 +2328,22 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			}
 			MenubarTrackActive(PAGE_CALLVOTE, Button);
 
-			if(Box.w >= 10.0f + 33.0f + 10.0f)
+			if(HasOnlineDemoButton)
 			{
+				Box.VSplitLeft(OnlineDemoGap, nullptr, &Box);
+				Box.VSplitLeft(OnlineDemoButtonSize, &DemoButton, &Box);
+				Box.VSplitLeft(OnlineDemoGap, &Box, nullptr);
+
 				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 
-				Box.VSplitRight(10.0f, &Box, nullptr);
-				Box.VSplitRight(33.0f, &Box, &Button);
 				static CButtonContainer s_DemoButton;
-				CUIRect DemoButton = Button;
-				const float CircleSize = minimum(DemoButton.w, DemoButton.h);
-				DemoButton.x += (DemoButton.w - CircleSize) / 2.0f;
-				DemoButton.w = CircleSize;
 				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
 				{
 					NewPage = PAGE_DEMOS;
 				}
 				MenubarTrackActive(PAGE_DEMOS, DemoButton);
-				GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
-				Box.VSplitRight(10.0f, &Box, nullptr);
+				GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &DemoButton, Localize("Demos"));
 
 				TextRender()->SetRenderFlags(0);
 				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);

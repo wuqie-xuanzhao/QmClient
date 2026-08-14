@@ -1182,9 +1182,6 @@ Automatic game-end scoreboard screenshot
 Automatic updates
 == 自动更新
 
-Automatic updates are only supported on Windows
-== 自动更新仅支持 Windows
-
 Automatically adds voting options for all maps
 == 自动为所有地图添加投票选项
 
@@ -1463,9 +1460,6 @@ Black
 
 Blend mode
 == 叠加模式
-
-Blink the active local tee
-== 让当前本地角色闪烁
 
 Block enemy chat
 == 屏蔽敌对玩家聊天
@@ -11364,6 +11358,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == 此服务器运行着经过调整的非标准游戏模式。
 
+The update is ready and will be installed when you exit.
+== The update is ready and will be installed when you exit.
+
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == 纹理文件 %s 的宽度无法被 %d 整除，或者高度无法被 %d 整除，这可能会导致显示错误。
 
@@ -12062,12 +12059,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == 更新失败，请重试
-
-Update finished. Please restart the client
-== 更新完成，请重启客户端
-
-Update finished. Restarting...
-== 更新完成，正在重启……
 
 Update notice
 == 更新提示

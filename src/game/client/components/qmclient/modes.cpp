@@ -34,6 +34,11 @@ int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActi
 				return HiddenValue;
 			}
 		}
+		else if(State.m_AutoChangedValue && CurrentValue != HiddenValue)
+		{
+			// 用户已改过自动写入的值，离开自动状态时不再恢复旧值。
+			State.m_AutoChangedValue = false;
+		}
 		return CurrentValue;
 	}
 	if(State.m_WasActive)
@@ -54,13 +59,10 @@ int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActi
 	return CurrentValue;
 }
 
-bool ApplyQmGoresLinkedConfig(bool GoresActive, bool AutoToggle, bool CurrentValue, bool &Changed)
+int ApplyQmGoresLinkedConfig(SQmFocusConfigOverrideState &State, bool GoresActive, bool AutoToggle, int CurrentValue, bool &Changed)
 {
-	Changed = false;
-	if(!AutoToggle)
-		return CurrentValue;
-	Changed = CurrentValue != GoresActive;
-	return GoresActive;
+	// Gores 只在进入时临时开启快速输入；离开或取消联动时恢复自动改动前的值。
+	return ApplyQmFocusConfigOverride(State, GoresActive && AutoToggle, CurrentValue, 1, Changed);
 }
 
 int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Changed)

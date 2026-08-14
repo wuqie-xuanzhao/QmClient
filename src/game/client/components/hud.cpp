@@ -24,6 +24,7 @@
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
@@ -2404,6 +2405,12 @@ void CHud::RenderTextInfo()
 		TextY = MiniY + MiniH + 4.0f;
 	}
 	CHudEditor::STransformScope TextInfoScope;
+	float FpsX = m_Width - 10.0f - DisplayFpsWidth;
+	float FpsY = 5.0f;
+	float PredX = m_Width - 10.0f - DisplayPredWidth;
+	float PredY = RenderFps ? 18.0f : 5.0f;
+	float LossX = m_Width - 10.0f - DisplayLossWidth;
+	float LossY = RenderPred ? PredY + 13.0f : (RenderFps ? 18.0f : 5.0f);
 	if(RenderFps || RenderPred || RenderLoss)
 	{
 		bool BoundsInitialized = false;
@@ -2483,8 +2490,6 @@ void CHud::RenderTextInfo()
 	if(RenderFps)
 	{
 		CTextCursor Cursor;
-		float FpsX = m_Width - 10 - DisplayFpsWidth;
-		float FpsY = 5.0f;
 		if(UseV2TextInfoLayout)
 		{
 			if(pAnimRuntime != nullptr)
@@ -2526,8 +2531,6 @@ void CHud::RenderTextInfo()
 	}
 	if(RenderPred)
 	{
-		float PredX = m_Width - 10 - DisplayPredWidth;
-		float PredY = RenderFps ? 18.0f : 5.0f;
 		if(UseV2TextInfoLayout)
 		{
 			if(pAnimRuntime != nullptr)
@@ -2570,8 +2573,6 @@ void CHud::RenderTextInfo()
 	}
 	if(RenderLoss)
 	{
-		float LossX = m_Width - 10.0f - DisplayLossWidth;
-		float LossY = RenderPred ? 31.0f : (RenderFps ? 18.0f : 5.0f);
 		if(UseV2TextInfoLayout)
 		{
 			if(pAnimRuntime != nullptr)
@@ -2602,6 +2603,43 @@ void CHud::RenderTextInfo()
 		TextRender()->Text(LossX, LossY, TextInfoFontSize, pLossText, -1.0f);
 		TextRender()->TextColor(OldColor);
 		TextRender()->TextOutlineColor(OldOutlineColor);
+	}
+
+	if(QmMacosGraphicsDiagnosticsEnabled())
+	{
+		const auto AlphaBucket = [](float Alpha) { return std::clamp((int)std::round(Alpha * 10.0f), 0, 10); };
+		const auto PositionBucket = [](float Position) { return std::clamp((int)std::round(Position), -32768, 32767); };
+		const auto LogTextInfo = [&](const char *pName, uint64_t &LastSignature, bool Enabled, bool Rendered, float TargetAlpha, float ResolvedAlpha, float TargetX, float TargetY, float ResolvedX, float ResolvedY, int ContainerIndex, bool ContainerValid, const char *pText) {
+			auto AppendSignature = [](uint64_t Signature, int Value) {
+				return (Signature ^ static_cast<uint32_t>(Value)) * 1099511628211ULL;
+			};
+			uint64_t Signature = 1469598103934665603ULL;
+			Signature = AppendSignature(Signature, Enabled ? 1 : 0);
+			Signature = AppendSignature(Signature, Rendered ? 1 : 0);
+			Signature = AppendSignature(Signature, ContainerValid ? 1 : 0);
+			Signature = AppendSignature(Signature, AlphaBucket(TargetAlpha));
+			Signature = AppendSignature(Signature, AlphaBucket(ResolvedAlpha));
+			Signature = AppendSignature(Signature, PositionBucket(TargetX));
+			Signature = AppendSignature(Signature, PositionBucket(TargetY));
+			Signature = AppendSignature(Signature, PositionBucket(ResolvedX));
+			Signature = AppendSignature(Signature, PositionBucket(ResolvedY));
+			Signature = AppendSignature(Signature, ContainerIndex);
+			Signature = AppendSignature(Signature, str_length(pText != nullptr ? pText : ""));
+			if(Signature == LastSignature)
+				return;
+			char aPayload[384];
+			str_format(aPayload, sizeof(aPayload), "event=hud_text_info item=%s enabled=%d rendered=%d target_alpha=%.3f resolved_alpha=%.3f target_x=%.1f target_y=%.1f resolved_x=%.1f resolved_y=%.1f text_container=%d text_container_valid=%d text_len=%d",
+				pName, Enabled ? 1 : 0, Rendered ? 1 : 0, TargetAlpha, ResolvedAlpha, TargetX, TargetY, ResolvedX, ResolvedY,
+				ContainerIndex, ContainerValid ? 1 : 0, str_length(pText != nullptr ? pText : ""));
+			QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_hud", aPayload, Client());
+			LastSignature = Signature;
+		};
+		LogTextInfo("fps", AnimState.m_DiagnosticFpsSignature, Showfps, RenderFps, Showfps ? 1.0f : 0.0f, FpsAlpha,
+			V2Layout.m_FpsX, V2Layout.m_FpsY, FpsX, FpsY, m_FPSTextContainerIndex.m_Index, m_FPSTextContainerIndex.Valid(), pFpsText);
+		LogTextInfo("pred", AnimState.m_DiagnosticPredSignature, Showpred, RenderPred, Showpred ? 1.0f : 0.0f, PredAlpha,
+			V2Layout.m_PredX, V2Layout.m_PredY, PredX, PredY, -1, false, pPredText);
+		LogTextInfo("loss", AnimState.m_DiagnosticLossSignature, ShowLoss, RenderLoss, ShowLoss ? 1.0f : 0.0f, LossAlpha,
+			V2Layout.m_LossX, V2Layout.m_LossY, LossX, LossY, -1, false, pLossText);
 	}
 
 	GameClient()->m_HudEditor.EndTransform(TextInfoScope);
@@ -4129,7 +4167,7 @@ void CHud::RenderMediaIsland()
 		str_format(aCheckpointBuf, sizeof(aCheckpointBuf), "CP%d", Checkpoint);
 
 	constexpr float BaseIslandHeight = QmHudMediaIslandScaled(16.0f);
-	const float IslandY = 1.0f;
+	const float IslandY = 0.0f;
 	constexpr float CoverSize = QmHudMediaIslandScaled(12.0f);
 	constexpr float PaddingX = QmHudMediaIslandScaled(2.0f);
 	constexpr float Gap = QmHudMediaIslandScaled(2.0f);

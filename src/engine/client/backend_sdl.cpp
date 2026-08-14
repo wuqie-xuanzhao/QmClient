@@ -927,16 +927,9 @@ bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeT
 #ifdef CONF_BACKEND_VULKAN
 		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
 		{
-			Major = gs_BackendVulkanMinimumVersion.m_Major;
-			Minor = gs_BackendVulkanMinimumVersion.m_Minor;
-			Patch = gs_BackendVulkanMinimumVersion.m_Patch;
-			return true;
-		}
-		else if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_MODERN)
-		{
-			Major = gs_BackendVulkanMaximumVersion.m_Major;
-			Minor = gs_BackendVulkanMaximumVersion.m_Minor;
-			Patch = gs_BackendVulkanMaximumVersion.m_Patch;
+			Major = 0;
+			Minor = 0;
+			Patch = 0;
 			return true;
 		}
 #else

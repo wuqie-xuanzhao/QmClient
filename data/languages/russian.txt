@@ -1182,9 +1182,6 @@ Automatic game-end scoreboard screenshot
 Automatic updates
 == Автоматические обновления
 
-Automatic updates are only supported on Windows
-== Автоматические обновления поддерживаются только на Windows
-
 Automatically adds voting options for all maps
 == Автоматически добавляет варианты голосования для всех карт
 
@@ -1463,9 +1460,6 @@ Black
 
 Blend mode
 == Режим смешивания
-
-Blink the active local tee
-== Заставить активного локального персонажа мигнуть
 
 Block enemy chat
 == Блокировать чат врагов
@@ -11364,6 +11358,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == Сервер использует нестандартные настройки в чистом игровом режиме.
 
+The update is ready and will be installed when you exit.
+== The update is ready and will be installed when you exit.
+
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == Ширина текстуры %s не делится на %d, или высота не делится на %d, что может вызвать визуальные ошибки.
 
@@ -12062,12 +12059,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == Обновление не удалось. Пожалуйста, попробуйте снова
-
-Update finished. Please restart the client
-== Обновление завершено. Пожалуйста, перезапустите клиент
-
-Update finished. Restarting...
-== Обновление завершено. Перезапуск...
 
 Update notice
 == Обновить уведомление

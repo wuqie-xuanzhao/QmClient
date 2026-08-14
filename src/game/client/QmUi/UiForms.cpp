@@ -121,13 +121,9 @@ namespace ui_widget
 			const bool HasQmIcon = QmIcon >= 0 && QmIcon < static_cast<int>(EQmIcon::COUNT);
 			if((pIcon == nullptr && !HasQmIcon) || Rect.w <= 0.0f || Rect.h <= 0.0f)
 				return;
-			// Phosphor 的 eye-off 将眼睛拆分给对角线，主体比 eye 更窄。
-			// 仅补偿这对密码可见性图标，避免改变其他图标的既有比例。
-			const float EyeOffScale = QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? 1.25f : 1.15f;
-			const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;
 			if(HasQmIcon && Ctx.m_pIconManager != nullptr)
 			{
-				const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;
+				const float IconSide = minimum(Rect.w, Rect.h) * 0.58f;
 				const CUIRect IconRect{Rect.x + (Rect.w - IconSide) * 0.5f, Rect.y + (Rect.h - IconSide) * 0.5f, IconSide, IconSide};
 				if(Ctx.m_pIconManager->RenderIcon(static_cast<EQmIcon>(QmIcon), IconRect, Color))
 					return;
@@ -143,7 +139,7 @@ namespace ui_widget
 			pTextRender->TextColor(Color);
 			pTextRender->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 			pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);
+			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);
 			pTextRender->SetRenderFlags(PreviousFlags);
 			pTextRender->SetFontPreset(PreviousPreset);
 			pTextRender->TextOutlineColor(PreviousOutlineColor);
@@ -199,6 +195,16 @@ namespace ui_widget
 		const ColorRGBA PlateColor = Hovered && !pInput->IsActive() ? Theme.m_SurfaceHovered : Theme.m_InputSurface;
 		DrawTextFieldShell(Ctx, Layout.m_ShellRect, PlateColor, Options.m_Corners, ui_token::radius::BASE);
 		pInput->SetEmptyText(Options.m_pPlaceholder != nullptr ? Options.m_pPlaceholder : (Search ? Localize("Search") : nullptr));
+		if(!Options.m_ProcessInput)
+		{
+			pInput->Deactivate();
+			Ctx.m_pUi->ClipEnable(&TextRect);
+			pInput->Render(&TextRect, FontSize, TextAlign, false, -1.0f, 0.0f);
+			Ctx.m_pUi->ClipDisable();
+			if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
+				Ctx.m_pUi->DoLabel(&TrailingRect, Options.m_pTrailingText, FontSize * 0.82f, TEXTALIGN_MC);
+			return {};
+		}
 
 		if(Options.m_SearchHotkeyEnabled && Search && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->Input()->KeyPress(KEY_F))
 		{
@@ -500,10 +506,12 @@ namespace ui_widget
 		const float InfiniteEndpointStart = Infinite ? NumericFieldInfiniteEndpointStart(ScrollBar.w, Ctx.m_UiScale) : 1.0f;
 		const float Normalized = IsInfinite ? 1.0f : std::clamp(pScale->ToRelative(SliderValue, SliderMin, FiniteSliderMax), 0.0f, 1.0f) * InfiniteEndpointStart;
 		const bool SliderWasActive = pState->m_SliderWasActive;
-		if(HasSlider && !RenderOnly && !pInput->IsActive())
+		const bool SliderOwnsInput = Ctx.m_pUi->CheckActiveItem(pId);
+		bool SliderActive = SliderOwnsInput;
+		if(HasSlider && !RenderOnly && (!pInput->IsActive() || SliderOwnsInput))
 		{
 			const float NewNormalized = Ctx.m_pUi->DoScrollbarH(pId, &ScrollBar, Normalized);
-			const bool SliderActive = Ctx.m_pUi->CheckActiveItem(pId);
+			SliderActive = Ctx.m_pUi->CheckActiveItem(pId);
 			const bool SliderReleased = SliderWasActive && !SliderActive;
 			const bool NewInfiniteValue = Infinite && NewNormalized >= (1.0f + InfiniteEndpointStart) * 0.5f;
 			const int NewSliderValue = NewInfiniteValue ? SliderMax : pScale->ToAbsolute(NewNormalized / InfiniteEndpointStart, SliderMin, FiniteSliderMax);
@@ -556,6 +564,7 @@ namespace ui_widget
 		FieldOptions.m_TextAlign = TEXTALIGN_MC;
 		FieldOptions.m_pTrailingText = HasSuffix ? Options.m_pSuffix : nullptr;
 		FieldOptions.m_InlineTrailingText = HasSuffix;
+		FieldOptions.m_ProcessInput = !SliderActive;
 		SInputFieldResult Result = ui_widget::InputField(Ctx, pInput, InputField, FieldOptions);
 
 		if(bShowMaxText)

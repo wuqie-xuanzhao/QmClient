@@ -17,6 +17,11 @@ inline bool QmPerfEnabled()
 	return g_Config.m_QmPerfDebug != 0 || g_Config.m_QmPerfLogfile != 0 || g_Config.m_QmPerfStutterDiagnostics != 0;
 }
 
+inline bool QmMacosGraphicsDiagnosticsEnabled()
+{
+	return g_Config.m_QmMacosGraphicsDiagnostics != 0;
+}
+
 inline double QmPerfThresholdMs()
 {
 	const double Configured = g_Config.m_QmPerfDebugThresholdMs > 0 ? g_Config.m_QmPerfDebugThresholdMs : 1.0;
@@ -223,6 +228,13 @@ inline void QmPerfLogPayload(const char *pSystem, const char *pPayload, const IC
 inline void QmPerfLogPayloadForce(const char *pSystem, const char *pPayload, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr)
 {
 	QmPerfLogPayloadUnchecked(pSystem, pPayload, pClient, pPage, pTab);
+}
+
+inline void QmMacosGraphicsDiagnosticsLogPayload(const char *pSystem, const char *pPayload, const IClient *pClient = nullptr)
+{
+	if(!QmMacosGraphicsDiagnosticsEnabled())
+		return;
+	QmPerfLogPayloadUnchecked(pSystem, pPayload, pClient);
 }
 
 inline void QmPerfLogStage(const char *pSystem, const char *pStage, double DurationMs, bool Force = false, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr, const char *pExtra = nullptr)

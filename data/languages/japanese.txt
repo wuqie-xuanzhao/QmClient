@@ -1182,9 +1182,6 @@ Automatic game-end scoreboard screenshot
 Automatic updates
 == 自動更新
 
-Automatic updates are only supported on Windows
-== 自動更新は Windows のみ対応
-
 Automatically adds voting options for all maps
 == すべてのマップに投票オプションを自動追加
 
@@ -1463,9 +1460,6 @@ Black
 
 Blend mode
 == ブレンドモード
-
-Blink the active local tee
-== 操作中のローカルキャラクターを点滅させる
 
 Block enemy chat
 == 敵対プレイヤーのチャットをブロック
@@ -11364,6 +11358,9 @@ The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
 == サーバーが純粋なゲームタイプで非標準のチューニングを実行しています。
 
+The update is ready and will be installed when you exit.
+== The update is ready and will be installed when you exit.
+
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == テクスチャ %s の幅が %d で割り切れないか、高さが %d で割り切れないため、表示に問題が発生する可能性があります。
 
@@ -12062,12 +12059,6 @@ Update a rcon key with prehashed data
 
 Update failed. Please try again
 == 更新に失敗しました。もう一度お試しください
-
-Update finished. Please restart the client
-== 更新が完了しました。クライアントを再起動してください
-
-Update finished. Restarting...
-== 更新が完了しました。再起動中...
 
 Update notice
 == お知らせを更新

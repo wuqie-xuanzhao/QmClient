@@ -418,7 +418,7 @@ TEST(QmModeStatus, UsesExpiringEchoMessages)
 	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
 	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
 	const std::string FocusBody = SourceFunctionBody(Source, "void CTClient::ApplyFocusModeEffects()");
-	const std::string GoresBody = SourceFunctionBody(Source, "void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)");
+	const std::string GoresBody = SourceFunctionBody(Source, "void CTClient::ApplyGoresFastInputLink()");
 	const std::string EchoBody = SourceFunctionBody(Chat, "void CChat::Echo(const char *pString)");
 
 	EXPECT_NE(FocusBody.find("GameClient()->Echo(aFocusMsg);"), std::string::npos);
@@ -426,6 +426,18 @@ TEST(QmModeStatus, UsesExpiringEchoMessages)
 	EXPECT_NE(GoresBody.find("GameClient()->Echo(aGoresMsg);"), std::string::npos);
 	EXPECT_EQ(GoresBody.find("GameClient()->Echo(aGoresMsg, true);"), std::string::npos);
 	EXPECT_NE(EchoBody.find("GameClient()->m_QmHudNotifications.QueueEcho"), std::string::npos);
+}
+
+TEST(QmGoresMode, ShutdownRestoresTemporaryConfigOverrides)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string ShutdownBody = SourceFunctionBody(Source, "void CTClient::OnShutdown()");
+
+	const size_t RestoreOverrides = ShutdownBody.find("ResetGoresConfigOverrides();");
+	const size_t AbortRequests = ShutdownBody.find("auto AbortTask");
+	EXPECT_NE(RestoreOverrides, std::string::npos);
+	EXPECT_NE(AbortRequests, std::string::npos);
+	EXPECT_LT(RestoreOverrides, AbortRequests);
 }
 
 TEST(QmChatPresentation, ResetAndTimeRollbackKeepFiniteFreshState)

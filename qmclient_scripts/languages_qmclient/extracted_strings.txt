@@ -392,7 +392,6 @@ Automate demos, screenshots, and match exports
 Automatic gain control (0=off 1=on)
 Automatic game-end scoreboard screenshot
 Automatic updates
-Automatic updates are only supported on Windows
 Automatically adds voting options for all maps
 Automatically ban blacklisted addresses
 Automatically check for stable updates and install them on exit
@@ -486,7 +485,6 @@ Bind Wheel Key
 Bit flags for disabling settings tabs
 Black
 Blend mode
-Blink the active local tee
 Block enemy chat
 Block votes from blacklisted addresses
 Block words
@@ -3786,6 +3784,7 @@ The selected button is not visible. Do you want to deselect it or edit its visib
 The selected button is overlapping with other buttons.
 The selected part stays highlighted while you adjust its color.
 The server is running a non-standard tuning on a pure game type.
+The update is ready and will be installed when you exit.
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 Theme
 Themes directory
@@ -4019,8 +4018,6 @@ Update
 Update a rcon key
 Update a rcon key with prehashed data
 Update failed. Please try again
-Update finished. Please restart the client
-Update finished. Restarting...
 Update notice
 Update or add a specific war group
 Update Rate

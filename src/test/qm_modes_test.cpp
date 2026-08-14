@@ -86,26 +86,97 @@ TEST(LocalSkinSource, OnlinePlayUsesMatchingLocalConfiguration)
 	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, -1, -1, -1), -1);
 }
 
-TEST(QmGoresMode, LinkedFastInputDirectlyFollowsGoresMode)
+TEST(QmGoresMode, LinkedFastInputTemporarilyOverridesAndRestoresThePreviousValue)
 {
+	SQmFocusConfigOverrideState State;
 	bool Changed = false;
-	EXPECT_TRUE(ApplyQmGoresLinkedConfig(true, true, false, Changed));
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
+	EXPECT_TRUE(State.m_WasActive);
+	EXPECT_TRUE(State.m_AutoChangedValue);
+
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, false, true, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+}
+
+TEST(QmGoresMode, LinkedFastInputKeepsManualChangesMadeDuringGores)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
 	EXPECT_TRUE(Changed);
 
-	EXPECT_FALSE(ApplyQmGoresLinkedConfig(false, true, true, Changed));
-	EXPECT_TRUE(Changed);
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 0);
+	EXPECT_FALSE(Changed);
 
-	EXPECT_TRUE(ApplyQmGoresLinkedConfig(true, true, true, Changed));
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, false, true, 0, Changed), 0);
 	EXPECT_FALSE(Changed);
 }
 
-TEST(QmGoresMode, UnlinkedFastInputConfigIsNotChanged)
+TEST(QmGoresMode, LinkedFastInputKeepsManualReenableMadeDuringGores)
 {
+	SQmFocusConfigOverrideState State;
 	bool Changed = false;
-	EXPECT_TRUE(ApplyQmGoresLinkedConfig(false, false, true, Changed));
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
+
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 0);
 	EXPECT_FALSE(Changed);
 
-	EXPECT_FALSE(ApplyQmGoresLinkedConfig(true, false, false, Changed));
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, false, true, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+}
+
+TEST(QmGoresMode, DisablingLinkedFastInputRestoresOnlyAutomaticChanges)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
+
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, false, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+}
+
+TEST(QmGoresMode, AutoEnableTemporarilyActivatesGoresAndKeepsManualChanges)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 1);
+	EXPECT_TRUE(Changed);
+
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, false, 1, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+
+	State = {};
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 1);
+	EXPECT_TRUE(Changed);
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 0);
+	EXPECT_FALSE(Changed);
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, false, 0, 1, Changed), 0);
+	EXPECT_FALSE(Changed);
+}
+
+TEST(QmGoresMode, AutoEnableKeepsManualReenable)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 1);
+	EXPECT_TRUE(Changed);
+
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 0);
+	EXPECT_FALSE(Changed);
+
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 1, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, false, 1, 1, Changed), 1);
 	EXPECT_FALSE(Changed);
 }
 

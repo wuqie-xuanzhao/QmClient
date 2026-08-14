@@ -640,6 +640,7 @@ void CTClient::OnInit()
 
 void CTClient::OnShutdown()
 {
+	ResetGoresConfigOverrides();
 	auto AbortTask = [](std::shared_ptr<CHttpRequest> &pTask) {
 		if(pTask)
 		{
@@ -1695,7 +1696,7 @@ void CTClient::OnConsoleInit()
 	Console()->Chain(
 		"qm_gores", [](IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData) {
 			pfnCallback(pResult, pCallbackUserData);
-			((CTClient *)pUserData)->ApplyGoresFastInputLink(false);
+			((CTClient *)pUserData)->ApplyGoresFastInputLink();
 		},
 		this);
 
@@ -3309,7 +3310,7 @@ void CTClient::OnStateChange(int NewState, int OldState)
 	SetForcedAspect();
 	if(NewState != IClient::STATE_ONLINE)
 	{
-		ResetGoresDummyHammerOverride();
+		ResetGoresConfigOverrides();
 		ResetFinishRenameState();
 		EndMapHistorySession(true);
 		m_MapHistorySuppressedMapId.clear();
@@ -3322,8 +3323,6 @@ void CTClient::OnStateChange(int NewState, int OldState)
 	{
 		m_GoresModeStateKnown = false;
 		m_PrevGoresModeActive = false;
-		m_GoresAutoMapKnown = false;
-		m_GoresAutoMapToken = 0;
 		ClearSwapCountdown();
 		m_aLastChatMessage[0] = '\0';
 		m_LastChatTeam = 0;
@@ -3360,8 +3359,6 @@ void CTClient::OnStateChange(int NewState, int OldState)
 	{
 		m_GoresModeStateKnown = false;
 		m_PrevGoresModeActive = IsGoresModuleEnabled();
-		m_GoresAutoMapKnown = false;
-		m_GoresAutoMapToken = 0;
 	}
 
 	// 进入服务器时重置统计数据
@@ -3376,7 +3373,7 @@ void CTClient::OnNewSnapshot()
 	CheckHammerWakeupActions();
 	// snapshot 处理期间不能同步触发全局 resize，延迟到下一次常规更新处理。
 	QueueAspectApply();
-	ApplyGoresFastInputLink(true);
+	ApplyGoresFastInputLink();
 	MaybeShowLocalSaveJoinHint();
 	// Update volleyball
 	bool IsVolleyBall = false;
@@ -4486,27 +4483,14 @@ void CTClient::ApplyFocusModeEffects()
 	m_PrevFocusModeActive = FocusActive;
 }
 
-void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
+void CTClient::ApplyGoresFastInputLink()
 {
 	if(Client()->State() != IClient::STATE_ONLINE)
 	{
+		ResetGoresConfigOverrides();
 		m_GoresModeStateKnown = false;
 		m_PrevGoresModeActive = false;
-		m_GoresAutoMapKnown = false;
-		m_GoresAutoMapToken = 0;
 		return;
-	}
-
-	bool FastInputConfigChanged = false;
-	const unsigned GoresMapToken = str_quickhash(Client()->GetCurrentMap());
-	const bool MapChanged = !m_GoresAutoMapKnown || m_GoresAutoMapToken != GoresMapToken;
-	if(AutoMapCheck && MapChanged)
-	{
-		const bool GoresGameMode = IsGoresGameMode();
-		if(g_Config.m_QmGoresAutoEnable != 0 && g_Config.m_QmGores != (GoresGameMode ? 1 : 0))
-			g_Config.m_QmGores = GoresGameMode ? 1 : 0;
-		m_GoresAutoMapKnown = true;
-		m_GoresAutoMapToken = GoresMapToken;
 	}
 
 	const bool StateWasKnown = m_GoresModeStateKnown;
@@ -4515,15 +4499,20 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 		m_GoresModeStateKnown = true;
 	}
 
+	bool GoresAutoEnableChanged = false;
+	const int GoresEnabled = ApplyQmFocusConfigOverride(m_GoresAutoEnableOverride, g_Config.m_QmGoresAutoEnable != 0 && IsGoresGameMode(), g_Config.m_QmGores, 1, GoresAutoEnableChanged);
+	if(GoresAutoEnableChanged)
+		g_Config.m_QmGores = GoresEnabled;
+
 	bool TcFastInputChanged = false;
 	bool TcFastInputOthersChanged = false;
 	const bool GoresActive = g_Config.m_QmGores != 0;
-	const bool TcFastInput = ApplyQmGoresLinkedConfig(GoresActive, g_Config.m_QmGoresFastInput != 0, g_Config.m_TcFastInput != 0, TcFastInputChanged);
-	const bool TcFastInputOthers = ApplyQmGoresLinkedConfig(GoresActive, g_Config.m_QmGoresFastInputOthers != 0, g_Config.m_TcFastInputOthers != 0, TcFastInputOthersChanged);
+	const int TcFastInput = ApplyQmGoresLinkedConfig(m_GoresFastInputOverride, GoresActive, g_Config.m_QmGoresFastInput != 0, g_Config.m_TcFastInput, TcFastInputChanged);
+	const int TcFastInputOthers = ApplyQmGoresLinkedConfig(m_GoresFastInputOthersOverride, GoresActive, g_Config.m_QmGoresFastInputOthers != 0, g_Config.m_TcFastInputOthers, TcFastInputOthersChanged);
 	if(TcFastInputChanged)
-		g_Config.m_TcFastInput = TcFastInput ? 1 : 0;
+		g_Config.m_TcFastInput = TcFastInput;
 	if(TcFastInputOthersChanged)
-		g_Config.m_TcFastInputOthers = TcFastInputOthers ? 1 : 0;
+		g_Config.m_TcFastInputOthers = TcFastInputOthers;
 	bool DummyHammerChanged = false;
 	const int DummyHammer = ApplyQmGoresDummyHammerOverride(m_GoresDummyHammerOverride, GoresActive, g_Config.m_QmGoresDisableDummyHammer != 0, g_Config.m_ClDummyHammer, DummyHammerChanged);
 	if(DummyHammerChanged)
@@ -4540,7 +4529,7 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 		GameClient()->Echo(aGoresMsg);
 	}
 
-	FastInputConfigChanged = TcFastInputChanged || TcFastInputOthersChanged || DummyHammerChanged;
+	const bool FastInputConfigChanged = TcFastInputChanged || TcFastInputOthersChanged || DummyHammerChanged;
 
 	m_PrevGoresModeActive = GoresActive;
 
@@ -4550,11 +4539,17 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 	}
 }
 
-void CTClient::ResetGoresDummyHammerOverride()
+void CTClient::ResetGoresConfigOverrides()
 {
-	if(m_GoresDummyHammerOverride.m_WasActive && m_GoresDummyHammerOverride.m_AutoChangedValue && g_Config.m_ClDummyHammer == 0)
-		g_Config.m_ClDummyHammer = m_GoresDummyHammerOverride.m_SavedValue;
-	m_GoresDummyHammerOverride = {};
+	const auto RestoreOverride = [](SQmFocusConfigOverrideState &State, int &ConfigValue, int OverrideValue) {
+		if(State.m_WasActive && State.m_AutoChangedValue && ConfigValue == OverrideValue)
+			ConfigValue = State.m_SavedValue;
+		State = {};
+	};
+	RestoreOverride(m_GoresAutoEnableOverride, g_Config.m_QmGores, 1);
+	RestoreOverride(m_GoresFastInputOverride, g_Config.m_TcFastInput, 1);
+	RestoreOverride(m_GoresFastInputOthersOverride, g_Config.m_TcFastInputOthers, 1);
+	RestoreOverride(m_GoresDummyHammerOverride, g_Config.m_ClDummyHammer, 0);
 }
 
 bool CTClient::BuildGoresDebugRoute(std::vector<vec2> &vRoutePoints, int Dummy) const

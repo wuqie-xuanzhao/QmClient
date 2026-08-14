@@ -79,7 +79,7 @@ namespace
 		}
 		else if(str_comp_nocase(pSafeBackendName, "Vulkan") == 0)
 		{
-			str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "Vulkan %d.%d", Major, Minor);
+			str_copy(aBackendDisplayName, "Vulkan - performance mode");
 		}
 		else if(str_comp_nocase(pSafeBackendName, "GLES") == 0)
 		{
@@ -890,7 +890,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
 			str_copy(aBuf, " ");
 			str_append(aBuf, Localize("Hz", "Hertz"));
-			DoNumericField("general-refresh-rate", &g_Config.m_ClRefreshRate, &g_Config.m_ClRefreshRate, Button, Localize("Update Rate"), 10, 1000, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE | CUi::SCROLLBAR_OPTION_DELAYUPDATE, aBuf);
+			DoNumericField("general-refresh-rate", &g_Config.m_ClRefreshRate, &g_Config.m_ClRefreshRate, Button, Localize("Update Rate"), 10, 10000, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE | CUi::SCROLLBAR_OPTION_DELAYUPDATE, aBuf);
 			Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
 			static int s_LowerRefreshRate;
@@ -3938,7 +3938,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Button = NextRow();
 		str_copy(aBuf, " ");
 		str_append(aBuf, Localize("Hz", "Hertz"));
-			DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000);
+		DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 10000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000);
 
 		const auto DoGraphicsChoiceRow = [this, GraphicsMetrics, GraphicsPage](CUIRect Row, const char *pLabel, const char *pId, const char **ppNames, size_t Count, int Current, CUi::SDropDownState &State, CScrollRegion &ScrollRegion, auto &&OnChanged) {
 				CUIRect Label, DropDown;
@@ -3971,8 +3971,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				}
 				int Selected = -1;
 				for(size_t i = 0; i < s_vSupportedBackendInfos.size(); ++i)
-					if(str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == s_vSupportedBackendInfos[i].m_Major && g_Config.m_GfxGLMinor == s_vSupportedBackendInfos[i].m_Minor && g_Config.m_GfxGLPatch == s_vSupportedBackendInfos[i].m_Patch)
+				{
+					const bool IsVulkanPerformanceMode = str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, "Vulkan") == 0;
+					if(str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, g_Config.m_GfxBackend) == 0 &&
+						(IsVulkanPerformanceMode || (g_Config.m_GfxGLMajor == s_vSupportedBackendInfos[i].m_Major && g_Config.m_GfxGLMinor == s_vSupportedBackendInfos[i].m_Minor && g_Config.m_GfxGLPatch == s_vSupportedBackendInfos[i].m_Patch)))
 						Selected = (int)i;
+				}
 				if(Selected < 0)
 				{
 					Selected = ResolveSettingsSelectionWithCustomFallback(Selected, (int)s_vGraphicsBackendInfos.size());
@@ -5740,13 +5744,6 @@ void CMenus::RenderSettings(CUIRect MainView)
 				TabBar.HSplitTop(ui_token::settings::TAB_HEIGHT, &Button, &TabBar);
 				if(DoButton_MenuTab(&m_aSettingsTabButtons[i], m_apSettingsTabs[i], Active, &Button, IGraphics::CORNER_ALL, &m_aAnimatorsSettingsTab[i], nullptr, &SettingsNavigationSelected, &SettingsNavigationHover, 10.0f, nullptr, &m_aSettingsTabLabelElements[i]))
 					g_Config.m_UiSettingsPage = i;
-				if(Active)
-				{
-					CUIRect Accent = Button;
-					Accent.VSplitLeft(3.0f, &Accent, nullptr);
-					Accent.HMargin(5.0f, &Accent);
-					Accent.Draw(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiAccentColor)), IGraphics::CORNER_ALL, 2.0f);
-				}
 			}
 			else
 			{

@@ -8,6 +8,7 @@
 
 #include <engine/client/plausible_sizes.h>
 #include <engine/client/rounded_rect_geometry.h>
+#include <engine/client/backend/vulkan/backend_vulkan.h>
 #include <engine/engine.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
@@ -23,6 +24,10 @@
 #include <cinttypes>
 #include <limits>
 #include <thread>
+
+#if defined(CONF_BACKEND_VULKAN)
+#include <SDL.h>
+#endif
 
 #if defined(CONF_PLATFORM_MACOS)
 #include <os/log.h>
@@ -2679,6 +2684,19 @@ void CGraphics_Threaded::RenderQuadLayer(int BufferContainerIndex, SQuadRenderIn
 
 void CGraphics_Threaded::RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor)
 {
+#if defined(CONF_PLATFORM_MACOS)
+	if(m_MacosGraphicsDiagnosticsEnabled)
+	{
+		if(BufferContainerIndex == -1)
+		{
+			m_BufferedTextNoContainerCount++;
+			return;
+		}
+		m_BufferedTextCommandCount++;
+		if(TextQuadNum <= 0)
+			m_BufferedTextZeroQuadCount++;
+	}
+#endif
 	if(BufferContainerIndex == -1)
 		return;
 
@@ -3705,7 +3723,41 @@ void CGraphics_Threaded::AddBackEndWarningIfExists()
 
 int CGraphics_Threaded::InitWindow()
 {
-	const bool VulkanRequested = str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0;
+#if defined(CONF_BACKEND_VULKAN)
+	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
+	const bool VulkanForcedByEnvironment = pEnvDriver != nullptr && str_comp_nocase(pEnvDriver, "Vulkan") == 0;
+	const bool VulkanConfigured = pEnvDriver == nullptr && str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0;
+#else
+	const bool VulkanForcedByEnvironment = false;
+	const bool VulkanConfigured = false;
+#endif
+	const bool VulkanRequested = VulkanForcedByEnvironment || VulkanConfigured;
+	const SOpenGLVersion ForcedVulkanConfigVersion{g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch};
+	const auto SetAutomaticVulkanVersion = [VulkanRequested]() {
+		if(VulkanRequested)
+		{
+			g_Config.m_GfxGLMajor = 0;
+			g_Config.m_GfxGLMinor = 0;
+			g_Config.m_GfxGLPatch = 0;
+		}
+	};
+	const auto RestoreAutomaticVulkanConfig = [VulkanConfigured]() {
+		if(VulkanConfigured && str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0)
+		{
+			g_Config.m_GfxGLMajor = 0;
+			g_Config.m_GfxGLMinor = 0;
+			g_Config.m_GfxGLPatch = 0;
+		}
+	};
+	const auto RestoreForcedVulkanConfig = [VulkanForcedByEnvironment, ForcedVulkanConfigVersion]() {
+		if(VulkanForcedByEnvironment)
+		{
+			g_Config.m_GfxGLMajor = ForcedVulkanConfigVersion.m_Major;
+			g_Config.m_GfxGLMinor = ForcedVulkanConfigVersion.m_Minor;
+			g_Config.m_GfxGLPatch = ForcedVulkanConfigVersion.m_Patch;
+		}
+	};
+	SetAutomaticVulkanVersion();
 	bool RestoreAutomaticOpenGLConfig = g_Config.m_GfxGLMajor == 0 && (str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0 || str_comp_nocase(g_Config.m_GfxBackend, "GLES") == 0);
 	const auto RestoreAutomaticOpenGLConfigFn = [&RestoreAutomaticOpenGLConfig]() {
 		if(RestoreAutomaticOpenGLConfig)
@@ -3715,10 +3767,12 @@ int CGraphics_Threaded::InitWindow()
 			g_Config.m_GfxGLPatch = 0;
 		}
 	};
-	const auto FinishSuccessfulInit = [VulkanRequested, &RestoreAutomaticOpenGLConfig, &RestoreAutomaticOpenGLConfigFn]() {
-		if(VulkanRequested && (str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0 || str_comp_nocase(g_Config.m_GfxBackend, "GLES") == 0))
+	const auto FinishSuccessfulInit = [VulkanConfigured, &RestoreAutomaticOpenGLConfig, &RestoreAutomaticOpenGLConfigFn, &RestoreAutomaticVulkanConfig, &RestoreForcedVulkanConfig]() {
+		if(VulkanConfigured && (str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0 || str_comp_nocase(g_Config.m_GfxBackend, "GLES") == 0))
 			RestoreAutomaticOpenGLConfig = true;
 		RestoreAutomaticOpenGLConfigFn();
+		RestoreAutomaticVulkanConfig();
+		RestoreForcedVulkanConfig();
 		return 0;
 	};
 	int ErrorCode = IssueInit();
@@ -3745,16 +3799,24 @@ int CGraphics_Threaded::InitWindow()
 			return FinishSuccessfulInit();
 	}
 
-	const bool Vulkan14Requested = VulkanRequested && g_Config.m_GfxGLMajor == 1 && g_Config.m_GfxGLMinor >= 4;
-	if(Vulkan14Requested)
+	const bool VulkanFallbackAttempted = VulkanRequested && g_Config.m_GfxGLMajor == gs_BackendVulkanFallbackVersion.m_Major &&
+		g_Config.m_GfxGLMinor == gs_BackendVulkanFallbackVersion.m_Minor && g_Config.m_GfxGLPatch == gs_BackendVulkanFallbackVersion.m_Patch;
+	if(VulkanRequested && !VulkanFallbackAttempted)
 	{
-		g_Config.m_GfxGLMajor = 1;
-		g_Config.m_GfxGLMinor = 1;
-		g_Config.m_GfxGLPatch = 0;
-		log_warn("gfx", "Failed to initialize Vulkan 1.4. Trying Vulkan 1.1 instead.");
+		g_Config.m_GfxGLMajor = gs_BackendVulkanFallbackVersion.m_Major;
+		g_Config.m_GfxGLMinor = gs_BackendVulkanFallbackVersion.m_Minor;
+		g_Config.m_GfxGLPatch = gs_BackendVulkanFallbackVersion.m_Patch;
+		log_warn("gfx", "Failed to initialize Vulkan at the automatically selected API level. Trying Vulkan 1.1 instead.");
 		ErrorCode = IssueInit();
 		if(ErrorCode == 0)
 			return FinishSuccessfulInit();
+	}
+
+	if(VulkanForcedByEnvironment)
+	{
+		RestoreForcedVulkanConfig();
+		log_error("gfx", "Failed to initialize forced Vulkan. Not falling back to another backend.");
+		return ErrorCode;
 	}
 
 	if(VulkanRequested)
@@ -4374,6 +4436,9 @@ void CGraphics_Threaded::Swap()
 			m_MsdfFlushCount = 0;
 			m_RoundedRectSdfCommandCount = 0;
 			m_RoundedRectSdfFlushCount = 0;
+			m_BufferedTextCommandCount = 0;
+			m_BufferedTextNoContainerCount = 0;
+			m_BufferedTextZeroQuadCount = 0;
 		}
 	}
 	else
@@ -4394,8 +4459,8 @@ void CGraphics_Threaded::Swap()
 			{
 				const double MetalWaitForIdleMsAvg = m_MacosMetalWaitForIdleCount > 0 ? m_MacosMetalWaitForIdleMsSum / (double)m_MacosMetalWaitForIdleCount : 0.0;
 				const int UnlimitedConfig = g_Config.m_GfxVsync == 0 && g_Config.m_GfxRefreshRate == 0 && g_Config.m_ClRefreshRate == 0;
-				dbg_msg("perf/macos_graphics", "event=frame_submit sample_frames=120 submit_duration_ms_sum=%.3f submit_duration_ms_avg=%.3f metal_wait_for_idle_count=%" PRIu64 " metal_wait_for_idle_ms_sum=%.3f metal_wait_for_idle_ms_avg=%.3f unlimited_config=%d vsync=%d gfx_refresh_rate=%d cl_refresh_rate=%d cl_refresh_rate_inactive=%d debug=%d dbg_graphs=%d async_render_old=%d backend=%s renderer=%s vendor=%s drawable_width=%d drawable_height=%d hidpi_scale=%.3f fullscreen=%d fsaa=%u refresh_hz=%d msdf_commands_sum=%" PRIu64 " msdf_flushes_sum=%" PRIu64 " rounded_sdf_commands_sum=%" PRIu64 " rounded_sdf_flushes_sum=%" PRIu64,
-					m_MacosGraphicsDiagnosticSubmitMsSum, m_MacosGraphicsDiagnosticSubmitMsSum / 120.0, m_MacosMetalWaitForIdleCount, m_MacosMetalWaitForIdleMsSum, MetalWaitForIdleMsAvg, UnlimitedConfig, g_Config.m_GfxVsync, g_Config.m_GfxRefreshRate, g_Config.m_ClRefreshRate, g_Config.m_ClRefreshRateInactive, g_Config.m_Debug, g_Config.m_DbgGraphs, g_Config.m_GfxAsyncRenderOld, pBackend, GetRendererString(), GetVendorString(), m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale, g_Config.m_GfxFullscreen, m_MultiSamplingCount, m_ScreenRefreshRate, m_MsdfCommandCount, m_MsdfFlushCount, m_RoundedRectSdfCommandCount, m_RoundedRectSdfFlushCount);
+				dbg_msg("perf/macos_graphics", "event=frame_submit sample_frames=120 submit_duration_ms_sum=%.3f submit_duration_ms_avg=%.3f metal_wait_for_idle_count=%" PRIu64 " metal_wait_for_idle_ms_sum=%.3f metal_wait_for_idle_ms_avg=%.3f unlimited_config=%d vsync=%d gfx_refresh_rate=%d cl_refresh_rate=%d cl_refresh_rate_inactive=%d debug=%d dbg_graphs=%d async_render_old=%d backend=%s renderer=%s vendor=%s drawable_width=%d drawable_height=%d hidpi_scale=%.3f fullscreen=%d fsaa=%u refresh_hz=%d msdf_commands_sum=%" PRIu64 " msdf_flushes_sum=%" PRIu64 " rounded_sdf_commands_sum=%" PRIu64 " rounded_sdf_flushes_sum=%" PRIu64 " buffered_text_commands_sum=%" PRIu64 " buffered_text_no_container_sum=%" PRIu64 " buffered_text_zero_quad_sum=%" PRIu64,
+					m_MacosGraphicsDiagnosticSubmitMsSum, m_MacosGraphicsDiagnosticSubmitMsSum / 120.0, m_MacosMetalWaitForIdleCount, m_MacosMetalWaitForIdleMsSum, MetalWaitForIdleMsAvg, UnlimitedConfig, g_Config.m_GfxVsync, g_Config.m_GfxRefreshRate, g_Config.m_ClRefreshRate, g_Config.m_ClRefreshRateInactive, g_Config.m_Debug, g_Config.m_DbgGraphs, g_Config.m_GfxAsyncRenderOld, pBackend, GetRendererString(), GetVendorString(), m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale, g_Config.m_GfxFullscreen, m_MultiSamplingCount, m_ScreenRefreshRate, m_MsdfCommandCount, m_MsdfFlushCount, m_RoundedRectSdfCommandCount, m_RoundedRectSdfFlushCount, m_BufferedTextCommandCount, m_BufferedTextNoContainerCount, m_BufferedTextZeroQuadCount);
 				m_MacosGraphicsDiagnosticFrameCount = 0;
 				m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
 				m_MacosMetalWaitForIdleMsSum = 0.0;
@@ -4404,6 +4469,9 @@ void CGraphics_Threaded::Swap()
 				m_MsdfFlushCount = 0;
 				m_RoundedRectSdfCommandCount = 0;
 				m_RoundedRectSdfFlushCount = 0;
+				m_BufferedTextCommandCount = 0;
+				m_BufferedTextNoContainerCount = 0;
+				m_BufferedTextZeroQuadCount = 0;
 			}
 		}
 	}

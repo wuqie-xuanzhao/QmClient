@@ -1029,6 +1029,13 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 		uint64_t m_FenceWaits = 0;
 		uint64_t m_QueueWaits = 0;
 		uint64_t m_DeviceWaits = 0;
+		uint64_t m_TextRenderPrepares = 0;
+		uint64_t m_TextRenderInvalidContainer = 0;
+		uint64_t m_TextRenderInvalidBufferObject = 0;
+		uint64_t m_TextRenderMissingBuffer = 0;
+		uint64_t m_TextRenderInvalidTexture = 0;
+		uint64_t m_TextRenderMissingDescriptor = 0;
+		uint64_t m_TextRenderZeroDraw = 0;
 		std::chrono::nanoseconds m_CPUFrameTime = 0ns;
 		std::chrono::nanoseconds m_GPUFrameTime = 0ns;
 		std::chrono::nanoseconds m_CPUCommandPrepareTime = 0ns;
@@ -1084,6 +1091,13 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 			m_FenceWaits += Other.m_FenceWaits;
 			m_QueueWaits += Other.m_QueueWaits;
 			m_DeviceWaits += Other.m_DeviceWaits;
+			m_TextRenderPrepares += Other.m_TextRenderPrepares;
+			m_TextRenderInvalidContainer += Other.m_TextRenderInvalidContainer;
+			m_TextRenderInvalidBufferObject += Other.m_TextRenderInvalidBufferObject;
+			m_TextRenderMissingBuffer += Other.m_TextRenderMissingBuffer;
+			m_TextRenderInvalidTexture += Other.m_TextRenderInvalidTexture;
+			m_TextRenderMissingDescriptor += Other.m_TextRenderMissingDescriptor;
+			m_TextRenderZeroDraw += Other.m_TextRenderZeroDraw;
 			m_CPUFrameTime += Other.m_CPUFrameTime;
 			m_CPUCommandPrepareTime += Other.m_CPUCommandPrepareTime;
 			m_CPUMainCommandRecordTime += Other.m_CPUMainCommandRecordTime;
@@ -1178,16 +1192,17 @@ private:
 
 	std::vector<SBufferContainer> m_vBufferContainers;
 
-	VkInstance m_VKInstance;
-	VkPhysicalDevice m_VKGPU;
+	VkInstance m_VKInstance = VK_NULL_HANDLE;
+	VkPhysicalDevice m_VKGPU = VK_NULL_HANDLE;
 	uint32_t m_VKGraphicsQueueIndex = std::numeric_limits<uint32_t>::max();
-	VkDevice m_VKDevice;
-	VkQueue m_VKGraphicsQueue, m_VKPresentQueue;
-	VkSurfaceKHR m_VKPresentSurface;
+	VkDevice m_VKDevice = VK_NULL_HANDLE;
+	VkQueue m_VKGraphicsQueue = VK_NULL_HANDLE;
+	VkQueue m_VKPresentQueue = VK_NULL_HANDLE;
+	VkSurfaceKHR m_VKPresentSurface = VK_NULL_HANDLE;
 	SSwapImgViewportExtent m_VKSwapImgAndViewportExtent;
 
 #ifdef VK_EXT_debug_utils
-	VkDebugUtilsMessengerEXT m_DebugMessenger;
+	VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 #endif
 
 	VkDescriptorSetLayout m_StandardTexturedDescriptorSetLayout;
@@ -1284,6 +1299,7 @@ private:
 
 		VkBuffer m_IndexBuffer = VK_NULL_HANDLE;
 		bool m_ClearColorInRenderThread = false;
+		bool m_SkipRender = false;
 
 		bool m_HasDynamicState = false;
 		VkViewport m_Viewport;
@@ -4239,9 +4255,6 @@ public:
 
 	[[nodiscard]] bool ResolveRequestedVulkanApiVersion()
 	{
-		const SVulkanVersion RequestedVersion = gs_BackendVulkanMinimumVersion;
-		m_RequestedApiVersion = VK_MAKE_API_VERSION(0, RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch);
-
 		uint32_t LoaderApiVersion = VK_API_VERSION_1_0;
 		auto pfnGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(SDL_Vulkan_GetVkGetInstanceProcAddr());
 		if(pfnGetInstanceProcAddr == nullptr)
@@ -4260,19 +4273,26 @@ public:
 			}
 		}
 
-		const SVulkanVersion LoaderVersion = {
-			(int)VK_API_VERSION_MAJOR(LoaderApiVersion),
-			(int)VK_API_VERSION_MINOR(LoaderApiVersion),
-			(int)VK_API_VERSION_PATCH(LoaderApiVersion)};
-		if(!IsVulkanVersionAtLeast(LoaderVersion, RequestedVersion))
+		const uint32_t FallbackApiVersion = VK_MAKE_API_VERSION(0, gs_BackendVulkanFallbackVersion.m_Major, gs_BackendVulkanFallbackVersion.m_Minor, gs_BackendVulkanFallbackVersion.m_Patch);
+		if(LoaderApiVersion < FallbackApiVersion)
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "Vulkan %d.%d was selected, but the installed Vulkan loader only supports %d.%d.%d.", RequestedVersion.m_Major, RequestedVersion.m_Minor, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
+			str_format(aBuf, sizeof(aBuf), "The installed Vulkan loader only supports %d.%d.%d, but Vulkan 1.1 is required.", (int)VK_API_VERSION_MAJOR(LoaderApiVersion), (int)VK_API_VERSION_MINOR(LoaderApiVersion), (int)VK_API_VERSION_PATCH(LoaderApiVersion));
 			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, aBuf);
 			return false;
 		}
 
-		log_info("gfx/vulkan", "requested Vulkan API %d.%d.%d, loader supports %d.%d.%d", RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
+		const bool FallbackRequested = g_Config.m_GfxGLMajor == gs_BackendVulkanFallbackVersion.m_Major &&
+					       g_Config.m_GfxGLMinor == gs_BackendVulkanFallbackVersion.m_Minor &&
+					       g_Config.m_GfxGLPatch == gs_BackendVulkanFallbackVersion.m_Patch;
+		const uint32_t HeaderApiVersion = VK_MAKE_API_VERSION(0, VK_API_VERSION_MAJOR(VK_HEADER_VERSION_COMPLETE), VK_API_VERSION_MINOR(VK_HEADER_VERSION_COMPLETE), 0);
+		m_RequestedApiVersion = FallbackRequested ? FallbackApiVersion : std::min(LoaderApiVersion, HeaderApiVersion);
+
+		const char *pLogSystem = g_Config.m_QmMacosGraphicsDiagnostics != 0 ? "perf/autodiag_vulkan" : "vulkan";
+		dbg_msg(pLogSystem, "requested Vulkan API %d.%d.%d, loader supports %d.%d.%d, selection=%s",
+			(int)VK_API_VERSION_MAJOR(m_RequestedApiVersion), (int)VK_API_VERSION_MINOR(m_RequestedApiVersion), (int)VK_API_VERSION_PATCH(m_RequestedApiVersion),
+			(int)VK_API_VERSION_MAJOR(LoaderApiVersion), (int)VK_API_VERSION_MINOR(LoaderApiVersion), (int)VK_API_VERSION_PATCH(LoaderApiVersion),
+			FallbackRequested ? "fallback-1.1" : "automatic-highest");
 		return true;
 	}
 
@@ -4774,7 +4794,11 @@ public:
 
 	void DestroySurface()
 	{
-		vkDestroySurfaceKHR(m_VKInstance, m_VKPresentSurface, nullptr);
+		if(m_VKInstance != VK_NULL_HANDLE && m_VKPresentSurface != VK_NULL_HANDLE)
+		{
+			vkDestroySurfaceKHR(m_VKInstance, m_VKPresentSurface, nullptr);
+		}
+		m_VKPresentSurface = VK_NULL_HANDLE;
 	}
 
 	[[nodiscard]] bool GetPresentationMode(VkPresentModeKHR &VKIOMode)
@@ -4975,7 +4999,7 @@ public:
 #if defined(CONF_PLATFORM_MACOS)
 		if(g_Config.m_QmMacosGraphicsDiagnostics != 0)
 		{
-			log_info("gfx/vulkan", "swapchain present: vsync=%d mode=%d images=%u refresh=%d screen_refresh=%d", g_Config.m_GfxVsync, (int)PresentMode, SwapImgCount, g_Config.m_GfxRefreshRate, g_Config.m_GfxScreenRefreshRate);
+			dbg_msg("perf/autodiag_vulkan", "swapchain present: vsync=%d mode=%d images=%u refresh=%d screen_refresh=%d", g_Config.m_GfxVsync, (int)PresentMode, SwapImgCount, g_Config.m_GfxRefreshRate, g_Config.m_GfxScreenRefreshRate);
 		}
 #endif
 
@@ -5130,7 +5154,11 @@ public:
 	{
 #ifdef VK_EXT_debug_utils
 		if(m_DebugMessenger != VK_NULL_HANDLE)
-			DestroyDebugUtilsMessengerEXT(m_DebugMessenger);
+		{
+			if(m_VKInstance != VK_NULL_HANDLE)
+				DestroyDebugUtilsMessengerEXT(m_DebugMessenger);
+			m_DebugMessenger = VK_NULL_HANDLE;
+		}
 #endif
 	}
 
@@ -6520,23 +6548,30 @@ public:
 
 	void CleanupVulkanSDL()
 	{
+		DestroySurface();
+		if(m_VKDevice != VK_NULL_HANDLE)
+		{
+			vkDestroyDevice(m_VKDevice, nullptr);
+			m_VKDevice = VK_NULL_HANDLE;
+		}
+
+		m_pfnCreateSwapchainKHR = nullptr;
+		m_pfnDestroySwapchainKHR = nullptr;
+		m_pfnGetSwapchainImagesKHR = nullptr;
+		m_pfnAcquireNextImageKHR = nullptr;
+		m_pfnQueuePresentKHR = nullptr;
+
+		UnregisterDebugCallback();
 		if(m_VKInstance != VK_NULL_HANDLE)
 		{
-			DestroySurface();
-			vkDestroyDevice(m_VKDevice, nullptr);
-			m_pfnCreateSwapchainKHR = nullptr;
-			m_pfnDestroySwapchainKHR = nullptr;
-			m_pfnGetSwapchainImagesKHR = nullptr;
-			m_pfnAcquireNextImageKHR = nullptr;
-			m_pfnQueuePresentKHR = nullptr;
-
-			if(g_Config.m_DbgGfx == DEBUG_GFX_MODE_MINIMUM || g_Config.m_DbgGfx == DEBUG_GFX_MODE_ALL)
-			{
-				UnregisterDebugCallback();
-			}
 			vkDestroyInstance(m_VKInstance, nullptr);
 			m_VKInstance = VK_NULL_HANDLE;
 		}
+
+		m_VKGPU = VK_NULL_HANDLE;
+		m_VKGraphicsQueueIndex = std::numeric_limits<uint32_t>::max();
+		m_VKGraphicsQueue = VK_NULL_HANDLE;
+		m_VKPresentQueue = VK_NULL_HANDLE;
 	}
 
 	int RecreateSwapChain()
@@ -7665,12 +7700,14 @@ public:
 
 		m_LastFrameProfileLogFrame = m_CurFrame;
 		SFrameProfileStats Stats = CurrentFrameProfileStats();
-		dbg_msg("vulkan",
+		const char *pProfileLogSystem = g_Config.m_QmMacosGraphicsDiagnostics != 0 ? "perf/autodiag_vulkan" : "vulkan";
+		dbg_msg(pProfileLogSystem,
 			"profile frame=%" PRIu64 " cmds=%" PRIu64 " render_cmds=%" PRIu64 " prepare=%" PRIu64 " main_record=%" PRIu64 " thread_record=%" PRIu64 " estimated_draws=%" PRIu64 " draws=%" PRIu64 " "
 			"pipeline=%" PRIu64 "/%" PRIu64 " vb=%" PRIu64 "/%" PRIu64 " ib=%" PRIu64 "/%" PRIu64 " dynamic=%" PRIu64 "/%" PRIu64 " descriptors=%" PRIu64 "/%" PRIu64 " "
 			"desc_pool=%" PRIu64 " desc_alloc=%" PRIu64 " desc_update=%" PRIu64 " stream=%" PRIu64 "(%" PRIu64 " KiB) stream_alloc=%" PRIu64 "(%" PRIu64 " KiB) staging=%" PRIu64 "(%" PRIu64 " KiB) staging_alloc=%" PRIu64 "(%" PRIu64 " KiB) "
 			"flush=%" PRIu64 "/%" PRIu64 " invalidate=%" PRIu64 "/%" PRIu64 " readback=%" PRIu64 "(%" PRIu64 " KiB) "
 			"barriers=%" PRIu64 "/%" PRIu64 " submits=%" PRIu64 "/%" PRIu64 " waits=%" PRIu64 " queue_waits=%" PRIu64 " device_waits=%" PRIu64 " "
+			"text_prepare=%" PRIu64 " text_bad_container=%" PRIu64 " text_bad_buffer_object=%" PRIu64 " text_missing_buffer=%" PRIu64 " text_bad_texture=%" PRIu64 " text_missing_descriptor=%" PRIu64 " text_zero_draw=%" PRIu64 " "
 			"cpu=%" PRId64 "us gpu_last=%" PRId64 "us gpu_valid=%d prepare=%" PRId64 "us main_record=%" PRId64 "us thread_record=%" PRId64 "us wait=%" PRId64 "us submit=%" PRId64 "us queue_wait=%" PRId64 "us device_wait=%" PRId64 "us invalidate=%" PRId64 "us",
 			m_CurFrame,
 			Stats.m_CommandCount, Stats.m_RenderCommands,
@@ -7693,6 +7730,7 @@ public:
 			Stats.m_BarrierCalls, Stats.m_Barriers,
 			Stats.m_QueueSubmits, Stats.m_QueueSubmitCommandBuffers,
 			Stats.m_FenceWaits, Stats.m_QueueWaits, Stats.m_DeviceWaits,
+			Stats.m_TextRenderPrepares, Stats.m_TextRenderInvalidContainer, Stats.m_TextRenderInvalidBufferObject, Stats.m_TextRenderMissingBuffer, Stats.m_TextRenderInvalidTexture, Stats.m_TextRenderMissingDescriptor, Stats.m_TextRenderZeroDraw,
 			Stats.m_CPUFrameTime.count() / 1000,
 			Stats.m_HasGPUFrameTime ? Stats.m_GPUFrameTime.count() / 1000 : 0,
 			Stats.m_HasGPUFrameTime ? 1 : 0,
@@ -9366,9 +9404,62 @@ public:
 
 	void Cmd_RenderText_FillExecuteBuffer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand_RenderText *pCommand)
 	{
-		size_t BufferContainerIndex = (size_t)pCommand->m_BufferContainerIndex;
-		size_t BufferObjectIndex = (size_t)m_vBufferContainers[BufferContainerIndex].m_BufferObjectIndex;
+		// Command preparation always runs on the main thread. Do not write a helper
+		// thread's profile state here while it can record the previous command batch.
+		auto &Stats = m_FrameProfileStats;
+		const bool RecordProfile = m_FrameProfilingActive;
+		if(RecordProfile)
+			Stats.m_TextRenderPrepares++;
+		ExecBuffer.m_SkipRender = false;
+		ExecBuffer.m_EstimatedRenderCallCount = 0;
+
+		if(pCommand->m_DrawNum <= 0)
+		{
+			if(RecordProfile)
+				Stats.m_TextRenderZeroDraw++;
+			ExecBuffer.m_SkipRender = true;
+			return;
+		}
+		if(pCommand->m_BufferContainerIndex < 0 || (size_t)pCommand->m_BufferContainerIndex >= m_vBufferContainers.size())
+		{
+			if(RecordProfile)
+				Stats.m_TextRenderInvalidContainer++;
+			ExecBuffer.m_SkipRender = true;
+			return;
+		}
+
+		const size_t BufferContainerIndex = (size_t)pCommand->m_BufferContainerIndex;
+		const int BufferObjectIndex = m_vBufferContainers[BufferContainerIndex].m_BufferObjectIndex;
+		if(BufferObjectIndex < 0 || (size_t)BufferObjectIndex >= m_vBufferObjects.size())
+		{
+			if(RecordProfile)
+				Stats.m_TextRenderInvalidBufferObject++;
+			ExecBuffer.m_SkipRender = true;
+			return;
+		}
+
 		const auto &BufferObject = m_vBufferObjects[BufferObjectIndex];
+		if(BufferObject.m_CurBuffer == VK_NULL_HANDLE || m_RenderIndexBuffer == VK_NULL_HANDLE)
+		{
+			if(RecordProfile)
+				Stats.m_TextRenderMissingBuffer++;
+			ExecBuffer.m_SkipRender = true;
+			return;
+		}
+		if(pCommand->m_TextTextureIndex < 0 || (size_t)pCommand->m_TextTextureIndex >= m_vTextures.size())
+		{
+			if(RecordProfile)
+				Stats.m_TextRenderInvalidTexture++;
+			ExecBuffer.m_SkipRender = true;
+			return;
+		}
+		if(m_vTextures[pCommand->m_TextTextureIndex].m_VKTextDescrSet.m_Descriptor == VK_NULL_HANDLE)
+		{
+			if(RecordProfile)
+				Stats.m_TextRenderMissingDescriptor++;
+			ExecBuffer.m_SkipRender = true;
+			return;
+		}
 
 		ExecBuffer.m_Buffer = BufferObject.m_CurBuffer;
 		ExecBuffer.m_BufferOff = BufferObject.m_CurBufferOffset;
@@ -9384,6 +9475,8 @@ public:
 
 	[[nodiscard]] bool Cmd_RenderText(const CCommandBuffer::SCommand_RenderText *pCommand, SRenderCommandExecuteBuffer &ExecBuffer)
 	{
+		if(ExecBuffer.m_SkipRender)
+			return true;
 		std::array<float, (size_t)4 * 2> m;
 		GetStateMatrix(pCommand->m_State, m);
 
@@ -9694,7 +9787,8 @@ public:
 		m_pGpuList = pCommand->m_pGpuList;
 		if(InitVulkanSDL(pCommand->m_pWindow, pCommand->m_Width, pCommand->m_Height, pCommand->m_pRendererString, pCommand->m_pVendorString, pCommand->m_pVersionString) != 0)
 		{
-			m_VKInstance = VK_NULL_HANDLE;
+			CleanupVulkanSDL();
+			return false;
 		}
 
 		RegisterCommands();

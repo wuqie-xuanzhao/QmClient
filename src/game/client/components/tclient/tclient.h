@@ -515,16 +515,17 @@ public:
 	SQmFocusConfigOverrideState m_FocusVideoDirectionOverrideState;
 	void ApplyFocusModeEffects();
 
-	// Gores FastInput Link
+	// Gores 快速输入临时覆盖
 	bool m_GoresModeStateKnown = false;
 	bool m_PrevGoresModeActive = false;
+	SQmFocusConfigOverrideState m_GoresAutoEnableOverride;
+	SQmFocusConfigOverrideState m_GoresFastInputOverride;
+	SQmFocusConfigOverrideState m_GoresFastInputOthersOverride;
 	SQmFocusConfigOverrideState m_GoresDummyHammerOverride;
-	void ResetGoresDummyHammerOverride();
-	bool m_GoresAutoMapKnown = false;
-	unsigned m_GoresAutoMapToken = 0;
+	void ResetGoresConfigOverrides();
 	bool IsFastInputActive() const;
 	bool IsFastInputOthersActive() const;
-	void ApplyGoresFastInputLink(bool AutoMapCheck = false);
+	void ApplyGoresFastInputLink();
 };
 
 #endif
