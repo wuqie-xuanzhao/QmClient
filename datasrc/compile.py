@@ -1,7 +1,7 @@
 import argparse
+
 import content
 import network
-
 from datatypes import EmitDefinition, EmitTypeDeclaration
 
 

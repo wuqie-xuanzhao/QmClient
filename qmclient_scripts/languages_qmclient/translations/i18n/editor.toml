@@ -1832,7 +1832,7 @@ simplified_chinese = "终点概率强度。"
 key = "End% "
 context = "Editor"
 [message.translations]
-simplified_chinese = "止% "
+simplified_chinese = "止%"
 
 [[message]]
 key = "ENDLESS HOOK OFF: Deactivates endless hook."
@@ -3794,7 +3794,7 @@ simplified_chinese = "随机扰动强度。"
 key = "Randomness "
 context = "Editor"
 [message.translations]
-simplified_chinese = "随机 "
+simplified_chinese = "随机"
 
 [[message]]
 key = "Re-import"
@@ -4586,7 +4586,7 @@ simplified_chinese = "平滑"
 key = "Softness "
 context = "Editor"
 [message.translations]
-simplified_chinese = "柔化 "
+simplified_chinese = "柔化"
 
 [[message]]
 key = "SOLO: You are now in a solo part."
@@ -4796,7 +4796,7 @@ simplified_chinese = "起点概率强度。"
 key = "Start% "
 context = "Editor"
 [message.translations]
-simplified_chinese = "起% "
+simplified_chinese = "起%"
 
 [[message]]
 key = "START: Starts counting your race time."
@@ -5240,7 +5240,7 @@ simplified_chinese = "这些边框代表菜单中显示的内容."
 key = "Thickness "
 context = "Editor"
 [message.translations]
-simplified_chinese = "粗细 "
+simplified_chinese = "粗细"
 
 [[message]]
 key = "This image is used in the map. Removing it will reset all layers that use this image to their default.\\n\\nRemove anyway?"
@@ -5889,3 +5889,93 @@ key = "Shift by"
 context = "Editor tile shift amount"
 [message.translations]
 simplified_chinese = "平移量"
+
+[[message]]
+key = "Append"
+context = "Editor"
+[message.translations]
+simplified_chinese = "添加"
+
+[[message]]
+key = "Blockworlds"
+context = "Editor"
+[message.translations]
+simplified_chinese = "方块世界"
+
+[[message]]
+key = "Error: Failed to allocate memory for bezier envelope points."
+context = "Editor"
+[message.translations]
+simplified_chinese = "错误：无法为贝塞尔动画点分配内存。"
+
+[[message]]
+key = "Error: Failed to allocate memory for envelope points."
+context = "Editor"
+[message.translations]
+simplified_chinese = "错误：无法为动画点分配内存。"
+
+[[message]]
+key = "Error: Saving is not possible because the bezier envelope point data is too large."
+context = "Editor"
+[message.translations]
+simplified_chinese = "错误：无法保存，因为贝塞尔动画点数据过大。"
+
+[[message]]
+key = "Error: Saving is not possible because the envelope point data is too large."
+context = "Editor"
+[message.translations]
+simplified_chinese = "错误：无法保存，因为动画点数据过大。"
+
+[[message]]
+key = "Error: Saving is not possible because there are too many envelope points."
+context = "Editor"
+[message.translations]
+simplified_chinese = "错误：无法保存，因为动画点数量过多。"
+
+[[message]]
+key = "Freeze grenade"
+context = "Editor"
+[message.translations]
+simplified_chinese = "冻结榴弹炮"
+
+[[message]]
+key = "Jump to beginning of animation."
+context = "Editor"
+[message.translations]
+simplified_chinese = "跳到动画开头。"
+
+[[message]]
+key = "Official"
+context = "Editor"
+[message.translations]
+simplified_chinese = "官方"
+
+[[message]]
+key = "Race"
+context = "Editor"
+[message.translations]
+simplified_chinese = "竞速"
+
+[[message]]
+key = "Saving failed: Could not replace map file '%s'; the previous version was restored or kept at '%s'."
+context = "Editor"
+[message.translations]
+simplified_chinese = "保存失败：无法替换地图文件“%s”；旧版本已恢复或保留在“%s”。"
+
+[[message]]
+key = "Timebar. Press left-click to drag. Hold ctrl to be more precise."
+context = "Editor"
+[message.translations]
+simplified_chinese = "时间条：左键拖动，按住 Ctrl 精细调整。"
+
+[[message]]
+key = "Vanilla"
+context = "Editor"
+[message.translations]
+simplified_chinese = "原版"
+
+[[message]]
+key = "X: %.1f, Y: %.1f, Z: %.1f, T: %.1f, A: %.1f, G: %i  %s"
+context = "Editor"
+[message.translations]
+simplified_chinese = "坐标 X: %.1f, 坐标 Y: %.1f, 缩放: %.1f, 时间: %.1f, 动画: %.1f, 网格: %i  %s"

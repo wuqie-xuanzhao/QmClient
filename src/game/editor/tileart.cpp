@@ -170,7 +170,7 @@ void CEditorMap::AddTileArt(CImageInfo &&Image, const char *pFilename, bool Igno
 	if(vColorImages.size() != vaColorGroups.size())
 	{
 		Image.Free();
-		Editor()->ShowFileDialogError("无法生成图块画图像。");
+		Editor()->ShowFileDialogError(Localize("Could not generate the tile art image.", "Editor"));
 		return;
 	}
 	char aImageName[IO_MAX_PATH_LENGTH];

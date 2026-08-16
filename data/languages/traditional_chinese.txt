@@ -251,10 +251,6 @@
 [%s] %s (Map: %s, Time: %s)
 == [%s] %s（地圖：%s，時間：%s）
 
-[]
-[Developer]
-== [開發者]
-
 _ or ' ' = blank spacer
 == _ 或 ' ' = 空白間隔
 
@@ -642,9 +638,6 @@ Allow left-click to toggle between spectating nearest player and free view
 Allow mic permission in system settings, then reopen voice
 == 需要在系統設置裡允許麥克風權限，然後重新打開語音
 
-Allow QmLiveClient to connect as hidden read-only observer
-== 允許 QmLiveClient 以隱藏只讀 observer 連接
-
 Allow voting to kick players
 == 允許投票踢出玩家
 
@@ -703,7 +696,7 @@ Animate chat box, emote selector, scoreboard, and spectate selection
 == 聊天框、表情選擇、計分板和觀戰選擇的展示動畫
 
 Animate lists when entering a page
-== Animate lists when entering a page
+== 進入頁面時播放列表動畫
 
 Animate settings card expand and collapse height changes
 == 展開或折疊設定卡片時播放高度過渡動畫
@@ -1189,7 +1182,7 @@ Automatically ban blacklisted addresses
 == 自動禁止黑名單地址
 
 Automatically check for stable updates and install them on exit
-== Automatically check for stable updates and install them on exit
+== 自動檢查穩定版更新並在結束時安裝
 
 Automatically close the current chat after waking from freeze
 == 從凍結狀態中醒來自動關閉聊天框
@@ -1230,6 +1223,9 @@ Available resolutions
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == 平均 %.*f ↓ %.*f ↑ %.*f
 
+Axiom API returned an error
+== Axiom API 傳回錯誤
+
 Axiom auto login failed
 == Axiom 自動登錄失敗
 
@@ -1244,6 +1240,12 @@ Axiom dummy password
 
 Axiom main account password
 == Axiom 主號密碼
+
+Axiom score request failed
+== Axiom 分數請求失敗
+
+Axiom scores
+== Axiom 分數
 
 Axis
 == 軸
@@ -1460,6 +1462,9 @@ Black
 
 Blend mode
 == 疊加模式
+
+Blink the active local tee
+== 讓目前本機角色閃爍
 
 Block enemy chat
 == 封鎖敵對玩家聊天
@@ -1938,9 +1943,6 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == 單擊從你的好友列表移除此玩家
 
-Click to restore full match
-== 點擊恢復完整比賽
-
 Click to select server. Double click to join your friend.
 == 點擊選擇伺服器。雙擊加入好友所在伺服器。
 
@@ -2081,6 +2083,9 @@ Compatible with single-player area hints from other servers
 
 Complete snapshots are arriving late or not arriving
 == 完整快照到達延遲或未到達
+
+Completed maps
+== 已完成地圖
 
 Compressor attack time (ms)
 == 壓縮器攻擊時間（毫秒）
@@ -2955,9 +2960,6 @@ Disable clipping
 Disable Gores auto-switch when picking up extra weapon
 == 拿到額外武器時停用 Gores 自動切換
 
-Disable QmLive team preview/render filter
-== 關閉 QmLive 隊伍預覽/渲染過濾
-
 Disabled
 == 已停用
 
@@ -3027,6 +3029,9 @@ Displays estimated process UDP send rate
 Displays prediction timing jitter
 == 顯示預測時序抖動
 
+Displays server snapshot latency
+== 顯示伺服器快照延遲
+
 Displays the client's prediction lead
 == 顯示用戶端的預測提前量
 
@@ -3077,6 +3082,9 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == 自己被凍結時不預測其他玩家
+
+Do not set this variable, instead create a ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible serverlist URLs
+== 不要設定此變數；請在 settings_ddnet.cfg 旁建立 ddnet-serverlist-urls.cfg，以指定所有可用的伺服器列表 URL
 
 Do not set, used to mark official tutorial server
 == 勿修改：用於標記官方教學伺服器
@@ -3745,7 +3753,7 @@ Enable stereo positioning
 == 啟用立體聲定位
 
 Enable switch countdown
-== Enable switch countdown
+== 啟用開關倒數
 
 Enable system media control
 == 啟用系統媒體控制
@@ -4146,9 +4154,6 @@ Filter full servers in browser
 Filter game type
 == 要過濾的遊戲類型
 
-Filter off
-== 關閉過濾
-
 Filter out password protected servers in browser
 == 在瀏覽器中過濾掉受密碼保護的伺服器
 
@@ -4163,12 +4168,6 @@ Filter out servers without friends
 
 Filter out spectators from player count
 == 從玩家號碼中過濾掉觀眾
-
-Filter Team %d
-== 過濾隊伍 %d
-
-Filter: Team %d
-== 過濾：隊伍 %d
 
 Filtered word console color
 == 被屏蔽詞控制台顏色
@@ -4398,9 +4397,6 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 == 全螢幕
 
-Full demo + sidecar
-== 完整 demo + sidecar
-
 Full map listen in same room
 == 同房間全圖收聽
 
@@ -4548,6 +4544,9 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == 全局卡片排序舊配置遷移完成標記
 
+Global rank
+== 全球排名
+
 Global toggle key
 == 全局開關鍵
 
@@ -4633,10 +4632,10 @@ Graphics display
 == 圖像顯示
 
 Graphics library major version (0 = auto-detect)
-== Graphics library major version (0 = auto-detect)
+== 圖形庫主版本（0 = 自動偵測）
 
 Graphics library minor version (0 = auto-detect)
-== Graphics library minor version (0 = auto-detect)
+== 圖形庫次版本（0 = 自動偵測）
 
 Graphics library patch version
 == 圖庫補丁版本
@@ -4706,9 +4705,6 @@ Hi!
 
 Hide basic system info (join, version, rules) in Zen mode
 == 禪模式下隱藏入場、版本和規則等基礎系統信息
-
-Hide Chat
-== 隱藏聊天框
 
 Hide chat messages from players marked as enemies
 == 隱藏被標記為敵人的玩家聊天訊息
@@ -5034,9 +5030,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls/zh
 
@@ -5322,6 +5315,9 @@ Interpolation
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == 當前編輯器地圖副本自動保存到“auto”文件夾的時間間隔（0 表示關閉）
 
+Invalid Axiom API response
+== Axiom API 回應無效
+
 Invalid client id to kick
 == 用於踢人的客戶端 ID 無效
 
@@ -5604,6 +5600,9 @@ Last entered
 Last page in console
 == 控制台最後一頁
 
+Latency
+== 延遲
+
 Latency compensation
 == 延遲補償
 
@@ -5804,6 +5803,9 @@ Loading
 
 Loading assets...
 == 正在加載資源……
+
+Loading Axiom scores...
+== 正在載入 Axiom 分數……
 
 Loading commands…
 == 正在加載指令…
@@ -6144,6 +6146,9 @@ Map to use on server
 Map type:
 == 地圖類型：
 
+Maps
+== 地圖
+
 Margin when notification is docked
 == 通知欄貼邊時預留邊距
 
@@ -6246,9 +6251,6 @@ Maximum framerate for entity layer video background
 Maximum notification count
 == 通知欄最大顯示數量
 
-Maximum number of allowed QmLive observer connections
-== 最多允許的 QmLive observer 連接數
-
 Maximum number of auto recorded demos (0 = unlimited)
 == 自動錄製 demo 的最大數量（0 = 無限制）
 
@@ -6331,7 +6333,7 @@ Menu option - selected
 == 菜單選項 - 選中
 
 Merge consecutive identical player messages within 2 seconds
-== Merge consecutive identical player messages within 2 seconds
+== 合併 2 秒內連續出現的相同玩家訊息
 
 Message color
 == 留言顏色
@@ -6365,6 +6367,9 @@ Microphone volume
 
 Microphone volume (percent)
 == 麥克風音量（百分比）
+
+Mileage
+== 里程
 
 Milliseconds
 == 毫秒
@@ -6518,6 +6523,9 @@ Moves to the tile with x/y-number ii
 
 Multi-View
 == 多人同框視角
+
+Multiple exact Axiom players found
+== 找到多個完全相符的 Axiom 玩家
 
 Mute
 == 靜音
@@ -7020,6 +7028,12 @@ Not open, check input device or mic permission
 Not open, check output device
 == 未打開，請檢查輸出設備
 
+Not ranked
+== 未上榜
+
+Not requested
+== 尚未請求
+
 Note
 == 備註
 
@@ -7362,6 +7376,9 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == 覆蓋群組
 
+Override location for ping estimation, available: auto, af, as, as:cn, eu, na, oc, sa (Automatic, Africa, Asia, China, Europe, North America, Oceania/Australia, South America
+== 覆寫 Ping 估算位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自動、非洲、亞洲、中國、歐洲、北美洲、大洋洲/澳洲、南美洲）
+
 Override Selected
 == 覆蓋選定項
 
@@ -7479,6 +7496,9 @@ Per-word highlight (karaoke)
 Performance debug log threshold (ms)
 == 性能調試日誌閾值（毫秒）
 
+Performance points
+== 表現分
+
 Personal best:
 == 個人最佳：
 
@@ -7534,7 +7554,7 @@ Plasma gun shots per second
 == 等離子槍每秒發射多少發子彈
 
 Play a flip animation while reloading weapons
-== Play a flip animation while reloading weapons
+== 武器裝填時播放翻轉動畫
 
 Play a slide-in rotation animation when switching weapons
 == 切換武器時播放滑入旋轉動畫
@@ -7553,6 +7573,9 @@ Play the current demo
 
 Play the selected demo
 == 播放選中的錄影
+
+Play time
+== 遊玩時間
 
 Play/Pause
 == 播放/暫停
@@ -7643,6 +7666,9 @@ Player name:
 
 Player not found
 == 未找到該玩家
+
+Player not found on Axiom
+== Axiom 上找不到該玩家
 
 Player preview
 == 玩家預覽
@@ -7914,12 +7940,6 @@ Preview the current chat appearance
 Preview visibilities
 == 預覽可見性
 
-Preview/render only one DDRace team from a full match demo
-== 從完整比賽 demo 中只預覽/渲染一個 DDRace 隊伍
-
-Preview/render only this team
-== 僅預覽/渲染此隊伍
-
 Previous
 == 上一個
 
@@ -8094,45 +8114,6 @@ QmClient sidebar module collapse state
 QmClient sidebar module order
 == 棲夢側欄模塊排序
 
-QmLiveClient: Default filter for unrecognized source player events
-== QmLiveClient：無法識別來源的玩家型事件默認過濾
-
-QmLiveClient: Enable single team isolation audio filter
-== QmLiveClient：啟用單隊隔離音效過濾
-
-QmLiveClient: Enable single team isolation visual filter
-== QmLiveClient：啟用單隊隔離畫面過濾
-
-QmLiveClient: Finish ranking card display seconds
-== QmLiveClient：完成排名卡片顯示秒數
-
-QmLiveClient: Finish ranking card opacity percent
-== QmLiveClient：完成排名卡片不透明度百分比
-
-QmLiveClient: Finish ranking card scale percent
-== QmLiveClient：完成排名卡片縮放百分比
-
-QmLiveClient: Full match demo recording toggle
-== QmLiveClient：完整比賽 demo 錄製開關
-
-QmLiveClient: Hide non-target team finish prompts
-== QmLiveClient：隱藏非目標隊伍完成提示
-
-QmLiveClient: Ranking HUD team range lower bound
-== QmLiveClient：排名 HUD 隊伍範圍下限
-
-QmLiveClient: Ranking HUD team range upper bound
-== QmLiveClient：排名 HUD 隊伍範圍上限
-
-QmLiveClient: Show finish cards for teams outside range
-== QmLiveClient：顯示配置範圍外隊伍的完成卡片
-
-QmLiveClient: Show team finish ranking card
-== QmLiveClient：顯示隊伍完成排名卡片
-
-QmLiveClient: Single team isolation preview/render team, 0=Off
-== QmLiveClient：單隊隔離預覽/渲染隊伍，0=關閉
-
 QmUi animation intensity: 0=Off, 1=Reduced, 2=Full
 == QmUi 動效強度：0=關閉 1=降低 2=完整
 
@@ -8285,9 +8266,6 @@ Record chat replays.
 
 Record demo
 == 錄製回放
-
-Record match
-== 錄製比賽
 
 Record to a file
 == 記錄到文件
@@ -9445,13 +9423,13 @@ Settings
 == 設置
 
 Settings card background
-== Settings card background
+== 設定卡片背景
 
 Settings card background color
-== Settings card background color
+== 設定卡片背景顏色
 
 Settings card background transparency
-== Settings card background transparency
+== 設定卡片背景透明度
 
 Settings card border color
 == 設定卡片邊框顏色
@@ -10305,6 +10283,9 @@ Show weapon trajectory guide
 Show welcome message indicating first client launch
 == 顯示歡迎消息，指示首次啟動客戶端
 
+Show whether you have finished a DDNet map (transmits your player name to info.ddnet.org/info)
+== 顯示你是否已完成 DDNet 地圖（會將你的玩家名稱傳送至 info.ddnet.org/info）
+
 Show Workshop Assets
 == 顯示商店資源
 
@@ -10566,6 +10547,9 @@ Snapshot Age
 Snapshot age
 == 快照年齡
 
+Snapshot Latency
+== 快照延遲
+
 Snapshot payload
 == 快照負載
 
@@ -10776,9 +10760,6 @@ Start marker of replay slice
 Start playback of ghosts
 == 開始播放鬼影
 
-Start QmLive full match demo recording
-== 開始 QmLive 完整比賽 demo 錄製
-
 Start recording a demo
 == 開始錄製回放
 
@@ -10839,14 +10820,8 @@ Steam profile name
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == 切換時分身或玩家是否停止按鍵（0 = 關閉，1 = 分身，2 = 玩家）
 
-Stop match record
-== 停止比賽錄製
-
 Stop practice
 == 停止練習
-
-Stop QmLive full match demo recording
-== 停止 QmLive 完整比賽 demo 錄製
 
 Stop record
 == 停止錄製
@@ -10951,7 +10926,7 @@ Switch
 == 切換
 
 Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
-== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== 開關倒數位置（0 = 跟隨 Tee，1 = 靈動島，2 = 兩者）
 
 Switch failed
 == 切換失敗
@@ -11144,6 +11119,9 @@ Team mode change disabled
 
 Team mode change is disabled on this server.
 == 本伺服器已禁用隊伍模式切換
+
+Team rank
+== 團隊排名
 
 Team save already in progress
 == 隊伍存檔尚未完成
@@ -11359,7 +11337,7 @@ The server is running a non-standard tuning on a pure game type.
 == 此伺服器運行著經過調整的非標準遊戲模式。
 
 The update is ready and will be installed when you exit.
-== The update is ready and will be installed when you exit.
+== 更新已準備就緒，將在結束用戶端時安裝。
 
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == 紋理文件 %s 的寬度無法被 %d 整除，或者高度無法被 %d 整除，這可能會導致顯示錯誤。
@@ -12517,7 +12495,7 @@ Weapon range color
 == 武器範圍顏色
 
 Weapon reload animation probability
-== Weapon reload animation probability
+== 武器裝填動畫機率
 
 Weapon switch animation
 == 武器切換動畫
@@ -13107,15 +13085,6 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 騰訊雲 API 密鑰未配置
 
-不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-
-显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-
-覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-
 [Assets editor blend mode]
 Multiply
 == 正片疊底
@@ -13238,7 +13207,7 @@ Could not initialize the given graphics backend, this is probably because you di
 
 [Graphics error]
 Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 初始化失敗。請嘗試打開配置目錄中的設定檔（qmclient/settings_ddnet.cfg）並將「gfx_backend」設定為「gfx_backend OpenGL」或「gfx_backend Vulkan」再重試。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13254,7 +13223,7 @@ Submitting the render commands failed. Try to update your GPU drivers.
 
 [Graphics error]
 Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 未知錯誤。請嘗試打開配置目錄中的設定檔（qmclient/settings_ddnet.cfg）並將「gfx_backend」設定為「gfx_backend OpenGL」或「gfx_backend Vulkan」再重試。
 
 [Hammer Mode]
 Normal

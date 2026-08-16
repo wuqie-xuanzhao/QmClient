@@ -451,26 +451,20 @@ void CMenus::RenderGame(CUIRect MainView)
 	const int LocalTeam = HasLocalInfo ? GameClient()->m_Snap.m_pLocalInfo->m_Team : TEAM_SPECTATORS;
 	const bool Recording = DemoRecorder(RECORDER_MANUAL)->IsRecording();
 	const bool FastPracticeEnabled = GameClient()->m_FastPractice.Enabled();
-	const bool LiveDirectorActive = GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER;
 	const bool ReportDisabledOnAxiom = GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
 
 	const char *pDisconnectButtonLabel = Localize("Disconnect");
-	const char *pDummyButtonLabel = nullptr;
-	const char *pDummyButtonTextId = nullptr;
-	if(!LiveDirectorActive)
+	const char *pDummyButtonLabel = Localize("Connect dummy");
+	const char *pDummyButtonTextId = "ingame-game-connect-dummy";
+	if(Client()->DummyConnecting())
 	{
-		pDummyButtonLabel = Localize("Connect dummy");
-		pDummyButtonTextId = "ingame-game-connect-dummy";
-		if(Client()->DummyConnecting())
-		{
-			pDummyButtonLabel = Localize("Connecting dummy");
-			pDummyButtonTextId = "ingame-game-connecting-dummy";
-		}
-		else if(Client()->DummyConnected())
-		{
-			pDummyButtonLabel = Localize("Disconnect dummy");
-			pDummyButtonTextId = "ingame-game-disconnect-dummy";
-		}
+		pDummyButtonLabel = Localize("Connecting dummy");
+		pDummyButtonTextId = "ingame-game-connecting-dummy";
+	}
+	else if(Client()->DummyConnected())
+	{
+		pDummyButtonLabel = Localize("Disconnect dummy");
+		pDummyButtonTextId = "ingame-game-disconnect-dummy";
 	}
 	const char *pEditHudButtonLabel = Localize("Edit HUD");
 	const char *pDemoButtonLabel = Recording ? Localize("Stop record") : Localize("Record demo");
@@ -499,8 +493,8 @@ void CMenus::RenderGame(CUIRect MainView)
 	const float CompactPracticeButtonWidth = CalcMenuButtonWidth("fp", MenuButtonPaddingCompact, PracticeButtonMinWidth);
 	const float DisconnectButtonWidthNormal = CalcMenuButtonWidth(pDisconnectButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float DisconnectButtonWidthCompact = CalcMenuButtonWidth(pDisconnectButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
-	const float DummyButtonWidthNormal = LiveDirectorActive ? 0.0f : CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
-	const float DummyButtonWidthCompact = LiveDirectorActive ? 0.0f : CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
+	const float DummyButtonWidthNormal = CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
+	const float DummyButtonWidthCompact = CalcMenuButtonWidth(pDummyButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 	const float EditHudButtonWidthNormal = CalcMenuButtonWidth(pEditHudButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float EditHudButtonWidthCompact = CalcMenuButtonWidth(pEditHudButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 	const float DemoButtonWidthNormal = CalcMenuButtonWidth(pDemoButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
@@ -512,7 +506,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	const float ReportButtonWidthNormal = CalcMenuButtonWidth(pReportButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float ReportButtonWidthCompact = CalcMenuButtonWidth(pReportButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 
-	const bool ShowGameplayButtons = HasLocalInfo && HasGameInfo && !Paused && !Spec && !LiveDirectorActive;
+	const bool ShowGameplayButtons = HasLocalInfo && HasGameInfo && !Paused && !Spec;
 	const bool ShowSpectateButton = ShowGameplayButtons && LocalTeam != TEAM_SPECTATORS && !FastPracticeEnabled;
 	const bool ShowJoinRedButton = ShowGameplayButtons && IsTeamPlay && LocalTeam != TEAM_RED;
 	const bool ShowJoinBlueButton = ShowGameplayButtons && IsTeamPlay && LocalTeam != TEAM_BLUE;
@@ -523,9 +517,9 @@ void CMenus::RenderGame(CUIRect MainView)
 	const bool ShowAutoCameraButton = HasLocalInfo && (LocalTeam == TEAM_SPECTATORS || Paused || Spec);
 
 	const float UtilityButtonWidthNormal =
-		DisconnectButtonWidthNormal + (LiveDirectorActive ? 0.0f : DummyButtonWidthNormal + UtilityButtonSpacingNormal) + EditHudButtonWidthNormal + DemoButtonWidthNormal + SaveReplayButtonWidthNormal + DemoMarkerButtonWidthNormal + ReportButtonWidthNormal + UtilityButtonSpacingNormal * 5.0f;
+		DisconnectButtonWidthNormal + DummyButtonWidthNormal + EditHudButtonWidthNormal + DemoButtonWidthNormal + SaveReplayButtonWidthNormal + DemoMarkerButtonWidthNormal + ReportButtonWidthNormal + UtilityButtonSpacingNormal * 6.0f;
 	const float UtilityButtonWidthCompact =
-		DisconnectButtonWidthCompact + (LiveDirectorActive ? 0.0f : DummyButtonWidthCompact + UtilityButtonSpacingCompact) + EditHudButtonWidthCompact + DemoButtonWidthCompact + SaveReplayButtonWidthCompact + DemoMarkerButtonWidthCompact + ReportButtonWidthCompact + UtilityButtonSpacingCompact * 5.0f;
+		DisconnectButtonWidthCompact + DummyButtonWidthCompact + EditHudButtonWidthCompact + DemoButtonWidthCompact + SaveReplayButtonWidthCompact + DemoMarkerButtonWidthCompact + ReportButtonWidthCompact + UtilityButtonSpacingCompact * 6.0f;
 	const float PrimaryButtonBarWidth = maximum(0.0f, MainView.w - 20.0f);
 
 	auto CalcPrimaryButtonsWidth = [&](bool IncludeTeamplayDDRaceButtons) {
@@ -669,49 +663,46 @@ void CMenus::RenderGame(CUIRect MainView)
 	}
 
 	UtilityButtonBar.VSplitRight(UtilityButtonSpacing, &UtilityButtonBar, nullptr);
-	if(!LiveDirectorActive)
-	{
-		UtilityButtonBar.VSplitRight(DummyButtonWidth, &UtilityButtonBar, &Button);
+	UtilityButtonBar.VSplitRight(DummyButtonWidth, &UtilityButtonBar, &Button);
 
-		static CButtonContainer s_DummyButton;
-		if(!Client()->DummyAllowed())
+	static CButtonContainer s_DummyButton;
+	if(!Client()->DummyAllowed())
+	{
+		DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
+		GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Dummies are not allowed on this server"));
+	}
+	else if(Client()->DummyConnectingDelayed())
+	{
+		DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
+		GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Please wait…"));
+	}
+	else if(Client()->DummyConnecting())
+	{
+		DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
+	}
+	else if(DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 0, &Button))
+	{
+		if(!Client()->DummyConnected())
 		{
-			DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Dummies are not allowed on this server"));
+			GameClient()->m_QmAxiomAutoLogin.EnableDummyReconnectForServer();
+			Client()->DummyConnect();
 		}
-		else if(Client()->DummyConnectingDelayed())
+		else
 		{
-			DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Please wait…"));
-		}
-		else if(Client()->DummyConnecting())
-		{
-			DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 1, &Button);
-		}
-		else if(DoIngameMenuButton(PAGE_GAME, pDummyButtonTextId, &s_DummyButton, pDummyButtonLabel, 0, &Button))
-		{
-			if(!Client()->DummyConnected())
+			if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
 			{
-				GameClient()->m_QmAxiomAutoLogin.EnableDummyReconnectForServer();
-				Client()->DummyConnect();
+				PopupConfirm(Localize("Disconnect dummy"), Localize("Are you sure that you want to disconnect your dummy?"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnectDummy);
 			}
 			else
 			{
-				if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
-				{
-					PopupConfirm(Localize("Disconnect dummy"), Localize("Are you sure that you want to disconnect your dummy?"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnectDummy);
-				}
-				else
-				{
-					GameClient()->OnDummyManualDisconnect();
-					Client()->DummyDisconnect(nullptr);
-					SetActive(false);
-				}
+				GameClient()->OnDummyManualDisconnect();
+				Client()->DummyDisconnect(nullptr);
+				SetActive(false);
 			}
 		}
-
-		UtilityButtonBar.VSplitRight(UtilityButtonSpacing, &UtilityButtonBar, nullptr);
 	}
+
+	UtilityButtonBar.VSplitRight(UtilityButtonSpacing, &UtilityButtonBar, nullptr);
 	UtilityButtonBar.VSplitRight(EditHudButtonWidth, &UtilityButtonBar, &Button);
 	static CButtonContainer s_EditHudButton;
 	if(DoIngameMenuButton(PAGE_GAME, "ingame-game-edit-hud", &s_EditHudButton, pEditHudButtonLabel, 0, &Button))
@@ -1339,10 +1330,14 @@ void CMenus::RenderIngameServerInfoValueCached(const char *pTextId, unsigned &Te
 	CUIElement *pLastReadyElement = nullptr;
 	if(RequestSnapshotTextContainer(pTextId, pRect, pSafeText, Size, Align, LabelProps, &pReadyElement) && pReadyElement != nullptr)
 		RenderSnapshotTextContainer(*pReadyElement, pRect);
-	else if((pLastReadyElement = m_SnapshotTextLastReadyByScope[pTextId != nullptr ? pTextId : ""]) != nullptr)
-		RenderSnapshotTextContainer(*pLastReadyElement, pRect);
 	else
-		RequestSnapshotTextContainer(pTextId, pRect, pSafeText, Size, Align, LabelProps);
+	{
+		pLastReadyElement = m_SnapshotTextLastReadyByScope[pTextId != nullptr ? pTextId : ""];
+		if(pLastReadyElement != nullptr)
+			RenderSnapshotTextContainer(*pLastReadyElement, pRect);
+		else
+			RequestSnapshotTextContainer(pTextId, pRect, pSafeText, Size, Align, LabelProps);
+	}
 	(void)TextHash;
 }
 

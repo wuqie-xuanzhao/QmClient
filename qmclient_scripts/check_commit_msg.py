@@ -2,8 +2,6 @@
 """
 校验 commit message subject 是否符合 <type>(<scope>): <简述> 规范。
 
-规范见 .agents/skills/qmclient-git-commit/SKILL.md。
-
 用法：
   # 直接校验一段文本
   python qmclient_scripts/check_commit_msg.py "fix(hud): 修复通知栏位置"
@@ -128,8 +126,7 @@ def main() -> int:
         f"[commit-msg] subject 不符合规范：{subject!r}\n"
         f"  原因：{reason}\n"
         f"  期望：<type>(<scope>): <中文简述>，如 fix(hud): 修复通知栏位置\n"
-        f"  type 可选：{', '.join(sorted(KNOWN_TYPES))}\n"
-        f"  规范见 .agents/skills/qmclient-git-commit/SKILL.md"
+        f"  type 可选：{', '.join(sorted(KNOWN_TYPES))}"
     )
     print(hint, file=sys.stderr)
     return 1 if args.strict else 0

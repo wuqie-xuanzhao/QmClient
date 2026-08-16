@@ -1567,14 +1567,6 @@ def _business_data_records_from_path(
                 )
             )
 
-    if normalized.endswith("src/game/client/live/live_match_replay.cpp"):
-        for text, line in _extract_cpp_string_literal_records(content):
-            records.append(
-                StringAuditRecord(
-                    path, line, text, "business_data", "QmLive recorder diagnostic text"
-                )
-            )
-
     if normalized.endswith("src/game/client/components/qmclient/menus_qmclient.cpp"):
         # 贡献者、服务商、语言名、地图名和歌词预览是运行时数据，不是翻译源文案。
         DataTexts = {
@@ -1610,12 +1602,6 @@ def _business_data_records_from_path(
         DataTexts = {
             "s[tuning] ?f[value]",
             "i[zone] s[tuning] f[value]",
-            "Current Rank #%d",
-            "JSON sidecar",
-            "QmLive full match recording started",
-            "QmLive full match recording stopped",
-            "QmLive team filter expects a DDRace team from 1 to 63",
-            "QmLive team filter disabled",
         }
         for text, line in _extract_cpp_string_literal_records(content):
             if text in DataTexts:

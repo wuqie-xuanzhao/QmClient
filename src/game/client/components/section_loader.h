@@ -115,7 +115,7 @@ inline bool SettingsCardDeckMoveWithinColumn(std::vector<std::string> &vOrder, c
 	if(It == vOrder.end())
 		return false;
 
-	const std::string StableId = *It;
+	std::string StableId = std::move(*It);
 	const int OldIndex = (int)std::distance(vOrder.begin(), It);
 	vOrder.erase(It);
 	if(DropIndex > OldIndex)
@@ -124,7 +124,7 @@ inline bool SettingsCardDeckMoveWithinColumn(std::vector<std::string> &vOrder, c
 		DropIndex = 0;
 	if(DropIndex > (int)vOrder.size())
 		DropIndex = (int)vOrder.size();
-	vOrder.insert(vOrder.begin() + DropIndex, StableId);
+	vOrder.insert(vOrder.begin() + DropIndex, std::move(StableId));
 	return true;
 }
 
@@ -137,13 +137,13 @@ inline bool SettingsCardDeckMoveBetweenColumns(std::vector<std::string> &vFromOr
 	if(It == vFromOrder.end())
 		return false;
 
-	const std::string StableId = *It;
+	std::string StableId = std::move(*It);
 	vFromOrder.erase(It);
 	if(DropIndex < 0)
 		DropIndex = 0;
 	if(DropIndex > (int)vToOrder.size())
 		DropIndex = (int)vToOrder.size();
-	vToOrder.insert(vToOrder.begin() + DropIndex, StableId);
+	vToOrder.insert(vToOrder.begin() + DropIndex, std::move(StableId));
 	return true;
 }
 

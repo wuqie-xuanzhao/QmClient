@@ -63,7 +63,7 @@ void CEditorMap::PlaceBorderTiles()
 	}
 
 	int GameGroupIndex = std::find(m_vpGroups.begin(), m_vpGroups.end(), m_pGameGroup) - m_vpGroups.begin();
-	m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(this, GameGroupIndex), "工具“生成边框”");
+	m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(this, GameGroupIndex), Localize("Tool 'Make borders'", "Editor"));
 
 	OnModify();
 }
@@ -739,7 +739,7 @@ void CEditorMap::RemoveUnusedEnvelopes()
 		}
 	}
 	char aDisplay[256];
-	str_format(aDisplay, sizeof(aDisplay), "工具“移除未使用包络线”：删除 %d 条包络线", DeletedCount);
+	str_format(aDisplay, sizeof(aDisplay), Localize("Tool 'Remove unused envelopes': delete %d envelopes", "Editor"), DeletedCount);
 	m_EnvelopeEditorHistory.EndBulk(aDisplay);
 }
 

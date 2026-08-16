@@ -1443,20 +1443,6 @@
   },
   {
     "header": "src/engine/shared/config_variables.h",
-    "script_name": "sv_qm_live_observer",
-    "old": "允许 QmLiveClient 以隐藏只读 observer 连接",
-    "new": "Allow QmLiveClient to connect as hidden read-only observer",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables.h",
-    "script_name": "sv_qm_live_max_observers",
-    "old": "最多允许的 QmLive observer 连接数",
-    "new": "Maximum number of allowed QmLive observer connections",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables.h",
     "script_name": "sv_inactivekick_time",
     "old": "处理不活跃玩家前等待的时间（单位：分钟）",
     "new": "Time to wait before handling inactive players (in minutes)",

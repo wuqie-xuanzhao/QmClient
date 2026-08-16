@@ -2,7 +2,7 @@
 
 > 调研日期：2026-06-24
 > 基于 `translate_with_local_http.py`、`i18n_store.py`、`source_keys.py`、`local_http_client.py` 及 prompt assets 的代码与数据。
-> 2026-06-26 术语修正：本笔记的术语扩表示例只代表当时从 QmClient 现有数据抽取出的候选，不是官方术语结论。DDNet/core 简中术语必须以官方 DDNet 简体中文翻译为基线，见 `docs/superpowers/explore/2026-06-26-ddnet-official-simplified-chinese-terminology.md`；已确认 `Hook=钩索`、`Hook collision line=钩索辅助线`、`Grenade=榴弹枪`。
+> 2026-06-26 术语修正：本笔记的术语扩表示例只代表当时从 QmClient 现有数据抽取出的候选，不是官方术语结论。DDNet/core 简中术语必须以官方 DDNet 简体中文翻译为基线；已确认 `Hook=钩索`、`Hook collision line=钩索辅助线`、`Grenade=榴弹枪`。
 
 ---
 

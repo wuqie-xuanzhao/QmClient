@@ -28,8 +28,8 @@ static const char *LayerTypeDisplayName(const std::shared_ptr<CLayer> &pLayer)
 		if(pTiles->m_HasSwitch)
 			return Localize("Switch", "Editor layer type");
 		if(pTiles->m_HasTune)
-			return "调整";
-		return "图块";
+			return Localize("Tune", "Editor");
+		return Localize("Tiles", "Editor");
 	}
 	if(pLayer->m_Type == LAYERTYPE_QUADS)
 		return Localize("Quads", "Editor");
@@ -402,18 +402,18 @@ void CEditorActionEditQuadColor::Apply(std::vector<CColor> &vValue)
 CEditorActionEditQuadProp::CEditorActionEditQuadProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, int QuadIndex, EQuadProp Prop, int Previous, int Current) :
 	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_QuadIndex(QuadIndex), m_Prop(Prop), m_Previous(Previous), m_Current(Current)
 {
-	static const char *s_apNames[] = {
-		"顺序",
-		"位置横",
-		"位置纵",
-		"位置包络线",
-		"位置包络线偏移",
+	const char *apNames[] = {
+		Localize("Order", "Editor"),
+		Localize("Pos X", "Editor"),
+		Localize("Pos Y", "Editor"),
+		Localize("Pos. Env", "Editor"),
+		Localize("pos env offset", "Editor"),
 		nullptr,
-		"颜色包络线",
-		"颜色包络线偏移"};
-	static_assert(std::size(s_apNames) == (size_t)EQuadProp::NUM_PROPS);
+		Localize("Color Env", "Editor"),
+		Localize("color env offset", "Editor")};
+	static_assert(std::size(apNames) == (size_t)EQuadProp::NUM_PROPS);
 	dbg_assert(Prop != EQuadProp::PROP_COLOR, "Color prop implemented by CEditorActionEditQuadColor");
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑四边形 %s 属性（图层 %d，组 %d）", s_apNames[(int)m_Prop], m_LayerIndex, m_GroupIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit quad %s property in layer %d of group %d", "Editor"), apNames[(int)m_Prop], m_LayerIndex, m_GroupIndex);
 }
 
 void CEditorActionEditQuadProp::Undo()
@@ -908,22 +908,22 @@ void CEditorActionEditLayerProp::Apply(int Value)
 CEditorActionEditLayerTilesProp::CEditorActionEditLayerTilesProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, ETilesProp Prop, int Previous, int Current) :
 	CEditorActionEditLayerPropBase(pMap, GroupIndex, LayerIndex, Prop, Previous, Current)
 {
-	static const char *s_apNames[] = {
-		"宽度",
-		"高度",
-		"偏移",
-		"偏移步长",
-		"图像",
-		"颜色",
-		"颜色包络线",
-		"颜色包络线偏移",
-		"自动映射器",
-		"自动映射参考",
-		"实时游戏图块",
-		"种子"};
-	static_assert(std::size(s_apNames) == (size_t)ETilesProp::NUM_PROPS);
+	const char *apNames[] = {
+		Localize("Width", "Editor"),
+		Localize("Height", "Editor"),
+		Localize("shift", "Editor property offset"),
+		Localize("shift by", "Editor property offset step"),
+		Localize("Image", "Editor"),
+		Localize("Color", "Editor"),
+		Localize("Color Env", "Editor"),
+		Localize("color env offset", "Editor"),
+		Localize("automapper", "Editor"),
+		Localize("automapper reference", "Editor"),
+		Localize("Live Gametiles", "Editor"),
+		Localize("Seed", "Editor")};
+	static_assert(std::size(apNames) == (size_t)ETilesProp::NUM_PROPS);
 
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit tiles layer %d in group %d %s property", "Editor"), m_LayerIndex, m_GroupIndex, s_apNames[(int)Prop]);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit tiles layer %d in group %d %s property", "Editor"), m_LayerIndex, m_GroupIndex, apNames[(int)Prop]);
 }
 
 void CEditorActionEditLayerTilesProp::SetSavedLayers(const std::map<int, std::shared_ptr<CLayer>> &SavedLayers)
@@ -1227,7 +1227,7 @@ CEditorActionAppendMap::CEditorActionAppendMap(CEditorMap *pMap, const char *pMa
 	IEditorAction(pMap), m_PrevInfo(PrevInfo), m_vImageIndexMap(vImageIndexMap)
 {
 	str_copy(m_aMapName, pMapName);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "附加 %s", m_aMapName);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Append %s", "Editor"), m_aMapName);
 }
 
 void CEditorActionAppendMap::Undo()
@@ -1307,7 +1307,7 @@ CEditorActionTileArt::CEditorActionTileArt(CEditorMap *pMap, int PreviousImageCo
 	IEditorAction(pMap), m_PreviousImageCount(PreviousImageCount), m_vImageIndexMap(vImageIndexMap)
 {
 	str_copy(m_aFilename, pFilename);
-	str_copy(m_aDisplayText, "图块艺术");
+	str_copy(m_aDisplayText, Localize("Tile art", "Editor"));
 }
 
 void CEditorActionTileArt::Undo()
@@ -1353,7 +1353,7 @@ void CEditorActionTileArt::Redo()
 	CImageInfo Image;
 	if(!Graphics()->LoadPng(Image, m_aFilename, IStorage::TYPE_ALL))
 	{
-		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", m_aFilename);
+		Editor()->ShowFileDialogError(Localize("Failed to load image from file '%s'.", "Editor"), m_aFilename);
 		return;
 	}
 	Map()->AddTileArt(std::move(Image), m_aFilename, true);
@@ -1496,7 +1496,7 @@ CEditorActionEnvelopeAdd::CEditorActionEnvelopeAdd(CEditorMap *pMap, CEnvelope::
 	IEditorAction(pMap),
 	m_EnvelopeType(EnvelopeType)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "新增%s包络线", EnvelopeType == CEnvelope::EType::COLOR ? "颜色" : (EnvelopeType == CEnvelope::EType::POSITION ? "位置" : "声音"));
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Add new %s envelope", "Editor"), EnvelopeType == CEnvelope::EType::COLOR ? Localize("Color", "Editor") : (EnvelopeType == CEnvelope::EType::POSITION ? Localize("position", "Editor") : Localize("Sound", "Editor")));
 	m_PreviousSelectedEnvelope = Editor()->Map()->m_SelectedEnvelope;
 }
 
@@ -1518,7 +1518,7 @@ void CEditorActionEnvelopeAdd::Redo()
 CEditorActionEnvelopeDelete::CEditorActionEnvelopeDelete(CEditorMap *pMap, int EnvelopeIndex, std::vector<std::shared_ptr<IEditorEnvelopeReference>> &vpObjectReferences, std::shared_ptr<CEnvelope> &pEnvelope) :
 	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_pEnv(pEnvelope), m_vpObjectReferences(vpObjectReferences)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除包络线 %d", m_EnvelopeIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Delete envelope %d", "Editor"), m_EnvelopeIndex);
 }
 
 void CEditorActionEnvelopeDelete::Undo()
@@ -1537,10 +1537,10 @@ void CEditorActionEnvelopeDelete::Redo()
 CEditorActionEnvelopeEdit::CEditorActionEnvelopeEdit(CEditorMap *pMap, int EnvelopeIndex, EEditType EditType, int Previous, int Current) :
 	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_EditType(EditType), m_Previous(Previous), m_Current(Current)
 {
-	static const char *s_apNames[] = {
-		"同步",
-		"顺序"};
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑包络线 %d 的%s", m_EnvelopeIndex, s_apNames[(int)m_EditType]);
+	const char *apNames[] = {
+		Localize("sync", "Editor"),
+		Localize("Order", "Editor")};
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit envelope %d %s", "Editor"), m_EnvelopeIndex, apNames[(int)m_EditType]);
 }
 
 void CEditorActionEnvelopeEdit::Undo()
@@ -1584,7 +1584,7 @@ void CEditorActionEnvelopeEdit::Redo()
 CEditorActionEnvelopeEditPointTime::CEditorActionEnvelopeEditPointTime(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, CFixedTime Previous, CFixedTime Current) :
 	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Previous(Previous), m_Current(Current)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑点 %d 的时间（包络线 %d）", m_PointIndex, m_EnvelopeIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit time of point %d of env %d", "Editor"), m_PointIndex, m_EnvelopeIndex);
 }
 
 void CEditorActionEnvelopeEditPointTime::Undo()
@@ -1606,10 +1606,10 @@ void CEditorActionEnvelopeEditPointTime::Apply(CFixedTime Value)
 CEditorActionEnvelopeEditPoint::CEditorActionEnvelopeEditPoint(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, int Channel, EEditType EditType, int Previous, int Current) :
 	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Channel(Channel), m_EditType(EditType), m_Previous(Previous), m_Current(Current)
 {
-	static const char *s_apNames[] = {
-		"数值",
-		"曲线类型"};
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑包络线 %d 的点 %d（通道 %d）的%s", m_EnvelopeIndex, m_PointIndex, m_Channel, s_apNames[(int)m_EditType]);
+	const char *apNames[] = {
+		Localize("value", "Editor numeric value"),
+		Localize("curve type", "Editor")};
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit envelope %d point %d (channel %d) %s", "Editor"), m_EnvelopeIndex, m_PointIndex, m_Channel, apNames[(int)m_EditType]);
 }
 
 void CEditorActionEnvelopeEditPoint::Undo()
@@ -1650,7 +1650,7 @@ void CEditorActionEnvelopeEditPoint::Apply(int Value)
 CEditorActionEditEnvelopePointValue::CEditorActionEditEnvelopePointValue(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, int Channel, EType Type, CFixedTime OldTime, int OldValue, CFixedTime NewTime, int NewValue) :
 	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Channel(Channel), m_Type(Type), m_OldTime(OldTime), m_OldValue(OldValue), m_NewTime(NewTime), m_NewValue(NewValue)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑点 %d%s 数值（包络线 %d，通道 %d）", PointIndex, m_Type == EType::TANGENT_IN ? "入切线" : (m_Type == EType::TANGENT_OUT ? "出切线" : ""), m_EnvelopeIndex, m_Channel);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit point %d%s value (envelope %d, channel %d)", "Editor"), PointIndex, m_Type == EType::TANGENT_IN ? Localize("tangent in", "Editor") : (m_Type == EType::TANGENT_OUT ? Localize("tangent out", "Editor") : ""), m_EnvelopeIndex, m_Channel);
 }
 
 void CEditorActionEditEnvelopePointValue::Undo()
@@ -1709,7 +1709,7 @@ void CEditorActionEditEnvelopePointValue::Apply(bool Undo)
 CEditorActionResetEnvelopePointTangent::CEditorActionResetEnvelopePointTangent(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, int Channel, bool In, CFixedTime OldTime, int OldValue) :
 	CEditorActionEditEnvelopePointValue(pMap, EnvelopeIndex, PointIndex, Channel, In ? EType::TANGENT_IN : EType::TANGENT_OUT, OldTime, OldValue, CFixedTime(0), 0)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "重置点 %d（包络线 %d）切线%s", PointIndex, EnvelopeIndex, In ? "入" : "出");
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Reset point %d of env %d tangent %s", "Editor"), PointIndex, EnvelopeIndex, In ? Localize("in", "Editor") : Localize("out", "Editor"));
 }
 
 // ------------------
@@ -1717,7 +1717,7 @@ CEditorActionResetEnvelopePointTangent::CEditorActionResetEnvelopePointTangent(C
 CEditorActionAddEnvelopePoint::CEditorActionAddEnvelopePoint(CEditorMap *pMap, int EnvelopeIndex, CFixedTime Time, ColorRGBA Channels) :
 	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_Time(Time), m_Channels(Channels)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "在包络线 %d 的时间 %f 处新增点", m_EnvelopeIndex, Time.AsSeconds());
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Add new point in envelope %d at time %f", "Editor"), m_EnvelopeIndex, Time.AsSeconds());
 }
 
 void CEditorActionAddEnvelopePoint::Undo()
@@ -1746,7 +1746,7 @@ void CEditorActionAddEnvelopePoint::Redo()
 CEditorActionDeleteEnvelopePoint::CEditorActionDeleteEnvelopePoint(CEditorMap *pMap, int EnvelopeIndex, int PointIndex) :
 	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Point(Map()->m_vpEnvelopes[EnvelopeIndex]->m_vPoints[PointIndex])
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除点 %d（包络线 %d）", m_PointIndex, m_EnvelopeIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Delete point %d of envelope %d", "Editor"), m_PointIndex, m_EnvelopeIndex);
 }
 
 void CEditorActionDeleteEnvelopePoint::Undo()
@@ -1898,19 +1898,19 @@ void CEditorActionEditSoundSourceShape::Save()
 CEditorActionEditSoundSourceProp::CEditorActionEditSoundSourceProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, int SourceIndex, ESoundProp Prop, int Previous, int Current) :
 	CEditorActionEditLayerPropBase(pMap, GroupIndex, LayerIndex, Prop, Previous, Current), m_SourceIndex(SourceIndex)
 {
-	static const char *s_apNames[] = {
-		"位置横",
-		"位置纵",
-		"循环",
-		"声像",
-		"时间延迟",
-		"衰减",
-		"位置包络线",
-		"位置包络线偏移",
-		"声音包络线",
-		"声音包络线偏移"};
-	static_assert(std::size(s_apNames) == (size_t)ESoundProp::NUM_PROPS);
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit sound source %d in layer %d of group %d %s property", "Editor"), SourceIndex, LayerIndex, GroupIndex, s_apNames[(int)Prop]);
+	const char *apNames[] = {
+		Localize("Pos X", "Editor"),
+		Localize("Pos Y", "Editor"),
+		Localize("Loop", "Editor"),
+		Localize("Pan", "Editor"),
+		Localize("time delay", "Editor"),
+		Localize("Falloff", "Editor"),
+		Localize("Pos. Env", "Editor"),
+		Localize("pos env offset", "Editor"),
+		Localize("Sound Env", "Editor"),
+		Localize("sound env offset", "Editor")};
+	static_assert(std::size(apNames) == (size_t)ESoundProp::NUM_PROPS);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), Localize("Edit sound source %d in layer %d of group %d %s property", "Editor"), SourceIndex, LayerIndex, GroupIndex, apNames[(int)Prop]);
 }
 
 void CEditorActionEditSoundSourceProp::Undo()

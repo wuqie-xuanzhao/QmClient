@@ -251,10 +251,6 @@
 [%s] %s (Map: %s, Time: %s)
 == [%s] %s (Mapa: %s, hora: %s)
 
-[]
-[Developer]
-== [Desarrollador]
-
 _ or ' ' = blank spacer
 == _ o ' ' = espacio en blanco
 
@@ -642,9 +638,6 @@ Allow left-click to toggle between spectating nearest player and free view
 Allow mic permission in system settings, then reopen voice
 == Permite el permiso del micrófono en la configuración del sistema, luego vuelve a abrir la voz
 
-Allow QmLiveClient to connect as hidden read-only observer
-== Permitir que QmLiveClient se conecte como observador oculto de solo lectura
-
 Allow voting to kick players
 == Permitir votar para expulsar jugadores
 
@@ -703,7 +696,7 @@ Animate chat box, emote selector, scoreboard, and spectate selection
 == Animar el chat, el selector de emoticonos, el marcador y la selección de espectador
 
 Animate lists when entering a page
-== Animate lists when entering a page
+== Animar las listas al entrar en una página
 
 Animate settings card expand and collapse height changes
 == Animar los cambios de altura al expandir y contraer tarjetas de ajustes
@@ -1189,7 +1182,7 @@ Automatically ban blacklisted addresses
 == Banear automáticamente direcciones en la lista negra
 
 Automatically check for stable updates and install them on exit
-== Automatically check for stable updates and install them on exit
+== Buscar automáticamente actualizaciones estables e instalarlas al salir
 
 Automatically close the current chat after waking from freeze
 == Cerrar automáticamente el chat actual al despertar de la congelación
@@ -1230,6 +1223,9 @@ Available resolutions
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == Promedio %.*f   ↓ %.*f   ↑ %.*f
 
+Axiom API returned an error
+== La API de Axiom devolvió un error
+
 Axiom auto login failed
 == Falló el inicio de sesión automático de Axiom
 
@@ -1244,6 +1240,12 @@ Axiom dummy password
 
 Axiom main account password
 == Contraseña de la cuenta principal de Axiom
+
+Axiom score request failed
+== Error al solicitar las puntuaciones de Axiom
+
+Axiom scores
+== Puntuaciones de Axiom
 
 Axis
 == Eje
@@ -1460,6 +1462,9 @@ Black
 
 Blend mode
 == Modo de mezcla
+
+Blink the active local tee
+== Hacer parpadear al personaje local activo
 
 Block enemy chat
 == Bloquear el chat de enemigos
@@ -1938,9 +1943,6 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == Haz clic para eliminar este jugador de tu lista de amigos.
 
-Click to restore full match
-== Haz clic para restaurar la partida completa
-
 Click to select server. Double click to join your friend.
 == Haz clic para seleccionar servidor. Haz doble clic para unirte a tu amigo.
 
@@ -2081,6 +2083,9 @@ Compatible with single-player area hints from other servers
 
 Complete snapshots are arriving late or not arriving
 == Las instantáneas completas llegan tarde o no llegan
+
+Completed maps
+== Mapas completados
 
 Compressor attack time (ms)
 == Tiempo de ataque del compresor (ms)
@@ -2955,9 +2960,6 @@ Disable clipping
 Disable Gores auto-switch when picking up extra weapon
 == Desactivar cambio automático de Gores al obtener arma extra
 
-Disable QmLive team preview/render filter
-== Desactivar el filtro de vista previa/representación del equipo de QmLive
-
 Disabled
 == Deshabilitado
 
@@ -3027,6 +3029,9 @@ Displays estimated process UDP send rate
 Displays prediction timing jitter
 == Mostrar la fluctuación temporal de la predicción
 
+Displays server snapshot latency
+== Muestra la latencia de snapshots del servidor
+
 Displays the client's prediction lead
 == Mostrar el adelanto de predicción del cliente
 
@@ -3077,6 +3082,9 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == No predecir otros jugadores cuando estás congelado
+
+Do not set this variable, instead create a ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible serverlist URLs
+== No establezcas esta variable; crea ddnet-serverlist-urls.cfg junto a settings_ddnet.cfg para especificar todas las URL posibles de listas de servidores
 
 Do not set, used to mark official tutorial server
 == No configurar: usado para marcar servidor tutorial oficial
@@ -3745,7 +3753,7 @@ Enable stereo positioning
 == Activar posicionamiento estéreo
 
 Enable switch countdown
-== Enable switch countdown
+== Activar la cuenta atrás del interruptor
 
 Enable system media control
 == Activar control multimedia del sistema
@@ -4146,9 +4154,6 @@ Filter full servers in browser
 Filter game type
 == Filtrar tipo de juego
 
-Filter off
-== Filtro desactivado
-
 Filter out password protected servers in browser
 == Filtrar servidores protegidos con contraseña en el navegador
 
@@ -4163,12 +4168,6 @@ Filter out servers without friends
 
 Filter out spectators from player count
 == Filtrar espectadores del conteo de jugadores
-
-Filter Team %d
-== Filtrar equipo %d
-
-Filter: Team %d
-== Filtro: equipo %d
 
 Filtered word console color
 == Color de la consola para palabras bloqueadas
@@ -4398,9 +4397,6 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 == Completo
 
-Full demo + sidecar
-== Demo completa + sidecar
-
 Full map listen in same room
 == Escuchar en todo el mapa en la misma sala
 
@@ -4548,6 +4544,9 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == Marcador de migración completada de configuración antigua de orden de tarjetas global
 
+Global rank
+== Clasificación mundial
+
 Global toggle key
 == Tecla de activación global
 
@@ -4633,10 +4632,10 @@ Graphics display
 == Visualización gráfica
 
 Graphics library major version (0 = auto-detect)
-== Graphics library major version (0 = auto-detect)
+== Versión principal de la biblioteca gráfica (0 = detección automática)
 
 Graphics library minor version (0 = auto-detect)
-== Graphics library minor version (0 = auto-detect)
+== Versión secundaria de la biblioteca gráfica (0 = detección automática)
 
 Graphics library patch version
 == Versión de parche de la biblioteca de gráficos
@@ -4706,9 +4705,6 @@ Hi!
 
 Hide basic system info (join, version, rules) in Zen mode
 == Ocultar mensajes básicos del sistema (entrada, versión, reglas) en modo Zen
-
-Hide Chat
-== Ocultar chat
 
 Hide chat messages from players marked as enemies
 == Ocultar los mensajes de chat de jugadores marcados como enemigos
@@ -5034,9 +5030,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5257,10 +5250,10 @@ Input overlay display
 == Visualización de superposición de entrada
 
 Input overlay keyboard scale (percent)
-== Input overlay keyboard scale (percent)
+== Escala del teclado en la superposición de entrada (porcentaje)
 
 Input overlay mouse scale (percent)
-== Input overlay mouse scale (percent)
+== Escala del ratón en la superposición de entrada (porcentaje)
 
 Input overlay opacity (percent)
 == Opacidad de la superposición de entrada (porcentaje)
@@ -5321,6 +5314,9 @@ Interpolation
 
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == Intervalo para guardar automáticamente la copia del mapa actual del editor en la carpeta "auto" (0=desactivado)
+
+Invalid Axiom API response
+== Respuesta no válida de la API de Axiom
 
 Invalid client id to kick
 == ID de cliente no válido para expulsar
@@ -5604,6 +5600,9 @@ Last entered
 Last page in console
 == Última página en la consola
 
+Latency
+== Latencia
+
 Latency compensation
 == Compensación de latencia
 
@@ -5804,6 +5803,9 @@ Loading
 
 Loading assets...
 == Cargando activos...
+
+Loading Axiom scores...
+== Cargando puntuaciones de Axiom...
 
 Loading commands…
 == Cargando comandos…
@@ -6144,6 +6146,9 @@ Map to use on server
 Map type:
 == Tipo de mapa:
 
+Maps
+== Mapas
+
 Margin when notification is docked
 == Margen de reserva al ajustar la barra de notificaciones al borde
 
@@ -6246,9 +6251,6 @@ Maximum framerate for entity layer video background
 Maximum notification count
 == Número máximo de notificaciones mostradas
 
-Maximum number of allowed QmLive observer connections
-== Número máximo de conexiones de observador QmLive permitidas
-
 Maximum number of auto recorded demos (0 = unlimited)
 == Número máximo de demos grabados automáticamente (0 = ilimitado)
 
@@ -6331,7 +6333,7 @@ Menu option - selected
 == Opción de menú - seleccionada
 
 Merge consecutive identical player messages within 2 seconds
-== Merge consecutive identical player messages within 2 seconds
+== Combinar mensajes consecutivos idénticos de un jugador en un intervalo de 2 segundos
 
 Message color
 == Color del mensaje
@@ -6365,6 +6367,9 @@ Microphone volume
 
 Microphone volume (percent)
 == Volumen del micrófono (porcentaje)
+
+Mileage
+== Distancia recorrida
 
 Milliseconds
 == Milisegundos
@@ -6518,6 +6523,9 @@ Moves to the tile with x/y-number ii
 
 Multi-View
 == Vista múltiple
+
+Multiple exact Axiom players found
+== Se encontraron varios jugadores de Axiom con coincidencia exacta
 
 Mute
 == Silenciar
@@ -7020,6 +7028,12 @@ Not open, check input device or mic permission
 Not open, check output device
 == No abierto, revisa el dispositivo de salida
 
+Not ranked
+== Sin clasificación
+
+Not requested
+== No solicitado
+
 Note
 == Nota
 
@@ -7362,6 +7376,9 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == Sobrescribir Grupo
 
+Override location for ping estimation, available: auto, af, as, as:cn, eu, na, oc, sa (Automatic, Africa, Asia, China, Europe, North America, Oceania/Australia, South America
+== Sobrescribir la ubicación para estimar el Ping; opciones: auto, af, as, as:cn, eu, na, oc, sa (Automático, África, Asia, China, Europa, Norteamérica, Oceanía/Australia, Sudamérica)
+
 Override Selected
 == Sobrescribir Seleccionado
 
@@ -7479,6 +7496,9 @@ Per-word highlight (karaoke)
 Performance debug log threshold (ms)
 == Umbral de registro de depuración de rendimiento (ms)
 
+Performance points
+== Puntos de rendimiento
+
 Personal best:
 == Mejor personal:
 
@@ -7534,7 +7554,7 @@ Plasma gun shots per second
 == Disparos de cañón de plasma por segundo
 
 Play a flip animation while reloading weapons
-== Play a flip animation while reloading weapons
+== Reproducir una animación de giro al recargar las armas
 
 Play a slide-in rotation animation when switching weapons
 == Reproducir una animación de rotación deslizante al cambiar de arma
@@ -7553,6 +7573,9 @@ Play the current demo
 
 Play the selected demo
 == Reproducir la demo seleccionada
+
+Play time
+== Tiempo de juego
 
 Play/Pause
 == Reproducir/Pausar
@@ -7643,6 +7666,9 @@ Player name:
 
 Player not found
 == Jugador no encontrado
+
+Player not found on Axiom
+== Jugador no encontrado en Axiom
 
 Player preview
 == Vista previa del jugador
@@ -7914,12 +7940,6 @@ Preview the current chat appearance
 Preview visibilities
 == Vista previa de visibilidades
 
-Preview/render only one DDRace team from a full match demo
-== Vista previa/renderizar solo un equipo de DDRace de una demo de partida completa
-
-Preview/render only this team
-== Vista previa/renderizar solo este equipo
-
 Previous
 == Anterior
 
@@ -8094,45 +8114,6 @@ QmClient sidebar module collapse state
 QmClient sidebar module order
 == Orden del módulo de la barra lateral Qimeng
 
-QmLiveClient: Default filter for unrecognized source player events
-== QmLiveClient: Filtro predeterminado para eventos de jugador con fuente no identificada
-
-QmLiveClient: Enable single team isolation audio filter
-== QmLiveClient: Habilitar filtro de audio de equipo aislado
-
-QmLiveClient: Enable single team isolation visual filter
-== QmLiveClient: Habilitar filtro de pantalla de equipo aislado
-
-QmLiveClient: Finish ranking card display seconds
-== QmLiveClient: Segundos de visualización de la tarjeta de clasificación final
-
-QmLiveClient: Finish ranking card opacity percent
-== QmLiveClient: Porcentaje de opacidad de la tarjeta de clasificación final
-
-QmLiveClient: Finish ranking card scale percent
-== QmLiveClient: Porcentaje de escala de la tarjeta de clasificación final
-
-QmLiveClient: Full match demo recording toggle
-== QmLiveClient: Interruptor de grabación de demo de partida completa
-
-QmLiveClient: Hide non-target team finish prompts
-== QmLiveClient: Ocultar notificaciones de finalización de equipos no objetivo
-
-QmLiveClient: Ranking HUD team range lower bound
-== QmLiveClient: Límite inferior del rango de equipos en el HUD de clasificación
-
-QmLiveClient: Ranking HUD team range upper bound
-== QmLiveClient: Límite superior del rango de equipos en el HUD de clasificación
-
-QmLiveClient: Show finish cards for teams outside range
-== QmLiveClient: Mostrar tarjetas de finalización de equipos fuera del rango configurado
-
-QmLiveClient: Show team finish ranking card
-== QmLiveClient: Mostrar tarjeta de clasificación final del equipo
-
-QmLiveClient: Single team isolation preview/render team, 0=Off
-== QmLiveClient: Vista previa/renderizado de equipo aislado, 0=desactivado
-
 QmUi animation intensity: 0=Off, 1=Reduced, 2=Full
 == Intensidad de animación de QmUi: 0=Desactivado 1=Reducido 2=Completo
 
@@ -8285,9 +8266,6 @@ Record chat replays.
 
 Record demo
 == Grabar demo
-
-Record match
-== Grabar partida
 
 Record to a file
 == Grabar en un archivo
@@ -9445,13 +9423,13 @@ Settings
 == Ajustes
 
 Settings card background
-== Settings card background
+== Fondo de la tarjeta de ajustes
 
 Settings card background color
-== Settings card background color
+== Color de fondo de la tarjeta de ajustes
 
 Settings card background transparency
-== Settings card background transparency
+== Transparencia del fondo de la tarjeta de ajustes
 
 Settings card border color
 == Color de los bordes de las tarjetas de configuración
@@ -10264,10 +10242,10 @@ Show translation
 == Mostrar traducción
 
 Show Tune Zone effects
-== Show Tune Zone effects
+== Mostrar efectos de Tune Zone
 
 Show Tune Zone effects on HUD Dynamic Island
-== Show Tune Zone effects on HUD Dynamic Island
+== Mostrar efectos de Tune Zone en la isla dinámica del HUD
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Mostrar parámetros de ajuste que afectan al propio jugador (0 = Desactivado, 1 = Mostrar cambiados, 2 = Mostrar todos)
@@ -10304,6 +10282,9 @@ Show weapon trajectory guide
 
 Show welcome message indicating first client launch
 == Mostrar mensaje de bienvenida indicando primer inicio del cliente
+
+Show whether you have finished a DDNet map (transmits your player name to info.ddnet.org/info)
+== Mostrar si has completado un mapa de DDNet (envía tu nombre de jugador a info.ddnet.org/info)
 
 Show Workshop Assets
 == Mostrar activos del Workshop
@@ -10566,6 +10547,9 @@ Snapshot Age
 Snapshot age
 == Antigüedad de la instantánea
 
+Snapshot Latency
+== Latencia de snapshots
+
 Snapshot payload
 == Carga útil de instantáneas
 
@@ -10776,9 +10760,6 @@ Start marker of replay slice
 Start playback of ghosts
 == Iniciar reproducción de fantasmas
 
-Start QmLive full match demo recording
-== Iniciar grabación de demo de partida completa de QmLive
-
 Start recording a demo
 == Iniciar grabación de una demo
 
@@ -10839,14 +10820,8 @@ Steam profile name
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == Detener entrada de teclas al cambiar (0=desactivado, 1=dummy, 2=jugador)
 
-Stop match record
-== Detener grabación de partida
-
 Stop practice
 == Detener práctica
-
-Stop QmLive full match demo recording
-== Detener grabación de demo de partida completa de QmLive
 
 Stop record
 == Detener grabación
@@ -10951,7 +10926,7 @@ Switch
 == Cambiar
 
 Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
-== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== Posición de la cuenta atrás del interruptor (0 = seguir al Tee, 1 = isla dinámica, 2 = ambos)
 
 Switch failed
 == Cambio fallido
@@ -11144,6 +11119,9 @@ Team mode change disabled
 
 Team mode change is disabled on this server.
 == El cambio de modo de equipo está deshabilitado en este servidor.
+
+Team rank
+== Clasificación por equipos
 
 Team save already in progress
 == Guardado de equipo ya en progreso
@@ -11359,7 +11337,7 @@ The server is running a non-standard tuning on a pure game type.
 == El servidor está ejecutando una afinación no estándar en un tipo de juego puro.
 
 The update is ready and will be installed when you exit.
-== The update is ready and will be installed when you exit.
+== La actualización está lista y se instalará al salir.
 
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == El ancho de la textura %s no es divisible por %d, o la altura no es divisible por %d, lo que podría causar errores visuales.
@@ -12517,7 +12495,7 @@ Weapon range color
 == Color del rango de arma
 
 Weapon reload animation probability
-== Weapon reload animation probability
+== Probabilidad de la animación de recarga del arma
 
 Weapon switch animation
 == Animación de cambio de arma
@@ -13107,15 +13085,6 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ API de Tencent Cloud no configurada
 
-不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-
-显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-
-覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-
 [Assets editor blend mode]
 Multiply
 == Multiplicar
@@ -13238,7 +13207,7 @@ Could not initialize the given graphics backend, this is probably because you di
 
 [Graphics error]
 Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Falló durante la inicialización. Intenta cambiar gfx_backend a OpenGL o Vulkan en qmclient/settings_ddnet.cfg en el directorio de configuración e inténtalo de nuevo.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13254,7 +13223,7 @@ Submitting the render commands failed. Try to update your GPU drivers.
 
 [Graphics error]
 Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== Error desconocido. Intenta cambiar gfx_backend a OpenGL o Vulkan en qmclient/settings_ddnet.cfg en el directorio de configuración e inténtalo de nuevo.
 
 [Hammer Mode]
 Normal

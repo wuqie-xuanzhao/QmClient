@@ -228,7 +228,7 @@ REGISTER_QUICK_ACTION(
 	[&]() {
 		char aDefaultName[IO_MAX_PATH_LENGTH];
 		fs_split_file_extension(fs_filename(m_Map.m_aFilename), aDefaultName, sizeof(aDefaultName));
-		m_FileBrowser.ShowFileDialog(IStorage::TYPE_SAVE, CFileBrowser::EFileType::MAP, "保存地图", "另存为", "maps", aDefaultName, CallbackSaveMap, this);
+		m_FileBrowser.ShowFileDialog(IStorage::TYPE_SAVE, CFileBrowser::EFileType::MAP, Localize("Save map", "Editor"), Localize("Save as", "Editor"), "maps", aDefaultName, CallbackSaveMap, this);
 	},
 	ALWAYS_FALSE,
 	ALWAYS_FALSE,

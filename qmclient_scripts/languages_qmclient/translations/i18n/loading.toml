@@ -608,22 +608,6 @@ turkish = "Demolar"
 polish = "Dema"
 
 [[message]]
-key = "Disable QmLive team preview/render filter"
-[message.translations]
-simplified_chinese = "关闭 QmLive 队伍预览/渲染过滤"
-traditional_chinese = "關閉 QmLive 隊伍預覽/渲染過濾"
-japanese = "QmLive チームプレビュー/レンダリングフィルターを無効化"
-korean = "QmLive 팀 미리보기/렌더 필터 비활성화"
-russian = "Отключить фильтр предпросмотра/рендера команды QmLive"
-german = "QmLive-Teamvorschau-/Renderfilter deaktivieren"
-spanish = "Desactivar el filtro de vista previa/representación del equipo de QmLive"
-french = "Désactiver le filtre d'aperçu/rendu d'équipe QmLive"
-brazilian_portuguese = "Desativar filtro de pré-visualização/renderização da equipe QmLive"
-portuguese = "Desativar filtro de pré-visualização/ renderização da equipe QmLive"
-turkish = "QmLive takım önizleme/oluşturma filtresini devre dışı bırak."
-polish = "Wyłącz filtr podglądu/renderingu drużyny QmLive"
-
-[[message]]
 key = "Downloading map"
 [message.translations]
 simplified_chinese = "正在下载地图"
@@ -2000,22 +1984,6 @@ turkish = "Hız"
 polish = "Prędkość"
 
 [[message]]
-key = "Start QmLive full match demo recording"
-[message.translations]
-simplified_chinese = "开始 QmLive 完整比赛 demo 录制"
-traditional_chinese = "開始 QmLive 完整比賽 demo 錄製"
-japanese = "QmLive フルマッチデモ録画を開始"
-korean = "QmLive 전체 매치 데모 녹화 시작"
-russian = "Начать запись полного матч-демо QmLive"
-german = "QmLive Vollmatch-Demo-Aufnahme starten"
-spanish = "Iniciar grabación de demo de partida completa de QmLive"
-french = "Démarrer l'enregistrement de la démo de match complet QmLive"
-brazilian_portuguese = "Iniciar gravação de demo de partida completa do QmLive"
-portuguese = "Iniciar gravação de demo de partida completa do QmLive"
-turkish = "QmLive tam maç demo kaydını başlat"
-polish = "Rozpocznij nagrywanie pełnego dema meczu QmLive"
-
-[[message]]
 key = "Stats"
 [message.translations]
 simplified_chinese = "统计"
@@ -2062,22 +2030,6 @@ brazilian_portuguese = "Parar gravação de partida"
 portuguese = "Parar gravação de partida"
 turkish = "Maç kaydını durdur"
 polish = "Zatrzymaj nagrywanie meczu"
-
-[[message]]
-key = "Stop QmLive full match demo recording"
-[message.translations]
-simplified_chinese = "停止 QmLive 完整比赛 demo 录制"
-traditional_chinese = "停止 QmLive 完整比賽 demo 錄製"
-japanese = "QmLive フルマッチデモ録画を停止"
-korean = "QmLive 전체 매치 데모 녹화 중지"
-russian = "Остановить запись полного матч-демо QmLive"
-german = "QmLive Vollmatch-Demo-Aufnahme stoppen"
-spanish = "Detener grabación de demo de partida completa de QmLive"
-french = "Arrêter l'enregistrement de la démo de match complet QmLive"
-brazilian_portuguese = "Parar gravação de demo de partida completa do QmLive"
-portuguese = "Parar gravação de demo de partida completa do QmLive"
-turkish = "QmLive tam maç demo kaydını durdur"
-polish = "Zatrzymaj nagrywanie pełnego dema meczu QmLive"
 
 [[message]]
 key = "Switch team"

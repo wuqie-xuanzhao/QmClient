@@ -1016,7 +1016,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 					if(!m_TilesHistory.empty()) // Sometimes pressing that button causes the automap to run so we should be able to undo that
 					{
 						// record undo
-						Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
+						Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], Localize("Automap", "Editor"), m_TilesHistory));
 						ClearHistory();
 					}
 				}
@@ -1027,7 +1027,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			{
 				Map()->m_vpImages[m_Image]->m_AutoMapper.Proceed(this, Map()->m_pGameLayer.get(), m_AutoMapperReference, m_AutoMapperConfig, m_Seed);
 				// record undo
-				Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
+				Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], Localize("Automap", "Editor"), m_TilesHistory));
 				ClearHistory();
 				return CUi::POPUP_CLOSE_CURRENT;
 			}
@@ -1035,18 +1035,18 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	}
 
 	CProperty aProps[] = {
-		{"宽度", m_Width, PROPTYPE_INT, 2, 100000},
-		{"高度", m_Height, PROPTYPE_INT, 2, 100000},
-		{"平移", 0, PROPTYPE_SHIFT, 0, 0},
-		{"平移量", Map()->m_ShiftBy, PROPTYPE_INT, 1, 100000},
-		{"图像", m_Image, PROPTYPE_IMAGE, 0, 0},
-		{"颜色", PackColor(m_Color), PROPTYPE_COLOR, 0, 0},
-		{"颜色动画", m_ColorEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
-		{"颜色偏移", m_ColorEnvOffset, PROPTYPE_INT, -1000000, 1000000},
-		{"自动规则", m_AutoMapperConfig, PROPTYPE_AUTOMAPPER, m_Image, 0},
-		{"参考", m_AutoMapperReference, PROPTYPE_AUTOMAPPER_REFERENCE, 0, 0},
-		{"实时游戏图块", m_LiveGameTiles, PROPTYPE_BOOL, 0, 1},
-		{"种子", m_Seed, PROPTYPE_INT, 0, 1000000000},
+		{Localize("Width", "Editor"), m_Width, PROPTYPE_INT, 2, 100000},
+		{Localize("Height", "Editor"), m_Height, PROPTYPE_INT, 2, 100000},
+		{Localize("shift", "Editor tile shift"), 0, PROPTYPE_SHIFT, 0, 0},
+		{Localize("Shift by", "Editor tile shift amount"), Map()->m_ShiftBy, PROPTYPE_INT, 1, 100000},
+		{Localize("Image", "Editor"), m_Image, PROPTYPE_IMAGE, 0, 0},
+		{Localize("Color", "Editor"), PackColor(m_Color), PROPTYPE_COLOR, 0, 0},
+		{Localize("Color Env", "Editor"), m_ColorEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
+		{Localize("Color TO", "Editor"), m_ColorEnvOffset, PROPTYPE_INT, -1000000, 1000000},
+		{Localize("Auto Rule", "Editor"), m_AutoMapperConfig, PROPTYPE_AUTOMAPPER, m_Image, 0},
+		{Localize("Reference", "Editor"), m_AutoMapperReference, PROPTYPE_AUTOMAPPER_REFERENCE, 0, 0},
+		{Localize("Live Gametiles", "Editor"), m_LiveGameTiles, PROPTYPE_BOOL, 0, 1},
+		{Localize("Seed", "Editor"), m_Seed, PROPTYPE_INT, 0, 1000000000},
 		{nullptr},
 	};
 
@@ -1173,7 +1173,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		// Record undo if automapper was ran
 		if(m_AutoAutoMap && !m_TilesHistory.empty())
 		{
-			Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
+			Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], Localize("Automap", "Editor"), m_TilesHistory));
 			ClearHistory();
 		}
 	}
@@ -1287,11 +1287,11 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 	}
 
 	CProperty aProps[] = {
-		{"宽度", State.m_Width, PROPTYPE_INT, 2, 100000},
-		{"高度", State.m_Height, PROPTYPE_INT, 2, 100000},
-		{"平移", 0, PROPTYPE_SHIFT, 0, 0},
-		{"平移量", pEditorMap->m_ShiftBy, PROPTYPE_INT, 1, 100000},
-		{"颜色", State.m_Color, PROPTYPE_COLOR, 0, 0},
+		{Localize("Width", "Editor"), State.m_Width, PROPTYPE_INT, 2, 100000},
+		{Localize("Height", "Editor"), State.m_Height, PROPTYPE_INT, 2, 100000},
+		{Localize("shift", "Editor tile shift"), 0, PROPTYPE_SHIFT, 0, 0},
+		{Localize("Shift by", "Editor tile shift amount"), pEditorMap->m_ShiftBy, PROPTYPE_INT, 1, 100000},
+		{Localize("Color", "Editor"), State.m_Color, PROPTYPE_COLOR, 0, 0},
 		{nullptr},
 	};
 

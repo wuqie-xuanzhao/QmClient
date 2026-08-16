@@ -251,10 +251,6 @@
 [%s] %s (Map: %s, Time: %s)
 == [%s] %s (맵: %s, 시간: %s)
 
-[]
-[Developer]
-== [개발자]
-
 _ or ' ' = blank spacer
 == _ 또는 ' ' = 빈 공백
 
@@ -642,9 +638,6 @@ Allow left-click to toggle between spectating nearest player and free view
 Allow mic permission in system settings, then reopen voice
 == 시스템 설정에서 마이크 권한을 허용한 후 음성을 다시 켜세요
 
-Allow QmLiveClient to connect as hidden read-only observer
-== QmLiveClient가 숨겨진 읽기 전용 관전자로 연결 허용
-
 Allow voting to kick players
 == 플레이어 추방 투표 허용
 
@@ -703,7 +696,7 @@ Animate chat box, emote selector, scoreboard, and spectate selection
 == 채팅창, 이모티콘 선택기, 점수판 및 관전 선택에 애니메이션 적용
 
 Animate lists when entering a page
-== Animate lists when entering a page
+== 페이지 진입 시 목록 애니메이션 재생
 
 Animate settings card expand and collapse height changes
 == 설정 카드 확장 및 접기 높이 변경에 애니메이션 적용
@@ -1189,7 +1182,7 @@ Automatically ban blacklisted addresses
 == 블랙리스트 주소 자동 차단
 
 Automatically check for stable updates and install them on exit
-== Automatically check for stable updates and install them on exit
+== 안정 버전 업데이트를 자동으로 확인하고 종료할 때 설치
 
 Automatically close the current chat after waking from freeze
 == 얼음에서 깨어난 후 현재 채팅 자동 닫기
@@ -1230,6 +1223,9 @@ Available resolutions
 Avg %.*f   ↓ %.*f   ↑ %.*f
 == 평균 %.*f   ↓ %.*f   ↑ %.*f
 
+Axiom API returned an error
+== Axiom API에서 오류를 반환했습니다
+
 Axiom auto login failed
 == Axiom 자동 로그인 실패
 
@@ -1244,6 +1240,12 @@ Axiom dummy password
 
 Axiom main account password
 == Axiom 메인 계정 비밀번호
+
+Axiom score request failed
+== Axiom 점수 요청에 실패했습니다
+
+Axiom scores
+== Axiom 점수
 
 Axis
 == 축
@@ -1460,6 +1462,9 @@ Black
 
 Blend mode
 == 혼합 모드
+
+Blink the active local tee
+== 활성 로컬 캐릭터를 깜박이게 합니다
 
 Block enemy chat
 == 적대 플레이어 채팅 차단
@@ -1938,9 +1943,6 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == 친구 목록에서 이 플레이어를 제거하려면 클릭하세요.
 
-Click to restore full match
-== 클릭하여 전체 매치 복원
-
 Click to select server. Double click to join your friend.
 == 클릭하여 서버를 선택하세요. 더블 클릭하여 친구의 서버에 접속하세요.
 
@@ -2081,6 +2083,9 @@ Compatible with single-player area hints from other servers
 
 Complete snapshots are arriving late or not arriving
 == 완전한 스냅샷이 늦게 도착하거나 도착하지 않음
+
+Completed maps
+== 완료한 맵
 
 Compressor attack time (ms)
 == 컴프레서 어택 타임 (ms)
@@ -2955,9 +2960,6 @@ Disable clipping
 Disable Gores auto-switch when picking up extra weapon
 == 추가 무기 획득 시 Gores 자동 전환 비활성화
 
-Disable QmLive team preview/render filter
-== QmLive 팀 미리보기/렌더 필터 비활성화
-
 Disabled
 == 비활성화됨
 
@@ -3027,6 +3029,9 @@ Displays estimated process UDP send rate
 Displays prediction timing jitter
 == 예측 타이밍 지터 표시
 
+Displays server snapshot latency
+== 서버 스냅샷 지연 시간 표시
+
 Displays the client's prediction lead
 == 클라이언트의 예측 선행 시간 표시
 
@@ -3077,6 +3082,9 @@ Do not auto-show server info on entering map
 
 Do not predict other players when frozen
 == 프리즈 시 다른 플레이어 예측 안 함
+
+Do not set this variable, instead create a ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible serverlist URLs
+== 이 변수는 설정하지 말고 settings_ddnet.cfg 옆에 ddnet-serverlist-urls.cfg를 만들어 사용 가능한 모든 서버 목록 URL을 지정하세요
 
 Do not set, used to mark official tutorial server
 == 설정하지 마세요, 공식 튜토리얼 서버 표시용
@@ -3745,7 +3753,7 @@ Enable stereo positioning
 == 스테레오 포지셔닝 활성화
 
 Enable switch countdown
-== Enable switch countdown
+== 스위치 카운트다운 활성화
 
 Enable system media control
 == 시스템 미디어 제어 활성화
@@ -4146,9 +4154,6 @@ Filter full servers in browser
 Filter game type
 == 게임 유형 필터
 
-Filter off
-== 필터 끄기
-
 Filter out password protected servers in browser
 == 브라우저에서 비밀번호로 보호된 서버 필터링
 
@@ -4163,12 +4168,6 @@ Filter out servers without friends
 
 Filter out spectators from player count
 == 플레이어 수에서 관전자 제외
-
-Filter Team %d
-== 팀 %d 필터
-
-Filter: Team %d
-== 필터: 팀 %d
 
 Filtered word console color
 == 차단된 단어 콘솔 색상
@@ -4398,9 +4397,6 @@ FTAPI auto-translate is disabled to prevent overload. Enable in settings if need
 Full
 == 전체
 
-Full demo + sidecar
-== 전체 데모 + 사이드카
-
 Full map listen in same room
 == 같은 방에서 전체 맵 듣기
 
@@ -4548,6 +4544,9 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == 전역 카드 정렬 이전 설정 마이그레이션 완료 표시
 
+Global rank
+== 세계 순위
+
 Global toggle key
 == 전역 토글 키
 
@@ -4633,10 +4632,10 @@ Graphics display
 == 그래픽 표시
 
 Graphics library major version (0 = auto-detect)
-== Graphics library major version (0 = auto-detect)
+== 그래픽 라이브러리 주 버전(0 = 자동 감지)
 
 Graphics library minor version (0 = auto-detect)
-== Graphics library minor version (0 = auto-detect)
+== 그래픽 라이브러리 부 버전(0 = 자동 감지)
 
 Graphics library patch version
 == 그래픽 라이브러리 패치 버전
@@ -4706,9 +4705,6 @@ Hi!
 
 Hide basic system info (join, version, rules) in Zen mode
 == 선 모드에서 입장, 버전, 규칙 등 기본 시스템 정보 숨기기
-
-Hide Chat
-== 채팅 숨기기
 
 Hide chat messages from players marked as enemies
 == 적으로 표시한 플레이어의 채팅 메시지 숨기기
@@ -5034,9 +5030,6 @@ https://ddnet.org/discord
 https://wiki.ddnet.org/
 == https://wiki.ddnet.org/
 
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
-
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls
 
@@ -5257,10 +5250,10 @@ Input overlay display
 == 입력 오버레이 표시
 
 Input overlay keyboard scale (percent)
-== Input overlay keyboard scale (percent)
+== 입력 오버레이 키보드 배율(퍼센트)
 
 Input overlay mouse scale (percent)
-== Input overlay mouse scale (percent)
+== 입력 오버레이 마우스 배율(퍼센트)
 
 Input overlay opacity (percent)
 == 입력 오버레이 불투명도 (백분율)
@@ -5321,6 +5314,9 @@ Interpolation
 
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == 현재 편집기 맵 사본을 "auto" 폴더에 자동 저장하는 간격 (0=끄기)
+
+Invalid Axiom API response
+== 잘못된 Axiom API 응답
 
 Invalid client id to kick
 == 추방할 클라이언트 ID 가 잘못됨
@@ -5604,6 +5600,9 @@ Last entered
 Last page in console
 == 콘솔의 마지막 페이지
 
+Latency
+== 지연 시간
+
 Latency compensation
 == 지연 보상
 
@@ -5804,6 +5803,9 @@ Loading
 
 Loading assets...
 == 에셋 로딩 중...
+
+Loading Axiom scores...
+== Axiom 점수 불러오는 중...
 
 Loading commands…
 == 명령 로딩 중…
@@ -6144,6 +6146,9 @@ Map to use on server
 Map type:
 == 맵 유형:
 
+Maps
+== 맵
+
 Margin when notification is docked
 == 알림바가 가장자리에 붙을 때 여백
 
@@ -6246,9 +6251,6 @@ Maximum framerate for entity layer video background
 Maximum notification count
 == 알림바 최대 표시 개수
 
-Maximum number of allowed QmLive observer connections
-== 허용되는 최대 QmLive 관전자 연결 수
-
 Maximum number of auto recorded demos (0 = unlimited)
 == 자동 녹화 데모 최대 개수 (0 = 무제한)
 
@@ -6331,7 +6333,7 @@ Menu option - selected
 == 메뉴 옵션 - 선택됨
 
 Merge consecutive identical player messages within 2 seconds
-== Merge consecutive identical player messages within 2 seconds
+== 2초 안에 연속으로 표시된 동일 플레이어의 같은 메시지 병합
 
 Message color
 == 메시지 색상
@@ -6365,6 +6367,9 @@ Microphone volume
 
 Microphone volume (percent)
 == 마이크 볼륨 (백분율)
+
+Mileage
+== 주행 거리
 
 Milliseconds
 == 밀리초
@@ -6518,6 +6523,9 @@ Moves to the tile with x/y-number ii
 
 Multi-View
 == 멀티 뷰
+
+Multiple exact Axiom players found
+== 정확히 일치하는 Axiom 플레이어가 여러 명 있습니다
 
 Mute
 == 음소거
@@ -7020,6 +7028,12 @@ Not open, check input device or mic permission
 Not open, check output device
 == 열려 있지 않음, 출력 장치 확인
 
+Not ranked
+== 순위 없음
+
+Not requested
+== 요청하지 않음
+
 Note
 == 메모
 
@@ -7362,6 +7376,9 @@ Override Freeze Tile Entity Alpha (0-100)
 Override Group
 == 그룹 재정의
 
+Override location for ping estimation, available: auto, af, as, as:cn, eu, na, oc, sa (Automatic, Africa, Asia, China, Europe, North America, Oceania/Australia, South America
+== Ping 추정 위치를 재정의합니다. 사용 가능: auto, af, as, as:cn, eu, na, oc, sa(자동, 아프리카, 아시아, 중국, 유럽, 북미, 오세아니아/호주, 남미)
+
 Override Selected
 == 선택 항목 재정의
 
@@ -7479,6 +7496,9 @@ Per-word highlight (karaoke)
 Performance debug log threshold (ms)
 == 성능 디버그 로그 임계값 (ms)
 
+Performance points
+== 성과 점수
+
 Personal best:
 == 개인 최고 기록:
 
@@ -7534,7 +7554,7 @@ Plasma gun shots per second
 == 플라즈마 건 초당 발사 수
 
 Play a flip animation while reloading weapons
-== Play a flip animation while reloading weapons
+== 무기 재장전 중 뒤집기 애니메이션 재생
 
 Play a slide-in rotation animation when switching weapons
 == 무기 전환 시 슬라이드인 회전 애니메이션 재생
@@ -7553,6 +7573,9 @@ Play the current demo
 
 Play the selected demo
 == 선택한 데모 재생
+
+Play time
+== 플레이 시간
 
 Play/Pause
 == 재생/일시정지
@@ -7643,6 +7666,9 @@ Player name:
 
 Player not found
 == 플레이어를 찾을 수 없습니다
+
+Player not found on Axiom
+== Axiom에서 플레이어를 찾을 수 없습니다
 
 Player preview
 == 플레이어 미리보기
@@ -7914,12 +7940,6 @@ Preview the current chat appearance
 Preview visibilities
 == 미리보기 가시성
 
-Preview/render only one DDRace team from a full match demo
-== 전체 매치 데모에서 하나의 DDRace 팀만 미리보기/렌더
-
-Preview/render only this team
-== 이 팀만 미리보기/렌더
-
 Previous
 == 이전
 
@@ -8094,45 +8114,6 @@ QmClient sidebar module collapse state
 QmClient sidebar module order
 == 치멍 사이드바 모듈 정렬
 
-QmLiveClient: Default filter for unrecognized source player events
-== QmLiveClient：출처를 식별할 수 없는 플레이어 이벤트 기본 필터
-
-QmLiveClient: Enable single team isolation audio filter
-== QmLiveClient：단일 팀 격리 음향 필터 활성화
-
-QmLiveClient: Enable single team isolation visual filter
-== QmLiveClient：단일 팀 격리 화면 필터 활성화
-
-QmLiveClient: Finish ranking card display seconds
-== QmLiveClient：완료 순위 카드 표시 시간(초)
-
-QmLiveClient: Finish ranking card opacity percent
-== QmLiveClient：완료 순위 카드 불투명도 백분율
-
-QmLiveClient: Finish ranking card scale percent
-== QmLiveClient：완료 순위 카드 확대/축소 백분율
-
-QmLiveClient: Full match demo recording toggle
-== QmLiveClient：전체 경기 데모 녹화 스위치
-
-QmLiveClient: Hide non-target team finish prompts
-== QmLiveClient：비대상 팀 완료 알림 숨기기
-
-QmLiveClient: Ranking HUD team range lower bound
-== QmLiveClient：순위 HUD 팀 범위 하한
-
-QmLiveClient: Ranking HUD team range upper bound
-== QmLiveClient：순위 HUD 팀 범위 상한
-
-QmLiveClient: Show finish cards for teams outside range
-== QmLiveClient：설정 범위 밖 팀의 완료 카드 표시
-
-QmLiveClient: Show team finish ranking card
-== QmLiveClient：팀 완료 순위 카드 표시
-
-QmLiveClient: Single team isolation preview/render team, 0=Off
-== QmLiveClient：단일 팀 격리 미리보기/렌더링 팀, 0=끄기
-
 QmUi animation intensity: 0=Off, 1=Reduced, 2=Full
 == QmUi 애니메이션 강도: 0=끄기 1=낮음 2=전체
 
@@ -8285,9 +8266,6 @@ Record chat replays.
 
 Record demo
 == 데모 녹화
-
-Record match
-== 매치 녹화
 
 Record to a file
 == 파일에 기록
@@ -9445,13 +9423,13 @@ Settings
 == 설정
 
 Settings card background
-== Settings card background
+== 설정 카드 배경
 
 Settings card background color
-== Settings card background color
+== 설정 카드 배경색
 
 Settings card background transparency
-== Settings card background transparency
+== 설정 카드 배경 투명도
 
 Settings card border color
 == 설정 카드 테두리 색상
@@ -10267,7 +10245,7 @@ Show Tune Zone effects
 == Tune Zone 효과 표시
 
 Show Tune Zone effects on HUD Dynamic Island
-== Show Tune Zone effects on HUD Dynamic Island
+== HUD 다이내믹 아일랜드에 Tune Zone 효과 표시
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 자신의 플레이어에 영향을 미치는 튜닝 파라미터 표시 (0 = 끄기, 1 = 변경된 것만 표시, 2 = 모두 표시)
@@ -10304,6 +10282,9 @@ Show weapon trajectory guide
 
 Show welcome message indicating first client launch
 == 클라이언트 첫 실행 시 환영 메시지 표시
+
+Show whether you have finished a DDNet map (transmits your player name to info.ddnet.org/info)
+== DDNet 맵 완료 여부를 표시합니다(플레이어 이름을 info.ddnet.org/info로 전송)
 
 Show Workshop Assets
 == 상점 리소스 표시
@@ -10566,6 +10547,9 @@ Snapshot Age
 Snapshot age
 == 스냅샷 경과 시간
 
+Snapshot Latency
+== 스냅샷 지연 시간
+
 Snapshot payload
 == 스냅샷 페이로드
 
@@ -10776,9 +10760,6 @@ Start marker of replay slice
 Start playback of ghosts
 == 고스트 재생 시작
 
-Start QmLive full match demo recording
-== QmLive 전체 매치 데모 녹화 시작
-
 Start recording a demo
 == 데모 녹화 시작
 
@@ -10839,14 +10820,8 @@ Steam profile name
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == 전환 시 키 입력 중지 (0=끄기, 1=더미, 2=플레이어)
 
-Stop match record
-== 매치 녹화 중지
-
 Stop practice
 == 연습 중지
-
-Stop QmLive full match demo recording
-== QmLive 전체 매치 데모 녹화 중지
 
 Stop record
 == 녹화 중지
@@ -10951,7 +10926,7 @@ Switch
 == 전환
 
 Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
-== Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
+== 스위치 카운트다운 위치(0 = Tee 따라가기, 1 = 다이내믹 아일랜드, 2 = 둘 다)
 
 Switch failed
 == 전환 실패
@@ -11144,6 +11119,9 @@ Team mode change disabled
 
 Team mode change is disabled on this server.
 == 이 서버에서는 팀 모드 변경이 비활성화되었습니다
+
+Team rank
+== 팀 순위
 
 Team save already in progress
 == 팀 저장이 이미 진행 중입니다
@@ -11359,7 +11337,7 @@ The server is running a non-standard tuning on a pure game type.
 == 서버가 순수 게임 유형에서 비표준 튜닝을 실행 중입니다.
 
 The update is ready and will be installed when you exit.
-== The update is ready and will be installed when you exit.
+== 업데이트가 준비되었습니다. 종료할 때 설치됩니다.
 
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 == 텍스처 %s의 너비가 %d로 나누어 떨어지지 않거나 높이가 %d로 나누어 떨어지지 않아 시각적 버그가 발생할 수 있습니다.
@@ -11824,7 +11802,7 @@ Tune variable to value or show current value
 == 변수를 값으로 조정하거나 현재 값을 표시합니다.
 
 Tune Zone effect icon legend
-== Tune Zone effect icon legend
+== Tune Zone 효과 아이콘 안내
 
 Tutorial
 == 튜토리얼
@@ -12517,7 +12495,7 @@ Weapon range color
 == 무기 범위 색상
 
 Weapon reload animation probability
-== Weapon reload animation probability
+== 무기 재장전 애니메이션 확률
 
 Weapon switch animation
 == 무기 전환 애니메이션
@@ -13107,15 +13085,6 @@ Zoom to current mouse target
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 텐센트 클라우드 API가 구성되지 않음
 
-不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-== 不要设置此变量，而是在配置目录中创建 ddnet-serverlist-urls.cfg 以指定所有可能的服务器列表 URL
-
-显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-== 显示你是否已完成 DDNet 地图（将你的玩家姓名传输至 info.ddnet.org/info）
-
-覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-== 覆盖 ping 估计的位置，可用：auto、af、as、as:cn、eu、na、oc、sa（自动、非洲、亚洲、中国、欧洲、北美、大洋洲/澳大利亚、南美洲
-
 [Assets editor blend mode]
 Multiply
 == 곱하기
@@ -13238,7 +13207,7 @@ Could not initialize the given graphics backend, this is probably because you di
 
 [Graphics error]
 Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 초기화 중 실패했습니다. 설정 디렉토리의 qmclient/settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경한 후 다시 시도하세요.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13254,7 +13223,7 @@ Submitting the render commands failed. Try to update your GPU drivers.
 
 [Graphics error]
 Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+== 알 수 없는 오류입니다. 설정 디렉터리의 qmclient/settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
 
 [Hammer Mode]
 Normal

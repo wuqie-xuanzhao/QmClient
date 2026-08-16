@@ -7024,11 +7024,6 @@ void CHud::OnRender()
 	if(!GameClient()->m_Snap.m_pGameInfoObj)
 		return;
 
-#if defined(CONF_QM_LIVE_CLIENT)
-	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER || GameClient()->ShouldSuppressStandardHud())
-		return;
-#endif
-
 	m_Width = 300.0f * Graphics()->ScreenAspect();
 	m_Height = 300.0f;
 	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);

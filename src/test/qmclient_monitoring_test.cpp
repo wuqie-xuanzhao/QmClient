@@ -6327,7 +6327,6 @@ TEST(QmMonitoringHelpers, SettingsTextMissLogsAreSampledPerFrameBucket)
 TEST(QmMonitoringHelpers, DefaultGateRunsFullAutomatedTests)
 {
 	const std::string Gate = ReadRepoFile("qmclient_scripts/gate/check_gate.py");
-	const std::string Verification = ReadRepoFile(".agents/skills/qmclient-verification-gate/SKILL.md");
 	const std::string ScriptsOverview = ReadRepoFile("qmclient_scripts/scripts_overview.md");
 	ASSERT_FALSE(Gate.empty());
 
@@ -10402,38 +10401,6 @@ TEST(QmMonitoringHelpers, MenuUiPerfOperationsAreEmittedFromRealListOwners)
 	EXPECT_EQ(Count(Demo, "QmLogMenuUiFramePerf("), 1u);
 	EXPECT_GE(Count(Settings, "QmLogMenuUiFramePerf("), 3u);
 	EXPECT_GE(Count(Assets, "QmLogMenuUiFramePerf("), 2u);
-}
-
-TEST(QmMonitoringHelpers, P7AcceptanceDoesNotClaimUnsampledRuntimePercentiles)
-{
-	static constexpr const char *pActiveReportPath = "docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md";
-	static constexpr const char *pArchivedReportPath = "docs/superpowers/reports/archive/2026-07-11-settings-ui-p7-acceptance.md";
-	const char *pReportPath = std::filesystem::exists(TestSourcePath(pActiveReportPath)) ? pActiveReportPath : pArchivedReportPath;
-	const std::string Report = ReadRepoFile(pReportPath);
-	EXPECT_NE(Report.find("**P7 automated evidence status:** complete"), std::string::npos);
-	const bool RuntimePending = Report.find("**P7 user runtime acceptance:** pending") != std::string::npos;
-	const bool RuntimeComplete = Report.find("**P7 user runtime acceptance:** complete") != std::string::npos;
-	ASSERT_NE(RuntimePending, RuntimeComplete);
-
-	for(const char *pOperation : {"server_browser_scroll", "friends_scroll", "demo_browser_scroll", "assets_grid_scroll", "skins_grid_scroll", "flags_grid_scroll", "language_list_scroll", "dropdown_first_wheel"})
-	{
-		const size_t OperationPos = Report.find(pOperation);
-		ASSERT_NE(OperationPos, std::string::npos) << pOperation;
-		const size_t LineBegin = Report.rfind('\n', OperationPos);
-		const size_t LineEnd = Report.find('\n', OperationPos);
-		const std::string Row = Report.substr(LineBegin == std::string::npos ? 0 : LineBegin + 1, LineEnd - (LineBegin == std::string::npos ? 0 : LineBegin + 1));
-		EXPECT_NE(Row.find("telemetry owner verified"), std::string::npos) << Row;
-		if(RuntimePending)
-		{
-			EXPECT_NE(Row.find("user runtime sampling required"), std::string::npos) << Row;
-			EXPECT_NE(Row.find("runtime verdict pending"), std::string::npos) << Row;
-		}
-		else
-		{
-			EXPECT_EQ(Row.find("user runtime sampling required"), std::string::npos) << Row;
-			EXPECT_EQ(Row.find("runtime verdict pending"), std::string::npos) << Row;
-		}
-	}
 }
 
 TEST(QmMonitoringHelpers, SettingsUiMigrationFinalStructureContract)

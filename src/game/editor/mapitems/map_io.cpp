@@ -68,14 +68,14 @@ void CDataFileWriterFinishJob::Run()
 	char aBackupFilename[2 * IO_MAX_PATH_LENGTH];
 	if(IStorage::ReplaceFileSafely(m_pStorage, m_aTempFilename, m_aRealFilename, aBackupFilename, sizeof(aBackupFilename)))
 	{
-		log_trace("editor/save", "保存“%s”完成", m_aRealFilename);
+		log_trace("editor/save", Localize("saving '%s' done", "Editor"), m_aRealFilename);
 		return;
 	}
 
 	if(aBackupFilename[0] != '\0')
-		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "保存失败：无法替换地图文件“%s”；旧版本已恢复或保留在“%s”。", m_aRealFilename, aBackupFilename);
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), Localize("Saving failed: Could not replace map file '%s'; the previous version was restored or kept at '%s'.", "Editor"), m_aRealFilename, aBackupFilename);
 	else
-		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "保存失败：无法将临时地图文件“%s”移动到“%s”。", m_aTempFilename, m_aRealFilename);
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), Localize("Saving failed: Could not move temporary map file '%s' to '%s'.", "Editor"), m_aTempFilename, m_aRealFilename);
 	log_error("editor/save", "%s", m_aErrorMessage);
 }
 CDataFileWriterFinishJob::CDataFileWriterFinishJob(IStorage *pStorage, const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :
@@ -93,7 +93,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 	IStorage::FormatTmpPath(aFilenameTmp, sizeof(aFilenameTmp), pFilename);
 
 	char aBuf[IO_MAX_PATH_LENGTH + 64];
-	str_format(aBuf, sizeof(aBuf), "正在保存到“%s”…", aFilenameTmp);
+	str_format(aBuf, sizeof(aBuf), Localize("saving to '%s'...", "Editor"), aFilenameTmp);
 	log_info("editor/save", "%s", aBuf);
 
 	if(!PerformPreSaveSanityChecks(ErrorHandler))
@@ -104,7 +104,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 	CDataFileWriter Writer;
 	if(!Writer.Open(m_pEditor->Storage(), aFilenameTmp))
 	{
-		str_format(aBuf, sizeof(aBuf), "错误：无法打开文件“%s”进行写入。", aFilenameTmp);
+		str_format(aBuf, sizeof(aBuf), Localize("Error: Failed to open file '%s' for writing.", "Editor"), aFilenameTmp);
 		ErrorHandler(aBuf);
 		return false;
 	}
@@ -478,7 +478,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 		if(m_vpEnvelopes[e]->m_vPoints.size() > (size_t)std::numeric_limits<int>::max() ||
 			PointCount > std::numeric_limits<int>::max() - (int)m_vpEnvelopes[e]->m_vPoints.size())
 		{
-			ErrorHandler("错误：无法保存，因为包络点数量过多。");
+			ErrorHandler(Localize("Error: Saving is not possible because there are too many envelope points.", "Editor"));
 			return false;
 		}
 		CMapItemEnvelope Item;
@@ -513,13 +513,13 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 	size_t EnvPointDataSize = 0;
 	if(!CheckedDatafileArraySize((size_t)PointCount, sizeof(CEnvPoint), EnvPointDataSize))
 	{
-		ErrorHandler("错误：无法保存，因为包络点数据过大。");
+		ErrorHandler(Localize("Error: Saving is not possible because the envelope point data is too large.", "Editor"));
 		return false;
 	}
 	CEnvPoint *pPoints = (CEnvPoint *)calloc(maximum(PointCount, 1), sizeof(CEnvPoint));
 	if(pPoints == nullptr)
 	{
-		ErrorHandler("错误：无法为包络点分配内存。");
+		ErrorHandler(Localize("Error: Failed to allocate memory for envelope points.", "Editor"));
 		return false;
 	}
 	CEnvPointBezier *pPointsBezier = nullptr;
@@ -529,14 +529,14 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 		if(!CheckedDatafileArraySize((size_t)PointCount, sizeof(CEnvPointBezier), EnvPointBezierDataSize))
 		{
 			free(pPoints);
-			ErrorHandler("错误：无法保存，因为贝塞尔包络点数据过大。");
+			ErrorHandler(Localize("Error: Saving is not possible because the bezier envelope point data is too large.", "Editor"));
 			return false;
 		}
 		pPointsBezier = (CEnvPointBezier *)calloc(maximum(PointCount, 1), sizeof(CEnvPointBezier));
 		if(pPointsBezier == nullptr)
 		{
 			free(pPoints);
-			ErrorHandler("错误：无法为贝塞尔包络点分配内存。");
+			ErrorHandler(Localize("Error: Failed to allocate memory for bezier envelope points.", "Editor"));
 			return false;
 		}
 	}
@@ -575,7 +575,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 		if(!CheckedDatafileArraySize((size_t)PointCount, sizeof(CEnvPointBezier), EnvPointBezierDataSize))
 		{
 			free(pPointsBezier);
-			ErrorHandler("错误：无法保存，因为贝塞尔包络点数据过大。");
+			ErrorHandler(Localize("Error: Saving is not possible because the bezier envelope point data is too large.", "Editor"));
 			return false;
 		}
 		Writer.AddItem(MAPITEMTYPE_ENVPOINTS_BEZIER, 0, EnvPointBezierDataSize, pPointsBezier);
@@ -599,7 +599,7 @@ bool CEditorMap::PerformPreSaveSanityChecks(const FErrorHandler &ErrorHandler)
 	{
 		if(!pImage->m_External && pImage->m_pData == nullptr)
 		{
-			str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为图像“%s”未能加载。请移除或替换该图像。", pImage->m_aName);
+			str_format(aErrorMessage, sizeof(aErrorMessage), Localize("Error: Saving is not possible because the image '%s' could not be loaded. Remove or replace this image.", "Editor"), pImage->m_aName);
 			ErrorHandler(aErrorMessage);
 			Success = false;
 		}
@@ -609,7 +609,7 @@ bool CEditorMap::PerformPreSaveSanityChecks(const FErrorHandler &ErrorHandler)
 	{
 		if(pSound->m_pData == nullptr)
 		{
-			str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为声音“%s”未能加载。请移除或替换该声音。", pSound->m_aName);
+			str_format(aErrorMessage, sizeof(aErrorMessage), Localize("Error: Saving is not possible because the sound '%s' could not be loaded. Remove or replace this sound.", "Editor"), pSound->m_aName);
 			ErrorHandler(aErrorMessage);
 			Success = false;
 		}
@@ -654,7 +654,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 				if(pStr == nullptr)
 				{
 					char aBuf[128];
-					str_format(aBuf, sizeof(aBuf), "错误：无法从地图信息中读取%s。", pErrorContext);
+					str_format(aBuf, sizeof(aBuf), Localize("Error: Failed to read %s from map info.", "Editor"), pErrorContext);
 					ErrorHandler(aBuf);
 					pBuffer[0] = '\0';
 				}
@@ -664,10 +664,10 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 				}
 			};
 
-			ReadStringInfo(pItem->m_Author, m_MapInfo.m_aAuthor, sizeof(m_MapInfo.m_aAuthor), "作者");
-			ReadStringInfo(pItem->m_MapVersion, m_MapInfo.m_aVersion, sizeof(m_MapInfo.m_aVersion), "版本");
-			ReadStringInfo(pItem->m_Credits, m_MapInfo.m_aCredits, sizeof(m_MapInfo.m_aCredits), "致谢");
-			ReadStringInfo(pItem->m_License, m_MapInfo.m_aLicense, sizeof(m_MapInfo.m_aLicense), "许可");
+			ReadStringInfo(pItem->m_Author, m_MapInfo.m_aAuthor, sizeof(m_MapInfo.m_aAuthor), Localize("author", "Editor"));
+			ReadStringInfo(pItem->m_MapVersion, m_MapInfo.m_aVersion, sizeof(m_MapInfo.m_aVersion), Localize("version", "Editor"));
+			ReadStringInfo(pItem->m_Credits, m_MapInfo.m_aCredits, sizeof(m_MapInfo.m_aCredits), Localize("credits", "Editor"));
+			ReadStringInfo(pItem->m_License, m_MapInfo.m_aLicense, sizeof(m_MapInfo.m_aLicense), Localize("license", "Editor"));
 
 			if(pItem->m_Version != 1 || ItemSize < (int)sizeof(CMapItemInfoSettings))
 				break;
@@ -703,7 +703,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "错误：无法读取图像 %d 的名称。", i);
+				str_format(aBuf, sizeof(aBuf), Localize("Error: Failed to read name of image %d.", "Editor"), i);
 				ErrorHandler(aBuf);
 			}
 			else
@@ -712,7 +712,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			if(pItem->m_Version > 1 && pItem->m_MustBe1 != 1)
 			{
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "错误：图像 %d“%s”的类型不受支持。", i, pImg->m_aName);
+				str_format(aBuf, sizeof(aBuf), Localize("Error: Unsupported image type of image %d '%s'.", "Editor"), i, pImg->m_aName);
 				ErrorHandler(aBuf);
 			}
 
@@ -744,7 +744,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 				}
 				else
 				{
-					str_format(aBuf, sizeof(aBuf), "错误：无法加载外部图像“%s”。", pImg->m_aName);
+					str_format(aBuf, sizeof(aBuf), Localize("Error: Failed to load external image '%s'.", "Editor"), pImg->m_aName);
 					ErrorHandler(aBuf);
 				}
 			}
@@ -818,7 +818,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "错误：无法读取声音 %d 的名称。", i);
+				str_format(aBuf, sizeof(aBuf), Localize("Error: Failed to read name of sound %d.", "Editor"), i);
 				ErrorHandler(aBuf);
 			}
 			else
@@ -836,7 +836,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 				}
 				else
 				{
-					str_format(aBuf, sizeof(aBuf), "错误：无法加载外部声音“%s”。", pSound->m_aName);
+					str_format(aBuf, sizeof(aBuf), Localize("Error: Failed to load external sound '%s'.", "Editor"), pSound->m_aName);
 					ErrorHandler(aBuf);
 				}
 			}
@@ -1222,7 +1222,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			if(Channels != pItem->m_Channels)
 			{
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "错误：包络线 %d 的通道数 %d 无效，已更正为 %d。", EnvelopeIndex, pItem->m_Channels, Channels);
+				str_format(aBuf, sizeof(aBuf), Localize("Error: Envelope %d had an invalid number of channels, %d, which was changed to %d.", "Editor"), EnvelopeIndex, pItem->m_Channels, Channels);
 				ErrorHandler(aBuf);
 			}
 
@@ -1317,7 +1317,7 @@ bool CEditorMap::Append(const char *pFilename, int StorageType, bool IgnoreHisto
 		int DuplicateCount = 1;
 		str_copy(aRenamed, pImage->m_aName);
 		while(std::find_if(m_vpImages.begin(), m_vpImages.end(), [aRenamed](const std::shared_ptr<CEditorImage> &OtherImage) { return str_comp(OtherImage->m_aName, aRenamed) == 0; }) != m_vpImages.end())
-			str_format(aRenamed, sizeof(aRenamed), "%s (%d)", pImage->m_aName, DuplicateCount++); // Rename to "图像名（%d）"
+			str_format(aRenamed, sizeof(aRenamed), "%s (%d)", pImage->m_aName, DuplicateCount++); // 重命名为“image_name (%d)”
 		str_copy(pImage->m_aName, aRenamed);
 	};
 
@@ -1340,7 +1340,7 @@ bool CEditorMap::Append(const char *pFilename, int StorageType, bool IgnoreHisto
 			{
 				const int IndexToReplaceWith = MatchInCurrentMap - m_vpImages.begin();
 
-				dbg_msg("editor", "地图已包含图像 %s 且数据相同，移除重复项", pNewImage->m_aName);
+				dbg_msg("editor", Localize("map already contains image %s with the same data, removing duplicate", "Editor"), pNewImage->m_aName);
 
 				// In the new map, replace the index of the duplicate image to the index of the same in the current map.
 				NewMap.ModifyImageIndex(ReplaceIndex(IndexToReplace, IndexToReplaceWith));
@@ -1350,7 +1350,7 @@ bool CEditorMap::Append(const char *pFilename, int StorageType, bool IgnoreHisto
 				// Rename image and add it
 				Rename(pNewImage);
 
-				dbg_msg("editor", "地图已包含图像 %s，但附加图像内容不同，重命名为 %s", (*MatchInCurrentMap)->m_aName, pNewImage->m_aName);
+				dbg_msg("editor", Localize("map already contains image %s but contents of appended image is different. Renaming to %s", "Editor"), (*MatchInCurrentMap)->m_aName, pNewImage->m_aName);
 
 				NewMap.ModifyImageIndex(ReplaceIndex(IndexToReplace, m_vpImages.size()));
 				pNewImage->OnAttach(this);
@@ -1449,7 +1449,7 @@ void CEditorMap::PerformSanityChecks(const FErrorHandler &ErrorHandler)
 						{
 							pLayerTiles->m_Image = -1;
 							char aBuf[IO_MAX_PATH_LENGTH + 128];
-							str_format(aBuf, sizeof(aBuf), "错误：图像“%s”（大小 %" PRIzu "x%" PRIzu "）的宽或高不能被 16 整除，因此不能用于图块层。已取消组 #%" PRIzu "“%s”中图层 #%" PRIzu "“%s”的图像。", pImage->m_aName, pImage->m_Width, pImage->m_Height, GroupIndex, pGroup->m_aName, LayerIndex, pLayer->m_aName);
+							str_format(aBuf, sizeof(aBuf), Localize("Error: The image '%s' (size %zu x%zu) has a width or height that is not divisible by 16 and therefore cannot be used for tile layers. The image of group #%zu '%s', layer #%zu '%s', has been unset.", "Editor"), pImage->m_aName, pImage->m_Width, pImage->m_Height, GroupIndex, pGroup->m_aName, LayerIndex, pLayer->m_aName);
 							ErrorHandler(aBuf);
 						}
 					}

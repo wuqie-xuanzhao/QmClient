@@ -9,7 +9,7 @@
 // 全局卡片组件注册表（单一事实源）。
 // 每张卡的默认 Placement {stableId, tab, column, order}，是默认值、迁移兜底、新卡补位的唯一依据。
 // tab 是可变位置维度（非卡片固有归属）；数据债卡（laser/nameplate_text）的 tab 在本表补齐。
-// stableId 规范见 docs/superpowers/specs/2026-06-29-全局卡片-组件编辑器与stableId设计.md。
+// stableId 使用 qm:/tclient:/deck: 命名空间并保持全局唯一。
 namespace qm_card_registry
 {
 	enum class ECardColumn

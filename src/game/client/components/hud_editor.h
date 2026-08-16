@@ -196,7 +196,6 @@ enum class EHudEditorElement
 	VoiceOverlay,
 	InputOverlay,
 	HudNotifications,
-	LiveFinishRank,
 
 	Count,
 };
@@ -231,7 +230,6 @@ namespace QmHudEditor
 		case EHudEditorElement::VoiceOverlay: return "voice_overlay";
 		case EHudEditorElement::InputOverlay: return "input_overlay";
 		case EHudEditorElement::HudNotifications: return "hud_notifications";
-		case EHudEditorElement::LiveFinishRank: return "live_finish_rank";
 		case EHudEditorElement::Count: break;
 		}
 		return "";

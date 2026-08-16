@@ -1,6 +1,7 @@
 #include "statusbar.h"
 
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
 
 #include <game/client/gameclient.h>
@@ -299,6 +300,20 @@ float CStatusBar::DownstreamWidth()
 
 void CStatusBar::DownstreamRender()
 {
+	CServerInfo CurrentServerInfo;
+	Client()->GetServerInfo(&CurrentServerInfo);
+	char aBuf[32];
+	FormatMetricValue(aBuf, sizeof(aBuf), "ms", (float)CurrentServerInfo.m_Latency);
+	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
+}
+
+float CStatusBar::RttWidth()
+{
+	return TextRender()->TextWidth(m_FontSize, "000ms");
+}
+
+void CStatusBar::RttRender()
+{
 	char aBuf[32];
 	FormatMetricValue(aBuf, sizeof(aBuf), "ms", GameClient()->m_QmMonitoring.Snapshot().m_Network.m_PingMs);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
@@ -452,7 +467,7 @@ void CStatusBar::ApplyStatusBarScheme(const char *pScheme)
 	for(int i = 0; pScheme[i] != '\0'; ++i)
 	{
 		char SchemeLetter = pScheme[i];
-		for(CStatusItem &ItemType : m_StatusItemTypes)
+		for(CStatusItem &ItemType : m_vStatusItemTypes)
 		{
 			for(char ItemLetter : ItemType.m_aLetters)
 			{

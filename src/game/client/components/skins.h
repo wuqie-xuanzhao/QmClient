@@ -277,6 +277,7 @@ public:
 		EState DetermineInitialState() const;
 		bool IsBackgroundTracked() const { return m_BackgroundEntryIterator.has_value() && !m_UsageEntryIterator.has_value(); }
 		void TouchUsage();
+		void ClearUsage();
 		void TouchBackgroundUsage();
 		void ClearBackgroundUsage();
 		void SetState(EState State, ESettingsResourcePriority Priority = ESettingsResourcePriority::VISIBLE);

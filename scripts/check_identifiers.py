@@ -6,9 +6,16 @@ import sys
 def check_name(kind, qualifiers, typ, name):
 	if kind == "variable":
 		return check_variable_name(qualifiers, typ, name)
-	if kind in "class struct".split():
+	if kind == "class":
 		if name[0] not in "CI":
 			return "should start with 'C' (or 'I' for interfaces)"
+		if len(name) < 2:
+			return "must be at least two characters long"
+		if not name[1].isupper():
+			return "must start with an uppercase letter"
+	if kind == "struct":
+		if not name.startswith("S"):
+			return "should start with 'S'"
 		if len(name) < 2:
 			return "must be at least two characters long"
 		if not name[1].isupper():

@@ -50,9 +50,6 @@ void CPlayerIndicator::OnRender()
 		{
 			if(!GameClient()->m_Snap.m_apPlayerInfos[i] || i == LocalClientId)
 				continue;
-			if(!GameClient()->LiveTeamFilterAllowsClient(i))
-				continue;
-
 			const CGameClient::CClientData &OtherTee = GameClient()->m_aClients[i];
 			const CCharacterCore &OtherCharacter = OtherTee.m_Predicted;
 			if(

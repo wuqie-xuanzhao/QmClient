@@ -77,7 +77,7 @@ void CQuadKnife::DoSlice()
 		vec2(fx2f(pQuad->m_aPoints[3].x), fx2f(pQuad->m_aPoints[3].y)),
 		vec2(fx2f(pQuad->m_aPoints[2].x), fx2f(pQuad->m_aPoints[2].y))};
 
-	str_copy(Editor()->m_aTooltip, "在四边形内左键选择切割区域。按住 Alt 可忽略网格。右键退出切割模式。");
+	str_copy(Editor()->m_aTooltip, Localize("Left click inside the quad to select an area to slice. Hold alt to ignore grid. Right click to leave knife mode.", "Editor"));
 
 	if(Editor()->Ui()->MouseButtonClicked(1))
 	{
