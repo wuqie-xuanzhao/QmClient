@@ -405,8 +405,8 @@ namespace QmLyrics
 
 		char aErr[128];
 		std::vector<SSourceCandidate> vCandidates = CompletedStage == SImpl::EStage::GET ?
-			ParseLrclibGetResponse((const char *)pBody, BodyLen, aErr, sizeof(aErr)) :
-			ParseLrclibSearchResponse((const char *)pBody, BodyLen, aErr, sizeof(aErr));
+								    ParseLrclibGetResponse((const char *)pBody, BodyLen, aErr, sizeof(aErr)) :
+								    ParseLrclibSearchResponse((const char *)pBody, BodyLen, aErr, sizeof(aErr));
 		if(CompletedStage == SImpl::EStage::GET && ShouldFallbackLrclibGet(pRequest->StatusCode(), !vCandidates.empty()))
 		{
 			m_pImpl->m_Done = std::move(Done);
