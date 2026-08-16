@@ -26,7 +26,10 @@ struct SSettingsCardDefinition
 	FSettingsCardPreLayoutHeaderInput m_PreLayoutHeaderInput;
 	FSettingsCardHeaderAction m_HeaderAction;
 	std::function<bool()> m_IsCollapsed;
+	// 存在回调时，m_DefaultCollapsed 是当前 definitions revision 的权威外部快照。
+	FSettingsCardCollapseChanged m_OnCollapseChanged;
 	std::function<bool()> m_IsVisible;
+	bool m_DefaultCollapsed = false;
 	// 控制其他卡片可见性的输入在最终布局前处理。
 	bool m_VisibilityController = false;
 	// 内容高度依赖配置或运行时状态时，每帧重新测量。

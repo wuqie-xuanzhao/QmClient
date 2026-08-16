@@ -7259,7 +7259,7 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiCardOpacity / 100.0f"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_SurfaceColor = CardColor.WithAlpha(std::clamp(g_Config.m_QmUiOpacity / 100.0f"), std::string::npos);
 	EXPECT_EQ(MenusSource.find("Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 &&"), std::string::npos);
-	EXPECT_NE(QmClientSource.find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("Definition.m_OnCollapseChanged"), std::string::npos);
 	EXPECT_EQ(QmClientSource.find("Collapsed ? \"+\" : \"-\""), std::string::npos);
 }
 

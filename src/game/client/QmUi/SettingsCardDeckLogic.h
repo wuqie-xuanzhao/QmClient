@@ -91,20 +91,15 @@ inline bool SettingsCardDeckShouldRunPreLayoutInput(const bool HasPointerInput, 
 	return (((HasPointerInput || HasPendingInput) && ControllerVisible) || HasActiveItemContinuation) && !Collapsed && VisibleContentHeight > 0.0f;
 }
 
-inline bool SettingsCardDeckUsesDefaultCollapseControl(const bool HasCustomCollapsedState, const bool HasCustomHeaderInput)
+inline bool SettingsCardDeckUsesDefaultCollapseControl()
 {
-	return !HasCustomCollapsedState && !HasCustomHeaderInput;
+	return true;
 }
 
-inline bool SettingsCardDeckResolveCollapsed(const bool HasCustomCollapsedState, const bool CustomCollapsed, const bool DefaultCollapsed)
+// 默认折叠按钮的唯一状态转移；RenderOnly 不能改写卡片状态。
+inline bool SettingsCardDeckApplyDefaultCollapseToggle(const bool Collapsed, const bool TogglePressed, const bool RenderOnly)
 {
-	return HasCustomCollapsedState ? CustomCollapsed : DefaultCollapsed;
-}
-
-// 默认折叠按钮的唯一状态转移；自定义卡片和 RenderOnly 不能被公共按钮改写。
-inline bool SettingsCardDeckApplyDefaultCollapseToggle(const bool HasCustomCollapsedState, const bool Collapsed, const bool TogglePressed, const bool RenderOnly)
-{
-	return !HasCustomCollapsedState && !RenderOnly && TogglePressed ? !Collapsed : Collapsed;
+	return !RenderOnly && TogglePressed ? !Collapsed : Collapsed;
 }
 
 inline bool SettingsCardDeckDefinitionsRevisionChanged(const bool Initialized, const uint64_t CurrentRevision, const uint64_t NextRevision)
@@ -128,6 +123,11 @@ inline void SettingsCardDeckStoreCollapsed(std::unordered_map<std::string, bool>
 {
 	if(pStableId != nullptr && pStableId[0] != '\0')
 		States[pStableId] = Collapsed;
+}
+
+inline bool SettingsCardDeckResolveCollapsedSnapshot(const std::unordered_map<std::string, bool> &States, const char *pStableId, const bool DefinitionCollapsed, const bool DefinitionAuthoritative)
+{
+	return DefinitionAuthoritative ? DefinitionCollapsed : SettingsCardDeckLoadCollapsed(States, pStableId, DefinitionCollapsed);
 }
 
 struct SSettingsCardAnimationWork

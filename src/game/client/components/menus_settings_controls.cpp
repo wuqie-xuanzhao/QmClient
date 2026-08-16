@@ -295,7 +295,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(GameClient()->m_Menus.m_SettingsCardDeckDisplayCycle, GameClient()->m_Menus.m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
 	const auto BuildDefinitions = [this, HasCustomBinds, ReadOnly, ControllerMeasureRevision, CardCtx](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(9);
-		const auto AddCard = [this](std::vector<SSettingsCardDefinition> &Cards, const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, std::function<bool()> IsCollapsed = {}, FSettingsCardPreLayoutHeaderInput PreLayoutHeaderInput = {}, FSettingsCardHeaderAction HeaderAction = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
+		const auto AddCard = [](std::vector<SSettingsCardDefinition> &Cards, const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false, bool DefaultCollapsed = false, FSettingsCardCollapseChanged OnCollapseChanged = {}, bool MeasureEachFrame = false, uint64_t MeasureRevision = 0) {
 			const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(pId);
 			if(pDefault == nullptr)
 				return;
@@ -304,9 +304,8 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			Definition.m_Measure = [Measure, MinHeight](float Width) { return std::max(MinHeight, Measure ? Measure(Width) : 0.0f); };
 			Definition.m_Render = std::move(Render);
 			Definition.m_IsVisible = std::move(IsVisible);
-			Definition.m_IsCollapsed = std::move(IsCollapsed);
-			Definition.m_PreLayoutHeaderInput = std::move(PreLayoutHeaderInput);
-			Definition.m_HeaderAction = std::move(HeaderAction);
+			Definition.m_DefaultCollapsed = DefaultCollapsed;
+			Definition.m_OnCollapseChanged = std::move(OnCollapseChanged);
 			Definition.m_MeasureEachFrame = MeasureEachFrame;
 			Definition.m_MeasureRevision = MeasureRevision;
 			Definition.m_RenderWhenClipped = RenderWhenClipped;
@@ -317,7 +316,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			return Expanded ? MeasureSettingsBindsHeight(Group) : 0.0f;
 		};
 		AddCard(vCards, "deck:controls-mouse", 0.0f, [this](float) { return MeasureSettingsMouseHeight(); }, [this](CUIRect Rect) { RenderSettingsMouse(Rect); });
-		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float Width) { return MeasureSettingsJoystickHeight(Width); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); }, {}, false, {}, {}, {}, false, ControllerMeasureRevision);
+		AddCard(vCards, "deck:controls-controller", 0.0f, [this](float Width) { return MeasureSettingsJoystickHeight(Width); }, [this, ReadOnly](CUIRect Rect) { RenderSettingsJoystick(Rect, ReadOnly); }, {}, false, false, {}, false, ControllerMeasureRevision);
 		vCards.back().m_PreLayoutInput = [this](CUIRect Content) {
 			bool Changed = false;
 			CUIRect Button;
@@ -372,16 +371,9 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 		for(const auto &[Group, pId] : aBindCards)
 		{
 			const bool IsCustom = Group == EBindOptionGroup::CUSTOM;
-			const auto IsCollapsed = [this, Group] { return !m_aBindGroupExpanded[(int)Group]; };
-			const auto PreLayoutHeaderInput = [this, Group](const SSettingsCardFrame &Frame, bool Collapsed) {
-				const int GroupIndex = (int)Group;
-				if(!Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], Collapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
-					return false;
-				m_aBindGroupExpanded[GroupIndex] = !m_aBindGroupExpanded[GroupIndex];
-				return true;
-			};
-			const auto HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
-			AddCard(vCards, pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group, ReadOnly](CUIRect Rect) { RenderSettingsBindCard(Group, Rect, ReadOnly); }, IsCustom ? std::function<bool()>([HasCustomBinds] { return HasCustomBinds; }) : std::function<bool()>(), true, IsCollapsed, PreLayoutHeaderInput, HeaderAction, false, m_BindLayoutRevision);
+			const bool DefaultCollapsed = !m_aBindGroupExpanded[(int)Group];
+			const auto OnCollapseChanged = [this, Group](bool Collapsed) { m_aBindGroupExpanded[(int)Group] = !Collapsed; };
+			AddCard(vCards, pId, 0.0f, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group, ReadOnly](CUIRect Rect) { RenderSettingsBindCard(Group, Rect, ReadOnly); }, IsCustom ? std::function<bool()>([HasCustomBinds] { return HasCustomBinds; }) : std::function<bool()>(), true, DefaultCollapsed, OnCollapseChanged, false, m_BindLayoutRevision);
 		}
 	};
 	if(!ReadOnly && m_SearchMatchReveal && !m_vSearchMatches.empty() && m_CurrentSearchMatch >= 0 && m_CurrentSearchMatch < (int)m_vSearchMatches.size())

@@ -1,7 +1,7 @@
 ---
 type: design-specification
 date: 2026-07-10
-updated: 2026-07-11
+updated: 2026-07-22
 status: active
 scope:
   - 全部设置页、QmClient、TClient 和设置搜索
@@ -10,6 +10,8 @@ authority: 本规格、当前代码审计、GitHub 合并前审查、人工验�
 ---
 
 # QmClient 设置页卡片平台与菜单 UI/UX 重新设计规格
+
+> 文档状态：本文的历史基础设计仍有效，但 2026-07-21 的 [UIUX 现状审查与防回归设计](2026-07-21-QmClient-设置页UIUX现状审查与防回归设计.md) 覆盖本文之后产生的 Dropdown anchor/完整行、网格滚动条、卡片折叠唯一入口、边框与背景解耦等冲突条款。实现状态和最新验收证据以该文第 0 节为准。
 
 ## 1. 文档地位与完成口径
 
@@ -170,7 +172,7 @@ label + horizontal slider + InputField(integer/decimal/infinite) + optional unit
 | 菜单列表 | `medium` | 由行高与每次行数解析步长 |
 | popup 与复合控件内滚 | `small` | 至多八项可见，按行滚动 |
 | 数值 slider | `horizontal` | 由 `NumericField` 统一管理 |
-| 国旗等筛选网格 | `small` + hidden rail | 两行步长，仍保留 wheel/键盘/clip |
+| 国旗、皮肤、Tee7 部件网格 | `SETTINGS_GRID` + `small` rail | overflow 时显示 rail 并消费 wheel；无 overflow 时不显示、不预留 |
 
 rail 只有 `AUTO` 与 `HIDDEN`。`AUTO` 仅真实 overflow 时显示；没有 overflow 时不得绘制、预留宽度或扩大热区。`HIDDEN` 不绘制也不预留 rail，但仍可滚动，热区只能为实际 clip。
 
@@ -276,7 +278,7 @@ R1–R3 是可追踪路线，不是 P0–P7 的隐含完成条件。除非用户
 - 三档字体、长本地化/UI scale 的保底触发和布局反馈记录。
 - 灰色输入背景、粗外框 focus、icon slot、placeholder、IME、光标、清除 `X`。
 - 整数/小数/`∞`、单位、delay commit、slider 最小轨道与两行安全降级。
-- overflow rail 显隐、Alt 3 倍、hidden rail、列表行步长、popup 八项上限、首轮 wheel ownership 和父 viewport clip。
+- overflow rail 显隐、Alt 3 倍、`SETTINGS_GRID` overflow rail、列表行步长、popup 八项上限、首轮 wheel ownership 和父 viewport clip。
 - 禁止旧 glass/TClient cache/private drag/`ForceShowScrollbar`/设置页直接旧 input 与 slider 路径的结构检查。
 
 最终验证使用仓库规定的 `cmake-windows.cmd` 构建入口，串行运行全量 C++ tests、docs check、`git diff --check` 和适用的 default gate。核心逻辑改动完成后必须有独立只读 review；review finding 收口前不得提交。
@@ -290,7 +292,7 @@ R1–R3 是可追踪路线，不是 P0–P7 的隐含完成条件。除非用户
 | Graphics、Controls、Sound | slider+input、`∞`、单位、focus ring、无球状横向轨道。 |
 | Search | 搜索结果与设置卡同源，跳转正确，无重复/英文占位文本。 |
 | 短/长 dropdown | 父 clip、rail、wheel ownership、无闪烁。 |
-| 国旗、语言、服务器、好友 | list/filter profile、hidden rail、Alt 加速和性能。 |
+| 国旗、皮肤、Tee7、语言、服务器、好友 | grid/list profile、overflow rail、Alt 加速和性能。 |
 | 非默认 UI scale、本地化长文本 | typography 保底、卡片宽度、行高与控件不重叠。 |
 
 每项记录页面、viewport/UI scale、操作、截图或结果，以及未验证项。未人工验收的项目必须以 gap 交接。

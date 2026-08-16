@@ -156,28 +156,19 @@ TEST(SettingsCardDeck, ActiveItemContinuationRequiresPointerInput)
 	EXPECT_FALSE(SettingsCardDeckHasActiveItemContinuation(false, false));
 }
 
-TEST(SettingsCardDeck, OrdinaryCardsUseDefaultCollapseWhileCustomCardsRemainAuthoritative)
+TEST(SettingsCardDeck, EveryCardUsesTheSharedCollapseControl)
 {
-	EXPECT_TRUE(SettingsCardDeckUsesDefaultCollapseControl(false, false));
-	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, false));
-	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(false, true));
-	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, true));
-
-	EXPECT_FALSE(SettingsCardDeckResolveCollapsed(false, true, false));
-	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(false, false, true));
-	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(true, true, false));
-	EXPECT_FALSE(SettingsCardDeckResolveCollapsed(true, false, true));
+	EXPECT_TRUE(SettingsCardDeckUsesDefaultCollapseControl());
 }
 
 TEST(SettingsCardDeck, OrdinaryCollapseStateTogglesOnlyFromVisibleHeaderInput)
 {
-	// 这条契约模拟真实 header 点击的状态转移：RenderOnly、用户自定义 header
-	// 和未点击都不能偷改卡片折叠状态。
-	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, false, true, false));
-	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, true, false));
-	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, false, true, true));
-	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(true, false, true, false));
-	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, false, false));
+	// 这条契约模拟真实 header 点击的状态转移：RenderOnly 和未点击
+	// 都不能偷改卡片折叠状态。
+	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, false));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(true, true, false));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, true));
+	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(true, false, false));
 }
 
 TEST(SettingsCardDeck, PreLayoutReleaseUsesTheLastVisibleAnimatedFrame)
@@ -654,6 +645,24 @@ TEST(SettingsCardDeck, InnerSurfaceCompensatesBorderWithoutTintingCardBackground
 	EXPECT_NEAR(CombinedChannel(Inner.b, Border.b), Surface.b * Surface.a, 0.001f);
 }
 
+TEST(SettingsCardDeck, EffectiveBorderAlphaCannotPolluteATranslucentSurface)
+{
+	const ColorRGBA Surface(0.24f, 0.28f, 0.32f, 0.20f);
+	const ColorRGBA Border(0.90f, 0.15f, 0.10f, 1.0f);
+	const ColorRGBA Effective = ResolveSettingsCardEffectiveBorderColor(Border, Surface);
+	const ColorRGBA Inner = ResolveSettingsCardInnerSurfaceColor(Surface, Effective);
+	const float CombinedAlpha = Inner.a + Effective.a * (1.0f - Inner.a);
+	const auto CombinedChannel = [&](const float InnerChannel, const float BorderChannel) {
+		return InnerChannel * Inner.a + BorderChannel * Effective.a * (1.0f - Inner.a);
+	};
+
+	EXPECT_LT(Effective.a, Surface.a);
+	EXPECT_NEAR(CombinedAlpha, Surface.a, 0.001f);
+	EXPECT_NEAR(CombinedChannel(Inner.r, Effective.r), Surface.r * Surface.a, 0.001f);
+	EXPECT_NEAR(CombinedChannel(Inner.g, Effective.g), Surface.g * Surface.a, 0.001f);
+	EXPECT_NEAR(CombinedChannel(Inner.b, Effective.b), Surface.b * Surface.a, 0.001f);
+}
+
 TEST(SettingsCardDeck, ConfiguredBorderColorDoesNotTintSurface)
 {
 	const ColorRGBA Surface(0.24f, 0.28f, 0.32f, 0.70f);
@@ -800,6 +809,14 @@ TEST(SettingsCardDeck, DefaultCollapseStateUsesStableIdAcrossTabs)
 	EXPECT_TRUE(SettingsCardDeckLoadCollapsed(States, "graphics-display", false));
 	EXPECT_FALSE(SettingsCardDeckLoadCollapsed(States, "controls-gamepad", true));
 	EXPECT_TRUE(SettingsCardDeckLoadCollapsed(States, "missing", true));
+}
+
+TEST(SettingsCardDeck, ExplicitCollapseStateOverridesCachedStableIdState)
+{
+	std::unordered_map<std::string, bool> States;
+	SettingsCardDeckStoreCollapsed(States, "qm:coords", true);
+	EXPECT_FALSE(SettingsCardDeckResolveCollapsedSnapshot(States, "qm:coords", false, true));
+	EXPECT_TRUE(SettingsCardDeckResolveCollapsedSnapshot(States, "qm:coords", false, false));
 }
 
 TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)

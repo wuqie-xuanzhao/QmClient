@@ -8,6 +8,7 @@
 
 #include <game/client/ui_rect.h>
 
+#include <algorithm>
 #include <cstdint>
 
 struct SQmDropdownVisualStyle
@@ -36,6 +37,10 @@ struct SQmDropdownGeometryConfig
 	float m_Height = 0.0f;
 	float m_Gap = 0.0f;
 	float m_Margin = 0.0f;
+	float m_RowHeight = 0.0f;
+	float m_RowSpacing = 0.0f;
+	float m_FixedHeight = 0.0f;
+	float m_LeadingRowSpacing = 0.0f;
 	bool m_PreferBelow = true;
 };
 
@@ -76,6 +81,11 @@ struct SQmDropdownUpdateResult
 	bool m_Selected = false;
 	int m_SelectedIndex = -1;
 };
+
+inline float QmDropdownFixedHeight(const bool HasMessage, const float MessageHeight, const float OuterHeight)
+{
+	return std::max(0.0f, OuterHeight) + (HasMessage ? std::max(0.0f, MessageHeight) : 0.0f);
+}
 
 SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRect, const CUIRect &ViewportRect, const SQmDropdownGeometryConfig &Config);
 SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight, int MinimumVisibleItems = 0);
