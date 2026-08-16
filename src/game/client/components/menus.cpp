@@ -2277,7 +2277,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float OnlineDemoButtonSize = Box.h;
 			const float OnlineDemoGap = 6.0f;
 			const float RequiredOnlineTabsWidth = GameButtonWidth + PlayersButtonWidth + ServerInfoButtonWidth + BrowserButtonWidth + CallVoteButtonWidth +
-				OnlineTabGap * 4.0f + (GameClient()->m_GameInfo.m_Race ? GhostButtonWidth + OnlineTabGap : 0.0f);
+							      OnlineTabGap * 4.0f + (GameClient()->m_GameInfo.m_Race ? GhostButtonWidth + OnlineTabGap : 0.0f);
 			const bool HasOnlineDemoButton = Box.w >= RequiredOnlineTabsWidth + 2.0f * OnlineDemoGap + OnlineDemoButtonSize;
 			CUIRect DemoButton;
 

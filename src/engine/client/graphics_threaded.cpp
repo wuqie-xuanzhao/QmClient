@@ -6,9 +6,9 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/client/backend/vulkan/backend_vulkan.h>
 #include <engine/client/plausible_sizes.h>
 #include <engine/client/rounded_rect_geometry.h>
-#include <engine/client/backend/vulkan/backend_vulkan.h>
 #include <engine/engine.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
@@ -3800,7 +3800,7 @@ int CGraphics_Threaded::InitWindow()
 	}
 
 	const bool VulkanFallbackAttempted = VulkanRequested && g_Config.m_GfxGLMajor == gs_BackendVulkanFallbackVersion.m_Major &&
-		g_Config.m_GfxGLMinor == gs_BackendVulkanFallbackVersion.m_Minor && g_Config.m_GfxGLPatch == gs_BackendVulkanFallbackVersion.m_Patch;
+					     g_Config.m_GfxGLMinor == gs_BackendVulkanFallbackVersion.m_Minor && g_Config.m_GfxGLPatch == gs_BackendVulkanFallbackVersion.m_Patch;
 	if(VulkanRequested && !VulkanFallbackAttempted)
 	{
 		g_Config.m_GfxGLMajor = gs_BackendVulkanFallbackVersion.m_Major;
