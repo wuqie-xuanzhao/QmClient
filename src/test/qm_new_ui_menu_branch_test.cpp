@@ -57,6 +57,15 @@ TEST(TClientStatusBarScore, FormatsPlayerPointsStates)
 	EXPECT_FALSE(tclient_statusbar::FormatPlayerPoints(aBuf, 0, EPointsStatus::READY, 0));
 }
 
+TEST(TClientStatusBar, ValidatesPlayerIds)
+{
+	EXPECT_FALSE(tclient_statusbar::IsValidPlayerId(SPEC_FREEVIEW));
+	EXPECT_FALSE(tclient_statusbar::IsValidPlayerId(-1));
+	EXPECT_TRUE(tclient_statusbar::IsValidPlayerId(0));
+	EXPECT_TRUE(tclient_statusbar::IsValidPlayerId(MAX_CLIENTS - 1));
+	EXPECT_FALSE(tclient_statusbar::IsValidPlayerId(MAX_CLIENTS));
+}
+
 TEST(QmNewUiMenuBranches, RespawnWeaponAndCallvoteFiltersUseSharedBoundedSemantics)
 {
 	EXPECT_EQ(QmRespawnDefaultWantedWeapon(-1), 0);
@@ -161,6 +170,7 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 {
 	const std::string Header = ReadTextFile("src/game/client/components/tclient/statusbar.h");
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
+	const std::string Config = ReadTextFile("src/engine/shared/config_variables_tclient.h");
 	const std::string ApplyScheme = FunctionBody(Source, "void CStatusBar::ApplyStatusBarScheme(const char *pScheme)");
 	const std::string UpdateScheme = FunctionBody(Source, "void CStatusBar::UpdateStatusBarScheme(char *pScheme)");
 	const std::string ScoreRegistration = "\"s\", \"Points\", \"Points\", \"Displays the DDNet Points of the current player\"";
@@ -172,21 +182,48 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 	EXPECT_NE(ApplyScheme.find("for(char ItemLetter : ItemType.m_aLetters)"), std::string::npos);
 	EXPECT_NE(ApplyScheme.find("m_StatusBarItems.push_back(&ItemType);"), std::string::npos);
 	EXPECT_NE(UpdateScheme.find("pScheme[Index++] = pItem->m_aLetters[0];"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_STR(TcStatusBarScheme, tc_statusbar_scheme, 129,"), std::string::npos);
+	EXPECT_NE(Header.find("STATUSBAR_MAX_SIZE = 128"), std::string::npos);
 }
 
-TEST(TClientStatusBarNetworkMetrics, PreservesSnapshotLatencyAndSeparatesRoundTripTime)
+TEST(TClientStatusBar, IgnoresPlayerItemsForInvalidSpectatorIds)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
+	const std::string AngleWidth = FunctionBody(Source, "float CStatusBar::AngleWidth()");
+	const std::string PingWidth = FunctionBody(Source, "float CStatusBar::PingWidth()");
+	const std::string PositionWidth = FunctionBody(Source, "float CStatusBar::PositionWidth()");
+	const std::string VelocityWidth = FunctionBody(Source, "float CStatusBar::VelocityWidth()");
+
+	EXPECT_NE(Source.find("static_assert(STATUSBAR_MAX_SIZE < sizeof(g_Config.m_TcStatusBarScheme));"), std::string::npos);
+	EXPECT_NE(AngleWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId))"), std::string::npos);
+	EXPECT_NE(PingWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])"), std::string::npos);
+	EXPECT_NE(PositionWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])"), std::string::npos);
+	EXPECT_NE(VelocityWidth.find("if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])"), std::string::npos);
+}
+
+TEST(TClientStatusBar, RefreshesDynamicLayoutInputsBeforeRendering)
 {
 	const std::string Header = ReadTextFile("src/game/client/components/tclient/statusbar.h");
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
-	const std::string SnapshotLatencyRender = FunctionBody(Source, "void CStatusBar::DownstreamRender()");
-	const std::string RoundTripTimeRender = FunctionBody(Source, "void CStatusBar::RttRender()");
+	const std::string Render = FunctionBody(Source, "void CStatusBar::OnRender()");
+	const std::string RaceRender = FunctionBody(Source, "void CStatusBar::RaceTimeRender()");
+	const std::string ApplyScheme = FunctionBody(Source, "void CStatusBar::ApplyStatusBarScheme(const char *pScheme)");
+	const std::string UpdateScheme = FunctionBody(Source, "void CStatusBar::UpdateStatusBarScheme(char *pScheme)");
+	const std::string ConnectionWidth = FunctionBody(Source, "float CStatusBar::ConnectionGradeWidth()");
 
-	EXPECT_NE(Header.find("\"u\", \"Snapshot Latency\", \"Latency\", \"Displays server snapshot latency\""), std::string::npos);
-	EXPECT_NE(Header.find("\"t\", \"Round-trip time\", \"RTT\", \"Displays the game connection round-trip time\""), std::string::npos);
-	EXPECT_NE(Header.find("m_Score, m_Downstream, m_Rtt, m_Upstream"), std::string::npos);
-	EXPECT_NE(SnapshotLatencyRender.find("Client()->GetServerInfo(&CurrentServerInfo)"), std::string::npos);
-	EXPECT_NE(SnapshotLatencyRender.find("CurrentServerInfo.m_Latency"), std::string::npos);
-	EXPECT_NE(RoundTripTimeRender.find("m_PingMs"), std::string::npos);
+	EXPECT_NE(Header.find("int CalculateRaceTime();"), std::string::npos);
+	const size_t RaceTimeUpdate = Render.find("m_CurrentRaceTime = CalculateRaceTime();");
+	const size_t LayoutWidth = Render.find("LayoutItem.m_ItemWidth = pItem->m_GetWidth();");
+	ASSERT_NE(RaceTimeUpdate, std::string::npos);
+	ASSERT_NE(LayoutWidth, std::string::npos);
+	EXPECT_LT(RaceTimeUpdate, LayoutWidth);
+	EXPECT_NE(RaceRender.find("const int RaceTime = m_CurrentRaceTime;"), std::string::npos);
+	EXPECT_NE(Header.find("m_aAppliedStatusBarScheme"), std::string::npos);
+	EXPECT_NE(Render.find("str_comp(m_aAppliedStatusBarScheme, g_Config.m_TcStatusBarScheme) != 0"), std::string::npos);
+	EXPECT_NE(ApplyScheme.find("str_copy(m_aAppliedStatusBarScheme, pScheme"), std::string::npos);
+	EXPECT_NE(UpdateScheme.find("str_copy(m_aAppliedStatusBarScheme, pScheme"), std::string::npos);
+	EXPECT_NE(ConnectionWidth.find("ConnectionGradeLabel(GameClient()->m_QmMonitoring.Snapshot().m_Verdict.m_Grade)"), std::string::npos);
+	EXPECT_EQ(ConnectionWidth.find("Localize(\"Severe\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsShellAndOuterScrollbarUseStableContracts)
@@ -295,6 +332,12 @@ TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_NE(UseNewUiBlock.find("const float GameButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float ServerInfoButtonWidth = CompactOnlineMenuTabs ? 94.0f : 104.0f;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float OnlineTabGap = 4.0f;"), std::string::npos);
+	EXPECT_NE(UseNewUiBlock.find("const float RequiredOnlineTabsWidth = GameButtonWidth + PlayersButtonWidth + ServerInfoButtonWidth + BrowserButtonWidth + CallVoteButtonWidth +"), std::string::npos);
+	EXPECT_NE(UseNewUiBlock.find("(GameClient()->m_GameInfo.m_Race ? GhostButtonWidth + OnlineTabGap : 0.0f);"), std::string::npos);
+	EXPECT_NE(UseNewUiBlock.find("const bool HasOnlineDemoButton"), std::string::npos);
+	EXPECT_NE(UseNewUiBlock.find("Box.w >= RequiredOnlineTabsWidth + 2.0f * OnlineDemoGap + OnlineDemoButtonSize"), std::string::npos);
+	EXPECT_NE(UseNewUiBlock.find("Box.VSplitLeft(OnlineDemoButtonSize, &DemoButton, &Box);"), std::string::npos);
+	EXPECT_NE(UseNewUiBlock.find("IGraphics::CORNER_ALL"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_SettingsButton"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_InternetButton"), std::string::npos);
 	EXPECT_EQ(UseNewUiBlock.find("DoButton_MenuTab(&s_SettingsButton"), std::string::npos);
@@ -903,7 +946,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurSettingReplacesBetterScoreboardAndIsVersio
 	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(19.0f);"), std::string::npos);
 	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
 	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \"2.80.0\""), std::string::npos);
+	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NewSettingsUseToggleAndExposeAccentAndBlurControls)
@@ -2964,10 +3007,10 @@ TEST(QmNewUiMenuBranches, InputTrailingActionsDoNotStealTextEditingHitArea)
 	EXPECT_NE(Body.find("Search ? static_cast<int>(EQmIcon::SEARCH) : -1"), std::string::npos);
 	EXPECT_NE(Body.find("static_cast<int>(EQmIcon::CLOSE)"), std::string::npos);
 	EXPECT_NE(Source.find("Ctx.m_pIconManager->RenderIcon"), std::string::npos);
-	EXPECT_NE(Source.find("const float EyeOffScale = QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? 1.25f : 1.15f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;"), std::string::npos);
-	EXPECT_NE(Source.find("Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);"), std::string::npos);
+	EXPECT_NE(Source.find("const float IconSide = minimum(Rect.w, Rect.h) * 0.58f;"), std::string::npos);
+	EXPECT_NE(Source.find("Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);"), std::string::npos);
+	EXPECT_EQ(Source.find("EyeOffScale"), std::string::npos);
+	EXPECT_EQ(Source.find("QmIcon == static_cast<int>(EQmIcon::EYE_OFF)"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
@@ -3676,6 +3719,7 @@ TEST(QmNewUiMenuBranches, SettingsDisplayCycleUpdatesAfterTabInputBeforePageRend
 	ASSERT_NE(PageRender, std::string::npos);
 	EXPECT_LT(TabInput, DisplayCycle);
 	EXPECT_LT(DisplayCycle, PageRender);
+	EXPECT_EQ(RenderSettings.find("Accent.VSplitLeft(3.0f"), std::string::npos);
 	EXPECT_NE(DeckSource.find("const bool TabChanged = m_LastRenderedTab != pTab;"), std::string::npos);
 	EXPECT_NE(DeckSource.find("if(TabChanged || StableIdsChanged || ModelCountChanged || StateIndexChanged)"), std::string::npos);
 	EXPECT_NE(DeckSource.find("m_SuppressHoverFeedbackOnce = true;"), std::string::npos);
@@ -4082,6 +4126,24 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	EXPECT_LT(HookCall, CommandLineParse);
 }
 
+TEST(QmNewUiMenuBranches, LiveDirectorChatToggleIsHandledByOverlayInput)
+{
+	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string Contains = FunctionBody(Source, "bool CGameClient::LiveObserverOverlayContains");
+	const std::string Input = FunctionBody(Source, "bool CGameClient::HandleLiveObserverInput");
+	const std::string Render = FunctionBody(Source, "void CGameClient::RenderLiveObserverOverlay");
+
+	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_W"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_H"), std::string::npos);
+	EXPECT_NE(Source.find("CUIRect LiveObserverChatToggleRect(float Height)"), std::string::npos);
+	EXPECT_NE(Contains.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), std::string::npos);
+	EXPECT_NE(Input.find("g_Config.m_ClShowChat = g_Config.m_ClShowChat == 0 ? 1 : 0;"), std::string::npos);
+	EXPECT_NE(Input.find("Input()->MouseModeAbsolute();"), std::string::npos);
+	EXPECT_LT(Input.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), Input.find("if(Panel.Inside(MousePos))"));
+	EXPECT_NE(Render.find("const CUIRect ChatToggle = LiveObserverChatToggleRect(Height);"), std::string::npos);
+	EXPECT_NE(Render.find("ChatVisible ? Localize(\"Hide Chat\") : Localize(\"Show chat\")"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
 {
 	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");
@@ -4172,20 +4234,12 @@ TEST(QmNewUiMenuBranches, OpenGLSelectionUsesRuntimeContextDetection)
 	EXPECT_FALSE(ShouldSyncActualOpenGLVersion(EBackendType::BACKEND_TYPE_OPENGL_ES, {1, 0, 0}, {3, 2, 0}));
 }
 
-TEST(QmNewUiMenuBranches, VulkanSelectionKeepsCompatibilityAndHighestTiersSeparate)
+TEST(QmNewUiMenuBranches, VulkanPerformanceModeNegotiatesHighestHeaderVersionThenFallsBack)
 {
-	EXPECT_EQ(gs_BackendVulkanMinimumVersion.m_Major, 1);
-	EXPECT_EQ(gs_BackendVulkanMinimumVersion.m_Minor, 1);
-	EXPECT_EQ(gs_BackendVulkanMaximumVersion.m_Major, 1);
-	EXPECT_EQ(gs_BackendVulkanMaximumVersion.m_Minor, 4);
+	EXPECT_EQ(gs_BackendVulkanFallbackVersion.m_Major, 1);
+	EXPECT_EQ(gs_BackendVulkanFallbackVersion.m_Minor, 1);
 	EXPECT_TRUE(IsVulkanVersionAtLeast({1, 4, 0}, {1, 1, 0}));
-	EXPECT_FALSE(IsVulkanVersionAtLeast({1, 3, 999}, {1, 4, 0}));
-	EXPECT_EQ(NormalizeRequestedVulkanVersion({1, 1, 0}).m_Minor, 1);
-	EXPECT_EQ(NormalizeRequestedVulkanVersion({1, 3, 0}).m_Minor, 1);
-	EXPECT_EQ(NormalizeRequestedVulkanVersion({1, 4, 0}).m_Minor, 4);
-	EXPECT_EQ(NormalizeRequestedVulkanVersion({1, 4, 99}).m_Minor, 4);
-	EXPECT_EQ(NormalizeRequestedVulkanVersion({2, 0, 0}).m_Minor, 1);
-	EXPECT_EQ(NormalizeRequestedVulkanVersion({4, 1, 0}).m_Minor, 1);
+	EXPECT_FALSE(IsVulkanVersionAtLeast({1, 0, 0}, {1, 1, 0}));
 
 	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp");
 	const std::string GraphicsThreadedSource = ReadTextFile("src/engine/client/graphics_threaded.cpp");
@@ -4196,22 +4250,88 @@ TEST(QmNewUiMenuBranches, VulkanSelectionKeepsCompatibilityAndHighestTiersSepara
 	const std::string CreateInstance = FunctionBody(VulkanSource, "bool CreateVulkanInstance(");
 	const std::string SelectGpu = FunctionBody(VulkanSource, "bool SelectGpu(");
 
-	EXPECT_NE(DriverVersions.find("gs_BackendVulkanMinimumVersion"), std::string::npos);
-	EXPECT_NE(DriverVersions.find("gs_BackendVulkanMaximumVersion"), std::string::npos);
-	EXPECT_EQ(ClampDriverVersion.find("NormalizeRequestedVulkanVersion"), std::string::npos);
+	EXPECT_NE(DriverVersions.find("Major = 0;"), std::string::npos);
+	EXPECT_NE(DriverVersions.find("Minor = 0;"), std::string::npos);
+	EXPECT_EQ(DriverVersions.find("gs_BackendVulkan"), std::string::npos);
+	EXPECT_EQ(ClampDriverVersion.find("gs_BackendVulkan"), std::string::npos);
 	EXPECT_EQ(ClampDriverVersion.find("g_Config.m_GfxGLMajor = Version.m_Major"), std::string::npos);
-	EXPECT_NE(VulkanSource.find("const SVulkanVersion RequestedVersion = gs_BackendVulkanMinimumVersion;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VK_HEADER_VERSION_COMPLETE"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("std::min(LoaderApiVersion, HeaderApiVersion)"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("fallback-1.1"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("SDL_Vulkan_GetVkGetInstanceProcAddr"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("vkEnumerateInstanceVersion"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("FirstCompatibleDeviceIndex"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("configured graphics card is unavailable"), std::string::npos);
+	EXPECT_NE(GraphicsThreadedSource.find("RestoreAutomaticVulkanConfig"), std::string::npos);
+	EXPECT_NE(GraphicsThreadedSource.find("const char *pEnvDriver = SDL_getenv(\"DDNET_DRIVER\");"), std::string::npos);
+	EXPECT_NE(GraphicsThreadedSource.find("const bool VulkanForcedByEnvironment = pEnvDriver != nullptr && str_comp_nocase(pEnvDriver, \"Vulkan\") == 0;"), std::string::npos);
+	EXPECT_NE(GraphicsThreadedSource.find("const bool VulkanConfigured = pEnvDriver == nullptr && str_comp_nocase(g_Config.m_GfxBackend, \"Vulkan\") == 0;"), std::string::npos);
+	EXPECT_NE(GraphicsThreadedSource.find("const bool VulkanRequested = VulkanForcedByEnvironment || VulkanConfigured;"), std::string::npos);
+	EXPECT_NE(GraphicsThreadedSource.find("if(VulkanForcedByEnvironment)"), std::string::npos);
+	EXPECT_NE(GraphicsThreadedSource.find("Failed to initialize forced Vulkan. Not falling back to another backend."), std::string::npos);
 	EXPECT_NE(GraphicsThreadedSource.find("Trying Vulkan 1.1 instead"), std::string::npos);
 	EXPECT_NE(GraphicsThreadedSource.find("Falling back to automatically detected OpenGL"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("s_GfxBackendChanged = true;"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("s_GfxGpuChanged = true;"), std::string::npos);
 	EXPECT_NE(CreateInstance.find("VKAppInfo.apiVersion = m_RequestedApiVersion;"), std::string::npos);
 	EXPECT_NE(SelectGpu.find("IsVulkanVersionAtLeast(DeviceVersion, RequestedVersion)"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("\"Vulkan %d.%d\""), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Vulkan - performance mode"), std::string::npos);
+	EXPECT_EQ(SettingsSource.find("\"Vulkan %d.%d\""), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, VulkanPreInitFailureCleansPartiallyInitializedResources)
+{
+	const std::string VulkanSource = ReadTextFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const std::string DestroySurface = FunctionBody(VulkanSource, "void DestroySurface()");
+	const std::string UnregisterDebugCallback = FunctionBody(VulkanSource, "void UnregisterDebugCallback()");
+	const std::string InitializationCleanup = FunctionBody(VulkanSource, "void CleanupVulkanInitialization()");
+	const std::string ErroneousCleanup = FunctionBody(VulkanSource, "void ErroneousCleanup()");
+	const std::string PostShutdown = FunctionBody(VulkanSource, "bool Cmd_PostShutdown(");
+	const std::string InitVulkan = FunctionBody(VulkanSource, "int InitVulkan()");
+	const std::string FreeImageMemory = FunctionBody(VulkanSource, "void FreeImageMemBlock(");
+	const std::string DestroyMultiSampleImages = FunctionBody(VulkanSource, "void DestroyMultiSamplerImageAttachments(");
+	const std::string Cleanup = FunctionBody(VulkanSource, "void CleanupVulkanSDL()");
+	const std::string PreInit = FunctionBody(VulkanSource, "bool Cmd_PreInit(");
+
+	EXPECT_NE(VulkanSource.find("VkInstance m_VKInstance = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkPhysicalDevice m_VKGPU = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkDevice m_VKDevice = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkQueue m_VKGraphicsQueue = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkQueue m_VKPresentQueue = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkSurfaceKHR m_VKPresentSurface = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkRenderPass m_VKRenderPass = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkBuffer m_IndexBuffer = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("VkBuffer m_RenderIndexBuffer = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("bool m_VulkanInitializationComplete = false;"), std::string::npos);
+	EXPECT_NE(DestroySurface.find("m_VKInstance != VK_NULL_HANDLE && m_VKPresentSurface != VK_NULL_HANDLE"), std::string::npos);
+	EXPECT_NE(DestroySurface.find("m_VKPresentSurface = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(UnregisterDebugCallback.find("m_DebugMessenger = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(InitializationCleanup.find("if(m_VulkanInitializationComplete)"), std::string::npos);
+	EXPECT_NE(InitializationCleanup.find("CleanupVulkan<true>(m_SwapChainImageCount);"), std::string::npos);
+	EXPECT_NE(InitializationCleanup.find("m_VulkanInitializationComplete = false;"), std::string::npos);
+	EXPECT_NE(InitializationCleanup.find("if(m_VKSwapChain != VK_NULL_HANDLE)"), std::string::npos);
+	EXPECT_NE(InitializationCleanup.find("CleanupVulkanSwapChain(true, true);"), std::string::npos);
+	EXPECT_NE(InitializationCleanup.find("DestroyDescriptorSetLayouts();"), std::string::npos);
+	EXPECT_NE(FreeImageMemory.find("if(!m_VulkanInitializationComplete)"), std::string::npos);
+	EXPECT_NE(DestroyMultiSampleImages.find("if(InitializationFailure)"), std::string::npos);
+	EXPECT_NE(DestroyMultiSampleImages.find("ImageBufferCache.second.Destroy(m_VKDevice);"), std::string::npos);
+	EXPECT_NE(ErroneousCleanup.find("if(!m_CanAssert)"), std::string::npos);
+	EXPECT_NE(ErroneousCleanup.find("CleanupVulkanInitialization();"), std::string::npos);
+	ASSERT_NE(PostShutdown.find("if(!m_CanAssert)"), std::string::npos);
+	ASSERT_NE(PostShutdown.find("CleanupVulkanInitialization();"), std::string::npos);
+	ASSERT_NE(PostShutdown.find("m_ThreadCount = 1;"), std::string::npos);
+	EXPECT_LT(PostShutdown.find("CleanupVulkanInitialization();"), PostShutdown.find("m_ThreadCount = 1;"));
+	ASSERT_NE(InitVulkan.find("m_vImageLastFrameCheck.resize(m_SwapChainImageCount, 0);"), std::string::npos);
+	ASSERT_NE(InitVulkan.find("m_VulkanInitializationComplete = true;"), std::string::npos);
+	EXPECT_LT(InitVulkan.find("m_vImageLastFrameCheck.resize(m_SwapChainImageCount, 0);"), InitVulkan.find("m_VulkanInitializationComplete = true;"));
+	EXPECT_NE(Cleanup.find("if(m_VKDevice != VK_NULL_HANDLE)"), std::string::npos);
+	EXPECT_NE(Cleanup.find("UnregisterDebugCallback();"), std::string::npos);
+	EXPECT_NE(Cleanup.find("m_VKGPU = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(Cleanup.find("m_VKGraphicsQueueIndex = std::numeric_limits<uint32_t>::max();"), std::string::npos);
+	EXPECT_NE(Cleanup.find("m_VKGraphicsQueue = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(Cleanup.find("m_VKPresentQueue = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(PreInit.find("CleanupVulkanSDL();"), std::string::npos);
+	EXPECT_NE(PreInit.find("return false;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GraphicsCurrentModeLabelSanitizesScaleAndAspectRatio)
@@ -5345,6 +5465,7 @@ TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 	const std::string Effects = ReadTextFile("src/game/client/components/ui_effects.cpp");
 	const std::string HudEditor = ReadTextFile("src/game/client/components/hud_editor.cpp");
 	const std::string TClientMenus = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string GameClient = ReadTextFile("src/game/client/gameclient.cpp");
 	const std::string Chat = ReadTextFile("src/game/client/components/chat.cpp");
 
 	EXPECT_NE(Appearance.find("DrawRoundedSurface(Ui(), MessageBackground"), std::string::npos);
@@ -5355,6 +5476,9 @@ TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 	EXPECT_EQ(HudEditor.find("Graphics()->DrawRect(HelpX, HelpY"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), BodyColor"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), FeetColor"), std::string::npos);
+	EXPECT_NE(GameClient.find("AccentRect.Draw(AccentColor"), std::string::npos);
+	EXPECT_NE(GameClient.find("TopBorderRect.Draw(BorderColor"), std::string::npos);
+	EXPECT_NE(GameClient.find("BottomBorderRect.Draw(BorderColor"), std::string::npos);
 
 	// 聊天滚动条和实时预览仍属于高频绘制，保留批量直绘路径。
 	EXPECT_NE(Chat.find("Graphics()->DrawRect(ScrollbarRect.x"), std::string::npos);

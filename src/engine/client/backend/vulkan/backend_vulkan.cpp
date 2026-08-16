@@ -931,6 +931,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 
 	bool m_RecreateSwapChain = false;
 	bool m_SwapchainCreated = false;
+	bool m_VulkanInitializationComplete = false;
 	bool m_RenderingPaused = false;
 	bool m_HasDynamicViewport = false;
 	bool m_ForceSingleThreadedRender = false;
@@ -944,10 +945,10 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	bool m_OptimalRGBAImageBlitting = false;
 	bool m_LinearRGBAImageBlitting = false;
 
-	VkBuffer m_IndexBuffer;
+	VkBuffer m_IndexBuffer = VK_NULL_HANDLE;
 	SDeviceMemoryBlock m_IndexBufferMemory;
 
-	VkBuffer m_RenderIndexBuffer;
+	VkBuffer m_RenderIndexBuffer = VK_NULL_HANDLE;
 	SDeviceMemoryBlock m_RenderIndexBufferMemory;
 	size_t m_CurRenderIndexPrimitiveCount;
 
@@ -971,7 +972,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	uint32_t m_GetPresentedImgDataHelperHeight = 0;
 	VkFence m_GetPresentedImgDataHelperFence = VK_NULL_HANDLE;
 
-	std::array<VkSampler, SUPPORTED_SAMPLER_TYPE_COUNT> m_aSamplers;
+	std::array<VkSampler, SUPPORTED_SAMPLER_TYPE_COUNT> m_aSamplers{};
 
 	class IStorage *m_pStorage;
 
@@ -1205,13 +1206,13 @@ private:
 	VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 #endif
 
-	VkDescriptorSetLayout m_StandardTexturedDescriptorSetLayout;
-	VkDescriptorSetLayout m_Standard3DTexturedDescriptorSetLayout;
+	VkDescriptorSetLayout m_StandardTexturedDescriptorSetLayout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout m_Standard3DTexturedDescriptorSetLayout = VK_NULL_HANDLE;
 
-	VkDescriptorSetLayout m_TextDescriptorSetLayout;
+	VkDescriptorSetLayout m_TextDescriptorSetLayout = VK_NULL_HANDLE;
 
-	VkDescriptorSetLayout m_SpriteMultiUniformDescriptorSetLayout;
-	VkDescriptorSetLayout m_QuadUniformDescriptorSetLayout;
+	VkDescriptorSetLayout m_SpriteMultiUniformDescriptorSetLayout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout m_QuadUniformDescriptorSetLayout = VK_NULL_HANDLE;
 
 	SPipelineContainer m_StandardPipeline;
 	SPipelineContainer m_StandardLinePipeline;
@@ -1243,7 +1244,7 @@ private:
 
 	std::vector<VkCommandPool> m_vCommandPools;
 
-	VkRenderPass m_VKRenderPass;
+	VkRenderPass m_VKRenderPass = VK_NULL_HANDLE;
 	VkRenderPass m_VKRenderPassLoad = VK_NULL_HANDLE;
 	VkRenderPass m_VKRenderTargetRenderPass = VK_NULL_HANDLE;
 
@@ -1453,8 +1454,45 @@ protected:
 		return pCriticalError;
 	}
 
+	void CleanupVulkanInitialization()
+	{
+		if(m_VKDevice == VK_NULL_HANDLE)
+			return;
+
+		DestroyIndexBuffer(m_IndexBuffer, m_IndexBufferMemory);
+		DestroyIndexBuffer(m_RenderIndexBuffer, m_RenderIndexBufferMemory);
+		if(m_VulkanInitializationComplete)
+		{
+			CleanupVulkan<true>(m_SwapChainImageCount);
+			m_VulkanInitializationComplete = false;
+		}
+		else
+		{
+			DestroySyncObjects();
+			DestroyFrameTimestampQueries();
+			if(m_VKSwapChain != VK_NULL_HANDLE)
+				CleanupVulkanSwapChain(true, true);
+			DestroyTextureSamplers();
+			DestroyDescriptorPools();
+			DestroyCommandPool();
+			m_vvThreadDrawCommandBuffers.clear();
+			m_vHelperThreadDrawCommandBuffers.clear();
+			m_vvUsedThreadDrawCommandBuffer.clear();
+			m_vMainDrawCommandBuffers.clear();
+			m_vMemoryCommandBuffers.clear();
+			m_vUsedMemoryCommandBuffer.clear();
+			DestroyUniformDescriptorSetLayouts();
+			DestroyTextDescriptorSetLayout();
+			DestroyDescriptorSetLayouts();
+		}
+		SyncTexturedMsdfCapability();
+		m_pBackendCapabilities = nullptr;
+	}
+
 	void ErroneousCleanup() override
 	{
+		if(!m_CanAssert)
+			CleanupVulkanInitialization();
 		CleanupVulkanSDL();
 	}
 
@@ -2210,6 +2248,17 @@ protected:
 
 	void FreeImageMemBlock(SMemoryImageBlock<IMAGE_BUFFER_CACHE_ID> &Block)
 	{
+		if(!m_VulkanInitializationComplete)
+		{
+			if(!Block.m_IsCached && Block.m_BufferMem.m_Mem != VK_NULL_HANDLE)
+			{
+				vkFreeMemory(m_VKDevice, Block.m_BufferMem.m_Mem, nullptr);
+				m_pTextureMemoryUsage->store(m_pTextureMemoryUsage->load(std::memory_order_relaxed) - Block.m_BufferMem.m_Size, std::memory_order_relaxed);
+			}
+			Block = {};
+			return;
+		}
+
 		if(!Block.m_IsCached)
 		{
 			m_vvFrameDelayedBufferCleanup[m_CurImageIndex].push_back({Block.m_Buffer, Block.m_BufferMem, nullptr});
@@ -3427,9 +3476,12 @@ protected:
 
 	void DestroyTextureSamplers()
 	{
-		vkDestroySampler(m_VKDevice, m_aSamplers[SUPPORTED_SAMPLER_TYPE_REPEAT], nullptr);
-		vkDestroySampler(m_VKDevice, m_aSamplers[SUPPORTED_SAMPLER_TYPE_CLAMP_TO_EDGE], nullptr);
-		vkDestroySampler(m_VKDevice, m_aSamplers[SUPPORTED_SAMPLER_TYPE_2D_TEXTURE_ARRAY], nullptr);
+		for(auto &Sampler : m_aSamplers)
+		{
+			if(Sampler != VK_NULL_HANDLE)
+				vkDestroySampler(m_VKDevice, Sampler, nullptr);
+			Sampler = VK_NULL_HANDLE;
+		}
 	}
 
 	VkSampler GetTextureSampler(ESupportedSamplerTypes SamplerType)
@@ -5052,11 +5104,12 @@ public:
 
 	void DestroySwapChain(bool ForceDestroy)
 	{
-		if(ForceDestroy)
+		if(ForceDestroy && m_VKSwapChain != VK_NULL_HANDLE && m_pfnDestroySwapchainKHR != nullptr)
 		{
 			m_pfnDestroySwapchainKHR(m_VKDevice, m_VKSwapChain, nullptr);
-			m_VKSwapChain = VK_NULL_HANDLE;
 		}
+		if(ForceDestroy)
+			m_VKSwapChain = VK_NULL_HANDLE;
 	}
 
 	[[nodiscard]] bool GetSwapChainImageHandles()
@@ -5219,19 +5272,27 @@ public:
 		return true;
 	}
 
-	void DestroyMultiSamplerImageAttachments()
+	void DestroyMultiSamplerImageAttachments(bool InitializationFailure = false)
 	{
 		if(HasMultiSampling())
 		{
-			m_vSwapChainMultiSamplingImages.resize(m_SwapChainImageCount);
-			for(size_t i = 0; i < m_SwapChainImageCount; ++i)
+			for(auto &MultiSampleImage : m_vSwapChainMultiSamplingImages)
 			{
-				vkDestroyImage(m_VKDevice, m_vSwapChainMultiSamplingImages[i].m_Image, nullptr);
-				vkDestroyImageView(m_VKDevice, m_vSwapChainMultiSamplingImages[i].m_ImgView, nullptr);
-				FreeImageMemBlock(m_vSwapChainMultiSamplingImages[i].m_ImgMem);
+				if(MultiSampleImage.m_ImgView != VK_NULL_HANDLE)
+					vkDestroyImageView(m_VKDevice, MultiSampleImage.m_ImgView, nullptr);
+				if(MultiSampleImage.m_Image != VK_NULL_HANDLE)
+					vkDestroyImage(m_VKDevice, MultiSampleImage.m_Image, nullptr);
+				FreeImageMemBlock(MultiSampleImage.m_ImgMem);
+				MultiSampleImage = {};
 			}
 		}
 		m_vSwapChainMultiSamplingImages.clear();
+		if(InitializationFailure)
+		{
+			for(auto &ImageBufferCache : m_ImageBufferCaches)
+				ImageBufferCache.second.Destroy(m_VKDevice);
+			m_ImageBufferCaches.clear();
+		}
 	}
 
 	[[nodiscard]] VkFormat RenderTargetReadbackFormat() const
@@ -5423,8 +5484,12 @@ public:
 
 	void DestroyDescriptorSetLayouts()
 	{
-		vkDestroyDescriptorSetLayout(m_VKDevice, m_StandardTexturedDescriptorSetLayout, nullptr);
-		vkDestroyDescriptorSetLayout(m_VKDevice, m_Standard3DTexturedDescriptorSetLayout, nullptr);
+		if(m_StandardTexturedDescriptorSetLayout != VK_NULL_HANDLE)
+			vkDestroyDescriptorSetLayout(m_VKDevice, m_StandardTexturedDescriptorSetLayout, nullptr);
+		if(m_Standard3DTexturedDescriptorSetLayout != VK_NULL_HANDLE)
+			vkDestroyDescriptorSetLayout(m_VKDevice, m_Standard3DTexturedDescriptorSetLayout, nullptr);
+		m_StandardTexturedDescriptorSetLayout = VK_NULL_HANDLE;
+		m_Standard3DTexturedDescriptorSetLayout = VK_NULL_HANDLE;
 	}
 
 	[[nodiscard]] bool LoadShader(const char *pFilename, std::vector<uint8_t> *&pvShaderData)
@@ -5749,7 +5814,9 @@ public:
 
 	void DestroyTextDescriptorSetLayout()
 	{
-		vkDestroyDescriptorSetLayout(m_VKDevice, m_TextDescriptorSetLayout, nullptr);
+		if(m_TextDescriptorSetLayout != VK_NULL_HANDLE)
+			vkDestroyDescriptorSetLayout(m_VKDevice, m_TextDescriptorSetLayout, nullptr);
+		m_TextDescriptorSetLayout = VK_NULL_HANDLE;
 	}
 
 	[[nodiscard]] bool CreateTextGraphicsPipelineImpl(const char *pVertName, const char *pFragName, SPipelineContainer &PipeContainer, EVulkanBackendTextureModes TexMode, EVulkanBackendBlendModes BlendMode, EVulkanBackendClipModes DynamicMode)
@@ -5901,8 +5968,12 @@ public:
 
 	void DestroyUniformDescriptorSetLayouts()
 	{
-		vkDestroyDescriptorSetLayout(m_VKDevice, m_QuadUniformDescriptorSetLayout, nullptr);
-		vkDestroyDescriptorSetLayout(m_VKDevice, m_SpriteMultiUniformDescriptorSetLayout, nullptr);
+		if(m_QuadUniformDescriptorSetLayout != VK_NULL_HANDLE)
+			vkDestroyDescriptorSetLayout(m_VKDevice, m_QuadUniformDescriptorSetLayout, nullptr);
+		if(m_SpriteMultiUniformDescriptorSetLayout != VK_NULL_HANDLE)
+			vkDestroyDescriptorSetLayout(m_VKDevice, m_SpriteMultiUniformDescriptorSetLayout, nullptr);
+		m_QuadUniformDescriptorSetLayout = VK_NULL_HANDLE;
+		m_SpriteMultiUniformDescriptorSetLayout = VK_NULL_HANDLE;
 	}
 
 	[[nodiscard]] bool CreateUniformDescriptorSets(size_t RenderThreadIndex, VkDescriptorSetLayout &SetLayout, SDeviceDescriptorSet *pSets, size_t SetCount, VkBuffer BindBuffer, size_t SingleBufferInstanceSize, VkDeviceSize MemoryOffset)
@@ -6212,10 +6283,12 @@ public:
 
 	void DestroyCommandPool()
 	{
-		for(size_t i = 0; i < m_ThreadCount; ++i)
+		for(auto &CommandPool : m_vCommandPools)
 		{
-			vkDestroyCommandPool(m_VKDevice, m_vCommandPools[i], nullptr);
+			if(CommandPool != VK_NULL_HANDLE)
+				vkDestroyCommandPool(m_VKDevice, CommandPool, nullptr);
 		}
+		m_vCommandPools.clear();
 	}
 
 	[[nodiscard]] bool CreateCommandBuffers()
@@ -6418,7 +6491,7 @@ public:
 	 * SWAP CHAIN
 	 **************/
 
-	void CleanupVulkanSwapChain(bool ForceSwapChainDestruct)
+	void CleanupVulkanSwapChain(bool ForceSwapChainDestruct, bool InitializationFailure = false)
 	{
 		m_StandardPipeline.Destroy(m_VKDevice);
 		m_StandardLinePipeline.Destroy(m_VKDevice);
@@ -6444,7 +6517,7 @@ public:
 
 		DestroyRenderPass();
 
-		DestroyMultiSamplerImageAttachments();
+		DestroyMultiSamplerImageAttachments(InitializationFailure);
 
 		DestroyImageViews();
 		ClearSwapChainImageHandles();
@@ -7398,6 +7471,9 @@ public:
 				m_OptimalSwapChainImageLinearBlitting = true;
 			}
 		}
+
+		if(IsFirstInitialization)
+			m_VulkanInitializationComplete = true;
 
 		return 0;
 	}
@@ -9847,6 +9923,9 @@ public:
 		m_vpRenderThreads.clear();
 		m_vvThreadCommandLists.clear();
 		m_vThreadHelperHadCommands.clear();
+
+		if(!m_CanAssert)
+			CleanupVulkanInitialization();
 
 		m_ThreadCount = 1;
 
