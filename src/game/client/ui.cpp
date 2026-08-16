@@ -2557,9 +2557,9 @@ void CUi::DoBackButton()
 		ButtonRect.y = ButtonPos.y;
 	}
 
-	if(Result && Clicked)
+	if(Clicked || Abrupted)
 	{
-		if(m_BackButtonOp == EBackButtonOp::CLICKED && m_DispatchInputFunction)
+		if(Result && Clicked && m_BackButtonOp == EBackButtonOp::CLICKED && m_DispatchInputFunction)
 		{
 			IInput::CEvent Event;
 			Event.m_Key = KEY_ESCAPE;
@@ -2570,10 +2570,6 @@ void CUi::DoBackButton()
 			Event.m_Flags = IInput::FLAG_RELEASE;
 			m_DispatchInputFunction(Event);
 		}
-		m_BackButtonOp = EBackButtonOp::NONE;
-	}
-	else if(Result && Abrupted)
-	{
 		m_BackButtonOp = EBackButtonOp::NONE;
 	}
 
