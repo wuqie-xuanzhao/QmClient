@@ -933,6 +933,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	bool m_SwapchainCreated = false;
 	bool m_VulkanInitializationComplete = false;
 	bool m_RenderingPaused = false;
+	bool m_FramePrepared = false;
 	bool m_HasDynamicViewport = false;
 	bool m_ForceSingleThreadedRender = false;
 	SBackendCapabilities *m_pBackendCapabilities = nullptr;
@@ -3028,6 +3029,7 @@ protected:
 		for(size_t RenderThreadIndex = 0; RenderThreadIndex < m_vDrawCommandStates.size(); ++RenderThreadIndex)
 			ResetDrawCommandState(RenderThreadIndex);
 
+		m_FramePrepared = true;
 		return true;
 	}
 
@@ -3073,8 +3075,10 @@ protected:
 		{
 			if(!WaitFrame())
 				return false;
-			if(!PrepareFrame())
-				return false;
+			// 下一帧的 swapchain 获取与 fence 等待延后到下一份命令缓冲
+			// 真正开始录制时执行，避免在交换命令尾部阻塞图形线程，
+			// 让主线程可以先把下一帧命令缓冲交进来。
+			m_FramePrepared = false;
 		}
 		// else only execute the memory command buffer
 		else
@@ -4875,9 +4879,17 @@ public:
 				VK_PRESENT_MODE_FIFO_KHR,
 				VK_PRESENT_MODE_FIFO_RELAXED_KHR};
 		else
+#if defined(CONF_PLATFORM_MACOS)
+			// MoltenVK 通常不提供 MAILBOX；FIFO 会让 vsync=0 的输入轮询
+			// 被压到刷新率，表现为“输入慢一拍”。没有 MAILBOX 时退回 IMMEDIATE。
+			aPreferredModes = {
+				VK_PRESENT_MODE_MAILBOX_KHR,
+				VK_PRESENT_MODE_IMMEDIATE_KHR};
+#else
 			aPreferredModes = {
 				VK_PRESENT_MODE_IMMEDIATE_KHR,
 				VK_PRESENT_MODE_MAILBOX_KHR};
+#endif
 		for(const VkPresentModeKHR PreferredMode : aPreferredModes)
 		{
 			for(const VkPresentModeKHR AvailableMode : vPresentModeList)
@@ -8102,6 +8114,21 @@ public:
 			return ERunCommandReturnTypes::RUN_COMMAND_COMMAND_ERROR;
 		}
 
+		if(m_VulkanInitializationComplete && !m_RenderingPaused && !m_FramePrepared)
+		{
+			// StartCommands 已经把本命令缓冲的统计计入当前帧；
+			// PrepareFrame 会重置帧画像，这里在成功准备后补回，避免丢计数。
+			const size_t CommandCount = m_CommandsInPipe;
+			const size_t EstimatedRenderCallCount = m_RenderCallsInPipe;
+			if(!PrepareFrame())
+				return ERunCommandReturnTypes::RUN_COMMAND_COMMAND_ERROR;
+			if(m_FrameProfilingActive)
+			{
+				m_FrameProfileStats.m_CommandCount += CommandCount;
+				m_FrameProfileStats.m_EstimatedRenderCallCount += EstimatedRenderCallCount;
+			}
+		}
+
 		if(IsInCommandRange<decltype(pBaseCommand->m_Cmd)>(pBaseCommand->m_Cmd, CCommandBuffer::CMD_FIRST, CCommandBuffer::CMD_COUNT))
 		{
 			auto &CallbackObj = m_aCommandCallbacks[CommandBufferCMDOff(CCommandBuffer::ECommandBufferCMD(pBaseCommand->m_Cmd))];
@@ -9842,6 +9869,7 @@ public:
 			if(!WaitFrame())
 				return false;
 			m_RenderingPaused = true;
+			m_FramePrepared = false;
 			VkResult WaitIdleResult = DeviceWaitIdle();
 			if(WaitIdleResult != VK_SUCCESS)
 			{
@@ -9879,6 +9907,13 @@ public:
 		if(pCommand->m_pVendorString != nullptr && str_find_nocase(pCommand->m_pVendorString, "AMD") != nullptr && m_ThreadCount > 1)
 		{
 			dbg_msg("vulkan", "forcing single-threaded rendering on AMD to avoid driver crashes with dynamic viewport usage");
+			m_ThreadCount = 1;
+		}
+		if(pCommand->m_pVendorString != nullptr && str_find_nocase(pCommand->m_pVendorString, "Apple") != nullptr && m_ThreadCount > 1)
+		{
+			// MoltenVK/Metal 对 secondary command buffer 的编码开销较高，
+			// 界面命令量大的场景下三线程录制反而更容易造成帧时间抖动。
+			dbg_msg("vulkan", "forcing single-threaded rendering on Apple/MoltenVK to avoid secondary command buffer overhead");
 			m_ThreadCount = 1;
 		}
 

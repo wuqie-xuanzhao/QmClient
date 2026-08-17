@@ -4046,7 +4046,7 @@ TEST(QmMonitoringHelpers, VulkanFrameSubmitFailureRecordsFrameContext)
 	EXPECT_EQ(SubmitBlock.find("else"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, VulkanNoVsyncPrefersImmediateAndKeepsNormalSwapchainDepth)
+TEST(QmMonitoringHelpers, VulkanNoVsyncPrefersImmediateExceptMacMailboxAndKeepsNormalSwapchainDepth)
 {
 	const std::string VulkanSource = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
 	const size_t FunctionStart = VulkanSource.find("[[nodiscard]] bool GetPresentationMode(VkPresentModeKHR &VKIOMode)");
@@ -4055,12 +4055,15 @@ TEST(QmMonitoringHelpers, VulkanNoVsyncPrefersImmediateAndKeepsNormalSwapchainDe
 	ASSERT_NE(FunctionEnd, std::string::npos);
 	const std::string FunctionBody = VulkanSource.substr(FunctionStart, FunctionEnd - FunctionStart);
 
-	EXPECT_EQ(FunctionBody.find("#if defined(CONF_PLATFORM_MACOS)"), std::string::npos);
+	const size_t MacosGuard = FunctionBody.find("#if defined(CONF_PLATFORM_MACOS)");
+	ASSERT_NE(MacosGuard, std::string::npos);
+	const size_t Mailbox = FunctionBody.find("VK_PRESENT_MODE_MAILBOX_KHR");
 	const size_t Immediate = FunctionBody.find("VK_PRESENT_MODE_IMMEDIATE_KHR");
-	const size_t Mailbox = FunctionBody.find("VK_PRESENT_MODE_MAILBOX_KHR", Immediate);
-	ASSERT_NE(Immediate, std::string::npos);
 	ASSERT_NE(Mailbox, std::string::npos);
-	EXPECT_LT(Immediate, Mailbox);
+	ASSERT_NE(Immediate, std::string::npos);
+	// macOS 分支 MAILBOX 在 IMMEDIATE 之前；其他平台仍保持 IMMEDIATE 优先。
+	EXPECT_LT(Mailbox, Immediate);
+	EXPECT_LT(MacosGuard, Mailbox);
 
 	const std::string SwapImageBody = ExtractSourceFunctionBody(VulkanSource, "uint32_t GetNumberOfSwapImages(");
 	ASSERT_FALSE(SwapImageBody.empty());

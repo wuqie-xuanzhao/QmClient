@@ -899,7 +899,20 @@ void CGameWorld::CreatePredictedExplosionEvent(vec2 Pos, int Id)
 
 void CGameWorld::CreatePredictedHammerHitEvent(vec2 Pos, int Id, int TargetId)
 {
+	if(!g_Config.m_ClPredictEvents || !m_WorldConfig.m_PredictEvents)
+		return;
+
 	CPredictedEvent Event(NETEVENTTYPE_HAMMERHIT, Pos, Id, GameTick(), TargetId);
+	// 预测在同一 tick 内可能重复运行，位置修正不应把同一次命中拆成多个粒子事件。
+	const auto It = std::find_if(
+		m_PredictedEvents.begin(),
+		m_PredictedEvents.end(),
+		[Event](const CPredictedEvent &Existing) {
+			return Existing.m_EventId == Event.m_EventId && Existing.m_Id == Event.m_Id &&
+			       Existing.m_Tick == Event.m_Tick && Existing.m_ExtraInfo == Event.m_ExtraInfo;
+		});
+	if(It != m_PredictedEvents.end())
+		return;
 	CreatePredictedEvent(Event);
 }
 

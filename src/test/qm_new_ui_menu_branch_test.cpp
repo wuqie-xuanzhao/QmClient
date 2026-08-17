@@ -332,11 +332,15 @@ TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_NE(UseNewUiBlock.find("const float GameButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float ServerInfoButtonWidth = CompactOnlineMenuTabs ? 94.0f : 104.0f;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float OnlineTabGap = 4.0f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float RequiredOnlineTabsWidth = GameButtonWidth + PlayersButtonWidth + ServerInfoButtonWidth + BrowserButtonWidth + CallVoteButtonWidth +"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("(GameClient()->m_GameInfo.m_Race ? GhostButtonWidth + OnlineTabGap : 0.0f);"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const bool HasOnlineDemoButton"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("Box.w >= RequiredOnlineTabsWidth + 2.0f * OnlineDemoGap + OnlineDemoButtonSize"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("Box.VSplitLeft(OnlineDemoButtonSize, &DemoButton, &Box);"), std::string::npos);
+	const std::string NewOnlineBlock = BlockBodyAfter(UseNewUiBlock, "if(ClientState == IClient::STATE_ONLINE)");
+	ASSERT_FALSE(NewOnlineBlock.empty());
+	EXPECT_NE(NewOnlineBlock.find("static CButtonContainer s_DemoButton"), std::string::npos);
+	EXPECT_NE(NewOnlineBlock.find("Box.VSplitRight(MenubarIconGap, &Box, nullptr);"), std::string::npos);
+	EXPECT_NE(NewOnlineBlock.find("Box.VSplitRight(MenubarIconButtonSize, &Box, &Button);"), std::string::npos);
+	EXPECT_NE(NewOnlineBlock.find("DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD"), std::string::npos);
+	EXPECT_EQ(UseNewUiBlock.find("HasOnlineDemoButton"), std::string::npos);
+	EXPECT_EQ(UseNewUiBlock.find("RequiredOnlineTabsWidth"), std::string::npos);
+	EXPECT_EQ(UseNewUiBlock.find("Box.VSplitLeft(OnlineDemoButtonSize, &DemoButton, &Box);"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("IGraphics::CORNER_ALL"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_SettingsButton"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_InternetButton"), std::string::npos);
@@ -347,6 +351,12 @@ TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_EQ(OldUiBlock.find("Box.HMargin(MenubarOuterInsetY, &Box);"), std::string::npos);
 	EXPECT_NE(OldUiBlock.find("if(DoButton_MenuTab(&s_SettingsButton"), std::string::npos);
 	EXPECT_NE(OldUiBlock.find("if(DoButton_MenuTab(&s_InternetButton"), std::string::npos);
+	const std::string OldOnlineBlock = BlockBodyAfter(OldUiBlock, "if(ClientState == IClient::STATE_ONLINE)");
+	ASSERT_FALSE(OldOnlineBlock.empty());
+	EXPECT_NE(OldOnlineBlock.find("Box.VSplitRight(10.0f, &Box, nullptr);"), std::string::npos);
+	EXPECT_NE(OldOnlineBlock.find("Box.VSplitRight(33.0f, &Box, &Button);"), std::string::npos);
+	EXPECT_NE(OldOnlineBlock.find("DoButton_MenuTab(&s_DemoButton, FONT_ICON_CLAPPERBOARD"), std::string::npos);
+	EXPECT_EQ(OldUiBlock.find("if(Box.w >= 10.0f + 33.0f + 10.0f)"), std::string::npos);
 	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_SettingsButton"), std::string::npos);
 	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_InternetButton"), std::string::npos);
 }
@@ -1733,6 +1743,7 @@ TEST(QmNewUiMenuBranches, WeaponImpactEventsUseInferredOwnerAlpha)
 	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
 	const std::string ProcessEvents = FunctionBody(Source, "void CGameClient::ProcessEvents()");
 	const std::string FinalizeHammerHitEvents = FunctionBody(Source, "void CGameClient::FinalizeHammerHitEvents()");
+	const std::string HandlePredictedEvents = FunctionBody(Source, "void CGameClient::HandlePredictedEvents(const int Tick)");
 
 	EXPECT_NE(Source.find("float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)"), std::string::npos);
 	EXPECT_NE(Source.find("int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)"), std::string::npos);
@@ -1750,7 +1761,52 @@ TEST(QmNewUiMenuBranches, WeaponImpactEventsUseInferredOwnerAlpha)
 	EXPECT_NE(FinalizeHammerHitEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
 	EXPECT_NE(FinalizeHammerHitEvents.find("const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);"), std::string::npos);
 	EXPECT_NE(FinalizeHammerHitEvents.find("m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);"), std::string::npos);
+	EXPECT_NE(HandlePredictedEvents.find("m_Effects.HammerHit(EventsIterator->m_Pos, Alpha, 1.0f);"), std::string::npos);
 	EXPECT_EQ(ProcessEvents.find("m_Effects.Explosion(vec2(pEvent->m_X, pEvent->m_Y), Alpha);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GhostPlayersDoNotEmitDuplicateWeaponEffects)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/players.cpp");
+	const std::string RenderPlayerGhost = FunctionBody(Source, "void CPlayers::RenderPlayerGhost(");
+
+	EXPECT_NE(RenderPlayerGhost.find("const bool AllowEffects = false;"), std::string::npos);
+	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects)\n\t\tGameClient()->m_Flow.Add("), std::string::npos);
+	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects && !InAir && WantOtherDir"), std::string::npos);
+	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects)\n\t\t\t\t\t\tGameClient()->m_Effects.PowerupShine("), std::string::npos);
+	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects && !ShouldHideFocusMuzzleEffects("), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, HammerPredictionDeduplicatesSameTargetAndTick)
+{
+	const std::string Source = ReadTextFile("src/game/client/prediction/gameworld.cpp");
+	const std::string CreateHammerEvent = FunctionBody(Source, "void CGameWorld::CreatePredictedHammerHitEvent(");
+
+	EXPECT_NE(CreateHammerEvent.find("Existing.m_EventId == Event.m_EventId"), std::string::npos);
+	EXPECT_NE(CreateHammerEvent.find("Existing.m_Id == Event.m_Id"), std::string::npos);
+	EXPECT_NE(CreateHammerEvent.find("Existing.m_Tick == Event.m_Tick"), std::string::npos);
+	EXPECT_NE(CreateHammerEvent.find("Existing.m_ExtraInfo == Event.m_ExtraInfo"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, HammerSkinSwapUsesTheActiveProtocolSkinFormat)
+{
+	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string HandleHammerSkinSwap = FunctionBody(Source, "void CGameClient::HandleHammerSkinSwap(");
+
+	EXPECT_NE(HandleHammerSkinSwap.find("if(Client()->IsSixup())"), std::string::npos);
+	EXPECT_NE(HandleHammerSkinSwap.find("TargetClient.m_aSixup[SourceConnection]"), std::string::npos);
+	EXPECT_NE(HandleHammerSkinSwap.find("CSkins7::ms_apSkinVariables[TeeIndex][Part]"), std::string::npos);
+	EXPECT_NE(HandleHammerSkinSwap.find("const char *pTargetSkinName = pTargetSkin->Name();"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SkinLookupReusesExistingNamesIgnoringCase)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/skins.cpp");
+	const std::string FindContainer = FunctionBody(Source, "const CSkins::CSkinContainer *CSkins::FindContainerImpl(");
+
+	EXPECT_NE(FindContainer.find("str_comp_nocase(Entry.first.c_str(), pName) == 0"), std::string::npos);
+	EXPECT_NE(FindContainer.find("Entry.second->State() != CSkinContainer::EState::ERROR"), std::string::npos);
+	EXPECT_NE(FindContainer.find("Entry.second->State() != CSkinContainer::EState::NOT_FOUND"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOneConsumption)
@@ -2929,13 +2985,16 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 		EXPECT_NE(pDeck->find("ResolveSettingsContentMetrics(MainView.w)"), std::string::npos);
 		EXPECT_NE(pDeck->find("CardDeck.RenderCached("), std::string::npos);
 		EXPECT_NE(pDeck->find("ResolveSettingsCardDefinitionsRevision("), std::string::npos);
-		EXPECT_NE(pDeck->find("static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;"), std::string::npos);
-		EXPECT_NE(pDeck->find("Ui()->DoButtonLogic(&CollapseButtons[Index]"), std::string::npos);
-		EXPECT_NE(pDeck->find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
-		EXPECT_EQ(pDeck->find("Ui()->DoButtonLogic(&Collapsed[Index]"), std::string::npos);
+		EXPECT_NE(pDeck->find("static std::array<bool, QmModuleCount> s_aCollapsed = {};"), std::string::npos);
+		EXPECT_NE(pDeck->find("Definition.m_OnCollapseChanged"), std::string::npos);
 		EXPECT_EQ(pDeck->find("BeginSettingsQmScrollContainer("), std::string::npos);
 		EXPECT_EQ(pDeck->find("s_GlassCards"), std::string::npos);
 	}
+
+	const std::string DeckSource = ReadTextFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+	EXPECT_NE(DeckSource.find("Ctx.m_pUi->DoButtonLogic(&Runtime.m_DefaultCollapseButtonId"), std::string::npos);
+	const std::string CardSource = ReadTextFile("src/game/client/QmUi/SettingsCard.cpp");
+	EXPECT_NE(CardSource.find("RenderSettingsCardCollapseButton(Ctx, DrawFrame.m_HandleRect"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
@@ -4124,24 +4183,6 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	ASSERT_NE(HookCall, std::string::npos);
 	ASSERT_NE(CommandLineParse, std::string::npos);
 	EXPECT_LT(HookCall, CommandLineParse);
-}
-
-TEST(QmNewUiMenuBranches, LiveDirectorChatToggleIsHandledByOverlayInput)
-{
-	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
-	const std::string Contains = FunctionBody(Source, "bool CGameClient::LiveObserverOverlayContains");
-	const std::string Input = FunctionBody(Source, "bool CGameClient::HandleLiveObserverInput");
-	const std::string Render = FunctionBody(Source, "void CGameClient::RenderLiveObserverOverlay");
-
-	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_W"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_H"), std::string::npos);
-	EXPECT_NE(Source.find("CUIRect LiveObserverChatToggleRect(float Height)"), std::string::npos);
-	EXPECT_NE(Contains.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), std::string::npos);
-	EXPECT_NE(Input.find("g_Config.m_ClShowChat = g_Config.m_ClShowChat == 0 ? 1 : 0;"), std::string::npos);
-	EXPECT_NE(Input.find("Input()->MouseModeAbsolute();"), std::string::npos);
-	EXPECT_LT(Input.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), Input.find("if(Panel.Inside(MousePos))"));
-	EXPECT_NE(Render.find("const CUIRect ChatToggle = LiveObserverChatToggleRect(Height);"), std::string::npos);
-	EXPECT_NE(Render.find("ChatVisible ? Localize(\"Hide Chat\") : Localize(\"Show chat\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
@@ -5465,7 +5506,6 @@ TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 	const std::string Effects = ReadTextFile("src/game/client/components/ui_effects.cpp");
 	const std::string HudEditor = ReadTextFile("src/game/client/components/hud_editor.cpp");
 	const std::string TClientMenus = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string GameClient = ReadTextFile("src/game/client/gameclient.cpp");
 	const std::string Chat = ReadTextFile("src/game/client/components/chat.cpp");
 
 	EXPECT_NE(Appearance.find("DrawRoundedSurface(Ui(), MessageBackground"), std::string::npos);
@@ -5476,10 +5516,6 @@ TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 	EXPECT_EQ(HudEditor.find("Graphics()->DrawRect(HelpX, HelpY"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), BodyColor"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), FeetColor"), std::string::npos);
-	EXPECT_NE(GameClient.find("AccentRect.Draw(AccentColor"), std::string::npos);
-	EXPECT_NE(GameClient.find("TopBorderRect.Draw(BorderColor"), std::string::npos);
-	EXPECT_NE(GameClient.find("BottomBorderRect.Draw(BorderColor"), std::string::npos);
-
 	// 聊天滚动条和实时预览仍属于高频绘制，保留批量直绘路径。
 	EXPECT_NE(Chat.find("Graphics()->DrawRect(ScrollbarRect.x"), std::string::npos);
 	EXPECT_NE(Chat.find("Graphics()->DrawRect(x, PreviewY"), std::string::npos);

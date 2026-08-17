@@ -795,11 +795,11 @@ TEST(Skins, SkinTransitionUsesDefaultKeyWhenInitialDescriptorIsNotReady)
 
 	EXPECT_NE(UpdateRenderInfoBody.find("CSkinDescriptor RenderSkinDescriptor = SkinDescriptor;"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("const bool DescriptorRenderInfoReady = m_pSkinInfo->DescriptorRenderInfoReady();"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && m_RenderInfo.Valid())"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && m_RenderInfo.Valid())"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("else if(!DescriptorRenderInfoReady)"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("const float OriginalSize = NewRenderInfo.m_Size;"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("BuildDefaultSkinDescriptor(RenderSkinDescriptor);"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo))\n\t\t\tNewRenderInfo.Reset();"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("BuildDefaultSkinDescriptor(RenderSkinDescriptor, SkinDescriptor.m_Flags);"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))\n\t\t\tNewRenderInfo.Reset();"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("UpdateSkinChangeTransition(NewRenderInfo, RenderSkinDescriptor);"), std::string::npos);
 	EXPECT_EQ(UpdateRenderInfoBody.find("UpdateSkinChangeTransition(NewRenderInfo, SkinDescriptor);"), std::string::npos);
 }
@@ -815,15 +815,17 @@ TEST(Skins, DefaultFallbackNeverAppliesTheUntexturedPlaceholder)
 	EXPECT_TRUE(CTeeRenderInfo::AreTextureVariantsDrawableState(true, false, true, false));
 
 	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
-	const size_t ApplyDefaultPos = GameClientSource.find("bool ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info)");
+	const size_t ApplyDefaultPos = GameClientSource.find("bool ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info, unsigned SkinDescriptorFlags)");
 	ASSERT_NE(ApplyDefaultPos, std::string::npos);
 	const size_t CopyColorsPos = GameClientSource.find("void CopySkinColorsOnly", ApplyDefaultPos);
 	ASSERT_NE(CopyColorsPos, std::string::npos);
 	const std::string ApplyDefaultBody = GameClientSource.substr(ApplyDefaultPos, CopyColorsPos - ApplyDefaultPos);
 	EXPECT_NE(ApplyDefaultBody.find("m_Skins.FindOrNullptr(\"default\")"), std::string::npos);
 	EXPECT_EQ(ApplyDefaultBody.find("m_Skins.Find(\"default\")"), std::string::npos);
-	EXPECT_NE(ApplyDefaultBody.find("return Info.SixDescriptorReady() || Info.SevenDescriptorReady();"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo))\n\t\t\tNewRenderInfo.Reset();"), std::string::npos);
+	EXPECT_NE(ApplyDefaultBody.find("if(SkinDescriptorFlags & CSkinDescriptor::FLAG_SIX)"), std::string::npos);
+	EXPECT_NE(ApplyDefaultBody.find("if(SkinDescriptorFlags & CSkinDescriptor::FLAG_SEVEN)"), std::string::npos);
+	EXPECT_NE(ApplyDefaultBody.find("return Ready;"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))\n\t\t\tNewRenderInfo.Reset();"), std::string::npos);
 
 	const std::string RenderSource = ReadTestSourceFile("src/game/client/render.cpp");
 	const size_t RenderTeePos = RenderSource.find("void CRenderTools::RenderTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha, vec2 BodyScale");
@@ -846,6 +848,44 @@ TEST(Skins, DefaultFallbackNeverAppliesTheUntexturedPlaceholder)
 	EXPECT_NE(RenderTee6Body.find("if(!CTeeRenderInfo::IsDrawableTexture(*pFeetTexture))"), std::string::npos);
 	EXPECT_NE(RenderTee6Body.find("m_Skins.FindOrNullptr(g_Config.m_TcWhiteFeetSkin)"), std::string::npos);
 	EXPECT_EQ(RenderTee6Body.find("m_Skins.Find(g_Config.m_TcWhiteFeetSkin)"), std::string::npos);
+}
+
+TEST(Skins, SevenSkinRenderingIsRestrictedToOnlineServerControlledAppearance)
+{
+	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const std::string LocalDescriptorBody = FunctionBody(GameClientSource, "void CGameClient::CClientData::BuildLocalSkinDescriptor");
+	ASSERT_FALSE(LocalDescriptorBody.empty());
+	EXPECT_NE(LocalDescriptorBody.find("m_pGameClient->m_pClient->State() == IClient::STATE_ONLINE"), std::string::npos);
+	EXPECT_NE(LocalDescriptorBody.find("m_pGameClient->ShouldUseServerControlledLocalSkin()"), std::string::npos);
+	EXPECT_NE(LocalDescriptorBody.find("if(UseServerControlledSkin && TranslatedClient.m_Active)"), std::string::npos);
+	EXPECT_NE(LocalDescriptorBody.find("else if(m_Active)"), std::string::npos);
+	EXPECT_NE(LocalDescriptorBody.find("CSkinDescriptor::FLAG_SEVEN"), std::string::npos);
+	EXPECT_NE(LocalDescriptorBody.find("CSkinDescriptor::FLAG_SIX"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("if(Client()->State() != IClient::STATE_ONLINE)\n\t\treturn false;"), std::string::npos);
+
+	const std::string DescriptorBody = FunctionBody(GameClientSource, "CSkinDescriptor CGameClient::CClientData::ToSkinDescriptor");
+	ASSERT_FALSE(DescriptorBody.empty());
+	EXPECT_NE(DescriptorBody.find("m_pGameClient->m_pClient->State() == IClient::STATE_ONLINE"), std::string::npos);
+	EXPECT_NE(DescriptorBody.find("if(UseServerControlledSkin && TranslatedClient.m_Active)"), std::string::npos);
+	EXPECT_NE(DescriptorBody.find("else if(m_Active)"), std::string::npos);
+
+	const std::string BrowserSource = ReadTestSourceFile("src/game/client/components/menus_browser.cpp");
+	EXPECT_EQ(BrowserSource.find("m_Skins7.FindSkinPart"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("GetTeeRenderInfo(vec2(Skin.w, Skin.h), \"default\", false, 0, 0)"), std::string::npos);
+
+	const std::string UpdateRenderInfoBody = FunctionBody(GameClientSource, "void CGameClient::CClientData::UpdateRenderInfo");
+	ASSERT_FALSE(UpdateRenderInfoBody.empty());
+	EXPECT_NE(GameClientSource.find("bool HasDrawableSevenSkin(const CTeeRenderInfo &Info)"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("const bool TargetUsesSevenSkin"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("const bool PreviousRenderInfoUsesSevenSkin = HasDrawableSevenSkin(m_RenderInfo);"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("const bool MayReusePreviousRenderInfo = TargetUsesSevenSkin || !PreviousRenderInfoUsesSevenSkin;"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && !TargetUsesSevenSkin && PreviousRenderInfoUsesSevenSkin)"), std::string::npos);
+
+	const std::string TransitionBody = FunctionBody(GameClientSource, "void CGameClient::CClientData::UpdateSkinChangeTransition");
+	ASSERT_FALSE(TransitionBody.empty());
+	EXPECT_NE(TransitionBody.find("const bool HidesPreviousSevenSkin"), std::string::npos);
+	EXPECT_NE(TransitionBody.find("HasDrawableSevenSkin(m_RenderInfo)"), std::string::npos);
+	EXPECT_NE(TransitionBody.find("m_SkinTransitionPreviousRenderInfo.Reset();"), std::string::npos);
 }
 
 TEST(Skins, StreamerFallbackCancelsAnyRealSkinTransition)
@@ -897,10 +937,10 @@ TEST(Skins, SkinTransitionKeepsPreviousSkinBaseWhileDescriptorIsPending)
 	const std::string UpdateRenderInfoBody = Source.substr(UpdateRenderInfoPos, UpdateTransitionPos - UpdateRenderInfoPos);
 
 	EXPECT_NE(UpdateRenderInfoBody.find("const bool DescriptorRenderInfoReady = m_pSkinInfo->DescriptorRenderInfoReady();"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && m_RenderInfo.Valid())"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && m_RenderInfo.Valid())"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("NewRenderInfo = m_RenderInfo;"), std::string::npos);
 	EXPECT_EQ(UpdateRenderInfoBody.find("return;\n\t\t}"), std::string::npos);
-	EXPECT_LT(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && m_RenderInfo.Valid())"), UpdateRenderInfoBody.find("// force team colors"));
+	EXPECT_LT(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && m_RenderInfo.Valid())"), UpdateRenderInfoBody.find("// force team colors"));
 	EXPECT_LT(UpdateRenderInfoBody.find("// force team colors"), UpdateRenderInfoBody.find("UpdateSkinChangeTransition(NewRenderInfo, RenderSkinDescriptor);"));
 }
 

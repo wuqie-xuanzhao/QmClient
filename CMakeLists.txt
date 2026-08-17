@@ -3881,7 +3881,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/hammer_hit_detection.cpp
     src/game/client/components/qmclient/axiom_scores.cpp
     src/game/client/components/qmclient/axiom_scores_data.cpp
-    src/test/ui_test_stubs.cpp
     src/game/client/components/qmclient/monitoring/monitoring_device_perf.cpp
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.cpp
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_clock.cpp

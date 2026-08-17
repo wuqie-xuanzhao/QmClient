@@ -2961,6 +2961,20 @@ const CSkins::CSkinContainer *CSkins::FindContainerImpl(const char *pName)
 	}
 
 	auto ExistingSkin = m_Skins.find(pName);
+	if(ExistingSkin == m_Skins.end() ||
+		(ExistingSkin->second->State() == CSkinContainer::EState::ERROR || ExistingSkin->second->State() == CSkinContainer::EState::NOT_FOUND))
+	{
+		const auto CaseInsensitiveSkin = std::find_if(
+			m_Skins.begin(),
+			m_Skins.end(),
+			[this, pName, &ExistingSkin](const auto &Entry) {
+				return (ExistingSkin == m_Skins.end() || Entry.second.get() != ExistingSkin->second.get()) &&
+				       str_comp_nocase(Entry.first.c_str(), pName) == 0 &&
+				       Entry.second->State() != CSkinContainer::EState::ERROR && Entry.second->State() != CSkinContainer::EState::NOT_FOUND;
+			});
+		if(CaseInsensitiveSkin != m_Skins.end())
+			ExistingSkin = CaseInsensitiveSkin;
+	}
 	if(ExistingSkin == m_Skins.end())
 	{
 		CSkinContainer SkinContainer(this, pName, CSkinContainer::EType::DOWNLOAD, IStorage::TYPE_SAVE);

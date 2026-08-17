@@ -2010,6 +2010,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		const ColorRGBA HomeButtonHover = ui_token::color::ACCENT_PRIMARY;
 		const ColorRGBA QuitButtonDefault = MenuDangerTabDefaultColor();
 		const ColorRGBA QuitButtonHover = MenuDangerTabHoverColor();
+		bool CompactOnlineMenuTabs = false;
 		Box.VSplitRight(MenubarIconButtonSize, &Box, &Button);
 		static CButtonContainer s_QuitButton;
 		{
@@ -2061,6 +2062,22 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			}
 		}
 		GameClient()->m_Tooltips.DoToolTip(&s_EditorButton, &Button, Localize("Editor"));
+
+		if(ClientState == IClient::STATE_ONLINE)
+		{
+			// 在线菜单右侧始终保留回放、编辑器、设置、退出四个图标。
+			Box.VSplitRight(MenubarIconGap, &Box, nullptr);
+			Box.VSplitRight(MenubarIconButtonSize, &Box, &Button);
+			static CButtonContainer s_DemoButton;
+			if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
+			{
+				NewPage = PAGE_DEMOS;
+			}
+			MenubarTrackActive(PAGE_DEMOS, Button);
+			GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
+
+			CompactOnlineMenuTabs = Graphics()->ScreenAspect() <= 1.45f || Box.w < 690.0f;
+		}
 
 		if(ClientState == IClient::STATE_OFFLINE)
 		{
@@ -2266,7 +2283,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			TextRender()->SetRenderFlags(0);
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
-			const bool CompactOnlineMenuTabs = Graphics()->ScreenAspect() <= 1.45f || Box.w < 690.0f;
 			const float GameButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
 			const float PlayersButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
 			const float ServerInfoButtonWidth = CompactOnlineMenuTabs ? 94.0f : 104.0f;
@@ -2274,12 +2290,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float GhostButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
 			const float CallVoteButtonWidth = CompactOnlineMenuTabs ? 80.0f : 88.0f;
 			const float OnlineTabGap = 4.0f;
-			const float OnlineDemoButtonSize = Box.h;
-			const float OnlineDemoGap = 6.0f;
-			const float RequiredOnlineTabsWidth = GameButtonWidth + PlayersButtonWidth + ServerInfoButtonWidth + BrowserButtonWidth + CallVoteButtonWidth +
-							      OnlineTabGap * 4.0f + (GameClient()->m_GameInfo.m_Race ? GhostButtonWidth + OnlineTabGap : 0.0f);
-			const bool HasOnlineDemoButton = Box.w >= RequiredOnlineTabsWidth + 2.0f * OnlineDemoGap + OnlineDemoButtonSize;
-			CUIRect DemoButton;
 
 			Box.VSplitLeft(GameButtonWidth, &Button, &Box);
 			static CButtonContainer s_GameButton;
@@ -2327,27 +2337,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				m_ControlPageOpening = true;
 			}
 			MenubarTrackActive(PAGE_CALLVOTE, Button);
-
-			if(HasOnlineDemoButton)
-			{
-				Box.VSplitLeft(OnlineDemoGap, nullptr, &Box);
-				Box.VSplitLeft(OnlineDemoButtonSize, &DemoButton, &Box);
-				Box.VSplitLeft(OnlineDemoGap, &Box, nullptr);
-
-				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-
-				static CButtonContainer s_DemoButton;
-				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
-				{
-					NewPage = PAGE_DEMOS;
-				}
-				MenubarTrackActive(PAGE_DEMOS, DemoButton);
-				GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &DemoButton, Localize("Demos"));
-
-				TextRender()->SetRenderFlags(0);
-				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-			}
 		}
 	}
 	else
@@ -2386,7 +2375,19 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		}
 		GameClient()->m_Tooltips.DoToolTip(&s_EditorButton, &Button, Localize("Editor"));
 
-		if(ClientState == IClient::STATE_OFFLINE)
+		if(ClientState == IClient::STATE_ONLINE)
+		{
+			Box.VSplitRight(10.0f, &Box, nullptr);
+			Box.VSplitRight(33.0f, &Box, &Button);
+			static CButtonContainer s_DemoButton;
+			if(DoButton_MenuTab(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_DEMOBUTTON]))
+			{
+				NewPage = PAGE_DEMOS;
+			}
+			MenubarTrackActive(PAGE_DEMOS, Button);
+			GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
+		}
+		else if(ClientState == IClient::STATE_OFFLINE)
 		{
 			Box.VSplitRight(10.0f, &Box, nullptr);
 			Box.VSplitRight(33.0f, &Box, &Button);
@@ -2613,25 +2614,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			{
 				NewPage = PAGE_CALLVOTE;
 				m_ControlPageOpening = true;
-			}
-
-			if(Box.w >= 10.0f + 33.0f + 10.0f)
-			{
-				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-
-				Box.VSplitRight(10.0f, &Box, nullptr);
-				Box.VSplitRight(33.0f, &Box, &Button);
-				static CButtonContainer s_DemoButton;
-				if(DoButton_MenuTab(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_DEMOBUTTON]))
-				{
-					NewPage = PAGE_DEMOS;
-				}
-				GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
-				Box.VSplitRight(10.0f, &Box, nullptr);
-
-				TextRender()->SetRenderFlags(0);
-				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 			}
 		}
 	}
