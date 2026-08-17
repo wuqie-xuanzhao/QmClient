@@ -1931,8 +1931,6 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 	static CListBox s_ListBox;
 	View.VSplitLeft(5.0f, nullptr, &View);
 	s_ListBox.DoAutoSpacing(2.0f);
-	s_ListBox.SetScrollbarWidth(16.0f);
-	s_ListBox.SetScrollbarMargin(5.0f);
 	s_ListBox.DoStart(25.0f, (int)pSelectedServer->m_vClients.size(), 1, 3, -1, &View, false, IGraphics::CORNER_NONE);
 
 	for(size_t i = 0; i < pSelectedServer->m_vClients.size(); i++)

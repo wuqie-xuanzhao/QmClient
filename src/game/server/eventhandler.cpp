@@ -57,12 +57,12 @@ void CEventHandler::Snap(int SnappingClient)
 				int Type = m_aTypes[i];
 				int Size = m_aSizes[i];
 				const char *pData = &m_aData[m_aOffsets[i]];
-					if(GameServer()->Server()->IsSixup(SnappingClient))
-						EventToSixup(&Type, &Size, &pData);
+				if(GameServer()->Server()->IsSixup(SnappingClient))
+					EventToSixup(&Type, &Size, &pData);
 
-					const auto &&SnapEvent = [&]() {
-						GameServer()->Server()->SnapNewItem(Type, i, rust::Slice((const int32_t *)pData, Size / sizeof(int32_t)));
-					};
+				const auto &&SnapEvent = [&]() {
+					GameServer()->Server()->SnapNewItem(Type, i, rust::Slice((const int32_t *)pData, Size / sizeof(int32_t)));
+				};
 				const auto &&SnapTranslateEvent = [&](int *pClientId) {
 					int ClientId = *pClientId; // Save real Id
 					if(GameServer()->Server()->Translate(*pClientId, SnappingClient))
@@ -78,9 +78,9 @@ void CEventHandler::Snap(int SnappingClient)
 					SnapTranslateEvent(&pDeath->m_ClientId);
 				}
 				else
-					{
-						SnapEvent();
-					}
+				{
+					SnapEvent();
+				}
 			}
 		}
 	}

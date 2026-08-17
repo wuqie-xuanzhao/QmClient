@@ -1,6 +1,6 @@
 #include "playermapping.h"
 
-#include <base/net.h>
+#include <base/system.h>
 
 #include <engine/shared/config.h>
 
