@@ -302,8 +302,11 @@ std::optional<int> CNetBase::UnpackPacketFlags(unsigned char *pBuffer, int Size)
 }
 
 // TODO: rename this function
-int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket, bool &Sixup, SECURITY_TOKEN *pSecurityToken, SECURITY_TOKEN *pResponseToken)
+int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket, bool &Sixup, bool AllowDecompression, SECURITY_TOKEN *pSecurityToken, SECURITY_TOKEN *pResponseToken, bool *pDecompressed)
 {
+	if(pDecompressed != nullptr)
+		*pDecompressed = false;
+
 	std::optional<int> Flags = UnpackPacketFlags(pBuffer, Size);
 	if(!Flags)
 	{
@@ -377,6 +380,10 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 
 		if((pPacket->m_Flags & NET_PACKETFLAG_COMPRESSION) != 0)
 		{
+			if(!AllowDecompression)
+				return -1;
+			if(pDecompressed != nullptr)
+				*pDecompressed = true;
 			pPacket->m_DataSize = ms_Huffman.Decompress(&pBuffer[DataStart], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
 			if(pPacket->m_DataSize < 0)
 			{

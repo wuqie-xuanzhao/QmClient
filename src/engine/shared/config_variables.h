@@ -528,6 +528,9 @@ MACRO_CONFIG_INT(SvPlayerDemoRecord, sv_player_demo_record, 0, 0, 1, CFGFLAG_SER
 MACRO_CONFIG_INT(SvDemoChat, sv_demo_chat, 0, 0, 1, CFGFLAG_SERVER, "Record chat replays.")
 MACRO_CONFIG_INT(SvServerInfoPerSecond, sv_server_info_per_second, 50, 0, 10000, CFGFLAG_SERVER, "Max number of full server info responses sent per second (0 = unlimited).")
 MACRO_CONFIG_INT(SvVanConnPerSecond, sv_van_conn_per_second, 10, 0, 10000, CFGFLAG_SERVER, "Anti-spoof specific rate limit (0 = unlimited).")
+MACRO_CONFIG_INT(SvMaxPacketsPerRecv, sv_max_packets_per_recv, 2048, 0, 1000000, CFGFLAG_SERVER, "Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).")
+MACRO_CONFIG_INT(SvPreConnDecompressPerSecond, sv_preconn_decompress_per_second, 800, 0, 1000000, CFGFLAG_SERVER, "Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).")
+MACRO_CONFIG_INT(SvBanRepliesPerSecond, sv_ban_replies_per_second, 200, 0, 1000000, CFGFLAG_SERVER, "Maximum banned addresses sent their ban message per second (0 = unlimited).")
 MACRO_CONFIG_INT(SvSixup, sv_sixup, 1, 0, 1, CFGFLAG_SERVER, "Enable Sixup connection.")
 MACRO_CONFIG_INT(SvSkillLevel, sv_skill_level, 1, SERVERINFO_LEVEL_MIN, SERVERINFO_LEVEL_MAX, CFGFLAG_SERVER, "Teeworlds 0.7 difficulty level (0 = Casual, 1 = Normal, 2 = Competitive).")
 
@@ -747,7 +750,7 @@ MACRO_CONFIG_INT(SvNetFakeJitter, sv_net_fake_jitter, 0, 0, 1000, CFGFLAG_SERVER
 MACRO_CONFIG_INT(SvNetFakeRtt, sv_net_fake_rtt, 0, 0, 2000, CFGFLAG_SERVER, "Weak network test: server receive simulated RTT (ms, half for one-way delay)")
 MACRO_CONFIG_INT(SvNetFakeReorder, sv_net_fake_reorder, 0, 0, 100, CFGFLAG_SERVER, "Weak network test: server receive extra reorder probability percentage")
 
-MACRO_CONFIG_INT(SvConnlimit, sv_connlimit, 5, 0, 100, CFGFLAG_SERVER, "Connlimit: number of connections allowed per IP in a time period")
+MACRO_CONFIG_INT(SvConnlimit, sv_connlimit, 5, 1, 100, CFGFLAG_SERVER, "Connlimit: number of connections allowed per IP in a time period")
 MACRO_CONFIG_INT(SvConnlimitTime, sv_connlimit_time, 20, 0, 1000, CFGFLAG_SERVER, "Connlimit: time window for IP connection count")
 
 #if defined(CONF_FAMILY_UNIX)

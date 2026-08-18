@@ -3068,7 +3068,7 @@ void CServer::UpdateServerInfo(bool Resend)
 	m_ServerInfoNeedsUpdate = false;
 }
 
-void CServer::PumpNetwork(bool PacketWaiting)
+void CServer::PumpNetwork()
 {
 	CNetChunk Packet;
 	SECURITY_TOKEN ResponseToken;
@@ -3115,78 +3115,75 @@ void CServer::PumpNetwork(bool PacketWaiting)
 
 	m_NetServer.Update();
 
-	if(PacketWaiting)
+	// 无条件接收：UDP 接收队列可能包含就绪检查未报告的数据包。
+	ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
+	while(m_NetServer.Recv(&Packet, &ResponseToken))
 	{
-		// process packets
-		ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
-		while(m_NetServer.Recv(&Packet, &ResponseToken))
+		if(Packet.m_ClientId == -1)
 		{
-			if(Packet.m_ClientId == -1)
+			if(ResponseToken == NET_SECURITY_TOKEN_UNKNOWN && m_pRegister->OnPacket(&Packet))
+				continue;
+
 			{
-				if(ResponseToken == NET_SECURITY_TOKEN_UNKNOWN && m_pRegister->OnPacket(&Packet))
-					continue;
-
+				int ExtraToken = 0;
+				int Type = -1;
+				if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETINFO) + 1 &&
+					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
-					int ExtraToken = 0;
-					int Type = -1;
-					if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETINFO) + 1 &&
-						mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
+					if(Packet.m_Flags & NETSENDFLAG_EXTENDED)
 					{
-						if(Packet.m_Flags & NETSENDFLAG_EXTENDED)
-						{
-							Type = SERVERINFO_EXTENDED;
-							ExtraToken = (Packet.m_aExtraData[0] << 8) | Packet.m_aExtraData[1];
-						}
-						else
-							Type = SERVERINFO_VANILLA;
+						Type = SERVERINFO_EXTENDED;
+						ExtraToken = (Packet.m_aExtraData[0] << 8) | Packet.m_aExtraData[1];
 					}
-					else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETINFO_64_LEGACY) + 1 &&
-						mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO_64_LEGACY, sizeof(SERVERBROWSE_GETINFO_64_LEGACY)) == 0)
+					else
+						Type = SERVERINFO_VANILLA;
+				}
+				else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETINFO_64_LEGACY) + 1 &&
+					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO_64_LEGACY, sizeof(SERVERBROWSE_GETINFO_64_LEGACY)) == 0)
+				{
+					Type = SERVERINFO_64_LEGACY;
+				}
+				if(Type == SERVERINFO_VANILLA && ResponseToken != NET_SECURITY_TOKEN_UNKNOWN && Config()->m_SvSixup)
+				{
+					CUnpacker Unpacker;
+					Unpacker.Reset((unsigned char *)Packet.m_pData + sizeof(SERVERBROWSE_GETINFO), Packet.m_DataSize - sizeof(SERVERBROWSE_GETINFO));
+					int SrvBrwsToken = Unpacker.GetInt();
+					if(Unpacker.Error())
 					{
-						Type = SERVERINFO_64_LEGACY;
+						continue;
 					}
-					if(Type == SERVERINFO_VANILLA && ResponseToken != NET_SECURITY_TOKEN_UNKNOWN && Config()->m_SvSixup)
-					{
-						CUnpacker Unpacker;
-						Unpacker.Reset((unsigned char *)Packet.m_pData + sizeof(SERVERBROWSE_GETINFO), Packet.m_DataSize - sizeof(SERVERBROWSE_GETINFO));
-						int SrvBrwsToken = Unpacker.GetInt();
-						if(Unpacker.Error())
-						{
-							continue;
-						}
 
-						CPacker Packer;
-						Packer.Reset();
-						Packer.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-						Packer.AddInt(SrvBrwsToken);
-						GetServerInfoSixup(&Packer, RateLimitServerInfoConnless());
-						CNetBase::SendPacketConnlessWithToken7(m_NetServer.Socket(), &Packet.m_Address, Packer.Data(), Packer.Size(), ResponseToken, m_NetServer.GetToken(Packet.m_Address));
-					}
-					else if(Type != -1)
-					{
-						int Token = ((unsigned char *)Packet.m_pData)[sizeof(SERVERBROWSE_GETINFO)];
-						Token |= ExtraToken << 8;
-						SendServerInfoConnless(&Packet.m_Address, Token, Type);
-					}
+					CPacker Packer;
+					Packer.Reset();
+					Packer.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+					Packer.AddInt(SrvBrwsToken);
+					GetServerInfoSixup(&Packer, RateLimitServerInfoConnless());
+					CNetBase::SendPacketConnlessWithToken7(m_NetServer.Socket(), &Packet.m_Address, Packer.Data(), Packer.Size(), ResponseToken, m_NetServer.GetToken(Packet.m_Address));
+				}
+				else if(Type != -1)
+				{
+					int Token = ((unsigned char *)Packet.m_pData)[sizeof(SERVERBROWSE_GETINFO)];
+					Token |= ExtraToken << 8;
+					SendServerInfoConnless(&Packet.m_Address, Token, Type);
 				}
 			}
-			else
+		}
+		else
+		{
+			if(m_aClients[Packet.m_ClientId].m_State == CClient::STATE_REDIRECTED)
+				continue;
+
+			int GameFlags = 0;
+			if(Packet.m_Flags & NET_CHUNKFLAG_VITAL)
 			{
-				if(m_aClients[Packet.m_ClientId].m_State == CClient::STATE_REDIRECTED)
-					continue;
-
-				int GameFlags = 0;
-				if(Packet.m_Flags & NET_CHUNKFLAG_VITAL)
-				{
-					GameFlags |= MSGFLAG_VITAL;
-				}
-				if(Antibot()->OnEngineClientMessage(Packet.m_ClientId, Packet.m_pData, Packet.m_DataSize, GameFlags))
-				{
-					continue;
-				}
-
-				ProcessClientPacket(&Packet);
+				GameFlags |= MSGFLAG_VITAL;
 			}
+			if(Antibot()->OnEngineClientMessage(Packet.m_ClientId, Packet.m_pData, Packet.m_DataSize, GameFlags))
+			{
+				continue;
+			}
+
+			ProcessClientPacket(&Packet);
 		}
 	}
 	{
@@ -3529,7 +3526,6 @@ int CServer::Run()
 	// start game
 	{
 		bool NonActive = false;
-		bool PacketWaiting = false;
 
 		m_GameStartTime = time_get();
 
@@ -3537,7 +3533,7 @@ int CServer::Run()
 		while(m_RunServer < STOPPING)
 		{
 			if(NonActive)
-				PumpNetwork(PacketWaiting);
+				PumpNetwork();
 
 			set_new_tick();
 
@@ -3755,7 +3751,7 @@ int CServer::Run()
 			}
 
 			if(!NonActive)
-				PumpNetwork(PacketWaiting);
+				PumpNetwork();
 
 			NonActive = true;
 			for(const auto &Client : m_aClients)
@@ -3794,14 +3790,15 @@ int CServer::Run()
 				!m_aDemoRecorder[RECORDER_MANUAL].IsRecording() &&
 				!m_aDemoRecorder[RECORDER_AUTO].IsRecording())
 			{
-				PacketWaiting = net_socket_read_wait(m_NetServer.Socket(), 1s);
+				net_socket_read_wait(m_NetServer.Socket(), 1s);
 			}
 			else
 			{
 				set_new_tick();
 				LastTime = time_get();
 				const auto MicrosecondsToWait = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::nanoseconds(TickStartTime(m_CurrentGameTick + 1) - LastTime)) + 1us;
-				PacketWaiting = MicrosecondsToWait > 0us ? net_socket_read_wait(m_NetServer.Socket(), MicrosecondsToWait) : true;
+				if(MicrosecondsToWait > 0us)
+					net_socket_read_wait(m_NetServer.Socket(), MicrosecondsToWait);
 			}
 			if(IsInterrupted())
 			{

@@ -122,7 +122,8 @@ enum
 
 	NET_CONN_BUFFERSIZE = 1024 * 32,
 
-	NET_CONNLIMIT_IPS = 16,
+	// `sv_connlimit` 跟踪的地址，按最近最少使用策略淘汰。
+	NET_CONNLIMIT_IPS = 256,
 	NET_FAKE_MAX_DELAYED_PACKETS = 1024,
 	NET_KCP_HEADER_SIZE = 9,
 	NET_KCP_MTU = NET_MAX_PACKETSIZE - NET_KCP_HEADER_SIZE,
@@ -530,6 +531,7 @@ class CNetServer
 	{
 		NETADDR m_Addr;
 		int64_t m_Time;
+		int64_t m_LastSeen;
 		int m_Conns;
 	};
 
@@ -552,7 +554,13 @@ class CNetServer
 	int64_t m_VConnFirst;
 	int m_VConnNum;
 
-	CSpamConn m_aSpamConns[NET_CONNLIMIT_IPS];
+	// 未认证来源的接收预算；每批接收包预算在 Recv 中重置，其余按秒重置。
+	int m_NumRecvPackets = 0;
+	int64_t m_BudgetStart = 0;
+	int m_NumPreConnDecompress = 0;
+	int m_NumBanReplies = 0;
+
+	CSpamConn m_aSpamConns[NET_CONNLIMIT_IPS] = {};
 
 	CPacketChunkUnpacker m_PacketChunkUnpacker;
 	CNetPacketConstruct m_RecvBuffer;
@@ -821,7 +829,7 @@ public:
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket, SECURITY_TOKEN SecurityToken, bool Sixup = false);
 
 	static std::optional<int> UnpackPacketFlags(unsigned char *pBuffer, int Size);
-	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket, bool &Sixup, SECURITY_TOKEN *pSecurityToken = nullptr, SECURITY_TOKEN *pResponseToken = nullptr);
+	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket, bool &Sixup, bool AllowDecompression = true, SECURITY_TOKEN *pSecurityToken = nullptr, SECURITY_TOKEN *pResponseToken = nullptr, bool *pDecompressed = nullptr);
 
 	// The backroom is ack-NET_MAX_SEQUENCE/2. Used for knowing if we acked a packet or not
 	static bool IsSeqInBackroom(int Seq, int Ack);

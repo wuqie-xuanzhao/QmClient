@@ -4,6 +4,7 @@
 
 #include <base/log.h>
 #include <base/str.h>
+#include <base/time.h>
 
 #include <engine/keys.h>
 
@@ -30,6 +31,14 @@ void CFontTyper::SetTile(ivec2 Pos, unsigned char Index, const std::shared_ptr<C
 	};
 	pLayer->SetTile(Pos.x, Pos.y, Tile);
 	m_TilesPlacedSinceActivate++;
+}
+
+void CFontTyper::PlaceTile(unsigned char Index, const std::shared_ptr<CLayerTiles> &pLayer)
+{
+	if(Index != 0 && m_TextIndex.x < m_LineStart)
+		m_LineStart = m_TextIndex.x;
+	SetTile(m_TextIndex, Index, pLayer);
+	m_TextIndex.x++;
 }
 
 bool CFontTyper::OnInput(const IInput::CEvent &Event)
@@ -69,51 +78,32 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 
 	// letters
 	if(Event.m_Key >= KEY_A && Event.m_Key <= KEY_Z)
-	{
-		SetTile(m_TextIndex, Event.m_Key - KEY_A + LETTER_OFFSET, pLayer);
-		m_TextIndex.x++;
-		m_TextLineLen++;
-	}
+		PlaceTile(Event.m_Key - KEY_A + LETTER_OFFSET, pLayer);
 	// numbers
 	if(Event.m_Key >= KEY_1 && Event.m_Key <= KEY_0)
-	{
-		SetTile(m_TextIndex, Event.m_Key - KEY_1 + NUMBER_OFFSET, pLayer);
-		m_TextIndex.x++;
-		m_TextLineLen++;
-	}
+		PlaceTile(Event.m_Key - KEY_1 + NUMBER_OFFSET, pLayer);
 	if(Event.m_Key >= KEY_KP_1 && Event.m_Key <= KEY_KP_0)
-	{
-		SetTile(m_TextIndex, Event.m_Key - KEY_KP_1 + NUMBER_OFFSET, pLayer);
-		m_TextIndex.x++;
-		m_TextLineLen++;
-	}
+		PlaceTile(Event.m_Key - KEY_KP_1 + NUMBER_OFFSET, pLayer);
 
 	// deletion
 	if(Event.m_Key == KEY_BACKSPACE)
 	{
 		m_TextIndex.x--;
-		m_TextLineLen--;
 		SetTile(m_TextIndex, 0, pLayer);
 	}
 	// space
 	if(Event.m_Key == KEY_SPACE)
-	{
-		SetTile(m_TextIndex, 0, pLayer);
-		m_TextIndex.x++;
-		m_TextLineLen++;
-	}
+		PlaceTile(0, pLayer);
 	// newline
 	if(Event.m_Key == KEY_RETURN)
 	{
 		m_TextIndex.y++;
-		m_TextIndex.x -= m_TextLineLen;
-		m_TextLineLen = 0;
+		m_TextIndex.x = m_LineStart;
 	}
 	// arrow key navigation
 	if(Event.m_Key == KEY_LEFT)
 	{
 		m_TextIndex.x--;
-		m_TextLineLen--;
 		if(Input()->KeyIsPressed(KEY_LCTRL))
 		{
 			while(pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
@@ -121,14 +111,12 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 				if(m_TextIndex.x < 1 || m_TextIndex.x > pLayer->m_Width - 2)
 					break;
 				m_TextIndex.x--;
-				m_TextLineLen--;
 			}
 		}
 	}
 	if(Event.m_Key == KEY_RIGHT)
 	{
 		m_TextIndex.x++;
-		m_TextLineLen++;
 		if(Input()->KeyIsPressed(KEY_LCTRL))
 		{
 			while(pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
@@ -136,7 +124,6 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 				if(m_TextIndex.x < 1 || m_TextIndex.x > pLayer->m_Width - 2)
 					break;
 				m_TextIndex.x++;
-				m_TextLineLen++;
 			}
 		}
 	}
@@ -191,7 +178,7 @@ void CFontTyper::SetCursor()
 {
 	m_TextIndex.x = (int)(Editor()->MapView()->MouseWorldPos().x / 32);
 	m_TextIndex.y = (int)(Editor()->MapView()->MouseWorldPos().y / 32);
-	m_TextLineLen = 0;
+	m_LineStart = m_TextIndex.x;
 	m_CursorRenderTime = time_get_nanoseconds() - 501ms;
 }
 

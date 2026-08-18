@@ -23,7 +23,8 @@ class CFontTyper : public CEditorComponent
 		NUMBER_OFFSET = 54,
 	};
 	ivec2 m_TextIndex = ivec2(0, 0);
-	int m_TextLineLen = 0;
+	// 换行返回到的列。
+	int m_LineStart = 0;
 	bool m_Active = false;
 	std::chrono::nanoseconds m_CursorRenderTime;
 	IGraphics::CTextureHandle m_CursorTextTexture;
@@ -35,6 +36,7 @@ class CFontTyper : public CEditorComponent
 	void TextModeOff();
 	void TextModeOn();
 	void SetTile(ivec2 Pos, unsigned char Index, const std::shared_ptr<CLayerTiles> &pLayer);
+	void PlaceTile(unsigned char Index, const std::shared_ptr<CLayerTiles> &pLayer);
 
 public:
 	void OnRender(CUIRect View) override;
