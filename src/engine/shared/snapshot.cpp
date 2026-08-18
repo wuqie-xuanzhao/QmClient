@@ -258,7 +258,7 @@ void CSnapshotStorage::Add(int Tick, int64_t Tagtime, size_t DataSize, const voi
 
 int CSnapshotStorage::Get(int Tick, int64_t *pTagtime, const CSnapshot **ppData, const CSnapshot **ppAltData) const
 {
-	CHolder *pHolder = m_pFirst;
+	CHolder *pHolder = m_pLast;
 
 	while(pHolder)
 	{
@@ -273,7 +273,10 @@ int CSnapshotStorage::Get(int Tick, int64_t *pTagtime, const CSnapshot **ppData,
 			return pHolder->m_SnapSize;
 		}
 
-		pHolder = pHolder->m_pNext;
+		if(pHolder->m_Tick < Tick)
+			return -1;
+
+		pHolder = pHolder->m_pPrev;
 	}
 
 	return -1;

@@ -9,6 +9,8 @@
 
 #include <engine/shared/protocol.h>
 
+#include <generated/protocol.h>
+
 #include <game/alloc.h>
 #include <game/server/save.h>
 
@@ -106,6 +108,7 @@ public:
 	int m_SendVoteIndex;
 
 	CTeeInfo m_TeeInfos;
+	void InvalidateClientInfo() { m_ClientInfoValid = false; }
 
 	int m_DieTick;
 	int m_PreviousDieTick;
@@ -125,6 +128,9 @@ public:
 	} m_Latency;
 
 private:
+	CNetObj_ClientInfo m_ClientInfo = {};
+	bool m_ClientInfoValid = false;
+
 	const uint32_t m_UniqueClientId;
 	CCharacter *m_pCharacter;
 	int m_NumInputs;

@@ -431,6 +431,7 @@ public:
 
 	virtual void OnClientEnter(int ClientId) = 0;
 	virtual void OnClientDrop(int ClientId, const char *pReason) = 0;
+	virtual void OnClientInfoChange(int ClientId) = 0;
 	virtual void OnClientPrepareInput(int ClientId, void *pInput) = 0;
 	virtual void OnClientDirectInput(int ClientId, const void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientId, const void *pInput) = 0;

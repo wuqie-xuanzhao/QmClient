@@ -1834,6 +1834,12 @@ void CGameContext::OnClientConnected(int ClientId, void *pData)
 	Server()->ExpireServerInfo();
 }
 
+void CGameContext::OnClientInfoChange(int ClientId)
+{
+	if(m_apPlayers[ClientId])
+		m_apPlayers[ClientId]->InvalidateClientInfo();
+}
+
 void CGameContext::OnClientDrop(int ClientId, const char *pReason)
 {
 	LogEvent("Disconnect", ClientId);
@@ -2045,6 +2051,7 @@ void *CGameContext::PreProcessMsg(int *pMsgId, CUnpacker *pUnpacker, int ClientI
 
 			pPlayer->m_TeeInfos = CTeeInfo(pMsg7->m_apSkinPartNames, pMsg7->m_aUseCustomColors, pMsg7->m_aSkinPartColors);
 			pPlayer->m_TeeInfos.FromSixup();
+			pPlayer->InvalidateClientInfo();
 
 			str_copy(s_aRawMsg + sizeof(*pMsg), pPlayer->m_TeeInfos.m_aSkinName, sizeof(s_aRawMsg) - sizeof(*pMsg));
 
@@ -2065,6 +2072,7 @@ void *CGameContext::PreProcessMsg(int *pMsgId, CUnpacker *pUnpacker, int ClientI
 			CTeeInfo Info(pMsg->m_apSkinPartNames, pMsg->m_aUseCustomColors, pMsg->m_aSkinPartColors);
 			Info.FromSixup();
 			pPlayer->m_TeeInfos = Info;
+			pPlayer->InvalidateClientInfo();
 			SendSkinChange7(ClientId);
 
 			return nullptr;
@@ -2833,6 +2841,7 @@ void CGameContext::OnChangeInfoNetMessage(const CNetMsg_Cl_ChangeInfo *pMsg, int
 	pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 	if(!Server()->IsSixup(ClientId))
 		pPlayer->m_TeeInfos.ToSixup();
+	pPlayer->InvalidateClientInfo();
 
 	if(SixupNeedsUpdate)
 	{
@@ -3024,6 +3033,7 @@ void CGameContext::OnStartInfoNetMessage(const CNetMsg_Cl_StartInfo *pMsg, int C
 	pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 	if(!Server()->IsSixup(ClientId))
 		pPlayer->m_TeeInfos.ToSixup();
+	pPlayer->InvalidateClientInfo();
 
 	// send clear vote options
 	CNetMsg_Sv_VoteClearOptions ClearMsg;

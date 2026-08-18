@@ -53,6 +53,7 @@ private:
 	int m_DDRaceTeam;
 	bool m_IsSolo;
 	vec2 m_InitDir;
+	CClientMask m_TeamMask;
 
 public:
 	void SetBouncing(int Value);

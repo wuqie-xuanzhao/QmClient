@@ -422,6 +422,7 @@ bool CServer::SetClientNameImpl(int ClientId, const char *pNameRequest, bool Set
 		// set the client name
 		str_copy(m_aClients[ClientId].m_aName, aNameTry);
 		GameServer()->TeehistorianRecordPlayerName(ClientId, m_aClients[ClientId].m_aName);
+		GameServer()->OnClientInfoChange(ClientId);
 	}
 
 	return Changed;
@@ -459,10 +460,11 @@ bool CServer::SetClientClanImpl(int ClientId, const char *pClanRequest, bool Set
 
 	bool Changed = str_comp(m_aClients[ClientId].m_aClan, aTrimmedClan) != 0;
 
-	if(Set)
+	if(Set && Changed)
 	{
 		// set the client clan
 		str_copy(m_aClients[ClientId].m_aClan, aTrimmedClan);
+		GameServer()->OnClientInfoChange(ClientId);
 	}
 
 	return Changed;
@@ -494,7 +496,11 @@ void CServer::SetClientCountry(int ClientId, int Country)
 	if(ClientId < 0 || ClientId >= MAX_CLIENTS || m_aClients[ClientId].m_State < CClient::STATE_READY)
 		return;
 
+	if(m_aClients[ClientId].m_Country == Country)
+		return;
+
 	m_aClients[ClientId].m_Country = Country;
+	GameServer()->OnClientInfoChange(ClientId);
 }
 
 void CServer::SetClientScore(int ClientId, std::optional<int> Score)
@@ -3357,7 +3363,9 @@ void CServer::UpdateDebugDummies(bool ForceDisconnect)
 			Client.m_DDNetVersion = DDNET_VERSION_NUMBER;
 			Client.m_GotDDNetVersionPacket = true;
 			Client.m_DDNetVersionSettled = true;
-			str_format(Client.m_aName, sizeof(Client.m_aName), "Debug dummy %d", DummyIndex + 1);
+			char aDummyName[MAX_NAME_LENGTH];
+			str_format(aDummyName, sizeof(aDummyName), "Debug dummy %d", DummyIndex + 1);
+			SetClientName(ClientId, aDummyName);
 			GameServer()->OnClientEnter(ClientId);
 		}
 		else if(!AddDummy && Client.m_DebugDummy)
@@ -5016,6 +5024,9 @@ bool CServer::SetTimedOut(int ClientId, int OrigId)
 	m_NetServer.ResumeOldConnection(ClientId, OrigId);
 
 	m_aClients[ClientId].m_Sixup = m_aClients[OrigId].m_Sixup;
+	// 恢复后的连接可能使用另一种协议版本，旧快照不能继续作为 delta 基础。
+	m_aClients[ClientId].m_Snapshots.PurgeAll();
+	m_aClients[ClientId].m_LastAckedSnapshot = -1;
 	const EClientBrand OrigClientBrand = m_aClients[OrigId].m_ClientBrand;
 
 	DelClientCallback(OrigId, "Timeout Protection used", this);
