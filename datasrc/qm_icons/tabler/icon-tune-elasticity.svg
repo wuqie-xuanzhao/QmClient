@@ -1,6 +1,0 @@
-<!-- QmClient hand-drawn Tune Zone elasticity icon: a ball bouncing on a spring. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <circle cx="128" cy="62" r="32" fill="currentColor"/>
-  <path d="M128 104v38M102 126l26 28 26-28" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M40 188h30l18-30 26 60 28-60 26 60 18-30h30" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>

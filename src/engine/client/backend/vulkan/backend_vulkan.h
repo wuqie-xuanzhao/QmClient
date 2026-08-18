@@ -22,9 +22,16 @@ constexpr bool IsVulkanVersionAtLeast(const SVulkanVersion &Version, const SVulk
 	return Version.m_Patch >= Required.m_Patch;
 }
 
-constexpr SVulkanVersion NormalizeRequestedVulkanVersion(const SVulkanVersion &Requested)
+constexpr SVulkanVersion MinVulkanVersion(const SVulkanVersion &Left, const SVulkanVersion &Right)
 {
-	return Requested.m_Major == gs_BackendVulkanMaximumVersion.m_Major && Requested.m_Minor >= gs_BackendVulkanMaximumVersion.m_Minor ? gs_BackendVulkanMaximumVersion : gs_BackendVulkanMinimumVersion;
+	return IsVulkanVersionAtLeast(Left, Right) ? Right : Left;
+}
+
+constexpr SVulkanVersion ClampVulkanVersionToSupportedRange(const SVulkanVersion &Version)
+{
+	if(!IsVulkanVersionAtLeast(Version, gs_BackendVulkanMinimumVersion))
+		return gs_BackendVulkanMinimumVersion;
+	return MinVulkanVersion(Version, gs_BackendVulkanMaximumVersion);
 }
 
 CCommandProcessorFragment_GLBase *CreateVulkanCommandProcessorFragment();

@@ -180,6 +180,7 @@ MACRO_CONFIG_INT(QmCycleTeeHueSpeed, qm_cycle_tee_hue_speed, 72, 0, 360, CFGFLAG
 MACRO_CONFIG_INT(QmRandomEmoteOnHit, qm_random_emote_on_hit, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Random emote when hit by hammer/grenade")
 MACRO_CONFIG_INT(QmEmoticonShadow, qm_emoticon_shadow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Draw shadow behind emote")
 MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon trajectory helper mode (0=Off, 1=On key, 2=Always)")
+MACRO_CONFIG_INT(QmWeaponTrajectoryGun, qm_weapon_trajectory_gun, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Pistol guide line")
 MACRO_CONFIG_COL(QmWeaponTrajectoryColor, qm_weapon_trajectory_color, 16750899, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon trajectory helper color")
 MACRO_CONFIG_INT(QmWeaponTrajectoryWidth, qm_weapon_trajectory_width, 2, 1, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon trajectory helper width")
 MACRO_CONFIG_INT(QmWeaponTrajectoryAlpha, qm_weapon_trajectory_alpha, 70, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon trajectory helper alpha")
@@ -394,10 +395,8 @@ MACRO_CONFIG_INT(QmSwitchCountdownMode, qm_switch_countdown_mode, 1, 0, 2, CFGFL
 // HUD Dynamic Island - 灵动岛/HUD 编辑器
 MACRO_CONFIG_INT(QmHudIslandUseOriginalStyle, qm_hud_island_use_original_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use original style for Dynamic Island")
 MACRO_CONFIG_INT(QmHudIslandShowTeam, qm_hud_island_show_team, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show team on HUD Dynamic Island")
-MACRO_CONFIG_INT(QmHudIslandShowTuneZoneEffects, qm_hud_island_show_tune_zone_effects, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show Tune Zone effects on HUD Dynamic Island")
 MACRO_CONFIG_COL(QmHudIslandBgColor, qm_hud_island_bg_color, 0x9C460E, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dynamic Island background color")
 MACRO_CONFIG_INT(QmHudIslandBgOpacity, qm_hud_island_bg_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dynamic Island background alpha")
-MACRO_CONFIG_INT(QmHudIslandEdgeMargin, qm_hud_island_edge_margin, 5, 0, 64, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dynamic Island HUD editor edge margin px")
 MACRO_CONFIG_STR(QmHudEditorLayout, qm_hud_editor_layout, 2048, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "HUD editor layout")
 
 // Camera / View - 相机、视野

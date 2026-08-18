@@ -79,7 +79,10 @@ namespace
 		}
 		else if(str_comp_nocase(pSafeBackendName, "Vulkan") == 0)
 		{
-			str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "Vulkan %d.%d", Major, Minor);
+			if(Major == 0)
+				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "Vulkan (%s)", Localize("auto"));
+			else
+				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "Vulkan %d.%d", Major, Minor);
 		}
 		else if(str_comp_nocase(pSafeBackendName, "GLES") == 0)
 		{
@@ -3971,7 +3974,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				}
 				int Selected = -1;
 				for(size_t i = 0; i < s_vSupportedBackendInfos.size(); ++i)
-					if(str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == s_vSupportedBackendInfos[i].m_Major && g_Config.m_GfxGLMinor == s_vSupportedBackendInfos[i].m_Minor && g_Config.m_GfxGLPatch == s_vSupportedBackendInfos[i].m_Patch)
+					if(str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, g_Config.m_GfxBackend) == 0 &&
+						(str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0 ||
+							(g_Config.m_GfxGLMajor == s_vSupportedBackendInfos[i].m_Major && g_Config.m_GfxGLMinor == s_vSupportedBackendInfos[i].m_Minor && g_Config.m_GfxGLPatch == s_vSupportedBackendInfos[i].m_Patch)))
 						Selected = (int)i;
 				if(Selected < 0)
 				{

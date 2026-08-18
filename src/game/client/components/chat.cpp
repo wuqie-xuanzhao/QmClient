@@ -3112,7 +3112,6 @@ void CChat::OnRender()
 		// render chat input
 		CTextCursor InputCursor;
 		InputCursor.SetPosition(vec2(x, y));
-		InputCursor.SetPosition(vec2(x + TranslateButtonSize + TranslateButtonGap, y));
 		InputCursor.m_FontSize = ScaledFontSize;
 		InputCursor.m_LineWidth = InputLineWidth;
 

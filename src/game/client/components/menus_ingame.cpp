@@ -599,7 +599,8 @@ void CMenus::RenderGame(CUIRect MainView)
 
 	const bool HasSecondaryButtonBar = g_Config.m_ClTouchControls || UseSecondaryUtilityButtonBar;
 	MainView.HSplitTop(45.0f + (HasSecondaryButtonBar ? 35.0f : 0.0f), &ButtonBars, &MainView);
-	ButtonBars.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
+	const int ButtonBarsCorners = g_Config.m_QmNewUi != 0 ? IGraphics::CORNER_ALL : IGraphics::CORNER_B;
+	ButtonBars.Draw(ms_ColorTabbarActive, ButtonBarsCorners, 10.0f);
 	ButtonBars.Margin(10.0f, &ButtonBars);
 	ButtonBars.HSplitTop(MenuButtonHeight, &ButtonBar, &ButtonBars);
 	if(HasSecondaryButtonBar)

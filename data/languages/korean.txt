@@ -3371,9 +3371,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == 다이나믹 아일랜드 배경 색상
 
-Dynamic Island HUD editor edge margin px
-== 다이나믹 아일랜드 HUD 편집기 가장자리 여백 px
-
 Ease in out quad
 == 이즈 인 아웃 쿼드
 
@@ -5104,6 +5101,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == 음성 거리 감쇠 무시
+
+Ignored legacy Dynamic Island edge margin
+== Ignored legacy Dynamic Island edge margin
 
 Import from clipboard
 == 클립보드에서 가져오기
@@ -7549,6 +7549,9 @@ Ping the current server
 
 Pistol
 == 권총
+
+Pistol guide line
+== 권총 보조선
 
 Plasma gun shots per second
 == 플라즈마 건 초당 발사 수
@@ -10241,12 +10244,6 @@ Show toast
 Show translation
 == 번역 표시
 
-Show Tune Zone effects
-== Tune Zone 효과 표시
-
-Show Tune Zone effects on HUD Dynamic Island
-== HUD 다이내믹 아일랜드에 Tune Zone 효과 표시
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 자신의 플레이어에 영향을 미치는 튜닝 파라미터 표시 (0 = 끄기, 1 = 변경된 것만 표시, 2 = 모두 표시)
 
@@ -11800,9 +11797,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == 변수를 값으로 조정하거나 현재 값을 표시합니다.
-
-Tune Zone effect icon legend
-== Tune Zone 효과 아이콘 안내
 
 Tutorial
 == 튜토리얼

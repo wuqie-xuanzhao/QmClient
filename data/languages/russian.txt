@@ -3371,9 +3371,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == Цвет фона Dynamic Island
 
-Dynamic Island HUD editor edge margin px
-== Внешний отступ редактора Dynamic Island HUD от края, px
-
 Ease in out quad
 == Ease in-out quad
 
@@ -5104,6 +5101,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == Игнорировать затухание голоса по расстоянию
+
+Ignored legacy Dynamic Island edge margin
+== Ignored legacy Dynamic Island edge margin
 
 Import from clipboard
 == Импорт из буфера обмена
@@ -7549,6 +7549,9 @@ Ping the current server
 
 Pistol
 == Пистолет
+
+Pistol guide line
+== Линия траектории пистолета
 
 Plasma gun shots per second
 == Выстрелов плазменной пушки в секунду
@@ -10241,12 +10244,6 @@ Show toast
 Show translation
 == Показать перевод
 
-Show Tune Zone effects
-== Показывать эффекты Tune Zone
-
-Show Tune Zone effects on HUD Dynamic Island
-== Показывать эффекты Tune Zone в динамическом острове HUD
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Показывать параметры настройки, влияющие на своего игрока (0 = Выкл, 1 = Показывать изменённые, 2 = Показывать все)
 
@@ -11800,9 +11797,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Установить переменную тюнинга в значение или показать текущее значение
-
-Tune Zone effect icon legend
-== Показывать эффекты Tune Zone
 
 Tutorial
 == Обучение

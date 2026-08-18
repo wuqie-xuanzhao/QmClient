@@ -3371,9 +3371,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == Dinamik Ada arka plan rengi
 
-Dynamic Island HUD editor edge margin px
-== Dynamic Island HUD düzenleyici kenar dış boşluğu (px)
-
 Ease in out quad
 == Yavaş giriş yavaş çıkış ikinci derece
 
@@ -5104,6 +5101,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == Ses mesafesi zayıflamasını yoksay
+
+Ignored legacy Dynamic Island edge margin
+== Ignored legacy Dynamic Island edge margin
 
 Import from clipboard
 == Panodan içe aktar
@@ -7549,6 +7549,9 @@ Ping the current server
 
 Pistol
 == Tabanca
+
+Pistol guide line
+== Tabanca yardımcı çizgisi
 
 Plasma gun shots per second
 == Plazma tabancasının saniyedeki atış sayısı
@@ -10241,12 +10244,6 @@ Show toast
 Show translation
 == Çeviriyi göster
 
-Show Tune Zone effects
-== Tune Zone etkilerini göster
-
-Show Tune Zone effects on HUD Dynamic Island
-== Tune Zone etkilerini HUD Dinamik Ada'da göster
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Kendi oyuncunu etkileyen ayar parametrelerini göster (0=Kapalı, 1=Değişenleri göster, 2=Tümünü göster)
 
@@ -11800,9 +11797,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Değişkeni değere ayarla veya geçerli değeri göster
-
-Tune Zone effect icon legend
-== Tune Zone etkilerini göster
 
 Tutorial
 == Eğitim

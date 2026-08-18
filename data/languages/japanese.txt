@@ -3371,9 +3371,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == ダイナミックアイランドの背景色
 
-Dynamic Island HUD editor edge margin px
-== ダイナミックアイランド HUD エディターのエッジマージン px
-
 Ease in out quad
 == イーズインアウトクワッド
 
@@ -5104,6 +5101,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == ボイス距離減衰を無視
+
+Ignored legacy Dynamic Island edge margin
+== Ignored legacy Dynamic Island edge margin
 
 Import from clipboard
 == クリップボードからインポート
@@ -7549,6 +7549,9 @@ Ping the current server
 
 Pistol
 == ピストル
+
+Pistol guide line
+== ピストル補助線
 
 Plasma gun shots per second
 == プラズマガンの毎秒発射数
@@ -10241,12 +10244,6 @@ Show toast
 Show translation
 == 翻訳を表示
 
-Show Tune Zone effects
-== Tune Zone 効果を表示
-
-Show Tune Zone effects on HUD Dynamic Island
-== HUD ダイナミックアイランドに Tune Zone 効果を表示
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 自身のプレイヤーに影響するチューニングパラメーターを表示（0 = オフ、1 = 変更のみ表示、2 = すべて表示）
 
@@ -11800,9 +11797,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == チューン変数を値に設定するか、現在の値を表示
-
-Tune Zone effect icon legend
-== Tune Zone エフェクトアイコン一覧
 
 Tutorial
 == チュートリアル

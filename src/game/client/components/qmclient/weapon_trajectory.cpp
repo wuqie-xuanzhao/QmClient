@@ -40,7 +40,7 @@ void CQmWeaponTrajectory::Render(
 		return;
 
 	const int Weapon = pPlayerChar->m_Weapon;
-	if(Weapon != WEAPON_GUN && Weapon != WEAPON_GRENADE && Weapon != WEAPON_SHOTGUN && Weapon != WEAPON_LASER)
+	if(!QmWeaponTrajectoryEnabledForWeapon(Weapon, g_Config.m_QmWeaponTrajectoryGun != 0))
 		return;
 
 	const float TrajectoryAlpha = std::clamp(g_Config.m_QmWeaponTrajectoryAlpha / 100.0f, 0.0f, 1.0f);

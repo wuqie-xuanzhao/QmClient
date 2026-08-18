@@ -1,6 +1,0 @@
-<!-- QmClient hand-drawn Tune Zone jump icon: a tee body rising from the ground. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <circle cx="128" cy="86" r="30" fill="currentColor"/>
-  <path d="M116 150h24V82h32l-44-50-44 50h32v68Z" fill="currentColor"/>
-  <path d="M42 218h172" stroke="currentColor" stroke-width="20" stroke-linecap="round"/>
-</svg>

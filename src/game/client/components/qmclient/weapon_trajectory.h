@@ -39,6 +39,13 @@ inline bool QmWeaponTrajectoryUsesLineStyle(int Weapon)
 	return Weapon == WEAPON_GUN || Weapon == WEAPON_SHOTGUN || Weapon == WEAPON_LASER;
 }
 
+inline bool QmWeaponTrajectoryEnabledForWeapon(int Weapon, bool PistolGuideEnabled)
+{
+	if(Weapon == WEAPON_GUN)
+		return PistolGuideEnabled;
+	return Weapon == WEAPON_GRENADE || Weapon == WEAPON_SHOTGUN || Weapon == WEAPON_LASER;
+}
+
 inline bool QmWeaponTrajectoryCanHitOtherPlayers(
 	int Weapon,
 	bool GrenadeHitDisabled,

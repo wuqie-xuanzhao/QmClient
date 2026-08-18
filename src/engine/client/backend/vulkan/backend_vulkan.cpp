@@ -1129,6 +1129,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	bool m_FrameTimestampQueryRecorded = false;
 	bool m_FrameProfilingActive = false;
 	uint32_t m_RequestedApiVersion = VK_API_VERSION_1_1;
+	uint32_t m_EffectiveApiVersion = VK_API_VERSION_1_1;
 
 	size_t m_ThreadCount = 1;
 	static constexpr size_t MAIN_THREAD_INDEX = 0;
@@ -4239,9 +4240,6 @@ public:
 
 	[[nodiscard]] bool ResolveRequestedVulkanApiVersion()
 	{
-		const SVulkanVersion RequestedVersion = gs_BackendVulkanMinimumVersion;
-		m_RequestedApiVersion = VK_MAKE_API_VERSION(0, RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch);
-
 		uint32_t LoaderApiVersion = VK_API_VERSION_1_0;
 		auto pfnGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(SDL_Vulkan_GetVkGetInstanceProcAddr());
 		if(pfnGetInstanceProcAddr == nullptr)
@@ -4264,15 +4262,17 @@ public:
 			(int)VK_API_VERSION_MAJOR(LoaderApiVersion),
 			(int)VK_API_VERSION_MINOR(LoaderApiVersion),
 			(int)VK_API_VERSION_PATCH(LoaderApiVersion)};
-		if(!IsVulkanVersionAtLeast(LoaderVersion, RequestedVersion))
+		if(!IsVulkanVersionAtLeast(LoaderVersion, gs_BackendVulkanMinimumVersion))
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "Vulkan %d.%d was selected, but the installed Vulkan loader only supports %d.%d.%d.", RequestedVersion.m_Major, RequestedVersion.m_Minor, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
+			str_format(aBuf, sizeof(aBuf), "Vulkan %d.%d or newer is required, but the installed Vulkan loader only supports %d.%d.%d.", gs_BackendVulkanMinimumVersion.m_Major, gs_BackendVulkanMinimumVersion.m_Minor, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
 			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, aBuf);
 			return false;
 		}
 
-		log_info("gfx/vulkan", "requested Vulkan API %d.%d.%d, loader supports %d.%d.%d", RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
+		const SVulkanVersion RequestedVersion = ClampVulkanVersionToSupportedRange(LoaderVersion);
+		m_RequestedApiVersion = VK_MAKE_API_VERSION(0, RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch);
+		log_info("gfx/vulkan", "requesting Vulkan API %d.%d.%d, loader supports %d.%d.%d", RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
 		return true;
 	}
 
@@ -4515,11 +4515,7 @@ public:
 
 			auto IsDenied = CCommandProcessorFragment_Vulkan::IsGpuDenied(DeviceProp.vendorID, DeviceProp.driverVersion, DevApiMajor, DevApiMinor, DevApiPatch);
 			const SVulkanVersion DeviceVersion = {DevApiMajor, DevApiMinor, DevApiPatch};
-			const SVulkanVersion RequestedVersion = {
-				(int)VK_API_VERSION_MAJOR(m_RequestedApiVersion),
-				(int)VK_API_VERSION_MINOR(m_RequestedApiVersion),
-				(int)VK_API_VERSION_PATCH(m_RequestedApiVersion)};
-			if(IsVulkanVersionAtLeast(DeviceVersion, RequestedVersion) && !IsDenied)
+			if(IsVulkanVersionAtLeast(DeviceVersion, gs_BackendVulkanMinimumVersion) && !IsDenied)
 			{
 				if(FirstCompatibleDeviceIndex == InvalidDeviceIndex)
 					FirstCompatibleDeviceIndex = Index;
@@ -4555,7 +4551,7 @@ public:
 		if(m_pGpuList->m_vGpus.empty())
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "No device supporting the selected Vulkan %u.%u API was found.", VK_API_VERSION_MAJOR(m_RequestedApiVersion), VK_API_VERSION_MINOR(m_RequestedApiVersion));
+			str_format(aBuf, sizeof(aBuf), "No device supporting the required Vulkan %d.%d API was found.", gs_BackendVulkanMinimumVersion.m_Major, gs_BackendVulkanMinimumVersion.m_Minor);
 			SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED_NO_DEVICE_WITH_REQUIRED_VERSION, aBuf);
 			return false;
 		}
@@ -4571,6 +4567,13 @@ public:
 			int DevApiMajor = (int)VK_API_VERSION_MAJOR(DeviceProp.apiVersion);
 			int DevApiMinor = (int)VK_API_VERSION_MINOR(DeviceProp.apiVersion);
 			int DevApiPatch = (int)VK_API_VERSION_PATCH(DeviceProp.apiVersion);
+			const SVulkanVersion DeviceVersion = ClampVulkanVersionToSupportedRange({DevApiMajor, DevApiMinor, DevApiPatch});
+			const SVulkanVersion InstanceVersion = {
+				(int)VK_API_VERSION_MAJOR(m_RequestedApiVersion),
+				(int)VK_API_VERSION_MINOR(m_RequestedApiVersion),
+				(int)VK_API_VERSION_PATCH(m_RequestedApiVersion)};
+			const SVulkanVersion EffectiveVersion = MinVulkanVersion(InstanceVersion, DeviceVersion);
+			m_EffectiveApiVersion = VK_MAKE_API_VERSION(0, EffectiveVersion.m_Major, EffectiveVersion.m_Minor, EffectiveVersion.m_Patch);
 
 			str_copy(pRendererName, DeviceProp.deviceName, gs_GpuInfoStringSize);
 			const char *pVendorNameStr = NULL;
@@ -4609,6 +4612,7 @@ public:
 			char aBuff[256];
 			str_copy(pVendorName, pVendorNameStr, gs_GpuInfoStringSize);
 			str_format(pVersionName, gs_GpuInfoStringSize, "Vulkan %d.%d.%d (driver: %s)", DevApiMajor, DevApiMinor, DevApiPatch, GetDriverVersion(aBuff, DeviceProp.driverVersion, DeviceProp.vendorID));
+			log_info("gfx/vulkan", "effective Vulkan API %d.%d.%d (instance %u.%u.%u, device %d.%d.%d)", EffectiveVersion.m_Major, EffectiveVersion.m_Minor, EffectiveVersion.m_Patch, VK_API_VERSION_MAJOR(m_RequestedApiVersion), VK_API_VERSION_MINOR(m_RequestedApiVersion), VK_API_VERSION_PATCH(m_RequestedApiVersion), DevApiMajor, DevApiMinor, DevApiPatch);
 
 			// get important device limits
 			m_NonCoherentMemAlignment = DeviceProp.limits.nonCoherentAtomSize;
@@ -5182,7 +5186,7 @@ public:
 		{
 			for(size_t i = 0; i < m_SwapChainImageCount; ++i)
 			{
-				if(!CreateImage(m_VKSwapImgAndViewportExtent.m_SwapImageViewport.width, m_VKSwapImgAndViewportExtent.m_SwapImageViewport.height, 1, 1, m_VKSurfFormat.format, VK_IMAGE_TILING_OPTIMAL, m_vSwapChainMultiSamplingImages[i].m_Image, m_vSwapChainMultiSamplingImages[i].m_ImgMem, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT))
+				if(!CreateImage(m_VKSwapImgAndViewportExtent.m_SwapImageViewport.width, m_VKSwapImgAndViewportExtent.m_SwapImageViewport.height, 1, 1, m_VKSurfFormat.format, VK_IMAGE_TILING_OPTIMAL, m_vSwapChainMultiSamplingImages[i].m_Image, m_vSwapChainMultiSamplingImages[i].m_ImgMem, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT))
 					return false;
 				m_vSwapChainMultiSamplingImages[i].m_ImgView = CreateImageView(m_vSwapChainMultiSamplingImages[i].m_Image, m_VKSurfFormat.format, VK_IMAGE_VIEW_TYPE_2D, 1, 1);
 			}
@@ -5221,10 +5225,10 @@ public:
 		MultiSamplingColorAttachment.format = AttachmentFormat;
 		MultiSamplingColorAttachment.samples = HasMultiSamplingTargets ? GetSampleCount() : VK_SAMPLE_COUNT_1_BIT;
 		MultiSamplingColorAttachment.loadOp = LoadAttachments ? VK_ATTACHMENT_LOAD_OP_LOAD : (ClearAttachments ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
-		MultiSamplingColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		MultiSamplingColorAttachment.storeOp = HasMultiSamplingTargets ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		MultiSamplingColorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		MultiSamplingColorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		MultiSamplingColorAttachment.initialLayout = InitialLayout;
+		MultiSamplingColorAttachment.initialLayout = HasMultiSamplingTargets && LoadAttachments ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : InitialLayout;
 		MultiSamplingColorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentDescription ColorAttachment{};
@@ -7096,8 +7100,7 @@ public:
 
 	[[nodiscard]] bool SupportsBackbufferCapture() const
 	{
-		// The load pass can preserve the single-sample swap image. With MSAA the transient
-		// color attachment is not guaranteed to survive ending and restarting the pass.
+		// 截图路径只验证过单采样交换链；多采样附件虽可恢复，但读取流程仍保持保守限制。
 		const bool CompatibleFormat = m_VKSurfFormat.format == VK_FORMAT_B8G8R8A8_UNORM || m_VKSurfFormat.format == VK_FORMAT_R8G8B8A8_UNORM;
 		return SupportsRenderTargetReadback() && CompatibleFormat && m_OptimalSwapChainImageBlitting && m_OptimalRGBAImageBlitting;
 	}
@@ -8128,9 +8131,9 @@ public:
 		pCommand->m_pCapabilities->m_2DArrayTextures = true;
 		pCommand->m_pCapabilities->m_NPOTTextures = true;
 
-		pCommand->m_pCapabilities->m_ContextMajor = (int)VK_API_VERSION_MAJOR(m_RequestedApiVersion);
-		pCommand->m_pCapabilities->m_ContextMinor = (int)VK_API_VERSION_MINOR(m_RequestedApiVersion);
-		pCommand->m_pCapabilities->m_ContextPatch = (int)VK_API_VERSION_PATCH(m_RequestedApiVersion);
+		pCommand->m_pCapabilities->m_ContextMajor = (int)VK_API_VERSION_MAJOR(m_EffectiveApiVersion);
+		pCommand->m_pCapabilities->m_ContextMinor = (int)VK_API_VERSION_MINOR(m_EffectiveApiVersion);
+		pCommand->m_pCapabilities->m_ContextPatch = (int)VK_API_VERSION_PATCH(m_EffectiveApiVersion);
 		pCommand->m_pCapabilities->m_DetectedContextMajor = 0;
 		pCommand->m_pCapabilities->m_DetectedContextMinor = 0;
 		pCommand->m_pCapabilities->m_DetectedContextPatch = 0;
@@ -8163,6 +8166,12 @@ public:
 			*pCommand->m_pInitError = -2;
 			return false;
 		}
+		pCommand->m_pCapabilities->m_ContextMajor = (int)VK_API_VERSION_MAJOR(m_EffectiveApiVersion);
+		pCommand->m_pCapabilities->m_ContextMinor = (int)VK_API_VERSION_MINOR(m_EffectiveApiVersion);
+		pCommand->m_pCapabilities->m_ContextPatch = (int)VK_API_VERSION_PATCH(m_EffectiveApiVersion);
+		pCommand->m_pCapabilities->m_DetectedContextMajor = pCommand->m_pCapabilities->m_ContextMajor;
+		pCommand->m_pCapabilities->m_DetectedContextMinor = pCommand->m_pCapabilities->m_ContextMinor;
+		pCommand->m_pCapabilities->m_DetectedContextPatch = pCommand->m_pCapabilities->m_ContextPatch;
 		pCommand->m_pCapabilities->m_MediaIslandSdf = true;
 		pCommand->m_pCapabilities->m_RoundedRectSdf = true;
 		SyncTexturedMsdfCapability();

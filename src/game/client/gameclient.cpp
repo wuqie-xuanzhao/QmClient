@@ -181,6 +181,10 @@ namespace
 		pSnapshot->emplace_back(pVariable->m_pScriptName, *pIntVariable->m_pVariable);
 	}
 
+	void ConDiscardLegacyHudIslandEdgeMargin(IConsole::IResult *, void *)
+	{
+	}
+
 	int QmLocalReferenceClientId(const CGameClient *pGameClient)
 	{
 		const int LocalId = pGameClient->m_aLocalIds[g_Config.m_ClDummy];
@@ -661,6 +665,7 @@ void CGameClient::OnConsoleInit()
 
 	// add basic console commands
 	IConsole *pConsole = m_pConsole;
+	pConsole->Register("qm_hud_island_edge_margin", "?i[value]", CFGFLAG_CLIENT, ConDiscardLegacyHudIslandEdgeMargin, nullptr, "Ignored legacy Dynamic Island edge margin");
 	pConsole->Register("team", "i[team-id]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	pConsole->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself to restart");
 	pConsole->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange7, this, "Change ready state (0.7 only)");
@@ -6257,7 +6262,6 @@ void CGameClient::UpdatePrediction()
 	m_GameWorld.m_WorldConfig.m_PredictTeleport = false;
 	m_GameWorld.m_WorldConfig.m_BugDDRaceInput = m_GameInfo.m_BugDDRaceInput;
 	m_GameWorld.m_WorldConfig.m_NoWeakHookAndBounce = m_GameInfo.m_NoWeakHookAndBounce;
-	m_GameWorld.m_WorldConfig.m_PredictEvents = m_GameInfo.m_PredictEvents;
 
 	if(!m_Snap.m_pLocalCharacter)
 	{

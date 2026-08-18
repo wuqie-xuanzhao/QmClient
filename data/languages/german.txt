@@ -3371,9 +3371,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == Dynamic Island Hintergrundfarbe
 
-Dynamic Island HUD editor edge margin px
-== Randabstand des Dynamic-Island-HUD-Editors (px)
-
 Ease in out quad
 == Ease in-out quad
 
@@ -5104,6 +5101,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == Sprachdistanzdämpfung ignorieren
+
+Ignored legacy Dynamic Island edge margin
+== Ignored legacy Dynamic Island edge margin
 
 Import from clipboard
 == Aus Zwischenablage importieren
@@ -7549,6 +7549,9 @@ Ping the current server
 
 Pistol
 == Pistole
+
+Pistol guide line
+== Pistolen-Hilfslinie
 
 Plasma gun shots per second
 == Plasmaschüsse pro Sekunde
@@ -10241,12 +10244,6 @@ Show toast
 Show translation
 == Übersetzung anzeigen
 
-Show Tune Zone effects
-== Tune-Zone-Effekte anzeigen
-
-Show Tune Zone effects on HUD Dynamic Island
-== Tune-Zone-Effekte auf der dynamischen HUD-Insel anzeigen
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Zeige Tuning-Parameter, die den eigenen Spieler betreffen (0 = Aus, 1 = Geänderte anzeigen, 2 = Alle anzeigen)
 
@@ -11800,9 +11797,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == Variable auf Wert tunen oder aktuellen Wert anzeigen
-
-Tune Zone effect icon legend
-== Tune-Zone-Effekte anzeigen
 
 Tutorial
 == Tutorial

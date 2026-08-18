@@ -1122,7 +1122,6 @@ Dynamic Island
 Dynamic island
 Dynamic Island background alpha
 Dynamic Island background color
-Dynamic Island HUD editor edge margin px
 Ease in out quad
 Ease out cubic
 Echo follows the original chat color
@@ -1700,6 +1699,7 @@ Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
 Ignore clan tag when searching friends
 Ignore keyboard modifier mask
 Ignore voice distance attenuation
+Ignored legacy Dynamic Island edge margin
 Import from clipboard
 Improved Anti Ping
 Improved anti ping
@@ -2515,6 +2515,7 @@ Pie menu rename list (separate with |, e.g., name1|name2)
 Ping
 Ping the current server
 Pistol
+Pistol guide line
 Plasma gun shots per second
 Play a flip animation while reloading weapons
 Play a slide-in rotation animation when switching weapons
@@ -3412,8 +3413,6 @@ Show the server rules
 Show tiles layers from BG map
 Show toast
 Show translation
-Show Tune Zone effects
-Show Tune Zone effects on HUD Dynamic Island
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 Show unfreeze/deep unfreeze tile outlines
 Show unknown server messages
@@ -3932,7 +3931,6 @@ Tune in zone a variable to value
 Tune layer opacity
 Tune variable to value
 Tune variable to value or show current value
-Tune Zone effect icon legend
 Tutorial
 Twinkle strength
 Type

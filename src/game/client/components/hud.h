@@ -12,7 +12,6 @@
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/component.h>
 #include <game/client/components/hud_media_island_logic.h>
-#include <game/client/components/qmclient/tune_zone_effects.h>
 #include <game/client/ui_rect.h>
 #include <game/teamscore.h>
 
@@ -210,7 +209,6 @@ class CHud : public CComponent
 			float m_LiquidProgress = 0.0f;
 			float m_LiquidOriginCenterX = 0.0f;
 			float m_LiquidOriginWidth = 0.0f;
-			SQmTuneZoneEffectSummary m_TuneZoneSummary;
 
 			void Reset()
 			{
@@ -318,6 +316,9 @@ class CHud : public CComponent
 	int m_MediaIslandBlurWidth = 0;
 	int m_MediaIslandBlurHeight = 0;
 	bool m_MediaIslandBlurReady = false;
+	IGraphics::CRenderTargetHandle m_DummyMiniViewRenderTarget;
+	int m_DummyMiniViewRenderTargetWidth = 0;
+	int m_DummyMiniViewRenderTargetHeight = 0;
 	struct SHudWeaponPresentationState
 	{
 		bool m_aClientInitialized[MAX_CLIENTS] = {};
@@ -459,6 +460,7 @@ class CHud : public CComponent
 	void ResetSwitchCountdownRings();
 	void RenderFollowSwitchCountdowns();
 	void RenderDummyMiniMap();
+	void DestroyDummyMiniViewRenderTarget();
 	bool GetDummyMiniMapRect(float &X, float &Y, float &W, float &H) const;
 	void RenderConnectionWarning();
 	void RenderTeambalanceWarning();

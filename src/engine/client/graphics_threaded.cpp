@@ -3745,18 +3745,6 @@ int CGraphics_Threaded::InitWindow()
 			return FinishSuccessfulInit();
 	}
 
-	const bool Vulkan14Requested = VulkanRequested && g_Config.m_GfxGLMajor == 1 && g_Config.m_GfxGLMinor >= 4;
-	if(Vulkan14Requested)
-	{
-		g_Config.m_GfxGLMajor = 1;
-		g_Config.m_GfxGLMinor = 1;
-		g_Config.m_GfxGLPatch = 0;
-		log_warn("gfx", "Failed to initialize Vulkan 1.4. Trying Vulkan 1.1 instead.");
-		ErrorCode = IssueInit();
-		if(ErrorCode == 0)
-			return FinishSuccessfulInit();
-	}
-
 	if(VulkanRequested)
 	{
 		str_copy(g_Config.m_GfxBackend, "OpenGL");

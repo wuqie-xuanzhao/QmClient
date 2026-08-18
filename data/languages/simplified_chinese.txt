@@ -3371,9 +3371,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == 灵动岛背景颜色
 
-Dynamic Island HUD editor edge margin px
-== 灵动岛 HUD 编辑器贴边外边距 px
-
 Ease in out quad
 == 缓入缓出二次
 
@@ -5104,6 +5101,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == 忽略语音距离衰减
+
+Ignored legacy Dynamic Island edge margin
+== Ignored legacy Dynamic Island edge margin
 
 Import from clipboard
 == 从剪贴板导入
@@ -7549,6 +7549,9 @@ Ping the current server
 
 Pistol
 == 手枪
+
+Pistol guide line
+== 手枪辅助线
 
 Plasma gun shots per second
 == 等离子枪每秒发射多少发子弹
@@ -10241,12 +10244,6 @@ Show toast
 Show translation
 == 显示翻译
 
-Show Tune Zone effects
-== 显示 Tune Zone 效果
-
-Show Tune Zone effects on HUD Dynamic Island
-== HUD 灵动岛显示 Tune Zone 效果
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 显示影响自身玩家的调整参数信息（0 = 关闭，1 = 显示已改变的，2 = 显示全部）
 
@@ -11800,9 +11797,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == 将变量调到指定值，或显示当前值
-
-Tune Zone effect icon legend
-== Tune Zone 效果图标说明
 
 Tutorial
 == 教学

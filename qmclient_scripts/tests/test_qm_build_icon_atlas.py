@@ -71,11 +71,11 @@ class QmBuildIconAtlasTest(unittest.TestCase):
             primary.mkdir()
             shared.mkdir()
             (primary / "icon-search.svg").touch()
-            (shared / "icon-tune-gravity.svg").touch()
+            (shared / "icon-star.svg").touch()
 
             svg_files = ICON_ATLAS.collect_svg_files([primary, shared])
 
-            self.assertEqual([svg.name for svg in svg_files], ["icon-search.svg", "icon-tune-gravity.svg"])
+            self.assertEqual([svg.name for svg in svg_files], ["icon-search.svg", "icon-star.svg"])
 
     def test_collect_svg_files_rejects_duplicate_icon_names(self) -> None:
         with tempfile.TemporaryDirectory(prefix="qm-icon-test-") as temp_dir:

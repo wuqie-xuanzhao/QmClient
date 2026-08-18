@@ -269,7 +269,7 @@ TEST(SettingsPageLayout, DynamicIslandHeightMatchesTheRenderedRowsAndColorRow)
 	const float ExpandedHeight = ResolveQmHudDynamicIslandHeight(Metrics, false, 700.0f);
 	const CUIRect ColorRowView{0.0f, 0.0f, 700.0f, 0.0f};
 
-	EXPECT_FLOAT_EQ(OriginalHeight, 4.0f * Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(OriginalHeight, 2.0f * Metrics.m_RowStep);
 	EXPECT_FLOAT_EQ(ExpandedHeight - OriginalHeight, ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight);
 }
 

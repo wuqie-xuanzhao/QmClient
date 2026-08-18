@@ -77,8 +77,7 @@ enum class EHudMediaIslandTrackUpdate
 
 enum class EHudMediaIslandCountdownType
 {
-	TUNE_ZONE = 0,
-	SWAP,
+	SWAP = 0,
 	SWITCH,
 	MUTE,
 };

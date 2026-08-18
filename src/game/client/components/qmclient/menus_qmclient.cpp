@@ -1410,7 +1410,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 			"临渊捕鱼", "?hook?", "放肆zero", "Q币", "洛天依", "spider", "贝塔塔塔", "见月", "咩子的银耳", "Cancer", "少女`",
 			"长亭寂寞独自愁", "fantuan", "无言鱼", "胖人老许", "夏日", "张宁我儿", "拌饭", "shengyan", "修勾在修沟", "taffy",
 			"杀意没爱意", "DYL", "小信", "哆啦梦", "菜菜羊", "吃了吗chilem", "你就是我的", "xiaopang", "星星🌙", "軽い猫",
-			"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡", "迟渔"};
+			"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡", "迟渔", "潇洒的吗喽", "weijiu"};
 		const auto BuildSponsorLines = [this, TipSize](float MaxLineWidth) {
 			static std::vector<std::string> Lines;
 			static float s_CachedMaxLineWidth = -1.0f;
@@ -1799,6 +1799,10 @@ void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float Lin
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	if(g_Config.m_QmWeaponTrajectory == 0)
 		return;
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	RenderQmFunctionCheckbox(&g_Config.m_QmWeaponTrajectoryGun, "qmclient-weapon-trajectory-gun", Localize("Pistol guide line"), &g_Config.m_QmWeaponTrajectoryGun, &Row, PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	static CButtonContainer s_WeaponTrajectoryColorId;
 	DoLine_ColorPicker(&s_WeaponTrajectoryColorId, CurrentSettingsContentMetrics(), &Content, Localize("Guide line color"), &g_Config.m_QmWeaponTrajectoryColor, ColorRGBA(1.0f, 0.6f, 0.2f, 1.0f), false);
@@ -3252,36 +3256,11 @@ void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight,
 	RenderValue("qmclient-dummy-window-zoom", "Dummy window zoom", &s_QmDummyMiniViewZoomInputId, &g_Config.m_QmDummyMiniViewZoom, 10, 300);
 }
 
-void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool OriginalStyle, bool PrewarmOnly)
+void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float LineSpacing, bool OriginalStyle)
 {
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandUseOriginalStyle, "Use original style", Localize("Use original style"), &g_Config.m_QmHudIslandUseOriginalStyle);
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTeam, "Show team", Localize("Show team"), &g_Config.m_QmHudIslandShowTeam);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTuneZoneEffects, "Show Tune Zone effects", Localize("Show Tune Zone effects"), &g_Config.m_QmHudIslandShowTuneZoneEffects);
 
-	CUIRect Row, LabelColumn, ControlColumn;
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	RenderQmHudLabel("qmclient-dynamic-island-tune-zone-icon-legend", &LabelColumn, Localize("Tune Zone effect icon legend"), BodySize);
-	CUIRect GravityLegend, ElasticityLegend;
-	ControlColumn.VSplitMid(&GravityLegend, &ElasticityLegend, LineSpacing);
-	auto RenderTuneLegend = [this, PrewarmOnly, BodySize](CUIRect Legend, EQmIcon Icon, const char *pText) {
-		CUIRect IconRect, TextRect;
-		Legend.VSplitLeft(Legend.h, &IconRect, &TextRect);
-		TextRect.VSplitLeft(2.0f, nullptr, &TextRect);
-		if(!PrewarmOnly)
-			GameClient()->QmIconManager()->RenderIcon(Icon, IconRect, ColorRGBA(1.0f, 1.0f, 1.0f, 0.9f));
-		RenderQmHudLabel(pText, &TextRect, Localize(pText), BodySize * 0.85f);
-	};
-	RenderTuneLegend(GravityLegend, EQmIcon::TUNE_GRAVITY, "Gravity");
-	RenderTuneLegend(ElasticityLegend, EQmIcon::TUNE_ELASTICITY, "Elasticity");
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	RenderQmHudLabel("qmclient-dynamic-island-edge-margin", &LabelColumn, Localize("Edge margin"), BodySize);
-	static int s_QmHudIslandEdgeMarginInputId;
-	RenderQmSettingsSliderWithValueInput(&s_QmHudIslandEdgeMarginInputId, ControlColumn, &g_Config.m_QmHudIslandEdgeMargin, 0, 64, "px", PrewarmOnly);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	if(OriginalStyle)
 		return;
 
@@ -4672,7 +4651,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 			return Revision;
 		}
 		case EQmModuleId::Voice: return ResolveQmHudVoiceRevision(g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
-		case EQmModuleId::DynamicIsland: return (DynamicIslandOriginalStyle ? 1u : 0u) | (g_Config.m_QmHudIslandShowTuneZoneEffects ? 2u : 0u);
+		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? 1u : 0u;
 		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? 1u : 0u;
 		case EQmModuleId::Lyrics: return (uint64_t)std::clamp(g_Config.m_QmSmtcLyricsFontSize, 0, 255) | ((uint64_t)std::clamp(g_Config.m_QmSmtcLyricsLines, 0, 3) << 8);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DRevision(g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
@@ -4697,11 +4676,9 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 				return HandleQmHudCheckboxInput(Content, Metrics.m_LineHeight, Metrics.m_LineSpacing, &g_Config.m_QmInputOverlay, &g_Config.m_QmInputOverlay);
 			};
 		case EQmModuleId::DynamicIsland:
-			return [this, Metrics, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {
+			return [this, Metrics, LineHeight, LineSpacing](CUIRect Content) {
 				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandUseOriginalStyle, &g_Config.m_QmHudIslandUseOriginalStyle);
 				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTeam, &g_Config.m_QmHudIslandShowTeam) || Changed;
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTuneZoneEffects, &g_Config.m_QmHudIslandShowTuneZoneEffects) || Changed;
-				ConsumeQmHudRow(Content); // edge margin
 				if(!g_Config.m_QmHudIslandUseOriginalStyle)
 				{
 					const SSettingsColorRowLayout ColorLayout = ResolveSettingsColorRowLayout(Content, Metrics, false);
@@ -4864,7 +4841,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 				RenderQmHudNotificationsAdvancedContent(Content, Metrics, LabelWidth, ReadOnly);
 		});
 		AddCard(EQmModuleId::Voice, "qm:voice", "Voice", "Voice chat settings and diagnostics", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudVoiceContent(Content, Metrics, LabelWidth, ReadOnly); });
-		AddCard(EQmModuleId::DynamicIsland, "qm:dynamic_island", "Dynamic Island", "HUD island appearance settings", [this, LineHeight, BodySize, LineSpacing, LabelWidth, DynamicIslandOriginalStyle, ReadOnly](CUIRect &Content) { RenderQmHudDynamicIslandContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, DynamicIslandOriginalStyle, ReadOnly); });
+		AddCard(EQmModuleId::DynamicIsland, "qm:dynamic_island", "Dynamic Island", "HUD island appearance settings", [this, LineHeight, LineSpacing, DynamicIslandOriginalStyle](CUIRect &Content) { RenderQmHudDynamicIslandContent(Content, LineHeight, LineSpacing, DynamicIslandOriginalStyle); });
 		AddCard(EQmModuleId::SystemMediaControls, "qm:system_media_controls", "SMTC", "System media control", [this, LineHeight, BodySize, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudSystemMediaControlsContent(Content, LineHeight, BodySize, LineSpacing, ReadOnly); });
 		AddCard(EQmModuleId::Lyrics, "qm:lyrics", "Lyrics", "Show current and next lyric lines on HUD", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudLyricsContent(Content, Metrics, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::Background3D, "qm:background_3d", "3D Background", "Configure background 3D particle effects", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudBackground3DContent(Content, Metrics, LabelWidth, ReadOnly); });
@@ -4990,7 +4967,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
 		case EQmModuleId::MiniFeatures: return Rows(19.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;
-		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 4.0f;
+		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 5.0f;
 		case EQmModuleId::FriendNotify:
 			return Row() * (5.0f + (g_Config.m_QmFriendOnlineAutoRefresh ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterBroadcast ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterAutoGreet ? 1.0f : 0.0f));
 		case EQmModuleId::BlockWords: return Row() * (g_Config.m_QmBlockWordsAction == 0 ? 7.0f : 4.0f) + CalcQiaFenInputHeight(TextRender(), g_Config.m_QmBlockWordsList, std::max(1.0f, ContentWidth - LabelWidth), BodySize, std::clamp(2.0f * UiScale, 1.0f, 2.0f), LineHeight);

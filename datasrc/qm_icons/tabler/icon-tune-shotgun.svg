@@ -1,5 +1,0 @@
-<!-- QmClient hand-drawn Tune Zone shotgun icon: double barrel with pellet spread. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <path d="M28 82h150v30H28V82Zm0 38h150v30H28v-30Zm92 30 34 64h54l-46-64h-42Z" fill="currentColor"/>
-  <path d="M194 78l34-22M198 116h42M194 154l34 22" stroke="currentColor" stroke-width="18" stroke-linecap="round"/>
-</svg>

@@ -60,19 +60,6 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_CHECK), "satellite-check");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE), "satellite-spectator-eye");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED), "satellite-spectator-eye-closed");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_GRAVITY), "tune-gravity");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_MOVEMENT), "tune-movement");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_JUMP), "tune-jump");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_HOOK), "tune-hook");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_COLLISION), "tune-collision");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_GUN_JETPACK), "tune-gun-jetpack");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_SHOTGUN), "tune-shotgun");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_GRENADE_EXPLOSION), "tune-grenade-explosion");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_LASER), "tune-laser");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_HAMMER), "tune-hammer");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_WEAPON_FIRE_RATE), "tune-weapon-fire-rate");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_VELRAMP), "tune-velramp");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TUNE_ELASTICITY), "tune-elasticity");
 
 	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
 	const std::string IconManager = ReadTextFile("src/game/client/qm_icon_manager.cpp");
@@ -350,7 +337,8 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 		constexpr int FieldSize = 48;
 		constexpr int Padding = 8;
 		constexpr int CellSize = FieldSize + Padding * 2;
-		constexpr int IconCount = static_cast<int>(EQmIcon::COUNT);
+		const int IconCount = static_cast<int>(pIcons->u.object.length);
+		EXPECT_GE(IconCount, static_cast<int>(EQmIcon::COUNT));
 		int Columns = 1;
 		while(Columns * Columns < IconCount)
 			++Columns;

@@ -1,4 +1,6 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
+#include <engine/shared/config.h>
+
 #include <game/client/components/qmclient/weapon_animation.h>
 #include <game/client/components/qmclient/weapon_trajectory.h>
 
@@ -123,6 +125,17 @@ TEST(QmWeaponTrajectory, UsesLaserLineStyleForGun)
 	EXPECT_TRUE(QmWeaponTrajectoryUsesLineStyle(WEAPON_SHOTGUN));
 	EXPECT_TRUE(QmWeaponTrajectoryUsesLineStyle(WEAPON_LASER));
 	EXPECT_FALSE(QmWeaponTrajectoryUsesLineStyle(WEAPON_GRENADE));
+}
+
+TEST(QmWeaponTrajectory, PistolGuideToggleOnlyAffectsGun)
+{
+	EXPECT_EQ(DefaultConfig::QmWeaponTrajectoryGun, 1);
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_GUN, true));
+	EXPECT_FALSE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_GUN, false));
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_GRENADE, false));
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_SHOTGUN, false));
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_LASER, false));
+	EXPECT_FALSE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_HAMMER, true));
 }
 
 TEST(QmWeaponTrajectory, RespectsWeaponSpecificPlayerHitDisables)

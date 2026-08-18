@@ -585,7 +585,7 @@ public:
 
 	// returns true if the driver age type is supported, passing BACKEND_TYPE_AUTO for BackendType will query the values for the currently used backend
 	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
-	// 返回当前 OpenGL/GLES context 从驱动字符串解析出的真实版本，不能用配置请求版本代替。
+	// 返回当前图形后端实际生效的 API 版本，不能用配置请求版本代替。
 	virtual bool GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName)
 	{
 		Major = 0;

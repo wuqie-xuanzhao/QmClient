@@ -316,7 +316,7 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 
 	SImePresentationTarget TargetPresentation;
 	TargetPresentation.m_Rect = {Position.x, Position.y, PanelWidth, PanelHeight};
-	TargetPresentation.m_Radius = std::min(PanelHeight * 0.36f, Ime.m_Radius);
+	TargetPresentation.m_Radius = PanelHeight * 0.5f;
 	TargetPresentation.m_Alpha = TargetVisible ? 1.0f : 0.0f;
 	TargetPresentation.m_CandidateAlpha = TargetVisible ? 1.0f : 0.0f;
 	TargetPresentation.m_CandidateScale = TargetVisible ? 1.0f : 0.84f;

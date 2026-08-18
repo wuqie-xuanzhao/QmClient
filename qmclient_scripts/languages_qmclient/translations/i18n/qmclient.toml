@@ -14320,6 +14320,22 @@ turkish = "Bu sunucuda oyuncular birbirini kancalayamaz"
 polish = "Gracze nie mogą się nawzajem hakować na tym serwerze"
 
 [[message]]
+key = "Pistol guide line"
+[message.translations]
+simplified_chinese = "手枪辅助线"
+traditional_chinese = "手槍輔助線"
+japanese = "ピストル補助線"
+korean = "권총 보조선"
+russian = "Линия траектории пистолета"
+german = "Pistolen-Hilfslinie"
+spanish = "Línea guía de la pistola"
+french = "Ligne guide du pistolet"
+brazilian_portuguese = "Linha guia da pistola"
+portuguese = "Linha guia da pistola"
+turkish = "Tabanca yardımcı çizgisi"
+polish = "Linia pomocnicza pistoletu"
+
+[[message]]
 key = "Playing effects"
 [message.translations]
 simplified_chinese = "播放效果"
@@ -17470,38 +17486,6 @@ brazilian_portuguese = "Mostrar time"
 portuguese = "Mostrar equipa"
 turkish = "Takımı göster"
 polish = "Pokaż drużynę"
-
-[[message]]
-key = "Show Tune Zone effects"
-[message.translations]
-japanese = "Tune Zone 効果を表示"
-korean = "Tune Zone 효과 표시"
-simplified_chinese = "显示 Tune Zone 效果"
-traditional_chinese = "顯示 Tune Zone 效果"
-russian = "Показывать эффекты Tune Zone"
-german = "Tune-Zone-Effekte anzeigen"
-spanish = "Mostrar efectos de Tune Zone"
-french = "Afficher les effets de Tune Zone"
-brazilian_portuguese = "Mostrar efeitos da Tune Zone"
-portuguese = "Mostrar efeitos da Tune Zone"
-turkish = "Tune Zone etkilerini göster"
-polish = "Pokaż efekty Tune Zone"
-
-[[message]]
-key = "Tune Zone effect icon legend"
-[message.translations]
-simplified_chinese = "Tune Zone 效果图标说明"
-traditional_chinese = "Tune Zone 效果圖示說明"
-japanese = "Tune Zone エフェクトアイコン一覧"
-korean = "Tune Zone 효과 아이콘 안내"
-russian = "Показывать эффекты Tune Zone"
-german = "Tune-Zone-Effekte anzeigen"
-spanish = "Mostrar efectos de Tune Zone"
-french = "Afficher les effets de Tune Zone"
-brazilian_portuguese = "Mostrar efeitos da Tune Zone"
-portuguese = "Mostrar efeitos da Tune Zone"
-turkish = "Tune Zone etkilerini göster"
-polish = "Pokaż efekty Tune Zone"
 
 [[message]]
 key = "Show team on HUD Dynamic Island"
@@ -25685,22 +25669,6 @@ brazilian_portuguese = "Escala do mouse na sobreposição de entrada (porcentage
 portuguese = "Escala do rato na sobreposição de entrada (percentagem)"
 turkish = "Giriş katmanındaki fare ölçeği (yüzde)"
 polish = "Skala myszy w nakładce wejścia (procent)"
-
-[[message]]
-key = "Show Tune Zone effects on HUD Dynamic Island"
-[message.translations]
-simplified_chinese = "HUD 灵动岛显示 Tune Zone 效果"
-traditional_chinese = "HUD 靈動島顯示 Tune Zone 效果"
-japanese = "HUD ダイナミックアイランドに Tune Zone 効果を表示"
-korean = "HUD 다이내믹 아일랜드에 Tune Zone 효과 표시"
-russian = "Показывать эффекты Tune Zone в динамическом острове HUD"
-german = "Tune-Zone-Effekte auf der dynamischen HUD-Insel anzeigen"
-spanish = "Mostrar efectos de Tune Zone en la isla dinámica del HUD"
-french = "Afficher les effets de Tune Zone dans l'îlot dynamique du HUD"
-brazilian_portuguese = "Mostrar efeitos da Tune Zone na ilha dinâmica do HUD"
-portuguese = "Mostrar efeitos da Tune Zone na ilha dinâmica do HUD"
-turkish = "Tune Zone etkilerini HUD Dinamik Ada'da göster"
-polish = "Pokazuj efekty Tune Zone na dynamicznej wyspie HUD"
 
 [[message]]
 key = "Message merging"

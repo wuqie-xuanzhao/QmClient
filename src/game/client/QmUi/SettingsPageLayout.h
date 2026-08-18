@@ -658,7 +658,7 @@ inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metr
 
 inline float ResolveQmHudDynamicIslandHeight(const SSettingsContentMetrics &Metrics, const bool OriginalStyle, const float ContentWidth)
 {
-	float Height = 4.0f * Metrics.m_RowStep;
+	float Height = 2.0f * Metrics.m_RowStep;
 	if(!OriginalStyle)
 	{
 		const CUIRect ColorRowView{0.0f, 0.0f, std::max(0.0f, ContentWidth), 0.0f};
