@@ -921,6 +921,11 @@ int CCollision::MoverSpeed(int x, int y, vec2 *pSpeed) const
 	return Index;
 }
 
+bool CCollision::HasHookTeleIns() const
+{
+	return m_HasHookTeleIns || (g_Config.m_SvOldTeleportHook && !m_TeleIns.empty());
+}
+
 int CCollision::GetPureMapIndex(float x, float y) const
 {
 	if(!m_pTiles || m_Width <= 0 || m_Height <= 0)
