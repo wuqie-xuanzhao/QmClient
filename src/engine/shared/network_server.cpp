@@ -1148,7 +1148,7 @@ int CNetServer::SendClient(CNetChunk *pChunk)
 		{
 			if((pChunk->m_Flags & NETSENDFLAG_FLUSH) == 0 || !Slot.m_Connection.HasPendingPacketData())
 				return SendLegacyBypass(pChunk);
-			if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
+			if(pChunk->m_DataSize > NET_MAX_CHUNK_SIZE)
 				return SendLegacyBypass(pChunk);
 			if(Slot.m_Kcp.PendingSegments() >= NET_KCP_MAX_PENDING_SEGMENTS)
 			{

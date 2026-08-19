@@ -261,7 +261,7 @@ void CNetConnection::SendConnect()
 
 void CNetConnection::SendControl(int ControlMsg, const void *pExtra, int ExtraSize)
 {
-	if(ExtraSize < 0 || ExtraSize > NET_MAX_PAYLOAD - 1)
+	if(ExtraSize < 0 || ExtraSize > NET_MAX_CONNLESS_PAYLOAD - 1)
 	{
 		return;
 	}

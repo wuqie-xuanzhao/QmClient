@@ -592,7 +592,7 @@ void CClient::SendKcpCapability(int Conn)
 	CMsgPacker Msg(NETMSG_KCP_CAPABLE, true);
 	Msg.AddInt(1); // negotiation version
 	Msg.AddInt(NET_MAX_PACKETSIZE);
-	Msg.AddInt(NET_MAX_PAYLOAD);
+	Msg.AddInt(NET_MAX_CONNLESS_PAYLOAD);
 	Msg.AddInt(Conn == CONN_DUMMY ? 1 : 0);
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 	if(g_Config.m_Debug)
@@ -611,7 +611,7 @@ void CClient::SendKcpProbe(int Conn)
 	CMsgPacker Msg(NETMSG_KCP_CAPABLE, true);
 	Msg.AddInt(1);
 	Msg.AddInt(NET_MAX_PACKETSIZE);
-	Msg.AddInt(NET_MAX_PAYLOAD);
+	Msg.AddInt(NET_MAX_CONNLESS_PAYLOAD);
 	Msg.AddInt(0);
 	SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
