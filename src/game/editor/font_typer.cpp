@@ -86,7 +86,7 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 		PlaceTile(Event.m_Key - KEY_KP_1 + NUMBER_OFFSET, pLayer);
 
 	// deletion
-	if(Event.m_Key == KEY_BACKSPACE)
+	if(Event.m_Key == KEY_BACKSPACE && m_TextIndex.x > 0)
 	{
 		m_TextIndex.x--;
 		SetTile(m_TextIndex, 0, pLayer);
@@ -106,10 +106,8 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 		m_TextIndex.x--;
 		if(Input()->KeyIsPressed(KEY_LCTRL))
 		{
-			while(pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
+			while(m_TextIndex.x >= 1 && m_TextIndex.x <= pLayer->m_Width - 2 && pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
 			{
-				if(m_TextIndex.x < 1 || m_TextIndex.x > pLayer->m_Width - 2)
-					break;
 				m_TextIndex.x--;
 			}
 		}
@@ -119,10 +117,8 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 		m_TextIndex.x++;
 		if(Input()->KeyIsPressed(KEY_LCTRL))
 		{
-			while(pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
+			while(m_TextIndex.x >= 1 && m_TextIndex.x <= pLayer->m_Width - 2 && pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
 			{
-				if(m_TextIndex.x < 1 || m_TextIndex.x > pLayer->m_Width - 2)
-					break;
 				m_TextIndex.x++;
 			}
 		}
