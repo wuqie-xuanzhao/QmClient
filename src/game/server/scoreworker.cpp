@@ -1047,26 +1047,45 @@ bool CScoreWorker::ShowTop(IDbConnection *pSqlServer, const ISqlData *pGameData,
 	auto *pResult = dynamic_cast<CScorePlayerResult *>(pGameData->m_pResult.get());
 
 	int LimitStart = maximum(absolute(pData->m_Offset) - 1, 0);
-	const char *pOrder = pData->m_Offset >= 0 ? "ASC" : "DESC";
 	const char *pAny = "%";
 
-	// check sort method
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf),
-		"SELECT Name, Time, Ranking "
-		"FROM ("
-		"  SELECT RANK() OVER w AS Ranking, MIN(Time) AS Time, Name "
-		"  FROM %s_race "
-		"  WHERE Map = ? "
-		"  AND Server LIKE ? "
-		"  GROUP BY Name "
-		"  WINDOW w AS (ORDER BY MIN(Time))"
-		") as a "
-		"ORDER BY Ranking %s "
-		"LIMIT %d, ?",
-		pSqlServer->GetPrefix(),
-		pOrder,
-		LimitStart);
+	const bool Ascending = pData->m_Offset >= 0;
+	char aBuf[1024];
+	if(Ascending)
+	{
+		str_format(aBuf, sizeof(aBuf),
+			"SELECT a.Name, a.Time, "
+			"  (SELECT COUNT(DISTINCT r3.Name) FROM %s_race r3 "
+			"   WHERE r3.Map = ? AND r3.Server LIKE ? AND r3.Time < a.Time) + 1 AS Ranking "
+			"FROM ("
+			"  SELECT r1.Name, r1.Time, r1.Timestamp, r1.Server "
+			"  FROM %s_race AS r1 "
+			"  WHERE r1.Map = ? AND r1.Server LIKE ? AND NOT EXISTS ("
+			"    SELECT 1 FROM %s_race AS r2 "
+			"    WHERE r2.Map = r1.Map AND r2.Name = r1.Name AND r2.Server LIKE ? "
+			"      AND (r2.Time, r2.Timestamp, r2.Server) < (r1.Time, r1.Timestamp, r1.Server)) "
+			"  ORDER BY r1.Time, r1.Timestamp, r1.Server, r1.Name LIMIT %d, ?"
+			") AS a "
+			"ORDER BY a.Time, a.Timestamp, a.Server, a.Name",
+			pSqlServer->GetPrefix(), pSqlServer->GetPrefix(), pSqlServer->GetPrefix(), LimitStart);
+	}
+	else
+	{
+		str_format(aBuf, sizeof(aBuf),
+			"SELECT Name, Time, Ranking "
+			"FROM ("
+			"  SELECT RANK() OVER w AS Ranking, MIN(Time) AS Time, Name "
+			"  FROM %s_race "
+			"  WHERE Map = ? "
+			"  AND Server LIKE ? "
+			"  GROUP BY Name "
+			"  WINDOW w AS (ORDER BY MIN(Time))"
+			") as a "
+			"ORDER BY Ranking DESC "
+			"LIMIT %d, ?",
+			pSqlServer->GetPrefix(),
+			LimitStart);
+	}
 
 	if(!pSqlServer->PrepareStatement(aBuf, pError, ErrorSize))
 	{
@@ -1074,7 +1093,17 @@ bool CScoreWorker::ShowTop(IDbConnection *pSqlServer, const ISqlData *pGameData,
 	}
 	pSqlServer->BindString(1, pData->m_aMap);
 	pSqlServer->BindString(2, pAny);
-	pSqlServer->BindInt(3, 5);
+	if(Ascending)
+	{
+		pSqlServer->BindString(3, pData->m_aMap);
+		pSqlServer->BindString(4, pAny);
+		pSqlServer->BindString(5, pAny);
+		pSqlServer->BindInt(6, 5);
+	}
+	else
+	{
+		pSqlServer->BindInt(3, 5);
+	}
 
 	// show top
 	int Line = 0;
@@ -1112,7 +1141,17 @@ bool CScoreWorker::ShowTop(IDbConnection *pSqlServer, const ISqlData *pGameData,
 	}
 	pSqlServer->BindString(1, pData->m_aMap);
 	pSqlServer->BindString(2, aServerLike);
-	pSqlServer->BindInt(3, 3);
+	if(Ascending)
+	{
+		pSqlServer->BindString(3, pData->m_aMap);
+		pSqlServer->BindString(4, aServerLike);
+		pSqlServer->BindString(5, aServerLike);
+		pSqlServer->BindInt(6, 3);
+	}
+	else
+	{
+		pSqlServer->BindInt(3, 3);
+	}
 
 	str_format(pResult->m_Data.m_aaMessages[Line], sizeof(pResult->m_Data.m_aaMessages[Line]),
 		"------------ %s 排行 ------------", pData->m_aServer);

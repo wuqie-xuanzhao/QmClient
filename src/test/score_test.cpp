@@ -204,6 +204,24 @@ TEST_P(SingleScore, TopServer)
 			"-----------------------------------------"});
 }
 
+TEST_P(SingleScore, TopPaginationKeepsGlobalRanks)
+{
+	g_Config.m_SvRegionalRankings = false;
+	InsertRank(200.0, false, "second tee");
+	InsertRank(300.0, false, "third tee");
+	InsertRank(400.0, false, "fourth tee");
+	InsertRank(500.0, false, "fifth tee");
+	InsertRank(600.0, false, "sixth tee");
+	InsertRank(700.0, false, "seventh tee");
+	m_PlayerRequest.m_Offset = 6;
+	ASSERT_TRUE(CScoreWorker::ShowTop(m_pConn, &m_PlayerRequest, m_aError, sizeof(m_aError))) << m_aError;
+	ExpectLines(m_pPlayerResult,
+		{"------------ 全局排行 ------------",
+			"6. sixth tee 时间：10:00.00",
+			"7. seventh tee 时间：11:40.00",
+			"-----------------------------------------"});
+}
+
 TEST_P(SingleScore, RankServerRegional)
 {
 	g_Config.m_SvRegionalRankings = true;
@@ -228,7 +246,7 @@ TEST_P(SingleScore, RankPercent)
 	InsertRank(400.0, false, "fourth tee");
 	str_copy(m_PlayerRequest.m_aName, "third tee");
 	ASSERT_TRUE(CScoreWorker::ShowRank(m_pConn, &m_PlayerRequest, m_aError, sizeof(m_aError))) << m_aError;
-	ExpectLines(m_pPlayerResult, {"third tee - 05:00.00 - better than 33% - requested by brainless tee", "Global rank 3"}, true);
+	ExpectLines(m_pPlayerResult, {"third tee - 05:00.00 - 超过 33% 的玩家 - 由 brainless tee 查询", "全局排名 3"}, true);
 }
 
 TEST_P(SingleScore, LoadPlayerData)
