@@ -442,8 +442,8 @@ bool CNetConnection::UpdatePeerAddressForRebind(const NETADDR &Addr)
 
 int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr, SECURITY_TOKEN SecurityToken, SECURITY_TOKEN ResponseToken)
 {
-	// Disregard packets from the wrong address, unless we don't know our peer yet.
-	if(State() != EState::OFFLINE && State() != EState::CONNECT && *pAddr != m_PeerAddr)
+	// Disregard packets from the wrong address, unless this is a server-side connection slot.
+	if(State() != EState::OFFLINE && !IsPeerAddress(*pAddr))
 	{
 		return 0;
 	}

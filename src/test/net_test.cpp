@@ -435,6 +435,37 @@ TEST(NetClient, QosCanBeDisabledAndReenabledWithoutAConnection)
 	Client.Close();
 }
 
+TEST(Net, ConnectionRejectsUnexpectedAddressWhileConnecting)
+{
+	InitNetBase();
+
+	NETSOCKET Socket = BindUdpSocket(0);
+	ASSERT_TRUE(Socket);
+
+	NETADDR ConnectAddr = {};
+	NETADDR AlternativeConnectAddr = {};
+	NETADDR UnexpectedAddr = {};
+	ASSERT_FALSE(net_addr_from_str(&ConnectAddr, "127.0.0.1:8303"));
+	ASSERT_FALSE(net_addr_from_str(&AlternativeConnectAddr, "127.0.0.2:8303"));
+	ASSERT_FALSE(net_addr_from_str(&UnexpectedAddr, "127.0.0.3:8303"));
+	const NETADDR aConnectAddrs[] = {ConnectAddr, AlternativeConnectAddr};
+
+	{
+		CNetConnection Connection;
+		Connection.Init(Socket, false);
+		ASSERT_EQ(Connection.Connect(aConnectAddrs, std::size(aConnectAddrs)), 0);
+
+		CNetPacketConstruct Packet = {};
+		Packet.m_NumChunks = 1;
+		Packet.m_DataSize = 1;
+		EXPECT_EQ(Connection.Feed(&Packet, &UnexpectedAddr), 0);
+		EXPECT_EQ(Connection.Feed(&Packet, &AlternativeConnectAddr), 1);
+		EXPECT_EQ(Connection.State(), CNetConnection::EState::CONNECT);
+	}
+
+	net_udp_close(Socket);
+}
+
 TEST(Net, PackPacketKeepsLegacyRoundtrip)
 {
 	InitNetBase();
