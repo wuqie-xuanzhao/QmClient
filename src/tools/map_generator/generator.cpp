@@ -789,7 +789,7 @@ namespace
 		return Tile.m_Index |
 		       (static_cast<int>(Tile.m_Flags) << 8) |
 		       (static_cast<int>(Tile.m_Skip) << 16) |
-		       (static_cast<int>(Tile.m_Reserved) << 24);
+		       (static_cast<int>(Tile.m_MustBe0) << 24);
 	}
 
 	CTile DecodeTile(int Encoded)
@@ -798,7 +798,7 @@ namespace
 		Tile.m_Index = Encoded & 0xff;
 		Tile.m_Flags = (Encoded >> 8) & 0xff;
 		Tile.m_Skip = (Encoded >> 16) & 0xff;
-		Tile.m_Reserved = (Encoded >> 24) & 0xff;
+		Tile.m_MustBe0 = (Encoded >> 24) & 0xff;
 		return Tile;
 	}
 
