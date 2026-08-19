@@ -546,6 +546,9 @@ class CNetServer
 	int m_MaxClients = NET_MAX_CLIENTS;
 	int m_MaxClientsPerIp;
 
+	bool m_FlushBatch = false;
+	bool m_aFlushPending[NET_MAX_CLIENTS] = {};
+
 	NETFUNC_NEWCLIENT m_pfnNewClient;
 	NETFUNC_NEWCLIENT_NOAUTH m_pfnNewClientNoAuth;
 	NETFUNC_DELCLIENT m_pfnDelClient;
@@ -622,6 +625,8 @@ public:
 	int Send(CNetChunk *pChunk);
 	int SendLegacyBypass(CNetChunk *pChunk);
 	void Update();
+	void BeginFlushBatch() { m_FlushBatch = true; }
+	void EndFlushBatch();
 
 	//
 	void Drop(int ClientId, const char *pReason);

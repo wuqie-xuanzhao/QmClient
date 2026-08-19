@@ -3121,6 +3121,7 @@ void CServer::PumpNetwork()
 		m_KcpLastStatsTime = time_get();
 
 	m_NetServer.Update();
+	m_NetServer.BeginFlushBatch();
 
 	// 无条件接收：UDP 接收队列可能包含就绪检查未报告的数据包。
 	ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
@@ -3193,6 +3194,7 @@ void CServer::PumpNetwork()
 			ProcessClientPacket(&Packet);
 		}
 	}
+	m_NetServer.EndFlushBatch();
 	{
 		unsigned char aBuffer[NET_MAX_CHUNK_SIZE];
 		int Flags;

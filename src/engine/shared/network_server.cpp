@@ -169,6 +169,23 @@ void CNetServer::Update()
 	}
 }
 
+void CNetServer::EndFlushBatch()
+{
+	m_FlushBatch = false;
+	for(int ClientId = 0; ClientId < MaxClients(); ClientId++)
+	{
+		if(!m_aFlushPending[ClientId])
+			continue;
+		m_aFlushPending[ClientId] = false;
+		if(m_aSlots[ClientId].m_Connection.State() != CNetConnection::EState::ONLINE)
+			continue;
+
+		m_aSlots[ClientId].m_Connection.Flush();
+		if(m_aSlots[ClientId].m_Transport == ENetTransport::KCP && m_aSlots[ClientId].m_Kcp.IsActive())
+			m_aSlots[ClientId].m_Kcp.Flush();
+	}
+}
+
 SNetTransportStats CNetServer::ClientTransportStats(int ClientId) const
 {
 	const CSlot &Slot = m_aSlots[ClientId];
@@ -1147,7 +1164,7 @@ int CNetServer::SendClient(CNetChunk *pChunk)
 		}
 		if((pChunk->m_Flags & NETSENDFLAG_VITAL) == 0)
 		{
-			if((pChunk->m_Flags & NETSENDFLAG_FLUSH) == 0 || !Slot.m_Connection.HasPendingPacketData())
+			if((pChunk->m_Flags & NETSENDFLAG_FLUSH) == 0 || (!m_FlushBatch && !Slot.m_Connection.HasPendingPacketData()))
 				return SendLegacyBypass(pChunk);
 			if(pChunk->m_DataSize > NET_MAX_CHUNK_SIZE)
 				return SendLegacyBypass(pChunk);
@@ -1161,10 +1178,15 @@ int CNetServer::SendClient(CNetChunk *pChunk)
 			int Result = Slot.m_Connection.QueueChunk(0, pChunk->m_DataSize, pChunk->m_pData);
 			if(Result == 0)
 			{
-				Result = Slot.m_Connection.Flush();
-				Slot.m_Kcp.Flush();
-				if(Result >= 0)
-					Result = 0;
+				if(m_FlushBatch)
+					m_aFlushPending[pChunk->m_ClientId] = true;
+				else
+				{
+					Result = Slot.m_Connection.Flush();
+					Slot.m_Kcp.Flush();
+					if(Result >= 0)
+						Result = 0;
+				}
 			}
 			Slot.m_TransportStats = Slot.m_Kcp.Stats();
 			return Result;
@@ -1182,10 +1204,15 @@ int CNetServer::SendClient(CNetChunk *pChunk)
 		int Result = Slot.m_Connection.QueueChunk(Flags, pChunk->m_DataSize, pChunk->m_pData);
 		if(Result == 0 && (pChunk->m_Flags & NETSENDFLAG_FLUSH))
 		{
-			Result = Slot.m_Connection.Flush();
-			Slot.m_Kcp.Flush();
-			if(Result >= 0)
-				Result = 0;
+			if(m_FlushBatch)
+				m_aFlushPending[pChunk->m_ClientId] = true;
+			else
+			{
+				Result = Slot.m_Connection.Flush();
+				Slot.m_Kcp.Flush();
+				if(Result >= 0)
+					Result = 0;
+			}
 		}
 		Slot.m_TransportStats = Slot.m_Kcp.Stats();
 		return Result;
@@ -1216,7 +1243,12 @@ int CNetServer::SendLegacy(CNetChunk *pChunk)
 		if(m_aSlots[pChunk->m_ClientId].m_Connection.QueueChunk(Flags, pChunk->m_DataSize, pChunk->m_pData) == 0)
 		{
 			if(pChunk->m_Flags & NETSENDFLAG_FLUSH)
-				m_aSlots[pChunk->m_ClientId].m_Connection.Flush();
+			{
+				if(m_FlushBatch)
+					m_aFlushPending[pChunk->m_ClientId] = true;
+				else
+					m_aSlots[pChunk->m_ClientId].m_Connection.Flush();
+			}
 		}
 	}
 	return 0;
