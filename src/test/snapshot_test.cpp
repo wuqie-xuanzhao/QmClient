@@ -70,6 +70,30 @@ TEST(Snapshot, CrcOverflow)
 	ASSERT_EQ(Buffer.AsSnapshot()->Crc(), 1);
 }
 
+TEST(Snapshot, RejectsUnalignedItemOffset)
+{
+	CSnapshotBuffer Buffer;
+	mem_zero(&Buffer, sizeof(Buffer));
+	int *pData = (int *)Buffer.m_aData;
+	pData[0] = sizeof(CSnapshotItem) + sizeof(int32_t);
+	pData[1] = 1;
+	pData[2] = 1;
+
+	EXPECT_FALSE(Buffer.AsSnapshot()->IsValid(sizeof(CSnapshot) + sizeof(int32_t) + pData[0]));
+}
+
+TEST(Snapshot, RejectsUnalignedItemSize)
+{
+	CSnapshotBuffer Buffer;
+	mem_zero(&Buffer, sizeof(Buffer));
+	int *pData = (int *)Buffer.m_aData;
+	pData[0] = sizeof(CSnapshotItem) + 1;
+	pData[1] = 1;
+	pData[2] = 0;
+
+	EXPECT_FALSE(Buffer.AsSnapshot()->IsValid(sizeof(CSnapshot) + sizeof(int32_t) + pData[0]));
+}
+
 TEST(Snapshot, StorageGet)
 {
 	CSnapshotStorage Storage;

@@ -922,6 +922,9 @@ int CInput::Update()
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
 				if(m_InputGrabbed)
 				{
+#if defined(CONF_PLATFORM_MACOS) // Todo: remove this when fixed in SDL: https://github.com/libsdl-org/SDL/issues/13920
+					MouseModeAbsolute();
+#endif
 					MouseModeRelative();
 					// Clear pending relative mouse motion
 					SDL_GetRelativeMouseState(nullptr, nullptr);

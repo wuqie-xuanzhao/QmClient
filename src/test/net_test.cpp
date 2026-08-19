@@ -93,7 +93,21 @@ namespace
 	TEST(Net, UnpackUncompressedPacketWithoutDecompression)
 	{
 		CNetPacketConstruct Packet;
-		EXPECT_EQ(UnpackUncompressedPacket(NET_MAX_PACKETSIZE, &Packet, false), 0);
+		EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData), &Packet, false), 0);
+	}
+
+	TEST(Net, UnpackMaximumUncompressedPacket)
+	{
+		CNetPacketConstruct Packet;
+		EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData), &Packet), 0);
+		EXPECT_EQ(Packet.m_DataSize, (int)sizeof(Packet.m_aChunkData));
+	}
+
+	TEST(Net, UnpackOversizedUncompressedPacket)
+	{
+		CNetPacketConstruct Packet;
+		EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData) + 1, &Packet), -1);
+		EXPECT_EQ(UnpackUncompressedPacket(NET_MAX_PACKETSIZE, &Packet), -1);
 	}
 
 	unsigned char *PackTestChunk(CNetPacketConstruct *pPacket, int Flags, int DataSize, const unsigned char *pData, bool Sixup, int Sequence = 17)

@@ -155,13 +155,25 @@ bool CSnapshot::IsValid(size_t ActualSize) const
 	// validate item offsets
 	const int *pOffsets = Offsets();
 	for(int Index = 0; Index < m_NumItems; Index++)
-		if(pOffsets[Index] < 0 || pOffsets[Index] > m_DataSize)
+	{
+		if(pOffsets[Index] < 0 ||
+			pOffsets[Index] > m_DataSize ||
+			pOffsets[Index] % sizeof(int32_t) != 0)
+		{
 			return false;
+		}
+	}
 
 	// validate item sizes
 	for(int Index = 0; Index < m_NumItems; Index++)
-		if(GetItemSize(Index) < 0) // the offsets must be validated before using this
+	{
+		const int ItemSize = GetItemSize(Index); // the offsets must be validated before using this
+		if(ItemSize < 0 ||
+			ItemSize % sizeof(int32_t) != 0)
+		{
 			return false;
+		}
+	}
 
 	return true;
 }
