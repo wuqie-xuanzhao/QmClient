@@ -77,13 +77,13 @@ struct Score : public testing::TestWithParam<IDbConnection *>
 		ASSERT_EQ(NumInserted, 1);
 	}
 
-	void InsertRank(float Time = 100.0, bool WithTimeCheckPoints = false)
+	void InsertRank(float Time = 100.0, bool WithTimeCheckPoints = false, const char *pName = "nameless tee")
 	{
 		str_copy(g_Config.m_SvSqlServerName, "USA", sizeof(g_Config.m_SvSqlServerName));
 		CSqlScoreData ScoreData(std::make_shared<CScorePlayerResult>());
 		str_copy(ScoreData.m_aMap, "Kobra 3", sizeof(ScoreData.m_aMap));
 		str_copy(ScoreData.m_aGameUuid, "8d300ecf-5873-4297-bee5-95668fdff320", sizeof(ScoreData.m_aGameUuid));
-		str_copy(ScoreData.m_aName, "nameless tee", sizeof(ScoreData.m_aName));
+		str_copy(ScoreData.m_aName, pName, sizeof(ScoreData.m_aName));
 		ScoreData.m_ClientId = 0;
 		ScoreData.m_Time = Time;
 		str_copy(ScoreData.m_aTimestamp, "2021-11-24 19:24:08", sizeof(ScoreData.m_aTimestamp));
@@ -218,6 +218,17 @@ TEST_P(SingleScore, RankServer)
 	str_copy(m_PlayerRequest.m_aServer, "USA", sizeof(m_PlayerRequest.m_aServer));
 	ASSERT_TRUE(CScoreWorker::ShowRank(m_pConn, &m_PlayerRequest, m_aError, sizeof(m_aError))) << m_aError;
 	ExpectLines(m_pPlayerResult, {"nameless tee - 01:40.00 - 超过 100% 的玩家 - 由 brainless tee 查询", "全局排名 1"}, true);
+}
+
+TEST_P(SingleScore, RankPercent)
+{
+	g_Config.m_SvRegionalRankings = false;
+	InsertRank(200.0, false, "second tee");
+	InsertRank(300.0, false, "third tee");
+	InsertRank(400.0, false, "fourth tee");
+	str_copy(m_PlayerRequest.m_aName, "third tee");
+	ASSERT_TRUE(CScoreWorker::ShowRank(m_pConn, &m_PlayerRequest, m_aError, sizeof(m_aError))) << m_aError;
+	ExpectLines(m_pPlayerResult, {"third tee - 05:00.00 - better than 33% - requested by brainless tee", "Global rank 3"}, true);
 }
 
 TEST_P(SingleScore, LoadPlayerData)
