@@ -461,6 +461,8 @@ public:
 	int m_Tune;
 };
 
+static_assert(sizeof(CMapItemLayerTilemap) == 92);
+
 class CMapItemLayerQuads
 {
 public:
