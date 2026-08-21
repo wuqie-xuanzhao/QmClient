@@ -2267,13 +2267,13 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 
 	CUIRect UnscrolledLayersBox = LayersBox;
 
-	static CScrollRegion s_ScrollRegion;
+	CScrollRegion &ScrollRegion = Map()->m_EditorUiElements.m_LayersScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ScrollbarThickness = 10.0f;
 	ScrollParams.m_ScrollbarMargin = 3.0f;
 	ScrollParams.m_ScrollUnit = RowHeight * 5.0f;
-	s_ScrollRegion.Begin(&LayersBox, &ScrollOffset, &ScrollParams);
+	ScrollRegion.Begin(&LayersBox, &ScrollOffset, &ScrollParams);
 	LayersBox.y += ScrollOffset.y;
 
 	enum
@@ -2365,7 +2365,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 
 			CUIRect Slot;
 			LayersBox.HSplitTop(Map()->m_vSelectedLayers.size() * (RowHeight + 2.0f), &Slot, &LayersBox);
-			s_ScrollRegion.AddRect(Slot);
+			ScrollRegion.AddRect(Slot);
 		}
 
 		CUIRect Slot, VisibleToggle;
@@ -2386,7 +2386,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 					LayersBox.HSplitTop(RowHeight + 7.0f, &TmpSlot, &LayersBox);
 				else
 					LayersBox.HSplitTop(vButtonsPerGroup[Map()->m_SelectedGroup] * (RowHeight + 2.0f) + 5.0f, &TmpSlot, &LayersBox);
-				s_ScrollRegion.AddRect(TmpSlot, false);
+				ScrollRegion.AddRect(TmpSlot, false);
 			}
 		}
 		if(s_Operation != OP_GROUP_DRAG || g != Map()->m_SelectedGroup)
@@ -2395,10 +2395,10 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 
 			CUIRect TmpRect;
 			LayersBox.HSplitTop(2.0f, &TmpRect, &LayersBox);
-			s_ScrollRegion.AddRect(TmpRect);
+			ScrollRegion.AddRect(TmpRect);
 		}
 
-		if(s_ScrollRegion.AddRect(Slot))
+		if(ScrollRegion.AddRect(Slot))
 		{
 			Slot.VSplitLeft(15.0f, &VisibleToggle, &Slot);
 
@@ -2540,18 +2540,18 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 						for(size_t j = 0; j < Map()->m_vSelectedLayers.size(); j++)
 						{
 							LayersBox.HSplitTop(RowHeight + 2.0f, nullptr, &LayersBox);
-							s_ScrollRegion.AddRect(Slot);
+							ScrollRegion.AddRect(Slot);
 						}
 					}
 					LayersBox.HSplitTop(RowHeight + 2.0f, &Slot, &LayersBox);
-					if(!s_ScrollRegion.AddRect(Slot, ScrollToSelection && IsLayerSelected))
+					if(!ScrollRegion.AddRect(Slot, ScrollToSelection && IsLayerSelected))
 						continue;
 				}
 			}
 			else
 			{
 				LayersBox.HSplitTop(RowHeight + 2.0f, &Slot, &LayersBox);
-				if(!s_ScrollRegion.AddRect(Slot, ScrollToSelection && IsLayerSelected))
+				if(!ScrollRegion.AddRect(Slot, ScrollToSelection && IsLayerSelected))
 					continue;
 			}
 
@@ -2746,7 +2746,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 		if(s_Operation != OP_GROUP_DRAG || g != Map()->m_SelectedGroup)
 		{
 			LayersBox.HSplitTop(5.0f, &Slot, &LayersBox);
-			s_ScrollRegion.AddRect(Slot);
+			ScrollRegion.AddRect(Slot);
 		}
 	}
 
@@ -2757,7 +2757,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 
 		CUIRect TmpSlot;
 		LayersBox.HSplitTop(Map()->m_vSelectedLayers.size() * (RowHeight + 2.0f), &TmpSlot, &LayersBox);
-		s_ScrollRegion.AddRect(TmpSlot);
+		ScrollRegion.AddRect(TmpSlot);
 	}
 
 	if(!DraggedPositionFound && s_Operation == OP_GROUP_DRAG)
@@ -2769,7 +2769,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 			LayersBox.HSplitTop(RowHeight + 7.0f, &TmpSlot, &LayersBox);
 		else
 			LayersBox.HSplitTop(vButtonsPerGroup[Map()->m_SelectedGroup] * (RowHeight + 2.0f) + 5.0f, &TmpSlot, &LayersBox);
-		s_ScrollRegion.AddRect(TmpSlot, false);
+		ScrollRegion.AddRect(TmpSlot, false);
 	}
 
 	if(MoveLayers && 1 <= GroupAfterDraggedLayer && GroupAfterDraggedLayer <= (int)Map()->m_vpGroups.size())
@@ -2852,7 +2852,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 		}
 		else
 		{
-			s_ScrollRegion.DoEdgeScrolling();
+			ScrollRegion.DoEdgeScrolling();
 			Ui()->SetActiveItem(s_pDraggedButton);
 		}
 	}
@@ -2887,7 +2887,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 
 	CUIRect AddGroupButton, CollapseAllButton;
 	LayersBox.HSplitTop(RowHeight + 1.0f, &AddGroupButton, &LayersBox);
-	if(s_ScrollRegion.AddRect(AddGroupButton))
+	if(ScrollRegion.AddRect(AddGroupButton))
 	{
 		AddGroupButton.HSplitTop(RowHeight, &AddGroupButton, nullptr);
 		if(DoButton_Editor(&m_QuickActionAddGroup, m_QuickActionAddGroup.Label(), 0, &AddGroupButton, BUTTONFLAG_LEFT, m_QuickActionAddGroup.Description()))
@@ -2898,7 +2898,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 
 	LayersBox.HSplitTop(5.0f, nullptr, &LayersBox);
 	LayersBox.HSplitTop(RowHeight + 1.0f, &CollapseAllButton, &LayersBox);
-	if(s_ScrollRegion.AddRect(CollapseAllButton))
+	if(ScrollRegion.AddRect(CollapseAllButton))
 	{
 		size_t TotalCollapsed = 0;
 		for(const auto &pGroup : Map()->m_vpGroups)
@@ -2925,7 +2925,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 		}
 	}
 
-	s_ScrollRegion.End();
+	ScrollRegion.End();
 
 	if(s_Operation == OP_NONE)
 	{
@@ -3192,13 +3192,13 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 {
 	const float RowHeight = 12.0f;
 
-	static CScrollRegion s_ScrollRegion;
+	CScrollRegion &ScrollRegion = Map()->m_EditorUiElements.m_ImagesScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ScrollbarThickness = 10.0f;
 	ScrollParams.m_ScrollbarMargin = 3.0f;
 	ScrollParams.m_ScrollUnit = RowHeight * 5;
-	s_ScrollRegion.Begin(&ToolBox, &ScrollOffset, &ScrollParams);
+	ScrollRegion.Begin(&ToolBox, &ScrollOffset, &ScrollParams);
 	ToolBox.y += ScrollOffset.y;
 
 	// Precompute image usage once instead of scanning all groups/layers for each visible row.
@@ -3243,7 +3243,7 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 	{
 		CUIRect Slot;
 		ToolBox.HSplitTop(RowHeight + 3.0f, &Slot, &ToolBox);
-		if(s_ScrollRegion.AddRect(Slot))
+		if(ScrollRegion.AddRect(Slot))
 			Ui()->DoLabel(&Slot, e == 0 ? Localize("Embed", "Editor") : Localize("External", "Editor"), 12.0f, TEXTALIGN_MC);
 
 		for(int i = 0; i < (int)Map()->m_vpImages.size(); i++)
@@ -3256,7 +3256,7 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 
 			ToolBox.HSplitTop(RowHeight + 2.0f, &Slot, &ToolBox);
 			int Selected = Map()->m_SelectedImage == i;
-			if(!s_ScrollRegion.AddRect(Slot, Selected && ScrollToSelection))
+			if(!ScrollRegion.AddRect(Slot, Selected && ScrollToSelection))
 				continue;
 			Slot.HSplitTop(RowHeight, &Slot, nullptr);
 
@@ -3289,7 +3289,7 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 
 		// separator
 		ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
-		if(s_ScrollRegion.AddRect(Slot))
+		if(ScrollRegion.AddRect(Slot))
 		{
 			IGraphics::CLineItem LineItem(Slot.x, Slot.y + Slot.h / 2, Slot.x + Slot.w, Slot.y + Slot.h / 2);
 			Graphics()->TextureClear();
@@ -3303,14 +3303,14 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 	static int s_AddImageButton = 0;
 	CUIRect AddImageButton;
 	ToolBox.HSplitTop(5.0f + RowHeight + 1.0f, &AddImageButton, &ToolBox);
-	if(s_ScrollRegion.AddRect(AddImageButton))
+	if(ScrollRegion.AddRect(AddImageButton))
 	{
 		AddImageButton.HSplitTop(5.0f, nullptr, &AddImageButton);
 		AddImageButton.HSplitTop(RowHeight, &AddImageButton, nullptr);
 		if(DoButton_Editor(&s_AddImageButton, m_QuickActionAddImage.Label(), 0, &AddImageButton, BUTTONFLAG_LEFT, m_QuickActionAddImage.Description()))
 			m_QuickActionAddImage.Call();
 	}
-	s_ScrollRegion.End();
+	ScrollRegion.End();
 }
 
 void CEditor::RenderSelectedImage(CUIRect View) const
@@ -3340,13 +3340,13 @@ void CEditor::RenderSounds(CUIRect ToolBox)
 {
 	const float RowHeight = 12.0f;
 
-	static CScrollRegion s_ScrollRegion;
+	CScrollRegion &ScrollRegion = Map()->m_EditorUiElements.m_SoundsScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ScrollbarThickness = 10.0f;
 	ScrollParams.m_ScrollbarMargin = 3.0f;
 	ScrollParams.m_ScrollUnit = RowHeight * 5;
-	s_ScrollRegion.Begin(&ToolBox, &ScrollOffset, &ScrollParams);
+	ScrollRegion.Begin(&ToolBox, &ScrollOffset, &ScrollParams);
 	ToolBox.y += ScrollOffset.y;
 
 	bool ScrollToSelection = false;
@@ -3366,14 +3366,14 @@ void CEditor::RenderSounds(CUIRect ToolBox)
 
 	CUIRect Slot;
 	ToolBox.HSplitTop(RowHeight + 3.0f, &Slot, &ToolBox);
-	if(s_ScrollRegion.AddRect(Slot))
+	if(ScrollRegion.AddRect(Slot))
 		Ui()->DoLabel(&Slot, Localize("Embed", "Editor"), 12.0f, TEXTALIGN_MC);
 
 	for(int i = 0; i < (int)Map()->m_vpSounds.size(); i++)
 	{
 		ToolBox.HSplitTop(RowHeight + 2.0f, &Slot, &ToolBox);
 		int Selected = Map()->m_SelectedSound == i;
-		if(!s_ScrollRegion.AddRect(Slot, Selected && ScrollToSelection))
+		if(!ScrollRegion.AddRect(Slot, Selected && ScrollToSelection))
 			continue;
 		Slot.HSplitTop(RowHeight, &Slot, nullptr);
 
@@ -3403,7 +3403,7 @@ void CEditor::RenderSounds(CUIRect ToolBox)
 
 	// separator
 	ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
-	if(s_ScrollRegion.AddRect(Slot))
+	if(ScrollRegion.AddRect(Slot))
 	{
 		IGraphics::CLineItem LineItem(Slot.x, Slot.y + Slot.h / 2, Slot.x + Slot.w, Slot.y + Slot.h / 2);
 		Graphics()->TextureClear();
@@ -3416,14 +3416,14 @@ void CEditor::RenderSounds(CUIRect ToolBox)
 	static int s_AddSoundButton = 0;
 	CUIRect AddSoundButton;
 	ToolBox.HSplitTop(5.0f + RowHeight + 1.0f, &AddSoundButton, &ToolBox);
-	if(s_ScrollRegion.AddRect(AddSoundButton))
+	if(ScrollRegion.AddRect(AddSoundButton))
 	{
 		AddSoundButton.HSplitTop(5.0f, nullptr, &AddSoundButton);
 		AddSoundButton.HSplitTop(RowHeight, &AddSoundButton, nullptr);
 		if(DoButton_Editor(&s_AddSoundButton, Localize("Add sound", "Editor"), 0, &AddSoundButton, BUTTONFLAG_LEFT, Localize("Load a new sound to use in the map.", "Editor")))
 			m_FileBrowser.ShowFileDialog(IStorage::TYPE_ALL, CFileBrowser::EFileType::SOUND, Localize("Add sound", "Editor"), Localize("Add", "Editor"), "mapres", "", AddSound, this);
 	}
-	s_ScrollRegion.End();
+	ScrollRegion.End();
 }
 
 bool CEditor::CStringKeyComparator::operator()(const char *pLhs, const char *pRhs) const
