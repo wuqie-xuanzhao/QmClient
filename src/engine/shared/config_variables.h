@@ -589,7 +589,7 @@ MACRO_CONFIG_INT(SvVoteMapTimeDelay, sv_vote_map_delay, 0, 0, 9999, CFGFLAG_SERV
 MACRO_CONFIG_INT(SvVoteDelay, sv_vote_delay, 3, 0, 9999, CFGFLAG_SERVER, "Time between any votes (in seconds)")
 MACRO_CONFIG_INT(SvVoteKickDelay, sv_vote_kick_delay, 0, 0, 9999, CFGFLAG_SERVER, "Minimum time between kick votes (in seconds)")
 MACRO_CONFIG_INT(SvVoteYesPercentage, sv_vote_yes_percentage, 50, 1, 99, CFGFLAG_SERVER, "Fraction of players needed to pass a vote")
-MACRO_CONFIG_INT(SvVoteMajority, sv_vote_majority, 0, 0, 1, CFGFLAG_SERVER, "Whether non-voting players count as 'no' (0) or ignored (1)")
+MACRO_CONFIG_INT(SvVoteMajority, sv_vote_majority, 0, 0, 1, CFGFLAG_SERVER, "Whether non-voting players are ignored (0) or are considered as votes for \"no\" (1)")
 MACRO_CONFIG_INT(SvVoteMaxTotal, sv_vote_max_total, 0, 0, SERVER_MAX_CLIENTS, CFGFLAG_SERVER, "Maximum players participating in a vote (0 = unlimited)")
 MACRO_CONFIG_INT(SvVoteVetoTime, sv_vote_veto_time, 20, 0, 1000, CFGFLAG_SERVER, "Minutes on server before a player can call a map change vote (0 = disabled)")
 MACRO_CONFIG_INT(SvKillDelay, sv_kill_delay, 1, 0, 9999, CFGFLAG_SERVER, "Minimum time between kills (in seconds)")
@@ -600,6 +600,9 @@ MACRO_CONFIG_INT(SvFastDownload, sv_fast_download, 1, 0, 1, CFGFLAG_SERVER, "Ena
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "Crazy shotgun bullet sound on/off")
 
 MACRO_CONFIG_STR(SvRegionName, sv_region_name, 5, "UNK", CFGFLAG_SERVER, "Server region. Used for region bans")
+MACRO_CONFIG_STR(SvSqlSslCa, sv_sql_ssl_ca, 256, "", CFGFLAG_SERVER, "Path to CA certificate for verifying the MySQL/MariaDB server certificate")
+MACRO_CONFIG_STR(SvSqlSslCert, sv_sql_ssl_cert, 256, "", CFGFLAG_SERVER, "Path to client certificate for the MySQL/MariaDB SSL connection")
+MACRO_CONFIG_STR(SvSqlSslKey, sv_sql_ssl_key, 256, "", CFGFLAG_SERVER, "Path to client key for the MySQL/MariaDB SSL connection")
 MACRO_CONFIG_STR(SvSqlServerName, sv_sql_servername, 5, "UNK", CFGFLAG_SERVER, "SQL Server name for record table")
 MACRO_CONFIG_INT(SvSaveGames, sv_savegames, 1, 0, 1, CFGFLAG_SERVER, "Enable saving games (/save and /load)")
 MACRO_CONFIG_INT(SvSaveSwapGamesDelay, sv_saveswapgames_delay, 30, 0, 10000, CFGFLAG_SERVER, "Delay in seconds before loading a saved game or swapping")

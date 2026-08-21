@@ -10,6 +10,7 @@
 
 #include <limits>
 #elif defined(CONF_PLATFORM_MACOS)
+#include "secure.h"
 #include "str.h"
 #include "system.h" // pid
 
@@ -42,10 +43,13 @@ void sphore_destroy(SEMAPHORE *sem)
 #elif defined(CONF_PLATFORM_MACOS)
 void sphore_init(SEMAPHORE *sem)
 {
-	char aBuf[64];
-	str_format(aBuf, sizeof(aBuf), "/%d.%p", pid(), (void *)sem);
+	unsigned Random;
+	secure_random_fill(&Random, sizeof(Random));
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "/%d.%08x", pid(), Random);
 	*sem = sem_open(aBuf, O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
 	dbg_assert(*sem != SEM_FAILED, "sem_open failure, errno=%d, name='%s'", errno, aBuf);
+	dbg_assert(sem_unlink(aBuf) == 0, "sem_unlink failure, errno=%d, name='%s'", errno, aBuf);
 }
 void sphore_wait(SEMAPHORE *sem)
 {
@@ -63,9 +67,6 @@ void sphore_signal(SEMAPHORE *sem)
 void sphore_destroy(SEMAPHORE *sem)
 {
 	dbg_assert(sem_close(*sem) == 0, "sem_close failure");
-	char aBuf[64];
-	str_format(aBuf, sizeof(aBuf), "/%d.%p", pid(), (void *)sem);
-	dbg_assert(sem_unlink(aBuf) == 0, "sem_unlink failure");
 }
 #elif defined(CONF_FAMILY_UNIX)
 void sphore_init(SEMAPHORE *sem)

@@ -2324,6 +2324,7 @@ set_src(BASE GLOB_RECURSE src/base
   lock.h
   log.cpp
   log.h
+  log_color.h
   logger.h
   math.h
   mem.cpp
