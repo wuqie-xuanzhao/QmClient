@@ -95,12 +95,34 @@ bool CMap::Load(const char *pMapName, int StorageType)
 	NewDataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 
 	// 将旧版本的地图条目替换为与最新版本兼容的条目，避免使用地图条目时做版本检查。
+	// 确保存在 game 层与 game group。
+	const CMapItemLayerTilemap *pGameLayer = nullptr;
+	std::set<int> UsedLayerItemIndices;
 	for(int GroupIndex = 0; GroupIndex < GroupsNum; GroupIndex++)
 	{
+		const size_t GroupItemSize = NewDataFile.GetItemSize(GroupsStart + GroupIndex);
+		if(GroupItemSize < sizeof(CMapItemGroup_v1))
+		{
+			log_error("map/load", "Group %d is truncated (size %" PRIzu ").", GroupIndex, GroupItemSize);
+			return false;
+		}
 		const CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(NewDataFile.GetItem(GroupsStart + GroupIndex));
+		if(pGroup->m_StartLayer < 0 || pGroup->m_NumLayers < 0 ||
+			(int64_t)pGroup->m_StartLayer + pGroup->m_NumLayers > LayersNum)
+		{
+			log_error("map/load", "Group %d uses invalid layers %d to %d (the map contains %d layers).",
+				GroupIndex, pGroup->m_StartLayer, pGroup->m_StartLayer + pGroup->m_NumLayers - 1, LayersNum);
+			return false;
+		}
 		for(int LayerIndex = 0; LayerIndex < pGroup->m_NumLayers; LayerIndex++)
 		{
 			const int LayerItemIndex = LayersStart + pGroup->m_StartLayer + LayerIndex;
+			const auto &[_, LayerUnique] = UsedLayerItemIndices.emplace(LayerItemIndex);
+			if(!LayerUnique)
+			{
+				log_error("map/load", "Layer %d in group %d is also being used by another group.", LayerIndex, GroupIndex);
+				return false;
+			}
 			CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(NewDataFile.GetItem(LayerItemIndex));
 			const size_t LayerItemSize = NewDataFile.GetItemSize(LayerItemIndex);
 			if(LayerItemSize < sizeof(CMapItemLayer))
@@ -121,27 +143,8 @@ bool CMap::Load(const char *pMapName, int StorageType)
 				{
 					return false;
 				}
-			}
-		}
-	}
-
-	// 惰性校验数据并把压缩的 tile 层替换为未压缩版本。
-	// 确保存在 game 层与 game group。
-	const CMapItemLayerTilemap *pGameLayer = nullptr;
-	std::set<int> UsedDataIndices;
-	for(int GroupIndex = 0; GroupIndex < GroupsNum; GroupIndex++)
-	{
-		const CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(NewDataFile.GetItem(GroupsStart + GroupIndex));
-		for(int LayerIndex = 0; LayerIndex < pGroup->m_NumLayers; LayerIndex++)
-		{
-			CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(NewDataFile.GetItem(LayersStart + pGroup->m_StartLayer + LayerIndex));
-			if(pLayer->m_Type == LAYERTYPE_TILES)
-			{
-				const CMapItemLayerTilemap *pLayerTilemap = reinterpret_cast<const CMapItemLayerTilemap *>(pLayer);
-				if(!ValidateAndUnpackTilesLayerData(NewDataFile, GroupIndex, LayerIndex, pLayerTilemap, UsedDataIndices))
-				{
-					return false;
-				}
+				// 条目可能已被替换，因此必须重新获取指针。
+				const CMapItemLayerTilemap *pLayerTilemap = static_cast<CMapItemLayerTilemap *>(NewDataFile.GetItem(LayerItemIndex));
 				if(pLayerTilemap->m_Flags & TILESLAYERFLAG_GAME)
 				{
 					pGameLayer = pLayerTilemap;
@@ -154,6 +157,25 @@ bool CMap::Load(const char *pMapName, int StorageType)
 		log_error("map/load", "Game layer is missing.");
 		return false;
 	}
+
+	// 惰性校验数据并把压缩的 tile 层替换为未压缩版本。
+	std::set<int> UsedDataIndices;
+	for(int GroupIndex = 0; GroupIndex < GroupsNum; GroupIndex++)
+	{
+		const CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(NewDataFile.GetItem(GroupsStart + GroupIndex));
+		for(int LayerIndex = 0; LayerIndex < pGroup->m_NumLayers; LayerIndex++)
+		{
+			CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(NewDataFile.GetItem(LayersStart + pGroup->m_StartLayer + LayerIndex));
+			if(pLayer->m_Type == LAYERTYPE_TILES)
+			{
+				if(!ValidateAndUnpackTilesLayerData(NewDataFile, GroupIndex, LayerIndex, reinterpret_cast<const CMapItemLayerTilemap *>(pLayer), *pGameLayer, UsedDataIndices))
+				{
+					return false;
+				}
+			}
+		}
+	}
+
 	// 立即加载并隐式校验 game 层 tile 数据，因为后续必然用到。
 	// 不预加载其他数据以避免过多内存占用。
 	if(NewDataFile.GetData(pGameLayer->m_Data) == nullptr)
@@ -483,6 +505,13 @@ bool CMap::UpgradeAndValidateTilesLayerItem(
 			return false;
 		}
 	}
+	else if(LayerItemSize < sizeof(CMapItemLayerTilemap_v3Teeworlds))
+	{
+		// 版本 3 与 4 条目只允许截断 DDRace 追加的物理层数据索引，图层名必须完整。
+		log_error("map/load", "Tile layer %d in group %d is truncated (version %d, size %" PRIzu ").",
+			LayerIndex, GroupIndex, pLayerTilemapBase->m_Version, LayerItemSize);
+		return false;
+	}
 	else if(LayerItemSize < sizeof(CMapItemLayerTilemap))
 	{
 		const CMapItemLayerTilemap *pLayerTilemapLegacy = static_cast<const CMapItemLayerTilemap *>(pLayerTilemapBase);
@@ -517,7 +546,7 @@ bool CMap::UpgradeAndValidateTilesLayerItem(
 	return true;
 }
 
-bool CMap::ValidateAndUnpackTilesLayerData(CDataFileReader &NewDataFile, int GroupIndex, int LayerIndex, const CMapItemLayerTilemap *pLayerTilemap, std::set<int> &UsedDataIndices)
+bool CMap::ValidateAndUnpackTilesLayerData(CDataFileReader &NewDataFile, int GroupIndex, int LayerIndex, const CMapItemLayerTilemap *pLayerTilemap, const CMapItemLayerTilemap &GameLayer, std::set<int> &UsedDataIndices)
 {
 	size_t TileSize;
 	int DataIndex;
@@ -585,6 +614,16 @@ bool CMap::ValidateAndUnpackTilesLayerData(CDataFileReader &NewDataFile, int Gro
 	{
 		log_error("map/load", "Tile layer %d in group %d is too big (%d * %d * %" PRIzu " causes an integer overflow).",
 			LayerIndex, GroupIndex, pLayerTilemap->m_Width, pLayerTilemap->m_Height, TileSize);
+		return false;
+	}
+
+	// 碰撞检测使用 game 层的大小来访问所有物理层数据，
+	// 因此物理层必须包含至少与 game 层一样多的 tile。
+	if(LayerType != LAYERTYPE_TILES && LayerType != LAYERTYPE_GAME &&
+		TilemapCount < (size_t)GameLayer.m_Width * GameLayer.m_Height)
+	{
+		log_error("map/load", "Physics layer %d in group %d is smaller than the game layer (%d * %d < %d * %d).",
+			LayerIndex, GroupIndex, pLayerTilemap->m_Width, pLayerTilemap->m_Height, GameLayer.m_Width, GameLayer.m_Height);
 		return false;
 	}
 

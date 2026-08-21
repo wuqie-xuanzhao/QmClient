@@ -474,6 +474,10 @@ public:
 	int m_Tune;
 };
 
+// tiles 层条目是从原始地图文件数据直接转换的，因此基类不得给派生类添加填充。
+static_assert(sizeof(CMapItemLayerTilemap_v2) == 60);
+static_assert(sizeof(CMapItemLayerTilemap_v2Legacy) == 80);
+static_assert(sizeof(CMapItemLayerTilemap_v3Teeworlds) == 72);
 static_assert(sizeof(CMapItemLayerTilemap) == 92);
 
 class CMapItemLayerQuads

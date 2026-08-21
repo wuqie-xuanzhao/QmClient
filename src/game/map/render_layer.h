@@ -122,7 +122,7 @@ public:
 	void Init() override;
 	void OnInit(IGraphics *pGraphics, ITextRender *pTextRender, CRenderMap *pRenderMap, std::shared_ptr<CEnvelopeManager> &pEnvelopeManager, IMap *pMap, IMapImages *pMapImages, std::optional<FRenderUploadCallback> &FRenderUploadCallbackOptional) override;
 
-	virtual int GetDataIndex(unsigned int &TileSize) const;
+	virtual int GetDataIndex() const;
 	bool IsValid() const override { return GetRawData() != nullptr; }
 	void Unload() override;
 
@@ -320,7 +320,7 @@ class CRenderLayerEntityFront final : public CRenderLayerEntityBase
 {
 public:
 	CRenderLayerEntityFront(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
-	int GetDataIndex(unsigned int &TileSize) const override;
+	int GetDataIndex() const override;
 	void Init() override;
 	void Unload() override;
 
@@ -340,7 +340,7 @@ class CRenderLayerEntityTele final : public CRenderLayerEntityBase
 {
 public:
 	CRenderLayerEntityTele(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
-	int GetDataIndex(unsigned int &TileSize) const override;
+	int GetDataIndex() const override;
 	void Init() override;
 	void Unload() override;
 
@@ -361,7 +361,7 @@ class CRenderLayerEntitySpeedup final : public CRenderLayerEntityBase
 {
 public:
 	CRenderLayerEntitySpeedup(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
-	int GetDataIndex(unsigned int &TileSize) const override;
+	int GetDataIndex() const override;
 	void Init() override;
 	void Unload() override;
 
@@ -382,7 +382,7 @@ class CRenderLayerEntitySwitch final : public CRenderLayerEntityBase
 {
 public:
 	CRenderLayerEntitySwitch(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
-	int GetDataIndex(unsigned int &TileSize) const override;
+	int GetDataIndex() const override;
 	void Init() override;
 	void Unload() override;
 
@@ -407,7 +407,7 @@ class CRenderLayerEntityTune final : public CRenderLayerEntityBase
 {
 public:
 	CRenderLayerEntityTune(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
-	int GetDataIndex(unsigned int &TileSize) const override;
+	int GetDataIndex() const override;
 	void Init() override;
 
 protected:

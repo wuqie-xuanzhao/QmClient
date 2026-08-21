@@ -128,6 +128,10 @@ void CLayers::InitTilemapSkip()
 				continue;
 
 			const CMapItemLayerTilemap *pTilemap = reinterpret_cast<const CMapItemLayerTilemap *>(pLayer);
+			// 除 game 层外的物理层把 tile 存在各自的数据索引里，其 m_Data 既不使用也不在地图加载时校验。
+			if((pTilemap->m_Flags & (TILESLAYERFLAG_TELE | TILESLAYERFLAG_SPEEDUP | TILESLAYERFLAG_FRONT | TILESLAYERFLAG_SWITCH | TILESLAYERFLAG_TUNE)) != 0)
+				continue;
+
 			CTile *pTiles = static_cast<CTile *>(m_pMap->GetData(pTilemap->m_Data));
 			if(pTiles == nullptr || pTilemap->m_Width < 0 || pTilemap->m_Height < 0 ||
 				(int64_t)pTilemap->m_Width * pTilemap->m_Height > m_pMap->GetDataSize(pTilemap->m_Data) / (int)sizeof(CTile))
