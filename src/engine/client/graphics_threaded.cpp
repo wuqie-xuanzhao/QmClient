@@ -479,7 +479,7 @@ void CGraphics_Threaded::UnloadTexture(CTextureHandle *pIndex)
 
 static bool GetSpriteImageRect(const CImageInfo &ImageInfo, const CDataSprite *pSprite, size_t &x, size_t &y, size_t &w, size_t &h);
 
-IGraphics::CTextureHandle CGraphics_Threaded::LoadSpriteTexture(const CImageInfo &FromImageInfo, const CDataSprite *pSprite)
+IGraphics::CTextureHandle CGraphics_Threaded::LoadSpriteTexture(const CImageInfo &FromImageInfo, const std::optional<CImageInfo> &FallbackImageInfo, const CDataSprite *pSprite)
 {
 	const char *pSpriteName = pSprite && pSprite->m_pName ? pSprite->m_pName : "(no name)";
 	size_t x = 0;
@@ -490,6 +490,13 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadSpriteTexture(const CImageInfo
 	{
 		log_error("graphics/texture", "Ignoring invalid sprite texture '%s'.", pSpriteName);
 		return m_NullTexture;
+	}
+
+	// 检查不可见纹理（可能是过时的游戏资源），回退到默认资源
+	if(FallbackImageInfo.has_value() && IsImageSubFullyTransparent(FromImageInfo, (int)x, (int)y, (int)w, (int)h))
+	{
+		log_warn("graphics", "Asset '%s' appears to be invisible, falling back to default", pSpriteName);
+		return LoadSpriteTexture(FallbackImageInfo.value(), std::nullopt, pSprite);
 	}
 
 	CImageInfo SpriteInfo;
