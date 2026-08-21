@@ -43,7 +43,6 @@
 #include <game/editor/prompt.h>
 #include <game/editor/quick_action.h>
 #include <game/localization.h>
-#include <game/map/render_interfaces.h>
 #include <game/mapitems.h>
 
 #include <deque>
@@ -110,7 +109,7 @@ enum
 	PROPTYPE_AUTOMAPPER_REFERENCE,
 };
 
-class CEditor : public IEditor, public IEnvelopeEval
+class CEditor : public IEditor
 {
 	friend class CEditorDrawingTools;
 
@@ -238,11 +237,6 @@ public:
 		m_GuiActive = true;
 
 		m_ShowTileInfo = SHOW_TILE_OFF;
-		m_Animate = false;
-		m_AnimateStart = 0.0f;
-		m_AnimateTime = 0.0f;
-		m_AnimateSpeed = 1.0f;
-		m_AnimateUpdatePopup = false;
 
 		for(size_t i = 0; i < std::size(m_aSavedColors); ++i)
 		{
@@ -469,12 +463,6 @@ public:
 	};
 	EShowTile m_ShowTileInfo;
 
-	bool m_Animate;
-	float m_AnimateStart;
-	float m_AnimateTime;
-	float m_AnimateSpeed;
-	bool m_AnimateUpdatePopup;
-
 	enum EExtraEditor
 	{
 		EXTRAEDITOR_NONE = -1,
@@ -532,8 +520,6 @@ public:
 	const void *m_pUiGotContext = nullptr;
 
 	std::deque<std::shared_ptr<CDataFileWriterFinishJob>> m_WriterFinishJobs;
-
-	void EnvelopeEval(int TimeOffsetMillis, int EnvelopeIndex, ColorRGBA &Result, size_t Channels) override;
 
 	CLineInputBuffered<256> m_SettingsCommandInput;
 	CMapSettingsBackend m_MapSettingsBackend;

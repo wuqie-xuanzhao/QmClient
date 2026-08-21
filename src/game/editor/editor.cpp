@@ -136,18 +136,6 @@ bool CEditor::IsVanillaImage(const char *pImage)
 	return std::any_of(std::begin(VANILLA_IMAGES), std::end(VANILLA_IMAGES), [pImage](const char *pVanillaImage) { return str_comp(pImage, pVanillaImage) == 0; });
 }
 
-void CEditor::EnvelopeEval(int TimeOffsetMillis, int EnvelopeIndex, ColorRGBA &Result, size_t Channels)
-{
-	if(EnvelopeIndex < 0 || EnvelopeIndex >= (int)m_Map.m_vpEnvelopes.size())
-		return;
-
-	std::shared_ptr<CEnvelope> pEnvelope = m_Map.m_vpEnvelopes[EnvelopeIndex];
-	float Time = m_AnimateTime;
-	Time *= m_AnimateSpeed;
-	Time += (TimeOffsetMillis / 1000.0f);
-	pEnvelope->Eval(Time, Result, Channels);
-}
-
 bool CEditor::CallbackOpenMap(const char *pFilename, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor *)pUser;
@@ -458,17 +446,17 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		static char s_JumpStartButton = 0;
 		if(DoButton_FontIcon(&s_JumpStartButton, FONT_ICON_BACKWARD_STEP, false, &Button, BUTTONFLAG_LEFT, Localize("Jump to beginning of animation.", "Editor"), IGraphics::CORNER_L))
 		{
-			m_AnimateTime = 0;
-			m_Animate = false;
+			Map()->m_EnvelopeEvaluator.m_AnimateTime = 0;
+			Map()->m_EnvelopeEvaluator.m_Animate = false;
 		}
 
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static char s_AnimateButton = 0;
-		if(DoButton_FontIcon(&s_AnimateButton, m_Animate ? FONT_ICON_PAUSE : FONT_ICON_PLAY, m_Animate, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+M] Toggle animation.", "Editor"), IGraphics::CORNER_NONE) ||
+		if(DoButton_FontIcon(&s_AnimateButton, Map()->m_EnvelopeEvaluator.m_Animate ? FONT_ICON_PAUSE : FONT_ICON_PLAY, Map()->m_EnvelopeEvaluator.m_Animate, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+M] Toggle animation.", "Editor"), IGraphics::CORNER_NONE) ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_M) && ModPressed))
 		{
-			m_AnimateStart = Client()->GlobalTime() - m_AnimateTime;
-			m_Animate = !m_Animate;
+			Map()->m_EnvelopeEvaluator.m_AnimateStart = Client()->GlobalTime() - Map()->m_EnvelopeEvaluator.m_AnimateTime;
+			Map()->m_EnvelopeEvaluator.m_Animate = !Map()->m_EnvelopeEvaluator.m_Animate;
 		}
 
 		// animation settings button
@@ -476,7 +464,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		static char s_AnimateSettingsButton;
 		if(DoButton_FontIcon(&s_AnimateSettingsButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, Localize("Change the animation settings.", "Editor"), IGraphics::CORNER_R, 8.0f))
 		{
-			m_AnimateUpdatePopup = true;
+			Map()->m_EnvelopeEvaluator.m_AnimateUpdatePopup = true;
 			static SPopupMenuId s_PopupAnimateSettingsId;
 			Ui()->DoPopupMenu(&s_PopupAnimateSettingsId, Button.x, Button.y + Button.h, 150.0f, 37.0f, this, PopupAnimateSettings);
 		}
@@ -4370,13 +4358,13 @@ void CEditor::UpdateHotEnvelopeObject(const CUIRect &View, const CEnvelope *pEnv
 	{
 		Ui()->SetHotItem(pMinPointId);
 	}
-	else if(!m_Animate && pEnvelope->EndTime() > 0.0f)
+	else if(!Map()->m_EnvelopeEvaluator.m_Animate && pEnvelope->EndTime() > 0.0f)
 	{
-		const float Time = m_AnimateTime * m_AnimateSpeed;
+		const float Time = Map()->m_EnvelopeEvaluator.m_AnimateTime * Map()->m_EnvelopeEvaluator.m_AnimateSpeed;
 		const float LoopedTime = std::fmod(Time, pEnvelope->EndTime());
 		if(absolute(EnvelopeToScreenX(View, Time) - MousePos.x) < 20.0f || absolute(EnvelopeToScreenX(View, LoopedTime) - MousePos.x) < 20.0f)
 		{
-			Ui()->SetHotItem(&m_AnimateTime);
+			Ui()->SetHotItem(&Map()->m_EnvelopeEvaluator.m_AnimateTime);
 		}
 	}
 }
@@ -5015,7 +5003,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			}
 
 			ColorRGBA BarColor;
-			if(Ui()->CheckActiveItem(&m_AnimateTime))
+			if(Ui()->CheckActiveItem(&Map()->m_EnvelopeEvaluator.m_AnimateTime))
 			{
 				if(s_Operation == EEnvelopeEditorOp::OP_SELECT)
 				{
@@ -5031,8 +5019,8 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					}
 
 					const float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX());
-					m_AnimateTime += DeltaX / m_AnimateSpeed;
-					m_AnimateTime = std::max(m_AnimateTime, 0.0f);
+					Map()->m_EnvelopeEvaluator.m_AnimateTime += DeltaX / Map()->m_EnvelopeEvaluator.m_AnimateSpeed;
+					Map()->m_EnvelopeEvaluator.m_AnimateTime = std::max(Map()->m_EnvelopeEvaluator.m_AnimateTime, 0.0f);
 				}
 
 				if(!Ui()->MouseButton(0))
@@ -5045,11 +5033,11 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				BarColor = ColorRGBA(1.0f, 1.0f, 0.0f, 0.8f);
 				str_copy(m_aTooltip, Localize("Timebar. Press left-click to drag. Hold ctrl to be more precise.", "Editor"));
 			}
-			else if(Ui()->HotItem() == &m_AnimateTime)
+			else if(Ui()->HotItem() == &Map()->m_EnvelopeEvaluator.m_AnimateTime)
 			{
 				if(Ui()->MouseButton(0))
 				{
-					Ui()->SetActiveItem(&m_AnimateTime);
+					Ui()->SetActiveItem(&Map()->m_EnvelopeEvaluator.m_AnimateTime);
 					s_Operation = EEnvelopeEditorOp::OP_SELECT;
 
 					s_MouseStart = Ui()->MousePos();
@@ -5065,7 +5053,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			}
 
 			Ui()->ClipEnable(&View);
-			const float Time = m_AnimateTime * m_AnimateSpeed;
+			const float Time = Map()->m_EnvelopeEvaluator.m_AnimateTime * Map()->m_EnvelopeEvaluator.m_AnimateSpeed;
 			const float BarWidth = 1.5f;
 			CUIRect TimeBar{
 				EnvelopeToScreenX(View, Time) - BarWidth / 2.0f,
@@ -6170,7 +6158,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	char aTimeStr[6];
 	str_timestamp_format(aTimeStr, sizeof(aTimeStr), "%H:%M");
 
-	str_format(aBuf, sizeof(aBuf), Localize("X: %.1f, Y: %.1f, Z: %.1f, T: %.1f, A: %.1f, G: %i  %s", "Editor"), MapView()->MouseWorldPos().x / 32.0f, MapView()->MouseWorldPos().y / 32.0f, MapView()->Zoom()->GetValue(), m_AnimateTime * m_AnimateSpeed, m_AnimateSpeed, MapView()->MapGrid()->Factor(), aTimeStr);
+	str_format(aBuf, sizeof(aBuf), Localize("X: %.1f, Y: %.1f, Z: %.1f, T: %.1f, A: %.1f, G: %i  %s", "Editor"), MapView()->MouseWorldPos().x / 32.0f, MapView()->MouseWorldPos().y / 32.0f, MapView()->Zoom()->GetValue(), Map()->m_EnvelopeEvaluator.m_AnimateTime * Map()->m_EnvelopeEvaluator.m_AnimateSpeed, Map()->m_EnvelopeEvaluator.m_AnimateSpeed, MapView()->MapGrid()->Factor(), aTimeStr);
 	Ui()->DoLabel(&Info, aBuf, 10.0f, TEXTALIGN_MR);
 
 	static int s_HelpButton = 0;
@@ -6947,8 +6935,8 @@ void CEditor::Reset(bool CreateDefault)
 	m_ActiveEnvelopePreview = EEnvelopePreview::NONE;
 	m_QuadEnvelopePointOperation = EQuadEnvelopePointOperation::NONE;
 
-	m_AnimateTime = 0;
-	m_Animate = false;
+	Map()->m_EnvelopeEvaluator.m_AnimateTime = 0;
+	Map()->m_EnvelopeEvaluator.m_Animate = false;
 
 	m_ResetZoomEnvelope = true;
 	m_SettingsCommandInput.Clear();
@@ -7250,8 +7238,8 @@ void CEditor::OnRender()
 	if(Input()->KeyPress(KEY_F10))
 		m_ShowMousePointer = false;
 
-	if(m_Animate)
-		m_AnimateTime = Client()->GlobalTime() - m_AnimateStart;
+	if(Map()->m_EnvelopeEvaluator.m_Animate)
+		Map()->m_EnvelopeEvaluator.m_AnimateTime = Client()->GlobalTime() - Map()->m_EnvelopeEvaluator.m_AnimateStart;
 
 	m_pUiGotContext = nullptr;
 	Ui()->StartCheck();
