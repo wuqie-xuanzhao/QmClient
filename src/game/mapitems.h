@@ -424,18 +424,10 @@ public:
 	int m_Flags;
 };
 
-class CMapItemLayerTilemap
+// Teeworlds 版本 2 的 tiles 图层条目。tiles 图层最早支持的版本。
+class CMapItemLayerTilemap_v2
 {
 public:
-	/**
-	 * @link CMapItemLayerTilemap @endlink with this version are only written to maps in upstream Teeworlds.
-	 * The tile data of tilemaps using this version must be unpacked by repeating tiles according to the
-	 * @link CTile::m_Skip @endlink values of the packed tile data.
-	 *
-	 * @see CMap::ExtractTiles
-	 */
-	static constexpr int VERSION_TEEWORLDS_TILESKIP = 4;
-
 	CMapItemLayer m_Layer;
 	int m_Version;
 
@@ -449,11 +441,32 @@ public:
 
 	int m_Image;
 	int m_Data;
+};
 
+// DDRace 在既有 Teeworlds 版本 2 tiles 图层条目上追加了自己的成员变量。
+// 注意版本 2 tiles 图层条目可能只包含这些成员变量的前缀。
+class CMapItemLayerTilemap_v2Legacy : public CMapItemLayerTilemap_v2
+{
+public:
+	int m_Tele;
+	int m_Speedup;
+	int m_Front;
+	int m_Switch;
+	int m_Tune;
+};
+
+// Teeworlds 在版本 3 中基于原始版本 2 条目给 tiles 图层增加了图层名。
+// 注意该地图条目与 DDRace 添加的遗留版本 2 地图条目不兼容。
+class CMapItemLayerTilemap_v3Teeworlds : public CMapItemLayerTilemap_v2
+{
+public:
 	int m_aName[3];
+};
 
-	// DDRace
-
+// DDRace 再次在 Teeworlds 版本 3 tiles 图层条目上追加了自己的成员变量。
+class CMapItemLayerTilemap : public CMapItemLayerTilemap_v3Teeworlds
+{
+public:
 	int m_Tele;
 	int m_Speedup;
 	int m_Front;
@@ -646,6 +659,7 @@ public:
 	unsigned char m_Force;
 	unsigned char m_MaxSpeed;
 	unsigned char m_Type;
+	unsigned char m_MustBe0;
 	short m_Angle;
 };
 

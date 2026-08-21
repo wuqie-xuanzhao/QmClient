@@ -10,6 +10,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/datafile.h>
 #include <engine/shared/filecollection.h>
+#include <engine/shared/map.h>
 #include <engine/sound.h>
 #include <engine/storage.h>
 
@@ -620,18 +621,10 @@ bool CEditorMap::PerformPreSaveSanityChecks(const FErrorHandler &ErrorHandler)
 
 bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandler &ErrorHandler)
 {
-	CDataFileReader DataFile;
-	if(!DataFile.Open(m_pEditor->Storage(), pFilename, StorageType))
+	std::unique_ptr<IEngineMap> pMap(CreateEngineMap());
+	if(!pMap->Load(pFilename, StorageType))
 	{
 		ErrorHandler(Localize("Error: Failed to open map file. See local console for details.", "Editor"));
-		return false;
-	}
-
-	// check version
-	const CMapItemVersion *pItemVersion = static_cast<CMapItemVersion *>(DataFile.FindItem(MAPITEMTYPE_VERSION, 0));
-	if(pItemVersion == nullptr || pItemVersion->m_Version != 1)
-	{
-		ErrorHandler(Localize("Error: The map has an unsupported version.", "Editor"));
 		return false;
 	}
 
@@ -640,17 +633,17 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 	// load map info
 	{
 		int Start, Num;
-		DataFile.GetType(MAPITEMTYPE_INFO, &Start, &Num);
+		pMap->GetType(MAPITEMTYPE_INFO, &Start, &Num);
 		for(int i = Start; i < Start + Num; i++)
 		{
-			int ItemSize = DataFile.GetItemSize(i);
+			int ItemSize = pMap->GetItemSize(i);
 			int ItemId;
-			CMapItemInfoSettings *pItem = (CMapItemInfoSettings *)DataFile.GetItem(i, nullptr, &ItemId);
+			CMapItemInfoSettings *pItem = (CMapItemInfoSettings *)pMap->GetItem(i, nullptr, &ItemId);
 			if(!pItem || ItemId != 0)
 				continue;
 
 			const auto &&ReadStringInfo = [&](int Index, char *pBuffer, size_t BufferSize, const char *pErrorContext) {
-				const char *pStr = DataFile.GetDataString(Index);
+				const char *pStr = pMap->GetDataString(Index);
 				if(pStr == nullptr)
 				{
 					char aBuf[128];
@@ -675,8 +668,8 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			if(!(pItem->m_Settings > -1))
 				break;
 
-			const unsigned Size = DataFile.GetDataSize(pItem->m_Settings);
-			char *pSettings = (char *)DataFile.GetData(pItem->m_Settings);
+			const unsigned Size = pMap->GetDataSize(pItem->m_Settings);
+			char *pSettings = (char *)pMap->GetData(pItem->m_Settings);
 			char *pNext = pSettings;
 			while(pNext < pSettings + Size)
 			{
@@ -690,16 +683,16 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 	// load images
 	{
 		int Start, Num;
-		DataFile.GetType(MAPITEMTYPE_IMAGE, &Start, &Num);
+		pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &Num);
 		for(int i = 0; i < Num; i++)
 		{
-			CMapItemImage_v2 *pItem = (CMapItemImage_v2 *)DataFile.GetItem(Start + i);
+			CMapItemImage_v2 *pItem = (CMapItemImage_v2 *)pMap->GetItem(Start + i);
 
 			// copy base info
 			std::shared_ptr<CEditorImage> pImg = std::make_shared<CEditorImage>(this);
 			pImg->m_External = pItem->m_External;
 
-			const char *pName = DataFile.GetDataString(pItem->m_ImageName);
+			const char *pName = pMap->GetDataString(pItem->m_ImageName);
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
@@ -755,9 +748,9 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 				pImg->m_Format = CImageInfo::FORMAT_RGBA;
 
 				// copy image data
-				void *pData = DataFile.GetData(pItem->m_ImageData);
+				void *pData = pMap->GetData(pItem->m_ImageData);
 				size_t DataSize = 0;
-				const int FileDataSize = DataFile.GetDataSize(pItem->m_ImageData);
+				const int FileDataSize = pMap->GetDataSize(pItem->m_ImageData);
 				if(pData == nullptr || FileDataSize <= 0 || !pImg->DataSize(DataSize) || (size_t)FileDataSize < DataSize)
 				{
 					char aBuf[IO_MAX_PATH_LENGTH];
@@ -798,23 +791,23 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			m_vpImages.push_back(pImg);
 
 			// unload image
-			DataFile.UnloadData(pItem->m_ImageData);
-			DataFile.UnloadData(pItem->m_ImageName);
+			pMap->UnloadData(pItem->m_ImageData);
+			pMap->UnloadData(pItem->m_ImageName);
 		}
 	}
 
 	// load sounds
 	{
 		int Start, Num;
-		DataFile.GetType(MAPITEMTYPE_SOUND, &Start, &Num);
+		pMap->GetType(MAPITEMTYPE_SOUND, &Start, &Num);
 		for(int i = 0; i < Num; i++)
 		{
-			CMapItemSound *pItem = (CMapItemSound *)DataFile.GetItem(Start + i);
+			CMapItemSound *pItem = (CMapItemSound *)pMap->GetItem(Start + i);
 
 			// copy base info
 			std::shared_ptr<CEditorSound> pSound = std::make_shared<CEditorSound>(this);
 
-			const char *pName = DataFile.GetDataString(pItem->m_SoundName);
+			const char *pName = pMap->GetDataString(pItem->m_SoundName);
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
@@ -842,8 +835,8 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			}
 			else
 			{
-				void *pData = DataFile.GetData(pItem->m_SoundData);
-				const int SoundDataSize = DataFile.GetDataSize(pItem->m_SoundData);
+				void *pData = pMap->GetData(pItem->m_SoundData);
+				const int SoundDataSize = pMap->GetDataSize(pItem->m_SoundData);
 				if(pData == nullptr || SoundDataSize <= 0)
 				{
 					char aBuf[IO_MAX_PATH_LENGTH];
@@ -872,22 +865,22 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 			m_vpSounds.push_back(pSound);
 
 			// unload sound
-			DataFile.UnloadData(pItem->m_SoundData);
-			DataFile.UnloadData(pItem->m_SoundName);
+			pMap->UnloadData(pItem->m_SoundData);
+			pMap->UnloadData(pItem->m_SoundName);
 		}
 	}
 
 	// load groups
 	{
 		int LayersStart, LayersNum;
-		DataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
+		pMap->GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 
 		int Start, Num;
-		DataFile.GetType(MAPITEMTYPE_GROUP, &Start, &Num);
+		pMap->GetType(MAPITEMTYPE_GROUP, &Start, &Num);
 
 		for(int g = 0; g < Num; g++)
 		{
-			CMapItemGroup *pGItem = (CMapItemGroup *)DataFile.GetItem(Start + g);
+			CMapItemGroup *pGItem = (CMapItemGroup *)pMap->GetItem(Start + g);
 
 			if(pGItem->m_Version < 1 || pGItem->m_Version > 3)
 				continue;
@@ -913,7 +906,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 
 			for(int l = 0; l < pGItem->m_NumLayers; l++)
 			{
-				CMapItemLayer *pLayerItem = (CMapItemLayer *)DataFile.GetItem(LayersStart + pGItem->m_StartLayer + l);
+				CMapItemLayer *pLayerItem = (CMapItemLayer *)pMap->GetItem(LayersStart + pGItem->m_StartLayer + l);
 				if(!pLayerItem)
 					continue;
 
@@ -930,41 +923,26 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					}
 					else if(pTilemapItem->m_Flags & TILESLAYERFLAG_TELE)
 					{
-						if(pTilemapItem->m_Version <= 2)
-							pTilemapItem->m_Tele = *((const int *)(pTilemapItem) + 15);
-
 						pTiles = std::make_shared<CLayerTele>(this, pTilemapItem->m_Width, pTilemapItem->m_Height);
 						MakeTeleLayer(pTiles);
 					}
 					else if(pTilemapItem->m_Flags & TILESLAYERFLAG_SPEEDUP)
 					{
-						if(pTilemapItem->m_Version <= 2)
-							pTilemapItem->m_Speedup = *((const int *)(pTilemapItem) + 16);
-
 						pTiles = std::make_shared<CLayerSpeedup>(this, pTilemapItem->m_Width, pTilemapItem->m_Height);
 						MakeSpeedupLayer(pTiles);
 					}
 					else if(pTilemapItem->m_Flags & TILESLAYERFLAG_FRONT)
 					{
-						if(pTilemapItem->m_Version <= 2)
-							pTilemapItem->m_Front = *((const int *)(pTilemapItem) + 17);
-
 						pTiles = std::make_shared<CLayerFront>(this, pTilemapItem->m_Width, pTilemapItem->m_Height);
 						MakeFrontLayer(pTiles);
 					}
 					else if(pTilemapItem->m_Flags & TILESLAYERFLAG_SWITCH)
 					{
-						if(pTilemapItem->m_Version <= 2)
-							pTilemapItem->m_Switch = *((const int *)(pTilemapItem) + 18);
-
 						pTiles = std::make_shared<CLayerSwitch>(this, pTilemapItem->m_Width, pTilemapItem->m_Height);
 						MakeSwitchLayer(pTiles);
 					}
 					else if(pTilemapItem->m_Flags & TILESLAYERFLAG_TUNE)
 					{
-						if(pTilemapItem->m_Version <= 2)
-							pTilemapItem->m_Tune = *((const int *)(pTilemapItem) + 19);
-
 						pTiles = std::make_shared<CLayerTune>(this, pTilemapItem->m_Width, pTilemapItem->m_Height);
 						MakeTuneLayer(pTiles);
 					}
@@ -993,8 +971,8 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 
 					if(pTiles->m_HasTele)
 					{
-						void *pTeleData = DataFile.GetData(pTilemapItem->m_Tele);
-						unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Tele);
+						void *pTeleData = pMap->GetData(pTilemapItem->m_Tele);
+						unsigned int Size = pMap->GetDataSize(pTilemapItem->m_Tele);
 						if(Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CTeleTile))
 						{
 							CTeleTile *pLayerTeleTiles = std::static_pointer_cast<CLayerTele>(pTiles)->m_pTeleTile;
@@ -1008,12 +986,12 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 									pTiles->m_pTiles[i].m_Index = 0;
 							}
 						}
-						DataFile.UnloadData(pTilemapItem->m_Tele);
+						pMap->UnloadData(pTilemapItem->m_Tele);
 					}
 					else if(pTiles->m_HasSpeedup)
 					{
-						void *pSpeedupData = DataFile.GetData(pTilemapItem->m_Speedup);
-						unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Speedup);
+						void *pSpeedupData = pMap->GetData(pTilemapItem->m_Speedup);
+						unsigned int Size = pMap->GetDataSize(pTilemapItem->m_Speedup);
 
 						if(Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CSpeedupTile))
 						{
@@ -1029,19 +1007,21 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 							}
 						}
 
-						DataFile.UnloadData(pTilemapItem->m_Speedup);
+						pMap->UnloadData(pTilemapItem->m_Speedup);
 					}
 					else if(pTiles->m_HasFront)
 					{
-						void *pFrontData = DataFile.GetData(pTilemapItem->m_Front);
-						unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Front);
-						pTiles->ExtractTiles(pTilemapItem->m_Version, (CTile *)pFrontData, Size);
-						DataFile.UnloadData(pTilemapItem->m_Front);
+						const void *pData = pMap->GetData(pTilemapItem->m_Front);
+						if(pData != nullptr)
+						{
+							mem_copy(pTiles->m_pTiles, pData, (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CTile));
+						}
+						pMap->UnloadData(pTilemapItem->m_Front);
 					}
 					else if(pTiles->m_HasSwitch)
 					{
-						void *pSwitchData = DataFile.GetData(pTilemapItem->m_Switch);
-						unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Switch);
+						void *pSwitchData = pMap->GetData(pTilemapItem->m_Switch);
+						unsigned int Size = pMap->GetDataSize(pTilemapItem->m_Switch);
 						if(Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CSwitchTile))
 						{
 							CSwitchTile *pLayerSwitchTiles = std::static_pointer_cast<CLayerSwitch>(pTiles)->m_pSwitchTile;
@@ -1065,12 +1045,12 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 								}
 							}
 						}
-						DataFile.UnloadData(pTilemapItem->m_Switch);
+						pMap->UnloadData(pTilemapItem->m_Switch);
 					}
 					else if(pTiles->m_HasTune)
 					{
-						void *pTuneData = DataFile.GetData(pTilemapItem->m_Tune);
-						unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Tune);
+						void *pTuneData = pMap->GetData(pTilemapItem->m_Tune);
+						unsigned int Size = pMap->GetDataSize(pTilemapItem->m_Tune);
 						if(Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CTuneTile))
 						{
 							CTuneTile *pLayerTuneTiles = std::static_pointer_cast<CLayerTune>(pTiles)->m_pTuneTile;
@@ -1084,14 +1064,16 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 									pTiles->m_pTiles[i].m_Index = 0;
 							}
 						}
-						DataFile.UnloadData(pTilemapItem->m_Tune);
+						pMap->UnloadData(pTilemapItem->m_Tune);
 					}
 					else // regular tile layer or game layer
 					{
-						void *pData = DataFile.GetData(pTilemapItem->m_Data);
-						unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Data);
-						pTiles->ExtractTiles(pTilemapItem->m_Version, (CTile *)pData, Size);
-						DataFile.UnloadData(pTilemapItem->m_Data);
+						const void *pData = pMap->GetData(pTilemapItem->m_Data);
+						if(pData != nullptr)
+						{
+							mem_copy(pTiles->m_pTiles, pData, (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CTile));
+						}
+						pMap->UnloadData(pTilemapItem->m_Data);
 					}
 				}
 				else if(pLayerItem->m_Type == LAYERTYPE_QUADS)
@@ -1114,8 +1096,8 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 
 					if(pQuadsItem->m_NumQuads > 0)
 					{
-						const void *pData = DataFile.GetDataSwapped(pQuadsItem->m_Data);
-						if(pData != nullptr && (size_t)DataFile.GetDataSize(pQuadsItem->m_Data) >= sizeof(CQuad) * (size_t)pQuadsItem->m_NumQuads)
+						const void *pData = pMap->GetDataSwapped(pQuadsItem->m_Data);
+						if(pData != nullptr && (size_t)pMap->GetDataSize(pQuadsItem->m_Data) >= sizeof(CQuad) * (size_t)pQuadsItem->m_NumQuads)
 						{
 							pQuads->m_vQuads.resize(pQuadsItem->m_NumQuads);
 							mem_copy(pQuads->m_vQuads.data(), pData, sizeof(CQuad) * pQuadsItem->m_NumQuads);
@@ -1126,7 +1108,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 							str_format(aBuf, sizeof(aBuf), "Error: Failed to read quads of layer %d.", l);
 							ErrorHandler(aBuf);
 						}
-						DataFile.UnloadData(pQuadsItem->m_Data);
+						pMap->UnloadData(pQuadsItem->m_Data);
 					}
 
 					pGroup->AddLayer(pQuads);
@@ -1153,8 +1135,8 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					// load data
 					if(pSoundsItem->m_NumSources > 0)
 					{
-						const void *pData = DataFile.GetDataSwapped(pSoundsItem->m_Data);
-						if(pData != nullptr && (size_t)DataFile.GetDataSize(pSoundsItem->m_Data) >= sizeof(CSoundSource) * (size_t)pSoundsItem->m_NumSources)
+						const void *pData = pMap->GetDataSwapped(pSoundsItem->m_Data);
+						if(pData != nullptr && (size_t)pMap->GetDataSize(pSoundsItem->m_Data) >= sizeof(CSoundSource) * (size_t)pSoundsItem->m_NumSources)
 						{
 							pSounds->m_vSources.resize(pSoundsItem->m_NumSources);
 							mem_copy(pSounds->m_vSources.data(), pData, sizeof(CSoundSource) * pSoundsItem->m_NumSources);
@@ -1165,7 +1147,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 							str_format(aBuf, sizeof(aBuf), "Error: Failed to read sound sources of layer %d.", l);
 							ErrorHandler(aBuf);
 						}
-						DataFile.UnloadData(pSoundsItem->m_Data);
+						pMap->UnloadData(pSoundsItem->m_Data);
 					}
 
 					pGroup->AddLayer(pSounds);
@@ -1195,8 +1177,8 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					// load data
 					if(pSoundsItem->m_NumSources > 0)
 					{
-						const CSoundSourceDeprecated *pData = (const CSoundSourceDeprecated *)DataFile.GetDataSwapped(pSoundsItem->m_Data);
-						if(pData == nullptr || (size_t)DataFile.GetDataSize(pSoundsItem->m_Data) < sizeof(CSoundSourceDeprecated) * (size_t)pSoundsItem->m_NumSources)
+						const CSoundSourceDeprecated *pData = (const CSoundSourceDeprecated *)pMap->GetDataSwapped(pSoundsItem->m_Data);
+						if(pData == nullptr || (size_t)pMap->GetDataSize(pSoundsItem->m_Data) < sizeof(CSoundSourceDeprecated) * (size_t)pSoundsItem->m_NumSources)
 						{
 							char aBuf[128];
 							str_format(aBuf, sizeof(aBuf), "Error: Failed to read sound sources of layer %d.", l);
@@ -1227,7 +1209,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 							}
 						}
 
-						DataFile.UnloadData(pSoundsItem->m_Data);
+						pMap->UnloadData(pSoundsItem->m_Data);
 					}
 				}
 			}
@@ -1236,13 +1218,13 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 
 	// load envelopes
 	{
-		const CMapBasedEnvelopePointAccess EnvelopePoints(&DataFile);
+		const CMapBasedEnvelopePointAccess EnvelopePoints(pMap.get());
 
 		int EnvelopeStart, EnvelopeNum;
-		DataFile.GetType(MAPITEMTYPE_ENVELOPE, &EnvelopeStart, &EnvelopeNum);
+		pMap->GetType(MAPITEMTYPE_ENVELOPE, &EnvelopeStart, &EnvelopeNum);
 		for(int EnvelopeIndex = 0; EnvelopeIndex < EnvelopeNum; EnvelopeIndex++)
 		{
-			CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(EnvelopeStart + EnvelopeIndex);
+			CMapItemEnvelope *pItem = (CMapItemEnvelope *)pMap->GetItem(EnvelopeStart + EnvelopeIndex);
 			int Channels = pItem->m_Channels;
 			if(Channels <= 0 || Channels == 2 || Channels > CEnvPoint::MAX_CHANNELS)
 			{
@@ -1278,10 +1260,10 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 	// load automapper configurations
 	{
 		int AutomapperConfigStart, AutomapperConfigNum;
-		DataFile.GetType(MAPITEMTYPE_AUTOMAPPER_CONFIG, &AutomapperConfigStart, &AutomapperConfigNum);
+		pMap->GetType(MAPITEMTYPE_AUTOMAPPER_CONFIG, &AutomapperConfigStart, &AutomapperConfigNum);
 		for(int i = 0; i < AutomapperConfigNum; i++)
 		{
-			CMapItemAutoMapperConfig *pItem = (CMapItemAutoMapperConfig *)DataFile.GetItem(AutomapperConfigStart + i);
+			CMapItemAutoMapperConfig *pItem = (CMapItemAutoMapperConfig *)pMap->GetItem(AutomapperConfigStart + i);
 			if(pItem->m_Version == 1)
 			{
 				if(pItem->m_GroupId >= 0 && (size_t)pItem->m_GroupId < m_vpGroups.size() &&
