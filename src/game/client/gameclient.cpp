@@ -6645,7 +6645,8 @@ void CGameClient::UpdateRenderedCharacters()
 			Client()->m_IsLocalFrozen = pChar && pChar->m_FreezeTime > 0;
 
 		const bool IsPracticeParticipant = m_FastPractice.Enabled() && m_FastPractice.IsPracticeParticipant(i);
-		bool AntiPingPlayer = AntiPingPlayers() == 1 || (AntiPingPlayers() >= 2 && pChar && pChar->IsInterfering());
+		const bool IsDummy = PredictDummy() && i == m_aLocalIds[!g_Config.m_ClDummy];
+		bool AntiPingPlayer = AntiPingPlayers() == 1 || (AntiPingPlayers() >= 2 && (IsDummy || (pChar && pChar->IsInterfering())));
 		if(Predict() && (i == m_Snap.m_LocalClientId || IsPracticeParticipant || (AntiPingPlayer && !IsOtherTeam(i))) && pChar)
 		{
 			m_aClients[i].m_Predicted.Write(&m_aClients[i].m_RenderCur);
