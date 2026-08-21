@@ -1431,7 +1431,9 @@ CCharacter::CCharacter(CGameWorld *pGameWorld, int Id, CNetObj_Character *pChar,
 	m_Core.Reset();
 	m_Core.Init(&GameWorld()->m_Core, GameWorld()->Collision(), GameWorld()->Teams());
 	m_Core.m_Id = Id;
-	m_Core.SetAntiPingInterfereCallback(AntiPingInterfereCb, this);
+	m_Core.SetAntiPingInterfereCallback([this](int ClientId, bool DisallowReset) {
+		AntiPingInterference(ClientId, DisallowReset, true);
+	});
 	m_Core.m_ActiveWeapon = -1; // set by the first Read below
 	mem_zero(&m_Core.m_Ninja, sizeof(m_Core.m_Ninja));
 	m_Core.m_LeftWall = true;
@@ -1458,19 +1460,13 @@ CCharacter::CCharacter(CGameWorld *pGameWorld, int Id, CNetObj_Character *pChar,
 	Read(pChar, pExtended, false);
 }
 
-void CCharacter::AntiPingInterfereCb(int ClientId, bool DisallowReset, void *pUser)
+void CCharacter::AntiPingInterference(int ClientId, bool DisallowReset, bool HasToBeUnfrozen)
 {
-	CCharacter *pThis = (CCharacter *)pUser;
 	// 非冻结时为我们钩住或撞到的玩家启用 antiping；被救援时非冻结检查有帮助
 	// 若干扰的玩家本身弹开或钩住别人，则级联预测：被干扰者也可为他人启用 antiping
-	if(!pThis->m_FreezeTime)
-	{
-		pThis->AntiPingInterference(ClientId, DisallowReset);
-	}
-}
+	if(HasToBeUnfrozen && m_FreezeTime)
+		return;
 
-void CCharacter::AntiPingInterference(int ClientId, bool DisallowReset)
-{
 	bool AllowEnablePrediction = m_IsLocal || m_Interfering;
 	if(!AllowEnablePrediction && !DisallowReset)
 	{
