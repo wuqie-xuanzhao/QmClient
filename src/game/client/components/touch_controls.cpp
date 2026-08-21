@@ -613,14 +613,24 @@ void CTouchControls::CJoystickTouchButtonBehavior::OnDeactivate(bool ByFinger)
 void CTouchControls::CJoystickTouchButtonBehavior::OnUpdate()
 {
 	CControls &Controls = m_pTouchControls->GameClient()->m_Controls;
+	const float Zoom = m_pTouchControls->GameClient()->m_Snap.m_SpecInfo.m_Active ? m_pTouchControls->GameClient()->m_Camera.m_Zoom : 1.0f;
 	if(m_pTouchControls->GameClient()->m_Snap.m_SpecInfo.m_Active)
 	{
 		vec2 WorldScreenSize;
-		m_pTouchControls->Graphics()->CalcScreenParams(m_pTouchControls->Graphics()->GameScreenAspect(), m_pTouchControls->GameClient()->m_Camera.m_Zoom, &WorldScreenSize.x, &WorldScreenSize.y);
+		m_pTouchControls->Graphics()->CalcScreenParams(m_pTouchControls->Graphics()->GameScreenAspect(), Zoom, &WorldScreenSize.x, &WorldScreenSize.y);
 		Controls.m_aMousePos[g_Config.m_ClDummy] += -m_AccumulatedDelta * WorldScreenSize;
 		Controls.m_aMouseInputType[g_Config.m_ClDummy] = CControls::EMouseInputType::RELATIVE;
 		Controls.m_aMousePos[g_Config.m_ClDummy].x = std::clamp(Controls.m_aMousePos[g_Config.m_ClDummy].x, -201.0f * 32, (m_pTouchControls->Collision()->GetWidth() + 201.0f) * 32.0f);
 		Controls.m_aMousePos[g_Config.m_ClDummy].y = std::clamp(Controls.m_aMousePos[g_Config.m_ClDummy].y, -201.0f * 32, (m_pTouchControls->Collision()->GetHeight() + 201.0f) * 32.0f);
+		m_AccumulatedDelta = vec2(0.0f, 0.0f);
+	}
+	else if(IsRelative())
+	{
+		vec2 WorldScreenSize;
+		m_pTouchControls->Graphics()->CalcScreenParams(m_pTouchControls->Graphics()->GameScreenAspect(), Zoom, &WorldScreenSize.x, &WorldScreenSize.y);
+		Controls.m_aMousePos[g_Config.m_ClDummy] += m_AccumulatedDelta * WorldScreenSize;
+		Controls.m_aMouseInputType[g_Config.m_ClDummy] = CControls::EMouseInputType::RELATIVE;
+		Controls.ClampMousePos();
 		m_AccumulatedDelta = vec2(0.0f, 0.0f);
 	}
 	else
@@ -644,6 +654,12 @@ int CTouchControls::CJoystickActionTouchButtonBehavior::SelectedAction() const
 
 // Joystick that only aims.
 int CTouchControls::CJoystickAimTouchButtonBehavior::SelectedAction() const
+{
+	return ACTION_AIM;
+}
+
+// 只瞄准并相对移动鼠标指针的摇杆。
+int CTouchControls::CJoystickAimRelativeTouchButtonBehavior::SelectedAction() const
 {
 	return ACTION_AIM;
 }
@@ -960,6 +976,7 @@ int CTouchControls::NextDirectTouchAction() const
 		case EDirectTouchIngameMode::ACTION:
 			return m_ActionSelected;
 		case EDirectTouchIngameMode::AIM:
+		case EDirectTouchIngameMode::AIM_RELATIVE:
 			return ACTION_AIM;
 		case EDirectTouchIngameMode::FIRE:
 			return ACTION_FIRE;
