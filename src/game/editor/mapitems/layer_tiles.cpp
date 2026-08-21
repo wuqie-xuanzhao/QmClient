@@ -162,12 +162,12 @@ void CLayerTiles::MakePalette() const
 			m_pTiles[y * m_Width + x].m_Index = y * 16 + x;
 }
 
-void CLayerTiles::Render()
+void CLayerTiles::Render(const CEditorMap *pRenderMap)
 {
 	IGraphics::CTextureHandle Texture;
-	if(m_Image >= 0 && (size_t)m_Image < Map()->m_vpImages.size())
+	if(m_Image >= 0 && (size_t)m_Image < pRenderMap->m_vpImages.size())
 	{
-		const auto &pImage = Map()->m_vpImages[m_Image];
+		const auto &pImage = pRenderMap->m_vpImages[m_Image];
 		if(pImage->m_Width % 16 == 0 && pImage->m_Height % 16 == 0)
 		{
 			Texture = pImage->m_Texture;
@@ -188,7 +188,7 @@ void CLayerTiles::Render()
 	Graphics()->TextureSet(Texture);
 
 	ColorRGBA ColorEnv = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	Map()->m_EnvelopeEvaluator.EnvelopeEval(m_ColorEnvOffset, m_ColorEnv, ColorEnv, 4);
+	pRenderMap->m_EnvelopeEvaluator.EnvelopeEval(m_ColorEnvOffset, m_ColorEnv, ColorEnv, 4);
 	const ColorRGBA Color = ColorRGBA(m_Color.r / 255.0f, m_Color.g / 255.0f, m_Color.b / 255.0f, m_Color.a / 255.0f).Multiply(ColorEnv);
 
 	Graphics()->BlendNone();
