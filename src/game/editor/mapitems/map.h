@@ -173,6 +173,7 @@ public:
 	CMapEnvelopeEvaluator m_EnvelopeEvaluator;
 	CFontTyper::CState m_FontTyperState;
 	CEditorUiElements m_EditorUiElements;
+	CEditorHistoryUiState m_EditorHistoryUiState;
 	CMapGrid::CState m_MapGridState;
 	CProofMode::CState m_ProofModeState;
 	CQuadKnife::CState m_QuadKnifeState;
