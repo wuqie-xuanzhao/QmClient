@@ -372,6 +372,8 @@ void CCharacter::FireWeapon()
 			pTarget->Unfreeze();
 
 			Hits++;
+
+			AntiPingInterference(pTarget->GetCid());
 		}
 
 		// if we Hit anything, we have to wait for the reload
@@ -628,6 +630,16 @@ void CCharacter::Tick()
 	HandleWeapons();
 
 	DDRacePostCoreTick();
+
+	// antiping
+	if(IsInterfering())
+	{
+		// 玩家移动或钩住墙壁时关闭基于交互的动态 antiping
+		if((!m_FreezeTime || g_Config.m_ClAntiPingPlayers != 3) && (m_Input.m_Direction != m_PrevInput.m_Direction || m_Input.m_Jump != m_PrevInput.m_Jump || m_Core.m_TriggeredEvents & COREEVENT_HOOK_ATTACH_GROUND))
+		{
+			m_Interfering = false;
+		}
+	}
 
 	// Previnput
 	m_PrevInput = m_Input;
@@ -1419,6 +1431,7 @@ CCharacter::CCharacter(CGameWorld *pGameWorld, int Id, CNetObj_Character *pChar,
 	m_Core.Reset();
 	m_Core.Init(&GameWorld()->m_Core, GameWorld()->Collision(), GameWorld()->Teams());
 	m_Core.m_Id = Id;
+	m_Core.SetAntiPingInterfereCallback(AntiPingInterfereCb, this);
 	m_Core.m_ActiveWeapon = -1; // set by the first Read below
 	mem_zero(&m_Core.m_Ninja, sizeof(m_Core.m_Ninja));
 	m_Core.m_LeftWall = true;
@@ -1443,6 +1456,34 @@ CCharacter::CCharacter(CGameWorld *pGameWorld, int Id, CNetObj_Character *pChar,
 
 	ResetPrediction();
 	Read(pChar, pExtended, false);
+}
+
+void CCharacter::AntiPingInterfereCb(int ClientId, bool DisallowReset, void *pUser)
+{
+	CCharacter *pThis = (CCharacter *)pUser;
+	// 非冻结时为我们钩住或撞到的玩家启用 antiping；被救援时非冻结检查有帮助
+	// 若干扰的玩家本身弹开或钩住别人，则级联预测：被干扰者也可为他人启用 antiping
+	if(!pThis->m_FreezeTime)
+	{
+		pThis->AntiPingInterference(ClientId, DisallowReset);
+	}
+}
+
+void CCharacter::AntiPingInterference(int ClientId, bool DisallowReset)
+{
+	bool AllowEnablePrediction = m_IsLocal || m_Interfering;
+	if(!AllowEnablePrediction && !DisallowReset)
+	{
+		// 非预测玩家与目标交互时关闭 antiping（此处不含玩家弹跳）
+		if(!GameWorld()->GetCharacterById(ClientId)->m_FreezeTime || g_Config.m_ClAntiPingPlayers != 3)
+		{
+			GameWorld()->GetCharacterById(ClientId)->m_Interfering = false;
+		}
+	}
+	else if(AllowEnablePrediction)
+	{
+		GameWorld()->GetCharacterById(ClientId)->m_Interfering = true;
+	}
 }
 
 void CCharacter::ResetPrediction()
@@ -1479,6 +1520,7 @@ void CCharacter::ResetPrediction()
 	}
 	m_LastWeaponSwitchTick = 0;
 	m_LastTuneZoneTick = 0;
+	m_Interfering = false;
 	m_LastDamageTick = -1;
 	m_LastDamageFrom = -1;
 	m_LastDamageWeapon = -1;
@@ -1520,6 +1562,13 @@ void CCharacter::Read(CNetObj_Character *pChar, CNetObj_DDNetCharacter *pExtende
 		else
 		{
 			Unfreeze();
+		}
+
+		// 等待服务器告知冻结状态而非用预测的 Freeze()，因为后者可能误判导致 antiping 抖动
+		if(pExtended->m_FreezeEnd != 0 && g_Config.m_ClAntiPingPlayers == 3)
+		{
+			// 若开启，冻结玩家始终预测以便救援
+			m_Interfering = true;
 		}
 
 		m_Core.ReadDDNet(pExtended);
