@@ -1205,14 +1205,31 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	}
 
 	static CLineInputBuffered<25> s_FlagFilterInput;
-	static std::vector<const CCountryFlags::CCountryFlag *> s_vpFilteredFlags;
-	s_vpFilteredFlags.clear();
-	s_vpFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());
+	class CCountryFlagEntry
+	{
+	public:
+		const CCountryFlags::CCountryFlag *m_pFlag;
+		std::optional<std::pair<int, int>> m_NameMatch;
+	};
+	static std::vector<CCountryFlagEntry> s_vFilteredFlags;
+	s_vFilteredFlags.clear();
+	s_vFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());
 	for(size_t i = 0; i < GameClient()->m_CountryFlags.Num(); ++i)
 	{
 		const CCountryFlags::CCountryFlag &Entry = GameClient()->m_CountryFlags.GetByIndex(i);
-		if(str_find_nocase(Entry.m_aCountryCodeString, s_FlagFilterInput.GetString()))
-			s_vpFilteredFlags.push_back(&Entry);
+		if(!s_FlagFilterInput.IsEmpty())
+		{
+			const char *pNameMatchEnd;
+			const char *pNameMatchStart = str_utf8_find_nocase(Entry.m_aCountryCodeString, s_FlagFilterInput.GetString(), &pNameMatchEnd);
+			if(pNameMatchStart != nullptr)
+			{
+				s_vFilteredFlags.emplace_back(&Entry, std::make_pair<int, int>(pNameMatchStart - Entry.m_aCountryCodeString, pNameMatchEnd - pNameMatchStart));
+			}
+		}
+		else
+		{
+			s_vFilteredFlags.emplace_back(&Entry, std::nullopt);
+		}
 	}
 	const IUiContext PlayerFlagSearchCtx = SettingsUiContext("settings_player_flag_search", UiScale);
 
@@ -1262,14 +1279,14 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			static CListBox s_ListBox;
 			s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_GRID);
 			s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
-			s_ListBox.DoStart(48.0f * UiScale, s_vpFilteredFlags.size(), 10, 2, SelectedOld, &Content);
+			s_ListBox.DoStart(48.0f * UiScale, s_vFilteredFlags.size(), 10, 2, SelectedOld, &Content);
 			int VisibleFlags = 0;
-			for(size_t i = 0; i < s_vpFilteredFlags.size(); i++)
+			for(size_t i = 0; i < s_vFilteredFlags.size(); i++)
 			{
-				const CCountryFlags::CCountryFlag *pEntry = s_vpFilteredFlags[i];
-				if(pEntry->m_CountryCode == *pCountry)
+				const CCountryFlagEntry &Entry = s_vFilteredFlags[i];
+				if(Entry.m_pFlag->m_CountryCode == *pCountry)
 					SelectedOld = i;
-				const CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, SelectedOld >= 0 && (size_t)SelectedOld == i);
+				const CListboxItem Item = s_ListBox.DoNextItem(&Entry.m_pFlag->m_CountryCode, SelectedOld >= 0 && (size_t)SelectedOld == i);
 				if(!Item.m_Visible)
 					continue;
 				++VisibleFlags;
@@ -1280,9 +1297,18 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 				const float OldWidth = FlagRect.w;
 				FlagRect.w = FlagRect.h * 2.0f;
 				FlagRect.x += (OldWidth - FlagRect.w) / 2.0f;
-				GameClient()->m_CountryFlags.Render(pEntry->m_CountryCode, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), FlagRect.x, FlagRect.y, FlagRect.w, FlagRect.h);
-				if(pEntry->m_Texture.IsValid() || pEntry->m_CountryCode == -1)
-					Ui()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f * UiScale, TEXTALIGN_MC);
+				GameClient()->m_CountryFlags.Render(Entry.m_pFlag->m_CountryCode, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), FlagRect.x, FlagRect.y, FlagRect.w, FlagRect.h);
+				if(Entry.m_pFlag->m_Texture.IsValid() || Entry.m_pFlag->m_CountryCode == -1)
+				{
+					SLabelProperties Props;
+					Props.m_MaxWidth = Label.w - 5.0f;
+					if(Entry.m_NameMatch.has_value())
+					{
+						const auto [MatchStart, MatchLength] = Entry.m_NameMatch.value();
+						Props.m_vColorSplits.emplace_back(MatchStart, MatchLength, ColorRGBA(0.4f, 0.4f, 1.0f, 1.0f));
+					}
+					Ui()->DoLabel(&Label, Entry.m_pFlag->m_aCountryCodeString, 10.0f * UiScale, TEXTALIGN_MC, Props);
+				}
 			}
 			const int NewSelected = s_ListBox.DoEnd();
 			const bool FlagListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
@@ -1292,16 +1318,16 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 				SQmMenuUiFramePerf MenuUiPerf;
 				MenuUiPerf.m_pPage = "settings:player";
 				MenuUiPerf.m_pOperation = "flags_grid_scroll";
-				MenuUiPerf.m_ItemsTotal = (int)s_vpFilteredFlags.size();
+				MenuUiPerf.m_ItemsTotal = (int)s_vFilteredFlags.size();
 				MenuUiPerf.m_ItemsVisible = VisibleFlags;
 				MenuUiPerf.m_ItemsProcessed = VisibleFlags;
-				MenuUiPerf.m_ItemsSkipped = maximum(0, (int)s_vpFilteredFlags.size() - VisibleFlags);
+				MenuUiPerf.m_ItemsSkipped = maximum(0, (int)s_vFilteredFlags.size() - VisibleFlags);
 				MenuUiPerf.m_UiMs = MenuUiPerfEnabled ? (float)std::chrono::duration<double, std::milli>(time_get_nanoseconds() - MenuUiStartTime).count() : -1.0f;
 				QmLogMenuUiFramePerf(MenuUiPerf, Client());
 			}
-			if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)s_vpFilteredFlags.size())
+			if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)s_vFilteredFlags.size())
 			{
-				*pCountry = s_vpFilteredFlags[NewSelected]->m_CountryCode;
+				*pCountry = s_vFilteredFlags[NewSelected].m_pFlag->m_CountryCode;
 				SetNeedSendInfo();
 			}
 			ui_widget::SInputFieldOptions FlagSearchOptions;

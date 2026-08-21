@@ -320,6 +320,7 @@ _FONT_ASSIGNMENT_SOURCES = _TYPOGRAPHY_SOURCES + (_NAVIGATION_SOURCE,)
 # 颜色拾取器和地图 popup。新增例外必须在这里集中说明，禁止在业务页静默散落裸字号。
 _RAW_FONT_ALLOWLIST = (
 	"Entry.m_aCountryCodeString",
+	"Entry.m_pFlag->m_aCountryCodeString",
 	"pEntry->m_aCountryCodeString",
 	"&ChangeInfo, aStats",
 	"FONT_ICON_QUESTION",
