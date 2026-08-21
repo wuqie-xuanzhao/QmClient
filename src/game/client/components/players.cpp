@@ -274,6 +274,7 @@ float CPlayers::GetPlayerTargetAngle(
 }
 
 void CPlayers::RenderHookCollLine(
+	const CScreenRect &ScreenRect,
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
 	int ClientId)
@@ -350,6 +351,21 @@ void CPlayers::RenderHookCollLine(
 	const CCharacterCore &PlayerCore = GameClient()->m_aClients[ClientId].m_IsPredicted ? GameClient()->m_aClients[ClientId].m_Predicted : GameClient()->m_aClients[GameClient()->m_aLocalIds[g_Config.m_ClDummy]].m_Predicted;
 	float HookLength = PlayerCore.m_Tuning.m_HookLength;
 	float HookFireSpeed = PlayerCore.m_Tuning.m_HookFireSpeed;
+
+	// 检查玩家是否在屏幕外且朝远离屏幕的方向瞄准
+	// 若地图含 hook teleport 则无法预知是否会进入屏幕
+	if(!Collision()->HasHookTeleIns())
+	{
+		const float MaxHookReach = HookLength + HookFireSpeed;
+
+		if(Position.x < ScreenRect.m_TopLeft.x - (Direction.x >= 0 ? MaxHookReach : 0) ||
+			Position.x > ScreenRect.m_BottomRight.x + (Direction.x <= 0 ? MaxHookReach : 0) ||
+			Position.y < ScreenRect.m_TopLeft.y - (Direction.y >= 0 ? MaxHookReach : 0) ||
+			Position.y > ScreenRect.m_BottomRight.y + (Direction.y <= 0 ? MaxHookReach : 0))
+		{
+			return;
+		}
+	}
 
 	// TClient: Hook collision line length follows cursor distance
 	// 有问题,暂定改回原版
@@ -1921,6 +1937,7 @@ void CPlayers::OnRender()
 	// get screen edges to avoid rendering offscreen
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const CScreenRect ScreenRect = Graphics()->GetScreen();
 	// expand the edges to prevent popping in/out onscreen
 	float BorderBuffer = 100;
 	ScreenX0 -= BorderBuffer;
@@ -1980,7 +1997,7 @@ void CPlayers::OnRender()
 			continue;
 		}
 
-		RenderHookCollLine(&GameClient()->m_aClients[ClientId].m_RenderPrev, &GameClient()->m_aClients[ClientId].m_RenderCur, ClientId);
+		RenderHookCollLine(ScreenRect, &GameClient()->m_aClients[ClientId].m_RenderPrev, &GameClient()->m_aClients[ClientId].m_RenderCur, ClientId);
 
 		if(!in_range(GameClient()->m_aClients[ClientId].m_RenderPos.x, ScreenX0, ScreenX1) || !in_range(GameClient()->m_aClients[ClientId].m_RenderPos.y, ScreenY0, ScreenY1))
 		{
@@ -2011,7 +2028,7 @@ void CPlayers::OnRender()
 	if(RenderLastId != -1 && IsPlayerInfoAvailable(RenderLastId))
 	{
 		const CGameClient::CClientData *pClientData = &GameClient()->m_aClients[RenderLastId];
-		RenderHookCollLine(&pClientData->m_RenderPrev, &pClientData->m_RenderCur, RenderLastId);
+		RenderHookCollLine(ScreenRect, &pClientData->m_RenderPrev, &pClientData->m_RenderCur, RenderLastId);
 		RenderWeaponTrajectory(&pClientData->m_RenderPrev, &pClientData->m_RenderCur, RenderLastId);
 		RenderPlayer(&pClientData->m_RenderPrev, &aRenderCurForTee[RenderLastId], &aRenderInfo[RenderLastId], RenderLastId);
 	}

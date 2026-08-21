@@ -27,7 +27,7 @@
 #define m_RiBetterLasers m_QmLaserEnhanced
 #define m_RiLaserGlowIntensity m_QmLaserGlowIntensity
 
-void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
+void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId, const CScreenRect &ScreenRect)
 {
 	int CurWeapon = std::clamp(pCurrent->m_Type, 0, NUM_WEAPONS - 1);
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
@@ -94,6 +94,8 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 	}
 
 	vec2 Pos = CalcPos(pCurrent->m_StartPos, pCurrent->m_StartVel, Curvature, Speed, Ct);
+	if(!ScreenRect.Inside(Pos))
+		return;
 	vec2 PrevPos = CalcPos(pCurrent->m_StartPos, pCurrent->m_StartVel, Curvature, Speed, Ct - 0.001f);
 
 	float Alpha = 1.0f;
@@ -599,6 +601,23 @@ void CItems::OnRender()
 
 	bool UsePredicted = !RenderingMini && GameClient()->Predict() && GameClient()->AntiPingGunfire();
 	auto &aSwitchers = GameClient()->Switchers();
+
+	CScreenRect ScreenRectLaser = Graphics()->GetScreen();
+	CScreenRect ScreenRectProjectile = ScreenRectLaser;
+	CScreenRect ScreenRectPickup = ScreenRectLaser;
+
+	constexpr float TileSize = 64.0f;
+	ScreenRectProjectile.Expand(TileSize);
+	ScreenRectLaser.Expand(TileSize / 2.0f);
+	ScreenRectPickup.Expand(1.75f * TileSize, 0.75f * TileSize);
+
+	auto IsLaserInside = [&](const CLaserData &LaserData) -> bool {
+		const vec2 &From = LaserData.m_From;
+		const vec2 &To = LaserData.m_To;
+		return !((From.x < ScreenRectLaser.m_TopLeft.x && To.x < ScreenRectLaser.m_TopLeft.x) || (From.x > ScreenRectLaser.m_BottomRight.x && To.x > ScreenRectLaser.m_BottomRight.x) ||
+			 (From.y < ScreenRectLaser.m_TopLeft.y && To.y < ScreenRectLaser.m_TopLeft.y) || (From.y > ScreenRectLaser.m_BottomRight.y && To.y > ScreenRectLaser.m_BottomRight.y));
+	};
+
 	if(UsePredicted)
 	{
 		for(auto *pProj = (CProjectile *)GameClient()->m_PrevPredictedWorld.FindFirst(CGameWorld::ENTTYPE_PROJECTILE); pProj; pProj = (CProjectile *)pProj->NextEntity())
@@ -607,7 +626,7 @@ void CItems::OnRender()
 				continue;
 
 			CProjectileData Data = pProj->GetData();
-			RenderProjectile(&Data, pProj->GetId());
+			RenderProjectile(&Data, pProj->GetId(), ScreenRectProjectile);
 		}
 		for(CEntity *pEnt = GameClient()->m_PrevPredictedWorld.FindFirst(CGameWorld::ENTTYPE_LASER); pEnt; pEnt = pEnt->NextEntity())
 		{
@@ -615,6 +634,8 @@ void CItems::OnRender()
 			if(!pLaser || pLaser->GetOwner() < 0 || !GameClient()->m_aClients[pLaser->GetOwner()].m_IsPredictedLocal)
 				continue;
 			CLaserData Data = pLaser->GetData();
+			if(!IsLaserInside(Data))
+				continue;
 			RenderLaser(&Data, true);
 		}
 		for(auto *pPickup = (CPickup *)GameClient()->m_PrevPredictedWorld.FindFirst(CGameWorld::ENTTYPE_PICKUP); pPickup; pPickup = (CPickup *)pPickup->NextEntity())
@@ -665,7 +686,7 @@ void CItems::OnRender()
 						continue;
 				}
 			}
-			RenderProjectile(&Data, Item.m_Id);
+			RenderProjectile(&Data, Item.m_Id, ScreenRectProjectile);
 		}
 		else if(Item.m_Type == NETOBJTYPE_PICKUP || Item.m_Type == NETOBJTYPE_DDNETPICKUP)
 		{
@@ -680,6 +701,8 @@ void CItems::OnRender()
 				if(pPickup && pPickup->InDDNetTile())
 					continue;
 			}
+			if(!ScreenRectPickup.Inside(Data.m_Pos))
+				continue;
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
 			if(pPrev)
 				RenderPickup((const CNetObj_Pickup *)pPrev, (const CNetObj_Pickup *)pData, false, Data.m_Flags);
@@ -694,6 +717,8 @@ void CItems::OnRender()
 			}
 
 			CLaserData Data = ExtractLaserInfo(Item.m_Type, pData, &GameClient()->m_GameWorld, pEntEx);
+			if(!IsLaserInside(Data))
+				continue;
 			bool Inactive = !IsSuper && Data.m_SwitchNumber > 0 && Data.m_SwitchNumber < (int)aSwitchers.size() && !aSwitchers[Data.m_SwitchNumber].m_aStatus[SwitcherTeam];
 
 			bool IsEntBlink = false;
