@@ -236,10 +236,8 @@ public:
 		m_ShowMousePointer = true;
 
 		m_GuiActive = true;
-		m_PreviewZoom = false;
 
 		m_ShowTileInfo = SHOW_TILE_OFF;
-		m_ShowDetail = true;
 		m_Animate = false;
 		m_AnimateStart = 0.0f;
 		m_AnimateTime = 0.0f;
@@ -460,7 +458,6 @@ public:
 	bool m_ShowMousePointer;
 	bool m_GuiActive;
 
-	bool m_PreviewZoom;
 	const void *m_pContainerPanned;
 	const void *m_pContainerPannedLast;
 
@@ -471,7 +468,6 @@ public:
 		SHOW_TILE_HEXADECIMAL
 	};
 	EShowTile m_ShowTileInfo;
-	bool m_ShowDetail;
 
 	bool m_Animate;
 	float m_AnimateStart;

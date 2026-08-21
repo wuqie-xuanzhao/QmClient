@@ -445,10 +445,10 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// detail button
 		ToolbarTop.VSplitLeft(40.0f, &Button, &ToolbarTop);
 		static int s_HqButton = 0;
-		if(DoButton_Editor(&s_HqButton, Localize("HD", "Editor"), m_ShowDetail, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+H] Toggle high detail.", "Editor")) ||
+		if(DoButton_Editor(&s_HqButton, Localize("HD", "Editor"), Map()->m_ShowDetail, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+H] Toggle high detail.", "Editor")) ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_H) && ModPressed))
 		{
-			m_ShowDetail = !m_ShowDetail;
+			Map()->m_ShowDetail = !Map()->m_ShowDetail;
 		}
 
 		ToolbarTop.VSplitLeft(5.0f, nullptr, &ToolbarTop);
@@ -503,9 +503,9 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// zoom button
 		ToolbarTop.VSplitLeft(40.0f, &Button, &ToolbarTop);
 		static int s_ZoomButton = 0;
-		if(DoButton_Editor(&s_ZoomButton, Localize("Zoom", "Editor"), m_PreviewZoom, &Button, BUTTONFLAG_LEFT, Localize("Toggle preview of how layers will be zoomed ingame.", "Editor")))
+		if(DoButton_Editor(&s_ZoomButton, Localize("Zoom", "Editor"), Map()->m_PreviewZoom, &Button, BUTTONFLAG_LEFT, Localize("Toggle preview of how layers will be zoomed ingame.", "Editor")))
 		{
-			m_PreviewZoom = !m_PreviewZoom;
+			Map()->m_PreviewZoom = !Map()->m_PreviewZoom;
 		}
 
 		ToolbarTop.VSplitLeft(5.0f, nullptr, &ToolbarTop);

@@ -44,7 +44,7 @@ void CLayerGroup::Convert(CUIRect *pRect) const
 void CLayerGroup::Mapping(float *pPoints) const
 {
 	float NormalParallaxZoom = std::clamp((double)(maximum(m_ParallaxX, m_ParallaxY)), 0., 100.);
-	float ParallaxZoom = Editor()->m_PreviewZoom ? NormalParallaxZoom : 100.0f;
+	float ParallaxZoom = Editor()->Map()->m_PreviewZoom ? NormalParallaxZoom : 100.0f;
 
 	Graphics()->MapScreenToWorld(
 		Editor()->MapView()->GetWorldOffset().x, Editor()->MapView()->GetWorldOffset().y,
@@ -109,7 +109,7 @@ void CLayerGroup::Render()
 				if(pTiles->m_HasGame || pTiles->m_HasFront || pTiles->m_HasTele || pTiles->m_HasSpeedup || pTiles->m_HasTune || pTiles->m_HasSwitch)
 					continue;
 			}
-			if(Editor()->m_ShowDetail || !(pLayer->m_Flags & LAYERFLAG_DETAIL))
+			if(Editor()->Map()->m_ShowDetail || !(pLayer->m_Flags & LAYERFLAG_DETAIL))
 				pLayer->Render();
 		}
 	}
