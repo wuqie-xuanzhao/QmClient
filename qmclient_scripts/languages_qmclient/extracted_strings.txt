@@ -82,7 +82,6 @@
 === All Local Saves ===
 === Saves for '%s' ===
 [%s] %s (Map: %s, Time: %s)
-[Developer]
 _ or ' ' = blank spacer
 a = View angle
 A demo with this name already exists
@@ -487,6 +486,7 @@ Bind Wheel Key
 Bit flags for disabling settings tabs
 Black
 Blend mode
+Blink the active local tee
 Block enemy chat
 Block votes from blacklisted addresses
 Block words
@@ -974,6 +974,7 @@ Detailed reason
 Detect compatible solo prompts from custom servers
 Detection distance
 Detection time
+Developer
 DF
 Diamond
 died

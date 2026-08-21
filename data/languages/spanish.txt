@@ -2927,6 +2927,9 @@ Detection distance
 Detection time
 == Tiempo de detección
 
+Developer
+== Desarrollador
+
 DF
 == DF
 

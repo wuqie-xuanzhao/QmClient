@@ -6725,7 +6725,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/nameplates.cpp",
       "context": "",
-      "line": 2021
+      "line": 2023
     },
     {
       "key": "Clan name size on nameplate",
@@ -11066,6 +11066,13 @@
       "source": "src/game/client/components/qmclient/menus_qmclient.cpp",
       "context": "",
       "line": 3472
+    },
+    {
+      "key": "Developer",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/nameplates.cpp",
+      "context": "",
+      "line": 679
     },
     {
       "key": "DF",
@@ -43769,7 +43776,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/editor/mapitems/map.cpp",
       "context": "Editor",
-      "line": 742
+      "line": 725
     },
     {
       "key": "Toolbox page",

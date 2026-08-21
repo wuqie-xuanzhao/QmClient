@@ -2927,6 +2927,9 @@ Detection distance
 Detection time
 == 判定时间
 
+Developer
+== 开发者
+
 DF
 == DF
 

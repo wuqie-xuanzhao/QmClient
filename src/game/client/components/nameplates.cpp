@@ -675,7 +675,9 @@ protected:
 	{
 		m_FontSize = Data.m_FontSize * ms_FontSizeScale;
 		m_Rainbow = Data.m_DeveloperRainbow;
-		const char *pText = Localize("[Developer]");
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "[%s]", Localize("Developer"));
+		const char *pText = aBuf;
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		if(m_Rainbow)

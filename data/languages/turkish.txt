@@ -2927,6 +2927,9 @@ Detection distance
 Detection time
 == Algılama süresi
 
+Developer
+== Geliştirici
+
 DF
 == DF
 

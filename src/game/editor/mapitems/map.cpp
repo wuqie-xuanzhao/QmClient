@@ -1036,24 +1036,3 @@ CSoundSource *CEditorMap::SelectedSoundSource() const
 		return &pSounds->m_vSources[m_SelectedSoundSource];
 	return nullptr;
 }
-void CEditorMap::PlaceBorderTiles()
-{
-	std::shared_ptr<CLayerTiles> pT = std::static_pointer_cast<CLayerTiles>(SelectedLayerType(0, LAYERTYPE_TILES));
-
-	for(int i = 0; i < pT->m_Width * pT->m_Height; ++i)
-	{
-		if(i % pT->m_Width < 2 || i % pT->m_Width > pT->m_Width - 3 || i < pT->m_Width * 2 || i > pT->m_Width * (pT->m_Height - 2))
-		{
-			int x = i % pT->m_Width;
-			int y = i / pT->m_Width;
-
-			CTile Current = pT->m_pTiles[i];
-			Current.m_Index = 1;
-			pT->SetTile(x, y, Current);
-		}
-	}
-
-	m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(this, m_SelectedGroup), "Tool 'Make borders'");
-
-	OnModify();
-}
