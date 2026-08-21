@@ -1022,7 +1022,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					{
 						void *pSwitchData = pMap->GetData(pTilemapItem->m_Switch);
 						unsigned int Size = pMap->GetDataSize(pTilemapItem->m_Switch);
-						if(Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CSwitchTile))
+						if(pSwitchData != nullptr && Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CSwitchTile))
 						{
 							CSwitchTile *pLayerSwitchTiles = std::static_pointer_cast<CLayerSwitch>(pTiles)->m_pSwitchTile;
 							mem_copy(pLayerSwitchTiles, pSwitchData, (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CSwitchTile));
@@ -1051,7 +1051,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandle
 					{
 						void *pTuneData = pMap->GetData(pTilemapItem->m_Tune);
 						unsigned int Size = pMap->GetDataSize(pTilemapItem->m_Tune);
-						if(Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CTuneTile))
+						if(pTuneData != nullptr && Size >= (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CTuneTile))
 						{
 							CTuneTile *pLayerTuneTiles = std::static_pointer_cast<CLayerTune>(pTiles)->m_pTuneTile;
 							mem_copy(pLayerTuneTiles, pTuneData, (size_t)pTiles->m_Width * pTiles->m_Height * sizeof(CTuneTile));

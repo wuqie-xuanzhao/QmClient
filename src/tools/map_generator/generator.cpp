@@ -391,7 +391,11 @@ namespace
 		OutLayer.m_Width = pTilemapItem->m_Width;
 		OutLayer.m_Height = pTilemapItem->m_Height;
 		OutLayer.m_vTiles.assign((size_t)OutLayer.m_Width * OutLayer.m_Height, MakeTile(TILE_AIR));
-		CMap::ExtractTiles(OutLayer.m_vTiles.data(), OutLayer.m_vTiles.size(), static_cast<const CTile *>(pData), (size_t)DataSize / sizeof(CTile));
+		if(!CMap::ExtractTiles(OutLayer.m_vTiles.data(), OutLayer.m_vTiles.size(), static_cast<const CTile *>(pData), (size_t)DataSize / sizeof(CTile)))
+		{
+			log_error("map_generator", "Failed to extract tile layer data");
+			return false;
+		}
 
 		char aName[16] = "";
 		if(pTilemapItem->m_Version >= 3)
