@@ -86,8 +86,7 @@ bool CMovingTiles::ShouldRenderMovingWater() const
 	if(Client()->State() != IClient::STATE_ONLINE)
 		return false;
 
-	CServerInfo ServerInfo = {};
-	Client()->GetServerInfo(&ServerInfo);
+	const CServerInfo &ServerInfo = Client()->ServerInfo();
 
 	const char *pServerInfoGameType = ServerInfo.m_aGameType;
 	const char *pCommunityId = ServerInfo.m_aCommunityId;

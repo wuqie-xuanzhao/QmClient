@@ -4,6 +4,7 @@
 #include "chat.h"
 
 #include <base/log.h>
+#include <base/log_color.h>
 
 #include <engine/editor.h>
 #include <engine/external/regex.h>
@@ -755,11 +756,10 @@ void CChat::RefreshArgumentCandidates()
 		return;
 	m_ArgumentCompletionNextSourceCheck = Now + time_freq() / 4;
 
-	CServerInfo CurrentServerInfo;
 	bool IsDdnetMode = false;
+	const CServerInfo &CurrentServerInfo = Client()->ServerInfo();
 	if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
 	{
-		Client()->GetServerInfo(&CurrentServerInfo);
 		IsDdnetMode = str_comp(CurrentServerInfo.m_aCommunityId, IServerBrowser::COMMUNITY_DDNET) == 0;
 		if(!IsDdnetMode && ServerBrowser() != nullptr && Client()->ServerAddress() != nullptr)
 		{
@@ -1225,7 +1225,7 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 	else if(str_comp(pMode, "team") == 0)
 		pChat->EnableMode(1);
 	else
-		pChat->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "expected all or team as mode");
+		log_error("chat", "expected all or team as mode");
 
 	if(pResult->GetString(1)[0])
 	{
@@ -2160,9 +2160,7 @@ void CChat::PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLi
 			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
 	}
 
-	char aBuf[1024];
-	str_format(aBuf, sizeof(aBuf), "%s%s%s", aName, ClientId >= 0 ? ": " : "", pLine);
-	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor);
+	log_info_color(color_cast<LOG_COLOR>(ChatLogColor), pFrom, "%s%s%s", aName, ClientId >= 0 ? ": " : "", pLine);
 }
 
 ColorRGBA CChat::PlayerNameColor(int ClientId, int NameColor, bool TeamMessage) const

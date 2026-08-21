@@ -198,8 +198,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			break;
 		NumDurationLabels = i + 1;
 	}
-	if(NumDurationLabels > 0 && m_SkipDurationIndex >= NumDurationLabels)
-		m_SkipDurationIndex = maximum(0, NumDurationLabels - 1);
+	if(NumDurationLabels < 2)
+	{
+		m_SkipDurationIndex = 0;
+	}
+	else if(m_SkipDurationIndex >= NumDurationLabels)
+	{
+		m_SkipDurationIndex = NumDurationLabels - 1;
+	}
 
 	const auto &&NormalizePendingSlice = [&]() {
 		const int StartTick = g_Config.m_ClDemoSliceBegin == -1 ? pInfo->m_FirstTick : g_Config.m_ClDemoSliceBegin;
@@ -263,7 +269,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			if(Input()->ModifierIsPressed())
 				PositionToSeek = FindPreviousMarkerPosition();
 			else if(Input()->ShiftIsPressed())
-				m_SkipDurationIndex = maximum(m_SkipDurationIndex - 1, 0);
+			{
+				if(m_SkipDurationIndex > 0)
+				{
+					--m_SkipDurationIndex;
+				}
+			}
 			else
 				TimeToSeek = -SKIP_DURATIONS_SECONDS[m_SkipDurationIndex];
 		}
@@ -272,7 +283,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			if(Input()->ModifierIsPressed())
 				PositionToSeek = FindNextMarkerPosition();
 			else if(Input()->ShiftIsPressed())
-				m_SkipDurationIndex = minimum(m_SkipDurationIndex + 1, NumDurationLabels - 1);
+			{
+				if(m_SkipDurationIndex < NumDurationLabels - 1)
+				{
+					++m_SkipDurationIndex;
+				}
+			}
 			else
 				TimeToSeek = SKIP_DURATIONS_SECONDS[m_SkipDurationIndex];
 		}

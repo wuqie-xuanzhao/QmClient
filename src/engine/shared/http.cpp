@@ -140,7 +140,7 @@ static std::string HttpRequestHostKey(const char *pUrl)
 	return Host;
 }
 
-void EscapeUrl(char *pBuf, int Size, const char *pStr)
+void EscapeUrl(char *pBuf, size_t Size, const char *pStr)
 {
 	char *pEsc = curl_easy_escape(nullptr, pStr, 0);
 	str_copy(pBuf, pEsc, Size);

@@ -1400,7 +1400,6 @@ protected:
 	char m_aSettingsTabLanguageFile[IO_MAX_PATH_LENGTH] = "";
 	bool m_NeedSendinfo;
 	bool m_NeedSendDummyinfo;
-	int m_SettingPlayerPage;
 
 	// 0.7 skins
 	bool m_CustomSkinMenu = false;

@@ -736,6 +736,12 @@ void CDemoPlayer::DoTick()
 
 		if(ChunkType == CHUNKTYPE_DELTA)
 		{
+			if(m_LastSnapshotDataSize == -1)
+			{
+				Stop("Delta snapshot before any full snapshot");
+				break;
+			}
+
 			// process delta snapshot
 			// TODO: this needs alignment for `m_aChunkData` of 4,
 			// but this is not guaranteed. This is assumed above,

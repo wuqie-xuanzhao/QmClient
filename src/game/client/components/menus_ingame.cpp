@@ -1459,8 +1459,7 @@ void CMenus::PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView)
 	LogSettingsAdaptiveBudget("ingame_server_info_snapshot_text", TextBudgetInput, m_IngameTextFrameBudget);
 	m_IngameTextFrameBudget.m_TextContainerTokens = maximum(1, m_IngameTextFrameBudget.m_TextContainerTokens);
 
-	CServerInfo CurrentServerInfo;
-	Client()->GetServerInfo(&CurrentServerInfo);
+	const CServerInfo &CurrentServerInfo = Client()->ServerInfo();
 
 	CUIRect ServerInfo, GameInfo, Motd;
 	MainView.Margin(10.0f, &MainView);
@@ -1739,8 +1738,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	const float FontSizeBody = 20.0f;
 	const float ServerInfoLabelWidth = 132.0f;
 
-	CServerInfo CurrentServerInfo;
-	Client()->GetServerInfo(&CurrentServerInfo);
+	const CServerInfo &CurrentServerInfo = Client()->ServerInfo();
 	SSettingsAdaptiveBudgetInput TextBudgetInput;
 	TextBudgetInput.m_FrameId = Client()->PerfFrame();
 	str_copy(TextBudgetInput.m_aOperation, "ingame_server_info", sizeof(TextBudgetInput.m_aOperation));
@@ -2146,8 +2144,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)
 	static CListBox s_ListBox;
 	s_ListBox.DoStart(19.0f, NumVoteOptions, 1, 3, Selected, &List);
 
-	CServerInfo CurrentServerInfo;
-	Client()->GetServerInfo(&CurrentServerInfo);
+	const CServerInfo &CurrentServerInfo = Client()->ServerInfo();
 	const CCommunity *pCurrentCommunity = ServerBrowser()->Community(CurrentServerInfo.m_aCommunityId);
 
 	for(int OptionIndex = 0; OptionIndex < NumVoteOptions; ++OptionIndex)

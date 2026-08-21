@@ -300,8 +300,7 @@ float CStatusBar::DownstreamWidth()
 
 void CStatusBar::DownstreamRender()
 {
-	CServerInfo CurrentServerInfo;
-	Client()->GetServerInfo(&CurrentServerInfo);
+	const CServerInfo &CurrentServerInfo = Client()->ServerInfo();
 	char aBuf[32];
 	FormatMetricValue(aBuf, sizeof(aBuf), "ms", (float)CurrentServerInfo.m_Latency);
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);

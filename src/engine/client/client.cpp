@@ -1445,6 +1445,11 @@ bool CClient::DummyAllowed() const
 	return m_ServerCapabilities.m_AllowDummy;
 }
 
+const CServerInfo &CClient::ServerInfo() const
+{
+	return m_CurrentServerInfo;
+}
+
 void CClient::GetServerInfo(CServerInfo *pServerInfo) const
 {
 	*pServerInfo = m_CurrentServerInfo;
@@ -2415,7 +2420,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				{
 					char aUrl[256];
 					char aEscaped[256];
-					EscapeUrl(aEscaped, m_aMapdownloadFilename + 15); // cut off downloadedmaps/
+					EscapeUrl(aEscaped, str_startswith(m_aMapdownloadFilename, "downloadedmaps/"));
 					bool UseConfigUrl = str_comp(g_Config.m_ClMapDownloadUrl, "https://maps.ddnet.org") != 0 || m_aMapDownloadUrl[0] == '\0';
 					str_format(aUrl, sizeof(aUrl), "%s/%s", UseConfigUrl ? g_Config.m_ClMapDownloadUrl : m_aMapDownloadUrl, aEscaped);
 
@@ -3041,7 +3046,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 						}
 						if(!Dummy)
 						{
-							GameClient()->OnNewSnapshot();
+							GameClient()->OnNewSnapshot(false);
 						}
 						SetState(IClient::STATE_ONLINE);
 						if(Conn == CONN_MAIN)
@@ -3508,7 +3513,7 @@ void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 	mem_copy(m_aapSnapshots[0][SNAP_CURRENT]->m_pSnap, pData, Size);
 	mem_copy(m_aapSnapshots[0][SNAP_CURRENT]->m_pAltSnap, &AltSnapBuffer, AltSnapSize);
 
-	GameClient()->OnNewSnapshot();
+	GameClient()->OnNewSnapshot(false);
 }
 
 void CClient::OnDemoPlayerMessage(void *pData, int Size)
@@ -3632,7 +3637,7 @@ void CClient::Update()
 			if(m_LastDummy != (bool)g_Config.m_ClDummy && m_aapSnapshots[g_Config.m_ClDummy][SNAP_PREV])
 			{
 				// Load snapshot for m_ClDummy
-				GameClient()->OnNewSnapshot();
+				GameClient()->OnNewSnapshot(true);
 				Repredict = true;
 			}
 
@@ -3651,7 +3656,7 @@ void CClient::Update()
 				m_aCurGameTick[g_Config.m_ClDummy] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_Tick;
 				m_aPrevGameTick[g_Config.m_ClDummy] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_PREV]->m_Tick;
 
-				GameClient()->OnNewSnapshot();
+				GameClient()->OnNewSnapshot(false);
 				Repredict = true;
 			}
 
@@ -6541,7 +6546,7 @@ void CClient::RequestDDNetInfo()
 	if(g_Config.m_BrIndicateFinished)
 	{
 		char aEscaped[128];
-		EscapeUrl(aEscaped, sizeof(aEscaped), PlayerName());
+		EscapeUrl(aEscaped, PlayerName());
 		str_append(aUrl, "?name=");
 		str_append(aUrl, aEscaped);
 	}

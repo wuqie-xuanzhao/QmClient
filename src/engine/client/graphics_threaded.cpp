@@ -1641,6 +1641,10 @@ void CGraphics_Threaded::ScreenshotDirect(bool *pSwapped)
 			m_pfnScreenshotCallback(Image.DeepCopy());
 		m_pEngine->AddJob(std::make_shared<CScreenshotSaveJob>(m_pStorage, m_aScreenshotName, std::move(Image)));
 	}
+	else
+	{
+		log_error("graphics", "Failed to create screenshot");
+	}
 	m_pfnScreenshotCallback = nullptr;
 }
 

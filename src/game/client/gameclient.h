@@ -883,7 +883,7 @@ public:
 	bool OnDemoPlaybackMessage(int MsgId, CUnpacker *pUnpacker) override;
 	void ResetDemoPlaybackState() override;
 	void InvalidateSnapshot() override;
-	void OnNewSnapshot() override;
+	void OnNewSnapshot(bool DummySwapped) override;
 	void OnPredict() override;
 	void OnActivateEditor() override;
 	void OnDummySwap() override;
