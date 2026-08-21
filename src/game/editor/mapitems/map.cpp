@@ -114,6 +114,7 @@ void CEditorMap::Clean()
 	m_ShiftBy = 1;
 	m_ShowDetail = true;
 	m_PreviewZoom = false;
+	m_FontTyperState.Reset();
 
 	m_MapViewState.Reset(Editor());
 	m_MapGridState.Reset();
