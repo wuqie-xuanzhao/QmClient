@@ -2415,58 +2415,98 @@ void CUi::RenderProgressBar(CUIRect ProgressBar, float Progress)
 	DrawRoundedSurface(this, ProgressBar, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), ColorRGBA(), Rounding);
 }
 
-void CUi::RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds) const
+void CCachedText::Update(ITextRender *pTextRender, const char *pText, float FontSize, float LineWidth, int CursorFlags)
+{
+	if(m_FontSize == FontSize && m_LineWidth == LineWidth && m_CursorFlags == CursorFlags && m_Text == pText)
+		return;
+
+	pTextRender->DeleteTextContainer(m_TextContainerIndex);
+
+	m_Text = pText;
+	m_FontSize = FontSize;
+	m_LineWidth = LineWidth;
+	m_CursorFlags = CursorFlags;
+
+	CTextCursor Cursor;
+	Cursor.m_FontSize = FontSize;
+	Cursor.m_LineWidth = LineWidth;
+	Cursor.m_Flags = CursorFlags;
+
+	// 颜色在渲染时应用，因此不能烘焙进 quad。
+	const ColorRGBA OldColor = pTextRender->GetTextColor();
+	pTextRender->TextColor(pTextRender->DefaultTextColor());
+	pTextRender->CreateTextContainer(m_TextContainerIndex, &Cursor, m_Text.c_str());
+	pTextRender->TextColor(OldColor);
+
+	m_BoundingBox = Cursor.BoundingBox();
+	m_MaxCharacterHeight = Cursor.m_MaxCharacterHeight;
+}
+
+void CCachedText::Render(ITextRender *pTextRender, vec2 Pos, ColorRGBA Color) const
+{
+	if(!m_TextContainerIndex.Valid())
+		return;
+	// quad 用默认颜色构建，因此描边需在此处随 alpha 淡出而非继承烘焙的顶点色。
+	pTextRender->RenderTextContainer(m_TextContainerIndex, Color, pTextRender->DefaultTextOutlineColor().WithMultipliedAlpha(Color.a), Pos.x, Pos.y);
+}
+
+void CCachedText::Reset(ITextRender *pTextRender)
+{
+	pTextRender->DeleteTextContainer(m_TextContainerIndex);
+	m_Text.clear();
+	m_FontSize = -1.0f;
+	m_LineWidth = -1.0f;
+	m_CursorFlags = 0;
+	m_BoundingBox = {0.0f, 0.0f, 0.0f, 0.0f};
+	m_MaxCharacterHeight = 0.0f;
+}
+
+void CUi::RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds, CCachedText &SecondsText, CCachedText &MillisText, ColorRGBA Color) const
 {
 	if(NotFinished)
 		return;
 
 	char aBuf[128];
-
 	str_time(absolute(static_cast<int64_t>(Seconds)) * 100, TIME_HOURS, aBuf, sizeof(aBuf));
+	SecondsText.Update(TextRender(), aBuf, FontSize);
 
-	// align in vertical middle
+	// 垂直居中
 	vec2 Cursor = TimeRect.TopLeft();
-	float TextHeight = 0.0f;
-	float SecondsMaxHeight = 0.0f;
-	STextSizeProperties TextSizeProps{};
-	TextSizeProps.m_pMaxCharacterHeightInLine = &SecondsMaxHeight;
-	TextSizeProps.m_pHeight = &TextHeight;
+	const float SecondsWidth = std::min(SecondsText.Width(), TimeRect.w);
+	Cursor.x += TimeRect.w - SecondsWidth; // 右对齐
+	Cursor.y += ((TimeRect.h - SecondsText.MaxCharacterHeight()) / 2.0f - (FontSize - SecondsText.MaxCharacterHeight()));
 
-	float SecondsWidth = std::min(TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f, 0, TextSizeProps), TimeRect.w);
-	Cursor.x += TimeRect.w - SecondsWidth; // align right
-	Cursor.y += ((TimeRect.h - SecondsMaxHeight) / 2.0f - (FontSize - SecondsMaxHeight));
-
-	// show milliseconds or centiseconds if we are under an hour
+	// 显示毫秒或百分秒（不足一小时时）
 	if(Millis >= 0 && Seconds < 60 * 60)
 	{
 		constexpr float GoldenRatio = 0.61803398875f;
 		const float CentisecondFontSize = FontSize * GoldenRatio;
 
-		// format 2 or 3 digits
+		// 2 或 3 位数字
 		char aMillis[4];
 		Millis %= 1000;
 		if(!TrueMilliseconds)
 			str_format(aMillis, sizeof(aMillis), "%02d", (int)std::round(Millis / 10));
 		else
 			str_format(aMillis, sizeof(aMillis), "%03d", Millis);
+		MillisText.Update(TextRender(), aMillis, CentisecondFontSize);
 
-		float MillisWidth = TextRender()->TextWidth(CentisecondFontSize, aMillis, -1, -1.0f, 0, TextSizeProps);
+		const float MillisWidth = MillisText.Width();
 
-		// make space for millis, but put them 1/6th of a char tighter together
+		// 为毫秒腾出空间，但间距收紧 1/6 字符
 		Cursor.x -= MillisWidth - (TrueMilliseconds ? MillisWidth / (3 * 6) : MillisWidth / (2 * 6));
 
 		vec2 CursorMillis = TimeRect.TopLeft();
-		CursorMillis.x += TimeRect.w - MillisWidth; // align right
-		CursorMillis.y += ((TimeRect.h - SecondsMaxHeight) / 2.0f - (CentisecondFontSize - SecondsMaxHeight));
+		CursorMillis.x += TimeRect.w - MillisWidth; // 右对齐
+		CursorMillis.y += ((TimeRect.h - MillisText.MaxCharacterHeight()) / 2.0f - (CentisecondFontSize - MillisText.MaxCharacterHeight()));
 		CursorMillis.y -= (CursorMillis.y - Cursor.y) * GoldenRatio;
 
-		TextRender()->Text(Cursor.x, Cursor.y, FontSize, aBuf);
-		TextRender()->Text(CursorMillis.x, CursorMillis.y, CentisecondFontSize, aMillis);
+		SecondsText.Render(TextRender(), Cursor, Color);
+		MillisText.Render(TextRender(), CursorMillis, Color);
 	}
 	else
 	{
-		str_time(absolute(static_cast<int64_t>(Seconds)) * 100, TIME_HOURS, aBuf, sizeof(aBuf));
-		TextRender()->Text(Cursor.x, Cursor.y, FontSize, aBuf);
+		SecondsText.Render(TextRender(), Cursor, Color);
 	}
 }
 

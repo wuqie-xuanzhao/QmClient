@@ -438,6 +438,37 @@ struct SPopupMenuId
 {
 };
 
+/**
+ * 跨帧保留文本容器、仅在文本或布局变化时重建的文本，用于每帧渲染的文本。
+ * 颜色在渲染时应用，因此修改颜色不会重建容器。
+ *
+ * 容器必须在文本渲染丢弃其容器前用 @link Reset @endlink 释放，
+ * 这发生在窗口大小变化与语言切换时。
+ */
+class CCachedText
+{
+	STextContainerIndex m_TextContainerIndex;
+	std::string m_Text;
+	float m_FontSize = -1.0f;
+	float m_LineWidth = -1.0f;
+	int m_CursorFlags = 0;
+	STextBoundingBox m_BoundingBox = {0.0f, 0.0f, 0.0f, 0.0f};
+	float m_MaxCharacterHeight = 0.0f;
+
+public:
+	CCachedText() = default;
+	// 复制会导致两个所有者共享同一个文本容器。
+	CCachedText(const CCachedText &) = delete;
+	CCachedText &operator=(const CCachedText &) = delete;
+
+	void Update(ITextRender *pTextRender, const char *pText, float FontSize, float LineWidth = -1.0f, int CursorFlags = TEXTFLAG_RENDER);
+	void Render(ITextRender *pTextRender, vec2 Pos, ColorRGBA Color) const;
+	void Reset(ITextRender *pTextRender);
+
+	float Width() const { return m_BoundingBox.m_W; }
+	float MaxCharacterHeight() const { return m_MaxCharacterHeight; }
+};
+
 struct SPopupMenuProperties
 {
 	int m_Corners = IGraphics::CORNER_ALL;
@@ -1076,7 +1107,7 @@ public:
 	void RenderProgressBar(CUIRect ProgressBar, float Progress);
 
 	// render time with hundredths or thousands aligned to the right of the UIRect
-	void RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds) const;
+	void RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds, CCachedText &SecondsText, CCachedText &MillisText, ColorRGBA Color) const;
 
 	// progress spinner
 	void RenderProgressSpinner(vec2 Center, float OuterRadius, const SProgressSpinnerProperties &Props = {}) const;

@@ -370,6 +370,35 @@ void CScoreboard::OnInit()
 	m_DeadTeeTexture = Graphics()->LoadTexture("deadtee.png", IStorage::TYPE_ALL);
 }
 
+void CScoreboard::ResetTexts()
+{
+	for(CPlayerElement &Player : m_aPlayers)
+	{
+		Player.m_Score.Reset(TextRender());
+		Player.m_ScoreMillis.Reset(TextRender());
+		Player.m_Name.Reset(TextRender());
+		Player.m_ReadyMark.Reset(TextRender());
+		Player.m_Clan.Reset(TextRender());
+		Player.m_Ping.Reset(TextRender());
+	}
+	m_TitleScore.Reset(TextRender());
+	m_TitleScoreMillis.Reset(TextRender());
+	m_HeadlineScore.Reset(TextRender());
+	m_HeadlineName.Reset(TextRender());
+	m_HeadlineClan.Reset(TextRender());
+	m_HeadlinePing.Reset(TextRender());
+}
+
+void CScoreboard::OnShutdown()
+{
+	ResetTexts();
+}
+
+void CScoreboard::OnWindowResize()
+{
+	ResetTexts();
+}
+
 void CScoreboard::OnReset()
 {
 	m_Active = false;
@@ -498,7 +527,8 @@ void CScoreboard::RenderTitleScore(CUIRect ScoreLabel, int Team, float TitleFont
 				GameClient()->m_MapBestTimeSeconds,
 				GameClient()->m_MapBestTimeSeconds == FinishTime::NOT_FINISHED_MILLIS,
 				GameClient()->m_MapBestTimeMillis,
-				GameClient()->m_ReceivedDDNetPlayerFinishTimesMillis);
+				GameClient()->m_ReceivedDDNetPlayerFinishTimesMillis,
+				m_TitleScore, m_TitleScoreMillis, TextRender()->DefaultTextColor());
 			return;
 		}
 	}
@@ -1325,22 +1355,24 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	CUIRect Headline;
 	Scoreboard.HSplitTop(HeadlineFontsize * 2.0f, &Headline, &Scoreboard);
 	const float HeadlineY = Headline.y + Headline.h / 2.0f - HeadlineFontsize / 2.0f;
-	const char *pScore = TimeScore ? Localize("Time") : Localize("Score");
-	TextRender()->Text(ScoreOffset + ScoreLength - TextRender()->TextWidth(HeadlineFontsize, pScore), HeadlineY, HeadlineFontsize, pScore);
+	const ColorRGBA HeadlineColor = TextRender()->DefaultTextColor();
+	m_HeadlineScore.Update(TextRender(), TimeScore ? Localize("Time") : Localize("Score"), HeadlineFontsize);
+	m_HeadlineName.Update(TextRender(), Localize("Name"), HeadlineFontsize);
+	m_HeadlineClan.Update(TextRender(), Localize("Clan"), HeadlineFontsize);
+	m_HeadlinePing.Update(TextRender(), Localize("Ping"), HeadlineFontsize);
+	m_HeadlineScore.Render(TextRender(), vec2(ScoreOffset + ScoreLength - m_HeadlineScore.Width(), HeadlineY), HeadlineColor);
 	// Points column header: only render when enabled
 	if(ShowPoints)
 	{
 		const char *pPointsLabel = Localize("Points");
 		TextRender()->Text(PointsOffset + PointsLength - TextRender()->TextWidth(HeadlineFontsize, pPointsLabel), HeadlineY, HeadlineFontsize, pPointsLabel);
 	}
-	TextRender()->Text(NameOffset, HeadlineY, HeadlineFontsize, Localize("Name"));
+	m_HeadlineName.Render(TextRender(), vec2(NameOffset, HeadlineY), HeadlineColor);
 	if(RowDetail.m_ShowClan)
 	{
-		const char *pClanLabel = Localize("Clan");
-		TextRender()->Text(ClanOffset + (ClanLength - TextRender()->TextWidth(HeadlineFontsize, pClanLabel)) / 2.0f, HeadlineY, HeadlineFontsize, pClanLabel);
+		m_HeadlineClan.Render(TextRender(), vec2(ClanOffset + (ClanLength - m_HeadlineClan.Width()) / 2.0f, HeadlineY), HeadlineColor);
 	}
-	const char *pPingLabel = Localize("Ping");
-	TextRender()->Text(PingOffset + PingLength - TextRender()->TextWidth(HeadlineFontsize, pPingLabel), HeadlineY, HeadlineFontsize, pPingLabel);
+	m_HeadlinePing.Render(TextRender(), vec2(PingOffset + PingLength - m_HeadlinePing.Width(), HeadlineY), HeadlineColor);
 
 	// render player entries
 	int PrevDDTeam = -1;
