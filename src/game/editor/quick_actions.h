@@ -17,6 +17,14 @@ REGISTER_QUICK_ACTION(
 	DEFAULT_BTN,
 	"[F1] Open the DDNet Wiki page for the map editor in a web browser.")
 REGISTER_QUICK_ACTION(
+	GotoPosition,
+	"Goto position",
+	[&]() { GotoPosition(); },
+	ALWAYS_FALSE,
+	ALWAYS_FALSE,
+	DEFAULT_BTN,
+	"Go to a specified coordinate point on the map.")
+REGISTER_QUICK_ACTION(
 	ToggleGrid,
 	Localizable("Toggle grid", "Editor"),
 	[&]() { MapView()->MapGrid()->Toggle(); },

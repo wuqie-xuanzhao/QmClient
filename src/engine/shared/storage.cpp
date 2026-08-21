@@ -137,6 +137,7 @@ namespace
 				"demos/highlight",
 				"demos/replays",
 				"editor",
+				"editor/automap",
 				"ghosts",
 				"teehistorian"};
 

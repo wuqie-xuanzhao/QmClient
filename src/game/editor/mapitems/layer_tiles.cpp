@@ -166,7 +166,13 @@ void CLayerTiles::Render()
 {
 	IGraphics::CTextureHandle Texture;
 	if(m_Image >= 0 && (size_t)m_Image < Map()->m_vpImages.size())
-		Texture = Map()->m_vpImages[m_Image]->m_Texture;
+	{
+		const auto &pImage = Map()->m_vpImages[m_Image];
+		if(pImage->m_Width % 16 == 0 && pImage->m_Height % 16 == 0)
+		{
+			Texture = pImage->m_Texture;
+		}
+	}
 	else if(m_HasGame)
 		Texture = Editor()->GetEntitiesTexture();
 	else if(m_HasFront)

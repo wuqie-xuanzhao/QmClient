@@ -918,7 +918,7 @@ void CEditor::UpdateHotSoundSource(const CLayerSounds *pLayer)
 	const void *pMinSourceId = nullptr;
 
 	const auto UpdateMinimum = [&](vec2 Position, const void *pId) {
-		const float CurrDist = length_squared((Position - MouseWorld) / MapView()->MouseWorldScale());
+		const float CurrDist = distance_squared(Position, MouseWorld) / (MapView()->MouseWorldScale() * MapView()->MouseWorldScale());
 		if(CurrDist < MinDist)
 		{
 			MinDist = CurrDist;
@@ -2166,7 +2166,7 @@ void CEditor::UpdateHotQuadPoint(const CLayerQuads *pLayer)
 	const void *pMinPointId = nullptr;
 
 	const auto UpdateMinimum = [&](vec2 Position, const void *pId) {
-		const float CurrDist = length_squared((Position - MouseWorld) / MapView()->MouseWorldScale());
+		const float CurrDist = distance_squared(Position, MouseWorld) / (MapView()->MouseWorldScale() * MapView()->MouseWorldScale());
 		if(CurrDist < MinDist)
 		{
 			MinDist = CurrDist;
@@ -4389,8 +4389,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 	static EEnvelopeEditorOp s_Operation = EEnvelopeEditorOp::OP_NONE;
 	static std::vector<float> s_vAccurateDragValuesX = {};
 	static std::vector<float> s_vAccurateDragValuesY = {};
-	static float s_MouseXStart = 0.0f;
-	static float s_MouseYStart = 0.0f;
+	static vec2 s_MouseStart = vec2(0.0f, 0.0f);
 
 	static CLineInput s_NameInput;
 
@@ -4720,8 +4719,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				if(s_Operation != EEnvelopeEditorOp::OP_BOX_SELECT && !Input()->ModifierIsPressed())
 				{
 					s_Operation = EEnvelopeEditorOp::OP_BOX_SELECT;
-					s_MouseXStart = Ui()->MouseX();
-					s_MouseYStart = Ui()->MouseY();
+					s_MouseStart = Ui()->MousePos();
 				}
 			}
 			else if(s_EnvelopeEditorButtonUsed == 0)
@@ -5021,16 +5019,18 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			{
 				if(s_Operation == EEnvelopeEditorOp::OP_SELECT)
 				{
-					const float dx = s_MouseXStart - Ui()->MouseX();
-					const float dy = s_MouseYStart - Ui()->MouseY();
-
-					if(dx * dx + dy * dy > 20.0f)
+					if(length_squared(s_MouseStart - Ui()->MousePos()) > 20.0f)
 						s_Operation = EEnvelopeEditorOp::OP_DRAG_TIME_BAR;
 				}
 
 				if(s_Operation == EEnvelopeEditorOp::OP_DRAG_TIME_BAR)
 				{
-					const float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * (Input()->ModifierIsPressed() ? 0.05f : 1.0f);
+					if(Input()->ModifierIsPressed())
+					{
+						Ui()->SetMouseSlow(true);
+					}
+
+					const float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX());
 					m_AnimateTime += DeltaX / m_AnimateSpeed;
 					m_AnimateTime = std::max(m_AnimateTime, 0.0f);
 				}
@@ -5052,8 +5052,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					Ui()->SetActiveItem(&m_AnimateTime);
 					s_Operation = EEnvelopeEditorOp::OP_SELECT;
 
-					s_MouseXStart = Ui()->MouseX();
-					s_MouseYStart = Ui()->MouseY();
+					s_MouseStart = Ui()->MousePos();
 				}
 
 				m_ActiveEnvelopePreview = EEnvelopePreview::SELECTED;
@@ -5065,6 +5064,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				BarColor = ColorRGBA(1.0f, 1.0f, 0.0f, 0.5f);
 			}
 
+			Ui()->ClipEnable(&View);
 			const float Time = m_AnimateTime * m_AnimateSpeed;
 			const float BarWidth = 1.5f;
 			CUIRect TimeBar{
@@ -5082,6 +5082,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				TimeBar.x = EnvelopeToScreenX(View, LoopedTime) - BarWidth / 2.0f;
 				TimeBar.Draw(BarColor, IGraphics::CORNER_NONE, 0.0f);
 			}
+			Ui()->ClipDisable();
 		}
 
 		// render handles
@@ -5148,10 +5149,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 							if(s_Operation == EEnvelopeEditorOp::OP_SELECT)
 							{
-								float dx = s_MouseXStart - Ui()->MouseX();
-								float dy = s_MouseYStart - Ui()->MouseY();
-
-								if(dx * dx + dy * dy > 20.0f)
+								if(length_squared(s_MouseStart - Ui()->MousePos()) > 20.0f)
 								{
 									s_Operation = EEnvelopeEditorOp::OP_DRAG_POINT;
 
@@ -5162,6 +5160,11 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 							if(s_Operation == EEnvelopeEditorOp::OP_DRAG_POINT || s_Operation == EEnvelopeEditorOp::OP_DRAG_POINT_X || s_Operation == EEnvelopeEditorOp::OP_DRAG_POINT_Y)
 							{
+								if(Input()->ModifierIsPressed())
+								{
+									Ui()->SetMouseSlow(true);
+								}
+
 								if(Input()->ShiftIsPressed())
 								{
 									if(s_Operation == EEnvelopeEditorOp::OP_DRAG_POINT || s_Operation == EEnvelopeEditorOp::OP_DRAG_POINT_Y)
@@ -5173,7 +5176,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 									}
 									else
 									{
-										float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * (Input()->ModifierIsPressed() ? 50.0f : 1000.0f);
+										float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * 1000.0f;
 
 										for(size_t k = 0; k < Map()->m_vSelectedEnvelopePoints.size(); k++)
 										{
@@ -5224,7 +5227,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 									}
 									else
 									{
-										float DeltaY = ScreenToEnvelopeDY(View, Ui()->MouseDeltaY()) * (Input()->ModifierIsPressed() ? 51.2f : 1024.0f);
+										float DeltaY = ScreenToEnvelopeDY(View, Ui()->MouseDeltaY()) * 1024.0f;
 										for(size_t k = 0; k < Map()->m_vSelectedEnvelopePoints.size(); k++)
 										{
 											auto [SelectedIndex, SelectedChannel] = Map()->m_vSelectedEnvelopePoints[k];
@@ -5286,8 +5289,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 								s_Operation = EEnvelopeEditorOp::OP_SELECT;
 								Map()->m_SelectedQuadEnvelope = Map()->m_SelectedEnvelope;
 
-								s_MouseXStart = Ui()->MouseX();
-								s_MouseYStart = Ui()->MouseY();
+								s_MouseStart = Ui()->MousePos();
 							}
 							else if(Ui()->MouseButtonClicked(1))
 							{
@@ -5356,10 +5358,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								if(s_Operation == EEnvelopeEditorOp::OP_SELECT)
 								{
-									float dx = s_MouseXStart - Ui()->MouseX();
-									float dy = s_MouseYStart - Ui()->MouseY();
-
-									if(dx * dx + dy * dy > 20.0f)
+									if(length_squared(s_MouseStart - Ui()->MousePos()) > 20.0f)
 									{
 										s_Operation = EEnvelopeEditorOp::OP_DRAG_POINT;
 
@@ -5373,8 +5372,13 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								if(s_Operation == EEnvelopeEditorOp::OP_DRAG_POINT)
 								{
-									float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * (Input()->ModifierIsPressed() ? 50.0f : 1000.0f);
-									float DeltaY = ScreenToEnvelopeDY(View, Ui()->MouseDeltaY()) * (Input()->ModifierIsPressed() ? 51.2f : 1024.0f);
+									if(Input()->ModifierIsPressed())
+									{
+										Ui()->SetMouseSlow(true);
+									}
+
+									float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * 1000.0f;
+									float DeltaY = ScreenToEnvelopeDY(View, Ui()->MouseDeltaY()) * 1024.0f;
 									s_vAccurateDragValuesX[0] += DeltaX;
 									s_vAccurateDragValuesY[0] -= DeltaY;
 
@@ -5421,8 +5425,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 									s_Operation = EEnvelopeEditorOp::OP_SELECT;
 									Map()->m_SelectedQuadEnvelope = Map()->m_SelectedEnvelope;
 
-									s_MouseXStart = Ui()->MouseX();
-									s_MouseYStart = Ui()->MouseY();
+									s_MouseStart = Ui()->MousePos();
 								}
 								else if(Ui()->MouseButtonClicked(1))
 								{
@@ -5491,10 +5494,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								if(s_Operation == EEnvelopeEditorOp::OP_SELECT)
 								{
-									float dx = s_MouseXStart - Ui()->MouseX();
-									float dy = s_MouseYStart - Ui()->MouseY();
-
-									if(dx * dx + dy * dy > 20.0f)
+									if(length_squared(s_MouseStart - Ui()->MousePos()) > 20.0f)
 									{
 										s_Operation = EEnvelopeEditorOp::OP_DRAG_POINT;
 
@@ -5508,8 +5508,13 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								if(s_Operation == EEnvelopeEditorOp::OP_DRAG_POINT)
 								{
-									float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * (Input()->ModifierIsPressed() ? 50.0f : 1000.0f);
-									float DeltaY = ScreenToEnvelopeDY(View, Ui()->MouseDeltaY()) * (Input()->ModifierIsPressed() ? 51.2f : 1024.0f);
+									if(Input()->ModifierIsPressed())
+									{
+										Ui()->SetMouseSlow(true);
+									}
+
+									float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * 1000.0f;
+									float DeltaY = ScreenToEnvelopeDY(View, Ui()->MouseDeltaY()) * 1024.0f;
 									s_vAccurateDragValuesX[0] += DeltaX;
 									s_vAccurateDragValuesY[0] -= DeltaY;
 
@@ -5556,8 +5561,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 									s_Operation = EEnvelopeEditorOp::OP_SELECT;
 									Map()->m_SelectedQuadEnvelope = Map()->m_SelectedEnvelope;
 
-									s_MouseXStart = Ui()->MouseX();
-									s_MouseYStart = Ui()->MouseY();
+									s_MouseStart = Ui()->MousePos();
 								}
 								else if(Ui()->MouseButtonClicked(1))
 								{
@@ -5640,9 +5644,14 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		{
 			str_copy(m_aTooltip, Localize("Press shift to scale the time. Press alt to scale along midpoint. Press ctrl to be more precise.", "Editor"));
 
+			if(Input()->ModifierIsPressed())
+			{
+				Ui()->SetMouseSlow(true);
+			}
+
 			if(Input()->ShiftIsPressed())
 			{
-				s_ScaleFactorX += Ui()->MouseDeltaX() / Graphics()->ScreenWidth() * (Input()->ModifierIsPressed() ? 0.5f : 10.0f);
+				s_ScaleFactorX += Ui()->MouseDeltaX() / Graphics()->ScreenWidth() * 10.0f;
 				float Midpoint = Input()->AltIsPressed() ? s_MidpointX : 0.0f;
 				for(size_t k = 0; k < Map()->m_vSelectedEnvelopePoints.size(); k++)
 				{
@@ -5695,7 +5704,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			}
 			else
 			{
-				s_ScaleFactorY -= Ui()->MouseDeltaY() / Graphics()->ScreenHeight() * (Input()->ModifierIsPressed() ? 0.5f : 10.0f);
+				s_ScaleFactorY -= Ui()->MouseDeltaY() / Graphics()->ScreenHeight() * 10.0f;
 				for(size_t k = 0; k < Map()->m_vSelectedEnvelopePoints.size(); k++)
 				{
 					auto [SelectedIndex, SelectedChannel] = Map()->m_vSelectedEnvelopePoints[k];
@@ -5736,10 +5745,10 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		{
 			Ui()->ClipEnable(&View);
 			CUIRect SelectionRect;
-			SelectionRect.x = s_MouseXStart;
-			SelectionRect.y = s_MouseYStart;
-			SelectionRect.w = Ui()->MouseX() - s_MouseXStart;
-			SelectionRect.h = Ui()->MouseY() - s_MouseYStart;
+			SelectionRect.x = s_MouseStart.x;
+			SelectionRect.y = s_MouseStart.y;
+			SelectionRect.w = Ui()->MouseX() - s_MouseStart.x;
+			SelectionRect.h = Ui()->MouseY() - s_MouseStart.y;
 			SelectionRect.DrawOutline(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 			Ui()->ClipDisable();
 
@@ -5748,9 +5757,9 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				s_Operation = EEnvelopeEditorOp::OP_NONE;
 				Ui()->SetActiveItem(nullptr);
 
-				float TimeStart = ScreenToEnvelopeX(View, s_MouseXStart);
+				float TimeStart = ScreenToEnvelopeX(View, s_MouseStart.x);
 				float TimeEnd = ScreenToEnvelopeX(View, Ui()->MouseX());
-				float ValueStart = ScreenToEnvelopeY(View, s_MouseYStart);
+				float ValueStart = ScreenToEnvelopeY(View, s_MouseStart.y);
 				float ValueEnd = ScreenToEnvelopeY(View, Ui()->MouseY());
 
 				float TimeMin = minimum(TimeStart, TimeEnd);
@@ -5763,7 +5772,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 				for(int i = 0; i < (int)pEnvelope->m_vPoints.size(); i++)
 				{
-					for(int c = 0; c < CEnvPoint::MAX_CHANNELS; c++)
+					for(int c = 0; c < pEnvelope->GetChannels(); c++)
 					{
 						if(!(s_ActiveChannels & (1 << c)))
 							continue;
@@ -5880,14 +5889,14 @@ void CEditor::RenderEnvelopeEditorColorBar(CUIRect ColorBar, const std::shared_p
 
 void CEditor::RenderEditorHistory(CUIRect View)
 {
-	enum EHistoryType
+	enum class EHistoryType
 	{
-		EDITOR_HISTORY,
-		ENVELOPE_HISTORY,
-		SERVER_SETTINGS_HISTORY
+		EDITOR,
+		ENVELOPE,
+		SERVER_SETTINGS,
 	};
 
-	static EHistoryType s_HistoryType = EDITOR_HISTORY;
+	static EHistoryType s_HistoryType = EHistoryType::EDITOR;
 	static int s_ActionSelectedIndex = 0;
 	static CListBox s_ListBox;
 	s_ListBox.SetActive(m_Dialog == DIALOG_NONE && !Ui()->IsPopupOpen());
@@ -5912,23 +5921,23 @@ void CEditor::RenderEditorHistory(CUIRect View)
 	{
 		TypeButtons.VSplitLeft(HistoryTypeBtnSize, &HistoryTypeButton, &TypeButtons);
 		static int s_EditorHistoryButton = 0;
-		if(DoButton_Ex(&s_EditorHistoryButton, Localize("Editor", "Editor"), s_HistoryType == EDITOR_HISTORY, &HistoryTypeButton, BUTTONFLAG_LEFT, Localize("Show map editor history.", "Editor"), IGraphics::CORNER_L))
+		if(DoButton_Ex(&s_EditorHistoryButton, Localize("Editor", "Editor"), s_HistoryType == EHistoryType::EDITOR, &HistoryTypeButton, BUTTONFLAG_LEFT, Localize("Show map editor history.", "Editor"), IGraphics::CORNER_L))
 		{
-			s_HistoryType = EDITOR_HISTORY;
+			s_HistoryType = EHistoryType::EDITOR;
 		}
 
 		TypeButtons.VSplitLeft(HistoryTypeBtnSize, &HistoryTypeButton, &TypeButtons);
 		static int s_EnvelopeEditorHistoryButton = 0;
-		if(DoButton_Ex(&s_EnvelopeEditorHistoryButton, Localize("Envelope", "Editor"), s_HistoryType == ENVELOPE_HISTORY, &HistoryTypeButton, BUTTONFLAG_LEFT, Localize("Show envelope editor history.", "Editor"), IGraphics::CORNER_NONE))
+		if(DoButton_Ex(&s_EnvelopeEditorHistoryButton, Localize("Envelope", "Editor"), s_HistoryType == EHistoryType::ENVELOPE, &HistoryTypeButton, BUTTONFLAG_LEFT, Localize("Show envelope editor history.", "Editor"), IGraphics::CORNER_NONE))
 		{
-			s_HistoryType = ENVELOPE_HISTORY;
+			s_HistoryType = EHistoryType::ENVELOPE;
 		}
 
 		TypeButtons.VSplitLeft(HistoryTypeBtnSize, &HistoryTypeButton, &TypeButtons);
 		static int s_ServerSettingsHistoryButton = 0;
-		if(DoButton_Ex(&s_ServerSettingsHistoryButton, Localize("Settings", "Editor"), s_HistoryType == SERVER_SETTINGS_HISTORY, &HistoryTypeButton, BUTTONFLAG_LEFT, Localize("Show server settings editor history.", "Editor"), IGraphics::CORNER_R))
+		if(DoButton_Ex(&s_ServerSettingsHistoryButton, Localize("Settings", "Editor"), s_HistoryType == EHistoryType::SERVER_SETTINGS, &HistoryTypeButton, BUTTONFLAG_LEFT, Localize("Show server settings editor history.", "Editor"), IGraphics::CORNER_R))
 		{
-			s_HistoryType = SERVER_SETTINGS_HISTORY;
+			s_HistoryType = EHistoryType::SERVER_SETTINGS;
 		}
 	}
 
@@ -5939,11 +5948,11 @@ void CEditor::RenderEditorHistory(CUIRect View)
 	Ui()->DoLabel(&Label, Localize("Editor history. Click on an action to undo all actions above.", "Editor"), 10.0f, TEXTALIGN_ML, InfoProps);
 
 	CEditorHistory *pCurrentHistory;
-	if(s_HistoryType == EDITOR_HISTORY)
+	if(s_HistoryType == EHistoryType::EDITOR)
 		pCurrentHistory = &Map()->m_EditorHistory;
-	else if(s_HistoryType == ENVELOPE_HISTORY)
+	else if(s_HistoryType == EHistoryType::ENVELOPE)
 		pCurrentHistory = &Map()->m_EnvelopeEditorHistory;
-	else if(s_HistoryType == SERVER_SETTINGS_HISTORY)
+	else if(s_HistoryType == EHistoryType::SERVER_SETTINGS)
 		pCurrentHistory = &Map()->m_ServerSettingsHistory;
 	else
 		return;
@@ -7157,8 +7166,7 @@ void CEditor::HandleWriterFinishJobs()
 	// send rcon.. if we can
 	if(Client()->RconAuthed() && g_Config.m_EdAutoMapReload)
 	{
-		CServerInfo CurrentServerInfo;
-		Client()->GetServerInfo(&CurrentServerInfo);
+		const CServerInfo &CurrentServerInfo = Client()->ServerInfo();
 
 		if(Client()->ServerAddress() != nullptr && net_addr_is_local(Client()->ServerAddress()))
 		{

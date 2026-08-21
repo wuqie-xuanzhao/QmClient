@@ -35,8 +35,23 @@ void CFontTyper::SetTile(ivec2 Pos, unsigned char Index, const std::shared_ptr<C
 
 void CFontTyper::PlaceTile(unsigned char Index, const std::shared_ptr<CLayerTiles> &pLayer)
 {
-	if(Index != 0 && m_TextIndex.x < m_LineStart)
+	// 光标位于右边界列时换行
+	if(m_TextIndex.x == pLayer->m_Width)
+	{
+		if(Index == 0)
+			return;
+		m_TextIndex.x = m_LineStart;
+		m_TextIndex.y++;
+
+		// 角落情况：已到图层底部
+		if(m_TextIndex.y >= pLayer->m_Height)
+			return;
+	}
+	// 处理在行首左侧输入
+	else if(Index != 0 && m_TextIndex.x < m_LineStart)
+	{
 		m_LineStart = m_TextIndex.x;
+	}
 	SetTile(m_TextIndex, Index, pLayer);
 	m_TextIndex.x++;
 }
@@ -127,7 +142,7 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 		m_TextIndex.y--;
 	if(Event.m_Key == KEY_DOWN)
 		m_TextIndex.y++;
-	m_TextIndex.x = std::clamp(m_TextIndex.x, 0, pLayer->m_Width - 1);
+	m_TextIndex.x = std::clamp(m_TextIndex.x, 0, pLayer->m_Width);
 	m_TextIndex.y = std::clamp(m_TextIndex.y, 0, pLayer->m_Height - 1);
 	m_CursorRenderTime = time_get_nanoseconds() - 501ms;
 	float Dist = distance(
@@ -213,7 +228,7 @@ void CFontTyper::OnRender(CUIRect View)
 		return;
 	}
 	m_pLastLayer = pLayer;
-	m_TextIndex.x = std::clamp(m_TextIndex.x, 0, pLayer->m_Width - 1);
+	m_TextIndex.x = std::clamp(m_TextIndex.x, 0, pLayer->m_Width);
 	m_TextIndex.y = std::clamp(m_TextIndex.y, 0, pLayer->m_Height - 1);
 
 	const auto CurTime = time_get_nanoseconds();

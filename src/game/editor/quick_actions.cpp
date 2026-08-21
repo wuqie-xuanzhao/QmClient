@@ -262,3 +262,10 @@ void CEditor::TestMapLocally()
 		}
 	}
 }
+
+void CEditor::GotoPosition()
+{
+	static SPopupMenuId s_PopupGotoId;
+	Ui()->DoPopupMenu(&s_PopupGotoId, Ui()->MouseX(), Ui()->MouseY(), 120.0f, 52.0f, this, PopupGoto);
+	Ui()->SetActiveItem(nullptr);
+}

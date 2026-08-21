@@ -236,13 +236,11 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuTools(void *pContext, CUIRect Vi
 		}
 	}
 
-	static int s_GotoButton = 0;
 	View.HSplitTop(2.0f, nullptr, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_GotoButton, Localize("Goto position", "Editor"), 0, &Slot, BUTTONFLAG_LEFT, Localize("Go to a specified coordinate point on the map.", "Editor")))
+	if(pEditor->DoButton_MenuItem(&pEditor->m_QuickActionGotoPosition, pEditor->m_QuickActionGotoPosition.Label(), 0, &Slot, BUTTONFLAG_LEFT, pEditor->m_QuickActionGotoPosition.Description()))
 	{
-		static SPopupMenuId s_PopupGotoId;
-		pEditor->Ui()->DoPopupMenu(&s_PopupGotoId, Slot.x, Slot.y + Slot.h, 120, 52, pEditor, PopupGoto);
+		pEditor->m_QuickActionGotoPosition.Call();
 	}
 
 	static int s_TileartButton = 0;
@@ -2597,6 +2595,25 @@ CUi::EPopupMenuFunctionResult CEditor::PopupSelectConfigAutoMap(void *pContext, 
 	const float ButtonHeight = 12.0f;
 	const float ButtonMargin = 2.0f;
 
+	CUIRect Button;
+	View.HSplitBottom(ButtonHeight, &View, &Button);
+	static char s_ShowDirectoryButton;
+	if(pEditor->DoButton_MenuItem(&s_ShowDirectoryButton, Localize("Show directory", "Editor"), 0, &Button, BUTTONFLAG_LEFT, Localize("Open the directory for automapper rules in the file browser.", "Editor")))
+	{
+		char aPath[IO_MAX_PATH_LENGTH];
+		pEditor->Storage()->GetCompletePath(IStorage::TYPE_SAVE, "editor/automap", aPath, sizeof(aPath));
+		pEditor->Storage()->CreateFolder("editor", IStorage::TYPE_SAVE);
+		pEditor->Storage()->CreateFolder("editor/automap", IStorage::TYPE_SAVE);
+		pEditor->Client()->ViewFile(aPath);
+	}
+
+	View.HSplitBottom(5.0f, &View, &Button);
+	IGraphics::CLineItem LineItem(Button.x, Button.y + Button.h / 2, Button.x + Button.w, Button.y + Button.h / 2);
+	pEditor->Graphics()->TextureClear();
+	pEditor->Graphics()->LinesBegin();
+	pEditor->Graphics()->LinesDraw(&LineItem, 1);
+	pEditor->Graphics()->LinesEnd();
+
 	static CListBox s_ListBox;
 	s_ListBox.DoStart(ButtonHeight, pAutoMapper->ConfigNamesNum() + 1, 1, 4, s_AutoMapConfigCurrent + 1, &View, false);
 	s_ListBox.SetScrollbarWidth(15.0f);
@@ -2633,7 +2650,7 @@ void CEditor::PopupSelectConfigAutoMapInvoke(int Current, float x, float y)
 	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayer(0));
 	const int ItemCount = minimum(Map()->m_vpImages[pLayer->m_Image]->m_AutoMapper.ConfigNamesNum() + 1, 10); // +1 for None-entry
 	// Width for buttons is 120, 15 is the scrollbar width, 2 is the margin between both.
-	Ui()->DoPopupMenu(&s_PopupSelectConfigAutoMapId, x, y, 120.0f + 15.0f + 2.0f, 10.0f + 12.0f * ItemCount + 2.0f * (ItemCount - 1), this, PopupSelectConfigAutoMap);
+	Ui()->DoPopupMenu(&s_PopupSelectConfigAutoMapId, x, y, 120.0f + 15.0f + 2.0f, 10.0f + 12.0f * ItemCount + 2.0f * (ItemCount - 1) + 5.0f + 12.0f, this, PopupSelectConfigAutoMap);
 }
 
 int CEditor::PopupSelectConfigAutoMapResult()
