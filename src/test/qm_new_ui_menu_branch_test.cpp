@@ -1478,9 +1478,9 @@ TEST(QmNewUiMenuBranches, ConfigPageLocalizesVariableHelpText)
 	const std::string TClientMenusSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
 
 	EXPECT_NE(ConfigHeader.find("const char *m_pHelpLocalizeKey;"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_INT, Flags, pHelp, Desc"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_COLOR, Flags, pHelp, Desc"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_STRING, Flags, pHelp, Desc"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_INT, Flags, m_ConfigHeap.StoreString(aHelp), pDesc"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_COLOR, Flags, m_ConfigHeap.StoreString(aHelp), Desc"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_STRING, Flags, m_ConfigHeap.StoreString(aHelp), Desc"), std::string::npos);
 	EXPECT_NE(TClientMenusSource.find("BuildLocalizedConfigHelpText"), std::string::npos);
 	EXPECT_NE(TClientMenusSource.find("pVar->m_pHelpLocalizeKey ? pVar->m_pHelpLocalizeKey"), std::string::npos);
 	EXPECT_NE(TClientMenusSource.find("Localize(pHelpKey)"), std::string::npos);
@@ -1888,7 +1888,7 @@ TEST(QmNewUiMenuBranches, HammerHitConsumersUseDeferredServerEvidenceOnly)
 	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
 	const std::string InferHammerHit = FunctionBody(GameClientSource, "SQmHammerHitMatch QmInferHammerHit(");
 	const std::string FinalizeHammerHitEvents = FunctionBody(GameClientSource, "void CGameClient::FinalizeHammerHitEvents()");
-	const std::string OnNewSnapshot = FunctionBody(GameClientSource, "void CGameClient::OnNewSnapshot()");
+	const std::string OnNewSnapshot = FunctionBody(GameClientSource, "void CGameClient::OnNewSnapshot(bool DummySwapped)");
 	const std::string WakeupActions = FunctionBody(TClientSource, "void CTClient::CheckHammerWakeupActions()");
 
 	EXPECT_EQ(CharacterSource.find("CreateHammerHitEvent"), std::string::npos);
@@ -4089,7 +4089,7 @@ TEST(QmNewUiMenuBranches, SettingsListSelectionsClampBeforeIndexing)
 	const std::string RenderSettingsGraphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	const std::string PopupMapPicker = FunctionBody(Source, "CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect View, bool Active)");
 
-	EXPECT_NE(RenderSettingsPlayer.find("NewSelected >= 0 && NewSelected < (int)s_vpFilteredFlags.size()"), std::string::npos);
+	EXPECT_NE(RenderSettingsPlayer.find("NewSelected >= 0 && NewSelected < (int)s_vFilteredFlags.size()"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("NewSelected >= 0 && NewSelected < s_NumNodes"), std::string::npos);
 	EXPECT_NE(PopupMapPicker.find("const int ItemIndex = MapIndex++;"), std::string::npos);
 	EXPECT_NE(PopupMapPicker.find("ItemIndex == pPopupContext->m_Selection"), std::string::npos);
@@ -4491,8 +4491,8 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesCleanDisplayNames)
 	EXPECT_NE(RenderSettingsGraphics.find("s_ActiveBackendDisplayName"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_vpGraphicsBackendNames[Selected] = s_ActiveBackendDisplayName.c_str();"), std::string::npos);
 	EXPECT_NE(ReadTextFile("src/engine/client/graphics_threaded.cpp").find("RestoreAutomaticOpenGLConfig"), std::string::npos);
-	EXPECT_NE(Source.find("static std::vector<const CCountryFlags::CCountryFlag *> s_vpFilteredFlags"), std::string::npos);
-	EXPECT_NE(Source.find("s_vpFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());"), std::string::npos);
+	EXPECT_NE(Source.find("static std::vector<CCountryFlagEntry> s_vFilteredFlags"), std::string::npos);
+	EXPECT_NE(Source.find("s_vFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_aScreenNamesCacheLanguage"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const bool RefreshScreenNames"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_vSupportedBackendNames"), std::string::npos);

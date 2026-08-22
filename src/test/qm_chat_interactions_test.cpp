@@ -211,9 +211,9 @@ TEST(QmNameplates, DeveloperBadgeUsesLocalizedSourceKey)
 	const std::string Nameplates = ReadTestSourceFile("src/game/client/components/nameplates.cpp");
 	const std::string Translations = ReadTestSourceFile("qmclient_scripts/languages_qmclient/translations/i18n/misc.toml");
 
-	EXPECT_NE(Nameplates.find("Localize(\"[Developer]\")"), std::string::npos);
-	EXPECT_EQ(Nameplates.find("ms_pText = \"[开发者]\""), std::string::npos);
-	EXPECT_NE(Translations.find("key = \"[Developer]\""), std::string::npos);
+	EXPECT_NE(Nameplates.find("Localize(\"Developer\")"), std::string::npos);
+	EXPECT_NE(Nameplates.find("str_format(aBuf, sizeof(aBuf), \"[%s]\", Localize(\"Developer\"))"), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"Developer\""), std::string::npos);
 }
 
 TEST(QmChatMessageMerge, SettingIsDefaultOnLocalizedInDreamFeaturesAndVersioned)

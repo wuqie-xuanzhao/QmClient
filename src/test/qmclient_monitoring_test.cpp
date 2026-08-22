@@ -8446,7 +8446,7 @@ TEST(QmMonitoringHelpers, SkinFlagLanguageBusinessItemsStayNonCardAndUseSharedRu
 	ASSERT_FALSE(LanguageBody.empty());
 
 	EXPECT_NE(PlayerBody.find("s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_GRID);"), std::string::npos);
-	EXPECT_NE(PlayerBody.find("s_ListBox.DoStart(48.0f * UiScale, s_vpFilteredFlags.size(), 10, 2"), std::string::npos);
+	EXPECT_NE(PlayerBody.find("s_ListBox.DoStart(48.0f * UiScale, s_vFilteredFlags.size(), 10, 2"), std::string::npos);
 	EXPECT_NE(TeeBody.find("s_ListBox.SetScrollProfile(EQmScrollProfile::SETTINGS_GRID);"), std::string::npos);
 	EXPECT_NE(TeeBody.find("ui_widget::InputField(TeeSkinSearchCtx"), std::string::npos);
 	EXPECT_NE(LanguageBody.find("ScrollRequest.m_Profile = EQmScrollProfile::SETTINGS_INNER;"), std::string::npos);
