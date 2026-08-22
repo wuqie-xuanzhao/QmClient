@@ -26,6 +26,7 @@
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/editor/enums.h>
+#include <game/editor/envelope_editor.h>
 #include <game/editor/file_browser.h>
 #include <game/editor/mapitems/envelope.h>
 #include <game/editor/mapitems/layer.h>
@@ -202,8 +203,6 @@ public:
 #define REGISTER_QUICK_ACTION(name, text, callback, disabled, active, button_color, description) m_QuickAction##name(text, description, callback, disabled, active, button_color),
 #include <game/editor/quick_actions.h>
 #undef REGISTER_QUICK_ACTION
-		m_ZoomEnvelopeX(1.0f, 0.1f, 600.0f),
-		m_ZoomEnvelopeY(640.0f, 0.1f, 32000.0f),
 		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput)),
 		m_Map(this)
 	{
@@ -227,10 +226,6 @@ public:
 		m_ToolbarPreviewSound = -1;
 
 		m_SelectEntitiesImage = "DDNet";
-
-		m_ResetZoomEnvelope = true;
-		m_OffsetEnvelopeX = 0.1f;
-		m_OffsetEnvelopeY = 0.5f;
 
 		m_ShowMousePointer = true;
 
@@ -441,13 +436,6 @@ public:
 	std::string m_SelectEntitiesImage;
 
 	// Zooming
-	CSmoothValue m_ZoomEnvelopeX;
-	CSmoothValue m_ZoomEnvelopeY;
-
-	bool m_ResetZoomEnvelope;
-
-	float m_OffsetEnvelopeX;
-	float m_OffsetEnvelopeY;
 
 	bool m_ShowMousePointer;
 	bool m_GuiActive;
@@ -512,6 +500,7 @@ public:
 
 	IGraphics::CTextureHandle GetEntitiesTexture();
 
+	CEnvelopeEditor m_EnvelopeEditor;
 	std::unique_ptr<CEditorMap> m_pToolsMap;
 	std::shared_ptr<CLayerGroup> m_pBrush;
 	std::shared_ptr<CLayerTiles> m_pTilesetPicker;
@@ -716,9 +705,6 @@ public:
 	void RenderStatusbar(CUIRect View, CUIRect *pTooltipRect);
 	void RenderTooltip(CUIRect TooltipRect);
 
-	void RenderEnvelopeEditor(CUIRect View);
-	void RenderEnvelopeEditorColorBar(CUIRect ColorBar, const std::shared_ptr<CEnvelope> &pEnvelope);
-
 	void RenderMapSettingsErrorDialog();
 	void RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEditorLast);
 	static void MapSettingsDropdownRenderCallback(const SPossibleValueMatch &Match, char (&aOutput)[128], std::vector<STextColorSplit> &vColorSplits);
@@ -734,28 +720,10 @@ public:
 	};
 	void DoEditorDragBar(CUIRect View, CUIRect *pDragBar, EDragSide Side, float *pValue, float MinValue = 100.0f, float MaxValue = 400.0f);
 
-	void UpdateHotEnvelopeObject(const CUIRect &View, const CEnvelope *pEnvelope, int ActiveChannels);
-
 	void RenderMenubar(CUIRect Menubar);
 	void ShowHelp();
 
 	void DoAudioPreview(CUIRect View, const void *pPlayPauseButtonId, const void *pStopButtonId, const void *pSeekBarId, int SampleId);
-
-	// Zooming
-	void ZoomAdaptOffsetX(float ZoomFactor, const CUIRect &View);
-	void UpdateZoomEnvelopeX(const CUIRect &View);
-
-	void ZoomAdaptOffsetY(float ZoomFactor, const CUIRect &View);
-	void UpdateZoomEnvelopeY(const CUIRect &View);
-
-	void ResetZoomEnvelope(const std::shared_ptr<CEnvelope> &pEnvelope, int ActiveChannels);
-	void RemoveTimeOffsetEnvelope(const std::shared_ptr<CEnvelope> &pEnvelope);
-	float ScreenToEnvelopeX(const CUIRect &View, float x) const;
-	float EnvelopeToScreenX(const CUIRect &View, float x) const;
-	float ScreenToEnvelopeY(const CUIRect &View, float y) const;
-	float EnvelopeToScreenY(const CUIRect &View, float y) const;
-	float ScreenToEnvelopeDX(const CUIRect &View, float DeltaX);
-	float ScreenToEnvelopeDY(const CUIRect &View, float DeltaY);
 
 	// DDRace
 

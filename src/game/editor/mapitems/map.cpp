@@ -115,6 +115,7 @@ void CEditorMap::Clean()
 	m_ShowDetail = true;
 	m_PreviewZoom = false;
 	m_FontTyperState.Reset();
+	m_EnvelopeEditorState.Reset(Editor());
 
 	m_MapViewState.Reset(Editor());
 	m_MapGridState.Reset();

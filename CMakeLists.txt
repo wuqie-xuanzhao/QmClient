@@ -3163,6 +3163,8 @@ if(CLIENT)
     map_view.cpp
     map_view.h
     mapitems.h
+    envelope_editor.cpp
+    envelope_editor.h
     mapitems/envelope.cpp
     mapitems/envelope.h
     mapitems/envelope_evaluator.cpp

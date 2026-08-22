@@ -12,6 +12,7 @@
 #include <game/editor/editor_server_settings.h>
 #include <game/editor/editor_trackers.h>
 #include <game/editor/editor_ui.h>
+#include <game/editor/envelope_editor.h>
 #include <game/editor/font_typer.h>
 #include <game/editor/map_grid.h>
 #include <game/editor/map_view.h>
@@ -172,6 +173,7 @@ public:
 	CMapView::CState m_MapViewState;
 	CMapEnvelopeEvaluator m_EnvelopeEvaluator;
 	CFontTyper::CState m_FontTyperState;
+	CEnvelopeEditor::CState m_EnvelopeEditorState;
 	CEditorUiElements m_EditorUiElements;
 	CEditorHistoryUiState m_EditorHistoryUiState;
 	CMapGrid::CState m_MapGridState;
