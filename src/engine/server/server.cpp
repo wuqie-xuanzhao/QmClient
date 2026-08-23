@@ -5041,14 +5041,19 @@ bool CServer::SetTimedOut(int ClientId, int OrigId)
 	// 恢复后的连接可能使用另一种协议版本，旧快照不能继续作为 delta 基础。
 	m_aClients[ClientId].m_Snapshots.PurgeAll();
 	m_aClients[ClientId].m_LastAckedSnapshot = -1;
+	// DelClientCallback 会通知游戏层并清理旧连接槽，接管状态必须先保存。
+	const int OrigFlags = m_aClients[OrigId].m_Flags;
+	const int OrigDDNetVersion = m_aClients[OrigId].m_DDNetVersion;
+	const bool OrigGotDDNetVersionPacket = m_aClients[OrigId].m_GotDDNetVersionPacket;
+	const bool OrigDDNetVersionSettled = m_aClients[OrigId].m_DDNetVersionSettled;
 	const EClientBrand OrigClientBrand = m_aClients[OrigId].m_ClientBrand;
 
 	DelClientCallback(OrigId, "Timeout Protection used", this);
 	m_aClients[ClientId].m_AuthKey = -1;
-	m_aClients[ClientId].m_Flags = m_aClients[OrigId].m_Flags;
-	m_aClients[ClientId].m_DDNetVersion = m_aClients[OrigId].m_DDNetVersion;
-	m_aClients[ClientId].m_GotDDNetVersionPacket = m_aClients[OrigId].m_GotDDNetVersionPacket;
-	m_aClients[ClientId].m_DDNetVersionSettled = m_aClients[OrigId].m_DDNetVersionSettled;
+	m_aClients[ClientId].m_Flags = OrigFlags;
+	m_aClients[ClientId].m_DDNetVersion = OrigDDNetVersion;
+	m_aClients[ClientId].m_GotDDNetVersionPacket = OrigGotDDNetVersionPacket;
+	m_aClients[ClientId].m_DDNetVersionSettled = OrigDDNetVersionSettled;
 	m_aClients[ClientId].m_ClientBrand = OrigClientBrand;
 
 	// OnSetTimedOut must be called after DelClientCallback to preserve the client id.

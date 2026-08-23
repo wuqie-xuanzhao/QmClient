@@ -7,6 +7,18 @@
 - 128 player 主体已由 `dae667a56` 及后续兼容修复落地；本轮进入行为审计与回归验证。
 - `IHttpRequest` 解耦已由 `368d883a4` 落地，待独立网络生命周期审计。
 
+## 128 Player Review Result
+
+- 修复 `CPlayerMapping::InitPlayer` 对未映射同 IP 玩家误设 reserved 的边界条件：`m_pReverseMap[i] == -1` 不再进入保留槽路径，避免后续更新永久跳过该玩家。
+- 收紧 timeout protection 接管状态读取：在 `DelClientCallback` 前快照 DDNet 版本、flags 和 client brand，再写入接管槽，避免回调清理旧槽后丢失协议状态。
+- `game-server` 构建通过；C++ 全量 `2783/2783`、Rust 全量测试通过。
+- `check_gate.py --mode default` 的测试层通过，但 quick 层代码格式检查被仓库既有 clang-format 违规阻断；本轮未修改这些格式问题。
+
+### Remaining Gaps
+
+- 尚无混合 0.6/0.7/128 人运行时场景覆盖映射、see-others 分页和 timeout reconnect；后续需独立集成测试或人工会话验证。
+- `CPlayerMapping` 尚无可隔离的单元测试 seam，本轮以静态边界审计和全量回归为主。
+
 ## 128 Player Audit
 
 ### Scope

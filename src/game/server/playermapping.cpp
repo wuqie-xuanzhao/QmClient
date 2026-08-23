@@ -167,10 +167,11 @@ void CPlayerMapping::CPlayerMap::InitPlayer(bool Timeout)
 			continue;
 
 		// update us with other same ip player infos
-		if(m_pPlayerMapping->m_aMap[i].m_pReverseMap[i] < MapSize())
+		const int OtherMapId = m_pPlayerMapping->m_aMap[i].m_pReverseMap[i];
+		if(OtherMapId >= 0 && OtherMapId < MapSize())
 		{
 			m_aReserved[i] = true;
-			Add(m_pPlayerMapping->m_aMap[i].m_pReverseMap[i], i);
+			Add(OtherMapId, i);
 		}
 
 		// update other same ip players with our info
