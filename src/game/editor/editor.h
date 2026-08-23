@@ -552,6 +552,19 @@ public:
 	static CUi::EPopupMenuFunctionResult PopupMenuTools(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupMenuSettings(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupCollab(void *pContext, CUIRect View, bool Active);
+	class CPopupMapTab : public SPopupMenuId
+	{
+	public:
+		CEditor *m_pEditor = nullptr;
+		size_t m_SelectedMap = 0;
+		static CUi::EPopupMenuFunctionResult Render(void *pContext, CUIRect View, bool Active);
+
+		const char m_CloseButtonId = 0;
+		const char m_CopyNameButtonId = 0;
+		const char m_CopyPathButtonId = 0;
+		const char m_ShowFileButtonId = 0;
+	};
+	CPopupMapTab m_PopupMapTab;
 	static CUi::EPopupMenuFunctionResult PopupGroup(void *pContext, CUIRect View, bool Active);
 	struct SLayerPopupContext : public SPopupMenuId
 	{

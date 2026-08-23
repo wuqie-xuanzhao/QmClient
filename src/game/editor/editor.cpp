@@ -401,28 +401,47 @@ void CEditor::DoMapTabs(CUIRect MapTabs)
 	m_MapTabsScrollRegion.Begin(&MapTabs, &ScrollOffset, &ScrollParams);
 	MapTabs.x += ScrollOffset.x;
 
-	size_t CloseIndex = m_vpMaps.size();
+	std::optional<size_t> CloseIndex;
 	for(size_t Index = 0; Index < m_vpMaps.size(); ++Index)
 	{
 		CEditorMap &Map = *m_vpMaps[Index];
-		const float ButtonWidth = std::clamp(TextRender()->TextWidth(10.0f, Map.m_aDisplayName) + 28.0f, 72.0f, 180.0f);
+		const float ButtonWidth = std::clamp(TextRender()->TextWidth(10.0f, Map.m_aDisplayName) + 10.0f, 60.0f, 120.0f);
 		CUIRect Tab;
-		MapTabs.VSplitLeft(ButtonWidth, &Tab, &MapTabs);
+		MapTabs.VSplitLeft(ButtonWidth + 18.0f, &Tab, &MapTabs);
 		MapTabs.VSplitLeft(2.0f, nullptr, &MapTabs);
 		if(!m_MapTabsScrollRegion.AddRect(Tab, m_MapTabsRevealSelected && m_SelectedMap == Index))
 			continue;
 
 		CUIRect CloseButton;
 		Tab.VSplitRight(18.0f, &Tab, &CloseButton);
-		const int TabResult = DoButton_Ex(&Map.m_TabSelectButtonId, Map.m_aDisplayName, m_SelectedMap == Index ? 1 : 0, &Tab, BUTTONFLAG_LEFT, "Select this map.", IGraphics::CORNER_L);
-		const int CloseResult = DoButton_FontIcon(&Map.m_TabCloseButtonId, FONT_ICON_XMARK, 0, &CloseButton, BUTTONFLAG_LEFT, "Close this map.", IGraphics::CORNER_R, 8.0f);
+		const bool Saving = IsSaving(Map.m_aFilename);
+		char aTooltip[256];
+		str_format(aTooltip, sizeof(aTooltip), "Select map '%s'.", Map.m_aFilename[0] == '\0' ? "unnamed" : Map.m_aFilename);
+		const int TabResult = DoButton_Ex(&Map.m_TabSelectButtonId, Map.m_aDisplayName, m_SelectedMap == Index ? 1 : 0, &Tab, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT | (Saving ? 0 : (int)BUTTONFLAG_MIDDLE), aTooltip, IGraphics::CORNER_L);
+		int CloseResult;
+		if(Saving)
+		{
+			CloseResult = DoButton_Ex(&Map.m_TabCloseButtonId, "", 0, &CloseButton, BUTTONFLAG_RIGHT, "This map is being saved.", IGraphics::CORNER_R);
+			Ui()->RenderProgressSpinner(CloseButton.Center(), 4.0f);
+		}
+		else
+		{
+			const bool ShowCloseIcon = !Map.m_Modified || Ui()->HotItem() == &Map.m_TabCloseButtonId;
+			CloseResult = DoButton_FontIcon(&Map.m_TabCloseButtonId, ShowCloseIcon ? FONT_ICON_XMARK : FONT_ICON_CIRCLE, 0, &CloseButton, BUTTONFLAG_ALL, Map.m_Modified ? "Close the selected map. This map has unsaved changes." : "Close the selected map.", IGraphics::CORNER_R, ShowCloseIcon ? 9.0f : 6.0f);
+		}
 		if(TabResult == 1)
 		{
 			m_SelectedMap = Index;
 			m_MapTabsScrollRegion.ScrollHere();
 			Reset(false);
 		}
-		else if(CloseResult == 1)
+		else if(TabResult == 2 || CloseResult == 2)
+		{
+			m_PopupMapTab.m_pEditor = this;
+			m_PopupMapTab.m_SelectedMap = Index;
+			Ui()->DoPopupMenu(&m_PopupMapTab, Ui()->MouseX(), Ui()->MouseY(), 150.0f, 80.0f, &m_PopupMapTab, CPopupMapTab::Render);
+		}
+		else if(TabResult == 3 || CloseResult == 1 || CloseResult == 3)
 		{
 			CloseIndex = Index;
 		}
@@ -430,12 +449,12 @@ void CEditor::DoMapTabs(CUIRect MapTabs)
 
 	m_MapTabsRevealSelected = false;
 	m_MapTabsScrollRegion.End();
-	if(CloseIndex < m_vpMaps.size())
-		CloseMap(CloseIndex, true);
+	if(CloseIndex.has_value())
+		CloseMap(CloseIndex.value(), true);
 
 	if(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Ui()->CheckActiveItem(nullptr))
 	{
-		if(Input()->ModifierIsPressed() && Input()->KeyPress(KEY_F4))
+		if(!CloseIndex.has_value() && Input()->ModifierIsPressed() && Input()->KeyPress(KEY_F4))
 			CloseMap(m_SelectedMap, true);
 		if(m_vpMaps.size() > 1 && Input()->ModifierIsPressed() && Input()->KeyPress(KEY_TAB))
 		{

@@ -19,6 +19,30 @@
 - 尚未启动工作区内开发客户端执行真实 HTTP 请求和关闭流程；当前证据覆盖编译、测试与静态生命周期接线，未覆盖真实网络运行时。
 - `check_gate.py --mode default` 仍可能被仓库既有 clang-format 违规阻断；若阻断，不把它归因于本专项改动。
 
+## 963f37bb Multi-Map Tabs
+
+### Scope
+
+- 保持当前 `CEditorMap` 多实例、tab 切换、Ctrl+Tab/Ctrl+Shift+Tab、新建/打开/保存/关闭流程。
+- 补齐 tab 的中键关闭、右键上下文菜单（关闭、复制名称、复制路径、打开所在目录）以及保存中/未保存状态提示。
+- 不扩展到跨地图复制粘贴、批量关闭/保存、tab 重排或协议/地图格式改动。
+
+### Status
+
+- 核心多地图生命周期已在当前分支存在；本轮补齐上游 963f37bb 的缺失 tab 交互。
+- 已完成：`game-client` 编译、C++ 全量 `2783/2783`、Rust 全量测试、专项 review。
+- `check_gate.py --mode default` 的测试层通过；quick 层仍被仓库既有 11 个 clang-format 违规阻断，未发现本专项新增格式失败。
+
+### Review Result
+
+- 未发现严重或重要级正确性问题。关闭请求始终使用 tab index，异步保存完成仍按 `CEditorMap *` 匹配，避免同路径 tab 误关闭。
+- 右键菜单在地图实例已被移除时主动关闭；保存中的地图禁用关闭并显示 spinner；未保存地图显示危险状态圆点，保留确认关闭流程。
+
+### Remaining Gaps
+
+- 尚未启动工作区内开发客户端做真实 UI 操作验证（中键关闭、右键菜单、Ctrl+Tab、异步保存期间关闭）；当前证据为源码审查、编译、全量测试和 gate。
+- 跨地图复制粘贴、批量关闭/保存、tab 重排仍明确不属于本专项。
+
 ## 128 Player Review Result
 
 - 修复 `CPlayerMapping::InitPlayer` 对未映射同 IP 玩家误设 reserved 的边界条件：`m_pReverseMap[i] == -1` 不再进入保留槽路径，避免后续更新永久跳过该玩家。

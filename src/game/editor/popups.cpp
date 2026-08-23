@@ -5,6 +5,7 @@
 #include "editor_actions.h"
 
 #include <base/color.h>
+#include <base/fs.h>
 
 #include <engine/graphics.h>
 #include <engine/input.h>
@@ -23,6 +24,77 @@
 #include <limits>
 
 using namespace FontIcons;
+
+CUi::EPopupMenuFunctionResult CEditor::CPopupMapTab::Render(void *pContext, CUIRect View, bool Active)
+{
+	CPopupMapTab *pPopupMapTab = static_cast<CPopupMapTab *>(pContext);
+	CEditor *pEditor = pPopupMapTab->m_pEditor;
+	if(!pEditor || pPopupMapTab->m_SelectedMap >= pEditor->m_vpMaps.size())
+		return CUi::POPUP_CLOSE_CURRENT;
+
+	const size_t SelectedMapIndex = pPopupMapTab->m_SelectedMap;
+	const auto &pSelectedMap = pEditor->m_vpMaps[SelectedMapIndex];
+	const bool Saving = pEditor->IsSaving(pSelectedMap->m_aFilename);
+	const bool Saved = pSelectedMap->m_aFilename[0] != '\0';
+
+	CUIRect Slot;
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&pPopupMapTab->m_CloseButtonId, "Close", Saving ? -1 : 0, &Slot, BUTTONFLAG_LEFT, "Close this map."))
+	{
+		pEditor->CloseMap(SelectedMapIndex, true);
+		return CUi::POPUP_CLOSE_CURRENT;
+	}
+
+	View.HSplitTop(10.0f, nullptr, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&pPopupMapTab->m_CopyNameButtonId, "Copy name", Saved ? 0 : -1, &Slot, BUTTONFLAG_LEFT, "Copy the name of this map to the clipboard."))
+	{
+		char aFilename[IO_MAX_PATH_LENGTH];
+		fs_split_file_extension(fs_filename(pSelectedMap->m_aFilename), aFilename, sizeof(aFilename));
+		pEditor->Input()->SetClipboardText(aFilename);
+		return CUi::POPUP_CLOSE_CURRENT;
+	}
+
+	View.HSplitTop(2.0f, nullptr, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&pPopupMapTab->m_CopyPathButtonId, "Copy path", Saved ? 0 : -1, &Slot, BUTTONFLAG_LEFT, "Copy the path of this map to the clipboard."))
+	{
+		pEditor->Input()->SetClipboardText(pSelectedMap->m_aFilename);
+		return CUi::POPUP_CLOSE_CURRENT;
+	}
+
+	View.HSplitTop(10.0f, nullptr, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&pPopupMapTab->m_ShowFileButtonId, "Show file", Saved ? 0 : -1, &Slot, BUTTONFLAG_LEFT, "Show this map in the file browser."))
+	{
+		bool FoundMap = false;
+		for(int CheckStorageType = IStorage::TYPE_SAVE; CheckStorageType < pEditor->Storage()->NumPaths(); ++CheckStorageType)
+		{
+			if(!pEditor->Storage()->FileExists(pSelectedMap->m_aFilename, CheckStorageType))
+				continue;
+
+			char aParentDirectory[IO_MAX_PATH_LENGTH];
+			str_copy(aParentDirectory, pSelectedMap->m_aFilename);
+			if(fs_parent_dir(aParentDirectory) != 0)
+			{
+				pEditor->ShowFileDialogError("Failed to determine parent folder for map file '%s'.", pSelectedMap->m_aFilename);
+				FoundMap = true;
+				break;
+			}
+			char aCompletePath[IO_MAX_PATH_LENGTH];
+			pEditor->Storage()->GetCompletePath(CheckStorageType, aParentDirectory, aCompletePath, sizeof(aCompletePath));
+			if(!pEditor->Client()->ViewFile(aCompletePath))
+				pEditor->ShowFileDialogError("Failed to open the folder '%s'.", aCompletePath);
+			FoundMap = true;
+			break;
+		}
+		if(!FoundMap)
+			pEditor->ShowFileDialogError("The map file '%s' could not be found.", pSelectedMap->m_aFilename);
+		return CUi::POPUP_CLOSE_CURRENT;
+	}
+
+	return CUi::POPUP_KEEP_OPEN;
+}
 
 namespace
 {
