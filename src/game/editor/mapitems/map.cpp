@@ -14,6 +14,28 @@
 #include <game/editor/mapitems/sound.h>
 #include <game/editor/references.h>
 
+CEditorMap::CEditorMap(CEditor *pEditor) :
+	m_EditorHistory(this),
+	m_ServerSettingsHistory(this),
+	m_EnvelopeEditorHistory(this),
+	m_QuadTracker(this),
+	m_EnvOpTracker(this),
+	m_LayerGroupPropTracker(this),
+	m_LayerPropTracker(this),
+	m_LayerTilesCommonPropTracker(this),
+	m_LayerTilesPropTracker(this),
+	m_LayerQuadPropTracker(this),
+	m_LayerSoundsPropTracker(this),
+	m_SoundSourceOperationTracker(this),
+	m_SoundSourcePropTracker(this),
+	m_SoundSourceRectShapePropTracker(this),
+	m_SoundSourceCircleShapePropTracker(this),
+	m_EnvelopeEvaluator(this),
+	m_MapSettingsCommandContext(pEditor->MapSettingsBackend().NewContextWithInput()),
+	m_pEditor(pEditor)
+{
+}
+
 void CEditorMap::CMapInfo::Reset()
 {
 	m_aAuthor[0] = '\0';
@@ -126,6 +148,7 @@ void CEditorMap::Clean()
 	m_MapGridState.Reset();
 	m_ProofModeState.Reset();
 	m_QuadKnifeState.Reset();
+	m_MapSettingsCommandContext.Reset();
 }
 
 void CEditorMap::CreateDefault()

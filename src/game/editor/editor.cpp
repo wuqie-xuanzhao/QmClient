@@ -5191,9 +5191,6 @@ void CEditor::Reset(bool CreateDefault)
 
 	Map()->m_EnvelopeEvaluator.m_AnimateTime = 0;
 	Map()->m_EnvelopeEvaluator.m_Animate = false;
-
-	m_SettingsCommandInput.Clear();
-	m_MapSettingsCommandContext.Reset();
 }
 
 void CEditor::AddDefaultMap()
@@ -5408,7 +5405,7 @@ void CEditor::HandleWriterFinishJobs()
 	}
 
 	auto MapIt = std::find_if(m_vpMaps.begin(), m_vpMaps.end(), [&](const std::unique_ptr<CEditorMap> &pMap) {
-		return str_comp(pMap->m_aFilename, pJob->RealFilename()) == 0;
+		return pMap.get() == pJob->Map();
 	});
 	if(MapIt != m_vpMaps.end() && (*MapIt)->m_CloseOnSave)
 	{

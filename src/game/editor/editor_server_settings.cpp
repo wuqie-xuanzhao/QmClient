@@ -55,8 +55,10 @@ struct SMapSettingCommand : public IMapSetting
 
 void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEditorLast)
 {
-	static int s_CommandSelectedIndex = -1;
-	static CListBox s_ListBox;
+	auto &m_MapSettingsCommandContext = Map()->m_MapSettingsCommandContext;
+	auto &m_SettingsCommandInput = m_MapSettingsCommandContext.m_CommandInput;
+	auto &s_ListBox = m_MapSettingsCommandContext.m_ListBox;
+	int &s_CommandSelectedIndex = m_MapSettingsCommandContext.m_CommandSelectedIndex;
 	s_ListBox.SetActive(!m_MapSettingsCommandContext.m_DropdownContext.m_ListBox.Active() && m_Dialog == DIALOG_NONE && !Ui()->IsPopupOpen());
 
 	bool GotSelection = s_ListBox.Active() && s_CommandSelectedIndex >= 0 && (size_t)s_CommandSelectedIndex < Map()->m_vSettings.size();
@@ -354,7 +356,7 @@ void CEditor::DoMapSettingsEditBox(CMapSettingsBackend::CContext *pContext, cons
 	{
 		// If line input is active, let's display a floating part for either the current argument name
 		// or for the error, if any. The error is only displayed when the cursor is at the end of the input.
-		const bool IsAtEnd = pLineInput->GetCursorOffset() >= (m_MapSettingsCommandContext.CommentOffset() != -1 ? m_MapSettingsCommandContext.CommentOffset() : pLineInput->GetLength());
+		const bool IsAtEnd = pLineInput->GetCursorOffset() >= (Context.CommentOffset() != -1 ? Context.CommentOffset() : pLineInput->GetLength());
 
 		if(Context.CurrentArgName() && (!Context.HasError() || !IsAtEnd)) // Render argument name
 			RenderFloatingPart(&ToolBar, x, Context.CurrentArgName());
@@ -1212,6 +1214,14 @@ void CMapSettingsBackend::CContext::Reset()
 	m_CommentOffset = -1;
 
 	ClearError();
+}
+
+void CMapSettingsBackend::CContextWithInput::Reset()
+{
+	CMapSettingsBackend::CContext::Reset();
+	m_CommandInput.Clear();
+	m_CommandSelectedIndex = -1;
+	m_ListBox.Reset();
 }
 
 void CMapSettingsBackend::CContext::Update()

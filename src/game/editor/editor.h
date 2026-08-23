@@ -172,6 +172,7 @@ public:
 
 	CEditorMap *Map();
 	const CEditorMap *Map() const;
+	CMapSettingsBackend &MapSettingsBackend() { return m_MapSettingsBackend; }
 	CMapView *MapView() { return &m_MapView; }
 	const CMapView *MapView() const { return &m_MapView; }
 	CQuadKnife *QuadKnife() { return &m_QuadKnife; }
@@ -204,7 +205,7 @@ public:
 #define REGISTER_QUICK_ACTION(name, text, callback, disabled, active, button_color, description) m_QuickAction##name(text, description, callback, disabled, active, button_color),
 #include <game/editor/quick_actions.h>
 #undef REGISTER_QUICK_ACTION
-		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput))
+		m_MapSettingsBackend()
 	{
 		m_EntitiesTexture.Invalidate();
 		m_FrontTexture.Invalidate();
@@ -517,9 +518,7 @@ public:
 
 	std::deque<std::shared_ptr<CDataFileWriterFinishJob>> m_WriterFinishJobs;
 
-	CLineInputBuffered<256> m_SettingsCommandInput;
 	CMapSettingsBackend m_MapSettingsBackend;
-	CMapSettingsBackend::CContext m_MapSettingsCommandContext;
 
 	CImageInfo m_TileartImageInfo;
 	char m_aTileartFilename[IO_MAX_PATH_LENGTH];

@@ -79,8 +79,9 @@ void CDataFileWriterFinishJob::Run()
 		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), Localize("Saving failed: Could not move temporary map file '%s' to '%s'.", "Editor"), m_aTempFilename, m_aRealFilename);
 	log_error("editor/save", "%s", m_aErrorMessage);
 }
-CDataFileWriterFinishJob::CDataFileWriterFinishJob(IStorage *pStorage, const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :
+CDataFileWriterFinishJob::CDataFileWriterFinishJob(IStorage *pStorage, CEditorMap *pMap, const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :
 	m_pStorage(pStorage),
+	m_pMap(pMap),
 	m_Writer(std::move(Writer))
 {
 	str_copy(m_aRealFilename, pRealFilename);
@@ -584,7 +585,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 	}
 
 	// finish the data file
-	std::shared_ptr<CDataFileWriterFinishJob> pWriterFinishJob = std::make_shared<CDataFileWriterFinishJob>(m_pEditor->Storage(), pFilename, aFilenameTmp, std::move(Writer));
+	std::shared_ptr<CDataFileWriterFinishJob> pWriterFinishJob = std::make_shared<CDataFileWriterFinishJob>(m_pEditor->Storage(), this, pFilename, aFilenameTmp, std::move(Writer));
 	m_pEditor->Engine()->AddJob(pWriterFinishJob);
 	m_pEditor->m_WriterFinishJobs.push_back(pWriterFinishJob);
 
