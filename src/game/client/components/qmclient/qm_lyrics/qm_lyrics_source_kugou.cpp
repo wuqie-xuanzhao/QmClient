@@ -6,7 +6,6 @@
 #include <engine/external/json-parser/json.h>
 #include <engine/external/zlib/zlib.h>
 #include <engine/http.h>
-#include <engine/shared/http.h>
 
 #include <algorithm>
 #include <cstdlib>
@@ -503,7 +502,7 @@ namespace QmLyrics
 		IHttp *m_pHttp = nullptr;
 		int m_TimeoutMs = 8000;
 		EStage m_Stage = EStage::IDLE;
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 		FSourceDoneCallback m_Done;
 		FSourceErrorCallback m_Error;
 		SSourceQuery m_Query;
@@ -516,7 +515,7 @@ namespace QmLyrics
 
 		void DispatchKugouRequest(CLyricsSourceKugou::SImpl *pImpl, const std::string &Url)
 		{
-			pImpl->m_pRequest = std::make_shared<CHttpRequest>(Url.c_str());
+			pImpl->m_pRequest = HttpGet(Url.c_str());
 			pImpl->m_pRequest->Timeout(CTimeout{5000, pImpl->m_TimeoutMs, 0, 0});
 			pImpl->m_pRequest->LogProgress(HTTPLOG::FAILURE);
 			pImpl->m_pRequest->AllowInsecureProtocol(true);
@@ -524,7 +523,7 @@ namespace QmLyrics
 			pImpl->m_pHttp->Run(pImpl->m_pRequest);
 		}
 
-		bool ReadKugouResponseBody(CHttpRequest *pReq, std::vector<unsigned char> *pOut)
+		bool ReadKugouResponseBody(IHttpRequest *pReq, std::vector<unsigned char> *pOut)
 		{
 			if(pReq == nullptr || pReq->State() != EHttpState::DONE || pReq->StatusCode() != 200)
 				return false;

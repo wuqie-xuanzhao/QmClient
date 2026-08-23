@@ -6,7 +6,6 @@
 #include <engine/engine.h>
 #include <engine/external/json-parser/json.h>
 #include <engine/http.h>
-#include <engine/shared/http.h>
 #include <engine/shared/jobs.h>
 #include <engine/storage.h>
 
@@ -193,7 +192,7 @@ namespace QmLyrics
 			return WriteFileText(pStorage, AMLL_TTML_DB_LAST_UPDATED_PATH, aNow);
 		}
 
-		bool ReadResponseBody(CHttpRequest *pReq, std::vector<unsigned char> *pOut)
+		bool ReadResponseBody(IHttpRequest *pReq, std::vector<unsigned char> *pOut)
 		{
 			if(pReq == nullptr || pReq->State() != EHttpState::DONE || pReq->StatusCode() != 200)
 				return false;
@@ -206,7 +205,7 @@ namespace QmLyrics
 			return true;
 		}
 
-		void PrepareRequest(CHttpRequest *pReq, int TimeoutMs)
+		void PrepareRequest(IHttpRequest *pReq, int TimeoutMs)
 		{
 			pReq->Timeout(CTimeout{5000, TimeoutMs > 0 ? TimeoutMs : 8000, 0, 0});
 			pReq->LogProgress(HTTPLOG::FAILURE);
@@ -510,7 +509,7 @@ namespace QmLyrics
 		int m_TimeoutMs = 8000;
 		std::string m_BaseUrl = AMLL_TTML_DB_DEFAULT_BASE_URL;
 		EStage m_Stage = EStage::IDLE;
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 		std::shared_ptr<CAmllTtmlDbIndexSearchJob> m_pIndexSearchJob;
 		std::shared_ptr<const TAmllTtmlDbIndex> m_pParsedIndex;
 		FSourceDoneCallback m_Done;
@@ -536,7 +535,7 @@ namespace QmLyrics
 		void DispatchAmllTtmlDbIndexDownload(CLyricsSourceAmllTtmlDb::SImpl *pImpl)
 		{
 			pImpl->m_Stage = CLyricsSourceAmllTtmlDb::SImpl::EStage::INDEX_DOWNLOAD;
-			pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildAmllTtmlDbIndexUrl(pImpl->m_BaseUrl.c_str()).c_str());
+			pImpl->m_pRequest = HttpGet(BuildAmllTtmlDbIndexUrl(pImpl->m_BaseUrl.c_str()).c_str());
 			PrepareRequest(pImpl->m_pRequest.get(), pImpl->m_TimeoutMs);
 			pImpl->m_pHttp->Run(pImpl->m_pRequest);
 		}
@@ -544,7 +543,7 @@ namespace QmLyrics
 		void DispatchAmllTtmlDbLyric(CLyricsSourceAmllTtmlDb::SImpl *pImpl)
 		{
 			pImpl->m_Stage = CLyricsSourceAmllTtmlDb::SImpl::EStage::LYRIC;
-			pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildAmllTtmlDbLyricUrl(pImpl->m_Hit.m_RawLyricFile, pImpl->m_BaseUrl.c_str()).c_str());
+			pImpl->m_pRequest = HttpGet(BuildAmllTtmlDbLyricUrl(pImpl->m_Hit.m_RawLyricFile, pImpl->m_BaseUrl.c_str()).c_str());
 			PrepareRequest(pImpl->m_pRequest.get(), pImpl->m_TimeoutMs);
 			pImpl->m_pHttp->Run(pImpl->m_pRequest);
 		}

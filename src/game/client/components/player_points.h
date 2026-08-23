@@ -3,7 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_PLAYER_POINTS_H
 #define GAME_CLIENT_COMPONENTS_PLAYER_POINTS_H
 
-#include <engine/shared/http.h>
+#include <engine/http.h>
 
 #include <game/client/component.h>
 
@@ -40,7 +40,7 @@ private:
 	std::map<std::string, SPlayerPointsEntry> m_Cache;
 
 	// Active HTTP requests: player name -> request
-	std::map<std::string, std::shared_ptr<CHttpRequest>> m_ActiveRequests;
+	std::map<std::string, std::shared_ptr<IHttpRequest>> m_ActiveRequests;
 
 	// Constants
 	static constexpr int64_t CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours

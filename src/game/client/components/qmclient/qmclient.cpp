@@ -185,7 +185,7 @@ namespace
 		using SResult = SQmClientUsersParseResult;
 
 	private:
-		std::shared_ptr<CHttpRequest> m_pTask;
+		std::shared_ptr<IHttpRequest> m_pTask;
 		char m_aServerAddress[NETADDR_MAXSTRSIZE] = "";
 		int64_t m_ExpireTick = 0;
 		CLock m_Lock;
@@ -213,7 +213,7 @@ namespace
 		}
 
 	public:
-		CQmClientUsersParseJob(std::shared_ptr<CHttpRequest> pTask, const char *pServerAddress, int64_t ExpireTick) :
+		CQmClientUsersParseJob(std::shared_ptr<IHttpRequest> pTask, const char *pServerAddress, int64_t ExpireTick) :
 			m_pTask(std::move(pTask)),
 			m_ExpireTick(ExpireTick)
 		{
@@ -242,7 +242,7 @@ namespace
 		};
 
 	private:
-		std::shared_ptr<CHttpRequest> m_pTask;
+		std::shared_ptr<IHttpRequest> m_pTask;
 		CLock m_Lock;
 		SResult m_Result;
 
@@ -347,7 +347,7 @@ namespace
 		}
 
 	public:
-		explicit CQmDdnetPlayerStatsParseJob(std::shared_ptr<CHttpRequest> pTask) :
+		explicit CQmDdnetPlayerStatsParseJob(std::shared_ptr<IHttpRequest> pTask) :
 			m_pTask(std::move(pTask))
 		{
 		}
@@ -733,7 +733,7 @@ void CQmClient::OnShutdown()
 		SendQmClientLifecyclePing("shutdown", m_pQmClientLifecycleStopTask);
 	}
 
-	auto AbortTask = [](std::shared_ptr<CHttpRequest> &pTask) {
+	auto AbortTask = [](std::shared_ptr<IHttpRequest> &pTask) {
 		if(pTask)
 		{
 			pTask->Abort();
@@ -874,7 +874,7 @@ void CQmClient::ClearQmClientLifecycleMarker()
 	Storage()->RemoveFile(QMCLIENT_LIFECYCLE_MARKER_FILE, IStorage::TYPE_SAVE);
 }
 
-void CQmClient::SendQmClientLifecyclePing(const char *pEvent, std::shared_ptr<CHttpRequest> &pTaskSlot)
+void CQmClient::SendQmClientLifecyclePing(const char *pEvent, std::shared_ptr<IHttpRequest> &pTaskSlot)
 {
 	if(!pEvent || pEvent[0] == '\0')
 		return;
@@ -959,7 +959,7 @@ void CQmClient::EnsureQmClientPlaytimeClientId()
 	}
 }
 
-void CQmClient::SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<CHttpRequest> &pTaskSlot, int64_t StopAt)
+void CQmClient::SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<IHttpRequest> &pTaskSlot, int64_t StopAt)
 {
 	if(!pUrl || pUrl[0] == '\0')
 		return;
@@ -991,7 +991,7 @@ void CQmClient::SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<CH
 	Http()->Run(pTaskSlot);
 }
 
-bool CQmClient::FinishQmClientPlaytimeTask(std::shared_ptr<CHttpRequest> &pTaskSlot, bool UpdateSessionStart)
+bool CQmClient::FinishQmClientPlaytimeTask(std::shared_ptr<IHttpRequest> &pTaskSlot, bool UpdateSessionStart)
 {
 	if(!pTaskSlot)
 		return false;
@@ -1504,7 +1504,7 @@ void CQmClient::UpdateQmDeveloperPresence()
 
 void CQmClient::ResetQmClientRecognitionTasks()
 {
-	auto AbortTask = [](std::shared_ptr<CHttpRequest> &pTask) {
+	auto AbortTask = [](std::shared_ptr<IHttpRequest> &pTask) {
 		if(pTask)
 		{
 			pTask->Abort();

@@ -2368,6 +2368,7 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   ghost.h
   graphics.cpp
   graphics.h
+  http.cpp
   http.h
   image.h
   input.h
@@ -2421,8 +2422,8 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   global_uuid_manager.cpp
   host_lookup.cpp
   host_lookup.h
-  http.cpp
-  http.h
+  http_curl.cpp
+  http_curl.h
   huffman.cpp
   huffman.h
   jobs.cpp

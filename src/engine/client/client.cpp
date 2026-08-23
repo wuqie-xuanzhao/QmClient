@@ -38,7 +38,7 @@
 #include <engine/shared/demo.h>
 #include <engine/shared/fifo.h>
 #include <engine/shared/filecollection.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/masterserver.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
@@ -3883,7 +3883,6 @@ void CClient::RegisterInterfaces()
 #endif
 	Kernel()->RegisterInterface(static_cast<IFriends *>(&m_Friends), false);
 	Kernel()->ReregisterInterface(static_cast<IFriends *>(&m_Foes));
-	Kernel()->RegisterInterface(static_cast<IHttp *>(&m_Http), false);
 }
 
 void CClient::InitInterfaces()
@@ -3911,7 +3910,7 @@ void CClient::InitInterfaces()
 	m_ServerBrowser.SetBaseInfo(&m_aNetClient[CONN_CONTACT], m_pGameClient->NetVersion());
 
 #if defined(CONF_AUTOUPDATE)
-	m_Updater.Init(&m_Http);
+	m_Updater.Init(m_pHttp);
 #endif
 
 	m_pConfigManager->RegisterCallback(IFavorites::ConfigSaveCallback, m_pFavorites);
@@ -3963,13 +3962,6 @@ void CClient::Run()
 		return;
 	}
 
-	if(!m_Http.Init(std::chrono::seconds{1}))
-	{
-		const char *pErrorMessage = "Failed to initialize the HTTP client.";
-		log_error("client", "%s", pErrorMessage);
-		ShowMessageBox({.m_pTitle = "HTTP Error", .m_pMessage = pErrorMessage});
-		return;
-	}
 
 	// init graphics
 	m_pGraphics = CreateEngineGraphicsThreaded();
@@ -4408,7 +4400,6 @@ void CClient::Run()
 	}
 
 	m_Fifo.Shutdown();
-	m_Http.Shutdown();
 	Engine()->ShutdownJobs();
 
 	// Stop the hang watchdog AFTER ShutdownJobs() so that hangs occurring
@@ -6226,6 +6217,10 @@ int main(int argc, const char **argv)
 	IEngineTextRender *pEngineTextRender = CreateEngineTextRender();
 	pKernel->RegisterInterface(pEngineTextRender); // IEngineTextRender
 	pKernel->RegisterInterface(static_cast<ITextRender *>(pEngineTextRender), false);
+
+	IEngineHttp *pEngineHttp = CreateEngineHttp();
+	pKernel->RegisterInterface(pEngineHttp); // IEngineHttp
+	pKernel->RegisterInterface(static_cast<IHttp *>(pEngineHttp), false);
 
 	IFrameScheduler *pFrameScheduler = CreateFrameScheduler();
 	pKernel->RegisterInterface(pFrameScheduler);

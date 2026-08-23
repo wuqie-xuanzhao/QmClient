@@ -26,7 +26,7 @@
 #include <engine/shared/fifo.h>
 #include <engine/shared/filecollection.h>
 #include <engine/shared/host_lookup.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/json.h>
 #include <engine/shared/jsonwriter.h>
 #include <engine/shared/linereader.h>
@@ -3493,14 +3493,14 @@ int CServer::Run()
 	m_UPnP.Open(BindAddr);
 #endif
 
-	if(!m_Http.Init(std::chrono::seconds{2}))
+	if(!m_pHttp->Init(std::chrono::seconds{2}))
 	{
 		log_error("server", "Failed to initialize the HTTP client.");
 		return -1;
 	}
 
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
-	m_pRegister = CreateRegister(&g_Config, m_pConsole, m_pEngine, &m_Http, g_Config.m_SvRegisterPort > 0 ? g_Config.m_SvRegisterPort : this->Port(), m_NetServer.GetGlobalToken());
+	m_pRegister = CreateRegister(&g_Config, m_pConsole, m_pEngine, m_pHttp, g_Config.m_SvRegisterPort > 0 ? g_Config.m_SvRegisterPort : this->Port(), m_NetServer.GetGlobalToken());
 
 	m_NetServer.SetCallbacks(NewClientCallback, NewClientNoAuthCallback, ClientRejoinCallback, DelClientCallback, this);
 
@@ -3842,7 +3842,7 @@ int CServer::Run()
 	m_pRegister->OnShutdown();
 	m_Econ.Shutdown();
 	m_Fifo.Shutdown();
-	m_Http.Shutdown();
+	m_pHttp->Shutdown();
 	Engine()->ShutdownJobs();
 
 	GameServer()->OnShutdown(nullptr);
@@ -4793,7 +4793,7 @@ void CServer::RegisterCommands()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pAntibot = Kernel()->RequestInterface<IEngineAntibot>();
 
-	Kernel()->RegisterInterface(static_cast<IHttp *>(&m_Http), false);
+	m_pHttp = Kernel()->RequestInterface<IEngineHttp>();
 
 	// register console commands
 	Console()->Register("kick", "v[id] ?r[reason]", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");

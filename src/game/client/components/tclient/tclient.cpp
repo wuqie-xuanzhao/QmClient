@@ -641,7 +641,7 @@ void CTClient::OnInit()
 void CTClient::OnShutdown()
 {
 	ResetGoresConfigOverrides();
-	auto AbortTask = [](std::shared_ptr<CHttpRequest> &pTask) {
+	auto AbortTask = [](std::shared_ptr<IHttpRequest> &pTask) {
 		if(pTask)
 		{
 			pTask->Abort();
@@ -2922,7 +2922,7 @@ void CTClient::StartUpdateDownload()
 	IStorage::FormatTmpPath(m_aUpdateManifestTmp, sizeof(m_aUpdateManifestTmp), QMCLIENT_UPDATE_MANIFEST_NAME);
 	IStorage::FormatTmpPath(m_aUpdateManifestSignatureTmp, sizeof(m_aUpdateManifestSignatureTmp), QMCLIENT_UPDATE_MANIFEST_SIGNATURE_NAME);
 
-	const auto StartDownload = [&](std::shared_ptr<CHttpRequest> &pTask, const char *pUrl, const char *pDestination, int64_t MaxResponseSize) {
+	const auto StartDownload = [&](std::shared_ptr<IHttpRequest> &pTask, const char *pUrl, const char *pDestination, int64_t MaxResponseSize) {
 		pTask = HttpGet(pUrl);
 		pTask->Timeout(CTimeout{10000, 0, 8192, 20});
 		pTask->MaxResponseSize(MaxResponseSize);
@@ -2940,7 +2940,7 @@ void CTClient::StartUpdateDownload()
 
 void CTClient::ResetUpdateDownloadTasks()
 {
-	const auto ResetTask = [](std::shared_ptr<CHttpRequest> &pTask) {
+	const auto ResetTask = [](std::shared_ptr<IHttpRequest> &pTask) {
 		if(pTask)
 			pTask->Abort();
 		pTask = nullptr;
@@ -3069,7 +3069,7 @@ void CTClient::FinishUpdateDownloads()
 		}
 	};
 
-	const auto IsSuccessful = [](const std::shared_ptr<CHttpRequest> &pTask) {
+	const auto IsSuccessful = [](const std::shared_ptr<IHttpRequest> &pTask) {
 		return pTask && pTask->State() == EHttpState::DONE;
 	};
 	if(!IsSuccessful(m_pUpdatePackageTask) || !IsSuccessful(m_pUpdatePackageSignatureTask) ||

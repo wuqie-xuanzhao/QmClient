@@ -3,7 +3,7 @@
 #include <base/math.h>
 #include <base/str.h>
 
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/json.h>
 
 #include <limits>

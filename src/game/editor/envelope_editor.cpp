@@ -462,7 +462,6 @@ void CEnvelopeEditor::Render(CUIRect View)
 			{
 				ToolBar.VSplitRight(5.0f, &ToolBar, nullptr);
 				ToolBar.VSplitRight(20.0f, &ToolBar, &Button);
-				static int m_ZoomOutButtonId = 0;
 				if(Editor()->DoButton_FontIcon(&m_ZoomOutButtonId, FontIcons::FONT_ICON_MINUS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad-] Zoom out horizontally, hold shift to zoom vertically.", "Editor"), IGraphics::CORNER_R, 9.0f))
 				{
 					if(Input()->ShiftIsPressed())
@@ -472,12 +471,10 @@ void CEnvelopeEditor::Render(CUIRect View)
 				}
 
 				ToolBar.VSplitRight(20.0f, &ToolBar, &Button);
-				static int m_ResetZoomButtonId = 0;
 				if(Editor()->DoButton_FontIcon(&m_ResetZoomButtonId, FontIcons::FONT_ICON_MAGNIFYING_GLASS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad*] Reset zoom to default value.", "Editor"), IGraphics::CORNER_NONE, 9.0f))
 					ResetZoomEnvelope(pEnvelope, State.m_ActiveChannels);
 
 				ToolBar.VSplitRight(20.0f, &ToolBar, &Button);
-				static int m_ZoomInButtonId = 0;
 				if(Editor()->DoButton_FontIcon(&m_ZoomInButtonId, FontIcons::FONT_ICON_PLUS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad+] Zoom in horizontally, hold shift to zoom vertically.", "Editor"), IGraphics::CORNER_L, 9.0f))
 				{
 					if(Input()->ShiftIsPressed())
@@ -582,7 +579,6 @@ void CEnvelopeEditor::Render(CUIRect View)
 			{Localize("Red value of the envelope.", "Editor"), Localize("Green value of the envelope.", "Editor"), Localize("Blue value of the envelope.", "Editor"), Localize("Alpha value of the envelope.", "Editor")},
 		};
 
-		static int m_aChannelButtonIds[CEnvPoint::MAX_CHANNELS] = {0};
 		int Bit = 1;
 
 		for(int i = 0; i < CEnvPoint::MAX_CHANNELS; i++, Bit <<= 1)
@@ -606,7 +602,6 @@ void CEnvelopeEditor::Render(CUIRect View)
 		ToolBar.VSplitLeft(15.0f, nullptr, &ToolBar);
 		ToolBar.VSplitLeft(40.0f, &Button, &ToolBar);
 
-		static int m_EnvelopeEditorButtonUsed = -1;
 		const bool ShouldPan = m_Operation == EEnvelopeEditorOp::OP_NONE && (Ui()->MouseButton(2) || (Ui()->MouseButton(0) && Input()->ModifierIsPressed()));
 		if(Editor()->m_pContainerPanned == &m_EnvelopeEditorId)
 		{
@@ -938,7 +933,6 @@ void CEnvelopeEditor::Render(CUIRect View)
 					else if(ButtonResult == 2)
 					{
 						Editor()->m_PopupEnvelopeSelectedPoint = i;
-						static SPopupMenuId m_PopupCurvetypeId;
 						Ui()->DoPopupMenu(&m_PopupCurvetypeId, Ui()->MouseX(), Ui()->MouseY(), 80, (float)NUM_CURVETYPES * 14.0f + 10.0f, Editor(), CEditor::PopupEnvelopeCurvetype);
 					}
 				}
@@ -1198,7 +1192,6 @@ void CEnvelopeEditor::Render(CUIRect View)
 									}
 									else if(Map()->m_vSelectedEnvelopePoints.size() > 1)
 									{
-										static SPopupMenuId m_PopupEnvPointMultiId;
 										Ui()->DoPopupMenu(&m_PopupEnvPointMultiId, Ui()->MouseX(), Ui()->MouseY(), 100, 22, Editor(), CEditor::PopupEnvPointMulti);
 									}
 									Ui()->SetActiveItem(nullptr);
@@ -1545,8 +1538,6 @@ void CEnvelopeEditor::Render(CUIRect View)
 		}
 
 		// handle scaling
-		static std::vector<float> m_vInitialPositionsX;
-		static std::vector<float> m_vInitialPositionsY;
 		if(m_Operation == EEnvelopeEditorOp::OP_NONE && !m_NameInput.IsActive() && Input()->KeyIsPressed(KEY_S) && !Input()->ModifierIsPressed() && !Map()->m_vSelectedEnvelopePoints.empty())
 		{
 			m_Operation = EEnvelopeEditorOp::OP_SCALE;

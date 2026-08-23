@@ -8,7 +8,7 @@
 #include <engine/external/regex.h>
 #include <engine/graphics.h>
 #include <engine/shared/console.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/json.h>
 #include <engine/shared/protocol.h>
 #include <engine/textrender.h>
@@ -416,11 +416,11 @@ public:
 	const char *UpdateShutdownMessage() const;
 	bool IsPreparingUpdateForShutdown() const { return m_UpdateShutdownRequested; }
 
-	std::shared_ptr<CHttpRequest> m_pQmClientUpdateInfoTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pUpdatePackageTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pUpdatePackageSignatureTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pUpdateManifestTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pUpdateManifestSignatureTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientUpdateInfoTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pUpdatePackageTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pUpdatePackageSignatureTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pUpdateManifestTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pUpdateManifestSignatureTask = nullptr;
 	void FetchQmClientUpdateInfo();
 	void FinishQmClientUpdateInfo();
 	void ResetQmClientUpdateInfoTask();

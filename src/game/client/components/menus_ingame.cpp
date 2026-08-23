@@ -20,7 +20,7 @@
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/json.h>
 #include <engine/shared/localization.h>
 #include <engine/storage.h>
@@ -107,7 +107,7 @@ namespace
 		str_append(pBuffer, pPath, BufferSize);
 	}
 
-	bool AddReportHeaders(CHttpRequest *pRequest, const char *pPath, const char *pBody)
+	bool AddReportHeaders(IHttpRequest *pRequest, const char *pPath, const char *pBody)
 	{
 		if(g_Config.m_QmReportAppId[0] == '\0' || g_Config.m_QmReportSecret[0] == '\0')
 			return false;
@@ -136,12 +136,12 @@ namespace
 		return true;
 	}
 
-	std::shared_ptr<CHttpRequest> CreateReportRequest(const char *pPath, const char *pBody)
+	std::shared_ptr<IHttpRequest> CreateReportRequest(const char *pPath, const char *pBody)
 	{
 		char aUrl[256];
 		BuildReportUrl(pPath, aUrl, sizeof(aUrl));
 
-		auto pRequest = std::make_shared<CHttpRequest>(aUrl);
+		std::shared_ptr<IHttpRequest> pRequest = HttpGet(aUrl);
 		pRequest->AllowInsecureProtocol();
 		pRequest->LogProgress(HTTPLOG::FAILURE);
 		pRequest->FailOnErrorStatus(false);
@@ -162,7 +162,7 @@ namespace
 			FAILED,
 		};
 
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 		std::unordered_map<std::string, std::vector<std::string>> m_UnfinishedByType;
 		EState m_State = EState::IDLE;
 
@@ -193,7 +193,7 @@ namespace
 			char aUrl[512];
 			str_format(aUrl, sizeof(aUrl), "https://ddnet.org/players/?json2=%s", aEncodedName);
 
-			auto pRequest = std::make_shared<CHttpRequest>(aUrl);
+			std::shared_ptr<IHttpRequest> pRequest = HttpGet(aUrl);
 			pRequest->Timeout(CTimeout{10000, 30000, 100, 10});
 			pRequest->LogProgress(HTTPLOG::FAILURE);
 			pRequest->FailOnErrorStatus(false);

@@ -5,7 +5,6 @@
 
 #include <engine/external/json-parser/json.h>
 #include <engine/http.h>
-#include <engine/shared/http.h>
 
 #include <algorithm>
 #include <cstring>
@@ -254,7 +253,7 @@ namespace QmLyrics
 		int m_TimeoutMs = 8000;
 		std::string m_BaseUrl = "https://lrclib.net";
 		std::string m_Proxy;
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 		FSourceDoneCallback m_Done;
 		FSourceErrorCallback m_Error;
 		SSourceQuery m_PendingQuery;
@@ -313,7 +312,7 @@ namespace QmLyrics
 
 		void DispatchRequest(CLyricsSourceLrclib::SImpl *pImpl, const std::string &Url, CLyricsSourceLrclib::SImpl::EStage Stage)
 		{
-			pImpl->m_pRequest = std::make_shared<CHttpRequest>(Url.c_str());
+			pImpl->m_pRequest = HttpGet(Url.c_str());
 			// 连接 5s，整体超时 m_TimeoutMs；关闭低速检测（小 API 响应易误触发）。
 			const int TimeoutMs = EffectiveLrclibHttpTimeoutMs(pImpl->m_TimeoutMs, pImpl->m_Proxy.c_str());
 			pImpl->m_pRequest->Timeout(CTimeout{5000, TimeoutMs, 0, 0});
@@ -354,7 +353,7 @@ namespace QmLyrics
 			return;
 
 		const SImpl::EStage CompletedStage = m_pImpl->m_Stage;
-		std::shared_ptr<CHttpRequest> pRequest = m_pImpl->m_pRequest;
+		std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pRequest;
 		m_pImpl->m_pRequest.reset();
 
 		if(pRequest->State() != EHttpState::DONE)

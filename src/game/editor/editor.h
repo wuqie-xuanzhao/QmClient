@@ -19,7 +19,7 @@
 #include <engine/editor.h>
 #include <engine/graphics.h>
 #include <engine/shared/datafile.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/jobs.h>
 #include <engine/shared/localization.h>
 
@@ -50,6 +50,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -169,8 +170,8 @@ public:
 	CUi *Ui() { return &m_UI; }
 	CRenderMap *RenderMap() { return &m_RenderMap; }
 
-	CEditorMap *Map() { return &m_Map; }
-	const CEditorMap *Map() const { return &m_Map; }
+	CEditorMap *Map();
+	const CEditorMap *Map() const;
 	CMapView *MapView() { return &m_MapView; }
 	const CMapView *MapView() const { return &m_MapView; }
 	CQuadKnife *QuadKnife() { return &m_QuadKnife; }
@@ -203,8 +204,7 @@ public:
 #define REGISTER_QUICK_ACTION(name, text, callback, disabled, active, button_color, description) m_QuickAction##name(text, description, callback, disabled, active, button_color),
 #include <game/editor/quick_actions.h>
 #undef REGISTER_QUICK_ACTION
-		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput)),
-		m_Map(this)
+		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput))
 	{
 		m_EntitiesTexture.Invalidate();
 		m_FrontTexture.Invalidate();
@@ -271,7 +271,7 @@ public:
 	void OnWindowResize() override;
 	void OnClose() override;
 	void OnDialogClose();
-	bool HasUnsavedData() const override { return Map()->m_Modified; }
+	bool HasUnsavedData() const override;
 	void UpdateMentions() override { m_Mentions++; }
 	void ResetMentions() override { m_Mentions = 0; }
 	void OnIngameMoved() override { m_IngameMoved = true; }
@@ -297,6 +297,8 @@ public:
 	float m_LastAutosaveUpdateTime = -1.0f;
 	void HandleAutosave();
 	void HandleWriterFinishJobs();
+	bool IsSaving(const char *pFilename) const;
+	void UpdateMapDisplayNames();
 
 	enum class ECollabState
 	{
@@ -308,11 +310,11 @@ public:
 	};
 	ECollabState m_CollabState = ECollabState::DISCONNECTED;
 	CLineInputBuffered<16> m_CollabRoomInput;
-	std::shared_ptr<CHttpRequest> m_pCollabCreateTask;
-	std::shared_ptr<CHttpRequest> m_pCollabJoinTask;
-	std::shared_ptr<CHttpRequest> m_pCollabLeaveTask;
-	std::shared_ptr<CHttpRequest> m_pCollabPushTask;
-	std::shared_ptr<CHttpRequest> m_pCollabPullTask;
+	std::shared_ptr<IHttpRequest> m_pCollabCreateTask;
+	std::shared_ptr<IHttpRequest> m_pCollabJoinTask;
+	std::shared_ptr<IHttpRequest> m_pCollabLeaveTask;
+	std::shared_ptr<IHttpRequest> m_pCollabPushTask;
+	std::shared_ptr<IHttpRequest> m_pCollabPullTask;
 	char m_aCollabClientId[64] = "";
 	char m_aCollabRoomCode[16] = "";
 	char m_aCollabStatus[160] = "Not in a collaboration room";
@@ -329,14 +331,14 @@ public:
 	[[gnu::format(printf, 2, 3)]] void SetCollabStatus(const char *pFormat, ...);
 	void UpdateCollab();
 	bool BuildCollabUrl(const char *pPath, char *pBuffer, int BufferSize, const char *pQuery = nullptr) const;
-	std::shared_ptr<CHttpRequest> MakeCollabJsonRequest(const char *pPath, const std::string &Body);
+	std::shared_ptr<IHttpRequest> MakeCollabJsonRequest(const char *pPath, const std::string &Body);
 	void CreateCollabRoom();
 	void JoinCollabRoom();
 	void LeaveCollabRoom();
 	void StartCollabPull();
 	void StartCollabSnapshotSave(bool Force = false);
 	void UploadCollabSnapshot();
-	void FinishCollabCreateJoin(std::shared_ptr<CHttpRequest> &pTask, bool Joining);
+	void FinishCollabCreateJoin(std::shared_ptr<IHttpRequest> &pTask, bool Joining);
 	void FinishCollabLeave();
 	void FinishCollabPush();
 	void FinishCollabPull();
@@ -354,6 +356,8 @@ public:
 	[[gnu::format(printf, 2, 3)]] void ShowFileDialogError(const char *pFormat, ...);
 
 	void Reset(bool CreateDefault = true);
+	void AddDefaultMap();
+	void CloseMap(size_t Index, bool Confirm);
 	bool Save(const char *pFilename) override;
 	bool Load(const char *pFilename, int StorageType) override;
 	bool HandleMapDrop(const char *pFilename, int StorageType) override;
@@ -394,6 +398,7 @@ public:
 		POPEVENT_LOADCURRENT,
 		POPEVENT_LOADDROP,
 		POPEVENT_NEW,
+		POPEVENT_CLOSE_MAP,
 		POPEVENT_LARGELAYER,
 		POPEVENT_PREVENTUNUSEDTILES,
 		POPEVENT_IMAGEDIV16,
@@ -413,6 +418,7 @@ public:
 	int m_PopupEventType;
 	int m_PopupEventActivated;
 	int m_PopupEventWasActivated;
+	size_t m_PopupCloseMapIndex = 0;
 	bool m_LargeLayerWasWarned;
 	bool m_PreventUnusedTilesWasWarned;
 
@@ -722,6 +728,7 @@ public:
 
 	void RenderMenubar(CUIRect Menubar);
 	void ShowHelp();
+	void DoMapTabs(CUIRect MapTabs);
 
 	void DoAudioPreview(CUIRect View, const void *pPlayPauseButtonId, const void *pStopButtonId, const void *pSeekBarId, int SampleId);
 
@@ -752,7 +759,10 @@ public:
 	void AdjustBrushSpecialTiles(bool UseNextFree, int AdjustModifiers, int AdjustValue);
 
 private:
-	CEditorMap m_Map;
+	std::vector<std::unique_ptr<CEditorMap>> m_vpMaps;
+	size_t m_SelectedMap = 0;
+	bool m_MapTabsRevealSelected = false;
+	CScrollRegion m_MapTabsScrollRegion;
 
 	CEditorHistory &ActiveHistory();
 

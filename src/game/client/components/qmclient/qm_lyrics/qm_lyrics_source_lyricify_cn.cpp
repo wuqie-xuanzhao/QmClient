@@ -7,7 +7,6 @@
 #include <engine/external/json-parser/json.h>
 #include <engine/external/zlib/zlib.h>
 #include <engine/http.h>
-#include <engine/shared/http.h>
 
 #include <algorithm>
 #include <array>
@@ -1662,7 +1661,7 @@ namespace QmLyrics
 			}
 		}
 
-		bool ReadResponseBody(CHttpRequest *pReq, std::vector<unsigned char> *pOut)
+		bool ReadResponseBody(IHttpRequest *pReq, std::vector<unsigned char> *pOut)
 		{
 			if(pReq == nullptr || pReq->State() != EHttpState::DONE || pReq->StatusCode() != 200)
 				return false;
@@ -1675,7 +1674,7 @@ namespace QmLyrics
 			return true;
 		}
 
-		void PrepareRequest(CHttpRequest *pReq, int TimeoutMs, bool AllowHttp)
+		void PrepareRequest(IHttpRequest *pReq, int TimeoutMs, bool AllowHttp)
 		{
 			pReq->Timeout(CTimeout{5000, TimeoutMs > 0 ? TimeoutMs : 8000, 0, 0});
 			pReq->LogProgress(HTTPLOG::FAILURE);
@@ -1683,7 +1682,7 @@ namespace QmLyrics
 			pReq->HeaderString("User-Agent", "QmClient (https://github.com/Q1menG)");
 		}
 
-		void PrepareNeteaseRequest(CHttpRequest *pReq, int TimeoutMs, bool AllowHttp)
+		void PrepareNeteaseRequest(IHttpRequest *pReq, int TimeoutMs, bool AllowHttp)
 		{
 			pReq->Timeout(CTimeout{5000, TimeoutMs > 0 ? TimeoutMs : 8000, 0, 0});
 			pReq->LogProgress(HTTPLOG::FAILURE);
@@ -2131,7 +2130,7 @@ namespace QmLyrics
 		IHttp *m_pHttp = nullptr;
 		int m_TimeoutMs = 8000;
 		EStage m_Stage = EStage::IDLE;
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 		FSourceDoneCallback m_Done;
 		FSourceErrorCallback m_Error;
 		SSourceQuery m_Query;
@@ -2143,7 +2142,7 @@ namespace QmLyrics
 				return false;
 			const std::string Body = BuildQqMusicQrcPostBody(m_Hit.m_Id);
 			m_Stage = EStage::QRC;
-			m_pRequest = std::make_shared<CHttpRequest>("https://c.y.qq.com/qqmusic/fcgi-bin/lyric_download.fcg");
+			m_pRequest = HttpGet("https://c.y.qq.com/qqmusic/fcgi-bin/lyric_download.fcg");
 			PrepareRequest(m_pRequest.get(), m_TimeoutMs, false);
 			m_pRequest->HeaderString("Referer", "https://c.y.qq.com/");
 			m_pRequest->HeaderString("Origin", "https://y.qq.com");
@@ -2158,7 +2157,7 @@ namespace QmLyrics
 				return false;
 			const int64_t NowMs = time_timestamp() * 1000LL;
 			m_Stage = EStage::LYRIC;
-			m_pRequest = std::make_shared<CHttpRequest>(BuildQqMusicLyricUrl(m_Hit.m_Mid, NowMs).c_str());
+			m_pRequest = HttpGet(BuildQqMusicLyricUrl(m_Hit.m_Mid, NowMs).c_str());
 			PrepareRequest(m_pRequest.get(), m_TimeoutMs, false);
 			m_pRequest->HeaderString("Referer", "https://c.y.qq.com/");
 			m_pHttp->Run(m_pRequest);
@@ -2228,7 +2227,7 @@ namespace QmLyrics
 		}
 		m_pImpl->m_Stage = SImpl::EStage::SEARCH;
 		const std::string Json = BuildQqMusicSearchJson(Query);
-		m_pImpl->m_pRequest = std::make_shared<CHttpRequest>("https://u.y.qq.com/cgi-bin/musicu.fcg");
+		m_pImpl->m_pRequest = HttpGet("https://u.y.qq.com/cgi-bin/musicu.fcg");
 		PrepareRequest(m_pImpl->m_pRequest.get(), m_pImpl->m_TimeoutMs, false);
 		m_pImpl->m_pRequest->HeaderString("Referer", "https://c.y.qq.com/");
 		m_pImpl->m_pRequest->PostJson(Json.c_str());
@@ -2317,7 +2316,7 @@ namespace QmLyrics
 		IHttp *m_pHttp = nullptr;
 		int m_TimeoutMs = 8000;
 		EStage m_Stage = EStage::IDLE;
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 		FSourceDoneCallback m_Done;
 		FSourceErrorCallback m_Error;
 		SSourceQuery m_Query;
@@ -2331,7 +2330,7 @@ namespace QmLyrics
 			if(Body.empty())
 				return false;
 			m_Stage = EStage::LYRIC;
-			m_pRequest = std::make_shared<CHttpRequest>(BuildNeteaseLyricUrl(m_Hit.m_Id).c_str());
+			m_pRequest = HttpGet(BuildNeteaseLyricUrl(m_Hit.m_Id).c_str());
 			PrepareNeteaseRequest(m_pRequest.get(), m_TimeoutMs, false);
 			m_pRequest->PostForm((const unsigned char *)Body.data(), Body.size());
 			m_pHttp->Run(m_pRequest);
@@ -2399,7 +2398,7 @@ namespace QmLyrics
 			return;
 		}
 		m_pImpl->m_Stage = SImpl::EStage::SEARCH;
-		m_pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildNeteaseSearchUrl(Query).c_str());
+		m_pImpl->m_pRequest = HttpGet(BuildNeteaseSearchUrl(Query).c_str());
 		PrepareNeteaseRequest(m_pImpl->m_pRequest.get(), m_pImpl->m_TimeoutMs, true);
 		m_pImpl->m_pHttp->Run(m_pImpl->m_pRequest);
 	}

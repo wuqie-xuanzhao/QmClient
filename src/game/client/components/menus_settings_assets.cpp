@@ -14,7 +14,7 @@
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
 #include <engine/shared/config.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/jobs.h>
 #include <engine/shared/json.h>
 #include <engine/storage.h>
@@ -1692,8 +1692,8 @@ namespace
 		std::string m_ThumbCachePath;
 		std::string m_InstallPath;
 		IGraphics::CTextureHandle m_ThumbTexture;
-		std::shared_ptr<CHttpRequest> m_pThumbTask;
-		std::shared_ptr<CHttpRequest> m_pDownloadTask;
+		std::shared_ptr<IHttpRequest> m_pThumbTask;
+		std::shared_ptr<IHttpRequest> m_pDownloadTask;
 		bool m_DownloadFailed = false;
 		bool m_Installed = false;
 		CImageInfo m_ThumbImage;
@@ -1798,8 +1798,8 @@ namespace
 		std::unordered_set<std::string> m_vDecodeThumbQueued;
 		std::deque<std::string> m_vReadyThumbQueue;
 		std::unordered_set<std::string> m_vReadyThumbQueued;
-		std::shared_ptr<CHttpRequest> m_pListTask;
-		std::shared_ptr<CHttpRequest> m_pEntityBgPreviewTask;
+		std::shared_ptr<IHttpRequest> m_pListTask;
+		std::shared_ptr<IHttpRequest> m_pEntityBgPreviewTask;
 		bool m_Requested = false;
 		bool m_EntityBgPreviewRequested = false;
 		bool m_LoadFailed = false;

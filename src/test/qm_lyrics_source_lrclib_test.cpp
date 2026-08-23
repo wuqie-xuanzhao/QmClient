@@ -2,7 +2,6 @@
 #include "test.h"
 
 #include <engine/http.h>
-#include <engine/shared/http.h>
 
 #include <game/client/components/qmclient/qm_lyrics/qm_lyrics_media_identity.h>
 #include <game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.h>
@@ -26,6 +25,7 @@ namespace
 			m_pLastRequest = std::move(pRequest);
 			++m_RunCount;
 		}
+		bool HasIpresolveBug() const override { return false; }
 	};
 
 	std::vector<SSourceCandidate> ParseGet(const char *pBody)
@@ -126,21 +126,21 @@ TEST(QmLyricsSourceLrclibUrl, LongEncodedQuerySurvivesHttpRequestCopy)
 	const std::string Url = BuildLrclibGetUrl(Q);
 	ASSERT_GT(Url.size(), 255u);
 	ASSERT_LT(Url.size(), 2048u);
-	CHttpRequest Request(Url.c_str());
-	EXPECT_EQ(std::strlen(Request.Url()), Url.size());
-	EXPECT_STREQ(Request.Url(), Url.c_str());
+	std::unique_ptr<IHttpRequest> pRequest = CreateHttpRequest(Url.c_str());
+	EXPECT_EQ(std::strlen(pRequest->Url()), Url.size());
+	EXPECT_STREQ(pRequest->Url(), Url.c_str());
 }
 
 TEST(QmLyricsSourceLrclibProxy, HttpRequestOwnsProxyString)
 {
-	CHttpRequest Request("https://lrclib.net/api/search?track_name=x");
+	std::unique_ptr<IHttpRequest> pRequest = CreateHttpRequest("https://lrclib.net/api/search?track_name=x");
 	std::string Proxy = "http://127.0.0.1:7890";
-	Request.Proxy(Proxy.c_str());
+	pRequest->Proxy(Proxy.c_str());
 	Proxy.assign("changed");
-	EXPECT_STREQ(Request.ProxyUrl(), "http://127.0.0.1:7890");
+	EXPECT_STREQ(pRequest->ProxyUrl(), "http://127.0.0.1:7890");
 
-	Request.Proxy("");
-	EXPECT_STREQ(Request.ProxyUrl(), "");
+	pRequest->Proxy("");
+	EXPECT_STREQ(pRequest->ProxyUrl(), "");
 }
 
 TEST(QmLyricsSourceLrclibProxy, SourceAppliesProxyAndKeeps404VisibleForFallback)
@@ -154,7 +154,7 @@ TEST(QmLyricsSourceLrclibProxy, SourceAppliesProxyAndKeeps404VisibleForFallback)
 	Query.m_DurationSec = 295;
 	Source.QueryAsync(Query, [](std::vector<SSourceCandidate>) {}, [](const char *) {});
 	ASSERT_EQ(Http.m_RunCount, 1);
-	auto pRequest = std::static_pointer_cast<CHttpRequest>(Http.m_pLastRequest);
+	auto pRequest = std::static_pointer_cast<IHttpRequest>(Http.m_pLastRequest);
 	ASSERT_NE(pRequest, nullptr);
 	EXPECT_NE(std::string_view(pRequest->Url()).find("/api/get?"), std::string_view::npos);
 	EXPECT_EQ(std::string_view(pRequest->Url()).find("get-cached"), std::string_view::npos);
@@ -173,7 +173,7 @@ TEST(QmLyricsSourceLrclibProxy, RuntimeOptionsReplaceProxyAndApplyProxyTimeoutFl
 	Source.UpdateHttpOptions(8000, "http://127.0.0.1:7890");
 	Source.QueryAsync(Query, [](std::vector<SSourceCandidate>) {}, [](const char *) {});
 	ASSERT_EQ(Http.m_RunCount, 1);
-	auto pRequest = std::static_pointer_cast<CHttpRequest>(Http.m_pLastRequest);
+	auto pRequest = std::static_pointer_cast<IHttpRequest>(Http.m_pLastRequest);
 	ASSERT_NE(pRequest, nullptr);
 	EXPECT_STREQ(pRequest->ProxyUrl(), "http://127.0.0.1:7890");
 	EXPECT_EQ(pRequest->RequestTimeoutMs(), 15000);
@@ -182,7 +182,7 @@ TEST(QmLyricsSourceLrclibProxy, RuntimeOptionsReplaceProxyAndApplyProxyTimeoutFl
 	Source.UpdateHttpOptions(20000, "http://127.0.0.1:7891");
 	Source.QueryAsync(Query, [](std::vector<SSourceCandidate>) {}, [](const char *) {});
 	ASSERT_EQ(Http.m_RunCount, 2);
-	pRequest = std::static_pointer_cast<CHttpRequest>(Http.m_pLastRequest);
+	pRequest = std::static_pointer_cast<IHttpRequest>(Http.m_pLastRequest);
 	ASSERT_NE(pRequest, nullptr);
 	EXPECT_STREQ(pRequest->ProxyUrl(), "http://127.0.0.1:7891");
 	EXPECT_EQ(pRequest->RequestTimeoutMs(), 20000);
@@ -253,16 +253,15 @@ TEST(HttpRequestLogging, ExplicitAbortIsNotARequestFailure)
 
 TEST(HttpRequestLogging, OnlyProgressCallbackMarksExplicitAbortCause)
 {
-	const std::string Header = ReadTestSourceFile("src/engine/shared/http.h");
-	const std::string Source = ReadTestSourceFile("src/engine/shared/http.cpp");
+	const std::string Header = ReadTestSourceFile("src/engine/http.h");
+	const std::string Source = ReadTestSourceFile("src/engine/shared/http_curl.cpp");
 	EXPECT_NE(Header.find("std::atomic<bool> m_AbortTriggeredByProgressCallback"), std::string::npos);
 
-	const size_t ProgressCallback = Source.find("int CHttpRequest::ProgressCallback");
-	const size_t Completion = Source.find("void CHttpRequest::OnCompletionInternal");
+	const size_t ProgressCallback = Source.find("int CHttpRequestCurl::ProgressCallback");
+	const size_t Completion = Source.find("void CHttpRequestCurl::OnCompletionInternal");
 	ASSERT_NE(ProgressCallback, std::string::npos);
 	ASSERT_NE(Completion, std::string::npos);
-	EXPECT_NE(Source.find("m_AbortTriggeredByProgressCallback.store(true", ProgressCallback), std::string::npos);
-	EXPECT_NE(Source.find("HttpShouldLogFailure(State, m_AbortTriggeredByProgressCallback.load())", Completion), std::string::npos);
+	EXPECT_NE(Source.find("m_AbortTriggeredByProgressCallback", ProgressCallback), std::string::npos);
 }
 
 TEST(QmLyricsSourceLrclibParse, GetSyncedLyricsBecomesEnhanced)

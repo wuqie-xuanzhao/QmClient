@@ -5,6 +5,7 @@
 #include <base/types.h>
 
 #include <engine/engine.h>
+#include <engine/http.h>
 #include <engine/kernel.h>
 #include <engine/server/databases/connection.h>
 #include <engine/server/databases/connection_pool.h>
@@ -47,6 +48,7 @@ public:
 	std::unique_ptr<IKernel> m_pKernel;
 	CTestInfo m_TestInfo;
 	std::unique_ptr<IStorage> m_pStorage;
+	IEngineHttp *m_pEngineHttp = nullptr;
 
 	CGameContext *GameServer()
 	{
@@ -60,6 +62,9 @@ public:
 
 		m_pKernel = std::unique_ptr<IKernel>(IKernel::Create());
 		m_pKernel->RegisterInterface(m_pServer);
+		m_pEngineHttp = CreateEngineHttp();
+		m_pKernel->RegisterInterface(m_pEngineHttp);
+		m_pKernel->RegisterInterface(static_cast<IHttp *>(m_pEngineHttp), false);
 
 		IEngine *pEngine = CreateTestEngine(GAME_NAME);
 		m_pKernel->RegisterInterface(pEngine);
@@ -109,7 +114,7 @@ public:
 		m_pServer->m_pPersistentData = malloc(GameServer()->PersistentDataSize());
 		EXPECT_NE(m_pServer->LoadMap("coverage"), 0);
 
-		EXPECT_TRUE(pServer->m_Http.Init(std::chrono::seconds{2})) << "Failed to initialize the HTTP client";
+		EXPECT_TRUE(m_pEngineHttp->Init(std::chrono::seconds{2})) << "Failed to initialize the HTTP client";
 
 		pServer->m_NetServer.SetCallbacks(
 			CServer::NewClientCallback,
@@ -130,6 +135,7 @@ public:
 	{
 		m_pServer->m_Econ.Shutdown();
 		m_pServer->m_Fifo.Shutdown();
+		m_pEngineHttp->Shutdown();
 		m_pGameServer->OnShutdown(nullptr);
 		m_pServer->m_pMap->Unload();
 		m_pServer->DbPool()->OnShutdown();

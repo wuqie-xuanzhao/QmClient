@@ -6,7 +6,6 @@
 
 #include <engine/engine.h>
 #include <engine/http.h>
-#include <engine/shared/http.h>
 #include <engine/shared/jobs.h>
 #include <engine/storage.h>
 
@@ -35,6 +34,7 @@ namespace
 			m_pLastRequest = std::move(pRequest);
 			++m_RunCount;
 		}
+		bool HasIpresolveBug() const override { return false; }
 	};
 
 	class CDeferredEngine : public IEngine
@@ -201,7 +201,7 @@ TEST(QmLyricsSourceAmllTtmlDb, FreshIndexSearchIsDeferredOffTheCallingThread)
 	Source.Tick();
 
 	ASSERT_EQ(Http.m_RunCount, 1);
-	auto pRequest = std::static_pointer_cast<CHttpRequest>(Http.m_pLastRequest);
+	auto pRequest = std::static_pointer_cast<IHttpRequest>(Http.m_pLastRequest);
 	ASSERT_NE(pRequest, nullptr);
 	EXPECT_NE(std::string_view(pRequest->Url()).find("/raw-lyrics/jay/sunny-day.ttml"), std::string_view::npos);
 	EXPECT_EQ(DoneCount, 0);
@@ -234,7 +234,7 @@ TEST(QmLyricsSourceAmllTtmlDb, CanceledIndexSearchCannotPublishTheOldSong)
 	Source.Tick();
 
 	ASSERT_EQ(Http.m_RunCount, 1);
-	auto pRequest = std::static_pointer_cast<CHttpRequest>(Http.m_pLastRequest);
+	auto pRequest = std::static_pointer_cast<IHttpRequest>(Http.m_pLastRequest);
 	ASSERT_NE(pRequest, nullptr);
 	EXPECT_NE(std::string_view(pRequest->Url()).find("/raw-lyrics/artist/song-b.ttml"), std::string_view::npos);
 	EXPECT_EQ(std::string_view(pRequest->Url()).find("song-a.ttml"), std::string_view::npos);
@@ -261,7 +261,7 @@ TEST(QmLyricsSourceAmllTtmlDb, ParsedIndexIsReusedAndRescoredForTheNextSong)
 	Engine.RunQueuedJobs();
 	Source.Tick();
 	ASSERT_EQ(Http.m_RunCount, 1);
-	auto pFirstRequest = std::static_pointer_cast<CHttpRequest>(Http.m_pLastRequest);
+	auto pFirstRequest = std::static_pointer_cast<IHttpRequest>(Http.m_pLastRequest);
 	ASSERT_NE(pFirstRequest, nullptr);
 	EXPECT_NE(std::string_view(pFirstRequest->Url()).find("/raw-lyrics/artist/song-a.ttml"), std::string_view::npos);
 
@@ -276,7 +276,7 @@ TEST(QmLyricsSourceAmllTtmlDb, ParsedIndexIsReusedAndRescoredForTheNextSong)
 	Source.Tick();
 
 	ASSERT_EQ(Http.m_RunCount, 2);
-	auto pSecondRequest = std::static_pointer_cast<CHttpRequest>(Http.m_pLastRequest);
+	auto pSecondRequest = std::static_pointer_cast<IHttpRequest>(Http.m_pLastRequest);
 	ASSERT_NE(pSecondRequest, nullptr);
 	EXPECT_NE(std::string_view(pSecondRequest->Url()).find("/raw-lyrics/artist/song-b.ttml"), std::string_view::npos);
 	EXPECT_EQ(std::string_view(pSecondRequest->Url()).find("wrong/song.ttml"), std::string_view::npos);

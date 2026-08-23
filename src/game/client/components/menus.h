@@ -54,7 +54,7 @@
 #include <vector>
 struct CDataSprite;
 
-class CHttpRequest;
+class IHttpRequest;
 class CChat;
 namespace qm_card_registry
 {
@@ -1927,7 +1927,7 @@ protected:
 		SCANNING,
 	};
 
-	std::shared_ptr<CHttpRequest> m_pReportScanRequest;
+	std::shared_ptr<IHttpRequest> m_pReportScanRequest;
 	EReportScanState m_ReportScanState = EReportScanState::IDLE;
 	char m_aReportScanAddress[NETADDR_MAXSTRSIZE] = "";
 	void ResetReportScan();

@@ -10492,12 +10492,12 @@ TEST(QmMonitoringHelpers, MenuUiPerfScrollOwnersGateSamplesAndReuseOneFpsTracker
 TEST(QmMonitoringHelpers, AndroidBundledCryptoUsesBoringSslAndSystemCertificates)
 {
 	const std::string FindCrypto = ReadRepoFile("cmake/FindCrypto.cmake");
-	const std::string Http = ReadRepoFile("src/engine/shared/http.cpp");
+	const std::string Http = ReadRepoFile("src/engine/shared/http_curl.cpp");
 
 	EXPECT_NE(FindCrypto.find("set_extra_dirs_lib(CRYPTO boringssl)"), std::string::npos);
 	EXPECT_EQ(FindCrypto.find("set_extra_dirs_lib(CRYPTO openssl)"), std::string::npos);
-	EXPECT_NE(Http.find("curl_easy_setopt(pH, CURLOPT_CAPATH, \"/system/etc/security/cacerts\");"), std::string::npos);
-	EXPECT_EQ(Http.find("curl_easy_setopt(pH, CURLOPT_CAINFO, \"data/cacert.pem\");"), std::string::npos);
+	EXPECT_NE(Http.find("curl_easy_setopt(pHandle, CURLOPT_CAPATH, \"/system/etc/security/cacerts\");"), std::string::npos);
+	EXPECT_EQ(Http.find("curl_easy_setopt(pHandle, CURLOPT_CAINFO, \"data/cacert.pem\");"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, EntitiesBackgroundExplicitlyDrawsConfiguredColor)

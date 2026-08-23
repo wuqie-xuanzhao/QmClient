@@ -35,6 +35,8 @@ void CEditorMap::OnModify()
 	m_Modified = true;
 	m_ModifiedAuto = true;
 	m_LastModifiedTime = Editor()->Client()->GlobalTime();
+	// 修改后取消保存完成自动关闭，避免保存期间继续编辑导致地图被意外关闭。
+	m_CloseOnSave = false;
 }
 
 void CEditorMap::ResetModifiedState()
@@ -71,7 +73,10 @@ void CEditorMap::PlaceBorderTiles()
 void CEditorMap::Clean()
 {
 	m_aFilename[0] = '\0';
+	str_copy(m_aDisplayName, "Unnamed");
+	str_copy(m_aAutosaveName, "unnamed");
 	m_ValidSaveFilename = false;
+	m_CloseOnSave = false;
 	ResetModifiedState();
 
 	m_vpGroups.clear();

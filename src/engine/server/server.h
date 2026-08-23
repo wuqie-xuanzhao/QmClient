@@ -16,7 +16,7 @@
 #include <engine/shared/demo.h>
 #include <engine/shared/econ.h>
 #include <engine/shared/fifo.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/netban.h>
 #include <engine/shared/network.h>
 #include <engine/shared/protocol.h>
@@ -38,6 +38,7 @@ class CMsgPacker;
 class CPacker;
 class IEngine;
 class IEngineMap;
+class IEngineHttp;
 class ILogger;
 
 class CServerBan : public CNetBan
@@ -233,7 +234,7 @@ public:
 	CEcon m_Econ;
 	CFifo m_Fifo;
 	CServerBan m_ServerBan;
-	CHttp m_Http;
+	IEngineHttp *m_pHttp = nullptr;
 
 	IEngineMap *m_pMap;
 

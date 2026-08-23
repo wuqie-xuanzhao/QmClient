@@ -34,7 +34,7 @@ namespace
 		return EQmAxiomScoreStatus::INVALID_RESPONSE;
 	}
 
-	void PrepareRequest(CHttpRequest *pRequest, int TimeoutMs)
+	void PrepareRequest(IHttpRequest *pRequest, int TimeoutMs)
 	{
 		pRequest->Timeout(CTimeout{AXIOM_CONNECT_TIMEOUT_MS, TimeoutMs, 0, 0});
 		pRequest->MaxResponseSize(AXIOM_MAX_RESPONSE_BYTES);
@@ -46,10 +46,10 @@ namespace
 
 	class CNativeAxiomHttpRequest final : public IQmAxiomHttpRequest
 	{
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 
 	public:
-		explicit CNativeAxiomHttpRequest(std::shared_ptr<CHttpRequest> pRequest) :
+		explicit CNativeAxiomHttpRequest(std::shared_ptr<IHttpRequest> pRequest) :
 			m_pRequest(std::move(pRequest))
 		{
 		}
@@ -110,7 +110,7 @@ std::shared_ptr<IQmAxiomHttpRequest> CQmAxiomScores::StartRequest(const char *pU
 	if(Http() == nullptr)
 		return nullptr;
 
-	auto pRequest = std::make_shared<CHttpRequest>(pUrl);
+	std::shared_ptr<IHttpRequest> pRequest = HttpGet(pUrl);
 	PrepareRequest(pRequest.get(), TimeoutMs);
 	Http()->Run(pRequest);
 	return std::make_shared<CNativeAxiomHttpRequest>(std::move(pRequest));

@@ -4,54 +4,12 @@
 #include <base/log.h>
 #include <base/system.h>
 
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/json.h>
 
 #include <game/client/gameclient.h>
 
 #include <cstring>
-
-// 玩家请求，携带本次请求的上下文信息。
-// NOLINTNEXTLINE(misc-use-internal-linkage)
-class CPlayerPointsRequest : public CHttpRequest
-{
-private:
-	std::string m_PlayerName;
-	int m_Points = 0;
-	bool m_PointsFound = false;
-	size_t m_BytesRead = 0;
-	static constexpr size_t MAX_READ_BYTES = 1024 * 1000; // 最大响应体大小（约 1000KB）
-
-	char m_aPartialData[MAX_READ_BYTES + 1] = {0};
-
-protected:
-	void OnCompletion(EHttpState State) override
-	{
-		// 该回调在 curl 线程执行，这里不做耗时逻辑。
-	}
-
-public:
-	CPlayerPointsRequest(const char *pUrl, const char *pPlayerName) :
-		CHttpRequest(pUrl),
-		m_PlayerName(pPlayerName)
-	{
-		// 限制响应大小，避免下载过大的 JSON。
-		MaxResponseSize(MAX_READ_BYTES);
-	}
-
-	const char *GetPlayerName() const { return m_PlayerName.c_str(); }
-	bool PointsFound() const { return m_PointsFound; }
-	int GetPoints() const { return m_Points; }
-
-	const char *GetPartialData() const { return m_aPartialData; }
-	size_t GetBytesRead() const { return m_BytesRead; }
-
-	void SetPointsFound(int Points)
-	{
-		m_PointsFound = true;
-		m_Points = Points;
-	}
-};
 
 void CPlayerPoints::OnRender()
 {
@@ -131,7 +89,8 @@ void CPlayerPoints::StartRequest(const char *pPlayerName)
 	str_format(aUrl, sizeof(aUrl), "https://ddnet.org/players/?json2=%s", aEncodedName);
 
 	// 创建并配置 HTTP 请求。
-	auto pRequest = std::make_shared<CPlayerPointsRequest>(aUrl, pPlayerName);
+	std::shared_ptr<IHttpRequest> pRequest = HttpGet(aUrl);
+	pRequest->MaxResponseSize(1024 * 1000);
 	pRequest->Timeout(CTimeout{10000, 30000, 100, 10});
 	pRequest->LogProgress(HTTPLOG::FAILURE);
 
@@ -150,7 +109,7 @@ void CPlayerPoints::ProcessCompletedRequests()
 	while(Iter != m_ActiveRequests.end())
 	{
 		const std::string &Name = Iter->first;
-		std::shared_ptr<CHttpRequest> pRequest = Iter->second;
+		std::shared_ptr<IHttpRequest> pRequest = Iter->second;
 
 		if(!pRequest->Done())
 		{

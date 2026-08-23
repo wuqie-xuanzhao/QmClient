@@ -3,7 +3,7 @@
 
 #include "axiom_scores_data.h"
 
-#include <engine/shared/http.h>
+#include <engine/http.h>
 
 #include <game/client/component.h>
 

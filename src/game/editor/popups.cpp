@@ -83,15 +83,8 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuFile(void *pContext, CUIRect Vie
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_NewMapButton, Localize("New", "Editor"), 0, &Slot, BUTTONFLAG_LEFT, Localize("[Ctrl+N] Create a new map.", "Editor")))
 	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_NEW;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-		{
-			pEditor->Reset();
-		}
+		pEditor->AddDefaultMap();
+		pEditor->Reset(false);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
 
@@ -99,15 +92,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuFile(void *pContext, CUIRect Vie
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_OpenButton, Localize("Load", "Editor"), 0, &Slot, BUTTONFLAG_LEFT, Localize("[Ctrl+L] Open a map for editing.", "Editor")))
 	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_LOAD;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-		{
-			pEditor->m_FileBrowser.ShowFileDialog(IStorage::TYPE_ALL, CFileBrowser::EFileType::MAP, Localize("Load map", "Editor"), Localize("Load", "Editor"), "maps", "", CallbackOpenMap, pEditor);
-		}
+		pEditor->m_FileBrowser.ShowFileDialog(IStorage::TYPE_ALL, CFileBrowser::EFileType::MAP, Localize("Load map", "Editor"), Localize("Load", "Editor"), "maps", "", CallbackOpenMap, pEditor);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
 
@@ -131,9 +116,9 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuFile(void *pContext, CUIRect Vie
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveButton, Localize("Save", "Editor"), 0, &Slot, BUTTONFLAG_LEFT, Localize("[Ctrl+S] Save the current map.", "Editor")))
 	{
-		if(pEditor->m_Map.m_aFilename[0] != '\0' && pEditor->m_Map.m_ValidSaveFilename)
+		if(pEditor->Map()->m_aFilename[0] != '\0' && pEditor->Map()->m_ValidSaveFilename)
 		{
-			CallbackSaveMap(pEditor->m_Map.m_aFilename, IStorage::TYPE_SAVE, pEditor);
+			CallbackSaveMap(pEditor->Map()->m_aFilename, IStorage::TYPE_SAVE, pEditor);
 		}
 		else
 		{
@@ -155,7 +140,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuFile(void *pContext, CUIRect Vie
 	if(pEditor->DoButton_MenuItem(&s_SaveCopyButton, Localize("Save copy", "Editor"), 0, &Slot, BUTTONFLAG_LEFT, Localize("[Ctrl+Shift+Alt+S] Save a copy of the current map under a new name.", "Editor")))
 	{
 		char aDefaultName[IO_MAX_PATH_LENGTH];
-		fs_split_file_extension(fs_filename(pEditor->m_Map.m_aFilename), aDefaultName, sizeof(aDefaultName));
+		fs_split_file_extension(fs_filename(pEditor->Map()->m_aFilename), aDefaultName, sizeof(aDefaultName));
 		pEditor->m_FileBrowser.ShowFileDialog(IStorage::TYPE_SAVE, CFileBrowser::EFileType::MAP, Localize("Save map", "Editor"), Localize("Save copy", "Editor"), "maps", aDefaultName, CallbackSaveCopyMap, pEditor);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
@@ -2194,6 +2179,11 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEvent(void *pContext, CUIRect View, 
 		pTitle = Localize("New map", "Editor");
 		pMessage = Localize("The map contains unsaved data, you might want to save it before you create a new map.\n\nContinue anyway?", "Editor");
 	}
+	else if(pEditor->m_PopupEventType == POPEVENT_CLOSE_MAP)
+	{
+		pTitle = Localize("Save changes?", "Editor");
+		pMessage = Localize("Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.", "Editor");
+	}
 	else if(pEditor->m_PopupEventType == POPEVENT_LARGELAYER)
 	{
 		pTitle = Localize("Large layer", "Editor");
@@ -2347,7 +2337,22 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEvent(void *pContext, CUIRect View, 
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		{
-			pEditor->Reset();
+			pEditor->AddDefaultMap();
+			pEditor->Reset(false);
+		}
+		else if(pEditor->m_PopupEventType == POPEVENT_CLOSE_MAP)
+		{
+			pEditor->Map()->m_CloseOnSave = true;
+			if(pEditor->Map()->m_aFilename[0] != '\0' && pEditor->Map()->m_ValidSaveFilename)
+			{
+				CallbackSaveMap(pEditor->Map()->m_aFilename, IStorage::TYPE_SAVE, pEditor);
+			}
+			else
+			{
+				char aDefaultName[IO_MAX_PATH_LENGTH];
+				fs_split_file_extension(fs_filename(pEditor->Map()->m_aFilename), aDefaultName, sizeof(aDefaultName));
+				pEditor->m_FileBrowser.ShowFileDialog(IStorage::TYPE_SAVE, CFileBrowser::EFileType::MAP, Localize("Save map", "Editor"), Localize("Save as", "Editor"), "maps", aDefaultName, CallbackSaveMap, pEditor);
+			}
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_PLACE_BORDER_TILES)
 		{
@@ -2387,6 +2392,18 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEvent(void *pContext, CUIRect View, 
 		}
 		pEditor->m_PopupEventWasActivated = false;
 		return CUi::POPUP_CLOSE_CURRENT;
+	}
+
+	if(pEditor->m_PopupEventType == POPEVENT_CLOSE_MAP)
+	{
+		static int s_DiscardButton = 0;
+		ButtonBar.VMargin((ButtonBar.w - 110.0f) / 2.0f, &Button);
+		if(pEditor->DoButton_Editor(&s_DiscardButton, Localize("Discard changes", "Editor"), EditorButtonChecked::DANGEROUS_ACTION, &Button, BUTTONFLAG_LEFT, nullptr))
+		{
+			pEditor->CloseMap(pEditor->m_PopupCloseMapIndex, false);
+			pEditor->m_PopupEventWasActivated = false;
+			return CUi::POPUP_CLOSE_CURRENT;
+		}
 	}
 
 	return CUi::POPUP_KEEP_OPEN;

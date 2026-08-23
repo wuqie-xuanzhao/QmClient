@@ -33,7 +33,7 @@
 #include <utility>
 #include <vector>
 
-class CHttpRequest;
+class IHttpRequest;
 class CSkins : public CComponent
 {
 private:
@@ -756,7 +756,7 @@ private:
 
 	private:
 		CLock m_Lock;
-		std::shared_ptr<CHttpRequest> m_pGetRequest GUARDED_BY(m_Lock);
+		std::shared_ptr<IHttpRequest> m_pGetRequest GUARDED_BY(m_Lock);
 	};
 
 	struct SSkinListSnapshotEntry
@@ -894,7 +894,7 @@ private:
 	CSkinList m_SkinList;
 	std::shared_ptr<CSkinDirectoryScanJob> m_pSkinDirectoryScanJob;
 	std::shared_ptr<CSkinListPlanJob> m_pSkinListPlanJob;
-	std::shared_ptr<CHttpRequest> m_pOfficialSkinIndexRequest;
+	std::shared_ptr<IHttpRequest> m_pOfficialSkinIndexRequest;
 	std::vector<SSettingsSkinListEntry> m_vPendingSkinListMergeEntries;
 	std::vector<CSkinListEntry> m_vPendingSkinListEntries;
 	size_t m_SkinListMergeCursor = 0;

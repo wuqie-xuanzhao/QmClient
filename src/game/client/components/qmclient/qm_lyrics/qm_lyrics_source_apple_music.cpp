@@ -5,7 +5,6 @@
 
 #include <engine/external/json-parser/json.h>
 #include <engine/http.h>
-#include <engine/shared/http.h>
 
 #include <algorithm>
 #include <cstring>
@@ -141,7 +140,7 @@ namespace QmLyrics
 			return Term;
 		}
 
-		bool ReadResponseBody(CHttpRequest *pReq, std::vector<unsigned char> *pOut)
+		bool ReadResponseBody(IHttpRequest *pReq, std::vector<unsigned char> *pOut)
 		{
 			if(pReq == nullptr || pOut == nullptr || pReq->State() != EHttpState::DONE || pReq->StatusCode() < 200 || pReq->StatusCode() >= 300)
 				return false;
@@ -154,7 +153,7 @@ namespace QmLyrics
 			return true;
 		}
 
-		void AddBaseHeaders(CHttpRequest *pRequest)
+		void AddBaseHeaders(IHttpRequest *pRequest)
 		{
 			pRequest->HeaderString("User-Agent", APPLE_MUSIC_USER_AGENT);
 			pRequest->HeaderString("Accept", "application/json");
@@ -162,7 +161,7 @@ namespace QmLyrics
 			pRequest->HeaderString("Referer", "https://music.apple.com/");
 		}
 
-		void AddLongHeader(CHttpRequest *pRequest, const char *pName, const std::string &Value)
+		void AddLongHeader(IHttpRequest *pRequest, const char *pName, const std::string &Value)
 		{
 			if(Value.empty())
 				return;
@@ -398,7 +397,7 @@ namespace QmLyrics
 		std::string m_Language;
 		bool m_Initialized = false;
 		EStage m_Stage = EStage::IDLE;
-		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<IHttpRequest> m_pRequest;
 		FSourceDoneCallback m_Done;
 		FSourceErrorCallback m_Error;
 		SSourceQuery m_Query;
@@ -421,7 +420,7 @@ namespace QmLyrics
 		void DispatchAppleMusicRequest(CLyricsSourceAppleMusic::SImpl *pImpl, const std::string &Url, CLyricsSourceAppleMusic::SImpl::EStage Stage)
 		{
 			pImpl->m_Stage = Stage;
-			pImpl->m_pRequest = std::make_shared<CHttpRequest>(Url.c_str());
+			pImpl->m_pRequest = HttpGet(Url.c_str());
 			pImpl->m_pRequest->Timeout(CTimeout{5000, pImpl->m_TimeoutMs, 0, 0});
 			pImpl->m_pRequest->LogProgress(HTTPLOG::FAILURE);
 			AddBaseHeaders(pImpl->m_pRequest.get());

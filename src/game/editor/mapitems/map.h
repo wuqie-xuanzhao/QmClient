@@ -90,7 +90,10 @@ public:
 	CEditor *Editor() { return m_pEditor; }
 
 	char m_aFilename[IO_MAX_PATH_LENGTH];
+	char m_aDisplayName[IO_MAX_PATH_LENGTH];
+	char m_aAutosaveName[IO_MAX_PATH_LENGTH];
 	bool m_ValidSaveFilename;
+	bool m_CloseOnSave = false;
 	/**
 	 * Map has unsaved changes for manual save.
 	 */
@@ -103,6 +106,9 @@ public:
 	float m_LastSaveTime;
 	void OnModify();
 	void ResetModifiedState();
+
+	char m_TabSelectButtonId = 0;
+	char m_TabCloseButtonId = 0;
 
 	std::vector<std::shared_ptr<CLayerGroup>> m_vpGroups;
 	std::vector<std::shared_ptr<CEditorImage>> m_vpImages;

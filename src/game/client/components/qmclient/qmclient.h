@@ -6,7 +6,7 @@
 
 #include <base/hash.h>
 
-#include <engine/shared/http.h>
+#include <engine/http.h>
 #include <engine/shared/protocol.h>
 
 #include <game/client/component.h>
@@ -18,20 +18,20 @@ class IJob;
 
 class CQmClient : public CComponent
 {
-	std::shared_ptr<CHttpRequest> m_pQmClientAuthTokenTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientUsersTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientUsersSendTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientAuthTokenTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientUsersTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientUsersSendTask = nullptr;
 	std::shared_ptr<IJob> m_pQmClientUsersParseJob = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmDeveloperPresenceTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmDeveloperPresencesTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientLifecycleStartTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientLifecycleCrashTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientLifecycleStopTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientServerTimeTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientPlaytimeQueryTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmDeveloperPresenceTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmDeveloperPresencesTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientLifecycleStartTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientLifecycleCrashTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientLifecycleStopTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientServerTimeTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmClientPlaytimeQueryTask = nullptr;
 	std::shared_ptr<IJob> m_pQmClientLifecycleMarkerWriteJob = nullptr;
 	std::shared_ptr<std::mutex> m_pQmClientLifecycleMarkerMutex = std::make_shared<std::mutex>();
-	std::shared_ptr<CHttpRequest> m_pQmDdnetPlayerTask = nullptr;
+	std::shared_ptr<IHttpRequest> m_pQmDdnetPlayerTask = nullptr;
 	std::shared_ptr<IJob> m_pQmDdnetPlayerParseJob = nullptr;
 
 	char m_aQmClientAuthToken[256] = "";
@@ -72,10 +72,10 @@ class CQmClient : public CComponent
 
 	void InitQmClientLifecycle();
 	void UpdateQmClientLifecycleAndServerTime();
-	void SendQmClientLifecyclePing(const char *pEvent, std::shared_ptr<CHttpRequest> &pTaskSlot);
-	bool FinishQmClientPlaytimeTask(std::shared_ptr<CHttpRequest> &pTaskSlot, bool UpdateSessionStart);
+	void SendQmClientLifecyclePing(const char *pEvent, std::shared_ptr<IHttpRequest> &pTaskSlot);
+	bool FinishQmClientPlaytimeTask(std::shared_ptr<IHttpRequest> &pTaskSlot, bool UpdateSessionStart);
 	void FinishQmClientServerTimeTask();
-	void SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<CHttpRequest> &pTaskSlot, int64_t StopAt = 0);
+	void SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<IHttpRequest> &pTaskSlot, int64_t StopAt = 0);
 	void EnsureQmClientPlaytimeClientId();
 	bool ReadQmClientLifecycleMarker(int64_t &OutStartedAt, int64_t &OutLastSeenAt);
 	void TouchQmClientLifecycleMarker(bool ForceWrite);
