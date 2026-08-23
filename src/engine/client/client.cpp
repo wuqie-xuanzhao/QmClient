@@ -3962,6 +3962,13 @@ void CClient::Run()
 		return;
 	}
 
+	if(!m_pHttp->Init(std::chrono::seconds{1}))
+	{
+		const char *pErrorMessage = "Failed to initialize the HTTP client.";
+		log_error("client", "%s", pErrorMessage);
+		ShowMessageBox({.m_pTitle = "HTTP Error", .m_pMessage = pErrorMessage});
+		return;
+	}
 
 	// init graphics
 	m_pGraphics = CreateEngineGraphicsThreaded();
@@ -4400,6 +4407,7 @@ void CClient::Run()
 	}
 
 	m_Fifo.Shutdown();
+	m_pHttp->Shutdown();
 	Engine()->ShutdownJobs();
 
 	// Stop the hang watchdog AFTER ShutdownJobs() so that hangs occurring
