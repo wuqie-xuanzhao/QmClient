@@ -2,6 +2,10 @@
 
 ## Status
 
+- 本专项已收口：206 清单中登记的 3 个专项（128 player、IHttpRequest 生命周期、963f37bb 多地图 tabs）均已完成实现/审计并分别提交。
+- 本记录不把真实混合版本会话、HTTP 网络请求、编辑器 UI 人工操作或 clang-format 历史问题误标为已验证；这些仍是明确的运行时/仓库卫生缺口。
+- 下一步不再是 206 清单内的未完成专项，应另立新的上游批次或独立功能计划；当前工作树中的 Metal backend 改动不属于本次 206 收口。
+
 - `e29d29ce8` 修复多地图异步保存绑定和 map-settings per-map 状态隔离。
 - `0c66f660`、`8fb321d0` 不直接搬迁：两者针对已被上游回退的 C++ snapshot builder；当前 QmClient 使用 Rust `libtw2` builder/delta。
 - 128 player 主体已由 `dae667a56` 及后续兼容修复落地；本轮进入行为审计与回归验证。
