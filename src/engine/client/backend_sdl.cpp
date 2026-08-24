@@ -1557,6 +1557,10 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 
 int CGraphicsBackend_SDL_GL::Shutdown()
 {
+	if(m_pProcessor != nullptr)
+		WaitForIdle();
+	if(m_pProcessor != nullptr)
+		m_pProcessor->ClearError();
 	ResetSubmissionStopForCleanup();
 	if(m_pProcessor != nullptr)
 	{

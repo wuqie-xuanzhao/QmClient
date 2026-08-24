@@ -148,6 +148,7 @@ option(DISCORD_DYNAMIC "Enable discovering Discord rich presence libraries at ru
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DEV "Don't generate stuff necessary for packaging" OFF)
 option(VULKAN "Enable the vulkan backend" ${AUTO_VULKAN_BACKEND})
+option(METAL "Enable the native Metal backend" OFF)
 option(EXCEPTION_HANDLING "Enable crashdumps (only works with Windows)" ON)
 option(IPO "Enable interprocedural optimizations" ON)
 option(FUSE_LD "Linker to use" OFF)
@@ -624,6 +625,32 @@ if(CLIENT AND VULKAN)
 else()
   set(VULKAN_LIBRARIES)
   set(VULKAN_INCLUDE_DIRS)
+endif()
+
+set(METAL_SHADER_FILE_LIST "" CACHE STRING "Metal shader file list")
+if(CLIENT AND METAL)
+  if(NOT TARGET_OS STREQUAL "mac")
+    message(FATAL_ERROR "METAL=ON is only supported on macOS")
+  endif()
+  find_program(XCRUN_PROGRAM xcrun)
+  if(NOT XCRUN_PROGRAM)
+    message(FATAL_ERROR "METAL=ON requires xcrun from Xcode or the macOS Command Line Tools")
+  endif()
+  execute_process(COMMAND ${XCRUN_PROGRAM} --find metal
+    OUTPUT_VARIABLE METAL_COMPILER
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    RESULT_VARIABLE METAL_COMPILER_RESULT)
+  execute_process(COMMAND ${XCRUN_PROGRAM} --find metallib
+    OUTPUT_VARIABLE METALLIB_COMPILER
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    RESULT_VARIABLE METALLIB_COMPILER_RESULT)
+  if(METAL_COMPILER_RESULT OR NOT EXISTS "${METAL_COMPILER}" OR METALLIB_COMPILER_RESULT OR NOT EXISTS "${METALLIB_COMPILER}")
+    message(FATAL_ERROR "METAL=ON requires both xcrun metal and metallib; install Xcode or the macOS Command Line Tools")
+  endif()
+  enable_language(OBJCXX)
+  include(cmake/BuildMetalShaders.cmake)
 endif()
 
 message(STATUS "******** ${CMAKE_PROJECT_NAME} ********")
@@ -2679,6 +2706,7 @@ if(CLIENT)
     backend/graphics_backend_contract.h
     backend/metal/metal_frame_state.cpp
     backend/metal/metal_frame_state.h
+    backend/metal/metal_types.h
     backend/glsl_shader_compiler.cpp
     backend/glsl_shader_compiler.h
     backend/null/backend_null.cpp
@@ -3333,6 +3361,11 @@ if(CLIENT)
     target_compile_definitions(game-client-common INTERFACE CONF_BACKEND_VULKAN)
     target_compile_definitions(engine-shared PRIVATE CONF_BACKEND_VULKAN)
   endif()
+  if(METAL)
+    target_compile_definitions(game-client-common INTERFACE CONF_BACKEND_METAL)
+    target_compile_definitions(engine-shared PRIVATE CONF_BACKEND_METAL)
+    target_link_libraries(game-client-common INTERFACE "-framework Metal" "-framework QuartzCore")
+  endif()
 
   if(TARGET_OS STREQUAL "windows")
     set(VERSION_EXECUTABLE "${CLIENT_EXECUTABLE}")
@@ -3382,6 +3415,9 @@ if(CLIENT)
   add_dependencies(game-client generate_content_types)
   if(VULKAN)
     add_dependencies(game-client build_vulkan_shaders)
+  endif()
+  if(METAL)
+    add_dependencies(game-client build_metal_shaders)
   endif()
   set_property(TARGET game-client
       PROPERTY OUTPUT_NAME ${CLIENT_EXECUTABLE}
@@ -3793,6 +3829,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     mapitems_test.cpp
     math_test.cpp
     metal_frame_state_test.cpp
+    metal_types_test.cpp
     mem_test.cpp
     mutes_test.cpp
     name_ban_test.cpp
@@ -4244,6 +4281,7 @@ endif()
 
 set(CPACK_GEN_FILES
   ${VULKAN_SHADER_FILE_LIST}
+  ${METAL_SHADER_FILE_LIST}
 )
 
 if(TARGET_OS STREQUAL "windows")
@@ -4285,6 +4323,9 @@ if(NOT DEV)
   endforeach()
   foreach(file ${VULKAN_SHADER_FILE_LIST})
     install(FILES "${PROJECT_BINARY_DIR}/${file}" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ddnet/data/shader/vulkan COMPONENT client)
+  endforeach()
+  foreach(file ${METAL_SHADER_FILE_LIST})
+    install(FILES "${PROJECT_BINARY_DIR}/${file}" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ddnet/data/shader/metal COMPONENT client)
   endforeach()
 endif()
 
@@ -4412,6 +4453,16 @@ if(CLIENT AND DMGBUILD_FOUND)
     endforeach()
   endif()
 
+  set(DMG_METAL_SHADER_COPY_COMMANDS)
+  if(METAL)
+    list(APPEND DMG_METAL_SHADER_COPY_COMMANDS
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/data/shader/metal)
+    foreach(file ${METAL_SHADER_FILE_LIST})
+      list(APPEND DMG_METAL_SHADER_COPY_COMMANDS
+        COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/${file} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/${file})
+    endforeach()
+  endif()
+
   set(DMG_FFMPEG_COPY_COMMANDS)
   if(VIDEORECORDER AND FFMPEG_FOUND AND FFMPEG_COPY_FILES)
     foreach(file ${FFMPEG_COPY_FILES})
@@ -4428,6 +4479,7 @@ if(CLIENT AND DMGBUILD_FOUND)
     # CLIENT
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/data ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/data
     ${DMG_VULKAN_SHADER_COPY_COMMANDS}
+    ${DMG_METAL_SHADER_COPY_COMMANDS}
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/other/icons/${CLIENT_EXECUTABLE}.icns ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/
     COMMAND ${CMAKE_COMMAND} -E copy bundle/client/Info.plist ${PROJECT_SOURCE_DIR}/other/bundle/client/PkgInfo ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game-client> ${TARGET_TOOLS_FILES} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/

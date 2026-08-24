@@ -4186,6 +4186,20 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	EXPECT_LT(HookCall, CommandLineParse);
 }
 
+TEST(QmNewUiMenuBranches, GraphicsShutdownClearsStickyFatalBeforeCommands)
+{
+	const std::string Source = ReadTextFile("src/engine/client/backend_sdl.cpp");
+	const size_t ShutdownStart = Source.find("int CGraphicsBackend_SDL_GL::Shutdown()");
+	ASSERT_NE(ShutdownStart, std::string::npos);
+	const size_t ShutdownEnd = Source.find("uint64_t CGraphicsBackend_SDL_GL::TextureMemoryUsage", ShutdownStart);
+	ASSERT_NE(ShutdownEnd, std::string::npos);
+	const std::string Shutdown = Source.substr(ShutdownStart, ShutdownEnd - ShutdownStart);
+
+	EXPECT_NE(Shutdown.find("m_pProcessor->ClearError();"), std::string::npos);
+	EXPECT_NE(Shutdown.find("ResetSubmissionStopForCleanup();"), std::string::npos);
+	EXPECT_LT(Shutdown.find("ClearError"), Shutdown.find("SCommand_Shutdown"));
+}
+
 TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
 {
 	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");

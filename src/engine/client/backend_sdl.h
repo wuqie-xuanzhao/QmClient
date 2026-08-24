@@ -61,6 +61,7 @@ public:
 		virtual void RunBuffer(CCommandBuffer *pBuffer) = 0;
 
 		virtual const SGfxErrorContainer &GetError() const = 0;
+		virtual void ClearError() = 0;
 		virtual void ErroneousCleanup() = 0;
 
 		virtual const SGfxWarningContainer &GetWarning() const = 0;
@@ -241,6 +242,7 @@ public:
 	void RunBuffer(CCommandBuffer *pBuffer) override;
 
 	const SGfxErrorContainer &GetError() const override;
+	void ClearError() override { m_Error = {}; }
 	void ErroneousCleanup() override;
 
 	const SGfxWarningContainer &GetWarning() const override;
