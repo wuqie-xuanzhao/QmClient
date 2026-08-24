@@ -659,11 +659,11 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuSettings(void *pContext, CUIRect
 
 		static int s_ButtonNo = 0;
 		static int s_ButtonYes = 0;
-		if(pEditor->DoButton_Ex(&s_ButtonNo, Localize("No", "Editor"), !g_Config.m_EdShowIngameEntities, &No, BUTTONFLAG_LEFT, Localize("Do not show how weapons, shields, hearts and flags appear ingame.", "Editor"), IGraphics::CORNER_L))
+		if(pEditor->DoButton_Ex(&s_ButtonNo, Localize("No", "Editor"), !g_Config.m_EdShowIngameEntities, &No, BUTTONFLAG_LEFT, Localize("Do not show how weapons, shields, snowflakes and flags appear ingame.", "Editor"), IGraphics::CORNER_L))
 		{
 			g_Config.m_EdShowIngameEntities = false;
 		}
-		if(pEditor->DoButton_Ex(&s_ButtonYes, Localize("Yes", "Editor"), g_Config.m_EdShowIngameEntities, &Yes, BUTTONFLAG_LEFT, Localize("Show how weapons, shields, hearts and flags appear ingame.", "Editor"), IGraphics::CORNER_R))
+		if(pEditor->DoButton_Ex(&s_ButtonYes, Localize("Yes", "Editor"), g_Config.m_EdShowIngameEntities, &Yes, BUTTONFLAG_LEFT, Localize("Show how weapons, shields, snowflakes and flags appear ingame.", "Editor"), IGraphics::CORNER_R))
 		{
 			g_Config.m_EdShowIngameEntities = true;
 		}

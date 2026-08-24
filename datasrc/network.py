@@ -174,6 +174,7 @@ Powerups = [
 	"ARMOR_GRENADE",
 	"ARMOR_NINJA",
 	"ARMOR_LASER",
+	"FREEZE",
 ]
 Authed = ["NO", "HELPER", "MOD", "ADMIN"]
 EntityClasses = [
