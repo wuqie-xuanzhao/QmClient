@@ -414,7 +414,7 @@ void CEditor::DoMapTabs(CUIRect MapTabs)
 
 		CUIRect CloseButton;
 		Tab.VSplitRight(18.0f, &Tab, &CloseButton);
-		const bool Saving = IsSaving(Map.m_aFilename);
+		const bool Saving = IsSaving(&Map);
 		char aTooltip[256];
 		str_format(aTooltip, sizeof(aTooltip), "Select map '%s'.", Map.m_aFilename[0] == '\0' ? "unnamed" : Map.m_aFilename);
 		const int TabResult = DoButton_Ex(&Map.m_TabSelectButtonId, Map.m_aDisplayName, m_SelectedMap == Index ? 1 : 0, &Tab, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT | (Saving ? 0 : (int)BUTTONFLAG_MIDDLE), aTooltip, IGraphics::CORNER_L);
@@ -438,7 +438,7 @@ void CEditor::DoMapTabs(CUIRect MapTabs)
 		else if(TabResult == 2 || CloseResult == 2)
 		{
 			m_PopupMapTab.m_pEditor = this;
-			m_PopupMapTab.m_SelectedMap = Index;
+			m_PopupMapTab.m_pSelectedMap = &Map;
 			Ui()->DoPopupMenu(&m_PopupMapTab, Ui()->MouseX(), Ui()->MouseY(), 150.0f, 80.0f, &m_PopupMapTab, CPopupMapTab::Render);
 		}
 		else if(TabResult == 3 || CloseResult == 1 || CloseResult == 3)
@@ -5689,7 +5689,7 @@ void CEditor::CloseMap(size_t Index, bool Confirm)
 {
 	if(Index >= m_vpMaps.size())
 		return;
-	if(IsSaving(m_vpMaps[Index]->m_aFilename))
+	if(IsSaving(m_vpMaps[Index].get()))
 		return;
 
 	if(Confirm && m_vpMaps[Index]->m_Modified)
@@ -5757,6 +5757,13 @@ bool CEditor::IsSaving(const char *pFilename) const
 {
 	return std::any_of(m_WriterFinishJobs.begin(), m_WriterFinishJobs.end(), [pFilename](const std::shared_ptr<CDataFileWriterFinishJob> &pJob) {
 		return str_comp(pFilename, pJob->RealFilename()) == 0;
+	});
+}
+
+bool CEditor::IsSaving(const CEditorMap *pMap) const
+{
+	return std::any_of(m_WriterFinishJobs.begin(), m_WriterFinishJobs.end(), [pMap](const std::shared_ptr<CDataFileWriterFinishJob> &pJob) {
+		return pJob->Map() == pMap;
 	});
 }
 

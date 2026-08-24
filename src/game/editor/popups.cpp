@@ -29,12 +29,17 @@ CUi::EPopupMenuFunctionResult CEditor::CPopupMapTab::Render(void *pContext, CUIR
 {
 	CPopupMapTab *pPopupMapTab = static_cast<CPopupMapTab *>(pContext);
 	CEditor *pEditor = pPopupMapTab->m_pEditor;
-	if(!pEditor || pPopupMapTab->m_SelectedMap >= pEditor->m_vpMaps.size())
+	if(!pEditor)
 		return CUi::POPUP_CLOSE_CURRENT;
 
-	const size_t SelectedMapIndex = pPopupMapTab->m_SelectedMap;
-	const auto &pSelectedMap = pEditor->m_vpMaps[SelectedMapIndex];
-	const bool Saving = pEditor->IsSaving(pSelectedMap->m_aFilename);
+	auto MapIt = std::find_if(pEditor->m_vpMaps.begin(), pEditor->m_vpMaps.end(), [pPopupMapTab](const auto &pMap) {
+		return pMap.get() == pPopupMapTab->m_pSelectedMap;
+	});
+	if(MapIt == pEditor->m_vpMaps.end())
+		return CUi::POPUP_CLOSE_CURRENT;
+	const size_t SelectedMapIndex = MapIt - pEditor->m_vpMaps.begin();
+	CEditorMap *pSelectedMap = MapIt->get();
+	const bool Saving = pEditor->IsSaving(pSelectedMap);
 	const bool Saved = pSelectedMap->m_aFilename[0] != '\0';
 
 	CUIRect Slot;

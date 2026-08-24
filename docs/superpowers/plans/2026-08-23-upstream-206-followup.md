@@ -2,11 +2,11 @@
 
 ## Status
 
-- 本专项已收口：206 清单中登记的 3 个专项（128 player、IHttpRequest 生命周期、963f37bb 多地图 tabs）均已完成实现/审计并分别提交。
+- 206 清单中登记的 3 个专项（128 player、IHttpRequest 生命周期、963f37bb 多地图 tabs）已完成主体实现；本轮 review 发现的问题已修复并完成编译、全量测试验证。
 - 本记录不把真实混合版本会话、HTTP 网络请求、编辑器 UI 人工操作或 clang-format 历史问题误标为已验证；这些仍是明确的运行时/仓库卫生缺口。
 - 下一步不再是 206 清单内的未完成专项，应另立新的上游批次或独立功能计划；当前工作树中的 Metal backend 改动不属于本次 206 收口。
 
-- `e29d29ce8` 修复多地图异步保存绑定和 map-settings per-map 状态隔离。
+- `e29d29ce8` 修复多地图异步保存绑定和 map-settings per-map 状态隔离；本轮补充 tab popup 的实例身份和同路径保存状态隔离。
 - `0c66f660`、`8fb321d0` 不直接搬迁：两者针对已被上游回退的 C++ snapshot builder；当前 QmClient 使用 Rust `libtw2` builder/delta。
 - 128 player 主体已由 `dae667a56` 及后续兼容修复落地；本轮进入行为审计与回归验证。
 - `IHttpRequest` 解耦已由 `368d883a4` 落地，待独立网络生命周期审计。
@@ -35,11 +35,11 @@
 
 - 核心多地图生命周期已在当前分支存在；本轮补齐上游 963f37bb 的缺失 tab 交互。
 - 已完成：`game-client` 编译、C++ 全量 `2783/2783`、Rust 全量测试、专项 review。
-- `check_gate.py --mode default` 的测试层通过；quick 层仍被仓库既有 11 个 clang-format 违规阻断，未发现本专项新增格式失败。
+- 默认 gate 的 clang-format 历史失败仍保留为仓库卫生缺口；代码与测试层已在本轮修复后重新验证。
 
 ### Review Result
 
-- 未发现严重或重要级正确性问题。关闭请求始终使用 tab index，异步保存完成仍按 `CEditorMap *` 匹配，避免同路径 tab 误关闭。
+- 本轮 review 发现并修复：popup 使用可变 tab index 导致异步删除后可能操作错误地图；同路径 tab 以 filename 判断保存状态导致错误互锁；HTTP scheduler 错误分支可能丢失 deferred 请求。
 - 右键菜单在地图实例已被移除时主动关闭；保存中的地图禁用关闭并显示 spinner；未保存地图显示危险状态圆点，保留确认关闭流程。
 
 ### Remaining Gaps

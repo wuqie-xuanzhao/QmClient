@@ -10,12 +10,27 @@
 
 #include <cstring>
 #include <limits>
+#include <string>
 
 #if !defined(CONF_FAMILY_WINDOWS)
 #include <csignal>
 #endif
 
 #include <curl/curl.h>
+
+static constexpr size_t HTTP_MAX_CONCURRENT_REQUESTS = 16;
+static constexpr size_t HTTP_MAX_CONCURRENT_REQUESTS_PER_HOST = 4;
+
+static std::string HttpRequestHostKey(const char *pUrl)
+{
+	if(!pUrl || pUrl[0] == '\0')
+		return {};
+
+	const char *pHostStart = str_find(pUrl, "://");
+	pHostStart = pHostStart ? pHostStart + 3 : pUrl;
+	const char *pHostEnd = str_find(pHostStart, "/");
+	return std::string(pHostStart, pHostEnd ? pHostEnd - pHostStart : str_length(pHostStart));
+}
 
 static int CurlDebug(CURL *pHandle, curl_infotype Type, char *pData, size_t DataSize, void *pUser)
 {
@@ -392,6 +407,8 @@ void CHttpCurl::RunLoop()
 	m_ConditionVariableInit.notify_all();
 	Lock.unlock();
 	m_NextTimeout = std::numeric_limits<int>::max();
+	std::unordered_map<std::string, size_t> RunningRequestsPerHost;
+	RunningRequestsPerHost.reserve(HTTP_MAX_CONCURRENT_REQUESTS);
 
 	while(m_State == CHttpCurl::RUNNING)
 	{
@@ -440,6 +457,18 @@ void CHttpCurl::RunLoop()
 			{
 				auto RequestIt = m_RunningRequests.find(pMsg->easy_handle);
 				dbg_assert(RequestIt != m_RunningRequests.end(), "Running handle not added to map");
+				const std::string HostKey = HttpRequestHostKey(RequestIt->second->m_aUrl);
+				if(!HostKey.empty())
+				{
+					auto HostIt = RunningRequestsPerHost.find(HostKey);
+					if(HostIt != RunningRequestsPerHost.end())
+					{
+						if(HostIt->second > 1)
+							--HostIt->second;
+						else
+							RunningRequestsPerHost.erase(HostIt);
+					}
+				}
 				auto pRequest = std::move(RequestIt->second);
 				m_RunningRequests.erase(RequestIt);
 
@@ -454,6 +483,7 @@ void CHttpCurl::RunLoop()
 		std::swap(m_PendingRequests, NewRequests);
 		Lock.unlock();
 
+		decltype(m_PendingRequests) DeferredRequests = {};
 		while(!NewRequests.empty())
 		{
 			auto &pRequest = NewRequests.front();
@@ -471,6 +501,16 @@ void CHttpCurl::RunLoop()
 					pRequest->m_State = EHttpState::DONE;
 				}
 				pRequest->m_WaitCondition.notify_all();
+				NewRequests.pop_front();
+				continue;
+			}
+
+			const std::string HostKey = HttpRequestHostKey(pRequest->m_aUrl);
+			const size_t RunningForHost = HostKey.empty() ? 0 : RunningRequestsPerHost[HostKey];
+			if(m_RunningRequests.size() >= HTTP_MAX_CONCURRENT_REQUESTS ||
+				(!HostKey.empty() && RunningForHost >= HTTP_MAX_CONCURRENT_REQUESTS_PER_HOST))
+			{
+				DeferredRequests.push_back(std::move(pRequest));
 				NewRequests.pop_front();
 				continue;
 			}
@@ -502,6 +542,8 @@ void CHttpCurl::RunLoop()
 				pRequest->m_State = EHttpState::RUNNING;
 			}
 			m_RunningRequests.emplace(pEH, std::move(pRequest));
+			if(!HostKey.empty())
+				++RunningRequestsPerHost[HostKey];
 			NewRequests.pop_front();
 			continue;
 
@@ -513,11 +555,20 @@ void CHttpCurl::RunLoop()
 			break;
 		}
 
-		// Only happens if m_State == ERROR, thus we already hold the lock
-		if(!NewRequests.empty())
+		if(m_State == CHttpCurl::ERROR)
 		{
-			m_PendingRequests.insert(m_PendingRequests.end(), std::make_move_iterator(NewRequests.begin()), std::make_move_iterator(NewRequests.end()));
+			if(!NewRequests.empty())
+				m_PendingRequests.insert(m_PendingRequests.end(), std::make_move_iterator(NewRequests.begin()), std::make_move_iterator(NewRequests.end()));
+			if(!DeferredRequests.empty())
+				m_PendingRequests.insert(m_PendingRequests.end(), std::make_move_iterator(DeferredRequests.begin()), std::make_move_iterator(DeferredRequests.end()));
 			break;
+		}
+
+		if(!DeferredRequests.empty())
+		{
+			Lock.lock();
+			m_PendingRequests.insert(m_PendingRequests.begin(), std::make_move_iterator(DeferredRequests.begin()), std::make_move_iterator(DeferredRequests.end()));
+			Lock.unlock();
 		}
 	}
 

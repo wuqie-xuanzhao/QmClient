@@ -299,6 +299,7 @@ public:
 	void HandleAutosave();
 	void HandleWriterFinishJobs();
 	bool IsSaving(const char *pFilename) const;
+	bool IsSaving(const CEditorMap *pMap) const;
 	void UpdateMapDisplayNames();
 
 	enum class ECollabState
@@ -556,7 +557,7 @@ public:
 	{
 	public:
 		CEditor *m_pEditor = nullptr;
-		size_t m_SelectedMap = 0;
+		CEditorMap *m_pSelectedMap = nullptr;
 		static CUi::EPopupMenuFunctionResult Render(void *pContext, CUIRect View, bool Active);
 
 		const char m_CloseButtonId = 0;

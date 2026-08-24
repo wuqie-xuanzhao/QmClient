@@ -3904,6 +3904,7 @@ void CClient::InitInterfaces()
 	m_pSteam = Kernel()->RequestInterface<ISteam>();
 	m_pNotifications = Kernel()->RequestInterface<INotifications>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pHttp = Kernel()->RequestInterface<IEngineHttp>();
 
 	m_DemoEditor.Init(&*m_pSnapshotDelta, &*m_pSnapshotDeltaSixup, m_pConsole, m_pStorage);
 
