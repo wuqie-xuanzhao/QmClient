@@ -110,32 +110,32 @@ public:
 
 struct SBackendCapabilities
 {
-	bool m_TileBuffering;
-	bool m_QuadBuffering;
-	bool m_TextBuffering;
-	bool m_QuadContainerBuffering;
+	bool m_TileBuffering = false;
+	bool m_QuadBuffering = false;
+	bool m_TextBuffering = false;
+	bool m_QuadContainerBuffering = false;
 
-	bool m_MipMapping;
-	bool m_NPOTTextures;
-	bool m_3DTextures;
-	bool m_2DArrayTextures;
-	bool m_2DArrayTexturesAsExtension;
-	bool m_ShaderSupport;
+	bool m_MipMapping = false;
+	bool m_NPOTTextures = false;
+	bool m_3DTextures = false;
+	bool m_2DArrayTextures = false;
+	bool m_2DArrayTexturesAsExtension = false;
+	bool m_ShaderSupport = false;
 	bool m_MediaIslandSdf = false;
 	bool m_RoundedRectSdf = false;
 	std::atomic<bool> m_TexturedMsdf{false};
-	bool m_RenderTargets;
+	bool m_RenderTargets = false;
 	bool m_RenderTargetGaussianBlur = false;
 	bool m_BackbufferCapture = false;
 	bool m_RenderTargetExternalPassRequiresSingleSample = false;
 	const char *m_pRenderTargetSupportReason = "not_initialized";
 
 	// use quads as much as possible, even if the user config says otherwise
-	bool m_TrianglesAsQuads;
+	bool m_TrianglesAsQuads = false;
 
-	int m_ContextMajor;
-	int m_ContextMinor;
-	int m_ContextPatch;
+	int m_ContextMajor = 0;
+	int m_ContextMinor = 0;
+	int m_ContextPatch = 0;
 
 	// 只保存从 GL_VERSION/GLES_VERSION 解析出的真实上下文版本。
 	// m_Context* 可能因兼容性降级而变化，不能用于展示实际驱动版本。
@@ -358,6 +358,8 @@ public:
 	{
 		return m_aRendererString;
 	}
+
+	EBackendType GetBackendType() const override { return m_BackendType; }
 
 	TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() override;
 

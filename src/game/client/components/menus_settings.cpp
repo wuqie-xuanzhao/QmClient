@@ -9,6 +9,7 @@
 #include <base/perf_timer.h>
 #include <base/system.h>
 
+#include <engine/client/backend/graphics_backend_contract.h>
 #include <engine/external/tinyexpr.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
@@ -87,6 +88,10 @@ namespace
 				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "GLES (%s)", Localize("auto"));
 			else
 				str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "GLES %d.%d", Major, Minor);
+		}
+		else if(str_comp_nocase(pSafeBackendName, "Metal") == 0)
+		{
+			str_copy(aBackendDisplayName, "Metal");
 		}
 		else
 		{
@@ -3647,6 +3652,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	};
 	struct SMenuBackendInfo
 	{
+		EBackendType m_BackendType = BACKEND_TYPE_AUTO;
 		int m_Major = 0;
 		int m_Minor = 0;
 		int m_Patch = 0;
@@ -3672,6 +3678,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
 			{
 				SMenuBackendInfo Info;
+				Info.m_BackendType = EBackendType(i);
 				if(Graphics()->GetDriverVersion(EGraphicsDriverAgeType(n), Info.m_Major, Info.m_Minor, Info.m_Patch, Info.m_pBackendName, EBackendType(i)))
 				{
 					// 被屏蔽的 OpenGL 驱动仅保留 legacy 选项。
@@ -3692,6 +3699,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			if(SupportsAutomaticVersion && s_vSupportedBackendInfos.size() > BackendStartIndex)
 			{
 				SMenuBackendInfo AutoInfo;
+				AutoInfo.m_BackendType = EBackendType(i);
 				AutoInfo.m_pBackendName = EBackendType(i) == BACKEND_TYPE_OPENGL ? "OpenGL" : "GLES";
 				AutoInfo.m_Found = true;
 				char aAutoBackendName[256];
@@ -3714,6 +3722,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				if(!PreferredVersionExists)
 				{
 					SMenuBackendInfo PreferredInfo;
+					PreferredInfo.m_BackendType = EBackendType(i);
 					PreferredInfo.m_pBackendName = AutoInfo.m_pBackendName;
 					PreferredInfo.m_Major = PreferredVersion.m_Major;
 					PreferredInfo.m_Minor = PreferredVersion.m_Minor;
@@ -3998,10 +4007,26 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				int Selected = -1;
 				for(size_t i = 0; i < s_vSupportedBackendInfos.size(); ++i)
 				{
-					const bool IsVulkanPerformanceMode = str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, "Vulkan") == 0;
-					if(str_comp_nocase(s_vSupportedBackendInfos[i].m_pBackendName, g_Config.m_GfxBackend) == 0 &&
-						(IsVulkanPerformanceMode || (g_Config.m_GfxGLMajor == s_vSupportedBackendInfos[i].m_Major && g_Config.m_GfxGLMinor == s_vSupportedBackendInfos[i].m_Minor && g_Config.m_GfxGLPatch == s_vSupportedBackendInfos[i].m_Patch)))
+					if(graphics_backend::MatchesConfiguredBackend(s_vSupportedBackendInfos[i].m_BackendType, s_vSupportedBackendInfos[i].m_pBackendName, s_vSupportedBackendInfos[i].m_Major, s_vSupportedBackendInfos[i].m_Minor, s_vSupportedBackendInfos[i].m_Patch, g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch))
 						Selected = (int)i;
+				}
+				if(Selected < 0)
+				{
+					if(graphics_backend::IsKnownUnavailableBackendName(g_Config.m_GfxBackend))
+					{
+						str_copy(g_Config.m_GfxBackend, "OpenGL");
+						g_Config.m_GfxGLMajor = 0;
+						g_Config.m_GfxGLMinor = 0;
+						g_Config.m_GfxGLPatch = 0;
+						for(size_t i = 0; i < s_vSupportedBackendInfos.size(); ++i)
+						{
+							if(graphics_backend::MatchesConfiguredBackend(s_vSupportedBackendInfos[i].m_BackendType, s_vSupportedBackendInfos[i].m_pBackendName, s_vSupportedBackendInfos[i].m_Major, s_vSupportedBackendInfos[i].m_Minor, s_vSupportedBackendInfos[i].m_Patch, g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch))
+							{
+								Selected = (int)i;
+								break;
+							}
+						}
+					}
 				}
 				if(Selected < 0)
 				{
@@ -4013,6 +4038,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					s_CustomBackendId = g_Config.m_GfxBackend;
 					s_CustomBackendDisplayName = aCustomDisplayName;
 					SMenuBackendInfo CustomInfo;
+					CustomInfo.m_BackendType = graphics_backend::ParseBackendName(g_Config.m_GfxBackend, BACKEND_TYPE_AUTO);
 					CustomInfo.m_pBackendName = s_CustomBackendId.c_str();
 					CustomInfo.m_Major = g_Config.m_GfxGLMajor;
 					CustomInfo.m_Minor = g_Config.m_GfxGLMinor;
@@ -4035,10 +4061,14 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				DoGraphicsChoiceRow(Row, Localize("Graphics backend"), "graphics-backend", s_vpGraphicsBackendNames.data(), s_vpGraphicsBackendNames.size(), Selected, s_BackendDropDownState, s_BackendDropDownScrollRegion, [this](int NewValue) {
 					if(NewValue < 0 || NewValue >= (int)s_vGraphicsBackendInfos.size())
 						return;
-					str_copy(g_Config.m_GfxBackend, s_vGraphicsBackendInfos[NewValue].m_pBackendName);
-					g_Config.m_GfxGLMajor = s_vGraphicsBackendInfos[NewValue].m_Major;
-					g_Config.m_GfxGLMinor = s_vGraphicsBackendInfos[NewValue].m_Minor;
-					g_Config.m_GfxGLPatch = s_vGraphicsBackendInfos[NewValue].m_Patch;
+					const SMenuBackendInfo &SelectedBackend = s_vGraphicsBackendInfos[NewValue];
+					str_copy(g_Config.m_GfxBackend, SelectedBackend.m_pBackendName);
+					if(!graphics_backend::PreservesOpenGLVersionTuple(SelectedBackend.m_BackendType))
+					{
+						g_Config.m_GfxGLMajor = SelectedBackend.m_Major;
+						g_Config.m_GfxGLMinor = SelectedBackend.m_Minor;
+						g_Config.m_GfxGLPatch = SelectedBackend.m_Patch;
+					}
 					s_GfxBackendChanged = true;
 					CheckSettings = true;
 					InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::BACKEND_CHANGED);

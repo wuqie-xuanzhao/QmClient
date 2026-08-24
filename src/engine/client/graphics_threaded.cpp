@@ -6,6 +6,7 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/client/backend/graphics_backend_contract.h>
 #include <engine/client/backend/vulkan/backend_vulkan.h>
 #include <engine/client/plausible_sizes.h>
 #include <engine/client/rounded_rect_geometry.h>
@@ -4407,8 +4408,8 @@ void CGraphics_Threaded::Swap()
 	m_MacosGraphicsDiagnosticsEnabled = MacosDiagnostics;
 	const auto SubmitStart = MacosDiagnostics ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	double SubmitMs = 0.0;
-	double MetalWaitForIdleMs = 0.0;
-	bool MetalWaitForIdle = false;
+	double FrameSerializationWaitMs = 0.0;
+	bool FrameSerializationWait = false;
 #endif
 	bool Swapped = false;
 	ScreenshotDirect(&Swapped);
@@ -4425,14 +4426,15 @@ void CGraphics_Threaded::Swap()
 	if(MacosDiagnostics)
 		SubmitMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - SubmitStart).count();
 
-	// TODO: Remove when https://github.com/libsdl-org/SDL/issues/5203 is fixed
-	if(str_find(GetVersionString(), "Metal"))
+	// MoltenVK needs serialized frame submission while SDL may destroy a drawable.
+	// Native Metal must not inherit this Vulkan-only workaround.
+	if(graphics_backend::RequiresFrameSerializationWorkaround(m_pBackend->GetBackendType()))
 	{
-		MetalWaitForIdle = true;
+		FrameSerializationWait = true;
 		const auto WaitForIdleStart = MacosDiagnostics ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		WaitForIdle();
 		if(MacosDiagnostics)
-			MetalWaitForIdleMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - WaitForIdleStart).count();
+			FrameSerializationWaitMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - WaitForIdleStart).count();
 	}
 
 	if(!MacosDiagnostics)
@@ -4441,8 +4443,8 @@ void CGraphics_Threaded::Swap()
 		{
 			m_MacosGraphicsDiagnosticFrameCount = 0;
 			m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
-			m_MacosMetalWaitForIdleMsSum = 0.0;
-			m_MacosMetalWaitForIdleCount = 0;
+			m_MacosFrameSerializationWaitMsSum = 0.0;
+			m_MacosFrameSerializationWaitCount = 0;
 			m_MsdfCommandCount = 0;
 			m_MsdfFlushCount = 0;
 			m_RoundedRectSdfCommandCount = 0;
@@ -4455,27 +4457,27 @@ void CGraphics_Threaded::Swap()
 	else
 	{
 		const char *pBackend = GetVersionString();
-		os_signpost_event_emit(MacosGraphicsSignpostLog(), OS_SIGNPOST_ID_EXCLUSIVE, "frame_submit", "submit_duration_ms=%{public}.3f metal_wait_for_idle_ms=%{public}.3f backend=%{public}s drawable=%dx%d hidpi=%.3f", SubmitMs, MetalWaitForIdleMs, pBackend, m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale);
+		os_signpost_event_emit(MacosGraphicsSignpostLog(), OS_SIGNPOST_ID_EXCLUSIVE, "frame_submit", "submit_duration_ms=%{public}.3f frame_serialization_wait_ms=%{public}.3f backend=%{public}s drawable=%dx%d hidpi=%.3f", SubmitMs, FrameSerializationWaitMs, pBackend, m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale);
 
 		if(PreviousMacosDiagnostics)
 		{
 			++m_MacosGraphicsDiagnosticFrameCount;
 			m_MacosGraphicsDiagnosticSubmitMsSum += SubmitMs;
-			if(MetalWaitForIdle)
+			if(FrameSerializationWait)
 			{
-				m_MacosMetalWaitForIdleMsSum += MetalWaitForIdleMs;
-				m_MacosMetalWaitForIdleCount++;
+				m_MacosFrameSerializationWaitMsSum += FrameSerializationWaitMs;
+				m_MacosFrameSerializationWaitCount++;
 			}
 			if(m_MacosGraphicsDiagnosticFrameCount == 120)
 			{
-				const double MetalWaitForIdleMsAvg = m_MacosMetalWaitForIdleCount > 0 ? m_MacosMetalWaitForIdleMsSum / (double)m_MacosMetalWaitForIdleCount : 0.0;
+				const double FrameSerializationWaitMsAvg = m_MacosFrameSerializationWaitCount > 0 ? m_MacosFrameSerializationWaitMsSum / (double)m_MacosFrameSerializationWaitCount : 0.0;
 				const int UnlimitedConfig = g_Config.m_GfxVsync == 0 && g_Config.m_GfxRefreshRate == 0 && g_Config.m_ClRefreshRate == 0;
-				dbg_msg("perf/macos_graphics", "event=frame_submit sample_frames=120 submit_duration_ms_sum=%.3f submit_duration_ms_avg=%.3f metal_wait_for_idle_count=%" PRIu64 " metal_wait_for_idle_ms_sum=%.3f metal_wait_for_idle_ms_avg=%.3f unlimited_config=%d vsync=%d gfx_refresh_rate=%d cl_refresh_rate=%d cl_refresh_rate_inactive=%d debug=%d dbg_graphs=%d async_render_old=%d backend=%s renderer=%s vendor=%s drawable_width=%d drawable_height=%d hidpi_scale=%.3f fullscreen=%d fsaa=%u refresh_hz=%d msdf_commands_sum=%" PRIu64 " msdf_flushes_sum=%" PRIu64 " rounded_sdf_commands_sum=%" PRIu64 " rounded_sdf_flushes_sum=%" PRIu64 " buffered_text_commands_sum=%" PRIu64 " buffered_text_no_container_sum=%" PRIu64 " buffered_text_zero_quad_sum=%" PRIu64,
-					m_MacosGraphicsDiagnosticSubmitMsSum, m_MacosGraphicsDiagnosticSubmitMsSum / 120.0, m_MacosMetalWaitForIdleCount, m_MacosMetalWaitForIdleMsSum, MetalWaitForIdleMsAvg, UnlimitedConfig, g_Config.m_GfxVsync, g_Config.m_GfxRefreshRate, g_Config.m_ClRefreshRate, g_Config.m_ClRefreshRateInactive, g_Config.m_Debug, g_Config.m_DbgGraphs, g_Config.m_GfxAsyncRenderOld, pBackend, GetRendererString(), GetVendorString(), m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale, g_Config.m_GfxFullscreen, m_MultiSamplingCount, m_ScreenRefreshRate, m_MsdfCommandCount, m_MsdfFlushCount, m_RoundedRectSdfCommandCount, m_RoundedRectSdfFlushCount, m_BufferedTextCommandCount, m_BufferedTextNoContainerCount, m_BufferedTextZeroQuadCount);
+				dbg_msg("perf/macos_graphics", "event=frame_submit sample_frames=120 submit_duration_ms_sum=%.3f submit_duration_ms_avg=%.3f frame_serialization_wait_count=%" PRIu64 " frame_serialization_wait_ms_sum=%.3f frame_serialization_wait_ms_avg=%.3f unlimited_config=%d vsync=%d gfx_refresh_rate=%d cl_refresh_rate=%d cl_refresh_rate_inactive=%d debug=%d dbg_graphs=%d async_render_old=%d backend=%s renderer=%s vendor=%s drawable_width=%d drawable_height=%d hidpi_scale=%.3f fullscreen=%d fsaa=%u refresh_hz=%d msdf_commands_sum=%" PRIu64 " msdf_flushes_sum=%" PRIu64 " rounded_sdf_commands_sum=%" PRIu64 " rounded_sdf_flushes_sum=%" PRIu64 " buffered_text_commands_sum=%" PRIu64 " buffered_text_no_container_sum=%" PRIu64 " buffered_text_zero_quad_sum=%" PRIu64,
+					m_MacosGraphicsDiagnosticSubmitMsSum, m_MacosGraphicsDiagnosticSubmitMsSum / 120.0, m_MacosFrameSerializationWaitCount, m_MacosFrameSerializationWaitMsSum, FrameSerializationWaitMsAvg, UnlimitedConfig, g_Config.m_GfxVsync, g_Config.m_GfxRefreshRate, g_Config.m_ClRefreshRate, g_Config.m_ClRefreshRateInactive, g_Config.m_Debug, g_Config.m_DbgGraphs, g_Config.m_GfxAsyncRenderOld, pBackend, GetRendererString(), GetVendorString(), m_ScreenWidth, m_ScreenHeight, m_ScreenHiDPIScale, g_Config.m_GfxFullscreen, m_MultiSamplingCount, m_ScreenRefreshRate, m_MsdfCommandCount, m_MsdfFlushCount, m_RoundedRectSdfCommandCount, m_RoundedRectSdfFlushCount, m_BufferedTextCommandCount, m_BufferedTextNoContainerCount, m_BufferedTextZeroQuadCount);
 				m_MacosGraphicsDiagnosticFrameCount = 0;
 				m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
-				m_MacosMetalWaitForIdleMsSum = 0.0;
-				m_MacosMetalWaitForIdleCount = 0;
+				m_MacosFrameSerializationWaitMsSum = 0.0;
+				m_MacosFrameSerializationWaitCount = 0;
 				m_MsdfCommandCount = 0;
 				m_MsdfFlushCount = 0;
 				m_RoundedRectSdfCommandCount = 0;

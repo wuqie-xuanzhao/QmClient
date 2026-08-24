@@ -149,6 +149,7 @@ enum EBackendType
 	BACKEND_TYPE_OPENGL = 0,
 	BACKEND_TYPE_OPENGL_ES,
 	BACKEND_TYPE_VULKAN,
+	BACKEND_TYPE_METAL,
 
 	// special value to tell the backend to identify the current backend
 	BACKEND_TYPE_AUTO,

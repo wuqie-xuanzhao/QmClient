@@ -21,6 +21,7 @@
 #include <engine/shared/video.h>
 #endif
 
+#include "backend/graphics_backend_contract.h"
 #include "backend_sdl.h"
 
 #if defined(CONF_HEADLESS_CLIENT)
@@ -667,28 +668,8 @@ static int IsVersionSupportedGlew(EBackendType BackendType, int VersionMajor, in
 EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
 {
 	EBackendType RetBackendType = BACKEND_TYPE_OPENGL;
-#if defined(CONF_BACKEND_VULKAN)
 	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
-	if(pEnvDriver && str_comp_nocase(pEnvDriver, "GLES") == 0)
-		RetBackendType = BACKEND_TYPE_OPENGL_ES;
-	else if(pEnvDriver && str_comp_nocase(pEnvDriver, "Vulkan") == 0)
-		RetBackendType = BACKEND_TYPE_VULKAN;
-	else if(pEnvDriver && str_comp_nocase(pEnvDriver, "OpenGL") == 0)
-		RetBackendType = BACKEND_TYPE_OPENGL;
-	else if(pEnvDriver == nullptr)
-	{
-		// load the config backend
-		const char *pConfBackend = g_Config.m_GfxBackend;
-		if(str_comp_nocase(pConfBackend, "GLES") == 0)
-			RetBackendType = BACKEND_TYPE_OPENGL_ES;
-		else if(str_comp_nocase(pConfBackend, "Vulkan") == 0)
-			RetBackendType = BACKEND_TYPE_VULKAN;
-		else if(str_comp_nocase(pConfBackend, "OpenGL") == 0)
-			RetBackendType = BACKEND_TYPE_OPENGL;
-	}
-#else
-	RetBackendType = BACKEND_TYPE_OPENGL;
-#endif
+	RetBackendType = graphics_backend::ParseBackendName(pEnvDriver != nullptr ? pEnvDriver : g_Config.m_GfxBackend, RetBackendType);
 #if !defined(CONF_BACKEND_OPENGL_ES) && !defined(CONF_BACKEND_OPENGL_ES3)
 	if(RetBackendType == BACKEND_TYPE_OPENGL_ES)
 		RetBackendType = BACKEND_TYPE_OPENGL;
@@ -856,6 +837,8 @@ bool CGraphicsBackend_SDL_GL::IsModernAPI(EBackendType BackendType)
 		return g_Config.m_GfxGLMajor >= 3;
 	else if(BackendType == BACKEND_TYPE_VULKAN)
 		return true;
+	else if(BackendType == BACKEND_TYPE_METAL)
+		return false;
 
 	return false;
 }
@@ -935,6 +918,20 @@ bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeT
 #else
 		return false;
 #endif
+	}
+	else if(BackendType == BACKEND_TYPE_METAL)
+	{
+		pName = "Metal";
+#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
+		{
+			Major = 0;
+			Minor = 0;
+			Patch = 0;
+			return true;
+		}
+#endif
+		return false;
 	}
 	return false;
 }
@@ -1176,6 +1173,9 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		break;
 	case BACKEND_TYPE_VULKAN:
 		pBackendName = "Vulkan";
+		break;
+	case BACKEND_TYPE_METAL:
+		pBackendName = "Metal";
 		break;
 	default:
 		dbg_assert_failed("Invalid m_BackendType: %d", m_BackendType);

@@ -880,6 +880,7 @@ public:
 	virtual const char *GetVersionString() = 0;
 	virtual const char *GetRendererString() = 0;
 	virtual const char *GetFatalError() const = 0;
+	virtual EBackendType GetBackendType() const = 0;
 
 	// be aware that this function should only be called from the graphics thread, and even then you should really know what you are doing
 	virtual TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() = 0;
@@ -948,8 +949,8 @@ class CGraphics_Threaded : public IEngineGraphics
 	bool m_MacosGraphicsDiagnosticsEnabled = false;
 	uint32_t m_MacosGraphicsDiagnosticFrameCount = 0;
 	double m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;
-	double m_MacosMetalWaitForIdleMsSum = 0.0;
-	uint64_t m_MacosMetalWaitForIdleCount = 0;
+	double m_MacosFrameSerializationWaitMsSum = 0.0;
+	uint64_t m_MacosFrameSerializationWaitCount = 0;
 	uint64_t m_MsdfCommandCount = 0;
 	uint64_t m_MsdfFlushCount = 0;
 	uint64_t m_RoundedRectSdfCommandCount = 0;

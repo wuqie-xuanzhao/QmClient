@@ -2675,6 +2675,8 @@ if(CLIENT)
   set_src(ENGINE_CLIENT GLOB_RECURSE src/engine/client
     backend/backend_base.cpp
     backend/backend_base.h
+    backend/graphics_backend_contract.cpp
+    backend/graphics_backend_contract.h
     backend/glsl_shader_compiler.cpp
     backend/glsl_shader_compiler.h
     backend/null/backend_null.cpp
@@ -3773,6 +3775,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     fs_test.cpp
     gameworld_test.cpp
     git_revision_test.cpp
+    graphics_backend_contract_test.cpp
     hash_test.cpp
     huffman_test.cpp
     image_test.cpp
@@ -3865,6 +3868,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     voice_core_test.cpp
   )
   set(TESTS_EXTRA
+    src/engine/client/backend/graphics_backend_contract.cpp
     src/game/client/animstate.cpp
     src/game/client/components/chat_completion.cpp
     src/game/client/race_parse.cpp
