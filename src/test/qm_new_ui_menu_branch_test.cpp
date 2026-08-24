@@ -4169,12 +4169,13 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	EXPECT_NE(StartupHook.find("ListDirectoryInfo"), std::string::npos);
 	EXPECT_NE(StartupHook.find("ReadFileStr"), std::string::npos);
 
-	EXPECT_NE(Recovery.find("str_copy(g_Config.m_GfxBackend, \"OpenGL\");"), std::string::npos);
-	EXPECT_NE(Recovery.find("const int FallbackGLMajor = 0;"), std::string::npos);
-	EXPECT_NE(Recovery.find("const int FallbackGLMinor = 0;"), std::string::npos);
+	EXPECT_NE(Recovery.find("graphics_backend::SafeBackendConfig()"), std::string::npos);
+	EXPECT_NE(Recovery.find("str_copy(g_Config.m_GfxBackend, SafeConfig.m_pBackend);"), std::string::npos);
+	EXPECT_NE(Recovery.find("SafeConfig.m_GLMajor"), std::string::npos);
+	EXPECT_NE(Recovery.find("SafeConfig.m_GLMinor"), std::string::npos);
 	EXPECT_EQ(Recovery.find("CONF_PLATFORM_MACOS"), std::string::npos);
-	EXPECT_NE(Recovery.find("g_Config.m_GfxFsaaSamples = 0;"), std::string::npos);
-	EXPECT_NE(Recovery.find("g_Config.m_GfxFullscreen = 0;"), std::string::npos);
+	EXPECT_NE(Recovery.find("g_Config.m_GfxFsaaSamples = SafeConfig.m_FsaaSamples;"), std::string::npos);
+	EXPECT_NE(Recovery.find("g_Config.m_GfxFullscreen = SafeConfig.m_Fullscreen;"), std::string::npos);
 	EXPECT_NE(StartupHook.find("resetting graphics to auto-detected OpenGL in windowed mode without FSAA"), std::string::npos);
 	EXPECT_EQ(StartupHook.find("CONF_PLATFORM_MACOS"), std::string::npos);
 

@@ -99,6 +99,9 @@ void CGraphicsBackend_Threaded::StartProcessor(ICommandProcessor *pProcessor)
 {
 	dbg_assert(m_Shutdown, "Processor was already not shut down.");
 	m_Shutdown = false;
+	m_SubmissionStopped.store(false, std::memory_order_relaxed);
+	m_FatalErrorPending.store(false, std::memory_order_relaxed);
+	m_FatalError.clear();
 	m_pProcessor = pProcessor;
 #if !defined(CONF_PLATFORM_EMSCRIPTEN)
 	std::unique_lock<std::mutex> Lock(m_BufferSwapMutex);
@@ -127,6 +130,9 @@ void CGraphicsBackend_Threaded::StopProcessor()
 
 void CGraphicsBackend_Threaded::RunBuffer(CCommandBuffer *pBuffer)
 {
+	if(m_SubmissionStopped.load(std::memory_order_relaxed))
+		return;
+
 	SGfxErrorContainer Error;
 #if defined(CONF_PLATFORM_EMSCRIPTEN)
 	Error = m_pProcessor->GetError();
@@ -161,6 +167,8 @@ void CGraphicsBackend_Threaded::RunBuffer(CCommandBuffer *pBuffer)
 
 void CGraphicsBackend_Threaded::RunBufferSingleThreadedUnsafe(CCommandBuffer *pBuffer)
 {
+	if(m_SubmissionStopped.load(std::memory_order_relaxed))
+		return;
 	m_pProcessor->RunBuffer(pBuffer);
 }
 
@@ -183,6 +191,10 @@ void CGraphicsBackend_Threaded::WaitForIdle()
 
 void CGraphicsBackend_Threaded::ProcessError(const SGfxErrorContainer &Error)
 {
+	const bool RuntimeFatal = Error.m_ErrorType != GFX_ERROR_TYPE_INIT;
+	if(RuntimeFatal)
+		m_SubmissionStopped.store(true, std::memory_order_relaxed);
+
 	m_FatalError = "";
 	for(const auto &ErrStr : Error.m_vErrors)
 	{
@@ -196,6 +208,13 @@ void CGraphicsBackend_Threaded::ProcessError(const SGfxErrorContainer &Error)
 			m_FatalError.append(ErrStr.m_Err);
 	}
 	std::string LogMessage = "Graphics Error:\n" + m_FatalError;
+	log_error("gfx", "%s", LogMessage.c_str());
+	if(RuntimeFatal)
+	{
+		// The release path must publish the fatal state without relying on an assertion trap.
+		m_FatalErrorPending.store(true, std::memory_order_release);
+		return;
+	}
 	dbg_assert_failed("%s", LogMessage.c_str());
 }
 
@@ -665,8 +684,10 @@ static int IsVersionSupportedGlew(EBackendType BackendType, int VersionMajor, in
 }
 #endif // !CONF_HEADLESS_CLIENT
 
-EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
+EBackendType CGraphicsBackend_SDL_GL::DetectBackend() const
 {
+	if(m_BackendOverride != BACKEND_TYPE_AUTO)
+		return m_BackendOverride;
 	EBackendType RetBackendType = BACKEND_TYPE_OPENGL;
 	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
 	RetBackendType = graphics_backend::ParseBackendName(pEnvDriver != nullptr ? pEnvDriver : g_Config.m_GfxBackend, RetBackendType);
@@ -1326,6 +1347,8 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		log_error("gfx", "Unable to create window: %s", SDL_GetError());
 		if(m_BackendType == BACKEND_TYPE_VULKAN)
 			return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED;
+		else if(m_BackendType == BACKEND_TYPE_METAL)
+			return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED;
 		else
 			return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_SDL_WINDOW_CREATE_FAILED;
 	}
@@ -1392,7 +1415,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		g_Config.m_GfxGLMinor = GlewMinor;
 		g_Config.m_GfxGLPatch = GlewPatch;
 
-		return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED;
+		return m_BackendType == BACKEND_TYPE_METAL ? EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED : EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED;
 	}
 #endif // !CONF_HEADLESS_CLIENT
 
@@ -1504,7 +1527,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 			str_copy(m_aErrorString, pErrorStr);
 		}
 
-		return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED;
+		return m_BackendType == BACKEND_TYPE_METAL ? EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED : EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED;
 	}
 
 	const SOpenGLVersion RequestedVersion{g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch};
@@ -1534,6 +1557,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 
 int CGraphicsBackend_SDL_GL::Shutdown()
 {
+	ResetSubmissionStopForCleanup();
 	if(m_pProcessor != nullptr)
 	{
 		// issue a shutdown command

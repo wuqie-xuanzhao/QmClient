@@ -58,6 +58,26 @@ TEST(GraphicsBackendContract, FrameSerializationWorkaroundIsVulkanOnly)
 	EXPECT_FALSE(graphics_backend::RequiresFrameSerializationWorkaround(BACKEND_TYPE_METAL));
 }
 
+TEST(GraphicsBackendContract, MetalInitializationIsNotAnOpenGLVersionFailure)
+{
+	EXPECT_TRUE(IsGraphicsBackendMetalInitError(GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED));
+	EXPECT_FALSE(IsGraphicsBackendOpenGLRetryableError(GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED));
+	EXPECT_TRUE(IsGraphicsBackendOpenGLRetryableError(GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED));
+	EXPECT_TRUE(IsGraphicsBackendOpenGLRetryableError(GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED));
+}
+
+TEST(GraphicsBackendContract, SafeBackendConfigIsDeterministic)
+{
+	constexpr auto SafeConfig = graphics_backend::SafeBackendConfig();
+	EXPECT_STREQ(SafeConfig.m_pBackend, "OpenGL");
+	EXPECT_EQ(SafeConfig.m_GLMajor, 4);
+	EXPECT_EQ(SafeConfig.m_GLMinor, 1);
+	EXPECT_EQ(SafeConfig.m_GLPatch, 0);
+	EXPECT_EQ(SafeConfig.m_FsaaSamples, 0);
+	EXPECT_EQ(SafeConfig.m_Fullscreen, 0);
+	EXPECT_EQ(SafeConfig.m_Borderless, 0);
+}
+
 TEST(GraphicsBackendContract, ConfiguredIdentityMatchesOnlyRelevantVersionFields)
 {
 	EXPECT_TRUE(graphics_backend::MatchesConfiguredBackend(BACKEND_TYPE_OPENGL, "OpenGL", 4, 1, 0, "opengl", 4, 1, 0));

@@ -18,6 +18,7 @@
 #include <base/system.h>
 #include <base/windows.h>
 
+#include <engine/client/backend/graphics_backend_contract.h>
 #include <engine/config.h>
 #include <engine/console.h>
 #include <engine/discord.h>
@@ -260,34 +261,33 @@ static bool QmCrashTextHasGraphicsDriverFault(const char *pText)
 
 static bool ApplyQmSafeGraphicsRecovery()
 {
+	const auto SafeConfig = graphics_backend::SafeBackendConfig();
 	bool Changed = false;
-	if(str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") != 0)
+	if(str_comp_nocase(g_Config.m_GfxBackend, SafeConfig.m_pBackend) != 0)
 	{
-		str_copy(g_Config.m_GfxBackend, "OpenGL");
+		str_copy(g_Config.m_GfxBackend, SafeConfig.m_pBackend);
 		Changed = true;
 	}
-	const int FallbackGLMajor = 0;
-	const int FallbackGLMinor = 0;
-	if(g_Config.m_GfxGLMajor != FallbackGLMajor || g_Config.m_GfxGLMinor != FallbackGLMinor || g_Config.m_GfxGLPatch != 0)
+	if(g_Config.m_GfxGLMajor != SafeConfig.m_GLMajor || g_Config.m_GfxGLMinor != SafeConfig.m_GLMinor || g_Config.m_GfxGLPatch != SafeConfig.m_GLPatch)
 	{
-		g_Config.m_GfxGLMajor = FallbackGLMajor;
-		g_Config.m_GfxGLMinor = FallbackGLMinor;
-		g_Config.m_GfxGLPatch = 0;
+		g_Config.m_GfxGLMajor = SafeConfig.m_GLMajor;
+		g_Config.m_GfxGLMinor = SafeConfig.m_GLMinor;
+		g_Config.m_GfxGLPatch = SafeConfig.m_GLPatch;
 		Changed = true;
 	}
-	if(g_Config.m_GfxFsaaSamples != 0)
+	if(g_Config.m_GfxFsaaSamples != SafeConfig.m_FsaaSamples)
 	{
-		g_Config.m_GfxFsaaSamples = 0;
+		g_Config.m_GfxFsaaSamples = SafeConfig.m_FsaaSamples;
 		Changed = true;
 	}
-	if(g_Config.m_GfxFullscreen != 0)
+	if(g_Config.m_GfxFullscreen != SafeConfig.m_Fullscreen)
 	{
-		g_Config.m_GfxFullscreen = 0;
+		g_Config.m_GfxFullscreen = SafeConfig.m_Fullscreen;
 		Changed = true;
 	}
-	if(g_Config.m_GfxBorderless != 0)
+	if(g_Config.m_GfxBorderless != SafeConfig.m_Borderless)
 	{
-		g_Config.m_GfxBorderless = 0;
+		g_Config.m_GfxBorderless = SafeConfig.m_Borderless;
 		Changed = true;
 	}
 	if(g_Config.m_Gfx3DTextureAnalysisRan != 0)
@@ -4097,6 +4097,23 @@ void CClient::Run()
 		++m_PerfFrame;
 		set_new_tick();
 		UpdateHangHeartbeat();
+
+		if(m_pGraphics->HasFatalError())
+		{
+			const char *pGraphicsError = m_pGraphics->GetFatalError();
+			const bool Changed = ApplyQmSafeGraphicsRecovery();
+			if(!m_pConfigManager->Save(true))
+			{
+				m_vQuittingWarnings.emplace_back(Localize("Graphics Error"), Localize("The graphics backend stopped unexpectedly, and safe graphics settings could not be saved."));
+			}
+			else if(Changed)
+			{
+				log_warn("client", "graphics runtime fatal: persisted safe graphics settings for the next launch");
+			}
+			m_vQuittingWarnings.emplace_back(Localize("Graphics Error"), pGraphicsError);
+			SetState(IClient::STATE_QUITTING);
+			break;
+		}
 
 		// handle pending connects
 		if(m_aCmdConnect[0])

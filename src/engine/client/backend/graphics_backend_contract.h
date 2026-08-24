@@ -5,6 +5,22 @@
 
 namespace graphics_backend
 {
+	struct SSafeBackendConfig
+	{
+		const char *m_pBackend;
+		int m_GLMajor;
+		int m_GLMinor;
+		int m_GLPatch;
+		int m_FsaaSamples;
+		int m_Fullscreen;
+		int m_Borderless;
+	};
+
+	constexpr SSafeBackendConfig SafeBackendConfig()
+	{
+		return {"OpenGL", 4, 1, 0, 0, 0, 0};
+	}
+
 	constexpr bool IsMetalCompiled()
 	{
 #if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)

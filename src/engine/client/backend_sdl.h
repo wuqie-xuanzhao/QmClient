@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
+#include <string>
 #include <vector>
 
 #if defined(CONF_PLATFORM_MACOS)
@@ -48,6 +49,8 @@ private:
 	TTranslateFunc m_TranslateFunc;
 	std::string m_FatalError;
 	SGfxWarningContainer m_Warning;
+	std::atomic_bool m_SubmissionStopped = false;
+	std::atomic_bool m_FatalErrorPending = false;
 
 public:
 	// constructed on the main thread, the rest of the functions is run on the render thread
@@ -75,6 +78,10 @@ public:
 protected:
 	void StartProcessor(ICommandProcessor *pProcessor);
 	void StopProcessor();
+	void ResetSubmissionStopForCleanup()
+	{
+		m_SubmissionStopped.store(false, std::memory_order_relaxed);
+	}
 
 	bool HasWarning() const
 	{
@@ -96,6 +103,7 @@ private:
 
 public:
 	const char *GetFatalError() const override;
+	bool HasFatalError() const override { return m_FatalErrorPending.load(std::memory_order_acquire); }
 	bool GetWarning(std::vector<std::string> &WarningStrings) override;
 };
 
@@ -267,14 +275,16 @@ class CGraphicsBackend_SDL_GL : public CGraphicsBackend_Threaded
 	char m_aRendererString[gs_GpuInfoStringSize] = {};
 
 	EBackendType m_BackendType = BACKEND_TYPE_AUTO;
+	EBackendType m_BackendOverride = BACKEND_TYPE_AUTO;
 
 	char m_aErrorString[256];
 
-	static EBackendType DetectBackend();
+	EBackendType DetectBackend() const;
 	static void ClampDriverVersion(EBackendType BackendType);
 
 public:
 	CGraphicsBackend_SDL_GL(TTranslateFunc &&TranslateFunc);
+	void SetBackendOverride(EBackendType BackendType) override { m_BackendOverride = BackendType; }
 	int Init(const char *pName, int *pScreen, int *pWidth, int *pHeight, int *pRefreshRate, int *pFsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight, int *pCurrentWidth, int *pCurrentHeight, class IStorage *pStorage) override;
 	int Shutdown() override;
 

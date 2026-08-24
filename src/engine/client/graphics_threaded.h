@@ -792,7 +792,18 @@ enum EGraphicsBackendErrorCodes
 	GRAPHICS_BACKEND_ERROR_CODE_SDL_SCREEN_INFO_REQUEST_FAILED,
 	GRAPHICS_BACKEND_ERROR_CODE_SDL_SCREEN_RESOLUTION_REQUEST_FAILED,
 	GRAPHICS_BACKEND_ERROR_CODE_SDL_WINDOW_CREATE_FAILED,
+	GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED,
 };
+
+constexpr bool IsGraphicsBackendOpenGLRetryableError(int ErrorCode)
+{
+	return ErrorCode == GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED || ErrorCode == GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED;
+}
+
+constexpr bool IsGraphicsBackendMetalInitError(int ErrorCode)
+{
+	return ErrorCode == GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED;
+}
 
 // interface for the graphics backend
 // all these functions are called on the main thread
@@ -880,6 +891,8 @@ public:
 	virtual const char *GetVersionString() = 0;
 	virtual const char *GetRendererString() = 0;
 	virtual const char *GetFatalError() const = 0;
+	virtual bool HasFatalError() const { return GetFatalError()[0] != '\0'; }
+	virtual void SetBackendOverride(EBackendType BackendType) { (void)BackendType; }
 	virtual EBackendType GetBackendType() const = 0;
 
 	// be aware that this function should only be called from the graphics thread, and even then you should really know what you are doing
@@ -1515,6 +1528,7 @@ public:
 	const char *GetVersionString() override;
 	const char *GetRendererString() override;
 	const char *GetFatalError() const override;
+	bool HasFatalError() const override { return m_pBackend != nullptr && m_pBackend->HasFatalError(); }
 
 	TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() override;
 

@@ -3791,8 +3791,29 @@ int CGraphics_Threaded::InitWindow()
 	if(ErrorCode == 0)
 		return FinishSuccessfulInit();
 
+	bool MetalFallbackAttempted = false;
+	if(IsGraphicsBackendMetalInitError(ErrorCode))
+	{
+		MetalFallbackAttempted = true;
+		// DDNET_DRIVER has precedence over the config, so force the fallback backend
+		// explicitly for this second initialization attempt.
+		m_pBackend->SetBackendOverride(BACKEND_TYPE_OPENGL);
+		const auto SafeConfig = graphics_backend::SafeBackendConfig();
+		str_copy(g_Config.m_GfxBackend, SafeConfig.m_pBackend);
+		g_Config.m_GfxGLMajor = SafeConfig.m_GLMajor;
+		g_Config.m_GfxGLMinor = SafeConfig.m_GLMinor;
+		g_Config.m_GfxGLPatch = SafeConfig.m_GLPatch;
+		g_Config.m_GfxFsaaSamples = SafeConfig.m_FsaaSamples;
+		g_Config.m_GfxFullscreen = SafeConfig.m_Fullscreen;
+		g_Config.m_GfxBorderless = SafeConfig.m_Borderless;
+		log_warn("gfx", "Failed to initialize Metal. Falling back once to OpenGL %d.%d.%d in windowed mode without FSAA.", SafeConfig.m_GLMajor, SafeConfig.m_GLMinor, SafeConfig.m_GLPatch);
+		ErrorCode = IssueInit();
+		if(ErrorCode == 0)
+			return FinishSuccessfulInit();
+	}
+
 	// try disabling fsaa
-	while(g_Config.m_GfxFsaaSamples)
+	while(!MetalFallbackAttempted && g_Config.m_GfxFsaaSamples)
 	{
 		// 4 is the minimum required by OpenGL ES spec (GL_MAX_SAMPLES - https://www.khronos.org/registry/OpenGL-Refpages/es3.0/html/glGet.xhtml),
 		// so can probably also be assumed for OpenGL
@@ -3845,8 +3866,7 @@ int CGraphics_Threaded::InitWindow()
 	}
 
 	size_t GLInitTryCount = 0;
-	while(ErrorCode == EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED ||
-		ErrorCode == EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED)
+	while(IsGraphicsBackendOpenGLRetryableError(ErrorCode))
 	{
 		if(ErrorCode == EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED)
 		{
