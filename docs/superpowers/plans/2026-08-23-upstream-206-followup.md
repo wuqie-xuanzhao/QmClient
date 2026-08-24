@@ -3,7 +3,7 @@
 ## Status
 
 - 206 清单中登记的 3 个专项（128 player、IHttpRequest 生命周期、963f37bb 多地图 tabs）已完成主体实现；本轮 review 发现的问题已修复并完成编译、全量测试验证。
-- 本记录不把真实混合版本会话、HTTP 网络请求、编辑器 UI 人工操作或 clang-format 历史问题误标为已验证；这些仍是明确的运行时/仓库卫生缺口。
+- 本记录不把真实混合版本会话、HTTP 网络请求或编辑器 UI 人工操作误标为已验证；这些仍是明确的运行时验证缺口。
 - 下一步不再是 206 清单内的未完成专项，应另立新的上游批次或独立功能计划；当前工作树中的 Metal backend 改动不属于本次 206 收口。
 
 - `e29d29ce8` 修复多地图异步保存绑定和 map-settings per-map 状态隔离；本轮补充 tab popup 的实例身份和同路径保存状态隔离。
@@ -21,7 +21,7 @@
 ### Remaining Gaps
 
 - 尚未启动工作区内开发客户端执行真实 HTTP 请求和关闭流程；当前证据覆盖编译、测试与静态生命周期接线，未覆盖真实网络运行时。
-- `check_gate.py --mode default` 仍可能被仓库既有 clang-format 违规阻断；若阻断，不把它归因于本专项改动。
+- `check_gate.py --mode default` 已于 2026-08-24 通过（13 pass / 0 warning / 0 fail / 0 skip）。
 
 ## 963f37bb Multi-Map Tabs
 
@@ -35,7 +35,7 @@
 
 - 核心多地图生命周期已在当前分支存在；本轮补齐上游 963f37bb 的缺失 tab 交互。
 - 已完成：`game-client` 编译、C++ 全量 `2783/2783`、Rust 全量测试、专项 review。
-- 默认 gate 的 clang-format 历史失败仍保留为仓库卫生缺口；代码与测试层已在本轮修复后重新验证。
+- 默认 gate 已于 2026-08-24 通过（13 pass / 0 warning / 0 fail / 0 skip）；代码与测试层已在本轮修复后重新验证。
 
 ### Review Result
 
@@ -52,7 +52,7 @@
 - 修复 `CPlayerMapping::InitPlayer` 对未映射同 IP 玩家误设 reserved 的边界条件：`m_pReverseMap[i] == -1` 不再进入保留槽路径，避免后续更新永久跳过该玩家。
 - 收紧 timeout protection 接管状态读取：在 `DelClientCallback` 前快照 DDNet 版本、flags 和 client brand，再写入接管槽，避免回调清理旧槽后丢失协议状态。
 - `game-server` 构建通过；C++ 全量 `2783/2783`、Rust 全量测试通过。
-- `check_gate.py --mode default` 的测试层通过，但 quick 层代码格式检查被仓库既有 clang-format 违规阻断；本轮未修改这些格式问题。
+- `check_gate.py --mode default` 已通过；仍缺少混合地图实例的真实 UI 操作验证。
 
 ### Remaining Gaps
 
