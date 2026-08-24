@@ -1436,6 +1436,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 
 	// issue init commands for OpenGL and SDL
 	CCommandBuffer CmdBuffer(1024, 512);
+	const char *pErrorStr = nullptr;
 	CCommandProcessorFragment_GLBase::SCommand_PreInit CmdPre;
 	CmdPre.m_pWindow = m_pWindow;
 	CmdPre.m_Width = *pCurrentWidth;
@@ -1444,6 +1445,8 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	CmdPre.m_pVersionString = m_aVersionString;
 	CmdPre.m_pRendererString = m_aRendererString;
 	CmdPre.m_pGpuList = &m_GpuList;
+	CmdPre.m_pInitError = &InitError;
+	CmdPre.m_pErrStringPtr = &pErrorStr;
 	CmdBuffer.AddCommandUnsafe(CmdPre);
 	RunBufferSingleThreadedUnsafe(&CmdBuffer);
 	CmdBuffer.Reset();
@@ -1457,7 +1460,6 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	WaitForIdle();
 	CmdBuffer.Reset();
 
-	const char *pErrorStr = nullptr;
 	if(InitError == 0)
 	{
 		CCommandProcessorFragment_GLBase::SCommand_Init CmdGL;

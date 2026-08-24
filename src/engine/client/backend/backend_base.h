@@ -122,6 +122,9 @@ public:
 		char *m_pRendererString;
 
 		TTwGraphicsGpuList *m_pGpuList;
+
+		int *m_pInitError = nullptr;
+		const char **m_pErrStringPtr = nullptr;
 	};
 
 	struct SCommand_Init : public CCommandBuffer::SCommand

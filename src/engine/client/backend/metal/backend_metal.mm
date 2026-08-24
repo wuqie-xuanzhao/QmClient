@@ -1,5 +1,7 @@
 #include "backend_metal.h"
 
+#include <SDL_metal.h>
+
 #include <string>
 
 namespace
@@ -28,6 +30,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 {
 	EMetalBackendState m_State = EMetalBackendState::UNINITIALIZED;
 	uint64_t m_FrameId = 0;
+	SDL_MetalView m_MetalView = nullptr;
+	void *m_pLayer = nullptr;
 
 	bool GetPresentedImageData(uint32_t &, uint32_t &, CImageInfo::EImageFormat &, std::vector<uint8_t> &) override
 	{
@@ -46,7 +50,35 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void Cmd_PreInit(const SCommand_PreInit *pCommand)
 	{
-		(void)pCommand;
+		if(m_MetalView != nullptr)
+		{
+			SDL_Metal_DestroyView(m_MetalView);
+			m_MetalView = nullptr;
+			m_pLayer = nullptr;
+		}
+		if(pCommand->m_pWindow == nullptr)
+		{
+			if(pCommand->m_pInitError != nullptr)
+				*pCommand->m_pInitError = -1;
+			if(pCommand->m_pErrStringPtr != nullptr)
+				*pCommand->m_pErrStringPtr = "Metal pre-init requires an SDL window";
+			return;
+		}
+
+		m_MetalView = SDL_Metal_CreateView(pCommand->m_pWindow);
+		m_pLayer = m_MetalView != nullptr ? SDL_Metal_GetLayer(m_MetalView) : nullptr;
+		if(m_MetalView == nullptr || m_pLayer == nullptr)
+		{
+			if(m_MetalView != nullptr)
+				SDL_Metal_DestroyView(m_MetalView);
+			m_MetalView = nullptr;
+			m_pLayer = nullptr;
+			if(pCommand->m_pInitError != nullptr)
+				*pCommand->m_pInitError = -1;
+			if(pCommand->m_pErrStringPtr != nullptr)
+				*pCommand->m_pErrStringPtr = "SDL could not create the Metal view or layer";
+			return;
+		}
 		m_State = EMetalBackendState::PRE_INITIALIZED;
 	}
 
@@ -67,6 +99,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void Cmd_PostShutdown(const SCommand_PostShutdown *pCommand)
 	{
 		(void)pCommand;
+		if(m_MetalView != nullptr)
+			SDL_Metal_DestroyView(m_MetalView);
+		m_MetalView = nullptr;
+		m_pLayer = nullptr;
 		m_State = EMetalBackendState::UNINITIALIZED;
 	}
 
