@@ -2677,6 +2677,8 @@ if(CLIENT)
     backend/backend_base.h
     backend/graphics_backend_contract.cpp
     backend/graphics_backend_contract.h
+    backend/metal/metal_frame_state.cpp
+    backend/metal/metal_frame_state.h
     backend/glsl_shader_compiler.cpp
     backend/glsl_shader_compiler.h
     backend/null/backend_null.cpp
@@ -3790,6 +3792,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     mapbugs_test.cpp
     mapitems_test.cpp
     math_test.cpp
+    metal_frame_state_test.cpp
     mem_test.cpp
     mutes_test.cpp
     name_ban_test.cpp
@@ -3869,6 +3872,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   set(TESTS_EXTRA
     src/engine/client/backend/graphics_backend_contract.cpp
+    src/engine/client/backend/metal/metal_frame_state.cpp
     src/game/client/animstate.cpp
     src/game/client/components/chat_completion.cpp
     src/game/client/race_parse.cpp
