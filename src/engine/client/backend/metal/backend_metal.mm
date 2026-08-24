@@ -50,6 +50,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void Cmd_PreInit(const SCommand_PreInit *pCommand)
 	{
+		m_State = EMetalBackendState::UNINITIALIZED;
 		if(m_MetalView != nullptr)
 		{
 			SDL_Metal_DestroyView(m_MetalView);

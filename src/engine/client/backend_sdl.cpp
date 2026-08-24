@@ -1296,7 +1296,12 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 
 	// set flags
 	int SdlFlags = SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_ALLOW_HIGHDPI;
-	SdlFlags |= (IsOpenGLFamilyBackend) ? SDL_WINDOW_OPENGL : SDL_WINDOW_VULKAN;
+	if(IsOpenGLFamilyBackend)
+		SdlFlags |= SDL_WINDOW_OPENGL;
+	else if(m_BackendType == BACKEND_TYPE_VULKAN)
+		SdlFlags |= SDL_WINDOW_VULKAN;
+	else if(m_BackendType == BACKEND_TYPE_METAL)
+		SdlFlags |= SDL_WINDOW_METAL;
 	if(Flags & IGraphicsBackend::INITFLAG_RESIZABLE)
 		SdlFlags |= SDL_WINDOW_RESIZABLE;
 	if(Flags & IGraphicsBackend::INITFLAG_BORDERLESS)
@@ -1395,8 +1400,10 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	{
 		if(IsOpenGLFamilyBackend)
 			SDL_GL_GetDrawableSize(m_pWindow, pCurrentWidth, pCurrentHeight);
-		else
+		else if(m_BackendType == BACKEND_TYPE_VULKAN)
 			SDL_Vulkan_GetDrawableSize(m_pWindow, pCurrentWidth, pCurrentHeight);
+		else
+			SDL_GetWindowSize(m_pWindow, pCurrentWidth, pCurrentHeight);
 	}
 	else
 		SDL_GetWindowSize(m_pWindow, pCurrentWidth, pCurrentHeight);
