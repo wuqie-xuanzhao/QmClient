@@ -17,10 +17,10 @@
 #include <engine/friends.h>
 #include <engine/ghost.h>
 #include <engine/graphics.h>
+#include <engine/http.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
-#include <engine/http.h>
 #include <engine/shared/json.h>
 #include <engine/shared/localization.h>
 #include <engine/storage.h>

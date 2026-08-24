@@ -18,8 +18,8 @@
 
 #include <engine/editor.h>
 #include <engine/graphics.h>
-#include <engine/shared/datafile.h>
 #include <engine/http.h>
+#include <engine/shared/datafile.h>
 #include <engine/shared/jobs.h>
 #include <engine/shared/localization.h>
 

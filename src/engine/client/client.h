@@ -18,10 +18,10 @@
 #include <engine/client/updater.h>
 #include <engine/editor.h>
 #include <engine/graphics.h>
+#include <engine/http.h>
 #include <engine/shared/config.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/fifo.h>
-#include <engine/http.h>
 #include <engine/shared/network.h>
 #include <engine/textrender.h>
 #include <engine/warning.h>

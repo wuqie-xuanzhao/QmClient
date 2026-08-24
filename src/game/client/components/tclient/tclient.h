@@ -7,8 +7,8 @@
 #include <engine/client/enums.h>
 #include <engine/external/regex.h>
 #include <engine/graphics.h>
-#include <engine/shared/console.h>
 #include <engine/http.h>
+#include <engine/shared/console.h>
 #include <engine/shared/json.h>
 #include <engine/shared/protocol.h>
 #include <engine/textrender.h>

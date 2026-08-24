@@ -280,7 +280,6 @@ public:
 		}
 
 	private:
-
 		void ClearError();
 		EValidationResult ValidateArg(int Index, const char *pArg);
 		void UpdatePossibleMatches();

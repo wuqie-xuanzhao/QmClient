@@ -7,8 +7,8 @@
 #include <engine/console.h>
 #include <engine/engine.h>
 #include <engine/external/json-parser/json.h>
-#include <engine/serverbrowser.h>
 #include <engine/http.h>
+#include <engine/serverbrowser.h>
 #include <engine/shared/jobs.h>
 #include <engine/shared/linereader.h>
 #include <engine/shared/serverinfo.h>

@@ -12,8 +12,8 @@
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
 #include <engine/graphics.h>
-#include <engine/shared/config.h>
 #include <engine/http.h>
+#include <engine/shared/config.h>
 #include <engine/shared/json.h>
 #include <engine/storage.h>
 

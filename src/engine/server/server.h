@@ -11,12 +11,12 @@
 #include <base/hash.h>
 
 #include <engine/console.h>
+#include <engine/http.h>
 #include <engine/server.h>
 #include <engine/shared/client_brand.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/econ.h>
 #include <engine/shared/fifo.h>
-#include <engine/http.h>
 #include <engine/shared/netban.h>
 #include <engine/shared/network.h>
 #include <engine/shared/protocol.h>
