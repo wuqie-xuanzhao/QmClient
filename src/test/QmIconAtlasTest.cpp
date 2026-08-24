@@ -483,8 +483,8 @@ TEST(QmIconAtlas, DiagnosticsKeepAtlasAndRendererCountersSeparated)
 	EXPECT_NE(GraphicsHeader.find("bool m_MacosGraphicsDiagnosticsEnabled = false;"), std::string::npos);
 	EXPECT_NE(GraphicsHeader.find("uint32_t m_MacosGraphicsDiagnosticFrameCount = 0;"), std::string::npos);
 	EXPECT_NE(GraphicsHeader.find("double m_MacosGraphicsDiagnosticSubmitMsSum = 0.0;"), std::string::npos);
-	EXPECT_NE(GraphicsHeader.find("double m_MacosMetalWaitForIdleMsSum = 0.0;"), std::string::npos);
-	EXPECT_NE(GraphicsHeader.find("uint64_t m_MacosMetalWaitForIdleCount = 0;"), std::string::npos);
+	EXPECT_NE(GraphicsHeader.find("double m_MacosFrameSerializationWaitMsSum = 0.0;"), std::string::npos);
+	EXPECT_NE(GraphicsHeader.find("uint64_t m_MacosFrameSerializationWaitCount = 0;"), std::string::npos);
 	EXPECT_NE(Graphics.find("sample_frames=120"), std::string::npos);
 	EXPECT_NE(Graphics.find("submit_duration_ms_sum"), std::string::npos);
 	EXPECT_NE(Graphics.find("submit_duration_ms_avg"), std::string::npos);
@@ -492,8 +492,8 @@ TEST(QmIconAtlas, DiagnosticsKeepAtlasAndRendererCountersSeparated)
 	EXPECT_NE(Graphics.find("if(PreviousMacosDiagnostics)"), std::string::npos);
 	EXPECT_NE(Graphics.find("msdf_commands_sum"), std::string::npos);
 	EXPECT_NE(Graphics.find("msdf_flushes_sum"), std::string::npos);
-	EXPECT_NE(Graphics.find("metal_wait_for_idle_count"), std::string::npos);
-	EXPECT_NE(Graphics.find("metal_wait_for_idle_ms_avg"), std::string::npos);
+	EXPECT_NE(Graphics.find("frame_serialization_wait_count"), std::string::npos);
+	EXPECT_NE(Graphics.find("frame_serialization_wait_ms_avg"), std::string::npos);
 	EXPECT_NE(Graphics.find("if(!MacosDiagnostics)\n\t{\n\t\tif(PreviousMacosDiagnostics)"), std::string::npos);
 	EXPECT_NE(Graphics.find("unlimited_config=%d"), std::string::npos);
 	EXPECT_NE(Graphics.find("gfx_refresh_rate=%d"), std::string::npos);
