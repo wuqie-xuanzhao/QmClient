@@ -40,6 +40,10 @@
 #include "backend/vulkan/backend_vulkan.h"
 #endif
 
+#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#include "backend/metal/backend_metal.h"
+#endif
+
 #include "graphics_threaded.h"
 
 #include <engine/graphics.h>
@@ -475,6 +479,12 @@ CCommandProcessor_SDL_GL::CCommandProcessor_SDL_GL(EBackendType BackendType, int
 	{
 #if defined(CONF_BACKEND_VULKAN)
 		m_pGLBackend = CreateVulkanCommandProcessorFragment();
+#endif
+	}
+	else if(BackendType == BACKEND_TYPE_METAL)
+	{
+#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+		m_pGLBackend = CreateMetalCommandProcessorFragment();
 #endif
 	}
 #endif

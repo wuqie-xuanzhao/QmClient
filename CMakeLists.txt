@@ -2777,6 +2777,12 @@ if(CLIENT)
     video.h
     warning.cpp
   )
+
+  if(TARGET_OS STREQUAL "mac" AND METAL)
+    list(APPEND ENGINE_CLIENT
+      src/engine/client/backend/metal/backend_metal.mm
+    )
+  endif()
   set_src(GAME_CLIENT GLOB_RECURSE src/game/client
     QmUi/QmAnim.cpp
     QmUi/QmAnim.h
@@ -3363,7 +3369,9 @@ if(CLIENT)
   endif()
   if(METAL)
     target_compile_definitions(game-client-common INTERFACE CONF_BACKEND_METAL)
+    target_compile_definitions(game-client-common INTERFACE CONF_BACKEND_METAL_READY)
     target_compile_definitions(engine-shared PRIVATE CONF_BACKEND_METAL)
+    target_compile_definitions(engine-shared PRIVATE CONF_BACKEND_METAL_READY)
     target_link_libraries(game-client-common INTERFACE "-framework Metal" "-framework QuartzCore")
   endif()
 
@@ -3980,6 +3988,10 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/engine/client/sqlite.cpp
   )
 
+  if(METAL)
+    list(APPEND TESTS_EXTRA src/engine/client/backend/metal/backend_metal.mm)
+  endif()
+
   set(TARGET_TESTRUNNER testrunner)
   add_executable(${TARGET_TESTRUNNER} EXCLUDE_FROM_ALL
     ${TESTS}
@@ -4002,6 +4014,10 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   target_compile_definitions(${TARGET_TESTRUNNER} PRIVATE
     DDNET_TEST_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
   )
+  if(METAL)
+    target_compile_definitions(${TARGET_TESTRUNNER} PRIVATE CONF_BACKEND_METAL CONF_BACKEND_METAL_READY)
+    target_link_libraries(${TARGET_TESTRUNNER} "-framework Metal" "-framework QuartzCore")
+  endif()
   if(MSVC)
     target_compile_options(${TARGET_TESTRUNNER} PRIVATE /bigobj)
   endif()

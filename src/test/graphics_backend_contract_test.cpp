@@ -1,6 +1,10 @@
 #include <engine/client/backend/graphics_backend_contract.h>
 #include <engine/client/backend_sdl.h>
 
+#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#include <engine/client/backend/metal/backend_metal.h>
+#endif
+
 #include <gtest/gtest.h>
 
 TEST(GraphicsBackendContract, NamesAreStable)
@@ -64,6 +68,42 @@ TEST(GraphicsBackendContract, MetalInitializationIsNotAnOpenGLVersionFailure)
 	EXPECT_FALSE(IsGraphicsBackendOpenGLRetryableError(GRAPHICS_BACKEND_ERROR_CODE_METAL_INIT_FAILED));
 	EXPECT_TRUE(IsGraphicsBackendOpenGLRetryableError(GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED));
 	EXPECT_TRUE(IsGraphicsBackendOpenGLRetryableError(GRAPHICS_BACKEND_ERROR_CODE_GL_VERSION_FAILED));
+}
+
+TEST(GraphicsBackendContract, MetalFactoryRejectsUnimplementedCommandsWithoutStickyInitError)
+{
+#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+	CCommandProcessorFragment_GLBase *pMetal = CreateMetalCommandProcessorFragment();
+	ASSERT_NE(pMetal, nullptr);
+
+	CCommandProcessorFragment_GLBase::SCommand_PreInit PreInit;
+	EXPECT_EQ(pMetal->RunCommand(&PreInit), RUN_COMMAND_COMMAND_HANDLED);
+
+	CCommandBuffer::SCommand_Render Render;
+	EXPECT_EQ(pMetal->RunCommand(&Render), RUN_COMMAND_COMMAND_ERROR);
+	const SGfxErrorContainer &RenderError = pMetal->GetError();
+	ASSERT_EQ(RenderError.m_ErrorType, GFX_ERROR_TYPE_RENDER_CMD_FAILED);
+	ASSERT_EQ(RenderError.m_vErrors.size(), 1U);
+	EXPECT_NE(RenderError.m_vErrors[0].m_Err.find("backend_state=pre_initialized"), std::string::npos);
+	EXPECT_NE(RenderError.m_vErrors[0].m_Err.find("frame_id=0"), std::string::npos);
+
+	delete pMetal;
+	pMetal = CreateMetalCommandProcessorFragment();
+	ASSERT_NE(pMetal, nullptr);
+	int InitError = 0;
+	const char *pErrorString = nullptr;
+	CCommandProcessorFragment_GLBase::SCommand_Init Init;
+	Init.m_pInitError = &InitError;
+	Init.m_pErrStringPtr = &pErrorString;
+	EXPECT_EQ(pMetal->RunCommand(&Init), RUN_COMMAND_COMMAND_HANDLED);
+	EXPECT_EQ(InitError, -1);
+	ASSERT_NE(pErrorString, nullptr);
+	EXPECT_EQ(pMetal->GetError().m_ErrorType, GFX_ERROR_TYPE_NONE);
+
+	delete pMetal;
+#else
+	SUCCEED();
+#endif
 }
 
 TEST(GraphicsBackendContract, SafeBackendConfigIsDeterministic)
