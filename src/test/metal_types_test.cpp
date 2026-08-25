@@ -17,6 +17,9 @@ TEST(MetalTypes, UniformsMatchTheMSLBufferLayout)
 	EXPECT_EQ(sizeof(SMetalTextUniforms), 112U);
 	EXPECT_EQ(offsetof(SMetalTextUniforms, m_OutlineColor), 80U);
 	EXPECT_EQ(offsetof(SMetalTextUniforms, m_Params), 96U);
+	EXPECT_EQ(sizeof(SMetalTileUniforms), 96U);
+	EXPECT_EQ(offsetof(SMetalTileUniforms, m_Transform), 80U);
+	EXPECT_EQ(offsetof(SMetalQuadUniforms, m_QuadOffset), 64U + METAL_MAX_QUADS * 32U);
 }
 
 TEST(MetalTypes, ComputesRgbaAndTextLayouts)
@@ -111,6 +114,8 @@ TEST(MetalTypes, ValidatesVertexAttributeLayoutAgainstStride)
 	EXPECT_FALSE(MetalValidateVertexAttribute(16, SMetalVertexAttribute{3, METAL_GRAPHICS_TYPE_FLOAT, false, 8, 0}));
 	EXPECT_FALSE(MetalValidateVertexAttribute(16, SMetalVertexAttribute{1, 0, false, 0, 0}));
 	EXPECT_FALSE(MetalValidateVertexAttribute(16, SMetalVertexAttribute{1, METAL_GRAPHICS_TYPE_FLOAT, false, 0, 2}));
+	EXPECT_TRUE(MetalVertexAttributeEquals(Position, 2, METAL_GRAPHICS_TYPE_FLOAT, false, 0, 0));
+	EXPECT_FALSE(MetalVertexAttributeEquals(Position, 2, METAL_GRAPHICS_TYPE_FLOAT, true, 0, 0));
 }
 
 TEST(MetalTypes, MapsBlendModesToOpenGLCompatibleFactors)

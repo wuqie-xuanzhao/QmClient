@@ -233,6 +233,11 @@ inline bool MetalValidateVertexAttribute(int Stride, const SMetalVertexAttribute
 	return Attribute.m_DataTypeCount <= (static_cast<size_t>(Stride) - Attribute.m_Offset) / TypeBytes;
 }
 
+inline bool MetalVertexAttributeEquals(const SMetalVertexAttribute &Attribute, uint32_t DataTypeCount, uint32_t Type, bool Normalized, size_t Offset, uint32_t FuncType)
+{
+	return Attribute.m_DataTypeCount == DataTypeCount && Attribute.m_Type == Type && Attribute.m_Normalized == Normalized && Attribute.m_Offset == Offset && Attribute.m_FuncType == FuncType;
+}
+
 class CMetalBufferRegistry
 {
 	struct SEntry
@@ -354,6 +359,32 @@ struct alignas(16) SMetalTextUniforms
 	SMetalFloat4 m_Params;
 };
 
+static constexpr size_t METAL_MAX_QUADS = 256;
+
+#if defined(__METAL_VERSION__)
+struct SMetalTileUniforms
+#else
+struct alignas(16) SMetalTileUniforms
+#endif
+{
+	SMetalFloat4x4 m_MVP;
+	SMetalFloat4 m_Color;
+	SMetalFloat4 m_Transform;
+};
+
+#if defined(__METAL_VERSION__)
+struct SMetalQuadUniforms
+#else
+struct alignas(16) SMetalQuadUniforms
+#endif
+{
+	SMetalFloat4x4 m_MVP;
+	SMetalFloat4 m_aColors[METAL_MAX_QUADS];
+	SMetalFloat4 m_aOffsetsRotations[METAL_MAX_QUADS];
+	int m_QuadOffset;
+	int m_Padding[3];
+};
+
 #if !defined(__METAL_VERSION__)
 static_assert(alignof(SMetalUniforms) == 16);
 static_assert(sizeof(SMetalFloat4x4) == 64);
@@ -365,6 +396,9 @@ static_assert(alignof(SMetalTextUniforms) == 16);
 static_assert(sizeof(SMetalTextUniforms) == 112);
 static_assert(offsetof(SMetalTextUniforms, m_OutlineColor) == 80);
 static_assert(offsetof(SMetalTextUniforms, m_Params) == 96);
+static_assert(sizeof(SMetalTileUniforms) == 96);
+static_assert(offsetof(SMetalTileUniforms, m_Transform) == 80);
+static_assert(offsetof(SMetalQuadUniforms, m_QuadOffset) == 64 + METAL_MAX_QUADS * 32);
 #endif
 
 #endif
