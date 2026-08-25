@@ -1812,7 +1812,9 @@ bool CGraphicsBackend_SDL_GL::ResizeWindow(int w, int h, int RefreshRate)
 
 void CGraphicsBackend_SDL_GL::GetViewportSize(int &w, int &h)
 {
-	if(m_BackendType != EBackendType::BACKEND_TYPE_VULKAN)
+	if(m_BackendType == EBackendType::BACKEND_TYPE_METAL)
+		SDL_Metal_GetDrawableSize(m_pWindow, &w, &h);
+	else if(m_BackendType != EBackendType::BACKEND_TYPE_VULKAN)
 		SDL_GL_GetDrawableSize(m_pWindow, &w, &h);
 	else
 		SDL_Vulkan_GetDrawableSize(m_pWindow, &w, &h);
