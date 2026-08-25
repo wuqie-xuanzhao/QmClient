@@ -1455,7 +1455,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(ActiveTargetId >= 0 && static_cast<size_t>(ActiveTargetId) < m_vRenderTargets.size())
 		{
 			const SRenderTarget &Target = m_vRenderTargets[ActiveTargetId];
-			return Target.m_Allocated && BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, ClearColor, MTLLoadActionLoad);
+			return Target.m_Allocated && BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, ClearColor, MTLLoadActionLoad, false);
 		}
 		if(m_CurrentCommandBuffer == nil || m_pLayer == nullptr)
 			return false;
@@ -1466,10 +1466,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(m_CurrentDrawable == nil)
 			return false;
-		return BeginRenderEncoderForTexture(m_CurrentDrawable.texture, m_DrawableWidth, m_DrawableHeight, ClearColor, m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear);
+		return BeginRenderEncoderForTexture(m_CurrentDrawable.texture, m_DrawableWidth, m_DrawableHeight, ClearColor, m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear, true);
 	}
 
-	bool BeginRenderEncoderForTexture(id<MTLTexture> Texture, uint32_t Width, uint32_t Height, const MTLClearColor &ClearColor, MTLLoadAction LoadAction)
+	bool BeginRenderEncoderForTexture(id<MTLTexture> Texture, uint32_t Width, uint32_t Height, const MTLClearColor &ClearColor, MTLLoadAction LoadAction, bool Backbuffer)
 	{
 		if(Texture == nil || Width == 0 || Height == 0 || m_CurrentCommandBuffer == nil)
 			return false;
@@ -1489,7 +1489,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CurrentRenderEncoder.label = @"QmClient Metal frame";
 		[m_CurrentRenderEncoder setViewport:(MTLViewport){0.0, 0.0, static_cast<double>(Width), static_cast<double>(Height), 0.0, 1.0}];
 		m_RenderEncoderStarted = true;
-		if(!m_RenderTargetState.IsActive())
+		if(Backbuffer)
 			m_BackbufferHasContents = true;
 		return true;
 	}
@@ -2085,7 +2085,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(ActiveTargetId >= 0 && static_cast<size_t>(ActiveTargetId) < m_vRenderTargets.size())
 		{
 			const SRenderTarget &Target = m_vRenderTargets[ActiveTargetId];
-			if(Target.m_Allocated && BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, ClearColor, MTLLoadActionClear))
+			if(Target.m_Allocated && BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, ClearColor, MTLLoadActionClear, false))
 				return;
 		}
 		else
@@ -2129,7 +2129,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		EndActiveEncoders();
 		if(!m_RenderTargetState.Begin(pCommand->m_TargetId))
 			return true;
-		if(BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, MTLClearColorMake(pCommand->m_ClearColor.r, pCommand->m_ClearColor.g, pCommand->m_ClearColor.b, pCommand->m_ClearColor.a), MTLLoadActionClear))
+		if(BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, MTLClearColorMake(pCommand->m_ClearColor.r, pCommand->m_ClearColor.g, pCommand->m_ClearColor.b, pCommand->m_ClearColor.a), MTLLoadActionClear, false))
 			return true;
 		m_RenderTargetState.Reset();
 		return false;
@@ -2154,7 +2154,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(PrimCount > std::numeric_limits<size_t>::max() / (4 * sizeof(CCommandBuffer::SVertex)))
 			return false;
 		const SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
-		if(!Target.m_Allocated || Target.m_Texture == nil || !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+		if(!Target.m_Allocated || Target.m_Texture == nil || m_CurrentCommandBuffer == nil)
 			return false;
 		const size_t VertexBytes = PrimCount * 4 * sizeof(CCommandBuffer::SVertex);
 		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
@@ -2170,10 +2170,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(pCommand->m_State.m_BlendMode);
 		if(UniformOffset > gs_StreamBufferSize || sizeof(Uniforms) > gs_StreamBufferSize - UniformOffset || static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
 			return false;
-		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + UniformOffset, &Uniforms, sizeof(Uniforms));
 		id<MTLRenderPipelineState> Pipeline = m_aPipelineStates[PipelineIndex(true, false, BlendMode)];
-		if(Pipeline == nil)
+		if(Pipeline == nil || !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
 			return false;
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + UniformOffset, &Uniforms, sizeof(Uniforms));
 		[m_CurrentRenderEncoder setRenderPipelineState:Pipeline];
 		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
 		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
@@ -2182,6 +2182,61 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		SetScissor(pCommand->m_State);
 		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(pCommand->m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
+		return true;
+	}
+
+	bool Cmd_RenderTarget_CaptureBackbuffer(const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *pCommand)
+	{
+		if(m_RenderTargetState.IsActive() || pCommand->m_TargetId < 0 || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size())
+			return true;
+		const SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
+		if(!Target.m_Allocated || Target.m_Texture == nil || Target.m_Width == 0 || Target.m_Height == 0)
+			return true;
+
+		std::array<CCommandBuffer::SVertex, 4> aVertices{};
+		aVertices[0].m_Pos = vec2(0.0f, 0.0f);
+		aVertices[0].m_Tex = vec2(0.0f, 0.0f);
+		aVertices[1].m_Pos = vec2(static_cast<float>(Target.m_Width), 0.0f);
+		aVertices[1].m_Tex = vec2(1.0f, 0.0f);
+		aVertices[2].m_Pos = vec2(static_cast<float>(Target.m_Width), static_cast<float>(Target.m_Height));
+		aVertices[2].m_Tex = vec2(1.0f, 1.0f);
+		aVertices[3].m_Pos = vec2(0.0f, static_cast<float>(Target.m_Height));
+		aVertices[3].m_Tex = vec2(0.0f, 1.0f);
+		for(CCommandBuffer::SVertex &Vertex : aVertices)
+			Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, 255};
+
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		const size_t VertexOffset = (Frame.m_VertexOffset + 255) & ~size_t(255);
+		const size_t VertexBytes = sizeof(aVertices);
+		const size_t UniformOffset = (VertexOffset + VertexBytes + 255) & ~size_t(255);
+		if(VertexOffset > gs_StreamBufferSize || VertexBytes > gs_StreamBufferSize - VertexOffset || UniformOffset > gs_StreamBufferSize || sizeof(SMetalUniforms) > gs_StreamBufferSize - UniformOffset)
+			return false;
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + VertexOffset, aVertices.data(), VertexBytes);
+		SMetalUniforms Uniforms;
+		CCommandBuffer::SState State{};
+		State.m_ScreenTL = vec2(0.0f, 0.0f);
+		State.m_ScreenBR = vec2(static_cast<float>(Target.m_Width), static_cast<float>(Target.m_Height));
+		if(!BuildMvp(State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + UniformOffset, &Uniforms, sizeof(Uniforms));
+		id<MTLRenderPipelineState> Pipeline = m_aPipelineStates[PipelineIndex(true, false, EMetalBlendMode::NONE)];
+		if(Pipeline == nil || m_CurrentCommandBuffer == nil)
+			return false;
+		if(m_CurrentDrawable == nil && !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		EndActiveEncoders();
+		if(m_CurrentDrawable == nil || !BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, MTLClearColorMake(0.0, 0.0, 0.0, 1.0), MTLLoadActionClear, false))
+			return false;
+		[m_CurrentRenderEncoder setRenderPipelineState:Pipeline];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentTexture:m_CurrentDrawable.texture atIndex:0];
+		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
+		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Target.m_Width, Target.m_Height}];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
+		EndActiveEncoders();
 		return true;
 	}
 
@@ -2650,6 +2705,13 @@ public:
 			case CCommandBuffer::CMD_RENDER_TARGET_DRAW:
 			{
 				const bool Success = Cmd_RenderTarget_Draw(static_cast<const CCommandBuffer::SCommand_RenderTarget_Draw *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TARGET_CAPTURE_BACKBUFFER:
+			{
+				const bool Success = Cmd_RenderTarget_CaptureBackbuffer(static_cast<const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *>(pBaseCommand));
 				if(!Success)
 					SetUnsupportedCommandError(pBaseCommand);
 				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
