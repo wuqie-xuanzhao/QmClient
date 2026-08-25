@@ -1,5 +1,6 @@
 #include "backend_metal.h"
 #include "metal_frame_state.h"
+#include "metal_render_target_state.h"
 #include "metal_types.h"
 
 #include <base/log.h>
@@ -88,6 +89,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		bool m_Allocated = false;
 	};
 
+	struct SRenderTarget
+	{
+		id<MTLTexture> m_Texture = nil;
+		uint32_t m_Width = 0;
+		uint32_t m_Height = 0;
+		size_t m_DataBytes = 0;
+		bool m_Allocated = false;
+	};
+
 	struct SFrameSlot
 	{
 		id<MTLBuffer> m_VertexBuffer = nil;
@@ -132,6 +142,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	IStorage *m_pStorage = nullptr;
 	bool m_CommandBufferCommitted = false;
 	bool m_RenderEncoderStarted = false;
+	bool m_BackbufferHasContents = false;
+	CMetalRenderTargetState m_RenderTargetState;
 	uint32_t m_DrawableWidth = 0;
 	uint32_t m_DrawableHeight = 0;
 	size_t m_StreamMemoryBytes = 0;
@@ -139,6 +151,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	std::vector<STextureSlot> m_vTextureSlots;
 	std::vector<SBufferSlot> m_vBufferSlots;
 	std::vector<SBufferContainerSlot> m_vBufferContainers;
+	std::vector<SRenderTarget> m_vRenderTargets;
 	unsigned int m_RequiredIndicesNum = 0;
 	std::atomic<uint64_t> *m_pTextureMemoryUsage = nullptr;
 	std::atomic<uint64_t> *m_pBufferMemoryUsage = nullptr;
@@ -248,9 +261,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void ReleaseGpuObjects()
 	{
+		DestroyAllRenderTargets();
 		m_CurrentRenderEncoder = nil;
 		m_CurrentBlitEncoder = nil;
 		m_CurrentDrawable = nil;
+		m_BackbufferHasContents = false;
+		m_RenderTargetState.Reset();
 		ReleaseMetalObject(m_LastPresentedReadback);
 		m_LastPresentedReadback = nil;
 		ReleaseMetalObject(m_LastPresentedCommandBuffer);
@@ -483,6 +499,71 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder endEncoding];
 		m_CurrentRenderEncoder = nil;
 		m_RenderEncoderStarted = false;
+	}
+
+	void DestroyRenderTarget(int TargetId)
+	{
+		if(TargetId < 0 || static_cast<size_t>(TargetId) >= m_vRenderTargets.size())
+			return;
+		if(!m_RenderTargetState.CanDestroy(TargetId))
+			return;
+		SRenderTarget &Target = m_vRenderTargets[TargetId];
+		if(Target.m_Allocated)
+		{
+			SubTextureMemory(Target.m_DataBytes);
+			ReleaseMetalObject(Target.m_Texture);
+		}
+		Target = {};
+	}
+
+	bool CreateRenderTarget(int TargetId, int Width, int Height)
+	{
+		if(TargetId < 0 || Width <= 0 || Height <= 0 || m_Device == nil || m_State != EMetalBackendState::INITIALIZED)
+			return false;
+		if(static_cast<size_t>(TargetId) >= m_vRenderTargets.size())
+			m_vRenderTargets.resize(static_cast<size_t>(TargetId) + 1);
+		if(!m_RenderTargetState.CanDestroy(TargetId))
+			return false;
+		DestroyRenderTarget(TargetId);
+		if(static_cast<size_t>(Width) > std::numeric_limits<size_t>::max() / static_cast<size_t>(Height))
+			return false;
+		const size_t PixelCount = static_cast<size_t>(Width) * static_cast<size_t>(Height);
+		if(PixelCount > std::numeric_limits<size_t>::max() / 4)
+			return false;
+		MTLTextureDescriptor *pDescriptor = [[MTLTextureDescriptor alloc] init];
+		pDescriptor.textureType = MTLTextureType2D;
+		pDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
+		pDescriptor.width = static_cast<NSUInteger>(Width);
+		pDescriptor.height = static_cast<NSUInteger>(Height);
+		pDescriptor.mipmapLevelCount = 1;
+		pDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+		pDescriptor.storageMode = MTLStorageModePrivate;
+		id<MTLTexture> Texture = [m_Device newTextureWithDescriptor:pDescriptor];
+#if !__has_feature(objc_arc)
+		[pDescriptor release];
+#endif
+		if(Texture == nil)
+			return false;
+		SRenderTarget &Target = m_vRenderTargets[TargetId];
+		Target.m_Texture = Texture;
+		Target.m_Width = static_cast<uint32_t>(Width);
+		Target.m_Height = static_cast<uint32_t>(Height);
+		Target.m_DataBytes = PixelCount * 4;
+		Target.m_Allocated = true;
+		AddTextureMemory(Target.m_DataBytes);
+		return true;
+	}
+
+	void DestroyAllRenderTargets()
+	{
+		if(m_RenderTargetState.IsActive())
+		{
+			EndActiveEncoders();
+			m_RenderTargetState.Reset();
+		}
+		for(size_t TargetId = 0; TargetId < m_vRenderTargets.size(); ++TargetId)
+			DestroyRenderTarget(static_cast<int>(TargetId));
+		m_vRenderTargets.clear();
 	}
 
 	bool CopyIntoBuffer(id<MTLBuffer> Destination, size_t DestinationOffset, const void *pData, size_t DataBytes)
@@ -1304,7 +1385,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_pCapabilities->m_QuadContainerBuffering = true;
 			m_pCapabilities->m_TextBuffering = true;
 			m_pCapabilities->m_TrianglesAsQuads = true;
-			m_pCapabilities->m_pRenderTargetSupportReason = "metal_p2_partial";
+			m_pCapabilities->m_RenderTargets = false;
+			m_pCapabilities->m_RenderTargetGaussianBlur = false;
+			m_pCapabilities->m_BackbufferCapture = false;
+			m_pCapabilities->m_pRenderTargetSupportReason = "metal_render_target_readback_not_implemented";
 		}
 		if(pCommand->m_pInitError != nullptr)
 			*pCommand->m_pInitError = 0;
@@ -1367,13 +1451,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		if(m_RenderEncoderStarted)
 			return m_CurrentRenderEncoder != nil;
+		const int ActiveTargetId = m_RenderTargetState.ActiveTargetId();
+		if(ActiveTargetId >= 0 && static_cast<size_t>(ActiveTargetId) < m_vRenderTargets.size())
+		{
+			const SRenderTarget &Target = m_vRenderTargets[ActiveTargetId];
+			return Target.m_Allocated && BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, ClearColor, MTLLoadActionLoad);
+		}
 		if(m_CurrentCommandBuffer == nil || m_pLayer == nullptr)
 			return false;
-		if(m_CurrentBlitEncoder != nil)
-		{
-			[m_CurrentBlitEncoder endEncoding];
-			m_CurrentBlitEncoder = nil;
-		}
 		if(m_CurrentDrawable == nil)
 		{
 			CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
@@ -1381,17 +1466,31 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(m_CurrentDrawable == nil)
 			return false;
+		return BeginRenderEncoderForTexture(m_CurrentDrawable.texture, m_DrawableWidth, m_DrawableHeight, ClearColor, m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear);
+	}
+
+	bool BeginRenderEncoderForTexture(id<MTLTexture> Texture, uint32_t Width, uint32_t Height, const MTLClearColor &ClearColor, MTLLoadAction LoadAction)
+	{
+		if(Texture == nil || Width == 0 || Height == 0 || m_CurrentCommandBuffer == nil)
+			return false;
+		if(m_CurrentBlitEncoder != nil)
+		{
+			[m_CurrentBlitEncoder endEncoding];
+			m_CurrentBlitEncoder = nil;
+		}
 		MTLRenderPassDescriptor *pPass = [MTLRenderPassDescriptor renderPassDescriptor];
-		pPass.colorAttachments[0].texture = m_CurrentDrawable.texture;
-		pPass.colorAttachments[0].loadAction = MTLLoadActionClear;
+		pPass.colorAttachments[0].texture = Texture;
+		pPass.colorAttachments[0].loadAction = LoadAction;
 		pPass.colorAttachments[0].storeAction = MTLStoreActionStore;
 		pPass.colorAttachments[0].clearColor = ClearColor;
 		m_CurrentRenderEncoder = [m_CurrentCommandBuffer renderCommandEncoderWithDescriptor:pPass];
 		if(m_CurrentRenderEncoder == nil)
 			return false;
 		m_CurrentRenderEncoder.label = @"QmClient Metal frame";
-		[m_CurrentRenderEncoder setViewport:(MTLViewport){0.0, 0.0, static_cast<double>(m_DrawableWidth), static_cast<double>(m_DrawableHeight), 0.0, 1.0}];
+		[m_CurrentRenderEncoder setViewport:(MTLViewport){0.0, 0.0, static_cast<double>(Width), static_cast<double>(Height), 0.0, 1.0}];
 		m_RenderEncoderStarted = true;
+		if(!m_RenderTargetState.IsActive())
+			m_BackbufferHasContents = true;
 		return true;
 	}
 
@@ -1537,10 +1636,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[State.m_Texture].m_Texture atIndex:0];
 			[m_CurrentRenderEncoder setFragmentSamplerState:State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
 		}
-		if(State.m_ClipEnable)
-			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{static_cast<NSUInteger>(std::max(State.m_ClipX, 0)), static_cast<NSUInteger>(std::max<int>(0, static_cast<int>(m_DrawableHeight) - State.m_ClipY - State.m_ClipH)), static_cast<NSUInteger>(std::max(State.m_ClipW, 0)), static_cast<NSUInteger>(std::max(State.m_ClipH, 0))}];
-		else
-			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, m_DrawableWidth, m_DrawableHeight}];
+		SetScissor(State);
 		if(PrimitiveType == EPrimitiveType::QUADS)
 			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:PrimitiveCount * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		else
@@ -1587,10 +1683,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
 		[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray atIndex:0];
 		[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
-		if(Command.m_State.m_ClipEnable)
-			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{static_cast<NSUInteger>(std::max(Command.m_State.m_ClipX, 0)), static_cast<NSUInteger>(std::max<int>(0, static_cast<int>(m_DrawableHeight) - Command.m_State.m_ClipY - Command.m_State.m_ClipH)), static_cast<NSUInteger>(std::max(Command.m_State.m_ClipW, 0)), static_cast<NSUInteger>(std::max(Command.m_State.m_ClipH, 0))}];
-		else
-			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, m_DrawableWidth, m_DrawableHeight}];
+		SetScissor(Command.m_State);
 		if(Command.m_PrimType == EPrimitiveType::QUADS)
 			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		else
@@ -1675,10 +1768,34 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void SetScissor(const CCommandBuffer::SState &State)
 	{
-		if(State.m_ClipEnable)
-			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{static_cast<NSUInteger>(std::max(State.m_ClipX, 0)), static_cast<NSUInteger>(std::max<int>(0, static_cast<int>(m_DrawableHeight) - State.m_ClipY - State.m_ClipH)), static_cast<NSUInteger>(std::max(State.m_ClipW, 0)), static_cast<NSUInteger>(std::max(State.m_ClipH, 0))}];
-		else
-			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, m_DrawableWidth, m_DrawableHeight}];
+		if(m_CurrentRenderEncoder == nil)
+			return;
+		uint32_t Width = m_DrawableWidth;
+		uint32_t Height = m_DrawableHeight;
+		const int ActiveTargetId = m_RenderTargetState.ActiveTargetId();
+		if(ActiveTargetId >= 0 && static_cast<size_t>(ActiveTargetId) < m_vRenderTargets.size())
+		{
+			const SRenderTarget &Target = m_vRenderTargets[ActiveTargetId];
+			Width = Target.m_Width;
+			Height = Target.m_Height;
+		}
+		if(!State.m_ClipEnable)
+		{
+			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Width, Height}];
+			return;
+		}
+		const auto ClampCoordinate = [](long long Value, uint32_t Dimension) {
+			return std::clamp(Value, 0LL, static_cast<long long>(Dimension));
+		};
+		const long long ClipLeft = ClampCoordinate(State.m_ClipX, Width);
+		const long long ClipRight = ClampCoordinate(static_cast<long long>(State.m_ClipX) + std::max(State.m_ClipW, 0), Width);
+		const long long ClipTop = ClampCoordinate(State.m_ClipY, Height);
+		const long long ClipBottom = ClampCoordinate(static_cast<long long>(State.m_ClipY) + std::max(State.m_ClipH, 0), Height);
+		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{
+			static_cast<NSUInteger>(ClipLeft),
+			static_cast<NSUInteger>(static_cast<long long>(Height) - ClipBottom),
+			static_cast<NSUInteger>(std::max(ClipRight - ClipLeft, 0LL)),
+			static_cast<NSUInteger>(std::max(ClipBottom - ClipTop, 0LL))}];
 	}
 
 	bool PrepareContainerPipeline(const CCommandBuffer::SState &State, size_t Pipeline, SBufferSlot &Buffer, size_t UniformOffset)
@@ -1962,13 +2079,22 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void Cmd_Clear(const CCommandBuffer::SCommand_Clear *pCommand)
 	{
-		if(m_RenderEncoderStarted && m_CurrentDrawable != nil)
+		EndActiveEncoders();
+		const MTLClearColor ClearColor = MTLClearColorMake(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0);
+		const int ActiveTargetId = m_RenderTargetState.ActiveTargetId();
+		if(ActiveTargetId >= 0 && static_cast<size_t>(ActiveTargetId) < m_vRenderTargets.size())
 		{
-			[m_CurrentRenderEncoder endEncoding];
-			m_CurrentRenderEncoder = nil;
-			m_RenderEncoderStarted = false;
+			const SRenderTarget &Target = m_vRenderTargets[ActiveTargetId];
+			if(Target.m_Allocated && BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, ClearColor, MTLLoadActionClear))
+				return;
 		}
-		if(!BeginRenderEncoder(MTLClearColorMake(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0)))
+		else
+		{
+			m_BackbufferHasContents = false;
+			if(BeginRenderEncoder(ClearColor))
+				return;
+		}
+		if(m_CurrentRenderEncoder == nil)
 			SetUnsupportedCommandError(pCommand);
 	}
 
@@ -1976,6 +2102,87 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		if(!DrawPrimitive(pCommand->m_State, pCommand->m_PrimType, pCommand->m_PrimCount, pCommand->m_pVertices))
 			SetUnsupportedCommandError(pCommand);
+	}
+
+	bool Cmd_RenderTarget_Create(const CCommandBuffer::SCommand_RenderTarget_Create *pCommand)
+	{
+		if(pCommand->m_TargetId < 0 || pCommand->m_Width <= 0 || pCommand->m_Height <= 0)
+			return true;
+		return CreateRenderTarget(pCommand->m_TargetId, pCommand->m_Width, pCommand->m_Height);
+	}
+
+	bool Cmd_RenderTarget_Destroy(const CCommandBuffer::SCommand_RenderTarget_Destroy *pCommand)
+	{
+		if(pCommand->m_TargetId < 0 || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size() || !m_RenderTargetState.CanDestroy(pCommand->m_TargetId))
+			return true;
+		DestroyRenderTarget(pCommand->m_TargetId);
+		return true;
+	}
+
+	bool Cmd_RenderTarget_Begin(const CCommandBuffer::SCommand_RenderTarget_Begin *pCommand)
+	{
+		if(pCommand->m_TargetId < 0 || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size() || m_RenderTargetState.IsActive())
+			return true;
+		const SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
+		if(!Target.m_Allocated || Target.m_Texture == nil)
+			return true;
+		EndActiveEncoders();
+		if(!m_RenderTargetState.Begin(pCommand->m_TargetId))
+			return true;
+		if(BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, MTLClearColorMake(pCommand->m_ClearColor.r, pCommand->m_ClearColor.g, pCommand->m_ClearColor.b, pCommand->m_ClearColor.a), MTLLoadActionClear))
+			return true;
+		m_RenderTargetState.Reset();
+		return false;
+	}
+
+	bool Cmd_RenderTarget_End(const CCommandBuffer::SCommand_RenderTarget_End *pCommand)
+	{
+		(void)pCommand;
+		const int ActiveTargetId = m_RenderTargetState.ActiveTargetId();
+		if(ActiveTargetId < 0 || static_cast<size_t>(ActiveTargetId) >= m_vRenderTargets.size())
+			return true;
+		EndActiveEncoders();
+		m_RenderTargetState.End();
+		return true;
+	}
+
+	bool Cmd_RenderTarget_Draw(const CCommandBuffer::SCommand_RenderTarget_Draw *pCommand)
+	{
+		if(pCommand->m_TargetId < 0 || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size() || pCommand->m_W <= 0.0f || pCommand->m_H <= 0.0f || pCommand->m_pVertices == nullptr || pCommand->m_PrimCount == 0 || !m_RenderTargetState.CanDraw(pCommand->m_TargetId))
+			return true;
+		const size_t PrimCount = static_cast<size_t>(pCommand->m_PrimCount);
+		if(PrimCount > std::numeric_limits<size_t>::max() / (4 * sizeof(CCommandBuffer::SVertex)))
+			return false;
+		const SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
+		if(!Target.m_Allocated || Target.m_Texture == nil || !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		const size_t VertexBytes = PrimCount * 4 * sizeof(CCommandBuffer::SVertex);
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		const size_t VertexOffset = (Frame.m_VertexOffset + 255) & ~size_t(255);
+		if(VertexOffset > gs_StreamBufferSize || VertexBytes > gs_StreamBufferSize - VertexOffset)
+			return false;
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + VertexOffset, pCommand->m_pVertices, VertexBytes);
+		SMetalUniforms Uniforms;
+		if(!BuildMvp(pCommand->m_State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+		const size_t UniformOffset = (VertexOffset + VertexBytes + 255) & ~size_t(255);
+		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(pCommand->m_State.m_BlendMode);
+		if(UniformOffset > gs_StreamBufferSize || sizeof(Uniforms) > gs_StreamBufferSize - UniformOffset || static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
+			return false;
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + UniformOffset, &Uniforms, sizeof(Uniforms));
+		id<MTLRenderPipelineState> Pipeline = m_aPipelineStates[PipelineIndex(true, false, BlendMode)];
+		if(Pipeline == nil)
+			return false;
+		[m_CurrentRenderEncoder setRenderPipelineState:Pipeline];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentTexture:Target.m_Texture atIndex:0];
+		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
+		SetScissor(pCommand->m_State);
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(pCommand->m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
+		return true;
 	}
 
 	void EndActiveEncoders()
@@ -2218,6 +2425,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CurrentRenderEncoder = nil;
 		m_CurrentBlitEncoder = nil;
 		m_CurrentDrawable = nil;
+		m_BackbufferHasContents = false;
+		m_RenderTargetState.Reset();
 		Frame.m_VertexOffset = 0;
 		Frame.m_FrameId = m_FrameState.CurrentFrameId();
 		m_FrameId = Frame.m_FrameId;
@@ -2414,6 +2623,33 @@ public:
 			case CCommandBuffer::CMD_RENDER_TEX3D:
 			{
 				const bool Success = DrawTex3D(*static_cast<const CCommandBuffer::SCommand_RenderTex3D *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TARGET_CREATE:
+			{
+				const bool Success = Cmd_RenderTarget_Create(static_cast<const CCommandBuffer::SCommand_RenderTarget_Create *>(pBaseCommand));
+				if(!Success)
+					SetResourceCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TARGET_DESTROY:
+				Cmd_RenderTarget_Destroy(static_cast<const CCommandBuffer::SCommand_RenderTarget_Destroy *>(pBaseCommand));
+				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_RENDER_TARGET_BEGIN:
+			{
+				const bool Success = Cmd_RenderTarget_Begin(static_cast<const CCommandBuffer::SCommand_RenderTarget_Begin *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TARGET_END:
+				Cmd_RenderTarget_End(static_cast<const CCommandBuffer::SCommand_RenderTarget_End *>(pBaseCommand));
+				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_RENDER_TARGET_DRAW:
+			{
+				const bool Success = Cmd_RenderTarget_Draw(static_cast<const CCommandBuffer::SCommand_RenderTarget_Draw *>(pBaseCommand));
 				if(!Success)
 					SetUnsupportedCommandError(pBaseCommand);
 				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;

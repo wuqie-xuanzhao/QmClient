@@ -102,6 +102,34 @@ TEST(MetalBackendContract, TextureArrayPathConvertsAtlasAndSamplesArrayLayers)
 	EXPECT_NE(Shader.find("qmclient_tex_array_fragment"), std::string::npos);
 }
 
+TEST(MetalBackendContract, RenderTargetsOwnAttachmentsAndRestoreDrawableRendering)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("struct SRenderTarget"), std::string::npos);
+	EXPECT_NE(Source.find("m_vRenderTargets"), std::string::npos);
+	EXPECT_NE(Source.find("pDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm"), std::string::npos);
+	EXPECT_EQ(Source.find("pDescriptor.pixelFormat = MTLPixelFormatRGBA8Unorm"), std::string::npos);
+	EXPECT_NE(Source.find("MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead"), std::string::npos);
+	EXPECT_NE(Source.find("void DestroyAllRenderTargets()"), std::string::npos);
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_Create"), std::string::npos);
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_Destroy"), std::string::npos);
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_Begin"), std::string::npos);
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_End"), std::string::npos);
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_Draw"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TARGET_CREATE"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TARGET_DESTROY"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TARGET_BEGIN"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TARGET_END"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TARGET_DRAW"), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderTargetState"), std::string::npos);
+	EXPECT_NE(Source.find("BeginRenderEncoderForTexture"), std::string::npos);
+	EXPECT_NE(Source.find("const size_t UniformOffset = (VertexOffset + VertexBytes + 255) & ~size_t(255)"), std::string::npos);
+	EXPECT_NE(Source.find("m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear"), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderTargets = false"), std::string::npos);
+	EXPECT_EQ(Source.find("m_RenderTargets = true"), std::string::npos);
+	EXPECT_NE(Source.find("m_pRenderTargetSupportReason = \"metal_render_target_readback_not_implemented\""), std::string::npos);
+}
+
 TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
