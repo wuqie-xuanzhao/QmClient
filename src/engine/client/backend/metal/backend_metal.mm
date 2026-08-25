@@ -1,4 +1,5 @@
 #include "backend_metal.h"
+#include "metal_types.h"
 
 #include <base/log.h>
 #include <base/str.h>
@@ -13,7 +14,10 @@
 #undef pi
 
 #include <algorithm>
+#include <atomic>
+#include <cstdlib>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -40,6 +44,17 @@ const char *MetalBackendStateName(EMetalBackendState State)
 
 class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_GLBase
 {
+	struct STextureSlot
+	{
+		id<MTLTexture> m_Texture = nil;
+		id<MTLBuffer> m_Staging = nil;
+		SMetalTextureLayout m_Layout;
+		size_t m_Width = 0;
+		size_t m_Height = 0;
+		EMetalTextureFormat m_Format = EMetalTextureFormat::RGBA8;
+		bool m_Allocated = false;
+	};
+
 	EMetalBackendState m_State = EMetalBackendState::UNINITIALIZED;
 	uint64_t m_FrameId = 0;
 	SDL_MetalView m_MetalView = nullptr;
@@ -47,6 +62,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	SDL_Window *m_pWindow = nullptr;
 	bool m_VSync = true;
 	id<MTLDevice> m_Device = nil;
+	id<MTLCommandQueue> m_CommandQueue = nil;
+	std::vector<STextureSlot> m_vTextureSlots;
+	std::atomic<uint64_t> *m_pTextureMemoryUsage = nullptr;
+	std::atomic<uint64_t> *m_pStagingMemoryUsage = nullptr;
 	char *m_pVendorString = nullptr;
 	char *m_pVersionString = nullptr;
 	char *m_pRendererString = nullptr;
@@ -68,6 +87,119 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_Device release];
 #endif
 		m_Device = nil;
+	}
+
+	static void ReleaseMetalObject(id Object)
+	{
+#if !__has_feature(objc_arc)
+		[Object release];
+#else
+		(void)Object;
+#endif
+	}
+
+	void ReleaseCommandQueue()
+	{
+		ReleaseMetalObject(m_CommandQueue);
+		m_CommandQueue = nil;
+	}
+
+	void AddTextureMemory(size_t Bytes)
+	{
+		if(m_pTextureMemoryUsage != nullptr)
+			m_pTextureMemoryUsage->fetch_add(Bytes, std::memory_order_relaxed);
+	}
+
+	void SubTextureMemory(size_t Bytes)
+	{
+		if(m_pTextureMemoryUsage != nullptr)
+			m_pTextureMemoryUsage->fetch_sub(Bytes, std::memory_order_relaxed);
+	}
+
+	bool EnsureTextureSlot(int Slot)
+	{
+		if(Slot < 0 || static_cast<size_t>(Slot) >= CCommandBuffer::MAX_TEXTURES)
+			return false;
+		if(static_cast<size_t>(Slot) >= m_vTextureSlots.size())
+			m_vTextureSlots.resize(static_cast<size_t>(Slot) + 1);
+		return true;
+	}
+
+	void DestroyTexture(int Slot)
+	{
+		if(!EnsureTextureSlot(Slot))
+			return;
+		STextureSlot &Texture = m_vTextureSlots[Slot];
+		if(!Texture.m_Allocated)
+			return;
+		SubTextureMemory(Texture.m_Layout.m_DataBytes);
+		if(Texture.m_Staging != nil)
+		{
+			if(m_pStagingMemoryUsage != nullptr)
+				m_pStagingMemoryUsage->fetch_sub([Texture.m_Staging length], std::memory_order_relaxed);
+			ReleaseMetalObject(Texture.m_Staging);
+		}
+		ReleaseMetalObject(Texture.m_Texture);
+		Texture = {};
+	}
+
+	bool CreateTexture(int Slot, size_t Width, size_t Height, EMetalTextureFormat Format, int Flags, uint8_t *pData)
+	{
+		if(!EnsureTextureSlot(Slot))
+			return false;
+		STextureSlot &Texture = m_vTextureSlots[Slot];
+		if(Texture.m_Allocated)
+			DestroyTexture(Slot);
+
+		SMetalTextureLayout Layout;
+		if(!MetalTextureLayout(Width, Height, Format, (Flags & TextureFlag::NO_MIPMAPS) != 0, Layout))
+			return false;
+
+		if(m_Device == nil || m_State != EMetalBackendState::INITIALIZED || m_CommandQueue == nil)
+			return false;
+
+		MTLTextureDescriptor *pDescriptor = [[MTLTextureDescriptor alloc] init];
+		pDescriptor.textureType = MTLTextureType2D;
+		pDescriptor.pixelFormat = Format == EMetalTextureFormat::R8 ? MTLPixelFormatR8Unorm : MTLPixelFormatRGBA8Unorm;
+		pDescriptor.width = Width;
+		pDescriptor.height = Height;
+		pDescriptor.mipmapLevelCount = Layout.m_MipLevels;
+		pDescriptor.usage = MTLTextureUsageShaderRead;
+		pDescriptor.storageMode = MTLStorageModePrivate;
+		id<MTLTexture> pTexture = [m_Device newTextureWithDescriptor:pDescriptor];
+	#if !__has_feature(objc_arc)
+		[pDescriptor release];
+	#endif
+		if(pTexture == nil)
+			return false;
+
+		Texture.m_Texture = pTexture;
+		Texture.m_Layout = Layout;
+		Texture.m_Width = Width;
+		Texture.m_Height = Height;
+		Texture.m_Format = Format;
+		Texture.m_Allocated = true;
+		AddTextureMemory(Layout.m_DataBytes);
+
+		// 上传编码器由后续 present 任务接入；没有它时不创建空纹理。
+		if(pData != nullptr)
+			free(pData);
+		return true;
+	}
+
+	bool UpdateTexture(int Slot, size_t X, size_t Y, size_t Width, size_t Height, EMetalTextureFormat Format, uint8_t *pData)
+	{
+		if(!EnsureTextureSlot(Slot) || !m_vTextureSlots[Slot].m_Allocated || m_CommandQueue == nil)
+			return false;
+		STextureSlot &Texture = m_vTextureSlots[Slot];
+		if(Texture.m_Format != Format || !MetalValidateSubregion(Texture.m_Width, Texture.m_Height, X, Y, Width, Height))
+			return false;
+		SMetalTextureLayout UpdateLayout;
+		if(!MetalTextureLayout(Width, Height, Format, true, UpdateLayout))
+			return false;
+		if(pData != nullptr)
+			free(pData);
+		return true;
 	}
 
 	static STWGraphicGpu::ETWGraphicsGpuType DeviceType(id<MTLDevice> Device)
@@ -240,6 +372,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void Cmd_Init(const SCommand_Init *pCommand)
 	{
+		m_pTextureMemoryUsage = pCommand->m_pTextureMemoryUsage;
+		m_pStagingMemoryUsage = pCommand->m_pStagingMemoryUsage;
+		if(m_pTextureMemoryUsage != nullptr)
+			m_pTextureMemoryUsage->store(0, std::memory_order_relaxed);
+		if(m_pStagingMemoryUsage != nullptr)
+			m_pStagingMemoryUsage->store(0, std::memory_order_relaxed);
 		if(pCommand->m_pInitError != nullptr)
 			*pCommand->m_pInitError = -1;
 		if(pCommand->m_pErrStringPtr != nullptr)
@@ -260,6 +398,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_MetalView = nullptr;
 		m_pLayer = nullptr;
 		m_pWindow = nullptr;
+		for(size_t Slot = 0; Slot < m_vTextureSlots.size(); ++Slot)
+			DestroyTexture(static_cast<int>(Slot));
+		m_vTextureSlots.clear();
+		ReleaseCommandQueue();
 		ReleaseDevice();
 		m_State = EMetalBackendState::UNINITIALIZED;
 	}
@@ -269,6 +411,9 @@ public:
 	{
 		if(m_MetalView != nullptr)
 			SDL_Metal_DestroyView(m_MetalView);
+		for(size_t Slot = 0; Slot < m_vTextureSlots.size(); ++Slot)
+			DestroyTexture(static_cast<int>(Slot));
+		ReleaseCommandQueue();
 		ReleaseDevice();
 	}
 
@@ -297,7 +442,7 @@ public:
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_VSync *>(pBaseCommand);
 				m_VSync = pCommand->m_VSync != 0;
 				if(m_pLayer != nullptr)
-					((CAMetalLayer *)m_pLayer).displaySyncEnabled = m_VSync;
+					((__bridge CAMetalLayer *)m_pLayer).displaySyncEnabled = m_VSync;
 				if(pCommand->m_pRetOk != nullptr)
 					*pCommand->m_pRetOk = m_pLayer != nullptr;
 				return RUN_COMMAND_COMMAND_HANDLED;
@@ -305,6 +450,51 @@ public:
 			case CCommandBuffer::CMD_UPDATE_VIEWPORT:
 				UpdateDrawableSize();
 				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_TEXTURE_CREATE:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand);
+				const bool Success = CreateTexture(pCommand->m_Slot, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::RGBA8, pCommand->m_Flags, pCommand->m_pData);
+				if(!Success && pCommand->m_pData != nullptr)
+					free(pCommand->m_pData);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			}
+			case CCommandBuffer::CMD_TEXTURE_UPDATE:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand);
+				const bool Success = UpdateTexture(pCommand->m_Slot, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::RGBA8, pCommand->m_pData);
+				if(!Success && pCommand->m_pData != nullptr)
+					free(pCommand->m_pData);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			}
+			case CCommandBuffer::CMD_TEXTURE_DESTROY:
+				DestroyTexture(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand)->m_Slot);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_TEXT_TEXTURES_CREATE:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_TextTextures_Create *>(pBaseCommand);
+				const bool TextSuccess = CreateTexture(pCommand->m_Slot, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, TextureFlag::NO_MIPMAPS, pCommand->m_pTextData);
+				const bool OutlineSuccess = CreateTexture(pCommand->m_SlotOutline, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, TextureFlag::NO_MIPMAPS, pCommand->m_pTextOutlineData);
+				if(!TextSuccess && pCommand->m_pTextData != nullptr)
+					free(pCommand->m_pTextData);
+				if(!OutlineSuccess && pCommand->m_pTextOutlineData != nullptr)
+					free(pCommand->m_pTextOutlineData);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			}
+			case CCommandBuffer::CMD_TEXT_TEXTURE_UPDATE:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_TextTexture_Update *>(pBaseCommand);
+				const bool Success = UpdateTexture(pCommand->m_Slot, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, pCommand->m_pData);
+				if(!Success && pCommand->m_pData != nullptr)
+					free(pCommand->m_pData);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			}
+			case CCommandBuffer::CMD_TEXT_TEXTURES_DESTROY:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_TextTextures_Destroy *>(pBaseCommand);
+				DestroyTexture(pCommand->m_Slot);
+				DestroyTexture(pCommand->m_SlotOutline);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			}
 
 			// 这些命令由组合处理器中的 SDL/General fragment 接管。
 			case CCommandBuffer::CMD_SIGNAL:
