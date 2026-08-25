@@ -3836,6 +3836,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     mapbugs_test.cpp
     mapitems_test.cpp
     math_test.cpp
+    metal_backend_contract_test.cpp
     metal_frame_state_test.cpp
     metal_types_test.cpp
     mem_test.cpp

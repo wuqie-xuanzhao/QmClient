@@ -21,7 +21,10 @@
 #include <array>
 #include <atomic>
 #include <cstdlib>
+#include <limits>
+#include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace
@@ -97,6 +100,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	uint32_t m_LastPresentedReadbackHeight = 0;
 	size_t m_LastPresentedReadbackRowBytes = 0;
 	std::atomic_bool m_GpuFailure = false;
+	std::atomic<uint64_t> m_GpuFailureFrameId = 0;
+	std::atomic<int> m_GpuFailureCommandId = -1;
+	std::atomic<int> m_GpuFailureStatus = 0;
+	std::atomic<int> m_LastCommandId = -1;
+	std::mutex m_GpuFailureMutex;
+	std::string m_GpuFailureDescription;
 	SBackendCapabilities *m_pCapabilities = nullptr;
 	IStorage *m_pStorage = nullptr;
 	bool m_CommandBufferCommitted = false;
@@ -228,6 +237,65 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_BufferMemoryBytes = 0;
 		}
 		ReleaseCommandQueue();
+	}
+
+	void WaitForGpuIdle()
+	{
+		if(m_CurrentCommandBuffer != nil && !m_CommandBufferCommitted)
+			CommitCurrentFrame(false, true);
+		for(SFrameSlot &Frame : m_aFrameSlots)
+		{
+			if(Frame.m_CommandBuffer != nil)
+				[Frame.m_CommandBuffer waitUntilCompleted];
+		}
+		m_FrameState.DrainFrames();
+	}
+
+	void RecordGpuFailure(id<MTLCommandBuffer> Buffer, uint64_t FrameId)
+	{
+		std::string Description = "Metal command buffer failed";
+		NSError *pError = Buffer.error;
+		if(pError != nil)
+		{
+			const char *pDomain = pError.domain.UTF8String;
+			const char *pLocalizedDescription = pError.localizedDescription.UTF8String;
+			Description += " (domain=";
+			Description += pDomain != nullptr ? pDomain : "unknown";
+			Description += ", code=" + std::to_string(static_cast<long long>(pError.code));
+			if(pLocalizedDescription != nullptr)
+			{
+				Description += ", description=";
+				Description += pLocalizedDescription;
+			}
+			Description += ")";
+		}
+		{
+			std::lock_guard<std::mutex> Lock(m_GpuFailureMutex);
+			m_GpuFailureDescription = std::move(Description);
+		}
+		m_GpuFailureFrameId.store(FrameId, std::memory_order_relaxed);
+		m_GpuFailureCommandId.store(m_LastCommandId.load(std::memory_order_relaxed), std::memory_order_relaxed);
+		m_GpuFailureStatus.store(static_cast<int>(Buffer.status), std::memory_order_relaxed);
+		m_GpuFailure.store(true, std::memory_order_release);
+	}
+
+	bool SetGpuFailureError()
+	{
+		if(!m_GpuFailure.load(std::memory_order_acquire))
+			return false;
+		const uint64_t FrameId = m_GpuFailureFrameId.load(std::memory_order_relaxed);
+		const int CommandId = m_GpuFailureCommandId.load(std::memory_order_relaxed);
+		const int Status = m_GpuFailureStatus.load(std::memory_order_relaxed);
+		std::string Description;
+		{
+			std::lock_guard<std::mutex> Lock(m_GpuFailureMutex);
+			Description = m_GpuFailureDescription;
+		}
+		m_Error.m_ErrorType = GFX_ERROR_TYPE_RENDER_SUBMIT_FAILED;
+		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{
+			false,
+			"Metal GPU command buffer failure (stage=completion, frame_id=" + std::to_string(FrameId) + ", command_id=" + std::to_string(CommandId) + ", status=" + std::to_string(Status) + "): " + Description});
+		return true;
 	}
 
 	void AddTextureMemory(size_t Bytes)
@@ -730,6 +798,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CurrentFrameSlot = 0;
 		m_FrameId = 0;
 		m_GpuFailure.store(false, std::memory_order_relaxed);
+		m_GpuFailureFrameId.store(0, std::memory_order_relaxed);
+		m_GpuFailureCommandId.store(-1, std::memory_order_relaxed);
+		m_GpuFailureStatus.store(0, std::memory_order_relaxed);
+		m_LastCommandId.store(-1, std::memory_order_relaxed);
+		{
+			std::lock_guard<std::mutex> Lock(m_GpuFailureMutex);
+			m_GpuFailureDescription.clear();
+		}
 		m_State = EMetalBackendState::INITIALIZED;
 		if(m_pCapabilities != nullptr)
 		{
@@ -754,8 +830,18 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void Cmd_PostShutdown(const SCommand_PostShutdown *pCommand)
 	{
 		(void)pCommand;
+		WaitForGpuIdle();
 		ReleaseGpuObjects();
 		m_FrameState.DrainFrames();
+		m_GpuFailure.store(false, std::memory_order_relaxed);
+		m_GpuFailureFrameId.store(0, std::memory_order_relaxed);
+		m_GpuFailureCommandId.store(-1, std::memory_order_relaxed);
+		m_GpuFailureStatus.store(0, std::memory_order_relaxed);
+		m_LastCommandId.store(-1, std::memory_order_relaxed);
+		{
+			std::lock_guard<std::mutex> Lock(m_GpuFailureMutex);
+			m_GpuFailureDescription.clear();
+		}
 		if(m_MetalView != nullptr)
 			SDL_Metal_DestroyView(m_MetalView);
 		m_MetalView = nullptr;
@@ -767,6 +853,19 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		ReleaseCommandQueue();
 		ReleaseDevice();
 		m_State = EMetalBackendState::UNINITIALIZED;
+	}
+
+	void ErroneousCleanup() override
+	{
+		EndActiveEncoders();
+		WaitForGpuIdle();
+		ReleaseGpuObjects();
+		if(m_MetalView != nullptr)
+			SDL_Metal_DestroyView(m_MetalView);
+		m_MetalView = nullptr;
+		m_pLayer = nullptr;
+		m_pWindow = nullptr;
+		m_State = EMetalBackendState::SHUTDOWN;
 	}
 
 	bool BeginRenderEncoder(const MTLClearColor &ClearColor)
@@ -1169,7 +1268,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const CMetalFrameState::SFrameCapture Capture{Frame.m_FrameId, Slot};
 		[m_CurrentCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> Buffer) {
 			const bool Success = Buffer.status == MTLCommandBufferStatusCompleted;
-			m_GpuFailure.store(!Success, std::memory_order_relaxed);
+			if(!Success)
+				RecordGpuFailure(Buffer, Capture.m_FrameId);
 			m_FrameState.CompleteFrame(Capture, Success);
 		}];
 	}
@@ -1182,6 +1282,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 public:
 	~CCommandProcessorFragment_Metal() override
 	{
+		WaitForGpuIdle();
 		ReleaseGpuObjects();
 		if(m_MetalView != nullptr)
 			SDL_Metal_DestroyView(m_MetalView);
@@ -1192,11 +1293,19 @@ public:
 	}
 
 	ERunCommandReturnTypes RunCommand(const CCommandBuffer::SCommand *pBaseCommand) override
+	{
+		@autoreleasepool
 		{
-			@autoreleasepool
-			{
-				m_Error = {};
-				switch(pBaseCommand->m_Cmd)
+			m_Error = {};
+			const bool IsLifecycleCommand = pBaseCommand->m_Cmd == CCommandProcessorFragment_GLBase::CMD_PRE_INIT ||
+				pBaseCommand->m_Cmd == CCommandProcessorFragment_GLBase::CMD_INIT ||
+				pBaseCommand->m_Cmd == CCommandProcessorFragment_GLBase::CMD_SHUTDOWN ||
+				pBaseCommand->m_Cmd == CCommandProcessorFragment_GLBase::CMD_POST_SHUTDOWN;
+			if(!IsLifecycleCommand && SetGpuFailureError())
+				return RUN_COMMAND_COMMAND_ERROR;
+			if(!IsLifecycleCommand)
+				m_LastCommandId.store(pBaseCommand->m_Cmd, std::memory_order_relaxed);
+			switch(pBaseCommand->m_Cmd)
 			{
 			case CCommandProcessorFragment_GLBase::CMD_PRE_INIT:
 				Cmd_PreInit(static_cast<const SCommand_PreInit *>(pBaseCommand));
