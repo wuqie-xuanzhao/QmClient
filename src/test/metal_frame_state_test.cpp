@@ -30,6 +30,19 @@ TEST(MetalFrameState, ScreenshotAndReadPixelSharePresentedFrame)
 	EXPECT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::ALREADY_FINALIZED);
 }
 
+TEST(MetalFrameState, ScreenshotAndReadPixelCommandsFinalizeOnlyOnePresent)
+{
+	CMetalFrameState State;
+	CMetalFrameState::SFrameCapture Capture;
+	ASSERT_TRUE(State.BeginFrame(0));
+	EXPECT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+	ASSERT_TRUE(State.ReadLastPresentedFrame(Capture));
+	EXPECT_EQ(Capture.m_FrameId, 1U);
+	EXPECT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::ALREADY_FINALIZED);
+	EXPECT_TRUE(State.ReadLastPresentedFrame(Capture));
+	EXPECT_EQ(Capture.m_FrameId, 1U);
+}
+
 TEST(MetalFrameState, DrawableFailureDoesNotPresentOrRetainCapture)
 {
 	CMetalFrameState State;
