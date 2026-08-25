@@ -102,6 +102,17 @@ TEST(MetalTypes, RejectsStaleBufferHandlesAndPreservesMetadata)
 	EXPECT_FALSE(Registry.Release(First));
 }
 
+TEST(MetalTypes, ValidatesVertexAttributeLayoutAgainstStride)
+{
+	const SMetalVertexAttribute Position{2, METAL_GRAPHICS_TYPE_FLOAT, false, 0, 0};
+	EXPECT_TRUE(MetalValidateVertexAttribute(16, Position));
+	const SMetalVertexAttribute Color{4, METAL_GRAPHICS_TYPE_UNSIGNED_BYTE, true, 8, 1};
+	EXPECT_TRUE(MetalValidateVertexAttribute(16, Color));
+	EXPECT_FALSE(MetalValidateVertexAttribute(16, SMetalVertexAttribute{3, METAL_GRAPHICS_TYPE_FLOAT, false, 8, 0}));
+	EXPECT_FALSE(MetalValidateVertexAttribute(16, SMetalVertexAttribute{1, 0, false, 0, 0}));
+	EXPECT_FALSE(MetalValidateVertexAttribute(16, SMetalVertexAttribute{1, METAL_GRAPHICS_TYPE_FLOAT, false, 0, 2}));
+}
+
 TEST(MetalTypes, MapsBlendModesToOpenGLCompatibleFactors)
 {
 	EXPECT_FALSE(MetalBlendState(EMetalBlendMode::NONE).m_Enabled);

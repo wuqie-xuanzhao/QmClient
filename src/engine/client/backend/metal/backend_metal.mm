@@ -75,6 +75,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		bool m_OneTimeUse = false;
 	};
 
+	struct SBufferContainerSlot
+	{
+		int m_Stride = 0;
+		int m_VertBufferBindingIndex = -1;
+		std::vector<SBufferContainerInfo::SAttribute> m_vAttributes;
+		bool m_Allocated = false;
+	};
+
 	struct SFrameSlot
 	{
 		id<MTLBuffer> m_VertexBuffer = nil;
@@ -125,6 +133,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	size_t m_BufferMemoryBytes = 0;
 	std::vector<STextureSlot> m_vTextureSlots;
 	std::vector<SBufferSlot> m_vBufferSlots;
+	std::vector<SBufferContainerSlot> m_vBufferContainers;
+	unsigned int m_RequiredIndicesNum = 0;
 	std::atomic<uint64_t> *m_pTextureMemoryUsage = nullptr;
 	std::atomic<uint64_t> *m_pBufferMemoryUsage = nullptr;
 	std::atomic<uint64_t> *m_pStreamMemoryUsage = nullptr;
@@ -358,6 +368,60 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		for(size_t Slot = 0; Slot < m_vBufferSlots.size(); ++Slot)
 			DestroyBuffer(static_cast<int>(Slot));
 		m_vBufferSlots.clear();
+	}
+
+	bool EnsureBufferContainerSlot(int Slot)
+	{
+		if(Slot < 0)
+			return false;
+		if(static_cast<size_t>(Slot) >= m_vBufferContainers.size())
+			m_vBufferContainers.resize(static_cast<size_t>(Slot) + 1);
+		return true;
+	}
+
+	void DestroyBufferContainer(int Slot, bool DestroyAllBO)
+	{
+		if(Slot < 0 || static_cast<size_t>(Slot) >= m_vBufferContainers.size())
+			return;
+		SBufferContainerSlot &Container = m_vBufferContainers[Slot];
+		if(!Container.m_Allocated)
+			return;
+		if(DestroyAllBO && Container.m_VertBufferBindingIndex >= 0)
+			DestroyBuffer(Container.m_VertBufferBindingIndex);
+		Container = {};
+	}
+
+	void DestroyAllBufferContainers()
+	{
+		for(size_t Slot = 0; Slot < m_vBufferContainers.size(); ++Slot)
+			DestroyBufferContainer(static_cast<int>(Slot), false);
+		m_vBufferContainers.clear();
+		m_RequiredIndicesNum = 0;
+	}
+
+	bool UpdateBufferContainer(int Slot, int Stride, int VertBufferBindingIndex, size_t AttributeCount, const SBufferContainerInfo::SAttribute *pAttributes, bool ReplaceExisting)
+	{
+		if(!EnsureBufferContainerSlot(Slot) || Stride <= 0 || (AttributeCount > 0 && pAttributes == nullptr))
+			return false;
+		SBufferContainerSlot &Container = m_vBufferContainers[Slot];
+		for(size_t Index = 0; Index < AttributeCount; ++Index)
+		{
+			const SBufferContainerInfo::SAttribute &Attribute = pAttributes[Index];
+			if(Attribute.m_DataTypeCount <= 0)
+				return false;
+			const SMetalVertexAttribute MetalAttribute{static_cast<uint32_t>(Attribute.m_DataTypeCount), Attribute.m_Type, Attribute.m_Normalized, reinterpret_cast<uintptr_t>(Attribute.m_pOffset), Attribute.m_FuncType};
+			if(!MetalValidateVertexAttribute(Stride, MetalAttribute))
+				return false;
+		}
+		if(ReplaceExisting && Container.m_Allocated)
+			DestroyBufferContainer(Slot, true);
+		Container.m_Stride = Stride;
+		Container.m_VertBufferBindingIndex = VertBufferBindingIndex;
+		Container.m_vAttributes.clear();
+		if(AttributeCount > 0)
+			Container.m_vAttributes.assign(pAttributes, pAttributes + AttributeCount);
+		Container.m_Allocated = true;
+		return true;
 	}
 
 	void EndRenderEncoderForBlit()
@@ -998,6 +1062,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		(void)pCommand;
 		WaitForGpuIdle();
+		DestroyAllBufferContainers();
 		DestroyAllBuffers();
 		ReleaseGpuObjects();
 		m_FrameState.DrainFrames();
@@ -1027,6 +1092,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		EndActiveEncoders();
 		WaitForGpuIdle();
+		DestroyAllBufferContainers();
 		DestroyAllBuffers();
 		ReleaseGpuObjects();
 		if(m_MetalView != nullptr)
@@ -1452,6 +1518,7 @@ public:
 	~CCommandProcessorFragment_Metal() override
 	{
 		WaitForGpuIdle();
+		DestroyAllBufferContainers();
 		DestroyAllBuffers();
 		ReleaseGpuObjects();
 		if(m_MetalView != nullptr)
@@ -1546,6 +1613,31 @@ public:
 			}
 			case CCommandBuffer::CMD_DELETE_BUFFER_OBJECT:
 				DestroyBuffer(static_cast<const CCommandBuffer::SCommand_DeleteBufferObject *>(pBaseCommand)->m_BufferIndex);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_CREATE_BUFFER_CONTAINER:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_CreateBufferContainer *>(pBaseCommand);
+				const bool Success = UpdateBufferContainer(pCommand->m_BufferContainerIndex, pCommand->m_Stride, pCommand->m_VertBufferBindingIndex, pCommand->m_AttrCount, pCommand->m_pAttributes, true);
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_UPDATE_BUFFER_CONTAINER:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_UpdateBufferContainer *>(pBaseCommand);
+				const bool Success = UpdateBufferContainer(pCommand->m_BufferContainerIndex, pCommand->m_Stride, pCommand->m_VertBufferBindingIndex, pCommand->m_AttrCount, pCommand->m_pAttributes, false);
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_DELETE_BUFFER_CONTAINER:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_DeleteBufferContainer *>(pBaseCommand);
+				DestroyBufferContainer(pCommand->m_BufferContainerIndex, pCommand->m_DestroyAllBO);
+				return RUN_COMMAND_COMMAND_HANDLED;
+			}
+			case CCommandBuffer::CMD_INDICES_REQUIRED_NUM_NOTIFY:
+				m_RequiredIndicesNum = std::max(m_RequiredIndicesNum, static_cast<const CCommandBuffer::SCommand_IndicesRequiredNumNotify *>(pBaseCommand)->m_RequiredIndicesNum);
 				return RUN_COMMAND_COMMAND_HANDLED;
 			case CCommandBuffer::CMD_TEXTURE_CREATE:
 			{

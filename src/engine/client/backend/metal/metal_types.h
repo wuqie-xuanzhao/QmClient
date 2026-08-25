@@ -192,6 +192,47 @@ struct SMetalBufferHandle
 	bool IsValid() const { return m_Generation != 0 && m_Slot != std::numeric_limits<size_t>::max(); }
 };
 
+enum : uint32_t
+{
+	METAL_GRAPHICS_TYPE_UNSIGNED_BYTE = 0x1401,
+	METAL_GRAPHICS_TYPE_UNSIGNED_SHORT = 0x1403,
+	METAL_GRAPHICS_TYPE_INT = 0x1404,
+	METAL_GRAPHICS_TYPE_UNSIGNED_INT = 0x1405,
+	METAL_GRAPHICS_TYPE_FLOAT = 0x1406,
+};
+
+struct SMetalVertexAttribute
+{
+	uint32_t m_DataTypeCount = 0;
+	uint32_t m_Type = 0;
+	bool m_Normalized = false;
+	size_t m_Offset = 0;
+	uint32_t m_FuncType = 0;
+};
+
+inline size_t MetalVertexDataTypeBytes(uint32_t Type)
+{
+	switch(Type)
+	{
+	case METAL_GRAPHICS_TYPE_UNSIGNED_BYTE: return 1;
+	case METAL_GRAPHICS_TYPE_UNSIGNED_SHORT: return 2;
+	case METAL_GRAPHICS_TYPE_INT:
+	case METAL_GRAPHICS_TYPE_UNSIGNED_INT:
+	case METAL_GRAPHICS_TYPE_FLOAT: return 4;
+	}
+	return 0;
+}
+
+inline bool MetalValidateVertexAttribute(int Stride, const SMetalVertexAttribute &Attribute)
+{
+	if(Stride <= 0 || Attribute.m_DataTypeCount == 0 || Attribute.m_FuncType > 1)
+		return false;
+	const size_t TypeBytes = MetalVertexDataTypeBytes(Attribute.m_Type);
+	if(TypeBytes == 0 || Attribute.m_Offset > static_cast<size_t>(Stride))
+		return false;
+	return Attribute.m_DataTypeCount <= (static_cast<size_t>(Stride) - Attribute.m_Offset) / TypeBytes;
+}
+
 class CMetalBufferRegistry
 {
 	struct SEntry

@@ -31,6 +31,17 @@ TEST(MetalBackendContract, RuntimeFailureAllowsOnlyLifecycleCommandsThrough)
 	EXPECT_NE(Source.find("CMD_POST_SHUTDOWN", Guard), std::string::npos);
 }
 
+TEST(MetalBackendContract, BufferContainerCommandsHaveExplicitResourceHandling)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("CMD_CREATE_BUFFER_CONTAINER"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_UPDATE_BUFFER_CONTAINER"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_DELETE_BUFFER_CONTAINER"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_INDICES_REQUIRED_NUM_NOTIFY"), std::string::npos);
+	EXPECT_NE(Source.find("m_RequiredIndicesNum = std::max"), std::string::npos);
+	EXPECT_NE(Source.find("MetalValidateVertexAttribute"), std::string::npos);
+}
+
 TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
@@ -43,20 +54,26 @@ TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 	ASSERT_NE(ErroneousCleanup, std::string::npos);
 	ASSERT_NE(Destructor, std::string::npos);
 	const size_t ErroneousWait = Source.find("WaitForGpuIdle();", ErroneousCleanup);
-	const size_t ErroneousBufferRelease = Source.find("DestroyAllBuffers();", ErroneousWait);
+	const size_t ErroneousContainerRelease = Source.find("DestroyAllBufferContainers();", ErroneousWait);
+	const size_t ErroneousBufferRelease = Source.find("DestroyAllBuffers();", ErroneousContainerRelease);
 	const size_t ErroneousGpuRelease = Source.find("ReleaseGpuObjects();", ErroneousBufferRelease);
 	const size_t DestructorWait = Source.find("WaitForGpuIdle();", Destructor);
-	const size_t DestructorBufferRelease = Source.find("DestroyAllBuffers();", DestructorWait);
+	const size_t DestructorContainerRelease = Source.find("DestroyAllBufferContainers();", DestructorWait);
+	const size_t DestructorBufferRelease = Source.find("DestroyAllBuffers();", DestructorContainerRelease);
 	const size_t DestructorGpuRelease = Source.find("ReleaseGpuObjects();", DestructorBufferRelease);
 	EXPECT_NE(ErroneousWait, std::string::npos);
+	EXPECT_NE(ErroneousContainerRelease, std::string::npos);
 	EXPECT_NE(ErroneousBufferRelease, std::string::npos);
 	EXPECT_NE(ErroneousGpuRelease, std::string::npos);
 	EXPECT_NE(DestructorWait, std::string::npos);
+	EXPECT_NE(DestructorContainerRelease, std::string::npos);
 	EXPECT_NE(DestructorBufferRelease, std::string::npos);
 	EXPECT_NE(DestructorGpuRelease, std::string::npos);
-	EXPECT_LT(ErroneousWait, ErroneousBufferRelease);
+	EXPECT_LT(ErroneousWait, ErroneousContainerRelease);
+	EXPECT_LT(ErroneousContainerRelease, ErroneousBufferRelease);
 	EXPECT_LT(ErroneousBufferRelease, ErroneousGpuRelease);
-	EXPECT_LT(DestructorWait, DestructorBufferRelease);
+	EXPECT_LT(DestructorWait, DestructorContainerRelease);
+	EXPECT_LT(DestructorContainerRelease, DestructorBufferRelease);
 	EXPECT_LT(DestructorBufferRelease, DestructorGpuRelease);
 	EXPECT_LT(Release, Wait);
 	EXPECT_LT(Wait, ErroneousCleanup);
