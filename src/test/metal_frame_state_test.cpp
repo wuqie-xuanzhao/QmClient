@@ -70,3 +70,58 @@ TEST(MetalFrameState, CannotStartAnotherFrameBeforeFinalization)
 	EXPECT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
 	EXPECT_TRUE(State.BeginFrame(1));
 }
+
+TEST(MetalFrameState, SlotCannotBeReusedBeforeGpuCompletion)
+{
+	CMetalFrameState State(2);
+	ASSERT_TRUE(State.BeginFrame(0));
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+
+	ASSERT_TRUE(State.BeginFrame(1));
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+	EXPECT_FALSE(State.BeginFrame(0));
+
+	const CMetalFrameState::SFrameCapture Capture{1, 0};
+	EXPECT_TRUE(State.CompleteFrame(Capture, true));
+	EXPECT_EQ(State.SlotState(0), CMetalFrameState::ESlotState::COMPLETED);
+	EXPECT_TRUE(State.BeginFrame(0));
+}
+
+TEST(MetalFrameState, CompletionErrorMarksTheSlotFailed)
+{
+	CMetalFrameState State;
+	ASSERT_TRUE(State.BeginFrame(0));
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+
+	const CMetalFrameState::SFrameCapture Capture{1, 0};
+	EXPECT_TRUE(State.CompleteFrame(Capture, false));
+	EXPECT_TRUE(State.CurrentFrameFailed());
+	EXPECT_EQ(State.SlotState(0), CMetalFrameState::ESlotState::FAILED);
+	EXPECT_FALSE(State.CompleteFrame(Capture, false));
+}
+
+TEST(MetalFrameState, CompletionBeforePresentIsRejected)
+{
+	CMetalFrameState State;
+	ASSERT_TRUE(State.BeginFrame(0));
+	const CMetalFrameState::SFrameCapture Capture{1, 0};
+	EXPECT_FALSE(State.CompleteFrame(Capture, true));
+	EXPECT_EQ(State.SlotState(0), CMetalFrameState::ESlotState::IN_FLIGHT);
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+	EXPECT_TRUE(State.CompleteFrame(Capture, true));
+}
+
+TEST(MetalFrameState, ShutdownDrainReleasesInFlightSlots)
+{
+	CMetalFrameState State(3);
+	ASSERT_TRUE(State.BeginFrame(0));
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+	ASSERT_TRUE(State.BeginFrame(1));
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+
+	EXPECT_EQ(State.DrainFrames(), 2U);
+	EXPECT_EQ(State.SlotState(0), CMetalFrameState::ESlotState::AVAILABLE);
+	EXPECT_EQ(State.SlotState(1), CMetalFrameState::ESlotState::AVAILABLE);
+	EXPECT_EQ(State.CurrentFrameId(), 0U);
+	EXPECT_TRUE(State.BeginFrame(2));
+}

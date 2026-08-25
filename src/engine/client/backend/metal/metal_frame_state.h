@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
+#include <vector>
 
 class CMetalFrameState
 {
@@ -20,17 +22,28 @@ public:
 		FAILED,
 	};
 
+	enum class ESlotState
+	{
+		AVAILABLE,
+		IN_FLIGHT,
+		COMPLETED,
+		FAILED,
+	};
+
 	explicit CMetalFrameState(size_t SlotCount = 3);
 
 	bool BeginFrame(size_t Slot);
 	EFinalizeResult FinalizeFrameForPresent(bool DrawableAvailable);
+	bool CompleteFrame(const SFrameCapture &Capture, bool Success);
+	size_t DrainFrames();
 	bool ReadLastPresentedFrame(SFrameCapture &Capture) const;
 
-	uint64_t CurrentFrameId() const { return m_CurrentFrameId; }
-	uint64_t LastPresentedFrameId() const { return m_LastPresentedFrameId; }
-	bool CurrentFrameFailed() const { return m_CurrentFrameFailed; }
-	bool CurrentFrameFinalized() const { return m_CurrentFrameFinalized; }
-	bool CaptureRetained() const { return m_CaptureRetained; }
+	uint64_t CurrentFrameId() const;
+	uint64_t LastPresentedFrameId() const;
+	bool CurrentFrameFailed() const;
+	bool CurrentFrameFinalized() const;
+	bool CaptureRetained() const;
+	ESlotState SlotState(size_t Slot) const;
 
 private:
 	size_t m_SlotCount;
@@ -42,6 +55,13 @@ private:
 	bool m_CurrentFrameFinalized = false;
 	bool m_CurrentFrameFailed = false;
 	bool m_CaptureRetained = false;
+	struct SSlot
+	{
+		uint64_t m_FrameId = 0;
+		ESlotState m_State = ESlotState::AVAILABLE;
+	};
+	std::vector<SSlot> m_vSlots;
+	mutable std::mutex m_Mutex;
 };
 
 #endif
