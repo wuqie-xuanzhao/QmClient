@@ -106,6 +106,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		uint64_t m_FrameId = 0;
 	};
 
+	using TPipelineStates = std::array<id<MTLRenderPipelineState>, 60>;
+
 	EMetalBackendState m_State = EMetalBackendState::UNINITIALIZED;
 	uint64_t m_FrameId = 0;
 	SDL_MetalView m_MetalView = nullptr;
@@ -116,7 +118,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLCommandQueue> m_CommandQueue = nil;
 	id<MTLBuffer> m_QuadIndexBuffer = nil;
 	id<MTLLibrary> m_ShaderLibrary = nil;
-	std::array<id<MTLRenderPipelineState>, 60> m_aPipelineStates{};
+	TPipelineStates m_aPipelineStates{};
+	TPipelineStates m_aMultiSamplePipelineStates{};
 	id<MTLSamplerState> m_RepeatSampler = nil;
 	id<MTLSamplerState> m_ClampSampler = nil;
 	std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};
@@ -126,6 +129,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLRenderCommandEncoder> m_CurrentRenderEncoder = nil;
 	id<MTLBlitCommandEncoder> m_CurrentBlitEncoder = nil;
 	id<CAMetalDrawable> m_CurrentDrawable = nil;
+	id<MTLTexture> m_MultiSampleTexture = nil;
 	id<MTLBuffer> m_LastPresentedReadback = nil;
 	id<MTLCommandBuffer> m_LastPresentedCommandBuffer = nil;
 	uint32_t m_LastPresentedReadbackWidth = 0;
@@ -143,6 +147,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	bool m_CommandBufferCommitted = false;
 	bool m_RenderEncoderStarted = false;
 	bool m_BackbufferHasContents = false;
+	uint32_t m_MultiSamplingCount = 0;
+	uint32_t m_MultiSampleTextureWidth = 0;
+	uint32_t m_MultiSampleTextureHeight = 0;
+	uint32_t m_MultiSampleTextureSampleCount = 0;
+	size_t m_MultiSampleTextureDataBytes = 0;
 	CMetalRenderTargetState m_RenderTargetState;
 	uint32_t m_DrawableWidth = 0;
 	uint32_t m_DrawableHeight = 0;
@@ -234,6 +243,19 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return 54 + static_cast<size_t>(BlendMode);
 	}
 
+	id<MTLRenderPipelineState> CurrentPipeline(size_t Index) const
+	{
+		const TPipelineStates &Pipelines = m_RenderTargetState.IsActive() || m_MultiSamplingCount == 0 ? m_aPipelineStates : m_aMultiSamplePipelineStates;
+		return Index < Pipelines.size() ? Pipelines[Index] : nil;
+	}
+
+	uint32_t SupportedMultiSamplingCount(uint32_t RequestedCount) const
+	{
+		if(m_Device == nil)
+			return 0;
+		return MetalSelectSampleCount(RequestedCount, [m_Device supportsTextureSampleCount:2], [m_Device supportsTextureSampleCount:4], [m_Device supportsTextureSampleCount:8]);
+	}
+
 	static MTLBlendFactor MetalBlendFactor(EMetalBlendFactor Factor)
 	{
 		switch(Factor)
@@ -259,9 +281,67 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		Frame = {};
 	}
 
+	static void ReleasePipelineStates(TPipelineStates &Pipelines)
+	{
+		for(id<MTLRenderPipelineState> Pipeline : Pipelines)
+			ReleaseMetalObject(Pipeline);
+		Pipelines.fill(nil);
+	}
+
+	void DestroyMultiSampleTexture()
+	{
+		if(m_MultiSampleTexture != nil)
+		{
+			SubTextureMemory(m_MultiSampleTextureDataBytes);
+			ReleaseMetalObject(m_MultiSampleTexture);
+		}
+		m_MultiSampleTexture = nil;
+		m_MultiSampleTextureWidth = 0;
+		m_MultiSampleTextureHeight = 0;
+		m_MultiSampleTextureSampleCount = 0;
+		m_MultiSampleTextureDataBytes = 0;
+	}
+
+	bool EnsureMultiSampleTexture(uint32_t Width, uint32_t Height)
+	{
+		if(m_MultiSamplingCount == 0)
+			return false;
+		if(m_MultiSampleTexture != nil && m_MultiSampleTextureWidth == Width && m_MultiSampleTextureHeight == Height && m_MultiSampleTextureSampleCount == m_MultiSamplingCount)
+			return true;
+		DestroyMultiSampleTexture();
+		if(m_Device == nil || Width == 0 || Height == 0)
+			return false;
+		size_t PixelCount = 0;
+		size_t DataBytes = 0;
+		if(!MetalCheckedMul(Width, Height, PixelCount) || !MetalCheckedMul(PixelCount, 4, DataBytes) || !MetalCheckedMul(DataBytes, m_MultiSamplingCount, DataBytes))
+			return false;
+		MTLTextureDescriptor *pDescriptor = [[MTLTextureDescriptor alloc] init];
+		pDescriptor.textureType = MTLTextureType2DMultisample;
+		pDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
+		pDescriptor.width = Width;
+		pDescriptor.height = Height;
+		pDescriptor.sampleCount = m_MultiSamplingCount;
+		pDescriptor.mipmapLevelCount = 1;
+		pDescriptor.usage = MTLTextureUsageRenderTarget;
+		pDescriptor.storageMode = MTLStorageModePrivate;
+		m_MultiSampleTexture = [m_Device newTextureWithDescriptor:pDescriptor];
+#if !__has_feature(objc_arc)
+		[pDescriptor release];
+#endif
+		if(m_MultiSampleTexture == nil)
+			return false;
+		m_MultiSampleTextureWidth = Width;
+		m_MultiSampleTextureHeight = Height;
+		m_MultiSampleTextureSampleCount = m_MultiSamplingCount;
+		m_MultiSampleTextureDataBytes = DataBytes;
+		AddTextureMemory(DataBytes);
+		return true;
+	}
+
 	void ReleaseGpuObjects()
 	{
 		DestroyAllRenderTargets();
+		DestroyMultiSampleTexture();
 		m_CurrentRenderEncoder = nil;
 		m_CurrentBlitEncoder = nil;
 		m_CurrentDrawable = nil;
@@ -275,9 +355,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_LastPresentedReadbackHeight = 0;
 		m_LastPresentedReadbackRowBytes = 0;
 		m_CurrentCommandBuffer = nil;
-		for(id<MTLRenderPipelineState> Pipeline : m_aPipelineStates)
-			ReleaseMetalObject(Pipeline);
-		m_aPipelineStates.fill(nil);
+		ReleasePipelineStates(m_aPipelineStates);
+		ReleasePipelineStates(m_aMultiSamplePipelineStates);
 		ReleaseMetalObject(m_RepeatSampler);
 		ReleaseMetalObject(m_ClampSampler);
 		ReleaseMetalObject(m_ShaderLibrary);
@@ -726,8 +805,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return m_RepeatSampler != nil && m_ClampSampler != nil;
 	}
 
-	bool CreatePipelineStates()
+	bool CreatePipelineStates(uint32_t SampleCount, TPipelineStates &PipelineStates)
 	{
+		if(SampleCount == 0 || m_Device == nil || m_ShaderLibrary == nil)
+			return false;
+		TPipelineStates NewPipelineStates{};
 		id<MTLFunction> VertexFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_vertex"];
 		id<MTLFunction> ColorFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_fragment"];
 		id<MTLFunction> TexturedFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_textured_fragment"];
@@ -746,14 +828,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 
 		bool Success = true;
-		auto CreatePipeline = [this, &Success](size_t Index, id<MTLFunction> Vertex, id<MTLFunction> Fragment, MTLVertexDescriptor *pDescriptor) {
+		auto CreatePipeline = [this, &Success, SampleCount, &NewPipelineStates](size_t Index, id<MTLFunction> Vertex, id<MTLFunction> Fragment, MTLVertexDescriptor *pDescriptor) {
 			for(int Blend = 0; Blend <= static_cast<int>(EMetalBlendMode::ADDITIVE); ++Blend)
 			{
 				MTLRenderPipelineDescriptor *pPipeline = [[MTLRenderPipelineDescriptor alloc] init];
 				pPipeline.vertexFunction = Vertex;
 				pPipeline.fragmentFunction = Fragment;
 				pPipeline.vertexDescriptor = pDescriptor;
-				pPipeline.rasterSampleCount = 1;
+				pPipeline.rasterSampleCount = SampleCount;
 				pPipeline.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
 				const SMetalBlendState BlendState = MetalBlendState(static_cast<EMetalBlendMode>(Blend));
 				pPipeline.colorAttachments[0].blendingEnabled = BlendState.m_Enabled;
@@ -762,8 +844,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				pPipeline.colorAttachments[0].sourceAlphaBlendFactor = MetalBlendFactor(BlendState.m_Source);
 				pPipeline.colorAttachments[0].destinationAlphaBlendFactor = MetalBlendFactor(BlendState.m_Destination);
 				NSError *pError = nil;
-				m_aPipelineStates[Index + static_cast<size_t>(Blend)] = [m_Device newRenderPipelineStateWithDescriptor:pPipeline error:&pError];
-				Success = Success && m_aPipelineStates[Index + static_cast<size_t>(Blend)] != nil;
+				NewPipelineStates[Index + static_cast<size_t>(Blend)] = [m_Device newRenderPipelineStateWithDescriptor:pPipeline error:&pError];
+				Success = Success && NewPipelineStates[Index + static_cast<size_t>(Blend)] != nil;
 #if !__has_feature(objc_arc)
 				[pPipeline release];
 #endif
@@ -913,6 +995,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[SpriteMultipleFragment release];
 		[SpriteMultipleTexturedFragment release];
 #endif
+		if(Success)
+		{
+			ReleasePipelineStates(PipelineStates);
+			PipelineStates.swap(NewPipelineStates);
+		}
+		ReleasePipelineStates(NewPipelineStates);
 		return Success;
 	}
 
@@ -1355,7 +1443,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 
 		m_CommandQueue = [m_Device newCommandQueue];
-		if(m_CommandQueue == nil || !LoadShaderLibrary(pCommand) || !CreateSamplerStates() || !CreatePipelineStates() || !CreateFrameResources())
+		m_MultiSamplingCount = SupportedMultiSamplingCount(static_cast<uint32_t>(std::max(g_Config.m_GfxFsaaSamples, 0)));
+		if(m_CommandQueue == nil || !LoadShaderLibrary(pCommand) || !CreateSamplerStates() || !CreatePipelineStates(1, m_aPipelineStates) ||
+			(m_MultiSamplingCount > 0 && !CreatePipelineStates(m_MultiSamplingCount, m_aMultiSamplePipelineStates)) || !CreateFrameResources())
 		{
 			ReleaseGpuObjects();
 			if(pCommand->m_pErrStringPtr != nullptr)
@@ -1466,12 +1556,18 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(m_CurrentDrawable == nil)
 			return false;
+		if(m_MultiSamplingCount > 0)
+		{
+			if(!EnsureMultiSampleTexture(m_DrawableWidth, m_DrawableHeight))
+				return false;
+			return BeginRenderEncoderForTexture(m_MultiSampleTexture, m_DrawableWidth, m_DrawableHeight, ClearColor, m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear, true, m_CurrentDrawable.texture);
+		}
 		return BeginRenderEncoderForTexture(m_CurrentDrawable.texture, m_DrawableWidth, m_DrawableHeight, ClearColor, m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear, true);
 	}
 
-	bool BeginRenderEncoderForTexture(id<MTLTexture> Texture, uint32_t Width, uint32_t Height, const MTLClearColor &ClearColor, MTLLoadAction LoadAction, bool Backbuffer)
+	bool BeginRenderEncoderForTexture(id<MTLTexture> Texture, uint32_t Width, uint32_t Height, const MTLClearColor &ClearColor, MTLLoadAction LoadAction, bool Backbuffer, id<MTLTexture> ResolveTexture = nil)
 	{
-		if(Texture == nil || Width == 0 || Height == 0 || m_CurrentCommandBuffer == nil)
+		if(Texture == nil || Width == 0 || Height == 0 || m_CurrentCommandBuffer == nil || (ResolveTexture != nil && Texture.sampleCount <= 1))
 			return false;
 		if(m_CurrentBlitEncoder != nil)
 		{
@@ -1481,7 +1577,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		MTLRenderPassDescriptor *pPass = [MTLRenderPassDescriptor renderPassDescriptor];
 		pPass.colorAttachments[0].texture = Texture;
 		pPass.colorAttachments[0].loadAction = LoadAction;
-		pPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+		pPass.colorAttachments[0].storeAction = ResolveTexture != nil ? MTLStoreActionStoreAndMultisampleResolve : MTLStoreActionStore;
+		pPass.colorAttachments[0].resolveTexture = ResolveTexture;
 		pPass.colorAttachments[0].clearColor = ClearColor;
 		m_CurrentRenderEncoder = [m_CurrentCommandBuffer renderCommandEncoderWithDescriptor:pPass];
 		if(m_CurrentRenderEncoder == nil)
@@ -1625,7 +1722,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + UniformOffset, &Uniforms, sizeof(Uniforms));
 		const bool Textured = State.m_Texture >= 0 && static_cast<size_t>(State.m_Texture) < m_vTextureSlots.size() && m_vTextureSlots[State.m_Texture].m_Allocated;
 		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(State.m_BlendMode);
-		id<MTLRenderPipelineState> Pipeline = m_aPipelineStates[PipelineIndex(Textured, false, BlendMode)];
+		id<MTLRenderPipelineState> Pipeline = CurrentPipeline(PipelineIndex(Textured, false, BlendMode));
 		if(Pipeline == nil)
 			return false;
 		[m_CurrentRenderEncoder setRenderPipelineState:Pipeline];
@@ -1671,14 +1768,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
 			return false;
 		Uniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
-		size_t UniformOffset = 0;
+		const size_t UniformOffset = (VertexOffset + Bytes + 255) & ~size_t(255);
 		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode);
-		if(static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
+		if(UniformOffset > gs_StreamBufferSize || sizeof(Uniforms) > gs_StreamBufferSize - UniformOffset || static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
 			return false;
 		const size_t Pipeline = TextureArrayPipelineIndex(BlendMode);
-		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || Pipeline >= m_aPipelineStates.size() || m_aPipelineStates[Pipeline] == nil)
+		id<MTLRenderPipelineState> pPipeline = CurrentPipeline(Pipeline);
+		if(pPipeline == nil)
 			return false;
-		[m_CurrentRenderEncoder setRenderPipelineState:m_aPipelineStates[Pipeline]];
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + UniformOffset, &Uniforms, sizeof(Uniforms));
+		[m_CurrentRenderEncoder setRenderPipelineState:pPipeline];
 		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
 		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
 		[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray atIndex:0];
@@ -1800,9 +1899,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	bool PrepareContainerPipeline(const CCommandBuffer::SState &State, size_t Pipeline, SBufferSlot &Buffer, size_t UniformOffset)
 	{
-		if(Pipeline >= m_aPipelineStates.size() || static_cast<size_t>(State.m_BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE) || m_aPipelineStates[Pipeline] == nil)
+		id<MTLRenderPipelineState> pPipeline = CurrentPipeline(Pipeline);
+		if(static_cast<size_t>(State.m_BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE) || pPipeline == nil)
 			return false;
-		[m_CurrentRenderEncoder setRenderPipelineState:m_aPipelineStates[Pipeline]];
+		[m_CurrentRenderEncoder setRenderPipelineState:pPipeline];
 		[m_CurrentRenderEncoder setVertexBuffer:Buffer.m_Buffer offset:0 atIndex:0];
 		[m_CurrentRenderEncoder setVertexBuffer:m_aFrameSlots[m_CurrentFrameSlot].m_VertexBuffer offset:UniformOffset atIndex:1];
 		SetScissor(State);
@@ -2170,7 +2270,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(pCommand->m_State.m_BlendMode);
 		if(UniformOffset > gs_StreamBufferSize || sizeof(Uniforms) > gs_StreamBufferSize - UniformOffset || static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
 			return false;
-		id<MTLRenderPipelineState> Pipeline = m_aPipelineStates[PipelineIndex(true, false, BlendMode)];
+		id<MTLRenderPipelineState> Pipeline = CurrentPipeline(PipelineIndex(true, false, BlendMode));
 		if(Pipeline == nil || !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
 			return false;
 		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + UniformOffset, &Uniforms, sizeof(Uniforms));
@@ -2449,6 +2549,35 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			}
 		}
 		CommitCurrentFrame(true, false);
+	}
+
+	bool Cmd_MultiSampling(const CCommandBuffer::SCommand_MultiSampling *pCommand)
+	{
+		if(pCommand->m_pRetMultiSamplingCount == nullptr || pCommand->m_pRetOk == nullptr)
+			return false;
+		const uint32_t RequestedCount = pCommand->m_RequestedMultiSamplingCount;
+		const uint32_t SupportedCount = SupportedMultiSamplingCount(RequestedCount);
+		*pCommand->m_pRetMultiSamplingCount = m_MultiSamplingCount;
+		*pCommand->m_pRetOk = false;
+		if(m_State != EMetalBackendState::INITIALIZED || m_RenderTargetState.IsActive() || m_CurrentDrawable != nil || m_RenderEncoderStarted || m_CurrentRenderEncoder != nil || m_CurrentBlitEncoder != nil || m_BackbufferHasContents)
+			return false;
+		if(SupportedCount != RequestedCount)
+			log_warn("gfx/metal", "Requested %u FSAA samples, using %u.", RequestedCount, SupportedCount);
+		if(SupportedCount == m_MultiSamplingCount)
+		{
+			*pCommand->m_pRetMultiSamplingCount = SupportedCount;
+			*pCommand->m_pRetOk = true;
+			return true;
+		}
+		if(SupportedCount > 0 && !CreatePipelineStates(SupportedCount, m_aMultiSamplePipelineStates))
+			return false;
+		if(SupportedCount == 0)
+			ReleasePipelineStates(m_aMultiSamplePipelineStates);
+		DestroyMultiSampleTexture();
+		m_MultiSamplingCount = SupportedCount;
+		*pCommand->m_pRetMultiSamplingCount = SupportedCount;
+		*pCommand->m_pRetOk = true;
+		return true;
 	}
 
 	void CompleteCurrentFrameIfNeeded()
@@ -2776,10 +2905,16 @@ public:
 			case CCommandBuffer::CMD_TRY_SWAP_AND_SCREENSHOT:
 				Cmd_Screenshot(static_cast<const CCommandBuffer::SCommand_TrySwapAndScreenshot *>(pBaseCommand));
 				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_MULTISAMPLING:
+			{
+				const bool Success = Cmd_MultiSampling(static_cast<const CCommandBuffer::SCommand_MultiSampling *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
 
 			// 这些命令由组合处理器中的 SDL/General fragment 接管。
 			case CCommandBuffer::CMD_SIGNAL:
-			case CCommandBuffer::CMD_MULTISAMPLING:
 			case CCommandBuffer::CMD_WINDOW_CREATE_NTF:
 			case CCommandBuffer::CMD_WINDOW_DESTROY_NTF:
 				return RUN_COMMAND_COMMAND_UNHANDLED;

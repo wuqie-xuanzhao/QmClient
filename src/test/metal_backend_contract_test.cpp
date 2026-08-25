@@ -135,6 +135,22 @@ TEST(MetalBackendContract, RenderTargetsOwnAttachmentsAndRestoreDrawableRenderin
 	EXPECT_NE(Source.find("m_pRenderTargetSupportReason = \"metal_render_target_readback_not_implemented\""), std::string::npos);
 }
 
+TEST(MetalBackendContract, MultisampleBackbufferUsesResolveAttachmentAndRealDeviceSupport)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("bool Cmd_MultiSampling"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_MULTISAMPLING"), std::string::npos);
+	EXPECT_NE(Source.find("[m_Device supportsTextureSampleCount:2]"), std::string::npos);
+	EXPECT_NE(Source.find("MTLTextureType2DMultisample"), std::string::npos);
+	EXPECT_NE(Source.find("pDescriptor.sampleCount = m_MultiSamplingCount"), std::string::npos);
+	EXPECT_NE(Source.find("MTLStoreActionStoreAndMultisampleResolve"), std::string::npos);
+	EXPECT_NE(Source.find("pPass.colorAttachments[0].resolveTexture = ResolveTexture"), std::string::npos);
+	EXPECT_NE(Source.find("CreatePipelineStates(m_MultiSamplingCount, m_aMultiSamplePipelineStates)"), std::string::npos);
+	EXPECT_NE(Source.find("const size_t UniformOffset = (VertexOffset + Bytes + 255) & ~size_t(255)"), std::string::npos);
+	EXPECT_NE(Source.find("m_CurrentDrawable != nil || m_RenderEncoderStarted || m_CurrentRenderEncoder != nil || m_CurrentBlitEncoder != nil || m_BackbufferHasContents"), std::string::npos);
+	EXPECT_NE(Source.find("Requested %u FSAA samples, using %u."), std::string::npos);
+}
+
 TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");

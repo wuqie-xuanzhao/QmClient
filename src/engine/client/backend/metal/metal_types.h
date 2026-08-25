@@ -89,6 +89,17 @@ inline bool MetalCheckedMul(size_t A, size_t B, size_t &Result)
 	return true;
 }
 
+inline uint32_t MetalSelectSampleCount(uint32_t RequestedCount, bool Supports2, bool Supports4, bool Supports8)
+{
+	if(RequestedCount >= 8 && Supports8)
+		return 8;
+	if(RequestedCount >= 4 && Supports4)
+		return 4;
+	if(RequestedCount >= 2 && Supports2)
+		return 2;
+	return 0;
+}
+
 enum class EMetalPrimitiveType
 {
 	LINES,

@@ -156,6 +156,15 @@ TEST(MetalTypes, PipelineKeySeparatesRenderVariants)
 	EXPECT_NE(Base, (SMetalPipelineKey{0, 2, static_cast<uint8_t>(EMetalBlendMode::ALPHA), false, false}));
 }
 
+TEST(MetalTypes, ChoosesOnlySupportedMultisampleCounts)
+{
+	EXPECT_EQ(MetalSelectSampleCount(0, true, true, true), 0U);
+	EXPECT_EQ(MetalSelectSampleCount(3, true, true, true), 2U);
+	EXPECT_EQ(MetalSelectSampleCount(4, true, true, false), 4U);
+	EXPECT_EQ(MetalSelectSampleCount(8, true, false, false), 2U);
+	EXPECT_EQ(MetalSelectSampleCount(8, false, false, false), 0U);
+}
+
 TEST(MetalTypes, PrimitiveVertexCountsAreChecked)
 {
 	size_t Count = 0;
