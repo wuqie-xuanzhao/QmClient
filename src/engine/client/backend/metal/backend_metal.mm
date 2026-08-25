@@ -12,6 +12,7 @@
 #import <QuartzCore/CAMetalLayer.h>
 #undef pi
 
+#include <algorithm>
 #include <string>
 
 namespace
@@ -43,6 +44,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	uint64_t m_FrameId = 0;
 	SDL_MetalView m_MetalView = nullptr;
 	void *m_pLayer = nullptr;
+	SDL_Window *m_pWindow = nullptr;
+	bool m_VSync = true;
 	id<MTLDevice> m_Device = nil;
 	char *m_pVendorString = nullptr;
 	char *m_pVersionString = nullptr;
@@ -86,6 +89,28 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(str_startswith_nocase(pName, "NVIDIA"))
 			return "NVIDIA";
 		return "Metal";
+	}
+
+	void UpdateDrawableSize()
+	{
+		if(m_pWindow == nullptr || m_pLayer == nullptr)
+			return;
+		int Width = 0;
+		int Height = 0;
+		SDL_Metal_GetDrawableSize(m_pWindow, &Width, &Height);
+		CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
+		pLayer.drawableSize = CGSizeMake(std::max(Width, 0), std::max(Height, 0));
+	}
+
+	void ConfigureLayer()
+	{
+		CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
+		pLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+		pLayer.maximumDrawableCount = 3;
+		pLayer.framebufferOnly = NO;
+		pLayer.presentsWithTransaction = NO;
+		pLayer.displaySyncEnabled = m_VSync;
+		UpdateDrawableSize();
 	}
 
 	void SelectDevice(const char *pConfiguredGpuName)
@@ -139,6 +164,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				str_copy(m_pRendererString, m_Device.name.UTF8String, gs_MetalGpuInfoStringSize);
 			CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
 			pLayer.device = m_Device;
+			ConfigureLayer();
 		}
 
 #if !__has_feature(objc_arc)
@@ -169,6 +195,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_pVersionString = pCommand->m_pVersionString;
 		m_pRendererString = pCommand->m_pRendererString;
 		m_pGpuList = pCommand->m_pGpuList;
+		m_pWindow = pCommand->m_pWindow;
+		m_VSync = pCommand->m_VSync;
 		if(m_MetalView != nullptr)
 		{
 			SDL_Metal_DestroyView(m_MetalView);
@@ -231,6 +259,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			SDL_Metal_DestroyView(m_MetalView);
 		m_MetalView = nullptr;
 		m_pLayer = nullptr;
+		m_pWindow = nullptr;
 		ReleaseDevice();
 		m_State = EMetalBackendState::UNINITIALIZED;
 	}
@@ -263,11 +292,23 @@ public:
 			case CCommandProcessorFragment_GLBase::CMD_POST_SHUTDOWN:
 				Cmd_PostShutdown(static_cast<const SCommand_PostShutdown *>(pBaseCommand));
 				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_VSYNC:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_VSync *>(pBaseCommand);
+				m_VSync = pCommand->m_VSync != 0;
+				if(m_pLayer != nullptr)
+					((CAMetalLayer *)m_pLayer).displaySyncEnabled = m_VSync;
+				if(pCommand->m_pRetOk != nullptr)
+					*pCommand->m_pRetOk = m_pLayer != nullptr;
+				return RUN_COMMAND_COMMAND_HANDLED;
+			}
+			case CCommandBuffer::CMD_UPDATE_VIEWPORT:
+				UpdateDrawableSize();
+				return RUN_COMMAND_COMMAND_HANDLED;
 
 			// 这些命令由组合处理器中的 SDL/General fragment 接管。
 			case CCommandBuffer::CMD_SIGNAL:
 			case CCommandBuffer::CMD_MULTISAMPLING:
-			case CCommandBuffer::CMD_VSYNC:
 			case CCommandBuffer::CMD_SWAP:
 			case CCommandBuffer::CMD_WINDOW_CREATE_NTF:
 			case CCommandBuffer::CMD_WINDOW_DESTROY_NTF:

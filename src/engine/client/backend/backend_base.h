@@ -122,6 +122,7 @@ public:
 		char *m_pRendererString;
 
 		TTwGraphicsGpuList *m_pGpuList;
+		bool m_VSync = true;
 
 		int *m_pInitError = nullptr;
 		const char **m_pErrStringPtr = nullptr;

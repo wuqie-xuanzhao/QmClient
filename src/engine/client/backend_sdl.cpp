@@ -1452,6 +1452,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	CmdPre.m_pVersionString = m_aVersionString;
 	CmdPre.m_pRendererString = m_aRendererString;
 	CmdPre.m_pGpuList = &m_GpuList;
+	CmdPre.m_VSync = (Flags & IGraphicsBackend::INITFLAG_VSYNC) != 0;
 	CmdPre.m_pInitError = &InitError;
 	CmdPre.m_pErrStringPtr = &pErrorStr;
 	CmdBuffer.AddCommandUnsafe(CmdPre);
