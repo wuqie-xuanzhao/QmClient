@@ -542,7 +542,7 @@ src/test/metal_types_test.cpp
 - 读回在 offscreen 场景完成无 present 的 command buffer；已有 drawable 时在同一 command buffer 中复制 drawable、唯一 present，并让随后的 screenshot/read-pixel/swap 消费同一帧，避免空白二次 present。BGRA 到 RGBA 转换保留 alpha。
 - 已呈现读回的单次消费标记由 `CMetalFrameState` 持有，并以 mutex 保护；新 backbuffer encoder 清除旧标记，slot drain 不会误消费它。纯 C++ 测试覆盖单次消费、清除和 drain 语义。
 - 验证：`MetalBackendContract.*:MetalFrameState.*:MetalRenderTargetState.*:MetalTypes.*` 42/42；`xcrun clang++ -fsyntax-only -x objective-c++ ... backend_metal.mm` 通过；`python3 qmclient_scripts/gate/check_gate.py --mode default` 为 13/0/0、C++ 全量与 Rust 全量通过。
-- 阶段门仍保留真机缺口：当前环境没有 `xcrun metal` / `metallib`，无法完成 MSL 编译、Metal API validation、固定场景、resize/FSAA 切换和连续 screenshot/read-pixel 的真实 GPU 验证。因此 P3 不能标记为阶段验收完成，P4 不得启动。
+- 阶段门仍保留真机缺口：截至 2026-08-25，当前 developer directory 为 `/Library/Developer/CommandLineTools`，未安装可用的 Xcode app；`xcodebuild`、`xcrun metal` 和 `xcrun metallib` 都不可用，现有构建也为 `METAL=OFF`。因此无法完成 MSL 编译、Metal API validation、固定场景、resize/FSAA 切换和连续 screenshot/read-pixel 的真实 GPU 验证。P3 不能标记为阶段验收完成，P4 不得启动。
 
 # 7. P4：Qm 专用 shader
 
