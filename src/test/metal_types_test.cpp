@@ -20,6 +20,11 @@ TEST(MetalTypes, UniformsMatchTheMSLBufferLayout)
 	EXPECT_EQ(sizeof(SMetalTileUniforms), 96U);
 	EXPECT_EQ(offsetof(SMetalTileUniforms, m_Transform), 80U);
 	EXPECT_EQ(offsetof(SMetalQuadUniforms, m_QuadOffset), 64U + METAL_MAX_QUADS * 32U);
+	EXPECT_EQ(sizeof(SMetalQuadContainerUniforms), 96U);
+	EXPECT_EQ(offsetof(SMetalQuadContainerUniforms, m_CenterRotation), 64U);
+	EXPECT_EQ(offsetof(SMetalQuadContainerUniforms, m_VertexColor), 80U);
+	EXPECT_EQ(sizeof(SMetalSpriteMultipleUniforms), 64U + 16U + 16U + METAL_MAX_SPRITES * 16U);
+	EXPECT_EQ(offsetof(SMetalSpriteMultipleUniforms, m_aRenderInfo), 96U);
 }
 
 TEST(MetalTypes, ComputesRgbaAndTextLayouts)

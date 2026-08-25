@@ -62,6 +62,28 @@ TEST(MetalBackendContract, TileAndQuadCommandsUseDedicatedMetalPipelines)
 	EXPECT_NE(Shader.find("qmclient_quad_vertex_ungrouped"), std::string::npos);
 }
 
+TEST(MetalBackendContract, BufferedTextAndQuadContainerCommandsUseValidatedResources)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("CMD_RENDER_TEXT"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_QUAD_CONTAINER"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_QUAD_CONTAINER_EX"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_QUAD_CONTAINER_SPRITE_MULTIPLE"), std::string::npos);
+	EXPECT_NE(Source.find("GetStandardQuadDrawResources"), std::string::npos);
+	EXPECT_NE(Source.find("MatchesStandardVertexLayout"), std::string::npos);
+	EXPECT_NE(Source.find("QuadContainerExPipelineIndex"), std::string::npos);
+	EXPECT_NE(Source.find("SpriteMultiplePipelineIndex"), std::string::npos);
+	EXPECT_NE(Source.find("instanceCount:RenderCount"), std::string::npos);
+	EXPECT_NE(Source.find("METAL_MAX_SPRITES"), std::string::npos);
+	EXPECT_NE(Source.find("QuadEnd > std::numeric_limits<size_t>::max() / 6"), std::string::npos);
+
+	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
+	EXPECT_NE(Shader.find("qmclient_quad_container_ex_vertex"), std::string::npos);
+	EXPECT_NE(Shader.find("qmclient_quad_container_ex_textured_fragment"), std::string::npos);
+	EXPECT_NE(Shader.find("qmclient_sprite_multiple_vertex"), std::string::npos);
+	EXPECT_NE(Shader.find("Uniforms.m_aRenderInfo[InstanceId]"), std::string::npos);
+}
+
 TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");

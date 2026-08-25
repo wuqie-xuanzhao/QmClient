@@ -149,3 +149,62 @@ fragment float4 qmclient_quad_textured_fragment(SMetalQuadVertexOut Input [[stag
 {
 	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color;
 }
+
+vertex SMetalVertexOut qmclient_quad_container_ex_vertex(SMetalVertex Vertex [[stage_in]], constant SMetalQuadContainerUniforms &Uniforms [[buffer(1)]])
+{
+	SMetalVertexOut Out;
+	float2 Position = Vertex.m_Position;
+	const float Rotation = Uniforms.m_CenterRotation.z;
+	if(Rotation != 0.0)
+	{
+		const float2 Relative = Position - Uniforms.m_CenterRotation.xy;
+		const float SinRotation = sin(Rotation);
+		const float CosRotation = cos(Rotation);
+		Position = float2(Relative.x * CosRotation - Relative.y * SinRotation, Relative.x * SinRotation + Relative.y * CosRotation) + Uniforms.m_CenterRotation.xy;
+	}
+	Out.m_Position = Uniforms.m_MVP * float4(Position, 0.0, 1.0);
+	Out.m_TexCoord = Vertex.m_TexCoord;
+	Out.m_Color = float4(Vertex.m_Color);
+	return Out;
+}
+
+fragment float4 qmclient_quad_container_ex_fragment(SMetalVertexOut Input [[stage_in]], constant SMetalQuadContainerUniforms &Uniforms [[buffer(1)]])
+{
+	return Input.m_Color * Uniforms.m_VertexColor;
+}
+
+fragment float4 qmclient_quad_container_ex_textured_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalQuadContainerUniforms &Uniforms [[buffer(1)]])
+{
+	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color * Uniforms.m_VertexColor;
+}
+
+vertex SMetalVertexOut qmclient_sprite_multiple_vertex(SMetalVertex Vertex [[stage_in]], constant SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]], uint InstanceId [[instance_id]])
+{
+	SMetalVertexOut Out;
+	const float4 RenderInfo = Uniforms.m_aRenderInfo[InstanceId];
+	float2 Position = Vertex.m_Position;
+	const float Rotation = RenderInfo.w;
+	if(Rotation != 0.0)
+	{
+		const float2 Relative = Position - Uniforms.m_Center.xy;
+		const float SinRotation = sin(Rotation);
+		const float CosRotation = cos(Rotation);
+		Position = float2(Relative.x * CosRotation - Relative.y * SinRotation, Relative.x * SinRotation + Relative.y * CosRotation) + Uniforms.m_Center.xy;
+	}
+	Position *= RenderInfo.z;
+	Position += RenderInfo.xy;
+	Out.m_Position = Uniforms.m_MVP * float4(Position, 0.0, 1.0);
+	Out.m_TexCoord = Vertex.m_TexCoord;
+	Out.m_Color = float4(Vertex.m_Color);
+	return Out;
+}
+
+fragment float4 qmclient_sprite_multiple_fragment(SMetalVertexOut Input [[stage_in]], constant SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]])
+{
+	return Input.m_Color * Uniforms.m_VertexColor;
+}
+
+fragment float4 qmclient_sprite_multiple_textured_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]])
+{
+	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color * Uniforms.m_VertexColor;
+}

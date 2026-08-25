@@ -360,6 +360,7 @@ struct alignas(16) SMetalTextUniforms
 };
 
 static constexpr size_t METAL_MAX_QUADS = 256;
+static constexpr size_t METAL_MAX_SPRITES = 256;
 
 #if defined(__METAL_VERSION__)
 struct SMetalTileUniforms
@@ -385,6 +386,29 @@ struct alignas(16) SMetalQuadUniforms
 	int m_Padding[3];
 };
 
+#if defined(__METAL_VERSION__)
+struct SMetalQuadContainerUniforms
+#else
+struct alignas(16) SMetalQuadContainerUniforms
+#endif
+{
+	SMetalFloat4x4 m_MVP;
+	SMetalFloat4 m_CenterRotation;
+	SMetalFloat4 m_VertexColor;
+};
+
+#if defined(__METAL_VERSION__)
+struct SMetalSpriteMultipleUniforms
+#else
+struct alignas(16) SMetalSpriteMultipleUniforms
+#endif
+{
+	SMetalFloat4x4 m_MVP;
+	SMetalFloat4 m_Center;
+	SMetalFloat4 m_VertexColor;
+	SMetalFloat4 m_aRenderInfo[METAL_MAX_SPRITES];
+};
+
 #if !defined(__METAL_VERSION__)
 static_assert(alignof(SMetalUniforms) == 16);
 static_assert(sizeof(SMetalFloat4x4) == 64);
@@ -399,6 +423,8 @@ static_assert(offsetof(SMetalTextUniforms, m_Params) == 96);
 static_assert(sizeof(SMetalTileUniforms) == 96);
 static_assert(offsetof(SMetalTileUniforms, m_Transform) == 80);
 static_assert(offsetof(SMetalQuadUniforms, m_QuadOffset) == 64 + METAL_MAX_QUADS * 32);
+static_assert(sizeof(SMetalQuadContainerUniforms) == 96);
+static_assert(sizeof(SMetalSpriteMultipleUniforms) == 64 + 16 + 16 + METAL_MAX_SPRITES * 16);
 #endif
 
 #endif

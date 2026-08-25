@@ -101,7 +101,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLCommandQueue> m_CommandQueue = nil;
 	id<MTLBuffer> m_QuadIndexBuffer = nil;
 	id<MTLLibrary> m_ShaderLibrary = nil;
-	std::array<id<MTLRenderPipelineState>, 42> m_aPipelineStates{};
+	std::array<id<MTLRenderPipelineState>, 54> m_aPipelineStates{};
 	id<MTLSamplerState> m_RepeatSampler = nil;
 	id<MTLSamplerState> m_ClampSampler = nil;
 	std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};
@@ -199,6 +199,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	static size_t QuadPipelineIndex(bool Textured, bool Grouped, EMetalBlendMode BlendMode)
 	{
 		return 30 + (static_cast<size_t>(Grouped) * 2 + static_cast<size_t>(Textured)) * 3 + static_cast<size_t>(BlendMode);
+	}
+
+	static size_t QuadContainerExPipelineIndex(bool Textured, EMetalBlendMode BlendMode)
+	{
+		return 42 + static_cast<size_t>(Textured) * 3 + static_cast<size_t>(BlendMode);
+	}
+
+	static size_t SpriteMultiplePipelineIndex(bool Textured, EMetalBlendMode BlendMode)
+	{
+		return 48 + static_cast<size_t>(Textured) * 3 + static_cast<size_t>(BlendMode);
 	}
 
 	static MTLBlendFactor MetalBlendFactor(EMetalBlendFactor Factor)
@@ -695,7 +705,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLFunction> QuadVertexUngrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_vertex_ungrouped"];
 		id<MTLFunction> QuadFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_fragment"];
 		id<MTLFunction> QuadTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_textured_fragment"];
-		if(TileVertex == nil || TilePlainVertex == nil || TileFragment == nil || TileTexturedFragment == nil || QuadVertexGrouped == nil || QuadVertexUngrouped == nil || QuadFragment == nil || QuadTexturedFragment == nil)
+		id<MTLFunction> QuadContainerExVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_container_ex_vertex"];
+		id<MTLFunction> QuadContainerExFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_container_ex_fragment"];
+		id<MTLFunction> QuadContainerExTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_container_ex_textured_fragment"];
+		id<MTLFunction> SpriteMultipleVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_vertex"];
+		id<MTLFunction> SpriteMultipleFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_fragment"];
+		id<MTLFunction> SpriteMultipleTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_textured_fragment"];
+		if(TileVertex == nil || TilePlainVertex == nil || TileFragment == nil || TileTexturedFragment == nil || QuadVertexGrouped == nil || QuadVertexUngrouped == nil || QuadFragment == nil || QuadTexturedFragment == nil || QuadContainerExVertex == nil || QuadContainerExFragment == nil || QuadContainerExTexturedFragment == nil || SpriteMultipleVertex == nil || SpriteMultipleFragment == nil || SpriteMultipleTexturedFragment == nil)
 			Success = false;
 
 		MTLVertexDescriptor *pTileDescriptor = [[MTLVertexDescriptor alloc] init];
@@ -752,6 +768,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(QuadVertexUngrouped != nil && Fragment != nil)
 				CreatePipeline(QuadPipelineIndex(Textured != 0, false, EMetalBlendMode::NONE), QuadVertexUngrouped, Fragment, pDescriptor);
 		}
+		if(QuadContainerExVertex != nil && QuadContainerExFragment != nil)
+			CreatePipeline(QuadContainerExPipelineIndex(false, EMetalBlendMode::NONE), QuadContainerExVertex, QuadContainerExFragment, pVertexDescriptor);
+		if(QuadContainerExVertex != nil && QuadContainerExTexturedFragment != nil)
+			CreatePipeline(QuadContainerExPipelineIndex(true, EMetalBlendMode::NONE), QuadContainerExVertex, QuadContainerExTexturedFragment, pVertexDescriptor);
+		if(SpriteMultipleVertex != nil && SpriteMultipleFragment != nil)
+			CreatePipeline(SpriteMultiplePipelineIndex(false, EMetalBlendMode::NONE), SpriteMultipleVertex, SpriteMultipleFragment, pVertexDescriptor);
+		if(SpriteMultipleVertex != nil && SpriteMultipleTexturedFragment != nil)
+			CreatePipeline(SpriteMultiplePipelineIndex(true, EMetalBlendMode::NONE), SpriteMultipleVertex, SpriteMultipleTexturedFragment, pVertexDescriptor);
 #if !__has_feature(objc_arc)
 		[pVertexDescriptor release];
 		[pTileDescriptor release];
@@ -770,6 +794,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[QuadVertexUngrouped release];
 		[QuadFragment release];
 		[QuadTexturedFragment release];
+		[QuadContainerExVertex release];
+		[QuadContainerExFragment release];
+		[QuadContainerExTexturedFragment release];
+		[SpriteMultipleVertex release];
+		[SpriteMultipleFragment release];
+		[SpriteMultipleTexturedFragment release];
 #endif
 		return Success;
 	}
@@ -1156,8 +1186,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_pCapabilities->m_MipMapping = true;
 			m_pCapabilities->m_NPOTTextures = true;
 			m_pCapabilities->m_ShaderSupport = true;
+			m_pCapabilities->m_QuadContainerBuffering = true;
+			m_pCapabilities->m_TextBuffering = true;
 			m_pCapabilities->m_TrianglesAsQuads = true;
-			m_pCapabilities->m_pRenderTargetSupportReason = "metal_p1_disabled";
+			m_pCapabilities->m_pRenderTargetSupportReason = "metal_p2_partial";
 		}
 		if(pCommand->m_pInitError != nullptr)
 			*pCommand->m_pInitError = 0;
@@ -1418,6 +1450,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return !Textured || MatchesContainerAttribute(Container.m_vAttributes[1], 4, METAL_GRAPHICS_TYPE_UNSIGNED_BYTE, false, sizeof(float) * 2, 1);
 	}
 
+	static bool MatchesStandardVertexLayout(const SBufferContainerSlot &Container)
+	{
+		return Container.m_vAttributes.size() == 3 && Container.m_Stride == static_cast<int>(sizeof(GL_SVertex)) &&
+			MatchesContainerAttribute(Container.m_vAttributes[0], 2, METAL_GRAPHICS_TYPE_FLOAT, false, offsetof(GL_SVertex, m_Pos), 0) &&
+			MatchesContainerAttribute(Container.m_vAttributes[1], 2, METAL_GRAPHICS_TYPE_FLOAT, false, offsetof(GL_SVertex, m_Tex), 0) &&
+			MatchesContainerAttribute(Container.m_vAttributes[2], 4, METAL_GRAPHICS_TYPE_UNSIGNED_BYTE, true, offsetof(GL_SVertex, m_Color), 0);
+	}
+
 	void SetScissor(const CCommandBuffer::SState &State)
 	{
 		if(State.m_ClipEnable)
@@ -1428,7 +1468,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	bool PrepareContainerPipeline(const CCommandBuffer::SState &State, size_t Pipeline, SBufferSlot &Buffer, size_t UniformOffset)
 	{
-		if(static_cast<size_t>(State.m_BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE) || m_aPipelineStates[Pipeline] == nil)
+		if(Pipeline >= m_aPipelineStates.size() || static_cast<size_t>(State.m_BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE) || m_aPipelineStates[Pipeline] == nil)
 			return false;
 		[m_CurrentRenderEncoder setRenderPipelineState:m_aPipelineStates[Pipeline]];
 		[m_CurrentRenderEncoder setVertexBuffer:Buffer.m_Buffer offset:0 atIndex:0];
@@ -1543,6 +1583,165 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(Grouped)
 				break;
 		}
+		return true;
+	}
+
+	bool GetStandardQuadDrawResources(int ContainerIndex, const void *pOffset, unsigned int DrawNum, size_t &QuadOffset, size_t &QuadCount, const SBufferContainerSlot *&pContainer, SBufferSlot *&pBuffer)
+	{
+		if(!DecodeQuadIndexRange(static_cast<const char *>(pOffset), DrawNum, QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() - QuadCount || QuadOffset + QuadCount > std::numeric_limits<size_t>::max() / 4)
+			return false;
+		const size_t QuadEnd = QuadOffset + QuadCount;
+		if(QuadEnd > std::numeric_limits<size_t>::max() / 6 || QuadEnd * 6 > [m_QuadIndexBuffer length] / sizeof(uint16_t))
+			return false;
+		if(!GetContainerDrawResources(ContainerIndex, QuadEnd * 4, pContainer, pBuffer) || !MatchesStandardVertexLayout(*pContainer))
+			return false;
+		return true;
+	}
+
+	bool DrawQuadContainer(const CCommandBuffer::SCommand_RenderQuadContainer &Command)
+	{
+		if(Command.m_DrawNum == 0)
+			return true;
+		const bool Textured = Command.m_State.m_Texture >= 0;
+		if(Textured && (static_cast<size_t>(Command.m_State.m_Texture) >= m_vTextureSlots.size() || !m_vTextureSlots[Command.m_State.m_Texture].m_Allocated))
+			return false;
+		size_t QuadOffset = 0;
+		size_t QuadCount = 0;
+		const SBufferContainerSlot *pContainer = nullptr;
+		SBufferSlot *pBuffer = nullptr;
+		if(!GetStandardQuadDrawResources(Command.m_BufferContainerIndex, Command.m_pOffset, Command.m_DrawNum, QuadOffset, QuadCount, pContainer, pBuffer))
+			return false;
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		SMetalUniforms Uniforms;
+		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+		size_t UniformOffset = 0;
+		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || !PrepareContainerPipeline(Command.m_State, PipelineIndex(Textured, false, static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode)), *pBuffer, UniformOffset))
+			return false;
+		if(Textured)
+		{
+			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
+			[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
+		}
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t)];
+		(void)pContainer;
+		(void)QuadCount;
+		return true;
+	}
+
+	bool DrawText(const CCommandBuffer::SCommand_RenderText &Command)
+	{
+		if(Command.m_DrawNum == 0)
+			return true;
+		if(Command.m_DrawNum < 0 || Command.m_TextureSize <= 0 || Command.m_BufferContainerIndex < 0)
+			return false;
+		if(Command.m_TextTextureIndex < 0 || Command.m_TextOutlineTextureIndex < 0 || static_cast<size_t>(Command.m_TextTextureIndex) >= m_vTextureSlots.size() || static_cast<size_t>(Command.m_TextOutlineTextureIndex) >= m_vTextureSlots.size() || !m_vTextureSlots[Command.m_TextTextureIndex].m_Allocated || !m_vTextureSlots[Command.m_TextOutlineTextureIndex].m_Allocated)
+			return false;
+		size_t QuadOffset = 0;
+		size_t QuadCount = 0;
+		const SBufferContainerSlot *pContainer = nullptr;
+		SBufferSlot *pBuffer = nullptr;
+		if(!GetStandardQuadDrawResources(Command.m_BufferContainerIndex, nullptr, static_cast<unsigned int>(Command.m_DrawNum), QuadOffset, QuadCount, pContainer, pBuffer))
+			return false;
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		SMetalTextUniforms Uniforms;
+		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Color = {{Command.m_TextColor.r, Command.m_TextColor.g, Command.m_TextColor.b, Command.m_TextColor.a}};
+		Uniforms.m_OutlineColor = {{Command.m_TextOutlineColor.r, Command.m_TextOutlineColor.g, Command.m_TextOutlineColor.b, Command.m_TextOutlineColor.a}};
+		Uniforms.m_Params = {{static_cast<float>(Command.m_TextureSize), 0.0f, 0.0f, 0.0f}};
+		size_t UniformOffset = 0;
+		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || !PrepareContainerPipeline(Command.m_State, PipelineIndex(true, true, static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode)), *pBuffer, UniformOffset))
+			return false;
+		[m_CurrentRenderEncoder setFragmentBuffer:m_aFrameSlots[m_CurrentFrameSlot].m_VertexBuffer offset:UniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_TextTextureIndex].m_Texture atIndex:0];
+		[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_TextOutlineTextureIndex].m_Texture atIndex:1];
+		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_DrawNum) indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t)];
+		(void)pContainer;
+		(void)QuadCount;
+		return true;
+	}
+
+	bool DrawQuadContainerEx(const CCommandBuffer::SCommand_RenderQuadContainerEx &Command)
+	{
+		if(Command.m_DrawNum == 0)
+			return true;
+		const bool Textured = Command.m_State.m_Texture >= 0;
+		if(Textured && (static_cast<size_t>(Command.m_State.m_Texture) >= m_vTextureSlots.size() || !m_vTextureSlots[Command.m_State.m_Texture].m_Allocated))
+			return false;
+		size_t QuadOffset = 0;
+		size_t QuadCount = 0;
+		const SBufferContainerSlot *pContainer = nullptr;
+		SBufferSlot *pBuffer = nullptr;
+		if(!GetStandardQuadDrawResources(Command.m_BufferContainerIndex, Command.m_pOffset, Command.m_DrawNum, QuadOffset, QuadCount, pContainer, pBuffer))
+			return false;
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		SMetalQuadContainerUniforms Uniforms;
+		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_CenterRotation = {{Command.m_Center.x, Command.m_Center.y, Command.m_Rotation, 0.0f}};
+		Uniforms.m_VertexColor = {{Command.m_VertexColor.r, Command.m_VertexColor.g, Command.m_VertexColor.b, Command.m_VertexColor.a}};
+		size_t UniformOffset = 0;
+		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || !PrepareContainerPipeline(Command.m_State, QuadContainerExPipelineIndex(Textured, static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode)), *pBuffer, UniformOffset))
+			return false;
+		if(Textured)
+		{
+			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
+			[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
+		}
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t)];
+		(void)pContainer;
+		(void)QuadCount;
+		return true;
+	}
+
+	bool DrawQuadContainerAsSpriteMultiple(const CCommandBuffer::SCommand_RenderQuadContainerAsSpriteMultiple &Command)
+	{
+		if(Command.m_DrawNum == 0 || Command.m_DrawCount == 0)
+			return true;
+		if(Command.m_pRenderInfo == nullptr)
+			return false;
+		const bool Textured = Command.m_State.m_Texture >= 0;
+		if(Textured && (static_cast<size_t>(Command.m_State.m_Texture) >= m_vTextureSlots.size() || !m_vTextureSlots[Command.m_State.m_Texture].m_Allocated))
+			return false;
+		size_t QuadOffset = 0;
+		size_t QuadCount = 0;
+		const SBufferContainerSlot *pContainer = nullptr;
+		SBufferSlot *pBuffer = nullptr;
+		if(!GetStandardQuadDrawResources(Command.m_BufferContainerIndex, Command.m_pOffset, Command.m_DrawNum, QuadOffset, QuadCount, pContainer, pBuffer) || QuadCount != 1)
+			return false;
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		SMetalSpriteMultipleUniforms Uniforms{};
+		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Center = {{Command.m_Center.x, Command.m_Center.y, 0.0f, 0.0f}};
+		Uniforms.m_VertexColor = {{Command.m_VertexColor.r, Command.m_VertexColor.g, Command.m_VertexColor.b, Command.m_VertexColor.a}};
+		for(unsigned int RenderOffset = 0; RenderOffset < Command.m_DrawCount;)
+		{
+			const unsigned int RenderCount = std::min(Command.m_DrawCount - RenderOffset, static_cast<unsigned int>(METAL_MAX_SPRITES));
+			for(unsigned int Index = 0; Index < RenderCount; ++Index)
+			{
+				const IGraphics::SRenderSpriteInfo &Info = Command.m_pRenderInfo[RenderOffset + Index];
+				Uniforms.m_aRenderInfo[Index] = {{Info.m_Pos.x, Info.m_Pos.y, Info.m_Scale, Info.m_Rotation}};
+			}
+			size_t UniformOffset = 0;
+			if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || !PrepareContainerPipeline(Command.m_State, SpriteMultiplePipelineIndex(Textured, static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode)), *pBuffer, UniformOffset))
+				return false;
+			if(Textured)
+			{
+				[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
+				[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
+			}
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t) instanceCount:RenderCount baseVertex:0 baseInstance:0];
+			RenderOffset += RenderCount;
+		}
+		(void)pContainer;
 		return true;
 	}
 
@@ -2016,6 +2215,34 @@ public:
 			{
 				const bool Grouped = pBaseCommand->m_Cmd == CCommandBuffer::CMD_RENDER_QUAD_LAYER_GROUPED;
 				const bool Success = DrawQuadLayer(*static_cast<const CCommandBuffer::SCommand_RenderQuadLayer *>(pBaseCommand), Grouped);
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TEXT:
+			{
+				const bool Success = DrawText(*static_cast<const CCommandBuffer::SCommand_RenderText *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER:
+			{
+				const bool Success = DrawQuadContainer(*static_cast<const CCommandBuffer::SCommand_RenderQuadContainer *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER_EX:
+			{
+				const bool Success = DrawQuadContainerEx(*static_cast<const CCommandBuffer::SCommand_RenderQuadContainerEx *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER_SPRITE_MULTIPLE:
+			{
+				const bool Success = DrawQuadContainerAsSpriteMultiple(*static_cast<const CCommandBuffer::SCommand_RenderQuadContainerAsSpriteMultiple *>(pBaseCommand));
 				if(!Success)
 					SetUnsupportedCommandError(pBaseCommand);
 				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
