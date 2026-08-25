@@ -225,3 +225,23 @@ TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 	EXPECT_LT(Release, Wait);
 	EXPECT_LT(Wait, ErroneousCleanup);
 }
+
+TEST(MetalBackendContract, FrameSlotsKeepVertexBuffersAndOwnCrossCommandEncoders)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t ReleaseFrameSlot = Source.find("void ReleaseFrameSlotResources(size_t Slot)");
+	const size_t NextMethod = Source.find("\n\tvoid ", ReleaseFrameSlot + 1);
+	ASSERT_NE(ReleaseFrameSlot, std::string::npos);
+	ASSERT_NE(NextMethod, std::string::npos);
+	const std::string FrameSlotRelease = Source.substr(ReleaseFrameSlot, NextMethod - ReleaseFrameSlot);
+	EXPECT_NE(FrameSlotRelease.find("ReleaseMetalObject(Frame.m_CommandBuffer);"), std::string::npos);
+	EXPECT_NE(FrameSlotRelease.find("Frame.m_CommandBuffer = nil;"), std::string::npos);
+	EXPECT_EQ(FrameSlotRelease.find("ReleaseMetalObject(Frame.m_VertexBuffer);"), std::string::npos);
+
+	EXPECT_NE(Source.find("RetainMetalObject([m_CurrentCommandBuffer renderCommandEncoderWithDescriptor:pPass])"), std::string::npos);
+	EXPECT_NE(Source.find("RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder])"), std::string::npos);
+	EXPECT_NE(Source.find("RetainMetalObject([pLayer nextDrawable])"), std::string::npos);
+	EXPECT_NE(Source.find("ReleaseMetalObject(m_CurrentRenderEncoder);"), std::string::npos);
+	EXPECT_NE(Source.find("ReleaseMetalObject(m_CurrentBlitEncoder);"), std::string::npos);
+	EXPECT_NE(Source.find("ReleaseMetalObject(m_CurrentDrawable);"), std::string::npos);
+}

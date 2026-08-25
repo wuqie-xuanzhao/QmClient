@@ -7,13 +7,13 @@ struct SMetalVertex
 {
 	float2 m_Position [[attribute(0)]];
 	float2 m_TexCoord [[attribute(1)]];
-	uchar4 m_Color [[attribute(2)]];
+	float4 m_Color [[attribute(2)]];
 };
 
 struct SMetalTex3DVertex
 {
 	float2 m_Position [[attribute(0)]];
-	uchar4 m_Color [[attribute(1)]];
+	float4 m_Color [[attribute(1)]];
 	float3 m_TexCoord [[attribute(2)]];
 };
 
@@ -45,8 +45,14 @@ struct SMetalTilePlainVertex
 struct SMetalQuadVertex
 {
 	float4 m_PositionCenter [[attribute(0)]];
-	uchar4 m_Color [[attribute(1)]];
+	float4 m_Color [[attribute(1)]];
 	float2 m_TexCoord [[attribute(2)]];
+};
+
+struct SMetalQuadPlainVertex
+{
+	float4 m_PositionCenter [[attribute(0)]];
+	float4 m_Color [[attribute(1)]];
 };
 
 vertex SMetalVertexOut qmclient_vertex(SMetalVertex Vertex [[stage_in]], constant SMetalUniforms &Uniforms [[buffer(1)]])
@@ -105,7 +111,7 @@ vertex SMetalTex3DVertexOut qmclient_tex_array_vertex(SMetalTex3DVertex Vertex [
 
 fragment float4 qmclient_tex_array_fragment(SMetalTex3DVertexOut Input [[stage_in]], texture2d_array<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]])
 {
-	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color;
+	return Texture.sample(Sampler, Input.m_TexCoord.xy, uint(Input.m_TexCoord.z)) * Input.m_Color;
 }
 
 fragment float4 qmclient_text_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> TextTexture [[texture(0)]], texture2d<float> OutlineTexture [[texture(1)]], sampler Sampler [[sampler(0)]], constant SMetalTextUniforms &Uniforms [[buffer(1)]])
@@ -164,7 +170,7 @@ struct SMetalQuadVertexOut
 	float2 m_TexCoord;
 };
 
-SMetalQuadVertexOut QuadVertexImpl(SMetalQuadVertex Vertex, constant SMetalQuadUniforms &Uniforms, uint VertexId, bool Grouped)
+SMetalQuadVertexOut QuadVertexImpl(SMetalQuadVertex Vertex, device const SMetalQuadUniforms &Uniforms, uint VertexId, bool Grouped)
 {
 	SMetalQuadVertexOut Out;
 	uint QuadIndex = Grouped ? 0 : (VertexId / 4) - uint(Uniforms.m_QuadOffset);
@@ -184,14 +190,44 @@ SMetalQuadVertexOut QuadVertexImpl(SMetalQuadVertex Vertex, constant SMetalQuadU
 	return Out;
 }
 
-vertex SMetalQuadVertexOut qmclient_quad_vertex_grouped(SMetalQuadVertex Vertex [[stage_in]], constant SMetalQuadUniforms &Uniforms [[buffer(1)]], uint VertexId [[vertex_id]])
+vertex SMetalQuadVertexOut qmclient_quad_vertex_grouped(SMetalQuadVertex Vertex [[stage_in]], device const SMetalQuadUniforms &Uniforms [[buffer(1)]], uint VertexId [[vertex_id]])
 {
 	return QuadVertexImpl(Vertex, Uniforms, VertexId, true);
 }
 
-vertex SMetalQuadVertexOut qmclient_quad_vertex_ungrouped(SMetalQuadVertex Vertex [[stage_in]], constant SMetalQuadUniforms &Uniforms [[buffer(1)]], uint VertexId [[vertex_id]])
+vertex SMetalQuadVertexOut qmclient_quad_vertex_ungrouped(SMetalQuadVertex Vertex [[stage_in]], device const SMetalQuadUniforms &Uniforms [[buffer(1)]], uint VertexId [[vertex_id]])
 {
 	return QuadVertexImpl(Vertex, Uniforms, VertexId, false);
+}
+
+SMetalQuadVertexOut QuadPlainVertexImpl(SMetalQuadPlainVertex Vertex, device const SMetalQuadUniforms &Uniforms, uint VertexId, bool Grouped)
+{
+	SMetalQuadVertexOut Out;
+	uint QuadIndex = Grouped ? 0 : (VertexId / 4) - uint(Uniforms.m_QuadOffset);
+	float2 Position = Vertex.m_PositionCenter.xy;
+	const float Rotation = Uniforms.m_aOffsetsRotations[QuadIndex].z;
+	if(Rotation != 0.0)
+	{
+		const float2 Relative = Position - Vertex.m_PositionCenter.zw;
+		const float SinRotation = sin(Rotation);
+		const float CosRotation = cos(Rotation);
+		Position = float2(Relative.x * CosRotation - Relative.y * SinRotation, Relative.x * SinRotation + Relative.y * CosRotation) + Vertex.m_PositionCenter.zw;
+	}
+	Position += Uniforms.m_aOffsetsRotations[QuadIndex].xy;
+	Out.m_Position = Uniforms.m_MVP * float4(Position, 0.0, 1.0);
+	Out.m_Color = float4(Vertex.m_Color) * Uniforms.m_aColors[QuadIndex];
+	Out.m_TexCoord = float2(0.0);
+	return Out;
+}
+
+vertex SMetalQuadVertexOut qmclient_quad_plain_vertex_grouped(SMetalQuadPlainVertex Vertex [[stage_in]], device const SMetalQuadUniforms &Uniforms [[buffer(1)]], uint VertexId [[vertex_id]])
+{
+	return QuadPlainVertexImpl(Vertex, Uniforms, VertexId, true);
+}
+
+vertex SMetalQuadVertexOut qmclient_quad_plain_vertex_ungrouped(SMetalQuadPlainVertex Vertex [[stage_in]], device const SMetalQuadUniforms &Uniforms [[buffer(1)]], uint VertexId [[vertex_id]])
+{
+	return QuadPlainVertexImpl(Vertex, Uniforms, VertexId, false);
 }
 
 fragment float4 qmclient_quad_fragment(SMetalQuadVertexOut Input [[stage_in]])
@@ -232,7 +268,7 @@ fragment float4 qmclient_quad_container_ex_textured_fragment(SMetalVertexOut Inp
 	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color * Uniforms.m_VertexColor;
 }
 
-vertex SMetalVertexOut qmclient_sprite_multiple_vertex(SMetalVertex Vertex [[stage_in]], constant SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]], uint InstanceId [[instance_id]])
+vertex SMetalVertexOut qmclient_sprite_multiple_vertex(SMetalVertex Vertex [[stage_in]], device const SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]], uint InstanceId [[instance_id]])
 {
 	SMetalVertexOut Out;
 	const float4 RenderInfo = Uniforms.m_aRenderInfo[InstanceId];
@@ -253,12 +289,12 @@ vertex SMetalVertexOut qmclient_sprite_multiple_vertex(SMetalVertex Vertex [[sta
 	return Out;
 }
 
-fragment float4 qmclient_sprite_multiple_fragment(SMetalVertexOut Input [[stage_in]], constant SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]])
+fragment float4 qmclient_sprite_multiple_fragment(SMetalVertexOut Input [[stage_in]], device const SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]])
 {
 	return Input.m_Color * Uniforms.m_VertexColor;
 }
 
-fragment float4 qmclient_sprite_multiple_textured_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]])
+fragment float4 qmclient_sprite_multiple_textured_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], device const SMetalSpriteMultipleUniforms &Uniforms [[buffer(1)]])
 {
 	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color * Uniforms.m_VertexColor;
 }

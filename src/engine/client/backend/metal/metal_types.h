@@ -2,8 +2,8 @@
 #define ENGINE_CLIENT_BACKEND_METAL_METAL_TYPES_H
 
 #if defined(__METAL_VERSION__)
-using SMetalFloat4 = float4;
-using SMetalFloat4x4 = float4x4;
+using SMetalFloat4 = metal::float4;
+using SMetalFloat4x4 = metal::float4x4;
 #else
 #include <cstddef>
 #include <cstdint>
@@ -392,8 +392,16 @@ struct alignas(16) SMetalTextUniforms
 	SMetalFloat4 m_Params;
 };
 
+#if defined(__METAL_VERSION__)
+enum : uint
+{
+	METAL_MAX_QUADS = 256,
+	METAL_MAX_SPRITES = 256,
+};
+#else
 static constexpr size_t METAL_MAX_QUADS = 256;
 static constexpr size_t METAL_MAX_SPRITES = 256;
+#endif
 
 #if defined(__METAL_VERSION__)
 struct SMetalTileUniforms

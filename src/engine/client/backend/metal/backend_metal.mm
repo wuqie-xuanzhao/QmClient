@@ -278,8 +278,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(State == CMetalFrameState::ESlotState::IN_FLIGHT)
 			return;
 		ReleaseMetalObject(Frame.m_CommandBuffer);
-		ReleaseMetalObject(Frame.m_VertexBuffer);
-		Frame = {};
+		Frame.m_CommandBuffer = nil;
+		Frame.m_VertexOffset = 0;
+		Frame.m_FrameId = 0;
 	}
 
 	static void ReleasePipelineStates(TPipelineStates &Pipelines)
@@ -341,10 +342,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void ReleaseGpuObjects()
 	{
+		EndActiveEncoders();
 		DestroyAllRenderTargets();
 		DestroyMultiSampleTexture();
-		m_CurrentRenderEncoder = nil;
-		m_CurrentBlitEncoder = nil;
+		ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentDrawable = nil;
 		m_FrameState.ClearReadbackPresented();
 		m_BackbufferHasContents = false;
@@ -580,6 +581,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentRenderEncoder == nil)
 			return;
 		[m_CurrentRenderEncoder endEncoding];
+		ReleaseMetalObject(m_CurrentRenderEncoder);
 		m_CurrentRenderEncoder = nil;
 		m_RenderEncoderStarted = false;
 	}
@@ -662,7 +664,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			std::memset(Staging.contents, 0, DataBytes);
 		EndRenderEncoderForBlit();
 		if(m_CurrentBlitEncoder == nil)
-			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 		const bool Success = m_CurrentBlitEncoder != nil;
 		if(Success)
 			[m_CurrentBlitEncoder copyFromBuffer:Staging sourceOffset:0 toBuffer:Destination destinationOffset:DestinationOffset size:DataBytes];
@@ -752,7 +754,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		EndRenderEncoderForBlit();
 		if(m_CurrentBlitEncoder == nil)
-			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 		if(m_CurrentBlitEncoder == nil)
 			return false;
 		[m_CurrentBlitEncoder copyFromBuffer:ReadBuffer.m_Buffer sourceOffset:ReadOffset toBuffer:WriteBuffer.m_Buffer destinationOffset:WriteOffset size:CopyBytes];
@@ -788,6 +790,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 #if !OS_OBJECT_USE_OBJC
 		dispatch_release(Data);
 #endif
+		if(m_ShaderLibrary == nil && pError != nil)
+			dbg_msg("gfx/metal", "failed to load qmclient.metallib: %s", [[pError localizedDescription] UTF8String]);
 		return m_ShaderLibrary != nil;
 	}
 
@@ -849,6 +853,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				pPipeline.colorAttachments[0].destinationAlphaBlendFactor = MetalBlendFactor(BlendState.m_Destination);
 				NSError *pError = nil;
 				NewPipelineStates[Index + static_cast<size_t>(Blend)] = [m_Device newRenderPipelineStateWithDescriptor:pPipeline error:&pError];
+				if(NewPipelineStates[Index + static_cast<size_t>(Blend)] == nil && pError != nil)
+					dbg_msg("gfx/metal", "pipeline %zu blend %d failed: %s", Index, Blend, [[pError localizedDescription] UTF8String]);
 				Success = Success && NewPipelineStates[Index + static_cast<size_t>(Blend)] != nil;
 #if !__has_feature(objc_arc)
 				[pPipeline release];
@@ -898,6 +904,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLFunction> TileTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_textured_fragment"];
 		id<MTLFunction> QuadVertexGrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_vertex_grouped"];
 		id<MTLFunction> QuadVertexUngrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_vertex_ungrouped"];
+		id<MTLFunction> QuadPlainVertexGrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_plain_vertex_grouped"];
+		id<MTLFunction> QuadPlainVertexUngrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_plain_vertex_ungrouped"];
 		id<MTLFunction> QuadFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_fragment"];
 		id<MTLFunction> QuadTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_textured_fragment"];
 		id<MTLFunction> QuadContainerExVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_container_ex_vertex"];
@@ -906,7 +914,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLFunction> SpriteMultipleVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_vertex"];
 		id<MTLFunction> SpriteMultipleFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_fragment"];
 		id<MTLFunction> SpriteMultipleTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_textured_fragment"];
-		if(TileVertex == nil || TilePlainVertex == nil || TileFragment == nil || TileTexturedFragment == nil || QuadVertexGrouped == nil || QuadVertexUngrouped == nil || QuadFragment == nil || QuadTexturedFragment == nil || QuadContainerExVertex == nil || QuadContainerExFragment == nil || QuadContainerExTexturedFragment == nil || SpriteMultipleVertex == nil || SpriteMultipleFragment == nil || SpriteMultipleTexturedFragment == nil)
+		if(TileVertex == nil || TilePlainVertex == nil || TileFragment == nil || TileTexturedFragment == nil || QuadVertexGrouped == nil || QuadVertexUngrouped == nil || QuadPlainVertexGrouped == nil || QuadPlainVertexUngrouped == nil || QuadFragment == nil || QuadTexturedFragment == nil || QuadContainerExVertex == nil || QuadContainerExFragment == nil || QuadContainerExTexturedFragment == nil || SpriteMultipleVertex == nil || SpriteMultipleFragment == nil || SpriteMultipleTexturedFragment == nil)
 			Success = false;
 
 		MTLVertexDescriptor *pTileDescriptor = [[MTLVertexDescriptor alloc] init];
@@ -954,15 +962,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pQuadPlainDescriptor.attributes[1].bufferIndex = 0;
 		pQuadPlainDescriptor.layouts[0].stride = sizeof(float) * 4 + sizeof(uint8_t) * 4;
 		pQuadPlainDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
-		for(int Textured = 0; Textured <= 1; ++Textured)
-		{
-			MTLVertexDescriptor *pDescriptor = Textured ? pQuadDescriptor : pQuadPlainDescriptor;
-			id<MTLFunction> Fragment = Textured ? QuadTexturedFragment : QuadFragment;
-			if(QuadVertexGrouped != nil && Fragment != nil)
-				CreatePipeline(QuadPipelineIndex(Textured != 0, true, EMetalBlendMode::NONE), QuadVertexGrouped, Fragment, pDescriptor);
-			if(QuadVertexUngrouped != nil && Fragment != nil)
-				CreatePipeline(QuadPipelineIndex(Textured != 0, false, EMetalBlendMode::NONE), QuadVertexUngrouped, Fragment, pDescriptor);
-		}
+		if(QuadPlainVertexGrouped != nil && QuadFragment != nil)
+			CreatePipeline(QuadPipelineIndex(false, true, EMetalBlendMode::NONE), QuadPlainVertexGrouped, QuadFragment, pQuadPlainDescriptor);
+		if(QuadPlainVertexUngrouped != nil && QuadFragment != nil)
+			CreatePipeline(QuadPipelineIndex(false, false, EMetalBlendMode::NONE), QuadPlainVertexUngrouped, QuadFragment, pQuadPlainDescriptor);
+		if(QuadVertexGrouped != nil && QuadTexturedFragment != nil)
+			CreatePipeline(QuadPipelineIndex(true, true, EMetalBlendMode::NONE), QuadVertexGrouped, QuadTexturedFragment, pQuadDescriptor);
+		if(QuadVertexUngrouped != nil && QuadTexturedFragment != nil)
+			CreatePipeline(QuadPipelineIndex(true, false, EMetalBlendMode::NONE), QuadVertexUngrouped, QuadTexturedFragment, pQuadDescriptor);
 		if(QuadContainerExVertex != nil && QuadContainerExFragment != nil)
 			CreatePipeline(QuadContainerExPipelineIndex(false, EMetalBlendMode::NONE), QuadContainerExVertex, QuadContainerExFragment, pVertexDescriptor);
 		if(QuadContainerExVertex != nil && QuadContainerExTexturedFragment != nil)
@@ -990,6 +997,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[TileTexturedFragment release];
 		[QuadVertexGrouped release];
 		[QuadVertexUngrouped release];
+		[QuadPlainVertexGrouped release];
+		[QuadPlainVertexUngrouped release];
 		[QuadFragment release];
 		[QuadTexturedFragment release];
 		[QuadContainerExVertex release];
@@ -1076,12 +1085,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			vIndices.push_back(Base + 2);
 			vIndices.push_back(Base + 3);
 		}
-		m_QuadIndexBuffer = [m_Device newBufferWithBytes:vIndices.data() length:vIndices.size() * sizeof(uint16_t) options:MTLResourceStorageModePrivate];
-		if(m_QuadIndexBuffer == nil)
+		const size_t IndexBytes = vIndices.size() * sizeof(uint16_t);
+		m_QuadIndexBuffer = [m_Device newBufferWithLength:IndexBytes options:MTLResourceStorageModeShared];
+		if(m_QuadIndexBuffer == nil || m_QuadIndexBuffer.contents == nullptr)
 			return false;
+		mem_copy(m_QuadIndexBuffer.contents, vIndices.data(), IndexBytes);
 
 		m_StreamMemoryBytes = gs_FrameSlotCount * gs_StreamBufferSize;
-		m_BufferMemoryBytes = vIndices.size() * sizeof(uint16_t);
+		m_BufferMemoryBytes = IndexBytes;
 		AddStreamMemory(m_StreamMemoryBytes);
 		AddBufferMemory(m_BufferMemoryBytes);
 		return true;
@@ -1494,12 +1505,26 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 		m_CommandQueue = [m_Device newCommandQueue];
 		m_MultiSamplingCount = SupportedMultiSamplingCount(static_cast<uint32_t>(std::max(g_Config.m_GfxFsaaSamples, 0)));
-		if(m_CommandQueue == nil || !LoadShaderLibrary(pCommand) || !CreateSamplerStates() || !CreatePipelineStates(1, m_aPipelineStates) || !CreateGaussianBlurPipeline() ||
-			(m_MultiSamplingCount > 0 && !CreatePipelineStates(m_MultiSamplingCount, m_aMultiSamplePipelineStates)) || !CreateFrameResources())
+		const char *pFailedStage = nullptr;
+		if(m_CommandQueue == nil)
+			pFailedStage = "command queue";
+		else if(!LoadShaderLibrary(pCommand))
+			pFailedStage = "shader library";
+		else if(!CreateSamplerStates())
+			pFailedStage = "sampler states";
+		else if(!CreatePipelineStates(1, m_aPipelineStates))
+			pFailedStage = "single-sample pipelines";
+		else if(!CreateGaussianBlurPipeline())
+			pFailedStage = "Gaussian blur pipeline";
+		else if(m_MultiSamplingCount > 0 && !CreatePipelineStates(m_MultiSamplingCount, m_aMultiSamplePipelineStates))
+			pFailedStage = "MSAA pipelines";
+		else if(!CreateFrameResources())
+			pFailedStage = "frame resources";
+		if(pFailedStage != nullptr)
 		{
 			ReleaseGpuObjects();
 			if(pCommand->m_pErrStringPtr != nullptr)
-				*pCommand->m_pErrStringPtr = "Metal queue, shader, pipeline, or frame resource creation failed";
+				*pCommand->m_pErrStringPtr = pFailedStage;
 			return;
 		}
 
@@ -1602,7 +1627,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentDrawable == nil)
 		{
 			CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
-			m_CurrentDrawable = [pLayer nextDrawable];
+			m_CurrentDrawable = RetainMetalObject([pLayer nextDrawable]);
 		}
 		if(m_CurrentDrawable == nil)
 			return false;
@@ -1622,6 +1647,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentBlitEncoder != nil)
 		{
 			[m_CurrentBlitEncoder endEncoding];
+			ReleaseMetalObject(m_CurrentBlitEncoder);
 			m_CurrentBlitEncoder = nil;
 		}
 		MTLRenderPassDescriptor *pPass = [MTLRenderPassDescriptor renderPassDescriptor];
@@ -1630,7 +1656,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pPass.colorAttachments[0].storeAction = ResolveTexture != nil ? MTLStoreActionStoreAndMultisampleResolve : MTLStoreActionStore;
 		pPass.colorAttachments[0].resolveTexture = ResolveTexture;
 		pPass.colorAttachments[0].clearColor = ClearColor;
-		m_CurrentRenderEncoder = [m_CurrentCommandBuffer renderCommandEncoderWithDescriptor:pPass];
+		m_CurrentRenderEncoder = RetainMetalObject([m_CurrentCommandBuffer renderCommandEncoderWithDescriptor:pPass]);
 		if(m_CurrentRenderEncoder == nil)
 			return false;
 		m_CurrentRenderEncoder.label = @"QmClient Metal frame";
@@ -1660,11 +1686,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentRenderEncoder != nil)
 		{
 			[m_CurrentRenderEncoder endEncoding];
+			ReleaseMetalObject(m_CurrentRenderEncoder);
 			m_CurrentRenderEncoder = nil;
 			m_RenderEncoderStarted = false;
 		}
 		if(m_CurrentBlitEncoder == nil)
-			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 		if(m_CurrentBlitEncoder == nil)
 		{
 			ReleaseMetalObject(Staging);
@@ -1709,11 +1736,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentRenderEncoder != nil)
 		{
 			[m_CurrentRenderEncoder endEncoding];
+			ReleaseMetalObject(m_CurrentRenderEncoder);
 			m_CurrentRenderEncoder = nil;
 			m_RenderEncoderStarted = false;
 		}
 		if(m_CurrentBlitEncoder == nil)
-			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 		if(m_CurrentBlitEncoder == nil)
 		{
 			ReleaseMetalObject(Staging);
@@ -2519,12 +2547,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentRenderEncoder != nil)
 		{
 			[m_CurrentRenderEncoder endEncoding];
+			ReleaseMetalObject(m_CurrentRenderEncoder);
 			m_CurrentRenderEncoder = nil;
 			m_RenderEncoderStarted = false;
 		}
 		if(m_CurrentBlitEncoder != nil)
 		{
 			[m_CurrentBlitEncoder endEncoding];
+			ReleaseMetalObject(m_CurrentBlitEncoder);
 			m_CurrentBlitEncoder = nil;
 		}
 	}
@@ -2572,7 +2602,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes * Height options:MTLResourceStorageModeShared];
 		if(Readback == nil)
 			return nil;
-		m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+		m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 		if(m_CurrentBlitEncoder == nil)
 		{
 			ReleaseMetalObject(Readback);
@@ -2704,7 +2734,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes options:MTLResourceStorageModeShared];
 			if(Readback == nil)
 				return;
-			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 			if(m_CurrentBlitEncoder == nil)
 			{
 				ReleaseMetalObject(Readback);
@@ -2805,13 +2835,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		ReleaseFrameSlotResources(Slot);
 		if(!m_FrameState.BeginFrame(Slot))
 			return;
+		EndActiveEncoders();
+		ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentFrameSlot = Slot;
 		Frame.m_CommandBuffer = RetainMetalObject([m_CommandQueue commandBuffer]);
 		m_CurrentCommandBuffer = Frame.m_CommandBuffer;
 		m_CommandBufferCommitted = false;
 		m_RenderEncoderStarted = false;
-		m_CurrentRenderEncoder = nil;
-		m_CurrentBlitEncoder = nil;
 		m_CurrentDrawable = nil;
 		m_BackbufferHasContents = false;
 		m_RenderTargetState.Reset();
@@ -2862,6 +2892,9 @@ public:
 				m_LastCommandId.store(pBaseCommand->m_Cmd, std::memory_order_relaxed);
 			switch(pBaseCommand->m_Cmd)
 			{
+			case CCommandProcessorFragment_SDL::CMD_INIT:
+			case CCommandProcessorFragment_SDL::CMD_SHUTDOWN:
+				return RUN_COMMAND_COMMAND_UNHANDLED;
 			case CCommandProcessorFragment_GLBase::CMD_PRE_INIT:
 				Cmd_PreInit(static_cast<const SCommand_PreInit *>(pBaseCommand));
 				return RUN_COMMAND_COMMAND_HANDLED;

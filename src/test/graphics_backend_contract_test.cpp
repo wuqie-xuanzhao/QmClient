@@ -38,7 +38,7 @@ TEST(GraphicsBackendContract, MetalIsSelectableOnlyWhenCompiledForMacos)
 	EXPECT_TRUE(graphics_backend::IsKnownBackendName("Metal"));
 	EXPECT_TRUE(graphics_backend::IsKnownBackendName("OpenGL ES"));
 	EXPECT_FALSE(graphics_backend::IsKnownBackendName("custom"));
-	EXPECT_TRUE(graphics_backend::IsKnownUnavailableBackendName("Metal"));
+	EXPECT_EQ(graphics_backend::IsKnownUnavailableBackendName("Metal"), !graphics_backend::IsMetalCompiled());
 	EXPECT_FALSE(graphics_backend::IsKnownUnavailableBackendName("OpenGL"));
 	EXPECT_FALSE(graphics_backend::IsKnownUnavailableBackendName("custom"));
 	EXPECT_FALSE(graphics_backend::IsBackendSelectable(BACKEND_TYPE_AUTO));
@@ -77,6 +77,16 @@ TEST(GraphicsBackendContract, MetalFactoryRejectsUnimplementedCommandsWithoutSti
 	ASSERT_NE(pMetal, nullptr);
 
 	CCommandProcessorFragment_GLBase::SCommand_PreInit PreInit;
+	PreInit.m_pWindow = nullptr;
+	PreInit.m_Width = 0;
+	PreInit.m_Height = 0;
+	PreInit.m_pVendorString = nullptr;
+	PreInit.m_pVersionString = nullptr;
+	PreInit.m_pRendererString = nullptr;
+	PreInit.m_pGpuList = nullptr;
+	PreInit.m_VSync = true;
+	PreInit.m_pInitError = nullptr;
+	PreInit.m_pErrStringPtr = nullptr;
 	EXPECT_EQ(pMetal->RunCommand(&PreInit), RUN_COMMAND_COMMAND_HANDLED);
 
 	CCommandBuffer::SCommand_Render Render;
@@ -84,8 +94,11 @@ TEST(GraphicsBackendContract, MetalFactoryRejectsUnimplementedCommandsWithoutSti
 	const SGfxErrorContainer &RenderError = pMetal->GetError();
 	ASSERT_EQ(RenderError.m_ErrorType, GFX_ERROR_TYPE_RENDER_CMD_FAILED);
 	ASSERT_EQ(RenderError.m_vErrors.size(), 1U);
-	EXPECT_NE(RenderError.m_vErrors[0].m_Err.find("backend_state=pre_initialized"), std::string::npos);
+	EXPECT_NE(RenderError.m_vErrors[0].m_Err.find("backend_state=uninitialized"), std::string::npos);
 	EXPECT_NE(RenderError.m_vErrors[0].m_Err.find("frame_id=0"), std::string::npos);
+
+	CCommandProcessorFragment_SDL::SCommand_Init SdlInit;
+	EXPECT_EQ(pMetal->RunCommand(&SdlInit), RUN_COMMAND_COMMAND_UNHANDLED);
 
 	delete pMetal;
 	pMetal = CreateMetalCommandProcessorFragment();
@@ -93,8 +106,29 @@ TEST(GraphicsBackendContract, MetalFactoryRejectsUnimplementedCommandsWithoutSti
 	int InitError = 0;
 	const char *pErrorString = nullptr;
 	CCommandProcessorFragment_GLBase::SCommand_Init Init;
+	Init.m_pWindow = nullptr;
+	Init.m_Width = 0;
+	Init.m_Height = 0;
+	Init.m_pStorage = nullptr;
+	Init.m_pTextureMemoryUsage = nullptr;
+	Init.m_pBufferMemoryUsage = nullptr;
+	Init.m_pStreamMemoryUsage = nullptr;
+	Init.m_pStagingMemoryUsage = nullptr;
+	Init.m_pGpuList = nullptr;
+	Init.m_pReadPresentedImageDataFunc = nullptr;
+	Init.m_pCapabilities = nullptr;
 	Init.m_pInitError = &InitError;
 	Init.m_pErrStringPtr = &pErrorString;
+	Init.m_pVendorString = nullptr;
+	Init.m_pVersionString = nullptr;
+	Init.m_pRendererString = nullptr;
+	Init.m_RequestedMajor = 0;
+	Init.m_RequestedMinor = 0;
+	Init.m_RequestedPatch = 0;
+	Init.m_RequestedBackend = BACKEND_TYPE_METAL;
+	Init.m_GlewMajor = 0;
+	Init.m_GlewMinor = 0;
+	Init.m_GlewPatch = 0;
 	EXPECT_EQ(pMetal->RunCommand(&Init), RUN_COMMAND_COMMAND_HANDLED);
 	EXPECT_EQ(InitError, -1);
 	ASSERT_NE(pErrorString, nullptr);

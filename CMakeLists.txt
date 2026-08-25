@@ -3994,7 +3994,10 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
 
   if(METAL)
-    list(APPEND TESTS_EXTRA src/engine/client/backend/metal/backend_metal.mm)
+    list(APPEND TESTS_EXTRA
+      src/engine/client/backend/backend_base.cpp
+      src/engine/client/backend/metal/backend_metal.mm
+    )
   endif()
 
   set(TARGET_TESTRUNNER testrunner)
@@ -4021,7 +4024,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   if(METAL)
     target_compile_definitions(${TARGET_TESTRUNNER} PRIVATE CONF_BACKEND_METAL CONF_BACKEND_METAL_READY)
-    target_link_libraries(${TARGET_TESTRUNNER} "-framework Metal" "-framework QuartzCore")
+    target_link_libraries(${TARGET_TESTRUNNER} ${SDL2_LIBRARIES} "-framework Metal" "-framework QuartzCore")
   endif()
   if(MSVC)
     target_compile_options(${TARGET_TESTRUNNER} PRIVATE /bigobj)

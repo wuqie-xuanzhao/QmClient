@@ -542,7 +542,9 @@ src/test/metal_types_test.cpp
 - 读回在 offscreen 场景完成无 present 的 command buffer；已有 drawable 时在同一 command buffer 中复制 drawable、唯一 present，并让随后的 screenshot/read-pixel/swap 消费同一帧，避免空白二次 present。BGRA 到 RGBA 转换保留 alpha。
 - 已呈现读回的单次消费标记由 `CMetalFrameState` 持有，并以 mutex 保护；新 backbuffer encoder 清除旧标记，slot drain 不会误消费它。纯 C++ 测试覆盖单次消费、清除和 drain 语义。
 - 验证：`MetalBackendContract.*:MetalFrameState.*:MetalRenderTargetState.*:MetalTypes.*` 42/42；`xcrun clang++ -fsyntax-only -x objective-c++ ... backend_metal.mm` 通过；`python3 qmclient_scripts/gate/check_gate.py --mode default` 为 13/0/0、C++ 全量与 Rust 全量通过。
-- 阶段门仍保留真机缺口：截至 2026-08-25，当前 developer directory 为 `/Library/Developer/CommandLineTools`，未安装可用的 Xcode app；`xcodebuild`、`xcrun metal` 和 `xcrun metallib` 都不可用，现有构建也为 `METAL=OFF`。因此无法完成 MSL 编译、Metal API validation、固定场景、resize/FSAA 切换和连续 screenshot/read-pixel 的真实 GPU 验证。P3 不能标记为阶段验收完成，P4 不得启动。
+- 2026-08-25 真机补充：已安装可用的 Xcode Metal toolchain，并以独立 `cmake-build-metal-release` 完成 `METAL=ON` 配置、MSL/metallib、`game-client` 与 `testrunner` 构建。Apple M2 上显式选择 `gfx_backend Metal` 后创建 `Metal 4.1` context，无 OpenGL fallback；修复了 plain quad pipeline 的缺失 texcoord attribute、frame resource 索引 buffer 初始化、跨 `RunCommand` 的 encoder/drawable 所有权，以及 frame slot 轮转误释放长期 vertex buffer。
+- Metal API validation 已通过 `MTL_DEBUG_LAYER=1` 启用。启动参数 `gfx_fsaa_samples 4` 的性能日志记录 `backend=Metal native`、`renderer=Apple M2`、`fsaa=4`，并在多个 120 帧窗口记录 `frame_serialization_wait_count=0`。受控启动稳定运行至终止前，无新增 DDNet crash report、pipeline error、validation error 或 fallback。
+- 验证：Metal 配置 `GraphicsBackendContract.*:MetalBackendContract.*` 为 23/23；Metal 配置 `run_cxx_tests` 为 2832/2832；`python3 qmclient_scripts/gate/check_gate.py --mode quick` 通过。当前仍未完成可交互的 screenshot/read-pixel/video/capture、render-target blur 固定场景、fullscreen/HiDPI 与反复 resize 矩阵；自动 resize 被 macOS 辅助访问权限拒绝，未修改系统权限或用户配置。P3 不能标记为阶段验收完成，P4 不得启动。
 
 # 7. P4：Qm 专用 shader
 
