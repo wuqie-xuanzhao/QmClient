@@ -1,11 +1,22 @@
 #include "backend_metal.h"
 
+#include <base/log.h>
+#include <base/str.h>
+
+#include <engine/shared/config.h>
+
 #include <SDL_metal.h>
+
+#define pi qmclient_carbon_pi
+#import <Metal/Metal.h>
+#import <QuartzCore/CAMetalLayer.h>
+#undef pi
 
 #include <string>
 
 namespace
 {
+constexpr size_t gs_MetalGpuInfoStringSize = 256;
 enum class EMetalBackendState
 {
 	UNINITIALIZED,
@@ -32,6 +43,95 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	uint64_t m_FrameId = 0;
 	SDL_MetalView m_MetalView = nullptr;
 	void *m_pLayer = nullptr;
+	id<MTLDevice> m_Device = nil;
+	char *m_pVendorString = nullptr;
+	char *m_pVersionString = nullptr;
+	char *m_pRendererString = nullptr;
+	TTwGraphicsGpuList *m_pGpuList = nullptr;
+
+	void SetDevice(id<MTLDevice> Device)
+	{
+#if !__has_feature(objc_arc)
+		[m_Device release];
+		m_Device = [Device retain];
+#else
+		m_Device = Device;
+#endif
+	}
+
+	void ReleaseDevice()
+	{
+#if !__has_feature(objc_arc)
+		[m_Device release];
+#endif
+		m_Device = nil;
+	}
+
+	static STWGraphicGpu::ETWGraphicsGpuType DeviceType(id<MTLDevice> Device)
+	{
+		if(str_startswith(Device.name.UTF8String, "Apple"))
+			return STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INTEGRATED;
+		return Device.lowPower ? STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INTEGRATED : STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_DISCRETE;
+	}
+
+	void SelectDevice(const char *pConfiguredGpuName)
+	{
+		NSArray<id<MTLDevice>> *pDevices = MTLCopyAllDevices();
+		id<MTLDevice> pDefaultDevice = MTLCreateSystemDefaultDevice();
+		id<MTLDevice> pSelectedDevice = pDefaultDevice;
+		const bool IsAuto = pConfiguredGpuName == nullptr || str_comp(pConfiguredGpuName, "auto") == 0;
+		bool ExplicitMatch = false;
+
+		if(m_pGpuList != nullptr)
+		{
+			m_pGpuList->m_vGpus.clear();
+			m_pGpuList->m_AutoGpu = {};
+			for(id<MTLDevice> pDevice in pDevices)
+			{
+				STWGraphicGpu::STWGraphicGpuItem Gpu = {};
+				str_copy(Gpu.m_aName, pDevice.name.UTF8String);
+				Gpu.m_GpuType = DeviceType(pDevice);
+				m_pGpuList->m_vGpus.push_back(Gpu);
+				if(pDefaultDevice == pDevice)
+					m_pGpuList->m_AutoGpu = Gpu;
+				if(!IsAuto && str_comp(pDevice.name.UTF8String, pConfiguredGpuName) == 0)
+				{
+					pSelectedDevice = pDevice;
+					ExplicitMatch = true;
+				}
+			}
+		}
+
+		if(!IsAuto && !ExplicitMatch)
+			log_warn("gfx/metal", "Configured GPU '%s' was not found; using the system default Metal device.", pConfiguredGpuName);
+
+		SetDevice(pSelectedDevice);
+		if(m_Device == nil)
+		{
+			if(m_pVendorString != nullptr)
+				str_copy(m_pVendorString, "Metal", gs_MetalGpuInfoStringSize);
+			if(m_pVersionString != nullptr)
+				str_copy(m_pVersionString, "Metal native", gs_MetalGpuInfoStringSize);
+			if(m_pRendererString != nullptr)
+				str_copy(m_pRendererString, "No Metal device", gs_MetalGpuInfoStringSize);
+		}
+		else
+		{
+			if(m_pVendorString != nullptr)
+				str_copy(m_pVendorString, str_startswith(m_Device.name.UTF8String, "Apple") ? "Apple" : "Metal", gs_MetalGpuInfoStringSize);
+			if(m_pVersionString != nullptr)
+				str_copy(m_pVersionString, "Metal native", gs_MetalGpuInfoStringSize);
+			if(m_pRendererString != nullptr)
+				str_copy(m_pRendererString, m_Device.name.UTF8String, gs_MetalGpuInfoStringSize);
+			CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
+			pLayer.device = m_Device;
+		}
+
+#if !__has_feature(objc_arc)
+		[pDevices release];
+		[pDefaultDevice release];
+#endif
+	}
 
 	bool GetPresentedImageData(uint32_t &, uint32_t &, CImageInfo::EImageFormat &, std::vector<uint8_t> &) override
 	{
@@ -51,6 +151,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void Cmd_PreInit(const SCommand_PreInit *pCommand)
 	{
 		m_State = EMetalBackendState::UNINITIALIZED;
+		m_pVendorString = pCommand->m_pVendorString;
+		m_pVersionString = pCommand->m_pVersionString;
+		m_pRendererString = pCommand->m_pRendererString;
+		m_pGpuList = pCommand->m_pGpuList;
 		if(m_MetalView != nullptr)
 		{
 			SDL_Metal_DestroyView(m_MetalView);
@@ -80,6 +184,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				*pCommand->m_pErrStringPtr = "SDL could not create the Metal view or layer";
 			return;
 		}
+		SelectDevice(g_Config.m_GfxGpuName);
+		if(m_Device == nil)
+		{
+			if(pCommand->m_pInitError != nullptr)
+				*pCommand->m_pInitError = -1;
+			if(pCommand->m_pErrStringPtr != nullptr)
+				*pCommand->m_pErrStringPtr = "No Metal device is available";
+			return;
+		}
 		m_State = EMetalBackendState::PRE_INITIALIZED;
 	}
 
@@ -104,10 +217,18 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			SDL_Metal_DestroyView(m_MetalView);
 		m_MetalView = nullptr;
 		m_pLayer = nullptr;
+		ReleaseDevice();
 		m_State = EMetalBackendState::UNINITIALIZED;
 	}
 
 public:
+	~CCommandProcessorFragment_Metal() override
+	{
+		if(m_MetalView != nullptr)
+			SDL_Metal_DestroyView(m_MetalView);
+		ReleaseDevice();
+	}
+
 	ERunCommandReturnTypes RunCommand(const CCommandBuffer::SCommand *pBaseCommand) override
 	{
 		@autoreleasepool
