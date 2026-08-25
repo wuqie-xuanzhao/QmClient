@@ -146,7 +146,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	SBackendCapabilities *m_pCapabilities = nullptr;
 	IStorage *m_pStorage = nullptr;
 	bool m_CommandBufferCommitted = false;
-	bool m_ReadbackPresented = false;
 	bool m_RenderEncoderStarted = false;
 	bool m_BackbufferHasContents = false;
 	uint32_t m_MultiSamplingCount = 0;
@@ -347,7 +346,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CurrentRenderEncoder = nil;
 		m_CurrentBlitEncoder = nil;
 		m_CurrentDrawable = nil;
-		m_ReadbackPresented = false;
+		m_FrameState.ClearReadbackPresented();
 		m_BackbufferHasContents = false;
 		m_RenderTargetState.Reset();
 		ReleaseMetalObject(m_LastPresentedReadback);
@@ -1640,7 +1639,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(Backbuffer)
 		{
 			m_BackbufferHasContents = true;
-			m_ReadbackPresented = false;
+			m_FrameState.ClearReadbackPresented();
 		}
 		return true;
 	}
@@ -2433,7 +2432,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			StoreLastPresentedReadback(PresentedReadback, m_DrawableWidth, m_DrawableHeight, PresentedRowBytes);
 			ReleaseMetalObject(m_LastPresentedCommandBuffer);
 			m_LastPresentedCommandBuffer = RetainMetalObject(m_CurrentCommandBuffer);
-			m_ReadbackPresented = true;
+			m_FrameState.MarkReadbackPresented();
 			ReleaseMetalObject(PresentedReadback);
 		}
 		size_t PixelCount = 0;
@@ -2627,10 +2626,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		size_t RowBytes = 0;
 		uint32_t Width = m_DrawableWidth;
 		uint32_t Height = m_DrawableHeight;
-		if(!*pCommand->m_pSwapped && m_ReadbackPresented)
+		if(!*pCommand->m_pSwapped && m_FrameState.ConsumeReadbackPresented())
 		{
 			*pCommand->m_pSwapped = true;
-			m_ReadbackPresented = false;
 		}
 		if(!*pCommand->m_pSwapped)
 		{
@@ -2689,10 +2687,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(pCommand->m_pColor == nullptr || pCommand->m_pSwapped == nullptr)
 			return;
 		*pCommand->m_pColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-		if(!*pCommand->m_pSwapped && m_ReadbackPresented)
+		if(!*pCommand->m_pSwapped && m_FrameState.ConsumeReadbackPresented())
 		{
 			*pCommand->m_pSwapped = true;
-			m_ReadbackPresented = false;
 		}
 		if(!*pCommand->m_pSwapped)
 		{
@@ -2734,11 +2731,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
 	{
 		(void)pCommand;
-		if(m_ReadbackPresented)
-		{
-			m_ReadbackPresented = false;
+		if(m_FrameState.ConsumeReadbackPresented())
 			return;
-		}
 		if(m_CurrentDrawable != nil && m_DrawableWidth > 0 && m_DrawableHeight > 0)
 		{
 			size_t RowBytes = 0;

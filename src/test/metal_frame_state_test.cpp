@@ -35,6 +35,35 @@ TEST(MetalFrameState, ReadbackFinalizesWithoutReplacingPresentedCapture)
 	EXPECT_FALSE(State.FinalizeFrameWithoutPresent());
 }
 
+TEST(MetalFrameState, PresentedReadbackIsConsumedOnlyOnce)
+{
+	CMetalFrameState State;
+	EXPECT_FALSE(State.ReadbackPresented());
+	EXPECT_FALSE(State.ConsumeReadbackPresented());
+
+	State.MarkReadbackPresented();
+	EXPECT_TRUE(State.ReadbackPresented());
+	EXPECT_TRUE(State.ConsumeReadbackPresented());
+	EXPECT_FALSE(State.ReadbackPresented());
+	EXPECT_FALSE(State.ConsumeReadbackPresented());
+}
+
+TEST(MetalFrameState, NewBackbufferRenderingInvalidatesPresentedReadback)
+{
+	CMetalFrameState State;
+	State.MarkReadbackPresented();
+	State.ClearReadbackPresented();
+	EXPECT_FALSE(State.ReadbackPresented());
+}
+
+TEST(MetalFrameState, DrainingFramesDoesNotConsumePresentedReadback)
+{
+	CMetalFrameState State;
+	State.MarkReadbackPresented();
+	EXPECT_EQ(State.DrainFrames(), 0U);
+	EXPECT_TRUE(State.ReadbackPresented());
+}
+
 TEST(MetalFrameState, ScreenshotAndReadPixelSharePresentedFrame)
 {
 	CMetalFrameState State;

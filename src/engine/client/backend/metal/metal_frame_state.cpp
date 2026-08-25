@@ -60,6 +60,27 @@ bool CMetalFrameState::FinalizeFrameWithoutPresent()
 	return true;
 }
 
+void CMetalFrameState::MarkReadbackPresented()
+{
+	std::lock_guard<std::mutex> Lock(m_Mutex);
+	m_ReadbackPresented = true;
+}
+
+bool CMetalFrameState::ConsumeReadbackPresented()
+{
+	std::lock_guard<std::mutex> Lock(m_Mutex);
+	if(!m_ReadbackPresented)
+		return false;
+	m_ReadbackPresented = false;
+	return true;
+}
+
+void CMetalFrameState::ClearReadbackPresented()
+{
+	std::lock_guard<std::mutex> Lock(m_Mutex);
+	m_ReadbackPresented = false;
+}
+
 bool CMetalFrameState::CompleteFrame(const SFrameCapture &Capture, bool Success)
 {
 	std::lock_guard<std::mutex> Lock(m_Mutex);
@@ -133,6 +154,12 @@ bool CMetalFrameState::CaptureRetained() const
 {
 	std::lock_guard<std::mutex> Lock(m_Mutex);
 	return m_CaptureRetained;
+}
+
+bool CMetalFrameState::ReadbackPresented() const
+{
+	std::lock_guard<std::mutex> Lock(m_Mutex);
+	return m_ReadbackPresented;
 }
 
 CMetalFrameState::ESlotState CMetalFrameState::SlotState(size_t Slot) const

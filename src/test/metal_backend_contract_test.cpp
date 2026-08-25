@@ -146,8 +146,8 @@ TEST(MetalBackendContract, RenderTargetReadbackCopiesBgraToRgbaBeforeSignaling)
 	EXPECT_NE(Source.find("CopyBgraToRgba"), std::string::npos);
 	EXPECT_NE(Source.find("id<MTLBuffer> PresentedReadback = nil;"), std::string::npos);
 	EXPECT_NE(Source.find("const bool FrameCompleted = HasDrawable ? CommitCurrentFrame(true, true) : CommitCurrentFrameForReadback();"), std::string::npos);
-	EXPECT_NE(Source.find("m_ReadbackPresented = true;"), std::string::npos);
-	EXPECT_NE(Source.find("if(!*pCommand->m_pSwapped && m_ReadbackPresented)"), std::string::npos);
+	EXPECT_NE(Source.find("m_FrameState.MarkReadbackPresented();"), std::string::npos);
+	EXPECT_NE(Source.find("m_FrameState.ConsumeReadbackPresented()"), std::string::npos);
 	EXPECT_NE(Source.find("pDst[Pixel * 4 + 3] = pSrc[Pixel * 4 + 3];"), std::string::npos);
 	EXPECT_NE(Source.find("CMD_RENDER_TARGET_READBACK"), std::string::npos);
 }

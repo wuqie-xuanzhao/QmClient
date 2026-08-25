@@ -35,6 +35,9 @@ public:
 	bool BeginFrame(size_t Slot);
 	EFinalizeResult FinalizeFrameForPresent(bool DrawableAvailable);
 	bool FinalizeFrameWithoutPresent();
+	void MarkReadbackPresented();
+	bool ConsumeReadbackPresented();
+	void ClearReadbackPresented();
 	bool CompleteFrame(const SFrameCapture &Capture, bool Success);
 	size_t DrainFrames();
 	bool ReadLastPresentedFrame(SFrameCapture &Capture) const;
@@ -44,6 +47,7 @@ public:
 	bool CurrentFrameFailed() const;
 	bool CurrentFrameFinalized() const;
 	bool CaptureRetained() const;
+	bool ReadbackPresented() const;
 	ESlotState SlotState(size_t Slot) const;
 
 private:
@@ -56,6 +60,7 @@ private:
 	bool m_CurrentFrameFinalized = false;
 	bool m_CurrentFrameFailed = false;
 	bool m_CaptureRetained = false;
+	bool m_ReadbackPresented = false;
 	struct SSlot
 	{
 		uint64_t m_FrameId = 0;
