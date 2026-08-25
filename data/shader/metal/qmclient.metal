@@ -10,10 +10,24 @@ struct SMetalVertex
 	uchar4 m_Color [[attribute(2)]];
 };
 
+struct SMetalTex3DVertex
+{
+	float2 m_Position [[attribute(0)]];
+	uchar4 m_Color [[attribute(1)]];
+	float3 m_TexCoord [[attribute(2)]];
+};
+
 struct SMetalVertexOut
 {
 	float4 m_Position [[position]];
 	float2 m_TexCoord;
+	float4 m_Color;
+};
+
+struct SMetalTex3DVertexOut
+{
+	float4 m_Position [[position]];
+	float3 m_TexCoord;
 	float4 m_Color;
 };
 
@@ -50,6 +64,20 @@ fragment float4 qmclient_fragment(SMetalVertexOut Input [[stage_in]])
 }
 
 fragment float4 qmclient_textured_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]])
+{
+	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color;
+}
+
+vertex SMetalTex3DVertexOut qmclient_tex_array_vertex(SMetalTex3DVertex Vertex [[stage_in]], constant SMetalUniforms &Uniforms [[buffer(1)]])
+{
+	SMetalTex3DVertexOut Out;
+	Out.m_Position = Uniforms.m_MVP * float4(Vertex.m_Position, 0.0, 1.0);
+	Out.m_TexCoord = Vertex.m_TexCoord;
+	Out.m_Color = float4(Vertex.m_Color) * Uniforms.m_Color;
+	return Out;
+}
+
+fragment float4 qmclient_tex_array_fragment(SMetalTex3DVertexOut Input [[stage_in]], texture2d_array<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]])
 {
 	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color;
 }

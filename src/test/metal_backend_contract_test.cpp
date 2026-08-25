@@ -84,6 +84,24 @@ TEST(MetalBackendContract, BufferedTextAndQuadContainerCommandsUseValidatedResou
 	EXPECT_NE(Shader.find("Uniforms.m_aRenderInfo[InstanceId]"), std::string::npos);
 }
 
+TEST(MetalBackendContract, TextureArrayPathConvertsAtlasAndSamplesArrayLayers)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("m_TextureArray"), std::string::npos);
+	EXPECT_NE(Source.find("MetalTextureArrayLayout"), std::string::npos);
+	EXPECT_NE(Source.find("Texture2DTo3D"), std::string::npos);
+	EXPECT_NE(Source.find("UploadTextureArray"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TEX3D"), std::string::npos);
+	EXPECT_NE(Source.find("TextureArrayPipelineIndex"), std::string::npos);
+	EXPECT_NE(Source.find("m_2DArrayTextures = true"), std::string::npos);
+	EXPECT_EQ(Source.find("m_3DTextures = true"), std::string::npos);
+
+	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
+	EXPECT_NE(Shader.find("texture2d_array<float>"), std::string::npos);
+	EXPECT_NE(Shader.find("qmclient_tex_array_vertex"), std::string::npos);
+	EXPECT_NE(Shader.find("qmclient_tex_array_fragment"), std::string::npos);
+}
+
 TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");

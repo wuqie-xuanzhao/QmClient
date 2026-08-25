@@ -59,11 +59,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	struct STextureSlot
 	{
 		id<MTLTexture> m_Texture = nil;
+		id<MTLTexture> m_TextureArray = nil;
 		id<MTLBuffer> m_Staging = nil;
 		SMetalTextureLayout m_Layout;
+		SMetalTextureLayout m_ArrayLayout;
 		size_t m_Width = 0;
 		size_t m_Height = 0;
+		size_t m_ArrayWidth = 0;
+		size_t m_ArrayHeight = 0;
 		EMetalTextureFormat m_Format = EMetalTextureFormat::RGBA8;
+		bool m_Is2DArray = false;
 		bool m_Allocated = false;
 	};
 
@@ -101,7 +106,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLCommandQueue> m_CommandQueue = nil;
 	id<MTLBuffer> m_QuadIndexBuffer = nil;
 	id<MTLLibrary> m_ShaderLibrary = nil;
-	std::array<id<MTLRenderPipelineState>, 54> m_aPipelineStates{};
+	std::array<id<MTLRenderPipelineState>, 60> m_aPipelineStates{};
 	id<MTLSamplerState> m_RepeatSampler = nil;
 	id<MTLSamplerState> m_ClampSampler = nil;
 	std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};
@@ -209,6 +214,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	static size_t SpriteMultiplePipelineIndex(bool Textured, EMetalBlendMode BlendMode)
 	{
 		return 48 + static_cast<size_t>(Textured) * 3 + static_cast<size_t>(BlendMode);
+	}
+
+	static size_t TextureArrayPipelineIndex(EMetalBlendMode BlendMode)
+	{
+		return 54 + static_cast<size_t>(BlendMode);
 	}
 
 	static MTLBlendFactor MetalBlendFactor(EMetalBlendFactor Factor)
@@ -641,12 +651,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLFunction> ColorFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_fragment"];
 		id<MTLFunction> TexturedFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_textured_fragment"];
 		id<MTLFunction> TextFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_text_fragment"];
-		if(VertexFunction == nil || ColorFunction == nil || TexturedFunction == nil || TextFunction == nil)
+		id<MTLFunction> TexArrayVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_tex_array_vertex"];
+		id<MTLFunction> TexArrayFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_tex_array_fragment"];
+		if(VertexFunction == nil || ColorFunction == nil || TexturedFunction == nil || TextFunction == nil || TexArrayVertex == nil || TexArrayFragment == nil)
 		{
 			ReleaseMetalObject(VertexFunction);
 			ReleaseMetalObject(ColorFunction);
 			ReleaseMetalObject(TexturedFunction);
 			ReleaseMetalObject(TextFunction);
+			ReleaseMetalObject(TexArrayVertex);
+			ReleaseMetalObject(TexArrayFragment);
 			return false;
 		}
 
@@ -696,6 +710,20 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				CreatePipeline(PipelineIndex(Textured != 0, Text != 0, EMetalBlendMode::NONE), VertexFunction, Text ? TextFunction : (Textured ? TexturedFunction : ColorFunction), pVertexDescriptor);
 			}
 		}
+
+		MTLVertexDescriptor *pTexArrayDescriptor = [[MTLVertexDescriptor alloc] init];
+		pTexArrayDescriptor.attributes[0].format = MTLVertexFormatFloat2;
+		pTexArrayDescriptor.attributes[0].offset = offsetof(GL_SVertexTex3DStream, m_Pos);
+		pTexArrayDescriptor.attributes[0].bufferIndex = 0;
+		pTexArrayDescriptor.attributes[1].format = MTLVertexFormatUChar4Normalized;
+		pTexArrayDescriptor.attributes[1].offset = offsetof(GL_SVertexTex3DStream, m_Color);
+		pTexArrayDescriptor.attributes[1].bufferIndex = 0;
+		pTexArrayDescriptor.attributes[2].format = MTLVertexFormatFloat3;
+		pTexArrayDescriptor.attributes[2].offset = offsetof(GL_SVertexTex3DStream, m_Tex);
+		pTexArrayDescriptor.attributes[2].bufferIndex = 0;
+		pTexArrayDescriptor.layouts[0].stride = sizeof(GL_SVertexTex3DStream);
+		pTexArrayDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+		CreatePipeline(TextureArrayPipelineIndex(EMetalBlendMode::NONE), TexArrayVertex, TexArrayFragment, pTexArrayDescriptor);
 
 		id<MTLFunction> TileVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_vertex"];
 		id<MTLFunction> TilePlainVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_plain_vertex"];
@@ -778,6 +806,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			CreatePipeline(SpriteMultiplePipelineIndex(true, EMetalBlendMode::NONE), SpriteMultipleVertex, SpriteMultipleTexturedFragment, pVertexDescriptor);
 #if !__has_feature(objc_arc)
 		[pVertexDescriptor release];
+		[pTexArrayDescriptor release];
 		[pTileDescriptor release];
 		[pTilePlainDescriptor release];
 		[pQuadDescriptor release];
@@ -786,6 +815,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[ColorFunction release];
 		[TexturedFunction release];
 		[TextFunction release];
+		[TexArrayVertex release];
+		[TexArrayFragment release];
 		[TileVertex release];
 		[TilePlainVertex release];
 		[TileFragment release];
@@ -854,6 +885,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(!Texture.m_Allocated)
 			return;
 		SubTextureMemory(Texture.m_Layout.m_DataBytes);
+		SubTextureMemory(Texture.m_ArrayLayout.m_DataBytes);
 		if(Texture.m_Staging != nil)
 		{
 			if(m_pStagingMemoryUsage != nullptr)
@@ -861,6 +893,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			ReleaseMetalObject(Texture.m_Staging);
 		}
 		ReleaseMetalObject(Texture.m_Texture);
+		ReleaseMetalObject(Texture.m_TextureArray);
 		Texture = {};
 	}
 
@@ -872,44 +905,108 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(Texture.m_Allocated)
 			DestroyTexture(Slot);
 
+		const bool Wants2D = (Flags & TextureFlag::NO_2D_TEXTURE) == 0;
+		const bool Wants2DArray = (Flags & TextureFlag::TO_2D_ARRAY_TEXTURE) != 0;
+		if(!Wants2D && !Wants2DArray)
+			return false;
 		SMetalTextureLayout Layout;
-		if(!MetalTextureLayout(Width, Height, Format, (Flags & TextureFlag::NO_MIPMAPS) != 0, Layout))
+		if(Wants2D && !MetalTextureLayout(Width, Height, Format, (Flags & TextureFlag::NO_MIPMAPS) != 0, Layout))
+			return false;
+		size_t ArrayWidth = 0;
+		size_t ArrayHeight = 0;
+		SMetalTextureLayout ArrayLayout;
+		if(Wants2DArray && (Width > static_cast<size_t>(std::numeric_limits<int>::max()) || Height > static_cast<size_t>(std::numeric_limits<int>::max()) || !MetalTextureArrayLayout(Width, Height, Format, (Flags & TextureFlag::NO_MIPMAPS) != 0, ArrayWidth, ArrayHeight, ArrayLayout)))
+			return false;
+		if(Layout.m_DataBytes > std::numeric_limits<size_t>::max() - ArrayLayout.m_DataBytes)
 			return false;
 
 		if(m_Device == nil || m_State != EMetalBackendState::INITIALIZED || m_CommandQueue == nil)
 			return false;
 
-		MTLTextureDescriptor *pDescriptor = [[MTLTextureDescriptor alloc] init];
-		pDescriptor.textureType = MTLTextureType2D;
-		pDescriptor.pixelFormat = Format == EMetalTextureFormat::R8 ? MTLPixelFormatR8Unorm : MTLPixelFormatRGBA8Unorm;
-		pDescriptor.width = Width;
-		pDescriptor.height = Height;
-		pDescriptor.mipmapLevelCount = Layout.m_MipLevels;
-		pDescriptor.usage = MTLTextureUsageShaderRead;
-		pDescriptor.storageMode = MTLStorageModePrivate;
-		id<MTLTexture> pTexture = [m_Device newTextureWithDescriptor:pDescriptor];
+		const MTLPixelFormat PixelFormat = Format == EMetalTextureFormat::R8 ? MTLPixelFormatR8Unorm : MTLPixelFormatRGBA8Unorm;
+		id<MTLTexture> pTexture = nil;
+		if(Wants2D)
+		{
+			MTLTextureDescriptor *pDescriptor = [[MTLTextureDescriptor alloc] init];
+			pDescriptor.textureType = MTLTextureType2D;
+			pDescriptor.pixelFormat = PixelFormat;
+			pDescriptor.width = Width;
+			pDescriptor.height = Height;
+			pDescriptor.mipmapLevelCount = Layout.m_MipLevels;
+			pDescriptor.usage = MTLTextureUsageShaderRead;
+			pDescriptor.storageMode = MTLStorageModePrivate;
+			pTexture = [m_Device newTextureWithDescriptor:pDescriptor];
 	#if !__has_feature(objc_arc)
-		[pDescriptor release];
+			[pDescriptor release];
 	#endif
-		if(pTexture == nil)
-			return false;
+			if(pTexture == nil)
+				return false;
+		}
+		id<MTLTexture> pTextureArray = nil;
+		if(Wants2DArray)
+		{
+			MTLTextureDescriptor *pArrayDescriptor = [[MTLTextureDescriptor alloc] init];
+			pArrayDescriptor.textureType = MTLTextureType2DArray;
+			pArrayDescriptor.pixelFormat = PixelFormat;
+			pArrayDescriptor.width = ArrayWidth;
+			pArrayDescriptor.height = ArrayHeight;
+			pArrayDescriptor.arrayLength = METAL_TEXTURE_ARRAY_LAYERS;
+			pArrayDescriptor.mipmapLevelCount = ArrayLayout.m_MipLevels;
+			pArrayDescriptor.usage = MTLTextureUsageShaderRead;
+			pArrayDescriptor.storageMode = MTLStorageModePrivate;
+			pTextureArray = [m_Device newTextureWithDescriptor:pArrayDescriptor];
+	#if !__has_feature(objc_arc)
+			[pArrayDescriptor release];
+	#endif
+			if(pTextureArray == nil)
+			{
+				ReleaseMetalObject(pTexture);
+				return false;
+			}
+		}
 
 		Texture.m_Texture = pTexture;
+		Texture.m_TextureArray = pTextureArray;
 		Texture.m_Layout = Layout;
+		Texture.m_ArrayLayout = ArrayLayout;
 		Texture.m_Width = Width;
 		Texture.m_Height = Height;
+		Texture.m_ArrayWidth = ArrayWidth;
+		Texture.m_ArrayHeight = ArrayHeight;
 		Texture.m_Format = Format;
+		Texture.m_Is2DArray = Wants2DArray;
 		Texture.m_Allocated = true;
-		AddTextureMemory(Layout.m_DataBytes);
+		AddTextureMemory(Layout.m_DataBytes + ArrayLayout.m_DataBytes);
 
-		const bool Uploaded = pData == nullptr || UploadTextureRegion(Texture, 0, 0, Width, Height, pData);
+		bool Uploaded = pData == nullptr || pTexture == nil;
+		if(pData != nullptr && pTexture != nil)
+			Uploaded = UploadTextureRegion(Texture, 0, 0, Width, Height, pData);
+		if(Uploaded && pTextureArray != nil && pData != nullptr)
+		{
+			size_t SourceBytes = 0;
+			if(!MetalCheckedMul(Width, Height, SourceBytes) || !MetalCheckedMul(SourceBytes, MetalTextureBytesPerPixel(Format), SourceBytes))
+				Uploaded = false;
+			else
+			{
+				std::vector<uint8_t> vArrayData(SourceBytes);
+				int ConvertedWidth = 0;
+				int ConvertedHeight = 0;
+				Texture2DTo3D(pData, static_cast<int>(Width), static_cast<int>(Height), MetalTextureBytesPerPixel(Format), 16, 16, vArrayData.data(), ConvertedWidth, ConvertedHeight);
+				Uploaded = ConvertedWidth == static_cast<int>(ArrayWidth) && ConvertedHeight == static_cast<int>(ArrayHeight) && UploadTextureArray(Texture, vArrayData.data(), ArrayWidth, ArrayHeight, 0, METAL_TEXTURE_ARRAY_LAYERS);
+			}
+		}
 		if(!Uploaded)
 		{
 			DestroyTexture(Slot);
 			return false;
 		}
-		if(Layout.m_MipLevels > 1 && m_CurrentBlitEncoder != nil)
-			[m_CurrentBlitEncoder generateMipmapsForTexture:Texture.m_Texture];
+		if(m_CurrentBlitEncoder != nil)
+		{
+			if(Layout.m_MipLevels > 1 && Texture.m_Texture != nil)
+				[m_CurrentBlitEncoder generateMipmapsForTexture:Texture.m_Texture];
+			if(ArrayLayout.m_MipLevels > 1 && Texture.m_TextureArray != nil)
+				[m_CurrentBlitEncoder generateMipmapsForTexture:Texture.m_TextureArray];
+		}
 		return true;
 	}
 
@@ -920,12 +1017,29 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		STextureSlot &Texture = m_vTextureSlots[Slot];
 		if(Texture.m_Format != Format || !MetalValidateSubregion(Texture.m_Width, Texture.m_Height, X, Y, Width, Height))
 			return false;
-		SMetalTextureLayout UpdateLayout;
-		if(!MetalTextureLayout(Width, Height, Format, true, UpdateLayout))
+		if(Texture.m_Is2DArray && (X != 0 || Y != 0 || Width != Texture.m_Width || Height != Texture.m_Height))
 			return false;
-		const bool Uploaded = pData == nullptr || UploadTextureRegion(Texture, X, Y, Width, Height, pData);
-		if(Uploaded && Texture.m_Layout.m_MipLevels > 1 && m_CurrentBlitEncoder != nil)
-			[m_CurrentBlitEncoder generateMipmapsForTexture:Texture.m_Texture];
+		if(pData == nullptr)
+			return true;
+		bool Uploaded = Texture.m_Texture == nil || UploadTextureRegion(Texture, X, Y, Width, Height, pData);
+		if(Uploaded && Texture.m_Is2DArray)
+		{
+			size_t SourceBytes = 0;
+			if(!MetalCheckedMul(Texture.m_Width, Texture.m_Height, SourceBytes) || !MetalCheckedMul(SourceBytes, MetalTextureBytesPerPixel(Format), SourceBytes) || Texture.m_Width > static_cast<size_t>(std::numeric_limits<int>::max()) || Texture.m_Height > static_cast<size_t>(std::numeric_limits<int>::max()))
+				return false;
+			std::vector<uint8_t> vArrayData(SourceBytes);
+			int ConvertedWidth = 0;
+			int ConvertedHeight = 0;
+			Texture2DTo3D(pData, static_cast<int>(Width), static_cast<int>(Height), MetalTextureBytesPerPixel(Format), 16, 16, vArrayData.data(), ConvertedWidth, ConvertedHeight);
+			Uploaded = ConvertedWidth == static_cast<int>(Texture.m_ArrayWidth) && ConvertedHeight == static_cast<int>(Texture.m_ArrayHeight) && UploadTextureArray(Texture, vArrayData.data(), Texture.m_ArrayWidth, Texture.m_ArrayHeight, 0, METAL_TEXTURE_ARRAY_LAYERS);
+		}
+		if(Uploaded && m_CurrentBlitEncoder != nil)
+		{
+			if(Texture.m_Layout.m_MipLevels > 1 && Texture.m_Texture != nil)
+				[m_CurrentBlitEncoder generateMipmapsForTexture:Texture.m_Texture];
+			if(Texture.m_ArrayLayout.m_MipLevels > 1 && Texture.m_TextureArray != nil)
+				[m_CurrentBlitEncoder generateMipmapsForTexture:Texture.m_TextureArray];
+		}
 		return Uploaded;
 	}
 
@@ -1185,6 +1299,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			m_pCapabilities->m_MipMapping = true;
 			m_pCapabilities->m_NPOTTextures = true;
+			m_pCapabilities->m_2DArrayTextures = true;
 			m_pCapabilities->m_ShaderSupport = true;
 			m_pCapabilities->m_QuadContainerBuffering = true;
 			m_pCapabilities->m_TextBuffering = true;
@@ -1320,6 +1435,56 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return true;
 	}
 
+	bool UploadTextureArray(STextureSlot &Texture, const uint8_t *pData, size_t Width, size_t Height, size_t LayerStart, size_t LayerCount)
+	{
+		if(pData == nullptr || m_CurrentCommandBuffer == nil || Texture.m_TextureArray == nil || LayerCount == 0 || LayerStart > METAL_TEXTURE_ARRAY_LAYERS - 1 || LayerCount > METAL_TEXTURE_ARRAY_LAYERS - LayerStart || Width == 0 || Height == 0)
+			return false;
+		const size_t BytesPerPixel = MetalTextureBytesPerPixel(Texture.m_Format);
+		if(Width > std::numeric_limits<size_t>::max() / BytesPerPixel)
+			return false;
+		const size_t RowBytes = Width * BytesPerPixel;
+		const size_t AlignedRowBytes = (RowBytes + 255) & ~size_t(255);
+		if(AlignedRowBytes < RowBytes || Height > std::numeric_limits<size_t>::max() / AlignedRowBytes)
+			return false;
+		const size_t SliceBytes = AlignedRowBytes * Height;
+		if(LayerCount > std::numeric_limits<size_t>::max() / SliceBytes)
+			return false;
+		std::vector<uint8_t> vUpload(SliceBytes * LayerCount, 0);
+		const size_t SourceSliceBytes = RowBytes * Height;
+		for(size_t Layer = 0; Layer < LayerCount; ++Layer)
+			for(size_t Row = 0; Row < Height; ++Row)
+				mem_copy(vUpload.data() + Layer * SliceBytes + Row * AlignedRowBytes, pData + Layer * SourceSliceBytes + Row * RowBytes, RowBytes);
+		id<MTLBuffer> Staging = [m_Device newBufferWithBytes:vUpload.data() length:vUpload.size() options:MTLResourceStorageModeShared];
+		if(Staging == nil)
+			return false;
+		if(m_CurrentRenderEncoder != nil)
+		{
+			[m_CurrentRenderEncoder endEncoding];
+			m_CurrentRenderEncoder = nil;
+			m_RenderEncoderStarted = false;
+		}
+		if(m_CurrentBlitEncoder == nil)
+			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+		if(m_CurrentBlitEncoder == nil)
+		{
+			ReleaseMetalObject(Staging);
+			return false;
+		}
+		for(size_t Layer = 0; Layer < LayerCount; ++Layer)
+			[m_CurrentBlitEncoder copyFromBuffer:Staging sourceOffset:Layer * SliceBytes sourceBytesPerRow:AlignedRowBytes sourceBytesPerImage:SliceBytes sourceSize:MTLSizeMake(Width, Height, 1) toTexture:Texture.m_TextureArray destinationSlice:LayerStart + Layer destinationLevel:0 destinationOrigin:MTLOriginMake(0, 0, 0)];
+		if(Texture.m_Staging != nil)
+		{
+			if(m_pStagingMemoryUsage != nullptr)
+				m_pStagingMemoryUsage->fetch_sub([Texture.m_Staging length], std::memory_order_relaxed);
+			ReleaseMetalObject(Texture.m_Staging);
+		}
+		Texture.m_Staging = RetainMetalObject(Staging);
+		if(m_pStagingMemoryUsage != nullptr)
+			m_pStagingMemoryUsage->fetch_add([Staging length], std::memory_order_relaxed);
+		ReleaseMetalObject(Staging);
+		return true;
+	}
+
 	bool DrawPrimitive(const CCommandBuffer::SState &State, EPrimitiveType PrimitiveType, unsigned PrimitiveCount, const GL_SVertex *pVertices)
 	{
 		if(pVertices == nullptr || PrimitiveCount == 0 || m_CurrentCommandBuffer == nil)
@@ -1380,6 +1545,56 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:PrimitiveCount * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		else
 			[m_CurrentRenderEncoder drawPrimitives:PrimitiveType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:VertexCount];
+		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
+		return true;
+	}
+
+	bool DrawTex3D(const CCommandBuffer::SCommand_RenderTex3D &Command)
+	{
+		if(Command.m_pVertices == nullptr || Command.m_PrimCount == 0 || Command.m_State.m_Texture < 0 || static_cast<size_t>(Command.m_State.m_Texture) >= m_vTextureSlots.size() || !m_vTextureSlots[Command.m_State.m_Texture].m_Allocated || m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray == nil)
+			return false;
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		size_t VertexCount = 0;
+		EMetalPrimitiveType MetalType = EMetalPrimitiveType::TRIANGLES;
+		switch(Command.m_PrimType)
+		{
+		case EPrimitiveType::LINES: MetalType = EMetalPrimitiveType::LINES; break;
+		case EPrimitiveType::QUADS: MetalType = EMetalPrimitiveType::QUADS; break;
+		case EPrimitiveType::TRIANGLES: MetalType = EMetalPrimitiveType::TRIANGLES; break;
+		}
+		if(!MetalPrimitiveVertexCount(MetalType, Command.m_PrimCount, VertexCount) || VertexCount > std::numeric_limits<size_t>::max() / sizeof(GL_SVertexTex3DStream))
+			return false;
+		const size_t Bytes = VertexCount * sizeof(GL_SVertexTex3DStream);
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		const size_t VertexOffset = (Frame.m_VertexOffset + 255) & ~size_t(255);
+		if(VertexOffset > gs_StreamBufferSize || Bytes > gs_StreamBufferSize - VertexOffset)
+			return false;
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + VertexOffset, Command.m_pVertices, Bytes);
+		SMetalUniforms Uniforms;
+		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+		size_t UniformOffset = 0;
+		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode);
+		if(static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
+			return false;
+		const size_t Pipeline = TextureArrayPipelineIndex(BlendMode);
+		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || Pipeline >= m_aPipelineStates.size() || m_aPipelineStates[Pipeline] == nil)
+			return false;
+		[m_CurrentRenderEncoder setRenderPipelineState:m_aPipelineStates[Pipeline]];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray atIndex:0];
+		[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
+		if(Command.m_State.m_ClipEnable)
+			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{static_cast<NSUInteger>(std::max(Command.m_State.m_ClipX, 0)), static_cast<NSUInteger>(std::max<int>(0, static_cast<int>(m_DrawableHeight) - Command.m_State.m_ClipY - Command.m_State.m_ClipH)), static_cast<NSUInteger>(std::max(Command.m_State.m_ClipW, 0)), static_cast<NSUInteger>(std::max(Command.m_State.m_ClipH, 0))}];
+		else
+			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, m_DrawableWidth, m_DrawableHeight}];
+		if(Command.m_PrimType == EPrimitiveType::QUADS)
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		else
+			[m_CurrentRenderEncoder drawPrimitives:Command.m_PrimType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:static_cast<NSUInteger>(VertexCount)];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
 		return true;
 	}
@@ -2196,6 +2411,13 @@ public:
 			case CCommandBuffer::CMD_RENDER:
 				Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand));
 				return m_Error.m_ErrorType == GFX_ERROR_TYPE_NONE ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			case CCommandBuffer::CMD_RENDER_TEX3D:
+			{
+				const bool Success = DrawTex3D(*static_cast<const CCommandBuffer::SCommand_RenderTex3D *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
 			case CCommandBuffer::CMD_RENDER_TILE_LAYER:
 			{
 				const bool Success = DrawTileLayer(*static_cast<const CCommandBuffer::SCommand_RenderTileLayer *>(pBaseCommand), false, {}, {});

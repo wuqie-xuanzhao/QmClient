@@ -40,6 +40,13 @@ TEST(MetalTypes, ComputesRgbaAndTextLayouts)
 	EXPECT_EQ(Layout.m_RowBytes, 8U);
 	EXPECT_EQ(Layout.m_DataBytes, 8U * 4U + 4U * 2U + 2U * 1U + 1U * 1U);
 	EXPECT_EQ(Layout.m_MipLevels, 4U);
+
+	size_t LayerWidth = 0;
+	size_t LayerHeight = 0;
+	ASSERT_TRUE(MetalTextureArrayLayout(64, 32, EMetalTextureFormat::RGBA8, true, LayerWidth, LayerHeight, Layout));
+	EXPECT_EQ(LayerWidth, 4U);
+	EXPECT_EQ(LayerHeight, 2U);
+	EXPECT_EQ(Layout.m_DataBytes, 4U * 2U * 4U * METAL_TEXTURE_ARRAY_LAYERS);
 }
 
 TEST(MetalTypes, RejectsTextureSizeOverflow)
@@ -47,6 +54,11 @@ TEST(MetalTypes, RejectsTextureSizeOverflow)
 	SMetalTextureLayout Layout;
 	EXPECT_FALSE(MetalTextureLayout(std::numeric_limits<size_t>::max(), 2, EMetalTextureFormat::RGBA8, true, Layout));
 	EXPECT_EQ(Layout.m_DataBytes, 0U);
+	size_t LayerWidth = 0;
+	size_t LayerHeight = 0;
+	EXPECT_FALSE(MetalTextureArrayLayout(15, 16, EMetalTextureFormat::RGBA8, true, LayerWidth, LayerHeight, Layout));
+	EXPECT_EQ(LayerWidth, 0U);
+	EXPECT_EQ(LayerHeight, 0U);
 }
 
 TEST(MetalTypes, ValidatesSubregionsWithoutOverflow)

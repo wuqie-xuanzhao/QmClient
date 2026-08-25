@@ -71,6 +71,8 @@ struct SMetalTextureLayout
 	size_t m_MipLevels = 0;
 };
 
+static constexpr size_t METAL_TEXTURE_ARRAY_LAYERS = 16 * 16;
+
 inline size_t MetalTextureBytesPerPixel(EMetalTextureFormat Format)
 {
 	return Format == EMetalTextureFormat::R8 ? 1 : 4;
@@ -147,6 +149,26 @@ inline bool MetalTextureLayout(size_t Width, size_t Height, EMetalTextureFormat 
 		MipWidth = MipWidth > 1 ? MipWidth / 2 : 1;
 		MipHeight = MipHeight > 1 ? MipHeight / 2 : 1;
 	}
+	return true;
+}
+
+inline bool MetalTextureArrayLayout(size_t SourceWidth, size_t SourceHeight, EMetalTextureFormat Format, bool NoMipmaps, size_t &LayerWidth, size_t &LayerHeight, SMetalTextureLayout &Layout)
+{
+	LayerWidth = 0;
+	LayerHeight = 0;
+	Layout = {};
+	if(SourceWidth == 0 || SourceHeight == 0 || SourceWidth % 16 != 0 || SourceHeight % 16 != 0)
+		return false;
+	LayerWidth = SourceWidth / 16;
+	LayerHeight = SourceHeight / 16;
+	if(!MetalTextureLayout(LayerWidth, LayerHeight, Format, NoMipmaps, Layout) || Layout.m_DataBytes > std::numeric_limits<size_t>::max() / METAL_TEXTURE_ARRAY_LAYERS)
+	{
+		LayerWidth = 0;
+		LayerHeight = 0;
+		Layout = {};
+		return false;
+	}
+	Layout.m_DataBytes *= METAL_TEXTURE_ARRAY_LAYERS;
 	return true;
 }
 
