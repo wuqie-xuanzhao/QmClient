@@ -13,6 +13,10 @@ TEST(MetalTypes, UniformsMatchTheMSLBufferLayout)
 	EXPECT_EQ(sizeof(SMetalUniforms), 80U);
 	EXPECT_EQ(offsetof(SMetalUniforms, m_MVP), 0U);
 	EXPECT_EQ(offsetof(SMetalUniforms, m_Color), 64U);
+	EXPECT_EQ(alignof(SMetalTextUniforms), 16U);
+	EXPECT_EQ(sizeof(SMetalTextUniforms), 112U);
+	EXPECT_EQ(offsetof(SMetalTextUniforms, m_OutlineColor), 80U);
+	EXPECT_EQ(offsetof(SMetalTextUniforms, m_Params), 96U);
 }
 
 TEST(MetalTypes, ComputesRgbaAndTextLayouts)
@@ -60,4 +64,35 @@ TEST(MetalTypes, RejectsStaleTextureHandles)
 	EXPECT_NE(First.m_Generation, Second.m_Generation);
 	EXPECT_FALSE(Registry.Release(First));
 	EXPECT_TRUE(Registry.IsValid(Second));
+}
+
+TEST(MetalTypes, MapsBlendModesToOpenGLCompatibleFactors)
+{
+	EXPECT_FALSE(MetalBlendState(EMetalBlendMode::NONE).m_Enabled);
+	const SMetalBlendState Alpha = MetalBlendState(EMetalBlendMode::ALPHA);
+	EXPECT_TRUE(Alpha.m_Enabled);
+	EXPECT_EQ(Alpha.m_Source, EMetalBlendFactor::SOURCE_ALPHA);
+	EXPECT_EQ(Alpha.m_Destination, EMetalBlendFactor::ONE_MINUS_SOURCE_ALPHA);
+	const SMetalBlendState Additive = MetalBlendState(EMetalBlendMode::ADDITIVE);
+	EXPECT_TRUE(Additive.m_Enabled);
+	EXPECT_EQ(Additive.m_Destination, EMetalBlendFactor::ONE);
+}
+
+TEST(MetalTypes, PipelineKeySeparatesRenderVariants)
+{
+	const SMetalPipelineKey Base{0, 1, static_cast<uint8_t>(EMetalBlendMode::ALPHA), false, false};
+	EXPECT_EQ(Base, Base);
+	EXPECT_NE(Base, (SMetalPipelineKey{0, 1, static_cast<uint8_t>(EMetalBlendMode::ADDITIVE), false, false}));
+	EXPECT_NE(Base, (SMetalPipelineKey{0, 1, static_cast<uint8_t>(EMetalBlendMode::ALPHA), true, false}));
+	EXPECT_NE(Base, (SMetalPipelineKey{0, 2, static_cast<uint8_t>(EMetalBlendMode::ALPHA), false, false}));
+}
+
+TEST(MetalTypes, PrimitiveVertexCountsAreChecked)
+{
+	size_t Count = 0;
+	EXPECT_TRUE(MetalPrimitiveVertexCount(EMetalPrimitiveType::QUADS, 3, Count));
+	EXPECT_EQ(Count, 12U);
+	EXPECT_TRUE(MetalPrimitiveVertexCount(EMetalPrimitiveType::LINES, 4, Count));
+	EXPECT_EQ(Count, 8U);
+	EXPECT_FALSE(MetalPrimitiveVertexCount(EMetalPrimitiveType::TRIANGLES, std::numeric_limits<size_t>::max(), Count));
 }

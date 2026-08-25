@@ -16,6 +16,53 @@ enum class EMetalTextureFormat
 	R8,
 };
 
+enum class EMetalBlendMode
+{
+	NONE,
+	ALPHA,
+	ADDITIVE,
+};
+
+enum class EMetalBlendFactor
+{
+	ZERO,
+	ONE,
+	SOURCE_ALPHA,
+	ONE_MINUS_SOURCE_ALPHA,
+};
+
+struct SMetalBlendState
+{
+	bool m_Enabled = false;
+	EMetalBlendFactor m_Source = EMetalBlendFactor::ONE;
+	EMetalBlendFactor m_Destination = EMetalBlendFactor::ZERO;
+};
+
+inline SMetalBlendState MetalBlendState(EMetalBlendMode Mode)
+{
+	switch(Mode)
+	{
+	case EMetalBlendMode::NONE: return {};
+	case EMetalBlendMode::ALPHA: return {true, EMetalBlendFactor::SOURCE_ALPHA, EMetalBlendFactor::ONE_MINUS_SOURCE_ALPHA};
+	case EMetalBlendMode::ADDITIVE: return {true, EMetalBlendFactor::SOURCE_ALPHA, EMetalBlendFactor::ONE};
+	}
+	return {};
+}
+
+struct SMetalPipelineKey
+{
+	uint8_t m_PixelFormat = 0;
+	uint8_t m_SampleCount = 1;
+	uint8_t m_BlendMode = 0;
+	bool m_Textured = false;
+	bool m_Text = false;
+
+	bool operator==(const SMetalPipelineKey &Other) const
+	{
+		return m_PixelFormat == Other.m_PixelFormat && m_SampleCount == Other.m_SampleCount && m_BlendMode == Other.m_BlendMode && m_Textured == Other.m_Textured && m_Text == Other.m_Text;
+	}
+};
+
 struct SMetalTextureLayout
 {
 	size_t m_BytesPerPixel = 0;
@@ -38,6 +85,25 @@ inline bool MetalCheckedMul(size_t A, size_t B, size_t &Result)
 	}
 	Result = A * B;
 	return true;
+}
+
+enum class EMetalPrimitiveType
+{
+	LINES,
+	QUADS,
+	TRIANGLES,
+};
+
+inline bool MetalPrimitiveVertexCount(EMetalPrimitiveType Type, size_t PrimitiveCount, size_t &VertexCount)
+{
+	size_t VerticesPerPrimitive = 0;
+	switch(Type)
+	{
+	case EMetalPrimitiveType::LINES: VerticesPerPrimitive = 2; break;
+	case EMetalPrimitiveType::QUADS: VerticesPerPrimitive = 4; break;
+	case EMetalPrimitiveType::TRIANGLES: VerticesPerPrimitive = 3; break;
+	}
+	return MetalCheckedMul(PrimitiveCount, VerticesPerPrimitive, VertexCount);
 }
 
 inline size_t MetalMipLevelCount(size_t Width, size_t Height, bool NoMipmaps)
@@ -153,6 +219,18 @@ struct alignas(16) SMetalUniforms
 	SMetalFloat4 m_Color;
 };
 
+#if defined(__METAL_VERSION__)
+struct SMetalTextUniforms
+#else
+struct alignas(16) SMetalTextUniforms
+#endif
+{
+	SMetalFloat4x4 m_MVP;
+	SMetalFloat4 m_Color;
+	SMetalFloat4 m_OutlineColor;
+	SMetalFloat4 m_Params;
+};
+
 #if !defined(__METAL_VERSION__)
 static_assert(alignof(SMetalUniforms) == 16);
 static_assert(sizeof(SMetalFloat4x4) == 64);
@@ -160,6 +238,10 @@ static_assert(sizeof(SMetalFloat4) == 16);
 static_assert(sizeof(SMetalUniforms) == 80);
 static_assert(offsetof(SMetalUniforms, m_MVP) == 0);
 static_assert(offsetof(SMetalUniforms, m_Color) == 64);
+static_assert(alignof(SMetalTextUniforms) == 16);
+static_assert(sizeof(SMetalTextUniforms) == 112);
+static_assert(offsetof(SMetalTextUniforms, m_OutlineColor) == 80);
+static_assert(offsetof(SMetalTextUniforms, m_Params) == 96);
 #endif
 
 #endif
