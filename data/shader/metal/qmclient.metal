@@ -68,6 +68,32 @@ fragment float4 qmclient_textured_fragment(SMetalVertexOut Input [[stage_in]], t
 	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color;
 }
 
+float GaussianBlurWeight(constant SMetalGaussianBlurUniforms &Uniforms, int Offset)
+{
+	if(Offset < 4)
+		return Uniforms.m_Weights0[Offset];
+	if(Offset < 8)
+		return Uniforms.m_Weights1[Offset - 4];
+	return Uniforms.m_Weights2[Offset - 8];
+}
+
+fragment float4 qmclient_gaussian_blur_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalGaussianBlurUniforms &Uniforms [[buffer(1)]])
+{
+	float4 Result = Texture.sample(Sampler, Input.m_TexCoord) * GaussianBlurWeight(Uniforms, 0);
+	const float2 TexelOffset = Uniforms.m_TexelOffsetRadius.xy;
+	const int Radius = int(Uniforms.m_TexelOffsetRadius.z);
+	for(int Offset = 1; Offset <= 10; ++Offset)
+	{
+		if(Offset > Radius)
+			break;
+		const float2 SampleOffset = TexelOffset * float(Offset);
+		const float Weight = GaussianBlurWeight(Uniforms, Offset);
+		Result += Texture.sample(Sampler, Input.m_TexCoord + SampleOffset) * Weight;
+		Result += Texture.sample(Sampler, Input.m_TexCoord - SampleOffset) * Weight;
+	}
+	return Result;
+}
+
 vertex SMetalTex3DVertexOut qmclient_tex_array_vertex(SMetalTex3DVertex Vertex [[stage_in]], constant SMetalUniforms &Uniforms [[buffer(1)]])
 {
 	SMetalTex3DVertexOut Out;

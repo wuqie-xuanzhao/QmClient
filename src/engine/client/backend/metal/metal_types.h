@@ -442,6 +442,18 @@ struct alignas(16) SMetalSpriteMultipleUniforms
 	SMetalFloat4 m_aRenderInfo[METAL_MAX_SPRITES];
 };
 
+#if defined(__METAL_VERSION__)
+struct SMetalGaussianBlurUniforms
+#else
+struct alignas(16) SMetalGaussianBlurUniforms
+#endif
+{
+	SMetalFloat4 m_TexelOffsetRadius;
+	SMetalFloat4 m_Weights0;
+	SMetalFloat4 m_Weights1;
+	SMetalFloat4 m_Weights2;
+};
+
 #if !defined(__METAL_VERSION__)
 static_assert(alignof(SMetalUniforms) == 16);
 static_assert(sizeof(SMetalFloat4x4) == 64);
@@ -458,6 +470,9 @@ static_assert(offsetof(SMetalTileUniforms, m_Transform) == 80);
 static_assert(offsetof(SMetalQuadUniforms, m_QuadOffset) == 64 + METAL_MAX_QUADS * 32);
 static_assert(sizeof(SMetalQuadContainerUniforms) == 96);
 static_assert(sizeof(SMetalSpriteMultipleUniforms) == 64 + 16 + 16 + METAL_MAX_SPRITES * 16);
+static_assert(sizeof(SMetalGaussianBlurUniforms) == 64);
+static_assert(offsetof(SMetalGaussianBlurUniforms, m_TexelOffsetRadius) == 0);
+static_assert(offsetof(SMetalGaussianBlurUniforms, m_Weights0) == 16);
 #endif
 
 #endif

@@ -165,6 +165,14 @@ TEST(MetalTypes, ChoosesOnlySupportedMultisampleCounts)
 	EXPECT_EQ(MetalSelectSampleCount(8, false, false, false), 0U);
 }
 
+TEST(MetalTypes, GaussianBlurUniformsUseFourAlignedFloat4s)
+{
+	EXPECT_EQ(sizeof(SMetalGaussianBlurUniforms), 64U);
+	EXPECT_EQ(alignof(SMetalGaussianBlurUniforms), 16U);
+	EXPECT_EQ(offsetof(SMetalGaussianBlurUniforms, m_TexelOffsetRadius), 0U);
+	EXPECT_EQ(offsetof(SMetalGaussianBlurUniforms, m_Weights0), 16U);
+}
+
 TEST(MetalTypes, PrimitiveVertexCountsAreChecked)
 {
 	size_t Count = 0;

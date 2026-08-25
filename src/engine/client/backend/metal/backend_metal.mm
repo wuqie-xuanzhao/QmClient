@@ -120,6 +120,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLLibrary> m_ShaderLibrary = nil;
 	TPipelineStates m_aPipelineStates{};
 	TPipelineStates m_aMultiSamplePipelineStates{};
+	id<MTLRenderPipelineState> m_GaussianBlurPipeline = nil;
 	id<MTLSamplerState> m_RepeatSampler = nil;
 	id<MTLSamplerState> m_ClampSampler = nil;
 	std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};
@@ -357,6 +358,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CurrentCommandBuffer = nil;
 		ReleasePipelineStates(m_aPipelineStates);
 		ReleasePipelineStates(m_aMultiSamplePipelineStates);
+		ReleaseMetalObject(m_GaussianBlurPipeline);
 		ReleaseMetalObject(m_RepeatSampler);
 		ReleaseMetalObject(m_ClampSampler);
 		ReleaseMetalObject(m_ShaderLibrary);
@@ -365,6 +367,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_RepeatSampler = nil;
 		m_ClampSampler = nil;
 		m_ShaderLibrary = nil;
+		m_GaussianBlurPipeline = nil;
 		for(size_t Slot = 0; Slot < m_aFrameSlots.size(); ++Slot)
 		{
 			ReleaseMetalObject(m_aFrameSlots[Slot].m_CommandBuffer);
@@ -1004,6 +1007,52 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return Success;
 	}
 
+	bool CreateGaussianBlurPipeline()
+	{
+		if(m_Device == nil || m_ShaderLibrary == nil)
+			return false;
+		id<MTLFunction> VertexFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_vertex"];
+		id<MTLFunction> FragmentFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_gaussian_blur_fragment"];
+		if(VertexFunction == nil || FragmentFunction == nil)
+		{
+			ReleaseMetalObject(VertexFunction);
+			ReleaseMetalObject(FragmentFunction);
+			return false;
+		}
+		MTLVertexDescriptor *pVertexDescriptor = [[MTLVertexDescriptor alloc] init];
+		pVertexDescriptor.attributes[0].format = MTLVertexFormatFloat2;
+		pVertexDescriptor.attributes[0].offset = offsetof(GL_SVertex, m_Pos);
+		pVertexDescriptor.attributes[0].bufferIndex = 0;
+		pVertexDescriptor.attributes[1].format = MTLVertexFormatFloat2;
+		pVertexDescriptor.attributes[1].offset = offsetof(GL_SVertex, m_Tex);
+		pVertexDescriptor.attributes[1].bufferIndex = 0;
+		pVertexDescriptor.attributes[2].format = MTLVertexFormatUChar4Normalized;
+		pVertexDescriptor.attributes[2].offset = offsetof(GL_SVertex, m_Color);
+		pVertexDescriptor.attributes[2].bufferIndex = 0;
+		pVertexDescriptor.layouts[0].stride = sizeof(GL_SVertex);
+		pVertexDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+		MTLRenderPipelineDescriptor *pPipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+		pPipelineDescriptor.vertexFunction = VertexFunction;
+		pPipelineDescriptor.fragmentFunction = FragmentFunction;
+		pPipelineDescriptor.vertexDescriptor = pVertexDescriptor;
+		pPipelineDescriptor.rasterSampleCount = 1;
+		pPipelineDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+		pPipelineDescriptor.colorAttachments[0].blendingEnabled = NO;
+		NSError *pError = nil;
+		id<MTLRenderPipelineState> Pipeline = [m_Device newRenderPipelineStateWithDescriptor:pPipelineDescriptor error:&pError];
+#if !__has_feature(objc_arc)
+		[pPipelineDescriptor release];
+		[pVertexDescriptor release];
+		[VertexFunction release];
+		[FragmentFunction release];
+#endif
+		if(Pipeline == nil)
+			return false;
+		ReleaseMetalObject(m_GaussianBlurPipeline);
+		m_GaussianBlurPipeline = Pipeline;
+		return true;
+	}
+
 	bool CreateFrameResources()
 	{
 		for(SFrameSlot &Frame : m_aFrameSlots)
@@ -1444,7 +1493,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 		m_CommandQueue = [m_Device newCommandQueue];
 		m_MultiSamplingCount = SupportedMultiSamplingCount(static_cast<uint32_t>(std::max(g_Config.m_GfxFsaaSamples, 0)));
-		if(m_CommandQueue == nil || !LoadShaderLibrary(pCommand) || !CreateSamplerStates() || !CreatePipelineStates(1, m_aPipelineStates) ||
+		if(m_CommandQueue == nil || !LoadShaderLibrary(pCommand) || !CreateSamplerStates() || !CreatePipelineStates(1, m_aPipelineStates) || !CreateGaussianBlurPipeline() ||
 			(m_MultiSamplingCount > 0 && !CreatePipelineStates(m_MultiSamplingCount, m_aMultiSamplePipelineStates)) || !CreateFrameResources())
 		{
 			ReleaseGpuObjects();
@@ -2285,6 +2334,65 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return true;
 	}
 
+	bool Cmd_RenderTarget_GaussianBlurPass(const CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass *pCommand)
+	{
+		if(!m_RenderTargetState.IsActive() || m_GaussianBlurPipeline == nil || pCommand->m_SourceTargetId < 0 || pCommand->m_Radius < 1 || pCommand->m_Radius > IGraphics::GAUSSIAN_BLUR_MAX_RADIUS)
+			return false;
+		const int DestinationTargetId = m_RenderTargetState.ActiveTargetId();
+		if(DestinationTargetId < 0 || pCommand->m_SourceTargetId == DestinationTargetId || static_cast<size_t>(pCommand->m_SourceTargetId) >= m_vRenderTargets.size() || static_cast<size_t>(DestinationTargetId) >= m_vRenderTargets.size())
+			return false;
+		const SRenderTarget &Source = m_vRenderTargets[pCommand->m_SourceTargetId];
+		const SRenderTarget &Destination = m_vRenderTargets[DestinationTargetId];
+		if(!Source.m_Allocated || !Destination.m_Allocated || Source.m_Texture == nil || Destination.m_Texture == nil || Source.m_Width != Destination.m_Width || Source.m_Height != Destination.m_Height || Source.m_Width == 0 || Source.m_Height == 0 || m_CurrentCommandBuffer == nil)
+			return false;
+
+		std::array<CCommandBuffer::SVertex, 4> aVertices{};
+		aVertices[0].m_Pos = vec2(-1.0f, -1.0f);
+		aVertices[0].m_Tex = vec2(0.0f, 0.0f);
+		aVertices[1].m_Pos = vec2(1.0f, -1.0f);
+		aVertices[1].m_Tex = vec2(1.0f, 0.0f);
+		aVertices[2].m_Pos = vec2(1.0f, 1.0f);
+		aVertices[2].m_Tex = vec2(1.0f, 1.0f);
+		aVertices[3].m_Pos = vec2(-1.0f, 1.0f);
+		aVertices[3].m_Tex = vec2(0.0f, 1.0f);
+		for(CCommandBuffer::SVertex &Vertex : aVertices)
+			Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, 255};
+
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		const size_t VertexOffset = (Frame.m_VertexOffset + 255) & ~size_t(255);
+		const size_t VertexBytes = sizeof(aVertices);
+		const size_t VertexUniformOffset = (VertexOffset + VertexBytes + 255) & ~size_t(255);
+		const size_t FragmentUniformOffset = (VertexUniformOffset + sizeof(SMetalUniforms) + 255) & ~size_t(255);
+		if(VertexOffset > gs_StreamBufferSize || VertexBytes > gs_StreamBufferSize - VertexOffset || VertexUniformOffset > gs_StreamBufferSize || sizeof(SMetalUniforms) > gs_StreamBufferSize - VertexUniformOffset || FragmentUniformOffset > gs_StreamBufferSize || sizeof(SMetalGaussianBlurUniforms) > gs_StreamBufferSize - FragmentUniformOffset)
+			return false;
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + VertexOffset, aVertices.data(), VertexBytes);
+		SMetalUniforms VertexUniforms{};
+		VertexUniforms.m_MVP.m_v[0] = 1.0f;
+		VertexUniforms.m_MVP.m_v[5] = 1.0f;
+		VertexUniforms.m_MVP.m_v[10] = 1.0f;
+		VertexUniforms.m_MVP.m_v[15] = 1.0f;
+		VertexUniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+		SMetalGaussianBlurUniforms FragmentUniforms{};
+		FragmentUniforms.m_TexelOffsetRadius = {{pCommand->m_Horizontal ? 1.0f / static_cast<float>(Source.m_Width) : 0.0f, pCommand->m_Horizontal ? 0.0f : 1.0f / static_cast<float>(Source.m_Height), static_cast<float>(pCommand->m_Radius), 0.0f}};
+		mem_copy(FragmentUniforms.m_Weights0.m_v, pCommand->m_aWeights.data(), sizeof(pCommand->m_aWeights));
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + VertexUniformOffset, &VertexUniforms, sizeof(VertexUniforms));
+		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + FragmentUniformOffset, &FragmentUniforms, sizeof(FragmentUniforms));
+
+		EndActiveEncoders();
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 0.0}))
+			return false;
+		[m_CurrentRenderEncoder setRenderPipelineState:m_GaussianBlurPipeline];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexUniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentBuffer:Frame.m_VertexBuffer offset:FragmentUniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentTexture:Source.m_Texture atIndex:0];
+		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
+		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Destination.m_Width, Destination.m_Height}];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		Frame.m_VertexOffset = FragmentUniformOffset + sizeof(FragmentUniforms);
+		return true;
+	}
+
 	bool Cmd_RenderTarget_CaptureBackbuffer(const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *pCommand)
 	{
 		if(m_RenderTargetState.IsActive() || pCommand->m_TargetId < 0 || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size())
@@ -2834,6 +2942,13 @@ public:
 			case CCommandBuffer::CMD_RENDER_TARGET_DRAW:
 			{
 				const bool Success = Cmd_RenderTarget_Draw(static_cast<const CCommandBuffer::SCommand_RenderTarget_Draw *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS:
+			{
+				const bool Success = Cmd_RenderTarget_GaussianBlurPass(static_cast<const CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass *>(pBaseCommand));
 				if(!Success)
 					SetUnsupportedCommandError(pBaseCommand);
 				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;

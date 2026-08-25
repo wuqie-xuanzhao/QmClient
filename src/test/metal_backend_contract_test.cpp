@@ -151,6 +151,27 @@ TEST(MetalBackendContract, MultisampleBackbufferUsesResolveAttachmentAndRealDevi
 	EXPECT_NE(Source.find("Requested %u FSAA samples, using %u."), std::string::npos);
 }
 
+TEST(MetalBackendContract, GaussianBlurUsesSingleSamplePingPongPasses)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("bool CreateGaussianBlurPipeline()"), std::string::npos);
+	EXPECT_NE(Source.find("qmclient_gaussian_blur_fragment"), std::string::npos);
+	EXPECT_NE(Source.find("pPipelineDescriptor.rasterSampleCount = 1"), std::string::npos);
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_GaussianBlurPass"), std::string::npos);
+	EXPECT_NE(Source.find("pCommand->m_SourceTargetId == DestinationTargetId"), std::string::npos);
+	EXPECT_NE(Source.find("Source.m_Width != Destination.m_Width"), std::string::npos);
+	EXPECT_NE(Source.find("EndActiveEncoders();\n\t\tif(!BeginRenderEncoder"), std::string::npos);
+	EXPECT_NE(Source.find("setFragmentBuffer:Frame.m_VertexBuffer offset:FragmentUniformOffset atIndex:1"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS"), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderTargetGaussianBlur = false"), std::string::npos);
+
+	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
+	EXPECT_NE(Shader.find("float GaussianBlurWeight"), std::string::npos);
+	EXPECT_NE(Shader.find("fragment float4 qmclient_gaussian_blur_fragment"), std::string::npos);
+	EXPECT_NE(Shader.find("if(Offset > Radius)"), std::string::npos);
+	EXPECT_NE(Shader.find("Texture.sample(Sampler, Input.m_TexCoord + SampleOffset)"), std::string::npos);
+}
+
 TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
