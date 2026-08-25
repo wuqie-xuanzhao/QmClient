@@ -21,6 +21,7 @@
 #include <array>
 #include <atomic>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <mutex>
 #include <string>
@@ -64,6 +65,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		size_t m_Height = 0;
 		EMetalTextureFormat m_Format = EMetalTextureFormat::RGBA8;
 		bool m_Allocated = false;
+	};
+
+	struct SBufferSlot
+	{
+		id<MTLBuffer> m_Buffer = nil;
+		size_t m_DataBytes = 0;
+		bool m_Allocated = false;
+		bool m_OneTimeUse = false;
 	};
 
 	struct SFrameSlot
@@ -115,6 +124,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	size_t m_StreamMemoryBytes = 0;
 	size_t m_BufferMemoryBytes = 0;
 	std::vector<STextureSlot> m_vTextureSlots;
+	std::vector<SBufferSlot> m_vBufferSlots;
 	std::atomic<uint64_t> *m_pTextureMemoryUsage = nullptr;
 	std::atomic<uint64_t> *m_pBufferMemoryUsage = nullptr;
 	std::atomic<uint64_t> *m_pStreamMemoryUsage = nullptr;
@@ -320,6 +330,153 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		if(m_pBufferMemoryUsage != nullptr)
 			m_pBufferMemoryUsage->fetch_sub(Bytes, std::memory_order_relaxed);
+	}
+
+	bool EnsureBufferSlot(int Slot)
+	{
+		if(Slot < 0)
+			return false;
+		if(static_cast<size_t>(Slot) >= m_vBufferSlots.size())
+			m_vBufferSlots.resize(static_cast<size_t>(Slot) + 1);
+		return true;
+	}
+
+	void DestroyBuffer(int Slot)
+	{
+		if(Slot < 0 || static_cast<size_t>(Slot) >= m_vBufferSlots.size())
+			return;
+		SBufferSlot &Buffer = m_vBufferSlots[Slot];
+		if(!Buffer.m_Allocated)
+			return;
+		SubBufferMemory(Buffer.m_DataBytes);
+		ReleaseMetalObject(Buffer.m_Buffer);
+		Buffer = {};
+	}
+
+	void DestroyAllBuffers()
+	{
+		for(size_t Slot = 0; Slot < m_vBufferSlots.size(); ++Slot)
+			DestroyBuffer(static_cast<int>(Slot));
+		m_vBufferSlots.clear();
+	}
+
+	void EndRenderEncoderForBlit()
+	{
+		if(m_CurrentRenderEncoder == nil)
+			return;
+		[m_CurrentRenderEncoder endEncoding];
+		m_CurrentRenderEncoder = nil;
+		m_RenderEncoderStarted = false;
+	}
+
+	bool CopyIntoBuffer(id<MTLBuffer> Destination, size_t DestinationOffset, const void *pData, size_t DataBytes)
+	{
+		if(Destination == nil || m_CurrentCommandBuffer == nil || DataBytes == 0)
+			return false;
+		id<MTLBuffer> Staging = [m_Device newBufferWithLength:DataBytes options:MTLResourceStorageModeShared];
+		if(Staging == nil)
+			return false;
+		if(pData != nullptr)
+			mem_copy(Staging.contents, pData, DataBytes);
+		else
+			std::memset(Staging.contents, 0, DataBytes);
+		EndRenderEncoderForBlit();
+		if(m_CurrentBlitEncoder == nil)
+			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+		const bool Success = m_CurrentBlitEncoder != nil;
+		if(Success)
+			[m_CurrentBlitEncoder copyFromBuffer:Staging sourceOffset:0 toBuffer:Destination destinationOffset:DestinationOffset size:DataBytes];
+		if(m_pStagingMemoryUsage != nullptr)
+			m_pStagingMemoryUsage->fetch_add(DataBytes, std::memory_order_relaxed);
+		if(m_pStagingMemoryUsage != nullptr)
+			m_pStagingMemoryUsage->fetch_sub(DataBytes, std::memory_order_relaxed);
+		ReleaseMetalObject(Staging);
+		return Success;
+	}
+
+	bool CreateBuffer(int Slot, size_t DataBytes, const void *pData, int Flags)
+	{
+		if(!EnsureBufferSlot(Slot))
+			return false;
+		if(m_vBufferSlots[Slot].m_Allocated)
+			DestroyBuffer(Slot);
+		const bool OneTimeUse = (Flags & IGraphics::EBufferObjectCreateFlags::BUFFER_OBJECT_CREATE_FLAGS_ONE_TIME_USE_BIT) != 0;
+		SMetalBufferLayout Layout;
+		if(!MetalBufferLayout(DataBytes, OneTimeUse, Layout) || m_Device == nil || m_CurrentCommandBuffer == nil)
+			return false;
+		const MTLResourceOptions Options = OneTimeUse ? MTLResourceStorageModeShared : MTLResourceStorageModePrivate;
+		id<MTLBuffer> Buffer = [m_Device newBufferWithLength:DataBytes options:Options];
+		if(Buffer == nil)
+			return false;
+		bool Success = true;
+		if(OneTimeUse)
+		{
+			if(pData != nullptr)
+				mem_copy(Buffer.contents, pData, DataBytes);
+			else
+				std::memset(Buffer.contents, 0, DataBytes);
+		}
+		else
+		{
+			Success = CopyIntoBuffer(Buffer, 0, pData, DataBytes);
+		}
+		if(!Success)
+		{
+			ReleaseMetalObject(Buffer);
+			return false;
+		}
+		SBufferSlot &SlotInfo = m_vBufferSlots[Slot];
+		SlotInfo.m_Buffer = Buffer;
+		SlotInfo.m_DataBytes = DataBytes;
+		SlotInfo.m_OneTimeUse = OneTimeUse;
+		SlotInfo.m_Allocated = true;
+		AddBufferMemory(DataBytes);
+		return true;
+	}
+
+	bool UpdateBuffer(int Slot, size_t Offset, size_t DataBytes, const void *pData)
+	{
+		if(Slot < 0 || static_cast<size_t>(Slot) >= m_vBufferSlots.size() || !m_vBufferSlots[Slot].m_Allocated)
+			return false;
+		SBufferSlot &Buffer = m_vBufferSlots[Slot];
+		if(!MetalValidateBufferRange(Buffer.m_DataBytes, Offset, DataBytes))
+			return false;
+		if(Buffer.m_OneTimeUse)
+		{
+			if(pData != nullptr)
+				mem_copy(static_cast<uint8_t *>(Buffer.m_Buffer.contents) + Offset, pData, DataBytes);
+			else
+				std::memset(static_cast<uint8_t *>(Buffer.m_Buffer.contents) + Offset, 0, DataBytes);
+			return true;
+		}
+		return CopyIntoBuffer(Buffer.m_Buffer, Offset, pData, DataBytes);
+	}
+
+	bool CopyBuffer(int WriteSlot, int ReadSlot, size_t WriteOffset, size_t ReadOffset, size_t CopyBytes)
+	{
+		if(WriteSlot < 0 || ReadSlot < 0 || static_cast<size_t>(WriteSlot) >= m_vBufferSlots.size() || static_cast<size_t>(ReadSlot) >= m_vBufferSlots.size() || !m_vBufferSlots[WriteSlot].m_Allocated || !m_vBufferSlots[ReadSlot].m_Allocated)
+			return false;
+		SBufferSlot &WriteBuffer = m_vBufferSlots[WriteSlot];
+		SBufferSlot &ReadBuffer = m_vBufferSlots[ReadSlot];
+		if(!MetalValidateBufferRange(WriteBuffer.m_DataBytes, WriteOffset, CopyBytes) || !MetalValidateBufferRange(ReadBuffer.m_DataBytes, ReadOffset, CopyBytes))
+			return false;
+		if(WriteBuffer.m_OneTimeUse && ReadBuffer.m_OneTimeUse)
+		{
+			if(WriteSlot == ReadSlot && WriteOffset < ReadOffset + CopyBytes && ReadOffset < WriteOffset + CopyBytes)
+				std::memmove(static_cast<uint8_t *>(WriteBuffer.m_Buffer.contents) + WriteOffset, static_cast<uint8_t *>(ReadBuffer.m_Buffer.contents) + ReadOffset, CopyBytes);
+			else
+				mem_copy(static_cast<uint8_t *>(WriteBuffer.m_Buffer.contents) + WriteOffset, static_cast<uint8_t *>(ReadBuffer.m_Buffer.contents) + ReadOffset, CopyBytes);
+			return true;
+		}
+		if(m_CurrentCommandBuffer == nil)
+			return false;
+		EndRenderEncoderForBlit();
+		if(m_CurrentBlitEncoder == nil)
+			m_CurrentBlitEncoder = [m_CurrentCommandBuffer blitCommandEncoder];
+		if(m_CurrentBlitEncoder == nil)
+			return false;
+		[m_CurrentBlitEncoder copyFromBuffer:ReadBuffer.m_Buffer sourceOffset:ReadOffset toBuffer:WriteBuffer.m_Buffer destinationOffset:WriteOffset size:CopyBytes];
+		return true;
 	}
 
 	void AddStreamMemory(size_t Bytes)
@@ -698,6 +855,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{
 			false,
 			"Metal command processor does not implement command " + std::to_string(pCommand->m_Cmd) +
+				" (backend_state=" + MetalBackendStateName(m_State) + ", frame_id=" + std::to_string(m_FrameId) + ")"});
+	}
+
+	void SetResourceCommandError(const CCommandBuffer::SCommand *pCommand)
+	{
+		m_Error = {};
+		m_Error.m_ErrorType = GFX_ERROR_TYPE_RENDER_CMD_FAILED;
+		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{
+			false,
+			"Metal buffer resource command failed " + std::to_string(pCommand->m_Cmd) +
 			" (backend_state=" + MetalBackendStateName(m_State) + ", frame_id=" + std::to_string(m_FrameId) + ")"});
 	}
 
@@ -831,6 +998,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		(void)pCommand;
 		WaitForGpuIdle();
+		DestroyAllBuffers();
 		ReleaseGpuObjects();
 		m_FrameState.DrainFrames();
 		m_GpuFailure.store(false, std::memory_order_relaxed);
@@ -859,6 +1027,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		EndActiveEncoders();
 		WaitForGpuIdle();
+		DestroyAllBuffers();
 		ReleaseGpuObjects();
 		if(m_MetalView != nullptr)
 			SDL_Metal_DestroyView(m_MetalView);
@@ -1283,6 +1452,7 @@ public:
 	~CCommandProcessorFragment_Metal() override
 	{
 		WaitForGpuIdle();
+		DestroyAllBuffers();
 		ReleaseGpuObjects();
 		if(m_MetalView != nullptr)
 			SDL_Metal_DestroyView(m_MetalView);
@@ -1333,6 +1503,49 @@ public:
 			}
 			case CCommandBuffer::CMD_UPDATE_VIEWPORT:
 				UpdateDrawableSize();
+				return RUN_COMMAND_COMMAND_HANDLED;
+			case CCommandBuffer::CMD_CREATE_BUFFER_OBJECT:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_CreateBufferObject *>(pBaseCommand);
+				const bool Success = CreateBuffer(pCommand->m_BufferIndex, pCommand->m_DataSize, pCommand->m_pUploadData, pCommand->m_Flags);
+				if(pCommand->m_DeletePointer && pCommand->m_pUploadData != nullptr)
+					free(pCommand->m_pUploadData);
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RECREATE_BUFFER_OBJECT:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_RecreateBufferObject *>(pBaseCommand);
+				DestroyBuffer(pCommand->m_BufferIndex);
+				const bool Success = CreateBuffer(pCommand->m_BufferIndex, pCommand->m_DataSize, pCommand->m_pUploadData, pCommand->m_Flags);
+				if(pCommand->m_DeletePointer && pCommand->m_pUploadData != nullptr)
+					free(pCommand->m_pUploadData);
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_UPDATE_BUFFER_OBJECT:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_UpdateBufferObject *>(pBaseCommand);
+				const size_t Offset = reinterpret_cast<uintptr_t>(pCommand->m_pOffset);
+				const bool Success = UpdateBuffer(pCommand->m_BufferIndex, Offset, pCommand->m_DataSize, pCommand->m_pUploadData);
+				if(pCommand->m_DeletePointer && pCommand->m_pUploadData != nullptr)
+					free(pCommand->m_pUploadData);
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_COPY_BUFFER_OBJECT:
+			{
+				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_CopyBufferObject *>(pBaseCommand);
+				const bool Success = CopyBuffer(pCommand->m_WriteBufferIndex, pCommand->m_ReadBufferIndex, pCommand->m_WriteOffset, pCommand->m_ReadOffset, pCommand->m_CopySize);
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_DELETE_BUFFER_OBJECT:
+				DestroyBuffer(static_cast<const CCommandBuffer::SCommand_DeleteBufferObject *>(pBaseCommand)->m_BufferIndex);
 				return RUN_COMMAND_COMMAND_HANDLED;
 			case CCommandBuffer::CMD_TEXTURE_CREATE:
 			{

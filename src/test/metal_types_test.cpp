@@ -66,6 +66,42 @@ TEST(MetalTypes, RejectsStaleTextureHandles)
 	EXPECT_TRUE(Registry.IsValid(Second));
 }
 
+TEST(MetalTypes, ValidatesBufferLayoutsAndRanges)
+{
+	SMetalBufferLayout Layout;
+	ASSERT_TRUE(MetalBufferLayout(128, false, Layout));
+	EXPECT_EQ(Layout.m_DataBytes, 128U);
+	EXPECT_FALSE(Layout.m_OneTimeUse);
+	ASSERT_TRUE(MetalBufferLayout(64, true, Layout));
+	EXPECT_TRUE(Layout.m_OneTimeUse);
+	EXPECT_FALSE(MetalBufferLayout(0, false, Layout));
+
+	EXPECT_TRUE(MetalValidateBufferRange(128, 0, 128));
+	EXPECT_TRUE(MetalValidateBufferRange(128, 64, 64));
+	EXPECT_FALSE(MetalValidateBufferRange(128, 129, 1));
+	EXPECT_FALSE(MetalValidateBufferRange(128, 127, 2));
+	EXPECT_FALSE(MetalValidateBufferRange(128, 0, 0));
+}
+
+TEST(MetalTypes, RejectsStaleBufferHandlesAndPreservesMetadata)
+{
+	CMetalBufferRegistry Registry;
+	const SMetalBufferHandle First = Registry.Allocate(4, 256, true);
+	ASSERT_TRUE(Registry.IsValid(First));
+	EXPECT_EQ(Registry.DataBytes(First), 256U);
+	EXPECT_TRUE(Registry.IsOneTimeUse(First));
+	EXPECT_FALSE(Registry.Allocate(4, 8, false).IsValid());
+	ASSERT_TRUE(Registry.Release(First));
+	EXPECT_FALSE(Registry.IsValid(First));
+
+	const SMetalBufferHandle Second = Registry.Allocate(4, 512, false);
+	ASSERT_TRUE(Registry.IsValid(Second));
+	EXPECT_NE(First.m_Generation, Second.m_Generation);
+	EXPECT_EQ(Registry.DataBytes(Second), 512U);
+	EXPECT_FALSE(Registry.IsOneTimeUse(Second));
+	EXPECT_FALSE(Registry.Release(First));
+}
+
 TEST(MetalTypes, MapsBlendModesToOpenGLCompatibleFactors)
 {
 	EXPECT_FALSE(MetalBlendState(EMetalBlendMode::NONE).m_Enabled);

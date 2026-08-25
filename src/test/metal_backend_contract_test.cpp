@@ -42,8 +42,22 @@ TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)
 	ASSERT_NE(Release, std::string::npos);
 	ASSERT_NE(ErroneousCleanup, std::string::npos);
 	ASSERT_NE(Destructor, std::string::npos);
-	EXPECT_NE(Source.find("WaitForGpuIdle();\n\t\tReleaseGpuObjects();", ErroneousCleanup), std::string::npos);
-	EXPECT_NE(Source.find("WaitForGpuIdle();\n\t\tReleaseGpuObjects();", Destructor), std::string::npos);
+	const size_t ErroneousWait = Source.find("WaitForGpuIdle();", ErroneousCleanup);
+	const size_t ErroneousBufferRelease = Source.find("DestroyAllBuffers();", ErroneousWait);
+	const size_t ErroneousGpuRelease = Source.find("ReleaseGpuObjects();", ErroneousBufferRelease);
+	const size_t DestructorWait = Source.find("WaitForGpuIdle();", Destructor);
+	const size_t DestructorBufferRelease = Source.find("DestroyAllBuffers();", DestructorWait);
+	const size_t DestructorGpuRelease = Source.find("ReleaseGpuObjects();", DestructorBufferRelease);
+	EXPECT_NE(ErroneousWait, std::string::npos);
+	EXPECT_NE(ErroneousBufferRelease, std::string::npos);
+	EXPECT_NE(ErroneousGpuRelease, std::string::npos);
+	EXPECT_NE(DestructorWait, std::string::npos);
+	EXPECT_NE(DestructorBufferRelease, std::string::npos);
+	EXPECT_NE(DestructorGpuRelease, std::string::npos);
+	EXPECT_LT(ErroneousWait, ErroneousBufferRelease);
+	EXPECT_LT(ErroneousBufferRelease, ErroneousGpuRelease);
+	EXPECT_LT(DestructorWait, DestructorBufferRelease);
+	EXPECT_LT(DestructorBufferRelease, DestructorGpuRelease);
 	EXPECT_LT(Release, Wait);
 	EXPECT_LT(Wait, ErroneousCleanup);
 }
