@@ -74,6 +74,20 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return Device.lowPower ? STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INTEGRATED : STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_DISCRETE;
 	}
 
+	static const char *VendorName(id<MTLDevice> Device)
+	{
+		const char *pName = Device.name.UTF8String;
+		if(str_startswith(pName, "Apple"))
+			return "Apple";
+		if(str_startswith_nocase(pName, "AMD"))
+			return "AMD";
+		if(str_startswith_nocase(pName, "Intel"))
+			return "Intel";
+		if(str_startswith_nocase(pName, "NVIDIA"))
+			return "NVIDIA";
+		return "Metal";
+	}
+
 	void SelectDevice(const char *pConfiguredGpuName)
 	{
 		NSArray<id<MTLDevice>> *pDevices = MTLCopyAllDevices();
@@ -118,7 +132,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		else
 		{
 			if(m_pVendorString != nullptr)
-				str_copy(m_pVendorString, str_startswith(m_Device.name.UTF8String, "Apple") ? "Apple" : "Metal", gs_MetalGpuInfoStringSize);
+				str_copy(m_pVendorString, VendorName(m_Device), gs_MetalGpuInfoStringSize);
 			if(m_pVersionString != nullptr)
 				str_copy(m_pVersionString, "Metal native", gs_MetalGpuInfoStringSize);
 			if(m_pRendererString != nullptr)
