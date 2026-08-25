@@ -146,6 +146,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	SBackendCapabilities *m_pCapabilities = nullptr;
 	IStorage *m_pStorage = nullptr;
 	bool m_CommandBufferCommitted = false;
+	bool m_ReadbackPresented = false;
 	bool m_RenderEncoderStarted = false;
 	bool m_BackbufferHasContents = false;
 	uint32_t m_MultiSamplingCount = 0;
@@ -346,6 +347,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CurrentRenderEncoder = nil;
 		m_CurrentBlitEncoder = nil;
 		m_CurrentDrawable = nil;
+		m_ReadbackPresented = false;
 		m_BackbufferHasContents = false;
 		m_RenderTargetState.Reset();
 		ReleaseMetalObject(m_LastPresentedReadback);
@@ -1524,10 +1526,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_pCapabilities->m_QuadContainerBuffering = true;
 			m_pCapabilities->m_TextBuffering = true;
 			m_pCapabilities->m_TrianglesAsQuads = true;
-			m_pCapabilities->m_RenderTargets = false;
-			m_pCapabilities->m_RenderTargetGaussianBlur = false;
-			m_pCapabilities->m_BackbufferCapture = false;
-			m_pCapabilities->m_pRenderTargetSupportReason = "metal_render_target_readback_not_implemented";
+			m_pCapabilities->m_RenderTargets = true;
+			m_pCapabilities->m_RenderTargetGaussianBlur = true;
+			m_pCapabilities->m_BackbufferCapture = true;
+			m_pCapabilities->m_pRenderTargetSupportReason = "supported";
 		}
 		if(pCommand->m_pInitError != nullptr)
 			*pCommand->m_pInitError = 0;
@@ -1636,7 +1638,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setViewport:(MTLViewport){0.0, 0.0, static_cast<double>(Width), static_cast<double>(Height), 0.0, 1.0}];
 		m_RenderEncoderStarted = true;
 		if(Backbuffer)
+		{
 			m_BackbufferHasContents = true;
+			m_ReadbackPresented = false;
+		}
 		return true;
 	}
 
@@ -2393,6 +2398,68 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return true;
 	}
 
+	bool Cmd_RenderTarget_Readback(const CCommandBuffer::SCommand_RenderTarget_Readback *pCommand)
+	{
+		if(pCommand->m_TargetId < 0 || pCommand->m_pImage == nullptr || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size() || m_RenderTargetState.IsActive())
+			return true;
+		const SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
+		if(!Target.m_Allocated || Target.m_Texture == nil || Target.m_Width == 0 || Target.m_Height == 0)
+			return true;
+		size_t RowBytes = 0;
+		id<MTLBuffer> Readback = EncodeTextureReadback(Target.m_Texture, Target.m_Width, Target.m_Height, RowBytes);
+		if(Readback == nil)
+			return false;
+		id<MTLBuffer> PresentedReadback = nil;
+		size_t PresentedRowBytes = 0;
+		const bool HasDrawable = m_CurrentDrawable != nil;
+		if(HasDrawable)
+		{
+			PresentedReadback = EncodeDrawableReadback(m_DrawableWidth, m_DrawableHeight, PresentedRowBytes);
+			if(PresentedReadback == nil)
+			{
+				ReleaseMetalObject(Readback);
+				return false;
+			}
+		}
+		const bool FrameCompleted = HasDrawable ? CommitCurrentFrame(true, true) : CommitCurrentFrameForReadback();
+		if(!FrameCompleted)
+		{
+			ReleaseMetalObject(Readback);
+			ReleaseMetalObject(PresentedReadback);
+			return false;
+		}
+		if(HasDrawable)
+		{
+			StoreLastPresentedReadback(PresentedReadback, m_DrawableWidth, m_DrawableHeight, PresentedRowBytes);
+			ReleaseMetalObject(m_LastPresentedCommandBuffer);
+			m_LastPresentedCommandBuffer = RetainMetalObject(m_CurrentCommandBuffer);
+			m_ReadbackPresented = true;
+			ReleaseMetalObject(PresentedReadback);
+		}
+		size_t PixelCount = 0;
+		size_t DataBytes = 0;
+		if(!MetalCheckedMul(static_cast<size_t>(Target.m_Width), static_cast<size_t>(Target.m_Height), PixelCount) || !MetalCheckedMul(PixelCount, 4, DataBytes))
+		{
+			ReleaseMetalObject(Readback);
+			return false;
+		}
+		uint8_t *pImageData = static_cast<uint8_t *>(malloc(DataBytes));
+		if(pImageData == nullptr)
+		{
+			ReleaseMetalObject(Readback);
+			return false;
+		}
+		const uint8_t *pReadback = static_cast<const uint8_t *>(Readback.contents);
+		for(uint32_t Y = 0; Y < Target.m_Height; ++Y)
+			CopyBgraToRgba(pImageData + static_cast<size_t>(Y) * Target.m_Width * 4, pReadback + static_cast<size_t>(Y) * RowBytes, Target.m_Width);
+		pCommand->m_pImage->m_Width = Target.m_Width;
+		pCommand->m_pImage->m_Height = Target.m_Height;
+		pCommand->m_pImage->m_Format = CImageInfo::FORMAT_RGBA;
+		pCommand->m_pImage->m_pData = pImageData;
+		ReleaseMetalObject(Readback);
+		return true;
+	}
+
 	bool Cmd_RenderTarget_CaptureBackbuffer(const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *pCommand)
 	{
 		if(m_RenderTargetState.IsActive() || pCommand->m_TargetId < 0 || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size())
@@ -2479,18 +2546,29 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return Result == CMetalFrameState::EFinalizeResult::PRESENTED && m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
 	}
 
-	id<MTLBuffer> EncodeDrawableReadback(size_t Width, size_t Height, size_t &RowBytes)
+	bool CommitCurrentFrameForReadback()
 	{
-		if(m_CurrentCommandBuffer == nil || Width == 0 || Height == 0)
-			return nil;
-		if(m_CurrentDrawable == nil && !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+		if(m_CurrentCommandBuffer == nil || m_CommandBufferCommitted)
+			return false;
+		EndActiveEncoders();
+		if(!m_FrameState.FinalizeFrameWithoutPresent())
+			return false;
+		[m_CurrentCommandBuffer commit];
+		m_CommandBufferCommitted = true;
+		[m_CurrentCommandBuffer waitUntilCompleted];
+		return m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
+	}
+
+	id<MTLBuffer> EncodeTextureReadback(id<MTLTexture> Texture, size_t Width, size_t Height, size_t &RowBytes)
+	{
+		if(m_CurrentCommandBuffer == nil || Texture == nil || Width == 0 || Height == 0)
 			return nil;
 		EndActiveEncoders();
 		size_t UnalignedRowBytes = 0;
 		if(!MetalCheckedMul(Width, 4, UnalignedRowBytes) || UnalignedRowBytes > std::numeric_limits<size_t>::max() - 255)
 			return nil;
 		RowBytes = (UnalignedRowBytes + 255) & ~size_t(255);
-		if(Height > 0 && RowBytes > std::numeric_limits<size_t>::max() / Height)
+		if(RowBytes > std::numeric_limits<size_t>::max() / Height)
 			return nil;
 		id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes * Height options:MTLResourceStorageModeShared];
 		if(Readback == nil)
@@ -2501,8 +2579,17 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			ReleaseMetalObject(Readback);
 			return nil;
 		}
-		[m_CurrentBlitEncoder copyFromTexture:m_CurrentDrawable.texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(Width, Height, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes * Height];
+		[m_CurrentBlitEncoder copyFromTexture:Texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(Width, Height, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes * Height];
 		return Readback;
+	}
+
+	id<MTLBuffer> EncodeDrawableReadback(size_t Width, size_t Height, size_t &RowBytes)
+	{
+		if(m_CurrentCommandBuffer == nil || Width == 0 || Height == 0)
+			return nil;
+		if(m_CurrentDrawable == nil && !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return nil;
+		return EncodeTextureReadback(m_CurrentDrawable.texture, Width, Height, RowBytes);
 	}
 
 	void StoreLastPresentedReadback(id<MTLBuffer> Readback, uint32_t Width, uint32_t Height, size_t RowBytes)
@@ -2521,7 +2608,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			pDst[Pixel * 4 + 0] = pSrc[Pixel * 4 + 2];
 			pDst[Pixel * 4 + 1] = pSrc[Pixel * 4 + 1];
 			pDst[Pixel * 4 + 2] = pSrc[Pixel * 4 + 0];
-			pDst[Pixel * 4 + 3] = 255;
+			pDst[Pixel * 4 + 3] = pSrc[Pixel * 4 + 3];
 		}
 	}
 
@@ -2540,6 +2627,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		size_t RowBytes = 0;
 		uint32_t Width = m_DrawableWidth;
 		uint32_t Height = m_DrawableHeight;
+		if(!*pCommand->m_pSwapped && m_ReadbackPresented)
+		{
+			*pCommand->m_pSwapped = true;
+			m_ReadbackPresented = false;
+		}
 		if(!*pCommand->m_pSwapped)
 		{
 			Readback = EncodeDrawableReadback(Width, Height, RowBytes);
@@ -2597,6 +2689,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(pCommand->m_pColor == nullptr || pCommand->m_pSwapped == nullptr)
 			return;
 		*pCommand->m_pColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		if(!*pCommand->m_pSwapped && m_ReadbackPresented)
+		{
+			*pCommand->m_pSwapped = true;
+			m_ReadbackPresented = false;
+		}
 		if(!*pCommand->m_pSwapped)
 		{
 			const int X = pCommand->m_Position.x;
@@ -2637,6 +2734,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
 	{
 		(void)pCommand;
+		if(m_ReadbackPresented)
+		{
+			m_ReadbackPresented = false;
+			return;
+		}
 		if(m_CurrentDrawable != nil && m_DrawableWidth > 0 && m_DrawableHeight > 0)
 		{
 			size_t RowBytes = 0;
@@ -2949,6 +3051,13 @@ public:
 			case CCommandBuffer::CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS:
 			{
 				const bool Success = Cmd_RenderTarget_GaussianBlurPass(static_cast<const CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TARGET_READBACK:
+			{
+				const bool Success = Cmd_RenderTarget_Readback(static_cast<const CCommandBuffer::SCommand_RenderTarget_Readback *>(pBaseCommand));
 				if(!Success)
 					SetUnsupportedCommandError(pBaseCommand);
 				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;

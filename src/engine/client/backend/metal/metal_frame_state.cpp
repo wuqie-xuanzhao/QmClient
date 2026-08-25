@@ -51,6 +51,15 @@ CMetalFrameState::EFinalizeResult CMetalFrameState::FinalizeFrameForPresent(bool
 	return EFinalizeResult::PRESENTED;
 }
 
+bool CMetalFrameState::FinalizeFrameWithoutPresent()
+{
+	std::lock_guard<std::mutex> Lock(m_Mutex);
+	if(m_CurrentFrameId == 0 || m_CurrentFrameFinalized || m_CurrentFrameFailed)
+		return false;
+	m_CurrentFrameFinalized = true;
+	return true;
+}
+
 bool CMetalFrameState::CompleteFrame(const SFrameCapture &Capture, bool Success)
 {
 	std::lock_guard<std::mutex> Lock(m_Mutex);

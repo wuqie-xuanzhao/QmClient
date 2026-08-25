@@ -130,9 +130,26 @@ TEST(MetalBackendContract, RenderTargetsOwnAttachmentsAndRestoreDrawableRenderin
 	EXPECT_NE(Source.find("m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear"), std::string::npos);
 	EXPECT_NE(Source.find("[m_CurrentRenderEncoder setFragmentTexture:m_CurrentDrawable.texture atIndex:0]"), std::string::npos);
 	EXPECT_NE(Source.find("EndActiveEncoders();\n\t\treturn true;\n\t}\n\n\tvoid EndActiveEncoders()"), std::string::npos);
-	EXPECT_NE(Source.find("m_RenderTargets = false"), std::string::npos);
-	EXPECT_EQ(Source.find("m_RenderTargets = true"), std::string::npos);
-	EXPECT_NE(Source.find("m_pRenderTargetSupportReason = \"metal_render_target_readback_not_implemented\""), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderTargets = true"), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderTargetGaussianBlur = true"), std::string::npos);
+	EXPECT_NE(Source.find("m_BackbufferCapture = true"), std::string::npos);
+	EXPECT_NE(Source.find("m_pRenderTargetSupportReason = \"supported\""), std::string::npos);
+}
+
+TEST(MetalBackendContract, RenderTargetReadbackCopiesBgraToRgbaBeforeSignaling)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_Readback"), std::string::npos);
+	EXPECT_NE(Source.find("id<MTLBuffer> EncodeTextureReadback"), std::string::npos);
+	EXPECT_NE(Source.find("bool CommitCurrentFrameForReadback"), std::string::npos);
+	EXPECT_NE(Source.find("FinalizeFrameWithoutPresent"), std::string::npos);
+	EXPECT_NE(Source.find("CopyBgraToRgba"), std::string::npos);
+	EXPECT_NE(Source.find("id<MTLBuffer> PresentedReadback = nil;"), std::string::npos);
+	EXPECT_NE(Source.find("const bool FrameCompleted = HasDrawable ? CommitCurrentFrame(true, true) : CommitCurrentFrameForReadback();"), std::string::npos);
+	EXPECT_NE(Source.find("m_ReadbackPresented = true;"), std::string::npos);
+	EXPECT_NE(Source.find("if(!*pCommand->m_pSwapped && m_ReadbackPresented)"), std::string::npos);
+	EXPECT_NE(Source.find("pDst[Pixel * 4 + 3] = pSrc[Pixel * 4 + 3];"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TARGET_READBACK"), std::string::npos);
 }
 
 TEST(MetalBackendContract, MultisampleBackbufferUsesResolveAttachmentAndRealDeviceSupport)
@@ -163,7 +180,7 @@ TEST(MetalBackendContract, GaussianBlurUsesSingleSamplePingPongPasses)
 	EXPECT_NE(Source.find("EndActiveEncoders();\n\t\tif(!BeginRenderEncoder"), std::string::npos);
 	EXPECT_NE(Source.find("setFragmentBuffer:Frame.m_VertexBuffer offset:FragmentUniformOffset atIndex:1"), std::string::npos);
 	EXPECT_NE(Source.find("CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS"), std::string::npos);
-	EXPECT_NE(Source.find("m_RenderTargetGaussianBlur = false"), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderTargetGaussianBlur = true"), std::string::npos);
 
 	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
 	EXPECT_NE(Shader.find("float GaussianBlurWeight"), std::string::npos);

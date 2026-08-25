@@ -18,6 +18,23 @@ TEST(MetalFrameState, CannotFinalizeBeforeStartingAFrame)
 	EXPECT_FALSE(State.CaptureRetained());
 }
 
+TEST(MetalFrameState, ReadbackFinalizesWithoutReplacingPresentedCapture)
+{
+	CMetalFrameState State;
+	CMetalFrameState::SFrameCapture Capture;
+	ASSERT_TRUE(State.BeginFrame(0));
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+	ASSERT_TRUE(State.ReadLastPresentedFrame(Capture));
+	EXPECT_EQ(Capture.m_FrameId, 1U);
+
+	ASSERT_TRUE(State.BeginFrame(1));
+	EXPECT_TRUE(State.FinalizeFrameWithoutPresent());
+	EXPECT_TRUE(State.CurrentFrameFinalized());
+	EXPECT_TRUE(State.ReadLastPresentedFrame(Capture));
+	EXPECT_EQ(Capture.m_FrameId, 1U);
+	EXPECT_FALSE(State.FinalizeFrameWithoutPresent());
+}
+
 TEST(MetalFrameState, ScreenshotAndReadPixelSharePresentedFrame)
 {
 	CMetalFrameState State;

@@ -34,6 +34,7 @@ public:
 
 	bool BeginFrame(size_t Slot);
 	EFinalizeResult FinalizeFrameForPresent(bool DrawableAvailable);
+	bool FinalizeFrameWithoutPresent();
 	bool CompleteFrame(const SFrameCapture &Capture, bool Success);
 	size_t DrainFrames();
 	bool ReadLastPresentedFrame(SFrameCapture &Capture) const;
