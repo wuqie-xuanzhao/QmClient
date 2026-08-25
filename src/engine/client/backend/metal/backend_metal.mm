@@ -704,7 +704,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_pCapabilities->m_MipMapping = true;
 			m_pCapabilities->m_NPOTTextures = true;
 			m_pCapabilities->m_ShaderSupport = true;
-			m_pCapabilities->m_pRenderTargetSupportReason = "render_targets_not_implemented";
+			m_pCapabilities->m_TrianglesAsQuads = true;
+			m_pCapabilities->m_pRenderTargetSupportReason = "metal_p1_disabled";
 		}
 		if(pCommand->m_pInitError != nullptr)
 			*pCommand->m_pInitError = 0;
