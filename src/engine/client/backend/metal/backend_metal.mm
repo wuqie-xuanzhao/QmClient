@@ -1573,6 +1573,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pLayer.maximumDrawableCount = 3;
 		pLayer.framebufferOnly = NO;
 		pLayer.presentsWithTransaction = NO;
+		// drawable 不可用时让本帧返回，避免合成器阻塞图形线程；下一帧可继续恢复。
+		pLayer.allowsNextDrawableTimeout = YES;
 		pLayer.displaySyncEnabled = m_VSync;
 		UpdateDrawableSize();
 	}
@@ -3438,12 +3440,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		SFrameSlot &Frame = m_aFrameSlots[Slot];
 		if(m_FrameState.SlotState(Slot) == CMetalFrameState::ESlotState::IN_FLIGHT && Frame.m_CommandBuffer != nil)
 		{
-			const auto FrameSlotWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
-			[Frame.m_CommandBuffer waitUntilCompleted];
-			if(m_MetalPerfEnabled)
+			const MTLCommandBufferStatus Status = Frame.m_CommandBuffer.status;
+			if(Status != MTLCommandBufferStatusCompleted && Status != MTLCommandBufferStatusError)
 			{
-				++m_MetalPerfFrameSlotWaitCount;
-				m_MetalPerfFrameSlotWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - FrameSlotWaitStart).count();
+				const auto FrameSlotWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+				[Frame.m_CommandBuffer waitUntilCompleted];
+				if(m_MetalPerfEnabled)
+				{
+					++m_MetalPerfFrameSlotWaitCount;
+					m_MetalPerfFrameSlotWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - FrameSlotWaitStart).count();
+				}
 			}
 			m_FrameState.CompleteFrame({Frame.m_FrameId, Slot}, Frame.m_CommandBuffer.status == MTLCommandBufferStatusCompleted);
 		}

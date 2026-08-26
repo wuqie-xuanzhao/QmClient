@@ -355,3 +355,15 @@ TEST(MetalBackendContract, FrameSlotsKeepVertexBuffersAndOwnCrossCommandEncoders
 	EXPECT_NE(Source.find("ReleaseMetalObject(m_CurrentBlitEncoder);"), std::string::npos);
 	EXPECT_NE(Source.find("ReleaseMetalObject(m_CurrentDrawable);"), std::string::npos);
 }
+
+TEST(MetalBackendContract, DrawableAcquisitionUsesTimeoutAndCompletedSlotsDoNotWait)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
+	const size_t SlotWait = Source.find("const MTLCommandBufferStatus Status = Frame.m_CommandBuffer.status;");
+	ASSERT_NE(SlotWait, std::string::npos);
+	const size_t WaitCall = Source.find("[Frame.m_CommandBuffer waitUntilCompleted];", SlotWait);
+	ASSERT_NE(WaitCall, std::string::npos);
+	EXPECT_LT(SlotWait, WaitCall);
+	EXPECT_NE(Source.find("Status != MTLCommandBufferStatusCompleted && Status != MTLCommandBufferStatusError"), std::string::npos);
+}
