@@ -610,6 +610,7 @@ src/test/metal_types_test.cpp
 - VSync on/off、普通/HiDPI 分开，不用单个 FPS 数字判断后端优劣。
 - 2026-08-26 用户反馈“设置页点击慢半拍、进游戏前卡顿、性能不如 Vulkan”后复核发现普通 `Cmd_Swap()` 每帧都在创建整屏 shared readback buffer 并插入 blit encoder，属于已确认的 Metal 热路径回退。现改为普通帧只 present；视频回调在真正请求 `GetPresentedImageData()` 时对当前已呈现 drawable 按需读回，截图/读像素仍保留显式请求路径。普通 present 会清理旧 readback，延迟读回使用呈现帧尺寸快照；图形线程在视频回调完成前保持 buffer in-process，避免下一帧释放 drawable 竞态。新增 contract/runtime 回归覆盖首次按需读回与“显式读回后普通帧替换旧缓存”。
 - 2026-08-26 Metal ON 回归中 `QuadContainerExBindsFragmentUniforms` 曾因测试把私有 buffer 上传插在清屏 encoder 之后而出现不稳定黑帧；测试现先建立 one-time-use 顶点资源，再清屏并绘制，避免把资源上传/encoder 顺序问题混入 uniform 绑定断言。调整后 runtime 9/9、Metal 相关 contract/type/state 49/49、Metal ON C++ 全量 2847/2847 通过。
+- 2026-08-26 并行编码评估补充：原生 Metal 当前由 `CGraphicsBackend_Threaded` 的单一 processor/graphics thread 顺序驱动；`gfx_render_thread_count` 只被 Vulkan secondary-command-buffer worker 路径消费，不能据此推导 Metal 必须单线程，也不能直接复用 Vulkan 的 `m_ThreadIndex`。Metal 预初始化日志现在记录 `requested_threads` 与 `actual_threads=1`，每 120 帧诊断样本增加 graphics-thread command processing 总时长/最大值。只有在这些样本或 GPU capture 证明 CPU encode 为主要瓶颈后，才进入独立的 Metal command partition/`MTLParallelRenderCommandEncoder` 设计；在此之前保持顺序编码以保护 drawable、encoder、stream buffer、render-target 和资源状态的顺序语义。
 
 ## Task 31：证据驱动优化
 

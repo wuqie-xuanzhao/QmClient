@@ -190,6 +190,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	uint64_t m_MetalPerfTextureCreateBytes = 0;
 	uint64_t m_MetalPerfBufferCreateCount = 0;
 	uint64_t m_MetalPerfBufferCreateBytes = 0;
+	double m_MetalPerfCommandProcessingMs = 0.0;
+	double m_MetalPerfCommandProcessingMaxMs = 0.0;
+	std::chrono::nanoseconds m_MetalPerfFrameStart = std::chrono::nanoseconds::zero();
+	int m_MetalPerfRequestedRenderThreads = 1;
 	unsigned int m_RequiredIndicesNum = 0;
 	std::atomic<uint64_t> *m_pTextureMemoryUsage = nullptr;
 	std::atomic<uint64_t> *m_pBufferMemoryUsage = nullptr;
@@ -218,14 +222,17 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_MetalPerfTextureCreateBytes = 0;
 		m_MetalPerfBufferCreateCount = 0;
 		m_MetalPerfBufferCreateBytes = 0;
+		m_MetalPerfCommandProcessingMs = 0.0;
+		m_MetalPerfCommandProcessingMaxMs = 0.0;
+		m_MetalPerfFrameStart = std::chrono::nanoseconds::zero();
 	}
 
 	void MaybeLogMetalPerfStats()
 	{
 		if(!m_MetalPerfEnabled || m_MetalPerfFrameCount != 120)
 			return;
-		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu",
-			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes);
+		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu",
+			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes);
 		ResetMetalPerfStats();
 	}
 
@@ -1758,6 +1765,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void Cmd_PreInit(const SCommand_PreInit *pCommand)
 	{
 		m_State = EMetalBackendState::UNINITIALIZED;
+		m_MetalPerfRequestedRenderThreads = g_Config.m_GfxRenderThreadCount;
+		dbg_msg("gfx/metal", "render command policy: requested_threads=%d actual_threads=1 (Metal encoder state is serialized; parallel encoding requires a separate profile and command partition)", m_MetalPerfRequestedRenderThreads);
 		m_pVendorString = pCommand->m_pVendorString;
 		m_pVersionString = pCommand->m_pVersionString;
 		m_pRendererString = pCommand->m_pRendererString;
@@ -3429,10 +3438,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(m_MetalPerfEnabled)
 		{
+			MaybeLogMetalPerfStats();
+			m_MetalPerfFrameStart = time_get_nanoseconds();
 			++m_MetalPerfFrameCount;
 			++m_MetalPerfCommandBufferCount;
 			m_MetalPerfEstimatedRenderCalls += EstimatedRenderCallCount;
-			MaybeLogMetalPerfStats();
 		}
 		if(m_State != EMetalBackendState::INITIALIZED || m_CommandQueue == nil)
 			return;
@@ -3481,6 +3491,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void EndCommands() override
 	{
 		CompleteCurrentFrameIfNeeded();
+		if(m_MetalPerfEnabled && m_MetalPerfFrameStart != std::chrono::nanoseconds::zero())
+		{
+			const double ProcessingMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - m_MetalPerfFrameStart).count();
+			m_MetalPerfCommandProcessingMs += ProcessingMs;
+			m_MetalPerfCommandProcessingMaxMs = std::max(m_MetalPerfCommandProcessingMaxMs, ProcessingMs);
+			m_MetalPerfFrameStart = std::chrono::nanoseconds::zero();
+		}
 	}
 
 public:
