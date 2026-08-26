@@ -1445,6 +1445,16 @@ TEST(QmMonitoringHelpers, ProcessHighPriorityConfigExistsAndDefaultsOff)
 	EXPECT_NE(Source.find("MACRO_CONFIG_INT(QmAssetsPreviewBudgetPercent, qm_assets_preview_budget_percent, 8, 0, 100"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientAspectChainUsesRegisteredConfigName)
+{
+	const std::string ConfigSource = ReadRepoFile("src/engine/shared/config_variables_tclient.h");
+	const std::string ClientSource = ReadRepoFile("src/game/client/components/tclient/tclient.cpp");
+
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(TcAllowAnyRes, tc_allow_any_res,"), std::string::npos);
+	EXPECT_NE(ClientSource.find("Console()->Chain(\n\t\t\"tc_allow_any_res\""), std::string::npos);
+	EXPECT_EQ(ClientSource.find("tc_allow_any_resolution"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, WindowsStartupPriorityHookIsOptionalAndGuarded)
 {
 	std::ifstream File(TestSourcePath("src/engine/client/client.cpp"));

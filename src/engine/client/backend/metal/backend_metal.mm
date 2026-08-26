@@ -107,6 +107,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	};
 
 	using TPipelineStates = std::array<id<MTLRenderPipelineState>, 60>;
+	using TSdfPipelineStates = std::array<id<MTLRenderPipelineState>, static_cast<size_t>(EMetalBlendMode::ADDITIVE) + 1>;
 
 	EMetalBackendState m_State = EMetalBackendState::UNINITIALIZED;
 	uint64_t m_FrameId = 0;
@@ -120,6 +121,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLLibrary> m_ShaderLibrary = nil;
 	TPipelineStates m_aPipelineStates{};
 	TPipelineStates m_aMultiSamplePipelineStates{};
+	TSdfPipelineStates m_aMediaIslandSdfPipelines{};
+	TSdfPipelineStates m_aRoundedRectSdfPipelines{};
+	TSdfPipelineStates m_aMultiSampleMediaIslandSdfPipelines{};
+	TSdfPipelineStates m_aMultiSampleRoundedRectSdfPipelines{};
+	TSdfPipelineStates m_aTexturedMsdfPipelines{};
+	TSdfPipelineStates m_aMultiSampleTexturedMsdfPipelines{};
 	id<MTLRenderPipelineState> m_GaussianBlurPipeline = nil;
 	id<MTLSamplerState> m_RepeatSampler = nil;
 	id<MTLSamplerState> m_ClampSampler = nil;
@@ -283,7 +290,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		Frame.m_FrameId = 0;
 	}
 
-	static void ReleasePipelineStates(TPipelineStates &Pipelines)
+	template<size_t Size>
+	static void ReleasePipelineStates(std::array<id<MTLRenderPipelineState>, Size> &Pipelines)
 	{
 		for(id<MTLRenderPipelineState> Pipeline : Pipelines)
 			ReleaseMetalObject(Pipeline);
@@ -360,6 +368,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CurrentCommandBuffer = nil;
 		ReleasePipelineStates(m_aPipelineStates);
 		ReleasePipelineStates(m_aMultiSamplePipelineStates);
+		ReleasePipelineStates(m_aMediaIslandSdfPipelines);
+		ReleasePipelineStates(m_aRoundedRectSdfPipelines);
+		ReleasePipelineStates(m_aMultiSampleMediaIslandSdfPipelines);
+		ReleasePipelineStates(m_aMultiSampleRoundedRectSdfPipelines);
+		ReleasePipelineStates(m_aTexturedMsdfPipelines);
+		ReleasePipelineStates(m_aMultiSampleTexturedMsdfPipelines);
 		ReleaseMetalObject(m_GaussianBlurPipeline);
 		ReleaseMetalObject(m_RepeatSampler);
 		ReleaseMetalObject(m_ClampSampler);
@@ -777,10 +791,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		if(pCommand->m_pStorage == nullptr)
 			return false;
+		constexpr const char *pShaderLibraryPath = "shader/metal/qmclient.metallib";
 		void *pShaderData = nullptr;
 		unsigned ShaderSize = 0;
-		if(!pCommand->m_pStorage->ReadFile("data/shader/metal/qmclient.metallib", IStorage::TYPE_ALL, &pShaderData, &ShaderSize) || pShaderData == nullptr || ShaderSize == 0)
+		const bool ShaderLibraryRead = pCommand->m_pStorage->ReadFile(pShaderLibraryPath, IStorage::TYPE_ALL, &pShaderData, &ShaderSize);
+		if(!ShaderLibraryRead || pShaderData == nullptr || ShaderSize == 0)
+		{
+			dbg_msg("gfx/metal", "failed to read shader library '%s' from storage type TYPE_ALL (read=%d, bytes=%u)", pShaderLibraryPath, ShaderLibraryRead, ShaderSize);
+			free(pShaderData);
 			return false;
+		}
 
 		dispatch_data_t Data = dispatch_data_create(pShaderData, ShaderSize, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 			free(pShaderData);
@@ -791,7 +811,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		dispatch_release(Data);
 #endif
 		if(m_ShaderLibrary == nil && pError != nil)
-			dbg_msg("gfx/metal", "failed to load qmclient.metallib: %s", [[pError localizedDescription] UTF8String]);
+			dbg_msg("gfx/metal", "failed to load shader library '%s': %s", pShaderLibraryPath, [[pError localizedDescription] UTF8String]);
 		return m_ShaderLibrary != nil;
 	}
 
@@ -1061,6 +1081,166 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		ReleaseMetalObject(m_GaussianBlurPipeline);
 		m_GaussianBlurPipeline = Pipeline;
 		return true;
+	}
+
+	bool CreateSdfPipelineStates(uint32_t SampleCount, TSdfPipelineStates &MediaIslandPipelines, TSdfPipelineStates &RoundedRectPipelines)
+	{
+		if(SampleCount == 0 || m_Device == nil || m_ShaderLibrary == nil)
+			return false;
+		TSdfPipelineStates NewMediaIslandPipelines{};
+		TSdfPipelineStates NewRoundedRectPipelines{};
+		id<MTLFunction> VertexFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_vertex"];
+		id<MTLFunction> MediaIslandFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_media_island_sdf_fragment"];
+		id<MTLFunction> RoundedRectFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_rounded_rect_sdf_fragment"];
+		if(VertexFunction == nil || MediaIslandFragment == nil || RoundedRectFragment == nil)
+		{
+			ReleaseMetalObject(VertexFunction);
+			ReleaseMetalObject(MediaIslandFragment);
+			ReleaseMetalObject(RoundedRectFragment);
+			return false;
+		}
+
+		MTLVertexDescriptor *pVertexDescriptor = [[MTLVertexDescriptor alloc] init];
+		pVertexDescriptor.attributes[0].format = MTLVertexFormatFloat2;
+		pVertexDescriptor.attributes[0].offset = offsetof(GL_SVertex, m_Pos);
+		pVertexDescriptor.attributes[0].bufferIndex = 0;
+		pVertexDescriptor.attributes[1].format = MTLVertexFormatFloat2;
+		pVertexDescriptor.attributes[1].offset = offsetof(GL_SVertex, m_Tex);
+		pVertexDescriptor.attributes[1].bufferIndex = 0;
+		pVertexDescriptor.attributes[2].format = MTLVertexFormatUChar4Normalized;
+		pVertexDescriptor.attributes[2].offset = offsetof(GL_SVertex, m_Color);
+		pVertexDescriptor.attributes[2].bufferIndex = 0;
+		pVertexDescriptor.layouts[0].stride = sizeof(GL_SVertex);
+		pVertexDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+
+		auto CreatePipelines = [this, SampleCount, VertexFunction, pVertexDescriptor](id<MTLFunction> FragmentFunction, TSdfPipelineStates &Pipelines, const char *pName) {
+			bool Success = true;
+			for(int Blend = 0; Blend <= static_cast<int>(EMetalBlendMode::ADDITIVE); ++Blend)
+			{
+				MTLRenderPipelineDescriptor *pPipeline = [[MTLRenderPipelineDescriptor alloc] init];
+				pPipeline.vertexFunction = VertexFunction;
+				pPipeline.fragmentFunction = FragmentFunction;
+				pPipeline.vertexDescriptor = pVertexDescriptor;
+				pPipeline.rasterSampleCount = SampleCount;
+				pPipeline.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+				const SMetalBlendState BlendState = MetalBlendState(static_cast<EMetalBlendMode>(Blend));
+				pPipeline.colorAttachments[0].blendingEnabled = BlendState.m_Enabled;
+				pPipeline.colorAttachments[0].sourceRGBBlendFactor = MetalBlendFactor(BlendState.m_Source);
+				pPipeline.colorAttachments[0].destinationRGBBlendFactor = MetalBlendFactor(BlendState.m_Destination);
+				pPipeline.colorAttachments[0].sourceAlphaBlendFactor = MetalBlendFactor(BlendState.m_Source);
+				pPipeline.colorAttachments[0].destinationAlphaBlendFactor = MetalBlendFactor(BlendState.m_Destination);
+				NSError *pError = nil;
+				Pipelines[static_cast<size_t>(Blend)] = [m_Device newRenderPipelineStateWithDescriptor:pPipeline error:&pError];
+				if(Pipelines[static_cast<size_t>(Blend)] == nil && pError != nil)
+					dbg_msg("gfx/metal", "%s pipeline blend %d failed: %s", pName, Blend, [[pError localizedDescription] UTF8String]);
+				Success = Success && Pipelines[static_cast<size_t>(Blend)] != nil;
+#if !__has_feature(objc_arc)
+				[pPipeline release];
+#endif
+			}
+			return Success;
+		};
+
+		const bool Success = CreatePipelines(MediaIslandFragment, NewMediaIslandPipelines, "Media Island SDF") && CreatePipelines(RoundedRectFragment, NewRoundedRectPipelines, "rounded-rect SDF");
+#if !__has_feature(objc_arc)
+		[pVertexDescriptor release];
+		[VertexFunction release];
+		[MediaIslandFragment release];
+		[RoundedRectFragment release];
+#endif
+		if(Success)
+		{
+			ReleasePipelineStates(MediaIslandPipelines);
+			ReleasePipelineStates(RoundedRectPipelines);
+			MediaIslandPipelines.swap(NewMediaIslandPipelines);
+			RoundedRectPipelines.swap(NewRoundedRectPipelines);
+		}
+		ReleasePipelineStates(NewMediaIslandPipelines);
+		ReleasePipelineStates(NewRoundedRectPipelines);
+		return Success;
+	}
+
+	bool CreateTexturedMsdfPipelineStates(uint32_t SampleCount, TSdfPipelineStates &Pipelines)
+	{
+		if(SampleCount == 0 || m_Device == nil || m_ShaderLibrary == nil)
+			return false;
+		TSdfPipelineStates NewPipelines{};
+		id<MTLFunction> VertexFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_vertex"];
+		id<MTLFunction> FragmentFunction = [m_ShaderLibrary newFunctionWithName:@"qmclient_textured_msdf_fragment"];
+		if(VertexFunction == nil || FragmentFunction == nil)
+		{
+			ReleaseMetalObject(VertexFunction);
+			ReleaseMetalObject(FragmentFunction);
+			return false;
+		}
+
+		MTLVertexDescriptor *pVertexDescriptor = [[MTLVertexDescriptor alloc] init];
+		pVertexDescriptor.attributes[0].format = MTLVertexFormatFloat2;
+		pVertexDescriptor.attributes[0].offset = offsetof(GL_SVertex, m_Pos);
+		pVertexDescriptor.attributes[0].bufferIndex = 0;
+		pVertexDescriptor.attributes[1].format = MTLVertexFormatFloat2;
+		pVertexDescriptor.attributes[1].offset = offsetof(GL_SVertex, m_Tex);
+		pVertexDescriptor.attributes[1].bufferIndex = 0;
+		pVertexDescriptor.attributes[2].format = MTLVertexFormatUChar4Normalized;
+		pVertexDescriptor.attributes[2].offset = offsetof(GL_SVertex, m_Color);
+		pVertexDescriptor.attributes[2].bufferIndex = 0;
+		pVertexDescriptor.layouts[0].stride = sizeof(GL_SVertex);
+		pVertexDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+
+		bool Success = true;
+		for(int Blend = 0; Blend <= static_cast<int>(EMetalBlendMode::ADDITIVE); ++Blend)
+		{
+			MTLRenderPipelineDescriptor *pPipeline = [[MTLRenderPipelineDescriptor alloc] init];
+			pPipeline.vertexFunction = VertexFunction;
+			pPipeline.fragmentFunction = FragmentFunction;
+			pPipeline.vertexDescriptor = pVertexDescriptor;
+			pPipeline.rasterSampleCount = SampleCount;
+			pPipeline.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+			const SMetalBlendState BlendState = MetalBlendState(static_cast<EMetalBlendMode>(Blend));
+			pPipeline.colorAttachments[0].blendingEnabled = BlendState.m_Enabled;
+			pPipeline.colorAttachments[0].sourceRGBBlendFactor = MetalBlendFactor(BlendState.m_Source);
+			pPipeline.colorAttachments[0].destinationRGBBlendFactor = MetalBlendFactor(BlendState.m_Destination);
+			pPipeline.colorAttachments[0].sourceAlphaBlendFactor = MetalBlendFactor(BlendState.m_Source);
+			pPipeline.colorAttachments[0].destinationAlphaBlendFactor = MetalBlendFactor(BlendState.m_Destination);
+			NSError *pError = nil;
+			NewPipelines[static_cast<size_t>(Blend)] = [m_Device newRenderPipelineStateWithDescriptor:pPipeline error:&pError];
+			if(NewPipelines[static_cast<size_t>(Blend)] == nil && pError != nil)
+				dbg_msg("gfx/metal", "Textured MSDF pipeline blend %d failed: %s", Blend, [[pError localizedDescription] UTF8String]);
+			Success = Success && NewPipelines[static_cast<size_t>(Blend)] != nil;
+#if !__has_feature(objc_arc)
+			[pPipeline release];
+#endif
+		}
+#if !__has_feature(objc_arc)
+		[pVertexDescriptor release];
+		[VertexFunction release];
+		[FragmentFunction release];
+#endif
+		if(Success)
+		{
+			ReleasePipelineStates(Pipelines);
+			Pipelines.swap(NewPipelines);
+		}
+		ReleasePipelineStates(NewPipelines);
+		return Success;
+	}
+
+	static bool HasSdfPipelines(const TSdfPipelineStates &Pipelines)
+	{
+		return std::all_of(Pipelines.begin(), Pipelines.end(), [](id<MTLRenderPipelineState> Pipeline) { return Pipeline != nil; });
+	}
+
+	bool HasSdfSupportForCurrentSampleCount() const
+	{
+		const TSdfPipelineStates &MediaIslandPipelines = m_RenderTargetState.IsActive() || m_MultiSamplingCount == 0 ? m_aMediaIslandSdfPipelines : m_aMultiSampleMediaIslandSdfPipelines;
+		const TSdfPipelineStates &RoundedRectPipelines = m_RenderTargetState.IsActive() || m_MultiSamplingCount == 0 ? m_aRoundedRectSdfPipelines : m_aMultiSampleRoundedRectSdfPipelines;
+		return HasSdfPipelines(MediaIslandPipelines) && HasSdfPipelines(RoundedRectPipelines);
+	}
+
+	bool HasTexturedMsdfSupportForCurrentSampleCount() const
+	{
+		const TSdfPipelineStates &Pipelines = m_RenderTargetState.IsActive() || m_MultiSamplingCount == 0 ? m_aTexturedMsdfPipelines : m_aMultiSampleTexturedMsdfPipelines;
+		return HasSdfPipelines(Pipelines);
 	}
 
 	bool CreateFrameResources()
@@ -1522,10 +1702,35 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			pFailedStage = "frame resources";
 		if(pFailedStage != nullptr)
 		{
+			dbg_msg("gfx/metal", "native Metal initialization failed at %s", pFailedStage);
 			ReleaseGpuObjects();
+			if(m_pCapabilities != nullptr)
+				m_pCapabilities->m_TexturedMsdf.store(false, std::memory_order_release);
 			if(pCommand->m_pErrStringPtr != nullptr)
 				*pCommand->m_pErrStringPtr = pFailedStage;
 			return;
+		}
+		const bool SingleSampleSdfPipelines = CreateSdfPipelineStates(1, m_aMediaIslandSdfPipelines, m_aRoundedRectSdfPipelines);
+		bool SdfPipelinesAvailable = SingleSampleSdfPipelines;
+		if(SdfPipelinesAvailable && m_MultiSamplingCount > 0)
+			SdfPipelinesAvailable = CreateSdfPipelineStates(m_MultiSamplingCount, m_aMultiSampleMediaIslandSdfPipelines, m_aMultiSampleRoundedRectSdfPipelines);
+		if(!SdfPipelinesAvailable)
+		{
+			dbg_msg("gfx/metal", "Qm SDF pipelines unavailable; using the existing geometry fallback");
+			ReleasePipelineStates(m_aMediaIslandSdfPipelines);
+			ReleasePipelineStates(m_aRoundedRectSdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleMediaIslandSdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleRoundedRectSdfPipelines);
+		}
+		const bool SingleSampleTexturedMsdfPipelines = CreateTexturedMsdfPipelineStates(1, m_aTexturedMsdfPipelines);
+		bool TexturedMsdfPipelinesAvailable = SingleSampleTexturedMsdfPipelines;
+		if(TexturedMsdfPipelinesAvailable && m_MultiSamplingCount > 0)
+			TexturedMsdfPipelinesAvailable = CreateTexturedMsdfPipelineStates(m_MultiSamplingCount, m_aMultiSampleTexturedMsdfPipelines);
+		if(!TexturedMsdfPipelinesAvailable)
+		{
+			dbg_msg("gfx/metal", "Textured MSDF pipelines unavailable; using the existing geometry fallback");
+			ReleasePipelineStates(m_aTexturedMsdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleTexturedMsdfPipelines);
 		}
 
 		m_FrameState.DrainFrames();
@@ -1550,6 +1755,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_pCapabilities->m_QuadContainerBuffering = true;
 			m_pCapabilities->m_TextBuffering = true;
 			m_pCapabilities->m_TrianglesAsQuads = true;
+			m_pCapabilities->m_MediaIslandSdf = SdfPipelinesAvailable;
+			m_pCapabilities->m_RoundedRectSdf = SdfPipelinesAvailable;
+			m_pCapabilities->m_TexturedMsdf.store(TexturedMsdfPipelinesAvailable, std::memory_order_release);
 			m_pCapabilities->m_RenderTargets = true;
 			m_pCapabilities->m_RenderTargetGaussianBlur = true;
 			m_pCapabilities->m_BackbufferCapture = true;
@@ -1564,6 +1772,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void Cmd_Shutdown(const SCommand_Shutdown *pCommand)
 	{
 		(void)pCommand;
+		if(m_pCapabilities != nullptr)
+			m_pCapabilities->m_TexturedMsdf.store(false, std::memory_order_release);
 		m_State = EMetalBackendState::SHUTDOWN;
 	}
 
@@ -1594,6 +1804,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_vTextureSlots.clear();
 		ReleaseCommandQueue();
 		ReleaseDevice();
+		if(m_pCapabilities != nullptr)
+			m_pCapabilities->m_TexturedMsdf.store(false, std::memory_order_release);
 		m_State = EMetalBackendState::UNINITIALIZED;
 	}
 
@@ -1604,6 +1816,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		DestroyAllBufferContainers();
 		DestroyAllBuffers();
 		ReleaseGpuObjects();
+		if(m_pCapabilities != nullptr)
+			m_pCapabilities->m_TexturedMsdf.store(false, std::memory_order_release);
 		if(m_MetalView != nullptr)
 			SDL_Metal_DestroyView(m_MetalView);
 		m_MetalView = nullptr;
@@ -1821,6 +2035,144 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentRenderEncoder drawPrimitives:PrimitiveType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:VertexCount];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
 		return true;
+	}
+
+	bool DrawSdf(const CCommandBuffer::SState &State, EPrimitiveType PrimitiveType, unsigned PrimitiveCount, const CCommandBuffer::SVertex *pVertices, const void *pParams, size_t ParamsSize, const TSdfPipelineStates &Pipelines, id<MTLTexture> BackdropTexture)
+	{
+		if(pVertices == nullptr || pParams == nullptr || ParamsSize == 0 || PrimitiveCount == 0 || m_CurrentCommandBuffer == nil)
+			return false;
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		size_t VertexCount = 0;
+		EMetalPrimitiveType MetalType = EMetalPrimitiveType::TRIANGLES;
+		switch(PrimitiveType)
+		{
+		case EPrimitiveType::LINES: MetalType = EMetalPrimitiveType::LINES; break;
+		case EPrimitiveType::QUADS: MetalType = EMetalPrimitiveType::QUADS; break;
+		case EPrimitiveType::TRIANGLES: MetalType = EMetalPrimitiveType::TRIANGLES; break;
+		}
+		if(!MetalPrimitiveVertexCount(MetalType, PrimitiveCount, VertexCount) || VertexCount > std::numeric_limits<size_t>::max() / sizeof(CCommandBuffer::SVertex))
+			return false;
+		const size_t VertexBytes = VertexCount * sizeof(CCommandBuffer::SVertex);
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		const size_t VertexOffset = (Frame.m_VertexOffset + 255) & ~size_t(255);
+		const size_t UniformOffset = (VertexOffset + VertexBytes + 255) & ~size_t(255);
+		const size_t ParamsOffset = (UniformOffset + sizeof(SMetalUniforms) + 255) & ~size_t(255);
+		if(VertexOffset > gs_StreamBufferSize || VertexBytes > gs_StreamBufferSize - VertexOffset || UniformOffset > gs_StreamBufferSize || sizeof(SMetalUniforms) > gs_StreamBufferSize - UniformOffset || ParamsOffset > gs_StreamBufferSize || ParamsSize > gs_StreamBufferSize - ParamsOffset)
+			return false;
+		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(State.m_BlendMode);
+		if(static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
+			return false;
+		id<MTLRenderPipelineState> Pipeline = Pipelines[static_cast<size_t>(BlendMode)];
+		if(Pipeline == nil)
+			return false;
+		SMetalUniforms Uniforms;
+		if(!BuildMvp(State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+		uint8_t *pStreamData = static_cast<uint8_t *>(Frame.m_VertexBuffer.contents);
+		mem_copy(pStreamData + VertexOffset, pVertices, VertexBytes);
+		mem_copy(pStreamData + UniformOffset, &Uniforms, sizeof(Uniforms));
+		mem_copy(pStreamData + ParamsOffset, pParams, ParamsSize);
+		[m_CurrentRenderEncoder setRenderPipelineState:Pipeline];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentBuffer:Frame.m_VertexBuffer offset:ParamsOffset atIndex:1];
+		if(BackdropTexture != nil)
+		{
+			[m_CurrentRenderEncoder setFragmentTexture:BackdropTexture atIndex:0];
+			[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
+		}
+		SetScissor(State);
+		if(PrimitiveType == EPrimitiveType::QUADS)
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(PrimitiveCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		else
+			[m_CurrentRenderEncoder drawPrimitives:PrimitiveType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:static_cast<NSUInteger>(VertexCount)];
+		Frame.m_VertexOffset = ParamsOffset + ParamsSize;
+		return true;
+	}
+
+	bool DrawMediaIslandSdf(const CCommandBuffer::SCommand_RenderMediaIslandSdf &Command)
+	{
+		const TSdfPipelineStates &Pipelines = m_RenderTargetState.IsActive() || m_MultiSamplingCount == 0 ? m_aMediaIslandSdfPipelines : m_aMultiSampleMediaIslandSdfPipelines;
+		IGraphics::SMediaIslandSdfParams Params = Command.m_Params;
+		id<MTLTexture> BackdropTexture = nil;
+		if(!m_RenderTargetState.IsActive() && Command.m_BackdropTargetId >= 0 && static_cast<size_t>(Command.m_BackdropTargetId) < m_vRenderTargets.size())
+		{
+			const SRenderTarget &Target = m_vRenderTargets[Command.m_BackdropTargetId];
+			if(Target.m_Allocated && Target.m_Texture != nil)
+				BackdropTexture = Target.m_Texture;
+		}
+		if(BackdropTexture == nil)
+			Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_BACKDROP_UV] = vec4();
+		return DrawSdf(Command.m_State, Command.m_PrimType, Command.m_PrimCount, Command.m_pVertices, &Params, sizeof(Params), Pipelines, BackdropTexture);
+	}
+
+	bool DrawTexturedMsdf(const CCommandBuffer::SCommand_RenderTexturedMsdf &Command)
+	{
+		if(Command.m_pVertices == nullptr || Command.m_PrimCount == 0 || Command.m_MsdfParams.x <= 0.0f || Command.m_MsdfParams.y <= 0.0f || Command.m_MsdfParams.z <= 0.0f || Command.m_State.m_Texture < 0 || static_cast<size_t>(Command.m_State.m_Texture) >= m_vTextureSlots.size())
+			return false;
+		const STextureSlot &Texture = m_vTextureSlots[Command.m_State.m_Texture];
+		if(!Texture.m_Allocated || Texture.m_Texture == nil)
+			return false;
+		const TSdfPipelineStates &Pipelines = m_RenderTargetState.IsActive() || m_MultiSamplingCount == 0 ? m_aTexturedMsdfPipelines : m_aMultiSampleTexturedMsdfPipelines;
+		if(!HasSdfPipelines(Pipelines))
+			return false;
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+
+		size_t VertexCount = 0;
+		EMetalPrimitiveType MetalType = EMetalPrimitiveType::TRIANGLES;
+		switch(Command.m_PrimType)
+		{
+		case EPrimitiveType::LINES: MetalType = EMetalPrimitiveType::LINES; break;
+		case EPrimitiveType::QUADS: MetalType = EMetalPrimitiveType::QUADS; break;
+		case EPrimitiveType::TRIANGLES: MetalType = EMetalPrimitiveType::TRIANGLES; break;
+		}
+		if(!MetalPrimitiveVertexCount(MetalType, Command.m_PrimCount, VertexCount) || VertexCount > std::numeric_limits<size_t>::max() / sizeof(CCommandBuffer::SVertex))
+			return false;
+		const size_t VertexBytes = VertexCount * sizeof(CCommandBuffer::SVertex);
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		const size_t VertexOffset = (Frame.m_VertexOffset + 255) & ~size_t(255);
+		const size_t UniformOffset = (VertexOffset + VertexBytes + 255) & ~size_t(255);
+		const size_t ParamsOffset = (UniformOffset + sizeof(SMetalUniforms) + 255) & ~size_t(255);
+		if(VertexOffset > gs_StreamBufferSize || VertexBytes > gs_StreamBufferSize - VertexOffset || UniformOffset > gs_StreamBufferSize || sizeof(SMetalUniforms) > gs_StreamBufferSize - UniformOffset || ParamsOffset > gs_StreamBufferSize || sizeof(Command.m_MsdfParams) > gs_StreamBufferSize - ParamsOffset)
+			return false;
+
+		SMetalUniforms Uniforms;
+		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
+			return false;
+		Uniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+		uint8_t *pStreamData = static_cast<uint8_t *>(Frame.m_VertexBuffer.contents);
+		mem_copy(pStreamData + VertexOffset, Command.m_pVertices, VertexBytes);
+		mem_copy(pStreamData + UniformOffset, &Uniforms, sizeof(Uniforms));
+		mem_copy(pStreamData + ParamsOffset, &Command.m_MsdfParams, sizeof(Command.m_MsdfParams));
+
+		const EMetalBlendMode BlendMode = static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode);
+		if(static_cast<size_t>(BlendMode) > static_cast<size_t>(EMetalBlendMode::ADDITIVE))
+			return false;
+		id<MTLRenderPipelineState> Pipeline = Pipelines[static_cast<size_t>(BlendMode)];
+		if(Pipeline == nil)
+			return false;
+		[m_CurrentRenderEncoder setRenderPipelineState:Pipeline];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
+		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
+		[m_CurrentRenderEncoder setFragmentTexture:Texture.m_Texture atIndex:0];
+		[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
+		[m_CurrentRenderEncoder setFragmentBuffer:Frame.m_VertexBuffer offset:ParamsOffset atIndex:1];
+		SetScissor(Command.m_State);
+		if(Command.m_PrimType == EPrimitiveType::QUADS)
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		else
+			[m_CurrentRenderEncoder drawPrimitives:Command.m_PrimType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:static_cast<NSUInteger>(VertexCount)];
+		Frame.m_VertexOffset = ParamsOffset + sizeof(Command.m_MsdfParams);
+		return true;
+	}
+
+	bool DrawRoundedRectSdf(const CCommandBuffer::SCommand_RenderRoundedRectSdf &Command)
+	{
+		const TSdfPipelineStates &Pipelines = m_RenderTargetState.IsActive() || m_MultiSamplingCount == 0 ? m_aRoundedRectSdfPipelines : m_aMultiSampleRoundedRectSdfPipelines;
+		return DrawSdf(Command.m_State, Command.m_PrimType, Command.m_PrimCount, Command.m_pVertices, &Command.m_Params, sizeof(Command.m_Params), Pipelines, nil);
 	}
 
 	bool DrawTex3D(const CCommandBuffer::SCommand_RenderTex3D &Command)
@@ -2202,6 +2554,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		size_t UniformOffset = 0;
 		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || !PrepareContainerPipeline(Command.m_State, QuadContainerExPipelineIndex(Textured, static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode)), *pBuffer, UniformOffset))
 			return false;
+		[m_CurrentRenderEncoder setFragmentBuffer:m_aFrameSlots[m_CurrentFrameSlot].m_VertexBuffer offset:UniformOffset atIndex:1];
 		if(Textured)
 		{
 			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
@@ -2807,8 +3160,37 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		if(SupportedCount == 0)
 			ReleasePipelineStates(m_aMultiSamplePipelineStates);
+		if(SupportedCount > 0 && HasSdfPipelines(m_aMediaIslandSdfPipelines) && HasSdfPipelines(m_aRoundedRectSdfPipelines) &&
+			!CreateSdfPipelineStates(SupportedCount, m_aMultiSampleMediaIslandSdfPipelines, m_aMultiSampleRoundedRectSdfPipelines))
+		{
+			dbg_msg("gfx/metal", "Qm SDF MSAA pipelines unavailable after FSAA change; using the existing geometry fallback");
+			ReleasePipelineStates(m_aMediaIslandSdfPipelines);
+			ReleasePipelineStates(m_aRoundedRectSdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleMediaIslandSdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleRoundedRectSdfPipelines);
+		}
+		if(SupportedCount > 0 && HasSdfPipelines(m_aTexturedMsdfPipelines) &&
+			!CreateTexturedMsdfPipelineStates(SupportedCount, m_aMultiSampleTexturedMsdfPipelines))
+		{
+			dbg_msg("gfx/metal", "Textured MSDF MSAA pipelines unavailable after FSAA change; using the existing geometry fallback");
+			ReleasePipelineStates(m_aTexturedMsdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleTexturedMsdfPipelines);
+		}
+		if(SupportedCount == 0)
+		{
+			ReleasePipelineStates(m_aMultiSampleMediaIslandSdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleRoundedRectSdfPipelines);
+			ReleasePipelineStates(m_aMultiSampleTexturedMsdfPipelines);
+		}
 		DestroyMultiSampleTexture();
 		m_MultiSamplingCount = SupportedCount;
+		if(m_pCapabilities != nullptr)
+		{
+			const bool SdfPipelinesAvailable = HasSdfSupportForCurrentSampleCount();
+			m_pCapabilities->m_MediaIslandSdf = SdfPipelinesAvailable;
+			m_pCapabilities->m_RoundedRectSdf = SdfPipelinesAvailable;
+			m_pCapabilities->m_TexturedMsdf.store(HasTexturedMsdfSupportForCurrentSampleCount(), std::memory_order_release);
+		}
 		*pCommand->m_pRetMultiSamplingCount = SupportedCount;
 		*pCommand->m_pRetOk = true;
 		return true;
@@ -3041,6 +3423,27 @@ public:
 			case CCommandBuffer::CMD_RENDER:
 				Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand));
 				return m_Error.m_ErrorType == GFX_ERROR_TYPE_NONE ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			case CCommandBuffer::CMD_RENDER_MEDIA_ISLAND_SDF:
+			{
+				const bool Success = DrawMediaIslandSdf(*static_cast<const CCommandBuffer::SCommand_RenderMediaIslandSdf *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_ROUNDED_RECT_SDF:
+			{
+				const bool Success = DrawRoundedRectSdf(*static_cast<const CCommandBuffer::SCommand_RenderRoundedRectSdf *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
+			case CCommandBuffer::CMD_RENDER_TEXTURED_MSDF:
+			{
+				const bool Success = DrawTexturedMsdf(*static_cast<const CCommandBuffer::SCommand_RenderTexturedMsdf *>(pBaseCommand));
+				if(!Success)
+					SetUnsupportedCommandError(pBaseCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
+			}
 			case CCommandBuffer::CMD_RENDER_TEX3D:
 			{
 				const bool Success = DrawTex3D(*static_cast<const CCommandBuffer::SCommand_RenderTex3D *>(pBaseCommand));

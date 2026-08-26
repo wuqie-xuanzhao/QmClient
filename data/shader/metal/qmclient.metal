@@ -74,6 +74,235 @@ fragment float4 qmclient_textured_fragment(SMetalVertexOut Input [[stage_in]], t
 	return Texture.sample(Sampler, Input.m_TexCoord) * Input.m_Color;
 }
 
+float QmClientMedian(float3 Value)
+{
+	return max(min(Value.r, Value.g), min(max(Value.r, Value.g), Value.b));
+}
+
+fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant float4 &MsdfParams [[buffer(1)]])
+{
+	const float SignedDistance = QmClientMedian(Texture.sample(Sampler, Input.m_TexCoord).rgb) - 0.5;
+	const float2 UnitRange = float2(MsdfParams.x) / MsdfParams.yz;
+	const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);
+	const float ScreenPxRange = max(0.5 * dot(UnitRange, ScreenTexSize), 1.0);
+	const float Opacity = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);
+	return float4(Input.m_Color.rgb, Input.m_Color.a * Opacity);
+}
+
+float RoundedRectDistance(float2 Point, float2 HalfSize, float Radius)
+{
+	const float2 DistanceToInner = abs(Point) - HalfSize + Radius;
+	return length(max(DistanceToInner, float2(0.0))) + min(max(DistanceToInner.x, DistanceToInner.y), 0.0) - Radius;
+}
+
+float RoundedRectCornerRadius(float2 Point, float4 CornerRadii)
+{
+	if(Point.y < 0.0)
+		return Point.x < 0.0 ? CornerRadii.x : CornerRadii.y;
+	return Point.x < 0.0 ? CornerRadii.w : CornerRadii.z;
+}
+
+float RoundedRectCoverage(float DistanceValue, float PixelSize)
+{
+	const float Feather = max(PixelSize, length(float2(dfdx(DistanceValue), dfdy(DistanceValue))));
+	return 1.0 - smoothstep(-Feather * 0.5, Feather * 0.5, DistanceValue);
+}
+
+fragment float4 qmclient_rounded_rect_sdf_fragment(SMetalVertexOut Input [[stage_in]], constant float4 *Params [[buffer(1)]])
+{
+	const float4 Rect = Params[0];
+	const float4 FillColor = Params[1];
+	const float4 BorderColor = Params[2];
+	const float4 CornerRadii = Params[3];
+	const float4 RenderParams = Params[4];
+	const float2 HalfSize = Rect.zw * 0.5;
+	const float2 Point = (Input.m_TexCoord - float2(0.5)) * (Rect.zw + float2(RenderParams.z * 2.0));
+	const float Radius = clamp(RoundedRectCornerRadius(Point, CornerRadii), 0.0, min(HalfSize.x, HalfSize.y));
+	const float OuterDistance = RoundedRectDistance(Point, HalfSize, Radius);
+	const float OuterCoverage = RoundedRectCoverage(OuterDistance, RenderParams.y);
+	const float BorderWidth = clamp(RenderParams.x, 0.0, min(HalfSize.x, HalfSize.y));
+	const float2 InnerHalfSize = HalfSize - float2(BorderWidth);
+	const float4 InnerCornerRadii = max(CornerRadii - float4(BorderWidth), float4(0.0));
+	const float InnerRadius = clamp(RoundedRectCornerRadius(Point, InnerCornerRadii), 0.0, min(InnerHalfSize.x, InnerHalfSize.y));
+	const float InnerDistance = RoundedRectDistance(Point, InnerHalfSize, InnerRadius);
+	const float InnerCoverage = BorderWidth > 0.0 && min(InnerHalfSize.x, InnerHalfSize.y) > 0.0 ? RoundedRectCoverage(InnerDistance, RenderParams.y) : 0.0;
+	if(BorderWidth <= 0.0)
+		return float4(FillColor.rgb, FillColor.a * OuterCoverage) * Input.m_Color;
+	const float BorderCoverage = max(OuterCoverage - InnerCoverage, 0.0);
+	const float BorderAlpha = BorderColor.a * BorderCoverage;
+	const float FillAlpha = FillColor.a * InnerCoverage;
+	const float OutputAlpha = FillAlpha + BorderAlpha;
+	const float3 Premultiplied = FillColor.rgb * FillAlpha + BorderColor.rgb * BorderAlpha;
+	return (OutputAlpha > 0.0 ? float4(Premultiplied / OutputAlpha, OutputAlpha) : float4(0.0)) * Input.m_Color;
+}
+
+constant float MEDIA_ISLAND_PI = 3.14159265359;
+constant float MEDIA_ISLAND_TAU = 6.28318530718;
+constant int MEDIA_ISLAND_MAX_ITEMS = 12;
+constant int MEDIA_ISLAND_ITEM_BASE = 8;
+constant int MEDIA_ISLAND_ITEM_STRIDE = 3;
+constant int MEDIA_ISLAND_BACKDROP_UV = 44;
+
+bool MediaIslandHasCorner(float Flags, int Bit)
+{
+	return fmod(floor(Flags / float(Bit)), 2.0) > 0.5;
+}
+
+float MediaIslandRoundedRectDistance(float2 Point, float4 Rect, float Radius, float Corners, float DisabledRadius)
+{
+	if(Rect.z <= 0.0 || Rect.w <= 0.0)
+		return 1000000.0;
+	const float2 HalfSize = Rect.zw * 0.5;
+	const float2 Local = Point - (Rect.xy + HalfSize);
+	int Corner = 8;
+	if(Local.x < 0.0)
+		Corner = Local.y < 0.0 ? 1 : 4;
+	else if(Local.y < 0.0)
+		Corner = 2;
+	const float RequestedRadius = MediaIslandHasCorner(Corners, Corner) ? Radius : DisabledRadius;
+	const float CornerRadius = clamp(RequestedRadius, 0.0, min(HalfSize.x, HalfSize.y));
+	const float2 DistanceToInner = abs(Local) - HalfSize + CornerRadius;
+	const float2 Outside = max(DistanceToInner, float2(0.0));
+	return length(Outside) + min(max(DistanceToInner.x, DistanceToInner.y), 0.0) - CornerRadius;
+}
+
+float MediaIslandBlobExponent(float2 Radii)
+{
+	const float MaxRadius = max(Radii.x, Radii.y);
+	const float RadiusDifference = MaxRadius > 0.0 ? abs(Radii.x - Radii.y) / MaxRadius : 0.0;
+	return mix(2.0, 5.0, smoothstep(0.0, 0.1, RadiusDifference));
+}
+
+float MediaIslandBlobDistance(float2 Point, float2 Center, float2 Radii)
+{
+	if(Radii.x <= 0.0 || Radii.y <= 0.0)
+		return 1000000.0;
+	const float Exponent = MediaIslandBlobExponent(Radii);
+	const float2 Normalized = abs((Point - Center) / Radii);
+	const float NormalizedDistance = pow(pow(Normalized.x, Exponent) + pow(Normalized.y, Exponent), 1.0 / Exponent);
+	return (NormalizedDistance - 1.0) * min(Radii.x, Radii.y);
+}
+
+float MediaIslandSmoothUnion(float Left, float Right, float Blend)
+{
+	if(Blend <= 0.0)
+		return min(Left, Right);
+	const float H = max(Blend - abs(Left - Right), 0.0) / Blend;
+	return min(Left, Right) - H * H * Blend * 0.25;
+}
+
+float MediaIslandCoverage(float DistanceValue, float Feather)
+{
+	Feather = max(Feather, 0.0001);
+	const float T = clamp((DistanceValue + Feather) / (Feather * 2.0), 0.0, 1.0);
+	return 1.0 - (T * T * (3.0 - 2.0 * T));
+}
+
+float MediaIslandArcDistance(float2 Point, float2 Center, float Radius, float HalfThickness, float Progress)
+{
+	const float2 Relative = Point - Center;
+	Progress = clamp(Progress, 0.0, 1.0);
+	if(Progress <= 0.0)
+		return 1000000.0;
+	if(Progress >= 0.9999)
+		return abs(length(Relative) - Radius) - HalfThickness;
+	float Angle = atan2(Relative.y, Relative.x) + MEDIA_ISLAND_PI * 0.5;
+	if(Angle < 0.0)
+		Angle += MEDIA_ISLAND_TAU;
+	const float EndAngle = Progress * MEDIA_ISLAND_TAU;
+	if(Angle <= EndAngle)
+		return abs(length(Relative) - Radius) - HalfThickness;
+	const float2 StartPoint = Center + float2(0.0, -Radius);
+	const float2 EndPoint = Center + float2(sin(EndAngle) * Radius, -cos(EndAngle) * Radius);
+	return min(distance(Point, StartPoint), distance(Point, EndPoint)) - HalfThickness;
+}
+
+void MediaIslandComposite(thread float3 &PremulColor, thread float &Alpha, float4 Color, float ShapeCoverage)
+{
+	const float SourceAlpha = clamp(Color.a * ShapeCoverage, 0.0, 1.0);
+	PremulColor = Color.rgb * SourceAlpha + PremulColor * (1.0 - SourceAlpha);
+	Alpha = SourceAlpha + Alpha * (1.0 - SourceAlpha);
+}
+
+fragment float4 qmclient_media_island_sdf_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> BackdropTexture [[texture(0)]], sampler BackdropSampler [[sampler(0)]], constant float4 *Data [[buffer(1)]])
+{
+	const float4 OuterRect = Data[0];
+	const float4 MainParams = Data[4];
+	const float4 Metadata = Data[5];
+	const float4 ShadowParams = Data[7];
+	const float2 Point = OuterRect.xy + Input.m_TexCoord * OuterRect.zw;
+	const float ScreenPixelSize = max(Metadata.w, 0.0001);
+	const float Feather = max(ScreenPixelSize * 0.8, max(fwidth(Point.x), fwidth(Point.y)) * 0.9);
+	const int ItemCount = clamp(int(Metadata.x + 0.5), 0, MEDIA_ISLAND_MAX_ITEMS);
+	const float MainRadius = MainParams.x;
+	const float MainDistance = MediaIslandRoundedRectDistance(Point, Data[1], MainRadius, Metadata.y, MainParams.y);
+	float SatelliteDistance = 1000000.0;
+	float ShapeDistance = MainDistance;
+	for(int i = 0; i < ItemCount; ++i)
+	{
+		const float4 ItemShape = Data[MEDIA_ISLAND_ITEM_BASE + i * MEDIA_ISLAND_ITEM_STRIDE];
+		const float4 ItemParams = Data[MEDIA_ISLAND_ITEM_BASE + i * MEDIA_ISLAND_ITEM_STRIDE + 1];
+		const float ItemDistance = MediaIslandBlobDistance(Point, ItemShape.xy, ItemShape.zw);
+		SatelliteDistance = i == 0 ? ItemDistance : MediaIslandSmoothUnion(SatelliteDistance, ItemDistance, MainRadius * 0.28);
+		if(ItemParams.x > 0.0)
+			ShapeDistance = min(ShapeDistance, MediaIslandSmoothUnion(MainDistance, ItemDistance, ItemParams.x));
+	}
+	ShapeDistance = min(ShapeDistance, SatelliteDistance);
+
+	const float4 CapsuleRect = Data[2];
+	const float4 CapsuleParams = Data[6];
+	if(Metadata.z > 0.5 && CapsuleRect.z > 0.0 && CapsuleRect.w > 0.0)
+	{
+		const float CapsuleDistance = MediaIslandRoundedRectDistance(Point, CapsuleRect, CapsuleParams.x, 15.0, 0.0);
+		ShapeDistance = min(ShapeDistance, CapsuleDistance);
+		if(CapsuleParams.y > 0.0)
+			ShapeDistance = min(ShapeDistance, MediaIslandSmoothUnion(MainDistance, CapsuleDistance, CapsuleParams.y));
+	}
+
+	float3 PremulColor = float3(0.0);
+	float Alpha = 0.0;
+	const float ShadowSize = max(ShadowParams.x, 0.0);
+	if(ShadowSize > 0.0 && ShadowParams.y > 0.0)
+	{
+		const float OutsideMask = smoothstep(-Feather, Feather, ShapeDistance);
+		const float ShadowFalloff = 1.0 - smoothstep(0.0, ShadowSize, max(ShapeDistance, 0.0));
+		MediaIslandComposite(PremulColor, Alpha, float4(0.0, 0.0, 0.0, ShadowParams.y), OutsideMask * ShadowFalloff);
+	}
+	const float ShapeCoverage = MediaIslandCoverage(ShapeDistance, Feather);
+	const float4 Background = Data[3];
+	const float4 BackdropUv = Data[MEDIA_ISLAND_BACKDROP_UV];
+	if(abs(BackdropUv.z) > 0.000001 && abs(BackdropUv.w) > 0.000001)
+	{
+		const float3 Backdrop = BackdropTexture.sample(BackdropSampler, BackdropUv.xy + Input.m_TexCoord * BackdropUv.zw).rgb;
+		MediaIslandComposite(PremulColor, Alpha, float4(mix(Backdrop, Background.rgb, clamp(Background.a, 0.0, 1.0)), 1.0), ShapeCoverage);
+	}
+	else
+		MediaIslandComposite(PremulColor, Alpha, Background, ShapeCoverage);
+	for(int i = 0; i < ItemCount; ++i)
+	{
+		const float4 ItemShape = Data[MEDIA_ISLAND_ITEM_BASE + i * MEDIA_ISLAND_ITEM_STRIDE];
+		const float4 ItemParams = Data[MEDIA_ISLAND_ITEM_BASE + i * MEDIA_ISLAND_ITEM_STRIDE + 1];
+		if(ItemParams.y > 0.001)
+		{
+			const float RingRadius = MainParams.z * ItemParams.z;
+			const float RingThickness = MainParams.w * ItemParams.z;
+			const float2 Relative = Point - ItemShape.xy;
+			if(abs(Relative.x) <= RingRadius + RingThickness + Feather && abs(Relative.y) <= RingRadius + RingThickness + Feather)
+			{
+				const float TrackDistance = abs(length(Relative) - RingRadius) - RingThickness * 0.5;
+				float4 ItemColor = Data[MEDIA_ISLAND_ITEM_BASE + i * MEDIA_ISLAND_ITEM_STRIDE + 2];
+				float4 TrackColor = ItemColor;
+				TrackColor.a *= 0.18 * ItemParams.y;
+				MediaIslandComposite(PremulColor, Alpha, TrackColor, MediaIslandCoverage(TrackDistance, Feather));
+				ItemColor.a *= ItemParams.y;
+				MediaIslandComposite(PremulColor, Alpha, ItemColor, MediaIslandCoverage(MediaIslandArcDistance(Point, ItemShape.xy, RingRadius, RingThickness * 0.5, ItemParams.w), Feather));
+			}
+		}
+	}
+	const float InvAlpha = Alpha > 0.0001 ? 1.0 / Alpha : 0.0;
+	return float4(clamp(PremulColor * InvAlpha, 0.0, 1.0), clamp(Alpha, 0.0, 1.0)) * Input.m_Color;
+}
+
 float GaussianBlurWeight(constant SMetalGaussianBlurUniforms &Uniforms, int Offset)
 {
 	if(Offset < 4)

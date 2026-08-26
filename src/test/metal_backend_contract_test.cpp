@@ -1,3 +1,5 @@
+#include <engine/client/backend/metal/metal_shader_manifest.h>
+
 #include <gtest/gtest.h>
 #include <test/test.h>
 
@@ -187,6 +189,68 @@ TEST(MetalBackendContract, GaussianBlurUsesSingleSamplePingPongPasses)
 	EXPECT_NE(Shader.find("fragment float4 qmclient_gaussian_blur_fragment"), std::string::npos);
 	EXPECT_NE(Shader.find("if(Offset > Radius)"), std::string::npos);
 	EXPECT_NE(Shader.find("Texture.sample(Sampler, Input.m_TexCoord + SampleOffset)"), std::string::npos);
+}
+
+TEST(MetalBackendContract, QmSdfCommandsUseMatchedPipelinesAndLayout)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("CreateSdfPipelineStates"), std::string::npos);
+	EXPECT_NE(Source.find("m_aMediaIslandSdfPipelines"), std::string::npos);
+	EXPECT_NE(Source.find("m_aRoundedRectSdfPipelines"), std::string::npos);
+	EXPECT_NE(Source.find("m_aMultiSampleMediaIslandSdfPipelines"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_MEDIA_ISLAND_SDF"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_ROUNDED_RECT_SDF"), std::string::npos);
+	EXPECT_NE(Source.find("setFragmentBuffer:Frame.m_VertexBuffer offset:ParamsOffset atIndex:1"), std::string::npos);
+	EXPECT_NE(Source.find("m_MediaIslandSdf = SdfPipelinesAvailable"), std::string::npos);
+	EXPECT_NE(Source.find("m_RoundedRectSdf = SdfPipelinesAvailable"), std::string::npos);
+
+	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
+	EXPECT_NE(Shader.find("qmclient_media_island_sdf_fragment"), std::string::npos);
+	EXPECT_NE(Shader.find("qmclient_rounded_rect_sdf_fragment"), std::string::npos);
+	EXPECT_NE(Shader.find("constant float4 *Data [[buffer(1)]]"), std::string::npos);
+	EXPECT_NE(Shader.find("MEDIA_ISLAND_ITEM_STRIDE = 3"), std::string::npos);
+	EXPECT_NE(Shader.find("MEDIA_ISLAND_BACKDROP_UV = 44"), std::string::npos);
+}
+
+TEST(MetalBackendContract, TexturedMsdfUsesDedicatedPipelinesAndAtomicCapability)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("CreateTexturedMsdfPipelineStates"), std::string::npos);
+	EXPECT_NE(Source.find("m_aTexturedMsdfPipelines"), std::string::npos);
+	EXPECT_NE(Source.find("m_aMultiSampleTexturedMsdfPipelines"), std::string::npos);
+	EXPECT_NE(Source.find("CMD_RENDER_TEXTURED_MSDF"), std::string::npos);
+	EXPECT_NE(Source.find("bool DrawTexturedMsdf"), std::string::npos);
+	EXPECT_NE(Source.find("setFragmentTexture:Texture.m_Texture atIndex:0"), std::string::npos);
+	EXPECT_NE(Source.find("setFragmentBuffer:Frame.m_VertexBuffer offset:ParamsOffset atIndex:1"), std::string::npos);
+	EXPECT_NE(Source.find("m_TexturedMsdf.store(TexturedMsdfPipelinesAvailable, std::memory_order_release)"), std::string::npos);
+	EXPECT_NE(Source.find("m_TexturedMsdf.store(false, std::memory_order_release)"), std::string::npos);
+	EXPECT_NE(Source.find("CreateTexturedMsdfPipelineStates(SupportedCount, m_aMultiSampleTexturedMsdfPipelines)"), std::string::npos);
+
+	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
+	EXPECT_NE(Shader.find("qmclient_textured_msdf_fragment"), std::string::npos);
+	EXPECT_NE(Shader.find("QmClientMedian"), std::string::npos);
+	EXPECT_NE(Shader.find("fwidth(Input.m_TexCoord)"), std::string::npos);
+	EXPECT_NE(Shader.find("Input.m_Color.a * Opacity"), std::string::npos);
+}
+
+TEST(MetalBackendContract, ShaderManifestCoversAllBackendFamiliesAndMetalEntrypoints)
+{
+	const std::string MetalShader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
+	ASSERT_FALSE(MetalShader.empty());
+	for(const char *pEntrypoint : g_aMetalShaderEntrypoints)
+		EXPECT_NE(MetalShader.find(pEntrypoint), std::string::npos) << pEntrypoint;
+
+	for(const SMetalShaderFamilyManifest &Family : g_aMetalShaderFamilies)
+	{
+		const std::string OpenGLVertex = ReadTestSourceFile((std::string("data/shader/") + Family.m_pOpenGLName + ".vert").c_str());
+		const std::string OpenGLFragment = ReadTestSourceFile((std::string("data/shader/") + Family.m_pOpenGLName + ".frag").c_str());
+		const std::string VulkanVertex = ReadTestSourceFile((std::string("data/shader/vulkan/") + Family.m_pVulkanName + ".vert").c_str());
+		const std::string VulkanFragment = ReadTestSourceFile((std::string("data/shader/vulkan/") + Family.m_pVulkanName + ".frag").c_str());
+		EXPECT_FALSE(OpenGLVertex.empty()) << Family.m_pOpenGLName;
+		EXPECT_FALSE(OpenGLFragment.empty()) << Family.m_pOpenGLName;
+		EXPECT_FALSE(VulkanVertex.empty()) << Family.m_pVulkanName;
+		EXPECT_FALSE(VulkanFragment.empty()) << Family.m_pVulkanName;
+	}
 }
 
 TEST(MetalBackendContract, CleanupWaitsBeforeReleasingCommandBuffers)

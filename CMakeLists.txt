@@ -3839,6 +3839,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     mapitems_test.cpp
     math_test.cpp
     metal_backend_contract_test.cpp
+    metal_backend_runtime_test.cpp
     metal_frame_state_test.cpp
     metal_render_target_state_test.cpp
     metal_types_test.cpp
@@ -4023,6 +4024,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     DDNET_TEST_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
   )
   if(METAL)
+    add_dependencies(${TARGET_TESTRUNNER} build_metal_shaders)
     target_compile_definitions(${TARGET_TESTRUNNER} PRIVATE CONF_BACKEND_METAL CONF_BACKEND_METAL_READY)
     target_link_libraries(${TARGET_TESTRUNNER} ${SDL2_LIBRARIES} "-framework Metal" "-framework QuartzCore")
   endif()

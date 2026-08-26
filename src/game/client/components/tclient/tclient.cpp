@@ -1680,7 +1680,7 @@ void CTClient::OnConsoleInit()
 	ConfigManager()->RegisterCallback(ConfigSaveFavoriteMaps, this);
 
 	Console()->Chain(
-		"tc_allow_any_resolution", [](IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData) {
+		"tc_allow_any_res", [](IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData) {
 			pfnCallback(pResult, pCallbackUserData);
 			((CTClient *)pUserData)->QueueAspectApply();
 		},
