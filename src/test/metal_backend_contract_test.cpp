@@ -169,6 +169,20 @@ TEST(MetalBackendContract, PresentedReadbackWaitsBeforeConsumingSharedBuffer)
 	EXPECT_NE(Source.find("if(!WaitForPresentedReadback()", ReadPixel), std::string::npos);
 }
 
+TEST(MetalBackendContract, NormalSwapDefersFullFrameReadbackUntilRequested)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Swap = Source.find("void Cmd_Swap");
+	const size_t MultiSampling = Source.find("bool Cmd_MultiSampling", Swap);
+	ASSERT_NE(Swap, std::string::npos);
+	ASSERT_NE(MultiSampling, std::string::npos);
+	const std::string SwapSource = Source.substr(Swap, MultiSampling - Swap);
+	EXPECT_EQ(SwapSource.find("EncodeDrawableReadback"), std::string::npos);
+	EXPECT_NE(SwapSource.find("CommitCurrentFrame(true, false)"), std::string::npos);
+	EXPECT_NE(Source.find("m_LastPresentedDrawableWidth"), std::string::npos);
+	EXPECT_NE(Source.find("m_LastPresentedDrawableHeight"), std::string::npos);
+}
+
 TEST(MetalBackendContract, TextureResourceFailuresArePropagated)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");

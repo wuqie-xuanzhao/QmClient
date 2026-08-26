@@ -75,14 +75,17 @@ void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 #endif
 			pSelf->m_pProcessor->RunBuffer(pSelf->m_pBuffer);
 
-			pSelf->m_pBuffer = nullptr;
-			pSelf->m_BufferInProcess.store(false, std::memory_order_relaxed);
-			pSelf->m_BufferSwapCond.notify_all();
-
 #if defined(CONF_VIDEORECORDER)
 			if(IVideo::Current())
 				IVideo::Current()->NextVideoFrameThread();
 #endif
+
+			// Video capture reads the just-presented frame through the backend. Keep
+			// the buffer marked in-process until that callback has finished so the
+			// next frame cannot release the retained drawable concurrently.
+			pSelf->m_pBuffer = nullptr;
+			pSelf->m_BufferInProcess.store(false, std::memory_order_relaxed);
+			pSelf->m_BufferSwapCond.notify_all();
 		}
 	}
 }

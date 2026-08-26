@@ -320,7 +320,7 @@ namespace
 		CreateBuffer.m_DeletePointer = false;
 		CreateBuffer.m_pUploadData = aVertices.data();
 		CreateBuffer.m_DataSize = sizeof(aVertices);
-		CreateBuffer.m_Flags = 0;
+		CreateBuffer.m_Flags = IGraphics::EBufferObjectCreateFlags::BUFFER_OBJECT_CREATE_FLAGS_ONE_TIME_USE_BIT;
 		if(!RunCommand(pBackend, &CreateBuffer))
 			return false;
 
@@ -335,6 +335,12 @@ namespace
 		CreateContainer.m_AttrCount = aAttributes.size();
 		CreateContainer.m_pAttributes = aAttributes.data();
 		if(!RunCommand(pBackend, &CreateContainer))
+			return false;
+
+		CCommandBuffer::SCommand_Clear Clear;
+		Clear.m_Color = {0.0f, 0.0f, 0.0f, 1.0f};
+		Clear.m_ForceClear = true;
+		if(!RunCommand(pBackend, &Clear))
 			return false;
 
 		CCommandBuffer::SCommand_RenderQuadContainerEx Render;
@@ -502,6 +508,140 @@ TEST(MetalBackendRuntime, BackbufferCaptureAndTrySwapReadbacksShareNativePresent
 	EXPECT_GE(vVideoData[1], 250);
 	EXPECT_LE(vVideoData[2], 2);
 	ScreenshotImage.Free();
+}
+
+TEST(MetalBackendRuntime, NormalSwapSupportsDeferredPresentedReadback)
+{
+	CMetalRuntimeBackend Runtime;
+	ASSERT_TRUE(Runtime.Init()) << Runtime.Error();
+	CCommandProcessorFragment_GLBase *pBackend = Runtime.Backend();
+	ASSERT_NE(pBackend, nullptr);
+
+	pBackend->StartCommands(4, 1);
+	CCommandBuffer::SCommand_Clear ClearGreen;
+	ClearGreen.m_Color = {0.0f, 1.0f, 0.0f, 1.0f};
+	ClearGreen.m_ForceClear = true;
+	ASSERT_TRUE(RunCommand(pBackend, &ClearGreen));
+	CCommandBuffer::SCommand_Swap Swap;
+	ASSERT_TRUE(RunCommand(pBackend, &Swap));
+	pBackend->EndCommands();
+	pBackend->StartCommands(1, 0);
+	pBackend->EndCommands();
+
+	uint32_t Width = 0;
+	uint32_t Height = 0;
+	CImageInfo::EImageFormat Format = static_cast<CImageInfo::EImageFormat>(-1);
+	std::vector<uint8_t> vData;
+	ASSERT_TRUE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
+	EXPECT_EQ(Width, 32U);
+	EXPECT_EQ(Height, 32U);
+	EXPECT_EQ(Format, CImageInfo::FORMAT_RGBA);
+	ASSERT_EQ(vData.size(), static_cast<size_t>(Width) * Height * 4);
+	EXPECT_LE(vData[0], 2);
+	EXPECT_GE(vData[1], 250);
+	EXPECT_LE(vData[2], 2);
+	EXPECT_LE(vData[3], 2);
+}
+
+TEST(MetalBackendRuntime, NormalSwapReplacesEarlierPresentedReadback)
+{
+	CMetalRuntimeBackend Runtime;
+	ASSERT_TRUE(Runtime.Init()) << Runtime.Error();
+	CCommandProcessorFragment_GLBase *pBackend = Runtime.Backend();
+	ASSERT_NE(pBackend, nullptr);
+
+	pBackend->StartCommands(4, 1);
+	CCommandBuffer::SCommand_Clear ClearRed;
+	ClearRed.m_Color = {1.0f, 0.0f, 0.0f, 1.0f};
+	ClearRed.m_ForceClear = true;
+	ASSERT_TRUE(RunCommand(pBackend, &ClearRed));
+	CImageInfo FirstImage;
+	bool FirstSwapped = false;
+	CCommandBuffer::SCommand_TrySwapAndScreenshot FirstScreenshot;
+	FirstScreenshot.m_pImage = &FirstImage;
+	FirstScreenshot.m_pSwapped = &FirstSwapped;
+	ASSERT_TRUE(RunCommand(pBackend, &FirstScreenshot));
+	pBackend->EndCommands();
+	ASSERT_TRUE(FirstSwapped);
+	ASSERT_NE(FirstImage.m_pData, nullptr);
+	EXPECT_GE(static_cast<const uint8_t *>(FirstImage.m_pData)[0], 250);
+	FirstImage.Free();
+
+	pBackend->StartCommands(4, 1);
+	CCommandBuffer::SCommand_Clear ClearGreen;
+	ClearGreen.m_Color = {0.0f, 1.0f, 0.0f, 1.0f};
+	ClearGreen.m_ForceClear = true;
+	ASSERT_TRUE(RunCommand(pBackend, &ClearGreen));
+	CCommandBuffer::SCommand_Swap Swap;
+	ASSERT_TRUE(RunCommand(pBackend, &Swap));
+	pBackend->EndCommands();
+	pBackend->StartCommands(1, 0);
+	pBackend->EndCommands();
+
+	uint32_t Width = 0;
+	uint32_t Height = 0;
+	CImageInfo::EImageFormat Format = static_cast<CImageInfo::EImageFormat>(-1);
+	std::vector<uint8_t> vData;
+	ASSERT_TRUE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
+	ASSERT_FALSE(vData.empty());
+	EXPECT_LE(vData[0], 2);
+	EXPECT_GE(vData[1], 250);
+	EXPECT_LE(vData[2], 2);
+}
+
+TEST(MetalBackendRuntime, ReadPixelSwapReplacesEarlierPresentedReadback)
+{
+	CMetalRuntimeBackend Runtime;
+	ASSERT_TRUE(Runtime.Init()) << Runtime.Error();
+	CCommandProcessorFragment_GLBase *pBackend = Runtime.Backend();
+	ASSERT_NE(pBackend, nullptr);
+
+	pBackend->StartCommands(4, 1);
+	CCommandBuffer::SCommand_Clear ClearRed;
+	ClearRed.m_Color = {1.0f, 0.0f, 0.0f, 1.0f};
+	ClearRed.m_ForceClear = true;
+	ASSERT_TRUE(RunCommand(pBackend, &ClearRed));
+	CImageInfo FirstImage;
+	bool FirstSwapped = false;
+	CCommandBuffer::SCommand_TrySwapAndScreenshot FirstScreenshot;
+	FirstScreenshot.m_pImage = &FirstImage;
+	FirstScreenshot.m_pSwapped = &FirstSwapped;
+	ASSERT_TRUE(RunCommand(pBackend, &FirstScreenshot));
+	pBackend->EndCommands();
+	ASSERT_TRUE(FirstSwapped);
+	FirstImage.Free();
+
+	pBackend->StartCommands(4, 1);
+	CCommandBuffer::SCommand_Clear ClearGreen;
+	ClearGreen.m_Color = {0.0f, 1.0f, 0.0f, 1.0f};
+	ClearGreen.m_ForceClear = true;
+	ASSERT_TRUE(RunCommand(pBackend, &ClearGreen));
+	CCommandBuffer::SColorf PixelColor;
+	bool Swapped = false;
+	CCommandBuffer::SCommand_TrySwapAndReadPixel ReadPixel;
+	ReadPixel.m_Position = {0, 0};
+	ReadPixel.m_pColor = &PixelColor;
+	ReadPixel.m_pSwapped = &Swapped;
+	ASSERT_TRUE(RunCommand(pBackend, &ReadPixel));
+	pBackend->EndCommands();
+	pBackend->StartCommands(1, 0);
+	pBackend->EndCommands();
+	ASSERT_TRUE(Swapped);
+	EXPECT_NEAR(PixelColor.r, 0.0f, 0.01f);
+	EXPECT_NEAR(PixelColor.g, 1.0f, 0.01f);
+
+	uint32_t Width = 0;
+	uint32_t Height = 0;
+	CImageInfo::EImageFormat Format = static_cast<CImageInfo::EImageFormat>(-1);
+	std::vector<uint8_t> vData;
+	ASSERT_TRUE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
+	EXPECT_EQ(Width, 32U);
+	EXPECT_EQ(Height, 32U);
+	EXPECT_EQ(Format, CImageInfo::FORMAT_RGBA);
+	ASSERT_EQ(vData.size(), static_cast<size_t>(Width) * Height * 4);
+	EXPECT_LE(vData[0], 2);
+	EXPECT_GE(vData[1], 250);
+	EXPECT_LE(vData[2], 2);
 }
 
 TEST(MetalBackendRuntime, QmSdfPipelinesRenderBackdropAlphaAndClip)
@@ -699,10 +839,6 @@ TEST(MetalBackendRuntime, QuadContainerExBindsFragmentUniforms)
 	ASSERT_NE(pBackend, nullptr);
 
 	pBackend->StartCommands(5, 2);
-	CCommandBuffer::SCommand_Clear Clear;
-	Clear.m_Color = {0.0f, 0.0f, 0.0f, 1.0f};
-	Clear.m_ForceClear = true;
-	ASSERT_TRUE(RunCommand(pBackend, &Clear));
 	ASSERT_TRUE(RenderQuadContainerEx(pBackend, 32.0f, 32.0f, {0.0f, 0.5f, 1.0f, 1.0f}));
 	CImageInfo Image;
 	bool Swapped = false;

@@ -138,12 +138,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLRenderCommandEncoder> m_CurrentRenderEncoder = nil;
 	id<MTLBlitCommandEncoder> m_CurrentBlitEncoder = nil;
 	id<CAMetalDrawable> m_CurrentDrawable = nil;
+	id<CAMetalDrawable> m_LastPresentedDrawable = nil;
 	id<MTLTexture> m_MultiSampleTexture = nil;
 	id<MTLBuffer> m_LastPresentedReadback = nil;
 	id<MTLCommandBuffer> m_LastPresentedCommandBuffer = nil;
 	uint32_t m_LastPresentedReadbackWidth = 0;
 	uint32_t m_LastPresentedReadbackHeight = 0;
 	size_t m_LastPresentedReadbackRowBytes = 0;
+	uint32_t m_LastPresentedDrawableWidth = 0;
+	uint32_t m_LastPresentedDrawableHeight = 0;
 	std::atomic_bool m_GpuFailure = false;
 	std::atomic<uint64_t> m_GpuFailureFrameId = 0;
 	std::atomic<int> m_GpuFailureCommandId = -1;
@@ -402,6 +405,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		DestroyMultiSampleTexture();
 		ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentDrawable = nil;
+		ReleaseMetalObject(m_LastPresentedDrawable);
+		m_LastPresentedDrawable = nil;
 		m_FrameState.ClearReadbackPresented();
 		m_BackbufferHasContents = false;
 		m_RenderTargetState.Reset();
@@ -412,6 +417,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_LastPresentedReadbackWidth = 0;
 		m_LastPresentedReadbackHeight = 0;
 		m_LastPresentedReadbackRowBytes = 0;
+		m_LastPresentedDrawableWidth = 0;
+		m_LastPresentedDrawableHeight = 0;
 		m_CurrentCommandBuffer = nil;
 		ReleasePipelineStates(m_aPipelineStates);
 		ReleasePipelineStates(m_aMultiSamplePipelineStates);
@@ -1649,10 +1656,66 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	bool GetPresentedImageData(uint32_t &Width, uint32_t &Height, CImageInfo::EImageFormat &Format, std::vector<uint8_t> &vDstData) override
 	{
-		if(m_LastPresentedReadback == nil || m_LastPresentedCommandBuffer == nil || m_LastPresentedReadbackWidth == 0 || m_LastPresentedReadbackHeight == 0)
+		if(m_LastPresentedReadback == nil)
 		{
-			dbg_msg("gfx/metal", "presented readback unavailable: buffer=%d command_buffer=%d size=%ux%u", m_LastPresentedReadback != nil, m_LastPresentedCommandBuffer != nil, m_LastPresentedReadbackWidth, m_LastPresentedReadbackHeight);
-			return false;
+			// Normal Swap keeps only the last drawable. Read it back on demand for
+			// video capture instead of copying the full frame every render tick.
+			if(m_LastPresentedDrawable == nil || m_Device == nil || m_CommandQueue == nil || m_LastPresentedDrawableWidth == 0 || m_LastPresentedDrawableHeight == 0)
+			{
+				dbg_msg("gfx/metal", "presented readback unavailable: buffer=%d drawable=%d device=%d queue=%d size=%ux%u", m_LastPresentedReadback != nil, m_LastPresentedDrawable != nil, m_Device != nil, m_CommandQueue != nil, m_LastPresentedDrawableWidth, m_LastPresentedDrawableHeight);
+				return false;
+			}
+			size_t UnalignedRowBytes = 0;
+			size_t PixelCount = 0;
+			size_t DataBytes = 0;
+			if(!MetalCheckedMul(static_cast<size_t>(m_LastPresentedDrawableWidth), 4, UnalignedRowBytes) || !MetalCheckedMul(static_cast<size_t>(m_LastPresentedDrawableWidth), static_cast<size_t>(m_LastPresentedDrawableHeight), PixelCount) || !MetalCheckedMul(PixelCount, 4, DataBytes) || UnalignedRowBytes > std::numeric_limits<size_t>::max() - 255)
+				return false;
+			const size_t RowBytes = (UnalignedRowBytes + 255) & ~size_t(255);
+			if(RowBytes > std::numeric_limits<size_t>::max() / m_LastPresentedDrawableHeight)
+				return false;
+			id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes * m_LastPresentedDrawableHeight options:MTLResourceStorageModeShared];
+			id<MTLCommandBuffer> ReadbackCommandBuffer = RetainMetalObject([m_CommandQueue commandBuffer]);
+			id<MTLBlitCommandEncoder> ReadbackEncoder = ReadbackCommandBuffer != nil ? RetainMetalObject([ReadbackCommandBuffer blitCommandEncoder]) : nil;
+			if(Readback == nil || ReadbackCommandBuffer == nil || ReadbackEncoder == nil)
+			{
+				ReleaseMetalObject(ReadbackEncoder);
+				ReleaseMetalObject(ReadbackCommandBuffer);
+				ReleaseMetalObject(Readback);
+				return false;
+			}
+			if(m_MetalPerfEnabled)
+			{
+				m_MetalPerfReadbackBytes += RowBytes * m_LastPresentedDrawableHeight;
+				++m_MetalPerfEncoderCount;
+			}
+			[ReadbackEncoder copyFromTexture:m_LastPresentedDrawable.texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(m_LastPresentedDrawableWidth, m_LastPresentedDrawableHeight, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes * m_LastPresentedDrawableHeight];
+			[ReadbackEncoder endEncoding];
+			const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+			[ReadbackCommandBuffer commit];
+			[ReadbackCommandBuffer waitUntilCompleted];
+			if(m_MetalPerfEnabled)
+			{
+				++m_MetalPerfGpuCompletionWaitCount;
+				m_MetalPerfGpuCompletionWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - GpuCompletionWaitStart).count();
+			}
+			if(ReadbackCommandBuffer.status != MTLCommandBufferStatusCompleted)
+			{
+				ReleaseMetalObject(ReadbackEncoder);
+				ReleaseMetalObject(ReadbackCommandBuffer);
+				ReleaseMetalObject(Readback);
+				return false;
+			}
+			vDstData.resize(DataBytes);
+			const uint8_t *pReadback = static_cast<const uint8_t *>(Readback.contents);
+			for(uint32_t Y = 0; Y < m_LastPresentedDrawableHeight; ++Y)
+				CopyBgraToRgba(vDstData.data() + static_cast<size_t>(Y) * m_LastPresentedDrawableWidth * 4, pReadback + static_cast<size_t>(Y) * RowBytes, m_LastPresentedDrawableWidth);
+			Width = m_LastPresentedDrawableWidth;
+			Height = m_LastPresentedDrawableHeight;
+			Format = CImageInfo::FORMAT_RGBA;
+			ReleaseMetalObject(ReadbackEncoder);
+			ReleaseMetalObject(ReadbackCommandBuffer);
+			ReleaseMetalObject(Readback);
+			return true;
 		}
 		if(!WaitForPresentedReadback())
 			return false;
@@ -3110,6 +3173,32 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_LastPresentedReadbackRowBytes = RowBytes;
 	}
 
+	void ClearLastPresentedReadback()
+	{
+		ReleaseMetalObject(m_LastPresentedReadback);
+		m_LastPresentedReadback = nil;
+		ReleaseMetalObject(m_LastPresentedCommandBuffer);
+		m_LastPresentedCommandBuffer = nil;
+		m_LastPresentedReadbackWidth = 0;
+		m_LastPresentedReadbackHeight = 0;
+		m_LastPresentedReadbackRowBytes = 0;
+	}
+
+	void StoreLastPresentedDrawableSize()
+	{
+		m_LastPresentedDrawableWidth = m_DrawableWidth;
+		m_LastPresentedDrawableHeight = m_DrawableHeight;
+	}
+
+	void StoreLastPresentedDrawable()
+	{
+		if(m_CurrentDrawable == nil)
+			return;
+		ReleaseMetalObject(m_LastPresentedDrawable);
+		m_LastPresentedDrawable = RetainMetalObject(m_CurrentDrawable);
+		StoreLastPresentedDrawableSize();
+	}
+
 	static void CopyBgraToRgba(uint8_t *pDst, const uint8_t *pSrc, size_t PixelCount)
 	{
 		for(size_t Pixel = 0; Pixel < PixelCount; ++Pixel)
@@ -3232,6 +3321,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				ReleaseMetalObject(Readback);
 				return;
 			}
+			ClearLastPresentedReadback();
+			StoreLastPresentedDrawable();
 			const uint8_t *pPixel = static_cast<const uint8_t *>(Readback.contents);
 			*pCommand->m_pColor = ColorRGBA(pPixel[2] / 255.0f, pPixel[1] / 255.0f, pPixel[0] / 255.0f, 1.0f);
 			*pCommand->m_pSwapped = true;
@@ -3251,24 +3342,18 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return;
 		if(m_CurrentDrawable != nil && m_DrawableWidth > 0 && m_DrawableHeight > 0)
 		{
-			size_t RowBytes = 0;
-			id<MTLBuffer> Readback = EncodeDrawableReadback(m_DrawableWidth, m_DrawableHeight, RowBytes);
-			if(Readback != nil)
+			if(CommitCurrentFrame(true, false))
 			{
-				id<MTLCommandBuffer> PresentedCommandBuffer = RetainMetalObject(m_CurrentCommandBuffer);
-				if(CommitCurrentFrame(true, false))
-				{
-					StoreLastPresentedReadback(Readback, m_DrawableWidth, m_DrawableHeight, RowBytes);
-					ReleaseMetalObject(m_LastPresentedCommandBuffer);
-					m_LastPresentedCommandBuffer = PresentedCommandBuffer;
-					PresentedCommandBuffer = nil;
-				}
-				ReleaseMetalObject(PresentedCommandBuffer);
-				ReleaseMetalObject(Readback);
-				return;
+				ClearLastPresentedReadback();
+				StoreLastPresentedDrawable();
 			}
+			return;
 		}
-		CommitCurrentFrame(true, false);
+		if(CommitCurrentFrame(true, false))
+		{
+			ClearLastPresentedReadback();
+			StoreLastPresentedDrawable();
+		}
 	}
 
 	bool Cmd_MultiSampling(const CCommandBuffer::SCommand_MultiSampling *pCommand)
