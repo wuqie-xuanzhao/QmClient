@@ -1175,6 +1175,10 @@ void CGameClient::RefreshStreamerSkinPrivacyAfterStateChange()
 
 int CGameClient::RenderThrottleRefreshRate() const
 {
+	// 空闲刷新率只用于菜单；游戏场景在关闭垂直同步且未配置 gfx_refresh_rate
+	// 时必须保持真正的无限制渲染。
+	if(!m_Menus.IsActive())
+		return 0;
 	return m_Menus.IdleRenderFrameRate();
 }
 

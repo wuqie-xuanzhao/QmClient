@@ -8,6 +8,9 @@
 
 #include <engine/client/backend_sdl.h>
 #include <engine/shared/config.h>
+#if defined(CONF_VIDEORECORDER)
+#include <engine/shared/video.h>
+#endif
 #include <engine/storage.h>
 
 #include <SDL_metal.h>
@@ -57,6 +60,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 {
 	static constexpr size_t gs_FrameSlotCount = 3;
 	static constexpr size_t gs_StreamBufferSize = 4 * 1024 * 1024;
+	static constexpr size_t gs_TransientBufferPoolByteLimit = 8 * 1024 * 1024;
 
 	struct STextureSlot
 	{
@@ -78,8 +82,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		id<MTLBuffer> m_Buffer = nil;
 		size_t m_DataBytes = 0;
+		size_t m_LastUsedFrameSlot = gs_FrameSlotCount;
 		bool m_Allocated = false;
 		bool m_OneTimeUse = false;
+	};
+
+	struct STransientBuffer
+	{
+		id<MTLBuffer> m_Buffer = nil;
+		size_t m_DataBytes = 0;
 	};
 
 	struct SBufferContainerSlot
@@ -119,6 +130,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLDevice> m_Device = nil;
 	id<MTLCommandQueue> m_CommandQueue = nil;
 	id<MTLBuffer> m_QuadIndexBuffer = nil;
+	size_t m_QuadIndexCount = 0;
 	id<MTLLibrary> m_ShaderLibrary = nil;
 	TPipelineStates m_aPipelineStates{};
 	TPipelineStates m_aMultiSamplePipelineStates{};
@@ -132,21 +144,21 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLSamplerState> m_RepeatSampler = nil;
 	id<MTLSamplerState> m_ClampSampler = nil;
 	std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};
+	std::array<std::vector<STransientBuffer>, gs_FrameSlotCount> m_aTransientBuffers{};
+	std::array<std::vector<STransientBuffer>, gs_FrameSlotCount> m_aRetiredTransientBuffers{};
+	std::array<size_t, gs_FrameSlotCount> m_aTransientBufferPoolBytes{};
 	CMetalFrameState m_FrameState{gs_FrameSlotCount};
 	size_t m_CurrentFrameSlot = 0;
 	id<MTLCommandBuffer> m_CurrentCommandBuffer = nil;
 	id<MTLRenderCommandEncoder> m_CurrentRenderEncoder = nil;
 	id<MTLBlitCommandEncoder> m_CurrentBlitEncoder = nil;
 	id<CAMetalDrawable> m_CurrentDrawable = nil;
-	id<CAMetalDrawable> m_LastPresentedDrawable = nil;
 	id<MTLTexture> m_MultiSampleTexture = nil;
 	id<MTLBuffer> m_LastPresentedReadback = nil;
 	id<MTLCommandBuffer> m_LastPresentedCommandBuffer = nil;
 	uint32_t m_LastPresentedReadbackWidth = 0;
 	uint32_t m_LastPresentedReadbackHeight = 0;
 	size_t m_LastPresentedReadbackRowBytes = 0;
-	uint32_t m_LastPresentedDrawableWidth = 0;
-	uint32_t m_LastPresentedDrawableHeight = 0;
 	std::atomic_bool m_GpuFailure = false;
 	std::atomic<uint64_t> m_GpuFailureFrameId = 0;
 	std::atomic<int> m_GpuFailureCommandId = -1;
@@ -159,6 +171,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	bool m_CommandBufferCommitted = false;
 	bool m_RenderEncoderStarted = false;
 	bool m_BackbufferHasContents = false;
+	bool m_SkipCurrentFrame = false;
 	uint32_t m_MultiSamplingCount = 0;
 	uint32_t m_MultiSampleTextureWidth = 0;
 	uint32_t m_MultiSampleTextureHeight = 0;
@@ -180,9 +193,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	uint64_t m_MetalPerfEncoderCount = 0;
 	uint64_t m_MetalPerfFrameSlotWaitCount = 0;
 	uint64_t m_MetalPerfDrawableAcquireCount = 0;
+	uint64_t m_MetalPerfDrawableUnavailableCount = 0;
+	uint64_t m_MetalPerfDrawableAcquireOver16MsCount = 0;
+	uint64_t m_MetalPerfDrawableAcquireOver33MsCount = 0;
+	uint64_t m_MetalPerfDrawableAcquireOver100MsCount = 0;
 	uint64_t m_MetalPerfGpuCompletionWaitCount = 0;
 	double m_MetalPerfFrameSlotWaitMs = 0.0;
 	double m_MetalPerfDrawableAcquireMs = 0.0;
+	double m_MetalPerfDrawableAcquireMaxMs = 0.0;
 	double m_MetalPerfGpuCompletionWaitMs = 0.0;
 	uint64_t m_MetalPerfUploadBytes = 0;
 	uint64_t m_MetalPerfReadbackBytes = 0;
@@ -190,9 +208,21 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	uint64_t m_MetalPerfTextureCreateBytes = 0;
 	uint64_t m_MetalPerfBufferCreateCount = 0;
 	uint64_t m_MetalPerfBufferCreateBytes = 0;
+	uint64_t m_MetalPerfBufferReuseCount = 0;
+	uint64_t m_MetalPerfBufferReuseBytes = 0;
+	uint64_t m_MetalPerfTransientPoolReuseCount = 0;
+	uint64_t m_MetalPerfTransientPoolReuseBytes = 0;
 	double m_MetalPerfCommandProcessingMs = 0.0;
 	double m_MetalPerfCommandProcessingMaxMs = 0.0;
 	std::chrono::nanoseconds m_MetalPerfFrameStart = std::chrono::nanoseconds::zero();
+	// Metal completion handler 不在图形线程执行，GPU timing 单独同步，避免与采样日志竞争。
+	std::atomic<uint64_t> m_MetalPerfGeneration{0};
+	std::mutex m_MetalPerfGpuTimingMutex;
+	uint64_t m_MetalPerfGpuTimingGeneration = 0;
+	uint64_t m_MetalPerfGpuExecutionCount = 0;
+	uint64_t m_MetalPerfGpuExecutionUnavailableCount = 0;
+	double m_MetalPerfGpuExecutionMs = 0.0;
+	double m_MetalPerfGpuExecutionMaxMs = 0.0;
 	int m_MetalPerfRequestedRenderThreads = 1;
 	unsigned int m_RequiredIndicesNum = 0;
 	std::atomic<uint64_t> *m_pTextureMemoryUsage = nullptr;
@@ -212,9 +242,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_MetalPerfEncoderCount = 0;
 		m_MetalPerfFrameSlotWaitCount = 0;
 		m_MetalPerfDrawableAcquireCount = 0;
+		m_MetalPerfDrawableUnavailableCount = 0;
+		m_MetalPerfDrawableAcquireOver16MsCount = 0;
+		m_MetalPerfDrawableAcquireOver33MsCount = 0;
+		m_MetalPerfDrawableAcquireOver100MsCount = 0;
 		m_MetalPerfGpuCompletionWaitCount = 0;
 		m_MetalPerfFrameSlotWaitMs = 0.0;
 		m_MetalPerfDrawableAcquireMs = 0.0;
+		m_MetalPerfDrawableAcquireMaxMs = 0.0;
 		m_MetalPerfGpuCompletionWaitMs = 0.0;
 		m_MetalPerfUploadBytes = 0;
 		m_MetalPerfReadbackBytes = 0;
@@ -222,17 +257,69 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_MetalPerfTextureCreateBytes = 0;
 		m_MetalPerfBufferCreateCount = 0;
 		m_MetalPerfBufferCreateBytes = 0;
+		m_MetalPerfBufferReuseCount = 0;
+		m_MetalPerfBufferReuseBytes = 0;
+		m_MetalPerfTransientPoolReuseCount = 0;
+		m_MetalPerfTransientPoolReuseBytes = 0;
 		m_MetalPerfCommandProcessingMs = 0.0;
 		m_MetalPerfCommandProcessingMaxMs = 0.0;
 		m_MetalPerfFrameStart = std::chrono::nanoseconds::zero();
+	}
+
+	void ClearMetalGpuTimingStats(uint64_t Generation)
+	{
+		std::lock_guard<std::mutex> Lock(m_MetalPerfGpuTimingMutex);
+		m_MetalPerfGpuTimingGeneration = Generation;
+		m_MetalPerfGpuExecutionCount = 0;
+		m_MetalPerfGpuExecutionUnavailableCount = 0;
+		m_MetalPerfGpuExecutionMs = 0.0;
+		m_MetalPerfGpuExecutionMaxMs = 0.0;
+	}
+
+	void RecordMetalGpuExecutionTiming(id<MTLCommandBuffer> Buffer, uint64_t Generation)
+	{
+		if(m_MetalPerfGeneration.load(std::memory_order_acquire) != Generation)
+			return;
+		const CFTimeInterval GpuStartTime = Buffer.GPUStartTime;
+		const CFTimeInterval GpuEndTime = Buffer.GPUEndTime;
+		std::lock_guard<std::mutex> Lock(m_MetalPerfGpuTimingMutex);
+		if(m_MetalPerfGpuTimingGeneration != Generation)
+			return;
+		if(GpuStartTime <= 0.0 || GpuEndTime < GpuStartTime)
+		{
+			++m_MetalPerfGpuExecutionUnavailableCount;
+			return;
+		}
+		const double GpuExecutionMs = (GpuEndTime - GpuStartTime) * 1000.0;
+		++m_MetalPerfGpuExecutionCount;
+		m_MetalPerfGpuExecutionMs += GpuExecutionMs;
+		m_MetalPerfGpuExecutionMaxMs = std::max(m_MetalPerfGpuExecutionMaxMs, GpuExecutionMs);
+	}
+
+	void TakeMetalGpuTimingStats(uint64_t &ExecutionCount, double &ExecutionMs, double &ExecutionMaxMs, uint64_t &UnavailableCount)
+	{
+		std::lock_guard<std::mutex> Lock(m_MetalPerfGpuTimingMutex);
+		ExecutionCount = m_MetalPerfGpuExecutionCount;
+		ExecutionMs = m_MetalPerfGpuExecutionMs;
+		ExecutionMaxMs = m_MetalPerfGpuExecutionMaxMs;
+		UnavailableCount = m_MetalPerfGpuExecutionUnavailableCount;
+		m_MetalPerfGpuExecutionCount = 0;
+		m_MetalPerfGpuExecutionUnavailableCount = 0;
+		m_MetalPerfGpuExecutionMs = 0.0;
+		m_MetalPerfGpuExecutionMaxMs = 0.0;
 	}
 
 	void MaybeLogMetalPerfStats()
 	{
 		if(!m_MetalPerfEnabled || m_MetalPerfFrameCount != 120)
 			return;
-		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu",
-			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes);
+		uint64_t GpuExecutionCount = 0;
+		uint64_t GpuExecutionUnavailableCount = 0;
+		double GpuExecutionMs = 0.0;
+		double GpuExecutionMaxMs = 0.0;
+		TakeMetalGpuTimingStats(GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, GpuExecutionUnavailableCount);
+		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f drawable_acquire_ms_max=%.3f drawable_acquire_over_16ms_count=%llu drawable_acquire_over_33ms_count=%llu drawable_acquire_over_100ms_count=%llu drawable_unavailable_count=%llu gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu buffer_reuse_count=%llu buffer_reuse_bytes=%llu transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu",
+			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, m_MetalPerfDrawableAcquireMaxMs, (unsigned long long)m_MetalPerfDrawableAcquireOver16MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver33MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver100MsCount, (unsigned long long)m_MetalPerfDrawableUnavailableCount, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, (unsigned long long)GpuExecutionUnavailableCount, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes, (unsigned long long)m_MetalPerfBufferReuseCount, (unsigned long long)m_MetalPerfBufferReuseBytes, (unsigned long long)m_MetalPerfTransientPoolReuseCount, (unsigned long long)m_MetalPerfTransientPoolReuseBytes);
 		ResetMetalPerfStats();
 	}
 
@@ -345,6 +432,43 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		Frame.m_CommandBuffer = nil;
 		Frame.m_VertexOffset = 0;
 		Frame.m_FrameId = 0;
+		for(STransientBuffer &Buffer : m_aRetiredTransientBuffers[Slot])
+			RecycleTransientBuffer(Slot, Buffer);
+		m_aRetiredTransientBuffers[Slot].clear();
+	}
+
+	void RecycleTransientBuffer(size_t Slot, STransientBuffer Buffer)
+	{
+		if(Slot >= gs_FrameSlotCount || Buffer.m_Buffer == nil)
+			return;
+		if(Buffer.m_DataBytes <= gs_TransientBufferPoolByteLimit - m_aTransientBufferPoolBytes[Slot])
+		{
+			m_aTransientBuffers[Slot].push_back(Buffer);
+			m_aTransientBufferPoolBytes[Slot] += Buffer.m_DataBytes;
+			return;
+		}
+		SubBufferMemory(Buffer.m_DataBytes);
+		ReleaseMetalObject(Buffer.m_Buffer);
+	}
+
+	void ReleaseTransientBufferPools()
+	{
+		for(size_t Slot = 0; Slot < gs_FrameSlotCount; ++Slot)
+		{
+			for(STransientBuffer &Buffer : m_aTransientBuffers[Slot])
+			{
+				SubBufferMemory(Buffer.m_DataBytes);
+				ReleaseMetalObject(Buffer.m_Buffer);
+			}
+			for(STransientBuffer &Buffer : m_aRetiredTransientBuffers[Slot])
+			{
+				SubBufferMemory(Buffer.m_DataBytes);
+				ReleaseMetalObject(Buffer.m_Buffer);
+			}
+			m_aTransientBuffers[Slot].clear();
+			m_aRetiredTransientBuffers[Slot].clear();
+			m_aTransientBufferPoolBytes[Slot] = 0;
+		}
 	}
 
 	template<size_t Size>
@@ -412,8 +536,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		DestroyMultiSampleTexture();
 		ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentDrawable = nil;
-		ReleaseMetalObject(m_LastPresentedDrawable);
-		m_LastPresentedDrawable = nil;
 		m_FrameState.ClearReadbackPresented();
 		m_BackbufferHasContents = false;
 		m_RenderTargetState.Reset();
@@ -424,8 +546,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_LastPresentedReadbackWidth = 0;
 		m_LastPresentedReadbackHeight = 0;
 		m_LastPresentedReadbackRowBytes = 0;
-		m_LastPresentedDrawableWidth = 0;
-		m_LastPresentedDrawableHeight = 0;
 		m_CurrentCommandBuffer = nil;
 		ReleasePipelineStates(m_aPipelineStates);
 		ReleasePipelineStates(m_aMultiSamplePipelineStates);
@@ -441,6 +561,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		ReleaseMetalObject(m_ShaderLibrary);
 		ReleaseMetalObject(m_QuadIndexBuffer);
 		m_QuadIndexBuffer = nil;
+		m_QuadIndexCount = 0;
 		m_RepeatSampler = nil;
 		m_ClampSampler = nil;
 		m_ShaderLibrary = nil;
@@ -563,8 +684,22 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		SBufferSlot &Buffer = m_vBufferSlots[Slot];
 		if(!Buffer.m_Allocated)
 			return;
-		SubBufferMemory(Buffer.m_DataBytes);
-		ReleaseMetalObject(Buffer.m_Buffer);
+		if(Buffer.m_OneTimeUse && Buffer.m_Buffer != nil)
+		{
+			// 即使尚未绑定到 encoder，也必须按当前 command buffer 所属 slot 延迟回收；
+			// 这样从池中取出后立刻删除不会重复扣减已计入的 buffer 内存。
+			const size_t LastUsedSlot = Buffer.m_LastUsedFrameSlot < gs_FrameSlotCount ? Buffer.m_LastUsedFrameSlot : m_CurrentFrameSlot;
+			// one-time buffer 必须等最后一次绑定它的 command buffer 完成后才能复用。
+			if(m_State == EMetalBackendState::INITIALIZED && m_CurrentCommandBuffer != nil && m_FrameState.CurrentFrameId() != 0 && m_FrameState.SlotState(LastUsedSlot) == CMetalFrameState::ESlotState::IN_FLIGHT)
+				m_aRetiredTransientBuffers[LastUsedSlot].push_back({Buffer.m_Buffer, Buffer.m_DataBytes});
+			else
+				RecycleTransientBuffer(LastUsedSlot, {Buffer.m_Buffer, Buffer.m_DataBytes});
+		}
+		else
+		{
+			SubBufferMemory(Buffer.m_DataBytes);
+			ReleaseMetalObject(Buffer.m_Buffer);
+		}
 		Buffer = {};
 	}
 
@@ -573,6 +708,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		for(size_t Slot = 0; Slot < m_vBufferSlots.size(); ++Slot)
 			DestroyBuffer(static_cast<int>(Slot));
 		m_vBufferSlots.clear();
+		ReleaseTransientBufferPools();
 	}
 
 	bool EnsureBufferContainerSlot(int Slot)
@@ -772,11 +908,36 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		SMetalBufferLayout Layout;
 		if(!MetalBufferLayout(DataBytes, OneTimeUse, Layout) || m_Device == nil || m_CurrentCommandBuffer == nil)
 			return false;
-		const MTLResourceOptions Options = OneTimeUse ? MTLResourceStorageModeShared : MTLResourceStorageModePrivate;
-		id<MTLBuffer> Buffer = [m_Device newBufferWithLength:DataBytes options:Options];
+		id<MTLBuffer> Buffer = nil;
+		bool ReusedTransientBuffer = false;
+		if(OneTimeUse)
+		{
+			auto &Available = m_aTransientBuffers[m_CurrentFrameSlot];
+			for(auto It = Available.begin(); It != Available.end(); ++It)
+			{
+				if(It->m_DataBytes == DataBytes)
+				{
+					Buffer = It->m_Buffer;
+					m_aTransientBufferPoolBytes[m_CurrentFrameSlot] -= It->m_DataBytes;
+					Available.erase(It);
+					ReusedTransientBuffer = true;
+					break;
+				}
+			}
+		}
+		if(Buffer == nil)
+		{
+			const MTLResourceOptions Options = OneTimeUse ? MTLResourceStorageModeShared : MTLResourceStorageModePrivate;
+			Buffer = [m_Device newBufferWithLength:DataBytes options:Options];
+		}
 		if(Buffer == nil)
 			return false;
-		if(m_MetalPerfEnabled)
+		if(m_MetalPerfEnabled && ReusedTransientBuffer)
+		{
+			++m_MetalPerfTransientPoolReuseCount;
+			m_MetalPerfTransientPoolReuseBytes += DataBytes;
+		}
+		if(m_MetalPerfEnabled && !ReusedTransientBuffer)
 		{
 			++m_MetalPerfBufferCreateCount;
 			m_MetalPerfBufferCreateBytes += DataBytes;
@@ -803,7 +964,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		SlotInfo.m_DataBytes = DataBytes;
 		SlotInfo.m_OneTimeUse = OneTimeUse;
 		SlotInfo.m_Allocated = true;
-		AddBufferMemory(DataBytes);
+		if(!ReusedTransientBuffer)
+			AddBufferMemory(DataBytes);
 		return true;
 	}
 
@@ -823,6 +985,27 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return true;
 		}
 		return CopyIntoBuffer(Buffer.m_Buffer, Offset, pData, DataBytes);
+	}
+
+	bool RecreateBuffer(int Slot, size_t DataBytes, const void *pData, int Flags)
+	{
+		const bool OneTimeUse = (Flags & IGraphics::EBufferObjectCreateFlags::BUFFER_OBJECT_CREATE_FLAGS_ONE_TIME_USE_BIT) != 0;
+		if(Slot >= 0 && static_cast<size_t>(Slot) < m_vBufferSlots.size())
+		{
+			SBufferSlot &Existing = m_vBufferSlots[Slot];
+			if(Existing.m_Allocated && !OneTimeUse && !Existing.m_OneTimeUse && Existing.m_DataBytes == DataBytes)
+			{
+				const bool Success = UpdateBuffer(Slot, 0, DataBytes, pData);
+				if(Success && m_MetalPerfEnabled)
+				{
+					++m_MetalPerfBufferReuseCount;
+					m_MetalPerfBufferReuseBytes += DataBytes;
+				}
+				return Success;
+			}
+		}
+		DestroyBuffer(Slot);
+		return CreateBuffer(Slot, DataBytes, pData, Flags);
 	}
 
 	bool CopyBuffer(int WriteSlot, int ReadSlot, size_t WriteOffset, size_t ReadOffset, size_t CopyBytes)
@@ -1324,6 +1507,62 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return HasSdfPipelines(Pipelines);
 	}
 
+	bool CreateQuadIndexBuffer(size_t IndexCount)
+	{
+		if(IndexCount == 0 || IndexCount % 6 != 0 || IndexCount / 6 > (std::numeric_limits<uint32_t>::max() / 4))
+			return false;
+		size_t IndexBytes = 0;
+		if(!MetalCheckedMul(IndexCount, sizeof(uint32_t), IndexBytes))
+			return false;
+		std::vector<uint32_t> vIndices(IndexCount);
+		for(size_t Quad = 0; Quad < IndexCount / 6; ++Quad)
+		{
+			const uint32_t Base = static_cast<uint32_t>(Quad * 4);
+			const size_t Offset = Quad * 6;
+			vIndices[Offset + 0] = Base + 0;
+			vIndices[Offset + 1] = Base + 1;
+			vIndices[Offset + 2] = Base + 2;
+			vIndices[Offset + 3] = Base + 0;
+			vIndices[Offset + 4] = Base + 2;
+			vIndices[Offset + 5] = Base + 3;
+		}
+		id<MTLBuffer> NewIndexBuffer = [m_Device newBufferWithLength:IndexBytes options:MTLResourceStorageModeShared];
+		if(NewIndexBuffer == nil || NewIndexBuffer.contents == nullptr)
+		{
+			ReleaseMetalObject(NewIndexBuffer);
+			return false;
+		}
+		mem_copy(NewIndexBuffer.contents, vIndices.data(), IndexBytes);
+		ReleaseMetalObject(m_QuadIndexBuffer);
+		m_QuadIndexBuffer = NewIndexBuffer;
+		m_QuadIndexCount = IndexCount;
+		if(m_BufferMemoryBytes != 0)
+			SubBufferMemory(m_BufferMemoryBytes);
+		m_BufferMemoryBytes = IndexBytes;
+		AddBufferMemory(m_BufferMemoryBytes);
+		return true;
+	}
+
+	bool EnsureQuadIndexCapacity(size_t RequiredIndexCount)
+	{
+		if(RequiredIndexCount == 0 || RequiredIndexCount % 6 != 0)
+			return false;
+		if(RequiredIndexCount <= m_QuadIndexCount)
+			return true;
+		size_t NewIndexCount = m_QuadIndexCount == 0 ? 6 : m_QuadIndexCount;
+		while(NewIndexCount < RequiredIndexCount)
+		{
+			if(NewIndexCount > std::numeric_limits<size_t>::max() / 2)
+			{
+				NewIndexCount = RequiredIndexCount;
+				break;
+			}
+			NewIndexCount *= 2;
+		}
+		NewIndexCount = std::max(NewIndexCount - NewIndexCount % 6, RequiredIndexCount);
+		return CreateQuadIndexBuffer(NewIndexCount);
+	}
+
 	bool CreateFrameResources()
 	{
 		for(SFrameSlot &Frame : m_aFrameSlots)
@@ -1333,29 +1572,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				return false;
 		}
 
-		const size_t QuadCount = CCommandBuffer::MAX_VERTICES / 4;
-		std::vector<uint16_t> vIndices;
-		vIndices.reserve(QuadCount * 6);
-		for(uint16_t Quad = 0; Quad < QuadCount; ++Quad)
-		{
-			const uint16_t Base = static_cast<uint16_t>(Quad * 4);
-			vIndices.push_back(Base + 0);
-			vIndices.push_back(Base + 1);
-			vIndices.push_back(Base + 2);
-			vIndices.push_back(Base + 0);
-			vIndices.push_back(Base + 2);
-			vIndices.push_back(Base + 3);
-		}
-		const size_t IndexBytes = vIndices.size() * sizeof(uint16_t);
-		m_QuadIndexBuffer = [m_Device newBufferWithLength:IndexBytes options:MTLResourceStorageModeShared];
-		if(m_QuadIndexBuffer == nil || m_QuadIndexBuffer.contents == nullptr)
+		if(!CreateQuadIndexBuffer(static_cast<size_t>(CCommandBuffer::MAX_VERTICES) / 4 * 6))
 			return false;
-		mem_copy(m_QuadIndexBuffer.contents, vIndices.data(), IndexBytes);
-
 		m_StreamMemoryBytes = gs_FrameSlotCount * gs_StreamBufferSize;
-		m_BufferMemoryBytes = IndexBytes;
 		AddStreamMemory(m_StreamMemoryBytes);
-		AddBufferMemory(m_BufferMemoryBytes);
 		return true;
 	}
 
@@ -1583,7 +1803,18 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// drawable 不可用时让本帧返回，避免合成器阻塞图形线程；下一帧可继续恢复。
 		pLayer.allowsNextDrawableTimeout = YES;
 		pLayer.displaySyncEnabled = m_VSync;
+		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0);
 		UpdateDrawableSize();
+	}
+
+	bool VideoCaptureActive() const
+	{
+#if defined(CONF_VIDEORECORDER)
+		const IVideo *pVideo = IVideo::Current();
+		return pVideo != nullptr && pVideo->IsRecording();
+#else
+		return false;
+#endif
 	}
 
 	void SelectDevice(const char *pConfiguredGpuName)
@@ -1665,68 +1896,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	bool GetPresentedImageData(uint32_t &Width, uint32_t &Height, CImageInfo::EImageFormat &Format, std::vector<uint8_t> &vDstData) override
 	{
-		if(m_LastPresentedReadback == nil)
-		{
-			// Normal Swap keeps only the last drawable. Read it back on demand for
-			// video capture instead of copying the full frame every render tick.
-			if(m_LastPresentedDrawable == nil || m_Device == nil || m_CommandQueue == nil || m_LastPresentedDrawableWidth == 0 || m_LastPresentedDrawableHeight == 0)
-			{
-				dbg_msg("gfx/metal", "presented readback unavailable: buffer=%d drawable=%d device=%d queue=%d size=%ux%u", m_LastPresentedReadback != nil, m_LastPresentedDrawable != nil, m_Device != nil, m_CommandQueue != nil, m_LastPresentedDrawableWidth, m_LastPresentedDrawableHeight);
-				return false;
-			}
-			size_t UnalignedRowBytes = 0;
-			size_t PixelCount = 0;
-			size_t DataBytes = 0;
-			if(!MetalCheckedMul(static_cast<size_t>(m_LastPresentedDrawableWidth), 4, UnalignedRowBytes) || !MetalCheckedMul(static_cast<size_t>(m_LastPresentedDrawableWidth), static_cast<size_t>(m_LastPresentedDrawableHeight), PixelCount) || !MetalCheckedMul(PixelCount, 4, DataBytes) || UnalignedRowBytes > std::numeric_limits<size_t>::max() - 255)
-				return false;
-			const size_t RowBytes = (UnalignedRowBytes + 255) & ~size_t(255);
-			if(RowBytes > std::numeric_limits<size_t>::max() / m_LastPresentedDrawableHeight)
-				return false;
-			id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes * m_LastPresentedDrawableHeight options:MTLResourceStorageModeShared];
-			id<MTLCommandBuffer> ReadbackCommandBuffer = RetainMetalObject([m_CommandQueue commandBuffer]);
-			id<MTLBlitCommandEncoder> ReadbackEncoder = ReadbackCommandBuffer != nil ? RetainMetalObject([ReadbackCommandBuffer blitCommandEncoder]) : nil;
-			if(Readback == nil || ReadbackCommandBuffer == nil || ReadbackEncoder == nil)
-			{
-				ReleaseMetalObject(ReadbackEncoder);
-				ReleaseMetalObject(ReadbackCommandBuffer);
-				ReleaseMetalObject(Readback);
-				return false;
-			}
-			if(m_MetalPerfEnabled)
-			{
-				m_MetalPerfReadbackBytes += RowBytes * m_LastPresentedDrawableHeight;
-				++m_MetalPerfEncoderCount;
-			}
-			[ReadbackEncoder copyFromTexture:m_LastPresentedDrawable.texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(m_LastPresentedDrawableWidth, m_LastPresentedDrawableHeight, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes * m_LastPresentedDrawableHeight];
-			[ReadbackEncoder endEncoding];
-			const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
-			[ReadbackCommandBuffer commit];
-			[ReadbackCommandBuffer waitUntilCompleted];
-			if(m_MetalPerfEnabled)
-			{
-				++m_MetalPerfGpuCompletionWaitCount;
-				m_MetalPerfGpuCompletionWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - GpuCompletionWaitStart).count();
-			}
-			if(ReadbackCommandBuffer.status != MTLCommandBufferStatusCompleted)
-			{
-				ReleaseMetalObject(ReadbackEncoder);
-				ReleaseMetalObject(ReadbackCommandBuffer);
-				ReleaseMetalObject(Readback);
-				return false;
-			}
-			vDstData.resize(DataBytes);
-			const uint8_t *pReadback = static_cast<const uint8_t *>(Readback.contents);
-			for(uint32_t Y = 0; Y < m_LastPresentedDrawableHeight; ++Y)
-				CopyBgraToRgba(vDstData.data() + static_cast<size_t>(Y) * m_LastPresentedDrawableWidth * 4, pReadback + static_cast<size_t>(Y) * RowBytes, m_LastPresentedDrawableWidth);
-			Width = m_LastPresentedDrawableWidth;
-			Height = m_LastPresentedDrawableHeight;
-			Format = CImageInfo::FORMAT_RGBA;
-			ReleaseMetalObject(ReadbackEncoder);
-			ReleaseMetalObject(ReadbackCommandBuffer);
-			ReleaseMetalObject(Readback);
-			return true;
-		}
-		if(!WaitForPresentedReadback())
+		if(m_LastPresentedReadback == nil || m_LastPresentedCommandBuffer == nil || !WaitForPresentedReadback())
 			return false;
 		size_t PixelCount = 0;
 		size_t DataBytes = 0;
@@ -1766,7 +1936,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		m_State = EMetalBackendState::UNINITIALIZED;
 		m_MetalPerfRequestedRenderThreads = g_Config.m_GfxRenderThreadCount;
-		dbg_msg("gfx/metal", "render command policy: requested_threads=%d actual_threads=1 (Metal encoder state is serialized; parallel encoding requires a separate profile and command partition)", m_MetalPerfRequestedRenderThreads);
+		dbg_msg("gfx/metal", "render command implementation: requested_threads=%d processor_threads=1 (current Metal backend has no parallel encoder partition; this is not a driver workaround)", m_MetalPerfRequestedRenderThreads);
 		m_pVendorString = pCommand->m_pVendorString;
 		m_pVersionString = pCommand->m_pVersionString;
 		m_pRendererString = pCommand->m_pRendererString;
@@ -2010,12 +2180,23 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_CurrentDrawable = RetainMetalObject([pLayer nextDrawable]);
 			if(m_MetalPerfEnabled)
 			{
+				const double DrawableAcquireMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - DrawableAcquireStart).count();
 				++m_MetalPerfDrawableAcquireCount;
-				m_MetalPerfDrawableAcquireMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - DrawableAcquireStart).count();
+				m_MetalPerfDrawableAcquireMs += DrawableAcquireMs;
+				m_MetalPerfDrawableAcquireMaxMs = std::max(m_MetalPerfDrawableAcquireMaxMs, DrawableAcquireMs);
+				m_MetalPerfDrawableAcquireOver16MsCount += DrawableAcquireMs > 16.667;
+				m_MetalPerfDrawableAcquireOver33MsCount += DrawableAcquireMs > 33.333;
+				m_MetalPerfDrawableAcquireOver100MsCount += DrawableAcquireMs > 100.0;
 			}
 		}
 		if(m_CurrentDrawable == nil)
+		{
+			// allowsNextDrawableTimeout 允许这一帧可恢复地放弃呈现，不应当成为命令错误。
+			m_SkipCurrentFrame = true;
+			if(m_MetalPerfEnabled)
+				++m_MetalPerfDrawableUnavailableCount;
 			return false;
+		}
 		if(m_MultiSamplingCount > 0)
 		{
 			if(!EnsureMultiSampleTexture(m_DrawableWidth, m_DrawableHeight))
@@ -2215,7 +2396,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		SetScissor(State);
 		if(PrimitiveType == EPrimitiveType::QUADS)
-			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:PrimitiveCount * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+				[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:PrimitiveCount * 6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		else
 			[m_CurrentRenderEncoder drawPrimitives:PrimitiveType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:VertexCount];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
@@ -2270,7 +2451,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		SetScissor(State);
 		if(PrimitiveType == EPrimitiveType::QUADS)
-			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(PrimitiveCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(PrimitiveCount) * 6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		else
 			[m_CurrentRenderEncoder drawPrimitives:PrimitiveType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:static_cast<NSUInteger>(VertexCount)];
 		Frame.m_VertexOffset = ParamsOffset + ParamsSize;
@@ -2347,7 +2528,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentBuffer:Frame.m_VertexBuffer offset:ParamsOffset atIndex:1];
 		SetScissor(Command.m_State);
 		if(Command.m_PrimType == EPrimitiveType::QUADS)
-			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_PrimCount) * 6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		else
 			[m_CurrentRenderEncoder drawPrimitives:Command.m_PrimType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:static_cast<NSUInteger>(VertexCount)];
 		Frame.m_VertexOffset = ParamsOffset + sizeof(Command.m_MsdfParams);
@@ -2402,7 +2583,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
 		SetScissor(Command.m_State);
 		if(Command.m_PrimType == EPrimitiveType::QUADS)
-			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_PrimCount) * 6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		else
 			[m_CurrentRenderEncoder drawPrimitives:Command.m_PrimType == EPrimitiveType::LINES ? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:static_cast<NSUInteger>(VertexCount)];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
@@ -2522,6 +2703,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		[m_CurrentRenderEncoder setRenderPipelineState:pPipeline];
 		[m_CurrentRenderEncoder setVertexBuffer:Buffer.m_Buffer offset:0 atIndex:0];
+		if(Buffer.m_OneTimeUse)
+			Buffer.m_LastUsedFrameSlot = m_CurrentFrameSlot;
 		[m_CurrentRenderEncoder setVertexBuffer:m_aFrameSlots[m_CurrentFrameSlot].m_VertexBuffer offset:UniformOffset atIndex:1];
 		SetScissor(State);
 		return true;
@@ -2568,9 +2751,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			size_t QuadOffset = 0;
 			size_t QuadCount = 0;
-			if(!DecodeQuadIndexRange(Command.m_pIndicesOffsets[Index], Command.m_pDrawCount[Index], QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() / 4 || QuadCount > std::numeric_limits<size_t>::max() / 4 || QuadOffset * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) || QuadCount * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) - QuadOffset * 4 || (QuadOffset + QuadCount) * 6 > [m_QuadIndexBuffer length] / sizeof(uint16_t))
+			if(!DecodeQuadIndexRange(Command.m_pIndicesOffsets[Index], Command.m_pDrawCount[Index], QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() / 4 || QuadCount > std::numeric_limits<size_t>::max() / 4 || QuadOffset * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) || QuadCount * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) - QuadOffset * 4 || QuadOffset > std::numeric_limits<size_t>::max() - QuadCount || QuadOffset + QuadCount > std::numeric_limits<size_t>::max() / 6 || !EnsureQuadIndexCapacity((QuadOffset + QuadCount) * 6))
 				return false;
-			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(QuadCount * 6) indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t)];
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(QuadCount * 6) indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint32_t)];
 		}
 		return true;
 	}
@@ -2627,9 +2810,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
 				[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
 			}
-			if((QuadOffset + RenderOffset + RenderCount) * 6 > [m_QuadIndexBuffer length] / sizeof(uint16_t))
+			if((QuadOffset + RenderOffset + RenderCount) * 6 > m_QuadIndexCount)
 				return false;
-			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(RenderCount * 6) indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:(QuadOffset + RenderOffset) * 6 * sizeof(uint16_t)];
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(RenderCount * 6) indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:(QuadOffset + RenderOffset) * 6 * sizeof(uint32_t)];
 			if(Grouped)
 				break;
 		}
@@ -2641,7 +2824,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(!DecodeQuadIndexRange(static_cast<const char *>(pOffset), DrawNum, QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() - QuadCount || QuadOffset + QuadCount > std::numeric_limits<size_t>::max() / 4)
 			return false;
 		const size_t QuadEnd = QuadOffset + QuadCount;
-		if(QuadEnd > std::numeric_limits<size_t>::max() / 6 || QuadEnd * 6 > [m_QuadIndexBuffer length] / sizeof(uint16_t))
+		if(QuadEnd > std::numeric_limits<size_t>::max() / 6 || QuadEnd * 6 > m_QuadIndexCount)
 			return false;
 		if(!GetContainerDrawResources(ContainerIndex, QuadEnd * 4, pContainer, pBuffer) || !MatchesStandardVertexLayout(*pContainer))
 			return false;
@@ -2675,7 +2858,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
 			[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
 		}
-		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t)];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint32_t)];
 		(void)pContainer;
 		(void)QuadCount;
 		return true;
@@ -2710,7 +2893,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_TextTextureIndex].m_Texture atIndex:0];
 		[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_TextOutlineTextureIndex].m_Texture atIndex:1];
 		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
-		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_DrawNum) indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t)];
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(Command.m_DrawNum) indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint32_t)];
 		(void)pContainer;
 		(void)QuadCount;
 		return true;
@@ -2745,7 +2928,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
 			[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
 		}
-		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t)];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint32_t)];
 		(void)pContainer;
 		(void)QuadCount;
 		return true;
@@ -2789,7 +2972,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
 				[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
 			}
-			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint16_t) instanceCount:RenderCount baseVertex:0 baseInstance:0];
+			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:Command.m_DrawNum indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint32_t) instanceCount:RenderCount baseVertex:0 baseInstance:0];
 			RenderOffset += RenderCount;
 		}
 		(void)pContainer;
@@ -2813,13 +2996,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(BeginRenderEncoder(ClearColor))
 				return;
 		}
-		if(m_CurrentRenderEncoder == nil)
+		if(m_CurrentRenderEncoder == nil && !m_SkipCurrentFrame)
 			SetUnsupportedCommandError(pCommand);
 	}
 
 	void Cmd_Render(const CCommandBuffer::SCommand_Render *pCommand)
 	{
-		if(!DrawPrimitive(pCommand->m_State, pCommand->m_PrimType, pCommand->m_PrimCount, pCommand->m_pVertices))
+		if(!DrawPrimitive(pCommand->m_State, pCommand->m_PrimType, pCommand->m_PrimCount, pCommand->m_pVertices) && !m_SkipCurrentFrame)
 			SetUnsupportedCommandError(pCommand);
 	}
 
@@ -2899,7 +3082,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentTexture:Target.m_Texture atIndex:0];
 		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
 		SetScissor(pCommand->m_State);
-		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(pCommand->m_PrimCount) * 6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(pCommand->m_PrimCount) * 6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
 		return true;
 	}
@@ -2958,7 +3141,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentTexture:Source.m_Texture atIndex:0];
 		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
 		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Destination.m_Width, Destination.m_Height}];
-		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		Frame.m_VertexOffset = FragmentUniformOffset + sizeof(FragmentUniforms);
 		return true;
 	}
@@ -3074,7 +3257,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentTexture:m_CurrentDrawable.texture atIndex:0];
 		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
 		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Target.m_Width, Target.m_Height}];
-		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt16 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
+		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
 		EndActiveEncoders();
 		return true;
@@ -3102,13 +3285,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentCommandBuffer == nil || m_CommandBufferCommitted)
 			return false;
 		EndActiveEncoders();
-		const CMetalFrameState::EFinalizeResult Result = m_FrameState.FinalizeFrameForPresent(Present && m_CurrentDrawable != nil);
-		if(Result == CMetalFrameState::EFinalizeResult::PRESENTED)
+		const bool CanPresent = Present && m_CurrentDrawable != nil;
+		const bool FrameFinalized = CanPresent ?
+			m_FrameState.FinalizeFrameForPresent(true) == CMetalFrameState::EFinalizeResult::PRESENTED :
+			m_FrameState.FinalizeFrameWithoutPresent();
+		if(CanPresent && FrameFinalized)
 			[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
 		if(!WaitForCompletion)
-			return Result == CMetalFrameState::EFinalizeResult::PRESENTED;
+			return FrameFinalized;
 		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		[m_CurrentCommandBuffer waitUntilCompleted];
 		if(m_MetalPerfEnabled)
@@ -3116,7 +3302,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			++m_MetalPerfGpuCompletionWaitCount;
 			m_MetalPerfGpuCompletionWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - GpuCompletionWaitStart).count();
 		}
-		return Result == CMetalFrameState::EFinalizeResult::PRESENTED && m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
+		return FrameFinalized && m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
 	}
 
 	bool CommitCurrentFrameForReadback()
@@ -3193,21 +3379,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_LastPresentedReadbackWidth = 0;
 		m_LastPresentedReadbackHeight = 0;
 		m_LastPresentedReadbackRowBytes = 0;
-	}
-
-	void StoreLastPresentedDrawableSize()
-	{
-		m_LastPresentedDrawableWidth = m_DrawableWidth;
-		m_LastPresentedDrawableHeight = m_DrawableHeight;
-	}
-
-	void StoreLastPresentedDrawable()
-	{
-		if(m_CurrentDrawable == nil)
-			return;
-		ReleaseMetalObject(m_LastPresentedDrawable);
-		m_LastPresentedDrawable = RetainMetalObject(m_CurrentDrawable);
-		StoreLastPresentedDrawableSize();
 	}
 
 	static void CopyBgraToRgba(uint8_t *pDst, const uint8_t *pSrc, size_t PixelCount)
@@ -3312,15 +3483,23 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(m_CurrentDrawable == nil && !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
 				return;
 			EndActiveEncoders();
+			ClearLastPresentedReadback();
+			size_t VideoRowBytes = 0;
+			id<MTLBuffer> VideoReadback = VideoCaptureActive() ? EncodeDrawableReadback(m_DrawableWidth, m_DrawableHeight, VideoRowBytes) : nil;
+			EndActiveEncoders();
 			const size_t RowBytes = 256;
 			id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes options:MTLResourceStorageModeShared];
 			if(Readback == nil)
+			{
+				ReleaseMetalObject(VideoReadback);
 				return;
+			}
 			if(m_MetalPerfEnabled)
 				m_MetalPerfReadbackBytes += RowBytes;
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 			if(m_CurrentBlitEncoder == nil)
 			{
+				ReleaseMetalObject(VideoReadback);
 				ReleaseMetalObject(Readback);
 				return;
 			}
@@ -3329,14 +3508,20 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentBlitEncoder copyFromTexture:m_CurrentDrawable.texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(X, Y, 0) sourceSize:MTLSizeMake(1, 1, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes];
 			if(!CommitCurrentFrame(true, true))
 			{
+				ReleaseMetalObject(VideoReadback);
 				ReleaseMetalObject(Readback);
 				return;
 			}
-			ClearLastPresentedReadback();
-			StoreLastPresentedDrawable();
+			if(VideoReadback != nil)
+			{
+				StoreLastPresentedReadback(VideoReadback, m_DrawableWidth, m_DrawableHeight, VideoRowBytes);
+				ReleaseMetalObject(m_LastPresentedCommandBuffer);
+				m_LastPresentedCommandBuffer = RetainMetalObject(m_CurrentCommandBuffer);
+			}
 			const uint8_t *pPixel = static_cast<const uint8_t *>(Readback.contents);
 			*pCommand->m_pColor = ColorRGBA(pPixel[2] / 255.0f, pPixel[1] / 255.0f, pPixel[0] / 255.0f, 1.0f);
 			*pCommand->m_pSwapped = true;
+			ReleaseMetalObject(VideoReadback);
 			ReleaseMetalObject(Readback);
 			return;
 		}
@@ -3351,20 +3536,25 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		(void)pCommand;
 		if(m_FrameState.ConsumeReadbackPresented())
 			return;
-		if(m_CurrentDrawable != nil && m_DrawableWidth > 0 && m_DrawableHeight > 0)
-		{
-			if(CommitCurrentFrame(true, false))
-			{
-				ClearLastPresentedReadback();
-				StoreLastPresentedDrawable();
-			}
-			return;
-		}
-		if(CommitCurrentFrame(true, false))
+		if(VideoCaptureActive() && m_CurrentDrawable != nil && m_DrawableWidth > 0 && m_DrawableHeight > 0)
 		{
 			ClearLastPresentedReadback();
-			StoreLastPresentedDrawable();
+			size_t RowBytes = 0;
+			id<MTLBuffer> Readback = EncodeDrawableReadback(m_DrawableWidth, m_DrawableHeight, RowBytes);
+			id<MTLCommandBuffer> PresentedCommandBuffer = Readback != nil ? RetainMetalObject(m_CurrentCommandBuffer) : nil;
+			if(CommitCurrentFrame(true, false) && Readback != nil)
+			{
+				StoreLastPresentedReadback(Readback, m_DrawableWidth, m_DrawableHeight, RowBytes);
+				ReleaseMetalObject(m_LastPresentedCommandBuffer);
+				m_LastPresentedCommandBuffer = PresentedCommandBuffer;
+				PresentedCommandBuffer = nil;
+			}
+			ReleaseMetalObject(PresentedCommandBuffer);
+			ReleaseMetalObject(Readback);
+			return;
 		}
+		ClearLastPresentedReadback();
+		CommitCurrentFrame(true, false);
 	}
 
 	bool Cmd_MultiSampling(const CCommandBuffer::SCommand_MultiSampling *pCommand)
@@ -3435,6 +3625,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			m_MetalPerfEnabled = PerfEnabled;
 			ResetMetalPerfStats();
+			ClearMetalGpuTimingStats(m_MetalPerfGeneration.fetch_add(1, std::memory_order_acq_rel) + 1);
 		}
 		if(m_MetalPerfEnabled)
 		{
@@ -3475,12 +3666,17 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_RenderEncoderStarted = false;
 		m_CurrentDrawable = nil;
 		m_BackbufferHasContents = false;
+		m_SkipCurrentFrame = false;
 		m_RenderTargetState.Reset();
 		Frame.m_VertexOffset = 0;
 		Frame.m_FrameId = m_FrameState.CurrentFrameId();
 		m_FrameId = Frame.m_FrameId;
 		const CMetalFrameState::SFrameCapture Capture{Frame.m_FrameId, Slot};
+		const bool RecordGpuTiming = m_MetalPerfEnabled;
+		const uint64_t GpuTimingGeneration = m_MetalPerfGeneration.load(std::memory_order_acquire);
 		[m_CurrentCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> Buffer) {
+			if(RecordGpuTiming)
+				RecordMetalGpuExecutionTiming(Buffer, GpuTimingGeneration);
 			const bool Success = Buffer.status == MTLCommandBufferStatusCompleted;
 			if(!Success)
 				RecordGpuFailure(Buffer, Capture.m_FrameId);
@@ -3497,6 +3693,40 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_MetalPerfCommandProcessingMs += ProcessingMs;
 			m_MetalPerfCommandProcessingMaxMs = std::max(m_MetalPerfCommandProcessingMaxMs, ProcessingMs);
 			m_MetalPerfFrameStart = std::chrono::nanoseconds::zero();
+		}
+	}
+
+	bool SkipCurrentFrameCommand(int Command) const
+	{
+		if(!m_SkipCurrentFrame)
+			return false;
+		switch(Command)
+		{
+		case CCommandBuffer::CMD_CLEAR:
+		case CCommandBuffer::CMD_RENDER:
+		case CCommandBuffer::CMD_RENDER_MEDIA_ISLAND_SDF:
+		case CCommandBuffer::CMD_RENDER_ROUNDED_RECT_SDF:
+		case CCommandBuffer::CMD_RENDER_TEXTURED_MSDF:
+		case CCommandBuffer::CMD_RENDER_TEX3D:
+		case CCommandBuffer::CMD_RENDER_TARGET_BEGIN:
+		case CCommandBuffer::CMD_RENDER_TARGET_END:
+		case CCommandBuffer::CMD_RENDER_TARGET_DRAW:
+		case CCommandBuffer::CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS:
+		case CCommandBuffer::CMD_RENDER_TARGET_READBACK:
+		case CCommandBuffer::CMD_RENDER_TARGET_CAPTURE_BACKBUFFER:
+		case CCommandBuffer::CMD_RENDER_TILE_LAYER:
+		case CCommandBuffer::CMD_RENDER_BORDER_TILE:
+		case CCommandBuffer::CMD_RENDER_QUAD_LAYER:
+		case CCommandBuffer::CMD_RENDER_QUAD_LAYER_GROUPED:
+		case CCommandBuffer::CMD_RENDER_TEXT:
+		case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER:
+		case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER_EX:
+		case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER_SPRITE_MULTIPLE:
+		case CCommandBuffer::CMD_TRY_SWAP_AND_READ_PIXEL:
+		case CCommandBuffer::CMD_TRY_SWAP_AND_SCREENSHOT:
+			return true;
+		default:
+			return false;
 		}
 	}
 
@@ -3528,6 +3758,8 @@ public:
 				return RUN_COMMAND_COMMAND_ERROR;
 			if(!IsLifecycleCommand)
 				m_LastCommandId.store(pBaseCommand->m_Cmd, std::memory_order_relaxed);
+			if(!IsLifecycleCommand && SkipCurrentFrameCommand(pBaseCommand->m_Cmd))
+				return RUN_COMMAND_COMMAND_HANDLED;
 			switch(pBaseCommand->m_Cmd)
 			{
 			case CCommandProcessorFragment_SDL::CMD_INIT:
@@ -3553,6 +3785,8 @@ public:
 				m_VSync = pCommand->m_VSync != 0;
 				if(m_pLayer != nullptr)
 					((__bridge CAMetalLayer *)m_pLayer).displaySyncEnabled = m_VSync;
+				if(m_pLayer != nullptr)
+					dbg_msg("gfx/metal", "layer vsync changed: requested=%d display_sync=%d", m_VSync ? 1 : 0, ((__bridge CAMetalLayer *)m_pLayer).displaySyncEnabled ? 1 : 0);
 				if(pCommand->m_pRetOk != nullptr)
 					*pCommand->m_pRetOk = m_pLayer != nullptr;
 				return RUN_COMMAND_COMMAND_HANDLED;
@@ -3573,8 +3807,7 @@ public:
 			case CCommandBuffer::CMD_RECREATE_BUFFER_OBJECT:
 			{
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_RecreateBufferObject *>(pBaseCommand);
-				DestroyBuffer(pCommand->m_BufferIndex);
-				const bool Success = CreateBuffer(pCommand->m_BufferIndex, pCommand->m_DataSize, pCommand->m_pUploadData, pCommand->m_Flags);
+				const bool Success = RecreateBuffer(pCommand->m_BufferIndex, pCommand->m_DataSize, pCommand->m_pUploadData, pCommand->m_Flags);
 				if(pCommand->m_DeletePointer && pCommand->m_pUploadData != nullptr)
 					free(pCommand->m_pUploadData);
 				if(!Success)
@@ -3626,8 +3859,16 @@ public:
 				return RUN_COMMAND_COMMAND_HANDLED;
 			}
 			case CCommandBuffer::CMD_INDICES_REQUIRED_NUM_NOTIFY:
-				m_RequiredIndicesNum = std::max(m_RequiredIndicesNum, static_cast<const CCommandBuffer::SCommand_IndicesRequiredNumNotify *>(pBaseCommand)->m_RequiredIndicesNum);
+			{
+				const unsigned int RequiredIndicesNum = static_cast<const CCommandBuffer::SCommand_IndicesRequiredNumNotify *>(pBaseCommand)->m_RequiredIndicesNum;
+				if(!EnsureQuadIndexCapacity(RequiredIndicesNum))
+				{
+					SetResourceCommandError(pBaseCommand);
+					return RUN_COMMAND_COMMAND_ERROR;
+				}
+				m_RequiredIndicesNum = std::max(m_RequiredIndicesNum, RequiredIndicesNum);
 				return RUN_COMMAND_COMMAND_HANDLED;
+			}
 			case CCommandBuffer::CMD_TEXTURE_CREATE:
 			{
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand);

@@ -337,12 +337,6 @@ namespace
 		if(!RunCommand(pBackend, &CreateContainer))
 			return false;
 
-		CCommandBuffer::SCommand_Clear Clear;
-		Clear.m_Color = {0.0f, 0.0f, 0.0f, 1.0f};
-		Clear.m_ForceClear = true;
-		if(!RunCommand(pBackend, &Clear))
-			return false;
-
 		CCommandBuffer::SCommand_RenderQuadContainerEx Render;
 		Render.m_State.m_BlendMode = EBlendMode::NONE;
 		Render.m_State.m_Texture = -1;
@@ -510,7 +504,7 @@ TEST(MetalBackendRuntime, BackbufferCaptureAndTrySwapReadbacksShareNativePresent
 	ScreenshotImage.Free();
 }
 
-TEST(MetalBackendRuntime, NormalSwapSupportsDeferredPresentedReadback)
+TEST(MetalBackendRuntime, NormalSwapDoesNotRetainDrawableForDeferredReadback)
 {
 	CMetalRuntimeBackend Runtime;
 	ASSERT_TRUE(Runtime.Init()) << Runtime.Error();
@@ -532,18 +526,10 @@ TEST(MetalBackendRuntime, NormalSwapSupportsDeferredPresentedReadback)
 	uint32_t Height = 0;
 	CImageInfo::EImageFormat Format = static_cast<CImageInfo::EImageFormat>(-1);
 	std::vector<uint8_t> vData;
-	ASSERT_TRUE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
-	EXPECT_EQ(Width, 32U);
-	EXPECT_EQ(Height, 32U);
-	EXPECT_EQ(Format, CImageInfo::FORMAT_RGBA);
-	ASSERT_EQ(vData.size(), static_cast<size_t>(Width) * Height * 4);
-	EXPECT_LE(vData[0], 2);
-	EXPECT_GE(vData[1], 250);
-	EXPECT_LE(vData[2], 2);
-	EXPECT_LE(vData[3], 2);
+	EXPECT_FALSE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
 }
 
-TEST(MetalBackendRuntime, NormalSwapReplacesEarlierPresentedReadback)
+TEST(MetalBackendRuntime, NormalSwapInvalidatesEarlierPresentedReadback)
 {
 	CMetalRuntimeBackend Runtime;
 	ASSERT_TRUE(Runtime.Init()) << Runtime.Error();
@@ -582,14 +568,10 @@ TEST(MetalBackendRuntime, NormalSwapReplacesEarlierPresentedReadback)
 	uint32_t Height = 0;
 	CImageInfo::EImageFormat Format = static_cast<CImageInfo::EImageFormat>(-1);
 	std::vector<uint8_t> vData;
-	ASSERT_TRUE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
-	ASSERT_FALSE(vData.empty());
-	EXPECT_LE(vData[0], 2);
-	EXPECT_GE(vData[1], 250);
-	EXPECT_LE(vData[2], 2);
+	EXPECT_FALSE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
 }
 
-TEST(MetalBackendRuntime, ReadPixelSwapReplacesEarlierPresentedReadback)
+TEST(MetalBackendRuntime, ReadPixelSwapInvalidatesEarlierPresentedReadbackWithoutVideoCapture)
 {
 	CMetalRuntimeBackend Runtime;
 	ASSERT_TRUE(Runtime.Init()) << Runtime.Error();
@@ -634,14 +616,7 @@ TEST(MetalBackendRuntime, ReadPixelSwapReplacesEarlierPresentedReadback)
 	uint32_t Height = 0;
 	CImageInfo::EImageFormat Format = static_cast<CImageInfo::EImageFormat>(-1);
 	std::vector<uint8_t> vData;
-	ASSERT_TRUE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
-	EXPECT_EQ(Width, 32U);
-	EXPECT_EQ(Height, 32U);
-	EXPECT_EQ(Format, CImageInfo::FORMAT_RGBA);
-	ASSERT_EQ(vData.size(), static_cast<size_t>(Width) * Height * 4);
-	EXPECT_LE(vData[0], 2);
-	EXPECT_GE(vData[1], 250);
-	EXPECT_LE(vData[2], 2);
+	EXPECT_FALSE(Runtime.ReadPresentedImageData(Width, Height, Format, vData));
 }
 
 TEST(MetalBackendRuntime, QmSdfPipelinesRenderBackdropAlphaAndClip)

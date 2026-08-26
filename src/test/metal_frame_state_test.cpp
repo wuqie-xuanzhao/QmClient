@@ -35,6 +35,18 @@ TEST(MetalFrameState, ReadbackFinalizesWithoutReplacingPresentedCapture)
 	EXPECT_FALSE(State.FinalizeFrameWithoutPresent());
 }
 
+TEST(MetalFrameState, NonPresentedSubmissionKeepsSlotInFlightUntilGpuCompletion)
+{
+	CMetalFrameState State;
+	ASSERT_TRUE(State.BeginFrame(0));
+	ASSERT_TRUE(State.FinalizeFrameWithoutPresent());
+	EXPECT_EQ(State.SlotState(0), CMetalFrameState::ESlotState::IN_FLIGHT);
+
+	const CMetalFrameState::SFrameCapture Capture{1, 0};
+	EXPECT_TRUE(State.CompleteFrame(Capture, true));
+	EXPECT_EQ(State.SlotState(0), CMetalFrameState::ESlotState::COMPLETED);
+}
+
 TEST(MetalFrameState, PresentedReadbackIsConsumedOnlyOnce)
 {
 	CMetalFrameState State;

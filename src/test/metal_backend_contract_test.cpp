@@ -55,7 +55,13 @@ TEST(MetalBackendContract, TileAndQuadCommandsUseDedicatedMetalPipelines)
 	EXPECT_NE(Source.find("TilePipelineIndex"), std::string::npos);
 	EXPECT_NE(Source.find("QuadPipelineIndex"), std::string::npos);
 	EXPECT_NE(Source.find("MatchesContainerLayout"), std::string::npos);
-	EXPECT_NE(Source.find("MTLIndexTypeUInt16"), std::string::npos);
+	EXPECT_NE(Source.find("MTLIndexTypeUInt32"), std::string::npos);
+	EXPECT_NE(Source.find("m_QuadIndexCount"), std::string::npos);
+	EXPECT_NE(Source.find("IndexCount % 6 != 0"), std::string::npos);
+	EXPECT_NE(Source.find("sizeof(uint32_t)"), std::string::npos);
+	EXPECT_NE(Source.find("EnsureQuadIndexCapacity(RequiredIndicesNum)"), std::string::npos);
+	EXPECT_NE(Source.find("bool EnsureQuadIndexCapacity(size_t RequiredIndexCount)"), std::string::npos);
+	EXPECT_NE(Source.find("EnsureQuadIndexCapacity((QuadOffset + QuadCount) * 6)"), std::string::npos);
 
 	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
 	EXPECT_NE(Shader.find("qmclient_tile_vertex"), std::string::npos);
@@ -84,6 +90,17 @@ TEST(MetalBackendContract, BufferedTextAndQuadContainerCommandsUseValidatedResou
 	EXPECT_NE(Shader.find("qmclient_quad_container_ex_textured_fragment"), std::string::npos);
 	EXPECT_NE(Shader.find("qmclient_sprite_multiple_vertex"), std::string::npos);
 	EXPECT_NE(Shader.find("Uniforms.m_aRenderInfo[InstanceId]"), std::string::npos);
+}
+
+TEST(MetalBackendContract, VSyncMirrorsTheExplicitGraphicsSetting)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("m_VSync = pCommand->m_VSync != 0;"), std::string::npos);
+	EXPECT_NE(Source.find("displaySyncEnabled = m_VSync;"), std::string::npos);
+	EXPECT_NE(Source.find("pLayer.displaySyncEnabled = m_VSync;"), std::string::npos);
+	EXPECT_EQ(Source.find("displaySyncEnabled = YES"), std::string::npos);
+	EXPECT_NE(Source.find("layer configured: vsync=%d display_sync=%d"), std::string::npos);
+	EXPECT_NE(Source.find("layer vsync changed: requested=%d display_sync=%d"), std::string::npos);
 }
 
 TEST(MetalBackendContract, TextureArrayPathConvertsAtlasAndSamplesArrayLayers)
@@ -169,7 +186,7 @@ TEST(MetalBackendContract, PresentedReadbackWaitsBeforeConsumingSharedBuffer)
 	EXPECT_NE(Source.find("if(!WaitForPresentedReadback()", ReadPixel), std::string::npos);
 }
 
-TEST(MetalBackendContract, NormalSwapDefersFullFrameReadbackUntilRequested)
+TEST(MetalBackendContract, NormalSwapCapturesReadbackOnlyWhileVideoRecording)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t Swap = Source.find("void Cmd_Swap");
@@ -177,10 +194,10 @@ TEST(MetalBackendContract, NormalSwapDefersFullFrameReadbackUntilRequested)
 	ASSERT_NE(Swap, std::string::npos);
 	ASSERT_NE(MultiSampling, std::string::npos);
 	const std::string SwapSource = Source.substr(Swap, MultiSampling - Swap);
-	EXPECT_EQ(SwapSource.find("EncodeDrawableReadback"), std::string::npos);
+	EXPECT_NE(SwapSource.find("VideoCaptureActive()"), std::string::npos);
+	EXPECT_NE(SwapSource.find("EncodeDrawableReadback"), std::string::npos);
 	EXPECT_NE(SwapSource.find("CommitCurrentFrame(true, false)"), std::string::npos);
-	EXPECT_NE(Source.find("m_LastPresentedDrawableWidth"), std::string::npos);
-	EXPECT_NE(Source.find("m_LastPresentedDrawableHeight"), std::string::npos);
+	EXPECT_EQ(Source.find("m_LastPresentedDrawable"), std::string::npos);
 }
 
 TEST(MetalBackendContract, TextureResourceFailuresArePropagated)
@@ -356,10 +373,59 @@ TEST(MetalBackendContract, FrameSlotsKeepVertexBuffersAndOwnCrossCommandEncoders
 	EXPECT_NE(Source.find("ReleaseMetalObject(m_CurrentDrawable);"), std::string::npos);
 }
 
+TEST(MetalBackendContract, StaticEqualSizeBufferRecreationUsesSafeInPlaceUpdate)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Helper = Source.find("bool RecreateBuffer(int Slot, size_t DataBytes, const void *pData, int Flags)");
+	ASSERT_NE(Helper, std::string::npos);
+	EXPECT_NE(Source.find("!OneTimeUse && !Existing.m_OneTimeUse && Existing.m_DataBytes == DataBytes", Helper), std::string::npos);
+	EXPECT_NE(Source.find("UpdateBuffer(Slot, 0, DataBytes, pData)", Helper), std::string::npos);
+	EXPECT_NE(Source.find("DestroyBuffer(Slot);\n\t\treturn CreateBuffer(Slot, DataBytes, pData, Flags);", Helper), std::string::npos);
+
+	const size_t RecreateCommand = Source.find("case CCommandBuffer::CMD_RECREATE_BUFFER_OBJECT:");
+	ASSERT_NE(RecreateCommand, std::string::npos);
+	EXPECT_NE(Source.find("RecreateBuffer(pCommand->m_BufferIndex", RecreateCommand), std::string::npos);
+}
+
+TEST(MetalBackendContract, BufferReuseAppearsInMetalPerformanceSample)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("m_MetalPerfBufferReuseCount"), std::string::npos);
+	EXPECT_NE(Source.find("m_MetalPerfBufferReuseBytes"), std::string::npos);
+	EXPECT_NE(Source.find("buffer_reuse_count=%llu buffer_reuse_bytes=%llu"), std::string::npos);
+}
+
+TEST(MetalBackendContract, GpuExecutionTimingAppearsInMetalPerformanceSample)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("Buffer.GPUStartTime"), std::string::npos);
+	EXPECT_NE(Source.find("Buffer.GPUEndTime"), std::string::npos);
+	EXPECT_NE(Source.find("const bool RecordGpuTiming = m_MetalPerfEnabled;"), std::string::npos);
+	EXPECT_NE(Source.find("if(RecordGpuTiming)\n\t\t\t\tRecordMetalGpuExecutionTiming(Buffer, GpuTimingGeneration);"), std::string::npos);
+	EXPECT_NE(Source.find("m_MetalPerfGeneration.load(std::memory_order_acquire) != Generation"), std::string::npos);
+	EXPECT_NE(Source.find("gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu"), std::string::npos);
+}
+
+TEST(MetalBackendContract, OneTimeBuffersAreRetiredPerFrameSlotBeforeReuse)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("m_aTransientBuffers"), std::string::npos);
+	EXPECT_NE(Source.find("m_aRetiredTransientBuffers"), std::string::npos);
+	EXPECT_NE(Source.find("m_LastUsedFrameSlot"), std::string::npos);
+	EXPECT_NE(Source.find("m_aRetiredTransientBuffers[LastUsedSlot]"), std::string::npos);
+	EXPECT_NE(Source.find("LastUsedSlot = Buffer.m_LastUsedFrameSlot < gs_FrameSlotCount ? Buffer.m_LastUsedFrameSlot : m_CurrentFrameSlot"), std::string::npos);
+	EXPECT_NE(Source.find("RecycleTransientBuffer(Slot, Buffer)"), std::string::npos);
+	EXPECT_NE(Source.find("m_aTransientBuffers[m_CurrentFrameSlot]"), std::string::npos);
+	EXPECT_NE(Source.find("transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu"), std::string::npos);
+}
+
 TEST(MetalBackendContract, DrawableAcquisitionUsesTimeoutAndCompletedSlotsDoNotWait)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	EXPECT_NE(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
+	EXPECT_NE(Source.find("m_SkipCurrentFrame = true;"), std::string::npos);
+	EXPECT_NE(Source.find("bool SkipCurrentFrameCommand(int Command) const"), std::string::npos);
+	EXPECT_NE(Source.find("m_FrameState.FinalizeFrameWithoutPresent()"), std::string::npos);
 	const size_t SlotWait = Source.find("const MTLCommandBufferStatus Status = Frame.m_CommandBuffer.status;");
 	ASSERT_NE(SlotWait, std::string::npos);
 	const size_t WaitCall = Source.find("[Frame.m_CommandBuffer waitUntilCompleted];", SlotWait);
