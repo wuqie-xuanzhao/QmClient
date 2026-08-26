@@ -600,6 +600,13 @@ src/test/metal_types_test.cpp
 
 - 同一二进制、配置、地图、相机位置分别采集 OpenGL 与 Metal。
 - 记录 CPU frame p50/p95/p99/max、GPU frame、drawable wait、encode、command buffers、encoders、draw、upload/readback bytes、内存和功耗。
+
+### 实施记录（2026-08-26）
+
+- Metal 新增默认关闭的 `qm_macos_graphics_diagnostics` 采样：每 120 帧记录 command buffer/render call/encoder、frame-slot wait、drawable 获取、GPU completion wait、upload/readback bytes 及纹理/缓冲创建数量与字节数，用于区分设置页响应、首帧初始化和游戏场景 GPU 压力；未以单一 FPS 数字判断 Metal 与 Vulkan 优劣。
+- 修复呈现读回生命周期：普通异步 `Swap()` 保留的 shared readback buffer 在 screenshot、read-pixel 和视频读取前统一等待对应 command buffer 完成并检查状态，避免三帧 in-flight 下读到旧数据或未完成数据。
+- 修复纹理、文本纹理 create/update 失败静默成功：资源分配或上传失败现在传播为 render command error；文本纹理成对创建失败时回滚已成功的一侧，避免半初始化槽位。
+- 验证：`cmake --build cmake-build-metal-release --target run_cxx_tests -j 4` 为 2843/2843；`cmake --build cmake-build-metal-release --target game-client -j 4` 通过；release C++ 为 2837/2837；release Rust 全量（含 doctest）通过；`python3 qmclient_scripts/gate/check_gate.py --mode default` 为 13/0/0。真实 UI 点击延迟、进入游戏首帧卡顿及 Vulkan 对比仍需在 dev 客户端用同场景诊断日志与 GPU capture 归因。
 - VSync on/off、普通/HiDPI 分开，不用单个 FPS 数字判断后端优劣。
 
 ## Task 31：证据驱动优化

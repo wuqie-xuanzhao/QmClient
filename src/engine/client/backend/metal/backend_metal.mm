@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -169,6 +170,23 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	std::vector<SBufferSlot> m_vBufferSlots;
 	std::vector<SBufferContainerSlot> m_vBufferContainers;
 	std::vector<SRenderTarget> m_vRenderTargets;
+	bool m_MetalPerfEnabled = false;
+	uint32_t m_MetalPerfFrameCount = 0;
+	uint64_t m_MetalPerfCommandBufferCount = 0;
+	uint64_t m_MetalPerfEstimatedRenderCalls = 0;
+	uint64_t m_MetalPerfEncoderCount = 0;
+	uint64_t m_MetalPerfFrameSlotWaitCount = 0;
+	uint64_t m_MetalPerfDrawableAcquireCount = 0;
+	uint64_t m_MetalPerfGpuCompletionWaitCount = 0;
+	double m_MetalPerfFrameSlotWaitMs = 0.0;
+	double m_MetalPerfDrawableAcquireMs = 0.0;
+	double m_MetalPerfGpuCompletionWaitMs = 0.0;
+	uint64_t m_MetalPerfUploadBytes = 0;
+	uint64_t m_MetalPerfReadbackBytes = 0;
+	uint64_t m_MetalPerfTextureCreateCount = 0;
+	uint64_t m_MetalPerfTextureCreateBytes = 0;
+	uint64_t m_MetalPerfBufferCreateCount = 0;
+	uint64_t m_MetalPerfBufferCreateBytes = 0;
 	unsigned int m_RequiredIndicesNum = 0;
 	std::atomic<uint64_t> *m_pTextureMemoryUsage = nullptr;
 	std::atomic<uint64_t> *m_pBufferMemoryUsage = nullptr;
@@ -178,6 +196,35 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	char *m_pVersionString = nullptr;
 	char *m_pRendererString = nullptr;
 	TTwGraphicsGpuList *m_pGpuList = nullptr;
+
+	void ResetMetalPerfStats()
+	{
+		m_MetalPerfFrameCount = 0;
+		m_MetalPerfCommandBufferCount = 0;
+		m_MetalPerfEstimatedRenderCalls = 0;
+		m_MetalPerfEncoderCount = 0;
+		m_MetalPerfFrameSlotWaitCount = 0;
+		m_MetalPerfDrawableAcquireCount = 0;
+		m_MetalPerfGpuCompletionWaitCount = 0;
+		m_MetalPerfFrameSlotWaitMs = 0.0;
+		m_MetalPerfDrawableAcquireMs = 0.0;
+		m_MetalPerfGpuCompletionWaitMs = 0.0;
+		m_MetalPerfUploadBytes = 0;
+		m_MetalPerfReadbackBytes = 0;
+		m_MetalPerfTextureCreateCount = 0;
+		m_MetalPerfTextureCreateBytes = 0;
+		m_MetalPerfBufferCreateCount = 0;
+		m_MetalPerfBufferCreateBytes = 0;
+	}
+
+	void MaybeLogMetalPerfStats()
+	{
+		if(!m_MetalPerfEnabled || m_MetalPerfFrameCount != 120)
+			return;
+		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu",
+			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes);
+		ResetMetalPerfStats();
+	}
 
 	void SetDevice(id<MTLDevice> Device)
 	{
@@ -649,6 +696,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		Target.m_Height = static_cast<uint32_t>(Height);
 		Target.m_DataBytes = PixelCount * 4;
 		Target.m_Allocated = true;
+		if(m_MetalPerfEnabled)
+		{
+			++m_MetalPerfTextureCreateCount;
+			m_MetalPerfTextureCreateBytes += Target.m_DataBytes;
+		}
 		AddTextureMemory(Target.m_DataBytes);
 		return true;
 	}
@@ -672,13 +724,19 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLBuffer> Staging = [m_Device newBufferWithLength:DataBytes options:MTLResourceStorageModeShared];
 		if(Staging == nil)
 			return false;
+		if(m_MetalPerfEnabled)
+			m_MetalPerfUploadBytes += DataBytes;
 		if(pData != nullptr)
 			mem_copy(Staging.contents, pData, DataBytes);
 		else
 			std::memset(Staging.contents, 0, DataBytes);
 		EndRenderEncoderForBlit();
 		if(m_CurrentBlitEncoder == nil)
+		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
+			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+				++m_MetalPerfEncoderCount;
+		}
 		const bool Success = m_CurrentBlitEncoder != nil;
 		if(Success)
 			[m_CurrentBlitEncoder copyFromBuffer:Staging sourceOffset:0 toBuffer:Destination destinationOffset:DestinationOffset size:DataBytes];
@@ -704,6 +762,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLBuffer> Buffer = [m_Device newBufferWithLength:DataBytes options:Options];
 		if(Buffer == nil)
 			return false;
+		if(m_MetalPerfEnabled)
+		{
+			++m_MetalPerfBufferCreateCount;
+			m_MetalPerfBufferCreateBytes += DataBytes;
+		}
 		bool Success = true;
 		if(OneTimeUse)
 		{
@@ -768,7 +831,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		EndRenderEncoderForBlit();
 		if(m_CurrentBlitEncoder == nil)
+		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
+			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+				++m_MetalPerfEncoderCount;
+		}
 		if(m_CurrentBlitEncoder == nil)
 			return false;
 		[m_CurrentBlitEncoder copyFromBuffer:ReadBuffer.m_Buffer sourceOffset:ReadOffset toBuffer:WriteBuffer.m_Buffer destinationOffset:WriteOffset size:CopyBytes];
@@ -1386,6 +1453,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		Texture.m_Format = Format;
 		Texture.m_Is2DArray = Wants2DArray;
 		Texture.m_Allocated = true;
+		if(m_MetalPerfEnabled)
+		{
+			++m_MetalPerfTextureCreateCount;
+			m_MetalPerfTextureCreateBytes += Layout.m_DataBytes + ArrayLayout.m_DataBytes;
+		}
 		AddTextureMemory(Layout.m_DataBytes + ArrayLayout.m_DataBytes);
 
 		bool Uploaded = pData == nullptr || pTexture == nil;
@@ -1558,12 +1630,31 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 #endif
 	}
 
+	bool WaitForPresentedReadback()
+	{
+		if(m_LastPresentedReadback == nil || m_LastPresentedCommandBuffer == nil)
+			return false;
+		const auto PresentedReadbackWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+		[m_LastPresentedCommandBuffer waitUntilCompleted];
+		if(m_MetalPerfEnabled)
+		{
+			++m_MetalPerfGpuCompletionWaitCount;
+			m_MetalPerfGpuCompletionWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - PresentedReadbackWaitStart).count();
+		}
+		if(m_LastPresentedCommandBuffer.status == MTLCommandBufferStatusCompleted)
+			return true;
+		dbg_msg("gfx/metal", "presented readback command buffer incomplete: status=%ld", static_cast<long>(m_LastPresentedCommandBuffer.status));
+		return false;
+	}
+
 	bool GetPresentedImageData(uint32_t &Width, uint32_t &Height, CImageInfo::EImageFormat &Format, std::vector<uint8_t> &vDstData) override
 	{
 		if(m_LastPresentedReadback == nil || m_LastPresentedCommandBuffer == nil || m_LastPresentedReadbackWidth == 0 || m_LastPresentedReadbackHeight == 0)
+		{
+			dbg_msg("gfx/metal", "presented readback unavailable: buffer=%d command_buffer=%d size=%ux%u", m_LastPresentedReadback != nil, m_LastPresentedCommandBuffer != nil, m_LastPresentedReadbackWidth, m_LastPresentedReadbackHeight);
 			return false;
-		[m_LastPresentedCommandBuffer waitUntilCompleted];
-		if(m_LastPresentedCommandBuffer.status != MTLCommandBufferStatusCompleted)
+		}
+		if(!WaitForPresentedReadback())
 			return false;
 		size_t PixelCount = 0;
 		size_t DataBytes = 0;
@@ -1841,7 +1932,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentDrawable == nil)
 		{
 			CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
+			const auto DrawableAcquireStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 			m_CurrentDrawable = RetainMetalObject([pLayer nextDrawable]);
+			if(m_MetalPerfEnabled)
+			{
+				++m_MetalPerfDrawableAcquireCount;
+				m_MetalPerfDrawableAcquireMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - DrawableAcquireStart).count();
+			}
 		}
 		if(m_CurrentDrawable == nil)
 			return false;
@@ -1874,6 +1971,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentRenderEncoder == nil)
 			return false;
 		m_CurrentRenderEncoder.label = @"QmClient Metal frame";
+		if(m_MetalPerfEnabled)
+			++m_MetalPerfEncoderCount;
 		[m_CurrentRenderEncoder setViewport:(MTLViewport){0.0, 0.0, static_cast<double>(Width), static_cast<double>(Height), 0.0, 1.0}];
 		m_RenderEncoderStarted = true;
 		if(Backbuffer)
@@ -1897,6 +1996,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLBuffer> Staging = [m_Device newBufferWithBytes:vUpload.data() length:vUpload.size() options:MTLResourceStorageModeShared];
 		if(Staging == nil)
 			return false;
+		if(m_MetalPerfEnabled)
+			m_MetalPerfUploadBytes += vUpload.size();
 		if(m_CurrentRenderEncoder != nil)
 		{
 			[m_CurrentRenderEncoder endEncoding];
@@ -1905,7 +2006,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_RenderEncoderStarted = false;
 		}
 		if(m_CurrentBlitEncoder == nil)
+		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
+			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+				++m_MetalPerfEncoderCount;
+		}
 		if(m_CurrentBlitEncoder == nil)
 		{
 			ReleaseMetalObject(Staging);
@@ -1947,6 +2052,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLBuffer> Staging = [m_Device newBufferWithBytes:vUpload.data() length:vUpload.size() options:MTLResourceStorageModeShared];
 		if(Staging == nil)
 			return false;
+		if(m_MetalPerfEnabled)
+			m_MetalPerfUploadBytes += vUpload.size();
 		if(m_CurrentRenderEncoder != nil)
 		{
 			[m_CurrentRenderEncoder endEncoding];
@@ -1955,7 +2062,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_RenderEncoderStarted = false;
 		}
 		if(m_CurrentBlitEncoder == nil)
+		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
+			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+				++m_MetalPerfEncoderCount;
+		}
 		if(m_CurrentBlitEncoder == nil)
 		{
 			ReleaseMetalObject(Staging);
@@ -2924,7 +3035,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CommandBufferCommitted = true;
 		if(!WaitForCompletion)
 			return Result == CMetalFrameState::EFinalizeResult::PRESENTED;
+		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		[m_CurrentCommandBuffer waitUntilCompleted];
+		if(m_MetalPerfEnabled)
+		{
+			++m_MetalPerfGpuCompletionWaitCount;
+			m_MetalPerfGpuCompletionWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - GpuCompletionWaitStart).count();
+		}
 		return Result == CMetalFrameState::EFinalizeResult::PRESENTED && m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
 	}
 
@@ -2937,7 +3054,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
+		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		[m_CurrentCommandBuffer waitUntilCompleted];
+		if(m_MetalPerfEnabled)
+		{
+			++m_MetalPerfGpuCompletionWaitCount;
+			m_MetalPerfGpuCompletionWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - GpuCompletionWaitStart).count();
+		}
 		return m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
 	}
 
@@ -2955,12 +3078,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes * Height options:MTLResourceStorageModeShared];
 		if(Readback == nil)
 			return nil;
+		if(m_MetalPerfEnabled)
+			m_MetalPerfReadbackBytes += RowBytes * Height;
 		m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 		if(m_CurrentBlitEncoder == nil)
 		{
 			ReleaseMetalObject(Readback);
 			return nil;
 		}
+		if(m_MetalPerfEnabled)
+			++m_MetalPerfEncoderCount;
 		[m_CurrentBlitEncoder copyFromTexture:Texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(Width, Height, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes * Height];
 		return Readback;
 	}
@@ -3029,6 +3156,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		else
 		{
+			if(!WaitForPresentedReadback())
+				return;
 			Readback = m_LastPresentedReadback;
 			Width = m_LastPresentedReadbackWidth;
 			Height = m_LastPresentedReadbackHeight;
@@ -3087,12 +3216,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			id<MTLBuffer> Readback = [m_Device newBufferWithLength:RowBytes options:MTLResourceStorageModeShared];
 			if(Readback == nil)
 				return;
+			if(m_MetalPerfEnabled)
+				m_MetalPerfReadbackBytes += RowBytes;
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 			if(m_CurrentBlitEncoder == nil)
 			{
 				ReleaseMetalObject(Readback);
 				return;
 			}
+			if(m_MetalPerfEnabled)
+				++m_MetalPerfEncoderCount;
 			[m_CurrentBlitEncoder copyFromTexture:m_CurrentDrawable.texture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(X, Y, 0) sourceSize:MTLSizeMake(1, 1, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes];
 			if(!CommitCurrentFrame(true, true))
 			{
@@ -3105,7 +3238,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			ReleaseMetalObject(Readback);
 			return;
 		}
-		if(m_LastPresentedReadback == nil || pCommand->m_Position.x < 0 || pCommand->m_Position.y < 0 || static_cast<uint32_t>(pCommand->m_Position.x) >= m_LastPresentedReadbackWidth || static_cast<uint32_t>(pCommand->m_Position.y) >= m_LastPresentedReadbackHeight)
+		if(!WaitForPresentedReadback() || pCommand->m_Position.x < 0 || pCommand->m_Position.y < 0 || static_cast<uint32_t>(pCommand->m_Position.x) >= m_LastPresentedReadbackWidth || static_cast<uint32_t>(pCommand->m_Position.y) >= m_LastPresentedReadbackHeight)
 			return;
 		const uint8_t *pPixel = static_cast<const uint8_t *>(m_LastPresentedReadback.contents) + static_cast<size_t>(pCommand->m_Position.y) * m_LastPresentedReadbackRowBytes + static_cast<size_t>(pCommand->m_Position.x) * 4;
 		*pCommand->m_pColor = ColorRGBA(pPixel[2] / 255.0f, pPixel[1] / 255.0f, pPixel[0] / 255.0f, 1.0f);
@@ -3164,8 +3297,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			!CreateSdfPipelineStates(SupportedCount, m_aMultiSampleMediaIslandSdfPipelines, m_aMultiSampleRoundedRectSdfPipelines))
 		{
 			dbg_msg("gfx/metal", "Qm SDF MSAA pipelines unavailable after FSAA change; using the existing geometry fallback");
-			ReleasePipelineStates(m_aMediaIslandSdfPipelines);
-			ReleasePipelineStates(m_aRoundedRectSdfPipelines);
 			ReleasePipelineStates(m_aMultiSampleMediaIslandSdfPipelines);
 			ReleasePipelineStates(m_aMultiSampleRoundedRectSdfPipelines);
 		}
@@ -3173,7 +3304,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			!CreateTexturedMsdfPipelineStates(SupportedCount, m_aMultiSampleTexturedMsdfPipelines))
 		{
 			dbg_msg("gfx/metal", "Textured MSDF MSAA pipelines unavailable after FSAA change; using the existing geometry fallback");
-			ReleasePipelineStates(m_aTexturedMsdfPipelines);
 			ReleasePipelineStates(m_aMultiSampleTexturedMsdfPipelines);
 		}
 		if(SupportedCount == 0)
@@ -3204,14 +3334,32 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void StartCommands(size_t CommandCount, size_t EstimatedRenderCallCount) override
 	{
 		(void)CommandCount;
-		(void)EstimatedRenderCallCount;
+		const bool PerfEnabled = g_Config.m_QmMacosGraphicsDiagnostics != 0;
+		if(PerfEnabled != m_MetalPerfEnabled)
+		{
+			m_MetalPerfEnabled = PerfEnabled;
+			ResetMetalPerfStats();
+		}
+		if(m_MetalPerfEnabled)
+		{
+			++m_MetalPerfFrameCount;
+			++m_MetalPerfCommandBufferCount;
+			m_MetalPerfEstimatedRenderCalls += EstimatedRenderCallCount;
+			MaybeLogMetalPerfStats();
+		}
 		if(m_State != EMetalBackendState::INITIALIZED || m_CommandQueue == nil)
 			return;
 		const size_t Slot = m_FrameId == 0 ? 0 : (m_CurrentFrameSlot + 1) % gs_FrameSlotCount;
 		SFrameSlot &Frame = m_aFrameSlots[Slot];
 		if(m_FrameState.SlotState(Slot) == CMetalFrameState::ESlotState::IN_FLIGHT && Frame.m_CommandBuffer != nil)
 		{
+			const auto FrameSlotWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 			[Frame.m_CommandBuffer waitUntilCompleted];
+			if(m_MetalPerfEnabled)
+			{
+				++m_MetalPerfFrameSlotWaitCount;
+				m_MetalPerfFrameSlotWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - FrameSlotWaitStart).count();
+			}
 			m_FrameState.CompleteFrame({Frame.m_FrameId, Slot}, Frame.m_CommandBuffer.status == MTLCommandBufferStatusCompleted);
 		}
 		ReleaseFrameSlotResources(Slot);
@@ -3375,18 +3523,22 @@ public:
 			case CCommandBuffer::CMD_TEXTURE_CREATE:
 			{
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand);
-				CreateTexture(pCommand->m_Slot, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::RGBA8, pCommand->m_Flags, pCommand->m_pData);
+				const bool Success = CreateTexture(pCommand->m_Slot, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::RGBA8, pCommand->m_Flags, pCommand->m_pData);
 				if(pCommand->m_pData != nullptr)
 					free(pCommand->m_pData);
-				return RUN_COMMAND_COMMAND_HANDLED;
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
 			}
 			case CCommandBuffer::CMD_TEXTURE_UPDATE:
 			{
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand);
-				UpdateTexture(pCommand->m_Slot, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::RGBA8, pCommand->m_pData);
+				const bool Success = UpdateTexture(pCommand->m_Slot, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::RGBA8, pCommand->m_pData);
 				if(pCommand->m_pData != nullptr)
 					free(pCommand->m_pData);
-				return RUN_COMMAND_COMMAND_HANDLED;
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
 			}
 			case CCommandBuffer::CMD_TEXTURE_DESTROY:
 				DestroyTexture(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand)->m_Slot);
@@ -3394,21 +3546,33 @@ public:
 			case CCommandBuffer::CMD_TEXT_TEXTURES_CREATE:
 			{
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_TextTextures_Create *>(pBaseCommand);
-				CreateTexture(pCommand->m_Slot, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, TextureFlag::NO_MIPMAPS, pCommand->m_pTextData);
-				CreateTexture(pCommand->m_SlotOutline, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, TextureFlag::NO_MIPMAPS, pCommand->m_pTextOutlineData);
+				const bool TextSuccess = CreateTexture(pCommand->m_Slot, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, TextureFlag::NO_MIPMAPS, pCommand->m_pTextData);
+				const bool OutlineSuccess = CreateTexture(pCommand->m_SlotOutline, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, TextureFlag::NO_MIPMAPS, pCommand->m_pTextOutlineData);
+				const bool Success = TextSuccess && OutlineSuccess;
+				if(!Success)
+				{
+					if(TextSuccess)
+						DestroyTexture(pCommand->m_Slot);
+					if(OutlineSuccess)
+						DestroyTexture(pCommand->m_SlotOutline);
+				}
 				if(pCommand->m_pTextData != nullptr)
 					free(pCommand->m_pTextData);
 				if(pCommand->m_pTextOutlineData != nullptr)
 					free(pCommand->m_pTextOutlineData);
-				return RUN_COMMAND_COMMAND_HANDLED;
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
 			}
 			case CCommandBuffer::CMD_TEXT_TEXTURE_UPDATE:
 			{
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_TextTexture_Update *>(pBaseCommand);
 				const bool Success = UpdateTexture(pCommand->m_Slot, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height, EMetalTextureFormat::R8, pCommand->m_pData);
-				if(!Success && pCommand->m_pData != nullptr)
+				if(pCommand->m_pData != nullptr)
 					free(pCommand->m_pData);
-				return RUN_COMMAND_COMMAND_HANDLED;
+				if(!Success)
+					SetResourceCommandError(pCommand);
+				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
 			}
 			case CCommandBuffer::CMD_TEXT_TEXTURES_DESTROY:
 			{

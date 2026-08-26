@@ -154,6 +154,38 @@ TEST(MetalBackendContract, RenderTargetReadbackCopiesBgraToRgbaBeforeSignaling)
 	EXPECT_NE(Source.find("CMD_RENDER_TARGET_READBACK"), std::string::npos);
 }
 
+TEST(MetalBackendContract, PresentedReadbackWaitsBeforeConsumingSharedBuffer)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Helper = Source.find("bool WaitForPresentedReadback()");
+	const size_t Screenshot = Source.find("void Cmd_Screenshot");
+	const size_t ReadPixel = Source.find("void Cmd_ReadPixel");
+	ASSERT_NE(Helper, std::string::npos);
+	ASSERT_NE(Screenshot, std::string::npos);
+	ASSERT_NE(ReadPixel, std::string::npos);
+	EXPECT_NE(Source.find("waitUntilCompleted", Helper), std::string::npos);
+	EXPECT_NE(Source.find("MTLCommandBufferStatusCompleted", Helper), std::string::npos);
+	EXPECT_NE(Source.find("if(!WaitForPresentedReadback())", Screenshot), std::string::npos);
+	EXPECT_NE(Source.find("if(!WaitForPresentedReadback()", ReadPixel), std::string::npos);
+}
+
+TEST(MetalBackendContract, TextureResourceFailuresArePropagated)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t TextureCreate = Source.find("case CCommandBuffer::CMD_TEXTURE_CREATE");
+	const size_t TextureUpdate = Source.find("case CCommandBuffer::CMD_TEXTURE_UPDATE");
+	const size_t TextCreate = Source.find("case CCommandBuffer::CMD_TEXT_TEXTURES_CREATE");
+	const size_t TextUpdate = Source.find("case CCommandBuffer::CMD_TEXT_TEXTURE_UPDATE");
+	ASSERT_NE(TextureCreate, std::string::npos);
+	ASSERT_NE(TextureUpdate, std::string::npos);
+	ASSERT_NE(TextCreate, std::string::npos);
+	ASSERT_NE(TextUpdate, std::string::npos);
+	EXPECT_NE(Source.find("SetResourceCommandError(pCommand)", TextureCreate), std::string::npos);
+	EXPECT_NE(Source.find("SetResourceCommandError(pCommand)", TextureUpdate), std::string::npos);
+	EXPECT_NE(Source.find("SetResourceCommandError(pCommand)", TextCreate), std::string::npos);
+	EXPECT_NE(Source.find("SetResourceCommandError(pCommand)", TextUpdate), std::string::npos);
+}
+
 TEST(MetalBackendContract, MultisampleBackbufferUsesResolveAttachmentAndRealDeviceSupport)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
