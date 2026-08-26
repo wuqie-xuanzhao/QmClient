@@ -158,6 +158,31 @@ option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF
 option(QM_STRICT_WARNINGS "Treat compiler warnings as errors" OFF)
 option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor PNG icon atlases from SVG sources" ON)
 
+# 网易云音乐 3.1.36.205322 x64 Hook 仅在 Windows x64 构建。
+if(TARGET_OS STREQUAL "windows" AND TARGET_BITS STREQUAL "64")
+  add_subdirectory(vendor/minhook EXCLUDE_FROM_ALL)
+  add_library(qm-nmt-hook64 SHARED
+    src/qm-nmt-hook/qm_netease_hook_dll.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.h
+  )
+  set_target_properties(qm-nmt-hook64 PROPERTIES OUTPUT_NAME "qm-nmt-hook64")
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_EXTENSIONS OFF)
+  target_include_directories(qm-nmt-hook64 PRIVATE src vendor/minhook/include)
+  target_compile_definitions(qm-nmt-hook64 PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-hook64 PRIVATE minhook windowsapp bcrypt)
+
+  add_executable(qm-nmt-helper src/qm-nmt-hook/qm_netease_hook_helper.cpp)
+  set_target_properties(qm-nmt-helper PROPERTIES OUTPUT_NAME "qm-nmt-helper")
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_EXTENSIONS OFF)
+  target_compile_definitions(qm-nmt-helper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-helper PRIVATE bcrypt)
+endif()
+
 if(TARGET_OS STREQUAL "android")
   set(DISCORD OFF)
   set(STEAM OFF)
@@ -2205,6 +2230,34 @@ file(GLOB QM_ICON_ATLAS_SVG_SOURCES
   datasrc/qm_icons/phosphor_thin/*.svg
   datasrc/qm_icons/tabler/*.svg
 )
+set(QM_ICON_MORPH_SVG_SOURCES
+  datasrc/qm_icons/phosphor_bold/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_bold/icon-eye.svg
+  datasrc/qm_icons/phosphor_fill/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_fill/icon-eye.svg
+  datasrc/qm_icons/phosphor_regular/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_regular/icon-eye.svg
+  datasrc/qm_icons/phosphor_thin/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_thin/icon-eye.svg
+)
+set(QM_ICON_MORPH_GENERATED ${PROJECT_BINARY_DIR}/src/generated/qm_icon_morph_generated.inc)
+add_custom_command(OUTPUT ${QM_ICON_MORPH_GENERATED}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/src/generated
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_morph.py
+    --source-root datasrc/qm_icons
+    --output ${QM_ICON_MORPH_GENERATED}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  DEPENDS
+    qmclient_scripts/qm_build_icon_atlas.py
+    qmclient_scripts/qm_build_icon_morph.py
+    ${QM_ICON_MORPH_SVG_SOURCES}
+  COMMENT "Building QmClient eye path morph data"
+)
+add_custom_target(qm-icon-morph DEPENDS ${QM_ICON_MORPH_GENERATED})
+if(TARGET sync_runtime_data)
+  add_dependencies(sync_runtime_data qm-icon-morph)
+endif()
 add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
@@ -2810,9 +2863,6 @@ if(CLIENT)
     components/censor.h
     components/chat.cpp
     components/chat.h
-    components/chat_completion.cpp
-    components/chat_completion.h
-    components/chat_completion_pinyin.inc
     components/community_icons.cpp
     components/community_icons.h
     components/console.cpp
@@ -2951,6 +3001,10 @@ if(CLIENT)
     components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.h
     components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
     components/qmclient/qm_lyrics/qm_lyrics_song_search_map.h
+    components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    components/qmclient/netease_hook/qm_netease_hook_protocol.h
+    components/qmclient/netease_hook/qm_netease_hook_provider.cpp
+    components/qmclient/netease_hook/qm_netease_hook_provider.h
     components/qmclient/qmclient.cpp
     components/qmclient/qmclient.h
     components/qmclient/qmclient_utils.cpp
@@ -3091,6 +3145,8 @@ if(CLIENT)
     projectile_data.h
     qm_icon_manager.cpp
     qm_icon_manager.h
+    qm_icon_morph.cpp
+    qm_icon_morph.h
     qm_ime_candidate_popup.cpp
     qm_ime_candidate_popup.h
     qm_ime_manager.cpp
@@ -3361,6 +3417,14 @@ if(CLIENT)
     )
   endif()
   add_dependencies(game-client generate_content_types)
+  add_dependencies(game-client qm-icon-morph)
+  if(TARGET qm-nmt-hook64)
+    add_dependencies(game-client qm-nmt-hook64 qm-nmt-helper)
+    add_custom_command(TARGET game-client POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-hook64>" "$<TARGET_FILE_DIR:game-client>/qm-nmt-hook64.dll"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-helper>" "$<TARGET_FILE_DIR:game-client>/qm-nmt-helper.exe"
+      COMMENT "Copying 网易云音乐 Hook helper and DLL")
+  endif()
   if(VULKAN)
     add_dependencies(game-client build_vulkan_shaders)
   endif()
@@ -3798,6 +3862,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_lyrics_source_lyricify_cn_test.cpp
     qm_lyrics_source_lrclib_test.cpp
     qm_lyrics_song_search_map_test.cpp
+    qm_netease_hook_protocol_test.cpp
     qm_modes_test.cpp
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
@@ -3847,7 +3912,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   set(TESTS_EXTRA
     src/game/client/animstate.cpp
-    src/game/client/components/chat_completion.cpp
     src/game/client/race_parse.cpp
     src/game/client/skin.cpp
     src/game/client/components/tclient/map_history.cpp
@@ -3896,6 +3960,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
     src/game/client/components/qmclient/modes.cpp
     src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/tee_hue_cycle.cpp

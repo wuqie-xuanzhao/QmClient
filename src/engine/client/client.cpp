@@ -560,6 +560,11 @@ void CClient::SendTClientInfo(int Conn)
 
 void CClient::SendInfo(int Conn)
 {
+	// 静默断开后的同端口重连会保留服务器游戏态，因此先用游戏层消息恢复 DDNet 版本。
+	CMsgPacker MsgLegacyVersion(NETMSGTYPE_CL_ISDDNETLEGACY, false);
+	MsgLegacyVersion.AddInt(GameClient()->DDNetVersion());
+	SendMsg(Conn, &MsgLegacyVersion, MSGFLAG_VITAL);
+
 	SendTClientInfo(Conn);
 
 	CMsgPacker MsgVer(NETMSG_CLIENTVER, true);

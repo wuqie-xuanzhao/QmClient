@@ -12,6 +12,7 @@
 #include <game/client/components/nameplates.h>
 #include <game/client/components/qmclient/axiom_auto_login.h>
 #include <game/client/components/tclient/statusbar.h>
+#include <game/client/components/tooltips.h>
 #include <game/client/prediction/gameworld.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
@@ -156,6 +157,19 @@ namespace
 	}
 
 } // namespace
+
+TEST(QmTooltips, OwnsCallerTextAndBoundsFriendNotes)
+{
+	char aCallerText[] = "rabbit";
+	CTooltip Tooltip{nullptr, CUIRect{}, aCallerText, -1.0f, false};
+	aCallerText[0] = 'R';
+	EXPECT_EQ(Tooltip.m_Text, "rabbit");
+
+	const std::string BrowserSource = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string FriendsRender = FunctionBody(BrowserSource, "void CMenus::RenderServerbrowserFriends(CUIRect View)");
+	EXPECT_NE(FriendsRender.find("DoToolTip(pListItemId, &Rect, TooltipText.c_str(), 320.0f);"), std::string::npos);
+	EXPECT_NE(FriendsRender.find("DoToolTip(pSkinTooltipId, &Skin, Friend.Skin());"), std::string::npos);
+}
 
 TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 {
@@ -1351,6 +1365,7 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 		"QmChatSaveDraft",
 		"QmChatHideSystemPrefix",
 		"QmSmtcEnable",
+		"QmNeteaseHookEnable",
 		"QmSmtcShowHud",
 		"QmSmtcLyricsEnable",
 		"QmLyricsMarquee",

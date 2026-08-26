@@ -3,11 +3,15 @@
 
 #include "system_media_controls_timeline.h"
 
+#include <base/time.h>
+
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 #include <base/perf_timer.h>
 #include <base/str.h>
 #include <base/system.h>
 
+#include <engine/gfx/image_loader.h>
+#include <engine/gfx/image_manipulation.h>
 #include <engine/image.h>
 #include <engine/shared/config.h>
 
@@ -24,6 +28,7 @@
 #include <chrono>
 #include <cmath>
 #include <deque>
+#include <limits>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -477,10 +482,103 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 	str_format(aExtra, sizeof(aExtra), "width=%d height=%d valid=%d circular_valid=%d", AlbumArtWidth, AlbumArtHeight, pWinrt->m_State.m_AlbumArt.IsValid() ? 1 : 0, pWinrt->m_State.m_AlbumArtCircular.IsValid() ? 1 : 0);
 	QmPerfLogStage("perf/system_media_controls", "album_art_apply", ApplyTimer.ElapsedMs(), true, pClient, nullptr, nullptr, aExtra);
 }
+
+static bool LoadHookAlbumArtTextures(IGraphics *pGraphics, const char *pPath, IGraphics::CTextureHandle *pAlbumArt, IGraphics::CTextureHandle *pAlbumArtCircular, int *pWidth, int *pHeight)
+{
+	if(pGraphics == nullptr || pPath == nullptr || pPath[0] == '\0' || pAlbumArt == nullptr || pAlbumArtCircular == nullptr || pWidth == nullptr || pHeight == nullptr)
+		return false;
+	IOHANDLE File = io_open(pPath, IOFLAG_READ);
+	if(File == nullptr)
+		return false;
+	CImageInfo Image;
+	int PngliteIncompatible = 0;
+	const bool Loaded = CImageLoader::LoadPng(File, pPath, Image, PngliteIncompatible);
+	io_close(File);
+	if(!Loaded || Image.m_Width == 0 || Image.m_Height == 0 || Image.m_pData == nullptr)
+	{
+		Image.Free();
+		return false;
+	}
+	if(Image.m_Format != CImageInfo::FORMAT_RGBA && !ConvertToRgba(Image))
+	{
+		Image.Free();
+		return false;
+	}
+	size_t DataSize = 0;
+	if(!Image.DataSize(DataSize) || DataSize == 0 || DataSize > (size_t)std::numeric_limits<int>::max())
+	{
+		Image.Free();
+		return false;
+	}
+	const int Width = (int)Image.m_Width;
+	const int Height = (int)Image.m_Height;
+	std::vector<uint8_t> Pixels(Image.m_pData, Image.m_pData + DataSize);
+	Image.Free();
+	std::vector<uint8_t> CircularPixels = Pixels;
+	ApplyCircularFeatherMask(CircularPixels, Width, Height);
+	const float RoundingRatio = 2.0f / 14.0f;
+	ApplyRoundedMask(Pixels, Width, Height, (float)std::min(Width, Height) * RoundingRatio);
+	IGraphics::CTextureHandle AlbumArt = LoadAlbumArtTexture(pGraphics, Pixels, Width, Height, "netease_hook_album_art");
+	if(!AlbumArt.IsValid())
+		return false;
+	IGraphics::CTextureHandle AlbumArtCircular = LoadAlbumArtTexture(pGraphics, CircularPixels, Width, Height, "netease_hook_album_art_circular");
+	if(!AlbumArtCircular.IsValid())
+	{
+		pGraphics->UnloadTexture(&AlbumArt);
+		return false;
+	}
+	*pAlbumArt = AlbumArt;
+	*pAlbumArtCircular = AlbumArtCircular;
+	*pWidth = Width;
+	*pHeight = Height;
+	return true;
+}
 #endif
 
 CSystemMediaControls::CSystemMediaControls() = default;
 CSystemMediaControls::~CSystemMediaControls() = default;
+
+void CSystemMediaControls::ClearHookAlbumArt()
+{
+	if(Graphics() != nullptr)
+	{
+		if(m_HookAlbumArt.IsValid())
+			Graphics()->UnloadTexture(&m_HookAlbumArt);
+		if(m_HookAlbumArtCircular.IsValid())
+			Graphics()->UnloadTexture(&m_HookAlbumArtCircular);
+	}
+	m_HookAlbumArt.Invalidate();
+	m_HookAlbumArtCircular.Invalidate();
+	m_HookAlbumArtWidth = 0;
+	m_HookAlbumArtHeight = 0;
+	m_HookAlbumArtPath.clear();
+}
+
+void CSystemMediaControls::SyncNeteaseHookConfiguration()
+{
+	const bool HookEnabled = g_Config.m_QmNeteaseHookEnable != 0;
+	const std::string HelperPath = g_Config.m_QmNeteaseHookHelperPath;
+	const bool ConfigurationChanged = !m_NeteaseHookConfigInitialized ||
+					  HookEnabled != m_LastNeteaseHookEnabled ||
+					  (HookEnabled && HelperPath != m_LastNeteaseHookHelperPath);
+	if(!ConfigurationChanged)
+		return;
+
+	if(m_pNeteaseHook != nullptr)
+	{
+		if(SystemMediaControls::ShouldStopNeteaseHookForConfigurationChange(m_NeteaseHookConfigInitialized, m_LastNeteaseHookEnabled))
+			m_pNeteaseHook->Stop();
+		if(HookEnabled)
+			m_pNeteaseHook->Start(HelperPath.c_str(), g_Config.m_QmNeteaseHookTimeoutMs);
+	}
+
+	m_NeteaseHookConfigInitialized = true;
+	m_LastNeteaseHookEnabled = HookEnabled;
+	m_LastNeteaseHookHelperPath = HelperPath;
+	m_HookHasMedia = false;
+	m_HookState = SState{};
+	ClearHookAlbumArt();
+}
 
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 void CSystemMediaControls::ThreadMain()
@@ -508,6 +606,14 @@ void CSystemMediaControls::ThreadMain()
 		{
 			try
 			{
+				if(!g_Config.m_QmSmtcEnable)
+				{
+					if(HasMedia)
+						ResetSharedState(m_pShared.get(), State, HasMedia, AlbumArtKey);
+					std::this_thread::sleep_for(std::chrono::milliseconds(200));
+					continue;
+				}
+
 				if(!Manager)
 				{
 					try
@@ -765,6 +871,8 @@ void CSystemMediaControls::ThreadMain()
 
 void CSystemMediaControls::OnInit()
 {
+	m_pNeteaseHook = std::make_unique<CQmNeteaseHookProvider>();
+	SyncNeteaseHookConfiguration();
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	m_pWinrt = std::make_unique<SWinrt>();
 	m_pShared = std::make_unique<SShared>();
@@ -788,13 +896,113 @@ void CSystemMediaControls::OnShutdown()
 		m_pWinrt.reset();
 	}
 #endif
+	if(m_pNeteaseHook)
+	{
+		m_pNeteaseHook->Stop();
+		m_pNeteaseHook.reset();
+	}
+	m_NeteaseHookConfigInitialized = false;
+	m_LastNeteaseHookEnabled = false;
+	m_LastNeteaseHookHelperPath.clear();
+	m_HookHasMedia = false;
+	m_HookState = SState{};
+	ClearHookAlbumArt();
 }
 
 void CSystemMediaControls::OnUpdate()
 {
+	SyncNeteaseHookConfiguration();
+	if(m_pNeteaseHook && m_LastNeteaseHookEnabled)
+	{
+		QmNeteaseHook::SSnapshot HookSnapshot{};
+		m_HookHasMedia = m_pNeteaseHook->Read(&HookSnapshot, g_Config.m_QmNeteaseHookTimeoutMs) && QmNeteaseHook::HasMedia(HookSnapshot);
+		m_HookState = SState{};
+		if(m_HookHasMedia)
+		{
+			m_HookState.m_HookValid = true;
+			m_HookState.m_HookSequence = HookSnapshot.m_Sequence;
+			m_HookState.m_Playing = (HookSnapshot.m_Status & QmNeteaseHook::STATUS_PLAYING) != 0;
+			// 使用网易云实际 SMTC 标识，使现有 Netease 歌词源可以复用歌曲 ID 直查。
+			str_copy(m_HookState.m_aSourceAppId, "cloudmusic.exe", sizeof(m_HookState.m_aSourceAppId));
+			str_copy(m_HookState.m_aTitle, HookSnapshot.m_aTitle, sizeof(m_HookState.m_aTitle));
+			str_copy(m_HookState.m_aArtist, HookSnapshot.m_aArtist, sizeof(m_HookState.m_aArtist));
+			str_copy(m_HookState.m_aAlbum, HookSnapshot.m_aAlbum, sizeof(m_HookState.m_aAlbum));
+			str_copy(m_HookState.m_aNeteaseSongId, HookSnapshot.m_aSongId, sizeof(m_HookState.m_aNeteaseSongId));
+			str_copy(m_HookState.m_aHookAlbumArtPath, HookSnapshot.m_aCoverPath, sizeof(m_HookState.m_aHookAlbumArtPath));
+			str_copy(m_HookState.m_aHookAlbumArtUrl, HookSnapshot.m_aCoverUrl, sizeof(m_HookState.m_aHookAlbumArtUrl));
+			m_HookState.m_PositionMs = HookSnapshot.m_PositionMs;
+			m_HookState.m_DurationMs = HookSnapshot.m_DurationMs;
+			// DLL 与客户端的 steady_clock 起点不同，不能直接传递 QPC 数值；读取时重新锚定本地单调时钟。
+			m_HookState.m_PositionUpdatedTick = time_get_impl();
+			m_HookState.m_TimelineGeneration = HookSnapshot.m_TimelineGeneration;
+			m_HookState.m_PlaybackRate = HookSnapshot.m_PlaybackRate;
+			m_HookState.m_HookCurrentLineStartMs = HookSnapshot.m_CurrentLineStartMs;
+			m_HookState.m_HookCurrentLineEndMs = HookSnapshot.m_CurrentLineEndMs;
+			if(QmNeteaseHook::HasCurrentLine(HookSnapshot))
+				str_copy(m_HookState.m_aHookCurrentLine, HookSnapshot.m_aCurrentLine, sizeof(m_HookState.m_aHookCurrentLine));
+			const std::string CoverPath = QmNeteaseHook::HasCover(HookSnapshot) ? HookSnapshot.m_aCoverPath : "";
+			if(CoverPath.empty())
+			{
+				if(!m_HookAlbumArtPath.empty() || m_HookAlbumArt.IsValid() || m_HookAlbumArtCircular.IsValid())
+					ClearHookAlbumArt();
+			}
+			else
+			{
+				if(CoverPath != m_HookAlbumArtPath)
+				{
+					ClearHookAlbumArt();
+					m_HookAlbumArtPath = CoverPath;
+				}
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
+				if(!m_HookAlbumArt.IsValid())
+				{
+					IGraphics::CTextureHandle AlbumArt;
+					IGraphics::CTextureHandle AlbumArtCircular;
+					int Width = 0;
+					int Height = 0;
+					if(LoadHookAlbumArtTextures(Graphics(), CoverPath.c_str(), &AlbumArt, &AlbumArtCircular, &Width, &Height))
+					{
+						m_HookAlbumArt = AlbumArt;
+						m_HookAlbumArtCircular = AlbumArtCircular;
+						m_HookAlbumArtWidth = Width;
+						m_HookAlbumArtHeight = Height;
+					}
+				}
+#endif
+			}
+			m_HookState.m_AlbumArt = m_HookAlbumArt;
+			m_HookState.m_AlbumArtCircular = m_HookAlbumArtCircular;
+			m_HookState.m_AlbumArtWidth = m_HookAlbumArtWidth;
+			m_HookState.m_AlbumArtHeight = m_HookAlbumArtHeight;
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
+			// Hook 缓存尚未生成时，暂时复用同一首歌的 SMTC 解码结果，避免封面闪烁。
+			if(!m_HookState.m_AlbumArt.IsValid() && m_pWinrt)
+			{
+				m_HookState.m_AlbumArt = m_pWinrt->m_State.m_AlbumArt;
+				m_HookState.m_AlbumArtCircular = m_pWinrt->m_State.m_AlbumArtCircular;
+				m_HookState.m_AlbumArtWidth = m_pWinrt->m_State.m_AlbumArtWidth;
+				m_HookState.m_AlbumArtHeight = m_pWinrt->m_State.m_AlbumArtHeight;
+			}
+#endif
+		}
+	}
+	else
+	{
+		m_HookHasMedia = false;
+		m_HookState = SState{};
+		if(!m_HookAlbumArtPath.empty() || m_HookAlbumArt.IsValid() || m_HookAlbumArtCircular.IsValid())
+			ClearHookAlbumArt();
+	}
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!m_pWinrt)
 		return;
+
+	if(!g_Config.m_QmSmtcEnable)
+	{
+		if(m_pWinrt->m_HasMedia)
+			ClearState(m_pWinrt.get(), Graphics());
+		return;
+	}
 
 	if(!m_pShared)
 		return;
@@ -836,11 +1044,19 @@ void CSystemMediaControls::OnUpdate()
 	}
 
 	ApplySharedAlbumArt(m_pShared.get(), m_pWinrt.get(), Graphics(), Client());
+
 #endif
 }
 
 bool CSystemMediaControls::GetStateSnapshot(SState &State) const
 {
+#if defined(_WIN32)
+	if(g_Config.m_QmNeteaseHookEnable && m_LastNeteaseHookEnabled && m_HookHasMedia)
+	{
+		State = m_HookState;
+		return true;
+	}
+#endif
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!g_Config.m_QmSmtcEnable)
 	{

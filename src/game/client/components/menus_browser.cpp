@@ -2443,7 +2443,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 						TooltipText.append(" ");
 						TooltipText.append(pNote);
 					}
-					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str());
+					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str(), 320.0f);
 				}
 				++FriendTooltipIndex;
 				const bool IsOffline = Friend.ServerInfo() == nullptr;

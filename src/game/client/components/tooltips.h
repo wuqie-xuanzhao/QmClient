@@ -7,13 +7,14 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <string>
 #include <unordered_map>
 
 struct CTooltip
 {
 	const void *m_pId;
 	CUIRect m_Rect;
-	const char *m_pText;
+	std::string m_Text;
 	float m_WidthHint;
 	bool m_OnScreen; // used to know if the tooltip should be rendered.
 	float m_FadeTime = 0.75f;

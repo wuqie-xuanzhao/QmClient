@@ -3665,7 +3665,7 @@ bool CHud::HasVisibleMediaIsland() const
 	if(GameClient()->m_QmLyrics.GetMediaIslandText(aLyricsIslandBuf, sizeof(aLyricsIslandBuf), nullptr))
 		return true;
 
-	if(!(g_Config.m_QmSmtcEnable && g_Config.m_QmSmtcShowHud))
+	if(!g_Config.m_QmSmtcShowHud || !SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0))
 		return false;
 
 	CSystemMediaControls::SState MediaState;
@@ -3695,7 +3695,7 @@ float CHud::GetTopIslandAvoidanceRight() const
 	const bool ShowTeam = BuildHudTeamText(*GameClient(), aTeamBuf, sizeof(aTeamBuf));
 
 	CSystemMediaControls::SState MediaState;
-	const bool MediaHudEnabled = g_Config.m_QmSmtcEnable && g_Config.m_QmSmtcShowHud;
+	const bool MediaHudEnabled = g_Config.m_QmSmtcShowHud && SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0);
 	const bool HasMediaState = MediaHudEnabled && GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState);
 	const bool ShowTopRow = HasMediaState || ShowInfoStack || TimerCapsule.m_Visible || ShowRecordingStatus || ShowSpectatorSatellite || ShowTeam;
 	if(!ShowTopRow)
@@ -3831,7 +3831,7 @@ void CHud::RenderMediaIsland()
 	auto &AnimState = m_MediaIslandAnimState;
 	const int64_t Now = time_get();
 	CSystemMediaControls::SState MediaState;
-	const bool MediaHudEnabled = g_Config.m_QmSmtcEnable && g_Config.m_QmSmtcShowHud;
+	const bool MediaHudEnabled = g_Config.m_QmSmtcShowHud && SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0);
 	const bool HasMediaState = MediaHudEnabled && GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState);
 	if(!HasMediaState)
 	{
@@ -6702,7 +6702,7 @@ void CHud::RenderLocalTime(float x)
 float CHud::RenderLegacyMediaInfoAt(float AnchorX, float CenterY)
 {
 	const bool Preview = GameClient()->m_HudEditor.IsActive();
-	if(m_LegacyMediaInfoRendered || !g_Config.m_QmHudIslandUseOriginalStyle || !g_Config.m_QmSmtcEnable || !g_Config.m_QmSmtcShowHud)
+	if(m_LegacyMediaInfoRendered || !g_Config.m_QmHudIslandUseOriginalStyle || !g_Config.m_QmSmtcShowHud || !SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0))
 		return CenterY;
 
 	CSystemMediaControls::SState MediaState{};

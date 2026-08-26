@@ -87,6 +87,64 @@ namespace
 		return !Query.m_Title.empty() || !Query.m_Artist.empty() || !Query.m_LinkedFileName.empty();
 	}
 
+	bool BuildNeteaseHookTrack(const CSystemMediaControls::SState &MediaState, const QmLyrics::SLyricsTrack &NetworkTrack, QmLyrics::SLyricsTrack *pTrack)
+	{
+		if(pTrack == nullptr || !MediaState.m_HookValid || MediaState.m_aHookCurrentLine[0] == '\0')
+			return false;
+
+		const int64_t HookStart = MediaState.m_HookCurrentLineStartMs;
+		const int64_t HookEnd = MediaState.m_HookCurrentLineEndMs;
+		if(HookStart >= 0 && HookEnd > HookStart)
+		{
+			QmLyrics::SLyricsTrack Track;
+			Track.m_Format = QmLyrics::EFormat::LRC_STANDARD;
+			QmLyrics::SLyricsLine Line;
+			Line.m_StartMs = HookStart;
+			Line.m_EndMs = HookEnd;
+			Line.m_RawText = MediaState.m_aHookCurrentLine;
+			Track.m_vLines.push_back(std::move(Line));
+			*pTrack = std::move(Track);
+			return true;
+		}
+
+		// GDI+ 只给出正在绘制的句子；从已有时间轴匹配文本，避免用任意固定时长伪造边界。
+		const std::string HookText = MediaState.m_aHookCurrentLine;
+		const std::string NormalizedHook = QmLyrics::NormalizeForMatch(HookText);
+		if(NormalizedHook.empty() || NetworkTrack.m_vLines.empty())
+			return false;
+		int BestIndex = -1;
+		int64_t BestDistance = std::numeric_limits<int64_t>::max();
+		float BestRatio = 0.0f;
+		for(int Index = 0; Index < (int)NetworkTrack.m_vLines.size(); ++Index)
+		{
+			const QmLyrics::SLyricsLine &Candidate = NetworkTrack.m_vLines[Index];
+			const std::string NormalizedCandidate = QmLyrics::NormalizeForMatch(Candidate.m_RawText);
+			if(NormalizedCandidate.empty())
+				continue;
+			const float Ratio = NormalizedCandidate == NormalizedHook ? 1.0f : QmLyrics::TokenSetRatio(NormalizedCandidate, NormalizedHook);
+			if(Ratio < 0.96f)
+				continue;
+			const int64_t Distance = std::llabs(Candidate.m_StartMs - MediaState.m_PositionMs);
+			if(BestIndex < 0 || Ratio > BestRatio || (Ratio == BestRatio && Distance < BestDistance))
+			{
+				BestIndex = Index;
+				BestDistance = Distance;
+				BestRatio = Ratio;
+			}
+		}
+		if(BestIndex < 0)
+			return false;
+
+		QmLyrics::SLyricsTrack Track;
+		Track.m_Format = NetworkTrack.m_Format;
+		QmLyrics::SLyricsLine Line = NetworkTrack.m_vLines[BestIndex];
+		Line.m_RawText = HookText;
+		Line.m_vWords.clear(); // 网络词级时间轴与 Hook 文本可能存在标点/空格差异。
+		Track.m_vLines.push_back(std::move(Line));
+		*pTrack = std::move(Track);
+		return true;
+	}
+
 	bool IsLocalLyricsSourceId(std::string_view SourceId)
 	{
 		return SourceId.size() >= 6 && SourceId.substr(0, 6) == "local-";
@@ -438,6 +496,8 @@ struct CQmLyrics::SImpl
 	std::vector<int> m_vSourceOrder;
 	std::vector<QmLyrics::SSourceCandidate> m_vPendingCandidates;
 	QmLyrics::SLyricsTrack m_Track;
+	QmLyrics::SLyricsTrack m_NetworkTrack;
+	bool m_HookTrackActive = false;
 	QmLyrics::CClockInterpolator m_Clock;
 	QmLyrics::CCacheIndex m_Cache;
 	int m_ActiveLineIndex = -1;
@@ -542,6 +602,8 @@ namespace
 		pImpl->m_LastMediaIdentity.m_Valid = false;
 		pImpl->m_LastTrackKey.clear();
 		pImpl->m_Track.m_vLines.clear();
+		pImpl->m_NetworkTrack.m_vLines.clear();
+		pImpl->m_HookTrackActive = false;
 		pImpl->m_ActiveLineIndex = -1;
 		pImpl->m_LastAnimatedLineIndex = -1;
 		pImpl->m_PreviousAnimatedLineIndex = -1;
@@ -576,7 +638,10 @@ namespace
 		QmLyrics::SLyricsTrack Track;
 		if(!ParseCandidateTrack(Candidate, &Track, aErr, sizeof(aErr)))
 			return false;
-		pImpl->m_Track = std::move(Track);
+		pImpl->m_NetworkTrack = std::move(Track);
+		if(pImpl->m_HookTrackActive)
+			return true;
+		pImpl->m_Track = pImpl->m_NetworkTrack;
 		pImpl->m_State = CQmLyrics::SImpl::EState::READY;
 		pImpl->m_ActiveLineIndex = -1;
 		pImpl->m_LastAnimatedLineIndex = -1;
@@ -780,19 +845,10 @@ void CQmLyrics::TickStateMachine()
 			m_pImpl->m_State = SImpl::EState::IDLE;
 		}
 		CSystemMediaControls::SState MediaState{};
-		if(g_Config.m_QmSmtcEnable && GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState))
+		if(GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState))
 			UpdatePlaybackClock(m_pImpl.get(), MediaState);
 		else
 			ResetPlaybackClock(m_pImpl.get());
-		return;
-	}
-
-	if(!g_Config.m_QmSmtcEnable)
-	{
-		if(m_pImpl->m_State == SImpl::EState::FETCHING)
-			CancelAllSources(m_pImpl.get());
-		ResetPlaybackState(m_pImpl.get());
-		m_pImpl->m_State = SImpl::EState::IDLE;
 		return;
 	}
 
@@ -824,7 +880,7 @@ void CQmLyrics::TickStateMachine()
 		SetStateStatus(m_pImpl.get(), Localize("Lyrics: no media playing"));
 		return;
 	}
-	const bool MediaIdentityChanged = !QmLyrics::MediaIdentityEquals(m_pImpl->m_LastMediaIdentity, MediaState);
+	bool MediaIdentityChanged = !QmLyrics::MediaIdentityEquals(m_pImpl->m_LastMediaIdentity, MediaState);
 	UpdatePlaybackClock(m_pImpl.get(), MediaState);
 
 	auto DispatchSource = [this](int SourceIndex, int Generation) {
@@ -874,6 +930,8 @@ void CQmLyrics::TickStateMachine()
 			CancelAllSources(m_pImpl.get());
 		QmLyrics::SetMediaIdentity(&m_pImpl->m_LastMediaIdentity, MediaState);
 		m_pImpl->m_Track.m_vLines.clear();
+		m_pImpl->m_NetworkTrack.m_vLines.clear();
+		m_pImpl->m_HookTrackActive = false;
 		m_pImpl->m_ActiveLineIndex = -1;
 		m_pImpl->m_PendingQuery = BuildQueryFromMedia(MediaState);
 		m_pImpl->m_State = SImpl::EState::IDLE;
@@ -939,6 +997,34 @@ void CQmLyrics::TickStateMachine()
 					DispatchSource(SourceIndex, Generation);
 			}
 		}
+	}
+
+	// 网易云内部 Hook 当前句优先显示；Hook 暂时没有句子时恢复网络/缓存歌词。
+	QmLyrics::SLyricsTrack HookTrack;
+	const bool HasHookTrack = BuildNeteaseHookTrack(MediaState, m_pImpl->m_NetworkTrack, &HookTrack);
+	if(HasHookTrack)
+	{
+		const bool LineChanged = !m_pImpl->m_HookTrackActive || m_pImpl->m_Track.m_vLines.empty() ||
+					 m_pImpl->m_Track.m_vLines.front().m_StartMs != HookTrack.m_vLines.front().m_StartMs ||
+					 m_pImpl->m_Track.m_vLines.front().m_RawText != HookTrack.m_vLines.front().m_RawText;
+		m_pImpl->m_HookTrackActive = true;
+		m_pImpl->m_Track = std::move(HookTrack);
+		m_pImpl->m_State = SImpl::EState::READY;
+		if(LineChanged)
+		{
+			m_pImpl->m_ActiveLineIndex = -1;
+			m_pImpl->m_LastAnimatedLineIndex = -1;
+			m_pImpl->m_PreviousAnimatedLineIndex = -1;
+			m_pImpl->m_ActiveLineChangedTick = time_get();
+		}
+	}
+	else if(m_pImpl->m_HookTrackActive)
+	{
+		m_pImpl->m_HookTrackActive = false;
+		m_pImpl->m_Track = m_pImpl->m_NetworkTrack;
+		m_pImpl->m_ActiveLineIndex = -1;
+		m_pImpl->m_LastAnimatedLineIndex = -1;
+		m_pImpl->m_PreviousAnimatedLineIndex = -1;
 	}
 	if(MediaIdentityChanged && PerfStartNs != 0)
 	{
@@ -1232,7 +1318,8 @@ bool CQmLyrics::GetMediaIslandText(char *pBuf, size_t BufSize, ColorRGBA *pColor
 		return false;
 	pBuf[0] = '\0';
 
-	if(!g_Config.m_QmLyrics || !g_Config.m_QmLyricsInMediaIsland || g_Config.m_QmHudIslandUseOriginalStyle)
+	if(!g_Config.m_QmLyrics || !g_Config.m_QmLyricsInMediaIsland || g_Config.m_QmHudIslandUseOriginalStyle ||
+		!SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0))
 		return false;
 	if(g_Config.m_QmLyricsHideWhenPaused && m_pImpl->m_State == SImpl::EState::READY && !m_pImpl->m_LastMediaPlaying)
 		return false;
@@ -1274,7 +1361,8 @@ bool CQmLyrics::GetMediaIslandText(char *pBuf, size_t BufSize, ColorRGBA *pColor
 
 bool CQmLyrics::RenderMediaIslandLine(const CUIRect &Rect, float FontSize, float Alpha)
 {
-	if(!g_Config.m_QmLyrics || !g_Config.m_QmLyricsInMediaIsland || g_Config.m_QmHudIslandUseOriginalStyle)
+	if(!g_Config.m_QmLyrics || !g_Config.m_QmLyricsInMediaIsland || g_Config.m_QmHudIslandUseOriginalStyle ||
+		!SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0))
 		return false;
 	if(g_Config.m_QmLyricsHideWhenPaused && m_pImpl->m_State == SImpl::EState::READY && !m_pImpl->m_LastMediaPlaying)
 		return false;

@@ -60,6 +60,22 @@ TEST(SystemMediaTimeline, NormalizesNonZeroStartAndMapsSampleTick)
 	EXPECT_EQ(Snapshot.m_PositionUpdatedTick, MsToTicks(3000));
 }
 
+TEST(SystemMediaSourcePolicy, NeteaseHookIsIndependentFromSmtc)
+{
+	EXPECT_FALSE(SystemMediaControls::AnyMediaSourceEnabled(false, false));
+	EXPECT_TRUE(SystemMediaControls::AnyMediaSourceEnabled(true, false));
+	EXPECT_TRUE(SystemMediaControls::AnyMediaSourceEnabled(false, true));
+	EXPECT_TRUE(SystemMediaControls::AnyMediaSourceEnabled(true, true));
+}
+
+TEST(SystemMediaSourcePolicy, NeteaseHookOnlyStopsAnActiveConfiguration)
+{
+	EXPECT_FALSE(SystemMediaControls::ShouldStopNeteaseHookForConfigurationChange(false, false));
+	EXPECT_FALSE(SystemMediaControls::ShouldStopNeteaseHookForConfigurationChange(false, true));
+	EXPECT_FALSE(SystemMediaControls::ShouldStopNeteaseHookForConfigurationChange(true, false));
+	EXPECT_TRUE(SystemMediaControls::ShouldStopNeteaseHookForConfigurationChange(true, true));
+}
+
 TEST(SystemMediaAlbumArt, DecodeSizeCapsLargeCoversAndPreservesAspectRatio)
 {
 	const SystemMediaControls::SAlbumArtDecodeSize Square = SystemMediaControls::CalculateAlbumArtDecodeSize(2048, 2048);

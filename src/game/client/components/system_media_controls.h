@@ -5,17 +5,29 @@
 #include <engine/graphics.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/netease_hook/qm_netease_hook_provider.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <thread>
 
 namespace SystemMediaControls
 {
 	constexpr uint32_t ALBUM_ART_MAX_DIMENSION = 256;
+
+	inline bool AnyMediaSourceEnabled(bool SmtcEnabled, bool NeteaseHookEnabled)
+	{
+		return SmtcEnabled || NeteaseHookEnabled;
+	}
+
+	inline bool ShouldStopNeteaseHookForConfigurationChange(bool ConfigurationInitialized, bool WasHookEnabled)
+	{
+		return ConfigurationInitialized && WasHookEnabled;
+	}
 
 	struct SAlbumArtDecodeSize
 	{
@@ -89,6 +101,13 @@ public:
 		int64_t m_PositionUpdatedTick = 0;
 		uint64_t m_TimelineGeneration = 0;
 		double m_PlaybackRate = 1.0;
+		bool m_HookValid = false;
+		uint64_t m_HookSequence = 0;
+		char m_aHookCurrentLine[256] = {};
+		int64_t m_HookCurrentLineStartMs = -1;
+		int64_t m_HookCurrentLineEndMs = -1;
+		char m_aHookAlbumArtPath[QmNeteaseHook::MAX_COVER_PATH_BYTES] = {};
+		char m_aHookAlbumArtUrl[QmNeteaseHook::MAX_COVER_URL_BYTES] = {};
 		IGraphics::CTextureHandle m_AlbumArt;
 		IGraphics::CTextureHandle m_AlbumArtCircular;
 		int m_AlbumArtWidth = 0;
@@ -113,6 +132,20 @@ public:
 	void Next();
 
 private:
+	void ClearHookAlbumArt();
+	void SyncNeteaseHookConfiguration();
+
+	std::unique_ptr<CQmNeteaseHookProvider> m_pNeteaseHook;
+	bool m_HookHasMedia = false;
+	bool m_NeteaseHookConfigInitialized = false;
+	bool m_LastNeteaseHookEnabled = false;
+	std::string m_LastNeteaseHookHelperPath;
+	SState m_HookState{};
+	std::string m_HookAlbumArtPath;
+	IGraphics::CTextureHandle m_HookAlbumArt;
+	IGraphics::CTextureHandle m_HookAlbumArtCircular;
+	int m_HookAlbumArtWidth = 0;
+	int m_HookAlbumArtHeight = 0;
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	std::unique_ptr<SWinrt> m_pWinrt;
 	std::unique_ptr<SShared> m_pShared;

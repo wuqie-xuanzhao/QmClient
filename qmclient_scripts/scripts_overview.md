@@ -59,7 +59,6 @@
 - `qmclient_scripts/fix_style.py`
 - `qmclient_scripts/export_settings_commands_table.py`
 - `qmclient_scripts/generate_release_notes.py`
-- `qmclient_scripts/update_ddnet_map_categories.py`：从 `ddnet/ddnet-maps` 的 `types/*/maps/*.map` 生成聊天地图补全使用的官方分类表
 
 ### 4. 其他专用脚本
 

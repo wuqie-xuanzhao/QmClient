@@ -7567,6 +7567,28 @@ TEST(QmMonitoringHelpers, QmClientContentOwnersPreserveInteractiveContracts)
 	EXPECT_NE(HudDeck.find("RenderQmHudNotificationsAdvancedContent"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TimeoutDisconnectReconnectAdvertisesDDNetVersionBeforeSystemInfo)
+{
+	const std::string Source = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string SendInfoBody = ExtractSourceFunctionBody(Source, "void CClient::SendInfo(int Conn)");
+	ASSERT_FALSE(SendInfoBody.empty());
+
+	const size_t LegacyVersion = SendInfoBody.find("CMsgPacker MsgLegacyVersion(NETMSGTYPE_CL_ISDDNETLEGACY, false);");
+	const size_t TClientInfo = SendInfoBody.find("SendTClientInfo(Conn);");
+	const size_t ClientVersion = SendInfoBody.find("CMsgPacker MsgVer(NETMSG_CLIENTVER, true);");
+	const size_t SystemInfo = SendInfoBody.find("CMsgPacker Msg(NETMSG_INFO, true);");
+	ASSERT_NE(LegacyVersion, std::string::npos);
+	ASSERT_NE(TClientInfo, std::string::npos);
+	ASSERT_NE(ClientVersion, std::string::npos);
+	ASSERT_NE(SystemInfo, std::string::npos);
+
+	EXPECT_LT(LegacyVersion, TClientInfo);
+	EXPECT_LT(LegacyVersion, ClientVersion);
+	EXPECT_LT(LegacyVersion, SystemInfo);
+	EXPECT_NE(SendInfoBody.find("MsgLegacyVersion.AddInt(GameClient()->DDNetVersion());"), std::string::npos);
+	EXPECT_NE(SendInfoBody.find("SendMsg(Conn, &MsgLegacyVersion, MSGFLAG_VITAL);"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, QmClientDeckMeasureRevisionsDoNotPreMeasureContent)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -7611,7 +7633,7 @@ TEST(QmMonitoringHelpers, QmClientDeckMeasureRevisionsDoNotPreMeasureContent)
 	}
 	EXPECT_EQ(FunctionDeck.find("QmKeywordReplyRules::DecodeFromConfig", FunctionDeckMeasure + 1), std::string::npos);
 
-	for(const char *pState : {"DummyMiniViewExpanded", "g_Config.m_QmPlayerStatsMapProgress", "g_Config.m_QmSpeedrunTimer", "g_Config.m_QmInputOverlay", "g_Config.m_QmHudNotificationsShowAdvanced", "g_Config.m_QmHudNotificationsUseCategoryFilters", "g_Config.m_QmVoiceEnable", "g_Config.m_QmVoiceShowAdvanced", "DynamicIslandOriginalStyle", "g_Config.m_QmSmtcEnable", "g_Config.m_Qm3DParticles"})
+	for(const char *pState : {"DummyMiniViewExpanded", "g_Config.m_QmPlayerStatsMapProgress", "g_Config.m_QmSpeedrunTimer", "g_Config.m_QmInputOverlay", "g_Config.m_QmHudNotificationsShowAdvanced", "g_Config.m_QmHudNotificationsUseCategoryFilters", "g_Config.m_QmVoiceEnable", "g_Config.m_QmVoiceShowAdvanced", "DynamicIslandOriginalStyle", "g_Config.m_QmSmtcEnable", "g_Config.m_QmNeteaseHookEnable", "g_Config.m_Qm3DParticles"})
 		EXPECT_NE(HudDeck.find(pState), std::string::npos) << pState;
 	for(const char *pState : {"g_Config.m_TcFreezeChatEnabled", "g_Config.m_TcFreezeChatEmoticon", "g_Config.m_QmAxiomAutoLogin", "g_Config.m_QmGores", "g_Config.m_QmGoresAutoEnable", "g_Config.m_QmWeaponTrajectory", "g_Config.m_QmFriendOnlineAutoRefresh", "g_Config.m_QmFriendEnterBroadcast", "g_Config.m_QmFriendEnterAutoGreet", "s_BlockWordsLayoutRevision", "g_Config.m_QmTranslateBackend", "g_Config.m_QmTranslateLlmEnableThinking", "g_Config.m_QmTranslateLlmProvider", "s_KeywordRulesLayoutRevision", "g_Config.m_QmPieMenuEnabled", "s_FavoriteMapsLayoutRevision", "g_Config.m_QmAutoTeamLock"})
 		EXPECT_NE(FunctionDeck.find(pState), std::string::npos) << pState;

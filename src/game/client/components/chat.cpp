@@ -292,82 +292,6 @@ static bool ApplyBlockWords(std::string &Text, std::vector<std::string> *pMatche
 	return Replaced;
 }
 
-static constexpr int COMMAND_PREVIEW_TOKEN_LENGTH = 128;
-
-static bool CommandPreviewNameIs(const char *pName, const char *pCommand)
-{
-	return str_comp_nocase(pName, pCommand) == 0;
-}
-
-static const char *ReadCommandPreviewToken(const char *pText, char *pToken, size_t TokenSize)
-{
-	if(TokenSize == 0)
-		return pText;
-
-	pToken[0] = '\0';
-	if(pText == nullptr)
-		return "";
-
-	const char *pCursor = str_skip_whitespaces_const(pText);
-	char *pDst = pToken;
-	char *pEnd = pToken + TokenSize;
-
-	if(*pCursor == '"')
-	{
-		pCursor++;
-		while(*pCursor != '\0' && *pCursor != '"')
-		{
-			if(*pCursor == '\\' && pCursor[1] != '\0')
-				pCursor++;
-			if(pDst + 1 < pEnd)
-				*pDst++ = *pCursor;
-			pCursor++;
-		}
-		if(*pCursor == '"')
-			pCursor++;
-	}
-	else
-	{
-		while(*pCursor != '\0' && !str_isspace(*pCursor))
-		{
-			if(pDst + 1 < pEnd)
-				*pDst++ = *pCursor;
-			pCursor++;
-		}
-	}
-
-	*pDst = '\0';
-	return pCursor;
-}
-
-static void CopyCommandPreviewRest(const char *pText, char *pBuf, size_t BufSize)
-{
-	if(BufSize == 0)
-		return;
-
-	pBuf[0] = '\0';
-	if(pText == nullptr)
-		return;
-
-	const char *pRest = str_skip_whitespaces_const(pText);
-	if(pRest[0] == '\0')
-		return;
-
-	if(pRest[0] == '"')
-	{
-		char aQuoted[COMMAND_PREVIEW_TOKEN_LENGTH];
-		const char *pAfterQuoted = ReadCommandPreviewToken(pRest, aQuoted, sizeof(aQuoted));
-		if(*str_skip_whitespaces_const(pAfterQuoted) == '\0')
-		{
-			str_copy(pBuf, aQuoted, BufSize);
-			return;
-		}
-	}
-
-	str_copy(pBuf, pRest, BufSize);
-	str_utf8_trim_right(pBuf);
-}
-
 static void DoCachedChatPopupLabel(CUi *pUi, CUIElement &LabelUiElement, const CUIRect &Rect, const char *pText, float Size, int Align)
 {
 	SLabelProperties LabelProps;
@@ -491,503 +415,11 @@ CChat::CChat()
 	});
 }
 
-const CChat::CCommand *CChat::FindServerCommand(const char *pName) const
-{
-	for(const CCommand &Command : m_vServerCommands)
-	{
-		if(str_comp_nocase(Command.m_aName, pName) == 0)
-			return &Command;
-	}
-	return nullptr;
-}
-
-void CChat::RefreshSlashCommandSuggestions()
-{
-	const char *pInput = m_Input.GetString();
-	if(m_SlashCommandSuggestionsDismissed && str_comp(pInput, m_aSlashCommandSuggestionsDismissedInput) == 0)
-	{
-		m_vSlashCommandSuggestions.clear();
-		return;
-	}
-	m_SlashCommandSuggestionsDismissed = false;
-	m_aSlashCommandSuggestionsDismissedInput[0] = '\0';
-	m_vSlashCommandSuggestions = BuildSlashCommandSuggestions(pInput, 8);
-}
-
-const char *CChat::LocalizeCommandPreviewText(const char *pText) const
-{
-	if(pText == nullptr || pText[0] == '\0')
-		return pText;
-
-	return Localize(pText);
-}
-
 float CChat::CalculateCutOffOffsetX(float Progress)
 {
 	if(!g_Config.m_QmChatAnimSlideOut)
 		return 0.0f;
 	return -24.0f * std::clamp(Progress, 0.0f, 1.0f);
-}
-
-bool CChat::BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const
-{
-	if(BufSize == 0)
-		return false;
-
-	pBuf[0] = '\0';
-	const int PreviewBufSize = (int)BufSize;
-	if(pInput == nullptr || pInput[0] != '/' || pInput[1] == '\0')
-		return false;
-
-	char aCommand[COMMAND_PREVIEW_TOKEN_LENGTH];
-	const char *pAfterCommand = ReadCommandPreviewToken(pInput + 1, aCommand, sizeof(aCommand));
-	if(aCommand[0] == '\0')
-		return false;
-
-	char aFirstArg[COMMAND_PREVIEW_TOKEN_LENGTH];
-	const char *pAfterFirstArg = ReadCommandPreviewToken(pAfterCommand, aFirstArg, sizeof(aFirstArg));
-
-	char aRestArg[MAX_LINE_LENGTH];
-	CopyCommandPreviewRest(pAfterCommand, aRestArg, sizeof(aRestArg));
-
-	char aRestAfterFirstArg[MAX_LINE_LENGTH];
-	CopyCommandPreviewRest(pAfterFirstArg, aRestAfterFirstArg, sizeof(aRestAfterFirstArg));
-
-	if(CommandPreviewNameIs(aCommand, "points"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Query points for %s"), aRestArg);
-		else
-			str_format(pBuf, PreviewBufSize, Localize("Query points for %s"), Localize("yourself"));
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "rank"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Query rank for %s"), aRestArg);
-		else
-			str_format(pBuf, PreviewBufSize, Localize("Query rank for %s"), Localize("yourself"));
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "teamrank") || CommandPreviewNameIs(aCommand, "rankteam"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Query team rank for %s"), aRestArg);
-		else
-			str_format(pBuf, PreviewBufSize, Localize("Query team rank for %s"), Localize("yourself"));
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "r") || CommandPreviewNameIs(aCommand, "rescue"))
-	{
-		str_copy(pBuf, Localize("Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "w") || CommandPreviewNameIs(aCommand, "whisper"))
-	{
-		if(aFirstArg[0] != '\0' && aRestAfterFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Whisper to %s: %s"), aFirstArg, aRestAfterFirstArg);
-		else if(aFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Whisper to %s"), aFirstArg);
-		else
-			str_copy(pBuf, Localize("Whisper: /w player message"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "c") || CommandPreviewNameIs(aCommand, "converse"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Reply to the last whisper target: %s"), aRestArg);
-		else
-			str_copy(pBuf, Localize("Reply to the last whisper target"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "mapinfo"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Query map info for %s"), aRestArg);
-		else
-			str_copy(pBuf, Localize("Query current map info"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "team"))
-	{
-		if(aFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Join team %s"), aFirstArg);
-		else
-			str_copy(pBuf, Localize("Show your current team"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "lock"))
-	{
-		if(str_comp(aFirstArg, "0") == 0)
-			str_copy(pBuf, Localize("Unlock the team"), BufSize);
-		else
-			str_copy(pBuf, Localize("Lock the team so other players cannot join directly"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "invite"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Invite %s to the locked team"), aRestArg);
-		else
-			str_format(pBuf, PreviewBufSize, Localize("Invite %s to the locked team"), Localize("a player"));
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "swap"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Request to swap positions with %s"), aRestArg);
-		else
-			str_copy(pBuf, Localize("Request a position swap"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "save"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Save the team as %s"), aRestArg);
-		else
-			str_copy(pBuf, Localize("Save the current team"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "load"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Load save %s"), aRestArg);
-		else
-			str_copy(pBuf, Localize("Show existing saves"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "settings"))
-	{
-		if(aFirstArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("Query server setting: %s"), aFirstArg);
-		else
-			str_copy(pBuf, Localize("Show server settings"), BufSize);
-		return true;
-	}
-
-	if(CommandPreviewNameIs(aCommand, "help"))
-	{
-		if(aRestArg[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("%s (/%s %s)"), Localize("Usage"), aCommand, aRestArg);
-		else
-			str_format(pBuf, PreviewBufSize, Localize("Usage: /%s %s"), aCommand, "");
-		return true;
-	}
-
-	const CCommand *pCommand = FindServerCommand(aCommand);
-	if(pCommand == nullptr)
-		return false;
-
-	const char *pHelpText = LocalizeCommandPreviewText(pCommand->m_aHelpText);
-	if(pHelpText != nullptr && pHelpText[0] != '\0')
-	{
-		if(pCommand->m_aParams[0] != '\0')
-			str_format(pBuf, PreviewBufSize, Localize("%s (/%s %s)"), pHelpText, pCommand->m_aName, pCommand->m_aParams);
-		else
-			str_copy(pBuf, pHelpText, BufSize);
-		return true;
-	}
-
-	if(pCommand->m_aParams[0] != '\0')
-	{
-		str_format(pBuf, PreviewBufSize, Localize("Usage: /%s %s"), pCommand->m_aName, pCommand->m_aParams);
-		return true;
-	}
-
-	return false;
-}
-
-void CChat::HideArgumentCandidates()
-{
-	m_vArgumentCandidates.clear();
-	m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
-	m_ArgumentCandidatePopup.m_RectValid = false;
-	m_ArgumentCandidatePopup.m_PressedIndex = -1;
-	m_ArgumentCandidateLastMousePos.reset();
-	m_ArgumentCandidatesRequestedByTab = false;
-	m_ArgumentCompletionNextSourceCheck = 0;
-	m_ArgumentCompletionSelected = 0;
-	m_ArgumentCompletionScroll = 0;
-}
-
-void CChat::RefreshArgumentCandidates()
-{
-	if(m_Mode == MODE_NONE)
-	{
-		HideArgumentCandidates();
-		return;
-	}
-
-	QmChatCompletion::SContext Context;
-	const char *pInput = m_Input.GetString();
-	const size_t CursorOffset = m_Input.GetCursorOffset();
-	if(!QmChatCompletion::ParseContext(pInput, CursorOffset, Context) &&
-		(!m_ArgumentCandidatesRequestedByTab || !QmChatCompletion::ParsePlayerTabContext(pInput, CursorOffset, Context)))
-	{
-		m_ArgumentCompletionCachedInput = pInput;
-		m_ArgumentCompletionCachedCursor = CursorOffset;
-		HideArgumentCandidates();
-		return;
-	}
-	const int64_t Now = time();
-	const bool InputUnchanged = m_ArgumentCompletionCachedInput == pInput && m_ArgumentCompletionCachedCursor == CursorOffset;
-	if(InputUnchanged && Now < m_ArgumentCompletionNextSourceCheck)
-		return;
-	m_ArgumentCompletionNextSourceCheck = Now + time_freq() / 4;
-
-	CServerInfo CurrentServerInfo;
-	bool IsDdnetMode = false;
-	if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
-	{
-		Client()->GetServerInfo(&CurrentServerInfo);
-		IsDdnetMode = str_comp(CurrentServerInfo.m_aCommunityId, IServerBrowser::COMMUNITY_DDNET) == 0;
-		if(!IsDdnetMode && ServerBrowser() != nullptr && Client()->ServerAddress() != nullptr)
-		{
-			const IServerBrowser::CServerEntry *pEntry = ServerBrowser()->Find(*Client()->ServerAddress());
-			IsDdnetMode = pEntry != nullptr && pEntry->m_GotInfo && str_comp(pEntry->m_Info.m_aCommunityId, IServerBrowser::COMMUNITY_DDNET) == 0;
-		}
-	}
-
-	uint64_t SourceSignature = 0;
-	if(Context.m_Provider == QmChatCompletion::EProvider::PLAYER)
-	{
-		for(const auto *pPlayerInfo : GameClient()->m_Snap.m_apInfoByName)
-		{
-			if(pPlayerInfo == nullptr)
-				continue;
-			const char *pName = GameClient()->m_aClients[pPlayerInfo->m_ClientId].m_aName;
-			SourceSignature = SourceSignature * 1099511628211ULL ^ str_quickhash(pName);
-		}
-	}
-	else if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
-	{
-		SourceSignature = ServerBrowser() != nullptr ? ((uint64_t)ServerBrowser()->NumServers() << 32) ^ ServerBrowser()->LoadingProgression() : 0;
-		SourceSignature = SourceSignature * 1099511628211ULL ^ (IsDdnetMode ? 1ULL : 0ULL);
-		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption != nullptr; pOption = pOption->m_pNext)
-			SourceSignature = SourceSignature * 1099511628211ULL ^ str_quickhash(pOption->m_aDescription);
-		for(const std::string &MapName : Client()->MaplistEntries())
-			SourceSignature = SourceSignature * 1099511628211ULL ^ str_quickhash(MapName.c_str());
-	}
-
-	if(InputUnchanged && m_ArgumentCompletionSourceSignature == SourceSignature)
-		return;
-
-	m_ArgumentCompletionCachedInput = pInput;
-	m_ArgumentCompletionCachedCursor = CursorOffset;
-	m_ArgumentCompletionSourceSignature = SourceSignature;
-	m_ArgumentCompletionContext = Context;
-	m_vArgumentCandidates.clear();
-	m_ArgumentCandidatePopup.m_RectValid = false;
-	if(Context.m_Provider == QmChatCompletion::EProvider::PLAYER)
-	{
-		for(const auto *pPlayerInfo : GameClient()->m_Snap.m_apInfoByName)
-		{
-			if(pPlayerInfo == nullptr)
-				continue;
-			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, GameClient()->m_aClients[pPlayerInfo->m_ClientId].m_aName, Context.m_Query.c_str(), true);
-		}
-	}
-	else if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
-	{
-		if(ServerBrowser() != nullptr)
-		{
-			for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumServers(); ++ServerIndex)
-			{
-				const CServerInfo *pInfo = ServerBrowser()->Get(ServerIndex);
-				if(pInfo == nullptr || pInfo->m_aMap[0] == '\0')
-					continue;
-				std::string FallbackCategory;
-				QmChatCompletion::ExtractMapCategory(pInfo->m_aCommunityType, pInfo->m_aName, FallbackCategory);
-				std::string Category;
-				QmChatCompletion::ResolveMapCompletionCategory(pInfo->m_aMap, IsDdnetMode, FallbackCategory.c_str(), Category);
-				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, pInfo->m_aMap, Context.m_Query.c_str(), false, Category.c_str());
-			}
-		}
-		std::string CurrentCategory;
-		QmChatCompletion::ExtractMapCategory(CurrentServerInfo.m_aCommunityType, CurrentServerInfo.m_aName, CurrentCategory);
-		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption != nullptr; pOption = pOption->m_pNext)
-		{
-			std::string MapName;
-			if(QmChatCompletion::ExtractMapNameFromVoteOption(pOption->m_aDescription, MapName))
-			{
-				std::string Category;
-				QmChatCompletion::ResolveMapCompletionCategory(MapName.c_str(), IsDdnetMode, CurrentCategory.c_str(), Category);
-				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, Category.c_str());
-			}
-		}
-		for(const std::string &MapName : Client()->MaplistEntries())
-		{
-			std::string Category;
-			QmChatCompletion::ResolveMapCompletionCategory(MapName.c_str(), IsDdnetMode, CurrentCategory.c_str(), Category);
-			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, Category.c_str());
-		}
-	}
-	QmChatCompletion::SortCandidates(m_vArgumentCandidates);
-	m_vArgumentCandidates.erase(std::unique(m_vArgumentCandidates.begin(), m_vArgumentCandidates.end(), [](const auto &Left, const auto &Right) {
-		return str_comp_nocase(Left.m_Value.c_str(), Right.m_Value.c_str()) == 0;
-	}),
-		m_vArgumentCandidates.end());
-	m_ArgumentCompletionSelected = 0;
-	m_ArgumentCompletionScroll = 0;
-	m_ArgumentCandidatePopup.m_PressedIndex = -1;
-	if(m_vArgumentCandidates.empty())
-		m_ArgumentCandidatePopup.m_RectValid = false;
-}
-
-void CChat::EnsureArgumentCandidateVisible()
-{
-	if(m_vArgumentCandidates.empty())
-		return;
-	m_ArgumentCompletionSelected = std::clamp(m_ArgumentCompletionSelected, 0, (int)m_vArgumentCandidates.size() - 1);
-	const int VisibleRows = maximum(1, m_ArgumentCandidatePopup.m_VisibleRows);
-	if(m_ArgumentCompletionSelected < m_ArgumentCompletionScroll)
-		m_ArgumentCompletionScroll = m_ArgumentCompletionSelected;
-	else if(m_ArgumentCompletionSelected >= m_ArgumentCompletionScroll + VisibleRows)
-		m_ArgumentCompletionScroll = m_ArgumentCompletionSelected - VisibleRows + 1;
-	m_ArgumentCompletionScroll = std::clamp(m_ArgumentCompletionScroll, 0, maximum(0, (int)m_vArgumentCandidates.size() - VisibleRows));
-}
-
-bool CChat::ApplyArgumentCandidate(int Index)
-{
-	if(Index < 0 || Index >= (int)m_vArgumentCandidates.size())
-		return false;
-	char aCompleted[MAX_LINE_LENGTH];
-	size_t CursorOffset = 0;
-	if(!QmChatCompletion::ApplyCandidate(m_Input.GetString(), m_ArgumentCompletionContext, m_vArgumentCandidates[Index].m_Value.c_str(), aCompleted, sizeof(aCompleted), CursorOffset))
-		return false;
-	m_Input.Set(aCompleted);
-	m_Input.SetCursorOffset(CursorOffset);
-	m_Input.Activate(EInputPriority::CHAT);
-	m_CompletionUsed = false;
-	m_CompletionChosen = -1;
-	m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
-	HideArgumentCandidates();
-	return true;
-}
-
-int CChat::ArgumentCandidateIndexAt(vec2 MousePos) const
-{
-	if(!m_ArgumentCandidatePopup.m_RectValid ||
-		MousePos.x < m_ArgumentCandidatePopup.m_X || MousePos.x > m_ArgumentCandidatePopup.m_X + m_ArgumentCandidatePopup.m_W ||
-		MousePos.y < m_ArgumentCandidatePopup.m_Y || MousePos.y > m_ArgumentCandidatePopup.m_Y + m_ArgumentCandidatePopup.m_H)
-		return -1;
-	const int Row = (int)((MousePos.y - m_ArgumentCandidatePopup.m_Y) / m_ArgumentCandidatePopup.m_RowHeight);
-	const int Index = m_ArgumentCompletionScroll + Row;
-	return Row >= 0 && Row < m_ArgumentCandidatePopup.m_VisibleRows && Index < (int)m_vArgumentCandidates.size() ? Index : -1;
-}
-
-void CChat::RenderArgumentCandidates(const CUIRect &InputRect, float Width)
-{
-	if(m_vArgumentCandidates.empty())
-	{
-		m_ArgumentCandidatePopup.m_RectValid = false;
-		return;
-	}
-
-	const float FontSize = maximum(7.0f, this->FontSize() * 0.95f);
-	const float RowHeight = FontSize + 5.0f;
-	const int VisibleRows = std::min({5, (int)m_vArgumentCandidates.size(), maximum(1, (int)((InputRect.y - 54.0f) / RowHeight))});
-	const float PopupHeight = RowHeight * VisibleRows;
-	const bool HasScrollbar = (int)m_vArgumentCandidates.size() > VisibleRows;
-	float ContentWidth = 0.0f;
-	for(const QmChatCompletion::SCandidate &Candidate : m_vArgumentCandidates)
-	{
-		float RowContentWidth = TextRender()->TextWidth(FontSize, Candidate.m_Value.c_str());
-		if(!Candidate.m_Detail.empty())
-			RowContentWidth += 8.0f + TextRender()->TextWidth(FontSize, Localize(Candidate.m_Detail.c_str())) + 1.0f;
-		ContentWidth = maximum(ContentWidth, RowContentWidth);
-	}
-	const float PopupWidth = QmChatCompletion::CalculateCandidatePopupWidth(Width, ContentWidth, HasScrollbar);
-	const CUIRect PopupRect = {InputRect.x, InputRect.y - PopupHeight - 3.0f, PopupWidth, PopupHeight};
-	m_ArgumentCandidatePopup.m_RectValid = true;
-	m_ArgumentCandidatePopup.m_X = PopupRect.x;
-	m_ArgumentCandidatePopup.m_Y = PopupRect.y;
-	m_ArgumentCandidatePopup.m_W = PopupRect.w;
-	m_ArgumentCandidatePopup.m_H = PopupRect.h;
-	m_ArgumentCandidatePopup.m_RowHeight = RowHeight;
-	m_ArgumentCandidatePopup.m_VisibleRows = VisibleRows;
-	m_ArgumentCompletionSelected = std::clamp(m_ArgumentCompletionSelected, 0, (int)m_vArgumentCandidates.size() - 1);
-	m_ArgumentCompletionScroll = std::clamp(m_ArgumentCompletionScroll, 0, maximum(0, (int)m_vArgumentCandidates.size() - VisibleRows));
-
-	PopupRect.Draw(ColorRGBA(0.045f, 0.055f, 0.075f, 0.94f), IGraphics::CORNER_ALL, 4.0f);
-	const vec2 MousePos = GetChatMousePos();
-	const int HoveredIndex = ArgumentCandidateIndexAt(MousePos);
-	const bool MouseMoved = !m_ArgumentCandidateLastMousePos.has_value() ||
-				m_ArgumentCandidateLastMousePos->x != MousePos.x || m_ArgumentCandidateLastMousePos->y != MousePos.y;
-	m_ArgumentCandidateLastMousePos = MousePos;
-	if(MouseMoved && HoveredIndex >= 0)
-		m_ArgumentCompletionSelected = HoveredIndex;
-
-	for(int Row = 0; Row < VisibleRows; ++Row)
-	{
-		const int Index = m_ArgumentCompletionScroll + Row;
-		if(Index >= (int)m_vArgumentCandidates.size())
-			break;
-		const QmChatCompletion::SCandidate &Candidate = m_vArgumentCandidates[Index];
-		CUIRect RowRect = {PopupRect.x, PopupRect.y + Row * RowHeight, PopupRect.w, RowHeight};
-		if(Index == m_ArgumentCompletionSelected)
-			RowRect.Draw(ColorRGBA(0.24f, 0.45f, 0.76f, 0.72f), IGraphics::CORNER_ALL, 3.0f);
-
-		CTextCursor Cursor;
-		Cursor.SetPosition(vec2(RowRect.x + 5.0f, RowRect.y + 2.5f));
-		Cursor.m_FontSize = FontSize;
-		float DetailWidth = 0.0f;
-		const float RightPadding = HasScrollbar ? 9.0f : 5.0f;
-		if(!Candidate.m_Detail.empty())
-		{
-			const char *pDetail = Localize(Candidate.m_Detail.c_str());
-			DetailWidth = minimum(TextRender()->TextWidth(FontSize, pDetail) + 1.0f, maximum(0.0f, RowRect.w - 5.0f - RightPadding));
-			CTextCursor DetailCursor;
-			DetailCursor.SetPosition(vec2(RowRect.x + RowRect.w - RightPadding - DetailWidth, RowRect.y + 2.5f));
-			DetailCursor.m_FontSize = FontSize;
-			DetailCursor.m_LineWidth = DetailWidth;
-			DetailCursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END;
-			TextRender()->TextColor(1.0f, 0.82f, 0.34f, 1.0f);
-			TextRender()->TextEx(&DetailCursor, pDetail);
-		}
-		Cursor.m_LineWidth = maximum(0.0f, RowRect.w - 5.0f - RightPadding - (DetailWidth > 0.0f ? DetailWidth + 8.0f : 0.0f));
-		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END;
-		TextRender()->TextColor(0.90f, 0.93f, 1.0f, 0.96f);
-		if(Candidate.m_MatchOffset >= 0 && Candidate.m_MatchLength > 0)
-		{
-			const std::string Prefix = Candidate.m_Value.substr(0, Candidate.m_MatchOffset);
-			const std::string Match = Candidate.m_Value.substr(Candidate.m_MatchOffset, Candidate.m_MatchLength);
-			const std::string Suffix = Candidate.m_Value.substr(Candidate.m_MatchOffset + Candidate.m_MatchLength);
-			TextRender()->TextEx(&Cursor, Prefix.c_str());
-			TextRender()->TextColor(1.0f, 0.82f, 0.34f, 1.0f);
-			TextRender()->TextEx(&Cursor, Match.c_str());
-			TextRender()->TextColor(0.90f, 0.93f, 1.0f, 0.96f);
-			TextRender()->TextEx(&Cursor, Suffix.c_str());
-		}
-		else
-			TextRender()->TextEx(&Cursor, Candidate.m_Value.c_str());
-	}
-
-	if((int)m_vArgumentCandidates.size() > VisibleRows)
-	{
-		const float RailWidth = 2.0f;
-		const float HandleHeight = maximum(8.0f, PopupRect.h * VisibleRows / (float)m_vArgumentCandidates.size());
-		const int MaxScroll = (int)m_vArgumentCandidates.size() - VisibleRows;
-		const float HandleY = PopupRect.y + (PopupRect.h - HandleHeight) * m_ArgumentCompletionScroll / maximum(1, MaxScroll);
-		CUIRect Rail = {PopupRect.x + PopupRect.w - RailWidth - 1.0f, PopupRect.y + 2.0f, RailWidth, PopupRect.h - 4.0f};
-		Rail.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.14f), IGraphics::CORNER_ALL, 1.0f);
-		CUIRect Handle = {Rail.x, HandleY, RailWidth, HandleHeight};
-		Handle.Draw(ColorRGBA(0.75f, 0.84f, 1.0f, 0.66f), IGraphics::CORNER_ALL, 1.0f);
-	}
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
 }
 
 void CChat::RegisterCommand(const char *pName, const char *pParams, const char *pHelpText)
@@ -998,7 +430,6 @@ void CChat::RegisterCommand(const char *pName, const char *pParams, const char *
 			return;
 
 	m_vServerCommands.emplace_back(pName, pParams, pHelpText);
-	m_ServerCommandsNeedSorting = true;
 }
 
 void CChat::UnregisterCommand(const char *pName)
@@ -1138,10 +569,6 @@ void CChat::OnWindowResize()
 void CChat::Reset()
 {
 	ClearLines();
-	HideArgumentCandidates();
-	m_ArgumentCompletionCachedInput.clear();
-	m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
-	m_ArgumentCompletionSourceSignature = 0;
 
 	m_Show = false;
 	m_CompletionUsed = false;
@@ -1158,9 +585,7 @@ void CChat::Reset()
 	m_aSavedInputText[0] = '\0';
 	m_SavedInputPending = false;
 	m_ServerSupportsCommandInfo = false;
-	m_ServerCommandsNeedSorting = false;
 	m_aCurrentInputText[0] = '\0';
-	m_vSlashCommandSuggestions.clear();
 	DisableMode();
 	m_vServerCommands.clear();
 
@@ -1172,7 +597,6 @@ void CChat::OnRelease()
 {
 	FlushPendingConsoleLine(true);
 	m_Show = false;
-	HideArgumentCandidates();
 }
 
 void CChat::OnStateChange(int NewState, int OldState)
@@ -1340,83 +764,6 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 	const bool ChatLineMenuOpen = Ui()->IsPopupOpen(&m_ChatLinePopupContext);
 	const bool AnyChatPopupOpen = LanguageMenuOpen || ChatLineMenuOpen;
 	const bool IsWheelEvent = Event.m_Key == KEY_MOUSE_WHEEL_UP || Event.m_Key == KEY_MOUSE_WHEEL_DOWN;
-	RefreshArgumentCandidates();
-	if(!AnyChatPopupOpen && m_ArgumentCandidatePopup.m_RectValid && !m_vArgumentCandidates.empty())
-	{
-		const vec2 MousePos = GetChatMousePos();
-		const int MouseIndex = ArgumentCandidateIndexAt(MousePos);
-		const bool InsideCandidates = MouseIndex >= 0 || (m_ArgumentCandidatePopup.m_RectValid &&
-									 MousePos.x >= m_ArgumentCandidatePopup.m_X && MousePos.x <= m_ArgumentCandidatePopup.m_X + m_ArgumentCandidatePopup.m_W &&
-									 MousePos.y >= m_ArgumentCandidatePopup.m_Y && MousePos.y <= m_ArgumentCandidatePopup.m_Y + m_ArgumentCandidatePopup.m_H);
-
-		if((Event.m_Flags & IInput::FLAG_PRESS) && IsWheelEvent && InsideCandidates)
-		{
-			const int Direction = Event.m_Key == KEY_MOUSE_WHEEL_UP ? -1 : 1;
-			const int MaxScroll = maximum(0, (int)m_vArgumentCandidates.size() - maximum(1, m_ArgumentCandidatePopup.m_VisibleRows));
-			m_ArgumentCompletionScroll = std::clamp(m_ArgumentCompletionScroll + Direction, 0, MaxScroll);
-			return true;
-		}
-		if((Event.m_Flags & IInput::FLAG_PRESS) && (Event.m_Key == KEY_UP || Event.m_Key == KEY_DOWN))
-		{
-			m_ArgumentCandidateLastMousePos = GetChatMousePos();
-			const int Direction = Event.m_Key == KEY_UP ? -1 : 1;
-			m_ArgumentCompletionSelected = (m_ArgumentCompletionSelected + Direction + (int)m_vArgumentCandidates.size()) % (int)m_vArgumentCandidates.size();
-			EnsureArgumentCandidateVisible();
-			return true;
-		}
-		if((Event.m_Flags & IInput::FLAG_PRESS) && Event.m_Key == KEY_TAB)
-		{
-			m_ArgumentCandidateLastMousePos = GetChatMousePos();
-			if(Input()->ShiftIsPressed())
-			{
-				m_ArgumentCompletionSelected = (m_ArgumentCompletionSelected - 1 + (int)m_vArgumentCandidates.size()) % (int)m_vArgumentCandidates.size();
-				EnsureArgumentCandidateVisible();
-			}
-			return ApplyArgumentCandidate(m_ArgumentCompletionSelected);
-		}
-		if((Event.m_Flags & IInput::FLAG_PRESS) && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
-		{
-			m_ArgumentCandidateLastMousePos = GetChatMousePos();
-			return ApplyArgumentCandidate(m_ArgumentCompletionSelected);
-		}
-
-		if(Event.m_Key == KEY_MOUSE_1)
-		{
-			if((Event.m_Flags & IInput::FLAG_PRESS) && MouseIndex >= 0)
-			{
-				m_ArgumentCompletionSelected = MouseIndex;
-				m_ArgumentCandidatePopup.m_PressedIndex = MouseIndex;
-				CLineInput::SMouseSelection *pMouseSelection = m_Input.GetMouseSelection();
-				if(pMouseSelection != nullptr)
-					pMouseSelection->m_Selecting = false;
-				return true;
-			}
-			if((Event.m_Flags & IInput::FLAG_RELEASE) && m_ArgumentCandidatePopup.m_PressedIndex >= 0)
-			{
-				const int PressedIndex = m_ArgumentCandidatePopup.m_PressedIndex;
-				m_ArgumentCandidatePopup.m_PressedIndex = -1;
-				if(MouseIndex == PressedIndex)
-					ApplyArgumentCandidate(PressedIndex);
-				m_Input.Activate(EInputPriority::CHAT);
-				return true;
-			}
-		}
-	}
-	if(!AnyChatPopupOpen && (Event.m_Flags & IInput::FLAG_PRESS) && Event.m_Key == KEY_TAB && !m_ArgumentCandidatePopup.m_RectValid)
-	{
-		if(!m_vArgumentCandidates.empty())
-			return true;
-		QmChatCompletion::SContext TabContext;
-		if(QmChatCompletion::ParsePlayerTabContext(m_Input.GetString(), m_Input.GetCursorOffset(), TabContext))
-		{
-			m_ArgumentCandidatesRequestedByTab = true;
-			m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
-			RefreshArgumentCandidates();
-			if(!m_vArgumentCandidates.empty())
-				return true;
-			m_ArgumentCandidatesRequestedByTab = false;
-		}
-	}
 	if(!AnyChatPopupOpen && (Event.m_Flags & IInput::FLAG_PRESS) && IsWheelEvent)
 	{
 		const float Height = 300.0f;
@@ -1522,7 +869,6 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 			return true;
 		}
 
-		m_vSlashCommandSuggestions.clear();
 		DisableMode();
 		GameClient()->OnRelease();
 		if(g_Config.m_ClChatReset)
@@ -1539,12 +885,6 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 	}
 	else if(Event.m_Flags & IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
-		if(m_ServerCommandsNeedSorting)
-		{
-			std::sort(m_vServerCommands.begin(), m_vServerCommands.end());
-			m_ServerCommandsNeedSorting = false;
-		}
-
 		if(GameClient()->m_BindChat.ChatDoBinds(m_Input.GetString()))
 			; // Do nothing as bindchat was executed
 		else if(GameClient()->m_TClient.ChatDoSpecId(m_Input.GetString()))
@@ -1554,18 +894,12 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		m_SavedInputPending = false;
 		m_aSavedInputText[0] = '\0';
 		m_pHistoryEntry = nullptr;
-		m_vSlashCommandSuggestions.clear();
 		DisableMode();
 		GameClient()->OnRelease();
 		m_Input.Clear();
 	}
-	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
-	{
-		m_SlashCommandSuggestionsDismissed = true;
-		str_copy(m_aSlashCommandSuggestionsDismissedInput, m_Input.GetString(), sizeof(m_aSlashCommandSuggestionsDismissedInput));
-		m_vSlashCommandSuggestions.clear();
-	}
-
+	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_TAB && m_Input.GetString()[0] == '/')
+		return true;
 	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
 		const bool ShiftPressed = Input()->ShiftIsPressed();
@@ -1584,7 +918,7 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 			str_truncate(m_aCompletionBuffer, sizeof(m_aCompletionBuffer), m_Input.GetString() + m_PlaceholderOffset, m_PlaceholderLength);
 		}
 
-		if(!m_CompletionUsed && m_aCompletionBuffer[0] != '/')
+		if(!m_CompletionUsed)
 		{
 			// Create the completion list of player names through which the player can iterate
 			const char *PlayerName, *FoundInput;
@@ -1610,71 +944,6 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 				});
 		}
 
-		if(m_aCompletionBuffer[0] == '/' && !m_vServerCommands.empty())
-		{
-			CCommand *pCompletionCommand = nullptr;
-
-			const size_t NumCommands = m_vServerCommands.size();
-
-			if(ShiftPressed && m_CompletionUsed)
-				m_CompletionChosen--;
-			else if(!ShiftPressed)
-				m_CompletionChosen++;
-			m_CompletionChosen = (m_CompletionChosen + 2 * NumCommands) % (2 * NumCommands);
-
-			m_CompletionUsed = true;
-
-			const char *pCommandStart = m_aCompletionBuffer + 1;
-			for(size_t i = 0; i < 2 * NumCommands; ++i)
-			{
-				int SearchType;
-				int Index;
-
-				if(ShiftPressed)
-				{
-					SearchType = ((m_CompletionChosen - i + 2 * NumCommands) % (2 * NumCommands)) / NumCommands;
-					Index = (m_CompletionChosen - i + NumCommands) % NumCommands;
-				}
-				else
-				{
-					SearchType = ((m_CompletionChosen + i) % (2 * NumCommands)) / NumCommands;
-					Index = (m_CompletionChosen + i) % NumCommands;
-				}
-
-				auto &Command = m_vServerCommands[Index];
-
-				if(str_startswith_nocase(Command.m_aName, pCommandStart))
-				{
-					pCompletionCommand = &Command;
-					m_CompletionChosen = Index + SearchType * NumCommands;
-					break;
-				}
-			}
-
-			// insert the command
-			if(pCompletionCommand)
-			{
-				char aBuf[MAX_LINE_LENGTH];
-				// add part before the name
-				str_truncate(aBuf, sizeof(aBuf), m_Input.GetString(), m_PlaceholderOffset);
-
-				// add the command
-				str_append(aBuf, "/");
-				str_append(aBuf, pCompletionCommand->m_aName);
-
-				// add separator
-				const char *pSeparator = pCompletionCommand->m_aParams[0] == '\0' ? "" : " ";
-				str_append(aBuf, pSeparator);
-
-				// add part after the name
-				str_append(aBuf, m_Input.GetString() + m_PlaceholderOffset + m_PlaceholderLength);
-
-				m_PlaceholderLength = str_length(pSeparator) + str_length(pCompletionCommand->m_aName) + 1;
-				m_Input.Set(aBuf);
-				m_Input.SetCursorOffset(m_PlaceholderOffset + m_PlaceholderLength);
-			}
-		}
-		else
 		{
 			// find next possible name
 			const char *pCompletionString = nullptr;
@@ -1717,19 +986,6 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 				// add part before the name
 				str_truncate(aBuf, sizeof(aBuf), m_Input.GetString(), m_PlaceholderOffset);
 
-				// quote the name
-				char aQuoted[128];
-				if(m_Input.GetString()[0] == '/' && (str_find(pCompletionString, " ") || str_find(pCompletionString, "\"")))
-				{
-					// escape the name
-					str_copy(aQuoted, "\"");
-					char *pDst = aQuoted + str_length(aQuoted);
-					str_escape(&pDst, pCompletionString, aQuoted + sizeof(aQuoted));
-					str_append(aQuoted, "\"");
-
-					pCompletionString = aQuoted;
-				}
-
 				// add the name
 				str_append(aBuf, pCompletionString);
 
@@ -1761,7 +1017,6 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		}
 
 		m_Input.ProcessInput(Event);
-		RefreshSlashCommandSuggestions();
 	}
 
 	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
@@ -1833,8 +1088,6 @@ void CChat::DisableMode()
 {
 	CloseLanguageMenu();
 	CloseChatLineMenu();
-	HideArgumentCandidates();
-
 	if(m_Mode != MODE_NONE)
 	{
 		m_Mode = MODE_NONE;
@@ -3014,18 +2267,10 @@ void CChat::OnRender()
 	const bool FocusHideEcho = FocusModeActive && g_Config.m_QmFocusModeHideEcho;
 	const bool HasForceVisibleLine = std::any_of(std::begin(m_aLines), std::end(m_aLines), [](const CLine &Line) { return Line.m_Initialized && Line.m_ForceVisible; });
 	if(!ShouldRenderAnyFocusFilteredChat(FocusHideChat, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, FocusHideEcho, HasForceVisibleLine))
-	{
-		m_ArgumentCandidatePopup.m_RectValid = false;
 		return;
-	}
 
 	const bool HudEditorPreview = GameClient()->m_HudEditor.IsActive();
 	const bool InputActive = m_Mode != MODE_NONE;
-	const bool ChatPopupOpen = m_LanguageMenuOpen || Ui()->IsPopupOpen(&m_LanguagePopupContext) || Ui()->IsPopupOpen(&m_ChatLinePopupContext);
-	if(InputActive && !ChatPopupOpen)
-		RefreshArgumentCandidates();
-	else
-		m_ArgumentCandidatePopup.m_RectValid = false;
 	const bool ShowLargeArea =
 		m_Show ||
 		(InputActive && g_Config.m_ClShowChat == 1) ||
@@ -3090,22 +2335,12 @@ void CChat::OnRender()
 	// float y = 300.0f - 20.0f * FontSize() / 6.0f;
 
 	float ScaledFontSize = FontSize() * (8.0f / 6.0f);
-	const float CommandPreviewFontSize = ScaledFontSize * 0.5f;
 	const float TranslateButtonSize = maximum(16.0f, ScaledFontSize * 1.35f);
 	const float TranslateButtonGap = 4.0f;
 	const float InputLineWidth = std::max(Width - 190.0f, 190.0f);
 	const char *pInputModeLabel = m_Mode == MODE_ALL ? Localize("All") : (m_Mode == MODE_TEAM ? Localize("Team") : Localize("Chat"));
-	const float InputPrefixWidth = TextRender()->TextWidth(ScaledFontSize, pInputModeLabel) + TextRender()->TextWidth(ScaledFontSize, ": ");
-	const float CommandPreviewMaxWidth = maximum(1.0f, InputLineWidth - InputPrefixWidth - TranslateButtonSize - TranslateButtonGap);
-	char aCommandPreview[MAX_LINE_LENGTH];
-	const bool HasCommandPreview = m_Mode != MODE_NONE && BuildCommandUsagePreview(m_Input.GetString(), aCommandPreview, sizeof(aCommandPreview));
 	CUIRect InputBlockRect = {};
 	bool InputBlockRectValid = false;
-	if(HasCommandPreview)
-	{
-		const STextBoundingBox PreviewBoundingBox = TextRender()->TextBoundingBox(CommandPreviewFontSize, aCommandPreview, -1, CommandPreviewMaxWidth);
-		y -= PreviewBoundingBox.m_H + 4.0f;
-	}
 
 	if(InputActive)
 	{
@@ -3160,47 +2395,6 @@ void CChat::OnRender()
 		m_Input.SetScrollOffset(ScrollOffset);
 		m_Input.SetScrollOffsetChange(ScrollOffsetChange);
 
-		// Autocompletion hint
-		if(m_Input.GetString()[0] == '/' && m_Input.GetString()[1] != '\0' && !m_vServerCommands.empty())
-		{
-			for(const auto &Command : m_vServerCommands)
-			{
-				if(str_startswith_nocase(Command.m_aName, m_Input.GetString() + 1))
-				{
-					InputCursor.m_X = InputCursor.m_X + TextRender()->TextWidth(InputCursor.m_FontSize, m_Input.GetString(), -1, InputCursor.m_LineWidth);
-					InputCursor.m_Y = m_Input.GetCaretPosition().y;
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-					TextRender()->TextEx(&InputCursor, Command.m_aName + str_length(m_Input.GetString() + 1));
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
-					break;
-				}
-			}
-		}
-
-		if(HasCommandPreview)
-		{
-			CTextCursor PreviewCursor;
-			const float PreviewY = InputContentRect.y + minimum(BoundingBox.m_H, InputContentRect.h) + 2.0f;
-			PreviewCursor.SetPosition(vec2(InputContentRect.x, PreviewY));
-			PreviewCursor.m_FontSize = CommandPreviewFontSize;
-			PreviewCursor.m_LineWidth = MessageMaxWidth;
-			PreviewCursor.m_Flags = TEXTFLAG_RENDER;
-			TextRender()->TextColor(0.72f, 0.88f, 1.0f, 0.78f);
-			TextRender()->TextEx(&PreviewCursor, aCommandPreview);
-			TextRender()->TextColor(TextRender()->DefaultTextColor());
-			ExtendBounds(PreviewCursor.m_StartX, PreviewCursor.m_StartY, MessageMaxWidth, PreviewCursor.Height());
-		}
-
-		if(!ChatPopupOpen)
-			RenderArgumentCandidates(InputContentRect, MessageMaxWidth);
-		else
-			m_ArgumentCandidatePopup.m_RectValid = false;
-		if(m_ArgumentCandidatePopup.m_RectValid)
-		{
-			ExtendBounds(m_ArgumentCandidatePopup.m_X, m_ArgumentCandidatePopup.m_Y, m_ArgumentCandidatePopup.m_W, m_ArgumentCandidatePopup.m_H);
-			y = minimum(y, m_ArgumentCandidatePopup.m_Y);
-		}
-
 		// 渲染翻译按钮
 		CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap, InputContentRect.y, TranslateButtonSize, maximum(InputCursor.m_FontSize + 4.0f, 16.0f)};
 		RenderTranslateButton(TranslateButtonRect);
@@ -3208,7 +2402,6 @@ void CChat::OnRender()
 	else
 	{
 		m_TranslateButton.m_RectValid = false;
-		m_ArgumentCandidatePopup.m_RectValid = false;
 	}
 
 #if defined(CONF_VIDEORECORDER)
@@ -3305,8 +2498,6 @@ void CChat::OnRender()
 		m_ScrollbarDragging = false;
 	}
 
-	const bool LanguageMenuOpen = m_LanguageMenuOpen || Ui()->IsPopupOpen(&m_LanguagePopupContext);
-	const bool ChatLineMenuOpen = Ui()->IsPopupOpen(&m_ChatLinePopupContext);
 	vec2 MousePos = GetChatMousePos();
 	if(HudEditorScope.m_Applied && ChatRect.w > 0.0f)
 	{
@@ -3327,19 +2518,13 @@ void CChat::OnRender()
 		MousePos.x <= m_TranslateButton.m_X + m_TranslateButton.m_W &&
 		MousePos.y >= m_TranslateButton.m_Y &&
 		MousePos.y <= m_TranslateButton.m_Y + m_TranslateButton.m_H;
-	const bool InsideArgumentCandidates =
-		m_ArgumentCandidatePopup.m_RectValid &&
-		MousePos.x >= m_ArgumentCandidatePopup.m_X &&
-		MousePos.x <= m_ArgumentCandidatePopup.m_X + m_ArgumentCandidatePopup.m_W &&
-		MousePos.y >= m_ArgumentCandidatePopup.m_Y &&
-		MousePos.y <= m_ArgumentCandidatePopup.m_Y + m_ArgumentCandidatePopup.m_H;
 	const bool InsideScrollbar =
 		ShowChatScrollbar &&
 		MousePos.x >= ScrollbarRect.x &&
 		MousePos.x <= ScrollbarRect.x + ScrollbarRect.w &&
 		MousePos.y >= ScrollbarRect.y &&
 		MousePos.y <= ScrollbarRect.y + ScrollbarRect.h;
-	const bool ChatCopyActive = m_Mode != MODE_NONE && !LanguageMenuOpen && !ChatLineMenuOpen && !InsideInputBlock && !InsideTranslateButton && !InsideArgumentCandidates && !InsideScrollbar && !m_ScrollbarDragging;
+	const bool ChatCopyActive = m_Mode != MODE_NONE && !LanguageMenuOpen && !ChatLineMenuOpen && !InsideInputBlock && !InsideTranslateButton && !InsideScrollbar && !m_ScrollbarDragging;
 	const bool CopyClickReleased = m_MouseIsPress && !MouseDown && IsCopyClickDrag(m_MousePress, MousePos);
 	const bool ChatLineMenuRequested = ChatCopyActive && Input()->KeyPress(KEY_MOUSE_2);
 	if(ChatCopyActive)

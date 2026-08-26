@@ -2,3 +2,6 @@
 	path = ddnet-libs
 	url = https://github.com/wxj881027/ddnet-libs.git
 	shallow = true
+[submodule "vendor/minhook"]
+	path = vendor/minhook
+	url = https://github.com/TsudaKageyu/minhook.git

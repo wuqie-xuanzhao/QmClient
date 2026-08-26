@@ -14,6 +14,7 @@
 
 #include <game/client/lineinput.h>
 #include <game/client/qm_icon_manager.h>
+#include <game/client/qm_icon_morph.h>
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
 #include <game/localization.h>
@@ -116,7 +117,7 @@ namespace ui_widget
 			return Active;
 		}
 
-		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon, const ColorRGBA &Color, const int QmIcon = -1)
+		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon, const ColorRGBA &Color, const int QmIcon = -1, const void *pAnimationId = nullptr)
 		{
 			const bool HasQmIcon = QmIcon >= 0 && QmIcon < static_cast<int>(EQmIcon::COUNT);
 			if((pIcon == nullptr && !HasQmIcon) || Rect.w <= 0.0f || Rect.h <= 0.0f)
@@ -125,10 +126,24 @@ namespace ui_widget
 			// 仅补偿这对密码可见性图标，避免改变其他图标的既有比例。
 			const float EyeOffScale = QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? 1.25f : 1.15f;
 			const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;
+			const bool IsEyeMorphIcon = QmIcon == static_cast<int>(EQmIcon::EYE) || QmIcon == static_cast<int>(EQmIcon::EYE_OFF);
 			if(HasQmIcon && Ctx.m_pIconManager != nullptr)
 			{
 				const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;
+				const float BaseIconSide = minimum(Rect.w, Rect.h) * 0.58f;
 				const CUIRect IconRect{Rect.x + (Rect.w - IconSide) * 0.5f, Rect.y + (Rect.h - IconSide) * 0.5f, IconSide, IconSide};
+				if(IsEyeMorphIcon && pAnimationId != nullptr && Ctx.m_pAnim != nullptr && Ctx.m_pUi != nullptr && g_Config.m_QmUiMotionLevel > 0)
+				{
+					const uint64_t MorphNodeKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash ^ 0xE1E0A11ull, reinterpret_cast<uint64_t>(pAnimationId));
+					const float MorphTarget = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? 1.0f : 0.0f;
+					const float MorphProgress = ResolveUiAnimSpringValue(*Ctx.m_pAnim, MorphNodeKey, EUiAnimProperty::SCALE, MorphTarget, ui_token::motion::TOGGLE, 2);
+					const float MorphScale = 1.0f + (EyeOffScale - 1.0f) * std::clamp(MorphProgress, -0.25f, 1.25f);
+					const float MorphSide = BaseIconSide * MorphScale;
+					const CUIRect MorphRect{Rect.x + (Rect.w - MorphSide) * 0.5f, Rect.y + (Rect.h - MorphSide) * 0.5f, MorphSide, MorphSide};
+					const bool MorphActive = Ctx.m_pAnim->HasActiveAnimation(MorphNodeKey, EUiAnimProperty::SCALE);
+					if(MorphActive && RenderQmEyeMorph(Ctx.m_pUi->Graphics(), g_Config.m_QmUiIconWeight, MorphRect, Color, MorphProgress))
+						return;
+				}
 				if(Ctx.m_pIconManager->RenderIcon(static_cast<EQmIcon>(QmIcon), IconRect, Color))
 					return;
 			}
@@ -243,7 +258,7 @@ namespace ui_widget
 			const float ActionState = Ctx.m_pUi->ButtonColorMul(Options.m_pTrailingActionId);
 			if(ActionState > 1.0f)
 				DrawRoundedSurface(Ctx, TrailingRect, Ctx.m_pUi->ScaleBackgroundAlpha(ActionHoverColor(ActionState)), ColorRGBA(), ui_token::radius::BASE, 0.0f, Options.m_Clearable ? IGraphics::CORNER_NONE : IGraphics::CORNER_R);
-			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor, Options.m_TrailingActionQmIcon);
+			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor, Options.m_TrailingActionQmIcon, Options.m_pTrailingActionId);
 			TrailingAction = Ctx.m_pUi->DoButtonLogic(Options.m_pTrailingActionId, 0, &TrailingRect, BUTTONFLAG_LEFT) != 0;
 		}
 		if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
