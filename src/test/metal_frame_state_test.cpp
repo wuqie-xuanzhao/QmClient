@@ -68,12 +68,18 @@ TEST(MetalFrameState, NewBackbufferRenderingInvalidatesPresentedReadback)
 	EXPECT_FALSE(State.ReadbackPresented());
 }
 
-TEST(MetalFrameState, DrainingFramesDoesNotConsumePresentedReadback)
+TEST(MetalFrameState, DrainingFramesClearsPresentedReadbackAndCapture)
 {
 	CMetalFrameState State;
+	CMetalFrameState::SFrameCapture Capture;
+	ASSERT_TRUE(State.BeginFrame(0));
+	ASSERT_EQ(State.FinalizeFrameForPresent(true), CMetalFrameState::EFinalizeResult::PRESENTED);
+	ASSERT_TRUE(State.ReadLastPresentedFrame(Capture));
 	State.MarkReadbackPresented();
-	EXPECT_EQ(State.DrainFrames(), 0U);
-	EXPECT_TRUE(State.ReadbackPresented());
+	EXPECT_EQ(State.DrainFrames(), 1U);
+	EXPECT_FALSE(State.ReadbackPresented());
+	EXPECT_FALSE(State.CaptureRetained());
+	EXPECT_FALSE(State.ReadLastPresentedFrame(Capture));
 }
 
 TEST(MetalFrameState, ScreenshotAndReadPixelSharePresentedFrame)

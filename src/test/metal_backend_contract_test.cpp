@@ -61,11 +61,24 @@ TEST(MetalBackendContract, TileAndQuadCommandsUseDedicatedMetalPipelines)
 	EXPECT_NE(Source.find("sizeof(uint32_t)"), std::string::npos);
 	EXPECT_NE(Source.find("EnsureQuadIndexCapacity(RequiredIndicesNum)"), std::string::npos);
 	EXPECT_NE(Source.find("bool EnsureQuadIndexCapacity(size_t RequiredIndexCount)"), std::string::npos);
-	EXPECT_NE(Source.find("EnsureQuadIndexCapacity((QuadOffset + QuadCount) * 6)"), std::string::npos);
+	EXPECT_NE(Source.find("EnsureQuadIndexCapacity(MaxQuadEnd * 6)"), std::string::npos);
 
 	const std::string Shader = ReadTestSourceFile("data/shader/metal/qmclient.metal");
 	EXPECT_NE(Shader.find("qmclient_tile_vertex"), std::string::npos);
+	EXPECT_NE(Shader.find("qmclient_tile_border_vertex"), std::string::npos);
 	EXPECT_NE(Shader.find("TexScale.yx"), std::string::npos);
+	EXPECT_NE(Shader.find("float4 m_TexCoord [[center_no_perspective]];"), std::string::npos);
+	EXPECT_NE(Shader.find("float4 m_TexCoord [[centroid_no_perspective]];"), std::string::npos);
+	EXPECT_NE(Shader.find("texture2d_array<float> Texture [[texture(0)]]"), std::string::npos);
+	EXPECT_NE(Shader.find("qmclient_tile_border_textured_fragment"), std::string::npos);
+	EXPECT_NE(Shader.find("const float2 TexCoord = fract(Input.m_TexCoord.xy);"), std::string::npos);
+	EXPECT_NE(Shader.find("const float2 Dx = dfdx(Input.m_TexCoord.xy);"), std::string::npos);
+	EXPECT_NE(Shader.find("const float2 Dy = dfdy(Input.m_TexCoord.xy);"), std::string::npos);
+	EXPECT_NE(Shader.find("gradient2d(Dx, Dy)"), std::string::npos);
+	EXPECT_NE(Source.find("TileBorderTexturedFragment"), std::string::npos);
+	EXPECT_NE(Source.find("TileBorderVertex"), std::string::npos);
+	EXPECT_NE(Source.find("m_TextureArray == nil"), std::string::npos);
+	EXPECT_NE(Source.find("setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray"), std::string::npos);
 	EXPECT_NE(Shader.find("qmclient_quad_vertex_grouped"), std::string::npos);
 	EXPECT_NE(Shader.find("qmclient_quad_vertex_ungrouped"), std::string::npos);
 }

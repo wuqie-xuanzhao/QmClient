@@ -358,12 +358,30 @@ fragment float4 qmclient_text_fragment(SMetalVertexOut Input [[stage_in]], textu
 struct SMetalTileVertexOut
 {
 	float4 m_Position [[position]];
-	float4 m_TexCoord;
+	float4 m_TexCoord [[center_no_perspective]];
+};
+
+struct SMetalTileBorderVertexOut
+{
+	float4 m_Position [[position]];
+	float4 m_TexCoord [[centroid_no_perspective]];
 };
 
 vertex SMetalTileVertexOut qmclient_tile_vertex(SMetalTileVertex Vertex [[stage_in]], constant SMetalTileUniforms &Uniforms [[buffer(1)]])
 {
 	SMetalTileVertexOut Out;
+	const float2 Position = Vertex.m_Position * Uniforms.m_Transform.zw + Uniforms.m_Transform.xy;
+	Out.m_Position = Uniforms.m_MVP * float4(Position, 0.0, 1.0);
+	float2 TexScale = Uniforms.m_Transform.zw;
+	if(Vertex.m_TexCoord.w > 0)
+		TexScale = TexScale.yx;
+	Out.m_TexCoord = float4(float2(Vertex.m_TexCoord.xy) * TexScale, float(Vertex.m_TexCoord.z), float(Vertex.m_TexCoord.w));
+	return Out;
+}
+
+vertex SMetalTileBorderVertexOut qmclient_tile_border_vertex(SMetalTileVertex Vertex [[stage_in]], constant SMetalTileUniforms &Uniforms [[buffer(1)]])
+{
+	SMetalTileBorderVertexOut Out;
 	const float2 Position = Vertex.m_Position * Uniforms.m_Transform.zw + Uniforms.m_Transform.xy;
 	Out.m_Position = Uniforms.m_MVP * float4(Position, 0.0, 1.0);
 	float2 TexScale = Uniforms.m_Transform.zw;
@@ -387,9 +405,17 @@ fragment float4 qmclient_tile_fragment(SMetalTileVertexOut Input [[stage_in]], c
 	return Uniforms.m_Color;
 }
 
-fragment float4 qmclient_tile_textured_fragment(SMetalTileVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalTileUniforms &Uniforms [[buffer(1)]])
+fragment float4 qmclient_tile_textured_fragment(SMetalTileVertexOut Input [[stage_in]], texture2d_array<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalTileUniforms &Uniforms [[buffer(1)]])
 {
-	return Texture.sample(Sampler, Input.m_TexCoord.xy) * Uniforms.m_Color;
+	return Texture.sample(Sampler, Input.m_TexCoord.xy, uint(Input.m_TexCoord.z)) * Uniforms.m_Color;
+}
+
+fragment float4 qmclient_tile_border_textured_fragment(SMetalTileBorderVertexOut Input [[stage_in]], texture2d_array<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalTileUniforms &Uniforms [[buffer(1)]])
+{
+	const float2 TexCoord = fract(Input.m_TexCoord.xy);
+	const float2 Dx = dfdx(Input.m_TexCoord.xy);
+	const float2 Dy = dfdy(Input.m_TexCoord.xy);
+	return Texture.sample(Sampler, TexCoord, uint(Input.m_TexCoord.z), gradient2d(Dx, Dy)) * Uniforms.m_Color;
 }
 
 struct SMetalQuadVertexOut

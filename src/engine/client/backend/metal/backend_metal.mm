@@ -1188,9 +1188,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		CreatePipeline(TextureArrayPipelineIndex(EMetalBlendMode::NONE), TexArrayVertex, TexArrayFragment, pTexArrayDescriptor);
 
 		id<MTLFunction> TileVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_vertex"];
+		id<MTLFunction> TileBorderVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_border_vertex"];
 		id<MTLFunction> TilePlainVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_plain_vertex"];
 		id<MTLFunction> TileFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_fragment"];
 		id<MTLFunction> TileTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_textured_fragment"];
+		id<MTLFunction> TileBorderTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_tile_border_textured_fragment"];
 		id<MTLFunction> QuadVertexGrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_vertex_grouped"];
 		id<MTLFunction> QuadVertexUngrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_vertex_ungrouped"];
 		id<MTLFunction> QuadPlainVertexGrouped = [m_ShaderLibrary newFunctionWithName:@"qmclient_quad_plain_vertex_grouped"];
@@ -1203,7 +1205,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLFunction> SpriteMultipleVertex = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_vertex"];
 		id<MTLFunction> SpriteMultipleFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_fragment"];
 		id<MTLFunction> SpriteMultipleTexturedFragment = [m_ShaderLibrary newFunctionWithName:@"qmclient_sprite_multiple_textured_fragment"];
-		if(TileVertex == nil || TilePlainVertex == nil || TileFragment == nil || TileTexturedFragment == nil || QuadVertexGrouped == nil || QuadVertexUngrouped == nil || QuadPlainVertexGrouped == nil || QuadPlainVertexUngrouped == nil || QuadFragment == nil || QuadTexturedFragment == nil || QuadContainerExVertex == nil || QuadContainerExFragment == nil || QuadContainerExTexturedFragment == nil || SpriteMultipleVertex == nil || SpriteMultipleFragment == nil || SpriteMultipleTexturedFragment == nil)
+		if(TileVertex == nil || TileBorderVertex == nil || TilePlainVertex == nil || TileFragment == nil || TileTexturedFragment == nil || TileBorderTexturedFragment == nil || QuadVertexGrouped == nil || QuadVertexUngrouped == nil || QuadPlainVertexGrouped == nil || QuadPlainVertexUngrouped == nil || QuadFragment == nil || QuadTexturedFragment == nil || QuadContainerExVertex == nil || QuadContainerExFragment == nil || QuadContainerExTexturedFragment == nil || SpriteMultipleVertex == nil || SpriteMultipleFragment == nil || SpriteMultipleTexturedFragment == nil)
 			Success = false;
 
 		MTLVertexDescriptor *pTileDescriptor = [[MTLVertexDescriptor alloc] init];
@@ -1225,8 +1227,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			CreatePipeline(TilePipelineIndex(true, false, EMetalBlendMode::NONE), TileVertex, TileTexturedFragment, pTileDescriptor);
 		if(TilePlainVertex != nil && TileFragment != nil)
 			CreatePipeline(TilePipelineIndex(false, false, EMetalBlendMode::NONE), TilePlainVertex, TileFragment, pTilePlainDescriptor);
-		if(TileVertex != nil && TileTexturedFragment != nil)
-			CreatePipeline(TilePipelineIndex(true, true, EMetalBlendMode::NONE), TileVertex, TileTexturedFragment, pTileDescriptor);
+		if(TileBorderVertex != nil && TileBorderTexturedFragment != nil)
+			CreatePipeline(TilePipelineIndex(true, true, EMetalBlendMode::NONE), TileBorderVertex, TileBorderTexturedFragment, pTileDescriptor);
 		if(TilePlainVertex != nil && TileFragment != nil)
 			CreatePipeline(TilePipelineIndex(false, true, EMetalBlendMode::NONE), TilePlainVertex, TileFragment, pTilePlainDescriptor);
 
@@ -1281,9 +1283,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[TexArrayVertex release];
 		[TexArrayFragment release];
 		[TileVertex release];
+		[TileBorderVertex release];
 		[TilePlainVertex release];
 		[TileFragment release];
 		[TileTexturedFragment release];
+		[TileBorderTexturedFragment release];
 		[QuadVertexGrouped release];
 		[QuadVertexUngrouped release];
 		[QuadPlainVertexGrouped release];
@@ -2739,11 +2743,24 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(Command.m_IndicesDrawNum <= 0 || Command.m_pIndicesOffsets == nullptr || Command.m_pDrawCount == nullptr)
 			return true;
 		const bool Textured = Command.m_State.m_Texture >= 0;
-		if(Textured && (static_cast<size_t>(Command.m_State.m_Texture) >= m_vTextureSlots.size() || !m_vTextureSlots[Command.m_State.m_Texture].m_Allocated))
+		if(Textured && (static_cast<size_t>(Command.m_State.m_Texture) >= m_vTextureSlots.size() || !m_vTextureSlots[Command.m_State.m_Texture].m_Allocated || m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray == nil))
 			return false;
 		const SBufferContainerSlot *pContainer = nullptr;
 		SBufferSlot *pBuffer = nullptr;
 		if(!GetContainerDrawResources(Command.m_BufferContainerIndex, 1, pContainer, pBuffer) || !MatchesContainerLayout(*pContainer, Textured, false))
+			return false;
+		// 先完成整个 tile 批次的索引范围校验和扩容，再开始编码。
+		// 否则批次中途发现容量不足会留下半帧绘制，随后上层看到黑屏/闪烁。
+		size_t MaxQuadEnd = 0;
+		for(int Index = 0; Index < Command.m_IndicesDrawNum; ++Index)
+		{
+			size_t QuadOffset = 0;
+			size_t QuadCount = 0;
+			if(!DecodeQuadIndexRange(Command.m_pIndicesOffsets[Index], Command.m_pDrawCount[Index], QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() - QuadCount || QuadOffset > std::numeric_limits<size_t>::max() / 4 || QuadCount > std::numeric_limits<size_t>::max() / 4 || QuadOffset * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) || QuadCount * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) - QuadOffset * 4 || QuadOffset + QuadCount > std::numeric_limits<size_t>::max() / 6)
+				return false;
+			MaxQuadEnd = std::max(MaxQuadEnd, QuadOffset + QuadCount);
+		}
+		if(MaxQuadEnd == 0 || MaxQuadEnd > std::numeric_limits<size_t>::max() / 6 || !EnsureQuadIndexCapacity(MaxQuadEnd * 6))
 			return false;
 		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
 			return false;
@@ -2758,14 +2775,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentBuffer:m_aFrameSlots[m_CurrentFrameSlot].m_VertexBuffer offset:UniformOffset atIndex:1];
 		if(Textured)
 		{
-			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_Texture atIndex:0];
+			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray atIndex:0];
 			[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
 		}
 		for(int Index = 0; Index < Command.m_IndicesDrawNum; ++Index)
 		{
 			size_t QuadOffset = 0;
 			size_t QuadCount = 0;
-			if(!DecodeQuadIndexRange(Command.m_pIndicesOffsets[Index], Command.m_pDrawCount[Index], QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() / 4 || QuadCount > std::numeric_limits<size_t>::max() / 4 || QuadOffset * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) || QuadCount * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) - QuadOffset * 4 || QuadOffset > std::numeric_limits<size_t>::max() - QuadCount || QuadOffset + QuadCount > std::numeric_limits<size_t>::max() / 6 || !EnsureQuadIndexCapacity((QuadOffset + QuadCount) * 6))
+			if(!DecodeQuadIndexRange(Command.m_pIndicesOffsets[Index], Command.m_pDrawCount[Index], QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() / 4 || QuadCount > std::numeric_limits<size_t>::max() / 4 || QuadOffset * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) || QuadCount * 4 > pBuffer->m_DataBytes / static_cast<size_t>(pContainer->m_Stride) - QuadOffset * 4 || QuadOffset > std::numeric_limits<size_t>::max() - QuadCount || QuadOffset + QuadCount > std::numeric_limits<size_t>::max() / 6 || (QuadOffset + QuadCount) * 6 > m_QuadIndexCount)
 				return false;
 			[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:static_cast<NSUInteger>(QuadCount * 6) indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:QuadOffset * 6 * sizeof(uint32_t)];
 		}
@@ -2798,6 +2815,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const SBufferContainerSlot *pContainer = nullptr;
 		SBufferSlot *pBuffer = nullptr;
 		if(QuadOffset == std::numeric_limits<size_t>::max() || Command.m_QuadNum > std::numeric_limits<size_t>::max() - QuadOffset || QuadOffset + Command.m_QuadNum > std::numeric_limits<size_t>::max() / 4 || !GetContainerDrawResources(Command.m_BufferContainerIndex, (QuadOffset + Command.m_QuadNum) * 4, pContainer, pBuffer) || !MatchesContainerLayout(*pContainer, Textured, true))
+			return false;
+		if(QuadOffset + Command.m_QuadNum > std::numeric_limits<size_t>::max() / 6 || !EnsureQuadIndexCapacity((QuadOffset + Command.m_QuadNum) * 6))
 			return false;
 		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
 			return false;
@@ -2838,7 +2857,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(!DecodeQuadIndexRange(static_cast<const char *>(pOffset), DrawNum, QuadOffset, QuadCount) || QuadCount == 0 || QuadOffset > std::numeric_limits<size_t>::max() - QuadCount || QuadOffset + QuadCount > std::numeric_limits<size_t>::max() / 4)
 			return false;
 		const size_t QuadEnd = QuadOffset + QuadCount;
-		if(QuadEnd > std::numeric_limits<size_t>::max() / 6 || QuadEnd * 6 > m_QuadIndexCount)
+		if(QuadEnd > std::numeric_limits<size_t>::max() / 6 || !EnsureQuadIndexCapacity(QuadEnd * 6))
 			return false;
 		if(!GetContainerDrawResources(ContainerIndex, QuadEnd * 4, pContainer, pBuffer) || !MatchesStandardVertexLayout(*pContainer))
 			return false;

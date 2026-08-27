@@ -25,7 +25,7 @@ inline constexpr std::array<SMetalShaderFamilyManifest, 12> g_aMetalShaderFamili
 	{"gaussian_blur", "gaussian_blur"},
 }};
 
-inline constexpr std::array<const char *, 26> g_aMetalShaderEntrypoints{{
+inline constexpr std::array<const char *, 28> g_aMetalShaderEntrypoints{{
 	"qmclient_vertex",
 	"qmclient_fragment",
 	"qmclient_textured_fragment",
@@ -37,9 +37,11 @@ inline constexpr std::array<const char *, 26> g_aMetalShaderEntrypoints{{
 	"qmclient_tex_array_fragment",
 	"qmclient_text_fragment",
 	"qmclient_tile_vertex",
+	"qmclient_tile_border_vertex",
 	"qmclient_tile_plain_vertex",
 	"qmclient_tile_fragment",
 	"qmclient_tile_textured_fragment",
+	"qmclient_tile_border_textured_fragment",
 	"qmclient_quad_vertex_grouped",
 	"qmclient_quad_vertex_ungrouped",
 	"qmclient_quad_plain_vertex_grouped",

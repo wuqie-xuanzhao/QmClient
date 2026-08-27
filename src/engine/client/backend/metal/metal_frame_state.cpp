@@ -112,6 +112,11 @@ size_t CMetalFrameState::DrainFrames()
 	m_CurrentFrameId = 0;
 	m_CurrentFrameFinalized = false;
 	m_CurrentFrameFailed = false;
+	// Drain 是生命周期边界：即将释放的资源所属 capture/readback 不能泄漏到下一帧序列。
+	m_LastPresentedFrameId = 0;
+	m_LastPresentedSlot = 0;
+	m_CaptureRetained = false;
+	m_ReadbackPresented = false;
 	return Drained;
 }
 
