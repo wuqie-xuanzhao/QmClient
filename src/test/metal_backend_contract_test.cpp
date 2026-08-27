@@ -125,6 +125,16 @@ TEST(MetalBackendContract, TileArraysDoNotSampleUninitializedMipLevels)
 	EXPECT_NE(Source.find("m_TileClampSampler : m_TileRepeatSampler"), std::string::npos);
 }
 
+TEST(MetalBackendContract, ScissorKeepsFrontendCoordinateConversionAndCachesState)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t SetScissor = Source.find("void SetScissor(const CCommandBuffer::SState &State)");
+	ASSERT_NE(SetScissor, std::string::npos);
+	EXPECT_NE(Source.find("Height) - ClipBottom", SetScissor), std::string::npos);
+	EXPECT_NE(Source.find("m_HasBoundScissorRect", SetScissor), std::string::npos);
+	EXPECT_NE(Source.find("ScissorRectsEqual", SetScissor), std::string::npos);
+}
+
 TEST(MetalBackendContract, RecreatedMultisampleAttachmentStartsWithClear)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
@@ -215,12 +225,23 @@ TEST(MetalBackendContract, CommandBufferSlicesPreserveBackbufferUntilPresent)
 	const size_t BeginFrame = Source.find("if(!m_FrameState.BeginFrame(Slot))", Continue);
 	ASSERT_NE(Continue, std::string::npos);
 	ASSERT_NE(BeginFrame, std::string::npos);
-	EXPECT_NE(Source.find("m_CommandBufferCommitted && CurrentBackbufferHasContents()", Continue), std::string::npos);
+	EXPECT_NE(Source.find("m_CommandBufferCommitted && m_BackbufferContinuationPending && CurrentBackbufferHasContents()", Continue), std::string::npos);
 	EXPECT_NE(Source.find("if(!ContinueBackbufferFrame)\n\t\t\tReleaseMetalObject(m_CurrentDrawable);", BeginFrame), std::string::npos);
 	EXPECT_NE(Source.find("if(!ContinueBackbufferFrame)\n\t\t{\n\t\t\tm_CurrentDrawable = nil;", BeginFrame), std::string::npos);
 	EXPECT_NE(Source.find("if(Present || !CurrentBackbufferHasContents())", Source.find("bool CommitCurrentFrame")), std::string::npos);
 	EXPECT_NE(Source.find("id<MTLTexture> m_BackbufferTexture = nil;"), std::string::npos);
 	EXPECT_NE(Source.find("const size_t Slot = ContinueBackbufferFrame ? m_CurrentFrameSlot"), std::string::npos);
+}
+
+TEST(MetalBackendContract, FailedPresentCannotTurnNextFrameIntoACommandBufferContinuation)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Commit = Source.find("bool CommitCurrentFrame(bool Present, bool WaitForCompletion)");
+	const size_t Start = Source.find("const bool ContinueBackbufferFrame", Commit);
+	ASSERT_NE(Commit, std::string::npos);
+	ASSERT_NE(Start, std::string::npos);
+	EXPECT_NE(Source.find("m_BackbufferContinuationPending = !Present && CurrentBackbufferHasContents();", Commit), std::string::npos);
+	EXPECT_NE(Source.find("m_CommandBufferCommitted && m_BackbufferContinuationPending && CurrentBackbufferHasContents()", Start), std::string::npos);
 }
 
 TEST(MetalBackendContract, DrawableSkipDoesNotDropRenderTargetReadback)

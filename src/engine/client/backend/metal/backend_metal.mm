@@ -171,6 +171,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLRenderCommandEncoder> m_CurrentRenderEncoder = nil;
 	id<MTLBlitCommandEncoder> m_CurrentBlitEncoder = nil;
 	id<CAMetalDrawable> m_CurrentDrawable = nil;
+	MTLScissorRect m_BoundScissorRect{};
+	bool m_HasBoundScissorRect = false;
 	id<MTLBuffer> m_LastPresentedReadback = nil;
 	id<MTLCommandBuffer> m_LastPresentedCommandBuffer = nil;
 	uint32_t m_LastPresentedReadbackWidth = 0;
@@ -186,6 +188,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	SBackendCapabilities *m_pCapabilities = nullptr;
 	IStorage *m_pStorage = nullptr;
 	bool m_CommandBufferCommitted = false;
+	// 仅命令缓冲区容量切分（非 present）时，下一段才能继续加载当前 backbuffer。
+	// present 尝试失败也会保留旧内容用于诊断，但不能把它当作下一逻辑帧的起点。
+	bool m_BackbufferContinuationPending = false;
 	bool m_RenderEncoderStarted = false;
 	bool m_SkipCurrentFrame = false;
 	uint32_t m_MultiSamplingCount = 0;
@@ -373,6 +378,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 #else
 		return Object;
 #endif
+	}
+
+	static bool ScissorRectsEqual(const MTLScissorRect &Left, const MTLScissorRect &Right)
+	{
+		return Left.x == Right.x && Left.y == Right.y && Left.width == Right.width && Left.height == Right.height;
 	}
 
 	void ReleaseCommandQueue()
@@ -668,6 +678,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_LastPresentedReadbackHeight = 0;
 		m_LastPresentedReadbackRowBytes = 0;
 		m_CurrentCommandBuffer = nil;
+		m_BackbufferContinuationPending = false;
 		ReleasePipelineStates(m_aPipelineStates);
 		ReleasePipelineStates(m_aMultiSamplePipelineStates);
 		ReleasePipelineStates(m_aMediaIslandSdfPipelines);
@@ -2393,6 +2404,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_MetalPerfEnabled)
 			++m_MetalPerfEncoderCount;
 		[m_CurrentRenderEncoder setViewport:(MTLViewport){0.0, 0.0, static_cast<double>(Width), static_cast<double>(Height), 0.0, 1.0}];
+		m_HasBoundScissorRect = false;
 		m_RenderEncoderStarted = true;
 		if(Backbuffer)
 		{
@@ -2407,8 +2419,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(pData == nullptr || m_CurrentCommandBuffer == nil || Texture.m_Texture == nil)
 			return false;
 		const size_t BytesPerPixel = MetalTextureBytesPerPixel(Texture.m_Format);
+		if(Width == 0 || Height == 0 || Width > std::numeric_limits<size_t>::max() / BytesPerPixel)
+			return false;
 		const size_t RowBytes = Width * BytesPerPixel;
 		const size_t AlignedRowBytes = (RowBytes + 255) & ~size_t(255);
+		if(AlignedRowBytes < RowBytes || Height > std::numeric_limits<size_t>::max() / AlignedRowBytes)
+			return false;
 		std::vector<uint8_t> vUpload(AlignedRowBytes * Height, 0);
 		for(size_t Row = 0; Row < Height; ++Row)
 			mem_copy(vUpload.data() + Row * AlignedRowBytes, pData + Row * RowBytes, RowBytes);
@@ -2424,6 +2440,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_CurrentRenderEncoder = nil;
 			m_RenderEncoderStarted = false;
 		}
+		m_HasBoundScissorRect = false;
 		if(m_CurrentBlitEncoder == nil)
 		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
@@ -2843,7 +2860,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(!State.m_ClipEnable)
 		{
-			[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Width, Height}];
+			const MTLScissorRect Rect{0, 0, Width, Height};
+			if(!m_HasBoundScissorRect || !ScissorRectsEqual(m_BoundScissorRect, Rect))
+			{
+				[m_CurrentRenderEncoder setScissorRect:Rect];
+				m_BoundScissorRect = Rect;
+				m_HasBoundScissorRect = true;
+			}
 			return;
 		}
 		const auto ClampCoordinate = [](long long Value, uint32_t Dimension) {
@@ -2853,11 +2876,19 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const long long ClipRight = ClampCoordinate(static_cast<long long>(State.m_ClipX) + std::max(State.m_ClipW, 0), Width);
 		const long long ClipTop = ClampCoordinate(State.m_ClipY, Height);
 		const long long ClipBottom = ClampCoordinate(static_cast<long long>(State.m_ClipY) + std::max(State.m_ClipH, 0), Height);
-		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{
+		const MTLScissorRect Rect{
 			static_cast<NSUInteger>(ClipLeft),
-			static_cast<NSUInteger>(static_cast<long long>(Height) - ClipBottom),
+			// 前端沿用 OpenGL 风格保存裁剪坐标，Metal 的 scissor 原点
+			// 在左上角，因此需要在后端转换为目标纹理坐标。
+			static_cast<NSUInteger>(std::max(static_cast<long long>(Height) - ClipBottom, 0LL)),
 			static_cast<NSUInteger>(std::max(ClipRight - ClipLeft, 0LL)),
-			static_cast<NSUInteger>(std::max(ClipBottom - ClipTop, 0LL))}];
+			static_cast<NSUInteger>(std::max(ClipBottom - ClipTop, 0LL))};
+		if(!m_HasBoundScissorRect || !ScissorRectsEqual(m_BoundScissorRect, Rect))
+		{
+			[m_CurrentRenderEncoder setScissorRect:Rect];
+			m_BoundScissorRect = Rect;
+			m_HasBoundScissorRect = true;
+		}
 	}
 
 	bool PrepareContainerPipeline(const CCommandBuffer::SState &State, size_t Pipeline, SBufferSlot &Buffer, size_t UniformOffset)
@@ -3320,6 +3351,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentTexture:Source.m_Texture atIndex:0];
 		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
 		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Destination.m_Width, Destination.m_Height}];
+		m_HasBoundScissorRect = false;
 		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		Frame.m_VertexOffset = FragmentUniformOffset + sizeof(FragmentUniforms);
 		return true;
@@ -3436,6 +3468,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		[m_CurrentRenderEncoder setFragmentTexture:CurrentBackbufferTexture() atIndex:0];
 		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
 		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Target.m_Width, Target.m_Height}];
+		m_HasBoundScissorRect = false;
 		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
 		Frame.m_VertexOffset = UniformOffset + sizeof(Uniforms);
 		EndActiveEncoders();
@@ -3505,6 +3538,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
+		m_BackbufferContinuationPending = !Present && CurrentBackbufferHasContents();
 		// 非 present 提交可能只是同一逻辑帧的 buffer slice；保留 drawable 和
 		// backbuffer 内容供下一段继续 load。真正 present 或无 backbuffer 时再释放。
 		if(Present || !CurrentBackbufferHasContents())
@@ -3535,6 +3569,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
+		m_BackbufferContinuationPending = false;
 		ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentDrawable = nil;
 		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
@@ -3879,7 +3914,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// 命令缓冲区可能因容量耗尽在同一逻辑帧中被切分。只要上一段已经
 		// 获取了 backbuffer drawable，就跨段保留它并以 load 继续绘制，直到
 		// 真正的 Swap/present；否则前半帧会被丢弃，表现为闪烁和抖动。
-		const bool ContinueBackbufferFrame = m_CommandBufferCommitted && CurrentBackbufferHasContents();
+		const bool ContinueBackbufferFrame = m_CommandBufferCommitted && m_BackbufferContinuationPending && CurrentBackbufferHasContents();
 		// 同一逻辑帧因命令缓冲区分片时继续使用当前 slot，避免把仍在 GPU
 		// 使用的 backbuffer 交给另一个 slot。正常帧仍按 slot 轮转并行执行。
 		const size_t Slot = ContinueBackbufferFrame ? m_CurrentFrameSlot : (m_FrameId == 0 ? 0 : (m_CurrentFrameSlot + 1) % gs_FrameSlotCount);
@@ -3909,6 +3944,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		Frame.m_CommandBuffer = RetainMetalObject([m_CommandQueue commandBuffer]);
 		m_CurrentCommandBuffer = Frame.m_CommandBuffer;
 		m_CommandBufferCommitted = false;
+		m_BackbufferContinuationPending = false;
 		m_RenderEncoderStarted = false;
 		if(!ContinueBackbufferFrame)
 		{

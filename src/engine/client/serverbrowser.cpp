@@ -1909,11 +1909,34 @@ std::vector<const CCommunity *> CServerBrowser::CurrentCommunities() const
 
 unsigned CServerBrowser::CurrentCommunitiesHash() const
 {
-	std::vector<const CCommunity *> vpCommunities = CurrentCommunities();
 	unsigned Hash = 5381;
-	for(const CCommunity *pCommunity : CurrentCommunities())
+	if(m_ServerlistType == IServerBrowser::TYPE_INTERNET || m_ServerlistType == IServerBrowser::TYPE_FAVORITES)
 	{
-		Hash = (Hash << 5) + Hash + str_quickhash(pCommunity->Id());
+		// Keep this hot-path hash allocation-free. CurrentCommunities() returns
+		// a temporary vector, but this function runs once per browser frame even
+		// when the cache is unchanged.
+		for(const auto &Community : Communities())
+		{
+			if(!CommunitiesFilter().Filtered(Community.Id()))
+				Hash = (Hash << 5) + Hash + str_quickhash(Community.Id());
+		}
+	}
+	else if(m_ServerlistType >= IServerBrowser::TYPE_FAVORITE_COMMUNITY_1 && m_ServerlistType <= IServerBrowser::TYPE_FAVORITE_COMMUNITY_5)
+	{
+		const size_t CommunityIndex = m_ServerlistType - IServerBrowser::TYPE_FAVORITE_COMMUNITY_1;
+		size_t CurrentIndex = 0;
+		for(const auto &CommunityId : FavoriteCommunitiesFilter().Entries())
+		{
+			const CCommunity *pCommunity = Community(CommunityId.Id());
+			if(pCommunity == nullptr)
+				continue;
+			if(CurrentIndex == CommunityIndex)
+			{
+				Hash = (Hash << 5) + Hash + str_quickhash(pCommunity->Id());
+				break;
+			}
+			++CurrentIndex;
+		}
 	}
 	return Hash;
 }

@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <ctime>
 #include <unordered_map>
 
@@ -780,14 +781,38 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	s_ListBox.SetActive(!Ui()->IsPopupOpen());
 	const bool PerfListFrameEnabled = QmPerfEnabled();
 	const auto ListFrameStartTime = PerfListFrameEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
-	s_ListBox.DoStart(ms_ListheaderHeight, NumServers, 1, 3, -1, &View, false);
+	int SelectedServerIndex = -1;
+	FindSortedServerByAddress(ServerBrowser(), g_Config.m_UiServerAddress, &SelectedServerIndex);
+	s_ListBox.DoStart(ms_ListheaderHeight, NumServers, 1, 3, SelectedServerIndex, &View, false);
 
+	const bool RevealSelection = m_ServerBrowserShouldRevealSelection;
 	if(m_ServerBrowserShouldRevealSelection)
 	{
 		s_ListBox.ScrollToSelected();
 		m_ServerBrowserShouldRevealSelection = false;
 	}
-	m_SelectedIndex = -1;
+	m_SelectedIndex = SelectedServerIndex;
+
+	// 列表框仍需为所有项目维护滚动几何，但只有可见行需要命中测试、文本布局和绘制命令。
+	// 两侧各保留一行，避免滚轮/滚动动画结算时出现空行；显式要求显示选中项时保留全量遍历，
+	// 让 DoNextItem 继续执行原有的选中项定位逻辑。
+	int FirstVisibleItem = 0;
+	int EndVisibleItem = NumServers;
+	if(!RevealSelection && NumServers > 0)
+	{
+		const float RowHeight = ms_ListheaderHeight;
+		const float ScrollY = std::max(0.0f, s_ListBox.ScrollOffsetY());
+		const float ViewHeight = std::max(0.0f, s_ListBox.ViewHeight());
+		const int ExtraRows = 1;
+		const int FirstVisibleRow = std::max(0, (int)std::floor(ScrollY / RowHeight) - ExtraRows);
+		const int LastVisibleRowExclusive = std::min(
+			NumServers,
+			(int)std::ceil((ScrollY + ViewHeight) / RowHeight) + ExtraRows);
+		FirstVisibleItem = std::min(FirstVisibleRow, NumServers);
+		EndVisibleItem = std::max(FirstVisibleItem, LastVisibleRowExclusive);
+	}
+	if(FirstVisibleItem > 0)
+		s_ListBox.SkipItems(FirstVisibleItem);
 
 	const auto &&RenderBrowserIcons = [this](CUIElement::SUIElementRect &UIRect, CUIRect *pRect, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor, const char *pText, int TextAlign, bool SmallFont = false) {
 		const float FontSize = SmallFont ? 6.0f : 14.0f;
@@ -809,17 +834,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	int RowsVisible = 0;
 	int RowsRendered = 0;
 	int RowsIterated = 0;
-	for(int i = 0; i < NumServers; i++)
+	for(int i = FirstVisibleItem; i < EndVisibleItem; i++)
 	{
 		const CServerInfo *pItem = ServerBrowser()->SortedGet(i);
 		RowsIterated += PerfListFrameEnabled ? 1 : 0;
-		const CCommunity *pCommunity = ServerBrowser()->Community(pItem->m_aCommunityId);
-
-		if(vpServerBrowserUiElements[i] == nullptr)
-		{
-			vpServerBrowserUiElements[i] = Ui()->GetNewUIElement(NUM_UI_ELEMS);
-		}
-		CUIElement *pUiElement = vpServerBrowserUiElements[i];
 
 		const CListboxItem ListItem = s_ListBox.DoNextItem(pItem, str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress) == 0);
 		if(ListItem.m_Selected)
@@ -834,6 +852,16 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			// don't render invisible items
 			continue;
 		}
+
+		// Resolve row-only data after visibility is known. The list can contain
+		// hundreds of servers while only a few rows are on screen; doing these
+		// lookups and allocating the streamed UI element for every hidden row
+		// made the server browser pay an unnecessary per-frame cost.
+		const CCommunity *pCommunity = ServerBrowser()->Community(pItem->m_aCommunityId);
+		if(vpServerBrowserUiElements[i] == nullptr)
+			vpServerBrowserUiElements[i] = Ui()->GetNewUIElement(NUM_UI_ELEMS);
+		CUIElement *pUiElement = vpServerBrowserUiElements[i];
+
 		if(PerfListFrameEnabled)
 		{
 			RowsVisible++;
@@ -1001,6 +1029,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			}
 		}
 	}
+	if(EndVisibleItem < NumServers)
+		s_ListBox.SkipItems(NumServers - EndVisibleItem);
 
 	const int NewSelected = s_ListBox.DoEnd();
 	const bool ListScrollActive = QmMenuUiScrollPerfActive(s_ListBox.WheelConsumedThisFrame(), s_ListBox.ScrollbarActive(), s_ListBox.ScrollbarAnimating());
