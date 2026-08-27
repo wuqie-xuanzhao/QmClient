@@ -118,9 +118,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLBuffer> m_VertexBuffer = nil;
 		id<MTLCommandBuffer> m_CommandBuffer = nil;
 		id<MTLTexture> m_BackbufferTexture = nil;
+		id<MTLTexture> m_MultiSampleTexture = nil;
 		uint32_t m_BackbufferWidth = 0;
 		uint32_t m_BackbufferHeight = 0;
 		size_t m_BackbufferDataBytes = 0;
+		uint32_t m_MultiSampleTextureWidth = 0;
+		uint32_t m_MultiSampleTextureHeight = 0;
+		uint32_t m_MultiSampleTextureSampleCount = 0;
+		size_t m_MultiSampleTextureDataBytes = 0;
 		bool m_BackbufferHasContents = false;
 		size_t m_VertexOffset = 0;
 		uint64_t m_FrameId = 0;
@@ -166,7 +171,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLRenderCommandEncoder> m_CurrentRenderEncoder = nil;
 	id<MTLBlitCommandEncoder> m_CurrentBlitEncoder = nil;
 	id<CAMetalDrawable> m_CurrentDrawable = nil;
-	id<MTLTexture> m_MultiSampleTexture = nil;
 	id<MTLBuffer> m_LastPresentedReadback = nil;
 	id<MTLCommandBuffer> m_LastPresentedCommandBuffer = nil;
 	uint32_t m_LastPresentedReadbackWidth = 0;
@@ -185,10 +189,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	bool m_RenderEncoderStarted = false;
 	bool m_SkipCurrentFrame = false;
 	uint32_t m_MultiSamplingCount = 0;
-	uint32_t m_MultiSampleTextureWidth = 0;
-	uint32_t m_MultiSampleTextureHeight = 0;
-	uint32_t m_MultiSampleTextureSampleCount = 0;
-	size_t m_MultiSampleTextureDataBytes = 0;
 	CMetalRenderTargetState m_RenderTargetState;
 	uint32_t m_DrawableWidth = 0;
 	uint32_t m_DrawableHeight = 0;
@@ -514,18 +514,27 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		Pipelines.fill(nil);
 	}
 
-	void DestroyMultiSampleTexture()
+	void DestroyMultiSampleTexture(size_t Slot)
 	{
-		if(m_MultiSampleTexture != nil)
+		if(Slot >= m_aFrameSlots.size())
+			return;
+		SFrameSlot &Frame = m_aFrameSlots[Slot];
+		if(Frame.m_MultiSampleTexture != nil)
 		{
-			SubTextureMemory(m_MultiSampleTextureDataBytes);
-			ReleaseMetalObject(m_MultiSampleTexture);
+			SubTextureMemory(Frame.m_MultiSampleTextureDataBytes);
+			ReleaseMetalObject(Frame.m_MultiSampleTexture);
 		}
-		m_MultiSampleTexture = nil;
-		m_MultiSampleTextureWidth = 0;
-		m_MultiSampleTextureHeight = 0;
-		m_MultiSampleTextureSampleCount = 0;
-		m_MultiSampleTextureDataBytes = 0;
+		Frame.m_MultiSampleTexture = nil;
+		Frame.m_MultiSampleTextureWidth = 0;
+		Frame.m_MultiSampleTextureHeight = 0;
+		Frame.m_MultiSampleTextureSampleCount = 0;
+		Frame.m_MultiSampleTextureDataBytes = 0;
+	}
+
+	void DestroyAllMultiSampleTextures()
+	{
+		for(size_t Slot = 0; Slot < m_aFrameSlots.size(); ++Slot)
+			DestroyMultiSampleTexture(Slot);
 	}
 
 	void DestroyBackbufferTexture(size_t Slot)
@@ -603,11 +612,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		if(m_MultiSamplingCount == 0)
 			return false;
-		if(m_MultiSampleTexture != nil && m_MultiSampleTextureWidth == Width && m_MultiSampleTextureHeight == Height && m_MultiSampleTextureSampleCount == m_MultiSamplingCount)
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		if(Frame.m_MultiSampleTexture != nil && Frame.m_MultiSampleTextureWidth == Width && Frame.m_MultiSampleTextureHeight == Height && Frame.m_MultiSampleTextureSampleCount == m_MultiSamplingCount)
 			return true;
 		// MSAA attachment 重建后内容未定义，下一次 render pass 必须清屏。
 		SetCurrentBackbufferHasContents(false);
-		DestroyMultiSampleTexture();
+		DestroyMultiSampleTexture(m_CurrentFrameSlot);
 		if(m_Device == nil || Width == 0 || Height == 0)
 			return false;
 		size_t PixelCount = 0;
@@ -623,16 +633,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pDescriptor.mipmapLevelCount = 1;
 		pDescriptor.usage = MTLTextureUsageRenderTarget;
 		pDescriptor.storageMode = MTLStorageModePrivate;
-		m_MultiSampleTexture = [m_Device newTextureWithDescriptor:pDescriptor];
+		Frame.m_MultiSampleTexture = [m_Device newTextureWithDescriptor:pDescriptor];
 #if !__has_feature(objc_arc)
 		[pDescriptor release];
 #endif
-		if(m_MultiSampleTexture == nil)
+		if(Frame.m_MultiSampleTexture == nil)
 			return false;
-		m_MultiSampleTextureWidth = Width;
-		m_MultiSampleTextureHeight = Height;
-		m_MultiSampleTextureSampleCount = m_MultiSamplingCount;
-		m_MultiSampleTextureDataBytes = DataBytes;
+		Frame.m_MultiSampleTextureWidth = Width;
+		Frame.m_MultiSampleTextureHeight = Height;
+		Frame.m_MultiSampleTextureSampleCount = m_MultiSamplingCount;
+		Frame.m_MultiSampleTextureDataBytes = DataBytes;
 		AddTextureMemory(DataBytes);
 		return true;
 	}
@@ -641,7 +651,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		EndActiveEncoders();
 		DestroyAllRenderTargets();
-		DestroyMultiSampleTexture();
+		DestroyAllMultiSampleTextures();
 		for(size_t Slot = 0; Slot < m_aFrameSlots.size(); ++Slot)
 			DestroyBackbufferTexture(Slot);
 		ReleaseMetalObject(m_CurrentDrawable);
@@ -2355,7 +2365,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			if(!EnsureMultiSampleTexture(m_DrawableWidth, m_DrawableHeight))
 				return false;
-			return BeginRenderEncoderForTexture(m_MultiSampleTexture, m_DrawableWidth, m_DrawableHeight, ClearColor, CurrentBackbufferHasContents() ? MTLLoadActionLoad : MTLLoadActionClear, true, CurrentBackbufferTexture());
+			return BeginRenderEncoderForTexture(m_aFrameSlots[m_CurrentFrameSlot].m_MultiSampleTexture, m_DrawableWidth, m_DrawableHeight, ClearColor, CurrentBackbufferHasContents() ? MTLLoadActionLoad : MTLLoadActionClear, true, CurrentBackbufferTexture());
 		}
 		return BeginRenderEncoderForTexture(CurrentBackbufferTexture(), m_DrawableWidth, m_DrawableHeight, ClearColor, CurrentBackbufferHasContents() ? MTLLoadActionLoad : MTLLoadActionClear, true);
 	}
@@ -3824,7 +3834,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			ReleasePipelineStates(m_aMultiSampleRoundedRectSdfPipelines);
 			ReleasePipelineStates(m_aMultiSampleTexturedMsdfPipelines);
 		}
-		DestroyMultiSampleTexture();
+		// Sample-count changes invalidate every in-flight attachment. Drain first
+		// so no completed handler or GPU pass can still reference the old textures.
+		WaitForGpuIdle();
+		DestroyAllMultiSampleTextures();
 		m_MultiSamplingCount = SupportedCount;
 		if(m_pCapabilities != nullptr)
 		{

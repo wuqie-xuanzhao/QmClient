@@ -191,6 +191,16 @@ inline bool QmCheckPredictedHammerHitHandled(std::vector<CGameWorld::CPredictedE
 	return true;
 }
 
+inline bool QmPredictedEventMatchesForCreation(const CGameWorld::CPredictedEvent &Existing, const CGameWorld::CPredictedEvent &NewEvent)
+{
+	if(Existing.m_EventId != NewEvent.m_EventId || Existing.m_ExtraInfo != NewEvent.m_ExtraInfo || Existing.m_Id != NewEvent.m_Id || Existing.m_Tick != NewEvent.m_Tick)
+		return false;
+
+	// 声音事件由实体和 tick 标识。预测重放同一 tick 时位置可能被校正，
+	// 但不能因此再次排队同一份声音。
+	return NewEvent.m_EventId == NETEVENTTYPE_SOUNDWORLD || Existing.m_Pos == NewEvent.m_Pos;
+}
+
 class CCharOrder
 {
 public:

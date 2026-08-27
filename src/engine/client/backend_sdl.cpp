@@ -415,12 +415,17 @@ void CCommandProcessor_SDL_GL::RunBuffer(CCommandBuffer *pBuffer)
 		else if(Res == ERunCommandReturnTypes::RUN_COMMAND_COMMAND_ERROR)
 		{
 			m_Error = m_pGLBackend->GetError();
+			// 后端可能已经打开 render/blit encoder 或持有未提交的 command
+			// buffer。即使命令失败，也必须收尾当前帧，避免下一帧复用半完成状态。
+			m_pGLBackend->EndCommands();
 			HandleError();
 			return;
 		}
 		else if(Res == ERunCommandReturnTypes::RUN_COMMAND_COMMAND_WARNING)
 		{
 			m_Warning = m_pGLBackend->GetWarning();
+			// 与错误路径保持一致，避免 warning 中断时遗留未收尾的后端帧。
+			m_pGLBackend->EndCommands();
 			HandleWarning();
 			return;
 		}
@@ -432,6 +437,8 @@ void CCommandProcessor_SDL_GL::RunBuffer(CCommandBuffer *pBuffer)
 			continue;
 
 		dbg_assert_failed("Unknown graphics command %d", pCommand->m_Cmd);
+		m_pGLBackend->EndCommands();
+		return;
 	}
 
 	m_pGLBackend->EndCommands();
@@ -1527,6 +1534,10 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		RunBufferSingleThreadedUnsafe(&CmdBuffer);
 		CmdBuffer.Reset();
 
+		// Metal 的 readback 回调捕获了后端对象。先清除回调，再释放处理器，
+		// 防止 shutdown 后仍通过旧函数指针访问已销毁的对象。
+		m_ReadPresentedImageDataFunc = nullptr;
+
 		// stop and delete the processor
 		StopProcessor();
 		delete m_pProcessor;
@@ -1611,6 +1622,10 @@ int CGraphicsBackend_SDL_GL::Shutdown()
 		delete m_pProcessor;
 		m_pProcessor = nullptr;
 	}
+
+	// Metal 的 readback 回调捕获了后端对象。无论处理器是否已存在，
+	// shutdown 后都不能保留可能指向已销毁对象的函数。
+	m_ReadPresentedImageDataFunc = nullptr;
 
 	if(m_GLContext != nullptr)
 		SDL_GL_DeleteContext(m_GLContext);

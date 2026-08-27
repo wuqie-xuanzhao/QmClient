@@ -130,11 +130,22 @@ TEST(MetalBackendContract, RecreatedMultisampleAttachmentStartsWithClear)
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t EnsureMsaa = Source.find("bool EnsureMultiSampleTexture(uint32_t Width, uint32_t Height)");
 	const size_t Invalidate = Source.find("SetCurrentBackbufferHasContents(false);", EnsureMsaa);
-	const size_t Destroy = Source.find("DestroyMultiSampleTexture();", EnsureMsaa);
+	const size_t Destroy = Source.find("DestroyMultiSampleTexture(m_CurrentFrameSlot);", EnsureMsaa);
 	ASSERT_NE(EnsureMsaa, std::string::npos);
 	ASSERT_NE(Invalidate, std::string::npos);
 	ASSERT_NE(Destroy, std::string::npos);
 	EXPECT_LT(Invalidate, Destroy);
+}
+
+TEST(MetalBackendContract, MultisampleAttachmentsAreOwnedByFrameSlots)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("id<MTLTexture> m_MultiSampleTexture = nil;"), std::string::npos);
+	EXPECT_NE(Source.find("std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};"), std::string::npos);
+	EXPECT_EQ(Source.find("id<MTLTexture> m_MultiSampleTexture = nil;\n\tid<MTLBuffer> m_LastPresentedReadback"), std::string::npos);
+	EXPECT_NE(Source.find("void DestroyAllMultiSampleTextures()"), std::string::npos);
+	EXPECT_NE(Source.find("WaitForGpuIdle();\n\t\tDestroyAllMultiSampleTextures();"), std::string::npos);
+	EXPECT_NE(Source.find("m_aFrameSlots[m_CurrentFrameSlot].m_MultiSampleTexture"), std::string::npos);
 }
 
 TEST(MetalBackendContract, MetalPerfReportsEffectiveLayerPresentationState)

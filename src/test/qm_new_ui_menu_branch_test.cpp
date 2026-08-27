@@ -82,6 +82,18 @@ TEST(QmNewUiMenuBranches, RespawnWeaponAndCallvoteFiltersUseSharedBoundedSemanti
 	EXPECT_FALSE(QmTextMatchesIncludeExcludeFilter(nullptr, "", ""));
 }
 
+TEST(QmPredictedEvents, SoundIdentityIgnoresPredictionPositionCorrection)
+{
+	const CGameWorld::CPredictedEvent Existing(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), 3, 500, SOUND_GUN_FIRE);
+	const CGameWorld::CPredictedEvent CorrectedPosition(NETEVENTTYPE_SOUNDWORLD, vec2(108.0f, 100.0f), 3, 500, SOUND_GUN_FIRE);
+	const CGameWorld::CPredictedEvent OtherTick(NETEVENTTYPE_SOUNDWORLD, vec2(108.0f, 100.0f), 3, 501, SOUND_GUN_FIRE);
+	const CGameWorld::CPredictedEvent OtherEntity(NETEVENTTYPE_SOUNDWORLD, vec2(108.0f, 100.0f), 4, 500, SOUND_GUN_FIRE);
+
+	EXPECT_TRUE(QmPredictedEventMatchesForCreation(Existing, CorrectedPosition));
+	EXPECT_FALSE(QmPredictedEventMatchesForCreation(Existing, OtherTick));
+	EXPECT_FALSE(QmPredictedEventMatchesForCreation(Existing, OtherEntity));
+}
+
 namespace
 {
 

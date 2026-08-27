@@ -849,14 +849,16 @@ void CGameWorld::CreatePredictedEvent(const CPredictedEvent &NewEvent)
 	const auto It = std::find_if(
 		m_PredictedEvents.begin(),
 		m_PredictedEvents.end(),
-		[NewEvent](const CPredictedEvent &Event) {
-			return Event.m_EventId == NewEvent.m_EventId && Event.m_ExtraInfo == NewEvent.m_ExtraInfo &&
-			       Event.m_Pos == NewEvent.m_Pos && Event.m_Id == NewEvent.m_Id && Event.m_Tick == NewEvent.m_Tick;
-		});
+		[NewEvent](const CPredictedEvent &Event) { return QmPredictedEventMatchesForCreation(Event, NewEvent); });
 
 	if(It == m_PredictedEvents.end())
 	{
 		m_PredictedEvents.push_back(NewEvent);
+	}
+	else if(NewEvent.m_EventId == NETEVENTTYPE_SOUNDWORLD && !It->m_Handled)
+	{
+		// 预测校正位置时保留同一声音身份，同时更新空间化播放位置。
+		It->m_Pos = NewEvent.m_Pos;
 	}
 }
 
