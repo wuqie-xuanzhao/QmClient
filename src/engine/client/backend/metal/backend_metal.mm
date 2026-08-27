@@ -916,7 +916,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				m_aRetiredBuffers[m_CurrentFrameSlot].push_back({Buffer.m_Buffer, Buffer.m_DataBytes});
 			DeferredRelease = true;
 		}
-		if(Buffer.m_Buffer != nil && Buffer.m_OneTimeUse && !DeferredRelease)
+		if(DeferredRelease)
+		{
+			// 所有权已经转移到对应 frame slot 的 deferred 队列；此处不能
+			// 再 release 或扣减内存，否则队列回收时会使用悬空对象。
+		}
+		else if(Buffer.m_Buffer != nil && Buffer.m_OneTimeUse)
 		{
 			// 即使尚未绑定到 encoder，也必须按当前 command buffer 所属 slot 延迟回收；
 			// 这样从池中取出后立刻删除不会重复扣减已计入的 buffer 内存。

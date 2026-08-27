@@ -630,6 +630,14 @@ TEST(MetalBackendContract, PersistentBuffersAreNotMutatedOrReleasedWhileInFlight
 	ASSERT_NE(Prepare, std::string::npos);
 	EXPECT_NE(Source.find("WaitForBufferIdle(Buffer)", Destroy), std::string::npos);
 	EXPECT_NE(Source.find("WaitForGpuIdle()", Destroy), std::string::npos);
+	const size_t Deferred = Source.find("if(DeferredRelease)", Destroy);
+	const size_t DeferredElse = Source.find("else if(Buffer.m_Buffer != nil && Buffer.m_OneTimeUse)", Deferred);
+	const size_t DeferredReleaseCall = Source.find("ReleaseMetalObject(Buffer.m_Buffer);", Deferred);
+	ASSERT_NE(Deferred, std::string::npos);
+	ASSERT_NE(DeferredElse, std::string::npos);
+	ASSERT_NE(DeferredReleaseCall, std::string::npos);
+	EXPECT_LT(Deferred, DeferredElse);
+	EXPECT_LT(DeferredElse, DeferredReleaseCall);
 	EXPECT_NE(Source.find("if(Buffer.m_OneTimeUse)", Destroy), std::string::npos);
 	EXPECT_NE(Source.find("m_aLastUsedFrameIds[m_CurrentFrameSlot]", Prepare), std::string::npos);
 	EXPECT_NE(Source.find("BufferInFlightMask(Buffer, false)"), std::string::npos);
