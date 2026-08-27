@@ -116,6 +116,35 @@ TEST(MetalBackendContract, VSyncMirrorsTheExplicitGraphicsSetting)
 	EXPECT_NE(Source.find("layer vsync changed: requested=%d display_sync=%d"), std::string::npos);
 }
 
+TEST(MetalBackendContract, TileArraysDoNotSampleUninitializedMipLevels)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("m_TileRepeatSampler"), std::string::npos);
+	EXPECT_NE(Source.find("m_TileClampSampler"), std::string::npos);
+	EXPECT_NE(Source.find("MTLSamplerMipFilterNotMipmapped"), std::string::npos);
+	EXPECT_NE(Source.find("m_TileClampSampler : m_TileRepeatSampler"), std::string::npos);
+}
+
+TEST(MetalBackendContract, RecreatedMultisampleAttachmentStartsWithClear)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t EnsureMsaa = Source.find("bool EnsureMultiSampleTexture(uint32_t Width, uint32_t Height)");
+	const size_t Invalidate = Source.find("SetCurrentBackbufferHasContents(false);", EnsureMsaa);
+	const size_t Destroy = Source.find("DestroyMultiSampleTexture();", EnsureMsaa);
+	ASSERT_NE(EnsureMsaa, std::string::npos);
+	ASSERT_NE(Invalidate, std::string::npos);
+	ASSERT_NE(Destroy, std::string::npos);
+	EXPECT_LT(Invalidate, Destroy);
+}
+
+TEST(MetalBackendContract, MetalPerfReportsEffectiveLayerPresentationState)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("display_sync=%d max_drawables=%lu presents_with_transaction=%d"), std::string::npos);
+	EXPECT_NE(Source.find("pLayer.displaySyncEnabled"), std::string::npos);
+	EXPECT_NE(Source.find("pLayer.maximumDrawableCount"), std::string::npos);
+}
+
 TEST(MetalBackendContract, ZeroSizedDrawableNeverBlocksOnNextDrawable)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");

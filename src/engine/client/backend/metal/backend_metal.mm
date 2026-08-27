@@ -151,6 +151,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLRenderPipelineState> m_GaussianBlurPipeline = nil;
 	id<MTLSamplerState> m_RepeatSampler = nil;
 	id<MTLSamplerState> m_ClampSampler = nil;
+	// 图块数组不依赖自动生成的 mip 级。部分 macOS/Metal 设备在数组纹理
+	// 上传与异步 mip 生成交错时会短暂读到未初始化的高 mip 级，低 Zoom 下
+	// 表现为整片黑屏，因此使用独立的非 mip sampler。
+	id<MTLSamplerState> m_TileRepeatSampler = nil;
+	id<MTLSamplerState> m_TileClampSampler = nil;
 	std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};
 	std::array<std::vector<STransientBuffer>, gs_FrameSlotCount> m_aTransientBuffers{};
 	std::array<std::vector<STransientBuffer>, gs_FrameSlotCount> m_aRetiredTransientBuffers{};
@@ -325,8 +330,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		double GpuExecutionMs = 0.0;
 		double GpuExecutionMaxMs = 0.0;
 		TakeMetalGpuTimingStats(GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, GpuExecutionUnavailableCount);
-		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f drawable_acquire_ms_max=%.3f drawable_acquire_over_16ms_count=%llu drawable_acquire_over_33ms_count=%llu drawable_acquire_over_100ms_count=%llu drawable_unavailable_count=%llu gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu buffer_reuse_count=%llu buffer_reuse_bytes=%llu transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu",
-			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, m_MetalPerfDrawableAcquireMaxMs, (unsigned long long)m_MetalPerfDrawableAcquireOver16MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver33MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver100MsCount, (unsigned long long)m_MetalPerfDrawableUnavailableCount, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, (unsigned long long)GpuExecutionUnavailableCount, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes, (unsigned long long)m_MetalPerfBufferReuseCount, (unsigned long long)m_MetalPerfBufferReuseBytes, (unsigned long long)m_MetalPerfTransientPoolReuseCount, (unsigned long long)m_MetalPerfTransientPoolReuseBytes);
+		CAMetalLayer *pLayer = m_pLayer != nullptr ? (__bridge CAMetalLayer *)m_pLayer : nil;
+		const int DisplaySync = pLayer != nil && pLayer.displaySyncEnabled ? 1 : 0;
+		const unsigned long MaxDrawables = pLayer != nil ? static_cast<unsigned long>(pLayer.maximumDrawableCount) : 0;
+		const int PresentsWithTransaction = pLayer != nil && pLayer.presentsWithTransaction ? 1 : 0;
+		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f drawable_acquire_ms_max=%.3f drawable_acquire_over_16ms_count=%llu drawable_acquire_over_33ms_count=%llu drawable_acquire_over_100ms_count=%llu drawable_unavailable_count=%llu gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu buffer_reuse_count=%llu buffer_reuse_bytes=%llu transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu display_sync=%d max_drawables=%lu presents_with_transaction=%d",
+			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, m_MetalPerfDrawableAcquireMaxMs, (unsigned long long)m_MetalPerfDrawableAcquireOver16MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver33MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver100MsCount, (unsigned long long)m_MetalPerfDrawableUnavailableCount, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, (unsigned long long)GpuExecutionUnavailableCount, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes, (unsigned long long)m_MetalPerfBufferReuseCount, (unsigned long long)m_MetalPerfBufferReuseBytes, (unsigned long long)m_MetalPerfTransientPoolReuseCount, (unsigned long long)m_MetalPerfTransientPoolReuseBytes, DisplaySync, MaxDrawables, PresentsWithTransaction);
 		ResetMetalPerfStats();
 	}
 
@@ -596,6 +605,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		if(m_MultiSampleTexture != nil && m_MultiSampleTextureWidth == Width && m_MultiSampleTextureHeight == Height && m_MultiSampleTextureSampleCount == m_MultiSamplingCount)
 			return true;
+		// MSAA attachment 重建后内容未定义，下一次 render pass 必须清屏。
+		SetCurrentBackbufferHasContents(false);
 		DestroyMultiSampleTexture();
 		if(m_Device == nil || Width == 0 || Height == 0)
 			return false;
@@ -658,12 +669,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		ReleaseMetalObject(m_GaussianBlurPipeline);
 		ReleaseMetalObject(m_RepeatSampler);
 		ReleaseMetalObject(m_ClampSampler);
+		ReleaseMetalObject(m_TileRepeatSampler);
+		ReleaseMetalObject(m_TileClampSampler);
 		ReleaseMetalObject(m_ShaderLibrary);
 		ReleaseMetalObject(m_QuadIndexBuffer);
 		m_QuadIndexBuffer = nil;
 		m_QuadIndexCount = 0;
 		m_RepeatSampler = nil;
 		m_ClampSampler = nil;
+		m_TileRepeatSampler = nil;
+		m_TileClampSampler = nil;
 		m_ShaderLibrary = nil;
 		m_GaussianBlurPipeline = nil;
 		for(size_t Slot = 0; Slot < m_aFrameSlots.size(); ++Slot)
@@ -1197,10 +1212,18 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pDescriptor.sAddressMode = MTLSamplerAddressModeClampToEdge;
 		pDescriptor.tAddressMode = MTLSamplerAddressModeClampToEdge;
 		m_ClampSampler = [m_Device newSamplerStateWithDescriptor:pDescriptor];
+		// Tile array textures use level 0 explicitly through a non-mip sampler.
+		pDescriptor.mipFilter = MTLSamplerMipFilterNotMipmapped;
+		pDescriptor.sAddressMode = MTLSamplerAddressModeRepeat;
+		pDescriptor.tAddressMode = MTLSamplerAddressModeRepeat;
+		m_TileRepeatSampler = [m_Device newSamplerStateWithDescriptor:pDescriptor];
+		pDescriptor.sAddressMode = MTLSamplerAddressModeClampToEdge;
+		pDescriptor.tAddressMode = MTLSamplerAddressModeClampToEdge;
+		m_TileClampSampler = [m_Device newSamplerStateWithDescriptor:pDescriptor];
 #if !__has_feature(objc_arc)
 		[pDescriptor release];
 #endif
-		return m_RepeatSampler != nil && m_ClampSampler != nil;
+		return m_RepeatSampler != nil && m_ClampSampler != nil && m_TileRepeatSampler != nil && m_TileClampSampler != nil;
 	}
 
 	bool CreatePipelineStates(uint32_t SampleCount, TPipelineStates &PipelineStates)
@@ -2881,7 +2904,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(Textured)
 		{
 			[m_CurrentRenderEncoder setFragmentTexture:m_vTextureSlots[Command.m_State.m_Texture].m_TextureArray atIndex:0];
-			[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_ClampSampler : m_RepeatSampler atIndex:0];
+			[m_CurrentRenderEncoder setFragmentSamplerState:Command.m_State.m_WrapMode == EWrapMode::CLAMP ? m_TileClampSampler : m_TileRepeatSampler atIndex:0];
 		}
 		for(int Index = 0; Index < Command.m_IndicesDrawNum; ++Index)
 		{
