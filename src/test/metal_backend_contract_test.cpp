@@ -636,6 +636,9 @@ TEST(MetalBackendContract, PersistentBuffersAreNotMutatedOrReleasedWhileInFlight
 	ASSERT_NE(Deferred, std::string::npos);
 	ASSERT_NE(DeferredElse, std::string::npos);
 	ASSERT_NE(DeferredReleaseCall, std::string::npos);
+	const std::string DeferredBody = Source.substr(Deferred, DeferredElse - Deferred);
+	EXPECT_EQ(DeferredBody.find("SubBufferMemory(Buffer.m_DataBytes)"), std::string::npos);
+	EXPECT_EQ(DeferredBody.find("ReleaseMetalObject(Buffer.m_Buffer)"), std::string::npos);
 	EXPECT_LT(Deferred, DeferredElse);
 	EXPECT_LT(DeferredElse, DeferredReleaseCall);
 	EXPECT_NE(Source.find("if(Buffer.m_OneTimeUse)", Destroy), std::string::npos);
