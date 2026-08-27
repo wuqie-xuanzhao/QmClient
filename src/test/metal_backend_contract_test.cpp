@@ -169,6 +169,34 @@ TEST(MetalBackendContract, PresentedDrawableIsReleasedAfterCommit)
 	EXPECT_NE(Source.find("m_CurrentDrawable = nil;", Release), std::string::npos);
 }
 
+TEST(MetalBackendContract, DrawableFailureDoesNotContinueOrReportPresent)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Commit = Source.find("bool CommitCurrentFrame(bool Present, bool WaitForCompletion)");
+	const size_t Requested = Source.find("const bool PresentationRequested", Commit);
+	const size_t Return = Source.find("return PresentationSucceeded;", Commit);
+	ASSERT_NE(Commit, std::string::npos);
+	ASSERT_NE(Requested, std::string::npos);
+	ASSERT_NE(Return, std::string::npos);
+	EXPECT_NE(Source.find("const bool PresentationSucceeded = !PresentationRequested || BackbufferPresented;", Requested), std::string::npos);
+	EXPECT_NE(Source.find("const bool BackbufferPresented = CanPresent && FrameFinalized;", Requested), std::string::npos);
+	EXPECT_NE(Source.find("if(BackbufferPresented)\n\t\t\tSetCurrentBackbufferHasContents(false);", Requested), std::string::npos);
+	EXPECT_LT(Requested, Return);
+}
+
+TEST(MetalBackendContract, DrawableUnavailableCannotReportPresentSuccess)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Commit = Source.find("bool CommitCurrentFrame(bool Present, bool WaitForCompletion)");
+	const size_t Finalize = Source.find("const bool FrameFinalized", Commit);
+	const size_t Return = Source.find("return PresentationSucceeded && m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;", Commit);
+	ASSERT_NE(Commit, std::string::npos);
+	ASSERT_NE(Finalize, std::string::npos);
+	ASSERT_NE(Return, std::string::npos);
+	EXPECT_NE(Source.find("const bool PresentationSucceeded = !PresentationRequested || BackbufferPresented;", Finalize), std::string::npos);
+	EXPECT_LT(Finalize, Return);
+}
+
 TEST(MetalBackendContract, CommandBufferSlicesPreserveBackbufferUntilPresent)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
@@ -233,6 +261,15 @@ TEST(MetalBackendContract, TextureArrayPathConvertsAtlasAndSamplesArrayLayers)
 	EXPECT_NE(Shader.find("texture2d_array<float>"), std::string::npos);
 	EXPECT_NE(Shader.find("qmclient_tex_array_vertex"), std::string::npos);
 	EXPECT_NE(Shader.find("qmclient_tex_array_fragment"), std::string::npos);
+}
+
+TEST(MetalBackendContract, BufferedTileAndQuadCapabilitiesArePublished)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	EXPECT_NE(Source.find("m_pCapabilities->m_TileBuffering = true;"), std::string::npos);
+	EXPECT_NE(Source.find("m_pCapabilities->m_QuadBuffering = true;"), std::string::npos);
+	EXPECT_NE(Source.find("bool DrawTileLayer"), std::string::npos);
+	EXPECT_NE(Source.find("bool DrawQuadLayer"), std::string::npos);
 }
 
 TEST(MetalBackendContract, RenderTargetsOwnAttachmentsAndRestoreDrawableRendering)
@@ -343,7 +380,8 @@ TEST(MetalBackendContract, MultisampleBackbufferUsesResolveAttachmentAndRealDevi
 	EXPECT_NE(Source.find("pPass.colorAttachments[0].resolveTexture = ResolveTexture"), std::string::npos);
 	EXPECT_NE(Source.find("CreatePipelineStates(m_MultiSamplingCount, m_aMultiSamplePipelineStates)"), std::string::npos);
 	EXPECT_NE(Source.find("const size_t UniformOffset = (VertexOffset + Bytes + 255) & ~size_t(255)"), std::string::npos);
-	EXPECT_NE(Source.find("m_CurrentDrawable != nil || m_RenderEncoderStarted || m_CurrentRenderEncoder != nil || m_CurrentBlitEncoder != nil"), std::string::npos);
+	EXPECT_NE(Source.find("m_CurrentDrawable != nil"), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderEncoderStarted || m_CurrentRenderEncoder != nil || m_CurrentBlitEncoder != nil"), std::string::npos);
 	EXPECT_NE(Source.find("SetCurrentBackbufferHasContents(false)"), std::string::npos);
 	EXPECT_NE(Source.find("Requested %u FSAA samples, using %u."), std::string::npos);
 }

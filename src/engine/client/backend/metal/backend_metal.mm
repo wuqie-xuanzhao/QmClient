@@ -1212,7 +1212,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pDescriptor.sAddressMode = MTLSamplerAddressModeClampToEdge;
 		pDescriptor.tAddressMode = MTLSamplerAddressModeClampToEdge;
 		m_ClampSampler = [m_Device newSamplerStateWithDescriptor:pDescriptor];
-		// Tile array textures use level 0 explicitly through a non-mip sampler.
+		// Tile array textures currently upload level 0 only. Do not sample
+		// uninitialized array mip levels while zooming out.
 		pDescriptor.mipFilter = MTLSamplerMipFilterNotMipmapped;
 		pDescriptor.sAddressMode = MTLSamplerAddressModeRepeat;
 		pDescriptor.tAddressMode = MTLSamplerAddressModeRepeat;
@@ -1958,7 +1959,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pLayer.maximumDrawableCount = 3;
 		pLayer.framebufferOnly = NO;
 		pLayer.presentsWithTransaction = NO;
-		// drawable 不可用时让本帧返回，避免合成器阻塞图形线程；下一帧可继续恢复。
+		// 允许 drawable 获取在池暂时耗尽时超时返回；下一帧重试，避免
+		// 合成器背压把渲染线程卡到下一次刷新甚至更久。
 		pLayer.allowsNextDrawableTimeout = YES;
 		pLayer.displaySyncEnabled = m_VSync;
 		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0);
@@ -2244,6 +2246,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_pCapabilities->m_MipMapping = true;
 			m_pCapabilities->m_NPOTTextures = true;
 			m_pCapabilities->m_2DArrayTextures = true;
+			// Metal implements the buffered tile/quad command paths with the same
+			// indexed uint32 stream used by the backend handlers below. Publishing
+			// these capabilities avoids the immediate fallback during zoom-heavy
+			// scenes and keeps CPU command encoding bounded by the buffer container.
+			m_pCapabilities->m_TileBuffering = true;
+			m_pCapabilities->m_QuadBuffering = true;
 			m_pCapabilities->m_ShaderSupport = true;
 			m_pCapabilities->m_QuadContainerBuffering = true;
 			m_pCapabilities->m_TextBuffering = true;
@@ -3446,8 +3454,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentCommandBuffer == nil || m_CommandBufferCommitted)
 			return false;
 		EndActiveEncoders();
+		const bool PresentationRequested = Present && HasValidBackbufferContents() && m_pLayer != nullptr;
 		bool CanPresent = false;
-		if(Present && HasValidBackbufferContents() && m_pLayer != nullptr)
+		if(PresentationRequested)
 		{
 			CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
 			const auto DrawableAcquireStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
@@ -3474,11 +3483,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 					CanPresent = true;
 				}
 			}
+			if(m_CurrentDrawable == nil && m_MetalPerfEnabled)
+				++m_MetalPerfDrawableUnavailableCount;
 		}
 		const bool FrameFinalized = CanPresent ?
 			m_FrameState.FinalizeFrameForPresent(true) == CMetalFrameState::EFinalizeResult::PRESENTED :
 			m_FrameState.FinalizeFrameWithoutPresent();
-		if(CanPresent && FrameFinalized)
+		const bool BackbufferPresented = CanPresent && FrameFinalized;
+		const bool PresentationSucceeded = !PresentationRequested || BackbufferPresented;
+		if(BackbufferPresented)
 			[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
@@ -3489,10 +3502,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			ReleaseMetalObject(m_CurrentDrawable);
 			m_CurrentDrawable = nil;
 		}
-		if(CanPresent && FrameFinalized)
+		if(BackbufferPresented)
 			SetCurrentBackbufferHasContents(false);
 		if(!WaitForCompletion)
-			return FrameFinalized;
+			return PresentationSucceeded;
 		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		[m_CurrentCommandBuffer waitUntilCompleted];
 		if(m_MetalPerfEnabled)
@@ -3500,7 +3513,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			++m_MetalPerfGpuCompletionWaitCount;
 			m_MetalPerfGpuCompletionWaitMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - GpuCompletionWaitStart).count();
 		}
-		return FrameFinalized && m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
+		return PresentationSucceeded && m_CurrentCommandBuffer.status == MTLCommandBufferStatusCompleted;
 	}
 
 	bool CommitCurrentFrameForReadback()
