@@ -1214,29 +1214,6 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 		Ui()->DoLabel(&PlayersOnline, aBuf, 12.0f, TEXTALIGN_MR);
 	}
 
-	// status box
-	{
-		CUIRect ServersOnline, PlayersOnline;
-		ServersPlayersOnline.HSplitMid(&PlayersOnline, &ServersOnline);
-
-		char aBuf[128];
-		if(ServerBrowser()->NumServers() != 1)
-			str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers());
-		else
-			str_format(aBuf, sizeof(aBuf), Localize("%d of %d server"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers());
-		Ui()->DoLabel(&ServersOnline, aBuf, 12.0f, TEXTALIGN_MR);
-
-		int NumPlayers = 0;
-		for(int i = 0; i < ServerBrowser()->NumSortedServers(); i++)
-			NumPlayers += ServerBrowser()->SortedGet(i)->m_NumFilteredPlayers;
-
-		if(NumPlayers != 1)
-			str_format(aBuf, sizeof(aBuf), Localize("%d players"), NumPlayers);
-		else
-			str_format(aBuf, sizeof(aBuf), Localize("%d player"), NumPlayers);
-		Ui()->DoLabel(&PlayersOnline, aBuf, 12.0f, TEXTALIGN_MR);
-	}
-
 	// address info
 	{
 		CUIRect ServerAddrLabel, ServerAddrEditBox;

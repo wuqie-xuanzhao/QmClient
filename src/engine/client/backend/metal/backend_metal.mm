@@ -85,7 +85,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		id<MTLBuffer> m_Buffer = nil;
 		size_t m_DataBytes = 0;
-		size_t m_LastUsedFrameSlot = gs_FrameSlotCount;
+		std::array<uint64_t, gs_FrameSlotCount> m_aLastUsedFrameIds{};
 		bool m_Allocated = false;
 		bool m_OneTimeUse = false;
 	};
@@ -164,6 +164,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	std::array<SFrameSlot, gs_FrameSlotCount> m_aFrameSlots{};
 	std::array<std::vector<STransientBuffer>, gs_FrameSlotCount> m_aTransientBuffers{};
 	std::array<std::vector<STransientBuffer>, gs_FrameSlotCount> m_aRetiredTransientBuffers{};
+	std::array<std::vector<STransientBuffer>, gs_FrameSlotCount> m_aRetiredBuffers{};
 	std::array<size_t, gs_FrameSlotCount> m_aTransientBufferPoolBytes{};
 	CMetalFrameState m_FrameState{gs_FrameSlotCount};
 	size_t m_CurrentFrameSlot = 0;
@@ -480,6 +481,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		for(STransientBuffer &Buffer : m_aRetiredTransientBuffers[Slot])
 			RecycleTransientBuffer(Slot, Buffer);
 		m_aRetiredTransientBuffers[Slot].clear();
+		for(STransientBuffer &Buffer : m_aRetiredBuffers[Slot])
+		{
+			SubBufferMemory(Buffer.m_DataBytes);
+			ReleaseMetalObject(Buffer.m_Buffer);
+		}
+		m_aRetiredBuffers[Slot].clear();
 	}
 
 	void RecycleTransientBuffer(size_t Slot, STransientBuffer Buffer)
@@ -510,8 +517,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				SubBufferMemory(Buffer.m_DataBytes);
 				ReleaseMetalObject(Buffer.m_Buffer);
 			}
+			for(STransientBuffer &Buffer : m_aRetiredBuffers[Slot])
+			{
+				SubBufferMemory(Buffer.m_DataBytes);
+				ReleaseMetalObject(Buffer.m_Buffer);
+			}
 			m_aTransientBuffers[Slot].clear();
 			m_aRetiredTransientBuffers[Slot].clear();
+			m_aRetiredBuffers[Slot].clear();
 			m_aTransientBufferPoolBytes[Slot] = 0;
 		}
 	}
@@ -819,6 +832,64 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		return true;
 	}
 
+	uint8_t BufferInFlightMask(const SBufferSlot &Buffer, bool IncludeCurrentRecording) const
+	{
+		if(m_State != EMetalBackendState::INITIALIZED || m_CurrentCommandBuffer == nil)
+			return 0;
+		uint8_t Mask = 0;
+		for(size_t Slot = 0; Slot < gs_FrameSlotCount; ++Slot)
+		{
+			const uint64_t FrameId = m_aFrameSlots[Slot].m_FrameId;
+			if(FrameId == 0 || Buffer.m_aLastUsedFrameIds[Slot] != FrameId || m_FrameState.SlotState(Slot) != CMetalFrameState::ESlotState::IN_FLIGHT)
+				continue;
+			if(!IncludeCurrentRecording && Slot == m_CurrentFrameSlot && !m_CommandBufferCommitted)
+				continue;
+			Mask |= static_cast<uint8_t>(1u << Slot);
+		}
+		return Mask;
+	}
+
+	bool IsBufferInFlight(const SBufferSlot &Buffer) const
+	{
+		return BufferInFlightMask(Buffer, false) != 0;
+	}
+
+	size_t PreferredBufferSlot(const SBufferSlot &Buffer) const
+	{
+		size_t PreferredSlot = m_CurrentFrameSlot;
+		uint64_t PreferredFrameId = 0;
+		for(size_t Slot = 0; Slot < gs_FrameSlotCount; ++Slot)
+		{
+			const uint64_t FrameId = Buffer.m_aLastUsedFrameIds[Slot];
+			if(FrameId != 0 && FrameId == m_aFrameSlots[Slot].m_FrameId && FrameId > PreferredFrameId)
+			{
+				PreferredFrameId = FrameId;
+				PreferredSlot = Slot;
+			}
+		}
+		return PreferredSlot;
+	}
+
+	bool WaitForBufferIdle(SBufferSlot &Buffer)
+	{
+		const uint8_t Mask = BufferInFlightMask(Buffer, false);
+		bool Success = true;
+		for(size_t Slot = 0; Slot < gs_FrameSlotCount; ++Slot)
+		{
+			if((Mask & (1u << Slot)) == 0)
+				continue;
+			SFrameSlot &Frame = m_aFrameSlots[Slot];
+			if(Frame.m_CommandBuffer == nil)
+				return false;
+			[Frame.m_CommandBuffer waitUntilCompleted];
+			const bool FrameSuccess = Frame.m_CommandBuffer.status == MTLCommandBufferStatusCompleted;
+			Success = Success && FrameSuccess;
+			m_FrameState.CompleteFrame({Frame.m_FrameId, Slot}, FrameSuccess);
+			ReleaseFrameSlotResources(Slot);
+		}
+		return Success;
+	}
+
 	void DestroyBuffer(int Slot)
 	{
 		if(Slot < 0 || static_cast<size_t>(Slot) >= m_vBufferSlots.size())
@@ -826,16 +897,32 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		SBufferSlot &Buffer = m_vBufferSlots[Slot];
 		if(!Buffer.m_Allocated)
 			return;
-		if(Buffer.m_OneTimeUse && Buffer.m_Buffer != nil)
+		const uint8_t CommittedMask = BufferInFlightMask(Buffer, false);
+		const bool CurrentRecordingUse = Buffer.m_Buffer != nil &&
+			(BufferInFlightMask(Buffer, true) & (1u << m_CurrentFrameSlot)) != 0 && !m_CommandBufferCommitted;
+		if(Buffer.m_Buffer != nil && CommittedMask != 0)
+		{
+			// 同一 buffer 可能被多个已提交帧槽引用，先等待所有 committed
+			// 用户；当前尚未提交的录制引用仍需延迟到当前槽完成。
+			if(!WaitForBufferIdle(Buffer))
+				WaitForGpuIdle();
+		}
+		bool DeferredRelease = false;
+		if(Buffer.m_Buffer != nil && CurrentRecordingUse)
+		{
+			if(Buffer.m_OneTimeUse)
+				m_aRetiredTransientBuffers[m_CurrentFrameSlot].push_back({Buffer.m_Buffer, Buffer.m_DataBytes});
+			else
+				m_aRetiredBuffers[m_CurrentFrameSlot].push_back({Buffer.m_Buffer, Buffer.m_DataBytes});
+			DeferredRelease = true;
+		}
+		if(Buffer.m_Buffer != nil && Buffer.m_OneTimeUse && !DeferredRelease)
 		{
 			// 即使尚未绑定到 encoder，也必须按当前 command buffer 所属 slot 延迟回收；
 			// 这样从池中取出后立刻删除不会重复扣减已计入的 buffer 内存。
-			const size_t LastUsedSlot = Buffer.m_LastUsedFrameSlot < gs_FrameSlotCount ? Buffer.m_LastUsedFrameSlot : m_CurrentFrameSlot;
+			const size_t LastUsedSlot = PreferredBufferSlot(Buffer);
 			// one-time buffer 必须等最后一次绑定它的 command buffer 完成后才能复用。
-			if(m_State == EMetalBackendState::INITIALIZED && m_CurrentCommandBuffer != nil && m_FrameState.CurrentFrameId() != 0 && m_FrameState.SlotState(LastUsedSlot) == CMetalFrameState::ESlotState::IN_FLIGHT)
-				m_aRetiredTransientBuffers[LastUsedSlot].push_back({Buffer.m_Buffer, Buffer.m_DataBytes});
-			else
-				RecycleTransientBuffer(LastUsedSlot, {Buffer.m_Buffer, Buffer.m_DataBytes});
+			RecycleTransientBuffer(LastUsedSlot, {Buffer.m_Buffer, Buffer.m_DataBytes});
 		}
 		else
 		{
@@ -1118,6 +1205,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		SBufferSlot &Buffer = m_vBufferSlots[Slot];
 		if(!MetalValidateBufferRange(Buffer.m_DataBytes, Offset, DataBytes))
 			return false;
+		if(!WaitForBufferIdle(Buffer))
+			return false;
 		if(Buffer.m_OneTimeUse)
 		{
 			if(pData != nullptr)
@@ -1135,7 +1224,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(Slot >= 0 && static_cast<size_t>(Slot) < m_vBufferSlots.size())
 		{
 			SBufferSlot &Existing = m_vBufferSlots[Slot];
-			if(Existing.m_Allocated && !OneTimeUse && !Existing.m_OneTimeUse && Existing.m_DataBytes == DataBytes)
+			if(Existing.m_Allocated && !OneTimeUse && !Existing.m_OneTimeUse && Existing.m_DataBytes == DataBytes && !IsBufferInFlight(Existing))
 			{
 				const bool Success = UpdateBuffer(Slot, 0, DataBytes, pData);
 				if(Success && m_MetalPerfEnabled)
@@ -1978,6 +2067,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
 		pLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
 		pLayer.maximumDrawableCount = 3;
+		// The private backbuffer is copied into the drawable with a blit encoder,
+		// therefore the drawable must remain usable outside a render pass.
 		pLayer.framebufferOnly = NO;
 		pLayer.presentsWithTransaction = NO;
 		// 允许 drawable 获取在池暂时耗尽时超时返回；下一帧重试，避免
@@ -2878,9 +2969,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const long long ClipBottom = ClampCoordinate(static_cast<long long>(State.m_ClipY) + std::max(State.m_ClipH, 0), Height);
 		const MTLScissorRect Rect{
 			static_cast<NSUInteger>(ClipLeft),
-			// 前端沿用 OpenGL 风格保存裁剪坐标，Metal 的 scissor 原点
-			// 在左上角，因此需要在后端转换为目标纹理坐标。
-			static_cast<NSUInteger>(std::max(static_cast<long long>(Height) - ClipBottom, 0LL)),
+			// CCommandBuffer 的裁剪坐标已经是左上角原点；Metal 的
+			// MTLScissorRect 也使用左上角原点，不要再次翻转 Y。
+			static_cast<NSUInteger>(ClipTop),
 			static_cast<NSUInteger>(std::max(ClipRight - ClipLeft, 0LL)),
 			static_cast<NSUInteger>(std::max(ClipBottom - ClipTop, 0LL))};
 		if(!m_HasBoundScissorRect || !ScissorRectsEqual(m_BoundScissorRect, Rect))
@@ -2898,8 +2989,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		[m_CurrentRenderEncoder setRenderPipelineState:pPipeline];
 		[m_CurrentRenderEncoder setVertexBuffer:Buffer.m_Buffer offset:0 atIndex:0];
-		if(Buffer.m_OneTimeUse)
-			Buffer.m_LastUsedFrameSlot = m_CurrentFrameSlot;
+		Buffer.m_aLastUsedFrameIds[m_CurrentFrameSlot] = m_aFrameSlots[m_CurrentFrameSlot].m_FrameId;
 		[m_CurrentRenderEncoder setVertexBuffer:m_aFrameSlots[m_CurrentFrameSlot].m_VertexBuffer offset:UniformOffset atIndex:1];
 		SetScissor(State);
 		return true;
@@ -3538,7 +3628,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
-		m_BackbufferContinuationPending = !Present && CurrentBackbufferHasContents();
+		// present 失败（通常是 drawable 暂时不可用）时，当前私有
+		// backbuffer 仍是下一段绘制的有效内容。保留同一 frame slot，
+		// 下一帧继续 load，避免失败 present 后清屏造成黑帧/闪烁。
+		m_BackbufferContinuationPending = CurrentBackbufferHasContents() && (!Present || !BackbufferPresented);
 		// 非 present 提交可能只是同一逻辑帧的 buffer slice；保留 drawable 和
 		// backbuffer 内容供下一段继续 load。真正 present 或无 backbuffer 时再释放。
 		if(Present || !CurrentBackbufferHasContents())

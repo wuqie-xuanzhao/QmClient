@@ -125,12 +125,13 @@ TEST(MetalBackendContract, TileArraysDoNotSampleUninitializedMipLevels)
 	EXPECT_NE(Source.find("m_TileClampSampler : m_TileRepeatSampler"), std::string::npos);
 }
 
-TEST(MetalBackendContract, ScissorKeepsFrontendCoordinateConversionAndCachesState)
+TEST(MetalBackendContract, ScissorUsesTopLeftCoordinatesAndCachesState)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t SetScissor = Source.find("void SetScissor(const CCommandBuffer::SState &State)");
 	ASSERT_NE(SetScissor, std::string::npos);
-	EXPECT_NE(Source.find("Height) - ClipBottom", SetScissor), std::string::npos);
+	EXPECT_NE(Source.find("static_cast<NSUInteger>(ClipTop)", SetScissor), std::string::npos);
+	EXPECT_EQ(Source.find("Height) - ClipBottom", SetScissor), std::string::npos);
 	EXPECT_NE(Source.find("m_HasBoundScissorRect", SetScissor), std::string::npos);
 	EXPECT_NE(Source.find("ScissorRectsEqual", SetScissor), std::string::npos);
 }
@@ -164,6 +165,7 @@ TEST(MetalBackendContract, MetalPerfReportsEffectiveLayerPresentationState)
 	EXPECT_NE(Source.find("display_sync=%d max_drawables=%lu presents_with_transaction=%d"), std::string::npos);
 	EXPECT_NE(Source.find("pLayer.displaySyncEnabled"), std::string::npos);
 	EXPECT_NE(Source.find("pLayer.maximumDrawableCount"), std::string::npos);
+	EXPECT_NE(Source.find("pLayer.framebufferOnly = NO;"), std::string::npos);
 }
 
 TEST(MetalBackendContract, ZeroSizedDrawableNeverBlocksOnNextDrawable)
@@ -233,14 +235,14 @@ TEST(MetalBackendContract, CommandBufferSlicesPreserveBackbufferUntilPresent)
 	EXPECT_NE(Source.find("const size_t Slot = ContinueBackbufferFrame ? m_CurrentFrameSlot"), std::string::npos);
 }
 
-TEST(MetalBackendContract, FailedPresentCannotTurnNextFrameIntoACommandBufferContinuation)
+TEST(MetalBackendContract, FailedPresentContinuesFromPrivateBackbuffer)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t Commit = Source.find("bool CommitCurrentFrame(bool Present, bool WaitForCompletion)");
 	const size_t Start = Source.find("const bool ContinueBackbufferFrame", Commit);
 	ASSERT_NE(Commit, std::string::npos);
 	ASSERT_NE(Start, std::string::npos);
-	EXPECT_NE(Source.find("m_BackbufferContinuationPending = !Present && CurrentBackbufferHasContents();", Commit), std::string::npos);
+	EXPECT_NE(Source.find("m_BackbufferContinuationPending = CurrentBackbufferHasContents() && (!Present || !BackbufferPresented);", Commit), std::string::npos);
 	EXPECT_NE(Source.find("m_CommandBufferCommitted && m_BackbufferContinuationPending && CurrentBackbufferHasContents()", Start), std::string::npos);
 }
 
@@ -596,12 +598,35 @@ TEST(MetalBackendContract, OneTimeBuffersAreRetiredPerFrameSlotBeforeReuse)
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	EXPECT_NE(Source.find("m_aTransientBuffers"), std::string::npos);
 	EXPECT_NE(Source.find("m_aRetiredTransientBuffers"), std::string::npos);
-	EXPECT_NE(Source.find("m_LastUsedFrameSlot"), std::string::npos);
-	EXPECT_NE(Source.find("m_aRetiredTransientBuffers[LastUsedSlot]"), std::string::npos);
-	EXPECT_NE(Source.find("LastUsedSlot = Buffer.m_LastUsedFrameSlot < gs_FrameSlotCount ? Buffer.m_LastUsedFrameSlot : m_CurrentFrameSlot"), std::string::npos);
+	EXPECT_NE(Source.find("m_aLastUsedFrameIds"), std::string::npos);
+	EXPECT_NE(Source.find("m_aRetiredTransientBuffers[m_CurrentFrameSlot]"), std::string::npos);
+	EXPECT_NE(Source.find("PreferredBufferSlot(Buffer)"), std::string::npos);
+	EXPECT_NE(Source.find("PreferredFrameId"), std::string::npos);
 	EXPECT_NE(Source.find("RecycleTransientBuffer(Slot, Buffer)"), std::string::npos);
 	EXPECT_NE(Source.find("m_aTransientBuffers[m_CurrentFrameSlot]"), std::string::npos);
 	EXPECT_NE(Source.find("transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu"), std::string::npos);
+}
+
+TEST(MetalBackendContract, PersistentBuffersAreNotMutatedOrReleasedWhileInFlight)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Destroy = Source.find("void DestroyBuffer(int Slot)");
+	const size_t Update = Source.find("bool UpdateBuffer(int Slot, size_t Offset, size_t DataBytes, const void *pData)");
+	const size_t Recreate = Source.find("bool RecreateBuffer(int Slot, size_t DataBytes, const void *pData, int Flags)");
+	const size_t Prepare = Source.find("bool PrepareContainerPipeline(const CCommandBuffer::SState &State");
+	ASSERT_NE(Destroy, std::string::npos);
+	ASSERT_NE(Update, std::string::npos);
+	ASSERT_NE(Recreate, std::string::npos);
+	ASSERT_NE(Prepare, std::string::npos);
+	EXPECT_NE(Source.find("WaitForBufferIdle(Buffer)", Destroy), std::string::npos);
+	EXPECT_NE(Source.find("WaitForGpuIdle()", Destroy), std::string::npos);
+	EXPECT_NE(Source.find("if(Buffer.m_OneTimeUse)", Destroy), std::string::npos);
+	EXPECT_NE(Source.find("m_aLastUsedFrameIds[m_CurrentFrameSlot]", Prepare), std::string::npos);
+	EXPECT_NE(Source.find("BufferInFlightMask(Buffer, false)"), std::string::npos);
+	EXPECT_NE(Source.find("for(size_t Slot = 0; Slot < gs_FrameSlotCount; ++Slot)"), std::string::npos);
+	EXPECT_NE(Source.find("WaitForBufferIdle(Buffer)", Update), std::string::npos);
+	EXPECT_NE(Source.find("!IsBufferInFlight(Existing)", Recreate), std::string::npos);
+	EXPECT_NE(Source.find("m_aLastUsedFrameIds[m_CurrentFrameSlot]", Prepare), std::string::npos);
 }
 
 TEST(MetalBackendContract, DrawableAcquisitionUsesTimeoutAndCompletedSlotsDoNotWait)
