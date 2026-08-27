@@ -117,6 +117,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		id<MTLBuffer> m_VertexBuffer = nil;
 		id<MTLCommandBuffer> m_CommandBuffer = nil;
+		id<MTLTexture> m_BackbufferTexture = nil;
+		uint32_t m_BackbufferWidth = 0;
+		uint32_t m_BackbufferHeight = 0;
+		size_t m_BackbufferDataBytes = 0;
+		bool m_BackbufferHasContents = false;
 		size_t m_VertexOffset = 0;
 		uint64_t m_FrameId = 0;
 	};
@@ -156,10 +161,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	id<MTLRenderCommandEncoder> m_CurrentRenderEncoder = nil;
 	id<MTLBlitCommandEncoder> m_CurrentBlitEncoder = nil;
 	id<CAMetalDrawable> m_CurrentDrawable = nil;
-	id<MTLTexture> m_BackbufferTexture = nil;
-	uint32_t m_BackbufferWidth = 0;
-	uint32_t m_BackbufferHeight = 0;
-	size_t m_BackbufferDataBytes = 0;
 	id<MTLTexture> m_MultiSampleTexture = nil;
 	id<MTLBuffer> m_LastPresentedReadback = nil;
 	id<MTLCommandBuffer> m_LastPresentedCommandBuffer = nil;
@@ -177,7 +178,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	IStorage *m_pStorage = nullptr;
 	bool m_CommandBufferCommitted = false;
 	bool m_RenderEncoderStarted = false;
-	bool m_BackbufferHasContents = false;
 	bool m_SkipCurrentFrame = false;
 	uint32_t m_MultiSamplingCount = 0;
 	uint32_t m_MultiSampleTextureWidth = 0;
@@ -410,8 +410,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		ArraySourceHeight = SourceHeight;
 		if(ArraySourceWidth % 16 == 0 && ArraySourceHeight % 16 == 0)
 			return true;
-		ArraySourceWidth = static_cast<size_t>(std::max(HighestBit(static_cast<int>(SourceWidth)), 16));
-		ArraySourceHeight = static_cast<size_t>(std::max(HighestBit(static_cast<int>(SourceHeight)), 16));
+		// 图集必须按 16x16 tile 切片。向上补齐而不是向下取幂，避免
+		// 非整除尺寸的尾部 tile 被裁掉后在低 Zoom 时显示为黑块。
+		if(SourceWidth > std::numeric_limits<size_t>::max() - 15 || SourceHeight > std::numeric_limits<size_t>::max() - 15)
+			return false;
+		ArraySourceWidth = ((SourceWidth + 15) / 16) * 16;
+		ArraySourceHeight = ((SourceHeight + 15) / 16) * 16;
+		if(ArraySourceWidth > static_cast<size_t>(std::numeric_limits<int>::max()) || ArraySourceHeight > static_cast<size_t>(std::numeric_limits<int>::max()))
+			return false;
 		return ArraySourceWidth % 16 == 0 && ArraySourceHeight % 16 == 0;
 	}
 
@@ -511,28 +517,31 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_MultiSampleTextureHeight = 0;
 		m_MultiSampleTextureSampleCount = 0;
 		m_MultiSampleTextureDataBytes = 0;
-		m_BackbufferHasContents = false;
 	}
 
-	void DestroyBackbufferTexture()
+	void DestroyBackbufferTexture(size_t Slot)
 	{
-		if(m_BackbufferTexture != nil)
+		if(Slot >= m_aFrameSlots.size())
+			return;
+		SFrameSlot &Frame = m_aFrameSlots[Slot];
+		if(Frame.m_BackbufferTexture != nil)
 		{
-			SubTextureMemory(m_BackbufferDataBytes);
-			ReleaseMetalObject(m_BackbufferTexture);
+			SubTextureMemory(Frame.m_BackbufferDataBytes);
+			ReleaseMetalObject(Frame.m_BackbufferTexture);
 		}
-		m_BackbufferTexture = nil;
-		m_BackbufferWidth = 0;
-		m_BackbufferHeight = 0;
-		m_BackbufferDataBytes = 0;
-		m_BackbufferHasContents = false;
+		Frame.m_BackbufferTexture = nil;
+		Frame.m_BackbufferWidth = 0;
+		Frame.m_BackbufferHeight = 0;
+		Frame.m_BackbufferDataBytes = 0;
+		Frame.m_BackbufferHasContents = false;
 	}
 
 	bool EnsureBackbufferTexture(uint32_t Width, uint32_t Height)
 	{
-		if(m_BackbufferTexture != nil && m_BackbufferWidth == Width && m_BackbufferHeight == Height)
+		SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		if(Frame.m_BackbufferTexture != nil && Frame.m_BackbufferWidth == Width && Frame.m_BackbufferHeight == Height)
 			return true;
-		DestroyBackbufferTexture();
+		DestroyBackbufferTexture(m_CurrentFrameSlot);
 		if(m_Device == nil || Width == 0 || Height == 0)
 			return false;
 		size_t PixelCount = 0;
@@ -547,22 +556,38 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pDescriptor.mipmapLevelCount = 1;
 		pDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
 		pDescriptor.storageMode = MTLStorageModePrivate;
-		m_BackbufferTexture = [m_Device newTextureWithDescriptor:pDescriptor];
+		Frame.m_BackbufferTexture = [m_Device newTextureWithDescriptor:pDescriptor];
 #if !__has_feature(objc_arc)
 		[pDescriptor release];
 #endif
-		if(m_BackbufferTexture == nil)
+		if(Frame.m_BackbufferTexture == nil)
 			return false;
-		m_BackbufferWidth = Width;
-		m_BackbufferHeight = Height;
-		m_BackbufferDataBytes = DataBytes;
+		Frame.m_BackbufferWidth = Width;
+		Frame.m_BackbufferHeight = Height;
+		Frame.m_BackbufferDataBytes = DataBytes;
 		AddTextureMemory(DataBytes);
 		return true;
 	}
 
 	bool HasValidBackbufferContents() const
 	{
-		return m_BackbufferHasContents && m_BackbufferTexture != nil && m_BackbufferWidth == m_DrawableWidth && m_BackbufferHeight == m_DrawableHeight && m_DrawableWidth > 0 && m_DrawableHeight > 0;
+		const SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		return Frame.m_BackbufferHasContents && Frame.m_BackbufferTexture != nil && Frame.m_BackbufferWidth == m_DrawableWidth && Frame.m_BackbufferHeight == m_DrawableHeight && m_DrawableWidth > 0 && m_DrawableHeight > 0;
+	}
+
+	id<MTLTexture> CurrentBackbufferTexture() const
+	{
+		return m_aFrameSlots[m_CurrentFrameSlot].m_BackbufferTexture;
+	}
+
+	bool CurrentBackbufferHasContents() const
+	{
+		return m_aFrameSlots[m_CurrentFrameSlot].m_BackbufferHasContents;
+	}
+
+	void SetCurrentBackbufferHasContents(bool HasContents)
+	{
+		m_aFrameSlots[m_CurrentFrameSlot].m_BackbufferHasContents = HasContents;
 	}
 
 	bool EnsureMultiSampleTexture(uint32_t Width, uint32_t Height)
@@ -606,11 +631,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		EndActiveEncoders();
 		DestroyAllRenderTargets();
 		DestroyMultiSampleTexture();
-		DestroyBackbufferTexture();
+		for(size_t Slot = 0; Slot < m_aFrameSlots.size(); ++Slot)
+			DestroyBackbufferTexture(Slot);
 		ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentDrawable = nil;
 		m_FrameState.ClearReadbackPresented();
-		m_BackbufferHasContents = false;
+		for(SFrameSlot &Frame : m_aFrameSlots)
+			Frame.m_BackbufferHasContents = false;
 		m_RenderTargetState.Reset();
 		ReleaseMetalObject(m_LastPresentedReadback);
 		m_LastPresentedReadback = nil;
@@ -671,7 +698,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// resize 或重初始化边界不能继续复用该 drawable。
 		ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentDrawable = nil;
-		m_BackbufferHasContents = false;
+		for(SFrameSlot &Frame : m_aFrameSlots)
+			Frame.m_BackbufferHasContents = false;
 		m_FrameState.DrainFrames();
 	}
 
@@ -2296,9 +2324,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			if(!EnsureMultiSampleTexture(m_DrawableWidth, m_DrawableHeight))
 				return false;
-			return BeginRenderEncoderForTexture(m_MultiSampleTexture, m_DrawableWidth, m_DrawableHeight, ClearColor, m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear, true, m_BackbufferTexture);
+			return BeginRenderEncoderForTexture(m_MultiSampleTexture, m_DrawableWidth, m_DrawableHeight, ClearColor, CurrentBackbufferHasContents() ? MTLLoadActionLoad : MTLLoadActionClear, true, CurrentBackbufferTexture());
 		}
-		return BeginRenderEncoderForTexture(m_BackbufferTexture, m_DrawableWidth, m_DrawableHeight, ClearColor, m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear, true);
+		return BeginRenderEncoderForTexture(CurrentBackbufferTexture(), m_DrawableWidth, m_DrawableHeight, ClearColor, CurrentBackbufferHasContents() ? MTLLoadActionLoad : MTLLoadActionClear, true);
 	}
 
 	bool BeginRenderEncoderForTexture(id<MTLTexture> Texture, uint32_t Width, uint32_t Height, const MTLClearColor &ClearColor, MTLLoadAction LoadAction, bool Backbuffer, id<MTLTexture> ResolveTexture = nil)
@@ -2327,7 +2355,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_RenderEncoderStarted = true;
 		if(Backbuffer)
 		{
-			m_BackbufferHasContents = true;
+			SetCurrentBackbufferHasContents(true);
 			m_FrameState.ClearReadbackPresented();
 		}
 		return true;
@@ -3102,7 +3130,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		else
 		{
-			m_BackbufferHasContents = false;
+			SetCurrentBackbufferHasContents(false);
 			if(BeginRenderEncoder(ClearColor))
 				return;
 		}
@@ -3356,15 +3384,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		id<MTLRenderPipelineState> Pipeline = m_aPipelineStates[PipelineIndex(true, false, EMetalBlendMode::NONE)];
 		if(Pipeline == nil || m_CurrentCommandBuffer == nil)
 			return false;
-		if(m_BackbufferTexture == nil && !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+		if(CurrentBackbufferTexture() == nil && !BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
 			return false;
 		EndActiveEncoders();
-		if(m_BackbufferTexture == nil || !BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, MTLClearColorMake(0.0, 0.0, 0.0, 1.0), MTLLoadActionClear, false))
+		if(CurrentBackbufferTexture() == nil || !BeginRenderEncoderForTexture(Target.m_Texture, Target.m_Width, Target.m_Height, MTLClearColorMake(0.0, 0.0, 0.0, 1.0), MTLLoadActionClear, false))
 			return false;
 		[m_CurrentRenderEncoder setRenderPipelineState:Pipeline];
 		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:VertexOffset atIndex:0];
 		[m_CurrentRenderEncoder setVertexBuffer:Frame.m_VertexBuffer offset:UniformOffset atIndex:1];
-		[m_CurrentRenderEncoder setFragmentTexture:m_BackbufferTexture atIndex:0];
+		[m_CurrentRenderEncoder setFragmentTexture:CurrentBackbufferTexture() atIndex:0];
 		[m_CurrentRenderEncoder setFragmentSamplerState:m_ClampSampler atIndex:0];
 		[m_CurrentRenderEncoder setScissorRect:MTLScissorRect{0, 0, Target.m_Width, Target.m_Height}];
 		[m_CurrentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6 indexType:MTLIndexTypeUInt32 indexBuffer:m_QuadIndexBuffer indexBufferOffset:0];
@@ -3416,7 +3444,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 				if(m_CurrentBlitEncoder != nil)
 				{
-					[m_CurrentBlitEncoder copyFromTexture:m_BackbufferTexture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(m_DrawableWidth, m_DrawableHeight, 1) toTexture:m_CurrentDrawable.texture destinationSlice:0 destinationLevel:0 destinationOrigin:MTLOriginMake(0, 0, 0)];
+					[m_CurrentBlitEncoder copyFromTexture:CurrentBackbufferTexture() sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(m_DrawableWidth, m_DrawableHeight, 1) toTexture:m_CurrentDrawable.texture destinationSlice:0 destinationLevel:0 destinationOrigin:MTLOriginMake(0, 0, 0)];
 					[m_CurrentBlitEncoder endEncoding];
 					ReleaseMetalObject(m_CurrentBlitEncoder);
 					m_CurrentBlitEncoder = nil;
@@ -3433,13 +3461,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_CommandBufferCommitted = true;
 		// 非 present 提交可能只是同一逻辑帧的 buffer slice；保留 drawable 和
 		// backbuffer 内容供下一段继续 load。真正 present 或无 backbuffer 时再释放。
-		if(Present || !m_BackbufferHasContents)
+		if(Present || !CurrentBackbufferHasContents())
 		{
 			ReleaseMetalObject(m_CurrentDrawable);
 			m_CurrentDrawable = nil;
 		}
 		if(CanPresent && FrameFinalized)
-			m_BackbufferHasContents = false;
+			SetCurrentBackbufferHasContents(false);
 		if(!WaitForCompletion)
 			return FrameFinalized;
 		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
@@ -3505,9 +3533,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		if(m_CurrentCommandBuffer == nil || Width == 0 || Height == 0)
 			return nil;
-		if(!HasValidBackbufferContents() || m_BackbufferWidth != Width || m_BackbufferHeight != Height)
+		const SFrameSlot &Frame = m_aFrameSlots[m_CurrentFrameSlot];
+		if(!HasValidBackbufferContents() || Frame.m_BackbufferWidth != Width || Frame.m_BackbufferHeight != Height)
 			return nil;
-		return EncodeTextureReadback(m_BackbufferTexture, Width, Height, RowBytes);
+		return EncodeTextureReadback(CurrentBackbufferTexture(), Width, Height, RowBytes);
 	}
 
 	void StoreLastPresentedReadback(id<MTLBuffer> Readback, uint32_t Width, uint32_t Height, size_t RowBytes)
@@ -3654,7 +3683,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			}
 			if(m_MetalPerfEnabled)
 				++m_MetalPerfEncoderCount;
-			[m_CurrentBlitEncoder copyFromTexture:m_BackbufferTexture sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(X, Y, 0) sourceSize:MTLSizeMake(1, 1, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes];
+			[m_CurrentBlitEncoder copyFromTexture:CurrentBackbufferTexture() sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(X, Y, 0) sourceSize:MTLSizeMake(1, 1, 1) toBuffer:Readback destinationOffset:0 destinationBytesPerRow:RowBytes destinationBytesPerImage:RowBytes];
 			if(!CommitCurrentFrame(true, true))
 			{
 				ReleaseMetalObject(VideoReadback);
@@ -3721,7 +3750,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		// 仅剩上一帧 backbuffer 内容时可以安全丢弃；切换采样数会在下一次
 		// BeginRenderEncoder 中重新清屏，不能把旧内容误当作当前附件。
-		m_BackbufferHasContents = false;
+		SetCurrentBackbufferHasContents(false);
 		if(SupportedCount != RequestedCount)
 			log_warn("gfx/metal", "Requested %u FSAA samples, using %u.", RequestedCount, SupportedCount);
 		if(SupportedCount == m_MultiSamplingCount)
@@ -3801,8 +3830,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// 命令缓冲区可能因容量耗尽在同一逻辑帧中被切分。只要上一段已经
 		// 获取了 backbuffer drawable，就跨段保留它并以 load 继续绘制，直到
 		// 真正的 Swap/present；否则前半帧会被丢弃，表现为闪烁和抖动。
-		const bool ContinueBackbufferFrame = m_CommandBufferCommitted && m_BackbufferHasContents;
-		const size_t Slot = m_FrameId == 0 ? 0 : (m_CurrentFrameSlot + 1) % gs_FrameSlotCount;
+		const bool ContinueBackbufferFrame = m_CommandBufferCommitted && CurrentBackbufferHasContents();
+		// 同一逻辑帧因命令缓冲区分片时继续使用当前 slot，避免把仍在 GPU
+		// 使用的 backbuffer 交给另一个 slot。正常帧仍按 slot 轮转并行执行。
+		const size_t Slot = ContinueBackbufferFrame ? m_CurrentFrameSlot : (m_FrameId == 0 ? 0 : (m_CurrentFrameSlot + 1) % gs_FrameSlotCount);
 		SFrameSlot &Frame = m_aFrameSlots[Slot];
 		if(m_FrameState.SlotState(Slot) == CMetalFrameState::ESlotState::IN_FLIGHT && Frame.m_CommandBuffer != nil)
 		{
@@ -3833,7 +3864,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(!ContinueBackbufferFrame)
 		{
 			m_CurrentDrawable = nil;
-			m_BackbufferHasContents = false;
+			Frame.m_BackbufferHasContents = false;
 		}
 		m_SkipCurrentFrame = false;
 		m_RenderTargetState.Reset();

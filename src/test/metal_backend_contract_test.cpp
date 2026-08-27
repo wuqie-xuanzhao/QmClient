@@ -147,10 +147,12 @@ TEST(MetalBackendContract, CommandBufferSlicesPreserveBackbufferUntilPresent)
 	const size_t BeginFrame = Source.find("if(!m_FrameState.BeginFrame(Slot))", Continue);
 	ASSERT_NE(Continue, std::string::npos);
 	ASSERT_NE(BeginFrame, std::string::npos);
-	EXPECT_NE(Source.find("m_CommandBufferCommitted && m_BackbufferHasContents", Continue), std::string::npos);
+	EXPECT_NE(Source.find("m_CommandBufferCommitted && CurrentBackbufferHasContents()", Continue), std::string::npos);
 	EXPECT_NE(Source.find("if(!ContinueBackbufferFrame)\n\t\t\tReleaseMetalObject(m_CurrentDrawable);", BeginFrame), std::string::npos);
 	EXPECT_NE(Source.find("if(!ContinueBackbufferFrame)\n\t\t{\n\t\t\tm_CurrentDrawable = nil;", BeginFrame), std::string::npos);
-	EXPECT_NE(Source.find("if(Present || !m_BackbufferHasContents)", Source.find("bool CommitCurrentFrame")), std::string::npos);
+	EXPECT_NE(Source.find("if(Present || !CurrentBackbufferHasContents())", Source.find("bool CommitCurrentFrame")), std::string::npos);
+	EXPECT_NE(Source.find("id<MTLTexture> m_BackbufferTexture = nil;"), std::string::npos);
+	EXPECT_NE(Source.find("const size_t Slot = ContinueBackbufferFrame ? m_CurrentFrameSlot"), std::string::npos);
 }
 
 TEST(MetalBackendContract, DrawableSkipDoesNotDropRenderTargetReadback)
@@ -175,7 +177,7 @@ TEST(MetalBackendContract, GpuIdleInvalidatesRetainedDrawable)
 	ASSERT_NE(Drain, std::string::npos);
 	const size_t Release = Source.find("ReleaseMetalObject(m_CurrentDrawable);", WaitForGpuIdle);
 	const size_t ResetDrawable = Source.find("m_CurrentDrawable = nil;", WaitForGpuIdle);
-	const size_t ResetContents = Source.find("m_BackbufferHasContents = false;", WaitForGpuIdle);
+	const size_t ResetContents = Source.find("Frame.m_BackbufferHasContents = false;", WaitForGpuIdle);
 	ASSERT_NE(Release, std::string::npos);
 	ASSERT_NE(ResetDrawable, std::string::npos);
 	ASSERT_NE(ResetContents, std::string::npos);
@@ -190,6 +192,8 @@ TEST(MetalBackendContract, TextureArrayPathConvertsAtlasAndSamplesArrayLayers)
 	EXPECT_NE(Source.find("m_TextureArray"), std::string::npos);
 	EXPECT_NE(Source.find("MetalTextureArrayLayout"), std::string::npos);
 	EXPECT_NE(Source.find("Texture2DTo3D"), std::string::npos);
+	EXPECT_NE(Source.find("向上补齐而不是向下取幂"), std::string::npos);
+	EXPECT_NE(Source.find("ArraySourceWidth = ((SourceWidth + 15) / 16) * 16"), std::string::npos);
 	EXPECT_NE(Source.find("UploadTextureArray"), std::string::npos);
 	EXPECT_NE(Source.find("CMD_RENDER_TEX3D"), std::string::npos);
 	EXPECT_NE(Source.find("TextureArrayPipelineIndex"), std::string::npos);
@@ -227,8 +231,8 @@ TEST(MetalBackendContract, RenderTargetsOwnAttachmentsAndRestoreDrawableRenderin
 	EXPECT_NE(Source.find("m_RenderTargetState"), std::string::npos);
 	EXPECT_NE(Source.find("BeginRenderEncoderForTexture"), std::string::npos);
 	EXPECT_NE(Source.find("const size_t UniformOffset = (VertexOffset + VertexBytes + 255) & ~size_t(255)"), std::string::npos);
-	EXPECT_NE(Source.find("m_BackbufferHasContents ? MTLLoadActionLoad : MTLLoadActionClear"), std::string::npos);
-	EXPECT_NE(Source.find("[m_CurrentRenderEncoder setFragmentTexture:m_BackbufferTexture atIndex:0]"), std::string::npos);
+	EXPECT_NE(Source.find("CurrentBackbufferHasContents() ? MTLLoadActionLoad : MTLLoadActionClear"), std::string::npos);
+	EXPECT_NE(Source.find("[m_CurrentRenderEncoder setFragmentTexture:CurrentBackbufferTexture() atIndex:0]"), std::string::npos);
 	EXPECT_NE(Source.find("EndActiveEncoders();\n\t\treturn true;\n\t}\n\n\tvoid EndActiveEncoders()"), std::string::npos);
 	EXPECT_NE(Source.find("m_RenderTargets = true"), std::string::npos);
 	EXPECT_NE(Source.find("m_RenderTargetGaussianBlur = true"), std::string::npos);
@@ -311,7 +315,7 @@ TEST(MetalBackendContract, MultisampleBackbufferUsesResolveAttachmentAndRealDevi
 	EXPECT_NE(Source.find("CreatePipelineStates(m_MultiSamplingCount, m_aMultiSamplePipelineStates)"), std::string::npos);
 	EXPECT_NE(Source.find("const size_t UniformOffset = (VertexOffset + Bytes + 255) & ~size_t(255)"), std::string::npos);
 	EXPECT_NE(Source.find("m_CurrentDrawable != nil || m_RenderEncoderStarted || m_CurrentRenderEncoder != nil || m_CurrentBlitEncoder != nil"), std::string::npos);
-	EXPECT_NE(Source.find("m_BackbufferHasContents = false;"), std::string::npos);
+	EXPECT_NE(Source.find("SetCurrentBackbufferHasContents(false)"), std::string::npos);
 	EXPECT_NE(Source.find("Requested %u FSAA samples, using %u."), std::string::npos);
 }
 
