@@ -2965,15 +2965,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		};
 		const long long ClipLeft = ClampCoordinate(State.m_ClipX, Width);
 		const long long ClipRight = ClampCoordinate(static_cast<long long>(State.m_ClipX) + std::max(State.m_ClipW, 0), Width);
-		const long long ClipTop = ClampCoordinate(State.m_ClipY, Height);
-		const long long ClipBottom = ClampCoordinate(static_cast<long long>(State.m_ClipY) + std::max(State.m_ClipH, 0), Height);
+		// CGraphics_Threaded::ClipEnable stores the OpenGL-style bottom-left Y
+		// coordinate. Metal uses a top-left scissor origin, so convert back to
+		// the presented texture coordinate system exactly once here.
+		const long long ClipBottom = ClampCoordinate(State.m_ClipY, Height);
+		const long long ClipTop = ClampCoordinate(static_cast<long long>(State.m_ClipY) + std::max(State.m_ClipH, 0), Height);
 		const MTLScissorRect Rect{
 			static_cast<NSUInteger>(ClipLeft),
-			// CCommandBuffer 的裁剪坐标已经是左上角原点；Metal 的
-			// MTLScissorRect 也使用左上角原点，不要再次翻转 Y。
-			static_cast<NSUInteger>(ClipTop),
+			static_cast<NSUInteger>(std::max(static_cast<long long>(Height) - ClipTop, 0LL)),
 			static_cast<NSUInteger>(std::max(ClipRight - ClipLeft, 0LL)),
-			static_cast<NSUInteger>(std::max(ClipBottom - ClipTop, 0LL))};
+			static_cast<NSUInteger>(std::max(ClipTop - ClipBottom, 0LL))};
 		if(!m_HasBoundScissorRect || !ScissorRectsEqual(m_BoundScissorRect, Rect))
 		{
 			[m_CurrentRenderEncoder setScissorRect:Rect];
@@ -3587,7 +3588,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(m_CurrentCommandBuffer == nil || m_CommandBufferCommitted)
 			return false;
 		EndActiveEncoders();
-		const bool PresentationRequested = Present && HasValidBackbufferContents() && m_pLayer != nullptr;
+		const bool BackbufferReady = HasValidBackbufferContents();
+		// CAMetalLayer is configured with allowsNextDrawableTimeout. If the
+		// drawable pool is temporarily exhausted, nextDrawable returns nil and
+		// the private backbuffer is kept for the next command-buffer slice. Do
+		// not add an application-side in-flight limit here: that would turn an
+		// uncapped, no-VSync render loop into an artificial display-refresh cap.
+		const bool PresentationRequested = Present && BackbufferReady && m_pLayer != nullptr;
 		bool CanPresent = false;
 		if(PresentationRequested)
 		{
@@ -3625,7 +3632,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const bool BackbufferPresented = CanPresent && FrameFinalized;
 		const bool PresentationSucceeded = !PresentationRequested || BackbufferPresented;
 		if(BackbufferPresented)
+		{
 			[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
+		}
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
 		// present 失败（通常是 drawable 暂时不可用）时，当前私有

@@ -125,15 +125,25 @@ TEST(MetalBackendContract, TileArraysDoNotSampleUninitializedMipLevels)
 	EXPECT_NE(Source.find("m_TileClampSampler : m_TileRepeatSampler"), std::string::npos);
 }
 
-TEST(MetalBackendContract, ScissorUsesTopLeftCoordinatesAndCachesState)
+TEST(MetalBackendContract, ScissorConvertsFromOpenGLCoordinatesAndCachesState)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t SetScissor = Source.find("void SetScissor(const CCommandBuffer::SState &State)");
 	ASSERT_NE(SetScissor, std::string::npos);
-	EXPECT_NE(Source.find("static_cast<NSUInteger>(ClipTop)", SetScissor), std::string::npos);
-	EXPECT_EQ(Source.find("Height) - ClipBottom", SetScissor), std::string::npos);
+	EXPECT_NE(Source.find("Height) - ClipTop", SetScissor), std::string::npos);
+	EXPECT_NE(Source.find("ClipTop - ClipBottom", SetScissor), std::string::npos);
 	EXPECT_NE(Source.find("m_HasBoundScissorRect", SetScissor), std::string::npos);
 	EXPECT_NE(Source.find("ScissorRectsEqual", SetScissor), std::string::npos);
+}
+
+TEST(MetalBackendContract, DrawablePoolUsesTimeoutInsteadOfArtificialFrameCap)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Commit = Source.find("bool CommitCurrentFrame(bool Present, bool WaitForCompletion)");
+	ASSERT_NE(Commit, std::string::npos);
+	EXPECT_EQ(Source.find("PresentBackpressure", Commit), std::string::npos);
+	EXPECT_EQ(Source.find("m_pPresentTracker", Commit), std::string::npos);
+	EXPECT_NE(Source.find("allowsNextDrawableTimeout", 0), std::string::npos);
 }
 
 TEST(MetalBackendContract, RecreatedMultisampleAttachmentStartsWithClear)
