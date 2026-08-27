@@ -103,6 +103,74 @@ TEST(MetalBackendContract, VSyncMirrorsTheExplicitGraphicsSetting)
 	EXPECT_NE(Source.find("layer vsync changed: requested=%d display_sync=%d"), std::string::npos);
 }
 
+TEST(MetalBackendContract, ZeroSizedDrawableNeverBlocksOnNextDrawable)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t BeginEncoder = Source.find("bool BeginRenderEncoder(const MTLClearColor &ClearColor)");
+	const size_t NextDrawable = Source.find("[pLayer nextDrawable]", BeginEncoder);
+	ASSERT_NE(BeginEncoder, std::string::npos);
+	ASSERT_NE(NextDrawable, std::string::npos);
+	const size_t ZeroSizeGuard = Source.find("m_DrawableWidth == 0 || m_DrawableHeight == 0", BeginEncoder);
+	ASSERT_NE(ZeroSizeGuard, std::string::npos);
+	EXPECT_LT(ZeroSizeGuard, NextDrawable);
+	EXPECT_NE(Source.find("m_SkipCurrentFrame = true", ZeroSizeGuard), std::string::npos);
+}
+
+TEST(MetalBackendContract, PresentedDrawableIsReleasedAfterCommit)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Commit = Source.find("[m_CurrentCommandBuffer commit];");
+	ASSERT_NE(Commit, std::string::npos);
+	const size_t Release = Source.find("ReleaseMetalObject(m_CurrentDrawable);", Commit);
+	ASSERT_NE(Release, std::string::npos);
+	EXPECT_LT(Commit, Release);
+	EXPECT_NE(Source.find("m_CurrentDrawable = nil;", Release), std::string::npos);
+}
+
+TEST(MetalBackendContract, CommandBufferSlicesPreserveBackbufferUntilPresent)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Continue = Source.find("const bool ContinueBackbufferFrame");
+	const size_t BeginFrame = Source.find("if(!m_FrameState.BeginFrame(Slot))", Continue);
+	ASSERT_NE(Continue, std::string::npos);
+	ASSERT_NE(BeginFrame, std::string::npos);
+	EXPECT_NE(Source.find("m_CommandBufferCommitted && m_CurrentDrawable != nil && m_BackbufferHasContents", Continue), std::string::npos);
+	EXPECT_NE(Source.find("if(!ContinueBackbufferFrame)\n\t\t\tReleaseMetalObject(m_CurrentDrawable);", BeginFrame), std::string::npos);
+	EXPECT_NE(Source.find("if(!ContinueBackbufferFrame)\n\t\t{\n\t\t\tm_CurrentDrawable = nil;", BeginFrame), std::string::npos);
+	EXPECT_NE(Source.find("if(Present || !m_BackbufferHasContents)", Source.find("bool CommitCurrentFrame")), std::string::npos);
+}
+
+TEST(MetalBackendContract, DrawableSkipDoesNotDropRenderTargetReadback)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Skip = Source.find("bool SkipCurrentFrameCommand");
+	const size_t SwitchEnd = Source.find("default:", Skip);
+	ASSERT_NE(Skip, std::string::npos);
+	ASSERT_NE(SwitchEnd, std::string::npos);
+	const std::string SkipCases = Source.substr(Skip, SwitchEnd - Skip);
+	EXPECT_EQ(SkipCases.find("CMD_RENDER_TARGET_READBACK"), std::string::npos);
+	EXPECT_EQ(SkipCases.find("CMD_TRY_SWAP_AND_READ_PIXEL"), std::string::npos);
+	EXPECT_NE(Source.find("bool Cmd_RenderTarget_Readback"), std::string::npos);
+}
+
+TEST(MetalBackendContract, GpuIdleInvalidatesRetainedDrawable)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t WaitForGpuIdle = Source.find("void WaitForGpuIdle()");
+	const size_t Drain = Source.find("m_FrameState.DrainFrames();", WaitForGpuIdle);
+	ASSERT_NE(WaitForGpuIdle, std::string::npos);
+	ASSERT_NE(Drain, std::string::npos);
+	const size_t Release = Source.find("ReleaseMetalObject(m_CurrentDrawable);", WaitForGpuIdle);
+	const size_t ResetDrawable = Source.find("m_CurrentDrawable = nil;", WaitForGpuIdle);
+	const size_t ResetContents = Source.find("m_BackbufferHasContents = false;", WaitForGpuIdle);
+	ASSERT_NE(Release, std::string::npos);
+	ASSERT_NE(ResetDrawable, std::string::npos);
+	ASSERT_NE(ResetContents, std::string::npos);
+	EXPECT_LT(Release, Drain);
+	EXPECT_LT(ResetDrawable, Drain);
+	EXPECT_LT(ResetContents, Drain);
+}
+
 TEST(MetalBackendContract, TextureArrayPathConvertsAtlasAndSamplesArrayLayers)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");

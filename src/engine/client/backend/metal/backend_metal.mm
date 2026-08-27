@@ -594,6 +594,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(Frame.m_CommandBuffer != nil)
 				[Frame.m_CommandBuffer waitUntilCompleted];
 		}
+		// 已提交但未 present 的分片可能仍持有旧 layer drawable。
+		// resize 或重初始化边界不能继续复用该 drawable。
+		ReleaseMetalObject(m_CurrentDrawable);
+		m_CurrentDrawable = nil;
+		m_BackbufferHasContents = false;
 		m_FrameState.DrainFrames();
 	}
 
@@ -2173,6 +2178,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(m_CurrentCommandBuffer == nil || m_pLayer == nullptr)
 			return false;
+		// 窗口最小化或 resize 过渡期间没有合法 drawable，不能调用 nextDrawable：
+		// CAMetalLayer 可能等待 drawable 超时，导致图形线程卡住。
+		if(m_DrawableWidth == 0 || m_DrawableHeight == 0)
+		{
+			m_SkipCurrentFrame = true;
+			if(m_MetalPerfEnabled)
+				++m_MetalPerfDrawableUnavailableCount;
+			return false;
+		}
 		if(m_CurrentDrawable == nil)
 		{
 			CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
@@ -3293,6 +3307,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
+		// 非 present 提交可能只是同一逻辑帧的 buffer slice；保留 drawable 和
+		// backbuffer 内容供下一段继续 load。真正 present 或无 backbuffer 时再释放。
+		if(Present || !m_BackbufferHasContents)
+		{
+			ReleaseMetalObject(m_CurrentDrawable);
+			m_CurrentDrawable = nil;
+		}
 		if(!WaitForCompletion)
 			return FrameFinalized;
 		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
@@ -3314,6 +3335,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
+		ReleaseMetalObject(m_CurrentDrawable);
+		m_CurrentDrawable = nil;
 		const auto GpuCompletionWaitStart = m_MetalPerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		[m_CurrentCommandBuffer waitUntilCompleted];
 		if(m_MetalPerfEnabled)
@@ -3637,6 +3660,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(m_State != EMetalBackendState::INITIALIZED || m_CommandQueue == nil)
 			return;
+		// 命令缓冲区可能因容量耗尽在同一逻辑帧中被切分。只要上一段已经
+		// 获取了 backbuffer drawable，就跨段保留它并以 load 继续绘制，直到
+		// 真正的 Swap/present；否则前半帧会被丢弃，表现为闪烁和抖动。
+		const bool ContinueBackbufferFrame = m_CommandBufferCommitted && m_CurrentDrawable != nil && m_BackbufferHasContents;
 		const size_t Slot = m_FrameId == 0 ? 0 : (m_CurrentFrameSlot + 1) % gs_FrameSlotCount;
 		SFrameSlot &Frame = m_aFrameSlots[Slot];
 		if(m_FrameState.SlotState(Slot) == CMetalFrameState::ESlotState::IN_FLIGHT && Frame.m_CommandBuffer != nil)
@@ -3658,14 +3685,18 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(!m_FrameState.BeginFrame(Slot))
 			return;
 		EndActiveEncoders();
-		ReleaseMetalObject(m_CurrentDrawable);
+		if(!ContinueBackbufferFrame)
+			ReleaseMetalObject(m_CurrentDrawable);
 		m_CurrentFrameSlot = Slot;
 		Frame.m_CommandBuffer = RetainMetalObject([m_CommandQueue commandBuffer]);
 		m_CurrentCommandBuffer = Frame.m_CommandBuffer;
 		m_CommandBufferCommitted = false;
 		m_RenderEncoderStarted = false;
-		m_CurrentDrawable = nil;
-		m_BackbufferHasContents = false;
+		if(!ContinueBackbufferFrame)
+		{
+			m_CurrentDrawable = nil;
+			m_BackbufferHasContents = false;
+		}
 		m_SkipCurrentFrame = false;
 		m_RenderTargetState.Reset();
 		Frame.m_VertexOffset = 0;
@@ -3712,7 +3743,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		case CCommandBuffer::CMD_RENDER_TARGET_END:
 		case CCommandBuffer::CMD_RENDER_TARGET_DRAW:
 		case CCommandBuffer::CMD_RENDER_TARGET_GAUSSIAN_BLUR_PASS:
-		case CCommandBuffer::CMD_RENDER_TARGET_READBACK:
 		case CCommandBuffer::CMD_RENDER_TARGET_CAPTURE_BACKBUFFER:
 		case CCommandBuffer::CMD_RENDER_TILE_LAYER:
 		case CCommandBuffer::CMD_RENDER_BORDER_TILE:
@@ -3722,7 +3752,6 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER:
 		case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER_EX:
 		case CCommandBuffer::CMD_RENDER_QUAD_CONTAINER_SPRITE_MULTIPLE:
-		case CCommandBuffer::CMD_TRY_SWAP_AND_READ_PIXEL:
 		case CCommandBuffer::CMD_TRY_SWAP_AND_SCREENSHOT:
 			return true;
 		default:
