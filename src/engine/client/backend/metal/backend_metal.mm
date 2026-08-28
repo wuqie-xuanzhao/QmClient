@@ -338,10 +338,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		TakeMetalGpuTimingStats(GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, GpuExecutionUnavailableCount);
 		CAMetalLayer *pLayer = m_pLayer != nullptr ? (__bridge CAMetalLayer *)m_pLayer : nil;
 		const int DisplaySync = pLayer != nil && pLayer.displaySyncEnabled ? 1 : 0;
+		const int AllowsNextDrawableTimeout = pLayer != nil && pLayer.allowsNextDrawableTimeout ? 1 : 0;
 		const unsigned long MaxDrawables = pLayer != nil ? static_cast<unsigned long>(pLayer.maximumDrawableCount) : 0;
 		const int PresentsWithTransaction = pLayer != nil && pLayer.presentsWithTransaction ? 1 : 0;
-		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f drawable_acquire_ms_max=%.3f drawable_acquire_over_16ms_count=%llu drawable_acquire_over_33ms_count=%llu drawable_acquire_over_100ms_count=%llu drawable_unavailable_count=%llu gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu buffer_reuse_count=%llu buffer_reuse_bytes=%llu transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu display_sync=%d max_drawables=%lu presents_with_transaction=%d",
-			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, m_MetalPerfDrawableAcquireMaxMs, (unsigned long long)m_MetalPerfDrawableAcquireOver16MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver33MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver100MsCount, (unsigned long long)m_MetalPerfDrawableUnavailableCount, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, (unsigned long long)GpuExecutionUnavailableCount, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes, (unsigned long long)m_MetalPerfBufferReuseCount, (unsigned long long)m_MetalPerfBufferReuseBytes, (unsigned long long)m_MetalPerfTransientPoolReuseCount, (unsigned long long)m_MetalPerfTransientPoolReuseBytes, DisplaySync, MaxDrawables, PresentsWithTransaction);
+		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f drawable_acquire_ms_max=%.3f drawable_acquire_over_16ms_count=%llu drawable_acquire_over_33ms_count=%llu drawable_acquire_over_100ms_count=%llu drawable_unavailable_count=%llu gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu buffer_reuse_count=%llu buffer_reuse_bytes=%llu transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu presents_with_transaction=%d",
+			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, m_MetalPerfDrawableAcquireMaxMs, (unsigned long long)m_MetalPerfDrawableAcquireOver16MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver33MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver100MsCount, (unsigned long long)m_MetalPerfDrawableUnavailableCount, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, (unsigned long long)GpuExecutionUnavailableCount, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes, (unsigned long long)m_MetalPerfBufferReuseCount, (unsigned long long)m_MetalPerfBufferReuseBytes, (unsigned long long)m_MetalPerfTransientPoolReuseCount, (unsigned long long)m_MetalPerfTransientPoolReuseBytes, DisplaySync, AllowsNextDrawableTimeout, MaxDrawables, PresentsWithTransaction);
 		ResetMetalPerfStats();
 	}
 
@@ -1877,7 +1878,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		size_t ArrayWidth = 0;
 		size_t ArrayHeight = 0;
 		SMetalTextureLayout ArrayLayout{};
-		if(Wants2DArray && (!MetalArraySourceDimensions(Width, Height, ArraySourceWidth, ArraySourceHeight) || !MetalTextureArrayLayout(ArraySourceWidth, ArraySourceHeight, Format, (Flags & TextureFlag::NO_MIPMAPS) != 0, ArrayWidth, ArrayHeight, ArrayLayout)))
+		// Tile arrays are uploaded as a single level and sampled with the
+		// non-mipmapped tile sampler. Keep the descriptor aligned with that
+		// contract instead of allocating unused mip levels.
+		if(Wants2DArray && (!MetalArraySourceDimensions(Width, Height, ArraySourceWidth, ArraySourceHeight) || !MetalTextureArrayLayout(ArraySourceWidth, ArraySourceHeight, Format, true, ArrayWidth, ArrayHeight, ArrayLayout)))
 			return false;
 		const size_t LayoutBytes = Wants2D ? Layout.m_DataBytes : 0;
 		const size_t ArrayLayoutBytes = Wants2DArray ? ArrayLayout.m_DataBytes : 0;
@@ -1915,7 +1919,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			pArrayDescriptor.width = ArrayWidth;
 			pArrayDescriptor.height = ArrayHeight;
 			pArrayDescriptor.arrayLength = METAL_TEXTURE_ARRAY_LAYERS;
-			pArrayDescriptor.mipmapLevelCount = ArrayLayout.m_MipLevels;
+			pArrayDescriptor.mipmapLevelCount = 1;
 			pArrayDescriptor.usage = MTLTextureUsageShaderRead;
 			pArrayDescriptor.storageMode = MTLStorageModePrivate;
 			pTextureArray = [m_Device newTextureWithDescriptor:pArrayDescriptor];
@@ -2076,11 +2080,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// therefore the drawable must remain usable outside a render pass.
 		pLayer.framebufferOnly = NO;
 		pLayer.presentsWithTransaction = NO;
-		// 允许 drawable 获取在池暂时耗尽时超时返回；下一帧重试，避免
-		// 合成器背压把渲染线程卡到下一次刷新甚至更久。
-		pLayer.allowsNextDrawableTimeout = YES;
+		// 保持 CAMetalLayer 的系统默认 drawable 获取策略。drawables 来自
+		// 有限池，强制超时会把暂时背压转换成 nil 和丢帧，产生闪烁；
+		// 由系统决定 nextDrawable 的等待时机。
 		pLayer.displaySyncEnabled = m_VSync;
-		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0);
+		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, pLayer.allowsNextDrawableTimeout ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0);
 		UpdateDrawableSize();
 	}
 
@@ -2206,7 +2210,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{
 			false,
 			"Metal buffer resource command failed " + std::to_string(pCommand->m_Cmd) +
-			" (backend_state=" + MetalBackendStateName(m_State) + ", frame_id=" + std::to_string(m_FrameId) + ")"});
+				" (backend_state=" + MetalBackendStateName(m_State) + ", frame_id=" + std::to_string(m_FrameId) + ")"});
+	}
+
+	void SetSwapError()
+	{
+		m_Error = {};
+		m_Error.m_ErrorType = GFX_ERROR_TYPE_SWAP_FAILED;
+		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{
+			false,
+			std::string("Metal drawable presentation failed (backend_state=") + MetalBackendStateName(m_State) + ", frame_id=" + std::to_string(m_FrameId) + ")"});
 	}
 
 	void Cmd_PreInit(const SCommand_PreInit *pCommand)
@@ -3035,15 +3048,19 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(MaxQuadEnd == 0 || MaxQuadEnd > std::numeric_limits<size_t>::max() / 6 || !EnsureQuadIndexCapacity(MaxQuadEnd * 6))
 			return false;
-		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
-			return false;
 		SMetalTileUniforms Uniforms;
 		if(!BuildMvp(Command.m_State, Uniforms.m_MVP))
 			return false;
 		Uniforms.m_Color = {{Command.m_Color.r, Command.m_Color.g, Command.m_Color.b, Command.m_Color.a}};
 		Uniforms.m_Transform = Border ? SMetalFloat4{{Offset.x, Offset.y, Scale.x, Scale.y}} : SMetalFloat4{{0.0f, 0.0f, 1.0f, 1.0f}};
 		size_t UniformOffset = 0;
-		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset) || !PrepareContainerPipeline(Command.m_State, TilePipelineIndex(Textured, Border, static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode)), *pBuffer, UniformOffset))
+		if(!AllocateUniformData(&Uniforms, sizeof(Uniforms), UniformOffset))
+			return false;
+		// 完成所有可能失败的 CPU 校验和流缓冲分配后再开启 encoder，
+		// 避免缩放场景中半帧编码失败而被上层提交成黑帧。
+		if(!BeginRenderEncoder({0.0, 0.0, 0.0, 1.0}))
+			return false;
+		if(!PrepareContainerPipeline(Command.m_State, TilePipelineIndex(Textured, Border, static_cast<EMetalBlendMode>(Command.m_State.m_BlendMode)), *pBuffer, UniformOffset))
 			return false;
 		[m_CurrentRenderEncoder setFragmentBuffer:m_aFrameSlots[m_CurrentFrameSlot].m_VertexBuffer offset:UniformOffset atIndex:1];
 		if(Textured)
@@ -3594,11 +3611,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		EndActiveEncoders();
 		const bool BackbufferReady = HasValidBackbufferContents();
-		// CAMetalLayer is configured with allowsNextDrawableTimeout. If the
-		// drawable pool is temporarily exhausted, nextDrawable returns nil and
-		// the private backbuffer is kept for the next command-buffer slice. Do
-		// not add an application-side in-flight limit here: that would turn an
-		// uncapped, no-VSync render loop into an artificial display-refresh cap.
+		// The drawable pool is finite. Keep presentation late and do not add an
+		// application-side in-flight limit here: that would turn an uncapped,
+		// no-VSync render loop into an artificial display-refresh cap.
 		const bool PresentationRequested = Present && BackbufferReady && m_pLayer != nullptr;
 		bool CanPresent = false;
 		if(PresentationRequested)
@@ -3758,16 +3773,22 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 	}
 
-	void Cmd_Screenshot(const CCommandBuffer::SCommand_TrySwapAndScreenshot *pCommand)
+	ERunCommandReturnTypes Cmd_Screenshot(const CCommandBuffer::SCommand_TrySwapAndScreenshot *pCommand)
 	{
 		if(pCommand->m_pImage == nullptr)
-			return;
+		{
+			SetResourceCommandError(pCommand);
+			return RUN_COMMAND_COMMAND_ERROR;
+		}
 		pCommand->m_pImage->m_pData = nullptr;
 		pCommand->m_pImage->m_Width = 0;
 		pCommand->m_pImage->m_Height = 0;
 		pCommand->m_pImage->m_Format = CImageInfo::FORMAT_RGBA;
 		if(pCommand->m_pSwapped == nullptr)
-			return;
+		{
+			SetResourceCommandError(pCommand);
+			return RUN_COMMAND_COMMAND_ERROR;
+		}
 
 		id<MTLBuffer> Readback = nil;
 		size_t RowBytes = 0;
@@ -3780,10 +3801,17 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(!*pCommand->m_pSwapped)
 		{
 			Readback = EncodeDrawableReadback(Width, Height, RowBytes);
-			if(Readback == nil || !CommitCurrentFrame(true, true))
+			if(Readback == nil)
 			{
 				ReleaseMetalObject(Readback);
-				return;
+				SetSwapError();
+				return RUN_COMMAND_COMMAND_ERROR;
+			}
+			if(!CommitCurrentFrame(true, true))
+			{
+				ReleaseMetalObject(Readback);
+				SetSwapError();
+				return RUN_COMMAND_COMMAND_ERROR;
 			}
 			*pCommand->m_pSwapped = true;
 			StoreLastPresentedReadback(Readback, Width, Height, RowBytes);
@@ -3794,7 +3822,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		else
 		{
 			if(!WaitForPresentedReadback())
-				return;
+			{
+				SetSwapError();
+				return RUN_COMMAND_COMMAND_ERROR;
+			}
 			Readback = m_LastPresentedReadback;
 			Width = m_LastPresentedReadbackWidth;
 			Height = m_LastPresentedReadbackHeight;
@@ -3804,7 +3835,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			if(!*pCommand->m_pSwapped)
 				ReleaseMetalObject(Readback);
-			return;
+			return RUN_COMMAND_COMMAND_HANDLED;
 		}
 		size_t DataBytes = 0;
 		size_t PixelBytes = 0;
@@ -3812,14 +3843,14 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			if(Readback != m_LastPresentedReadback)
 				ReleaseMetalObject(Readback);
-			return;
+			return RUN_COMMAND_COMMAND_HANDLED;
 		}
 		uint8_t *pImageData = static_cast<uint8_t *>(malloc(DataBytes));
 		if(pImageData == nullptr)
 		{
 			if(Readback != m_LastPresentedReadback)
 				ReleaseMetalObject(Readback);
-			return;
+			return RUN_COMMAND_COMMAND_HANDLED;
 		}
 		const uint8_t *pReadback = static_cast<const uint8_t *>(Readback.contents);
 		for(uint32_t Y = 0; Y < Height; ++Y)
@@ -3829,12 +3860,16 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		pCommand->m_pImage->m_pData = pImageData;
 		if(Readback != m_LastPresentedReadback)
 			ReleaseMetalObject(Readback);
+		return RUN_COMMAND_COMMAND_HANDLED;
 	}
 
-	void Cmd_ReadPixel(const CCommandBuffer::SCommand_TrySwapAndReadPixel *pCommand)
+	ERunCommandReturnTypes Cmd_ReadPixel(const CCommandBuffer::SCommand_TrySwapAndReadPixel *pCommand)
 	{
 		if(pCommand->m_pColor == nullptr || pCommand->m_pSwapped == nullptr)
-			return;
+		{
+			SetResourceCommandError(pCommand);
+			return RUN_COMMAND_COMMAND_ERROR;
+		}
 		*pCommand->m_pColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		if(!*pCommand->m_pSwapped && m_FrameState.ConsumeReadbackPresented())
 		{
@@ -3845,9 +3880,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			const int X = pCommand->m_Position.x;
 			const int Y = pCommand->m_Position.y;
 			if(X < 0 || Y < 0 || static_cast<uint32_t>(X) >= m_DrawableWidth || static_cast<uint32_t>(Y) >= m_DrawableHeight)
-				return;
+				return RUN_COMMAND_COMMAND_HANDLED;
 			if(!HasValidBackbufferContents())
-				return;
+				return RUN_COMMAND_COMMAND_HANDLED;
 			EndActiveEncoders();
 			ClearLastPresentedReadback();
 			size_t VideoRowBytes = 0;
@@ -3858,7 +3893,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(Readback == nil)
 			{
 				ReleaseMetalObject(VideoReadback);
-				return;
+				SetSwapError();
+				return RUN_COMMAND_COMMAND_ERROR;
 			}
 			if(m_MetalPerfEnabled)
 				m_MetalPerfReadbackBytes += RowBytes;
@@ -3867,7 +3903,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			{
 				ReleaseMetalObject(VideoReadback);
 				ReleaseMetalObject(Readback);
-				return;
+				SetSwapError();
+				return RUN_COMMAND_COMMAND_ERROR;
 			}
 			if(m_MetalPerfEnabled)
 				++m_MetalPerfEncoderCount;
@@ -3876,7 +3913,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			{
 				ReleaseMetalObject(VideoReadback);
 				ReleaseMetalObject(Readback);
-				return;
+				SetSwapError();
+				return RUN_COMMAND_COMMAND_ERROR;
 			}
 			if(VideoReadback != nil)
 			{
@@ -3889,26 +3927,28 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			*pCommand->m_pSwapped = true;
 			ReleaseMetalObject(VideoReadback);
 			ReleaseMetalObject(Readback);
-			return;
+			return RUN_COMMAND_COMMAND_HANDLED;
 		}
 		if(!WaitForPresentedReadback() || pCommand->m_Position.x < 0 || pCommand->m_Position.y < 0 || static_cast<uint32_t>(pCommand->m_Position.x) >= m_LastPresentedReadbackWidth || static_cast<uint32_t>(pCommand->m_Position.y) >= m_LastPresentedReadbackHeight)
-			return;
+			return RUN_COMMAND_COMMAND_HANDLED;
 		const uint8_t *pPixel = static_cast<const uint8_t *>(m_LastPresentedReadback.contents) + static_cast<size_t>(pCommand->m_Position.y) * m_LastPresentedReadbackRowBytes + static_cast<size_t>(pCommand->m_Position.x) * 4;
 		*pCommand->m_pColor = ColorRGBA(pPixel[2] / 255.0f, pPixel[1] / 255.0f, pPixel[0] / 255.0f, 1.0f);
+		return RUN_COMMAND_COMMAND_HANDLED;
 	}
 
-	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
+	ERunCommandReturnTypes Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
 	{
 		(void)pCommand;
 		if(m_FrameState.ConsumeReadbackPresented())
-			return;
+			return RUN_COMMAND_COMMAND_HANDLED;
 		if(VideoCaptureActive() && HasValidBackbufferContents())
 		{
 			ClearLastPresentedReadback();
 			size_t RowBytes = 0;
 			id<MTLBuffer> Readback = EncodeDrawableReadback(m_DrawableWidth, m_DrawableHeight, RowBytes);
 			id<MTLCommandBuffer> PresentedCommandBuffer = Readback != nil ? RetainMetalObject(m_CurrentCommandBuffer) : nil;
-			if(CommitCurrentFrame(true, false) && Readback != nil)
+			const bool CommitSucceeded = CommitCurrentFrame(true, false);
+			if(CommitSucceeded && Readback != nil)
 			{
 				StoreLastPresentedReadback(Readback, m_DrawableWidth, m_DrawableHeight, RowBytes);
 				ReleaseMetalObject(m_LastPresentedCommandBuffer);
@@ -3917,10 +3957,20 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			}
 			ReleaseMetalObject(PresentedCommandBuffer);
 			ReleaseMetalObject(Readback);
-			return;
+			if(!CommitSucceeded)
+			{
+				SetSwapError();
+				return RUN_COMMAND_COMMAND_ERROR;
+			}
+			return RUN_COMMAND_COMMAND_HANDLED;
 		}
 		ClearLastPresentedReadback();
-		CommitCurrentFrame(true, false);
+		if(!CommitCurrentFrame(true, false))
+		{
+			SetSwapError();
+			return RUN_COMMAND_COMMAND_ERROR;
+		}
+		return RUN_COMMAND_COMMAND_HANDLED;
 	}
 
 	bool Cmd_MultiSampling(const CCommandBuffer::SCommand_MultiSampling *pCommand)
@@ -4454,14 +4504,11 @@ public:
 				return Success ? RUN_COMMAND_COMMAND_HANDLED : RUN_COMMAND_COMMAND_ERROR;
 			}
 			case CCommandBuffer::CMD_SWAP:
-				Cmd_Swap(static_cast<const CCommandBuffer::SCommand_Swap *>(pBaseCommand));
-				return RUN_COMMAND_COMMAND_HANDLED;
+				return Cmd_Swap(static_cast<const CCommandBuffer::SCommand_Swap *>(pBaseCommand));
 			case CCommandBuffer::CMD_TRY_SWAP_AND_READ_PIXEL:
-				Cmd_ReadPixel(static_cast<const CCommandBuffer::SCommand_TrySwapAndReadPixel *>(pBaseCommand));
-				return RUN_COMMAND_COMMAND_HANDLED;
+				return Cmd_ReadPixel(static_cast<const CCommandBuffer::SCommand_TrySwapAndReadPixel *>(pBaseCommand));
 			case CCommandBuffer::CMD_TRY_SWAP_AND_SCREENSHOT:
-				Cmd_Screenshot(static_cast<const CCommandBuffer::SCommand_TrySwapAndScreenshot *>(pBaseCommand));
-				return RUN_COMMAND_COMMAND_HANDLED;
+				return Cmd_Screenshot(static_cast<const CCommandBuffer::SCommand_TrySwapAndScreenshot *>(pBaseCommand));
 			case CCommandBuffer::CMD_MULTISAMPLING:
 			{
 				const bool Success = Cmd_MultiSampling(static_cast<const CCommandBuffer::SCommand_MultiSampling *>(pBaseCommand));

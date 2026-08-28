@@ -112,7 +112,7 @@ TEST(MetalBackendContract, VSyncMirrorsTheExplicitGraphicsSetting)
 	EXPECT_NE(Source.find("displaySyncEnabled = m_VSync;"), std::string::npos);
 	EXPECT_NE(Source.find("pLayer.displaySyncEnabled = m_VSync;"), std::string::npos);
 	EXPECT_EQ(Source.find("displaySyncEnabled = YES"), std::string::npos);
-	EXPECT_NE(Source.find("layer configured: vsync=%d display_sync=%d"), std::string::npos);
+	EXPECT_NE(Source.find("layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu"), std::string::npos);
 	EXPECT_NE(Source.find("layer vsync changed: requested=%d display_sync=%d"), std::string::npos);
 }
 
@@ -136,14 +136,15 @@ TEST(MetalBackendContract, ScissorConvertsFromOpenGLCoordinatesAndCachesState)
 	EXPECT_NE(Source.find("ScissorRectsEqual", SetScissor), std::string::npos);
 }
 
-TEST(MetalBackendContract, DrawablePoolUsesTimeoutInsteadOfArtificialFrameCap)
+TEST(MetalBackendContract, DrawablePoolUsesTimeoutWithoutApplicationFrameCap)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t Commit = Source.find("bool CommitCurrentFrame(bool Present, bool WaitForCompletion)");
 	ASSERT_NE(Commit, std::string::npos);
 	EXPECT_EQ(Source.find("PresentBackpressure", Commit), std::string::npos);
 	EXPECT_EQ(Source.find("m_pPresentTracker", Commit), std::string::npos);
-	EXPECT_NE(Source.find("allowsNextDrawableTimeout", 0), std::string::npos);
+	EXPECT_EQ(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
+	EXPECT_NE(Source.find("The drawable pool is finite", 0), std::string::npos);
 }
 
 TEST(MetalBackendContract, RecreatedMultisampleAttachmentStartsWithClear)
@@ -172,8 +173,9 @@ TEST(MetalBackendContract, MultisampleAttachmentsAreOwnedByFrameSlots)
 TEST(MetalBackendContract, MetalPerfReportsEffectiveLayerPresentationState)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
-	EXPECT_NE(Source.find("display_sync=%d max_drawables=%lu presents_with_transaction=%d"), std::string::npos);
+	EXPECT_NE(Source.find("display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu presents_with_transaction=%d"), std::string::npos);
 	EXPECT_NE(Source.find("pLayer.displaySyncEnabled"), std::string::npos);
+	EXPECT_NE(Source.find("AllowsNextDrawableTimeout"), std::string::npos);
 	EXPECT_NE(Source.find("pLayer.maximumDrawableCount"), std::string::npos);
 	EXPECT_NE(Source.find("pLayer.framebufferOnly = NO;"), std::string::npos);
 }
@@ -228,6 +230,17 @@ TEST(MetalBackendContract, DrawableUnavailableCannotReportPresentSuccess)
 	ASSERT_NE(Return, std::string::npos);
 	EXPECT_NE(Source.find("const bool PresentationSucceeded = !PresentationRequested || BackbufferPresented;", Finalize), std::string::npos);
 	EXPECT_LT(Finalize, Return);
+}
+
+TEST(MetalBackendContract, SwapPropagatesDrawablePresentationFailure)
+{
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
+	const size_t Swap = Source.find("ERunCommandReturnTypes Cmd_Swap");
+	ASSERT_NE(Swap, std::string::npos);
+	EXPECT_NE(Source.find("if(!CommitCurrentFrame(true, false))", Swap), std::string::npos);
+	EXPECT_NE(Source.find("SetSwapError();", Swap), std::string::npos);
+	EXPECT_NE(Source.find("return RUN_COMMAND_COMMAND_ERROR;", Swap), std::string::npos);
+	EXPECT_NE(Source.find("GFX_ERROR_TYPE_SWAP_FAILED", Source.find("void SetSwapError")), std::string::npos);
 }
 
 TEST(MetalBackendContract, CommandBufferSlicesPreserveBackbufferUntilPresent)
@@ -370,8 +383,8 @@ TEST(MetalBackendContract, PresentedReadbackWaitsBeforeConsumingSharedBuffer)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t Helper = Source.find("bool WaitForPresentedReadback()");
-	const size_t Screenshot = Source.find("void Cmd_Screenshot");
-	const size_t ReadPixel = Source.find("void Cmd_ReadPixel");
+	const size_t Screenshot = Source.find("ERunCommandReturnTypes Cmd_Screenshot");
+	const size_t ReadPixel = Source.find("ERunCommandReturnTypes Cmd_ReadPixel");
 	ASSERT_NE(Helper, std::string::npos);
 	ASSERT_NE(Screenshot, std::string::npos);
 	ASSERT_NE(ReadPixel, std::string::npos);
@@ -384,7 +397,7 @@ TEST(MetalBackendContract, PresentedReadbackWaitsBeforeConsumingSharedBuffer)
 TEST(MetalBackendContract, NormalSwapCapturesReadbackOnlyWhileVideoRecording)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
-	const size_t Swap = Source.find("void Cmd_Swap");
+	const size_t Swap = Source.find("ERunCommandReturnTypes Cmd_Swap");
 	const size_t MultiSampling = Source.find("bool Cmd_MultiSampling", Swap);
 	ASSERT_NE(Swap, std::string::npos);
 	ASSERT_NE(MultiSampling, std::string::npos);
@@ -653,7 +666,7 @@ TEST(MetalBackendContract, PersistentBuffersAreNotMutatedOrReleasedWhileInFlight
 TEST(MetalBackendContract, DrawableAcquisitionUsesTimeoutAndCompletedSlotsDoNotWait)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
-	EXPECT_NE(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
+	EXPECT_EQ(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
 	EXPECT_NE(Source.find("m_CurrentDrawable = RetainMetalObject([pLayer nextDrawable]);"), std::string::npos);
 	EXPECT_NE(Source.find("copyFromTexture:CurrentBackbufferTexture() sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0)"), std::string::npos);
 	EXPECT_NE(Source.find("m_SkipCurrentFrame = true;"), std::string::npos);
