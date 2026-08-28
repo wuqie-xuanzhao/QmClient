@@ -3642,10 +3642,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
-		// present 失败（通常是 drawable 暂时不可用）时，当前私有
-		// backbuffer 仍是下一段绘制的有效内容。保留同一 frame slot，
-		// 下一帧继续 load，避免失败 present 后清屏造成黑帧/闪烁。
-		m_BackbufferContinuationPending = CurrentBackbufferHasContents() && (!Present || !BackbufferPresented);
+		// 只有命令缓冲区容量切片才需要沿用当前私有 backbuffer。present
+		// 失败时当前内容没有进入屏幕，丢弃这次未呈现的 slot，避免下一帧
+		// 复用同一 slot 并等待仍在 GPU 队列中的 command buffer。
+		m_BackbufferContinuationPending = CurrentBackbufferHasContents() && !Present;
 		// 非 present 提交可能只是同一逻辑帧的 buffer slice；保留 drawable 和
 		// backbuffer 内容供下一段继续 load。真正 present 或无 backbuffer 时再释放。
 		if(Present || !CurrentBackbufferHasContents())

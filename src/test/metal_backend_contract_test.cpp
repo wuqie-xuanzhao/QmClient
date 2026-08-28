@@ -245,14 +245,14 @@ TEST(MetalBackendContract, CommandBufferSlicesPreserveBackbufferUntilPresent)
 	EXPECT_NE(Source.find("const size_t Slot = ContinueBackbufferFrame ? m_CurrentFrameSlot"), std::string::npos);
 }
 
-TEST(MetalBackendContract, FailedPresentContinuesFromPrivateBackbuffer)
+TEST(MetalBackendContract, FailedPresentDoesNotForceContinuationWait)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	const size_t Commit = Source.find("bool CommitCurrentFrame(bool Present, bool WaitForCompletion)");
 	const size_t Start = Source.find("const bool ContinueBackbufferFrame", Commit);
 	ASSERT_NE(Commit, std::string::npos);
 	ASSERT_NE(Start, std::string::npos);
-	EXPECT_NE(Source.find("m_BackbufferContinuationPending = CurrentBackbufferHasContents() && (!Present || !BackbufferPresented);", Commit), std::string::npos);
+	EXPECT_NE(Source.find("m_BackbufferContinuationPending = CurrentBackbufferHasContents() && !Present;", Commit), std::string::npos);
 	EXPECT_NE(Source.find("m_CommandBufferCommitted && m_BackbufferContinuationPending && CurrentBackbufferHasContents()", Start), std::string::npos);
 }
 
@@ -654,6 +654,8 @@ TEST(MetalBackendContract, DrawableAcquisitionUsesTimeoutAndCompletedSlotsDoNotW
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
 	EXPECT_NE(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
+	EXPECT_NE(Source.find("m_CurrentDrawable = RetainMetalObject([pLayer nextDrawable]);"), std::string::npos);
+	EXPECT_NE(Source.find("copyFromTexture:CurrentBackbufferTexture() sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0)"), std::string::npos);
 	EXPECT_NE(Source.find("m_SkipCurrentFrame = true;"), std::string::npos);
 	EXPECT_NE(Source.find("bool SkipCurrentFrameCommand(int Command) const"), std::string::npos);
 	EXPECT_NE(Source.find("m_FrameState.FinalizeFrameWithoutPresent()"), std::string::npos);
