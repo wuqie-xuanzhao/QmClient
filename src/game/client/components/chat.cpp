@@ -2505,6 +2505,8 @@ void CChat::OnRender()
 		MousePos.x = (MousePos.x - HudEditorScope.m_TargetRect.x) / Scale;
 		MousePos.y = (MousePos.y - HudEditorScope.m_TargetRect.y) / Scale;
 	}
+	const bool LanguageMenuOpen = m_LanguageMenuOpen || Ui()->IsPopupOpen(&m_LanguagePopupContext);
+	const bool ChatLineMenuOpen = Ui()->IsPopupOpen(&m_ChatLinePopupContext);
 	const bool MouseDown = Input()->KeyIsPressed(KEY_MOUSE_1);
 	const bool InsideInputBlock =
 		InputBlockRectValid &&

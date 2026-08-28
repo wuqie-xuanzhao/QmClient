@@ -82,32 +82,31 @@ namespace SystemMediaControls
 class CSystemMediaControls : public CComponent
 {
 public:
+	enum class EPlaybackState : uint8_t
+	{
+		Unknown = 0,
+		Playing,
+		Paused,
+		Stopped,
+	};
+
 	struct SState
 	{
 		bool m_CanPlay = false;
 		bool m_CanPause = false;
 		bool m_CanPrev = false;
 		bool m_CanNext = false;
+		EPlaybackState m_PlaybackState = EPlaybackState::Unknown;
 		bool m_Playing = false;
 		char m_aSourceAppId[128] = {};
 		char m_aTitle[128] = {};
 		char m_aArtist[128] = {};
 		char m_aAlbum[128] = {};
-		char m_aNeteaseSongId[128] = {};
-		char m_aQqMusicSongId[128] = {};
-		char m_aLinkedFileName[128] = {};
 		int64_t m_PositionMs = 0;
 		int64_t m_DurationMs = 0;
 		int64_t m_PositionUpdatedTick = 0;
 		uint64_t m_TimelineGeneration = 0;
 		double m_PlaybackRate = 1.0;
-		bool m_HookValid = false;
-		uint64_t m_HookSequence = 0;
-		char m_aHookCurrentLine[256] = {};
-		int64_t m_HookCurrentLineStartMs = -1;
-		int64_t m_HookCurrentLineEndMs = -1;
-		char m_aHookAlbumArtPath[QmNeteaseHook::MAX_COVER_PATH_BYTES] = {};
-		char m_aHookAlbumArtUrl[QmNeteaseHook::MAX_COVER_URL_BYTES] = {};
 		IGraphics::CTextureHandle m_AlbumArt;
 		IGraphics::CTextureHandle m_AlbumArtCircular;
 		int m_AlbumArtWidth = 0;
@@ -127,25 +126,21 @@ public:
 	void OnUpdate() override;
 
 	bool GetStateSnapshot(SState &State) const;
+	// 读取网易云私有 v5 快照；不会把其字段合并到标准 SMTC 状态。
+	bool GetNeteaseSnapshot(QmNeteaseHook::SSnapshotV5 &Snapshot) const;
 	void Previous();
 	void PlayPause();
 	void Next();
 
 private:
-	void ClearHookAlbumArt();
 	void SyncNeteaseHookConfiguration();
 
 	std::unique_ptr<CQmNeteaseHookProvider> m_pNeteaseHook;
-	bool m_HookHasMedia = false;
 	bool m_NeteaseHookConfigInitialized = false;
 	bool m_LastNeteaseHookEnabled = false;
 	std::string m_LastNeteaseHookHelperPath;
-	SState m_HookState{};
-	std::string m_HookAlbumArtPath;
-	IGraphics::CTextureHandle m_HookAlbumArt;
-	IGraphics::CTextureHandle m_HookAlbumArtCircular;
-	int m_HookAlbumArtWidth = 0;
-	int m_HookAlbumArtHeight = 0;
+	QmNeteaseHook::SSnapshotV5 m_NeteaseSnapshot{};
+	bool m_HasNeteaseSnapshot = false;
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	std::unique_ptr<SWinrt> m_pWinrt;
 	std::unique_ptr<SShared> m_pShared;

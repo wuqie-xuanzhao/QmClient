@@ -2,13 +2,15 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#include "qm_netease_bootstrap.h"
+#include "qm_netease_frontend_bridge.h"
+
 #include <windows.h>
 
-#include <bcrypt.h>
+#include <shellapi.h>
 #include <tlhelp32.h>
 
 #include <algorithm>
-#include <array>
 #include <cctype>
 #include <chrono>
 #include <cstdio>
@@ -19,16 +21,13 @@
 #include <thread>
 #include <vector>
 
-#pragma comment(lib, "bcrypt.lib")
-
 namespace
 {
 	constexpr wchar_t TARGET_EXE[] = L"cloudmusic.exe";
 	constexpr wchar_t TARGET_DLL[] = L"qm-nmt-hook64.dll";
-	// 与 v4 共享映射配套，避免旧 Helper 抑制新协议的注入循环。
-	constexpr wchar_t HELPER_MUTEX_NAME[] = L"Local\\QmClient.NeteaseHook.Helper.v4";
-	constexpr char EXPECTED_EXE_SHA256[] = "1B86292DA1056A729226DF9205EB9F69C1E5558BC3EDDBE0639C06A2443BF2D3";
-	constexpr char EXPECTED_CLOUDMUSIC_SHA256[] = "98874023CAB8D13F4E7E3FBC74FBC30186529039593E1359A189878ECE35029F";
+	constexpr wchar_t HELPER_MUTEX_NAME[] = L"Local\\QmClient.NeteaseHook.Helper.v5";
+	constexpr wchar_t APP_PATHS_KEY[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\cloudmusic.exe";
+	constexpr wchar_t NETEASE_KEY[] = L"SOFTWARE\\NetEase\\CloudMusic";
 
 	std::wstring Lower(std::wstring Value)
 	{
@@ -45,50 +44,6 @@ namespace
 		if(pfn == nullptr || !pfn(hProcess, &ProcessMachine, &NativeMachine))
 			return false;
 		return ProcessMachine == IMAGE_FILE_MACHINE_UNKNOWN && NativeMachine == IMAGE_FILE_MACHINE_AMD64;
-	}
-
-	std::string Sha256File(const std::wstring &Path)
-	{
-		HANDLE hFile = CreateFileW(Path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-		if(hFile == INVALID_HANDLE_VALUE)
-			return {};
-		BCRYPT_ALG_HANDLE hAlgorithm = nullptr;
-		BCRYPT_HASH_HANDLE hHash = nullptr;
-		std::array<uint8_t, 32> Digest{};
-		DWORD DigestLength = 0;
-		DWORD ResultLength = 0;
-		std::string Result;
-		if(BCryptOpenAlgorithmProvider(&hAlgorithm, BCRYPT_SHA256_ALGORITHM, nullptr, 0) == 0 &&
-			BCryptGetProperty(hAlgorithm, BCRYPT_HASH_LENGTH, reinterpret_cast<PUCHAR>(&DigestLength), sizeof(DigestLength), &ResultLength, 0) == 0 &&
-			DigestLength == Digest.size() && BCryptCreateHash(hAlgorithm, &hHash, nullptr, 0, nullptr, 0, 0) == 0)
-		{
-			std::array<uint8_t, 1024 * 64> Buffer{};
-			DWORD Read = 0;
-			bool Good = true;
-			while(ReadFile(hFile, Buffer.data(), (DWORD)Buffer.size(), &Read, nullptr) && Read > 0)
-			{
-				if(BCryptHashData(hHash, Buffer.data(), Read, 0) != 0)
-				{
-					Good = false;
-					break;
-				}
-			}
-			if(Good && BCryptFinishHash(hHash, Digest.data(), (ULONG)Digest.size(), 0) == 0)
-			{
-				static constexpr char Hex[] = "0123456789ABCDEF";
-				for(const uint8_t Byte : Digest)
-				{
-					Result.push_back(Hex[Byte >> 4]);
-					Result.push_back(Hex[Byte & 0x0F]);
-				}
-			}
-		}
-		if(hHash != nullptr)
-			BCryptDestroyHash(hHash);
-		if(hAlgorithm != nullptr)
-			BCryptCloseAlgorithmProvider(hAlgorithm, 0);
-		CloseHandle(hFile);
-		return Result;
 	}
 
 	struct SCandidate
@@ -238,12 +193,160 @@ namespace
 		return Slash == std::wstring::npos ? L"." : Path.substr(0, Slash);
 	}
 
+	std::wstring ModulePath()
+	{
+		std::vector<wchar_t> Buffer(MAX_PATH);
+		for(;;)
+		{
+			const DWORD Length = GetModuleFileNameW(nullptr, Buffer.data(), (DWORD)Buffer.size());
+			if(Length == 0)
+				return {};
+			if(Length < Buffer.size())
+				return std::wstring(Buffer.data(), Length);
+			if(GetLastError() != ERROR_INSUFFICIENT_BUFFER || Buffer.size() >= 32768)
+				return {};
+			Buffer.resize(std::min<size_t>(Buffer.size() * 2, 32768));
+		}
+	}
+
+	std::wstring QuoteWindowsPathArgument(std::wstring Value)
+	{
+		// 结尾反斜杠会转义命令行参数的闭合引号，目录参数先去掉多余分隔符。
+		while(Value.size() > 1 && (Value.back() == L'\\' || Value.back() == L'/'))
+		{
+			if(Value.size() == 3 && Value[1] == L':')
+				break;
+			Value.pop_back();
+		}
+		return L"\"" + Value + L"\"";
+	}
+
+	std::wstring QueryRegistryString(HKEY hRoot, const wchar_t *pSubKey, const wchar_t *pValueName, REGSAM View)
+	{
+		HKEY hKey = nullptr;
+		if(RegOpenKeyExW(hRoot, pSubKey, 0, KEY_QUERY_VALUE | View, &hKey) != ERROR_SUCCESS)
+			return {};
+		DWORD Type = 0;
+		DWORD ByteSize = 0;
+		LONG Result = RegQueryValueExW(hKey, pValueName, nullptr, &Type, nullptr, &ByteSize);
+		if(Result != ERROR_SUCCESS || (Type != REG_SZ && Type != REG_EXPAND_SZ) || ByteSize < sizeof(wchar_t) || ByteSize > 32768 * sizeof(wchar_t))
+		{
+			RegCloseKey(hKey);
+			return {};
+		}
+		std::vector<wchar_t> Buffer(ByteSize / sizeof(wchar_t) + 1, L'\0');
+		Result = RegQueryValueExW(hKey, pValueName, nullptr, &Type, reinterpret_cast<BYTE *>(Buffer.data()), &ByteSize);
+		RegCloseKey(hKey);
+		if(Result != ERROR_SUCCESS)
+			return {};
+		std::wstring Value(Buffer.data());
+		if(Type == REG_EXPAND_SZ)
+		{
+			const DWORD Required = ExpandEnvironmentStringsW(Value.c_str(), nullptr, 0);
+			if(Required == 0 || Required > 32768)
+				return {};
+			std::vector<wchar_t> Expanded(Required);
+			if(ExpandEnvironmentStringsW(Value.c_str(), Expanded.data(), Required) == 0)
+				return {};
+			Value.assign(Expanded.data());
+		}
+		while(!Value.empty() && iswspace(Value.front()))
+			Value.erase(Value.begin());
+		while(!Value.empty() && iswspace(Value.back()))
+			Value.pop_back();
+		if(Value.size() >= 2 && Value.front() == L'"' && Value.back() == L'"')
+			Value = Value.substr(1, Value.size() - 2);
+		return Value;
+	}
+
+	bool IsCloudMusicDirectory(const std::wstring &Directory)
+	{
+		if(Directory.empty())
+			return false;
+		const std::filesystem::path Base(Directory);
+		const std::filesystem::path Executable = Base / TARGET_EXE;
+		const std::filesystem::path Renderer = Base / L"cloudmusic.dll";
+		DWORD BinaryType = 0;
+		return GetFileAttributesW(Executable.c_str()) != INVALID_FILE_ATTRIBUTES &&
+		       GetFileAttributesW(Renderer.c_str()) != INVALID_FILE_ATTRIBUTES &&
+		       GetBinaryTypeW(Executable.c_str(), &BinaryType) && BinaryType == SCS_64BIT_BINARY;
+	}
+
+	std::wstring FindInstalledCloudMusicDirectory()
+	{
+		const HKEY aRoots[] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
+		constexpr REGSAM aViews[] = {KEY_WOW64_64KEY, KEY_WOW64_32KEY};
+		for(const HKEY hRoot : aRoots)
+		{
+			for(const REGSAM View : aViews)
+			{
+				const std::wstring Executable = QueryRegistryString(hRoot, APP_PATHS_KEY, nullptr, View);
+				if(!Executable.empty())
+				{
+					const std::wstring Directory = std::filesystem::path(Executable).parent_path().wstring();
+					if(IsCloudMusicDirectory(Directory))
+						return Directory;
+				}
+				const std::wstring Directory = QueryRegistryString(hRoot, NETEASE_KEY, L"install_dir", View);
+				if(IsCloudMusicDirectory(Directory))
+					return Directory;
+			}
+		}
+		return {};
+	}
+
+	bool RunElevatedBootstrapInstall(const std::wstring &CloudMusicDirectory)
+	{
+		if(!IsCloudMusicDirectory(CloudMusicDirectory) || CloudMusicDirectory.find(L'"') != std::wstring::npos)
+			return false;
+		const std::wstring Executable = ModulePath();
+		if(Executable.empty())
+			return false;
+		const std::wstring WorkingDirectory = ModuleDirectory();
+		const std::wstring Parameters = L"--install-bootstrap " + QuoteWindowsPathArgument(CloudMusicDirectory);
+		SHELLEXECUTEINFOW Execute{};
+		Execute.cbSize = sizeof(Execute);
+		Execute.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+		Execute.lpVerb = L"runas";
+		Execute.lpFile = Executable.c_str();
+		Execute.lpParameters = Parameters.c_str();
+		Execute.lpDirectory = WorkingDirectory.c_str();
+		Execute.nShow = SW_HIDE;
+		if(!ShellExecuteExW(&Execute) || Execute.hProcess == nullptr)
+			return false;
+		const DWORD WaitResult = WaitForSingleObject(Execute.hProcess, 30000);
+		DWORD ExitCode = 1;
+		const bool Success = WaitResult == WAIT_OBJECT_0 && GetExitCodeProcess(Execute.hProcess, &ExitCode) && ExitCode == 0;
+		CloseHandle(Execute.hProcess);
+		return Success;
+	}
+
+	bool IsSuccessfulInstallResult(QmNeteaseBootstrap::EInstallResult Result)
+	{
+		return Result == QmNeteaseBootstrap::EInstallResult::AlreadyInstalled ||
+		       Result == QmNeteaseBootstrap::EInstallResult::Installed ||
+		       Result == QmNeteaseBootstrap::EInstallResult::Updated;
+	}
+
+	int InstallBootstrap(const std::wstring &CloudMusicDirectory)
+	{
+		if(!IsCloudMusicDirectory(CloudMusicDirectory))
+			return 10;
+		const std::wstring SourcePath = ModuleDirectory() + L"\\" + QmNeteaseBootstrap::BOOTSTRAP_SOURCE_NAME;
+		const QmNeteaseBootstrap::EInstallResult Result = QmNeteaseBootstrap::EnsureInstalled(CloudMusicDirectory, SourcePath);
+		return IsSuccessfulInstallResult(Result) ? 0 : 11;
+	}
+
 	bool MatchesTargetBuild(const SCandidate &Candidate)
 	{
 		const std::filesystem::path ExePath(Candidate.m_Path);
 		const std::filesystem::path Directory = ExePath.parent_path();
-		return Sha256File(ExePath.wstring()) == EXPECTED_EXE_SHA256 &&
-		       Sha256File((Directory / L"cloudmusic.dll").wstring()) == EXPECTED_CLOUDMUSIC_SHA256;
+		// 不绑定某一个网易云补丁的 hash。Updater 会替换 exe/CEF，
+		// 只要目标是 x64 cloudmusic.exe 且同目录存在 renderer DLL 即允许
+		// CDP/兼容注入，具体 target 仍由 Orpheus URL 校验。
+		const std::filesystem::path CloudMusicDll = Directory / L"cloudmusic.dll";
+		return !ExePath.empty() && GetFileAttributesW(ExePath.c_str()) != INVALID_FILE_ATTRIBUTES &&
+		       GetFileAttributesW(CloudMusicDll.c_str()) != INVALID_FILE_ATTRIBUTES;
 	}
 
 	bool IsAlreadyInjected(DWORD Pid, const std::wstring &DllPath)
@@ -307,6 +410,7 @@ namespace
 	{
 		const std::wstring Dir = ModuleDirectory();
 		const std::wstring HookPath = HookOverride.empty() ? Dir + L"\\" + TARGET_DLL : HookOverride;
+		const std::wstring BootstrapSourcePath = Dir + L"\\" + QmNeteaseBootstrap::BOOTSTRAP_SOURCE_NAME;
 		if(GetFileAttributesW(HookPath.c_str()) == INVALID_FILE_ATTRIBUTES)
 			return 3;
 		HANDLE hParent = nullptr;
@@ -317,18 +421,56 @@ namespace
 				return 4;
 		}
 		int Result = 0;
+		QmNeteaseBridge::CFrontendLyricBridge FrontendBridge;
+		DWORD ActiveCloudMusicPid = 0;
+		std::wstring BootstrapConflictDirectory;
+		std::wstring BootstrapElevationAttemptDirectory;
+		uint64_t NextBootstrapCheck = 0;
 		for(;;)
 		{
 			if(hParent != nullptr && WaitForSingleObject(hParent, 0) == WAIT_OBJECT_0)
 				break;
 			const std::optional<SCandidate> Candidate = FindMainProcess();
+			const uint64_t Now = GetTickCount64();
+			if(Now >= NextBootstrapCheck)
+			{
+				NextBootstrapCheck = Now + 10000;
+				const std::wstring InstallDirectory = Candidate.has_value() ? std::filesystem::path(Candidate->m_Path).parent_path().wstring() : FindInstalledCloudMusicDirectory();
+				if(!InstallDirectory.empty() && InstallDirectory != BootstrapConflictDirectory)
+				{
+					QmNeteaseBootstrap::EInstallResult InstallResult = QmNeteaseBootstrap::EnsureInstalled(InstallDirectory, BootstrapSourcePath);
+					if(InstallResult == QmNeteaseBootstrap::EInstallResult::AccessDenied && InstallDirectory != BootstrapElevationAttemptDirectory)
+					{
+						BootstrapElevationAttemptDirectory = InstallDirectory;
+						if(RunElevatedBootstrapInstall(InstallDirectory))
+							InstallResult = QmNeteaseBootstrap::EnsureInstalled(InstallDirectory, BootstrapSourcePath);
+					}
+					if(InstallResult == QmNeteaseBootstrap::EInstallResult::Conflict)
+					{
+						BootstrapConflictDirectory = InstallDirectory;
+						OutputDebugStringW(L"NCM/Bootstrap: BootstrapConflict，拒绝覆盖未知 version.dll\n");
+					}
+				}
+			}
 			if(Candidate.has_value())
 			{
 				if(!IsAlreadyInjected(Candidate->m_Pid, HookPath))
 					Inject(Candidate->m_Pid, HookPath);
+				if(ActiveCloudMusicPid != Candidate->m_Pid)
+				{
+					FrontendBridge.Stop();
+					if(FrontendBridge.Start(Candidate->m_Pid, Candidate->m_CommandLine))
+						ActiveCloudMusicPid = Candidate->m_Pid;
+				}
+			}
+			else if(ActiveCloudMusicPid != 0)
+			{
+				FrontendBridge.Stop();
+				ActiveCloudMusicPid = 0;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
+		FrontendBridge.Stop();
 		if(hParent != nullptr)
 			CloseHandle(hParent);
 		return Result;
@@ -337,6 +479,8 @@ namespace
 
 int wmain(int argc, wchar_t **argv)
 {
+	if(argc == 3 && std::wstring(argv[1]) == L"--install-bootstrap")
+		return InstallBootstrap(argv[2]);
 	if(argc < 2 || std::wstring(argv[1]) != L"--watch")
 		return 1;
 	HANDLE hMutex = CreateMutexW(nullptr, TRUE, HELPER_MUTEX_NAME);

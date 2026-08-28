@@ -86,6 +86,8 @@ struct CQmNeteaseHookProvider::SImpl
 {
 	HANDLE m_hMapping = nullptr;
 	void *m_pView = nullptr;
+	HANDLE m_hMappingV5 = nullptr;
+	void *m_pViewV5 = nullptr;
 	bool m_MappingWritable = false;
 	uint64_t m_LastSequence = 0;
 	uint32_t m_LastProducerPid = 0;
@@ -93,6 +95,41 @@ struct CQmNeteaseHookProvider::SImpl
 	bool m_SawSequenceReset = false;
 	bool m_HelperStarted = false;
 	HANDLE m_hHelperProcess = nullptr;
+	uint64_t m_LastV5Sequence = 0;
+	uint32_t m_LastV5Pid = 0;
+
+	bool OpenV5()
+	{
+		if(m_pViewV5 != nullptr)
+			return true;
+		m_hMappingV5 = OpenFileMappingA(FILE_MAP_READ, FALSE, QmNeteaseHook::PROTOCOL_MAPPING_NAME_V5);
+		if(m_hMappingV5 == nullptr)
+			return false;
+		m_pViewV5 = MapViewOfFile(m_hMappingV5, FILE_MAP_READ, 0, 0, sizeof(QmNeteaseHook::SSharedBlockV5));
+		if(m_pViewV5 == nullptr)
+		{
+			CloseHandle(m_hMappingV5);
+			m_hMappingV5 = nullptr;
+			return false;
+		}
+		return true;
+	}
+
+	void CloseV5()
+	{
+		if(m_pViewV5 != nullptr)
+		{
+			UnmapViewOfFile(m_pViewV5);
+			m_pViewV5 = nullptr;
+		}
+		if(m_hMappingV5 != nullptr)
+		{
+			CloseHandle(m_hMappingV5);
+			m_hMappingV5 = nullptr;
+		}
+		m_LastV5Sequence = 0;
+		m_LastV5Pid = 0;
+	}
 
 	bool OpenMapping(DWORD Access)
 	{
@@ -231,6 +268,7 @@ void CQmNeteaseHookProvider::Stop()
 		m_pImpl->m_hHelperProcess = nullptr;
 	}
 	m_pImpl->CloseMapping();
+	m_pImpl->CloseV5();
 	m_pImpl->m_LastSequence = 0;
 	m_pImpl->m_LastProducerPid = 0;
 	m_pImpl->m_LastValidTick = 0;
@@ -306,15 +344,50 @@ bool CQmNeteaseHookProvider::Read(QmNeteaseHook::SSnapshot *pSnapshot, int Timeo
 	return true;
 }
 
+bool CQmNeteaseHookProvider::ReadV5(QmNeteaseHook::SSnapshotV5 *pSnapshot, int TimeoutMs)
+{
+	if(pSnapshot == nullptr || !m_pImpl || !m_pImpl->OpenV5())
+		return false;
+	QmNeteaseHook::SSnapshotV5 Candidate{};
+	for(int Attempt = 0; Attempt < 3; ++Attempt)
+	{
+		auto *pShared = static_cast<const volatile QmNeteaseHook::SSharedBlockV5 *>(m_pImpl->m_pViewV5);
+		const uint64_t Begin = *reinterpret_cast<const volatile uint64_t *>(&pShared->m_Sequence);
+		MemoryBarrier();
+		if(Begin == 0 || (Begin & 1) != 0)
+			continue;
+		std::memcpy(&Candidate, (const void *)&pShared->m_Snapshot, sizeof(Candidate));
+		MemoryBarrier();
+		const uint64_t End = *reinterpret_cast<const volatile uint64_t *>(&pShared->m_Sequence);
+		if(!QmNeteaseHook::IsStableSequenceV5(Begin, End) || Candidate.m_Sequence != End)
+			continue;
+		if(!QmNeteaseHook::ValidateSnapshotV5(Candidate))
+			continue;
+		const uint64_t Now = GetTickCount64();
+		if(QmNeteaseHook::IsStaleV5(Candidate, Now, (uint64_t)std::max(1, TimeoutMs)))
+			return false;
+		if(m_pImpl->m_LastV5Pid != 0 && Candidate.m_CloudMusicPid != m_pImpl->m_LastV5Pid)
+			m_pImpl->m_LastV5Sequence = 0;
+		if(m_pImpl->m_LastV5Sequence != 0 && Candidate.m_Sequence < m_pImpl->m_LastV5Sequence)
+			m_pImpl->m_LastV5Sequence = 0;
+		m_pImpl->m_LastV5Pid = Candidate.m_CloudMusicPid;
+		m_pImpl->m_LastV5Sequence = Candidate.m_Sequence;
+		*pSnapshot = Candidate;
+		return true;
+	}
+	return false;
+}
+
 bool CQmNeteaseHookProvider::IsRunning() const
 {
-	return m_pImpl != nullptr && m_pImpl->m_pView != nullptr;
+	return m_pImpl != nullptr && (m_pImpl->m_pView != nullptr || m_pImpl->m_pViewV5 != nullptr);
 }
 
 #else
 
 struct CQmNeteaseHookProvider::SImpl
 {
+	void CloseV5() {}
 };
 
 CQmNeteaseHookProvider::CQmNeteaseHookProvider() :
@@ -323,6 +396,7 @@ CQmNeteaseHookProvider::~CQmNeteaseHookProvider() = default;
 void CQmNeteaseHookProvider::Start(const char *, int) {}
 void CQmNeteaseHookProvider::Stop() {}
 bool CQmNeteaseHookProvider::Read(QmNeteaseHook::SSnapshot *, int) { return false; }
+bool CQmNeteaseHookProvider::ReadV5(QmNeteaseHook::SSnapshotV5 *, int) { return false; }
 bool CQmNeteaseHookProvider::IsRunning() const { return false; }
 
 #endif

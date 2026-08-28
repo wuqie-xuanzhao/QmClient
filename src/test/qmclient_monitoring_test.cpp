@@ -6863,48 +6863,14 @@ TEST(QmMonitoringHelpers, QmClientVoiceTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoiceServer, &ControlCol, LgBodySize"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, QmClientLyricsTextInputsUseSharedQmTextField)
+TEST(QmMonitoringHelpers, NeteaseLyricsSettingsAreIntegratedWithSystemMediaControls)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmHudSystemMediaControlsContent");
 	ASSERT_FALSE(Body.empty());
-
-	const size_t CtxPos = Body.find("IUiContext QmClientLyricsTextInputCtx;");
-	const size_t UiPos = Body.find("QmClientLyricsTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientLyricsTextInputCtx.m_pAnim = PrewarmOnly || Ui()->RenderOnly() ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientLyricsTextInputCtx.m_pTree = PrewarmOnly || Ui()->RenderOnly() ? nullptr : &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientLyricsTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_lyrics_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientLyricsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
-
-	const size_t LambdaPos = Body.find("auto RenderLyricTextInput = [&](CLineInput *pLineInput, const char *pTextId, const char *pLabel, char *pValue, size_t ValueSize, const char *pEmptyText) {", FrameDtPos);
-	const size_t EmptyTextPos = Body.find("pLineInput->SetEmptyText(pEmptyText);", LambdaPos);
-	const size_t TextFieldPos = Body.find("if(ui_widget::InputField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, BodySize))", EmptyTextPos);
-	const size_t WriteBackPos = Body.find("str_copy(pValue, pLineInput->GetString(), ValueSize);", TextFieldPos);
-	EXPECT_NE(LambdaPos, std::string::npos);
-	EXPECT_NE(EmptyTextPos, std::string::npos);
-	EXPECT_NE(TextFieldPos, std::string::npos);
-	EXPECT_NE(WriteBackPos, std::string::npos);
-	EXPECT_LT(LambdaPos, EmptyTextPos);
-	EXPECT_LT(EmptyTextPos, TextFieldPos);
-	EXPECT_LT(TextFieldPos, WriteBackPos);
-
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsSourceOrder"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsProviderThresholds"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsIgnoreCacheProviders"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsAppleMusicMediaUserToken"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsLocalMediaFolders"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(pLineInput, &ControlColValue, LgBodySize"), std::string::npos);
+	EXPECT_NE(Body.find("g_Config.m_QmLyrics"), std::string::npos);
+	EXPECT_NE(Body.find("g_Config.m_QmLyricsInMediaIsland"), std::string::npos);
+	EXPECT_EQ(Source.find("RenderQmHudLyricsContent"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsRenderOnlyTraversalHasNoInputAnimationDeviceOrConfigSideEffects)

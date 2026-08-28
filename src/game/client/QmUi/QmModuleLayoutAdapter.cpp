@@ -118,7 +118,6 @@ namespace qm_module
 		case EQmModuleId::Voice: return "qm:voice";
 		case EQmModuleId::DynamicIsland: return "qm:dynamic_island";
 		case EQmModuleId::SystemMediaControls: return "qm:system_media_controls";
-		case EQmModuleId::Lyrics: return "qm:lyrics";
 		case EQmModuleId::Background3D: return "qm:background_3d";
 		case EQmModuleId::WeaponTrajectory: return "qm:weapon_trajectory";
 		case EQmModuleId::WeaponAnimation: return "qm:weapon_animation";

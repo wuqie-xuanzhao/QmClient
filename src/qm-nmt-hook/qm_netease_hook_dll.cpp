@@ -4,6 +4,7 @@
 #endif
 #include <game/client/components/qmclient/netease_hook/qm_netease_hook_metadata.h>
 #include <game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.h>
+#include <game/client/components/qmclient/netease_hook/qm_netease_hook_v5_writer.h>
 
 #include <windows.h>
 
@@ -29,6 +30,7 @@
 #include <cstring>
 #include <cwchar>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -92,6 +94,12 @@ namespace
 
 	HANDLE g_hMapping = nullptr;
 	QmNeteaseHook::SSharedBlock *g_pShared = nullptr;
+	std::unique_ptr<QmNeteaseHook::CV5Writer> g_pV5Writer;
+	std::atomic_bool g_V5WriterReady{false};
+	std::atomic<uint64_t> g_V5Generation{0};
+	std::atomic<uint64_t> g_V5SongId{0};
+	std::string g_V5MediaKey;
+	std::mutex g_V5Mutex;
 	std::atomic_bool g_HooksInstalled{false};
 	bool g_MinHookInitializedByUs = false;
 	bool g_GdipAddPathStringHookCreated = false;
@@ -710,6 +718,43 @@ namespace
 		std::memcpy(&g_pShared->m_aSnapshots[Slot], &Snapshot, sizeof(Snapshot));
 		MemoryBarrier();
 		InterlockedExchange64(reinterpret_cast<volatile LONG64 *>(&g_pShared->m_ActiveSequence), (LONG64)EvenSequence);
+	}
+
+	// DesktopLyrics GDI 只作为迁移期 fallback。Helper/CDP 发布 Frontend 结果
+	// 后，DLL 不得覆盖它；同时不把标准 SMTC 字段写入 v5。
+	void PublishV5Fallback(const QmNeteaseHook::SSnapshot &LegacySnapshot)
+	{
+		if(!g_V5WriterReady.load(std::memory_order_acquire) || !g_pV5Writer || !g_pV5Writer->IsOpen() || IsWorkCancelled())
+			return;
+		if(LegacySnapshot.m_SongId == 0 || (LegacySnapshot.m_Status & QmNeteaseHook::STATUS_HAS_CURRENT_LINE) == 0 || LegacySnapshot.m_aCurrentLine[0] == '\0')
+			return;
+		std::scoped_lock Lock(g_V5Mutex);
+
+		const uint64_t SongId = LegacySnapshot.m_SongId;
+		const std::string MediaKey = std::string(LegacySnapshot.m_aSongId) + '\n' + LegacySnapshot.m_aTitle + '\n' + LegacySnapshot.m_aArtist + '\n' + LegacySnapshot.m_aAlbum;
+		if(MediaKey != g_V5MediaKey)
+		{
+			g_V5MediaKey = MediaKey;
+			g_V5SongId.store(SongId, std::memory_order_release);
+			const uint64_t Previous = g_V5Generation.load(std::memory_order_acquire);
+			g_V5Generation.store(Previous == UINT64_MAX ? 1 : Previous + 1, std::memory_order_release);
+		}
+		QmNeteaseHook::SSnapshotV5 Snapshot{};
+		Snapshot.m_CloudMusicPid = GetCurrentProcessId();
+		Snapshot.m_SongId = SongId;
+		Snapshot.m_Generation = g_V5Generation.load(std::memory_order_acquire);
+		Snapshot.m_UpdatedAtTick = GetTickCount64();
+		Snapshot.m_PositionMs = std::max<int64_t>(0, LegacySnapshot.m_PositionMs);
+		if(SongId != 0)
+			Snapshot.m_Flags |= QmNeteaseHook::V5_FLAG_HAS_SONG;
+		if((LegacySnapshot.m_Status & QmNeteaseHook::STATUS_PLAYING) != 0)
+			Snapshot.m_Flags |= QmNeteaseHook::V5_FLAG_PLAYING_HINT;
+		Snapshot.m_Flags |= QmNeteaseHook::V5_FLAG_LYRIC_VALID | QmNeteaseHook::V5_FLAG_POSITION_VALID;
+		Snapshot.m_LyricSource = (uint32_t)QmNeteaseHook::ENeteaseLyricSource::DesktopLyricsFallback;
+		Snapshot.m_LineStartMs = -1;
+		Snapshot.m_LineEndMs = -1;
+		QmNeteaseHook::CopyUtf8Truncated(Snapshot.m_aCurrentLyric, sizeof(Snapshot.m_aCurrentLyric), LegacySnapshot.m_aCurrentLine, std::strlen(LegacySnapshot.m_aCurrentLine));
+		g_pV5Writer->PublishFallback(Snapshot, GetTickCount64(), 2000);
 	}
 
 	template<typename TOperation>
@@ -1770,6 +1815,7 @@ namespace
 			Snapshot.m_Status |= QmNeteaseHook::STATUS_HAS_CURRENT_LINE;
 		}
 		Publish(Snapshot);
+		PublishV5Fallback(Snapshot);
 	}
 
 	void AcknowledgeStop()
@@ -1803,6 +1849,8 @@ namespace
 		{
 			winrt::init_apartment(winrt::apartment_type::multi_threaded);
 			ApartmentInitialized = true;
+			g_pV5Writer = std::make_unique<QmNeteaseHook::CV5Writer>();
+			g_V5WriterReady.store(g_pV5Writer->Open(true), std::memory_order_release);
 			g_hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(QmNeteaseHook::SSharedBlock), SHARED_MAPPING_NAME);
 			if(g_hMapping != nullptr)
 			{
@@ -1844,6 +1892,12 @@ namespace
 		SuspendHooks();
 		if(IsControlStopRequested())
 			AcknowledgeStop();
+		if(g_pV5Writer)
+		{
+			g_pV5Writer->Close();
+			g_pV5Writer.reset();
+		}
+		g_V5WriterReady.store(false, std::memory_order_release);
 		if(ApartmentInitialized)
 			winrt::uninit_apartment();
 	}

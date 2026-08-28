@@ -50,14 +50,12 @@ struct SPlainState
 	bool m_CanPause = false;
 	bool m_CanPrev = false;
 	bool m_CanNext = false;
+	CSystemMediaControls::EPlaybackState m_PlaybackState = CSystemMediaControls::EPlaybackState::Unknown;
 	bool m_Playing = false;
 	char m_aSourceAppId[128] = {};
 	char m_aTitle[128] = {};
 	char m_aArtist[128] = {};
 	char m_aAlbum[128] = {};
-	char m_aNeteaseSongId[128] = {};
-	char m_aQqMusicSongId[128] = {};
-	char m_aLinkedFileName[128] = {};
 	int64_t m_PositionMs = 0;
 	int64_t m_DurationMs = 0;
 	int64_t m_PositionUpdatedTick = 0;
@@ -151,24 +149,6 @@ static void ClearMediaText(SPlainState &State)
 	State.m_aTitle[0] = '\0';
 	State.m_aArtist[0] = '\0';
 	State.m_aAlbum[0] = '\0';
-	State.m_aNeteaseSongId[0] = '\0';
-	State.m_aQqMusicSongId[0] = '\0';
-	State.m_aLinkedFileName[0] = '\0';
-}
-
-template<typename TGenres>
-static std::string FindGenreValue(const TGenres &Genres, const char *pPrefix)
-{
-	if(pPrefix == nullptr || pPrefix[0] == '\0')
-		return {};
-	const uint32_t NumGenres = Genres.Size();
-	for(uint32_t i = 0; i < NumGenres; ++i)
-	{
-		const std::string Value = winrt::to_string(Genres.GetAt(i));
-		if(str_startswith(Value.c_str(), pPrefix))
-			return Value.substr(str_length(pPrefix));
-	}
-	return {};
 }
 
 static bool IsAppleMusicPlayerId(const char *pSourceAppId)
@@ -483,76 +463,10 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 	QmPerfLogStage("perf/system_media_controls", "album_art_apply", ApplyTimer.ElapsedMs(), true, pClient, nullptr, nullptr, aExtra);
 }
 
-static bool LoadHookAlbumArtTextures(IGraphics *pGraphics, const char *pPath, IGraphics::CTextureHandle *pAlbumArt, IGraphics::CTextureHandle *pAlbumArtCircular, int *pWidth, int *pHeight)
-{
-	if(pGraphics == nullptr || pPath == nullptr || pPath[0] == '\0' || pAlbumArt == nullptr || pAlbumArtCircular == nullptr || pWidth == nullptr || pHeight == nullptr)
-		return false;
-	IOHANDLE File = io_open(pPath, IOFLAG_READ);
-	if(File == nullptr)
-		return false;
-	CImageInfo Image;
-	int PngliteIncompatible = 0;
-	const bool Loaded = CImageLoader::LoadPng(File, pPath, Image, PngliteIncompatible);
-	io_close(File);
-	if(!Loaded || Image.m_Width == 0 || Image.m_Height == 0 || Image.m_pData == nullptr)
-	{
-		Image.Free();
-		return false;
-	}
-	if(Image.m_Format != CImageInfo::FORMAT_RGBA && !ConvertToRgba(Image))
-	{
-		Image.Free();
-		return false;
-	}
-	size_t DataSize = 0;
-	if(!Image.DataSize(DataSize) || DataSize == 0 || DataSize > (size_t)std::numeric_limits<int>::max())
-	{
-		Image.Free();
-		return false;
-	}
-	const int Width = (int)Image.m_Width;
-	const int Height = (int)Image.m_Height;
-	std::vector<uint8_t> Pixels(Image.m_pData, Image.m_pData + DataSize);
-	Image.Free();
-	std::vector<uint8_t> CircularPixels = Pixels;
-	ApplyCircularFeatherMask(CircularPixels, Width, Height);
-	const float RoundingRatio = 2.0f / 14.0f;
-	ApplyRoundedMask(Pixels, Width, Height, (float)std::min(Width, Height) * RoundingRatio);
-	IGraphics::CTextureHandle AlbumArt = LoadAlbumArtTexture(pGraphics, Pixels, Width, Height, "netease_hook_album_art");
-	if(!AlbumArt.IsValid())
-		return false;
-	IGraphics::CTextureHandle AlbumArtCircular = LoadAlbumArtTexture(pGraphics, CircularPixels, Width, Height, "netease_hook_album_art_circular");
-	if(!AlbumArtCircular.IsValid())
-	{
-		pGraphics->UnloadTexture(&AlbumArt);
-		return false;
-	}
-	*pAlbumArt = AlbumArt;
-	*pAlbumArtCircular = AlbumArtCircular;
-	*pWidth = Width;
-	*pHeight = Height;
-	return true;
-}
 #endif
 
 CSystemMediaControls::CSystemMediaControls() = default;
 CSystemMediaControls::~CSystemMediaControls() = default;
-
-void CSystemMediaControls::ClearHookAlbumArt()
-{
-	if(Graphics() != nullptr)
-	{
-		if(m_HookAlbumArt.IsValid())
-			Graphics()->UnloadTexture(&m_HookAlbumArt);
-		if(m_HookAlbumArtCircular.IsValid())
-			Graphics()->UnloadTexture(&m_HookAlbumArtCircular);
-	}
-	m_HookAlbumArt.Invalidate();
-	m_HookAlbumArtCircular.Invalidate();
-	m_HookAlbumArtWidth = 0;
-	m_HookAlbumArtHeight = 0;
-	m_HookAlbumArtPath.clear();
-}
 
 void CSystemMediaControls::SyncNeteaseHookConfiguration()
 {
@@ -575,9 +489,8 @@ void CSystemMediaControls::SyncNeteaseHookConfiguration()
 	m_NeteaseHookConfigInitialized = true;
 	m_LastNeteaseHookEnabled = HookEnabled;
 	m_LastNeteaseHookHelperPath = HelperPath;
-	m_HookHasMedia = false;
-	m_HookState = SState{};
-	ClearHookAlbumArt();
+	m_HasNeteaseSnapshot = false;
+	m_NeteaseSnapshot = {};
 }
 
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
@@ -678,7 +591,24 @@ void CSystemMediaControls::ThreadMain()
 				State.m_CanPause = Controls.IsPauseEnabled();
 				State.m_CanPrev = Controls.IsPreviousEnabled();
 				State.m_CanNext = Controls.IsNextEnabled();
-				State.m_Playing = PlaybackInfo.PlaybackStatus() == GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing;
+				const auto PlaybackStatus = PlaybackInfo.PlaybackStatus();
+				switch(PlaybackStatus)
+				{
+				case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing:
+					State.m_PlaybackState = CSystemMediaControls::EPlaybackState::Playing;
+					break;
+				case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Paused:
+					State.m_PlaybackState = CSystemMediaControls::EPlaybackState::Paused;
+					break;
+				case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Stopped:
+				case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Closed:
+					State.m_PlaybackState = CSystemMediaControls::EPlaybackState::Stopped;
+					break;
+				default:
+					State.m_PlaybackState = CSystemMediaControls::EPlaybackState::Unknown;
+					break;
+				}
+				State.m_Playing = State.m_PlaybackState == CSystemMediaControls::EPlaybackState::Playing;
 				const auto PlaybackRate = PlaybackInfo.PlaybackRate();
 				State.m_PlaybackRate = PlaybackRate ? std::max(0.0, PlaybackRate.Value()) : 1.0;
 				const std::string SourceAppId = winrt::to_string(Session.SourceAppUserModelId());
@@ -735,10 +665,6 @@ void CSystemMediaControls::ThreadMain()
 								const std::string Title = winrt::to_string(MediaProps.Title());
 								std::string Artist = winrt::to_string(MediaProps.Artist());
 								std::string Album = winrt::to_string(MediaProps.AlbumTitle());
-								const auto Genres = MediaProps.Genres();
-								const std::string NeteaseSongId = FindGenreValue(Genres, "NCM-");
-								const std::string QqMusicSongId = FindGenreValue(Genres, "QQ-");
-								const std::string LinkedFileName = FindGenreValue(Genres, "FILENAME-");
 								ApplyAppleMusicMetadataFix(State.m_aSourceAppId, Artist, Album);
 
 								if(!Title.empty())
@@ -767,21 +693,6 @@ void CSystemMediaControls::ThreadMain()
 								{
 									State.m_aAlbum[0] = '\0';
 								}
-
-								if(!NeteaseSongId.empty())
-									str_copy(State.m_aNeteaseSongId, NeteaseSongId.c_str(), sizeof(State.m_aNeteaseSongId));
-								else
-									State.m_aNeteaseSongId[0] = '\0';
-
-								if(!QqMusicSongId.empty())
-									str_copy(State.m_aQqMusicSongId, QqMusicSongId.c_str(), sizeof(State.m_aQqMusicSongId));
-								else
-									State.m_aQqMusicSongId[0] = '\0';
-
-								if(!LinkedFileName.empty())
-									str_copy(State.m_aLinkedFileName, LinkedFileName.c_str(), sizeof(State.m_aLinkedFileName));
-								else
-									State.m_aLinkedFileName[0] = '\0';
 
 								const bool HasText = !Title.empty() || !Artist.empty() || !Album.empty();
 								if(HasText)
@@ -904,94 +815,24 @@ void CSystemMediaControls::OnShutdown()
 	m_NeteaseHookConfigInitialized = false;
 	m_LastNeteaseHookEnabled = false;
 	m_LastNeteaseHookHelperPath.clear();
-	m_HookHasMedia = false;
-	m_HookState = SState{};
-	ClearHookAlbumArt();
+	m_HasNeteaseSnapshot = false;
+	m_NeteaseSnapshot = {};
 }
 
 void CSystemMediaControls::OnUpdate()
 {
 	SyncNeteaseHookConfiguration();
+	// v5 是网易云私有补充数据。即使歌词关闭也持续读取，使开关只控制展示。
+	m_HasNeteaseSnapshot = false;
+	m_NeteaseSnapshot = {};
 	if(m_pNeteaseHook && m_LastNeteaseHookEnabled)
 	{
-		QmNeteaseHook::SSnapshot HookSnapshot{};
-		m_HookHasMedia = m_pNeteaseHook->Read(&HookSnapshot, g_Config.m_QmNeteaseHookTimeoutMs) && QmNeteaseHook::HasMedia(HookSnapshot);
-		m_HookState = SState{};
-		if(m_HookHasMedia)
+		QmNeteaseHook::SSnapshotV5 Snapshot{};
+		if(m_pNeteaseHook->ReadV5(&Snapshot, g_Config.m_QmNeteaseHookTimeoutMs))
 		{
-			m_HookState.m_HookValid = true;
-			m_HookState.m_HookSequence = HookSnapshot.m_Sequence;
-			m_HookState.m_Playing = (HookSnapshot.m_Status & QmNeteaseHook::STATUS_PLAYING) != 0;
-			// 使用网易云实际 SMTC 标识，使现有 Netease 歌词源可以复用歌曲 ID 直查。
-			str_copy(m_HookState.m_aSourceAppId, "cloudmusic.exe", sizeof(m_HookState.m_aSourceAppId));
-			str_copy(m_HookState.m_aTitle, HookSnapshot.m_aTitle, sizeof(m_HookState.m_aTitle));
-			str_copy(m_HookState.m_aArtist, HookSnapshot.m_aArtist, sizeof(m_HookState.m_aArtist));
-			str_copy(m_HookState.m_aAlbum, HookSnapshot.m_aAlbum, sizeof(m_HookState.m_aAlbum));
-			str_copy(m_HookState.m_aNeteaseSongId, HookSnapshot.m_aSongId, sizeof(m_HookState.m_aNeteaseSongId));
-			str_copy(m_HookState.m_aHookAlbumArtPath, HookSnapshot.m_aCoverPath, sizeof(m_HookState.m_aHookAlbumArtPath));
-			str_copy(m_HookState.m_aHookAlbumArtUrl, HookSnapshot.m_aCoverUrl, sizeof(m_HookState.m_aHookAlbumArtUrl));
-			m_HookState.m_PositionMs = HookSnapshot.m_PositionMs;
-			m_HookState.m_DurationMs = HookSnapshot.m_DurationMs;
-			// DLL 与客户端的 steady_clock 起点不同，不能直接传递 QPC 数值；读取时重新锚定本地单调时钟。
-			m_HookState.m_PositionUpdatedTick = time_get_impl();
-			m_HookState.m_TimelineGeneration = HookSnapshot.m_TimelineGeneration;
-			m_HookState.m_PlaybackRate = HookSnapshot.m_PlaybackRate;
-			m_HookState.m_HookCurrentLineStartMs = HookSnapshot.m_CurrentLineStartMs;
-			m_HookState.m_HookCurrentLineEndMs = HookSnapshot.m_CurrentLineEndMs;
-			if(QmNeteaseHook::HasCurrentLine(HookSnapshot))
-				str_copy(m_HookState.m_aHookCurrentLine, HookSnapshot.m_aCurrentLine, sizeof(m_HookState.m_aHookCurrentLine));
-			const std::string CoverPath = QmNeteaseHook::HasCover(HookSnapshot) ? HookSnapshot.m_aCoverPath : "";
-			if(CoverPath.empty())
-			{
-				if(!m_HookAlbumArtPath.empty() || m_HookAlbumArt.IsValid() || m_HookAlbumArtCircular.IsValid())
-					ClearHookAlbumArt();
-			}
-			else
-			{
-				if(CoverPath != m_HookAlbumArtPath)
-				{
-					ClearHookAlbumArt();
-					m_HookAlbumArtPath = CoverPath;
-				}
-#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
-				if(!m_HookAlbumArt.IsValid())
-				{
-					IGraphics::CTextureHandle AlbumArt;
-					IGraphics::CTextureHandle AlbumArtCircular;
-					int Width = 0;
-					int Height = 0;
-					if(LoadHookAlbumArtTextures(Graphics(), CoverPath.c_str(), &AlbumArt, &AlbumArtCircular, &Width, &Height))
-					{
-						m_HookAlbumArt = AlbumArt;
-						m_HookAlbumArtCircular = AlbumArtCircular;
-						m_HookAlbumArtWidth = Width;
-						m_HookAlbumArtHeight = Height;
-					}
-				}
-#endif
-			}
-			m_HookState.m_AlbumArt = m_HookAlbumArt;
-			m_HookState.m_AlbumArtCircular = m_HookAlbumArtCircular;
-			m_HookState.m_AlbumArtWidth = m_HookAlbumArtWidth;
-			m_HookState.m_AlbumArtHeight = m_HookAlbumArtHeight;
-#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
-			// Hook 缓存尚未生成时，暂时复用同一首歌的 SMTC 解码结果，避免封面闪烁。
-			if(!m_HookState.m_AlbumArt.IsValid() && m_pWinrt)
-			{
-				m_HookState.m_AlbumArt = m_pWinrt->m_State.m_AlbumArt;
-				m_HookState.m_AlbumArtCircular = m_pWinrt->m_State.m_AlbumArtCircular;
-				m_HookState.m_AlbumArtWidth = m_pWinrt->m_State.m_AlbumArtWidth;
-				m_HookState.m_AlbumArtHeight = m_pWinrt->m_State.m_AlbumArtHeight;
-			}
-#endif
+			m_NeteaseSnapshot = Snapshot;
+			m_HasNeteaseSnapshot = true;
 		}
-	}
-	else
-	{
-		m_HookHasMedia = false;
-		m_HookState = SState{};
-		if(!m_HookAlbumArtPath.empty() || m_HookAlbumArt.IsValid() || m_HookAlbumArtCircular.IsValid())
-			ClearHookAlbumArt();
 	}
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!m_pWinrt)
@@ -1028,14 +869,12 @@ void CSystemMediaControls::OnUpdate()
 		m_pWinrt->m_State.m_CanPause = SharedState.m_CanPause;
 		m_pWinrt->m_State.m_CanPrev = SharedState.m_CanPrev;
 		m_pWinrt->m_State.m_CanNext = SharedState.m_CanNext;
+		m_pWinrt->m_State.m_PlaybackState = SharedState.m_PlaybackState;
 		m_pWinrt->m_State.m_Playing = SharedState.m_Playing;
 		str_copy(m_pWinrt->m_State.m_aSourceAppId, SharedState.m_aSourceAppId, sizeof(m_pWinrt->m_State.m_aSourceAppId));
 		str_copy(m_pWinrt->m_State.m_aTitle, SharedState.m_aTitle, sizeof(m_pWinrt->m_State.m_aTitle));
 		str_copy(m_pWinrt->m_State.m_aArtist, SharedState.m_aArtist, sizeof(m_pWinrt->m_State.m_aArtist));
 		str_copy(m_pWinrt->m_State.m_aAlbum, SharedState.m_aAlbum, sizeof(m_pWinrt->m_State.m_aAlbum));
-		str_copy(m_pWinrt->m_State.m_aNeteaseSongId, SharedState.m_aNeteaseSongId, sizeof(m_pWinrt->m_State.m_aNeteaseSongId));
-		str_copy(m_pWinrt->m_State.m_aQqMusicSongId, SharedState.m_aQqMusicSongId, sizeof(m_pWinrt->m_State.m_aQqMusicSongId));
-		str_copy(m_pWinrt->m_State.m_aLinkedFileName, SharedState.m_aLinkedFileName, sizeof(m_pWinrt->m_State.m_aLinkedFileName));
 		m_pWinrt->m_State.m_PositionMs = SharedState.m_PositionMs;
 		m_pWinrt->m_State.m_DurationMs = SharedState.m_DurationMs;
 		m_pWinrt->m_State.m_PositionUpdatedTick = SharedState.m_PositionUpdatedTick;
@@ -1050,13 +889,6 @@ void CSystemMediaControls::OnUpdate()
 
 bool CSystemMediaControls::GetStateSnapshot(SState &State) const
 {
-#if defined(_WIN32)
-	if(g_Config.m_QmNeteaseHookEnable && m_LastNeteaseHookEnabled && m_HookHasMedia)
-	{
-		State = m_HookState;
-		return true;
-	}
-#endif
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!g_Config.m_QmSmtcEnable)
 	{
@@ -1072,6 +904,17 @@ bool CSystemMediaControls::GetStateSnapshot(SState &State) const
 #endif
 	State = SState{};
 	return false;
+}
+
+bool CSystemMediaControls::GetNeteaseSnapshot(QmNeteaseHook::SSnapshotV5 &Snapshot) const
+{
+	if(!m_HasNeteaseSnapshot)
+	{
+		Snapshot = {};
+		return false;
+	}
+	Snapshot = m_NeteaseSnapshot;
+	return true;
 }
 
 void CSystemMediaControls::Previous()
