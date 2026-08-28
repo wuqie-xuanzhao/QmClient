@@ -4925,13 +4925,6 @@ int CMenus::IdleRenderFrameRate() const
 	if(GameClient()->m_MenuBackground.IsLoading())
 		return 0;
 
-	// Server browser data and ping results continue to arrive while the menu is
-	// idle. Do not apply the power-saving menu cap to these pages, otherwise the
-	// list is rendered at 60 Hz regardless of the actual backend capacity.
-	const int VisiblePage = ClientState == IClient::STATE_ONLINE || ClientState == IClient::STATE_DEMOPLAYBACK ? m_GamePage : m_MenuPage;
-	if((VisiblePage >= PAGE_INTERNET && VisiblePage <= PAGE_FAVORITE_COMMUNITY_5) || VisiblePage == PAGE_FAVORITE_MAPS)
-		return 0;
-
 	const SUiV2PerfStats &UiRuntimeStats = GameClient()->UiRuntimeV2()->LastStats();
 	if(UiRuntimeStats.m_ActiveAnimCount > 0 || UiRuntimeStats.m_QueuedAnimCount > 0)
 		return 0;

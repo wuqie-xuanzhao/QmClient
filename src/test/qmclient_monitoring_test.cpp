@@ -5214,8 +5214,6 @@ TEST(QmMonitoringHelpers, MenuIdleRenderThrottleOnlySkipsSettingsDuringPerfSampl
 	ASSERT_NE(SettingsGuard, std::string::npos);
 	ASSERT_NE(SettingsReturn, std::string::npos);
 	EXPECT_NE(Body.find("GameClient()->m_MenuBackground.IsLoading()"), std::string::npos);
-	EXPECT_NE(Body.find("VisiblePage >= PAGE_INTERNET && VisiblePage <= PAGE_FAVORITE_COMMUNITY_5"), std::string::npos);
-	EXPECT_NE(Body.find("VisiblePage == PAGE_FAVORITE_MAPS"), std::string::npos);
 	EXPECT_NE(Body.find("UiRuntimeStats.m_ActiveAnimCount > 0"), std::string::npos);
 	EXPECT_NE(Body.find("time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME"), std::string::npos);
 	EXPECT_NE(Body.find("return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);"), std::string::npos);
