@@ -143,7 +143,7 @@ TEST(MetalBackendContract, DrawablePoolUsesTimeoutWithoutApplicationFrameCap)
 	ASSERT_NE(Commit, std::string::npos);
 	EXPECT_EQ(Source.find("PresentBackpressure", Commit), std::string::npos);
 	EXPECT_EQ(Source.find("m_pPresentTracker", Commit), std::string::npos);
-	EXPECT_EQ(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
+	EXPECT_NE(Source.find("pLayer.allowsNextDrawableTimeout = !m_VSync;"), std::string::npos);
 	EXPECT_NE(Source.find("The drawable pool is finite", 0), std::string::npos);
 }
 
@@ -666,7 +666,7 @@ TEST(MetalBackendContract, PersistentBuffersAreNotMutatedOrReleasedWhileInFlight
 TEST(MetalBackendContract, DrawableAcquisitionUsesTimeoutAndCompletedSlotsDoNotWait)
 {
 	const std::string Source = ReadTestSourceFile("src/engine/client/backend/metal/backend_metal.mm");
-	EXPECT_EQ(Source.find("pLayer.allowsNextDrawableTimeout = YES;"), std::string::npos);
+	EXPECT_NE(Source.find("pLayer.allowsNextDrawableTimeout = !m_VSync;"), std::string::npos);
 	EXPECT_NE(Source.find("m_CurrentDrawable = RetainMetalObject([pLayer nextDrawable]);"), std::string::npos);
 	EXPECT_NE(Source.find("copyFromTexture:CurrentBackbufferTexture() sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0)"), std::string::npos);
 	EXPECT_NE(Source.find("m_SkipCurrentFrame = true;"), std::string::npos);

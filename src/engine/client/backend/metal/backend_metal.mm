@@ -2080,9 +2080,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// therefore the drawable must remain usable outside a render pass.
 		pLayer.framebufferOnly = NO;
 		pLayer.presentsWithTransaction = NO;
-		// 保持 CAMetalLayer 的系统默认 drawable 获取策略。drawables 来自
-		// 有限池，强制超时会把暂时背压转换成 nil 和丢帧，产生闪烁；
-		// 由系统决定 nextDrawable 的等待时机。
+		// 仅在关闭 VSync 时允许 drawable 获取超时。开启 VSync 时必须保留
+		// 系统背压，否则 nextDrawable 返回 nil 会直接丢掉本帧呈现。
+		pLayer.allowsNextDrawableTimeout = !m_VSync;
 		pLayer.displaySyncEnabled = m_VSync;
 		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, pLayer.allowsNextDrawableTimeout ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0);
 		UpdateDrawableSize();
