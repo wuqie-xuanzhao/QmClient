@@ -3662,7 +3662,7 @@ bool CHud::HasVisibleMediaIsland() const
 	}
 
 	char aLyricsIslandBuf[256];
-	if(GameClient()->m_QmLyrics.GetMediaIslandText(aLyricsIslandBuf, sizeof(aLyricsIslandBuf), nullptr))
+	if(GameClient()->m_NeteaseIntegration.GetCurrentLyric(aLyricsIslandBuf, sizeof(aLyricsIslandBuf), nullptr))
 		return true;
 
 	if(!(g_Config.m_QmSmtcEnable && g_Config.m_QmSmtcShowHud))
@@ -4022,7 +4022,7 @@ void CHud::RenderMediaIsland()
 	const bool ShowTeam = BuildHudTeamText(*GameClient(), aTeamBuf, sizeof(aTeamBuf));
 	char aLyricsIslandBuf[256];
 	ColorRGBA LyricsIslandColor(0.97f, 0.98f, 1.0f, 0.90f);
-	const bool ShowLyricsIslandLine = GameClient()->m_QmLyrics.GetMediaIslandText(aLyricsIslandBuf, sizeof(aLyricsIslandBuf), &LyricsIslandColor);
+	const bool ShowLyricsIslandLine = GameClient()->m_NeteaseIntegration.GetCurrentLyric(aLyricsIslandBuf, sizeof(aLyricsIslandBuf), &LyricsIslandColor);
 	const SHudMediaIslandSwapRows SwapRows = QmHudMediaIslandSwapRows(IncomingSwapCount, TimerCapsule.m_Visible, ShowLyricsIslandLine);
 	const bool ShowTopRow = HasMediaState || ShowInfoStack || TimerCapsule.m_Visible || ShowRecordingStatus || ShowSpectator || ShowTeam;
 
@@ -5099,9 +5099,7 @@ void CHud::RenderMediaIsland()
 			const float LyricsTextY = BottomTextY + BottomRowLineHeight * SwapRows.m_LyricsLineIndex;
 			ColorRGBA LyricsTextColor = LyricsIslandColor;
 			LyricsTextColor.a *= VisibleBottomAlpha;
-			const CUIRect LyricsRect = {IslandX, LyricsTextY, UnifiedWidth, BottomRowLineHeight};
-			if(!GameClient()->m_QmLyrics.RenderMediaIslandLine(LyricsRect, BottomFontSize, VisibleBottomAlpha))
-				RenderBottomTextCentered(LyricsTextY, aLyricsIslandBuf, LyricsTextColor);
+			RenderBottomTextCentered(LyricsTextY, aLyricsIslandBuf, LyricsTextColor);
 		}
 	}
 

@@ -77,7 +77,7 @@
 #include "components/qmclient/hud_notifications/hud_notifications.h"
 #include "components/qmclient/input_overlay.h"
 #include "components/qmclient/monitoring/monitoring.h"
-#include "components/qmclient/qm_lyrics/qm_lyrics.h"
+#include "components/qmclient/netease/netease_integration.h"
 #include "components/qmclient/qmclient.h"
 #include "components/qmclient/scripting.h"
 #include "components/qmclient/stutter_diagnostics.h"
@@ -243,7 +243,7 @@ public:
 	CSounds m_Sounds;
 	CEmoticon m_Emoticon;
 	CSystemMediaControls m_SystemMediaControls;
-	CQmLyrics m_QmLyrics;
+	CNeteaseIntegration m_NeteaseIntegration;
 
 	CDamageInd m_DamageInd;
 	CTouchControls m_TouchControls;

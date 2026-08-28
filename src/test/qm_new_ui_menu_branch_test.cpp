@@ -1328,7 +1328,7 @@ TEST(QmNewUiMenuBranches, DefaultUiSurfacesUseBlackThirtyPercent)
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(ClSettingsTabbarOpacity, cl_settings_tabbar_opacity, 30"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaults)
+TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredDefaults)
 {
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	const std::regex BinaryQmDefaultOn(R"(MACRO_CONFIG_INT\([^,]+,\s*qm_[^,]+,\s*1,\s*0,\s*1,)");
@@ -1352,12 +1352,6 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaul
 		"QmChatHideSystemPrefix",
 		"QmSmtcEnable",
 		"QmSmtcShowHud",
-		"QmSmtcLyricsEnable",
-		"QmLyricsMarquee",
-		"QmLyricsSearchType",
-		"QmLyricsCacheEnable",
-		"QmLyricsAutoHideNoSmtc",
-		"QmLyricsHideWhenPaused",
 		"QmAutoUpdate",
 		"QmSwitchCountdown",
 		"QmMessageMerge",
@@ -1739,18 +1733,15 @@ TEST(QmNewUiMenuBranches, NameplateGameUsesFullScopeReferenceFrame)
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowDirection = pPlayerInfo->m_Local;"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, MediaIslandLyricsUsesKaraokeRenderer)
+TEST(QmNewUiMenuBranches, MediaIslandLyricsUsesNeteaseIntegration)
 {
 	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
-	const std::string LyricsHeader = ReadTextFile("src/game/client/components/qmclient/qm_lyrics/qm_lyrics.h");
-	const std::string LyricsSource = ReadTextFile("src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp");
 	const std::string RenderMediaIsland = FunctionBody(HudSource, "void CHud::RenderMediaIsland()");
-	const std::string RenderMediaIslandLine = FunctionBody(LyricsSource, "bool CQmLyrics::RenderMediaIslandLine");
-
-	EXPECT_NE(LyricsHeader.find("bool RenderMediaIslandLine(const CUIRect &Rect, float FontSize, float Alpha);"), std::string::npos);
-	EXPECT_NE(RenderMediaIsland.find("GameClient()->m_QmLyrics.RenderMediaIslandLine(LyricsRect, BottomFontSize, VisibleBottomAlpha)"), std::string::npos);
-	EXPECT_NE(RenderMediaIslandLine.find("DrawKaraokeLine(TextRender(), Graphics(), m_pImpl->m_Track.m_vLines[Active], NowMs, Rect, FontSize, TextY, Played, Unplayed, Opacity);"), std::string::npos);
-	EXPECT_NE(RenderMediaIslandLine.find("QmLyrics::ResolveDisplayLineIndex(m_pImpl->m_Track, m_pImpl->m_ActiveLineIndex, NowMs);"), std::string::npos);
+	const std::string IntegrationSource = ReadTextFile("src/game/client/components/qmclient/netease/netease_integration.cpp");
+	EXPECT_NE(RenderMediaIsland.find("GameClient()->m_NeteaseIntegration.GetCurrentLyric"), std::string::npos);
+	EXPECT_EQ(RenderMediaIsland.find("m_QmLyrics"), std::string::npos);
+	EXPECT_NE(IntegrationSource.find("qm_lyrics"), std::string::npos);
+	EXPECT_NE(IntegrationSource.find("qm_lyrics_in_media_island"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, HudNotificationsKeepEdgeGeometryStableDuringSlide)
@@ -2956,7 +2947,8 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	EXPECT_NE(HudDeck.find("ConsumeQmHudRow(Content); // push radius"), std::string::npos);
 	EXPECT_NE(HudDeck.find("ResolveSettingsRadioRowLayout(Content, 2, Metrics)"), std::string::npos);
 	EXPECT_NE(QmSource.find("const int NoiseSuppressModeForLayout = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);"), std::string::npos);
-	EXPECT_NE(QmSource.find("const int PreviewFontSizeForLayout = g_Config.m_QmSmtcLyricsFontSize;"), std::string::npos);
+	EXPECT_NE(QmSource.find("g_Config.m_QmLyricsInMediaIsland"), std::string::npos);
+	EXPECT_EQ(QmSource.find("EQmModuleId::Lyrics"), std::string::npos);
 	EXPECT_NE(QmSource.find("if(!PrewarmOnly && !Ui()->RenderOnly())"), std::string::npos);
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");

@@ -699,19 +699,6 @@ inline float ResolveQmHudVoiceHeight(const SSettingsContentMetrics &Metrics, con
 	return Height - Metrics.m_LineSpacing;
 }
 
-inline float ResolveQmHudLyricsPreviewHeight(const int FontSize, const int LineCount)
-{
-	constexpr float PreviewPaddingY = 7.0f;
-	constexpr float PreviewLineGap = 5.0f;
-	const int ClampedLines = std::clamp(LineCount, 1, 2);
-	return std::max(42.0f, PreviewPaddingY * 2.0f + std::max(0, FontSize) * ClampedLines + PreviewLineGap * (ClampedLines - 1));
-}
-
-inline float ResolveQmHudLyricsHeight(const SSettingsContentMetrics &Metrics, const int PreviewFontSize, const int PreviewLineCount)
-{
-	return 48.0f * Metrics.m_RowStep + ResolveQmHudLyricsPreviewHeight(PreviewFontSize, PreviewLineCount);
-}
-
 inline float ResolveQmHudBackground3DHeight(const SSettingsContentMetrics &Metrics, const float ContentWidth, const bool Enabled, const bool CustomColor, const bool Glow, const bool Trail, const bool Pulse, const bool Twinkle)
 {
 	if(!Enabled)

@@ -586,6 +586,7 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_FastPractice, "fast_practice");
 	AddComponent(&m_Voice, "voice");
 	AddComponent(&m_SystemMediaControls, "system_media_controls");
+	AddComponent(&m_NeteaseIntegration, "netease_integration");
 	AddComponent(&m_Players, "players");
 	AddComponent(&m_MovingTilesBackground, "moving_tiles_background");
 	AddComponent(&m_MapLayersForeground, "map_layers_foreground");
@@ -613,7 +614,6 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_InfoMessages, "info_messages");
 	AddComponent(&m_Chat, "chat");
 	AddComponent(&m_QmHudNotifications, "hud_notifications");
-	AddComponent(&m_QmLyrics, "lyrics");
 	AddComponent(&m_Broadcast, "broadcast");
 	AddComponent(&m_ImportantAlert, "important_alert");
 	AddComponent(&m_DebugHud, "debug_hud");

@@ -158,6 +158,61 @@ option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF
 option(QM_STRICT_WARNINGS "Treat compiler warnings as errors" OFF)
 option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor PNG icon atlases from SVG sources" ON)
 
+if(TARGET_OS STREQUAL "windows" AND TARGET_BITS STREQUAL "64")
+  add_subdirectory(vendor/minhook EXCLUDE_FROM_ALL)
+  add_library(qm-nmt-hook64 SHARED
+    src/qm-nmt-hook/qm_netease_hook_dll.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_v5_writer.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.h
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_v5_writer.h
+  )
+  set_target_properties(qm-nmt-hook64 PROPERTIES OUTPUT_NAME "qm-nmt-hook64")
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_EXTENSIONS OFF)
+  target_include_directories(qm-nmt-hook64 PRIVATE src vendor/minhook/include)
+  target_compile_definitions(qm-nmt-hook64 PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-hook64 PRIVATE minhook windowsapp bcrypt)
+
+  # 网易云启动期 Bootstrap 在 QmClient 目录中使用独立文件名；部署器只在
+  # 网易云安装目录内将它安装为 version.dll，并拒绝覆盖未知同名 DLL。
+  add_library(qm-nmt-bootstrap SHARED
+    src/qm-nmt-hook/qm_netease_version_proxy.cpp
+    src/qm-nmt-hook/qm_netease_bootstrap.cpp
+    src/qm-nmt-hook/qm_netease_bootstrap.h
+    src/qm-nmt-hook/qm_netease_version_proxy.def
+  )
+  set_target_properties(qm-nmt-bootstrap PROPERTIES OUTPUT_NAME "qm-nmt-bootstrap")
+  set_property(TARGET qm-nmt-bootstrap PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-bootstrap PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-bootstrap PROPERTY CXX_EXTENSIONS OFF)
+  target_include_directories(qm-nmt-bootstrap PRIVATE src)
+  target_compile_definitions(qm-nmt-bootstrap PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-bootstrap PRIVATE ws2_32)
+
+  add_executable(qm-nmt-helper src/qm-nmt-hook/qm_netease_hook_helper.cpp)
+  target_sources(qm-nmt-helper PRIVATE
+    src/qm-nmt-hook/qm_netease_bootstrap.cpp
+    src/qm-nmt-hook/qm_netease_cdp.cpp
+    src/qm-nmt-hook/qm_netease_cdp_client.cpp
+    src/qm-nmt-hook/qm_netease_frontend_bridge.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_state.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_v5_writer.cpp
+    src/engine/external/json-parser/json.c
+  )
+  set_target_properties(qm-nmt-helper PROPERTIES OUTPUT_NAME "qm-nmt-helper")
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_EXTENSIONS OFF)
+  target_include_directories(qm-nmt-helper PRIVATE src)
+  target_compile_definitions(qm-nmt-helper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-helper PRIVATE bcrypt winhttp ws2_32)
+endif()
+
 if(TARGET_OS STREQUAL "android")
   set(DISCORD OFF)
   set(STEAM OFF)
@@ -857,12 +912,16 @@ if(NOT(GTEST_FOUND) AND DOWNLOAD_GTEST)
       )
 
       if(MSVC)
-        foreach(target gtest gmock)
-          set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded$<${DBG}:Debug>)
+        foreach(target gtest gmock gtest_main gmock_main)
+          if(TARGET ${target})
+            set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded$<${DBG}:Debug>)
+          endif()
           # `/w` disables all warnings. This is needed because `gtest` enables
           # `/WX` (equivalent of `-Werror`) for some reason, breaking builds
           # when MSVS adds new warnings.
-          target_compile_options(${target} PRIVATE /w)
+          if(TARGET ${target})
+            target_compile_options(${target} PRIVATE /w)
+          endif()
         endforeach()
       endif()
 
@@ -2810,9 +2869,6 @@ if(CLIENT)
     components/censor.h
     components/chat.cpp
     components/chat.h
-    components/chat_completion.cpp
-    components/chat_completion.h
-    components/chat_completion_pinyin.inc
     components/community_icons.cpp
     components/community_icons.h
     components/console.cpp
@@ -2921,36 +2977,22 @@ if(CLIENT)
     components/qmclient/monitoring/monitoring.cpp
     components/qmclient/monitoring/monitoring_device_perf.cpp
     components/qmclient/monitoring/monitoring.h
-    components/qmclient/qm_lyrics/qm_lyrics.cpp
-    components/qmclient/qm_lyrics/qm_lyrics.h
-    components/qmclient/qm_lyrics/qm_lyrics_cache.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_cache.h
-    components/qmclient/qm_lyrics/qm_lyrics_clock.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_clock.h
-    components/qmclient/qm_lyrics/qm_lyrics_match.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_match.h
-    components/qmclient/qm_lyrics/qm_lyrics_model.h
-    components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.h
-    components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.h
-    components/qmclient/qm_lyrics/qm_lyrics_render.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_render.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.h
-    components/qmclient/qm_lyrics/qm_lyrics_source.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_kugou.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_kugou.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_local_files.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_local_files.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.h
-    components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_song_search_map.h
+    components/qmclient/netease/netease_integration.cpp
+    components/qmclient/netease/netease_integration.h
+    components/qmclient/netease/netease_lyric_parser.cpp
+    components/qmclient/netease/netease_lyric_parser.h
+    components/qmclient/netease/netease_lyric_state.cpp
+    components/qmclient/netease/netease_lyric_state.h
+    components/qmclient/netease/netease_lyric_timeline.cpp
+    components/qmclient/netease/netease_lyric_timeline.h
+    components/qmclient/netease/netease_shared_memory.cpp
+    components/qmclient/netease/netease_shared_memory.h
+    components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    components/qmclient/netease_hook/qm_netease_hook_protocol.h
+    components/qmclient/netease_hook/qm_netease_hook_v5_writer.cpp
+    components/qmclient/netease_hook/qm_netease_hook_v5_writer.h
+    components/qmclient/netease_hook/qm_netease_hook_provider.cpp
+    components/qmclient/netease_hook/qm_netease_hook_provider.h
     components/qmclient/qmclient.cpp
     components/qmclient/qmclient.h
     components/qmclient/qmclient_utils.cpp
@@ -3361,6 +3403,14 @@ if(CLIENT)
     )
   endif()
   add_dependencies(game-client generate_content_types)
+  if(TARGET qm-nmt-hook64)
+    add_dependencies(game-client qm-nmt-hook64 qm-nmt-helper qm-nmt-bootstrap)
+    add_custom_command(TARGET game-client POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-hook64>" "$<TARGET_FILE_DIR:game-client>/qm-nmt-hook64.dll"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-helper>" "$<TARGET_FILE_DIR:game-client>/qm-nmt-helper.exe"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-bootstrap>" "$<TARGET_FILE_DIR:game-client>/$<TARGET_FILE_NAME:qm-nmt-bootstrap>"
+      COMMENT "Copying Netease hook helper and bootstrap")
+  endif()
   if(VULKAN)
     add_dependencies(game-client build_vulkan_shaders)
   endif()
@@ -3786,18 +3836,12 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_ime_platform_test.cpp
     qm_new_ui_menu_branch_test.cpp
     qm_update_arguments_test.cpp
-    qm_lyrics_cache_test.cpp
-    qm_lyrics_clock_test.cpp
-    qm_lyrics_match_test.cpp
-    qm_lyrics_parser_lrc_test.cpp
-    qm_lyrics_parser_ttml_test.cpp
-    qm_lyrics_render_test.cpp
-    qm_lyrics_source_amll_ttml_db_test.cpp
-    qm_lyrics_source_apple_music_test.cpp
-    qm_lyrics_source_local_files_test.cpp
-    qm_lyrics_source_lyricify_cn_test.cpp
-    qm_lyrics_source_lrclib_test.cpp
-    qm_lyrics_song_search_map_test.cpp
+    netease_lyric_parser_test.cpp
+    netease_lyric_timeline_test.cpp
+    netease_lyric_state_test.cpp
+    netease_shared_memory_test.cpp
+    qm_netease_cdp_test.cpp
+    qm_netease_hook_protocol_test.cpp
     qm_modes_test.cpp
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
@@ -3847,7 +3891,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   set(TESTS_EXTRA
     src/game/client/animstate.cpp
-    src/game/client/components/chat_completion.cpp
     src/game/client/race_parse.cpp
     src/game/client/skin.cpp
     src/game/client/components/tclient/map_history.cpp
@@ -3883,19 +3926,13 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/axiom_scores_data.cpp
     src/test/ui_test_stubs.cpp
     src/game/client/components/qmclient/monitoring/monitoring_device_perf.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_clock.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_match.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_render.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_kugou.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_local_files.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_state.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
+    src/game/client/components/qmclient/netease/netease_shared_memory.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    src/qm-nmt-hook/qm_netease_cdp.cpp
+    src/qm-nmt-hook/qm_netease_cdp_client.cpp
     src/game/client/components/qmclient/modes.cpp
     src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/tee_hue_cycle.cpp
@@ -3933,6 +3970,9 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   add_dependencies(${TARGET_TESTRUNNER} generate_protocol)
   target_link_libraries(${TARGET_TESTRUNNER} ${PNG_LIBRARIES} ${WebP_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS_SERVER})
+  if(TARGET_OS STREQUAL "windows")
+    target_link_libraries(${TARGET_TESTRUNNER} bcrypt winhttp ws2_32)
+  endif()
   if(FFMPEG_FOUND)
     target_link_libraries(${TARGET_TESTRUNNER} ${FFMPEG_LIBRARIES})
   endif()
@@ -3948,6 +3988,41 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   if(FFMPEG_FOUND)
     target_include_directories(${TARGET_TESTRUNNER} SYSTEM PRIVATE ${FFMPEG_INCLUDE_DIRS})
+  endif()
+
+  set(QM_NMT_GTEST_MAIN_TARGET)
+  if(TARGET GTest::gtest_main)
+    set(QM_NMT_GTEST_MAIN_TARGET GTest::gtest_main)
+  elseif(TARGET gtest_main)
+    set(QM_NMT_GTEST_MAIN_TARGET gtest_main)
+  endif()
+  if(QM_NMT_GTEST_MAIN_TARGET)
+    add_executable(qm-nmt-tests EXCLUDE_FROM_ALL
+      src/test/netease_lyric_parser_test.cpp
+      src/test/netease_lyric_state_test.cpp
+      src/test/netease_lyric_timeline_test.cpp
+      src/test/netease_shared_memory_test.cpp
+      src/test/qm_netease_cdp_test.cpp
+      src/test/qm_netease_hook_protocol_test.cpp
+      src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+      src/game/client/components/qmclient/netease/netease_lyric_state.cpp
+      src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
+      src/game/client/components/qmclient/netease/netease_shared_memory.cpp
+      src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+      src/qm-nmt-hook/qm_netease_bootstrap.cpp
+      src/qm-nmt-hook/qm_netease_cdp.cpp
+      src/qm-nmt-hook/qm_netease_cdp_client.cpp
+      src/engine/external/json-parser/json.c
+    )
+    target_include_directories(qm-nmt-tests PRIVATE src)
+    target_link_libraries(qm-nmt-tests PRIVATE ${QM_NMT_GTEST_MAIN_TARGET})
+    if(TARGET_OS STREQUAL "windows")
+      target_compile_definitions(qm-nmt-tests PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+      target_link_libraries(qm-nmt-tests PRIVATE bcrypt winhttp ws2_32)
+    endif()
+    list(APPEND TARGETS_OWN qm-nmt-tests)
+    enable_testing()
+    add_test(NAME qm-nmt-tests COMMAND $<TARGET_FILE:qm-nmt-tests>)
   endif()
 
   list(APPEND TARGETS_OWN ${TARGET_TESTRUNNER})

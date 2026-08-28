@@ -12,7 +12,6 @@
 #include <generated/protocol7.h>
 
 #include <game/client/component.h>
-#include <game/client/components/chat_completion.h>
 #include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
 #include <game/client/lineinput.h>
 #include <game/client/render.h>
@@ -21,7 +20,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -201,29 +199,7 @@ private:
 	CRateablePlayer m_aPlayerCompletionList[MAX_CLIENTS];
 	int m_PlayerCompletionListLength;
 
-	struct SArgumentCandidatePopup
-	{
-		bool m_RectValid = false;
-		float m_X = 0.0f;
-		float m_Y = 0.0f;
-		float m_W = 0.0f;
-		float m_H = 0.0f;
-		float m_RowHeight = 0.0f;
-		int m_VisibleRows = 0;
-		int m_PressedIndex = -1;
-	};
-	std::vector<QmChatCompletion::SCandidate> m_vArgumentCandidates;
-	QmChatCompletion::SContext m_ArgumentCompletionContext;
-	SArgumentCandidatePopup m_ArgumentCandidatePopup;
-	std::optional<vec2> m_ArgumentCandidateLastMousePos;
-	bool m_ArgumentCandidatesRequestedByTab = false;
-	int64_t m_ArgumentCompletionNextSourceCheck = 0;
-	std::string m_ArgumentCompletionCachedInput;
-	size_t m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
-	uint64_t m_ArgumentCompletionSourceSignature = 0;
-	int m_ArgumentCompletionSelected = 0;
-	int m_ArgumentCompletionScroll = 0;
-
+public:
 	struct CCommand
 	{
 		char m_aName[IConsole::TEMPCMD_NAME_LENGTH];
@@ -238,21 +214,11 @@ private:
 			str_copy(m_aHelpText, pHelpText);
 		}
 
-		bool operator<(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) < 0; }
-		bool operator<=(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) <= 0; }
 		bool operator==(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) == 0; }
 	};
 
-	struct SSlashCommandSuggestion
-	{
-		const char *m_pCommand;
-	};
-
+private:
 	std::vector<CCommand> m_vServerCommands;
-	std::vector<SSlashCommandSuggestion> m_vSlashCommandSuggestions;
-	bool m_SlashCommandSuggestionsDismissed = false;
-	char m_aSlashCommandSuggestionsDismissedInput[MAX_LINE_LENGTH] = "";
-	bool m_ServerCommandsNeedSorting;
 
 	struct CHistoryEntry
 	{
@@ -289,16 +255,6 @@ private:
 	void CleanupOldChatLogs(const char *pToday);
 	void SaveChatLogLine(int ClientId, int Team, const char *pLine);
 	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
-	const CCommand *FindServerCommand(const char *pName) const;
-	void RefreshSlashCommandSuggestions();
-	const char *LocalizeCommandPreviewText(const char *pText) const;
-	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;
-	void RefreshArgumentCandidates();
-	void HideArgumentCandidates();
-	bool ApplyArgumentCandidate(int Index);
-	void EnsureArgumentCandidateVisible();
-	int ArgumentCandidateIndexAt(vec2 MousePos) const;
-	void RenderArgumentCandidates(const CUIRect &InputRect, float Width);
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
 	int CountInitializedLines() const;
 	int CountVisibleLinesFrom(int BacklogLine) const;
@@ -475,43 +431,6 @@ public:
 	static const char *SystemMessageNamePrefix(bool HideSystemPrefix = true)
 	{
 		return MessageNamePrefixForClientId(SERVER_MSG, HideSystemPrefix);
-	}
-	static std::vector<SSlashCommandSuggestion> BuildSlashCommandSuggestions(std::string_view Input, size_t MaxSuggestions)
-	{
-		static constexpr const char *s_apCommonCommands[] = {
-			"/pause",
-			"/spec",
-			"/team",
-			"/w",
-			"/top5",
-			"/top",
-		};
-		std::vector<SSlashCommandSuggestion> vSuggestions;
-		if(Input.empty() || Input[0] != '/' || Input.find(' ') != std::string_view::npos)
-			return vSuggestions;
-
-		char aInput[MAX_LINE_LENGTH];
-		str_truncate(aInput, sizeof(aInput), Input.data(), (int)Input.size());
-		for(const char *pCommand : s_apCommonCommands)
-		{
-			if(str_comp_nocase(aInput, pCommand) == 0)
-				return {};
-			if(str_startswith_nocase(pCommand, aInput))
-			{
-				vSuggestions.push_back({pCommand});
-				if(vSuggestions.size() >= MaxSuggestions)
-					break;
-			}
-		}
-		return vSuggestions;
-	}
-	static bool ApplySlashCommandSuggestion(char *pBuf, size_t BufSize, const char *pInput, const char *pCommand)
-	{
-		if(pBuf == nullptr || pInput == nullptr || pCommand == nullptr || BufSize == 0 || pInput[0] != '/' || str_find(pInput, " ") != nullptr || !str_startswith_nocase(pCommand, pInput))
-			return false;
-		str_copy(pBuf, pCommand, BufSize);
-		str_append(pBuf, " ", BufSize);
-		return true;
 	}
 	static bool ShouldHideBlockWordsMessage(EBlockWordsAction Action, bool Matched, int ClientId, bool IsLocalClient, int Team)
 	{

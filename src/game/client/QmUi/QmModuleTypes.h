@@ -43,7 +43,6 @@ namespace qm_module
 		Voice,
 		DynamicIsland,
 		SystemMediaControls,
-		Lyrics,
 		Background3D,
 		WeaponTrajectory,
 		WeaponAnimation,
@@ -64,7 +63,7 @@ namespace qm_module
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 36;
+	constexpr size_t QmModuleCount = 35;
 } // namespace qm_module
 
 #endif // GAME_CLIENT_QMUI_QMMODULETYPES_H
