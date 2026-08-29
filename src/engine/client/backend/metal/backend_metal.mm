@@ -19,6 +19,7 @@
 #define pi qmclient_carbon_pi
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
+#import <CoreGraphics/CoreGraphics.h>
 #undef pi
 #include <dispatch/dispatch.h>
 
@@ -26,6 +27,7 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -204,11 +206,20 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	std::vector<SBufferSlot> m_vBufferSlots;
 	std::vector<SBufferContainerSlot> m_vBufferContainers;
 	std::vector<SRenderTarget> m_vRenderTargets;
+	// 无 VSync 时最后一次成功 present 的时间，用于按刷新周期节流呈现。
+	std::chrono::nanoseconds m_LastPresentTimeNs = std::chrono::nanoseconds::zero();
+	// 主显示器实际刷新率（Hz），用于 present 节流；0 表示未知。
+	int m_PresentRefreshRateHz = 0;
 	bool m_MetalPerfEnabled = false;
 	uint32_t m_MetalPerfFrameCount = 0;
 	uint64_t m_MetalPerfCommandBufferCount = 0;
 	uint64_t m_MetalPerfEstimatedRenderCalls = 0;
 	uint64_t m_MetalPerfEncoderCount = 0;
+	uint64_t m_MetalPerfRenderEncoderCount = 0;
+	uint64_t m_MetalPerfBlitEncoderCount = 0;
+	uint64_t m_MetalPerfUploadInterruptCount = 0;
+	uint64_t m_MetalPerfClearCount = 0;
+	uint64_t m_MetalPerfRenderTargetSwitchCount = 0;
 	uint64_t m_MetalPerfFrameSlotWaitCount = 0;
 	uint64_t m_MetalPerfDrawableAcquireCount = 0;
 	uint64_t m_MetalPerfDrawableUnavailableCount = 0;
@@ -258,6 +269,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_MetalPerfCommandBufferCount = 0;
 		m_MetalPerfEstimatedRenderCalls = 0;
 		m_MetalPerfEncoderCount = 0;
+		m_MetalPerfRenderEncoderCount = 0;
+		m_MetalPerfBlitEncoderCount = 0;
+		m_MetalPerfUploadInterruptCount = 0;
+		m_MetalPerfClearCount = 0;
+		m_MetalPerfRenderTargetSwitchCount = 0;
 		m_MetalPerfFrameSlotWaitCount = 0;
 		m_MetalPerfDrawableAcquireCount = 0;
 		m_MetalPerfDrawableUnavailableCount = 0;
@@ -341,8 +357,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const int AllowsNextDrawableTimeout = pLayer != nil && pLayer.allowsNextDrawableTimeout ? 1 : 0;
 		const unsigned long MaxDrawables = pLayer != nil ? static_cast<unsigned long>(pLayer.maximumDrawableCount) : 0;
 		const int PresentsWithTransaction = pLayer != nil && pLayer.presentsWithTransaction ? 1 : 0;
-		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f drawable_acquire_ms_max=%.3f drawable_acquire_over_16ms_count=%llu drawable_acquire_over_33ms_count=%llu drawable_acquire_over_100ms_count=%llu drawable_unavailable_count=%llu gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu buffer_reuse_count=%llu buffer_reuse_bytes=%llu transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu presents_with_transaction=%d",
-			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, m_MetalPerfDrawableAcquireMaxMs, (unsigned long long)m_MetalPerfDrawableAcquireOver16MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver33MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver100MsCount, (unsigned long long)m_MetalPerfDrawableUnavailableCount, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, (unsigned long long)GpuExecutionUnavailableCount, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes, (unsigned long long)m_MetalPerfBufferReuseCount, (unsigned long long)m_MetalPerfBufferReuseBytes, (unsigned long long)m_MetalPerfTransientPoolReuseCount, (unsigned long long)m_MetalPerfTransientPoolReuseBytes, DisplaySync, AllowsNextDrawableTimeout, MaxDrawables, PresentsWithTransaction);
+		dbg_msg("perf/macos_metal", "event=frame_sample sample_frames=%u command_buffers=%llu render_calls=%llu encoders=%llu render_encoders=%llu blit_encoders=%llu upload_interrupts=%llu clears=%llu rt_switches=%llu command_processing_ms_sum=%.3f command_processing_ms_max=%.3f requested_render_threads=%d actual_render_threads=1 frame_slot_wait_count=%llu frame_slot_wait_ms_sum=%.3f drawable_acquire_count=%llu drawable_acquire_ms_sum=%.3f drawable_acquire_ms_max=%.3f drawable_acquire_over_16ms_count=%llu drawable_acquire_over_33ms_count=%llu drawable_acquire_over_100ms_count=%llu drawable_unavailable_count=%llu gpu_completion_wait_count=%llu gpu_completion_wait_ms_sum=%.3f gpu_execution_count=%llu gpu_execution_ms_sum=%.3f gpu_execution_ms_max=%.3f gpu_execution_unavailable_count=%llu upload_bytes=%llu readback_bytes=%llu texture_create_count=%llu texture_create_bytes=%llu buffer_create_count=%llu buffer_create_bytes=%llu buffer_reuse_count=%llu buffer_reuse_bytes=%llu transient_pool_reuse_count=%llu transient_pool_reuse_bytes=%llu display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu presents_with_transaction=%d",
+			m_MetalPerfFrameCount, (unsigned long long)m_MetalPerfCommandBufferCount, (unsigned long long)m_MetalPerfEstimatedRenderCalls, (unsigned long long)m_MetalPerfEncoderCount, (unsigned long long)m_MetalPerfRenderEncoderCount, (unsigned long long)m_MetalPerfBlitEncoderCount, (unsigned long long)m_MetalPerfUploadInterruptCount, (unsigned long long)m_MetalPerfClearCount, (unsigned long long)m_MetalPerfRenderTargetSwitchCount, m_MetalPerfCommandProcessingMs, m_MetalPerfCommandProcessingMaxMs, m_MetalPerfRequestedRenderThreads, (unsigned long long)m_MetalPerfFrameSlotWaitCount, m_MetalPerfFrameSlotWaitMs, (unsigned long long)m_MetalPerfDrawableAcquireCount, m_MetalPerfDrawableAcquireMs, m_MetalPerfDrawableAcquireMaxMs, (unsigned long long)m_MetalPerfDrawableAcquireOver16MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver33MsCount, (unsigned long long)m_MetalPerfDrawableAcquireOver100MsCount, (unsigned long long)m_MetalPerfDrawableUnavailableCount, (unsigned long long)m_MetalPerfGpuCompletionWaitCount, m_MetalPerfGpuCompletionWaitMs, (unsigned long long)GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, (unsigned long long)GpuExecutionUnavailableCount, (unsigned long long)m_MetalPerfUploadBytes, (unsigned long long)m_MetalPerfReadbackBytes, (unsigned long long)m_MetalPerfTextureCreateCount, (unsigned long long)m_MetalPerfTextureCreateBytes, (unsigned long long)m_MetalPerfBufferCreateCount, (unsigned long long)m_MetalPerfBufferCreateBytes, (unsigned long long)m_MetalPerfBufferReuseCount, (unsigned long long)m_MetalPerfBufferReuseBytes, (unsigned long long)m_MetalPerfTransientPoolReuseCount, (unsigned long long)m_MetalPerfTransientPoolReuseBytes, DisplaySync, AllowsNextDrawableTimeout, MaxDrawables, PresentsWithTransaction);
 		ResetMetalPerfStats();
 	}
 
@@ -1102,10 +1118,27 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		m_vRenderTargets.clear();
 	}
 
+	// 小于该尺寸的持久 buffer 使用 Shared 存储：CPU 直写 + didModifyRange 更新，
+	// 避免每次更新都结束 render encoder 并插入 blit encoder，消除服务器列表等
+	// UI 场景每帧数百次 encoder 打断。Apple Silicon 统一内存下 Shared 读性能接近 Private。
+	static constexpr size_t QM_METAL_MAX_SHARED_BUFFER_BYTES = 256 * 1024;
+
 	bool CopyIntoBuffer(id<MTLBuffer> Destination, size_t DestinationOffset, const void *pData, size_t DataBytes)
 	{
 		if(Destination == nil || m_CurrentCommandBuffer == nil || DataBytes == 0)
 			return false;
+		if(Destination.storageMode == MTLStorageModeShared)
+		{
+			// Shared buffer 直接写内存并通知 GPU，不需要 blit，不打断 render encoder。
+			if(pData != nullptr)
+				mem_copy(static_cast<uint8_t *>(Destination.contents) + DestinationOffset, pData, DataBytes);
+			else
+				std::memset(static_cast<uint8_t *>(Destination.contents) + DestinationOffset, 0, DataBytes);
+			[Destination didModifyRange:NSMakeRange(DestinationOffset, DataBytes)];
+			if(m_MetalPerfEnabled)
+				m_MetalPerfUploadBytes += DataBytes;
+			return true;
+		}
 		id<MTLBuffer> Staging = [m_Device newBufferWithLength:DataBytes options:MTLResourceStorageModeShared];
 		if(Staging == nil)
 			return false;
@@ -1120,7 +1153,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+			{
 				++m_MetalPerfEncoderCount;
+				++m_MetalPerfBlitEncoderCount;
+			}
 		}
 		const bool Success = m_CurrentBlitEncoder != nil;
 		if(Success)
@@ -1162,7 +1198,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		}
 		if(Buffer == nil)
 		{
-			const MTLResourceOptions Options = OneTimeUse ? MTLResourceStorageModeShared : MTLResourceStorageModePrivate;
+			// 小尺寸持久 buffer 也使用 Shared：更新时直写内存，避免 blit 打断。
+			const bool UseSharedStorage = OneTimeUse || DataBytes <= QM_METAL_MAX_SHARED_BUFFER_BYTES;
+			const MTLResourceOptions Options = UseSharedStorage ? MTLResourceStorageModeShared : MTLResourceStorageModePrivate;
 			Buffer = [m_Device newBufferWithLength:DataBytes options:Options];
 		}
 		if(Buffer == nil)
@@ -1268,7 +1306,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+			{
 				++m_MetalPerfEncoderCount;
+				++m_MetalPerfBlitEncoderCount;
+			}
 		}
 		if(m_CurrentBlitEncoder == nil)
 			return false;
@@ -2075,6 +2116,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	{
 		CAMetalLayer *pLayer = (__bridge CAMetalLayer *)m_pLayer;
 		pLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+		// macOS 限制 maximumDrawableCount 合法范围为 [2, 3]，不能通过增大
+		// drawable 池缓解无 VSync 高帧率下的呈现竞争；改用别的策略。
 		pLayer.maximumDrawableCount = 3;
 		// The private backbuffer is copied into the drawable with a blit encoder,
 		// therefore the drawable must remain usable outside a render pass.
@@ -2084,7 +2127,19 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// 系统背压，否则 nextDrawable 返回 nil 会直接丢掉本帧呈现。
 		pLayer.allowsNextDrawableTimeout = !m_VSync;
 		pLayer.displaySyncEnabled = m_VSync;
-		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, pLayer.allowsNextDrawableTimeout ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0);
+		// 缓存主显示器刷新率，供无 VSync 的 present 节流使用。
+		// 部分模式（如 ProMotion 可变刷新率）可能返回 0，视为未知。
+		m_PresentRefreshRateHz = 0;
+		CGDirectDisplayID DisplayId = CGMainDisplayID();
+		CGDisplayModeRef Mode = CGDisplayCopyDisplayMode(DisplayId);
+		if(Mode != nullptr)
+		{
+			const int Rate = (int)std::lround(CGDisplayModeGetRefreshRate(Mode));
+			CGDisplayModeRelease(Mode);
+			if(Rate > 0)
+				m_PresentRefreshRateHz = Rate;
+		}
+		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d refresh_hz=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, pLayer.allowsNextDrawableTimeout ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0, m_PresentRefreshRateHz);
 		UpdateDrawableSize();
 	}
 
@@ -2511,7 +2566,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		m_CurrentRenderEncoder.label = @"QmClient Metal frame";
 		if(m_MetalPerfEnabled)
+		{
 			++m_MetalPerfEncoderCount;
+			++m_MetalPerfRenderEncoderCount;
+		}
 		[m_CurrentRenderEncoder setViewport:(MTLViewport){0.0, 0.0, static_cast<double>(Width), static_cast<double>(Height), 0.0, 1.0}];
 		m_HasBoundScissorRect = false;
 		m_RenderEncoderStarted = true;
@@ -2544,6 +2602,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_MetalPerfUploadBytes += vUpload.size();
 		if(m_CurrentRenderEncoder != nil)
 		{
+			if(m_MetalPerfEnabled)
+				++m_MetalPerfUploadInterruptCount;
 			[m_CurrentRenderEncoder endEncoding];
 			ReleaseMetalObject(m_CurrentRenderEncoder);
 			m_CurrentRenderEncoder = nil;
@@ -2554,7 +2614,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+			{
 				++m_MetalPerfEncoderCount;
+				++m_MetalPerfBlitEncoderCount;
+			}
 		}
 		if(m_CurrentBlitEncoder == nil)
 		{
@@ -2601,6 +2664,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_MetalPerfUploadBytes += vUpload.size();
 		if(m_CurrentRenderEncoder != nil)
 		{
+			if(m_MetalPerfEnabled)
+				++m_MetalPerfUploadInterruptCount;
 			[m_CurrentRenderEncoder endEncoding];
 			ReleaseMetalObject(m_CurrentRenderEncoder);
 			m_CurrentRenderEncoder = nil;
@@ -2610,7 +2675,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		{
 			m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
 			if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+			{
 				++m_MetalPerfEncoderCount;
+				++m_MetalPerfBlitEncoderCount;
+			}
 		}
 		if(m_CurrentBlitEncoder == nil)
 		{
@@ -3304,6 +3372,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void Cmd_Clear(const CCommandBuffer::SCommand_Clear *pCommand)
 	{
+		if(m_MetalPerfEnabled)
+			++m_MetalPerfClearCount;
 		EndActiveEncoders();
 		const MTLClearColor ClearColor = MTLClearColorMake(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0);
 		const int ActiveTargetId = m_RenderTargetState.ActiveTargetId();
@@ -3346,6 +3416,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	bool Cmd_RenderTarget_Begin(const CCommandBuffer::SCommand_RenderTarget_Begin *pCommand)
 	{
+		if(m_MetalPerfEnabled)
+			++m_MetalPerfRenderTargetSwitchCount;
 		if(pCommand->m_TargetId < 0 || static_cast<size_t>(pCommand->m_TargetId) >= m_vRenderTargets.size() || m_RenderTargetState.IsActive())
 			return true;
 		const SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
@@ -3363,6 +3435,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	bool Cmd_RenderTarget_End(const CCommandBuffer::SCommand_RenderTarget_End *pCommand)
 	{
 		(void)pCommand;
+		if(m_MetalPerfEnabled)
+			++m_MetalPerfRenderTargetSwitchCount;
 		const int ActiveTargetId = m_RenderTargetState.ActiveTargetId();
 		if(ActiveTargetId < 0 || static_cast<size_t>(ActiveTargetId) >= m_vRenderTargets.size())
 			return true;
@@ -3611,10 +3685,30 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		EndActiveEncoders();
 		const bool BackbufferReady = HasValidBackbufferContents();
+		// drawable 池最多 3 个，WindowServer 按显示器刷新率回收。逻辑帧率远高于
+		// 刷新率时每帧 present 会耗尽池，nextDrawable 阻塞到下一个刷新周期，形成
+		// 周期性锁帧卡顿。无 VSync 时按刷新周期主动节流 present：逻辑帧照常渲染
+		// 提交，呈现均匀且不阻塞（录像/截图路径独立，不受节流影响）。
+		bool EffectivePresent = Present;
+		bool ThrottledPresent = false;
+		// 刷新率优先级：显式配置 > 显示器实际刷新率 > 不节流。
+		// 配置为 0（未设置）时用缓存的实际刷新率，仍无法获取则不节流，
+		// 避免 120/144Hz 显示器被错误地限制到 60Hz 呈现。
+		const int RefreshRate = g_Config.m_GfxScreenRefreshRate > 0 ? g_Config.m_GfxScreenRefreshRate : m_PresentRefreshRateHz;
+		if(EffectivePresent && RefreshRate > 0 && !m_VSync && !VideoCaptureActive())
+		{
+			const std::chrono::nanoseconds Now = time_get_nanoseconds();
+			const std::chrono::nanoseconds PresentInterval = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0 / RefreshRate));
+			if(m_LastPresentTimeNs.count() != 0 && Now - m_LastPresentTimeNs < PresentInterval)
+			{
+				EffectivePresent = false;
+				ThrottledPresent = true;
+			}
+		}
 		// The drawable pool is finite. Keep presentation late and do not add an
 		// application-side in-flight limit here: that would turn an uncapped,
 		// no-VSync render loop into an artificial display-refresh cap.
-		const bool PresentationRequested = Present && BackbufferReady && m_pLayer != nullptr;
+		const bool PresentationRequested = EffectivePresent && BackbufferReady && m_pLayer != nullptr;
 		bool CanPresent = false;
 		if(PresentationRequested)
 		{
@@ -3634,6 +3728,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(m_CurrentDrawable != nil)
 			{
 				m_CurrentBlitEncoder = RetainMetalObject([m_CurrentCommandBuffer blitCommandEncoder]);
+				if(m_MetalPerfEnabled && m_CurrentBlitEncoder != nil)
+					++m_MetalPerfBlitEncoderCount;
 				if(m_CurrentBlitEncoder != nil)
 				{
 					[m_CurrentBlitEncoder copyFromTexture:CurrentBackbufferTexture() sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(m_DrawableWidth, m_DrawableHeight, 1) toTexture:m_CurrentDrawable.texture destinationSlice:0 destinationLevel:0 destinationOrigin:MTLOriginMake(0, 0, 0)];
@@ -3653,13 +3749,25 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		const bool PresentationSucceeded = !PresentationRequested || BackbufferPresented;
 		if(BackbufferPresented)
 		{
-			[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
+			m_LastPresentTimeNs = time_get_nanoseconds();
+			if(!m_VSync)
+			{
+				// 无 VSync 时裸 present 不对齐显示器 vsync，呈现时刻随渲染循环
+				// 漂移，快速移动时画面节奏抖动/撕裂。用 1ms 的 afterMinimumDuration
+				// 把呈现对齐到 vsync 边界，保持逻辑帧率不受限但画面节奏均匀。
+				[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable afterMinimumDuration:0.001];
+			}
+			else
+			{
+				[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable];
+			}
 		}
 		[m_CurrentCommandBuffer commit];
 		m_CommandBufferCommitted = true;
 		// 只有命令缓冲区容量切片才需要沿用当前私有 backbuffer。present
 		// 失败时当前内容没有进入屏幕，丢弃这次未呈现的 slot，避免下一帧
-		// 复用同一 slot 并等待仍在 GPU 队列中的 command buffer。
+		// 复用同一 slot 并等待仍在 GPU 队列中的 command buffer。节流跳过的
+		// present 同样视为已消费，下一帧正常轮转清屏。
 		m_BackbufferContinuationPending = CurrentBackbufferHasContents() && !Present;
 		// 非 present 提交可能只是同一逻辑帧的 buffer slice；保留 drawable 和
 		// backbuffer 内容供下一段继续 load。真正 present 或无 backbuffer 时再释放。
@@ -3669,6 +3777,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			m_CurrentDrawable = nil;
 		}
 		if(BackbufferPresented)
+			SetCurrentBackbufferHasContents(false);
+		if(ThrottledPresent)
 			SetCurrentBackbufferHasContents(false);
 		if(!WaitForCompletion)
 			return PresentationSucceeded;
