@@ -208,6 +208,8 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	std::vector<SRenderTarget> m_vRenderTargets;
 	// 无 VSync 时最后一次成功 present 的时间，用于按刷新周期节流呈现。
 	std::chrono::nanoseconds m_LastPresentTimeNs = std::chrono::nanoseconds::zero();
+	// 无 VSync 时的呈现节奏锚点：每次 present 的目标呈现时刻（vsync 序列估计）。
+	std::chrono::nanoseconds m_NextPresentTimeNs = std::chrono::nanoseconds::zero();
 	// 主显示器实际刷新率（Hz），用于 present 节流；0 表示未知。
 	int m_PresentRefreshRateHz = 0;
 	bool m_MetalPerfEnabled = false;
@@ -3698,8 +3700,13 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(EffectivePresent && RefreshRate > 0 && !m_VSync && !VideoCaptureActive())
 		{
 			const std::chrono::nanoseconds Now = time_get_nanoseconds();
-			const std::chrono::nanoseconds PresentInterval = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0 / RefreshRate));
-			if(m_LastPresentTimeNs.count() != 0 && Now - m_LastPresentTimeNs < PresentInterval)
+			if(m_NextPresentTimeNs.count() == 0)
+				m_NextPresentTimeNs = Now;
+			// 在目标呈现时刻前约 1ms 调用 present，让 afterMinimumDuration 把
+			// 呈现精确落在锚点上。调用时刻锚定到固定节奏，避免相对 vsync 相位
+			// 漂移造成每帧显示内容的新旧波动（快速移动时的速度感不均）。
+			const std::chrono::nanoseconds PresentLead = std::chrono::milliseconds(1);
+			if(Now < m_NextPresentTimeNs - PresentLead)
 			{
 				EffectivePresent = false;
 				ThrottledPresent = true;
@@ -3750,12 +3757,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(BackbufferPresented)
 		{
 			m_LastPresentTimeNs = time_get_nanoseconds();
-			if(!m_VSync)
+			if(!m_VSync && RefreshRate > 0)
 			{
-				// 无 VSync 时裸 present 不对齐显示器 vsync，呈现时刻随渲染循环
-				// 漂移，快速移动时画面节奏抖动/撕裂。用 1ms 的 afterMinimumDuration
-				// 把呈现对齐到 vsync 边界，保持逻辑帧率不受限但画面节奏均匀。
-				[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable afterMinimumDuration:0.001];
+				// present pacing：把呈现时刻锚定到固定节奏序列，使每帧显示间隔
+				// 精确等于刷新周期、帧内容年龄恒定，消除快速移动时的速度感波动。
+				const std::chrono::nanoseconds Now = time_get_nanoseconds();
+				const double Duration = std::max(0.0, std::chrono::duration<double>(m_NextPresentTimeNs - Now).count());
+				[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable afterMinimumDuration:Duration];
+				const std::chrono::nanoseconds PresentInterval = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0 / RefreshRate));
+				m_NextPresentTimeNs += PresentInterval;
 			}
 			else
 			{
