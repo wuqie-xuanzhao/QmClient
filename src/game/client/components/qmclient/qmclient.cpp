@@ -995,10 +995,10 @@ void CQmClient::RecordQmClientLocalMapFinish(const char *pGameMode, int Score)
 	const std::string CommunityId = Client()->State() == IClient::STATE_ONLINE ? Client()->ServerInfo().m_aCommunityId : "";
 	if(CommunityId.size() > 128 || !str_utf8_check(CommunityId.c_str()))
 		return;
-	AccumulateQmClientLocalModePlaytime(time_timestamp());
+	AccumulateQmClientLocalModePlaytime(time_get());
 	for(SQmClientLocalModeStats &Stats : m_vQmClientLocalModeStats)
 	{
-		if(Stats.m_GameMode == pGameMode && Stats.m_CommunityId == CommunityId && Stats.m_IsAxiom == IsAxiom)
+		if(str_comp_nocase(Stats.m_GameMode.c_str(), pGameMode) == 0 && Stats.m_CommunityId == CommunityId && Stats.m_IsAxiom == IsAxiom)
 		{
 			++Stats.m_Maps;
 			Stats.m_Score += Score;
@@ -1018,20 +1018,28 @@ void CQmClient::AccumulateQmClientLocalModePlaytime(int64_t Now)
 {
 	if(m_QmClientActiveLocalMode.empty())
 		return;
-	if(m_QmClientLocalModeLastTimestamp <= 0)
+	if(m_QmClientLocalModeLastTick <= 0)
 	{
-		m_QmClientLocalModeLastTimestamp = Now;
+		m_QmClientLocalModeLastTick = Now;
 		return;
 	}
-	const int64_t Delta = Now - m_QmClientLocalModeLastTimestamp;
-	m_QmClientLocalModeLastTimestamp = Now;
-	if(Delta <= 0 || Delta > 24 * 60 * 60)
+	const int64_t Delta = Now - m_QmClientLocalModeLastTick;
+	m_QmClientLocalModeLastTick = Now;
+	if(Delta <= 0 || Delta > 24 * 60 * 60 * time_freq())
+	{
+		m_QmClientLocalModeTickRemainder = 0;
+		return;
+	}
+	m_QmClientLocalModeTickRemainder += Delta;
+	const int64_t Seconds = m_QmClientLocalModeTickRemainder / time_freq();
+	m_QmClientLocalModeTickRemainder %= time_freq();
+	if(Seconds <= 0)
 		return;
 	for(SQmClientLocalModeStats &Stats : m_vQmClientLocalModeStats)
 	{
-		if(Stats.m_GameMode == m_QmClientActiveLocalMode && Stats.m_CommunityId == m_QmClientActiveLocalCommunityId && Stats.m_IsAxiom == m_QmClientActiveLocalIsAxiom)
+		if(str_comp_nocase(Stats.m_GameMode.c_str(), m_QmClientActiveLocalMode.c_str()) == 0 && Stats.m_CommunityId == m_QmClientActiveLocalCommunityId && Stats.m_IsAxiom == m_QmClientActiveLocalIsAxiom)
 		{
-			Stats.m_PlaytimeSeconds += Delta;
+			Stats.m_PlaytimeSeconds += Seconds;
 			return;
 		}
 	}
@@ -1039,13 +1047,13 @@ void CQmClient::AccumulateQmClientLocalModePlaytime(int64_t Now)
 	Stats.m_GameMode = m_QmClientActiveLocalMode;
 	Stats.m_CommunityId = m_QmClientActiveLocalCommunityId;
 	Stats.m_IsAxiom = m_QmClientActiveLocalIsAxiom;
-	Stats.m_PlaytimeSeconds = Delta;
+	Stats.m_PlaytimeSeconds = Seconds;
 	m_vQmClientLocalModeStats.push_back(std::move(Stats));
 }
 
 void CQmClient::UpdateQmClientLocalModePlaytime()
 {
-	const int64_t Now = time_timestamp();
+	const int64_t Now = time_get();
 	const bool Online = Client()->State() == IClient::STATE_ONLINE;
 	const char *pMode = Online ? Client()->ServerInfo().m_aGameType : "";
 	const std::string CommunityId = Online ? Client()->ServerInfo().m_aCommunityId : "";
@@ -1056,7 +1064,8 @@ void CQmClient::UpdateQmClientLocalModePlaytime()
 		m_QmClientActiveLocalMode = pMode;
 		m_QmClientActiveLocalCommunityId = CommunityId;
 		m_QmClientActiveLocalIsAxiom = IsAxiom;
-		m_QmClientLocalModeLastTimestamp = pMode[0] != '\0' ? Now : 0;
+		m_QmClientLocalModeLastTick = pMode[0] != '\0' ? Now : 0;
+		m_QmClientLocalModeTickRemainder = 0;
 		return;
 	}
 	AccumulateQmClientLocalModePlaytime(Now);
@@ -1066,11 +1075,12 @@ void CQmClient::EndQmClientLocalModePlaytime()
 {
 	if(!m_QmClientActiveLocalMode.empty())
 	{
-		AccumulateQmClientLocalModePlaytime(time_timestamp());
+		AccumulateQmClientLocalModePlaytime(time_get());
 		m_QmClientActiveLocalMode.clear();
 		m_QmClientActiveLocalCommunityId.clear();
 		m_QmClientActiveLocalIsAxiom = false;
-		m_QmClientLocalModeLastTimestamp = 0;
+		m_QmClientLocalModeLastTick = 0;
+		m_QmClientLocalModeTickRemainder = 0;
 	}
 }
 

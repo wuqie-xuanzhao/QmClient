@@ -48,6 +48,7 @@ enum class EQmAxiomScoreStatus
 struct SQmAxiomModeResult
 {
 	EQmAxiomScoreStatus m_Status = EQmAxiomScoreStatus::NOT_REQUESTED;
+	bool m_HasData = false;
 	SQmAxiomModeScore m_Score;
 };
 

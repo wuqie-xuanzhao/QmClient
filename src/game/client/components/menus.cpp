@@ -2852,7 +2852,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	for(const SQmClientLocalModeStats &Stats : vLocalModeStats)
 	{
 		auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [&Stats](const SQmClientLocalModeStats &Existing) {
-			return Existing.m_GameMode == Stats.m_GameMode;
+			return str_comp_nocase(Existing.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0;
 		});
 		if(It == vModeStats.end())
 		{
@@ -3111,7 +3111,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 				pBuf[0] = '\0';
 				return;
 			}
-			if(pAxiomGoresResult && pAxiomGoresResult->m_Status == EQmAxiomScoreStatus::READY)
+			if(pAxiomGoresResult && (pAxiomGoresResult->m_HasData || pAxiomGoresResult->m_Status == EQmAxiomScoreStatus::READY))
 			{
 				str_format(pBuf, BufSize, "%" PRId64, pAxiomGoresResult->m_Score.m_Points);
 			}
@@ -3306,7 +3306,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	Ui()->DoLabel(&RightTitle, Localize("Stats notes"), 14.0f, TEXTALIGN_ML);
 	RightBody.HSplitTop(6.0f, nullptr, &RightBody);
 	CUIRect NotesBody, LinksBody;
-	RightBody.HSplitTop(72.0f, &NotesBody, &LinksBody);
+	RightBody.HSplitBottom(32.0f, &NotesBody, &LinksBody);
 	LinksBody.HSplitTop(8.0f, nullptr, &LinksBody);
 
 	char aNowTime[64];

@@ -86,7 +86,8 @@ class CQmClient : public CComponent
 	std::string m_QmClientActiveLocalMode;
 	std::string m_QmClientActiveLocalCommunityId;
 	bool m_QmClientActiveLocalIsAxiom = false;
-	int64_t m_QmClientLocalModeLastTimestamp = 0;
+	int64_t m_QmClientLocalModeLastTick = 0;
+	int64_t m_QmClientLocalModeTickRemainder = 0;
 
 	void InitQmClientLifecycle();
 	void UpdateQmClientLifecycleAndServerTime();

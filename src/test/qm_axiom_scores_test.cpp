@@ -2,6 +2,8 @@
 
 #include <base/system.h>
 
+#include <engine/shared/json.h>
+
 #include <game/client/components/qmclient/axiom_scores.h>
 #include <game/client/components/qmclient/axiom_scores_data.h>
 
@@ -310,6 +312,45 @@ TEST(QmAxiomScoresComponent, StartsBothModesAndKeepsFailuresIndependent)
 	Scores.EnsureQueried("wolf_test");
 	ASSERT_EQ(Http.m_vRequests.size(), 4u);
 	EXPECT_NE(Http.Request(3).m_Url.find("mode=AXRace"), std::string::npos);
+}
+
+TEST(QmAxiomScoresComponent, KeepsPersistedScoreVisibleWhileRefreshing)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	const char *pJson = R"({
+		"remote": {"axiom": {"players": [{
+			"name": "wolf_test",
+			"user_id": 5528,
+			"player_name": "wolf_test",
+			"dummy_name": "",
+			"modes": [{
+				"mode": "Gores",
+				"points": 38,
+				"total_play_time": 2,
+				"total_maps_completed": 3,
+				"performance_points": 4,
+				"mileage": 5,
+				"difficulties": []
+			}]
+		}]}}
+	})";
+	json_value *pRoot = JsonParse(pJson, std::strlen(pJson));
+	ASSERT_NE(pRoot, nullptr);
+	Scores.LoadPersistentCache(pRoot);
+	json_value_free(pRoot);
+
+	const SQmAxiomPlayerResult *pResult = Scores.GetResult("wolf_test");
+	ASSERT_NE(pResult, nullptr);
+	EXPECT_TRUE(pResult->Mode(EQmAxiomMode::GORES).m_HasData);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Score.m_Points, 38);
+
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	pResult = Scores.GetResult("wolf_test");
+	ASSERT_NE(pResult, nullptr);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Status, EQmAxiomScoreStatus::READY);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Score.m_Points, 38);
 }
 
 TEST(QmAxiomScoresComponent, SwitchingPlayersCancelsEveryOldRequest)

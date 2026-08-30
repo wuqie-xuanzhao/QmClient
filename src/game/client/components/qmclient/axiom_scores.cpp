@@ -51,6 +51,11 @@ namespace
 		return str_comp(aCanonical, pText) == 0;
 	}
 
+	bool ReadNonNegativeInt64(const json_value *pObject, const char *pName, int64_t &Out)
+	{
+		return ReadInt64(pObject, pName, Out) && Out >= 0;
+	}
+
 	void WriteInt64(CJsonFileWriter &Writer, const char *pName, int64_t Value)
 	{
 		char aValue[64];
@@ -156,19 +161,19 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 			const int Index = Mode == EQmAxiomMode::AXRACE ? 1 : 0;
 			SQmAxiomModeScore &Score = Entry.m_Result.m_aModes[Index].m_Score;
 			int64_t Value = 0;
-			if(!ReadInt64(pMode, "points", Value))
+			if(!ReadNonNegativeInt64(pMode, "points", Value) ||
+				!ReadNonNegativeInt64(pMode, "total_play_time", Score.m_TotalPlayTime) ||
+				!ReadNonNegativeInt64(pMode, "total_maps_completed", Score.m_TotalMapsCompleted) ||
+				!ReadNonNegativeInt64(pMode, "performance_points", Score.m_PerformancePoints) ||
+				!ReadNonNegativeInt64(pMode, "mileage", Score.m_Mileage))
 				continue;
 			Score.m_Points = Value;
-			ReadInt64(pMode, "total_play_time", Score.m_TotalPlayTime);
-			ReadInt64(pMode, "total_maps_completed", Score.m_TotalMapsCompleted);
-			ReadInt64(pMode, "performance_points", Score.m_PerformancePoints);
-			ReadInt64(pMode, "mileage", Score.m_Mileage);
 			Value = 0;
-			ReadInt64(pMode, "global_rank", Value);
+			ReadNonNegativeInt64(pMode, "global_rank", Value);
 			if(Value > 0)
 				Score.m_GlobalRank = Value;
 			Value = 0;
-			ReadInt64(pMode, "team_rank", Value);
+			ReadNonNegativeInt64(pMode, "team_rank", Value);
 			if(Value > 0)
 				Score.m_TeamRank = Value;
 			Score.m_PlayerName = Entry.m_Result.m_Match.m_PlayerName;
@@ -182,23 +187,23 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 					const json_value *pDifficultyName = JsonField(pDifficulty, "name");
 					SQmAxiomDifficultyStats Difficulty;
 					int64_t DifficultyValue = 0;
-					if(pDifficultyName->type != json_string || !json_string_get(pDifficultyName) || json_string_get(pDifficultyName)[0] == '\0' || static_cast<size_t>(str_length(json_string_get(pDifficultyName))) > AXIOM_MAX_DIFFICULTY_NAME_BYTES || !str_utf8_check(json_string_get(pDifficultyName)) || !ReadInt64(pDifficulty, "points", Difficulty.m_Points) || !ReadInt64(pDifficulty, "completed_maps", Difficulty.m_CompletedMaps) || !ReadInt64(pDifficulty, "remaining_maps", Difficulty.m_RemainingMaps))
+					if(pDifficultyName->type != json_string || !json_string_get(pDifficultyName) || json_string_get(pDifficultyName)[0] == '\0' || static_cast<size_t>(str_length(json_string_get(pDifficultyName))) > AXIOM_MAX_DIFFICULTY_NAME_BYTES || !str_utf8_check(json_string_get(pDifficultyName)) || !ReadNonNegativeInt64(pDifficulty, "points", Difficulty.m_Points) || !ReadNonNegativeInt64(pDifficulty, "completed_maps", Difficulty.m_CompletedMaps) || !ReadNonNegativeInt64(pDifficulty, "remaining_maps", Difficulty.m_RemainingMaps))
 					{
 						ValidDifficulties = false;
 						break;
 					}
 					Difficulty.m_Name = json_string_get(pDifficultyName);
 					DifficultyValue = 0;
-					if(ReadInt64(pDifficulty, "global_rank", DifficultyValue) && DifficultyValue > 0)
+					if(ReadNonNegativeInt64(pDifficulty, "global_rank", DifficultyValue) && DifficultyValue > 0)
 						Difficulty.m_GlobalRank = DifficultyValue;
 					DifficultyValue = 0;
-					if(ReadInt64(pDifficulty, "team_rank", DifficultyValue) && DifficultyValue > 0)
+					if(ReadNonNegativeInt64(pDifficulty, "team_rank", DifficultyValue) && DifficultyValue > 0)
 						Difficulty.m_TeamRank = DifficultyValue;
 					DifficultyValue = 0;
-					if(ReadInt64(pDifficulty, "total_points", DifficultyValue) && DifficultyValue >= 0)
+					if(ReadNonNegativeInt64(pDifficulty, "total_points", DifficultyValue))
 						Difficulty.m_TotalPoints = DifficultyValue;
 					DifficultyValue = 0;
-					if(ReadInt64(pDifficulty, "total_maps", DifficultyValue) && DifficultyValue >= 0)
+					if(ReadNonNegativeInt64(pDifficulty, "total_maps", DifficultyValue))
 						Difficulty.m_TotalMaps = DifficultyValue;
 					Score.m_vDifficulties.push_back(std::move(Difficulty));
 				}
@@ -206,6 +211,7 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 					Score.m_vDifficulties.clear();
 			}
 			Entry.m_Result.m_aModes[Index].m_Status = EQmAxiomScoreStatus::READY;
+			Entry.m_Result.m_aModes[Index].m_HasData = true;
 			HasMode = true;
 		}
 		if(!HasMode)
@@ -228,11 +234,11 @@ void CQmAxiomScores::WritePersistentCache(CJsonFileWriter &Writer) const
 	Writer.BeginArray();
 	for(const auto &[Name, Entry] : m_Cache)
 	{
-		if(Entry.m_Result.m_SearchStatus != EQmAxiomScoreStatus::READY || Entry.m_Result.m_Match.m_UserId <= 0)
+		if(Entry.m_Result.m_Match.m_UserId <= 0)
 			continue;
 		bool HasReadyMode = false;
 		for(const SQmAxiomModeResult &ModeResult : Entry.m_Result.m_aModes)
-			HasReadyMode |= ModeResult.m_Status == EQmAxiomScoreStatus::READY;
+			HasReadyMode |= ModeResult.m_HasData;
 		if(!HasReadyMode)
 			continue;
 		Writer.BeginObject();
@@ -248,7 +254,7 @@ void CQmAxiomScores::WritePersistentCache(CJsonFileWriter &Writer) const
 		for(int Index = 0; Index < 2; ++Index)
 		{
 			const SQmAxiomModeResult &ModeResult = Entry.m_Result.m_aModes[Index];
-			if(ModeResult.m_Status != EQmAxiomScoreStatus::READY)
+			if(!ModeResult.m_HasData)
 				continue;
 			const SQmAxiomModeScore &Score = ModeResult.m_Score;
 			Writer.BeginObject();
@@ -394,9 +400,6 @@ void CQmAxiomScores::EvictCacheEntryIfNeeded()
 void CQmAxiomScores::StartSearchRequest(const char *pPlayerName, SCacheEntry &Entry)
 {
 	Entry.m_Result.m_SearchStatus = EQmAxiomScoreStatus::FETCHING;
-	Entry.m_Result.m_Match = {};
-	for(SQmAxiomModeResult &ModeResult : Entry.m_Result.m_aModes)
-		ModeResult = {};
 
 	const std::string Url = QmBuildAxiomSearchUrl(pPlayerName);
 	if(Url.empty())
@@ -422,7 +425,6 @@ void CQmAxiomScores::StartModeRequest(const char *pPlayerName, SCacheEntry &Entr
 	const int Index = ModeIndex(Mode);
 	SQmAxiomModeResult &ModeResult = Entry.m_Result.m_aModes[Index];
 	ModeResult.m_Status = EQmAxiomScoreStatus::FETCHING;
-	ModeResult.m_Score = {};
 
 	if(Entry.m_Result.m_Match.m_UserId <= 0)
 	{
@@ -480,7 +482,13 @@ void CQmAxiomScores::ProcessSearchRequest()
 		return;
 	}
 
+	const bool MatchChanged = Entry.m_Result.m_Match.m_UserId != Match.m_UserId;
 	Entry.m_Result.m_Match = std::move(Match);
+	if(MatchChanged)
+	{
+		for(SQmAxiomModeResult &ModeResult : Entry.m_Result.m_aModes)
+			ModeResult = {};
+	}
 	Entry.m_LastSearchSuccessTick = Now;
 	Entry.m_LastSearchFailureTick = 0;
 	StartModeRequest(ResponsePlayerName.c_str(), Entry, EQmAxiomMode::GORES);
@@ -530,6 +538,7 @@ void CQmAxiomScores::ProcessModeRequests()
 		}
 
 		ModeResult.m_Score = std::move(Score);
+		ModeResult.m_HasData = true;
 		Entry.m_aLastModeSuccessTick[Index] = Now;
 		Entry.m_aLastModeFailureTick[Index] = 0;
 	}
